@@ -602,7 +602,13 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
   auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
   GE_CHECK_NOTNULL(out_data_anchor);
   auto peer_node = out_data_anchor->GetOwnerNode();
-  GE_CHECK_NOTNULL(peer_node);
+  if (peer_node->GetType() == ENTER || peer_node->GetType() == REFENTER) {
+    auto enter_in_data_anchor = peer_node->GetInDataAnchor(0);
+    GE_CHECK_NOTNULL(enter_in_data_anchor);
+    auto enter_peer_out_data_anchor = enter_in_data_anchor->GetPeerOutAnchor();
+    GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
+    peer_node = enter_peer_out_data_anchor->GetOwnerNode();
+  }
   auto peer_op_desc = peer_node->GetOpDesc();
   GE_CHECK_NOTNULL(peer_op_desc);
   auto peer_op_type = peer_op_desc->GetType();
