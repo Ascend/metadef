@@ -186,7 +186,7 @@ class OpReg {
     typedef x _THIS_TYPE;                                            \
                                                                      \
    public:                                                           \
-   ATTRIBUTED_DEPRECATED(x(const AscendString &))                    \
+   ATTRIBUTED_DEPRECATED(x(const char *))                            \
     explicit x(const string &name) : Operator(name.c_str(), #x) { __##x(); } \
     explicit x(const char *name) : Operator(name, #x) { __##x(); }   \
     explicit x(const AscendString &name) : Operator(name, #x) {      \
@@ -270,12 +270,12 @@ class OpReg {
   static const void name_in_##x(AscendString &name) {                          \
     name = AscendString(#x);                                                   \
   }                                                                            \
-  ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_input_##x(Operator &, const char *))   \
+  ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_input_##x##_by_name(Operator &, const char *)) \
   _THIS_TYPE &set_input_##x(Operator &v, const string &srcName) {              \
     Operator::SetInput(#x, v, srcName.c_str());                                \
     return *this;                                                              \
   }                                                                            \
-  _THIS_TYPE &set_input_##x(Operator &v, const char *srcName) {                \
+  _THIS_TYPE &set_input_##x##_by_name(Operator &v, const char *srcName) {      \
     Operator::SetInput(#x, v, srcName);                                        \
     return *this;                                                              \
   }                                                                            \
@@ -287,7 +287,7 @@ class OpReg {
     Operator::SetInput(#x, v);                                                 \
     return *this;                                                              \
   }                                                                            \
-  TensorDesc get_input_desc_##x() const { return Operator::GetInputDesc(#x, 0); } \
+  TensorDesc get_input_desc_##x() const { return Operator::GetInputDescByName(#x); } \
   graphStatus update_input_desc_##x(const TensorDesc &tensorDesc) {            \
     return Operator::UpdateInputDesc(#x, tensorDesc);                          \
   }                                                                            \
@@ -312,12 +312,12 @@ class OpReg {
     Operator::SetInput(#x, v);                                                 \
     return *this;                                                              \
   }                                                                            \
-  ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_input_##x(Operator &, const char *))   \
+  ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_input_##x##_by_name(Operator &, const char *))  \
   _THIS_TYPE &set_input_##x(Operator &v, const string &srcName) {              \
     Operator::SetInput(#x, v, srcName.c_str());                                \
     return *this;                                                              \
   }                                                                            \
-  _THIS_TYPE &set_input_##x(Operator &v, const char *srcName) {                \
+  _THIS_TYPE &set_input_##x##_by_name(Operator &v, const char *srcName) {      \
     Operator::SetInput(#x, v, srcName);                                        \
     return *this;                                                              \
   }                                                                            \
@@ -325,7 +325,7 @@ class OpReg {
     Operator::SetInput(#x, v, index);                                          \
     return *this;                                                              \
   }                                                                            \
-  TensorDesc get_input_desc_##x() const { return Operator::GetInputDesc(#x, 0); } \
+  TensorDesc get_input_desc_##x() const { return Operator::GetInputDescByName(#x); } \
   graphStatus update_input_desc_##x(const TensorDesc &tensorDesc) {            \
     return Operator::UpdateInputDesc(#x, tensorDesc);                          \
   }                                                                            \
@@ -346,7 +346,7 @@ class OpReg {
   static const void name_out_##x(AscendString &name) {                           \
     name = AscendString(#x);                                                     \
   }                                                                              \
-  TensorDesc get_output_desc_##x() const { return Operator::GetOutputDesc(#x, 0); } \
+  TensorDesc get_output_desc_##x() const { return Operator::GetOutputDescByName(#x); } \
   graphStatus update_output_desc_##x(const TensorDesc &tensorDesc) {             \
     return Operator::UpdateOutputDesc(#x, tensorDesc);                           \
   }                                                                              \
@@ -535,9 +535,9 @@ class OpReg {
 
 #define ELMTWISE_INFER_SHAPEANDTYPE(in_name, out_name)            \
   [](Operator op)->graphStatus {                                  \
-    auto x_shape = op.GetInputDesc(in_name, 0).GetShape().GetDims(); \
-    auto x_type = op.GetInputDesc(in_name, 0).GetDataType();      \
-    TensorDesc op_output_desc = op.GetOutputDesc(out_name, 0);    \
+    auto x_shape = op.GetInputDescByName(in_name).GetShape().GetDims(); \
+    auto x_type = op.GetInputDescByName(in_name).GetDataType();         \
+    TensorDesc op_output_desc = op.GetOutputDescByName(out_name); \
     op_output_desc.SetShape(ge::Shape(x_shape));                  \
     op_output_desc.SetOriginShape(ge::Shape(x_shape));            \
     op_output_desc.SetDataType(x_type);                           \
@@ -550,10 +550,10 @@ graphStatus BroadCastInfer(const function<vector<int64_t>()> &get_in1_shape,
 
 #define BROADCAST_INFER(in1_name, in2_name, out_name)                                       \
   [](Operator op) -> graphStatus {                                                          \
-    return BroadCastInfer([&]() { return op.GetInputDesc(in1_name, 0).GetShape().GetDims(); }, \
-                          [&]() { return op.GetInputDesc(in2_name, 0).GetShape().GetDims(); }, \
+    return BroadCastInfer([&]() { return op.GetInputDescByName(in1_name).GetShape().GetDims(); }, \
+                          [&]() { return op.GetInputDescByName(in2_name).GetShape().GetDims(); }, \
                           [&](const vector<int64_t> &y_shape) {                             \
-                            TensorDesc op_output_desc = op.GetOutputDesc(out_name, 0);      \
+                            TensorDesc op_output_desc = op.GetOutputDescByName(out_name);   \
                             op_output_desc.SetShape(ge::Shape(y_shape));                    \
                             (void)op.UpdateOutputDesc(out_name, op_output_desc);});         \
   }
