@@ -129,7 +129,7 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
       auto shape = tensor.MutableShape();
       if (shape.GetDims().size() != ref_out_tensor_shape.GetDims().size()) {
         GELOGD("node is %s, i : %d, shape size: %lu, ref_out_tensor_shape size: %lu",
-          node->GetName().c_str(), i, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
+               node->GetName().c_str(), i, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
         ref_out_tensor_shape = GeShape(UNKNOWN_RANK);
         break;
       }
@@ -538,8 +538,8 @@ InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, Inf
     if (iter != context_map.end()) {
       const auto &src_context = iter->second;
       GE_IF_BOOL_EXEC(src_context == nullptr, GELOGE(GRAPH_FAILED, "src_context is null."); return nullptr);
-      GELOGD("node:%s get %ld marks from node:%s", node->GetName().c_str(), src_context->GetMarks().size(),
-              input_node->GetName().c_str());
+      GELOGD("node:%s get %ld marks from node:%s", 
+             node->GetName().c_str(), src_context->GetMarks().size(), input_node->GetName().c_str());
       for (auto mark : src_context->GetMarks()) {
         marks.push_back(mark);
       }

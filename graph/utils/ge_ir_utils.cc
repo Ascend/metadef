@@ -401,11 +401,9 @@ void OnnxUtils::AddAttrProtoForOpInAndOutDesc(onnx::NodeProto *node_proto, const
   }
 }
 
-void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(const ::google::protobuf::Map<std::string,
-                                                ::ge::proto::AttrDef> &attr_map,
-                                                onnx::NodeProto *node_proto,
-                                                const std::string& prefix,
-                                                const std::string& suffix) {
+void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
+    const ::google::protobuf::Map<std::string, ::ge::proto::AttrDef> &attr_map, onnx::NodeProto *node_proto,
+    const std::string& prefix, const std::string& suffix) {
   for (const auto &item : attr_map) {
     auto attr_name = item.first;
     auto attr_def = item.second;
