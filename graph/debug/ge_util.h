@@ -17,8 +17,8 @@
 #ifndef COMMON_GRAPH_DEBUG_GE_UTIL_H_
 #define COMMON_GRAPH_DEBUG_GE_UTIL_H_
 
-#include <limits.h>
-#include <math.h>
+#include <climits>
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <sstream>

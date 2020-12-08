@@ -792,7 +792,7 @@ graphStatus ComputeGraph::CollectBreadthOutNode(const NodePtr &node, std::map<No
   for (const auto &anchor : node->GetAllOutDataAnchors()) {
     for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
       auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
-      if (iter != map_in_edge_num.end() && 0 == --iter->second) {
+      if (iter != map_in_edge_num.end() && --iter->second == 0) {
         (void)breadth_node_map.emplace(peer_in_anchor->GetOwnerNode()->GetName(), peer_in_anchor->GetOwnerNode());
       }
     }
