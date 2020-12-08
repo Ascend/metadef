@@ -400,8 +400,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::OpDescAttrsAreEqual(
   }
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool
-OpDesc::OpDescGenTensorDescsAreEqual(const OpDesc &r_op_desc) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::OpDescGenTensorDescsAreEqual(const OpDesc &r_op_desc)
+    const {
   // 1.Verify inputs and outputs desc size
   const auto inputs_desc_size = this->inputs_desc_.size();
   const auto r_inputs_desc_size = r_op_desc.inputs_desc_.size();
@@ -1363,8 +1363,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetSubgraphIn
   return subgraph_instance_names_.at(index);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::vector<std::string> &
-OpDesc::GetSubgraphInstanceNames() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::vector<std::string> &OpDesc::GetSubgraphInstanceNames()
+    const {
   return subgraph_instance_names_;
 }
 
@@ -1390,8 +1390,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::AddSubgraphNa
   return GRAPH_SUCCESS;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::map<std::string, uint32_t> &
-OpDesc::GetSubgraphNameIndexes() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::map<std::string, uint32_t> & OpDesc::GetSubgraphNameIndexes()
+    const {
   return subgraph_names_to_index_;
 }
 
