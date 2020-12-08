@@ -81,8 +81,6 @@ const std::map<uint32_t, ge::DataType> data_type_map = {
 };
 }  // namespace
 
-
-
 ge::DataType TensorAssign::ConvertTensorflowDataType(uint32_t tf_data_type) {
   auto search = data_type_map.find(tf_data_type);
   if (search != data_type_map.end()) {
