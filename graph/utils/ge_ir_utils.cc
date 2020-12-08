@@ -36,7 +36,8 @@ using AttrDefPair = ::google::protobuf::MapPair<std::string, ge::proto::AttrDef>
 
 namespace ge {
 // Part 1: from IR convert to ONNX Protobuf
-static const std::map<ge::DataType, onnx::TensorProto_DataType> kGeDataTypeToOnnxMap = {
+namespace{
+const std::map<ge::DataType, onnx::TensorProto_DataType> kGeDataTypeToOnnxMap = {
     {DT_INT64, onnx::TensorProto_DataType_INT64},   {DT_UINT64, onnx::TensorProto_DataType_UINT64},
     {DT_FLOAT, onnx::TensorProto_DataType_FLOAT},   {DT_INT32, onnx::TensorProto_DataType_INT32},
     {DT_UINT32, onnx::TensorProto_DataType_UINT32}, {DT_INT8, onnx::TensorProto_DataType_INT8},
@@ -44,6 +45,7 @@ static const std::map<ge::DataType, onnx::TensorProto_DataType> kGeDataTypeToOnn
     {DT_UINT16, onnx::TensorProto_DataType_UINT16}, {DT_FLOAT16, onnx::TensorProto_DataType_FLOAT16},
     {DT_DOUBLE, onnx::TensorProto_DataType_DOUBLE}, {DT_BOOL, onnx::TensorProto_DataType_BOOL},
 };
+}
 
 struct AttrNameComp {
   inline bool operator()(const onnx::AttributeProto &lsh, const onnx::AttributeProto &rsh) {

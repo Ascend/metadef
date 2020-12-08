@@ -24,7 +24,8 @@
 using domi::domiTensorFormat_t;
 
 namespace ge {
-static const std::map<Format, std::string> kFormatToStringMap = {
+namespace{
+const std::map<Format, std::string> kFormatToStringMap = {
     {FORMAT_NCHW, "NCHW"},
     {FORMAT_NHWC, "NHWC"},
     {FORMAT_ND, "ND"},
@@ -67,7 +68,7 @@ static const std::map<Format, std::string> kFormatToStringMap = {
     {FORMAT_RESERVED, "FORMAT_RESERVED"},
     {FORMAT_ALL, "ALL"}};
 
-static const std::map<domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
+const std::map<domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
   {domi::DOMI_TENSOR_NCHW, FORMAT_NCHW},
   {domi::DOMI_TENSOR_NHWC, FORMAT_NHWC},
   {domi::DOMI_TENSOR_ND, FORMAT_ND},
@@ -87,7 +88,7 @@ static const std::map<domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
   {domi::DOMI_TENSOR_RESERVED, FORMAT_RESERVED}
 };
 
-static const std::unordered_set<std::string> kInternalFormat = {
+const std::unordered_set<std::string> kInternalFormat = {
   "NC1HWC0",
   "FRACTAL_Z",
   "NC1C0HWPAD",
@@ -110,14 +111,14 @@ static const std::unordered_set<std::string> kInternalFormat = {
   "FORMAT_FRACTAL_Z_G"
 };
 
-static const std::map<std::string, Format> kDataFormatMap = {
+const std::map<std::string, Format> kDataFormatMap = {
   {"NCHW", FORMAT_NCHW},
   {"NHWC", FORMAT_NHWC},
   {"NDHWC", FORMAT_NDHWC},
   {"NCDHW", FORMAT_NCDHW},
   {"ND",   FORMAT_ND}};
 
-static const std::map<std::string, Format> kStringToFormatMap = {
+const std::map<std::string, Format> kStringToFormatMap = {
     {"NCHW", FORMAT_NCHW},
     {"NHWC", FORMAT_NHWC},
     {"ND", FORMAT_ND},
@@ -161,7 +162,7 @@ static const std::map<std::string, Format> kStringToFormatMap = {
     {"ALL", FORMAT_ALL},
     {"NULL", FORMAT_NULL}};
 
-static const std::map<DataType, std::string> kDataTypeToStringMap = {
+const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_UNDEFINED, "DT_UNDEFINED"},            // Used to indicate a DataType field has not been set.
     {DT_FLOAT, "DT_FLOAT"},                    // float type
     {DT_FLOAT16, "DT_FLOAT16"},                // fp16 type
@@ -190,7 +191,7 @@ static const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_STRING, "DT_STRING"},                  // string type
 };
 
-static const std::map<std::string, DataType> kStringTodataTypeMap = {
+const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_UNDEFINED", DT_UNDEFINED},            // Used to indicate a DataType field has not been set.
     {"DT_FLOAT", DT_FLOAT},                    // float type
     {
@@ -221,7 +222,7 @@ static const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_STRING", DT_STRING},                  // string type
 };
 
-static const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
+const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
     {DT_BOOL, sizeof(bool)},
     {DT_INT64, sizeof(int64_t)},
     {DT_UINT64, sizeof(int64_t)},
@@ -249,7 +250,7 @@ static const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
     {DT_RESOURCE, sizeof(uint64_t)},
 };
 
-static const std::map<domi::FrameworkType, std::string> kFmkTypeToString = {
+const std::map<domi::FrameworkType, std::string> kFmkTypeToString = {
     {domi::CAFFE, "caffe"},
     {domi::MINDSPORE, "mindspore"},
     {domi::TENSORFLOW, "tensorflow"},
@@ -258,7 +259,7 @@ static const std::map<domi::FrameworkType, std::string> kFmkTypeToString = {
     {domi::FRAMEWORK_RESERVED, "framework_reserved"},
 };
 
-static const std::map<domi::ImplyType, std::string> kImplyTypeToString = {
+const std::map<domi::ImplyType, std::string> kImplyTypeToString = {
   {domi::ImplyType::BUILDIN, "buildin"},
   {domi::ImplyType::TVM, "tvm"},
   {domi::ImplyType::CUSTOM, "custom"},
@@ -268,6 +269,8 @@ static const std::map<domi::ImplyType, std::string> kImplyTypeToString = {
   {domi::ImplyType::HCCL, "hccl"},
   {domi::ImplyType::INVALID, "invalid"}
 };
+}
+
 
 std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
   auto it = kImplyTypeToString.find(imply_type);

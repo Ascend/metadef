@@ -31,7 +31,10 @@ using std::vector;
 namespace ge {
 /*lint -e512 -e737 -e752*/
 const char OP_DESC_QUANT_PARAMS[] = "quantize_factor";
-static const int CONST_OP_NORMAL_WEIGHT_SIZE = 1;
+
+namespace {
+const int CONST_OP_NORMAL_WEIGHT_SIZE = 1;
+} 
 
 bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
   GE_CHK_BOOL_EXEC(node != nullptr, return false, "node is nullptr");
