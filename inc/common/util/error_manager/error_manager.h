@@ -32,6 +32,12 @@ class ErrorManager {
 
   ///
   /// @brief init
+  /// @return int 0(success) -1(fail)
+  ///
+  int Init();
+
+  ///
+  /// @brief init
   /// @param [in] path: current so path
   /// @return int 0(success) -1(fail)
   ///
