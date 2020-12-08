@@ -48,7 +48,6 @@
 #include <queue>
 #include <set>
 
-
 using std::enable_shared_from_this;
 using std::make_pair;
 using std::shared_ptr;
