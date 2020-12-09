@@ -27,9 +27,7 @@
 #include "register/graph_optimizer/graph_fusion/pattern_fusion_base_pass_impl.h"
 
 namespace fe {
-namespace {
-const string STREAM_LABEL = "_stream_label";
-}
+static const string STREAM_LABEL = "_stream_label";
 PatternFusionBasePass::PatternFusionBasePass() {
   pattern_fusion_base_pass_impl_ptr_ = std::make_shared<PatternFusionBasePassImpl>();
 }
