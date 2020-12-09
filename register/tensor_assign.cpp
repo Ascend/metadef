@@ -32,7 +32,7 @@ using GeShape = ge::GeShape;
 namespace domi {
 namespace {
 const uint32_t kExtraBytesForString = sizeof(int64_t) + 1;
-const char *const kOriginElementNumAttrName = "origin_element_num";s
+const char *const kOriginElementNumAttrName = "origin_element_num";
 const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_FLOAT, ge::DataType::DT_FLOAT},
     {domi::tensorflow::DataType::DT_HALF, ge::DataType::DT_FLOAT16},
