@@ -59,7 +59,7 @@ target_compile_options(graph PRIVATE
 
 target_compile_definitions(graph PRIVATE
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(graph PRIVATE
@@ -126,7 +126,7 @@ target_compile_options(graph_static PRIVATE
 
 target_compile_definitions(graph_static PRIVATE
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(graph_static PRIVATE

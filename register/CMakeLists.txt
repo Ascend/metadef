@@ -43,7 +43,7 @@ set(SRC_LIST
 add_library(register SHARED ${SRC_LIST} ${PROTO_SRCS})
 
 target_compile_definitions(register PRIVATE
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(register PRIVATE
@@ -104,7 +104,7 @@ add_library(register_static STATIC ${SRC_LIST} ${PROTO_SRCS}
 )
 
 target_compile_definitions(register_static PRIVATE
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(register_static PRIVATE
