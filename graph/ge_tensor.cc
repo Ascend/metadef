@@ -31,9 +31,9 @@
 #include "utils/type_utils.h"
 
 namespace ge {
-static const char *const kKeyDataTypeSelfDefined = "__tensor_desc_data_type__";
-
-static const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
+namespace{
+const char *const kKeyDataTypeSelfDefined = "__tensor_desc_data_type__";
+const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_UNDEFINED, proto::DT_UNDEFINED},
     {DT_FLOAT, proto::DT_FLOAT},
     {DT_FLOAT16, proto::DT_FLOAT16},
@@ -62,10 +62,13 @@ static const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_STRING, proto::DT_STRING},
 };
 
-static const std::map<DataType, int> kDataTypeSelfDefinedMap = {
+const std::map<DataType, int> kDataTypeSelfDefinedMap = {
     {DT_DUAL, 13},  {DT_DUAL_SUB_INT8, 14}, {DT_DUAL_SUB_UINT8, 15}, {DT_COMPLEX64, 16}, {DT_COMPLEX128, 17},
     {DT_QINT8, 18}, {DT_QINT16, 19},        {DT_QINT32, 20},         {DT_QUINT8, 21},    {DT_QUINT16, 22},
 };
+}
+ 
+
 
 GeShape::GeShape() { shape_def_.InitDefault(); }
 

@@ -16,7 +16,7 @@
 
 #include "external/graph/operator.h"
 #include "external/graph/operator_factory.h"
-#include <stdint.h>
+#include <cstdint>
 #include <algorithm>
 #include <mutex>
 #include <queue>
@@ -47,8 +47,6 @@
 #include <mutex>
 #include <queue>
 #include <set>
-#include <stdint.h>
-
 
 using std::enable_shared_from_this;
 using std::make_pair;

@@ -33,9 +33,7 @@ namespace domi {
 namespace {
 const uint32_t kExtraBytesForString = sizeof(int64_t) + 1;
 const char *const kOriginElementNumAttrName = "origin_element_num";
-}  // namespace
-
-static const std::map<uint32_t, ge::DataType> data_type_map = {
+const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_FLOAT, ge::DataType::DT_FLOAT},
     {domi::tensorflow::DataType::DT_HALF, ge::DataType::DT_FLOAT16},
     {domi::tensorflow::DataType::DT_INT8, ge::DataType::DT_INT8},
@@ -81,6 +79,7 @@ static const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_HALF_REF, ge::DataType::DT_FLOAT16},
     {domi::tensorflow::DataType::DT_STRING_REF, ge::DataType::DT_STRING},
 };
+}  // namespace
 
 ge::DataType TensorAssign::ConvertTensorflowDataType(uint32_t tf_data_type) {
   auto search = data_type_map.find(tf_data_type);
