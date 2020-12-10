@@ -166,6 +166,8 @@ const std::string ATTR_NAME_AUTOMIC_ADD_MEM_SIZE = "automic_add_mem_size";
 const std::string ATTR_NAME_DYNAMIC_OUTPUT_DIMS = "_dynamic_output_dims";
 const std::string ATTR_NAME_INPUT_ORIGIN_SIZE = "input_origin_size";
 
+const std::string ATTR_NAME_ROOT_GRAPH_ID = "_root_graph_id";
+
 // Identify node connecting to input and output
 const std::string ATTR_NAME_NODE_CONNECT_INPUT = "_is_connected_to_data";
 const std::string ATTR_NAME_NODE_CONNECT_OUTPUT = "_is_connected_to_netoutput";
