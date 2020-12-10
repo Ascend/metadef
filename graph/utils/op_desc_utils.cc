@@ -20,6 +20,7 @@
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
+#include "common/util/error_manager/error_manager.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
 #include "graph/ge_attr_value.h"
@@ -28,8 +29,8 @@
 
 using std::vector;
 
-namespace ge {
 /*lint -e512 -e737 -e752*/
+namespace ge {
 const char OP_DESC_QUANT_PARAMS[] = "quantize_factor";
 static const int CONST_OP_NORMAL_WEIGHT_SIZE = 1;
 
@@ -259,6 +260,9 @@ size_t OpDescUtils::GetNonConstInputsSize(const ge::Node &node) {
   } else {
     GE_IF_BOOL_EXEC(
         node.GetInDataNodes().size() < GetConstInputs(node).size(),
+        ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+            {"GetNonConstInputsSize", "InDataNodes size[" + std::to_string(node.GetInDataNodes().size()) +
+            "] is smaller than ConstInputs[" + std::to_string(GetConstInputs(node).size()) + "]"});
         GELOGE(GRAPH_FAILED, "%zu is smaller than %zu", node.GetInDataNodes().size(), GetConstInputs(node).size());
         return 0);
     return node.GetInDataNodes().size() - GetConstInputs(node).size();
@@ -497,6 +501,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<GeTensorPtr> OpDescUtils::
   for (const auto &input_node : input_nodes) {
     auto temp_weight = MutableWeights(input_node->GetOpDesc());
     if (temp_weight == nullptr) {
+      ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+          {"MutableWeights", "const op[" + input_node->GetName() + "]'s weight is null"});
       GELOGE(GRAPH_FAILED, "const op's weight is null, name: %s", input_node->GetName().c_str());
       return vector<GeTensorPtr>();
     }
@@ -526,6 +532,8 @@ OpDescUtils::SetWeights(ge::Node &node, const vector<ge::GeTensorPtr> &weights) 
 
   auto input_nodes = GetConstInputs(node);
   if (weights.size() < input_nodes.size()) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"SetWeights", "weights count can't be less than const input count"});
     GELOGE(GRAPH_FAILED, "weights count can't be less than const input count");
     return GRAPH_PARAM_INVALID;
   }
@@ -568,6 +576,9 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
     if (weights_map.size() == CONST_OP_NORMAL_WEIGHT_SIZE) {
       return SetWeights(node.GetOpDesc(), weights_map.begin()->second);
     }
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"SetWeights", "const op[" + node.GetName() + "] weight size[" +
+        std::to_string(weights_map.size()) + "] should be 1"});
     GELOGE(GRAPH_PARAM_INVALID, "const op %s weight size %zu should be 1", node.GetName().c_str(), weights_map.size());
     return GRAPH_PARAM_INVALID;
   }
@@ -583,6 +594,10 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
         return GRAPH_PARAM_INVALID;
       }
       if (peer_node->GetType() != CONSTANT) {
+        ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+            {"SetWeights", "op[" + node.GetName() + "] [" + std::to_string(pair.first) +
+            "]'s input node should be const, but real op is " +
+            peer_node->GetName() + ", type is " + peer_node->GetType()});
         GELOGE(GRAPH_PARAM_INVALID,
                " op %s [%d]'s input node should be const, but is %s type:%s ", node.GetName().c_str(),
                pair.first, peer_node->GetName().c_str(), peer_node->GetType().c_str());
@@ -815,6 +830,10 @@ graphStatus OpDescUtils::SetSubgraphInstanceName(const std::string &subgraph_nam
   const auto &subgraph_names_to_index = op_desc->GetSubgraphNameIndexes();
   auto iter = subgraph_names_to_index.find(subgraph_name);
   if (iter == subgraph_names_to_index.end()) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"SetSubgraphInstanceName", "subgraph name[" + subgraph_name + "] is not exists."
+        "The op is " + op_desc->GetName() + ", type is " + op_desc->GetType() +
+        ", subgraph is " + subgraph_instance_name});
     GELOGE(GRAPH_PARAM_INVALID,
         "Failed to set subgraph instance %s for node %s type %s, the subgraph name %s does not exists",
         subgraph_instance_name.c_str(), op_desc->GetName().c_str(), op_desc->GetType().c_str(), subgraph_name.c_str());
@@ -823,5 +842,5 @@ graphStatus OpDescUtils::SetSubgraphInstanceName(const std::string &subgraph_nam
 
   return op_desc->SetSubgraphInstanceName(iter->second, subgraph_instance_name);
 }
-/*lint +e512 +e737 +e752*/
 }  // namespace ge
+/*lint +e512 +e737 +e752*/
