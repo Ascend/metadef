@@ -277,6 +277,9 @@ std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
   if (it != kImplyTypeToString.end()) {
     return it->second;
   } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"ImplyTypeToSerialString",
+        "imply_type[" + std::to_string(static_cast<unsigned int>(imply_type)) + "] is not support"});
     GELOGE(GRAPH_FAILED, "ImplyTypeToSerialString: imply_type not support %u", imply_type);
     return "UNDEFINED";
   }
@@ -293,6 +296,8 @@ std::string TypeUtils::DataTypeToSerialString(DataType data_type) {
   if (it != kDataTypeToStringMap.end()) {
     return it->second;
   } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"DataTypeToSerialString", "data_type[" + std::to_string(data_type) + "] is not support"});
     GELOGE(GRAPH_FAILED, "DataTypeToSerialString: datatype not support %u", data_type);
     return "UNDEFINED";
   }
@@ -303,6 +308,8 @@ DataType TypeUtils::SerialStringToDataType(const std::string &str) {
   if (it != kStringTodataTypeMap.end()) {
     return it->second;
   } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"SerialStringToDataType", "data_type[" + str + "] is not support"});
     GELOGE(GRAPH_FAILED, "SerialStringToDataType: datatype not support %s", str.c_str());
     return DT_UNDEFINED;
   }
@@ -345,6 +352,8 @@ std::string TypeUtils::FormatToSerialString(Format format) {
   if (it != kFormatToStringMap.end()) {
     return it->second;
   } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"FormatToSerialString", "Format[" + std::to_string(format) + "] is not support"});
     GELOGE(GRAPH_FAILED, "Format not support %u", format);
     return "RESERVED";
   }
@@ -354,6 +363,8 @@ Format TypeUtils::SerialStringToFormat(const std::string &str) {
   if (it != kStringToFormatMap.end()) {
     return it->second;
   } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"SerialStringToFormat", "Format[" + str + "] is not support"});
     GELOGE(GRAPH_FAILED, "Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
@@ -364,6 +375,8 @@ Format TypeUtils::DataFormatToFormat(const std::string &str) {
   if (it != kDataFormatMap.end()) {
     return it->second;
   } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"FormatToSerialString", "Format[" + str + "] is not support"});
     GELOGE(GRAPH_FAILED, "Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
@@ -374,6 +387,8 @@ Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {
   if (it != kDomiFormatToGeFormat.end()) {
     return it->second;
   }
+  ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+      {"FormatToSerialString", "do not find domi Format[" + std::to_string(domi_format) + "] from map"});
   GELOGE(GRAPH_FAILED, "do not find domi Format %d from map", domi_format);
   return FORMAT_RESERVED;
 }

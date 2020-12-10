@@ -23,6 +23,7 @@
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
+#include "common/util/error_manager/error_manager.h"
 #include "ge/ge_api_types.h"
 #include "graph/shape_refiner.h"
 #include "proto/ge_ir.pb.h"
@@ -872,10 +873,14 @@ graphStatus ComputeGraph::TopologicalSortingGraph(bool dfs_reverse) {
     for (auto &node : node_vec) {
       itered_nodes_set.insert(node.get());
     }
+    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+        {"TopologicalSortingGraph", "exist closed loop in graph"});
     GE_LOGE("Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.", nodes_.size(),
             node_vec.size());
     for (auto &node : nodes_) {
       if (itered_nodes_set.count(node.get()) == 0) {
+        ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+            {"TopologicalSortingGraph", "op[" + node->GetName() + "] does not itered when topological sorting"});
         GE_LOGE("The node %s does not itered when topological sorting", node->GetName().c_str());
       }
     }
@@ -914,7 +919,9 @@ graphStatus ComputeGraph::SortNodes(std::vector<NodePtr> &stack, std::map<NodePt
         // At present, can only judge the isolated point without input and output.
         // It is impossible to judge the situation with multiple output nodes.
         if (verify_isolated && GetOutEdgeSize(node) == 0) {
-          GELOGE(GRAPH_FAILED, "May has isolated nodes in graph, node name: %s.", node->GetName().c_str());
+          ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
+              {"SortNodes", "may has isolated node[" + node->GetName() + "] in graph"});
+          GELOGE(GRAPH_FAILED, "May has isolated node in graph, node name: %s.", node->GetName().c_str());
           return GRAPH_FAILED;
         }
         (void)stack.insert(stack.begin(), node);
