@@ -95,7 +95,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   explicit Operator(const char *type);
 
-  ATTRIBUTED_DEPRECATED(Operator(const AscendString &, const AscendString &))
+  ATTRIBUTED_DEPRECATED(Operator(const char *, const char *))
   Operator(const string &name, const string &type);  // lint !e148
 
   Operator(const AscendString &name, const AscendString &type);
@@ -139,10 +139,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   graphStatus GetInputConstData(const char *dst_name, Tensor &data) const;
 
-  ATTRIBUTED_DEPRECATED(TensorDesc GetInputDesc(const char *, uint32_t len) const)
+  ATTRIBUTED_DEPRECATED(TensorDesc GetInputDescByName(const char *) const)
   TensorDesc GetInputDesc(const string &name) const;
 
-  TensorDesc GetInputDesc(const char *name, uint32_t len) const;
+  TensorDesc GetInputDescByName(const char *name) const;
 
   TensorDesc GetInputDesc(uint32_t index) const;
 
@@ -166,10 +166,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   graphStatus UpdateInputDesc(const char *name, const TensorDesc &tensor_desc);
 
-  ATTRIBUTED_DEPRECATED(TensorDesc GetOutputDesc(const char *, uint32_t len) const)
+  ATTRIBUTED_DEPRECATED(TensorDesc GetOutputDescByName(const char *) const)
   TensorDesc GetOutputDesc(const string &name) const;
 
-  TensorDesc GetOutputDesc(const char *name, uint32_t len) const;
+  TensorDesc GetOutputDescByName(const char *name) const;
 
   TensorDesc GetOutputDesc(uint32_t index) const;
 

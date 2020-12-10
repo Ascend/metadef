@@ -775,10 +775,10 @@ TensorDesc Operator::GetInputDesc(const std::string &name) const {
   return TensorAdapter::GeTensorDesc2TensorDesc(operator_impl_->GetInputDesc(name));
 }
 
-TensorDesc Operator::GetInputDesc(const char *name, uint32_t len) const {
+TensorDesc Operator::GetInputDescByName(const char *name) const {
   GE_CHK_BOOL_EXEC(name != nullptr, return TensorDesc(), "Operator name is nullptr.");
-  std::string op_name = name;
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, return TensorDesc(), "Operator impl is nullptr.");
+  std::string op_name = name;
   return TensorAdapter::GeTensorDesc2TensorDesc(operator_impl_->GetInputDesc(op_name));
 }
 
@@ -842,7 +842,7 @@ TensorDesc Operator::GetOutputDesc(const std::string &name) const {
   return TensorAdapter::GeTensorDesc2TensorDesc(operator_impl_->GetOutputDesc(name));
 }
 
-TensorDesc Operator::GetOutputDesc(const char *name, uint32_t len) const {
+TensorDesc Operator::GetOutputDescByName(const char *name) const {
   GE_CHK_BOOL_EXEC(name != nullptr, return TensorDesc(), "Operator name is nullptr.");
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, return TensorDesc(), "Operator impl is nullptr.");
   std::string op_name = name;
