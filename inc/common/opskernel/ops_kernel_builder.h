@@ -51,6 +51,21 @@ class OpsKernelBuilder {
   virtual Status GenMemCopyTask(uint64_t count, STR_FWK_OP_KERNEL &task, string &task_info) {
     return FAILED;
   }
+
+  // only call hccl interface to pass profiling reporter callback
+  virtual Status RegProfReporterCallBack(void *func) {
+    return SUCCESS;
+  }
+
+  // only call hccl interface to pass profiling config to hccl
+  virtual Status ProfStart(uint64_t prof_config) {
+    return SUCCESS;
+  }
+
+  // only call hccl interface to pass profiling config to hccl
+  virtual Status ProfStop(uint64_t prof_config) {
+    return SUCCESS;
+  }
 };
 }  // namespace ge
 #endif // INC_COMMON_OPSKERNELUTILS_OPS_KERNEL_INFO_UTILS_H_
