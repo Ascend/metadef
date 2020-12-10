@@ -67,7 +67,7 @@ class ModelParser {
   /**
   * @ingroup domi_omg
   * @brief Parse relevant data from memory and save it to graph
-  * @param [in] input Model file memory data
+  * @param [in] input Model file memory data and size
   * @param [in|out] graph A graph for saving the model information after analysis
   * @return SUCCESS
   * @return FAILED
