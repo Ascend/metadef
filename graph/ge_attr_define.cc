@@ -341,6 +341,7 @@ const std::string CONCAT_ATTR_NAME_AXIS = "axis";
 const std::string CONST_ATTR_NAME_DATA_TRANSTYPE = "data_transtype";
 const std::string CONST_ATTR_NAME_OUTPUT_FORMAT = "output_format";
 const std::string CONST_ATTR_NAME_OUTPUT_TYPE = "output_type";
+const std::string CONST_ATTR_NAME_INPUT = "is_const";
 
 // Roipooling
 const std::string ROIPOOLING_ATTR_NAME_POOLED_H = "pooled_h";
