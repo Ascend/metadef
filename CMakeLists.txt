@@ -7,6 +7,8 @@ if (DEFINED ENV{D_PKG_SERVER})
     set(METADEF_PB_PKG $ENV{D_PKG_SERVER})
 endif()
 
+option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
+
 option(ONLY_COMPILE_OPEN_SRC_METADEF "Enable compile in metadef opensource." FALSE)
 
 if (ENABLE_OPEN_SRC)
