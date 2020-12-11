@@ -28,7 +28,8 @@ const char *const kDumpGEGraph = "DUMP_GE_GRAPH";
 const int8_t kMaxRecursionDepth = 10;
 char kDumpGeGraph[MMPA_MAX_PATH] = { 0x00 };
 const int64_t kDumpLevel =
-    (mmGetEnv(kDumpGEGraph, kDumpGeGraph, MMPA_MAX_PATH) == EN_OK) ? std::strtol(kDumpGeGraph, nullptr, 10) : ge::OnnxUtils::NO_DUMP;
+    (mmGetEnv(kDumpGEGraph, kDumpGeGraph, MMPA_MAX_PATH) == EN_OK) ? 
+    std::strtol(kDumpGeGraph, nullptr, 10) : ge::OnnxUtils::NO_DUMP;
 const int64_t kInputPrefixLength = 5;
 const int64_t kOutputPrefixLength = 6;
 using AttrDefPair = ::google::protobuf::MapPair<std::string, ge::proto::AttrDef>;
@@ -281,28 +282,28 @@ void OnnxUtils::AddAttrProtoForOpInAndOutDesc(onnx::NodeProto *node_proto, const
       auto input_desc = op_desc->GetInputDescPtrDfault(i);
       if (input_desc != nullptr) {
         auto data_type = TypeUtils::DataTypeToSerialString(input_desc->GetDataType());
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, "input_desc_dtype:" + std::to_string(i),
-                     &data_type);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, 
+                     "input_desc_dtype:" + std::to_string(i), &data_type);
         auto data_type_origin = TypeUtils::DataTypeToSerialString(input_desc->GetOriginDataType());
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, "input_desc_origin_dtype:" + std::to_string(i),
-                     &data_type_origin);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, 
+                     "input_desc_origin_dtype:" + std::to_string(i), &data_type_origin);
         auto dims = input_desc->GetShape().GetDims();
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "input_desc_shape:" + std::to_string(i),
-                     &dims);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, 
+                     "input_desc_shape:" + std::to_string(i), &dims);
         auto dims_origin = input_desc->GetOriginShape().GetDims();
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
                      "input_desc_origin_shape:" + std::to_string(i), &dims_origin);
         auto layout = TypeUtils::FormatToSerialString(input_desc->GetFormat());
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, "input_desc_layout:" + std::to_string(i),
-                     &layout);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, 
+                     "input_desc_layout:" + std::to_string(i), &layout);
         auto layout_origin = TypeUtils::FormatToSerialString(input_desc->GetOriginFormat());
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                      "input_desc_origin_layout:" + std::to_string(i), &layout_origin);
         auto tensor_descriptor = input_desc->tensor_descriptor_.GetProtoMsg();
         if (tensor_descriptor != nullptr) {
           auto size = tensor_descriptor->size();
-          AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "input_desc_size:" + std::to_string(i),
-                       &size);
+          AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, 
+                       "input_desc_size:" + std::to_string(i), &size);
           auto weight_size = tensor_descriptor->weight_size();
           AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                        "input_desc_weight_size:" + std::to_string(i), &weight_size);
@@ -357,14 +358,14 @@ void OnnxUtils::AddAttrProtoForOpInAndOutDesc(onnx::NodeProto *node_proto, const
       auto output_desc = op_desc->GetOutputDescPtr(i);
       if (output_desc != nullptr) {
         auto data_type = TypeUtils::DataTypeToSerialString(output_desc->GetDataType());
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, "output_desc_dtype:" + std::to_string(i),
-                     &data_type);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, 
+                     "output_desc_dtype:" + std::to_string(i), &data_type);
         auto origin_data_type = TypeUtils::DataTypeToSerialString(output_desc->GetOriginDataType());
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, "output_desc_origin_dtype:" + std::to_string(i),
-                     &origin_data_type);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, 
+                     "output_desc_origin_dtype:" + std::to_string(i), &origin_data_type);
         auto dims = output_desc->GetShape().GetDims();
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "output_desc_shape:" + std::to_string(i),
-                     &dims);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, 
+                     "output_desc_shape:" + std::to_string(i), &dims);
         auto dims_origin = output_desc->GetOriginShape().GetDims();
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
                      "output_desc_origin_shape:" + std::to_string(i), &dims_origin);
@@ -414,14 +415,17 @@ void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
       const auto &tensor_def = attr_def.t();
       const auto &tensor_desc = tensor_def.desc();
       auto data_type = ge::proto::DataType_Name(tensor_desc.dtype());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, prefix + attr_name + "_desc_dtype" + suffix, &data_type);
+      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, 
+                   prefix + attr_name + "_desc_dtype" + suffix, &data_type);
       auto dims = tensor_desc.shape().dim();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, prefix + attr_name + "_desc_shape" + suffix, dims);
+      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, 
+                   prefix + attr_name + "_desc_shape" + suffix, dims);
       auto layout = tensor_desc.layout();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, prefix + attr_name + "_desc_layout" + suffix, &layout);
+      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, 
+                   prefix + attr_name + "_desc_layout" + suffix, &layout);
       auto device_type = tensor_desc.device_type();
-      AddAttrProto(node_proto, ge::onnx::AttributeProto_AttributeType_STRING, prefix + attr_name + "_desc_device_type" + suffix,
-                   &device_type);
+      AddAttrProto(node_proto, ge::onnx::AttributeProto_AttributeType_STRING, 
+                   prefix + attr_name + "_desc_device_type" + suffix, &device_type);
       if (kDumpLevel == DUMP_ALL) {
         auto data = tensor_def.data();
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, prefix + attr_name + "_data" + suffix, &data);

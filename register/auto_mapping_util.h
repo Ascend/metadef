@@ -148,7 +148,7 @@ public:
         GELOGD("the attr value of %s is not set.", key.c_str());
         break;
       default:
-        GE_LOGE("the attr value type(%d) is invalid.", (int)value.value_case());
+        GE_LOGE("the attr value type(%d) is invalid.", static_cast<int>(value.value_case()));
         break;
     }
   }

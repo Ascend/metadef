@@ -92,7 +92,9 @@ class ErrorManager {
   /// @param [out] msg_map: failed message map, key is error code, value is op_name list
   /// @return int 0(success) -1(fail)
   ///
-  int GetMstuneCompileFailedMsg(const std::string &graph_name, std::map<std::string, std::vector<std::string>> &msg_map);
+  int GetMstuneCompileFailedMsg(const std::string &graph_name, 
+                                std::map<std::string, 
+                                std::vector<std::string>> &msg_map);
 
  private:
   struct ErrorInfo {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <stdint.h>
+#include <cstdint>
 #include <functional>
 #include <algorithm>
 #include <vector>
