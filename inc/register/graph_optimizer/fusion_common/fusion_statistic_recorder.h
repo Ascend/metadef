@@ -77,7 +77,8 @@ class FusionStatisticRecorder {
 
   void UpdateBufferFusionEffectTimes(FusionInfo &fusion_info);
 
-  void GetAndClearFusionInfo(const std::string &session_graph_id, std::map<std::string, FusionInfo> &graph_fusion_info_map,
+  void GetAndClearFusionInfo(const std::string &session_graph_id, 
+                             std::map<std::string, FusionInfo> &graph_fusion_info_map,
                              std::map<std::string, FusionInfo> &buffer_fusion_info_map);
 
  private:

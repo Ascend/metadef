@@ -103,7 +103,10 @@ class TensorImpl {
       // Front 8 bytes store pointer of string
       char *raw_data = buff.get() + EXTRA_STORE_POINTER_FOR_STRING;
       p[0] = reinterpret_cast<uintptr_t>(raw_data);
-      int32_t memcpy_ret = memcpy_s(raw_data, total_size - EXTRA_STORE_POINTER_FOR_STRING, data.c_str(), data.size() + 1);
+      int32_t memcpy_ret = memcpy_s(raw_data, 
+                                    total_size - EXTRA_STORE_POINTER_FOR_STRING, 
+                                    data.c_str(), 
+                                    data.size() + 1);
       GE_CHK_BOOL_RET_STATUS(memcpy_ret == EOK, GRAPH_FAILED, "copy data failed");
       (void)ge_tensor.SetData(reinterpret_cast<const uint8_t *>(buff.get()), total_size);
       return GRAPH_SUCCESS;
