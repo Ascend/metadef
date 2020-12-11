@@ -758,6 +758,7 @@ graphStatus Node::Verify() const {
   const string data_type = "Data";
   const string aipp_data_type = "AippData";
   const string const_type = "Const";
+  const string const_type_train = "Constant";
   const string variable_type = "Variable";
   bool is_unknown_graph = GetOwnerComputeGraph()->GetGraphUnknownFlag();
   GE_CHK_BOOL_EXEC(op_ != nullptr, return GRAPH_FAILED, "original OpDesc is nullptr");
@@ -767,7 +768,7 @@ graphStatus Node::Verify() const {
       GE_IF_BOOL_EXEC(in_anchor_ptr == nullptr, GELOGW("in anchor ptr is null");
                       continue);
       bool valid_anchor = op_->GetType() == data_type || op_->GetType() == aipp_data_type ||
-          op_->GetType() == const_type || op_->GetType() == variable_type ||
+          op_->GetType() == const_type || op_->GetType() == variable_type || op_->GetType() == const_type_train ||
           op_->IsOptionalInput(in_anchor_ptr->GetIdx()) || op_->MutableInputDesc(in_anchor_ptr->GetIdx()) == nullptr ||
           in_anchor_ptr->GetPeerAnchors().size() > 0;
       if (!valid_anchor) {
