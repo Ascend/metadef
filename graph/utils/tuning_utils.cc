@@ -121,7 +121,9 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
   GE_CHECK_NOTNULL(exe_graph);
   graphStatus ret = exe_graph->TopologicalSortingGraph(true);
   if (ret != SUCCESS) {
-    GELOGE(ret, "Graph[%s] topological sort failed, ret:%d.", exe_graph->GetName().c_str(), ret);
+    GraphUtils::DumpGEGraphToOnnx(*exe_graph, "black_box");
+    GELOGE(ret, "Graph[%s] topological sort failed, saved to file black_box ret:%d.",
+           exe_graph->GetName().c_str(), ret);
     return ret;
   }
   // clear graph id
@@ -573,6 +575,17 @@ graphStatus TuningUtils::MergeAllSubGraph(std::vector<ComputeGraphPtr> &subgraph
   for (const auto &node: merged_graph_nodes_) {
     (void) output_merged_compute_graph->AddNode(node);
     GELOGD("TUU:graph %s add node %s success", output_merged_compute_graph->GetName().c_str(), node->GetName().c_str());
+
+    vector<string> recover_attr_name;
+    (void) ge::AttrUtils::GetListStr(node->GetOpDesc(), ATTR_NAME_NEED_RECOVER_ATTR, recover_attr_name);
+    if (!recover_attr_name.empty()) {
+      for (const auto &attr_name : recover_attr_name) {
+        if (!ge::AttrUtils::SetBool(node->GetOpDesc(), attr_name, true)) {
+          GELOGE(GRAPH_FAILED, "Recover attr %s for node:%s failed.", attr_name.c_str(), node->GetName().c_str());
+          return GRAPH_FAILED;
+        }
+      }
+    }
   }
 
   // 2. remove data and output node added by us
@@ -732,30 +745,47 @@ graphStatus TuningUtils::HandleContinuousInputNodeNextData(NodePtr &node) {
   for (const auto &out_anchor : node->GetAllOutAnchors()) {
     for (const auto &peer_in_anchor : out_anchor->GetPeerAnchors()) {
       auto next_node = peer_in_anchor->GetOwnerNode();
+      vector<string> remove_attr_names;
       bool is_no_padding_continuous_input = false;
       bool is_continuous_input = false;
+      bool is_no_task = false;
       (void) ge::AttrUtils::GetBool(next_node->GetOpDesc(), ATTR_NAME_CONTINUOUS_INPUT, is_continuous_input);
       (void) ge::AttrUtils::GetBool(next_node->GetOpDesc(),
                                     ATTR_NAME_NOPADDING_CONTINUOUS_INPUT,
                                     is_no_padding_continuous_input);
-      if (is_continuous_input || is_no_padding_continuous_input) {
+      (void) ge::AttrUtils::GetBool(next_node->GetOpDesc(), ATTR_NAME_NOTASK, is_no_task);
+      if (is_continuous_input) {
         if (!ge::AttrUtils::SetBool(next_node->GetOpDesc(), ATTR_NAME_CONTINUOUS_INPUT, false)) {
           GELOGE(GRAPH_FAILED, "Remove attr ATTR_NAME_CONTINUOUS_INPUT for node:%s failed.",
                  next_node->GetName().c_str());
           return GRAPH_FAILED;
         }
+        remove_attr_names.emplace_back(ATTR_NAME_CONTINUOUS_INPUT);
+      }
+      if (is_no_padding_continuous_input) {
         if (!ge::AttrUtils::SetBool(next_node->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, false)) {
           GELOGE(GRAPH_FAILED, "Remove attr ATTR_NAME_NOPADDING_CONTINUOUS_INPUT for node:%s failed.",
                  next_node->GetName().c_str());
           return GRAPH_FAILED;
         }
+        remove_attr_names.emplace_back(ATTR_NAME_NOPADDING_CONTINUOUS_INPUT);
+      }
+      if ((is_continuous_input || is_no_padding_continuous_input) && is_no_task) {
         if (!ge::AttrUtils::SetBool(next_node->GetOpDesc(), ATTR_NAME_NOTASK, false)) {
           GELOGE(GRAPH_FAILED, "Remove attr ATTR_NAME_NOTASK for node:%s failed.",
                  next_node->GetName().c_str());
           return GRAPH_FAILED;
         }
-        GELOGI("Remove attr continuous input and no task for node:%s, because of data linking to it.",
-               next_node->GetName().c_str());
+        remove_attr_names.emplace_back(ATTR_NAME_NOTASK);
+      }
+      if (!remove_attr_names.empty()) {
+        if (!ge::AttrUtils::SetListStr(next_node->GetOpDesc(),
+                                       ATTR_NAME_NEED_RECOVER_ATTR,
+                                       remove_attr_names)) {
+          GELOGE(GRAPH_FAILED, "Set attr ATTR_NAME_NEED_RECOVER_ATTR for node:%s failed.",
+                 next_node->GetName().c_str());
+          return GRAPH_FAILED;
+        }
       }
     }
   }
