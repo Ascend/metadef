@@ -26,10 +26,11 @@ const char *const kPrefixForInputDesc = "input_desc_attr_";
 const char *const kPrefixForOutputDesc = "output_desc_attr_";
 const char *const kDumpGEGraph = "DUMP_GE_GRAPH";
 const int8_t kMaxRecursionDepth = 10;
+const int base = 10;
 char kDumpGeGraph[MMPA_MAX_PATH] = { 0x00 };
 const int64_t kDumpLevel =
     (mmGetEnv(kDumpGEGraph, kDumpGeGraph, MMPA_MAX_PATH) == EN_OK) ? 
-    std::strtol(kDumpGeGraph, nullptr, 10) : ge::OnnxUtils::NO_DUMP;
+    std::strtol(kDumpGeGraph, nullptr, base) : ge::OnnxUtils::NO_DUMP;
 const int64_t kInputPrefixLength = 5;
 const int64_t kOutputPrefixLength = 6;
 using AttrDefPair = ::google::protobuf::MapPair<std::string, ge::proto::AttrDef>;
@@ -428,7 +429,8 @@ void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
                    prefix + attr_name + "_desc_device_type" + suffix, &device_type);
       if (kDumpLevel == DUMP_ALL) {
         auto data = tensor_def.data();
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, prefix + attr_name + "_data" + suffix, &data);
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
+                     prefix + attr_name + "_data" + suffix, &data);
       }
     }
     if (attr_type == ge::proto::AttrDef::kS) {
