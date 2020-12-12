@@ -165,6 +165,8 @@ std::string Scope::ScopeImpl::TrimScopeIndex(const std::string &scope_name) {
       }
     } catch (std::invalid_argument &e) {
       scope_name_new = scope_name;
+    } catch (std::out_of_range &e) {
+      scope_name_new = scope_name;
     }
   }
   return scope_name_new;
