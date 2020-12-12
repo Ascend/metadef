@@ -26,11 +26,11 @@ const char *const kPrefixForInputDesc = "input_desc_attr_";
 const char *const kPrefixForOutputDesc = "output_desc_attr_";
 const char *const kDumpGEGraph = "DUMP_GE_GRAPH";
 const int8_t kMaxRecursionDepth = 10;
-const int BASE = 10;
+const int kBase = 10;
 char kDumpGeGraph[MMPA_MAX_PATH] = { 0x00 };
 const int64_t kDumpLevel =
     (mmGetEnv(kDumpGEGraph, kDumpGeGraph, MMPA_MAX_PATH) == EN_OK) ? 
-    std::strtol(kDumpGeGraph, nullptr, BASE) : ge::OnnxUtils::NO_DUMP;
+    std::strtol(kDumpGeGraph, nullptr, kBase) : ge::OnnxUtils::NO_DUMP;
 const int64_t kInputPrefixLength = 5;
 const int64_t kOutputPrefixLength = 6;
 using AttrDefPair = ::google::protobuf::MapPair<std::string, ge::proto::AttrDef>;
