@@ -72,7 +72,7 @@ graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
     if (!node_sub->GetInDataNodes().empty() || node_sub->GetType() == DATA) {
       continue;
     }
-    for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
+    for (const auto &out_data_anchor : node_sub->GetAllOutDataAnchors()) {
       GE_CHECK_NOTNULL(out_data_anchor);
       auto out_data_anchor_idx = out_data_anchor->GetIdx();
       for (const auto &peer_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
