@@ -50,7 +50,7 @@ target_compile_options(register PRIVATE
 
 target_compile_definitions(register PRIVATE
     google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(register PRIVATE
@@ -120,7 +120,7 @@ target_compile_options(register_static PRIVATE
 
 target_compile_definitions(register_static PRIVATE
     google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
 )

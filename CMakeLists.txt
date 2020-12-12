@@ -9,6 +9,8 @@ endif()
 
 option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
 
+option(ONLY_COMPILE_OPEN_SRC_METADEF "Enable compile in metadef opensource." FALSE)
+
 if (ENABLE_OPEN_SRC)
     set(HI_PYTHON python3)
 
