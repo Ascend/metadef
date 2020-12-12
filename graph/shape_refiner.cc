@@ -68,6 +68,25 @@ graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
     }
   }
 
+  for (const auto &node_sub : sub_graph_body->GetAllNodes()) {
+    if (!node_sub->GetInDataNodes().empty() || node_sub->GetType() == DATA) {
+      continue;
+    }
+    for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
+      GE_CHECK_NOTNULL(out_data_anchor);
+      auto out_data_anchor_idx = out_data_anchor->GetIdx();
+      for (const auto &peer_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
+        GE_CHECK_NOTNULL(peer_in_data_anchor);
+        auto peer_in_data_node = peer_in_data_anchor->GetOwnerNode();
+        GE_CHECK_NOTNULL(peer_in_data_node);
+        GE_CHECK_NOTNULL(peer_in_data_node->GetOpDesc());
+        int idx = peer_in_data_anchor->GetIdx();
+        auto shape = node_sub->GetOpDesc()->MutableOutputDesc(out_data_anchor_idx)->GetShape();
+        peer_in_data_node->GetOpDesc()->MutableInputDesc(idx)->SetShape(shape);
+      }
+    }
+  }
+
   return GRAPH_SUCCESS;
 }
 
