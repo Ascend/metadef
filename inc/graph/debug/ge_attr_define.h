@@ -1151,6 +1151,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_GET
 // getnext_sink marked on NetOutput
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_GETNEXT_SINK_DYNMAIC;
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_ALL_GEARS_INFO;
+
+// Calculate the operator output memory
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_MEMORY_SIZE_CALC_TYPE;
 }  // namespace ge
 
 /*lint +e618*/

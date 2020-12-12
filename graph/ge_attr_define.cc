@@ -1117,4 +1117,7 @@ const std::string ATTR_GETNEXT_SINK_SHAPE_INFO = "shape_info";
 // getnext_sink marked on NetOutput
 const std::string ATTR_GETNEXT_SINK_DYNMAIC = "getnext_sink_dynamic";
 const std::string ATTR_ALL_GEARS_INFO = "all_gears_info";
+
+// Calculate the operator output memory
+const std::string ATTR_NAME_MEMORY_SIZE_CALC_TYPE = "_memory_size_calc_type";
 }  // namespace ge
