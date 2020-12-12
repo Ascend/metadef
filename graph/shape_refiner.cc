@@ -50,6 +50,10 @@ graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
   }
 
   for (const auto &node_sub : sub_graph_body->GetAllNodes()) {
+    // const/constant/variale etc. no need to reverse brush
+    if (node_sub->GetInDataNodes().empty() && node_sub->GetType() != DATA) {
+      continue;
+    }
     for (size_t i = 0; i < node_sub->GetAllInDataAnchorsSize(); i++) {
       auto input_desc = node_sub->GetOpDesc()->MutableInputDesc(i);
       GE_IF_BOOL_EXEC(input_desc == nullptr,
@@ -61,6 +65,25 @@ graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
     for (size_t i = 0; i < node_sub->GetAllOutDataAnchorsSize(); i++) {
       auto output_desc = node_sub->GetOpDesc()->MutableOutputDesc(i);
       (void)output_desc->SetUnknownDimNumShape();
+    }
+  }
+
+  for (const auto &node_sub : sub_graph_body->GetAllNodes()) {
+    if (!node_sub->GetInDataNodes().empty() || node_sub->GetType() == DATA) {
+      continue;
+    }
+    for (const auto &out_data_anchor : node_sub->GetAllOutDataAnchors()) {
+      GE_CHECK_NOTNULL(out_data_anchor);
+      auto out_data_anchor_idx = out_data_anchor->GetIdx();
+      for (const auto &peer_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
+        GE_CHECK_NOTNULL(peer_in_data_anchor);
+        auto peer_in_data_node = peer_in_data_anchor->GetOwnerNode();
+        GE_CHECK_NOTNULL(peer_in_data_node);
+        GE_CHECK_NOTNULL(peer_in_data_node->GetOpDesc());
+        int idx = peer_in_data_anchor->GetIdx();
+        auto shape = node_sub->GetOpDesc()->MutableOutputDesc(out_data_anchor_idx)->GetShape();
+        peer_in_data_node->GetOpDesc()->MutableInputDesc(idx)->SetShape(shape);
+      }
     }
   }
 
@@ -538,7 +561,7 @@ InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, Inf
     if (iter != context_map.end()) {
       const auto &src_context = iter->second;
       GE_IF_BOOL_EXEC(src_context == nullptr, GELOGE(GRAPH_FAILED, "src_context is null."); return nullptr);
-      GELOGD("node:%s get %ld marks from node:%s", 
+      GELOGD("node:%s get %ld marks from node:%s",
              node->GetName().c_str(), src_context->GetMarks().size(), input_node->GetName().c_str());
       for (auto mark : src_context->GetMarks()) {
         marks.push_back(mark);

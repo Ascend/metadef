@@ -220,6 +220,8 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_RESOURCE", DT_RESOURCE},              // resource type
     {"DT_STRING_REF", DT_STRING_REF},          // string ref type
     {"DT_STRING", DT_STRING},                  // string type
+    // add for json input
+    {"DT_FLOAT32", DT_FLOAT}
 };
 
 const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
