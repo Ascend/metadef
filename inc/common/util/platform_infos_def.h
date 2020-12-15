@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technoligies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class StrInfos {
 };
 
 class SoCInfoImpl;
-using SocInfoImplPtr = std::shared_ptr<SoCInfoImpl>;
+using SoCInfoImplPtr = std::shared_ptr<SoCInfoImpl>;
 class SoCInfos {
  public:
   bool Init();
@@ -237,7 +237,7 @@ class CPUCaches {
 };
 
 class PlatFormInfosImpl;
-using PlatFormImfosImplPtr = std::shared_ptr<PlatFormInfosImpl>;
+using PlatFormInfosImplPtr = std::shared_ptr<PlatFormInfosImpl>;
 class PlatFormInfos {
  public:
   bool Init();
