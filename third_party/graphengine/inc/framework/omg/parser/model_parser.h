@@ -64,7 +64,6 @@ class ModelParser {
    */
   virtual Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) = 0;
 
-#ifndef ONLY_COMPILE_OPEN_SRC_METADEF
   /**
   * @ingroup domi_omg
   * @brief Parse relevant data from memory and save it to graph
@@ -75,7 +74,6 @@ class ModelParser {
   * @author
   */
   virtual Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) = 0;
-#endif
 
   /**
   * @ingroup domi_omg

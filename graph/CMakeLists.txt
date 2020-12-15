@@ -67,7 +67,7 @@ target_compile_options(graph PRIVATE
 target_compile_definitions(graph PRIVATE
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
     google=ascend_private
-    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(graph PRIVATE
@@ -143,7 +143,7 @@ target_compile_options(graph_static PRIVATE
 target_compile_definitions(graph_static PRIVATE
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
     google=ascend_private
-    $<$<STREQUAL:${ONLY_COMPILE_OPEN_SRC_METADEF},True>:ONLY_COMPILE_OPEN_SRC>
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
 )

@@ -90,9 +90,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpRegistry {
   std::unordered_map<std::string, std::vector<RemoveInputConfigure>> remove_input_configure_map_;
   std::unordered_map<std::string, std::string> origin_type_to_om_type_;
   std::unordered_map<std::string, ParseOpToGraphFunc> parse_op_to_graph_fn_map_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   std::unordered_map<std::string, ParseSubgraphFuncV2> op_types_to_parse_subgraph_post_func_v2_;
-#endif
 };
 }  // namespace domi
 #endif  // INC_REGISTER_OP_REGISTRY_H_

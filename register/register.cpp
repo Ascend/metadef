@@ -958,9 +958,7 @@ bool OpRegistry::Register(const OpRegistrationData &reg_data) {
   }
   op_run_mode_map_[reg_data.impl_->om_optype_] = reg_data.impl_->imply_type_;
   op_types_to_parse_subgraph_post_func_[reg_data.impl_->om_optype_] = reg_data.impl_->parse_subgraph_post_fn_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   op_types_to_parse_subgraph_post_func_v2_[reg_data.impl_->om_optype_] = reg_data.impl_->parse_subgraph_post_fn_v2_;
-#endif
   return true;
 }
 
@@ -1034,13 +1032,11 @@ domi::ParseSubgraphFunc OpRegistry::GetParseSubgraphPostFunc(const std::string &
 
 Status OpRegistry::GetParseSubgraphPostFunc(const std::string &op_type,
                                             domi::ParseSubgraphFuncV2 &parse_subgraph_func) {
-#ifndef ONLY_COMPILE_OPEN_SRC
   auto it_find = op_types_to_parse_subgraph_post_func_v2_.find(op_type);
   if (it_find == op_types_to_parse_subgraph_post_func_v2_.end()) {
     return FAILED;
   }
   parse_subgraph_func = it_find->second;
-#endif
   return SUCCESS;
 }
 
