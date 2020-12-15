@@ -23,25 +23,21 @@
 #include <memory>
 #include "platform_info_def.h"
 
-using std::map;
-using std::vector;
-using std::string;
-
 namespace fe {
 class StrInfoImpl;
 using StrInfoImplPtr = std::shared_ptr<StrInfoImpl>;
 class StrInfos {
  public:
   bool Init();
-  string GetAIcVersion();
-  string GetCcecAIcVersion();
-  string GetCcecAIvVersion();
-  string IsSupportAICpuCompiler();
+  std::string GetAIcVersion();
+  std::string GetCcecAIcVersion();
+  std:: GetCcecAIvVersion();
+  std::string IsSupportAICpuCompiler();
 
-  void SetAIcVersion(string &aic_version);
-  void SetCcecAIcVersion(string &ccec_aic_version);
-  void SetCcecAIvVersion(string &ccec_aiv_version);
-  void SetIsSupportAICpuCompiler(string &is_support_ai_cpu_compiler);
+  void SetAIcVersion(std::string &aic_version);
+  void SetCcecAIcVersion(std::string &ccec_aic_version);
+  void SetCcecAIvVersion(std::string &ccec_aiv_version);
+  void SetIsSupportAICpuCompiler(std::string &is_support_ai_cpu_compiler);
  private:
   StrInfoImplPtr str_info_impl_{nullptr};
 };
@@ -245,21 +241,21 @@ class PlatFormInfos {
   SoCInfos GetSocInfo();
   AICoreSpecs GetAICoreSpec();
   AICoreMemRates GetAICoreMemRates();
-  map<string, vector<string>> GetAICoreIntrinsicDtype();
+  std::map<std::string, std::vector<std::string>> GetAICoreIntrinsicDtype();
   VectorCoreSpecs GetVectorCoreSpec();
   VectorCoreMemRates GetVectorCoreMemRates();
   CPUCaches GetCPUCache();
-  map<string, vector<string>> GetVectorCoreIntrinsicDtype();
+  std::map<std::string, std::vector<std::string>> GetVectorCoreIntrinsicDtype();
 
   void SetStrInfo(StrInfos &str_infos);
   void SetSocInfo(SoCInfos &SoC_infos);
   void SetAICoreSpec(AICoreSpecs &AICore_specs);
   void SetAICoreMemRates(AICoreMemRates &AICore_mem_rates);
-  void SetAICoreIntrinsicDtype(map<string, vector<string>> &intrinsic_dtypes);
+  void SetAICoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes);
   void SetVectorCoreSpec(VectorCoreSpecs &vector_core_specs);
   void SetVectorCoreMemRates(VectorCoreMemRates &vectorcore_mem_rates);
   void SetCPUCache(CPUCaches &CPU_caches);
-  void SetVectorCoreIntrinsicDtype(map<string, vector<string>> &intrinsic_dtypes);
+  void SetVectorCoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes);
 
  private:
   PlatFormInfosImplPtr platform_infos_impl_{nullptr};
@@ -270,15 +266,15 @@ using OptionalInfosImplPtr = std::shared_ptr<OptionalInfosImpl>;
 class OptionalInfos {
  public:
   bool Init();
-  string GetSocVersion();
-  string GetCoreType();
+  std::string GetSocVersion();
+  std::string GetCoreType();
   uint32_t GetAICoreNum();
-  string GetL1FusionFlag();
+  std::string GetL1FusionFlag();
 
-  void SetSocVersion(string soc_version);
-  void SetCoreType(string core_type);
+  void SetSocVersion(std::string soc_version);
+  void SetCoreType(std::string core_type);
   void SetAICoreNum(uint32_t ai_core_num);
-  void SetL1FusionFlag(string l1_fusion_flag);
+  void SetL1FusionFlag(std::string l1_fusion_flag);
  private:
   OptionalInfosImplPtr optional_infos_impl_{nullptr};
 };
