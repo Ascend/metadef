@@ -26,16 +26,11 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/type_utils.h"
 #include "graph/utils/tensor_utils.h"
+#include <nlohmann/json.hpp>
 
 #define LOG_ENABLED(loglvl) CheckLogLevel(GE_MODULE_NAME, loglvl)
 
 namespace optiling {
-
-std::string OpTilingInterf::OpTilingUuid = "123456789";
-
-OpTilingInterf::OpTilingInterf(std::string op_type, OpTilingFuncOld func) {
-    GELOGW("REGISTER_OP_TILING_FUNC has been deprecated. optype: %s", op_type.c_str());
-}
 
 const char *COMPILE_INFO_JSON = "compile_info_json";
 const char *COMPILE_INFO_KEY = "compile_info_key";
