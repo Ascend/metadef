@@ -40,7 +40,8 @@ class PlatformInfoManager {
 
   void SetOptionalCompilationInfo(OptionalInfo &opti_compilation_info);
 
-  uint32_t GetPlatformInfos(const std::string SoCVersion, PlatFormInfos &platform_info,
+  uint32_t GetPlatformInfos(const std::string SoCVersion,
+                            PlatFormInfos &platform_info,
                             OptionalInfos &opti_compilation_info);
 
   uint32_t GetPlatformInfoWithOutSocVersion(PlatFormInfos &platform_info, OptionalInfos &opti_compilation_info);
@@ -107,8 +108,8 @@ class PlatformInfoManager {
   void ParseVectorCoreintrinsicDtypeMap(std::map<std::string, std::string> &vector_coreintrinsic_dtype_map,
                                         PlatformInfo &platform_info_temp);
 
-  uint32_t ParsePlatformInfoFromStrToStruct(std::map<std::string, std::map<std::string,
-                                            std::string>> &content_info_map, std::string &soc_version,
+  uint32_t ParsePlatformInfoFromStrToStruct(std::map<std::string, std::map<std::string, std::string>> &content_info_map,
+                                            std::string &soc_version,
                                             PlatformInfo &platform_info_temp);
 
   void ParseVersion(std::map<std::string, std::string> &version_map,
