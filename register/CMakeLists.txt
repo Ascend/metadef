@@ -123,6 +123,7 @@ target_compile_definitions(register_static PRIVATE
     $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
+    LOG_CPP
 )
 target_include_directories(register_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
@@ -218,6 +219,10 @@ target_include_directories(op_tiling_o2 PRIVATE
 target_compile_options(op_tiling_o2 PRIVATE
     -O2
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations>
+)
+
+target_compile_definitions(op_tiling_o2 PRIVATE
+    LOG_CPP
 )
 
 target_link_libraries(op_tiling_o2 PRIVATE
