@@ -32,13 +32,17 @@ class PlatformInfoManager {
   uint32_t InitializePlatformInfo();
   uint32_t Finalize();
 
-  uint32_t GetPlatformInfo(const std::string SoCVersion, PlatformInfo &platform_info, OptionalInfo &opti_compilation_info);
+  uint32_t GetPlatformInfo(const std::string SoCVersion,
+                           PlatformInfo &platform_info,
+                           OptionalInfo &opti_compilation_info);
 
   uint32_t GetPlatformInfoWithOutSocVersion(PlatformInfo &platform_info, OptionalInfo &opti_compilation_info);
 
   void SetOptionalCompilationInfo(OptionalInfo &opti_compilation_info);
 
-  uint32_t GetPlatformInfos(const std::string SoCVersion, PlatFormInfos &platform_info, OptionalInfos &opti_compilation_info);
+  uint32_t GetPlatformInfos(const std::string SoCVersion,
+                            PlatFormInfos &platform_info,
+                            OptionalInfos &opti_compilation_info);
 
   uint32_t GetPlatformInfoWithOutSocVersion(PlatFormInfos &platform_info, OptionalInfos &opti_compilation_info);
 
@@ -58,72 +62,103 @@ class PlatformInfoManager {
 
   std::string GetSoFilePath();
 
-  void ParseVersion(std::map<std::string, std::string> &version_map, std::string &soc_version, PlatformInfo &platform_info_temp);
+  void ParseVersion(std::map<std::string, std::string> &version_map,
+                    std::string &soc_version,
+                    PlatformInfo &platform_info_temp);
 
-  void ParseSocInfo(std::map<std::string, std::string> &soc_info_map, PlatformInfo &platform_info_temp);
+  void ParseSocInfo(std::map<std::string, std::string> &soc_info_map,
+                    PlatformInfo &platform_info_temp);
 
-  void ParseCubeOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatformInfo &platform_info_temp);
+  void ParseCubeOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                             PlatformInfo &platform_info_temp);
 
-  void ParseBufferOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatformInfo &platform_info_temp);
+  void ParseBufferOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                               PlatformInfo &platform_info_temp);
 
-  void ParseUBOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatformInfo &platform_info_temp);
+  void ParseUBOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                           PlatformInfo &platform_info_temp);
 
-  void ParseUnzipOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatformInfo &platform_info_temp);
+  void ParseUnzipOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                              PlatformInfo &platform_info_temp);
 
-  void ParseAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatformInfo &platform_info_temp);
+  void ParseAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                       PlatformInfo &platform_info_temp);
 
-  void ParseBufferOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map, PlatformInfo &platform_info_temp);
+  void ParseBufferOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map,
+                                      PlatformInfo &platform_info_temp);
 
-  void ParseAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map, PlatformInfo &platform_info_temp);
+  void ParseAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map,
+                              PlatformInfo &platform_info_temp);
 
-  void ParseUBOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map, PlatformInfo &platform_info_temp);
+  void ParseUBOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map,
+                                  PlatformInfo &platform_info_temp);
 
-  void ParseAICoreintrinsicDtypeMap(std::map<std::string, std::string> &ai_coreintrinsic_dtype_map, PlatformInfo &platform_info_temp);
+  void ParseAICoreintrinsicDtypeMap(std::map<std::string, std::string> &ai_coreintrinsic_dtype_map,
+                                    PlatformInfo &platform_info_temp);
 
-  void ParseVectorCoreSpec(std::map<std::string, std::string> &vector_core_spec_map, PlatformInfo &platform_info_temp);
+  void ParseVectorCoreSpec(std::map<std::string, std::string> &vector_core_spec_map,
+                           PlatformInfo &platform_info_temp);
 
-  void ParseVectorCoreMemoryRates(std::map<std::string, std::string> &vector_core_memory_rates_map, PlatformInfo &platform_info_temp);
+  void ParseVectorCoreMemoryRates(std::map<std::string, std::string> &vector_core_memory_rates_map,
+                                  PlatformInfo &platform_info_temp);
 
-  void ParseCPUCache(std::map<std::string, std::string> &CPUCacheMap, PlatformInfo &platform_info_temp);
+  void ParseCPUCache(std::map<std::string, std::string> &CPUCacheMap,
+                     PlatformInfo &platform_info_temp);
 
   void ParseVectorCoreintrinsicDtypeMap(std::map<std::string, std::string> &vector_coreintrinsic_dtype_map,
                                         PlatformInfo &platform_info_temp);
 
-  uint32_t ParsePlatformInfoFromStrToStruct(std::map<std::string, std::map<std::string, std::string>> &content_info_map, std::string &soc_version,
+  uint32_t ParsePlatformInfoFromStrToStruct(std::map<std::string, std::map<std::string, std::string>> &content_info_map,
+                                            std::string &soc_version,
                                             PlatformInfo &platform_info_temp);
 
-  void ParseVersion(std::map<std::string, std::string> &version_map, std::string &soc_version, PlatFormInfos &platform_info_temp);
+  void ParseVersion(std::map<std::string, std::string> &version_map,
+                    std::string &soc_version,
+                    PlatFormInfos &platform_info_temp);
 
   void ParseSocInfo(std::map<std::string, std::string> &soc_info_map, PlatFormInfos &platform_info_temp);
 
-  void ParseCubeOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatFormInfos &platform_info_temp);
+  void ParseCubeOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                             PlatFormInfos &platform_info_temp);
 
-  void ParseBufferOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatFormInfos &platform_info_temp);
+  void ParseBufferOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                               PlatFormInfos &platform_info_temp);
 
-  void ParseUBOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatFormInfos &platform_info_temp);
+  void ParseUBOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                           PlatFormInfos &platform_info_temp);
 
-  void ParseUnzipOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatFormInfos &platform_info_temp);
+  void ParseUnzipOfAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                              PlatFormInfos &platform_info_temp);
 
-  void ParseAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map, PlatFormInfos &platform_info_temp);
+  void ParseAICoreSpec(std::map<std::string, std::string> &ai_core_spec_map,
+                       PlatFormInfos &platform_info_temp);
 
-  void ParseBufferOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map, PlatFormInfos &platform_info_temp);
+  void ParseBufferOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map,
+                                      PlatFormInfos &platform_info_temp);
 
-  void ParseAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map, PlatFormInfos &platform_info_temp);
+  void ParseAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map,
+                              PlatFormInfos &platform_info_temp);
 
-  void ParseUBOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map, PlatFormInfos &platform_info_temp);
+  void ParseUBOfAICoreMemoryRates(std::map<std::string, std::string> &ai_core_memory_rates_map,
+                                  PlatFormInfos &platform_info_temp);
 
-  void ParseAICoreintrinsicDtypeMap(std::map<std::string, std::string> &ai_coreintrinsic_dtype_map, PlatFormInfos &platform_info_temp);
+  void ParseAICoreintrinsicDtypeMap(std::map<std::string, std::string> &ai_coreintrinsic_dtype_map,
+                                    PlatFormInfos &platform_info_temp);
 
-  void ParseVectorCoreSpec(std::map<std::string, std::string> &vector_core_spec_map, PlatFormInfos &platform_info_temp);
+  void ParseVectorCoreSpec(std::map<std::string, std::string> &vector_core_spec_map,
+                           PlatFormInfos &platform_info_temp);
 
-  void ParseVectorCoreMemoryRates(std::map<std::string, std::string> &vector_core_memory_rates_map, PlatFormInfos &platform_info_temp);
+  void ParseVectorCoreMemoryRates(std::map<std::string, std::string> &vector_core_memory_rates_map,
+                                  PlatFormInfos &platform_info_temp);
 
-  void ParseCPUCache(std::map<std::string, std::string> &CPUCacheMap, PlatFormInfos &platform_info_temp);
+  void ParseCPUCache(std::map<std::string, std::string> &CPUCacheMap,
+                     PlatFormInfos &platform_info_temp);
 
   void ParseVectorCoreintrinsicDtypeMap(std::map<std::string, std::string> &vector_coreintrinsic_dtype_map,
                                         PlatFormInfos &platform_info_temp);
 
-  uint32_t ParsePlatformInfo(std::map<std::string, std::map<std::string, std::string>> &content_info_map, std::string &soc_version,
+  uint32_t ParsePlatformInfo(std::map<std::string, std::map<std::string, std::string>> &content_info_map,
+                             std::string &soc_version,
                              PlatFormInfos &platform_info_temp);
 
   uint32_t AssemblePlatformInfoVector(std::map<std::string, std::map<std::string, std::string>> &content_info_map);
