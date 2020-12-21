@@ -60,6 +60,7 @@ const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_RESOURCE, proto::DT_RESOURCE},
     {DT_STRING_REF, proto::DT_STRING_REF},
     {DT_STRING, proto::DT_STRING},
+    {DT_VARIANT, proto::DT_VARIANT},
 };
 
 const std::map<DataType, int> kDataTypeSelfDefinedMap = {
