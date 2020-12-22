@@ -23,7 +23,6 @@
 #include "debug/ge_attr_define.h"
 #include "debug/ge_log.h"
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "proto/ge_ir.pb.h"
 #include "utils/graph_utils.h"
@@ -49,11 +48,18 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
                                                                                        proto::TensorDef *tensor_proto) {
   GE_CHK_BOOL_EXEC(tensor != nullptr, return false, "tensor is null.");
   GE_CHK_BOOL_EXEC(tensor_proto != nullptr, return false, "tensor_proto is null.");
-
+#ifndef ENABLE_OPEN_SRC
+  if (tensor->tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
+    *(tensor_proto->mutable_desc()) = *(tensor->tensor_data_.tensor_descriptor_.GetProtoMsg());
+    tensor_proto->set_data(tensor->GetData().data(), tensor->GetData().size());
+    return true;
+  }
+#else
   if (tensor->tensor_def_.GetProtoMsg() != nullptr) {
     *tensor_proto = *tensor->tensor_def_.GetProtoMsg();
     return true;
   }
+#endif
   return false;
 }
 
