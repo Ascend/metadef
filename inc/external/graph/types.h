@@ -222,11 +222,6 @@ struct TensorType {
 
   std::shared_ptr<TensorTypeImpl> tensor_type_impl_;
 };
-
-enum MEMORY_SIZE_CALC_TYPE {
-  MEMORY_SIZE_NORMAL = 0,
-  ALWAYS_EMPTY
-};
 }  // namespace ge
 
 namespace domi {
