@@ -1155,6 +1155,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_ALL
 
 // Calculate the operator output memory
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_MEMORY_SIZE_CALC_TYPE;
+// Indicates which operators keep the precision unchanged
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_KEEP_DTYPE;
 }  // namespace ge
 
 /*lint +e618*/
