@@ -23,7 +23,7 @@
 #include <vector>
 #include "detail/attributes_holder.h"
 #include "graph/buffer.h"
-#if !ENABLE_OPEN_SRC
+#if (ENABLE_OPEN_SRC != True)
 #include "graph/aligned_ptr.h"
 #endif
 #include "graph/ge_error_codes.h"
@@ -152,7 +152,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   void RefTo(const GeTensorDesc &tensorDesc) { tensor_descriptor_ = tensorDesc.tensor_descriptor_; }
   GeShape &ShapeReference() const;
 };
-#if !ENABLE_OPEN_SRC
+#if (ENABLE_OPEN_SRC != True)
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
  public:
   TensorData() = default;

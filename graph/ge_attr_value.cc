@@ -433,7 +433,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kT)) {
     return false;
   }
-#if !ENABLE_OPEN_SRC
+#if (ENABLE_OPEN_SRC != True)
   if (val.tensor_def_.GetProtoOwner() != nullptr) {
     auto proto_msg = val.tensor_def_.GetProtoMsg();
     if (proto_msg == nullptr) {
@@ -483,7 +483,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
       proto_attr_val.clear_list();
       return false;
     }
-#if !ENABLE_OPEN_SRC
+#if (ENABLE_OPEN_SRC != True)
     if (item->tensor_def_.GetProtoOwner() != nullptr) {
       auto proto_msg = item->tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {
@@ -526,7 +526,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_t();
   for (const auto &item : value) {
-#if !ENABLE_OPEN_SRC
+#if (ENABLE_OPEN_SRC != True)
     if (item.tensor_def_.GetProtoOwner() != nullptr) {
       auto proto_msg = item.tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {

@@ -20,12 +20,9 @@
 #include <memory>
 #include <functional>
 
-namespace {
-  const size_t ALIGNMENT_BYTES = 16;
-}
-
 namespace ge {
 namespace {
+const size_t ALIGNMENT_BYTES = 16;
 using deleter = std::function<void(uint8_t *)>;
 using allocator = std::function<void(std::unique_ptr<uint8_t[], deleter> &base_addr)>;
 void default_deleter(uint8_t *ptr) {

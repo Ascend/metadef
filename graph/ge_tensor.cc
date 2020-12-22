@@ -606,7 +606,7 @@ GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   }
   return *this;
 }
-#if !ENABLE_OPEN_SRC
+#if (ENABLE_OPEN_SRC != True)
 uint8_t TensorData::invalid_data_ = 0;
 
 TensorData::TensorData(const TensorData &other) {
