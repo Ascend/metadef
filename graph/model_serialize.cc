@@ -48,7 +48,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
                                                                                        proto::TensorDef *tensor_proto) {
   GE_CHK_BOOL_EXEC(tensor != nullptr, return false, "tensor is null.");
   GE_CHK_BOOL_EXEC(tensor_proto != nullptr, return false, "tensor_proto is null.");
-#ifndef ENABLE_OPEN_SRC
+#if !ENABLE_OPEN_SRC
   if (tensor->tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
     *(tensor_proto->mutable_desc()) = *(tensor->tensor_data_.tensor_descriptor_.GetProtoMsg());
     tensor_proto->set_data(tensor->GetData().data(), tensor->GetData().size());
