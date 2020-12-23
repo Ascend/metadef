@@ -73,13 +73,6 @@ class ErrorManager {
   void ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key = {},
                            const std::vector<std::string> &value = {});
 
-  ///
-  /// @brief report graph compile failed message such as error code and op_name in mstune case
-  /// @param [in] msg: failed message map, key is error code, value is op_name
-  /// @return int 0(success) -1(fail)
-  ///
-  int ReportMstuneCompileFailedMsg(const std::map<std::string, std::string> &msg);
-
 #ifndef ONLY_COMPILE_OPEN_SRC
   ///
   /// @brief report graph compile failed message such as error code and op_name in mstune case
@@ -90,12 +83,6 @@ class ErrorManager {
   int ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
                                    const std::map<std::string, std::string> &msg);
 #endif
-
-  ///
-  /// @brief save graph compile failed message from thread local map to global map
-  /// @param [in] graph_name: graph name
-  ///
-  void SaveMstuneCompileFailedMsg(const std::string &graph_name);
 
   ///
   /// @brief get graph compile failed message in mstune case
