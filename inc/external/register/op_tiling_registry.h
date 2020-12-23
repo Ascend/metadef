@@ -63,6 +63,7 @@ struct OpRunInfo {
   std::vector<int64_t> workspaces;
   ByteBuffer tiling_data;
   bool clear_atomic;
+  uint32_t tiling_key;
 };
 
 using TeOpAttrArgs = std::vector<std::string>;
