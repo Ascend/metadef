@@ -64,6 +64,7 @@ enum DataType {
   DT_RESOURCE = 23,        // resource type
   DT_STRING_REF = 24,      // string ref type
   DT_DUAL = 25,            // dual output type
+  DT_VARIANT = 26,         // dt_variant type
   DT_UNDEFINED             // Used to indicate a DataType field has not been set.
 };
 
@@ -95,6 +96,7 @@ inline int GetSizeByDataType(DataType data_type) {
       -1,  // DT_RESOURCE = 23,           resource type
       -1,  // DT_STRING_REF = 24,        string ref type
       5,   // DT_DUAL = 25,               dual output type (float + int8)
+      -1,  // DT_VARIANT                  variant type
            // DT_UNDEFINED    Used to indicate a DataType field has not been set.
   };
   if (data_type >= DT_UNDEFINED) {
