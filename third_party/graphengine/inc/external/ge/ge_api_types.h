@@ -295,7 +295,6 @@ const std::string MDL_BANK_PATH_FLAG = "ge.mdl_bank_path";
 
 // Configure op bank path
 const std::string OP_BANK_PATH_FLAG = "ge.op_bank_path";
-const std::string OP_BANK_UPDATE_FLAG = "ge.op_bank_update";
 
 // Graph run mode
 enum GraphRunMode
@@ -382,7 +381,6 @@ static const char *const OP_COMPILER_CACHE_DIR = ge::OP_COMPILER_CACHE_DIR;
 static const char *const OP_COMPILER_CACHE_MODE = ge::OP_COMPILER_CACHE_MODE;
 static const char *const MDL_BANK_PATH_FLAG = ge::MDL_BANK_PATH_FLAG.c_str();
 static const char *const OP_BANK_PATH_FLAG = ge::OP_BANK_PATH_FLAG.c_str();
-static const char *const OP_BANK_UPDATE = ge::OP_BANK_UPDATE_FLAG.c_str();
 static const char *const OP_DEBUG_LEVEL = ge::OP_DEBUG_LEVEL.c_str();
 
 // for interface: aclgrphBuildModel
@@ -405,8 +403,7 @@ const std::set<std::string> ir_builder_suppported_options = {INPUT_FORMAT,
                                                              OP_COMPILER_CACHE_DIR,
                                                              OP_COMPILER_CACHE_MODE,
                                                              MDL_BANK_PATH_FLAG,
-                                                             OP_BANK_PATH_FLAG,
-                                                             OP_BANK_UPDATE};
+                                                             OP_BANK_PATH_FLAG};
 
 // for interface: aclgrphParse
 const std::set<std::string> ir_parser_suppported_options = {INPUT_FP16_NODES,
