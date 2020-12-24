@@ -99,7 +99,7 @@ target_link_libraries(register PRIVATE
     -Wl,--no-as-needed
     ascend_protobuf
     c_sec
-    slog
+    alog
     graph
     -Wl,--as-needed
     json
