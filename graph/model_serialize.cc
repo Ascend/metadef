@@ -625,47 +625,45 @@ size_t ModelSerialize::GetSerializeModelSize(const Model &model) {
 #endif
 }
 
-Model ModelSerialize::UnserializeModel(const uint8_t *data, size_t len) {
+bool ModelSerialize::UnserializeModel(const uint8_t *data, size_t len, Model &model) {
   if (data == nullptr) {
     GELOGE(GRAPH_FAILED, "data is nullptr");
-    return Model();
+    return false;
   }
 
   std::shared_ptr<proto::ModelDef> model_proto_ptr;
   model_proto_ptr = ComGraphMakeShared<proto::ModelDef>();
   if (model_proto_ptr == nullptr) {
     GELOGE(GRAPH_FAILED, "proto::ModelDef make shared failed");
-    return Model();
+    return false;
   }
 
   auto &model_proto = *model_proto_ptr;
   if (!ReadProtoFromBinaryFile(data, len, &model_proto)) {
     GELOGE(GRAPH_FAILED, "ParseFromArray fail");
-    return Model();
+    return false;
   }
 
-  Model model;
   ModelSerializeImp imp;
   imp.SetProtobufOwner(model_proto_ptr);
   if (!imp.UnserializeModel(model, model_proto)) {
     GELOGE(GRAPH_FAILED, "Unserialize Model fail");
-    return Model();
+    return false;
   }
-  return model;
+  return model.IsValid();
 }
 
-Model ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def) {
+bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &model) {
   std::shared_ptr<proto::ModelDef> model_def_ptr = ComGraphMakeShared<proto::ModelDef>(model_def);
-  GE_CHK_BOOL_EXEC(model_def_ptr != nullptr, return Model(), "mode_def make shared failed");
+  GE_CHK_BOOL_EXEC(model_def_ptr != nullptr, return false, "mode_def make shared failed");
 
   ModelSerializeImp imp;
   imp.SetProtobufOwner(model_def_ptr);
-  Model model;
   if (!imp.UnserializeModel(model, *model_def_ptr)) {
     GELOGE(GRAPH_FAILED, "Unserialize Model fail");
-    return Model();
+    return false;
   }
-  return model;
+  return model.IsValid();
 }
 
 Buffer ModelSerialize::SerializeGraph(const ComputeGraphPtr &graph) {

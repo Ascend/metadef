@@ -88,8 +88,12 @@ void Model::SetAttr(const ProtoAttrMapHelper &attrs) { attrs_ = attrs; }
 
 graphStatus Model::Load(const uint8_t *data, size_t len, Model &model) {
   ModelSerialize serialize;
-  model = serialize.UnserializeModel(data, len);
-  return model.IsValid() ? GRAPH_SUCCESS : GRAPH_FAILED;
+  return serialize.UnserializeModel(data, len, model) ? GRAPH_SUCCESS : GRAPH_FAILED;
+}
+
+graphStatus Model::Load(ge::proto::ModelDef &model_def) {
+  ModelSerialize serialize;
+  return serialize.UnserializeModel(model_def, *this) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
 graphStatus Model::SaveToFile(const string &file_name) const {
@@ -137,12 +141,6 @@ graphStatus Model::SaveToFile(const string &file_name) const {
     }
   }
   return GRAPH_SUCCESS;
-}
-
-graphStatus Model::Load(ge::proto::ModelDef &model_def) {
-  ModelSerialize serialize;
-  *this = serialize.UnserializeModel(model_def);
-  return this->IsValid() ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
 bool Model::IsValid() const { return graph_.IsValid(); }
