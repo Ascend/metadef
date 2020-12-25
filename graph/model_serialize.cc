@@ -666,6 +666,18 @@ bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &mod
   return model.IsValid();
 }
 
+Model ModelSerialize::UnserializeModel(const uint8_t *data, size_t len) {
+  Model model;
+  (void)UnserializeModel(data, len, model);
+  return model;
+}
+
+Model ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def) {
+  Model model;
+  (void)UnserializeModel(model_def, model);
+  return model;
+}
+
 Buffer ModelSerialize::SerializeGraph(const ComputeGraphPtr &graph) {
   proto::GraphDef graph_def;
   ModelSerializeImp imp;
