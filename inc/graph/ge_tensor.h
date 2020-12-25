@@ -169,7 +169,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   // zero copy SetData
   void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size);
 
-  const uint8_t *MallocSize(size_t size);
+  const uint8_t *MallocAlignedPtr(size_t size);
 
   inline const std::uint8_t *data() const { return GetData(); }
   inline std::uint8_t *data() { return GetData(); }
@@ -191,7 +191,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   size_t length_ = 0;
   // functions data() & mutable_data() return address of invalid_data_ when length_ is 0
   // defined for coding convenience
-  static uint8_t invalid_data_;
+  static uint32_t invalid_data_;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {

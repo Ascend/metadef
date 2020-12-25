@@ -26,6 +26,7 @@
 #include "graph/model_serialize.h"
 #include "proto/ge_ir.pb.h"
 #include "utils/ge_ir_utils.h"
+#include "utils/mem_utils.h"
 #include "utils/tensor_utils.h"
 
 namespace ge {
@@ -608,7 +609,7 @@ GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   return *this;
 }
 #ifndef ONLY_COMPILE_OPEN_SRC
-uint8_t TensorData::invalid_data_ = 0;
+uint32_t TensorData::invalid_data_ = 0x3A2D2900;
 
 TensorData::TensorData(const TensorData &other) {
   // Share data
@@ -643,12 +644,11 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
     return GRAPH_SUCCESS;
   }
 
-  if (MallocSize(size) == nullptr) {
+  if (MallocAlignedPtr(size) == nullptr) {
     GELOGE(MEMALLOC_FAILED, "malloc memory failed, size=%zu", size);
     return GRAPH_FAILED;
   }
 
-  GELOGD("SetData: dest_addr=%p, dest_size=%zu, src_addr=%p, src_size=%zu", aligned_ptr_->Get(), length_, data, size);
   if (memcpy_s(static_cast<void*>(aligned_ptr_->MutableGet()), length_, static_cast<const void*>(data), size) != EOK) {
     GELOGE(INTERNAL_ERROR, "memcpy failed");
     return GRAPH_FAILED;
@@ -661,11 +661,11 @@ void TensorData::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) {
   length_ = size;
 }
 
-const uint8_t *TensorData::MallocSize(size_t size) {
+const uint8_t *TensorData::MallocAlignedPtr(size_t size) {
   if (size == 0) {
     GELOGW("data size is 0");
     aligned_ptr_.reset();
-    return &invalid_data_;
+    return reinterpret_cast<const uint8_t *>(&invalid_data_);
   }
 
   if (length_ != size) {
@@ -674,7 +674,7 @@ const uint8_t *TensorData::MallocSize(size_t size) {
 
   length_ = size;
   if (aligned_ptr_ == nullptr) {
-    aligned_ptr_ = AlignedPtr::BuildAlignedPtr(length_);
+    aligned_ptr_ = MakeShared<AlignedPtr>(length_);
     if (aligned_ptr_ == nullptr) {
       GELOGE(INTERNAL_ERROR, "AlignedPtr is null");
       return nullptr;
@@ -688,7 +688,7 @@ size_t TensorData::GetSize() const { return length_; }
 
 const uint8_t *TensorData::GetData() const {
   if (length_ == 0) {
-    return &invalid_data_;
+    return reinterpret_cast<const uint8_t *>(&invalid_data_);
   }
   if (aligned_ptr_ == nullptr) {
     return nullptr;
@@ -698,7 +698,7 @@ const uint8_t *TensorData::GetData() const {
 
 uint8_t *TensorData::GetData() {
   if (length_ == 0) {
-    return &invalid_data_;
+    return reinterpret_cast<uint8_t *>(&invalid_data_);
   }
   if (aligned_ptr_ == nullptr) {
     return nullptr;
@@ -755,7 +755,7 @@ GeTensor::GeTensor(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> 
 
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc, size_t size) : GeTensor() {
   DescReference() = tensor_desc;
-  if (tensor_data_.MallocSize(size) == nullptr) {
+  if (tensor_data_.MallocAlignedPtr(size) == nullptr) {
     GELOGW("malloc memory failed, size=%zu", size);
   }
 }
@@ -795,17 +795,15 @@ void GeTensor::BuildAlignerPtrWithProtoData() {
   tensor_data_.length_ = proto_msg->data().size();
   tensor_data_.aligned_ptr_.reset();
   tensor_data_.aligned_ptr_ =
-          AlignedPtr::BuildAlignedPtr(proto_msg->data().size(),
-                                      [&proto_msg](std::unique_ptr<uint8_t[], deleter> &ptr) {
-                                        GELOGD("set aligned_ptr, addr=%p", proto_msg->data().data());
-                                        ptr.reset(const_cast<uint8_t *>(
-                                                reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
-                                      },
-                                      [](uint8_t *ptr) {
-                                        GELOGD("reset aligned_ptr in MutableWeight, addr=%p", ptr);
-                                        ptr = nullptr;
-                                      },
-                                      0);
+          AlignedPtr::BuildFromAllocFunc(proto_msg->data().size(),
+                                         [&proto_msg](std::unique_ptr<uint8_t[], deleter> &ptr) {
+                                           ptr.reset(const_cast<uint8_t *>(
+                                                   reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
+                                         },
+                                         [](uint8_t *ptr) {
+                                           ptr = nullptr;
+                                         },
+                                         0);
 }
 
 GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
