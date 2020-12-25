@@ -122,7 +122,7 @@ target_link_libraries(graph PRIVATE
     -Wl,--no-as-needed
     ascend_protobuf
     c_sec
-    alog
+    slog
     error_manager
     -Wl,--as-needed
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
@@ -396,7 +396,7 @@ target_link_libraries(graph PRIVATE
         static_mmpa
         -Wl,--no-as-needed
         c_sec
-        alog
+        slog
         error_manager
         -Wl,--as-needed
         -lrt
