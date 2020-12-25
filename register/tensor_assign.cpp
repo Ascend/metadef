@@ -78,6 +78,7 @@ const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_BOOL_REF, ge::DataType::DT_BOOL},
     {domi::tensorflow::DataType::DT_HALF_REF, ge::DataType::DT_FLOAT16},
     {domi::tensorflow::DataType::DT_STRING_REF, ge::DataType::DT_STRING},
+    {domi::tensorflow::DataType::DT_VARIANT, ge::DataType::DT_VARIANT},
 };
 }  // namespace
 

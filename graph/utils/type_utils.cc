@@ -193,6 +193,7 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_RESOURCE, "DT_RESOURCE"},              // resource type
     {DT_STRING_REF, "DT_STRING_REF"},          // string ref type
     {DT_STRING, "DT_STRING"},                  // string type
+    {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
 };
 
 const std::map<std::string, DataType> kStringTodataTypeMap = {
@@ -225,7 +226,8 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_STRING_REF", DT_STRING_REF},          // string ref type
     {"DT_STRING", DT_STRING},                  // string type
     // add for json input
-    {"DT_FLOAT32", DT_FLOAT}
+    {"DT_FLOAT32", DT_FLOAT},
+    {"DT_VARIANT", DT_VARIANT},                // dt_variant type
 };
 
 const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
@@ -254,6 +256,7 @@ const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
     {DT_STRING_REF, sizeof(uint64_t) * 2},
     {DT_STRING, sizeof(uint64_t)},
     {DT_RESOURCE, sizeof(uint64_t)},
+    {DT_VARIANT, sizeof(uint64_t)},
 };
 
 const std::map<domi::FrameworkType, std::string> kFmkTypeToString = {
