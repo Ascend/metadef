@@ -649,8 +649,22 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
     return GRAPH_FAILED;
   }
 
-  if (memcpy_s(static_cast<void*>(aligned_ptr_->MutableGet()), length_, static_cast<const void*>(data), size) != EOK) {
-    GELOGE(INTERNAL_ERROR, "memcpy failed");
+  size_t remain_size = size;
+  auto dst_addr = reinterpret_cast<uintptr_t>(aligned_ptr_->MutableGet());
+  auto src_addr = reinterpret_cast<uintptr_t>(data);
+  while(remain_size > SECUREC_MEM_MAX_LEN) {
+    if (memcpy_s(reinterpret_cast<void*>(dst_addr), SECUREC_MEM_MAX_LEN,
+                 reinterpret_cast<const void*>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
+      GELOGE(INTERNAL_ERROR, "memcpy failed, size=SECUREC_MEM_MAX_LEN");
+      return GRAPH_FAILED;
+    }
+    remain_size -= SECUREC_MEM_MAX_LEN;
+    dst_addr += SECUREC_MEM_MAX_LEN;
+    src_addr += SECUREC_MEM_MAX_LEN;
+  }
+  if (memcpy_s(reinterpret_cast<void*>(dst_addr), remain_size,
+               reinterpret_cast<const void*>(src_addr), remain_size) != EOK) {
+    GELOGE(INTERNAL_ERROR, "memcpy failed, size=%zu", remain_size);
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
