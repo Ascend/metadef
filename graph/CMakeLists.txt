@@ -16,6 +16,7 @@ set(SRC_LIST
     "ge_attr_value.cc"
     "attr_value.cc"
     "buffer.cc"
+    "aligned_ptr.cc"
     "compute_graph.cc"
     "ascend_string.cc"
     "gnode.cc"

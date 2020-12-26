@@ -847,6 +847,9 @@ const std::string REF_VAR_PRE_PEER_OUT_INDEX = "ref_var_pre_peer_out_index";
 const std::string ASSIGN_VALIDATE_SHAPE = "validate_shape";
 const std::string ASSIGN_VAR_NAME = "_assign_var_name";
 
+// Inplace support
+const std::string INPLACE_SUPPORT_INPUT_INDEX = "_inplace_support_input_index";
+
 //  space2bacth batch2space
 const std::string BATCH_SPACE_ATTR_BLOCK = "block";
 const std::string BATCH_SPACE_ATTR_PADDING = "padding";
