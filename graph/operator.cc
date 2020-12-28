@@ -21,7 +21,6 @@
 #include <mutex>
 #include <queue>
 #include <set>
-#include "array_ops.h"
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
@@ -306,9 +305,9 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
       Operator const_op(out_handle.GetOwner());
       const auto &op_desc_impl_type = out_handle.GetOwner()->GetOpDescImpl()->GetType();
       if (op_desc_impl_type == CONSTANTOP) {
-        return const_op.GetAttr(op::Constant::name_attr_value(), data);
+        return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
       } else if (op_desc_impl_type == CONSTANT) {
-        return const_op.GetAttr(op::Const::name_attr_value(), data);
+        return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
       }
     }
     return GRAPH_FAILED;
