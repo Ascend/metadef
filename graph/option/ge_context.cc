@@ -17,7 +17,6 @@
 #include "./ge_context.h"
 #include "./ge_global_options.h"
 #include "./ge_local_context.h"
-#include "framework/common/ge_types.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace ge {
@@ -39,8 +38,8 @@ graphStatus GEContext::GetOption(const std::string &key, std::string &option) {
 
 bool GEContext::GetHostExecFlag() {
   std::string exec_placement;
-  if (GetThreadLocalContext().GetOption(GE_OPTION_EXEC_PLACEMENT, exec_placement) != GRAPH_SUCCESS) {
-    GELOGW("get option OPTION_EXEC_PLACEMENT failed.");
+  if (GetThreadLocalContext().GetOption("ge.exec.placement", exec_placement) != GRAPH_SUCCESS) {
+    GELOGW("get option ge.exec.placement failed.");
     return false;
   }
   GELOGD("Option ge.exec.placement is %s.", exec_placement.c_str());
