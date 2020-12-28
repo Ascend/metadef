@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_SCOPE_GUARD_H_
-#define INC_SCOPE_GUARD_H_
+#ifndef COMMON_GRAPH_UTILS_SCOPE_GUARD_H_
+#define COMMON_GRAPH_UTILS_SCOPE_GUARD_H_
 
 #include <functional>
 
@@ -55,4 +55,4 @@ class ScopeGuard {
 };
 }  // namespace ge
 
-#endif  // INC_SCOPE_GUARD_H_
+#endif  // COMMON_GRAPH_UTILS_SCOPE_GUARD_H_
