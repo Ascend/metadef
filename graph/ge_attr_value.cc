@@ -15,7 +15,6 @@
  */
 
 #include "graph/ge_attr_value.h"
-#include "graph/ge_tensor.h"
 #include "external/graph/graph.h"
 #include "utils/attr_utils.h"
 #include "framework/common/debug/ge_log.h"
@@ -434,12 +433,33 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kT)) {
     return false;
   }
+#ifndef ONLY_COMPILE_OPEN_SRC
+  if (val.tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = val.tensor_def_.GetProtoMsg();
+    if (proto_msg == nullptr) {
+      GELOGE(FAILED, "Proto msg is nullptr");
+      return false;
+    }
+    *proto_attr_val.mutable_t() = *proto_msg;
+  } else {
+    auto tensor = proto_attr_val.mutable_t();
+    if (tensor == nullptr) {
+      GELOGE(FAILED, "tensor is nullptr");
+      return false;
+    }
+    if (val.tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
+      tensor->mutable_desc()->CopyFrom(*(val.tensor_data_.tensor_descriptor_.GetProtoMsg()));
+    }
+    tensor->set_data(val.GetData().data(), val.GetData().size());
+  }
+#else
   auto proto_msg = val.tensor_def_.GetProtoMsg();
   if (proto_msg == nullptr) {
     GELOGE(FAILED, "Proto msg is nullptr");
     return false;
   }
   *proto_attr_val.mutable_t() = *proto_msg;
+#endif
   return true;
 }
 
@@ -463,6 +483,28 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
       proto_attr_val.clear_list();
       return false;
     }
+#ifndef ONLY_COMPILE_OPEN_SRC
+    if (item->tensor_def_.GetProtoOwner() != nullptr) {
+      auto proto_msg = item->tensor_def_.GetProtoMsg();
+      if (proto_msg == nullptr) {
+        GELOGE(FAILED, "Proto msg is nullptr");
+        proto_attr_val.clear_list();
+        return false;
+      }
+      *list->add_t() = *proto_msg;
+    } else {
+      auto tensor = list->add_t();
+      if (tensor == nullptr) {
+        GELOGE(FAILED, "tensor is nullptr");
+        proto_attr_val.clear_list();
+        return false;
+      }
+      if (item->tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
+        tensor->mutable_desc()->CopyFrom(*(item->tensor_data_.tensor_descriptor_.GetProtoMsg()));
+      }
+      tensor->set_data(item->GetData().data(), item->GetData().size());
+    }
+#else
     auto proto_msg = item->tensor_def_.GetProtoMsg();
     if (proto_msg == nullptr) {
       GELOGE(FAILED, "Proto msg is nullptr");
@@ -470,6 +512,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
       return false;
     }
     *list->add_t() = *proto_msg;
+#endif
   }
   return true;
 }
@@ -483,6 +526,28 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_t();
   for (const auto &item : value) {
+#ifndef ONLY_COMPILE_OPEN_SRC
+    if (item.tensor_def_.GetProtoOwner() != nullptr) {
+      auto proto_msg = item.tensor_def_.GetProtoMsg();
+      if (proto_msg == nullptr) {
+        GELOGE(FAILED, "Proto msg is nullptr");
+        proto_attr_val.clear_list();
+        return false;
+      }
+      *list->add_t() = *proto_msg;
+    } else {
+      auto tensor = list->add_t();
+      if (tensor == nullptr) {
+        GELOGE(FAILED, "tensor is nullptr");
+        proto_attr_val.clear_list();
+        return false;
+      }
+      if (item.tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
+        tensor->mutable_desc()->CopyFrom(*(item.tensor_data_.tensor_descriptor_.GetProtoMsg()));
+      }
+      tensor->set_data(item.GetData().data(), item.GetData().size());
+    }
+#else
     auto proto_msg = item.tensor_def_.GetProtoMsg();
     if (proto_msg == nullptr) {
       GELOGE(FAILED, "Proto msg is nullptr");
@@ -490,6 +555,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
       return false;
     }
     *list->add_t() = *proto_msg;
+#endif
   }
   return true;
 }

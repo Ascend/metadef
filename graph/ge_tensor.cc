@@ -15,20 +15,19 @@
  */
 
 #include "graph/ge_tensor.h"
-#include <cstdlib>
+
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <securec.h>
 #include "debug/ge_attr_define.h"
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/ge_attr_value.h"
 #include "graph/model_serialize.h"
 #include "proto/ge_ir.pb.h"
-#include "utils/attr_utils.h"
 #include "utils/ge_ir_utils.h"
+#include "utils/mem_utils.h"
 #include "utils/tensor_utils.h"
-#include "utils/type_utils.h"
 
 namespace ge {
 namespace{
@@ -609,7 +608,334 @@ GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   }
   return *this;
 }
+#ifndef ONLY_COMPILE_OPEN_SRC
+uint32_t TensorData::invalid_data_ = 0x3A2D2900;
 
+TensorData::TensorData(const TensorData &other) {
+  // Share data
+  tensor_descriptor_ = other.tensor_descriptor_;
+  aligned_ptr_ = other.aligned_ptr_;
+  length_ = other.length_;
+}
+
+TensorData &TensorData::operator=(const TensorData &other) {
+  if (&other != this) {
+    // Share data
+    tensor_descriptor_ = other.tensor_descriptor_;
+    aligned_ptr_ = other.aligned_ptr_;
+    length_ = other.length_;
+  }
+  return *this;
+}
+
+graphStatus TensorData::SetData(std::vector<uint8_t> &&data) { return SetData(data.data(), data.size()); }
+graphStatus TensorData::SetData(const std::vector<uint8_t> &data) { return SetData(data.data(), data.size()); }
+graphStatus TensorData::SetData(const Buffer &data) { return SetData(data.data(), data.size()); }
+graphStatus TensorData::SetData(const TensorData &data) { return SetData(data.data(), data.size()); }
+
+graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
+  if (size == 0) {
+    GELOGI("size is 0");
+    aligned_ptr_.reset();
+    return GRAPH_SUCCESS;
+  }
+  if (data == nullptr) {
+    GELOGI("data addr is empty");
+    return GRAPH_SUCCESS;
+  }
+
+  if (MallocAlignedPtr(size) == nullptr) {
+    GELOGE(MEMALLOC_FAILED, "malloc memory failed, size=%zu", size);
+    return GRAPH_FAILED;
+  }
+
+  size_t remain_size = size;
+  auto dst_addr = reinterpret_cast<uintptr_t>(aligned_ptr_->MutableGet());
+  auto src_addr = reinterpret_cast<uintptr_t>(data);
+  while(remain_size > SECUREC_MEM_MAX_LEN) {
+    if (memcpy_s(reinterpret_cast<void*>(dst_addr), SECUREC_MEM_MAX_LEN,
+                 reinterpret_cast<const void*>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
+      GELOGE(INTERNAL_ERROR, "memcpy failed, size=SECUREC_MEM_MAX_LEN");
+      return GRAPH_FAILED;
+    }
+    remain_size -= SECUREC_MEM_MAX_LEN;
+    dst_addr += SECUREC_MEM_MAX_LEN;
+    src_addr += SECUREC_MEM_MAX_LEN;
+  }
+  if (memcpy_s(reinterpret_cast<void*>(dst_addr), remain_size,
+               reinterpret_cast<const void*>(src_addr), remain_size) != EOK) {
+    GELOGE(INTERNAL_ERROR, "memcpy failed, size=%zu", remain_size);
+    return GRAPH_FAILED;
+  }
+  return GRAPH_SUCCESS;
+}
+
+void TensorData::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) {
+  aligned_ptr_ = std::move(aligned_ptr);
+  length_ = size;
+}
+
+const uint8_t *TensorData::MallocAlignedPtr(size_t size) {
+  if (size == 0) {
+    GELOGW("data size is 0");
+    aligned_ptr_.reset();
+    return reinterpret_cast<const uint8_t *>(&invalid_data_);
+  }
+
+  if (length_ != size) {
+    aligned_ptr_.reset();
+  }
+
+  length_ = size;
+  if (aligned_ptr_ == nullptr) {
+    aligned_ptr_ = MakeShared<AlignedPtr>(length_);
+    if (aligned_ptr_ == nullptr) {
+      GELOGE(INTERNAL_ERROR, "AlignedPtr is null");
+      return nullptr;
+    }
+  }
+
+  return aligned_ptr_->Get();
+}
+
+size_t TensorData::GetSize() const { return length_; }
+
+const uint8_t *TensorData::GetData() const {
+  if (length_ == 0) {
+    return reinterpret_cast<const uint8_t *>(&invalid_data_);
+  }
+  if (aligned_ptr_ == nullptr) {
+    return nullptr;
+  }
+  return aligned_ptr_->Get();
+}
+
+uint8_t *TensorData::GetData() {
+  if (length_ == 0) {
+    return reinterpret_cast<uint8_t *>(&invalid_data_);
+  }
+  if (aligned_ptr_ == nullptr) {
+    return nullptr;
+  }
+  return aligned_ptr_->MutableGet();
+}
+
+GeTensor::GeTensor::GeTensor() : tensor_def_(nullptr, nullptr), __desc_(), tensor_data_() {
+  tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
+  // Default init desc
+  DescReference() = GeTensorDesc();
+}
+
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc) : GeTensor() { DescReference() = tensor_desc; }
+
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const vector<uint8_t> &data) : GeTensor() {
+  DescReference() = tensor_desc;
+  if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
+    GELOGW("Set data failed");
+  }
+}
+
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const uint8_t *data, size_t size) : GeTensor() {
+  DescReference() = tensor_desc;
+  if (tensor_data_.SetData(data, size) != GRAPH_SUCCESS) {
+    GELOGW("Set data failed");
+  }
+}
+
+GeTensor::GeTensor(GeTensorDesc &&tensor_desc, vector<uint8_t> &&data) : GeTensor() {
+  DescReference() = std::move(tensor_desc);
+  if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
+    GELOGW("Set data failed");
+  }
+}
+
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const Buffer &data) : GeTensor() {
+  DescReference() = tensor_desc;
+  if (data.size() == 0) {
+    GELOGI("GetSize res is 0.");
+  }
+  if (data.data() == nullptr) {
+    GELOGI("data addr is null.");
+  }
+  if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
+    GELOGW("Set data failed");
+  }
+}
+
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) : GeTensor() {
+  DescReference() = tensor_desc;
+  tensor_data_.SetData(std::move(aligned_ptr), size);
+}
+
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, size_t size) : GeTensor() {
+  DescReference() = tensor_desc;
+  if (tensor_data_.MallocAlignedPtr(size) == nullptr) {
+    GELOGW("malloc memory failed, size=%zu", size);
+  }
+}
+
+GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg)
+        : tensor_def_(proto_owner, proto_msg), __desc_(), tensor_data_() {
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    if (tensor_def_.GetProtoMsg() != nullptr) {
+      BuildAlignerPtrWithProtoData();
+    } else {
+      GELOGI("data is empty");
+    }
+    tensor_data_.tensor_descriptor_ = DescReference().tensor_descriptor_;
+  } else {
+    if (proto_msg != nullptr) {
+      GeTensorDesc tensor_desc(proto_owner, proto_msg->mutable_desc());
+      tensor_data_.tensor_descriptor_ = tensor_desc.tensor_descriptor_;
+      DescReference() = tensor_desc;
+      if (tensor_data_.SetData(reinterpret_cast<const uint8_t *>(proto_msg->data().data()),
+                               proto_msg->data().size()) != GRAPH_SUCCESS) {
+        GELOGW("Set data failed");
+      }
+    } else {
+      GeTensorDesc tensor_desc(proto_owner, nullptr);
+      tensor_data_.tensor_descriptor_ = tensor_desc.tensor_descriptor_;
+      DescReference() = tensor_desc;
+      GELOGI("data is empty");
+    }
+  }
+}
+
+void GeTensor::BuildAlignerPtrWithProtoData() {
+  auto proto_msg = tensor_def_.GetProtoMsg();
+  if ((proto_msg == nullptr) || (reinterpret_cast<const uint8_t *>(proto_msg->data().data()) == tensor_data_.data())) {
+    return;
+  }
+  tensor_data_.length_ = proto_msg->data().size();
+  tensor_data_.aligned_ptr_.reset();
+  tensor_data_.aligned_ptr_ =
+          AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], deleter> &ptr) {
+                                           ptr.reset(const_cast<uint8_t *>(
+                                                   reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
+                                         },
+                                         [](uint8_t *ptr) {
+                                           ptr = nullptr;
+                                         });
+}
+
+GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
+
+GeTensorDesc &GeTensor::MutableTensorDesc() { return DescReference(); }
+
+GeTensorDesc &GeTensor::DescReference() const {
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    if (tensor_def_.GetProtoMsg() != nullptr) {
+      GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), tensor_def_.GetProtoMsg()->mutable_desc());
+      __desc_.RefTo(tensor_desc);
+    } else {
+      GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), nullptr);
+      __desc_.RefTo(tensor_desc);
+    }
+  } else {
+    if (tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
+      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(), tensor_data_.tensor_descriptor_.GetProtoMsg());
+      __desc_.RefTo(tensor_desc);
+    } else {
+      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(), nullptr);
+      __desc_.RefTo(tensor_desc);
+    }
+  }
+  return __desc_;
+}
+
+void GeTensor::SetTensorDesc(const GeTensorDesc &tensor_desc) { DescReference() = tensor_desc; }
+
+graphStatus GeTensor::SetData(vector<uint8_t> &&data) {
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = tensor_def_.GetProtoMsg();
+    GE_CHECK_NOTNULL(proto_msg);
+    proto_msg->set_data(data.data(), data.size());
+    BuildAlignerPtrWithProtoData();
+    return GRAPH_SUCCESS;
+  }
+  return tensor_data_.SetData(data);
+}
+
+graphStatus GeTensor::SetData(const vector<uint8_t> &data) {
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = tensor_def_.GetProtoMsg();
+    GE_CHECK_NOTNULL(proto_msg);
+    proto_msg->set_data(data.data(), data.size());
+    BuildAlignerPtrWithProtoData();
+    return GRAPH_SUCCESS;
+  }
+  return tensor_data_.SetData(data);
+}
+
+graphStatus GeTensor::SetData(const uint8_t *data, size_t size) {
+  if (size > 0) {
+    GE_CHECK_NOTNULL(data);
+  }
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = tensor_def_.GetProtoMsg();
+    GE_CHECK_NOTNULL(proto_msg);
+    proto_msg->set_data(data, size);
+    BuildAlignerPtrWithProtoData();
+    return GRAPH_SUCCESS;
+  }
+  return tensor_data_.SetData(data, size);
+}
+
+graphStatus GeTensor::SetData(const Buffer &data) {
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = tensor_def_.GetProtoMsg();
+    GE_CHECK_NOTNULL(proto_msg);
+    if (data.size() == 0) {
+      GELOGI("GetSize res is 0.");
+    }
+    if (data.data() == nullptr) {
+      GELOGI("data addr is null.");
+    }
+    proto_msg->set_data(data.data(), data.size());
+    BuildAlignerPtrWithProtoData();
+    return GRAPH_SUCCESS;
+  }
+  return tensor_data_.SetData(data);
+}
+
+graphStatus GeTensor::SetData(const TensorData &data) {
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = tensor_def_.GetProtoMsg();
+    GE_CHECK_NOTNULL(proto_msg);
+    proto_msg->set_data(data.data(), data.size());
+    BuildAlignerPtrWithProtoData();
+    return GRAPH_SUCCESS;
+  }
+  return tensor_data_.SetData(data);
+}
+
+GeTensor GeTensor::Clone() const {
+  GeTensor tensor;
+  tensor.__desc_.tensor_descriptor_.CopyValueFrom(__desc_.tensor_descriptor_);
+  tensor.tensor_data_.tensor_descriptor_ = tensor.__desc_.tensor_descriptor_;
+  tensor.SetData(GetData());
+  return tensor;
+}
+
+GeTensor::GeTensor(const GeTensor &other) : GeTensor() {
+  if (other.tensor_def_.GetProtoOwner() != nullptr) {
+    tensor_def_ = other.tensor_def_;
+  }
+  __desc_ = other.__desc_;
+  tensor_data_ = other.tensor_data_;
+}
+
+GeTensor &GeTensor::operator=(const GeTensor &other) {
+  if (&other != this) {
+    if (other.tensor_def_.GetProtoOwner() != nullptr) {
+      tensor_def_ = other.tensor_def_;
+    }
+    __desc_ = other.__desc_;
+    tensor_data_ = other.tensor_data_;
+  }
+  return *this;
+}
+#else
 GeTensor::GeTensor::GeTensor() {
   tensor_def_.InitDefault();
   // Default init desc
@@ -743,7 +1069,7 @@ GeTensor &GeTensor::operator=(const GeTensor &other) {
   }
   return *this;
 }
-
+#endif
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetSize(const GeTensorDesc &tensor_desc,
                                                                                 int64_t &size) {
   auto tensor_descriptor_msg = tensor_desc.tensor_descriptor_.GetProtoMsg();
