@@ -9,8 +9,6 @@ set(PROTO_LIST
     "${METADEF_DIR}/proto/tensorflow/tensor_shape.proto"
     "${METADEF_DIR}/proto/tensorflow/types.proto"
     "${METADEF_DIR}/proto/tensorflow/versions.proto"
-    "${METADEF_DIR}/proto/task.proto"
-    "${METADEF_DIR}/proto/om.proto"
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
