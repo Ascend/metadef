@@ -24,31 +24,13 @@
 #include <vector>
 #include <deque>
 #include "detail/attributes_holder.h"
+#include "graph/ge_attr_value.h"
 #include "graph/anchor.h"
 #include "graph/node.h"
 #include "graph/op_desc.h"
 #include "graph/range_vistor.h"
 
 namespace ge {
-class Node;
-using NodePtr = std::shared_ptr<Node>;
-class Edge;
-using EdgePtr = std::shared_ptr<Edge>;
-
-class InDataAnchor;
-using InDataAnchorPtr = std::shared_ptr<InDataAnchor>;
-
-class OutDataAnchor;
-using OutDataAnchorPtr = std::shared_ptr<OutDataAnchor>;
-
-class ControlAnchor;
-using ControlAnchorPtr = std::shared_ptr<ControlAnchor>;
-class InControlAnchor;
-using InControlAnchorPtr = std::shared_ptr<InControlAnchor>;
-class OutControlAnchor;
-using OutControlAnchorPtr = std::shared_ptr<OutControlAnchor>;
-class GeAttrValue;
-using AttrValuePtr = std::shared_ptr<GeAttrValue>;
 using ConstComputeGraph = const ComputeGraph;
 
 class OperatorImpl;
