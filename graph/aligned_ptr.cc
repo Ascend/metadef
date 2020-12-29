@@ -19,7 +19,7 @@
 #include "graph/debug/ge_log.h"
 
 namespace ge {
-AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment, const deleter &delete_func) {
+AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
   size_t alloc_size = buffer_size;
   if (alignment > 0) {
     alloc_size = buffer_size + alignment - 1;
@@ -29,7 +29,11 @@ AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment, const deleter &dele
     return;
   }
 
-  base_ = std::unique_ptr<uint8_t[], deleter>(new (std::nothrow) uint8_t[alloc_size], delete_func);
+  base_ = std::unique_ptr<uint8_t[], deleter>(new (std::nothrow) uint8_t[alloc_size],
+                                              [](uint8_t *ptr) {
+                                                delete[] ptr;
+                                                ptr = nullptr;
+                                              });
   if (base_ == nullptr) {
     GELOGW("Allocate buffer failed, size=%zu", alloc_size);
     return;
@@ -44,10 +48,9 @@ AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment, const deleter &dele
   }
 }
 
-std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(size_t buffer_size, const allocator &alloc_func,
-                                                           const deleter &delete_func, size_t alignment) {
-  if (alloc_func == nullptr) {
-      GELOGE(FAILED, "alloc_func is null");
+std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const allocator &alloc_func, const deleter &delete_func) {
+  if ((alloc_func == nullptr) || (delete_func == nullptr)) {
+      GELOGE(FAILED, "alloc_func/delete_func is null");
       return nullptr;
   }
   auto aligned_ptr = MakeShared<AlignedPtr>();

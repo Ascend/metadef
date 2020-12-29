@@ -25,16 +25,10 @@ namespace {
 constexpr size_t kAlignmentBytes = 16;
 using deleter = std::function<void(uint8_t *)>;
 using allocator = std::function<void(std::unique_ptr<uint8_t[], deleter> &base_addr)>;
-void default_deleter(uint8_t *ptr) {
-  delete[] ptr;
-  ptr = nullptr;
-}
 }
 class AlignedPtr {
  public:
-  explicit AlignedPtr(size_t buffer_size,
-                      size_t alignment = kAlignmentBytes,
-                      const deleter &delete_func = default_deleter);
+  explicit AlignedPtr(size_t buffer_size, size_t alignment = kAlignmentBytes);
   AlignedPtr() = default;
   ~AlignedPtr() = default;
   AlignedPtr(const AlignedPtr &) = delete;
@@ -45,10 +39,7 @@ class AlignedPtr {
   const uint8_t *Get() const { return aligned_addr_; }
   uint8_t *MutableGet() { return aligned_addr_; }
 
-  static std::shared_ptr<AlignedPtr> BuildFromAllocFunc(size_t buffer_size,
-                                                        const allocator &alloc_func,
-                                                        const deleter &delete_func = default_deleter,
-                                                        size_t alignment = kAlignmentBytes);
+  static std::shared_ptr<AlignedPtr> BuildFromAllocFunc(const allocator &alloc_func, const deleter &delete_func);
 
  private:
   std::unique_ptr<uint8_t[], deleter> base_ = nullptr;

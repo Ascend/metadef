@@ -809,15 +809,13 @@ void GeTensor::BuildAlignerPtrWithProtoData() {
   tensor_data_.length_ = proto_msg->data().size();
   tensor_data_.aligned_ptr_.reset();
   tensor_data_.aligned_ptr_ =
-          AlignedPtr::BuildFromAllocFunc(proto_msg->data().size(),
-                                         [&proto_msg](std::unique_ptr<uint8_t[], deleter> &ptr) {
+          AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], deleter> &ptr) {
                                            ptr.reset(const_cast<uint8_t *>(
                                                    reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
                                          },
                                          [](uint8_t *ptr) {
                                            ptr = nullptr;
-                                         },
-                                         0);
+                                         });
 }
 
 GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
