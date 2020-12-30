@@ -32,18 +32,6 @@ enum FrameworkType {
   ONNX,
   FRAMEWORK_RESERVED,
 };
-
-///
-/// @ingroup domi_omg
-/// @brief  AI framework type to string
-///
-const std::map<std::string, std::string> kFwkTypeToStr = {
-    {"0", "Caffe"},
-    {"1", "MindSpore"},
-    {"3", "TensorFlow"},
-    {"4", "Android_NN"},
-    {"5", "Onnx"}
-};
 }  // namespace domi
 
 #endif  // INC_EXTERNAL_REGISTER_REGISTER_FMK_TYPES_H_
