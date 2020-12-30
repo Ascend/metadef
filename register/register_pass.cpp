@@ -34,7 +34,7 @@ class PassRegistrationDataImpl {
   std::string pass_name_;
   int32_t priority_ = INT_MAX;
   CustomPassFunc custom_pass_fn_ = nullptr;
-}
+};
 
 PassRegistrationDataImpl::PassRegistrationDataImpl(const std::string &pass_name)
     : pass_name_(pass_name),
@@ -58,7 +58,7 @@ std::string PassRegistrationData::GetPassName() const {
 PassRegistrationData &PassRegistrationData::Priority(const int32_t &priority) {
   if (impl_ != nullptr) {
     if (priority < 0) {
-      GELOGW("Custom pass [%s] priority must greater than or equal to 0, but got %d",
+      GELOGW("Custom pass [%s] priority must greater than or equal to 0, but got %d!",
              impl_->pass_name_.c_str(), priority);
     } else {
       impl_->priority_ = priority;
@@ -95,7 +95,7 @@ CustomPassHelper *CustomPassHelper::Instance() {
 
 Status CustomPassHelper::Run(ge::GraphPtr &graph) {
   for (auto &item : registration_datas_) {
-    GELOGD("Start to run custom pass [%s]", item.GetPassName().c_str());
+    GELOGD("Start to run custom pass [%s]!", item.GetPassName().c_str());
     auto custom_pass_fn = item.GetCustomPassFn();
     if (custom_pass_fn == nullptr) {
       GELOGW("Custom pass [%s] doesn't have custom_pass_fn!", item.GetPassName().c_str());
