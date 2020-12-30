@@ -60,7 +60,7 @@ class CustomPassHelper {
  public:
   static CustomPassHelper *Instance();
 
-  std::multiset<PassRegistrationData, CustomPassGreater> registration_datas_;
+  void Insert(const PassRegistrationData &);
 
   Status Run(ge::GraphPtr &);
 
@@ -68,6 +68,7 @@ class CustomPassHelper {
 
  private:
   CustomPassHelper() = default;
+  std::multiset<PassRegistrationData, CustomPassGreater> registration_datas_;
 };
 
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassReceiver {

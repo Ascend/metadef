@@ -21,7 +21,7 @@
 
 namespace ge {
 PassReceiver::PassReceiver(PassRegistrationData &reg_data) {
-  CustomPassHelper::Instance()->registration_datas_.insert(reg_data);
+  CustomPassHelper::Instance()->Insert(reg_data);
 }
 
 class PassRegistrationDataImpl {
@@ -91,6 +91,10 @@ CustomPassFunc PassRegistrationData::GetCustomPassFn() const {
 CustomPassHelper *CustomPassHelper::Instance() {
   static CustomPassHelper instance;
   return &instance;
+}
+
+void CustomPassHelper::Insert(const PassRegistrationData &reg_data) {
+  registration_datas_.insert(reg_data);
 }
 
 Status CustomPassHelper::Run(ge::GraphPtr &graph) {
