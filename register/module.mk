@@ -2,6 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 
 local_lib_src_files :=  register.cpp \
+                        register_pass.cpp \
                         ops_kernel_builder_registry.cc \
                         graph_optimizer/graph_fusion/graph_fusion_pass_base.cc \
                         graph_optimizer/graph_fusion/fusion_pass_registry.cc \
