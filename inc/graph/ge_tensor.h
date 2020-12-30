@@ -177,7 +177,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   inline void clear() { aligned_ptr_.reset(); }
   uint8_t operator[](size_t index) const {
     if (aligned_ptr_ != nullptr && index < length_) {
-      return (uint8_t)(*(aligned_ptr_->MutableGet() + index));
+      return *(aligned_ptr_->MutableGet() + index);
     }
     return 0xff;
   }
