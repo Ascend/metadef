@@ -433,7 +433,6 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kT)) {
     return false;
   }
-#ifndef ONLY_COMPILE_OPEN_SRC
   if (val.tensor_def_.GetProtoOwner() != nullptr) {
     auto proto_msg = val.tensor_def_.GetProtoMsg();
     if (proto_msg == nullptr) {
@@ -452,14 +451,6 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
     }
     tensor->set_data(val.GetData().data(), val.GetData().size());
   }
-#else
-  auto proto_msg = val.tensor_def_.GetProtoMsg();
-  if (proto_msg == nullptr) {
-    GELOGE(FAILED, "Proto msg is nullptr");
-    return false;
-  }
-  *proto_attr_val.mutable_t() = *proto_msg;
-#endif
   return true;
 }
 
@@ -483,7 +474,6 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
       proto_attr_val.clear_list();
       return false;
     }
-#ifndef ONLY_COMPILE_OPEN_SRC
     if (item->tensor_def_.GetProtoOwner() != nullptr) {
       auto proto_msg = item->tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {
@@ -504,15 +494,6 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
       }
       tensor->set_data(item->GetData().data(), item->GetData().size());
     }
-#else
-    auto proto_msg = item->tensor_def_.GetProtoMsg();
-    if (proto_msg == nullptr) {
-      GELOGE(FAILED, "Proto msg is nullptr");
-      proto_attr_val.clear_list();
-      return false;
-    }
-    *list->add_t() = *proto_msg;
-#endif
   }
   return true;
 }
@@ -526,7 +507,6 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_t();
   for (const auto &item : value) {
-#ifndef ONLY_COMPILE_OPEN_SRC
     if (item.tensor_def_.GetProtoOwner() != nullptr) {
       auto proto_msg = item.tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {
@@ -547,15 +527,6 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
       }
       tensor->set_data(item.GetData().data(), item.GetData().size());
     }
-#else
-    auto proto_msg = item.tensor_def_.GetProtoMsg();
-    if (proto_msg == nullptr) {
-      GELOGE(FAILED, "Proto msg is nullptr");
-      proto_attr_val.clear_list();
-      return false;
-    }
-    *list->add_t() = *proto_msg;
-#endif
   }
   return true;
 }
