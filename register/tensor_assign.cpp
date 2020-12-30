@@ -288,7 +288,8 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
     GE_LOGE("weight is nullptr.");
     return;
   }
-  GELOGD("Set data from tensor_content, count = %d ,data_type = %s.", count, DataType_Name(data_type).c_str());
+  GELOGD("Set data from tensor_content %s, count = %d, data_type = %s.", tensor_content.c_str(),
+         count, DataType_Name(data_type).c_str());
   if (CheckByte(data_type)) {
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(uint8_t));
   } else if (CheckBoolVal(data_type)) {
@@ -301,6 +302,20 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(uint64_t));
   } else if (CheckDoubleVal(data_type) || CheckComplex128Val(data_type)) {
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(double));
+  } else if (CheckStringVal(data_type)) {
+    std::string weight_content;
+    if (tensor_content.size() > 1) {
+      weight_content = tensor_content.substr(1);  // first byte is tensor length
+    }
+    size_t total_size = weight_content.size() + kExtraBytesForString;
+    std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
+    GE_CHECK_NOTNULL_EXEC(addr, return);
+    uint64_t *p = reinterpret_cast<uint64_t *>(addr.get());
+    char *raw_data = addr.get() + sizeof(uint64_t);
+    p[0] = reinterpret_cast<uintptr_t>(raw_data);
+    CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1, weight_content.c_str(),
+		             weight_content.size() + 1) == EOK, GELOGW("call memcpy_s fail!"));
+    weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   } else {
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(float));
   }
