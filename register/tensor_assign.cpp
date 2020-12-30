@@ -314,7 +314,7 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
     char *raw_data = addr.get() + sizeof(uint64_t);
     p[0] = reinterpret_cast<uintptr_t>(raw_data);
     CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1, weight_content.c_str(),
-		             weight_content.size() + 1) == EOK, GELOGW("call memcpy_s fail!"));
+                     weight_content.size() + 1) == EOK, GELOGW("call memcpy_s fail!"));
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   } else {
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(float));
