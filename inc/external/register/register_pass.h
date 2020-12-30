@@ -49,7 +49,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassRegistrationData {
   std::shared_ptr<PassRegistrationDataImpl> impl_;
 };
 
-class DataGreater : std::greater<PassRegistrationData> {
+class CustomPassGreater : std::greater<PassRegistrationData> {
  public:
   bool operator()(const PassRegistrationData &a, const PassRegistrationData &b) const {
     return a.GetPriority() < b.GetPriority();
@@ -60,7 +60,7 @@ class CustomPassHelper {
  public:
   static CustomPassHelper *Instance();
 
-  std::multiset<PassRegistrationData, DataGreater> registration_datas_;
+  std::multiset<PassRegistrationData, CustomPassGreater> registration_datas_;
 
   Status Run(ge::GraphPtr &);
 
