@@ -175,6 +175,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   inline std::uint8_t *data() { return GetData(); }
   inline std::size_t size() const { return GetSize(); }
   inline void clear() { aligned_ptr_.reset(); }
+  uint8_t operator[](size_t index) const {
+    if (aligned_ptr_ != nullptr && index < length_) {
+      return *(aligned_ptr_->MutableGet() + index);
+    }
+    return 0xff;
+  }
 
   std::size_t GetSize() const;
   const std::uint8_t *GetData() const;
