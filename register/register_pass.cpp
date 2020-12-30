@@ -32,16 +32,16 @@ class PassRegistrationDataImpl {
   explicit PassRegistrationDataImpl(const std::string &pass_name);
 
   std::string pass_name_;
-  int32_t priority = INT_MAX;
+  int32_t priority_ = INT_MAX;
   CustomPassFunc custom_pass_fn_ = nullptr;
 }
 
 PassRegistrationDataImpl::PassRegistrationDataImpl(const std::string &pass_name)
     : pass_name_(pass_name),
-      priority(INT_MAX),
+      priority_(INT_MAX),
       custom_pass_fn_(nullptr) {}
 
-PassRegistrationData &PassRegistrationData(std::string pass_name) {
+PassRegistrationData::PassRegistrationData(std::string pass_name) {
   impl_ = std::shared_ptr<PassRegistrationDataImpl>(new (std::nothrow) PassRegistrationDataImpl(pass_name));
   if (impl_ == nullptr) {
     GELOGW("Custom pass [%s] PassRegistrationDataImpl make shared failed!", pass_name.c_str());
@@ -68,7 +68,7 @@ PassRegistrationData &PassRegistrationData::Priority(const int32_t &priority) {
 }
 
 int32_t PassRegistrationData::GetPriority() const {
-  if (impl_ != nullptr) {
+  if (impl_ == nullptr) {
     return INT_MAX;
   }
   return impl_->priority_;
@@ -93,16 +93,16 @@ CustomPassHelper *CustomPassHelper::Instance() {
   return &instance;
 }
 
-Status CustomPassHelper::Run(ge::GraphPtr & graph) {
-  for (auto item : registration_datas_) {
-    GELOGD("Start to run custom pass", item.GetPassName().c_str());
+Status CustomPassHelper::Run(ge::GraphPtr &graph) {
+  for (auto &item : registration_datas_) {
+    GELOGD("Start to run custom pass [%s]", item.GetPassName().c_str());
     auto custom_pass_fn = item.GetCustomPassFn();
     if (custom_pass_fn == nullptr) {
-      GELOGW("Custom pass [%s] doesn't have custom_pass_fn", item.GetPassName().c_str());
+      GELOGW("Custom pass [%s] doesn't have custom_pass_fn!", item.GetPassName().c_str());
       continue;
     }
     if (custom_pass_fn(graph) != SUCCESS) {
-      GELOGE("Custom pass [%s] run failed!", item.GetPassName().c_str());
+      GE_LOGE("Custom pass [%s] run failed!", item.GetPassName().c_str());
       return FAILED;
     }
     GELOGD("Run custom pass [%s] success!", item.GetPassName().c_str());

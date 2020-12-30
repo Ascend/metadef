@@ -51,7 +51,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassRegistrationData {
 
 class DataGreater : std::greater<PassRegistrationData> {
  public:
-  bool opertor()(const PassRegistrationData &a, const PassRegistrationData &b) const {
+  bool operator()(const PassRegistrationData &a, const PassRegistrationData &b) const {
     return a.GetPriority() < b.GetPriority();
   }
 };
@@ -82,5 +82,6 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassReceiver {
   static ::ge::PassReceiver register_pass##ctr      \
       __attribute__((unused)) =                     \
           ::ge::PassRegistrationData(name)
-} // namespace ge
+}  // namespace ge
+
 #endif  // INC_EXTERNAL_REGISTER_REGISTER_PASS_H_
