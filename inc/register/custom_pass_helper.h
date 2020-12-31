@@ -32,7 +32,7 @@ class CustomPassGreater : std::greater<PassRegistrationData> {
 
 class CustomPassHelper {
  public:
-  static CustomPassHelper *Instance();
+  static CustomPassHelper &Instance();
 
   void Insert(const PassRegistrationData &);
 

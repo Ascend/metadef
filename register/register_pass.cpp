@@ -22,7 +22,7 @@
 
 namespace ge {
 PassReceiver::PassReceiver(PassRegistrationData &reg_data) {
-  CustomPassHelper::Instance()->Insert(reg_data);
+  CustomPassHelper::Instance().Insert(reg_data);
 }
 
 class PassRegistrationDataImpl {
@@ -89,9 +89,9 @@ CustomPassFunc PassRegistrationData::GetCustomPassFn() const {
   return impl_->custom_pass_fn_;
 }
 
-CustomPassHelper *CustomPassHelper::Instance() {
+CustomPassHelper &CustomPassHelper::Instance() {
   static CustomPassHelper instance;
-  return &instance;
+  return instance;
 }
 
 void CustomPassHelper::Insert(const PassRegistrationData &reg_data) {
