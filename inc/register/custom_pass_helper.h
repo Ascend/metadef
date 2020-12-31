@@ -44,5 +44,6 @@ class CustomPassHelper {
   CustomPassHelper() = default;
   std::multiset<PassRegistrationData, CustomPassGreater> registration_datas_;
 };
-}
-#endif //INC_REGISTER_CUSTOM_PASS_HELPER_H_
+} // namespace ge
+
+#endif // INC_REGISTER_CUSTOM_PASS_HELPER_H_
