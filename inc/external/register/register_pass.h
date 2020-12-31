@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <set>
 
 #include "graph/graph.h"
 #include "ge/ge_api_error_codes.h"
@@ -47,28 +46,6 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassRegistrationData {
 
  private:
   std::shared_ptr<PassRegistrationDataImpl> impl_;
-};
-
-class CustomPassGreater : std::greater<PassRegistrationData> {
- public:
-  bool operator()(const PassRegistrationData &a, const PassRegistrationData &b) const {
-    return a.GetPriority() < b.GetPriority();
-  }
-};
-
-class CustomPassHelper {
- public:
-  static CustomPassHelper *Instance();
-
-  void Insert(const PassRegistrationData &);
-
-  Status Run(ge::GraphPtr &);
-
-  ~CustomPassHelper() = default;
-
- private:
-  CustomPassHelper() = default;
-  std::multiset<PassRegistrationData, CustomPassGreater> registration_datas_;
 };
 
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassReceiver {
