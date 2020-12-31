@@ -15,10 +15,10 @@
 */
 
 #include "external/register/register_pass.h"
+#include "register/custom_pass_helper.h"
 #include <algorithm>
 #include <climits>
 #include "graph/debug/ge_log.h"
-#include "register/custom_pass_helper.h"
 
 namespace ge {
 PassReceiver::PassReceiver(PassRegistrationData &reg_data) {
