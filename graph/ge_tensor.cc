@@ -637,6 +637,7 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
   if (size == 0) {
     GELOGI("size is 0");
     aligned_ptr_.reset();
+    length_ = 0;
     return GRAPH_SUCCESS;
   }
   if (data == nullptr) {
@@ -679,6 +680,7 @@ const uint8_t *TensorData::MallocAlignedPtr(size_t size) {
   if (size == 0) {
     GELOGW("data size is 0");
     aligned_ptr_.reset();
+    length_ = 0;
     return reinterpret_cast<const uint8_t *>(&invalid_data_);
   }
 
@@ -907,6 +909,16 @@ graphStatus GeTensor::SetData(const TensorData &data) {
     return GRAPH_SUCCESS;
   }
   return tensor_data_.SetData(data);
+}
+
+void GeTensor::ClearData() {
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = tensor_def_.GetProtoMsg();
+    if (proto_msg != nullptr) {
+      proto_msg->clear_data();
+    }
+  }
+  tensor_data_.clear();
 }
 
 GeTensor GeTensor::Clone() const {
