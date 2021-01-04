@@ -1125,4 +1125,10 @@ const std::string ATTR_ALL_GEARS_INFO = "all_gears_info";
 const std::string ATTR_NAME_MEMORY_SIZE_CALC_TYPE = "_memory_size_calc_type";
 // Indicates which operators keep the precision unchanged
 const std::string ATTR_NAME_KEEP_DTYPE = "_keep_dtype";
+
+// profiling task mark on fp bp
+const std::string ATTR_NAME_INSERT_FP_PROFILILNG_TASK = "_fp_profiling_task";
+const std::string ATTR_NAME_INSERT_BP_PROFILILNG_TASK = "_bp_profiling_task";
+const std::string ATTR_NAME_INSERT_END_PROFILILNG_TASK = "_end_profiling_task";
+const std::string ATTR_NAME_INSERT_PROFILILNG_TASK_LOG_ID = "_profiling_log_id";
 }  // namespace ge
