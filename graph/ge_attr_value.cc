@@ -15,6 +15,7 @@
  */
 
 #include "graph/ge_attr_value.h"
+#include <set>
 #include "external/graph/graph.h"
 #include "utils/attr_utils.h"
 #include "framework/common/debug/ge_log.h"
@@ -28,6 +29,7 @@
 using std::map;
 using std::string;
 using std::vector;
+using std::set;
 
 namespace ge {
 NamedAttrs::NamedAttrs() { named_attrs_.InitDefault(); }
@@ -1350,6 +1352,28 @@ std::string AttrUtils::GetAllAttrsStr(AttrUtils::ConstAttrHolderAdapter &&obj) {
   for (auto &attr : ordered_attrs) {
     ss << attr.first << ":" << attr.second << ";";
   }
+  return ss.str();
+}
+
+std::string AttrUtils::GetAttrsStrAfterRid(AttrUtils::ConstAttrHolderAdapter &&obj,
+                                           const set<string> &un_compute_attrs) {
+  auto holder = obj.get();
+  if (holder == nullptr) {
+    return "";
+  }
+  auto attrs_map = holder->GetAttrMap();
+  if (attrs_map.GetProtoMsg() == nullptr) {
+    return "";
+  }
+
+  std::stringstream ss;
+  for (auto &attr : *(attrs_map.GetProtoMsg())) {
+    if (un_compute_attrs.find(attr.first) != un_compute_attrs.end()) {
+      continue;
+    }
+    ss << attr.first << ":" << attr.second.SerializeAsString() << ";";
+  }
+
   return ss.str();
 }
 }  // namespace ge
