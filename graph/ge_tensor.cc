@@ -636,8 +636,7 @@ graphStatus TensorData::SetData(const TensorData &data) { return SetData(data.da
 graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
   if (size == 0) {
     GELOGI("size is 0");
-    aligned_ptr_.reset();
-    length_ = 0;
+    clear();
     return GRAPH_SUCCESS;
   }
   if (data == nullptr) {
@@ -679,8 +678,7 @@ void TensorData::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) {
 const uint8_t *TensorData::MallocAlignedPtr(size_t size) {
   if (size == 0) {
     GELOGW("data size is 0");
-    aligned_ptr_.reset();
-    length_ = 0;
+    clear();
     return reinterpret_cast<const uint8_t *>(&invalid_data_);
   }
 
