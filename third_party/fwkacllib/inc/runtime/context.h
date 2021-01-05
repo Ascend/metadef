@@ -47,7 +47,7 @@ typedef struct tagRtGroupInfo {
   uint32_t aivectorNum;
   uint32_t sdmaNum;
   uint32_t activeStreamNum;
-  void*  extrPtr;
+  void *extrPtr;
 } rtGroupInfo_t;
 
 /**
@@ -156,6 +156,7 @@ RTS_API rtError_t rtGetGroupCount(uint32_t *count);
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtSetCtxINFMode(bool mode);
+
 #if defined(__cplusplus) && !defined(COMPILE_OMG_PACKAGE)
 }
 #endif
