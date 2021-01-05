@@ -608,7 +608,7 @@ GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   }
   return *this;
 }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
 uint32_t TensorData::invalid_data_ = 0x3A2D2900;
 
 TensorData::TensorData(const TensorData &other) {
@@ -935,141 +935,7 @@ GeTensor &GeTensor::operator=(const GeTensor &other) {
   }
   return *this;
 }
-#else
-GeTensor::GeTensor::GeTensor() {
-  tensor_def_.InitDefault();
-  // Default init desc
-  DescReference() = GeTensorDesc();
-}
 
-GeTensor::GeTensor(const GeTensorDesc &tensor_desc) : GeTensor() { DescReference() = tensor_desc; }
-
-GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const vector<uint8_t> &data) : GeTensor() {
-  DescReference() = tensor_desc;
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  if (proto_msg != nullptr) {
-    proto_msg->set_data(data.data(), data.size());
-  }
-}
-
-GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const uint8_t *data, size_t size) : GeTensor() {
-  DescReference() = tensor_desc;
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  if (proto_msg != nullptr && data != nullptr) {
-    proto_msg->set_data(data, size);
-  }
-}
-
-GeTensor::GeTensor(GeTensorDesc &&tensor_desc, vector<uint8_t> &&data) : GeTensor() {
-  DescReference() = std::move(tensor_desc);
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  if (proto_msg != nullptr) {
-    proto_msg->set_data(data.data(), data.size());
-  }
-}
-
-GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const Buffer &data) : GeTensor() {
-  DescReference() = tensor_desc;
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  if (proto_msg != nullptr) {
-    if (data.size() == 0) {
-      GELOGI("GetSize res is 0.");
-    }
-    if (data.data() == nullptr) {
-      GELOGI("data addr is null.");
-    }
-    proto_msg->set_data(data.GetData(), data.GetSize());
-  }
-}
-
-GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg)
-    : tensor_def_(proto_owner, proto_msg) {}
-
-GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
-
-GeTensorDesc &GeTensor::MutableTensorDesc() { return DescReference(); }
-
-GeTensorDesc &GeTensor::DescReference() const {
-  if (tensor_def_.GetProtoMsg() != nullptr) {
-    GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), tensor_def_.GetProtoMsg()->mutable_desc());
-    __desc_.RefTo(tensor_desc);
-  } else {
-    GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), nullptr);
-    __desc_.RefTo(tensor_desc);
-  }
-  return __desc_;
-}
-
-void GeTensor::SetTensorDesc(const GeTensorDesc &tensor_desc) { DescReference() = tensor_desc; }
-
-const Buffer GeTensor::GetData() const {
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  if (proto_msg != nullptr) {
-    return Buffer(tensor_def_.GetProtoOwner(), proto_msg->mutable_data());
-  }
-  return Buffer();
-}
-
-Buffer GeTensor::MutableData() {
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  if (proto_msg != nullptr) {
-    return Buffer(tensor_def_.GetProtoOwner(), proto_msg->mutable_data());
-  }
-  return Buffer();
-}
-
-graphStatus GeTensor::SetData(vector<uint8_t> &&data) {
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  GE_CHECK_NOTNULL(proto_msg);
-  proto_msg->set_data(data.data(), data.size());
-  return GRAPH_SUCCESS;
-}
-
-graphStatus GeTensor::SetData(const vector<uint8_t> &data) {
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  GE_CHECK_NOTNULL(proto_msg);
-  proto_msg->set_data(data.data(), data.size());
-  return GRAPH_SUCCESS;
-}
-
-graphStatus GeTensor::SetData(const uint8_t *data, size_t size) {
-  if (size > 0) {
-    GE_CHECK_NOTNULL(data);
-  }
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  GE_CHECK_NOTNULL(proto_msg);
-  proto_msg->set_data(data, size);
-  return GRAPH_SUCCESS;
-}
-
-graphStatus GeTensor::SetData(const Buffer &data) {
-  auto proto_msg = tensor_def_.GetProtoMsg();
-  GE_CHECK_NOTNULL(proto_msg);
-  if (data.size() == 0) {
-    GELOGI("GetSize res is 0.");
-  }
-  if (data.data() == nullptr) {
-    GELOGI("data addr is null.");
-  }
-  proto_msg->set_data(data.data(), data.size());
-  return GRAPH_SUCCESS;
-}
-
-GeTensor GeTensor::Clone() const {
-  GeTensor tensor;
-  tensor.tensor_def_.CopyValueFrom(tensor_def_);
-  return tensor;
-}
-
-GeTensor::GeTensor(const GeTensor &other) { tensor_def_ = other.tensor_def_; }
-
-GeTensor &GeTensor::operator=(const GeTensor &other) {
-  if (&other != this) {
-    tensor_def_ = other.tensor_def_;
-  }
-  return *this;
-}
-#endif
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetSize(const GeTensorDesc &tensor_desc,
                                                                                 int64_t &size) {
   auto tensor_descriptor_msg = tensor_desc.tensor_descriptor_.GetProtoMsg();

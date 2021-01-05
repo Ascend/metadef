@@ -23,9 +23,7 @@
 #include <vector>
 #include "detail/attributes_holder.h"
 #include "graph/buffer.h"
-#ifndef ONLY_COMPILE_OPEN_SRC
 #include "graph/aligned_ptr.h"
-#endif
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
 
@@ -152,7 +150,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   void RefTo(const GeTensorDesc &tensorDesc) { tensor_descriptor_ = tensorDesc.tensor_descriptor_; }
   GeShape &ShapeReference() const;
 };
-#ifndef ONLY_COMPILE_OPEN_SRC
+
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
  public:
   TensorData() = default;
@@ -254,46 +252,5 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   GeTensorDesc &DescReference() const;
   TensorData tensor_data_;
 };
-#else
-class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
- public:
-  GeTensor();
-  explicit GeTensor(const GeTensorDesc &tensorDesc);
-  explicit GeTensor(const GeTensorDesc &tensorDesc, const std::vector<uint8_t> &data);
-  explicit GeTensor(const GeTensorDesc &tensorDesc, const Buffer &data);
-  explicit GeTensor(const GeTensorDesc &tensorDesc, const uint8_t *data, size_t size);
-  explicit GeTensor(GeTensorDesc &&tensorDesc, std::vector<uint8_t> &&data);
-  ~GeTensor() = default;
-
-  GeTensorDesc GetTensorDesc() const;
-  GeTensorDesc &MutableTensorDesc();
-  void SetTensorDesc(const GeTensorDesc &tensorDesc);
-
-  const Buffer GetData() const;
-  Buffer MutableData();
-  graphStatus SetData(std::vector<uint8_t> &&data);
-  graphStatus SetData(const std::vector<uint8_t> &data);
-  graphStatus SetData(const Buffer &data);
-  graphStatus SetData(const uint8_t *data, size_t size);
-
-  GeTensor Clone() const;
-
-  // Share value
-  GeTensor(const GeTensor &other);
-  // Share value
-  GeTensor &operator=(const GeTensor &other);
-
- private:
-  friend class GeAttrValueImp;
-  friend class ModelSerializeImp;
-  friend class OnnxUtils;
-  // Create from proto obj
-  GeTensor(const ProtoMsgOwner &protoOnwer, proto::TensorDef *protoMsg);
-  GeIrProtoHelper<proto::TensorDef> tensor_def_;
-  // Reference from tensorDef_, do not direct use
-  mutable GeTensorDesc __desc_;
-  GeTensorDesc &DescReference() const;
-};
-#endif
 }  // namespace ge
 #endif  // INC_GRAPH_GE_TENSOR_H_
