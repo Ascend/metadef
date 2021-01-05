@@ -27,7 +27,7 @@ extern "C" {
 #define RT_CAPABILITY_NOT_SUPPORT (0x0)
 
 typedef struct tagRTDeviceInfo {
-  uint8_t env_type;  // 0: FPGA  1: EMU 2: ESL
+  uint8_t env_type; // 0: FPGA  1: EMU 2: ESL
   uint32_t ctrl_cpu_ip;
   uint32_t ctrl_cpu_id;
   uint32_t ctrl_cpu_core_num;
@@ -185,7 +185,7 @@ RTS_API rtError_t rtDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc);
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtDeviceCanAccessPeer(int32_t* canAccessPeer, uint32_t device, uint32_t peerDevice);
+RTS_API rtError_t rtDeviceCanAccessPeer(int32_t *canAccessPeer, uint32_t device, uint32_t peerDevice);
 
 /**
  * @ingroup dvrt_dev
@@ -356,6 +356,7 @@ RTS_API rtError_t rtSetDeviceWithoutTsd(int32_t device);
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtDeviceResetWithoutTsd(int32_t device);
+
 #if defined(__cplusplus) && !defined(COMPILE_OMG_PACKAGE)
 }
 #endif

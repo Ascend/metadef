@@ -42,6 +42,7 @@ typedef enum tagRtChipType {
   CHIP_MDC,
   CHIP_LHISI,
   CHIP_DC,
+  CHIP_CLOUD_V2,
   CHIP_END,
 } rtChipType_t;
 
@@ -62,6 +63,7 @@ typedef enum tagRtPlatformType {
   PLATFORM_LHISI_ES,
   PLATFORM_LHISI_CS,
   PLATFORM_DC,
+  PLATFORM_CLOUD_V2,
   PLATFORM_END,
 } rtPlatformType_t;
 
@@ -119,7 +121,9 @@ typedef struct tagRtMemoryConfig {
   uint32_t compilerSize;
 } rtMemoryConfig_t;
 
-typedef struct tagRtPlatformConfig { uint32_t platformConfig; } rtPlatformConfig_t;
+typedef struct tagRtPlatformConfig {
+  uint32_t platformConfig;
+} rtPlatformConfig_t;
 
 /**
  * @ingroup
@@ -178,6 +182,7 @@ RTS_API rtError_t rtMemGetL2Info(rtStream_t stream, void **ptr, uint32_t *size);
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtGetRuntimeVersion(uint32_t *runtimeVersion);
+
 #if defined(__cplusplus) && !defined(COMPILE_OMG_PACKAGE)
 }
 #endif

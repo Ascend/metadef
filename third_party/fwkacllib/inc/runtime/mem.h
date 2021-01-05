@@ -89,11 +89,11 @@ typedef uint32_t rtMemType_t;
  * @brief memory copy type
  */
 typedef enum tagRtMemcpyKind {
-  RT_MEMCPY_HOST_TO_HOST = 0,  // host to host
-  RT_MEMCPY_HOST_TO_DEVICE,    // host to device
-  RT_MEMCPY_DEVICE_TO_HOST,    // device to host
-  RT_MEMCPY_DEVICE_TO_DEVICE,  // device to device, 1P && P2P
-  RT_MEMCPY_MANAGED,           // managed memory
+  RT_MEMCPY_HOST_TO_HOST = 0, // host to host
+  RT_MEMCPY_HOST_TO_DEVICE,   // host to device
+  RT_MEMCPY_DEVICE_TO_HOST,   // device to host
+  RT_MEMCPY_DEVICE_TO_DEVICE, // device to device, 1P && P2P
+  RT_MEMCPY_MANAGED,          // managed memory
   RT_MEMCPY_ADDR_DEVICE_TO_DEVICE,
   RT_MEMCPY_HOST_TO_DEVICE_EX, // host  to device ex (only used for 8 bytes)
   RT_MEMCPY_DEVICE_TO_HOST_EX, // device to host ex
@@ -103,18 +103,19 @@ typedef enum tagRtMemcpyKind {
 typedef enum tagRtMemInfoType {
   RT_MEMORYINFO_DDR,
   RT_MEMORYINFO_HBM,
-  RT_MEMORYINFO_DDR_HUGE,               // Hugepage memory of DDR
-  RT_MEMORYINFO_DDR_NORMAL,             // Normal memory of DDR
-  RT_MEMORYINFO_HBM_HUGE,               // Hugepage memory of HBM
-  RT_MEMORYINFO_HBM_NORMAL,             // Normal memory of HBM
-  RT_MEMORYINFO_DDR_P2P_HUGE,           // Hugepage memory of DDR
-  RT_MEMORYINFO_DDR_P2P_NORMAL,         // Normal memory of DDR
-  RT_MEMORYINFO_HBM_P2P_HUGE,           // Hugepage memory of HBM
-  RT_MEMORYINFO_HBM_P2P_NORMAL,         // Normal memory of HBM
+  RT_MEMORYINFO_DDR_HUGE,       // Hugepage memory of DDR
+  RT_MEMORYINFO_DDR_NORMAL,     // Normal memory of DDR
+  RT_MEMORYINFO_HBM_HUGE,       // Hugepage memory of HBM
+  RT_MEMORYINFO_HBM_NORMAL,     // Normal memory of HBM
+  RT_MEMORYINFO_DDR_P2P_HUGE,   // Hugepage memory of DDR
+  RT_MEMORYINFO_DDR_P2P_NORMAL, // Normal memory of DDR
+  RT_MEMORYINFO_HBM_P2P_HUGE,   // Hugepage memory of HBM
+  RT_MEMORYINFO_HBM_P2P_NORMAL, // Normal memory of HBM
 } rtMemInfoType_t;
 
 typedef enum tagRtRecudeKind {
-  RT_MEMCPY_SDMA_AUTOMATIC_ADD = 10,  // D2D, SDMA inline reduce, include 1P, and P2P
+  RT_MEMCPY_SDMA_AUTOMATIC_ADD =
+      10, // D2D, SDMA inline reduce, include 1P, and P2P
   RT_RECUDE_KIND_END
 } rtRecudeKind_t;
 
@@ -130,9 +131,9 @@ typedef enum tagRtDataType {
  * @brief memory copy channel  type
  */
 typedef enum tagRtMemcpyChannelType {
-  RT_MEMCPY_CHANNEL_TYPE_INNER = 0,  // 1P
+  RT_MEMCPY_CHANNEL_TYPE_INNER = 0, // 1P
   RT_MEMCPY_CHANNEL_TYPE_PCIe,
-  RT_MEMCPY_CHANNEL_TYPE_HCCs,  // not support now
+  RT_MEMCPY_CHANNEL_TYPE_HCCs, // not support now
   RT_MEMCPY_CHANNEL_TYPE_RESERVED,
 } rtMemcpyChannelType_t;
 
@@ -159,11 +160,11 @@ typedef struct rtAiCoreMemorySize {
  * @ingroup dvrt_mem
  * @brief memory type
  */
-typedef enum tagRtMemoryType { 
-    RT_MEMORY_TYPE_HOST = 1, 
-    RT_MEMORY_TYPE_DEVICE = 2 , 
-    RT_MEMORY_TYPE_SVM = 3,
-    RT_MEMORY_TYPE_DVPP = 4
+typedef enum tagRtMemoryType {
+  RT_MEMORY_TYPE_HOST = 1,
+  RT_MEMORY_TYPE_DEVICE = 2,
+  RT_MEMORY_TYPE_SVM = 3,
+  RT_MEMORY_TYPE_DVPP = 4
 } rtMemoryType_t;
 
 /**
@@ -171,33 +172,31 @@ typedef enum tagRtMemoryType {
  * @brief memory attribute
  */
 typedef struct tagRtPointerAttributes {
-  rtMemoryType_t memoryType;  // host memory or device memory
+  rtMemoryType_t memoryType; // host memory or device memory
   rtMemoryType_t locationType;
-  uint32_t deviceID;          // device ID
+  uint32_t deviceID; // device ID
   uint32_t pageSize;
 } rtPointerAttributes_t;
 
-
 typedef struct rtMallocHostSharedMemoryIn {
-    const char* name;
-    const uint64_t size;
-    uint32_t flag;
+  const char *name;
+  const uint64_t size;
+  uint32_t flag;
 } rtMallocHostSharedMemoryIn;
 
 typedef struct rtMallocHostSharedMemoryOut {
-    int fd;
-    void* ptr;
-    void* devPtr;
+  int fd;
+  void *ptr;
+  void *devPtr;
 } rtMallocHostSharedMemoryOut;
 
 typedef struct rtFreeHostSharedMemoryIn {
-    const char* name;
-    const uint64_t size;
-    int fd;
-    void* ptr;
-    void* devPtr;
+  const char *name;
+  const uint64_t size;
+  int fd;
+  void *ptr;
+  void *devPtr;
 } rtFreeHostSharedMemoryIn;
-
 
 /**
  * @ingroup dvrt_mem
@@ -267,7 +266,7 @@ RTS_API rtError_t rtFreeHost(void *hostPtr);
  */
 
 RTS_API rtError_t rtMallocHostSharedMemory(rtMallocHostSharedMemoryIn *in,
-    rtMallocHostSharedMemoryOut *out);
+                                           rtMallocHostSharedMemoryOut *out);
 
 /**
  * @ingroup dvrt_mem
