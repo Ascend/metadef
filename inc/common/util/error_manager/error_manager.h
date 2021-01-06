@@ -73,7 +73,6 @@ class ErrorManager {
   void ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key = {},
                            const std::vector<std::string> &value = {});
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   ///
   /// @brief report graph compile failed message such as error code and op_name in mstune case
   /// @param [in] graph_name: root graph name
@@ -82,7 +81,6 @@ class ErrorManager {
   ///
   int ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
                                    const std::map<std::string, std::string> &msg);
-#endif
 
   ///
   /// @brief get graph compile failed message in mstune case
@@ -113,11 +111,9 @@ class ErrorManager {
 
   int ReadJsonFile(const std::string &file_path, void *handle);
 
- #ifndef ONLY_COMPILE_OPEN_SRC 
   void ClassifyCompileFailedMsg(const std::map<std::string, std::string> &msg,
                                 std::map<std::string,
                                 std::vector<std::string>> &classfied_msg);
-#endif
 
   bool is_init_ = false;
   std::mutex mutex_;
