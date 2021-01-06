@@ -1645,46 +1645,41 @@ graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const string &pref
   }
   const auto &new_node = it->second;
 
-  for (const auto &in_anchor : node->GetAllInDataAnchors()) {
-    GE_CHK_BOOL_EXEC(in_anchor != nullptr, return GRAPH_FAILED, "In data anchor is null");
-    const auto &out_anchor = in_anchor->GetPeerOutAnchor();
-    if (out_anchor == nullptr) {
-      GELOGW("Peer out anchor is null: %s", node->GetName().c_str());
-      continue;
-    }
-    GE_CHK_BOOL_EXEC(out_anchor->GetOwnerNode() != nullptr, return GRAPH_FAILED, "Peer out node is null");
-
-    it = all_nodes.find(out_anchor->GetOwnerNode()->GetName() + prefix);
-    if (it == all_nodes.end()) {
-      GELOGE(GRAPH_FAILED, "node[%s] not found", out_anchor->GetOwnerNode()->GetName().c_str());
-      return GRAPH_FAILED;
-    }
-    const auto &new_out_node = it->second;
-
-    auto rslt = GraphUtils::AddEdge(new_out_node->GetOutAnchor(out_anchor->GetIdx()),
-                                    new_node->GetInAnchor(in_anchor->GetIdx()));
-    GE_CHK_BOOL_EXEC(rslt == GRAPH_SUCCESS, return GRAPH_FAILED, "link failed[%s to %s]",
-                     new_out_node->GetName().c_str(), new_node->GetName().c_str());
-  }
-
-  if (node->GetInControlAnchor() != nullptr) {
-    for (const auto &out_anchor : node->GetInControlAnchor()->GetPeerAnchors()) {
-      GE_CHK_BOOL_EXEC(out_anchor != nullptr, continue, "Peer out anchor is null: %s", node->GetName().c_str());
-      GE_CHK_BOOL_EXEC(out_anchor->GetOwnerNode() != nullptr, return GRAPH_FAILED, "Peer out node is null");
-
-      it = all_nodes.find(out_anchor->GetOwnerNode()->GetName() + prefix);
+  // traversing from the parent node can be completely restored in the original one-to-many order.
+  for (const auto &out_anchor : node->GetAllOutDataAnchors()) {
+    GE_CHK_BOOL_EXEC(out_anchor != nullptr, return GRAPH_FAILED, "Out data anchor is null");
+    for (const auto &peer_in_anchor : out_anchor->GetPeerInDataAnchors()) {
+      GE_CHECK_NOTNULL(peer_in_anchor);
+      GE_CHK_BOOL_EXEC(peer_in_anchor->GetOwnerNode() != nullptr, return GRAPH_FAILED, "Peer in node is null");
+      it = all_nodes.find(peer_in_anchor->GetOwnerNode()->GetName() + prefix);
       if (it == all_nodes.end()) {
-        GELOGE(GRAPH_FAILED, "node[%s] not found", out_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "node[%s] not found", peer_in_anchor->GetOwnerNode()->GetName().c_str());
         return GRAPH_FAILED;
       }
-      const auto &new_out_node = it->second;
-
-      auto rslt = GraphUtils::AddEdge(new_out_node->GetOutAnchor(out_anchor->GetIdx()), new_node->GetInControlAnchor());
-      GE_CHK_BOOL_EXEC(rslt == GRAPH_SUCCESS, return GRAPH_FAILED, "link failed[%s to %s]",
-                       new_out_node->GetName().c_str(), new_node->GetName().c_str());
+      const auto &new_peer_in_node = it->second;
+      auto ret = GraphUtils::AddEdge(new_node->GetOutAnchor(out_anchor->GetIdx()),
+                                     new_peer_in_node->GetInAnchor(peer_in_anchor->GetIdx()));
+      GE_CHK_BOOL_EXEC(ret == GRAPH_SUCCESS, return GRAPH_FAILED, "link data edge failed[%s to %s]",
+                       new_node->GetName().c_str(), new_peer_in_node->GetName().c_str());
     }
   }
 
+  if (node->GetOutControlAnchor() != nullptr) {
+    for (const auto &peer_in_control_anchor : node->GetOutControlAnchor()->GetPeerAnchors()) {
+      GE_CHECK_NOTNULL(peer_in_control_anchor);
+      GE_CHK_BOOL_EXEC(peer_in_control_anchor->GetOwnerNode() != nullptr, return GRAPH_FAILED, "Peer out node is null");
+      it = all_nodes.find(peer_in_control_anchor->GetOwnerNode()->GetName() + prefix);
+      if (it == all_nodes.end()) {
+        GELOGE(GRAPH_FAILED, "node[%s] not found", peer_in_control_anchor->GetOwnerNode()->GetName().c_str());
+        return GRAPH_FAILED;
+      }
+      const auto &new_peer_in_node = it->second;
+      auto ret = GraphUtils::AddEdge(new_node->GetOutControlAnchor(),
+                                     new_peer_in_node->GetInAnchor(peer_in_control_anchor->GetIdx()));
+      GE_CHK_BOOL_EXEC(ret == GRAPH_SUCCESS, return GRAPH_FAILED, "link control edge failed[%s to %s]",
+                       new_node->GetName().c_str(), new_peer_in_node->GetName().c_str());
+    }
+  }
   return GRAPH_SUCCESS;
 }
 
