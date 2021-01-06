@@ -1337,12 +1337,17 @@ std::string AttrUtils::GetAttrsStrAfterRid(AttrUtils::ConstAttrHolderAdapter &&o
     return "";
   }
 
-  std::stringstream ss;
+  std::map<std::string, std::string> ordered_attrs;
   for (auto &attr : *(attrs_map.GetProtoMsg())) {
+    ordered_attrs[attr.first] = attr.second.SerializeAsString();
+  }
+
+  std::stringstream ss;
+  for (auto &attr : ordered_attrs) {
     if (un_compute_attrs.find(attr.first) != un_compute_attrs.end()) {
       continue;
     }
-    ss << attr.first << ":" << attr.second.SerializeAsString() << ";";
+    ss << attr.first << ":" << attr.second << ";";
   }
 
   return ss.str();
