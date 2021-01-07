@@ -11,7 +11,12 @@ set(PROTO_LIST
     "${METADEF_DIR}/proto/tensorflow/versions.proto"
 )
 
+set(TASK_PROTO
+    "${METADEF_DIR}/proto/task.proto"
+)
+
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
+protobuf_generate(ge TASK_PROTO_SRC TASK_PROTO_HDR ${TASK_PROTO})
 
 set(SRC_LIST
     "register.cpp"
@@ -41,7 +46,7 @@ set(SRC_LIST
 )
 
 ############ libregister.so ############
-add_library(register SHARED ${SRC_LIST} ${PROTO_SRCS})
+add_library(register SHARED ${SRC_LIST} ${PROTO_SRCS} ${TASK_PROTO_HDR})
 
 target_compile_options(register PRIVATE
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
@@ -105,7 +110,7 @@ target_link_libraries(register PRIVATE
 )
 
 ############ libregister.a ############
-add_library(register_static STATIC ${SRC_LIST} ${PROTO_SRCS}
+add_library(register_static STATIC ${SRC_LIST} ${PROTO_SRCS} ${TASK_PROTO_HDR}
     "op_tiling.cpp"
     "op_tiling_registry.cpp"
 )
