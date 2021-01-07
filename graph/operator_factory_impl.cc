@@ -163,6 +163,7 @@ graphStatus OperatorFactoryImpl::RegisterInferShapeFunc(const std::string &opera
   }
   auto it = operator_infershape_funcs_->find(operator_type);
   if (it != operator_infershape_funcs_->end()) {
+    GELOGW("optype[%s] has registered infershape func", operator_type.c_str());
     return GRAPH_FAILED;
   }
   (void)operator_infershape_funcs_->emplace(operator_type, infer_shape_func);

@@ -570,7 +570,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   GE_IF_BOOL_EXEC(res != EN_OK && !is_always_dump, return;);
 
   // dump the graph according to different graph level
-  if (GraphUtils::MatchDumpStr(suffix)) {
+  if (GraphUtils::MatchDumpStr(suffix) && (!is_always_dump)) {
     return;
   }
 
