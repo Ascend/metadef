@@ -52,6 +52,8 @@ set(SRC_LIST
     "runtime_inference_context.cc"
     "${METADEF_DIR}/third_party/transformer/src/axis_util.cpp"
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cpp"
+    "${METADEF_DIR}/third_party/transformer/src/axis_name_util.cpp"
+    "${METADEF_DIR}/third_party/transformer/src/padding_dimension.cpp"
     "utils/transformer_utils.cc"
 )
 
