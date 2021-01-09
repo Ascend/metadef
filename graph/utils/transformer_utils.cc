@@ -19,6 +19,8 @@
 #include "external/ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/type_utils.h"
+#include "graph/utils/attr_utils.h"
+#include "inc/graph/utils/debug/ge_attr_define.h"
 
 namespace ge {
 bool NodeShapeTransUtils::CatchFormatAndShape() {
@@ -103,6 +105,15 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     std::vector<int64_t> ori_shape_dims = ori_shape.GetDims();
     std::vector<int64_t> out_dims;
     ge::DataType dtype =  map_dtype_in_[ele.first];
+    // FE Set and GE Get for PadDimension
+    string infer_reshape_type;
+    (void)AttrUtils::GetStr(*tensor_desc_input, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
+    bool is_success = common::transformer::PadDimensionTo4(op_desc_->GetType(), ori_format, curr_format, ele.second,
+                                                          infer_reshape_type, ori_shape_dims);
+    if (!is_success) {
+      GELOGE(GRAPH_FAILED, "Call PadDimensionTo4 failed!");
+      return GRAPH_FAILED;
+    }
     common::transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, ori_format, curr_format, dtype,
                                                                common::transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer->GetShapeAccordingToFormat(shape_and_format_info);
@@ -149,6 +160,15 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     std::vector<int64_t> ori_shape_dims = ori_shape.GetDims();
     std::vector<int64_t> out_dims;
     ge::DataType dtype =  tensor_desc_output->GetDataType();
+    // FE Set and GE Get for PadDimension
+    string infer_reshape_type;
+    (void)AttrUtils::GetStr(*tensor_desc_input, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
+    bool is_success = common::transformer::PadDimensionTo4(op_desc_->GetType(), curr_format, saved_format, ele.second,
+                                                          infer_reshape_type, ori_shape_dims);
+    if (!is_success) {
+      GELOGE(GRAPH_FAILED, "Call PadDimensionTo4 failed!");
+      return GRAPH_FAILED;
+    }
     common::transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, curr_format, saved_format,
                                                                dtype, common::transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer->GetShapeAccordingToFormat(shape_and_format_info);
