@@ -162,7 +162,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     ge::DataType dtype =  tensor_desc_output->GetDataType();
     // FE Set and GE Get for PadDimension
     string infer_reshape_type;
-    (void)AttrUtils::GetStr(*tensor_desc_input, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
+    (void)AttrUtils::GetStr(*tensor_desc_output, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
     bool is_success = common::transformer::PadDimensionTo4(op_desc_->GetType(), curr_format, saved_format, ele.second,
                                                           infer_reshape_type, ori_shape_dims);
     if (!is_success) {
