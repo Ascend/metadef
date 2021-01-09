@@ -1131,4 +1131,6 @@ const std::string ATTR_NAME_INSERT_FP_PROFILILNG_TASK = "_fp_profiling_task";
 const std::string ATTR_NAME_INSERT_BP_PROFILILNG_TASK = "_bp_profiling_task";
 const std::string ATTR_NAME_INSERT_END_PROFILILNG_TASK = "_end_profiling_task";
 const std::string ATTR_NAME_INSERT_PROFILILNG_TASK_LOG_ID = "_profiling_log_id";
+// padding dimension type (FE set and ge get)
+const std::string ATTR_NAME_RESHAPE_INFER_TYPE = "_infer_reshape_type";
 }  // namespace ge
