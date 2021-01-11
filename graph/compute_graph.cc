@@ -817,6 +817,15 @@ graphStatus ComputeGraph::CollectBreadthOutNode(const NodePtr &node, std::map<No
   return GRAPH_SUCCESS;
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::TopologicalSorting(
+    std::function<bool (const NodePtr &, const NodePtr &)> comp) {
+  nodes_.sort(std::move(comp));
+  int64_t num = 0;
+  for (const NodePtr &node : nodes_) {
+    node->GetOpDesc()->SetId(num++);  // node should not be null, node->GetOpDesc() should not be null]
+  }
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::TopologicalSorting() {
   auto ret = TopologicalSortingGraph();
   if (ret != SUCCESS) {

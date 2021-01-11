@@ -117,6 +117,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   ///
   graphStatus UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
 
+  void TopologicalSorting(std::function<bool (const NodePtr &, const NodePtr &)> comp);
   graphStatus TopologicalSorting();
   bool IsValid() const;
   void InValid() { is_valid_flag_ = false; }
