@@ -1051,6 +1051,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Swap(ComputeGr
   std::swap(graph_id_, graph.graph_id_);
   attrs_.Swap(graph.attrs_);
   nodes_.swap(graph.nodes_);
+  auto tmp_size = direct_nodes_size_;
+  direct_nodes_size_ = graph.direct_nodes_size_;
+  graph.direct_nodes_size_ = tmp_size;
   all_nodes_infos_.swap(graph.all_nodes_infos_);
   target_nodes_info_.swap(graph.target_nodes_info_);
 
