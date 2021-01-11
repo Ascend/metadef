@@ -110,7 +110,7 @@ ComputeGraph::Vistor<NodePtr> ComputeGraph::GetNodes(bool is_unknown_shape) cons
 }
 
 
-size_t ComputeGraph::GetDirectNodesSize() const { return nodes_.size(); }
+size_t ComputeGraph::GetDirectNodesSize() const { return direct_nodes_size_; }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::Vistor<NodePtr> ComputeGraph::GetDirectNode() const {
   return Vistor<NodePtr>(shared_from_this(), nodes_);
@@ -220,7 +220,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::VectorInputNod
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::GraphMembersAreEqual(
     const ComputeGraph &r_graph) const {
   return (IsEqual(this->sub_graph_.size(), r_graph.sub_graph_.size(), "graph.subgraphs_.size()") &&
-          IsEqual(this->nodes_.size(), r_graph.nodes_.size(), "graph.nodes_.size()") &&
+          IsEqual(this->GetDirectNodesSize(), r_graph.GetDirectNodesSize(), "graph.nodes_.size()") &&
           VectorInputNodePtrIsEqual(this->input_nodes_, r_graph.input_nodes_) &&
           IsEqual(this->name_, r_graph.name_, "graph.name_") &&
           IsEqual(this->is_valid_flag_, r_graph.is_valid_flag_, "graph.is_valid_flag_") &&
@@ -270,11 +270,11 @@ NodePtr ComputeGraph::AddNodeFront(NodePtr node) {
     return nullptr;
   }
   node->SetHostNode(is_valid_flag_);
-  node->GetOpDesc()->SetId(nodes_.size());
-  if (nodes_.size() > 0 && nodes_[0]->GetType() == DATA) {
-    (void)nodes_.insert(nodes_.begin() + 1, node);
+  node->GetOpDesc()->SetId(GetDirectNodesSize());
+  if (GetDirectNodesSize() > 0 && (*(nodes_.begin()))->GetType() == DATA) {
+    InsertToNodeList(next(nodes_.begin()), node);
   } else {
-    (void)nodes_.insert(nodes_.begin(), node);
+    InsertToNodeList(nodes_.begin(), node);
   }
   return node;
 }
@@ -284,7 +284,7 @@ NodePtr ComputeGraph::AddNodeFront(const OpDescPtr &op) {
     GELOGE(GRAPH_FAILED, "The OpDesc ptr should not be null.");
     return nullptr;
   }
-  op->SetId(nodes_.size());
+  op->SetId(GetDirectNodesSize());
   NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, shared_from_this()));
   GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS, GELOGE(GRAPH_FAILED, "node init fail."); return nullptr);
@@ -298,7 +298,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY NodePtr ComputeGraph::AddNode(Nod
   }
   node->SetHostNode(is_valid_flag_);
   node->GetOpDesc()->SetId((int64_t)GetDirectNodesSize());
-  nodes_.push_back(node);
+  PushBackToNodeList(node);
   return node;
 }
 
@@ -324,7 +324,7 @@ NodePtr ComputeGraph::AddNode(OpDescPtr op, int64_t id) {  // for unserialize.
   GE_IF_BOOL_EXEC(node == nullptr, GELOGE(GRAPH_FAILED, "node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node->Init() != GRAPH_SUCCESS, GELOGE(GRAPH_FAILED, "node init fail."); return nullptr);
   node->SetHostNode(is_valid_flag_);
-  nodes_.push_back(node);
+  PushBackToNodeList(node);
   return node;
 }
 
@@ -387,7 +387,7 @@ graphStatus ComputeGraph::RemoveConstInput(const NodePtr &node) {
         GELOGI("Remove const op %s.", out_anchor->GetOwnerNode()->GetName().c_str());
         auto iter = find(nodes_.begin(), nodes_.end(), out_anchor->GetOwnerNode());
         if (iter != nodes_.end()) {
-          (void)nodes_.erase(iter);
+          EraseFromNodeList(iter);
         }
       }
     }
@@ -417,7 +417,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::RemoveN
 
   auto iter = find(nodes_.begin(), nodes_.end(), node);
   if (iter != nodes_.end()) {
-    (void)nodes_.erase(iter);
+    EraseFromNodeList(iter);
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -657,7 +657,7 @@ ComputeGraph::UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_map
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertEventNodes() {
-  std::vector<NodePtr> node_vec = nodes_;
+  std::list<NodePtr> node_list = nodes_;
   for (const auto &node : GetDirectNode()) {
     if (node == nullptr || node->GetOpDesc() == nullptr) {
       GELOGW("node or OpDescPtr is nullptr.");
@@ -665,37 +665,38 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertE
     }
     GE_IF_BOOL_EXEC(node == nullptr, GELOGE(GRAPH_FAILED, "The node should not be null."); return GRAPH_FAILED);
     if (node->GetOpDesc()->GetType() == RECV) {
-      auto iter = find(node_vec.begin(), node_vec.end(), node);
-      if (iter == node_vec.end()) {
+      auto iter = find(node_list.begin(), node_list.end(), node);
+      if (iter == node_list.end()) {
         GELOGW("no node found.");
       } else {
-        (void)node_vec.erase(iter);
+        (void)node_list.erase(iter);
       }
 
-      auto dst_iter = find(node_vec.begin(), node_vec.end(), node->GetOutControlNodes().at(0));
-      (void)node_vec.insert(dst_iter, node);
+      auto dst_iter = find(node_list.begin(), node_list.end(), node->GetOutControlNodes().at(0));
+      (void)node_list.insert(dst_iter, node);
     }
     if (node->GetOpDesc()->GetType() == SEND) {
-      auto iter = find(node_vec.begin(), node_vec.end(), node);
-      if (iter == node_vec.end()) {
+      auto iter = find(node_list.begin(), node_list.end(), node);
+      if (iter == node_list.end()) {
         GELOGW("no node found.");
       } else {
-        (void)node_vec.erase(iter);
+        (void)node_list.erase(iter);
       }
 
-      auto src_iter = find(node_vec.begin(), node_vec.end(), node->GetInControlNodes().at(0));
-      (void)node_vec.insert(src_iter + 1, node);
+      auto src_iter = find(node_list.begin(), node_list.end(), node->GetInControlNodes().at(0));
+      (void)node_list.insert(++src_iter, node);
     }
   }
-  nodes_.clear();
-  for (size_t i = 0; i < node_vec.size(); ++i) {
-    NodePtr node = node_vec[i];
+  ClearNodeList();
+  int64_t i = 0;
+  for (const auto &node: node_list) {
     if (node == nullptr || node->GetOpDesc() == nullptr) {
       GELOGW("node or OpDescPtr is nullptr.");
     } else {
-      node->GetOpDesc()->SetId((int64_t)i);
-      nodes_.push_back(node);
+      node->GetOpDesc()->SetId(i);
+      PushBackToNodeList(node);
     }
+    ++i;
   }
   return GRAPH_SUCCESS;
 }
@@ -868,14 +869,14 @@ graphStatus ComputeGraph::TopologicalSortingGraph(bool dfs_reverse) {
   }
 
   // If they are not equal, there is a closed loop
-  if (node_vec.size() != nodes_.size()) {
+  if (node_vec.size() != GetDirectNodesSize()) {
     std::set<Node *> itered_nodes_set;
     for (auto &node : node_vec) {
       itered_nodes_set.insert(node.get());
     }
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"TopologicalSortingGraph", "exist closed loop in graph"});
-    GE_LOGE("Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.", nodes_.size(),
+    GE_LOGE("Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.", GetDirectNodesSize(),
             node_vec.size());
     for (auto &node : nodes_) {
       if (itered_nodes_set.count(node.get()) == 0) {
@@ -887,11 +888,11 @@ graphStatus ComputeGraph::TopologicalSortingGraph(bool dfs_reverse) {
     return GRAPH_FAILED;
   }
 
-  nodes_.clear();
+  ClearNodeList();
   for (size_t i = 0; i < node_vec.size(); i++) {
     NodePtr node = node_vec[i];   // [node: should not be null]
     node->GetOpDesc()->SetId(i);  // [node->GetOpDesc(): should not be null]
-    nodes_.push_back(node);
+    PushBackToNodeList(node);
   }
 
   is_valid_flag_ = true;
@@ -1050,6 +1051,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Swap(ComputeGr
   std::swap(graph_id_, graph.graph_id_);
   attrs_.Swap(graph.attrs_);
   nodes_.swap(graph.nodes_);
+  auto tmp_size = direct_nodes_size_;
+  direct_nodes_size_ = graph.direct_nodes_size_;
+  graph.direct_nodes_size_ = tmp_size;
   all_nodes_infos_.swap(graph.all_nodes_infos_);
   target_nodes_info_.swap(graph.target_nodes_info_);
 
