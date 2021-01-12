@@ -57,7 +57,11 @@ const uint32_t MINUS_VALUE_ONE = 1;
 const uint32_t MINUS_VALUE_TWO = 2;
 const uint32_t SIZE_OF_CN = 2;
 const uint32_t MINIMUM_NZ_SHAPE_DIM_NUM = 2;
+const uint32_t GROUPS_DEFAULT_VALUE = 1;
+const uint32_t UNKNOWN_SHAPE_VALUE = -1;
 
+const int32_t LSTM_NI = 4;
+const int32_t X0 = 16;
 /* The first parameter is axis value, second is new shape and third is
  * op implementation type. */
 using GetNewShapeByAxisValueAndFormat =
@@ -92,27 +96,46 @@ class ShapeTransferAccordingToFormat {
   static bool GetNDC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
                                           const std::vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
-  static bool GetNCHWShapeByAxisValue(vector<int64_t> &newShape, const int64_t &implType,
-                                      const vector<int64_t> &axisValue, const vector<int64_t> &ndValue);
+  static bool GetNCHWShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
-  static bool GetNHWCShapeByAxisValue(vector<int64_t> &newShape, const int64_t &implType,
-                                      const vector<int64_t> &axisValue, const vector<int64_t> &ndValue);
+  static bool GetNHWCShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
-  static bool GetNC1HWC0ShapeByAxisValue(vector<int64_t> &newShape, const int64_t &implType,
-                                         const vector<int64_t> &axisValue, const vector<int64_t> &ndValue);
+  static bool GetNC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                         const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
-  static bool GetFzShapeByAxisValue(vector<int64_t> &newShape, const int64_t &implType,
-                                    const vector<int64_t> &axisValue, const vector<int64_t> &ndValue);
+  static bool GetFzShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                    const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
-  static bool GetHWCNShapeByAxisValue(vector<int64_t> &newShape, const int64_t &implType,
-                                      const vector<int64_t> &axisValue, const vector<int64_t> &ndValue);
+  static bool GetHWCNShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
-  static bool GetC1HWNCoC0ShapeByAxisValue(vector<int64_t> &newShape, const int64_t &implType,
-                                           const vector<int64_t> &axisValue, const vector<int64_t> &ndValue);
+  static bool GetC1HWNCoC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                           const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
-  static bool GetNzShapeByAxisValue(vector<int64_t> &newShape, const int64_t &implType,
-                                    const vector<int64_t> &axisValue, const vector<int64_t> &ndValue);
+  static bool GetNzShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                    const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
+  static bool GetFz3DShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+
+  static bool GetFz3DTransposeShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                               const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+
+  static bool GetFzLstmShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                        const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+
+  static bool GetFzC04ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                       const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+
+  static bool GetFzGShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                     const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+
+  static bool GetCHWNShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
+                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+
+  static int64_t GetAsisEnlargeValue(const int64_t& cin, const int64_t& cout, const int64_t& c0, const int64_t& group);
  private:
   /* map of GetAxisValueInfoByFormat, get axis value by different original
    * formats. */
