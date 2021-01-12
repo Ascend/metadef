@@ -113,7 +113,8 @@ enum AxisValueType {
   AXIS_C0 = 5,
   AXIS_Co = 6,
   AXIS_D = 7,
-  AXIS_BOTTOM = 8
+  AXIS_G = 8,
+  AXIS_BOTTOM = 9
 };
 
 int64_t DivisionCeiling(int64_t dividend, int64_t divisor);
