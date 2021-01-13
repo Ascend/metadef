@@ -362,7 +362,7 @@ add_library(graph SHARED ${SRC_LIST} ${PROTO_SRCS})
 target_compile_options(graph PRIVATE
         -O2
         $<$<STREQUAL:${PRODUCT_SIDE},host>:-fexceptions>
-        $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations>
+	$<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
         )
 
 target_compile_definitions(graph PRIVATE
