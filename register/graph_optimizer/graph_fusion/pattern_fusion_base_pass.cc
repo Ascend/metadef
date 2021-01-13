@@ -118,6 +118,17 @@ static bool SetStreamLabelToFusedNodes(vector<ge::NodePtr> &fused_nodes, ge::Nod
   }
   return true;
 }
+
+void InheritAttrFromOriNode(vector<ge::NodePtr> &original_nodes, const ge::NodePtr &fusion_node) {
+  for (const auto &origin_node : original_nodes) {
+    int64_t keep_dtype_ = false;
+    if (ge::AttrUtils::GetInt(origin_node->GetOpDesc(), "_keep_dtype", keep_dtype_) && keep_dtype_ != 0) {
+      ge::AttrUtils::SetInt(fusion_node->GetOpDesc(), "_keep_dtype", keep_dtype_);
+      break;
+    }
+  }
+}
+
 /**
  * @ingroup fe
  * @brief do matching and fusion in graph based on the pattern
@@ -176,11 +187,11 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
         }
       }
       SetDataDumpAttr(original_nodes, fus_nodes);
-      if (!fus_nodes.empty()) {
-        // add fusednode to node map info
-        for (ge::NodePtr &node : fus_nodes) {
-          (void)GraphPassUtil::AddNodeFromOpTypeMap(node_map_info, node);
-        }
+      for (ge::NodePtr &node : fus_nodes) {
+        (void)GraphPassUtil::AddNodeFromOpTypeMap(node_map_info, node);
+        /* If one of the original node has attribute like keep_dtype_, the fused node
+         * will inherit that attribute. */
+        InheritAttrFromOriNode(original_nodes, node);
       }
     }
     changed = (changed || status == SUCCESS);
