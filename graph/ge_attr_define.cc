@@ -1121,4 +1121,6 @@ const std::string ATTR_ALL_GEARS_INFO = "all_gears_info";
 
 // Calculate the operator output memory
 const std::string ATTR_NAME_MEMORY_SIZE_CALC_TYPE = "_memory_size_calc_type";
+// Indicates which operators keep the precision unchanged
+const std::string ATTR_NAME_KEEP_DTYPE = "_keep_dtype";
 }  // namespace ge
