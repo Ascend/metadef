@@ -94,7 +94,7 @@ bool IsEqual(const T &l_value, const T &r_value, const std::string &log_info_tag
   if (l_value == r_value) {
     return true;
   } else {
-    GELOGE(GRAPH_FAILED, "Check failed with %s", log_info_tag.c_str());
+    GELOGD("Check not equal with %s", log_info_tag.c_str());
     return false;
   }
 }
