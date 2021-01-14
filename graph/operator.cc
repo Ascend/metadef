@@ -563,6 +563,113 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator OpDescUtils::CreateOpera
   return operator_impl_ptr->ToOperator();
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+OpDescUtils::CopyOperators(ComputeGraphPtr &dst_compute_graph,
+                           const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                           const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
+                           const std::map<string, ge::Operator> &src_op_list,
+                           std::map<string, ge::Operator> &dst_op_list) {
+  GE_CHECK_NOTNULL(dst_compute_graph);
+
+  std::map<OperatorImplPtr, NodePtr> all_node_info;
+
+  for (const auto &itr : src_op_list) {
+    auto name = itr.first;
+    const ge::Operator &src_op = itr.second;
+    GE_CHECK_NOTNULL(src_op.operator_impl_);
+    OperatorImplPtr scr_op_impl_ptr = src_op.operator_impl_;
+    GE_CHECK_NOTNULL(scr_op_impl_ptr->op_desc_);
+    ge::Operator dst_op;
+    OpDescPtr dst_op_desc = nullptr;
+    if (scr_op_impl_ptr->node_ == nullptr) {
+      // cannot find op_desc in compute graph, need creat new op_desc
+      // otherwise use existing op_desc
+      auto it = op_desc_old_2_new.find(scr_op_impl_ptr->op_desc_);
+      if (it != op_desc_old_2_new.end()) {
+        dst_op_desc = it->second;
+      } else {
+        dst_op_desc = AttrUtils::CopyOpDesc(scr_op_impl_ptr->op_desc_);
+        if (dst_op_desc == nullptr) {
+          GELOGE(GRAPH_FAILED, "Create new op_desc:%s failed", scr_op_impl_ptr->op_desc_->GetName().c_str());
+          return GRAPH_FAILED;
+        }
+        dst_op_desc->CopyAttrsFrom(*scr_op_impl_ptr->op_desc_);
+        dst_op_desc->SetName(scr_op_impl_ptr->op_desc_->GetName());
+      }
+      dst_op = CreateOperatorFromOpDesc(dst_op_desc);
+    } else {
+      auto original_op_desc = scr_op_impl_ptr->node_->GetOpDesc();
+      if (scr_op_impl_ptr->op_desc_ != original_op_desc) {
+        GELOGE(GRAPH_FAILED, "node and op_desc of operator are not equal.");
+        return GRAPH_FAILED;
+      }
+      NodePtr dst_node = nullptr;
+      // cannot find node in compute graph, need creat new node
+      // otherwise use existing node and op_desc
+      auto it = node_old_2_new.find(scr_op_impl_ptr->node_);
+      if (it != node_old_2_new.end()) {
+        dst_node = it->second;
+      } else {
+        dst_op_desc = AttrUtils::CopyOpDesc(scr_op_impl_ptr->op_desc_);
+        if (dst_op_desc == nullptr) {
+          GELOGE(GRAPH_FAILED, "Create new op_desc:%s failed", scr_op_impl_ptr->op_desc_->GetName().c_str());
+          return GRAPH_FAILED;
+        }
+        dst_op_desc->CopyAttrsFrom(*scr_op_impl_ptr->op_desc_);
+        dst_op_desc->SetName(scr_op_impl_ptr->op_desc_->GetName());
+        dst_node = NodeUtils::CreatNodeWithoutGraph(dst_op_desc);
+        GE_CHECK_NOTNULL(dst_node);
+        // to do link egdes
+      }
+      dst_op = CreateOperatorFromNode(dst_node);
+      all_node_info.emplace(dst_op.GetOperatorImplPtr(), dst_node);
+    }
+    dst_op.operator_impl_->subgraph_names_to_builders_ = src_op.operator_impl_->subgraph_names_to_builders_;
+    dst_op_list.emplace(name, dst_op);
+  }
+
+  dst_compute_graph->SetAllNodesInfo(all_node_info);
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+OpDescUtils::CopyOperatorLinks(const std::map<string, ge::Operator> &src_op_list,
+                               std::map<string, ge::Operator> &dst_op_list) {
+  for (const auto &it : src_op_list) {
+    auto &src_op = it.second;
+    auto op_name = it.first;
+    auto &dst_op = dst_op_list[op_name];
+    OperatorImplPtr src_impl_ptr = src_op.GetOperatorImplPtr();
+    OperatorImplPtr dst_impl_ptr = dst_op.GetOperatorImplPtr();
+    for (const auto &itr : src_impl_ptr->input_link_) {
+      std::string dst_name = itr.first;
+      const OpIO &op_io = itr.second;
+      OperatorImplPtr input_impl_ptr = op_io.GetOwner();
+      GE_CHECK_NOTNULL(input_impl_ptr);
+      auto iter = dst_op_list.find(input_impl_ptr->GetName());
+      if (iter == dst_op_list.end()) {
+        GELOGE(GRAPH_FAILED, "Find dst operator:%s failed", input_impl_ptr->GetName().c_str());
+        return GRAPH_FAILED;
+      }
+      auto &input_op = iter->second;
+      dst_op.SetInput(dst_name, input_op);
+    }
+
+    for (const auto &itr : src_impl_ptr->control_input_link_) {
+      OperatorImplPtr input_ctrl_impl_ptr = itr.lock();
+      GE_CHECK_NOTNULL(input_ctrl_impl_ptr);
+      auto iter = dst_op_list.find(input_ctrl_impl_ptr->GetName());
+      if (iter == dst_op_list.end()) {
+        GELOGE(GRAPH_FAILED, "Find dst ctrl operator:%s failed", input_ctrl_impl_ptr->GetName().c_str());
+        return GRAPH_FAILED;
+      }
+      auto &ctrl_input_op = iter->second;
+      dst_op.AddControlInput(ctrl_input_op);
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+
 Operator::Operator(const std::string &type) {
   static uint32_t index = 0;
   string name = type + "_" + std::to_string(index++);

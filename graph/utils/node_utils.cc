@@ -1055,4 +1055,16 @@ std::string NodeUtils::GetInConstNodeTypeCrossSubgraph(const NodePtr &node) {
 
   return "";
 }
+NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
+  if (op_desc == nullptr) {
+    GELOGE(GRAPH_FAILED, "The OpDesc ptr should not be null.");
+    return nullptr;
+  }
+  NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
+  if(node_ptr == nullptr) {
+    GELOGE(GRAPH_FAILED, "node_ptr is NULL!");
+    return nullptr;
+  }
+  return node_ptr;
+}
 }  // namespace ge
