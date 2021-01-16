@@ -66,6 +66,11 @@ enum InputAippType{
 const char *const GE_ENGINE_ATTR_MEM_TYPE_HBM = "HBM";
 const char *const GE_OPTION_EXEC_PLACEMENT = "ge.exec.placement";
 
+// profiling data
+const uint32_t kTaskTypeAicore = 0;
+const uint32_t kTaskTypeAicpu = 1;
+const uint32_t kTaskTypeInvalid = 0xFFFF;
+
 // Data cache, including data address and length
 struct DataBuffer {
  public:
@@ -259,6 +264,7 @@ struct TaskDescInfo {
   uint32_t stream_id;
   std::string shape_type;
   int64_t cur_iter_num;
+  uint32_t task_type;
 };
 
 // Profiling info of graph
