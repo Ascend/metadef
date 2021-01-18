@@ -2080,8 +2080,7 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   }
 
   // Merge op 0th output
-  bool is_merge_op = (type == MERGE) && (output_index == 0);
-  if (is_merge_op) {
+  if ((type == MERGE) && (output_index == 0)) {
     reuse_in_index = 0;
     GELOGI("Merge name[%s] output_index[0].", node->GetName().c_str());
     return true;
@@ -2122,16 +2121,6 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
     }
   }
 
-  //nopadding reuse input
-  bool attr_reuse = false;
-  bool get_reuse_flag = ge::AttrUtils::GetBool(op_desc, ATTR_NAME_OUTPUT_REUSE_INPUT, attr_reuse);
-  bool is_no_padding_reuse_input = get_reuse_flag && attr_reuse;
-  if (is_no_padding_reuse_input) {
-    reuse_in_index = 0;
-    GELOGI("Nopadding ReuseInput name[%s] output[%d] reuse input[%d].", op_desc->GetName().c_str(),
-           output_index, reuse_in_index);
-    return true;
-  }
   return false;
 }
 
