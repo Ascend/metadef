@@ -217,6 +217,42 @@ class GraphPassUtil {
     ge::OpDescPtr node_op_desc_ptr = node->GetOpDesc();
     (void)ge::AttrUtils::SetListStr(node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
   }
+
+  static void AddNodeToNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type, ge::NodePtr &node_ptr) {
+    if (node_type_map == nullptr || node_ptr == nullptr) {
+      return;
+    }
+    auto iter = node_type_map->find(op_type);
+    if (iter == node_type_map->end()) {
+      node_type_map->emplace(std::make_pair(op_type, std::unordered_set<ge::NodePtr>{node_ptr}));
+    } else {
+      iter->second.insert(node_ptr);
+    }
+  }
+
+  static void RemoveNodeFromNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type,
+                                        ge::NodePtr &node_ptr) {
+    if (node_type_map == nullptr || node_ptr == nullptr) {
+      return;
+    }
+    auto iter = node_type_map->find(op_type);
+    if (iter != node_type_map->end()) {
+      iter->second.erase(node_ptr);
+    }
+  }
+
+  static void GetNodesFromNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type,
+                                      std::vector<ge::NodePtr> &nodes) {
+    if (node_type_map == nullptr) {
+      return;
+    }
+    auto iter = node_type_map->find(op_type);
+    if (iter != node_type_map->end()) {
+      for (auto &node_ptr : iter->second) {
+        nodes.push_back(node_ptr);
+      }
+    }
+  }
 };
 
 }  // namespace fe
