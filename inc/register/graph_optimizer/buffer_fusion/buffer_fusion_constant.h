@@ -26,6 +26,7 @@ static const std::string TBE_PATTERN_OP_TYPE_ANY = "OpTypeAny";
 static const std::string TBE_PATTERN_OUTPUT_NODE = "OutputData";
 static const std::string OP_PATTERN_ELEMWISE = "ElemWise";
 static const std::string OP_PATTERN_COMMONREDUCE = "CommReduce";
+static const std::string OP_PATTERN_BROAD_CAST = "BroadCast";
 static const std::string OP_PATTERN_SEGMENT = "Segment";
 static const std::string OP_PATTERN_MAXPOOL = "MaxPool";
 static const std::string OP_PATTERN_CONV = "Convolution";
@@ -52,6 +53,7 @@ static const std::string OP_PATTERN_CONV3D = "Conv3d";
 
 static const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                                      OP_PATTERN_COMMONREDUCE,
+                                                     OP_PATTERN_BROAD_CAST,
                                                      OP_PATTERN_SEGMENT,
                                                      OP_PATTERN_MAXPOOL,
                                                      OP_PATTERN_CONV,
