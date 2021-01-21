@@ -1,0 +1,73 @@
+/**
+ * Copyright 2021 Huawei Technologies Co., Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "external/graph/types.h"
+#include <gtest/gtest.h>
+
+namespace ge {
+class UtestTypes : public testing::Test {
+ protected:
+  void SetUp() {}
+
+  void TearDown() {}
+};
+
+TEST_F(UtestTypes, GetFormatName) {
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NCHW), "NCHW"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NHWC), "NHWC"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_ND), "ND"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NC1HWC0), "NC1HWC0"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z), "FRACTAL_Z"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NC1C0HWPAD), "NC1C0HWPAD"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NHWC1C0), "NHWC1C0"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FSR_NCHW), "FSR_NCHW"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_DECONV), "FRACTAL_DECONV"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_C1HWNC0), "C1HWNC0"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_DECONV_TRANSPOSE), "FRACTAL_DECONV_TRANSPOSE"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_DECONV_SP_STRIDE_TRANS), "FRACTAL_DECONV_SP_STRIDE_TRANS"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NC1HWC0_C04), "NC1HWC0_C04"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z_C04), "FRACTAL_Z_C04"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_DECONV_SP_STRIDE8_TRANS), "DECONV_SP_STRIDE8_TRANS"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NC1KHKWHWC0), "NC1KHKWHWC0"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_BN_WEIGHT), "BN_WEIGHT"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FILTER_HWCK), "FILTER_HWCK"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_HASHTABLE_LOOKUP_LOOKUPS), "LOOKUP_LOOKUPS"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_HASHTABLE_LOOKUP_KEYS), "LOOKUP_KEYS"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_HASHTABLE_LOOKUP_VALUE), "LOOKUP_VALUE"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_HASHTABLE_LOOKUP_OUTPUT), "LOOKUP_OUTPUT"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_HASHTABLE_LOOKUP_HITS), "LOOKUP_HITS"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_C1HWNCoC0), "C1HWNCoC0"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_MD), "MD"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NDHWC), "NDHWC"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_ZZ), "UNKNOWN"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_NZ), "FRACTAL_NZ"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NCDHW), "NCDHW"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_DHWCN), "DHWCN"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NDC1HWC0), "NDC1HWC0"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z_3D), "FRACTAL_Z_3D"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_CN), "CN"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NC), "NC"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_DHWNC), "DHWNC"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z_3D_TRANSPOSE), "FRACTAL_Z_3D_TRANSPOSE"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_ZN_LSTM), "FRACTAL_ZN_LSTM"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z_G), "FRACTAL_Z_G"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_RESERVED), "UNKNOWN"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_ALL), "UNKNOWN"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NULL), "UNKNOWN"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_END), "UNKNOWN"), 0);
+  ASSERT_EQ(FORMAT_END, 43); // if add formats definition, add ut here
+}
+}

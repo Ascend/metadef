@@ -18,14 +18,15 @@ project(ut_graph)
 set(CMAKE_CXX_STANDARD 11)
 
 # include directories
-include_directories(${CMAKE_CURRENT_LIST_DIR})
+include_directories(${CMAKE_CURRENT_LIST_DIR} ../../../inc)
 
 set(UT_FILES
     "testcase/graph_unittest.cc"
+    "testcase/types_unittest.cc"
 )
 
 set(SRC_FILES
-
+    "../../../graph/types.cc"
 )
 
 add_executable(ut_graph ${UT_FILES} ${SRC_FILES})

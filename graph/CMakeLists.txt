@@ -12,6 +12,7 @@ set(PROTO_LIST
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
 
 set(SRC_LIST
+    "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
     "attr_value.cc"
