@@ -74,7 +74,7 @@ graphStatus ReflectionProcess(const std::unordered_set<RefCell, RefCellHash> &re
 
 graphStatus BiasAddFormatFixProcess(ge::NodePtr &node_ptr) {
   // 5 meas dim num
-  if (node_ptr->GetType() != "BiasAdd") {
+  if (node_ptr->GetType() != "BiasAdd" && node_ptr->GetType() != "BiasAddGrad") {
     return GRAPH_SUCCESS;
   }
   std::unordered_map<string, Format> kTfFormatFix = {
@@ -84,17 +84,23 @@ graphStatus BiasAddFormatFixProcess(ge::NodePtr &node_ptr) {
   for (size_t i = 0; i < node_ptr->GetOpDesc()->GetInputsSize(); i++) {
     auto in_desc = node_ptr->GetOpDesc()->MutableInputDesc(i);
     GE_CHECK_NOTNULL(in_desc);
-    if (in_desc->MutableShape().GetDimNum() != 5) { // 5 means dim num
-      continue;
+    auto dim_num = in_desc->MutableShape().GetDimNum();
+    if (dim_num == 5) { // 5 means dim num
+      auto format = in_desc->GetOriginFormat();
+      auto key = TypeUtils::FormatToSerialString(format);
+      auto fixed_format = (kTfFormatFix.count(key) == 0) ? format : kTfFormatFix[key];
+      in_desc->SetOriginFormat(fixed_format);
+      in_desc->SetFormat(fixed_format);
+      GELOGD("Fix the %zu'th input of node[%s]. Origin format is %s , after fixed it is %s",
+             i, node_ptr->GetName().c_str(), TypeUtils::FormatToSerialString(format).c_str(),
+             TypeUtils::FormatToSerialString(fixed_format).c_str());
+    } else if (dim_num < 4) {
+      in_desc->SetOriginFormat(FORMAT_ND);
+      in_desc->SetFormat(FORMAT_ND);
+      GELOGD("Fix the %zu'th input of node[%s]. Origin format is %s , after fixed it is %s",
+             i, node_ptr->GetName().c_str(), TypeUtils::FormatToSerialString(FORMAT_ND).c_str(),
+             TypeUtils::FormatToSerialString(FORMAT_ND).c_str());
     }
-    auto format = in_desc->GetOriginFormat();
-    auto key = TypeUtils::FormatToSerialString(format);
-    auto fixed_format = (kTfFormatFix.count(key) == 0) ? format : kTfFormatFix[key];
-    in_desc->SetOriginFormat(fixed_format);
-    in_desc->SetFormat(fixed_format);
-    GELOGD("fix the %zu'th input of node[%s]. Origin format is %s , after fixed it is %s",
-           i, node_ptr->GetName().c_str(), TypeUtils::FormatToSerialString(format).c_str(),
-           TypeUtils::FormatToSerialString(fixed_format).c_str());
   }
   for (size_t i = 0; i < node_ptr->GetOpDesc()->GetOutputsSize(); i++) {
     auto out_desc = node_ptr->GetOpDesc()->MutableOutputDesc(i);
