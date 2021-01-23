@@ -151,7 +151,7 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
       }
       auto shape = tensor.MutableShape();
       if (shape.GetDims().size() != ref_out_tensor_shape.GetDims().size()) {
-        GELOGD("node is %s, i : %d, shape size: %lu, ref_out_tensor_shape size: %lu",
+        GELOGD("node is %s, i : %zu, shape size: %lu, ref_out_tensor_shape size: %lu",
                node->GetName().c_str(), i, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
         ref_out_tensor_shape = GeShape(UNKNOWN_RANK);
         break;
@@ -160,7 +160,7 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
         if (ref_out_tensor_shape.GetDim(j) == shape.GetDim(j)) {
           continue;
         }
-        GELOGD("node is %s, i : %d, j: %d ,shape size: %lu, ref_out_tensor_shape size: %lu",
+        GELOGD("node is %s, i : %zu, j: %zu ,shape size: %lu, ref_out_tensor_shape size: %lu",
                node->GetName().c_str(), i, j, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
         (void)ref_out_tensor_shape.SetDim(j, UNKNOWN_DIM);
       }
@@ -300,7 +300,7 @@ graphStatus FindSubgraphDataAndNetoutput(std::shared_ptr<ComputeGraph> &sub_grap
         return GRAPH_FAILED;
       }
       if (ref_i < 0 || static_cast<uint32_t>(ref_i) >= node->GetAllInDataAnchorsSize()) {
-        GELOGE(GRAPH_FAILED, "data node[%s]'s ref index[%d] is not in range [0, %zu)!",
+        GELOGE(GRAPH_FAILED, "data node[%s]'s ref index[%d] is not in range [0, %u)!",
                sub_node->GetName().c_str(), ref_i, node->GetAllInDataAnchorsSize());
         return GRAPH_FAILED;
       }
@@ -353,7 +353,7 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
                 name.c_str(), node->GetName().c_str(), edge_anchor->GetIdx());
         return GRAPH_FAILED;
       }
-      GELOGI("Netoutput in anchor index is %zu, input tensor dim is %zu",
+      GELOGI("Netoutput in anchor index is %d, input tensor dim is %zu",
              edge_anchor->GetIdx(), edge_desc->GetShape().GetDimNum());
       int ref_i;
       if (!AttrUtils::GetInt(edge_desc, ATTR_NAME_PARENT_NODE_INDEX, ref_i)) {

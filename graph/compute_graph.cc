@@ -363,7 +363,7 @@ NodePtr ComputeGraph::AddOutputNodeByIndex(NodePtr node, int32_t index) {
 
   if (!already_have) {
     output_nodes_info_.emplace_back(std::make_pair(node, index));
-    GELOGI("Push back node name:%s, index:%ld, into output_nodes_info_.", node->GetName().c_str(), index);
+    GELOGI("Push back node name:%s, index:%d, into output_nodes_info_.", node->GetName().c_str(), index);
   }
 
   if (std::find(nodes_.begin(), nodes_.end(), node) == nodes_.end()) {
@@ -648,7 +648,7 @@ ComputeGraph::UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_map
       return GRAPH_FAILED;
     }
     if (op_desc->UpdateInputDesc(i, tensor) != GRAPH_SUCCESS) {
-      GE_LOGE("UpdateOutputMapping failed: update %u input_tensor failed.", i);
+      GE_LOGE("UpdateOutputMapping failed: update %zu input_tensor failed.", i);
       return GRAPH_FAILED;
     }
   }
