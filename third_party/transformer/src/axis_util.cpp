@@ -25,19 +25,22 @@ namespace common {
 namespace transformer {
 using namespace ge;
 using namespace std;
-
-AxisUtil::AxisUtil() {
-  getAxisValueFuncMap = {{FORMAT_NCHW, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByNCHW)},
-                         {FORMAT_NHWC, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByNHWC)},
-                         {FORMAT_NC1HWC0, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByNC1HWC0)},
-                         {FORMAT_HWCN, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByHWCN)},
-                         {FORMAT_ND, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByND)},
-                         {FORMAT_C1HWNCoC0, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByC1HWNCoC0)},
-                         {FORMAT_NDHWC, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByNDHWC)},
-                         {FORMAT_NCDHW, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByNCDHW)},
-                         {FORMAT_DHWCN, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByDHWCN)},
-                         {FORMAT_DHWNC, std::make_shared<GetAxisValueInfoByFormat>(GetAxisValueByDHWNC)}};
+namespace {
+static std::map<ge::Format, GetAxisValueInfoByFormatPtr> getAxisValueFuncMap = {
+    {FORMAT_NCHW, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNCHW)},
+    {FORMAT_NHWC, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNHWC)},
+    {FORMAT_NC1HWC0, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNC1HWC0)},
+    {FORMAT_HWCN, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByHWCN)},
+    {FORMAT_ND, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByND)},
+    {FORMAT_C1HWNCoC0, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByC1HWNCoC0)},
+    {FORMAT_NDHWC, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNDHWC)},
+    {FORMAT_NCDHW, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNCDHW)},
+    {FORMAT_DHWCN, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByDHWCN)},
+    {FORMAT_DHWNC, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByDHWNC)}};
 }
+
+
+AxisUtil::AxisUtil() {}
 
 int64_t DivisionCeiling(int64_t dividend, int64_t divisor) {
   if (divisor == 0) {

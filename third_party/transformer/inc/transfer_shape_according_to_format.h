@@ -136,11 +136,7 @@ class ShapeTransferAccordingToFormat {
                                       const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
   static int64_t GetAsisEnlargeValue(const int64_t& cin, const int64_t& cout, const int64_t& c0, const int64_t& group);
- private:
-  /* map of GetAxisValueInfoByFormat, get axis value by different original
-   * formats. */
-  std::map<ge::Format, GetNewShapeByAxisValueAndFormatPtr> getNewShapeFuncMap;
-  std::map<ge::DataType, uint32_t> mapOfDtypeAndC0;
+
 };
 } // namespace transformer
 } // namespace common

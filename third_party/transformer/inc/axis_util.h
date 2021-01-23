@@ -135,7 +135,6 @@ class AxisUtil {
                                   std::vector<int64_t>& axisValue, std::vector<int64_t>& ndValue);
   bool HasAxisValueFunc(const ge::Format& format);
 
- private:
   static bool CheckParams(const std::vector<int64_t>& originalDimVec, const uint32_t& c0,
                           std::vector<int64_t>& axisValue, std::vector<int64_t>& ndValue);
 
@@ -171,9 +170,6 @@ class AxisUtil {
 
   static bool GetAxisValueByDHWNC(const std::vector<int64_t>& original_dim_vec, const uint32_t& c0,
                                   std::vector<int64_t>& axis_value, std::vector<int64_t>& nd_value);
-  /* map of GetAxisValueInfoByFormat, get axis value by different original
-   * formats. */
-  std::map<ge::Format, GetAxisValueInfoByFormatPtr> getAxisValueFuncMap;
 };
 } // namespace transformer
 } // namespace common
