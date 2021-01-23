@@ -23,6 +23,7 @@
 #include <vector>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/attr_utils.h"
 
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
@@ -40,6 +41,7 @@
 namespace ge {
 namespace {
 const uint32_t kWhileBodySubGraphIdx = 1;
+const char* const kPreOpInputShapeRange = "_pre_op_in_range";
 
 graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
   GELOGD("Enter reverse brush while body subgraph process!");
@@ -463,6 +465,10 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
       std::vector<std::pair<int64_t, int64_t>> shape_range;
       (void) peer_out_desc->GetShapeRange(shape_range);
       in_desc->SetShapeRange(shape_range);
+    }
+    std::vector<int64_t> pre_op_in_range;
+    if (ge::AttrUtils::GetListInt(*peer_out_desc, kPreOpInputShapeRange, pre_op_in_range)) {
+      (void)ge::AttrUtils::SetListInt(*in_desc, kPreOpInputShapeRange, pre_op_in_range);
     }
     ge::TensorUtils::SetRealDimCnt(*in_desc,
                                    static_cast<uint32_t>(peer_out_desc->MutableShape().GetDims().size()));

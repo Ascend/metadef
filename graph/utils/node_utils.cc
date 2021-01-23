@@ -308,9 +308,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::UpdatePeer
     auto output_tensor = op_desc->MutableOutputDesc(out_anchor->GetIdx());
     auto out_dims = output_tensor->GetShape().GetDims();
     auto out_dtype = output_tensor->GetDataType();
-    ge::TensorUtils::SetRealDimCnt(*output_tensor, static_cast<uint32_t>(output_tensor->GetShape().GetDims().size()));
-    output_tensor->SetOriginShape(output_tensor->GetShape());
-    output_tensor->SetOriginDataType(output_tensor->GetDataType());
 
     GELOGD("node name is %s, origin shape is %ld, origin format is %s, origin data type is %s",
            node_ptr->GetName().c_str(), output_tensor->GetOriginShape().GetShapeSize(),
