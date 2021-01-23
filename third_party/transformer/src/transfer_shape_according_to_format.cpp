@@ -25,31 +25,48 @@ namespace transformer {
 using namespace ge;
 using namespace std;
 
-ShapeTransferAccordingToFormat::ShapeTransferAccordingToFormat(void) {
-  getNewShapeFuncMap = {
-      {ge::FORMAT_NCHW, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetNCHWShapeByAxisValue)},
-      {ge::FORMAT_NHWC, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetNHWCShapeByAxisValue)},
-      {ge::FORMAT_NC1HWC0, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetNC1HWC0ShapeByAxisValue)},
-      {ge::FORMAT_NDC1HWC0, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetNDC1HWC0ShapeByAxisValue)},
-      {ge::FORMAT_FRACTAL_Z, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetFzShapeByAxisValue)},
-      {ge::FORMAT_HWCN, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetHWCNShapeByAxisValue)},
-      {ge::FORMAT_C1HWNCoC0, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetC1HWNCoC0ShapeByAxisValue)},
-      {ge::FORMAT_FRACTAL_NZ, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetNzShapeByAxisValue)},
-      {ge::FORMAT_NC1HWC0_C04, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetNC1HWC0ShapeByAxisValue)},
-      {ge::FORMAT_FRACTAL_Z_C04, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetFzC04ShapeByAxisValue)},
-      {ge::FORMAT_FRACTAL_Z_G, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetFzGShapeByAxisValue)},
-      {ge::FORMAT_CHWN, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetCHWNShapeByAxisValue)},
-      {ge::FORMAT_FRACTAL_Z_3D, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetFz3DShapeByAxisValue)},
-      {ge::FORMAT_FRACTAL_Z_3D_TRANSPOSE,
-          std::make_shared<GetNewShapeByAxisValueAndFormat>(GetFz3DTransposeShapeByAxisValue)},
-      {ge::FORMAT_FRACTAL_ZN_LSTM, std::make_shared<GetNewShapeByAxisValueAndFormat>(GetFzLstmShapeByAxisValue)}};
+namespace {
+  static std::unique_ptr<AxisUtil> axisutil_object(new(std::nothrow) AxisUtil());
+  static std::map<ge::Format, GetNewShapeByAxisValueAndFormatPtr> getNewShapeFuncMap = {
+    {ge::FORMAT_NCHW, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetNCHWShapeByAxisValue)},
+    {ge::FORMAT_NHWC, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetNHWCShapeByAxisValue)},
+    {ge::FORMAT_NC1HWC0, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetNC1HWC0ShapeByAxisValue)},
+    {ge::FORMAT_NDC1HWC0, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetNDC1HWC0ShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_Z, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetFzShapeByAxisValue)},
+    {ge::FORMAT_HWCN, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetHWCNShapeByAxisValue)},
+    {ge::FORMAT_C1HWNCoC0, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetC1HWNCoC0ShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_NZ, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetNzShapeByAxisValue)},
+    {ge::FORMAT_NC1HWC0_C04, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetNC1HWC0ShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_Z_C04, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetFzC04ShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_Z_G, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetFzGShapeByAxisValue)},
+    {ge::FORMAT_CHWN, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetCHWNShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_Z_3D, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetFz3DShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_Z_3D_TRANSPOSE,
+        std::make_shared<GetNewShapeByAxisValueAndFormat>(
+            ShapeTransferAccordingToFormat::GetFz3DTransposeShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_ZN_LSTM, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetFzLstmShapeByAxisValue)}};
 
-  mapOfDtypeAndC0 = {
-      {ge::DT_FLOAT16, SHAPE_NUMBER_16}, {ge::DT_FLOAT, SHAPE_NUMBER_16},  {ge::DT_INT8, SHAPE_NUMBER_32},
-      {ge::DT_INT16, SHAPE_NUMBER_16},   {ge::DT_INT32, SHAPE_NUMBER_16},  {ge::DT_INT64, SHAPE_NUMBER_16},
-      {ge::DT_UINT8, SHAPE_NUMBER_16},   {ge::DT_UINT16, SHAPE_NUMBER_32}, {ge::DT_UINT32, SHAPE_NUMBER_16},
-      {ge::DT_UINT64, SHAPE_NUMBER_16},  {ge::DT_BOOL, SHAPE_NUMBER_16}};
+    static std::map<ge::DataType, uint32_t> mapOfDtypeAndC0 = {
+    {ge::DT_FLOAT16, SHAPE_NUMBER_16}, {ge::DT_FLOAT, SHAPE_NUMBER_16},  {ge::DT_INT8, SHAPE_NUMBER_32},
+    {ge::DT_INT16, SHAPE_NUMBER_16},   {ge::DT_INT32, SHAPE_NUMBER_16},  {ge::DT_INT64, SHAPE_NUMBER_16},
+    {ge::DT_UINT8, SHAPE_NUMBER_16},   {ge::DT_UINT16, SHAPE_NUMBER_32}, {ge::DT_UINT32, SHAPE_NUMBER_16},
+    {ge::DT_UINT64, SHAPE_NUMBER_16},  {ge::DT_BOOL, SHAPE_NUMBER_16}};
 }
+ShapeTransferAccordingToFormat::ShapeTransferAccordingToFormat(void) {}
 
 bool ShapeTransferAccordingToFormat::GetNDC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
                                  const std::vector<int64_t> &axis_value, const vector<int64_t> &nd_value) {
@@ -206,16 +223,16 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
     GELOGE(GRAPH_FAILED, "currentDataType %u is invalid!", shapeAndFormatInfo.currentDataType);
     return false;
   }
-  AxisUtil* axisutil_object = new AxisUtil();
+  if (axisutil_object == nullptr) {
+    return false;
+  }
   if (!axisutil_object->HasAxisValueFunc(shapeAndFormatInfo.oldFormat)) {
-    delete axisutil_object;
     return true;
   }
 
   auto iterGetNewShapeFunc = getNewShapeFuncMap.find(shapeAndFormatInfo.newFormat);
   if (iterGetNewShapeFunc == getNewShapeFuncMap.end()) {
     GELOGD("Can not get new shape of new format %u!", shapeAndFormatInfo.newFormat);
-    delete axisutil_object;
     return true;
   }
   GELOGD("Original format %u, new format %u", shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat);
@@ -233,7 +250,6 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
     auto iterGetC0 = mapOfDtypeAndC0.find(shapeAndFormatInfo.currentDataType);
     if (iterGetC0 == mapOfDtypeAndC0.end()) {
       GELOGE(GRAPH_FAILED, "Dtype is not support.");
-      delete axisutil_object;
       return true;
     }
     c0 = iterGetC0->second;
@@ -243,14 +259,14 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
   if (shapeAndFormatInfo.newFormat == ge::FORMAT_NC1HWC0_C04) {
     c0 = SHAPE_DIM_VALUE_C04;
   }
-
+  if (axisutil_object == nullptr) {
+    return false;
+  }
   bool ret = axisutil_object->GetAxisValueByOriginFormat(
       shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.oldShape, c0, axis_value, nd_value);
   if (ret != true && shapeAndFormatInfo.newFormat != ge::FORMAT_FRACTAL_NZ) {
-    delete axisutil_object;
     return true;
   }
-  delete axisutil_object;
 
   shapeAndFormatInfo.newShape.clear();
   (*getNewShapeFunc)(shapeAndFormatInfo.newShape, shapeAndFormatInfo.opImplType, axis_value, nd_value);
