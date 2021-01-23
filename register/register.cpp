@@ -554,13 +554,13 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
     int parent_index = -1;
     int index = -1;
     if (!ge::AttrUtils::GetInt(nodes[i]->GetOpDesc(), "index", index)) {
-      GELOGE(FAILED, "Failed to get index from data[%d], failed to get the attr", i);
+      GELOGE(FAILED, "Failed to get index from data[%zu], failed to get the attr", i);
       return FAILED;
     }
-    GELOGI("Get index %d from data[%d]", index, i);
+    GELOGI("Get index %d from data[%zu]", index, i);
     auto ret = input(index, parent_index);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Failed to get parent index from data index %d, error code %u", i, ret);
+      GELOGE(FAILED, "Failed to get parent index from data index %zu, error code %u", i, ret);
       return FAILED;
     }
     if (!ge::AttrUtils::SetInt(nodes[i]->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
