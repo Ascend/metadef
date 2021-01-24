@@ -340,7 +340,7 @@ bool ShapeTransferAccordingToFormat::GetFz3DTransposeShapeByAxisValue(vector<int
   }
   /* axis_value is initialized as a size 6 vector. */
   for (auto ele : axis_value) {
-    GELOGI("value is %ld", ele);
+    GELOGI("value is %u", ele);
   }
   int64_t n1 = DivisionCeiling(axis_value[AXIS_N], NI);
   int64_t dhwn1 = n1 * axis_value[AXIS_H] * axis_value[AXIS_W] * axis_value[AXIS_D];

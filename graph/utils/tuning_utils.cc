@@ -132,7 +132,7 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
   // if not make exe, just dump and return
   if (!help_info.exe_flag) {
     DumpGraphToPath(exe_graph, help_info.index, help_info.is_tuning_graph, help_info.path);
-    GELOGI("TUU:just return, dump original sub_graph[%s]index[%ld]", exe_graph->GetName().c_str(), help_info.index);
+    GELOGI("TUU:just return, dump original sub_graph[%s]index[%d]", exe_graph->GetName().c_str(), help_info.index);
     return SUCCESS;
   }
   // modify sub graph

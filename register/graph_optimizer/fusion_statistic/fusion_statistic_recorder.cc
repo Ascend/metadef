@@ -33,7 +33,7 @@ void FusionStatisticRecorder::UpdateGraphFusionMatchTimes(FusionInfo &fusion_inf
   if (fusion_info.GetMatchTimes() != 0) {
     std::string session_and_graph_id = std::to_string(fusion_info.GetSessionId()) + "_" + fusion_info.GetGraphId();
     graph_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].AddMatchTimes(fusion_info.GetMatchTimes());
-    GELOGD("session %d graph %s pass %s match_times value: %d", fusion_info.GetSessionId(),
+    GELOGD("session %lu graph %s pass %s match_times value: %d", fusion_info.GetSessionId(),
            fusion_info.GetGraphId().c_str(), fusion_info.GetPassName().c_str(),
            graph_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].GetMatchTimes());
   }
@@ -45,7 +45,7 @@ void FusionStatisticRecorder::UpdateGraphFusionEffectTimes(FusionInfo &fusion_in
     std::string session_and_graph_id = std::to_string(fusion_info.GetSessionId()) + "_" + fusion_info.GetGraphId();
     graph_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].AddEffectTimes(
         fusion_info.GetEffectTimes());
-    GELOGD("session %d graph %s pass %s effect_times value: %d", fusion_info.GetSessionId(),
+    GELOGD("session %lu graph %s pass %s effect_times value: %d", fusion_info.GetSessionId(),
            fusion_info.GetGraphId().c_str(), fusion_info.GetPassName().c_str(),
            graph_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].GetEffectTimes());
   }
@@ -56,7 +56,7 @@ void FusionStatisticRecorder::UpdateBufferFusionMatchTimes(FusionInfo &fusion_in
   if (fusion_info.GetMatchTimes() != 0) {
     std::string session_and_graph_id = std::to_string(fusion_info.GetSessionId()) + "_" + fusion_info.GetGraphId();
     buffer_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].AddMatchTimes(fusion_info.GetMatchTimes());
-    GELOGD("ub session %d graph %s pass %s match_times value: %d", fusion_info.GetSessionId(),
+    GELOGD("ub session %lu graph %s pass %s match_times value: %d", fusion_info.GetSessionId(),
            fusion_info.GetGraphId().c_str(), fusion_info.GetPassName().c_str(),
            buffer_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].GetMatchTimes());
   }
@@ -68,7 +68,7 @@ void FusionStatisticRecorder::UpdateBufferFusionEffectTimes(FusionInfo &fusion_i
     std::string session_and_graph_id = std::to_string(fusion_info.GetSessionId()) + "_" + fusion_info.GetGraphId();
     buffer_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].AddEffectTimes(
         fusion_info.GetEffectTimes());
-    GELOGD("ub session %d graph %s pass %s effect_times value: %d", fusion_info.GetSessionId(),
+    GELOGD("ub session %lu graph %s pass %s effect_times value: %d", fusion_info.GetSessionId(),
            fusion_info.GetGraphId().c_str(), fusion_info.GetPassName().c_str(),
            buffer_fusion_info_map_[session_and_graph_id][fusion_info.GetPassName()].GetEffectTimes());
   }
@@ -78,8 +78,8 @@ void FusionStatisticRecorder::GetAndClearFusionInfo(const std::string &session_g
                                                     std::map<std::string, FusionInfo> &graph_fusion_info_map,
                                                     std::map<std::string, FusionInfo> &buffer_fusion_info_map) {
   std::lock_guard<std::recursive_mutex> lock_guard(mutex_);
-  GELOGD("start to get graph map size %d", graph_fusion_info_map_.size());
-  GELOGD("start to get ub graph map size %d", buffer_fusion_info_map_.size());
+  GELOGD("start to get graph map size %zu", graph_fusion_info_map_.size());
+  GELOGD("start to get ub graph map size %zu", buffer_fusion_info_map_.size());
   GetFusionInfo(session_graph_id, graph_fusion_info_map, buffer_fusion_info_map);
   ClearFusionInfo(session_graph_id);
 }
