@@ -31,7 +31,7 @@ class PlatFormInfos {
   bool Init();
   std::map<std::string, std::vector<std::string>> GetAICoreIntrinsicDtype();
   std::map<std::string, std::vector<std::string>> GetVectorCoreIntrinsicDtype();
-  bool GetPlatformRes(const std::string &label, const std::string &key, std::string &val)l
+  bool GetPlatformRes(const std::string &label, const std::string &key, std::string &val);
 
   void SetAICoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes);
   void SetVectorCoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes);

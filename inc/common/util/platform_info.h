@@ -121,7 +121,7 @@ class PlatformInfoManager {
                                         PlatFormInfos &platform_info_temp);
 
   void ParsePlatformRes(const std::string &label,
-                        std::map<std;;string, std::string> &platform_res_map,
+                        std::map<std::string, std::string> &platform_res_map,
                         PlatFormInfos &platform_info_temp);
 
   uint32_t ParsePlatformInfo(std::map<std::string, std::map<std::string, std::string>> &content_info_map,
