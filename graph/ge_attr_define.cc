@@ -1078,7 +1078,6 @@ const std::string ATTR_NAME_HCCL_FUSED_FLAG = "_hccl_fused_node";
 // dynamic shape attr
 const std::string ATTR_DYNAMIC_SHAPE_FIXED_ADDR = "_alloc_fixed_addr";
 const std::string ATTR_DYNAMIC_SHAPE_FIXED_ADDR_INDEX = "_alloc_fixed_addr_index";
-const std::string ATTR_DYNAMIC_SHAPE_SINGLE_AICPU = "_single_aicpu_dynamic";
 
 // op dynamic input
 const std::string ATTR_NAME_DYNAMIC_INPUT_START = "_dynamic_input_index_start";
@@ -1133,4 +1132,7 @@ const std::string ATTR_NAME_INSERT_END_PROFILILNG_TASK = "_end_profiling_task";
 const std::string ATTR_NAME_INSERT_PROFILILNG_TASK_LOG_ID = "_profiling_log_id";
 // padding dimension type (FE set and ge get)
 const std::string ATTR_NAME_RESHAPE_INFER_TYPE = "_infer_reshape_type";
+
+// mark single op scene
+const std::string ATTR_SINGLE_OP_SCENE = "_single_op_scene";
 }  // namespace ge
