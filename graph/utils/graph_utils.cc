@@ -1545,6 +1545,20 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
       return nullptr;
     }
 
+    if (n->GetType() == CONSTANT || n->GetType() == CONSTANTOP) {
+      GeTensorPtr weight = nullptr;
+      if (!AttrUtils::MutableTensor(n->GetOpDesc(), ATTR_NAME_WEIGHTS, weight)) {
+        GELOGI("Can not find attr ATTR_NAME_WEIGHTS for node:%s.", n->GetName().c_str());
+        continue;
+      }
+      GeTensor copy_weight = weight->Clone();
+      if (!AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, copy_weight)) {
+        GELOGE(INTERNAL_ERROR, "Clone ATTR_NAME_WEIGHTS for node:%s failed.", op_desc->GetName().c_str());
+        return nullptr;
+      }
+      GELOGD("Clone ATTR_NAME_WEIGHTS for node:%s success.", op_desc->GetName().c_str());
+    }
+
     op_desc->SetName(n->GetName() + prefix);
     NodePtr node = new_graph->AddNode(op_desc);
     GE_CHK_BOOL_EXEC(node != nullptr, return nullptr, "Add node[%s] to graph failed", op_desc->GetName().c_str());
