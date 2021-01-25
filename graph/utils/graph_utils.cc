@@ -286,7 +286,7 @@ GraphUtils::RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const 
 
   auto iter = find(compute_graph->nodes_.begin(), compute_graph->nodes_.end(), node);
   if (iter != compute_graph->nodes_.end()) {
-    compute_graph->nodes_.erase(iter);
+    compute_graph->EraseFromNodeList(iter);
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -484,7 +484,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::RemoveJus
   }
   auto iter = find(compute_graph.nodes_.begin(), compute_graph.nodes_.end(), node);
   if (iter != compute_graph.nodes_.end()) {
-    compute_graph.nodes_.erase(iter);
+    compute_graph.EraseFromNodeList(iter);
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -3009,13 +3009,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::Topologic
     nodes_name.clear();
   }
   // If they are not equal, there is a closed loop
-  if (node_vec.size() != compute_graph->nodes_.size()) {
+  if (node_vec.size() != compute_graph->GetDirectNodesSize()) {
     std::set<Node *> itered_nodes_set;
     for (auto &node : node_vec) {
       itered_nodes_set.insert(node.get());
     }
     GE_LOGE("Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.",
-            compute_graph->nodes_.size(), node_vec.size());
+            compute_graph->GetDirectNodesSize(), node_vec.size());
     for (auto &node : compute_graph->nodes_) {
       if (itered_nodes_set.count(node.get()) == 0) {
         GE_LOGE("The node %s does not itered when topological sorting", node->GetName().c_str());
