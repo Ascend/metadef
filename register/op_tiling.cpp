@@ -492,21 +492,8 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
     return ge::GRAPH_FAILED;
   }
 
-  ge::NodePtr atomic_clean_node = nullptr;
-  atomic_clean_node = op_desc->TryGetExtAttr("atomic_clean_node_ptr", atomic_clean_node);
-  if (atomic_clean_node == nullptr) {
-    GE_LOGE("This node has no atomice node. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
-    return ge::GRAPH_FAILED;
-  }
-
-  ge::OpDescPtr atomic_op_desc = atomic_clean_node->GetOpDesc();
-  if (atomic_op_desc == nullptr) {
-    GE_LOGE("Failed to get op desc from node. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
-    return ge::GRAPH_FAILED;
-  }
-
   OpCompileInfo op_compile_info;
-  bool bres = GetCompileInfo(atomic_op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
+  bool bres = GetAtomicCleanCompileInfo(atomic_op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
   if (!bres) {
     GE_LOGE("Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
