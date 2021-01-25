@@ -493,7 +493,7 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
   }
 
   OpCompileInfo op_compile_info;
-  bool bres = GetAtomicCleanCompileInfo(atomic_op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
+  bool bres = GetAtomicCleanCompileInfo(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
   if (!bres) {
     GE_LOGE("Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
