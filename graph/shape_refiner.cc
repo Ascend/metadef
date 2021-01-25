@@ -708,11 +708,27 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
   auto opdesc = node->GetOpDesc();
   GE_IF_BOOL_EXEC(opdesc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
 
+  vector<ge::DataType> temp_dtype;
+  for (auto &tensor_desc: opdesc->GetAllOutputsDescPtr()) {
+      temp_dtype.emplace_back(tensor_desc->GetDataType());
+  }
   PrintInOutTensorShape(node, "before_infershape when running");
   Operator op = OpDescUtils::CreateOperatorFromNode(node);
 
   graphStatus status = InferShapeAndTypeForRunning(node, op, before_subgraph);
   if (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS) {
+    // ensure the dtype is not changed after infershape in running 
+    auto after_opdesc = node->GetOpDesc();
+    GE_IF_BOOL_EXEC(after_opdesc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
+    auto all_output_tensor = after_opdesc->GetAllOutputsDescPtr();
+    for (size_t i = 0; i < all_output_tensor.size(); ++i) {
+      if (all_output_tensor.at(i)->GetDataType() != temp_dtype[i]) {
+        GELOGD("Op %s output %zu need reset dtype,original dtype is %s, new dtype is %s",
+               node->GetName().c_str(), i, TypeUtils::DataTypeToSerialString(all_output_tensor.at(i)->GetDataType()).c_str(), 
+               TypeUtils::DataTypeToSerialString(temp_dtype[i]).c_str());
+        all_output_tensor.at(i)->SetDataType(temp_dtype[i]);
+      }
+    }
     PrintInOutTensorShape(node, "after_infershape when running");
     return GRAPH_SUCCESS;
   } else {
