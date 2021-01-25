@@ -1078,6 +1078,7 @@ const std::string ATTR_NAME_HCCL_FUSED_FLAG = "_hccl_fused_node";
 // dynamic shape attr
 const std::string ATTR_DYNAMIC_SHAPE_FIXED_ADDR = "_alloc_fixed_addr";
 const std::string ATTR_DYNAMIC_SHAPE_FIXED_ADDR_INDEX = "_alloc_fixed_addr_index";
+const std::string ATTR_DYNAMIC_SHAPE_SINGLE_AICPU = "_single_aicpu_dynamic";
 
 // op dynamic input
 const std::string ATTR_NAME_DYNAMIC_INPUT_START = "_dynamic_input_index_start";
