@@ -197,7 +197,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   for (const auto &output : graph->GetGraphOutNodesInfo()) {
     if (output.first != nullptr) {
       graph_proto->add_output(output.first->GetName() + ":" + std::to_string(output.second));
-      GELOGI("Add output to graph proto, node name:%s, index:%ld", output.first->GetName().c_str(), output.second);
+      GELOGI("Add output to graph proto, node name:%s, index:%d", output.first->GetName().c_str(), output.second);
     }
   }
   if (graph->attrs_.GetProtoMsg() != nullptr) {
@@ -445,7 +445,7 @@ bool ModelSerializeImp::HandleNodeNameRef() {
 
     GE_IF_BOOL_EXEC(item.graph == nullptr, continue);
     auto ret = item.graph->AddOutputNodeByIndex(node_it->second, item.index);
-    GELOGI("node name:%s, item.index:%ld", node_it->second->GetName().c_str(), item.index);
+    GELOGI("node name:%s, item.index:%d", node_it->second->GetName().c_str(), item.index);
     if (ret == nullptr) {
       GELOGE(GRAPH_FAILED, "AddOutputNode failed.");
       return false;
