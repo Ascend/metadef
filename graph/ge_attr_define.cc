@@ -1133,4 +1133,7 @@ const std::string ATTR_NAME_INSERT_END_PROFILILNG_TASK = "_end_profiling_task";
 const std::string ATTR_NAME_INSERT_PROFILILNG_TASK_LOG_ID = "_profiling_log_id";
 // padding dimension type (FE set and ge get)
 const std::string ATTR_NAME_RESHAPE_INFER_TYPE = "_infer_reshape_type";
+
+// mark single op scene
+const std::string ATTR_SINGLE_OP_SCENE = "_single_op_scene";
 }  // namespace ge

@@ -1168,6 +1168,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_INSERT_PROFILILNG_TASK_LOG_ID;
 // padding dimmension type
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_RESHAPE_INFER_TYPE;
+
+// mark single op scene
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_SINGLE_OP_SCENE;
 }  // namespace ge
 
 /*lint +e618*/
