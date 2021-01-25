@@ -381,7 +381,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
     for (const auto &in_data_anchor : sub_netoutput_node->GetAllInDataAnchors()) {
       auto in_desc = op_desc->MutableInputDesc(in_data_anchor->GetIdx());
       if (in_desc == nullptr) {
-        GELOGE(GRAPH_FAILED, "Invalid NetOutput node [%s] idx [%d], no tensor on it",
+        GELOGE(GRAPH_FAILED, "Invalid NetOutput node [%s] idx [%lu], no tensor on it",
                sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
         return GRAPH_FAILED;
       }
