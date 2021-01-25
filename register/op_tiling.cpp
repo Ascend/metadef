@@ -34,6 +34,8 @@ namespace optiling {
 
 const char *COMPILE_INFO_JSON = "compile_info_json";
 const char *COMPILE_INFO_KEY = "compile_info_key";
+const char *ATOMIC_COMPILE_INFO_JSON = "_atomic_compile_info_json";
+const char *ATOMIC_COMPILE_INFO_KEY = "_atomic_compile_info_key";
 
 const std::map<ge::DataType, std::string> DATATYPE_STRING_MAP{{ge::DT_FLOAT, "float32"},
                                                               {ge::DT_FLOAT16, "float16"},
@@ -124,6 +126,22 @@ bool GetCompileInfo(const ge::OpDescPtr &op_desc, const char *op_type, const cha
   bres = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON, op_compile_info.str);
   if (!bres) {
     GE_LOGE("Can not find the attribute %s. op_type:%s, op_name:%s", COMPILE_INFO_JSON, op_type, op_name);
+    return false;
+  }
+  return true;
+}
+
+bool GetAtomicCleanCompileInfo(const ge::OpDescPtr &op_desc, const char *op_type, const char *op_name,
+                    OpCompileInfo &op_compile_info) {
+  bool bres = ge::AttrUtils::GetStr(op_desc, ATOMIC_COMPILE_INFO_KEY, op_compile_info.key);
+  if (!bres) {
+    GE_LOGE("Can not find the attribute %s. op_type:%s, op_name:%s", ATOMIC_COMPILE_INFO_KEY, op_type, op_name);
+    return false;
+  }
+
+  bres = ge::AttrUtils::GetStr(op_desc, ATOMIC_COMPILE_INFO_JSON, op_compile_info.str);
+  if (!bres) {
+    GE_LOGE("Can not find the attribute %s. op_type:%s, op_name:%s", ATOMIC_COMPILE_INFO_JSON, op_type, op_name);
     return false;
   }
   return true;
