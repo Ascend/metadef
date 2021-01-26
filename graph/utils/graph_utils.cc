@@ -2138,8 +2138,12 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
 
   //nopadding reuse input
   bool attr_reuse = false;
+  bool is_input_continuous = false;
+  bool is_out_continuous = false;
+  (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, is_input_continuous);
+  (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, is_out_continuous);
   bool get_reuse_flag = ge::AttrUtils::GetBool(op_desc, ATTR_NAME_OUTPUT_REUSE_INPUT, attr_reuse);
-  bool is_no_padding_reuse_input = get_reuse_flag && attr_reuse;
+  bool is_no_padding_reuse_input = (is_input_continuous || is_out_continuous) && get_reuse_flag && attr_reuse;
   if (is_no_padding_reuse_input) {
     reuse_in_index = 0;
     GELOGI("Nopadding ReuseInput name[%s] output[%d] reuse input[%d].", op_desc->GetName().c_str(),
