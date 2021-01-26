@@ -656,8 +656,8 @@ ComputeGraph::UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_map
   return GRAPH_SUCCESS;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertEventNodes() {
-  std::list<NodePtr> node_list = nodes_;
+graphStatus ComputeGraph::ReorderEventNodes() {
+  std::list<NodePtr> &node_list = nodes_;
   for (const auto &node : GetDirectNode()) {
     if (node == nullptr || node->GetOpDesc() == nullptr) {
       GELOGW("node or OpDescPtr is nullptr.");
@@ -669,24 +669,36 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertE
       if (iter == node_list.end()) {
         GELOGW("no node found.");
       } else {
-        (void)node_list.erase(iter);
+        (void) node_list.erase(iter);
       }
 
       auto dst_iter = find(node_list.begin(), node_list.end(), node->GetOutControlNodes().at(0));
-      (void)node_list.insert(dst_iter, node);
+      (void) node_list.insert(dst_iter, node);
     }
     if (node->GetOpDesc()->GetType() == SEND) {
       auto iter = find(node_list.begin(), node_list.end(), node);
       if (iter == node_list.end()) {
         GELOGW("no node found.");
       } else {
-        (void)node_list.erase(iter);
+        (void) node_list.erase(iter);
       }
 
       auto src_iter = find(node_list.begin(), node_list.end(), node->GetInControlNodes().at(0));
-      (void)node_list.insert(++src_iter, node);
+      (void) node_list.insert(++src_iter, node);
     }
   }
+
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertEventNodes() {
+  auto status = ReorderEventNodes();
+  if (status != GRAPH_SUCCESS) {
+    GELOGE(status, "Graph [%s] record event nodes failed", name_.c_str());
+    return status;
+  }
+
+  std::list<NodePtr> node_list = nodes_;
   ClearNodeList();
   int64_t i = 0;
   for (const auto &node: node_list) {
@@ -698,6 +710,32 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertE
     }
     ++i;
   }
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertGraphEvents() {
+  auto status = ReorderEventNodes();
+  if (status != GRAPH_SUCCESS) {
+    GELOGE(status, "Graph [%s] record event nodes failed", name_.c_str());
+    return status;
+  }
+
+  // Partition subgraph
+  for (const auto graph : sub_graph_) {
+    status = graph->ReorderEventNodes();
+    if (status != GRAPH_SUCCESS) {
+      GELOGE(status, "Graph [%s] record event nodes failed", name_.c_str());
+      return status;
+    }
+  }
+
+  std::vector<ComputeGraphPtr> subgraphs;
+  const auto nodes = AllGraphNodes(subgraphs);
+  for (size_t i = 0; i < nodes.size(); ++i) {
+    NodePtr node = nodes.at(i);   // [node: should not be null]
+    node->GetOpDesc()->SetId(i);  // [node->GetOpDesc(): should not be null]
+  }
+
   return GRAPH_SUCCESS;
 }
 
@@ -828,20 +866,20 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::TopologicalSor
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::TopologicalSorting() {
   auto ret = TopologicalSortingGraph();
-  if (ret != SUCCESS) {
+  if (ret != GRAPH_SUCCESS) {
     GraphUtils::DumpGEGraphToOnnx(*this, "black_box");
     GELOGE(ret, "Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
     return ret;
   }
 
   if (sub_graph_.empty()) {
-    return SUCCESS;
+    return GRAPH_SUCCESS;
   }
 
   // partition sub graph
   for (const auto &sub_graph : sub_graph_) {
     ret = sub_graph->TopologicalSortingGraph();
-    if (ret != SUCCESS) {
+    if (ret != GRAPH_SUCCESS) {
       GELOGE(ret, "Sub graph topological sort Failed");
       return ret;
     }
@@ -855,10 +893,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::Topolog
   }
   if (sub_graph_.size() != subgraphs.size()) {  // Graph Partition use subgraph, Keep original
     GELOGW("Keep original subgraph for graph size %zu not equal %zu.", sub_graph_.size(), subgraphs.size());
-    return SUCCESS;
+    return GRAPH_SUCCESS;
   }
   sub_graph_.swap(subgraphs);
-  return SUCCESS;
+  return GRAPH_SUCCESS;
 }
 
 graphStatus ComputeGraph::TopologicalSortingGraph(bool dfs_reverse) {
