@@ -42,7 +42,7 @@ using namespace std;
 namespace ge {
 namespace {
 const size_t kDimSize4d = 4;
-const std::unordered_set<string> kChangeDimNodes = {PERMUTE, EXPANDDIMS, SQUEEZE};
+const std::set<string> kChangeDimNodes = {PERMUTE, EXPANDDIMS, SQUEEZE};
 const string kIsGraphInferred = "_is_graph_inferred";
 thread_local RefRelations reflection_builder;
 }  // namespace

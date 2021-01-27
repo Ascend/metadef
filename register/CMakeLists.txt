@@ -95,6 +95,10 @@ target_include_directories(register PRIVATE
     ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
+target_link_options(graph PRIVATE
+    -Wl,-Bsymbolic
+)
+
 target_link_libraries(register PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--whole-archive

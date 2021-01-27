@@ -119,6 +119,10 @@ target_include_directories(graph PRIVATE
     ${METADEF_DIR}/third_party/transformer/inc
 )
 
+target_link_options(graph PRIVATE
+    -Wl,-Bsymbolic
+)
+
 target_link_libraries(graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     static_mmpa
@@ -393,6 +397,10 @@ target_include_directories(graph PRIVATE
         ${METADEF_DIR}/third_party
         ${METADEF_DIR}/third_party/transformer/inc
         )
+        
+target_link_options(graph PRIVATE
+        -Wl,-Bsymbolic
+)
 
 target_link_libraries(graph PRIVATE
         $<BUILD_INTERFACE:intf_pub>

@@ -88,7 +88,7 @@ const std::map<domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
   {domi::DOMI_TENSOR_RESERVED, FORMAT_RESERVED}
 };
 
-const std::unordered_set<std::string> kInternalFormat = {
+const std::set<std::string> kInternalFormat = {
   "NC1HWC0",
   "FRACTAL_Z",
   "NC1C0HWPAD",
