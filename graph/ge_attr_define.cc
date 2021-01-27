@@ -1111,6 +1111,9 @@ const std::string ATTR_STAGE_LEVEL = "_stage_level";
 const std::string ATTR_ZERO_COPY_BASIC_OFFSET = "_zero_copy_basic_offset";
 const std::string ATTR_ZERO_COPY_RELATIVE_OFFSET = "_zero_copy_relative_offset";
 
+// mark node cannot be deleted
+const std::string ATTR_NAME_CANNOT_BE_DELETED = "_cannot_be_deleted";
+
 // The processing mode of INF and NAN during floating-point number calculation.
 const std::string ATTR_FP_CEILING_MODE = "_fp_ceiling_mode";
 // count of data from getnext_sink
