@@ -74,7 +74,7 @@ graphStatus ReflectionProcess(const std::unordered_set<RefCell, RefCellHash> &re
 
 graphStatus BiasAddFormatFixProcess(ge::NodePtr &node_ptr) {
   // 5 meas dim num
-  if (node_ptr->GetType() != "BiasAdd" && node_ptr->GetType() != "BiasAddGrad") {
+  if (node_ptr->GetType() != "BiasAdd") {
     return GRAPH_SUCCESS;
   }
   std::unordered_map<string, Format> kTfFormatFix = {
