@@ -495,7 +495,7 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     in_idx++;
   }
   for (const auto &output_desc : op_desc->GetAllInputsDescPtr()) {
-    if (input_desc == nullptr) {
+    if (output_desc == nullptr) {
       out_idx++;
       continue;
     }
