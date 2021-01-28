@@ -20,7 +20,6 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <iomanip>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -480,9 +479,9 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
       continue;
     }
     if (in_idx > 0) {
-      ss << std::setw(4);
+      ss << "    ";
     }
-    ss << "input_" << in_idx << std::setw(1) << "tensor: [";
+    ss << "input_" << in_idx << " " << "tensor: [";
     ss << "(shape:" << input_desc->MutableShape().ToString() << "),";
     ss << "(format:" << TypeUtils::FormatToSerialString(input_desc->GetFormat()) << "),";
     ss << "(dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetDataType()) << "),";
@@ -500,9 +499,9 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
       continue;
     }
     if (out_idx > 0) {
-      ss << std::setw(4);
+      ss << "    ";
     }
-    ss << "output_" << out_idx << std::setw(1) << "tensor: [";
+    ss << "output_" << out_idx << " " << "tensor: [";
     ss << "(shape:" << output_desc->MutableShape().ToString() << "),";
     ss << "(format:" << TypeUtils::FormatToSerialString(output_desc->GetFormat()) << "),";
     ss << "(dtype:" << TypeUtils::DataTypeToSerialString(output_desc->GetDataType()) << "),";
