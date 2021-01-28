@@ -1332,7 +1332,7 @@ graphStatus OpDesc::CallInferFunc(Operator &op) {
     return GRAPH_FAILED;
   }
   auto is_init_success = transformer->Init();
-  if (is_init_success) {
+  if (!is_init_success) {
     GELOGE(GRAPH_FAILED, "transformer init failed");
     return GRAPH_FAILED;
   }
