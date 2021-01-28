@@ -68,6 +68,7 @@ const char *const kDumpStrOptimizeSubgraph = "OptimizeSubGraph";
 const char *const kDumpStrSubgraphFunc = "sub_graph";
 const char *const kDumpStrAicpu = "Aicpu";
 const int32_t kNameMax = 255;
+const int32_t kMaxRecursionDepth = 10;
 };
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::AddEdge(const OutDataAnchorPtr &src,
@@ -1520,6 +1521,177 @@ ComputeGraphPtr GraphUtils::FindRootGraph(ComputeGraphPtr graph) {
     graph = result->GetParentGraph();
   }
   return result;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::CopyGraph(const Graph &src_graph, Graph &dst_graph) {
+  std::string graph_name = dst_graph.GetName();
+  if (graph_name.empty()) {
+    graph_name = src_graph.GetName();
+  }
+  ComputeGraphPtr new_compute_graph = ComGraphMakeShared<ComputeGraph>(graph_name);
+  GE_CHECK_NOTNULL(new_compute_graph);
+  ComputeGraphPtr src_compute_graph = GetComputeGraph(src_graph);
+  GE_CHECK_NOTNULL(src_compute_graph);
+  int32_t depth = 0;
+  std::map<ConstNodePtr, NodePtr> node_old_2_new;
+  std::map<ConstOpDescPtr, OpDescPtr> op_desc_old_2_new;
+  graphStatus ret = CopyComputeGraph(src_compute_graph, new_compute_graph,
+                                     node_old_2_new, op_desc_old_2_new, depth);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Copy graph failed.");
+    return GRAPH_FAILED;
+  }
+  Graph tmp_graph = CreateGraphFromComputeGraph(new_compute_graph);
+  ret = CopyGraphImpl(src_graph, tmp_graph,
+                      node_old_2_new, op_desc_old_2_new);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Copy graph impl failed.");
+    return GRAPH_FAILED;
+  }
+  std::swap(dst_graph, tmp_graph);
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph,
+                                         ComputeGraphPtr &dst_compute_graph,
+                                         std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
+                                         int32_t &depth) {
+  GE_CHECK_NOTNULL(dst_compute_graph);
+  GE_CHECK_NOTNULL(src_compute_graph);
+
+  if (depth >= kMaxRecursionDepth) {
+    GELOGE(GRAPH_FAILED, "exist too much subgraphs:%d > %d(allow max subgraphs)", depth, kMaxRecursionDepth);
+    return GRAPH_FAILED;
+  }
+  // copy op and subgraph from old graph to new graph
+  std::unordered_map<std::string, NodePtr> all_new_nodes;
+  for (const auto &n : src_compute_graph->GetDirectNode()) {
+    OpDescPtr op_desc = AttrUtils::CopyOpDesc(n->GetOpDesc());
+    if (op_desc == nullptr) {
+      GELOGE(GRAPH_FAILED, "Create new node:%s failed", n->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+
+    if (CopyTensorAttrs(op_desc, n) != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "Copy op:%s tensor failed.", n->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+
+    op_desc->SetName(n->GetName());
+    NodePtr node = dst_compute_graph->AddNode(op_desc);
+    if (node == nullptr) {
+      GELOGE(GRAPH_FAILED, "Add node[%s] to graph failed", op_desc->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+    all_new_nodes[node->GetName()] = node;
+    node_old_2_new[n] = node;
+    op_desc_old_2_new[n->GetOpDesc()] = op_desc;
+
+    // copy subgraph from old graph to new graph
+    const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
+    for (auto name_iter = subgraph_names.rbegin(); name_iter != subgraph_names.rend(); ++name_iter) {
+      auto src_subgraph = src_compute_graph->GetSubgraph(*name_iter);
+      ComputeGraphPtr dst_subgraph = ComGraphMakeShared<ComputeGraph>(src_subgraph->GetName());
+      GE_CHECK_NOTNULL(dst_subgraph);
+      std::map<ConstNodePtr, NodePtr> sub_node_old_2_new;
+      std::map<ConstOpDescPtr, OpDescPtr> sub_op_desc_old_2_new;
+      graphStatus ret = CopyComputeGraph(dst_subgraph, src_subgraph,
+                                         sub_node_old_2_new, sub_op_desc_old_2_new,
+                                         ++depth);
+      if (ret != GRAPH_SUCCESS) {
+        GELOGE(GRAPH_FAILED, "Copy subgraph:%s of parent node:%s failed.",
+               src_subgraph->GetName().c_str(), node->GetName().c_str());
+        return GRAPH_FAILED;
+      }
+      dst_compute_graph->AddSubGraph(dst_subgraph);
+      dst_subgraph->SetParentNode(node);
+      dst_subgraph->SetParentGraph(dst_compute_graph);
+    }
+  }
+
+  for (const auto &n : src_compute_graph->GetDirectNode()) {
+    if (RelinkGraphEdges(n, "", all_new_nodes) != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "Relink edges failed.");
+      return GRAPH_FAILED;
+    }
+  }
+
+  // copy members from old graph to new graph
+  auto ret = CopyMembers(src_compute_graph, dst_compute_graph, all_new_nodes);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Copy members failed.");
+    return GRAPH_FAILED;
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
+                                    ComputeGraphPtr &dst_compute_graph,
+                                    const std::unordered_map<std::string, NodePtr> &all_new_nodes) {
+  // copy info of output nodes from old graph to new graph.
+  const std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info = src_compute_graph->GetGraphOutNodesInfo();
+  std::vector<std::pair<NodePtr, int32_t>> new_out_nodes_info;
+  for (const auto &info : out_nodes_info) {
+    auto it = all_new_nodes.find(info.first->GetName());
+    if (it == all_new_nodes.end()) {
+      GELOGE(GRAPH_FAILED, "Find output node:%s failed.", info.first->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+    new_out_nodes_info.emplace_back(it->second, info.second);
+  }
+  dst_compute_graph->SetGraphOutNodesInfo(new_out_nodes_info);
+
+  // copy info of input nodes from old graph to new graph.
+  const ComputeGraph::Vistor<NodePtr> &input_nodes = src_compute_graph->GetInputNodes();
+  for (const auto &node : input_nodes) {
+    auto it = all_new_nodes.find(node->GetName());
+    if (it == all_new_nodes.end()) {
+      GELOGE(GRAPH_FAILED, "Find input node:%s failed.", node->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+    dst_compute_graph->AddInputNode(it->second);
+  }
+
+  // copy target info nodes from old graph to new graph.
+  const std::vector<NodePtr> &src_traget_nodes_info = src_compute_graph->GetGraphTargetNodesInfo();
+  std::vector<NodePtr> dst_traget_nodes_info;
+  for (const auto &node : src_traget_nodes_info) {
+    auto it = all_new_nodes.find(node->GetName());
+    if (it == all_new_nodes.end()) {
+      GELOGE(GRAPH_FAILED, "Find target info node:%s failed.", node->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+    dst_traget_nodes_info.emplace_back(it->second);
+  }
+  dst_compute_graph->SetGraphTargetNodesInfo(dst_traget_nodes_info);
+
+  // copy attr from old graph to new graph.
+  std::shared_ptr<proto::GraphDef> graph_proto = ComGraphMakeShared<proto::GraphDef>();
+  if (src_compute_graph->attrs_.GetProtoMsg() != nullptr) {
+    *graph_proto->mutable_attr() = *src_compute_graph->attrs_.GetProtoMsg();
+    dst_compute_graph->attrs_ = ProtoAttrMapHelper(graph_proto, graph_proto->mutable_attr());
+  }
+
+  // copy other members from old graph to new graph.
+  dst_compute_graph->data_format_ = src_compute_graph->data_format_;
+  dst_compute_graph->is_unknown_shape_graph_ = src_compute_graph->is_unknown_shape_graph_;
+  dst_compute_graph->need_iteration_ = src_compute_graph->need_iteration_;
+  dst_compute_graph->is_summary_graph_ = src_compute_graph->is_summary_graph_;
+  dst_compute_graph->is_valid_flag_ = src_compute_graph->is_valid_flag_;
+  dst_compute_graph->input_size_ = src_compute_graph->input_size_;
+  dst_compute_graph->output_size_ = src_compute_graph->output_size_;
+  dst_compute_graph->direct_nodes_size_ = src_compute_graph->direct_nodes_size_;
+  dst_compute_graph->inputs_order_ = src_compute_graph->inputs_order_;
+  dst_compute_graph->op_name_map_ = src_compute_graph->op_name_map_;
+  dst_compute_graph->out_nodes_map_ = src_compute_graph->out_nodes_map_;
+  dst_compute_graph->params_share_map_ = src_compute_graph->params_share_map_;
+
+  return GRAPH_SUCCESS;
 }
 
 ///

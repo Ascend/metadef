@@ -769,6 +769,15 @@ graphStatus Graph::GetName(AscendString &name) const {
   return GRAPH_SUCCESS;
 }
 
+graphStatus Graph::CopyFrom(const Graph &src_graph) {
+  auto res = GraphUtils::CopyGraph(src_graph, *this);
+  if (res != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Copy graph:%s failed.", src_graph.GetName().c_str());
+    return GRAPH_FAILED;
+  }
+  return GRAPH_SUCCESS;
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Graph
 GraphUtils::CreateGraphFromComputeGraph(const ge::ComputeGraphPtr compute_graph) {
   GE_CHK_BOOL_EXEC_NOLOG(compute_graph != nullptr, return Graph(""));
@@ -780,6 +789,35 @@ GraphUtils::CreateGraphFromComputeGraph(const ge::ComputeGraphPtr compute_graph)
   graph.impl_->compute_graph_ = compute_graph;
 
   return graph;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtils::CopyGraphImpl(const Graph &src_graph, Graph &dst_graph,
+                          const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                          const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new) {
+  GE_CHECK_NOTNULL(dst_graph.impl_);
+  GE_CHECK_NOTNULL(src_graph.impl_);
+
+  std::map<string, ge::Operator> &dst_op_list = dst_graph.impl_->op_list_;
+  const std::map<string, ge::Operator> &src_op_list = src_graph.impl_->op_list_;
+  auto &dst_compute_graph = dst_graph.impl_->compute_graph_;
+
+  dst_graph.impl_->output_name_ = src_graph.impl_->output_name_;
+
+  auto ret = OpDescUtils::CopyOperators(dst_compute_graph,
+                                        node_old_2_new, op_desc_old_2_new,
+                                        src_op_list, dst_op_list);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Copy operator failed.");
+    return GRAPH_FAILED;
+  }
+
+  ret = OpDescUtils::CopyOperatorLinks(src_op_list, dst_op_list);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Copy operator links failed.");
+    return GRAPH_FAILED;
+  }
+  return GRAPH_SUCCESS;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GraphPtr
