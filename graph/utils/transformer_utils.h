@@ -28,24 +28,27 @@
 namespace ge {
 class NodeShapeTransUtils {
  public:
+  bool Init();
   bool CatchFormatAndShape();
   bool UpdateFormatAndShape();
 
-  explicit NodeShapeTransUtils(OpDescPtr op_desc) : op_desc_(op_desc) {
+  explicit NodeShapeTransUtils(OpDescPtr op_desc) : op_desc_(op_desc), in_num_(0), out_num_(0) {
   }
 
   ~NodeShapeTransUtils() {
   }
 
  private:
-  std::map<std::string, Format> map_format_in_;
-  std::map<std::string, Format> map_ori_format_in_;
-  std::map<std::string, DataType> map_dtype_in_;
-  std::map<std::string, Format> map_format_out_;
-  std::map<std::string, Format> map_ori_format_out_;
-  std::map<std::string, DataType> map_dtype_out_;
+  std::vector<Format> map_format_in_;
+  std::vector<Format> map_ori_format_in_;
+  std::vector<DataType> map_dtype_in_;
+  std::vector<Format> map_format_out_;
+  std::vector<Format> map_ori_format_out_;
+  std::vector<DataType> map_dtype_out_;
 
   OpDescPtr op_desc_;
+  uint32_t in_num_;
+  uint32_t out_num_;
 };
 }  // namespace ge
 #endif  // COMMON_GRAPH_UTILS_TRANSFORMER_UTILS_H_
