@@ -485,10 +485,10 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     ss << "input_" << in_idx << std::setw(1) << "tensor: [";
     ss << "(shape:" << input_desc->MutableShape().ToString() << "),";
     ss << "(format:" << TypeUtils::FormatToSerialString(input_desc->GetFormat()) << "),";
-    ss << "(dtype:" << TypeUtils::FormatToSerialString(input_desc->GetDataType()) << "),";
+    ss << "(dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetDataType()) << "),";
     ss << "(origin_shape:" << input_desc->GetOriginShape().ToString() << "),";
     ss << "(origin_format:" << TypeUtils::FormatToSerialString(input_desc->GetOriginFormat()) << "),";
-    ss << "(origin_dtype:" << TypeUtils::FormatToSerialString(input_desc->GetOriginDataType()) << "),";
+    ss << "(origin_dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetOriginDataType()) << "),";
     string range_str;
     SerialShapeRange(input_desc, range_str);
     ss << "(shape_range:" << range_str << ")]" << std::setw(4);
@@ -505,17 +505,17 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     ss << "output_" << out_idx << std::setw(1) << "tensor: [";
     ss << "(shape:" << output_desc->MutableShape().ToString() << "),";
     ss << "(format:" << TypeUtils::FormatToSerialString(output_desc->GetFormat()) << "),";
-    ss << "(dtype:" << TypeUtils::FormatToSerialString(output_desc->GetDataType()) << "),";
+    ss << "(dtype:" << TypeUtils::DataTypeToSerialString(output_desc->GetDataType()) << "),";
     ss << "(origin_shape:" << output_desc->GetOriginShape().ToString() << "),";
     ss << "(origin_format:" << TypeUtils::FormatToSerialString(output_desc->GetOriginFormat()) << "),";
-    ss << "(origin_dtype:" << TypeUtils::FormatToSerialString(output_desc->GetOriginDataType()) << "),";
+    ss << "(origin_dtype:" << TypeUtils::DataTypeToSerialString(output_desc->GetOriginDataType()) << "),";
     string range_str;
     SerialShapeRange(output_desc, range_str);
     ss << "(shape_range:" << range_str << ")]";
     out_idx++;
   }
   ss << "}";
-  GELOGD("Shape dump [%s], Node name: [%s]. %s", phase.c_str(), node->GetName().c_str(), ss.str());
+  GELOGD("Shape dump [%s], Node name: [%s]. %s", phase.c_str(), node->GetName().c_str(), ss.str().c_str());
 }
 
 InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, InferenceContextPtr> &context_map,
