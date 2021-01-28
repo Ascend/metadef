@@ -490,7 +490,7 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     ss << "(origin_dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetOriginDataType()) << "),";
     string range_str;
     SerialShapeRange(input_desc, range_str);
-    ss << "(shape_range:" << range_str << ")]" << std::setw(4);
+    ss << "(shape_range:" << range_str << ")]";
     in_idx++;
   }
   for (const auto &output_desc : op_desc->GetAllInputsDescPtr()) {
