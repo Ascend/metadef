@@ -397,7 +397,7 @@ void SerialShapeRange(const GeTensorDescPtr &desc, std::string &desc_str) {
     desc_str += std::to_string(pair.first) + "," + std::to_string(pair.second);
     desc_str += "},";
   }
-  desc_str += "] ";
+  desc_str += "]";
 }
 
 graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
@@ -482,7 +482,7 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
       ss << "    ";
     }
     ss << "input_" << in_idx << " " << "tensor: [";
-    ss << "(shape:" << input_desc->MutableShape().ToString() << "),";
+    ss << "(shape:[" << input_desc->MutableShape().ToString() << "]),";
     ss << "(format:" << TypeUtils::FormatToSerialString(input_desc->GetFormat()) << "),";
     ss << "(dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetDataType()) << "),";
     ss << "(origin_shape:" << input_desc->GetOriginShape().ToString() << "),";
@@ -498,11 +498,9 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
       out_idx++;
       continue;
     }
-    if (out_idx > 0) {
-      ss << "    ";
-    }
+    ss << "    ";
     ss << "output_" << out_idx << " " << "tensor: [";
-    ss << "(shape:" << output_desc->MutableShape().ToString() << "),";
+    ss << "(shape:[" << output_desc->MutableShape().ToString() << "]),";
     ss << "(format:" << TypeUtils::FormatToSerialString(output_desc->GetFormat()) << "),";
     ss << "(dtype:" << TypeUtils::DataTypeToSerialString(output_desc->GetDataType()) << "),";
     ss << "(origin_shape:" << output_desc->GetOriginShape().ToString() << "),";
