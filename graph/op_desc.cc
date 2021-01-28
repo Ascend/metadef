@@ -1331,6 +1331,11 @@ graphStatus OpDesc::CallInferFunc(Operator &op) {
     GELOGE(GRAPH_FAILED, "Memory alloc failed");
     return GRAPH_FAILED;
   }
+  auto is_init_success = transformer->Init();
+  if (is_init_success) {
+    GELOGE(GRAPH_FAILED, "transformer init failed");
+    return GRAPH_FAILED;
+  }
   if (!transformer->CatchFormatAndShape()) {
     GELOGE(GRAPH_FAILED, "catch format and shape info failed!");
     return GRAPH_FAILED;
