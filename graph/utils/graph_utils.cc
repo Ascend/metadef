@@ -2634,6 +2634,16 @@ NodePtr CompleteGraphBuilder::AddDataNode(uint32_t index, graphStatus &error_cod
       return nullptr;
     }
   }
+  if (parent_node_ != nullptr) {
+    // op_desc should not be null
+    const auto &parent_desc = parent_node_->GetOpDesc()->GetInputDesc(index_iter->second);
+    if ((op_desc->UpdateInputDesc(0, parent_desc) != GRAPH_SUCCESS) ||
+        (op_desc->UpdateOutputDesc(0, parent_desc) != GRAPH_SUCCESS)) {
+      error_code = GRAPH_FAILED;
+      error_msg = "AddDataNode failed: update tensor_desc for " + data_name + " failed.";
+      return nullptr;
+    }
+  }
 
   NodePtr data_node = owner_graph_->AddNode(op_desc);
   if (data_node == nullptr) {
