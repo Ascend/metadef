@@ -1076,7 +1076,7 @@ const std::string ATTR_NAME_HCCL_FUSED_GROUP = "_hccl_fused_group";
 const std::string ATTR_NAME_HCCL_FUSED_FLAG = "_hccl_fused_node";
 
 // used for parallel group
-const std::string ATTR_NAME_HCCL_PARALLEL_GROUP = "_parallel_group";
+const std::string ATTR_NAME_PARALLEL_GROUP = "_parallel_group";
 
 // dynamic shape attr
 const std::string ATTR_DYNAMIC_SHAPE_FIXED_ADDR = "_alloc_fixed_addr";
