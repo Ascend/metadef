@@ -1111,6 +1111,15 @@ graphStatus RelinkControlNodeIfNeed(const NodePtr &node, InNodesToOut &in_nodes_
         if (in_node->GetOutControlAnchor()->IsLinkedWith(out_node->GetInControlAnchor())) {
           continue;
         }
+        // Some pass, such as SameTransdataBreadFusionPass will generate a ring, so add a
+        // ring breaking operation here, and notice, this is an operation which will be
+        // delete later, so do not use this interface to break a ring
+        if (in_node == out_node) {
+          GELOGW("there is a cycle between %s to %s when isolating node %s type %s",
+                in_node->GetName().c_str(), out_node->GetName().c_str(), node->GetName().c_str(),
+                node->GetType().c_str());
+          continue;
+        }
         auto ret = GraphUtils::AddEdge(in_node->GetOutControlAnchor(), out_node->GetInControlAnchor());
         if (ret != GRAPH_SUCCESS) {
           GELOGE(GRAPH_FAILED, "Failed to add control edge from %s to %s when isolating node %s type %s",
