@@ -911,7 +911,7 @@ Status NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
     auto root_graph = GraphUtils::FindRootGraph(owner_graph);
     GE_CHECK_NOTNULL(root_graph);
 
-    std::unordered_set<std::string> subgraph_to_remove;
+    std::set<std::string> subgraph_to_remove;
     for (auto &subgraph_name : subgraph_names) {
       std::deque<std::string> queue;
       queue.push_back(subgraph_name);

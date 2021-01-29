@@ -33,6 +33,11 @@ OpKernelRegistry::OpKernelRegistry() {
 OpKernelRegistry::~OpKernelRegistry() {
 }
 
+OpKernelRegistry& OpKernelRegistry::GetInstance() {
+  static OpKernelRegistry instance;
+  return instance;
+}
+
 bool OpKernelRegistry::IsRegistered(const std::string &op_type) {
   if (impl_ == nullptr) {
     GELOGE(MEMALLOC_FAILED, "Failed to invoke IsRegistered %s, OpKernelRegistry is not properly initialized",

@@ -25,7 +25,7 @@
 
 namespace ge {
 using std::map;
-using std::unordered_set;
+using std::set;
 void AttrHolder::CopyAttrsFrom(const AttrHolder &holder) { MutableAttrMap().CopyValueFrom(holder.GetAttrMap()); }
 graphStatus AttrHolder::SetAttr(const std::string &name, const GeAttrValue &value) {
   if (value.IsEmpty()) {
@@ -106,8 +106,8 @@ const std::map<string, GeAttrValue> AttrHolder::GetAllAttrs() const {
   return attr_value_map;
 }
 
-const std::unordered_set<string> AttrHolder::GetAllAttrNames() const {
-  std::unordered_set<string> names;
+const std::set<string> AttrHolder::GetAllAttrNames() const {
+  std::set<string> names;
   auto proto_map = GetAttrMap().GetProtoMsg();
   if (proto_map != nullptr) {
     for (const auto &it : *proto_map) {

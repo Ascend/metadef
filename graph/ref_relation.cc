@@ -17,6 +17,7 @@
 #include "graph/ref_relation.h"
 
 #include <unordered_set>
+#include <set>
 #include <unordered_map>
 
 #include "utils/mem_utils.h"
@@ -39,7 +40,7 @@ namespace {
 
   const uint16_t kMaxElementNum = 100;
 
-  std::unordered_set<string> function_op = {
+  std::set<string> function_op = {
     kWhile,
     kIf,
     kCase

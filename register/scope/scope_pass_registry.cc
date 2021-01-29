@@ -111,6 +111,11 @@ ScopeFusionPassRegistry::ScopeFusionPassRegistry() {
 
 ScopeFusionPassRegistry::~ScopeFusionPassRegistry() {}
 
+ScopeFusionPassRegistry& ScopeFusionPassRegistry::GetInstance() {
+  static ScopeFusionPassRegistry instance;
+  return instance;
+}
+
 void ScopeFusionPassRegistry::RegisterScopeFusionPass(const std::string &pass_name, CreateFn create_fn,
                                                       bool is_general) {
   if (impl_ == nullptr) {
