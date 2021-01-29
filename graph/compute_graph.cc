@@ -867,7 +867,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::TopologicalSor
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::TopologicalSorting() {
   auto ret = TopologicalSortingGraph();
   if (ret != GRAPH_SUCCESS) {
-    GE_DUMP(share_from_this(), "black_box" + name_);
+    GE_DUMP(shared_from_this(), "black_box" + name_);
     GELOGE(ret, "Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
     return ret;
   }
