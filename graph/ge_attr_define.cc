@@ -1142,4 +1142,11 @@ const std::string ATTR_NAME_RESHAPE_INFER_TYPE = "_infer_reshape_type";
 
 // mark single op scene
 const std::string ATTR_SINGLE_OP_SCENE = "_single_op_scene";
+
+// for fe judge whether trans/cast op is inserted
+const std::string ATTR_NAME_FORMAT_CONTINUOUS = "_format_continuous";
+const std::string ATTR_NAME_REFRESH_CONTINUOUS_FLAG = "_refresh_continuous_flag";
+const std::string ATTR_NAME_FORMAT_AGNOSTIC = "_format_agnostic";
+const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_OUTPUT = "_format_agnostic_except_output";
+const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_INPUT = "_format_agnostic_except_input";
 }  // namespace ge
