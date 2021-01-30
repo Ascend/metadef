@@ -18,11 +18,14 @@
 
 #include <memory>
 #include <string>
+#include <sstream>
+#include <iostream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/attr_utils.h"
 
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
@@ -40,6 +43,7 @@
 namespace ge {
 namespace {
 const uint32_t kWhileBodySubGraphIdx = 1;
+const char* const kPreOpInputShapeRange = "_pre_op_in_range";
 
 graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
   GELOGD("Enter reverse brush while body subgraph process!");
@@ -151,7 +155,7 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
       }
       auto shape = tensor.MutableShape();
       if (shape.GetDims().size() != ref_out_tensor_shape.GetDims().size()) {
-        GELOGD("node is %s, i : %d, shape size: %lu, ref_out_tensor_shape size: %lu",
+        GELOGD("node is %s, i : %zu, shape size: %lu, ref_out_tensor_shape size: %lu",
                node->GetName().c_str(), i, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
         ref_out_tensor_shape = GeShape(UNKNOWN_RANK);
         break;
@@ -160,7 +164,7 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
         if (ref_out_tensor_shape.GetDim(j) == shape.GetDim(j)) {
           continue;
         }
-        GELOGD("node is %s, i : %d, j: %d ,shape size: %lu, ref_out_tensor_shape size: %lu",
+        GELOGD("node is %s, i : %zu, j: %zu ,shape size: %lu, ref_out_tensor_shape size: %lu",
                node->GetName().c_str(), i, j, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
         (void)ref_out_tensor_shape.SetDim(j, UNKNOWN_DIM);
       }
@@ -300,7 +304,7 @@ graphStatus FindSubgraphDataAndNetoutput(std::shared_ptr<ComputeGraph> &sub_grap
         return GRAPH_FAILED;
       }
       if (ref_i < 0 || static_cast<uint32_t>(ref_i) >= node->GetAllInDataAnchorsSize()) {
-        GELOGE(GRAPH_FAILED, "data node[%s]'s ref index[%d] is not in range [0, %zu)!",
+        GELOGE(GRAPH_FAILED, "data node[%s]'s ref index[%d] is not in range [0, %u)!",
                sub_node->GetName().c_str(), ref_i, node->GetAllInDataAnchorsSize());
         return GRAPH_FAILED;
       }
@@ -353,7 +357,7 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
                 name.c_str(), node->GetName().c_str(), edge_anchor->GetIdx());
         return GRAPH_FAILED;
       }
-      GELOGI("Netoutput in anchor index is %zu, input tensor dim is %zu",
+      GELOGI("Netoutput in anchor index is %d, input tensor dim is %zu",
              edge_anchor->GetIdx(), edge_desc->GetShape().GetDimNum());
       int ref_i;
       if (!AttrUtils::GetInt(edge_desc, ATTR_NAME_PARENT_NODE_INDEX, ref_i)) {
@@ -393,26 +397,7 @@ void SerialShapeRange(const GeTensorDescPtr &desc, std::string &desc_str) {
     desc_str += std::to_string(pair.first) + "," + std::to_string(pair.second);
     desc_str += "},";
   }
-  desc_str += "] ";
-}
-
-void SerialShapeAndDtype(const GeTensorDescPtr &desc, bool is_origin_info, std::string &desc_str) {
-  desc_str += "[";
-  if (!is_origin_info) {
-    for (int64_t dim : desc->GetShape().GetDims()) {
-      desc_str += std::to_string(dim) + " ";
-    }
-    desc_str += "]";
-    desc_str += ":" + TypeUtils::DataTypeToSerialString(desc->GetDataType()) + ":" +
-                      TypeUtils::FormatToSerialString(desc->GetFormat()) + " ";
-  } else {
-    for (int64_t dim : desc->GetOriginShape().GetDims()) {
-      desc_str += std::to_string(dim) + " ";
-    }
-    desc_str += "]";
-    desc_str += ":" + TypeUtils::DataTypeToSerialString(desc->GetOriginDataType()) + ":" +
-                      TypeUtils::FormatToSerialString(desc->GetOriginFormat()) + " ";
-  }
+  desc_str += "]";
 }
 
 graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
@@ -441,7 +426,7 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
     auto peer_out_shape = peer_out_desc->MutableShape().GetDims();
     auto peer_out_dtype = peer_out_desc->GetDataType();
     if (peer_out_dtype != in_dtype) {
-      GELOGW("current node [%s] [%d]\'th out_dtype is [%s].peer output node [%s] [%d]\'th "
+      GELOGW("current node [%s] [%d]\'th in_dtype is [%s].peer output node [%s] [%d]\'th "
              "output_dtype is [%s].The two dtype should be same! Please check graph and fix it",
              node_ptr->GetName().c_str(), in_idx, TypeUtils::DataTypeToSerialString(in_dtype).c_str(),
              peer_out_data_node->GetName().c_str(), peer_out_idx,
@@ -449,8 +434,8 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
     } else if ((!in_shape.empty()) && (in_shape != peer_out_shape)) {
       string in_shape_str = Serial(in_shape);
       string peer_out_shape_str = Serial(peer_out_shape);
-      GELOGW("current node [%s] [%d]\'th out_shape is [%s].peer input node [%s] [%d]\'th "
-             "input_shape is [%s].The two shape should be same! Please check graph and fix it",
+      GELOGW("current node [%s] [%d]\'th in_shape is [%s].peer output node [%s] [%d]\'th "
+             "output_shape is [%s].The two shape should be same! Please check graph and fix it",
              node_ptr->GetName().c_str(), in_idx, in_shape_str.c_str(),
              peer_out_data_node->GetName().c_str(), peer_out_idx, peer_out_shape_str.c_str());
     }
@@ -463,6 +448,10 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
       std::vector<std::pair<int64_t, int64_t>> shape_range;
       (void) peer_out_desc->GetShapeRange(shape_range);
       in_desc->SetShapeRange(shape_range);
+    }
+    std::vector<int64_t> pre_op_in_range;
+    if (ge::AttrUtils::GetListInt(*peer_out_desc, kPreOpInputShapeRange, pre_op_in_range)) {
+      (void)ge::AttrUtils::SetListInt(*in_desc, kPreOpInputShapeRange, pre_op_in_range);
     }
     ge::TensorUtils::SetRealDimCnt(*in_desc,
                                    static_cast<uint32_t>(peer_out_desc->MutableShape().GetDims().size()));
@@ -480,53 +469,50 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
   }
   ge::OpDescPtr op_desc = node->GetOpDesc();
   GE_IF_BOOL_EXEC(op_desc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return);
-  std::string str;
-  if (op_desc->GetInputsSize() != 0) {
-    std::string input_desc_str = "input shape: ";
-    for (const auto &input_desc : op_desc->GetAllInputsDescPtr()) {
-      SerialShapeAndDtype(input_desc, false, input_desc_str);
+  std::stringstream ss;
+  ss << "{";
+  int32_t in_idx = 0;
+  int32_t out_idx = 0;
+  for (const auto &input_desc : op_desc->GetAllInputsDescPtr()) {
+    if (input_desc == nullptr) {
+      in_idx++;
+      continue;
     }
-    str += input_desc_str;
-
-    input_desc_str = "input origin shape: ";
-    for (const auto &input_desc : op_desc->GetAllInputsDescPtr()) {
-      SerialShapeAndDtype(input_desc, true, input_desc_str);
+    if (in_idx > 0) {
+      ss << "    ";
     }
-    str += input_desc_str;
-
-    input_desc_str = "input shape range: ";
-    for (const auto &input_desc : op_desc->GetAllInputsDescPtr()) {
-      SerialShapeRange(input_desc, input_desc_str);
-    }
-    str += input_desc_str;
+    ss << "input_" << in_idx << " " << "tensor: [";
+    ss << "(shape:[" << input_desc->MutableShape().ToString() << "]),";
+    ss << "(format:" << TypeUtils::FormatToSerialString(input_desc->GetFormat()) << "),";
+    ss << "(dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetDataType()) << "),";
+    ss << "(origin_shape:" << input_desc->GetOriginShape().ToString() << "),";
+    ss << "(origin_format:" << TypeUtils::FormatToSerialString(input_desc->GetOriginFormat()) << "),";
+    ss << "(origin_dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetOriginDataType()) << "),";
+    string range_str;
+    SerialShapeRange(input_desc, range_str);
+    ss << "(shape_range:" << range_str << ")]";
+    in_idx++;
   }
-
-  if (op_desc->GetAllOutputsDescSize() != 0) {
-    std::string output_desc_str = "output shape: ";
-    for (const auto &output_desc : op_desc->GetAllOutputsDescPtr()) {
-      if (output_desc == nullptr) {
-        continue;
-      }
-      SerialShapeAndDtype(output_desc, false, output_desc_str);
+  for (const auto &output_desc : op_desc->GetAllInputsDescPtr()) {
+    if (output_desc == nullptr) {
+      out_idx++;
+      continue;
     }
-    str += output_desc_str;
-
-    output_desc_str = "output origin shape: ";
-    for (const auto &output_desc : op_desc->GetAllOutputsDescPtr()) {
-      if (output_desc == nullptr) {
-        continue;
-      }
-      SerialShapeAndDtype(output_desc, true, output_desc_str);
-    }
-    str += output_desc_str;
-
-    output_desc_str = "output shape range: ";
-    for (const auto &output_desc : op_desc->GetAllOutputsDescPtr()) {
-      SerialShapeRange(output_desc, output_desc_str);
-    }
-    str += output_desc_str;
+    ss << "    ";
+    ss << "output_" << out_idx << " " << "tensor: [";
+    ss << "(shape:[" << output_desc->MutableShape().ToString() << "]),";
+    ss << "(format:" << TypeUtils::FormatToSerialString(output_desc->GetFormat()) << "),";
+    ss << "(dtype:" << TypeUtils::DataTypeToSerialString(output_desc->GetDataType()) << "),";
+    ss << "(origin_shape:" << output_desc->GetOriginShape().ToString() << "),";
+    ss << "(origin_format:" << TypeUtils::FormatToSerialString(output_desc->GetOriginFormat()) << "),";
+    ss << "(origin_dtype:" << TypeUtils::DataTypeToSerialString(output_desc->GetOriginDataType()) << "),";
+    string range_str;
+    SerialShapeRange(output_desc, range_str);
+    ss << "(shape_range:" << range_str << ")]";
+    out_idx++;
   }
-  GELOGD("Shape dump [%s], Node name: [%s]. %s", phase.c_str(), node->GetName().c_str(), str.c_str());
+  ss << "}";
+  GELOGD("Shape dump [%s], Node name: [%s]. %s", phase.c_str(), node->GetName().c_str(), ss.str().c_str());
 }
 
 InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, InferenceContextPtr> &context_map,
@@ -702,11 +688,27 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
   auto opdesc = node->GetOpDesc();
   GE_IF_BOOL_EXEC(opdesc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
 
+  vector<ge::DataType> temp_dtype;
+  for (auto &tensor_desc: opdesc->GetAllOutputsDescPtr()) {
+      temp_dtype.emplace_back(tensor_desc->GetDataType());
+  }
   PrintInOutTensorShape(node, "before_infershape when running");
   Operator op = OpDescUtils::CreateOperatorFromNode(node);
 
   graphStatus status = InferShapeAndTypeForRunning(node, op, before_subgraph);
   if (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS) {
+    // ensure the dtype is not changed after infershape in running
+    auto after_opdesc = node->GetOpDesc();
+    GE_IF_BOOL_EXEC(after_opdesc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
+    auto all_output_tensor = after_opdesc->GetAllOutputsDescPtr();
+    for (size_t i = 0; i < all_output_tensor.size(); ++i) {
+      if (all_output_tensor.at(i)->GetDataType() != temp_dtype[i]) {
+        GELOGD("Op %s output %zu need reset dtype,original dtype is %s, new dtype is %s",
+               node->GetName().c_str(), i, TypeUtils::DataTypeToSerialString(all_output_tensor.at(i)->GetDataType()).c_str(),
+               TypeUtils::DataTypeToSerialString(temp_dtype[i]).c_str());
+        all_output_tensor.at(i)->SetDataType(temp_dtype[i]);
+      }
+    }
     PrintInOutTensorShape(node, "after_infershape when running");
     return GRAPH_SUCCESS;
   } else {

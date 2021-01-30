@@ -17,6 +17,12 @@
 #ifndef COMMON_GRAPH_FORMAT_REFINER_H_
 #define COMMON_GRAPH_FORMAT_REFINER_H_
 
+#if defined(_MSC_VER)
+#define METADEF_FUNC_VISIBILITY
+#else
+#define METADEF_FUNC_VISIBILITY __attribute__((visibility("hidden")))
+#endif
+
 #include <deque>
 #include <string>
 #include <unordered_map>
@@ -27,7 +33,7 @@
 
 namespace ge {
 // ShapeRefiner performs shape inference for compute graphs
-class FormatRefiner {
+class METADEF_FUNC_VISIBILITY FormatRefiner {
  public:
   static graphStatus InferOrigineFormat(const ge::ComputeGraphPtr &graph);
 

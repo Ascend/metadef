@@ -16,7 +16,7 @@
 
 #include "graph/debug/graph_debug.h"
 #include <algorithm>
-#include <unordered_set>
+#include <set>
 #include <vector>
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
@@ -29,7 +29,7 @@ using namespace std;
 #define OUTPUT_ANCHOR_PORT(name) ("__output__" + (name))
 
 namespace ge {
-std::unordered_set<std::string> control_anchor;
+std::set<std::string> control_anchor;
 std::vector<string> types = {
     "DT_FLOAT", "DT_FLOAT16", "DT_INT8",          "DT_INT32",          "DT_UINT8",    "",
     "DT_INT16", "DT_UINT16",  "DT_UINT32",        "DT_INT64",          "DT_UINT64",   "DT_DOUBLE",

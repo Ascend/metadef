@@ -1051,7 +1051,7 @@ std::vector<int32_t> ScopeGraph::ScopeGraphImpl::GetFusionResultInputOrOutput(co
   }
 
   FusionScopesResult *fusion_node = fusion_iter->second;
-  std::unordered_map<std::string, std::vector<int32_t>> inout_map;
+  std::map<std::string, std::vector<int32_t>> inout_map;
   auto &impl = fusion_node->impl_;
   if (input) {
     inout_map = impl->GetInputs();

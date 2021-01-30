@@ -12,6 +12,7 @@ set(PROTO_LIST
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
 
 set(SRC_LIST
+    "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
     "attr_value.cc"
@@ -117,6 +118,10 @@ target_include_directories(graph PRIVATE
     ${METADEF_DIR}/third_party/fwkacllib/inc/ops
     ${METADEF_DIR}/third_party
     ${METADEF_DIR}/third_party/transformer/inc
+)
+
+target_link_options(graph PRIVATE
+    -Wl,-Bsymbolic
 )
 
 target_link_libraries(graph PRIVATE
@@ -393,6 +398,10 @@ target_include_directories(graph PRIVATE
         ${METADEF_DIR}/third_party
         ${METADEF_DIR}/third_party/transformer/inc
         )
+        
+target_link_options(graph PRIVATE
+        -Wl,-Bsymbolic
+)
 
 target_link_libraries(graph PRIVATE
         $<BUILD_INTERFACE:intf_pub>

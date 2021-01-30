@@ -308,9 +308,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::UpdatePeer
     auto output_tensor = op_desc->MutableOutputDesc(out_anchor->GetIdx());
     auto out_dims = output_tensor->GetShape().GetDims();
     auto out_dtype = output_tensor->GetDataType();
-    ge::TensorUtils::SetRealDimCnt(*output_tensor, static_cast<uint32_t>(output_tensor->GetShape().GetDims().size()));
-    output_tensor->SetOriginShape(output_tensor->GetShape());
-    output_tensor->SetOriginDataType(output_tensor->GetDataType());
 
     GELOGD("node name is %s, origin shape is %ld, origin format is %s, origin data type is %s",
            node_ptr->GetName().c_str(), output_tensor->GetOriginShape().GetShapeSize(),
@@ -914,7 +911,7 @@ Status NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
     auto root_graph = GraphUtils::FindRootGraph(owner_graph);
     GE_CHECK_NOTNULL(root_graph);
 
-    std::unordered_set<std::string> subgraph_to_remove;
+    std::set<std::string> subgraph_to_remove;
     for (auto &subgraph_name : subgraph_names) {
       std::deque<std::string> queue;
       queue.push_back(subgraph_name);
@@ -1054,5 +1051,17 @@ std::string NodeUtils::GetInConstNodeTypeCrossSubgraph(const NodePtr &node) {
   }
 
   return "";
+}
+NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
+  if (op_desc == nullptr) {
+    GELOGE(GRAPH_FAILED, "The OpDesc ptr should not be null.");
+    return nullptr;
+  }
+  NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
+  if(node_ptr == nullptr) {
+    GELOGE(GRAPH_FAILED, "node_ptr is NULL!");
+    return nullptr;
+  }
+  return node_ptr;
 }
 }  // namespace ge

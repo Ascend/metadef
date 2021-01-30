@@ -88,7 +88,7 @@ const std::map<domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
   {domi::DOMI_TENSOR_RESERVED, FORMAT_RESERVED}
 };
 
-const std::unordered_set<std::string> kInternalFormat = {
+const std::set<std::string> kInternalFormat = {
   "NC1HWC0",
   "FRACTAL_Z",
   "NC1C0HWPAD",
@@ -289,7 +289,7 @@ std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"ImplyTypeToSerialString",
         "imply_type[" + std::to_string(static_cast<unsigned int>(imply_type)) + "] is not support"});
-    GELOGE(GRAPH_FAILED, "ImplyTypeToSerialString: imply_type not support %u", imply_type);
+    GELOGE(GRAPH_FAILED, "ImplyTypeToSerialString: imply_type not support %u", static_cast<unsigned int>(imply_type));
     return "UNDEFINED";
   }
 }

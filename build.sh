@@ -54,9 +54,9 @@ checkopts()
   VERBOSE=""
   THREAD_NUM=8
   # ENABLE_METADEF_UT_ONLY_COMPILE="off"
-  ENABLE_GE_UT="off"
-  ENABLE_GE_ST="off"
-  ENABLE_GE_COV="off"
+  ENABLE_METADEF_UT="off"
+  ENABLE_METADEF_ST="off"
+  ENABLE_METADEF_COV="off"
   GE_ONLY="on"
   ENABLE_GITEE="off"
   # Process the options
@@ -65,19 +65,18 @@ checkopts()
     OPTARG=$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')
     case "${opt}" in
       u)
-        # ENABLE_GE_UT_ONLY_COMPILE="on"
-        ENABLE_GE_UT="on"
+        ENABLE_METADEF_UT="on"
         GE_ONLY="off"
         ;;
       s)
-        ENABLE_GE_ST="on"
+        ENABLE_METADEF_ST="on"
         ;;
       t)
-	      ENABLE_GE_UT="on"
+	      ENABLE_METADEF_UT="on"
 	      GE_ONLY="off"
 	      ;;
       c)
-        ENABLE_GE_COV="on"
+        ENABLE_METADEF_COV="on"
         GE_ONLY="off"
         ;;
       h)
@@ -122,23 +121,23 @@ build_metadef()
   cd "${BUILD_PATH}"
   CMAKE_ARGS="-DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
 
-  if [[ "X$ENABLE_GE_COV" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_COV=ON"
+  if [[ "X$ENABLE_METADEF_COV" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_METADEF_COV=ON"
   fi
 
-  if [[ "X$ENABLE_GE_UT" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_UT=ON"
+  if [[ "X$ENABLE_METADEF_UT" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_METADEF_UT=ON"
   fi
 
 
-  if [[ "X$ENABLE_GE_ST" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_ST=ON"
+  if [[ "X$ENABLE_METADEF_ST" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_METADEF_ST=ON"
   fi
 
   if [[ "X$ENABLE_GITEE" = "Xon" ]]; then
     CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GITEE=ON"
   fi
-
+  
   CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
   echo "${CMAKE_ARGS}"
   cmake ${CMAKE_ARGS} ..
@@ -147,7 +146,12 @@ build_metadef()
     echo "execute command: cmake ${CMAKE_ARGS} .. failed."
     return 1
   fi
-  make ${VERBOSE} -j${THREAD_NUM} && make install
+  
+  if [ "X$ENABLE_METADEF_UT" = "Xon" ]; then
+    make ut_graph ut_register -j8
+  else
+    make ${VERBOSE} -j${THREAD_NUM} && make install
+  fi
   if [ 0 -ne $? ]
   then
     echo "execute command: make ${VERBOSE} -j${THREAD_NUM} && make install failed."
@@ -168,6 +172,26 @@ chmod -R 750 ${OUTPUT_PATH}
 find ${OUTPUT_PATH} -name "*.so*" -print0 | xargs -0 chmod 500
 
 echo "---------------- Metadef output generated ----------------"
+
+if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
+    cp ${BUILD_PATH}/tests/ut/graph/ut_graph ${OUTPUT_PATH}
+    cp ${BUILD_PATH}/tests/ut/register/ut_register ${OUTPUT_PATH}
+
+    ${OUTPUT_PATH}/ut_graph &&
+    ${OUTPUT_PATH}/ut_register
+    if [[ "$?" -ne 0 ]]; then
+        echo "!!! UT FAILED, PLEASE CHECK YOUR CHANGES !!!"
+        exit 1;
+    fi
+  echo "Generating coverage statistics, please wait..."
+  cd ${BASEPATH}
+  rm -rf ${BASEPATH}/cov
+  mkdir ${BASEPATH}/cov
+  lcov -c -d build/tests/ut/graph -d build/tests/ut/register -o cov/tmp.info
+  lcov --remove cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/local/*' -o cov/coverage.info
+  cd ${BASEPATH}/cov
+  #genhtml coverage.info
+fi
 
 # generate output package in tar form, including ut/st libraries/executables
 generate_package()
@@ -204,7 +228,7 @@ generate_package()
   tar -cf metadef_lib.tar fwkacllib atc
 }
 
-if [[ "X$ENABLE_GE_UT" = "Xoff" ]]; then
+if [[ "X$ENABLE_METADEF_UT" = "Xoff" ]]; then
   generate_package
 fi
 echo "---------------- Metadef package archive generated ----------------"

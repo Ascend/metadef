@@ -17,6 +17,7 @@
 #include "graph/ref_relation.h"
 
 #include <unordered_set>
+#include <set>
 #include <unordered_map>
 
 #include "utils/mem_utils.h"
@@ -39,7 +40,7 @@ namespace {
 
   const uint16_t kMaxElementNum = 100;
 
-  std::unordered_set<string> function_op = {
+  std::set<string> function_op = {
     kWhile,
     kIf,
     kCase
@@ -381,7 +382,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
     for (const auto &in_data_anchor : sub_netoutput_node->GetAllInDataAnchors()) {
       auto in_desc = op_desc->MutableInputDesc(in_data_anchor->GetIdx());
       if (in_desc == nullptr) {
-        GELOGE(GRAPH_FAILED, "Invalid NetOutput node [%s] idx [%lu], no tensor on it",
+        GELOGE(GRAPH_FAILED, "Invalid NetOutput node [%s] idx [%d], no tensor on it",
                sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
         return GRAPH_FAILED;
       }

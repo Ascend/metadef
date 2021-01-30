@@ -284,7 +284,7 @@ Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<Sc
     }
     GELOGI("FusionScope:%s", result.second->Name().c_str());
     auto &impl = result.second->impl_;
-    const std::unordered_map<std::string, std::vector<int32_t>> &inputs = impl->GetInputs();
+    const std::map<std::string, std::vector<int32_t>> &inputs = impl->GetInputs();
     for (auto &input : inputs) {
       std::vector<int32_t> indexs = input.second;
       for (int32_t index : indexs) {
@@ -292,7 +292,7 @@ Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<Sc
       }
     }
 
-    const std::unordered_map<std::string, std::vector<int32_t>> &outputs = impl->GetOutputs();
+    const std::map<std::string, std::vector<int32_t>> &outputs = impl->GetOutputs();
     for (auto &output : outputs) {
       std::vector<int32_t> indexs = output.second;
       for (int32_t index : indexs) {

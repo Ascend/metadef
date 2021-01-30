@@ -1075,6 +1075,9 @@ const std::string ATTR_HOROVOD_ATTR_REDUCE_TYPE = "reduce_op";
 const std::string ATTR_NAME_HCCL_FUSED_GROUP = "_hccl_fused_group";
 const std::string ATTR_NAME_HCCL_FUSED_FLAG = "_hccl_fused_node";
 
+// used for parallel group
+const std::string ATTR_NAME_PARALLEL_GROUP = "_parallel_group";
+
 // dynamic shape attr
 const std::string ATTR_DYNAMIC_SHAPE_FIXED_ADDR = "_alloc_fixed_addr";
 const std::string ATTR_DYNAMIC_SHAPE_FIXED_ADDR_INDEX = "_alloc_fixed_addr_index";
@@ -1111,6 +1114,9 @@ const std::string ATTR_STAGE_LEVEL = "_stage_level";
 const std::string ATTR_ZERO_COPY_BASIC_OFFSET = "_zero_copy_basic_offset";
 const std::string ATTR_ZERO_COPY_RELATIVE_OFFSET = "_zero_copy_relative_offset";
 
+// mark node cannot be deleted
+const std::string ATTR_NAME_CANNOT_BE_DELETED = "_cannot_be_deleted";
+
 // The processing mode of INF and NAN during floating-point number calculation.
 const std::string ATTR_FP_CEILING_MODE = "_fp_ceiling_mode";
 // count of data from getnext_sink
@@ -1133,4 +1139,7 @@ const std::string ATTR_NAME_INSERT_END_PROFILILNG_TASK = "_end_profiling_task";
 const std::string ATTR_NAME_INSERT_PROFILILNG_TASK_LOG_ID = "_profiling_log_id";
 // padding dimension type (FE set and ge get)
 const std::string ATTR_NAME_RESHAPE_INFER_TYPE = "_infer_reshape_type";
+
+// mark single op scene
+const std::string ATTR_SINGLE_OP_SCENE = "_single_op_scene";
 }  // namespace ge
