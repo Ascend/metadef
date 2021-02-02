@@ -35,7 +35,7 @@ static const int TBE_PATTERN_GROUPID_INVALID = -1;
 
 enum SkipStatus { DISABLED = 0, AVAILABLE = 1, SKIPPED = 2 };
 
-enum ShapeTypeRule { IGNORE_SHAPE_TYPE = 0, ONLY_SUPPORT_STATIC, ONLY_SUPPORT_DYNAMIC};
+enum ShapeTypeRule { IGNORE_SHAPE_TYPE = 0, ONLY_SUPPORT_STATIC, ONLY_SUPPORT_DYNAMIC };
 
 struct BufferFusionOpDesc {
   std::string desc_name;                       // description name
