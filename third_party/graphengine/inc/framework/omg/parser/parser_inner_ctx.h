@@ -23,21 +23,18 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
 #include "external/register/register_fmk_types.h"
 #include "external/register/register_types.h"
 #include "framework/omg/omg_inner_types.h"
 
-namespace ge
-{
-struct ParserContext
-{
+namespace ge {
+struct ParserContext {
   // format of the input specified by the command line
   std::unordered_map<std::string, domiTensorFormat_t> input_nodes_format_map;
   std::vector<domiTensorFormat_t> output_formats;
   // user-designate input dims
   std::vector<std::pair<std::string, std::vector<int64_t>>> user_input_dims;
-  std::unordered_map<std::string, std::vector<int64_t>> input_dims;
+  std::map<std::string, std::vector<int64_t>> input_dims;
   // resolve the mapping between operators with the same name and corresponding network. format e.g.
   // Detectionoutput:SsdDetectiontOutput
   std::map<std::string, std::string> op_conf_map;
@@ -71,7 +68,7 @@ struct ParserContext
   std::string enable_scope_fusion_passes;
 };
 
-ParserContext &GetParserContext();
+GE_FUNC_VISIBILITY ParserContext &GetParserContext();
 }  // namespace ge
 
 #endif  // INC_FRAMEWORK_OMG_PARSER_PARSER_INNER_CONTEXT_H_
