@@ -278,7 +278,7 @@ class GraphPassUtil {
     if (iter == node_type_map->end()) {
       return;
     }
-    if (iter->seond.empty()) {
+    if (iter->second.empty()) {
       return;
     }
     for (auto node_iter = iter->second.begin(); node_iter != iter->second.end(); node_iter++) {

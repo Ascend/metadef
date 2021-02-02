@@ -49,7 +49,9 @@ struct BufferFusionOpDesc {
   bool match_status;
   int64_t group_id;  // record desc groupid, need one desc matched at least in
                     // the same group
+#ifndef ONLY_COMPILE_OPEN_SRC
   ShapeTypeRule shape_type_rule;
+#endif
   bool ignore_input_num;
   bool ignore_output_num;
   // used for two connected op, first opdesc has optional multiple nodes and
