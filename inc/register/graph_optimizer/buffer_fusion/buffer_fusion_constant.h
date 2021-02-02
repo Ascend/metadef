@@ -53,7 +53,9 @@ static const std::string OP_PATTERN_CONV3D = "Conv3d";
 
 static const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                                      OP_PATTERN_COMMONREDUCE,
+#ifndef ONLY_COMPILE_OPEN_SRC
                                                      OP_PATTERN_BROAD_CAST,
+#endif
                                                      OP_PATTERN_SEGMENT,
                                                      OP_PATTERN_MAXPOOL,
                                                      OP_PATTERN_CONV,
