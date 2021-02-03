@@ -336,6 +336,7 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   friend class AttrUtils;
   friend class GeAttrValueImp;
   friend class OnnxUtils;
+  friend class GraphUtils;
 };
 }  // namespace ge
 #endif  // INC_GRAPH_OP_DESC_H_
