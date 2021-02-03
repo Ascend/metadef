@@ -95,7 +95,7 @@ target_include_directories(register PRIVATE
     ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
-target_link_options(graph PRIVATE
+target_link_options(register PRIVATE
     -Wl,-Bsymbolic
 )
 
