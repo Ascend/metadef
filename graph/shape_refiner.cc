@@ -18,22 +18,17 @@
 
 #include <memory>
 #include <string>
-#include <sstream>
 #include <iostream>
 #include <unordered_map>
-#include <utility>
 #include <vector>
+#include <stack>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
-#include "graph/utils/attr_utils.h"
 
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
-#include "external/graph/operator.h"
 #include "external/graph/operator_factory.h"
-#include "framework/common/debug/ge_log.h"
-#include "graph/compute_graph.h"
 #include "graph/operator_factory_impl.h"
 #include "utils/node_utils.h"
 #include "utils/op_desc_utils.h"
@@ -53,42 +48,40 @@ graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
     return GRAPH_FAILED;
   }
 
+  std::stack<NodePtr> refresh_nodes;
   for (const auto &node_sub : sub_graph_body->GetAllNodes()) {
-    // const/constant/variale etc. no need to reverse brush
-    if (node_sub->GetInDataNodes().empty() && node_sub->GetType() != DATA) {
-      continue;
-    }
-    for (size_t i = 0; i < node_sub->GetAllInDataAnchorsSize(); i++) {
-      auto input_desc = node_sub->GetOpDesc()->MutableInputDesc(i);
-      GE_IF_BOOL_EXEC(input_desc == nullptr,
-                      GELOGW("Get null input by index %zu from node %s ",
-                             i, node_sub->GetName().c_str());
-                      continue);
-      (void)input_desc->SetUnknownDimNumShape();
-    }
-    for (size_t i = 0; i < node_sub->GetAllOutDataAnchorsSize(); i++) {
-      auto output_desc = node_sub->GetOpDesc()->MutableOutputDesc(i);
-      (void)output_desc->SetUnknownDimNumShape();
+    // const/constant/variable etc. & invariant input of while no need to reverse brush
+    if ((node_sub->GetType() == DATA) && NodeUtils::IsWhileVaryingInput(node_sub)) {
+      refresh_nodes.push(node_sub);
     }
   }
-
-  for (const auto &node_sub : sub_graph_body->GetAllNodes()) {
-    if (!node_sub->GetInDataNodes().empty() || node_sub->GetType() == DATA) {
+  std::set<NodePtr> visited_nodes;
+  while (!refresh_nodes.empty()) {
+    const NodePtr &cur_node = refresh_nodes.top();
+    refresh_nodes.pop();
+    if (visited_nodes.count(cur_node) > 0) {
       continue;
     }
-    for (const auto &out_data_anchor : node_sub->GetAllOutDataAnchors()) {
-      GE_CHECK_NOTNULL(out_data_anchor);
-      auto out_data_anchor_idx = out_data_anchor->GetIdx();
-      for (const auto &peer_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
-        GE_CHECK_NOTNULL(peer_in_data_anchor);
-        auto peer_in_data_node = peer_in_data_anchor->GetOwnerNode();
-        GE_CHECK_NOTNULL(peer_in_data_node);
-        GE_CHECK_NOTNULL(peer_in_data_node->GetOpDesc());
-        int idx = peer_in_data_anchor->GetIdx();
-        auto shape = node_sub->GetOpDesc()->MutableOutputDesc(out_data_anchor_idx)->GetShape();
-        peer_in_data_node->GetOpDesc()->MutableInputDesc(idx)->SetShape(shape);
+    for (const auto &out_data_anchor : cur_node->GetAllOutDataAnchors()) {
+      // op_desc of node should not be null
+      const auto &output_desc = cur_node->GetOpDesc()->MutableOutputDesc(out_data_anchor->GetIdx());
+      if (output_desc == nullptr) {
+        continue;
+      }
+      output_desc->SetUnknownDimNumShape();
+      for (const auto &peer_in_anchor : out_data_anchor->GetPeerInDataAnchors()) {
+        // owner_node of anchor should not be null
+        const auto &out_data_node = peer_in_anchor->GetOwnerNode();
+        // op_desc of node should not be null
+        const auto &input_desc = out_data_node->GetOpDesc()->MutableInputDesc(peer_in_anchor->GetIdx());
+        if (input_desc == nullptr) {
+          continue;
+        }
+        input_desc->SetUnknownDimNumShape();
+        refresh_nodes.push(out_data_node);
       }
     }
+    visited_nodes.insert(cur_node);
   }
 
   return GRAPH_SUCCESS;
