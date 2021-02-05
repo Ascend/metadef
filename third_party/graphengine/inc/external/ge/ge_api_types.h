@@ -216,6 +216,9 @@ const std::string OPTYPELIST_FOR_IMPLMODE = "ge.optypelistForImplmode";
 // its value should be "0" or "1", default value is "0"
 const std::string HCOM_PARALLEL = "ge.hcomParallel";
 
+// configure threshold of fusion data size for communication op
+const std::string FUSION_TENSOR_SIZE = "ge.fusionTensorSize";
+
 // configure whether to use dynamic batch size
 const char *const kDynamicBatchSize = "ge.dynamicBatchSize";
 
