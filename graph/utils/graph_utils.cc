@@ -1589,6 +1589,18 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
       return GRAPH_FAILED;
     }
 
+    if (n->GetType() == CONSTANT || n->GetType() == CONSTANTOP) {
+      GeTensorPtr weight = nullptr;
+      if (AttrUtils::MutableTensor(n->GetOpDesc(), ATTR_NAME_WEIGHTS, weight)) {
+        GeTensor copy_weight = weight->Clone();
+        if (!AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, copy_weight)) {
+          GELOGE(INTERNAL_ERROR, "copy ATTR_NAME_WEIGHTS for node:%s failed.", op_desc->GetName().c_str());
+          return GRAPH_FAILED;
+        }
+        GELOGD("Clone ATTR_NAME_WEIGHTS for node:%s success.", op_desc->GetName().c_str());
+      }
+    }
+
     op_desc->SetName(n->GetName());
     NodePtr node = dst_compute_graph->AddNode(op_desc);
     if (node == nullptr) {
@@ -1600,14 +1612,14 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
     op_desc_old_2_new[n->GetOpDesc()] = op_desc;
 
     // copy subgraph from old graph to new graph
-    const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
+    const auto &subgraph_names = n->GetOpDesc()->GetSubgraphInstanceNames();
     for (auto name_iter = subgraph_names.rbegin(); name_iter != subgraph_names.rend(); ++name_iter) {
       auto src_subgraph = src_compute_graph->GetSubgraph(*name_iter);
       ComputeGraphPtr dst_subgraph = ComGraphMakeShared<ComputeGraph>(src_subgraph->GetName());
       GE_CHECK_NOTNULL(dst_subgraph);
       std::map<ConstNodePtr, NodePtr> sub_node_old_2_new;
       std::map<ConstOpDescPtr, OpDescPtr> sub_op_desc_old_2_new;
-      graphStatus ret = CopyComputeGraph(dst_subgraph, src_subgraph,
+      graphStatus ret = CopyComputeGraph(src_subgraph, dst_subgraph,
                                          sub_node_old_2_new, sub_op_desc_old_2_new,
                                          ++depth);
       if (ret != GRAPH_SUCCESS) {
@@ -1618,6 +1630,9 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
       dst_compute_graph->AddSubGraph(dst_subgraph);
       dst_subgraph->SetParentNode(node);
       dst_subgraph->SetParentGraph(dst_compute_graph);
+      op_desc->subgraph_ir_names_to_type_ = n->GetOpDesc()->subgraph_ir_names_to_type_;
+      op_desc->subgraph_names_to_index_ = n->GetOpDesc()->subgraph_names_to_index_;
+      op_desc->subgraph_instance_names_ = n->GetOpDesc()->subgraph_instance_names_;
     }
   }
 
