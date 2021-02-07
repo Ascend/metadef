@@ -70,4 +70,31 @@ TEST_F(UtestTypes, GetFormatName) {
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_END), "UNKNOWN"), 0);
   ASSERT_EQ(FORMAT_END, 43); // if add formats definition, add ut here
 }
+
+TEST_F(UtestTypes, GetFormatFromSub) {
+  ASSERT_EQ(GetFormatFromSub(10, 8), 0x80a);
+  ASSERT_EQ(GetFormatFromSub(1, 0), 1);
+  ASSERT_EQ(GetFormatFromSub(0, 0), 0);
+  ASSERT_EQ(GetFormatFromSub(0xff, 0), 0xff);
+  ASSERT_EQ(GetFormatFromSub(0xff, 0xffff), 0xffffff);
+  ASSERT_EQ(GetFormatFromSub(FORMAT_FRACTAL_Z, 8), 0x804);
+}
+
+TEST_F(UtestTypes, GetPrimaryFormat) {
+  ASSERT_EQ(GetPrimaryFormat(0x804), FORMAT_FRACTAL_Z);
+  ASSERT_EQ(GetPrimaryFormat(0), FORMAT_NCHW);
+  ASSERT_EQ(GetPrimaryFormat(0xffffff), 0xff);
+}
+
+TEST_F(UtestTypes, GetSubFormat) {
+  ASSERT_EQ(GetSubFormat(0x804), 8);
+  ASSERT_EQ(GetSubFormat(0), 0);
+  ASSERT_EQ(GetSubFormat(0xffffff), 0xffff);
+  ASSERT_EQ(GetSubFormat(0x4), 0);
+
+  ASSERT_EQ(HasSubFormat(0x804), true);
+  ASSERT_EQ(HasSubFormat(0), false);
+  ASSERT_EQ(HasSubFormat(0xffffff), true);
+  ASSERT_EQ(GetSubFormat(0x4), false);
+}
 }

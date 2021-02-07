@@ -150,9 +150,38 @@ enum Format {
   FORMAT_ALL,
   FORMAT_NULL,
   // Add new formats definition here
-  FORMAT_END
+  FORMAT_END,
+  FORMAT_MAX = 0xff
 };
 
+/**
+ * Get format from primary and sub-format,
+ * in bits field:
+ * ----------------------------------
+ * |  1 byte  |   2 bytes  | 1 byte |
+ * |----------|------------|--------|
+ * | reserved | sub-format | format |
+ * ----------------------------------
+ * @param primary_format
+ * @param sub_format
+ * @return
+ */
+inline int32_t GetFormatFromSub(int32_t primary_format, int32_t sub_format) {
+  return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xff) |
+                              ((static_cast<uint32_t>(sub_format) & 0xffff) << 8));
+}
+
+inline int32_t GetPrimaryFormat(int32_t format) {
+  return static_cast<int32_t>(static_cast<uint32_t>(format) & 0xff);
+}
+
+inline int32_t GetSubFormat(int32_t format) {
+  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffff00) >> 8);
+}
+
+inline bool HasSubFormat(int32_t format) {
+  return GetSubFormat(format) > 0;
+}
 
 // for unknown shape op type
 enum UnknowShapeOpType {
