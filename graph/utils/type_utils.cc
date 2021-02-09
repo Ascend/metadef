@@ -325,7 +325,7 @@ DataType TypeUtils::SerialStringToDataType(const std::string &str) {
 }
 
 bool TypeUtils::IsFormatValid(Format format) {
-  uint32_t num = static_cast<uint32_t>(format);
+  uint32_t num = static_cast<uint32_t>(GetPrimaryFormat(format));
   GE_CHK_BOOL_EXEC((num <= FORMAT_RESERVED), return false, "The Format is invalid");
   return true;
 }
@@ -350,15 +350,18 @@ bool TypeUtils::IsFormatValid(std::string format) {
 }
 
 bool TypeUtils::IsInternalFormat(Format format) {
-  std::string serial_format = FormatToSerialString(format);
+  std::string serial_format = FormatToSerialString(static_cast<Format>(GetPrimaryFormat(format)));
   auto iter = kInternalFormat.find(serial_format);
   bool result = (iter == kInternalFormat.end()) ? false : true;
   return result;
 }
 
 std::string TypeUtils::FormatToSerialString(Format format) {
-  auto it = kFormatToStringMap.find(format);
+  auto it = kFormatToStringMap.find(static_cast<Format>(GetPrimaryFormat(format)));
   if (it != kFormatToStringMap.end()) {
+    if (HasSubFormat(format)) {
+      return it->second + ":" + std::to_string(GetSubFormat(format));
+    }
     return it->second;
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
@@ -367,28 +370,75 @@ std::string TypeUtils::FormatToSerialString(Format format) {
     return "RESERVED";
   }
 }
+
 Format TypeUtils::SerialStringToFormat(const std::string &str) {
-  auto it = kStringToFormatMap.find(str);
+  std::string primary_format_str = str;
+  int32_t sub_format = 0;
+  if (SplitFormatFromStr(str, primary_format_str, sub_format) != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Split Format from %s failed", str.c_str());
+    return FORMAT_RESERVED;
+  }
+  int32_t primary_format;
+  auto it = kStringToFormatMap.find(primary_format_str);
   if (it != kStringToFormatMap.end()) {
-    return it->second;
+    primary_format = it->second;
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"SerialStringToFormat", "Format[" + str + "] is not support"});
     GELOGE(GRAPH_FAILED, "Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
+  return static_cast<Format>(GetFormatFromSub(primary_format, sub_format));
 }
 
 Format TypeUtils::DataFormatToFormat(const std::string &str) {
-  auto it = kDataFormatMap.find(str);
+  std::string primary_format_str = str;
+  int32_t sub_format = 0;
+  if (SplitFormatFromStr(str, primary_format_str, sub_format) != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Split Format from %s failed", str.c_str());
+    return FORMAT_RESERVED;
+  }
+  int32_t primary_format;
+  auto it = kDataFormatMap.find(primary_format_str);
   if (it != kDataFormatMap.end()) {
-    return it->second;
+    primary_format = it->second;
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"FormatToSerialString", "Format[" + str + "] is not support"});
     GELOGE(GRAPH_FAILED, "Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
+  return static_cast<Format>(GetFormatFromSub(primary_format, sub_format));
+}
+
+graphStatus TypeUtils::SplitFormatFromStr(const std::string &str,
+                                          std::string &primary_format_str, int32_t &sub_format) {
+  size_t split_pos = str.find_first_of(':');
+  if (split_pos != std::string::npos) {
+    std::string sub_format_str = str.substr(split_pos + 1);
+    try {
+      primary_format_str = str.substr(0, split_pos);
+      if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(), [](char c) { return !isdigit(c); })) {
+        GELOGE(GRAPH_FAILED, "sub_format: %s is not digital.", sub_format_str.c_str());
+        return GRAPH_FAILED;
+      }
+      sub_format = std::stoi(sub_format_str);
+    } catch (std::invalid_argument &) {
+      GELOGE(GRAPH_FAILED, "sub_format: %s is invalid.", sub_format_str.c_str());
+      return GRAPH_FAILED;
+    } catch (std::out_of_range &) {
+      GELOGE(GRAPH_FAILED, "sub_format: %s is out of range.", sub_format_str.c_str());
+      return GRAPH_FAILED;
+    } catch (...) {
+      GELOGE(GRAPH_FAILED, "sub_format: %s cannot change to int.", sub_format_str.c_str());
+      return GRAPH_FAILED;
+    }
+    if (sub_format > 0xffff) {
+      GELOGE(GRAPH_FAILED, "sub_format: %u is out of range [0, 0xffff].", sub_format);
+      return GRAPH_FAILED;
+    }
+  }
+  return GRAPH_SUCCESS;
 }
 
 Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {

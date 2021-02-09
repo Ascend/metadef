@@ -43,6 +43,7 @@ class TypeUtils {
   static std::string FormatToSerialString(Format format);
   static Format SerialStringToFormat(const std::string &str);
   static Format DataFormatToFormat(const std::string &str);
+  static graphStatus SplitFormatFromStr(const std::string &str, std::string &primary_format_str, int32_t &sub_format);
   static Format DomiFormatToFormat(domi::domiTensorFormat_t domi_format);
   static std::string FmkTypeToSerialString(domi::FrameworkType fmk_type);
 

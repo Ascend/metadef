@@ -40,12 +40,12 @@ FormatTransferRegister::FormatTransferRegister(FormatTransferBuilder builder, Fo
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<FormatTransfer> BuildFormatTransfer(
     const TransArgs &args) {
-  auto registry = GetFormatTransferRegistry();
-  auto dst_builder = registry.src_dst_builder.find(args.src_format);
+  auto &registry = GetFormatTransferRegistry();
+  auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
   if (dst_builder == registry.src_dst_builder.end()) {
     return nullptr;
   }
-  auto builder_iter = dst_builder->second.find(args.dst_format);
+  auto builder_iter = dst_builder->second.find(static_cast<Format>(GetPrimaryFormat(args.dst_format)));
   if (builder_iter == dst_builder->second.end()) {
     return nullptr;
   }
@@ -53,12 +53,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<FormatTransfer> B
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool FormatTransferExists(const TransArgs &args) {
-  auto registry = GetFormatTransferRegistry();
-  auto dst_builder = registry.src_dst_builder.find(args.src_format);
+  auto &registry = GetFormatTransferRegistry();
+  auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
   if (dst_builder == registry.src_dst_builder.end()) {
     return false;
   }
-  return dst_builder->second.count(args.dst_format) > 0;
+  return dst_builder->second.count(static_cast<Format>(GetPrimaryFormat(args.dst_format))) > 0;
 }
 }  // namespace formats
 }  // namespace ge
