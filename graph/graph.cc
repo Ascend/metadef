@@ -501,6 +501,10 @@ std::vector<GNode> Graph::GetDirectNode() const {
 }
 
 graphStatus Graph::RemoveNode(GNode &node) {
+  return RemoveNode(node, false);
+}
+
+graphStatus Graph::RemoveNode(GNode &node, bool contain_subgraph) {
   if (impl_ == nullptr) {
     GELOGE(GRAPH_FAILED, "RemoveNode: graph can not be used, impl is nullptr.");
     return GRAPH_FAILED;
@@ -512,15 +516,31 @@ graphStatus Graph::RemoveNode(GNode &node) {
     return GRAPH_FAILED;
   }
 
-  if (node_ptr->GetOwnerComputeGraph() == nullptr) {
-    GELOGE(GRAPH_FAILED, "RemoveNode: node[%s] is invalid.", node_ptr->GetName().c_str());
+  ComputeGraphPtr owner_compute_graph = node_ptr->GetOwnerComputeGraph();
+  if (owner_compute_graph == nullptr) {
+    GELOGE(GRAPH_FAILED, "RemoveNode: owner graph of node[%s] is invalid.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
   ComputeGraphPtr compute_graph_ptr = impl_->GetComputeGraph();
   if (compute_graph_ptr == nullptr) {
-    GELOGE(GRAPH_FAILED, "RemoveNde: compute graph ptr is nullptr.");
+    GELOGE(GRAPH_FAILED, "RemoveNode: compute graph of node[%s] is invalid.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
+  }
+
+  if (contain_subgraph) {
+    if (!GraphUtils::IsNodeInGraphRecursively(compute_graph_ptr, *node_ptr)) {
+      GELOGE(GRAPH_FAILED, "RemoveNde: node[%s] is not in the graph[%s].", node_ptr->GetName().c_str(),
+             compute_graph_ptr->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+    compute_graph_ptr = owner_compute_graph;
+  } else {
+    if (compute_graph_ptr != owner_compute_graph) {
+      GELOGE(GRAPH_FAILED, "RemoveNde: node[%s] is not in the graph[%s].", node_ptr->GetName().c_str(),
+             compute_graph_ptr->GetName().c_str());
+      return GRAPH_FAILED;
+    }
   }
 
   ge::NodeUtils::UnlinkAll(*node_ptr);
@@ -528,9 +548,7 @@ graphStatus Graph::RemoveNode(GNode &node) {
     GELOGE(GRAPH_FAILED, "RemoveNode: remove node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
-
   node_ptr->SetAnyOwnerComputeGraph(nullptr);
-
   return GRAPH_SUCCESS;
 }
 
