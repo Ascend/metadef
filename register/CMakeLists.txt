@@ -171,7 +171,7 @@ target_include_directories(register_static PRIVATE
 )
 
 target_link_libraries(register_static PRIVATE
-    ascend_protobuf
+    ascend_protobuf_static
     c_sec
     json
     $<BUILD_INTERFACE:intf_pub>
