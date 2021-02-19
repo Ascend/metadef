@@ -61,7 +61,8 @@ bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc, std
     tensor.shape = desc->GetShape().GetDims();
     tensor.ori_shape = desc->GetOriginShape().GetDims();
 
-    tensor.format = ge::TypeUtils::FormatToSerialString(desc->GetFormat());
+    ge::Format primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(desc->GetFormat()));
+    tensor.format = ge::TypeUtils::FormatToSerialString(primary_format);
 
     tensor.ori_format = ge::TypeUtils::FormatToSerialString(desc->GetOriginFormat());
 
