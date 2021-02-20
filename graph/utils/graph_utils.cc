@@ -2349,6 +2349,17 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   return false;
 }
 
+bool GraphUtils::IsNodeInGraphRecursively(const ComputeGraphPtr &graph, const Node &node) {
+  auto parent_graph = node.GetOwnerComputeGraph();
+  while (parent_graph != nullptr) {
+    if (parent_graph == graph) {
+      return true;
+    }
+    parent_graph = parent_graph->GetParentGraph();
+  }
+  return false;
+}
+
 ///
 /// Determine if the graph is a UNKNOWN_SHAPE graph based on whether the graph and all subgraphs
 /// of the graph have UNKNOWN_SHAPE operators or not.
