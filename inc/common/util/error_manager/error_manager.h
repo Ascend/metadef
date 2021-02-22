@@ -65,6 +65,10 @@ class ErrorManager {
   ///
   int OutputMessage(int handle);
 
+  std::string GetErrorMessage();
+
+  std::string GetWarningMessage();
+
   ///
   /// @brief Report error message
   /// @param [in] key: vector parameter key
@@ -88,9 +92,17 @@ class ErrorManager {
   /// @param [out] msg_map: failed message map, key is error code, value is op_name list
   /// @return int 0(success) -1(fail)
   ///
-  int GetMstuneCompileFailedMsg(const std::string &graph_name, 
-                                std::map<std::string, 
+  int GetMstuneCompileFailedMsg(const std::string &graph_name,
+                                std::map<std::string,
                                 std::vector<std::string>> &msg_map);
+
+  // @brief generate work_stream_id by current pid and tid, clear error_message stored by same work_stream_id
+  // used in external api entrance, all sync api can use
+  void GenWorkStreamIdDefault();
+
+  // @brief generate work_stream_id by args sessionid and graphid, clear error_message stored by same work_stream_id
+  // used in external api entrance
+  void GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t graph_id);
 
  private:
   struct ErrorInfo {
@@ -115,12 +127,18 @@ class ErrorManager {
                                 std::map<std::string,
                                 std::vector<std::string>> &classfied_msg);
 
+  std::vector<std::string>& GetErrorMsgContainerByWorkId(uint64_t work_id);
+  std::vector<std::string>& GetWarningMsgContainerByWorkId(uint64_t work_id);
+
   bool is_init_ = false;
   std::mutex mutex_;
   std::map<std::string, ErrorInfo> error_map_;
   std::vector<std::string> error_messages_;
   std::vector<std::string> warning_messages_;
   std::map<std::string, std::map<std::string, std::vector<std::string>>> compile_failed_msg_map_;
+
+  std::map<uint64_t, std::vector<std::string>> error_message_per_work_id_;
+  std::map<uint64_t, std::vector<std::string>> warning_messages_per_work_id_;
 };
 
 #endif  // ERROR_MANAGER_H_
