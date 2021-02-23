@@ -124,7 +124,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     }
     // if can not find saved info, it says format and origin format is same when catched
     if (map_ori_format_out_[i] == FORMAT_RESERVED) {
-      GELOGD("Node is [%s], input tensor idx [%d] is not been catched.Skip update action for it!",
+      GELOGD("Node is [%s], output tensor idx [%d] is not been catched.Skip update action for it!",
              op_desc_->GetName().c_str(), i);
       tensor_desc_output->SetOriginFormat(tensor_desc_output->GetFormat());
       tensor_desc_output->SetOriginShape(tensor_desc_output->MutableShape());
