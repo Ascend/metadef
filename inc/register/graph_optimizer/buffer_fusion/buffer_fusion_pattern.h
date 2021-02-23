@@ -49,9 +49,7 @@ struct BufferFusionOpDesc {
   bool match_status;
   int64_t group_id;  // record desc groupid, need one desc matched at least in
                     // the same group
-#ifndef ONLY_COMPILE_OPEN_SRC
   ShapeTypeRule shape_type_rule;
-#endif
   bool ignore_input_num;
   bool ignore_output_num;
   // used for two connected op, first opdesc has optional multiple nodes and
@@ -68,18 +66,11 @@ class BufferFusionPattern {
 
   virtual ~BufferFusionPattern();
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &patterns,
                                  int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
                                  ShapeTypeRule shape_type_rule = ONLY_SUPPORT_STATIC);
-#else
-  BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &patterns,
-                                 int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
-                                 int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
-                                 int64_t group_id = TBE_PATTERN_GROUPID_INVALID);
-#endif
 
   BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &patterns,
                                   int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,

@@ -30,11 +30,7 @@
 #include <vector>
 
 namespace fe {
-#ifndef ONLY_COMPILE_OPEN_SRC
 using NodeTypeMap = std::unordered_map<string, std::map<string, ge::NodePtr>>;
-#else
-using NodeTypeMap = std::unordered_map<string, std::unordered_set<ge::NodePtr>>;
-#endif
 using NodeTypeMapPtr = std::shared_ptr<NodeTypeMap>;
 struct NodeMapInfo {
   int64_t run_count;
@@ -175,20 +171,12 @@ class GraphPassUtil {
     NodeTypeMapPtr node_type_map = node_map_info->node_type_map;
     string real_op_type = ge::NodeUtils::GetNodeType(*node_ptr);
     auto iter = node_type_map->find(real_op_type);
-#ifndef ONLY_COMPILE_OPEN_SRC
     if (iter != node_type_map->end()) {
       iter->second.emplace(node_ptr->GetName(), node_ptr);
     } else {
       node_type_map->emplace(std::make_pair(real_op_type,
                                             std::map<string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
     }
-#else
-    if (iter != node_type_map->end()) {
-      iter->second.insert(node_ptr);
-    } else {
-      node_type_map->emplace(std::make_pair(real_op_type, std::unordered_set<ge::NodePtr>{node_ptr}));
-    }
-#endif
   }
 
   static Status GetOpTypeMapToGraph(NodeMapInfoPtr &node_map_info, const ge::ComputeGraph &graph) {
@@ -236,20 +224,12 @@ class GraphPassUtil {
       return;
     }
     auto iter = node_type_map->find(op_type);
-#ifndef ONLY_COMPILE_OPEN_SRC
     if (iter == node_type_map->end()) {
       node_type_map->emplace(std::make_pair(op_type,
                                             std::map<string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
     } else {
       iter->second.emplace(node_ptr->GetName(), node_ptr);
     }
-#else
-    if (iter == node_type_map->end()) {
-      node_type_map->emplace(std::make_pair(op_type, std::unordered_set<ge::NodePtr>{node_ptr}));
-    } else {
-      iter->second.insert(node_ptr);
-    }
-#endif
   }
 
   static void RemoveNodeFromNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type,
@@ -259,11 +239,7 @@ class GraphPassUtil {
     }
     auto iter = node_type_map->find(op_type);
     if (iter != node_type_map->end()) {
-#ifndef ONLY_COMPILE_OPEN_SRC
       iter->second.erase(node_ptr->GetName());
-#else
-      iter->second.erase(node_ptr);
-#endif
     }
   }
 
@@ -274,7 +250,6 @@ class GraphPassUtil {
     }
 
     auto iter = node_type_map->find(op_type);
-#ifndef ONLY_COMPILE_OPEN_SRC
     if (iter == node_type_map->end()) {
       return;
     }
@@ -284,13 +259,6 @@ class GraphPassUtil {
     for (auto node_iter = iter->second.begin(); node_iter != iter->second.end(); node_iter++) {
       nodes.push_back(node_iter->second);
     }
-#else
-    if (iter != node_type_map->end()) {
-      for (auto &node_ptr : iter->second) {
-        nodes.push_back(node_ptr);
-      }
-    }
-#endif
   }
 };
 

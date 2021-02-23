@@ -53,14 +53,9 @@ BufferFusionPattern::~BufferFusionPattern() {
  * with the value
  * @return BufferFusionPattern: pattern object
  */
-#ifndef ONLY_COMPILE_OPEN_SRC
 BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
                                                     int64_t repeate_min, int64_t repeate_max, int64_t group_id,
                                                     ShapeTypeRule shape_type_rule) {
-#else
-BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
-                                                  int64_t repeate_min, int64_t repeate_max, int64_t group_id) {
-#endif
   if (desc_name.empty()) {
     GELOGW("Desc_name cannot be empty.");
     error_count_++;
@@ -93,9 +88,7 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->repeate_max = repeate_max;
   op->repeate_curr = 0;
   op->group_id = group_id;
-#ifndef ONLY_COMPILE_OPEN_SRC
   op->shape_type_rule = shape_type_rule;
-#endif
   op->match_status = false;
   op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
   op->ignore_input_num = false;
