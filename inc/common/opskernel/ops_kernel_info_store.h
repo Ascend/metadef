@@ -73,12 +73,12 @@ class OpsKernelInfoStore {
 
   virtual bool CheckSupported(const ge::NodePtr &node, std::string &un_supported_reason) const {
     return CheckSupported(node->GetOpDesc(), un_supported_reason);
-  };
+  }
 
   virtual bool CheckAccuracySupported(const ge::NodePtr &node, std::string &un_supported_reason,
                                       bool realQuery = false) const {
     return CheckAccuracySupported(node->GetOpDesc(), un_supported_reason, realQuery);
-  };
+  }
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_STORE_H_
