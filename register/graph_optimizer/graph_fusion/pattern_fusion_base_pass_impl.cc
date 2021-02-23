@@ -242,12 +242,8 @@ bool PatternFusionBasePassImpl::GetMatchOutputNodes(ge::ComputeGraph &graph, con
     for (auto &OutOpType : output_op_desc->types) {
       auto iter = node_map_info->node_type_map->find(OutOpType);
       if (iter != node_map_info->node_type_map->end()) {
-#ifndef ONLY_COMPILE_OPEN_SRC
         for (auto iter_node = iter->second.begin(); iter_node != iter->second.end(); iter_node++) {
           ge::NodePtr node_ptr = iter_node->second;
-#else
-        for (auto &node_ptr : iter->second) {
-#endif
 
           if (node_ptr->GetInDataNodes().empty() && node_ptr->GetOutAllNodes().empty()) {
             continue;
