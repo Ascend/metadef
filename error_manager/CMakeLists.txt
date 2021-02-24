@@ -13,13 +13,12 @@ target_compile_options(error_manager PRIVATE
 
 target_include_directories(error_manager PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${TOP_DIR}
-    ${TOP_DIR}/inc
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/graphengine/inc
-    ${TOP_DIR}/inc/external
-    ${TOP_DIR}/metadef/inc/external
-    ${TOP_DIR}/graphengine/inc/external
+    ${METADEF_DIR}
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/external
 )
 
 target_link_libraries(error_manager PRIVATE
@@ -39,13 +38,12 @@ add_library(error_manager_static STATIC ${SRC_LIST})
 
 target_include_directories(error_manager_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${TOP_DIR}
-    ${TOP_DIR}/inc
-    ${TOP_DIR}/metadef/inc
-    ${TOP_DIR}/graphengine/inc
-    ${TOP_DIR}/inc/external
-    ${TOP_DIR}/metadef/inc/external
-    ${TOP_DIR}/graphengine/inc/external
+    ${METADEF_DIR}
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/external
 )
 
 target_compile_definitions(error_manager_static PRIVATE
