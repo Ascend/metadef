@@ -66,7 +66,10 @@ const std::map<Format, std::string> kFormatToStringMap = {
     {FORMAT_FRACTAL_ZN_LSTM, "FRACTAL_ZN_LSTM"},
     {FORMAT_FRACTAL_Z_G, "FRACTAL_Z_G"},
     {FORMAT_RESERVED, "FORMAT_RESERVED"},
-    {FORMAT_ALL, "ALL"}};
+    {FORMAT_ALL, "ALL"},
+    {FORMAT_NULL, "NULL"},
+    {FORMAT_END, "END"},
+    {FORMAT_MAX, "MAX"}};
 
 const std::map<domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
   {domi::DOMI_TENSOR_NCHW, FORMAT_NCHW},
