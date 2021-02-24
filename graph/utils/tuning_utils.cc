@@ -29,7 +29,7 @@ const std::string parent_node_anchor_index_attr = "_parentNodeAnchorIndex";
 const std::string tuning_subgraph_prefix = "/aicore_subgraph_";
 const std::string non_tuning_subgraph_prefix = "/subgraph_";
 const std::set<std::string> kPartitionOpTypes = {PLACEHOLDER, END};
-const std::set<std::string> kExeTypes = {DATA, NETOUTPUT};
+const std::set<std::string> kExeTypes = {DATA, CONSTANT, NETOUTPUT};
 }
 NodeNametoNodeNameMap TuningUtils::data_2_netoutput_;
 NodetoNodeNameMap TuningUtils::data_node_2_netoutput_ ;
@@ -189,7 +189,13 @@ void TuningUtils::DumpGraphToPath(ComputeGraphPtr &exe_graph, int64_t index,
 graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
   auto graph = node->GetOwnerComputeGraph();
   GE_CHECK_NOTNULL(graph);
-  auto data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), DATA);
+  OpDescPtr data_op_desc;
+  const vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
+  if (!weight.empty()) {
+    data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), CONSTANT);
+  } else {
+    data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), DATA);
+  }
   GE_CHECK_NOTNULL(data_op_desc);
   auto pld_op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(pld_op_desc);
@@ -205,6 +211,12 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
   }
   data_node = graph->AddNode(data_op_desc);
   GE_CHECK_NOTNULL(data_node);
+  if (data_node->GetType() == CONSTANT) {
+    if (OpDescUtils::SetWeights(data_node, weight) != GRAPH_SUCCESS) {
+      GELOGE(FAILED, "TUU:const node %s add weight failed", data_op_desc->GetName().c_str());
+      return FAILED;
+    }
+  }
   if (data_node->SetOwnerComputeGraph(graph) != GRAPH_SUCCESS) {
     GELOGE(FAILED, "TUU:SetOwnerComputeGraph failed");
     return FAILED;
@@ -257,7 +269,7 @@ graphStatus TuningUtils::AddAttrToDataNodeForMergeGraph(const NodePtr &pld, Node
 graphStatus TuningUtils::ChangePld2Data(NodePtr &node, NodePtr &data_node) {
   auto type_pld = node->GetType();
   auto type_data = data_node->GetType();
-  if (type_pld != PLACEHOLDER || type_data != DATA) {
+  if (type_pld != PLACEHOLDER || kExeTypes.count(type_data) == 0) {
     GELOGE(FAILED, "TUU:Failed to change node %s from type %s to type %s",
            node->GetName().c_str(), type_pld.c_str(), type_data.c_str());
     return FAILED;
@@ -610,7 +622,7 @@ graphStatus TuningUtils::MergeSubGraph(ComputeGraphPtr &subgraph) {
       return FAILED;
     }
     // handle data converted from pld node
-    if (node->GetType() == DATA) {
+    if (node->GetType() == DATA || node->GetType() == CONSTANT) {
       auto op_desc = node->GetOpDesc();
       GE_CHECK_NOTNULL(op_desc);
       std::string peer_out_name;

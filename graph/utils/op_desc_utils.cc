@@ -476,10 +476,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<GeTensorPtr> OpDescUtils::
     }
   }
   // Const operator, take the weight directly
-  if (op_desc->GetType() == CONSTANT || (op_desc->GetType() == CONSTANTOP)) {
+  // In some case, Placeholder operator may has it's peer const node's weight
+  if ((op_desc->GetType() == CONSTANT) || (op_desc->GetType() == CONSTANTOP) || (op_desc->GetType() == PLACEHOLDER)) {
     auto weight = MutableWeights(op_desc);
     if (weight == nullptr) {
-      GELOGI("const op has no weight, op name:%s", node.GetName().c_str());
+      GELOGD("op type %s has no weight, op name:%s", node.GetType().c_str(), node.GetName().c_str());
       return ret;
     }
     ret.push_back(weight);
