@@ -486,7 +486,7 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     ss << "(shape_range:" << range_str << ")]";
     in_idx++;
   }
-  for (const auto &output_desc : op_desc->GetAllInputsDescPtr()) {
+  for (const auto &output_desc : op_desc->GetAllOutputsDescPtr()) {
     if (output_desc == nullptr) {
       out_idx++;
       continue;
