@@ -50,6 +50,7 @@ struct TeOpTensor {
   std::string format;
   std::string ori_format;
   std::string dtype;
+  std::string name;
   std::map<std::string, std::string> attrs;
 };
 

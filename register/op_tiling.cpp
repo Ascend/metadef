@@ -53,13 +53,16 @@ const std::map<ge::DataType, std::string> DATATYPE_STRING_MAP{{ge::DT_FLOAT, "fl
                                                               {ge::DT_DUAL_SUB_INT8, "dual_sub_int8"},
                                                               {ge::DT_DUAL_SUB_UINT8, "dual_sub_uint8"}};
 
-bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc, std::vector<TeOpTensorArg> &tensor_arg) {
+bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc, std::vector<TeOpTensorArg> &tensor_arg,
+                       ge::OpDescPtr &op_desc) {
+  size_t index = 0;
   for (auto &desc : tensor_desc) {
     TeOpTensorArg arg_tensor;
     TeOpTensor tensor;
     arg_tensor.arg_type = TA_SINGLE;
     tensor.shape = desc->GetShape().GetDims();
     tensor.ori_shape = desc->GetOriginShape().GetDims();
+    tensor.name = op_desc->GetInputNameByIndex(index);
 
     ge::Format primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(desc->GetFormat()));
     tensor.format = ge::TypeUtils::FormatToSerialString(primary_format);
@@ -91,6 +94,7 @@ bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc, std
 
     arg_tensor.tensor.emplace_back(tensor);
     tensor_arg.emplace_back(arg_tensor);
+    index++;
   }
   return true;
 }
@@ -413,12 +417,12 @@ extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_
   auto outputs = op_desc->GetAllOutputsDescPtr();
 
   bool bres = false;
-  bres = FeedTeOpTensorArg(inputs, op_param.inputs);
+  bres = FeedTeOpTensorArg(inputs, op_param.inputs, op_desc);
   if (!bres) {
     GE_LOGE("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
-  bres = FeedTeOpTensorArg(outputs, op_param.outputs);
+  bres = FeedTeOpTensorArg(outputs, op_param.outputs, op_desc);
   if (!bres) {
     return ge::GRAPH_FAILED;
   }
