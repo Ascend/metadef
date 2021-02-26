@@ -2112,7 +2112,7 @@
   },
   {
     "ErrCode" : "EE1005",
-    "ErrMessage" : "Current device is null if function[%s], please check if context is create correctly.",
+    "ErrMessage" : "Current device is null of function[%s], please check if context is created correctly.",
     "Arglist" : "function"
   },
   {
