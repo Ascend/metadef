@@ -2091,6 +2091,61 @@
     "Arglist" : "version"
   },
   {
+    "ErrCode" : "EE1001",
+    "ErrMessage" : "Param [%s] of function[%s] check failed, %s",
+    "Arglist" : "param,function,error_msg"
+  },
+  {
+    "ErrCode" : "EE1002",
+    "ErrMessage" : "Param check failed in [%s],%s",
+    "Arglist" : "function,error_msg"
+  },
+  {
+    "ErrCode" : "EE1003",
+    "ErrMessage" : "Invalid metadata, please check, metadata[%s]",
+    "Arglist" : "metadata"
+  },
+  {
+    "ErrCode" : "EE1004",
+    "ErrMessage" : "Current context is null of function[%s], please check if the device has been initialized",
+    "Arglist" : "function"
+  },
+  {
+    "ErrCode" : "EE1005",
+    "ErrMessage" : "Current device is null if function[%s], please check if context is create correctly.",
+    "Arglist" : "function"
+  },
+  {
+    "ErrCode" : "EE1006",
+    "ErrMessage" : "Can not find function by %s.",
+    "Arglist" : "key"
+  },
+  {
+    "ErrCode" : "EE1007",
+    "ErrMessage" : "Device is not running, please check if device is working.",
+    "Arglist" : ""
+  },
+  {
+    "ErrCode" : "EE1008",
+    "ErrMessage" : "Do not support this mode in function[%s], %s.",
+    "Arglist" : "function,error_msg"
+  },
+  {
+    "ErrCode" : "EE1009",
+    "ErrMessage" : "Stream is not in current context in function[%s].",
+    "Arglist" : "function"
+  },
+  {
+    "ErrCode" : "EE1010",
+    "ErrMessage" : "Model is not in current context in function[%s].",
+    "Arglist" : "function"
+  },
+  {
+    "ErrCode" : "EE1011",
+    "ErrMessage" : "[%s] has not been registered, key[%s].",
+    "Arglist" : "resource,key"
+  },
+  {
     "ErrCode" : "EF0000",
     "ErrMessage" : "Failed to read or write repository files [%s], please check its dir's existence and permission.",
     "Arglist" : "filepath"
