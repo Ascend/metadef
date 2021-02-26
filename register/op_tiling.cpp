@@ -306,6 +306,7 @@ bool DumpRunInfo(const OpRunInfo &run_info, char *run_info_json, size_t run_info
   json_obj["workspaces"] = run_info.workspaces;
   json_obj["tiling_data"] = DumpByteBuffer(run_info.tiling_data);
   json_obj["clear_atomic"] = run_info.clear_atomic;
+  json_obj["tiling_key"] = run_info.tiling_key;
 
   std::string str = json_obj.dump();
   if (str.size() >= run_info_len) {
