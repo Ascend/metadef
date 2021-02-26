@@ -72,11 +72,17 @@ class OpsKernelInfoStore {
   virtual Status LoadTask(GETaskInfo &task) { return SUCCESS; }
 
   virtual bool CheckSupported(const ge::NodePtr &node, std::string &un_supported_reason) const {
+    if (node == nullptr) {
+      return false;
+    }
     return CheckSupported(node->GetOpDesc(), un_supported_reason);
   }
 
   virtual bool CheckAccuracySupported(const ge::NodePtr &node, std::string &un_supported_reason,
                                       bool realQuery = false) const {
+    if (node == nullptr) {
+      return false;
+    }
     return CheckAccuracySupported(node->GetOpDesc(), un_supported_reason, realQuery);
   }
 };
