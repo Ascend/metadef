@@ -273,7 +273,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
   }
 
   graphStatus graph_status;
-  switch (format) {
+  switch (GetPrimaryFormat(format)) {
     case FORMAT_ND:
     case FORMAT_MD:
       graph_status = CalcElementCntByDims(dims, element_cnt);
