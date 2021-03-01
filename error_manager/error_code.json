@@ -1338,7 +1338,7 @@
     {
         "ErrCode": "E62001",
         "ErrMessage": "In op[%s],dilation_h, dilation_w and dilation_d must be 1,actual are [%s], [%s] and  [%s].",
-        "Arglist": "op_name,dilation_h,dilation_w,dilation_d"
+        "Arglist": "op_name,para1,para2,para3"
     },
     {
         "ErrCode": "E62002",
@@ -1353,17 +1353,17 @@
     {
         "ErrCode": "E62004",
         "ErrMessage": "In op[%s],filter D must > Pad D, actual they are [%s] and [%s].",
-        "Arglist": "op_name,d_of_filter,d_of_pad"
+        "Arglist": "op_name,para1,para2"
     },
     {
         "ErrCode": "E62005",
         "ErrMessage": "In op[%s], x D(after pad) must >= stride D, actual they are [%s] and [%s].",
-        "Arglist": "op_name,d_of_x,d_of_stride"
+        "Arglist": "op_name,para1,para2"
     },
     {
         "ErrCode": "E62006",
         "ErrMessage": "In op[%s],[%s].",
-        "Arglist": "op_name,error_desc"
+        "Arglist": "op_name,para1"
     },
     {
         "ErrCode": "E62301",
@@ -1393,42 +1393,42 @@
     {
         "ErrCode": "E62306",
         "ErrMessage": "In op[%s], [%s].",
-        "Arglist": "op_name,desc"
+        "Arglist": "op_name,para1"
     },
     {
         "ErrCode": "E62501",
         "ErrMessage": "In op[%s], [%s] should be 6d list.",
-        "Arglist": "op_name,param_name"
+        "Arglist": "op_name,para1"
     },
     {
         "ErrCode": "E62502",
         "ErrMessage": "In op[%s], there is a division by zero operation during calculating, the oprands are [%s] and [%s]. ",
-        "Arglist": "op_name,first_operand,second_operand"
+        "Arglist": "op_name,para1,para2"
     },
     {
         "ErrCode": "E62503",
         "ErrMessage": "In op[%s], the  Fmap's batch must be equal to the batch in backpropagation, it should be [%s], but actually it is [%s].",
-        "Arglist": "op_name,backprop_N,forward_shape"
+        "Arglist": "op_name,para1,para2"
     },
     {
         "ErrCode": "E62504",
         "ErrMessage": "In op[%s], the  Dedy's channel must be equal to the Filter's batch in backpropagation, it should be [%s], but actually it is [%s].",
-        "Arglist": "op_name,backprop_C,forward_shape"
+        "Arglist": "op_name,para1,para2"
     },
     {
         "ErrCode": "E62505",
         "ErrMessage": "In op[%s], the  input's channel must be equal to the Filter's batch in backpropagation, it should be [%s], but actually it is [%s].",
-        "Arglist": "op_name,input_C,filter_N"
+        "Arglist": "op_name,para1,para2"
     },
     {
         "ErrCode": "E62506",
         "ErrMessage": "In op[%s], the  Dedy's channel must be equal to the Filter's channel in backpropagation, it should be [%s], but actually it is [%s].",
-        "Arglist": "op_name,backprop_C,filter_C"
+        "Arglist": "op_name,para1,para2"
     },
     {
         "ErrCode": "E62507",
         "ErrMessage": "In op[%s], the [%s] dim of Filter(after dilation) must be less than the corresponding dim of input(after padding), they are [%s] and [%s].",
-        "Arglist": "op_name,dim,filter_dila,input_pad"
+        "Arglist": "op_name,para1,para2,para3"
     },
     {
         "ErrCode": "E62508",
@@ -1438,7 +1438,7 @@
     {
         "ErrCode": "E62509",
         "ErrMessage": "In op[%s], the type of axis of [%s] must be positive int.",
-        "Arglist": "op_name,param_name"
+        "Arglist": "op_name,para1"
     },
     {
         "ErrCode": "E62510",
@@ -1448,7 +1448,7 @@
     {
         "ErrCode": "E62511",
         "ErrMessage": "In op[%s], C0 must be 16, but actually it is [%s].",
-        "Arglist": "op_name,shape_c0"
+        "Arglist": "op_name,para1"
     },
     {
         "ErrCode": "E64001",
