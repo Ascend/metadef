@@ -289,7 +289,7 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
     GE_LOGE("weight is nullptr.");
     return;
   }
-  GELOGD("Set data from tensor_content %s, count = %d, data_type = %s.", tensor_content.c_str(),
+  GELOGD("Set data from tensor_content, count = %d, data_type = %s.",
          count, DataType_Name(data_type).c_str());
   if (CheckByte(data_type)) {
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(uint8_t));
