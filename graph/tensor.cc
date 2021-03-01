@@ -106,7 +106,7 @@ class TensorImpl {
       // Front 8 bytes store pointer of string
       char *raw_data = buff.get() + sizeof(StringHead);
       string_head->addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
-      string_head->len = static_cast<uint64_t>(data.size);
+      string_head->len = static_cast<uint64_t>(data.size());
       int32_t memcpy_ret = memcpy_s(raw_data,
                                     total_size - sizeof(StringHead),
                                     data.c_str(),
@@ -165,7 +165,7 @@ class TensorImpl {
     uint64_t ptr_size = data.size() * sizeof(StringHead);
     for (size_t i = 0; i < data.size(); ++i) {
       string_head[i].addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
-      string_head[i].len = static_cast<uint64_t>(data[i].size);
+      string_head[i].len = static_cast<uint64_t>(data[i].size());
 #else
     uint64_t *p = reinterpret_cast<uint64_t *>(buff.get());
     char *raw_data = buff.get() + data.size() * sizeof(uint64_t);
