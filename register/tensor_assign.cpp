@@ -212,14 +212,14 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
     for (int32_t i = 0; i < min_count; i++) {
       // extra 16 bytes store head of string
       // extra 1 byte store '\0'
-      total_size += (val_vector[i].size() + sizeof(StringHead) + 1);
+      total_size += (val_vector[i].size() + sizeof(ge::StringHead) + 1);
     }
-    total_size += (count - min_count) * (sizeof(StringHead) + 1));
+    total_size += (count - min_count) * (sizeof(ge::StringHead) + 1));
     std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
     GE_CHECK_NOTNULL(addr);
-    StringHead *string_head = reinterpret_cast<StringHead *>(addr.get());
+    ge::StringHead *string_head = reinterpret_cast<ge::StringHead *>(addr.get());
     // front 16 bytes store head of each string
-    char *raw_data = addr.get() + count * sizeof(StringHead);
+    char *raw_data = addr.get() + count * sizeof(ge::StringHead);
     for (int32_t i = 0; i < count; ++i) {
       string_head[i].addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       if (i < val_size) {
@@ -263,15 +263,15 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
 #ifndef ONLY_COMPILE_OPEN_SRC
     // extra 16 bytes store head of string
     // extra 1 byte store '\0'
-    total_size = (str.size() + sizeof(StringHead) + 1) * count;
+    total_size = (str.size() + sizeof(ge::StringHead) + 1) * count;
     std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
     GE_CHECK_NOTNULL(addr);
     // front 16 bytes store head of each string
-    StringHead *string_head = reinterpret_cast<StringHead *>(addr.get());
-    char *raw_data = addr.get() + count * sizeof(StringHead);
+    ge::StringHead *string_head = reinterpret_cast<ge::StringHead *>(addr.get());
+    char *raw_data = addr.get() + count * sizeof(ge::StringHead);
     for (int32_t i = 0; i < count; ++i) {
-      p[string_head].addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
-      p[string_head].len = static_cast<uint64_t>(str.size());
+      string_head[i].addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
+      string_head[i].len = static_cast<uint64_t>(str.size());
       CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1, str.c_str(), str.size() + 1) == EOK,
                        GELOGW("call memcpy_s fail!"));
       raw_data += (str.size() + 1);
@@ -356,11 +356,11 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
       weight_content = tensor_content.substr(1);  // first byte is tensor length
     }
 #ifndef ONLY_COMPILE_OPEN_SRC
-    size_t total_size = weight_content.size() + sizeof(StringHead) + 1;
+    size_t total_size = weight_content.size() + sizeof(ge::StringHead) + 1;
     std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
     GE_CHECK_NOTNULL_EXEC(addr, return);
-    StringHead *string_head = reinterpret_cast<StringHead *>(addr.get());
-    char *raw_data = addr.get() + sizeof(StringHead);
+    ge::StringHead *string_head = reinterpret_cast<ge::StringHead *>(addr.get());
+    char *raw_data = addr.get() + sizeof(ge::StringHead);
     string_head->addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
     string_head->len = static_cast<uint64_t>(weight_content.size());
 #else
