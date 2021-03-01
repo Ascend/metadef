@@ -191,6 +191,11 @@ struct QuantizeFactorParams {
 };
 
 #undef DEF_TYPE_DEC
+// used for data type of DT_STRING
+struct StringHead {
+  uint64_t addr;  // the addr of string
+  uint64_t len;   // the length of string
+};
 }  // namespace ge
 
 #endif  // INC_GRAPH_DEF_TYPES_H_

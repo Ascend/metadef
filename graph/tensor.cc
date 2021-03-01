@@ -25,10 +25,12 @@
 #include "utils/type_utils.h"
 
 namespace {
+#ifdef ONLY_COMPILE_OPEN_SRC
 /// Extra 8 bytes store pointer of string
 /// Extra 1 byte store '\0'
 const int EXTRA_STORE_POINTER_FOR_STRING = 8;
 const int EXTRA_STORE_POINTER_FOR_STRING_AND_END_SYMBOL = 9;
+#endif
 const int64_t UNKNOWN_DIM_SIZE = -1;
 }  // namespace
 
@@ -91,6 +93,25 @@ class TensorImpl {
 
   graphStatus SetData(const std::string &data) {
     if (!data.empty()) {
+#ifndef ONLY_COMPILE_OPEN_SRC
+      /// Extra 16 bytes store string head
+      /// Extra 1 byte store '\0'
+      size_t total_size = data.size() + sizeof(StringHead) + 1;
+      std::unique_ptr<char[]> buff(new (std::nothrow) char[total_size]());
+      if (buff == nullptr) {
+        GELOGE(GRAPH_FAILED, "allocate string raw data buff failed");
+        return GRAPH_FAILED;
+      }
+      StringHead *string_head = reinterpret_cast<StringHead *>(buff.get());
+      // Front 8 bytes store pointer of string
+      char *raw_data = buff.get() + sizeof(StringHead);
+      string_head->addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
+      string_head->len = static_cast<uint64_t>(data.size);
+      int32_t memcpy_ret = memcpy_s(raw_data,
+                                    total_size - sizeof(StringHead),
+                                    data.c_str(),
+                                    data.size() + 1);
+#else
       /// Extra 8 bytes store pointer of string
       /// Extra 1 byte store '\0'
       size_t total_size = data.size() + EXTRA_STORE_POINTER_FOR_STRING_AND_END_SYMBOL;
@@ -103,10 +124,11 @@ class TensorImpl {
       // Front 8 bytes store pointer of string
       char *raw_data = buff.get() + EXTRA_STORE_POINTER_FOR_STRING;
       p[0] = reinterpret_cast<uintptr_t>(raw_data);
-      int32_t memcpy_ret = memcpy_s(raw_data, 
-                                    total_size - EXTRA_STORE_POINTER_FOR_STRING, 
-                                    data.c_str(), 
+      int32_t memcpy_ret = memcpy_s(raw_data,
+                                    total_size - EXTRA_STORE_POINTER_FOR_STRING,
+                                    data.c_str(),
                                     data.size() + 1);
+#endif
       GE_CHK_BOOL_RET_STATUS(memcpy_ret == EOK, GRAPH_FAILED, "copy data failed");
       (void)ge_tensor.SetData(reinterpret_cast<const uint8_t *>(buff.get()), total_size);
       return GRAPH_SUCCESS;
@@ -121,21 +143,36 @@ class TensorImpl {
     }
     size_t total_size = 0;
     for (auto str : data) {
+#ifndef ONLY_COMPILE_OPEN_SRC
+      /// Extra 16 bytes store string head
+      /// Extra 1 byte store '\0'
+      total_size += (str.size() + sizeof(StringHead) + 1);
+#else
       /// Extra 8 bytes store pointer of each string
       /// Extra 1 byte store '\0'
       total_size += (str.size() + EXTRA_STORE_POINTER_FOR_STRING_AND_END_SYMBOL);
+#endif
     }
     std::unique_ptr<char[]> buff(new (std::nothrow) char[total_size]);
     if (buff == nullptr) {
       GELOGE(GRAPH_FAILED, "allocate string raw data buff failed");
       return GRAPH_FAILED;
     }
+    // Front some bytes store head of each string
+#ifndef ONLY_COMPILE_OPEN_SRC
+    StringHead *string_head = reinterpret_cast<StringHead *>(buff.get());
+    char *raw_data = buff.get() + data.size() * sizeof(StringHead);
+    uint64_t ptr_size = data.size() * sizeof(StringHead);
+    for (size_t i = 0; i < data.size(); ++i) {
+      string_head[i].addr = reinterpret_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
+      string_head[i].len = static_cast<uint64_t>(data[i].size);
+#else
     uint64_t *p = reinterpret_cast<uint64_t *>(buff.get());
-    // Front some bytes store pointer of each string
     char *raw_data = buff.get() + data.size() * sizeof(uint64_t);
     uint64_t ptr_size = data.size() * sizeof(uint64_t);
     for (size_t i = 0; i < data.size(); ++i) {
       p[i] = reinterpret_cast<uintptr_t>(raw_data);
+#endif
       if (total_size < ptr_size) {
         GELOGE(GRAPH_FAILED, "Subtraction invalid, total_size: %zu, ptr_size: %lu", total_size, ptr_size);
         return GRAPH_FAILED;
