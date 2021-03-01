@@ -214,7 +214,7 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
       // extra 1 byte store '\0'
       total_size += (val_vector[i].size() + sizeof(ge::StringHead) + 1);
     }
-    total_size += (count - min_count) * (sizeof(ge::StringHead) + 1));
+    total_size += (count - min_count) * (sizeof(ge::StringHead) + 1);
     std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
     GE_CHECK_NOTNULL(addr);
     ge::StringHead *string_head = reinterpret_cast<ge::StringHead *>(addr.get());
