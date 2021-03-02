@@ -62,6 +62,9 @@ const int32_t kNchwDimIdxW = 3;
 
 const int kDataMemAlignSize = 32;
 const int kNum2 = 2;
+
+const char *const kShapeRangeInvalid = "format of shape range is invalid";
+const char *const kShapeRangeSample = "\"[1~20,3,3~6,-1]\"";
 }  // namespace
 
 ///
@@ -419,6 +422,65 @@ TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_t
   }
 
   size_temp = output_mem_size;
+  return GRAPH_SUCCESS;
+}
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std::pair<int64_t, int64_t>> &shape_range) {
+  if (shape.GetDimNum() == 0 || shape_range.empty()) {
+    GELOGD(" Shape or shape range is empty, no need to check.");
+    return GRAPH_SUCCESS;
+  }
+  if (shape.GetDimNum() != shape_range.size()) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E10049", {"shape_range_size", "cur_dim_size"},
+                                                    {std::to_string(shape_range.size()),
+                                                     std::to_string(shape.GetDimNum())});
+    GELOGE(PARAM_INVALID, "Given shape_range dim num [%zu] and current dim num [%zu] are not match. Please check",
+           shape_range.size(), shape.GetDimNum());
+    return PARAM_INVALID;
+  }
+
+  for (size_t idx = 0; idx < shape.GetDimNum(); idx++) {
+    auto cur_dim = shape.GetDim(idx);
+    auto left_range = shape_range[idx].first;
+    auto right_range = shape_range[idx].second;
+    if (left_range < 0) {
+      std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
+      ErrorManager::GetInstance().ATCReportErrMessage("E10048", {"shape_range", "reason", "sample"},
+                                                      {error_range, kShapeRangeInvalid, kShapeRangeSample});
+      GELOGE(PARAM_INVALID, "Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
+             error_range.c_str(), kShapeRangeInvalid, kShapeRangeSample);
+      return PARAM_INVALID;
+    }
+
+    if (cur_dim < left_range) {
+      ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim","shape_range_left", "shape_range_right"},
+                                                      {std::to_string(cur_dim), std::to_string(left_range),
+                                                       std::to_string(right_range)});
+      GELOGE(PARAM_INVALID, "Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
+             cur_dim, left_range, right_range);
+      return PARAM_INVALID;
+    }
+
+    if (right_range < 0) {
+      if (right_range != UNKNOWN_DIM) {
+        std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
+        ErrorManager::GetInstance().ATCReportErrMessage("E10048", {"shape_range", "reason", "sample"},
+                                                        {error_range, kShapeRangeInvalid, kShapeRangeSample});
+        GELOGE(PARAM_INVALID, "Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
+               error_range.c_str(), kShapeRangeInvalid, kShapeRangeSample);
+        return PARAM_INVALID;
+      }
+    } else {
+      if (cur_dim > right_range) {
+        ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim","shape_range_left", "shape_range_right"},
+                                                        {std::to_string(cur_dim), std::to_string(left_range),
+                                                         std::to_string(right_range)});
+        GELOGE(PARAM_INVALID, "Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
+               cur_dim, left_range, right_range);
+        return PARAM_INVALID;
+      }
+    }
+  }
   return GRAPH_SUCCESS;
 }
 }  // namespace ge
