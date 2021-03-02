@@ -24,7 +24,6 @@
 #include <sstream>
 #include "framework/common/debug/ge_log.h"
 #include "framework/common/string_util.h"
-#include "graph/ge_context.h"
 #include "mmpa/mmpa_api.h"
 
 namespace {
@@ -35,6 +34,10 @@ const char *const kErrMessage = "ErrMessage";
 const char *const kArgList = "Arglist";
 const uint64_t kLength = 2;
 }  // namespace
+
+using namespace ErrorMessage;
+
+thread_local struct Context ErrorManager::error_context_ = {0, "", "", ""};
 
 ///
 /// @brief Obtain error manager self library path
@@ -135,12 +138,11 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
     error_message.replace(index, kLength, arg_value);
   }
 
-  uint64_t work_id = ge::GetContext().WorkStreamId();
-  if (work_id == 0) {
+  if (error_context_.work_stream_id == 0) {
     GELOGW("work_id in this work stream is zero, work_id set action maybe forgeted in some externel api.");
   }
-  auto& error_messages = GetErrorMsgContainerByWorkId(work_id);
-  auto& warning_messages = GetWarningMsgContainerByWorkId(work_id);
+  auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
+  auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   std::string message = error_code + ": " + error_message;
   std::unique_lock<std::mutex> lock(mutex_);
@@ -160,8 +162,7 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
 }
 
 std::string ErrorManager::GetErrorMessage() {
-  uint64_t work_id = ge::GetContext().WorkStreamId();
-  auto& error_messages = GetErrorMsgContainerByWorkId(work_id);
+  auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.empty()) {
     error_messages.push_back("E19999: Unknown error occurred. Please check the log.");
@@ -176,8 +177,7 @@ std::string ErrorManager::GetErrorMessage() {
 }
 
 std::string ErrorManager::GetWarningMessage() {
-  uint64_t work_id = ge::GetContext().WorkStreamId();
-  auto& warning_messages = GetWarningMsgContainerByWorkId(work_id);
+  auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   std::stringstream warning_stream;
   for (auto &info : warning_messages) {
@@ -192,8 +192,7 @@ std::string ErrorManager::GetWarningMessage() {
 /// @return int 0(success) -1(fail)
 ///
 int ErrorManager::OutputErrMessage(int handle) {
-  uint64_t work_id = ge::GetContext().WorkStreamId();
-  auto& error_messages = GetErrorMsgContainerByWorkId(work_id);
+  auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.empty()) {
     error_messages.push_back("E19999: Unknown error occurred. Please check the log.");
@@ -220,8 +219,7 @@ int ErrorManager::OutputErrMessage(int handle) {
 /// @return int 0(success) -1(fail)
 ///
 int ErrorManager::OutputMessage(int handle) {
-  uint64_t work_id = ge::GetContext().WorkStreamId();
-  auto& warning_messages = GetWarningMsgContainerByWorkId(work_id);
+  auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   for (auto &info : warning_messages) {
     std::cout << info << std::endl;
@@ -451,7 +449,7 @@ void ErrorManager::GenWorkStreamIdDefault() {
 
   const uint64_t kPidOffset = 100000;
   uint64_t work_stream_id = pid * kPidOffset + tid;
-  ge::GetContext().SetWorkStreamId(work_stream_id);
+  error_context_.work_stream_id = work_stream_id;
 
   auto iter = error_message_per_work_id_.find(work_stream_id);
   if (iter != error_message_per_work_id_.end()) {
@@ -462,10 +460,32 @@ void ErrorManager::GenWorkStreamIdDefault() {
 void ErrorManager::GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t graph_id) {
   const uint64_t kSessionIdOffset = 100000;
   uint64_t work_stream_id = session_id * kSessionIdOffset + graph_id;
-  ge::GetContext().SetWorkStreamId(work_stream_id);
+  error_context_.work_stream_id = work_stream_id;
 
   auto iter = error_message_per_work_id_.find(work_stream_id);
   if (iter != error_message_per_work_id_.end()) {
     error_message_per_work_id_.erase(iter);
   }
 }
+
+const std::string &ErrorManager::GetLogHeader() {
+  return error_context_.log_header;
+}
+
+struct Context &ErrorManager::GetErrorContext() {
+  return error_context_;
+}
+
+void ErrorManager::SetErrorContext(struct Context error_context) {
+  error_context_.work_stream_id = error_context.work_stream_id;
+  error_context_.first_stage = move(error_context.first_stage);
+  error_context_.second_stage = move(error_context.second_stage);
+  error_context_.log_header = move(error_context.log_header);
+}
+
+void ErrorManager::SetStage(const std::string &first_stage, const std::string &second_stage) {
+  error_context_.first_stage = first_stage;
+  error_context_.second_stage = second_stage;
+  error_context_.log_header = move("[" + first_stage + "][" + second_stage + "]");
+}
+

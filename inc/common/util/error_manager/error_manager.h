@@ -22,6 +22,41 @@
 #include <vector>
 #include <mutex>
 
+namespace ErrorMessage {
+  // first stage
+  const std::string kInitialize   = "INIT";
+  const std::string kModelCompile = "COMP";
+  const std::string kModelLoad    = "LOAD";
+  const std::string kModelExecute = "EXEC";
+  const std::string kFinalize     = "FINAL";
+
+  // SecondStage
+  // INITIALIZE
+  const std::string kOpsProtoInit         = "OPS_PRO";
+  const std::string kSystemInit           = "SYS";
+  const std::string kEngineInit           = "ENGINE";
+  const std::string kOpsKernelInit        = "OPS_KER";
+  const std::string kOpsKernelBuilderInit = "OPS_KER_BLD";
+  // MODEL_COMPILE
+  const std::string kPrepareOptimize    = "PRE_OPT";
+  const std::string kOriginOptimize     = "ORI_OPT";
+  const std::string kSubGraphOptimize   = "SUB_OPT";
+  const std::string kMergeGraphOptimize = "MERGE_OPT";
+  const std::string kPreBuild           = "PRE_BLD";
+  const std::string kStreamAlloc        = "STM_ALLOC";
+  const std::string kMemoryAlloc        = "MEM_ALLOC";
+  const std::string kTaskGenerate       = "TASK_GEN";
+  // COMMON
+  const std::string OTHER = "OTHER";
+
+  struct Context {
+    uint64_t work_stream_id;
+    std::string first_stage;
+    std::string second_stage;
+    std::string log_header;
+  };
+}
+
 class ErrorManager {
  public:
   ///
@@ -104,6 +139,14 @@ class ErrorManager {
   // used in external api entrance
   void GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t graph_id);
 
+  const std::string &GetLogHeader();
+
+  struct ErrorMessage::Context &GetErrorContext();
+
+  void SetErrorContext(struct ErrorMessage::Context error_context);
+
+  void SetStage(const std::string &first_stage, const std::string &second_stage);
+
  private:
   struct ErrorInfo {
     std::string error_id;
@@ -139,6 +182,8 @@ class ErrorManager {
 
   std::map<uint64_t, std::vector<std::string>> error_message_per_work_id_;
   std::map<uint64_t, std::vector<std::string>> warning_messages_per_work_id_;
+
+  thread_local static struct ErrorMessage::Context error_context_;
 };
 
 #endif  // ERROR_MANAGER_H_
