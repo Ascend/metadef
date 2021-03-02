@@ -59,6 +59,12 @@ class AnyMap {
     anyValues_.swap(other.anyValues_);
   }
 
+  void Names(std::set<string> &names) const {
+    for (const auto &item : anyValues_) {
+      names.emplace(item.first);
+    }
+  }
+
  private:
   class Placeholder {
    public:

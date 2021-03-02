@@ -87,8 +87,8 @@ graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
   return GRAPH_SUCCESS;
 }
 
-graphStatus UpdataOutputForMultiBatcch(const ConstNodePtr &node,
-                                       std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
+graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
+                                      std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
   // check sub_graph shape. Get max for update.
   for (size_t i = 0; i < ref_out_tensors.size(); ++i) {
     if (ref_out_tensors[i].empty()) {
@@ -131,7 +131,7 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
                                       std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
   GELOGD("Enter update parent node shape for class branch op process");
   if (node->GetOpDesc()->HasAttr(ATTR_NAME_BATCH_NUM)) {
-    return UpdataOutputForMultiBatcch(node, ref_out_tensors);
+    return UpdateOutputForMultiBatch(node, ref_out_tensors);
   }
 
   // check sub_graph shape.If not same ,do unknown shape process

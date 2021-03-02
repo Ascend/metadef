@@ -72,9 +72,9 @@ checkopts()
         ENABLE_METADEF_ST="on"
         ;;
       t)
-	      ENABLE_METADEF_UT="on"
-	      GE_ONLY="off"
-	      ;;
+        ENABLE_METADEF_UT="on"
+        GE_ONLY="off"
+        ;;
       c)
         ENABLE_METADEF_COV="on"
         GE_ONLY="off"
@@ -177,20 +177,21 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     cp ${BUILD_PATH}/tests/ut/graph/ut_graph ${OUTPUT_PATH}
     cp ${BUILD_PATH}/tests/ut/register/ut_register ${OUTPUT_PATH}
 
-    ${OUTPUT_PATH}/ut_graph &&
-    ${OUTPUT_PATH}/ut_register
+    RUN_TEST_CASE=${OUTPUT_PATH}/ut_graph && ${RUN_TEST_CASE} &&
+    RUN_TEST_CASE=${OUTPUT_PATH}/ut_register && ${RUN_TEST_CASE}
     if [[ "$?" -ne 0 ]]; then
         echo "!!! UT FAILED, PLEASE CHECK YOUR CHANGES !!!"
+        echo -e "\033[31m${RUN_TEST_CASE}\033[0m"
         exit 1;
     fi
-  echo "Generating coverage statistics, please wait..."
-  cd ${BASEPATH}
-  rm -rf ${BASEPATH}/cov
-  mkdir ${BASEPATH}/cov
-  lcov -c -d build/tests/ut/graph -d build/tests/ut/register -o cov/tmp.info
-  lcov --remove cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/local/*' -o cov/coverage.info
-  cd ${BASEPATH}/cov
-  #genhtml coverage.info
+    echo "Generating coverage statistics, please wait..."
+    cd ${BASEPATH}
+    rm -rf ${BASEPATH}/cov
+    mkdir ${BASEPATH}/cov
+    lcov -c -d build/tests/ut/graph -d build/tests/ut/register -o cov/tmp.info
+    lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/local/*' -o cov/coverage.info
+    cd ${BASEPATH}/cov
+    #genhtml coverage.info
 fi
 
 # generate output package in tar form, including ut/st libraries/executables

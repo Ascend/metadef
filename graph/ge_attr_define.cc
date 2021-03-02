@@ -1149,4 +1149,8 @@ const std::string ATTR_NAME_REFRESH_CONTINUOUS_FLAG = "_refresh_continuous_flag"
 const std::string ATTR_NAME_FORMAT_AGNOSTIC = "_format_agnostic";
 const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_OUTPUT = "_format_agnostic_except_output";
 const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_INPUT = "_format_agnostic_except_input";
+
+// for ffts subgraph
+const std::string ATTR_NAME_FFTS_SUB_GRAPH = "_ffts_sub_graph";
+const std::string ATTR_NAME_THREAD_SCOPE_ID = "_thread_scope_id";
 }  // namespace ge
