@@ -24,28 +24,28 @@
 
 namespace ErrorMessage {
   // first stage
-  const std::string INITIALIZE = "INIT";
-  const std::string MODEL_COMPILE = "COMP";
-  const std::string MODEL_LOAD = "LOAD";
-  const std::string MODEL_EXECUTE = "EXEC";
-  const std::string FINALIZE = "FINAL";
+  const std::string kInitialize   = "INIT";
+  const std::string kModelCompile = "COMP";
+  const std::string kModelLoad    = "LOAD";
+  const std::string kModelExecute = "EXEC";
+  const std::string kFinalize     = "FINAL";
 
   // SecondStage
   // INITIALIZE
-  const std::string OPS_PROTO = "OPS_PRO";
-  const std::string SYSTEM = "SYS";
-  const std::string ENGINE = "ENGINE";
-  const std::string OPS_KERNEL = "OPS_KER";
-  const std::string OPS_KERNEL_BUILDER = "OPS_KER_BLD";
+  const std::string kOpsProtoInit         = "OPS_PRO";
+  const std::string kSystemInit           = "SYS";
+  const std::string kEngineInit           = "ENGINE";
+  const std::string kOpsKernelInit        = "OPS_KER";
+  const std::string kOpsKernelBuilderInit = "OPS_KER_BLD";
   // MODEL_COMPILE
-  const std::string PREPARE_OPTIMIZE = "PRE_OPT";
-  const std::string ORIGIN_OPTIMIZE = "ORI_OPT";
-  const std::string SUB_GRAPH_OPTIMIZE = "SUB_OPT";
-  const std::string MERGE_GRAPH_OPTIMIZE = "MERGE_OPT";
-  const std::string PREBUILD = "PRE_BLD";
-  const std::string STREAM_ALLOC = "STM_ALLOC";
-  const std::string MEMORY_ALLOC = "MEM_ALLOC";
-  const std::string TASK_GENERATE = "TASK_GEN";
+  const std::string kPrepareOptimize    = "PRE_OPT";
+  const std::string kOriginOptimize     = "ORI_OPT";
+  const std::string kSubGraphOptimize   = "SUB_OPT";
+  const std::string kMergeGraphOptimize = "MERGE_OPT";
+  const std::string kPreBuild           = "PRE_BLD";
+  const std::string kStreamAlloc        = "STM_ALLOC";
+  const std::string kMemoryAlloc        = "MEM_ALLOC";
+  const std::string kTaskGenerate       = "TASK_GEN";
   // COMMON
   const std::string OTHER = "OTHER";
 
