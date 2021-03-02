@@ -72,7 +72,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::Vistor<NodePtr> Com
   return AllGraphNodes(subgraphs);
 }
 
-ComputeGraph::Vistor<NodePtr> ComputeGraph::AllGraphNodes(std::vector<std::shared_ptr<ComputeGraph>> &subgraphs) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+ComputeGraph::Vistor<NodePtr> ComputeGraph::GetAllNodes(bool ffts_nodes) const {
+  std::vector<std::shared_ptr<ComputeGraph>> subgraphs;
+  return AllGraphNodes(subgraphs, ffts_nodes);
+}
+
+ComputeGraph::Vistor<NodePtr> ComputeGraph::AllGraphNodes(vector<ComputeGraphPtr> &subgraphs, bool ffts_nodes) const {
   std::vector<NodePtr> all_nodes;
   std::deque<NodePtr> candidates;
 
@@ -84,6 +90,11 @@ ComputeGraph::Vistor<NodePtr> ComputeGraph::AllGraphNodes(std::vector<std::share
 
     OpDescPtr op_desc = node->GetOpDesc();
     if (op_desc == nullptr) {
+      continue;
+    }
+
+    if (op_desc->HasAttr(ATTR_NAME_FFTS_SUB_GRAPH) && !ffts_nodes) {
+      GELOGI("Node: %s, Skip ffts subgraph nodes", op_desc->GetName().c_str());
       continue;
     }
 
@@ -109,6 +120,10 @@ ComputeGraph::Vistor<NodePtr> ComputeGraph::GetNodes(bool is_unknown_shape) cons
   }
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+ComputeGraph::Vistor<NodePtr> ComputeGraph::GetNodes(bool is_unknown_shape, bool ffts_nodes) const {
+  return is_unknown_shape ? GetDirectNode() : GetAllNodes(ffts_nodes);
+}
 
 size_t ComputeGraph::GetDirectNodesSize() const { return direct_nodes_size_; }
 
@@ -691,28 +706,6 @@ graphStatus ComputeGraph::ReorderEventNodes() {
   return GRAPH_SUCCESS;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertEventNodes() {
-  auto status = ReorderEventNodes();
-  if (status != GRAPH_SUCCESS) {
-    GELOGE(status, "Graph [%s] record event nodes failed", name_.c_str());
-    return status;
-  }
-
-  std::list<NodePtr> node_list = nodes_;
-  ClearNodeList();
-  int64_t i = 0;
-  for (const auto &node: node_list) {
-    if (node == nullptr || node->GetOpDesc() == nullptr) {
-      GELOGW("node or OpDescPtr is nullptr.");
-    } else {
-      node->GetOpDesc()->SetId(i);
-      PushBackToNodeList(node);
-    }
-    ++i;
-  }
-  return GRAPH_SUCCESS;
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertGraphEvents() {
   auto status = ReorderEventNodes();
   if (status != GRAPH_SUCCESS) {
@@ -1060,6 +1053,10 @@ size_t ComputeGraph::GetOutEdgeSize(const NodePtr &node) {
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::IsValid() const { return is_valid_flag_; }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Dump() const {
+  if (!IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {
+    return;
+  }
+
   GELOGI("graph name = %s.", GetName().c_str());
   for (const auto &node : GetAllNodes()) {
     GELOGD("node name = %s.", node->GetName().c_str());

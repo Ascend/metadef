@@ -36,9 +36,9 @@ TEST_F(UtestTypeUtils, IsInternalFormat) {
 
 TEST_F(UtestTypeUtils, FormatToSerialString) {
   ASSERT_EQ(TypeUtils::FormatToSerialString(FORMAT_NCHW), "NCHW");
-  ASSERT_EQ(TypeUtils::FormatToSerialString(FORMAT_END), "RESERVED");
+  ASSERT_EQ(TypeUtils::FormatToSerialString(FORMAT_END), "END");
   ASSERT_EQ(TypeUtils::FormatToSerialString(static_cast<Format>(GetFormatFromSub(FORMAT_FRACTAL_Z, 1))), "FRACTAL_Z:1");
-  ASSERT_EQ(TypeUtils::FormatToSerialString(static_cast<Format>(GetFormatFromSub(FORMAT_END, 1))), "RESERVED");
+  ASSERT_EQ(TypeUtils::FormatToSerialString(static_cast<Format>(GetFormatFromSub(FORMAT_END, 1))), "END:1");
 }
 
 TEST_F(UtestTypeUtils, SerialStringToFormat) {
