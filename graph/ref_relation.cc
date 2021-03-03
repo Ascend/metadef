@@ -38,8 +38,6 @@ namespace {
   const string kIf = "If";
   const string kCase = "Case";
 
-  const uint16_t kMaxElementNum = 100;
-
   std::set<string> function_op = {
     kWhile,
     kIf,
@@ -357,7 +355,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphDataNodes(
     }
     max_ref_idx = (i > max_ref_idx) ? i : max_ref_idx;
   }
-
+  classed_data_nodes.resize(max_ref_idx + 1);
   while (!data_nodes.empty()) {
     auto data = data_nodes.back();
     data_nodes.pop_back();
@@ -375,6 +373,8 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
                   const vector<NodePtr> &netoutput_nodes,
                   vector<vector<std::pair<NodePtr, size_t>>> &classed_netoutput_nodes) {
   GELOGD("[RefRelations]Start to process subgraph netoutput!");
+  // calc  netoutput max_ref_idx
+  int max_ref_idx = 0;
   for (const auto &sub_netoutput_node : netoutput_nodes) {
     auto op_desc = sub_netoutput_node->GetOpDesc();
     GE_CHECK_NOTNULL(op_desc);
@@ -386,6 +386,24 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
                sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
         return GRAPH_FAILED;
       }
+      int ref_o;
+      if (AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
+        max_ref_idx = (ref_o > max_ref_idx) ? ref_o : max_ref_idx;
+      } else {
+        GELOGE(GRAPH_FAILED, "Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
+               sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
+        return GRAPH_FAILED;
+      }
+    }
+  }
+  classed_netoutput_nodes.resize(max_ref_idx + 1);
+  // re-sort according ref idx
+  for (const auto &sub_netoutput_node : netoutput_nodes) {
+    auto op_desc = sub_netoutput_node->GetOpDesc();
+    GE_CHECK_NOTNULL(op_desc);
+
+    for (const auto &in_data_anchor : sub_netoutput_node->GetAllInDataAnchors()) {
+      auto in_desc = op_desc->MutableInputDesc(in_data_anchor->GetIdx());
       int ref_o;
       if (AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
         if (ref_o >= static_cast<int>(classed_netoutput_nodes.size())) {
@@ -421,9 +439,8 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
     vector<NodePtr> netoutput_nodes;
     // Get data and netoutput of sub_graph
     GetDataAndNetoutputOfSubGraph(root_graph, data_nodes, netoutput_nodes, sub_graph_names, node_type);
-    size_t max_elem_num = (data_nodes.size() > kMaxElementNum) ? data_nodes.size() : kMaxElementNum;
-    vector<vector<NodePtr>> classed_data_nodes(max_elem_num);   // according to ref_idx
-    vector<vector<std::pair<NodePtr, size_t>>> classed_netoutput_nodes(max_elem_num);   // according to ref_idx
+    vector<vector<NodePtr>> classed_data_nodes;   // resize according to ref_idx
+    vector<vector<std::pair<NodePtr, size_t>>> classed_netoutput_nodes;   // resize according to ref_idx
     status = ProcessSubgraphDataNodes(data_nodes, classed_data_nodes);
     if (status != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "classfy data nodes failed!");
