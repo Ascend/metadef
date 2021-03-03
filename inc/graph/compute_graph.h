@@ -132,6 +132,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus InferShape();
   graphStatus InferOriginFormat();
   graphStatus InferShapeInNeed();
+  graphStatus InsertEventNodes();
   graphStatus InsertGraphEvents();
   bool operator==(const ComputeGraph &r_compute_graph) const;
 
