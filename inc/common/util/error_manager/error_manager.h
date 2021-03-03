@@ -38,6 +38,7 @@ namespace ErrorMessage {
   const std::string kOpsKernelInit        = "OPS_KER";
   const std::string kOpsKernelBuilderInit = "OPS_KER_BLD";
   // MODEL_COMPILE
+  const std::string kParser             = "PARSER";
   const std::string kPrepareOptimize    = "PRE_OPT";
   const std::string kOriginOptimize     = "ORI_OPT";
   const std::string kSubGraphOptimize   = "SUB_OPT";
