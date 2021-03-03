@@ -10,7 +10,10 @@ if ((${CMAKE_INSTALL_PREFIX} STREQUAL /usr/local) OR
     message(STATUS "No install prefix selected, default to ${CMAKE_INSTALL_PREFIX}.")
 endif()
 
-if (ENABLE_GITEE)
+if (METADEF_PB_PKG)
+    set(REQ_URL "${METADEF_PB_PKG}/libs/gflags/v2.2.2.tar.gz")
+    set(MD5 "")
+elseif (ENABLE_GITEE)
     set(REQ_URL "https://gitee.com/mirrors/gflags/repository/archive/v2.2.2.tar.gz")
     set(MD5 "")
 else()
