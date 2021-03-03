@@ -31,7 +31,6 @@ GEContext &GetContext() {
 }
 
 thread_local uint64_t GEContext::session_id_ = 0;
-thread_local uint64_t GEContext::work_stream_id_ = 0;
 
 graphStatus GEContext::GetOption(const std::string &key, std::string &option) {
   return GetThreadLocalContext().GetOption(key, option);
@@ -95,15 +94,11 @@ void GEContext::Init() {
 
 uint64_t GEContext::SessionId() { return session_id_; }
 
-uint64_t GEContext::WorkStreamId() { return work_stream_id_; }
-
 uint32_t GEContext::DeviceId() { return device_id_; }
 
 uint64_t GEContext::TraceId() { return trace_id_; }
 
 void GEContext::SetSessionId(uint64_t session_id) { session_id_ = session_id; }
-
-void GEContext::SetWorkStreamId(uint64_t work_stream_id) { work_stream_id_ = work_stream_id; }
 
 void GEContext::SetCtxDeviceId(uint32_t device_id) { device_id_ = device_id; }
 
