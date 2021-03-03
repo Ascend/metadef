@@ -10,8 +10,8 @@ if ((${CMAKE_INSTALL_PREFIX} STREQUAL /usr/local) OR
     message(STATUS "No install prefix selected, default to ${CMAKE_INSTALL_PREFIX}.")
 endif()
 
-if (GE_PB_PKG)
-    set(REQ_URL "${GE_PB_PKG}/libs/ge_gtest/release-1.8.1.tar.gz")
+if (METADEF_PB_PKG)
+    set(REQ_URL "${METADEF_PB_PKG}/libs/ge_gtest/release-1.8.1.tar.gz")
     set(MD5 "")
 elseif (ENABLE_GITEE)
     set(REQ_URL "https://gitee.com/mirrors/googletest/repository/archive/release-1.8.1.tar.gz")

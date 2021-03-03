@@ -684,22 +684,22 @@ graphStatus ComputeGraph::ReorderEventNodes() {
       if (iter == node_list.end()) {
         GELOGW("no node found.");
       } else {
-        (void) node_list.erase(iter);
+        node_list.erase(iter);
       }
 
       auto dst_iter = find(node_list.begin(), node_list.end(), node->GetOutControlNodes().at(0));
-      (void) node_list.insert(dst_iter, node);
+      node_list.insert(dst_iter, node);
     }
     if (node->GetOpDesc()->GetType() == SEND) {
       auto iter = find(node_list.begin(), node_list.end(), node);
       if (iter == node_list.end()) {
         GELOGW("no node found.");
       } else {
-        (void) node_list.erase(iter);
+        node_list.erase(iter);
       }
 
       auto src_iter = find(node_list.begin(), node_list.end(), node->GetInControlNodes().at(0));
-      (void) node_list.insert(++src_iter, node);
+      node_list.insert(++src_iter, node);
     }
   }
 
