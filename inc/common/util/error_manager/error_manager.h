@@ -48,7 +48,7 @@ namespace ErrorMessage {
   const std::string kMemoryAlloc        = "MEM_ALLOC";
   const std::string kTaskGenerate       = "TASK_GEN";
   // COMMON
-  const std::string OTHER = "OTHER";
+  const std::string kOther = "OTHER";
 
   struct Context {
     uint64_t work_stream_id;
