@@ -177,3 +177,110 @@ message LabelSwitchByIndexDef {
     uint32 op_index = 1;
     uint32 label_max = 2;
 }
+
+message FftsTaskDef {
+    uint32 op_index = 1;
+
+    uint32 ffts_type = 2;   // 2: Auto Threading / 3: Manual Threading
+    repeated FftsSubTaskDef sub_task = 3;
+    repeated TicketCacheDef ticket_cache = 4;
+}
+
+message FftsSubTaskDef {
+    uint32 sub_task_type = 1;   // 0: AIC / 1: AIV / 2: DMU / 3: NOP / 4: Prefetch
+
+    uint32 thread_dim = 2;
+    uint32 dst_tick_cache_vld_bitmap = 3;
+    uint32 src_tick_cache_vld_bitmap = 4;
+    uint32 src_data_out_of_subgraph_bitmap = 5;
+
+    repeated uint32 dst_tick_cache_id = 6;  // Max 8 output
+    repeated uint32 src_tick_cache_id = 7;  // Max 8 input
+
+    AutoThreadAicAivDef auto_thread_aic_aiv = 8;
+
+    ManualThreadAicAivDef manual_thread_aic_aiv = 9;
+    ManualThreadNopDef manual_thread_nop = 10;
+}
+
+message TicketCacheDef {
+    uint32 cache_option = 1;    // 1: invalidate / 2: flush
+    uint32 ticket_cache_window = 2;
+
+    AutoThreadCacheDef auto_thread_cache = 3;
+
+    ManualThreadCacheDef manual_thread_cache = 4;
+}
+
+message AutoThreadAicAivDef {
+    repeated uint64 task_addr = 1; // input / output address (runtime device memory)
+
+    uint32 task_param_offset = 2;
+
+    uint32 prefetch_enable_bitmap = 3;  // 8 bit bitmap
+    uint32 prefetch_once_bitmap = 4;    // 8 bit bitmap
+
+    uint32 tail_blk_dim = 5;
+    uint32 non_tail_blk_dim = 6;
+
+    string non_tail_task_func_stub = 7;
+    string tail_task_func_stub = 8;
+
+    repeated AutoThreadPrefetchDef src_prefetch = 9;
+}
+
+message AutoThreadCacheDef {
+    uint64 data_addr = 1;   // device num
+    uint32 data_addr_offset = 2;
+    uint32 non_tail_data_len = 3;
+    uint32 tail_data_len = 4;
+    uint32 ticket_cache_ref_cnt = 5;
+}
+
+message AutoThreadPrefetchDef {
+    uint64 data_addr = 1;
+    uint32 data_addr_offset = 2;
+    uint32 non_tail_data_len = 3;
+    uint32 tail_data_len = 4;
+}
+
+message ManualThreadAicAivDef {
+    uint64 task_param_addr = 1;
+    uint32 task_param_offset = 2;
+    uint32 prefetch_enable_bitmap = 3;  // 8 bit bitmap 1010
+    uint32 prefetch_once_bitmap = 4;    // 8 bit bitmap 1010
+
+    uint32 prefetch_once_dmu_num = 5;   //
+
+    repeated uint32 thread_prefetch_dmu_idx = 6;    // max valid is thread dim
+    repeated uint32 thread_blk_dim = 7;
+
+    repeated string thread_task_func_stub = 8;
+
+    repeated ManualThreadDmuDef prefetch_list = 9;  // dmu desc 0-64k
+    repeated ManualThreadDependencyDef src_dep_tbl = 10;
+}
+
+message ManualThreadNopDef {
+    repeated ManualThreadDependencyDef src_dep_tbl = 1;
+}
+
+message ManualThreadCacheDef {
+    repeated ManualThreadDmuDef dmu_list = 1;
+
+    repeated uint32 slice_dmu_idx = 2;
+    repeated uint32 ticket_cache_ref_cnt_tbl = 3;
+}
+
+message ManualThreadDmuDef {
+    uint64 data_addr = 1;   // device num
+    uint32 num_outer = 2;
+    uint32 num_inner = 3;
+    uint32 stride_outer = 4;
+    uint32 len_inner = 5;
+    uint32 stride_inner = 6;
+}
+
+message ManualThreadDependencyDef {
+    repeated uint32 dependency = 1;
+}
