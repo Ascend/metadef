@@ -1086,7 +1086,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
     if (peer_out_node->GetType() != "PartitionedCall") {
       rNode = peer_out_node;
       GELOGD("in node[%s] rNode[%s] rNode type[%s]",
-             node->GetName(),c_str(),
+             node->GetName().c_str(),
              rNode->GetName().c_str(),
              rNode->GetType().c_str());
       return GRAPH_SUCCESS;
