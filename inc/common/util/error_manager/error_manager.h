@@ -32,6 +32,7 @@ namespace ErrorMessage {
 
   // SecondStage
   // INITIALIZE
+  const std::string kParser               = "PARSER";
   const std::string kOpsProtoInit         = "OPS_PRO";
   const std::string kSystemInit           = "SYS";
   const std::string kEngineInit           = "ENGINE";
@@ -47,7 +48,7 @@ namespace ErrorMessage {
   const std::string kMemoryAlloc        = "MEM_ALLOC";
   const std::string kTaskGenerate       = "TASK_GEN";
   // COMMON
-  const std::string OTHER = "OTHER";
+  const std::string kOther = "DEFAULT";
 
   struct Context {
     uint64_t work_stream_id;
