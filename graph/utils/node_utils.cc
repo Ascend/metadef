@@ -40,6 +40,7 @@ const std::set<std::string> kIfOpTypes = { "If", "_If", "StatelessIf" };
 const std::set<std::string> kWhileOpTypes = { "While", "_While", "StatelessWhile" };
 const std::set<std::string> kCaseOpTypes = { "Case" };
 const std::set<std::string> kForOpTypes = { "For" };
+const char *kRefIndex = "_parent_node_index";
 
 bool OpShapeIsUnknown(const OpDescPtr &desc) {
   for (const auto &ptr : desc->GetAllInputsDescPtr()) {
