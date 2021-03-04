@@ -86,7 +86,7 @@ int ErrorManager::Init(std::string path) {
   }
   int ret = ParseJsonFile(path + kErrorCodePath);
   if (ret != 0) {
-    GELOGE(ge::FAILED, "Parser json file failed, path:%s", path.c_str());
+    GELOGE(ge::FAILED, "Parser json file failed");
     return -1;
   }
   is_init_ = true;
