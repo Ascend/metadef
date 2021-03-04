@@ -1093,7 +1093,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
     }
     // if peer node is PartionedCall, return owner graph's correspond node
     auto op_desc = peer_out_node->GetOpDesc();
-    auto subgraph_names = op_desc->GetSubgraphInstanceNames();
+    auto sub_graph_names = op_desc->GetSubgraphInstanceNames();
     auto root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
     GE_CHECK_NOTNULL(root_graph);
     if (sub_graph_names.empty()) {
