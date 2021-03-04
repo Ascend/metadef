@@ -1137,7 +1137,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
           return GRAPH_FAILED;
         }
       }
-      return GRAPH_SUCCESS
+      return GRAPH_SUCCESS;
     }
     GELOGE(GRAPH_FAILED, "On graph[%s], no exist NETOUTPUT node", sub_graph->GetName().c_str());
     return GRAPH_FAILED;
@@ -1152,7 +1152,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
     GE_CHECK_NOTNULL(parent_node);
     return GetInNodeCrossPartionCallNode(parent_node, ref_i, rNode);
   }
-  GELOGD("returned peer_out_node is nullptr because no attr[%s] node!", kRefIndex, node->GetName().c_str());
+  GELOGD("returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!", kRefIndex, node->GetName().c_str());
   return GRAPH_SUCCESS;
 }
 }  // namespace ge
