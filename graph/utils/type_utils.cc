@@ -257,11 +257,7 @@ const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
     {DT_QUINT8, sizeof(uint8_t)},
     {DT_QUINT16, sizeof(uint16_t)},
     {DT_STRING_REF, sizeof(uint64_t) * 2},
-#ifndef ONLY_COMPILE_OPEN_SRC
     {DT_STRING, sizeof(uint64_t) * 2},
-#else
-    {DT_STRING, sizeof(uint64_t)},
-#endif
     {DT_RESOURCE, sizeof(uint64_t)},
     {DT_VARIANT, sizeof(uint64_t)},
 };
