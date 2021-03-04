@@ -1130,7 +1130,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
             GELOGD("in node[%s] rNode[%s] type[%s]",
               node->GetName().c_str(),
               rNode->GetName().c_str(),
-              rNode->GetTYpe().c_str());
+              rNode->GetType().c_str());
             return GRAPH_SUCCESS;
           }
         } else {
