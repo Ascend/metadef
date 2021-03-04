@@ -772,7 +772,7 @@
     },
     {
       "ErrCode" : "E35002",
-      "ErrMessage" : "The attr[%s] of op[%s] has wrong value[%s], the correct value should be %s.",
+      "ErrMessage" : "The attr[%s] of op[%s] has wrong size[%s], the correct size should be %s.",
       "Arglist" : "attrname,opname,wrong_size,correct_size"
     },
     {
