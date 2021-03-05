@@ -45,4 +45,11 @@ size_t ByteBufferGetAll(ByteBuffer &buf, char *dest, size_t dest_len) {
 
   return nread;
 }
+
+ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t data_len) {
+  buf.write(reinterpret_cast<const char*>(data), data_len);
+  buf.flush();
+  return buf;
+}
+
 }  // namespace optiling
