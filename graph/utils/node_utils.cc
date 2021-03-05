@@ -1066,13 +1066,13 @@ NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
   return node_ptr;
 }
 
-graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32_t index, NodePtr &rNode) {
+graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node) {
   GE_CHECK_NOTNULL(node);
   if (node->GetAllInDataAnchorsSize() < index && node->GetType() != DATA) {
     return GRAPH_FAILED;
   }
   GELOGD("in node:%s index:%d", node->GetName().c_str(), index);
-  rNode = nullptr;
+  peer_node = nullptr;
   if (node->GetType() != DATA) {
     auto in_anchor = node->GetInDataAnchor(index);
     GE_CHECK_NOTNULL(in_anchor);
@@ -1084,11 +1084,11 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
     auto peer_out_node = peer_out_data_anchor->GetOwnerNode();
     GE_CHECK_NOTNULL(peer_out_node);
     if (peer_out_node->GetType() != "PartitionedCall") {
-      rNode = peer_out_node;
-      GELOGD("in node[%s] rNode[%s] rNode type[%s]",
+      peer_node = peer_out_node;
+      GELOGD("in node[%s] peer_node[%s] peer_node type[%s]",
              node->GetName().c_str(),
-             rNode->GetName().c_str(),
-             rNode->GetType().c_str());
+             peer_node->GetName().c_str(),
+             peer_node->GetType().c_str());
       return GRAPH_SUCCESS;
     }
     // if peer node is PartionedCall, return owner graph's correspond node
@@ -1126,11 +1126,11 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
           if (peer_out_idx != ref_o) {
             continue;
           } else {
-            rNode = NodeUtils::GetInDataNodeByIndex(*n, in_data_anchor->GetIdx());
-            GELOGD("in node[%s] rNode[%s] type[%s]",
+            peer_node = NodeUtils::GetInDataNodeByIndex(*n, in_data_anchor->GetIdx());
+            GELOGD("in node[%s] peer_node[%s] type[%s]",
               node->GetName().c_str(),
-              rNode->GetName().c_str(),
-              rNode->GetType().c_str());
+              peer_node->GetName().c_str(),
+              peer_node->GetType().c_str());
             return GRAPH_SUCCESS;
           }
         } else {
@@ -1150,7 +1150,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
     GELOGD("owner_graph:%s  ref_idx:%u", owner_graph->GetName().c_str(), ref_i);
     auto parent_node = owner_graph->GetParentNode();
     GE_CHECK_NOTNULL(parent_node);
-    return GetInNodeCrossPartionCallNode(parent_node, ref_i, rNode);
+    return GetInNodeCrossPartionCallNode(parent_node, ref_i, peer_node);
   }
   GELOGD("returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!", kRefIndex, node->GetName().c_str());
   return GRAPH_SUCCESS;
