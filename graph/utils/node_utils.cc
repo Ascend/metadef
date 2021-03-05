@@ -1068,7 +1068,7 @@ NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
 
 graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node) {
   GE_CHECK_NOTNULL(node);
-  if (node->GetAllInDataAnchorsSize() < index && node->GetType() != DATA) {
+  if (node->GetAllInDataAnchorsSize() <= index && node->GetType() != DATA) {
     return GRAPH_FAILED;
   }
   GELOGD("in node:%s index:%d", node->GetName().c_str(), index);
@@ -1083,7 +1083,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32
     }
     auto peer_out_node = peer_out_data_anchor->GetOwnerNode();
     GE_CHECK_NOTNULL(peer_out_node);
-    if (peer_out_node->GetType() != "PartitionedCall") {
+    if (peer_out_node->GetType() != PARTITIONEDCALL) {
       peer_node = peer_out_node;
       GELOGD("in node[%s] peer_node[%s] peer_node type[%s]",
              node->GetName().c_str(),
