@@ -1066,7 +1066,7 @@ NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
   return node_ptr;
 }
 
-graphStatus NodeUtils::GetInNodeCrossPartionCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node) {
+graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node) {
   GE_CHECK_NOTNULL(node);
   if (node->GetAllInDataAnchorsSize() <= index && node->GetType() != DATA) {
     return GRAPH_FAILED;

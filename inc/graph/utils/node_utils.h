@@ -181,7 +181,7 @@ class NodeUtils {
   ///          If it is called like GetInNodeCrossPartionCallNode(B,0,peer_node)or(Data1,0,peer_node), peer_node is A
   /// @return [graphStatus] running result of this function
   ///
-  static graphStatus GetInNodeCrossPartionCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
+  static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
 
  private:
   static std::map<NodePtr, std::vector<uint32_t>> map_send_info_;
