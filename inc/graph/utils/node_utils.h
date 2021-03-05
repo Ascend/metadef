@@ -170,6 +170,19 @@ class NodeUtils {
   ///
   static std::string GetInConstNodeTypeCrossSubgraph(const ge::NodePtr &node);
 
+  ///
+  /// @brief Get peer input node, supported get cross PartitionedCall .
+  /// @param [in] node, current node
+  /// @param [in] index, current node the index'th input, if it is PartionedCall's subgraph Data, please assign 0
+  /// @param [out] peer_node,
+  ///          A(PartionedCall_0)->B(PartionedCall_1)
+  ///          PartionedCall_0's subgraph: Data->A->Netoutput
+  ///          PartionedCall_1's subgraph: Data1->B->Netoutput
+  ///          If it is called like GetInNodeCrossPartionCallNode(B,0,peer_node)or(Data1,0,peer_node), peer_node is A
+  /// @return [graphStatus] running result of this function
+  ///
+  static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
+
  private:
   static std::map<NodePtr, std::vector<uint32_t>> map_send_info_;
   static std::map<NodePtr, std::vector<uint32_t>> map_recv_info_;
