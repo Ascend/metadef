@@ -1150,7 +1150,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     GELOGD("owner_graph:%s  ref_idx:%u", owner_graph->GetName().c_str(), ref_i);
     auto parent_node = owner_graph->GetParentNode();
     GE_CHECK_NOTNULL(parent_node);
-    return GetInNodeCrossPartionCallNode(parent_node, ref_i, peer_node);
+    return GetInNodeCrossPartionedCallNode(parent_node, ref_i, peer_node);
   }
   GELOGD("returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!", kRefIndex, node->GetName().c_str());
   return GRAPH_SUCCESS;
