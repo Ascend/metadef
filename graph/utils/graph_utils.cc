@@ -1116,8 +1116,8 @@ graphStatus RelinkControlNodeIfNeed(const NodePtr &node, InNodesToOut &in_nodes_
         // delete later, so do not use this interface to break a ring
         if (in_node == out_node) {
           GELOGW("there is a cycle between %s to %s when isolating node %s type %s",
-                in_node->GetName().c_str(), out_node->GetName().c_str(), node->GetName().c_str(),
-                node->GetType().c_str());
+                 in_node->GetName().c_str(), out_node->GetName().c_str(), node->GetName().c_str(),
+                 node->GetType().c_str());
           continue;
         }
         auto ret = GraphUtils::AddEdge(in_node->GetOutControlAnchor(), out_node->GetInControlAnchor());

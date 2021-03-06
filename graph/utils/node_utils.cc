@@ -1059,7 +1059,7 @@ NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
     return nullptr;
   }
   NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
-  if(node_ptr == nullptr) {
+  if (node_ptr == nullptr) {
     GELOGE(GRAPH_FAILED, "node_ptr is NULL!");
     return nullptr;
   }
@@ -1128,9 +1128,9 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
           } else {
             peer_node = NodeUtils::GetInDataNodeByIndex(*n, in_data_anchor->GetIdx());
             GELOGD("in node[%s] peer_node[%s] type[%s]",
-              node->GetName().c_str(),
-              peer_node->GetName().c_str(),
-              peer_node->GetType().c_str());
+                   node->GetName().c_str(),
+                   peer_node->GetName().c_str(),
+                   peer_node->GetType().c_str());
             return GRAPH_SUCCESS;
           }
         } else {
