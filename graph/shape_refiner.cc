@@ -697,7 +697,8 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
     for (size_t i = 0; i < all_output_tensor.size(); ++i) {
       if (all_output_tensor.at(i)->GetDataType() != temp_dtype[i]) {
         GELOGD("Op %s output %zu need reset dtype,original dtype is %s, new dtype is %s",
-               node->GetName().c_str(), i, TypeUtils::DataTypeToSerialString(all_output_tensor.at(i)->GetDataType()).c_str(),
+               node->GetName().c_str(), i,
+               TypeUtils::DataTypeToSerialString(all_output_tensor.at(i)->GetDataType()).c_str(),
                TypeUtils::DataTypeToSerialString(temp_dtype[i]).c_str());
         all_output_tensor.at(i)->SetDataType(temp_dtype[i]);
       }

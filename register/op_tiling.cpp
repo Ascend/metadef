@@ -137,7 +137,7 @@ bool GetCompileInfo(const ge::OpDescPtr &op_desc, const char *op_type, const cha
 }
 
 bool GetAtomicCleanCompileInfo(const ge::OpDescPtr &op_desc, const char *op_type, const char *op_name,
-                    OpCompileInfo &op_compile_info) {
+                               OpCompileInfo &op_compile_info) {
   bool bres = ge::AttrUtils::GetStr(op_desc, ATOMIC_COMPILE_INFO_KEY, op_compile_info.key);
   if (!bres) {
     GE_LOGE("Can not find the attribute %s. op_type:%s, op_name:%s", ATOMIC_COMPILE_INFO_KEY, op_type, op_name);

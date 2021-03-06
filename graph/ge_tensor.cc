@@ -67,8 +67,6 @@ const std::map<DataType, int> kDataTypeSelfDefinedMap = {
     {DT_QINT8, 18}, {DT_QINT16, 19},        {DT_QINT32, 20},         {DT_QUINT8, 21},    {DT_QUINT16, 22},
 };
 }
- 
-
 
 GeShape::GeShape() { shape_def_.InitDefault(); }
 
@@ -652,9 +650,9 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
   size_t remain_size = size;
   auto dst_addr = reinterpret_cast<uintptr_t>(aligned_ptr_->MutableGet());
   auto src_addr = reinterpret_cast<uintptr_t>(data);
-  while(remain_size > SECUREC_MEM_MAX_LEN) {
-    if (memcpy_s(reinterpret_cast<void*>(dst_addr), SECUREC_MEM_MAX_LEN,
-                 reinterpret_cast<const void*>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
+  while (remain_size > SECUREC_MEM_MAX_LEN) {
+    if (memcpy_s(reinterpret_cast<void *>(dst_addr), SECUREC_MEM_MAX_LEN,
+                 reinterpret_cast<const void *>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
       GELOGE(INTERNAL_ERROR, "memcpy failed, size=SECUREC_MEM_MAX_LEN");
       return GRAPH_FAILED;
     }
@@ -662,8 +660,8 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
     dst_addr += SECUREC_MEM_MAX_LEN;
     src_addr += SECUREC_MEM_MAX_LEN;
   }
-  if (memcpy_s(reinterpret_cast<void*>(dst_addr), remain_size,
-               reinterpret_cast<const void*>(src_addr), remain_size) != EOK) {
+  if (memcpy_s(reinterpret_cast<void *>(dst_addr), remain_size,
+               reinterpret_cast<const void *>(src_addr), remain_size) != EOK) {
     GELOGE(INTERNAL_ERROR, "memcpy failed, size=%zu", remain_size);
     return GRAPH_FAILED;
   }
@@ -775,7 +773,7 @@ GeTensor::GeTensor(const GeTensorDesc &tensor_desc, size_t size) : GeTensor() {
 }
 
 GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg)
-        : tensor_def_(proto_owner, proto_msg), __desc_(), tensor_data_() {
+    : tensor_def_(proto_owner, proto_msg), __desc_(), tensor_data_() {
   if (tensor_def_.GetProtoOwner() != nullptr) {
     if (tensor_def_.GetProtoMsg() != nullptr) {
       BuildAlignerPtrWithProtoData();
@@ -833,7 +831,8 @@ GeTensorDesc &GeTensor::DescReference() const {
     }
   } else {
     if (tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
-      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(), tensor_data_.tensor_descriptor_.GetProtoMsg());
+      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(),
+                               tensor_data_.tensor_descriptor_.GetProtoMsg());
       __desc_.RefTo(tensor_desc);
     } else {
       GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(), nullptr);
