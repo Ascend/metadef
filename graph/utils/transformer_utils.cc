@@ -39,7 +39,7 @@ bool NodeShapeTransUtils::Init() {
   return true;
 }
 bool NodeShapeTransUtils::CatchFormatAndShape() {
-  for (int i = 0; i < in_num_; i++) {
+  for (size_t i = 0; i < in_num_; i++) {
     auto tensor_desc_input = op_desc_->MutableInputDesc(i);
     if (tensor_desc_input == nullptr) {
       continue;
@@ -59,7 +59,7 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     tensor_desc_input->SetShape(tensor_desc_input->GetOriginShape());
   }
 
-  for (int i = 0; i < out_num_; i++) {
+  for (size_t i = 0; i < out_num_; i++) {
     auto tensor_desc_output = op_desc_->MutableOutputDesc(i);
     if (tensor_desc_output == nullptr) {
       continue;
@@ -87,7 +87,7 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
 
 bool NodeShapeTransUtils::UpdateFormatAndShape() {
   common::transformer::ShapeTransferAccordingToFormat shape_transfer;
-  for (int i = 0; i < in_num_; i++) {
+  for (size_t i = 0; i < in_num_; i++) {
     auto tensor_desc_input = op_desc_->MutableInputDesc(i);
     if (tensor_desc_input == nullptr) {
       continue;
@@ -117,7 +117,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     tensor_desc_input->SetShape(GeShape(out_dims));
   }
 
-  for (int i = 0; i < out_num_; i++) {
+  for (size_t i = 0; i < out_num_; i++) {
     auto tensor_desc_output = op_desc_->MutableOutputDesc(i);
     if (tensor_desc_output == nullptr) {
       continue;
