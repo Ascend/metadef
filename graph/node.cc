@@ -769,8 +769,7 @@ graphStatus Node::Verify() const {
                       continue);
       bool valid_anchor = op_->GetType() == data_type || op_->GetType() == aipp_data_type ||
           op_->GetType() == const_type || op_->GetType() == variable_type || op_->GetType() == const_type_train ||
-          op_->IsOptionalInput(in_anchor_ptr->GetIdx()) || op_->MutableInputDesc(in_anchor_ptr->GetIdx()) == nullptr ||
-          in_anchor_ptr->GetPeerAnchors().size() > 0;
+          op_->MutableInputDesc(in_anchor_ptr->GetIdx()) == nullptr || in_anchor_ptr->GetPeerAnchors().size() > 0;
       if (!valid_anchor) {
         ErrorManager::GetInstance().ATCReportErrMessage("E11019", {"opname", "index"},
                                                         {GetName(), std::to_string(in_anchor_ptr->GetIdx())});

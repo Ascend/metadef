@@ -992,6 +992,7 @@ const std::string ATTR_NAME_TBE_KERNEL_NAME = "_tbe_kernel_name";
 const std::string ATTR_NAME_TBE_KERNEL_BUFFER = "_tbe_kernel_buffer";
 const std::string ATTR_NAME_DATA_SLICE = "_data_slice";
 const std::string ATTR_NAME_NEED_RECOVER_ATTR = "_need_recover_attr";
+const std::string ATTR_NAME_OFF_SUPERKERNEL_ATTR = "_off_superkernel";
 
 // used for memory allocate
 const std::string ATTR_NAME_INPUT_MEM_TYPE_LIST = "_input_memory_type";
