@@ -73,7 +73,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::Vistor<NodePtr> Com
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-ComputeGraph::Vistor<NodePtr> ComputeGraph::GetAllNodes(std::function<bool(const Node &)> &node_filter) const {
+ComputeGraph::Vistor<NodePtr> ComputeGraph::GetAllNodes(const std::function<bool(const Node &)> &node_filter) const {
   std::vector<NodePtr> all_nodes;
   std::deque<NodePtr> candidates;
 
@@ -143,7 +143,7 @@ ComputeGraph::Vistor<NodePtr> ComputeGraph::GetNodes(bool is_unknown_shape) cons
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 ComputeGraph::Vistor<NodePtr> ComputeGraph::GetNodes(bool is_unknown_shape,
-                                                     std::function<bool(const Node &)> &node_filter) const {
+                                                     const std::function<bool(const Node &)> &node_filter) const {
   return is_unknown_shape ? GetDirectNode() : GetAllNodes(node_filter);
 }
 
