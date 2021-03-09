@@ -231,6 +231,21 @@
       "Arglist" : "parameter0,parameter1"
     },
     {
+      "ErrCode" : "E10048",
+      "ErrMessage" : "Parse input parameter [--input_shape_range]'s shape_range[%s] failed which %s, correct example is %s.",
+      "Arglist" : "shape_range,reason,sample"
+    },
+    {
+      "ErrCode" : "E10049",
+      "ErrMessage" : "Given shape_range dim num [%s] and current dim num [%s] are not match. Please check.",
+      "Arglist" : "shape_range_size,cur_dim_size"
+    },
+    {
+      "ErrCode" : "E10050",
+      "ErrMessage" : "Current dim [%s] is out of shape range[%s~%s]. Please check.",
+      "Arglist" : "cur_dim,shape_range_left,shape_range_right"
+    },
+    {
       "ErrCode" : "E11001",
       "ErrMessage" : "input_dim and input_shape can not both exist!",
       "Arglist" : ""
