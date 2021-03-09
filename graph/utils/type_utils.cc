@@ -234,32 +234,8 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
 };
 
 const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
-    {DT_BOOL, sizeof(bool)},
-    {DT_INT64, sizeof(int64_t)},
-    {DT_UINT64, sizeof(int64_t)},
-    {DT_FLOAT, sizeof(float)},
-    {DT_INT32, sizeof(int32_t)},
-    {DT_UINT32, sizeof(int32_t)},
-    {DT_INT8, sizeof(char)},
-    {DT_UINT8, sizeof(char)},
-    {DT_INT16, sizeof(int16_t)},
-    {DT_UINT16, sizeof(int16_t)},
-    {DT_FLOAT16, sizeof(int16_t)},
-    {DT_DOUBLE, sizeof(double)},
-    {DT_DUAL, sizeof(float) + sizeof(int8_t)},
-    {DT_DUAL_SUB_INT8, sizeof(int8_t)},
-    {DT_DUAL_SUB_UINT8, sizeof(uint8_t)},
-    {DT_COMPLEX64, sizeof(int64_t)},
-    {DT_COMPLEX128, sizeof(int64_t) * 2},
-    {DT_QINT8, sizeof(int8_t)},
-    {DT_QINT16, sizeof(int16_t)},
-    {DT_QINT32, sizeof(int32_t)},
-    {DT_QUINT8, sizeof(uint8_t)},
-    {DT_QUINT16, sizeof(uint16_t)},
     {DT_STRING_REF, sizeof(uint64_t) * 2},
     {DT_STRING, sizeof(uint64_t) * 2},
-    {DT_RESOURCE, sizeof(uint64_t)},
-    {DT_VARIANT, sizeof(uint64_t)},
 };
 
 const std::map<domi::FrameworkType, std::string> kFmkTypeToString = {
@@ -548,6 +524,12 @@ bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
   auto it = kDataTypeToLength.find(data_type);
   if (it != kDataTypeToLength.end()) {
     length = it->second;
+    return true;
+  }
+
+  int size = GetSizeByDataType(data_type);
+  if (size > 0) {
+    length = static_cast<uint32_t>(size);
     return true;
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
