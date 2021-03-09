@@ -37,7 +37,7 @@ const uint64_t kLength = 2;
 
 using namespace ErrorMessage;
 
-thread_local struct Context ErrorManager::error_context_ = {0, "", "", ""};
+thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 
 ///
 /// @brief Obtain error manager self library path
@@ -100,6 +100,19 @@ int ErrorManager::Init(std::string path) {
 int ErrorManager::Init() {
     return Init(GetSelfLibraryDir());
 }
+
+int ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
+  if (!IsInnerErrorCode(error_code)) {
+    GELOGE(ge::FAILED, "Error code %s is not internal error code", error_code.c_str());
+    return -1;
+  }
+
+  auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
+  ErrorManager::ErrorItem item = {error_code, error_msg};
+  error_messages.emplace_back(item);
+  return 0;
+}
+
 ///
 /// @brief report error message
 /// @param [in] error_code: error code
@@ -116,7 +129,7 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
     GELOGE(ge::FAILED, "Error code %s is not registered", error_code.c_str());
     return -1;
   }
-  const ErrorInfo &error_info = it->second;
+  const ErrorInfoConfig &error_info = it->second;
   std::string error_message = error_info.error_message;
   const std::vector<std::string> &arg_list = error_info.arg_list;
   for (const std::string &arg : arg_list) {
@@ -144,20 +157,19 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
-  std::string message = error_code + ": " + error_message;
+  ErrorManager::ErrorItem error_item = {error_code, error_message};
   std::unique_lock<std::mutex> lock(mutex_);
   if (error_code[0] == 'W') {
-    auto it = find(warning_messages.begin(), warning_messages.end(), message);
+    auto it = find(warning_messages.begin(), warning_messages.end(), error_item);
     if (it == warning_messages.end()) {
-      warning_messages.emplace_back(message);
+      warning_messages.emplace_back(error_item);
     }
   } else {
-    auto it = find(error_messages.begin(), error_messages.end(), message);
+    auto it = find(error_messages.begin(), error_messages.end(), error_item);
     if (it == error_messages.end()) {
-      error_messages.emplace_back(message);
+      error_messages.emplace_back(error_item);
     }
   }
-
   return 0;
 }
 
@@ -165,12 +177,24 @@ std::string ErrorManager::GetErrorMessage() {
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.empty()) {
-    error_messages.push_back("E19999: Unknown error occurred. Please check the log.");
+    error_messages.push_back({"E19999", "Unknown error occurred. Please check the log."});
   }
 
   std::stringstream err_stream;
-  for (auto &info : error_messages) {
-    err_stream << info << std::endl;
+  std::string first_code = error_messages[0].error_id;
+  if (IsInnerErrorCode(first_code)) {
+    err_stream << first_code << ": Inner Error!" << std::endl;
+    for (auto &item : error_messages) {
+      err_stream << "        " << item.error_message << std::endl;
+    }
+  } else {
+    err_stream << first_code << ": " << error_messages[0].error_message << std::endl;
+    error_messages.erase(error_messages.begin());
+    for (auto &item : error_messages) {
+      if (!IsInnerErrorCode(item.error_id)) {
+        err_stream << "        " << item.error_message << std::endl;
+      }
+    }
   }
 
   return err_stream.str();
@@ -180,8 +204,8 @@ std::string ErrorManager::GetWarningMessage() {
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   std::stringstream warning_stream;
-  for (auto &info : warning_messages) {
-    warning_stream << info << std::endl;
+  for (auto &item : warning_messages) {
+    warning_stream << item.error_id << ": " << item.error_message << std::endl;
   }
   return warning_stream.str();
 }
@@ -192,22 +216,15 @@ std::string ErrorManager::GetWarningMessage() {
 /// @return int 0(success) -1(fail)
 ///
 int ErrorManager::OutputErrMessage(int handle) {
-  auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
+  std::string err_msg = GetErrorMessage();
 
-  if (error_messages.empty()) {
-    error_messages.push_back("E19999: Unknown error occurred. Please check the log.");
-  }
   if (handle <= fileno(stderr)) {
-    for (auto &info : error_messages) {
-      std::cout << info << std::endl;
-    }
+    std::cout << err_msg << std::endl;
   } else {
-    for (auto &info : error_messages) {
-      mmSsize_t ret = mmWrite(handle, const_cast<char *>(info.c_str()), info.length());
-      if (ret == -1) {
-        GELOGE(ge::FAILED, "write file fail");
-        return -1;
-      }
+    mmSsize_t ret = mmWrite(handle, const_cast<char *>(err_msg.c_str()), err_msg.length());
+    if (ret == -1) {
+      GELOGE(ge::FAILED, "write file fail");
+      return -1;
     }
   }
   return 0;
@@ -219,11 +236,8 @@ int ErrorManager::OutputErrMessage(int handle) {
 /// @return int 0(success) -1(fail)
 ///
 int ErrorManager::OutputMessage(int handle) {
-  auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
-
-  for (auto &info : warning_messages) {
-    std::cout << info << std::endl;
-  }
+  std::string warning_msg = GetWarningMessage();
+  std::cout << warning_msg << std::endl;
   return 0;
 }
 
@@ -253,7 +267,7 @@ int ErrorManager::ParseJsonFile(std::string path) {
     }
 
     for (size_t i = 0; i < error_list_json.size(); i++) {
-      ErrorInfo error_info;
+      ErrorInfoConfig error_info;
       error_info.error_id = error_list_json[i][kErrCode];
       error_info.error_message = error_list_json[i][kErrMessage];
       error_info.arg_list = ge::StringUtils::Split(error_list_json[i][kArgList], ',');
@@ -424,19 +438,19 @@ int ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, std::
   return 0;
 }
 
-std::vector<std::string>& ErrorManager::GetErrorMsgContainerByWorkId(uint64_t work_id) {
+std::vector<ErrorManager::ErrorItem> &ErrorManager::GetErrorMsgContainerByWorkId(uint64_t work_id) {
   auto iter = error_message_per_work_id_.find(work_id);
   if (iter == error_message_per_work_id_.end()) {
-    error_message_per_work_id_.emplace(work_id, std::vector<std::string>());
+    error_message_per_work_id_.emplace(work_id, std::vector<ErrorItem>());
     iter = error_message_per_work_id_.find(work_id);
   }
   return iter->second;
 }
 
-std::vector<std::string>& ErrorManager::GetWarningMsgContainerByWorkId(uint64_t work_id) {
+std::vector<ErrorManager::ErrorItem> &ErrorManager::GetWarningMsgContainerByWorkId(uint64_t work_id) {
   auto iter = warning_messages_per_work_id_.find(work_id);
   if (iter == warning_messages_per_work_id_.end()) {
-    warning_messages_per_work_id_.emplace(work_id, std::vector<std::string>());
+    warning_messages_per_work_id_.emplace(work_id, std::vector<ErrorItem>());
     iter = warning_messages_per_work_id_.find(work_id);
   }
   return iter->second;
@@ -451,9 +465,14 @@ void ErrorManager::GenWorkStreamIdDefault() {
   uint64_t work_stream_id = pid * kPidOffset + tid;
   error_context_.work_stream_id = work_stream_id;
 
-  auto iter = error_message_per_work_id_.find(work_stream_id);
-  if (iter != error_message_per_work_id_.end()) {
-    error_message_per_work_id_.erase(iter);
+  auto err_iter = error_message_per_work_id_.find(work_stream_id);
+  if (err_iter != error_message_per_work_id_.end()) {
+    error_message_per_work_id_.erase(err_iter);
+  }
+
+  auto warn_iter = warning_messages_per_work_id_.find(work_stream_id);
+  if (warn_iter != warning_messages_per_work_id_.end()) {
+    warning_messages_per_work_id_.erase(warn_iter);
   }
 }
 
@@ -462,9 +481,14 @@ void ErrorManager::GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t g
   uint64_t work_stream_id = session_id * kSessionIdOffset + graph_id;
   error_context_.work_stream_id = work_stream_id;
 
-  auto iter = error_message_per_work_id_.find(work_stream_id);
-  if (iter != error_message_per_work_id_.end()) {
-    error_message_per_work_id_.erase(iter);
+  auto err_iter = error_message_per_work_id_.find(work_stream_id);
+  if (err_iter != error_message_per_work_id_.end()) {
+    error_message_per_work_id_.erase(err_iter);
+  }
+
+  auto warn_iter = warning_messages_per_work_id_.find(work_stream_id);
+  if (warn_iter != warning_messages_per_work_id_.end()) {
+    warning_messages_per_work_id_.erase(warn_iter);
   }
 }
 
@@ -472,11 +496,11 @@ const std::string &ErrorManager::GetLogHeader() {
   return error_context_.log_header;
 }
 
-struct Context &ErrorManager::GetErrorContext() {
+Context &ErrorManager::GetErrorContext() {
   return error_context_;
 }
 
-void ErrorManager::SetErrorContext(struct Context error_context) {
+void ErrorManager::SetErrorContext(Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);
@@ -488,4 +512,14 @@ void ErrorManager::SetStage(const std::string &first_stage, const std::string &s
   error_context_.second_stage = second_stage;
   error_context_.log_header = move("[" + first_stage + "][" + second_stage + "]");
 }
+
+bool ErrorManager::IsInnerErrorCode(const std::string &error_code) {
+  const std::string kInterErrorCodePrefix = "9999";
+  if (!IsValidErrorCode(error_code)) {
+    return false;
+  } else {
+    return error_code.substr(2, 4) == kInterErrorCodePrefix;
+  }
+}
+
 

@@ -18,9 +18,44 @@
 #define ERROR_MANAGER_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <mutex>
+
+///
+/// @brief Report error message
+/// @param [in] key: vector parameter key
+/// @param [in] value: vector parameter value
+///
+#define REPORT_INPUT_ERROR(error_code, key, value)                                          \
+  ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value);                  \
+
+///
+/// @brief Report error message
+/// @param [in] key: vector parameter key
+/// @param [in] value: vector parameter value
+///
+#define REPORT_ENV_ERROR(error_code, key, value)                                            \
+  ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value);                  \
+
+#define REPORT_INNER_ERROR(error_code, fmt, ...)                                            \
+{                                                                                           \
+  char str[512];                                                                            \
+  int ret = sprintf_s(str, 512, fmt, ##__VA_ARGS__);                                        \
+  if (ret > 0) {                                                                            \
+    ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(str));  \
+  }                                                                                         \
+}                                                                                           \
+
+#define REPORT_CALL_ERROR(error_code, fmt, ...)                                             \
+{                                                                                           \
+  char str[512];                                                                            \
+  int ret = sprintf_s(str, 512, fmt, ##__VA_ARGS__);                                        \
+  if (ret > 0) {                                                                            \
+    ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(str));  \
+  }                                                                                         \
+}                                                                                           \
 
 namespace ErrorMessage {
   // first stage
@@ -78,6 +113,8 @@ class ErrorManager {
   /// @return int 0(success) -1(fail)
   ///
   int Init(std::string path);
+
+  int ReportInterErrMessage(std::string error_code, const std::string &error_msg);
 
   ///
   /// @brief Report error message
@@ -142,17 +179,26 @@ class ErrorManager {
 
   const std::string &GetLogHeader();
 
-  struct ErrorMessage::Context &GetErrorContext();
+  ErrorMessage::Context &GetErrorContext();
 
-  void SetErrorContext(struct ErrorMessage::Context error_context);
+  void SetErrorContext(ErrorMessage::Context error_context);
 
   void SetStage(const std::string &first_stage, const std::string &second_stage);
 
  private:
-  struct ErrorInfo {
+  struct ErrorInfoConfig {
     std::string error_id;
     std::string error_message;
     std::vector<std::string> arg_list;
+  };
+
+  struct ErrorItem {
+    std::string error_id;
+    std::string error_message;
+
+    bool operator==(const ErrorItem &rhs) const {
+      return (error_id == rhs.error_id) && (error_message == rhs.error_message);
+    }
   };
 
   ErrorManager() {}
@@ -171,20 +217,25 @@ class ErrorManager {
                                 std::map<std::string,
                                 std::vector<std::string>> &classfied_msg);
 
-  std::vector<std::string>& GetErrorMsgContainerByWorkId(uint64_t work_id);
-  std::vector<std::string>& GetWarningMsgContainerByWorkId(uint64_t work_id);
+  bool IsInnerErrorCode(const std::string &error_code);
+
+  inline bool IsValidErrorCode(const std::string &error_code) {
+    const uint32_t kErrorCodeValidLength = 6;
+    return error_code.size() == kErrorCodeValidLength;
+  }
+
+  std::vector<ErrorItem> &GetErrorMsgContainerByWorkId(uint64_t work_id);
+  std::vector<ErrorItem> &GetWarningMsgContainerByWorkId(uint64_t work_id);
 
   bool is_init_ = false;
   std::mutex mutex_;
-  std::map<std::string, ErrorInfo> error_map_;
-  std::vector<std::string> error_messages_;
-  std::vector<std::string> warning_messages_;
+  std::map<std::string, ErrorInfoConfig> error_map_;
   std::map<std::string, std::map<std::string, std::vector<std::string>>> compile_failed_msg_map_;
 
-  std::map<uint64_t, std::vector<std::string>> error_message_per_work_id_;
-  std::map<uint64_t, std::vector<std::string>> warning_messages_per_work_id_;
+  std::map<uint64_t, std::vector<ErrorItem>> error_message_per_work_id_;
+  std::map<uint64_t, std::vector<ErrorItem>> warning_messages_per_work_id_;
 
-  thread_local static struct ErrorMessage::Context error_context_;
+  thread_local static ErrorMessage::Context error_context_;
 };
 
 #endif  // ERROR_MANAGER_H_
