@@ -114,7 +114,7 @@ class ErrorManager {
   ///
   int Init(std::string path);
 
-  int ReportInterErrMessage(std::string error_code, const std::string &error_msg);
+  int ReportInterErrMessage(const std::string &error_code, const std::string &error_msg);
 
   ///
   /// @brief Report error message

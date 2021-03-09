@@ -101,7 +101,7 @@ int ErrorManager::Init() {
     return Init(GetSelfLibraryDir());
 }
 
-int ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
+int ErrorManager::ReportInterErrMessage(const std::string &error_code, const std::string &error_msg) {
   if (!IsInnerErrorCode(error_code)) {
     GELOGE(ge::FAILED, "Error code %s is not internal error code", error_code.c_str());
     return -1;
