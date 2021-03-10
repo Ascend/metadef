@@ -138,21 +138,21 @@ Status CheckDynamicInfo(const vector<DynamicInputOutputInfo> &dynamic_name_attr_
   for (const auto &dynamic_info : dynamic_name_attr_value) {
     if (dynamic_info.port_name_len == 0 || dynamic_info.port_name_len > kMaxNameLength ||
         dynamic_info.attr_name_len == 0 || dynamic_info.attr_name_len > kMaxNameLength) {
-      GELOGE(PARAM_INVALID, "Invalid Param, port_name_len[%ld], attr_name_len[%ld].",
+      GELOGE(PARAM_INVALID, "[Check][Param]port_name_len:%ld, attr_name_len:%ld",
              dynamic_info.port_name_len,  dynamic_info.attr_name_len);
       return PARAM_INVALID;
     }
 
     int64_t port_name_len = strlen(dynamic_info.port_name);
     if (dynamic_info.port_name == nullptr || port_name_len != dynamic_info.port_name_len) {
-      GELOGE(PARAM_INVALID, "Invalid Param, port_name[%s], port_name_len[%ld]",
+      GELOGE(PARAM_INVALID, "[Check][Param]port_name:%s, port_name_len:%ld",
              dynamic_info.port_name, dynamic_info.port_name_len);
       return PARAM_INVALID;
     }
 
     int64_t attr_name_len = strlen(dynamic_info.attr_name);
     if (dynamic_info.attr_name == nullptr || attr_name_len != dynamic_info.attr_name_len) {
-      GELOGE(PARAM_INVALID, "Invalid Param, attr_name[%s], attr_name_len[%ld]",
+      GELOGE(PARAM_INVALID, "[Check][Param]attr_name:%s, attr_name_len:%ld",
              dynamic_info.attr_name, dynamic_info.attr_name_len);
       return PARAM_INVALID;
     }
@@ -167,7 +167,7 @@ Status GetDynamicTensorNum(const std::shared_ptr<ge::OpDesc> &op_desc, const str
   ge::GeAttrValue attr_value;
   ge::graphStatus ret = op_desc->GetAttr(attr_name, attr_value);
   if (ret != SUCCESS) {
-    GELOGE(FAILED, "Op[%s] get attr name[%s] value failed.", op_desc->GetName().c_str(), attr_name.c_str());
+    GELOGE(FAILED, "[Get][Attr:%s]op name:%s", attr_name.c_str(), op_desc->GetName().c_str());
     return FAILED;
   }
 
@@ -199,7 +199,8 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
     uint32_t dynamic_tensor_num = 0;
     if (op_desc->HasAttr(attr_name)) {
       if (GetDynamicTensorNum(op_desc, attr_name, dynamic_tensor_num) != SUCCESS) {
-        GELOGE(FAILED, "Get dynamic tensor num failed.");
+        GELOGE(FAILED, "[Get][DynamicTensorNum]op_name:%s, attr_name:%s",
+               op_desc->GetName().c_str(), attr_name.c_str());
         return FAILED;
       }
     } else {
@@ -343,20 +344,20 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
 
   Status ret = AutoMappingByOpFn(op_src, op);
   if (ret != SUCCESS) {
-    GELOGE(ret, "Op[%s] call auto mapping function failed.", op_desc_dst->GetName().c_str());
+    GELOGE(ret, "[Mapping][Operator]op_name:%s", op_desc_dst->GetName().c_str());
     return FAILED;
   }
 
   GELOGI("Op[%s] call auto mapping function success.", op_desc_dst->GetName().c_str());
   // 2. check dynamic input output info;
   if (CheckDynamicInfo(dynamic_name_attr_value) != SUCCESS) {
-    GELOGE(FAILED, "Check dynamic info param failed.");
+    GELOGE(FAILED, "[Check][DynamicInfo]op_name:%s", op_desc_dst->GetName().c_str());
     return FAILED;
   }
   // 3. update dynamic input output index by tensor num;
   map<string, DynamicInfo> port_dynamic_info;
   if (UpdateDynamicInputOutPutIndex(op_desc_dst, dynamic_name_attr_value, port_dynamic_info) != SUCCESS) {
-    GELOGE(FAILED, "Update dynamic input output index failed.");
+    GELOGE(FAILED, "[Update][DynamicIndex]op_name:%s", op_desc_dst->GetName().c_str());
     return FAILED;
   }
   // 4. sort map by port name insert index.
@@ -412,7 +413,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFn(const Mess
 
   Status ret = SetOpdescInputOutputFormat(op_dst);
   if (ret != SUCCESS) {
-    GELOGE(FAILED, "Set op[%s] desc input output format failed.", op_dst->GetName().c_str());
+    GELOGE(FAILED, "[Set][Format]Set op[%s] desc input output format failed.", op_dst->GetName().c_str());
     return FAILED;
   }
   return SUCCESS;
@@ -440,7 +441,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const 
   for (const auto &subgraph_instance_name : subgraph_instance_names) {
       auto ret = op_desc_dst->SetSubgraphInstanceName(index, subgraph_instance_name);
       if (ret != ge::GRAPH_SUCCESS) {
-        GELOGE(FAILED, "Failed to add subgraph instance name: %s, index: %u, for node %s type %s.",
+        GELOGE(FAILED, "[Add][SubGraphInstance] subgraph_name: %s, index: %u, for node %s type %s.",
                subgraph_instance_name.c_str(), index, op_desc_dst->GetType().c_str(), op_desc_dst->GetName().c_str());
         return FAILED;
       }
@@ -454,7 +455,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const 
 
   Status ret = SetOpdescInputOutputFormat(op_desc_dst);
   if (ret != SUCCESS) {
-    GELOGE(FAILED, "Set op desc Input output failed.");
+    GELOGE(FAILED, "[Set][Format]op_name:%s", op_desc_dst->GetName().c_str());
     return FAILED;
   }
   return SUCCESS;
@@ -518,7 +519,7 @@ Status AutoMappingSubgraphOutput(const ge::ComputeGraphPtr &graph,
     int parent_index = -1;
     auto ret = output(index, parent_index);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Failed to get parent index for net output index %ld, error code %u", index, ret);
+      GELOGE(FAILED, "[Get][ParentIndex:output]net output index %ld, error code %u", index, ret);
       return FAILED;
     }
 
@@ -531,7 +532,9 @@ Status AutoMappingSubgraphOutput(const ge::ComputeGraphPtr &graph,
     ge::GeTensorDescPtr tensor = op_desc->MutableInputDesc(index);
     GE_CHECK_NOTNULL(tensor);
     if (!ge::AttrUtils::SetInt(tensor, ge::ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
-      GELOGE(FAILED, "Failed to add parent node index for graph %s", graph->GetName().c_str());
+      GELOGE(FAILED, "[Set][Attr:%s]Failed for graph %s, op_name:%s, parent_index:%d",
+             ge::ATTR_NAME_PARENT_NODE_INDEX.c_str(), graph->GetName().c_str(),
+             op_desc->GetName().c_str(), parent_index);
       return FAILED;
     }
   }
@@ -554,17 +557,18 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
     int parent_index = -1;
     int index = -1;
     if (!ge::AttrUtils::GetInt(nodes[i]->GetOpDesc(), "index", index)) {
-      GELOGE(FAILED, "Failed to get index from data[%zu], failed to get the attr", i);
+      GELOGE(FAILED, "[Get][Attr:index]data_index:%zu, op_name:%s", i, nodes[i]->GetOpDesc().c_str());
       return FAILED;
     }
     GELOGI("Get index %d from data[%zu]", index, i);
     auto ret = input(index, parent_index);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Failed to get parent index from data index %zu, error code %u", i, ret);
+      GELOGE(FAILED, "[Get][ParentIndex:input]data index %zu, error code %u", i, ret);
       return FAILED;
     }
     if (!ge::AttrUtils::SetInt(nodes[i]->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
-      GELOGE(FAILED, "Failed to add parent node index for node %s", nodes[i]->GetName().c_str());
+      GELOGE(FAILED, "[Set][Attr:%s]data_index:%d, op_name:%s, ",
+             i, ge::ATTR_NAME_PARENT_NODE_INDEX.c_str(), nodes[i]->GetName().c_str());
       return FAILED;
     }
     GELOGI("Generate subgraph input map for subgraph %s, data index %zu, parent node index %d",
@@ -576,17 +580,19 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
   for (auto &retval : nodes) {
     int64_t index = -1;
     if (!ge::AttrUtils::GetInt(retval->GetOpDesc(), "retval_index", index)) {
-      GELOGE(FAILED, "Failed to get parent index from retval index %ld, failed to get the attr", index);
+      GELOGE(FAILED, "[Get][Attr:retval_index]retval index %ld, op_name:%s",
+             index, retval->GetOpDesc()->GetName().c_str());
       return FAILED;
     }
     int parent_index = -1;
     auto ret = output(index, parent_index);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Failed to get parent index from retval index %ld, error code %u", index, ret);
+      GELOGE(FAILED, "[Get][ParentIndex:output]retval index %ld, error code %u", index, ret);
       return FAILED;
     }
     if (!ge::AttrUtils::SetInt(retval->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
-      GELOGE(FAILED, "Failed to add parent node index for node %s", retval->GetName().c_str());
+      GELOGE(FAILED, "[Set][Attr:%s]op_name:%s, parent_index:%d",
+             ge::ATTR_NAME_PARENT_NODE_INDEX.c_str(), retval->GetName().c_str(), parent_index);
       return FAILED;
     }
     GELOGI("Generate subgraph output map for subgraph %s, retval index %ld, parent node index %d",
