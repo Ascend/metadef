@@ -104,7 +104,7 @@ int ErrorManager::Init() {
 
 int ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
   if (!IsInnerErrorCode(error_code)) {
-    GELOGE(ge::FAILED, "[Report][Error]Error code %s is not internal error code", error_code.c_str());
+    GELOGE(ge::FAILED, "[Report][Error]error_code %s is not internal error code", error_code.c_str());
     return -1;
   }
 
