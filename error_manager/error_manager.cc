@@ -142,14 +142,14 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
     auto arg_it = args_map.find(arg);
     if (arg_it == args_map.end()) {
       GELOGE(ge::FAILED, "[Report][Error]error_code: %s, arg %s is not existed in map",
-        error_code.c_str(), arg.c_str());
+             error_code.c_str(), arg.c_str());
       return -1;
     }
     const std::string &arg_value = arg_it->second;
     auto index = error_message.find("%s");
     if (index == std::string::npos) {
       GELOGE(ge::FAILED, "[Report][Error]error_code: %s, %s location in error_message is not found",
-        error_code.c_str(), arg.c_str());
+             error_code.c_str(), arg.c_str());
       return -1;
     }
     error_message.replace(index, kLength, arg_value);
@@ -281,7 +281,7 @@ int ErrorManager::ParseJsonFile(std::string path) {
       auto it = error_map_.find(error_info.error_id);
       if (it != error_map_.end()) {
         GELOGE(ge::FAILED, "[Check][Config]There are the same error code %s in %s",
-          error_info.error_id.c_str(), path.c_str());
+               error_info.error_id.c_str(), path.c_str());
         return -1;
       }
       error_map_.emplace(error_info.error_id, error_info);
