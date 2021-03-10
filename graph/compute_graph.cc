@@ -73,18 +73,17 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::Vistor<NodePtr> Com
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-ComputeGraph::Vistor<NodePtr> ComputeGraph::GetAllNodes(const std::function<bool(const Node &)> &node_filter) const {
+ComputeGraph::Vistor<NodePtr> ComputeGraph::GetAllNodes(NodeFilter &node_filter, GraphFilter &graph_filter) const {
   std::vector<NodePtr> all_nodes;
   std::deque<NodePtr> candidates;
 
   candidates.insert(candidates.begin(), nodes_.begin(), nodes_.end());
   while (!candidates.empty()) {
     NodePtr node = candidates.front();
-    all_nodes.emplace_back(node);
     candidates.pop_front();
 
-    if (node_filter != nullptr && node_filter(*node)) {
-      continue;
+    if (node_filter == nullptr || node_filter(*node)) {
+      all_nodes.emplace_back(node);
     }
 
     OpDescPtr op_desc = node->GetOpDesc();
@@ -95,7 +94,10 @@ ComputeGraph::Vistor<NodePtr> ComputeGraph::GetAllNodes(const std::function<bool
     const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
     for (auto name_iter = subgraph_names.rbegin(); name_iter != subgraph_names.rend(); ++name_iter) {
       auto subgraph = GetSubgraph(*name_iter);
-      if (subgraph != nullptr) {
+      if (subgraph == nullptr) {
+        continue;
+      }
+      if (graph_filter == nullptr || graph_filter(*node, name_iter->c_str(), subgraph)) {
         candidates.insert(candidates.begin(), subgraph->nodes_.begin(), subgraph->nodes_.end());
       }
     }
@@ -141,10 +143,9 @@ ComputeGraph::Vistor<NodePtr> ComputeGraph::GetNodes(bool is_unknown_shape) cons
   }
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-ComputeGraph::Vistor<NodePtr> ComputeGraph::GetNodes(bool is_unknown_shape,
-                                                     const std::function<bool(const Node &)> &node_filter) const {
-  return is_unknown_shape ? GetDirectNode() : GetAllNodes(node_filter);
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::Vistor<NodePtr>
+ComputeGraph::GetNodes(bool is_unknown_shape, NodeFilter &node_filter, GraphFilter &graph_filter) const {
+  return is_unknown_shape ? GetDirectNode() : GetAllNodes(node_filter, graph_filter);
 }
 
 size_t ComputeGraph::GetDirectNodesSize() const { return direct_nodes_size_; }

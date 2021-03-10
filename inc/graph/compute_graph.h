@@ -37,6 +37,9 @@ using ConstComputeGraph = const ComputeGraph;
 class OperatorImpl;
 using OperatorImplPtr = std::shared_ptr<OperatorImpl>;
 
+using NodeFilter = std::function<bool(const Node &)>;
+using GraphFilter = std::function<bool(const Node &, const char *, const ComputeGraphPtr &)>;
+
 class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public AttrHolder {
   friend class GraphUtils;
 
@@ -60,7 +63,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   // is_unknown_shape: false, same with GetAllNodes func
   // is_unknown_shape: true, same with GetDirectNodes func
   Vistor<NodePtr> GetNodes(bool is_unknown_shape) const;
-  Vistor<NodePtr> GetNodes(bool is_unknown_shape, const std::function<bool(const Node &)> &node_filter) const;
+  Vistor<NodePtr> GetNodes(bool is_unknown_shape, NodeFilter &node_filter, GraphFilter &graph_filter) const;
   size_t GetDirectNodesSize() const;
   Vistor<NodePtr> GetDirectNode() const;
   Vistor<NodePtr> GetInputNodes() const;
@@ -244,7 +247,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus TopologicalSortingGraph(bool dfs_reverse = false);
   graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &mapInEdgeNum);
   Vistor<NodePtr> AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs) const;
-  Vistor<NodePtr> GetAllNodes(const std::function<bool(const Node &)> &node_filter) const;
+  Vistor<NodePtr> GetAllNodes(NodeFilter &node_filter, GraphFilter &graph_filter) const;
   size_t GetInEdgeSize(const NodePtr &node);
   size_t GetOutEdgeSize(const NodePtr &node);
   graphStatus RemoveExtraOutEdge(const NodePtr &node);
