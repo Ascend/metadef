@@ -37,6 +37,9 @@ using ConstComputeGraph = const ComputeGraph;
 class OperatorImpl;
 using OperatorImplPtr = std::shared_ptr<OperatorImpl>;
 
+using NodeFilter = std::function<bool(const Node &)>;
+using GraphFilter = std::function<bool(const Node &, const char *, const ComputeGraphPtr &)>;
+
 class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public AttrHolder {
   friend class GraphUtils;
 
@@ -57,11 +60,10 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
   size_t GetAllNodesSize() const;
   Vistor<NodePtr> GetAllNodes() const;
-  Vistor<NodePtr> GetAllNodes(bool ffts_nodes) const;
   // is_unknown_shape: false, same with GetAllNodes func
   // is_unknown_shape: true, same with GetDirectNodes func
   Vistor<NodePtr> GetNodes(bool is_unknown_shape) const;
-  Vistor<NodePtr> GetNodes(bool is_unknown_shape, bool ffts_nodes) const;
+  Vistor<NodePtr> GetNodes(bool is_unknown_shape, const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
   size_t GetDirectNodesSize() const;
   Vistor<NodePtr> GetDirectNode() const;
   Vistor<NodePtr> GetInputNodes() const;
@@ -244,7 +246,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   /// in same case, user could get `c, a, b` with `dfs_reverse=true`
   graphStatus TopologicalSortingGraph(bool dfs_reverse = false);
   graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &mapInEdgeNum);
-  Vistor<NodePtr> AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs, bool ffts_nodes = true) const;
+  Vistor<NodePtr> AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs) const;
+  Vistor<NodePtr> GetAllNodes(const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
   size_t GetInEdgeSize(const NodePtr &node);
   size_t GetOutEdgeSize(const NodePtr &node);
   graphStatus RemoveExtraOutEdge(const NodePtr &node);
