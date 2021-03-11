@@ -84,9 +84,10 @@ int ErrorManager::Init(std::string path) {
   if (is_init_) {
     return 0;
   }
-  int ret = ParseJsonFile(path + kErrorCodePath);
+  std::string file_path = path + kErrorCodePath;
+  int ret = ParseJsonFile(file_path);
   if (ret != 0) {
-    GELOGE(ge::FAILED, "Parser json file failed");
+    GELOGE(ge::FAILED, "[Parse][File]Parser config file:%s failed", file_path.c_str());
     return -1;
   }
   is_init_ = true;
@@ -103,10 +104,11 @@ int ErrorManager::Init() {
 
 int ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
   if (!IsInnerErrorCode(error_code)) {
-    GELOGE(ge::FAILED, "Error code %s is not internal error code", error_code.c_str());
+    GELOGE(ge::FAILED, "[Report][Error]error_code %s is not internal error code", error_code.c_str());
     return -1;
   }
 
+  std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   ErrorManager::ErrorItem item = {error_code, error_msg};
   error_messages.emplace_back(item);
@@ -126,7 +128,7 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
   }
   auto it = error_map_.find(error_code);
   if (it == error_map_.end()) {
-    GELOGE(ge::FAILED, "Error code %s is not registered", error_code.c_str());
+    GELOGE(ge::FAILED, "[Report][Error]error_code %s is not registered", error_code.c_str());
     return -1;
   }
   const ErrorInfoConfig &error_info = it->second;
@@ -139,13 +141,15 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
     }
     auto arg_it = args_map.find(arg);
     if (arg_it == args_map.end()) {
-      GELOGE(ge::FAILED, "error_code: %s, arg %s is not existed in map", error_code.c_str(), arg.c_str());
+      GELOGE(ge::FAILED, "[Report][Error]error_code: %s, arg %s is not existed in map",
+             error_code.c_str(), arg.c_str());
       return -1;
     }
     const std::string &arg_value = arg_it->second;
     auto index = error_message.find("%s");
     if (index == std::string::npos) {
-      GELOGE(ge::FAILED, "error_code: %s, %s location in error_message is not found", error_code.c_str(), arg.c_str());
+      GELOGE(ge::FAILED, "[Report][Error]error_code: %s, %s location in error_message is not found",
+             error_code.c_str(), arg.c_str());
       return -1;
     }
     error_message.replace(index, kLength, arg_value);
@@ -154,11 +158,12 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
   if (error_context_.work_stream_id == 0) {
     GELOGW("work_id in this work stream is zero, work_id set action maybe forgeted in some externel api.");
   }
+
+  std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   ErrorManager::ErrorItem error_item = {error_code, error_message};
-  std::unique_lock<std::mutex> lock(mutex_);
   if (error_code[0] == 'W') {
     auto it = find(warning_messages.begin(), warning_messages.end(), error_item);
     if (it == warning_messages.end()) {
@@ -174,6 +179,7 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
 }
 
 std::string ErrorManager::GetErrorMessage() {
+  std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.empty()) {
@@ -201,6 +207,7 @@ std::string ErrorManager::GetErrorMessage() {
 }
 
 std::string ErrorManager::GetWarningMessage() {
+  std::unique_lock<std::mutex> lock(mutex_);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   std::stringstream warning_stream;
@@ -251,18 +258,18 @@ int ErrorManager::ParseJsonFile(std::string path) {
   nlohmann::json json_file;
   int status = ReadJsonFile(path, &json_file);
   if (status != 0) {
-    GELOGE(ge::FAILED, "Read json file failed and the file path is %s", path.c_str());
+    GELOGE(ge::FAILED, "[Read][JsonFile]file path is %s", path.c_str());
     return -1;
   }
 
   try {
     const nlohmann::json &error_list_json = json_file[kErrorList];
     if (error_list_json.is_null()) {
-      GELOGE(ge::FAILED, "The message of error_info_list is not found in %s", path.c_str());
+      GELOGE(ge::FAILED, "[Check][Config]The message of error_info_list is not found in %s", path.c_str());
       return -1;
     }
     if (!error_list_json.is_array()) {
-      GELOGE(ge::FAILED, "The message of error_info_list is not array in %s", path.c_str());
+      GELOGE(ge::FAILED, "[Check][Config]The message of error_info_list is not array in %s", path.c_str());
       return -1;
     }
 
@@ -273,13 +280,14 @@ int ErrorManager::ParseJsonFile(std::string path) {
       error_info.arg_list = ge::StringUtils::Split(error_list_json[i][kArgList], ',');
       auto it = error_map_.find(error_info.error_id);
       if (it != error_map_.end()) {
-        GELOGE(ge::FAILED, "There are the same error code %s in %s", error_info.error_id.c_str(), path.c_str());
+        GELOGE(ge::FAILED, "[Check][Config]There are the same error code %s in %s",
+               error_info.error_id.c_str(), path.c_str());
         return -1;
       }
       error_map_.emplace(error_info.error_id, error_info);
     }
   } catch (const nlohmann::json::exception &e) {
-    GELOGE(ge::FAILED, "Parse json file failed and the file path is %s, exception message: %s", path.c_str(), e.what());
+    GELOGE(ge::FAILED, "[Parse][JsonFile]the file path is %s, exception message: %s", path.c_str(), e.what());
     return -1;
   }
 
@@ -296,30 +304,30 @@ int ErrorManager::ParseJsonFile(std::string path) {
 int ErrorManager::ReadJsonFile(const std::string &file_path, void *handle) {
   GELOGI("Begin to read json file");
   if (file_path.empty()) {
-    GELOGE(ge::FAILED, "Json path %s is not valid", file_path.c_str());
+    GELOGE(ge::FAILED, "[Read][JsonFile]path %s is not valid", file_path.c_str());
     return -1;
   }
   nlohmann::json *json_file = reinterpret_cast<nlohmann::json *>(handle);
   if (json_file == nullptr) {
-    GELOGE(ge::FAILED, "JsonFile is nullptr");
+    GELOGE(ge::FAILED, "[Check][Param]JsonFile is nullptr");
     return -1;
   }
   const char *file = file_path.data();
   if ((mmAccess2(file, M_F_OK)) != EN_OK) {
-    GELOGE(ge::FAILED, "The json file %s is not exist, error %s", file_path.c_str(), strerror(errno));
+    GELOGE(ge::FAILED, "[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), strerror(errno));
     return -1;
   }
 
   std::ifstream ifs(file_path);
   if (!ifs.is_open()) {
-    GELOGE(ge::FAILED, "Open json file %s failed", file_path.c_str());
+    GELOGE(ge::FAILED, "[Read][JsonFile]Open %s failed", file_path.c_str());
     return -1;
   }
 
   try {
     ifs >> *json_file;
   } catch (const nlohmann::json::exception &e) {
-    GELOGE(ge::FAILED, "Something wrong in %s", file_path.c_str());
+    GELOGE(ge::FAILED, "[Read][JsonFile]ifstream to json fail. path: %s", file_path.c_str());
     ifs.close();
     return -1;
   }

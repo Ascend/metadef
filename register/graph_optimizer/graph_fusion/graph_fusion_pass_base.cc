@@ -40,6 +40,7 @@ Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
   bool is_patterns_ok = true;
   // build Pattern
   vector<FusionPattern *> patterns;
+  std::string invalid_patterns;
   pattern_fusion_base_pass_impl_ptr_->GetPatterns(patterns);
   if (patterns.empty()) {
     patterns = DefinePatterns();
@@ -48,6 +49,7 @@ Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
         bool ok = pattern->Build();
         if (!ok) {
           GELOGW("this pattern: %s build not success.", pattern->GetName().c_str());
+          invalid_patterns += pattern->GetName() + ",";
         }
         pattern->Dump();
         is_patterns_ok = is_patterns_ok && ok;
@@ -57,7 +59,7 @@ Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
     pattern_fusion_base_pass_impl_ptr_->SetPatterns(patterns);
   }
   if (!is_patterns_ok) {
-    GELOGE(FAILED, "Patterns invalid.");
+    GELOGE(FAILED, "[Check][Patterns]Pattern:%s invalid.", invalid_patterns.c_str());
     return FAILED;
   }
 
@@ -119,7 +121,7 @@ Status GraphFusionPassBase::RunOnePattern(ge::ComputeGraph &graph, const FusionP
 
     Status status = Fusion(graph, mapping, fus_nodes);
     if (status != SUCCESS && status != NOT_CHANGED) {
-      GELOGE(status, "Fail to fuse the graph with pattern[%s].", pattern.GetName().c_str());
+      GELOGE(status, "[Fuse][Graph]Fail with pattern[%s].", pattern.GetName().c_str());
       return status;
     }
 

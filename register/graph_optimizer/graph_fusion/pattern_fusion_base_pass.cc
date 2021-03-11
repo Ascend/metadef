@@ -172,7 +172,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
     }
 
     if (status != SUCCESS && status != NOT_CHANGED) {
-      GELOGE(status, "Fail to fuse the graph with pattern[%s].", pattern.GetName().c_str());
+      GELOGE(status, "[Fuse][Graph]Fail with pattern[%s].", pattern.GetName().c_str());
       return status;
     }
 
