@@ -1567,7 +1567,7 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
                                          ComputeGraphPtr &dst_compute_graph,
                                          std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                          std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
-                                         int32_t &depth) {
+                                         int32_t depth) {
   GE_CHECK_NOTNULL(dst_compute_graph);
   GE_CHECK_NOTNULL(src_compute_graph);
 
@@ -1621,7 +1621,7 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
       std::map<ConstOpDescPtr, OpDescPtr> sub_op_desc_old_2_new;
       graphStatus ret = CopyComputeGraph(src_subgraph, dst_subgraph,
                                          sub_node_old_2_new, sub_op_desc_old_2_new,
-                                         ++depth);
+                                         depth + 1);
       if (ret != GRAPH_SUCCESS) {
         GELOGE(GRAPH_FAILED, "Copy subgraph:%s of parent node:%s failed.",
                src_subgraph->GetName().c_str(), node->GetName().c_str());

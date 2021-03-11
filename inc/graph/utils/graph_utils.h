@@ -189,7 +189,7 @@ class GraphUtils {
                                       ComputeGraphPtr &dst_compute_graph,
                                       std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                       std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
-                                      int32_t &depth);
+                                      int32_t depth);
 
   static graphStatus CopyMembers(const ComputeGraphPtr &src_compute_graph,
                                  ComputeGraphPtr &dst_compute_graph,

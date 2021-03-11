@@ -945,6 +945,7 @@ const std::string ATTR_NAME_SWITCH_TRUE_BRANCH_FLAG = "_switch_true_branch_flag"
 const std::string ATTR_NAME_SWITCH_DATA_TYPE = "_switch_data_type";
 const std::string ATTR_NAME_ORIG_NODE_NAME = "_original_node_name";
 const std::string ATTR_NAME_CYCLIC_DEPENDENCE_FLAG = "_cyclic_dependence_flag";
+const std::string ATTR_NAME_STREAM_SWITCH_TYPE = "_stream_switch_type";
 
 const std::string ATTR_NAME_NEXT_ITERATION = "_next_iteration_node";
 
