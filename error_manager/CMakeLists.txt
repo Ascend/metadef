@@ -66,6 +66,11 @@ set_target_properties(error_manager_static PROPERTIES
     OUTPUT_NAME error_manager
 )
 
+set_target_properties(error_manager PROPERTIES
+    OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,liberror_manager,error_manager>
+    WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+)
+
 ############ install ############
 set(INSTALL_BASE_DIR "")
 set(INSTALL_LIBRARY_DIR lib)
