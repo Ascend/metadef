@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef COMMON_UTILS_TRANSFORMER_INC_EXPAND_DIMENSION_H_
 #define COMMON_UTILS_TRANSFORMER_INC_EXPAND_DIMENSION_H_
 

@@ -19,7 +19,7 @@
 
 #include <memory.h>
 #include <functional>
-#include <vector>sss
+#include <vector>
 #include "graph/types.h"
 #include "axis_util.h"
 

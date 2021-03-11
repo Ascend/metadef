@@ -136,7 +136,7 @@ static const std::map<ge::Format, std::unordered_set<std::string>> ALL_VALID_RES
                               "ND", "NH", "NW", "NC", "DH", "DW", "DC", "HW", "HC", "WC",
                               "NDH", "NDW", "NDC", "NHW", "NHC", "NWC", "DHW", "DHC", "DWC", "HWC",
                               "NDHW", "NDHC", "NDWC", "NHWC", "DHWC"
-        }},
+                           }},
         {ge::FORMAT_NCDHW, {
                                "N", "C", "D", "H", "W",
                                "NC", "ND", "NH", "NW", "CD", "CH", "CW", "DH", "DW", "HW",
@@ -212,7 +212,7 @@ void ExpandByReshapeType(std::vector<int64_t> &dims, const std::string &op_type,
   } else {
     /* Build a array with all 1 of full size. Then we will substitute some of the 1 with the original axis value. */
     std::vector<int64_t> new_dims;
-    for (size_t i=0; i < full_size; i++) {
+    for (size_t i = 0; i < full_size; i++) {
       new_dims.emplace_back(1);
     }
 
@@ -261,7 +261,7 @@ bool ExpandDimension(const std::string &op_type, const ge::Format &original_form
         return true;
       }
       GELOGI("Get default reshape type %s for op %s tensor %u original format %u is invalid.",
-              valid_reshape_type.c_str(), op_type.c_str(), tensor_index, original_format);
+             valid_reshape_type.c_str(), op_type.c_str(), tensor_index, original_format);
     }
   }
 
