@@ -21,6 +21,7 @@
 #include "graph/utils/type_utils.h"
 #include "graph/utils/attr_utils.h"
 #include "inc/graph/debug/ge_attr_define.h"
+#include "transfer_shape_according_to_format.h"
 
 namespace ge {
 bool NodeShapeTransUtils::Init() {
@@ -86,7 +87,7 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
 }
 
 bool NodeShapeTransUtils::UpdateFormatAndShape() {
-  common::transformer::ShapeTransferAccordingToFormat shape_transfer;
+  transformer::ShapeTransferAccordingToFormat shape_transfer;
   for (size_t i = 0; i < in_num_; i++) {
     auto tensor_desc_input = op_desc_->MutableInputDesc(i);
     if (tensor_desc_input == nullptr) {
@@ -110,8 +111,8 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     std::vector<int64_t> out_dims;
     ge::DataType dtype =  map_dtype_in_[i];
 
-    common::transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, ori_format, curr_format, dtype,
-                                                               common::transformer::EN_IMPL_CUSTOM_TBE};
+    transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, ori_format, curr_format, dtype,
+                                                               transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     tensor_desc_input->SetFormat(curr_format);
     tensor_desc_input->SetShape(GeShape(out_dims));
@@ -151,8 +152,8 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     std::vector<int64_t> out_dims;
     ge::DataType dtype =  tensor_desc_output->GetDataType();
 
-    common::transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, curr_format, saved_format,
-                                                               dtype, common::transformer::EN_IMPL_CUSTOM_TBE};
+    transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, curr_format, saved_format, dtype,
+                                                       transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     tensor_desc_output->SetShape(GeShape(out_dims));
     GELOGD("Node is %s, out tensor idx is %d. Update format and shape success，ori format: %s, format: %s",

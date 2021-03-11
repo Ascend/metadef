@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-/*!
- * \file transfer_shape_according_to_format.h
- * \brief set shape according to original format and current format
- */
-#ifndef COMMON_UTILS_TRANSFER_SHAPE_ACCORDING_TO_FORMAT_H_
-#define COMMON_UTILS_TRANSFER_SHAPE_ACCORDING_TO_FORMAT_H_
-
-#include "transformer/inc/axis_util.h"
+#ifndef COMMON_UTILS_TRANSFORMER_INC_TRANSFER_SHAPE_ACCORDING_TO_FORMAT_H_
+#define COMMON_UTILS_TRANSFORMER_INC_TRANSFER_SHAPE_ACCORDING_TO_FORMAT_H_
 
 #include <memory.h>
 #include <functional>
 #include <vector>
 
 #include "graph/types.h"
-#include "graph/utils/op_desc_utils.h"
+#include "axis_util.h"
 
-namespace common {
 namespace transformer {
+using std::vector;
 
 enum OpImplType {
   EN_IMPL_CUSTOM_CONSTANT_CCE = 0,    // custom constant op
@@ -70,8 +64,8 @@ using GetNewShapeByAxisValueAndFormat =
 using GetNewShapeByAxisValueAndFormatPtr = std::shared_ptr<GetNewShapeByAxisValueAndFormat>;
 
 struct ShapeAndFormatInfo {
-  const std::vector<int64_t> &oldShape;
-  std::vector<int64_t> &newShape;
+  const vector<int64_t> &oldShape;
+  vector<int64_t> &newShape;
   const ge::Format &oldFormat;
   const ge::Format &newFormat;
   const ge::DataType &currentDataType;
@@ -94,7 +88,7 @@ class ShapeTransferAccordingToFormat {
 
   /* ----------Below is the function of getting new shape---------------------- */
   static bool GetNDC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                          const std::vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+                                          const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
 
   static bool GetNCHWShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
                                       const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
@@ -139,6 +133,5 @@ class ShapeTransferAccordingToFormat {
 
 };
 } // namespace transformer
-} // namespace common
 
-#endif  // COMMON_UTILS_TRANSFER_SHAPE_ACCORDING_TO_FORMAT_H_
+#endif  // COMMON_UTILS_TRANSFORMER_INC_TRANSFER_SHAPE_ACCORDING_TO_FORMAT_H_

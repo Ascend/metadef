@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-/*!
- * \file transfer_shape_according_to_format.cpp
- * \brief set shape according to original format and current format
- */
-#include "transformer/inc/transfer_shape_according_to_format.h"
+#include "transfer_shape_according_to_format.h"
+#include <algorithm>
+#include "framework/common/debug/ge_log.h"
 
-namespace common {
 namespace transformer {
 using namespace ge;
-using namespace std;
 
 namespace {
   static std::unique_ptr<AxisUtil> axisutil_object(new(std::nothrow) AxisUtil());
@@ -69,7 +65,7 @@ namespace {
 ShapeTransferAccordingToFormat::ShapeTransferAccordingToFormat(void) {}
 
 bool ShapeTransferAccordingToFormat::GetNDC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                 const std::vector<int64_t> &axis_value, const vector<int64_t> &nd_value) {
+                                 const vector<int64_t> &axis_value, const vector<int64_t> &nd_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
   new_shape.push_back(axis_value[AXIS_N]);
   new_shape.push_back(axis_value[AXIS_D]);
@@ -238,11 +234,11 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
   GELOGD("Original format %u, new format %u", shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat);
   GetNewShapeByAxisValueAndFormatPtr getNewShapeFunc = iterGetNewShapeFunc->second;
   if (getNewShapeFunc);
-  std::vector<int64_t> axis_value;
+  vector<int64_t> axis_value;
   for (uint32_t i = 0; i < AXIS_BOTTOM; i++) {
     axis_value.push_back(1);
   }
-  std::vector<int64_t> nd_value;
+  vector<int64_t> nd_value;
   uint32_t c0;
   if (mapOfDtypeAndC0.empty()) {
     c0 = SHAPE_NUMBER_16;
@@ -451,4 +447,3 @@ int64_t ShapeTransferAccordingToFormat::GetAsisEnlargeValue(const int64_t& cin, 
   return std::min(tmp, group);
 }
 } // namespace transformer
-} // namespace common

@@ -47,8 +47,9 @@ COMMON_LOCAL_SRC_FILES := \
     option/ge_local_context.cc \
     ./runtime_inference_context.cc \
     ./utils/node_utils.cc \
-    ../third_party/transformer/src/axis_util.cpp \
-    ../third_party/transformer/src/transfer_shape_according_to_format.cpp \
+    ../third_party/transformer/src/axis_util.cc \
+    ../third_party/transformer/src/transfer_shape_according_to_format.cc \
+    ../third_party/transformer/src/expand_dimension.cc \
     ./utils/transformer_utils.cc \
 
 

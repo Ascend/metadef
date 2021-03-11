@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Huawei Technologies Co., Ltd
+ * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-/*!
- * \file axis_util.h
- * \brief get the axis value
- */
-#ifndef COMMON_UTILS_TRANSFER_AXIS_UTIL_H_
-#define COMMON_UTILS_TRANSFER_AXIS_UTIL_H_
+#ifndef COMMON_UTILS_TRANSFORMER_INC_AXIS_UTIL_H_
+#define COMMON_UTILS_TRANSFORMER_INC_AXIS_UTIL_H_
 
 #include <memory.h>
 #include <functional>
@@ -29,7 +25,6 @@
 #include "external/graph/types.h"
 #include "framework/common/debug/ge_log.h"
 
-namespace common {
 namespace transformer {
 
 const int32_t DIM_DEFAULT_SIZE = 4;
@@ -172,6 +167,5 @@ class AxisUtil {
                                   std::vector<int64_t>& axis_value, std::vector<int64_t>& nd_value);
 };
 } // namespace transformer
-} // namespace common
 
-#endif // COMMON_UTILS_TRANSFER_AXIS_UTIL_H_
+#endif // COMMON_UTILS_TRANSFORMER_INC_AXIS_UTIL_H_

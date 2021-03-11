@@ -51,10 +51,9 @@ set(SRC_LIST
     "option/ge_context.cc"
     "option/ge_local_context.cc"
     "runtime_inference_context.cc"
-    "${METADEF_DIR}/third_party/transformer/src/axis_util.cpp"
-    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cpp"
-    "${METADEF_DIR}/third_party/transformer/src/axis_name_util.cpp"
-    "${METADEF_DIR}/third_party/transformer/src/padding_dimension.cpp"
+    "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
+    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
+    "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
     "utils/transformer_utils.cc"
 )
 
@@ -398,7 +397,7 @@ target_include_directories(graph PRIVATE
         ${METADEF_DIR}/third_party
         ${METADEF_DIR}/third_party/transformer/inc
         )
-        
+
 target_link_options(graph PRIVATE
         -Wl,-Bsymbolic
 )

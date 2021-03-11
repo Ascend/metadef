@@ -23,7 +23,6 @@
 #include "external/graph/types.h"
 #include "graph/op_desc.h"
 #include "graph/ge_tensor.h"
-#include "transformer/inc/transfer_shape_according_to_format.h"
 
 namespace ge {
 class NodeShapeTransUtils {

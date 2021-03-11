@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Huawei Technologies Co., Ltd
+ * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-/*!
- * \file axis_util.cpp
- * \brief get the axis value
- */
-#include "transformer/inc/axis_util.h"
+#include "axis_util.h"
 #include "graph/types.h"
+#include "framework/common/debug/ge_log.h"
 
-namespace common {
 namespace transformer {
 using namespace ge;
-using namespace std;
 namespace {
 static std::map<ge::Format, GetAxisValueInfoByFormatPtr> getAxisValueFuncMap = {
     {FORMAT_NCHW, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNCHW)},
@@ -205,8 +200,8 @@ bool AxisUtil::GetAxisValueByC1HWNCoC0(const vector<int64_t> &originalDimVec, co
   return true;
 }
 
-bool AxisUtil::GetAxisValueByNDHWC(const std::vector<int64_t>& original_dim_vec, const uint32_t& c0,
-                                  std::vector<int64_t>& axis_value, std::vector<int64_t>& nd_value) {
+bool AxisUtil::GetAxisValueByNDHWC(const vector<int64_t>& original_dim_vec, const uint32_t& c0,
+                                  vector<int64_t>& axis_value, vector<int64_t>& nd_value) {
   CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
   CHECK(original_dim_vec.empty(), GELOGI("Original dim vector is empty!"), return true);
 
@@ -226,8 +221,8 @@ bool AxisUtil::GetAxisValueByNDHWC(const std::vector<int64_t>& original_dim_vec,
   return true;
 }
 
-bool AxisUtil::GetAxisValueByNCDHW(const std::vector<int64_t>& original_dim_vec, const uint32_t& c0,
-                                  std::vector<int64_t>& axis_value, std::vector<int64_t>& nd_value) {
+bool AxisUtil::GetAxisValueByNCDHW(const vector<int64_t>& original_dim_vec, const uint32_t& c0,
+                                  vector<int64_t>& axis_value, vector<int64_t>& nd_value) {
   CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
   CHECK(original_dim_vec.empty(), GELOGI("Original dim vector is empty!"), return true);
 
@@ -247,8 +242,8 @@ bool AxisUtil::GetAxisValueByNCDHW(const std::vector<int64_t>& original_dim_vec,
   return true;
 }
 
-bool AxisUtil::GetAxisValueByDHWCN(const std::vector<int64_t>& original_dim_vec, const uint32_t& c0,
-                                  std::vector<int64_t>& axis_value, std::vector<int64_t>& nd_value) {
+bool AxisUtil::GetAxisValueByDHWCN(const vector<int64_t>& original_dim_vec, const uint32_t& c0,
+                                  vector<int64_t>& axis_value, vector<int64_t>& nd_value) {
   CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
   CHECK(original_dim_vec.empty(), GELOGI("Original dim vector is empty!"), return true);
 
@@ -268,8 +263,8 @@ bool AxisUtil::GetAxisValueByDHWCN(const std::vector<int64_t>& original_dim_vec,
   return true;
 }
 
-bool AxisUtil::GetAxisValueByDHWNC(const std::vector<int64_t>& original_dim_vec, const uint32_t& c0,
-                                  std::vector<int64_t>& axis_value, std::vector<int64_t>& nd_value) {
+bool AxisUtil::GetAxisValueByDHWNC(const vector<int64_t>& original_dim_vec, const uint32_t& c0,
+                                  vector<int64_t>& axis_value, vector<int64_t>& nd_value) {
   CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
   CHECK(original_dim_vec.empty(), GELOGI("Original dim vector is empty!"), return true);
 
@@ -289,4 +284,3 @@ bool AxisUtil::GetAxisValueByDHWNC(const std::vector<int64_t>& original_dim_vec,
   return true;
 }
 } // namespace transformer
-} // namespace common
