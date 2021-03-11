@@ -23,7 +23,6 @@
 
 #include "external/graph/ge_error_codes.h"
 #include "external/graph/types.h"
-#include "framework/common/debug/ge_log.h"
 
 namespace transformer {
 

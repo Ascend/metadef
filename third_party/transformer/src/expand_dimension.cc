@@ -82,12 +82,16 @@ static const std::map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
 static const std::map<size_t, std::map<ge::Format, std::string>> DEFAULT_RESHAPE_TYPE {
     {0, {{ge::FORMAT_NCHW, ""}, {ge::FORMAT_NHWC, ""}, {ge::FORMAT_HWCN, ""}, {ge::FORMAT_CHWN, ""},
          {ge::FORMAT_NDHWC, ""}, {ge::FORMAT_NCDHW, ""}, {ge::FORMAT_DHWCN, ""}}},
-    {1, {{ge::FORMAT_NCHW, "C"}, {ge::FORMAT_NHWC, "C"}, {ge::FORMAT_HWCN, ""C}, {ge::FORMAT_CHWN, "C"},
+
+    {1, {{ge::FORMAT_NCHW, "C"}, {ge::FORMAT_NHWC, "C"}, {ge::FORMAT_HWCN, "C"}, {ge::FORMAT_CHWN, "C"},
          {ge::FORMAT_NDHWC, "C"}, {ge::FORMAT_NCDHW, "C"}, {ge::FORMAT_DHWCN, "C"}}},
+
     {2, {{ge::FORMAT_NCHW, "CH"}, {ge::FORMAT_NHWC, "HW"}, {ge::FORMAT_HWCN, "CN"}, {ge::FORMAT_CHWN, "WN"},
          {ge::FORMAT_NDHWC, "WC"}, {ge::FORMAT_NCDHW, "HW"}, {ge::FORMAT_DHWCN, "CN"}}},
+
     {3, {{ge::FORMAT_NCHW, "CHW"}, {ge::FORMAT_NHWC, "HWC"}, {ge::FORMAT_HWCN, "WCN"}, {ge::FORMAT_CHWN, "HWN"},
          {ge::FORMAT_NDHWC, "HWC"}, {ge::FORMAT_NCDHW, "DHW"}, {ge::FORMAT_DHWCN, "WCN"}}},
+
     {4, {{ge::FORMAT_NDHWC, "DHWC"}, {ge::FORMAT_NCDHW, "CDHW"}, {ge::FORMAT_DHWCN, "HWCN"}}}
 };
 
@@ -108,42 +112,42 @@ static const std::map<ge::Format, std::map<std::string, int32_t>> AXIS_INDEX_OF_
 
 static const std::map<ge::Format, std::unordered_set<std::string>> ALL_VALID_RESHAPE_TYPE {
         {ge::FORMAT_NCHW, {
-                            "N", "C", "H", "W",
-                            "NC", "NH", "NW", "CH", "CW", "HW",
-                            "NCH", "NCW", "NHW", "CHW"
+                              "N", "C", "H", "W",
+                              "NC", "NH", "NW", "CH", "CW", "HW",
+                              "NCH", "NCW", "NHW", "CHW"
                           }},
         {ge::FORMAT_NHWC, {
-                            "N", "H", "W", "C",
-                            "NH", "NW", "NC", "HW", "HC", "WC",
-                            "NHW", "NHC", "NWC", "HWC"
+                              "N", "H", "W", "C",
+                              "NH", "NW", "NC", "HW", "HC", "WC",
+                              "NHW", "NHC", "NWC", "HWC"
                           }},
         {ge::FORMAT_HWCN, {
-                            "H", "W", "C", "N",
-                            "HW", "HC", "HN", "WC", "WN", "CN",
-                            "HWC", "HWN", "HCN", "WCN"
+                              "H", "W", "C", "N",
+                              "HW", "HC", "HN", "WC", "WN", "CN",
+                              "HWC", "HWN", "HCN", "WCN"
                            }},
         {ge::FORMAT_CHWN, {
-                            "C", "H", "W", "N",
-                            "CH", "CW", "CN", "HW", "HN", "WN",
-                            "CHW", "CHN", "CWN", "HWN"
+                              "C", "H", "W", "N",
+                              "CH", "CW", "CN", "HW", "HN", "WN",
+                              "CHW", "CHN", "CWN", "HWN"
                            }},
         {ge::FORMAT_NDHWC, {
-                            "N", "D", "H", "W", "C",
-                            "ND", "NH", "NW", "NC", "DH", "DW", "DC", "HW", "HC", "WC",
-                            "NDH", "NDW", "NDC", "NHW", "NHC", "NWC", "DHW", "DHC", "DWC", "HWC",
-                            "NDHW", "NDHC", "NDWC", "NHWC", "DHWC"
+                              "N", "D", "H", "W", "C",
+                              "ND", "NH", "NW", "NC", "DH", "DW", "DC", "HW", "HC", "WC",
+                              "NDH", "NDW", "NDC", "NHW", "NHC", "NWC", "DHW", "DHC", "DWC", "HWC",
+                              "NDHW", "NDHC", "NDWC", "NHWC", "DHWC"
         }},
         {ge::FORMAT_NCDHW, {
-                             "N", "C", "D", "H", "W",
-                             "NC", "ND", "NH", "NW", "CD", "CH", "CW", "DH", "DW", "HW",
-                             "NCD", "NCH", "NCW", "NDH", "NDW", "NHW", "CDH", "CDW", "CHW", "DHW",
-                             "NCDH", "NCDW", "NCHW", "NDHW", "CDHW"
+                               "N", "C", "D", "H", "W",
+                               "NC", "ND", "NH", "NW", "CD", "CH", "CW", "DH", "DW", "HW",
+                               "NCD", "NCH", "NCW", "NDH", "NDW", "NHW", "CDH", "CDW", "CHW", "DHW",
+                               "NCDH", "NCDW", "NCHW", "NDHW", "CDHW"
                           }},
         {ge::FORMAT_DHWCN, {
-                             "D", "H", "W", "C", "N",
-                             "DH", "DW", "DC", "DN", "HW", "HC", "HN", "WC", "WN", "CN",
-                             "DHW", "DHC", "DHN", "DWC", "DWN", "DCN", "HWC", "HWN", "HCN", "WCN",
-                             "DHWC", "DHWN", "DHCN", "DWCN", "HWCN"
+                               "D", "H", "W", "C", "N",
+                               "DH", "DW", "DC", "DN", "HW", "HC", "HN", "WC", "WN", "CN",
+                               "DHW", "DHC", "DHN", "DWC", "DWN", "DCN", "HWC", "HWN", "HCN", "WCN",
+                               "DHWC", "DHWN", "DHCN", "DWCN", "HWCN"
                          }}
 };
 
@@ -208,7 +212,7 @@ void ExpandByReshapeType(std::vector<int64_t> &dims, const std::string &op_type,
   } else {
     /* Build a array with all 1 of full size. Then we will substitute some of the 1 with the original axis value. */
     std::vector<int64_t> new_dims;
-    for (size_t i=0; i< full_size; i++) {
+    for (size_t i=0; i < full_size; i++) {
       new_dims.emplace_back(1);
     }
 
@@ -246,17 +250,17 @@ bool ExpandDimension(const std::string &op_type, const ge::Format &original_form
   }
 
   /* 2. Check whether the reshape type is consistent with the original format.
-   * If noe consistent, just return and report a warning. */
+   * If not consistent, just return and report a warning. */
   std::string valid_reshape_type = reshape_type;
   size_t old_dims_size = dims.size();
   auto iter_format = ALL_VALID_RESHAPE_TYPE.find(original_format);
   if (iter_format != ALL_VALID_RESHAPE_TYPE.end()) {
-    auto iter_reshape_type == iter_format->second.find(reshape_type);
+    auto iter_reshape_type = iter_format->second.find(reshape_type);
     if (iter_reshape_type == iter_format->second.end()) {
       if (!GetDefaultReshapeType(original_format, old_dims_size, valid_reshape_type)) {
         return true;
       }
-      GE_LOGI("Get default reshape type %s for op %s tensor %u original format %u is invalid.",
+      GELOGI("Get default reshape type %s for op %s tensor %u original format %u is invalid.",
               valid_reshape_type.c_str(), op_type.c_str(), tensor_index, original_format);
     }
   }

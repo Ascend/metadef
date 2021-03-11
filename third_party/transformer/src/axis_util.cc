@@ -19,6 +19,7 @@
 #include "framework/common/debug/ge_log.h"
 
 namespace transformer {
+using std::vector;
 using namespace ge;
 namespace {
 static std::map<ge::Format, GetAxisValueInfoByFormatPtr> getAxisValueFuncMap = {

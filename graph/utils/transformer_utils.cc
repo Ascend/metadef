@@ -112,7 +112,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     ge::DataType dtype =  map_dtype_in_[i];
 
     transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, ori_format, curr_format, dtype,
-                                                               transformer::EN_IMPL_CUSTOM_TBE};
+                                                       transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     tensor_desc_input->SetFormat(curr_format);
     tensor_desc_input->SetShape(GeShape(out_dims));
