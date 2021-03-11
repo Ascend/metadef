@@ -518,7 +518,11 @@ void ErrorManager::SetErrorContext(Context error_context) {
 void ErrorManager::SetStage(const std::string &first_stage, const std::string &second_stage) {
   error_context_.first_stage = first_stage;
   error_context_.second_stage = second_stage;
-  error_context_.log_header = move("[" + first_stage + "][" + second_stage + "]");
+  if ((first_stage == "") && (second_stage == "")) {
+    error_context_.log_header = "";
+  } else {
+    error_context_.log_header = move("[" + first_stage + "][" + second_stage + "]");
+  }
 }
 
 bool ErrorManager::IsInnerErrorCode(const std::string &error_code) {
