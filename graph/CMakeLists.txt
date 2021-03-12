@@ -296,6 +296,10 @@ target_include_directories(atc_stub_graph PRIVATE
     ${METADEF_DIR}/third_party/transformer/inc
 )
 
+target_compile_options(atc_stub_graph PRIVATE
+    -fno-common
+)
+
 target_link_libraries(atc_stub_graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
 )
