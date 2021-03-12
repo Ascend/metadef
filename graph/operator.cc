@@ -205,8 +205,10 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
     auto dst_input_desc = op_desc_->GetInputDesc(dst_name);
     if (dst_input_desc.GetFormat() == FORMAT_RESERVED) {
       src_output_desc.SetFormat(FORMAT_ND);
+      src_output_desc.SetOriginFormat(FORMAT_ND);
     } else {
       src_output_desc.SetFormat(dst_input_desc.GetFormat());
+      src_output_desc.SetOriginFormat(dst_input_desc.GetOriginFormat());
     }
     GE_CHK_BOOL_EXEC(op_desc_->UpdateInputDesc(dst_name, src_output_desc) == GRAPH_SUCCESS, return,
                      "Update input desc failed,dst name is %s,src name is %s", dst_name.c_str(),
