@@ -748,6 +748,7 @@ graphStatus TuningUtils::GetInAndOutAnchorPair(NodePtr &data_node,
               data_dump_name_match = true;
               GELOGI("TUU:get out node:%s 's input node name %s from src_node:%s 's attr", out_node->GetName().c_str(),
                      netoutput_input_name.c_str(), src_node_name.c_str());
+              break;
             }
           }
         }
