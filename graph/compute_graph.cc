@@ -37,7 +37,6 @@
 namespace ge {
 namespace {
 const size_t OUTPUT_PARAM_SIZE = 2;
-const std::string alias_name_attr = "_aliasName";
 bool IsUseBFS() {
   string run_mode;
   const int base = 10;
@@ -173,14 +172,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY NodePtr ComputeGraph::FindNode(co
     }
     if (node->GetName() == name) {
       return node;
-    }
-    std::vector<string> out_alias_name;
-    if (AttrUtils::GetListStr(node->GetOpDesc(), alias_name_attr, out_alias_name)) {
-      for (const auto &alias_name : out_alias_name) {
-        if (alias_name == name) {
-          return node;
-        }
-      }
     }
   }
   return nullptr;
