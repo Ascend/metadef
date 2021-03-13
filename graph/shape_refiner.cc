@@ -226,7 +226,7 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
 
       // zxx
       bool is_infer_again = false;
-      AttrUtils::GetBool(node->GetOpDesc(), "need_infer_shape_again_", is_infer_again);
+      AttrUtils::GetBool(node->GetOpDesc(), "need_infer_again_", is_infer_again);
       if (is_infer_again) {
         input_desc = op_desc->MutableOutputDesc(ref_i);
         if (input_desc == nullptr) {
