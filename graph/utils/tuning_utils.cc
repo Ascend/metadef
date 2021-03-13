@@ -657,6 +657,26 @@ graphStatus TuningUtils::MergeSubGraph(ComputeGraphPtr &subgraph) {
   return SUCCESS;
 }
 
+NodePtr TuningUtils::FindNode(const std::string &name) {
+  for (const auto &node:netoutput_nodes_) {
+    if (node == nullptr) {
+      continue;
+    }
+    if (node->GetName() == name) {
+      return node;
+    }
+    std::vector<string> out_alias_name;
+    if (AttrUtils::GetListStr(node->GetOpDesc(), alias_name_attr, out_alias_name)) {
+      for (const auto &alias_name : out_alias_name) {
+        if (alias_name == name) {
+          return node;
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
 graphStatus TuningUtils::RemoveDataNetoutputEdge(ComputeGraphPtr &graph) {
   GE_CHECK_NOTNULL(graph);
   // 1. traverse
@@ -664,7 +684,7 @@ graphStatus TuningUtils::RemoveDataNetoutputEdge(ComputeGraphPtr &graph) {
     auto data_node = pair.first;
     GE_CHECK_NOTNULL(data_node);
     auto netoutput_name = pair.second;
-    auto netoutput_node = graph->FindNode(netoutput_name);
+    auto netoutput_node = FindNode(netoutput_name);
     GE_CHECK_NOTNULL(netoutput_node);
     data_node_2_netoutput_node_.emplace(data_node, netoutput_node);
     // 2. get `data out anchor` and `net output in anchor` and `net output in node's out anchor`
