@@ -132,7 +132,7 @@ static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_
 static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, Format format, uint32_t fixed_dim_size,
                                              int64_t &element_cnt) {
   if (dims.size() != fixed_dim_size) {
-    GELOGW("Format %d(%s) need dim size=%u but %zu, calc as ND.", 
+    GELOGW("Format %d(%s) need dim size=%u but %zu, calc as ND.",
            format, TypeUtils::FormatToSerialString(format).c_str(), fixed_dim_size, dims.size());
   }
   return CalcElementCntByDims(dims, element_cnt);
@@ -296,6 +296,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
     case FORMAT_FRACTAL_Z:
       graph_status = CalcElementCntOfFractalZ(dims, data_type, element_cnt);
       break;
+    case FORMAT_FILTER_HWCK:
     case FORMAT_FRACTAL_NZ:
     case FORMAT_FRACTAL_ZZ:
     case FORMAT_NDHWC:
