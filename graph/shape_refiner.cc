@@ -40,53 +40,6 @@ namespace {
 const uint32_t kWhileBodySubGraphIdx = 1;
 const char* const kPreOpInputShapeRange = "_pre_op_in_range";
 
-graphStatus ReverseBrushWhileBodySubGraph(const ConstNodePtr &node) {
-  GELOGD("Enter reverse brush while body subgraph process!");
-  auto sub_graph_body = NodeUtils::GetSubgraph(*node, kWhileBodySubGraphIdx);
-  if (sub_graph_body == nullptr) {
-    GELOGE(GRAPH_FAILED, "Get while body graph failed!");
-    return GRAPH_FAILED;
-  }
-
-  std::stack<NodePtr> refresh_nodes;
-  for (const auto &node_sub : sub_graph_body->GetAllNodes()) {
-    // const/constant/variable etc. & invariant input of while no need to reverse brush
-    if ((node_sub->GetType() == DATA) && NodeUtils::IsWhileVaryingInput(node_sub)) {
-      refresh_nodes.push(node_sub);
-    }
-  }
-  std::set<NodePtr> visited_nodes;
-  while (!refresh_nodes.empty()) {
-    const NodePtr &cur_node = refresh_nodes.top();
-    refresh_nodes.pop();
-    if (visited_nodes.count(cur_node) > 0) {
-      continue;
-    }
-    for (const auto &out_data_anchor : cur_node->GetAllOutDataAnchors()) {
-      // op_desc of node should not be null
-      const auto &output_desc = cur_node->GetOpDesc()->MutableOutputDesc(out_data_anchor->GetIdx());
-      if (output_desc == nullptr) {
-        continue;
-      }
-      output_desc->SetUnknownDimNumShape();
-      for (const auto &peer_in_anchor : out_data_anchor->GetPeerInDataAnchors()) {
-        // owner_node of anchor should not be null
-        const auto &out_data_node = peer_in_anchor->GetOwnerNode();
-        // op_desc of node should not be null
-        const auto &input_desc = out_data_node->GetOpDesc()->MutableInputDesc(peer_in_anchor->GetIdx());
-        if (input_desc == nullptr) {
-          continue;
-        }
-        input_desc->SetUnknownDimNumShape();
-        refresh_nodes.push(out_data_node);
-      }
-    }
-    visited_nodes.insert(cur_node);
-  }
-
-  return GRAPH_SUCCESS;
-}
-
 graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
                                       std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
   // check sub_graph shape. Get max for update.
@@ -182,37 +135,48 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
       return GRAPH_FAILED;
     }
   }
-  bool is_need_reverse_brush = false;
+  bool need_infer_again = false;
   // check input and output
   for (size_t i = 0; i < ref_out_tensors.size(); i++) {
     if (ref_out_tensors[i].empty()) {
       continue;
     }
     auto ref_out_tensor = ref_out_tensors[i].at(0);
-    auto tmp_shape = ref_out_tensor.MutableShape();
+    auto out_shape = ref_out_tensor.MutableShape();
     // ref_i's data and output tensor shape should be same
     for (auto &tensor : ref_data_tensors[i]) {
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
         GELOGE(GRAPH_FAILED, "node[%s] does not support diff dtype or format output.", node->GetName().c_str());
         return GRAPH_FAILED;
       }
-      auto shape = tensor.MutableShape();
-      if (shape.GetDims() != tmp_shape.GetDims()) {
-        ref_out_tensor.SetUnknownDimNumShape();
-        is_need_reverse_brush = true;
-        break;
+      auto data_shape = tensor.MutableShape();
+      // input is dynamic, here use dim_num
+      if (data_shape.GetDims() != out_shape.GetDims()) {
+        GELOGW("After infer, While %s %d output shape [%s] is not match with input shape [%s].Need infer again.",
+               node->GetName().c_str(), i, out_shape.ToString().c_str(), data_shape.ToString().c_str());
+        if (data_shape.GetDimNum() != out_shape.GetDimNum()) {
+          ref_out_tensor.SetUnknownDimNumShape();
+        } else {
+          for (size_t j = 0; j < data_shape.GetDimNum(); ++j) {
+            if (data_shape.GetDim(j) != out_shape.GetDim(j)) {
+              // if input data is -1, output is fix shape, update with fix shape
+              auto final_dim = (data_shape.GetDim(j) == UNKNOWN_DIM) ? out_shape.GetDim(j) : UNKNOWN_DIM;
+              data_shape.SetDim(j, final_dim);
+            }
+          }
+          ref_out_tensor.SetShape(data_shape);
+        }
+        need_infer_again = true;
       }
     }
     (void)node->GetOpDesc()->UpdateOutputDesc(i, ref_out_tensor);
   }
-  // reverse refresh while body shape
-  if (is_need_reverse_brush) {
-    return ReverseBrushWhileBodySubGraph(node);
-  }
+  AttrUtils::SetBool(node->GetOpDesc(), "need_infer_again_", need_infer_again);
   return GRAPH_SUCCESS;
 }
 
 graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
+  // if infer again, update output of while into subgraph data node
   auto op_desc = node->GetOpDesc();
   auto sub_graph_names = op_desc->GetSubgraphInstanceNames();
   if (sub_graph_names.empty()) {
@@ -259,8 +223,32 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
       }
       GELOGI("Ref index is %d, input_desc dtype is %d, node name is %s", ref_i, input_desc->GetDataType(),
              node->GetName().c_str());
-      auto ret = data_opdesc->UpdateInputDesc(0, *input_desc);
 
+      // zxx
+      bool is_infer_again = false;
+      AttrUtils::GetBool(node->GetOpDesc(), "need_infer_shape_again_", is_infer_again);
+      if (is_infer_again) {
+        input_desc = op_desc->MutableOutputDesc(ref_i);
+        if (input_desc == nullptr) {
+          GELOGE(PARAM_INVALID,
+                 "The ref index(%d) on the data %s on the subgraph %s "
+                 "parent node %s are incompatible,outputs num %u.",
+                 ref_i,
+                 node_sub->GetName().c_str(),
+                 name.c_str(),
+                 node->GetName().c_str(),
+                 node->GetAllOutDataAnchorsSize());
+        }
+        GELOGI("Update input desc of data %s on the sub graph %s of node %s,output idx: %d from [%s] to [%s]",
+               node_sub->GetName().c_str(),
+               name.c_str(),
+               node->GetName().c_str(),
+               ref_i,
+               data_opdesc->GetInputDescPtr(0)->GetShape().ToString().c_str(),
+               input_desc->GetShape().ToString().c_str());
+      }
+
+      auto ret = data_opdesc->UpdateInputDesc(0, *input_desc);
       if (ret != GRAPH_SUCCESS) {
         GE_LOGE("Failed to update input desc of data %s on the sub graph %s parent node %s",
             node_sub->GetName().c_str(), name.c_str(), node->GetName().c_str());
