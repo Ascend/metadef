@@ -736,14 +736,29 @@ graphStatus TuningUtils::GetInAndOutAnchorPair(NodePtr &data_node,
       auto src_node = src_anchor->GetOwnerNode();
       GE_CHECK_NOTNULL(src_node);
       std::string src_node_name = src_node->GetName();
-      if (src_node_name.find(netoutput_input_name) != src_node_name.npos &&
-          src_anchor->GetIdx() == parent_node_anchor_index) {
+      bool name_match = (src_node_name.find(netoutput_input_name) != src_node_name.npos);
+      bool data_dump_name_match = false;
+      // node name is for merge graph, node name may changed between partition and merge, we
+      // could get original names from attr
+      if (!name_match) {
+        std::vector<std::string> original_names;
+        if (ge::AttrUtils::GetListStr(src_node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
+          for (const auto &name : original_names) {
+            if (name == netoutput_input_name) {
+              data_dump_name_match = true;
+              GELOGI("TUU:get out node:%s 's input node name %s from src_node:%s 's attr", out_node->GetName().c_str(),
+                     netoutput_input_name.c_str(), src_node_name.c_str());
+            }
+          }
+        }
+      }
+      if ((name_match || data_dump_name_match) && (src_anchor->GetIdx() == parent_node_anchor_index)) {
         dest_in_anchor = in_anchor;
         src_out_anchor = src_anchor;
         GELOGD("TUU:get out node:%s 's in anchor(%d) src_node:%s 's out anchor(%d) related with data node:%s",
                out_node->GetName().c_str(), dest_in_anchor->GetIdx(), netoutput_input_name.c_str(),
                parent_node_anchor_index, data_node->GetName().c_str());
-        break;
+        return SUCCESS;
       }
     }
   }
