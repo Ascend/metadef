@@ -38,7 +38,7 @@
     return 0;
   }
   const std::string kLogHeader("GeUtStub");
-const std::string &ErrorManager::GetLogHeader() {
+  const std::string &ErrorManager::GetLogHeader() {
   return kLogHeader;
 }
 
