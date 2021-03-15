@@ -152,21 +152,22 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
       auto data_shape = tensor.MutableShape();
       // input is dynamic, here use dim_num
       if (data_shape.GetDims() != out_shape.GetDims()) {
-        GELOGW("After infer, While %s %d output shape [%s] is not match with input shape [%s].Need infer again.",
+        GELOGI("After infer, While %s %d output shape [%s] is not match with input shape [%s].Need infer again.",
                node->GetName().c_str(), i, out_shape.ToString().c_str(), data_shape.ToString().c_str());
         if (data_shape.GetDimNum() != out_shape.GetDimNum()) {
           ref_out_tensor.SetUnknownDimNumShape();
         } else {
           for (size_t j = 0; j < data_shape.GetDimNum(); ++j) {
             if (data_shape.GetDim(j) != out_shape.GetDim(j)) {
-              // if input data is -1, output is fix shape, update with fix shape
-              auto final_dim = (data_shape.GetDim(j) == UNKNOWN_DIM) ? out_shape.GetDim(j) : UNKNOWN_DIM;
-              data_shape.SetDim(j, final_dim);
+              if (data_shape.GetDim(j) != UNKNOWN_DIM) {
+                // if input data is fix shape, output is different, need_infer_again
+                need_infer_again = true;
+              }
+              data_shape.SetDim(j, UNKNOWN_DIM);
             }
           }
           ref_out_tensor.SetShape(data_shape);
         }
-        need_infer_again = true;
       }
     }
     (void)node->GetOpDesc()->UpdateOutputDesc(i, ref_out_tensor);
@@ -224,7 +225,7 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
       GELOGI("Ref index is %d, input_desc dtype is %d, node name is %s", ref_i, input_desc->GetDataType(),
              node->GetName().c_str());
 
-      // zxx
+      // if need infer again, refresh subgraph input with output
       bool is_infer_again = false;
       AttrUtils::GetBool(node->GetOpDesc(), "need_infer_again_", is_infer_again);
       if (is_infer_again) {
@@ -239,7 +240,7 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
                  node->GetName().c_str(),
                  node->GetAllOutDataAnchorsSize());
         }
-        GELOGI("Update input desc of data %s on the sub graph %s of node %s,output idx: %d from [%s] to [%s]",
+        GELOGD("Update input desc of data %s on the sub graph %s of node %s,output idx: %d from [%s] to [%s]",
                node_sub->GetName().c_str(),
                name.c_str(),
                node->GetName().c_str(),
