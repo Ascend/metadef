@@ -41,6 +41,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR} ../../../third_party/graphengine/i
 include_directories(${CMAKE_CURRENT_LIST_DIR} ../../../third_party/graphengine/inc/external)
 include_directories(${CMAKE_CURRENT_LIST_DIR} ../../../third_party/graphengine/inc/external/ge)
 include_directories(${CMAKE_CURRENT_LIST_DIR} ../../../third_party/fwkacllib/inc)
+include_directories(${CMAKE_CURRENT_LIST_DIR} ../../../third_party/transformer/inc)
 include_directories(${CMAKE_CURRENT_LIST_DIR} ../../../)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
@@ -93,10 +94,8 @@ set(SRC_FILES
     "../../../graph/utils/tensor_utils.cc"
     "../../../graph/utils/transformer_utils.cc"
     "../../../ops/op_imp.cpp"
-    "${METADEF_DIR}/third_party/transformer/src/axis_util.cpp"
-    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cpp"
-    "${METADEF_DIR}/third_party/transformer/src/axis_name_util.cpp"
-    "${METADEF_DIR}/third_party/transformer/src/padding_dimension.cpp"
+    "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
+    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
 )
 
 add_executable(ut_graph ${UT_FILES} ${SRC_FILES} ${PROTO_SRCS} ${PROTO_HDRS})
