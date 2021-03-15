@@ -100,6 +100,7 @@ private:
   graphStatus ProcessSubgraphNetoutput(
                   const vector<NodePtr> &netoutput_nodes,
                   vector<vector<std::pair<NodePtr, size_t>>> &classed_netoutput_nodes);
+  void BuildRelationsForVariables(const ge::ComputeGraph &root_graph);
 
   std::unordered_map<string, vector<RefCell>> look_up_table_;
   std::vector<vector<vector<RefCell>>> values_;
@@ -418,6 +419,40 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
   return GRAPH_SUCCESS;
 }
 
+void RefRelations::Impl::BuildRelationsForVariables(const ge::ComputeGraph &root_graph) {
+  if (root_graph.GetAllSubgraphs().empty()) {
+    return;
+  }
+
+  std::map<std::string, std::vector<NodePtr>> variables;
+  for (const auto &node : root_graph.GetAllNodes()) {
+    if (node->GetType() == VARIABLE) {
+      variables[node->GetName()].emplace_back(node);
+    }
+  }
+
+  for (const auto &it : variables) {
+    const auto &instances = it.second;
+    if (instances.size() <= 1) {
+      continue;
+    }
+
+    GELOGD("Variable [%s] has %zu instances", it.first.c_str(), instances.size());
+    std::vector<RefCell> variable_all_refs;
+    for (const auto &variable : instances) {
+      RefCell variable_ref;
+      variable_ref.node_name = it.first;
+      variable_ref.node = variable;
+      variable_ref.in_out = NODE_OUT;
+      variable_ref.in_out_idx = 0;
+      variable_all_refs.emplace_back(std::move(variable_ref));
+    }
+
+    std::vector<std::vector<RefCell>> refs {variable_all_refs};
+    values_.emplace_back(std::move(refs));
+  }
+}
+
 graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
   GELOGD("Start to build ref relations!");
   /* First Step: Get root graph */
@@ -467,6 +502,8 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
       values_.push_back(node_refs);
     }
   }
+
+  BuildRelationsForVariables(root_graph);
   /* Seconde Step: generate map */
   status = BuildLookUpTables();
   if (status != GRAPH_SUCCESS) {
