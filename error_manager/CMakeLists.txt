@@ -75,7 +75,7 @@ set_target_properties(error_manager PROPERTIES
 set(INSTALL_BASE_DIR "")
 set(INSTALL_LIBRARY_DIR lib)
 
-if(${TARGET_SYSTEM_NAME} STREQUAL "Windows")
+if(TARGET_SYSTEM_NAME STREQUAL "Windows")
 install(TARGETS error_manager error_manager_static OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
 )
