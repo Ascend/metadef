@@ -265,10 +265,6 @@ add_library(atc_stub_graph SHARED
 )
 add_dependencies(atc_stub_graph graph_stub)
 
-target_compile_options(atc_stub_graph PRIVATE
-    -fno-common
-)
-
 target_include_directories(atc_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
@@ -326,6 +322,10 @@ add_library(fwk_stub_graph SHARED
 )
 
 add_dependencies(fwk_stub_graph graph_stub)
+
+target_compile_options(fwk_stub_graph PRIVATE
+    -fno-common
+)
 
 target_include_directories(fwk_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
