@@ -265,7 +265,7 @@ add_library(atc_stub_graph SHARED
 )
 add_dependencies(atc_stub_graph graph_stub)
 
-target_compile_options(atc_stub_ge_compiler PRIVATE
+target_compile_options(atc_stub_graph PRIVATE
     -fno-common
 )
 
