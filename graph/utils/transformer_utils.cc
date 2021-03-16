@@ -113,10 +113,10 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     ge::DataType dtype =  map_dtype_in_[i];
 
     // FE set and Ge get for PadDimention
-    string infer_shape_type;
-    (void) AttrUtils::GetStr(*tensor_desc_input, ATTR_NAME_RESHAPE_INFER_TYPE, infer_shape_type);
+    string infer_reshape_type;
+    (void) AttrUtils::GetStr(*tensor_desc_input, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
     bool is_success = transformer::ExpandDimension(op_desc_->GetType(), ori_format, curr_format, i,
-                                                   infer_shape_type, ori_shape_dims);
+                                                   infer_reshape_type, ori_shape_dims);
     if (!is_success) {
       GELOGE(GRAPH_FAILED, "Call expandDimension failed.");
       return GRAPH_FAILED;
@@ -163,10 +163,10 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     ge::DataType dtype =  tensor_desc_output->GetDataType();
 
     // FE set and Ge get for PadDimention
-    string infer_shape_type;
-    (void) AttrUtils::GetStr(*tensor_desc_output, ATTR_NAME_RESHAPE_INFER_TYPE, infer_shape_type);
+    string infer_reshape_type;
+    (void) AttrUtils::GetStr(*tensor_desc_output, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
     bool is_success = transformer::ExpandDimension(op_desc_->GetType(), curr_format, saved_format, i,
-                                                   infer_shape_type, ori_shape_dims);
+                                                   infer_reshape_type, ori_shape_dims);
     if (!is_success) {
       GELOGE(GRAPH_FAILED, "Call expandDimension failed.");
       return GRAPH_FAILED;
