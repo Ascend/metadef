@@ -257,16 +257,6 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
         GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
         peer_node = enter_peer_out_data_anchor->GetOwnerNode();
       }
-      // Try get from runtime inference context
-      auto context_id = std::to_string(GetContext().ContextId());
-      RuntimeInferenceContext *runtime_infer_ctx = nullptr;
-      if (RuntimeInferenceContext::GetContext(context_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
-        GELOGD("To get constant from runtime inference context. context_id = %s", context_id.c_str());
-        auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(), data);
-        if (ret == GRAPH_SUCCESS) {
-          return GRAPH_SUCCESS;
-        }
-      }
       auto peer_op_desc = peer_node->GetOpDesc();
       GE_CHECK_NOTNULL(peer_op_desc);
       auto peer_op_type = peer_op_desc->GetType();
@@ -286,6 +276,16 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
           GE_CHECK_NOTNULL(const_op_impl);
           Operator const_op(std::move(const_op_impl));
           return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
+        }
+      }
+      // Try get from runtime inference context
+      auto session_id = std::to_string(GetContext().SessionId());
+      RuntimeInferenceContext *runtime_infer_ctx = nullptr;
+      if (RuntimeInferenceContext::GetContext(session_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
+        GELOGD("To get constant from runtime inference context. session_id = %s", session_id.c_str());
+        auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(), data);
+        if (ret == GRAPH_SUCCESS) {
+          return GRAPH_SUCCESS;
         }
       }
     } else {
