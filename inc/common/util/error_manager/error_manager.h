@@ -39,23 +39,23 @@
 #define REPORT_ENV_ERROR(error_code, key, value)                                            \
   ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value);                  \
 
-#define REPORT_INNER_ERROR(error_code, fmt, ...)                                            \
-{                                                                                           \
-  char str[512];                                                                            \
-  int ret = sprintf_s(str, 512, fmt, ##__VA_ARGS__);                                        \
-  if (ret > 0) {                                                                            \
-    ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(str));  \
-  }                                                                                         \
-}                                                                                           \
+#define REPORT_INNER_ERROR(error_code, fmt, ...)                                                                       \
+{                                                                                                                      \
+  char error_message_str[512];                                                                                         \
+  int error_message_ret = sprintf_s(error_message_str, 512, fmt, ##__VA_ARGS__);                                       \
+  if (error_message_ret > 0) {                                                                                         \
+    error_message_ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
+  }                                                                                                                    \
+}                                                                                                                      \
 
-#define REPORT_CALL_ERROR(error_code, fmt, ...)                                             \
-{                                                                                           \
-  char str[512];                                                                            \
-  int ret = sprintf_s(str, 512, fmt, ##__VA_ARGS__);                                        \
-  if (ret > 0) {                                                                            \
-    ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(str));  \
-  }                                                                                         \
-}                                                                                           \
+#define REPORT_CALL_ERROR(error_code, fmt, ...)                                                                        \
+{                                                                                                                      \
+  char error_message_str[512];                                                                                         \
+  int error_message_ret = sprintf_s(error_message_str, 512, fmt, ##__VA_ARGS__);                                       \
+  if (error_message_ret > 0) {                                                                                         \
+    error_message_ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
+  }                                                                                                                    \
+}                                                                                                                      \
 
 namespace ErrorMessage {
   // first stage
