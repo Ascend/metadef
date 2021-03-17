@@ -412,7 +412,7 @@ class GraphUtils {
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
   ///
-  static graphStatus HandleInAnchorMapping(const NodePtr &node,
+  static graphStatus HandleInAnchorMapping(const ComputeGraphPtr &graph, const NodePtr &node,
                                            std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                            std::map<std::string, std::string> &anchor_to_symbol);
 
