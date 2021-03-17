@@ -1,3 +1,7 @@
+if (HAVE_PROTOBUF_STATIC)
+    return()
+endif()
+
 include(ExternalProject)
 include(GNUInstallDirs)
 #set(CMAKE_INSTALL_PREFIX ${GE_CODE_DIR}/output)
@@ -53,3 +57,5 @@ target_include_directories(ascend_protobuf_static INTERFACE ${PROTOBUF_STATIC_PK
 target_link_libraries(ascend_protobuf_static INTERFACE ascend_protobuf_static_lib)
 
 add_dependencies(ascend_protobuf_static protobuf_static_build)
+
+set(HAVE_PROTOBUF_STATIC TRUE)

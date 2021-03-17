@@ -155,7 +155,7 @@ target_include_directories(register_static PRIVATE
     ${ASCEND_DIR}/driver/include
     ${ASCEND_DIR}/fwkacllib/include
     #### blue independent compile #####
-    ${METADEF_DIR}/../third_party/fwkacllib/inc 
+    ${METADEF_DIR}/../third_party/fwkacllib/inc
     ${METADEF_DIR}/third_party/graphengine/inc
     ${METADEF_DIR}/third_party/graphengine/inc/framework
     ${METADEF_DIR}/third_party/graphengine/inc/external
@@ -163,7 +163,7 @@ target_include_directories(register_static PRIVATE
 )
 
 target_link_libraries(register_static PRIVATE
-    ascend_protobuf
+    ascend_protobuf_static
     c_sec
     json
     $<BUILD_INTERFACE:intf_pub>
