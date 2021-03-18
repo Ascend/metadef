@@ -563,6 +563,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(con
   return false;
 }
 
+namespace{
 void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   static std::string path_prefix;
   if (path_prefix.empty()) {
@@ -581,6 +582,7 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   } else {
     stream_file_name << path_prefix;
   }
+}
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(const ge::ComputeGraphPtr &graph,
