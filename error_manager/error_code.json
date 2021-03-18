@@ -251,11 +251,6 @@
       "Arglist" : "job_id, MaxStrLen"
     },
     {
-      "ErrCode" : "E10052",
-      "ErrMessage" : "Failed because lack initialize call before.",
-      "Arglist" : ""
-    },
-    {
       "ErrCode" : "E11001",
       "ErrMessage" : "input_dim and input_shape can not both exist!",
       "Arglist" : ""
