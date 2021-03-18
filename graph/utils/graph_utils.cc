@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <queue>
 #include <atomic>
+#include <mutex>
 
 #include "./ge_context.h"
 #include "debug/ge_util.h"
@@ -590,6 +591,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
                                                                             bool is_always_dump,
                                                                             const std::string &user_graph_name) {
 #ifdef FMK_SUPPORT_DUMP
+  static std::mutex mutex;
   char dump_ge_graph[MMPA_MAX_PATH] = { 0x00 };
   INT32 res = mmGetEnv(kDumpGeGraph, dump_ge_graph, MMPA_MAX_PATH);
   GE_IF_BOOL_EXEC(res != EN_OK && !is_always_dump, return;);
@@ -616,13 +618,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   }
 
   std::stringstream stream_file_name;
-  GetDumpGraphPrefix(stream_file_name);
-  if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
-    int32_t ret = CreateDirectory(stream_file_name.str());
-    if (ret != 0) {
-      GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
-      stream_file_name.str("");
-      stream_file_name << "./";
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    GetDumpGraphPrefix(stream_file_name);
+    if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
+      int32_t ret = CreateDirectory(stream_file_name.str());
+      if (ret != 0) {
+        GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+        stream_file_name.str("");
+        stream_file_name << "./";
+      }
     }
   }
 
