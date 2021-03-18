@@ -19,6 +19,8 @@
 #define COMMON_GRAPH_UTILS_FILE_UTILS_H_
 
 #include <cstdint>
+#include <string>
+
 
 namespace ge {
 ///
