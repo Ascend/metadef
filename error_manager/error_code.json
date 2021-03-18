@@ -248,7 +248,7 @@
     {
       "ErrCode" : "E10051",
       "ErrMessage" : "Input JobId [%s] length > the max sting length [%d].",
-      "Arglist" : "job_id, MaxStrLen"
+      "Arglist" : "id, length"
     },
     {
       "ErrCode" : "E11001",
