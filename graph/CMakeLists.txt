@@ -55,6 +55,7 @@ set(SRC_LIST
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
     "utils/transformer_utils.cc"
+    "utils/file_utils.cc"
 )
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)

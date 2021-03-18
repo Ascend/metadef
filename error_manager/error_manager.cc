@@ -126,6 +126,11 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
     GELOGI("ErrorManager has not inited, can't report error message");
     return 0;
   }
+
+  if (error_context_.work_stream_id == 0) {
+    GenWorkStreamIdDefault();
+  }
+
   auto it = error_map_.find(error_code);
   if (it == error_map_.end()) {
     GELOGE(ge::FAILED, "[Report][Error]error_code %s is not registered", error_code.c_str());
