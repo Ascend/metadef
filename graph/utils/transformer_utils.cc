@@ -49,7 +49,7 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     auto format = tensor_desc_input->GetFormat();
     auto ori_format = tensor_desc_input->GetOriginFormat();
     if (format == ori_format) {
-      GELOGD("Node is %s, input tensor idx is %d. ori format: %s, format: %s is same! No need to catch format&shape!",
+      GELOGD("Node is %s, input tensor idx is %zu. ori format: %s, format: %s is same! No need to catch format&shape!",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(ori_format).c_str(),
              TypeUtils::FormatToSerialString(format).c_str());
       continue;
@@ -69,7 +69,7 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     auto format = tensor_desc_output->GetFormat();
     auto ori_format = tensor_desc_output->GetOriginFormat();
     if (format == ori_format) {
-      GELOGD("Node is %s, output tensor idx is %d. ori format: %s, format: %s is same! No need to catch format&shape!",
+      GELOGD("Node is %s, output tensor idx is %zu. ori format: %s, format: %s is same! No need to catch format&shape!",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(ori_format).c_str(),
              TypeUtils::FormatToSerialString(format).c_str());
       continue;
@@ -96,7 +96,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     }
     // if can not find saved info, it says format and origin format is same when catched
     if (map_format_in_[i] == FORMAT_RESERVED) {
-      GELOGD("Node is [%s], input tensor idx [%d] is not been catched.Skip update action for it!",
+      GELOGD("Node is [%s], input tensor idx [%zu] is not been catched.Skip update action for it!",
              op_desc_->GetName().c_str(), i);
       tensor_desc_input->SetOriginFormat(tensor_desc_input->GetFormat());
       tensor_desc_input->SetOriginShape(tensor_desc_input->MutableShape());
@@ -135,7 +135,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     }
     // if can not find saved info, it says format and origin format is same when catched
     if (map_ori_format_out_[i] == FORMAT_RESERVED) {
-      GELOGD("Node is [%s], output tensor idx [%d] is not been catched.Skip update action for it!",
+      GELOGD("Node is [%s], output tensor idx [%zu] is not been catched.Skip update action for it!",
              op_desc_->GetName().c_str(), i);
       tensor_desc_output->SetOriginFormat(tensor_desc_output->GetFormat());
       tensor_desc_output->SetOriginShape(tensor_desc_output->MutableShape());
@@ -144,7 +144,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     auto ori_shape = tensor_desc_output->MutableShape();
     auto curr_format = tensor_desc_output->GetFormat();
     if (curr_format != map_ori_format_out_[i]) {
-      GELOGE(GRAPH_FAILED, "Node is %s, out tensor idx is %d. format: %s, recorded origin format: %s is not same",
+      GELOGE(GRAPH_FAILED, "Node is %s, out tensor idx is %zu. format: %s, recorded origin format: %s is not same",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
              TypeUtils::FormatToSerialString(map_ori_format_out_[i]).c_str());
       return GRAPH_FAILED;
@@ -152,7 +152,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     tensor_desc_output->SetOriginShape(ori_shape);
     auto saved_format = map_format_out_[i];
     if (curr_format == saved_format) {
-      GELOGD("Nodeis %s, out tensor idx is %s. ori format: %s, recorded format: %s is same! No need to transfer",
+      GELOGD("Nodeis %s, out tensor idx is %zu. ori format: %s, recorded format: %s is same! No need to transfer",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
              TypeUtils::FormatToSerialString(saved_format).c_str());
       continue;
@@ -175,7 +175,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
                                                        transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     tensor_desc_output->SetShape(GeShape(out_dims));
-    GELOGD("Node is %s, out tensor idx is %d. Update format and shape success，ori format: %s, format: %s",
+    GELOGD("Node is %s, out tensor idx is %zu. Update format and shape success，ori format: %s, format: %s",
         op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
         TypeUtils::FormatToSerialString(saved_format).c_str());
   }
