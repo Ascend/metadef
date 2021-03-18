@@ -36,6 +36,7 @@
 #include "utils/attr_utils.h"
 #include "utils/ge_ir_utils.h"
 #include "utils/node_utils.h"
+#include "utils/file_utils.h"
 #include "debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"
 #include "graph/debug/ge_attr_define.h"
@@ -570,14 +571,6 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
     if (npu_collect_path != nullptr) {
       std::string base_path_str(npu_collect_path);
       stream_file_name << base_path_str << "/graph/" << mmGetPid() << "_" << GetContext().DeviceId() << "/";
-      if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
-        int32_t ret = mmMkdir(stream_file_name.str().c_str(), M_IRUSR | M_IWUSR | M_IXUSR);
-        if (ret != 0) {
-          GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
-          stream_file_name.str("");
-          stream_file_name << "./";
-        }
-      }
     } else if (dump_graph_path != nullptr) {
       std::string dump_graph_path_str(dump_graph_path);
       stream_file_name << (dump_graph_path_str.empty() ? "" : dump_graph_path_str + "/");
@@ -622,6 +615,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
 
   std::stringstream stream_file_name;
   GetDumpGraphPrefix(stream_file_name);
+  if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
+    int32_t ret = CreateDirectory(stream_file_name.str());
+    if (ret != 0) {
+      GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+      stream_file_name.str("");
+      stream_file_name << "./";
+    }
+  }
 
   stream_file_name << "ge_proto_" << std::setw(kDumpGraphIndexWidth) << std::setfill('0') << file_index;
   stream_file_name << "_" << suffix << ".txt";
@@ -875,6 +876,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
 
   std::stringstream stream_file_name;
   GetDumpGraphPrefix(stream_file_name);
+  if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
+    int32_t ret = CreateDirectory(stream_file_name.str());
+    if (ret != 0) {
+      GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+      stream_file_name.str("");
+      stream_file_name << "./";
+    }
+  }
 
   stream_file_name << "ge_onnx_" << std::setw(kDumpGraphIndexWidth) << std::setfill('0') << file_index;
   stream_file_name << "_graph_" << compute_graph.GetGraphID();
