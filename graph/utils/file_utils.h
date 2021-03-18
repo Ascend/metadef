@@ -18,6 +18,8 @@
 #ifndef COMMON_GRAPH_UTILS_FILE_UTILS_H_
 #define COMMON_GRAPH_UTILS_FILE_UTILS_H_
 
+#include <cstdint>
+
 namespace ge {
 ///
 /// @ingroup domi_common
@@ -37,3 +39,5 @@ std::string RealPath(const char *path);
 int32_t CreateDirectory(const std::string &directory_path);
 
 }
+
+#endif // end COMMON_GRAPH_UTILS_FILE_UTILS_H_
