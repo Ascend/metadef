@@ -246,6 +246,11 @@
       "Arglist" : "cur_dim,shape_range_left,shape_range_right"
     },
     {
+      "ErrCode" : "E10051",
+      "ErrMessage" : "Input JobId [%s] length > the max sting length [%d].",
+      "Arglist" : "id, length"
+    },
+    {
       "ErrCode" : "E11001",
       "ErrMessage" : "input_dim and input_shape can not both exist!",
       "Arglist" : ""
