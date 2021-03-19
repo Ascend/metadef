@@ -22,9 +22,41 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 #include <sstream>
-#include "framework/common/debug/ge_log.h"
-#include "framework/common/string_util.h"
 #include "mmpa/mmpa_api.h"
+#include "toolchain/slog.h"
+
+#define GE_MODULE_NAME static_cast<int>(GE)
+
+class GeLog {
+ public:
+  static uint64_t GetTid() {
+#ifdef __GNUC__
+    thread_local static uint64_t tid = static_cast<uint64_t>(syscall(__NR_gettid));
+#else
+    thread_local static uint64_t tid = static_cast<uint64_t>(GetCurrentThreadId());
+#endif
+    return tid;
+  }
+};
+
+inline bool IsLogEnable(int module_name, int log_level) {
+  int32_t enable = CheckLogLevel(module_name, log_level);
+  // 1:enable, 0:disable
+  return (enable == 1);
+}
+
+#define GELOGE(fmt, ...)                                                      \
+  dlog_error(GE_MODULE_NAME, "%lu %s: %s" fmt, GeLog::GetTid(), __FUNCTION__, \
+             ErrorManager::GetInstance().GetLogHeader().c_str(), ##__VA_ARGS__)
+#define GELOGW(fmt, ...)                      \
+  if (IsLogEnable(GE_MODULE_NAME, DLOG_WARN)) \
+  dlog_warn(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
+#define GELOGI(fmt, ...)                      \
+  if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) \
+  dlog_info(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
+#define GELOGD(fmt, ...)                       \
+  if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) \
+  dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
 
 namespace {
 const char *const kErrorCodePath = "../conf/error_manager/error_code.json";
@@ -66,6 +98,29 @@ static std::string GetSelfLibraryDir(void) {
   }
 }
 
+// split string
+static std::vector<std::string> Split(const std::string &str, char delim) {
+  std::vector<std::string> elems;
+
+  if (str.empty()) {
+    elems.emplace_back("");
+    return elems;
+  }
+
+  std::stringstream ss(str);
+  std::string item;
+
+  while (getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+  auto str_size = str.size();
+  if (str_size > 0 && str[str_size - 1] == delim) {
+    elems.emplace_back("");
+  }
+
+  return elems;
+}
+
 ///
 /// @brief Obtain ErrorManager instance
 /// @return ErrorManager instance
@@ -87,7 +142,7 @@ int ErrorManager::Init(std::string path) {
   std::string file_path = path + kErrorCodePath;
   int ret = ParseJsonFile(file_path);
   if (ret != 0) {
-    GELOGE(ge::FAILED, "[Parse][File]Parser config file:%s failed", file_path.c_str());
+    GELOGE("[Parse][File]Parser config file:%s failed", file_path.c_str());
     return -1;
   }
   is_init_ = true;
@@ -104,7 +159,7 @@ int ErrorManager::Init() {
 
 int ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
   if (!IsInnerErrorCode(error_code)) {
-    GELOGE(ge::FAILED, "[Report][Error]error_code %s is not internal error code", error_code.c_str());
+    GELOGE("[Report][Error]error_code %s is not internal error code", error_code.c_str());
     return -1;
   }
 
@@ -133,7 +188,7 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
 
   auto it = error_map_.find(error_code);
   if (it == error_map_.end()) {
-    GELOGE(ge::FAILED, "[Report][Error]error_code %s is not registered", error_code.c_str());
+    GELOGE("[Report][Error]error_code %s is not registered", error_code.c_str());
     return -1;
   }
   const ErrorInfoConfig &error_info = it->second;
@@ -146,14 +201,14 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
     }
     auto arg_it = args_map.find(arg);
     if (arg_it == args_map.end()) {
-      GELOGE(ge::FAILED, "[Report][Error]error_code: %s, arg %s is not existed in map",
+      GELOGE("[Report][Error]error_code: %s, arg %s is not existed in map",
              error_code.c_str(), arg.c_str());
       return -1;
     }
     const std::string &arg_value = arg_it->second;
     auto index = error_message.find("%s");
     if (index == std::string::npos) {
-      GELOGE(ge::FAILED, "[Report][Error]error_code: %s, %s location in error_message is not found",
+      GELOGE("[Report][Error]error_code: %s, %s location in error_message is not found",
              error_code.c_str(), arg.c_str());
       return -1;
     }
@@ -235,7 +290,7 @@ int ErrorManager::OutputErrMessage(int handle) {
   } else {
     mmSsize_t ret = mmWrite(handle, const_cast<char *>(err_msg.c_str()), err_msg.length());
     if (ret == -1) {
-      GELOGE(ge::FAILED, "write file fail");
+      GELOGE("write file fail");
       return -1;
     }
   }
@@ -263,18 +318,18 @@ int ErrorManager::ParseJsonFile(std::string path) {
   nlohmann::json json_file;
   int status = ReadJsonFile(path, &json_file);
   if (status != 0) {
-    GELOGE(ge::FAILED, "[Read][JsonFile]file path is %s", path.c_str());
+    GELOGE("[Read][JsonFile]file path is %s", path.c_str());
     return -1;
   }
 
   try {
     const nlohmann::json &error_list_json = json_file[kErrorList];
     if (error_list_json.is_null()) {
-      GELOGE(ge::FAILED, "[Check][Config]The message of error_info_list is not found in %s", path.c_str());
+      GELOGE("[Check][Config]The message of error_info_list is not found in %s", path.c_str());
       return -1;
     }
     if (!error_list_json.is_array()) {
-      GELOGE(ge::FAILED, "[Check][Config]The message of error_info_list is not array in %s", path.c_str());
+      GELOGE("[Check][Config]The message of error_info_list is not array in %s", path.c_str());
       return -1;
     }
 
@@ -282,17 +337,17 @@ int ErrorManager::ParseJsonFile(std::string path) {
       ErrorInfoConfig error_info;
       error_info.error_id = error_list_json[i][kErrCode];
       error_info.error_message = error_list_json[i][kErrMessage];
-      error_info.arg_list = ge::StringUtils::Split(error_list_json[i][kArgList], ',');
+      error_info.arg_list = Split(error_list_json[i][kArgList], ',');
       auto it = error_map_.find(error_info.error_id);
       if (it != error_map_.end()) {
-        GELOGE(ge::FAILED, "[Check][Config]There are the same error code %s in %s",
+        GELOGE("[Check][Config]There are the same error code %s in %s",
                error_info.error_id.c_str(), path.c_str());
         return -1;
       }
       error_map_.emplace(error_info.error_id, error_info);
     }
   } catch (const nlohmann::json::exception &e) {
-    GELOGE(ge::FAILED, "[Parse][JsonFile]the file path is %s, exception message: %s", path.c_str(), e.what());
+    GELOGE("[Parse][JsonFile]the file path is %s, exception message: %s", path.c_str(), e.what());
     return -1;
   }
 
@@ -309,30 +364,30 @@ int ErrorManager::ParseJsonFile(std::string path) {
 int ErrorManager::ReadJsonFile(const std::string &file_path, void *handle) {
   GELOGI("Begin to read json file");
   if (file_path.empty()) {
-    GELOGE(ge::FAILED, "[Read][JsonFile]path %s is not valid", file_path.c_str());
+    GELOGE("[Read][JsonFile]path %s is not valid", file_path.c_str());
     return -1;
   }
   nlohmann::json *json_file = reinterpret_cast<nlohmann::json *>(handle);
   if (json_file == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param]JsonFile is nullptr");
+    GELOGE("[Check][Param]JsonFile is nullptr");
     return -1;
   }
   const char *file = file_path.data();
   if ((mmAccess2(file, M_F_OK)) != EN_OK) {
-    GELOGE(ge::FAILED, "[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), strerror(errno));
+    GELOGE("[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), strerror(errno));
     return -1;
   }
 
   std::ifstream ifs(file_path);
   if (!ifs.is_open()) {
-    GELOGE(ge::FAILED, "[Read][JsonFile]Open %s failed", file_path.c_str());
+    GELOGE("[Read][JsonFile]Open %s failed", file_path.c_str());
     return -1;
   }
 
   try {
     ifs >> *json_file;
   } catch (const nlohmann::json::exception &e) {
-    GELOGE(ge::FAILED, "[Read][JsonFile]ifstream to json fail. path: %s", file_path.c_str());
+    GELOGE("[Read][JsonFile]ifstream to json fail. path: %s", file_path.c_str());
     ifs.close();
     return -1;
   }
@@ -402,8 +457,8 @@ int ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph_nam
     return 0;
   }
   if (msg.empty() || root_graph_name.empty()) {
-    GELOGW("Msg or root graph name is empty, msg size is %zu, \
-           root graph name is %s", msg.size(), root_graph_name.c_str());
+    GELOGW("Msg or root graph name is empty, msg size is %zu, root graph name is %s",
+           msg.size(), root_graph_name.c_str());
     return -1;
   }
   GELOGD("Report graph:%s compile failed msg", root_graph_name.c_str());
