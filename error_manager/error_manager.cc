@@ -402,7 +402,7 @@ int ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph_nam
     return 0;
   }
   if (msg.empty() || root_graph_name.empty()) {
-    GELOGW("Msg or root graph name is empty, msg size is %u, \
+    GELOGW("Msg or root graph name is empty, msg size is %zu, \
            root graph name is %s", msg.size(), root_graph_name.c_str());
     return -1;
   }
