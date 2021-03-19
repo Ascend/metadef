@@ -1977,6 +1977,46 @@
      "Arglist" : "op_name,errmsg"
   },
   {
+    "ErrCode" : "E21006",
+    "ErrMessage" : "The value %s of %s for op %s is invalid, it should be %s.",
+    "Arglist" : "value, attr_or_pattern_name, op_type, correct_value."
+  },
+  {
+    "ErrCode" : "E21007",
+    "ErrMessage" : "The %s of op %s does not exist.",
+    "Arglist" : "attr_or_pattern_name, op_type"
+  },
+  {
+    "ErrCode" : "E21008",
+    "ErrMessage" : "Failed to initialize ops kernel store %s.",
+    "Arglist" : "ops_store_name"
+  },
+  {
+    "ErrCode" : "E21009",
+    "ErrMessage" : "%s",
+    "Arglist" : "common_error"
+  },
+  {
+    "ErrCode" : "E2100A",
+    "ErrMessage" : "Failed to init fusion priority with file %s",
+    "Arglist" : "file"
+  },
+  {
+    "ErrCode" : "E2100B",
+    "ErrMessage" : "Failed to init fusion switch with file %s",
+    "Arglist" : "file"
+  },
+  {
+    "ErrCode" : "E2101F",
+    "ErrMessage" : "[GraphOpt][DtypeJdg][MixedPrecision][Op %s type %s]is in white list but it doesn't support fp16!",
+    "Arglist" : "op_name, op_type"
+  },
+  {
+    "ErrCode" : "E21020",
+    "ErrMessage" : "[GraphOpt][DtypeJdg][DefaultMode][Op %s type %s] Precision loss is not allowed! %s is not supported.",
+    "Arglist" : "op_name, op_type, origin_dtype"
+  },
+  {
      "ErrCode": "W40000",
      "ErrMessage": "The op [%s] do not support 'impl_mode' parameter.",
      "Arglist": "op_type"
