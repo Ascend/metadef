@@ -183,7 +183,9 @@ class NodeUtils {
   ///
   static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
 
- private:
+  static graphStatus SetNodeParallelGroup(Node &node, const char *group_name);
+
+private:
   static std::map<NodePtr, std::vector<uint32_t>> map_send_info_;
   static std::map<NodePtr, std::vector<uint32_t>> map_recv_info_;
 };

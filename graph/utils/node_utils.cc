@@ -29,6 +29,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
+#include <securec.h>
 
 namespace ge {
 std::map<NodePtr, std::vector<uint32_t>> NodeUtils::map_send_info_{};
@@ -1153,6 +1154,34 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     return GetInNodeCrossPartionedCallNode(parent_node, ref_i, peer_node);
   }
   GELOGD("returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!", kRefIndex, node->GetName().c_str());
+  return GRAPH_SUCCESS;
+}
+
+graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) {
+  if (group_name == nullptr) {
+    GE_LOGE("[Check][Parameter]Get nullptr when set parallel group on node:%s", node.GetName().c_str());
+    REPORT_INNER_ERROR("E19999", "Get nullptr when set parallel group on node:%s", node.GetName().c_str());
+    return GRAPH_FAILED;
+  }
+  std::string current_group;
+  std::string new_group(group_name);
+  if (AttrUtils::GetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, current_group)) {
+    if (new_group != current_group) {
+      GE_LOGE("[Compare][Attr]Failed to set parallel group name %s on node %s, group conflict with existing %s",
+              new_group.c_str(), node.GetName().c_str(), group_name);
+      REPORT_INNER_ERROR("E19999", "Failed to set parallel group name %s on node %s, group conflict with existing %s",
+                         new_group.c_str(), node.GetName().c_str(), group_name);
+      return GRAPH_FAILED;
+    }
+    return GRAPH_SUCCESS;
+  }
+  if (AttrUtils::SetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, new_group)) {
+    GE_LOGE("[SetAttr][OpDesc]Failed to set parallel group name %s on node %s",
+            group_name, node.GetName().c_str());
+    REPORT_INNER_ERROR("E19999", "Failed to set parallel group name %s on node %s",
+                       group_name, node.GetName().c_str());
+    return GRAPH_FAILED;
+  }
   return GRAPH_SUCCESS;
 }
 }  // namespace ge
