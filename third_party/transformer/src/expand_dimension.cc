@@ -154,7 +154,7 @@ static const std::map<ge::Format, std::unordered_set<std::string>> ALL_VALID_RES
 bool GetDefaultReshapeType(const ge::Format &original_format, size_t old_dims_size, std::string &reshape_type) {
   auto rsp_tp_all_format = DEFAULT_RESHAPE_TYPE.find(old_dims_size);
   if (rsp_tp_all_format == DEFAULT_RESHAPE_TYPE.end()) {
-    GELOGW("dim size %u is invalid.", old_dims_size);
+    GELOGW("dim size %zu is invalid.", old_dims_size);
     return false;
   }
 
@@ -232,7 +232,7 @@ void ExpandByReshapeType(std::vector<int64_t> &dims, const std::string &op_type,
       }
       int32_t index = iter_axis_index->second;
       if (index < 0 || index >= (int32_t)full_size) {
-        GELOGW("Index of %s is %d which is larger than the full size %u.", axis_str.c_str(), index, full_size);
+        GELOGW("Index of %s is %d which is larger than the full size %zu.", axis_str.c_str(), index, full_size);
         return;
       }
       new_dims[index] = dims[i];
@@ -269,7 +269,7 @@ bool ExpandDimension(const std::string &op_type, const ge::Format &original_form
    * the length of reshape type. If the dimension of original shape if larger,
    * we cannot find suitable posotion for all axis in original shape and we just return. */
   if (old_dims_size > valid_reshape_type.length()) {
-    GELOGW("Dimension %zu of tensor %u of %s is larger than the length of reshape type which is %u.",
+    GELOGW("Dimension %zu of tensor %u of %s is larger than the length of reshape type which is %zu.",
            old_dims_size, tensor_index, op_type.c_str(), valid_reshape_type.length());
     return true;
   }
