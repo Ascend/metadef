@@ -16,6 +16,11 @@ target_include_directories(error_manager PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
+    #### yellow zone ####
+    ${METADEF_DIR}/../inc
+    ${METADEF_DIR}/../graphengine/inc
+    ${METADEF_DIR}/../graphengine/inc/external
+    #### blue zone ####
     ${METADEF_DIR}/third_party/fwkacllib/inc
     ${METADEF_DIR}/third_party/graphengine/inc
     ${METADEF_DIR}/third_party/graphengine/inc/external
@@ -41,6 +46,11 @@ target_include_directories(error_manager_static PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
+    #### yellow zone ####
+    ${METADEF_DIR}/../inc
+    ${METADEF_DIR}/../graphengine/inc
+    ${METADEF_DIR}/../graphengine/inc/external
+    #### blue zone ####
     ${METADEF_DIR}/third_party/fwkacllib/inc
     ${METADEF_DIR}/third_party/graphengine/inc
     ${METADEF_DIR}/third_party/graphengine/inc/external
