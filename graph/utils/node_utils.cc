@@ -1175,7 +1175,7 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) 
     }
     return GRAPH_SUCCESS;
   }
-  if (AttrUtils::SetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, new_group)) {
+  if (!AttrUtils::SetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, new_group)) {
     GE_LOGE("[SetAttr][OpDesc]Failed to set parallel group name %s on node %s",
             group_name, node.GetName().c_str());
     REPORT_INNER_ERROR("E19999", "Failed to set parallel group name %s on node %s",
