@@ -567,8 +567,8 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
       return FAILED;
     }
     if (!ge::AttrUtils::SetInt(nodes[i]->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
-      GELOGE(FAILED, "[Set][Attr:%s]data_index:%d, op_name:%s, ",
-             i, ge::ATTR_NAME_PARENT_NODE_INDEX.c_str(), nodes[i]->GetName().c_str());
+      GELOGE(FAILED, "[Set][Attr:%s]data_index:%zu, op_name:%s, ",
+             ge::ATTR_NAME_PARENT_NODE_INDEX.c_str(), i, nodes[i]->GetName().c_str());
       return FAILED;
     }
     GELOGI("Generate subgraph input map for subgraph %s, data index %zu, parent node index %d",

@@ -1088,7 +1088,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     GE_CHECK_NOTNULL(in_anchor);
     auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
     if (peer_out_data_anchor == nullptr) {
-      GELOGW("Node[%s] the %u'th input anchor no peer out anchor, please check!");
+      GELOGW("Node[%s] the %u'th input anchor no peer out anchor, please check!", , node->GetName().c_str(), index);
       return GRAPH_SUCCESS;
     }
     auto peer_out_node = peer_out_data_anchor->GetOwnerNode();
@@ -1126,7 +1126,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
       for (const auto &in_data_anchor : n->GetAllInDataAnchors()) {
         auto in_desc = n->GetOpDesc()->MutableInputDesc(in_data_anchor->GetIdx());
         if (in_desc == nullptr) {
-          GELOGE(GRAPH_FAILED, "Invalid Netoutput node[%s] idx[%s], no tensor on it",
+          GELOGE(GRAPH_FAILED, "Invalid Netoutput node[%s] idx[%d], no tensor on it",
                  n->GetName().c_str(),
                  in_data_anchor->GetIdx());
           return GRAPH_FAILED;
