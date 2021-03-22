@@ -36,7 +36,7 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 /// @param [in] value: vector parameter value
 ///
 #define REPORT_INPUT_ERROR(error_code, key, value)                                          \
-  ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value);
+  ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value)
 
 ///
 /// @brief Report error message
@@ -44,7 +44,7 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 /// @param [in] value: vector parameter value
 ///
 #define REPORT_ENV_ERROR(error_code, key, value)                                            \
-  ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value);
+  ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value)
 
 #define REPORT_INNER_ERROR(error_code, fmt, ...)                                                                       \
 do {                                                                                                                   \
