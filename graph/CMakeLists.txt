@@ -10,6 +10,7 @@ set(PROTO_LIST
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
+protobuf_generate(ge_static PROTO_STATIC_SRCS PROTO_STATIC_HDRS ${PROTO_LIST})
 
 set(SRC_LIST
     "types.cc"
@@ -137,7 +138,7 @@ target_link_libraries(graph PRIVATE
 )
 
 ######### libgraph.a #############
-add_library(graph_static STATIC ${SRC_LIST} ${PROTO_SRCS})
+add_library(graph_static STATIC ${SRC_LIST} ${PROTO_STATIC_SRCS})
 
 target_compile_options(graph_static PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC>
@@ -159,8 +160,8 @@ target_compile_definitions(graph_static PRIVATE
 target_include_directories(graph_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
-    ${CMAKE_BINARY_DIR}/proto/ge/proto
+    ${CMAKE_BINARY_DIR}/proto/ge_static
+    ${CMAKE_BINARY_DIR}/proto/ge_static/proto
     ${METADEF_DIR}
     ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc

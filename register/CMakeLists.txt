@@ -16,7 +16,9 @@ set(TASK_PROTO
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
+protobuf_generate(ge_static PROTO_STATIC_SRCS PROTO_STATIC_HDRS ${PROTO_LIST})
 protobuf_generate(ge TASK_PROTO_SRC TASK_PROTO_HDR ${TASK_PROTO})
+protobuf_generate(ge_static TASK_PROTO_STATIC_SRC TASK_PROTO_STATIC_HDR ${TASK_PROTO})
 
 set(SRC_LIST
     "register.cpp"
@@ -114,7 +116,7 @@ target_link_libraries(register PRIVATE
 )
 
 ############ libregister.a ############
-add_library(register_static STATIC ${SRC_LIST} ${PROTO_SRCS} ${TASK_PROTO_HDR}
+add_library(register_static STATIC ${SRC_LIST} ${PROTO_STATIC_SRCS} ${TASK_PROTO_STATIC_HDR}
     "op_tiling.cpp"
     "op_tiling_registry.cpp"
 )
@@ -143,7 +145,7 @@ target_include_directories(register_static PRIVATE
     ${METADEF_DIR}/..
     ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/ge_static
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     #### temp independent ####
@@ -163,7 +165,7 @@ target_include_directories(register_static PRIVATE
     ${ASCEND_DIR}/driver/include
     ${ASCEND_DIR}/fwkacllib/include
     #### blue independent compile #####
-    ${METADEF_DIR}/../third_party/fwkacllib/inc 
+    ${METADEF_DIR}/../third_party/fwkacllib/inc
     ${METADEF_DIR}/third_party/graphengine/inc
     ${METADEF_DIR}/third_party/graphengine/inc/framework
     ${METADEF_DIR}/third_party/graphengine/inc/external
@@ -198,7 +200,7 @@ target_include_directories(op_tiling_o2 PRIVATE
     ${METADEF_DIR}/..
     ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/ge_static
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     #### temp independent ####
