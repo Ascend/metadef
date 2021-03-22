@@ -24,10 +24,10 @@
 #include <mutex>
 
 
-#if WIN
-int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
-#else
+#ifdef __GNUC__
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
+#else
+int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 #endif
 
 ///
