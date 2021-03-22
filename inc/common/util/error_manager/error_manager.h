@@ -23,6 +23,13 @@
 #include <vector>
 #include <mutex>
 
+
+#if WIN
+int format_message(char *str_dst, size_t dst_max, const char *format, ...);
+#else
+int format_message(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
+#endif
+
 ///
 /// @brief Report error message
 /// @param [in] key: vector parameter key
@@ -42,7 +49,7 @@
 #define REPORT_INNER_ERROR(error_code, fmt, ...)                                                                       \
 {                                                                                                                      \
   char error_message_str[512];                                                                                         \
-  int error_message_ret = sprintf_s(error_message_str, 512, fmt, ##__VA_ARGS__);                                       \
+  int error_message_ret = format_message(error_message_str, 512, fmt, ##__VA_ARGS__);                                       \
   if (error_message_ret > 0) {                                                                                         \
     error_message_ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
   }                                                                                                                    \
@@ -51,7 +58,7 @@
 #define REPORT_CALL_ERROR(error_code, fmt, ...)                                                                        \
 {                                                                                                                      \
   char error_message_str[512];                                                                                         \
-  int error_message_ret = sprintf_s(error_message_str, 512, fmt, ##__VA_ARGS__);                                       \
+  int error_message_ret = format_message(error_message_str, 512, fmt, ##__VA_ARGS__);                                       \
   if (error_message_ret > 0) {                                                                                         \
     error_message_ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
   }                                                                                                                    \
