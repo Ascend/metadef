@@ -61,7 +61,6 @@ inline bool IsLogEnable(int module_name, int log_level) {
   if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) \
   dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
 
-namespace {
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   int ret;
   va_list arg_list;
@@ -74,6 +73,7 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   return ret;
 }
 
+namespace {
 const char *const kErrorCodePath = "../conf/error_manager/error_code.json";
 const char *const kErrorList = "error_info_list";
 const char *const kErrCode = "ErrCode";
