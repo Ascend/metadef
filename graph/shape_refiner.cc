@@ -172,7 +172,7 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
     }
     (void)node->GetOpDesc()->UpdateOutputDesc(i, ref_out_tensor);
   }
-  AttrUtils::SetBool(node->GetOpDesc(), "need_infer_again_", need_infer_again);
+  AttrUtils::SetBool(node->GetOpDesc(), ATTR_NAME_NEED_INFER_AGAIN, need_infer_again);
   return GRAPH_SUCCESS;
 }
 
@@ -227,7 +227,7 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
 
       // if need infer again, refresh subgraph input with output
       bool is_infer_again = false;
-      AttrUtils::GetBool(node->GetOpDesc(), "need_infer_again_", is_infer_again);
+      AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_NEED_INFER_AGAIN, is_infer_again);
       if (is_infer_again) {
         input_desc = op_desc->MutableOutputDesc(ref_i);
         if (input_desc == nullptr) {
