@@ -204,7 +204,7 @@ generate_package()
   FWK_PATH="fwkacllib/lib64"
   ATC_PATH="atc/lib64"
 
-  COMMON_LIB=("libgraph.so" "libregister.so")
+  COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
 
   rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
   rm -rf ${OUTPUT_PATH:?}/${ACL_PATH}/
