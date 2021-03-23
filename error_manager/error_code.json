@@ -251,6 +251,61 @@
       "Arglist" : "id, length"
     },
     {
+      "ErrCode" : "E10401",
+      "ErrMessage" : "Input num mismatch. model expect %zu, but given %zu.",
+      "Arglist" : "expect_num, input_num"
+    },
+    {
+      "ErrCode" : "E10402",
+      "ErrMessage" : "Input size mismatch. index = %zu, model expect %zu, but given %zu(after align).",
+      "Arglist" : "index, expect_size, input_size"
+    },
+    {
+      "ErrCode" : "E10403",
+      "ErrMessage" : "output num mismatch. model expect %zu, but given %zu.",
+      "Arglist" : "expect_num, input_num"
+    },
+    {
+      "ErrCode" : "E10404",
+      "ErrMessage" : "Output size mismatch. index = %zu, model expect %zu, but given %zu(after align).",
+      "Arglist" : "index, expect_size, input_size"
+    },
+    {
+      "ErrCode" : "E10405",
+      "ErrMessage" : "Input number mismatches input desc number. Input num = %zu, input desc num = %zu.",
+      "Arglist" : "input_num, input_desc_num"
+    },
+    {
+      "ErrCode" : "E10406",
+      "ErrMessage" : "Output number mismatches output desc number. Output num = %zu, output desc num = %zu.",
+      "Arglist" : "out_num, out_desc_num"
+    },
+    {
+      "ErrCode" : "E10410",
+      "ErrMessage" : "Can not get real path for %s relate path can't transfer to absolute path, please check.",
+      "Arglist" : "cfgpath"
+    },
+    {
+      "ErrCode" : "E10412",
+      "ErrMessage" : "input %s is nullptr.",
+      "Arglist" : "inputparam"
+    },
+    {
+      "ErrCode" : "E10414",
+      "ErrMessage" : "input_format [%s] invalid.",
+      "Arglist" : "input_format"
+    },
+    {
+      "ErrCode" : "E10416",
+      "ErrMessage" : "input_shape: %s invalid.",
+      "Arglist" : "input_shape"
+    },
+    {
+      "ErrCode" : "E10417",
+      "ErrMessage" : "log:%s invalid, only support debug, info, warning, error, null.",
+      "Arglist" : "loglevel"
+    },
+    {
       "ErrCode" : "E11001",
       "ErrMessage" : "input_dim and input_shape can not both exist!",
       "Arglist" : ""
