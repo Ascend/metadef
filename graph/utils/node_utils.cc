@@ -1037,23 +1037,33 @@ ConstNodePtr NodeUtils::GetNodeFromOperator(const Operator &oprt) {
 }
 
 std::string NodeUtils::GetInConstNodeTypeCrossSubgraph(const NodePtr &node) {
+  NodePtr input_node = GetInNodeCrossSubgraph(node);
+  if (input_node == nullptr) {
+    return "";
+  }
+
+  return input_node->GetType();
+}
+
+NodePtr NodeUtils::GetInNodeCrossSubgraph(const NodePtr &node) {
   NodePtr input_node = node;
   while (input_node != nullptr) {
     if (input_node->GetType() != DATA) {
-      return input_node->GetType();
+      return input_node;
     }
 
     auto owner_graph = input_node->GetOwnerComputeGraph();
     auto parent_node = owner_graph->GetParentNode();
     if ((parent_node == nullptr) || (kWhileOpTypes.count(parent_node->GetType()) > 0)) {
-      return node->GetType();       // not in subgraph or while subgraph.
+      return node;       // not in subgraph or while subgraph.
     }
 
     input_node = GetParentInput(input_node);
   }
 
-  return "";
+  return input_node;
 }
+
 NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
   if (op_desc == nullptr) {
     GELOGE(GRAPH_FAILED, "The OpDesc ptr should not be null.");
