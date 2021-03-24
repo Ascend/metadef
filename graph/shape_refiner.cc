@@ -380,6 +380,13 @@ void SerialShapeRange(const GeTensorDescPtr &desc, std::string &desc_str) {
     desc_str += "},";
   }
   desc_str += "]";
+  shape_range.clear();
+  (void)desc->GetOriginShapeRange(shape_range);
+  for (const auto &pair : shape_range) {
+    desc_str += ",{";
+    desc_str += std::to_string(pair.first) + "," + std::to_string(pair.second);
+    desc_str += "},";
+  }
 }
 
 graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
@@ -739,17 +746,33 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
     auto op_desc = node->GetOpDesc();
     for (const auto &out_anchor : node->GetAllOutDataAnchors()) {
       auto output_tensor = op_desc->MutableOutputDesc(out_anchor->GetIdx());
+      if (output_tensor == nullptr) {
+        continue;
+      }
       if (output_tensor->MutableShape().GetDims().empty()) {
         output_tensor->SetOriginShape(output_tensor->GetShape());
       }
       ge::TensorUtils::SetRealDimCnt(*output_tensor, static_cast<uint32_t>(output_tensor->GetOriginShape().GetDims()
         .size()));
       output_tensor->SetOriginDataType(output_tensor->GetDataType());
-
+      // set output origin shape range
+      std::vector<std::pair<int64_t, int64_t>> range;
+      (void)output_tensor->GetShapeRange(range);
+      output_tensor->SetOriginShapeRange(range);
       GELOGD("node name is %s, origin shape is %ld, origin format is %s, origin data type is %s",
              node->GetName().c_str(), output_tensor->GetOriginShape().GetShapeSize(),
              TypeUtils::FormatToSerialString(output_tensor->GetOriginFormat()).c_str(),
              TypeUtils::DataTypeToSerialString(output_tensor->GetOriginDataType()).c_str());
+    }
+    for (const auto &in_anchor : node->GetAllInDataAnchors()) {
+      auto input_tensor = op_desc->MutableInputDesc(in_anchor->GetIdx());
+      if (input_tensor == nullptr) {
+        continue;
+      }
+      // set input origin shape range
+      std::vector<std::pair<int64_t, int64_t>> range;
+      (void)input_tensor->GetShapeRange(range);
+      input_tensor->SetOriginShapeRange(range);
     }
     if (NodeUtils::UpdatePeerNodeInputDesc(node) != SUCCESS) {
         return GRAPH_FAILED;

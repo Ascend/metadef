@@ -146,6 +146,11 @@ class GeAttrValueImp {
   static bool SetValue(proto::AttrDef &attr_def, const vector<vector<int64_t>> &value);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
                        vector<vector<int64_t>> &value);
+
+  static bool SetValue(proto::AttrDef &attr_def, const vector<vector<float>> &value);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
+                       vector<vector<float>> &value);
+
   static bool SetValue(proto::AttrDef &attr_def, const vector<ge::DataType> &value);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
                        vector<ge::DataType> &value);
@@ -165,6 +170,7 @@ map<proto::AttrDef::ValueCase, GeAttrValue::ValueType> GeAttrValueImp::attr_val_
     {proto::AttrDef::kBt, GeAttrValue::VT_BYTES},
     {proto::AttrDef::kFunc, GeAttrValue::VT_NAMED_ATTRS},
     {proto::AttrDef::kListListInt, GeAttrValue::VT_LIST_LIST_INT},
+    {proto::AttrDef::kListListFloat, GeAttrValue::VT_LIST_LIST_FLOAT},
     {proto::AttrDef::kDt, GeAttrValue::VT_DATA_TYPE},
 };
 map<proto::AttrDef_ListValue_ListValueType, GeAttrValue::ValueType> GeAttrValueImp::attr_val_list_type_map_ = {
@@ -256,6 +262,7 @@ ATTR_VALUE_SET_GET_IMP(GeAttrValue::NAMED_ATTRS)
 ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::NAMED_ATTRS>)
 /*lint -e665*/
 ATTR_VALUE_SET_GET_IMP(vector<vector<int64_t>>)
+ATTR_VALUE_SET_GET_IMP(vector<vector<float>>)
 /*lint +e665*/
 ATTR_VALUE_SET_GET_IMP(vector<DataType>)        // lint !e665
 ATTR_VALUE_SET_GET_IMP(GeAttrValue::DATA_TYPE)  // lint !e665
@@ -638,6 +645,23 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<vecto
   return true;
 }
 
+bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<vector<float>> &value) {
+  if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kListListFloat)) {
+    return false;
+  }
+  proto_attr_val.clear_list_list_float();
+  auto list_list_float = proto_attr_val.mutable_list_list_float();
+  GE_CHECK_NOTNULL_EXEC(list_list_float, return false);
+  for (auto &list_float : value) {
+    auto list_item = list_list_float->add_list_list_f();
+    GE_CHECK_NOTNULL_EXEC(list_item, return false);
+    for (auto &float_item : list_float) {
+      list_item->add_list_f(float_item);
+    }
+  }
+  return true;
+}
+
 bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<ge::DataType> &value) {
   if (!AttrUtilsHelper::SetValueCheckAndSetListType(proto_attr_val,
                                                     proto::AttrDef_ListValue_ListValueType_VT_LIST_DATA_TYPE)) {
@@ -886,6 +910,24 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
 }
 
 bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoMsgOwner &,
+                              vector<vector<float>> &value) {
+  value.clear();
+  if (!AttrUtilsHelper::GetValueCheckType(proto_attr_val, proto::AttrDef::kListListFloat)) {
+    return false;
+  }
+
+  auto &list_list_float = proto_attr_val.list_list_float().list_list_f();
+  for (auto &list_float : list_list_float) {
+    vector<float> list_item(list_float.list_f().size());
+    if (!list_float.list_f().empty()) {
+      (void)std::copy(list_float.list_f().begin(), list_float.list_f().end(), list_item.begin());
+    }
+    value.push_back(list_item);
+  }
+  return true;
+}
+
+bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoMsgOwner &,
                               vector<ge::DataType> &value) {
   if (!AttrUtilsHelper::GetValueCheckListType(proto_attr_val, proto::AttrDef_ListValue_ListValueType_VT_LIST_DATA_TYPE,
                                               ListValueItemCheck(dt))) {
@@ -1019,6 +1061,7 @@ ATTR_UTILS_SET_GET_IMP(ListInt, vector<int64_t>)
 ATTR_UTILS_SET_IMP(ListInt, vector<int32_t>)
 ATTR_UTILS_SET_IMP(ListInt, vector<uint32_t>)
 ATTR_UTILS_SET_GET_IMP(ListFloat, vector<float>)
+ATTR_UTILS_SET_GET_IMP(ListListFloat, vector<vector<float>>)
 ATTR_UTILS_SET_GET_IMP(ListBool, vector<bool>)
 ATTR_UTILS_SET_GET_IMP(ListStr, vector<string>)
 ATTR_UTILS_SET_GET_IMP(ListTensorDesc, vector<GeTensorDesc>)

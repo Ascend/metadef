@@ -61,6 +61,9 @@ bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc, std
     TeOpTensor tensor;
     arg_tensor.arg_type = TA_SINGLE;
     tensor.shape = desc->GetShape().GetDims();
+    if (tensor.shape.empty()) {
+      tensor.shape = {1};
+    }
     tensor.ori_shape = desc->GetOriginShape().GetDims();
     tensor.name = op_desc->GetInputNameByIndex(index);
 
