@@ -1088,7 +1088,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     GE_CHECK_NOTNULL(in_anchor);
     auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
     if (peer_out_data_anchor == nullptr) {
-      GELOGW("Node[%s] the %u'th input anchor no peer out anchor, please check!", , node->GetName().c_str(), index);
+      GELOGW("Node[%s] the %u'th input anchor no peer out anchor, please check!", node->GetName().c_str(), index);
       return GRAPH_SUCCESS;
     }
     auto peer_out_node = peer_out_data_anchor->GetOwnerNode();
