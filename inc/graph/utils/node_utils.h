@@ -171,6 +171,13 @@ class NodeUtils {
   static std::string GetInConstNodeTypeCrossSubgraph(const ge::NodePtr &node);
 
   ///
+  /// @brief Get node in cross subgragh.
+  /// @param [in] node
+  /// @return Node
+  ///
+  static NodePtr GetInNodeCrossSubgraph(const ge::NodePtr &node);
+
+  ///
   /// @brief Get peer input node, supported get cross PartitionedCall .
   /// @param [in] node, current node
   /// @param [in] index, current node the index'th input, if it is PartionedCall's subgraph Data, please assign 0
