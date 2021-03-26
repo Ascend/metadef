@@ -71,6 +71,13 @@ message AttrDef
         repeated ListInt list_list_i             = 1; // list list int
     }
 
+    message ListListFloat{
+        message ListFloat{
+            repeated float list_f             = 1; // list float
+        }
+        repeated ListFloat list_list_f             = 1; // list list float
+    }
+
     oneof value
     {
         bytes            s    = 2;  // "string"
@@ -85,6 +92,7 @@ message AttrDef
         GraphDef         g    = 13;  // Graph type
         ListListInt      list_list_int  = 14;  // List List Int type
         int64            dt   = 15; // ge::DataType
+        ListListFloat    list_list_float  = 16;  // List List Float type
     }
 }
 

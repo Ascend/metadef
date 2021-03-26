@@ -288,6 +288,14 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
           return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
         }
       }
+      auto tensor = op_desc->MutableInputDesc(index);
+      GeTensorPtr tensor_value = nullptr;
+      if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, tensor_value)) {
+        GELOGD("Get ATTR_NAME_VALUE from %zu input of %s, Tensor addr is %p, tensor value data type is %d.", index,
+               op_desc->GetName().c_str(), tensor.get(), tensor_value->GetTensorDesc().GetDataType());
+        data = TensorAdapter::GeTensor2Tensor(tensor_value);
+        return GRAPH_SUCCESS;
+      }
     } else {
       // For outer graph
       return GetInputConstDataOut(dst_name, data);

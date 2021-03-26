@@ -1157,4 +1157,15 @@ const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_INPUT = "_format_agnostic_exc
 // for ffts subgraph
 const std::string ATTR_NAME_FFTS_SUB_GRAPH = "_ffts_sub_graph";
 const std::string ATTR_NAME_THREAD_SCOPE_ID = "_thread_scope_id";
+
+// mark fuzz build scene
+const std::string ATTR_NAME_FUZZ_BUILD = "_fuzz_build";
+const std::string ATTR_NAME_PLACEMENT = "_mem_type";
+const std::string ATTR_NAME_VALUE = "_value";
+const std::string ATTR_NAME_VALUE_RANGE = "_value_range";
+const std::string ATTR_NAME_BUILD_MODE = "_build_mode";
+const std::string ATTR_NAME_FUZZ_BUILD_RES_ATTRS = "_fuzz_build_res";
+const std::string ATTR_NAME_FUZZ_INPUTS_SUPPORTED_ATTRS = "_inputs_support_info";
+const std::string ATTR_NAME_FUZZ_OUTPUTS_SUPPORTED_ATTRS = "_outputs_support_info";
+const std::string ATTR_NAME_FUZZ_IS_HIGH_PERFORMANCE_ATTRS = "_is_high_performance";
 }  // namespace ge

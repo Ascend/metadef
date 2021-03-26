@@ -221,6 +221,7 @@ const string TENSOR_UTILS_ORIGIN_SHAPE = "origin_shape";
 const string TENSOR_UTILS_ORIGIN_FORMAT = "origin_format";
 const string TENSOR_UTILS_ORIGIN_DATA_TYPE = "origin_data_type";
 const string TENSOR_UTILS_SHAPE_RANGE = "shape_range";
+const string TENSOR_UTILS_ORIGIN_SHAPE_RANGE = "origin_shape_range";
 const string TENSOR_UTILS_REF_PORT_INDEX = "ref_port_index";
 
 GeShape::GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg) : shape_def_(proto_owner, proto_msg) {}
@@ -424,6 +425,16 @@ graphStatus GeTensorDesc::SetShapeRange(const std::vector<std::pair<int64_t, int
   auto ret = AttrUtils::SetListListInt(this, TENSOR_UTILS_SHAPE_RANGE, shape_range);
   return ret ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
+
+graphStatus GeTensorDesc::SetOriginShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range) {
+  std::vector<vector<int64_t>> origin_shape_range;
+  for (const auto &ele : range) {
+    origin_shape_range.emplace_back(std::vector<int64_t>({ele.first, ele.second}));
+  }
+  auto ret = AttrUtils::SetListListInt(this, TENSOR_UTILS_ORIGIN_SHAPE_RANGE, origin_shape_range);
+  return ret ? GRAPH_SUCCESS : GRAPH_FAILED;
+}
+
 graphStatus GeTensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const {
   std::vector<vector<int64_t>> shape_range;
   (void)AttrUtils::GetListListInt(this, TENSOR_UTILS_SHAPE_RANGE, shape_range);
@@ -432,6 +443,23 @@ graphStatus GeTensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>>
     // here must be only two elemenet because pair
     if (ele.size() != 2) {
       GELOGE(GRAPH_FAILED, "shape_range must contain only 2 value but really is %lu", ele.size());
+      return GRAPH_FAILED;
+    }
+    std::pair<int64_t, int64_t> pair({ele[0], ele[1]});
+    range.emplace_back(pair);
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GeTensorDesc::GetOriginShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const {
+  std::vector<vector<int64_t>> origin_shape_range;
+  (void)AttrUtils::GetListListInt(this, TENSOR_UTILS_ORIGIN_SHAPE_RANGE, origin_shape_range);
+
+  for (const auto &ele : origin_shape_range) {
+    // here must be only two elemenet because pair
+    if (ele.size() != 2) {
+      GELOGE(GRAPH_FAILED, "origin_shape_range must contain only 2 value but really is %lu", ele.size());
       return GRAPH_FAILED;
     }
     std::pair<int64_t, int64_t> pair({ele[0], ele[1]});
