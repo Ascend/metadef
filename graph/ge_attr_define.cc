@@ -924,6 +924,8 @@ const std::string ATTR_NAME_ACTIVE_LABEL_LIST = "_active_label_list";
 // Used for l2cache, true: the memory of all inputs is used for the last time.
 const std::string ATTR_NAME_IS_END_OF_INPUTMEM_LIFECYCLE = "is_end_of_inputmem_lifecycle";
 
+const std::string ATTR_NAME_DATA_VISIT_DISTANCE = "data_visit_distance";
+
 // Multi batch
 const std::string ATTR_NAME_PRED_VALUE = "_pred_value";
 const std::string ATTR_NAME_BATCH_NUM = "_batch_num";
