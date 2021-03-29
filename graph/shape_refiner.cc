@@ -196,11 +196,25 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
         GELOGE(GRAPH_FAILED, "node[%s] does not support diff dtype or format output.", node->GetName().c_str());
         return GRAPH_FAILED;
       }
-      auto shape = tensor.MutableShape();
-      if (shape.GetDims() != tmp_shape.GetDims()) {
-        ref_out_tensor.SetUnknownDimNumShape();
-        is_need_reverse_brush = true;
-        break;
+      auto data_shape = tensor.MutableShape();
+      // input is dynamic, here use dim_num
+      if (data_shape.GetDims() != out_shape.GetDims()) {
+        GELOGI("After infer, While %s %d output shape [%s] is not match with input shape [%s].Need infer again.",
+               node->GetName().c_str(), i, out_shape.ToString().c_str(), data_shape.ToString().c_str());
+        if (data_shape.GetDimNum() != out_shape.GetDimNum()) {
+          ref_out_tensor.SetUnknownDimNumShape();
+        } else {
+          for (size_t j = 0; j < data_shape.GetDimNum(); ++j) {
+            if (data_shape.GetDim(j) != out_shape.GetDim(j)) {
+              if (data_shape.GetDim(j) != UNKNOWN_DIM) {
+                // if input data is fix shape, output is different, need_infer_again
+                need_infer_again = true;
+              }
+              data_shape.SetDim(j, UNKNOWN_DIM);
+            }
+          }
+          ref_out_tensor.SetShape(data_shape);
+        }
       }
     }
     (void)node->GetOpDesc()->UpdateOutputDesc(i, ref_out_tensor);
@@ -259,6 +273,31 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
       }
       GELOGI("Ref index is %d, input_desc dtype is %d, node name is %s", ref_i, input_desc->GetDataType(),
              node->GetName().c_str());
+
+      // if need infer again, refresh subgraph input with output
+      bool is_infer_again = false;
+      AttrUtils::GetBool(node->GetOpDesc(), "need_infer_again_", is_infer_again);
+      if (is_infer_again) {
+        input_desc = op_desc->MutableOutputDesc(ref_i);
+        if (input_desc == nullptr) {
+          GELOGE(PARAM_INVALID,
+                 "The ref index(%d) on the data %s on the subgraph %s "
+                 "parent node %s are incompatible,outputs num %u.",
+                 ref_i,
+                 node_sub->GetName().c_str(),
+                 name.c_str(),
+                 node->GetName().c_str(),
+                 node->GetAllOutDataAnchorsSize());
+        }
+        GELOGD("Update input desc of data %s on the sub graph %s of node %s,output idx: %d from [%s] to [%s]",
+               node_sub->GetName().c_str(),
+               name.c_str(),
+               node->GetName().c_str(),
+               ref_i,
+               data_opdesc->GetInputDescPtr(0)->GetShape().ToString().c_str(),
+               input_desc->GetShape().ToString().c_str());
+      }
+
       auto ret = data_opdesc->UpdateInputDesc(0, *input_desc);
 
       if (ret != GRAPH_SUCCESS) {

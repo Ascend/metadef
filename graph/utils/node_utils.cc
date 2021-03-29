@@ -603,6 +603,17 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
     GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
     peer_node = enter_peer_out_data_anchor->GetOwnerNode();
   }
+  // Try get from runtime inference context
+  auto context_id = std::to_string(GetContext().ContextId());
+  RuntimeInferenceContext *runtime_infer_ctx = nullptr;
+  if (RuntimeInferenceContext::GetContext(context_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
+    GELOGD("To get constant from runtime inference context. context_id = %s", context_id.c_str());
+    auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(),
+                                            out_data_anchor->GetIdx(), ge_tensor);
+    if (ret == GRAPH_SUCCESS) {
+      return GRAPH_SUCCESS;
+    }
+  }
   auto peer_op_desc = peer_node->GetOpDesc();
   GE_CHECK_NOTNULL(peer_op_desc);
   auto peer_op_type = peer_op_desc->GetType();
@@ -623,17 +634,6 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
         GELOGW("get attr name %s failed.", ATTR_NAME_WEIGHTS.c_str());
         return GRAPH_FAILED;
       }
-      return GRAPH_SUCCESS;
-    }
-  }
-  // Try get from runtime inference context
-  auto session_id = std::to_string(GetContext().SessionId());
-  RuntimeInferenceContext *runtime_infer_ctx = nullptr;
-  if (RuntimeInferenceContext::GetContext(session_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
-    GELOGD("To get constant from runtime inference context. session_id = %s", session_id.c_str());
-    auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(),
-                                            out_data_anchor->GetIdx(), ge_tensor);
-    if (ret == GRAPH_SUCCESS) {
       return GRAPH_SUCCESS;
     }
   }
