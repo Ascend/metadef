@@ -945,11 +945,14 @@ const std::string ATTR_NAME_SWITCH_TRUE_BRANCH_FLAG = "_switch_true_branch_flag"
 const std::string ATTR_NAME_SWITCH_DATA_TYPE = "_switch_data_type";
 const std::string ATTR_NAME_ORIG_NODE_NAME = "_original_node_name";
 const std::string ATTR_NAME_CYCLIC_DEPENDENCE_FLAG = "_cyclic_dependence_flag";
+const std::string ATTR_NAME_STREAM_SWITCH_TYPE = "_stream_switch_type";
 
 const std::string ATTR_NAME_NEXT_ITERATION = "_next_iteration_node";
 
 // Function Op
 const std::string ATTR_NAME_PARENT_NODE_INDEX = "_parent_node_index";
+
+const std::string ATTR_NAME_NEED_INFER_AGAIN = "_need_infer_again";
 
 // Used for mark the active node is for loop, type:bool
 const std::string ATTR_NAME_IS_LOOP_ACTIVE = "is_loop_active";
@@ -1154,4 +1157,15 @@ const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_INPUT = "_format_agnostic_exc
 // for ffts subgraph
 const std::string ATTR_NAME_FFTS_SUB_GRAPH = "_ffts_sub_graph";
 const std::string ATTR_NAME_THREAD_SCOPE_ID = "_thread_scope_id";
+
+// mark fuzz build scene
+const std::string ATTR_NAME_FUZZ_BUILD = "_fuzz_build";
+const std::string ATTR_NAME_PLACEMENT = "_mem_type";
+const std::string ATTR_NAME_VALUE = "_value";
+const std::string ATTR_NAME_VALUE_RANGE = "_value_range";
+const std::string ATTR_NAME_BUILD_MODE = "_build_mode";
+const std::string ATTR_NAME_FUZZ_BUILD_RES_ATTRS = "_fuzz_build_res";
+const std::string ATTR_NAME_FUZZ_INPUTS_SUPPORTED_ATTRS = "_inputs_support_info";
+const std::string ATTR_NAME_FUZZ_OUTPUTS_SUPPORTED_ATTRS = "_outputs_support_info";
+const std::string ATTR_NAME_FUZZ_IS_HIGH_PERFORMANCE_ATTRS = "_is_high_performance";
 }  // namespace ge

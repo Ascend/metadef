@@ -38,6 +38,16 @@
     return 0;
   }
 
+  int ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
+    return 0;
+  }
+
+
+  const std::string kLogHeader("GeUtStub");
+  const std::string &ErrorManager::GetLogHeader() {
+  return kLogHeader;
+}
+
   ///
   /// @brief output error message
   /// @param [in] handle: print handle

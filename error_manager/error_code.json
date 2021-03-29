@@ -246,6 +246,11 @@
       "Arglist" : "cur_dim,shape_range_left,shape_range_right"
     },
     {
+      "ErrCode" : "E10051",
+      "ErrMessage" : "Input JobId [%s] length > the max sting length [%d].",
+      "Arglist" : "id, length"
+    },
+    {
       "ErrCode" : "E11001",
       "ErrMessage" : "input_dim and input_shape can not both exist!",
       "Arglist" : ""
@@ -1970,6 +1975,46 @@
      "ErrCode" : "E21005",
      "ErrMessage" : "Get attr from node [%s] failed, errmsg[%s]",
      "Arglist" : "op_name,errmsg"
+  },
+  {
+    "ErrCode" : "E21006",
+    "ErrMessage" : "The value %s of %s for op %s is invalid, it should be %s.",
+    "Arglist" : "value, attr_or_pattern_name, op_type, correct_value."
+  },
+  {
+    "ErrCode" : "E21007",
+    "ErrMessage" : "The %s of op %s does not exist.",
+    "Arglist" : "attr_or_pattern_name, op_type"
+  },
+  {
+    "ErrCode" : "E21008",
+    "ErrMessage" : "Failed to initialize ops kernel store %s.",
+    "Arglist" : "ops_store_name"
+  },
+  {
+    "ErrCode" : "E21009",
+    "ErrMessage" : "%s",
+    "Arglist" : "common_error"
+  },
+  {
+    "ErrCode" : "E2100A",
+    "ErrMessage" : "Failed to init fusion priority with file %s",
+    "Arglist" : "file"
+  },
+  {
+    "ErrCode" : "E2100B",
+    "ErrMessage" : "Failed to init fusion switch with file %s",
+    "Arglist" : "file"
+  },
+  {
+    "ErrCode" : "E2101F",
+    "ErrMessage" : "[GraphOpt][DtypeJdg][MixedPrecision][Op %s type %s]is in white list but it doesn't support fp16!",
+    "Arglist" : "op_name, op_type"
+  },
+  {
+    "ErrCode" : "E21020",
+    "ErrMessage" : "[GraphOpt][DtypeJdg][DefaultMode][Op %s type %s] Precision loss is not allowed! %s is not supported.",
+    "Arglist" : "op_name, op_type, origin_dtype"
   },
   {
      "ErrCode": "W40000",

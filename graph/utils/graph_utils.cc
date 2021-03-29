@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <queue>
 #include <atomic>
+#include <mutex>
 
 #include "./ge_context.h"
 #include "debug/ge_util.h"
@@ -36,6 +37,7 @@
 #include "utils/attr_utils.h"
 #include "utils/ge_ir_utils.h"
 #include "utils/node_utils.h"
+#include "utils/file_utils.h"
 #include "debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"
 #include "graph/debug/ge_attr_define.h"
@@ -60,6 +62,7 @@ const char *const kDumpGeGraph = "DUMP_GE_GRAPH";
 const int kDumpGraphIndexWidth = 8;
 #endif
 
+const char *const kNpuCollectPath = "NPU_COLLECT_PATH";
 const char *const kDumpGraphPath = "DUMP_GRAPH_PATH";
 const char *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
 const char *const kDumpStrBuild = "Build";
@@ -561,11 +564,34 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(con
   return false;
 }
 
+namespace{
+void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
+  static std::string path_prefix;
+  if (path_prefix.empty()) {
+    char *npu_collect_path = std::getenv(kNpuCollectPath);
+    char *dump_graph_path = std::getenv(kDumpGraphPath);
+    if (npu_collect_path != nullptr) {
+      std::string base_path_str(npu_collect_path);
+      stream_file_name << base_path_str << "/graph/" << mmGetPid() << "_" << GetContext().DeviceId() << "/";
+    } else if (dump_graph_path != nullptr) {
+      std::string dump_graph_path_str(dump_graph_path);
+      stream_file_name << (dump_graph_path_str.empty() ? "" : dump_graph_path_str + "/");
+    } else {
+      stream_file_name << "./";
+    }
+    path_prefix = stream_file_name.str();
+  } else {
+    stream_file_name << path_prefix;
+  }
+}
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(const ge::ComputeGraphPtr &graph,
                                                                             const std::string &suffix,
                                                                             bool is_always_dump,
                                                                             const std::string &user_graph_name) {
 #ifdef FMK_SUPPORT_DUMP
+  static std::mutex mutex;
   char dump_ge_graph[MMPA_MAX_PATH] = { 0x00 };
   INT32 res = mmGetEnv(kDumpGeGraph, dump_ge_graph, MMPA_MAX_PATH);
   GE_IF_BOOL_EXEC(res != EN_OK && !is_always_dump, return;);
@@ -592,11 +618,19 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   }
 
   std::stringstream stream_file_name;
-  char *dump_graph_path = std::getenv(kDumpGraphPath);
-  if (dump_graph_path != nullptr) {
-    std::string dump_graph_path_str(dump_graph_path);
-    stream_file_name << (dump_graph_path_str.empty() ? "" : dump_graph_path_str + "/");
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    GetDumpGraphPrefix(stream_file_name);
+    if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
+      int32_t ret = CreateDirectory(stream_file_name.str());
+      if (ret != 0) {
+        GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+        stream_file_name.str("");
+        stream_file_name << "./";
+      }
+    }
   }
+
   stream_file_name << "ge_proto_" << std::setw(kDumpGraphIndexWidth) << std::setfill('0') << file_index;
   stream_file_name << "_" << suffix << ".txt";
   std::string proto_file = user_graph_name.empty() ? stream_file_name.str() : user_graph_name;
@@ -848,11 +882,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   }
 
   std::stringstream stream_file_name;
-  char *dump_graph_path = std::getenv(kDumpGraphPath);
-  if (dump_graph_path != nullptr) {
-    std::string dump_graph_path_str(dump_graph_path);
-    stream_file_name << (dump_graph_path_str.empty() ? "" : dump_graph_path_str + "/");
+  GetDumpGraphPrefix(stream_file_name);
+  if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
+    int32_t ret = CreateDirectory(stream_file_name.str());
+    if (ret != 0) {
+      GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+      stream_file_name.str("");
+      stream_file_name << "./";
+    }
   }
+
   stream_file_name << "ge_onnx_" << std::setw(kDumpGraphIndexWidth) << std::setfill('0') << file_index;
   stream_file_name << "_graph_" << compute_graph.GetGraphID();
   stream_file_name << "_" << suffix << ".pbtxt";
@@ -1567,7 +1606,7 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
                                          ComputeGraphPtr &dst_compute_graph,
                                          std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                          std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
-                                         int32_t &depth) {
+                                         int32_t depth) {
   GE_CHECK_NOTNULL(dst_compute_graph);
   GE_CHECK_NOTNULL(src_compute_graph);
 
@@ -1621,7 +1660,7 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
       std::map<ConstOpDescPtr, OpDescPtr> sub_op_desc_old_2_new;
       graphStatus ret = CopyComputeGraph(src_subgraph, dst_subgraph,
                                          sub_node_old_2_new, sub_op_desc_old_2_new,
-                                         ++depth);
+                                         depth + 1);
       if (ret != GRAPH_SUCCESS) {
         GELOGE(GRAPH_FAILED, "Copy subgraph:%s of parent node:%s failed.",
                src_subgraph->GetName().c_str(), node->GetName().c_str());
@@ -1906,7 +1945,7 @@ graphStatus GraphUtils::GetRefMapping(const ComputeGraphPtr &graph,
   GE_CHECK_NOTNULL(graph);
   for (const auto &node : graph->GetAllNodes()) {
     // in_data_anchor
-    if (HandleInAnchorMapping(node, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+    if (HandleInAnchorMapping(graph, node, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
       GE_LOGE("Find ref_mapping for in_data_anchors of node %s failed.", node->GetName().c_str());
       return GRAPH_FAILED;
     }
@@ -1948,17 +1987,19 @@ NodePtr GraphUtils::FindNodeFromAllNodes(ComputeGraphPtr &graph, const std::stri
 /// @param [out] anchor_to_symbol
 /// @return success: GRAPH_SUCESS
 ///
-graphStatus GraphUtils::HandleInAnchorMapping(const NodePtr &node,
+graphStatus GraphUtils::HandleInAnchorMapping(const ComputeGraphPtr &graph, const NodePtr &node,
                                               std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                               std::map<std::string, std::string> &anchor_to_symbol) {
   GE_CHECK_NOTNULL(node);
+  if (node->GetOwnerComputeGraph()->GetName() != graph->GetName()) {
+    // when curr graph is subgraph , to handle subgraph input/output ref mapping
+    if (NodeUtils::IsSubgraphOutput(node)) {
+      return HandleSubgraphOutput(node, symbol_to_anchors, anchor_to_symbol);
+    }
 
-  if (NodeUtils::IsSubgraphOutput(node)) {
-    return HandleSubgraphOutput(node, symbol_to_anchors, anchor_to_symbol);
-  }
-
-  if (NodeUtils::IsSubgraphInput(node)) {
-    return HandleSubgraphInput(node, symbol_to_anchors, anchor_to_symbol);
+    if (NodeUtils::IsSubgraphInput(node)) {
+      return HandleSubgraphInput(node, symbol_to_anchors, anchor_to_symbol);
+    }
   }
 
   const std::string &type = node->GetType();

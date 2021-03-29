@@ -6,10 +6,11 @@ set(PROTO_LIST
     "${METADEF_DIR}/proto/dump_task.proto"
     "${METADEF_DIR}/proto/fwk_adapter.proto"
     "${METADEF_DIR}/proto/op_mapping_info.proto"
-    "${METADEF_DIR}/proto/proto_inner/ge_onnx.proto"
+    "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
+protobuf_generate(ge_static PROTO_STATIC_SRCS PROTO_STATIC_HDRS ${PROTO_LIST})
 
 set(SRC_LIST
     "types.cc"
@@ -55,6 +56,7 @@ set(SRC_LIST
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
     "utils/transformer_utils.cc"
+    "utils/file_utils.cc"
 )
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
@@ -137,7 +139,7 @@ target_link_libraries(graph PRIVATE
 )
 
 ######### libgraph.a #############
-add_library(graph_static STATIC ${SRC_LIST} ${PROTO_SRCS})
+add_library(graph_static STATIC ${SRC_LIST} ${PROTO_STATIC_SRCS})
 
 target_compile_options(graph_static PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC>
@@ -159,8 +161,8 @@ target_compile_definitions(graph_static PRIVATE
 target_include_directories(graph_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
-    ${CMAKE_BINARY_DIR}/proto/ge/proto
+    ${CMAKE_BINARY_DIR}/proto/ge_static
+    ${CMAKE_BINARY_DIR}/proto/ge_static/proto
     ${METADEF_DIR}
     ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
@@ -296,6 +298,10 @@ target_include_directories(atc_stub_graph PRIVATE
     ${METADEF_DIR}/third_party/transformer/inc
 )
 
+target_compile_options(atc_stub_graph PRIVATE
+    -fno-common
+)
+
 target_link_libraries(atc_stub_graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
 )
@@ -318,6 +324,10 @@ add_library(fwk_stub_graph SHARED
 )
 
 add_dependencies(fwk_stub_graph graph_stub)
+
+target_compile_options(fwk_stub_graph PRIVATE
+    -fno-common
+)
 
 target_include_directories(fwk_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}

@@ -189,7 +189,7 @@ class GraphUtils {
                                       ComputeGraphPtr &dst_compute_graph,
                                       std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                       std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
-                                      int32_t &depth);
+                                      int32_t depth);
 
   static graphStatus CopyMembers(const ComputeGraphPtr &src_compute_graph,
                                  ComputeGraphPtr &dst_compute_graph,
@@ -412,7 +412,7 @@ class GraphUtils {
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
   ///
-  static graphStatus HandleInAnchorMapping(const NodePtr &node,
+  static graphStatus HandleInAnchorMapping(const ComputeGraphPtr &graph, const NodePtr &node,
                                            std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                            std::map<std::string, std::string> &anchor_to_symbol);
 

@@ -40,7 +40,8 @@ OpKernelRegistry& OpKernelRegistry::GetInstance() {
 
 bool OpKernelRegistry::IsRegistered(const std::string &op_type) {
   if (impl_ == nullptr) {
-    GELOGE(MEMALLOC_FAILED, "Failed to invoke IsRegistered %s, OpKernelRegistry is not properly initialized",
+    GELOGE(MEMALLOC_FAILED,
+           "[Check][Param:impl_]Failed to invoke IsRegistered %s, OpKernelRegistry is not properly initialized",
            op_type.c_str());
     return false;
   }
@@ -50,7 +51,9 @@ bool OpKernelRegistry::IsRegistered(const std::string &op_type) {
 
 void OpKernelRegistry::RegisterHostCpuOp(const std::string &op_type, CreateFn create_fn) {
   if (impl_ == nullptr) {
-    GELOGE(MEMALLOC_FAILED, "Failed to register %s, OpKernelRegistry is not properly initialized", op_type.c_str());
+    GELOGE(MEMALLOC_FAILED,
+           "[Check][Param:impl_]Failed to register %s, OpKernelRegistry is not properly initialized",
+           op_type.c_str());
     return;
   }
 
@@ -58,7 +61,8 @@ void OpKernelRegistry::RegisterHostCpuOp(const std::string &op_type, CreateFn cr
 }
 std::unique_ptr<HostCpuOp> OpKernelRegistry::CreateHostCpuOp(const std::string &op_type) {
   if (impl_ == nullptr) {
-    GELOGE(MEMALLOC_FAILED, "Failed to create op for %s, OpKernelRegistry is not properly initialized",
+    GELOGE(MEMALLOC_FAILED,
+           "[Check][Param:impl_]Failed to create op for %s, OpKernelRegistry is not properly initialized",
            op_type.c_str());
     return nullptr;
   }
@@ -74,7 +78,7 @@ std::unique_ptr<HostCpuOp> OpKernelRegistry::CreateHostCpuOp(const std::string &
 
 HostCpuOpRegistrar::HostCpuOpRegistrar(const char *op_type, HostCpuOp *(*create_fn)()) {
   if (op_type == nullptr) {
-    GELOGE(PARAM_INVALID, "Failed to register host cpu op, op type is null");
+    GELOGE(PARAM_INVALID, "[Check][Param:op_type]is null,Failed to register host cpu op");
     return;
   }
 

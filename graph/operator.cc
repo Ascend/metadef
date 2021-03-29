@@ -205,8 +205,10 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
     auto dst_input_desc = op_desc_->GetInputDesc(dst_name);
     if (dst_input_desc.GetFormat() == FORMAT_RESERVED) {
       src_output_desc.SetFormat(FORMAT_ND);
+      src_output_desc.SetOriginFormat(FORMAT_ND);
     } else {
       src_output_desc.SetFormat(dst_input_desc.GetFormat());
+      src_output_desc.SetOriginFormat(dst_input_desc.GetOriginFormat());
     }
     GE_CHK_BOOL_EXEC(op_desc_->UpdateInputDesc(dst_name, src_output_desc) == GRAPH_SUCCESS, return,
                      "Update input desc failed,dst name is %s,src name is %s", dst_name.c_str(),
@@ -255,6 +257,16 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
         GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
         peer_node = enter_peer_out_data_anchor->GetOwnerNode();
       }
+      // Try get from runtime inference context
+      auto context_id = std::to_string(GetContext().ContextId());
+      RuntimeInferenceContext *runtime_infer_ctx = nullptr;
+      if (RuntimeInferenceContext::GetContext(context_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
+        GELOGD("To get constant from runtime inference context. context_id = %s", context_id.c_str());
+        auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(), data);
+        if (ret == GRAPH_SUCCESS) {
+          return GRAPH_SUCCESS;
+        }
+      }
       auto peer_op_desc = peer_node->GetOpDesc();
       GE_CHECK_NOTNULL(peer_op_desc);
       auto peer_op_type = peer_op_desc->GetType();
@@ -276,15 +288,13 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
           return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
         }
       }
-      // Try get from runtime inference context
-      auto session_id = std::to_string(GetContext().SessionId());
-      RuntimeInferenceContext *runtime_infer_ctx = nullptr;
-      if (RuntimeInferenceContext::GetContext(session_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
-        GELOGD("To get constant from runtime inference context. session_id = %s", session_id.c_str());
-        auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(), data);
-        if (ret == GRAPH_SUCCESS) {
-          return GRAPH_SUCCESS;
-        }
+      auto tensor = op_desc->MutableInputDesc(index);
+      GeTensorPtr tensor_value = nullptr;
+      if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, tensor_value)) {
+        GELOGD("Get ATTR_NAME_VALUE from %zu input of %s, Tensor addr is %p, tensor value data type is %d.", index,
+               op_desc->GetName().c_str(), tensor.get(), tensor_value->GetTensorDesc().GetDataType());
+        data = TensorAdapter::GeTensor2Tensor(tensor_value);
+        return GRAPH_SUCCESS;
       }
     } else {
       // For outer graph

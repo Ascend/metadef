@@ -21,6 +21,7 @@
 #include "graph/utils/type_utils.h"
 #include "graph/utils/attr_utils.h"
 #include "inc/graph/debug/ge_attr_define.h"
+#include "expand_dimension.h"
 #include "transfer_shape_according_to_format.h"
 
 namespace ge {
@@ -48,7 +49,7 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     auto format = tensor_desc_input->GetFormat();
     auto ori_format = tensor_desc_input->GetOriginFormat();
     if (format == ori_format) {
-      GELOGD("Node is %s, input tensor idx is %d. ori format: %s, format: %s is same! No need to catch format&shape!",
+      GELOGD("Node is %s, input tensor idx is %zu. ori format: %s, format: %s is same! No need to catch format&shape!",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(ori_format).c_str(),
              TypeUtils::FormatToSerialString(format).c_str());
       continue;
@@ -68,7 +69,7 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     auto format = tensor_desc_output->GetFormat();
     auto ori_format = tensor_desc_output->GetOriginFormat();
     if (format == ori_format) {
-      GELOGD("Node is %s, output tensor idx is %d. ori format: %s, format: %s is same! No need to catch format&shape!",
+      GELOGD("Node is %s, output tensor idx is %zu. ori format: %s, format: %s is same! No need to catch format&shape!",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(ori_format).c_str(),
              TypeUtils::FormatToSerialString(format).c_str());
       continue;
@@ -95,7 +96,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     }
     // if can not find saved info, it says format and origin format is same when catched
     if (map_format_in_[i] == FORMAT_RESERVED) {
-      GELOGD("Node is [%s], input tensor idx [%d] is not been catched.Skip update action for it!",
+      GELOGD("Node is [%s], input tensor idx [%zu] is not been catched.Skip update action for it!",
              op_desc_->GetName().c_str(), i);
       tensor_desc_input->SetOriginFormat(tensor_desc_input->GetFormat());
       tensor_desc_input->SetOriginShape(tensor_desc_input->MutableShape());
@@ -104,13 +105,22 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     auto ori_format = tensor_desc_input->GetFormat();
     auto ori_shape = tensor_desc_input->MutableShape();
     auto curr_format = map_format_in_[i];
-    if (ori_format == curr_format) {
+    if (ori_format == curr_format || curr_format == FORMAT_ND) {
       continue;
     }
     std::vector<int64_t> ori_shape_dims = ori_shape.GetDims();
     std::vector<int64_t> out_dims;
     ge::DataType dtype =  map_dtype_in_[i];
 
+    // FE set and Ge get for PadDimention
+    string infer_reshape_type;
+    (void) AttrUtils::GetStr(*tensor_desc_input, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
+    bool is_success = transformer::ExpandDimension(op_desc_->GetType(), ori_format, curr_format, i,
+                                                   infer_reshape_type, ori_shape_dims);
+    if (!is_success) {
+      GELOGE(GRAPH_FAILED, "Call expandDimension failed.");
+      return GRAPH_FAILED;
+    }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, ori_format, curr_format, dtype,
                                                        transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
@@ -125,7 +135,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     }
     // if can not find saved info, it says format and origin format is same when catched
     if (map_ori_format_out_[i] == FORMAT_RESERVED) {
-      GELOGD("Node is [%s], output tensor idx [%d] is not been catched.Skip update action for it!",
+      GELOGD("Node is [%s], output tensor idx [%zu] is not been catched.Skip update action for it!",
              op_desc_->GetName().c_str(), i);
       tensor_desc_output->SetOriginFormat(tensor_desc_output->GetFormat());
       tensor_desc_output->SetOriginShape(tensor_desc_output->MutableShape());
@@ -134,15 +144,15 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     auto ori_shape = tensor_desc_output->MutableShape();
     auto curr_format = tensor_desc_output->GetFormat();
     if (curr_format != map_ori_format_out_[i]) {
-      GELOGE(GRAPH_FAILED, "Node is %s, out tensor idx is %d. format: %s, recorded origin format: %s is not same",
+      GELOGE(GRAPH_FAILED, "Node is %s, out tensor idx is %zu. format: %s, recorded origin format: %s is not same",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
              TypeUtils::FormatToSerialString(map_ori_format_out_[i]).c_str());
       return GRAPH_FAILED;
     }
     tensor_desc_output->SetOriginShape(ori_shape);
     auto saved_format = map_format_out_[i];
-    if (curr_format == saved_format) {
-      GELOGD("Nodeis %s, out tensor idx is %s. ori format: %s, recorded format: %s is same! No need to transfer",
+    if (curr_format == saved_format || saved_format == FORMAT_ND) {
+      GELOGD("Nodeis %s, out tensor idx is %zu. ori format: %s, recorded format: %s is same! No need to transfer",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
              TypeUtils::FormatToSerialString(saved_format).c_str());
       continue;
@@ -152,11 +162,20 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     std::vector<int64_t> out_dims;
     ge::DataType dtype =  tensor_desc_output->GetDataType();
 
+    // FE set and Ge get for PadDimention
+    string infer_reshape_type;
+    (void) AttrUtils::GetStr(*tensor_desc_output, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
+    bool is_success = transformer::ExpandDimension(op_desc_->GetType(), curr_format, saved_format, i,
+                                                   infer_reshape_type, ori_shape_dims);
+    if (!is_success) {
+      GELOGE(GRAPH_FAILED, "Call expandDimension failed.");
+      return GRAPH_FAILED;
+    }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, curr_format, saved_format, dtype,
                                                        transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     tensor_desc_output->SetShape(GeShape(out_dims));
-    GELOGD("Node is %s, out tensor idx is %d. Update format and shape success，ori format: %s, format: %s",
+    GELOGD("Node is %s, out tensor idx is %zu. Update format and shape success，ori format: %s, format: %s",
         op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
         TypeUtils::FormatToSerialString(saved_format).c_str());
   }

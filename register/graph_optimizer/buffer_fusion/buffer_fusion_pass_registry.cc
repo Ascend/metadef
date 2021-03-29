@@ -70,8 +70,8 @@ BufferFusionPassRegistry &BufferFusionPassRegistry::GetInstance() {
 void BufferFusionPassRegistry::RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
                                             CreateFn create_fn) {
   if (impl_ == nullptr) {
-    GELOGE(ge::MEMALLOC_FAILED, "UbFusionPass[type=%d,name=%s]: failed to register the ub fusion pass", pass_type,
-           pass_name.c_str());
+    GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]UbFusionPass[type=%d,name=%s]: failed to register the ub fusion pass",
+           pass_type, pass_name.c_str());
     return;
   }
   impl_->RegisterPass(pass_type, pass_name, create_fn);
@@ -80,7 +80,7 @@ void BufferFusionPassRegistry::RegisterPass(const BufferFusionPassType &pass_typ
 std::map<std::string, BufferFusionPassRegistry::CreateFn> BufferFusionPassRegistry::GetCreateFnByType(
     const BufferFusionPassType &pass_type) {
   if (impl_ == nullptr) {
-    GELOGE(ge::MEMALLOC_FAILED, "UbFusionPass[type=%d]: failed to create the ub fusion pass", pass_type);
+    GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]UbFusionPass[type=%d]: failed to create the ub fusion pass", pass_type);
     return std::map<std::string, CreateFn>{};
   }
   return impl_->GetCreateFn(pass_type);
@@ -90,12 +90,12 @@ BufferFusionPassRegistrar::BufferFusionPassRegistrar(const BufferFusionPassType 
                                                      const std::string &pass_name,
                                                      BufferFusionPassBase *(*create_fn)()) {
   if (pass_type < BUILT_IN_AI_CORE_BUFFER_FUSION_PASS || pass_type >= BUFFER_FUSION_PASS_TYPE_RESERVED) {
-    GELOGE(ge::PARAM_INVALID, "The pass_type[%d] is not supported.", pass_type);
+    GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_type] value %d is not supported.", pass_type);
     return;
   }
 
   if (pass_name.empty()) {
-    GELOGE(ge::PARAM_INVALID, "Failed to register the ub fusion pass, the pass name is empty.");
+    GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_name]Failed to register the ub fusion pass, the pass name is empty.");
     return;
   }
 

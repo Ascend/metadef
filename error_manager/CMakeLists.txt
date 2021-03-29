@@ -16,9 +16,10 @@ target_include_directories(error_manager PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
+    #### yellow zone ####
+    ${METADEF_DIR}/../inc
+    #### blue zone ####
     ${METADEF_DIR}/third_party/fwkacllib/inc
-    ${METADEF_DIR}/third_party/graphengine/inc
-    ${METADEF_DIR}/third_party/graphengine/inc/external
 )
 
 target_link_libraries(error_manager PRIVATE
@@ -41,9 +42,10 @@ target_include_directories(error_manager_static PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
+    #### yellow zone ####
+    ${METADEF_DIR}/../inc
+    #### blue zone ####
     ${METADEF_DIR}/third_party/fwkacllib/inc
-    ${METADEF_DIR}/third_party/graphengine/inc
-    ${METADEF_DIR}/third_party/graphengine/inc/external
 )
 
 target_compile_definitions(error_manager_static PRIVATE
@@ -66,11 +68,22 @@ set_target_properties(error_manager_static PROPERTIES
     OUTPUT_NAME error_manager
 )
 
+set_target_properties(error_manager PROPERTIES
+    OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,liberror_manager,error_manager>
+    WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+)
+
 ############ install ############
 set(INSTALL_BASE_DIR "")
 set(INSTALL_LIBRARY_DIR lib)
 
+if(TARGET_SYSTEM_NAME STREQUAL "Windows")
+install(TARGETS error_manager error_manager_static OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
+)
+else()
 install(TARGETS error_manager error_manager_static OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
     ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR}
 )
+endif()

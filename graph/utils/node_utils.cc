@@ -29,6 +29,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
+#include <securec.h>
 
 namespace ge {
 std::map<NodePtr, std::vector<uint32_t>> NodeUtils::map_send_info_{};
@@ -603,6 +604,17 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
     GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
     peer_node = enter_peer_out_data_anchor->GetOwnerNode();
   }
+  // Try get from runtime inference context
+  auto context_id = std::to_string(GetContext().ContextId());
+  RuntimeInferenceContext *runtime_infer_ctx = nullptr;
+  if (RuntimeInferenceContext::GetContext(context_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
+    GELOGD("To get constant from runtime inference context. context_id = %s", context_id.c_str());
+    auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(),
+                                            out_data_anchor->GetIdx(), ge_tensor);
+    if (ret == GRAPH_SUCCESS) {
+      return GRAPH_SUCCESS;
+    }
+  }
   auto peer_op_desc = peer_node->GetOpDesc();
   GE_CHECK_NOTNULL(peer_op_desc);
   auto peer_op_type = peer_op_desc->GetType();
@@ -626,16 +638,11 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
       return GRAPH_SUCCESS;
     }
   }
-  // Try get from runtime inference context
-  auto session_id = std::to_string(GetContext().SessionId());
-  RuntimeInferenceContext *runtime_infer_ctx = nullptr;
-  if (RuntimeInferenceContext::GetContext(session_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
-    GELOGD("To get constant from runtime inference context. session_id = %s", session_id.c_str());
-    auto ret = runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(),
-                                            out_data_anchor->GetIdx(), ge_tensor);
-    if (ret == GRAPH_SUCCESS) {
-      return GRAPH_SUCCESS;
-    }
+  auto tensor = op_desc->MutableInputDesc(index);
+  if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, ge_tensor)) {
+    GELOGD("Get ATTR_NAME_VALUE from %zu input of %s, Tensor addr is %p, tensor value data type is %d.", index,
+           op_desc->GetName().c_str(), tensor.get(), ge_tensor->GetTensorDesc().GetDataType());
+    return GRAPH_SUCCESS;
   }
   GELOGW("node[%s]'s input[%s]'s peer node is not const", node.GetName().c_str(), dst_name.c_str());
   return GRAPH_FAILED;
@@ -1036,23 +1043,33 @@ ConstNodePtr NodeUtils::GetNodeFromOperator(const Operator &oprt) {
 }
 
 std::string NodeUtils::GetInConstNodeTypeCrossSubgraph(const NodePtr &node) {
+  NodePtr input_node = GetInNodeCrossSubgraph(node);
+  if (input_node == nullptr) {
+    return "";
+  }
+
+  return input_node->GetType();
+}
+
+NodePtr NodeUtils::GetInNodeCrossSubgraph(const NodePtr &node) {
   NodePtr input_node = node;
   while (input_node != nullptr) {
     if (input_node->GetType() != DATA) {
-      return input_node->GetType();
+      return input_node;
     }
 
     auto owner_graph = input_node->GetOwnerComputeGraph();
     auto parent_node = owner_graph->GetParentNode();
     if ((parent_node == nullptr) || (kWhileOpTypes.count(parent_node->GetType()) > 0)) {
-      return node->GetType();       // not in subgraph or while subgraph.
+      return node;       // not in subgraph or while subgraph.
     }
 
     input_node = GetParentInput(input_node);
   }
 
-  return "";
+  return input_node;
 }
+
 NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
   if (op_desc == nullptr) {
     GELOGE(GRAPH_FAILED, "The OpDesc ptr should not be null.");
@@ -1078,7 +1095,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     GE_CHECK_NOTNULL(in_anchor);
     auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
     if (peer_out_data_anchor == nullptr) {
-      GELOGW("Node[%s] the %u'th input anchor no peer out anchor, please check!");
+      GELOGW("Node[%s] the %u'th input anchor no peer out anchor, please check!", node->GetName().c_str(), index);
       return GRAPH_SUCCESS;
     }
     auto peer_out_node = peer_out_data_anchor->GetOwnerNode();
@@ -1116,7 +1133,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
       for (const auto &in_data_anchor : n->GetAllInDataAnchors()) {
         auto in_desc = n->GetOpDesc()->MutableInputDesc(in_data_anchor->GetIdx());
         if (in_desc == nullptr) {
-          GELOGE(GRAPH_FAILED, "Invalid Netoutput node[%s] idx[%s], no tensor on it",
+          GELOGE(GRAPH_FAILED, "Invalid Netoutput node[%s] idx[%d], no tensor on it",
                  n->GetName().c_str(),
                  in_data_anchor->GetIdx());
           return GRAPH_FAILED;
@@ -1153,6 +1170,34 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     return GetInNodeCrossPartionedCallNode(parent_node, ref_i, peer_node);
   }
   GELOGD("returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!", kRefIndex, node->GetName().c_str());
+  return GRAPH_SUCCESS;
+}
+
+graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) {
+  if (group_name == nullptr) {
+    GE_LOGE("[Check][Parameter]Get nullptr when set parallel group on node:%s", node.GetName().c_str());
+    REPORT_INNER_ERROR("E19999", "Get nullptr when set parallel group on node:%s", node.GetName().c_str());
+    return GRAPH_FAILED;
+  }
+  std::string current_group;
+  std::string new_group(group_name);
+  if (AttrUtils::GetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, current_group)) {
+    if (new_group != current_group) {
+      GE_LOGE("[Compare][Attr]Failed to set parallel group name %s on node %s, group conflict with existing %s",
+              new_group.c_str(), node.GetName().c_str(), group_name);
+      REPORT_INNER_ERROR("E19999", "Failed to set parallel group name %s on node %s, group conflict with existing %s",
+                         new_group.c_str(), node.GetName().c_str(), group_name);
+      return GRAPH_FAILED;
+    }
+    return GRAPH_SUCCESS;
+  }
+  if (!AttrUtils::SetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, new_group)) {
+    GE_LOGE("[SetAttr][OpDesc]Failed to set parallel group name %s on node %s",
+            group_name, node.GetName().c_str());
+    REPORT_INNER_ERROR("E19999", "Failed to set parallel group name %s on node %s",
+                       group_name, node.GetName().c_str());
+    return GRAPH_FAILED;
+  }
   return GRAPH_SUCCESS;
 }
 }  // namespace ge

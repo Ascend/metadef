@@ -61,10 +61,10 @@ OpsKernelBuilderRegistrar::OpsKernelBuilderRegistrar(const string &kernel_lib_na
   if (fn != nullptr) {
     builder.reset(fn());
     if (builder == nullptr) {
-      GELOGE(INTERNAL_ERROR, "Failed to create OpsKernelBuilder, kernel lib name = %s", kernel_lib_name.c_str());
+      GELOGE(INTERNAL_ERROR, "[Create][OpsKernelBuilder]kernel lib name = %s", kernel_lib_name.c_str());
     }
   } else {
-    GELOGE(INTERNAL_ERROR, "Creator is nullptr. kernel lib name = %s", kernel_lib_name.c_str());
+    GELOGE(INTERNAL_ERROR, "[Check][Param:fn]Creator is nullptr, kernel lib name = %s", kernel_lib_name.c_str());
   }
 
   // May add empty ptr, so that error can be found afterward
