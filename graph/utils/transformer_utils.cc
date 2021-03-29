@@ -21,6 +21,7 @@
 #include "graph/utils/type_utils.h"
 #include "graph/utils/attr_utils.h"
 #include "inc/graph/debug/ge_attr_define.h"
+#include "expand_dimension.h"
 #include "transfer_shape_according_to_format.h"
 
 namespace ge {
