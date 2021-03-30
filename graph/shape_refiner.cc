@@ -143,6 +143,7 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
     }
     auto ref_out_tensor = ref_out_tensors[i].at(0);
     auto out_shape = ref_out_tensor.MutableShape();
+    vector<std::pair<int64_t, int64_t>> data_shape_range;
     // ref_i's data and output tensor shape should be same
     for (auto &tensor : ref_data_tensors[i]) {
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
@@ -165,8 +166,15 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
               }
               data_shape.SetDim(j, UNKNOWN_DIM);
             }
+            // set shape rang of while, if dim is unknown ,set shape range as {1,-1}
+            if (data_shape.GetDim(j) == UNKNOWN_DIM) {
+              data_shape_range.emplace_back(std::make_pair(1, UNKNOWN_DIM));
+            } else {
+              data_shape_range.emplace_back(std::make_pair(data_shape.GetDim(j), data_shape.GetDim(j)));
+            }
           }
           ref_out_tensor.SetShape(data_shape);
+          ref_out_tensor.SetShapeRange(data_shape_range);
         }
       }
     }
