@@ -1168,4 +1168,10 @@ const std::string ATTR_NAME_FUZZ_BUILD_RES_ATTRS = "_fuzz_build_res";
 const std::string ATTR_NAME_FUZZ_INPUTS_SUPPORTED_ATTRS = "_inputs_support_info";
 const std::string ATTR_NAME_FUZZ_OUTPUTS_SUPPORTED_ATTRS = "_outputs_support_info";
 const std::string ATTR_NAME_FUZZ_IS_HIGH_PERFORMANCE_ATTRS = "_is_high_performance";
+
+// buffer pool allocator
+const std::string ATTR_NAME_BUFFER_POOL_ID = "_buffer_pool_id";
+const std::string ATTR_NAME_BUFFER_POOL_SIZE = "_buffer_pool_size";
+const std::string ATTR_NAME_EVENT_MULTIPLEXING = "_event_multiplexing";
+const std::string ATTR_NAME_BUFFER_POOL_NODE_SIZE_AND_OFFSET = "_buffer_pool_node_size_and_offset";
 }  // namespace ge
