@@ -2569,6 +2569,21 @@
     "ErrCode": "E68089",
     "ErrMessage": "tiling is not found in repository file.",
     "Arglist": ""
+  },
+  {
+    "ErrCode": "EH0001",
+    "ErrMessage": "invalid value for %s[%s], %s.",
+    "Arglist": "param,value,reason"
+  },
+  {
+    "ErrCode": "EH0002",
+    "ErrMessage": "param [%s] must not be null.",
+    "Arglist": "param"
+  },
+  {
+    "ErrCode": "EH0003",
+    "ErrMessage": "path [%s] is invalid, %s.",
+    "Arglist": "path,reason"
   }
   ]
 }
