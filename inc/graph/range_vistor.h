@@ -23,11 +23,11 @@
 template <class E, class O>
 class RangeVistor {
  public:
-  using Iterator = typename std::vector<E>::iterator;
-  using ConstIterator = typename std::vector<E>::const_iterator;
+  using Iterator = typename std::vector<E>::iterator;  //lint !e151
+  using ConstIterator = typename std::vector<E>::const_iterator;  //lint !e151
 
   RangeVistor(O owner, const std::vector<E> &vs) : owner_(owner), elements_(vs) {}
-  RangeVistor(O owner, const std::list<E> &vs) : owner_(owner), elements_(vs.begin(), vs.end()) {}
+  RangeVistor(O owner, const std::list<E> &vs) : owner_(owner), elements_(vs.begin(), vs.end()) {}  //lint !e1077
 
   ~RangeVistor() {}
 
@@ -43,7 +43,7 @@ class RangeVistor {
 
   bool empty() const { return elements_.empty(); }
 
-  E &at(std::size_t index) { return elements_.at(index); }
+  E &at(std::size_t index) { return elements_.at(index); }  //lint !e659
 
   const E &at(std::size_t index) const { return elements_.at(index); }
 
