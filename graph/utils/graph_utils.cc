@@ -1906,7 +1906,7 @@ graphStatus GraphUtils::GetRefMapping(const ComputeGraphPtr &graph,
   GE_CHECK_NOTNULL(graph);
   for (const auto &node : graph->GetAllNodes()) {
     // in_data_anchor
-    if (HandleInAnchorMapping(node, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+    if (HandleInAnchorMapping(graph, node, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
       GE_LOGE("Find ref_mapping for in_data_anchors of node %s failed.", node->GetName().c_str());
       return GRAPH_FAILED;
     }
@@ -1948,17 +1948,19 @@ NodePtr GraphUtils::FindNodeFromAllNodes(ComputeGraphPtr &graph, const std::stri
 /// @param [out] anchor_to_symbol
 /// @return success: GRAPH_SUCESS
 ///
-graphStatus GraphUtils::HandleInAnchorMapping(const NodePtr &node,
+graphStatus GraphUtils::HandleInAnchorMapping(const ComputeGraphPtr &graph, const NodePtr &node,
                                               std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                               std::map<std::string, std::string> &anchor_to_symbol) {
   GE_CHECK_NOTNULL(node);
+  if (node->GetOwnerComputeGraph()->GetName() != graph->GetName()) {
+    // when curr graph is subgraph , to handle subgraph input/output ref mapping
+    if (NodeUtils::IsSubgraphOutput(node)) {
+      return HandleSubgraphOutput(node, symbol_to_anchors, anchor_to_symbol);
+    }
 
-  if (NodeUtils::IsSubgraphOutput(node)) {
-    return HandleSubgraphOutput(node, symbol_to_anchors, anchor_to_symbol);
-  }
-
-  if (NodeUtils::IsSubgraphInput(node)) {
-    return HandleSubgraphInput(node, symbol_to_anchors, anchor_to_symbol);
+    if (NodeUtils::IsSubgraphInput(node)) {
+      return HandleSubgraphInput(node, symbol_to_anchors, anchor_to_symbol);
+    }
   }
 
   const std::string &type = node->GetType();
