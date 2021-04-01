@@ -519,7 +519,7 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
       subgraphs[subgraph->GetName()] = subgraph;
     }
 
-    if (!RebuildOwnership(compute_graph_ptr, subgraphs)) {
+    if (!subgraphs.empty() && !RebuildOwnership(compute_graph_ptr, subgraphs)) {
       GELOGE(GRAPH_FAILED, "Rebuild graph ownership failed");
       return false;
     }
