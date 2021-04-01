@@ -25,7 +25,7 @@ set(PROTO_LIST
     "${METADEF_DIR}/proto/dump_task.proto"
     "${METADEF_DIR}/proto/fwk_adapter.proto"
     "${METADEF_DIR}/proto/op_mapping_info.proto"
-    "${METADEF_DIR}/proto/proto_inner/ge_onnx.proto"
+    "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
