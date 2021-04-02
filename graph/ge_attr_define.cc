@@ -1016,6 +1016,10 @@ const std::string ATOMIC_ATTR_IS_FUSION_NODE = "is_fusion_node";
 const std::string EXT_ATTR_ATOMIC_WORKSPACE_INFO = "sub_node_workspace_info";
 const std::string EXT_ATTR_ATOMIC_WORKSPACE_OFFSET = "sub_node_workspace_offset";
 const std::string ATOMIC_ATTR_IS_ATOMIC_NODE = "is_atomic_node";
+const std::string ATOMIC_ATTR_TVM_MAGIC = "_atomic_tvm_magic";
+const std::string ATOMIC_ATTR_TVM_MATA = "_atomic_tvm_matadata";
+const std::string ATOMIC_ATTR_TBE_KERNEL_NAME = "_atomic_tbe_kernel_name";
+const std::string EXT_ATTR_ATOMIC_TBE_KERNEL = "_atomic_tbe_kernel";
 
 // Source/dst format for Op FormatTransfer
 const std::string FORMAT_TRANSFER_SRC_FORMAT = "src_format";
