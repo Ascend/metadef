@@ -543,15 +543,40 @@ Status AutoMappingSubgraphOutput(const ge::ComputeGraphPtr &graph,
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY
-Status AutoMappingSubgraphIndex(const ge::Graph &graph,
-                                const std::function<Status(int data_index, int &parent_input_index)> &input,
-                                const std::function<Status(int netoutput_index, int &parent_output_index)> &output) {
-  GE_CHECK_NOTNULL(input);
-  GE_CHECK_NOTNULL(output);
+Status AutoMappingSubgraphIndexByOutputNodesInfo(const ge::ComputeGraphPtr &compute_graph,
+    const std::function<Status(int netoutput_index, int &parent_output_index)> &output) {
+  const auto &out_nodes_info = compute_graph->GetGraphOutNodesInfo();
+  for (size_t i = 0; i < out_nodes_info.size(); i++) {
+    const auto &out_node = out_nodes_info[i].first;
+    int32_t output_index = out_nodes_info[i].second;
+    int64_t index = static_cast<int64_t>(i);
+    int parent_index = -1;
+    auto ret = output(index, parent_index);
+    if (ret != SUCCESS) {
+      GELOGE(FAILED, "[Get][ParentIndex:output] Output index %ld, error code %u", index, ret);
+      return FAILED;
+    }
+    auto output_desc = out_node->GetOpDesc()->MutableOutputDesc(output_index);
+    if (output_desc == nullptr) {
+      GELOGE(FAILED, "[Get][OutputDesc] Can not find output tensor desc from node:%s, index %d",
+             out_node->GetName().c_str(), output_index);
+      return FAILED;
+    }
+    if (!ge::AttrUtils::SetInt(output_desc, ge::ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
+      GELOGE(FAILED, "[Set][Attr:%s] Op name:%s, parent_index:%d",
+             ge::ATTR_NAME_PARENT_NODE_INDEX.c_str(), out_node->GetName().c_str(), parent_index);
+      return FAILED;
+    }
+    GELOGI("Generate subgraph output map for subgraph %s, out node index %ld, parent node index %d, node name:%s",
+           compute_graph->GetName().c_str(), index, parent_index, out_node->GetName().c_str());
+  }
 
-  auto compute_graph = ge::GraphUtils::GetComputeGraph(graph);
-  GE_CHECK_NOTNULL(compute_graph);
+  return SUCCESS;
+}
 
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY
+Status AutoMappingSubgraphIndexByDataNode(const ge::ComputeGraphPtr &compute_graph,
+    const std::function<Status(int data_index, int &parent_input_index)> &input) {
   auto nodes = FindNodesByType(compute_graph, "Data");
   for (size_t i = 0; i < nodes.size(); ++i) {
     int parent_index = -1;
@@ -572,11 +597,27 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
       return FAILED;
     }
     GELOGI("Generate subgraph input map for subgraph %s, data index %zu, parent node index %d",
-           graph.GetName().c_str(), i, parent_index);
+           compute_graph->GetName().c_str(), i, parent_index);
+  }
+  return SUCCESS;
+}
 
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY
+Status AutoMappingSubgraphIndex(const ge::Graph &graph,
+                                const std::function<Status(int data_index, int &parent_input_index)> &input,
+                                const std::function<Status(int netoutput_index, int &parent_output_index)> &output) {
+  GE_CHECK_NOTNULL(input);
+  GE_CHECK_NOTNULL(output);
+  auto compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  GE_CHECK_NOTNULL(compute_graph);
+
+  auto ret = AutoMappingSubgraphIndexByDataNode(compute_graph, input);
+  if (ret != SUCCESS) {
+    GELOGE(ret, "[Mapping][Index] auto mapping graph:%s input index failed,", graph.GetName().c_str());
+    return ret;
   }
 
-  nodes = FindNodesByType(compute_graph, "_Retval");
+  auto nodes = FindNodesByType(compute_graph, "_Retval");
   for (auto &retval : nodes) {
     int64_t index = -1;
     if (!ge::AttrUtils::GetInt(retval->GetOpDesc(), "retval_index", index)) {
@@ -585,7 +626,7 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
       return FAILED;
     }
     int parent_index = -1;
-    auto ret = output(index, parent_index);
+    ret = output(index, parent_index);
     if (ret != SUCCESS) {
       GELOGE(FAILED, "[Get][ParentIndex:output]retval index %ld, error code %u", index, ret);
       return FAILED;
@@ -600,6 +641,29 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
   }
 
   return nodes.empty() ? AutoMappingSubgraphOutput(compute_graph, output) : SUCCESS;
+}
+
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY
+Status AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo(const ge::Graph &graph,
+    const std::function<Status(int data_index, int &parent_input_index)> &input,
+    const std::function<Status(int netoutput_index, int &parent_output_index)> &output) {
+  GE_CHECK_NOTNULL(input);
+  GE_CHECK_NOTNULL(output);
+  auto compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  GE_CHECK_NOTNULL(compute_graph);
+
+  auto ret = AutoMappingSubgraphIndexByDataNode(compute_graph, input);
+  if (ret != SUCCESS) {
+    GELOGE(ret, "[Mapping][InputIndex] auto mapping graph:%s input index failed,", graph.GetName().c_str());
+    return ret;
+  }
+  ret = AutoMappingSubgraphIndexByOutputNodesInfo(compute_graph, output);
+  if (ret != SUCCESS) {
+    GELOGE(ret, "[Mapping][OutputIndex] auto mapping graph:%s output index failed,", graph.GetName().c_str());
+    return ret;
+  }
+
+  return SUCCESS;
 }
 
 OpReceiver::OpReceiver(OpRegistrationData &reg_data) { OpRegistry::Instance()->registrationDatas.push_back(reg_data); }
