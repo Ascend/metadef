@@ -125,7 +125,7 @@ target_link_libraries(ut_metadef_register PRIVATE
 
 
 add_executable(ut_register
-    ${UT_FILES} ${REGISTER_PROTO_HDRS}
+    ${REGISTER_UT_FILES} ${REGISTER_PROTO_HDRS}
 )
 
 target_compile_options(ut_register PRIVATE
