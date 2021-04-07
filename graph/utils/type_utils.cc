@@ -197,6 +197,8 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_STRING_REF, "DT_STRING_REF"},          // string ref type
     {DT_STRING, "DT_STRING"},                  // string type
     {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
+    {DT_BF16, "DT_BF16"},                      // dt_variant type
+    {DT_INT4, "DT_INT4"},                      // dt_variant type
 };
 
 const std::map<std::string, DataType> kStringTodataTypeMap = {
