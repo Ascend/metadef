@@ -396,12 +396,20 @@ void FormatRefiner::RefreshOriginFormatOfAnchor(std::vector<ge::NodePtr> &anchor
     for (const auto &input_desc : node->GetOpDesc()->GetAllInputsDescPtr()) {
       // single op support private format set, its origin format should not be override
       auto ori_format = input_desc->GetOriginFormat();
+      auto format = input_desc->GetFormat();
+      if (TypeUtils::IsInternalFormat(format)) {
+        continue;
+      }
       if (input_desc != nullptr && (ori_format == FORMAT_ND || ori_format == FORMAT_RESERVED)) {
         input_desc->SetOriginFormat(input_desc->GetFormat());
       }
     }
     for (const auto &output_desc : node->GetOpDesc()->GetAllOutputsDescPtr()) {
       auto ori_format = output_desc->GetOriginFormat();
+      auto format = output_desc->GetFormat();
+      if (TypeUtils::IsInternalFormat(format)) {
+        continue;
+      }
       if (output_desc != nullptr && (ori_format == FORMAT_ND || ori_format == FORMAT_RESERVED)) {
         output_desc->SetOriginFormat(output_desc->GetFormat());
       }
