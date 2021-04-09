@@ -76,7 +76,15 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
 }
 
 namespace {
+
+#ifdef __GNUC__
 const char *const kErrorCodePath = "../conf/error_manager/error_code.json";
+const char *const kSeprate = "/";
+#else
+const char *const kErrorCodePath = "..\\conf\\error_manager\\error_code.json";
+const char *const kSeprate = "\\";
+#endif
+
 const char *const kErrorList = "error_info_list";
 const char *const kErrCode = "ErrCode";
 const char *const kErrMessage = "ErrMessage";
@@ -110,7 +118,7 @@ static std::string GetSelfLibraryDir(void) {
     }
 
     so_path = path;
-    so_path = so_path.substr(0, so_path.rfind('/') + 1);
+    so_path = so_path.substr(0, so_path.rfind(kSeprate) + 1);
     return so_path;
   }
 }
