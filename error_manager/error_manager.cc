@@ -79,10 +79,10 @@ namespace {
 
 #ifdef __GNUC__
 const char *const kErrorCodePath = "../conf/error_manager/error_code.json";
-const char *const kSeprate = "/";
+const char *const kSeparator = "/";
 #else
 const char *const kErrorCodePath = "..\\conf\\error_manager\\error_code.json";
-const char *const kSeprate = "\\";
+const char *const kSeparator = "\\";
 #endif
 
 const char *const kErrorList = "error_info_list";
@@ -118,7 +118,7 @@ static std::string GetSelfLibraryDir(void) {
     }
 
     so_path = path;
-    so_path = so_path.substr(0, so_path.rfind(kSeprate) + 1);
+    so_path = so_path.substr(0, so_path.rfind(kSeparator) + 1);
     return so_path;
   }
 }
