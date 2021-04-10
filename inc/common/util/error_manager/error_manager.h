@@ -22,12 +22,15 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <string.h>
 
-namespace ErrorMessage {
+namespace error_message {
 #ifdef __GNUC__
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
+#define TRIP_PATH(x) strrchr(x, '/') ? strrchr(x, '/') + 1 : x
 #else
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
+#define TRIP_PATH(x) strrchr(x, '\\') ? strrchr(x, '\\') + 1 : x
 #endif
 }
 
@@ -47,24 +50,63 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 #define REPORT_ENV_ERROR(error_code, key, value)                                            \
   ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value)
 
-#define REPORT_INNER_ERROR(error_code, fmt, ...)                                                                       \
-do {                                                                                                                   \
-  char error_message_str[512] = {0};                                                                                   \
-  int error_message_ret = ErrorMessage::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                              \
-  if (error_message_ret > 0) {                                                                                         \
-    error_message_ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
-  }                                                                                                                    \
-} while(0)
+#define REPORT_INNER_ERROR(error_code, fmt, ...)                                                 \
+do {                                                                                             \
+  char error_message_str[512] = {0};                                                             \
+  error_message::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                 \
+  error_message::FormatErrorMessage(                                                             \
+          error_message_str, 512, "%s[FUNC:%s][FILE:%s][LINE:%d]",                               \
+          error_message_str, __FUNCTION__, TRIP_PATH(__FILE__), __LINE__);                       \
+  ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
+} while (0)
 
-#define REPORT_CALL_ERROR(error_code, fmt, ...)                                                                        \
-do {                                                                                                                   \
-  char error_message_str[512] = {0};                                                                                   \
-  int error_message_ret = ErrorMessage::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                              \
-  if (error_message_ret > 0) {                                                                                         \
-    error_message_ret = ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
-  }                                                                                                                    \
-} while(0)
+#define REPORT_CALL_ERROR(error_code, fmt, ...)                                                  \
+do {                                                                                             \
+  char error_message_str[512] = {0};                                                             \
+  error_message::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                 \
+  error_message::FormatErrorMessage(                                                             \
+          error_message_str, 512, "%s[FUNC:%s][FILE:%s][LINE:%d]",                               \
+          error_message_str, __FUNCTION__, TRIP_PATH(__FILE__), __LINE__);                       \
+  ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
+} while (0)
 
+namespace error_message {
+  // first stage
+  const std::string kInitialize   = "INIT";
+  const std::string kModelCompile = "COMP";
+  const std::string kModelLoad    = "LOAD";
+  const std::string kModelExecute = "EXEC";
+  const std::string kFinalize     = "FINAL";
+
+  // SecondStage
+  // INITIALIZE
+  const std::string kParser               = "PARSER";
+  const std::string kOpsProtoInit         = "OPS_PRO";
+  const std::string kSystemInit           = "SYS";
+  const std::string kEngineInit           = "ENGINE";
+  const std::string kOpsKernelInit        = "OPS_KER";
+  const std::string kOpsKernelBuilderInit = "OPS_KER_BLD";
+  // MODEL_COMPILE
+  const std::string kPrepareOptimize    = "PRE_OPT";
+  const std::string kOriginOptimize     = "ORI_OPT";
+  const std::string kSubGraphOptimize   = "SUB_OPT";
+  const std::string kMergeGraphOptimize = "MERGE_OPT";
+  const std::string kPreBuild           = "PRE_BLD";
+  const std::string kStreamAlloc        = "STM_ALLOC";
+  const std::string kMemoryAlloc        = "MEM_ALLOC";
+  const std::string kTaskGenerate       = "TASK_GEN";
+  // COMMON
+  const std::string kOther = "DEFAULT";
+
+  struct Context {
+    uint64_t work_stream_id;
+    std::string first_stage;
+    std::string second_stage;
+    std::string log_header;
+  };
+}
+
+// old, will be delete after all caller transfer to new
 namespace ErrorMessage {
   // first stage
   const std::string kInitialize   = "INIT";

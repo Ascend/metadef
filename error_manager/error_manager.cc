@@ -61,7 +61,7 @@ inline bool IsLogEnable(int module_name, int log_level) {
   if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) \
   dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
 
-namespace ErrorMessage {
+namespace error_message {
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   int ret;
   va_list arg_list;
