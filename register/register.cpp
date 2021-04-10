@@ -666,6 +666,61 @@ Status AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo(const ge::Graph &gra
   return SUCCESS;
 }
 
+class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkRegistryImpl {
+ public:
+  void AddAutoMappingSubgraphIOIndexFunc(domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun);
+  AutoMappingSubgraphIOIndexFunc GetAutoMappingSubgraphIOIndexFunc(domi::FrameworkType framework);
+ private:
+  std::map<domi::FrameworkType, AutoMappingSubgraphIOIndexFunc> fmk_type_to_auto_mapping_subgraph_index_fun_;
+};
+
+void FrameworkRegistryImpl::AddAutoMappingSubgraphIOIndexFunc(
+    domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun) {
+  GELOGD("Regitser auto mapping function: framework type:%d.", framework);
+  fmk_type_to_auto_mapping_subgraph_index_fun_[framework] = std::move(fun);
+}
+
+AutoMappingSubgraphIOIndexFunc FrameworkRegistryImpl::GetAutoMappingSubgraphIOIndexFunc(
+    domi::FrameworkType framework) {
+  auto itr = fmk_type_to_auto_mapping_subgraph_index_fun_.find(framework);
+  if (itr != fmk_type_to_auto_mapping_subgraph_index_fun_.end()) {
+    return itr->second;
+  }
+  return nullptr;
+}
+
+FrameworkRegistry::FrameworkRegistry() {
+  impl_ = std::unique_ptr<FrameworkRegistryImpl>(new (std::nothrow) FrameworkRegistryImpl());
+  if (impl_ == nullptr) {
+    GELOGW("FrameworkRegistryImpl make shared failed!");
+  }
+}
+
+FrameworkRegistry& FrameworkRegistry::Instance() {
+  static FrameworkRegistry instance;
+  return instance;
+}
+
+void FrameworkRegistry::AddAutoMappingSubgraphIOIndexFunc(
+    domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun) {
+  if (impl_ != nullptr) {
+    impl_->AddAutoMappingSubgraphIOIndexFunc(framework, fun);
+  }
+}
+
+AutoMappingSubgraphIOIndexFunc FrameworkRegistry::GetAutoMappingSubgraphIOIndexFunc(
+    domi::FrameworkType framework) {
+  if (impl_ != nullptr) {
+    return impl_->GetAutoMappingSubgraphIOIndexFunc(framework);
+  }
+  return nullptr;
+}
+
+AutoMappingSubgraphIOIndexFuncRegister::AutoMappingSubgraphIOIndexFuncRegister(
+    domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun) {
+  FrameworkRegistry::Instance().AddAutoMappingSubgraphIOIndexFunc(framework, fun);
+}
+
 OpReceiver::OpReceiver(OpRegistrationData &reg_data) { OpRegistry::Instance()->registrationDatas.push_back(reg_data); }
 
 class OpRegistrationDataImpl {
