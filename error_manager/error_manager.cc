@@ -61,6 +61,21 @@ inline bool IsLogEnable(int module_name, int log_level) {
   if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) \
   dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
 
+// old, will be delete after all caller transfer to new
+namespace ErrorMessage {
+int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
+  int ret;
+  va_list arg_list;
+
+  va_start(arg_list, format);
+  ret = vsprintf_s(str_dst, dst_max, format, arg_list);
+  va_end(arg_list);
+  (void)arg_list;
+
+  return ret;
+}
+}
+
 namespace error_message {
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   int ret;
