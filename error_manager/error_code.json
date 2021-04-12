@@ -2584,6 +2584,21 @@
     "ErrCode": "EH0003",
     "ErrMessage": "path [%s] is invalid, %s.",
     "Arglist": "path,reason"
+  },
+  {
+    "ErrCode": "EI0001",
+    "ErrMessage": "The env % is invalid, %s.",
+    "Arglist": "env,reason"
+  },
+  {
+    "ErrCode": "EI0002",
+    "ErrMessage": "The so[%s] is not found, Please check that the so file is right.",
+    "Arglist": "so_name"
+  },
+  {
+    "ErrCode": "EI0003",
+    "ErrMessage": "In [%s], the parameter [%s] 's value[%s] is invalid, %s.",
+    "Arglist": "ccl_op,parameter,value,reason"
   }
   ]
 }
