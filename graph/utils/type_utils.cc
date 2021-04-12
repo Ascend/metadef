@@ -108,10 +108,10 @@ const std::set<std::string> kInternalFormat = {
   "FRACTAL_ZZ",
   "FRACTAL_NZ",
   "NDC1HWC0",
-  "FORMAT_FRACTAL_Z_3D",
-  "FORMAT_FRACTAL_Z_3D_TRANSPOSE",
-  "FORMAT_FRACTAL_ZN_LSTM",
-  "FORMAT_FRACTAL_Z_G"
+  "FRACTAL_Z_3D",
+  "FRACTAL_Z_3D_TRANSPOSE",
+  "FRACTAL_ZN_LSTM",
+  "FRACTAL_Z_G"
 };
 
 const std::map<std::string, Format> kDataFormatMap = {
