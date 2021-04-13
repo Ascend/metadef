@@ -22,15 +22,15 @@
 #include <string>
 #include <vector>
 #include <mutex>
-#include <string.h>
+#include <cstring>
 
 namespace error_message {
 #ifdef __GNUC__
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
-#define TRIP_PATH(x) strrchr(x, '/') ? strrchr(x, '/') + 1 : x
+#define TRIM_PATH(x) strrchr(x, '/') ? strrchr(x, '/') + 1 : x
 #else
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
-#define TRIP_PATH(x) strrchr(x, '\\') ? strrchr(x, '\\') + 1 : x
+#define TRIM_PATH(x) strrchr(x, '\\') ? strrchr(x, '\\') + 1 : x
 #endif
 }
 
@@ -56,7 +56,7 @@ do {                                                                            
   error_message::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                 \
   error_message::FormatErrorMessage(                                                             \
           error_message_str, 512, "%s[FUNC:%s][FILE:%s][LINE:%d]",                               \
-          error_message_str, __FUNCTION__, TRIP_PATH(__FILE__), __LINE__);                       \
+          error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__);                       \
   ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
 } while (0)
 
@@ -66,7 +66,7 @@ do {                                                                            
   error_message::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                 \
   error_message::FormatErrorMessage(                                                             \
           error_message_str, 512, "%s[FUNC:%s][FILE:%s][LINE:%d]",                               \
-          error_message_str, __FUNCTION__, TRIP_PATH(__FILE__), __LINE__);                       \
+          error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__);                       \
   ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
 } while (0)
 
