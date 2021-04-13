@@ -97,4 +97,47 @@ TEST_F(UtestTypes, GetSubFormat) {
   ASSERT_EQ(HasSubFormat(0xffffff), true);
   ASSERT_EQ(GetSubFormat(0x4), false);
 }
+
+TEST_F(UtestTypes, GetSizeByDataType) {
+  EXPECT_EQ(GetSizeByDataType(DT_FLOAT), 4);
+  EXPECT_EQ(GetSizeByDataType(DT_FLOAT16), 2);
+  EXPECT_EQ(GetSizeByDataType(DT_INT8), 1);
+  EXPECT_EQ(GetSizeByDataType(DT_INT16), 2);
+  EXPECT_EQ(GetSizeByDataType(DT_UINT16), 2);
+  EXPECT_EQ(GetSizeByDataType(DT_UINT8), 1);
+  EXPECT_EQ(GetSizeByDataType(DT_INT32), 4);
+  EXPECT_EQ(GetSizeByDataType(DT_INT64), 8);
+  EXPECT_EQ(GetSizeByDataType(DT_UINT32), 4);
+  EXPECT_EQ(GetSizeByDataType(DT_UINT64), 8);
+  EXPECT_EQ(GetSizeByDataType(DT_BOOL), 1);
+  EXPECT_EQ(GetSizeByDataType(DT_DOUBLE), 8);
+  EXPECT_EQ(GetSizeByDataType(DT_STRING), -1);
+  EXPECT_EQ(GetSizeByDataType(DT_DUAL_SUB_INT8), 1);
+  EXPECT_EQ(GetSizeByDataType(DT_DUAL_SUB_UINT8), 1);
+  EXPECT_EQ(GetSizeByDataType(DT_COMPLEX64), 8);
+  EXPECT_EQ(GetSizeByDataType(DT_COMPLEX128), 16);
+  EXPECT_EQ(GetSizeByDataType(DT_QINT8), 1);
+  EXPECT_EQ(GetSizeByDataType(DT_QINT16), 2);
+  EXPECT_EQ(GetSizeByDataType(DT_QINT32), 4);
+  EXPECT_EQ(GetSizeByDataType(DT_QUINT8), 1);
+  EXPECT_EQ(GetSizeByDataType(DT_QUINT16), 2);
+  EXPECT_EQ(GetSizeByDataType(DT_RESOURCE), 8);
+  EXPECT_EQ(GetSizeByDataType(DT_STRING_REF), -1);
+  EXPECT_EQ(GetSizeByDataType(DT_DUAL), 5);
+  EXPECT_EQ(GetSizeByDataType(DT_VARIANT), 8);
+  EXPECT_EQ(GetSizeByDataType(DT_BF16), 2);
+  EXPECT_EQ(GetSizeByDataType(DT_INT4), kDataTypeSizeBitOffset + 4);
+  EXPECT_EQ(GetSizeByDataType(DT_UNDEFINED), -1);
+  EXPECT_EQ(DT_UNDEFINED, 29);
+}
+
+TEST_F(UtestTypes, GetSizeInBytes) {
+  EXPECT_EQ(GetSizeInBytes(-1, DT_FLOAT), -1);
+  EXPECT_EQ(GetSizeInBytes(10, DT_UNDEFINED), -1);
+  EXPECT_EQ(GetSizeInBytes(INT64_MAX, DT_INT32), -1);
+  EXPECT_EQ(GetSizeInBytes(10, DT_FLOAT), 40);
+  EXPECT_EQ(GetSizeInBytes(10, DT_INT4), 5);
+  EXPECT_EQ(GetSizeInBytes(9, DT_INT4), 5);
+  EXPECT_EQ(GetSizeInBytes(INT64_MAX, DT_INT4), -1);
+}
 }
