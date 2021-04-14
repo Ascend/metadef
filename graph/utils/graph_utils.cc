@@ -2372,8 +2372,19 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
       }
     }
   }
+  // nopadding reuse
+  return IsNoPaddingRefFromInput(out_data_anchor, reuse_in_index);
+}
 
-  //nopadding means output[0] reuse input[0]
+bool GraphUtils::IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {
+  NodePtr node = out_data_anchor->GetOwnerNode();
+  OpDescPtr op_desc = node->GetOpDesc();
+  if (op_desc == nullptr) {
+    GELOGW("op_desc is NULL.");
+    return false;
+  }
+  // nopadding means output[0] reuse input[0], but as history reason,
+  // other output index also return true for mem assign in block_mem_assigner
   bool attr_reuse = false;
   bool is_input_continuous = false;
   bool is_out_continuous = false;
@@ -2381,10 +2392,10 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, is_out_continuous);
   bool get_reuse_flag = ge::AttrUtils::GetBool(op_desc, ATTR_NAME_OUTPUT_REUSE_INPUT, attr_reuse);
   bool is_no_padding_reuse_input = (is_input_continuous || is_out_continuous) && get_reuse_flag && attr_reuse;
-  if (is_no_padding_reuse_input && (output_index == 0)) {
+  if (is_no_padding_reuse_input) {
     reuse_in_index = 0;
     GELOGI("Nopadding ReuseInput name[%s] output[%d] reuse input[%d].", op_desc->GetName().c_str(),
-           output_index, reuse_in_index);
+           out_data_anchor->GetIdx(), reuse_in_index);
     return true;
   }
   return false;
