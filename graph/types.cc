@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 #include "external/graph/types.h"
+#include <cmath>
+#include "graph/ge_error_codes.h"
+#include "framework/common/debug/ge_log.h"
 
 namespace ge {
 const char *GetFormatName(Format format) {
@@ -66,5 +69,76 @@ const char *GetFormatName(Format format) {
     return "UNKNOWN";
   }
   return names[format];
+}
+
+static int64_t CeilDiv(int64_t n1, int64_t n2) {
+  if (n1 == 0) {
+    return 0;
+  }
+  return (n2 != 0) ? (n1 -1) / n2 + 1 : 0;
+}
+
+///
+/// @ingroup math_util
+/// @brief check whether int64 int32 multiplication can result in overflow
+/// @param [in] a  multiplicator
+/// @param [in] b  multiplicator
+/// @return Status
+///
+static Status CheckInt64MulOverflow(int64_t a, int64_t b) {
+  if (a > 0) {
+    if (b > 0) {
+      if (a > (INT64_MAX / b)) {
+        return FAILED;
+      }
+    } else {
+      if (b < (INT64_MIN / a)) {
+        return FAILED;
+      }
+    }
+  } else {
+    if (b > 0) {
+      if (a < (INT64_MIN / b)) {
+        return FAILED;
+      }
+    } else {
+      if ((a != 0) && (b < (INT64_MAX / a))) {
+        return FAILED;
+      }
+    }
+  }
+  return SUCCESS;
+}
+
+int64_t GetSizeInBytes(int64_t element_count, DataType data_type) {
+  if (element_count < 0) {
+    REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, element_count:%ld less than 0.", element_count);
+    GELOGE(GRAPH_FAILED, "[Check][param]GetSizeInBytes failed, element_count:%ld less than 0.", element_count);
+    return -1;
+  }
+  int type_size = GetSizeByDataType(data_type);
+  if (type_size < 0) {
+    GELOGE(GRAPH_FAILED, "[Check][DataType]GetSizeInBytes failed, data_type:%d not support.", data_type);
+    return -1;
+  } else if (type_size > kDataTypeSizeBitOffset) {
+    int bit_size = type_size - kDataTypeSizeBitOffset;
+    if (CheckInt64MulOverflow(element_count, bit_size)) {
+      REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
+                         element_count, bit_size);
+      GELOGE(GRAPH_FAILED, "[Check][overflow]GetSizeInBytes failed, when multiplying %ld and %d.",
+             element_count, bit_size);
+      return -1;
+    }
+    return CeilDiv(element_count * bit_size, kBitNumOfOneByte);
+  } else {
+    if (CheckInt64MulOverflow(element_count, type_size)) {
+      REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
+                         element_count, type_size);
+      GELOGE(GRAPH_FAILED, "[Check][overflow]GetSizeInBytes failed, when multiplying %ld and %d.",
+             element_count, type_size);
+      return -1;
+    }
+    return element_count * type_size;
+  }
 }
 }

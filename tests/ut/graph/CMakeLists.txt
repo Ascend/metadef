@@ -25,7 +25,7 @@ set(PROTO_LIST
     "${METADEF_DIR}/proto/dump_task.proto"
     "${METADEF_DIR}/proto/fwk_adapter.proto"
     "${METADEF_DIR}/proto/op_mapping_info.proto"
-    "${METADEF_DIR}/proto/proto_inner/ge_onnx.proto"
+    "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
@@ -73,7 +73,7 @@ set(UT_FILES
     "testcase/graph_unittest.cc"
     "testcase/types_unittest.cc"
     "testcase/type_utils_unittest.cc"
-)
+    testcase/buffer_unittest.cc)
 
 set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/aligned_ptr.cc"

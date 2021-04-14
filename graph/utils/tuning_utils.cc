@@ -127,8 +127,11 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
     return ret;
   }
   // clear graph id
-  GELOGI("TUU:clear [%s] session_graph_id %s", exe_graph->GetName().c_str(),
-         (AttrUtils::SetStr(*exe_graph, ATTR_NAME_SESSION_GRAPH_ID, "") ? "success" : "not success"));
+  if (!AttrUtils::SetStr(*exe_graph, ATTR_NAME_SESSION_GRAPH_ID, "")) {
+    GELOGE(FAILED, "TUU:clear graph %s session_graph_id failed", exe_graph->GetName().c_str());
+    return FAILED;
+  }
+  GELOGI("TUU:clear [%s] session_graph_id success", exe_graph->GetName().c_str());
   // if not make exe, just dump and return
   if (!help_info.exe_flag) {
     DumpGraphToPath(exe_graph, help_info.index, help_info.is_tuning_graph, help_info.path);

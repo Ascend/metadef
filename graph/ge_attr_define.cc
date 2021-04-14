@@ -924,6 +924,8 @@ const std::string ATTR_NAME_ACTIVE_LABEL_LIST = "_active_label_list";
 // Used for l2cache, true: the memory of all inputs is used for the last time.
 const std::string ATTR_NAME_IS_END_OF_INPUTMEM_LIFECYCLE = "is_end_of_inputmem_lifecycle";
 
+const std::string ATTR_NAME_DATA_VISIT_DISTANCE = "_data_visit_distance";
+
 // Multi batch
 const std::string ATTR_NAME_PRED_VALUE = "_pred_value";
 const std::string ATTR_NAME_BATCH_NUM = "_batch_num";
@@ -1014,6 +1016,10 @@ const std::string ATOMIC_ATTR_IS_FUSION_NODE = "is_fusion_node";
 const std::string EXT_ATTR_ATOMIC_WORKSPACE_INFO = "sub_node_workspace_info";
 const std::string EXT_ATTR_ATOMIC_WORKSPACE_OFFSET = "sub_node_workspace_offset";
 const std::string ATOMIC_ATTR_IS_ATOMIC_NODE = "is_atomic_node";
+const std::string ATOMIC_ATTR_TVM_MAGIC = "_atomic_tvm_magic";
+const std::string ATOMIC_ATTR_TVM_METADATA = "_atomic_tvm_metadata";
+const std::string ATOMIC_ATTR_TBE_KERNEL_NAME = "_atomic_tbe_kernel_name";
+const std::string EXT_ATTR_ATOMIC_TBE_KERNEL = "_atomic_tbe_kernel";
 
 // Source/dst format for Op FormatTransfer
 const std::string FORMAT_TRANSFER_SRC_FORMAT = "src_format";
@@ -1168,4 +1174,10 @@ const std::string ATTR_NAME_FUZZ_BUILD_RES_ATTRS = "_fuzz_build_res";
 const std::string ATTR_NAME_FUZZ_INPUTS_SUPPORTED_ATTRS = "_inputs_support_info";
 const std::string ATTR_NAME_FUZZ_OUTPUTS_SUPPORTED_ATTRS = "_outputs_support_info";
 const std::string ATTR_NAME_FUZZ_IS_HIGH_PERFORMANCE_ATTRS = "_is_high_performance";
+
+// buffer pool allocator
+const std::string ATTR_NAME_BUFFER_POOL_ID = "_buffer_pool_id";
+const std::string ATTR_NAME_BUFFER_POOL_SIZE = "_buffer_pool_size";
+const std::string ATTR_NAME_EVENT_MULTIPLEXING = "_event_multiplexing";
+const std::string ATTR_NAME_BUFFER_POOL_NODE_SIZE_AND_OFFSET = "_buffer_pool_node_size_and_offset";
 }  // namespace ge
