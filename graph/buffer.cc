@@ -109,15 +109,4 @@ void Buffer::ClearBuffer() {
     buffer_->clear();
   }
 }
-void Buffer::ShareFrom(Buffer &other) {
-  data_ = other.data_;
-  buffer_ = other.buffer_;
-}
-Buffer::Buffer(Buffer &&buffer) noexcept {
-  data_ = buffer.data_;
-  buffer_ = buffer.buffer_;
-}
-Buffer Buffer::CreateShareFrom(Buffer &other) {
-  return other;
-}
 }  // namespace ge

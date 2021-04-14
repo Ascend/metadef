@@ -73,7 +73,7 @@ set(UT_FILES
     "testcase/graph_unittest.cc"
     "testcase/types_unittest.cc"
     "testcase/type_utils_unittest.cc"
-    testcase/buffer_unittest.cc)
+)
 
 set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/aligned_ptr.cc"
