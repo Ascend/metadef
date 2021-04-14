@@ -47,17 +47,6 @@ class TensorUtils {
   static void SetReuseInputIndex(GeTensorDesc &tensorDesc, uint32_t idx);
   static ge::graphStatus GetDataOffset(const GeTensorDesc &tensorDesc, int64_t &offset);
   static void SetDataOffset(GeTensorDesc &tensorDesc, int64_t offset);
-  static ge::graphStatus GetCmpsSize(const GeTensorDesc &tensorDesc, uint32_t &cmp_size);
-  static void SetCmpsSize(GeTensorDesc &tensorDesc, uint32_t cmp_size);
-  static ge::graphStatus GetCmpsTab(const GeTensorDesc &tensorDesc, vector<uint8_t> &vec);
-  static void SetCmpsTab(GeTensorDesc &tensorDesc, const uint8_t *data, size_t size);
-  static ge::graphStatus GetCmpsTabOffset(const GeTensorDesc &tensorDesc, int64_t &tab_offset);
-  static void SetCmpsTabOffset(GeTensorDesc &tensorDesc, int64_t tab_offset);
-  static ge::graphStatus GetCmpsInfo(const GeTensorDesc &tensorDesc, CompressInfo &info);
-  static void SetCmpsInfo(GeTensorDesc &tensorDesc, const CompressInfo &info);
-  static bool HasAlloffsetQuantizeInfo(const GeTensorDesc &tensorDesc);
-  static ge::graphStatus GetAlloffsetQuantizeInfo(const GeTensorDesc &tensorDesc, AllOffsetQuantizeInfo &info);
-  static void SetAlloffsetQuantizeInfo(GeTensorDesc &tensorDesc, const AllOffsetQuantizeInfo &info);
   static ge::graphStatus GetRC(const GeTensorDesc &tensorDesc, uint32_t &rc);
   static void SetRC(GeTensorDesc &tensorDesc, uint32_t rc);
 
