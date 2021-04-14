@@ -402,6 +402,8 @@ class GraphUtils {
   ///
   static bool IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index);
 
+  static bool IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index);
+
   static bool IsNodeInGraphRecursively(const ComputeGraphPtr &graph, const Node &node);
 
  private:
