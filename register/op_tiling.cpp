@@ -19,6 +19,8 @@
 #include <chrono>
 #include <cstring>
 #include <algorithm>
+#include <typeinfo>
+#include <type_traits>
 #include "securec.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
@@ -31,6 +33,138 @@
 #define LOG_ENABLED(loglvl) CheckLogLevel(GE_MODULE_NAME, loglvl)
 
 namespace optiling {
+
+using DataBuf = std::tuple<const uint8_t*, size_t>;
+
+class AnyValueBase {
+   public:
+    virtual ~AnyValueBase() = default;
+    virtual DataBuf GetDataBuf() const = 0;
+};
+
+template <typename VT>
+class AnyValue : public AnyValueBase{
+  public:
+    explicit AnyValue(const VT &value) : value_(value) {}
+    ~AnyValue() override = default;
+    DataBuf GetDataBuf() const override {
+      return DataBuf(reinterpret_cast<const uint8_t*>(&value_), sizeof(value_));
+    }
+
+  private:
+    VT value_;
+};
+
+template <typename VT>
+class AnyVecValue : public AnyValueBase{
+  public:
+    explicit AnyVecValue(std::vector<VT> &value) : value_(std::move(value)) {}
+    ~AnyVecValue() override = default;
+    DataBuf GetDataBuf() const override {
+      return DataBuf(reinterpret_cast<const uint8_t*>(value_.data()), sizeof(VT) * value_.size());
+    }
+
+  private:
+    vector<VT> value_;
+};
+
+template <typename T, typename Enabled = void>
+struct Getter;
+
+template <typename T>
+struct Getter<T, typename std::enable_if<std::is_integral<T>::value>::type> {
+  using ST = int64_t;
+  static constexpr bool(*func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, int64_t&) = ge::AttrUtils::GetInt;
+  static constexpr bool(*list_func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, vector<int64_t>&) = ge::AttrUtils::GetListInt;
+};
+template <typename T>
+struct Getter<T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
+  using ST = float;
+  static constexpr bool(*func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, float&) = ge::AttrUtils::GetFloat;
+  static constexpr bool(*list_func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, vector<float>&) = ge::AttrUtils::GetListFloat;
+};
+
+class TeOpVarAttrArgsImpl {
+  using DataKeyType = std::pair<std::string, std::string>;
+  public:
+    explicit TeOpVarAttrArgsImpl(ge::OpDescPtr &op_desc) : op_desc_(op_desc) {};
+    ~TeOpVarAttrArgsImpl() = default;
+
+    Status GetDataByName(const string &name, const string &dtype, DataBuf &data);
+
+  private:
+    template <typename T>
+    Status GetNodeAttrDataIntListList(const std::string &name, DataBuf &data) {
+      std::vector<std::vector<int64_t>> value;
+      bool res = ge::AttrUtils::GetListListInt(op_desc_, name, value);
+      if (!res) {
+        GE_LOGE("attr not found. %s", name.c_str());
+        return domi::FAILED;
+      }
+
+      std::vector<T> dest;
+      for (const auto &vec : value) {
+        for (auto elem : vec) {
+          dest.emplace_back(static_cast<T>(elem));
+        }
+      }
+      auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
+      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+      GE_LOGE("attr found. %s", name.c_str());
+      return domi::SUCCESS;
+    }
+
+    template <typename T, bool IsList = false,
+              typename std::enable_if<!IsList, bool>::type = true>
+    Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
+      auto func = Getter<T>::func;
+      typename Getter<T>::ST value;
+      bool res = func(op_desc_, name, value);
+      if (!res) {
+        GE_LOGE("attr not found. %s", name.c_str());
+        return domi::FAILED;
+      }
+
+      auto ptr = std::make_shared<AnyValue<T>>(static_cast<T>(value));
+      data_map_.emplace(name + '_' + typeid(T).name(), ptr);
+      data = ptr->GetDataBuf();
+      GE_LOGE("attr found. %s", name.c_str());
+      return domi::SUCCESS;
+    }
+
+    template <typename T, bool IsList = false,
+              typename std::enable_if<IsList, bool>::type = true>
+    Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
+      auto func = Getter<T>::list_func;
+      std::vector<typename Getter<T>::ST> value;
+      bool res = func(op_desc_, name, value);
+      if (!res) {
+        GE_LOGE("attr not found. %s", name.c_str());
+        return domi::FAILED;
+      }
+
+      std::vector<T> dest;
+      for (auto elem : value) {
+        dest.emplace_back(static_cast<T>(elem));
+      }
+      auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
+      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+      GE_LOGE("attr found. %s", name.c_str());
+      return domi::SUCCESS;
+    }
+
+  private:
+    static std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*, const std::string &, DataBuf &)>> data_getter_;
+    ge::OpDescPtr op_desc_;
+    std::map<std::string, std::shared_ptr<AnyValueBase>> data_map_;
+};
+
+class VarAttrHelper {
+  public:
+    static void InitTeOpVarAttr(ge::OpDescPtr &op_desc, TeOpVarAttrArgs &attr) {
+      attr.impl_ = std::make_shared<TeOpVarAttrArgsImpl>(op_desc);
+    }
+};
 
 const char *COMPILE_INFO_JSON = "compile_info_json";
 const char *COMPILE_INFO_KEY = "compile_info_key";
@@ -52,6 +186,48 @@ const std::map<ge::DataType, std::string> DATATYPE_STRING_MAP{{ge::DT_FLOAT, "fl
                                                               {ge::DT_DUAL, "dual"},
                                                               {ge::DT_DUAL_SUB_INT8, "dual_sub_int8"},
                                                               {ge::DT_DUAL_SUB_UINT8, "dual_sub_uint8"}};
+
+std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*, const std::string &, DataBuf &)>> TeOpVarAttrArgsImpl::data_getter_ = {
+  {"Int8", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int8_t>},
+  {"Int16", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int16_t>},
+  {"Int32", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int32_t>},
+  {"Int64", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int64_t>},
+  {"UInt8", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint8_t>},
+  {"UInt16", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint16_t>},
+  {"UInt32", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint32_t>},
+  {"UInt64", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint64_t>},
+  {"Float", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<float>},
+  {"ListInt8", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int8_t, true>},
+  {"ListInt16", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int16_t, true>},
+  {"ListInt32", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int32_t, true>},
+  {"ListInt64", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int64_t, true>},
+  {"ListUInt8", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint8_t, true>},
+  {"ListUInt16", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint16_t, true>},
+  {"ListUInt32", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint32_t, true>},
+  {"ListUInt64", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<uint64_t, true>},
+  {"ListFloat", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<float, true>}
+};
+
+Status TeOpVarAttrArgsImpl::GetDataByName(const string &name, const string &dtype, DataBuf &data) {
+  auto iter = data_getter_.find(dtype);
+  if (iter == data_getter_.end()) {
+    GE_LOGE("wrong dtype: %s", dtype.c_str());
+    return domi::FAILED;
+  } else {
+    return iter->second(this, name, data);
+  }
+}
+
+const uint8_t *TeOpVarAttrArgs::GetData(const std::string &name, const std::string &dtype, size_t &size) const{
+  DataBuf data(nullptr, 0);
+  auto rc = impl_->GetDataByName(name, dtype, data);
+  if (rc == domi::SUCCESS) {
+    GE_LOGE("attr found. %s, %s, %p, %ld", name.c_str(), dtype.c_str(), std::get<0>(data), std::get<1>(data));
+  }
+  size = std::get<1>(data);
+  return std::get<0>(data);
+}
+
 
 bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc, std::vector<TeOpTensorArg> &tensor_arg,
                        ge::OpDescPtr &op_desc) {
@@ -431,6 +607,7 @@ extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_
     return ge::GRAPH_FAILED;
   }
 
+  VarAttrHelper::InitTeOpVarAttr(op_desc, op_param.var_attrs);
   FeedTeOpConstTensor(node, op_desc, op_param.const_inputs);
 
   auto &interf = OpTilingRegistryInterf::RegisteredOpInterf();
