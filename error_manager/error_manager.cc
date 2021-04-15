@@ -167,7 +167,7 @@ int ErrorManager::Init(std::string path) {
   std::string file_path = path + kErrorCodePath;
   int ret = ParseJsonFile(file_path);
   if (ret != 0) {
-    GELOGE("[Parse][File]Parser config file:%s failed", file_path.c_str());
+    GELOGW("[Parse][File]Parser config file:%s failed", file_path.c_str());
     return -1;
   }
   is_init_ = true;
@@ -343,18 +343,18 @@ int ErrorManager::ParseJsonFile(std::string path) {
   nlohmann::json json_file;
   int status = ReadJsonFile(path, &json_file);
   if (status != 0) {
-    GELOGE("[Read][JsonFile]file path is %s", path.c_str());
+    GELOGW("[Read][JsonFile]file path is %s", path.c_str());
     return -1;
   }
 
   try {
     const nlohmann::json &error_list_json = json_file[kErrorList];
     if (error_list_json.is_null()) {
-      GELOGE("[Check][Config]The message of error_info_list is not found in %s", path.c_str());
+      GELOGW("[Check][Config]The message of error_info_list is not found in %s", path.c_str());
       return -1;
     }
     if (!error_list_json.is_array()) {
-      GELOGE("[Check][Config]The message of error_info_list is not array in %s", path.c_str());
+      GELOGW("[Check][Config]The message of error_info_list is not array in %s", path.c_str());
       return -1;
     }
 
@@ -365,14 +365,14 @@ int ErrorManager::ParseJsonFile(std::string path) {
       error_info.arg_list = Split(error_list_json[i][kArgList], ',');
       auto it = error_map_.find(error_info.error_id);
       if (it != error_map_.end()) {
-        GELOGE("[Check][Config]There are the same error code %s in %s",
+        GELOGW("[Check][Config]There are the same error code %s in %s",
                error_info.error_id.c_str(), path.c_str());
         return -1;
       }
       error_map_.emplace(error_info.error_id, error_info);
     }
   } catch (const nlohmann::json::exception &e) {
-    GELOGE("[Parse][JsonFile]the file path is %s, exception message: %s", path.c_str(), e.what());
+    GELOGW("[Parse][JsonFile]the file path is %s, exception message: %s", path.c_str(), e.what());
     return -1;
   }
 
@@ -389,30 +389,30 @@ int ErrorManager::ParseJsonFile(std::string path) {
 int ErrorManager::ReadJsonFile(const std::string &file_path, void *handle) {
   GELOGI("Begin to read json file");
   if (file_path.empty()) {
-    GELOGE("[Read][JsonFile]path %s is not valid", file_path.c_str());
+    GELOGW("[Read][JsonFile]path %s is not valid", file_path.c_str());
     return -1;
   }
   nlohmann::json *json_file = reinterpret_cast<nlohmann::json *>(handle);
   if (json_file == nullptr) {
-    GELOGE("[Check][Param]JsonFile is nullptr");
+    GELOGW("[Check][Param]JsonFile is nullptr");
     return -1;
   }
   const char *file = file_path.data();
   if ((mmAccess2(file, M_F_OK)) != EN_OK) {
-    GELOGE("[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), strerror(errno));
+    GELOGW("[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), strerror(errno));
     return -1;
   }
 
   std::ifstream ifs(file_path);
   if (!ifs.is_open()) {
-    GELOGE("[Read][JsonFile]Open %s failed", file_path.c_str());
+    GELOGW("[Read][JsonFile]Open %s failed", file_path.c_str());
     return -1;
   }
 
   try {
     ifs >> *json_file;
   } catch (const nlohmann::json::exception &e) {
-    GELOGE("[Read][JsonFile]ifstream to json fail. path: %s", file_path.c_str());
+    GELOGW("[Read][JsonFile]ifstream to json fail. path: %s", file_path.c_str());
     ifs.close();
     return -1;
   }
