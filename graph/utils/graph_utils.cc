@@ -564,7 +564,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(con
   return false;
 }
 
-namespace{
+namespace {
 void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   static std::string path_prefix;
   if (path_prefix.empty()) {
@@ -572,7 +572,7 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
     char *dump_graph_path = std::getenv(kDumpGraphPath);
     if (npu_collect_path != nullptr) {
       std::string base_path_str(npu_collect_path);
-      stream_file_name << base_path_str << "/graph/" << mmGetPid() << "_" << GetContext().DeviceId() << "/";
+      stream_file_name << base_path_str << "/extra-info/graph/" << mmGetPid() << "_" << GetContext().DeviceId() << "/";
     } else if (dump_graph_path != nullptr) {
       std::string dump_graph_path_str(dump_graph_path);
       stream_file_name << (dump_graph_path_str.empty() ? "" : dump_graph_path_str + "/");
