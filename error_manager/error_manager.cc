@@ -303,6 +303,7 @@ std::string ErrorManager::GetErrorMessage() {
     }
   }
 
+  ClearErrorMsgContainerByWorkId(work_stream_id);
   return err_stream.str();
 }
 
@@ -314,6 +315,7 @@ std::string ErrorManager::GetWarningMessage() {
   for (auto &item : warning_messages) {
     warning_stream << item.error_id << ": " << item.error_message << std::endl;
   }
+  ClearWarningMsgContainerByWorkId(work_stream_id);
   return warning_stream.str();
 }
 
@@ -573,15 +575,8 @@ void ErrorManager::GenWorkStreamIdDefault() {
   uint64_t work_stream_id = pid * kPidOffset + tid;
   error_context_.work_stream_id = work_stream_id;
 
-  auto err_iter = error_message_per_work_id_.find(work_stream_id);
-  if (err_iter != error_message_per_work_id_.end()) {
-    error_message_per_work_id_.erase(err_iter);
-  }
-
-  auto warn_iter = warning_messages_per_work_id_.find(work_stream_id);
-  if (warn_iter != warning_messages_per_work_id_.end()) {
-    warning_messages_per_work_id_.erase(warn_iter);
-  }
+  ClearErrorMsgContainerByWorkId(work_stream_id);
+  ClearWarningMsgContainerByWorkId(work_stream_id);
 }
 
 void ErrorManager::GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t graph_id) {
@@ -589,16 +584,24 @@ void ErrorManager::GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t g
   uint64_t work_stream_id = session_id * kSessionIdOffset + graph_id;
   error_context_.work_stream_id = work_stream_id;
 
+  ClearErrorMsgContainerByWorkId(work_stream_id);
+  ClearWarningMsgContainerByWorkId(work_stream_id);
+}
+
+void ErrorManager::ClearErrorMsgContainerByWorkId(uint64_t work_stream_id) {
   auto err_iter = error_message_per_work_id_.find(work_stream_id);
   if (err_iter != error_message_per_work_id_.end()) {
     error_message_per_work_id_.erase(err_iter);
   }
+}
 
+void ErrorManager::ClearWarningMsgContainerByWorkId(uint64_t work_stream_id) {
   auto warn_iter = warning_messages_per_work_id_.find(work_stream_id);
   if (warn_iter != warning_messages_per_work_id_.end()) {
     warning_messages_per_work_id_.erase(warn_iter);
   }
 }
+
 
 const std::string &ErrorManager::GetLogHeader() {
   return error_context_.log_header;
