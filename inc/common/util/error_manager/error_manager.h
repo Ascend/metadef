@@ -277,7 +277,8 @@ class ErrorManager {
   std::vector<ErrorItem> &GetErrorMsgContainerByWorkId(uint64_t work_id);
   std::vector<ErrorItem> &GetWarningMsgContainerByWorkId(uint64_t work_id);
 
-  void ClearMsgContainerByWorkId(uint64_t work_stream_id);
+  void ClearErrorMsgContainerByWorkId(uint64_t work_stream_id);
+  void ClearWarningMsgContainerByWorkId(uint64_t work_stream_id);
 
   bool is_init_ = false;
   std::mutex mutex_;
