@@ -303,7 +303,7 @@ std::string ErrorManager::GetErrorMessage() {
     }
   }
 
-  ClearErrorMsgContainerByWorkId(work_stream_id);
+  ClearErrorMsgContainerByWorkId(error_context_.work_stream_id);
   return err_stream.str();
 }
 
@@ -315,7 +315,7 @@ std::string ErrorManager::GetWarningMessage() {
   for (auto &item : warning_messages) {
     warning_stream << item.error_id << ": " << item.error_message << std::endl;
   }
-  ClearWarningMsgContainerByWorkId(work_stream_id);
+  ClearWarningMsgContainerByWorkId(error_context_.work_stream_id);
   return warning_stream.str();
 }
 
