@@ -126,7 +126,9 @@ TEST_F(UtestTypes, GetSizeByDataType) {
   EXPECT_EQ(GetSizeByDataType(DT_DUAL), 5);
   EXPECT_EQ(GetSizeByDataType(DT_VARIANT), 8);
   EXPECT_EQ(GetSizeByDataType(DT_BF16), 2);
+#ifndef ONLY_COMPILE_OPEN_SRC
   EXPECT_EQ(GetSizeByDataType(DT_INT4), kDataTypeSizeBitOffset + 4);
+#endif
   EXPECT_EQ(GetSizeByDataType(DT_UNDEFINED), -1);
   EXPECT_EQ(DT_UNDEFINED, 29);
 }
@@ -136,8 +138,10 @@ TEST_F(UtestTypes, GetSizeInBytes) {
   EXPECT_EQ(GetSizeInBytes(10, DT_UNDEFINED), -1);
   EXPECT_EQ(GetSizeInBytes(INT64_MAX, DT_INT32), -1);
   EXPECT_EQ(GetSizeInBytes(10, DT_FLOAT), 40);
+#ifndef ONLY_COMPILE_OPEN_SRC
   EXPECT_EQ(GetSizeInBytes(10, DT_INT4), 5);
   EXPECT_EQ(GetSizeInBytes(9, DT_INT4), 5);
   EXPECT_EQ(GetSizeInBytes(INT64_MAX, DT_INT4), -1);
+#endif
 }
 }
