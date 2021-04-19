@@ -74,31 +74,31 @@ do {                                                                            
 
 namespace error_message {
   // first stage
-  constexpr char *kInitialize   = "INIT";
-  constexpr char *kModelCompile = "COMP";
-  constexpr char *kModelLoad    = "LOAD";
-  constexpr char *kModelExecute = "EXEC";
-  constexpr char *kFinalize     = "FINAL";
+  constexpr char const *kInitialize   = "INIT";
+  constexpr char const *kModelCompile = "COMP";
+  constexpr char const *kModelLoad    = "LOAD";
+  constexpr char const *kModelExecute = "EXEC";
+  constexpr char const *kFinalize     = "FINAL";
 
   // SecondStage
   // INITIALIZE
-  constexpr char *kParser               = "PARSER";
-  constexpr char *kOpsProtoInit         = "OPS_PRO";
-  constexpr char *kSystemInit           = "SYS";
-  constexpr char *kEngineInit           = "ENGINE";
-  constexpr char *kOpsKernelInit        = "OPS_KER";
-  constexpr char *kOpsKernelBuilderInit = "OPS_KER_BLD";
+  constexpr char const *kParser               = "PARSER";
+  constexpr char const *kOpsProtoInit         = "OPS_PRO";
+  constexpr char const *kSystemInit           = "SYS";
+  constexpr char const *kEngineInit           = "ENGINE";
+  constexpr char const *kOpsKernelInit        = "OPS_KER";
+  constexpr char const *kOpsKernelBuilderInit = "OPS_KER_BLD";
   // MODEL_COMPILE
-  constexpr char *kPrepareOptimize    = "PRE_OPT";
-  constexpr char *kOriginOptimize     = "ORI_OPT";
-  constexpr char *kSubGraphOptimize   = "SUB_OPT";
-  constexpr char *kMergeGraphOptimize = "MERGE_OPT";
-  constexpr char *kPreBuild           = "PRE_BLD";
-  constexpr char *kStreamAlloc        = "STM_ALLOC";
-  constexpr char *kMemoryAlloc        = "MEM_ALLOC";
-  constexpr char *kTaskGenerate       = "TASK_GEN";
+  constexpr char const *kPrepareOptimize    = "PRE_OPT";
+  constexpr char const *kOriginOptimize     = "ORI_OPT";
+  constexpr char const *kSubGraphOptimize   = "SUB_OPT";
+  constexpr char const *kMergeGraphOptimize = "MERGE_OPT";
+  constexpr char const *kPreBuild           = "PRE_BLD";
+  constexpr char const *kStreamAlloc        = "STM_ALLOC";
+  constexpr char const *kMemoryAlloc        = "MEM_ALLOC";
+  constexpr char const *kTaskGenerate       = "TASK_GEN";
   // COMMON
-  constexpr char *kOther = "DEFAULT";
+  constexpr char const *kOther = "DEFAULT";
 
   struct Context {
     uint64_t work_stream_id;
@@ -111,31 +111,31 @@ namespace error_message {
 // old, will be delete after all caller transfer to new
 namespace ErrorMessage {
   // first stage
-  constexpr char *kInitialize   = "INIT";
-  constexpr char *kModelCompile = "COMP";
-  constexpr char *kModelLoad    = "LOAD";
-  constexpr char *kModelExecute = "EXEC";
-  constexpr char *kFinalize     = "FINAL";
+  constexpr char const *kInitialize   = "INIT";
+  constexpr char const *kModelCompile = "COMP";
+  constexpr char const *kModelLoad    = "LOAD";
+  constexpr char const *kModelExecute = "EXEC";
+  constexpr char const *kFinalize     = "FINAL";
 
   // SecondStage
   // INITIALIZE
-  constexpr char *kParser               = "PARSER";
-  constexpr char *kOpsProtoInit         = "OPS_PRO";
-  constexpr char *kSystemInit           = "SYS";
-  constexpr char *kEngineInit           = "ENGINE";
-  constexpr char *kOpsKernelInit        = "OPS_KER";
-  constexpr char *kOpsKernelBuilderInit = "OPS_KER_BLD";
+  constexpr char const *kParser               = "PARSER";
+  constexpr char const *kOpsProtoInit         = "OPS_PRO";
+  constexpr char const *kSystemInit           = "SYS";
+  constexpr char const *kEngineInit           = "ENGINE";
+  constexpr char const *kOpsKernelInit        = "OPS_KER";
+  constexpr char const *kOpsKernelBuilderInit = "OPS_KER_BLD";
   // MODEL_COMPILE
-  constexpr char *kPrepareOptimize    = "PRE_OPT";
-  constexpr char *kOriginOptimize     = "ORI_OPT";
-  constexpr char *kSubGraphOptimize   = "SUB_OPT";
-  constexpr char *kMergeGraphOptimize = "MERGE_OPT";
-  constexpr char *kPreBuild           = "PRE_BLD";
-  constexpr char *kStreamAlloc        = "STM_ALLOC";
-  constexpr char *kMemoryAlloc        = "MEM_ALLOC";
-  constexpr char *kTaskGenerate       = "TASK_GEN";
+  constexpr char const *kPrepareOptimize    = "PRE_OPT";
+  constexpr char const *kOriginOptimize     = "ORI_OPT";
+  constexpr char const *kSubGraphOptimize   = "SUB_OPT";
+  constexpr char const *kMergeGraphOptimize = "MERGE_OPT";
+  constexpr char const *kPreBuild           = "PRE_BLD";
+  constexpr char const *kStreamAlloc        = "STM_ALLOC";
+  constexpr char const *kMemoryAlloc        = "MEM_ALLOC";
+  constexpr char const *kTaskGenerate       = "TASK_GEN";
   // COMMON
-  constexpr char *kOther = "DEFAULT";
+  constexpr char const *kOther = "DEFAULT";
 
   struct Context {
     uint64_t work_stream_id;
