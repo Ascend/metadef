@@ -18,21 +18,15 @@
 #define METADEF_PROTOTYPE_PASS_REGISTRY_H
 
 #include <google/protobuf/message.h>
-#include "register/register_fmk_types.h"
-#include "register/register_types.h"
+
 #include "external/ge/ge_api_error_codes.h"
-#include "common/ge_inner_error_codes.h"
+#include "register/register_error_codes.h"
+#include "register/register_fmk_types.h"
 
 namespace ge {
 class ProtoTypeBasePass {
  public:
-    ProtoTypeBasePass(std::string name) {
-      name_ = name;
-    };
-    virtual Status Run(google::protobuf::Message *message) = 0;
-    std::string GetName() const { return name_; }
-private:
-    std::string name_;
+  virtual Status Run(google::protobuf::Message *message) = 0;
 };
 
 class ProtoTypePassRegistry {
@@ -40,13 +34,13 @@ class ProtoTypePassRegistry {
   using CreateFn = ProtoTypeBasePass *(*)();
   ~ProtoTypePassRegistry();
 
-  static ProtoTypePassRegistry& GetInstance();
+  static ProtoTypePassRegistry &GetInstance();
 
-  void RegisterProtoTypePass(CreateFn create_fn, const domi::FrameworkType &fmk_type);
+  void RegisterProtoTypePass(const std::string &pass_name, CreateFn create_fn, const domi::FrameworkType &fmk_type);
 
-  std::vector<CreateFn> GetCreateFnByType(const domi::FrameworkType &fmk_type);
+  std::vector<std::pair<std::string, CreateFn>> GetCreateFnByType(const domi::FrameworkType &fmk_type);
 
-private:
+ private:
   ProtoTypePassRegistry();
   class ProtoTypePassRegistryImpl;
   /*lint -e148*/
@@ -55,8 +49,9 @@ private:
 
 class ProtoTypePassRegistrar {
  public:
-   ProtoTypePassRegistrar(ProtoTypeBasePass *(*create_fn)(), const domi::FrameworkType &fmk_type);
-   ~ProtoTypePassRegistrar() {}
+  ProtoTypePassRegistrar(const std::string &pass_name, ProtoTypeBasePass *(*create_fn)(),
+                         const domi::FrameworkType &fmk_type);
+  ~ProtoTypePassRegistrar() {}
 };
 
 #define REGISTER_PROTOTYPE_PASS(pass_name, pass, fmk_type) \
@@ -65,9 +60,9 @@ class ProtoTypePassRegistrar {
 #define REGISTER_PROTOTYPE_PASS_UNIQ_HELPER(ctr, pass_name, pass, fmk_type) \
   REGISTER_PROTOTYPE_PASS_UNIQ(ctr, pass_name, pass, fmk_type)
 
-#define REGISTER_PROTOTYPE_PASS_UNIQ(ctr, pass_name, pass, fmk_type)                                 \
+#define REGISTER_PROTOTYPE_PASS_UNIQ(ctr, pass_name, pass, fmk_type)                         \
   static ::ge::ProtoTypePassRegistrar register_prototype_pass##ctr __attribute__((unused)) = \
-      ::ge::ProtoTypePassRegistrar([]() -> ::ge::ProtoTypeBasePass * { return new (std::nothrow) pass(pass_name); }, \
-                                     fmk_type)
-}
-#endif //METADEF_PROTOTYPE_PASS_REGISTRY_H
+      ::ge::ProtoTypePassRegistrar(                                                          \
+          pass_name, []() -> ::ge::ProtoTypeBasePass * { return new (std::nothrow) pass(); }, fmk_type)
+}  // namespace ge
+#endif  // METADEF_PROTOTYPE_PASS_REGISTRY_H
