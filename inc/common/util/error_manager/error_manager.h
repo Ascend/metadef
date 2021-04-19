@@ -34,6 +34,8 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 #endif
 }
 
+#define LIMIT_PER_MESSAGE 512
+
 ///
 /// @brief Report error message
 /// @param [in] key: vector parameter key
@@ -52,51 +54,51 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 
 #define REPORT_INNER_ERROR(error_code, fmt, ...)                                                 \
 do {                                                                                             \
-  char error_message_str[512] = {0};                                                             \
-  error_message::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                 \
+  char error_message_str[LIMIT_PER_MESSAGE] = {0};                                               \
+  error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__);   \
   error_message::FormatErrorMessage(                                                             \
-          error_message_str, 512, "%s[FUNC:%s][FILE:%s][LINE:%d]",                               \
+          error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                 \
           error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__);                       \
   ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
 } while (0)
 
 #define REPORT_CALL_ERROR(error_code, fmt, ...)                                                  \
 do {                                                                                             \
-  char error_message_str[512] = {0};                                                             \
-  error_message::FormatErrorMessage(error_message_str, 512, fmt, ##__VA_ARGS__);                 \
+  char error_message_str[LIMIT_PER_MESSAGE] = {0};                                               \
+  error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__);   \
   error_message::FormatErrorMessage(                                                             \
-          error_message_str, 512, "%s[FUNC:%s][FILE:%s][LINE:%d]",                               \
+          error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                 \
           error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__);                       \
   ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str)); \
 } while (0)
 
 namespace error_message {
   // first stage
-  const std::string kInitialize   = "INIT";
-  const std::string kModelCompile = "COMP";
-  const std::string kModelLoad    = "LOAD";
-  const std::string kModelExecute = "EXEC";
-  const std::string kFinalize     = "FINAL";
+  constexpr char *kInitialize   = "INIT";
+  constexpr char *kModelCompile = "COMP";
+  constexpr char *kModelLoad    = "LOAD";
+  constexpr char *kModelExecute = "EXEC";
+  constexpr char *kFinalize     = "FINAL";
 
   // SecondStage
   // INITIALIZE
-  const std::string kParser               = "PARSER";
-  const std::string kOpsProtoInit         = "OPS_PRO";
-  const std::string kSystemInit           = "SYS";
-  const std::string kEngineInit           = "ENGINE";
-  const std::string kOpsKernelInit        = "OPS_KER";
-  const std::string kOpsKernelBuilderInit = "OPS_KER_BLD";
+  constexpr char *kParser               = "PARSER";
+  constexpr char *kOpsProtoInit         = "OPS_PRO";
+  constexpr char *kSystemInit           = "SYS";
+  constexpr char *kEngineInit           = "ENGINE";
+  constexpr char *kOpsKernelInit        = "OPS_KER";
+  constexpr char *kOpsKernelBuilderInit = "OPS_KER_BLD";
   // MODEL_COMPILE
-  const std::string kPrepareOptimize    = "PRE_OPT";
-  const std::string kOriginOptimize     = "ORI_OPT";
-  const std::string kSubGraphOptimize   = "SUB_OPT";
-  const std::string kMergeGraphOptimize = "MERGE_OPT";
-  const std::string kPreBuild           = "PRE_BLD";
-  const std::string kStreamAlloc        = "STM_ALLOC";
-  const std::string kMemoryAlloc        = "MEM_ALLOC";
-  const std::string kTaskGenerate       = "TASK_GEN";
+  constexpr char *kPrepareOptimize    = "PRE_OPT";
+  constexpr char *kOriginOptimize     = "ORI_OPT";
+  constexpr char *kSubGraphOptimize   = "SUB_OPT";
+  constexpr char *kMergeGraphOptimize = "MERGE_OPT";
+  constexpr char *kPreBuild           = "PRE_BLD";
+  constexpr char *kStreamAlloc        = "STM_ALLOC";
+  constexpr char *kMemoryAlloc        = "MEM_ALLOC";
+  constexpr char *kTaskGenerate       = "TASK_GEN";
   // COMMON
-  const std::string kOther = "DEFAULT";
+  constexpr char *kOther = "DEFAULT";
 
   struct Context {
     uint64_t work_stream_id;
@@ -109,31 +111,31 @@ namespace error_message {
 // old, will be delete after all caller transfer to new
 namespace ErrorMessage {
   // first stage
-  const std::string kInitialize   = "INIT";
-  const std::string kModelCompile = "COMP";
-  const std::string kModelLoad    = "LOAD";
-  const std::string kModelExecute = "EXEC";
-  const std::string kFinalize     = "FINAL";
+  constexpr char *kInitialize   = "INIT";
+  constexpr char *kModelCompile = "COMP";
+  constexpr char *kModelLoad    = "LOAD";
+  constexpr char *kModelExecute = "EXEC";
+  constexpr char *kFinalize     = "FINAL";
 
   // SecondStage
   // INITIALIZE
-  const std::string kParser               = "PARSER";
-  const std::string kOpsProtoInit         = "OPS_PRO";
-  const std::string kSystemInit           = "SYS";
-  const std::string kEngineInit           = "ENGINE";
-  const std::string kOpsKernelInit        = "OPS_KER";
-  const std::string kOpsKernelBuilderInit = "OPS_KER_BLD";
+  constexpr char *kParser               = "PARSER";
+  constexpr char *kOpsProtoInit         = "OPS_PRO";
+  constexpr char *kSystemInit           = "SYS";
+  constexpr char *kEngineInit           = "ENGINE";
+  constexpr char *kOpsKernelInit        = "OPS_KER";
+  constexpr char *kOpsKernelBuilderInit = "OPS_KER_BLD";
   // MODEL_COMPILE
-  const std::string kPrepareOptimize    = "PRE_OPT";
-  const std::string kOriginOptimize     = "ORI_OPT";
-  const std::string kSubGraphOptimize   = "SUB_OPT";
-  const std::string kMergeGraphOptimize = "MERGE_OPT";
-  const std::string kPreBuild           = "PRE_BLD";
-  const std::string kStreamAlloc        = "STM_ALLOC";
-  const std::string kMemoryAlloc        = "MEM_ALLOC";
-  const std::string kTaskGenerate       = "TASK_GEN";
+  constexpr char *kPrepareOptimize    = "PRE_OPT";
+  constexpr char *kOriginOptimize     = "ORI_OPT";
+  constexpr char *kSubGraphOptimize   = "SUB_OPT";
+  constexpr char *kMergeGraphOptimize = "MERGE_OPT";
+  constexpr char *kPreBuild           = "PRE_BLD";
+  constexpr char *kStreamAlloc        = "STM_ALLOC";
+  constexpr char *kMemoryAlloc        = "MEM_ALLOC";
+  constexpr char *kTaskGenerate       = "TASK_GEN";
   // COMMON
-  const std::string kOther = "DEFAULT";
+  constexpr char *kOther = "DEFAULT";
 
   struct Context {
     uint64_t work_stream_id;
