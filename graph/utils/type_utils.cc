@@ -198,7 +198,7 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_STRING, "DT_STRING"},                  // string type
     {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
     {DT_BF16, "DT_BF16"},                      // dt_variant type
-  #ifndef ONLY_COMPILE_OPEN_SRC
+  #if !(defined(ONLY_COMPILE_OPEN_SRC) || defined(BUILD_OPEN_PROJECT))
     {DT_INT4, "DT_INT4"},                      // dt_variant type
   #endif
 };
@@ -236,7 +236,7 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_FLOAT32", DT_FLOAT},
     {"DT_VARIANT", DT_VARIANT},                // dt_variant type
     {"DT_BF16", DT_BF16},                      // dt_bf16 type
-  #ifndef ONLY_COMPILE_OPEN_SRC
+  #if !(defined(ONLY_COMPILE_OPEN_SRC) || defined(BUILD_OPEN_PROJECT))
     {"DT_INT4", DT_INT4},                      // dt_int4 type
   #endif
 };
