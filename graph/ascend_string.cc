@@ -22,7 +22,8 @@ AscendString::AscendString(const char* name) {
   if (name != nullptr) {
     name_ = std::shared_ptr<std::string>(new (std::nothrow) std::string(name)); //lint !e1524
     if (name_ == nullptr) {
-      GELOGE(FAILED, "AscendString[%s] make shared failed.", name);
+      REPORT_CALL_ERROR("E19999", "new string failed.");
+      GELOGE(FAILED, "[New][String]AscendString[%s] make shared failed.", name);
     }
   }
 }

@@ -22,7 +22,8 @@
 namespace ge {
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Format AnchorUtils::GetFormat(const DataAnchorPtr &data_anchor) {
   if (data_anchor == nullptr) {
-    GELOGE(GRAPH_FAILED, "The input data anchor is invalid.");
+    REPORT_INNER_ERROR("E19999", "param data_anchor is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] The input data anchor is invalid.");
     return FORMAT_RESERVED;
   }
   return data_anchor->format_;
@@ -31,7 +32,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Format AnchorUtils::GetFormat(con
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus AnchorUtils::SetFormat(const DataAnchorPtr &data_anchor,
                                                                                   Format data_format) {
   if ((data_anchor == nullptr) || (data_format == FORMAT_RESERVED)) {
-    GELOGE(GRAPH_FAILED, "The input data anchor or input data format is invalid .");
+    REPORT_INNER_ERROR("E19999", "param data_anchor is nullptr or data_format is invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] The input data anchor or input data format is invalid .");
     return GRAPH_FAILED;
   }
   data_anchor->format_ = data_format;
@@ -41,7 +43,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus AnchorUtils::SetForma
 // Get anchor status
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorStatus AnchorUtils::GetStatus(const DataAnchorPtr &data_anchor) {
   if (data_anchor == nullptr) {
-    GELOGE(GRAPH_FAILED, "The input data anchor is invalid.");
+    REPORT_INNER_ERROR("E19999", "param data_anchor is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] The input data anchor is invalid.");
     return ANCHOR_RESERVED;
   }
   return data_anchor->status_;
@@ -51,7 +54,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorStatus AnchorUtils::GetStat
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus AnchorUtils::SetStatus(const DataAnchorPtr &data_anchor,
                                                                                   AnchorStatus anchor_status) {
   if ((data_anchor == nullptr) || (anchor_status == ANCHOR_RESERVED)) {
-    GELOGE(GRAPH_FAILED, "The input data anchor or input data format is invalid .");
+    REPORT_INNER_ERROR("E19999", "The input data anchor or input data format is invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] The input data anchor or input data format is invalid.");
     return GRAPH_FAILED;
   }
   data_anchor->status_ = anchor_status;
@@ -74,7 +78,8 @@ bool AnchorUtils::HasControlEdge(const AnchorPtr &anchor) {
     }
     return false;
   }
-  GELOGE(GRAPH_FAILED, "the anchor is neither control anchor nor data anchor");
+  REPORT_INNER_ERROR("E19999", "the anchor is neither control anchor nor data anchor");
+  GELOGE(GRAPH_FAILED, "[Check][Param] the anchor is neither control anchor nor data anchor");
   return false;
 }
 

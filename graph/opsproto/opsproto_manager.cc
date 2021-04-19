@@ -108,7 +108,10 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
     GELOGI("realPath is empty");
     return;
   }
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path.size() >= MMPA_MAX_PATH, return, "path is invalid");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path.size() >= MMPA_MAX_PATH,
+                                 REPORT_INNER_ERROR("E19999", "param path size:%zu >= max path:%d",
+                                                    path.size(), MMPA_MAX_PATH);
+                                 return, "[Check][Param] path is invalid");
 
   char resolved_path[MMPA_MAX_PATH] = {0};
 
@@ -165,7 +168,8 @@ static void GetPluginSoFileList(const std::string &path, std::vector<std::string
 
 void OpsProtoManager::LoadOpsProtoPluginSo(std::string &path) {
   if (path.empty()) {
-    GELOGE(GRAPH_FAILED, "filePath is invalid. please check your text file %s.", path.c_str());
+    REPORT_INNER_ERROR("E19999", "filePath is empty. please check your text file.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] filePath is empty. please check your text file.");
     return;
   }
   std::vector<std::string> file_list;

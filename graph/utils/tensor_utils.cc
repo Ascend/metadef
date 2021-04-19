@@ -113,7 +113,8 @@ static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_
       ErrorManager::GetInstance().ATCReportErrMessage(
           "E19013", {"function", "var1", "var2"},
           {"CheckMultiplyOverflowInt64", std::to_string(element_cnt), std::to_string(dim)});
-      GELOGE(GRAPH_FAILED, "CalcElementCntByDims failed, when multiplying %ld and %ld.", element_cnt, dim);
+      GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcElementCntByDims failed, when multiplying %ld and %ld.",
+             element_cnt, dim);
       return GRAPH_FAILED;
     }
     element_cnt *= dim;
@@ -166,8 +167,8 @@ static graphStatus CalcElementCntOfNc1hwc0(const std::vector<int64_t> &dims, Dat
       "E19012", {"function", "reason"},
       {"CalcElementCntOfNc1hwc0", "dims.size[" + std::to_string(dims.size()) + "] is not " +
       std::to_string(kDimSize4d) + " or " +  std::to_string(kNc1hwc0CalcByDimsSize)});
-    GELOGE(GRAPH_FAILED, "CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.", dims.size(), kDimSize4d,
-           kNc1hwc0CalcByDimsSize);
+    GELOGE(GRAPH_FAILED, "[Check][Param] CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.",
+           dims.size(), kDimSize4d, kNc1hwc0CalcByDimsSize);
     return GRAPH_FAILED;
   }
 
@@ -197,7 +198,8 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
         "E19012", {"function", "reason"},
         {"CalcElementCntOfFractalZ",
          "dims.size[" + std::to_string(dims.size()) + "] is not " + std::to_string(kDimSize4d)});
-      GELOGE(GRAPH_FAILED, "CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.", dims.size(), kDimSize4d);
+      GELOGE(GRAPH_FAILED, "[Check][Param] CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
+             dims.size(), kDimSize4d);
       return GRAPH_FAILED;
     }
     auto c0 = static_cast<int64_t>(GetDimC0(data_type));
@@ -211,7 +213,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
     int64_t r_count = 1;
     graphStatus graph_status = CalcElementCntByDims(r_count_vec, r_count);
     if (graph_status != GRAPH_SUCCESS) {
-      GELOGE(graph_status, "Calc [%ld, %ld, %ld, %ld] element count failed.",
+      GELOGE(graph_status, "[Get][Cnt] Calc [%ld, %ld, %ld, %ld] element count failed.",
              c1, dims[kNchwDimIdxH], dims[kNchwDimIdxW], c0);
       return graph_status;
     }
@@ -228,7 +230,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
       ErrorManager::GetInstance().ATCReportErrMessage(
         "E19013", {"function", "var1", "var2"},
         {"CheckMultiplyOverflowInt64", std::to_string(nc_cnt), std::to_string(vc_cnt)});
-      GELOGE(GRAPH_FAILED, "The multiplication of %ld and %ld is overflow.", nc_cnt, vc_cnt);
+      GELOGE(GRAPH_FAILED, "[Check][Overflow] The multiplication of %ld and %ld is overflow.", nc_cnt, vc_cnt);
       return GRAPH_FAILED;
     }
     // Read data times needed by cube
@@ -238,7 +240,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
       ErrorManager::GetInstance().ATCReportErrMessage(
         "E19013", {"function", "var1", "var2"},
         {"CheckMultiplyOverflowInt64", std::to_string(c_cnt), std::to_string(cube_elem_cnt)});
-      GELOGE(GRAPH_FAILED, "The multiplication of %ld and %ld is overflow.", c_cnt, cube_elem_cnt);
+      GELOGE(GRAPH_FAILED, "[Check][Overflow] The multiplication of %ld and %ld is overflow.", c_cnt, cube_elem_cnt);
       return GRAPH_FAILED;
     }
     // Element count after fractal arrangement
@@ -314,7 +316,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
     default:
       ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
           {"CalcTensorElementCnt", "format[" + format_str + "] is not support"});
-      GELOGE(GRAPH_FAILED, "unsupported format, format=%d(%s).", format, format_str.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] unsupported format, format=%d(%s).", format, format_str.c_str());
       graph_status = GRAPH_FAILED;
       break;
   }
@@ -326,7 +328,9 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
         " data_type=%d(%s), element_cnt=%ld.",
         format, format_str.c_str(), data_type, type_str.c_str(), element_cnt);
   } else {
-    GELOGE(GRAPH_FAILED, "CalcTensorElementCnt failed, format=%d(%s), data_type=%d(%s).",
+    REPORT_INNER_ERROR("E19999", "CalcTensorElementCnt failed, format=%d(%s), data_type=%d(%s).",
+                       format, format_str.c_str(), data_type, type_str.c_str());
+    GELOGE(GRAPH_FAILED, "[Calc][TensorElementCnt] failed, format=%d(%s), data_type=%d(%s).",
            format, format_str.c_str(), data_type, type_str.c_str());
   }
   return graph_status;
@@ -349,7 +353,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
   uint32_t type_size = 0;
   bool result = TypeUtils::GetDataTypeLength(data_type, type_size);
   if (!result) {
-    GELOGE(GRAPH_FAILED, "GetDataTypeLength failed, data_type=%d(%s).", data_type, type_str.c_str());
+    REPORT_CALL_ERROR("E19999", "GetDataTypeLength failed, data_type=%d(%s).", data_type, type_str.c_str());
+    GELOGE(GRAPH_FAILED, "[Get][DataTypeLength] failed, data_type=%d(%s).", data_type, type_str.c_str());
     return GRAPH_FAILED;
   }
 
@@ -357,7 +362,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
   int64_t element_cnt = 0;
   graphStatus status = CalcTensorElementCnt(dims, format, data_type, element_cnt);
   if (status != GRAPH_SUCCESS) {
-    GELOGE(status, "CalcTensorElementCnt failed, status=%u format=%d(%s) data_type=%d(%s).",
+    GELOGE(status, "[Calc][TensorElementCnt] failed, status=%u format=%d(%s) data_type=%d(%s).",
            status, format, format_str.c_str(), data_type, type_str.c_str());
     return status;
   }
@@ -375,7 +380,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
     ErrorManager::GetInstance().ATCReportErrMessage(
       "E19013", {"function", "var1", "var2"},
       {"CheckMultiplyOverflowInt64", std::to_string(element_cnt), std::to_string(type_size_int64)});
-    GELOGE(GRAPH_FAILED, "CalcTensorMemSize overflow, when multiplying %ld and %ld, format=%d(%s), data_type=%d(%s).",
+    GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcTensorMemSize overflow, "
+           "when multiplying %ld and %ld, format=%d(%s), data_type=%d(%s).",
            element_cnt, type_size_int64, format, format_str.c_str(), data_type, type_str.c_str());
     return GRAPH_FAILED;
   }
@@ -410,15 +416,15 @@ TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_t
   int64_t output_mem_size = 0;
   graphStatus graph_status = CalcTensorMemSize(output_shape, format, data_type, output_mem_size);
   if (graph_status != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "CalcTensorMemSize failed!");
+    GELOGE(GRAPH_FAILED, "[Calc][TensorMemSize] failed! type:%s", TypeUtils::DataTypeToSerialString(data_type).c_str());
     return GRAPH_FAILED;
   }
 
   if (output_mem_size < 0) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"GetTensorSizeInBytes", "output_mem_size is out of data range [0, " + std::to_string(INT64_MAX) + "]"});
-    GELOGE(GRAPH_FAILED, "After calc concat tensor memory size, output_mem_size = %ld, out of data range [0, %ld]",
-           output_mem_size, INT64_MAX);
+    GELOGE(GRAPH_FAILED, "[Check][Param] After calc concat tensor memory size, "
+           "output_mem_size = %ld, out of data range [0, %ld]", output_mem_size, INT64_MAX);
     return GRAPH_FAILED;
   }
 
@@ -435,8 +441,8 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
     ErrorManager::GetInstance().ATCReportErrMessage("E10049", {"shape_range_size", "cur_dim_size"},
                                                     {std::to_string(shape_range.size()),
                                                      std::to_string(shape.GetDimNum())});
-    GELOGE(PARAM_INVALID, "Given shape_range dim num [%zu] and current dim num [%zu] are not match. Please check",
-           shape_range.size(), shape.GetDimNum());
+    GELOGE(PARAM_INVALID, "[Check][Param] Given shape_range dim num [%zu] and current dim num [%zu] are not match. "
+           "Please check", shape_range.size(), shape.GetDimNum());
     return PARAM_INVALID;
   }
 
@@ -452,7 +458,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
       std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
       ErrorManager::GetInstance().ATCReportErrMessage("E10048", {"shape_range", "reason", "sample"},
                                                       {error_range, kShapeRangeInvalid, kShapeRangeSample});
-      GELOGE(PARAM_INVALID, "Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
+      GELOGE(PARAM_INVALID, "[Check][Param] Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
              error_range.c_str(), kShapeRangeInvalid, kShapeRangeSample);
       return PARAM_INVALID;
     }
@@ -461,7 +467,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
       ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim","shape_range_left", "shape_range_right"},
                                                       {std::to_string(cur_dim), std::to_string(left_range),
                                                        std::to_string(right_range)});
-      GELOGE(PARAM_INVALID, "Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
+      GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
              cur_dim, left_range, right_range);
       return PARAM_INVALID;
     }
@@ -471,7 +477,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
         std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
         ErrorManager::GetInstance().ATCReportErrMessage("E10048", {"shape_range", "reason", "sample"},
                                                         {error_range, kShapeRangeInvalid, kShapeRangeSample});
-        GELOGE(PARAM_INVALID, "Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
+        GELOGE(PARAM_INVALID, "[Check][Param] Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
                error_range.c_str(), kShapeRangeInvalid, kShapeRangeSample);
         return PARAM_INVALID;
       }
@@ -480,7 +486,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
         ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim","shape_range_left", "shape_range_right"},
                                                         {std::to_string(cur_dim), std::to_string(left_range),
                                                          std::to_string(right_range)});
-        GELOGE(PARAM_INVALID, "Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
+        GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
                cur_dim, left_range, right_range);
         return PARAM_INVALID;
       }

@@ -39,7 +39,8 @@ Buffer::Buffer(std::size_t buffer_size, std::uint8_t default_val) : Buffer() {  
       proto_msg->set_bt(std::string(buffer_size, default_val));
       buffer_ = proto_msg->mutable_bt();
     } catch (std::bad_alloc &e) {
-      GELOGE(MEMALLOC_FAILED, "Failed to alloc buffer memory, buffer size %zu", buffer_size);
+      REPORT_CALL_ERROR("E19999", "failed to alloc buffer memory, buffer size %zu", buffer_size);
+      GELOGE(MEMALLOC_FAILED, "[New][Memory] failed to alloc buffer memory, buffer size %zu", buffer_size);
       buffer_ = nullptr;
     }
   }
@@ -53,7 +54,8 @@ Buffer Buffer::CopyFrom(const std::uint8_t *data, std::size_t buffer_size) {
       proto_msg->set_bt(data, buffer_size);
       buffer.buffer_ = proto_msg->mutable_bt();
     } catch (std::bad_alloc &e) {
-      GELOGE(MEMALLOC_FAILED, "Failed to alloc buffer memory, buffer size %zu", buffer_size);
+      REPORT_CALL_ERROR("E19999", "Failed to alloc buffer memory, buffer size %zu", buffer_size);
+      GELOGE(MEMALLOC_FAILED, "[New][Memory] Failed to alloc buffer memory, buffer size %zu", buffer_size);
       buffer.buffer_ = nullptr;
     }
   }

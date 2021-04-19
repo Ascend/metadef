@@ -35,11 +35,13 @@ const char OP_DESC_QUANT_PARAMS[] = "quantize_factor";
 
 namespace {
 const int CONST_OP_NORMAL_WEIGHT_SIZE = 1;
-} 
+}
 
 bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
-  GE_CHK_BOOL_EXEC(node != nullptr, return false, "node is nullptr");
-  GE_CHK_BOOL_EXEC(node->GetOpDesc() != nullptr, return false, "opdesc is nullptr");
+  GE_CHK_BOOL_EXEC(node != nullptr, REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
+                   return false, "[Check][Param] node is nullptr");
+  GE_CHK_BOOL_EXEC(node->GetOpDesc() != nullptr, REPORT_INNER_ERROR("E19999", "opdesc is nullptr.");
+                   return false, "[Check][Param] opdesc is nullptr");
   vector<int> index_list;
   for (const auto &in_anchor : node->GetAllInDataAnchors()) {
     if (in_anchor->GetPeerOutAnchor() == nullptr) {
@@ -62,8 +64,13 @@ bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearInputDesc(OpDescPtr op_desc,
                                                                                 const uint32_t index) {
-  GE_CHK_BOOL_EXEC(op_desc != nullptr, return false, "op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->inputs_desc_.size(), return false, "index %u is invalid.", index);
+  GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "op_desc is nullptr, check invalid");
+                   return false, "[Check][Param] op_desc is nullptr");
+  GE_CHK_BOOL_EXEC(index < op_desc->inputs_desc_.size(),
+                   REPORT_INNER_ERROR("E19999", "index %u is invalid, out of range(0, %zu).",
+                                      index, op_desc->inputs_desc_.size());
+                   return false,
+                   "[Check][Param] index %u is invalid, out of range(0, %zu).", index, op_desc->inputs_desc_.size());
 
   auto iter = op_desc->inputs_desc_.begin() + index;
   if (iter < op_desc->inputs_desc_.end()) {
@@ -80,8 +87,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::HasQuantizeFact
 }
 
 bool OpDescUtils::ClearOutputDesc(const NodePtr &node) {
-  GE_CHK_BOOL_EXEC(node != nullptr, return false, "node is nullptr");
-  GE_CHK_BOOL_EXEC(node->GetOpDesc() != nullptr, return false, "opdesc is nullptr");
+  GE_CHK_BOOL_EXEC(node != nullptr, REPORT_INNER_ERROR("E19999", "node is nullptr, check invalid.");
+                   return false, "[Check][Param] node is nullptr");
+  GE_CHK_BOOL_EXEC(node->GetOpDesc() != nullptr, REPORT_INNER_ERROR("E19999", "opdesc is nullptr.");
+                   return false, "[Check][Param] opdesc is nullptr");
   vector<int> index_list;
   for (const auto &out_anchor : node->GetAllOutDataAnchors()) {
     if (out_anchor->GetPeerInDataAnchors().empty()) {
@@ -104,8 +113,13 @@ bool OpDescUtils::ClearOutputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearOutputDesc(const OpDescPtr &op_desc,
                                                                                  uint32_t index) {
-  GE_CHK_BOOL_EXEC(op_desc != nullptr, return false, "op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->outputs_desc_.size(), return false, "index %u is invalid.", index);
+  GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr, check invalid");
+                   return false, "[Check][Param] op_desc is nullptr");
+  GE_CHK_BOOL_EXEC(index < op_desc->outputs_desc_.size(),
+                   REPORT_INNER_ERROR("E19999", "index %u is invalid. out of range(0, %zu)",
+                                      index, op_desc->outputs_desc_.size());
+                   return false,
+                   "[Check][Param] index %u is invalid. out of range(0, %zu)", index, op_desc->outputs_desc_.size());
 
   auto iter = op_desc->outputs_desc_.begin() + index;
   if (iter < op_desc->outputs_desc_.end()) {
@@ -129,7 +143,8 @@ GeTensorPtr OpDescUtils::MutableWeights(OpDesc &op_desc) {
 
 GE_FUNC_HOST_VISIBILITY GeTensorPtr OpDescUtils::MutableWeights(OpDescPtr op_desc) {
   if (op_desc == nullptr) {
-    GELOGE(GRAPH_FAILED, "op_desc is null");
+    REPORT_INNER_ERROR("E19999", "op_desc is null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] op_desc is null");
     return nullptr;
   }
   return MutableWeights(*op_desc);
@@ -137,7 +152,8 @@ GE_FUNC_HOST_VISIBILITY GeTensorPtr OpDescUtils::MutableWeights(OpDescPtr op_des
 
 graphStatus OpDescUtils::SetWeights(OpDesc &op_desc, const GeTensorPtr weight) {
   if (weight == nullptr) {
-    GELOGE(GRAPH_FAILED, "weight is null");
+    REPORT_INNER_ERROR("E19999", "weight is null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] weight is null");
     return GRAPH_FAILED;
   }
   return AttrUtils::SetTensor(&op_desc, ATTR_NAME_WEIGHTS, weight) ? GRAPH_SUCCESS : GRAPH_FAILED;
@@ -216,7 +232,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<ConstGeTensorPtr> OpDescUt
   for (const auto &input_node : input_nodes) {
     auto temp_weight = MutableWeights(input_node->GetOpDesc());
     if (temp_weight == nullptr) {
-      GELOGE(GRAPH_FAILED, "const op's weight is null, name: %s", input_node->GetName().c_str());
+      REPORT_CALL_ERROR("E19999", "const op's weight is null, name: %s", input_node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Invoke][MutableWeights] const op's weight is null, name: %s",
+             input_node->GetName().c_str());
       return vector<ConstGeTensorPtr>();
     }
     ret.push_back(temp_weight);
@@ -240,7 +258,8 @@ size_t OpDescUtils::GetNonConstInputsSize(const ge::Node &node) {
         ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
             {"GetNonConstInputsSize", "InDataNodes size[" + std::to_string(node.GetInDataNodes().size()) +
             "] is smaller than ConstInputs[" + std::to_string(GetConstInputs(node).size()) + "]"});
-        GELOGE(GRAPH_FAILED, "%zu is smaller than %zu", node.GetInDataNodes().size(), GetConstInputs(node).size());
+        GELOGE(GRAPH_FAILED, "[Check][Param] %zu is smaller than %zu",
+               node.GetInDataNodes().size(), GetConstInputs(node).size());
         return 0);
     return node.GetInDataNodes().size() - GetConstInputs(node).size();
   }
@@ -248,14 +267,16 @@ size_t OpDescUtils::GetNonConstInputsSize(const ge::Node &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY size_t OpDescUtils::GetNonConstInputsSize(const ge::ConstNodePtr node) {
   if (node == nullptr) {
-    GELOGE(GRAPH_FAILED, "Node is nullptr");
+    REPORT_INNER_ERROR("E19999", "node is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Node is nullptr");
     return 0;
   }
   return GetNonConstInputsSize(*node);
 }
 
 GeTensorDesc OpDescUtils::GetNonConstInputTensorDesc(const ge::Node &node, size_t index_non_const) {
-  GE_CHK_BOOL_EXEC(node.GetOpDesc() != nullptr, return GeTensorDesc(), "node.GetOpDesc() is nullptr!");
+  GE_CHK_BOOL_EXEC(node.GetOpDesc() != nullptr, REPORT_CALL_ERROR("E19999", "node.GetOpDesc() is nullptr!");
+                   return GeTensorDesc(), "[Check][Param] node.GetOpDesc() is nullptr!");
   size_t i = 0;
   if (NodeUtils::IsAnchorStatusSet(node)) {
     for (const auto &anchor : node.GetAllInDataAnchors()) {
@@ -432,7 +453,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<ge::NodePtr> OpDescUtils::
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<GeTensorPtr> OpDescUtils::MutableWeights(const ge::Node &node) {
   vector<GeTensorPtr> ret;
   auto op_desc = node.GetOpDesc();
-  GE_CHK_BOOL_EXEC(op_desc != nullptr, return ret, "op_desc is nullptr!");
+  GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param node's op_desc is nullptr.");
+                   return ret, "[Check][Param] op_desc is nullptr!");
   // Place holder operator, try to get the weight from parent node
   // when parent node is const operator
   if (node.GetType() == PLACEHOLDER) {
@@ -481,7 +503,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<GeTensorPtr> OpDescUtils::
     if (temp_weight == nullptr) {
       ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
           {"MutableWeights", "const op[" + input_node->GetName() + "]'s weight is null"});
-      GELOGE(GRAPH_FAILED, "const op's weight is null, name: %s", input_node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Invoke][MutableWeights] const op's weight is null, name: %s",
+             input_node->GetName().c_str());
       return vector<GeTensorPtr>();
     }
     ret.push_back(temp_weight);
@@ -492,14 +515,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<GeTensorPtr> OpDescUtils::
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<GeTensorPtr> OpDescUtils::MutableWeights(const ge::NodePtr node) {
   if (node == nullptr) {
-    GELOGE(GRAPH_FAILED, "Node is nullptr");
+    REPORT_INNER_ERROR("E19999", "node is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Node is nullptr");
     return vector<ge::GeTensorPtr>();
   }
   return MutableWeights(*node);
 }
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 OpDescUtils::SetWeights(ge::Node &node, const vector<ge::GeTensorPtr> &weights) {
-  GE_CHK_BOOL_EXEC(node.GetOpDesc() != nullptr, return GRAPH_PARAM_INVALID, "node.GetOpDesc is nullptr!");
+  GE_CHK_BOOL_EXEC(node.GetOpDesc() != nullptr, REPORT_CALL_ERROR("E19999", "opdesc of node is nullptr.");
+                   return GRAPH_PARAM_INVALID, "[Check][Param] node.GetOpDesc is nullptr!");
   if (node.GetOpDesc()->GetType() == CONSTANT) {
     if (weights.size() == CONST_OP_NORMAL_WEIGHT_SIZE) {
       return SetWeights(node.GetOpDesc(), weights[0]);
@@ -512,7 +537,8 @@ OpDescUtils::SetWeights(ge::Node &node, const vector<ge::GeTensorPtr> &weights) 
   if (weights.size() < input_nodes.size()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"SetWeights", "weights count can't be less than const input count"});
-    GELOGE(GRAPH_FAILED, "weights count can't be less than const input count");
+    GELOGE(GRAPH_FAILED, "[Check][Param] weights count:%zu can't be less than const input count:%zu",
+           weights.size(), input_nodes.size());
     return GRAPH_PARAM_INVALID;
   }
 
@@ -535,12 +561,15 @@ OpDescUtils::SetWeights(ge::Node &node, const vector<ge::GeTensorPtr> &weights) 
 
     auto owner_graph = node.GetOwnerComputeGraph();
     if (owner_graph == nullptr) {
-      GELOGE(GRAPH_FAILED, "node's graph is empty, name: %s", node.GetName().c_str());
+      REPORT_CALL_ERROR("E19999", "node's graph is empty, node name: %s", node.GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Get][Graph] node's graph is empty, name: %s", node.GetName().c_str());
       return GRAPH_PARAM_INVALID;
     }
     auto const_node = owner_graph->AddNodeFront(const_opdesc);
-    GE_CHK_BOOL_EXEC(node.AddLinkFrom(const_node) == GRAPH_SUCCESS, 
-                     GELOGE(GRAPH_FAILED, "graph add link failed!");
+    GE_CHK_BOOL_EXEC(node.AddLinkFrom(const_node) == GRAPH_SUCCESS,
+                     REPORT_CALL_ERROR("E19999", "node:%s add link failed.", node.GetName().c_str());
+                     GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] graph add link failed! node:%s",
+                            node.GetName().c_str());
                      return GRAPH_FAILED);
     std::vector<ge::NodePtr> original_nodes;
     ge::GraphUtils::RecordOriginalNames(original_nodes, const_node);
@@ -559,7 +588,8 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"SetWeights", "const op[" + node.GetName() + "] weight size[" +
         std::to_string(weights_map.size()) + "] should be 1"});
-    GELOGE(GRAPH_PARAM_INVALID, "const op %s weight size %zu should be 1", node.GetName().c_str(), weights_map.size());
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] const op %s weight size %zu should be 1",
+           node.GetName().c_str(), weights_map.size());
     return GRAPH_PARAM_INVALID;
   }
   // 2. node is not const
@@ -570,7 +600,8 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
       auto out_anchor = in_data_anchor->GetPeerOutAnchor();
       auto peer_node = out_anchor->GetOwnerNode();
       if (peer_node == nullptr) {
-        GELOGE(GRAPH_PARAM_INVALID, "op %s [%d]'s input node is null", node.GetName().c_str(), pair.first);
+        REPORT_CALL_ERROR("E19999", "op %s [%d]'s input node is null", node.GetName().c_str(), pair.first);
+        GELOGE(GRAPH_PARAM_INVALID, "[Get][Node] op %s [%d]'s input node is null", node.GetName().c_str(), pair.first);
         return GRAPH_PARAM_INVALID;
       }
       if (peer_node->GetType() != CONSTANT) {
@@ -578,9 +609,8 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
             {"SetWeights", "op[" + node.GetName() + "] [" + std::to_string(pair.first) +
             "]'s input node should be const, but real op is " +
             peer_node->GetName() + ", type is " + peer_node->GetType()});
-        GELOGE(GRAPH_PARAM_INVALID,
-               " op %s [%d]'s input node should be const, but is %s type:%s ", node.GetName().c_str(),
-               pair.first, peer_node->GetName().c_str(), peer_node->GetType().c_str());
+        GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] op %s [%d]'s input node should be const, but is %s type:%s ",
+               node.GetName().c_str(), pair.first, peer_node->GetName().c_str(), peer_node->GetType().c_str());
       }
       SetWeights(peer_node->GetOpDesc(), pair.second);
     } else {
@@ -589,12 +619,15 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
       GE_CHECK_NOTNULL(const_opdesc);
       auto owner_graph = node.GetOwnerComputeGraph();
       if (owner_graph == nullptr) {
-        GELOGE(GRAPH_PARAM_INVALID, "node's graph is empty, name: %s", node.GetName().c_str());
+        REPORT_CALL_ERROR("E19999", "node's graph is empty, node name: %s", node.GetName().c_str());
+        GELOGE(GRAPH_PARAM_INVALID, "[Get][Graph] node's graph is empty, name: %s", node.GetName().c_str());
         return GRAPH_PARAM_INVALID;
       }
       auto const_node = owner_graph->AddNodeFront(const_opdesc);
       if (node.AddLinkFrom(static_cast<uint32_t>(pair.first), const_node) != GRAPH_SUCCESS) {
-        GELOGE(GRAPH_FAILED, "op %s add const to input index[%d] failed", node.GetName().c_str(), pair.first);
+        REPORT_CALL_ERROR("E19999", "op %s add const to input index[%d] failed", node.GetName().c_str(), pair.first);
+        GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] op %s add const to input index[%d] failed",
+               node.GetName().c_str(), pair.first);
         return GRAPH_FAILED;
       }
     }
@@ -604,10 +637,12 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
 }
 
 OpDescPtr OpDescUtils::CreateConstOp(const GeTensorPtr &tensor_ptr) {
-  GE_CHK_BOOL_EXEC(tensor_ptr != nullptr, return nullptr, "tensor_ptr is nullptr!");
+  GE_CHK_BOOL_EXEC(tensor_ptr != nullptr, REPORT_INNER_ERROR("E19999", "tensor_ptr is nullptr, check invalid.");
+                   return nullptr, "[Check][Param] tensor_ptr is nullptr!");
   shared_ptr<OpDesc> const_opdesc = ComGraphMakeShared<OpDesc>();
   if (const_opdesc == nullptr) {
-    GELOGE(GRAPH_FAILED, "failed to make_shared ");
+    REPORT_CALL_ERROR("E19999", "create OpDesc failed.");
+    GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed to make_shared ");
     return nullptr;
   }
 
@@ -637,13 +672,17 @@ OpDescUtils::AddConstOpToAnchor(InDataAnchorPtr in_anchor, const GeTensorPtr &te
   GE_CHECK_NOTNULL(in_node);
   auto owner_graph = in_node->GetOwnerComputeGraph();
   if (owner_graph == nullptr) {
-    GELOGE(GRAPH_PARAM_INVALID, "node's graph is empty, name: %s", in_node->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "node's graph is empty, name: %s", in_node->GetName().c_str());
+    GELOGE(GRAPH_PARAM_INVALID, "[Get][Graph] node's graph is empty, name: %s", in_node->GetName().c_str());
     return GRAPH_PARAM_INVALID;
   }
   auto const_node = in_node->GetOwnerComputeGraph()->AddNodeFront(const_opdesc);
   GE_CHECK_NOTNULL(const_node);
   if (GraphUtils::AddEdge(const_node->GetOutDataAnchor(0), in_anchor) != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_PARAM_INVALID, "Addedge const to node failed.");
+    REPORT_CALL_ERROR("E19999", "AddEdge const %s to node %s failed", const_node->GetName().c_str(),
+                      in_node->GetName().c_str());
+    GELOGE(GRAPH_PARAM_INVALID, "[Add][Edge] const %s to node %s failed.", const_node->GetName().c_str(),
+           in_node->GetName().c_str());
     return GRAPH_PARAM_INVALID;
   }
   return GRAPH_SUCCESS;
@@ -660,14 +699,15 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDescUtils::ClearWei
   auto const_ops = GetConstInputs(node);
   auto graph = node->GetOwnerComputeGraph();
   if (graph == nullptr) {
-    GELOGE(GRAPH_FAILED, "Graph is nullptr");
+    REPORT_CALL_ERROR("E19999", "GetOwnerComputeGraph failed, graph is nullptr, node:%s", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Get][Graph] Graph is nullptr");
     return GRAPH_PARAM_INVALID;
   }
   for (const auto &const_op : const_ops) {
-    GE_CHK_STATUS_RET(GraphUtils::IsolateNode(const_op, {}), "Isolate removed node: %s, type: %s failed",
+    GE_CHK_STATUS_RET(GraphUtils::IsolateNode(const_op, {}), "[Isolate][Node] %s, type:%s failed",
                       const_op->GetName().c_str(), const_op->GetType().c_str());
     GE_CHK_STATUS_RET(GraphUtils::RemoveNodeWithoutRelink(graph, const_op),
-                      "Remove node: %s, type: %s without relink failed", const_op->GetName().c_str(),
+                      "[Remove][Node] %s, type: %s without relink failed", const_op->GetName().c_str(),
                       const_op->GetType().c_str());
   }
   return GRAPH_SUCCESS;
@@ -782,20 +822,23 @@ OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name, uint32_t
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescBuilder::Build() {
   OpDescPtr op_desc = shared_ptr<OpDesc>(new (std::nothrow) OpDesc(name_, type_));
   if (op_desc == nullptr) {
-    GELOGE(GRAPH_FAILED, "OpDesc is nullptr");
+    REPORT_CALL_ERROR("E19999", "create opdesc failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
+    GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
     return nullptr;
   }
 
   for (auto &input : inputs_) {
     if (op_desc->AddInputDesc(input.first, input.second) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "Add input_desc failed.");
+      REPORT_CALL_ERROR("E19999", "AddInputDesc failed, op:%s.", name_.c_str());
+      GELOGE(GRAPH_FAILED, "[Add][InputDesc] failed, op:%s.", name_.c_str());
       return nullptr;
     }
   }
 
   for (auto &output : outputs_) {
     if (op_desc->AddOutputDesc(output.first, output.second) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "Add output_desc failed.");
+      REPORT_CALL_ERROR("E19999", "AddOutputDesc failed, op:%s", name_.c_str());
+      GELOGE(GRAPH_FAILED, "[Add][OutputDesc] failed, op:%s.", name_.c_str());
       return nullptr;
     }
   }
@@ -815,7 +858,7 @@ graphStatus OpDescUtils::SetSubgraphInstanceName(const std::string &subgraph_nam
         "The op is " + op_desc->GetName() + ", type is " + op_desc->GetType() +
         ", subgraph is " + subgraph_instance_name});
     GELOGE(GRAPH_PARAM_INVALID,
-        "Failed to set subgraph instance %s for node %s type %s, the subgraph name %s does not exists",
+        "[Check][Param] Failed to set subgraph instance %s for node %s type %s, the subgraph name %s does not exists",
         subgraph_instance_name.c_str(), op_desc->GetName().c_str(), op_desc->GetType().c_str(), subgraph_name.c_str());
     return GRAPH_PARAM_INVALID;
   }

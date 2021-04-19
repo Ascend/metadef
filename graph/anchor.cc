@@ -61,7 +61,8 @@ void Anchor::UnlinkAll() noexcept {
 
 graphStatus Anchor::Unlink(const AnchorPtr &peer) {
   if (peer == nullptr) {
-    GELOGE(GRAPH_FAILED, "peer anchor is invalid.");
+    REPORT_INNER_ERROR("E19999", "param peer is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] peer anchor is invalid.");
     return GRAPH_FAILED;
   }
   auto it = std::find_if(peer_anchors_.begin(), peer_anchors_.end(), [peer](const std::weak_ptr<Anchor> &an) {
@@ -77,23 +78,28 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
         return Equal(anchor);
       });
 
-  GE_CHK_BOOL_RET_STATUS(it_peer != peer->peer_anchors_.end(), GRAPH_FAILED, "peer is not connected to this anchor");
-
+  GE_CHK_BOOL_RET_STATUS(it_peer != peer->peer_anchors_.end(), GRAPH_FAILED,
+                         "[Check][Param] peer(%s, %d) is not connected to this anchor(%s, %d)",
+                         peer->GetOwnerNode()->GetName().c_str(), peer->GetIdx(),
+                         this->GetOwnerNode()->GetName().c_str(), this->GetIdx());
   (void)peer_anchors_.erase(it);
   (void)peer->peer_anchors_.erase(it_peer);
   return GRAPH_SUCCESS;
 }
 
 graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &first_peer, const AnchorPtr &second_peer) {
-  GE_CHK_BOOL_RET_STATUS(old_peer != nullptr, GRAPH_FAILED, "this old peer anchor is nullptr");
-  GE_CHK_BOOL_RET_STATUS(first_peer != nullptr, GRAPH_FAILED, "this first peer anchor is nullptr");
-  GE_CHK_BOOL_RET_STATUS(second_peer != nullptr, GRAPH_FAILED, "this second peer anchor is nullptr");
+  GE_CHK_BOOL_RET_STATUS(old_peer != nullptr, GRAPH_FAILED, "[Check][Param] this old peer anchor is nullptr");
+  GE_CHK_BOOL_RET_STATUS(first_peer != nullptr, GRAPH_FAILED, "[Check][Param] this first peer anchor is nullptr");
+  GE_CHK_BOOL_RET_STATUS(second_peer != nullptr, GRAPH_FAILED, "[Check][Param] this second peer anchor is nullptr");
   auto this_it = std::find_if(peer_anchors_.begin(), peer_anchors_.end(), [old_peer](const std::weak_ptr<Anchor> &an) {
     auto anchor = an.lock();
     return old_peer->Equal(anchor);
   });
 
-  GE_CHK_BOOL_RET_STATUS(this_it != peer_anchors_.end(), GRAPH_FAILED, "this anchor is not connected to old_peer");
+  GE_CHK_BOOL_RET_STATUS(this_it != peer_anchors_.end(), GRAPH_FAILED,
+                         "[Check][Param] this anchor(%s, %d) is not connected to old_peer(%s, %d)",
+                         this->GetOwnerNode()->GetName().c_str(), this->GetIdx(),
+                         old_peer->GetOwnerNode()->GetName().c_str(), old_peer->GetIdx());
 
   auto old_it = std::find_if(old_peer->peer_anchors_.begin(), old_peer->peer_anchors_.end(),
                              [this](const std::weak_ptr<Anchor> &an) {
@@ -102,7 +108,9 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
                              });
 
   GE_CHK_BOOL_RET_STATUS(old_it != old_peer->peer_anchors_.end(), GRAPH_FAILED,
-                         "old_peer is not connected to this anchor");
+                         "[Check][Param] old_peer(%s, %d) is not connected to this anchor(%s, %d)",
+                         old_peer->GetOwnerNode()->GetName().c_str(), old_peer->GetIdx(),
+                         this->GetOwnerNode()->GetName().c_str(), this->GetIdx());
   *this_it = first_peer;
   first_peer->peer_anchors_.push_back(shared_from_this());
   *old_it = second_peer;
@@ -113,7 +121,7 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
 bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
   auto it = std::find_if(peer_anchors_.begin(), peer_anchors_.end(), [peer](const std::weak_ptr<Anchor> &an) {
     auto anchor = an.lock();
-    GE_CHK_BOOL_RET_STATUS(peer != nullptr, false, "this old peer anchor is nullptr");
+    GE_CHK_BOOL_RET_STATUS(peer != nullptr, false, "[Check][Param] this old peer anchor is nullptr");
     return peer->Equal(anchor);
   });
   return (it != peer_anchors_.end());
@@ -145,7 +153,8 @@ OutDataAnchorPtr InDataAnchor::GetPeerOutAnchor() const {
 graphStatus InDataAnchor::LinkFrom(const OutDataAnchorPtr &src) {
   // InDataAnchor must be only linkfrom once
   if (src == nullptr || !peer_anchors_.empty()) {
-    GELOGE(GRAPH_FAILED, "src anchor is invalid or the peerAnchors is not empty.");
+    REPORT_INNER_ERROR("E19999", "src anchor is invalid or the peerAnchors is not empty.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] src anchor is invalid or the peerAnchors is not empty.");
     return GRAPH_FAILED;
   }
   peer_anchors_.push_back(src);
@@ -207,7 +216,8 @@ OutDataAnchor::Vistor<InControlAnchorPtr> OutDataAnchor::GetPeerInControlAnchors
 
 graphStatus OutDataAnchor::LinkTo(const InDataAnchorPtr &dest) {
   if (dest == nullptr || !dest->peer_anchors_.empty()) {
-    GELOGE(GRAPH_FAILED, "dest anchor is invalid or the peerAnchors is not empty.");
+    REPORT_INNER_ERROR("E19999", "dest anchor is nullptr or the peerAnchors is not empty.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is nullptr or the peerAnchors is not empty.");
     return GRAPH_FAILED;
   }
   peer_anchors_.push_back(dest);
@@ -217,7 +227,8 @@ graphStatus OutDataAnchor::LinkTo(const InDataAnchorPtr &dest) {
 
 graphStatus OutDataAnchor::LinkTo(const InControlAnchorPtr &dest) {
   if (dest == nullptr) {
-    GELOGE(GRAPH_FAILED, "dest anchor is invalid.");
+    REPORT_INNER_ERROR("E19999", "param dest is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is invalid.");
     return GRAPH_FAILED;
   }
   peer_anchors_.push_back(dest);
@@ -227,7 +238,8 @@ graphStatus OutDataAnchor::LinkTo(const InControlAnchorPtr &dest) {
 
 graphStatus OutControlAnchor::LinkTo(const InDataAnchorPtr &dest) {
   if (dest == nullptr) {
-    GELOGE(GRAPH_FAILED, "dest anchor is invalid.");
+    REPORT_INNER_ERROR("E19999", "param dest is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is invalid.");
     return GRAPH_FAILED;
   }
   peer_anchors_.push_back(dest);
@@ -292,7 +304,8 @@ InControlAnchor::Vistor<OutDataAnchorPtr> InControlAnchor::GetPeerOutDataAnchors
 
 graphStatus InControlAnchor::LinkFrom(const OutControlAnchorPtr &src) {
   if (src == nullptr) {
-    GELOGE(GRAPH_FAILED, "src anchor is invalid.");
+    REPORT_INNER_ERROR("E19999", "param src is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] src anchor is invalid.");
     return GRAPH_FAILED;
   }
   peer_anchors_.push_back(src);
@@ -301,7 +314,8 @@ graphStatus InControlAnchor::LinkFrom(const OutControlAnchorPtr &src) {
 }
 
 bool InControlAnchor::Equal(AnchorPtr anchor) const {
-  CHECK_FALSE_EXEC(anchor != nullptr, return false);
+  CHECK_FALSE_EXEC(anchor != nullptr, REPORT_INNER_ERROR("E19999", "param anchor is nullptr, check invalid");
+                   GELOGE(GRAPH_FAILED, "[Check][Param] anchor is invalid."); return false);
   auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor);
   if (in_control_anchor != nullptr) {
     if (GetOwnerNode() == in_control_anchor->GetOwnerNode()) {
@@ -346,7 +360,8 @@ OutControlAnchor::Vistor<InDataAnchorPtr> OutControlAnchor::GetPeerInDataAnchors
 
 graphStatus OutControlAnchor::LinkTo(const InControlAnchorPtr &dest) {
   if (dest == nullptr) {
-    GELOGE(GRAPH_FAILED, "dest anchor is invalid.");
+    REPORT_INNER_ERROR("E19999", "param dest is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is invalid.");
     return GRAPH_FAILED;
   }
   peer_anchors_.push_back(dest);
