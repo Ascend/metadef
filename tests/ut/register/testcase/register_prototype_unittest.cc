@@ -33,6 +33,7 @@ class RegisterPass : public ProtoTypeBasePass {
 };
 
 REGISTER_PROTOTYPE_PASS("RegisterPass", RegisterPass, domi::CAFFE);
+REGISTER_PROTOTYPE_PASS("RegisterPass", RegisterPass, domi::CAFFE);
 
 TEST_F(UtestProtoTypeRegister, register_test) {
   auto pass_vec = ProtoTypePassRegistry::GetInstance().GetCreateFnByType(domi::CAFFE);

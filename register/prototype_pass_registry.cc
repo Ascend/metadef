@@ -24,6 +24,12 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
   void RegisterProtoTypePass(const std::string &pass_name, ProtoTypePassRegistry::CreateFn create_fn,
                              const domi::FrameworkType &fmk_type) {
     std::lock_guard<std::mutex> lock(mu_);
+    if (std::find(pass_names_.begin(), pass_names_.end(), pass_name) != pass_names_.end()) {
+      GELOGW("The prototype pass has been registered and will not overwrite the previous one, pass name = %s.",
+             pass_name.c_str());
+      return;
+    }
+    pass_names_.push_back(pass_name);
 
     auto iter = create_fns_.find(fmk_type);
     if (iter != create_fns_.end()) {
@@ -50,6 +56,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
 
  private:
   std::mutex mu_;
+  std::vector<std::string> pass_names_;
   std::map<domi::FrameworkType, std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>> create_fns_;
 };
 
