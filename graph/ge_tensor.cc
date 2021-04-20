@@ -61,9 +61,8 @@ const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_STRING, proto::DT_STRING},
     {DT_VARIANT, proto::DT_VARIANT},
     {DT_BF16, proto::DT_BF16},
-  #if !(defined(ONLY_COMPILE_OPEN_SRC) || defined(BUILD_OPEN_PROJECT))
-    {DT_INT4, proto::DT_INT4},
-  #endif
+    // Rollback int4
+    // {DT_INT4, proto::DT_INT4},
 };
 
 const std::map<DataType, int> kDataTypeSelfDefinedMap = {
