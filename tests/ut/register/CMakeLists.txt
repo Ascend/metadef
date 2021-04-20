@@ -82,6 +82,7 @@ set(REGISTER_SRC_FILES
     "${METADEF_DIR}/register/scope/scope_pattern.cc"
     "${METADEF_DIR}/register/scope/scope_util.cc"
     "${METADEF_DIR}/register/tensor_assign.cpp"
+    "${METADEF_DIR}/register/prototype_pass_registry.cc"
 )
 
 # include directories
@@ -100,6 +101,7 @@ include_directories(${METADEF_DIR}/third_party/graphengine/inc/framework)
 
 set(REGISTER_UT_FILES
     "testcase/register_unittest.cc"
+    "testcase/register_prototype_unittest.cc"
 )
 
 ############ libut_metadef_register.a ############
