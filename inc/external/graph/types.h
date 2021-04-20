@@ -69,9 +69,8 @@ enum DataType {
   DT_DUAL = 25,            // dual output type
   DT_VARIANT = 26,         // dt_variant type
   DT_BF16 = 27,            // bf16 type
-#if !(defined(ONLY_COMPILE_OPEN_SRC) || defined(BUILD_OPEN_PROJECT))
-  DT_INT4 = 28,            // int4 type
-#endif
+  // Rollback int4
+  // DT_INT4 = 28,            // int4 type
   DT_UNDEFINED             // Used to indicate a DataType field has not been set.
 };
 
@@ -105,9 +104,8 @@ inline int GetSizeByDataType(DataType data_type) {
       5,   // DT_DUAL = 25,               dual output type (float + int8)
       8,   // DT_VARIANT                  variant type
       2,   // DT_BF16 = 27,               bf16 type
-  #if !(defined(ONLY_COMPILE_OPEN_SRC) || defined(BUILD_OPEN_PROJECT))
-      kDataTypeSizeBitOffset + 4,    // DT_INT4 = 28,             int4 type
-  #endif
+      // Rollback int4
+      // kDataTypeSizeBitOffset + 4,    // DT_INT4 = 28,             int4 type
            // DT_UNDEFINED    Used to indicate a DataType field has not been set.
   };
   if (data_type >= DT_UNDEFINED) {
