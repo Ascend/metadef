@@ -748,6 +748,8 @@ const std::string ATTR_MODEL_ATC_VERSION = "atc_version";
 
 const std::string ATTR_MODEL_OPP_VERSION = "opp_version";
 
+const std::string ATTR_MODEL_SESSION_SCOPE_MEMORY_SIZE = "session_scope_memory_size";
+
 // Public attribute
 const std::string ATTR_NAME_IMPLY_TYPE = "imply_type";
 
@@ -1180,4 +1182,7 @@ const std::string ATTR_NAME_BUFFER_POOL_ID = "_buffer_pool_id";
 const std::string ATTR_NAME_BUFFER_POOL_SIZE = "_buffer_pool_size";
 const std::string ATTR_NAME_EVENT_MULTIPLEXING = "_event_multiplexing";
 const std::string ATTR_NAME_BUFFER_POOL_NODE_SIZE_AND_OFFSET = "_buffer_pool_node_size_and_offset";
+
+// session scope memory
+const std::string ATTR_NAME_WORKSPACE_MEMORY_NO_REUSE_SCOPE = "_workspace_memory_no_reuse_scope";
 }  // namespace ge
