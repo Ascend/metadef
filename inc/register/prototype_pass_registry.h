@@ -43,7 +43,6 @@ class ProtoTypePassRegistry {
  private:
   ProtoTypePassRegistry();
   class ProtoTypePassRegistryImpl;
-  /*lint -e148*/
   std::unique_ptr<ProtoTypePassRegistryImpl> impl_;
 };
 
