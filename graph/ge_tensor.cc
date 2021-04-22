@@ -821,6 +821,7 @@ GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg
         GELOGW("Set data failed");
       }
     } else {
+      __desc_.RefTo(GeTensorDesc(nullptr, nullptr));
       tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
       GELOGI("data is empty");
     }
@@ -877,7 +878,20 @@ graphStatus GeTensor::SetData(const uint8_t *data, size_t size) {
 }
 
 graphStatus GeTensor::SetData(const Buffer &data) {
-  return SetData(data.data(), data.size());
+  if (tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = tensor_def_.GetProtoMsg();
+    GE_CHECK_NOTNULL(proto_msg);
+    if (data.size() == 0) {
+      GELOGI("GetSize res is 0.");
+    }
+    if (data.data() == nullptr) {
+      GELOGI("data addr is null.");
+    }
+    proto_msg->set_data(data.data(), data.size());
+    BuildAlignerPtrWithProtoData();
+    return GRAPH_SUCCESS;
+  }
+  return tensor_data_.SetData(data);
 }
 
 graphStatus GeTensor::SetData(const TensorData &data) {
