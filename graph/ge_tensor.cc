@@ -852,23 +852,12 @@ GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
 GeTensorDesc &GeTensor::MutableTensorDesc() { return DescReference(); }
 
 GeTensorDesc &GeTensor::DescReference() const {
-  if (tensor_def_.GetProtoOwner() != nullptr) {
-    if (tensor_def_.GetProtoMsg() != nullptr) {
-      GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), tensor_def_.GetProtoMsg()->mutable_desc());
-      __desc_.RefTo(tensor_desc);
-    } else {
-      GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), nullptr);
-      __desc_.RefTo(tensor_desc);
-    }
+  if (tensor_def_.GetProtoMsg() != nullptr) {
+    GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), tensor_def_.GetProtoMsg()->mutable_desc());
+    __desc_.RefTo(tensor_desc);
   } else {
-    if (tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
-      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(),
-                               tensor_data_.tensor_descriptor_.GetProtoMsg());
-      __desc_.RefTo(tensor_desc);
-    } else {
-      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(), nullptr);
-      __desc_.RefTo(tensor_desc);
-    }
+    GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), nullptr);
+    __desc_.RefTo(tensor_desc);
   }
   return __desc_;
 }
@@ -963,6 +952,7 @@ GeTensor::GeTensor(const GeTensor &other) : GeTensor() {
   }
   __desc_ = other.__desc_;
   tensor_data_ = other.tensor_data_;
+  tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
 }
 
 GeTensor &GeTensor::operator=(const GeTensor &other) {
@@ -972,6 +962,7 @@ GeTensor &GeTensor::operator=(const GeTensor &other) {
     }
     __desc_ = other.__desc_;
     tensor_data_ = other.tensor_data_;
+    tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
   }
   return *this;
 }
