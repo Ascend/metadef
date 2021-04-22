@@ -61,4 +61,8 @@ TEST_F(UtestTypeUtils, DataFormatToFormat) {
   ASSERT_EQ(TypeUtils::DataFormatToFormat("INVALID:1"), FORMAT_RESERVED);
   ASSERT_EQ(TypeUtils::DataFormatToFormat("NCHW:1%"), FORMAT_RESERVED);
 }
+
+TEST_F(UtestTypeUtils, IsDataTypeValid) {
+  ASSERT_EQ(TypeUtils::IsDataTypeValid(DT_MAX), false);
+}
 }

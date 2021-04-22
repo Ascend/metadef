@@ -156,7 +156,7 @@ target_link_libraries(ut_metadef_graph PRIVATE
 add_executable(ut_graph ${UT_FILES} ${PROTO_HDRS})
 
 target_compile_options(ut_graph PRIVATE
-    -g
+    -g --coverage -fprofile-arcs -ftest-coverage
 )
 
 target_compile_definitions(ut_graph PRIVATE

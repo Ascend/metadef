@@ -350,13 +350,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
                                                                                           int64_t &mem_size) {
   const string format_str = TypeUtils::FormatToSerialString(format);
   const string type_str = TypeUtils::DataTypeToSerialString(data_type);
-  uint32_t type_size = 0;
-  bool result = TypeUtils::GetDataTypeLength(data_type, type_size);
-  if (!result) {
-    REPORT_CALL_ERROR("E19999", "GetDataTypeLength failed, data_type=%d(%s).", data_type, type_str.c_str());
-    GELOGE(GRAPH_FAILED, "[Get][DataTypeLength] failed, data_type=%d(%s).", data_type, type_str.c_str());
-    return GRAPH_FAILED;
-  }
 
   std::vector<int64_t> dims = shape.GetDims();
   int64_t element_cnt = 0;
@@ -375,17 +368,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
         format, format_str.c_str(), data_type, type_str.c_str(), mem_size);
     return GRAPH_SUCCESS;
   }
-  auto type_size_int64 = static_cast<int64_t>(type_size);
-  if (CheckMultiplyOverflowInt64(element_cnt, type_size_int64)) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-      "E19013", {"function", "var1", "var2"},
-      {"CheckMultiplyOverflowInt64", std::to_string(element_cnt), std::to_string(type_size_int64)});
-    GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcTensorMemSize overflow, "
-           "when multiplying %ld and %ld, format=%d(%s), data_type=%d(%s).",
-           element_cnt, type_size_int64, format, format_str.c_str(), data_type, type_str.c_str());
-    return GRAPH_FAILED;
-  }
-  mem_size = element_cnt * type_size_int64;
+
+  mem_size = ge::GetSizeInBytes(element_cnt, data_type);
 
   GELOGD(
       "CalcTensorMemSize end, "
