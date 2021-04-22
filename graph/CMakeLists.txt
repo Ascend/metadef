@@ -3,7 +3,9 @@ set(PROTO_LIST
     "${METADEF_DIR}/proto/ge_ir.proto"
     "${METADEF_DIR}/proto/insert_op.proto"
     "${METADEF_DIR}/proto/task.proto"
+    "${METADEF_DIR}/proto/dump_task.proto"
     "${METADEF_DIR}/proto/fwk_adapter.proto"
+    "${METADEF_DIR}/proto/op_mapping.proto"
     "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
 )
 
