@@ -74,7 +74,8 @@ set(UT_FILES
     "testcase/types_unittest.cc"
     "testcase/tensor_unittest.cc"
     "testcase/type_utils_unittest.cc"
-    testcase/tensor_ut.cc)
+    "testcase/aligned_ptr_unittest.cc"
+    "testcase/tensor_ut.cc")
 
 set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/aligned_ptr.cc"

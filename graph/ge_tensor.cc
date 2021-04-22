@@ -226,6 +226,7 @@ const string TENSOR_UTILS_ORIGIN_DATA_TYPE = "origin_data_type";
 const string TENSOR_UTILS_SHAPE_RANGE = "shape_range";
 const string TENSOR_UTILS_ORIGIN_SHAPE_RANGE = "origin_shape_range";
 const string TENSOR_UTILS_REF_PORT_INDEX = "ref_port_index";
+const string TENSOR_UTILS_PLACEMENT = "placement";
 
 GeShape::GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg) : shape_def_(proto_owner, proto_msg) {}
 
@@ -613,6 +614,16 @@ void GeTensorDesc::SetRefPortByIndex(const std::vector<uint32_t> &index) {
   (void)AttrUtils::SetListInt(this, TENSOR_UTILS_REF_PORT_INDEX, index);
 }
 
+Placement GeTensorDesc::GetPlacement() const {
+  int64_t placement = 0;
+  (void)AttrUtils::GetInt(this, TENSOR_UTILS_PLACEMENT, placement);
+  return static_cast<Placement>(placement);
+}
+
+void GeTensorDesc::SetPlacement(Placement placement) {
+  (void)AttrUtils::SetInt(this, TENSOR_UTILS_PLACEMENT, static_cast<int64_t>(placement));
+}
+
 graphStatus GeTensorDesc::IsValid() const {
   auto dtype = this->GetDataType();
   auto format = this->GetFormat();
@@ -836,7 +847,7 @@ void GeTensor::BuildAlignerPtrWithProtoData() {
   tensor_data_.length_ = proto_msg->data().size();
   tensor_data_.aligned_ptr_.reset();
   tensor_data_.aligned_ptr_ =
-          AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], deleter> &ptr) {
+          AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
                                            ptr.reset(const_cast<uint8_t *>(
                                                    reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
                                          },

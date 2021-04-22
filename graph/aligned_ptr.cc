@@ -17,6 +17,7 @@
 #include "graph/aligned_ptr.h"
 #include "utils/mem_utils.h"
 #include "graph/debug/ge_log.h"
+#include "graph/types.h"
 
 namespace ge {
 AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
@@ -29,7 +30,7 @@ AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
     return;
   }
 
-  base_ = std::unique_ptr<uint8_t[], deleter>(new (std::nothrow) uint8_t[alloc_size],
+  base_ = std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(new (std::nothrow) uint8_t[alloc_size],
                                               [](uint8_t *ptr) {
                                                 delete[] ptr;
                                                 ptr = nullptr;
@@ -48,10 +49,25 @@ AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
   }
 }
 
-std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const allocator &alloc_func, const deleter &delete_func) {
+std::unique_ptr<uint8_t[], AlignedPtr::Deleter> AlignedPtr::Reset() {
+  auto deleter_func = base_.get_deleter();
+  if (deleter_func == nullptr) {
+    base_.release();
+    return std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(aligned_addr_, nullptr);
+  } else {
+    auto base_addr = base_.release();
+    return std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(aligned_addr_, [deleter_func, base_addr](uint8_t *ptr) {
+      deleter_func(base_addr);
+      ptr = nullptr;
+    });
+  }
+}
+
+std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::Allocator &alloc_func,
+                                                           const AlignedPtr::Deleter &delete_func) {
   if ((alloc_func == nullptr) || (delete_func == nullptr)) {
-      GELOGE(FAILED, "alloc_func/delete_func is null");
-      return nullptr;
+    GELOGE(FAILED, "alloc_func/delete_func is null");
+    return nullptr;
   }
   auto aligned_ptr = MakeShared<AlignedPtr>();
   if (aligned_ptr == nullptr) {

@@ -18,6 +18,7 @@
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/ge_tensor.h"
+#include "graph/aligned_ptr.h"
 #include "securec.h"
 #include "utils/attr_utils.h"
 #include "utils/tensor_adapter.h"
@@ -70,6 +71,7 @@ class TensorDescImpl {
   int64_t size_ = 0;
   int64_t real_dim_cnt_ = 0;
   std::string name_;
+  Placement placement_ = kPlacementHost;
 };
 
 class TensorImpl {
@@ -431,6 +433,19 @@ void TensorDesc::SetName(const char *name) {
   }
 }
 
+void TensorDesc::SetPlacement(Placement placement) {
+  if (impl != nullptr) {
+    impl->placement_ = placement;
+  }
+}
+
+Placement TensorDesc::GetPlacement() const {
+  if (impl != nullptr) {
+    return impl->placement_;
+  }
+  return kPlacementHost;
+}
+
 Tensor::Tensor() { impl = ComGraphMakeShared<TensorImpl>(); }
 
 Tensor::Tensor(const TensorDesc &tensor_desc) {
@@ -539,6 +554,16 @@ size_t Tensor::GetSize() const {
     return impl->ge_tensor.GetData().size();
   }
   return 0;
+}
+
+std::unique_ptr<uint8_t[], Tensor::DeleteFunc> Tensor::ResetData() {
+  if (impl != nullptr) {
+    auto aligned_ptr = impl->ge_tensor.GetAlignedPtr();
+    if (aligned_ptr != nullptr) {
+      return aligned_ptr->Reset();
+    }
+  }
+  return nullptr;
 }
 
 graphStatus Tensor::SetData(std::vector<uint8_t> &&data) {
@@ -660,6 +685,7 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
   ge_tensor_desc.SetOriginShape(GeShape(tensor_desc.GetOriginShape().GetDims()));
   ge_tensor_desc.SetOriginFormat(tensor_desc.GetOriginFormat());
   ge_tensor_desc.SetName(tensor_desc.GetName());
+  ge_tensor_desc.SetPlacement(tensor_desc.GetPlacement());
   std::vector<std::pair<int64_t, int64_t>> shape_range;
   auto status = tensor_desc.GetShapeRange(shape_range);
   if (status != GRAPH_SUCCESS) {
@@ -676,6 +702,7 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
 
   auto real_dim_cnt = static_cast<uint32_t>(tensor_desc.GetRealDimCnt());
   TensorUtils::SetRealDimCnt(ge_tensor_desc, real_dim_cnt);
+
   return ge_tensor_desc;
 }
 
