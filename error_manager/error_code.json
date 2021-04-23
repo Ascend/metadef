@@ -757,8 +757,8 @@
     },
     {
       "ErrCode" : "E19020",
-      "ErrMessage" : "Duplicate to file[%s] failed.",
-      "Arglist" : "file"
+      "ErrMessage" : "Duplicate to file[%s] failed, errmsg[%s]",
+      "Arglist" : "file,errmsg"
     },
     {
       "ErrCode" : "E19021",
