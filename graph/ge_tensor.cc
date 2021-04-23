@@ -1172,4 +1172,60 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRC(co
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetRC(GeTensorDesc &tensor_desc, uint32_t rc) {
   (void)AttrUtils::SetInt(&tensor_desc, TENSOR_UTILS_RC, rc);
 }
+GeTensor TensorUtils::CreateShareTensor(const GeTensor &other) {
+  GeTensor tensor;
+  ShareTensor(other, tensor);
+  return tensor;
+}
+GeTensor TensorUtils::CreateShareTensor(const GeTensorDesc &tensorDesc,
+                                        std::shared_ptr<AlignedPtr> aligned_ptr,
+                                        size_t size) {
+  GeTensor tensor(tensorDesc);
+  ShareAlignedPtr(std::move(aligned_ptr), size, tensor.tensor_data_);
+  return tensor;
+}
+void TensorUtils::ShareTensor(const GeTensor &from, GeTensor &to) {
+  if (&from == &to) {
+    return;
+  }
+
+  if (from.tensor_def_.GetProtoOwner() != nullptr) {
+    // Old scene, share tensor_def, tensor_desc, tensor_data with `from`
+    to.tensor_def_ = from.tensor_def_;
+    to.tensor_def_ = from.tensor_def_;
+    if (to.tensor_def_.GetProtoMsg() == nullptr) {
+      to.__desc_.RefTo(GeTensorDesc(to.tensor_def_.GetProtoOwner(), nullptr));
+    } else {
+      to.__desc_.RefTo(GeTensorDesc(to.tensor_def_.GetProtoOwner(), to.tensor_def_.GetProtoMsg()->mutable_desc()));
+    }
+    to.tensor_data_.tensor_descriptor_ = to.__desc_.tensor_descriptor_;
+    to.BuildAlignerPtrWithProtoData();
+  } else {
+    // share tensor_data, do not share tensor_desc, tensor_def is null
+    to.__desc_ = from.__desc_;
+    to.tensor_data_ = from.tensor_data_;
+    to.tensor_data_.tensor_descriptor_ = to.__desc_.tensor_descriptor_;
+  }
+}
+void TensorUtils::ShareTensorData(const TensorData &from, TensorData &to) {
+  if (&from == &to) {
+    return;
+  }
+  // Share data
+  to.tensor_descriptor_ = from.tensor_descriptor_;
+  to.aligned_ptr_ = from.aligned_ptr_;
+  to.length_ = from.length_;
+}
+TensorData TensorUtils::CreateShareTensorData(const TensorData &other) {
+  TensorData td;
+  ShareTensorData(other, td);
+  return td;
+}
+void TensorUtils::ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, TensorData &to) {
+  to.aligned_ptr_ = std::move(ptr);
+  to.length_ = size;
+}
+void TensorUtils::ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, GeTensor &to) {
+  ShareAlignedPtr(std::move(ptr), size, to.tensor_data_);
+}
 }  // namespace ge

@@ -25,6 +25,15 @@
 namespace ge {
 class TensorUtils {
  public:
+  static GeTensor CreateShareTensor(const GeTensor &other);
+  static GeTensor CreateShareTensor(const GeTensorDesc &tensorDesc,
+                                    std::shared_ptr<AlignedPtr> aligned_ptr,
+                                    size_t size);
+  static void ShareTensor(const GeTensor &from, GeTensor &to);
+  static TensorData CreateShareTensorData(const TensorData &other);
+  static void ShareTensorData(const TensorData &from, TensorData &to);
+  static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, TensorData &to);
+  static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, GeTensor &to);
   static ge::graphStatus GetSize(const GeTensorDesc &tensorDesc, int64_t &size);
   static void SetSize(GeTensorDesc &tensorDesc, int64_t size);
   static uint32_t GetWeightSize(const ConstGeTensorPtr &tensorPtr);
