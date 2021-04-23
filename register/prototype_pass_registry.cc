@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ namespace ge {
 class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
  public:
   void RegisterProtoTypePass(const std::string &pass_name, ProtoTypePassRegistry::CreateFn create_fn,
-                             const domi::FrameworkType &fmk_type) {
+                             domi::FrameworkType fmk_type) {
     std::lock_guard<std::mutex> lock(mu_);
     if (std::find(pass_names_.begin(), pass_names_.end(), pass_name) != pass_names_.end()) {
       GELOGW("The prototype pass has been registered and will not overwrite the previous one, pass name = %s.",
@@ -44,8 +44,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
     GELOGD("Register prototype pass, pass name = %s", pass_name.c_str());
   }
 
-  std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> GetCreateFnByType(
-      const domi::FrameworkType &fmk_type) {
+  std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> GetCreateFnByType(domi::FrameworkType fmk_type) {
     std::lock_guard<std::mutex> lock(mu_);
     auto iter = create_fns_.find(fmk_type);
     if (iter == create_fns_.end()) {
@@ -71,17 +70,21 @@ ProtoTypePassRegistry &ProtoTypePassRegistry::GetInstance() {
   return instance;
 }
 
-void ProtoTypePassRegistry::RegisterProtoTypePass(const std::string &pass_name, CreateFn create_fn,
-                                                  const domi::FrameworkType &fmk_type) {
+void ProtoTypePassRegistry::RegisterProtoTypePass(const char *pass_name, CreateFn create_fn,
+                                                  domi::FrameworkType fmk_type) {
   if (impl_ == nullptr) {
     GELOGE(MEMALLOC_FAILED, "ProtoTypePassRegistry is not properly initialized.");
     return;
   }
-  impl_->RegisterProtoTypePass(pass_name, create_fn, fmk_type);
+  std::string str_pass_name;
+  if (pass_name != nullptr) {
+    str_pass_name = pass_name;
+  }
+  impl_->RegisterProtoTypePass(str_pass_name, create_fn, fmk_type);
 }
 
 std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> ProtoTypePassRegistry::GetCreateFnByType(
-    const domi::FrameworkType &fmk_type) {
+    domi::FrameworkType fmk_type) const {
   if (impl_ == nullptr) {
     GELOGE(MEMALLOC_FAILED, "ProtoTypePassRegistry is not properly initialized.");
     return std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>{};
@@ -89,9 +92,9 @@ std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> ProtoTypePa
   return impl_->GetCreateFnByType(fmk_type);
 }
 
-ProtoTypePassRegistrar::ProtoTypePassRegistrar(const std::string &pass_name, ProtoTypeBasePass *(*create_fn)(),
-                                               const domi::FrameworkType &fmk_type) {
-  if (pass_name.empty()) {
+ProtoTypePassRegistrar::ProtoTypePassRegistrar(const char *pass_name, ProtoTypeBasePass *(*create_fn)(),
+                                               domi::FrameworkType fmk_type) {
+  if (pass_name == nullptr) {
     GELOGE(PARAM_INVALID, "Failed to register ProtoType pass, pass name is null.");
     return;
   }

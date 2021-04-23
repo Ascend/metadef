@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 
 #include <google/protobuf/message.h>
 
+#include <functional>
+
 #include "external/ge/ge_api_error_codes.h"
 #include "register/register_error_codes.h"
 #include "register/register_fmk_types.h"
@@ -27,18 +29,19 @@ namespace ge {
 class ProtoTypeBasePass {
  public:
   virtual Status Run(google::protobuf::Message *message) = 0;
+  virtual ~ProtoTypeBasePass() {}
 };
 
 class ProtoTypePassRegistry {
  public:
-  using CreateFn = ProtoTypeBasePass *(*)();
+  using CreateFn = std::function<ProtoTypeBasePass *(void)>;
   ~ProtoTypePassRegistry();
 
   static ProtoTypePassRegistry &GetInstance();
 
-  void RegisterProtoTypePass(const std::string &pass_name, CreateFn create_fn, const domi::FrameworkType &fmk_type);
+  void RegisterProtoTypePass(const char *pass_name, CreateFn create_fn, domi::FrameworkType fmk_type);
 
-  std::vector<std::pair<std::string, CreateFn>> GetCreateFnByType(const domi::FrameworkType &fmk_type);
+  std::vector<std::pair<std::string, CreateFn>> GetCreateFnByType(domi::FrameworkType fmk_type) const;
 
  private:
   ProtoTypePassRegistry();
@@ -48,8 +51,7 @@ class ProtoTypePassRegistry {
 
 class ProtoTypePassRegistrar {
  public:
-  ProtoTypePassRegistrar(const std::string &pass_name, ProtoTypeBasePass *(*create_fn)(),
-                         const domi::FrameworkType &fmk_type);
+  ProtoTypePassRegistrar(const char *pass_name, ProtoTypeBasePass *(*create_fn)(), domi::FrameworkType fmk_type);
   ~ProtoTypePassRegistrar() {}
 };
 
