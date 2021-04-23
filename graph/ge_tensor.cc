@@ -751,8 +751,6 @@ uint8_t *TensorData::GetData() {
 
 GeTensor::GeTensor::GeTensor() : tensor_def_(nullptr, nullptr), __desc_(), tensor_data_() {
   tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
-  // Default init desc
-  DescReference() = GeTensorDesc();
 }
 
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc) : GeTensor() { DescReference() = tensor_desc; }
@@ -807,24 +805,24 @@ GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg
     : tensor_def_(proto_owner, proto_msg), __desc_(), tensor_data_() {
   if (tensor_def_.GetProtoOwner() != nullptr) {
     if (tensor_def_.GetProtoMsg() != nullptr) {
+      __desc_.RefTo(GeTensorDesc(tensor_def_.GetProtoOwner(), tensor_def_.GetProtoMsg()->mutable_desc()));
       BuildAlignerPtrWithProtoData();
     } else {
+      __desc_.RefTo(GeTensorDesc(tensor_def_.GetProtoOwner(), nullptr));
       GELOGI("data is empty");
     }
     tensor_data_.tensor_descriptor_ = DescReference().tensor_descriptor_;
   } else {
     if (proto_msg != nullptr) {
-      GeTensorDesc tensor_desc(proto_owner, proto_msg->mutable_desc());
-      tensor_data_.tensor_descriptor_ = tensor_desc.tensor_descriptor_;
-      DescReference() = tensor_desc;
+      __desc_.RefTo(GeTensorDesc(proto_owner, proto_msg->mutable_desc()));
+      tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
       if (tensor_data_.SetData(reinterpret_cast<const uint8_t *>(proto_msg->data().data()),
                                proto_msg->data().size()) != GRAPH_SUCCESS) {
         GELOGW("Set data failed");
       }
     } else {
-      GeTensorDesc tensor_desc(proto_owner, nullptr);
-      tensor_data_.tensor_descriptor_ = tensor_desc.tensor_descriptor_;
-      DescReference() = tensor_desc;
+      __desc_.RefTo(GeTensorDesc(nullptr, nullptr));
+      tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
       GELOGI("data is empty");
     }
   }
@@ -852,49 +850,17 @@ GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
 GeTensorDesc &GeTensor::MutableTensorDesc() { return DescReference(); }
 
 GeTensorDesc &GeTensor::DescReference() const {
-  if (tensor_def_.GetProtoOwner() != nullptr) {
-    if (tensor_def_.GetProtoMsg() != nullptr) {
-      GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), tensor_def_.GetProtoMsg()->mutable_desc());
-      __desc_.RefTo(tensor_desc);
-    } else {
-      GeTensorDesc tensor_desc(tensor_def_.GetProtoOwner(), nullptr);
-      __desc_.RefTo(tensor_desc);
-    }
-  } else {
-    if (tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
-      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(),
-                               tensor_data_.tensor_descriptor_.GetProtoMsg());
-      __desc_.RefTo(tensor_desc);
-    } else {
-      GeTensorDesc tensor_desc(tensor_data_.tensor_descriptor_.GetProtoOwner(), nullptr);
-      __desc_.RefTo(tensor_desc);
-    }
-  }
   return __desc_;
 }
 
 void GeTensor::SetTensorDesc(const GeTensorDesc &tensor_desc) { DescReference() = tensor_desc; }
 
 graphStatus GeTensor::SetData(vector<uint8_t> &&data) {
-  if (tensor_def_.GetProtoOwner() != nullptr) {
-    auto proto_msg = tensor_def_.GetProtoMsg();
-    GE_CHECK_NOTNULL(proto_msg);
-    proto_msg->set_data(data.data(), data.size());
-    BuildAlignerPtrWithProtoData();
-    return GRAPH_SUCCESS;
-  }
-  return tensor_data_.SetData(data);
+  return SetData(data);
 }
 
 graphStatus GeTensor::SetData(const vector<uint8_t> &data) {
-  if (tensor_def_.GetProtoOwner() != nullptr) {
-    auto proto_msg = tensor_def_.GetProtoMsg();
-    GE_CHECK_NOTNULL(proto_msg);
-    proto_msg->set_data(data.data(), data.size());
-    BuildAlignerPtrWithProtoData();
-    return GRAPH_SUCCESS;
-  }
-  return tensor_data_.SetData(data);
+  return SetData(data.data(), data.size());
 }
 
 graphStatus GeTensor::SetData(const uint8_t *data, size_t size) {
@@ -929,14 +895,7 @@ graphStatus GeTensor::SetData(const Buffer &data) {
 }
 
 graphStatus GeTensor::SetData(const TensorData &data) {
-  if (tensor_def_.GetProtoOwner() != nullptr) {
-    auto proto_msg = tensor_def_.GetProtoMsg();
-    GE_CHECK_NOTNULL(proto_msg);
-    proto_msg->set_data(data.data(), data.size());
-    BuildAlignerPtrWithProtoData();
-    return GRAPH_SUCCESS;
-  }
-  return tensor_data_.SetData(data);
+  return SetData(data.data(), data.size());
 }
 
 void GeTensor::ClearData() {
@@ -958,20 +917,28 @@ GeTensor GeTensor::Clone() const {
 }
 
 GeTensor::GeTensor(const GeTensor &other) : GeTensor() {
-  if (other.tensor_def_.GetProtoOwner() != nullptr) {
-    tensor_def_ = other.tensor_def_;
-  }
-  __desc_ = other.__desc_;
-  tensor_data_ = other.tensor_data_;
+  *this = other;
 }
 
 GeTensor &GeTensor::operator=(const GeTensor &other) {
   if (&other != this) {
     if (other.tensor_def_.GetProtoOwner() != nullptr) {
+      // Old scene, share tensor_def, tensor_desc, tensor_data with `other`
       tensor_def_ = other.tensor_def_;
+      if (tensor_def_.GetProtoMsg() == nullptr) {
+        __desc_.RefTo(GeTensorDesc(tensor_def_.GetProtoOwner(), nullptr));
+      } else {
+        __desc_.RefTo(GeTensorDesc(tensor_def_.GetProtoOwner(), tensor_def_.GetProtoMsg()->mutable_desc()));
+      }
+      tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
+      BuildAlignerPtrWithProtoData();
+    } else {
+      // share tensor_data, do not share tensor_desc, tensor_def is null
+      __desc_ = other.__desc_;
+      tensor_data_ = other.tensor_data_;
+      tensor_data_.tensor_descriptor_ = __desc_.tensor_descriptor_;
     }
-    __desc_ = other.__desc_;
-    tensor_data_ = other.tensor_data_;
+
   }
   return *this;
 }
