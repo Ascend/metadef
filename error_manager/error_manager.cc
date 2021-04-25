@@ -118,7 +118,9 @@ thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 static std::string GetSelfLibraryDir(void) {
   mmDlInfo dl_info;
   if (mmDladdr(reinterpret_cast<void *>(GetSelfLibraryDir), &dl_info) != EN_OK) {
-    GELOGW("Failed to read the shared library file path!, reason:%s", mmDlerror());
+    const char *error = mmDlerror();
+    error = (error == nullptr) ? "" : error;
+    GELOGW("Failed to read the shared library file path! reason:%s", error);
     return std::string();
   } else {
     std::string so_path = dl_info.dli_fname;
