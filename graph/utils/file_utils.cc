@@ -34,6 +34,8 @@ std::string RealPath(const char *path) {
   char resolved_path[MMPA_MAX_PATH] = {0};
   if (mmRealPath(path, resolved_path, MMPA_MAX_PATH) == EN_OK) {
     res = resolved_path;
+  } else {
+    GELOGW("[Real][path]failed for %s, reason:%s", path, strerror(errno));
   }
 
   return res;
@@ -64,7 +66,8 @@ int32_t CreateDirectory(const std::string &directory_path) {
         if (ret != 0) {
           if (errno != EEXIST) {
             ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
-            GELOGW("Can not create directory %s. Make sure the directory exists and writable.", directory_path.c_str());
+            GELOGW("Can not create directory %s. reason:%s. Make sure the directory exists and writable.",
+                   directory_path.c_str(), strerror(errno));
             return ret;
           }
         }
@@ -75,7 +78,8 @@ int32_t CreateDirectory(const std::string &directory_path) {
   if (ret != 0) {
     if (errno != EEXIST) {
       ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
-      GELOGW("Can not create directory %s. Make sure the directory exists and writable.", directory_path.c_str());
+      GELOGW("Can not create directory %s. reason:%s. Make sure the directory exists and writable.",
+             directory_path.c_str(), strerror(errno));
       return ret;
     }
   }

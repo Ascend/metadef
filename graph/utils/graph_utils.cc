@@ -769,14 +769,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
   const int FILE_AUTHORITY = 0600;
   int fd = mmOpen2(real_path, M_WRONLY | M_CREAT | O_TRUNC, FILE_AUTHORITY);
   if (fd < 0) {
-    GELOGE(GRAPH_FAILED, "fail to open the file: %s, %s", real_path, strerror(errno));
+    GELOGE(GRAPH_FAILED, "[Open][File] failed for %s, reason:%s", real_path, strerror(errno));
     return;
   }
   google::protobuf::io::FileOutputStream *output = new (std::nothrow) FileOutputStream(fd);
   if (output == nullptr) {
     GELOGE(GRAPH_FAILED, "Output is nullptr");
     if (mmClose(fd) != 0) {
-      GELOGE(GRAPH_FAILED, "Close fileoutputstream failed");
+      GELOGE(GRAPH_FAILED, "[Close][FileOutputStream]failed, reason:%s", strerror(errno));
     }
     return;
   }
@@ -785,12 +785,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     GELOGE(GRAPH_FAILED, "Fail to write the file: %s", real_path);
     delete output;
     output = nullptr;
-    GE_CHK_BOOL_EXEC(mmClose(fd) == 0, return, "Close fileoutputstream failed");
+    GE_CHK_BOOL_EXEC(mmClose(fd) == 0, return, "[Close][FileOutputStream]failed, reason:%s", strerror(errno));
     return;
   }
   delete output;
   output = nullptr;
-  GE_CHK_BOOL_EXEC(mmClose(fd) == 0, return, "Close fileoutputstream failed");
+  GE_CHK_BOOL_EXEC(mmClose(fd) == 0, return, "[Close][FileOutputStream]failed, reason:%s", strerror(errno));
 
   FILE *file = fopen(real_path, "rb");
   if (file == nullptr) {
@@ -915,7 +915,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
     int err_num = errno;
     // linux: ENAMETOOLONG windows: ERANGE
     if (err_num == ENAMETOOLONG || err_num == ERANGE) {
-      GELOGE(GRAPH_FAILED, "Call realpath failed: path is MMPA_MAX_PATH chars or more.");
+      GELOGE(GRAPH_FAILED, "[Real][Path] failed for file:%s. reason:%s", proto_file.c_str(), strerror(errno));
       return;
     }
   }
@@ -978,7 +978,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
   if (mmRealPath(proto_file.c_str(), real_path.get(), MMPA_MAX_PATH) != EN_OK) {
     // For case a
     if (errno == ENAMETOOLONG) {
-      GELOGE(GRAPH_FAILED, "Call realpath failed: path is PATH_MAX chars or more.");
+      GELOGE(GRAPH_FAILED, "[Real][Path] failed for file:%s. reason:%s", proto_file.c_str(), strerror(errno));
       return;
     }
   }

@@ -68,7 +68,7 @@ void OpsProtoManager::Finalize() {
       if (mmDlclose(handle) != 0) {
         const char *error = mmDlerror();
         error = (error == nullptr) ? "" : error;
-        GELOGW("failed to close handle, message: %s", error);
+        GELOGW("[Close][Handle]failed, reason:%s", error);
         continue;
       }
       GELOGI("close opsprotomanager handler success");
@@ -116,21 +116,22 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
   // Return absolute path when path is accessible
   INT32 result = mmRealPath(path.c_str(), resolved_path, MMPA_MAX_PATH);
   if (result != EN_OK) {
-    GELOGW("the path [%s] not exsit.", path.c_str());
+    GELOGW("[Real][Path]failed for file:%s. reason:%s", path.c_str(), strerror(errno));
     return;
   }
 
   INT32 is_dir = mmIsDir(resolved_path);
   // Lib plugin path not exist
   if (is_dir != EN_OK) {
-      GELOGW("Open directory %s failed,maybe it is not exit or not a dir", resolved_path);
+      GELOGW("[Open][Directory]%s failed, maybe it is not exit or not a dir, errmsg:%s",
+             resolved_path, strerror(errno));
       return;
   }
 
   mmDirent **entries = nullptr;
   auto ret = mmScandir(resolved_path, &entries, nullptr, nullptr);
   if (ret < EN_OK) {
-      GELOGW("scan dir failed. path = %s, ret = %d", resolved_path, ret);
+      GELOGW("[Scan][Directory]failed. path:%s, ret:%d, reason:%s", resolved_path, ret, strerror(errno));
       return;
   }
   for (int i = 0; i < ret; ++i) {

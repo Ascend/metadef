@@ -232,8 +232,10 @@ class ErrorManager {
   const std::string &GetLogHeader();
 
   ErrorMessage::Context &GetErrorContext();
+  error_message::Context &GetErrorManagerContext();
 
   void SetErrorContext(ErrorMessage::Context error_context);
+  void SetErrorContext(error_message::Context error_context);
 
   void SetStage(const std::string &first_stage, const std::string &second_stage);
 
@@ -290,7 +292,7 @@ class ErrorManager {
   std::map<uint64_t, std::vector<ErrorItem>> error_message_per_work_id_;
   std::map<uint64_t, std::vector<ErrorItem>> warning_messages_per_work_id_;
 
-  thread_local static ErrorMessage::Context error_context_;
+  thread_local static error_message::Context error_context_;
 };
 
 #endif  // ERROR_MANAGER_H_

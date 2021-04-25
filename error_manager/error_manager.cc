@@ -107,7 +107,7 @@ const char *const kArgList = "Arglist";
 const uint64_t kLength = 2;
 }  // namespace
 
-using namespace ErrorMessage;
+using namespace error_message;
 
 thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 
@@ -118,7 +118,9 @@ thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 static std::string GetSelfLibraryDir(void) {
   mmDlInfo dl_info;
   if (mmDladdr(reinterpret_cast<void *>(GetSelfLibraryDir), &dl_info) != EN_OK) {
-    GELOGW("Failed to read the shared library file path!");
+    const char *error = mmDlerror();
+    error = (error == nullptr) ? "" : error;
+    GELOGW("Failed to read the shared library file path! reason:%s", error);
     return std::string();
   } else {
     std::string so_path = dl_info.dli_fname;
@@ -128,7 +130,7 @@ static std::string GetSelfLibraryDir(void) {
         return std::string();
     }
     if (mmRealPath(so_path.c_str(), path, MMPA_MAX_PATH) != EN_OK) {
-      GELOGW("Failed to get realpath of %s", so_path.c_str());
+      GELOGW("Failed to get realpath of %s, reason:%s", so_path.c_str(), strerror(errno));
       return std::string();
     }
 
@@ -206,7 +208,10 @@ int ErrorManager::ReportInterErrMessage(std::string error_code, const std::strin
   std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   ErrorManager::ErrorItem item = {error_code, error_msg};
-  error_messages.emplace_back(item);
+  auto it = find(error_messages.begin(), error_messages.end(), item);
+  if (it == error_messages.end()) {
+    error_messages.emplace_back(item);
+  }
   return 0;
 }
 
@@ -332,7 +337,7 @@ int ErrorManager::OutputErrMessage(int handle) {
   } else {
     mmSsize_t ret = mmWrite(handle, const_cast<char *>(err_msg.c_str()), err_msg.length());
     if (ret == -1) {
-      GELOGE("write file fail");
+      GELOGE("[Write][File]fail, reason:%s",  strerror(errno));
       return -1;
     }
   }
@@ -607,11 +612,27 @@ const std::string &ErrorManager::GetLogHeader() {
   return error_context_.log_header;
 }
 
-Context &ErrorManager::GetErrorContext() {
+Context &ErrorManager::GetErrorManagerContext() {
   return error_context_;
 }
 
 void ErrorManager::SetErrorContext(Context error_context) {
+  error_context_.work_stream_id = error_context.work_stream_id;
+  error_context_.first_stage = move(error_context.first_stage);
+  error_context_.second_stage = move(error_context.second_stage);
+  error_context_.log_header = move(error_context.log_header);
+}
+
+ErrorMessage::Context &ErrorManager::GetErrorContext() {
+  thread_local static ErrorMessage::Context context;
+  context.work_stream_id = error_context_.work_stream_id;
+  context.first_stage = error_context_.first_stage;
+  context.second_stage = error_context_.second_stage;
+  context.log_header = error_context_.log_header;
+  return context;
+}
+
+void ErrorManager::SetErrorContext(ErrorMessage::Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);
