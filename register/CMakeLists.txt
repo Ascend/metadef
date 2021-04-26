@@ -23,6 +23,7 @@ protobuf_generate(ge_static TASK_PROTO_STATIC_SRC TASK_PROTO_STATIC_HDR ${TASK_P
 set(SRC_LIST
     "register.cpp"
     "register_pass.cpp"
+    "prototype_pass_registry.cc"
     "ops_kernel_builder_registry.cc"
     "graph_optimizer/graph_fusion/graph_fusion_pass_base.cc"
     "graph_optimizer/graph_fusion/fusion_pass_registry.cc"
