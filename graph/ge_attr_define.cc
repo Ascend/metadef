@@ -746,6 +746,8 @@ const std::string ATTR_MODEL_CORE_TYPE = "core_type";
 
 const std::string ATTR_MODEL_ATC_VERSION = "atc_version";
 
+const std::string ATTR_MODEL_ATC_CMDLINE = "atc_cmdline";
+
 const std::string ATTR_MODEL_OPP_VERSION = "opp_version";
 
 const std::string ATTR_MODEL_SESSION_SCOPE_MEMORY_SIZE = "session_scope_memory_size";
