@@ -218,6 +218,11 @@ enum DeviceType {
   CPU = 1,
 };
 
+enum Placement {
+  kPlacementHost = 0,     // host data addr
+  kPlacementDevice = 1,   // device data addr
+};
+
 ///
 /// @brief Get a format name from enum
 /// @param format

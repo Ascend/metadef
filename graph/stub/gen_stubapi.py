@@ -510,7 +510,9 @@ class H2CC(object):
             return_type = all_items[start]
         if return_type.startswith(('std::map', 'std::set', 'std::vector')):
             return_type = "std::map"
-        if return_type.endswith('*') or (len(all_items) > start + 1 and all_items[start + 1].startswith('*')):
+        if return_type.endswith('*') or (
+                len(all_items) > start + 1 and all_items[start + 1].startswith('*')) or return_type.startswith(
+            'std::unique_ptr'):
             return_type = "Ptr"
         if len(all_items) > start + 1 and all_items[start + 1].startswith('&'):
             return_type += "&"

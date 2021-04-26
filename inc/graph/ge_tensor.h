@@ -118,6 +118,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   std::vector<uint32_t> GetRefPortIndex() const;
   void SetRefPortByIndex(const std::vector<uint32_t> &index);
 
+  Placement GetPlacement() const;
+  void SetPlacement(Placement placement);
+
   GeTensorDesc Clone() const;
   GeTensorDesc &operator=(const GeTensorDesc &desc);
   GeTensorDesc &operator=(GeTensorDesc &&desc);
