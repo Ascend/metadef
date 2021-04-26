@@ -757,8 +757,8 @@
     },
     {
       "ErrCode" : "E19020",
-      "ErrMessage" : "Duplicate to file[%s] failed.",
-      "Arglist" : "file"
+      "ErrMessage" : "Duplicate to file[%s] failed, errmsg[%s]",
+      "Arglist" : "file,errmsg"
     },
     {
       "ErrCode" : "E19021",
@@ -2187,7 +2187,7 @@
   },
   {
     "ErrCode" : "EC0005",
-    "ErrMessage" : "Run .o failed, because soc_version doesn't match the device.",
+    "ErrMessage" : "GATune run Failed. Run .o failed, because soc_version doesn't match the device.",
     "Arglist" : ""
   },
   {

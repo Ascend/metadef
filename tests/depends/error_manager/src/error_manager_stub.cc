@@ -68,7 +68,7 @@
   /// @param [in] value: vector parameter value
   ///
   void ErrorManager::ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key,
-                                         const std::vector<std::string> &value) { 
+                                         const std::vector<std::string> &value) {
   }
 
   ///
@@ -87,9 +87,8 @@
   ///
   int ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, std::map<std::string, std::vector<std::string>> &msg_map) { return 0; }
 
-
-namespace ErrorMessage {
+namespace error_message {
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   return 0;
 }
-}  // namespace ErrorMessage
+}

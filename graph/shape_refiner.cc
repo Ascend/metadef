@@ -61,7 +61,7 @@ graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
       auto shape = tensor.MutableShape();
       int64_t size = 1;
       for (auto dim : shape.GetDims()) {
-        if (INT64_MAX / dim < size) {
+        if (dim != 0 && INT64_MAX / dim < size) {
           GELOGE(PARAM_INVALID, "The shape size overflow");
           return PARAM_INVALID;
         }

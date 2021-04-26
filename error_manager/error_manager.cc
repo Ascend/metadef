@@ -61,7 +61,22 @@ inline bool IsLogEnable(int module_name, int log_level) {
   if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) \
   dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
 
+// old, will be delete after all caller transfer to new
 namespace ErrorMessage {
+int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
+  int ret;
+  va_list arg_list;
+
+  va_start(arg_list, format);
+  ret = vsprintf_s(str_dst, dst_max, format, arg_list);
+  va_end(arg_list);
+  (void)arg_list;
+
+  return ret;
+}
+}
+
+namespace error_message {
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   int ret;
   va_list arg_list;
@@ -92,7 +107,7 @@ const char *const kArgList = "Arglist";
 const uint64_t kLength = 2;
 }  // namespace
 
-using namespace ErrorMessage;
+using namespace error_message;
 
 thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 
@@ -103,7 +118,9 @@ thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 static std::string GetSelfLibraryDir(void) {
   mmDlInfo dl_info;
   if (mmDladdr(reinterpret_cast<void *>(GetSelfLibraryDir), &dl_info) != EN_OK) {
-    GELOGW("Failed to read the shared library file path!");
+    const char *error = mmDlerror();
+    error = (error == nullptr) ? "" : error;
+    GELOGW("Failed to read the shared library file path! reason:%s", error);
     return std::string();
   } else {
     std::string so_path = dl_info.dli_fname;
@@ -113,7 +130,7 @@ static std::string GetSelfLibraryDir(void) {
         return std::string();
     }
     if (mmRealPath(so_path.c_str(), path, MMPA_MAX_PATH) != EN_OK) {
-      GELOGW("Failed to get realpath of %s", so_path.c_str());
+      GELOGW("Failed to get realpath of %s, reason:%s", so_path.c_str(), strerror(errno));
       return std::string();
     }
 
@@ -191,7 +208,10 @@ int ErrorManager::ReportInterErrMessage(std::string error_code, const std::strin
   std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   ErrorManager::ErrorItem item = {error_code, error_msg};
-  error_messages.emplace_back(item);
+  auto it = find(error_messages.begin(), error_messages.end(), item);
+  if (it == error_messages.end()) {
+    error_messages.emplace_back(item);
+  }
   return 0;
 }
 
@@ -288,6 +308,7 @@ std::string ErrorManager::GetErrorMessage() {
     }
   }
 
+  ClearErrorMsgContainerByWorkId(error_context_.work_stream_id);
   return err_stream.str();
 }
 
@@ -299,6 +320,7 @@ std::string ErrorManager::GetWarningMessage() {
   for (auto &item : warning_messages) {
     warning_stream << item.error_id << ": " << item.error_message << std::endl;
   }
+  ClearWarningMsgContainerByWorkId(error_context_.work_stream_id);
   return warning_stream.str();
 }
 
@@ -315,7 +337,7 @@ int ErrorManager::OutputErrMessage(int handle) {
   } else {
     mmSsize_t ret = mmWrite(handle, const_cast<char *>(err_msg.c_str()), err_msg.length());
     if (ret == -1) {
-      GELOGE("write file fail");
+      GELOGE("[Write][File]fail, reason:%s",  strerror(errno));
       return -1;
     }
   }
@@ -558,15 +580,8 @@ void ErrorManager::GenWorkStreamIdDefault() {
   uint64_t work_stream_id = pid * kPidOffset + tid;
   error_context_.work_stream_id = work_stream_id;
 
-  auto err_iter = error_message_per_work_id_.find(work_stream_id);
-  if (err_iter != error_message_per_work_id_.end()) {
-    error_message_per_work_id_.erase(err_iter);
-  }
-
-  auto warn_iter = warning_messages_per_work_id_.find(work_stream_id);
-  if (warn_iter != warning_messages_per_work_id_.end()) {
-    warning_messages_per_work_id_.erase(warn_iter);
-  }
+  ClearErrorMsgContainerByWorkId(work_stream_id);
+  ClearWarningMsgContainerByWorkId(work_stream_id);
 }
 
 void ErrorManager::GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t graph_id) {
@@ -574,26 +589,50 @@ void ErrorManager::GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t g
   uint64_t work_stream_id = session_id * kSessionIdOffset + graph_id;
   error_context_.work_stream_id = work_stream_id;
 
+  ClearErrorMsgContainerByWorkId(work_stream_id);
+  ClearWarningMsgContainerByWorkId(work_stream_id);
+}
+
+void ErrorManager::ClearErrorMsgContainerByWorkId(uint64_t work_stream_id) {
   auto err_iter = error_message_per_work_id_.find(work_stream_id);
   if (err_iter != error_message_per_work_id_.end()) {
     error_message_per_work_id_.erase(err_iter);
   }
+}
 
+void ErrorManager::ClearWarningMsgContainerByWorkId(uint64_t work_stream_id) {
   auto warn_iter = warning_messages_per_work_id_.find(work_stream_id);
   if (warn_iter != warning_messages_per_work_id_.end()) {
     warning_messages_per_work_id_.erase(warn_iter);
   }
 }
 
+
 const std::string &ErrorManager::GetLogHeader() {
   return error_context_.log_header;
 }
 
-Context &ErrorManager::GetErrorContext() {
+Context &ErrorManager::GetErrorManagerContext() {
   return error_context_;
 }
 
 void ErrorManager::SetErrorContext(Context error_context) {
+  error_context_.work_stream_id = error_context.work_stream_id;
+  error_context_.first_stage = move(error_context.first_stage);
+  error_context_.second_stage = move(error_context.second_stage);
+  error_context_.log_header = move(error_context.log_header);
+}
+
+ErrorMessage::Context &ErrorManager::GetErrorContext() {
+  thread_local static ErrorMessage::Context context;
+  context.work_stream_id = error_context_.work_stream_id;
+  context.first_stage = error_context_.first_stage;
+  context.second_stage = error_context_.second_stage;
+  context.log_header = error_context_.log_header;
+  return context;
+}
+
+void ErrorManager::SetErrorContext(ErrorMessage::Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);

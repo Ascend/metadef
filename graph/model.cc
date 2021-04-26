@@ -119,7 +119,7 @@ graphStatus Model::SaveToFile(const string &file_name) const {
     }
     int fd = mmOpen2(real_path, M_WRONLY | M_CREAT | O_TRUNC, ACCESS_PERMISSION_BITS);
     if (fd < 0) {
-      GELOGE(GRAPH_FAILED, "open file failed, file path [%s], %s ", real_path, strerror(errno));
+      GELOGE(GRAPH_FAILED, "[Open][File]failed, file path:%s, reason:%s", real_path, strerror(errno));
       return GRAPH_FAILED;
     }
     bool ret = ge_proto.SerializeToFileDescriptor(fd);
@@ -152,12 +152,13 @@ graphStatus Model::LoadFromFile(const string &file_name) {
   }
   INT32 result = mmRealPath(file_name.c_str(), real_path, MMPA_MAX_PATH);
   if (result != EN_OK) {
-    GELOGE(GRAPH_FAILED, "file %s does not exit, can not load.", file_name.c_str());
+    GELOGE(GRAPH_FAILED, "[Real][Path]failed, reason:%s, file:%s does not exit, can not load.",
+           strerror(errno), file_name.c_str());
     return GRAPH_FAILED;
   }
   int fd = mmOpen(real_path, M_RDONLY);
   if (fd < 0) {
-    GELOGE(GRAPH_FAILED, "open file failed, %s", strerror(errno));
+    GELOGE(GRAPH_FAILED, "[Open][File]failed for %s, reason:%s", real_path, strerror(errno));
     return GRAPH_FAILED;
   }
 
@@ -166,13 +167,13 @@ graphStatus Model::LoadFromFile(const string &file_name) {
   if (!ret) {
     GELOGE(GRAPH_FAILED, "ParseFromFileDescriptor failed");
     if (mmClose(fd) != 0) {
-      GELOGE(GRAPH_FAILED, "close file descriptor fail.");
+      GELOGE(GRAPH_FAILED, "[Close][File]failed. reason:%s", strerror(errno));
       return GRAPH_FAILED;
     }
     return GRAPH_FAILED;
   }
   if (mmClose(fd) != 0) {
-    GELOGE(GRAPH_FAILED, "close file descriptor fail.");
+    GELOGE(GRAPH_FAILED, "[Close][File]failed. reason:%s", strerror(errno));
     return GRAPH_FAILED;
   }
   if (!ret) {
