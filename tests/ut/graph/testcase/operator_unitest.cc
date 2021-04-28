@@ -22,6 +22,7 @@
 #include "external/graph/operator.h"
 #include "external/graph/tensor.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 
 #undef private
@@ -50,8 +51,8 @@ TEST_F(UtestOperater, GetInputConstData) {
 
   auto ge_tensor = std::make_shared<GeTensor>();
   auto op_desc = transdata->GetOpDesc();
-  op_desc->input_name_idx_["Data"] = 0;
-  op_desc->input_name_idx_["Enter"] = 1;
+  op_desc->impl_->input_name_idx_["Data"] = 0;
+  op_desc->impl_->input_name_idx_["Enter"] = 1;
   auto tensor_desc = op_desc->MutableInputDesc(0);
   AttrUtils::SetTensor(tensor_desc, "_value", ge_tensor);
 
@@ -89,8 +90,8 @@ TEST_F(UtestOperater, GetInputConstData_subgraph) {
   AttrUtils::SetInt(sub_data->GetOpDesc(), "_parent_node_index", 0);
 
   auto op_desc = add->GetOpDesc();
-  op_desc->input_name_idx_["sub_data"] = 0;
-  op_desc->input_name_idx_["sub_const"] = 1;
+  op_desc->impl_->input_name_idx_["sub_data"] = 0;
+  op_desc->impl_->input_name_idx_["sub_const"] = 1;
 
   Tensor tensor;
   auto op = OpDescUtils::CreateOperatorFromNode(add);

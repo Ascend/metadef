@@ -24,6 +24,7 @@
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
 #include "graph/ge_attr_value.h"
+#include "graph/op_desc_impl.h"
 #include "utils/graph_utils.h"
 #include "utils/node_utils.h"
 
@@ -50,10 +51,14 @@ bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
   }
   std::sort(index_list.begin(), index_list.end());
   // Node's in anchor index need shrink
+  if (node->GetOpDesc()->impl_ == nullptr) {
+    GELOGE(FAILED, "[Clear][InputDesc] Op desc impl is nullptr. ");
+    return false;
+  }
   for (size_t i = 0; i < index_list.size(); ++i) {
-    auto iter = node->GetOpDesc()->inputs_desc_.begin() + index_list[i];
-    if (iter < node->GetOpDesc()->inputs_desc_.end()) {
-      (void)node->GetOpDesc()->inputs_desc_.erase(iter);
+    auto iter = node->GetOpDesc()->impl_->inputs_desc_.begin() + index_list[i];
+    if (iter < node->GetOpDesc()->impl_->inputs_desc_.end()) {
+      (void)node->GetOpDesc()->impl_->inputs_desc_.erase(iter);
     } else {
       GELOGW("inputs_desc_ iterator out of range.");
     }
@@ -64,17 +69,19 @@ bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearInputDesc(OpDescPtr op_desc,
                                                                                 const uint32_t index) {
-  GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "op_desc is nullptr, check invalid");
+  GE_CHK_BOOL_EXEC(op_desc != nullptr && op_desc->impl_ != nullptr,
+                   REPORT_INNER_ERROR("E19999", "op_desc is nullptr, check invalid");
                    return false, "[Check][Param] op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->inputs_desc_.size(),
+  GE_CHK_BOOL_EXEC(index < op_desc->impl_->inputs_desc_.size(),
                    REPORT_INNER_ERROR("E19999", "index %u is invalid, out of range(0, %zu).",
-                                      index, op_desc->inputs_desc_.size());
+                                      index, op_desc->impl_->inputs_desc_.size());
                    return false,
-                   "[Check][Param] index %u is invalid, out of range(0, %zu).", index, op_desc->inputs_desc_.size());
+                   "[Check][Param] index %u is invalid, out of range(0, %zu).",
+                   index, op_desc->impl_->inputs_desc_.size());
 
-  auto iter = op_desc->inputs_desc_.begin() + index;
-  if (iter < op_desc->inputs_desc_.end()) {
-    (void)op_desc->inputs_desc_.erase(iter);
+  auto iter = op_desc->impl_->inputs_desc_.begin() + index;
+  if (iter < op_desc->impl_->inputs_desc_.end()) {
+    (void)op_desc->impl_->inputs_desc_.erase(iter);
   } else {
     GELOGW("inputs_desc_ iterator out of range.");
   }
@@ -99,10 +106,14 @@ bool OpDescUtils::ClearOutputDesc(const NodePtr &node) {
   }
   std::sort(index_list.begin(), index_list.end());
   // Node's out anchor index need shrink
+  if (node->GetOpDesc()->impl_ == nullptr) {
+    GELOGE(FAILED, "[Clear][OutputDesc] Op desc impl is nullptr. ");
+    return false;
+  }
   for (size_t i = 0; i < index_list.size(); ++i) {
-    auto iter = node->GetOpDesc()->outputs_desc_.begin() + index_list[i];
-    if (iter < node->GetOpDesc()->outputs_desc_.end()) {
-      (void)node->GetOpDesc()->outputs_desc_.erase(iter);
+    auto iter = node->GetOpDesc()->impl_->outputs_desc_.begin() + index_list[i];
+    if (iter < node->GetOpDesc()->impl_->outputs_desc_.end()) {
+      (void)node->GetOpDesc()->impl_->outputs_desc_.erase(iter);
     } else {
       GELOGW("outputs_desc_ iterator out of range.");
     }
@@ -113,17 +124,18 @@ bool OpDescUtils::ClearOutputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearOutputDesc(const OpDescPtr &op_desc,
                                                                                  uint32_t index) {
-  GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr, check invalid");
+  GE_CHK_BOOL_EXEC(op_desc != nullptr && op_desc->impl_ != nullptr,
+                   REPORT_INNER_ERROR("E19999", "param op_desc is nullptr, check invalid");
                    return false, "[Check][Param] op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->outputs_desc_.size(),
+  GE_CHK_BOOL_EXEC(index < op_desc->impl_->outputs_desc_.size(),
                    REPORT_INNER_ERROR("E19999", "index %u is invalid. out of range(0, %zu)",
-                                      index, op_desc->outputs_desc_.size());
+                                      index, op_desc->impl_->outputs_desc_.size());
                    return false,
-                   "[Check][Param] index %u is invalid. out of range(0, %zu)", index, op_desc->outputs_desc_.size());
-
-  auto iter = op_desc->outputs_desc_.begin() + index;
-  if (iter < op_desc->outputs_desc_.end()) {
-    (void)op_desc->outputs_desc_.erase(iter);
+                   "[Check][Param] index %u is invalid. out of range(0, %zu)",
+                   index, op_desc->impl_->outputs_desc_.size());
+  auto iter = op_desc->impl_->outputs_desc_.begin() + index;
+  if (iter < op_desc->impl_->outputs_desc_.end()) {
+    (void)op_desc->impl_->outputs_desc_.erase(iter);
   } else {
     GELOGW("outputs_desc_ iterator out of range.");
   }

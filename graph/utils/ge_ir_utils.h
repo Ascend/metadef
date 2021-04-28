@@ -129,6 +129,10 @@ class OnnxUtils {
   static void AddAttrProtoFromAttribute(const std::pair<const std::string, ge::GeAttrValue> &string_attr_value,
                                         ge::onnx::NodeProto *node_proto);
 
+  static void AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDescPtr &op_desc);
+
+  static void AddAttrProtoForOpOutDesc(onnx::NodeProto *node_proto, const OpDescPtr &op_desc);
+
   static void AddAttrProtoForOpInAndOutDesc(ge::onnx::NodeProto *node_proto, const OpDescPtr &op_desc);
 
   static void AddAttrProtoForAttrsFromAttrMap(const ::google::protobuf::Map<std::string,

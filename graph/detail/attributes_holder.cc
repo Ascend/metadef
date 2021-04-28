@@ -27,6 +27,11 @@ namespace ge {
 using std::map;
 using std::set;
 void AttrHolder::CopyAttrsFrom(const AttrHolder &holder) { MutableAttrMap().CopyValueFrom(holder.GetAttrMap()); }
+void AttrHolder::CopyFrom(const AttrHolder &holder) {
+    requiredAttrs_ = holder.requiredAttrs_;
+    extAttrs_ = holder.extAttrs_;
+}
+
 graphStatus AttrHolder::SetAttr(const std::string &name, const GeAttrValue &value) {
   if (value.IsEmpty()) {
     REPORT_INNER_ERROR("E19999", "param value is empty, check invalid, key of the attr:%s", name.c_str());

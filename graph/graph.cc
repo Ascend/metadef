@@ -593,7 +593,7 @@ graphStatus Graph::RemoveNode(GNode &node, bool contain_subgraph) {
            node_ptr->GetName().c_str(), compute_graph_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
-  node_ptr->SetAnyOwnerComputeGraph(nullptr);
+  node_ptr->ClearOwnerGraph(nullptr);
   return GRAPH_SUCCESS;
 }
 

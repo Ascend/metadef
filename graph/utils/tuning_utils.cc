@@ -19,6 +19,7 @@
 #include "../debug/ge_util.h"
 #include "../debug/ge_op_types.h"
 #include "graph/utils/scope_guard.h"
+#include "graph/node_impl.h"
 
 namespace ge {
 namespace {
@@ -438,7 +439,8 @@ graphStatus TuningUtils::LinkEnd2NetOutput(NodePtr &end_node, NodePtr &out_node)
     std::shared_ptr<InDataAnchor>
         anchor = ComGraphMakeShared<InDataAnchor>(out_node, out_node->GetAllInDataAnchors().size());
     GE_CHECK_NOTNULL(anchor);
-    out_node->in_data_anchors_.push_back(anchor);
+    GE_CHECK_NOTNULL(out_node->impl_);
+    out_node->impl_->in_data_anchors_.push_back(anchor);
     if (GraphUtils::AddEdge(src_anchor, anchor) != GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E19999", "TUU:add edge from %s(%d) to %s(%d) failed. node_name:%s, graph_name:%s",
                         GetNodeNameByAnchor(src_anchor.get()).c_str(), src_anchor->GetIdx(),

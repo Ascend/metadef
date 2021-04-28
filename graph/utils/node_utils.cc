@@ -22,6 +22,7 @@
 #include "graph/anchor.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/types.h"
+#include "graph/node_impl.h"
 #include "external/graph/operator.h"
 #include "graph/ge_context.h"
 #include "graph/runtime_inference_context.h"
@@ -157,25 +158,24 @@ graphStatus NodeUtils::GetDataOutAnchorAndControlInAnchor(const NodePtr &node_pt
 }
 
 graphStatus NodeUtils::ClearInDataAnchor(const NodePtr &node_ptr, const InDataAnchorPtr &in_data_anchor) {
-  GE_CHK_BOOL_EXEC(node_ptr != nullptr && in_data_anchor != nullptr,
+  GE_CHK_BOOL_EXEC(node_ptr != nullptr && node_ptr->impl_ != nullptr && in_data_anchor != nullptr,
                    REPORT_INNER_ERROR("E19999", "param node or in_data_anchor is nullptr, check invalid.");
                    return GRAPH_FAILED, "[Check][Param] node or in_data_anchor is nullptr");
-
   bool find_flag = false;
   uint32_t index = 0;
-  vector<InDataAnchorPtr>::iterator it = node_ptr->in_data_anchors_.end();
-  for (const auto &tmp : node_ptr->in_data_anchors_) {
+  vector<InDataAnchorPtr>::iterator it = node_ptr->impl_->in_data_anchors_.end();
+  for (const auto &tmp : node_ptr->impl_->in_data_anchors_) {
     if (tmp == in_data_anchor) {
       find_flag = true;
-      auto iter = node_ptr->in_data_anchors_.begin() + index;
-      if (iter != node_ptr->in_data_anchors_.end()) {
-        it = node_ptr->in_data_anchors_.erase(iter);
+      auto iter = node_ptr->impl_->in_data_anchors_.begin() + index;
+      if (iter != node_ptr->impl_->in_data_anchors_.end()) {
+        it = node_ptr->impl_->in_data_anchors_.erase(iter);
       }
       break;
     }
     index++;
   }
-  for (; it != node_ptr->in_data_anchors_.end(); ++it) {
+  for (; it != node_ptr->impl_->in_data_anchors_.end(); ++it) {
     (*it)->SetIdx(index);
     index++;
   }
@@ -196,7 +196,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::SetAllAnch
 }
 
 graphStatus NodeUtils::SetAllAnchorStatus(Node &node) {
-  node.anchor_status_updated_ = true;
+  if (node.impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "Node impl is nullptr.");
+    return GRAPH_FAILED;
+  }
+  node.impl_->anchor_status_updated_ = true;
   return GRAPH_SUCCESS;
 }
 
@@ -206,7 +210,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool NodeUtils::IsAnchorStatusSet
   return IsAnchorStatusSet(*node_ptr);
 }
 
-bool NodeUtils::IsAnchorStatusSet(const Node &node) { return node.anchor_status_updated_; }
+bool NodeUtils::IsAnchorStatusSet(const Node &node) {
+  if (node.impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "Node impl is nullptr.");
+    return false;
+  }
+  return node.impl_->anchor_status_updated_;
+}
 
 graphStatus NodeUtils::MoveOutputEdges(const NodePtr &origin_node, const NodePtr &new_node) {
   if ((origin_node == nullptr) || (new_node == nullptr)) {
@@ -418,7 +428,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::UpdatePeer
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, uint32_t num) {
-  if (node == nullptr) {
+  if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -434,14 +444,14 @@ graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, uint32_t num) {
     }
   }
 
-  for (size_t i = node->in_data_anchors_.size(); i < num; ++i) {
+  for (size_t i = node->impl_->in_data_anchors_.size(); i < num; ++i) {
     auto anchor = ComGraphMakeShared<InDataAnchor>(node, i);
     if (anchor == nullptr) {
       REPORT_CALL_ERROR("E19999", "Current in data anchor is null, make shared_ptr failed.");
       GELOGE(OUT_OF_MEMORY, "[Create][InDataAnchor] Current in data anchor is null, make shared_ptr failed.");
       return GRAPH_FAILED;
     }
-    node->in_data_anchors_.push_back(anchor);
+    node->impl_->in_data_anchors_.push_back(anchor);
   }
 
   return GRAPH_SUCCESS;
@@ -449,7 +459,7 @@ graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, uint32_t num) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, uint32_t num) {
-  if (node == nullptr) {
+  if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -468,8 +478,8 @@ graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, uint32_t num) {
   is_input_const.resize(num);
   op_desc->SetIsInputConst(is_input_const);
 
-  while (node->in_data_anchors_.size() > num) {
-    node->in_data_anchors_.pop_back();
+  while (node->impl_->in_data_anchors_.size() > num) {
+    node->impl_->in_data_anchors_.pop_back();
   }
 
   return GRAPH_SUCCESS;
@@ -477,7 +487,7 @@ graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, uint32_t num) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, uint32_t num) {
-  if (node == nullptr) {
+  if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "Input node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -493,14 +503,14 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, uint32_t num) {
     }
   }
 
-  for (size_t i = node->out_data_anchors_.size(); i < num; ++i) {
+  for (size_t i = node->impl_->out_data_anchors_.size(); i < num; ++i) {
     auto anchor = ComGraphMakeShared<OutDataAnchor>(node, i);
     if (anchor == nullptr) {
       REPORT_CALL_ERROR("E19999", "Current out data anchor is null, make shared_ptr failed.");
       GELOGE(OUT_OF_MEMORY, "[Create][OutDataAnchor] Current out data anchor is null, make shared_ptr failed.");
       return GRAPH_FAILED;
     }
-    node->out_data_anchors_.push_back(anchor);
+    node->impl_->out_data_anchors_.push_back(anchor);
   }
 
   return GRAPH_SUCCESS;
@@ -508,7 +518,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, uint32_t num) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::RemoveOutputAnchor(const NodePtr &node, uint32_t num) {
-  if (node == nullptr) {
+  if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "Input node is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -523,15 +533,20 @@ graphStatus NodeUtils::RemoveOutputAnchor(const NodePtr &node, uint32_t num) {
   }
   (void)op_desc->UpdateOutputName(output_names);
 
-  while (node->out_data_anchors_.size() > num) {
-    node->out_data_anchors_.pop_back();
+  while (node->impl_->out_data_anchors_.size() > num) {
+    node->impl_->out_data_anchors_.pop_back();
   }
 
   return GRAPH_SUCCESS;
 }
 
 bool NodeUtils::IsInNodesEmpty(const Node &node) {
-  for (const auto &in_anchor : node.in_data_anchors_) {
+  if (node.impl_ == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Node impl is null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Node impl is null");
+    return false;
+  }
+  for (const auto &in_anchor : node.impl_->in_data_anchors_) {
     if (in_anchor != nullptr) {
       auto out_anchor = in_anchor->GetPeerOutAnchor();
       if (out_anchor != nullptr) {
@@ -542,8 +557,9 @@ bool NodeUtils::IsInNodesEmpty(const Node &node) {
     }
   }
 
-  if ((node.in_control_anchor_ != nullptr) && (!node.in_control_anchor_->IsPeerOutAnchorsEmpty())) {
-    auto peer_out_control_anchors = node.in_control_anchor_->GetPeerOutControlAnchors();
+  if ((node.impl_->in_control_anchor_ != nullptr) &&
+      (!node.impl_->in_control_anchor_->IsPeerOutAnchorsEmpty())) {
+    auto peer_out_control_anchors = node.impl_->in_control_anchor_->GetPeerOutControlAnchors();
     for (const auto &out_control_anchor : peer_out_control_anchors) {
       if (out_control_anchor != nullptr) {
         if (out_control_anchor->GetOwnerNode() != nullptr) {

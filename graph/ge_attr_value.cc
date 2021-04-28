@@ -21,6 +21,9 @@
 #include "utils/attr_utils.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/model_serialize.h"
+#include "graph/ge_tensor_impl.h"
+#include "graph/buffer_impl.h"
+#include "graph/op_desc_impl.h"
 #include "proto/ge_ir.pb.h"
 #include "detail/model_serialize_imp.h"
 #include "debug/ge_attr_define.h"
@@ -409,7 +412,11 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensorDesc
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kTd)) {
     return false;
   }
-  auto proto_msg = value.tensor_descriptor_.GetProtoMsg();
+  if (value.impl_ == nullptr) {
+    return false;
+  }
+
+  auto proto_msg = value.impl_->tensor_descriptor_.GetProtoMsg();
   if (proto_msg == nullptr) {
     return false;
   }
@@ -426,7 +433,10 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_td();
   for (const auto &item : value) {
-    auto proto_msg = item.tensor_descriptor_.GetProtoMsg();
+    if (item.impl_ == nullptr) {
+      return false;
+    }
+    auto proto_msg = item.impl_->tensor_descriptor_.GetProtoMsg();
     if (proto_msg == nullptr) {
       proto_attr_val.clear_list();
       return false;
@@ -448,8 +458,11 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kT)) {
     return false;
   }
-  if (val.tensor_def_.GetProtoOwner() != nullptr) {
-    auto proto_msg = val.tensor_def_.GetProtoMsg();
+  if (val.impl_ == nullptr) {
+    return false;
+  }
+  if (val.impl_->tensor_def_.GetProtoOwner() != nullptr) {
+    auto proto_msg = val.impl_->tensor_def_.GetProtoMsg();
     if (proto_msg == nullptr) {
       REPORT_CALL_ERROR("E19999", "Proto msg is nullptr");
       GELOGE(FAILED, "[Get][ProtoMsg] Proto msg is nullptr");
@@ -463,8 +476,9 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
       GELOGE(FAILED, "[Check][Param] tensor is nullptr");
       return false;
     }
-    if (val.tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
-      tensor->mutable_desc()->CopyFrom(*(val.tensor_data_.tensor_descriptor_.GetProtoMsg()));
+    if (val.impl_ != nullptr && val.impl_->tensor_data_.impl_ != nullptr &&
+        val.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
+      tensor->mutable_desc()->CopyFrom(*(val.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg()));
     }
     tensor->set_data(val.GetData().data(), val.GetData().size());
   }
@@ -486,14 +500,14 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_t();
   for (const auto &item : value) {
-    if (item == nullptr) {
+    if (item == nullptr || item->impl_ == nullptr) {
       REPORT_INNER_ERROR("E19999", "ConstGeTensorPtr in param value is nullptr, check invalid");
       GELOGE(GRAPH_FAILED, "[Check][Param] AttrUtils::SetListTensor item is nullptr");
       proto_attr_val.clear_list();
       return false;
     }
-    if (item->tensor_def_.GetProtoOwner() != nullptr) {
-      auto proto_msg = item->tensor_def_.GetProtoMsg();
+    if (item->impl_->tensor_def_.GetProtoOwner() != nullptr) {
+      auto proto_msg = item->impl_->tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {
         REPORT_CALL_ERROR("E19999", "proto msg is nullptr, check invalid.");
         GELOGE(FAILED, "[Get][ProtoMsg] Proto msg is nullptr");
@@ -509,8 +523,9 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
         proto_attr_val.clear_list();
         return false;
       }
-      if (item->tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
-        tensor->mutable_desc()->CopyFrom(*(item->tensor_data_.tensor_descriptor_.GetProtoMsg()));
+      if (item->impl_->tensor_data_.impl_ != nullptr &&
+          item->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
+        tensor->mutable_desc()->CopyFrom(*(item->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg()));
       }
       tensor->set_data(item->GetData().data(), item->GetData().size());
     }
@@ -527,8 +542,8 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_t();
   for (const auto &item : value) {
-    if (item.tensor_def_.GetProtoOwner() != nullptr) {
-      auto proto_msg = item.tensor_def_.GetProtoMsg();
+    if (item.impl_ != nullptr && item.impl_->tensor_def_.GetProtoOwner() != nullptr) {
+      auto proto_msg = item.impl_->tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {
         REPORT_CALL_ERROR("E19999", "Proto msg is nullptr");
         GELOGE(FAILED, "[Get][ProtoMsg] Proto msg is nullptr");
@@ -544,8 +559,9 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
         proto_attr_val.clear_list();
         return false;
       }
-      if (item.tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
-        tensor->mutable_desc()->CopyFrom(*(item.tensor_data_.tensor_descriptor_.GetProtoMsg()));
+      if (item.impl_ != nullptr && item.impl_->tensor_data_.impl_ != nullptr &&
+          item.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
+        tensor->mutable_desc()->CopyFrom(*(item.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg()));
       }
       tensor->set_data(item.GetData().data(), item.GetData().size());
     }
@@ -742,7 +758,10 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
   if (!AttrUtilsHelper::GetValueCheckType(proto_attr_val, proto::AttrDef::kTd)) {
     return false;
   }
-  auto proto_msg = value.tensor_descriptor_.GetProtoMsg();
+  if (value.impl_ == nullptr) {
+    return false;
+  }
+  auto proto_msg = value.impl_->tensor_descriptor_.GetProtoMsg();
   if (proto_msg == nullptr) {
     return false;
   }
@@ -759,7 +778,10 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
   auto &list = proto_attr_val.list();
   for (const auto &item : list.td()) {
     value.emplace_back(GeTensorDesc());
-    auto proto_msg = value.back().tensor_descriptor_.GetProtoMsg();
+    if (value.back().impl_ == nullptr) {
+      return false;
+    }
+    auto proto_msg = value.back().impl_->tensor_descriptor_.GetProtoMsg();
     if (proto_msg == nullptr) {
       return false;
     }
@@ -977,7 +999,10 @@ GE_FUNC_HOST_VISIBILITY bool GeAttrValueImp::SetZeroCopyBytes(proto::AttrDef &pr
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kBt)) {
     return false;
   }
-  auto proto_msg = buffer.data_.GetProtoMsg();
+  if (buffer.impl_ == nullptr) {
+    return false;
+  }
+  auto proto_msg = buffer.impl_->data_.GetProtoMsg();
   if (proto_msg == nullptr) {
     return false;
   }
@@ -1004,7 +1029,10 @@ bool GeAttrValueImp::SetZeroCopyListBytes(proto::AttrDef &proto_attr_val, const 
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_bt();
   for (auto &item : list_buffer) {
-    auto proto_msg = item.data_.GetProtoMsg();
+    if (item.impl_ == nullptr) {
+      return false;
+    }
+    auto proto_msg = item.impl_->data_.GetProtoMsg();
     if (proto_msg == nullptr) {
       return false;
     }
@@ -1336,21 +1364,25 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
   op_desc->extAttrs_ = org_op_desc->extAttrs_;
 
   // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
-  if (!op_desc->input_name_idx_.empty()) {
-    op_desc->input_name_idx_.clear();
+  if (op_desc->impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "Op desc is nullptr.");
+    return nullptr;
   }
-  if (!op_desc->output_name_idx_.empty()) {
-    op_desc->output_name_idx_.clear();
+  if (!op_desc->impl_->input_name_idx_.empty()) {
+    op_desc->impl_->input_name_idx_.clear();
   }
-  if (!op_desc->optional_input_names_.empty()) {
-    op_desc->optional_input_names_.clear();
+  if (!op_desc->impl_->output_name_idx_.empty()) {
+    op_desc->impl_->output_name_idx_.clear();
+  }
+  if (!op_desc->impl_->optional_input_names_.empty()) {
+    op_desc->impl_->optional_input_names_.clear();
   }
 
   return op_desc;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
-  if (org_op_desc == nullptr) {
+  if (org_op_desc == nullptr || org_op_desc->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "org_op_desc is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
@@ -1372,14 +1404,20 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(c
 
   op_desc->extAttrs_ = org_op_desc->extAttrs_;
 
-  op_desc->input_name_idx_.insert(org_op_desc->input_name_idx_.begin(), org_op_desc->input_name_idx_.end());
-  op_desc->optional_input_names_.insert(org_op_desc->optional_input_names_.begin(),
-                                        org_op_desc->optional_input_names_.end());
-  op_desc->output_name_idx_.insert(org_op_desc->output_name_idx_.begin(), org_op_desc->output_name_idx_.end());
+  if (op_desc->impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "op desc is null.");
+    return nullptr;
+  }
+  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.begin(),
+                                         org_op_desc->impl_->input_name_idx_.end());
+  op_desc->impl_->optional_input_names_.insert(org_op_desc->impl_->optional_input_names_.begin(),
+                                               org_op_desc->impl_->optional_input_names_.end());
+  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.begin(),
+                                          org_op_desc->impl_->output_name_idx_.end());
 
-  op_desc->infer_func_ = org_op_desc->infer_func_;
-  op_desc->infer_format_func_ = org_op_desc->infer_format_func_;
-  op_desc->verifier_func_ = org_op_desc->verifier_func_;
+  op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
+  op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
+  op_desc->impl_->verifier_func_ = org_op_desc->impl_->verifier_func_;
 
   return op_desc;
 }
