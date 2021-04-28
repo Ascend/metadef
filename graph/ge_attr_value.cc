@@ -317,7 +317,8 @@ class AttrUtilsHelper {
     }
     auto list = attr_def.mutable_list();
     if (list == nullptr) {
-      GELOGE(GRAPH_FAILED, "list is nullptr");
+      REPORT_INNER_ERROR("E19999", "attrdef list is nullptr");
+      GELOGE(GRAPH_FAILED, "[Check][Param] attrdef list is nullptr");
       return false;
     }
     if (list->val_type() != proto::AttrDef_ListValue_ListValueType_VT_LIST_NONE &&
@@ -332,12 +333,14 @@ class AttrUtilsHelper {
 
   static bool GetAttrMapItem(const AttrHolder *obj, const string &name, const proto::AttrDef *&attr_def) {
     if (obj == nullptr) {
-      GELOGE(FAILED, "%s obj is nullptr", name.c_str());
+      REPORT_INNER_ERROR("E19999", "param obj is nullptr, check invalid");
+      GELOGE(FAILED, "[Check][Param] %s obj is nullptr", name.c_str());
       return false;
     }
     auto attr_map = obj->GetAttrMap().GetProtoMsg();
     if (attr_map == nullptr) {
-      GELOGE(FAILED, "%s attr map is nullptr", name.c_str());
+      REPORT_CALL_ERROR("E19999", "proto msg is nullptr, check invalid.");
+      GELOGE(FAILED, "[Get][ProtoMsg] %s attr map is nullptr", name.c_str());
       return false;
     }
     auto it = attr_map->find(name);
@@ -350,12 +353,14 @@ class AttrUtilsHelper {
 
   inline static bool MutableAttrMapItem(AttrHolder *obj, const string &name, proto::AttrDef *&attr_def) {
     if (obj == nullptr) {
-      GELOGE(FAILED, " %s obj is nullptr", name.c_str());
+      REPORT_INNER_ERROR("E19999", "param obj is nullptr, check invalid.");
+      GELOGE(FAILED, "[Check][Param] %s obj is nullptr", name.c_str());
       return false;
     }
     auto attr_map = obj->MutableAttrMap().GetProtoMsg();
     if (attr_map == nullptr) {
-      GELOGE(FAILED, "%s attr map is nullptr", name.c_str());
+      REPORT_CALL_ERROR("E19999", "proto msg is nullptr, check invalid.");
+      GELOGE(FAILED, "[Get][ProtoMsg] %s attr map is nullptr", name.c_str());
       return false;
     }
     // Get or add
@@ -445,14 +450,16 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
   if (val.tensor_def_.GetProtoOwner() != nullptr) {
     auto proto_msg = val.tensor_def_.GetProtoMsg();
     if (proto_msg == nullptr) {
-      GELOGE(FAILED, "Proto msg is nullptr");
+      REPORT_CALL_ERROR("E19999", "Proto msg is nullptr");
+      GELOGE(FAILED, "[Get][ProtoMsg] Proto msg is nullptr");
       return false;
     }
     *proto_attr_val.mutable_t() = *proto_msg;
   } else {
     auto tensor = proto_attr_val.mutable_t();
     if (tensor == nullptr) {
-      GELOGE(FAILED, "tensor is nullptr");
+      REPORT_INNER_ERROR("E19999", "tensor is nullptr");
+      GELOGE(FAILED, "[Check][Param] tensor is nullptr");
       return false;
     }
     if (val.tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
@@ -479,14 +486,16 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
   list->clear_t();
   for (const auto &item : value) {
     if (item == nullptr) {
-      GELOGE(GRAPH_FAILED, "AttrUtils::SetListTensor item is nullptr");
+      REPORT_INNER_ERROR("E19999", "ConstGeTensorPtr in param value is nullptr, check invalid");
+      GELOGE(GRAPH_FAILED, "[Check][Param] AttrUtils::SetListTensor item is nullptr");
       proto_attr_val.clear_list();
       return false;
     }
     if (item->tensor_def_.GetProtoOwner() != nullptr) {
       auto proto_msg = item->tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {
-        GELOGE(FAILED, "Proto msg is nullptr");
+        REPORT_CALL_ERROR("E19999", "proto msg is nullptr, check invalid.");
+        GELOGE(FAILED, "[Get][ProtoMsg] Proto msg is nullptr");
         proto_attr_val.clear_list();
         return false;
       }
@@ -494,7 +503,8 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
     } else {
       auto tensor = list->add_t();
       if (tensor == nullptr) {
-        GELOGE(FAILED, "tensor is nullptr");
+        REPORT_INNER_ERROR("E19999", "tensor is nullptr");
+        GELOGE(FAILED, "[Check][Param] tensor is nullptr");
         proto_attr_val.clear_list();
         return false;
       }
@@ -519,7 +529,8 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
     if (item.tensor_def_.GetProtoOwner() != nullptr) {
       auto proto_msg = item.tensor_def_.GetProtoMsg();
       if (proto_msg == nullptr) {
-        GELOGE(FAILED, "Proto msg is nullptr");
+        REPORT_CALL_ERROR("E19999", "Proto msg is nullptr");
+        GELOGE(FAILED, "[Get][ProtoMsg] Proto msg is nullptr");
         proto_attr_val.clear_list();
         return false;
       }
@@ -527,7 +538,8 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
     } else {
       auto tensor = list->add_t();
       if (tensor == nullptr) {
-        GELOGE(FAILED, "tensor is nullptr");
+        REPORT_INNER_ERROR("E19999", "tensor is nullptr");
+        GELOGE(FAILED, "[Check][Param] tensor is nullptr");
         proto_attr_val.clear_list();
         return false;
       }
@@ -569,7 +581,8 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeAttrValue:
   }
   auto proto_msg = value.named_attrs_.GetProtoMsg();
   if (proto_msg == nullptr) {
-    GELOGE(FAILED, "Proto msg is nullptr");
+    REPORT_CALL_ERROR("E19999", "proto msg is nullptr");
+    GELOGE(FAILED, "[Get][ProtoMsg] Proto msg is nullptr");
     return false;
   }
   *proto_attr_val.mutable_func() = *proto_msg;
@@ -601,7 +614,8 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const ge::ComputeG
   }
   ModelSerializeImp imp;
   if (!imp.SerializeGraph(value, proto_attr_val.mutable_g())) {
-    GELOGE(GRAPH_FAILED, "AttrUtils::SetGraph SerializeGraph Failed");
+    REPORT_CALL_ERROR("E19999", "SerializeGraph failed");
+    GELOGE(GRAPH_FAILED, "[Serialize][Graph] Failed");
     proto_attr_val.clear_g();
     return false;
   }
@@ -620,7 +634,8 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<ge::C
   ModelSerializeImp imp;
   for (const auto &item : value) {
     if (!imp.SerializeGraph(item, list->add_g())) {
-      GELOGE(GRAPH_FAILED, "AttrUtils::SetListGraph SerializeGraph");
+      REPORT_CALL_ERROR("E19999", "SerializeGraph failed.");
+      GELOGE(GRAPH_FAILED, "[Serialize][Graph] failed");
       proto_attr_val.clear_list();
       return false;
     }
@@ -759,7 +774,7 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
   }
   value = std::shared_ptr<GeTensor>(
       new (std::nothrow) GeTensor(proto_owner, const_cast<proto::AttrDef &>(proto_attr_val).mutable_t()));
-  GE_CHK_BOOL_RET_STATUS(value != nullptr, false, "value is nullptr");
+  GE_CHK_BOOL_RET_STATUS(value != nullptr, false, "[Check][Param] value is nullptr");
   return true;
 }
 
@@ -774,7 +789,11 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
   GE_CHECK_NOTNULL_EXEC(list, return false);
   for (auto &item : *(list->mutable_t())) {
     std::shared_ptr<GeTensor> temp_value = std::shared_ptr<GeTensor>(new (std::nothrow) GeTensor(proto_owner, &item));
-    GE_CHK_BOOL_RET_STATUS(temp_value != nullptr, false, "temp_value is nullptr");
+    if (temp_value == nullptr) {
+      REPORT_CALL_ERROR("E19999", "create GeTensor failed.");
+      GELOGE(false, "[Create][GeTensor] failed.");
+      return false;
+    }
     value.push_back(temp_value);
   }
   return true;
@@ -847,14 +866,16 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
   std::shared_ptr<proto::GraphDef> graph_def;
   graph_def = ComGraphMakeShared<proto::GraphDef>(proto_attr_val.g());
   if (graph_def == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::GraphDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create proto::GraphDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
     graph_def = nullptr;
     return false;  // lint !e665
   } else {
     ModelSerializeImp imp;
     imp.SetProtobufOwner(graph_def);
     if (!imp.UnserializeGraph(graph, *graph_def)) {
-      GELOGE(GRAPH_FAILED, "UnserializeGraph Failed");
+      REPORT_CALL_ERROR("E19999", "UnserializeGraph failed.");
+      GELOGE(GRAPH_FAILED, "[Unserialize][Graph] Failed");
       return false;
     }  // lint !e514
     value = graph;
@@ -874,7 +895,8 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
     std::shared_ptr<proto::GraphDef> graph_def;
     graph_def = ComGraphMakeShared<proto::GraphDef>(item);
     if (graph_def == nullptr) {
-      GELOGE(GRAPH_FAILED, "proto::GraphDef make shared failed");
+      REPORT_CALL_ERROR("E19999", "create proto::GraphDef failed.");
+      GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
       graph_def = nullptr;
       return false;  // lint !e665
     } else {
@@ -882,7 +904,8 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
       ModelSerializeImp imp;
       imp.SetProtobufOwner(graph_def);
       if (!imp.UnserializeGraph(graph, *graph_def)) {
-        GELOGE(GRAPH_FAILED, "UnserializeGraph Failed");
+        REPORT_CALL_ERROR("E19999", "UnserializeGraph failed.");
+        GELOGE(GRAPH_FAILED, "[Unserialize][Graph] Failed");
         return false;
       }  // lint !e514
       value.push_back(graph);
@@ -1139,7 +1162,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool AttrUtils::GetInt(ConstAttrH
     return false;
   }
   if (int64_val > INT32_MAX) {
-    GELOGE(GRAPH_FAILED, "%ld int64_t value cannot cast to int32_t", int64_val);
+    REPORT_INNER_ERROR("E19999", "%ld int64_t value cannot cast to int32_t", int64_val);
+    GELOGE(GRAPH_FAILED, "[Check][Param] %ld int64_t value cannot cast to int32_t", int64_val);
     return false;
   }
   value = static_cast<int32_t>(int64_val);
@@ -1153,7 +1177,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool AttrUtils::GetInt(ConstAttrH
     return false;
   }
   if (int64_val > UINT32_MAX) {
-    GELOGE(GRAPH_FAILED, "%ld int64_t value cannot cast to uint32_t", int64_val);
+    REPORT_INNER_ERROR("E19999", "%ld int64_t value cannot cast to uint32_t", int64_val);
+    GELOGE(GRAPH_FAILED, "[Check][Param] %ld int64_t value cannot cast to uint32_t", int64_val);
     return false;
   }
   value = static_cast<uint32_t>(int64_val);
@@ -1170,7 +1195,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool AttrUtils::GetListInt(ConstA
 
   for (size_t i = 0; i < int64_list.size(); ++i) {
     if (int64_list[i] > INT32_MAX) {
-      GELOGE(GRAPH_FAILED, "index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
+      REPORT_INNER_ERROR("E19999", "index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
+      GELOGE(GRAPH_FAILED, "[Check][Param] index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
       return false;
     }
   }
@@ -1188,7 +1214,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool AttrUtils::GetListInt(ConstA
 
   for (size_t i = 0; i < int64_list.size(); ++i) {
     if (int64_list[i] > UINT32_MAX) {
-      GELOGE(GRAPH_FAILED, "index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
+      REPORT_INNER_ERROR("E19999", "index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
+      GELOGE(GRAPH_FAILED, "[Check][Param] index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
       return false;
     }
   }
@@ -1286,13 +1313,15 @@ bool AttrUtils::GetZeroCopyListBytes(ConstAttrHolderAdapter &&obj, const string 
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(const ConstOpDescPtr &org_op_desc) {
   if (org_op_desc == nullptr) {
-    GELOGE(GRAPH_FAILED, "org_op_desc is null");
+    REPORT_INNER_ERROR("E19999", "org_op_desc is null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
   }
   std::shared_ptr<proto::OpDef> op_def;
   op_def = ComGraphMakeShared<proto::OpDef>();
   if (op_def == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::OpDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create proto::OpDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return nullptr;  // lint !e665
   }
   ModelSerializeImp imp;
@@ -1300,7 +1329,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
 
   imp.SetProtobufOwner(op_def);
   OpDescPtr op_desc = nullptr;
-  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def), return op_desc, "op_desc unserialize failed");
+  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
+                   REPORT_CALL_ERROR("E19999", "UnserializeOpDesc failed");
+                   return op_desc, "[Call][UnserializeOpDesc] op_desc unserialize failed");
   op_desc->extAttrs_ = org_op_desc->extAttrs_;
 
   // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
@@ -1319,12 +1350,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
   if (org_op_desc == nullptr) {
-    GELOGE(GRAPH_FAILED, "org_op_desc is null");
+    REPORT_INNER_ERROR("E19999", "org_op_desc is null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
   }
   std::shared_ptr<proto::OpDef> op_def = ComGraphMakeShared<proto::OpDef>();
   if (op_def == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::OpDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create proto::OpDef failed");
+    GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return nullptr;
   }
   ModelSerializeImp imp;
@@ -1332,7 +1365,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(c
 
   imp.SetProtobufOwner(op_def);
   OpDescPtr op_desc = nullptr;
-  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def), return op_desc, "op_desc unserialize failed");
+  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
+                   REPORT_CALL_ERROR("E19999", "UnserializeOpDesc failed.");
+                   return op_desc, "[Unserialize][OpDesc] failed");
 
   op_desc->extAttrs_ = org_op_desc->extAttrs_;
 

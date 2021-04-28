@@ -24,7 +24,8 @@ Operator OperatorFactory::CreateOperator(const std::string &operator_name, const
 
 Operator OperatorFactory::CreateOperator(const char *operator_name, const char *operator_type) {
   if (operator_name == nullptr || operator_type == nullptr) {
-    GELOGE(GRAPH_FAILED, "Create Operator input parameter is nullptr.");
+    REPORT_INNER_ERROR("E19999", "Create Operator input parameter is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Create Operator input parameter is nullptr.");
     return Operator();
   }
   std::string op_name = operator_name;
@@ -39,7 +40,8 @@ graphStatus OperatorFactory::GetOpsTypeList(std::vector<std::string> &all_ops) {
 graphStatus OperatorFactory::GetOpsTypeList(std::vector<AscendString> &all_ops) {
   std::vector<std::string> all_op_types;
   if (OperatorFactoryImpl::GetOpsTypeList(all_op_types) != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Get ops type list failed.");
+    REPORT_CALL_ERROR("E19999", "Get ops type list failed.");
+    GELOGE(GRAPH_FAILED, "[Get][OpsTypeList] failed.");
     return GRAPH_FAILED;
   }
   for (auto &op_type : all_op_types) {
@@ -52,7 +54,8 @@ bool OperatorFactory::IsExistOp(const string &operator_type) { return OperatorFa
 
 bool OperatorFactory::IsExistOp(const char *operator_type) {
   if (operator_type == nullptr) {
-    GELOGE(GRAPH_FAILED, "Operator type is nullptr.");
+    REPORT_INNER_ERROR("E19999", "Operator type is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Operator type is nullptr.");
     return false;
   }
   std::string op_type = operator_type;

@@ -117,11 +117,13 @@ graphStatus GeShape::SetDim(size_t idx, int64_t value) {
     auto dims = proto_msg->mutable_dim();
     GE_CHECK_NOTNULL(dims);
     if (dims->empty()) {
-      GELOGE(GRAPH_FAILED, "shape is empty");
+      REPORT_INNER_ERROR("E19999", "shape is empty");
+      GELOGE(GRAPH_FAILED, "[Check][Param] shape is empty");
       return GRAPH_FAILED;
     }
     if (static_cast<int>(idx) >= dims->size()) {
-      GELOGE(GRAPH_FAILED, "idx is out of range");
+      REPORT_INNER_ERROR("E19999", "idx(%zu) is out of range(0, %d)", idx, dims->size());
+      GELOGE(GRAPH_FAILED, "[Check][Param] idx(%zu) is out of range(0, %d)", idx, dims->size());
       return GRAPH_FAILED;
     }
     proto_msg->set_dim(static_cast<int>(idx), value);
@@ -385,7 +387,8 @@ void GeTensorDesc::Init() {
   SetOriginFormat(FORMAT_ND);
   TensorUtils::SetDeviceType(*this, DeviceType::NPU);
   if (tensor_descriptor_.GetProtoMsg() == nullptr) {
-    GELOGE(GRAPH_FAILED, "ProtoType nullptr.");
+    REPORT_CALL_ERROR("E19999", "ProtoType is nullptr.");
+    GELOGE(GRAPH_FAILED, "[Get][ProtoMsg] ProtoType nullptr.");
     return;
   }
   tensor_descriptor_.GetProtoMsg()->set_has_out_attr(true);
@@ -446,7 +449,8 @@ graphStatus GeTensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>>
   for (const auto &ele : shape_range) {
     // here must be only two elemenet because pair
     if (ele.size() != 2) {
-      GELOGE(GRAPH_FAILED, "shape_range must contain only 2 value but really is %lu", ele.size());
+      REPORT_INNER_ERROR("E19999", "shape_range must contain only 2 value but really is %zu", ele.size());
+      GELOGE(GRAPH_FAILED, "[Check][Param] shape_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
     std::pair<int64_t, int64_t> pair({ele[0], ele[1]});
@@ -463,7 +467,8 @@ graphStatus GeTensorDesc::GetOriginShapeRange(std::vector<std::pair<int64_t, int
   for (const auto &ele : origin_shape_range) {
     // here must be only two elemenet because pair
     if (ele.size() != 2) {
-      GELOGE(GRAPH_FAILED, "origin_shape_range must contain only 2 value but really is %lu", ele.size());
+      REPORT_INNER_ERROR("E19999", "origin_shape_range must contain only 2 value but really is %zu", ele.size());
+      GELOGE(GRAPH_FAILED, "[Check][Param] origin_shape_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
     std::pair<int64_t, int64_t> pair({ele[0], ele[1]});
@@ -685,7 +690,7 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
   }
 
   if (MallocAlignedPtr(size) == nullptr) {
-    GELOGE(MEMALLOC_FAILED, "malloc memory failed, size=%zu", size);
+    GELOGE(MEMALLOC_FAILED, "[Malloc][Memory] failed, size=%zu", size);
     return GRAPH_FAILED;
   }
 
@@ -695,7 +700,8 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
   while (remain_size > SECUREC_MEM_MAX_LEN) {
     if (memcpy_s(reinterpret_cast<void *>(dst_addr), SECUREC_MEM_MAX_LEN,
                  reinterpret_cast<const void *>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
-      GELOGE(INTERNAL_ERROR, "memcpy failed, size=SECUREC_MEM_MAX_LEN");
+      REPORT_CALL_ERROR("E19999", "memcpy failed, size = %lu", SECUREC_MEM_MAX_LEN);
+      GELOGE(INTERNAL_ERROR, "[Memcpy][Data] failed, size = %lu", SECUREC_MEM_MAX_LEN);
       return GRAPH_FAILED;
     }
     remain_size -= SECUREC_MEM_MAX_LEN;
@@ -704,7 +710,8 @@ graphStatus TensorData::SetData(const uint8_t *data, size_t size) {
   }
   if (memcpy_s(reinterpret_cast<void *>(dst_addr), remain_size,
                reinterpret_cast<const void *>(src_addr), remain_size) != EOK) {
-    GELOGE(INTERNAL_ERROR, "memcpy failed, size=%zu", remain_size);
+    REPORT_CALL_ERROR("E19999", "memcpy failed, size=%zu", remain_size);
+    GELOGE(INTERNAL_ERROR, "[Memcpy][Data] failed, size=%zu", remain_size);
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
@@ -730,7 +737,8 @@ const uint8_t *TensorData::MallocAlignedPtr(size_t size) {
   if (aligned_ptr_ == nullptr) {
     aligned_ptr_ = MakeShared<AlignedPtr>(length_);
     if (aligned_ptr_ == nullptr) {
-      GELOGE(INTERNAL_ERROR, "AlignedPtr is null");
+      REPORT_CALL_ERROR("E19999", "create AlignedPtr failed.");
+      GELOGE(INTERNAL_ERROR, "[Create][AlignedPtr] failed.");
       return nullptr;
     }
   }
@@ -989,7 +997,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t TensorUtils::GetWeightSi
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAddr(const ConstGeTensorPtr &tensor_ptr,
                                                                                    uint8_t *base) {
   if (tensor_ptr == nullptr) {
-    GELOGE(GRAPH_FAILED, "tensor_ptr is null.");
+    REPORT_INNER_ERROR("E19999", "param tensor_ptr is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] tensor_ptr is null.");
     return nullptr;
   }
   return GetWeightAddr(*tensor_ptr, base);
@@ -997,7 +1006,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAd
 
 uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *base) {
   if (base == nullptr) {
-    GELOGE(GRAPH_FAILED, "base is null.");
+    REPORT_INNER_ERROR("E19999", "param base is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] base is null.");
     return nullptr;
   }
   int64_t weight_data_offset = 0;

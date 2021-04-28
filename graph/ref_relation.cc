@@ -333,7 +333,8 @@ graphStatus RefRelations::Impl::GetRootGraph(ge::ComputeGraph &graph, ge::Comput
   }
   auto root_graph_ptr = GraphUtils::FindRootGraph(parent_graph_ptr);
   if (root_graph_ptr == nullptr) {
-    GE_LOGE("Get null root graph");
+    REPORT_INNER_ERROR("E19999", "Get null root graph, graph:%s", parent_graph_ptr->GetName().c_str());
+    GE_LOGE("[Find][Graph] Get null root graph");
     return GRAPH_PARAM_INVALID;
   }
   root_graph = *root_graph_ptr;
@@ -350,7 +351,9 @@ graphStatus RefRelations::Impl::ProcessSubgraphDataNodes(
     bool is_exist = true;
     is_exist = AttrUtils::GetInt(e->GetOpDesc(), kRefIndex, i);
     if (!is_exist) {
-      GELOGE(GRAPH_FAILED, "Invalid SubGraph NetOutput node[%s].no attr %s",
+      REPORT_INNER_ERROR("E19999", "Invalid SubGraph NetOutput node[%s].no attr %s",
+                         e->GetName().c_str(), kRefIndex);
+      GELOGE(GRAPH_FAILED, "[Get][Int] Invalid SubGraph NetOutput node[%s].no attr %s",
              e->GetName().c_str(), kRefIndex);
       return GRAPH_FAILED;
     }
@@ -383,7 +386,9 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
     for (const auto &in_data_anchor : sub_netoutput_node->GetAllInDataAnchors()) {
       auto in_desc = op_desc->MutableInputDesc(in_data_anchor->GetIdx());
       if (in_desc == nullptr) {
-        GELOGE(GRAPH_FAILED, "Invalid NetOutput node [%s] idx [%d], no tensor on it",
+        REPORT_INNER_ERROR("E19999", "Invalid NetOutput node [%s] idx [%d], no tensor on it",
+                           sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
+        GELOGE(GRAPH_FAILED, "[Get][Tensor] Invalid NetOutput node [%s] idx [%d], no tensor on it",
                sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
         return GRAPH_FAILED;
       }
@@ -391,7 +396,9 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
       if (AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
         max_ref_idx = (ref_o > max_ref_idx) ? ref_o : max_ref_idx;
       } else {
-        GELOGE(GRAPH_FAILED, "Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
+        REPORT_INNER_ERROR("E19999", "Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
+                           sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
+        GELOGE(GRAPH_FAILED, "[Get][Int] Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
                sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
         return GRAPH_FAILED;
       }
@@ -478,7 +485,7 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
     vector<vector<std::pair<NodePtr, size_t>>> classed_netoutput_nodes;   // resize according to ref_idx
     status = ProcessSubgraphDataNodes(data_nodes, classed_data_nodes);
     if (status != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "classfy data nodes failed!");
+      GELOGE(GRAPH_FAILED, "[Process][SubgraphDataNodes] failed! ret:%d", status);
       return status;
     }
 
@@ -488,14 +495,14 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
     // key: netoutput node_ptr ,<ref_idx, net_in_idx>
     status = ProcessSubgraphNetoutput(netoutput_nodes, classed_netoutput_nodes);
     if (status != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "process netoutput failed!");
+      GELOGE(GRAPH_FAILED, "[Process][SubgraphNetoutput] failed! ret:%d", status);
       return status;
     }
 
     vector<vector<RefCell>> node_refs;
     status = BuildRelationsWithFuncNodeType(node, classed_data_nodes, classed_netoutput_nodes, node_refs);
     if (status != GRAPH_SUCCESS) {
-      GELOGE(status, "BuildRelationsWithFuncNodeType Failed! Node is [%s]!", node->GetName().c_str());
+      GELOGE(status, "[Build][Relations] WithFuncNodeType Failed! Node is [%s]!", node->GetName().c_str());
       return status;
     }
     if (!node_refs.empty()) {
@@ -507,7 +514,7 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
   /* Seconde Step: generate map */
   status = BuildLookUpTables();
   if (status != GRAPH_SUCCESS) {
-    GELOGE(status, "Build look up tables failed!");
+    GELOGE(status, "[Build][LookUpTables] failed! ret:%d", status);
     return status;
   }
   return GRAPH_SUCCESS;
@@ -517,7 +524,8 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
 RefRelations::RefRelations() {
   impl_ = MakeShared<Impl>();
   if (impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "MakeShared failed!");
+    REPORT_CALL_ERROR("E19999", "new impl failed.");
+    GELOGE(GRAPH_FAILED, "[New][Impl] MakeShared failed!");
     return;
   }
 }

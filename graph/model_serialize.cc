@@ -46,8 +46,10 @@ bool ModelSerializeImp::ParseNodeIndex(const string &node_index, string &node_na
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeTensor(const ConstGeTensorPtr &tensor,
                                                                                        proto::TensorDef *tensor_proto) {
-  GE_CHK_BOOL_EXEC(tensor != nullptr, return false, "tensor is null.");
-  GE_CHK_BOOL_EXEC(tensor_proto != nullptr, return false, "tensor_proto is null.");
+  GE_CHK_BOOL_EXEC(tensor != nullptr, REPORT_INNER_ERROR("E19999", "param tensor is nullptr, check invalid.");
+                   return false, "[Check][Param] tensor is null.");
+  GE_CHK_BOOL_EXEC(tensor_proto != nullptr, REPORT_INNER_ERROR("E19999", "param tensor_proto is null, check invalid.");
+                   return false, "[Check][Param] tensor_proto is null.");
   if (tensor->tensor_data_.tensor_descriptor_.GetProtoMsg() != nullptr) {
     *(tensor_proto->mutable_desc()) = *(tensor->tensor_data_.tensor_descriptor_.GetProtoMsg());
     tensor_proto->set_data(tensor->GetData().data(), tensor->GetData().size());
@@ -57,8 +59,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
 }
 
 bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_proto) {
-  GE_CHK_BOOL_EXEC(node != nullptr, return false, "node is null.");
-  GE_CHK_BOOL_EXEC(op_def_proto != nullptr, return false, "op_def_proto is null.");
+  GE_CHK_BOOL_EXEC(node != nullptr, REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
+                   return false, "[Check][Param] node is null.");
+  GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E19999", "param op_def_proto is null, check invalid.");
+                   return false, "[Check][Param] op_def_proto is null.");
 
   op_def_proto->clear_input();
   // Inputs
@@ -87,8 +91,10 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_
 }
 
 bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, bool is_dump) {
-  GE_CHK_BOOL_EXEC(op_desc != nullptr, return false, "op_desc is null.");
-  GE_CHK_BOOL_EXEC(op_def_proto != nullptr, return false, "op_def_proto is null.");
+  GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr. check invalid.");
+                   return false, "[Check][Param] op_desc is null.");
+  GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E19999", "param op_def_proto is null, check invalid.");
+                   return false, "[Check][Param] op_def_proto is null.");
   if (op_desc->op_def_.GetProtoMsg() != nullptr) {
     *op_def_proto = *op_desc->op_def_.GetProtoMsg();
     //Delete unnecessary attr
@@ -165,11 +171,12 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
 
 bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, bool is_dump) {
   if (node == nullptr || op_def_proto == nullptr) {
-    GELOGE(GRAPH_FAILED, "Input Para Node Invalid");
+    REPORT_INNER_ERROR("E19999", "param node or op_def_proto is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] param node or op_def_proto is nullptr, check invalid.");
     return false;
   }
   if (!SerializeOpDesc(node->GetOpDesc(), op_def_proto, is_dump)) {
-    GELOGE(GRAPH_FAILED, "Serialize OpDesc failed");
+    GELOGE(GRAPH_FAILED, "[Serialize][OpDesc] failed, node:%s", node->GetName().c_str());
     return false;
   }
   if (SerializeEdge(node, op_def_proto)) {
@@ -183,7 +190,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
                                                                                       proto::GraphDef *graph_proto,
                                                                                       bool is_dump) {
   if (graph == nullptr || graph_proto == nullptr) {
-    GELOGE(GRAPH_FAILED, "Input para Invalid");
+    REPORT_INNER_ERROR("E19999", "param graph or graph_proto is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] param graph or graph_proto is nullptr, check invalid.");
     return false;
   }
   graph_proto->set_name(graph->GetName());
@@ -206,7 +214,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   for (const auto &node : graph->GetDirectNode()) {
     if (!SerializeNode(node, graph_proto->add_op(), is_dump)) {
       if (node->GetOpDesc() != nullptr) {
-        GELOGE(GRAPH_FAILED, "Serialize Node %s failed", node->GetName().c_str());
+        REPORT_CALL_ERROR("E19999", "op desc of node:%s is nullptr.", node->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "[Get][OpDesc] Serialize Node %s failed as node opdesc is null", node->GetName().c_str());
       }
       return false;
     }
@@ -216,7 +225,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
 
 bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *model_proto, bool is_dump) {
   if (model_proto == nullptr) {
-    GELOGE(GRAPH_FAILED, "model_proto para Invalid");
+    REPORT_INNER_ERROR("E19999", "param model_proto is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] param model_proto is nullptr, check Invalid");
     return false;
   }
   model_proto->set_name(model.GetName());
@@ -228,17 +238,18 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *mode
   auto &graph = model.graph_;
   auto compute_graph = GraphUtils::GetComputeGraph(graph);
   if (compute_graph == nullptr) {
-    GELOGE(GRAPH_FAILED, "GetComputeGraph return nullptr");
+    REPORT_CALL_ERROR("E19999", "get compute graph from graph failed as graph is invalid.");
+    GELOGE(GRAPH_FAILED, "[Get][ComputeGraph] return nullptr");
     return false;
   }
   if (!SerializeGraph(compute_graph, model_proto->add_graph(), is_dump)) {
-    GELOGE(GRAPH_FAILED, "SerializeGraph fail");
+    GELOGE(GRAPH_FAILED, "[Serialize][Graph] failed");
     return false;
   }
 
   for (auto subgraph : compute_graph->GetAllSubgraphs()) {
     if (!SerializeGraph(subgraph, model_proto->add_graph(), is_dump)) {
-      GELOGE(GRAPH_FAILED, "Serialize subgraph failed");
+      GELOGE(GRAPH_FAILED, "[Serialize][Subgraph] failed");
       return false;
     }
   }
@@ -250,7 +261,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Unseriali
     GeTensorPtr &tensor, proto::TensorDef &tensor_proto) {
   tensor = std::shared_ptr<GeTensor>(new (std::nothrow) GeTensor(protobuf_owner_, &tensor_proto));
   if (tensor == nullptr) {
-    GELOGE(GRAPH_FAILED, "tensor is nullptr");
+    REPORT_CALL_ERROR("E19999", "create GeTensor failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GeTensor] tensor is nullptr");
     return false;
   } else {
     return true;
@@ -339,20 +351,23 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   }
 
   op_desc = std::shared_ptr<OpDesc>(new (std::nothrow) OpDesc(protobuf_owner_, &op_def_proto));
-  GE_CHK_BOOL_EXEC(op_desc != nullptr, return false, "op_desc is nullptr.");
+  GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_CALL_ERROR("E19999", "create OpDesc failed.");
+                   return false, "[Create][OpDesc] op_desc is nullptr.");
 
   // Input tensor
   for (auto &input_desc : *op_def_proto.mutable_input_desc()) {
     std::shared_ptr<GeTensorDesc> temp_value =
         std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(protobuf_owner_, &input_desc));
-    GE_CHK_BOOL_RET_STATUS(temp_value != nullptr, false, "temp_value is nullptr");
+    GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
+                     return false, "[Create][GeTensorDesc] temp_value is nullptr.");
     op_desc->inputs_desc_.push_back(temp_value);
   }
   // Output tensor
   for (auto &output_desc : *op_def_proto.mutable_output_desc()) {
     std::shared_ptr<GeTensorDesc> temp_value =
         std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(protobuf_owner_, &output_desc));
-    GE_CHK_BOOL_RET_STATUS(temp_value != nullptr, false, "temp_value is nullptr");
+    GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
+                     return false, "[Create][GeTensorDesc] temp_value is nullptr.");
     op_desc->outputs_desc_.push_back(temp_value);
   }
 
@@ -373,11 +388,14 @@ bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op
   GE_RT_FALSE_CHECK_NOTNULL(graph);
   OpDescPtr op_desc = nullptr;
   if (!UnserializeOpDesc(op_desc, op_def_proto)) {
-    GELOGW("UnserializeOpDesc error.");
+    GELOGE(false, "[Unserialize][OpDesc] error.");
+    return false;
   }
 
   NodePtr node = graph->AddNode(op_desc, op_desc->GetId());
-  GE_CHK_BOOL_EXEC(node != nullptr, return false, "node is nullptr.");
+  GE_CHK_BOOL_EXEC(node != nullptr,
+                   REPORT_CALL_ERROR("E19999", "add node to graph:%s failed", graph->GetName().c_str());
+                   return false, "[Add][Node] to graph:%s failed.", graph->GetName().c_str());
 
   // Inputs
   int dst_index = 0;
@@ -400,7 +418,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
   for (auto &item : node_input_node_names_) {
     auto src_node_it = node_map_.find(item.src_node_name);
     if (src_node_it == node_map_.end()) {
-      GELOGE(GRAPH_FAILED, "cannot find node %s", item.src_node_name.c_str());
+      REPORT_INNER_ERROR("E19999", "cannot find edge node %s", item.src_node_name.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find edge node %s", item.src_node_name.c_str());
       return false;
     }
     GE_IF_BOOL_EXEC(src_node_it->second == nullptr || item.dst_node == nullptr, continue);
@@ -408,7 +427,9 @@ bool ModelSerializeImp::HandleNodeNameRef() {
       auto src_anchor = src_node_it->second->GetOutDataAnchor(item.src_out_index);
       auto dst_anchor = item.dst_node->GetInDataAnchor(item.dst_in_index);
       if (src_anchor == nullptr || dst_anchor == nullptr) {
-        GELOGE(GRAPH_FAILED, "get anchor failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
+        REPORT_CALL_ERROR("E19999", "get Anchor failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
+               item.dst_node_name.c_str(), item.dst_in_index);
+        GELOGE(GRAPH_FAILED, "[Get][Anchor] failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
                item.dst_node_name.c_str(), item.dst_in_index);
         return false;
       }
@@ -426,7 +447,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
   for (auto &item : graph_input_node_names_) {
     auto node_it = node_map_.find(item.node_name);
     if (node_it == node_map_.end()) {
-      GELOGE(GRAPH_FAILED, "cannot find node %s", item.node_name.c_str());
+      REPORT_INNER_ERROR("E19999", "cannot find graph input node %s", item.node_name.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph input node %s", item.node_name.c_str());
       return false;
     }
     GE_IF_BOOL_EXEC(item.graph == nullptr, continue);
@@ -439,7 +461,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
   for (auto &item : graph_output_node_names_) {
     auto node_it = node_map_.find(item.node_name);
     if (node_it == node_map_.end()) {
-      GELOGE(GRAPH_FAILED, "cannot find node %s", item.node_name.c_str());
+      REPORT_INNER_ERROR("E19999", "cannot find graph output node %s", item.node_name.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph output node %s", item.node_name.c_str());
       return false;
     }
 
@@ -447,7 +470,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
     auto ret = item.graph->AddOutputNodeByIndex(node_it->second, item.index);
     GELOGI("node name:%s, item.index:%d", node_it->second->GetName().c_str(), item.index);
     if (ret == nullptr) {
-      GELOGE(GRAPH_FAILED, "AddOutputNode failed.");
+      REPORT_CALL_ERROR("E19999", "add output node to graph:%s failed.", item.graph->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Add][OutputNode] to graph:%s failed.", item.graph->GetName().c_str());
       return false;
     }
   }
@@ -470,7 +494,9 @@ bool ModelSerializeImp::RebuildOwnership(ComputeGraphPtr &compute_graph, map<str
       for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
         auto it = subgraphs.find(name);
         if (it == subgraphs.end()) {
-          GELOGE(GRAPH_FAILED, "Node:%s, Subgraph:%s not found, num:%zu.",
+          REPORT_INNER_ERROR("E19999", "Node:%s, Subgraph:%s not found, num:%zu.",
+                             op_desc->GetName().c_str(), name.c_str(), subgraphs.size());
+          GELOGE(GRAPH_FAILED, "[Check][Param] Node:%s, Subgraph:%s not found, num:%zu.",
                  op_desc->GetName().c_str(), name.c_str(), subgraphs.size());
           return false;
         }
@@ -507,12 +533,12 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
       ComputeGraphPtr subgraph;
       ModelSerializeImp impl;
       if (!impl.UnserializeGraphWithoutEdge(subgraph, graphs_proto[idx])) {
-        GELOGE(GRAPH_FAILED, "UnserializeGraphWithoutEdge failed");
+        GELOGE(GRAPH_FAILED, "[Call][UnserializeGraphWithoutEdge] failed");
         return false;
       }
 
       if (!impl.HandleNodeNameRef()) {
-        GELOGE(GRAPH_FAILED, "HandleNodeNameRef failed");
+        GELOGE(GRAPH_FAILED, "[Call][HandleNodeNameRef] failed");
         return false;
       }
 
@@ -520,13 +546,13 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
     }
 
     if (!subgraphs.empty() && !RebuildOwnership(compute_graph_ptr, subgraphs)) {
-      GELOGE(GRAPH_FAILED, "Rebuild graph ownership failed");
+      GELOGE(GRAPH_FAILED, "[Rebuild][GraphOwnerShip] failed");
       return false;
     }
   }
 
   if (!HandleNodeNameRef()) {
-    GELOGE(GRAPH_FAILED, "HandleNodeNameRef failed");
+    GELOGE(GRAPH_FAILED, "[Call][HandleNodeNameRef] failed");
     return false;
   }
   return true;
@@ -535,7 +561,8 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
 bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, proto::GraphDef &graph_proto) {
   graph = ComGraphMakeShared<ComputeGraph>(graph_proto.name());
   if (graph == nullptr) {
-    GELOGE(GRAPH_FAILED, "ComputeGraph make shared failed");
+    REPORT_CALL_ERROR("E19999", "create ComputeGraph failed.");
+    GELOGE(GRAPH_FAILED, "[Create][ComputeGraph] ComputeGraph make shared failed");
     return false;
   }
 
@@ -558,7 +585,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
   graph->attrs_ = ProtoAttrMapHelper(protobuf_owner_, graph_proto.mutable_attr());
   for (auto &op_def_proto : *graph_proto.mutable_op()) {
     if (!UnserializeNode(graph, op_def_proto)) {
-      GELOGE(GRAPH_FAILED, "UnserializeNode fail");
+      GELOGE(GRAPH_FAILED, "[Unserialize][Node] failed");
       return false;
     }
   }
@@ -571,21 +598,24 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Unseriali
     GELOGW("UnserializeGraphWithoutEdge fail");
   }
   if (!HandleNodeNameRef()) {
-    GELOGE(GRAPH_FAILED, "Link Anchor or set graph input or output fail");
+    GELOGE(GRAPH_FAILED, "[Call][HandleNodeNameRef] Link Anchor or set graph input or output fail");
     return false;
   }
   return true;
 }
 
 bool ReadProtoFromBinaryFile(const uint8_t *data, size_t len, google::protobuf::Message *proto) {
-  GE_CHK_BOOL_EXEC(data != nullptr, return false, "data is null.");
-  GE_CHK_BOOL_EXEC(proto != nullptr, return false, "proto is null.");
+  GE_CHK_BOOL_EXEC(data != nullptr, REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
+                   return false, "[Check][Param] data is null.");
+  GE_CHK_BOOL_EXEC(proto != nullptr, REPORT_INNER_ERROR("E19999", "param proto is nullptr, check invalid.");
+                   return false, "[Check][Param] proto is null.");
 
   google::protobuf::io::CodedInputStream coded_stream(data, len);
   // 2048M -1
   coded_stream.SetTotalBytesLimit(INT32_MAX, -1);
   if (!proto->ParseFromCodedStream(&coded_stream)) {
-    GELOGE(GRAPH_FAILED, "ReadProtoFromBinaryFile failed len %zu", len);
+    REPORT_CALL_ERROR("E19999", "Read proto from BinaryFile failed, len %zu", len);
+    GELOGE(GRAPH_FAILED, "[Read][Proto] from BinaryFile failed, len %zu", len);
     return false;
   }
   return true;
@@ -626,27 +656,29 @@ size_t ModelSerialize::GetSerializeModelSize(const Model &model) {
 
 bool ModelSerialize::UnserializeModel(const uint8_t *data, size_t len, Model &model) {
   if (data == nullptr) {
-    GELOGE(GRAPH_FAILED, "data is nullptr");
+    REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
     return false;
   }
 
   std::shared_ptr<proto::ModelDef> model_proto_ptr;
   model_proto_ptr = ComGraphMakeShared<proto::ModelDef>();
   if (model_proto_ptr == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::ModelDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create ModelDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][ModelDef] proto::ModelDef make shared failed");
     return false;
   }
 
   auto &model_proto = *model_proto_ptr;
   if (!ReadProtoFromBinaryFile(data, len, &model_proto)) {
-    GELOGE(GRAPH_FAILED, "ParseFromArray fail");
+    GELOGE(GRAPH_FAILED, "[Read][Proto] from binaryfile failed.");
     return false;
   }
 
   ModelSerializeImp imp;
   imp.SetProtobufOwner(model_proto_ptr);
   if (!imp.UnserializeModel(model, model_proto)) {
-    GELOGE(GRAPH_FAILED, "Unserialize Model fail");
+    GELOGE(GRAPH_FAILED, "[Unserialize][Model] failed");
     return false;
   }
   return model.IsValid();
@@ -654,12 +686,13 @@ bool ModelSerialize::UnserializeModel(const uint8_t *data, size_t len, Model &mo
 
 bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &model) {
   std::shared_ptr<proto::ModelDef> model_def_ptr = ComGraphMakeShared<proto::ModelDef>(model_def);
-  GE_CHK_BOOL_EXEC(model_def_ptr != nullptr, return false, "mode_def make shared failed");
+  GE_CHK_BOOL_EXEC(model_def_ptr != nullptr, REPORT_CALL_ERROR("E19999", "create ModelDef failed.");
+                   return false, "[Create][ModelDef] mode_def make shared failed");
 
   ModelSerializeImp imp;
   imp.SetProtobufOwner(model_def_ptr);
   if (!imp.UnserializeModel(model, *model_def_ptr)) {
-    GELOGE(GRAPH_FAILED, "Unserialize Model fail");
+    GELOGE(GRAPH_FAILED, "[Unserialize][Model] fail");
     return false;
   }
   return model.IsValid();
@@ -692,7 +725,8 @@ Buffer ModelSerialize::SerializeGraph(const ComputeGraphPtr &graph) {
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
   auto ret = graph_def.SerializeToArray(buffer.GetData(), static_cast<int>(buffer.GetSize()));
   if (ret != true) {
-    GE_LOGE("serialize to array fail.");
+    REPORT_CALL_ERROR("E19999", "SerializeToArray failed");
+    GE_LOGE("[Call][SerializeToArray] fail.");
   }
 
   return buffer;
@@ -700,19 +734,21 @@ Buffer ModelSerialize::SerializeGraph(const ComputeGraphPtr &graph) {
 
 ComputeGraphPtr ModelSerialize::UnserializeGraph(const uint8_t *data, size_t len) {
   if (data == nullptr) {
-    GELOGE(GRAPH_FAILED, "data is nullptr");
+    REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
     return nullptr;
   }
 
   std::shared_ptr<proto::GraphDef> graph_proto_ptr;
   graph_proto_ptr = ComGraphMakeShared<proto::GraphDef>();
   if (graph_proto_ptr == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::GraphDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create GraphDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
     return nullptr;
   }
   proto::GraphDef &graph_proto = *graph_proto_ptr;
   if (!ReadProtoFromBinaryFile(data, len, &graph_proto)) {
-    GELOGE(GRAPH_FAILED, "ParseFromArray fail");
+    GELOGE(GRAPH_FAILED, "[Read][Proto] from binaryfile fail");
     return nullptr;
   }
 
@@ -740,7 +776,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer ModelSerialize::SerializeO
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
   auto ret = op_def.SerializeToArray(buffer.GetData(), static_cast<int>(buffer.GetSize()));
   if (ret != true) {
-    GE_LOGE("serialize to array fail.");
+    REPORT_CALL_ERROR("E19999", "SerializeToArray failed.");
+    GE_LOGE("[Call][SerializeToArray] fail.");
   }
 
   return buffer;
@@ -749,19 +786,21 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer ModelSerialize::SerializeO
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr ModelSerialize::UnserializeOpDesc(const uint8_t *data,
                                                                                            size_t len) {
   if (data == nullptr) {
-    GELOGE(GRAPH_FAILED, "data is nullptr");
+    REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
     return nullptr;
   }
 
   std::shared_ptr<proto::OpDef> op_def_ptr;
   op_def_ptr = ComGraphMakeShared<proto::OpDef>();
   if (op_def_ptr == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::OpDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create OpDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return nullptr;
   }
   proto::OpDef &op_def = *op_def_ptr;
   if (!ReadProtoFromBinaryFile(data, len, &op_def)) {
-    GELOGE(GRAPH_FAILED, "ParseFromArray fail");
+    GELOGE(GRAPH_FAILED, "[Read][Proto] from binaryfile fail");
     return nullptr;
   }
 

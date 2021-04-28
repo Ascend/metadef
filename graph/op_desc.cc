@@ -218,7 +218,8 @@ graphStatus OpDesc::AddInputDesc(const string &name, const ge::GeTensorDesc &inp
     int index = static_cast<int>(inputs_desc_.size());
     std::shared_ptr<GeTensorDesc> in_desc = ComGraphMakeShared<GeTensorDesc>(input_desc);
     if (in_desc == nullptr) {
-      GELOGE(GRAPH_FAILED, "AddInputDesc failed, malloc shared_ptr failed.");
+      REPORT_CALL_ERROR("E19999", "AddInputDesc failed, as malloc shared_ptr failed.");
+      GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] AddInputDesc failed, as malloc shared_ptr failed.");
       return GRAPH_FAILED;
     }
     inputs_desc_.push_back(in_desc);
@@ -234,17 +235,24 @@ graphStatus OpDesc::AddInputDesc(const string &name, const ge::GeTensorDesc &inp
 graphStatus OpDesc::AddInputDescMiddle(const string &name, const unsigned int num, size_t index) {
   for (unsigned int i = 0; i < num; i++) {
     string input_name = name + std::to_string(i);
-    GE_CHK_BOOL_RET_STATUS((input_name_idx_.find(input_name) == input_name_idx_.end()), GRAPH_FAILED,
-                           "Add input tensor_desc is existed. name[%s]", input_name.c_str());
+    GE_CHK_BOOL_EXEC((input_name_idx_.find(input_name) == input_name_idx_.end()),
+                     REPORT_INNER_ERROR("E19999", "Add input tensor_desc is existed. name[%s]", input_name.c_str());
+                     GELOGE(ge::FAILED, "[Check][Param] Add input tensor_desc is existed. name[%s]",
+                            input_name.c_str());
+                     return GRAPH_FAILED, );
 
     std::shared_ptr<GeTensorDesc> in_desc = ComGraphMakeShared<GeTensorDesc>(GeTensorDesc());
     if (in_desc == nullptr) {
-      GELOGE(GRAPH_FAILED, "AddInputDescMiddle failed, malloc shared_ptr failed.");
+      REPORT_CALL_ERROR("E19999", "AddInputDescMiddle failed, as malloc shared_ptr failed.");
+      GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] AddInputDescMiddle failed, as malloc shared_ptr failed.");
       return GRAPH_FAILED;
     }
 
     if (index > inputs_desc_.size()) {
-      GELOGE(GRAPH_FAILED, "AddInputDescMiddle failed, insert index should not more than inputs size.");
+      REPORT_INNER_ERROR("E19999", "AddInputDescMiddle failed, as param index(%zu) "
+             "is bigger than inputs size(%zu).", index, inputs_desc_.size());
+      GELOGE(GRAPH_FAILED, "[Check][Param] AddInputDescMiddle failed, as param index(%zu) "
+             "is bigger than inputs size(%zu).", index, inputs_desc_.size());
       return GRAPH_FAILED;
     }
 
@@ -266,17 +274,23 @@ graphStatus OpDesc::AddInputDescMiddle(const string &name, const unsigned int nu
 graphStatus OpDesc::AddOutputDescMiddle(const string &name, const unsigned int num, size_t index) {
   for (unsigned int i = 0; i < num; i++) {
     string output_name = name + std::to_string(i);
-    GE_CHK_BOOL_RET_STATUS((output_name_idx_.find(output_name) == output_name_idx_.end()), GRAPH_FAILED,
-                           "Add input tensor_desc is existed. name[%s]", output_name.c_str());
+    GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
+                     REPORT_INNER_ERROR("E19999", "Add output tensor_desc is existed. name[%s]", output_name.c_str());
+                     return GRAPH_FAILED,
+                    "[Check][Param] Add output tensor_desc is existed. name[%s]", output_name.c_str());
 
     std::shared_ptr<GeTensorDesc> out_desc = ComGraphMakeShared<GeTensorDesc>(GeTensorDesc());
     if (out_desc == nullptr) {
-      GELOGE(GRAPH_FAILED, "AddInputDescMiddle failed, malloc shared_ptr failed.");
+      REPORT_CALL_ERROR("E19999", "AddOutputDescMiddle failed, as malloc shared_ptr failed.");
+      GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] AddOutputDescMiddle failed, as malloc shared_ptr failed.");
       return GRAPH_FAILED;
     }
 
     if (index > outputs_desc_.size()) {
-      GELOGE(GRAPH_FAILED, "AddInputDescMiddle failed, insert index should not more than inputs size.");
+      REPORT_INNER_ERROR("E19999", "AddOutputDescMiddle failed, as param index(%zu) "
+                         "is bigger than outputs size(%zu).", index, outputs_desc_.size());
+      GELOGE(GRAPH_FAILED, "[Check][Param] AddOutputDescMiddle failed, as param index(%zu) "
+             "is bigger than outputs size(%zu).", index, outputs_desc_.size());
       return GRAPH_FAILED;
     }
 
@@ -298,12 +312,15 @@ graphStatus OpDesc::AddOutputDescMiddle(const string &name, const unsigned int n
 graphStatus OpDesc::AddInputDescForward(const string &name, const unsigned int num) {
   for (unsigned int i = 0; i < num; i++) {
     string input_name = name + std::to_string(i);
-    GE_CHK_BOOL_RET_STATUS((input_name_idx_.find(input_name) == input_name_idx_.end()), GRAPH_FAILED,
-                           "Add input tensor_desc is existed. name[%s]", input_name.c_str());
+    GE_CHK_BOOL_EXEC((input_name_idx_.find(input_name) == input_name_idx_.end()),
+                     REPORT_INNER_ERROR("E19999", "Add input tensor_desc is existed. name[%s]", input_name.c_str());
+                     return GRAPH_FAILED,
+                     "[Check][Param] Add input tensor_desc is existed. name[%s]", input_name.c_str());
 
     std::shared_ptr<GeTensorDesc> in_desc = ComGraphMakeShared<GeTensorDesc>(GeTensorDesc());
     if (in_desc == nullptr) {
-      GELOGE(GRAPH_FAILED, "AddInputDescForward failed, malloc shared_ptr failed.");
+      REPORT_CALL_ERROR("E19999", "AddInputDescForward failed, as malloc shared_ptr failed.");
+      GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] AddInputDescForward failed, as malloc shared_ptr failed.");
       return GRAPH_FAILED;
     }
     (void)inputs_desc_.insert(inputs_desc_.begin(), in_desc);
@@ -322,12 +339,15 @@ graphStatus OpDesc::AddInputDescForward(const string &name, const unsigned int n
 graphStatus OpDesc::AddOutputDescForward(const string &name, const unsigned int num) {
   for (unsigned int i = 0; i < num; i++) {
     string output_name = name + std::to_string(i);
-    GE_CHK_BOOL_RET_STATUS((output_name_idx_.find(output_name) == output_name_idx_.end()), GRAPH_FAILED,
-                           "Add output tensor_desc is existed. name[%s]", output_name.c_str());
+    GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
+                     REPORT_INNER_ERROR("E19999", "Add output tensor_desc is existed. name[%s]", output_name.c_str());
+                     return GRAPH_FAILED,
+                     "[Check][Param] Add output tensor_desc is existed. name[%s]", output_name.c_str());
 
     std::shared_ptr<GeTensorDesc> in_desc = ComGraphMakeShared<GeTensorDesc>(GeTensorDesc());
     if (in_desc == nullptr) {
-      GELOGE(GRAPH_FAILED, "AddOutputDescForward failed, malloc shared_ptr failed.");
+      REPORT_CALL_ERROR("E19999", "AddOutputDescForward failed, as malloc shared_ptr failed.");
+      GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] AddOutputDescForward failed, as malloc shared_ptr failed.");
       return GRAPH_FAILED;
     }
 
@@ -358,7 +378,8 @@ OpDesc::UpdateInputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc) {
 
   inputs_desc_[index] = ComGraphMakeShared<GeTensorDesc>(tensor_Desc);
   if (inputs_desc_[index] == nullptr) {
-    GELOGE(GRAPH_FAILED, "UpdateInputDesc failed, malloc shared_ptr failed.");
+    REPORT_CALL_ERROR("E19999", "UpdateInputDesc failed, as malloc shared_ptr failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] UpdateInputDesc failed, as malloc shared_ptr failed.");
     return GRAPH_FAILED;
   }
 
@@ -406,13 +427,19 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::OpDescGenTensorDescs
   const auto inputs_desc_size = this->inputs_desc_.size();
   const auto r_inputs_desc_size = r_op_desc.inputs_desc_.size();
   if (inputs_desc_size != r_inputs_desc_size) {
-    GELOGE(GRAPH_FAILED, "Size of OpDesc's inputs desc verify failed, node name: %s.", this->GetName().c_str());
+    REPORT_INNER_ERROR("E19999", "param r_op_desc inputs count(%zu) not equal to %s inputs count(%zu), "
+                       "verify failed.", r_inputs_desc_size, this->GetName().c_str(), inputs_desc_size);
+    GELOGE(GRAPH_FAILED, "[Check][Param] Size of OpDesc's inputs desc verify failed, node name: %s.",
+           this->GetName().c_str());
     return false;
   }
   const auto outputs_desc_size = this->outputs_desc_.size();
   const auto r_outputs_desc_size = r_op_desc.outputs_desc_.size();
   if (outputs_desc_size != r_outputs_desc_size) {
-    GELOGE(GRAPH_FAILED, "Size of OpDesc's outputs desc verify failed, node name: %s.", this->GetName().c_str());
+    REPORT_INNER_ERROR("E19999", "param r_op_desc outputs count(%zu) not equal to %s outputs count(%zu), "
+                       "verify failed.", r_inputs_desc_size, this->GetName().c_str(), inputs_desc_size);
+    GELOGE(GRAPH_FAILED, "[Check][Param] Size of OpDesc's outputs desc verify failed, node name: %s.",
+           this->GetName().c_str());
     return false;
   }
   // 2.Verify all inputs desc equal
@@ -421,7 +448,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::OpDescGenTensorDescs
     const auto &r_in_ge_tensor_desc = r_op_desc.GetInputDesc(i);
     // Determine the connection relationship by GeTensorDesc
     if (!(in_ge_tensor_desc == r_in_ge_tensor_desc)) {
-      GELOGE(GRAPH_FAILED, "Link info of OpDesc's inputs desc verify failed, OpDesc name: %s.",
+      REPORT_INNER_ERROR("E19999", "r_op_desc inputdesc(index:%u) not equal to %s inputdesc(index:%u), "
+                         "verify failed.", i, this->GetName().c_str(), i);
+      GELOGE(GRAPH_FAILED, "[Check][Param] Link info of OpDesc's inputs desc verify failed, OpDesc name: %s.",
              this->GetName().c_str());
       return false;
     }
@@ -431,7 +460,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::OpDescGenTensorDescs
     const auto &out_ge_tensor_desc = this->GetOutputDesc(i);
     const auto &r_out_ge_tensor_desc = r_op_desc.GetOutputDesc(i);
     if (!(out_ge_tensor_desc == r_out_ge_tensor_desc)) {
-      GELOGE(GRAPH_FAILED, "Link info of OpDesc's outputs desc verify failed, OpDesc name: %s.",
+      REPORT_INNER_ERROR("E19999", "r_op_desc outputdesc(index:%u) not equal to %s outputdesc(index:%u), "
+                         "verify failed.", i, this->GetName().c_str(), i);
+      GELOGE(GRAPH_FAILED, "[Check][Param] Link info of OpDesc's outputs desc verify failed, OpDesc name: %s.",
              this->GetName().c_str());
       return false;
     }
@@ -451,14 +482,16 @@ graphStatus OpDesc::UpdateInputDesc(const string &name, const ge::GeTensorDesc &
     return GRAPH_FAILED;
   }
   if (it->second >= inputs_desc_.size()) {
-    GELOGE(GRAPH_FAILED, "[%d] more than size of inputs_desc_", it->second);
+    REPORT_INNER_ERROR("E19999", "%d is out of range(0, %zu), check invalid", it->second, inputs_desc_.size());
+    GELOGE(GRAPH_FAILED, "[Check][Param] [%d] more than size of inputs_desc_", it->second);
     return GRAPH_FAILED;
   }
   GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(), GELOGE(GRAPH_FAILED, "it->second is invalid.");
                   return GRAPH_FAILED);
   inputs_desc_[it->second] = ComGraphMakeShared<GeTensorDesc>(tensor_Desc);
   if (inputs_desc_[it->second] == nullptr) {
-    GELOGE(GRAPH_FAILED, "UpdateInputDesc failed, malloc shared_ptr failed.");
+    REPORT_CALL_ERROR("E19999", "UpdateInputDesc failed, as malloc shared_ptr failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] UpdateInputDesc failed, as malloc shared_ptr failed.");
     return GRAPH_FAILED;
   }
 
@@ -468,9 +501,14 @@ graphStatus OpDesc::UpdateInputDesc(const string &name, const ge::GeTensorDesc &
 bool OpDesc::InputIsSet(const string &name) const {
   auto it = input_name_idx_.find(name);
   if (it != input_name_idx_.end()) {
-    GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(), GELOGE(GRAPH_FAILED, "it->second is invalid."); return false);
+    GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(),
+                    REPORT_INNER_ERROR("E19999", "input name(%s) id(%u) is out of range(0, %zu), check invalid",
+                                       name.c_str(), it->second, inputs_desc_.size());
+                    GELOGE(GRAPH_FAILED, "[Check][Param] it->second is invalid."); return false);
     auto tensor_desc = inputs_desc_[it->second];
-    GE_IF_BOOL_EXEC(tensor_desc == nullptr, GELOGE(GRAPH_FAILED, "tensor_desc is null."); return false);
+    GE_IF_BOOL_EXEC(tensor_desc == nullptr,
+                    REPORT_INNER_ERROR("E19999", "tensor_desc(index:%u) is null.", it->second);
+                    GELOGE(GRAPH_FAILED, "[Check][Param] tensor_desc(index:%u) is null.", it->second); return false);
     auto dims = tensor_desc->GetShape().GetDims();
     if (dims.size() > 0) {
       return true;
@@ -492,7 +530,11 @@ GeTensorDesc OpDesc::GetInputDesc(const string &name) const {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDescPtr OpDesc::MutableInputDesc(uint32_t index) const {
-  GE_CHK_BOOL_RET_STATUS(index < inputs_desc_.size(), nullptr, "Can't find the input desc %u", index);
+  GE_CHK_BOOL_EXEC(index < inputs_desc_.size(),
+                   REPORT_INNER_ERROR("E19999", "index(%u) is out of range(0, %zu), check invalid",
+                                      index, inputs_desc_.size());
+                   GELOGE(ge::FAILED, "[Check][Param] Can't find the input desc %u", index);
+                   return nullptr, );
   if (inputs_desc_[index] == nullptr) {
     return nullptr;
   }
@@ -528,7 +570,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetOpKernelLibName(c
   op_kernel_lib_name_ = name;
   auto ret = AttrUtils::SetStr(this, ATTR_NAME_OP_KERNEL_LIB_NAME, name);
   if (ret != true) {
-    GELOGE(GRAPH_FAILED, "set op kernel lib name failed.");
+    REPORT_CALL_ERROR("E19999", "set %s to op failed.", ATTR_NAME_OP_KERNEL_LIB_NAME.c_str());
+    GELOGE(GRAPH_FAILED, "[Set][Str] %s to op failed.", ATTR_NAME_OP_KERNEL_LIB_NAME.c_str());
   }
 }
 
@@ -592,13 +635,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::AddOutputDesc
 }
 
 graphStatus OpDesc::AddOutputDesc(const string &name, const ge::GeTensorDesc &output_desc) {
-  GE_CHK_BOOL_RET_STATUS((output_name_idx_.find(name) == output_name_idx_.end()), GRAPH_FAILED,
-                         "Add output tensor_Desc is existed. name[%s]", name.c_str());
+  GE_CHK_BOOL_EXEC((output_name_idx_.find(name) == output_name_idx_.end()),
+                   REPORT_INNER_ERROR("E19999", "Add output tensor_Desc is existed. name[%s]", name.c_str());
+                   return GRAPH_FAILED,
+                   "[Check][Param] Add output tensor_Desc is existed. name[%s]", name.c_str());
   int index = static_cast<int>(outputs_desc_.size());
 
   std::shared_ptr<GeTensorDesc> tensor = ComGraphMakeShared<GeTensorDesc>(output_desc);
   if (tensor == nullptr) {
-    GELOGE(GRAPH_FAILED, "AddOutputDesc failed, malloc shared_ptr failed.");
+    REPORT_CALL_ERROR("E19999", "AddOutputDesc failed, as malloc shared_ptr failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] AddOutputDesc failed, as malloc shared_ptr failed.");
     return GRAPH_FAILED;
   }
   outputs_desc_.push_back(tensor);
@@ -611,11 +657,16 @@ graphStatus OpDesc::AddOutputDesc(const string &name, const ge::GeTensorDesc &ou
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 OpDesc::UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc) {
-  GE_CHK_BOOL_RET_STATUS((index < outputs_desc_.size()), GRAPH_FAILED, "The index is invalid. index[%u]", index);
+  GE_CHK_BOOL_EXEC((index < outputs_desc_.size()),
+                         REPORT_INNER_ERROR("E19999", "param index(%u) is out of range(0, %zu), check invalid",
+                                            index, outputs_desc_.size());
+                         return GRAPH_FAILED,
+                         "[Check][Param] The index is invalid. index[%u]", index);
 
   outputs_desc_[index] = ComGraphMakeShared<GeTensorDesc>(tensor_Desc);
   if (outputs_desc_[index] == nullptr) {
-    GELOGE(GRAPH_FAILED, "UpdateOutputDesc failed, malloc shared_ptr failed.");
+    REPORT_CALL_ERROR("E19999", "UpdateOutputDesc failed, as malloc shared_ptr failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] UpdateOutputDesc failed, as malloc shared_ptr failed.");
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
@@ -627,11 +678,15 @@ graphStatus OpDesc::UpdateOutputDesc(const string &name, const ge::GeTensorDesc 
     GELOGW("Cann't find the output desc. name[%s]", name.c_str());
     return GRAPH_FAILED;
   }
-  GE_IF_BOOL_EXEC(it->second >= outputs_desc_.size(), GELOGE(GRAPH_FAILED, "it->second is invalid.");
+  GE_IF_BOOL_EXEC(it->second >= outputs_desc_.size(),
+                  REPORT_INNER_ERROR("E19999", "output name(%s) idx(%u) is out of range(0, %zu), check invalid",
+                                     name.c_str(), it->second, outputs_desc_.size());
+                  GELOGE(GRAPH_FAILED, "[Check][Param] it->second is invalid.");
                   return GRAPH_FAILED);
   outputs_desc_[it->second] = ComGraphMakeShared<GeTensorDesc>(tensor_Desc);
   if (outputs_desc_[it->second] == nullptr) {
-    GELOGE(GRAPH_FAILED, "UpdateOutputDesc failed, malloc shared_ptr failed.");
+    REPORT_CALL_ERROR("E19999", "UpdateOutputDesc failed, as malloc shared_ptr failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] UpdateOutputDesc failed, as malloc shared_ptr failed.");
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
