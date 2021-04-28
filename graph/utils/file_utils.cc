@@ -22,11 +22,15 @@
 
 namespace ge {
 std::string RealPath(const char *path) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path == nullptr, return "", "path pointer is NULL.");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path == nullptr,
+                                 REPORT_INNER_ERROR("E19999", "path is nullptr, check invalid");
+                                 return "", "[Check][Param] path pointer is NULL.");
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strlen(path) >= MMPA_MAX_PATH,
                                  ErrorManager::GetInstance().ATCReportErrMessage("E19002", {"filepath", "size"},
                                                                                  {path, std::to_string(MMPA_MAX_PATH)});
-                                 return "", "Path[%s] len is too long, it must be less than %d", path, MMPA_MAX_PATH);
+                                 return "",
+                                 "[Check][Param]Path[%s] len is too long, it must be less than %d",
+                                 path, MMPA_MAX_PATH);
 
   // Nullptr is returned when the path does not exist or there is no permission
   // Return absolute path when path is accessible
@@ -49,7 +53,9 @@ std::string RealPath(const char *path) {
  *  @return 0 success
  */
 int32_t CreateDirectory(const std::string &directory_path) {
-  GE_CHK_BOOL_EXEC(!directory_path.empty(), return -1, "directory path is empty.");
+  GE_CHK_BOOL_EXEC(!directory_path.empty(),
+                   REPORT_INNER_ERROR("E19999", "directory path is empty, check invalid");
+                   return -1, "[Check][Param] directory path is empty.");
   auto dir_path_len = directory_path.length();
   if (dir_path_len >= MMPA_MAX_PATH) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19002", {"filepath", "size"},

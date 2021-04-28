@@ -29,7 +29,8 @@ using std::set;
 void AttrHolder::CopyAttrsFrom(const AttrHolder &holder) { MutableAttrMap().CopyValueFrom(holder.GetAttrMap()); }
 graphStatus AttrHolder::SetAttr(const std::string &name, const GeAttrValue &value) {
   if (value.IsEmpty()) {
-    GELOGE(GRAPH_FAILED, "value is empty, key of the attr is %s", name.c_str());
+    REPORT_INNER_ERROR("E19999", "param value is empty, check invalid, key of the attr:%s", name.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] value is empty, key of the attr is %s", name.c_str());
     return GRAPH_FAILED;
   }
   auto proto_map = MutableAttrMap().GetProtoMsg();
@@ -98,7 +99,9 @@ const std::map<string, GeAttrValue> AttrHolder::GetAllAttrs() const {
   auto proto_map = GetAttrMap().GetProtoMsg();
   if (proto_map != nullptr) {
     auto proto_owner = GetAttrMap().GetProtoOwner();
-    GE_CHK_BOOL_EXEC(proto_owner != nullptr, return attr_value_map, "proto_owner is nullptr");
+    GE_CHK_BOOL_EXEC(proto_owner != nullptr,
+                     REPORT_INNER_ERROR("E19999", "proto owner is nullptr.");
+                     return attr_value_map, "[Check][Param] proto_owner is nullptr");
     for (const auto &it : *proto_map) {
       attr_value_map[it.first] = GeAttrValue(proto_owner, const_cast<proto::AttrDef *>(&it.second));
     }
@@ -125,7 +128,8 @@ void GeIrProtoHelper<proto::AttrDef>::InitDefault() {
   std::shared_ptr<proto::AttrDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::AttrDef>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::AttrDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create AttrDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][AttrDef] proto::AttrDef make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -137,7 +141,8 @@ void GeIrProtoHelper<proto::TensorDef>::InitDefault() {
   std::shared_ptr<proto::TensorDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::TensorDef>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::TensorDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create TensorDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][TensorDef] proto::TensorDef make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -149,7 +154,8 @@ void GeIrProtoHelper<proto::TensorDescriptor>::InitDefault() {
   std::shared_ptr<proto::TensorDescriptor> proto_owner;
   proto_owner = ComGraphMakeShared<proto::TensorDescriptor>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::TensorDescriptor make shared failed");
+    REPORT_CALL_ERROR("E19999", "create TensorDescriptor failed.");
+    GELOGE(GRAPH_FAILED, "[Create][TensorDescriptor] proto::TensorDescriptor make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -161,7 +167,8 @@ void GeIrProtoHelper<proto::ShapeDef>::InitDefault() {
   std::shared_ptr<proto::ShapeDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::ShapeDef>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::ShapeDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create ShapeDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][ShapeDef] proto::ShapeDef make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -173,7 +180,8 @@ void GeIrProtoHelper<proto::NamedAttrs>::InitDefault() {
   std::shared_ptr<proto::NamedAttrs> proto_owner;
   proto_owner = ComGraphMakeShared<proto::NamedAttrs>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::NamedAttrs make shared failed");
+    REPORT_CALL_ERROR("E19999", "create NamedAttrs failed.");
+    GELOGE(GRAPH_FAILED, "[Create][NamedAttrs] proto::NamedAttrs make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -185,7 +193,8 @@ void GeIrProtoHelper<proto::ModelDef>::InitDefault() {
   std::shared_ptr<proto::ModelDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::ModelDef>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::ModelDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create ModelDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][ModelDef] proto::ModelDef make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -197,7 +206,8 @@ void GeIrProtoHelper<proto::OpDef>::InitDefault() {
   std::shared_ptr<proto::OpDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::OpDef>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::OpDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create OpDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -209,7 +219,8 @@ void GeIrProtoHelper<proto::GraphDef>::InitDefault() {
   std::shared_ptr<proto::GraphDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::GraphDef>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::GraphDef make shared failed");
+    REPORT_CALL_ERROR("E19999", "create GraphDef failed.");
+    GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
     return;
   }
   protoMsg_ = proto_owner.get();
@@ -221,7 +232,8 @@ void GeIrProtoHelper<ProtoAttrMap>::InitDefault() {
   std::shared_ptr<proto::TensorDescriptor> proto_owner;
   proto_owner = ComGraphMakeShared<proto::TensorDescriptor>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::TensorDescriptor make shared failed");
+    REPORT_CALL_ERROR("E19999", "create TensorDescriptor failed.");
+    GELOGE(GRAPH_FAILED, "[Create][TensorDescriptor] proto::TensorDescriptor make shared failed");
     return;
   }
   protoMsg_ = proto_owner->mutable_attr();
@@ -233,7 +245,8 @@ void GeIrProtoHelper<const ProtoAttrMap>::InitDefault() {
   std::shared_ptr<proto::TensorDescriptor> proto_owner;
   proto_owner = ComGraphMakeShared<proto::TensorDescriptor>();
   if (proto_owner == nullptr) {
-    GELOGE(GRAPH_FAILED, "proto::TensorDescriptor make shared failed");
+    REPORT_CALL_ERROR("E19999", "create TensorDescriptor failed.");
+    GELOGE(GRAPH_FAILED, "[Create][TensorDescriptor] proto::TensorDescriptor make shared failed");
     return;
   }
   protoMsg_ = &proto_owner->attr();

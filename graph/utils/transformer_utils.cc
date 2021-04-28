@@ -27,7 +27,8 @@
 namespace ge {
 bool NodeShapeTransUtils::Init() {
   if (op_desc_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "input op_desc_ is nullptr!");
+    REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] input op_desc_ is nullptr!");
     return false;
   }
   in_num_ = op_desc_->MutableAllInputName().size();
@@ -118,7 +119,8 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     bool is_success = transformer::ExpandDimension(op_desc_->GetType(), ori_format, curr_format, i,
                                                    infer_reshape_type, ori_shape_dims);
     if (!is_success) {
-      GELOGE(GRAPH_FAILED, "Call expandDimension failed.");
+      REPORT_CALL_ERROR("E19999", "ExpandDimension failed, op type:%s", op_desc_->GetType().c_str());
+      GELOGE(GRAPH_FAILED, "[Call][ExpandDimension] failed, op type:%s", op_desc_->GetType().c_str());
       return GRAPH_FAILED;
     }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, ori_format, curr_format, dtype,
@@ -144,8 +146,13 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     auto ori_shape = tensor_desc_output->MutableShape();
     auto curr_format = tensor_desc_output->GetFormat();
     if (curr_format != map_ori_format_out_[i]) {
-      GELOGE(GRAPH_FAILED, "Node is %s, out tensor idx is %zu. format: %s, recorded origin format: %s is not same",
-             op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
+      REPORT_INNER_ERROR("E19999", "Node is %s, out tensor idx is %zu. format: %s, "
+                         "recorded origin format: %s is not same", op_desc_->GetName().c_str(), i,
+                         TypeUtils::FormatToSerialString(curr_format).c_str(),
+                         TypeUtils::FormatToSerialString(map_ori_format_out_[i]).c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] Node is %s, out tensor idx is %zu. format: %s, "
+             "recorded origin format: %s is not same", op_desc_->GetName().c_str(), i,
+             TypeUtils::FormatToSerialString(curr_format).c_str(),
              TypeUtils::FormatToSerialString(map_ori_format_out_[i]).c_str());
       return GRAPH_FAILED;
     }
@@ -168,7 +175,8 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     bool is_success = transformer::ExpandDimension(op_desc_->GetType(), curr_format, saved_format, i,
                                                    infer_reshape_type, ori_shape_dims);
     if (!is_success) {
-      GELOGE(GRAPH_FAILED, "Call expandDimension failed.");
+      REPORT_CALL_ERROR("E19999", "ExpandDimension failed, op type:%s.", op_desc_->GetType().c_str());
+      GELOGE(GRAPH_FAILED, "[Call][ExpandDimension] failed, op type:%s.", op_desc_->GetType().c_str());
       return GRAPH_FAILED;
     }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, curr_format, saved_format, dtype,

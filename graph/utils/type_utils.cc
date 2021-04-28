@@ -274,14 +274,17 @@ std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"ImplyTypeToSerialString",
         "imply_type[" + std::to_string(static_cast<unsigned int>(imply_type)) + "] is not support"});
-    GELOGE(GRAPH_FAILED, "ImplyTypeToSerialString: imply_type not support %u", static_cast<unsigned int>(imply_type));
+    GELOGE(GRAPH_FAILED, "[Check][Param] ImplyTypeToSerialString: imply_type not support %u",
+           static_cast<unsigned int>(imply_type));
     return "UNDEFINED";
   }
 }
 
 bool TypeUtils::IsDataTypeValid(DataType dt) {
   uint32_t num = static_cast<uint32_t>(dt);
-  GE_CHK_BOOL_EXEC((num <= DT_UNDEFINED), return false, "The DataType is invalid");
+  GE_CHK_BOOL_EXEC((num <= DT_UNDEFINED),
+                   REPORT_INNER_ERROR("E19999", "param dt:%d > DT_UNDEFINED:%d, check invalid", num, DT_UNDEFINED);
+                   return false, "[Check][Param] The DataType is invalid, dt:%u > DT_UNDEFINED:%d", num, DT_UNDEFINED);
   return true;
 }
 
@@ -292,7 +295,7 @@ std::string TypeUtils::DataTypeToSerialString(DataType data_type) {
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"DataTypeToSerialString", "data_type[" + std::to_string(data_type) + "] is not support"});
-    GELOGE(GRAPH_FAILED, "DataTypeToSerialString: datatype not support %u", data_type);
+    GELOGE(GRAPH_FAILED, "[Check][Param] DataTypeToSerialString: datatype not support %u", data_type);
     return "UNDEFINED";
   }
 }
@@ -304,14 +307,18 @@ DataType TypeUtils::SerialStringToDataType(const std::string &str) {
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"SerialStringToDataType", "data_type[" + str + "] is not support"});
-    GELOGE(GRAPH_FAILED, "SerialStringToDataType: datatype not support %s", str.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] SerialStringToDataType: datatype not support %s", str.c_str());
     return DT_UNDEFINED;
   }
 }
 
 bool TypeUtils::IsFormatValid(Format format) {
   uint32_t num = static_cast<uint32_t>(GetPrimaryFormat(format));
-  GE_CHK_BOOL_EXEC((num <= FORMAT_RESERVED), return false, "The Format is invalid");
+  GE_CHK_BOOL_EXEC((num <= FORMAT_RESERVED),
+                   REPORT_INNER_ERROR("E19999", "The Format is invalid, num:%u > FORMAT_RESERVED:%d",
+                                      num, FORMAT_RESERVED);
+                   return false,
+                   "[Check][Param] The Format is invalid, num:%u > FORMAT_RESERVED:%d", num, FORMAT_RESERVED);
   return true;
 }
 
@@ -351,7 +358,7 @@ std::string TypeUtils::FormatToSerialString(Format format) {
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"FormatToSerialString", "Format[" + std::to_string(format) + "] is not support"});
-    GELOGE(GRAPH_FAILED, "Format not support %u", format);
+    GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %u", format);
     return "RESERVED";
   }
 }
@@ -360,7 +367,7 @@ Format TypeUtils::SerialStringToFormat(const std::string &str) {
   std::string primary_format_str = str;
   int32_t sub_format = 0;
   if (SplitFormatFromStr(str, primary_format_str, sub_format) != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Split Format from %s failed", str.c_str());
+    GELOGE(GRAPH_FAILED, "[Split][Format] from %s failed", str.c_str());
     return FORMAT_RESERVED;
   }
   int32_t primary_format;
@@ -370,7 +377,7 @@ Format TypeUtils::SerialStringToFormat(const std::string &str) {
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"SerialStringToFormat", "Format[" + str + "] is not support"});
-    GELOGE(GRAPH_FAILED, "Format not support %s", str.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
   return static_cast<Format>(GetFormatFromSub(primary_format, sub_format));
@@ -380,7 +387,7 @@ Format TypeUtils::DataFormatToFormat(const std::string &str) {
   std::string primary_format_str = str;
   int32_t sub_format = 0;
   if (SplitFormatFromStr(str, primary_format_str, sub_format) != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Split Format from %s failed", str.c_str());
+    GELOGE(GRAPH_FAILED, "[Split][Format] from %s failed", str.c_str());
     return FORMAT_RESERVED;
   }
   int32_t primary_format;
@@ -390,7 +397,7 @@ Format TypeUtils::DataFormatToFormat(const std::string &str) {
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"FormatToSerialString", "Format[" + str + "] is not support"});
-    GELOGE(GRAPH_FAILED, "Format not support %s", str.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
   return static_cast<Format>(GetFormatFromSub(primary_format, sub_format));
@@ -404,22 +411,27 @@ graphStatus TypeUtils::SplitFormatFromStr(const std::string &str,
     try {
       primary_format_str = str.substr(0, split_pos);
       if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(), [](char c) { return !isdigit(c); })) {
-        GELOGE(GRAPH_FAILED, "sub_format: %s is not digital.", sub_format_str.c_str());
+        REPORT_CALL_ERROR("E19999", "sub_format: %s is not digital.", sub_format_str.c_str());
+        GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %s is not digital.", sub_format_str.c_str());
         return GRAPH_FAILED;
       }
       sub_format = std::stoi(sub_format_str);
     } catch (std::invalid_argument &) {
-      GELOGE(GRAPH_FAILED, "sub_format: %s is invalid.", sub_format_str.c_str());
+      REPORT_INNER_ERROR("E19999", "sub_format: %s is invalid.", sub_format_str.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %s is invalid.", sub_format_str.c_str());
       return GRAPH_FAILED;
     } catch (std::out_of_range &) {
-      GELOGE(GRAPH_FAILED, "sub_format: %s is out of range.", sub_format_str.c_str());
+      REPORT_INNER_ERROR("E19999", "sub_format: %s is out of range.", sub_format_str.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %s is out of range.", sub_format_str.c_str());
       return GRAPH_FAILED;
     } catch (...) {
-      GELOGE(GRAPH_FAILED, "sub_format: %s cannot change to int.", sub_format_str.c_str());
+      REPORT_INNER_ERROR("E19999", "sub_format: %s cannot change to int.", sub_format_str.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %s cannot change to int.", sub_format_str.c_str());
       return GRAPH_FAILED;
     }
     if (sub_format > 0xffff) {
-      GELOGE(GRAPH_FAILED, "sub_format: %u is out of range [0, 0xffff].", sub_format);
+      REPORT_INNER_ERROR("E19999", "sub_format: %u is out of range [0, 0xffff].", sub_format);
+      GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %u is out of range [0, 0xffff].", sub_format);
       return GRAPH_FAILED;
     }
   }
@@ -433,7 +445,7 @@ Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {
   }
   ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
       {"FormatToSerialString", "do not find domi Format[" + std::to_string(domi_format) + "] from map"});
-  GELOGE(GRAPH_FAILED, "do not find domi Format %d from map", domi_format);
+  GELOGE(GRAPH_FAILED, "[Check][Param] do not find domi Format %d from map", domi_format);
   return FORMAT_RESERVED;
 }
 
@@ -468,7 +480,7 @@ bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
         {"GetDataTypeLength", "data_type[" + std::to_string(data_type) + "] is not support"});
-    GELOGE(GRAPH_FAILED, "data_type not support %d", data_type);
+    GELOGE(GRAPH_FAILED, "[Check][Param] data_type not support %d", data_type);
     return false;
   }
 }
