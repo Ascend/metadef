@@ -232,4 +232,4 @@ generate_package()
 if [[ "X$ENABLE_METADEF_UT" = "Xoff" ]]; then
   generate_package
 fi
-echo "---------------- Metadef package archive generated ----------------"
+echo "---------------- Metadef package archive generated ----------------" 
