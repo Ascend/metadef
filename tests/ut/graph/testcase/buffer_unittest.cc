@@ -24,7 +24,29 @@ class BufferUT : public testing::Test {
   void TearDown() {}
 };
 
-TEST_F(BufferUT, ShareFrom) {
+TEST_F(BufferUT, ShareFrom1) {
+  uint8_t first_buf[100];
+  for (int i = 0; i < 100; ++i) {
+    first_buf[i] = i * 1024;
+  }
+  uint8_t second_buf[100];
+  for (int i = 0; i < 100; ++i) {
+    second_buf[i] = i * 1024;
+  }
+  second_buf[50] = 10;
+
+  Buffer buf(100);
+  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
+
+  Buffer buf1 = BufferUtils::CreateShareFrom(buf); // The buf1 and buf are ref from the same memory now
+  buf1.GetData()[50] = 10;
+  EXPECT_EQ(memcmp(buf1.GetData(), second_buf, sizeof(second_buf)), 0);
+  EXPECT_EQ(memcmp(buf.GetData(), second_buf, sizeof(second_buf)), 0);
+  EXPECT_NE(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
+}
+
+TEST_F(BufferUT, ShareFrom2) {
   uint8_t first_buf[100];
   for (int i = 0; i < 100; ++i) {
     first_buf[i] = i * 1024;
@@ -40,37 +62,14 @@ TEST_F(BufferUT, ShareFrom) {
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
   Buffer buf1;
-  buf1.ShareFrom(buf); // The buf1 and buf are ref from the same memory now
+  BufferUtils::ShareFrom(buf, buf1); // The buf1 and buf are ref from the same memory now
   buf1.GetData()[50] = 10;
   EXPECT_EQ(memcmp(buf1.GetData(), second_buf, sizeof(second_buf)), 0);
   EXPECT_EQ(memcmp(buf.GetData(), second_buf, sizeof(second_buf)), 0);
   EXPECT_NE(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 }
 
-TEST_F(BufferUT, MoveConstruct) {
-  uint8_t first_buf[100];
-  for (int i = 0; i < 100; ++i) {
-    first_buf[i] = i * 1024;
-  }
-  uint8_t second_buf[100];
-  for (int i = 0; i < 100; ++i) {
-    second_buf[i] = i * 1024;
-  }
-  second_buf[50] = 10;
-
-  Buffer buf(100);
-  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
-  EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
-
-  auto buf_addr = buf.GetData();
-
-  Buffer buf1(std::move(buf)); // The buf1 and buf are ref from the same memory now
-  buf1.GetData()[50] = 10;
-  EXPECT_EQ(memcmp(buf1.GetData(), second_buf, sizeof(second_buf)), 0);
-  EXPECT_EQ(buf1.GetData(), buf_addr);
-}
-
-TEST_F(BufferUT, OperatorEqual) {
+TEST_F(BufferUT, OperatorAssign) {
   uint8_t first_buf[100];
   for (int i = 0; i < 100; ++i) {
     first_buf[i] = i * 1024;
@@ -108,10 +107,53 @@ TEST_F(BufferUT, CreateShareFrom) {
   memcpy(buf.GetData(), first_buf, sizeof(first_buf));
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
-  Buffer buf1 = Buffer::CreateShareFrom(buf);  // The buf1 and buf are ref from the same memory now
+  Buffer buf1 = BufferUtils::CreateShareFrom(buf);  // The buf1 and buf are ref from the same memory now
   buf1.GetData()[50] = 10;
   EXPECT_EQ(memcmp(buf1.GetData(), second_buf, sizeof(second_buf)), 0);
   EXPECT_EQ(memcmp(buf.GetData(), second_buf, sizeof(second_buf)), 0);
   EXPECT_NE(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
+}
+
+TEST_F(BufferUT, CreateCopyFrom1) {
+  uint8_t first_buf[100];
+  for (int i = 0; i < 100; ++i) {
+    first_buf[i] = i * 2;
+  }
+  uint8_t second_buf[100];
+  for (int i = 0; i < 100; ++i) {
+    second_buf[i] = i * 2;
+  }
+  second_buf[50] = 250;
+
+  Buffer buf(100);
+  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
+
+  Buffer buf1;
+  BufferUtils::CopyFrom(buf, buf1);
+  buf1.GetData()[50] = 250;
+  EXPECT_EQ(memcmp(buf1.GetData(), second_buf, sizeof(second_buf)), 0);
+  EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
+}
+
+TEST_F(BufferUT, CreateCopyFrom2) {
+  uint8_t first_buf[100];
+  for (int i = 0; i < 100; ++i) {
+    first_buf[i] = i * 2;
+  }
+  uint8_t second_buf[100];
+  for (int i = 0; i < 100; ++i) {
+    second_buf[i] = i * 2;
+  }
+  second_buf[50] = 250;
+
+  Buffer buf(100);
+  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
+
+  Buffer buf1 = BufferUtils::CreateCopyFrom(buf);  // The buf1 and buf are ref from the same memory now
+  buf1.GetData()[50] = 250;
+  EXPECT_EQ(memcmp(buf1.GetData(), second_buf, sizeof(second_buf)), 0);
+  EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 }
 }  // namespace ge

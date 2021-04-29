@@ -111,11 +111,19 @@ void Buffer::ClearBuffer() {
     buffer_->clear();
   }
 }
-void Buffer::ShareFrom(Buffer &other) {
-  data_ = other.data_;
-  buffer_ = other.buffer_;
-}
-Buffer Buffer::CreateShareFrom(Buffer &other) {
+Buffer BufferUtils::CreateShareFrom(Buffer &other) {
   return other;
+}
+Buffer BufferUtils::CreateCopyFrom(const Buffer &other) {
+  return BufferUtils::CreateCopyFrom(other.GetData(), other.GetSize());
+}
+Buffer BufferUtils::CreateCopyFrom(const std::uint8_t *data, std::size_t buffer_size) {
+  return Buffer::CopyFrom(data, buffer_size);
+}
+void BufferUtils::ShareFrom(Buffer &from, Buffer &to) {
+  to = from;
+}
+void BufferUtils::CopyFrom(const Buffer &from, Buffer &to) {
+  to = BufferUtils::CreateCopyFrom(from);
 }
 }  // namespace ge
