@@ -535,6 +535,60 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::InsertNod
   return GRAPH_SUCCESS;
 }
 
+graphStatus GraphUtils::InsertNodeBefore(const InDataAnchorPtr &dst,
+                                         const NodePtr &insert_node,
+                                         uint32_t input_index,
+                                         uint32_t output_index) {
+  GE_CHECK_NOTNULL(dst);
+  GE_CHECK_NOTNULL(insert_node);
+  auto dst_node = dst->GetOwnerNode();
+  GE_CHECK_NOTNULL(dst_node);
+  if (dst_node->GetOwnerComputeGraph() != insert_node->GetOwnerComputeGraph()) {
+    GELOGE(GRAPH_FAILED, "[INSERT][NODE] dst:%s and insert_node:%s not exist in the same graph.",
+           dst_node->GetName().c_str(), insert_node->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+
+  auto src_node_out_anchor = dst->GetPeerOutAnchor();
+  GE_CHECK_NOTNULL(src_node_out_anchor);
+  auto src_node = src_node_out_anchor->GetOwnerNode();
+  GE_CHECK_NOTNULL(src_node);
+
+  // insert node
+  if ((RemoveEdge(src_node_out_anchor, dst) != GRAPH_SUCCESS) ||
+      (AddEdge(src_node_out_anchor, insert_node->GetInDataAnchor(input_index)) != GRAPH_SUCCESS) ||
+      (AddEdge(insert_node->GetOutDataAnchor(output_index), dst) != GRAPH_SUCCESS)) {
+    GELOGE(GRAPH_FAILED, "[INSERT][NODE] %s between %s->%s failed",
+           insert_node->GetName().c_str(),
+           src_node->GetName().c_str(),
+           dst_node->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+  GELOGI("[INSERT][NODE] %s between %s->%s",
+         insert_node->GetName().c_str(),
+         src_node->GetName().c_str(),
+         dst_node->GetName().c_str());
+
+  // update control edges
+  auto in_ctrl_anchor = dst_node->GetInControlAnchor();
+  GE_CHECK_NOTNULL(in_ctrl_anchor);
+  auto insert_node_in_ctrl_anchor = insert_node->GetInControlAnchor();
+  for (const auto &peer_out_ctrl_anchor : in_ctrl_anchor->GetPeerOutControlAnchors()) {
+    if ((RemoveEdge(peer_out_ctrl_anchor, in_ctrl_anchor) != GRAPH_SUCCESS) ||
+        (AddEdge(peer_out_ctrl_anchor, insert_node_in_ctrl_anchor) != GRAPH_SUCCESS)) {
+      auto peer_node = peer_out_ctrl_anchor->GetOwnerNode();
+      GELOGE(GRAPH_FAILED, "[INSERT][NODE] replace control edge from %s->%s to %s->%s failed.",
+             peer_node != nullptr ? peer_node->GetName().c_str() : "NULL",
+             dst_node->GetName().c_str(),
+             peer_node != nullptr ? peer_node->GetName().c_str() : "NULL",
+             insert_node->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::RemoveJustNode(ComputeGraph &compute_graph,
                                                                                       const NodePtr &node) {
   if (node == nullptr) {
