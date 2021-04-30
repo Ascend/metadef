@@ -79,6 +79,20 @@ class GE_FUNC_VISIBILITY ModelParser {
 
   /**
    * @ingroup domi_omg
+   * @brief Parse op from memory
+   * @param [in] input operator memory data
+   * @param [in] input operator memory size
+   * @param [in|out] op A operator for saving the operator information after analysis
+   * @return SUCCESS
+   * @return FAILED
+   * @author
+   */
+  virtual Status ParseOpFromMemory(const char *data, uint32_t size, ge::Operator &op) {
+    return UNSUPPORTED;
+  }
+
+  /**
+   * @ingroup domi_omg
    * @brief Analyze network model data
    * @param [in] proto  network model
    * @param [in|out]  graph Save the network information after analysis
