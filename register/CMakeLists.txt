@@ -1,25 +1,3 @@
-set(PROTO_LIST
-    "${METADEF_DIR}/proto/tensorflow/attr_value.proto"
-    "${METADEF_DIR}/proto/tensorflow/function.proto"
-    "${METADEF_DIR}/proto/tensorflow/graph.proto"
-    "${METADEF_DIR}/proto/tensorflow/node_def.proto"
-    "${METADEF_DIR}/proto/tensorflow/op_def.proto"
-    "${METADEF_DIR}/proto/tensorflow/resource_handle.proto"
-    "${METADEF_DIR}/proto/tensorflow/tensor.proto"
-    "${METADEF_DIR}/proto/tensorflow/tensor_shape.proto"
-    "${METADEF_DIR}/proto/tensorflow/types.proto"
-    "${METADEF_DIR}/proto/tensorflow/versions.proto"
-)
-
-set(TASK_PROTO
-    "${METADEF_DIR}/proto/task.proto"
-)
-
-protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
-protobuf_generate(ge_static PROTO_STATIC_SRCS PROTO_STATIC_HDRS ${PROTO_LIST})
-protobuf_generate(ge TASK_PROTO_SRC TASK_PROTO_HDR ${TASK_PROTO})
-protobuf_generate(ge_static TASK_PROTO_STATIC_SRC TASK_PROTO_STATIC_HDR ${TASK_PROTO})
-
 set(SRC_LIST
     "register.cpp"
     "register_pass.cpp"
@@ -49,7 +27,10 @@ set(SRC_LIST
 )
 
 ############ libregister.so ############
-add_library(register SHARED ${SRC_LIST} ${PROTO_SRCS} ${TASK_PROTO_HDR})
+add_library(register SHARED
+    ${SRC_LIST}
+    $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
+)
 
 target_compile_options(register PRIVATE
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
@@ -70,7 +51,7 @@ target_include_directories(register PRIVATE
     ${METADEF_DIR}/..
     ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     #### temp independent ####
@@ -117,7 +98,9 @@ target_link_libraries(register PRIVATE
 )
 
 ############ libregister.a ############
-add_library(register_static STATIC ${SRC_LIST} ${PROTO_STATIC_SRCS} ${TASK_PROTO_STATIC_HDR}
+add_library(register_static STATIC
+    ${SRC_LIST}
+    $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
     "op_tiling.cpp"
     "op_tiling_registry.cpp"
 )
@@ -146,7 +129,7 @@ target_include_directories(register_static PRIVATE
     ${METADEF_DIR}/..
     ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge_static
+    ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     #### temp independent ####
@@ -201,7 +184,7 @@ target_include_directories(op_tiling_o2 PRIVATE
     ${METADEF_DIR}/..
     ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge_static
+    ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     #### temp independent ####
