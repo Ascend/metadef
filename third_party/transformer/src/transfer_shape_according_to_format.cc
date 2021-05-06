@@ -59,7 +59,7 @@ namespace {
     static std::map<ge::DataType, uint32_t> mapOfDtypeAndC0 = {
     {ge::DT_FLOAT16, SHAPE_NUMBER_16}, {ge::DT_FLOAT, SHAPE_NUMBER_16},  {ge::DT_INT8, SHAPE_NUMBER_32},
     {ge::DT_INT16, SHAPE_NUMBER_16},   {ge::DT_INT32, SHAPE_NUMBER_16},  {ge::DT_INT64, SHAPE_NUMBER_16},
-    {ge::DT_UINT8, SHAPE_NUMBER_16},   {ge::DT_UINT16, SHAPE_NUMBER_32}, {ge::DT_UINT32, SHAPE_NUMBER_16},
+    {ge::DT_UINT8, SHAPE_NUMBER_32},   {ge::DT_UINT16, SHAPE_NUMBER_16}, {ge::DT_UINT32, SHAPE_NUMBER_16},
     {ge::DT_UINT64, SHAPE_NUMBER_16},  {ge::DT_BOOL, SHAPE_NUMBER_16}};
 }
 ShapeTransferAccordingToFormat::ShapeTransferAccordingToFormat(void) {}
