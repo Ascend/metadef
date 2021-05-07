@@ -114,7 +114,7 @@ void FusionStatisticRecorder::GetAllSessionAndGraphIdList(std::vector<std::strin
   if (!buffer_fusion_info_map_.empty()) {
     for (auto iter = buffer_fusion_info_map_.begin(); iter != buffer_fusion_info_map_.end(); iter++) {
       if (std::find(session_graph_id_vec.begin(), session_graph_id_vec.end(), iter->first)
-                    == session_graph_id_vec.end()) {
+              == session_graph_id_vec.end()) {
         session_graph_id_vec.push_back(iter->first);
       }
     }
