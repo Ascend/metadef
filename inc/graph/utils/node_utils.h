@@ -33,6 +33,8 @@ extern const std::set<std::string> kMergeOpTypes;
 extern const std::set<std::string> kSwitchOpTypes;
 // Op types of NextIteration like Opps.
 extern const std::set<std::string> kNextIterationOpTypes;
+// Op types of Exit like Opps.
+extern const std::set<std::string> kExitOpTypes;
 
 // Op types of If like Opps.
 extern const std::set<std::string> kIfOpTypes;

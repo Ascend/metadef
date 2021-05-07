@@ -40,6 +40,7 @@ const std::set<std::string> kConstOpTypes{ "Const", "Constant" };
 const std::set<std::string> kMergeOpTypes{ "Merge", "RefMerge" };
 const std::set<std::string> kSwitchOpTypes{ "Switch", "RefSwitch" };
 const std::set<std::string> kNextIterationOpTypes{ "NextIteration", "RefNextIteration" };
+const std::set<std::string> kExitOpTypes{ "Exit", "RefExit" };
 
 const std::set<std::string> kIfOpTypes{ "If", "_If", "StatelessIf" };
 const std::set<std::string> kWhileOpTypes{ "While", "_While", "StatelessWhile" };
