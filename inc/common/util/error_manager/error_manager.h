@@ -55,14 +55,12 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 #define REPORT_INNER_ERROR(error_code, fmt, ...)                                                         \
 do {                                                                                                     \
   char error_message_str[LIMIT_PER_MESSAGE] = {0};                                                       \
-  int ret = error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__); \
-  if (ret < 0) {                                                                                         \
+  if (error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__) < 0) { \
     break;                                                                                               \
   }                                                                                                      \
-  ret = error_message::FormatErrorMessage(                                                               \
-            error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                       \
-            error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__);                             \
-  if (ret < 0) {                                                                                         \
+  if (error_message::FormatErrorMessage(                                                                 \
+          error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                         \
+          error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__) < 0) {                         \
     break;                                                                                               \
   }                                                                                                      \
   ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
@@ -71,14 +69,12 @@ do {                                                                            
 #define REPORT_CALL_ERROR(error_code, fmt, ...)                                                  \
 do {                                                                                             \
   char error_message_str[LIMIT_PER_MESSAGE] = {0};                                                       \
-  int ret = error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__); \
-  if (ret < 0) {                                                                                         \
+  if (error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__) < 0) { \
     break;                                                                                               \
   }                                                                                                      \
-  ret = error_message::FormatErrorMessage(                                                               \
-            error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                       \
-            error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__);                             \
-  if (ret < 0) {                                                                                         \
+  if (error_message::FormatErrorMessage(                                                                 \
+          error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                         \
+          error_message_str, __FUNCTION__, TRIM_PATH(__FILE__), __LINE__) < 0) {                         \
     break;                                                                                               \
   }                                                                                                      \
   ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
