@@ -110,7 +110,8 @@ class TeOpVarAttrArgsImpl {
       }
       auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
       data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-      GE_LOGE("attr found. %s", name.c_str());
+      data = dest_ptr->GetDataBuf();
+      GELOGI("IntListList attr found. %s", name.c_str());
       return domi::SUCCESS;
     }
 
@@ -125,10 +126,10 @@ class TeOpVarAttrArgsImpl {
         return domi::FAILED;
       }
 
-      auto ptr = std::make_shared<AnyValue<T>>(static_cast<T>(value));
-      data_map_.emplace(name + '_' + typeid(T).name(), ptr);
-      data = ptr->GetDataBuf();
-      GE_LOGE("attr found. %s", name.c_str());
+      auto dest_ptr = std::make_shared<AnyValue<T>>(static_cast<T>(value));
+      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+      data = dest_ptr->GetDataBuf();
+      GELOGI("Single attr found. %s", name.c_str());
       return domi::SUCCESS;
     }
 
@@ -139,7 +140,7 @@ class TeOpVarAttrArgsImpl {
       std::vector<typename Getter<T>::ST> value;
       bool res = func(op_desc_, name, value);
       if (!res) {
-        GE_LOGE("attr not found. %s", name.c_str());
+        GE_LOGE("List attr not found. %s", name.c_str());
         return domi::FAILED;
       }
 
@@ -149,7 +150,8 @@ class TeOpVarAttrArgsImpl {
       }
       auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
       data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-      GE_LOGE("attr found. %s", name.c_str());
+      data = dest_ptr->GetDataBuf();
+      GELOGI("attr found. %s", name.c_str());
       return domi::SUCCESS;
     }
 
@@ -161,9 +163,7 @@ class TeOpVarAttrArgsImpl {
 
 class VarAttrHelper {
   public:
-    static void InitTeOpVarAttr(ge::OpDescPtr &op_desc, TeOpVarAttrArgs &attr) {
-      attr.impl_ = std::make_shared<TeOpVarAttrArgsImpl>(op_desc);
-    }
+    static void InitTeOpVarAttr(ge::OpDescPtr &op_desc, TeOpVarAttrArgs &attr);
 };
 
 const char *COMPILE_INFO_JSON = "compile_info_json";
@@ -208,6 +208,10 @@ std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*, const std::stri
   {"ListFloat", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<float, true>}
 };
 
+void VarAttrHelper::InitTeOpVarAttr(ge::OpDescPtr &op_desc, TeOpVarAttrArgs &attr) {
+  attr.impl_ = std::make_shared<TeOpVarAttrArgsImpl>(op_desc);
+}
+
 Status TeOpVarAttrArgsImpl::GetDataByName(const string &name, const string &dtype, DataBuf &data) {
   auto iter = data_getter_.find(dtype);
   if (iter == data_getter_.end()) {
@@ -222,7 +226,7 @@ const uint8_t *TeOpVarAttrArgs::GetData(const std::string &name, const std::stri
   DataBuf data(nullptr, 0);
   auto rc = impl_->GetDataByName(name, dtype, data);
   if (rc == domi::SUCCESS) {
-    GE_LOGE("attr found. %s, %s, %p, %ld", name.c_str(), dtype.c_str(), std::get<0>(data), std::get<1>(data));
+    GELOGI("attr found. %s, %s, %p, %ld", name.c_str(), dtype.c_str(), std::get<0>(data), std::get<1>(data));
   }
   size = std::get<1>(data);
   return std::get<0>(data);
