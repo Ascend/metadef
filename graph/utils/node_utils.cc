@@ -35,12 +35,18 @@ namespace ge {
 std::map<NodePtr, std::vector<uint32_t>> NodeUtils::map_send_info_{};
 std::map<NodePtr, std::vector<uint32_t>> NodeUtils::map_recv_info_{};
 
-const std::set<std::string> kConstOpTypes = { "Const", "Constant" };
+const std::set<std::string> kConstOpTypes{ "Const", "Constant" };
 
-const std::set<std::string> kIfOpTypes = { "If", "_If", "StatelessIf" };
-const std::set<std::string> kWhileOpTypes = { "While", "_While", "StatelessWhile" };
-const std::set<std::string> kCaseOpTypes = { "Case" };
-const std::set<std::string> kForOpTypes = { "For" };
+const std::set<std::string> kMergeOpTypes{ "Merge", "RefMerge" };
+const std::set<std::string> kSwitchOpTypes{ "Switch", "RefSwitch" };
+const std::set<std::string> kNextIterationOpTypes{ "NextIteration", "RefNextIteration" };
+const std::set<std::string> kExitOpTypes{ "Exit", "RefExit" };
+
+const std::set<std::string> kIfOpTypes{ "If", "_If", "StatelessIf" };
+const std::set<std::string> kWhileOpTypes{ "While", "_While", "StatelessWhile" };
+const std::set<std::string> kCaseOpTypes{ "Case" };
+const std::set<std::string> kForOpTypes{ "For" };
+
 const char *kRefIndex = "_parent_node_index";
 
 bool OpShapeIsUnknown(const OpDescPtr &desc) {

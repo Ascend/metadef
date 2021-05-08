@@ -191,7 +191,7 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     lcov -c -d build/tests/ut/graph -d build/tests/ut/register -o cov/tmp.info
     lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/local/*' -o cov/coverage.info
     cd ${BASEPATH}/cov
-    #genhtml coverage.info
+    genhtml coverage.info
 fi
 
 # generate output package in tar form, including ut/st libraries/executables
