@@ -15,6 +15,7 @@
  */
 
 #include "register/graph_optimizer/fusion_common/fusion_statistic_recorder.h"
+#include <algorithm>
 #include "graph/debug/ge_log.h"
 
 namespace fe {
@@ -101,6 +102,22 @@ void FusionStatisticRecorder::ClearFusionInfo(std::string session_graph_id) {
   }
   if (buffer_fusion_info_map_.find(session_graph_id) != buffer_fusion_info_map_.end()) {
     buffer_fusion_info_map_.erase(session_graph_id);
+  }
+}
+
+void FusionStatisticRecorder::GetAllSessionAndGraphIdList(std::vector<std::string> &session_graph_id_vec) {
+  if (!graph_fusion_info_map_.empty()) {
+    for (auto iter = graph_fusion_info_map_.begin(); iter != graph_fusion_info_map_.end(); iter++) {
+      session_graph_id_vec.push_back(iter->first);
+    }
+  }
+  if (!buffer_fusion_info_map_.empty()) {
+    for (auto iter = buffer_fusion_info_map_.begin(); iter != buffer_fusion_info_map_.end(); iter++) {
+      if (std::find(session_graph_id_vec.begin(), session_graph_id_vec.end(), iter->first)
+              == session_graph_id_vec.end()) {
+        session_graph_id_vec.push_back(iter->first);
+      }
+    }
   }
 }
 
