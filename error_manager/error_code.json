@@ -2588,17 +2588,17 @@
   {
     "ErrCode":"EH0004",
     "ErrMessage":"file[%s] is invalid, %s",
-    "Arglist":"path,reason",
+    "Arglist":"path,reason"
   },
   {
     "ErrCode":"EH0005",
     "ErrMessage":"set aipp[%s] failed, %s",
-    "Arglist":"param,reason",
+    "Arglist":"param,reason"
   },
   {
     "ErrCode":"EH0006",
     "ErrMessage":"%s is unsupported, %s",
-    "Arglist":"feature,reason",
+    "Arglist":"feature,reason"
   },
   {
     "ErrCode": "EI0001",
