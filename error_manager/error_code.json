@@ -2586,6 +2586,21 @@
     "Arglist": "path,reason"
   },
   {
+    "ErrCode":"EH0004",
+    "ErrMessage":"file[%s] is invalid, %s",
+    "Arglist":"path,reason",
+  },
+  {
+    "ErrCode":"EH0005",
+    "ErrMessage":"set aipp[%s] failed, %s",
+    "Arglist":"param,reason",
+  },
+  {
+    "ErrCode":"EH0006",
+    "ErrMessage":"%s is unsupported, %s",
+    "Arglist":"feature,reason",
+  },
+  {
     "ErrCode": "EI0001",
     "ErrMessage": "The env % is invalid, %s.",
     "Arglist": "env,reason"
