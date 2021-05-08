@@ -174,6 +174,10 @@ add_library(op_tiling_o2 STATIC
     "op_tiling_registry.cpp"
 )
 
+add_dependencies(op_tiling_o2
+    metadef_protos
+)
+
 target_include_directories(op_tiling_o2 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}
