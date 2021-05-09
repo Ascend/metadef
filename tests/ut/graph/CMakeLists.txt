@@ -76,6 +76,9 @@ set(UT_FILES
     "testcase/type_utils_unittest.cc"
     "testcase/aligned_ptr_unittest.cc"
     "testcase/tensor_ut.cc"
+    "testcase/node_utils_unitest.cc"
+    "testcase/graph_builder_utils.cc"
+    "testcase/operator_unitest.cc")
     "testcase/buffer_unittest.cc")
 
 set(GRAPH_SRC_FILES

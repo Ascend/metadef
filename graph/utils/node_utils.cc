@@ -659,6 +659,15 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
     GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
     peer_node = enter_peer_out_data_anchor->GetOwnerNode();
   }
+
+  // if tensor has host mem, init data by ATTR_NAME_VALUE first
+  auto tensor = op_desc->MutableInputDesc(index);
+  if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, ge_tensor)) {
+    GELOGD("Get ATTR_NAME_VALUE from %d input of %s, Tensor addr is %p, tensor value data type is %d.", index,
+           op_desc->GetName().c_str(), tensor.get(), ge_tensor->GetTensorDesc().GetDataType());
+    return GRAPH_SUCCESS;
+  }
+
   // Try get from runtime inference context
   auto context_id = std::to_string(GetContext().ContextId());
   RuntimeInferenceContext *runtime_infer_ctx = nullptr;
@@ -692,12 +701,6 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
       }
       return GRAPH_SUCCESS;
     }
-  }
-  auto tensor = op_desc->MutableInputDesc(index);
-  if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, ge_tensor)) {
-    GELOGD("Get ATTR_NAME_VALUE from %d input of %s, Tensor addr is %p, tensor value data type is %d.", index,
-           op_desc->GetName().c_str(), tensor.get(), ge_tensor->GetTensorDesc().GetDataType());
-    return GRAPH_SUCCESS;
   }
   GELOGW("node[%s]'s input[%s]'s peer node is not const", node.GetName().c_str(), dst_name.c_str());
   return GRAPH_FAILED;
