@@ -33,7 +33,7 @@ struct GraphOptimizerAttribute {
 
 std::vector<std::string> ForbiddenClosedPass = {
         // Graph Fusion
-        "ArgMaxWithFusionPass",
+        "ArgMaxWithKFusionPass",
         "COPYPass",
         "ADeformableConv2dPass",
         "DynamicGRUV2GradFusionPass",
@@ -46,7 +46,6 @@ std::vector<std::string> ForbiddenClosedPass = {
         "NormalizeFusionPass",
         "PassThroughFusionPass",
         "PassThroughSecondFusionPass",
-        "PermutePassName",
         "PriorBoxPass",
         "ProposalFusionPass",
         "RNNFusionPass",
