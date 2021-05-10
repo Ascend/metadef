@@ -31,7 +31,7 @@ struct GraphOptimizerAttribute {
   OPTIMIZER_SCOPE scope;
 };
 
-std::vector<std::string> ForbiddenClosedPass = {
+static const std::vector<std::string> ForbiddenClosedPass = {
         // Graph Fusion
         "ArgMaxWithKFusionPass",
         "COPYPass",
