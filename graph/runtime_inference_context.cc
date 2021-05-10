@@ -27,8 +27,10 @@ graphStatus RuntimeInferenceContext::CreateContext(const std::string &context_id
   GELOGI("To create context. session id = %s", context_id.c_str());
   auto ctx = std::unique_ptr<RuntimeInferenceContext>(new (std::nothrow)RuntimeInferenceContext());
   if (ctx == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Failed to create instance of RuntimeInferenceContext. context_id = %s",
+                      context_id.c_str());
     GELOGE(GRAPH_FAILED,
-           "Failed to create instance of RuntimeInferenceContext. context_id = %s",
+           "[Create][RuntimeInferenceContext] Failed to create instance of RuntimeInferenceContext. context_id = %s",
            context_id.c_str());
     return GRAPH_FAILED;
   }
@@ -36,7 +38,9 @@ graphStatus RuntimeInferenceContext::CreateContext(const std::string &context_id
   std::lock_guard<std::mutex> lk(ctx_mu_);
   auto emplace_ret = contexts_.emplace(context_id, std::move(ctx));
   if (!emplace_ret.second) {
-    GELOGE(GRAPH_FAILED, "Old context not destroyed");
+    REPORT_INNER_ERROR("E19999", "save context failed as Old context not destroyed, context_id:%s",
+                       context_id.c_str());
+    GELOGE(GRAPH_FAILED, "[Add][Context] Old context not destroyed");
     return GRAPH_FAILED;
   }
 
@@ -84,20 +88,25 @@ graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int output_id, T
 
 graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, Tensor &tensor) {
   if (output_id < 0) {
-    GELOGE(GRAPH_PARAM_INVALID, "Invalid output index: %d", output_id);
+    REPORT_INNER_ERROR("E19999", "param output_id:%d < 0, check invalid.", output_id);
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid output index: %d", output_id);
     return GRAPH_PARAM_INVALID;
   }
 
   std::lock_guard<std::mutex> lk(mu_);
   auto iter = tensors_.find(node_id);
   if (iter == tensors_.end()) {
-    GELOGE(INTERNAL_ERROR, "Node not register. Id = %ld", node_id);
+    REPORT_INNER_ERROR("E19999", "Node not register. Id = %ld", node_id);
+    GELOGE(INTERNAL_ERROR, "[Check][Param] Node not register. Id = %ld", node_id);
     return INTERNAL_ERROR;
   }
 
   auto &output_tensors = iter->second;
   if (static_cast<uint32_t>(output_id) >= output_tensors.size()) {
-    GELOGE(GRAPH_FAILED, "Node output is not registered. node_id = %ld, output index = %d", node_id, output_id);
+    REPORT_INNER_ERROR("E19999", "Node output is not registered. node_id = %ld, output index = %d",
+                       node_id, output_id);
+    GELOGE(GRAPH_FAILED, "[Check][Param] Node output is not registered. node_id = %ld, output index = %d",
+           node_id, output_id);
     return GRAPH_FAILED;
   }
 
@@ -108,20 +117,25 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, T
 
 graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, GeTensorPtr &tensor) {
   if (output_id < 0) {
-    GELOGE(GRAPH_PARAM_INVALID, "Invalid output index: %d", output_id);
+    REPORT_INNER_ERROR("E19999", "Invalid output index: %d", output_id);
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid output index: %d", output_id);
     return GRAPH_PARAM_INVALID;
   }
 
   std::lock_guard<std::mutex> lk(mu_);
   auto iter = ge_tensors_.find(node_id);
   if (iter == ge_tensors_.end()) {
-    GELOGE(INTERNAL_ERROR, "Node not register. Id = %ld", node_id);
+    REPORT_INNER_ERROR("E19999", "Node not register. Id = %ld", node_id);
+    GELOGE(INTERNAL_ERROR, "[Check][Param] Node not register. Id = %ld", node_id);
     return INTERNAL_ERROR;
   }
 
   auto &output_tensors = iter->second;
   if (static_cast<uint32_t>(output_id) >= output_tensors.size()) {
-    GELOGE(GRAPH_FAILED, "Node output is not registered. node_id = %ld, output index = %d", node_id, output_id);
+    REPORT_INNER_ERROR("E19999", "Node output is not registered. node_id = %ld, output index = %d",
+                       node_id, output_id);
+    GELOGE(GRAPH_FAILED, "[Check][Param] Node output is not registered. node_id = %ld, output index = %d",
+           node_id, output_id);
     return GRAPH_FAILED;
   }
 

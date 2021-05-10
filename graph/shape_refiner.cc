@@ -54,7 +54,10 @@ graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
     for (size_t j = 0; j < ref_out_tensors[i].size(); ++j) {
       auto &tensor = ref_out_tensors[i].at(j);
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
-        GELOGE(GRAPH_FAILED, "node[%s] does not support diff dtype output", node->GetName().c_str());
+        REPORT_INNER_ERROR("E19999", "node[%s] does not support diff dtype among all ref output",
+                           node->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "[Check][Param] node[%s] does not support diff dtype among all ref output",
+               node->GetName().c_str());
         return GRAPH_FAILED;
       }
 
@@ -62,7 +65,9 @@ graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
       int64_t size = 1;
       for (auto dim : shape.GetDims()) {
         if (dim != 0 && INT64_MAX / dim < size) {
-          GELOGE(PARAM_INVALID, "The shape size overflow");
+          REPORT_INNER_ERROR("E19999", "The shape:%s size overflow, node:%s",
+                             shape.ToString().c_str(), node->GetName().c_str());
+          GELOGE(PARAM_INVALID, "[Check][Overflow] The shape size overflow");
           return PARAM_INVALID;
         }
         size *= dim;
@@ -96,7 +101,9 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
     ge::GeShape &ref_out_tensor_shape = ref_out_tensor.MutableShape();
     for (auto &tensor : ref_out_tensors[i]) {
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
-        GELOGE(GRAPH_FAILED, "node[%s] does not support diff dtype output", node->GetName().c_str());
+        REPORT_INNER_ERROR("E19999", "node[%s] does not support diff dtype among all ref output, shape:%s",
+                           node->GetName().c_str(), ref_out_tensor_shape.ToString().c_str());
+        GELOGE(GRAPH_FAILED, "[Check][Param] node[%s] does not support diff dtype output", node->GetName().c_str());
         return GRAPH_FAILED;
       }
       auto shape = tensor.MutableShape();
@@ -125,13 +132,17 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
                                      std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
   GELOGD("Enter update parent node shape for class while op process");
   if (ref_data_tensors.size() != ref_out_tensors.size()) {
-    GELOGE(GRAPH_FAILED, "while op [%s] input number[%zu] and output number[%zu] is not same!",
+    REPORT_INNER_ERROR("E19999", "op:%s(%s) input number[%zu] and output number[%zu] is not same!",
+                       node->GetName().c_str(), node->GetType().c_str(),
+                       ref_data_tensors.size(), ref_out_tensors.size());
+    GELOGE(GRAPH_FAILED, "[Check][Param] while op [%s] input number[%zu] and output number[%zu] is not same!",
            node->GetName().c_str(), ref_data_tensors.size(), ref_out_tensors.size());
     return GRAPH_FAILED;
   }
   for (size_t i = 0; i < ref_data_tensors.size(); i++) {
     if (ref_out_tensors[i].size() != 1) {
-      GELOGE(GRAPH_FAILED, "while op, every output should only find one output tensor in all graph!");
+      REPORT_INNER_ERROR("E19999", "while op, every output should only find one output tensor in all graph!");
+      GELOGE(GRAPH_FAILED, "[Check][Param] while op, every output should only find one output tensor in all graph!");
       return GRAPH_FAILED;
     }
   }
@@ -147,7 +158,10 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
     // ref_i's data and output tensor shape should be same
     for (auto &tensor : ref_data_tensors[i]) {
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
-        GELOGE(GRAPH_FAILED, "node[%s] does not support diff dtype or format output.", node->GetName().c_str());
+        REPORT_INNER_ERROR("E19999", "node[%s] does not support diff dtype or format among all ref output",
+                           node->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "[Check][Param] node[%s] does not support diff dtype or format output.",
+               node->GetName().c_str());
         return GRAPH_FAILED;
       }
       auto data_shape = tensor.MutableShape();
@@ -200,7 +214,8 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
     }
     auto sub_graph = root_graph->GetSubgraph(name);
     if (sub_graph == nullptr) {
-      GE_LOGE("Can node find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
+      REPORT_INNER_ERROR("E19999", "Can not find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
+      GE_LOGE("[Get][Graph] can not find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
       return GRAPH_FAILED;
     }
     for (const auto &node_sub : sub_graph->GetDirectNode()) {
@@ -210,12 +225,16 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
       int ref_i;
       auto data_opdesc = node_sub->GetOpDesc();
       if (data_opdesc == nullptr) {
-        GE_LOGE("Invalid data node on the sub graph %s parent node %s, no OpDesc",
+        REPORT_INNER_ERROR("E19999", "Invalid data node on the sub graph %s parent node %s, no OpDesc",
+                           name.c_str(), node->GetName().c_str());
+        GE_LOGE("[Get][OpDesc] Invalid data node on the sub graph %s parent node %s, no OpDesc",
                 name.c_str(), node->GetName().c_str());
         return GRAPH_FAILED;
       }
       if (!AttrUtils::GetInt(data_opdesc, ATTR_NAME_PARENT_NODE_INDEX, ref_i)) {
-        GE_LOGE("Invalid data node on the sub graph %s parent node %s, no ref-index attribute",
+        REPORT_INNER_ERROR("E19999", "Invalid data node on the sub graph %s parent node %s, no ref-index attribute",
+                           name.c_str(), node->GetName().c_str());
+        GE_LOGE("[Get][Int] Invalid data node on the sub graph %s parent node %s, no ref-index attribute",
                 name.c_str(), node->GetName().c_str());
         return GRAPH_FAILED;
       }
@@ -224,10 +243,12 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
       }
       auto input_desc = op_desc->MutableInputDesc(ref_i);
       if (input_desc == nullptr) {
-        GE_LOGE("The ref index(%d) on the data %s on the sub graph %s "
-                "parent node %s are incompatible, inputs num %u",
-                ref_i, node_sub->GetName().c_str(), name.c_str(),
-                node->GetName().c_str(), node->GetAllOutDataAnchorsSize());
+        REPORT_INNER_ERROR("E19999", "The ref index(%d) on the data %s on the sub graph %s "
+                           "parent node %s are incompatible, inputs num %u", ref_i, node_sub->GetName().c_str(),
+                           name.c_str(), node->GetName().c_str(), node->GetAllInDataAnchorsSize());
+        GE_LOGE("[Call][MutableInputDesc] The ref index(%d) on the data %s on the sub graph %s "
+                "parent node %s are incompatible, inputs num %u", ref_i, node_sub->GetName().c_str(),
+                name.c_str(), node->GetName().c_str(), node->GetAllInDataAnchorsSize());
         return GRAPH_FAILED;
       }
       GELOGI("Ref index is %d, input_desc dtype is %d, node name is %s", ref_i, input_desc->GetDataType(),
@@ -239,14 +260,12 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
       if (is_infer_again) {
         input_desc = op_desc->MutableOutputDesc(ref_i);
         if (input_desc == nullptr) {
-          GELOGE(PARAM_INVALID,
-                 "The ref index(%d) on the data %s on the subgraph %s "
-                 "parent node %s are incompatible,outputs num %u.",
-                 ref_i,
-                 node_sub->GetName().c_str(),
-                 name.c_str(),
-                 node->GetName().c_str(),
-                 node->GetAllOutDataAnchorsSize());
+          REPORT_INNER_ERROR("E19999", "The ref index(%d) on the data %s on the subgraph %s "
+                             "parent node %s are incompatible, outputs num %u.", ref_i, node_sub->GetName().c_str(),
+                             name.c_str(), node->GetName().c_str(), node->GetAllOutDataAnchorsSize());
+          GELOGE(PARAM_INVALID, "[Call][MutableOutputDesc] The ref index(%d) on the data %s on the subgraph %s "
+                 "parent node %s are incompatible, outputs num %u.", ref_i, node_sub->GetName().c_str(),
+                 name.c_str(), node->GetName().c_str(), node->GetAllOutDataAnchorsSize());
         }
         GELOGD("Update input desc of data %s on the sub graph %s of node %s,output idx: %d from [%s] to [%s]",
                node_sub->GetName().c_str(),
@@ -259,13 +278,17 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
 
       auto ret = data_opdesc->UpdateInputDesc(0, *input_desc);
       if (ret != GRAPH_SUCCESS) {
-        GE_LOGE("Failed to update input desc of data %s on the sub graph %s parent node %s",
-            node_sub->GetName().c_str(), name.c_str(), node->GetName().c_str());
+        REPORT_CALL_ERROR("E19999", "Failed to update input desc of data %s on the sub graph %s parent node %s",
+                          node_sub->GetName().c_str(), name.c_str(), node->GetName().c_str());
+        GE_LOGE("[Update][InputDesc] of data %s on the sub graph %s parent node %s failed",
+                node_sub->GetName().c_str(), name.c_str(), node->GetName().c_str());
         return ret;
       }
       ret = data_opdesc->UpdateOutputDesc(0, *input_desc);
       if (ret != GRAPH_SUCCESS) {
-        GE_LOGE("Failed to update output desc of data %s on the sub graph %s parent node %s",
+        REPORT_CALL_ERROR("E19999", "Failed to update output desc of data %s on the sub graph %s parent node %s",
+                          node_sub->GetName().c_str(), name.c_str(), node->GetName().c_str());
+        GE_LOGE("[Update][OutputDesc] of data %s on the sub graph %s parent node %s failed",
                 node_sub->GetName().c_str(), name.c_str(), node->GetName().c_str());
         return ret;
       }
@@ -290,11 +313,14 @@ graphStatus FindSubgraphDataAndNetoutput(std::shared_ptr<ComputeGraph> &sub_grap
 
       int ref_i;
       if (!AttrUtils::GetInt(sub_node->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, ref_i)) {
-        GELOGE(GRAPH_FAILED, "subgraph data node[%s] has no parent node!", sub_node->GetName().c_str());
+        REPORT_INNER_ERROR("E19999", "subgraph data node[%s] has no parent node!", sub_node->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "[Get][Int] subgraph data node[%s] has no parent node!", sub_node->GetName().c_str());
         return GRAPH_FAILED;
       }
       if (ref_i < 0 || static_cast<uint32_t>(ref_i) >= node->GetAllInDataAnchorsSize()) {
-        GELOGE(GRAPH_FAILED, "data node[%s]'s ref index[%d] is not in range [0, %u)!",
+        REPORT_INNER_ERROR("E19999", "data node[%s]'s ref index[%d] is not in range [0, %u)!",
+                           sub_node->GetName().c_str(), ref_i, node->GetAllInDataAnchorsSize());
+        GELOGE(GRAPH_FAILED, "[Check][Param] data node[%s]'s ref index[%d] is not in range [0, %u)!",
                sub_node->GetName().c_str(), ref_i, node->GetAllInDataAnchorsSize());
         return GRAPH_FAILED;
       }
@@ -322,7 +348,8 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
     }
     auto sub_graph = root_graph->GetSubgraph(name);
     if (sub_graph == nullptr) {
-      GE_LOGE("Can node find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
+      REPORT_INNER_ERROR("E19999", "Can not find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
+      GE_LOGE("[Get][Subgraph] Can not find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
       return GRAPH_FAILED;
     }
     NodePtr netoutput = nullptr;
@@ -331,19 +358,27 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
       return ret;
     }
     if (netoutput == nullptr) {
-      GE_LOGE("No NetOutput node on sub graph %s, parent node %s", name.c_str(), node->GetName().c_str());
+      REPORT_INNER_ERROR("E19999", "No NetOutput node on sub graph %s, parent node %s",
+                         name.c_str(), node->GetName().c_str());
+      GE_LOGE("[Check][Param] No NetOutput node on sub graph %s, parent node %s",
+              name.c_str(), node->GetName().c_str());
       return GRAPH_FAILED;
     }
     auto netoutput_opdesc = netoutput->GetOpDesc();
     if (netoutput_opdesc == nullptr) {
-      GE_LOGE("Invalid NetOutput node on sub graph %s, parent node %s, no OpDesc on it",
+      REPORT_INNER_ERROR("E19999", "Invalid NetOutput node on sub graph %s, parent node %s, no OpDesc on it",
+                         name.c_str(), node->GetName().c_str());
+      GE_LOGE("[Get][OpDesc] Invalid NetOutput node on sub graph %s, parent node %s, no OpDesc on it",
               name.c_str(), node->GetName().c_str());
       return GRAPH_FAILED;
     }
     for (auto &edge_anchor : netoutput->GetAllInDataAnchors()) {
       auto edge_desc = netoutput_opdesc->MutableInputDesc(edge_anchor->GetIdx());
       if (edge_desc == nullptr) {
-        GE_LOGE("Invalid NetOutput node on sub graph %s, parent node %s, can not find input tensor %d",
+        REPORT_INNER_ERROR("E19999", "Invalid NetOutput node on sub graph %s, parent node %s, "
+                           "can not find input tensor %d",
+                           name.c_str(), node->GetName().c_str(), edge_anchor->GetIdx());
+        GE_LOGE("[Get][Tensor] Invalid NetOutput node on sub graph %s, parent node %s, can not find input tensor %d",
                 name.c_str(), node->GetName().c_str(), edge_anchor->GetIdx());
         return GRAPH_FAILED;
       }
@@ -398,8 +433,11 @@ void SerialShapeRange(const GeTensorDescPtr &desc, std::string &desc_str) {
 }
 
 graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
-  GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "node is null."); return GRAPH_FAILED);
-  GE_IF_BOOL_EXEC(node_ptr->GetOpDesc() == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
+  GE_IF_BOOL_EXEC(node_ptr == nullptr, REPORT_INNER_ERROR("E19999", "param node_ptr is nullptr, check invalid.");
+                  GELOGE(GRAPH_FAILED, "[Check][Param] node is null."); return GRAPH_FAILED);
+  GE_IF_BOOL_EXEC(node_ptr->GetOpDesc() == nullptr,
+                  REPORT_INNER_ERROR("E19999", "GetOpDesc failed, param node_ptr has no opdesc.");
+                  GELOGE(GRAPH_FAILED, "[Get][OpDesc] op_desc is null."); return GRAPH_FAILED);
   for (const auto &in_anchor : node_ptr->GetAllInDataAnchors()) {
     auto in_idx = in_anchor->GetIdx();
     auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
@@ -461,11 +499,13 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     return;
   }
   if (node == nullptr) {
-    GELOGE(GRAPH_FAILED, "node is null");
+    REPORT_INNER_ERROR("E19999", "param node is nullprt, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] node is null");
     return;
   }
   ge::OpDescPtr op_desc = node->GetOpDesc();
-  GE_IF_BOOL_EXEC(op_desc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return);
+  GE_IF_BOOL_EXEC(op_desc == nullptr, REPORT_INNER_ERROR("E19999", "node has no opdesc, check invalid");
+                  GELOGE(GRAPH_FAILED, "[Get][OpDesc] op_desc is null."); return);
   std::stringstream ss;
   ss << "{";
   int32_t in_idx = 0;
@@ -520,7 +560,8 @@ InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, Inf
   }
   InferenceContextPtr inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());
   if (inference_context == nullptr) {
-    GELOGE(GRAPH_FAILED, "Failed to alloc InferenceContext");
+    REPORT_CALL_ERROR("E19999", "Failed to alloc InferenceContext, node:%s", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Alloc][InferenceContext] failed.");
     return nullptr;
   }
 
@@ -543,7 +584,8 @@ InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, Inf
     auto iter = context_map.find(input_node);
     if (iter != context_map.end()) {
       const auto &src_context = iter->second;
-      GE_IF_BOOL_EXEC(src_context == nullptr, GELOGE(GRAPH_FAILED, "src_context is null."); return nullptr);
+      GE_IF_BOOL_EXEC(src_context == nullptr, REPORT_INNER_ERROR("E19999", "src_context is null.");
+                      GELOGE(GRAPH_FAILED, "[Check][Param] src_context is null."); return nullptr);
       GELOGD("node:%s get %ld marks from node:%s",
              node->GetName().c_str(), src_context->GetMarks().size(), input_node->GetName().c_str());
       for (auto mark : src_context->GetMarks()) {
@@ -610,7 +652,8 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
     auto temp_op_desc = ge::OpDescUtils::GetOpDescFromOperator(node_op);
     node_op.BreakConnect();
     if (temp_op_desc == nullptr) {
-      GELOGE(GRAPH_FAILED, "temp op desc is null");
+      REPORT_CALL_ERROR("E19999", "GetOpDescFromOperator failed, return nullptr.");
+      GELOGE(GRAPH_FAILED, "[Get][OpDesc] temp op desc is null");
       return GRAPH_FAILED;
     }
     if (!op_desc->UpdateInputName(temp_op_desc->GetAllInputName())) {
@@ -657,7 +700,8 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const ConstNodePtr &node, 
     auto origin_type = NodeUtils::GetNodeType(*node);
     auto infer_func = ge::OperatorFactoryImpl::GetInferShapeFunc(origin_type);
     if (infer_func == nullptr) {
-      GELOGE(GRAPH_FAILED, "Failed to Get InferFunc.type is %s", origin_type.c_str());
+      REPORT_INNER_ERROR("E19999", "Failed to Get InferFunc. type is %s", origin_type.c_str());
+      GELOGE(GRAPH_FAILED, "[Get][InferFunc] failed. type is %s", origin_type.c_str());
       return GRAPH_FAILED;
     }
     op_desc->AddInferFunc(infer_func);
@@ -681,9 +725,11 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool before_subgraph) {
-  GE_IF_BOOL_EXEC(node == nullptr, GELOGE(GRAPH_FAILED, "node is null."); return GRAPH_FAILED);
+  GE_IF_BOOL_EXEC(node == nullptr, REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid");
+                  GELOGE(GRAPH_FAILED, "[Check][Param] node is null."); return GRAPH_FAILED);
   auto opdesc = node->GetOpDesc();
-  GE_IF_BOOL_EXEC(opdesc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
+  GE_IF_BOOL_EXEC(opdesc == nullptr, REPORT_INNER_ERROR("E19999", "param node has no opdesc, check invalid.");
+                  GELOGE(GRAPH_FAILED, "[Get][OpDesc] opdesc is null."); return GRAPH_FAILED);
 
   vector<ge::DataType> temp_dtype;
   for (auto &tensor_desc: opdesc->GetAllOutputsDescPtr()) {
@@ -696,7 +742,8 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
   if (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS) {
     // ensure the dtype is not changed after infershape in running
     auto after_opdesc = node->GetOpDesc();
-    GE_IF_BOOL_EXEC(after_opdesc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
+    GE_IF_BOOL_EXEC(after_opdesc == nullptr, REPORT_INNER_ERROR("E19999", "param node has no opdesc, check invalid.");
+                    GELOGE(GRAPH_FAILED, "[Get][OpDesc]  after_opdesc is null."); return GRAPH_FAILED);
     auto all_output_tensor = after_opdesc->GetAllOutputsDescPtr();
     for (size_t i = 0; i < all_output_tensor.size(); ++i) {
       if (all_output_tensor.at(i)->GetDataType() != temp_dtype[i]) {
@@ -710,29 +757,34 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
     PrintInOutTensorShape(node, "after_infershape when running");
     return GRAPH_SUCCESS;
   } else {
-    GELOGE(GRAPH_FAILED, "%s call infer function failed.", node->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "%s call infer function failed.", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Call][InferFunction] failed, node:%s.", node->GetName().c_str());
     return GRAPH_FAILED;
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_subgraph) {
-  GE_IF_BOOL_EXEC(node == nullptr, GELOGE(GRAPH_FAILED, "node is null."); return GRAPH_FAILED);
+  GE_IF_BOOL_EXEC(node == nullptr, REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
+                  GELOGE(GRAPH_FAILED, "[Check][Param] node is null."); return GRAPH_FAILED);
   bool is_unknown_graph = node->GetOwnerComputeGraph()->GetGraphUnknownFlag();
   auto opdesc = node->GetOpDesc();
-  GE_IF_BOOL_EXEC(opdesc == nullptr, GELOGE(GRAPH_FAILED, "op_desc is null."); return GRAPH_FAILED);
+  GE_IF_BOOL_EXEC(opdesc == nullptr, REPORT_INNER_ERROR("E19999", "node has no opdesc, check invalid.");
+                  GELOGE(GRAPH_FAILED, "[Get][OpDesc] opdesc is null."); return GRAPH_FAILED);
   // some op can not infershape twice such as aipp
   bool need_update_input = !is_unknown_graph && !opdesc->HasAttr("has_infered_verified");
   if (need_update_input) {
     auto status = UpdateOpInputDesc(node);
     if (status != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "update op input_desc failed!");
+      REPORT_CALL_ERROR("E19999", "update op input_desc failed! ret:%d, node:%s", status, node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Update][OpInputDesc] failed! ret:%d", status);
       return status;
     }
   }
 
   if (node->Verify() != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Verifying %s failed.", node->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "Verifying %s failed.", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Call][Verify] Verifying %s failed.", node->GetName().c_str());
     return GRAPH_FAILED;
   }
   PrintInOutTensorShape(node, "before_infershape");
@@ -786,7 +838,8 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
         return GRAPH_FAILED;
     }
   } else {
-    GELOGE(GRAPH_FAILED, "%s call infer function failed.", node->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "%s call infer function failed.", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Call][InferFunction] failed, node:%s.", node->GetName().c_str());
     return GRAPH_FAILED;
   }
   if (!is_unknown_graph) {

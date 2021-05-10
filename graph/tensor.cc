@@ -94,7 +94,8 @@ class TensorImpl {
       size_t total_size = data.size() + sizeof(StringHead) + 1;
       std::unique_ptr<char[]> buff(new (std::nothrow) char[total_size]());
       if (buff == nullptr) {
-        GELOGE(GRAPH_FAILED, "allocate string raw data buff failed");
+        REPORT_CALL_ERROR("E19999", "allocate string raw data buff failed, size:%zu", total_size);
+        GELOGE(GRAPH_FAILED, "[New][Buffer] allocate string raw data buff failed");
         return GRAPH_FAILED;
       }
       StringHead *string_head = reinterpret_cast<StringHead *>(buff.get());
@@ -102,11 +103,12 @@ class TensorImpl {
       char *raw_data = buff.get() + sizeof(StringHead);
       string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       string_head->len = static_cast<uint64_t>(data.size());
-      int32_t memcpy_ret = memcpy_s(raw_data,
-                                    total_size - sizeof(StringHead),
-                                    data.c_str(),
-                                    data.size() + 1);
-      GE_CHK_BOOL_RET_STATUS(memcpy_ret == EOK, GRAPH_FAILED, "copy data failed");
+      int32_t memcpy_ret = memcpy_s(raw_data, total_size - sizeof(StringHead),  data.c_str(), data.size() + 1);
+      if (memcpy_ret != EOK) {
+        REPORT_CALL_ERROR("E19999", "memcpy data failed, ret:%d, size:%zu.", memcpy_ret, data.size() + 1);
+        GELOGE(GRAPH_FAILED, "[Copy][Data] failed, ret:%d", memcpy_ret);
+        return GRAPH_FAILED;
+      }
       (void)ge_tensor.SetData(reinterpret_cast<const uint8_t *>(buff.get()), total_size);
       return GRAPH_SUCCESS;
     }
@@ -115,7 +117,8 @@ class TensorImpl {
 
   graphStatus SetData(const std::vector<std::string> &data) {
     if (data.empty()) {
-      GELOGE(GRAPH_FAILED, "there is no data, please check the input variable");
+      REPORT_INNER_ERROR("E19999", "there is no data, please check the input variable");
+      GELOGE(GRAPH_FAILED, "[Check][Param] there is no data, please check the input variable");
       return GRAPH_FAILED;
     }
     size_t total_size = 0;
@@ -126,7 +129,8 @@ class TensorImpl {
     }
     std::unique_ptr<char[]> buff(new (std::nothrow) char[total_size]);
     if (buff == nullptr) {
-      GELOGE(GRAPH_FAILED, "allocate string raw data buff failed");
+      REPORT_CALL_ERROR("E19999", "allocate string raw data buff failed, size:%zu", total_size);
+      GELOGE(GRAPH_FAILED, "[New][Buffer] allocate string raw data buff failed");
       return GRAPH_FAILED;
     }
     // Front some bytes store head of each string
@@ -137,7 +141,9 @@ class TensorImpl {
       string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       string_head[i].len = static_cast<uint64_t>(data[i].size());
       if (total_size < ptr_size) {
-        GELOGE(GRAPH_FAILED, "Subtraction invalid, total_size: %zu, ptr_size: %lu", total_size, ptr_size);
+        REPORT_INNER_ERROR("E19999", "Subtraction invalid, total_size:%zu, ptr_size:%lu", total_size, ptr_size);
+        GELOGE(GRAPH_FAILED, "[Check][Param] Subtraction invalid, total_size: %zu, ptr_size: %lu",
+               total_size, ptr_size);
         return GRAPH_FAILED;
       }
       int32_t memcpy_ret = memcpy_s(raw_data, total_size - ptr_size, data[i].c_str(), data[i].size() + 1);
@@ -228,7 +234,8 @@ int64_t Shape::GetShapeSize() const {
       }
 
       if (!Int64MulNotOverflow(size, i)) {
-        GELOGE(GRAPH_FAILED, "mul overflow: %ld, %ld", size, i);
+        REPORT_CALL_ERROR("E19999", "mul overflow: %ld, %ld", size, i);
+        GELOGE(GRAPH_FAILED, "[Check][Overflow] mul overflow: %ld, %ld", size, i);
         size = 0;
         return size;
       }
@@ -306,7 +313,8 @@ graphStatus TensorDesc::SetUnknownDimNumShape() {
     impl->shape_ = Shape({UNKNOWN_DIM_NUM});
     return GRAPH_SUCCESS;
   }
-  GELOGE(GRAPH_FAILED, "Set unknown shape failed,because no impl class!");
+  REPORT_INNER_ERROR("E19999", "Set unknown shape failed, because no impl class!");
+  GELOGE(GRAPH_FAILED, "[Set][UnknownDimNumShape] failed, because no impl class!");
   return GRAPH_FAILED;
 }
 
@@ -316,7 +324,8 @@ graphStatus TensorDesc::SetShapeRange(const std::vector<std::pair<int64_t, int64
     impl->range_ = range;
     return GRAPH_SUCCESS;
   }
-  GELOGE(GRAPH_FAILED, "SetShapeRange failed!impl is nullptr!");
+  REPORT_INNER_ERROR("E19999", "SetShapeRange failed! impl is nullptr!");
+  GELOGE(GRAPH_FAILED, "[Set][ShapeRange] failed! impl is nullptr!");
   return GRAPH_FAILED;
 }
 graphStatus TensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const {
@@ -324,7 +333,8 @@ graphStatus TensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &
     range = impl->range_;
     return GRAPH_SUCCESS;
   }
-  GELOGE(GRAPH_FAILED, "impl is nullptr!");
+  REPORT_INNER_ERROR("E19999", "impl is nullptr! check invalid");
+  GELOGE(GRAPH_FAILED, "[Check][Param] impl is nullptr! check invalid");
   return GRAPH_FAILED;
 }
 
@@ -593,7 +603,7 @@ graphStatus Tensor::SetData(const uint8_t *data, size_t size) {
 graphStatus Tensor::SetData(const std::string &data) {
   if (impl != nullptr) {
     if (impl->SetData(data) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "Tensor set data failed.");
+      GELOGE(GRAPH_FAILED, "[Set][Data] %s failed.", data.c_str());
       return GRAPH_FAILED;
     }
     return GRAPH_SUCCESS;
@@ -604,7 +614,7 @@ graphStatus Tensor::SetData(const std::string &data) {
 graphStatus Tensor::SetData(const std::vector<std::string> &data) {
   if (impl != nullptr) {
     if (impl->SetData(data) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "Tensor set vector data failed.");
+      GELOGE(GRAPH_FAILED, "[Call][SetData] Tensor set vector data failed.");
       return GRAPH_FAILED;
     }
     return GRAPH_SUCCESS;
@@ -616,7 +626,7 @@ graphStatus Tensor::SetData(const char *data) {
   if (impl != nullptr && data != nullptr) {
     std::string tensor_data = data;
     if (impl->SetData(tensor_data) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "Tensor set data failed.");
+      GELOGE(GRAPH_FAILED, "[Call][SetData] Tensor set data(%s) failed.", data);
       return GRAPH_FAILED;
     }
     return GRAPH_SUCCESS;
@@ -629,13 +639,14 @@ graphStatus Tensor::SetData(const std::vector<AscendString> &datas) {
     std::vector<std::string> tensor_data;
     for (auto &data : datas) {
       if (data.GetString() == nullptr) {
-        GELOGE(GRAPH_FAILED, "Data is nullptr.");
+        REPORT_INNER_ERROR("E19999", "Data is nullptr. check invalid");
+        GELOGE(GRAPH_FAILED, "[Check][Param] Data is nullptr.");
         return GRAPH_FAILED;
       }
       tensor_data.emplace_back(data.GetString());
     }
     if (impl->SetData(tensor_data) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "Tensor set vector data failed.");
+      GELOGE(GRAPH_FAILED, "[Call][SetData] Tensor set vector data failed.");
       return GRAPH_FAILED;
     }
     return GRAPH_SUCCESS;
@@ -689,12 +700,14 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
   std::vector<std::pair<int64_t, int64_t>> shape_range;
   auto status = tensor_desc.GetShapeRange(shape_range);
   if (status != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Get shape range failed!");
+    REPORT_CALL_ERROR("E19999", "Get shape range failed! ret:%d", status);
+    GELOGE(GRAPH_FAILED, "[Get][ShapeRange] failed! ret:%d", status);
     return ge_tensor_desc;
   }
   status = ge_tensor_desc.SetShapeRange(shape_range);
   if (status != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Set shape range failed!");
+    REPORT_CALL_ERROR("E19999", "Set shape range failed! ret:%d", status);
+    GELOGE(GRAPH_FAILED, "[Set][ShapeRange] failed! ret:%d", status);
     return ge_tensor_desc;
   }
   auto size = tensor_desc.GetSize();
@@ -715,12 +728,14 @@ TensorDesc TensorAdapter::GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_
   std::vector<std::pair<int64_t, int64_t>> shape_range;
   auto status = ge_tensor_desc.GetShapeRange(shape_range);
   if (status != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Get shape range failed!");
+    REPORT_CALL_ERROR("E19999", "Get shape range failed! ret:%d", status);
+    GELOGE(GRAPH_FAILED, "[Get][ShapeRange] failed! ret:%d", status);
     return tensor_desc;
   }
   status = tensor_desc.SetShapeRange(shape_range);
   if (status != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Set shape range failed!");
+    REPORT_CALL_ERROR("E19999", "Set shape range failed! ret:%d", status);
+    GELOGE(GRAPH_FAILED, "[Set][ShapeRange] failed! ret:%d", status);
     return tensor_desc;
   }
   int64_t size = 0;
