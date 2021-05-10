@@ -261,7 +261,7 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
       // if tensor has host mem, init data by ATTR_NAME_VALUE first
       auto tensor = op_desc->MutableInputDesc(index);
       GeTensorPtr tensor_value = nullptr;
-      if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, tensor_value) && tensor_value != nullptr) {
+      if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, tensor_value)) {
         GELOGD("Get ATTR_NAME_VALUE from %d input of %s, Tensor addr is %p, tensor value data type is %d.", index,
                op_desc->GetName().c_str(), tensor.get(), tensor_value->GetTensorDesc().GetDataType());
         data = TensorAdapter::GeTensor2Tensor(tensor_value);
