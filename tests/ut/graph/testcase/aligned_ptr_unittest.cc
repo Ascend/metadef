@@ -43,4 +43,15 @@ namespace ge
    ASSERT_EQ(aligned_data, output_data);
    ASSERT_EQ(output_base, 0);
   }
+
+  TEST_F(UtestAlignedPtr, BuildFromData_success) {
+   auto deleter = [](uint8_t *ptr) {
+     delete ptr;
+     ptr = nullptr;
+   };
+   uint8_t* data_ptr = new uint8_t(10);
+   auto aligned_ptr = AlignedPtr::BuildFromData(data_ptr, deleter);
+   uint8_t result = *(aligned_ptr->Get());
+   ASSERT_EQ(result, 10);
+  }
 }

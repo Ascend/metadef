@@ -654,6 +654,16 @@ graphStatus Tensor::SetData(const std::vector<AscendString> &datas) {
   return GRAPH_FAILED;
 }
 
+graphStatus Tensor::SetData(uint8_t *data, size_t size, const Tensor::DeleteFunc &deleter_func) {
+  if (impl != nullptr) {
+    if (impl->ge_tensor.SetData(data, size, deleter_func) != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "[Call][SetData] Tensor set data with deleter function failed");
+      return GRAPH_FAILED;
+    }
+  }
+  return GRAPH_FAILED;
+}
+
 graphStatus Tensor::IsValid() {
   uint64_t shape_size = GetTensorDesc().GetShape().GetShapeSize();
   DataType data_type = GetTensorDesc().GetDataType();
@@ -725,6 +735,7 @@ TensorDesc TensorAdapter::GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_
   tensor_desc.SetOriginShape(Shape(ge_tensor_desc.GetOriginShape().GetDims()));
   tensor_desc.SetOriginFormat(ge_tensor_desc.GetOriginFormat());
   tensor_desc.SetName(ge_tensor_desc.GetName());
+  tensor_desc.SetPlacement(ge_tensor_desc.GetPlacement());
   std::vector<std::pair<int64_t, int64_t>> shape_range;
   auto status = ge_tensor_desc.GetShapeRange(shape_range);
   if (status != GRAPH_SUCCESS) {

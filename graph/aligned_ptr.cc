@@ -87,4 +87,22 @@ std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::All
   aligned_ptr->aligned_addr_ = aligned_ptr->base_.get();
   return aligned_ptr;
 }
+
+std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromData(uint8_t *data, const AlignedPtr::Deleter &delete_func) {
+  if (data == nullptr || delete_func == nullptr) {
+    REPORT_INNER_ERROR("E19999", "data is nullptr or delete_func is nullptr");
+    GELOGE(FAILED, "[Check][Param] data/delete_func is null");
+    return nullptr;
+  }
+  auto aligned_ptr = MakeShared<AlignedPtr>();
+  if (aligned_ptr == nullptr) {
+    REPORT_CALL_ERROR("E19999", "create AlignedPtr failed.");
+    GELOGE(INTERNAL_ERROR, "[Create][AlignedPtr] make shared for AlignedPtr failed");
+    return nullptr;
+  }
+  aligned_ptr->base_.reset(data);
+  aligned_ptr->base_.get_deleter() = delete_func;
+  aligned_ptr->aligned_addr_ = aligned_ptr->base_.get();
+  return aligned_ptr;
+}
 }  // namespace ge
