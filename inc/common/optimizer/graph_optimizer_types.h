@@ -19,7 +19,6 @@
 
 #include <stdint.h>
 #include <string>
-#include <vector>
 namespace ge {
 enum OPTIMIZER_SCOPE {
   UNIT = 0,
@@ -29,41 +28,6 @@ enum OPTIMIZER_SCOPE {
 struct GraphOptimizerAttribute {
   std::string engineName;
   OPTIMIZER_SCOPE scope;
-};
-
-static const std::vector<std::string> ForbiddenClosedPass = {
-        // Graph Fusion
-        "ArgMaxWithKFusionPass",
-        "COPYPass",
-        "ADeformableConv2dPass",
-        "DynamicGRUV2GradFusionPass",
-        "DynamicRNNGradFusionPass",
-        "DynamicRNNInsertTransposePass",
-        "FlattenV2Pass",
-        "HostBNFusionPass",
-        "ALSTMFusionPass",
-        "MapIndexFusionPass",
-        "NormalizeFusionPass",
-        "PassThroughFusionPass",
-        "PassThroughSecondFusionPass",
-        "PriorBoxPass",
-        "ProposalFusionPass",
-        "RNNFusionPass",
-        "SpatialTransformerDPass",
-        "SPPPass",
-        "YoloPass",
-        "YoloV2DetectionOutputPass",
-        "YoloV3DetectionOutputV2Pass",
-        "PermuteFusionPass",
-        "CommonLSTMFusionPass",
-        "PReluGradFusionPass",
-
-        // UB Fusion
-        "TbeCommonRules2FusionPass",
-        "TbeCommonRules0FusionPass",
-        "TbeAntiquantMaxpoolingFusionPass",
-        "TbeConvRequantFusionPass",
-        "TbeConvDequantS16FusionPass"
 };
 }  // namespace ge
 
