@@ -246,4 +246,16 @@ TEST_F(TensorUT, SetData_SharedWithoutTensorDef) {
   ASSERT_EQ(memcmp(t1.GetData().GetData(), vec3.data(), vec3.size()), 0);
   ASSERT_NE(t1.GetData().GetData(), t2.GetData().GetData());
 }
+
+TEST_F(TensorUT, SetDataDelete_success) {
+  auto deleter = [](uint8_t *ptr) {
+     delete []ptr;
+     ptr = nullptr;
+   };
+   uint8_t* data_ptr = new uint8_t[10];
+   GeTensor ge_tensor;
+   ge_tensor.SetData(data_ptr, 10, deleter);
+   auto length = ge_tensor.GetData().GetSize();
+   ASSERT_EQ(length, 10);
+}
 }  // namespace ge

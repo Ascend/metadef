@@ -722,6 +722,22 @@ void TensorData::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) {
   length_ = size;
 }
 
+graphStatus TensorData::SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc) {
+  if (size == 0) {
+    GELOGW("size is 0");
+    clear();
+    return GRAPH_SUCCESS;
+  }
+  if (data == nullptr) {
+    REPORT_CALL_ERROR("E19999", "data is nullptr");
+    GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
+    return GRAPH_FAILED;
+  }
+  length_ = size;
+  aligned_ptr_ = AlignedPtr::BuildFromData(data, delete_fuc);
+  return GRAPH_SUCCESS;
+}
+
 const uint8_t *TensorData::MallocAlignedPtr(size_t size) {
   if (size == 0) {
     GELOGW("data size is 0");
@@ -915,6 +931,10 @@ graphStatus GeTensor::SetData(const Buffer &data) {
 
 graphStatus GeTensor::SetData(const TensorData &data) {
   return SetData(data.data(), data.size());
+}
+
+graphStatus GeTensor::SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc) {
+  return tensor_data_.SetData(data, size, delete_fuc);
 }
 
 void GeTensor::ClearData() {
