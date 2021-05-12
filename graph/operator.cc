@@ -287,6 +287,16 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
         GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
         peer_node = enter_peer_out_data_anchor->GetOwnerNode();
       }
+
+      // if tensor has host mem, init data by ATTR_NAME_VALUE first
+      auto tensor = op_desc->MutableInputDesc(index);
+      GeTensorPtr tensor_value = nullptr;
+      if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, tensor_value)) {
+        GELOGD("Get ATTR_NAME_VALUE from %d input of %s, Tensor addr is %p, tensor value data type is %d.", index,
+               op_desc->GetName().c_str(), tensor.get(), tensor_value->GetTensorDesc().GetDataType());
+        data = TensorAdapter::GeTensor2Tensor(tensor_value);
+        return GRAPH_SUCCESS;
+      }
       // Try get from runtime inference context
       auto context_id = std::to_string(GetContext().ContextId());
       RuntimeInferenceContext *runtime_infer_ctx = nullptr;
@@ -317,14 +327,6 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
           Operator const_op(std::move(const_op_impl));
           return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
         }
-      }
-      auto tensor = op_desc->MutableInputDesc(index);
-      GeTensorPtr tensor_value = nullptr;
-      if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, tensor_value)) {
-        GELOGD("Get ATTR_NAME_VALUE from %d input of %s, Tensor addr is %p, tensor value data type is %d.", index,
-               op_desc->GetName().c_str(), tensor.get(), tensor_value->GetTensorDesc().GetDataType());
-        data = TensorAdapter::GeTensor2Tensor(tensor_value);
-        return GRAPH_SUCCESS;
       }
     } else {
       // For outer graph
