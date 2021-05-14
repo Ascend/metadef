@@ -517,10 +517,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<AnchorPtr> Node::Get
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InDataAnchorPtr Node::GetInDataAnchor(int idx) const {
   if (idx < 0 || idx >= static_cast<int>(in_data_anchors_.size())) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19019", {"opname", "index", "anchorname", "optype"},
-        {GetName().c_str(), std::to_string(idx), "in_data_anchor", GetType().c_str()});
-    GELOGE(GRAPH_FAILED, "[Check][Param] Op[%s] doesn't have index[%d]'s in_data_anchor which optype is %s.",
+    GELOGW("[Check][Param] Op[%s] doesn't have index[%d]'s in_data_anchor which optype is %s.",
            GetName().c_str(), idx, GetType().c_str());
     return nullptr;
   } else {
