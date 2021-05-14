@@ -598,10 +598,10 @@ void ErrorManager::ClearWarningMsgContainerByWorkId(uint64_t work_stream_id) {
 
 const std::string &ErrorManager::GetLogHeader() {
   if (error_context_.log_header == "") {
-    if ((first_stage == "") && (second_stage == "")) {
+    if ((error_context_.first_stage == "") && (error_context_.second_stage == "")) {
       error_context_.log_header = "empty";
     } else {
-      error_context_.log_header = move("[" + first_stage + "][" + second_stage + "]");
+      error_context_.log_header = move("[" + error_context_.first_stage + "][" + error_context_.second_stage + "]");
     }
   }
 
