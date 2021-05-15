@@ -707,7 +707,7 @@
     },
     {
       "ErrCode" : "E19010",
-      "ErrMessage" : "Check op[%s]'s type[%s] failed, the type is unsupported.",
+      "ErrMessage" : "Check op[%s]'s type[%s] failed, the op_type is not registered, maybe this op_type is not supported by corresponding framework now",
       "Arglist" : "opname,optype"
     },
     {
@@ -2206,59 +2206,14 @@
     "Arglist" : "version"
   },
   {
-    "ErrCode" : "EE1001",
-    "ErrMessage" : "Param [%s] of function[%s] check failed, %s.",
-    "Arglist" : "param,function,error_msg"
-  },
-  {
-    "ErrCode" : "EE1002",
-    "ErrMessage" : "Param check failed in [%s],%s.",
-    "Arglist" : "function,error_msg"
-  },
-  {
-    "ErrCode" : "EE1003",
-    "ErrMessage" : "Invalid metadata, please check, metadata[%s].",
-    "Arglist" : "metadata"
-  },
-  {
-    "ErrCode" : "EE1004",
-    "ErrMessage" : "Current context is null of function[%s], please check if the device has been initialized.",
-    "Arglist" : "function"
-  },
-  {
-    "ErrCode" : "EE1005",
-    "ErrMessage" : "Current device is null of function[%s], please check if context is created correctly.",
-    "Arglist" : "function"
-  },
-  {
-    "ErrCode" : "EE1006",
-    "ErrMessage" : "Can not find function by %s.",
-    "Arglist" : "key"
-  },
-  {
-    "ErrCode" : "EE1007",
+    "ErrCode" : "EE2000",
     "ErrMessage" : "Device is not running, please check if device is working.",
     "Arglist" : ""
   },
   {
-    "ErrCode" : "EE1008",
-    "ErrMessage" : "Do not support this mode in function[%s], %s.",
-    "Arglist" : "function,error_msg"
-  },
-  {
-    "ErrCode" : "EE1009",
-    "ErrMessage" : "Stream is not in current context in function[%s].",
-    "Arglist" : "function"
-  },
-  {
-    "ErrCode" : "EE1010",
-    "ErrMessage" : "Model is not in current context in function[%s].",
-    "Arglist" : "function"
-  },
-  {
-    "ErrCode" : "EE1011",
-    "ErrMessage" : "[%s] has not been registered, key[%s].",
-    "Arglist" : "resource,key"
+    "ErrCode" : "EE2001",
+    "ErrMessage" : "Alloc memory for %s failed, alloc size is %sB, please check whether the memory is enough.",
+    "Arglist" : "target,size"
   },
   {
     "ErrCode" : "EF0000",
