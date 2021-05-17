@@ -16,6 +16,7 @@
 
 #include "graph/ge_attr_value.h"
 #include <set>
+#include <google/protobuf/text_format.h>
 #include "external/graph/graph.h"
 #include "utils/attr_utils.h"
 #include "framework/common/debug/ge_log.h"
@@ -1394,7 +1395,10 @@ std::string AttrUtils::GetAllAttrsStr(AttrUtils::ConstAttrHolderAdapter &&obj) {
 
   std::map<std::string, std::string> ordered_attrs;
   for (auto &attr : *(attrs_map.GetProtoMsg())) {
-    ordered_attrs[attr.first] = attr.second.SerializeAsString();
+    // print message as an ordered string.
+    string ordered_attr;
+    (void)google::protobuf::TextFormat::PrintToString(attr.second, &ordered_attr);
+    ordered_attrs[attr.first] = ordered_attr;
   }
 
   std::stringstream ss;
