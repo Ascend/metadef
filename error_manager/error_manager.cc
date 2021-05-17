@@ -97,7 +97,7 @@ const uint64_t kLength = 2;
 
 using namespace error_message;
 
-thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
+thread_local Context ErrorManager::error_context_ = {0, "", ""};
 
 ///
 /// @brief Obtain error manager self library path
@@ -597,15 +597,11 @@ void ErrorManager::ClearWarningMsgContainerByWorkId(uint64_t work_stream_id) {
 
 
 const std::string &ErrorManager::GetLogHeader() {
-  if (error_context_.log_header == "") {
-    if ((error_context_.first_stage == "") && (error_context_.second_stage == "")) {
-      error_context_.log_header = "empty";
-    } else {
-      error_context_.log_header = move("[" + error_context_.first_stage + "][" + error_context_.second_stage + "]");
-    }
+  if ((error_context_.first_stage == "") && (error_context_.second_stage == "")) {
+    return "";
+  } else {
+    return "[" + error_context_.first_stage + "][" + error_context_.second_stage + "]";
   }
-
-  return error_context_.log_header == "empty" ? "" : error_context_.log_header;
 }
 
 Context &ErrorManager::GetErrorManagerContext() {
@@ -616,7 +612,6 @@ void ErrorManager::SetErrorContext(Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);
-  error_context_.log_header = move(error_context.log_header);
 }
 
 void ErrorManager::SetStage(const std::string &first_stage, const std::string &second_stage) {

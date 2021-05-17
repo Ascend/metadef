@@ -112,7 +112,6 @@ namespace error_message {
     uint64_t work_stream_id;
     std::string first_stage;
     std::string second_stage;
-    std::string log_header;
   };
 }
 
