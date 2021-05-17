@@ -506,11 +506,11 @@ class OpReg {
 #define IMPLEMT_VERIFIER(op_name, func_name) \
   GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY static graphStatus func_name(op::op_name op)
 
-#define INFER_VERIFY_FUNC(op_name, x) [&](Operator &v) { return x((op::op_name &)v); }
+#define INFER_VERIFY_FUNC(op_name, x) [](Operator &v) { return x((op::op_name &)v); }
 
-#define COMMON_INFER_VERIFY_FUNC(x) [&](Operator &v) { return x(v); }
+#define COMMON_INFER_VERIFY_FUNC(x) [](Operator &v) { return x(v); }
 
-#define INFER_FORMAT_FUNC(op_name, x) [&](Operator &v) { return x((op::op_name &)v); }
+#define INFER_FORMAT_FUNC(op_name, x) [](Operator &v) { return x((op::op_name &)v); }
 
 #define __INFER_FUNC_REG_IMPL__(op_name, x, n) static const InferShapeFuncRegister PASTE(if_register, n)(#op_name, x)
 
