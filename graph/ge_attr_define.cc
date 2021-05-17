@@ -961,6 +961,7 @@ const std::string ATTR_NAME_PARENT_NODE_INDEX = "_parent_node_index";
 const std::string ATTR_NAME_NEED_INFER_AGAIN = "_need_infer_again";
 
 const std::string ATTR_NAME_MERGE_INPUT_INDEX = "_merge_input_index";
+const std::string ATTR_NAME_CONTROL_FLOW_GROUP = "_control_flow_group";
 
 // Used for mark the active node is for loop, type:bool
 const std::string ATTR_NAME_IS_LOOP_ACTIVE = "is_loop_active";
