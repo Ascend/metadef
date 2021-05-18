@@ -595,8 +595,7 @@ void ErrorManager::ClearWarningMsgContainerByWorkId(uint64_t work_stream_id) {
   }
 }
 
-
-const std::string &ErrorManager::GetLogHeader() {
+const std::string ErrorManager::GetLogHeader() {
   if ((error_context_.first_stage == "") && (error_context_.second_stage == "")) {
     return "";
   } else {
