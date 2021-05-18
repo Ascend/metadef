@@ -97,7 +97,7 @@ const uint64_t kLength = 2;
 
 using namespace error_message;
 
-thread_local Context ErrorManager::error_context_ = {0, "", ""};
+thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 
 ///
 /// @brief Obtain error manager self library path
@@ -595,12 +595,13 @@ void ErrorManager::ClearWarningMsgContainerByWorkId(uint64_t work_stream_id) {
   }
 }
 
-const std::string ErrorManager::GetLogHeader() {
+const std::string &ErrorManager::GetLogHeader() {
   if ((error_context_.first_stage == "") && (error_context_.second_stage == "")) {
-    return "";
+    error_context_.log_header = "";
   } else {
-    return "[" + error_context_.first_stage + "][" + error_context_.second_stage + "]";
+    error_context_.log_header = "[" + error_context_.first_stage + "][" + error_context_.second_stage + "]";
   }
+  return error_context_.log_header;
 }
 
 Context &ErrorManager::GetErrorManagerContext() {

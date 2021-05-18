@@ -112,6 +112,7 @@ namespace error_message {
     uint64_t work_stream_id;
     std::string first_stage;
     std::string second_stage;
+    std::string log_header;
   };
 }
 
@@ -199,7 +200,7 @@ class ErrorManager {
   // used in external api entrance
   void GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t graph_id);
 
-  const std::string GetLogHeader();
+  const std::string &GetLogHeader();
 
   error_message::Context &GetErrorManagerContext();
 
