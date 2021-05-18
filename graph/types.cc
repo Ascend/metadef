@@ -17,6 +17,7 @@
 #include <cmath>
 #include "graph/ge_error_codes.h"
 #include "framework/common/debug/ge_log.h"
+#include "inc/common/util/error_manager/error_manager.h"
 
 namespace ge {
 const char *GetFormatName(Format format) {

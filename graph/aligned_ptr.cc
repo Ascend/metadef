@@ -17,6 +17,7 @@
 #include "graph/aligned_ptr.h"
 #include "utils/mem_utils.h"
 #include "graph/debug/ge_log.h"
+#include "inc/common/util/error_manager/error_manager.h"
 #include "graph/types.h"
 
 namespace ge {
