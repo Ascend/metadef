@@ -44,14 +44,24 @@ namespace ge
    ASSERT_EQ(output_base, 0);
   }
 
-  TEST_F(UtestAlignedPtr, BuildFromData_success) {
-   auto deleter = [](uint8_t *ptr) {
-     delete ptr;
-     ptr = nullptr;
+  TEST_F(UtestAlignedPtr, BuildFromAllocFunc_success) {
+   uint8_t *data = new uint8_t(10);
+   auto allocate = [&data](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
+     ptr.reset(data);
+     ptr.get_deleter() = [](uint8_t *addr) {
+       delete addr;
+       addr = nullptr;
+     };
    };
-   uint8_t* data_ptr = new uint8_t(10);
-   auto aligned_ptr = AlignedPtr::BuildFromData(data_ptr, deleter);
+   auto aligned_ptr = AlignedPtr::BuildFromAllocFunc(allocate);
    uint8_t result = *(aligned_ptr->Get());
    ASSERT_EQ(result, 10);
   }
+
+  TEST_F(UtestAlignedPtr, BuildFromAllocFunc_failed) {
+   auto allocate = nullptr;
+   auto aligned_ptr = AlignedPtr::BuildFromAllocFunc(allocate);
+   ASSERT_EQ(aligned_ptr, nullptr);
+  }
+  
 }

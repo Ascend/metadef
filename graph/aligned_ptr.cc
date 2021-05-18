@@ -89,11 +89,11 @@ std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::All
   return aligned_ptr;
 }
 
-std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromData(uint8_t *data, const AlignedPtr::Deleter &delete_func) {
-  if (data == nullptr || delete_func == nullptr) {
-    REPORT_INNER_ERROR("E19999", "data is nullptr or delete_func is nullptr");
-    GELOGE(FAILED, "[Check][Param] data/delete_func is null");
-    return nullptr;
+std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::Allocator &alloc_func) {
+  if ((alloc_func == nullptr)) {
+      REPORT_INNER_ERROR("E19999", "alloc_func is nullptr, check invalid");
+      GELOGE(FAILED, "[Check][Param] alloc_func is null");
+      return nullptr;
   }
   auto aligned_ptr = MakeShared<AlignedPtr>();
   if (aligned_ptr == nullptr) {
@@ -101,8 +101,13 @@ std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromData(uint8_t *data, const Align
     GELOGE(INTERNAL_ERROR, "[Create][AlignedPtr] make shared for AlignedPtr failed");
     return nullptr;
   }
-  aligned_ptr->base_.reset(data);
-  aligned_ptr->base_.get_deleter() = delete_func;
+  aligned_ptr->base_.reset();
+  alloc_func(aligned_ptr->base_);
+  if (aligned_ptr->base_ == nullptr) {
+    REPORT_CALL_ERROR("E19999", "allocate for AlignedPtr failed");
+    GELOGE(FAILED, "[Call][AllocFunc] allocate for AlignedPtr failed");
+    return nullptr;
+  }
   aligned_ptr->aligned_addr_ = aligned_ptr->base_.get();
   return aligned_ptr;
 }
