@@ -734,10 +734,7 @@ graphStatus TensorData::SetData(uint8_t *data, size_t size, const AlignedPtr::De
     return GRAPH_FAILED;
   }
   length_ = size;
-  aligned_ptr_ = AlignedPtr::BuildFromAllocFunc([&](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
-    ptr.reset(data);
-    ptr.get_deleter() = delete_fuc;
-  });
+  aligned_ptr_ = AlignedPtr::BuildFromData(data, delete_fuc);
   return GRAPH_SUCCESS;
 }
 
@@ -874,10 +871,13 @@ void GeTensor::BuildAlignerPtrWithProtoData() {
   tensor_data_.length_ = proto_msg->data().size();
   tensor_data_.aligned_ptr_.reset();
   tensor_data_.aligned_ptr_ =
-    AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
-      ptr.reset(const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
-      ptr.get_deleter() = [](uint8_t *ptr) { ptr = nullptr; };
-    });
+          AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
+                                           ptr.reset(const_cast<uint8_t *>(
+                                                   reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
+                                         },
+                                         [](uint8_t *ptr) {
+                                           ptr = nullptr;
+                                         });
 }
 
 GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
