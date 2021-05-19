@@ -97,8 +97,8 @@
     },
     {
       "ErrCode" : "E10020",
-      "ErrMessage" : "--dynamic_image_size's number of dimensions of each group must be %s.",
-      "Arglist" : "DynamicImageSizeNum"
+      "ErrMessage" : "Unrecognized --failed to recognize the dynamic_image_size, please check its value.",
+      "Arglist" : ""
     },
     {
       "ErrCode" : "E10021",
