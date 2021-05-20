@@ -37,6 +37,7 @@ std::map<NodePtr, std::vector<uint32_t>> NodeUtils::map_recv_info_{};
 
 const std::set<std::string> kConstOpTypes{ "Const", "Constant" };
 
+const std::set<std::string> kEnterOpTypes{ "Enter", "RefEnter" };
 const std::set<std::string> kMergeOpTypes{ "Merge", "RefMerge" };
 const std::set<std::string> kSwitchOpTypes{ "Switch", "RefSwitch" };
 const std::set<std::string> kNextIterationOpTypes{ "NextIteration", "RefNextIteration" };

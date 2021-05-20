@@ -27,6 +27,8 @@ namespace ge {
 // Op types of Const like Opps.
 extern const std::set<std::string> kConstOpTypes;
 
+// Op types of Enter like Opps.
+extern const std::set<std::string> kEnterOpTypes;
 // Op types of Merge like Opps.
 extern const std::set<std::string> kMergeOpTypes;
 // Op types of Switch like Opps.
