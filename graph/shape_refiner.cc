@@ -693,6 +693,14 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const ConstNodePtr &node, 
       return ret;
     }
   }
+
+  // Create InferenceContext to avoid null pointer access.
+  const static std::set<std::string> force_context_op_types{ "Enter", "Switch", "RefSwitch" };
+  if (force_context_op_types.count(op_type) > 0) {
+    GELOGD("Set InferenceContext for node [%s]", op_desc->GetName().c_str());
+    op.SetInferenceContext(std::shared_ptr<InferenceContext>(InferenceContext::Create()));
+  }
+
   // Get infer func and execute
   ret = op_desc->CallInferFunc(op);
   if (ret == GRAPH_PARAM_INVALID) {
