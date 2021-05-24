@@ -519,6 +519,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
 
   std::string compile_info_str = compile_info;
   TeOpParas op_params;
+  op_params.op_type = optype;
   std::map<std::string, std::vector<uint8_t>> const_values;
   try {
     nlohmann::json inputs_json = nlohmann::json::parse(inputs);
