@@ -595,12 +595,8 @@ void ErrorManager::ClearWarningMsgContainerByWorkId(uint64_t work_stream_id) {
   }
 }
 
+
 const std::string &ErrorManager::GetLogHeader() {
-  if ((error_context_.first_stage == "") && (error_context_.second_stage == "")) {
-    error_context_.log_header = "";
-  } else {
-    error_context_.log_header = "[" + error_context_.first_stage + "][" + error_context_.second_stage + "]";
-  }
   return error_context_.log_header;
 }
 
@@ -612,11 +608,17 @@ void ErrorManager::SetErrorContext(Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);
+  error_context_.log_header = move(error_context.log_header);
 }
 
 void ErrorManager::SetStage(const std::string &first_stage, const std::string &second_stage) {
   error_context_.first_stage = first_stage;
   error_context_.second_stage = second_stage;
+  if ((first_stage == "") && (second_stage == "")) {
+    error_context_.log_header = "";
+  } else {
+    error_context_.log_header = move("[" + first_stage + "][" + second_stage + "]");
+  }
 }
 
 bool ErrorManager::IsInnerErrorCode(const std::string &error_code) {
