@@ -81,7 +81,9 @@ set(UT_FILES
     "testcase/graph_builder_utils.cc"
     "testcase/operator_unitest.cc"
     "testcase/buffer_unittest.cc"
-    "testcase/ge_attr_value_unittest.cc")
+    "testcase/ge_attr_value_unittest.cc"
+    "testcase/shape_refiner_unittest.cc"
+)
 
 set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/aligned_ptr.cc"
