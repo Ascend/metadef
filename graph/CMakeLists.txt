@@ -1,3 +1,17 @@
+set(PROTO_LIST
+    "${METADEF_DIR}/proto/om.proto"
+    "${METADEF_DIR}/proto/ge_ir.proto"
+    "${METADEF_DIR}/proto/insert_op.proto"
+    "${METADEF_DIR}/proto/task.proto"
+    "${METADEF_DIR}/proto/dump_task.proto"
+    "${METADEF_DIR}/proto/fwk_adapter.proto"
+    "${METADEF_DIR}/proto/op_mapping.proto"
+    "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
+)
+
+protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
+protobuf_generate(ge_static PROTO_STATIC_SRCS PROTO_STATIC_HDRS ${PROTO_LIST})
+
 set(SRC_LIST
     "types.cc"
     "anchor.cc"
@@ -47,10 +61,7 @@ set(SRC_LIST
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
 ######### libgraph.so #############
-add_library(graph SHARED
-    ${SRC_LIST}
-    $<TARGET_OBJECTS:metadef_graph_protos_obj>
-)
+add_library(graph SHARED ${SRC_LIST} ${PROTO_SRCS})
 
 target_compile_options(graph PRIVATE
     -O2
@@ -67,8 +78,8 @@ target_compile_definitions(graph PRIVATE
 target_include_directories(graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
+    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/ge/proto
     ${METADEF_DIR}
     ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
@@ -128,10 +139,7 @@ target_link_libraries(graph PRIVATE
 )
 
 ######### libgraph.a #############
-add_library(graph_static STATIC
-    ${SRC_LIST}
-    $<TARGET_OBJECTS:metadef_graph_protos_obj>
-)
+add_library(graph_static STATIC ${SRC_LIST} ${PROTO_STATIC_SRCS})
 
 target_compile_options(graph_static PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC>
@@ -153,8 +161,8 @@ target_compile_definitions(graph_static PRIVATE
 target_include_directories(graph_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
+    ${CMAKE_BINARY_DIR}/proto/ge_static
+    ${CMAKE_BINARY_DIR}/proto/ge_static/proto
     ${METADEF_DIR}
     ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
@@ -363,10 +371,7 @@ set_target_properties(fwk_stub_graph PROPERTIES
 
 else ()
 ######### libgraph.so w/static protobuf #############
-add_library(graph SHARED
-    ${SRC_LIST}
-    $<TARGET_OBJECTS:metadef_graph_protos_obj>
-)
+add_library(graph SHARED ${SRC_LIST} ${PROTO_SRCS})
 
 target_compile_options(graph PRIVATE
         -O2
@@ -384,8 +389,8 @@ target_compile_definitions(graph PRIVATE
 target_include_directories(graph PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_BINARY_DIR}
-        ${CMAKE_BINARY_DIR}/proto/metadef_protos
-        ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
+        ${CMAKE_BINARY_DIR}/proto/ge
+        ${CMAKE_BINARY_DIR}/proto/ge/proto
         ${METADEF_DIR}
         ${METADEF_DIR}/graph
         ${METADEF_DIR}/inc
