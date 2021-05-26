@@ -97,7 +97,7 @@
     },
     {
       "ErrCode" : "E10020",
-      "ErrMessage" : "Unrecognized --failed to recognize the dynamic_image_size, please check its value.",
+      "ErrMessage" : "Unrecognized --failed to recognize the dynamic_image_size, please check its value, E.g.:imagesize1_height,imagesize1_width;imagesize2_height,imagesize2_width",
       "Arglist" : ""
     },
     {
