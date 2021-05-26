@@ -31,11 +31,10 @@ AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
     return;
   }
 
-  base_ = std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(new (std::nothrow) uint8_t[alloc_size],
-                                              [](uint8_t *ptr) {
-                                                delete[] ptr;
-                                                ptr = nullptr;
-                                              });
+  base_ = std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(new (std::nothrow) uint8_t[alloc_size], [](uint8_t *ptr) {
+    delete[] ptr;
+    ptr = nullptr;
+  });
   if (base_ == nullptr) {
     GELOGW("Allocate buffer failed, size=%zu", alloc_size);
     return;

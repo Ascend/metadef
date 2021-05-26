@@ -74,14 +74,18 @@ struct Getter;
 template <typename T>
 struct Getter<T, typename std::enable_if<std::is_integral<T>::value>::type> {
   using ST = int64_t;
-  static constexpr bool(*func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, int64_t&) = ge::AttrUtils::GetInt;
-  static constexpr bool(*list_func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, vector<int64_t>&) = ge::AttrUtils::GetListInt;
+  static constexpr bool(*func)(ge::AttrUtils::ConstAttrHolderAdapter&&,
+                               const string&, int64_t&) = ge::AttrUtils::GetInt;
+  static constexpr bool(*list_func)(ge::AttrUtils::ConstAttrHolderAdapter&&,
+                                    const string&, vector<int64_t>&) = ge::AttrUtils::GetListInt;
 };
 template <typename T>
 struct Getter<T, typename std::enable_if<std::is_floating_point<T>::value>::type> {
   using ST = float;
-  static constexpr bool(*func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, float&) = ge::AttrUtils::GetFloat;
-  static constexpr bool(*list_func)(ge::AttrUtils::ConstAttrHolderAdapter&&, const string&, vector<float>&) = ge::AttrUtils::GetListFloat;
+  static constexpr bool(*func)(ge::AttrUtils::ConstAttrHolderAdapter&&,
+                               const string&, float&) = ge::AttrUtils::GetFloat;
+  static constexpr bool(*list_func)(ge::AttrUtils::ConstAttrHolderAdapter&&,
+                                    const string&, vector<float>&) = ge::AttrUtils::GetListFloat;
 };
 
 class TeOpVarAttrArgsImpl {
@@ -156,7 +160,8 @@ class TeOpVarAttrArgsImpl {
     }
 
   private:
-    static std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*, const std::string &, DataBuf &)>> data_getter_;
+    static std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*,
+                                                      const std::string &, DataBuf &)>> data_getter_;
     ge::OpDescPtr op_desc_;
     std::map<std::string, std::shared_ptr<AnyValueBase>> data_map_;
 };
@@ -187,7 +192,8 @@ const std::map<ge::DataType, std::string> DATATYPE_STRING_MAP{{ge::DT_FLOAT, "fl
                                                               {ge::DT_DUAL_SUB_INT8, "dual_sub_int8"},
                                                               {ge::DT_DUAL_SUB_UINT8, "dual_sub_uint8"}};
 
-std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*, const std::string &, DataBuf &)>> TeOpVarAttrArgsImpl::data_getter_ = {
+std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*,
+                                           const std::string &, DataBuf &)>> TeOpVarAttrArgsImpl::data_getter_ = {
   {"Int8", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int8_t>},
   {"Int16", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int16_t>},
   {"Int32", &TeOpVarAttrArgsImpl::GetNodeAttrDataTmpl<int32_t>},

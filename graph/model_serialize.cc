@@ -428,7 +428,7 @@ bool ModelSerializeImp::HandleNodeNameRef() {
       auto dst_anchor = item.dst_node->GetInDataAnchor(item.dst_in_index);
       if (src_anchor == nullptr || dst_anchor == nullptr) {
         REPORT_CALL_ERROR("E19999", "get Anchor failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
-               item.dst_node_name.c_str(), item.dst_in_index);
+                          item.dst_node_name.c_str(), item.dst_in_index);
         GELOGE(GRAPH_FAILED, "[Get][Anchor] failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
                item.dst_node_name.c_str(), item.dst_in_index);
         return false;
