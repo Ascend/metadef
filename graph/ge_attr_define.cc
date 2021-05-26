@@ -1006,6 +1006,13 @@ const std::string ATTR_NAME_DATA_SLICE = "_data_slice";
 const std::string ATTR_NAME_NEED_RECOVER_ATTR = "_need_recover_attr";
 const std::string ATTR_NAME_OFF_SUPERKERNEL_ATTR = "_off_superkernel";
 
+// merge subgraph with output anchor map
+const std::string ATTR_NAME_FUSION_ORIGIN_NAME = "_fusion_origin_name";
+const std::string ATTR_NAME_FUSION_ORIGIN_OUTPUT_INDEX = "_fusion_origin_output_index";
+
+// read var offset
+const std::string ATTR_NAME_INNER_OFFSET = "_inner_offset";
+
 // used for memory allocate
 const std::string ATTR_NAME_INPUT_MEM_TYPE_LIST = "_input_memory_type";
 const std::string ATTR_NAME_OUTPUT_MEM_TYPE_LIST = "_output_memory_type";
