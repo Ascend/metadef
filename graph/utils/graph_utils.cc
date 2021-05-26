@@ -318,7 +318,7 @@ GraphUtils::RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const 
 
 /// Add two edges to the new node, respectively connecting the SRC and DST
 /// associated with the original edge
-/// A ---> B transfered to  A ---> N ---> B
+/// A ---> B transferred to  A ---> N ---> B
 graphStatus InsertTransNode(ComputeGraph &compute_graph, const InDataAnchorPtr &in_data_anchor,
                             const std::vector<OpDescPtr> &vec_op_desc) {
   GE_CHECK_NOTNULL(in_data_anchor);
@@ -395,11 +395,11 @@ graphStatus InsertTransNode(ComputeGraph &compute_graph, const InDataAnchorPtr &
       int64_t input_format = 0;
       int64_t output_format = 0;
       if (!AttrUtils::GetInt(op_desc, "input_format", input_format)) {
-        GELOGW("get attr input_format failed");
+        GELOGW("[Get][Attr] Get attr input_format failed");
         continue;
       }
       if (!AttrUtils::GetInt(op_desc, "output_format", output_format)) {
-        GELOGW("get attr output_format failed");
+        GELOGW("[Get][Attr] Get attr output_format failed");
         continue;
       }
 
@@ -632,7 +632,7 @@ void GraphUtils::RecordOriginalNames(std::vector<ge::NodePtr> original_nodes, co
     }
     auto ret = ge::AttrUtils::GetListStr(opdesc_tmp, ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp);
     if (!ret) {
-      GELOGW("Get list str failed");
+      GELOGW("[Get][Attr] Get attr _datadump_original_op_names failed");
       continue;
     }
     if (names_tmp.size() != 0) {
@@ -734,7 +734,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
     max_dump_file_num = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
   }
   if (max_dump_file_num != 0 && file_index > max_dump_file_num) {
-    GELOGW("dump graph file cnt > maxDumpFileNum, maxDumpFileCnt=%ld.", max_dump_file_num);
+    GELOGW("[DumpGraph][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
+           file_index, max_dump_file_num);
     return;
   }
 
@@ -745,7 +746,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
     if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
       int32_t ret = CreateDirectory(stream_file_name.str());
       if (ret != 0) {
-        GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+        GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
         stream_file_name.str("");
         stream_file_name << "./";
       }
@@ -782,7 +783,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
     GraphUtils::WriteProtoToTextFile(ge_proto, real_path);
   }
 #else
-  GELOGW("need to define FMK_SUPPORT_DUMP for dump graph.");
+  GELOGW("[DumpGraph][Check] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
 }
 
@@ -801,7 +802,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
     max_dump_file_num = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
   }
   if (max_dump_file_num != 0 && file_index > max_dump_file_num) {
-    GELOGW("Dump graph file cnt > maxDumpFileNum, maxDumpFileCnt=%ld.", max_dump_file_num);
+    GELOGW("[DumpGraph][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
+           file_index, max_dump_file_num);
     return;
   }
 
@@ -946,8 +948,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
       max_dump_file_size = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
     }
     if (max_dump_file_size != 0 && fileSize != -1 && fileSize > max_dump_file_size) {
-      GELOGW("dump graph file size > maxDumpFileSize, maxDumpFileSize=%ld.", max_dump_file_size);
-      GE_IF_BOOL_EXEC(remove(real_path) != 0, GELOGW("remove %s failed", real_path));
+      GELOGW("[WriteProto][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
+             fileSize, max_dump_file_size);
+      GE_IF_BOOL_EXEC(remove(real_path) != 0, GELOGW("[WriteProto][RemovePath] Remove path %s failed", real_path));
       GE_CHK_BOOL_EXEC(fclose(file) == 0,
                        REPORT_CALL_ERROR("E19999", "close file:%s failed, error:%s", real_path, strerror(errno));
                        return, "[FClose][File] %s failed error:%s", real_path, strerror(errno));
@@ -958,7 +961,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
                    REPORT_CALL_ERROR("E19999", "close file:%s failed error:%s", real_path, strerror(errno));
                    return, "[FClose][File] %s failed error:%s", real_path, strerror(errno));
 #else
-  GELOGW("Need to define FMK_SUPPORT_DUMP for dump graph.");
+  GELOGW("[Write][Proto] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
 }
 
@@ -1024,7 +1027,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
     max_dump_file_num = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
   }
   if (max_dump_file_num != 0 && file_index > max_dump_file_num) {
-    GELOGW("dump graph file cnt > maxDumpFileNum, maxDumpFileNum=%ld.", max_dump_file_num);
+    GELOGW("[DumpGraph][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
+           file_index, max_dump_file_num);
     return;
   }
 
@@ -1033,7 +1037,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
     int32_t ret = CreateDirectory(stream_file_name.str());
     if (ret != 0) {
-      GELOGW("create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+      GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
       stream_file_name.str("");
       stream_file_name << "./";
     }
@@ -1069,7 +1073,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   // 3. Serialize to file in current path
   GraphUtils::WriteProtoToTextFile(model_proto, real_path.get());
 #else
-  GELOGW("need to define FMK_SUPPORT_DUMP for dump graph.");
+  GELOGW("[DumpGraph][Check] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
 }
 
@@ -1098,7 +1102,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
     max_dump_file_num = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
   }
   if (max_dump_file_num != 0 && file_index > max_dump_file_num) {
-    GELOGW("Dump graph file cnt > maxDumpFileNum, maxDumpFileNum=%ld.", max_dump_file_num);
+    GELOGW("[DumpGraph][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
+           file_index, max_dump_file_num);
     return;
   }
 
@@ -1256,8 +1261,8 @@ graphStatus RelinkDataIO(const NodePtr &node, const std::vector<int> &io_map, In
     }
     auto in_anchor = in_data_anchors.at(in_index);
     if (in_anchor == nullptr) {
-      GELOGW("Invalid in data anchors(null) found at node %s type %s index %d, ignore it.", node->GetName().c_str(),
-             node->GetType().c_str(), in_index);
+      GELOGW("[Relink][Check] %d\'th in_data_anchor of node %s type %s is null, ignore it.", in_index,
+             node->GetName().c_str(), node->GetType().c_str());
       continue;
     }
     auto peer_out_anchor = in_anchor->GetPeerOutAnchor();
@@ -1322,7 +1327,7 @@ graphStatus RelinkControlNodeIfNeed(const NodePtr &node, InNodesToOut &in_nodes_
         // ring breaking operation here, and notice, this is an operation which will be
         // delete later, so do not use this interface to break a ring
         if (in_node == out_node) {
-          GELOGW("there is a cycle between %s to %s when isolating node %s type %s",
+          GELOGW("[Relink][CtrlNode] There is a cycle between %s to %s when isolating node %s type %s",
                  in_node->GetName().c_str(), out_node->GetName().c_str(), node->GetName().c_str(),
                  node->GetType().c_str());
           continue;
@@ -1425,7 +1430,6 @@ graphStatus ReplaceInDataAnchors(const Node::Vistor<InDataAnchorPtr> &new_ins,
 
     auto peer_out_anchor = old_in_anchor->GetPeerOutAnchor();
     if (peer_out_anchor == nullptr) {
-      GELOGW("Peer out anchor is nullptr");
       continue;
     }
     auto ret = peer_out_anchor->Unlink(old_in_anchor);
@@ -1462,23 +1466,21 @@ graphStatus ReplaceControlAnchors(const NodePtr &new_node, const NodePtr &old_no
   auto exists_out_anchors = new_in_control_anchor->GetPeerAnchors();
   auto exists_out_anchors_set = std::set<AnchorPtr>(exists_out_anchors.begin(), exists_out_anchors.end());
   for (const auto &peer_out_anchor : peer_out_anchors) {
-    if (peer_out_anchor != nullptr) {
-      if (exists_out_anchors_set.count(peer_out_anchor) > 0) {
-        continue;
-      }
-      auto ret = GraphUtils::AddEdge(peer_out_anchor, new_in_control_anchor);
-      if (ret != GRAPH_SUCCESS) {
-        REPORT_CALL_ERROR("E19999", "Add edge from %s to %s failed, ret:%d",
-                          peer_out_anchor->GetOwnerNode()->GetName().c_str(),
-                          new_in_control_anchor->GetOwnerNode()->GetName().c_str(), ret);
-        GELOGE(GRAPH_FAILED, "[Add][Edge] from %s to %s failed, ret:%d",
-               peer_out_anchor->GetOwnerNode()->GetName().c_str(),
-               new_in_control_anchor->GetOwnerNode()->GetName().c_str(), ret);
-        return GRAPH_FAILED;
-      }
-    } else {
-      GELOGW("peer outanchor is nullptr");
+    if (peer_out_anchor == nullptr) {
       continue;
+    }
+    if (exists_out_anchors_set.count(peer_out_anchor) > 0) {
+      continue;
+    }
+    auto ret = GraphUtils::AddEdge(peer_out_anchor, new_in_control_anchor);
+    if (ret != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Add edge from %s to %s failed, ret:%d",
+                        peer_out_anchor->GetOwnerNode()->GetName().c_str(),
+                        new_in_control_anchor->GetOwnerNode()->GetName().c_str(), ret);
+      GELOGE(GRAPH_FAILED, "[Add][Edge] from %s to %s failed, ret:%d",
+             peer_out_anchor->GetOwnerNode()->GetName().c_str(),
+             new_in_control_anchor->GetOwnerNode()->GetName().c_str(), ret);
+      return GRAPH_FAILED;
     }
   }
   auto old_out_control_anchor = old_node->GetOutControlAnchor();
@@ -1489,23 +1491,21 @@ graphStatus ReplaceControlAnchors(const NodePtr &new_node, const NodePtr &old_no
   auto exists_in_anchors = new_out_control_anchor->GetPeerAnchors();
   auto exists_in_anchors_set = std::set<AnchorPtr>(exists_in_anchors.begin(), exists_in_anchors.end());
   for (const auto &peer_in_anchor : peer_in_anchors) {
-    if (peer_in_anchor != nullptr) {
-      if (exists_in_anchors_set.count(peer_in_anchor) > 0) {
-        continue;
-      }
-      auto ret = GraphUtils::AddEdge(new_out_control_anchor, peer_in_anchor);
-      if (ret != GRAPH_SUCCESS) {
-        REPORT_CALL_ERROR("E19999", "AddEdge from %s to %s failed, ret:%d",
-                          new_out_control_anchor->GetOwnerNode()->GetName().c_str(),
-                          peer_in_anchor->GetOwnerNode()->GetName().c_str(), ret);
-        GELOGE(GRAPH_FAILED, "[Add][Edge] from %s to %s failed, ret:%d",
-               new_out_control_anchor->GetOwnerNode()->GetName().c_str(),
-               peer_in_anchor->GetOwnerNode()->GetName().c_str(), ret);
-        return GRAPH_FAILED;
-      }
-    } else {
-      GELOGW("Peer inanchor is nullptr");
+    if (peer_in_anchor == nullptr) {
       continue;
+    }
+    if (exists_in_anchors_set.count(peer_in_anchor) > 0) {
+      continue;
+    }
+    auto ret = GraphUtils::AddEdge(new_out_control_anchor, peer_in_anchor);
+    if (ret != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "AddEdge from %s to %s failed, ret:%d",
+                        new_out_control_anchor->GetOwnerNode()->GetName().c_str(),
+                        peer_in_anchor->GetOwnerNode()->GetName().c_str(), ret);
+      GELOGE(GRAPH_FAILED, "[Add][Edge] from %s to %s failed, ret:%d",
+             new_out_control_anchor->GetOwnerNode()->GetName().c_str(),
+             peer_in_anchor->GetOwnerNode()->GetName().c_str(), ret);
+      return GRAPH_FAILED;
     }
   }
 
@@ -2361,8 +2361,8 @@ graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
       }
     } else {
       if (reuse_input_flag) {
-        GELOGW("Invalid reuse_input attr on output %d of node %s, please check attr reuse_input and reuse_input_index",
-               out_data_anchor->GetIdx(), node->GetName().c_str());
+        GELOGW("[GetRefMapping][Check] Invalid reuse_input attr on output %d of node %s, please check attr reuse_input "
+               "and reuse_input_index", out_data_anchor->GetIdx(), node->GetName().c_str());
       }
       const std::string &symbol = cur_node_info.ToString();
       GELOGD("Add anchor %s, symbol %s.", cur_node_info.ToString().c_str(), symbol.c_str());
@@ -2575,8 +2575,8 @@ graphStatus GraphUtils::UnionSymbolMapping(const NodeIndexIO &exist_node_info1, 
       return GRAPH_FAILED;
     }
     if (iter->second != min_symbol) {
-      GELOGW("not expected symbol of anchor %s, expect %s but %s exactly.",
-             iter->first.c_str(), min_symbol.c_str(), iter->second.c_str());
+      GELOGW("[GetRefMapping][Check] not expected symbol of anchor %s, expect %s but %s exactly.", iter->first.c_str(),
+             min_symbol.c_str(), iter->second.c_str());
     }
     iter->second = symbol;
   }
@@ -2628,7 +2628,7 @@ graphStatus GraphUtils::UpdateRefMapping(const NodeIndexIO &cur_node_info, const
 ///
 bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {
   if (out_data_anchor == nullptr) {
-    GELOGW("out_data_anchor is NULL.");
+    GELOGW("[Check][Param] out_data_anchor is null");
     return false;
   }
   int32_t output_index = out_data_anchor->GetIdx();
@@ -2652,11 +2652,8 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   }
 
   // ref op
+  // op_desc of node should not be null
   OpDescPtr op_desc = node->GetOpDesc();
-  if (op_desc == nullptr) {
-    GELOGW("op_desc is NULL.");
-    return false;
-  }
   bool is_ref = false;
   (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_REFERENCE, is_ref);
   if (is_ref) {
@@ -2691,23 +2688,18 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
 
 bool GraphUtils::IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {
   NodePtr node = out_data_anchor->GetOwnerNode();
-  OpDescPtr op_desc = node->GetOpDesc();
-  if (op_desc == nullptr) {
-    GELOGW("op_desc is NULL.");
-    return false;
-  }
   // nopadding means output[0] reuse input[0], but as history reason,
   // other output index also return true for mem assign in block_mem_assigner
   bool attr_reuse = false;
   bool is_input_continuous = false;
   bool is_out_continuous = false;
-  (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, is_input_continuous);
-  (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, is_out_continuous);
-  bool get_reuse_flag = ge::AttrUtils::GetBool(op_desc, ATTR_NAME_OUTPUT_REUSE_INPUT, attr_reuse);
+  (void)ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, is_input_continuous);
+  (void)ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, is_out_continuous);
+  bool get_reuse_flag = ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_OUTPUT_REUSE_INPUT, attr_reuse);
   bool is_no_padding_reuse_input = (is_input_continuous || is_out_continuous) && get_reuse_flag && attr_reuse;
   if (is_no_padding_reuse_input) {
     reuse_in_index = 0;
-    GELOGI("Nopadding ReuseInput name[%s] output[%d] reuse input[%d].", op_desc->GetName().c_str(),
+    GELOGI("Nopadding ReuseInput name[%s] output[%d] reuse input[%d].", node->GetName().c_str(),
            out_data_anchor->GetIdx(), reuse_in_index);
     return true;
   }
@@ -2741,15 +2733,15 @@ bool GraphUtils::IsNodeInGraphRecursively(const ComputeGraphPtr &graph, const No
 ///
 bool GraphUtils::IsUnknownShapeGraph(const ComputeGraphPtr &graph) {
   if (graph == nullptr) {
-    GELOGW("Input graph is nullptr.");
+    GELOGW("[Check][Param] Input graph is nullptr.");
     return false;
   }
   for (const auto &node : graph->GetDirectNode()) {
     bool is_unknown = false;
     auto ret = NodeUtils::GetNodeUnknownShapeStatus(*node, is_unknown);
     if (ret != GRAPH_SUCCESS) {
-      GELOGW("Get node unknown status failed, node name:%s, type:%s.",
-             node->GetName().c_str(), node->GetType().c_str());
+      GELOGW("[Check][UnknownGraph] Get unknown status failed, node name:%s, type:%s", node->GetName().c_str(),
+             node->GetType().c_str());
       continue;
     }
     if (is_unknown) {

@@ -19,7 +19,6 @@
 #include <algorithm>
 
 #include "debug/ge_util.h"
-#include "common/util/error_manager/error_manager.h"
 
 using domi::domiTensorFormat_t;
 
@@ -444,7 +443,7 @@ std::string TypeUtils::FmkTypeToSerialString(domi::FrameworkType fmk_type) {
   if (it != kFmkTypeToString.end()) {
     return it->second;
   } else {
-    GELOGW("Framework type not support %d.", fmk_type);
+    GELOGW("[Util][Serialize] Framework type %d not support.", fmk_type);
     return "";
   }
 }

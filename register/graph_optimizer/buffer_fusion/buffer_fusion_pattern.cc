@@ -49,7 +49,7 @@ BufferFusionPattern::~BufferFusionPattern() {
  *                         patter match failed if real count lower than the
  * value
  * @param [in] repeate_max: the max count for fusion match,
- *                         the op will be ignored if current match count equla
+ *                         the op will be ignored if current match count equal
  * with the value
  * @return BufferFusionPattern: pattern object
  */
@@ -57,27 +57,27 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
                                                     int64_t repeate_min, int64_t repeate_max, int64_t group_id,
                                                     ShapeTypeRule shape_type_rule) {
   if (desc_name.empty()) {
-    GELOGW("Desc_name cannot be empty.");
+    GELOGW("[AddOpDesc][Check] Desc_name cannot be empty.");
     error_count_++;
     return *this;
   }
 
   if (repeate_min > repeate_max) {
-    GELOGW("Repeat_min can not lager than repeate_max, desc name is [%s], min is [%ld], max is [%ld]",
+    GELOGW("[AddOpDesc][Check] Check desc %s failed as repeat_min > repeat_max, repeat_min=%ld, repeat_max=%ld",
            desc_name.c_str(), repeate_min, repeate_max);
     error_count_++;
     return *this;
   }
 
   if (GetOpDesc(desc_name) != nullptr) {
-    GELOGW("Desc_name repeated. (desc_name:%s)", desc_name.c_str());
+    GELOGW("[AddOpDesc][Check] Desc_name repeated. (desc_name:%s)", desc_name.c_str());
     error_count_++;
     return *this;
   }
 
   BufferFusionOpDesc *op = new (std::nothrow) BufferFusionOpDesc();
   if (op == nullptr) {
-    GELOGW("New an object failed.");
+    GELOGW("[AddOpDesc][Check] New an object failed.");
     error_count_++;
     return *this;
   }
@@ -115,14 +115,14 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
 BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, const std::vector<string> &output_ids,
                                                      int64_t relation, bool ignore_input_num, bool ignore_output_num) {
   if (desc_name.empty()) {
-    GELOGW("Desc_name cannot be empty.");
+    GELOGW("[SetOutputs][Check] Desc_name cannot be empty.");
     error_count_++;
     return *this;
   }
 
   BufferFusionOpDesc *op_desc = GetOpDesc(desc_name);
   if (op_desc == nullptr) {
-    GELOGW("Desc_name not exist. (desc_name:%s)", desc_name.c_str());
+    GELOGW("[SetOutputs][Check] Desc_name %s not exist", desc_name.c_str());
     error_count_++;
     return *this;
   }
@@ -135,13 +135,13 @@ BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, co
 
   UpdateSkipStatus(op_desc);
 
-  // support one multi output for one optype
+  // support one multi output for one op_type
   for (const string &output_id : output_ids) {
     BufferFusionOpDesc *output_op_desc = GetOpDesc(output_id);
     if (output_op_desc == nullptr) {
-      GELOGW("Desc_name not exist. (desc_name:%s)", desc_name.c_str());
+      GELOGW("[SetOutputs][Check] Desc_name not exist. (desc_name:%s)", desc_name.c_str());
       if (IsAddOverflow(error_count_, 1) != SUCCESS) {
-        GELOGW("errorCount_++ overflow. (desc_name:%s)", desc_name.c_str());
+        GELOGW("[SetOutputs][Check] errorCount_++ overflow. (desc_name:%s)", desc_name.c_str());
         return *this;
       }
       error_count_++;
@@ -155,7 +155,8 @@ BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, co
     output_op_desc->inputs.push_back(op_desc);
 
     if (op_desc->out_branch_type != relation) {
-      GELOGW("Failed to set outputs relation: curr is [%ld], new is [%ld].", op_desc->out_branch_type, relation);
+      GELOGW("[SetOutputs][Check] Set outputs relation failed, curr is [%ld], new is [%ld].", op_desc->out_branch_type,
+             relation);
       return *this;
     }
   }
@@ -171,12 +172,12 @@ BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, co
 bool BufferFusionPattern::GetOutputs(BufferFusionOpDesc *op_desc, std::vector<BufferFusionOpDesc *> &outputs,
                                      bool ignore_repeat) {
   if (op_desc == nullptr) {
-    GELOGW("failed to get outputs: op_desc is null.");
+    GELOGW("[GetOutputs][Check] op_desc is null.");
     return false;
   }
   string desc_n = op_desc->desc_name;
 
-  // add curr desc can be reused while repeate_curr < repeate_max
+  // add curr desc can be reused while repeat_curr < repeate_max
   if (!ignore_repeat && op_desc->repeate_curr < op_desc->repeate_max) {
     outputs.push_back(op_desc);
   }
@@ -184,13 +185,12 @@ bool BufferFusionPattern::GetOutputs(BufferFusionOpDesc *op_desc, std::vector<Bu
   // check candidate desc
   for (auto desc : op_desc->outputs) {
     if (desc == nullptr) {
-      GELOGD("desc[%s] has null output desc.", desc_n.c_str());
       continue;
     }
     // add out desc
     outputs.push_back(desc);
 
-    // add sub outdescs while repeate_min == 0
+    // add sub out_descs while repeate_min == 0
     if (desc->repeate_min == 0) {
       std::vector<BufferFusionOpDesc *> sub_output;
       if (GetOutputs(desc, sub_output, true)) {
@@ -211,28 +211,28 @@ bool BufferFusionPattern::GetOutputs(BufferFusionOpDesc *op_desc, std::vector<Bu
  */
 BufferFusionPattern &BufferFusionPattern::SetHead(const std::vector<string> &head_ids) {
   if (head_ids.empty()) {
-    GELOGW("input vector is empty.");
+    GELOGW("[SetHead][Check] Input head_ids is empty.");
     error_count_++;
     return *this;
   }
   for (const string &head_id : head_ids) {
     BufferFusionOpDesc *head_op_desc = GetOpDesc(head_id);
     if (head_op_desc == nullptr) {
-      GELOGW("descName not exist. (desc_name:%s)", head_id.c_str());
+      GELOGW("[SetHead][Check] descName not exist. (desc_name:%s)", head_id.c_str());
       if (IsAddOverflow(error_count_, 1) != SUCCESS) {
-        GELOGW("errorCount_++ overflow. (desc_name:%s)", head_id.c_str());
+        GELOGW("[SetHead][Check] errorCount_++ overflow. (desc_name:%s)", head_id.c_str());
         return *this;
       }
       error_count_++;
       return *this;
     }
-    // Head desc repeat number can not excceed 1
-    // if must be excceed 1, it can be realized by several descs
+    // Head desc repeat number can not exceed 1
+    // if must be exceed 1, it can be realized by several descs
     if (head_op_desc->repeate_max > 1) {
-      GELOGW("Head desc repeat number can not excceed 1, head desc name is [%s], actual repeate_max is [%ld]",
-             head_id.c_str(), head_op_desc->repeate_max);
+      GELOGW("[SetHead][Check] Head desc named %s repeats more than once, cur_repeat_max=%ld", head_id.c_str(),
+             head_op_desc->repeate_max);
       if (IsAddOverflow(error_count_, 1) != SUCCESS) {
-        GELOGW("errorCount_++ overflow. (desc_name:%s)", head_id.c_str());
+        GELOGW("[SetHead][Check] errorCount_++ overflow. (desc_name:%s)", head_id.c_str());
         return *this;
       }
       error_count_++;
@@ -245,14 +245,15 @@ BufferFusionPattern &BufferFusionPattern::SetHead(const std::vector<string> &hea
   int64_t desc_total_min = 0;
   for (const auto &desc : head_) {
     if (IsAddOverflow(desc_total_min, desc->repeate_min) != SUCCESS) {
-      GELOGW("desc_total_min + repeate_min overflow.");
+      GELOGW("[SetHead][Check] desc_total_min[%ld] + repeate_min[%ld] overflow", desc_total_min, desc->repeate_min);
       return *this;
     }
     desc_total_min += desc->repeate_min;
   }
 
   if (desc_total_min > 1) {
-    GELOGW("head desc repeat min total value can not be larger than 1, current is [%ld]", desc_total_min);
+    GELOGW("[SetHead][Check] Head desc repeat min total value can not be larger than 1, current is [%ld]",
+           desc_total_min);
     error_count_++;
     return *this;
   }

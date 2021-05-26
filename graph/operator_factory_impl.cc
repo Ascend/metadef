@@ -16,7 +16,6 @@
 
 #include "graph/operator_factory_impl.h"
 #include "debug/ge_log.h"
-#include "framework/common/debug/ge_log.h"
 
 namespace ge {
 shared_ptr<std::map<string, OpCreator>> OperatorFactoryImpl::operator_creators_;
@@ -33,7 +32,7 @@ Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, c
     if (it_v2 != operator_creators_v2_->end()) {
       return it_v2->second(operator_name.c_str());
     } else {
-      GELOGW("No OpProto of [%s] registered by AscendString.", operator_type.c_str());
+      GELOGW("[Create][Operator] No op_proto of [%s] registered by AscendString.", operator_type.c_str());
     }
   }
   if (operator_creators_ == nullptr) {
@@ -41,7 +40,7 @@ Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, c
   }
   auto it = operator_creators_->find(operator_type);
   if (it == operator_creators_->end()) {
-    GELOGW("no OpProto of [%s] registered by string.", operator_type.c_str());
+    GELOGW("[Create][Operator] No op_proto of [%s] registered by string.", operator_type.c_str());
     return Operator();
   }
   return it->second(operator_name);
@@ -55,7 +54,7 @@ graphStatus OperatorFactoryImpl::GetOpsTypeList(std::vector<std::string> &all_op
     }
       return GRAPH_SUCCESS;
     } else {
-    GELOGW("Ops not registered by AscendString.");
+    GELOGW("[Get][OpsTypeList] Ops not registered by AscendString.");
   }
 
   if (operator_creators_ != nullptr) {
@@ -179,7 +178,7 @@ graphStatus OperatorFactoryImpl::RegisterInferShapeFunc(const std::string &opera
   }
   auto it = operator_infershape_funcs_->find(operator_type);
   if (it != operator_infershape_funcs_->end()) {
-    GELOGW("optype[%s] has registered infershape func", operator_type.c_str());
+    GELOGW("[Register][InferFunc] op [%s] has already registered infer_func", operator_type.c_str());
     return GRAPH_FAILED;
   }
   (void)operator_infershape_funcs_->emplace(operator_type, infer_shape_func);

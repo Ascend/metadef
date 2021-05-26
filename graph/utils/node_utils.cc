@@ -18,15 +18,10 @@
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
-#include "graph/anchor.h"
 #include "graph/debug/ge_attr_define.h"
-#include "graph/types.h"
 #include "graph/node_impl.h"
-#include "external/graph/operator.h"
 #include "graph/ge_context.h"
 #include "graph/runtime_inference_context.h"
-#include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
@@ -392,13 +387,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::UpdatePeer
       auto peer_input_dims = peer_input_desc->GetShape().GetDims();
       auto peer_input_dtype = peer_input_desc->GetDataType();
       if (out_dtype != peer_input_dtype) {
-        GELOGW("current node [%s] [%d]\'th out_dtype is [%s].peer input node [%s] [%d]\'th "
+        GELOGW("[Update][PeerInput] current node [%s] [%d]\'th out_dtype is [%s].peer input node [%s] [%d]\'th "
                "input_dtype is [%s].The two dtype should be same! Please check graph and fix it",
                node_ptr->GetName().c_str(), out_anchor->GetIdx(), TypeUtils::DataTypeToSerialString(out_dtype).c_str(),
                peer_anchor->GetOwnerNode()->GetName().c_str(), peer_anchor->GetIdx(),
                TypeUtils::DataTypeToSerialString(peer_input_dtype).c_str());
       } else if ((!peer_input_dims.empty()) && (out_dims != peer_input_dims)) {
-        GELOGW("current node [%s] [%d]\'th out_shape is [%s].peer input node [%s] [%d]\'th "
+        GELOGW("[Update][PeerInput] current node [%s] [%d]\'th out_shape is [%s].peer input node [%s] [%d]\'th "
                "input_shape is [%s].The two shape should be same! Please check graph and fix it",
                node_ptr->GetName().c_str(), out_anchor->GetIdx(), output_tensor->GetShape().ToString().c_str(),
                peer_anchor->GetOwnerNode()->GetName().c_str(), peer_anchor->GetIdx(),
@@ -702,7 +697,7 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
   auto peer_op_type = peer_op_desc->GetType();
   if (const_types.count(peer_op_type) > 0) {
     if (!AttrUtils::MutableTensor(peer_node->GetOpDesc(), ATTR_NAME_WEIGHTS, ge_tensor)) {
-      GELOGW("get attr name %s failed.", ATTR_NAME_WEIGHTS.c_str());
+      GELOGW("[Get][InputConst] Get attr %s failed.", ATTR_NAME_WEIGHTS.c_str());
       return GRAPH_FAILED;
     }
     return GRAPH_SUCCESS;
@@ -714,13 +709,13 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
     if (parent_node != nullptr
         && const_types.count(parent_node->GetType()) > 0) {
       if (!AttrUtils::MutableTensor(parent_node->GetOpDesc(), ATTR_NAME_WEIGHTS, ge_tensor)) {
-        GELOGW("get attr name %s failed.", ATTR_NAME_WEIGHTS.c_str());
+        GELOGW("[Get][InputConst] Get attr %s failed.", ATTR_NAME_WEIGHTS.c_str());
         return GRAPH_FAILED;
       }
       return GRAPH_SUCCESS;
     }
   }
-  GELOGW("node[%s]'s input[%s]'s peer node is not const", node.GetName().c_str(), dst_name.c_str());
+  GELOGW("[Get][InputConst] Node[%s]'s input[%s]'s peer node is not const", node.GetName().c_str(), dst_name.c_str());
   return GRAPH_FAILED;
 }
 
@@ -936,7 +931,7 @@ bool NodeUtils::IsWhileVaryingInput(const ge::NodePtr &node) {
 
   uint32_t index_i = 0;
   if (!AttrUtils::GetInt(node->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, index_i)) {
-    GELOGW("Node %s has no attr PARENT_NODE_INDEX.", node->GetName().c_str());
+    GELOGW("[Check][Attr] Node %s has no attr PARENT_NODE_INDEX.", node->GetName().c_str());
     return false;
   }
   bool varying_flag = true;
@@ -1047,7 +1042,6 @@ vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, int ind
   GE_CHECK_NOTNULL_EXEC(op_desc, return in_data_node_vec);
   auto subgraph_names = op_desc->GetSubgraphInstanceNames();
   if (subgraph_names.empty()) {
-    GELOGW("Node %s is single node without sub graph.", node.GetName().c_str());
     return in_data_node_vec;
   }
   auto compute_graph = node.GetOwnerComputeGraph();
@@ -1179,16 +1173,15 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     GE_CHECK_NOTNULL(in_anchor);
     auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
     if (peer_out_data_anchor == nullptr) {
-      GELOGW("Node[%s] the %u'th input anchor no peer out anchor, please check!", node->GetName().c_str(), index);
+      GELOGW("[Get][InNode] %u'th input anchor of node %s has no peer out anchor, please check!", index,
+             node->GetName().c_str());
       return GRAPH_SUCCESS;
     }
     auto peer_out_node = peer_out_data_anchor->GetOwnerNode();
     GE_CHECK_NOTNULL(peer_out_node);
     if (peer_out_node->GetType() != PARTITIONEDCALL) {
       peer_node = peer_out_node;
-      GELOGD("in node[%s] peer_node[%s] peer_node type[%s]",
-             node->GetName().c_str(),
-             peer_node->GetName().c_str(),
+      GELOGD("in node[%s] peer_node[%s] peer_node type[%s]", node->GetName().c_str(), peer_node->GetName().c_str(),
              peer_node->GetType().c_str());
       return GRAPH_SUCCESS;
     }

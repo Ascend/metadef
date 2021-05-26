@@ -199,7 +199,7 @@ static void CopyAttrValue(const std::string &key, const ge::GeAttrValue &value, 
       CASE_ATTR_VALUE_TYPE_LIST(LIST_INT, vector<int64_t>, ListInt);
 #undef CASE_ATTR_VALUE_TYPE_LIST
       default:
-        GELOGW("The ge attr value type(%d) is invalid.", static_cast<int>(value_type));
+        GELOGW("[Copy][AttrValue] Attr value type %d is not supported.", static_cast<int>(value_type));
         break;
     }
   }

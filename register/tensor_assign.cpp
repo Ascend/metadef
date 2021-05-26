@@ -222,7 +222,7 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
         const string &str = val_vector.Get(i);
         string_head[i].len = static_cast<uint64_t>(str.size());
         CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1, str.c_str(), str.size() + 1) == EOK,
-                         GELOGW("call memcpy_s fail!"));
+                         GELOGW("[GetStringVal][Copy] memcpy failed"));
         raw_data += (str.size() + 1);
       } else {
         string_head[i].len = 0;
@@ -244,7 +244,7 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
       string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       string_head[i].len = static_cast<uint64_t>(str.size());
       CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1, str.c_str(), str.size() + 1) == EOK,
-                       GELOGW("call memcpy_s fail!"));
+                       GELOGW("[GetStringVal][Copy] memcpy failed"));
       raw_data += (str.size() + 1);
     }
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
@@ -318,7 +318,7 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
     string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
     string_head->len = static_cast<uint64_t>(weight_content.size());
     CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1, weight_content.c_str(),
-		    weight_content.size() + 1) == EOK, GELOGW("call memcpy_s fail!"));
+                              weight_content.size() + 1) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   } else {
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(float));

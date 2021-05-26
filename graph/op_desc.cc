@@ -303,7 +303,7 @@ graphStatus OpDescImpl::AddOptionalInputDesc(const string &name,
 
 graphStatus OpDescImpl::UpdateInputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc) {
   if (index >= inputs_desc_.size()) {
-    GELOGW("The index is invalid. index[%u]", index);
+    GELOGW("[UpdateInput][Check] Input index is invalid, index=%u, input_size=%zu", index, inputs_desc_.size());
     return GRAPH_FAILED;
   }
 
@@ -409,7 +409,7 @@ bool OpDescImpl::operator==(const OpDescImpl &r_op_desc) const {
 graphStatus OpDescImpl::UpdateInputDesc(const string &name, const ge::GeTensorDesc &tensor_Desc) {
   auto it = input_name_idx_.find(name);
   if (it == input_name_idx_.end()) {
-    GELOGW("Cann't find the input desc. name[%s]", name.c_str());
+    GELOGW("[UpdateInput][Check] Can not find input desc named %s", name.c_str());
     return GRAPH_FAILED;
   }
   if (it->second >= inputs_desc_.size()) {
@@ -470,7 +470,7 @@ GeTensorDescPtr OpDescImpl::MutableInputDesc(uint32_t index) const {
     return nullptr;
   }
   if (inputs_desc_[index]->IsValid() != GRAPH_SUCCESS) {
-    GELOGW("input desc is invalid");
+    GELOGW("[Get][InputDesc] Input desc is invalid");
     return nullptr;
   }
   return inputs_desc_[index];
@@ -480,7 +480,7 @@ GeTensorDescPtr OpDescImpl::MutableInputDesc(const string &name) const {
   auto input_name_idx = GetAllInputName();
   auto it = input_name_idx.find(name);
   if (it == input_name_idx.end()) {
-    GELOGW("Failed to get [%s] input desc", name.c_str());
+    GELOGW("[Get][InputDesc] Failed to get [%s] input desc", name.c_str());
     return nullptr;
   }
   return MutableInputDesc(it->second);
@@ -520,7 +520,7 @@ OpDesc::Vistor<GeTensorDesc> OpDescImpl::GetAllInputsDesc(const ConstOpDescPtr &
     if (it->IsValid() == GRAPH_SUCCESS) {
       temp.push_back(*it);
     } else {
-      GELOGW("this inputDesc is InValid, it won't be return");
+      GELOGW("[Get][InputDesc] This input_desc is invalid, it won't be return");
       continue;
     }
   }
@@ -533,7 +533,7 @@ OpDesc::Vistor<GeTensorDescPtr> OpDescImpl::GetAllInputsDescPtr(const ConstOpDes
     if (it->IsValid() == GRAPH_SUCCESS) {
       temp.push_back(it);
     } else {
-      GELOGW("this inputDesc is InValid, it won't be return");
+      GELOGW("[Get][InputDesc] This input_desc is invalid, it won't be return");
       continue;
     }
   }
@@ -597,7 +597,7 @@ graphStatus OpDescImpl::UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc 
 graphStatus OpDescImpl::UpdateOutputDesc(const string &name, const ge::GeTensorDesc &tensor_Desc) {
   auto it = output_name_idx_.find(name);
   if (it == output_name_idx_.end()) {
-    GELOGW("Cann't find the output desc. name[%s]", name.c_str());
+    GELOGW("[Update][OutputDesc] Can not find the output desc named %s", name.c_str());
     return GRAPH_FAILED;
   }
   GE_IF_BOOL_EXEC(it->second >= outputs_desc_.size(),
@@ -634,7 +634,7 @@ GeTensorDescPtr OpDescImpl::MutableOutputDesc(uint32_t index) const {
 GeTensorDescPtr OpDescImpl::MutableOutputDesc(const string &name) const {
   auto it = output_name_idx_.find(name);
   if (it == output_name_idx_.end()) {
-    GELOGW("Failed to get [%s] output desc", name.c_str());
+    GELOGW("[Update][OutputDesc] Can not find the output desc named %s", name.c_str());
     return nullptr;
   }
   return MutableOutputDesc(it->second);
@@ -669,7 +669,7 @@ ConstGeTensorDescPtr OpDescImpl::GetInputDescPtr(uint32_t index) const {
     return nullptr;
   }
   if (inputs_desc_[index]->IsValid() != GRAPH_SUCCESS) {
-    GELOGW("inputsDesc[%u] is InValid", index);
+    GELOGW("[Get][InputDesc] Input desc %u is invalid", index);
     return nullptr;
   } else {
     return inputs_desc_[static_cast<size_t>(index)];
@@ -767,15 +767,13 @@ std::map<string, uint32_t>& OpDescImpl::MutableAllInputName() { return input_nam
 std::map<string, uint32_t>& OpDescImpl::MutableAllOutputName() { return output_name_idx_; }
 
 bool OpDescImpl::UpdateInputName(std::map<string, uint32_t> input_name_idx) {
-  bool ret = true;
-  //  Use inputDesc_.size() to contain the InValid OptionInput.GetInputsSize() will remove default OptionInput name.
+  // Use inputDesc_.size() to contain the InValid OptionInput.GetInputsSize() will remove default OptionInput name.
   auto input_map_size = inputs_desc_.size();
   auto factory_map_size = input_name_idx.size();
-  // It indicates that some inputs have no optionalname.
-  // The redundant optionalname of factory needs to be deleted and then assigned
+  // It indicates that some inputs have no optional name.
+  // The redundant optional name of factory needs to be deleted and then assigned
   if (input_map_size < factory_map_size) {
-    GELOGI("UpdateInputName org inputname map size: %zu, factory inputname map size: %zu", input_map_size,
-           factory_map_size);
+    GELOGI("org_input_name_num=%zu, factory_input_name_num=%zu", input_map_size, factory_map_size);
     for (auto it = input_name_idx.begin(); it != input_name_idx.end();) {
       if (it->second >= input_map_size) {
         it = input_name_idx.erase(it);
@@ -787,24 +785,25 @@ bool OpDescImpl::UpdateInputName(std::map<string, uint32_t> input_name_idx) {
       GELOGI("UpdateInputName");
       input_name_idx_ = input_name_idx;
     } else {
-      ret = false;
-      GELOGW("after UpdateInputName factoryName map size : %zu", input_name_idx.size());
+      GELOGW("[Update][InputName] After update, org_input_name_num=%zu, factory_input_name_num=%zu", input_map_size,
+             input_name_idx.size());
+      return false;
     }
   } else if (input_map_size == factory_map_size) {
     input_name_idx_ = input_name_idx;
   } else {
-    ret = false;
-    GELOGW("org inputname map size: %zu, factory inputname map size: %zu", input_map_size, factory_map_size);
+    GELOGW("[Update][InputName] factory_input_name_num can not be less than org_input_name_num, exactly "
+           "org_input_name_num=%zu, factory_input_name_num=%zu", input_map_size, factory_map_size);
+    return false;
   }
-  return ret;
+  return true;
 }
 
 bool OpDescImpl::UpdateOutputName(std::map<string, uint32_t> output_name_idx) {
   size_t output_map_size = GetAllOutputsDescSize();
   size_t factory_map_size = output_name_idx.size();
   if (output_map_size < factory_map_size) {
-    GELOGI("UpdateOutputName org outputname map size: %zu, factory outputname map size: %zu", output_map_size,
-           factory_map_size);
+    GELOGI("org_output_name_num=%zu, factory_output_name_num=%zu", output_map_size, factory_map_size);
     for (auto it = output_name_idx.begin(); it != output_name_idx.end();) {
       if (it->second >= output_map_size) {
         it = output_name_idx.erase(it);
@@ -813,7 +812,7 @@ bool OpDescImpl::UpdateOutputName(std::map<string, uint32_t> output_name_idx) {
       }
     }
     if (output_name_idx.size() == output_map_size) {
-      GELOGI("UpdateoutputName");
+      GELOGI("UpdateOutputName");
       output_name_idx_ = output_name_idx;
       return true;
     }
@@ -821,10 +820,12 @@ bool OpDescImpl::UpdateOutputName(std::map<string, uint32_t> output_name_idx) {
     output_name_idx_ = output_name_idx;
     return true;
   } else {
-    GELOGW("UpdateOutputName org name map size: %zu, factory map size: %zu", output_map_size, factory_map_size);
+    GELOGW("[Update][OutputName] factory_output_name_num can not be less than org_output_name_num, exactly "
+           "org_output_name_num=%zu, factory_output_name_num=%zu", output_map_size, output_name_idx.size());
     return false;
   }
-  GELOGW("UpdateOutputName org name map size: %zu, factory map size: %zu", output_map_size, factory_map_size);
+  GELOGW("[Update][OutputName] After update, org_output_name_num=%zu, factory_output_name_num=%zu", output_map_size,
+         factory_map_size);
   return false;
 }
 
@@ -844,9 +845,9 @@ graphStatus OpDescImpl::InferShapeAndType(const OpDescPtr &op_desc) {
   if (infer_func_ == nullptr) {
     infer_func_ = OperatorFactoryImpl::GetInferShapeFunc(GetType());
     if (infer_func_ == nullptr) {
-      GELOGW("%s does not have inferfunc_.", GetName().c_str());
-      /// The infoshape function has not been added for each operator in the current operator information library.
-      /// No infoshape added operator skips the call
+      GELOGW("[InferShape][Check] %s does not have infer_func.", GetName().c_str());
+      /// The infer_func has not been added for each operator in the current operator information library.
+      /// No infer_func added operator skips the call
       /// and directly uses the shape information passed down by the upper framework
       return GRAPH_SUCCESS;
     }
@@ -1256,7 +1257,7 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
   if (infer_func_ == nullptr) {
     infer_func_ = OperatorFactoryImpl::GetInferShapeFunc(GetType());
     if (infer_func_ == nullptr) {
-      GELOGW("%s does not have infer func.", GetName().c_str());
+      GELOGW("[InferShape][Check] %s does not have infer_func.", GetName().c_str());
       return GRAPH_PARAM_INVALID;
     }
   }
@@ -1320,7 +1321,7 @@ graphStatus OpDescImpl::AddSubgraphName(const std::string &name) {
   GELOGI("Add subgraph name is %s", name.c_str());
   auto iter = subgraph_names_to_index_.find(name);
   if (iter != subgraph_names_to_index_.end()) {
-    GELOGW("The subgraph name %s exists, index %u", name.c_str(), iter->second);
+    GELOGW("[Add][Subgraph] Subgraph name %s exists, index %u", name.c_str(), iter->second);
     return GRAPH_FAILED;
   }
   auto size = subgraph_names_to_index_.size();
@@ -1334,9 +1335,11 @@ const std::map<std::string, uint32_t> & OpDescImpl::GetSubgraphNameIndexes() con
 }
 
 graphStatus OpDescImpl::SetSubgraphInstanceName(uint32_t index, const std::string &name) {
-  GELOGI("Add sub graph instans name is %s, index is %u", name.c_str(), index);
+  GELOGI("Add sub graph instance name is %s, index is %u", name.c_str(), index);
   if (index >= subgraph_instance_names_.size()) {
-    GE_LOGE("The index %u exceeds the max instance coutn %zu", index, subgraph_instance_names_.size());
+    REPORT_INNER_ERROR("E19999", "Index %u exceeds the max instance count %zu", index, subgraph_instance_names_.size());
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Index %u exceeds the max instance count %zu", index,
+           subgraph_instance_names_.size());
     return GRAPH_PARAM_INVALID;
   }
   subgraph_instance_names_[index] = name;
@@ -1384,7 +1387,7 @@ graphStatus OpDescImpl::InferDataSlice(const OpDescPtr &op_desc) {
   if (infer_data_slice_func_ == nullptr) {
     infer_data_slice_func_ = OperatorFactoryImpl::GetInferDataSliceFunc(GetType());
     if (infer_data_slice_func_ == nullptr) {
-      GELOGW("%s does not have infer data slice func.", GetName().c_str());
+      GELOGW("[InferDataSlice][Check] %s does not have infer data slice func.", GetName().c_str());
       return NO_DEPENDENCE_FUNC;
     }
   }

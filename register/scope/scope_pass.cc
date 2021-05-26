@@ -139,7 +139,7 @@ Status ScopeBasePass::ScopeBasePassImpl::Run(std::shared_ptr<ScopeGraph> &scope_
       auto &impl_scope = result->impl_;
       impl_scope->ClearTypeAndSubType();
     }
-    GELOGW("[scope_fusion] Scope pass %s's patterns is ignored, because LastMatchScopesAndOPs failed.",
+    GELOGW("[ScopeFusion][RunPass] Scope pass %s's patterns is ignored, because LastMatchScopesAndOPs failed.",
            parent_->PassName().c_str());
     return domi::SCOPE_NOT_CHANGED;
   }

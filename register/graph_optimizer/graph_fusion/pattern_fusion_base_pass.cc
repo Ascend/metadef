@@ -56,7 +56,7 @@ Status PatternFusionBasePass::Run(ge::ComputeGraph &graph) {
       if (pattern != nullptr) {
         bool ok = pattern->Build();
         if (!ok) {
-          GELOGW("this pattern: %s build not success.", pattern->GetName().c_str());
+          GELOGW("[RunFusionPass][Check] pattern %s build failed", pattern->GetName().c_str());
         }
         pattern->Dump();
         is_patterns_ok = is_patterns_ok && ok;
@@ -80,7 +80,7 @@ Status PatternFusionBasePass::Run(ge::ComputeGraph &graph) {
       bool changed = false;
       Status ret = RunOnePattern(graph, *pattern, changed);
       if (ret != SUCCESS) {
-        GELOGW("run pattern %s not success, graph is not changed by it.", pattern->GetName().c_str());
+        GELOGW("[RunFusionPass][Check] run pattern %s failed, graph is not changed by it.", pattern->GetName().c_str());
         return ret;
       }
 
@@ -111,7 +111,7 @@ static bool SetStreamLabelToFusedNodes(vector<ge::NodePtr> &fused_nodes, ge::Nod
   if (ge::AttrUtils::GetStr(first_node->GetOpDesc(), STREAM_LABEL, stream_label)) {
     for (ge::NodePtr &node : fused_nodes) {
       if (!ge::AttrUtils::SetStr(node->GetOpDesc(), STREAM_LABEL, stream_label)) {
-        GELOGW("newNode set _stream_label error, fusion failed.");
+        GELOGW("[Set][Attr] node %s set attr _stream_label failed", node->GetName().c_str());
         return false;
       }
     }
@@ -209,36 +209,29 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
 }
 
 Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_nodes, vector<ge::NodePtr> &fus_nodes) {
-  for (auto &oriNode : original_nodes) {
-    auto itr = origin_op_anchors_map_.find(oriNode);
-    if (itr != origin_op_anchors_map_.end()) {
-      for (const auto &anchor_iter : itr->second) {
-        auto next_node_in_achor = anchor_iter.first;
-        auto fusion_node_out_data_anchor = next_node_in_achor->GetPeerOutAnchor();
+  for (auto &ori_node : original_nodes) {
+    auto iter = origin_op_anchors_map_.find(ori_node);
+    if (iter != origin_op_anchors_map_.end()) {
+      for (const auto &anchor_iter : iter->second) {
+        auto next_node_in_anchor = anchor_iter.first;
+        auto fusion_node_out_data_anchor = next_node_in_anchor->GetPeerOutAnchor();
         if (fusion_node_out_data_anchor == nullptr) {
-          GELOGW("fusionNodeOutDataAnchor is null");
+          GELOGW("[Set][Attr] peer_out_anchor of node %s input %d is null",
+                 next_node_in_anchor->GetOwnerNode()->GetName().c_str(), next_node_in_anchor->GetIdx());
           return FAILED;
         }
 
+        // owner_node of anchor should not be null
         auto fusion_node = fusion_node_out_data_anchor->GetOwnerNode();
-        if (fusion_node == nullptr) {
-          GELOGW("fusionNode is null");
-          return FAILED;
-        }
-
         if (pattern_fusion_base_pass_impl_ptr_->IsNodesExist(fusion_node, fus_nodes)) {
           auto origin_node_out_anchor = anchor_iter.second;
           if (origin_node_out_anchor == nullptr) {
-            GELOGW("originNodeOutAnchor is null");
+            GELOGW("[Set][Attr] ori_out_anchor of node %s is null", ori_node->GetName().c_str());
             return FAILED;
           }
 
+          // owner_node of anchor should not be null
           auto origin_node = origin_node_out_anchor->GetOwnerNode();
-          if (origin_node == nullptr) {
-            GELOGW("originNode is null");
-            return FAILED;
-          }
-
           uint32_t origin_index = origin_node_out_anchor->GetIdx();
           uint32_t fusion_index = fusion_node_out_data_anchor->GetIdx();
           (void)GraphPassUtil::SetOutputDescAttr(origin_index, fusion_index, origin_node, fusion_node);
@@ -368,13 +361,13 @@ void PatternFusionBasePass::RecordOutputAnchorMap(ge::NodePtr output_node) {
       }
 
       // Record anchor map
-      auto itr = origin_op_anchors_map_.find(output_node);
-      if (itr == origin_op_anchors_map_.end()) {
+      auto iter = origin_op_anchors_map_.find(output_node);
+      if (iter == origin_op_anchors_map_.end()) {
         std::map<ge::InDataAnchorPtr, ge::OutDataAnchorPtr> anchorMap;
         anchorMap[peer_in_anchor] = output_anchor;
         origin_op_anchors_map_.emplace(make_pair(output_node, anchorMap));
       } else {
-        itr->second.emplace(make_pair(peer_in_anchor, output_anchor));
+        iter->second.emplace(make_pair(peer_in_anchor, output_anchor));
       }
     }
   }

@@ -17,8 +17,6 @@
 #include "graph/aligned_ptr.h"
 #include "utils/mem_utils.h"
 #include "graph/debug/ge_log.h"
-#include "inc/common/util/error_manager/error_manager.h"
-#include "graph/types.h"
 
 namespace ge {
 AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
@@ -27,7 +25,7 @@ AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
     alloc_size = buffer_size + alignment - 1;
   }
   if ((buffer_size == 0) || (alloc_size < buffer_size)) {
-    GELOGW("Allocate empty buffer or overflow, size=%zu, alloc_size=%zu", buffer_size, alloc_size);
+    GELOGW("[Allocate][Buffer] Allocate empty buffer or overflow, size=%zu, alloc_size=%zu", buffer_size, alloc_size);
     return;
   }
 
@@ -36,7 +34,7 @@ AlignedPtr::AlignedPtr(size_t buffer_size, size_t alignment) {
     ptr = nullptr;
   });
   if (base_ == nullptr) {
-    GELOGW("Allocate buffer failed, size=%zu", alloc_size);
+    GELOGW("[Allocate][Buffer] Allocate buffer failed, size=%zu", alloc_size);
     return;
   }
 

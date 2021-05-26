@@ -15,19 +15,15 @@
  */
 
 #include "graph/node.h"
-#include <utility>
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
 #include "external/graph/operator_factory.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/node_impl.h"
-#include "graph/ge_tensor.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/shape_refiner.h"
 #include "utils/ge_ir_utils.h"
 #include "utils/node_utils.h"
 #include "utils/op_desc_utils.h"
-#include "common/util/error_manager/error_manager.h"
 
 using std::string;
 using std::vector;
@@ -410,8 +406,7 @@ Node::Vistor<AnchorPtr> Node::NodeImpl::GetAllOutAnchors(const ConstNodePtr &own
 
 InDataAnchorPtr Node::NodeImpl::GetInDataAnchor(int idx) const {
   if (idx < 0 || idx >= static_cast<int>(in_data_anchors_.size())) {
-    GELOGW("[Check][Param] Op[%s] doesn't have index[%d]'s in_data_anchor whose optype is %s.",
-           GetName().c_str(), idx, GetType().c_str());
+    GELOGW("[Check][Param] Op %s doesn't have data input %d, type = %s", GetName().c_str(), idx, GetType().c_str());
     return nullptr;
   } else {
     return in_data_anchors_[idx];
@@ -421,7 +416,7 @@ InDataAnchorPtr Node::NodeImpl::GetInDataAnchor(int idx) const {
 AnchorPtr Node::NodeImpl::GetInAnchor(int idx) const {
   // Idx can't be less than -1 or >= in_data_anchors_.size(), -1 means index of control anchor_
   if (idx < -1 || idx >= static_cast<int>(in_data_anchors_.size())) {
-    GELOGW("Op[%s] doesn't have index[%d]'s in_anchor which optype is %s.", GetName().c_str(), idx, GetType().c_str());
+    GELOGW("[Check][Param] Op %s doesn't have input %d, type = %s", GetName().c_str(), idx, GetType().c_str());
     return nullptr;
   } else {
     // Return control anchor
@@ -751,8 +746,10 @@ graphStatus Node::NodeImpl::Verify(const ge::ConstNodePtr &owner_node) const {
 
   if (!is_unknown_graph) {
     for (const auto &in_anchor_ptr : GetAllInDataAnchors(owner_node)) {
-      GE_IF_BOOL_EXEC(in_anchor_ptr == nullptr, GELOGW("in anchor ptr is null");
-          continue);
+      if (in_anchor_ptr == nullptr) {
+        GELOGW("[Verify][CheckParam] In data anchor is null");
+        continue;
+      }
       bool valid_anchor = op_->GetType() == data_type || op_->GetType() == aipp_data_type ||
                           op_->GetType() == const_type || op_->GetType() == variable_type ||
                           op_->GetType() == const_type_train ||
@@ -773,7 +770,7 @@ graphStatus Node::NodeImpl::Verify(const ge::ConstNodePtr &owner_node) const {
   if (need_update_name) {
     auto node_op = ge::OperatorFactoryImpl::CreateOperator("node_op", op_->GetType());
     if (node_op.IsEmpty()) {
-      GELOGW("get op from OperatorFactory fail. opType: %s", op_->GetType().c_str());
+      GELOGW("[Verify][CheckParam] Get op from OperatorFactory failed, type: %s", op_->GetType().c_str());
     } else {
       GELOGD("get op from OperatorFactory success. opType: %s", op_->GetType().c_str());
       auto temp_op_desc = ge::OpDescUtils::GetOpDescFromOperator(node_op);
@@ -784,10 +781,10 @@ graphStatus Node::NodeImpl::Verify(const ge::ConstNodePtr &owner_node) const {
         return GRAPH_FAILED;
       }
       if (!op_->UpdateInputName(temp_op_desc->GetAllInputName())) {
-        GELOGW("Verify UpdateInputName failed");
+        GELOGW("[Verify][Update] Update input name failed");
       }
       if (!op_->UpdateOutputName(temp_op_desc->GetAllOutputName())) {
-        GELOGW("Verify UpdateOutputName failed");
+        GELOGW("[Verify][Update] Update output name failed");
       }
     }
     node_op.BreakConnect();
@@ -841,7 +838,7 @@ Node::Vistor<std::pair<NodePtr, OutDataAnchorPtr>> Node::NodeImpl::GetInDataNode
   std::vector<std::pair<NodePtr, OutDataAnchorPtr>> vec;
   for (const auto &p : in_data_anchors_) {
     if (p == nullptr) {
-      GELOGW("indata anchor is nullptr, node %s:%s", GetType().c_str(), GetName().c_str());
+      GELOGW("[Check][Param] In data anchor is nullptr, node=%s, type=%s", GetType().c_str(), GetName().c_str());
       continue;
     }
     auto anchor_ptr = p->GetPeerOutAnchor();
@@ -850,7 +847,7 @@ Node::Vistor<std::pair<NodePtr, OutDataAnchorPtr>> Node::NodeImpl::GetInDataNode
     }
     auto node = anchor_ptr->GetOwnerNode();
     if (node == nullptr) {
-      GELOGW("src node is nullptr, node %s:%s", GetType().c_str(), GetName().c_str());
+      GELOGW("[Check][Param] Src node is nullptr, node=%s, type=%s", GetType().c_str(), GetName().c_str());
       continue;
     }
     vec.push_back(std::make_pair(node, anchor_ptr));
@@ -863,17 +860,17 @@ Node::Vistor<std::pair<NodePtr, InDataAnchorPtr>> Node::NodeImpl::GetOutDataNode
   std::vector<std::pair<NodePtr, InDataAnchorPtr>> vec;
   for (const auto &p : out_data_anchors_) {
     if (p == nullptr) {
-      GELOGW("out data anchor is nullptr, node %s:%s", GetType().c_str(), GetName().c_str());
+      GELOGW("[Check][Param] Out data anchor is nullptr, node=%s, type=%s", GetType().c_str(), GetName().c_str());
       continue;
     }
     for (const auto &in_anchor : p->GetPeerInDataAnchors()) {
       if (in_anchor == nullptr) {
-        GELOGW("dst in data anchor is nullptr, node %s:%s", GetType().c_str(), GetName().c_str());
+        GELOGW("[Check][Param] Dst in data anchor is nullptr, node=%s, type=%s", GetType().c_str(), GetName().c_str());
         continue;
       }
       auto node = in_anchor->GetOwnerNode();
       if (node == nullptr) {
-        GELOGW("dst node is nullptr, node %s:%s", GetType().c_str(), GetName().c_str());
+        GELOGW("[Check][Param] Dst node is nullptr, node=%s, type=%s", GetType().c_str(), GetName().c_str());
         continue;
       }
       vec.push_back(std::make_pair(node, in_anchor));

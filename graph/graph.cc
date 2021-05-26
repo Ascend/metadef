@@ -17,7 +17,6 @@
 #include "external/graph/graph.h"
 #include <cstring>
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/model.h"
@@ -67,7 +66,7 @@ class GraphImpl {
       return GRAPH_FAILED;
     }
     if (outputs.empty()) {
-      GELOGW("set outputs size is 0.");
+      GELOGI("Set outputs size is 0.");
       return GRAPH_SUCCESS;
     }
 
@@ -88,7 +87,7 @@ class GraphImpl {
       return GRAPH_FAILED;
     }
     if (output_indexs.empty()) {
-      GELOGW("set outputs size is 0.");
+      GELOGW("[SetOutputs][CheckParam] Set outputs size is 0.");
       return GRAPH_SUCCESS;
     }
 
@@ -99,7 +98,8 @@ class GraphImpl {
       const vector<size_t> &indexs = item.second;
       ge::NodePtr node = compute_graph_->FindNode(output.GetName());
       if (node == nullptr) {
-        GELOGW("user designated out_node [%s] not exist in graph, will ignored!", output.GetName().c_str());
+        GELOGW("[SetOutputs][Check] User designated out_node %s not exist in graph, skip it",
+               output.GetName().c_str());
         continue;
       }
 
@@ -114,7 +114,8 @@ class GraphImpl {
       } else {
         for (size_t i = 0; i < indexs.size(); ++i) {
           if (indexs[i] >= out_size) {
-            GELOGW("index[%zu] is not belong to out_node[%s]", indexs[i], output.GetName().c_str());
+            GELOGW("[SetOutputs][Check] User designated out_node %s has no output %zu, output_size=%zu, skip it",
+                   output.GetName().c_str(), indexs[i], out_size);
           } else {
             output_name_ += output.GetName() + ":" + std::to_string(i) + ";";
             output_nodes.emplace_back(node, indexs[i]);
@@ -192,7 +193,7 @@ class GraphImpl {
     for (auto item : targets) {
       ge::NodePtr node = compute_graph_->FindNode(item.GetName());
       if (node == nullptr) {
-        GELOGW(" Warning, user designated target_node (%s) not exist in graph, this target_node ignored!",
+        GELOGW("[SetTargets][Check] User designated target_node %s not exist in graph, skip it",
                item.GetName().c_str());
         continue;
       }
@@ -327,7 +328,7 @@ class GraphImpl {
 Graph::Graph(const std::string &name) {
   impl_ = ComGraphMakeShared<GraphImpl>(name);
   if (impl_ == nullptr) {
-    GELOGW("GraphImpl make shared failed, impl_ is nullptr");
+    GELOGW("[Check][Impl] Make graph impl failed");
   }
 }
 
@@ -336,10 +337,10 @@ Graph::Graph(const char *name) {
     std::string graph_name = name;
     impl_ = ComGraphMakeShared<GraphImpl>(graph_name);
     if (impl_ == nullptr) {
-      GELOGW("GraphImpl make shared failed, impl_ is nullptr.");
+      GELOGW("[Check][Impl] Make graph impl failed");
     }
   } else {
-    GELOGW("Graph name is nullptr.");
+    GELOGW("[Check][Param] Input graph name is nullptr.");
   }
 }
 
@@ -452,10 +453,9 @@ Graph &Graph::SetOutputs(const std::vector<std::pair<ge::Operator, AscendString>
   for (auto &item : outputs) {
     const char *name = item.second.GetString();
     if (name != nullptr) {
-      string output_name = name;
       graph_outputs.emplace_back((std::pair<ge::Operator, std::string>(item.first, name)));
     } else {
-      GELOGW("Output name is nullptr.");
+      GELOGW("[SetOutputs][CheckParam] Input output_op_name is nullptr.");
     }
   }
 

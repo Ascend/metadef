@@ -25,7 +25,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
                              domi::FrameworkType fmk_type) {
     std::lock_guard<std::mutex> lock(mu_);
     if (std::find(pass_names_.begin(), pass_names_.end(), pass_name) != pass_names_.end()) {
-      GELOGW("The prototype pass has been registered and will not overwrite the previous one, pass name = %s.",
+      GELOGW("[Register][Check] The prototype pass %s has been registered and will not overwrite the previous one",
              pass_name.c_str());
       return;
     }

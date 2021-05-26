@@ -18,10 +18,6 @@
 #include <cmath>
 
 #include "debug/ge_log.h"
-#include "framework/common/debug/ge_log.h"
-#include "common/util/error_manager/error_manager.h"
-#include "graph/ge_tensor.h"
-#include "graph/types.h"
 #include "graph/utils/type_utils.h"
 #include "mmpa/mmpa_api.h"
 
@@ -131,7 +127,7 @@ static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_
 static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, Format format, uint32_t fixed_dim_size,
                                              int64_t &element_cnt) {
   if (dims.size() != fixed_dim_size) {
-    GELOGW("Format %d(%s) need dim size=%u but %zu, calc as ND.",
+    GELOGW("[Util][CalcElemCnt] Format %d(%s) need dim size=%u but %zu, calc as ND.",
            format, TypeUtils::FormatToSerialString(format).c_str(), fixed_dim_size, dims.size());
   }
   return CalcElementCntByDims(dims, element_cnt);
@@ -396,12 +392,13 @@ TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &
   }
   // 64-byte alignment, if size is 0, align to 32 bytes
   if (size_temp > (INT64_MAX - kNum2 * kDataMemAlignSize)) {
-    GELOGW("The updated mem size %ld is bigger than INT64_MAX",size_temp);
+    GELOGW("[Util][CalcBytesSize] Mem size %ld after alignment is bigger than INT64_MAX", size_temp);
   } else {
     size_temp = ((size_temp + kNum2 * kDataMemAlignSize - 1) / kDataMemAlignSize) * kDataMemAlignSize;
   }
   return GRAPH_SUCCESS;
 }
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_temp) {
   GeShape output_shape = desc_temp.GetShape();
@@ -415,7 +412,8 @@ TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_t
   }
 
   if (output_mem_size < 0) {
-    REPORT_INNER_ERROR("E19999", "After calc concat tensor memory size, output_mem_size = %ld, out of data range [0, %ld]",
+    REPORT_INNER_ERROR("E19999",
+                       "After calc concat tensor memory size, output_mem_size = %ld, out of data range [0, %ld]",
                        output_mem_size, INT64_MAX);
     GELOGE(GRAPH_FAILED, "[Check][Param] After calc concat tensor memory size, "
            "output_mem_size = %ld, out of data range [0, %ld]", output_mem_size, INT64_MAX);

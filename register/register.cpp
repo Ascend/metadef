@@ -204,7 +204,8 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
         return FAILED;
       }
     } else {
-      GELOGW("In op %s dynamic attr [%s] is not exist.", op_desc->GetName().c_str(), attr_name.c_str());
+      GELOGW("[UpdateDynamic][GetAttr] Dynamic attr %s not exist in op %s", attr_name.c_str(),
+             op_desc->GetName().c_str());
       continue;
     }
     GELOGI("In Op %s dynamic attr [%s] is exist, tensor num: %u.", op_desc->GetName().c_str(), attr_name.c_str(),
@@ -293,7 +294,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
     return FAILED;
   }
 
-  // add dynamci input and output
+  // add dynamic input and output
   const NodeDef *node = reinterpret_cast<const NodeDef *>(op_src);
   for (auto it : dynamic_name_attr_value) {
     std::string flag = it.first;
@@ -304,7 +305,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
     tensorflow::AttrValue attr_num;
     int32_t dynamic_tensor_num = 0;
     if (!(ge::AutoMappingUtil::FindAttrValue(node, attr_name, attr_num))) {
-      GELOGW("In NodeDef %s dynamic attr [%s] is not exist.", node->name().c_str(), attr_name.c_str());
+      GELOGW("[AutoMappingFn][GetAttr] Dynamic attr %s in node %s not exist.", attr_name.c_str(), node->name().c_str());
     }
 
     if (attr_num.has_list()) {
@@ -314,7 +315,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
     }
 
     if (dynamic_tensor_num <= 0) {
-      GELOGW("In NodeDef %s dynamic num %d is less than 0.", node->name().c_str(), dynamic_tensor_num);
+      GELOGW("[AutoMappingFn][Check] Dynamic num %d in node %s is less than 0.", dynamic_tensor_num,
+             node->name().c_str());
       continue;
     }
 
@@ -372,7 +374,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
     uint32_t insert_index = dynamic_info.second.inset_index;
     uint32_t tensor_num = dynamic_info.second.tensor_num;
     if (tensor_num == 0) {
-      GELOGW("In op[%s] tensor num of port[%s] is equal 0.", op_desc_dst->GetName().c_str(), port_name.c_str());
+      GELOGW("[AutoMappingFn][Check] In op[%s] tensor num of port[%s] is equal 0.", op_desc_dst->GetName().c_str(),
+             port_name.c_str());
       continue;
     }
     if (dynamic_type == kInput) {
@@ -431,7 +434,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const 
   for (const auto &subgraph_name_index : subgraph_name_indexs) {
     auto ret = op_desc_dst->AddSubgraphName(subgraph_name_index.first);
     if (ret != ge::GRAPH_SUCCESS) {
-      GELOGW("Subgraph with name %s for node %s type %s has already added.",
+      GELOGW("[AutoMappingFn][Check] %s subgraph of node %s, type %s already exist.",
              subgraph_name_index.first.c_str(), op_desc_dst->GetName().c_str(), op_desc_dst->GetType().c_str());
     }
   }
@@ -637,7 +640,7 @@ AutoMappingSubgraphIOIndexFunc FrameworkRegistryImpl::GetAutoMappingSubgraphIOIn
 FrameworkRegistry::FrameworkRegistry() {
   impl_ = std::unique_ptr<FrameworkRegistryImpl>(new (std::nothrow) FrameworkRegistryImpl());
   if (impl_ == nullptr) {
-    GELOGW("FrameworkRegistryImpl make shared failed!");
+    GELOGW("[Check][Param] make impl failed");
   }
 }
 
@@ -705,7 +708,7 @@ OpRegistrationData::~OpRegistrationData() = default;
 OpRegistrationData::OpRegistrationData(const std::string &om_optype) {
   impl_ = ComGraphMakeShared<OpRegistrationDataImpl>(om_optype);
   if (impl_ == nullptr) {
-    GELOGW("OpRegistrationDataImpl make shared failed!");
+    GELOGW("[Check][Param] make impl failed!");
   }
 }
 
@@ -716,7 +719,7 @@ OpRegistrationData::OpRegistrationData(const char *om_op_type) {
   }
   impl_ = ComGraphMakeShared<OpRegistrationDataImpl>(op_type);
   if (impl_ == nullptr) {
-    GELOGW("OpRegistrationDataImpl make shared failed!");
+    GELOGW("[Check][Param] make impl failed!");
   }
 }
 
@@ -1004,7 +1007,7 @@ bool OpRegistry::Register(const OpRegistrationData &reg_data) {
   for (auto ori_type : reg_data.impl_->ori_optype_set_) {
     std::string om_ori_type = GetParserKey(reg_data.impl_->om_optype_, ori_type);
     if (op_parse_params_fn_map_.find(om_ori_type) != op_parse_params_fn_map_.end()) {
-      GELOGW("The plugin of op type:%s original type:%s is already registered and will be skipped.",
+      GELOGW("[Register][Check] Plugin of op type:%s, original type:%s already registered, skip",
              reg_data.impl_->om_optype_.c_str(), ori_type.c_str());
       continue;
     }
@@ -1023,7 +1026,7 @@ bool OpRegistry::Register(const OpRegistrationData &reg_data) {
   }
 
   if (op_run_mode_map_.find(reg_data.impl_->om_optype_) != op_run_mode_map_.end()) {
-    GELOGW("The plugin of %s is already registered and will be skipped.", reg_data.impl_->om_optype_.c_str());
+    GELOGW("[Register][Check] Plugin of %s already registered, skip", reg_data.impl_->om_optype_.c_str());
     return true;
   }
   op_run_mode_map_[reg_data.impl_->om_optype_] = reg_data.impl_->imply_type_;

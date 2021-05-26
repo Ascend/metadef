@@ -25,9 +25,7 @@
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
 #include "debug/ge_attr_define.h"
-#include "graph/ge_error_codes.h"
 #include "graph/utils/graph_utils.h"
-#include "framework/common/debug/ge_log.h"
 
 using namespace std;
 using namespace ge;
@@ -50,8 +48,8 @@ class RefRelations::Impl {
 public:
   graphStatus LookUpRefRelations(const RefCell &key, unordered_set<RefCell, RefCellHash> &result) {
     unsigned long number = static_cast<unsigned long>(reinterpret_cast<uintptr_t>(key.node.get()));
-    std::string lookup_key = key.node_name + std::to_string(key.in_out) + std::to_string(key.in_out_idx)
-                           + std::to_string(number);
+    std::string lookup_key =
+        key.node_name + std::to_string(key.in_out) + std::to_string(key.in_out_idx) + std::to_string(number);
     auto iter = look_up_table_.find(lookup_key);
     if (iter != look_up_table_.end()) {
       for (auto &c : iter->second) {
@@ -59,7 +57,7 @@ public:
       }
       return GRAPH_SUCCESS;
     }
-    GELOGW("can not find any relations! key value of dest relation is %s", lookup_key.c_str());
+    GELOGW("[RefRelations][Check] can not find any relations! key value of dest relation is %s", lookup_key.c_str());
     return GRAPH_SUCCESS;
   };
   graphStatus BuildRefRelations(ge::ComputeGraph &root_graph);
@@ -254,7 +252,8 @@ graphStatus RefRelations::Impl::BuildRefRelationsForWhile(
     }
     auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
     if (peer_out_data_node == nullptr || peer_out_data_node->GetOpDesc() == nullptr) {
-      GELOGW("Node[%s]\'s peer_out_data_node or peer_out_data_node desc is null", (netoutput->GetName()).c_str());
+      GELOGW("[RefRelations][Check] Node[%s]\'s peer_out_data_node or peer_out_data_node desc is null",
+             netoutput->GetName().c_str());
       continue;
     }
     if (peer_out_data_node->GetType() != DATA) {
@@ -303,7 +302,8 @@ void RefRelations::Impl::GetDataAndNetoutputOfSubGraph(
   for (const auto &name : sub_graph_names) {
     auto sub_graph = root_graph.GetSubgraph(name);
     if (sub_graph == nullptr) {
-      GELOGW("Can not find the sub graph %s for root graph %s.", name.c_str(), root_graph.GetName().c_str());
+      GELOGW("[RefRelations][Check] Can not find sub graph %s, root graph: %s.", name.c_str(),
+             root_graph.GetName().c_str());
       continue;
     }
     for (const auto &sub_graph_node : sub_graph->GetDirectNode()) {

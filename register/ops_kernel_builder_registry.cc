@@ -20,8 +20,8 @@
 namespace ge {
 OpsKernelBuilderRegistry::~OpsKernelBuilderRegistry() {
   for (auto &it : kernel_builders_) {
-    GELOGW("%s was not unregistered", it.first.c_str());
-    // to avoid coredump when unregister is not called when so was close
+    GELOGW("[Unregister][Destruct] %s was not unregistered", it.first.c_str());
+    // to avoid core dump when unregister is not called when so was close
     // this is called only when app is shutting down, so no release would be leaked
     new (std::nothrow) std::shared_ptr<OpsKernelBuilder>(it.second);
   }
@@ -31,7 +31,7 @@ void OpsKernelBuilderRegistry::Register(const string &lib_name, const OpsKernelB
   if (it.second) {
     GELOGI("Done registering OpsKernelBuilder successfully, kernel lib name = %s", lib_name.c_str());
   } else {
-    GELOGW("OpsKernelBuilder already registered. kernel lib name = %s", lib_name.c_str());
+    GELOGW("[Register][Check] OpsKernelBuilder already registered. kernel lib name = %s", lib_name.c_str());
   }
 }
 

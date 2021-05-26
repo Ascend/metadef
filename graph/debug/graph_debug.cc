@@ -19,7 +19,6 @@
 #include <set>
 #include <vector>
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 
 using namespace std;
 
@@ -241,7 +240,7 @@ graphStatus GraphDebugPrinter::DumpGraphDotFile(const ComputeGraphPtr graph, con
   if (output_file.is_open()) {
     output_file << out_.str();
   } else {
-    GELOGW("%s open error.", output_dot_file_name.c_str());
+    GELOGW("[DumpGraph][OpenFile] Open file %s failed.", output_dot_file_name.c_str());
   }
   return GRAPH_SUCCESS;
 }

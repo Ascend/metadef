@@ -38,7 +38,7 @@ namespace ge {
 bool ModelSerializeImp::ParseNodeIndex(const string &node_index, string &node_name, int32_t &index) {
   auto sep = node_index.rfind(":");
   if (sep == string::npos) {
-    GELOGW("separator is not found in node_index.");
+    GELOGW("[Parse][CheckParam] Separator \":\" is not found in node_index.");
     return false;
   }
   node_name = node_index.substr(0, sep);
@@ -299,8 +299,8 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
   }
   if (!key_in.empty()) {
     if (key_in.size() != value_in.size()) {
-      GELOGW("Key and value vector size is different. key_size: %zu, value_size: %zu.",
-             key_out.size(), value_in.size());
+      GELOGW("[ParseAttrDef][CheckParam] Input key and value vector size is different. key_size=%zu, value_size=%zu.",
+             key_in.size(), value_in.size());
     } else {
       for (uint32_t i = 0; i < key_in.size(); ++i) {
         op_desc->impl_->input_name_idx_.insert(std::pair<string, uint32_t>(key_in.at(i), value_in.at(i)));
@@ -309,7 +309,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
   }
   if (!key_out.empty()) {
     if (key_out.size() != value_out.size()) {
-      GELOGW("Key and value vector size is different. key_size: %zu, value_size: %zu.",
+      GELOGW("[ParseAttrDef][CheckParam] Output key and value vector size is different. key_size=%zu, value_size=%zu.",
              key_out.size(), value_out.size());
     } else {
       for (uint32_t i = 0; i < key_out.size(); ++i) {
@@ -618,7 +618,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::UnserializeGraph(ComputeGraphPtr &graph,
                                                                                         proto::GraphDef &graph_proto) {
   if (!UnserializeGraphWithoutEdge(graph, graph_proto)) {
-    GELOGW("UnserializeGraphWithoutEdge fail");
+    GELOGW("[Deserialize][Graph] Deserialize graph without edges failed");
   }
   if (!HandleNodeNameRef()) {
     GELOGE(GRAPH_FAILED, "[Call][HandleNodeNameRef] Link Anchor or set graph input or output fail");
@@ -659,7 +659,7 @@ Buffer ModelSerialize::SerializeModel(const Model &model, bool is_dump) {
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
   auto ret = model_def.SerializeToArray(buffer.GetData(), static_cast<int>(buffer.GetSize()));
   if (ret != true) {
-    GELOGW("serialize to array fail.");
+    GELOGW("[Serialize][Model] Serialize to array failed");
   }
   return buffer;
 }
@@ -831,7 +831,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr ModelSerialize::Unseria
   ModelSerializeImp imp;
   imp.SetProtobufOwner(op_def_ptr);
   if (!imp.UnserializeOpDesc(op_desc, op_def)) {
-    GELOGW("UnserializeOpDesc error.");
+    GELOGW("[Deserialize][OpDesc] Deserialize op_desc failed");
   }
   return op_desc;
 }
