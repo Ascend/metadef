@@ -137,10 +137,10 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
     GE_CHK_BOOL_EXEC(src_op_impl->op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "Src impl's opdesc is null.");
                      return, "[Check][Param] Src impl's opdesc is null.");
     GE_CHK_BOOL_EXEC(src_oprt.operator_impl_->op_desc_->GetOutputsSize() == 1,
-                     REPORT_INNER_ERROR("E19999", "The source operator[%s] must has one output",
+                     REPORT_INNER_ERROR("E19999", "The source operator[%s] must be single output operator",
                                         src_oprt.operator_impl_->op_desc_->GetName().c_str());
                      return,
-                     "[Check][Param] The source operator[%s] must has one output",
+                     "[Check][Param] The source operator[%s] must be single output operator",
                      src_oprt.operator_impl_->op_desc_->GetName().c_str());
 
     uint32_t src_index = 0;

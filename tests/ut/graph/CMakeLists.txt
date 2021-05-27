@@ -78,6 +78,7 @@ set(UT_FILES
     "testcase/tensor_ut.cc"
     "testcase/node_utils_unitest.cc"
     "testcase/node_unitest.cc"
+    "testcase/op_desc_utils_unittest.cc"
     "testcase/graph_builder_utils.cc"
     "testcase/operator_unitest.cc"
     "testcase/buffer_unittest.cc"

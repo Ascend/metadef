@@ -594,16 +594,16 @@ OpDescUtils::SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights
   }
   // 2. node is not const
   for (const auto &pair:weights_map) {
-    auto in_data_anchor = node.GetInDataAnchor(pair.first);
-    if (in_data_anchor != nullptr && in_data_anchor->GetPeerOutAnchor() != nullptr) {
+    auto idx = pair.first;
+    // idx = in data anchor size is valid, it meant to add a new const node
+    if ((idx < 0) || (static_cast<size_t>(idx) > node.GetAllInDataAnchorsSize())) {
+      REPORT_CALL_ERROR("E19999", "Invalid map key: %d of node[%s].", idx, node.GetName().c_str());
+      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid map key: %d of node[%s].", idx, node.GetName().c_str());
+      return GRAPH_PARAM_INVALID;
+    }
+    auto peer_node = NodeUtils::GetInDataNodeByIndex(node, idx);
+    if (peer_node != nullptr) {
       // a. update const input node
-      auto out_anchor = in_data_anchor->GetPeerOutAnchor();
-      auto peer_node = out_anchor->GetOwnerNode();
-      if (peer_node == nullptr) {
-        REPORT_CALL_ERROR("E19999", "op %s [%d]'s input node is null", node.GetName().c_str(), pair.first);
-        GELOGE(GRAPH_PARAM_INVALID, "[Get][Node] op %s [%d]'s input node is null", node.GetName().c_str(), pair.first);
-        return GRAPH_PARAM_INVALID;
-      }
       if (peer_node->GetType() != CONSTANT) {
         ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
             {"SetWeights", "op[" + node.GetName() + "] [" + std::to_string(pair.first) +
