@@ -198,8 +198,7 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_STRING, "DT_STRING"},                  // string type
     {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
     {DT_BF16, "DT_BF16"},                      // dt_variant type
-    // Rollback int4
-    // {DT_INT4, "DT_INT4"},                      // dt_variant type
+    {DT_INT4, "DT_INT4"},                      // dt_variant type
 };
 
 const std::map<std::string, DataType> kStringTodataTypeMap = {
@@ -235,8 +234,7 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_FLOAT32", DT_FLOAT},
     {"DT_VARIANT", DT_VARIANT},                // dt_variant type
     {"DT_BF16", DT_BF16},                      // dt_bf16 type
-    // Rollback int4
-    // {"DT_INT4", DT_INT4},                      // dt_int4 type
+    {"DT_INT4", DT_INT4},                      // dt_int4 type
 };
 
 const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
@@ -282,9 +280,9 @@ std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
 
 bool TypeUtils::IsDataTypeValid(DataType dt) {
   uint32_t num = static_cast<uint32_t>(dt);
-  GE_CHK_BOOL_EXEC((num <= DT_UNDEFINED),
-                   REPORT_INNER_ERROR("E19999", "param dt:%d > DT_UNDEFINED:%d, check invalid", num, DT_UNDEFINED);
-                   return false, "[Check][Param] The DataType is invalid, dt:%u > DT_UNDEFINED:%d", num, DT_UNDEFINED);
+  GE_CHK_BOOL_EXEC((num < DT_MAX),
+                   REPORT_INNER_ERROR("E19999", "param dt:%d >= DT_MAX:%d, check invalid", num, DT_MAX);
+                   return false, "[Check][Param] The DataType is invalid, dt:%u >= DT_MAX:%d", num, DT_MAX);
   return true;
 }
 
