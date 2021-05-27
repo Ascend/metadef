@@ -415,7 +415,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::AddLinkFrom(con
   if (index != -1) {
     if (index >= static_cast<int>(in_data_anchors_.size())) {
       REPORT_INNER_ERROR("E19999", "op %s get input name %s 's index %d is illegal as which >= indataanchors size:%zu.",
-             op_->GetName().c_str(), name.c_str(), index, in_data_anchors_.size());
+                         op_->GetName().c_str(), name.c_str(), index, in_data_anchors_.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] op %s get input name %s 's index %d is illegal.",
              op_->GetName().c_str(), name.c_str(), index);
       return GRAPH_FAILED;

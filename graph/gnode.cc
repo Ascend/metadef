@@ -922,7 +922,7 @@ graphStatus GNode::GetSubgraph(uint32_t index, GraphPtr &graph) const {
   ComputeGraphPtr compute_graph_ptr = NodeUtils::GetSubgraph(*node_ptr, index);
   if (compute_graph_ptr == nullptr) {
     REPORT_INNER_ERROR("E19999", "get subgraph[%u] failed from node[%s].",
-                      index, node_ptr->GetName().c_str());
+                       index, node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][SubGraph] subgraph[%u] from node[%s] is nullptr.",
            index, node_ptr->GetName().c_str());
     return GRAPH_FAILED;
