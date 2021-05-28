@@ -1794,6 +1794,12 @@ graphStatus GraphUtils::CopyGraph(const Graph &src_graph, Graph &dst_graph) {
   GE_CHECK_NOTNULL(new_compute_graph);
   ComputeGraphPtr src_compute_graph = GetComputeGraph(src_graph);
   GE_CHECK_NOTNULL(src_compute_graph);
+  if (src_compute_graph->GetParentGraph() != nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][RootGraph] Only support copy root graph, current graph name:%s, "
+                         "parent graph name:%s.", src_compute_graph->GetName().c_str(),
+           src_compute_graph->GetParentGraph()->GetName().c_str());
+    return GRAPH_FAILED;
+  }
   int32_t depth = 0;
   std::map<ConstNodePtr, NodePtr> node_old_2_new;
   std::map<ConstOpDescPtr, OpDescPtr> op_desc_old_2_new;
@@ -1822,6 +1828,10 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
                                          int32_t depth) {
   GE_CHECK_NOTNULL(dst_compute_graph);
   GE_CHECK_NOTNULL(src_compute_graph);
+  auto dst_root_compute_graph = FindRootGraph(dst_compute_graph);
+  GE_CHECK_NOTNULL(dst_root_compute_graph);
+  auto src_root_compute_graph = FindRootGraph(src_compute_graph);
+  GE_CHECK_NOTNULL(src_root_compute_graph);
 
   if (depth >= kMaxRecursionDepth) {
     REPORT_INNER_ERROR("E19999", "param depth:%d >= %d(allow max subgraphs)", depth, kMaxRecursionDepth);
@@ -1873,22 +1883,22 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
     // copy subgraph from old graph to new graph
     const auto &subgraph_names = n->GetOpDesc()->GetSubgraphInstanceNames();
     for (auto name_iter = subgraph_names.rbegin(); name_iter != subgraph_names.rend(); ++name_iter) {
-      auto src_subgraph = src_compute_graph->GetSubgraph(*name_iter);
+      auto src_subgraph = src_root_compute_graph->GetSubgraph(*name_iter);
+      GE_CHECK_NOTNULL(src_subgraph);
       ComputeGraphPtr dst_subgraph = ComGraphMakeShared<ComputeGraph>(src_subgraph->GetName());
       GE_CHECK_NOTNULL(dst_subgraph);
+      dst_subgraph->SetParentGraph(dst_compute_graph);
       std::map<ConstNodePtr, NodePtr> sub_node_old_2_new;
       std::map<ConstOpDescPtr, OpDescPtr> sub_op_desc_old_2_new;
-      graphStatus ret = CopyComputeGraph(src_subgraph, dst_subgraph,
-                                         sub_node_old_2_new, sub_op_desc_old_2_new,
-                                         depth + 1);
+      graphStatus ret = CopyComputeGraph(src_subgraph, dst_subgraph, sub_node_old_2_new,
+                                         sub_op_desc_old_2_new, depth + 1);
       if (ret != GRAPH_SUCCESS) {
         GELOGE(GRAPH_FAILED, "[Copy][SubGraph] %s of parent node:%s failed.",
                src_subgraph->GetName().c_str(), node->GetName().c_str());
         return GRAPH_FAILED;
       }
-      dst_compute_graph->AddSubGraph(dst_subgraph);
+      dst_root_compute_graph->AddSubGraph(dst_subgraph);
       dst_subgraph->SetParentNode(node);
-      dst_subgraph->SetParentGraph(dst_compute_graph);
       op_desc->subgraph_ir_names_to_type_ = n->GetOpDesc()->subgraph_ir_names_to_type_;
       op_desc->subgraph_names_to_index_ = n->GetOpDesc()->subgraph_names_to_index_;
       op_desc->subgraph_instance_names_ = n->GetOpDesc()->subgraph_instance_names_;
