@@ -527,6 +527,16 @@ class OpReg {
 
 #define VERIFY_FUNC_REG(op_name, x) __VERIFY_FUNC_REG_IMPL__(op_name, INFER_VERIFY_FUNC(op_name, x), __COUNTER__)
 
+// Value Range Infer
+#define INFER_VALUE_RANGE_DEFAULT_REG(op_name) \
+  static const InferValueRangeFuncRegister PASTE(iv_reg_default, __COUNTER__)(#op_name)
+
+#define INFER_VALUE_RANGE_CUSTOM_FUNC_REG(op_name, when_call, x) \
+  static const InferValueRangeFuncRegister PASTE(iv_reg_custom, __COUNTER__)(#op_name, when_call, x)
+
+#define IMPL_INFER_VALUE_RANGE_FUNC(op_name, func_name) \
+  GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY static graphStatus func_name(op::op_name &op)
+
 // Infer format func reg
 #define INFER_FORMAT_FUNC_REG(op_name, x) \
   __INFER_FORMAT_FUNC_REG_IMPL__(op_name, INFER_FORMAT_FUNC(op_name, x), __COUNTER__)

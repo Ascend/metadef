@@ -25,6 +25,7 @@ shared_ptr<std::map<string, InferShapeFunc>> OperatorFactoryImpl::operator_infer
 shared_ptr<std::map<string, InferFormatFunc>> OperatorFactoryImpl::operator_inferformat_funcs_;
 shared_ptr<std::map<string, VerifyFunc>> OperatorFactoryImpl::operator_verify_funcs_;
 shared_ptr<std::map<string, InferDataSliceFunc>> OperatorFactoryImpl::operator_infer_data_slice_funcs_;
+shared_ptr<std::map<string, InferValueRangePara>> OperatorFactoryImpl::operator_infer_value_range_paras_;
 
 Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, const std::string &operator_type) {
   if (operator_creators_v2_ != nullptr) {
@@ -106,6 +107,20 @@ InferFormatFunc OperatorFactoryImpl::GetInferFormatFunc(const std::string &opera
   auto it = operator_inferformat_funcs_->find(operator_type);
   if (it == operator_inferformat_funcs_->end()) {
     return nullptr;
+  }
+  return it->second;
+}
+
+InferValueRangePara OperatorFactoryImpl::GetInferValueRangePara(const std::string &operator_type) {
+  InferValueRangePara ret_para;
+  if (operator_infer_value_range_paras_ == nullptr) {
+    GELOGI("operator_infervalue_paras_ is null, operator infer value registration is none");
+    return ret_para;
+  }
+  auto it = operator_infer_value_range_paras_->find(operator_type);
+  if (it == operator_infer_value_range_paras_->end()) {
+    GELOGI("optype[%s] has not registered infer value func", operator_type.c_str());
+    return ret_para;
   }
   return it->second;
 }
@@ -209,6 +224,29 @@ graphStatus OperatorFactoryImpl::RegisterInferDataSliceFunc(const std::string &o
     return GRAPH_FAILED;
   }
   (void)operator_infer_data_slice_funcs_->emplace(operator_type, infer_data_slice_func);
+  return GRAPH_SUCCESS;
+}
+
+graphStatus OperatorFactoryImpl::RegisterInferValueRangeFunc(const string &operator_type) {
+  return RegisterInferValueRangeFunc(operator_type, INPUT_HAS_VALUE_RANGE,
+                                     true, nullptr);
+}
+
+graphStatus OperatorFactoryImpl::RegisterInferValueRangeFunc(const string &operator_type,
+                                                             WHEN_CALL when_call,
+                                                             const bool use_cpu_kernel,
+                                                             const InferValueRangeFunc &infer_value_range_func) {
+  if (operator_infer_value_range_paras_ == nullptr) {
+    GELOGI("operator_infervalue_paras_ init");
+    operator_infer_value_range_paras_.reset(new (std::nothrow) std::map<string, InferValueRangePara>());
+  }
+  auto it = operator_infer_value_range_paras_->find(operator_type);
+  if (it != operator_infer_value_range_paras_->end()) {
+    GELOGW("optype[%s] has registered infervalue func, no duplicate registration", operator_type.c_str());
+    return GRAPH_FAILED;
+  }
+  InferValueRangePara tmp_para(when_call, use_cpu_kernel, infer_value_range_func);
+  (void)operator_infer_value_range_paras_->emplace(operator_type, tmp_para);
   return GRAPH_SUCCESS;
 }
 }  // namespace ge

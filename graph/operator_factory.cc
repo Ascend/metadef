@@ -102,6 +102,24 @@ InferFormatFuncRegister::InferFormatFuncRegister(const char *operator_type,
   (void)OperatorFactoryImpl::RegisterInferFormatFunc(op_type, infer_format_func);
 }
 
+InferValueRangeFuncRegister::InferValueRangeFuncRegister(const char *operator_type,
+                                                         WHEN_CALL when_call,
+                                                         const InferValueRangeFunc &infer_value_range_func) {
+  std::string op_type;
+  if (operator_type != nullptr) {
+    op_type = operator_type;
+  }
+  (void)OperatorFactoryImpl::RegisterInferValueRangeFunc(op_type, when_call, true, infer_value_range_func);
+}
+
+InferValueRangeFuncRegister::InferValueRangeFuncRegister(const char *operator_type) {
+  std::string op_type;
+  if (operator_type != nullptr) {
+    op_type = operator_type;
+  }
+  (void)OperatorFactoryImpl::RegisterInferValueRangeFunc(op_type);
+}
+
 VerifyFuncRegister::VerifyFuncRegister(const std::string &operator_type, const VerifyFunc &verify_func) {
   (void)OperatorFactoryImpl::RegisterVerifyFunc(operator_type, verify_func);
 }
