@@ -36,19 +36,25 @@ class UtestNodeUtils : public testing::Test {
 TEST_F(UtestNodeUtils, GetInputConstData) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 0, 1);
-  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
+  auto enter = builder.AddNode("Enter", "Enter", 1, 1);
+  auto transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
   auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data2, 0, enter, 0);
   builder.AddDataEdge(data, 0, transdata, 0);
+  builder.AddDataEdge(enter, 0, transdata, 1);
   builder.AddDataEdge(transdata, 0, netoutput, 0);
   auto graph = builder.GetGraph();
 
   auto tensor = std::make_shared<GeTensor>();
   auto op_desc = transdata->GetOpDesc();
   op_desc->input_name_idx_["Data"] = 0;
+  op_desc->input_name_idx_["Enter"] = 1;
   auto tensor_desc = op_desc->MutableInputDesc(0);
   AttrUtils::SetTensor(tensor_desc, "_value", tensor);
 
   GeTensorPtr ge_tensor;
-  ASSERT_EQ(NodeUtils::GetInputConstData(*transdata, "Data", ge_tensor), 0);
+  ASSERT_EQ(NodeUtils::GetInputConstData(*transdata, "Data", ge_tensor), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::GetInputConstData(*transdata, "Enter", ge_tensor), GRAPH_FAILED);
 }
 }

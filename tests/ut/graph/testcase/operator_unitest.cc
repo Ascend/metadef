@@ -38,20 +38,26 @@ class UtestOperater : public testing::Test {
 TEST_F(UtestOperater, GetInputConstData) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 0, 1);
-  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
+  auto enter = builder.AddNode("Enter", "Enter", 1, 1);
+  auto transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
   auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data2, 0, enter, 0);
   builder.AddDataEdge(data, 0, transdata, 0);
+  builder.AddDataEdge(enter, 0, transdata, 1);
   builder.AddDataEdge(transdata, 0, netoutput, 0);
   auto graph = builder.GetGraph();
 
   auto ge_tensor = std::make_shared<GeTensor>();
   auto op_desc = transdata->GetOpDesc();
   op_desc->input_name_idx_["Data"] = 0;
+  op_desc->input_name_idx_["Enter"] = 1;
   auto tensor_desc = op_desc->MutableInputDesc(0);
   AttrUtils::SetTensor(tensor_desc, "_value", ge_tensor);
 
   Tensor tensor;
   auto op = OpDescUtils::CreateOperatorFromNode(transdata);
-  ASSERT_EQ(op.GetInputConstData("Data", tensor), 0);
+  ASSERT_EQ(op.GetInputConstData("Data", tensor), GRAPH_SUCCESS);
+  ASSERT_EQ(op.GetInputConstData("Enter", tensor), GRAPH_FAILED);
 }
 }
