@@ -23,6 +23,7 @@
 #include <set>
 #include <functional>
 #include <memory>
+#include "graph/tensor.h"
 
 namespace ge {
 // Option key: graph run mode
@@ -110,6 +111,8 @@ const char *const SAVE_ORIGINAL_MODEL = "ge.saveOriginalModel";
 const char *const ORIGINAL_MODEL_FILE = "ge.originalModelFile";
 const char *const INPUT_FP16_NODES = "ge.INPUT_NODES_SET_FP16";
 const char *const OP_DEBUG_LEVEL = "ge.opDebugLevel";
+const char *const PERFORMANCE_MODE = "ge.performance_mode";
+const char *const MODIFY_MIXLIST = "ge.exec.modify_mixlist";
 }  // namespace configure_option
 // Configure stream num by Session constructor options param,
 // its value should be int32_t type, default value is "1"
@@ -218,11 +221,11 @@ const std::string OPTYPELIST_FOR_IMPLMODE = "ge.optypelistForImplmode";
 // its value should be "0" or "1", default value is "0"
 const std::string HCOM_PARALLEL = "ge.hcomParallel";
 
-// configure threshold of fusion data size for communication op
-const std::string FUSION_TENSOR_SIZE = "ge.fusionTensorSize";
-
 // configure whether to use dynamic batch size
 const char *const kDynamicBatchSize = "ge.dynamicBatchSize";
+
+// configure threshold of fusion data size for communication op
+const std::string FUSION_TENSOR_SIZE = "ge.fusionTensorSize";
 
 const std::string INPUT_SHAPE = "ge.inputShape";
 
@@ -313,6 +316,16 @@ const std::string OP_BANK_UPDATE_FLAG = "ge.op_bank_update";
 // 0: data multi; 1: model multi;
 const std::string HCOM_MULTI_MODE = "ge.hcomMultiMode";
 
+// atc and ir option
+const char *const INPUT_SHAPE_RANGE = "input_shape_range";
+
+// Configure express high compile performance or high execute performance
+// normal: no need to compile, used saved .o files directly
+// high: need to recompile, high execute performance mode
+const std::string PERFORMANCE_MODE = "ge.performance_mode";
+
+const std::string MODIFY_MIXLIST = "ge.exec.modify_mixlist";
+
 // Graph run mode
 enum GraphRunMode { PREDICTION = 0, TRAIN };
 
@@ -347,11 +360,13 @@ struct OutputTensorInfo {
 };
 
 using Status = uint32_t;
-using RunAsyncCallback = std::function<void(Status, std::vector<ge::OutputTensorInfo> &)>;
+using RunAsyncCallback = std::function<void(Status, std::vector<ge::Tensor> &)>;
+
 // for ir build
 namespace ir_option {
 static const char *const INPUT_FORMAT = "input_format";
 static const char *const INPUT_SHAPE = "input_shape";
+static const char *const INPUT_SHAPE_RANGE = ge::INPUT_SHAPE_RANGE;
 static const char *const OP_NAME_MAP = "op_name_map";
 static const char *const IS_DYNAMIC_INPUT = "is_dynamic_input";
 static const char *const IS_INPUT_ADJUST_HW_LAYOUT = "is_input_adjust_hw_layout";
@@ -388,11 +403,14 @@ static const char *const MDL_BANK_PATH = ge::MDL_BANK_PATH_FLAG.c_str();
 static const char *const OP_BANK_PATH = ge::OP_BANK_PATH_FLAG.c_str();
 static const char *const OP_BANK_UPDATE = ge::OP_BANK_UPDATE_FLAG.c_str();
 static const char *const OP_DEBUG_LEVEL = ge::OP_DEBUG_LEVEL.c_str();
+static const char *const PERFORMANCE_MODE = ge::PERFORMANCE_MODE.c_str();
+static const char *const MODIFY_MIXLIST = ge::MODIFY_MIXLIST.c_str();
 
 // for interface: aclgrphBuildModel
 #ifdef __GNUC__
 const std::set<std::string> ir_builder_suppported_options = {INPUT_FORMAT,
                                                              INPUT_SHAPE,
+                                                             INPUT_SHAPE_RANGE,
                                                              OP_NAME_MAP,
                                                              DYNAMIC_BATCH_SIZE,
                                                              DYNAMIC_IMAGE_SIZE,
@@ -412,7 +430,9 @@ const std::set<std::string> ir_builder_suppported_options = {INPUT_FORMAT,
                                                              OP_COMPILER_CACHE_MODE,
                                                              MDL_BANK_PATH,
                                                              OP_BANK_PATH,
-                                                             OP_BANK_UPDATE};
+                                                             OP_BANK_UPDATE,
+                                                             PERFORMANCE_MODE,
+                                                             MODIFY_MIXLIST};
 
 // for interface: aclgrphParse
 const std::set<std::string> ir_parser_suppported_options = {
@@ -438,7 +458,8 @@ const std::set<std::string> global_options = {CORE_TYPE,
                                               OP_DEBUG_LEVEL,
                                               DEBUG_DIR,
                                               OP_COMPILER_CACHE_DIR,
-                                              OP_COMPILER_CACHE_MODE};
+                                              OP_COMPILER_CACHE_MODE,
+                                              MODIFY_MIXLIST};
 #endif
 }  // namespace ir_option
 }  // namespace ge
