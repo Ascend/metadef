@@ -71,7 +71,9 @@ int32_t CreateDirectory(const std::string &directory_path) {
         int32_t ret = mmMkdir(tmp_dir_path, M_IRUSR | M_IWUSR | M_IXUSR);  // 700
         if (ret != 0) {
           if (errno != EEXIST) {
-            ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
+            REPORT_CALL_ERROR("E19999",
+                              "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
+                              directory_path.c_str(), strerror(errno));
             GELOGW("Can not create directory %s. reason:%s. Make sure the directory exists and writable.",
                    directory_path.c_str(), strerror(errno));
             return ret;
@@ -83,7 +85,9 @@ int32_t CreateDirectory(const std::string &directory_path) {
   int32_t ret = mmMkdir(const_cast<char *>(directory_path.c_str()), M_IRUSR | M_IWUSR | M_IXUSR);  // 700
   if (ret != 0) {
     if (errno != EEXIST) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
+      REPORT_CALL_ERROR("E19999",
+                        "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
+                        directory_path.c_str(), strerror(errno));
       GELOGW("Can not create directory %s. reason:%s. Make sure the directory exists and writable.",
              directory_path.c_str(), strerror(errno));
       return ret;

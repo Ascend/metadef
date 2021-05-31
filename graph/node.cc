@@ -544,9 +544,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorPtr Node::GetInAnchor(int i
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorPtr Node::GetOutAnchor(int idx) const {
   // Idx can't be less than -1 or >= out_data_anchors_.size(), -1 means index of control anchor_
   if (idx < -1 || idx >= static_cast<int>(out_data_anchors_.size())) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19019", {"opname", "index", "anchorname", "optype"},
-        {GetName().c_str(), std::to_string(idx), "out_anchor", GetType().c_str(), });
+    REPORT_INNER_ERROR("E19999", "Op:%s(%s) doesn't have index:%d's anchorname",
+                       GetName().c_str(), GetType().c_str(), idx);
     GELOGE(GRAPH_FAILED, "[Check][Param] Op[%s] doesn't have index[%d]'s out_anchor which optype is %s.",
            GetName().c_str(), idx, GetType().c_str());
     return nullptr;
@@ -563,9 +562,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorPtr Node::GetOutAnchor(int 
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutDataAnchorPtr Node::GetOutDataAnchor(int idx) const {
   if (idx < 0 || idx >= static_cast<int>(out_data_anchors_.size())) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19019", {"opname", "index", "anchorname", "optype"},
-        {GetName().c_str(), std::to_string(idx), "out_data_anchor", GetType().c_str()});
+    REPORT_INNER_ERROR("E19999", "Op:%s(%s) doesn't have index:%d's anchorname",
+                       GetName().c_str(), GetType().c_str(), idx);
     GELOGE(GRAPH_FAILED, "[Check][Param] Op[%s] doesn't have index[%d]'s out_data_anchor which optype is %s.",
            GetName().c_str(), idx, GetType().c_str());
     return nullptr;

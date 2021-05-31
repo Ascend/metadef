@@ -269,9 +269,8 @@ std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
   if (it != kImplyTypeToString.end()) {
     return it->second;
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"ImplyTypeToSerialString",
-        "imply_type[" + std::to_string(static_cast<unsigned int>(imply_type)) + "] is not support"});
+    REPORT_INNER_ERROR("E19999", "ImplyTypeToSerialString: imply_type not support %u",
+                       static_cast<unsigned int>(imply_type));
     GELOGE(GRAPH_FAILED, "[Check][Param] ImplyTypeToSerialString: imply_type not support %u",
            static_cast<unsigned int>(imply_type));
     return "UNDEFINED";
@@ -291,9 +290,7 @@ std::string TypeUtils::DataTypeToSerialString(DataType data_type) {
   if (it != kDataTypeToStringMap.end()) {
     return it->second;
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"DataTypeToSerialString", "data_type[" + std::to_string(data_type) + "] is not support"});
-    GELOGE(GRAPH_FAILED, "[Check][Param] DataTypeToSerialString: datatype not support %u", data_type);
+    REPORT_INNER_ERROR("E19999", "DataTypeToSerialString: datatype not support %u", data_type);
     return "UNDEFINED";
   }
 }
@@ -303,8 +300,7 @@ DataType TypeUtils::SerialStringToDataType(const std::string &str) {
   if (it != kStringTodataTypeMap.end()) {
     return it->second;
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"SerialStringToDataType", "data_type[" + str + "] is not support"});
+    REPORT_INNER_ERROR("E19999", "SerialStringToDataType: datatype not support %s", str.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] SerialStringToDataType: datatype not support %s", str.c_str());
     return DT_UNDEFINED;
   }
@@ -354,8 +350,7 @@ std::string TypeUtils::FormatToSerialString(Format format) {
     }
     return it->second;
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"FormatToSerialString", "Format[" + std::to_string(format) + "] is not support"});
+    REPORT_INNER_ERROR("E19999", "Format not support %u", format);
     GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %u", format);
     return "RESERVED";
   }
@@ -373,8 +368,7 @@ Format TypeUtils::SerialStringToFormat(const std::string &str) {
   if (it != kStringToFormatMap.end()) {
     primary_format = it->second;
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"SerialStringToFormat", "Format[" + str + "] is not support"});
+    REPORT_INNER_ERROR("E19999", "Format not support %s", str.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
@@ -393,8 +387,7 @@ Format TypeUtils::DataFormatToFormat(const std::string &str) {
   if (it != kDataFormatMap.end()) {
     primary_format = it->second;
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"FormatToSerialString", "Format[" + str + "] is not support"});
+    REPORT_INNER_ERROR("E19999", "Format not support %s", str.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
@@ -441,8 +434,7 @@ Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {
   if (it != kDomiFormatToGeFormat.end()) {
     return it->second;
   }
-  ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-      {"FormatToSerialString", "do not find domi Format[" + std::to_string(domi_format) + "] from map"});
+  REPORT_INNER_ERROR("E19999", "do not find domi Format %d from map", domi_format);
   GELOGE(GRAPH_FAILED, "[Check][Param] do not find domi Format %d from map", domi_format);
   return FORMAT_RESERVED;
 }
@@ -476,8 +468,7 @@ bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
     length = static_cast<uint32_t>(size);
     return true;
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"GetDataTypeLength", "data_type[" + std::to_string(data_type) + "] is not support"});
+    REPORT_INNER_ERROR("E19999", "data_type not support %d", data_type);
     GELOGE(GRAPH_FAILED, "[Check][Param] data_type not support %d", data_type);
     return false;
   }
