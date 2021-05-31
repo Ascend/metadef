@@ -239,7 +239,7 @@ graphStatus OpDesc::AddInputDescMiddle(const string &name, const unsigned int nu
                      REPORT_INNER_ERROR("E19999", "Add input tensor_desc is existed. name[%s]", input_name.c_str());
                      GELOGE(ge::FAILED, "[Check][Param] Add input tensor_desc is existed. name[%s]",
                             input_name.c_str());
-                     return GRAPH_FAILED,);
+                     return GRAPH_FAILED);
 
     std::shared_ptr<GeTensorDesc> in_desc = ComGraphMakeShared<GeTensorDesc>(GeTensorDesc());
     if (in_desc == nullptr) {
@@ -534,7 +534,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDescPtr OpDesc::MutableIn
                    REPORT_INNER_ERROR("E19999", "index(%u) is out of range(0, %zu), check invalid",
                                       index, inputs_desc_.size());
                    GELOGE(ge::FAILED, "[Check][Param] Can't find the input desc %u", index);
-                   return nullptr,);
+                   return nullptr);
   if (inputs_desc_[index] == nullptr) {
     return nullptr;
   }
