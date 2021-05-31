@@ -1395,10 +1395,15 @@ std::string AttrUtils::GetAllAttrsStr(AttrUtils::ConstAttrHolderAdapter &&obj) {
 
   std::map<std::string, std::string> ordered_attrs;
   for (auto &attr : *(attrs_map.GetProtoMsg())) {
-    // print message as an ordered string.
-    string ordered_attr;
-    (void)google::protobuf::TextFormat::PrintToString(attr.second, &ordered_attr);
-    ordered_attrs[attr.first] = ordered_attr;
+    if (attr.second.has_t()) {
+      // print tensor desc message as an ordered string.
+      auto tensor_def = attr.second.t();
+      string ordered_tensor_desc;
+      (void)google::protobuf::TextFormat::PrintToString(tensor_def.desc(), &ordered_tensor_desc);
+      ordered_attrs[attr.first] = ordered_tensor_desc + tensor_def.data();
+    } else {
+      ordered_attrs[attr.first] = attr.second.SerializeAsString();
+    }
   }
 
   std::stringstream ss;
