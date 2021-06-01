@@ -811,12 +811,10 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
     auto op_desc = node->GetOpDesc();
     for (const auto &out_anchor : node->GetAllOutDataAnchors()) {
       auto output_tensor = op_desc->MutableOutputDesc(out_anchor->GetIdx());
-      if (output_tensor == nullptr) {
-        continue;
-      }
-      if (output_tensor->MutableShape().GetDims().empty()) {
-        output_tensor->SetOriginShape(output_tensor->GetShape());
-      }
+      GE_IF_BOOL_EXEC(output_tensor == nullptr, continue);
+      GE_IF_BOOL_EXEC(output_tensor->MutableShape().GetDims().empty(),
+                      output_tensor->SetOriginShape(output_tensor->GetShape()));
+
       ge::TensorUtils::SetRealDimCnt(*output_tensor, static_cast<uint32_t>(output_tensor->GetOriginShape().GetDims()
         .size()));
       output_tensor->SetOriginDataType(output_tensor->GetDataType());
@@ -831,17 +829,14 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
     }
     for (const auto &in_anchor : node->GetAllInDataAnchors()) {
       auto input_tensor = op_desc->MutableInputDesc(in_anchor->GetIdx());
-      if (input_tensor == nullptr) {
-        continue;
-      }
+      GE_IF_BOOL_EXEC(input_tensor == nullptr, continue);
+
       // set input origin shape range
       std::vector<std::pair<int64_t, int64_t>> range;
       (void)input_tensor->GetShapeRange(range);
       input_tensor->SetOriginShapeRange(range);
     }
-    if (NodeUtils::UpdatePeerNodeInputDesc(node) != SUCCESS) {
-        return GRAPH_FAILED;
-    }
+    GE_IF_BOOL_EXEC(NodeUtils::UpdatePeerNodeInputDesc(node) != SUCCESS, return GRAPH_FAILED);
   } else {
     REPORT_CALL_ERROR("E19999", "%s call infer function failed.", node->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Call][InferFunction] failed, node:%s.", node->GetName().c_str());

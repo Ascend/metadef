@@ -97,3 +97,4 @@ TEST_F(UtestOperater, GetInputConstData_subgraph) {
   ASSERT_EQ(op.GetInputConstData("sub_const", tensor), GRAPH_SUCCESS);
   ASSERT_EQ(op.GetInputConstData("sub_data", tensor), GRAPH_SUCCESS);
 }
+}

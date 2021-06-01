@@ -1193,9 +1193,8 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
       return GRAPH_FAILED;
     }
     auto sub_graph = root_graph->GetSubgraph(sub_graph_names[0]);
-    if (sub_graph == nullptr) {
-      return GRAPH_FAILED;
-    }
+    GE_CHECK_NOTNULL(sub_graph);
+
     int peer_out_idx = peer_out_data_anchor->GetIdx();
     for (const auto &n : sub_graph->GetDirectNode()) {
       if (n->GetType() != NETOUTPUT) {
@@ -1211,23 +1210,22 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
           return GRAPH_FAILED;
         }
         int ref_o = 0;
-        if (AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
-          if (peer_out_idx != ref_o) {
-            continue;
-          } else {
-            peer_node = NodeUtils::GetInDataNodeByIndex(*n, in_data_anchor->GetIdx());
-            GELOGD("in node[%s] peer_node[%s] type[%s]",
-                   node->GetName().c_str(),
-                   peer_node->GetName().c_str(),
-                   peer_node->GetType().c_str());
-            return GRAPH_SUCCESS;
-          }
-        } else {
+        if (!AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
           return GRAPH_FAILED;
         }
+        if (peer_out_idx != ref_o) {
+          continue;
+        }
+        peer_node = NodeUtils::GetInDataNodeByIndex(*n, in_data_anchor->GetIdx());
+        GELOGD("in node[%s] peer_node[%s] type[%s]",
+               node->GetName().c_str(),
+               peer_node->GetName().c_str(),
+               peer_node->GetType().c_str());
+        return GRAPH_SUCCESS;
       }
       return GRAPH_SUCCESS;
     }
+
     REPORT_INNER_ERROR("E19999", "On graph[%s], no exist NETOUTPUT node", sub_graph->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Node] On graph[%s], no exist NETOUTPUT node", sub_graph->GetName().c_str());
     return GRAPH_FAILED;
