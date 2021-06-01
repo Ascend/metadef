@@ -103,7 +103,7 @@ class TuningUtils {
   static graphStatus CreateDataNode(NodePtr &node, NodePtr &data_node);
   static graphStatus CreateNetOutput(NodePtr &node, NodePtr &out_node);
   static graphStatus AddAttrToDataNodeForMergeGraph(const NodePtr &pld, NodePtr &data_node);
-  static graphStatus AddAttrToNetOutputForMergeGraph(const NodePtr &end, NodePtr &out_node);
+  static graphStatus AddAttrToNetOutputForMergeGraph(const NodePtr &end, NodePtr &out_node, int64_t index);
   static void DumpGraphToPath(ComputeGraphPtr &exe_graph, int64_t index,
                               bool is_tuning_graph, std::string path);
 
@@ -118,8 +118,20 @@ class TuningUtils {
                                            NodePtr &out_node,
                                            AnchorPtr &dest_in_anchor,
                                            AnchorPtr &src_out_anchor);
+  struct SrcNodeInfo {
+    std::string src_node_name;
+    int64_t src_node_out_index;
+  };
+  static graphStatus TryGetDataAnchorPair(NodePtr &node,
+                                          const SrcNodeInfo &src_node_info,
+                                          AnchorPtr &node_in_anchor,
+                                          AnchorPtr &src_out_anchor);
+  static graphStatus TryGetControlAnchorPair(NodePtr &node,
+                                             const SrcNodeInfo &src_node_info,
+                                             AnchorPtr &node_in_anchor,
+                                             AnchorPtr &src_out_anchor);
   static graphStatus HandleContinuousInputNodeNextData(NodePtr &node);
-  static NodePtr FindNode(const std::string &name);
+  static NodePtr FindNode(const std::string &name, int64_t &in_index);
 
   static NodeNametoNodeNameMap data_2_netoutput_;
   static NodetoNodeNameMap data_node_2_netoutput_;
