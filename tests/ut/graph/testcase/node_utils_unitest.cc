@@ -57,4 +57,40 @@ TEST_F(UtestNodeUtils, GetInputConstData) {
   ASSERT_EQ(NodeUtils::GetInputConstData(*transdata, "Data", ge_tensor), GRAPH_SUCCESS);
   ASSERT_EQ(NodeUtils::GetInputConstData(*transdata, "Enter", ge_tensor), GRAPH_FAILED);
 }
+
+TEST_F(UtestNodeUtils, GetInputConstData_subgraph) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), "value", ge_tensor);
+  auto case_node = builder.AddNode("Case", "Case", 1, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(const_node, 0, case_node, 0);
+  builder.AddDataEdge(case_node, 0, netoutput, 0);
+  auto parent_graph = builder.GetGraph();
+
+  ut::GraphBuilder sub_builder = ut::GraphBuilder("subgraph_graph");
+  auto sub_data = sub_builder.AddNode("sub_data", "Data", 0, 1);
+  auto sub_const = sub_builder.AddNode("sub_const", "Const", 0, 1);
+  AttrUtils::SetTensor(sub_const->GetOpDesc(), "value", ge_tensor);
+  auto add = sub_builder.AddNode("Add", "Add", 2, 1);
+  auto sub_netoutput = sub_builder.AddNode("sub_netoutput", "NetOutput", 1, 0);
+  sub_builder.AddDataEdge(sub_data, 0, add, 0);
+  sub_builder.AddDataEdge(sub_const, 0, add, 1);
+  sub_builder.AddDataEdge(add, 0, sub_netoutput, 0);
+
+  auto subgraph = sub_builder.GetGraph();
+  subgraph->SetParentNode(case_node);
+  subgraph->SetParentGraph(parent_graph);
+  parent_graph->AddSubgraph(subgraph->GetName(), subgraph);
+  AttrUtils::SetInt(sub_data->GetOpDesc(), "_parent_node_index", 0);
+
+  auto op_desc = add->GetOpDesc();
+  op_desc->input_name_idx_["sub_data"] = 0;
+  op_desc->input_name_idx_["sub_const"] = 1;
+
+  GeTensorPtr tensor;
+  ASSERT_EQ(NodeUtils::GetInputConstData(*add, "sub_const", tensor), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::GetInputConstData(*add, "sub_data", tensor), GRAPH_SUCCESS);
 }
+}  // namespace ge

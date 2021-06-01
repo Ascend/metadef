@@ -680,10 +680,11 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
     GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
     peer_node = enter_peer_out_data_anchor->GetOwnerNode();
   }
+  std::set<std::string> const_types = { CONSTANT, CONSTANTOP };
   auto peer_op_desc = peer_node->GetOpDesc();
   GE_CHECK_NOTNULL(peer_op_desc);
   auto peer_op_type = peer_op_desc->GetType();
-  if (peer_op_type == CONSTANTOP || peer_op_type == CONSTANT) {
+  if (const_types.count(peer_op_type) > 0) {
     if (!AttrUtils::MutableTensor(peer_node->GetOpDesc(), ATTR_NAME_WEIGHTS, ge_tensor)) {
       GELOGW("get attr name %s failed.", ATTR_NAME_WEIGHTS.c_str());
       return GRAPH_FAILED;
@@ -694,8 +695,8 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
     while ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
       parent_node = NodeUtils::GetParentInput(parent_node);
     }
-    if ((parent_node != nullptr)
-        && ((parent_node->GetType() == CONSTANT) || (parent_node->GetType() == CONSTANTOP))) {
+    if (parent_node != nullptr
+        && const_types.count(parent_node->GetType()) > 0) {
       if (!AttrUtils::MutableTensor(parent_node->GetOpDesc(), ATTR_NAME_WEIGHTS, ge_tensor)) {
         GELOGW("get attr name %s failed.", ATTR_NAME_WEIGHTS.c_str());
         return GRAPH_FAILED;

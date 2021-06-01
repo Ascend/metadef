@@ -149,9 +149,6 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
   bool need_infer_again = false;
   // check input and output
   for (size_t i = 0; i < ref_out_tensors.size(); i++) {
-    if (ref_out_tensors[i].empty()) {
-      continue;
-    }
     auto ref_out_tensor = ref_out_tensors[i].at(0);
     auto out_shape = ref_out_tensor.MutableShape();
     vector<std::pair<int64_t, int64_t>> data_shape_range;
