@@ -32,10 +32,11 @@ TEST_F(UtestGeAttrValue, GetAllAttrsStr) {
   string type = "Constant";
   OpDescPtr op_desc = std::make_shared<OpDesc>(name, type);
   EXPECT_TRUE(op_desc);
-  static const string value = "value";
-  op_desc->SetAttr(value, GeAttrValue::CreateFrom<GeAttrValue::INT>(0));
+  op_desc->SetAttr("i", GeAttrValue::CreateFrom<GeAttrValue::INT>(1));
+  auto tensor = std::make_shared<GeTensor>();
+  op_desc->SetAttr("value", GeAttrValue::CreateFrom<GeAttrValue::TENSOR>(tensor));
   string attr = AttrUtils::GetAllAttrsStr(op_desc);
-  string res = value + ":" + "i: 0\n;";
+  string res = "i:\x18\x1;value:dtype: DT_FLOAT\nlayout: \"ND\"\nattr {\n  key: \"origin_format\"\n  value {\n    s: \"ND\"\n  }\n}\nhas_out_attr: true\ndevice_type: \"NPU\"\n;";
   EXPECT_EQ(res, attr);
 }
 }
