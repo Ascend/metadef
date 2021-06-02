@@ -19,7 +19,7 @@ class OpRunInfoImpl {
 
   OpRunInfoImpl &operator=(const OpRunInfoImpl &runinfo);
 
-  OpRunInfoImpl::OpRunInfoImpl(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key)
+  OpRunInfoImpl(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key)
     : block_dim(block_dim), clear_atomic(clear_atomic), tiling_key(tiling_key) {}
 
   void SetBlockDim(uint32_t block_dim);
