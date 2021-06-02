@@ -849,6 +849,24 @@ extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_in
   return TbeOpTilingPyInterfaceEx(optype, compile_info, inputs, outputs, run_info_json, run_info_len, nullptr);
 }
 
+bool StructToClass_RunInfo(OpRunInfo &run_info_struct, optiling::utils::OpRunInfo &run_info_cls) {
+  bool res = false;
+  run_info_cls.InternelSetTiling(run_info_struct.tiling_data);
+  run_info_cls.SetBlockDim(run_info_struct.block_dim);
+  run_info_cls.SetClearAtomic(run_info_struct.clear_atomic);
+  run_info_cls.SetTilingKey(run_info_struct.tiling_key);
+  if (!run_info_struct.workspaces.empty()) {
+    for (auto i : run_info_struct.workspaces) {
+      run_info_cls.AddWorkspace(i);
+    }
+  } else {
+    GELOGI("Null workspaces get from runinfo_struct.");
+  }
+  res = true;
+  return res;
+}
+
+
 extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
