@@ -26,8 +26,6 @@ namespace utils {
 
 OpCompileInfoImpl::OpCompileInfoImpl(const std::string &key, const std::string &value) : str(value), key(key) {}
 
-OpCompileInfoImpl::~OpCompileInfoImpl() {}
-
 void OpRunInfoImpl::SetBlockDim(uint32_t input_block_dim) {
   block_dim = input_block_dim;
 }
