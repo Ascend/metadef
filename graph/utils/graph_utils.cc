@@ -1041,10 +1041,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
     return;
   }
   std::unique_ptr<char[]> real_path(new (std::nothrow) char[MMPA_MAX_PATH]{0});
-  if (real_path == nullptr) {
-    GELOGE(GRAPH_FAILED, "[Create][Object] New real_path failed.");
-    return;
-  }
+  GE_CHECK_NOTNULL_EXEC(real_path, return);
+
   /// Returning nullptr means 3 case as follows:
   /// a.path is MMPA_MAX_PATH chars or more
   /// b.the file does not exist
