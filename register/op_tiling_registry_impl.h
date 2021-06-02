@@ -14,9 +14,13 @@ using ByteBuffer = std::stringstream;
 
 class OpRunInfoImpl {
  public:
-  OpRunInfoImpl();
-  ~OpRunInfoImpl();
-  OpRunInfoImpl(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key);
+  OpRunInfoImpl() = default;
+  ~OpRunInfoImpl() = default;
+
+  OpRunInfoImpl &operator=(const OpRunInfoImpl &runinfo);
+
+  OpRunInfoImpl::OpRunInfoImpl(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key)
+    : block_dim(block_dim), clear_atomic(clear_atomic), tiling_key(tiling_key) {}
 
   void SetBlockDim(uint32_t block_dim);
   uint32_t GetBlockDim();
@@ -45,8 +49,8 @@ class OpRunInfoImpl {
 
 class OpCompileInfoImpl {
  public:
-  OpCompileInfoImpl();
-  ~OpCompileInfoImpl();
+  OpCompileInfoImpl() = default;
+  ~OpCompileInfoImpl() = default;
   OpCompileInfoImpl(const std::string &key, const std::string &value);
 
   void SetKey(const std::string &key);

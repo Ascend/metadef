@@ -24,11 +24,6 @@
 namespace optiling {
 namespace utils {
 
-OpRunInfoImpl::OpRunInfoImpl(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key)
-    : block_dim(block_dim), clear_atomic(clear_atomic), tiling_key(tiling_key) {}
-
-OpRunInfoImpl::~OpRunInfoImpl() {}
-
 OpCompileInfoImpl::OpCompileInfoImpl(const std::string &key, const std::string &value) : str(value), key(key) {}
 
 OpCompileInfoImpl::~OpCompileInfoImpl() {}

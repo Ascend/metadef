@@ -94,8 +94,6 @@ OpRunInfo &OpRunInfo::operator=(OpRunInfo &&runinfo) {
   return *this;
 }
 
-OpRunInfo::~OpRunInfo() {}
-
 OpCompileInfo::OpCompileInfo(const std::string &key, const std::string &value) {
   impl_ = make_shared<OpCompileInfoImpl>(key, value);
 }
