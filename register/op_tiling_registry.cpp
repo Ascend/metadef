@@ -129,8 +129,6 @@ OpCompileInfo &OpCompileInfo::operator=(OpCompileInfo &&compileinfo) {
   return *this;
 }
 
-OpCompileInfo::~OpCompileInfo() {}
-
 std::map<std::string, OpTilingFuncV2> &OpTilingRegistryInterf_V2::RegisteredOpInterf() {
   static std::map<std::string, OpTilingFuncV2> interf;
   GELOGI("Generate interf by new method, registered count: %zu", interf.size());
