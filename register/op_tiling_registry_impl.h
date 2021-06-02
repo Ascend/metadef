@@ -36,7 +36,6 @@ class OpRunInfoImpl {
   void SetTilingKey(uint32_t tiling_key);
   uint32_t GetTilingKey() const;
 
- private:
   uint32_t block_dim;
   bool clear_atomic;
   uint32_t tiling_key;
@@ -56,7 +55,6 @@ class OpCompileInfoImpl {
   void SetValue(const std::string &value);
   const std::string &GetValue() const;
 
- private:
   std::string str;
   std::string key;
 };
