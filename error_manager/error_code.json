@@ -66,7 +66,7 @@
       "Arglist": "parameter,value"
     },
     {
-      "ErrCode": "E10041",
+      "ErrCode": "E10014",
       "ErrMessage": "Input parameter[%s]’s value[%s] cause invalid argument!",
       "Arglist": "parameter,value"
     },
@@ -97,8 +97,8 @@
     },
     {
       "ErrCode": "E10020",
-      "ErrMessage": "--dynamic_image_size's number of dimensions of each group must be %s, E.g.:imagesize1_height,imagesize1_width;imagesize2_height,imagesize2_width",
-      "Arglist": "DynamicImageSizeNum"
+      "ErrMessage" : "Failed to recognize the dynamic_image_size %s, please check its value, E.g.:imagesize1_height,imagesize1_width;imagesize2_height,imagesize2_width",
+      "Arglist": "dynamic_image_size"
     },
     {
       "ErrCode": "E10021",
@@ -184,6 +184,11 @@
       "ErrCode": "E10040",
       "ErrMessage": "Need unknow shape data when user set --dynamic_batch_size, --dynamic_image_size or --dynamic_dims.",
       "Arglist": ""
+    },
+    {
+      "ErrCode" : "E10041",
+      "ErrMessage" : "Load model from [%s] failed, please check model file or input parameter[--framework] is correct.",
+      "Arglist" : "file"
     },
     {
       "ErrCode": "E10044",
@@ -292,7 +297,7 @@
     },
     {
       "ErrCode": "E11005",
-      "ErrMessage": "Model has input：%s not define shape by param input_shape.",
+      "ErrMessage": "Model has input node:%s not define shape by param input_shape.",
       "Arglist": "input"
     },
     {
@@ -494,6 +499,11 @@
       "ErrCode": "E19014",
       "ErrMessage": "Op[%s]'s %s is invalid which %s.",
       "Arglist": "opname,value,reason"
+    },
+    {
+      "ErrCode" : "E19015",
+      "ErrMessage" : "File[%s] size is %s, out of range (0,%s).",
+      "Arglist" : "file,size,maxsize"
     },
     {
       "ErrCode": "E19018",
