@@ -99,6 +99,7 @@ TEST_F(UtestOpTilingRegister, TbeOpTilingPyInterfaceEx2_test_unregistered) {
   uint64_t *elapse;
   int res = TbeOpTilingPyInterfaceEx2(optype, compile_info, inputs, outputs,
                                       run_info_json, run_info_len, compile_info_hash, elapse);
+  EXPECT_EQ(res, 0);
 }
 
 }  // namespace ge
