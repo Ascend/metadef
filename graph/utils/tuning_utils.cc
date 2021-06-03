@@ -775,9 +775,9 @@ graphStatus TuningUtils::RemoveDataNetoutputEdge(ComputeGraphPtr &graph) {
           // remove noop node
           NodeUtils::UnlinkAll(*noop_node);
           if (GraphUtils::RemoveJustNode(graph, noop_node) != SUCCESS) {
-            REPORT_CALL_ERROR("E19999", "TUU:end node [%s] RemoveNodeWithoutRelink failed.",
+            REPORT_CALL_ERROR("E19999", "TUU:noop node [%s] RemoveNodeWithoutRelink failed.",
                               noop_node->GetName().c_str());
-            GELOGE(FAILED, "[Remove][Node]TUU:end node [%s] RemoveNodeWithoutRelink failed.",
+            GELOGE(FAILED, "[Remove][Node]TUU:noop node [%s] RemoveNodeWithoutRelink failed.",
                    noop_node->GetName().c_str());
             return FAILED;
           }
