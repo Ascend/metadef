@@ -26,6 +26,16 @@ namespace utils {
 
 OpCompileInfoImpl::OpCompileInfoImpl(const std::string &key, const std::string &value) : str(value), key(key) {}
 
+OpRunInfoImpl &OpRunInfoImpl::operator=(const OpRunInfoImpl &runinfo) {
+  // Copy
+  block_dim = runinfo.block_dim;
+  clear_atomic = runinfo.clear_atomic;
+  tiling_key = runinfo.tiling_key;
+  tiling_data = runinfo.tiling_data;
+  workspaces = runinfo.workspaces; 
+  return *this;
+}
+
 void OpRunInfoImpl::SetBlockDim(uint32_t input_block_dim) {
   block_dim = input_block_dim;
 }
