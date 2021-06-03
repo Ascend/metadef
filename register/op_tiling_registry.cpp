@@ -67,7 +67,13 @@ OpRunInfo::OpRunInfo(const OpRunInfo &runinfo) {
   // Copy
   impl_ = make_shared<OpRunInfoImpl>();
   if (runinfo.impl_ != nullptr && impl_ != nullptr) {
-    *impl_ = *runinfo.impl_;
+    impl_->block_dim = runinfo.impl_->block_dim;
+    impl_->clear_atomic = runinfo.impl_->clear_atomic;
+    impl_->tiling_key = runinfo.impl_->tiling_key;
+    impl_->workspaces = runinfo.impl_->workspaces;
+    std::string temp_str = (runinfo.impl_->tiling_data).str();
+    impl_->tiling_data.clear();
+    impl_->tiling_data << temp_str;
   }
 }
 
@@ -81,7 +87,13 @@ OpRunInfo &OpRunInfo::operator=(const OpRunInfo &runinfo) {
   if (&runinfo != this) {
     impl_ = make_shared<OpRunInfoImpl>();
     if (runinfo.impl_ != nullptr && impl_ != nullptr) {
-      *impl_ = *runinfo.impl_;
+      impl_->block_dim = runinfo.impl_->block_dim;
+      impl_->clear_atomic = runinfo.impl_->clear_atomic;
+      impl_->tiling_key = runinfo.impl_->tiling_key;
+      impl_->workspaces = runinfo.impl_->workspaces;
+      std::string temp_str = (runinfo.impl_->tiling_data).str();
+      impl_->tiling_data.clear();
+      impl_->tiling_data << temp_str;
     }
   }
   return *this;

@@ -148,10 +148,10 @@ class OpRunInfo {
   OpRunInfo(const OpRunInfo &runinfo);
   // Move
   OpRunInfo(OpRunInfo &&runinfo);
-  // // Copy
-  // OpRunInfo &operator=(const OpRunInfo &runinfo);
-  // // Move
-  // OpRunInfo &operator=(OpRunInfo &&runinfo);
+  // Copy
+  OpRunInfo &operator=(const OpRunInfo &runinfo);
+  // Move
+  OpRunInfo &operator=(OpRunInfo &&runinfo);
 
   void SetBlockDim(uint32_t block_dim);
   uint32_t GetBlockDim();
