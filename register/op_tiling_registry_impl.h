@@ -17,7 +17,7 @@ class OpRunInfoImpl {
   OpRunInfoImpl() = default;
   ~OpRunInfoImpl() = default;
 
-  OpRunInfoImpl &operator=(const OpRunInfoImpl &runinfo);
+  // OpRunInfoImpl &operator=(const OpRunInfoImpl &runinfo);
 
   OpRunInfoImpl(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key)
     : block_dim(block_dim), clear_atomic(clear_atomic), tiling_key(tiling_key) {}
