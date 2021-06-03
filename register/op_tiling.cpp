@@ -19,7 +19,6 @@
 #include "external/graph/operator.h"
 #include "external/graph/operator_factory.h"
 
-#include "common/util/error_manager/error_manager.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
