@@ -44,9 +44,9 @@ std::mutex TuningUtils::mutex_;
 
 std::string TuningUtils::PrintCheckLog() {
   std::stringstream ss;
-  ss << "d2n:{";
+  ss << "d2e:{";
   for (const auto &pair : data_2_end_) {
-    ss << "data:" << pair.first << "-" << "netoutput:" << pair.second;
+    ss << "data:" << pair.first << "-" << "end:" << pair.second;
     ss << " | ";
   }
   ss << "}";
