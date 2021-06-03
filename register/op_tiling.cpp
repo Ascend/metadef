@@ -93,79 +93,80 @@ struct Getter<T, typename std::enable_if<std::is_floating_point<T>::value>::type
 
 class TeOpVarAttrArgsImpl {
   using DataKeyType = std::pair<std::string, std::string>;
+  public:
+    explicit TeOpVarAttrArgsImpl(ge::OpDescPtr &op_desc) : op_desc_(op_desc) {};
+    ~TeOpVarAttrArgsImpl() = default;
 
- public:
-  explicit TeOpVarAttrArgsImpl(ge::OpDescPtr &op_desc) : op_desc_(op_desc){};
-  ~TeOpVarAttrArgsImpl() = default;
+    Status GetDataByName(const string &name, const string &dtype, DataBuf &data);
 
-  Status GetDataByName(const string &name, const string &dtype, DataBuf &data);
+  private:
+    template <typename T>
+    Status GetNodeAttrDataIntListList(const std::string &name, DataBuf &data) {
+      std::vector<std::vector<int64_t>> value;
+      bool res = ge::AttrUtils::GetListListInt(op_desc_, name, value);
+      if (!res) {
+        GE_LOGE("attr not found. %s", name.c_str());
+        return domi::FAILED;
+      }
 
- private:
-  template<typename T>
-  Status GetNodeAttrDataIntListList(const std::string &name, DataBuf &data) {
-    std::vector<std::vector<int64_t>> value;
-    bool res = ge::AttrUtils::GetListListInt(op_desc_, name, value);
-    if (!res) {
-      GE_LOGE("attr not found. %s", name.c_str());
-      return domi::FAILED;
+      std::vector<T> dest;
+      for (const auto &vec : value) {
+        for (auto elem : vec) {
+          dest.emplace_back(static_cast<T>(elem));
+        }
+      }
+      auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
+      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+      data = dest_ptr->GetDataBuf();
+      GELOGI("IntListList attr found. %s", name.c_str());
+      return domi::SUCCESS;
     }
 
-    std::vector<T> dest;
-    for (const auto &vec : value) {
-      for (auto elem : vec) {
+    template <typename T, bool IsList = false,
+              typename std::enable_if<!IsList, bool>::type = true>
+    Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
+      auto func = Getter<T>::func;
+      typename Getter<T>::ST value;
+      bool res = func(op_desc_, name, value);
+      if (!res) {
+        GE_LOGE("attr not found. %s", name.c_str());
+        return domi::FAILED;
+      }
+
+      auto dest_ptr = std::make_shared<AnyValue<T>>(static_cast<T>(value));
+      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+      data = dest_ptr->GetDataBuf();
+      GELOGI("Single attr found. %s", name.c_str());
+      return domi::SUCCESS;
+    }
+
+    template <typename T, bool IsList = false,
+              typename std::enable_if<IsList, bool>::type = true>
+    Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
+      auto func = Getter<T>::list_func;
+      std::vector<typename Getter<T>::ST> value;
+      bool res = func(op_desc_, name, value);
+      if (!res) {
+        GE_LOGE("List attr not found. %s", name.c_str());
+        return domi::FAILED;
+      }
+
+      std::vector<T> dest;
+      for (auto elem : value) {
         dest.emplace_back(static_cast<T>(elem));
       }
-    }
-    auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
-    data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-    data = dest_ptr->GetDataBuf();
-    GELOGI("IntListList attr found. %s", name.c_str());
-    return domi::SUCCESS;
-  }
-
-  template<typename T, bool IsList = false, typename std::enable_if<!IsList, bool>::type = true>
-  Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
-    auto func = Getter<T>::func;
-    typename Getter<T>::ST value;
-    bool res = func(op_desc_, name, value);
-    if (!res) {
-      GE_LOGE("attr not found. %s", name.c_str());
-      return domi::FAILED;
+      auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
+      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+      data = dest_ptr->GetDataBuf();
+      GELOGI("attr found. %s", name.c_str());
+      return domi::SUCCESS;
     }
 
-    auto dest_ptr = std::make_shared<AnyValue<T>>(static_cast<T>(value));
-    data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-    data = dest_ptr->GetDataBuf();
-    GELOGI("Single attr found. %s", name.c_str());
-    return domi::SUCCESS;
-  }
-
-  template<typename T, bool IsList = false, typename std::enable_if<IsList, bool>::type = true>
-  Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
-    auto func = Getter<T>::list_func;
-    std::vector<typename Getter<T>::ST> value;
-    bool res = func(op_desc_, name, value);
-    if (!res) {
-      GE_LOGE("List attr not found. %s", name.c_str());
-      return domi::FAILED;
-    }
-
-    std::vector<T> dest;
-    for (auto elem : value) {
-      dest.emplace_back(static_cast<T>(elem));
-    }
-    auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
-    data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-    data = dest_ptr->GetDataBuf();
-    GELOGI("attr found. %s", name.c_str());
-    return domi::SUCCESS;
-  }
-
- private:
-  static std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl *, const std::string &, DataBuf &)>>
-      data_getter_;
-  ge::OpDescPtr op_desc_;
-  std::map<std::string, std::shared_ptr<AnyValueBase>> data_map_;
+  private:
+    static std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*,
+                                                      const std::string &, DataBuf &)>> data_getter_;
+    ge::OpDescPtr op_desc_;
+    std::map<std::string, std::shared_ptr<AnyValueBase>> data_map_;
 };
 
 class VarAttrHelper {
