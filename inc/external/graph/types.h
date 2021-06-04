@@ -163,7 +163,9 @@ enum Format {
   FORMAT_FRACTAL_Z_3D_TRANSPOSE, // 3D filter(transpose) input tensor format
   FORMAT_FRACTAL_ZN_LSTM,
   FORMAT_FRACTAL_Z_G,
-  FORMAT_RESERVED = 40,
+  FORMAT_ND_RNN_BIAS = 40,
+  FORMAT_FRACTAL_ZN_RNN,
+  FORMAT_RESERVED = 45,
   FORMAT_ALL,
   FORMAT_NULL,
   // Add new formats definition here
