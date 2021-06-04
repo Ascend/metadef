@@ -165,7 +165,7 @@ enum Format {
   FORMAT_FRACTAL_Z_G,
   FORMAT_ND_RNN_BIAS = 40,
   FORMAT_FRACTAL_ZN_RNN,
-  FORMAT_RESERVED = 45,
+  FORMAT_RESERVED,
   FORMAT_ALL,
   FORMAT_NULL,
   // Add new formats definition here

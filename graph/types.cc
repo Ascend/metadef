@@ -62,7 +62,9 @@ const char *GetFormatName(Format format) {
       "FRACTAL_Z_3D_TRANSPOSE",
       "FRACTAL_ZN_LSTM",
       "FRACTAL_Z_G",
-      "UNKNOWN", // 40, FORMAT_RESERVED
+      "ND_RNN_BIAS",
+      "FRACTAL_ZN_RNN",
+      "UNKNOWN", // 42, FORMAT_RESERVED
       "UNKNOWN", // FORMAT_ALL
       "UNKNOWN", // FORMAT_NULL
   };
