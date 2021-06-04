@@ -335,14 +335,16 @@ bool GetCompileInfoV2(const ge::OpDescPtr &op_desc, const char *op_type, const c
                       COMPILE_INFO_KEY, op_type, op_name);
     return false;
   }
-  op_compile_info.SetKey(op_compile_info_key);
+  ge::AscendString compile_info_key(op_compile_info_key.c_str());
+  op_compile_info.SetKey(compile_info_key);
   bres = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON, op_compile_info_json);
   if (!bres) {
     REPORT_CALL_ERROR("E19999", "Can not find the attribute compile info json%s. op_type:%s, op_name:%s",
                       COMPILE_INFO_JSON, op_type, op_name);
     return false;
   }
-  op_compile_info.SetValue(op_compile_info_json);
+  ge::AscendString compile_info_value(op_compile_info_json.c_str());
+  op_compile_info.SetValue(compile_info_value);
   return true;
 }
 
@@ -372,7 +374,8 @@ bool GetAtomicCleanCompileInfoV2(const ge::OpDescPtr &op_desc, const char *op_ty
                       op_type, op_name);
     return false;
   }
-  op_compile_info.SetKey(op_compile_info_key);
+  ge::AscendString compile_info_key(op_compile_info_key.c_str());
+  op_compile_info.SetKey(compile_info_key);
 
   bres = ge::AttrUtils::GetStr(op_desc, ATOMIC_COMPILE_INFO_JSON, op_compile_info_json);
   if (!bres) {
@@ -380,7 +383,8 @@ bool GetAtomicCleanCompileInfoV2(const ge::OpDescPtr &op_desc, const char *op_ty
                       op_type, op_name);
     return false;
   }
-  op_compile_info.SetValue(op_compile_info_json);
+  ge::AscendString compile_info_value(op_compile_info_json.c_str());
+  op_compile_info.SetValue(compile_info_value);
   return true;
 }
 
@@ -808,8 +812,9 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
   }
 
   optiling::utils::OpCompileInfo op_compile_info{"", compile_info};
+  ge::AscendString opCompileInfoHash(compile_info_hash.c_str());
   if (compile_info_hash) {
-    op_compile_info.SetKey(compile_info_hash);
+    op_compile_info.SetKey(opCompileInfoHash);
   }
 
   optiling::utils::OpRunInfo run_info(uint32_t(0), false, uint32_t(0));
