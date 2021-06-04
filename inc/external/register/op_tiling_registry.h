@@ -185,7 +185,7 @@ class OpCompileInfo {
  public:
   OpCompileInfo();
   ~OpCompileInfo() = default;
-  explicit OpCompileInfo(const ge::AscendString &key, const ge::AscendString &value);
+  OpCompileInfo(const ge::AscendString &key, const ge::AscendString &value);
   // Copy
   OpCompileInfo(const OpCompileInfo &compileinfo);
   // Move
