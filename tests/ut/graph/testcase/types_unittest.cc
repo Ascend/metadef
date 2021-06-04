@@ -70,7 +70,7 @@ TEST_F(UtestTypes, GetFormatName) {
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_ALL), "UNKNOWN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_NULL), "UNKNOWN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_END), "UNKNOWN"), 0);
-  ASSERT_EQ(FORMAT_END, 43); // if add formats definition, add ut here
+  ASSERT_EQ(FORMAT_END, 45); // if add formats definition, add ut here
 }
 
 TEST_F(UtestTypes, GetFormatFromSub) {
