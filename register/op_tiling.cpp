@@ -812,7 +812,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
   }
 
   optiling::utils::OpCompileInfo op_compile_info{"", compile_info};
-  ge::AscendString opCompileInfoHash(compile_info_hash.c_str());
+  ge::AscendString opCompileInfoHash(compile_info_hash);
   if (compile_info_hash) {
     op_compile_info.SetKey(opCompileInfoHash);
   }
