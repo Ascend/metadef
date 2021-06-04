@@ -140,105 +140,71 @@ OpTilingRegistryInterf_V2::OpTilingRegistryInterf_V2(std::string op_type, OpTili
 }
 
 void OpRunInfo::SetBlockDim(uint32_t input_block_dim) {
-  if (impl_ != nullptr) {
-    impl_->SetBlockDim(input_block_dim);
-  }
+  impl_->SetBlockDim(input_block_dim);
 }
 
 void OpRunInfo::AddWorkspace(int64_t workspace) {
-  if (impl_ != nullptr) {
-    impl_->AddWorkspace(workspace);
-  }
+  impl_->AddWorkspace(workspace);
 }
 
 uint32_t OpRunInfo::GetBlockDim() {
-  if (impl_ != nullptr) {
-    return impl_->GetBlockDim();
-  }
+  return impl_->GetBlockDim();
 }
 
 size_t OpRunInfo::GetWorkspaceNum() {
-  if (impl_ != nullptr) {
-    return impl_->GetWorkspaceNum();
-  }
+  return impl_->GetWorkspaceNum();
 }
 
 ge::graphStatus OpRunInfo::GetWorkspace(size_t idx, int64_t &workspace) {
-  if (impl_ != nullptr) {
-    return impl_->GetWorkspace(idx, workspace);
-  }
+  return impl_->GetWorkspace(idx, workspace);
 }
 
 ge::graphStatus OpRunInfo::GetAllWorkspaces(std::vector<int64_t> &_workspaces) {
-  if (impl_ != nullptr) {
-    return impl_->GetAllWorkspaces(_workspaces);
-  }
+  return impl_->GetAllWorkspaces(_workspaces);
 }
 
 void OpRunInfo::InternelSetTiling(ByteBuffer &value) {
-  if (impl_ != nullptr) {
-    impl_->SetAllTilingData(value);
-  }
+  impl_->SetAllTilingData(value);
 }
 
 void OpRunInfo::AddTilingData(const char *_value, size_t _size) {
-  if (impl_ != nullptr) {
-    impl_->AddTilingData(_value, _size);
-  }
+  impl_->AddTilingData(_value, _size);
 }
 
 ByteBuffer &OpRunInfo::GetAllTilingData() {
-  if (impl_ != nullptr) {
-    return impl_->GetAllTilingData();
-  }
+  return impl_->GetAllTilingData();
 }
 
 void OpRunInfo::SetClearAtomic(bool clear_atomic_input) {
-  if (impl_ != nullptr) {
-    impl_->SetClearAtomic(clear_atomic_input);
-  }
+  impl_->SetClearAtomic(clear_atomic_input);
 }
 
 bool OpRunInfo::GetClearAtomic() const {
-  if (impl_ != nullptr) {
-    return impl_->GetClearAtomic();
-  }
+  return impl_->GetClearAtomic();
 }
 
 void OpRunInfo::SetTilingKey(uint32_t _tiling_key) {
-  if (impl_ != nullptr) {
-    impl_->SetTilingKey(_tiling_key);
-  }
+  impl_->SetTilingKey(_tiling_key);
 }
 
 uint32_t OpRunInfo::GetTilingKey() const {
-  if (impl_ != nullptr) {
-    return impl_->GetTilingKey();
-  }
+  return impl_->GetTilingKey();
 }
 
 void OpCompileInfo::SetKey(const ge::AscendString &_key) {
-  if (impl_ != nullptr) {
-    impl_->SetKey(_key);
-  }
+  impl_->SetKey(_key);
 }
 
 void OpCompileInfo::SetValue(const ge::AscendString &_value) {
-  if (impl_ != nullptr) {
-    impl_->SetValue(_value);
-  }
+  impl_->SetValue(_value);
 }
 
 const ge::AscendString &OpCompileInfo::GetKey() const {
-  if (impl_ != nullptr) {
-    return impl_->GetKey();
-  }
+  return impl_->GetKey();
 }
 
 const ge::AscendString &OpCompileInfo::GetValue() const {
-  if (impl_ != nullptr) {
-    return impl_->GetValue();
-  }
+  return impl_->GetValue();
 }
 }  // namespace utils
 }  // namespace optiling
