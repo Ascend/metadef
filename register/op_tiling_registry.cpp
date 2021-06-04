@@ -64,9 +64,23 @@ OpRunInfo::OpRunInfo(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key)
 }
 
 OpRunInfo::OpRunInfo(const OpRunInfo &runinfo) {
-  // Copy
   impl_ = make_shared<OpRunInfoImpl>();
-  if (runinfo.impl_ != nullptr && impl_ != nullptr) {
+  impl_->block_dim = runinfo.impl_->block_dim;
+  impl_->clear_atomic = runinfo.impl_->clear_atomic;
+  impl_->tiling_key = runinfo.impl_->tiling_key;
+  impl_->workspaces = runinfo.impl_->workspaces;
+  std::string temp_str = (runinfo.impl_->tiling_data).str();
+  impl_->tiling_data.clear();
+  impl_->tiling_data << temp_str;
+}
+
+OpRunInfo::OpRunInfo(OpRunInfo &&runinfo) {
+  impl_ = std::move(runinfo.impl_);
+}
+
+OpRunInfo &OpRunInfo::operator=(const OpRunInfo &runinfo) {
+  if (&runinfo != this) {
+    impl_ = make_shared<OpRunInfoImpl>();
     impl_->block_dim = runinfo.impl_->block_dim;
     impl_->clear_atomic = runinfo.impl_->clear_atomic;
     impl_->tiling_key = runinfo.impl_->tiling_key;
@@ -74,27 +88,6 @@ OpRunInfo::OpRunInfo(const OpRunInfo &runinfo) {
     std::string temp_str = (runinfo.impl_->tiling_data).str();
     impl_->tiling_data.clear();
     impl_->tiling_data << temp_str;
-  }
-}
-
-OpRunInfo::OpRunInfo(OpRunInfo &&runinfo) {
-  // Move
-  impl_ = std::move(runinfo.impl_);
-}
-
-OpRunInfo &OpRunInfo::operator=(const OpRunInfo &runinfo) {
-  // Copy
-  if (&runinfo != this) {
-    impl_ = make_shared<OpRunInfoImpl>();
-    if (runinfo.impl_ != nullptr && impl_ != nullptr) {
-      impl_->block_dim = runinfo.impl_->block_dim;
-      impl_->clear_atomic = runinfo.impl_->clear_atomic;
-      impl_->tiling_key = runinfo.impl_->tiling_key;
-      impl_->workspaces = runinfo.impl_->workspaces;
-      std::string temp_str = (runinfo.impl_->tiling_data).str();
-      impl_->tiling_data.clear();
-      impl_->tiling_data << temp_str;
-    }
   }
   return *this;
 }
@@ -106,30 +99,23 @@ OpRunInfo &OpRunInfo::operator=(OpRunInfo &&runinfo) {
   return *this;
 }
 
-OpCompileInfo::OpCompileInfo(const std::string &key, const std::string &value) {
+OpCompileInfo::OpCompileInfo(const ge::AscendString &key, const ge::AscendString &value) {
   impl_ = make_shared<OpCompileInfoImpl>(key, value);
 }
 
 OpCompileInfo::OpCompileInfo(const OpCompileInfo &compileinfo) {
-  // Copy
   impl_ = make_shared<OpCompileInfoImpl>();
-  if (compileinfo.impl_ != nullptr && impl_ != nullptr) {
-    *impl_ = *compileinfo.impl_;
-  }
+  *impl_ = *compileinfo.impl_;
 }
 
 OpCompileInfo::OpCompileInfo(OpCompileInfo &&compileinfo) {
-  // Move
   impl_ = std::move(compileinfo.impl_);
 }
 
 OpCompileInfo &OpCompileInfo::operator=(const OpCompileInfo &compileinfo) {
-  // Copy
   if (&compileinfo != this) {
     impl_ = make_shared<OpCompileInfoImpl>();
-    if (compileinfo.impl_ != nullptr && impl_ != nullptr) {
-      *impl_ = *compileinfo.impl_;
-    }
+    *impl_ = *compileinfo.impl_;
   }
   return *this;
 }
@@ -150,8 +136,7 @@ std::map<std::string, OpTilingFuncV2> &OpTilingRegistryInterf_V2::RegisteredOpIn
 OpTilingRegistryInterf_V2::OpTilingRegistryInterf_V2(std::string op_type, OpTilingFuncV2 func) {
   auto &interf = RegisteredOpInterf();
   interf.emplace(op_type, func);
-  GELOGI("Register tiling function by new method: op_type:%s, funcPointer:%p, registered ount:%zu", op_type.c_str(),
-         func.target<OpTilingFuncV2Ptr>(), interf.size());
+  GELOGI("Register tiling function by new method: op_type:%s, registered count:%zu", op_type.c_str(), interf.size());
 }
 
 void OpRunInfo::SetBlockDim(uint32_t input_block_dim) {
@@ -232,25 +217,25 @@ uint32_t OpRunInfo::GetTilingKey() const {
   }
 }
 
-void OpCompileInfo::SetKey(const std::string &_key) {
+void OpCompileInfo::SetKey(const ge::AscendString &_key) {
   if (impl_ != nullptr) {
     impl_->SetKey(_key);
   }
 }
 
-void OpCompileInfo::SetValue(const std::string &_value) {
+void OpCompileInfo::SetValue(const ge::AscendString &_value) {
   if (impl_ != nullptr) {
     impl_->SetValue(_value);
   }
 }
 
-const std::string &OpCompileInfo::GetKey() const {
+const ge::AscendString &OpCompileInfo::GetKey() const {
   if (impl_ != nullptr) {
     return impl_->GetKey();
   }
 }
 
-const std::string &OpCompileInfo::GetValue() const {
+const ge::AscendString &OpCompileInfo::GetValue() const {
   if (impl_ != nullptr) {
     return impl_->GetValue();
   }

@@ -18,6 +18,7 @@
 #define INC_REGISTER_OP_TILING_REGISTRY_H_
 
 #include "external/graph/tensor.h"
+#include "external/graph/ascend_string.h"
 #include "external/register/register_error_codes.h"
 #include "external/register/register_types.h"
 #include "graph/operator.h"
@@ -143,7 +144,7 @@ class OpRunInfo {
  public:
   OpRunInfo();
   ~OpRunInfo() = default;
-  explicit OpRunInfo(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key);
+  OpRunInfo(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key);
   // Copy
   OpRunInfo(const OpRunInfo &runinfo);
   // Move
@@ -184,7 +185,7 @@ class OpCompileInfo {
  public:
   OpCompileInfo();
   ~OpCompileInfo() = default;
-  explicit OpCompileInfo(const std::string &key, const std::string &value);
+  explicit OpCompileInfo(const ge::AscendString &key, const ge::AscendString &value);
   // Copy
   OpCompileInfo(const OpCompileInfo &compileinfo);
   // Move
@@ -194,11 +195,11 @@ class OpCompileInfo {
   // Move
   OpCompileInfo &operator=(OpCompileInfo &&compileinfo);
 
-  void SetKey(const std::string &key);
-  const std::string &GetKey() const;
+  void SetKey(const ge::AscendString &key);
+  const ge::AscendString &GetKey() const;
 
-  void SetValue(const std::string &value);
-  const std::string &GetValue() const;
+  void SetValue(const ge::AscendString &value);
+  const ge::AscendString &GetValue() const;
 
  private:
   std::shared_ptr<OpCompileInfoImpl> impl_;

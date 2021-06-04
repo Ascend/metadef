@@ -51,16 +51,16 @@ class OpCompileInfoImpl {
  public:
   OpCompileInfoImpl() = default;
   ~OpCompileInfoImpl() = default;
-  OpCompileInfoImpl(const std::string &key, const std::string &value);
+  OpCompileInfoImpl(const ge::AscendString &key, const ge::AscendString &value);
 
-  void SetKey(const std::string &key);
-  const std::string &GetKey() const;
+  void SetKey(const ge::AscendString &key);
+  const ge::AscendString &GetKey() const;
 
-  void SetValue(const std::string &value);
-  const std::string &GetValue() const;
+  void SetValue(const ge::AscendString &value);
+  const ge::AscendString &GetValue() const;
 
-  std::string str;
-  std::string key;
+  ge::AscendString str;
+  ge::AscendString key;
 };
 }  // namespace utils
 }  // namespace optiling

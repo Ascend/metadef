@@ -24,7 +24,7 @@
 namespace optiling {
 namespace utils {
 
-OpCompileInfoImpl::OpCompileInfoImpl(const std::string &key, const std::string &value) : str(value), key(key) {}
+OpCompileInfoImpl::OpCompileInfoImpl(const ge::AscendString &key, const ge::AscendString &value) : str(value), key(key) {}
 
 void OpRunInfoImpl::SetBlockDim(uint32_t input_block_dim) {
   block_dim = input_block_dim;
@@ -91,19 +91,19 @@ uint32_t OpRunInfoImpl::GetTilingKey() const {
   return tiling_key;
 }
 
-void OpCompileInfoImpl::SetKey(const std::string &_key) {
+void OpCompileInfoImpl::SetKey(const ge::AscendString &_key) {
   key = _key;
 }
 
-void OpCompileInfoImpl::SetValue(const std::string &value) {
+void OpCompileInfoImpl::SetValue(const ge::AscendString &value) {
   str = value;
 }
 
-const std::string &OpCompileInfoImpl::GetKey() const {
+const ge::AscendString &OpCompileInfoImpl::GetKey() const {
   return key;
 }
 
-const std::string &OpCompileInfoImpl::GetValue() const {
+const ge::AscendString &OpCompileInfoImpl::GetValue() const {
   return str;
 }
 }  // namespace utils
