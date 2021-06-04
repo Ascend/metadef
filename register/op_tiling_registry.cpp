@@ -135,7 +135,7 @@ std::map<std::string, OpTilingFuncV2> &OpTilingRegistryInterf_V2::RegisteredOpIn
 
 OpTilingRegistryInterf_V2::OpTilingRegistryInterf_V2(std::string op_type, OpTilingFuncV2 func) {
   auto &interf = RegisteredOpInterf();
-  interf.emplace(op_type, func);
+  interf.emplace(op_type, std::move(func));
   GELOGI("Register tiling function by new method: op_type:%s, registered count:%zu", op_type.c_str(), interf.size());
 }
 
