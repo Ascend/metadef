@@ -499,6 +499,16 @@ const std::string TVM_ATTR_NAME_BLOCKDIM = "tvm_blockdim";
 const std::string TVM_ATTR_NAME_METADATA = "tvm_metadata";
 const std::string TVM_ATTR_NAME_WORKSPACE_TYPE = "tvm_workspace_type";
 
+// Ffts Tvm
+const std::string TVM_ATTR_NAME_THREAD_MAGIC = "_thread_tvm_magic";
+const std::string TVM_ATTR_NAME_THREAD_BLOCKDIM = "_thread_tvm_blockdim";
+const std::string TVM_ATTR_NAME_THREAD_METADATA = "_thread_tvm_metadata";
+const std::string TVM_ATTR_NAME_THREAD_WORKSPACE_TYPE = "_thread_tvm_workspace_type";
+const std::string TVM_ATTR_NAME_THREAD_N_BATCH_SPLIT = "_thread_is_n_batch_split";
+
+const std::string ATTR_NAME_THREAD_TBE_KERNEL_BUFFER = "_thread_tbe_kernel_buffer";
+const std::string ATTR_NAME_THREAD_TBE_KERNEL_NAME = "_thread_tbe_kernel_name";
+
 // Squeeze
 const std::string SQUEEZE_ATTR_AXIS = "axis";
 const std::string SQUEEZE_ATTR_DIMS = "squeeze_dims";

@@ -59,6 +59,7 @@ message TaskDef {
     LabelSwitchByIndexDef label_switch_by_index = 39;
     KernelDefWithHandle kernel_with_handle = 40;
 }
+//    FftsTaskDef ffts_task = 41;
 
 message KernelDef {
     KernelContext context = 1;
@@ -182,14 +183,30 @@ message FftsTaskDef {
     uint32 op_index = 1;
 
     uint32 ffts_type = 2;   // 2: Auto Threading / 3: Manual Threading
-    repeated FftsSubTaskDef sub_task = 3;
-    repeated TicketCacheDef ticket_cache = 4;
+    uint32 addr_size = 3;   // Total task addr num
+    FftsDescInfoDef ffts_desc = 4;
+    repeated FftsSubTaskDef sub_task = 5;
+    repeated TicketCacheDef ticket_cache = 6;
+}
+
+message FftsDescInfoDef {
+    uint32 tm = 1;    // thread subtask kickstart mode, 0:order, 1:disorder
+    uint32 di = 2;    // discard invalidate
+    uint32 dw = 3;    // discard write back
+    uint32 df = 4;    // discard flush
+    uint32 data_split_unit = 5;    // split source or ticket cache by 2~dataSplitUnit MB
+    uint32 prefetch_ost_num = 6;
+    uint32 cache_maintain_ost_num = 7;
+    uint32 aic_prefetch_upper = 8;
+    uint32 aic_prefetch_lower = 9;
+    uint32 aiv_prefetch_upper = 10;
+    uint32 aiv_prefetch_lower = 11;
 }
 
 message FftsSubTaskDef {
     uint32 sub_task_type = 1;   // 0: AIC / 1: AIV / 2: DMU / 3: NOP / 4: Prefetch
 
-    uint32 thread_dim = 2;
+    uint32 thread_dim = 2;    // thread count
     uint32 dst_tick_cache_vld_bitmap = 3;
     uint32 src_tick_cache_vld_bitmap = 4;
     uint32 src_data_out_of_subgraph_bitmap = 5;
@@ -214,23 +231,27 @@ message TicketCacheDef {
 
 message AutoThreadAicAivDef {
     repeated uint64 task_addr = 1; // input / output address (runtime device memory)
+    repeated uint64 task_addr_offset = 2;
+    uint32 task_param_offset = 3;
 
-    uint32 task_param_offset = 2;
+    uint32 sat_mode = 4;
+    uint32 schedule_mode = 5;    // 0:normal mode, 1:batch mode, 2:sync mode, 3:reserved
+    uint32 cache_prefetch_cnt = 6;    // units is 2K
+    uint32 prefetch_enable_bitmap = 7;  // 8 bit bitmap
+    uint32 prefetch_once_bitmap = 8;    // 8 bit bitmap
 
-    uint32 prefetch_enable_bitmap = 3;  // 8 bit bitmap
-    uint32 prefetch_once_bitmap = 4;    // 8 bit bitmap
+    uint32 tail_blk_dim = 9;
+    uint32 non_tail_blk_dim = 10;
 
-    uint32 tail_blk_dim = 5;
-    uint32 non_tail_blk_dim = 6;
+    string non_tail_task_func_stub = 11;
+    string tail_task_func_stub = 12;
 
-    string non_tail_task_func_stub = 7;
-    string tail_task_func_stub = 8;
-
-    repeated AutoThreadPrefetchDef src_prefetch = 9;
+    repeated AutoThreadPrefetchDef src_prefetch = 13;
+    uint32 input_output_count = 14;
 }
 
 message AutoThreadCacheDef {
-    uint64 data_addr = 1;   // device num
+    uint64 data_addr = 1;   // device mem
     uint32 data_addr_offset = 2;
     uint32 non_tail_data_len = 3;
     uint32 tail_data_len = 4;
@@ -238,27 +259,35 @@ message AutoThreadCacheDef {
 }
 
 message AutoThreadPrefetchDef {
-    uint64 data_addr = 1;
+    uint64 data_addr = 1;  // device mem
     uint32 data_addr_offset = 2;
     uint32 non_tail_data_len = 3;
     uint32 tail_data_len = 4;
 }
 
 message ManualThreadAicAivDef {
-    uint64 task_param_addr = 1;
-    uint32 task_param_offset = 2;
-    uint32 prefetch_enable_bitmap = 3;  // 8 bit bitmap 1010
-    uint32 prefetch_once_bitmap = 4;    // 8 bit bitmap 1010
+    repeated uint64 task_addr = 1;    // input/output address(runtime device memory)
+    repeated uint64 task_addr_offset = 2;
+    uint32 task_param_offset = 3;
 
-    uint32 prefetch_once_dmu_num = 5;   //
+    uint32 sat_mode = 4;
+    uint32 schedule_mode = 5;    // 0:normal mode; 1:batch mode; 2:sync mode; 3:reserved
+    uint32 cache_prefetch_cnt = 6;  // units is 2K
+    uint32 prefetch_enable_bitmap = 7;  // 8 bit bitmap 1010
+    uint32 prefetch_once_bitmap = 8;    // 8 bit bitmap 1010
 
-    repeated uint32 thread_prefetch_dmu_idx = 6;    // max valid is thread dim
-    repeated uint32 thread_blk_dim = 7;
+    uint32 prefetch_once_dmu_num = 9;   // prefetch_once_dmu_descriptor_index in ffts
+    // num: thread0_prefetch_dmu_descriptor_index - prefetch_once_dmu_descriptor_index
+    // offset: PrefetchOnceDmuDescIndex
 
-    repeated string thread_task_func_stub = 8;
+    repeated uint32 thread_prefetch_dmu_idx = 10;    // max valid is thread dim
+    repeated uint32 thread_blk_dim = 11;
 
-    repeated ManualThreadDmuDef prefetch_list = 9;  // dmu desc 0-64k
-    repeated ManualThreadDependencyDef src_dep_tbl = 10;
+    repeated string thread_task_func_stub = 12;
+
+    repeated ManualThreadDmuDef prefetch_list = 13;  // dmu desc 0-64k
+    repeated ManualThreadDependencyDef src_dep_tbl = 14;
+    uint32 input_output_count = 15;
 }
 
 message ManualThreadNopDef {
@@ -273,7 +302,7 @@ message ManualThreadCacheDef {
 }
 
 message ManualThreadDmuDef {
-    uint64 data_addr = 1;   // device num
+    uint64 data_addr = 1;   // device mem
     uint32 num_outer = 2;
     uint32 num_inner = 3;
     uint32 stride_outer = 4;
