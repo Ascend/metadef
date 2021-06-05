@@ -23,6 +23,12 @@
 #include "op_desc.h"
 #include "node.h"
 #include "graph/utils/graph_utils.h"
+#include "inc/external/graph/operator_reg.h"
+#include "inc/external/graph/operator.h"
+#include "inc/external/graph/operator_factory.h"
+#include "inc/graph/operator_factory_impl.h"
+
+using namespace ge;
 
 class UtestGraph : public testing::Test {
  protected:
@@ -108,4 +114,26 @@ TEST_F(UtestGraph, copy_graph_02) {
   auto cp_add_node2 = cp_else_compute_graph->FindNode("add2");
   ASSERT_NE(cp_add_node2, nullptr);
   ASSERT_NE(cp_add_node2, add_node2);
+}
+
+TEST_F(UtestGraph, test_infer_value_range_register_succ) {
+  std::function<ge::graphStatus(ge::Operator &)> func =
+      [] (ge::Operator &tmp) -> ge::graphStatus {
+    std::cout << "test" << std::endl;
+  };
+  string op_type = "add";
+  INFER_VALUE_RANGE_DEFAULT_REG(add);
+  auto para = OperatorFactoryImpl::GetInferValueRangePara(op_type);
+  ASSERT_EQ(para.is_initialized, true);
+  ASSERT_EQ(para.infer_value_func, nullptr);
+  INFER_VALUE_RANGE_CUSTOM_FUNC_REG(mul, INPUT_HAS_VALUE_RANGE, func);
+
+  op_type = "mul";
+  para = OperatorFactoryImpl::GetInferValueRangePara(op_type);
+  ASSERT_EQ(para.is_initialized, true);
+  ASSERT_NE(para.infer_value_func, nullptr);
+
+  op_type = "sub";
+  para = OperatorFactoryImpl::GetInferValueRangePara(op_type);
+  ASSERT_EQ(para.is_initialized, false);
 }
