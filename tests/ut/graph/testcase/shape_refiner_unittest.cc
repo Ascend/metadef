@@ -15,12 +15,12 @@
  */
 
 #include <gtest/gtest.h>
-#include <iostream>
 
 #define protected public
 #define private public
 #include "graph/compute_graph.h"
 #include "graph/shape_refiner.h"
+#include "graph/operator_factory_impl.h"
 #include "graph/utils/tensor_utils.h"
 
 namespace ge {
@@ -73,5 +73,12 @@ TEST_F(UtestShapeRefiner, infer_shape_and_type_for_running) {
 
   EXPECT_EQ(ShapeRefiner::InferShapeAndTypeForRunning(enter1, true), GRAPH_SUCCESS);
 
+  auto infershape_funcs_back = OperatorFactoryImpl::operator_infershape_funcs_;
+  OperatorFactoryImpl::operator_infershape_funcs_.reset(new (std::nothrow) std::map<string, InferShapeFunc>());
+  OperatorFactoryImpl::operator_infershape_funcs_->emplace("Merge", [](Operator &op) { return GRAPH_SUCCESS; });
+  auto merge1 = CreateNode(graph, "merge1", "StreamMerge", 2, 2);
+  merge1->GetOpDesc()->AddInferFunc(nullptr);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndTypeForRunning(merge1, true), GRAPH_SUCCESS);
+  OperatorFactoryImpl::operator_infershape_funcs_ = infershape_funcs_back;
 }
 } // namespace ge
