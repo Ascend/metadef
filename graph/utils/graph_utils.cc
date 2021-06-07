@@ -43,6 +43,8 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
+#include "graph/compute_graph_impl.h"
+#include "graph/op_desc_impl.h"
 #include "mmpa/mmpa_api.h"
 
 using google::protobuf::io::FileOutputStream;
@@ -264,9 +266,9 @@ GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
     const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
     for (auto name_iter = subgraph_names.rbegin(); name_iter != subgraph_names.rend(); ++name_iter) {
       auto subgraph = root_graph->GetSubgraph(*name_iter);
-      if (subgraph != nullptr) {
+      if (subgraph != nullptr && subgraph->impl_ != nullptr) {
         subgraphs.emplace_back(subgraph);
-        candidates.insert(candidates.begin(), subgraph->nodes_.begin(), subgraph->nodes_.end());
+        candidates.insert(candidates.begin(), subgraph->impl_->nodes_.begin(), subgraph->impl_->nodes_.end());
       }
     }
   }
@@ -286,6 +288,7 @@ GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 GraphUtils::RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const NodePtr &node) {
   GE_CHECK_NOTNULL(compute_graph);
+  GE_CHECK_NOTNULL(compute_graph->impl_);
   if (node == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
@@ -305,8 +308,8 @@ GraphUtils::RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const 
     return GRAPH_FAILED;
   }
 
-  auto iter = find(compute_graph->nodes_.begin(), compute_graph->nodes_.end(), node);
-  if (iter != compute_graph->nodes_.end()) {
+  auto iter = find(compute_graph->impl_->nodes_.begin(), compute_graph->impl_->nodes_.end(), node);
+  if (iter != compute_graph->impl_->nodes_.end()) {
     compute_graph->EraseFromNodeList(iter);
     return GRAPH_SUCCESS;
   }
@@ -596,8 +599,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::RemoveJus
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should be not null.");
     return GRAPH_FAILED;
   }
-  auto iter = find(compute_graph.nodes_.begin(), compute_graph.nodes_.end(), node);
-  if (iter != compute_graph.nodes_.end()) {
+  if (compute_graph.impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "The compute graph impl should be not null.");
+    return GRAPH_FAILED;
+  }
+  auto iter = find(compute_graph.impl_->nodes_.begin(), compute_graph.impl_->nodes_.end(), node);
+  if (iter != compute_graph.impl_->nodes_.end()) {
     compute_graph.EraseFromNodeList(iter);
     return GRAPH_SUCCESS;
   }
@@ -1768,7 +1775,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::AppendInp
     return GRAPH_FAILED;
   }
   graph->SetInputSize(graph->GetInputSize() + 1);
-  graph->inputs_order_.emplace_back(node->GetName());
+  if (graph->impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "Graph impl is nullptr.");
+    return GRAPH_FAILED;
+  }
+  graph->impl_->inputs_order_.emplace_back(node->GetName());
   return GRAPH_SUCCESS;
 }
 
@@ -1819,34 +1830,23 @@ graphStatus GraphUtils::CopyGraph(const Graph &src_graph, Graph &dst_graph) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph,
-                                         ComputeGraphPtr &dst_compute_graph,
-                                         std::map<ConstNodePtr, NodePtr> &node_old_2_new,
-                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
-                                         int32_t depth) {
-  GE_CHECK_NOTNULL(dst_compute_graph);
-  GE_CHECK_NOTNULL(src_compute_graph);
+graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph,
+                                          ComputeGraphPtr &dst_compute_graph,
+                                          std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                                          std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
+                                          std::unordered_map<std::string, NodePtr> &all_new_nodes,
+                                          int32_t depth) {
   auto dst_root_compute_graph = FindRootGraph(dst_compute_graph);
   GE_CHECK_NOTNULL(dst_root_compute_graph);
   auto src_root_compute_graph = FindRootGraph(src_compute_graph);
   GE_CHECK_NOTNULL(src_root_compute_graph);
-
-  if (depth >= kMaxRecursionDepth) {
-    REPORT_INNER_ERROR("E19999", "param depth:%d >= %d(allow max subgraphs)", depth, kMaxRecursionDepth);
-    GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%d > %d(allow max subgraphs)",
-           depth, kMaxRecursionDepth);
-    return GRAPH_FAILED;
-  }
-  // copy op and subgraph from old graph to new graph
-  std::unordered_map<std::string, NodePtr> all_new_nodes;
   for (const auto &n : src_compute_graph->GetDirectNode()) {
     OpDescPtr op_desc = AttrUtils::CopyOpDesc(n->GetOpDesc());
-    if (op_desc == nullptr) {
+    if (op_desc == nullptr || op_desc->impl_ == nullptr) {
       REPORT_CALL_ERROR("E19999", "CopyOpDesc failed from node:%s", n->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Copy][OpDesc] from node:%s failed", n->GetName().c_str());
       return GRAPH_FAILED;
     }
-
     if (CopyTensorAttrs(op_desc, n) != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "[Copy][TensorAttrs] from node:%s failed.", n->GetName().c_str());
       return GRAPH_FAILED;
@@ -1897,10 +1897,37 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
       }
       dst_root_compute_graph->AddSubGraph(dst_subgraph);
       dst_subgraph->SetParentNode(node);
-      op_desc->subgraph_ir_names_to_type_ = n->GetOpDesc()->subgraph_ir_names_to_type_;
-      op_desc->subgraph_names_to_index_ = n->GetOpDesc()->subgraph_names_to_index_;
-      op_desc->subgraph_instance_names_ = n->GetOpDesc()->subgraph_instance_names_;
+      op_desc->impl_->subgraph_ir_names_to_type_ = n->GetOpDesc()->impl_->subgraph_ir_names_to_type_;
+      op_desc->impl_->subgraph_names_to_index_ = n->GetOpDesc()->impl_->subgraph_names_to_index_;
+      op_desc->impl_->subgraph_instance_names_ = n->GetOpDesc()->impl_->subgraph_instance_names_;
     }
+  }
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph,
+                                         ComputeGraphPtr &dst_compute_graph,
+                                         std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
+                                         int32_t depth) {
+  GE_CHECK_NOTNULL(dst_compute_graph);
+  GE_CHECK_NOTNULL(src_compute_graph);
+
+  if (depth >= kMaxRecursionDepth) {
+    REPORT_INNER_ERROR("E19999", "param depth:%d >= %d(allow max subgraphs)", depth, kMaxRecursionDepth);
+    GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%d > %d(allow max subgraphs)",
+           depth, kMaxRecursionDepth);
+    return GRAPH_FAILED;
+  }
+  // copy op and subgraph from old graph to new graph
+  std::unordered_map<std::string, NodePtr> all_new_nodes;
+  graphStatus ret = CopyOpAndSubgraph(src_compute_graph, dst_compute_graph,
+                                      node_old_2_new, op_desc_old_2_new,
+                                      all_new_nodes, depth);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "[Copy][OpAndSubGraph] failed.");
+    return GRAPH_FAILED;
   }
 
   for (const auto &n : src_compute_graph->GetDirectNode()) {
@@ -1911,7 +1938,7 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
   }
 
   // copy members from old graph to new graph
-  auto ret = CopyMembers(src_compute_graph, dst_compute_graph, all_new_nodes);
+  ret = CopyMembers(src_compute_graph, dst_compute_graph, all_new_nodes);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "[Copy][Members] failed, ret:%d.", ret);
     return GRAPH_FAILED;
@@ -1924,6 +1951,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
                                     ComputeGraphPtr &dst_compute_graph,
                                     const std::unordered_map<std::string, NodePtr> &all_new_nodes) {
+  if (src_compute_graph == nullptr || src_compute_graph->impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "Src compute graph is nullptr.");
+    return GRAPH_FAILED;
+  }
+  if (dst_compute_graph == nullptr || dst_compute_graph->impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "Dst compute graph is nullptr.");
+    return GRAPH_FAILED;
+  }
   // copy info of output nodes from old graph to new graph.
   const std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info = src_compute_graph->GetGraphOutNodesInfo();
   std::vector<std::pair<NodePtr, int32_t>> new_out_nodes_info;
@@ -1966,24 +2001,24 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
 
   // copy attr from old graph to new graph.
   std::shared_ptr<proto::GraphDef> graph_proto = ComGraphMakeShared<proto::GraphDef>();
-  if (src_compute_graph->attrs_.GetProtoMsg() != nullptr) {
-    *graph_proto->mutable_attr() = *src_compute_graph->attrs_.GetProtoMsg();
-    dst_compute_graph->attrs_ = ProtoAttrMapHelper(graph_proto, graph_proto->mutable_attr());
+  if (src_compute_graph->impl_->attrs_.GetProtoMsg() != nullptr) {
+    *graph_proto->mutable_attr() = *src_compute_graph->impl_->attrs_.GetProtoMsg();
+    dst_compute_graph->impl_->attrs_ = ProtoAttrMapHelper(graph_proto, graph_proto->mutable_attr());
   }
 
   // copy other members from old graph to new graph.
-  dst_compute_graph->data_format_ = src_compute_graph->data_format_;
-  dst_compute_graph->is_unknown_shape_graph_ = src_compute_graph->is_unknown_shape_graph_;
-  dst_compute_graph->need_iteration_ = src_compute_graph->need_iteration_;
-  dst_compute_graph->is_summary_graph_ = src_compute_graph->is_summary_graph_;
-  dst_compute_graph->is_valid_flag_ = src_compute_graph->is_valid_flag_;
-  dst_compute_graph->input_size_ = src_compute_graph->input_size_;
-  dst_compute_graph->output_size_ = src_compute_graph->output_size_;
-  dst_compute_graph->direct_nodes_size_ = src_compute_graph->direct_nodes_size_;
-  dst_compute_graph->inputs_order_ = src_compute_graph->inputs_order_;
-  dst_compute_graph->op_name_map_ = src_compute_graph->op_name_map_;
-  dst_compute_graph->out_nodes_map_ = src_compute_graph->out_nodes_map_;
-  dst_compute_graph->params_share_map_ = src_compute_graph->params_share_map_;
+  dst_compute_graph->impl_->data_format_ = src_compute_graph->impl_->data_format_;
+  dst_compute_graph->impl_->is_unknown_shape_graph_ = src_compute_graph->impl_->is_unknown_shape_graph_;
+  dst_compute_graph->impl_->need_iteration_ = src_compute_graph->impl_->need_iteration_;
+  dst_compute_graph->impl_->is_summary_graph_ = src_compute_graph->impl_->is_summary_graph_;
+  dst_compute_graph->impl_->is_valid_flag_ = src_compute_graph->impl_->is_valid_flag_;
+  dst_compute_graph->impl_->input_size_ = src_compute_graph->impl_->input_size_;
+  dst_compute_graph->impl_->output_size_ = src_compute_graph->impl_->output_size_;
+  dst_compute_graph->impl_->direct_nodes_size_ = src_compute_graph->impl_->direct_nodes_size_;
+  dst_compute_graph->impl_->inputs_order_ = src_compute_graph->impl_->inputs_order_;
+  dst_compute_graph->impl_->op_name_map_ = src_compute_graph->impl_->op_name_map_;
+  dst_compute_graph->impl_->out_nodes_map_ = src_compute_graph->impl_->out_nodes_map_;
+  dst_compute_graph->impl_->params_share_map_ = src_compute_graph->impl_->params_share_map_;
 
   return GRAPH_SUCCESS;
 }
@@ -3545,6 +3580,10 @@ void PartialGraphBuilder::BuildExistNodes(graphStatus &error_code, std::string &
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::TopologicalSortingByName(
         const ge::ComputeGraphPtr &compute_graph, vector<NodePtr> &node_vec) {
+  if (compute_graph == nullptr || compute_graph->impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "Compute graph or impl is nullptr.");
+    return GRAPH_FAILED;
+  }
   std::vector<NodePtr> stack_input;
   std::map<NodePtr, uint32_t> map_in_edge_num;
   graphStatus ret = compute_graph->SortNodes(stack_input, map_in_edge_num);
@@ -3553,7 +3592,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::Topologic
     GELOGE(GRAPH_FAILED, "[Sort][Nodes] failed, ret:%d, graph:%s.", ret, compute_graph->GetName().c_str());
     return GRAPH_FAILED;
   }
-  const size_t non_user_input_index = stack_input.size() - compute_graph->inputs_order_.size() - 1;
+  const size_t non_user_input_index = stack_input.size() - compute_graph->impl_->inputs_order_.size() - 1;
   std::sort(stack_input.begin(), stack_input.begin() + non_user_input_index,
             [](const NodePtr &a, const NodePtr &b) -> bool { return (a->GetName() > b->GetName()); });
 
@@ -3591,7 +3630,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::Topologic
                        compute_graph->GetDirectNodesSize(), node_vec.size());
     GE_LOGE("[Check][Param] Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.",
             compute_graph->GetDirectNodesSize(), node_vec.size());
-    for (auto &node : compute_graph->nodes_) {
+    for (auto &node : compute_graph->impl_->nodes_) {
       if (itered_nodes_set.count(node.get()) == 0) {
         REPORT_INNER_ERROR("E19999", "The node %s does not itered when topological sorting", node->GetName().c_str());
         GE_LOGE("[Check][Param] The node %s does not itered when topological sorting", node->GetName().c_str());

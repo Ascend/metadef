@@ -20,6 +20,7 @@
 #define private public
 
 #include "graph/utils/node_utils.h"
+#include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 
 #undef private
@@ -48,8 +49,8 @@ TEST_F(UtestNodeUtils, GetInputConstData) {
 
   auto tensor = std::make_shared<GeTensor>();
   auto op_desc = transdata->GetOpDesc();
-  op_desc->input_name_idx_["Data"] = 0;
-  op_desc->input_name_idx_["Enter"] = 1;
+  op_desc->impl_->input_name_idx_["Data"] = 0;
+  op_desc->impl_->input_name_idx_["Enter"] = 1;
   auto tensor_desc = op_desc->MutableInputDesc(0);
   AttrUtils::SetTensor(tensor_desc, "_value", tensor);
 
@@ -86,8 +87,8 @@ TEST_F(UtestNodeUtils, GetInputConstData_subgraph) {
   AttrUtils::SetInt(sub_data->GetOpDesc(), "_parent_node_index", 0);
 
   auto op_desc = add->GetOpDesc();
-  op_desc->input_name_idx_["sub_data"] = 0;
-  op_desc->input_name_idx_["sub_const"] = 1;
+  op_desc->impl_->input_name_idx_["sub_data"] = 0;
+  op_desc->impl_->input_name_idx_["sub_const"] = 1;
 
   GeTensorPtr tensor;
   ASSERT_EQ(NodeUtils::GetInputConstData(*add, "sub_const", tensor), GRAPH_SUCCESS);

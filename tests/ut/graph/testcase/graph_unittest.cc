@@ -27,15 +27,47 @@
 #include "inc/external/graph/operator.h"
 #include "inc/external/graph/operator_factory.h"
 #include "inc/graph/operator_factory_impl.h"
+#include "graph/utils/op_desc_utils.h"
+#include "graph_builder_utils.h"
+#include "graph/ge_attr_value.h"
+#undef private
 
 using namespace ge;
-
 class UtestGraph : public testing::Test {
  protected:
   void SetUp() {}
 
   void TearDown() {}
 };
+
+static ComputeGraphPtr BuildSubComputeGraph() {
+  ut::GraphBuilder builder = ut::GraphBuilder("subgraph");
+  auto data = builder.AddNode("sub_Data", "sub_Data", 0, 1);
+  auto netoutput = builder.AddNode("sub_Netoutput", "sub_NetOutput", 1, 0);
+  builder.AddDataEdge(data, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+  return graph;
+}
+
+// construct graph which contains subgraph
+static ComputeGraphPtr BuildComputeGraph() {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
+  transdata->GetOpDesc()->AddSubgraphName("subgraph");
+  transdata->GetOpDesc()->SetSubgraphInstanceName(0, "subgraph");
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data, 0, transdata, 0);
+  builder.AddDataEdge(transdata, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+  // add subgraph
+  transdata->SetOwnerComputeGraph(graph);
+  ComputeGraphPtr subgraph = BuildSubComputeGraph();
+  subgraph->SetParentGraph(graph);
+  subgraph->SetParentNode(transdata);
+  graph->AddSubgraph("subgraph", subgraph);
+  return graph;
+}
 
 TEST_F(UtestGraph, copy_graph_01) {
   ge::OpDescPtr add_op(new ge::OpDesc("add1", "Add"));
@@ -136,4 +168,10 @@ TEST_F(UtestGraph, test_infer_value_range_register_succ) {
   op_type = "sub";
   para = OperatorFactoryImpl::GetInferValueRangePara(op_type);
   ASSERT_EQ(para.is_initialized, false);
+}
+
+TEST_F(UtestGraph, get_all_graph_nodes) {
+  ComputeGraphPtr graph = BuildComputeGraph();
+  auto nodes = graph->GetAllNodes();
+  EXPECT_EQ(nodes.size(), 5);
 }
