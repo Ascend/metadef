@@ -53,7 +53,7 @@ TEST_F(UtestOpTilingRegister, run_info_test) {
   run_info.SetClearAtomic(true);
   run_info.SetBlockDim(uint32_t(temp));
   run_info.AddWorkspace(int64_t(temp));
-  
+
   EXPECT_EQ(run_info.GetBlockDim(), uint32_t(temp));
   EXPECT_EQ(run_info.GetClearAtomic(), true);
   EXPECT_EQ(run_info.GetTilingKey(), uint32_t(temp));
