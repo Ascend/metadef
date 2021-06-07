@@ -58,8 +58,8 @@ message TaskDef {
     LabelGotoExDef label_goto_ex = 38;
     LabelSwitchByIndexDef label_switch_by_index = 39;
     KernelDefWithHandle kernel_with_handle = 40;
+    FftsTaskDef ffts_task = 41;
 }
-//    FftsTaskDef ffts_task = 41;
 
 message KernelDef {
     KernelContext context = 1;
