@@ -21,7 +21,7 @@
 #include "external/graph/ascend_string.h"
 #include "external/register/register_error_codes.h"
 #include "external/register/register_types.h"
-#include "graph/operator.h"
+#include "external/graph/operator.h"
 #include <functional>
 #include <map>
 #include <sstream>
@@ -34,8 +34,6 @@
 
 #define REGISTER_OP_TILING_UNIQ(optype, opfunc, counter)                                                               \
   static OpTilingRegistryInterf g_##optype##TilingRegistryInterf##counter(#optype, opfunc)
-
-#define ATOMIC_CLEAN_WORKSPACE_ATTR_NAME "_optiling_atomicautomic_add_mem_size"
 
 #define REGISTER_OP_TILING_V2(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER_V2(optype, opfunc, __COUNTER__)
 

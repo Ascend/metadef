@@ -15,6 +15,7 @@
  */
 
 #include "register/op_tiling.h"
+#include "register/op_registry.h"
 #include "common/util/error_manager/error_manager.h"
 #include "external/graph/operator.h"
 #include "external/graph/operator_factory.h"

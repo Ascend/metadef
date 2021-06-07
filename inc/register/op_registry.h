@@ -26,6 +26,8 @@
 
 #include "register/register.h"
 
+#define ATOMIC_CLEAN_WORKSPACE_ATTR_NAME "_optiling_atomicautomic_add_mem_size"
+
 namespace domi {
 enum RemoveInputType {
   OMG_MOVE_TYPE_DTYPE = 0,
