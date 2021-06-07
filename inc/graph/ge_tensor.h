@@ -105,6 +105,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   // set shape with -2, it stand for unknown shape
   void SetUnknownDimNumShape();
   // for unknown shape
+  graphStatus SetValueRange(const std::vector<std::pair<int64_t, int64_t>> &range);
+  graphStatus GetValueRange(std::vector<std::pair<int64_t, int64_t>> &range) const;
   graphStatus SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range);
   graphStatus SetOriginShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range);
   graphStatus GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const;

@@ -148,26 +148,83 @@ TEST_F(UtestGraph, copy_graph_02) {
   ASSERT_NE(cp_add_node2, add_node2);
 }
 
+REG_OP(Mul)
+    .OP_END_FACTORY_REG(Mul)
+IMPL_INFER_VALUE_RANGE_FUNC(Mul, func){
+  std::cout << "test" << std::endl;
+  return GRAPH_SUCCESS;
+}
+
+REG_OP(Test2)
+    .OP_END_FACTORY_REG(Test2)
+IMPL_INFER_VALUE_RANGE_FUNC(Test2, func2){
+  std::cout << "test" << std::endl;
+  return GRAPH_SUCCESS;
+}
+
 TEST_F(UtestGraph, test_infer_value_range_register_succ) {
-  std::function<ge::graphStatus(ge::Operator &)> func =
-      [] (ge::Operator &tmp) -> ge::graphStatus {
-    std::cout << "test" << std::endl;
-  };
-  string op_type = "add";
-  INFER_VALUE_RANGE_DEFAULT_REG(add);
+  string op_type = "Add";
+  INFER_VALUE_RANGE_DEFAULT_REG(Add);
+  INFER_VALUE_RANGE_DEFAULT_REG(Test1);
   auto para = OperatorFactoryImpl::GetInferValueRangePara(op_type);
   ASSERT_EQ(para.is_initialized, true);
   ASSERT_EQ(para.infer_value_func, nullptr);
-  INFER_VALUE_RANGE_CUSTOM_FUNC_REG(mul, INPUT_HAS_VALUE_RANGE, func);
 
-  op_type = "mul";
+  op_type = "Mul";
+  INFER_VALUE_RANGE_CUSTOM_FUNC_REG(Mul, INPUT_HAS_VALUE_RANGE, func);
+  INFER_VALUE_RANGE_CUSTOM_FUNC_REG(Test2, INPUT_IS_DYNAMIC, func2);
   para = OperatorFactoryImpl::GetInferValueRangePara(op_type);
   ASSERT_EQ(para.is_initialized, true);
   ASSERT_NE(para.infer_value_func, nullptr);
 
-  op_type = "sub";
+  op_type = "Sub";
   para = OperatorFactoryImpl::GetInferValueRangePara(op_type);
   ASSERT_EQ(para.is_initialized, false);
+}
+
+REG_OP(Shape)
+    .OP_END_FACTORY_REG(Shape)
+IMPL_INFER_VALUE_RANGE_FUNC(Shape, ShapeValueInfer){
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  auto output_tensor_desc = op_desc->MutableOutputDesc(0);
+  std::vector<std::pair<int64_t, int64_t>> in_shape_range;
+  op_desc->MutableInputDesc(0)->GetShapeRange(in_shape_range);
+  if (!in_shape_range.empty()) {
+    output_tensor_desc->SetValueRange(in_shape_range);
+  }
+  return GRAPH_SUCCESS;
+}
+
+TEST_F(UtestGraph, test_value_range_infer_and_set_get) {
+  using std::make_pair;
+  string op_type = "Shape";
+  INFER_VALUE_RANGE_CUSTOM_FUNC_REG(Shape, INPUT_IS_DYNAMIC, ShapeValueInfer);
+  auto graph = std::make_shared<ComputeGraph>("test_graph");
+  auto shape_op_desc = std::make_shared<OpDesc>("node_name", op_type);
+  GeTensorDesc tensor_desc(GeShape({-1, -1, 4, 192}), ge::FORMAT_NCHW, DT_INT32);
+  std::vector<std::pair<int64_t, int64_t>> shape_range = {make_pair(1, 100), make_pair(1, 240),
+                                                          make_pair(4, 4),   make_pair(192, 192)};
+  tensor_desc.SetShapeRange(shape_range);
+  shape_op_desc->AddInputDesc(tensor_desc);
+  GeTensorDesc out_tensor_desc(GeShape({4}), ge::FORMAT_NCHW, DT_INT32);
+  shape_op_desc->AddOutputDesc(out_tensor_desc);
+  auto shape_node = graph->AddNode(shape_op_desc);
+  Operator op = OpDescUtils::CreateOperatorFromNode(shape_node);
+  auto ret = shape_node->GetOpDesc()->CallInferValueRangeFunc(op);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+
+  auto output_0_desc = shape_node->GetOpDesc()->GetOutputDesc(0);
+  std::vector<std::pair<int64_t, int64_t>> value_range;
+  output_0_desc.GetValueRange(value_range);
+  EXPECT_EQ(value_range.size(), 4);
+
+  std::vector<int64_t> target_value_range = {1, 100, 1, 240, 4, 4, 192, 192};
+  std::vector<int64_t> output_value_range;
+  for (auto pair : value_range) {
+    output_value_range.push_back(pair.first);
+    output_value_range.push_back(pair.second);
+  }
+  EXPECT_EQ(target_value_range, output_value_range);
 }
 
 TEST_F(UtestGraph, get_all_graph_nodes) {

@@ -109,7 +109,7 @@ InferValueRangeFuncRegister::InferValueRangeFuncRegister(const char *operator_ty
   if (operator_type != nullptr) {
     op_type = operator_type;
   }
-  (void)OperatorFactoryImpl::RegisterInferValueRangeFunc(op_type, when_call, true, infer_value_range_func);
+  (void)OperatorFactoryImpl::RegisterInferValueRangeFunc(op_type, when_call, false, infer_value_range_func);
 }
 
 InferValueRangeFuncRegister::InferValueRangeFuncRegister(const char *operator_type) {
