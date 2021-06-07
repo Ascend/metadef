@@ -23,6 +23,7 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/type_utils.h"
@@ -1104,7 +1105,7 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
 
   GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", clean_size, origin_op_type.c_str(), op_name.c_str());
   workspace_list.push_back(clean_size);
-  op_param.SetAttr(ATOMIC_CLEAN_WORKSPACE_ATTR_NAME, workspace_list);
+  op_param.SetAttr(ge::ATOMIC_CLEAN_WORKSPACE_ATTR_NAME, workspace_list);
 
   optiling::utils::OpCompileInfo op_compile_info("", "");
   bool bres = GetAtomicCleanCompileInfoV2(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
