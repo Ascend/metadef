@@ -18,8 +18,6 @@
 
 namespace ge {
 // Public attribute
-const std::string ATOMIC_CLEAN_WORKSPACE_ATTR_NAME = "_optiling_atomicautomic_add_mem_size";
-
 const std::string ATTR_NAME_FORCE_UNKNOWN_SHAPE = "_force_unknown_shape";
 
 const std::string ATTR_NAME_IS_UNKNOWN_SHAPE = "_is_unknown_shape";

@@ -18,10 +18,10 @@
 #include "framework/common/debug/ge_log.h"
 #include "op_tiling_registry_impl.h"
 #include <random>
+const char* ATOMIC_CLEAN_WORKSPACE_ATTR_NAME = "_optiling_atomicautomic_add_mem_size";
 using std::make_shared;
 
 namespace optiling {
-
 thread_local int64_t last_op_tiling_perf = -1;
 
 std::map<std::string, OpTilingFunc> &OpTilingRegistryInterf::RegisteredOpInterf() {
