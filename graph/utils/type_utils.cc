@@ -165,12 +165,12 @@ const std::map<std::string, Format> kStringToFormatMap = {
     {"NC", FORMAT_NC},
     {"FRACTAL_ZN_LSTM", FORMAT_FRACTAL_ZN_LSTM},
     {"FRACTAL_Z_G", FORMAT_FRACTAL_Z_G},
-    {"ND_RNN_BIAS", FORMAT_ND_RNN_BIAS},
-    {"FRACTAL_ZN_RNN", FORMAT_FRACTAL_ZN_RNN},
     {"FORMAT_RESERVED", FORMAT_RESERVED},
     {"ALL", FORMAT_ALL},
     {"NULL", FORMAT_NULL},
     // add for json input
+    {"ND_RNN_BIAS", FORMAT_ND_RNN_BIAS},
+    {"FRACTAL_ZN_RNN", FORMAT_FRACTAL_ZN_RNN},
     {"RESERVED", FORMAT_RESERVED},
     {"UNDEFINED", FORMAT_RESERVED}
   };
