@@ -1198,6 +1198,7 @@ const std::string ATTR_NAME_FUZZ_BUILD_RES_ATTRS = "_fuzz_build_res";
 const std::string ATTR_NAME_FUZZ_INPUTS_SUPPORTED_ATTRS = "_inputs_support_info";
 const std::string ATTR_NAME_FUZZ_OUTPUTS_SUPPORTED_ATTRS = "_outputs_support_info";
 const std::string ATTR_NAME_FUZZ_IS_HIGH_PERFORMANCE_ATTRS = "_is_high_performance";
+const std::string ATTR_NAME_IS_ORIGINAL_INPUT = "_is_original_input";
 
 // buffer pool allocator
 const std::string ATTR_NAME_BUFFER_POOL_ID = "_buffer_pool_id";
