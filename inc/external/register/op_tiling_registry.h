@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-extern const char *ATOMIC_CLEAN_WORKSPACE_ATTR_NAME;
+extern const char *ATTR_NAME_ATOMIC_CLEAN_WORKSPACE;
 
 #define REGISTER_OP_TILING(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER(optype, opfunc, __COUNTER__)
 

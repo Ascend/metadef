@@ -1103,7 +1103,7 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
 
   GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", clean_size, origin_op_type.c_str(), op_name.c_str());
   workspace_list.push_back(clean_size);
-  op_param.SetAttr(ATOMIC_CLEAN_WORKSPACE_ATTR_NAME, workspace_list);
+  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
 
   optiling::utils::OpCompileInfo op_compile_info("", "");
   bool bres = GetAtomicCleanCompileInfoV2(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
