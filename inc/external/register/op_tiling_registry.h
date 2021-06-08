@@ -17,18 +17,18 @@
 #ifndef INC_REGISTER_OP_TILING_REGISTRY_H_
 #define INC_REGISTER_OP_TILING_REGISTRY_H_
 
-#include "external/graph/tensor.h"
 #include "external/graph/ascend_string.h"
+#include "external/graph/operator.h"
+#include "external/graph/tensor.h"
 #include "external/register/register_error_codes.h"
 #include "external/register/register_types.h"
-#include "external/graph/operator.h"
 #include <functional>
 #include <map>
 #include <sstream>
 #include <string>
 #include <vector>
 
-extern const char* ATOMIC_CLEAN_WORKSPACE_ATTR_NAME;
+extern const char *ATOMIC_CLEAN_WORKSPACE_ATTR_NAME;
 
 #define REGISTER_OP_TILING(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER(optype, opfunc, __COUNTER__)
 
