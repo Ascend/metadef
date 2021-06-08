@@ -103,6 +103,7 @@ add_library(register_static STATIC
     $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
     "op_tiling.cpp"
     "op_tiling_registry.cpp"
+    "op_tiling_registry_impl.cpp"
 )
 
 target_compile_options(register_static PRIVATE
@@ -172,6 +173,7 @@ set_target_properties(register_static PROPERTIES
 add_library(op_tiling_o2 STATIC
     "op_tiling.cpp"
     "op_tiling_registry.cpp"
+    "op_tiling_registry_impl.cpp"
 )
 
 add_dependencies(op_tiling_o2
