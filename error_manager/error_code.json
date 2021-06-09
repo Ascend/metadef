@@ -27,8 +27,8 @@
     },
     {
       "ErrCode": "E10006",
-      "ErrMessage": "Input parameter[--%s]'s value must be 1 or 0.",
-      "Arglist": "parameter"
+      "ErrMessage": "Input parameter[--%s]'s value[%s] must be 1 or 0.",
+      "Arglist": "parameter,value"
     },
     {
       "ErrCode": "E10007",
@@ -1947,13 +1947,13 @@
   },
   {
     "ErrCode" : "EE1000",
-    "ErrMessage" : "Invalid soc version, please check, version: %s.",
-    "Arglist" : "version"
+    "ErrMessage" : "Invalid soc version, please check, version: %s, valid value: %s.",
+    "Arglist" : "version, valid_name"
   },
   {
     "ErrCode" : "EE2000",
-    "ErrMessage" : "Device is not running, please check if device is working.",
-    "Arglist" : ""
+    "ErrMessage" : "Device[%s] is not running, please check if device is working.",
+    "Arglist" : "device_id"
   },
   {
     "ErrCode" : "EE2001",

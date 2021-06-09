@@ -195,10 +195,19 @@ int ErrorManager::ReportInterErrMessage(std::string error_code, const std::strin
 
   std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
+  auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
+
   ErrorManager::ErrorItem item = {error_code, error_msg};
-  auto it = find(error_messages.begin(), error_messages.end(), item);
-  if (it == error_messages.end()) {
-    error_messages.emplace_back(item);
+  if (error_code[0] == 'W') {
+    auto it = find(warning_messages.begin(), warning_messages.end(), item);
+    if (it == warning_messages.end()) {
+      warning_messages.emplace_back(item);
+    }
+  } else {
+    auto it = find(error_messages.begin(), error_messages.end(), item);
+    if (it == error_messages.end()) {
+      error_messages.emplace_back(item);
+    }
   }
   return 0;
 }
