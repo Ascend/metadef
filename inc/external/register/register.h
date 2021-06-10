@@ -114,6 +114,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkRegistry {
  public:
   FrameworkRegistry(const FrameworkRegistry &) = delete;
   FrameworkRegistry& operator = (const FrameworkRegistry &) = delete;
+  ~FrameworkRegistry() {}
   static FrameworkRegistry& Instance();
   void AddAutoMappingSubgraphIOIndexFunc(domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun);
   AutoMappingSubgraphIOIndexFunc GetAutoMappingSubgraphIOIndexFunc(domi::FrameworkType framework);
@@ -125,6 +126,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkRegistry {
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY AutoMappingSubgraphIOIndexFuncRegister {
  public:
   AutoMappingSubgraphIOIndexFuncRegister(domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun);
+  ~AutoMappingSubgraphIOIndexFuncRegister() {}
 };
 
 #define REGISTER_AUTOMAPPING_SUBGRAPH_IO_INDEX_FUNC(framework, fun)             \
