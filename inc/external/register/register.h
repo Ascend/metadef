@@ -114,7 +114,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkRegistry {
  public:
   FrameworkRegistry(const FrameworkRegistry &) = delete;
   FrameworkRegistry& operator = (const FrameworkRegistry &) = delete;
-  ~FrameworkRegistry() {}
+  ~FrameworkRegistry() = default;
   static FrameworkRegistry& Instance();
   void AddAutoMappingSubgraphIOIndexFunc(domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun);
   AutoMappingSubgraphIOIndexFunc GetAutoMappingSubgraphIOIndexFunc(domi::FrameworkType framework);
