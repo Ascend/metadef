@@ -2302,7 +2302,7 @@
   },
   {
     "ErrCode": "EI0001",
-    "ErrMessage": "The env % is invalid, %s.",
+    "ErrMessage": "The env %s is invalid, %s.",
     "Arglist": "env,reason"
   },
   {
