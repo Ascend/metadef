@@ -29,6 +29,10 @@ ScopesResult::ScopesResult() {
 
 ScopesResult::ScopesResult(ScopesResult const &result) {
   impl_ = std::unique_ptr<ScopesResultImpl>(new (std::nothrow) ScopesResultImpl);
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "ScopesResult is not properly initialized.");
+    return;
+  }
   const std::vector<Scope *> &scopes = result.impl_->GetScopes();
   const std::vector<ge::OperatorPtr> &nodes = result.impl_->GetNodes();
   impl_->SetScopes(scopes);
