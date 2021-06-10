@@ -45,6 +45,10 @@ ScopesResult &ScopesResult::operator=(ScopesResult const &result) {
 
   const std::vector<Scope *> &scopes = result.impl_->GetScopes();
   const std::vector<ge::OperatorPtr> &nodes = result.impl_->GetNodes();
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "ScopesResult is not properly initialized.");
+    return *this;
+  }
   impl_->SetScopes(scopes);
   impl_->SetNodes(nodes);
   return *this;
