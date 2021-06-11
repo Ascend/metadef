@@ -533,6 +533,11 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Const
           item->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
         tensor->mutable_desc()->CopyFrom(*(item->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg()));
       }
+      if ((item->GetData().data() == nullptr) && (item->GetData().size() != 0)) {
+        REPORT_INNER_ERROR("E19999", "tensor data is null, but data size is not zero.");
+        GELOGE(FAILED, "[Check][Param] tensor data is null, but data size is not zero.");
+        return false;
+      }
       tensor->set_data(item->GetData().data(), item->GetData().size());
     }
   }
