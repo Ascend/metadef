@@ -983,8 +983,8 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
     for (auto &node : node_vec) {
       itered_nodes_set.insert(node.get());
     }
-    ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-        {"TopologicalSortingGraph", "exist closed loop in graph"});
+    REPORT_INNER_ERROR("E19999", "Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph:%s",
+                       GetDirectNodesSize(), node_vec.size(), name_.c_str());
     GE_LOGE("[Check][Param] Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.",
             GetDirectNodesSize(), node_vec.size());
     for (auto &node : nodes_) {
@@ -1031,8 +1031,8 @@ graphStatus ComputeGraphImpl::SortNodes(std::vector<NodePtr> &stack,
         // At present, can only judge the isolated point without input and output.
         // It is impossible to judge the situation with multiple output nodes.
         if (verify_isolated && GetOutEdgeSize(node) == 0) {
-          ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-              {"SortNodes", "may has isolated node[" + node->GetName() + "] in graph"});
+          REPORT_INNER_ERROR("E19999", "May has isolated node in graph:%s, node name: %s.",
+                             node->GetName().c_str(), name_.c_str());
           GELOGE(GRAPH_FAILED, "[Check][Param] May has isolated node in graph, node name: %s.",
                  node->GetName().c_str());
           return GRAPH_FAILED;
