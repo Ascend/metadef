@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 #include "op_tiling_registry_impl.h"
-#include "graph/debug/ge_log.h"
+
+#include <securec.h>
+
 #include <map>
 #include <memory>
-#include <securec.h>
 #include <string>
 #include <vector>
+
+#include "graph/debug/ge_log.h"
 
 namespace optiling {
 namespace utils {
 
-OpCompileInfoImpl::OpCompileInfoImpl(const ge::AscendString &key, const ge::AscendString &value) : str(value), key(key) {}
+OpCompileInfoImpl::OpCompileInfoImpl(const ge::AscendString &key,
+                                     const ge::AscendString &value)
+    : str(value), key(key) {}
 
 void OpRunInfoImpl::SetBlockDim(uint32_t input_block_dim) {
   block_dim = input_block_dim;
@@ -34,13 +39,9 @@ void OpRunInfoImpl::AddWorkspace(int64_t workspace) {
   workspaces.push_back(workspace);
 }
 
-uint32_t OpRunInfoImpl::GetBlockDim() {
-  return block_dim;
-}
+uint32_t OpRunInfoImpl::GetBlockDim() { return block_dim; }
 
-size_t OpRunInfoImpl::GetWorkspaceNum() {
-  return workspaces.size();
-}
+size_t OpRunInfoImpl::GetWorkspaceNum() { return workspaces.size(); }
 
 ge::graphStatus OpRunInfoImpl::GetWorkspace(size_t idx, int64_t &workspace) {
   if (!workspaces.empty() && idx < workspaces.size()) {
@@ -50,7 +51,8 @@ ge::graphStatus OpRunInfoImpl::GetWorkspace(size_t idx, int64_t &workspace) {
   return ge::GRAPH_FAILED;
 }
 
-ge::graphStatus OpRunInfoImpl::GetAllWorkspaces(std::vector<int64_t> &_workspaces) {
+ge::graphStatus OpRunInfoImpl::GetAllWorkspaces(
+    std::vector<int64_t> &_workspaces) {
   if (!workspaces.empty()) {
     _workspaces = workspaces;
     return ge::GRAPH_SUCCESS;
@@ -63,11 +65,7 @@ void OpRunInfoImpl::AddTilingData(const char *_value, size_t _size) {
   tiling_data.flush();
 }
 
-ByteBuffer &OpRunInfoImpl::GetAllTilingData() {
-  if (!tiling_data.str().empty()) {
-    return tiling_data;
-  }
-}
+ByteBuffer &OpRunInfoImpl::GetAllTilingData() { return tiling_data; }
 
 void OpRunInfoImpl::SetAllTilingData(ByteBuffer &value) {
   tiling_data.clear();
@@ -79,32 +77,20 @@ void OpRunInfoImpl::SetClearAtomic(bool clear_atomic_input) {
   clear_atomic = clear_atomic_input;
 }
 
-bool OpRunInfoImpl::GetClearAtomic() const {
-  return clear_atomic;
-}
+bool OpRunInfoImpl::GetClearAtomic() const { return clear_atomic; }
 
 void OpRunInfoImpl::SetTilingKey(uint32_t _tiling_key) {
   tiling_key = _tiling_key;
 }
 
-uint32_t OpRunInfoImpl::GetTilingKey() const {
-  return tiling_key;
-}
+uint32_t OpRunInfoImpl::GetTilingKey() const { return tiling_key; }
 
-void OpCompileInfoImpl::SetKey(const ge::AscendString &_key) {
-  key = _key;
-}
+void OpCompileInfoImpl::SetKey(const ge::AscendString &_key) { key = _key; }
 
-void OpCompileInfoImpl::SetValue(const ge::AscendString &value) {
-  str = value;
-}
+void OpCompileInfoImpl::SetValue(const ge::AscendString &value) { str = value; }
 
-const ge::AscendString &OpCompileInfoImpl::GetKey() const {
-  return key;
-}
+const ge::AscendString &OpCompileInfoImpl::GetKey() const { return key; }
 
-const ge::AscendString &OpCompileInfoImpl::GetValue() const {
-  return str;
-}
+const ge::AscendString &OpCompileInfoImpl::GetValue() const { return str; }
 }  // namespace utils
 }  // namespace optiling
