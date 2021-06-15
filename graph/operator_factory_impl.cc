@@ -247,6 +247,9 @@ graphStatus OperatorFactoryImpl::RegisterInferValueRangeFunc(const string &opera
   }
   InferValueRangePara tmp_para(when_call, use_cpu_kernel, infer_value_range_func);
   (void)operator_infer_value_range_paras_->emplace(operator_type, tmp_para);
+
+  GELOGD("Optype[%s] infervalue func registered successfully, when_call = %d, use_cpu_kernel = %d",
+         operator_type.c_str(), static_cast<int32_t>(when_call), static_cast<int32_t>(use_cpu_kernel));
   return GRAPH_SUCCESS;
 }
 }  // namespace ge

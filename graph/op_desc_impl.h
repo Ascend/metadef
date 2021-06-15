@@ -173,6 +173,7 @@ class OpDescImpl {
 
   graphStatus CallInferFunc(Operator &op, const OpDescPtr &op_desc);
   graphStatus CallInferFormatFunc(Operator &op, const ConstOpDescPtr &op_desc);
+  graphStatus CallInferValueRangeFunc(Operator &op, const ConstOpDescPtr &op_desc);
 
   std::string GetSubgraphInstanceName(uint32_t index) const;
   const std::vector<std::string> &GetSubgraphInstanceNames() const;
@@ -221,6 +222,7 @@ class OpDescImpl {
   vector<string> register_output_name_{};
   std::function<graphStatus(Operator &)> infer_func_ = nullptr;
   std::function<graphStatus(Operator &)> infer_format_func_ = nullptr;
+  std::function<graphStatus(Operator &)> infer_value_range_func_ = nullptr;
   std::function<graphStatus(Operator &)> verifier_func_ = nullptr;
   std::function<graphStatus(Operator &)> infer_data_slice_func_ = nullptr;
   string op_kernel_lib_name_;

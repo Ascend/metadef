@@ -1296,6 +1296,27 @@ graphStatus OpDescImpl::CallInferFormatFunc(Operator &op, const ConstOpDescPtr &
   return (graphStatus)infer_format_func_(op);
 }
 
+graphStatus OpDescImpl::CallInferValueRangeFunc(Operator &op, const ConstOpDescPtr &op_desc) {
+  if (infer_value_range_func_ == nullptr) {
+    auto infer_value_range_param = OperatorFactoryImpl::GetInferValueRangePara(GetType());
+    if (!infer_value_range_param.is_initialized) {
+      REPORT_CALL_ERROR("E19999", "Node %s does not register func to infer value range.", GetName().c_str());
+      GELOGE(GRAPH_PARAM_INVALID, "Node %s does not register func to infer value range.", GetName().c_str());
+      return GRAPH_PARAM_INVALID;
+    }
+
+    infer_value_range_func_ = infer_value_range_param.infer_value_func;
+    if (infer_value_range_func_ == nullptr) {
+      REPORT_CALL_ERROR("E19999", "Value range infer func of node %s has been registered, but infer func is nullptr.",
+                        GetName().c_str());
+      GELOGE(GRAPH_PARAM_INVALID, "Value range infer func of node %s has been registered, but infer func is nullptr.",
+             GetName().c_str());
+      return GRAPH_PARAM_INVALID;
+    }
+  }
+  return (graphStatus) infer_value_range_func_(op);
+}
+
 std::string OpDescImpl::GetSubgraphInstanceName(uint32_t index) const {
   if (static_cast<size_t>(index) >= subgraph_instance_names_.size()) {
     return "";
@@ -1997,6 +2018,9 @@ graphStatus OpDesc::CallInferFunc(Operator &op) {
 }
 graphStatus OpDesc::CallInferFormatFunc(Operator &op) {
   return impl_->CallInferFormatFunc(op, shared_from_this());
+}
+graphStatus OpDesc::CallInferValueRangeFunc(Operator &op) {
+  return impl_->CallInferValueRangeFunc(op, shared_from_this());
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetSubgraphInstanceName(uint32_t index) const {

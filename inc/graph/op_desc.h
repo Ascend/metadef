@@ -203,6 +203,8 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus CallInferFormatFunc(Operator &op);
 
+  graphStatus CallInferValueRangeFunc(Operator &op);
+
   graphStatus OpVerify();
 
   graphStatus CommonVerify() const;

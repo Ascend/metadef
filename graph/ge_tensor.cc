@@ -97,6 +97,7 @@ const string TENSOR_UTILS_ORIGIN_FORMAT = "origin_format";
 const string TENSOR_UTILS_ORIGIN_DATA_TYPE = "origin_data_type";
 const string TENSOR_UTILS_SHAPE_RANGE = "shape_range";
 const string TENSOR_UTILS_ORIGIN_SHAPE_RANGE = "origin_shape_range";
+const string TENSOR_UTILS_VALUE_RANGE = "value_range";
 const string TENSOR_UTILS_REF_PORT_INDEX = "ref_port_index";
 const string TENSOR_UTILS_PLACEMENT = "placement";
 }
@@ -691,6 +692,32 @@ void GeTensorDesc::SetShape(GeShape shape) { ShapeReference() = std::move(shape)
 void GeTensorDesc::SetUnknownDimNumShape() { SetShape(GeShape({UNKNOWN_DIM_NUM})); }
 
 // for unknown shape
+graphStatus GeTensorDesc::SetValueRange(const std::vector<std::pair<int64_t, int64_t>> &range) {
+  std::vector<vector<int64_t>> value_range;
+  for (const auto &ele : range) {
+    value_range.emplace_back(std::vector<int64_t>({ele.first, ele.second}));
+  }
+  auto ret = AttrUtils::SetListListInt(this, TENSOR_UTILS_VALUE_RANGE, value_range);
+  return ret ? GRAPH_SUCCESS : GRAPH_FAILED;
+}
+
+graphStatus GeTensorDesc::GetValueRange(std::vector<std::pair<int64_t, int64_t>> &range) const {
+  std::vector<vector<int64_t>> value_range;
+  (void) AttrUtils::GetListListInt(this, TENSOR_UTILS_VALUE_RANGE, value_range);
+
+  for (const auto &ele : value_range) {
+    // here must be only two elemenet because pair
+    if (ele.size() != 2) {
+      REPORT_INNER_ERROR("E19999", "value_range must contain only 2 value but really is %zu", ele.size());
+      GELOGE(GRAPH_FAILED, "[Check][Param] value_range must contain only 2 value but really is %zu", ele.size());
+      return GRAPH_FAILED;
+    }
+    range.emplace_back(std::make_pair(ele[0], ele[1]));
+  }
+
+  return GRAPH_SUCCESS;
+}
+
 graphStatus GeTensorDesc::SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range) {
   std::vector<vector<int64_t>> shape_range;
   for (const auto &ele : range) {
