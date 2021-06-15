@@ -16,7 +16,6 @@
 
 #include "external/register/register_pass.h"
 #include "register/custom_pass_helper.h"
-#include <algorithm>
 #include <climits>
 #include "graph/debug/ge_log.h"
 
@@ -45,7 +44,7 @@ PassRegistrationDataImpl::PassRegistrationDataImpl(const std::string &pass_name)
 PassRegistrationData::PassRegistrationData(std::string pass_name) {
   impl_ = std::shared_ptr<PassRegistrationDataImpl>(new (std::nothrow) PassRegistrationDataImpl(pass_name));
   if (impl_ == nullptr) {
-    GELOGW("Custom pass [%s] PassRegistrationDataImpl make shared failed!", pass_name.c_str());
+    GELOGW("[Check][Param] make impl failed, pass_name:%s", pass_name.c_str());
   }
 }
 
@@ -59,8 +58,7 @@ std::string PassRegistrationData::GetPassName() const {
 PassRegistrationData &PassRegistrationData::Priority(const int32_t &priority) {
   if (impl_ != nullptr) {
     if (priority < 0) {
-      GELOGW("Custom pass [%s] priority must greater than or equal to 0, but got %d!",
-             impl_->pass_name_.c_str(), priority);
+      GELOGW("[Check][Priority] Priority must >= 0, exactly %d, pass_name:%s", priority, impl_->pass_name_.c_str());
     } else {
       impl_->priority_ = priority;
     }
@@ -103,7 +101,7 @@ Status CustomPassHelper::Run(ge::GraphPtr &graph) {
     GELOGD("Start to run custom pass [%s]!", item.GetPassName().c_str());
     auto custom_pass_fn = item.GetCustomPassFn();
     if (custom_pass_fn == nullptr) {
-      GELOGW("Custom pass [%s] doesn't have custom_pass_fn!", item.GetPassName().c_str());
+      GELOGW("[Check][Param] Get custom_pass_fn of custom pass %s failed", item.GetPassName().c_str());
       continue;
     }
     if (custom_pass_fn(graph) != SUCCESS) {

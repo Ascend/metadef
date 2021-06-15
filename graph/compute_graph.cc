@@ -47,7 +47,7 @@ bool IsUseBFS() {
       return true;
     }
   } else {
-    GELOGW("OPTION_GRAPH_RUN_MODE not set, use BFSTopologicalSorting by default.");
+    GELOGI("OPTION_GRAPH_RUN_MODE not set, use BFSTopologicalSorting by default.");
   }
   return false;
 }
@@ -555,11 +555,10 @@ graphStatus ComputeGraphImpl::RemoveSubGraph(const std::shared_ptr<ComputeGraph>
   auto iter = find(sub_graph_.begin(), sub_graph_.end(), sub_graph);
   if (iter != sub_graph_.end()) {
     (void)sub_graph_.erase(iter);
-    return GRAPH_SUCCESS;
   } else {
-    GELOGW("find sub_graph failed");
-    return GRAPH_SUCCESS;
+    GELOGW("[Remove][Subgraph] find sub_graph failed");
   }
+  return GRAPH_SUCCESS;
 }
 
 graphStatus ComputeGraphImpl::AddSubgraph(const std::string &name,
@@ -591,10 +590,11 @@ graphStatus ComputeGraphImpl::AddSubgraph(const std::string &name,
     return GRAPH_PARAM_INVALID;
   }
   if (!this->parent_graph_.expired()) {
-    GELOGW("The subgraphs should only be added to the root graph");
+    GELOGW("[Add][Subgraph] The subgraphs should only be added to the root graph");
   }
   if (name != subgraph->GetName()) {
-    GELOGW("The subgraph name %s is different with input %s", subgraph->GetName().c_str(), name.c_str());
+    GELOGW("[Add][Subgraph] The subgraph name %s is different with input %s", subgraph->GetName().c_str(),
+           name.c_str());
   }
   if (names_to_subgraph_.find(name) != names_to_subgraph_.end()) {
     REPORT_INNER_ERROR("E19999", "The subgraph %s existed", name.c_str());
@@ -729,28 +729,18 @@ graphStatus ComputeGraphImpl::UpdateOutputMapping(const std::map<uint32_t, uint3
 graphStatus ComputeGraphImpl::ReorderEventNodes(const ConstComputeGraphPtr &compute_graph) {
   std::list<NodePtr> &node_list = nodes_;
   for (const auto &node : GetDirectNode(compute_graph)) {
-    if (node == nullptr || node->GetOpDesc() == nullptr) {
-      GELOGW("node or OpDescPtr is nullptr.");
-      continue;
-    }
-    GE_IF_BOOL_EXEC(node == nullptr,
-                    GELOGE(GRAPH_FAILED, "[Check][Param] The node should not be null."); return GRAPH_FAILED);
-    if (node->GetOpDesc()->GetType() == RECV) {
+    if (node->GetType() == RECV) {
       auto iter = find(node_list.begin(), node_list.end(), node);
-      if (iter == node_list.end()) {
-        GELOGW("no node found.");
-      } else {
+      if (iter != node_list.end()) {
         node_list.erase(iter);
       }
 
       auto dst_iter = find(node_list.begin(), node_list.end(), node->GetOutControlNodes().at(0));
       node_list.insert(dst_iter, node);
     }
-    if (node->GetOpDesc()->GetType() == SEND) {
+    if (node->GetType() == SEND) {
       auto iter = find(node_list.begin(), node_list.end(), node);
-      if (iter == node_list.end()) {
-        GELOGW("no node found.");
-      } else {
+      if (iter != node_list.end()) {
         node_list.erase(iter);
       }
 
@@ -953,7 +943,8 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
     node->GetOpDesc()->SetId(i);  // [node->GetOpDesc(): should not be null]
   }
   if (sub_graph_.size() != subgraphs.size()) {  // Graph Partition use subgraph, Keep original
-    GELOGW("Keep original subgraph for graph size %zu not equal %zu.", sub_graph_.size(), subgraphs.size());
+    GELOGW("[TopoSort][CheckNodeSize] Keep original subgraph for graph size %zu not equal %zu.", sub_graph_.size(),
+           subgraphs.size());
     return GRAPH_SUCCESS;
   }
   sub_graph_.swap(subgraphs);
@@ -1080,10 +1071,6 @@ size_t ComputeGraphImpl::GetInEdgeSize(const NodePtr &node) {
     OutDataAnchorPtr out_anchor = anchor->GetPeerOutAnchor();
     if ((out_anchor != nullptr) && (out_anchor->GetOwnerNode() != nullptr)) {
       NodePtr out_node = out_anchor->GetOwnerNode();
-      if (out_node == nullptr) {
-        GELOGW("out node is nullptr");
-        continue;
-      }
       if ((out_node->GetType() == NEXTITERATION) || (out_node->GetType() == REFNEXTITERATION)) {
         GE_IF_BOOL_EXEC(in_edge_size == 0,
                         GELOGE(GRAPH_FAILED, "[Check][Param] If [in_edge_size = 0], the result will be reversed");
@@ -1460,7 +1447,8 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
   for (string node : nodes) {
     vector<string> item = StringUtils::Split(node, ':');
     if (item.size() != OUTPUT_PARAM_SIZE) {
-      GELOGW("invalid output param!input:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W19999", "Check output param size failed, output_name:%s", output_name.c_str());
+      GELOGW("[Check][Output] Check output param size failed, output_name:%s", output_name.c_str());
       continue;
     }
 
@@ -1468,13 +1456,16 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
     try {
       index = stoi(StringUtils::Trim(item[1]));
     } catch (const std::out_of_range &) {
-      GELOGW("outputname cause out of range execption!output_name:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W19999", "Catch out_of_range exception, output_name:%s", output_name.c_str());
+      GELOGW("[Catch][Exception] Catch out_of_range exception, output_name:%s", output_name.c_str());
       continue;
     } catch (const std::invalid_argument &) {
-      GELOGW("outputname cause invalid argument!output_name:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W19999", "Catch invalid_argument exception, output_name:%s", output_name.c_str());
+      GELOGW("[Catch][Exception] Catch invalid_argument exception, output_name:%s", output_name.c_str());
       continue;
     } catch (...) {
-      GELOGW("stoi fail! output_name:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W19999", "Catch exception, output_name:%s", output_name.c_str());
+      GELOGW("[Catch][Exception] Catch exception, output_name:%s", output_name.c_str());
       continue;
     }
     auto iter = out_nodes_map_.find(item[0]);

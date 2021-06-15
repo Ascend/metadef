@@ -16,9 +16,7 @@
 
 #include "graph/gnode.h"
 
-#include <utility>
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/anchor.h"
 #include "graph/node.h"
 #include "graph/utils/node_adapter.h"
@@ -60,7 +58,7 @@ GNode NodeAdapter::Node2GNode(const ge::NodePtr &node) {
 
   GNode graph_node;
   if (graph_node.impl_ == nullptr) {
-    GELOGW("Node2GNode: gnode impl is nullptr, node[%s].", node->GetName().c_str());
+    GELOGW("[Check][Param] Gnode impl is nullptr, node:%s", node->GetName().c_str());
     return graph_node;
   }
   graph_node.impl_->node_ptr_ = node;
@@ -83,7 +81,7 @@ GNodePtr NodeAdapter::Node2GNodePtr(const ge::NodePtr &node) {
   }
 
   if (gnode->impl_ == nullptr) {
-    GELOGW("Node2GNode: gnode impl is nullptr, node[%s].", node->GetName().c_str());
+    GELOGW("[Check][Param] Gnode impl is nullptr, node:%s", node->GetName().c_str());
     return nullptr;
   }
   gnode->impl_->node_ptr_ = node;
@@ -975,7 +973,7 @@ graphStatus GNode::GetALLSubgraphs(std::vector<GraphPtr> &graph_list) const {
   }
 
   if (graph_list.empty()) {
-    GELOGW("Node[%s] has no subgraph.", node_ptr->GetName().c_str());
+    GELOGW("[Get][Subgraph] Node %s has no subgraph", node_ptr->GetName().c_str());
   }
 
   return GRAPH_SUCCESS;

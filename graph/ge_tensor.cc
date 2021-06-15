@@ -960,7 +960,7 @@ void TensorDataImpl::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t siz
 
 graphStatus TensorDataImpl::SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc) {
   if (size == 0) {
-    GELOGW("size is 0");
+    GELOGW("[Set][Data] Input size is 0");
     clear();
     return GRAPH_SUCCESS;
   }
@@ -976,7 +976,7 @@ graphStatus TensorDataImpl::SetData(uint8_t *data, size_t size, const AlignedPtr
 
 const uint8_t *TensorDataImpl::MallocAlignedPtr(size_t size) {
   if (size == 0) {
-    GELOGW("data size is 0");
+    GELOGW("[Check][Param] Input data size is 0");
     clear();
     return reinterpret_cast<const uint8_t *>(&invalid_data_);
   }
@@ -1108,21 +1108,21 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc) : GeTensorImpl() {
 GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const vector<uint8_t> &data) : GeTensorImpl() {
   DescReference() = tensor_desc;
   if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
-    GELOGW("Set data failed");
+    GELOGW("[Set][Data] Set data failed");
   }
 }
 
 GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const uint8_t *data, size_t size) : GeTensorImpl() {
   DescReference() = tensor_desc;
   if (tensor_data_.SetData(data, size) != GRAPH_SUCCESS) {
-    GELOGW("Set data failed");
+    GELOGW("[Set][Data] Set data failed");
   }
 }
 
 GeTensorImpl::GeTensorImpl(GeTensorDesc &&tensor_desc, vector<uint8_t> &&data) : GeTensorImpl() {
   DescReference() = std::move(tensor_desc);
   if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
-    GELOGW("Set data failed");
+    GELOGW("[Set][Data] Set data failed");
   }
 }
 
@@ -1135,7 +1135,7 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const Buffer &data) 
     GELOGI("data addr is null.");
   }
   if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
-    GELOGW("Set data failed");
+    GELOGW("[Set][Data] Set data failed");
   }
 }
 
@@ -1149,7 +1149,7 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc,
 GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, size_t size) : GeTensorImpl() {
   DescReference() = tensor_desc;
   if (tensor_data_.MallocAlignedPtr(size) == nullptr) {
-    GELOGW("malloc memory failed, size=%zu", size);
+    GELOGW("[Malloc][Memory] Malloc memory failed, size=%zu", size);
   }
 }
 
@@ -1174,7 +1174,7 @@ GeTensorImpl::GeTensorImpl(const ProtoMsgOwner &proto_owner, proto::TensorDef *p
       }
       if (tensor_data_.SetData(reinterpret_cast<const uint8_t *>(proto_msg->data().data()),
                                proto_msg->data().size()) != GRAPH_SUCCESS) {
-        GELOGW("Set data failed");
+        GELOGW("[Set][Data] Set data failed");
       }
     } else {
       __desc_.RefTo(GeTensorDesc(nullptr, nullptr));
@@ -1659,7 +1659,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDataO
       return GRAPH_FAILED;
     }
   } else {
-    GELOGW("tensor desc impl is nullptr.");
+    GELOGW("[Get][DataOffset] tensor desc impl is nullptr.");
   }
   return GRAPH_FAILED;
 }

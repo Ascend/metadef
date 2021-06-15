@@ -18,9 +18,7 @@
 #include <algorithm>
 #include <map>
 #include <vector>
-#include <utility>
 #include "graph/debug/ge_log.h"
-#include "external/register/scope/scope_fusion_pass_register.h"
 
 using ge::MEMALLOC_FAILED;
 
@@ -35,7 +33,7 @@ void ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::RegisterScopeFusionPa
   std::lock_guard<std::mutex> lock(mu_);
   auto iter = std::find(pass_names_.begin(), pass_names_.end(), pass_name);
   if (iter != pass_names_.end()) {
-    GELOGW("The scope fusion pass has been registered and will not overwrite the previous one, pass name = %s.",
+    GELOGW("[Register][Check] ScopeFusionPass %s already exists and will not be overwritten",
            pass_name.c_str());
     return;
   }
@@ -53,7 +51,7 @@ ScopeFusionPassRegistry::CreateFn ScopeFusionPassRegistry::ScopeFusionPassRegist
   std::lock_guard<std::mutex> lock(mu_);
   auto it = create_fn_packs_.find(pass_name);
   if (it == create_fn_packs_.end()) {
-    GELOGW("Scope fusion pass is not registered. pass name = %s.", pass_name.c_str());
+    GELOGW("[Get][CreateFun] ScopeFusionPass %s not registered", pass_name.c_str());
     return nullptr;
   }
 
@@ -61,7 +59,7 @@ ScopeFusionPassRegistry::CreateFn ScopeFusionPassRegistry::ScopeFusionPassRegist
   if (create_fn_pack.is_enable) {
     return create_fn_pack.create_fn;
   } else {
-    GELOGW("The scope fusion pass is disabled, pass name = %s", pass_name.c_str());
+    GELOGW("[Get][CreateFun] ScopeFusionPass %s is disabled", pass_name.c_str());
     return nullptr;
   }
 }
@@ -83,7 +81,7 @@ bool ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::SetPassEnableFlag(
   std::lock_guard<std::mutex> lock(mu_);
   auto it = create_fn_packs_.find(pass_name);
   if (it == create_fn_packs_.end()) {
-    GELOGW("Scope fusion pass is not registered. pass name = %s.", pass_name.c_str());
+    GELOGW("[Set][EnableFlag] ScopeFusionPass %s not registered", pass_name.c_str());
     return false;
   }
 

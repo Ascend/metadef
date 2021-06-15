@@ -17,7 +17,6 @@
 #include "file_utils.h"
 
 #include "debug/ge_log.h"
-#include "common/util/error_manager/error_manager.h"
 #include "mmpa/mmpa_api.h"
 
 namespace ge {
@@ -39,7 +38,7 @@ std::string RealPath(const char *path) {
   if (mmRealPath(path, resolved_path, MMPA_MAX_PATH) == EN_OK) {
     res = resolved_path;
   } else {
-    GELOGW("[Real][path]failed for %s, reason:%s", path, strerror(errno));
+    GELOGW("[Util][realpath] Get real_path for %s failed, reason:%s", path, strerror(errno));
   }
 
   return res;
@@ -60,7 +59,7 @@ int32_t CreateDirectory(const std::string &directory_path) {
   if (dir_path_len >= MMPA_MAX_PATH) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19002", {"filepath", "size"},
                                                     {directory_path, std::to_string(MMPA_MAX_PATH)});
-    GELOGW("Path[%s] len is too long, it must be less than %d", directory_path.c_str(), MMPA_MAX_PATH);
+    GELOGW("[Util][mkdir] Path %s len is too long, it must be less than %d", directory_path.c_str(), MMPA_MAX_PATH);
     return -1;
   }
   char tmp_dir_path[MMPA_MAX_PATH] = {0};
@@ -74,7 +73,7 @@ int32_t CreateDirectory(const std::string &directory_path) {
             REPORT_CALL_ERROR("E19999",
                               "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
                               directory_path.c_str(), strerror(errno));
-            GELOGW("Can not create directory %s. reason:%s. Make sure the directory exists and writable.",
+            GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",
                    directory_path.c_str(), strerror(errno));
             return ret;
           }
@@ -88,7 +87,7 @@ int32_t CreateDirectory(const std::string &directory_path) {
       REPORT_CALL_ERROR("E19999",
                         "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
                         directory_path.c_str(), strerror(errno));
-      GELOGW("Can not create directory %s. reason:%s. Make sure the directory exists and writable.",
+      GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",
              directory_path.c_str(), strerror(errno));
       return ret;
     }

@@ -281,7 +281,7 @@ class AttrUtilsHelper {
  public:
   inline static bool GetValueCheckType(const proto::AttrDef &attr_def, proto::AttrDef::ValueCase proto_case) {
     if (attr_def.value_case() != proto_case) {
-      GELOGW("Check Type Failed, proto case type %u, expected %u", attr_def.value_case(), proto_case);
+      GELOGW("[Check][Type] Check Type Failed, proto case type %u, expected %u", attr_def.value_case(), proto_case);
       return false;
     }
     return true;
@@ -291,7 +291,7 @@ class AttrUtilsHelper {
       const proto::AttrDef &attr_def, proto::AttrDef_ListValue_ListValueType proto_list_case,
       const std::function<bool(const proto::AttrDef &proto_attr_val)> item_check_fun) {
     if (attr_def.value_case() != proto::AttrDef::kList) {
-      GELOGW("Check ListType Failed, value_case %u", attr_def.value_case());
+      GELOGW("[Check][ListType] Check ListType Failed, value_case %u", attr_def.value_case());
       return false;
     }
     auto &list = attr_def.list();
@@ -299,7 +299,7 @@ class AttrUtilsHelper {
       return item_check_fun(attr_def);
     }
     if (list.val_type() != proto_list_case) {
-      GELOGW("Check ListType Failed, val_type %u, expected %u", list.val_type(), proto_list_case);
+      GELOGW("[Check][ListType] Check ListType Failed, val_type %u, expected %u", list.val_type(), proto_list_case);
       return false;
     }
     return true;
@@ -307,7 +307,7 @@ class AttrUtilsHelper {
 
   inline static bool SetValueCheckType(proto::AttrDef &attr_def, proto::AttrDef::ValueCase proto_case) {
     if (attr_def.value_case() != proto::AttrDef::VALUE_NOT_SET && attr_def.value_case() != proto_case) {
-      GELOGW("Check Type Failed, proto case type %u, expected %u", attr_def.value_case(), proto_case);
+      GELOGW("[Check][Type] Check Type Failed, proto case type %u, expected %u", attr_def.value_case(), proto_case);
       return false;
     }
     return true;
@@ -316,7 +316,7 @@ class AttrUtilsHelper {
   inline static bool SetValueCheckAndSetListType(proto::AttrDef &attr_def,
                                                  proto::AttrDef_ListValue_ListValueType proto_list_case) {
     if (attr_def.value_case() != proto::AttrDef::VALUE_NOT_SET && attr_def.value_case() != proto::AttrDef::kList) {
-      GELOGW("AttrUtils::Check Type Failed, value_case %u", attr_def.value_case());
+      GELOGW("[Check][Type] Check Type Failed, value_case %u", attr_def.value_case());
       return false;
     }
     auto list = attr_def.mutable_list();
@@ -327,8 +327,8 @@ class AttrUtilsHelper {
     }
     if (list->val_type() != proto::AttrDef_ListValue_ListValueType_VT_LIST_NONE &&
         list->val_type() != proto_list_case) {
-      GELOGW("AttrUtils::Check ListType Type Failed, val_type %d, expected %d", static_cast<int>(list->val_type()),
-             static_cast<int>(proto_list_case));
+      GELOGW("[Check][ListType] Check ListType Failed, val_type %d, expected %d",
+             static_cast<int>(list->val_type()), static_cast<int>(proto_list_case));
       return false;
     }
     list->set_val_type(proto_list_case);
@@ -1071,7 +1071,7 @@ bool AttrUtils::HasAttr(ConstAttrHolderAdapter &&obj, const string &name) {
       return false;                                                                                           \
     }                                                                                                         \
     if (!GeAttrValueImp::SetValue(*proto_attr_val, value)) {                                                  \
-      GELOGW("Set" #FuncName " failed key %s", name.c_str());                                                 \
+      GELOGW("[Set][Value] Set" #FuncName " failed key %s", name.c_str());                                    \
       return false;                                                                                           \
     }                                                                                                         \
     return true;                                                                                              \
@@ -1085,7 +1085,7 @@ bool AttrUtils::HasAttr(ConstAttrHolderAdapter &&obj, const string &name) {
       return false;                                                                                               \
     }                                                                                                             \
     if (!GeAttrValueImp::GetValue(*proto_attr_val, obj->GetAttrMap().GetProtoOwner(), value)) {                   \
-      GELOGW("Get" #FuncName " failed key %s", name.c_str());                                                     \
+      GELOGW("[Get][Value] Get" #FuncName " failed key %s", name.c_str());                                        \
       return false;                                                                                               \
     }                                                                                                             \
     return true;                                                                                                  \

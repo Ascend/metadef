@@ -21,7 +21,6 @@
 #include "graph/debug/ge_log.h"
 #include "register/graph_optimizer/fusion_common/fusion_statistic_recorder.h"
 #include "register/graph_optimizer/fusion_common/graph_pass_util.h"
-#include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 #include "register/graph_optimizer/graph_fusion/pattern_fusion_base_pass_impl.h"
 
 namespace fe {
@@ -48,7 +47,7 @@ Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
       if (pattern != nullptr) {
         bool ok = pattern->Build();
         if (!ok) {
-          GELOGW("this pattern: %s build not success.", pattern->GetName().c_str());
+          GELOGW("[RunFusionPass][Check] pattern: %s build failed", pattern->GetName().c_str());
           invalid_patterns += pattern->GetName() + ",";
         }
         pattern->Dump();
@@ -74,7 +73,7 @@ Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
       bool changed = false;
       Status ret = RunOnePattern(graph, *pattern, changed);
       if (ret != SUCCESS) {
-        GELOGW("run pattern %s not success, graph is not changed by it.", pattern->GetName().c_str());
+        GELOGW("[RunFusionPass][Check] run pattern %s failed, graph is not changed by it.", pattern->GetName().c_str());
         return ret;
       }
       final_changed = final_changed || changed;

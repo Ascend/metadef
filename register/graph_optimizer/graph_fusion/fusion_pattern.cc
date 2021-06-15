@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-#include <iostream>
+#include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "graph/debug/ge_log.h"
-#include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 
 namespace fe {
 
@@ -133,7 +132,7 @@ bool FusionPattern::Build() {
     if (op->is_output) {
       if (output_ != nullptr) {
         SetError();
-        GELOGW("Multiple outputs are not supported. (id:%s)", op->id.c_str());
+        GELOGW("[FusionPattern][Build] Multiple outputs are not supported, (id:%s)", op->id.c_str());
         break;
       }
       output_ = op;
@@ -142,7 +141,7 @@ bool FusionPattern::Build() {
 
   if (output_ == nullptr) {
     SetError();
-    GELOGW("Output must be set value.");
+    GELOGW("[FusionPattern][Build] Output must be set value.");
   }
 
   return !has_error_;

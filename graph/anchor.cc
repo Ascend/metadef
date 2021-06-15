@@ -97,9 +97,7 @@ void Anchor::UnlinkAll() noexcept {
   if (!impl_->peer_anchors_.empty()) {
     do {
       auto peer_anchor_ptr = impl_->peer_anchors_.begin()->lock();
-      if (Unlink(peer_anchor_ptr) != GRAPH_SUCCESS) {
-        GELOGW("unlink peer_anchor_ptr failed.");
-      }
+      (void)Unlink(peer_anchor_ptr);
     } while (!impl_->peer_anchors_.empty());
   }
 }
@@ -116,8 +114,10 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
     return peer->Equal(anchor);
   });
 
-  GE_IF_BOOL_EXEC(it == impl_->peer_anchors_.end(), GELOGW("this anchor is not connected to peer");
-                  return GRAPH_FAILED);
+  if (it == impl_->peer_anchors_.end()) {
+    GELOGW("[Check][Param] Unlink failed , as this anchor is not connected to peer");
+    return GRAPH_FAILED;
+  }
 
   auto it_peer = std::find_if(peer->impl_->peer_anchors_.begin(), peer->impl_->peer_anchors_.end(),
       [this](const std::weak_ptr<Anchor> &an) {

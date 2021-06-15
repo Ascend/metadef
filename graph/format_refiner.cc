@@ -17,21 +17,16 @@
 #include "format_refiner.h"
 
 #include <deque>
-#include <iostream>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "graph/ref_relation.h"
-#include "./compute_graph.h"
-#include "./ge_error_codes.h"
-#include "./graph/ge_tensor.h"
 #include "./operator.h"
 #include "./operator_factory.h"
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "utils/node_utils.h"
 #include "utils/op_desc_utils.h"
 #include "utils/tensor_utils.h"
@@ -242,28 +237,22 @@ graphStatus FormatRefiner::BackInferProcess(std::deque<ge::NodePtr> &nodes, ge::
   GE_CHECK_NOTNULL(node);
   GE_CHECK_NOTNULL(node->GetOpDesc());
 
-  GELOGD("Enter back infer process!Node is [%s]", (node->GetName()).c_str());
+  GELOGD("Enter back infer process!Node is [%s]", node->GetName().c_str());
   for (const auto &in_anchor : node->GetAllInDataAnchors()) {
-    GELOGD("Node is [%s] [B]", (node->GetName()).c_str());
+    GELOGD("Node is [%s] [B]", node->GetName().c_str());
     auto in_data_anchor_idx = in_anchor->GetIdx();
     auto input_desc = node->GetOpDesc()->MutableInputDesc(static_cast<uint32_t>(in_data_anchor_idx));
     GE_IF_BOOL_EXEC(input_desc == nullptr, continue);
     auto to_be_set_format = input_desc->GetOriginFormat();
     if (to_be_set_format == FORMAT_ND) {
-      GELOGD("Node [%s] [B], format is ND", (node->GetName()).c_str());
+      GELOGD("Node [%s] [B], format is ND", node->GetName().c_str());
       continue;
     }
     auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
     if (peer_out_data_anchor == nullptr) {
-      GELOGW("Node[%s] %dth in data anchor's peer_out_anchor is null", (node->GetName()).c_str(), in_data_anchor_idx);
       continue;
     }
     auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
-    if (peer_out_data_node == nullptr || peer_out_data_node->GetOpDesc() == nullptr) {
-      GELOGW("Node[%s]\'s peer_out_data_node or peer_out_data_node desc is null", (node->GetName()).c_str());
-      continue;
-    }
-    // Check format whether have been set
     int idx = peer_out_data_anchor->GetIdx();
     // do peer_out_node name and index as key to lookup reflections
     ge::RefCell key(peer_out_data_node->GetName(), peer_out_data_node, ge::NODE_OUT, idx);
@@ -275,6 +264,8 @@ graphStatus FormatRefiner::BackInferProcess(std::deque<ge::NodePtr> &nodes, ge::
       return GRAPH_FAILED;
     }
 
+    // Check format whether have been set
+    // op_desc of node should not be null
     auto ge_tensor_desc = peer_out_data_node->GetOpDesc()->GetOutputDesc(static_cast<uint32_t>(idx));
     if (ge_tensor_desc.GetOriginFormat() == FORMAT_ND) {
       auto dim_num = ge_tensor_desc.GetShape().GetDimNum();
@@ -322,15 +313,15 @@ graphStatus FormatRefiner::ForwardInferProcess(std::deque<ge::NodePtr> &nodes, g
                                                std::unordered_map<ge::NodePtr, bool> &node_status) {
   GE_CHECK_NOTNULL(node);
   GE_CHECK_NOTNULL(node->GetOpDesc());
-  GELOGD("Enter forward infer process!Node is [%s]", (node->GetName()).c_str());
+  GELOGD("Enter forward infer process!Node is [%s]", node->GetName().c_str());
   for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
-    GELOGD("Node is [%s] [F]", (node->GetName()).c_str());
+    GELOGD("Node is [%s] [F]", node->GetName().c_str());
     GE_IF_BOOL_EXEC(out_data_anchor == nullptr, continue);
     auto out_data_anchor_idx = out_data_anchor->GetIdx();
     auto to_be_set_format =
       node->GetOpDesc()->MutableOutputDesc(static_cast<uint32_t>(out_data_anchor_idx))->GetOriginFormat();
     if (to_be_set_format == FORMAT_ND) {
-      GELOGD("Node [%s] format is ND.[F]", (node->GetName()).c_str());
+      GELOGD("Node [%s] format is ND.[F]", node->GetName().c_str());
       continue;
     }
     for (const auto &peer_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {

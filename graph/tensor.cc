@@ -16,9 +16,7 @@
 
 #include "external/graph/tensor.h"
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/ge_tensor.h"
-#include "graph/aligned_ptr.h"
 #include "securec.h"
 #include "utils/attr_utils.h"
 #include "utils/tensor_adapter.h"
@@ -468,17 +466,17 @@ Tensor::Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data) 
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
-    GELOGW("datatype %d is not found.", data_type);
+    GELOGW("[Create][Tensor] Datatype %d not found.", data_type);
   }
 
   auto data_size = data.size();
   if (ret && (shape_size || (data_size != type_length))) {
     if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
-      GELOGW("mul overflow: %lu, %u", shape_size, type_length);
+      GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
     } else {
       if (shape_size * type_length != data_size) {
-        GELOGW("tensor length not equal: shape_byte_size=%lu, data_size=%zu, dt_type=%s.", shape_size * type_length,
-               data_size, TypeUtils::DataTypeToSerialString(data_type).c_str());
+        GELOGW("[Create][Tensor] Tensor length not equal: shape_byte_size=%lu, dt_type=%s, data_size=%zu.",
+               shape_size * type_length, TypeUtils::DataTypeToSerialString(data_type).c_str(), data_size);
       }
     }
   }
@@ -491,15 +489,15 @@ Tensor::Tensor(const TensorDesc &tensor_desc, const uint8_t *data, size_t size) 
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
-    GELOGW("datatype %d is not found.", data_type);
+    GELOGW("[Create][Tensor] Datatype %d not found.", data_type);
   }
   if (ret && (shape_size || (size != type_length))) {
     if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
-      GELOGW("mul overflow: %lu, %u", shape_size, type_length);
+      GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
     } else {
       if (shape_size * type_length != size) {
-        GELOGW("tensor length not equal: shape_byte_size=%lu, data_size=%zu, dt_type=%s.", shape_size * type_length,
-               size, TypeUtils::DataTypeToSerialString(data_type).c_str());
+        GELOGW("[Create][Tensor] Tensor length not equal: shape_byte_size=%lu, dt_type=%s, data_size=%zu.",
+               shape_size * type_length, TypeUtils::DataTypeToSerialString(data_type).c_str(), size);
       }
     }
   }
@@ -513,17 +511,17 @@ Tensor::Tensor(TensorDesc &&tensor_desc, std::vector<uint8_t> &&data) {
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
-    GELOGW("datatype %d is not found.", data_type);
+    GELOGW("[Create][Tensor] Datatype %d not found.", data_type);
   }
 
   auto data_size = data.size();
   if (ret && (shape_size || (data_size != type_length))) {
     if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
-      GELOGW("mul overflow: %lu, %u", shape_size, type_length);
+      GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
     } else {
       if (shape_size * type_length != data_size) {
-        GELOGW("tensor length not equal: shape_byte_size=%lu, data_size=%zu, dt_type=%s.", shape_size * type_length,
-               data_size, TypeUtils::DataTypeToSerialString(data_type).c_str());
+        GELOGW("[Create][Tensor] Tensor length not equal: shape_byte_size=%lu, dt_type=%s, data_size=%zu.",
+               shape_size * type_length, TypeUtils::DataTypeToSerialString(data_type).c_str(), data_size);
       }
     }
   }
@@ -670,7 +668,7 @@ graphStatus Tensor::IsValid() {
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
-    GELOGW("datatype %d is not found.", data_type);
+    GELOGW("[Check][Tensor] Datatype %d not found.", data_type);
     return GRAPH_SUCCESS;
   }
 
@@ -678,11 +676,11 @@ graphStatus Tensor::IsValid() {
   if (data_type != DT_STRING) {
     if (shape_size || (data_size != type_length)) {
       if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
-        GELOGW("mul overflow: %lu, %u", shape_size, type_length);
+        GELOGW("[Check][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
       } else {
         if (shape_size * type_length != data_size) {
-          GELOGW("tensor length not equal: shape_byte_size=%lu, data_size=%zu, dt_type=%s.", shape_size * type_length,
-                 data_size, TypeUtils::DataTypeToSerialString(data_type).c_str());
+          GELOGW("[Check][Tensor] Tensor length not equal: shape_byte_size=%lu, dt_type=%s, data_size=%zu.",
+                 shape_size * type_length, TypeUtils::DataTypeToSerialString(data_type).c_str(), data_size);
           return GRAPH_FAILED;
         }
       }

@@ -21,7 +21,6 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <stack>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
 
@@ -37,7 +36,6 @@
 
 namespace ge {
 namespace {
-const uint32_t kWhileBodySubGraphIdx = 1;
 const char* const kPreOpInputShapeRange = "_pre_op_in_range";
 
 const static std::set<string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
@@ -208,10 +206,6 @@ graphStatus UpdateSubGraphDataNodes(const ConstNodePtr &node) {
 
   auto root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
   for (const auto &name : sub_graph_names) {
-    if (name.empty()) {
-      GELOGW("The node %s contains empty subgraph instance name", node->GetName().c_str());
-      continue;
-    }
     auto sub_graph = root_graph->GetSubgraph(name);
     if (sub_graph == nullptr) {
       REPORT_INNER_ERROR("E19999", "Can not find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
@@ -342,14 +336,10 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
   auto root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
 
   for (const auto &name : sub_graph_names) {
-    if (name.empty()) {
-      GELOGW("The node %s contains empty subgraph instance name", node->GetName().c_str());
-      continue;
-    }
     auto sub_graph = root_graph->GetSubgraph(name);
     if (sub_graph == nullptr) {
-      REPORT_INNER_ERROR("E19999", "Can not find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
-      GE_LOGE("[Get][Subgraph] Can not find the subgrpah %s for node %s", name.c_str(), node->GetName().c_str());
+      REPORT_INNER_ERROR("E19999", "Can not find the subgraph %s for node %s", name.c_str(), node->GetName().c_str());
+      GE_LOGE("[Get][Subgraph] Can not find the subgraph %s for node %s", name.c_str(), node->GetName().c_str());
       return GRAPH_FAILED;
     }
     NodePtr netoutput = nullptr;
@@ -461,16 +451,16 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
     auto peer_out_shape = peer_out_desc->MutableShape().GetDims();
     auto peer_out_dtype = peer_out_desc->GetDataType();
     if (peer_out_dtype != in_dtype) {
-      GELOGW("current node [%s] [%d]\'th in_dtype is [%s].peer output node [%s] [%d]\'th "
-             "output_dtype is [%s].The two dtype should be same! Please check graph and fix it",
+      GELOGW("[Update][InputDesc] current node [%s] [%d]\'th in_dtype is [%s].peer output node [%s] [%d]\'th "
+             "output_dtype is [%s]. The two dtype should be same! Please check graph and fix it",
              node_ptr->GetName().c_str(), in_idx, TypeUtils::DataTypeToSerialString(in_dtype).c_str(),
              peer_out_data_node->GetName().c_str(), peer_out_idx,
              TypeUtils::DataTypeToSerialString(peer_out_dtype).c_str());
     } else if ((!in_shape.empty()) && (in_shape != peer_out_shape)) {
       string in_shape_str = Serial(in_shape);
       string peer_out_shape_str = Serial(peer_out_shape);
-      GELOGW("current node [%s] [%d]\'th in_shape is [%s].peer output node [%s] [%d]\'th "
-             "output_shape is [%s].The two shape should be same! Please check graph and fix it",
+      GELOGW("[Update][InputDesc] current node [%s] [%d]\'th in_shape is [%s].peer output node [%s] [%d]\'th "
+             "output_shape is [%s]. The two shape should be same! Please check graph and fix it",
              node_ptr->GetName().c_str(), in_idx, in_shape_str.c_str(),
              peer_out_data_node->GetName().c_str(), peer_out_idx, peer_out_shape_str.c_str());
     }
@@ -644,7 +634,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
     // Op ir no infer func, try to get infer func from operator factory
     auto node_op = ge::OperatorFactory::CreateOperator("node_op", op_desc->GetType());
     if (node_op.IsEmpty()) {
-      GELOGW("get op from OperatorFactory fail. opType: %s", op_type.c_str());
+      GELOGW("[InferShape][Check] Get op from OperatorFactory failed, type: %s", op_type.c_str());
       return ret;
     }
 
@@ -657,7 +647,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
       return GRAPH_FAILED;
     }
     if (!op_desc->UpdateInputName(temp_op_desc->GetAllInputName())) {
-      GELOGW("InferShapeAndType UpdateInputName failed");
+      GELOGW("[InferShape][UpdateInputName] Update input name failed");
       for (const auto &out_desc : op_desc->GetAllOutputsDescPtr()) {
         if (out_desc != nullptr && out_desc->GetShape().GetDims().empty()) {
           break;
@@ -666,7 +656,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
       }
     }
     if (!op_desc->UpdateOutputName(temp_op_desc->GetAllOutputName())) {
-      GELOGW("InferShapeAndType UpdateOutputName failed");
+      GELOGW("[InferShape][UpdateOutputName] Update output name failed");
     }
     op_desc->AddInferFunc(temp_op_desc->GetInferFunc());
     ret = op_desc->CallInferFunc(op);

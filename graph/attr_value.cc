@@ -15,9 +15,7 @@
  */
 
 #include "external/graph/attr_value.h"
-#include "debug/ge_log.h"
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/ge_attr_value.h"
 
 namespace ge {
@@ -28,7 +26,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrValue::AttrValue() {
 #define ATTR_VALUE_SET_GET_IMP(type)                 \
   graphStatus AttrValue::GetValue(type &val) const { \
     if (impl != nullptr) {                           \
-      GELOGW("GetValue failed.");                    \
       return impl->geAttrValue_.GetValue<type>(val); \
     }                                                \
     return GRAPH_FAILED;                             \

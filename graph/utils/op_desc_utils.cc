@@ -60,7 +60,7 @@ bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
     if (iter < node->GetOpDesc()->impl_->inputs_desc_.end()) {
       (void)node->GetOpDesc()->impl_->inputs_desc_.erase(iter);
     } else {
-      GELOGW("inputs_desc_ iterator out of range.");
+      GELOGW("[Clear][InputDesc] inputs_desc_ iterator out of range.");
     }
   }
 
@@ -83,7 +83,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearInputDesc(
   if (iter < op_desc->impl_->inputs_desc_.end()) {
     (void)op_desc->impl_->inputs_desc_.erase(iter);
   } else {
-    GELOGW("inputs_desc_ iterator out of range.");
+    GELOGW("[Clear][InputDesc] inputs_desc_ iterator out of range.");
   }
   return true;
 }
@@ -115,7 +115,7 @@ bool OpDescUtils::ClearOutputDesc(const NodePtr &node) {
     if (iter < node->GetOpDesc()->impl_->outputs_desc_.end()) {
       (void)node->GetOpDesc()->impl_->outputs_desc_.erase(iter);
     } else {
-      GELOGW("outputs_desc_ iterator out of range.");
+      GELOGW("[Clear][OutputDesc] outputs_desc_ iterator out of range.");
     }
   }
 
@@ -137,7 +137,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearOutputDesc
   if (iter < op_desc->impl_->outputs_desc_.end()) {
     (void)op_desc->impl_->outputs_desc_.erase(iter);
   } else {
-    GELOGW("outputs_desc_ iterator out of range.");
+    GELOGW("[Clear][OutputDesc] outputs_desc_ iterator out of range.");
   }
   return true;
 }
@@ -146,10 +146,7 @@ bool OpDescUtils::HasQuantizeFactorParams(const OpDesc &op_desc) { return op_des
 
 GeTensorPtr OpDescUtils::MutableWeights(OpDesc &op_desc) {
   GeTensorPtr weight = nullptr;
-  if (!AttrUtils::MutableTensor(&op_desc, ATTR_NAME_WEIGHTS, weight)) {
-    GELOGW("MutableTensor error");
-  }
-
+  (void)AttrUtils::MutableTensor(&op_desc, ATTR_NAME_WEIGHTS, weight);
   return weight;
 }
 
@@ -224,8 +221,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<ge::NodePtr> OpDescUtils::
         }
         // Enter node has and only has one input
         if (in_node->GetInDataNodes().size() != 1) {
-          GELOGW("Check number of input_nodes for Enter node %s failed, size=%zu.", node.GetName().c_str(),
-                 in_node->GetInDataNodes().size());
+          GELOGW("[Get][ConstInput] Check number of input_nodes for Enter node %s failed, input_node_num=%zu.",
+                 in_node->GetName().c_str(), in_node->GetInDataNodes().size());
           break;
         }
         in_node = in_node->GetInDataNodes().at(0);

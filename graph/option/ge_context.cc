@@ -59,9 +59,11 @@ void GEContext::Init() {
   try{
     session_id_ = static_cast<uint64_t>(std::stoi(session_id.c_str()));
   } catch (std::invalid_argument &) {
-    GELOGW("%s transform to int failed.", session_id.c_str());
+    GELOGW("[Init][GetSessionId] Transform option session_id %s to int failed, as catching invalid_argument exception",
+           session_id.c_str());
   } catch (std::out_of_range &) {
-    GELOGW("%s transform to int failed.", session_id.c_str());
+    GELOGW("[Init][GetSessionId] Transform option session_id %s to int failed, as catching out_of_range exception",
+           session_id.c_str());
   }
 
   string device_id;
@@ -69,9 +71,11 @@ void GEContext::Init() {
   try{
     device_id_ = static_cast<uint32_t>(std::stoi(device_id.c_str()));
   } catch (std::invalid_argument &) {
-    GELOGW("%s transform to int failed.", device_id.c_str());
+    GELOGW("[Init][GetDeviceId] Transform option device_id %s to int failed, as catching invalid_argument exception",
+           device_id.c_str());
   } catch (std::out_of_range &) {
-    GELOGW("%s transform to int failed.", device_id.c_str());
+    GELOGW("[Init][GetDeviceId] Transform option device_id %s to int failed, as catching out_of_range exception",
+           device_id.c_str());
   }
 
   string job_id;

@@ -43,7 +43,7 @@ bool OpsProtoManager::Initialize(const std::map<std::string, std::string> &optio
   auto proto_iter = options.find("ge.opsProtoLibPath");
   /*lint +e1561*/
   if (proto_iter == options.end()) {
-    GELOGW("ge.opsProtoLibPath option not set, return.");
+    GELOGW("[Initialize][CheckOption] Option \"ge.opsProtoLibPath\" not set");
     return false;
   }
 
@@ -68,12 +68,12 @@ void OpsProtoManager::Finalize() {
       if (mmDlclose(handle) != 0) {
         const char *error = mmDlerror();
         error = (error == nullptr) ? "" : error;
-        GELOGW("[Close][Handle]failed, reason:%s", error);
+        GELOGW("[Finalize][CloseHandle] close handle failed, reason:%s", error);
         continue;
       }
       GELOGI("close opsprotomanager handler success");
     } else {
-      GELOGW("close opsprotomanager handler failure, handler is nullptr");
+      GELOGW("[Finalize][CheckHandle] handler is null");
     }
   }
 
@@ -119,14 +119,14 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
   // Return absolute path when path is accessible
   INT32 result = mmRealPath(path.c_str(), resolved_path, MMPA_MAX_PATH);
   if (result != EN_OK) {
-    GELOGW("[Real][Path]failed for file:%s. reason:%s", path.c_str(), strerror(errno));
+    GELOGW("[FindSo][Check] Get real_path for file %s failed, reason:%s", path.c_str(), strerror(errno));
     return;
   }
 
   INT32 is_dir = mmIsDir(resolved_path);
   // Lib plugin path not exist
   if (is_dir != EN_OK) {
-      GELOGW("[Open][Directory]%s failed, maybe it is not exit or not a dir, errmsg:%s",
+      GELOGW("[FindSo][Check] Open directory %s failed, maybe it is not exit or not a dir, errmsg:%s",
              resolved_path, strerror(errno));
       return;
   }
@@ -134,7 +134,7 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
   mmDirent **entries = nullptr;
   auto ret = mmScandir(resolved_path, &entries, nullptr, nullptr);
   if (ret < EN_OK) {
-      GELOGW("[Scan][Directory]failed. path:%s, ret:%d, reason:%s", resolved_path, ret, strerror(errno));
+      GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", resolved_path, ret, strerror(errno));
       return;
   }
   for (int i = 0; i < ret; ++i) {
@@ -179,11 +179,12 @@ void OpsProtoManager::LoadOpsProtoPluginSo(std::string &path) {
 
   // Not found any .so file in the lib path
   if (file_list.empty()) {
-    GELOGW("OpsProtoManager can not find any plugin file in pluginPath: %s \n", path.c_str());
+    GELOGW("[LoadSo][Check] OpsProtoManager can not find any plugin file in pluginPath: %s \n", path.c_str());
     return;
   }
   // Warning message
-  GELOGW("The shared library will not be checked. Please ensure that the source of the shared library is trusted.");
+  GELOGW("[LoadSo][Check] Shared library will not be checked. Please make sure that the source of shared library is "
+         "trusted.");
 
   // Load .so file
   for (auto elem : file_list) {
@@ -191,7 +192,7 @@ void OpsProtoManager::LoadOpsProtoPluginSo(std::string &path) {
     if (handle == nullptr) {
       const char *error = mmDlerror();
       error = (error == nullptr) ? "" : error;
-      GELOGW("OpsProtoManager dlopen failed, plugin name:%s. Message(%s).", elem.c_str(), error);
+      GELOGW("[LoadSo][Open] OpsProtoManager dlopen failed, plugin name:%s. Message(%s).", elem.c_str(), error);
       continue;
     } else {
       // Close dl when the program exist, not close here
