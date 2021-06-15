@@ -40,6 +40,9 @@ namespace {
 const uint32_t kWhileBodySubGraphIdx = 1;
 const char* const kPreOpInputShapeRange = "_pre_op_in_range";
 
+const static std::set<string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
+const static std::map<string, string> kGeLocalOpMapping{{"StreamMerge", "Merge"}, {"MemcpyAsync", "Identity"}};
+
 graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
                                       std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
   // check sub_graph shape. Get max for update.
@@ -680,8 +683,8 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
 }
 
 graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph) {
-  auto op_desc = node->GetOpDesc();
-  const auto &op_type = op_desc->GetType();
+  const auto op_desc = node->GetOpDesc();
+  const auto origin_type = NodeUtils::GetNodeType(*node);
 
   graphStatus ret;
   if (before_subgraph) {
@@ -692,8 +695,7 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const ConstNodePtr &node, 
   }
 
   // Create InferenceContext to avoid null pointer access.
-  const static std::set<std::string> force_context_op_types{ "Enter", "Switch", "RefSwitch" };
-  if (force_context_op_types.count(op_type) > 0) {
+  if (kDummyContextOpTypes.count(origin_type) > 0) {
     GELOGD("Set InferenceContext for node [%s]", op_desc->GetName().c_str());
     op.SetInferenceContext(std::shared_ptr<InferenceContext>(InferenceContext::Create()));
   }
@@ -701,9 +703,9 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const ConstNodePtr &node, 
   // Get infer func and execute
   ret = op_desc->CallInferFunc(op);
   if (ret == GRAPH_PARAM_INVALID) {
-    GELOGD("NodeUtils::GetNodeType return value is: [%s]", NodeUtils::GetNodeType(*node).c_str());
-    auto origin_type = NodeUtils::GetNodeType(*node);
-    auto infer_func = ge::OperatorFactoryImpl::GetInferShapeFunc(origin_type);
+    GELOGD("NodeUtils::GetNodeType return value is: [%s]", origin_type.c_str());
+    const auto it = kGeLocalOpMapping.find(origin_type);
+    auto infer_func = OperatorFactoryImpl::GetInferShapeFunc(it == kGeLocalOpMapping.end() ? origin_type : it->second);
     if (infer_func == nullptr) {
       REPORT_INNER_ERROR("E19999", "Failed to Get InferFunc. type is %s", origin_type.c_str());
       GELOGE(GRAPH_FAILED, "[Get][InferFunc] failed. type is %s", origin_type.c_str());
@@ -836,7 +838,6 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
       (void)input_tensor->GetShapeRange(range);
       input_tensor->SetOriginShapeRange(range);
     }
-    GE_IF_BOOL_EXEC(NodeUtils::UpdatePeerNodeInputDesc(node) != SUCCESS, return GRAPH_FAILED);
   } else {
     REPORT_CALL_ERROR("E19999", "%s call infer function failed.", node->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Call][InferFunction] failed, node:%s.", node->GetName().c_str());
