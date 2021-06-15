@@ -35,8 +35,9 @@ TEST_F(UtestGeAttrValue, GetAllAttrsStr) {
   op_desc->SetAttr("i", GeAttrValue::CreateFrom<GeAttrValue::INT>(1));
   auto tensor = std::make_shared<GeTensor>();
   op_desc->SetAttr("value", GeAttrValue::CreateFrom<GeAttrValue::TENSOR>(tensor));
+  op_desc->SetAttr("input_desc", GeAttrValue::CreateFrom<GeAttrValue::TENSOR_DESC>(GeTensorDesc()));
   string attr = AttrUtils::GetAllAttrsStr(op_desc);
-  string res = "i:\x18\x1;value:dtype: DT_FLOAT\nlayout: \"ND\"\nattr {\n  key: \"origin_format\"\n  value {\n    s: \"ND\"\n  }\n}\nhas_out_attr: true\ndevice_type: \"NPU\"\n;";
+  string res = "i:\x18\x1;input_desc:td {\n  dtype: DT_FLOAT\n  layout: \"ND\"\n  attr {\n    key: \"origin_format\"\n    value {\n      s: \"ND\"\n    }\n  }\n  has_out_attr: true\n  device_type: \"NPU\"\n}\n;value:dtype: DT_FLOAT\nlayout: \"ND\"\nattr {\n  key: \"origin_format\"\n  value {\n    s: \"ND\"\n  }\n}\nhas_out_attr: true\ndevice_type: \"NPU\"\n;";
   EXPECT_EQ(res, attr);
 }
 }
