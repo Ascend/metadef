@@ -290,21 +290,26 @@ std::string ErrorManager::GetErrorMessage() {
 
   std::stringstream err_stream;
   std::string first_code = error_messages[0].error_id;
+  for (auto &item : error_messages) {
+    if (!IsInnerErrorCode(item.error_id)) {
+      first_code = item.error_id;
+      err_stream << first_code << ": " << item.error_message << std::endl;
+      break;
+    }
+  }
   if (IsInnerErrorCode(first_code)) {
     err_stream << first_code << ": Inner Error!" << std::endl;
     for (auto &item : error_messages) {
       err_stream << "        " << item.error_message << std::endl;
     }
   } else {
-    err_stream << first_code << ": " << error_messages[0].error_message << std::endl;
-    error_messages.erase(error_messages.begin());
     for (auto &item : error_messages) {
-      if (!IsInnerErrorCode(item.error_id)) {
-        err_stream << "        " << item.error_message << std::endl;
+      if (first_code == item.error_id) {
+        continue;
       }
+      err_stream << "        " << item.error_message << std::endl;
     }
   }
-
   ClearErrorMsgContainerByWorkId(error_context_.work_stream_id);
   return err_stream.str();
 }
