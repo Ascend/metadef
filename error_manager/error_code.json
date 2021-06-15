@@ -5,7 +5,7 @@
       "errTitle": "Invalid Argument",
       "ErrCode": "E10001",
       "ErrMessage": "Value [%s] for [--%s] is invalid. Reason: %s.",
-      "Arglist": "value,param,reason",
+      "Arglist": "value,parameter,reason",
       "suggestion": {
         "Possible Cause": "Invalid Argument.",
         "Solution": "Try again with a valid argument."
@@ -27,7 +27,7 @@
       "errTitle": "Invalid Argument",
       "ErrCode": "E10003",
       "ErrMessage": "Value [%s] for the [--%s] argument is invalid. Reason: %s.",
-      "Arglist": "value,param,reason",
+      "Arglist": "value,parameter,reason",
       "suggestion": {
         "Possible Cause": "Invalid Argument.",
         "Solution": "Try again with a valid argument."
