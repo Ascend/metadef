@@ -577,9 +577,13 @@ graphStatus GraphUtils::InsertNodeBefore(const InDataAnchorPtr &dst,
   GE_CHECK_NOTNULL(in_ctrl_anchor);
   auto insert_node_in_ctrl_anchor = insert_node->GetInControlAnchor();
   for (const auto &peer_out_ctrl_anchor : in_ctrl_anchor->GetPeerOutControlAnchors()) {
+    auto peer_node = peer_out_ctrl_anchor->GetOwnerNode();
+    auto node_type = NodeUtils::GetNodeType(peer_node);
+    if (node_type == ATOMICADDRCLEAN) {
+      continue;
+    }
     if ((RemoveEdge(peer_out_ctrl_anchor, in_ctrl_anchor) != GRAPH_SUCCESS) ||
         (AddEdge(peer_out_ctrl_anchor, insert_node_in_ctrl_anchor) != GRAPH_SUCCESS)) {
-      auto peer_node = peer_out_ctrl_anchor->GetOwnerNode();
       GELOGE(GRAPH_FAILED, "[INSERT][NODE] replace control edge from %s->%s to %s->%s failed.",
              peer_node != nullptr ? peer_node->GetName().c_str() : "NULL",
              dst_node->GetName().c_str(),

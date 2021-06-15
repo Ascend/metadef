@@ -84,6 +84,7 @@ set(UT_FILES
     "testcase/buffer_unittest.cc"
     "testcase/ge_attr_value_unittest.cc"
     "testcase/shape_refiner_unittest.cc"
+    "testcase/graph_utils_unitest.cc"
 )
 
 set(GRAPH_SRC_FILES
