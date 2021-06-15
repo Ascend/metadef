@@ -21,6 +21,36 @@
 namespace transformer {
 using namespace ge;
 
+inline bool CheckInt64MulOverflow(int64_t a, int64_t b) {
+  if (a > 0) {
+    if (b > 0) {
+      if (a > (INT64_MAX / b)) {
+        return false;
+      }
+    } else {
+      if (b < (INT64_MIN / a)) {
+        return false;
+      }
+    }
+  } else {
+    if (b > 0) {
+      if (a < (INT64_MIN / b)) {
+        return false;
+      }
+    } else {
+      if ((a != 0) && (b < (INT64_MAX / a))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+#define TRANS_INT64_MULCHECK(a, b)                        \
+  if (CheckInt64MulOverflow((a), (b)) != true) {       \
+    return false;                                         \
+  }
+
 namespace {
   static std::unique_ptr<AxisUtil> axisutil_object(new(std::nothrow) AxisUtil());
   static std::map<ge::Format, GetNewShapeByAxisValueAndFormatPtr> getNewShapeFuncMap = {
@@ -137,10 +167,36 @@ bool ShapeTransferAccordingToFormat::GetFzShapeByAxisValue(vector<int64_t>& new_
     new_shape.push_back(SHAPE_NUMBER_16);
     new_shape.push_back(axis_value[AXIS_C0]);
   } else {
-    if (impl_type == EN_IMPL_HW_TBE || impl_type == EN_IMPL_CUSTOM_TBE || impl_type == EN_IMPL_NON_PERSISTENT_CUSTOM_TBE) {
-      int64_t hwc1 = axis_value[AXIS_C1] * axis_value[AXIS_H] * axis_value[AXIS_W];
+    if (impl_type == EN_IMPL_HW_TBE || impl_type == EN_IMPL_CUSTOM_TBE ||
+        impl_type == EN_IMPL_NON_PERSISTENT_CUSTOM_TBE) {
+      bool has_unknown_shape = axis_value[AXIS_W] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_H] == UNKNOWN_SHAPE_VALUE ||
+                               axis_value[AXIS_C1] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_G] == UNKNOWN_SHAPE_VALUE;
+      int64_t hwc1 = UNKNOWN_SHAPE_VALUE;
+      int64_t axis_n_val = axis_value[AXIS_N];
+      if (!has_unknown_shape) {
+        int64_t group_val = axis_value[AXIS_G];
+        int64_t axis_c1_val = axis_value[AXIS_C1];
+        int64_t axis_g_val = GROUPS_DEFAULT_VALUE;
+        int64_t axis_c_val = axis_value[AXIS_C];
+        if (group_val > GROUPS_DEFAULT_VALUE && axis_n_val >= group_val) {
+          int64_t enlarge_value =
+              GetAsisEnlargeValue(axis_c_val, axis_n_val / group_val, axis_value[AXIS_C0], group_val);
+          axis_g_val = DivisionCeiling(group_val, enlarge_value);
+          TRANS_INT64_MULCHECK(axis_c_val, enlarge_value);
+          axis_c_val *= enlarge_value;
+          TRANS_INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
+          axis_n_val = (axis_n_val / group_val) * enlarge_value;
+          axis_c1_val = DivisionCeiling(axis_c_val, axis_value[AXIS_C0]);
+        }
+        TRANS_INT64_MULCHECK(axis_g_val, axis_c1_val);
+        int64_t g_c1_val = axis_g_val * axis_c1_val;
+        TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
+        g_c1_val *= axis_value[AXIS_H];
+        TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
+        hwc1 = g_c1_val * axis_value[AXIS_W];
+      }
       new_shape.push_back(hwc1);
-      new_shape.push_back(DivisionCeiling(axis_value[AXIS_N], NI));
+      new_shape.push_back(DivisionCeiling(axis_n_val, NI));
       new_shape.push_back(NI);
       new_shape.push_back(axis_value[AXIS_C0]);
     } else {
@@ -150,7 +206,6 @@ bool ShapeTransferAccordingToFormat::GetFzShapeByAxisValue(vector<int64_t>& new_
       new_shape.push_back(axis_value[AXIS_W]);
     }
   }
-
   return true;
 }
 
@@ -209,9 +264,11 @@ bool ShapeTransferAccordingToFormat::GetNzShapeByAxisValue(vector<int64_t>& new_
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& shapeAndFormatInfo, int64_t* c) {
   /* The default new shape is old shape */
   shapeAndFormatInfo.newShape = shapeAndFormatInfo.oldShape;
-  if (shapeAndFormatInfo.oldFormat >= ge::FORMAT_RESERVED || shapeAndFormatInfo.newFormat >= ge::FORMAT_RESERVED) {
+  ge::Format primary_new_format =
+      static_cast<Format>(GetPrimaryFormat(shapeAndFormatInfo.newFormat));
+  if (shapeAndFormatInfo.oldFormat >= ge::FORMAT_RESERVED || primary_new_format >= ge::FORMAT_RESERVED) {
     GELOGE(GRAPH_FAILED, "Old format %u or new format %u is invalid!", shapeAndFormatInfo.oldFormat,
-      shapeAndFormatInfo.newFormat);
+           primary_new_format);
     return false;
   }
 
@@ -226,18 +283,24 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
     return true;
   }
 
-  auto iterGetNewShapeFunc = getNewShapeFuncMap.find(shapeAndFormatInfo.newFormat);
+  auto iterGetNewShapeFunc = getNewShapeFuncMap.find(primary_new_format);
   if (iterGetNewShapeFunc == getNewShapeFuncMap.end()) {
-    GELOGD("Can not get new shape of new format %u!", shapeAndFormatInfo.newFormat);
+    GELOGD("Can not get new shape of new format %u!", primary_new_format);
     return true;
   }
-  GELOGD("Original format %u, new format %u", shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat);
+  GELOGD("Original format is %u, new format %u", shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat);
   GetNewShapeByAxisValueAndFormatPtr getNewShapeFunc = iterGetNewShapeFunc->second;
   if (getNewShapeFunc);
   vector<int64_t> axis_value;
   for (uint32_t i = 0; i < AXIS_BOTTOM; i++) {
     axis_value.push_back(1);
   }
+
+  int64_t group = static_cast<int64_t>(ge::GetSubFormat(shapeAndFormatInfo.newFormat));
+  if (group > GROUPS_DEFAULT_VALUE) {
+    axis_value[AXIS_G] = group;
+  }
+
   vector<int64_t> nd_value;
   uint32_t c0;
   if (mapOfDtypeAndC0.empty()) {
@@ -287,7 +350,6 @@ bool ShapeTransferAccordingToFormat::GetCHWNShapeByAxisValue(vector<int64_t> &ne
   return true;
 }
 
-
 bool ShapeTransferAccordingToFormat::GetFz3DShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
                                                              const vector<int64_t> &axis_value,
                                                              const vector<int64_t> &nd_value) {
@@ -312,11 +374,20 @@ bool ShapeTransferAccordingToFormat::GetFz3DShapeByAxisValue(vector<int64_t> &ne
       int64_t enlarge_value = GetAsisEnlargeValue(axis_c_val, axis_n_val / group_val,
                                                   axis_value[AXIS_C0], group_val);
       axis_g_val = DivisionCeiling(group_val, enlarge_value);
+      TRANS_INT64_MULCHECK(axis_c_val, enlarge_value);
       axis_c_val *= enlarge_value;
+      TRANS_INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
       axis_n_val = (axis_n_val / group_val) * enlarge_value;
       axis_c1_val = DivisionCeiling(axis_c_val, axis_value[AXIS_C0]);
     }
-    gdhwc1 = axis_g_val * axis_c1_val * axis_value[AXIS_D] * axis_value[AXIS_H] * axis_value[AXIS_W];
+    TRANS_INT64_MULCHECK(axis_g_val, axis_c1_val);
+    int64_t g_c1_val = axis_g_val * axis_c1_val;
+    TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_D]);
+    g_c1_val *= axis_value[AXIS_D];
+    TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
+    g_c1_val *= axis_value[AXIS_H];
+    TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
+    gdhwc1 = g_c1_val * axis_value[AXIS_W];
   }
   new_shape.push_back(gdhwc1);
   new_shape.push_back(DivisionCeiling(axis_n_val, NI));
