@@ -216,13 +216,16 @@ Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_node
         auto next_node_in_anchor = anchor_iter.first;
         auto fusion_node_out_data_anchor = next_node_in_anchor->GetPeerOutAnchor();
         if (fusion_node_out_data_anchor == nullptr) {
-          GELOGW("[Set][Attr] peer_out_anchor of node %s input %d is null",
-                 next_node_in_anchor->GetOwnerNode()->GetName().c_str(), next_node_in_anchor->GetIdx());
+          GELOGW("[Set][Attr] peer_out_anchor is null");
           return FAILED;
         }
 
         // owner_node of anchor should not be null
         auto fusion_node = fusion_node_out_data_anchor->GetOwnerNode();
+        if (fusion_node == nullptr) {
+          GELOGW("[Set][Attr] fusion_node is null");
+          return FAILED;
+        }
         if (pattern_fusion_base_pass_impl_ptr_->IsNodesExist(fusion_node, fus_nodes)) {
           auto origin_node_out_anchor = anchor_iter.second;
           if (origin_node_out_anchor == nullptr) {
@@ -232,6 +235,10 @@ Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_node
 
           // owner_node of anchor should not be null
           auto origin_node = origin_node_out_anchor->GetOwnerNode();
+          if (origin_node == nullptr) {
+            GELOGW("[Set][Attr] origin_node is null");
+            return FAILED;
+          }
           uint32_t origin_index = origin_node_out_anchor->GetIdx();
           uint32_t fusion_index = fusion_node_out_data_anchor->GetIdx();
           (void)GraphPassUtil::SetOutputDescAttr(origin_index, fusion_index, origin_node, fusion_node);
