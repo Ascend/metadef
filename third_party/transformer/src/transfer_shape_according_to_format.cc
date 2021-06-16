@@ -263,8 +263,8 @@ bool ShapeTransferAccordingToFormat::GetNzShapeByAxisValue(vector<int64_t>& new_
 
 bool CheckInputParam(const ShapeAndFormat& shapeAndFormatInfo, ge::Format primary_new_format) {
   bool invalid_format =
-      (shapeAndFormatInfo.oldFormat == ge::FORMAT_RESERVED || shapeAndFormatInfo.oldFormat >= ge::FORMAT_MAX) ||
-      (primary_new_format == ge::FORMAT_RESERVED || primary_new_format >= ge::FORMAT_MAX);
+      (shapeAndFormatInfo.oldFormat == ge::FORMAT_RESERVED || shapeAndFormatInfo.oldFormat >= ge::FORMAT_END) ||
+      (primary_new_format == ge::FORMAT_RESERVED || primary_new_format >= ge::FORMAT_END);
   if (invalid_format) {
     GELOGE(GRAPH_FAILED, "Old format %u or new format %u is invalid!", shapeAndFormatInfo.oldFormat,
            primary_new_format);
