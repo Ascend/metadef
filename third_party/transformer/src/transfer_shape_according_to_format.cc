@@ -261,24 +261,36 @@ bool ShapeTransferAccordingToFormat::GetNzShapeByAxisValue(vector<int64_t>& new_
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& shapeAndFormatInfo, int64_t* c) {
-  /* The default new shape is old shape */
-  shapeAndFormatInfo.newShape = shapeAndFormatInfo.oldShape;
-  ge::Format primary_new_format =
-      static_cast<Format>(GetPrimaryFormat(shapeAndFormatInfo.newFormat));
-  if (shapeAndFormatInfo.oldFormat >= ge::FORMAT_RESERVED || primary_new_format >= ge::FORMAT_RESERVED) {
+bool CheckInputParam(const ShapeAndFormat& shapeAndFormatInfo, ge::Format primary_new_format) {
+  bool invalid_format =
+      (shapeAndFormatInfo.oldFormat == ge::FORMAT_RESERVED || shapeAndFormatInfo.oldFormat >= ge::FORMAT_MAX) ||
+      (primary_new_format == ge::FORMAT_RESERVED || primary_new_format >= ge::FORMAT_MAX);
+  if (invalid_format) {
     GELOGE(GRAPH_FAILED, "Old format %u or new format %u is invalid!", shapeAndFormatInfo.oldFormat,
            primary_new_format);
     return false;
   }
 
-  if (shapeAndFormatInfo.currentDataType >= ge::DT_UNDEFINED) {
+  if (shapeAndFormatInfo.currentDataType == ge::DT_UNDEFINED ||
+      shapeAndFormatInfo.currentDataType >= ge::DT_MAX) {
     GELOGE(GRAPH_FAILED, "currentDataType %u is invalid!", shapeAndFormatInfo.currentDataType);
     return false;
   }
   if (axisutil_object == nullptr) {
     return false;
   }
+  return true;
+}
+
+bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& shapeAndFormatInfo, int64_t* c) {
+  /* The default new shape is old shape */
+  shapeAndFormatInfo.newShape = shapeAndFormatInfo.oldShape;
+  ge::Format primary_new_format =
+      static_cast<Format>(GetPrimaryFormat(shapeAndFormatInfo.newFormat));
+  if (!CheckInputParam(shapeAndFormatInfo, primary_new_format)) {
+    return false;
+  }
+
   if (!axisutil_object->HasAxisValueFunc(shapeAndFormatInfo.oldFormat)) {
     return true;
   }
@@ -290,7 +302,7 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
   }
   GELOGD("Original format is %u, new format %u", shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat);
   GetNewShapeByAxisValueAndFormatPtr getNewShapeFunc = iterGetNewShapeFunc->second;
-  if (getNewShapeFunc);
+
   vector<int64_t> axis_value;
   for (uint32_t i = 0; i < AXIS_BOTTOM; i++) {
     axis_value.push_back(1);
