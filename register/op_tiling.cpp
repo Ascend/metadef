@@ -1059,6 +1059,20 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
+bool checkOpRegistryInterf(
+    std::map<std::string, optiling::utils::OpTilingFuncV2> &interf,
+    std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter,
+    std::string op_name, std::string op_type) {
+  if (iter == interf.end()) {
+    REPORT_CALL_ERROR("E19999",
+                      "Atomic optiling func on the new way is not found, turn "
+                      "to the old way, op_type:%s, op_name:%s",
+                      op_type.c_str(), op_name.c_str());
+    return false;
+  }
+  return true;
+}
+
 extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = "DynamicAtomicAddrClean";
@@ -1066,16 +1080,11 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
   std::string origin_op_type = "DynamicAtomicAddrClean";
   op_desc->SetType(op_type);
   ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-
   auto &interf = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
   auto iter = interf.find(op_type);
-  if (iter == interf.end()) {
-    REPORT_CALL_ERROR("E19999",
-                      "Atomic optiling func on the new way is not found, turn to the old way, op_type:%s, op_name:%s",
-                      op_type.c_str(), op_name.c_str());
+  if (!checkOpRegistryInterf(interf, iter, op_type, op_name)) {
     return TurnToOpAtomicCalculate(node, run_info);
   }
-
   GELOGI("Do Atomic optiling. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   std::vector<int64_t> atomic_output_indices;
   (void) ge::AttrUtils::GetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
@@ -1084,14 +1093,12 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
                       op_name.c_str());
     return ge::GRAPH_FAILED;
   }
-
   ge::GeTensorDescPtr tensor = op_desc->MutableOutputDesc(atomic_output_indices[0]);
   if (tensor == nullptr) {
     REPORT_CALL_ERROR("E19999", "Get MutableOutputDesc failed. op_type:%s, op_name:%s", origin_op_type.c_str(),
                       op_name.c_str());
     return ge::GRAPH_FAILED;
   }
-
   int64_t clean_size = 0;
   vector<int> workspace_list;
   auto res = ge::TensorUtils::GetSize(*tensor, clean_size);
@@ -1100,25 +1107,21 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
                       op_name.c_str());
     return ge::GRAPH_FAILED;
   }
-
   GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", clean_size, origin_op_type.c_str(), op_name.c_str());
   workspace_list.push_back(clean_size);
   op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
-
   optiling::utils::OpCompileInfo op_compile_info("", "");
   bool bres = GetAtomicCleanCompileInfoV2(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
   if (!bres) {
     REPORT_CALL_ERROR("E19999", "Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
-
   bool rc = (iter->second)(op_param, op_compile_info, run_info);
   if (rc) {
     GELOGI("Atomic optiling succeed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   } else {
     REPORT_CALL_ERROR("E19999", "Atomic optiling failed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   }
-
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 }  // namespace optiling

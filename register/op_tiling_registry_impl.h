@@ -1,12 +1,28 @@
+/**
+ * Copyright 2021 Huawei Technologies Co., Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #ifndef __OP_TILING_REGISTRY_IMPL_H__
 #define __OP_TILING_REGISTRY_IMPL_H__
 
-#include "external/graph/tensor.h"
-#include "register/op_tiling_registry.h"
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "external/graph/tensor.h"
+#include "register/op_tiling_registry.h"
 
 namespace optiling {
 namespace utils {
@@ -17,10 +33,10 @@ class OpRunInfoImpl {
   OpRunInfoImpl() = default;
   ~OpRunInfoImpl() = default;
 
-  // OpRunInfoImpl &operator=(const OpRunInfoImpl &runinfo);
-
   OpRunInfoImpl(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key)
-    : block_dim(block_dim), clear_atomic(clear_atomic), tiling_key(tiling_key) {}
+      : block_dim(block_dim),
+        clear_atomic(clear_atomic),
+        tiling_key(tiling_key) {}
 
   void SetBlockDim(uint32_t block_dim);
   uint32_t GetBlockDim();
