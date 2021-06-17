@@ -93,17 +93,26 @@ const char *const kErrCode = "ErrCode";
 const char *const kErrMessage = "ErrMessage";
 const char *const kArgList = "Arglist";
 const uint64_t kLength = 2;
-}  // namespace
 
-using namespace error_message;
+std::string &Ltrim(std::string &s) {
+  (void)s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) { return !std::isspace(c); }));
+  return s;
+}
 
-thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
+std::string &Rtrim(std::string &s) {
+  (void)s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) { return !std::isspace(c); }).base(), s.end());
+  return s;
+}
+
+/// @ingroup domi_common
+/// @brief trim space
+std::string &Trim(std::string &s) { return Ltrim(Rtrim(s)); }
 
 ///
 /// @brief Obtain error manager self library path
 /// @return store liberror_manager.so path
 ///
-static std::string GetSelfLibraryDir(void) {
+std::string GetSelfLibraryDir(void) {
   mmDlInfo dl_info;
   if (mmDladdr(reinterpret_cast<void *>(GetSelfLibraryDir), &dl_info) != EN_OK) {
     const char *error = mmDlerror();
@@ -129,7 +138,7 @@ static std::string GetSelfLibraryDir(void) {
 }
 
 // split string
-static std::vector<std::string> Split(const std::string &str, char delim) {
+std::vector<std::string> Split(const std::string &str, char delim) {
   std::vector<std::string> elems;
 
   if (str.empty()) {
@@ -141,7 +150,7 @@ static std::vector<std::string> Split(const std::string &str, char delim) {
   std::string item;
 
   while (getline(ss, item, delim)) {
-    elems.push_back(item);
+    elems.push_back(Trim(item));
   }
   auto str_size = str.size();
   if (str_size > 0 && str[str_size - 1] == delim) {
@@ -150,6 +159,12 @@ static std::vector<std::string> Split(const std::string &str, char delim) {
 
   return elems;
 }
+
+}  // namespace
+
+using namespace error_message;
+
+thread_local Context ErrorManager::error_context_ = {0, "", "", ""};
 
 ///
 /// @brief Obtain ErrorManager instance
