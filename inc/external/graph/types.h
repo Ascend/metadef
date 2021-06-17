@@ -168,6 +168,10 @@ enum Format {
   FORMAT_NULL,
   // Add new formats definition here
   FORMAT_END,
+  // FORMAT_MAX defines the max value of Format.
+  // Any Format should not exceed the value of FORMAT_MAX.
+  // ** Attention ** : FORMAT_MAX stands for the SPEC of enum Format and almost SHOULD NOT be used in code.
+  //                   If you want to judge the range of Format, you can use FORMAT_END.
   FORMAT_MAX = 0xff
 };
 
