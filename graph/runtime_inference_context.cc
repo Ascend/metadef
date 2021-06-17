@@ -74,14 +74,19 @@ graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int output_id, T
   }
 
   GELOGD("Set tensor for node_id = %ld, output_id = %d", node_id, output_id);
-  output_tensors[output_id] = std::move(tensor);
+  output_tensors[output_id].reset(new (std::nothrow)Tensor(std::move(tensor)));
+  if (output_tensors[output_id] == nullptr) {
+    REPORT_CALL_ERROR("E19999", "[New][Tensor] Failed, node id = %ld, output index = %d", node_id, output_id);
+    GELOGE(GRAPH_PARAM_INVALID, "[New][Tensor] Failed, node id = %ld, output index = %d", node_id, output_id);
+    return GRAPH_FAILED;
+  }
 
   auto &output_ge_tensors = ge_tensors_[node_id];
   if (static_cast<uint32_t>(output_id) >= output_ge_tensors.size()) {
     output_ge_tensors.resize(output_id + 1);
   }
 
-  GELOGD("Set ge tensor for node_id = %ld, output_id = %d", node_id, output_id);
+  GELOGD("Set ge tensor successfully, node_id = %ld, output_id = %d", node_id, output_id);
   output_ge_tensors[output_id] = TensorAdapter::AsGeTensorPtr(tensor);
   return GRAPH_SUCCESS;
 }
@@ -111,7 +116,12 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, T
   }
 
   GELOGD("Get tensor for node_id = %ld, output_id = %d", node_id, output_id);
-  tensor = output_tensors[output_id];
+  auto &output_tensor = output_tensors[output_id];
+  if (output_tensor == nullptr) {
+    GELOGI("Node output is not registered. node_id = %ld, output index = %d", node_id, output_id);
+    return GRAPH_FAILED;
+  }
+  tensor = *output_tensor;
   return GRAPH_SUCCESS;
 }
 

@@ -37,7 +37,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY RuntimeInferenceContext {
   graphStatus GetTensor(int64_t node_id, int output_id, Tensor &tensor);
 
  private:
-  std::map<int64_t, std::vector<Tensor>> tensors_;
+  std::map<int64_t, std::vector<std::unique_ptr<Tensor>>> tensors_;
   std::map<int64_t, std::vector<GeTensorPtr>> ge_tensors_;
   std::mutex mu_;
 
