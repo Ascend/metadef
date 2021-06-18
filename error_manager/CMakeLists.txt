@@ -17,13 +17,15 @@ target_include_directories(error_manager PRIVATE
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
     #### yellow zone ####
-    ${METADEF_DIR}/../inc
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
     #### blue zone ####
-    ${METADEF_DIR}/third_party/fwkacllib/inc
+    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
 )
 
 target_link_libraries(error_manager PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     static_mmpa
     -Wl,--no-as-needed
     c_sec
@@ -43,9 +45,9 @@ target_include_directories(error_manager_static PRIVATE
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
     #### yellow zone ####
-    ${METADEF_DIR}/../inc
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
     #### blue zone ####
-    ${METADEF_DIR}/third_party/fwkacllib/inc
+    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
 )
 
 target_compile_definitions(error_manager_static PRIVATE
@@ -60,6 +62,8 @@ target_compile_options(error_manager_static PRIVATE
 
 target_link_libraries(error_manager_static PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     json
     c_sec
 )
