@@ -53,7 +53,7 @@ target_include_directories(register PRIVATE
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
+    ${METADEF_DIR}/../inc
     #### temp independent ####
     ${METADEF_DIR}/../graphengine/inc
     ${METADEF_DIR}/../graphengine/inc/framework
@@ -68,15 +68,15 @@ target_include_directories(register PRIVATE
     ${METADEF_DIR}/../../graphengine/inc/external
     ${METADEF_DIR}/../../inc
     #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
+    ${ASCEND_DIR}/driver/include
+    ${ASCEND_DIR}/fwkacllib/include
+    ${METADEF_DIR}/../third_party/fwkacllib/inc
     #### blue independent compile #####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/ge/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/framework>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/ge/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/framework
+    ${METADEF_DIR}/third_party/graphengine/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
 target_link_options(register PRIVATE
@@ -85,9 +85,6 @@ target_link_options(register PRIVATE
 
 target_link_libraries(register PRIVATE
     $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     -Wl,--whole-archive
     op_tiling_o2
     -Wl,--no-whole-archive
@@ -135,7 +132,7 @@ target_include_directories(register_static PRIVATE
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
+    ${METADEF_DIR}/../inc
     #### temp independent ####
     ${METADEF_DIR}/../graphengine/inc
     ${METADEF_DIR}/../graphengine/inc/framework
@@ -150,14 +147,14 @@ target_include_directories(register_static PRIVATE
     ${METADEF_DIR}/../../graphengine/inc/external
     ${METADEF_DIR}/../../inc
     #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
+    ${ASCEND_DIR}/driver/include
+    ${ASCEND_DIR}/fwkacllib/include
     #### blue independent compile #####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/framework>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
+    ${METADEF_DIR}/../third_party/fwkacllib/inc
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/framework
+    ${METADEF_DIR}/third_party/graphengine/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
 target_link_libraries(register_static PRIVATE
@@ -165,9 +162,6 @@ target_link_libraries(register_static PRIVATE
     c_sec
     json
     $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
 )
 
 set_target_properties(register_static PROPERTIES
@@ -198,7 +192,7 @@ target_include_directories(op_tiling_o2 PRIVATE
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
+    ${METADEF_DIR}/../inc
     #### temp independent ####
     ${METADEF_DIR}/../graphengine/inc
     ${METADEF_DIR}/../graphengine/inc/framework
@@ -213,13 +207,13 @@ target_include_directories(op_tiling_o2 PRIVATE
     ${METADEF_DIR}/../../graphengine/inc/external
     ${METADEF_DIR}/../../inc
     #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
+    ${ASCEND_DIR}/driver/include
+    ${ASCEND_DIR}/fwkacllib/include
+    ${METADEF_DIR}/../third_party/fwkacllib/inc
     #### blue independent compile ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
 target_compile_options(op_tiling_o2 PRIVATE
@@ -233,7 +227,6 @@ target_compile_definitions(op_tiling_o2 PRIVATE
 
 target_link_libraries(op_tiling_o2 PRIVATE
     $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
     json
     c_sec
 )
