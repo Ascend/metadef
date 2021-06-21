@@ -1064,10 +1064,9 @@ bool checkOpRegistryInterf(
     std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter,
     std::string op_name, std::string op_type) {
   if (iter == interf.end()) {
-    REPORT_CALL_ERROR("E19999",
-                      "Atomic optiling func on the new way is not found, turn "
-                      "to the old way, op_type:%s, op_name:%s",
-                      op_type.c_str(), op_name.c_str());
+    GELOGI("Atomic optiling func on the new way is not found, turn "
+           "to the old way, op_type:%s, op_name:%s",
+           op_type.c_str(), op_name.c_str());
     return false;
   }
   return true;
@@ -1078,8 +1077,7 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
   std::string op_type = "DynamicAtomicAddrClean";
   std::string op_name = op_desc->GetName();
   std::string origin_op_type = "DynamicAtomicAddrClean";
-  op_desc->SetType(op_type);
-  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  ge::Operator op_param(op_type);
   auto &interf = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
   auto iter = interf.find(op_type);
   if (!checkOpRegistryInterf(interf, iter, op_type, op_name)) {
