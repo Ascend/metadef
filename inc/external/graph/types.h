@@ -166,9 +166,9 @@ enum Format {
   FORMAT_RESERVED = 40,
   FORMAT_ALL,
   FORMAT_NULL,
-  // Add new formats definition here
   FORMAT_ND_RNN_BIAS,
   FORMAT_FRACTAL_ZN_RNN,
+  // Add new formats definition here
   FORMAT_END,
   FORMAT_MAX = 0xff
 };
