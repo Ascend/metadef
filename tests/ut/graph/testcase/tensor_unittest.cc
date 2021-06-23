@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include <vector>
-
+#include <securec.h>
 #include <gtest/gtest.h>
 #define private public
 #include "ge_tensor.h"
@@ -269,7 +269,7 @@ TEST_F(TensorUtilsUT, SetData_ShareAlignedPtr_TensorData) {
     vec.push_back(i);
   }
   auto ap = std::make_shared<AlignedPtr>(vec.size());
-  memcpy(ap->MutableGet(), vec.data(), vec.size());
+  memcpy_s(ap->MutableGet(), vec.size(), vec.data(), vec.size());
 
   TensorData td1;
   td1.SetData(ap, vec.size());

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <securec.h>
 #include <gtest/gtest.h>
 #include "graph/buffer.h"
 
@@ -36,7 +37,7 @@ TEST_F(BufferUT, ShareFrom1) {
   second_buf[50] = 10;
 
   Buffer buf(100);
-  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  memcpy_s(buf.GetData(), buf.GetSize(), first_buf, sizeof(first_buf));
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
   Buffer buf1 = BufferUtils::CreateShareFrom(buf); // The buf1 and buf are ref from the same memory now
@@ -58,7 +59,7 @@ TEST_F(BufferUT, ShareFrom2) {
   second_buf[50] = 10;
 
   Buffer buf(100);
-  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  memcpy_s(buf.GetData(), buf.GetSize(), first_buf, sizeof(first_buf));
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
   Buffer buf1;
@@ -81,7 +82,7 @@ TEST_F(BufferUT, OperatorAssign) {
   second_buf[50] = 10;
 
   Buffer buf(100);
-  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  memcpy_s(buf.GetData(), buf.GetSize(), first_buf, sizeof(first_buf));
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
   Buffer buf1;
@@ -104,7 +105,7 @@ TEST_F(BufferUT, CreateShareFrom) {
   second_buf[50] = 10;
 
   Buffer buf(100);
-  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  memcpy_s(buf.GetData(), buf.GetSize(), first_buf, sizeof(first_buf));
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
   Buffer buf1 = BufferUtils::CreateShareFrom(buf);  // The buf1 and buf are ref from the same memory now
@@ -126,7 +127,7 @@ TEST_F(BufferUT, CreateCopyFrom1) {
   second_buf[50] = 250;
 
   Buffer buf(100);
-  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  memcpy_s(buf.GetData(), buf.GetSize(), first_buf, sizeof(first_buf));
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
   Buffer buf1;
@@ -148,7 +149,7 @@ TEST_F(BufferUT, CreateCopyFrom2) {
   second_buf[50] = 250;
 
   Buffer buf(100);
-  memcpy(buf.GetData(), first_buf, sizeof(first_buf));
+  memcpy_s(buf.GetData(), buf.GetSize(), first_buf, sizeof(first_buf));
   EXPECT_EQ(memcmp(buf.GetData(), first_buf, sizeof(first_buf)), 0);
 
   Buffer buf1 = BufferUtils::CreateCopyFrom(buf);  // The buf1 and buf are ref from the same memory now
