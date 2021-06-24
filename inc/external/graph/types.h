@@ -26,6 +26,7 @@ static const int64_t UNKNOWN_DIM = -1;
 static const int64_t UNKNOWN_DIM_NUM = -2;
 static const std::vector<int64_t> UNKNOWN_SHAPE = {-1};
 static const std::vector<int64_t> UNKNOWN_RANK = {-2};
+static const std::vector<int64_t> DUMMY_SHAPE = {-3};
 // When data type unit is bit, this offset need to be added.
 static const int kDataTypeSizeBitOffset = 1000;
 static const int kBitNumOfOneByte = 8;
