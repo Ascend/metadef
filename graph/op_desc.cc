@@ -1276,7 +1276,7 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     return GRAPH_FAILED;
   }
   graphStatus graph_status = (graphStatus)infer_func_(op);
-  if (graph_status != GRAPH_SUCCESS) {
+  if (graph_status != GRAPH_SUCCESS && graph_status != GRAPH_NODE_NEED_REPASS) {
     GELOGE(GRAPH_FAILED, "%s call infer func. ret: %u", GetName().c_str(), graph_status);
     return GRAPH_FAILED;
   }
@@ -1284,7 +1284,7 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     GELOGE(GRAPH_FAILED, "catch format and shape info failed!");
     return GRAPH_FAILED;
   }
-  return GRAPH_SUCCESS;
+  return graph_status;
 }
 
 graphStatus OpDescImpl::CallInferFormatFunc(Operator &op, const ConstOpDescPtr &op_desc) {
@@ -1840,6 +1840,9 @@ graphStatus OpDesc::CommonVerify() const {
   for (const string &iname : GetAllInputNames()) {
     // Checking shape of all inputs
     vector<int64_t> ishape = GetInputDescPtr(iname)->GetShape().GetDims();
+    if (ishape == DUMMY_SHAPE) {
+      continue;
+    }
     for (int64_t dim : ishape) {
       GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(dim < -2,
           ErrorManager::GetInstance().ATCReportErrMessage("E19014", {"opname", "value", "reason"},
