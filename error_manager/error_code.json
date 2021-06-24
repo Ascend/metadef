@@ -1541,6 +1541,182 @@
       }
     },
     {
+      "errClass": "Command Line Errors",
+      "errTitle": "Invalid SoC Version",
+      "ErrCode": "EE1000",
+      "ErrMessage": "Value %s is invalid for the SoC version. Valid values are: %s",
+      "Arglist": "version,valid_name",
+      "suggestion": {
+        "Possible Cause": "The SoC version argument is invalid.",
+        "Solution": "Try again with a valid argument."
+      }
+    },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "Device Error",
+      "ErrCode": "EE2000",
+      "ErrMessage": "Device [%s] is not running properly.",
+      "Arglist": "device_id",
+      "suggestion": {
+        "Possible Cause": "Failed to connect to the device, possibly due to a bus error or device error.",
+        "Solution": "Send the log to Huawei technical support for fault locating."
+      }
+    },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "Failure to Allocate Memory",
+      "ErrCode": "EE2001",
+      "ErrMessage": "Failed to allocate memory for [%s] due to insufficient memory. The requested allocation is %s.",
+      "Arglist": "target,size",
+      "suggestion": {
+        "Possible Cause": "System memory is insufficient for the network.",
+        "Solution": "[step] Free the system memory and try again. [step] If no more system memory can be freed, reduce the network size and try again."
+      }
+    },
+    {
+      "errClass": "ACL API Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "EH0001",
+      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
+      "Arglist": "value,param,reason",
+      "suggestion": {
+        "Possible Cause": "The argument is invalid.",
+        "Solution": "Try again with a valid argument."
+      }
+    },
+    {
+      "errClass": "ACL API Errors",
+      "errTitle": "Null Pointer",
+      "ErrCode": "EH0002",
+      "ErrMessage": "Argument [%s] must not be null.",
+      "Arglist": "param",
+      "suggestion": {
+        "Possible Cause": "A null pointer is passed to the parameter.",
+        "Solution": "Check that memory is properly allocated to the pointer and try again with a valid pointer."
+      }
+    },
+    {
+      "errClass": "ACL API Errors",
+      "errTitle": "Invalid Path",
+      "ErrCode": "EH0003",
+      "ErrMessage": "Path [%s] is invalid. Reason: %s.",
+      "Arglist": "path,reason",
+      "suggestion": {
+        "Possible Cause": "The input path does not exist or is invalid. Alternatively, you do not have enough permission to access the path.",
+        "Solution": "Try again with a valid path."
+      }
+    },
+    {
+      "errClass": "ACL API Errors",
+      "errTitle": "Invalid File",
+      "ErrCode": "EH0004",
+      "ErrMessage": "File [%s] is invalid. Reason: %s.",
+      "Arglist": "path,reason",
+      "suggestion": {
+        "Possible Cause": "The file is invalid.",
+        "Solution": "Try again with a valid file."
+      }
+    },
+    {
+      "errClass": "ACL API Errors",
+      "errTitle": "Invalid AIPP Argument",
+      "ErrCode": "EH0005",
+      "ErrMessage": "AIPP argument [%s] is invalid. Reason: %s.",
+      "Arglist": "param,reason",
+      "suggestion": {
+        "Possible Cause": "The AIPP argument is invalid.",
+        "Solution": "Try again with a valid AIPP argument."
+      }
+    },
+    {
+      "errClass": "ACL API Errors",
+      "errTitle": "Feature Unsupported",
+      "ErrCode": "EH0006",
+      "ErrMessage": "%s is not supported. Reason: %s.",
+      "Arglist": "feature, reason",
+      "suggestion": {
+        "Possible Cause": "The feature is not supported.",
+        "Solution": "Check if parameters of unsupported features are used according to your environment setup."
+      }
+    },
+  {
+    "errClass": "Environment Errors",
+    "errTitle": "Invalid Environment Variable Configuration",
+    "ErrCode": "EI0001",
+    "ErrMessage": "Environment variable [%s] is invalid. Tips: %s.",
+    "Arglist": "env,tips",
+    "suggestion": {
+      "Possible Cause": "The environment variable configuration is invalid.",
+      "Solution": "Try again with valid environment variable configuration."
+    }
+  },
+  {
+    "errClass": "Environment Errors",
+    "errTitle": "SO File Not Found",
+    "ErrCode": "EI0002",
+    "ErrMessage": "SO file [%s] is not found.",
+    "Arglist": "so_name",
+    "suggestion": {
+      "Possible Cause": "The file does not exist or is damaged.",
+      "Solution": "Try again with a valid FwkACLlib installation."
+    }
+  },
+  {
+    "errClass": "Invalid Operator Arguments",
+    "errTitle": "Invalid Collective Communication Op Argument",
+    "ErrCode": "EI0003",
+    "ErrMessage": "In [%s], value [%s] of parameter [%s] is invalid. Tips: %s.",
+    "Arglist": "ccl_op,value,parameter,tips",
+    "suggestion": {
+      "Possible Cause": "The collective communication operator has an invalid argument.",
+      "Solution": "Try again with a valid argument."
+    }
+  },
+  {
+    "errClass": "Environment Errors",
+    "errTitle": "Invalid Ranktable Configuration",
+    "ErrCode": "EI0004",
+    "ErrMessage": "Invalid ranktable, with rankID [%s] and local devID [%s]. Check that ranktable [%s] is valid and the environment setup matches the ranktable.",
+    "Arglist": "rankid,devId,ranktable_path",
+    "suggestion": {
+      "Possible Cause": "The cluster configuration in the ranktable file does not match that of the actual operating environment, or the configuration format is invalid",
+      "Solution": "Try again with a valid cluster configuration in the ranktable file. Ensure that the configuration matches the operating environment."
+    }
+  },
+  {
+    "errClass": "Invalid Operator Arguments",
+    "errTitle": "Inconsistent Collective Communication Arguments Between Ranks",
+    "ErrCode": "EI0005",
+    "ErrMessage": "The arguments for collective communication are inconsistent between ranks: tag [%s], parameter [%s], local [%s], remote [%s]",
+    "Arglist": "tag,para_name,local_para,remote_para",
+    "suggestion": {
+      "Possible Cause": "The arguments for collective communication are inconsistent between ranks.",
+      "Solution": "Try again with valid arguments. Ensure that the arguments are consistent between ranks."
+    }
+  },
+  {
+    "errClass": "Invalid Operator Arguments",
+    "errTitle": "Invalid Collective Communication Allocation",
+    "ErrCode": "EI0006",
+    "ErrMessage": "[%s] failed with info [%s]. Please check the passed [%s] resource.",
+    "Arglist": "resource_op,resource_info,resource_type",
+    "suggestion": {
+      "Possible Cause": "The memory or notify allocation passed to collective communication is invalid.",
+      "Solution": "Try again with a valid memory or notify allocation."
+    }
+  },
+  {
+    "errClass": "Environment Errors",
+    "errTitle": "Allocation Failure",
+    "ErrCode": "EI0007",
+    "ErrMessage": "Failed to allocate resource [%s], with info [%s].",
+    "Arglist": "resource_type, resource_info",
+    "suggestion": {
+      "Possible Cause": "Failed to allocate memory or notify due to resource insufficiency.",
+      "Solution": "Clean up unnecessary allocations."
+    }
+  },
+  {
       "ErrCode": "E50000",
       "ErrMessage": "The op [%s] missing [%s] parameter",
       "Arglist": "op_name, param_name"
@@ -2449,39 +2625,6 @@
     "ErrMessage" : "RLTune run Failed. Run .o failed, because soc_version doesn't match the device.",
     "Arglist" : ""
   },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid SoC Version",
-      "ErrCode": "EE1000",
-      "ErrMessage": "Value %s is invalid for the SoC version. Valid values are: %s",
-      "Arglist": "version,valid_name",
-      "suggestion": {
-        "Possible Cause": "The SoC version argument is invalid.",
-        "Solution": "Try again with a valid argument."
-      }
-    },
-    {
-      "errClass": "Environment Errors",
-      "errTitle": "Device Error",
-      "ErrCode": "EE2000",
-      "ErrMessage": "Device [%s] is not running properly.",
-      "Arglist": "device_id",
-      "suggestion": {
-        "Possible Cause": "Failed to connect to the device, possibly due to a bus error or device error.",
-        "Solution": "Send the log to Huawei technical support for fault locating."
-      }
-    },
-    {
-      "errClass": "Environment Errors",
-      "errTitle": "Failure to Allocate Memory",
-      "ErrCode": "EE2001",
-      "ErrMessage": "Failed to allocate memory for [%s] due to insufficient memory. The requested allocation is %s.",
-      "Arglist": "target,size",
-      "suggestion": {
-        "Possible Cause": "System memory is insufficient for the network.",
-        "Solution": "[step] Free the system memory and try again. [step] If no more system memory can be freed, reduce the network size and try again."
-      }
-    },
   {
     "ErrCode" : "EF0000",
     "ErrMessage" : "Failed to read or write repository files [%s], please check its dir's existence and permission.",
@@ -2791,149 +2934,6 @@
     "ErrCode": "E68089",
     "ErrMessage": "tiling is not found in repository file.",
     "Arglist": ""
-  },
-    {
-      "errClass": "ACL API Errors",
-      "errTitle": "Invalid Argument",
-      "ErrCode": "EH0001",
-      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
-      "Arglist": "value,param,reason",
-      "suggestion": {
-        "Possible Cause": "The argument is invalid.",
-        "Solution": "Try again with a valid argument."
-      }
-    },
-    {
-      "errClass": "ACL API Errors",
-      "errTitle": "Null Pointer",
-      "ErrCode": "EH0002",
-      "ErrMessage": "Argument [%s] must not be null.",
-      "Arglist": "param",
-      "suggestion": {
-        "Possible Cause": "A null pointer is passed to the parameter.",
-        "Solution": "Check that memory is properly allocated to the pointer and try again with a valid pointer."
-      }
-    },
-    {
-      "errClass": "ACL API Errors",
-      "errTitle": "Invalid Path",
-      "ErrCode": "EH0003",
-      "ErrMessage": "Path [%s] is invalid. Reason: %s.",
-      "Arglist": "path,reason",
-      "suggestion": {
-        "Possible Cause": "The input path does not exist or is invalid. Alternatively, you do not have enough permission to access the path.",
-        "Solution": "Try again with a valid path."
-      }
-    },
-    {
-      "errClass": "ACL API Errors",
-      "errTitle": "Invalid File",
-      "ErrCode": "EH0004",
-      "ErrMessage": "File [%s] is invalid. Reason: %s.",
-      "Arglist": "path,reason",
-      "suggestion": {
-        "Possible Cause": "The file is invalid.",
-        "Solution": "Try again with a valid file."
-      }
-    },
-    {
-      "errClass": "ACL API Errors",
-      "errTitle": "Invalid AIPP Argument",
-      "ErrCode": "EH0005",
-      "ErrMessage": "AIPP argument [%s] is invalid. Reason: %s.",
-      "Arglist": "param,reason",
-      "suggestion": {
-        "Possible Cause": "The AIPP argument is invalid.",
-        "Solution": "Try again with a valid AIPP argument."
-      }
-    },
-    {
-      "errClass": "ACL API Errors",
-      "errTitle": "Feature Unsupported",
-      "ErrCode": "EH0006",
-      "ErrMessage": "%s is not supported. Reason: %s.",
-      "Arglist": "feature, reason",
-      "suggestion": {
-        "Possible Cause": "The feature is not supported.",
-        "Solution": "Check if parameters of unsupported features are used according to your environment setup."
-      }
-    },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "Invalid Environment Variable Configuration",
-    "ErrCode": "EI0001",
-    "ErrMessage": "Environment variable [%s] is invalid. Tips: %s.",
-    "Arglist": "env,tips",
-    "suggestion": {
-      "Possible Cause": "The environment variable configuration is invalid.",
-      "Solution": "Try again with valid environment variable configuration."
-    }
-  },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "SO File Not Found",
-    "ErrCode": "EI0002",
-    "ErrMessage": "SO file [%s] is not found.",
-    "Arglist": "so_name",
-    "suggestion": {
-      "Possible Cause": "The file does not exist or is damaged.",
-      "Solution": "Try again with a valid FwkACLlib installation."
-    }
-  },
-  {
-    "errClass": "Invalid Operator Arguments",
-    "errTitle": "Invalid Collective Communication Op Argument",
-    "ErrCode": "EI0003",
-    "ErrMessage": "In [%s], value [%s] of parameter [%s] is invalid. Tips: %s.",
-    "Arglist": "ccl_op,value,parameter,tips",
-    "suggestion": {
-      "Possible Cause": "The collective communication operator has an invalid argument.",
-      "Solution": "Try again with a valid argument."
-    }
-  },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "Invalid Ranktable Configuration",
-    "ErrCode": "EI0004",
-    "ErrMessage": "Invalid ranktable, with rankID [%s] and local devID [%s]. Check that ranktable [%s] is valid and the environment setup matches the ranktable.",
-    "Arglist": "rankid,devId,ranktable_path",
-    "suggestion": {
-      "Possible Cause": "The cluster configuration in the ranktable file does not match that of the actual operating environment, or the configuration format is invalid",
-      "Solution": "Try again with a valid cluster configuration in the ranktable file. Ensure that the configuration matches the operating environment."
-    }
-  },
-  {
-    "errClass": "Invalid Operator Arguments",
-    "errTitle": "Inconsistent Collective Communication Arguments Between Ranks",
-    "ErrCode": "EI0005",
-    "ErrMessage": "The arguments for collective communication are inconsistent between ranks: tag [%s], parameter [%s], local [%s], remote [%s]",
-    "Arglist": "tag,para_name,local_para,remote_para",
-    "suggestion": {
-      "Possible Cause": "The arguments for collective communication are inconsistent between ranks.",
-      "Solution": "Try again with valid arguments. Ensure that the arguments are consistent between ranks."
-    }
-  },
-  {
-    "errClass": "Invalid Operator Arguments",
-    "errTitle": "Invalid Collective Communication Allocation",
-    "ErrCode": "EI0006",
-    "ErrMessage": "[%s] failed with info [%s]. Please check the passed [%s] resource.",
-    "Arglist": "resource_op,resource_info,resource_type",
-    "suggestion": {
-      "Possible Cause": "The memory or notify allocation passed to collective communication is invalid.",
-      "Solution": "Try again with a valid memory or notify allocation."
-    }
-  },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "Allocation Failure",
-    "ErrCode": "EI0007",
-    "ErrMessage": "Failed to allocate resource [%s], with info [%s].",
-    "Arglist": "resource_type, resource_info",
-    "suggestion": {
-      "Possible Cause": "Failed to allocate memory or notify due to resource insufficiency.",
-      "Solution": "Clean up unnecessary allocations."
-    }
   }
   ]
 }
