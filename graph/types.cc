@@ -65,6 +65,8 @@ const char *GetFormatName(Format format) {
       "UNKNOWN", // 40, FORMAT_RESERVED
       "UNKNOWN", // FORMAT_ALL
       "UNKNOWN", // FORMAT_NULL
+      "ND_RNN_BIAS",
+      "FRACTAL_ZN_RNN",
   };
   if (format >= FORMAT_END) {
     return "UNKNOWN";

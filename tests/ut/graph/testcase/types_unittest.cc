@@ -64,11 +64,13 @@ TEST_F(UtestTypes, GetFormatName) {
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z_3D_TRANSPOSE), "FRACTAL_Z_3D_TRANSPOSE"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_ZN_LSTM), "FRACTAL_ZN_LSTM"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z_G), "FRACTAL_Z_G"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_ND_RNN_BIAS), "ND_RNN_BIAS"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_ZN_RNN), "FRACTAL_ZN_RNN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_RESERVED), "UNKNOWN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_ALL), "UNKNOWN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_NULL), "UNKNOWN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_END), "UNKNOWN"), 0);
-  ASSERT_EQ(FORMAT_END, 43); // if add formats definition, add ut here
+  ASSERT_EQ(FORMAT_END, 45); // if add formats definition, add ut here
 }
 
 TEST_F(UtestTypes, GetFormatFromSub) {

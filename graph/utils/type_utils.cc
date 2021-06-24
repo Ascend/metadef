@@ -64,6 +64,8 @@ const std::map<Format, std::string> kFormatToStringMap = {
     {FORMAT_NC, "NC"},
     {FORMAT_FRACTAL_ZN_LSTM, "FRACTAL_ZN_LSTM"},
     {FORMAT_FRACTAL_Z_G, "FRACTAL_Z_G"},
+    {FORMAT_ND_RNN_BIAS, "ND_RNN_BIAS"},
+    {FORMAT_FRACTAL_ZN_RNN, "FRACTAL_ZN_RNN"},
     {FORMAT_RESERVED, "FORMAT_RESERVED"},
     {FORMAT_ALL, "ALL"},
     {FORMAT_NULL, "NULL"},
@@ -110,7 +112,9 @@ const std::set<std::string> kInternalFormat = {
   "FRACTAL_Z_3D",
   "FRACTAL_Z_3D_TRANSPOSE",
   "FRACTAL_ZN_LSTM",
-  "FRACTAL_Z_G"
+  "FRACTAL_Z_G",
+  "ND_RNN_BIAS",
+  "FRACTAL_ZN_RNN"
 };
 
 const std::map<std::string, Format> kDataFormatMap = {
@@ -164,6 +168,8 @@ const std::map<std::string, Format> kStringToFormatMap = {
     {"ALL", FORMAT_ALL},
     {"NULL", FORMAT_NULL},
     // add for json input
+    {"ND_RNN_BIAS", FORMAT_ND_RNN_BIAS},
+    {"FRACTAL_ZN_RNN", FORMAT_FRACTAL_ZN_RNN},
     {"RESERVED", FORMAT_RESERVED},
     {"UNDEFINED", FORMAT_RESERVED}
   };
