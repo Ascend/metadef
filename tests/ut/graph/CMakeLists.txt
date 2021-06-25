@@ -122,6 +122,7 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/utils/anchor_utils.cc"
     "${METADEF_DIR}/graph/utils/ge_ir_utils.cc"
     "${METADEF_DIR}/graph/utils/graph_utils.cc"
+    "${METADEF_DIR}/graph/utils/dumper/ge_graph_dumper.cc"
     "${METADEF_DIR}/graph/utils/node_utils.cc"
     "${METADEF_DIR}/graph/utils/op_desc_utils.cc"
     "${METADEF_DIR}/graph/utils/tensor_utils.cc"
