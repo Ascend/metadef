@@ -86,6 +86,7 @@ set(UT_FILES
     "testcase/shape_refiner_unittest.cc"
     "testcase/graph_utils_unittest.cc"
     "testcase/runtime_inference_context_unittest.cc"
+    "testcase/op_desc_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES
