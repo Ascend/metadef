@@ -589,12 +589,14 @@ GeTensorDesc::GeTensorDesc(GeShape shape, Format format, DataType dt)
     : impl_(std::shared_ptr<GeTensorDescImpl>(new GeTensorDescImpl(shape, format, dt))) {}
 
 // Default
-GeTensorDesc::GeTensorDesc(const GeTensorDesc &desc) : AttrHolder(desc),
-    impl_(std::shared_ptr<GeTensorDescImpl>(new GeTensorDescImpl(*(desc.impl_)))) {}
+GeTensorDesc::GeTensorDesc(const GeTensorDesc &desc)
+    : AttrHolder(desc),
+      impl_(std::shared_ptr<GeTensorDescImpl>(new GeTensorDescImpl(*(desc.impl_)))) {}
 
 // Default
-GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc) : AttrHolder(std::move(desc)),
-    impl_(std::shared_ptr<GeTensorDescImpl>(new GeTensorDescImpl(std::move(*(desc.impl_))))) {}
+GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc)
+    : AttrHolder(std::move(desc)),
+      impl_(std::shared_ptr<GeTensorDescImpl>(new GeTensorDescImpl(std::move(*(desc.impl_))))) {}
 
 GeTensorDesc::~GeTensorDesc() = default;
 
@@ -1139,9 +1141,8 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const Buffer &data) 
   }
 }
 
-GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc,
-                           std::shared_ptr<AlignedPtr> aligned_ptr,
-                           size_t size) : GeTensorImpl() {
+GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> aligned_ptr, size_t size)
+    : GeTensorImpl() {
   DescReference() = tensor_desc;
   tensor_data_.SetData(std::move(aligned_ptr), size);
 }

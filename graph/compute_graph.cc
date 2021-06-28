@@ -1529,11 +1529,11 @@ ComputeGraph::~ComputeGraph() {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::ComputeGraph(const ge::ComputeGraph& compute_graph)
     : AttrHolder(compute_graph),
-    impl_(std::shared_ptr<ComputeGraphImpl>(new ComputeGraphImpl(*(compute_graph.impl_)))) {}
+      impl_(std::shared_ptr<ComputeGraphImpl>(new ComputeGraphImpl(*(compute_graph.impl_)))) {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::ComputeGraph(ge::ComputeGraph&& compute_graph)
     : AttrHolder(std::move(compute_graph)),
-    impl_(std::shared_ptr<ComputeGraphImpl>(new ComputeGraphImpl(std::move(*(compute_graph.impl_))))) {}
+      impl_(std::shared_ptr<ComputeGraphImpl>(new ComputeGraphImpl(std::move(*(compute_graph.impl_))))) {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY string ComputeGraph::GetName() const { return impl_->GetName(); }
 
