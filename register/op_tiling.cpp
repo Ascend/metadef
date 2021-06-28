@@ -1325,25 +1325,25 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(
     GELOGI(
         "Optiling func[optype] in V2 not found, turn to find it in V1[optype]. "
         "op_type:%s",
-        optype);
+        optype.c_str());
     flag = 0;
     if (iter_1 == interf_1.end()) {
       GELOGI(
           "Optiling func[optype] in V1 not found, turn to find it in "
           "V2[Autotiling]. op_type:%s",
-          optype);
+          optype.c_str());
       iter_2 = interf_2.find("AutoTiling");
       flag = 1;
       if (iter_2 == interf_2.end()) {
         GELOGI(
             "Optiling func[AutoTiling] in V2 not found, turn to find it in "
             "V1[Autotiling]. op_type:%s",
-            optype);
+            optype.c_str());
         iter_1 = interf_1.find("AutoTiling");
         flag = 0;
         if (iter_1 == interf_1.end()) {
           REPORT_CALL_ERROR("E19999", "Optiling func not found. op_type:%s",
-                            optype);
+                            optype.c_str());
           return ge::GRAPH_FAILED;
         }
       }
