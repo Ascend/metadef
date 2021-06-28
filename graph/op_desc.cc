@@ -1427,11 +1427,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::~OpDesc() {}
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const std::string &name, const std::string &type)
     : impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(name, type))) {}
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const OpDesc &op_desc) : AttrHolder(op_desc),
-    impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(*(op_desc.impl_)))) {}
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const OpDesc &op_desc)
+    : AttrHolder(op_desc),
+      impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(*(op_desc.impl_)))) {}
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(OpDesc &&op_desc) : AttrHolder(std::move(op_desc)),
-    impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(std::move(*(op_desc.impl_))))) {}
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(OpDesc &&op_desc)
+    : AttrHolder(std::move(op_desc)),
+      impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(std::move(*(op_desc.impl_))))) {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const ProtoMsgOwner &proto_msg_owner,
                                                               ge::proto::OpDef *op_def)

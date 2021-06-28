@@ -59,7 +59,6 @@ class ComputeGraphImpl {
   bool GraphMembersAreEqual(const ComputeGraphImpl &r_graph) const;
 
   bool operator==(const ComputeGraphImpl &r_graph) const;
-  //ComputeGraphImpl& operator=(const ge::ComputeGraphImpl& compute_graph);
 
   NodePtr AddNodeFront(NodePtr node);
   NodePtr AddNodeFront(const OpDescPtr &op, const ComputeGraphPtr &compute_graph);
