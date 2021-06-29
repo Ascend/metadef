@@ -1023,8 +1023,7 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, optiling::uti
   return (flag == 1 ? OpParaCalculateNew(node, run_info, iter_2) : TurnToOpParaCalculate(node, run_info, iter_1));
 }
 
-extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &run_info,
-                                             std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
+extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &run_info) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = "DynamicAtomicAddrClean";
   std::string op_name = op_desc->GetName();
@@ -1057,6 +1056,13 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
   op_param.const_inputs.emplace("workspace_size",
                                 TeConstTensorData(nullptr, static_cast<size_t>(clean_size), ge::Tensor()));
 
+  auto &interf = OpTilingRegistryInterf::RegisteredOpInterf();
+  auto iter = interf.find(op_type);
+  if (iter == interf.end()) {
+    GE_LOGE("Atomic optiling func not found. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+
   OpCompileInfo op_compile_info;
   bool bres = GetAtomicCleanCompileInfo(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
   if (!bres) {
@@ -1074,8 +1080,7 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
-ge::graphStatus TurnToOpAtomicCalculate(const ge::Node &node, optiling::utils::OpRunInfo &run_info,
-                                        std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
+ge::graphStatus TurnToOpAtomicCalculate(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
   OpRunInfo run_info_struct;
   run_info_struct.block_dim = run_info.GetBlockDim();
   run_info_struct.clear_atomic = run_info.GetClearAtomic();
@@ -1083,7 +1088,7 @@ ge::graphStatus TurnToOpAtomicCalculate(const ge::Node &node, optiling::utils::O
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
-  if (OpAtomicCalculate(node, run_info_struct, iter) != ge::GRAPH_SUCCESS) {
+  if (OpAtomicCalculate(node, run_info_struct) != ge::GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E19999", "OpAtomicCalculate failed, op_type[%s], op_name[%s]", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
@@ -1095,14 +1100,29 @@ ge::graphStatus TurnToOpAtomicCalculate(const ge::Node &node, optiling::utils::O
   return ge::GRAPH_SUCCESS;
 }
 
-extern "C" ge::graphStatus OpAtomicCalculateNew(const ge::Node &node, optiling::utils::OpRunInfo &run_info,
-                                                std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter) {
+bool checkOpRegistryInterf(std::map<std::string, optiling::utils::OpTilingFuncV2> &interf,
+                           std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter, std::string op_name,
+                           std::string op_type) {
+  if (iter == interf.end()) {
+    GELOGI("Atomic optiling func on the new way is not found, turn "
+           "to the old way, op_type:%s, op_name:%s",
+           op_type.c_str(), op_name.c_str());
+    return false;
+  }
+  return true;
+}
+
+extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = "DynamicAtomicAddrClean";
   std::string op_name = op_desc->GetName();
   std::string origin_op_type = "DynamicAtomicAddrClean";
   ge::Operator op_param(op_type);
-
+  auto &interf = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
+  auto iter = interf.find(op_type);
+  if (!checkOpRegistryInterf(interf, iter, op_type, op_name)) {
+    return TurnToOpAtomicCalculate(node, run_info);
+  }
   GELOGI("Do Atomic optiling. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   std::vector<int64_t> atomic_output_indices;
   (void) ge::AttrUtils::GetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
@@ -1141,40 +1161,5 @@ extern "C" ge::graphStatus OpAtomicCalculateNew(const ge::Node &node, optiling::
     REPORT_CALL_ERROR("E19999", "Atomic optiling failed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   }
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
-}
-
-extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
-  ge::OpDescPtr op_desc = node.GetOpDesc();
-  std::string optype = op_desc->GetType();
-  auto &interf_2 = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
-  auto &interf_1 = OpTilingRegistryInterf::RegisteredOpInterf();
-  int flag = 1;
-  auto iter_2 = interf_2.find(optype);
-  auto iter_1 = interf_1.find(optype);
-  if (iter_2 == interf_2.end()) {
-    GELOGI("Optiling func[optype] in V2 not found, turn to find it in V1[optype]. "
-           "op_type:%s",
-           optype.c_str());
-    flag = 0;
-    if (iter_1 == interf_1.end()) {
-      GELOGI("Optiling func[optype] in V1 not found, turn to find it in "
-             "V2[Autotiling]. op_type:%s",
-             optype.c_str());
-      iter_2 = interf_2.find("AutoTiling");
-      flag = 1;
-      if (iter_2 == interf_2.end()) {
-        GELOGI("Optiling func[AutoTiling] in V2 not found, turn to find it in "
-               "V1[Autotiling]. op_type:%s",
-               optype.c_str());
-        iter_1 = interf_1.find("AutoTiling");
-        flag = 0;
-        if (iter_1 == interf_1.end()) {
-          REPORT_CALL_ERROR("E19999", "Optiling func not found. op_type:%s", optype.c_str());
-          return ge::GRAPH_FAILED;
-        }
-      }
-    }
-  }
-  return (flag == 1 ? OpAtomicCalculateNew(node, run_info, iter_2) : TurnToOpAtomicCalculate(node, run_info, iter_1));
 }
 }  // namespace optiling
