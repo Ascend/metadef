@@ -509,7 +509,9 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   ge::DataType ge_dtype = ge::TypeUtils::SerialStringToDataType(dtype_str);
   std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
   ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
-  ge::GeTensor const_tensor(ge::GeTensorDesc(ge_shape, ge_format, ge_dtype), res.first->second);
+  ge::GeTensorDesc ge_tensor(ge_shape, ge_format, ge_dtype);
+  ge_tensor.SetName(name);
+  ge::GeTensor const_tensor(ge_tensor, res.first->second);
   ge::GeTensorPtr const_tensor_ptr = std::make_shared<ge::GeTensor>(const_tensor);
   ge::OpDescPtr const_op_desc = ge::OpDescUtils::CreateConstOp(const_tensor_ptr);
   ge::Operator const_op = ge::OpDescUtils::CreateOperatorFromOpDesc(const_op_desc);
@@ -748,6 +750,7 @@ void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, std::
   }
   if (shape.contains("name")) {
     name = shape["name"];
+    tensor.SetName(name);
     Flag == "inputs" ? op_desc->AddInputDesc(name, tensor) : op_desc->AddOutputDesc(name, tensor);
   } else {
     Flag == "inputs" ? op_desc->AddInputDesc(tensor) : op_desc->AddOutputDesc(tensor);
