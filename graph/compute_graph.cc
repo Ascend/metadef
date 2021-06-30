@@ -1004,30 +1004,12 @@ graphStatus ComputeGraphImpl::SortNodes(std::vector<NodePtr> &stack,
                                         const ConstComputeGraphPtr &compute_graph) {
   // Record the number of non data nodes but no input nodes
   uint32_t spec_node_size = 0;
-  bool verify_isolated = false;
-  string run_mode;
-  const int base = 10;
-  // Need verify isolated point in PREDICTION mode.
-  if (ge::GetContext().GetOption(ge::OPTION_GRAPH_RUN_MODE, run_mode) == GRAPH_SUCCESS && !run_mode.empty()) {
-    if (GraphRunMode(std::strtol(run_mode.c_str(), nullptr, base)) < TRAIN) {
-      verify_isolated = true;
-    }
-  }
   for (const auto &node : GetDirectNode(compute_graph)) {
     GE_IF_BOOL_EXEC(node->GetOpDesc() == nullptr, continue);
     map_in_edge_num[node] = static_cast<uint32_t>(GetInEdgeSize(node));
     if (map_in_edge_num[node] == 0) {
       if ((node->GetOpDesc()->GetType() != DATA) && (node->GetOpDesc()->GetType() != AIPPDATA) &&
           (node->GetOpDesc()->GetType() != INPUT_TYPE) && (node->GetOpDesc()->GetType() != ANN_DATA)) {
-        // At present, can only judge the isolated point without input and output.
-        // It is impossible to judge the situation with multiple output nodes.
-        if (verify_isolated && GetOutEdgeSize(node) == 0) {
-          REPORT_INNER_ERROR("E19999", "May has isolated node in graph:%s, node name: %s.",
-                             node->GetName().c_str(), name_.c_str());
-          GELOGE(GRAPH_FAILED, "[Check][Param] May has isolated node in graph, node name: %s.",
-                 node->GetName().c_str());
-          return GRAPH_FAILED;
-        }
         (void)stack.insert(stack.begin(), node);
         spec_node_size++;
         continue;
