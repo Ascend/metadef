@@ -918,6 +918,9 @@ const std::string ATTR_NAME_CONTINUOUS_INPUT_ALLOC = "continuous_input_alloc";
 
 const std::string ATTR_NAME_CONTINUOUS_OUTPUT = "continuous_output";
 
+// attr _input_mutable = true means node will modify its input in runtime
+const std::string ATTR_NAME_MODIFY_INPUT = "_input_mutable";
+
 const std::string ATTR_NAME_REFERENCE = "reference";
 
 const std::string ATTR_NAME_NOTASK = "_no_task";
@@ -1184,9 +1187,12 @@ const std::string ATTR_NAME_FORMAT_AGNOSTIC = "_format_agnostic";
 const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_OUTPUT = "_format_agnostic_except_output";
 const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_INPUT = "_format_agnostic_except_input";
 
-// for ffts subgraph
+// for ffts/ffts_plus
 const std::string ATTR_NAME_FFTS_SUB_GRAPH = "_ffts_sub_graph";
 const std::string ATTR_NAME_THREAD_SCOPE_ID = "_thread_scope_id";
+const std::string ATTR_NAME_FFTS_PLUS_SUB_GRAPH = "_ffts_plus_sub_graph";
+const std::string ATTR_NAME_COMPOUND_ENGINE_NAME = "_compound_engine_name";
+const std::string ATTR_NAME_COMPOUND_ENGINE_KERNEL_LIB_NAME = "_compound_engine_kernel_lib_name";
 
 // mark fuzz build scene
 const std::string ATTR_NAME_FUZZ_BUILD = "_fuzz_build";

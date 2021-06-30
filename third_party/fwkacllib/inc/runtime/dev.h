@@ -59,13 +59,24 @@ typedef enum tagRtAicpuDeployType {
 
 typedef enum tagRtFeatureType {
     FEATURE_TYPE_MEMCPY = 0,
+    FEATURE_TYPE_MEMORY = 1,
     FEATURE_TYPE_RSV
 } rtFeatureType_t;
+
+typedef enum tagRtDeviceFeatureType {
+  FEATURE_TYPE_SCHE,
+  FEATURE_TYPE_END,
+} rtDeviceFeatureType_t;
 
 typedef enum tagMemcpyInfo {
     MEMCPY_INFO_SUPPORT_ZEROCOPY = 0,
     MEMCPY_INFO_RSV
 } rtMemcpyInfo_t;
+
+typedef enum tagMemoryInfo {
+    MEMORY_INFO_TS_4G_LIMITED = 0,
+    MEMORY_INFO_RSV
+} rtMemoryInfo_t;
 
 /**
  * @ingroup dvrt_dev
