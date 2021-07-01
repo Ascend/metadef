@@ -4,7 +4,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10001",
-      "ErrMessage": "Value [%s] for [--%s] is invalid. Reason: %s.",
+      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
       "Arglist": "value,parameter,reason",
       "suggestion": {
         "Possible Cause": "Invalid Argument.",
