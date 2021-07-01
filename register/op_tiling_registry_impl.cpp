@@ -53,11 +53,8 @@ ge::graphStatus OpRunInfoImpl::GetWorkspace(size_t idx, int64_t &workspace) {
 
 ge::graphStatus OpRunInfoImpl::GetAllWorkspaces(
     std::vector<int64_t> &_workspaces) {
-  if (!workspaces.empty()) {
     _workspaces = workspaces;
     return ge::GRAPH_SUCCESS;
-  }
-  return ge::GRAPH_FAILED;
 }
 
 void OpRunInfoImpl::AddTilingData(const char *_value, size_t _size) {
