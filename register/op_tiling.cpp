@@ -965,11 +965,33 @@ ge::graphStatus TurnToOpParaCalculate(const ge::Node &node, optiling::utils::OpR
   return ge::GRAPH_SUCCESS;
 }
 
+void checkTensordescShape(ge::OpDescPtr &op_desc) {
+  size_t input_size = op_desc->GetAllInputsSize();
+  ge::GeTensorDesc tensor_temp;
+  for (size_t i = 0; i < input_size; ++ i) {
+    tensor_temp = op_desc->GetInputDesc(i);
+    if (tensor_temp.GetShape().GetShapeSize() == 0) {
+      tensor_temp.SetShape(ge::GeShape({1}));
+      op_desc->UpdateInputDesc(i, tensor_temp);
+    }
+  }
+
+  size_t output_size = op_desc->GetOutputsSize();
+  for (size_t i = 0; i < output_size; ++ i) {
+    tensor_temp = op_desc->GetOutputDesc(i);
+    if (tensor_temp.GetShape().GetShapeSize() == 0) {
+      tensor_temp.SetShape(ge::GeShape({1}));
+      op_desc->UpdateOutputDesc(i, tensor_temp);
+    }
+  }
+}
+
 extern "C" ge::graphStatus OpParaCalculateNew(const ge::Node &node, optiling::utils::OpRunInfo &run_info,
                                               std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
+  checkTensordescShape(op_desc);
   ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
 
