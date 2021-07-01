@@ -38,6 +38,7 @@
 #include "utils/ge_ir_utils.h"
 #include "utils/node_utils.h"
 #include "utils/file_utils.h"
+#include "graph/utils/dumper/ge_graph_dumper.h"
 #include "debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"
 #include "graph/debug/ge_attr_define.h"
@@ -716,6 +717,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
                                                                             bool is_always_dump,
                                                                             const std::string &user_graph_name) {
 #ifdef FMK_SUPPORT_DUMP
+  GraphDumperRegistry::GetDumper().Dump(graph, suffix);
   static std::mutex mutex;
   char dump_ge_graph[MMPA_MAX_PATH] = { 0x00 };
   INT32 res = mmGetEnv(kDumpGeGraph, dump_ge_graph, MMPA_MAX_PATH);
