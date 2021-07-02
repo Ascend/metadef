@@ -192,7 +192,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::SetAllAnch
 
 graphStatus NodeUtils::SetAllAnchorStatus(Node &node) {
   if (node.impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "Node impl is nullptr.");
+    REPORT_INNER_ERROR("E19999", "Param node impl is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Node impl is nullptr.");
     return GRAPH_FAILED;
   }
   node.impl_->anchor_status_updated_ = true;
@@ -207,7 +208,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool NodeUtils::IsAnchorStatusSet
 
 bool NodeUtils::IsAnchorStatusSet(const Node &node) {
   if (node.impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "Node impl is nullptr.");
+    REPORT_INNER_ERROR("E19999", "Param node impl is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Node impl is nullptr.");
     return false;
   }
   return node.impl_->anchor_status_updated_;

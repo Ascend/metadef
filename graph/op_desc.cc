@@ -417,7 +417,7 @@ graphStatus OpDescImpl::UpdateInputDesc(const string &name, const ge::GeTensorDe
     GELOGE(GRAPH_FAILED, "[Check][Param] [%d] more than size of inputs_desc_", it->second);
     return GRAPH_FAILED;
   }
-  GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(), GELOGE(GRAPH_FAILED, "it->second is invalid.");
+  GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(), GELOGE(GRAPH_FAILED, "[Check][Param] it->second is invalid.");
       return GRAPH_FAILED);
   inputs_desc_[it->second] = ComGraphMakeShared<GeTensorDesc>(tensor_Desc);
   if (inputs_desc_[it->second] == nullptr) {
@@ -985,7 +985,7 @@ int OpDescImpl::GetOutputIndexByName(const string &name) const {
 
 ProtoAttrMapHelper OpDescImpl::MutableAttrMap() {
   if (op_def_.GetProtoMsg() == nullptr) {
-    GELOGE(GRAPH_FAILED, "op def get proto msg failed");
+    GELOGE(GRAPH_FAILED, "[Get][ProtoMsg] failed");
     return GeIrProtoHelper<ProtoAttrMap>();
   }
   return ProtoAttrMapHelper(op_def_.GetProtoOwner(), op_def_.GetProtoMsg()->mutable_attr());
@@ -1263,25 +1263,26 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
   }
   std::unique_ptr<NodeShapeTransUtils> transformer(new(std::nothrow) NodeShapeTransUtils(op_desc));
   if (transformer == nullptr) {
-    GELOGE(GRAPH_FAILED, "Memory alloc failed");
+    REPORT_CALL_ERROR("E19999", "Alloc Memory failed.");
+    GELOGE(GRAPH_FAILED, "[Alloc][Memory] failed");
     return GRAPH_FAILED;
   }
   auto is_init_success = transformer->Init();
   if (!is_init_success) {
-    GELOGE(GRAPH_FAILED, "transformer init failed");
+    GELOGE(GRAPH_FAILED, "[Call][Init] for transformer failed");
     return GRAPH_FAILED;
   }
   if (!transformer->CatchFormatAndShape()) {
-    GELOGE(GRAPH_FAILED, "catch format and shape info failed!");
+    GELOGE(GRAPH_FAILED, "[Call][CatchFormatAndShape] for transformer failed!");
     return GRAPH_FAILED;
   }
   graphStatus graph_status = (graphStatus)infer_func_(op);
-  if (graph_status != GRAPH_SUCCESS && graph_status != GRAPH_NODE_NEED_REPASS) {
-    GELOGE(GRAPH_FAILED, "%s call infer func. ret: %u", GetName().c_str(), graph_status);
+  if (graph_status != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "[Call][InferFunc] for %s failed. ret:%u", GetName().c_str(), graph_status);
     return GRAPH_FAILED;
   }
   if (!transformer->UpdateFormatAndShape()) {
-    GELOGE(GRAPH_FAILED, "catch format and shape info failed!");
+    GELOGE(GRAPH_FAILED, "[Call][UpdateFormatAndShape] for transformer failed!");
     return GRAPH_FAILED;
   }
   return graph_status;
@@ -1964,7 +1965,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<string> OpDesc::GetDstName
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetOpInferDepends(const vector<string> &depend_names) {
   auto ret = AttrUtils::SetListStr(this, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
   if (!ret) {
-    GELOGE(GRAPH_FAILED, "set op_infer_depends fail.");
+    GELOGE(GRAPH_FAILED, "[Set][Attr] op_infer_depends fail.");
   }
 }
 
@@ -2003,7 +2004,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIsInputConst(cons
   // If comes from ME,which is_input_const exist as attrs, outside no need to check GE_TRAIN flag
   auto ret = AttrUtils::SetListBool(this, ATTR_NAME_IS_INPUT_CONST, is_input_const);
   if (ret != true) {
-    GELOGE(GRAPH_FAILED, "set is_input_const fail.");
+    GELOGE(GRAPH_FAILED, "[Set][Attr] is_input_const fail.");
   }
 }
 

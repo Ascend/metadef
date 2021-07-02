@@ -545,7 +545,8 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
 InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, InferenceContextPtr> &context_map,
                                            const NodePtr &node) {
   if (node == nullptr) {
-    GELOGE(GRAPH_FAILED, "node is null");
+    REPORT_INNER_ERROR("E19999", "Param node is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] node is null");
     return nullptr;
   }
   InferenceContextPtr inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());

@@ -605,7 +605,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::RemoveJus
     return GRAPH_FAILED;
   }
   if (compute_graph.impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "The compute graph impl should be not null.");
+    REPORT_INNER_ERROR("E19999", "The compute graph impl should be not null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] The compute graph impl should be not null.");
     return GRAPH_FAILED;
   }
   auto iter = find(compute_graph.impl_->nodes_.begin(), compute_graph.impl_->nodes_.end(), node);
@@ -1958,11 +1959,13 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
                                     ComputeGraphPtr &dst_compute_graph,
                                     const std::unordered_map<std::string, NodePtr> &all_new_nodes) {
   if (src_compute_graph == nullptr || src_compute_graph->impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "Src compute graph is nullptr.");
+    REPORT_INNER_ERROR("E19999", "Param src_compute_graph is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Src compute graph is nullptr.");
     return GRAPH_FAILED;
   }
   if (dst_compute_graph == nullptr || dst_compute_graph->impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "Dst compute graph is nullptr.");
+    REPORT_INNER_ERROR("E19999", "Param dst_compute_graph is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Dst compute graph is nullptr.");
     return GRAPH_FAILED;
   }
   // copy info of output nodes from old graph to new graph.
@@ -3579,7 +3582,8 @@ void PartialGraphBuilder::BuildExistNodes(graphStatus &error_code, std::string &
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::TopologicalSortingByName(
         const ge::ComputeGraphPtr &compute_graph, vector<NodePtr> &node_vec) {
   if (compute_graph == nullptr || compute_graph->impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "Compute graph or impl is nullptr.");
+    REPORT_INNER_ERROR("E19999", "Param compute_graph is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Compute graph or impl is nullptr.");
     return GRAPH_FAILED;
   }
   std::vector<NodePtr> stack_input;

@@ -1365,7 +1365,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
 
   // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
   if (op_desc->impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "Op desc is nullptr.");
+    REPORT_INNER_ERROR("E19999", "op_desc impl is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Op desc impl is nullptr.");
     return nullptr;
   }
   if (!op_desc->impl_->input_name_idx_.empty()) {
@@ -1405,7 +1406,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(c
   op_desc->extAttrs_ = org_op_desc->extAttrs_;
 
   if (op_desc->impl_ == nullptr) {
-    GELOGE(GRAPH_FAILED, "op desc is null.");
+    REPORT_INNER_ERROR("E19999", "op desc impl is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] op desc impl is null.");
     return nullptr;
   }
   op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.begin(),
