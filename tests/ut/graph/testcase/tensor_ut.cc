@@ -206,12 +206,6 @@ TEST_F(TensorUT, SetData_SharedWithTensorDef) {
   }
   t2.SetData(vec2);
   ASSERT_EQ(memcmp(t2.GetData().GetData(), vec2.data(), vec2.size()), 0);
-  // todo 这里存在bug，但是从目前来看，并没有被触发，因此暂时不修复了，重构后一起修复。
-  //  触发bug的场景为：如果tensor1是通过tensor_def_持有TensorData，然后通过拷贝构造、拷贝赋值的方式，从tensor1构造了tensor2。
-  //  那么通过tensor2.SetData后，会导致tensor1的GetData接口失效（获取到野指针）
-  //  触发的表现就是，如下两条ASSERT_EQ并不成立
-  // ASSERT_EQ(t1.GetData().GetData(), t2.GetData().GetData());
-  // ASSERT_EQ(memcmp(t1.GetData().GetData(), vec2.data(), vec2.size()), 0);
 }
 
 TEST_F(TensorUT, SetData_SharedWithoutTensorDef) {

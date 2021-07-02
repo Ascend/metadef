@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include <vector>
-
+#include <securec.h>
 #include <gtest/gtest.h>
 #define private public
 #include "ge_tensor.h"
@@ -115,12 +115,6 @@ TEST_F(TensorUtilsUT, SetData_CreateShareTensorWithTensorDef) {
   }
   t2.SetData(vec2);
   ASSERT_EQ(memcmp(t2.GetData().GetData(), vec2.data(), vec2.size()), 0);
-  // todo 这里存在bug，但是从目前来看，并没有被触发，因此暂时不修复了，重构后一起修复。
-  //  触发bug的场景为：如果tensor1是通过tensor_def_持有TensorData，然后通过拷贝构造、拷贝赋值的方式，从tensor1构造了tensor2。
-  //  那么通过tensor2.SetData后，会导致tensor1的GetData接口失效（获取到野指针）
-  //  触发的表现就是，如下两条ASSERT_EQ并不成立
-  // ASSERT_EQ(t1.GetData().GetData(), t2.GetData().GetData());
-  // ASSERT_EQ(memcmp(t1.GetData().GetData(), vec2.data(), vec2.size()), 0);
 }
 
 TEST_F(TensorUtilsUT, SetData_CreateShareTensorWithoutTensorDef) {
@@ -270,7 +264,7 @@ TEST_F(TensorUtilsUT, SetData_ShareAlignedPtr_TensorData) {
     vec.push_back(i);
   }
   auto ap = std::make_shared<AlignedPtr>(vec.size());
-  memcpy(ap->MutableGet(), vec.data(), vec.size());
+  memcpy_s(ap->MutableGet(), vec.size(), vec.data(), vec.size());
 
   TensorData td1;
   td1.SetData(ap, vec.size());
