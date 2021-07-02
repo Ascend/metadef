@@ -986,13 +986,24 @@ void checkTensordescShape(ge::OpDescPtr &op_desc) {
   }
 }
 
+void addNameToTensordesc(ge::OpDescPtr &op_desc) {
+  std::vector<std::string> inferDepends = op_desc->GetOpInferDepends();
+  ge::GeTensorDesc tensor_temp;
+  for (auto name : inferDepends) {
+    tensor_temp = op_desc->GetInputDesc(name);
+    tensor_temp.SetName(name);
+    op_desc->UpdateInputDesc(name, tensor_temp);
+  }
+}
+
 extern "C" ge::graphStatus OpParaCalculateNew(const ge::Node &node, optiling::utils::OpRunInfo &run_info,
                                               std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
   checkTensordescShape(op_desc);
-  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  addNameToTensordesc(op_desc);
+  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
 
   optiling::utils::OpCompileInfo op_compile_info("", "");
