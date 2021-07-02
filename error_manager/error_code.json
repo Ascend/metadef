@@ -4,7 +4,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10001",
-      "ErrMessage": "Value [%s] for [--%s] is invalid. Reason: %s.",
+      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
       "Arglist": "value,parameter,reason",
       "suggestion": {
         "Possible Cause": "Invalid Argument.",
@@ -170,7 +170,7 @@
       "errTitle": "Invalid Argument, Node Not Found",
       "ErrCode": "E10016",
       "ErrMessage": "Input Op [%s] specified in [--%s] is not found in the model.",
-      "Arglist": "opname;parameter",
+      "Arglist": "opname,parameter",
       "suggestion": {
         "Possible Cause": "The node specified in the argument does not exist in the model.",
         "Solution": "Try again with a valid node name."
@@ -181,7 +181,7 @@
       "errTitle": "Invalid Argument, Node Not Found",
       "ErrCode": "E10017",
       "ErrMessage": "Input Op [%s] specified in [--%s] is invalid.",
-      "Arglist": "opname;parameter",
+      "Arglist": "opname,parameter",
       "suggestion": {
         "Possible Cause": "The input node specified in the argument is invalid.",
         "Solution": "Try again with a valid input node name."
@@ -1098,6 +1098,17 @@
       "suggestion": {
         "Possible Cause": "Verification of operator data fails.",
         "Solution": "Fix the error according to the error message."
+      }
+    },
+    {
+      "errClass": "File Errors",
+      "errTitle": "File size invalid",
+      "ErrCode" : "E19015",
+      "ErrMessage" : "File[%s] size %s is out of valid range[0, %s].",
+      "Arglist" : "file,size,maxsize",
+      "suggestion": {
+        "Possible Cause": "File size is not valid.",
+        "Solution": "Try again with a valid file."
       }
     },
     {
