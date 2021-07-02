@@ -1552,6 +1552,17 @@
       }
     },
     {
+      "errClass": "TBE Compiler Errors",
+      "errTitle": "Invalid IR",
+      "ErrCode": "EB0000",
+      "ErrMessage": "Failed to compile the operator. Reason:%s, %s",
+      "Arglist": "message,traceback",
+      "suggestion": {
+        "Possible Cause": "The IR is invalid.",
+        "Solution": "Check that the Compute and Schedule APIs are used correctly. For details, see the TBE Custom Operator Developer Guide. If the error persists, contact Huawei technical support."
+      }
+    },
+    {
       "errClass": "Command Line Errors",
       "errTitle": "Invalid SoC Version",
       "ErrCode": "EE1000",
@@ -2584,11 +2595,6 @@
   },
   {
       "ErrCode" : "EA0000",
-      "ErrMessage" : "Compile operator failed, cause: %s, %s",
-      "Arglist" : "message,traceback"
-    },
-   {
-      "ErrCode" : "EB0000",
       "ErrMessage" : "Compile operator failed, cause: %s, %s",
       "Arglist" : "message,traceback"
     },
