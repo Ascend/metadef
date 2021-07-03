@@ -413,12 +413,11 @@ graphStatus OpDescImpl::UpdateInputDesc(const string &name, const ge::GeTensorDe
     return GRAPH_FAILED;
   }
   if (it->second >= inputs_desc_.size()) {
-    REPORT_INNER_ERROR("E19999", "%d is out of range(0, %zu), check invalid", it->second, inputs_desc_.size());
-    GELOGE(GRAPH_FAILED, "[Check][Param] [%d] more than size of inputs_desc_", it->second);
+    REPORT_INNER_ERROR("E19999", "%u is out of range(0, %zu), check invalid", it->second, inputs_desc_.size());
+    GELOGE(GRAPH_FAILED, "[Check][Param] [%u] more than size:%zu of inputs_desc_", it->second, inputs_desc_.size());
     return GRAPH_FAILED;
   }
-  GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(), GELOGE(GRAPH_FAILED, "[Check][Param] it->second is invalid.");
-      return GRAPH_FAILED);
+
   inputs_desc_[it->second] = ComGraphMakeShared<GeTensorDesc>(tensor_Desc);
   if (inputs_desc_[it->second] == nullptr) {
     REPORT_CALL_ERROR("E19999", "UpdateInputDesc failed, as malloc shared_ptr failed.");

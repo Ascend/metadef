@@ -53,7 +53,7 @@ const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_QUINT16, ge::DataType::DT_UINT16},
     {domi::tensorflow::DataType::DT_COMPLEX128, ge::DataType::DT_COMPLEX128},
     {domi::tensorflow::DataType::DT_RESOURCE, ge::DataType::DT_RESOURCE},
-    {domi::tensorflow::DataType::DT_BFLOAT16, ge::DataType::DT_FLOAT16},
+    {domi::tensorflow::DataType::DT_BFLOAT16, ge::DataType::DT_BF16},
     {domi::tensorflow::DataType::DT_STRING, ge::DataType::DT_STRING},
     {domi::tensorflow::DataType::DT_FLOAT_REF, ge::DataType::DT_FLOAT},
     {domi::tensorflow::DataType::DT_DOUBLE_REF, ge::DataType::DT_DOUBLE},

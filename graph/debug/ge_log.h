@@ -140,7 +140,7 @@
   try {                                                       \
     exec_expr0;                                               \
   } catch (...) {                                             \
-    GELOGE(ge::FAILED, "Make shared failed");                 \
+    GELOGE(ge::FAILED, "[Make][Shared] failed");              \
     exec_expr1;                                               \
   }
 
