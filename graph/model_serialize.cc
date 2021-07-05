@@ -157,7 +157,7 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
   proto::AttrDef value_in;
   auto op_desc_attr = op_def_proto->mutable_attr();
   if (op_desc == nullptr || op_desc->impl_ == nullptr) {
-    GELOGE(FAILED, "op desc or impl is nullptr.");
+    GELOGE(FAILED, "[Check][Param] op desc or impl is nullptr.");
     return;
   }
   if (!op_desc->impl_->input_name_idx_.empty()) {

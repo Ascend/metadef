@@ -72,7 +72,7 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   (void)arg_list;
 
   if (ret < 0) {
-    GELOGE("FormatErrorMessage failed, ret:%d, pattern:%s", ret, format);
+    GELOGE("[Check][Param] FormatErrorMessage failed, ret:%d, pattern:%s", ret, format);
   }
   return ret;
 }
