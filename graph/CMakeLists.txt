@@ -1,4 +1,4 @@
-set(SRC_LIST
+set(GRAPH_SOURCE_LIST
     "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
@@ -34,7 +34,7 @@ set(SRC_LIST
     "tensor.cc"
     "debug/graph_debug.cc"
     "opsproto/opsproto_manager.cc"
-    "../ops/op_imp.cpp"
+    "${METADEF_DIR}/ops/op_imp.cpp"
     "option/ge_context.cc"
     "option/ge_local_context.cc"
     "runtime_inference_context.cc"
@@ -48,7 +48,7 @@ set(SRC_LIST
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
 ######### libgraph.so #############
 add_library(graph SHARED
-    ${SRC_LIST}
+    ${GRAPH_SOURCE_LIST}
     $<TARGET_OBJECTS:metadef_graph_protos_obj>
 )
 
@@ -130,7 +130,7 @@ target_link_libraries(graph PRIVATE
 
 ######### libgraph.a #############
 add_library(graph_static STATIC
-    ${SRC_LIST}
+    ${GRAPH_SOURCE_LIST}
     $<TARGET_OBJECTS:metadef_graph_protos_obj>
 )
 
@@ -366,7 +366,7 @@ set_target_properties(fwk_stub_graph PROPERTIES
 else ()
 ######### libgraph.so w/static protobuf #############
 add_library(graph SHARED
-    ${SRC_LIST}
+    ${GRAPH_SOURCE_LIST}
     $<TARGET_OBJECTS:metadef_graph_protos_obj>
 )
 

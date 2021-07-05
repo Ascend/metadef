@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <graph/debug/ge_attr_define.h>
+#include "graph/debug/ge_attr_define.h"
 
 namespace ge {
 // Public attribute
