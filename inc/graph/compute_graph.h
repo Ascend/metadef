@@ -106,6 +106,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
   std::shared_ptr<ComputeGraph> GetSubgraph(const std::string &name) const;
   std::vector<std::shared_ptr<ComputeGraph>> GetAllSubgraphs() const;
+  void SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs);
 
   // obsolete
   std::shared_ptr<ComputeGraph> AddSubGraph(std::shared_ptr<ComputeGraph> sub_graph);

@@ -1943,6 +1943,17 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
       return GRAPH_FAILED;
     }
   }
+  // To keep subgraph consistent with the source graph
+  std::vector<ComputeGraphPtr> new_subgraphs;
+  auto old_subgraphs = src_compute_graph->GetAllSubgraphs();
+  for (const auto &sub_graph : old_subgraphs) {
+    auto new_subgraph = dst_compute_graph->GetSubgraph(sub_graph->GetName());
+    GE_CHK_BOOL_EXEC(new_subgraph != nullptr, return GRAPH_FAILED,
+                     "[Reorder][SubGraphs] can't find subgraph:%s in new graph.", sub_graph->GetName().c_str());
+    GELOGD("Copy new subgraph:%s.", sub_graph->GetName().c_str());
+    new_subgraphs.push_back(new_subgraph);
+  }
+  dst_compute_graph->SetAllSubgraphs(new_subgraphs);
 
   // copy members from old graph to new graph
   ret = CopyMembers(src_compute_graph, dst_compute_graph, all_new_nodes);
