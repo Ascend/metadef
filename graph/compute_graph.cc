@@ -634,6 +634,10 @@ std::vector<std::shared_ptr<ComputeGraph>> ComputeGraphImpl::GetAllSubgraphs() c
   return sub_graph_;
 }
 
+void ComputeGraphImpl::SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs) {
+  sub_graph_ = subgraphs;
+}
+
 shared_ptr<ComputeGraph> ComputeGraphImpl::GetParentGraph() {
   return parent_graph_.lock();
 }
@@ -1711,6 +1715,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<ComputeGraph> Com
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::shared_ptr<ComputeGraph>>
 ComputeGraph::GetAllSubgraphs() const {
   return impl_->GetAllSubgraphs();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void
+ComputeGraph::SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs) {
+  return impl_->SetAllSubgraphs(subgraphs);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
