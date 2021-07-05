@@ -34,6 +34,8 @@ class ShapeRefiner {
   static graphStatus InferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph);
   static graphStatus InferShapeAndTypeForRunning(const NodePtr &node, bool before_subgraph);
   static void ClearContextMap();
+  static InferenceContextPtr CreateInferenceContext(const NodePtr &node);
+  static void PushToContextMap(const NodePtr &node, const InferenceContextPtr &inference_context);
 
  private:
   static void PrintInOutTensorShape(const ge::NodePtr &node, const std::string &phase);

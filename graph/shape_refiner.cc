@@ -542,8 +542,23 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
   GELOGD("Shape dump [%s], Node name: [%s]. %s", phase.c_str(), node->GetName().c_str(), ss.str().c_str());
 }
 
-InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, InferenceContextPtr> &context_map,
-                                           const NodePtr &node) {
+
+
+namespace {
+thread_local std::unordered_map<NodePtr, InferenceContextPtr> context_map;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+void ShapeRefiner::ClearContextMap() {
+  context_map.clear();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+void ShapeRefiner::PushToContextMap(const NodePtr &node, const InferenceContextPtr &inference_context) {
+  (void)context_map.emplace(node, inference_context);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferenceContextPtr ShapeRefiner::CreateInferenceContext(const NodePtr &node) {
   if (node == nullptr) {
     REPORT_INNER_ERROR("E19999", "Param node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] node is null");
@@ -576,7 +591,7 @@ InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, Inf
     if (iter != context_map.end()) {
       const auto &src_context = iter->second;
       GE_IF_BOOL_EXEC(src_context == nullptr, REPORT_INNER_ERROR("E19999", "src_context is null.");
-                      GELOGE(GRAPH_FAILED, "[Check][Param] src_context is null."); return nullptr);
+          GELOGE(GRAPH_FAILED, "[Check][Param] src_context is null."); return nullptr);
       GELOGD("node:%s get %ld marks from node:%s",
              node->GetName().c_str(), src_context->GetMarks().size(), input_node->GetName().c_str());
       for (auto mark : src_context->GetMarks()) {
@@ -603,15 +618,6 @@ InferenceContextPtr CreateInferenceContext(const std::unordered_map<NodePtr, Inf
   inference_context->SetMarks(marks);
 
   return inference_context;
-}
-
-namespace {
-thread_local std::unordered_map<NodePtr, InferenceContextPtr> context_map;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-void ShapeRefiner::ClearContextMap() {
-  context_map.clear();
 }
 
 graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &op) {
@@ -791,7 +797,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
   Operator op = OpDescUtils::CreateOperatorFromNode(node);
 
   if (!is_unknown_graph) {
-    auto inference_context = CreateInferenceContext(context_map, node);
+    auto inference_context = CreateInferenceContext(node);
     GE_CHECK_NOTNULL(inference_context);
     GELOGD("create context for node:%s, marks %zu", node->GetName().c_str(), inference_context->GetMarks().size());
     op.SetInferenceContext(inference_context);
