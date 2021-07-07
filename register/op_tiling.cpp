@@ -892,7 +892,61 @@ bool StructToClass_RunInfo(OpRunInfo &run_info_struct, optiling::utils::OpRunInf
   return res;
 }
 
-extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info,
+extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info ) {
+  ge::OpDescPtr op_desc = node.GetOpDesc();
+  std::string op_type = op_desc->GetType();
+  std::string op_name = op_desc->GetName();
+  TeOpParas op_param;
+  op_param.op_type = op_type;
+
+  GELOGI("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+
+  auto inputs = op_desc->GetAllInputsDescPtr();
+  auto outputs = op_desc->GetAllOutputsDescPtr();
+
+  bool bres = false;
+  bres = FeedTeOpTensorArg(inputs, op_param.inputs, op_desc);
+  if (!bres) {
+    GE_LOGE("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+  bres = FeedTeOpTensorArg(outputs, op_param.outputs, op_desc);
+  if (!bres) {
+    return ge::GRAPH_FAILED;
+  }
+
+  VarAttrHelper::InitTeOpVarAttr(op_desc, op_param.var_attrs);
+  FeedTeOpConstTensor(node, op_desc, op_param.const_inputs);
+
+  auto &interf = OpTilingRegistryInterf::RegisteredOpInterf();
+  auto iter = interf.find(op_type);
+  if (iter == interf.end()) {
+    iter = interf.find("AutoTiling");
+  }
+  if (iter == interf.end()) {
+    GE_LOGE("Optiling func not found. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+
+  OpCompileInfo op_compile_info;
+  bres = GetCompileInfo(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
+  if (!bres) {
+    GE_LOGE("Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+
+  GELOGI("Optiling func found, op_type:%s, op_name:%s, func:[%s:%p]", op_type.c_str(), op_name.c_str(),
+         iter->first.c_str(), iter->second.target<OpTilingFuncPtr>());
+  bool rc = (iter->second)(op_param, op_compile_info, run_info);
+  if (rc) {
+    GELOGI("Optiling succeed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+  } else {
+    GE_LOGE("Optiling failed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+  }
+  return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
+}
+
+extern "C" ge::graphStatus OpParaCalculateV1(const ge::Node &node, OpRunInfo &run_info,
                                            std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
@@ -945,8 +999,8 @@ ge::graphStatus TurnToOpParaCalculate(const ge::Node &node, optiling::utils::OpR
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
-  if (OpParaCalculate(node, run_info_struct, iter) != ge::GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "OpParaCalculate failed, op_type[%s], op_name[%s]", op_type.c_str(), op_name.c_str());
+  if (OpParaCalculateV1(node, run_info_struct, iter) != ge::GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "OpParaCalculateV1 failed, op_type[%s], op_name[%s]", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
   if (!StructToClass_RunInfo(run_info_struct, run_info)) {
