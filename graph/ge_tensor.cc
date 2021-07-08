@@ -1332,6 +1332,8 @@ GeTensorImpl &GeTensorImpl::operator=(const GeTensorImpl &other) {
 
 GeTensor::GeTensor() : impl_(std::shared_ptr<GeTensorImpl>(new GeTensorImpl())) {}
 
+GeTensor::GeTensor(GeTensor &&other)  noexcept : impl_(std::move(other.impl_)) {}
+
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc)
     : impl_(std::shared_ptr<GeTensorImpl>(new GeTensorImpl(tensor_desc))) {}
 

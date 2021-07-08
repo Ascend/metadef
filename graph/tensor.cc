@@ -796,6 +796,13 @@ const GeTensor TensorAdapter::AsGeTensor(const Tensor &tensor) {
   return GeTensor();
 }
 
+GeTensor TensorAdapter::AsGeTensor(Tensor &&tensor) {
+  if (tensor.impl != nullptr) {
+    return GeTensor(std::move(tensor.impl->ge_tensor));
+  }
+  return GeTensor();
+}
+
 GeTensor TensorAdapter::AsGeTensor(Tensor &tensor) {
   if (tensor.impl != nullptr) {
     return tensor.impl->ge_tensor;

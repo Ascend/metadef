@@ -215,6 +215,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
  public:
   GeTensor();
+  GeTensor(GeTensor &&other) noexcept ;
   explicit GeTensor(const GeTensorDesc &tensorDesc);
   explicit GeTensor(const GeTensorDesc &tensorDesc, const std::vector<uint8_t> &data);
   explicit GeTensor(const GeTensorDesc &tensorDesc, const Buffer &data);
@@ -261,6 +262,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   friend class OnnxUtils;
   friend class TensorData;
   friend class TensorUtils;
+  friend class TensorAdapter;
   // Create from proto obj
   GeTensor(const ProtoMsgOwner &protoOnwer, proto::TensorDef *protoMsg);
   void BuildAlignerPtrWithProtoData();
