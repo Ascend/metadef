@@ -644,6 +644,8 @@ FrameworkRegistry::FrameworkRegistry() {
   }
 }
 
+FrameworkRegistry::~FrameworkRegistry() = default;
+
 FrameworkRegistry& FrameworkRegistry::Instance() {
   static FrameworkRegistry instance;
   return instance;
