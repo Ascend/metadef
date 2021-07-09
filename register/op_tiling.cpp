@@ -656,10 +656,10 @@ bool DumpRunInfo(const OpRunInfo &run_info, char *run_info_json, size_t run_info
   return true;
 }
 
-extern "C" int
-TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *compile_info, const char *inputs, const char *outputs,
-                                char *run_info_json, size_t run_info_len, const char *compile_info_hash,
-                                uint64_t *elapse, std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
+extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *compile_info, const char *inputs,
+                                               const char *outputs, char *run_info_json, size_t run_info_len,
+                                               const char *compile_info_hash, uint64_t *elapse,
+                                               std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
   if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
@@ -764,10 +764,10 @@ void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_de
   }
 }
 
-extern "C" int
-TbeOpTilingPyInterfaceEx2New(const char *optype, const char *compile_info, const char *inputs, const char *outputs,
-                             char *run_info_json, size_t run_info_len, const char *compile_info_hash,
-                             uint64_t *elapse, std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter) {
+extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *compile_info, const char *inputs,
+                                            const char *outputs, char *run_info_json, size_t run_info_len,
+                                            const char *compile_info_hash, uint64_t *elapse,
+                                            std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter) {
   if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
@@ -947,7 +947,7 @@ extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_
 }
 
 extern "C" ge::graphStatus OpParaCalculateV1(const ge::Node &node, OpRunInfo &run_info,
-                                           std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
+                                             std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();

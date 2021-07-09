@@ -1717,8 +1717,8 @@ ComputeGraph::GetAllSubgraphs() const {
   return impl_->GetAllSubgraphs();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void
-ComputeGraph::SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetAllSubgraphs(
+    const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs) {
   return impl_->SetAllSubgraphs(subgraphs);
 }
 
