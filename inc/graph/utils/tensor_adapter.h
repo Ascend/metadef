@@ -38,7 +38,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorAdapter {
   static GeTensor AsGeTensor(Tensor &tensor);                   // Share value
   static const Tensor AsTensor(const GeTensor &tensor);         // Share value
   static Tensor AsTensor(GeTensor &tensor);                     // Share value
-  static GeTensor AsGeTensor(Tensor &&tensor);
+  static GeTensor AsGeTensorShared(const Tensor &tensor);
 };
 }  // namespace ge
 #endif  // INC_GRAPH_UTILS_TENSOR_ADAPTER_H_
