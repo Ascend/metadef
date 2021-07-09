@@ -93,80 +93,79 @@ struct Getter<T, typename std::enable_if<std::is_floating_point<T>::value>::type
 
 class TeOpVarAttrArgsImpl {
   using DataKeyType = std::pair<std::string, std::string>;
-  public:
-    explicit TeOpVarAttrArgsImpl(ge::OpDescPtr &op_desc) : op_desc_(op_desc) {};
-    ~TeOpVarAttrArgsImpl() = default;
 
-    Status GetDataByName(const string &name, const string &dtype, DataBuf &data);
+ public:
+  explicit TeOpVarAttrArgsImpl(ge::OpDescPtr &op_desc) : op_desc_(op_desc){};
+  ~TeOpVarAttrArgsImpl() = default;
 
-  private:
-    template <typename T>
-    Status GetNodeAttrDataIntListList(const std::string &name, DataBuf &data) {
-      std::vector<std::vector<int64_t>> value;
-      bool res = ge::AttrUtils::GetListListInt(op_desc_, name, value);
-      if (!res) {
-        GE_LOGE("attr not found. %s", name.c_str());
-        return domi::FAILED;
-      }
+  Status GetDataByName(const string &name, const string &dtype, DataBuf &data);
 
-      std::vector<T> dest;
-      for (const auto &vec : value) {
-        for (auto elem : vec) {
-          dest.emplace_back(static_cast<T>(elem));
-        }
-      }
-      auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
-      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-      data = dest_ptr->GetDataBuf();
-      GELOGI("IntListList attr found. %s", name.c_str());
-      return domi::SUCCESS;
+ private:
+  template<typename T>
+  Status GetNodeAttrDataIntListList(const std::string &name, DataBuf &data) {
+    std::vector<std::vector<int64_t>> value;
+    bool res = ge::AttrUtils::GetListListInt(op_desc_, name, value);
+    if (!res) {
+      GE_LOGE("attr not found. %s", name.c_str());
+      return domi::FAILED;
     }
 
-    template <typename T, bool IsList = false,
-              typename std::enable_if<!IsList, bool>::type = true>
-    Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
-      auto func = Getter<T>::func;
-      typename Getter<T>::ST value;
-      bool res = func(op_desc_, name, value);
-      if (!res) {
-        GE_LOGE("attr not found. %s", name.c_str());
-        return domi::FAILED;
-      }
-
-      auto dest_ptr = std::make_shared<AnyValue<T>>(static_cast<T>(value));
-      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-      data = dest_ptr->GetDataBuf();
-      GELOGI("Single attr found. %s", name.c_str());
-      return domi::SUCCESS;
-    }
-
-    template <typename T, bool IsList = false,
-              typename std::enable_if<IsList, bool>::type = true>
-    Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
-      auto func = Getter<T>::list_func;
-      std::vector<typename Getter<T>::ST> value;
-      bool res = func(op_desc_, name, value);
-      if (!res) {
-        GE_LOGE("List attr not found. %s", name.c_str());
-        return domi::FAILED;
-      }
-
-      std::vector<T> dest;
-      for (auto elem : value) {
+    std::vector<T> dest;
+    for (const auto &vec : value) {
+      for (auto elem : vec) {
         dest.emplace_back(static_cast<T>(elem));
       }
-      auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
-      data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
-      data = dest_ptr->GetDataBuf();
-      GELOGI("attr found. %s", name.c_str());
-      return domi::SUCCESS;
+    }
+    auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
+    data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+    data = dest_ptr->GetDataBuf();
+    GELOGI("IntListList attr found. %s", name.c_str());
+    return domi::SUCCESS;
+  }
+
+  template<typename T, bool IsList = false, typename std::enable_if<!IsList, bool>::type = true>
+  Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
+    auto func = Getter<T>::func;
+    typename Getter<T>::ST value;
+    bool res = func(op_desc_, name, value);
+    if (!res) {
+      GE_LOGE("attr not found. %s", name.c_str());
+      return domi::FAILED;
     }
 
-  private:
-    static std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl*,
-                                                      const std::string &, DataBuf &)>> data_getter_;
-    ge::OpDescPtr op_desc_;
-    std::map<std::string, std::shared_ptr<AnyValueBase>> data_map_;
+    auto dest_ptr = std::make_shared<AnyValue<T>>(static_cast<T>(value));
+    data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+    data = dest_ptr->GetDataBuf();
+    GELOGI("Single attr found. %s", name.c_str());
+    return domi::SUCCESS;
+  }
+
+  template<typename T, bool IsList = false, typename std::enable_if<IsList, bool>::type = true>
+  Status GetNodeAttrDataTmpl(const std::string &name, DataBuf &data) {
+    auto func = Getter<T>::list_func;
+    std::vector<typename Getter<T>::ST> value;
+    bool res = func(op_desc_, name, value);
+    if (!res) {
+      GE_LOGE("List attr not found. %s", name.c_str());
+      return domi::FAILED;
+    }
+
+    std::vector<T> dest;
+    for (auto elem : value) {
+      dest.emplace_back(static_cast<T>(elem));
+    }
+    auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
+    data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
+    data = dest_ptr->GetDataBuf();
+    GELOGI("attr found. %s", name.c_str());
+    return domi::SUCCESS;
+  }
+
+ private:
+  static std::map<std::string, std::function<Status(TeOpVarAttrArgsImpl *, const std::string &, DataBuf &)>>
+      data_getter_;
+  ge::OpDescPtr op_desc_;
+  std::map<std::string, std::shared_ptr<AnyValueBase>> data_map_;
 };
 
 class VarAttrHelper {
@@ -499,16 +498,18 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
     return;  // CodeDEX complains 'CHECK_CONTAINER_EMPTY'
   }
 
-  ge::Shape ge_shape(shape);
+  ge::GeShape ge_shape(shape);
   std::transform(dtype_str.begin(), dtype_str.end(), dtype_str.begin(), ::toupper);
   dtype_str = "DT_" + dtype_str;
   ge::DataType ge_dtype = ge::TypeUtils::SerialStringToDataType(dtype_str);
   std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
   ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
-  ge::Tensor const_tensor(ge::TensorDesc(ge_shape, ge_format, ge_dtype), res.first->second);
-  std::string nodeName = op_desc->GetType() + "/" + name;
-  ge::Operator const_op = ge::OperatorFactory::CreateOperator(nodeName, op_desc->GetType());
-  const_op.SetAttr("value", const_tensor);
+  ge::GeTensorDesc ge_tensor(ge_shape, ge_format, ge_dtype);
+  ge_tensor.SetName(name);
+  ge::GeTensor const_tensor(ge_tensor, res.first->second);
+  ge::GeTensorPtr const_tensor_ptr = std::make_shared<ge::GeTensor>(const_tensor);
+  ge::OpDescPtr const_op_desc = ge::OpDescUtils::CreateConstOp(const_tensor_ptr);
+  ge::Operator const_op = ge::OpDescUtils::CreateOperatorFromOpDesc(const_op_desc);
   op_para.SetInput(name, const_op);
   return;
 }
@@ -655,9 +656,10 @@ bool DumpRunInfo(const OpRunInfo &run_info, char *run_info_json, size_t run_info
   return true;
 }
 
-extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *compile_info, const char *inputs,
-                                               const char *outputs, char *run_info_json, size_t run_info_len,
-                                               const char *compile_info_hash, uint64_t *elapse) {
+extern "C" int
+TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *compile_info, const char *inputs, const char *outputs,
+                                char *run_info_json, size_t run_info_len, const char *compile_info_hash,
+                                uint64_t *elapse, std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
   if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
@@ -680,20 +682,8 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
     return 0;
   }
 
-  auto &interf = OpTilingRegistryInterf::RegisteredOpInterf();
-  auto iter = interf.find(optype);
-  if (iter == interf.end()) {
-    iter = interf.find("AutoTiling");
-  }
-
-  if (iter == interf.end()) {
-    REPORT_CALL_ERROR("E19999", "Optiling func not found. op_type:%s", optype);
-    return 0;
-  }
-
   GELOGI("Optiling func found, op_type:%s, func:[%s:%p]", optype, iter->first.c_str(),
          iter->second.target<OpTilingFuncPtr>());
-
   OpCompileInfo op_compile_info{compile_info};
   if (compile_info_hash) {
     op_compile_info.key = compile_info_hash;
@@ -727,7 +717,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
 
 void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, std::string Flag) {
   ge::GeTensorDesc tensor;
-  std::string name = "";
+  std::string name;
   if (shape.contains("shape")) {
     tensor.SetShape(ge::GeShape(shape["shape"].get<vector<int64_t>>()));
   }
@@ -753,7 +743,13 @@ void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, std::
     ge::DataType ge_dtype = ge::TypeUtils::SerialStringToDataType(dtype_str);
     tensor.SetDataType(ge_dtype);
   }
-  Flag == "inputs" ? op_desc->AddInputDesc(tensor) : op_desc->AddOutputDesc(tensor);
+  if (shape.contains("name")) {
+    name = shape["name"];
+    tensor.SetName(name);
+    Flag == "inputs" ? op_desc->AddInputDesc(name, tensor) : op_desc->AddOutputDesc(name, tensor);
+  } else {
+    Flag == "inputs" ? op_desc->AddInputDesc(tensor) : op_desc->AddOutputDesc(tensor);
+  }
 }
 
 void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_desc, std::string Flag) {
@@ -768,32 +764,18 @@ void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_de
   }
 }
 
-extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile_info, const char *inputs,
-                                         const char *outputs, char *run_info_json, size_t run_info_len,
-                                         const char *compile_info_hash, uint64_t *elapse) {
+extern "C" int
+TbeOpTilingPyInterfaceEx2New(const char *optype, const char *compile_info, const char *inputs, const char *outputs,
+                             char *run_info_json, size_t run_info_len, const char *compile_info_hash,
+                             uint64_t *elapse, std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter) {
   if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
   }
-
-  auto &interf = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
-  auto iter = interf.find(optype);
-  if (iter == interf.end()) {
-    iter = interf.find("AutoTiling");
-  }
-
-  if (iter == interf.end()) {
-    GELOGI("Optiling func not found, turn to function[TbeOpTilingPyInterfaceEx2BackUp]. op_type:%s", optype);
-    return TbeOpTilingPyInterfaceEx2BackUp(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
-                                           compile_info_hash, elapse);
-  }
-
   GELOGI("Optiling func found, op_type:%s, func:[%s:%p]", optype, iter->first.c_str(),
          iter->second.target<optiling::utils::OpTilingFuncV2Ptr>());
-
   std::chrono::time_point<std::chrono::steady_clock> before_tiling, after_tiling;
-
   std::string compile_info_str = compile_info;
   std::string optype_str = optype;
   ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
@@ -843,6 +825,45 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
   return 1;
 }
 
+extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile_info, const char *inputs,
+                                         const char *outputs, char *run_info_json, size_t run_info_len,
+                                         const char *compile_info_hash, uint64_t *elapse) {
+  auto &interf_2 = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
+  auto &interf_1 = OpTilingRegistryInterf::RegisteredOpInterf();
+  int flag = 1;
+  auto iter_2 = interf_2.find(optype);
+  auto iter_1 = interf_1.find(optype);
+  if (iter_2 == interf_2.end()) {
+    GELOGI("Optiling func[optype] in V2 not found, turn to find it in V1[optype]. "
+           "op_type:%s",
+           optype);
+    flag = 0;
+    if (iter_1 == interf_1.end()) {
+      GELOGI("Optiling func[optype] in V1 not found, turn to find it in "
+             "V2[Autotiling]. op_type:%s",
+             optype);
+      iter_2 = interf_2.find("AutoTiling");
+      flag = 1;
+      if (iter_2 == interf_2.end()) {
+        GELOGI("Optiling func[AutoTiling] in V2 not found, turn to find it in "
+               "V1[Autotiling]. op_type:%s",
+               optype);
+        iter_1 = interf_1.find("AutoTiling");
+        flag = 0;
+        if (iter_1 == interf_1.end()) {
+          REPORT_CALL_ERROR("E19999", "Optiling func not found. op_type:%s", optype);
+          return 0;
+        }
+      }
+    }
+  }
+
+  return (flag == 1 ? TbeOpTilingPyInterfaceEx2New(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                                   compile_info_hash, elapse, iter_2)
+                    : TbeOpTilingPyInterfaceEx2BackUp(optype, compile_info, inputs, outputs, run_info_json,
+                                                      run_info_len, compile_info_hash, elapse, iter_1));
+}
+
 extern "C" int TbeOpTilingPyInterfaceEx(const char *optype, const char *compile_info, const char *inputs,
                                         const char *outputs, char *run_info_json, size_t run_info_len,
                                         uint64_t *elapse) {
@@ -871,8 +892,7 @@ bool StructToClass_RunInfo(OpRunInfo &run_info_struct, optiling::utils::OpRunInf
   return res;
 }
 
-
-extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info) {
+extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info ) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
@@ -926,7 +946,52 @@ extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
-ge::graphStatus TurnToOpParaCalculate(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
+extern "C" ge::graphStatus OpParaCalculateV1(const ge::Node &node, OpRunInfo &run_info,
+                                           std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
+  ge::OpDescPtr op_desc = node.GetOpDesc();
+  std::string op_type = op_desc->GetType();
+  std::string op_name = op_desc->GetName();
+  TeOpParas op_param;
+  op_param.op_type = op_type;
+
+  GELOGI("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+
+  auto inputs = op_desc->GetAllInputsDescPtr();
+  auto outputs = op_desc->GetAllOutputsDescPtr();
+
+  bool bres = false;
+  bres = FeedTeOpTensorArg(inputs, op_param.inputs, op_desc);
+  if (!bres) {
+    GE_LOGE("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+  bres = FeedTeOpTensorArg(outputs, op_param.outputs, op_desc);
+  if (!bres) {
+    return ge::GRAPH_FAILED;
+  }
+
+  VarAttrHelper::InitTeOpVarAttr(op_desc, op_param.var_attrs);
+  FeedTeOpConstTensor(node, op_desc, op_param.const_inputs);
+  OpCompileInfo op_compile_info;
+  bres = GetCompileInfo(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
+  if (!bres) {
+    GE_LOGE("Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+
+  GELOGI("Optiling func found, op_type:%s, op_name:%s, func:[%s:%p]", op_type.c_str(), op_name.c_str(),
+         iter->first.c_str(), iter->second.target<OpTilingFuncPtr>());
+  bool rc = (iter->second)(op_param, op_compile_info, run_info);
+  if (rc) {
+    GELOGI("Optiling succeed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+  } else {
+    GE_LOGE("Optiling failed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+  }
+  return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
+}
+
+ge::graphStatus TurnToOpParaCalculate(const ge::Node &node, optiling::utils::OpRunInfo &run_info,
+                                      std::map<std::string, optiling::OpTilingFunc>::iterator iter) {
   OpRunInfo run_info_struct;
   run_info_struct.block_dim = run_info.GetBlockDim();
   run_info_struct.clear_atomic = run_info.GetClearAtomic();
@@ -934,8 +999,8 @@ ge::graphStatus TurnToOpParaCalculate(const ge::Node &node, optiling::utils::OpR
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
-  if (OpParaCalculate(node, run_info_struct) != ge::GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "OpParaCalculate failed, op_type[%s], op_name[%s]", op_type.c_str(), op_name.c_str());
+  if (OpParaCalculateV1(node, run_info_struct, iter) != ge::GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "OpParaCalculateV1 failed, op_type[%s], op_name[%s]", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
   if (!StructToClass_RunInfo(run_info_struct, run_info)) {
@@ -946,28 +1011,70 @@ ge::graphStatus TurnToOpParaCalculate(const ge::Node &node, optiling::utils::OpR
   return ge::GRAPH_SUCCESS;
 }
 
-extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
+void checkTensordescShape(ge::OpDescPtr &op_desc, std::map<size_t, ge::GeTensorDesc> &inputsIndexes,
+                          std::map<size_t, ge::GeTensorDesc> &outputsIndexes) {
+  size_t input_size = op_desc->GetAllInputsSize();
+  ge::GeTensorDesc tensor_temp;
+  for (size_t i = 0; i < input_size; ++ i) {
+    tensor_temp = op_desc->GetInputDesc(i);
+    if (tensor_temp.GetShape().GetShapeSize() == 0) {
+      inputsIndexes.insert(std::pair<size_t, ge::GeTensorDesc> (i, tensor_temp));
+      tensor_temp.SetShape(ge::GeShape({1}));
+      op_desc->UpdateInputDesc(i, tensor_temp);
+    }
+  }
+
+  size_t output_size = op_desc->GetOutputsSize();
+  for (size_t i = 0; i < output_size; ++ i) {
+    tensor_temp = op_desc->GetOutputDesc(i);
+    if (tensor_temp.GetShape().GetShapeSize() == 0) {
+      outputsIndexes.insert(std::pair<size_t, ge::GeTensorDesc> (i, tensor_temp));
+      tensor_temp.SetShape(ge::GeShape({1}));
+      op_desc->UpdateOutputDesc(i, tensor_temp);
+    }
+  }
+}
+
+void backTraceTensordescShape(ge::OpDescPtr &op_desc, const std::map<size_t, ge::GeTensorDesc> &inputsIndexes,
+                              const std::map<size_t, ge::GeTensorDesc> &outputsIndexes) {
+  auto iter = inputsIndexes.begin();
+  while(iter != inputsIndexes.end()) {
+    op_desc->UpdateInputDesc(iter->first, iter->second);
+    ++ iter;
+  }
+  iter = outputsIndexes.begin();
+  while(iter != outputsIndexes.end()) {
+    op_desc->UpdateOutputDesc(iter->first, iter->second);
+    ++ iter;
+  }
+}
+
+void addNameToTensordesc(ge::OpDescPtr &op_desc) {
+  std::vector<std::string> inferDepends = op_desc->GetOpInferDepends();
+  ge::GeTensorDesc tensor_temp;
+  for (auto name : inferDepends) {
+    tensor_temp = op_desc->GetInputDesc(name);
+    tensor_temp.SetName(name);
+    op_desc->UpdateInputDesc(name, tensor_temp);
+  }
+}
+
+extern "C" ge::graphStatus OpParaCalculateNew(const ge::Node &node, optiling::utils::OpRunInfo &run_info,
+                                              std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
-  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  std::map<size_t, ge::GeTensorDesc> inputsIndexes;
+  std::map<size_t, ge::GeTensorDesc> outputsIndexes;
+  checkTensordescShape(op_desc, inputsIndexes, outputsIndexes);
+  addNameToTensordesc(op_desc);
+  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
-
-  auto &interf = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
-  auto iter = interf.find(op_type);
-  if (iter == interf.end()) {
-    iter = interf.find("AutoTiling");
-  }
-  if (iter == interf.end()) {
-    GELOGI("Optiling func on new way is not found, trun to the old way. op_type:%s, op_name:%s", op_type.c_str(),
-           op_name.c_str());
-    return TurnToOpParaCalculate(node, run_info);
-  }
-
   optiling::utils::OpCompileInfo op_compile_info("", "");
   bool bres = GetCompileInfoV2(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
   if (!bres) {
     REPORT_CALL_ERROR("E19999", "Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    backTraceTensordescShape(op_desc, inputsIndexes, outputsIndexes);
     return ge::GRAPH_FAILED;
   }
 
@@ -979,27 +1086,41 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, optiling::uti
   } else {
     REPORT_CALL_ERROR("E19999", "Optiling failed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   }
+  backTraceTensordescShape(op_desc, inputsIndexes, outputsIndexes);
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
-ge::graphStatus TurnToOpAtomicCalculate(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
-  OpRunInfo run_info_struct;
-  run_info_struct.block_dim = run_info.GetBlockDim();
-  run_info_struct.clear_atomic = run_info.GetClearAtomic();
-  run_info_struct.tiling_key = run_info.GetTilingKey();
+extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
   ge::OpDescPtr op_desc = node.GetOpDesc();
-  std::string op_type = op_desc->GetType();
-  std::string op_name = op_desc->GetName();
-  if (OpAtomicCalculate(node, run_info_struct) != ge::GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "OpAtomicCalculate failed, op_type[%s], op_name[%s]", op_type.c_str(), op_name.c_str());
-    return ge::GRAPH_FAILED;
+  std::string optype = op_desc->GetType();
+  auto &interf_2 = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
+  auto &interf_1 = OpTilingRegistryInterf::RegisteredOpInterf();
+  int flag = 1;
+  auto iter_2 = interf_2.find(optype);
+  auto iter_1 = interf_1.find(optype);
+  if (iter_2 == interf_2.end()) {
+    GELOGI("Optiling func[optype] in V2 not found, turn to find it in V1[optype], op_type:%s", optype.c_str());
+    flag = 0;
+    if (iter_1 == interf_1.end()) {
+      GELOGI("Optiling func[optype] in V1 not found, turn to find it in "
+             "V2[Autotiling]. op_type:%s",
+             optype.c_str());
+      iter_2 = interf_2.find("AutoTiling");
+      flag = 1;
+      if (iter_2 == interf_2.end()) {
+        GELOGI("Optiling func[AutoTiling] in V2 not found, turn to find it in "
+               "V1[Autotiling]. op_type:%s",
+               optype.c_str());
+        iter_1 = interf_1.find("AutoTiling");
+        flag = 0;
+        if (iter_1 == interf_1.end()) {
+          REPORT_CALL_ERROR("E19999", "Optiling func not found. op_type:%s", optype.c_str());
+          return ge::GRAPH_FAILED;
+        }
+      }
+    }
   }
-  if (!StructToClass_RunInfo(run_info_struct, run_info)) {
-    REPORT_CALL_ERROR("E19999", "Trans struct to class failed, op_type[%s], op_name[%s].", op_type.c_str(),
-                      op_name.c_str());
-    return ge::GRAPH_FAILED;
-  }
-  return ge::GRAPH_SUCCESS;
+  return (flag == 1 ? OpParaCalculateNew(node, run_info, iter_2) : TurnToOpParaCalculate(node, run_info, iter_1));
 }
 
 extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &run_info) {
@@ -1059,15 +1180,33 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
-bool checkOpRegistryInterf(
-    std::map<std::string, optiling::utils::OpTilingFuncV2> &interf,
-    std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter,
-    std::string op_name, std::string op_type) {
+ge::graphStatus TurnToOpAtomicCalculate(const ge::Node &node, optiling::utils::OpRunInfo &run_info) {
+  OpRunInfo run_info_struct;
+  run_info_struct.block_dim = run_info.GetBlockDim();
+  run_info_struct.clear_atomic = run_info.GetClearAtomic();
+  run_info_struct.tiling_key = run_info.GetTilingKey();
+  ge::OpDescPtr op_desc = node.GetOpDesc();
+  std::string op_type = op_desc->GetType();
+  std::string op_name = op_desc->GetName();
+  if (OpAtomicCalculate(node, run_info_struct) != ge::GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "OpAtomicCalculate failed, op_type[%s], op_name[%s]", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+  if (!StructToClass_RunInfo(run_info_struct, run_info)) {
+    REPORT_CALL_ERROR("E19999", "Trans struct to class failed, op_type[%s], op_name[%s].", op_type.c_str(),
+                      op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+bool checkOpRegistryInterf(std::map<std::string, optiling::utils::OpTilingFuncV2> &interf,
+                           std::map<std::string, optiling::utils::OpTilingFuncV2>::iterator iter, std::string op_name,
+                           std::string op_type) {
   if (iter == interf.end()) {
-    REPORT_CALL_ERROR("E19999",
-                      "Atomic optiling func on the new way is not found, turn "
-                      "to the old way, op_type:%s, op_name:%s",
-                      op_type.c_str(), op_name.c_str());
+    GELOGI("Atomic optiling func on the new way is not found, turn "
+           "to the old way, op_type:%s, op_name:%s",
+           op_type.c_str(), op_name.c_str());
     return false;
   }
   return true;
@@ -1078,8 +1217,7 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
   std::string op_type = "DynamicAtomicAddrClean";
   std::string op_name = op_desc->GetName();
   std::string origin_op_type = "DynamicAtomicAddrClean";
-  op_desc->SetType(op_type);
-  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  ge::Operator op_param(op_type);
   auto &interf = optiling::utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
   auto iter = interf.find(op_type);
   if (!checkOpRegistryInterf(interf, iter, op_type, op_name)) {

@@ -22,7 +22,6 @@
 #include "register/op_tiling_registry.h"
 
 namespace optiling {
-
 extern "C" ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info);
 extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &run_info);
 extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, optiling::utils::OpRunInfo &run_info);
