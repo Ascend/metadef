@@ -81,6 +81,7 @@ class ComputeGraphImpl {
 
   std::shared_ptr<ComputeGraph> GetSubgraph(const std::string &name) const;
   std::vector<std::shared_ptr<ComputeGraph>> GetAllSubgraphs() const;
+  void SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs);
 
   shared_ptr<ComputeGraph> GetParentGraph();
   void SetParentGraph(const shared_ptr<ComputeGraph> &parent);
