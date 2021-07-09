@@ -60,6 +60,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   }
   if (tensor->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
     *(tensor_proto->mutable_desc()) = *(tensor->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg());
+    if (tensor->GetData().data() == nullptr) {
+      REPORT_INNER_ERROR("E19999", "param tensor data is null, check invalid.");
+      GELOGE(FAILED, "[Check][Param] tensor data is null.");
+      return false;
+    }
     tensor_proto->set_data(tensor->GetData().data(), tensor->GetData().size());
     return true;
   }
