@@ -965,12 +965,14 @@ ge::graphStatus TurnToOpParaCalculate(const ge::Node &node, optiling::utils::OpR
   return ge::GRAPH_SUCCESS;
 }
 
-void checkTensordescShape(ge::OpDescPtr &op_desc) {
+void checkTensordescShape(ge::OpDescPtr &op_desc, std::vector<size_t> &inputsIndexes,
+                          std::vector<size_t> &outputsIndexes) {
   size_t input_size = op_desc->GetAllInputsSize();
   ge::GeTensorDesc tensor_temp;
   for (size_t i = 0; i < input_size; ++ i) {
     tensor_temp = op_desc->GetInputDesc(i);
     if (tensor_temp.GetShape().GetShapeSize() == 0) {
+      inputsIndexes.push_back(i);
       tensor_temp.SetShape(ge::GeShape({1}));
       op_desc->UpdateInputDesc(i, tensor_temp);
     }
@@ -980,9 +982,30 @@ void checkTensordescShape(ge::OpDescPtr &op_desc) {
   for (size_t i = 0; i < output_size; ++ i) {
     tensor_temp = op_desc->GetOutputDesc(i);
     if (tensor_temp.GetShape().GetShapeSize() == 0) {
+      outputsIndexes.push_back(i);
       tensor_temp.SetShape(ge::GeShape({1}));
       op_desc->UpdateOutputDesc(i, tensor_temp);
     }
+  }
+}
+
+void backTraceTensordescShape(ge::OpDescPtr &op_desc, const std::vector<size_t> &inputsIndexes,
+                              const std::vector<size_t> &outputsIndexes) {
+  auto iter = inputsIndexes.begin();
+  ge::GeTensorDesc tensor_temp;
+  std::vector<int64_t> noneVec;
+  while(iter != inputsIndexes.end()) {
+    tensor_temp = op_desc->GetInputDesc(*iter);
+    tensor_temp.SetShape(ge::GeShape(noneVec));
+    op_desc->UpdateInputDesc(*iter, tensor_temp);
+    ++ iter;
+  }
+  iter = outputsIndexes.begin();
+  while(iter != outputsIndexes.end()) {
+    tensor_temp = op_desc->GetOutputDesc(*iter);
+    tensor_temp.SetShape(ge::GeShape(noneVec));
+    op_desc->UpdateOutputDesc(*iter, tensor_temp);
+    ++ iter;
   }
 }
 
@@ -1001,7 +1024,9 @@ extern "C" ge::graphStatus OpParaCalculateNew(const ge::Node &node, optiling::ut
   ge::OpDescPtr op_desc = node.GetOpDesc();
   std::string op_type = op_desc->GetType();
   std::string op_name = op_desc->GetName();
-  checkTensordescShape(op_desc);
+  std::vector<size_t> inputsIndexes;
+  std::vector<size_t> outputsIndexes;
+  checkTensordescShape(op_desc, inputsIndexes, outputsIndexes);
   addNameToTensordesc(op_desc);
   ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
@@ -1010,6 +1035,7 @@ extern "C" ge::graphStatus OpParaCalculateNew(const ge::Node &node, optiling::ut
   bool bres = GetCompileInfoV2(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
   if (!bres) {
     REPORT_CALL_ERROR("E19999", "Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    backTraceTensordescShape(op_desc, inputsIndexes, outputsIndexes);
     return ge::GRAPH_FAILED;
   }
 
@@ -1021,6 +1047,7 @@ extern "C" ge::graphStatus OpParaCalculateNew(const ge::Node &node, optiling::ut
   } else {
     REPORT_CALL_ERROR("E19999", "Optiling failed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   }
+  backTraceTensordescShape(op_desc, inputsIndexes, outputsIndexes);
   return rc ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
