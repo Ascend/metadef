@@ -61,6 +61,8 @@ class PatternFusionBasePassImpl {
 
   bool CheckOpSupported(const ge::OpDescPtr &op_desc_ptr);
 
+  bool CheckOpSupported(const ge::NodePtr &node);
+
   bool IsNodesExist(ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes);
 
   bool IsMatched(std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node, const Mapping &mapping);

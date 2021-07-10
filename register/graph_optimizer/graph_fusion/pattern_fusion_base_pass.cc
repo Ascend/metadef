@@ -273,6 +273,10 @@ bool PatternFusionBasePass::CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) {
   return pattern_fusion_base_pass_impl_ptr_->CheckOpSupported(op_desc_ptr);
 }
 
+bool PatternFusionBasePass::CheckOpSupported(const ge::NodePtr &node) {
+  return pattern_fusion_base_pass_impl_ptr_->CheckOpSupported(node);
+}
+
 /**
  * @ingroup fe
  * @brief match all nodes in graph according to pattern
