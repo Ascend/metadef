@@ -480,9 +480,9 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeTensor &va
         val.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
       tensor->mutable_desc()->CopyFrom(*(val.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg()));
     }
-    if (val.GetData().data() == nullptr) {
-      REPORT_INNER_ERROR("E19999", "tensor data is null, check invalid.");
-      GELOGE(FAILED, "[Check][Param] tensor data is null.");
+    if ((val.GetData().data() == nullptr) && (val.GetData().size() != 0)) {
+      REPORT_INNER_ERROR("E19999", "tensor data is null, but data size is not zero.");
+      GELOGE(FAILED, "[Check][Param] tensor data is null, but data size is not zero.");
       return false;
     }
     tensor->set_data(val.GetData().data(), val.GetData().size());
@@ -568,9 +568,9 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
           item.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
         tensor->mutable_desc()->CopyFrom(*(item.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg()));
       }
-      if (item.GetData().data() == nullptr) {
-        REPORT_INNER_ERROR("E19999", "tensor data is null, check invalid.");
-        GELOGE(FAILED, "[Check][Param] tensor data is null.");
+      if ((item.GetData().data() == nullptr) && (item.GetData().size() != 0)) {
+        REPORT_INNER_ERROR("E19999", "tensor data is null, but data size is not zero.");
+        GELOGE(FAILED, "[Check][Param] tensor data is null, but data size is not zero.");
         return false;
       }
       tensor->set_data(item.GetData().data(), item.GetData().size());
@@ -584,9 +584,9 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeAttrValue:
     return false;
   }
   size_t val_size = value.GetSize();
-  if (value.GetData() == nullptr) {
-    REPORT_INNER_ERROR("E19999", "buffer data is null, check invalid.");
-    GELOGE(FAILED, "[Check][Param] buffer data is null.");
+  if ((value.GetData() == nullptr) && (val_size != 0)) {
+    REPORT_INNER_ERROR("E19999", "buffer data is null, but data size is not zero.");
+    GELOGE(FAILED, "[Check][Param] buffer data is null, but data size is not zero.");
     return false;
   }
   proto_attr_val.set_bt(value.GetData(), val_size);
@@ -602,9 +602,9 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeAtt
   GE_CHECK_NOTNULL_EXEC(list, return false);
   list->clear_bt();
   for (const auto &item : value) {
-    if (item.GetData() == nullptr) {
-      REPORT_INNER_ERROR("E19999", "buffer data is null, check invalid.");
-      GELOGE(FAILED, "[Check][Param] buffer data is null.");
+    if ((item.GetData() == nullptr) && (item.GetSize() != 0)) {
+      REPORT_INNER_ERROR("E19999", "buffer data is null, but data size is not zero.");
+      GELOGE(FAILED, "[Check][Param] buffer data is null, but data size is not zero.");
       return false;
     }
     list->add_bt(item.GetData(), item.GetSize());
