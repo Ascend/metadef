@@ -1214,4 +1214,7 @@ const std::string ATTR_NAME_BUFFER_POOL_NODE_SIZE_AND_OFFSET = "_buffer_pool_nod
 
 // session scope memory
 const std::string ATTR_NAME_WORKSPACE_MEMORY_NO_REUSE_SCOPE = "_workspace_memory_no_reuse_scope";
+
+// for blocking op
+const std::string ATTR_NAME_IS_BLOCKING_OP = "_is_blocking_op";
 }  // namespace ge

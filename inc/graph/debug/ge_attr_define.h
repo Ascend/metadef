@@ -1246,6 +1246,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 
 // session scope memory
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_WORKSPACE_MEMORY_NO_REUSE_SCOPE;
+
+// for blocking op
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_IS_BLOCKING_OP;
 }  // namespace ge
 
 /*lint +e618*/
