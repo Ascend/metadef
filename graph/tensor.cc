@@ -796,6 +796,14 @@ const GeTensor TensorAdapter::AsGeTensor(const Tensor &tensor) {
   return GeTensor();
 }
 
+GeTensor TensorAdapter::AsGeTensorShared(const Tensor &tensor) {
+  if (tensor.impl != nullptr) {
+    // Construct new rvalue ge tensor to avoid call copy constructor
+    return GeTensor(tensor.impl->ge_tensor.impl_);
+  }
+  return {};
+}
+
 GeTensor TensorAdapter::AsGeTensor(Tensor &tensor) {
   if (tensor.impl != nullptr) {
     return tensor.impl->ge_tensor;
