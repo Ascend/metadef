@@ -1276,7 +1276,7 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     return GRAPH_FAILED;
   }
   graphStatus graph_status = (graphStatus)infer_func_(op);
-  if (graph_status != GRAPH_SUCCESS) {
+  if (graph_status != GRAPH_SUCCESS && graph_status != GRAPH_NODE_NEED_REPASS) {
     GELOGE(GRAPH_FAILED, "[Call][InferFunc] for %s failed. ret:%u", GetName().c_str(), graph_status);
     return GRAPH_FAILED;
   }
