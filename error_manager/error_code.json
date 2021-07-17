@@ -2951,6 +2951,61 @@
     "ErrCode": "E68089",
     "ErrMessage": "tiling is not found in repository file.",
     "Arglist": ""
-  }
+  },
+    {
+      "errClass": "System Support Errors",
+      "errTitle": "Unsupported Operator",
+      "ErrCode": "EZ0501",
+      "ErrMessage": "IR for Op [%s, optype [%s]], is not registered.",
+      "Arglist": "opname,optype",
+      "suggestion": {
+        "Possible Cause": "IR for the operator type is not registered.",
+        "Solution": "Submit an issue to request for support at https://gitee.com/ascend, or remove this type of operators from your model."
+      }
+    },
+    {
+      "errClass": "System Support Errors",
+      "errTitle": "Unsupported Operator",
+      "ErrCode": "EZ3002",
+      "ErrMessage": "Optype [%s] of Ops kernel [%s] is unsupported. Reason: %s.",
+      "Arglist": "optype,opskernel,reason",
+      "suggestion": {
+        "Possible Cause": "The operator type is unsupported in the operator information library due to specification mismatch.",
+        "Solution": "Submit an issue to request for support at https://gitee.com/ascend, or remove this type of operators from your model."
+      }
+    },
+    {
+      "errClass": "System Support Errors",
+      "errTitle": "Unsupported Operator",
+      "ErrCode": "EZ3003",
+      "ErrMessage": "No supported Ops kernel and engine are found for [%s], optype [%s].",
+      "Arglist": "opname,optype",
+      "suggestion": {
+        "Possible Cause": "The operator is not supported by the system. Therefore, no hit is found in any operator information library.",
+        "Solution": "[step] Check that the OPP component is installed properly. [step] Submit an issue to request for the support of this operator type."
+      }
+    },
+    {
+      "errClass": "System Support Errors",
+      "errTitle": "Unsupported Operator",
+      "ErrCode": "EZ9010",
+      "ErrMessage": "No parser is registered for Op [%s, optype [%s]].",
+      "Arglist": "opname,optype",
+      "suggestion": {
+        "Possible Cause": "No parser is registered for the operator type.",
+        "Solution": "Submit an issue to request for support at https://gitee.com/ascend."
+      }
+    },
+    {
+      "errClass": "Command Line Errors",
+      "errTitle": "ONNX Model Data Error",
+      "ErrCode": "E76002",
+      "ErrMessage": "No ONNX parser is registered for optype [%s].",
+      "Arglist": "optype",
+      "suggestion": {
+        "Possible Cause": "No parser is registered for the optype in ONNX model conversion.",
+        "Solution": "Submit an issue to request for support at https://gitee.com/ascend, or remove this type of operators from your model."
+      }
+    }
   ]
 }
