@@ -82,8 +82,7 @@ static const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                                      OP_PATTERN_BATCH_MATMUL,
                                                      OP_PATTERN_CONV3D,
                                                      OP_PATTERN_DROPOUTDOMASKV3D,
-                                                     OP_PATTERN_CONV3D_BACKPROP_INPUT,
-                                                     
+                                                     OP_PATTERN_CONV3D_BACKPROP_INPUT,                        
 #ifndef ONLY_COMPILE_OPEN_SRC
                                                      OP_PATTERN_CONV_BACKPROP_FILTER
 #endif
