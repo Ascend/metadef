@@ -80,6 +80,8 @@ const std::string ATTR_NAME_FORMAT = "format";
 
 const std::string ATTR_NAME_STORAGE_FORMAT = "storage_format";
 
+const std::string ATTR_NAME_ORIGIN_FORMAT_IS_SET = "origin_format_is_set";
+
 const std::string ATTR_NAME_STORAGE_SHAPE = "storage_shape";
 
 const std::string ATTR_NAME_FILTER_FORMAT = "filter_format";

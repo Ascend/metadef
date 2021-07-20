@@ -17,6 +17,7 @@
 #include "external/graph/tensor.h"
 #include "debug/ge_util.h"
 #include "graph/ge_tensor.h"
+#include "graph/debug/ge_attr_define.h"
 #include "securec.h"
 #include "utils/attr_utils.h"
 #include "utils/tensor_adapter.h"
@@ -64,6 +65,7 @@ class TensorDescImpl {
   std::vector<std::pair<int64_t, int64_t>> range_;
   Format format_ = FORMAT_ND;
   Format origin_format_ = FORMAT_ND;
+  bool origin_format_is_set_ = false;
   DataType data_type_ = DT_FLOAT;
   Shape origin_shape_;
   int64_t size_ = 0;
@@ -372,6 +374,7 @@ Format TensorDesc::GetOriginFormat() const {
 void TensorDesc::SetOriginFormat(Format origin_format) {
   if (impl != nullptr) {
     impl->origin_format_ = origin_format;
+    impl->origin_format_is_set_ = true;
   }
 }
 
@@ -701,6 +704,9 @@ Tensor Tensor::Clone() const {
 GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_desc) {
   GeTensorDesc ge_tensor_desc(GeShape(tensor_desc.GetShape().GetDims()), tensor_desc.GetFormat(),
                               tensor_desc.GetDataType());
+  if (tensor_desc.impl->origin_format_is_set_) {
+    AttrUtils::SetBool(ge_tensor_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, true);
+  }
   ge_tensor_desc.SetOriginShape(GeShape(tensor_desc.GetOriginShape().GetDims()));
   ge_tensor_desc.SetOriginFormat(tensor_desc.GetOriginFormat());
   ge_tensor_desc.SetName(tensor_desc.GetName());
@@ -802,6 +808,20 @@ GeTensor TensorAdapter::AsGeTensorShared(const Tensor &tensor) {
     return GeTensor(tensor.impl->ge_tensor.impl_);
   }
   return {};
+}
+
+GeTensor TensorAdapter::NormalizeGeTensor(const GeTensor &tensor) {
+  auto normalized_tensor = tensor;
+  auto &desc = normalized_tensor.MutableTensorDesc();
+  bool origin_format_is_set = false;
+  if (AttrUtils::GetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set) && origin_format_is_set) {
+    AttrUtils::SetInt(desc, ATTR_NAME_STORAGE_FORMAT, static_cast<int64_t>(desc.GetFormat()));
+    AttrUtils::SetListInt(desc, ATTR_NAME_STORAGE_SHAPE, desc.GetShape().GetDims());
+    desc.SetFormat(desc.GetOriginFormat());
+    desc.SetShape(desc.GetOriginShape());
+    AttrUtils::SetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, false);
+  }
+  return normalized_tensor;
 }
 
 GeTensor TensorAdapter::AsGeTensor(Tensor &tensor) {

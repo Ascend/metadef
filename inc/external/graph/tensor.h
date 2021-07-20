@@ -102,6 +102,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorDesc {
 
  private:
   std::shared_ptr<TensorDescImpl> impl;
+  friend class TensorAdapter;
 };
 
 class TensorImpl;
