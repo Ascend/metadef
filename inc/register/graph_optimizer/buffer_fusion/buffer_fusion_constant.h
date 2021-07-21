@@ -53,6 +53,7 @@ static const std::string OP_PATTERN_BATCH_MATMUL = "BatchMatmul";
 static const std::string OP_PATTERN_CONV3D = "Conv3d";
 static const std::string OP_PATTERN_DROPOUTDOMASKV3D = "DropOutDoMaskV3D";
 static const std::string OP_PATTERN_CONV3D_BACKPROP_INPUT = "Conv3d_backprop_input";
+static const std::string OP_PATTERN_CONV_BACKPROP_FILTER = "Conv2d_backprop_filter";
 
 static const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                                      OP_PATTERN_COMMONREDUCE,
@@ -81,7 +82,11 @@ static const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                                      OP_PATTERN_BATCH_MATMUL,
                                                      OP_PATTERN_CONV3D,
                                                      OP_PATTERN_DROPOUTDOMASKV3D,
-                                                     OP_PATTERN_CONV3D_BACKPROP_INPUT};
+                                                     OP_PATTERN_CONV3D_BACKPROP_INPUT,                        
+#ifndef ONLY_COMPILE_OPEN_SRC
+                                                     OP_PATTERN_CONV_BACKPROP_FILTER
+#endif
+};
 }  // namespace fe
 
 #endif  // INC_REGISTER_GRAPH_OPTIMIZER_BUFFER_FUSION_CONSTANT_H_

@@ -53,9 +53,15 @@ BufferFusionPattern::~BufferFusionPattern() {
  * with the value
  * @return BufferFusionPattern: pattern object
  */
+#ifndef ONLY_COMPILE_OPEN_SRC
+BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
+                                                    int64_t repeate_min, int64_t repeate_max, int64_t group_id,
+                                                    ShapeTypeRule shape_type_rule, bool not_pattern) {
+#else
 BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
                                                     int64_t repeate_min, int64_t repeate_max, int64_t group_id,
                                                     ShapeTypeRule shape_type_rule) {
+#endif
   if (desc_name.empty()) {
     GELOGW("[AddOpDesc][Check] Desc_name cannot be empty.");
     error_count_++;
@@ -93,6 +99,9 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
   op->ignore_input_num = false;
   op->ignore_output_num = false;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  op->not_pattern = not_pattern;
+#endif
   if (repeate_max > repeate_min) {
     for (int64_t i = repeate_min; i < repeate_max; i++) {
       op->multi_output_skip_status.insert(std::pair<int64_t, SkipStatus>(i, SkipStatus::DISABLED));
