@@ -95,6 +95,7 @@ class TuningUtils {
   };
   static graphStatus MakeExeGraph(ComputeGraphPtr &exe_graph,
                                   const HelpInfo& help_info);
+  static graphStatus ConvertConstToWeightAttr(ComputeGraphPtr &exe_graph);
   static graphStatus HandlePld(NodePtr &node);
   static graphStatus HandleEnd(NodePtr &node);
   static graphStatus ChangePld2Data(NodePtr &node, NodePtr &data_node);
