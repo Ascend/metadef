@@ -82,6 +82,8 @@ class ModelSerializeImp {
  private:
   bool RebuildOwnership(ComputeGraphPtr &compute_graph, std::map<std::string, ComputeGraphPtr> &subgraphs);
 
+  void FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc);
+
   std::vector<NodeNameGraphReq> graph_input_node_names_;
   std::vector<NodeNameGraphReq> graph_output_node_names_;
   std::vector<NodeNameNodeReq> node_input_node_names_;
