@@ -906,7 +906,8 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
   }
 
   graphStatus status = InferShapeAndType(node, op, before_subgraph);
-  if (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS) {
+  bool check_status_valid = (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS);
+  if (check_status_valid) {
     if (is_unknown_graph) {
       PrintInOutTensorShape(node, "after_infershape when running");
       return GRAPH_SUCCESS;
