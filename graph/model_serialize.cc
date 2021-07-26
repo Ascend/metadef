@@ -103,6 +103,21 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_
   return true;
 }
 
+void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc) {
+  proto::OpDef *op_def_proto = op_desc->impl_->op_def_.GetProtoMsg();
+  size_t op_def_subgraph_name_size = op_def_proto->subgraph_name_size();
+  size_t op_desc_subgraph_name_size = op_desc->GetSubgraphInstanceNames().size();
+  if (op_def_subgraph_name_size == op_desc_subgraph_name_size) {
+    return;
+  }
+
+  if (op_def_subgraph_name_size == 0) {
+    for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
+      op_def_proto->add_subgraph_name(name);
+    }
+  }
+}
+
 bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, bool is_dump) {
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr. check invalid.");
                    return false, "[Check][Param] op_desc is null.");
@@ -113,6 +128,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
                    return false, "[Check][Param] op_desc impl is null.");
 
   if (op_desc->impl_->op_def_.GetProtoMsg() != nullptr) {
+    FixOpDefSubgraphInstanceName(op_desc);
     *op_def_proto = *op_desc->impl_->op_def_.GetProtoMsg();
     //Delete unnecessary attr
     if (is_dump) {
@@ -149,9 +165,6 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
     }
 
     op_def_proto->set_id(op_desc->GetId());
-    for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
-      op_def_proto->add_subgraph_name(name);
-    }
     OpDescToAttrDef(op_desc, op_def_proto);
   }
   return true;
