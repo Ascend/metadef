@@ -1078,6 +1078,9 @@ vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
   auto compute_graph = node.GetOwnerComputeGraph();
   for (const std::string &instance_name : subgraph_names) {
     auto subgraph = compute_graph->GetSubgraph(instance_name);
+    if (subgraph == nullptr) {
+      continue;
+    }
     for (const auto &node_in_subgraph : subgraph->GetDirectNode()) {
       if (NodeUtils::IsSubgraphOutput(node_in_subgraph)) {
         out_data_node_vec.emplace_back(node_in_subgraph);

@@ -34,11 +34,13 @@ class ShapeRefiner {
   static graphStatus InferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph);
   static graphStatus InferShapeAndTypeForRunning(const NodePtr &node, bool before_subgraph);
   static void ClearContextMap();
-  static InferenceContextPtr CreateInferenceContext(const NodePtr &node);
+  static graphStatus CreateInferenceContext(const NodePtr &node, InferenceContextPtr &inference_context);
   static void PushToContextMap(const NodePtr &node, const InferenceContextPtr &inference_context);
 
  private:
   static void PrintInOutTensorShape(const ge::NodePtr &node, const std::string &phase);
+  static graphStatus GetRealInNodesAndIndex(NodePtr &input_node, int32_t &output_idx,
+                                            std::map<NodePtr, int32_t> &nodes_idx);
 };
 }  // namespace ge
 #endif  // INC_GRAPH_SHAPE_REFINER_H_
