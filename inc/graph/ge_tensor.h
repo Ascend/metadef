@@ -71,6 +71,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   GeShape(GeShape &&other);
   GeShape &operator=(const GeShape &other);
   GeShape &operator=(GeShape &&other);
+  bool operator==(const GeShape &other) const;
 
  private:
   GeShapeImplPtr impl_;
@@ -114,6 +115,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
 
   GeShape GetOriginShape() const;
   void SetOriginShape(const GeShape &originShape);
+  bool IsOriginShapeInitialized();
 
   Format GetFormat() const;
   void SetFormat(Format format);
