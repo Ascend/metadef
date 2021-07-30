@@ -1285,4 +1285,32 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) 
   }
   return GRAPH_SUCCESS;
 }
+
+graphStatus NodeUtils::UpdateInputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
+  auto desc = node.GetOpDesc();
+  if (desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  auto input_desc = desc->MutableInputDesc(index);
+  if (input_desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  input_desc->SetShape(shape);
+  input_desc->SetOriginShape(shape);
+  return GRAPH_SUCCESS;
+}
+
+graphStatus NodeUtils::UpdateOutputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
+  auto desc = node.GetOpDesc();
+  if (desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  auto output_desc = desc->MutableOutputDesc(index);
+  if (output_desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  output_desc->SetShape(shape);
+  output_desc->SetOriginShape(shape);
+  return GRAPH_SUCCESS;
+}
 }  // namespace ge

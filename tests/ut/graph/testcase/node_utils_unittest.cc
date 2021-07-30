@@ -94,4 +94,19 @@ TEST_F(UtestNodeUtils, GetInputConstData_subgraph) {
   ASSERT_EQ(NodeUtils::GetInputConstData(*add, "sub_const", tensor), GRAPH_SUCCESS);
   ASSERT_EQ(NodeUtils::GetInputConstData(*add, "sub_data", tensor), GRAPH_SUCCESS);
 }
+
+TEST_F(UtestNodeUtils, UpdateOriginShapeAndShape) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data1 = builder.AddNode("Data1", "Data", 1, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 1, 1);
+
+  vector<int64_t> dims = {1, 2};
+  GeShape data_shape(dims);
+  ASSERT_EQ(NodeUtils::UpdateInputOriginalShapeAndShape(*data1, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::UpdateOutputOriginalShapeAndShape(*data1, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::UpdateInputOriginalShapeAndShape(*data2, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::UpdateOutputOriginalShapeAndShape(*data2, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(data1->GetOpDesc()->GetInputDesc(0).GetShape() == data1->GetOpDesc()->GetInputDesc(0).GetShape(), true);
+  ASSERT_EQ(data1->GetOpDesc()->GetInputDesc(0).IsOriginShapeInitialized(), true);
+}
 }  // namespace ge
