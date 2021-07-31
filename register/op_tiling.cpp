@@ -1097,55 +1097,24 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
   GELOGI("Do Atomic optiling. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   std::vector<int64_t> atomic_output_indices;
   (void) ge::AttrUtils::GetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
-  std::map<string, std::map<int64_t, int64_t>> atomic_workspace_info;
-  atomic_workspace_info = op_desc->TryGetExtAttr(ge::EXT_ATTR_ATOMIC_WORKSPACE_INFO, atomic_workspace_info);
-  if (atomic_output_indices.empty() && atomic_workspace_info.empty()) {
-    GE_LOGE("No ATOMIC_ATTR_OUTPUT_INDEX and EXT_ATTR_ATOMIC_WORKSPACE_INFO found, op_type:%s, op_name:%s",
-            origin_op_type.c_str(), op_name.c_str());
+  if (atomic_output_indices.empty()) {
+    GE_LOGE("No ATOMIC_ATTR_OUTPUT_INDEX found, op_type:%s, op_name:%s", origin_op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
 
-  OpCompileInfo op_compile_info;
-  bool bres = GetAtomicCleanCompileInfo(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
-  if (!bres) {
-    GE_LOGE("Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
-    return ge::GRAPH_FAILED;
-  }
-  std::string compile_info_value = op_compile_info.str;
-  nlohmann::json compile_info_json;
-  try {
-    compile_info_json = nlohmann::json::parse(compile_info_value);
-  } catch (nlohmann::json::parse_error& ex) {
-    GE_LOGE("Failed to set compile_info_value to json, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+  auto tensor = op_desc->MutableOutputDesc(atomic_output_indices[0]);
+  if (tensor == nullptr) {
+    GE_LOGE("Get MutableOutputDesc failed. op_type:%s, op_name:%s", origin_op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
 
   int64_t clean_size = 0;
-  if(!atomic_output_indices.empty()) {
-    for (auto atomic_output_indice : atomic_output_indices) {
-      auto tensor = op_desc->MutableOutputDesc(atomic_output_indice);
-      if (tensor == nullptr) {
-        GE_LOGE("Get MutableOutputDesc failed. op_type:%s, op_name:%s", origin_op_type.c_str(), op_name.c_str());
-        return ge::GRAPH_FAILED;
-      }
-      auto res = ge::TensorUtils::GetSize(*tensor, clean_size);
-      if (res != ge::GRAPH_SUCCESS) {
-        GE_LOGE("Get size of tensor desc failed. op_type:%s, op_name:%s", origin_op_type.c_str(), op_name.c_str());
-        return ge::GRAPH_FAILED;
-      }
-      compile_info_json["_workspace_size_list"].push_back(clean_size);
-    }
-  }
-  clean_size = 0;
-  if (!atomic_workspace_info.empty()) {
-    auto workspace_bytes = op_desc->GetWorkspaceBytes();
-    for (auto byte : workspace_bytes) {
-      clean_size += byte;
-    }
-    compile_info_json["_workspace_size_list"].push_back(clean_size);
+  auto res = ge::TensorUtils::GetSize(*tensor, clean_size);
+  if (res != ge::GRAPH_SUCCESS) {
+    GE_LOGE("Get size of tensor desc failed. op_type:%s, op_name:%s", origin_op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
   }
 
-  GELOGI("op_compile_info's value: %s", compile_info_json.dump().c_str());
   GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", clean_size, origin_op_type.c_str(), op_name.c_str());
   op_param.const_inputs.emplace("workspace_size",
                                 TeConstTensorData(nullptr, static_cast<size_t>(clean_size), ge::Tensor()));
@@ -1157,7 +1126,13 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
     return ge::GRAPH_FAILED;
   }
 
-  op_compile_info.str = compile_info_json.dump();
+  OpCompileInfo op_compile_info;
+  bool bres = GetAtomicCleanCompileInfo(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
+  if (!bres) {
+    GE_LOGE("Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+
   bool rc = (iter->second)(op_param, op_compile_info, run_info);
   if (rc) {
     GELOGI("Atomic optiling succeed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
@@ -1214,69 +1189,34 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
   GELOGI("Do Atomic optiling. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
   std::vector<int64_t> atomic_output_indices;
   (void) ge::AttrUtils::GetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
-  std::map<string, std::map<int64_t, int64_t>> atomic_workspace_info;
-  atomic_workspace_info = op_desc->TryGetExtAttr(ge::EXT_ATTR_ATOMIC_WORKSPACE_INFO, atomic_workspace_info);
-  bool atomic_flag = atomic_output_indices.empty() && atomic_workspace_info.empty();
-  if (atomic_flag) {
-    REPORT_CALL_ERROR("E19999",
-      "No ATOMIC_ATTR_OUTPUT_INDEX and EXT_ATTR_ATOMIC_WORKSPACE_INFO found,op_type:%s, op_name:%s",
-      origin_op_type.c_str(), op_name.c_str());
+  if (atomic_output_indices.empty()) {
+    REPORT_CALL_ERROR("E19999", "No ATOMIC_ATTR_OUTPUT_INDEX found, op_type:%s, op_name:%s", origin_op_type.c_str(),
+                      op_name.c_str());
     return ge::GRAPH_FAILED;
   }
-
+  ge::GeTensorDescPtr tensor = op_desc->MutableOutputDesc(atomic_output_indices[0]);
+  if (tensor == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Get MutableOutputDesc failed. op_type:%s, op_name:%s", origin_op_type.c_str(),
+                      op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+  int64_t clean_size = 0;
+  vector<int> workspace_list;
+  auto res = ge::TensorUtils::GetSize(*tensor, clean_size);
+  if (res != ge::GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "Get size of tensor desc failed. op_type:%s, op_name:%s", origin_op_type.c_str(),
+                      op_name.c_str());
+    return ge::GRAPH_FAILED;
+  }
+  GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", clean_size, origin_op_type.c_str(), op_name.c_str());
+  workspace_list.push_back(clean_size);
+  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
   optiling::utils::OpCompileInfo op_compile_info("", "");
   bool bres = GetAtomicCleanCompileInfoV2(op_desc, op_type.c_str(), op_name.c_str(), op_compile_info);
   if (!bres) {
     REPORT_CALL_ERROR("E19999", "Failed to get compile_info, op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
     return ge::GRAPH_FAILED;
   }
-  ge::AscendString compile_info_value(op_compile_info.GetValue());
-  nlohmann::json cinfo_json;
-  try {
-    const char* compile_info_value_str = compile_info_value.GetString();
-    if (compile_info_value_str == nullptr) {
-      REPORT_CALL_ERROR("E19999", "compile_info_value_str is null, op_type:%s, op_name:%s",
-        op_type.c_str(), op_name.c_str());
-      return ge::GRAPH_FAILED;
-    }
-    cinfo_json = nlohmann::json::parse(compile_info_value_str);
-  } catch (nlohmann::json::parse_error& ex) {
-    REPORT_CALL_ERROR("E19999", "Failed to set compile_info_value to json, op_type:%s, op_name:%s",
-                      op_type.c_str(), op_name.c_str());
-    return ge::GRAPH_FAILED;
-  }
-  int64_t clean_size = 0;
-  vector<int> workspace_list;
-  if(!atomic_output_indices.empty()) {
-    for (auto atomic_output_indice : atomic_output_indices) {
-      auto tensor = op_desc->MutableOutputDesc(atomic_output_indice);
-      if (tensor == nullptr) {
-        REPORT_CALL_ERROR("E19999",
-          "Get MutableOutputDesc failed. op_type:%s, op_name:%s", origin_op_type.c_str(), op_name.c_str());
-        return ge::GRAPH_FAILED;
-      }
-      auto res = ge::TensorUtils::GetSize(*tensor, clean_size);
-      if (res != ge::GRAPH_SUCCESS) {
-        REPORT_CALL_ERROR("E19999",
-          "Get size of tensor desc failed. op_type:%s, op_name:%s", origin_op_type.c_str(), op_name.c_str());
-        return ge::GRAPH_FAILED;
-      }
-      cinfo_json["_workspace_size_list"].push_back(clean_size);
-    }
-  }
-  clean_size = 0;
-  if (!atomic_workspace_info.empty()) {
-    auto workspace_bytes = op_desc->GetWorkspaceBytes();
-    for (auto byte : workspace_bytes) {
-      clean_size += byte;
-    }
-    cinfo_json["_workspace_size_list"].push_back(clean_size);
-  }
-  GELOGI("op_compile_info's value: %s", cinfo_json.dump().c_str());
-  GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", clean_size, origin_op_type.c_str(), op_name.c_str());
-  workspace_list.push_back(clean_size);
-  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
-  op_compile_info.SetValue(cinfo_json.dump().c_str());
   bool rc = (iter->second)(op_param, op_compile_info, run_info);
   if (rc) {
     GELOGI("Atomic optiling succeed. op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
