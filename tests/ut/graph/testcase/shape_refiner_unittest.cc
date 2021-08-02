@@ -188,7 +188,7 @@ TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
   const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
   auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
 
-  EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, true), GRAPH_SUCCESS);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, true), GRAPH_FAILED);
 
   auto infershape_funcs_back = OperatorFactoryImpl::operator_infershape_funcs_;
   OperatorFactoryImpl::operator_infershape_funcs_.reset(new (std::nothrow) std::map<string, InferShapeFunc>());
