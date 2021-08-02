@@ -886,7 +886,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
   }
 
   if (node->Verify() != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
+    REPORT_CALL_ERROR("EZ9999", "Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
     GELOGE(GRAPH_FAILED, "[Call][Verify] Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
     return GRAPH_FAILED;
   }
@@ -941,7 +941,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
       input_tensor->SetOriginShapeRange(range);
     }
   } else {
-    REPORT_CALL_ERROR("E19999", "%s(%s) call infer function failed.",
+    REPORT_CALL_ERROR("EZ9999", "%s(%s) call infer function failed.",
                       node->GetName().c_str(), node->GetType().c_str());
     GELOGE(GRAPH_FAILED, "[Call][InferFunction] failed, node:%s(%s).",
            node->GetName().c_str(), node->GetType().c_str());

@@ -183,4 +183,14 @@ TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
     EXPECT_EQ(node_idx.first->GetName(), "sub_relu2");
   }
 }
+
+TEST_F(UtestShapeRefiner, ) {
+  auto graph = CreateGraphWithMultiSubgraph();
+  graph->SetGraphUnknownFlag(false);
+  auto subgraph = graph->GetSubgraph("sub_graph1");
+  auto relu = subgraph->FindNode("sub_relu1");
+  relu->NodeImpl->OpDescPtr = nullptr;
+
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, false), GRAPH_FAILED);
+}
 } // namespace ge
