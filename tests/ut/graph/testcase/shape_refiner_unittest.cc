@@ -195,7 +195,7 @@ TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
   OperatorFactoryImpl::operator_infershape_funcs_->emplace("Merge", [](Operator &op) { return GRAPH_SUCCESS; });
   auto merge1 = CreateNode(graph, "merge1", "StreamMerge", 2, 2);
   merge1->GetOpDesc()->AddInferFunc(nullptr);
-  EXPECT_EQ(ShapeRefiner::InferShapeAndType(merge1, true), GRAPH_SUCCESS);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(merge1, true), GRAPH_FAILED);
   OperatorFactoryImpl::operator_infershape_funcs_ = infershape_funcs_back;
 }
 } // namespace ge
