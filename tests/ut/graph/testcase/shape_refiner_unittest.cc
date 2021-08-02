@@ -23,7 +23,7 @@
 #include "graph/operator_factory_impl.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph_builder_utils.h"
-#include "graph\node_impl.h"
+#include "graph/node_impl.h"
 
 namespace ge {
 class UtestShapeRefiner : public testing::Test {
