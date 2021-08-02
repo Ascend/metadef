@@ -186,12 +186,10 @@ TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
 }
 
 TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
-  auto graph = CreateGraphWithMultiSubgraph();
-  graph->SetGraphUnknownFlag(false);
-  auto subgraph = graph->GetSubgraph("sub_graph1");
-  auto relu = subgraph->FindNode("sub_relu1");
-  relu->NodeImpl->OpDescPtr = nullptr;
+  const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
+  auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
+  enter1->GetOpDesc()->AddInferFunc(nullptr);
 
-  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, false), GRAPH_FAILED);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, true), GRAPH_FAILED);
 }
 } // namespace ge
