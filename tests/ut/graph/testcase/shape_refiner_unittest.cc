@@ -185,7 +185,7 @@ TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
   }
 }
 
-TEST_F(UtestShapeRefiner, ) {
+TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
   auto graph = CreateGraphWithMultiSubgraph();
   graph->SetGraphUnknownFlag(false);
   auto subgraph = graph->GetSubgraph("sub_graph1");
