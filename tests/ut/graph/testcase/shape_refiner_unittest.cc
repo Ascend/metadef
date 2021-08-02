@@ -23,7 +23,6 @@
 #include "graph/operator_factory_impl.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph_builder_utils.h"
-#include "graph/node_impl.h"
 
 namespace ge {
 class UtestShapeRefiner : public testing::Test {
@@ -190,6 +189,6 @@ TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
   auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
   enter1->GetOpDesc()->AddInferFunc(nullptr);
 
-  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, true), GRAPH_FAILED);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, true), GRAPH_FAILED);
 }
 } // namespace ge
