@@ -198,6 +198,6 @@ TEST_F(UtestShapeRefiner, Infer_shape_and_type_false) {
   auto relu = subgraph->FindNode("sub_relu1");
   OperatorFactoryImpl::operator_infershape_funcs_ = nullptr;
 
-  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, false), GRAPH_FAILED);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, true), GRAPH_FAILED);
 }
 } // namespace ge
