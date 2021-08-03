@@ -192,16 +192,12 @@ TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
 }
 
 TEST_F(UtestShapeRefiner, Infer_shape_and_type_false) {
-  const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
-  auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
+  auto graph = CreateGraphWithMultiSubgraph();
+  graph->SetGraphUnknownFlag(false);
+  auto subgraph = graph->GetSubgraph("sub_graph1");
+  auto relu = subgraph->FindNode("sub_relu1");
+  OperatorFactoryImpl::operator_infershape_funcs_ = nullptr;
 
-  EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, false), GRAPH_SUCCESS);
-  auto infershape_funcs_back = OperatorFactoryImpl::operator_infershape_funcs_;
-  OperatorFactoryImpl::operator_infershape_funcs_.reset(new (std::nothrow) std::map<string, InferShapeFunc>());
-  OperatorFactoryImpl::operator_infershape_funcs_->emplace("Merge", [](Operator &op) { return GRAPH_SUCCESS; });
-  auto merge1 = CreateNode(graph, "merge1", "StreamMerge", 2, 2);
-  merge1->GetOpDesc()->AddInferFunc(nullptr);
-  EXPECT_EQ(ShapeRefiner::InferShapeAndType(merge1, true), GRAPH_FAILED);
-  OperatorFactoryImpl::operator_infershape_funcs_ = infershape_funcs_back;
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, false), GRAPH_FAILED);
 }
 } // namespace ge
