@@ -914,7 +914,7 @@ GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   return *this;
 }
 
-uint32_t TensorDataImpl::invalid_data_ = 0x3A2D2900;
+uint32_t TensorDataImpl::invalid_data_ = 0x3A2D2900U;
 
 TensorDataImpl::TensorDataImpl(const TensorDataImpl &other) {
   // Share data
@@ -1046,7 +1046,7 @@ uint8_t TensorDataImpl::operator[](size_t index) const {
   if (aligned_ptr_ != nullptr && index < length_) {
     return *(aligned_ptr_->MutableGet() + index);
   }
-  return 0xff;
+  return 0xffU;
 }
 
 TensorData::TensorData()
