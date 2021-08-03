@@ -190,4 +190,15 @@ TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
 
   EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, true), GRAPH_FAILED);
 }
+
+TEST_F(UtestShapeRefiner, Infer_shape_and_type_false) {
+  const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
+  auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
+
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, false), GRAPH_SUCCESS);
+  auto merge1 = CreateNode(graph, "merge1", "StreamMerge", 2, 2);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(merger1, true), GRAPH_FAILED);
+}
+
+
 } // namespace ge
