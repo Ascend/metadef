@@ -44,17 +44,29 @@
     }                                                                                                              \
   } while (0)
 
+namespace {
+struct GraphInfo {
+  std::set<ge::NodePtr> nodes;
+  std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_inputs;
+  std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_outputs;
+  std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> ctrl_inputs;
+  std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> ctrl_outputs;
+  std::list<std::pair<ge::OutDataAnchorPtr, ge::InDataAnchorPtr>> inner_data_edges;
+  std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> inner_ctrl_edges;
+};
+}
+
 namespace ge {
 enum IOType { kIn, kOut };
 
 struct NodeIndexIO {
-  NodeIndexIO(ge::NodePtr node, uint32_t index, IOType io_type)
+  NodeIndexIO(NodePtr node, uint32_t index, IOType io_type)
       : node_(std::move(node)), index_(index), io_type_(io_type) {
     if (node_ != nullptr) {
       value_ = node_->GetName() + (io_type_ == kOut ? "_out_" : "_in_") + std::to_string(index_);
     }
   }
-  NodeIndexIO(ge::NodePtr node, int index, IOType io_type)
+  NodeIndexIO(NodePtr node, int index, IOType io_type)
       : node_(std::move(node)), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
     if (node_ != nullptr) {
       value_ = node_->GetName() + (io_type_ == kOut ? "_out_" : "_in_") + std::to_string(index_);
@@ -101,6 +113,12 @@ class GraphUtils {
   static graphStatus RemoveEdge(const OutControlAnchorPtr &src, const InControlAnchorPtr &dst);
 
   static graphStatus RemoveEdge(const OutDataAnchorPtr &src, const InControlAnchorPtr &dst);
+
+  static graphStatus ReplaceEdgeSrc(const OutDataAnchorPtr &src, const InDataAnchorPtr &dst,
+                                    const OutDataAnchorPtr &new_src);
+
+  static graphStatus ReplaceEdgeSrc(const OutControlAnchorPtr &src, const InControlAnchorPtr &dst,
+                                    const OutControlAnchorPtr &new_src);
 
   static graphStatus ReplaceEdgeDst(const OutDataAnchorPtr &src, const InDataAnchorPtr &dst,
                                     const InDataAnchorPtr &new_dst);
@@ -353,6 +371,17 @@ class GraphUtils {
 
   static bool IsNodeInGraphRecursively(const ComputeGraphPtr &graph, const Node &node);
 
+  static graphStatus GetSubgraphsRecursively(const ComputeGraphPtr &graph, std::vector<ComputeGraphPtr> &subgraphs);
+
+  static ComputeGraphPtr BuildSubgraphWithNodes(const ComputeGraphPtr &graph, const std::set<NodePtr> &nodes,
+                                                const std::string &subgraph_name);
+
+  static ComputeGraphPtr BuildSubgraphWithNodes(ComputeGraph &graph, const std::set<NodePtr> &nodes,
+                                                const std::string &subgraph_name);
+
+  static graphStatus UnfoldSubgraph(const ComputeGraphPtr &graph,
+                                    const std::function<bool(const ComputeGraphPtr &)> &filter);
+
  private:
   ///
   /// Get reference-mapping for in_data_anchors of node
@@ -443,6 +472,26 @@ class GraphUtils {
   static graphStatus UpdateRefMapping(const NodeIndexIO &cur_node_info, const NodeIndexIO &exist_node_info,
                                       std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                       std::map<std::string, std::string> &anchor_to_symbol);
+
+  static void BuildGraphInfoFromNodes(const std::set<NodePtr> &nodes, GraphInfo &graph_info);
+
+  static void BuildInDataEdgesFromNode(const NodePtr &node, const std::set<NodePtr> &nodes,
+                                       std::map<OutDataAnchorPtr, size_t> &data_input_index_map,
+                                       GraphInfo &graph_info);
+
+  static NodePtr BuildSubgraphNode(ComputeGraph &graph, const std::string &graph_name,
+                                   const GraphInfo &graph_info);
+
+  static ComputeGraphPtr BuildSubgraph(const NodePtr &subgraph_node, const GraphInfo &graph_info,
+                                       const std::string &subgraph_name);
+
+  static graphStatus RelinkDataEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info);
+
+  static graphStatus RelinkCtrlEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info);
+
+  static graphStatus MergeInputNodes(const ComputeGraphPtr &graph);
+
+  static graphStatus MergeNetOutputNode(const ComputeGraphPtr &graph);
 };
 
 class ComputeGraphBuilder {

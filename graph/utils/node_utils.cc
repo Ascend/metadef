@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "graph/utils/node_utils.h"
+#include <stack>
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
@@ -750,6 +751,70 @@ std::vector<ComputeGraphPtr> NodeUtils::GetAllSubgraphs(const Node &node) {
     return {};
   }
   return root_graph->GetAllSubgraphs();
+}
+
+graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs) {
+  if (node == nullptr || node->GetOpDesc() == nullptr) {
+    REPORT_INNER_ERROR("E19999", "node or op_desc is null");
+    GELOGE(GRAPH_FAILED, "[Check][Param] node or op_desc is null");
+    return GRAPH_FAILED;
+  }
+
+  const auto &root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
+  if (root_graph == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Failed to find root graph from node %s ", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Get][Graph] Failed to find root graph from node %s ", node->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+
+  for (const auto &graph_name : node->GetOpDesc()->GetSubgraphInstanceNames()) {
+    const auto &graph = root_graph->GetSubgraph(graph_name);
+    if (graph == nullptr) {
+      GELOGW("[Get][Subgraph] subgraph %s of node %s is null", graph_name.c_str(), node->GetName().c_str());
+      continue;
+    }
+    subgraphs.emplace_back(graph);
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus NodeUtils::GetSubgraphsRecursively(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs) {
+  if (node == nullptr || node->GetOpDesc() == nullptr) {
+    REPORT_INNER_ERROR("E19999", "node or op_desc is null");
+    GELOGE(GRAPH_FAILED, "[Check][Param] node or op_desc is null");
+    return GRAPH_FAILED;
+  }
+
+  const auto &root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
+  if (root_graph == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Failed to find root graph from node %s ", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Get][Graph] Failed to find root graph from node %s ", node->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+
+  std::stack<std::string> subgraph_names;
+  for (const auto &graph_name : node->GetOpDesc()->GetSubgraphInstanceNames()) {
+    subgraph_names.push(graph_name);
+  }
+
+  while (!subgraph_names.empty()) {
+    const auto &graph_name = subgraph_names.top();
+    subgraph_names.pop();
+    const auto &graph = root_graph->GetSubgraph(graph_name);
+    if (graph == nullptr) {
+      GELOGW("[Get][Subgraph] subgraph %s of node %s is null", graph_name.c_str(), node->GetName().c_str());
+      continue;
+    }
+    for (const auto &cur_node : graph->GetDirectNode()) {
+      for (const auto &subgraph_name : cur_node->GetOpDesc()->GetSubgraphInstanceNames()) {
+        subgraph_names.push(subgraph_name);
+      }
+    }
+    subgraphs.emplace_back(graph);
+  }
+
+  return GRAPH_SUCCESS;
 }
 
 ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, uint32_t index) {

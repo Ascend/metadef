@@ -35,6 +35,7 @@ COMMON_LOCAL_SRC_FILES := \
     ./utils/anchor_utils.cc \
     ./utils/tuning_utils.cc \
     ./utils/graph_utils.cc \
+    ./utils/ffts_graph_utils.cc \
     ./utils/dumper/ge_graph_dumper.cc \
     ./utils/ge_ir_utils.cc \
     ./utils/op_desc_utils.cc \

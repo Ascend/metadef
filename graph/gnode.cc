@@ -21,7 +21,7 @@
 #include "graph/node.h"
 #include "graph/utils/node_adapter.h"
 #include "graph/utils/tensor_adapter.h"
-#include <graph/utils/graph_utils.h>
+#include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"
 #include "utils/node_utils.h"
@@ -950,7 +950,13 @@ graphStatus GNode::GetALLSubgraphs(std::vector<GraphPtr> &graph_list) const {
     return GRAPH_FAILED;
   }
 
-  std::vector<ComputeGraphPtr> sub_graphs = NodeUtils::GetAllSubgraphs(*node_ptr);
+  auto root_graph = GraphUtils::FindRootGraph(node_ptr->GetOwnerComputeGraph());
+  if (root_graph == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Failed to find root graph from node %s ", node_ptr->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Get][RootGraph] Failed to find root graph from node %s ", node_ptr->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+  std::vector<ComputeGraphPtr> sub_graphs = root_graph->GetAllSubgraphs();
   if (sub_graphs.empty()) {
     REPORT_CALL_ERROR("E19999", "get all subgraphs failed from node[%s].", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][ALLSubGraphs] failed from node[%s].", node_ptr->GetName().c_str());
