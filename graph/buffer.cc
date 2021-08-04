@@ -51,7 +51,7 @@ BufferImpl::BufferImpl(std::size_t buffer_size, std::uint8_t default_val) : Buff
 
 void BufferImpl::CopyFrom(const std::uint8_t *data, std::size_t buffer_size) {
   auto proto_msg = data_.GetProtoMsg();
-  if (proto_msg != nullptr && data != nullptr) {
+  if ((proto_msg != nullptr) && (data != nullptr)) {
     try {
       proto_msg->set_bt(data, buffer_size);
       buffer_ = proto_msg->mutable_bt();

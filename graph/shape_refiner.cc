@@ -840,7 +840,7 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
   Operator op = OpDescUtils::CreateOperatorFromNode(node);
 
   graphStatus status = InferShapeAndTypeForRunning(node, op, before_subgraph);
-  if (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS) {
+  if ((status == GRAPH_PARAM_INVALID) || (status == GRAPH_SUCCESS)) {
     // ensure the dtype is not changed after infershape in running
     auto after_opdesc = node->GetOpDesc();
     GE_IF_BOOL_EXEC(after_opdesc == nullptr, REPORT_INNER_ERROR("E19999", "param node has no opdesc, check invalid.");
