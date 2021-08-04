@@ -87,6 +87,7 @@ set(UT_FILES
     "testcase/graph_utils_unittest.cc"
     "testcase/runtime_inference_context_unittest.cc"
     "testcase/op_desc_unittest.cc"
+    "testcase/ref_relation_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES
