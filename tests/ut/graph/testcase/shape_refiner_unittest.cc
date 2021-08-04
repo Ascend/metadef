@@ -183,4 +183,12 @@ TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
     EXPECT_EQ(node_idx.first->GetName(), "sub_relu2");
   }
 }
+
+TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
+  const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
+  auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
+
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, true), GRAPH_FAILED);
+}
+
 } // namespace ge

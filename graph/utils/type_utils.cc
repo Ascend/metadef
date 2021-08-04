@@ -406,7 +406,7 @@ graphStatus TypeUtils::SplitFormatFromStr(const std::string &str,
     std::string sub_format_str = str.substr(split_pos + 1);
     try {
       primary_format_str = str.substr(0, split_pos);
-      if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(), [](char c) { return !isdigit(c); })) {
+      if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(), [](char c) { return isdigit(c) == 0; })) {
         REPORT_CALL_ERROR("E19999", "sub_format: %s is not digital.", sub_format_str.c_str());
         GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %s is not digital.", sub_format_str.c_str());
         return GRAPH_FAILED;

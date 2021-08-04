@@ -29,12 +29,12 @@ namespace ge {
 class StringUtils {
  public:
   static std::string &Ltrim(std::string &s) {
-    (void)s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) { return !std::isspace(c); }));
+    (void)s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) { return std::isspace(c) == 0; }));
     return s;
   }
 
   static std::string &Rtrim(std::string &s) {
-    (void)s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) { return !std::isspace(c); }).base(), s.end());
+    (void)s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) { return std::isspace(c) == 0; }).base(), s.end());
     return s;
   }
 
