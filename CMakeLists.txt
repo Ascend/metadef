@@ -139,6 +139,9 @@ target_compile_options(metadef_tensorflow_protos_obj PRIVATE
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
 )
 
+if (ENABLE_MS_TESTCASES)
+    set(ENABLE_OPEN_SRC TRUE)
+endif()
 add_subdirectory(graph)
 add_subdirectory(error_manager)
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
