@@ -1192,9 +1192,11 @@ const std::string ATTR_NAME_FORMAT_AGNOSTIC_EXCEPT_INPUT = "_format_agnostic_exc
 // for ffts/ffts_plus
 const std::string ATTR_NAME_FFTS_SUB_GRAPH = "_ffts_sub_graph";
 const std::string ATTR_NAME_THREAD_SCOPE_ID = "_thread_scope_id";
+const std::string ATTR_NAME_THREAD_MODE = "_thread_mode";
 const std::string ATTR_NAME_FFTS_PLUS_SUB_GRAPH = "_ffts_plus_sub_graph";
-const std::string ATTR_NAME_COMPOUND_ENGINE_NAME = "_compound_engine_name";
-const std::string ATTR_NAME_COMPOUND_ENGINE_KERNEL_LIB_NAME = "_compound_engine_kernel_lib_name";
+const std::string ATTR_NAME_COMPOSITE_ENGINE_NAME = "_composite_engine_name";
+const std::string ATTR_NAME_COMPOSITE_ENGINE_KERNEL_LIB_NAME = "_composite_engine_kernel_lib_name";
+const std::string ATTR_NAME_CUBE_VECTOR_CORE_TYPE = "_cube_vector_core_type";
 
 // mark fuzz build scene
 const std::string ATTR_NAME_FUZZ_BUILD = "_fuzz_build";
