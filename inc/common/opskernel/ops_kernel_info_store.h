@@ -85,6 +85,8 @@ class OpsKernelInfoStore {
     }
     return CheckAccuracySupported(node->GetOpDesc(), un_supported_reason, realQuery);
   }
+  // Set cut support info
+  virtual Status SetCutSupportedInfo(const ge::NodePtr &node) { return SUCCESS; }
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_STORE_H_

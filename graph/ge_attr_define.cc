@@ -1221,4 +1221,14 @@ const std::string ATTR_NAME_WORKSPACE_MEMORY_NO_REUSE_SCOPE = "_workspace_memory
 
 // for blocking op
 const std::string ATTR_NAME_IS_BLOCKING_OP = "_is_blocking_op";
+// model deploy scheduler(mds)
+const std::string ATTR_NAME_GRADIENT_NODE = "_gradient_node";
+const std::string ATTR_NAME_TRAINABLE_VAR = "_trainable_var";
+const std::string ATTR_NAME_FISSION_FACTOR = "_fission_factor";
+const std::string ATTR_NAME_DEPLOY_INFO = "_deploy_info";
+const std::string ATTR_NAME_CUT_INFO = "_cut_info";
+const std::string ATTR_NAME_DEPLOY_DEVICE_TYPE = "_device_type";
+const std::string ATTR_NAME_DEPLOY_DEVICE_ID = "_device_id";
+const std::string ATTR_NAME_DEPLOY_GRAPH_INPUTS = "_graph_inputs";
+const std::string ATTR_NAME_DEPLOY_NEED_RETURN_RESULT = "_need_return_result";
 }  // namespace ge
