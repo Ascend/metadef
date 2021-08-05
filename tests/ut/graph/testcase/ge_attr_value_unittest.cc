@@ -17,8 +17,12 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "graph/op_desc.h"
+#define private public
+#define protected public
 #include "graph/ge_attr_value.h"
 #include "graph/utils/attr_utils.h"
+#undef private
+#undef protected
 
 namespace ge {
 class UtestGeAttrValue : public testing::Test {
@@ -49,10 +53,14 @@ TEST_F(UtestGeAttrValue, GetAllAttrs) {
   op_desc->SetAttr("input_desc", GeAttrValue::CreateFrom<GeAttrValue::TENSOR_DESC>(GeTensorDesc()));
   auto attrs = AttrUtils::GetAllAttrs(op_desc);
   EXPECT_EQ(attrs.size(), 2);
-  EXPECT_EQ(attrs["i"], 100);
+  int64_t attr_value = 0;
+  EXPECT_EQ(attrs["i"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_value, 100);
   op_desc->SetAttr("i", GeAttrValue::CreateFrom<GeAttrValue::INT>(101));
-  EXPECT_EQ(attrs["i"], 101);
+  EXPECT_EQ(attrs["i"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_value, 101);
   op_desc->TrySetAttr("i", GeAttrValue::CreateFrom<GeAttrValue::INT>(102));
-  EXPECT_EQ(attrs["i"], 101);
+  EXPECT_EQ(attrs["i"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_value, 101);
 }
 }
