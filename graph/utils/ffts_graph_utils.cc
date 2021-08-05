@@ -293,7 +293,7 @@ graphStatus FftsGraphUtils::SetAttrForFftsPlusSubgraph(const ComputeGraphPtr &su
   GE_CHECK_NOTNULL(parent_node);
   AttrUtils::SetStr(parent_node->GetOpDesc(), ATTR_NAME_FFTS_PLUS_SUB_GRAPH, subgraph->GetName().c_str());
   for (const auto &node : subgraph->GetAllNodes()) {
-    // TODO
+    // depend on SGT api, need modify
     AttrUtils::SetInt(node->GetOpDesc(), ATTR_NAME_THREAD_SCOPE_ID, 0);
   }
   return GRAPH_SUCCESS;
