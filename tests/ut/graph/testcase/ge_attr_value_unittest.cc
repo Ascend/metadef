@@ -63,8 +63,8 @@ TEST_F(UtestGeAttrValue, GetAllAttrs) {
   EXPECT_EQ(attrs["i"].GetValue(attr_value), GRAPH_SUCCESS);
   EXPECT_EQ(attr_value, 101);
   op_desc->TrySetAttr("j", GeAttrValue::CreateFrom<GeAttrValue::INT>(102));
-  EXPECT_EQ(attrs["j"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(AttrUtils::GetAllAttrs(op_desc).size(), 3);
+  EXPECT_EQ(AttrUtils::GetAllAttrs(op_desc)["j"].GetValue(attr_value), GRAPH_SUCCESS);
   EXPECT_EQ(attr_value, 102);
-  EXPECT_EQ(attrs.size(), 3);
 }
 }
