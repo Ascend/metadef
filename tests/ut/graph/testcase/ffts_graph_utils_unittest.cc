@@ -536,11 +536,28 @@ TEST_F(UtestFftsGraphUtils, ClipNodesFromGraph_with_func_node) {
 TEST_F(UtestFftsGraphUtils, CheckRecursionDepth) {
   std::map<NodePtr, std::vector<uint32_t>> node_value;
   std::map<ComputeGraphPtr , std::vector<uint32_t>> graph_value;
-  ASSERT_EQ(FftsGraphUtils::Calculate(nullptr, nullptr, node_value, graph_value, 10), GRAPH_FAILED);
-  ASSERT_EQ(FftsGraphUtils::Calculate(nullptr, nullptr, node_value, graph_value, 9), GRAPH_PARAM_INVALID);
-  ASSERT_EQ(FftsGraphUtils::PartitionGraphWithLimit(nullptr, {}, node_value, graph_value, 10), GRAPH_FAILED);
-  ASSERT_EQ(FftsGraphUtils::PartitionGraphWithLimit(nullptr, {}, node_value, graph_value, 9), GRAPH_PARAM_INVALID);
-  ASSERT_EQ(FftsGraphUtils::SplitFuncNode({}, {}, node_value, graph_value, 10), GRAPH_FAILED);
-  ASSERT_EQ(FftsGraphUtils::SplitFuncNode({}, {}, node_value, graph_value, 9), GRAPH_SUCCESS);
+  ComputeGraphPtr graph = nullptr;
+  ASSERT_EQ(FftsGraphUtils::Calculate(graph, nullptr, node_value, graph_value, 10), GRAPH_FAILED);
+  ASSERT_EQ(FftsGraphUtils::Calculate(graph, nullptr, node_value, graph_value, 9), GRAPH_PARAM_INVALID);
+  ASSERT_EQ(FftsGraphUtils::PartitionGraphWithLimit(nullptr, node_value, graph_value, {}, 10), GRAPH_FAILED);
+  ASSERT_EQ(FftsGraphUtils::PartitionGraphWithLimit(nullptr, node_value, graph_value, {}, 9), GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestFftsGraphUtils, SplitSubgraph_nullptr_graph) {
+  std::vector<std::pair<bool, std::set<NodePtr>>> split_nodes;
+  split_nodes.emplace_back(std::make_pair(true, std::set<NodePtr>{ nullptr }));
+  ASSERT_EQ(FftsGraphUtils::SplitSubgraph(nullptr, split_nodes), GRAPH_FAILED);
+}
+
+TEST_F(UtestFftsGraphUtils, SetAttrForFftsPlusSubgraph_nullptr_parent_node) {
+  auto builder = ut::GraphBuilder("");
+  ASSERT_EQ(FftsGraphUtils::SetAttrForFftsPlusSubgraph(builder.GetGraph()), GRAPH_FAILED);
+}
+
+TEST_F(UtestFftsGraphUtils, Calculate_nullptr_node) {
+  NodePtr node = nullptr;
+  std::map<NodePtr, std::vector<uint32_t>> node_value;
+  std::map<ComputeGraphPtr , std::vector<uint32_t>> graph_value;
+  ASSERT_TRUE(FftsGraphUtils::Calculate(node, nullptr, node_value, graph_value, 1).empty());
 }
 }  // namespace ge

@@ -25,10 +25,11 @@
 namespace ge {
 class FftsGraphUtils {
  public:
+  using CalcFunc = std::function<std::vector<uint32_t>(const NodePtr &)>;
   static graphStatus GraphPartition(ComputeGraph &graph, const std::set<NodePtr> &unsupported_nodes);
 
   static graphStatus GraphPartition(ComputeGraph &graph,
-                                    const std::function<std::vector<uint32_t>(const NodePtr &)> &calc_func,
+                                    const CalcFunc &calc_func,
                                     const std::vector<uint32_t> &upper_limit);
  private:
   static graphStatus CollectClipNodesAndGraphs(const ComputeGraphPtr &graph,
@@ -42,6 +43,12 @@ class FftsGraphUtils {
                                          const std::unordered_set<NodePtr> &nodes_need_clip,
                                          std::vector<std::pair<bool, std::set<NodePtr>>> &split_nodes);
 
+  static void SplitNodes(const std::set<NodePtr> &calc_nodes, const std::function<bool(const NodePtr &)> &is_cur_stage,
+                         std::set<NodePtr> &visited_nodes, std::set<NodePtr> &cur_nodes, std::set<NodePtr> &next_nodes);
+
+  static graphStatus SplitSubgraph(const ComputeGraphPtr &subgraph,
+                                   const std::vector<std::pair<bool, std::set<NodePtr>>> &split_nodes);
+
   static graphStatus BuildFftsPlusSubgraphWithAllNodes(const ComputeGraphPtr &subgraph);
 
   static void CollectCalcNodeInSubgraph(const ComputeGraphPtr &subgraph, std::set<NodePtr> &calc_nodes);
@@ -51,25 +58,31 @@ class FftsGraphUtils {
   static graphStatus SetAttrForFftsPlusSubgraph(const ComputeGraphPtr &subgraph);
 
   static graphStatus Calculate(const ComputeGraphPtr &graph,
-                               const std::function<std::vector<uint32_t>(const NodePtr &)> &calc_func,
+                               const CalcFunc &calc_func,
                                std::map<NodePtr, std::vector<uint32_t>> &node_value,
                                std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value,
                                uint32_t recursive_depth = 1);
+
+  static std::vector<uint32_t> Calculate(const NodePtr &node, const CalcFunc &calc_func,
+                                        std::map<NodePtr, std::vector<uint32_t>> &node_value,
+                                        std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value,
+                                        uint32_t recursive_depth);
 
   static bool IsValueValid(const ComputeGraphPtr &graph, const std::vector<uint32_t> &upper_limit,
                            const std::map<NodePtr, std::vector<uint32_t>> &node_value,
                            const std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value);
 
-  static graphStatus PartitionGraphWithLimit(const ComputeGraphPtr &graph, const std::vector<uint32_t> &upper_limit,
+  static graphStatus PartitionGraphWithLimit(const ComputeGraphPtr &graph,
                                              std::map<NodePtr, std::vector<uint32_t>> &node_value,
                                              std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value,
+                                             const std::vector<uint32_t> &upper_limit,
                                              uint32_t recursive_depth = 1);
 
   static graphStatus SplitFuncNode(const std::vector<NodePtr> exceed_single_node,
-                                   const std::vector<uint32_t> &upper_limit,
                                    std::map<NodePtr, std::vector<uint32_t>> &node_value,
                                    std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value,
-                                   uint32_t recursive_depth = 1);
+                                   const std::vector<uint32_t> &upper_limit,
+                                   uint32_t recursive_depth);
 };
 }  // namespace ge
 #endif  // INC_GRAPH_UTILS_GRAPH_UTILS_H_
