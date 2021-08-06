@@ -2903,11 +2903,11 @@ void GraphUtils::BuildGraphInfoFromNodes(const std::set<NodePtr> &nodes, GraphIn
     std::list<InDataAnchorPtr> peer_data_anchors;
     for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
       peer_data_anchors.clear();
-      for (const auto &peer_in_anchor : out_data_anchor->GetPeerInDataAnchors()) {
-        if (nodes.count(peer_in_anchor->GetOwnerNode()) == 0) {
-          peer_data_anchors.emplace_back(peer_in_anchor);
-        }
-      }
+      const auto &peer_in_anchors = out_data_anchor->GetPeerInDataAnchors();
+      std::copy_if(peer_in_anchors.begin(), peer_in_anchors.end(), std::back_inserter(peer_data_anchors),
+                   [nodes](const InDataAnchorPtr &peer_in_anchor) {
+                     return nodes.count(peer_in_anchor->GetOwnerNode()) == 0;
+                   });
       if (!peer_data_anchors.empty()) {
         size_t output_index = graph_info.data_outputs.size();
         graph_info.data_outputs[output_index] = std::make_pair(out_data_anchor, peer_data_anchors);
