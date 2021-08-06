@@ -229,32 +229,9 @@ graphStatus FftsGraphUtils::BuildFftsPlusSubgraphWithAllNodes(const ComputeGraph
 
 void FftsGraphUtils::CollectCalcNodeInSubgraph(const ComputeGraphPtr &subgraph, std::set<NodePtr> &calc_nodes) {
   std::set<NodePtr> edge_nodes;
-  static std::set<std::string> ctrl_goto_types = { LABELSET, LABELGOTOEX, LABELSWITCHBYINDEX };
+  std::set<std::string> ctrl_goto_types = { LABELSET, LABELGOTOEX, LABELSWITCHBYINDEX };
   // collect end nodes
-  const auto &net_output_node = subgraph->FindFirstNodeMatchType(NETOUTPUT);
-  if (net_output_node != nullptr) {
-    std::set<NodePtr> out_nodes;
-    for (const auto &in_node :  net_output_node->GetInAllNodes()) {
-      for (const auto &out_node : in_node->GetOutAllNodes()) {
-        out_nodes.insert(out_node);
-      }
-    }
-    std::queue<NodePtr> end_nodes;
-    end_nodes.push(net_output_node);
-    for (const auto &out_node : out_nodes) {
-      if (ctrl_goto_types.count(out_node->GetType()) > 0) {
-        end_nodes.push(out_node);
-      }
-    }
-    while (!end_nodes.empty()) {
-      const auto &cur_node = end_nodes.front();
-      end_nodes.pop();
-      edge_nodes.insert(cur_node);
-      for (const auto &out_node : cur_node->GetOutAllNodes()) {
-        end_nodes.push(out_node);
-      }
-    }
-  }
+  CollectEndNodeInSubgraph(subgraph, ctrl_goto_types, edge_nodes);
   // collect start nodes
   std::queue<NodePtr> start_nodes;
   for (const auto &node : subgraph->GetDirectNode()) {
@@ -276,6 +253,36 @@ void FftsGraphUtils::CollectCalcNodeInSubgraph(const ComputeGraphPtr &subgraph, 
   for (const auto &node : subgraph->GetDirectNode()) {
     if (edge_nodes.count(node) == 0) {
       calc_nodes.insert(node);
+    }
+  }
+}
+
+void FftsGraphUtils::CollectEndNodeInSubgraph(const ComputeGraphPtr &subgraph,
+                                              const std::set<std::string> &ctrl_goto_types,
+                                              std::set<NodePtr> &edge_nodes) {
+  const auto &net_output_node = subgraph->FindFirstNodeMatchType(NETOUTPUT);
+  if (net_output_node == nullptr) {
+    return;
+  }
+  std::set<NodePtr> out_nodes;
+  for (const auto &in_node :  net_output_node->GetInAllNodes()) {
+    for (const auto &out_node : in_node->GetOutAllNodes()) {
+      out_nodes.insert(out_node);
+    }
+  }
+  std::queue<NodePtr> end_nodes;
+  end_nodes.push(net_output_node);
+  for (const auto &out_node : out_nodes) {
+    if (ctrl_goto_types.count(out_node->GetType()) > 0) {
+      end_nodes.push(out_node);
+    }
+  }
+  while (!end_nodes.empty()) {
+    const auto &cur_node = end_nodes.front();
+    end_nodes.pop();
+    edge_nodes.insert(cur_node);
+    for (const auto &out_node : cur_node->GetOutAllNodes()) {
+      end_nodes.push(out_node);
     }
   }
 }
