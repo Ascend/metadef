@@ -53,6 +53,9 @@ class FftsGraphUtils {
 
   static void CollectCalcNodeInSubgraph(const ComputeGraphPtr &subgraph, std::set<NodePtr> &calc_nodes);
 
+  static void CollectEndNodeInSubgraph(const ComputeGraphPtr &subgraph, const std::set<std::string> &ctrl_goto_types,
+                                       std::set<NodePtr> &edge_nodes);
+
   static ComputeGraphPtr GetFftsPlusGraph(ComputeGraph &graph);
 
   static graphStatus SetAttrForFftsPlusSubgraph(const ComputeGraphPtr &subgraph);
