@@ -172,13 +172,10 @@ void FftsGraphUtils::SplitNodes(const std::set<NodePtr> &calc_nodes,
     }
     visited_nodes.insert(node);
     for (const auto &out_node : node->GetOutAllNodes()) {
-      bool all_in_node_seen = true;
-      for (const auto &in_node : out_node->GetInAllNodes()) {
-        if (visited_nodes.count(in_node) == 0) {
-          all_in_node_seen = false;
-          break;
-        }
-      }
+      const auto &in_nodes = out_node->GetInAllNodes();
+      bool all_in_node_seen = !std::any_of(in_nodes.begin(), in_nodes.end(), [visited_nodes](const NodePtr &node) {
+        return visited_nodes.count(node) == 0;
+      });
       if (!all_in_node_seen) {
         continue;
       }
@@ -194,17 +191,15 @@ void FftsGraphUtils::SplitNodes(const std::set<NodePtr> &calc_nodes,
 graphStatus FftsGraphUtils::SplitSubgraph(const ComputeGraphPtr &subgraph,
                                           const std::vector<std::pair<bool, std::set<NodePtr>>> &split_nodes) {
   for (const auto &item : split_nodes) {
-    if (item.first) {
-      if (!item.second.empty()) {
-        const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(ffts_plus_subgraph_num++);
-        const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, item.second, subgraph_name);
-        if (new_subgraph == nullptr) {
-          REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());
-          GELOGE(GRAPH_FAILED, "[Build][Subgraph] %s failed", subgraph_name.c_str());
-          return GRAPH_FAILED;
-        }
-        GE_CHK_STATUS_RET(SetAttrForFftsPlusSubgraph(new_subgraph), "[Set][Attr] failed for ffts+ subgraph");
+    if (item.first && !item.second.empty()) {
+      const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(ffts_plus_subgraph_num++);
+      const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, item.second, subgraph_name);
+      if (new_subgraph == nullptr) {
+        REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());
+        GELOGE(GRAPH_FAILED, "[Build][Subgraph] %s failed", subgraph_name.c_str());
+        return GRAPH_FAILED;
       }
+      GE_CHK_STATUS_RET(SetAttrForFftsPlusSubgraph(new_subgraph), "[Set][Attr] failed for ffts+ subgraph");
     } else {
       for (const auto &node : item.second) {
         // op_desc of node should not be null
@@ -238,10 +233,10 @@ void FftsGraphUtils::CollectCalcNodeInSubgraph(const ComputeGraphPtr &subgraph, 
   // collect end nodes
   const auto &net_output_node = subgraph->FindFirstNodeMatchType(NETOUTPUT);
   if (net_output_node != nullptr) {
-    std::vector<NodePtr> out_nodes;
+    std::set<NodePtr> out_nodes;
     for (const auto &in_node :  net_output_node->GetInAllNodes()) {
       for (const auto &out_node : in_node->GetOutAllNodes()) {
-        out_nodes.emplace_back(out_node);
+        out_nodes.insert(out_node);
       }
     }
     std::queue<NodePtr> end_nodes;
