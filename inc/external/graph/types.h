@@ -72,6 +72,9 @@ enum DataType {
   DT_BF16 = 27,            // bf16 type
   DT_UNDEFINED = 28,       // Used to indicate a DataType field has not been set.
   DT_INT4 = 29,            // int4 type
+  DT_UINT1 = 30,           // uint1 type
+  DT_INT2 = 31,            // int2 type
+  DT_UINT2 = 32,           // uint2 type
   DT_MAX                   // Mark the boundaries of data types
 };
 
@@ -107,6 +110,9 @@ inline int GetSizeByDataType(DataType data_type) {
       2,   // DT_BF16 = 27,               bf16 type
       -1,  // DT_UNDEFINED = 28           Used to indicate a DataType field has not been set.
       kDataTypeSizeBitOffset + 4,    // DT_INT4 = 29,             int4 type
+      kDataTypeSizeBitOffset + 1,    // DT_UINT1 = 30,            uint1 type
+      kDataTypeSizeBitOffset + 2,    // DT_INT2 = 31,             int2 type
+      kDataTypeSizeBitOffset + 2,    // DT_UINT2 = 32,            uint2 type
            // DT_MAX
   };
   if (data_type >= DT_MAX) {

@@ -204,6 +204,9 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
     {DT_BF16, "DT_BFLOAT16"},                  // dt_bfloat16 type
     {DT_INT4, "DT_INT4"},                      // dt_variant type
+    {DT_UINT1, "DT_UINT1"},                    // dt_variant type
+    {DT_INT2, "DT_INT2"},                      // dt_variant type
+    {DT_UINT2, "DT_UINT2"}                     // dt_variant type
 };
 
 const std::map<std::string, DataType> kStringTodataTypeMap = {
@@ -240,6 +243,9 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_VARIANT", DT_VARIANT},                // dt_variant type
     {"DT_BFLOAT16", DT_BF16},                  // dt_bf16 type
     {"DT_INT4", DT_INT4},                      // dt_int4 type
+    {"DT_UINT1", DT_UINT1},                    // dt_uint1 type
+    {"DT_INT2", DT_INT2},                      // dt_int2 type
+    {"DT_UINT2", DT_UINT2},                    // dt_uint2 type
 };
 
 const std::map<ge::DataType, uint32_t> kDataTypeToLength = {

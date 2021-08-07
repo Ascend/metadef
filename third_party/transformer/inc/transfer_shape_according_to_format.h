@@ -44,6 +44,9 @@ enum OpImplType {
 
 const uint32_t SHAPE_NUMBER_16 = 16;
 const uint32_t SHAPE_NUMBER_32 = 32;
+const uint32_t SHAPE_NUMBER_64 = 64;
+const uint32_t SHAPE_NUMBER_128 = 128;
+const uint32_t SHAPE_NUMBER_256 = 256;
 const uint32_t SHAPE_DIM_VALUE_C04 = 4;
 const uint32_t NI = 16;
 const uint32_t MINUS_VALUE_ONE = 1;
