@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "graph/utils/node_utils.h"
+#include <stack>
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
@@ -752,6 +753,32 @@ std::vector<ComputeGraphPtr> NodeUtils::GetAllSubgraphs(const Node &node) {
   return root_graph->GetAllSubgraphs();
 }
 
+graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs) {
+  if (node == nullptr || node->GetOpDesc() == nullptr) {
+    REPORT_INNER_ERROR("E19999", "node or op_desc is null");
+    GELOGE(GRAPH_FAILED, "[Check][Param] node or op_desc is null");
+    return GRAPH_FAILED;
+  }
+
+  const auto &root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
+  if (root_graph == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Failed to find root graph from node %s ", node->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Get][Graph] Failed to find root graph from node %s ", node->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+
+  for (const auto &graph_name : node->GetOpDesc()->GetSubgraphInstanceNames()) {
+    const auto &graph = root_graph->GetSubgraph(graph_name);
+    if (graph == nullptr) {
+      GELOGW("[Get][Subgraph] subgraph %s of node %s is null", graph_name.c_str(), node->GetName().c_str());
+      continue;
+    }
+    subgraphs.emplace_back(graph);
+  }
+
+  return GRAPH_SUCCESS;
+}
+
 ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, uint32_t index) {
   auto op_desc = node.GetOpDesc();
   if (op_desc == nullptr) {
@@ -1078,6 +1105,9 @@ vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
   auto compute_graph = node.GetOwnerComputeGraph();
   for (const std::string &instance_name : subgraph_names) {
     auto subgraph = compute_graph->GetSubgraph(instance_name);
+    if (subgraph == nullptr) {
+      continue;
+    }
     for (const auto &node_in_subgraph : subgraph->GetDirectNode()) {
       if (NodeUtils::IsSubgraphOutput(node_in_subgraph)) {
         out_data_node_vec.emplace_back(node_in_subgraph);
@@ -1280,6 +1310,34 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) 
                        group_name, node.GetName().c_str());
     return GRAPH_FAILED;
   }
+  return GRAPH_SUCCESS;
+}
+
+graphStatus NodeUtils::UpdateInputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
+  auto desc = node.GetOpDesc();
+  if (desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  auto input_desc = desc->MutableInputDesc(index);
+  if (input_desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  input_desc->SetShape(shape);
+  input_desc->SetOriginShape(shape);
+  return GRAPH_SUCCESS;
+}
+
+graphStatus NodeUtils::UpdateOutputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
+  auto desc = node.GetOpDesc();
+  if (desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  auto output_desc = desc->MutableOutputDesc(index);
+  if (output_desc == nullptr) {
+    return GRAPH_PARAM_INVALID;
+  }
+  output_desc->SetShape(shape);
+  output_desc->SetOriginShape(shape);
   return GRAPH_SUCCESS;
 }
 }  // namespace ge

@@ -93,6 +93,7 @@ const string TENSOR_UTILS_CMPSINFO = "cmps_info";
 const string TENSOR_UTILS_ALLOFFSET_QUANTIZE_INFO = "alloffset_quantize_info";
 const string TENSOR_UTILS_RC = "rc";
 const string TENSOR_UTILS_ORIGIN_SHAPE = "origin_shape";
+const string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
 const string TENSOR_UTILS_ORIGIN_FORMAT = "origin_format";
 const string TENSOR_UTILS_ORIGIN_DATA_TYPE = "origin_data_type";
 const string TENSOR_UTILS_SHAPE_RANGE = "shape_range";
@@ -123,6 +124,7 @@ class GeShapeImpl {
   GeShapeImpl &operator=(const GeShapeImpl &other);
   GeShapeImpl &operator=(GeShapeImpl &&other);
   void RefTo(const GeShapeImpl &shape) { shape_def_ = shape.shape_def_; }
+  bool operator==(const GeShapeImpl &other) const;
 
 private:
   GeIrProtoHelper<proto::ShapeDef> shape_def_;
@@ -282,6 +284,10 @@ GeShapeImpl &GeShapeImpl::operator=(GeShapeImpl &&other) {
   return *this;
 }
 
+bool GeShapeImpl::operator==(const GeShapeImpl &other) const {
+  return this->GetDims() == other.GetDims();
+}
+
 GeShape::GeShape() : impl_(std::shared_ptr<GeShapeImpl>(new GeShapeImpl())) {}
 GeShape::GeShape(std::vector<int64_t> s)
     : impl_(std::shared_ptr<GeShapeImpl>(new GeShapeImpl(std::move(s)))) {}
@@ -352,6 +358,10 @@ GeShape &GeShape::operator=(GeShape &&other) {
 
 void GeShape::RefTo(const GeShape &shape) {
   impl_->RefTo(*(shape.impl_));
+}
+
+bool GeShape::operator==(const GeShape &other) const {
+  return *impl_ == *(other.impl_);
 }
 
 GeTensorDescImpl::GeTensorDescImpl() {
@@ -785,6 +795,13 @@ GeShape GeTensorDesc::GetOriginShape() const {
 void GeTensorDesc::SetOriginShape(const GeShape &origin_shape) {
   std::vector<int64_t> origin_shape_tmp = origin_shape.GetDims();
   (void)AttrUtils::SetListInt(this, TENSOR_UTILS_ORIGIN_SHAPE, origin_shape_tmp);
+  (void)AttrUtils::SetBool(this, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, true);
+}
+
+bool GeTensorDesc::IsOriginShapeInitialized() {
+  bool original_shape_initialized = false;
+  (void)AttrUtils::GetBool(this, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, original_shape_initialized);
+  return original_shape_initialized;
 }
 
 Format GeTensorDesc::GetFormat() const {

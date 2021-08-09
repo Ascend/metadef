@@ -17,7 +17,6 @@ if (ENABLE_OPEN_SRC)
     include(cmake/external_libs/protoc.cmake)
     include(cmake/external_libs/securec.cmake)
     include(cmake/external_libs/json.cmake)
-    include(cmake/external_libs/gtest.cmake)
     include(cmake/FindModule.cmake)
     include(cmake/intf_pub_linux.cmake)
 
@@ -47,6 +46,7 @@ if (ENABLE_OPEN_SRC)
     if(ENABLE_GE_COV OR ENABLE_GE_UT)
         message(STATUS "Runing on llt mode, no need to depend other component")
     elseif(ENABLE_METADEF_UT OR ENABLE_METADEF_COV)
+        include(cmake/external_libs/gtest.cmake)
         add_subdirectory(tests)
     endif()
 
@@ -139,6 +139,9 @@ target_compile_options(metadef_tensorflow_protos_obj PRIVATE
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
 )
 
+if (ENABLE_MS_TESTCASES)
+    set(ENABLE_OPEN_SRC TRUE)
+endif()
 add_subdirectory(graph)
 add_subdirectory(error_manager)
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)

@@ -96,6 +96,7 @@ class NodeUtils {
   static std::string GetNodeType(const NodePtr &node);
 
   static std::vector<ComputeGraphPtr> GetAllSubgraphs(const Node &node);
+  static graphStatus GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs);
   static ComputeGraphPtr GetSubgraph(const Node &node, uint32_t index);
   static graphStatus SetSubgraph(Node &node, uint32_t index, const ComputeGraphPtr &subgraph);
   static NodePtr CreatNodeWithoutGraph(const OpDescPtr op_desc);
@@ -203,6 +204,9 @@ class NodeUtils {
   static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
 
   static graphStatus SetNodeParallelGroup(Node &node, const char *group_name);
+
+  static graphStatus UpdateInputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape);
+  static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape);
 
 private:
   static std::map<NodePtr, std::vector<uint32_t>> map_send_info_;

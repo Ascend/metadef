@@ -20,6 +20,9 @@
 #include "ge_tensor.h"
 #include "ge_ir.pb.h"
 #include "graph/ge_tensor_impl.h"
+#include "graph/utils/tensor_adapter.h"
+#include "graph/utils/attr_utils.h"
+#include "graph/debug/ge_attr_define.h"
 
 namespace ge {
 class TensorUT : public testing::Test {
@@ -259,4 +262,75 @@ TEST_F(TensorUT, SetDataDelete_success) {
    auto length = ge_tensor.GetData().GetSize();
    ASSERT_EQ(length, 10);
 }
+
+TEST_F(TensorUT, TransTensorDescWithoutOriginShape2GeTensorDesc) {
+  TensorDesc desc(Shape({1, 2, 3, 4}), FORMAT_NCHW);
+  GeTensorDesc ge_desc = TensorAdapter::TensorDesc2GeTensorDesc(desc);
+  ASSERT_EQ(desc.GetFormat(), ge_desc.GetFormat());
+  ASSERT_EQ(desc.GetShape().GetDims().size(), ge_desc.GetShape().GetDims().size());
+  for (size_t i = 0; i < desc.GetShape().GetDims().size(); i++) {
+    ASSERT_EQ(desc.GetShape().GetDim(i), ge_desc.GetShape().GetDim(i));
+  }
+  bool origin_format_is_set = false;
+  EXPECT_FALSE(AttrUtils::GetBool(ge_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set));
+}
+
+TEST_F(TensorUT, TransTensorDescWithOriginShape2GeTensorDesc) {
+  TensorDesc desc(Shape({1, 2, 3, 4}), FORMAT_NCHW);
+  desc.SetOriginFormat(FORMAT_NHWC);
+  desc.SetOriginShape(Shape({1, 3, 4, 2}));
+  GeTensorDesc ge_desc = TensorAdapter::TensorDesc2GeTensorDesc(desc);
+
+  ASSERT_EQ(desc.GetFormat(), ge_desc.GetFormat());
+  ASSERT_EQ(desc.GetShape().GetDims().size(), ge_desc.GetShape().GetDims().size());
+  for (size_t i = 0; i < desc.GetShape().GetDims().size(); i++) {
+    ASSERT_EQ(desc.GetShape().GetDim(i), ge_desc.GetShape().GetDim(i));
+  }
+
+  ASSERT_EQ(desc.GetOriginFormat(), ge_desc.GetOriginFormat());
+  ASSERT_EQ(desc.GetOriginShape().GetDims().size(), ge_desc.GetOriginShape().GetDims().size());
+  for (size_t i = 0; i < desc.GetOriginShape().GetDims().size(); i++) {
+    ASSERT_EQ(desc.GetOriginShape().GetDim(i), ge_desc.GetOriginShape().GetDim(i));
+  }
+  bool origin_format_is_set = false;
+  EXPECT_TRUE(AttrUtils::GetBool(ge_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set));
+  EXPECT_TRUE(origin_format_is_set);
+}
+
+TEST_F(TensorUT, NormalizeGeTensorWithOriginShape) {
+  TensorDesc desc(Shape({1, 2, 3, 4}), FORMAT_NCHW);
+  desc.SetOriginFormat(FORMAT_NHWC);
+  desc.SetOriginShape(Shape({1, 3, 4, 2}));
+  Tensor tensor(desc);
+  auto ge_tensor = TensorAdapter::AsGeTensor(tensor);
+  auto &ge_desc = ge_tensor.MutableTensorDesc();
+
+  bool origin_format_is_set = false;
+  EXPECT_TRUE(AttrUtils::GetBool(ge_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set));
+  EXPECT_TRUE(origin_format_is_set);
+
+  auto normalized_ge_tensor = TensorAdapter::NormalizeGeTensor(ge_tensor);
+  auto &normalized_ge_desc = normalized_ge_tensor.MutableTensorDesc();
+
+  EXPECT_TRUE(AttrUtils::GetBool(normalized_ge_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set));
+  EXPECT_FALSE(origin_format_is_set);
+
+  auto storage_format = static_cast<int64_t>(FORMAT_MAX);
+  EXPECT_TRUE(AttrUtils::GetInt(normalized_ge_desc, ATTR_NAME_STORAGE_FORMAT, storage_format));
+  EXPECT_EQ(storage_format, static_cast<int64_t>(ge_desc.GetFormat()));
+
+  std::vector<int64_t> storage_dims;
+  EXPECT_TRUE(AttrUtils::GetListInt(normalized_ge_desc, ATTR_NAME_STORAGE_SHAPE, storage_dims));
+  EXPECT_EQ(storage_dims.size(), ge_desc.GetShape().GetDims().size());
+  for (size_t i = 0; i < storage_dims.size(); i++) {
+    ASSERT_EQ(ge_desc.GetShape().GetDim(i), storage_dims[i]);
+  }
+
+  EXPECT_EQ(ge_desc.GetOriginFormat(), normalized_ge_desc.GetFormat());
+  ASSERT_EQ(ge_desc.GetOriginShape().GetDims().size(), normalized_ge_desc.GetShape().GetDims().size());
+  for (size_t i = 0; i < ge_desc.GetOriginShape().GetDims().size(); i++) {
+    ASSERT_EQ(ge_desc.GetOriginShape().GetDim(i), normalized_ge_desc.GetShape().GetDim(i));
+  }
+}
+
 }  // namespace ge

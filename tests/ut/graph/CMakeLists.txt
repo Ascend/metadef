@@ -85,8 +85,11 @@ set(UT_FILES
     "testcase/ge_attr_value_unittest.cc"
     "testcase/shape_refiner_unittest.cc"
     "testcase/graph_utils_unittest.cc"
+    "testcase/ffts_graph_utils_unittest.cc"
     "testcase/runtime_inference_context_unittest.cc"
     "testcase/op_desc_unittest.cc"
+    "testcase/ref_relation_unittest.cc"
+    "testcase/gnode_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES
@@ -123,6 +126,7 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/utils/anchor_utils.cc"
     "${METADEF_DIR}/graph/utils/ge_ir_utils.cc"
     "${METADEF_DIR}/graph/utils/graph_utils.cc"
+    "${METADEF_DIR}/graph/utils/ffts_graph_utils.cc"
     "${METADEF_DIR}/graph/utils/dumper/ge_graph_dumper.cc"
     "${METADEF_DIR}/graph/utils/node_utils.cc"
     "${METADEF_DIR}/graph/utils/op_desc_utils.cc"

@@ -202,7 +202,7 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_STRING_REF, "DT_STRING_REF"},          // string ref type
     {DT_STRING, "DT_STRING"},                  // string type
     {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
-    {DT_BF16, "DT_BF16"},                      // dt_variant type
+    {DT_BF16, "DT_BFLOAT16"},                  // dt_bfloat16 type
     {DT_INT4, "DT_INT4"},                      // dt_variant type
 };
 
@@ -238,7 +238,7 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     // add for json input
     {"DT_FLOAT32", DT_FLOAT},
     {"DT_VARIANT", DT_VARIANT},                // dt_variant type
-    {"DT_BF16", DT_BF16},                      // dt_bf16 type
+    {"DT_BFLOAT16", DT_BF16},                  // dt_bf16 type
     {"DT_INT4", DT_INT4},                      // dt_int4 type
 };
 
@@ -406,7 +406,7 @@ graphStatus TypeUtils::SplitFormatFromStr(const std::string &str,
     std::string sub_format_str = str.substr(split_pos + 1);
     try {
       primary_format_str = str.substr(0, split_pos);
-      if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(), [](char c) { return !isdigit(c); })) {
+      if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(), [](char c) { return isdigit(c) == 0; })) {
         REPORT_CALL_ERROR("E19999", "sub_format: %s is not digital.", sub_format_str.c_str());
         GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %s is not digital.", sub_format_str.c_str());
         return GRAPH_FAILED;

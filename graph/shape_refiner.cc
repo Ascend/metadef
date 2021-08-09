@@ -21,6 +21,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <map>
+#include <set>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
 
@@ -40,6 +42,16 @@ const char* const kPreOpInputShapeRange = "_pre_op_in_range";
 
 const static std::set<string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
 const static std::map<string, string> kGeLocalOpMapping{{"StreamMerge", "Merge"}, {"MemcpyAsync", "Identity"}};
+const int32_t kMaxRecursionDepth = 10;
+
+bool IsOpWithSubgraph(const NodePtr &node) {
+  auto op_desc = node->GetOpDesc();
+  if (op_desc == nullptr) {
+    return false;
+  }
+  auto subgraph_name = op_desc->GetSubgraphInstanceNames();
+  return !subgraph_name.empty();
+}
 
 graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
                                       std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
@@ -558,56 +570,140 @@ void ShapeRefiner::PushToContextMap(const NodePtr &node, const InferenceContextP
   (void)context_map.emplace(node, inference_context);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferenceContextPtr ShapeRefiner::CreateInferenceContext(const NodePtr &node) {
-  if (node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Param node is nullptr, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] node is null");
-    return nullptr;
+Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, int out_idx, std::map<NodePtr, int32_t> &out_nodes,
+                                       int32_t depth) {
+  if (depth > kMaxRecursionDepth) {
+    REPORT_CALL_ERROR("E19999", "Exceed max recursion depth: %d.", kMaxRecursionDepth);
+    GELOGE(FAILED, "[Validate][Depth] Exceed max recursion depth: %d.", kMaxRecursionDepth);
+    return FAILED;
   }
-  InferenceContextPtr inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());
-  if (inference_context == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to alloc InferenceContext, node:%s", node->GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Alloc][InferenceContext] failed.");
-    return nullptr;
+  out_nodes.clear();
+  if (!IsOpWithSubgraph(parent_node)) {
+    return SUCCESS;
+  }
+  GELOGD("Node: %s, out index: %d.", parent_node->GetName().c_str(), out_idx);
+  auto subgraph_output_nodes = NodeUtils::GetSubgraphOutputNodes(*parent_node);
+  for (const auto &netoutput : subgraph_output_nodes) {
+    GE_CHECK_NOTNULL(netoutput);
+    auto output_desc = netoutput->GetOpDesc();
+    GE_CHECK_NOTNULL(output_desc);
+    for (const auto &in_data_anchor : netoutput->GetAllInDataAnchors()) {
+      GE_CHECK_NOTNULL(in_data_anchor);
+      auto in_desc = output_desc->MutableInputDesc(in_data_anchor->GetIdx());
+      GE_CHECK_NOTNULL(in_desc);
+      int32_t ref = 0;
+      if (AttrUtils::GetInt(in_desc, ATTR_NAME_PARENT_NODE_INDEX, ref) && ref == out_idx) {
+        auto peer_out_data_anchor = in_data_anchor->GetPeerOutAnchor();
+        GE_CHECK_NOTNULL(peer_out_data_anchor);
+        auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
+        if (IsOpWithSubgraph(peer_out_data_node)) {
+          map<NodePtr, int32_t> tmp_nodes;
+          if (GetOutNodesByParentNodeOutIndex(peer_out_data_node, peer_out_data_anchor->GetIdx(), tmp_nodes,
+                                              depth + 1) != SUCCESS) {
+            REPORT_CALL_ERROR("E19999", "Get out nodes of %s by index failed.", peer_out_data_node->GetName().c_str());
+            GELOGE(FAILED, "[Get][Outnodes] of %s by index failed.", peer_out_data_node->GetName().c_str());
+            return FAILED;
+          }
+          out_nodes.insert(tmp_nodes.begin(), tmp_nodes.end());
+        } else {
+          out_nodes.emplace(peer_out_data_node, peer_out_data_anchor->GetIdx());
+        }
+        GELOGI("Peer node: %s, out index: %d, ref: %d.", peer_out_data_node->GetName().c_str(),
+               peer_out_data_anchor->GetIdx(), ref);
+      }
+    }
+  }
+  return SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus ShapeRefiner::GetRealInNodesAndIndex(NodePtr &input_node, int32_t &output_idx,
+                                                 map<NodePtr, int32_t> &nodes_idx) {
+  auto op_desc = input_node->GetOpDesc();
+  GE_CHECK_NOTNULL(op_desc);
+  while (input_node->GetType() == DATA && op_desc->HasAttr(ATTR_NAME_PARENT_NODE_INDEX)) {
+    int32_t ref_i = 0;
+    (void)AttrUtils::GetInt(op_desc, ATTR_NAME_PARENT_NODE_INDEX, ref_i);
+    auto owner_graph = input_node->GetOwnerComputeGraph();
+    GE_CHECK_NOTNULL(owner_graph);
+    auto parent_node = owner_graph->GetParentNode();
+    GE_CHECK_NOTNULL(parent_node);
+    auto in_data_anchor = parent_node->GetInDataAnchor(ref_i);
+    GE_CHECK_NOTNULL(in_data_anchor);
+    auto peer_out_data_anchor = in_data_anchor->GetPeerOutAnchor();
+    GE_CHECK_NOTNULL(peer_out_data_anchor);
+    output_idx = peer_out_data_anchor->GetIdx();
+    input_node = peer_out_data_anchor->GetOwnerNode();
+    op_desc = input_node->GetOpDesc();
+    GE_CHECK_NOTNULL(op_desc);
+    GELOGD("In node[%s], type[%s], ref[%d].", input_node->GetName().c_str(), input_node->GetType().c_str(), ref_i);
   }
 
+  if (IsOpWithSubgraph(input_node)) {
+    if (GetOutNodesByParentNodeOutIndex(input_node, output_idx, nodes_idx, 0) != SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Get outnodes of %s by parent node out index failed.", input_node->GetName().c_str());
+      GELOGE(FAILED, "[Get][Outnodes] of %s by parent node out index failed.", input_node->GetName().c_str());
+      return FAILED;
+    }
+    GELOGI("Out node num: %zu.", nodes_idx.size());
+  }
+  if (nodes_idx.empty()) {
+    nodes_idx.emplace(input_node, output_idx);
+  }
+  return SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, InferenceContextPtr &inference_context) {
+  GE_CHECK_NOTNULL(node);
+  inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());
+  GE_CHECK_NOTNULL(inference_context);
   auto all_in_data_anchors = node->GetAllInDataAnchors();
   std::vector<std::vector<ShapeAndType>> input_shapes_and_types(all_in_data_anchors.size());
-  std::vector<std::string> marks;
+  std::set<std::string> marks;
 
   bool has_input_shapes_and_types = false;
   for (const auto &in_anchor : all_in_data_anchors) {
-    const auto &out_anchor = in_anchor->GetPeerOutAnchor();
+    GE_CHECK_NOTNULL(in_anchor);
+    auto out_anchor = in_anchor->GetPeerOutAnchor();
     if (out_anchor == nullptr) {
       continue;
     }
 
     auto input_node = out_anchor->GetOwnerNode();
-    if (input_node == nullptr) {
-      continue;
+    auto output_idx = out_anchor->GetIdx();
+    map<NodePtr, int32_t> input_nodes_2_out_idx;
+    if (GetRealInNodesAndIndex(input_node, output_idx, input_nodes_2_out_idx) != SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Failed to get real in nodes and index, node:%s", node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Get][InNodesAndIndex] of node[%s] failed.", node->GetName().c_str());
+      return GRAPH_FAILED;
     }
 
-    auto iter = context_map.find(input_node);
-    if (iter != context_map.end()) {
-      const auto &src_context = iter->second;
-      GE_IF_BOOL_EXEC(src_context == nullptr, REPORT_INNER_ERROR("E19999", "src_context is null.");
-          GELOGE(GRAPH_FAILED, "[Check][Param] src_context is null."); return nullptr);
-      GELOGD("node:%s get %ld marks from node:%s",
-             node->GetName().c_str(), src_context->GetMarks().size(), input_node->GetName().c_str());
-      for (auto mark : src_context->GetMarks()) {
-        marks.push_back(mark);
-      }
-      auto output_idx = out_anchor->GetIdx();
-      auto input_idx = in_anchor->GetIdx();
-      auto output_shape_and_type = src_context->GetOutputHandleShapesAndTypes();
-      if (output_idx < static_cast<int>(output_shape_and_type.size())) {
-        GELOGI("Add shape and type from %s:%d to %s:%d", input_node->GetName().c_str(), output_idx,
-               node->GetName().c_str(), input_idx);
-        input_shapes_and_types[input_idx] = output_shape_and_type[output_idx];
-        has_input_shapes_and_types = true;
-      } else {
-        GELOGI("[%s] Output out of range. index = %d, size = %zu", node->GetName().c_str(), output_idx,
-               output_shape_and_type.size());
+    auto input_idx = in_anchor->GetIdx();
+    for (const auto &node_idx : input_nodes_2_out_idx) {
+      auto in_node = node_idx.first;
+      GELOGD("Input node[%s], type[%s], context_map size[%zu].", in_node->GetName().c_str(), in_node->GetType().c_str(),
+             context_map.size());
+      auto iter = context_map.find(in_node);
+      if (iter != context_map.end()) {
+        const auto &src_context = iter->second;
+        GE_CHECK_NOTNULL(src_context);
+        GELOGD("node:%s get %ld marks from node:%s",
+               node->GetName().c_str(), src_context->GetMarks().size(), in_node->GetName().c_str());
+        for (auto mark : src_context->GetMarks()) {
+          marks.emplace(mark);
+        }
+        auto output_idx = node_idx.second;
+        auto output_shape_and_type = src_context->GetOutputHandleShapesAndTypes();
+        if (output_idx < static_cast<int>(output_shape_and_type.size())) {
+          GELOGI("Add shape and type from %s:%d to %s:%d", in_node->GetName().c_str(), output_idx,
+                 node->GetName().c_str(), input_idx);
+          input_shapes_and_types[input_idx] = output_shape_and_type[output_idx];
+          has_input_shapes_and_types = true;
+        } else {
+          GELOGI("[%s] Output out of range. index = %d, size = %zu", node->GetName().c_str(), output_idx,
+                 output_shape_and_type.size());
+        }
       }
     }
   }
@@ -615,9 +711,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferenceContextPtr ShapeRefiner:
   if (has_input_shapes_and_types) {
     inference_context->SetInputHandleShapesAndTypes(std::move(input_shapes_and_types));
   }
-  inference_context->SetMarks(marks);
+  std::vector<std::string> curr_marks(marks.begin(), marks.end());
+  inference_context->SetMarks(curr_marks);
 
-  return inference_context;
+  return SUCCESS;
 }
 
 graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &op) {
@@ -743,7 +840,7 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
   Operator op = OpDescUtils::CreateOperatorFromNode(node);
 
   graphStatus status = InferShapeAndTypeForRunning(node, op, before_subgraph);
-  if (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS) {
+  if ((status == GRAPH_PARAM_INVALID) || (status == GRAPH_SUCCESS)) {
     // ensure the dtype is not changed after infershape in running
     auto after_opdesc = node->GetOpDesc();
     GE_IF_BOOL_EXEC(after_opdesc == nullptr, REPORT_INNER_ERROR("E19999", "param node has no opdesc, check invalid.");
@@ -789,7 +886,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
   }
 
   if (node->Verify() != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
+    REPORT_CALL_ERROR("EZ9999", "Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
     GELOGE(GRAPH_FAILED, "[Call][Verify] Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
     return GRAPH_FAILED;
   }
@@ -797,14 +894,20 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
   Operator op = OpDescUtils::CreateOperatorFromNode(node);
 
   if (!is_unknown_graph) {
-    auto inference_context = CreateInferenceContext(node);
+    InferenceContextPtr inference_context;
+    if (CreateInferenceContext(node, inference_context) != SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "CreateInferenceContext of %s failed.", node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Create][Context] CreateInferenceContext of %s failed.", node->GetName().c_str());
+      return GRAPH_FAILED;
+    }
     GE_CHECK_NOTNULL(inference_context);
     GELOGD("create context for node:%s, marks %zu", node->GetName().c_str(), inference_context->GetMarks().size());
     op.SetInferenceContext(inference_context);
   }
 
   graphStatus status = InferShapeAndType(node, op, before_subgraph);
-  if (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS) {
+  bool check_status_valid = (status == GRAPH_PARAM_INVALID || status == GRAPH_SUCCESS);
+  if (check_status_valid) {
     if (is_unknown_graph) {
       PrintInOutTensorShape(node, "after_infershape when running");
       return GRAPH_SUCCESS;
@@ -838,7 +941,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
       input_tensor->SetOriginShapeRange(range);
     }
   } else {
-    REPORT_CALL_ERROR("E19999", "%s(%s) call infer function failed.",
+    REPORT_CALL_ERROR("EZ9999", "%s(%s) call infer function failed.",
                       node->GetName().c_str(), node->GetType().c_str());
     GELOGE(GRAPH_FAILED, "[Call][InferFunction] failed, node:%s(%s).",
            node->GetName().c_str(), node->GetType().c_str());

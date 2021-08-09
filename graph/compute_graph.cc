@@ -984,8 +984,6 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
             GetDirectNodesSize(), node_vec.size());
     for (auto &node : nodes_) {
       if (itered_nodes_set.count(node.get()) == 0) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E19012", {"function", "reason"},
-            {"TopologicalSortingGraph", "op[" + node->GetName() + "] does not itered when topological sorting"});
         GE_LOGE("[Check][Param] The node %s does not itered when topological sorting", node->GetName().c_str());
       }
     }

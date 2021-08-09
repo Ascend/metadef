@@ -20,11 +20,12 @@
 #define private public
 
 #include "graph/utils/node_utils.h"
+#include "graph/node_impl.h"
 #include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 
-#undef private
-#undef protected
+#define protected public
+#define private public
 
 namespace ge {
 class UtestNodeUtils : public testing::Test {
@@ -36,11 +37,11 @@ class UtestNodeUtils : public testing::Test {
 
 TEST_F(UtestNodeUtils, GetInputConstData) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
-  auto enter = builder.AddNode("Enter", "Enter", 1, 1);
-  auto transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
-  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  const auto &data = builder.AddNode("Data", "Data", 0, 1);
+  const auto &data2 = builder.AddNode("Data2", "Data", 0, 1);
+  const auto &enter = builder.AddNode("Enter", "Enter", 1, 1);
+  const auto &transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
+  const auto &netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
   builder.AddDataEdge(data2, 0, enter, 0);
   builder.AddDataEdge(data, 0, transdata, 0);
   builder.AddDataEdge(enter, 0, transdata, 1);
@@ -62,20 +63,20 @@ TEST_F(UtestNodeUtils, GetInputConstData) {
 TEST_F(UtestNodeUtils, GetInputConstData_subgraph) {
   auto ge_tensor = std::make_shared<GeTensor>();
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  const auto &const_node = builder.AddNode("Const", "Const", 0, 1);
   AttrUtils::SetTensor(const_node->GetOpDesc(), "value", ge_tensor);
-  auto case_node = builder.AddNode("Case", "Case", 1, 1);
-  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  const auto &case_node = builder.AddNode("Case", "Case", 1, 1);
+  const auto &netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
   builder.AddDataEdge(const_node, 0, case_node, 0);
   builder.AddDataEdge(case_node, 0, netoutput, 0);
   auto parent_graph = builder.GetGraph();
 
   ut::GraphBuilder sub_builder = ut::GraphBuilder("subgraph_graph");
-  auto sub_data = sub_builder.AddNode("sub_data", "Data", 0, 1);
-  auto sub_const = sub_builder.AddNode("sub_const", "Const", 0, 1);
+  const auto &sub_data = sub_builder.AddNode("sub_data", "Data", 0, 1);
+  const auto &sub_const = sub_builder.AddNode("sub_const", "Const", 0, 1);
   AttrUtils::SetTensor(sub_const->GetOpDesc(), "value", ge_tensor);
-  auto add = sub_builder.AddNode("Add", "Add", 2, 1);
-  auto sub_netoutput = sub_builder.AddNode("sub_netoutput", "NetOutput", 1, 0);
+  const auto &add = sub_builder.AddNode("Add", "Add", 2, 1);
+  const auto &sub_netoutput = sub_builder.AddNode("sub_netoutput", "NetOutput", 1, 0);
   sub_builder.AddDataEdge(sub_data, 0, add, 0);
   sub_builder.AddDataEdge(sub_const, 0, add, 1);
   sub_builder.AddDataEdge(add, 0, sub_netoutput, 0);
@@ -93,5 +94,75 @@ TEST_F(UtestNodeUtils, GetInputConstData_subgraph) {
   GeTensorPtr tensor;
   ASSERT_EQ(NodeUtils::GetInputConstData(*add, "sub_const", tensor), GRAPH_SUCCESS);
   ASSERT_EQ(NodeUtils::GetInputConstData(*add, "sub_data", tensor), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, UpdateOriginShapeAndShape) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data1 = builder.AddNode("Data1", "Data", 1, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 1, 1);
+
+  vector<int64_t> dims = {1, 2};
+  GeShape data_shape(dims);
+  ASSERT_EQ(NodeUtils::UpdateInputOriginalShapeAndShape(*data1, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::UpdateOutputOriginalShapeAndShape(*data1, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::UpdateInputOriginalShapeAndShape(*data2, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::UpdateOutputOriginalShapeAndShape(*data2, 0, data_shape), GRAPH_SUCCESS);
+  ASSERT_EQ(data1->GetOpDesc()->GetInputDesc(0).GetShape() == data1->GetOpDesc()->GetInputDesc(0).GetShape(), true);
+  ASSERT_EQ(data1->GetOpDesc()->GetInputDesc(0).IsOriginShapeInitialized(), true);
+}
+
+TEST_F(UtestNodeUtils, GetSubgraphs) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &case0 = root_builder.AddNode("case0", "Case", 0, 0);
+  const auto &root_graph = root_builder.GetGraph();
+
+  auto sub_builder1 = ut::GraphBuilder("sub1");
+  const auto &case1 = sub_builder1.AddNode("case1", "Case", 0, 0);
+  const auto &sub_graph1 = sub_builder1.GetGraph();
+  root_graph->AddSubGraph(sub_graph1);
+  sub_graph1->SetParentNode(case0);
+  sub_graph1->SetParentGraph(root_graph);
+  case0->GetOpDesc()->AddSubgraphName("branch1");
+  case0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
+
+  std::vector<ComputeGraphPtr> subgraphs0;
+  ASSERT_EQ(NodeUtils::GetDirectSubgraphs(case0, subgraphs0), GRAPH_SUCCESS);
+  ASSERT_EQ(subgraphs0.size(), 1);
+  std::vector<ComputeGraphPtr> subgraphs1;
+  ASSERT_EQ(NodeUtils::GetDirectSubgraphs(case1, subgraphs1), GRAPH_SUCCESS);
+  ASSERT_TRUE(subgraphs1.empty());
+}
+
+TEST_F(UtestNodeUtils, GetSubgraphs_nullptr_node) {
+  std::vector<ComputeGraphPtr> subgraphs;
+  ASSERT_NE(NodeUtils::GetDirectSubgraphs(nullptr, subgraphs), GRAPH_SUCCESS);
+  ASSERT_TRUE(subgraphs.empty());
+}
+
+TEST_F(UtestNodeUtils, GetSubgraphs_nullptr_root_graph) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node = builder.AddNode("node", "node", 0, 0);
+  node->impl_->owner_graph_.reset();
+
+  std::vector<ComputeGraphPtr> subgraphs;
+  ASSERT_NE(NodeUtils::GetDirectSubgraphs(node, subgraphs), GRAPH_SUCCESS);
+  ASSERT_TRUE(subgraphs.empty());
+}
+
+TEST_F(UtestNodeUtils, GetSubgraphs_nullptr_sub_graph) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &node = root_builder.AddNode("node", "node", 0, 0);
+  const auto &root_graph = root_builder.GetGraph();
+
+  auto sub_builder = ut::GraphBuilder("sub");
+  const auto &sub_graph = sub_builder.GetGraph();
+  sub_graph->SetParentNode(node);
+  sub_graph->SetParentGraph(root_graph);
+  node->GetOpDesc()->AddSubgraphName("branch1");
+  node->GetOpDesc()->SetSubgraphInstanceName(0, "sub");
+
+  std::vector<ComputeGraphPtr> subgraphs;
+  ASSERT_EQ(NodeUtils::GetDirectSubgraphs(node, subgraphs), GRAPH_SUCCESS);
+  ASSERT_TRUE(subgraphs.empty());
 }
 }  // namespace ge

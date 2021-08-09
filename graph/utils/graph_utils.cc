@@ -75,6 +75,7 @@ const char *const kDumpStrSubgraphFunc = "sub_graph";
 const char *const kDumpStrAicpu = "Aicpu";
 const int32_t kNameMax = 255;
 const int32_t kMaxRecursionDepth = 10;
+const std::set<std::string> kMergeInputSkipTypes{ STREAMACTIVE, STREAMSWITCH, CONSTANT, CONSTANTOP };
 };
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::AddEdge(const OutDataAnchorPtr &src,
@@ -193,6 +194,27 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::RemoveEdg
   return GRAPH_FAILED;
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::ReplaceEdgeSrc(const OutDataAnchorPtr &src, const InDataAnchorPtr &dst,
+                                       const OutDataAnchorPtr &new_src) {
+  if (RemoveEdge(src, dst) == GRAPH_SUCCESS && AddEdge(new_src, dst) == GRAPH_SUCCESS) {
+    return GRAPH_SUCCESS;
+  }
+  GELOGE(GRAPH_FAILED, "[Replace][EdgeSrc] Failed.");
+  return GRAPH_FAILED;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::ReplaceEdgeSrc(const OutControlAnchorPtr &src, const InControlAnchorPtr &dst,
+                                       const OutControlAnchorPtr &new_src) {
+  if (RemoveEdge(src, dst) == GRAPH_SUCCESS && AddEdge(new_src, dst) == GRAPH_SUCCESS) {
+    return GRAPH_SUCCESS;
+  }
+  GELOGE(GRAPH_FAILED, "[Replace][EdgeSrc] Failed.");
+  return GRAPH_FAILED;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus GraphUtils::ReplaceEdgeDst(const OutDataAnchorPtr &src, const InDataAnchorPtr &dst,
                                        const InDataAnchorPtr &new_dst) {
   if (RemoveEdge(src, dst) == GRAPH_SUCCESS && AddEdge(src, new_dst) == GRAPH_SUCCESS) {
@@ -202,6 +224,7 @@ graphStatus GraphUtils::ReplaceEdgeDst(const OutDataAnchorPtr &src, const InData
   return GRAPH_FAILED;
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus GraphUtils::ReplaceEdgeDst(const OutControlAnchorPtr &src, const InControlAnchorPtr &dst,
                                        const InControlAnchorPtr &new_dst) {
   if (RemoveEdge(src, dst) == GRAPH_SUCCESS && AddEdge(src, new_dst) == GRAPH_SUCCESS) {
@@ -2640,6 +2663,31 @@ graphStatus GraphUtils::UpdateRefMapping(const NodeIndexIO &cur_node_info, const
   return GRAPH_SUCCESS;
 }
 
+graphStatus GraphUtils::GetSubgraphsRecursively(const ComputeGraphPtr &graph, std::vector<ComputeGraphPtr> &subgraphs) {
+  auto root_graph = GraphUtils::FindRootGraph(graph);
+  if (root_graph == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Failed to find root graph");
+    GELOGE(GRAPH_FAILED, "[Get][Graph] Failed to find root graph");
+    return GRAPH_FAILED;
+  }
+  if (graph == root_graph) {
+    subgraphs = graph->GetAllSubgraphs();
+    return GRAPH_SUCCESS;
+  }
+  for (const auto &node : graph->GetAllNodes()) {
+    // op_desc of node should not be null
+    for (const auto &graph_name : node->GetOpDesc()->GetSubgraphInstanceNames()) {
+      const auto &subgraph = root_graph->GetSubgraph(graph_name);
+      if (subgraph == nullptr) {
+        GELOGW("[Get][Subgraph] subgraph %s of node %s is null", graph_name.c_str(), node->GetName().c_str());
+        continue;
+      }
+      subgraphs.emplace_back(subgraph);
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+
 ///
 /// Check if out_data_anchor is reference of input
 /// @param [in] out_data_anchor
@@ -2772,6 +2820,473 @@ bool GraphUtils::IsUnknownShapeGraph(const ComputeGraphPtr &graph) {
   }
   GELOGD("Graph %s does not have unknown shape node.", graph->GetName().c_str());
   return false;
+}
+
+ComputeGraphPtr GraphUtils::BuildSubgraphWithNodes(const ComputeGraphPtr &graph, const std::set<NodePtr> &nodes,
+                                                   const std::string &subgraph_name) {
+  if (graph == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Graph is null");
+    GELOGE(FAILED, "[Check][Param] graph is null");
+    return nullptr;
+  }
+  return BuildSubgraphWithNodes(*graph, nodes, subgraph_name);
+}
+
+ComputeGraphPtr GraphUtils::BuildSubgraphWithNodes(ComputeGraph &graph, const std::set<NodePtr> &nodes,
+                                                   const std::string &subgraph_name) {
+  if (nodes.empty()) {
+    GELOGW("nodes is empty, no need to build subgraph");
+    return nullptr;
+  }
+
+  GraphInfo graph_info;
+  BuildGraphInfoFromNodes(nodes, graph_info);
+
+  NodePtr graph_node = BuildSubgraphNode(graph, subgraph_name, graph_info);
+  if (graph_node == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Build SubgraphNode failed, subgraph_name:%s.", subgraph_name.c_str());
+    GELOGE(FAILED, "[Build][SubgraphNode] failed, subgraph_name:%s.", subgraph_name.c_str());
+    return nullptr;
+  }
+
+  ComputeGraphPtr subgraph = BuildSubgraph(graph_node, graph_info, subgraph_name);
+  if (subgraph == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Build Subgraph %s failed", subgraph_name.c_str());
+    GELOGE(FAILED, "[Build][Subgraph] %s failed", subgraph_name.c_str());
+    return nullptr;
+  }
+  const auto &root_graph = GraphUtils::FindRootGraph(graph_node->GetOwnerComputeGraph());
+  if (root_graph == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Find root graph failed, graph:%s", graph.GetName().c_str());
+    GELOGE(FAILED, "[Find][RootGraph] failed, graph:%s", graph.GetName().c_str());
+    return nullptr;
+  }
+  if (root_graph->AddSubgraph(subgraph) != GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "Add subgraph %s failed, root graph:%s", subgraph->GetName().c_str(),
+                      root_graph->GetName().c_str());
+    GELOGE(FAILED, "[Add][SubGraph] %s failed, root graph:%s", subgraph->GetName().c_str(),
+           root_graph->GetName().c_str());
+    return nullptr;
+  }
+
+  if ((RelinkDataEdges(graph_node, graph_info) != GRAPH_SUCCESS) ||
+      (RelinkCtrlEdges(graph_node, graph_info) != GRAPH_SUCCESS)) {
+    REPORT_CALL_ERROR("E19999", "ReLink edges for graph %s failed, graph_node:%s", graph.GetName().c_str(),
+                      graph_node->GetName().c_str());
+    GELOGE(FAILED, "[ReLink][Edges] for graph %s failed, graph_node:%s", graph.GetName().c_str(),
+           graph_node->GetName().c_str());
+    return nullptr;
+  }
+
+  for (const auto &node : nodes) {
+    // op_desc of node should not be null
+    auto subgraph_names = node->GetOpDesc()->GetSubgraphInstanceNames();
+    for (const auto &subgraph_name : subgraph_names) {
+      node->GetOpDesc()->RemoveSubgraphInstanceName(subgraph_name);
+    }
+    if (RemoveNodeWithoutRelink(node->GetOwnerComputeGraph(), node) != GRAPH_SUCCESS) {
+      GELOGW("Remove node %s failed.", node->GetName().c_str());
+    }
+  }
+
+  return subgraph;
+}
+
+void GraphUtils::BuildGraphInfoFromNodes(const std::set<NodePtr> &nodes, GraphInfo &graph_info) {
+  std::map<OutDataAnchorPtr, size_t> data_input_index_map;
+  for (const auto &node : nodes) {
+    // graph nodes
+    graph_info.nodes.emplace(node);
+    // in data
+    BuildInDataEdgesFromNode(node, nodes, data_input_index_map, graph_info);
+    // out data
+    std::list<InDataAnchorPtr> peer_data_anchors;
+    for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
+      peer_data_anchors.clear();
+      const auto &peer_in_anchors = out_data_anchor->GetPeerInDataAnchors();
+      std::copy_if(peer_in_anchors.begin(), peer_in_anchors.end(), std::back_inserter(peer_data_anchors),
+                   [nodes](const InDataAnchorPtr &peer_in_anchor) {
+                     return nodes.count(peer_in_anchor->GetOwnerNode()) == 0;
+                   });
+      if (!peer_data_anchors.empty()) {
+        size_t output_index = graph_info.data_outputs.size();
+        graph_info.data_outputs[output_index] = std::make_pair(out_data_anchor, peer_data_anchors);
+      }
+    }
+    // in ctrl
+    for (const auto &in_ctrl_node : node->GetInControlNodes()) {
+      if (nodes.count(in_ctrl_node) == 0) {
+        graph_info.ctrl_inputs.emplace_back(in_ctrl_node->GetOutControlAnchor(), node->GetInControlAnchor());
+      } else {
+        graph_info.inner_ctrl_edges.emplace_back(std::make_pair(in_ctrl_node->GetOutControlAnchor(),
+                                                                node->GetInControlAnchor()));
+      }
+    }
+    // out ctrl
+    for (const auto &out_ctrl_node : node->GetOutControlNodes()) {
+      if (nodes.count(out_ctrl_node) == 0) {
+        graph_info.ctrl_outputs.emplace_back(node->GetOutControlAnchor(), out_ctrl_node->GetInControlAnchor());
+      }
+    }
+  }
+}
+
+void GraphUtils::BuildInDataEdgesFromNode(const NodePtr &node, const std::set<NodePtr> &nodes,
+                                          std::map<OutDataAnchorPtr, size_t> &data_input_index_map,
+                                          GraphInfo &graph_info) {
+  for (const auto &in_data_anchor : node->GetAllInDataAnchors()) {
+    OutDataAnchorPtr peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
+    if (peer_out_anchor == nullptr) {
+      continue;
+    }
+    if (nodes.count(peer_out_anchor->GetOwnerNode()) == 0) {
+      size_t input_index;
+      if (data_input_index_map.count(peer_out_anchor) == 0) {
+        input_index = graph_info.data_inputs.size();
+        data_input_index_map[peer_out_anchor] = input_index;
+        graph_info.data_inputs[input_index].first = peer_out_anchor;
+      } else {
+        input_index = data_input_index_map[peer_out_anchor];
+      }
+      graph_info.data_inputs[input_index].second.emplace_back(in_data_anchor);
+    } else {
+      graph_info.inner_data_edges.emplace_back(std::make_pair(peer_out_anchor, in_data_anchor));
+    }
+  }
+}
+
+NodePtr GraphUtils::BuildSubgraphNode(ComputeGraph &graph, const std::string &graph_name,
+                                      const GraphInfo &graph_info) {
+  OpDescBuilder op_desc_builder(graph_name + "_" + PARTITIONEDCALL, PARTITIONEDCALL);
+  for (const auto &item : graph_info.data_inputs) {
+    auto input_desc = item.second.first->GetOwnerNode()->GetOpDesc();
+    if (input_desc == nullptr) {
+      REPORT_INNER_ERROR("E19999", "op_desc is null, node:%s", item.second.first->GetOwnerNode()->GetName().c_str());
+      GELOGE(PARAM_INVALID, "[Check][Param] op_desc is null, node:%s",
+             item.second.first->GetOwnerNode()->GetName().c_str());
+      return nullptr;
+    }
+    op_desc_builder.AddInput("args" + std::to_string(item.first),
+                             input_desc->GetOutputDesc(item.second.first->GetIdx()));
+  }
+  for (const auto &item : graph_info.data_outputs) {
+    auto output_desc = item.second.first->GetOwnerNode()->GetOpDesc();
+    if (output_desc == nullptr) {
+      REPORT_INNER_ERROR("E19999", "op_desc is null, node:%s",
+                         item.second.first->GetOwnerNode()->GetName().c_str());
+      GELOGE(PARAM_INVALID, "[Check][Param] op_desc is null, node:%s",
+             item.second.first->GetOwnerNode()->GetName().c_str());
+      return nullptr;
+    }
+    op_desc_builder.AddOutput("output" + std::to_string(item.first),
+                              output_desc->GetOutputDesc(item.second.first->GetIdx()));
+  }
+
+  OpDescPtr op_desc = op_desc_builder.Build();
+  if (op_desc == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Create op_desc for subgraph node failed, name:%s.", graph_name.c_str());
+    GELOGE(FAILED, "[Create][OpDesc] for subgraph node failed, name:%s.", graph_name.c_str());
+    return nullptr;
+  }
+
+  op_desc->AddSubgraphName("f");
+  op_desc->SetSubgraphInstanceName(0, graph_name);
+
+  return graph.AddNode(op_desc);
+}
+
+ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const GraphInfo &graph_info,
+                                          const std::string &subgraph_name) {
+  CompleteGraphBuilder graph_builder(subgraph_name, false);
+  // Add parent node
+  graph_builder.SetParentNode(subgraph_node);
+
+  // Add node
+  for (const auto &node : graph_info.nodes) {
+    graph_builder.AddNode(AttrUtils::CopyOpDesc(node->GetOpDesc()));
+  }
+
+  // Set Input
+  for (const auto &item : graph_info.data_inputs) {
+    for (const auto &in_data_anchor : item.second.second) {
+      graph_builder.SetInput(item.first, { in_data_anchor->GetOwnerNode()->GetName() },
+                             { static_cast<uint32_t>(in_data_anchor->GetIdx()) });
+    }
+  }
+
+  // Add Outputs
+  for (const auto &item : graph_info.data_outputs) {
+    graph_builder.AddOutput(item.second.first->GetOwnerNode()->GetName(),
+                            item.second.first->GetIdx());
+  }
+
+  // Add Data Edges
+  for (const auto &data_edge : graph_info.inner_data_edges) {
+    graph_builder.AddDataLink(data_edge.first->GetOwnerNode()->GetName(), data_edge.first->GetIdx(),
+                              data_edge.second->GetOwnerNode()->GetName(), data_edge.second->GetIdx());
+  }
+
+  // Add Ctrl Edges
+  for (const auto &ctrl_edge : graph_info.inner_ctrl_edges) {
+    graph_builder.AddControlLink(ctrl_edge.first->GetOwnerNode()->GetName(),
+                                 ctrl_edge.second->GetOwnerNode()->GetName());
+  }
+
+  // Add Input-Mapping
+  std::map<uint32_t, uint32_t> input_mapping;
+  for (size_t i = 0; i < graph_info.data_inputs.size(); i++) {
+    input_mapping[i] = i;
+  }
+  graph_builder.SetInputMapping(input_mapping);
+
+  // Add outputMapping
+  std::map<uint32_t, uint32_t> output_mapping;
+  for (size_t i = 0; i < graph_info.data_outputs.size(); i++) {
+    output_mapping[i] = i;
+  }
+  graph_builder.SetOutputMapping(output_mapping);
+
+  graphStatus error_code = GRAPH_SUCCESS;
+  std::string error_msg;
+  ComputeGraphPtr subgraph = graph_builder.Build(error_code, error_msg);
+  if (subgraph == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Build subgraph %s failed:%s.", subgraph_node->GetName().c_str(), error_msg.c_str());
+    GELOGE(error_code, "[Build][Subgraph] %s failed:%s.", subgraph_node->GetName().c_str(), error_msg.c_str());
+    return nullptr;
+  }
+
+  return subgraph;
+}
+
+graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info) {
+  // in data nodes
+  for (const auto &item : graph_info.data_inputs) {
+    for (const auto &in_data_anchor : item.second.second) {
+      GE_CHK_STATUS_RET(item.second.first->Unlink(in_data_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed",
+                        item.second.first->GetOwnerNode()->GetName().c_str(), item.second.first->GetIdx(),
+                        in_data_anchor->GetOwnerNode()->GetName().c_str(), in_data_anchor->GetIdx());
+      GE_CHK_STATUS_RET(item.second.first->LinkTo(subgraph_node->GetInDataAnchor(item.first)),
+                        "[Add][DataEdge] %s:%d->%s:%zu failed.",
+                        item.second.first->GetOwnerNode()->GetName().c_str(),
+                        item.second.first->GetIdx(), subgraph_node->GetName().c_str(), item.first);
+    }
+  }
+  // out data nodes
+  for (const auto &item : graph_info.data_outputs) {
+    const auto &out_data_anchor = subgraph_node->GetOutDataAnchor(item.first);
+    GE_CHECK_NOTNULL(out_data_anchor);
+    for (const auto &peer_in_anchor : item.second.second) {
+      GE_CHK_STATUS_RET(item.second.first->Unlink(peer_in_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed.",
+                        item.second.first->GetOwnerNode()->GetName().c_str(), item.second.first->GetIdx(),
+                        peer_in_anchor->GetOwnerNode()->GetName().c_str(), peer_in_anchor->GetIdx());
+      GE_CHK_STATUS_RET(out_data_anchor->LinkTo(peer_in_anchor), "[Add][DataEdge] %s:%zu->%s:%d failed.",
+                        subgraph_node->GetName().c_str(), item.first, peer_in_anchor->GetOwnerNode()->GetName().c_str(),
+                        peer_in_anchor->GetIdx());
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::RelinkCtrlEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info) {
+  // in ctrl nodes
+  for (const auto &ctrl_input : graph_info.ctrl_inputs) {
+    GE_CHK_STATUS_RET(ctrl_input.first->Unlink(ctrl_input.second), "[Remove][CtrlEdge] %s->%s failed",
+                      ctrl_input.first->GetOwnerNode()->GetName().c_str(),
+                      ctrl_input.second->GetOwnerNode()->GetName().c_str());
+    if (!ctrl_input.first->IsLinkedWith(subgraph_node->GetInControlAnchor())) {
+      GE_CHK_STATUS_RET(ctrl_input.first->LinkTo(subgraph_node->GetInControlAnchor()), "[Add][CtrlEdge] %s->%s failed.",
+                        ctrl_input.first->GetOwnerNode()->GetName().c_str(), subgraph_node->GetName().c_str());
+    }
+  }
+  // out ctrl nodes
+  for (const auto &ctrl_output : graph_info.ctrl_outputs) {
+    GE_CHK_STATUS_RET(ctrl_output.first->Unlink(ctrl_output.second), "[Remove][CtrlEdge] %s->%s failed.",
+                      ctrl_output.first->GetOwnerNode()->GetName().c_str(),
+                      ctrl_output.second->GetOwnerNode()->GetName().c_str());
+    if (!subgraph_node->GetOutControlAnchor()->IsLinkedWith(ctrl_output.second)) {
+      GE_CHK_STATUS_RET(subgraph_node->GetOutControlAnchor()->LinkTo(ctrl_output.second),
+                        "[Add][CtrlEdge] %s->%s failed.", subgraph_node->GetName().c_str(),
+                        ctrl_output.second->GetOwnerNode()->GetName().c_str());
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::UnfoldSubgraph(const ComputeGraphPtr &graph,
+                                       const std::function<bool(const ComputeGraphPtr &)> &filter) {
+  GE_CHECK_NOTNULL(graph);
+  const auto &parent_graph = graph->GetParentGraph();
+  const auto &parent_node = graph->GetParentNode();
+  if ((parent_graph == nullptr) && (parent_node == nullptr)) {
+    return GRAPH_SUCCESS;
+  }
+
+  GE_CHK_STATUS_RET(MergeInputNodes(graph),
+                    "[Invoke][MergeInputNodes] Merge data nodes for graph %s failed",
+                    graph->GetName().c_str());
+  GE_CHK_STATUS_RET(MergeNetOutputNode(graph),
+                    "[Invoke][MergeNetOutputNode] Merge net output nodes for graph %s failed",
+                    graph->GetName().c_str());
+  GELOGD("[%s] Merging graph inputs and outputs successfully", graph->GetName().c_str());
+
+  for (auto &node : graph->GetDirectNode()) {
+    if (node->GetType() == DATA || node->GetType() == NETOUTPUT) {
+      continue;
+    }
+
+    std::vector<ComputeGraphPtr> subgraphs;
+    GE_CHK_STATUS_RET(NodeUtils::GetDirectSubgraphs(node, subgraphs), "[Get][Subgraphs] failed, graph:%s",
+                      node->GetName().c_str());
+    bool skip_add_node_flag = true;
+    for (const auto &subgraph : subgraphs) {
+      if ((filter != nullptr) && filter(subgraph)) {
+        GE_CHK_STATUS_RET(UnfoldSubgraph(subgraph, filter),
+                          "[Invoke][UnfoldSubgraph] Failed to merge graph %s", subgraph->GetName().c_str());
+        skip_add_node_flag = false;
+      } else {
+        subgraph->SetParentGraph(parent_graph);
+      }
+    }
+
+    if (skip_add_node_flag) {
+      parent_graph->AddNode(node);
+      GELOGD("[%s::%s] added to parent graph: [%s].", graph->GetName().c_str(), node->GetName().c_str(),
+             parent_graph->GetName().c_str());
+      node->SetOwnerComputeGraph(parent_graph);
+    }
+  }
+
+  GELOGD("[%s] Done merging graph. remove it from root graph", graph->GetName().c_str());
+
+  const auto &subgraph_name = graph->GetName();
+  const auto &root_graph = GraphUtils::FindRootGraph(parent_graph);
+  GE_CHECK_NOTNULL(root_graph);
+  root_graph->RemoveSubgraph(graph->GetName());
+  parent_node->GetOpDesc()->RemoveSubgraphInstanceName(subgraph_name);
+  if (RemoveNodeWithoutRelink(parent_graph, parent_node) != GRAPH_SUCCESS) {
+    GELOGW("Remove node %s failed, graph:%s.", parent_node->GetName().c_str(), parent_graph->GetName().c_str());
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
+  const auto &parent_node = graph->GetParentNode();
+  GE_CHECK_NOTNULL(parent_node);
+
+  std::set<NodePtr> src_nodes;
+  for (const auto &node : graph->GetDirectNode()) {
+    if (node->GetType() != DATA) {
+      if (node->GetInDataNodes().empty()) {
+        src_nodes.emplace(node);
+      }
+      continue;
+    }
+
+    uint32_t parent_index = 0;
+    if (!AttrUtils::GetInt(node->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
+      REPORT_CALL_ERROR("E19999", "Get attr %s failed, node:%s", ATTR_NAME_PARENT_NODE_INDEX.c_str(),
+                        node->GetName().c_str());
+      GELOGE(FAILED, "[Get][Attr] %s failed, node:%s", ATTR_NAME_PARENT_NODE_INDEX.c_str(), node->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+
+    auto parent_node_in_anchor = parent_node->GetInDataAnchor(parent_index);
+    GE_CHECK_NOTNULL(parent_node_in_anchor);
+    auto src_out_anchor = parent_node_in_anchor->GetPeerOutAnchor();
+    if (src_out_anchor == nullptr || src_out_anchor->GetOwnerNode() == nullptr) {
+      continue;
+    }
+    parent_node_in_anchor->UnlinkAll();
+
+    // link src to outputs of DataNode
+    for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
+      for (const auto &peer_in_anchor : out_data_anchor->GetPeerInDataAnchors()) {
+        auto dst_node = peer_in_anchor->GetOwnerNode();
+        GE_CHECK_NOTNULL(dst_node);
+        const auto &in_nodes = dst_node->GetInDataNodes();
+        if (std::all_of(in_nodes.begin(), in_nodes.end(), [](const NodePtr &n) { return n->GetType() == DATA; })) {
+          src_nodes.emplace(dst_node);
+        }
+        GE_CHK_STATUS_RET(ReplaceEdgeSrc(out_data_anchor, peer_in_anchor, src_out_anchor),
+                          "[Replace][DataEdge] failed");
+      }
+    }
+  }
+
+  // transfer in control edges to all root nodes
+  for (const auto &src_node : src_nodes) {
+    const auto &in_nodes = src_node->GetInAllNodes();
+    std::set<NodePtr> in_node_set(in_nodes.begin(), in_nodes.end());
+    for (const auto &in_control_node : parent_node->GetInControlNodes()) {
+      if (in_node_set.count(in_control_node) == 0 && kMergeInputSkipTypes.count(src_node->GetType()) == 0) {
+        GELOGD("[%s] Restore control edge to [%s]", in_control_node->GetName().c_str(), src_node->GetName().c_str());
+        (void)AddEdge(in_control_node->GetOutControlAnchor(), src_node->GetInControlAnchor());
+      }
+    }
+  }
+
+  parent_node->GetInControlAnchor()->UnlinkAll();
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph) {
+  const auto &parent_node = graph->GetParentNode();
+  GE_CHECK_NOTNULL(parent_node);
+
+  const NodePtr &net_output = graph->FindFirstNodeMatchType(NETOUTPUT);
+  if (net_output == nullptr) {
+    GELOGD("Graph has no NetOutput node, no need to merge");
+    return SUCCESS;
+  }
+  auto all_in_nodes = net_output->GetInAllNodes();
+  auto all_out_nodes = parent_node->GetOutAllNodes();
+  net_output->GetInControlAnchor()->UnlinkAll();
+  parent_node->GetOutControlAnchor()->UnlinkAll();
+
+  for (const auto &in_data_anchor : net_output->GetAllInDataAnchors()) {
+    auto index = in_data_anchor->GetIdx();
+    uint32_t parent_index = 0;
+    // op_desc of node should not be null
+    if (!AttrUtils::GetInt(net_output->GetOpDesc()->GetInputDesc(index), ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
+      GELOGW("SubGraph: %s NetOutput input tensor %d, attr %s not found.", graph->GetName().c_str(), index,
+             ATTR_NAME_PARENT_NODE_INDEX.c_str());
+      continue;
+    }
+
+    auto src_out_anchor = in_data_anchor->GetPeerOutAnchor();
+    GE_CHECK_NOTNULL(src_out_anchor);
+    GE_CHECK_NOTNULL(src_out_anchor->GetOwnerNode());
+    GE_CHK_STATUS_RET(RemoveEdge(src_out_anchor, in_data_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed",
+                      src_out_anchor->GetOwnerNode()->GetName().c_str(), src_out_anchor->GetIdx(),
+                      net_output->GetName().c_str(), in_data_anchor->GetIdx());
+
+    const OutDataAnchorPtr &parent_out_anchor = parent_node->GetOutDataAnchor(parent_index);
+    GE_CHECK_NOTNULL(parent_out_anchor);
+    for (InDataAnchorPtr &dst_in_anchor : parent_out_anchor->GetPeerInDataAnchors()) {
+      GE_CHK_STATUS_RET(ReplaceEdgeSrc(parent_out_anchor, dst_in_anchor, src_out_anchor),
+                        "[Replace][DataEdge] failed");
+    }
+  }
+
+  // transfer out control edges
+  std::set<NodePtr> in_node_set(all_in_nodes.begin(), all_in_nodes.end());
+  std::set<NodePtr> out_node_set(all_out_nodes.begin(), all_out_nodes.end());
+  for (auto &src_node : in_node_set) {
+    GELOGD("[%s] process in node.", src_node->GetName().c_str());
+    auto out_nodes = src_node->GetOutAllNodes();
+    std::set<NodePtr> node_set(out_nodes.begin(), out_nodes.end());
+    for (auto &dst_node : out_node_set) {
+      if (node_set.count(dst_node) == 0) {
+        GELOGD("[%s] Restore control edge to [%s]", src_node->GetName().c_str(), dst_node->GetName().c_str());
+        src_node->GetOutControlAnchor()->LinkTo(dst_node->GetInControlAnchor());
+      }
+    }
+  }
+
+  return GRAPH_SUCCESS;
 }
 
 ///
@@ -3339,6 +3854,9 @@ void CompleteGraphBuilder::BuildGraphTargets(graphStatus &error_code, std::strin
 /// @return void
 ///
 void CompleteGraphBuilder::AddNetOutputNode(graphStatus &error_code, std::string &error_msg) {
+  if (graph_outputs_.empty() && graph_targets_.empty()) {
+    return;
+  }
   std::string log_msg = "AddNetOutputNode name:" + std::string(NODE_NAME_NET_OUTPUT) + ", type:" + NETOUTPUT;
   OpDescPtr net_output_desc = shared_ptr<OpDesc>(new (std::nothrow) OpDesc(NODE_NAME_NET_OUTPUT, NETOUTPUT));
   if (net_output_desc == nullptr) {
@@ -3446,18 +3964,44 @@ void CompleteGraphBuilder::BuildNetOutputNodeWithLink(const OpDescPtr &net_outpu
 void CompleteGraphBuilder::PostProcess(graphStatus &error_code, std::string &error_msg) {
   if (parent_node_ != nullptr) {
     owner_graph_->SetParentNode(parent_node_);
-    owner_graph_->SetParentGraph(parent_node_->GetOwnerComputeGraph());
-    // ATTR_NAME_SESSION_GRAPH_ID
-    std::string graph_id;
-    if (!AttrUtils::GetStr(parent_node_->GetOwnerComputeGraph(), ATTR_NAME_SESSION_GRAPH_ID, graph_id)) {
+    const auto &parent_graph = parent_node_->GetOwnerComputeGraph();
+    if (parent_graph == nullptr) {
       error_code = GRAPH_FAILED;
-      error_msg = "Get attr session_graph_id failed.";
+      error_msg = "Parent graph is null, parent_node=" + parent_node_->GetName();
       return;
     }
-    if (!AttrUtils::SetStr(owner_graph_, ATTR_NAME_SESSION_GRAPH_ID, graph_id)) {
+    owner_graph_->SetParentGraph(parent_graph);
+    // ATTR_NAME_SESSION_GRAPH_ID
+    std::string graph_id;
+    if (!AttrUtils::GetStr(parent_graph, ATTR_NAME_SESSION_GRAPH_ID, graph_id) ||
+        !AttrUtils::SetStr(owner_graph_, ATTR_NAME_SESSION_GRAPH_ID, graph_id)) {
       error_code = GRAPH_FAILED;
-      error_msg = "Set attr session_graph_id failed.";
+      error_msg = "Copy attr session_graph_id failed.";
       return;
+    }
+    if (parent_graph->HasAttr(ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED)) {
+      bool is_dynamic_shape = false;
+      if (!AttrUtils::GetBool(parent_graph, ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED, is_dynamic_shape) ||
+          !AttrUtils::SetBool(owner_graph_, ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED, is_dynamic_shape)) {
+        error_code = GRAPH_FAILED;
+        error_msg = "Copy attr _dynamic_shape_partitioned failed.";
+        return;
+      }
+    }
+    owner_graph_->SetGraphUnknownFlag(parent_graph->GetGraphUnknownFlag());
+
+    // refresh parent node/graph in subgraphs
+    for (const NodePtr &node : owner_graph_->GetDirectNode()) {
+      std::vector<ComputeGraphPtr> subgraphs;
+      if (NodeUtils::GetDirectSubgraphs(node, subgraphs) != GRAPH_SUCCESS) {
+        error_code = GRAPH_FAILED;
+        error_msg = "Get subgraphs for failed failed, node:" + node->GetName();
+        return;
+      }
+      for (const auto &subgraph : subgraphs) {
+        subgraph->SetParentNode(node);
+        subgraph->SetParentGraph(subgraph);
+      }
     }
   }
 

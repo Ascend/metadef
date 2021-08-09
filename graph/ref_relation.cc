@@ -35,6 +35,7 @@ namespace {
   const string kWhile = "While";
   const string kIf = "If";
   const string kCase = "Case";
+  const string kStatelessWhile = "kStatelessWhile";
 
   std::set<string> function_op = {
     kWhile,
@@ -314,7 +315,7 @@ void RefRelations::Impl::GetDataAndNetoutputOfSubGraph(
       } else if (sub_graph_node_type == NETOUTPUT) {
         // if while, the first subgraph must be cond subgraph.
         // There is no meaning for refs ,so continue
-        if (node_type == kWhile && sub_graph_idx == 0) {
+        if ((node_type == kWhile || node_type == kStatelessWhile) && sub_graph_idx == 0) {
           continue;
         }
         netoutput_nodes.emplace_back(sub_graph_node);

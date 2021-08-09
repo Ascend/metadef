@@ -100,6 +100,27 @@ graphStatus TuningUtils::ConvertGraphToFile(std::vector<ComputeGraphPtr> tuning_
   return SUCCESS;
 }
 
+graphStatus TuningUtils::ConvertConstToWeightAttr(ComputeGraphPtr &exe_graph) {
+  GELOGI("Start to convert const to weight attr of graph %s.", exe_graph->GetName().c_str());
+  for (const auto &node : exe_graph->GetDirectNode()) {
+    GE_CHECK_NOTNULL(node);
+    if (node->GetType() == PLACEHOLDER) {
+      auto op_desc = node->GetOpDesc();
+      GE_CHECK_NOTNULL(op_desc);
+      const vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
+      if (!weight.empty()) {
+        if (!ge::AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, weight[0])) {
+          REPORT_CALL_ERROR("E19999", "Set tensor to node[%s] failed", op_desc->GetName().c_str());
+          GELOGE(FAILED, "[Set][Tensor] to node[%s] failed", op_desc->GetName().c_str());
+          return FAILED;
+        }
+        GELOGI("Set tensor to node[%s].", op_desc->GetName().c_str());
+      }
+    }
+  }
+  return SUCCESS;
+}
+
 // +---------------+
 // | pld     pld   |
 // |  \      /     |
@@ -142,6 +163,11 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
   GELOGI("TUU:clear [%s] session_graph_id success", exe_graph->GetName().c_str());
   // if not make exe, just dump and return
   if (!help_info.exe_flag) {
+    if (ConvertConstToWeightAttr(exe_graph) != SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Convert const to weight attr of graph %s failed", exe_graph->GetName().c_str());
+      GELOGE(FAILED, "[Convert][Const] to weight attr of graph %s failed", exe_graph->GetName().c_str());
+      return FAILED;
+    }
     DumpGraphToPath(exe_graph, help_info.index, help_info.is_tuning_graph, help_info.path);
     GELOGI("TUU:just return, dump original sub_graph[%s]index[%ld]", exe_graph->GetName().c_str(), help_info.index);
     return SUCCESS;

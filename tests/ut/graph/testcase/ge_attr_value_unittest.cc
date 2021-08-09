@@ -17,8 +17,12 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "graph/op_desc.h"
+#define private public
+#define protected public
 #include "graph/ge_attr_value.h"
 #include "graph/utils/attr_utils.h"
+#undef private
+#undef protected
 
 namespace ge {
 class UtestGeAttrValue : public testing::Test {
@@ -39,5 +43,28 @@ TEST_F(UtestGeAttrValue, GetAllAttrsStr) {
   string attr = AttrUtils::GetAllAttrsStr(op_desc);
   string res = "i:\x18\x1;input_desc:td {\n  dtype: DT_FLOAT\n  layout: \"ND\"\n  attr {\n    key: \"origin_format\"\n    value {\n      s: \"ND\"\n    }\n  }\n  has_out_attr: true\n  device_type: \"NPU\"\n}\n;value:dtype: DT_FLOAT\nlayout: \"ND\"\nattr {\n  key: \"origin_format\"\n  value {\n    s: \"ND\"\n  }\n}\nhas_out_attr: true\ndevice_type: \"NPU\"\n;";
   EXPECT_EQ(res, attr);
+}
+TEST_F(UtestGeAttrValue, GetAllAttrs) {
+  string name = "const";
+  string type = "Constant";
+  OpDescPtr op_desc = std::make_shared<OpDesc>(name, type);
+  EXPECT_TRUE(op_desc);
+  op_desc->SetAttr("i", GeAttrValue::CreateFrom<GeAttrValue::INT>(100));
+  op_desc->SetAttr("input_desc", GeAttrValue::CreateFrom<GeAttrValue::TENSOR_DESC>(GeTensorDesc()));
+  auto attrs = AttrUtils::GetAllAttrs(op_desc);
+  EXPECT_EQ(attrs.size(), 2);
+  int64_t attr_value = 0;
+  EXPECT_EQ(attrs["i"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_value, 100);
+  op_desc->SetAttr("i", GeAttrValue::CreateFrom<GeAttrValue::INT>(101));
+  EXPECT_EQ(attrs["i"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_value, 101);
+  op_desc->TrySetAttr("i", GeAttrValue::CreateFrom<GeAttrValue::INT>(102));
+  EXPECT_EQ(attrs["i"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_value, 101);
+  op_desc->TrySetAttr("j", GeAttrValue::CreateFrom<GeAttrValue::INT>(102));
+  EXPECT_EQ(AttrUtils::GetAllAttrs(op_desc).size(), 3);
+  EXPECT_EQ(AttrUtils::GetAllAttrs(op_desc)["j"].GetValue(attr_value), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_value, 102);
 }
 }
