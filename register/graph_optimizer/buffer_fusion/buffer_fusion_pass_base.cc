@@ -30,6 +30,10 @@ Status BufferFusionPassBase::GetFusionNodes(const BufferFusionMapping &mapping,
   return SUCCESS;
 }
 
+Status BufferFusionPassBase::CalcFusionOpSliceInfo(vector<ge::NodePtr> &fusion_nodes, OpCalcInfo &op_slice_info) {
+  return SUCCESS;
+}
+
 std::vector<ge::NodePtr> BufferFusionPassBase::GetMatchedNodes(const BufferFusionMapping &mapping) {
   std::vector<ge::NodePtr> nodes;
   for (const auto &item : mapping) {
