@@ -67,20 +67,12 @@ class BufferFusionPattern {
 
   virtual ~BufferFusionPattern();
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &patterns,
                                  int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
                                  ShapeTypeRule shape_type_rule = ONLY_SUPPORT_STATIC,
                                  bool not_pattern = false);
-#else
-  BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &patterns,
-                                 int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
-                                 int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
-                                 int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
-                                 ShapeTypeRule shape_type_rule = ONLY_SUPPORT_STATIC);
-#endif
 
   BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &patterns,
                                   int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
