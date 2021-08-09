@@ -1221,6 +1221,11 @@ const std::string ATTR_NAME_WORKSPACE_MEMORY_NO_REUSE_SCOPE = "_workspace_memory
 
 // for blocking op
 const std::string ATTR_NAME_IS_BLOCKING_OP = "_is_blocking_op";
+
+// for op specified engine
+const std::string ATTR_NAME_OP_SPECIFIED_ENGINE_NAME = "_specified_engine_name";
+const std::string ATTR_NAME_OP_SPECIFIED_KERNEL_LIB_NAME = "_specified_kernel_lib_name";
+
 // model deploy scheduler(mds)
 const std::string ATTR_NAME_GRADIENT_NODE = "_gradient_node";
 const std::string ATTR_NAME_TRAINABLE_VAR = "_trainable_var";
