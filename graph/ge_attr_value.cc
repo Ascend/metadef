@@ -1482,6 +1482,14 @@ std::string AttrUtils::GetAllAttrsStr(AttrUtils::ConstAttrHolderAdapter &&obj) {
   }
   return ss.str();
 }
+std::map<string, GeAttrValue> AttrUtils::GetAllAttrs(AttrUtils::ConstAttrHolderAdapter &&obj) {
+  std::map<string, GeAttrValue> proto_attr_map;
+  auto holder = obj.get();
+  if (holder == nullptr) {
+    return proto_attr_map;
+  }
+  return holder->GetAllAttrs();
+}
 
 std::string AttrUtils::GetAttrsStrAfterRid(AttrUtils::ConstAttrHolderAdapter &&obj,
                                            const set<string> &un_compute_attrs) {

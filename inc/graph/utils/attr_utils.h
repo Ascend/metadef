@@ -119,10 +119,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static OpDescPtr CloneOpDesc(const ConstOpDescPtr &orgOpDesc);
 
   static OpDescPtr CopyOpDesc(const ConstOpDescPtr &orgOpDesc);
-
   static std::string GetAllAttrsStr(ConstAttrHolderAdapter &&obj);
+  static std::map<string, GeAttrValue> GetAllAttrs(ConstAttrHolderAdapter &&obj);
   static std::string GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const std::set<std::string> &un_compute_attrs);
-
   class AttrHolderAdapter {
    public:
     AttrHolderAdapter(AttrHolder *obj) : obj_(obj) {}

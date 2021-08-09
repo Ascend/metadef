@@ -54,6 +54,27 @@ graphStatus AttrHolder::SetAttr(const std::string &name, const GeAttrValue &valu
   return GRAPH_SUCCESS;
 }
 
+graphStatus AttrHolder::TrySetAttr(const std::string &name, const GeAttrValue &value) {
+  if (value.IsEmpty()) {
+    REPORT_INNER_ERROR("E19999", "param value is empty, check invalid, key of the attr:%s", name.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] value is empty, key of the attr is %s", name.c_str());
+    return GRAPH_FAILED;
+  }
+  auto proto_map = MutableAttrMap().GetProtoMsg();
+  auto proto_val = value.value_.GetProtoMsg();
+  if (proto_map == nullptr || proto_val == nullptr) {
+    return GRAPH_FAILED;
+  }
+  auto it = proto_map->find(name);
+  if (it != proto_map->end()) {
+    GELOGI("attr %s already existed, skip update", name.c_str());
+  } else {
+    (*proto_map)[name] = *proto_val;
+  }
+  return GRAPH_SUCCESS;
+}
+
+
 graphStatus AttrHolder::AddRequiredAttr(const std::string &name) {
   if (HasAttr(name)) {
     return GRAPH_FAILED;

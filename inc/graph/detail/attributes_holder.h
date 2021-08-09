@@ -121,6 +121,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
 
   graphStatus SetAttr(const string &name, const GeAttrValue &value);
 
+  graphStatus TrySetAttr(const string &name, const GeAttrValue &value);
+
   graphStatus GetAttr(const string &name, GeAttrValue &value) const;
 
   bool HasAttr(const string &name) const;
