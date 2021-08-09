@@ -22,6 +22,7 @@
 
 #include "external/graph/ge_error_codes.h"
 #include "graph/node.h"
+#include "graph/resource_context_mgr.h"
 
 namespace ge {
 // ShapeRefiner performs shape inference for compute graphs
@@ -34,7 +35,11 @@ class ShapeRefiner {
   static graphStatus InferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph);
   static graphStatus InferShapeAndTypeForRunning(const NodePtr &node, bool before_subgraph);
   static void ClearContextMap();
-  static graphStatus CreateInferenceContext(const NodePtr &node, InferenceContextPtr &inference_context);
+  static graphStatus CreateInferenceContext(const NodePtr &node,
+                                            InferenceContextPtr &inference_context);
+  static graphStatus CreateInferenceContext(const NodePtr &node,
+                                            ResourceContextMgr *resource_context_mgr,
+                                            InferenceContextPtr &inference_context);
   static void PushToContextMap(const NodePtr &node, const InferenceContextPtr &inference_context);
 
  private:
