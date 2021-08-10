@@ -21,8 +21,6 @@
 
 #include "graph/utils/op_desc_utils.h"
 #include "graph_builder_utils.h"
-#include "graph/utils/constant_utils.h"
-#include "graph/debug/ge_attr_define.h"
 
 #undef private
 #undef protected
@@ -34,12 +32,8 @@ class UtestOpDescUtils : public testing::Test {
 
   void TearDown() {}
 };
-namespace {
-///     Data    const1
-///        \  /
-///        addn
-///
-ComputeGraphPtr BuildGraph1() {
+
+TEST_F(UtestOpDescUtils, SetWeight) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 1, 1);
   auto const1 = builder.AddNode("const1", "Const", 1, 1);
@@ -52,64 +46,7 @@ ComputeGraphPtr BuildGraph1() {
 
   builder.AddDataEdge(data, 0, addn, 0);
   builder.AddDataEdge(const1, 0, addn, 1);
-  return builder.GetGraph();
-}
-///   (p_const)addn    const1
-///          /     \   /
-///        cast     mul
-///
-ComputeGraphPtr BuildGraph2() {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto addn = builder.AddNode("addn", "AddN", 0, 2);
-  auto const1 = builder.AddNode("const1", "Const", 0, 1);
-  auto cast = builder.AddNode("cast", "Cast", 1, 1);
-  auto mul = builder.AddNode("mul", "Mul", 2, 1);
-
-  int32_t weight[1] = {1};
-  GeTensorDesc weight_desc(GeShape({1}), FORMAT_NHWC, DT_INT32);
-  GeTensorPtr tensor0 = std::make_shared<GeTensor>(weight_desc, (uint8_t *)weight, sizeof(weight));
-  AttrUtils::SetBool(addn->GetOpDesc(), ATTR_NAME_POTENTIAL_CONST, true);
-  AttrUtils::SetListInt(addn->GetOpDesc(), ATTR_NAME_POTENTIAL_WEIGHT_INDICES, {0,1});
-  AttrUtils::SetListTensor(addn->GetOpDesc(), ATTR_NAME_POTENTIAL_WEIGHT, {tensor0, tensor0});
-  OpDescUtils::SetWeights(const1, {tensor0});
-
-  builder.AddDataEdge(addn, 0, cast, 0);
-  builder.AddDataEdge(addn, 1, mul, 0);
-  builder.AddDataEdge(const1, 0, mul, 1);
-  return builder.GetGraph();
-}
-///   (p_const)addn    const1
-///          /     \   /
-///        enter     mul
-///         |
-///       cast
-ComputeGraphPtr BuildGraph3() {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto addn = builder.AddNode("addn", "AddN", 0, 2);
-  auto const1 = builder.AddNode("const1", "Const", 0, 1);
-  auto enter = builder.AddNode("enter", "Enter", 1, 1);
-  auto cast = builder.AddNode("cast", "Cast", 1, 1);
-  auto mul = builder.AddNode("mul", "Mul", 2, 1);
-
-  int32_t weight[1] = {1};
-  GeTensorDesc weight_desc(GeShape({1}), FORMAT_NHWC, DT_INT32);
-  GeTensorPtr tensor0 = std::make_shared<GeTensor>(weight_desc, (uint8_t *)weight, sizeof(weight));
-  AttrUtils::SetBool(addn->GetOpDesc(), ATTR_NAME_POTENTIAL_CONST, true);
-  AttrUtils::SetListInt(addn->GetOpDesc(), ATTR_NAME_POTENTIAL_WEIGHT_INDICES, {0,1});
-  AttrUtils::SetListTensor(addn->GetOpDesc(), ATTR_NAME_POTENTIAL_WEIGHT, {tensor0, tensor0});
-  OpDescUtils::SetWeights(const1, {tensor0});
-
-  AttrUtils::SetBool(enter->GetOpDesc(), ENTER_ATTR_CONSTANT_FLAG, true);
-
-  builder.AddDataEdge(addn, 0, enter, 0);
-  builder.AddDataEdge(addn, 1, mul, 0);
-  builder.AddDataEdge(const1, 0, mul, 1);
-  builder.AddDataEdge(enter, 0, cast, 0);
-  return builder.GetGraph();
-}
-}
-TEST_F(UtestOpDescUtils, SetWeight) {
-  auto graph = BuildGraph1();
+  auto graph = builder.GetGraph();
 
   auto addn_node = graph->FindNode("addn");
   ge::GeTensorPtr tensor = std::make_shared<GeTensor>();
@@ -140,51 +77,5 @@ TEST_F(UtestOpDescUtils, SetWeight) {
   EXPECT_EQ(ret, 0);
   auto in_nodes1 = addn_node->GetInAllNodes();
   EXPECT_EQ(in_nodes1.size(), 3);
-}
-
-TEST_F(UtestOpDescUtils, GetRealConstInputNodeAndAnchor) {
-  auto graph = BuildGraph1();
-  auto add_node = graph->FindNode("addn");
-  auto nodes_2_out_anchor = OpDescUtils::GetConstInputNodeAndAnchor(*add_node);
-  EXPECT_EQ(nodes_2_out_anchor.size(), 1);
-  EXPECT_EQ(nodes_2_out_anchor[0].first->GetName(), "const1");
-  EXPECT_EQ(nodes_2_out_anchor[0].second->GetIdx(), 0);
-}
-TEST_F(UtestOpDescUtils, GetMixConstInputNodeAndAnchor) {
-  auto graph = BuildGraph2();
-  auto mul_node = graph->FindNode("mul");
-  auto nodes_2_out_anchor = OpDescUtils::GetConstInputNodeAndAnchor(*mul_node);
-  EXPECT_EQ(nodes_2_out_anchor.size(), 2);
-  EXPECT_EQ(nodes_2_out_anchor[0].first->GetName(), "addn");
-  EXPECT_EQ(nodes_2_out_anchor[0].second->GetIdx(), 1);
-  EXPECT_EQ(nodes_2_out_anchor[1].first->GetName(), "const1");
-  EXPECT_EQ(nodes_2_out_anchor[1].second->GetIdx(), 0);
-}
-TEST_F(UtestOpDescUtils, GetInputDataByIndexForMixInputConst) {
-  auto graph = BuildGraph2();
-  auto mul_node = graph->FindNode("mul");
-  auto nodes_2_out_anchor = OpDescUtils::GetConstInputNodeAndAnchor(*mul_node);
-  EXPECT_EQ(nodes_2_out_anchor.size(), 2);
-  EXPECT_EQ(nodes_2_out_anchor[0].first->GetName(), "addn");
-  EXPECT_EQ(nodes_2_out_anchor[0].second->GetIdx(), 1);
-  EXPECT_EQ(nodes_2_out_anchor[1].first->GetName(), "const1");
-  EXPECT_EQ(nodes_2_out_anchor[1].second->GetIdx(), 0);
-
-  auto weights = OpDescUtils::GetWeightsFromNodes(nodes_2_out_anchor);
-  EXPECT_EQ(weights.size(), 2);
-  EXPECT_EQ(weights[0]->GetTensorDesc().GetDataType(), DT_INT32);
-  EXPECT_EQ(weights[1]->GetTensorDesc().GetDataType(), DT_INT32);
-}
-TEST_F(UtestOpDescUtils, GetPotentailWeightByIndexAccrossEnter) {
-  auto graph = BuildGraph3();
-  auto cast_node = graph->FindNode("cast");
-  auto nodes_2_out_anchor = OpDescUtils::GetConstInputNodeAndAnchor(*cast_node);
-  EXPECT_EQ(nodes_2_out_anchor.size(), 1);
-  EXPECT_EQ(nodes_2_out_anchor[0].first->GetName(), "addn");
-  EXPECT_EQ(nodes_2_out_anchor[0].second->GetIdx(), 0);
-
-  auto weights = OpDescUtils::GetWeightsFromNodes(nodes_2_out_anchor);
-  EXPECT_EQ(weights.size(), 1);
-  EXPECT_EQ(weights[0]->GetTensorDesc().GetDataType(), DT_INT32);
 }
 }

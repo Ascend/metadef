@@ -90,9 +90,6 @@ set(UT_FILES
     "testcase/op_desc_unittest.cc"
     "testcase/ref_relation_unittest.cc"
     "testcase/gnode_unittest.cc"
-    "testcase/resource_context_mgr_unittest.cc"
-    "testcase/inference_context_unittest.cc"
-    "testcase/constant_utils_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES
@@ -126,7 +123,6 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/shape_refiner.cc"
     "${METADEF_DIR}/graph/tensor.cc"
     "${METADEF_DIR}/graph/types.cc"
-    "${METADEF_DIR}/graph/resource_context_mgr.cc"
     "${METADEF_DIR}/graph/utils/anchor_utils.cc"
     "${METADEF_DIR}/graph/utils/ge_ir_utils.cc"
     "${METADEF_DIR}/graph/utils/graph_utils.cc"
@@ -138,7 +134,6 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/utils/transformer_utils.cc"
     "${METADEF_DIR}/graph/utils/tuning_utils.cc"
     "${METADEF_DIR}/graph/utils/type_utils.cc"
-    "${METADEF_DIR}/graph/utils/constant_utils.cc"
     "${METADEF_DIR}/ops/op_imp.cpp"
     "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"

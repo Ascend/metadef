@@ -68,8 +68,6 @@ using OpDescPtr = std::shared_ptr<OpDesc>;
 
 using ConstNode = const Node;
 
-using NodeToOutAnchor = std::pair<NodePtr, OutDataAnchorPtr>;
-
 typedef std::vector<std::multimap<std::string, ge::AnchorPtr>> kFusionDataFlowVec_t;
 
 // Node is a component of ComputeGraph
@@ -135,7 +133,7 @@ class Node : public std::enable_shared_from_this<Node> {
   Vistor<NodePtr> GetOutAllNodes() const;
 
   // Get all in data nodes and its out-anchor
-  Vistor<NodeToOutAnchor> GetInDataNodesAndAnchors() const;
+  Vistor<std::pair<NodePtr, OutDataAnchorPtr>> GetInDataNodesAndAnchors() const;
 
   // Get all out data nodes and its in-anchor
   Vistor<std::pair<NodePtr, InDataAnchorPtr>> GetOutDataNodesAndAnchors() const;
