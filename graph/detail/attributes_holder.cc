@@ -56,20 +56,20 @@ graphStatus AttrHolder::SetAttr(const std::string &name, const GeAttrValue &valu
 
 graphStatus AttrHolder::TrySetAttr(const std::string &name, const GeAttrValue &value) {
   if (value.IsEmpty()) {
-    REPORT_INNER_ERROR("E19999", "param value is empty, check invalid, key of the attr:%s", name.c_str());
+    REPORT_INNER_ERROR("E19999", "param value is empty, key of the attr:%s", name.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] value is empty, key of the attr is %s", name.c_str());
     return GRAPH_FAILED;
   }
-  auto proto_map = MutableAttrMap().GetProtoMsg();
-  auto proto_val = value.value_.GetProtoMsg();
-  if (proto_map == nullptr || proto_val == nullptr) {
+  auto proto_of_map = MutableAttrMap().GetProtoMsg();
+  auto proto_of_val = value.value_.GetProtoMsg();
+  if (proto_of_map == nullptr || proto_of_val == nullptr) {
     return GRAPH_FAILED;
   }
-  auto it = proto_map->find(name);
-  if (it != proto_map->end()) {
-    GELOGI("attr %s already existed, skip update", name.c_str());
+  auto it = proto_of_map->find(name);
+  if (it != proto_of_map->end()) {
+    GELOGW("attr %s already existed, skip update", name.c_str());
   } else {
-    (*proto_map)[name] = *proto_val;
+    (*proto_of_map)[name] = *proto_of_val;
   }
   return GRAPH_SUCCESS;
 }
