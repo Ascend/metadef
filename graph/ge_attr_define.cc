@@ -1241,4 +1241,7 @@ const std::string ATTR_NAME_DEPLOY_NEED_RETURN_RESULT = "_need_return_result";
 const std::string ATTR_NAME_POTENTIAL_CONST = "_is_potential_const";
 const std::string ATTR_NAME_POTENTIAL_WEIGHT = "_potential_weight";
 const std::string ATTR_NAME_POTENTIAL_WEIGHT_INDICES = "_potential_weight_indices";
+
+// name of network output tensor
+const std::string ATTR_NAME_ORIGIN_OUTPUT_TENSOR_NAME = "_origin_output_tensor_name";
 }  // namespace ge
