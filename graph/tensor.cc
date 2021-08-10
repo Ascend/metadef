@@ -55,6 +55,59 @@ static bool Int64MulNotOverflow(int64_t a, int64_t b) {
   return true;
 }
 
+class TensorDescValue {
+ public:
+  TensorDescValue() = default;
+  TensorDescValue(const TensorDescValue &other) {
+    if (other.const_data_len_ == 0 || other.const_data_buffer_ == nullptr) {
+      return;
+    }
+    if (!CloneValue(this->const_data_buffer_, other.const_data_buffer_, other.const_data_len_)) {
+      return;
+    }
+    this->const_data_len_ = other.const_data_len_;
+    return;
+  }
+  TensorDescValue &operator=(const TensorDescValue &other) {
+    if (&other == this || other.const_data_len_ == 0 || other.const_data_buffer_ == nullptr) {
+      return *this;
+    }
+    if (!CloneValue(this->const_data_buffer_, other.const_data_buffer_, other.const_data_len_)) {
+      return *this;
+    }
+    this->const_data_len_ = other.const_data_len_;
+    return *this;
+  }
+
+  std::unique_ptr<uint8_t[]> const_data_buffer_ = nullptr;
+  size_t const_data_len_ = 0;
+
+ private:
+  bool CloneValue(std::unique_ptr<uint8_t[]> &dst, const std::unique_ptr<uint8_t[]> &src, const std::size_t len) {
+    dst = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[len]);
+    if (dst == nullptr) {
+      return false;
+    }
+    size_t remain_size = len;
+    auto dst_addr = reinterpret_cast<uintptr_t>(dst.get());
+    auto src_addr = reinterpret_cast<uintptr_t>(src.get());
+    while (remain_size > SECUREC_MEM_MAX_LEN) {
+      if (memcpy_s(reinterpret_cast<void *>(dst_addr), SECUREC_MEM_MAX_LEN,
+                   reinterpret_cast<const void *>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
+        return false;
+      }
+      remain_size -= SECUREC_MEM_MAX_LEN;
+      dst_addr += SECUREC_MEM_MAX_LEN;
+      src_addr += SECUREC_MEM_MAX_LEN;
+    }
+    if ((remain_size != 0) && memcpy_s(reinterpret_cast<void *>(dst_addr), remain_size,
+                                       reinterpret_cast<const void *>(src_addr), remain_size) != EOK) {
+      return false;
+    }
+    return true;
+  }
+};
+
 class TensorDescImpl {
  public:
   TensorDescImpl() = default;
@@ -72,6 +125,7 @@ class TensorDescImpl {
   int64_t real_dim_cnt_ = 0;
   std::string name_;
   Placement placement_ = kPlacementHost;
+  TensorDescValue tensor_desc_value_;
 };
 
 class TensorImpl {
@@ -455,6 +509,23 @@ Placement TensorDesc::GetPlacement() const {
     return impl->placement_;
   }
   return kPlacementHost;
+}
+
+void TensorDesc::SetConstData(std::unique_ptr<uint8_t[]> const_data_buffer, const size_t &const_data_len) {
+  if (impl != nullptr) {
+    impl->tensor_desc_value_.const_data_buffer_ = std::move(const_data_buffer);
+    impl->tensor_desc_value_.const_data_len_ = const_data_len;
+  }
+  return;
+}
+
+bool TensorDesc::GetConstData(uint8_t **const_data_buffer, size_t &const_data_len) const {
+  if (impl != nullptr) {
+    *const_data_buffer = impl->tensor_desc_value_.const_data_buffer_.get();
+    const_data_len = impl->tensor_desc_value_.const_data_len_;
+    return true;
+  }
+  return false;
 }
 
 Tensor::Tensor() { impl = ComGraphMakeShared<TensorImpl>(); }

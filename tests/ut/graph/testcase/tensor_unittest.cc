@@ -21,6 +21,7 @@
 #include "ge_ir.pb.h"
 #include "utils/tensor_utils.h"
 #include "graph/ge_tensor_impl.h"
+#include "external/graph/tensor.h"
 #include <iostream>
 
 namespace ge {
@@ -298,5 +299,49 @@ TEST_F(TensorUtilsUT, ShareTheSame) {
   GeTensor t1(tensor_desc, vec);
   TensorUtils::ShareTensor(t1, t1);
   ASSERT_EQ(memcmp(t1.GetData().GetData(), vec.data(), vec.size()), 0);
+}
+
+TEST_F(TensorUtilsUT, ConstData) {
+  int *c = new int(10);
+  void *d = static_cast<void*>(c);
+  std::unique_ptr<uint8_t[]> const_data = std::unique_ptr<uint8_t[]>(reinterpret_cast<uint8_t *>(d));
+  TensorDesc tensor_desc;
+  tensor_desc.SetFormat(FORMAT_NCHW);
+  tensor_desc.SetConstData(std::move(const_data), sizeof(int));
+  uint8_t *ret = nullptr;
+  size_t len = 0;
+  tensor_desc.GetConstData(&ret, len);
+  printf("GetConstData1====0x%x \n", ret);
+  ASSERT_NE(ret, nullptr);
+  ASSERT_EQ(sizeof(int), len);
+
+  // operator=
+  tensor_desc = tensor_desc;
+  TensorDesc tensor_desc1;
+  tensor_desc1 = tensor_desc;
+  uint8_t *ret1 = nullptr;
+  size_t len1 = 0;
+  tensor_desc1.GetConstData(&ret1, len1);
+  printf("GetConstData2 ====0x%x \n", ret1);
+  ASSERT_NE(ret1, nullptr);
+  ASSERT_NE(ret1, ret);
+  ASSERT_EQ(sizeof(int), len1);
+  ASSERT_EQ(tensor_desc1.GetFormat(), FORMAT_NCHW);
+
+  // copy
+  std::size_t big_size = SECUREC_MEM_MAX_LEN+1;
+  std::unique_ptr<uint8_t[]> big_data = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[big_size]);
+  TensorDesc tensor_desc2;
+  tensor_desc2.SetFormat(FORMAT_NCHW);
+  tensor_desc2.SetConstData(std::move(big_data), big_size);
+  TensorDesc tensor_desc3(tensor_desc2);
+  uint8_t *ret2 = nullptr;
+  size_t len2 = 0;
+  tensor_desc3.GetConstData(&ret2, len2);
+  printf("GetConstData3 ====0x%x \n", ret2);
+  ASSERT_NE(ret2, nullptr);
+  ASSERT_NE(ret2, ret);
+  ASSERT_EQ(big_size, len2);
+  ASSERT_EQ(tensor_desc3.GetFormat(), FORMAT_NCHW);
 }
 }  // namespace ge
