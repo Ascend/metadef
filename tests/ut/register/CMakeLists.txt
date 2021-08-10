@@ -102,6 +102,7 @@ include_directories(${METADEF_DIR}/third_party/graphengine/inc/framework)
 set(REGISTER_UT_FILES
     "testcase/register_unittest.cc"
     "testcase/register_prototype_unittest.cc"
+    "testcase/register_scope_graph_unittest.cc"
 )
 
 ############ libut_metadef_register.a ############
