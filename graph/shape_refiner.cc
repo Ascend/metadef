@@ -653,17 +653,10 @@ graphStatus ShapeRefiner::GetRealInNodesAndIndex(NodePtr &input_node, int32_t &o
   return SUCCESS;
 }
 
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, InferenceContextPtr &inference_context) {
-  return CreateInferenceContext(node, nullptr, inference_context);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceContextMgr *resource_context_mgr,
-                                                 InferenceContextPtr &inference_context) {
   GE_CHECK_NOTNULL(node);
-  inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create(resource_context_mgr));
+  inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());
   GE_CHECK_NOTNULL(inference_context);
   auto all_in_data_anchors = node->GetAllInDataAnchors();
   std::vector<std::vector<ShapeAndType>> input_shapes_and_types(all_in_data_anchors.size());

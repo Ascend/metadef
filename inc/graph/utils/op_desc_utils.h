@@ -40,9 +40,7 @@ class OpDescUtils {
   static bool HasQuantizeFactorParams(const OpDescPtr& op_desc);
   static bool HasQuantizeFactorParams(const OpDesc& op_desc);
   static vector<ge::NodePtr> GetConstInputNode(const ge::Node& node);
-  static vector<NodeToOutAnchor> GetConstInputNodeAndAnchor(const ge::Node &node);
   static vector<ConstGeTensorPtr> GetInputData(const vector<ge::NodePtr>& input_nodes);
-  static vector<ConstGeTensorPtr> GetWeightsFromNodes(const vector<NodeToOutAnchor>& input_nodes_2_out_anchors);
 
   static vector<ConstGeTensorPtr> GetWeights(const ge::Node& node);
   static vector<ConstGeTensorPtr> GetWeights(const ge::ConstNodePtr& node);

@@ -121,12 +121,6 @@ class NodeUtils {
   ///
   static NodePtr GetParentInput(const Node &node);
   static NodePtr GetParentInput(const NodePtr &node);
-  ///
-  /// @brief Get subgraph original input node and corresponding out_anchor.
-  /// @param [in] node
-  /// @return NodeToOutAnchor  node and out_anchor which linked to in_param node
-  ///
-  static NodeToOutAnchor GetParentInputAndAnchor(const NodePtr &node);
 
   ///
   /// @brief Get is dynamic shape graph from node.

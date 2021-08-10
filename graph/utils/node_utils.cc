@@ -915,35 +915,6 @@ NodePtr NodeUtils::GetParentInput(const Node &node) {
 NodePtr NodeUtils::GetParentInput(const NodePtr &node) {
   return node == nullptr ? node : GetParentInput(*node);
 }
-NodeToOutAnchor NodeUtils::GetParentInputAndAnchor(const NodePtr &node) {
-  uint32_t parent_index = 0;
-  if (!AttrUtils::GetInt(node->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
-    return {nullptr, nullptr};
-  }
-
-  // Subgraph Data Node, check for constant input.
-  const ComputeGraphPtr &graph = node->GetOwnerComputeGraph();
-  if (graph == nullptr) {
-    return {nullptr, nullptr};
-  }
-
-  const NodePtr &parent_node = graph->GetParentNode();
-  if (parent_node == nullptr) {
-    return {nullptr, nullptr};
-  }
-
-  const InDataAnchorPtr &in_anchor = parent_node->GetInDataAnchor(parent_index);
-  if (in_anchor == nullptr) {
-    return {nullptr, nullptr};
-  }
-
-  const OutDataAnchorPtr &peer_out_anchor = in_anchor->GetPeerOutAnchor();
-  if (peer_out_anchor == nullptr) {
-    return {nullptr, nullptr};
-  }
-
-  return std::make_pair(peer_out_anchor->GetOwnerNode(), peer_out_anchor);
-}
 
 ///
 /// @brief Get is dynamic shape graph from node.

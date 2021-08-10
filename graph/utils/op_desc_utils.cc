@@ -27,7 +27,6 @@
 #include "graph/op_desc_impl.h"
 #include "utils/graph_utils.h"
 #include "utils/node_utils.h"
-#include "utils/constant_utils.h"
 
 using std::vector;
 
@@ -206,7 +205,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<ge::NodePtr> OpDescUtils::
       if (in_node == nullptr) {
         break;
       }
-      if (ConstantUtils::IsConstant(in_node)) {
+      if ((in_node->GetType() == CONSTANT) || (in_node->GetType() == CONSTANTOP)) {
         ret.push_back(in_node);
         break;
       } else if (in_node->GetType() == DATA) {
@@ -235,72 +234,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<ge::NodePtr> OpDescUtils::
   return ret;
 }
 
-std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(const ge::Node &node) {
-  vector<std::pair<NodePtr, OutDataAnchorPtr>> ret;
-  auto in_nodes_and_anchors = node.GetInDataNodesAndAnchors();
-  for (const auto &in_node_2_anchor : in_nodes_and_anchors) {
-    auto in_node = in_node_2_anchor.first;
-    auto in_node_2_out_anchor = in_node_2_anchor;
-    while (true) {
-      if (in_node == nullptr) {
-        break;
-      }
-      if (ConstantUtils::IsConstant(in_node)) {
-        ret.push_back(in_node_2_out_anchor);
-        break;
-      } else if (in_node->GetType() == DATA) {
-        if (NodeUtils::IsWhileVaryingInput(in_node)) {
-          break;
-        }
-        in_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(in_node);
-        in_node = in_node_2_out_anchor.first;
-      } else if ((in_node->GetType() == ENTER) || (in_node->GetType() == REFENTER)) {
-        bool is_constant = false;
-        (void)AttrUtils::GetBool(in_node->GetOpDesc(), ENTER_ATTR_CONSTANT_FLAG, is_constant);
-        if (!is_constant) {
-          break;
-        }
-        // Enter node has and only has one input
-        if (in_node->GetInDataNodes().size() != 1) {
-          GELOGW("[Get][ConstInput] Check number of input_nodes for Enter node %s failed, input_node_num=%zu.",
-                 in_node->GetName().c_str(), in_node->GetInDataNodes().size());
-          break;
-        }
-        auto peer_out_anchor = in_node->GetInDataAnchor(0)->GetPeerOutAnchor();
-        in_node = peer_out_anchor->GetOwnerNode();
-        in_node_2_out_anchor = std::make_pair(in_node, peer_out_anchor);
-      } else {
-        break;
-      }
-    }
-  }
-  return ret;
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<ConstGeTensorPtr> OpDescUtils::GetInputData(
     const vector<ge::NodePtr> &input_nodes) {
   vector<ConstGeTensorPtr> ret;
 
   for (const auto &input_node : input_nodes) {
     auto temp_weight = MutableWeights(input_node->GetOpDesc());
-    if (temp_weight == nullptr) {
-      REPORT_CALL_ERROR("E19999", "const op's weight is null, name: %s", input_node->GetName().c_str());
-      GELOGE(GRAPH_FAILED, "[Invoke][MutableWeights] const op's weight is null, name: %s",
-             input_node->GetName().c_str());
-      return vector<ConstGeTensorPtr>();
-    }
-    ret.push_back(temp_weight);
-  }
-
-  return ret;
-}
-vector<ConstGeTensorPtr> OpDescUtils::GetWeightsFromNodes(const vector<NodeToOutAnchor>& input_nodes_2_out_anchors) {
-  vector<ConstGeTensorPtr> ret;
-  for (const auto &input_node_2_anchor : input_nodes_2_out_anchors) {
-    auto input_node = input_node_2_anchor.first;
-    GeTensorPtr temp_weight ;
-    ConstantUtils::MutableWeight(input_node->GetOpDesc(),
-                                 input_node_2_anchor.second->GetIdx(), temp_weight);
     if (temp_weight == nullptr) {
       REPORT_CALL_ERROR("E19999", "const op's weight is null, name: %s", input_node->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Invoke][MutableWeights] const op's weight is null, name: %s",
