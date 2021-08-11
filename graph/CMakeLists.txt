@@ -33,6 +33,7 @@ set(GRAPH_SOURCE_LIST
     "utils/op_desc_utils.cc"
     "utils/type_utils.cc"
     "utils/tensor_utils.cc"
+    "utils/constant_utils.cc"
     "tensor.cc"
     "debug/graph_debug.cc"
     "opsproto/opsproto_manager.cc"
@@ -45,6 +46,7 @@ set(GRAPH_SOURCE_LIST
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
     "utils/transformer_utils.cc"
     "utils/file_utils.cc"
+    "resource_context_mgr.cc"
 )
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
