@@ -61,7 +61,14 @@ TEST_F(UtestOperater, GetInputConstData) {
   ASSERT_EQ(op.GetInputConstData("Data", tensor), GRAPH_SUCCESS);
   ASSERT_EQ(op.GetInputConstData("Enter", tensor), GRAPH_FAILED);
 }
-
+/**                                   --------------------------
+ *         const                     |   sub_data    sub_const  |
+ *          |                        |         \    /           |
+ *        case-----------------------|          Add             |
+ *         |                         |          |               |
+ *      netoutput                    |     sub_netoutput        |
+ *                                   ---------------------------
+ */
 TEST_F(UtestOperater, GetInputConstData_subgraph) {
   auto ge_tensor = std::make_shared<GeTensor>();
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
