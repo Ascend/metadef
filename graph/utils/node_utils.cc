@@ -26,6 +26,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
+#include "graph/utils/constant_utils.h"
 #include <securec.h>
 
 namespace ge {
@@ -667,6 +668,7 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
   auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
   GE_CHECK_NOTNULL(out_data_anchor);
   auto peer_node = out_data_anchor->GetOwnerNode();
+  auto peer_node_2_out_anchor = std::make_pair(peer_node, out_data_anchor);
 
   // if tensor has host mem, init data by ATTR_NAME_VALUE first
   auto tensor = op_desc->MutableInputDesc(index);
@@ -693,25 +695,28 @@ graphStatus NodeUtils::GetInputConstData(const Node &node,
     auto enter_peer_out_data_anchor = enter_in_data_anchor->GetPeerOutAnchor();
     GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
     peer_node = enter_peer_out_data_anchor->GetOwnerNode();
+    peer_node_2_out_anchor.first = peer_node;
+    peer_node_2_out_anchor.second = enter_peer_out_data_anchor;
   }
-  std::set<std::string> const_types = { CONSTANT, CONSTANTOP };
+
   auto peer_op_desc = peer_node->GetOpDesc();
   GE_CHECK_NOTNULL(peer_op_desc);
   auto peer_op_type = peer_op_desc->GetType();
-  if (const_types.count(peer_op_type) > 0) {
-    if (!AttrUtils::MutableTensor(peer_node->GetOpDesc(), ATTR_NAME_WEIGHTS, ge_tensor)) {
+  if (ConstantUtils::IsConstant(peer_op_desc)) {
+    if (!ConstantUtils::MutableWeight(peer_op_desc, peer_node_2_out_anchor.second->GetIdx(), ge_tensor)) {
       GELOGW("[Get][InputConst] Get attr %s failed.", ATTR_NAME_WEIGHTS.c_str());
       return GRAPH_FAILED;
     }
     return GRAPH_SUCCESS;
   } else if (peer_op_type == DATA) {
-    auto parent_node = NodeUtils::GetParentInput(peer_node);
-    while ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
-      parent_node = NodeUtils::GetParentInput(parent_node);
+    auto parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(peer_node);
+    while ((parent_node_2_out_anchor.first != nullptr) && (parent_node_2_out_anchor.first->GetType() == DATA)) {
+      parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(parent_node_2_out_anchor.first);
     }
-    if (parent_node != nullptr
-        && const_types.count(parent_node->GetType()) > 0) {
-      if (!AttrUtils::MutableTensor(parent_node->GetOpDesc(), ATTR_NAME_WEIGHTS, ge_tensor)) {
+    if ((parent_node_2_out_anchor.first != nullptr)
+        && (ConstantUtils::IsConstant(parent_node_2_out_anchor.first))) {
+      if (!ConstantUtils::MutableWeight(parent_node_2_out_anchor.first->GetOpDesc(),
+                                        parent_node_2_out_anchor.second->GetIdx(), ge_tensor)) {
         GELOGW("[Get][InputConst] Get attr %s failed.", ATTR_NAME_WEIGHTS.c_str());
         return GRAPH_FAILED;
       }
