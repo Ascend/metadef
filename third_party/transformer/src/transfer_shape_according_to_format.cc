@@ -21,36 +21,6 @@
 namespace transformer {
 using namespace ge;
 
-inline bool CheckInt64MulOverflow(int64_t a, int64_t b) {
-  if (a > 0) {
-    if (b > 0) {
-      if (a > (INT64_MAX / b)) {
-        return false;
-      }
-    } else {
-      if (b < (INT64_MIN / a)) {
-        return false;
-      }
-    }
-  } else {
-    if (b > 0) {
-      if (a < (INT64_MIN / b)) {
-        return false;
-      }
-    } else {
-      if ((a != 0) && (b < (INT64_MAX / a))) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-#define TRANS_INT64_MULCHECK(a, b)                        \
-  if (CheckInt64MulOverflow((a), (b)) != true) {       \
-    return false;                                         \
-  }
-
 namespace {
   static std::unique_ptr<AxisUtil> axisutil_object(new(std::nothrow) AxisUtil());
   static std::map<ge::Format, GetNewShapeByAxisValueAndFormatPtr> getNewShapeFuncMap = {
@@ -183,17 +153,17 @@ bool ShapeTransferAccordingToFormat::GetFzShapeByAxisValue(vector<int64_t>& new_
           int64_t enlarge_value =
               GetAsisEnlargeValue(axis_c_val, axis_n_val / group_val, axis_value[AXIS_C0], group_val);
           axis_g_val = DivisionCeiling(group_val, enlarge_value);
-          TRANS_INT64_MULCHECK(axis_c_val, enlarge_value);
+          INT64_MULCHECK(axis_c_val, enlarge_value);
           axis_c_val *= enlarge_value;
-          TRANS_INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
+          INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
           axis_n_val = (axis_n_val / group_val) * enlarge_value;
           axis_c1_val = DivisionCeiling(axis_c_val, axis_value[AXIS_C0]);
         }
-        TRANS_INT64_MULCHECK(axis_g_val, axis_c1_val);
+        INT64_MULCHECK(axis_g_val, axis_c1_val);
         int64_t g_c1_val = axis_g_val * axis_c1_val;
-        TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
+        INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
         g_c1_val *= axis_value[AXIS_H];
-        TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
+        INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
         hwc1 = g_c1_val * axis_value[AXIS_W];
       }
       new_shape.push_back(hwc1);
@@ -387,19 +357,19 @@ bool ShapeTransferAccordingToFormat::GetFz3DShapeByAxisValue(vector<int64_t> &ne
       int64_t enlarge_value = GetAsisEnlargeValue(axis_c_val, axis_n_val / group_val,
                                                   axis_value[AXIS_C0], group_val);
       axis_g_val = DivisionCeiling(group_val, enlarge_value);
-      TRANS_INT64_MULCHECK(axis_c_val, enlarge_value);
+      INT64_MULCHECK(axis_c_val, enlarge_value);
       axis_c_val *= enlarge_value;
-      TRANS_INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
+      INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
       axis_n_val = (axis_n_val / group_val) * enlarge_value;
       axis_c1_val = DivisionCeiling(axis_c_val, axis_value[AXIS_C0]);
     }
-    TRANS_INT64_MULCHECK(axis_g_val, axis_c1_val);
+    INT64_MULCHECK(axis_g_val, axis_c1_val);
     int64_t g_c1_val = axis_g_val * axis_c1_val;
-    TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_D]);
+    INT64_MULCHECK(g_c1_val, axis_value[AXIS_D]);
     g_c1_val *= axis_value[AXIS_D];
-    TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
+    INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
     g_c1_val *= axis_value[AXIS_H];
-    TRANS_INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
+    INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
     gdhwc1 = g_c1_val * axis_value[AXIS_W];
   }
   new_shape.push_back(gdhwc1);

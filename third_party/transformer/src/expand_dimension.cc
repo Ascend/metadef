@@ -19,137 +19,6 @@
 #include "framework/common/debug/ge_log.h"
 
 namespace transformer {
-static const int32_t NCHW_DIM_N = 0;
-static const int32_t NCHW_DIM_C = 1;
-static const int32_t NCHW_DIM_H = 2;
-static const int32_t NCHW_DIM_W = 3;
-
-static const int32_t NHWC_DIM_N = 0;
-static const int32_t NHWC_DIM_H = 1;
-static const int32_t NHWC_DIM_W = 2;
-static const int32_t NHWC_DIM_C = 3;
-
-static const int32_t HWCN_DIM_H = 0;
-static const int32_t HWCN_DIM_W = 1;
-static const int32_t HWCN_DIM_C = 2;
-static const int32_t HWCN_DIM_N = 3;
-
-static const int32_t CHWN_DIM_C = 0;
-static const int32_t CHWN_DIM_H = 1;
-static const int32_t CHWN_DIM_W = 2;
-static const int32_t CHWN_DIM_N = 3;
-
-static const int32_t NDHWC_DIM_N = 0;
-static const int32_t NDHWC_DIM_D = 1;
-static const int32_t NDHWC_DIM_H = 2;
-static const int32_t NDHWC_DIM_W = 3;
-static const int32_t NDHWC_DIM_C = 4;
-
-static const int32_t NCDHW_DIM_N = 0;
-static const int32_t NCDHW_DIM_C = 1;
-static const int32_t NCDHW_DIM_D = 2;
-static const int32_t NCDHW_DIM_H = 3;
-static const int32_t NCDHW_DIM_W = 4;
-
-static const int32_t DHWCN_DIM_D = 0;
-static const int32_t DHWCN_DIM_H = 1;
-static const int32_t DHWCN_DIM_W = 2;
-static const int32_t DHWCN_DIM_C = 3;
-static const int32_t DHWCN_DIM_N = 4;
-
-static const int32_t DHWNC_DIM_D = 0;
-static const int32_t DHWNC_DIM_H = 1;
-static const int32_t DHWNC_DIM_W = 2;
-static const int32_t DHWNC_DIM_N = 3;
-static const int32_t DHWNC_DIM_C = 4;
-
-static const size_t DIMENSION_NUM_FOUR = 4;
-static const size_t DIMENSION_NUM_FIVE = 5;
-static const size_t DIMENSION_NUM_TWO = 2;
-static const std::string RESHAPE_TYPE_FORBIDDEN = "FORBIDDEN";
-
-static const std::map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
-    {ge::FORMAT_NCHW, DIMENSION_NUM_FOUR},
-    {ge::FORMAT_NHWC, DIMENSION_NUM_FOUR},
-    {ge::FORMAT_HWCN, DIMENSION_NUM_FOUR},
-    {ge::FORMAT_CHWN, DIMENSION_NUM_FOUR},
-    {ge::FORMAT_NDHWC, DIMENSION_NUM_FIVE},
-    {ge::FORMAT_NCDHW, DIMENSION_NUM_FIVE},
-    {ge::FORMAT_DHWCN, DIMENSION_NUM_FIVE},
-    {ge::FORMAT_ND, DIMENSION_NUM_FOUR}
-};
-
-static const std::map<size_t, std::map<ge::Format, std::string>> DEFAULT_RESHAPE_TYPE {
-    {0, {{ge::FORMAT_NCHW, ""}, {ge::FORMAT_NHWC, ""}, {ge::FORMAT_HWCN, ""}, {ge::FORMAT_CHWN, ""},
-         {ge::FORMAT_NDHWC, ""}, {ge::FORMAT_NCDHW, ""}, {ge::FORMAT_DHWCN, ""}}},
-
-    {1, {{ge::FORMAT_NCHW, "C"}, {ge::FORMAT_NHWC, "C"}, {ge::FORMAT_HWCN, "C"}, {ge::FORMAT_CHWN, "C"},
-         {ge::FORMAT_NDHWC, "C"}, {ge::FORMAT_NCDHW, "C"}, {ge::FORMAT_DHWCN, "C"}}},
-
-    {2, {{ge::FORMAT_NCHW, "CH"}, {ge::FORMAT_NHWC, "HW"}, {ge::FORMAT_HWCN, "CN"}, {ge::FORMAT_CHWN, "WN"},
-         {ge::FORMAT_NDHWC, "WC"}, {ge::FORMAT_NCDHW, "HW"}, {ge::FORMAT_DHWCN, "CN"}}},
-
-    {3, {{ge::FORMAT_NCHW, "CHW"}, {ge::FORMAT_NHWC, "HWC"}, {ge::FORMAT_HWCN, "WCN"}, {ge::FORMAT_CHWN, "HWN"},
-         {ge::FORMAT_NDHWC, "HWC"}, {ge::FORMAT_NCDHW, "DHW"}, {ge::FORMAT_DHWCN, "WCN"}}},
-
-    {4, {{ge::FORMAT_NDHWC, "DHWC"}, {ge::FORMAT_NCDHW, "CDHW"}, {ge::FORMAT_DHWCN, "HWCN"}}}
-};
-
-static const std::map<ge::Format, std::map<std::string, int32_t>> AXIS_INDEX_OF_FORMAT {
-    {ge::FORMAT_NCHW, {{"N", NCHW_DIM_N}, {"C", NCHW_DIM_C}, {"H", NCHW_DIM_H}, {"W", NCHW_DIM_W}}},
-    {ge::FORMAT_HWCN, {{"N", HWCN_DIM_N}, {"C", HWCN_DIM_C}, {"H", HWCN_DIM_H}, {"W", HWCN_DIM_W}}},
-    {ge::FORMAT_NHWC, {{"N", NHWC_DIM_N}, {"C", NHWC_DIM_C}, {"H", NHWC_DIM_H}, {"W", NHWC_DIM_W}}},
-    {ge::FORMAT_CHWN, {{"N", CHWN_DIM_N}, {"C", CHWN_DIM_C}, {"H", CHWN_DIM_H}, {"W", CHWN_DIM_W}}},
-    {ge::FORMAT_NDHWC,
-     {{"N", NDHWC_DIM_N}, {"C", NDHWC_DIM_C}, {"H", NDHWC_DIM_H}, {"W", NDHWC_DIM_W}, {"D", NDHWC_DIM_D}}},
-    {ge::FORMAT_NCDHW,
-     {{"N", NCDHW_DIM_N}, {"C", NCDHW_DIM_C}, {"H", NCDHW_DIM_H}, {"W", NCDHW_DIM_W}, {"D", NCDHW_DIM_D}}},
-    {ge::FORMAT_DHWCN,
-     {{"N", DHWCN_DIM_N}, {"C", DHWCN_DIM_C}, {"H", DHWCN_DIM_H}, {"W", DHWCN_DIM_W}, {"D", DHWCN_DIM_D}}},
-    {ge::FORMAT_DHWNC,
-     {{"N", DHWNC_DIM_N}, {"C", DHWNC_DIM_C}, {"H", DHWNC_DIM_H}, {"W", DHWNC_DIM_W}, {"D", DHWNC_DIM_D}}}
-};
-
-static const std::map<ge::Format, std::unordered_set<std::string>> ALL_VALID_RESHAPE_TYPE {
-        {ge::FORMAT_NCHW, {
-                              "N", "C", "H", "W",
-                              "NC", "NH", "NW", "CH", "CW", "HW",
-                              "NCH", "NCW", "NHW", "CHW"
-                          }},
-        {ge::FORMAT_NHWC, {
-                              "N", "H", "W", "C",
-                              "NH", "NW", "NC", "HW", "HC", "WC",
-                              "NHW", "NHC", "NWC", "HWC"
-                          }},
-        {ge::FORMAT_HWCN, {
-                              "H", "W", "C", "N",
-                              "HW", "HC", "HN", "WC", "WN", "CN",
-                              "HWC", "HWN", "HCN", "WCN"
-                           }},
-        {ge::FORMAT_CHWN, {
-                              "C", "H", "W", "N",
-                              "CH", "CW", "CN", "HW", "HN", "WN",
-                              "CHW", "CHN", "CWN", "HWN"
-                           }},
-        {ge::FORMAT_NDHWC, {
-                              "N", "D", "H", "W", "C",
-                              "ND", "NH", "NW", "NC", "DH", "DW", "DC", "HW", "HC", "WC",
-                              "NDH", "NDW", "NDC", "NHW", "NHC", "NWC", "DHW", "DHC", "DWC", "HWC",
-                              "NDHW", "NDHC", "NDWC", "NHWC", "DHWC"
-                           }},
-        {ge::FORMAT_NCDHW, {
-                               "N", "C", "D", "H", "W",
-                               "NC", "ND", "NH", "NW", "CD", "CH", "CW", "DH", "DW", "HW",
-                               "NCD", "NCH", "NCW", "NDH", "NDW", "NHW", "CDH", "CDW", "CHW", "DHW",
-                               "NCDH", "NCDW", "NCHW", "NDHW", "CDHW"
-                          }},
-        {ge::FORMAT_DHWCN, {
-                               "D", "H", "W", "C", "N",
-                               "DH", "DW", "DC", "DN", "HW", "HC", "HN", "WC", "WN", "CN",
-                               "DHW", "DHC", "DHN", "DWC", "DWN", "DCN", "HWC", "HWN", "HCN", "WCN",
-                               "DHWC", "DHWN", "DHCN", "DWCN", "HWCN"
-                         }}
-};
 
 bool GetDefaultReshapeType(const ge::Format &original_format, size_t old_dims_size, std::string &reshape_type) {
   auto rsp_tp_all_format = DEFAULT_RESHAPE_TYPE.find(old_dims_size);
@@ -279,4 +148,24 @@ bool ExpandDimension(const std::string &op_type, const ge::Format &original_form
   return true;
 }
 
+bool ExpandRangeDimension(const std::string &op_type, const ge::Format &original_format,
+    const ge::Format &final_format, const uint32_t &tensor_index, const std::string &reshape_type,
+    std::vector<std::pair<int64_t, int64_t>> &ranges) {
+  std::vector<int64_t> range_upper;
+  std::vector<int64_t> range_low;
+  for (auto &i : ranges) {
+    range_low.emplace_back(i.first);
+    range_upper.emplace_back(i.second);
+  }
+  bool res = ExpandDimension(op_type, original_format, final_format, tensor_index, reshape_type, range_low) &&
+      ExpandDimension(op_type, original_format, final_format, tensor_index, reshape_type, range_upper);
+  if (!res || (range_low.size() != range_upper.size())) {
+    return false;
+  }
+  ranges.clear();
+  for (size_t idx = 0; idx < range_low.size(); ++idx) {
+    ranges.emplace_back(std::pair<int64_t, int64_t>(range_low[idx], range_upper[idx]));
+  }
+  return res;
+}
 } // namespace transformer

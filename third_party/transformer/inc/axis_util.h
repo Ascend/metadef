@@ -23,7 +23,7 @@
 
 #include "external/graph/ge_error_codes.h"
 #include "external/graph/types.h"
-
+using namespace ge;
 namespace transformer {
 
 const int32_t DIM_DEFAULT_SIZE = 4;
@@ -81,6 +81,35 @@ const int32_t DHWNC_DIM_W = 2;
 const int32_t DHWNC_DIM_N = 3;
 const int32_t DHWNC_DIM_C = 4;
 
+inline bool CheckInt64MulOverflow(int64_t m, int64_t n) {
+  if (m > 0) {
+    if (n > 0) {
+      if (m > ((int64_t)INT64_MAX / n)) {
+        return false;
+      }
+    } else {
+      if (n < ((int64_t)INT64_MIN / m)) {
+        return false;
+      }
+    }
+  } else {
+    if (n > 0) {
+      if (m < ((int64_t)INT64_MIN / n)) {
+        return false;
+      }
+    } else {
+      if ((m != 0) && (n < ((int64_t)INT64_MAX / m))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+#define INT64_MULCHECK(a, b)                                                                      \
+  if (CheckInt64MulOverflow((a), (b)) != true) {                                                  \
+    return false;                                                                                 \
+  }
 
 #define CHECK_NOTNULL(val)                                       \
   do {                                                           \
@@ -98,6 +127,10 @@ const int32_t DHWNC_DIM_C = 4;
     }                                      \
   } while (0)
 
+#define INT64_ZEROCHECK(a)                                                                            \
+  if (a == 0) {                                                                                       \
+    return false;                                                                                     \
+  }
 enum AxisValueType {
   AXIS_N = 0,
   AXIS_C = 1,
@@ -108,7 +141,9 @@ enum AxisValueType {
   AXIS_Co = 6,
   AXIS_D = 7,
   AXIS_G = 8,
-  AXIS_BOTTOM = 9
+  AXIS_INPUT_SIZE = 9,
+  AXIS_HIDEEN_SIZE = 10,
+  AXIS_BOTTOM = 11
 };
 
 int64_t DivisionCeiling(int64_t dividend, int64_t divisor);
