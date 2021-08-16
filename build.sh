@@ -229,7 +229,38 @@ generate_package()
   tar -cf metadef_lib.tar fwkacllib atc
 }
 
+# generate output package in tar form, including ut/st libraries/executables for cann
+generate_package_for_cann()
+{
+  cd "${BASEPATH}"
+
+  METADEF_LIB_PATH="lib"
+  CMPL_PATH="compiler/lib64"
+  COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
+
+  rm -rf ${OUTPUT_PATH:?}/${CMPL_PATH}/
+
+  mk_dir "${OUTPUT_PATH}/${CMPL_PATH}"
+
+  find output/ -name metadef_lib.tar -exec rm {} \;
+
+  cd "${OUTPUT_PATH}"
+
+  for lib in "${COMMON_LIB[@]}";
+  do
+    find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${CMPL_PATH} \;
+  done
+
+  find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${CMPL_PATH} \;
+
+  tar -cf metadef_lib.tar compiler
+}
+
 if [[ "X$ENABLE_METADEF_UT" = "Xoff" ]]; then
-  generate_package
+  if [[ "X$ALL_IN_ONE_ENABLE" = "X1" ]]; then
+    generate_package_for_cann
+  else
+    generate_package
+  fi
 fi
 echo "---------------- Metadef package archive generated ----------------"
