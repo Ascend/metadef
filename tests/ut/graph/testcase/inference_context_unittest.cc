@@ -15,6 +15,7 @@
  */
 
 #include <gtest/gtest.h>
+#include "graph/ge_error_codes.h"
 #include "graph/inference_context.h"
 #include "graph/resource_context_mgr.h"
 #include "graph/node.h"
@@ -51,6 +52,10 @@ TEST_F(TestInferenceConext, TestSetAndGetResourceContext) {
   TestResourceContext *resource_context = new TestResourceContext();
   resource_context->shapes = resource_shapes;
   resource_context->resource_type = "normal";
+  // test resource key empty, return fail
+  auto ret = write_inference_context->SetResourceContext(AscendString(nullptr), resource_context);
+  ASSERT_EQ(ret, GRAPH_PARAM_INVALID);
+
   write_inference_context->SetResourceContext(AscendString(resource_key), resource_context);
 
   // simulate read op
@@ -71,6 +76,10 @@ TEST_F(TestInferenceConext, TestRegisterAndGetReiledOnResource) {
   const char* resource_key = "456";
   read_inference_context->RegisterReliedOnResourceKey(AscendString(resource_key));
 
+  // simulate read_op register empty relied resource
+  auto ret = read_inference_context->RegisterReliedOnResourceKey(AscendString(nullptr));
+  ASSERT_EQ(ret, GRAPH_PARAM_INVALID);
+
   auto reiled_keys = read_inference_context->GetReliedOnResourceKeys();
   // check result
   ASSERT_EQ(reiled_keys.empty(), false);
@@ -83,6 +92,10 @@ TEST_F(TestInferenceConext, TestAddChangeResourceAndGet) {
   // simulate write node add changed resource
   const char* resource_key = "789";
   write_inference_context->AddChangedResourceKey(AscendString(resource_key));
+
+  // simulate write node add empty changed resource
+  auto ret = write_inference_context->AddChangedResourceKey(AscendString(nullptr));
+  ASSERT_EQ(ret, GRAPH_PARAM_INVALID);
 
   auto changed_keys = write_inference_context->GetChangedResourceKeys();
   // check result
