@@ -34,7 +34,7 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 #endif
 }
 
-#define LIMIT_PER_MESSAGE 512
+constexpr size_t const LIMIT_PER_MESSAGE = 512；
 
 ///
 /// @brief Report error message
@@ -54,7 +54,7 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 
 #define REPORT_INNER_ERROR(error_code, fmt, ...)                                                         \
 do {                                                                                                     \
-  char error_message_str[LIMIT_PER_MESSAGE] = {0};                                                       \
+  char error_message_str[LIMIT_PER_MESSAGE] = {'\0'};                                                       \
   if (error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__) < 0) { \
     break;                                                                                               \
   }                                                                                                      \
@@ -63,12 +63,12 @@ do {                                                                            
           error_message_str, __FUNCTION__, TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) < 0) {    \
     break;                                                                                               \
   }                                                                                                      \
-  ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
+  (void)ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
 } while (0)
 
 #define REPORT_CALL_ERROR(error_code, fmt, ...)                                                  \
 do {                                                                                             \
-  char error_message_str[LIMIT_PER_MESSAGE] = {0};                                                       \
+  char error_message_str[LIMIT_PER_MESSAGE] = {'\0'};                                                       \
   if (error_message::FormatErrorMessage(error_message_str, LIMIT_PER_MESSAGE, fmt, ##__VA_ARGS__) < 0) { \
     break;                                                                                               \
   }                                                                                                      \
