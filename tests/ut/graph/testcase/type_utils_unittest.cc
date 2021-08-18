@@ -65,4 +65,10 @@ TEST_F(UtestTypeUtils, DataFormatToFormat) {
 TEST_F(UtestTypeUtils, IsDataTypeValid) {
   ASSERT_EQ(TypeUtils::IsDataTypeValid(DT_MAX), false);
 }
+
+TEST_F(UtestTypeUtils, DataTypeToSerialString) {
+  ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_INT2), "DT_INT2");
+  ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_UINT2), "DT_UINT2");
+  ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_UINT1), "DT_UINT1");
+}
 }
