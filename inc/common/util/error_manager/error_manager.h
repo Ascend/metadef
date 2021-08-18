@@ -60,7 +60,7 @@ do {                                                                            
   }                                                                                                      \
   if (error_message::FormatErrorMessage(                                                                 \
           error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                         \
-          error_message_str, __FUNCTION__, TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) < 0) {    \
+          error_message_str, static_cast<const char *>(__FUNCTION__), TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) < 0) {    \
     break;                                                                                               \
   }                                                                                                      \
   (void)ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
@@ -74,7 +74,7 @@ do {                                                                            
   }                                                                                                      \
   if (error_message::FormatErrorMessage(                                                                 \
           error_message_str, LIMIT_PER_MESSAGE, "%s[FUNC:%s][FILE:%s][LINE:%d]",                         \
-          error_message_str, __FUNCTION__, TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) < 0) {    \
+          error_message_str, static_cast<const char *>(__FUNCTION__), TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) < 0) {    \
     break;                                                                                               \
   }                                                                                                      \
   (void)ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
