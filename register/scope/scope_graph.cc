@@ -22,12 +22,122 @@
 #include "graph/debug/ge_util.h"
 #include "graph/ge_tensor.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/debug/ge_attr_define.h"
 
 namespace ge {
 namespace {
+using NodeEdges = std::map<int32_t, std::set<std::pair<std::string, int32_t>>>;
+using GraphNodesInOut = std::unordered_map<std::string, std::pair<NodeEdges, NodeEdges>>;
 const char *const kTfIdentityType = "Identity";
 const char *const kTfConstType = "Const";
 const char *const kNumerics = "0123456789";
+const size_t kInputPartsSize = 2;
+const size_t kInputNodeName = 0;
+const size_t kPeerOutIndex = 1;
+const int32_t kControlSlot = -1;
+
+Status DecomposeInputName(const std::string &input_name, std::string &node_name, int32_t &index, bool &is_control) {
+  if (StringUtils::StartWith(input_name, "^")) {
+    is_control = true;
+    node_name = input_name.substr(1);
+    index = kControlSlot;
+    return SUCCESS;
+  }
+  is_control = false;
+  if (input_name.find(":") == std::string::npos) {
+    node_name = input_name;
+    index = 0;
+    return SUCCESS;
+  }
+  std::vector<std::string> parts = StringUtils::Split(input_name, ':');
+  if (parts.size() != kInputPartsSize) {
+    GELOGE(PARAM_INVALID, "Input name [%s] is invalid.", input_name.c_str());
+    return PARAM_INVALID;
+  }
+  try {
+    index = static_cast<int32_t>(std::stoi(parts[kPeerOutIndex]));
+  } catch (std::invalid_argument &e) {
+    GELOGE(PARAM_INVALID, "Peer out index [%s] is invalid.", parts[kPeerOutIndex].c_str());
+    return PARAM_INVALID;
+  } catch (std::out_of_range &e) {
+    GELOGE(PARAM_INVALID, "Peer out index [%s] is out of range.", parts[kPeerOutIndex].c_str());
+    return PARAM_INVALID;
+  }
+  if (index < 0) {
+    GELOGE(PARAM_INVALID, "Peer out index [%d] is invalid.", index);
+    return PARAM_INVALID;
+  }
+  node_name = parts[kInputNodeName];
+  return SUCCESS;
+}
+
+void AddEdgeCtx(const std::string &peer_node_name, int32_t peer_index, int32_t curr_index, NodeEdges &node_edges) {
+  node_edges[curr_index].insert({peer_node_name, peer_index});
+}
+
+Status GetGraphDefInOutMap(domi::tensorflow::GraphDef *graph_def, GraphNodesInOut &in_out_map) {
+  GE_CHECK_NOTNULL(graph_def);
+  for (int i = 0; i < graph_def->node_size(); i++) {
+    domi::tensorflow::NodeDef *node = graph_def->mutable_node(i);
+    const std::string &node_name = node->name();
+    int32_t input_index = 0;
+    for (const auto &input : node->input()) {
+      std::string peer_node_name;
+      int32_t peer_out_index = 0;
+      bool is_control = false;
+      auto ret = DecomposeInputName(input, peer_node_name, peer_out_index, is_control);
+      if (ret != SUCCESS) {
+        GELOGE(PARAM_INVALID, "Input[%s] of node[%s] is invalid.", input.c_str(), node_name.c_str());
+        return PARAM_INVALID;
+      }
+      int32_t curr_input_index = is_control ? kControlSlot : input_index++;
+      AddEdgeCtx(peer_node_name, peer_out_index, curr_input_index, in_out_map[node_name].first);
+      AddEdgeCtx(node_name, curr_input_index, peer_out_index, in_out_map[peer_node_name].second);
+    }
+  }
+  return SUCCESS;
+}
+
+Status GetInOutStr(const GraphNodesInOut &in_out_map, const string &node_name,
+                   std::vector<std::string> &inputs, std::vector<std::string> &outputs) {
+  auto in_out_iter = in_out_map.find(node_name);
+  if (in_out_iter == in_out_map.end()) {
+    GELOGE(INTERNAL_ERROR, "Can not find input or output info, node:%s.", node_name.c_str());
+    return INTERNAL_ERROR;
+  }
+  auto inputs_data = in_out_iter->second.first;
+  for (const auto &input_data : inputs_data) {
+    for (const auto &name_index : input_data.second) {
+      std::string item = std::to_string(input_data.first) + ":" +  name_index.first +
+                         ":" + std::to_string(name_index.second);
+      inputs.push_back(item);
+    }
+  }
+
+  auto outputs_data = in_out_iter->second.second;
+  for (const auto &output_data : outputs_data) {
+    for (const auto &name_index : output_data.second) {
+      std::string item = std::to_string(output_data.first) + ":" +  name_index.first +
+        ":" + std::to_string(name_index.second);
+      outputs.push_back(item);
+    }
+  }
+  return SUCCESS;
+}
+
+Status SetNodeInputOutputAttr(const GraphNodesInOut &in_out_map, OperatorPtr &op) {
+  GE_CHECK_NOTNULL(op);
+  std::vector<std::string> inputs;
+  std::vector<std::string> outputs;
+  auto ret = GetInOutStr(in_out_map, op->GetName(), inputs, outputs);
+  if (ret != SUCCESS) {
+    GELOGE(INTERNAL_ERROR, "Failed to get in out info, node:%s.", op->GetName().c_str());
+    return INTERNAL_ERROR;
+  }
+  op->SetAttr(ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS, inputs);
+  op->SetAttr(ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS, outputs);
+  return SUCCESS;
+}
 }  // namespace
 
 Status Scope::ScopeImpl::Init(const std::string &name, const std::string &sub_type, Scope *father_scope) {
@@ -974,6 +1084,12 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
     GELOGE(PARAM_INVALID, "Input graph_def is nullptr.");
     return;
   }
+  GraphNodesInOut graph_nodes_in_out;
+  auto status = GetGraphDefInOutMap(graph_def, graph_nodes_in_out);
+  if (status != SUCCESS) {
+    GELOGE(FAILED, "Failed to get node input output map for graph.");
+    return;
+  }
 
   for (int i = 0; i < graph_def->node_size(); ++i) {
     const domi::tensorflow::NodeDef *node_def = graph_def->mutable_node(i);
@@ -993,6 +1109,11 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
       ge::GeTensorDesc tensor_desc;
       tensor_desc.SetName(node_def->input(i));
       op_desc->AddInputDesc(tensor_desc);
+    }
+    ret = SetNodeInputOutputAttr(graph_nodes_in_out, op);
+    if (ret != SUCCESS) {
+      GELOGE(FAILED, "Failed to set input output attr, op:%s.", op->GetName().c_str());
+      return;
     }
 
     nodes_map_.emplace(op->GetName(), op);

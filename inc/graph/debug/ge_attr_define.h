@@ -1276,6 +1276,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 
 // name of network output tensor
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_ORIGIN_OUTPUT_TENSOR_NAME;
+
+// for scope op to record the input and output information of the original graph node
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS;
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS;
 }  // namespace ge
 
 /*lint +e618*/

@@ -1244,4 +1244,8 @@ const std::string ATTR_NAME_POTENTIAL_WEIGHT_INDICES = "_potential_weight_indice
 
 // name of network output tensor
 const std::string ATTR_NAME_ORIGIN_OUTPUT_TENSOR_NAME = "_origin_output_tensor_name";
+
+// for scope op to record the input and output information of the original graph node
+const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS = "_origin_graph_node_inputs";
+const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS = "_origin_graph_node_outputs";
 }  // namespace ge
