@@ -27,10 +27,10 @@
 namespace error_message {
 #ifdef __GNUC__
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
-#define TRIM_PATH(x) (x.find_last_of('/') != std::string::npos ? x.substr(x.find_last_of('/') + 1) : x)
+#define TRIM_PATH(x) ((x.find_last_of('/') != std::string::npos) ? x.substr(x.find_last_of('/') + 1) : x)
 #else
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
-#define TRIM_PATH(x) (x.find_last_of('\\') != std::string::npos ? x.substr(x.find_last_of('\\') + 1) : x)
+#define TRIM_PATH(x) ((x.find_last_of('\\') != std::string::npos) ? x.substr(x.find_last_of('\\') + 1) : x)
 #endif
 }
 
@@ -77,7 +77,7 @@ do {                                                                            
           error_message_str, __FUNCTION__, TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) < 0) {    \
     break;                                                                                               \
   }                                                                                                      \
-  ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
+  (void)ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_message_str));         \
 } while (0)
 
 namespace error_message {
