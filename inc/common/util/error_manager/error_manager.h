@@ -34,7 +34,7 @@ int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 #endif
 }
 
-constexpr size_t const LIMIT_PER_MESSAGE = 512；
+constexpr size_t const LIMIT_PER_MESSAGE = 512;
 
 ///
 /// @brief Report error message
