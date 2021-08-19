@@ -333,4 +333,31 @@ TEST_F(TensorUT, NormalizeGeTensorWithOriginShape) {
   }
 }
 
+TEST_F(TensorUT, GeShapeSetDimNum) {
+  ge::GeShape shape;
+  EXPECT_EQ(shape.GetDimNum(), 0);
+  shape.SetDimNum(2); // Normal dim nums
+  EXPECT_EQ(shape.GetDimNum(), 2);
+  EXPECT_EQ(shape.GetDim(0), ge::UNKNOWN_DIM);
+  EXPECT_EQ(shape.GetDim(1), ge::UNKNOWN_DIM);
+  shape.SetDimNum(0); // Scalar dim nums
+  EXPECT_EQ(shape.GetDimNum(), 0);
+  shape.SetDimNum(20); // Big dim nums
+  EXPECT_EQ(shape.GetDimNum(), 20);
+  for (int i = 0; i < 20; i++) {
+    EXPECT_EQ(shape.GetDim(i), ge::UNKNOWN_DIM);
+  }
+}
+
+TEST_F(TensorUT, GeShapeIsUnknownDimNum) {
+  ge::GeShape shape;
+  EXPECT_FALSE(shape.IsUnknownDimNum());
+  shape.SetDimNum(2);
+  EXPECT_FALSE(shape.IsUnknownDimNum());
+  shape.SetIsUnknownDimNum();
+  EXPECT_TRUE(shape.IsUnknownDimNum());
+  shape.SetDimNum(2);
+  EXPECT_FALSE(shape.IsUnknownDimNum());
+}
+
 }  // namespace ge
