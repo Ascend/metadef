@@ -920,6 +920,9 @@ const std::string ATTR_NAME_CONTINUOUS_INPUT_ALLOC = "continuous_input_alloc";
 
 const std::string ATTR_NAME_CONTINUOUS_OUTPUT = "continuous_output";
 
+// For AscendWeightQuant+Enter
+const std::string ATTR_NAME_FINAL_CONST_NODE = "_final_const_node";
+
 // attr _input_mutable = true means node will modify its input in runtime
 const std::string ATTR_NAME_MODIFY_INPUT = "_input_mutable";
 
