@@ -1258,4 +1258,13 @@ const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS = "_origin_graph_node_outp
 
 // for operator resource list(e.g. queues, channels)
 const std::string ATTR_NAME_RESOURCE_LIST = "_resource_list";
+
+// for no tiling
+const std::string ATTR_NAME_OP_TILING_INLINE_ENGINE = "_op_tiling_inline_engine";
+const std::string ATTR_NAME_OP_EXPORT_SHAPE_ENGINE = "_op_export_shape_engine";
+const std::string ATTR_NAME_OP_MAX_SHAPE = "_op_max_shape";
+const std::string ATTR_NAME_TENSOR_MAX_SHAPE = "_tensor_max_shape";
+const std::string ATTR_NAME_OP_NO_TILING = "_op_no_tiling";
+const std::string ATTR_NAME_TENSOR_DESC_MEM_OFFSET = "_tensor_desc_mem_offset";
+const std::string ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE = "_tensor_no_tiling_mem_type";
 }  // namespace ge
