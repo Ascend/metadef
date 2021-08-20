@@ -46,6 +46,8 @@ class ShapeRefiner {
   static void PrintInOutTensorShape(const ge::NodePtr &node, const std::string &phase);
   static graphStatus GetRealInNodesAndIndex(NodePtr &input_node, int32_t &output_idx,
                                             std::map<NodePtr, int32_t> &nodes_idx);
+  static graphStatus PostProcessAfterInfershape(const NodePtr &node, Operator &op, bool is_unknown_graph);
+  static graphStatus UpdateInputOutputDesc(const NodePtr &node);
 };
 }  // namespace ge
 #endif  // INC_GRAPH_SHAPE_REFINER_H_
