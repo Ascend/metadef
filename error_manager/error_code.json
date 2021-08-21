@@ -1596,6 +1596,17 @@
       }
     },
     {
+      "errClass": "Environment Errors",
+      "errTitle": "Driver return failed",
+      "ErrCode": "EE3001",
+      "ErrMessage": "The process has lost connection between the host and device. This might be caused by execution timeout of particular operators or unstable connection. Check the error message detail and try again.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Execution timeout of particular operators or unstable connection.",
+        "Solution": "[step] Fix the timout operator or fix the connection problem between host and device, then restart the app"
+      }
+    },
+    {
       "errClass": "ACL API Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EH0001",

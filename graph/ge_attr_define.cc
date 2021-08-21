@@ -18,6 +18,8 @@
 
 namespace ge {
 // Public attribute
+const std::string ATTR_NAME_OP_FILE_PATH = "_op_file_path";
+
 const std::string ATTR_NAME_FORCE_UNKNOWN_SHAPE = "_force_unknown_shape";
 
 const std::string ATTR_NAME_IS_UNKNOWN_SHAPE = "_is_unknown_shape";
