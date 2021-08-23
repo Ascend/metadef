@@ -144,6 +144,33 @@ TEST_F(UtestScopeGraph, test_build_scope_graph_succ) {
   EXPECT_EQ(mul1_outputs.at(0), "0:add2:0");
 }
 
+TEST_F(UtestScopeGraph, test_build_scope_graph_node_without_inout) {
+  domi::tensorflow::GraphDef graph_def;
+  auto no_op = graph_def.add_node();
+  no_op->set_name("no_op");
+  no_op->set_op("NoOp");
+
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  Status ret = scope_graph->Init();
+  ASSERT_EQ(ret, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+
+  auto nodes_map = impl->GetNodesMap();
+  EXPECT_EQ(nodes_map.size(), 1);
+  auto iter = nodes_map.find("no_op");
+  ASSERT_NE(iter, nodes_map.end());
+  std::vector<std::string> inputs;
+  std::vector<std::string> outputs;
+  graphStatus get_input_attr = iter->second->GetAttr(ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS, inputs);
+  graphStatus get_output_attr = iter->second->GetAttr(ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS, outputs);
+  ASSERT_EQ(get_input_attr, GRAPH_SUCCESS);
+  ASSERT_EQ(get_output_attr, GRAPH_SUCCESS);
+  EXPECT_EQ(inputs.size(), 0);
+  EXPECT_EQ(outputs.size(), 0);
+}
+
 TEST_F(UtestScopeGraph, test_build_scope_graph_failed) {
   domi::tensorflow::GraphDef graph_def;
   auto placeholder0 = graph_def.add_node();

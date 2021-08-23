@@ -98,12 +98,12 @@ Status GetGraphDefInOutMap(domi::tensorflow::GraphDef *graph_def, GraphNodesInOu
   return SUCCESS;
 }
 
-Status GetInOutStr(const GraphNodesInOut &in_out_map, const string &node_name,
-                   std::vector<std::string> &inputs, std::vector<std::string> &outputs) {
+void GetInOutStr(const GraphNodesInOut &in_out_map, const string &node_name,
+                 std::vector<std::string> &inputs, std::vector<std::string> &outputs) {
   auto in_out_iter = in_out_map.find(node_name);
   if (in_out_iter == in_out_map.end()) {
-    GELOGE(INTERNAL_ERROR, "Can not find input or output info, node:%s.", node_name.c_str());
-    return INTERNAL_ERROR;
+    GELOGI("Not find input or output info for node:%s.", node_name.c_str());
+    return;
   }
   auto inputs_data = in_out_iter->second.first;
   for (const auto &input_data : inputs_data) {
@@ -122,18 +122,13 @@ Status GetInOutStr(const GraphNodesInOut &in_out_map, const string &node_name,
       outputs.push_back(item);
     }
   }
-  return SUCCESS;
 }
 
 Status SetNodeInputOutputAttr(const GraphNodesInOut &in_out_map, OperatorPtr &op) {
   GE_CHECK_NOTNULL(op);
   std::vector<std::string> inputs;
   std::vector<std::string> outputs;
-  auto ret = GetInOutStr(in_out_map, op->GetName(), inputs, outputs);
-  if (ret != SUCCESS) {
-    GELOGE(INTERNAL_ERROR, "Failed to get in out info, node:%s.", op->GetName().c_str());
-    return INTERNAL_ERROR;
-  }
+  GetInOutStr(in_out_map, op->GetName(), inputs, outputs);
   op->SetAttr(ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS, inputs);
   op->SetAttr(ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS, outputs);
   return SUCCESS;
