@@ -1602,7 +1602,7 @@
       "ErrMessage": "The process has lost connection between the host and device. This might be caused by execution timeout of particular operators or unstable connection. Check the error message detail and try again.",
       "Arglist": "",
       "suggestion": {
-        "Possible Cause": "The execution of a particular operator times out or the host and device connection is  unstable.",
+        "Possible Cause": "The execution of a particular operator times out or the host and device connection is unstable.",
         "Solution": "[step] Fix the timout operator or fix the connection problem between host and device, then restart the app"
       }
     },
@@ -1652,13 +1652,24 @@
     },
     {
       "errClass": "Task Schedule Execution Errors",
-      "errTitle": "HWTS Resource Error",
+      "errTitle": "Task Schedule Resource Error",
       "ErrCode": "EE5001",
       "ErrMessage": "Insufficient HWTS submit queue(SQ) resource. %s",
       "Arglist": "extend_info",
       "suggestion": {
         "Possible Cause": "The HWTS SQ resource are not sufficient to launch any new tasks.",
         "Solution": "Wait until sufficient HWTS SQ resource is available."
+      }
+    },
+    {
+      "errClass": "Task Schedule Execution Errors",
+      "errTitle": "Task Schedule Resource Error",
+      "ErrCode": "EE5002",
+      "ErrMessage": "Insufficient task schedule memory. %s",
+      "Arglist": "extend_info",
+      "suggestion": {
+        "Possible Cause": "The task schedule memory are not sufficient to allocate new memory.",
+        "Solution": "Reduce the number of tasks of your model and try again."
       }
     },
     {
