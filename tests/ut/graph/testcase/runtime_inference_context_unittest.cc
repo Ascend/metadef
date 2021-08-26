@@ -33,9 +33,20 @@ class RuntimeInferenceContextTest : public testing::Test {
 TEST_F(RuntimeInferenceContextTest, TestSetAndGetTensor) {
   RuntimeInferenceContext ctx;
   Tensor tensor;
-  ASSERT_EQ(ctx.SetTensor(1, 1, std::move(tensor)), GRAPH_SUCCESS);
+  ASSERT_EQ(ctx.SetTensor(1, 3, std::move(tensor)), GRAPH_SUCCESS);
   Tensor new_tensor;
-  ASSERT_EQ(ctx.GetTensor(1, 1, new_tensor), GRAPH_SUCCESS);
-  ASSERT_EQ(ctx.GetTensor(1, 0, new_tensor), GRAPH_FAILED);
+  ASSERT_EQ(ctx.GetTensor(1, 3, new_tensor), GRAPH_SUCCESS);
+  ASSERT_NE(ctx.GetTensor(2, 0, new_tensor), GRAPH_SUCCESS);
+  ASSERT_NE(ctx.GetTensor(1, 0, new_tensor), GRAPH_SUCCESS);
+}
+
+TEST_F(RuntimeInferenceContextTest, TestSetAndGetGeTensor) {
+RuntimeInferenceContext ctx;
+Tensor tensor;
+ASSERT_EQ(ctx.SetTensor(1, 3, std::move(tensor)), GRAPH_SUCCESS);
+GeTensorPtr new_tensor;
+ASSERT_EQ(ctx.GetTensor(1, 3, new_tensor), GRAPH_SUCCESS);
+ASSERT_NE(ctx.GetTensor(2, 0, new_tensor), GRAPH_SUCCESS);
+ASSERT_NE(ctx.GetTensor(1, 0, new_tensor), GRAPH_SUCCESS);
 }
 } // namespace ge
