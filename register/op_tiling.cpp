@@ -971,7 +971,7 @@ void checkTensordescShape(ge::OpDescPtr &op_desc, std::vector<size_t> &inputsInd
   ge::GeTensorDesc tensor_temp;
   for (size_t i = 0; i < input_size; ++ i) {
     tensor_temp = op_desc->GetInputDesc(i);
-    if (tensor_temp.GetShape().GetShapeSize() == 0) {
+    if (tensor_temp.GetShape().IsScalar()) {
       inputsIndexes.push_back(i);
       tensor_temp.SetShape(ge::GeShape({1}));
       op_desc->UpdateInputDesc(i, tensor_temp);
@@ -981,7 +981,7 @@ void checkTensordescShape(ge::OpDescPtr &op_desc, std::vector<size_t> &inputsInd
   size_t output_size = op_desc->GetOutputsSize();
   for (size_t i = 0; i < output_size; ++ i) {
     tensor_temp = op_desc->GetOutputDesc(i);
-    if (tensor_temp.GetShape().GetShapeSize() == 0) {
+    if (tensor_temp.GetShape().IsScalar()) {
       outputsIndexes.push_back(i);
       tensor_temp.SetShape(ge::GeShape({1}));
       op_desc->UpdateOutputDesc(i, tensor_temp);

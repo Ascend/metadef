@@ -44,6 +44,7 @@ set(GRAPH_SOURCE_LIST
     "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
+    "${METADEF_DIR}/third_party/transformer/src/transfer_range_according_to_format.cc"
     "utils/transformer_utils.cc"
     "utils/file_utils.cc"
     "resource_context_mgr.cc"

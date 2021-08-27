@@ -55,9 +55,42 @@ const uint32_t SIZE_OF_CN = 2;
 const uint32_t MINIMUM_NZ_SHAPE_DIM_NUM = 2;
 const uint32_t GROUPS_DEFAULT_VALUE = 1;
 const uint32_t UNKNOWN_SHAPE_VALUE = -1;
+const uint32_t MINIMUM_ND_TO_RNN_SHAPE_NUM = 2;
 
 const int32_t LSTM_NI = 4;
 const int32_t X0 = 16;
+const std::vector<uint32_t> vector_of_dtype_and_c0 = {
+    SHAPE_NUMBER_16,  // DT_FLOAT = 0,
+    SHAPE_NUMBER_16,  // DT_FLOAT16 = 1,
+    SHAPE_NUMBER_32,  // DT_INT8 = 2,
+    SHAPE_NUMBER_16,  // DT_INT32 = 3,
+    SHAPE_NUMBER_32,  // DT_UINT8 = 4,
+    SHAPE_NUMBER_16,
+    SHAPE_NUMBER_16,  // DT_INT16 = 6,
+    SHAPE_NUMBER_16,  // DT_UINT16 = 7,
+    SHAPE_NUMBER_16,  // DT_UINT32 = 8,
+    SHAPE_NUMBER_16,  // DT_INT64 = 9,
+    SHAPE_NUMBER_16,  // DT_UINT64 = 10,
+    SHAPE_NUMBER_16,  // DT_DOUBLE = 11,
+    SHAPE_NUMBER_16,  // DT_BOOL = 12,
+    SHAPE_NUMBER_16,  // DT_DUAL = 13,
+    SHAPE_NUMBER_16,  // DT_DUAL_SUB_INT8 = 14,
+    SHAPE_NUMBER_16,  // DT_DUAL_SUB_UINT8 = 15,
+    SHAPE_NUMBER_16,  // DT_COMPLEX64 = 16,
+    SHAPE_NUMBER_16,  // DT_COMPLEX128 = 17,
+    SHAPE_NUMBER_16,  // DT_QINT8 = 18,
+    SHAPE_NUMBER_16,  // DT_QINT16 = 19,
+    SHAPE_NUMBER_16,  // DT_QINT32 = 20,
+    SHAPE_NUMBER_16,  // DT_QUINT8 = 21,
+    SHAPE_NUMBER_16,  // DT_QUINT16 = 22,
+    SHAPE_NUMBER_16,  // DT_RESOURCE = 23,
+    SHAPE_NUMBER_16,  // DT_STRING_REF = 24,
+    SHAPE_NUMBER_16,  // DT_DUAL = 25,
+    SHAPE_NUMBER_16,  // DT_VARIANT = 26,
+    SHAPE_NUMBER_16,  // DT_BF16 = 27,
+    SHAPE_NUMBER_16,  // DT_UNDEFINED,
+    SHAPE_NUMBER_64,  // DT_INT4 = 29,
+};
 /* The first parameter is axis value, second is new shape and third is
  * op implementation type. */
 using GetNewShapeByAxisValueAndFormat =

@@ -249,14 +249,6 @@ Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_node
 
   for (auto &node : fus_nodes) {
     GraphPassUtil::RecordOriginalNames(original_nodes, node);
-    if (original_nodes.size() == 1) {
-      ge::NodePtr ori_node = original_nodes[0];
-      bool fuzz_build = false;
-      ge::AttrUtils::GetBool(ori_node->GetOpDesc(), ge::ATTR_NAME_FUZZ_BUILD, fuzz_build);
-      if (fuzz_build) {
-        node->GetOpDesc()->SetExtAttr("_original_node", ori_node);
-      }
-    }
   }
 
   if (fus_nodes.size() > 1) {
