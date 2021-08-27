@@ -208,6 +208,10 @@ int ErrorManager::ReportInterErrMessage(std::string error_code, const std::strin
     return -1;
   }
 
+  if (error_context_.work_stream_id == 0) {
+    GenWorkStreamIdDefault();
+  }
+
   std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
