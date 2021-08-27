@@ -47,6 +47,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   explicit GeShape(std::vector<int64_t> s);
 
   size_t GetDimNum() const;
+  void SetDimNum(size_t dim_num);
+  bool IsUnknownDimNum() const;
+  void SetIsUnknownDimNum();
   // If the idx is invalid, return 0
   int64_t GetDim(size_t idx) const;
   graphStatus SetDim(size_t idx, int64_t value);

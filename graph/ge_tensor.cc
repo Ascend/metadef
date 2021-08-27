@@ -112,6 +112,9 @@ class GeShapeImpl {
   ~GeShapeImpl() = default;
   explicit GeShapeImpl(std::vector<int64_t> s);
 
+  void SetDimNum(size_t dim_num);
+  bool IsUnknownDimNum() const;
+  void SetIsUnknownDimNum();
   size_t GetDimNum() const;
   int64_t GetDim(size_t idx) const;
   graphStatus SetDim(size_t idx, int64_t value);
@@ -143,6 +146,29 @@ GeShapeImpl::GeShapeImpl(std::vector<int64_t> s) : GeShapeImpl() {
     for (auto i : s) {
       proto_msg->add_dim(i);
     }
+  }
+}
+
+void GeShapeImpl::SetDimNum(size_t dim_num) {
+  auto proto_msg = shape_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->mutable_dim()->Resize(dim_num, UNKNOWN_DIM);
+  }
+}
+
+bool GeShapeImpl::IsUnknownDimNum() const {
+  auto proto_msg = shape_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    return proto_msg->dim_size() == 1 && proto_msg->dim(0) == UNKNOWN_DIM_NUM;
+  }
+  return true;
+}
+
+void GeShapeImpl::SetIsUnknownDimNum() {
+  auto proto_msg = shape_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->mutable_dim()->Resize(1, UNKNOWN_DIM_NUM);
+    proto_msg->set_dim(0, UNKNOWN_DIM_NUM);
   }
 }
 
@@ -307,6 +333,18 @@ GeShape::~GeShape() = default;
 
 size_t GeShape::GetDimNum() const {
   return impl_->GetDimNum();
+}
+
+void GeShape::SetDimNum(size_t dim_num) {
+  impl_->SetDimNum(dim_num);
+}
+
+bool GeShape::IsUnknownDimNum() const {
+  return impl_->IsUnknownDimNum();
+}
+
+void GeShape::SetIsUnknownDimNum() {
+  impl_->SetIsUnknownDimNum();
 }
 
 int64_t GeShape::GetDim(size_t idx) const {
