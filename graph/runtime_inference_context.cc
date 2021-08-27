@@ -101,8 +101,7 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, T
   std::lock_guard<std::mutex> lk(mu_);
   auto iter = tensors_.find(node_id);
   if (iter == tensors_.end()) {
-    REPORT_INNER_ERROR("E19999", "Node not register. Id = %ld", node_id);
-    GELOGE(INTERNAL_ERROR, "[Check][Param] Node not register. Id = %ld", node_id);
+    GELOGW("Node not register. Id = %ld", node_id);
     return INTERNAL_ERROR;
   }
 
@@ -135,8 +134,7 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, G
   std::lock_guard<std::mutex> lk(mu_);
   auto iter = ge_tensors_.find(node_id);
   if (iter == ge_tensors_.end()) {
-    REPORT_INNER_ERROR("E19999", "Node not register. Id = %ld", node_id);
-    GELOGE(INTERNAL_ERROR, "[Check][Param] Node not register. Id = %ld", node_id);
+    GELOGW("Node not register. Id = %ld", node_id);
     return INTERNAL_ERROR;
   }
 
@@ -151,6 +149,10 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, G
 
   GELOGD("Get ge tensor for node_id = %ld, output_id = %d", node_id, output_id);
   tensor = output_tensors[output_id];
+  if (tensor == nullptr) {
+    GELOGW("Node output is not registered. node_id = %ld, output index = %d", node_id, output_id);
+    return GRAPH_FAILED;
+  }
   return GRAPH_SUCCESS;
 }
 } // namespace ge
