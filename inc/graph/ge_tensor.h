@@ -144,17 +144,18 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
 
   graphStatus IsValid() const;
 
+  using AttrHolder::DelAttr;
+  using AttrHolder::GetAllAttrs;
+  using AttrHolder::GetAttr;
+  using AttrHolder::HasAttr;
+  using AttrHolder::SetAttr;
+
  protected:
   ProtoAttrMapHelper MutableAttrMap() override;
   ConstProtoAttrMapHelper GetAttrMap() const override;
 
  private:
   bool GeTensorDescAttrsAreEqual(const GeTensorDesc &r_ge_tensor_desc) const;
-  using AttrHolder::DelAttr;
-  using AttrHolder::GetAllAttrs;
-  using AttrHolder::GetAttr;
-  using AttrHolder::HasAttr;
-  using AttrHolder::SetAttr;
 
   // Create from proto obj
   GeTensorDesc(const ProtoMsgOwner &protoOnwer, proto::TensorDescriptor *protoMsg);
