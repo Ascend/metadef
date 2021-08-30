@@ -20,6 +20,8 @@
 #include "graph/resource_context_mgr.h"
 #include "graph/node.h"
 #include "graph_builder_utils.h"
+#include "graph/utils/transformer_utils.h"
+#include "external/graph/types.h"
 
 namespace ge {
 namespace {
@@ -107,5 +109,22 @@ TEST_F(TestInferenceConext, TestAddChangeResourceAndGet) {
   changed_keys = write_inference_context->GetChangedResourceKeys();
   // check result
   ASSERT_EQ(changed_keys.empty(), true);
+}
+
+TEST_F(TestInferenceConext, transformer_util) {
+  OpDescPtr op_desc = std::make_shared<OpDesc>("tmp", "tmp");
+  GeTensorDesc tensor_desc(GeShape(), ge::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc.SetShape(GeShape(std::vector<int64_t>{1, 1}));
+  tensor_desc.SetOriginShape(GeShape(std::vector<int64_t>{1, 1, 1, 1}));
+  tensor_desc.SetFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetDataType(DT_FLOAT16);
+  op_desc->AddInputDesc(tensor_desc);
+  op_desc->AddOutputDesc(tensor_desc);
+
+  std::unique_ptr<NodeShapeTransUtils> transformer(new (std::nothrow) NodeShapeTransUtils(op_desc));
+  transformer->Init();
+  ASSERT_EQ(transformer->CatchFormatAndShape(), true);
+  ASSERT_EQ(transformer->UpdateFormatAndShape(), true);
 }
 } // namespace ge

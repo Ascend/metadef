@@ -49,10 +49,14 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     }
     auto format = tensor_desc_input->GetFormat();
     auto ori_format = tensor_desc_input->GetOriginFormat();
-    if (format == ori_format) {
-      GELOGD("Node is %s, input tensor idx is %zu. ori format: %s, format: %s is same! No need to catch format&shape!",
-             op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(ori_format).c_str(),
-             TypeUtils::FormatToSerialString(format).c_str());
+    if (format == ori_format &&
+        tensor_desc_input->GetShape() == tensor_desc_input->GetOriginShape()) {
+      GELOGD("Node is %s, input tensor idx is %zu. ori format: %s, format: %s, ori shape:%s, shape:%s is same! "
+             "No need to catch format&shape!", op_desc_->GetName().c_str(), i,
+             TypeUtils::FormatToSerialString(ori_format).c_str(),
+             TypeUtils::FormatToSerialString(format).c_str(),
+             tensor_desc_input->GetOriginShape().ToString().c_str(),
+             tensor_desc_input->GetShape().ToString().c_str());
       continue;
     }
     map_format_in_[i] = format;
@@ -69,10 +73,14 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     }
     auto format = tensor_desc_output->GetFormat();
     auto ori_format = tensor_desc_output->GetOriginFormat();
-    if (format == ori_format) {
-      GELOGD("Node is %s, output tensor idx is %zu. ori format: %s, format: %s is same! No need to catch format&shape!",
-             op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(ori_format).c_str(),
-             TypeUtils::FormatToSerialString(format).c_str());
+    if (format == ori_format &&
+        tensor_desc_output->GetShape() == tensor_desc_output->GetOriginShape()) {
+      GELOGD("Node is %s, output tensor idx is %zu. ori format: %s, format: %s, ori shape:%s, shape:%s is same!"
+             "No need to catch format&shape!", op_desc_->GetName().c_str(), i,
+             TypeUtils::FormatToSerialString(ori_format).c_str(),
+             TypeUtils::FormatToSerialString(format).c_str(),
+             tensor_desc_output->GetOriginShape().ToString().c_str(),
+             tensor_desc_output->GetShape().ToString().c_str());
       continue;
     }
     map_format_out_[i] = format;
@@ -106,7 +114,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     auto ori_format = tensor_desc_input->GetFormat();
     auto ori_shape = tensor_desc_input->MutableShape();
     auto curr_format = map_format_in_[i];
-    if (ori_format == curr_format || curr_format == FORMAT_ND) {
+    if (curr_format == FORMAT_ND) {
       continue;
     }
     std::vector<int64_t> ori_shape_dims = ori_shape.GetDims();
@@ -158,7 +166,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     }
     tensor_desc_output->SetOriginShape(ori_shape);
     auto saved_format = map_format_out_[i];
-    if (curr_format == saved_format || saved_format == FORMAT_ND) {
+    if (saved_format == FORMAT_ND) {
       GELOGD("Nodeis %s, out tensor idx is %zu. ori format: %s, recorded format: %s is same! No need to transfer",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
              TypeUtils::FormatToSerialString(saved_format).c_str());

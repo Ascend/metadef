@@ -26,6 +26,7 @@
 
 namespace {
 const int64_t UNKNOWN_DIM_SIZE = -1;
+const string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
 }  // namespace
 
 namespace ge {
@@ -121,6 +122,7 @@ class TensorDescImpl {
   bool origin_format_is_set_ = false;
   DataType data_type_ = DT_FLOAT;
   Shape origin_shape_;
+  bool origin_shape_is_set_ = false;
   int64_t size_ = 0;
   int64_t real_dim_cnt_ = 0;
   std::string name_;
@@ -402,6 +404,7 @@ Shape TensorDesc::GetOriginShape() const {
 void TensorDesc::SetOriginShape(const Shape &origin_shape) {
   if (impl != nullptr) {
     impl->origin_shape_ = origin_shape;
+    impl->origin_shape_is_set_ = true;
   }
 }
 
@@ -778,7 +781,9 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
   if (tensor_desc.impl->origin_format_is_set_) {
     AttrUtils::SetBool(ge_tensor_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, true);
   }
-  ge_tensor_desc.SetOriginShape(GeShape(tensor_desc.GetOriginShape().GetDims()));
+  if (tensor_desc.impl->origin_shape_is_set_) {
+    ge_tensor_desc.SetOriginShape(GeShape(tensor_desc.GetOriginShape().GetDims()));
+  }
   ge_tensor_desc.SetOriginFormat(tensor_desc.GetOriginFormat());
   ge_tensor_desc.SetName(tensor_desc.GetName());
   ge_tensor_desc.SetPlacement(tensor_desc.GetPlacement());
@@ -807,7 +812,11 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
 TensorDesc TensorAdapter::GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_desc) {
   TensorDesc tensor_desc(Shape(ge_tensor_desc.GetShape().GetDims()), ge_tensor_desc.GetFormat(),
                          ge_tensor_desc.GetDataType());
-  tensor_desc.SetOriginShape(Shape(ge_tensor_desc.GetOriginShape().GetDims()));
+  bool original_shape_initialized = false;
+  (void)AttrUtils::GetBool(ge_tensor_desc, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, original_shape_initialized);
+  if (original_shape_initialized) {
+    tensor_desc.SetOriginShape(Shape(ge_tensor_desc.GetOriginShape().GetDims()));
+  }
   tensor_desc.SetOriginFormat(ge_tensor_desc.GetOriginFormat());
   tensor_desc.SetName(ge_tensor_desc.GetName());
   tensor_desc.SetPlacement(ge_tensor_desc.GetPlacement());
