@@ -90,6 +90,9 @@ class GraphUtils {
 
   static GraphPtr CreateGraphPtrFromComputeGraph(const ComputeGraphPtr compute_graph);
 
+  static graphStatus GetIndependentCompileGraphs(const ComputeGraphPtr &compute_graph,
+		                                 std::vector<ComputeGraphPtr> &independent_compile_subgraphs);
+
   static graphStatus RecoverGraphOperators(const Graph &graph);
 
   static ComputeGraphPtr CreateGraphFromOperator(const string &name, const std::vector<Operator> &inputs);

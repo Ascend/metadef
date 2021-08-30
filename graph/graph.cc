@@ -30,6 +30,10 @@ using std::pair;
 using std::string;
 using std::vector;
 
+namespace {
+const uint32_t kSubgraphIndexOfPartitionedCall = 0U;
+}  // namespace
+
 namespace ge {
 class GraphImpl {
  public:
@@ -933,6 +937,25 @@ GraphUtils::CreateGraphPtrFromComputeGraph(const ge::ComputeGraphPtr compute_gra
   graph->impl_->compute_graph_ = compute_graph;
 
   return graph;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::GetIndependentCompileGraphs(const ComputeGraphPtr &compute_graph,
+		                                    std::vector<ComputeGraphPtr> &independent_compile_subgraphs) {
+  bool is_pipeline_partitioned = false;
+  (void)AttrUtils::GetBool(*compute_graph, ATTR_NAME_PIPELINE_PARTITIONED, is_pipeline_partitioned);
+  if (is_pipeline_partitioned) {
+    for (const auto &node : compute_graph->GetDirectNode()) {
+      if (node->GetType() == PARTITIONEDCALL) {
+        auto sub_graph = NodeUtils::GetSubgraph(*node, kSubgraphIndexOfPartitionedCall);
+	GE_CHECK_NOTNULL(sub_graph);
+	independent_compile_subgraphs.emplace_back(sub_graph);
+      }
+    }
+    return GRAPH_SUCCESS;
+  }
+  independent_compile_subgraphs.emplace_back(compute_graph);
+  return GRAPH_SUCCESS;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
