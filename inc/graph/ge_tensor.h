@@ -103,9 +103,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
 
   void Update(GeShape shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
 
-  GeShape GetShape() const;
+  const GeShape &GetShape() const;
   GeShape &MutableShape();
-  void SetShape(GeShape shape);
+  void SetShape(const GeShape &shape);
 
   // set shape with -2, it stand for unknown shape
   void SetUnknownDimNumShape();
@@ -119,7 +119,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
 
   GeShape GetOriginShape() const;
   void SetOriginShape(const GeShape &originShape);
-  bool IsOriginShapeInitialized();
+  bool IsOriginShapeInitialized() const;
 
   Format GetFormat() const;
   void SetFormat(Format format);
@@ -231,7 +231,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   explicit GeTensor(const GeTensorDesc &tensorDesc, size_t size);
   ~GeTensor();
 
-  GeTensorDesc GetTensorDesc() const;
+  const GeTensorDesc &GetTensorDesc() const;
   GeTensorDesc &MutableTensorDesc();
   void SetTensorDesc(const GeTensorDesc &tensorDesc);
 

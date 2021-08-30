@@ -39,6 +39,11 @@ using std::vector;
 
 /*lint -save -e521 -e681 -e732 -e737*/
 namespace ge {
+static GeTensorDesc& InvalidGeTensorDesc() {
+  static GeTensorDesc kGlobalInvalidGeTensorDesc;
+  return kGlobalInvalidGeTensorDesc;
+}
+
 const std::string ATTR_NAME_ID = "id";
 
 const std::string ATTR_NAME_STREAM_ID = "stream_id";
@@ -447,15 +452,15 @@ bool OpDescImpl::InputIsSet(const string &name) const {
   return false;
 }
 
-GeTensorDesc OpDescImpl::GetInputDesc(uint32_t index) const {
-  GE_CHK_BOOL_RET_STATUS_NOLOG(index < inputs_desc_.size(), GeTensorDesc());
+const GeTensorDesc &OpDescImpl::GetInputDesc(uint32_t index) const {
+  GE_CHK_BOOL_RET_STATUS_NOLOG(index < inputs_desc_.size(), InvalidGeTensorDesc());
   return *(inputs_desc_[index].get());
 }
 
-GeTensorDesc OpDescImpl::GetInputDesc(const string &name) const {
+const GeTensorDesc &OpDescImpl::GetInputDesc(const string &name) const {
   auto it = input_name_idx_.find(name);
-  GE_CHK_BOOL_RET_STATUS_NOLOG(it != input_name_idx_.end(), GeTensorDesc());
-  GE_CHK_BOOL_RET_STATUS_NOLOG(it->second < inputs_desc_.size(), GeTensorDesc());
+  GE_CHK_BOOL_RET_STATUS_NOLOG(it != input_name_idx_.end(), InvalidGeTensorDesc());
+  GE_CHK_BOOL_RET_STATUS_NOLOG(it->second < inputs_desc_.size(), InvalidGeTensorDesc());
   return *(inputs_desc_[it->second].get());
 }
 
@@ -613,15 +618,15 @@ graphStatus OpDescImpl::UpdateOutputDesc(const string &name, const ge::GeTensorD
   return GRAPH_SUCCESS;
 }
 
-GeTensorDesc OpDescImpl::GetOutputDesc(uint32_t index) const {
-  GE_CHK_BOOL_RET_STATUS_NOLOG(index < outputs_desc_.size(), GeTensorDesc());
+const GeTensorDesc &OpDescImpl::GetOutputDesc(uint32_t index) const {
+  GE_CHK_BOOL_RET_STATUS_NOLOG(index < outputs_desc_.size(), InvalidGeTensorDesc());
   return *(outputs_desc_[index].get());
 }
 
-GeTensorDesc OpDescImpl::GetOutputDesc(const string &name) const {
+const GeTensorDesc &OpDescImpl::GetOutputDesc(const string &name) const {
   auto it = output_name_idx_.find(name);
-  GE_CHK_BOOL_RET_STATUS_NOLOG(it != output_name_idx_.end(), GeTensorDesc());
-  GE_CHK_BOOL_RET_STATUS_NOLOG(it->second < outputs_desc_.size(), GeTensorDesc());
+  GE_CHK_BOOL_RET_STATUS_NOLOG(it != output_name_idx_.end(), InvalidGeTensorDesc());
+  GE_CHK_BOOL_RET_STATUS_NOLOG(it->second < outputs_desc_.size(), InvalidGeTensorDesc());
   return *(outputs_desc_[it->second].get());
 }
 
@@ -1598,11 +1603,11 @@ bool OpDesc::InputIsSet(const string &name) const {
   return impl_->InputIsSet(name);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc OpDesc::GetInputDesc(uint32_t index) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const GeTensorDesc &OpDesc::GetInputDesc(uint32_t index) const {
   return impl_->GetInputDesc(index);
 }
 
-GeTensorDesc OpDesc::GetInputDesc(const string &name) const {
+const GeTensorDesc &OpDesc::GetInputDesc(const string &name) const {
   return impl_->GetInputDesc(name);
 }
 
@@ -1678,11 +1683,11 @@ graphStatus OpDesc::UpdateOutputDesc(const string &name, const ge::GeTensorDesc 
   return impl_->UpdateOutputDesc(name, tensor_Desc);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc OpDesc::GetOutputDesc(uint32_t index) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const GeTensorDesc &OpDesc::GetOutputDesc(uint32_t index) const {
   return impl_->GetOutputDesc(index);
 }
 
-GeTensorDesc OpDesc::GetOutputDesc(const string &name) const {
+const GeTensorDesc &OpDesc::GetOutputDesc(const string &name) const {
   return impl_->GetOutputDesc(name);
 }
 

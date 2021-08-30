@@ -55,8 +55,8 @@ class OpDescImpl {
 
   bool InputIsSet(const string &name) const;
 
-  GeTensorDesc GetInputDesc(uint32_t index) const;
-  GeTensorDesc GetInputDesc(const string &name) const;
+  const GeTensorDesc &GetInputDesc(uint32_t index) const;
+  const GeTensorDesc &GetInputDesc(const string &name) const;
   GeTensorDescPtr MutableInputDesc(uint32_t index) const;
   GeTensorDescPtr MutableInputDesc(const string &name) const;
   OpDesc::Vistor<string> GetAllInputNames(const ConstOpDescPtr &op_desc) const;
@@ -76,8 +76,8 @@ class OpDescImpl {
   graphStatus AddOutputDesc(const string &name, const ge::GeTensorDesc &output_desc);
   graphStatus UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc);
   graphStatus UpdateOutputDesc(const string &name, const ge::GeTensorDesc &tensor_Desc);
-  GeTensorDesc GetOutputDesc(uint32_t index) const;
-  GeTensorDesc GetOutputDesc(const string &name) const;
+  const GeTensorDesc &GetOutputDesc(uint32_t index) const;
+  const GeTensorDesc &GetOutputDesc(const string &name) const;
   GeTensorDescPtr MutableOutputDesc(uint32_t index) const;
   GeTensorDescPtr MutableOutputDesc(const string &name) const;
 

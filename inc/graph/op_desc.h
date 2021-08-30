@@ -113,9 +113,9 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   bool InputIsSet(const string &name) const;
 
-  GeTensorDesc GetInputDesc(uint32_t index) const;
+  const GeTensorDesc &GetInputDesc(uint32_t index) const;
 
-  GeTensorDesc GetInputDesc(const string &name) const;
+  const GeTensorDesc &GetInputDesc(const string &name) const;
 
   Vistor<string> GetAllInputNames() const;
 
@@ -139,9 +139,9 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus UpdateOutputDesc(const string &name, const GeTensorDesc &tensor_desc);
 
-  GeTensorDesc GetOutputDesc(uint32_t index) const;
+  const GeTensorDesc &GetOutputDesc(uint32_t index) const;
 
-  GeTensorDesc GetOutputDesc(const string &name) const;
+  const GeTensorDesc &GetOutputDesc(const string &name) const;
 
   GeTensorDescPtr MutableOutputDesc(uint32_t index) const;
 
