@@ -393,4 +393,31 @@ TEST_F(UtestGraphUtils, UnfoldSubgraph) {
   ASSERT_EQ(graph->GetAllSubgraphs().size(), 1);
   ASSERT_FALSE(graph->GetAllSubgraphs()[0]->GetGraphUnknownFlag());
 }
+
+TEST_F(UtestGraphUtils, GetIndependentCompileGraphs) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &partitioned_call0 = root_builder.AddNode("PartitionedCall", "PartitionedCall", 0, 0);
+  const auto &root_graph = root_builder.GetGraph();
+  (void)AttrUtils::SetBool(*root_graph, ATTR_NAME_PIPELINE_PARTITIONED, true);
+
+  auto sub_builder1 = ut::GraphBuilder("sub1");
+  const auto &data1 = sub_builder1.AddNode("Data", "Data", 0, 0);
+  const auto &sub_graph1 = sub_builder1.GetGraph();
+  root_graph->AddSubGraph(sub_graph1);
+  sub_graph1->SetParentNode(partitioned_call0);
+  sub_graph1->SetParentGraph(root_graph);
+  partitioned_call0->GetOpDesc()->AddSubgraphName("sub1");
+  partitioned_call0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
+
+  std::vector<ComputeGraphPtr> independent_compile_subgraphs;
+  ASSERT_EQ(GraphUtils::GetIndependentCompileGraphs(root_graph, independent_compile_subgraphs), GRAPH_SUCCESS);
+  ASSERT_EQ(independent_compile_subgraphs.size(), 1);
+  ASSERT_EQ(independent_compile_subgraphs[0]->GetName(), "sub1");
+
+  (void)AttrUtils::SetBool(*root_graph, ATTR_NAME_PIPELINE_PARTITIONED, false);
+  independent_compile_subgraphs.clear();
+  ASSERT_EQ(GraphUtils::GetIndependentCompileGraphs(root_graph, independent_compile_subgraphs), GRAPH_SUCCESS);
+  ASSERT_EQ(independent_compile_subgraphs.size(), 1);
+  ASSERT_EQ(independent_compile_subgraphs[0]->GetName(), "root");
+}
 }  // namespace ge
