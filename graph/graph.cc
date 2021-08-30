@@ -948,8 +948,8 @@ graphStatus GraphUtils::GetIndependentCompileGraphs(const ComputeGraphPtr &compu
     for (const auto &node : compute_graph->GetDirectNode()) {
       if (node->GetType() == PARTITIONEDCALL) {
         auto sub_graph = NodeUtils::GetSubgraph(*node, kSubgraphIndexOfPartitionedCall);
-	      GE_CHECK_NOTNULL(sub_graph);
-	      independent_compile_subgraphs.emplace_back(sub_graph);
+	GE_CHECK_NOTNULL(sub_graph);
+	independent_compile_subgraphs.emplace_back(sub_graph);
       }
     }
     return GRAPH_SUCCESS;
