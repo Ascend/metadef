@@ -32,7 +32,7 @@ using std::vector;
 
 namespace {
 const uint32_t kSubgraphIndexOfPartitionedCall = 0U;
-} // namespace
+}  // namespace
 
 namespace ge {
 class GraphImpl {
