@@ -781,8 +781,6 @@ const std::string ATTR_NAME_FUSION_SCOPE = "fusion_scope";
 
 const std::string ATTR_NAME_OPATTR = "opattr";
 
-const std::string ATTR_NAME_RELUFLAG = "relu_flag";
-
 const std::string ATTR_NAME_SEQLEN_INDEX = "seqlen_index";
 
 const std::string ATTR_NAME_X_INDEX = "x_index";
