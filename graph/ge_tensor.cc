@@ -113,6 +113,7 @@ class GeShapeImpl {
   explicit GeShapeImpl(std::vector<int64_t> s);
 
   void SetDimNum(size_t dim_num);
+  void AppendDim(int64_t dim_size);
   bool IsUnknownDimNum() const;
   void SetIsUnknownDimNum();
   size_t GetDimNum() const;
@@ -153,6 +154,13 @@ void GeShapeImpl::SetDimNum(size_t dim_num) {
   auto proto_msg = shape_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->mutable_dim()->Resize(dim_num, UNKNOWN_DIM);
+  }
+}
+
+void GeShapeImpl::AppendDim(int64_t dim_size) {
+  auto proto_msg = shape_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->add_dim(dim_size);
   }
 }
 
@@ -337,6 +345,10 @@ size_t GeShape::GetDimNum() const {
 
 void GeShape::SetDimNum(size_t dim_num) {
   impl_->SetDimNum(dim_num);
+}
+
+void GeShape::AppendDim(int64_t dim_size) {
+  impl_->AppendDim(dim_size);
 }
 
 bool GeShape::IsUnknownDimNum() const {
