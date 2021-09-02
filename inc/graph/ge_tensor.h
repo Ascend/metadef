@@ -106,6 +106,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   const GeShape &GetShape() const;
   GeShape &MutableShape();
   void SetShape(const GeShape &shape);
+  void SetShape(GeShape &&shape);
 
   // set shape with -2, it stand for unknown shape
   void SetUnknownDimNumShape();

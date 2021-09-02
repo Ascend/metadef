@@ -753,6 +753,8 @@ GeShape &GeTensorDesc::MutableShape() { return ShapeReference(); }
 
 void GeTensorDesc::SetShape(const GeShape &shape) { ShapeReference() = shape; }
 
+void GeTensorDesc::SetShape(GeShape &&shape) { ShapeReference() = std::move(shape); }
+
 // set shape with -2, it stand for unknown shape
 void GeTensorDesc::SetUnknownDimNumShape() { SetShape(GeShape({UNKNOWN_DIM_NUM})); }
 
