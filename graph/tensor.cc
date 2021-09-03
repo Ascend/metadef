@@ -59,6 +59,7 @@ static bool Int64MulNotOverflow(int64_t a, int64_t b) {
 class TensorDescValue {
  public:
   TensorDescValue() = default;
+  ~TensorDescValue() = default;
   TensorDescValue(const TensorDescValue &other) {
     if (other.const_data_len_ == 0 || other.const_data_buffer_ == nullptr) {
       return;

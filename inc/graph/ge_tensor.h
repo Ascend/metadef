@@ -48,6 +48,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
 
   size_t GetDimNum() const;
   void SetDimNum(size_t dim_num);
+  void AppendDim(int64_t dim_size);
   bool IsUnknownDimNum() const;
   void SetIsUnknownDimNum();
   // If the idx is invalid, return 0

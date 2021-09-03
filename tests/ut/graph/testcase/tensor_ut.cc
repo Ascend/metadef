@@ -360,4 +360,20 @@ TEST_F(TensorUT, GeShapeIsUnknownDimNum) {
   EXPECT_FALSE(shape.IsUnknownDimNum());
 }
 
+TEST_F(TensorUT, GeShapeAppendDim) {
+  ge::GeShape shape;
+  EXPECT_EQ(shape.GetDimNum(), 0);
+  shape.AppendDim(1);
+  EXPECT_EQ(shape.GetDimNum(), 1);
+  EXPECT_EQ(shape.GetDim(0), 1);
+  shape.AppendDim(2);
+  EXPECT_EQ(shape.GetDimNum(), 2);
+  EXPECT_EQ(shape.GetDim(0), 1);
+  EXPECT_EQ(shape.GetDim(1), 2);
+  shape.SetIsUnknownDimNum();
+  EXPECT_TRUE(shape.IsUnknownDimNum());
+  shape.AppendDim(1);
+  EXPECT_FALSE(shape.IsUnknownDimNum());
+}
+
 }  // namespace ge
