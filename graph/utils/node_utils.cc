@@ -47,6 +47,7 @@ const std::set<std::string> kCaseOpTypes{ "Case" };
 const std::set<std::string> kForOpTypes{ "For" };
 
 const char *kRefIndex = "_parent_node_index";
+const char *kPartSrcGraph = "part_src_graph";
 
 bool OpShapeIsUnknown(const OpDescPtr &desc) {
   for (const auto &ptr : desc->GetAllInputsDescPtr()) {
@@ -623,7 +624,15 @@ graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unkn
   } else {
     auto owner_graph = node.GetOwnerComputeGraph();
     GE_CHECK_NOTNULL(owner_graph);
-    auto root_graph = GraphUtils::FindRootGraph(node.GetOwnerComputeGraph());
+    // During graph splitting, get parent graph cannot be obtained in some scenarios,
+    // but the root graph can be set use the attribute.
+    ge::ComputeGraphPtr src_graph = owner_graph->TryGetExtAttr(kPartSrcGraph, ge::ComputeGraphPtr());
+    if (src_graph == nullptr) {
+      GELOGD("src graph is null, owner graph name is %s", owner_graph->GetName().c_str());
+      src_graph = owner_graph;
+    }
+    GELOGD("src graph is %s, owner graph name is %s", src_graph->GetName().c_str(), owner_graph->GetName().c_str());
+    auto root_graph = GraphUtils::FindRootGraph(src_graph);
     if (root_graph == nullptr) {
       REPORT_INNER_ERROR("E19999", "node:%s has no root graph.", node.GetName().c_str());
       GE_LOGE("[Get][Graph] Node %s gets null root graph", node.GetName().c_str());
