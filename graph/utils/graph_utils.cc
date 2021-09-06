@@ -500,7 +500,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::InsertNod
 
   NodePtr src_node = src->GetOwnerNode();
   if (src_node->GetOwnerComputeGraph() != insert_node->GetOwnerComputeGraph()) {
-    REPORT_INNER_ERROR("E19999" "src:%s and insert_node:%s not exist in the same graph.",
+    REPORT_INNER_ERROR("E19999", "src:%s and insert_node:%s not exist in the same graph.",
                        src_node->GetName().c_str(), insert_node->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] src:%s and insert_node:%s not exist in the same graph.",
            src_node->GetName().c_str(), insert_node->GetName().c_str());

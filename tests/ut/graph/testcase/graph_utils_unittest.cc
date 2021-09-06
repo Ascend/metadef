@@ -420,4 +420,17 @@ TEST_F(UtestGraphUtils, GetIndependentCompileGraphs) {
   ASSERT_EQ(independent_compile_subgraphs.size(), 1);
   ASSERT_EQ(independent_compile_subgraphs[0]->GetName(), "root");
 }
+
+TEST_F(UtestGraphUtils, InsertNodeAfter) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  const auto &graph0 = graph_builder0.GetGraph();
+
+  auto graph_builder1 = ut::GraphBuilder("test_graph1");
+  const auto &node1 = graph_builder1.AddNode("data1", DATA, 1, 1);
+  const auto &graph1 = graph_builder1.GetGraph();
+
+  std::vector<ComputeGraphPtr> independent_compile_subgraphs;
+  ASSERT_EQ(GraphUtils::InsertNodeAfter(node0->GetOutDataAnchor(0), {}, node1, 0, 0), GRAPH_FAILED);
+}
 }  // namespace ge
