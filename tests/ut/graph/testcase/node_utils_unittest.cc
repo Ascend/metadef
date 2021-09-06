@@ -165,4 +165,20 @@ TEST_F(UtestNodeUtils, GetSubgraphs_nullptr_sub_graph) {
   ASSERT_EQ(NodeUtils::GetDirectSubgraphs(node, subgraphs), GRAPH_SUCCESS);
   ASSERT_TRUE(subgraphs.empty());
 }
+
+TEST_F(UtestNodeUtils, GetNodeUnknownShapeStatus_success) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &case0 = root_builder.AddNode("case0", "Case", 0, 0);
+  const auto &root_graph = root_builder.GetGraph();
+  auto sub_builder1 = ut::GraphBuilder("sub1");
+  const auto &case1 = sub_builder1.AddNode("case1", "Case", 0, 0);
+  const auto &sub_graph1 = sub_builder1.GetGraph();
+  root_graph->AddSubGraph(sub_graph1);
+  sub_graph1->SetParentNode(case0);
+  sub_graph1->SetParentGraph(root_graph);
+  case0->GetOpDesc()->AddSubgraphName("branch1");
+  case0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
+  bool is_known = false;
+  ASSERT_EQ(NodeUtils::GetNodeUnknownShapeStatus(*case0, is_known), GRAPH_SUCCESS);
+}
 }  // namespace ge
