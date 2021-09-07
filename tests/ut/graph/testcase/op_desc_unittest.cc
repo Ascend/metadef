@@ -42,4 +42,15 @@ TEST_F(UtestOpDesc, TestCommonVerifyOnDummyShape) {
 
   EXPECT_EQ(GRAPH_SUCCESS, op_desc->CommonVerify());
 }
+
+TEST_F(UtestOpDesc, TestOpDescGetSetTensorDesc) {
+  GeTensorDesc desc(GeShape(), FORMAT_NCHW, DT_INT32);
+  OpDesc op_desc("foo", "Foo");
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDesc("x", desc));
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddOutputDesc("y", desc));
+
+  EXPECT_EQ(op_desc.GetInputDesc("x"), desc);
+  EXPECT_EQ(op_desc.GetOutputDesc("y"), desc);
+}
+
 }

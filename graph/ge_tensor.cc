@@ -747,11 +747,13 @@ void GeTensorDesc::Update(GeShape shape, Format format, DataType dt) {
   SetFormat(format);
   SetDataType(dt);
 }
-GeShape GeTensorDesc::GetShape() const { return ShapeReference(); }
+const GeShape &GeTensorDesc::GetShape() const { return ShapeReference(); }
 
 GeShape &GeTensorDesc::MutableShape() { return ShapeReference(); }
 
-void GeTensorDesc::SetShape(GeShape shape) { ShapeReference() = std::move(shape); }
+void GeTensorDesc::SetShape(const GeShape &shape) { ShapeReference() = shape; }
+
+void GeTensorDesc::SetShape(GeShape &&shape) { ShapeReference() = std::move(shape); }
 
 // set shape with -2, it stand for unknown shape
 void GeTensorDesc::SetUnknownDimNumShape() { SetShape(GeShape({UNKNOWN_DIM_NUM})); }
@@ -851,7 +853,7 @@ void GeTensorDesc::SetOriginShape(const GeShape &origin_shape) {
   (void)AttrUtils::SetBool(this, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, true);
 }
 
-bool GeTensorDesc::IsOriginShapeInitialized() {
+bool GeTensorDesc::IsOriginShapeInitialized() const {
   bool original_shape_initialized = false;
   (void)AttrUtils::GetBool(this, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, original_shape_initialized);
   return original_shape_initialized;
@@ -1436,7 +1438,7 @@ void GeTensor::BuildAlignerPtrWithProtoData() {
   impl_->BuildAlignerPtrWithProtoData();
 }
 
-GeTensorDesc GeTensor::GetTensorDesc() const { return DescReference(); }
+const GeTensorDesc &GeTensor::GetTensorDesc() const { return DescReference(); }
 
 GeTensorDesc &GeTensor::MutableTensorDesc() { return DescReference(); }
 
