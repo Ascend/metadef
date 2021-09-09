@@ -201,6 +201,9 @@ bool PatternFusionBasePassImpl::MatchFromOutput(vector<ge::NodePtr> &candidate_n
         candidate_nodes.push_back(input_node);
         candidate_op_descs.push_back(input_desc);
         // store the matched node
+        if (!mapping[input_desc].empty() && mapping[input_desc][0] != input_node) {
+          return false;
+        }
         mapping[input_desc].push_back(input_node);
       }
       usage_flags[j] = true;
