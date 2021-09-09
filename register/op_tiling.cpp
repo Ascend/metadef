@@ -1122,7 +1122,9 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
   }
 
   int64_t clean_size = 0;
+  int64_t first_clean_size = 0;
   if (!atomic_output_indices.empty()) {
+    uint32_t index = 0;
     for (auto atomic_output_indice : atomic_output_indices) {
       auto tensor = op_desc->MutableOutputDesc(atomic_output_indice);
       if (tensor == nullptr) {
@@ -1135,11 +1137,15 @@ extern "C" ge::graphStatus OpAtomicCalculate(const ge::Node &node, OpRunInfo &ru
         return ge::GRAPH_FAILED;
       }
       compile_info_json["_workspace_size_list"].push_back(clean_size);
+      if (index == 0) {
+        first_clean_size = clean_size;
+      }
+      index++;
     }
   }
-  GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", clean_size, origin_op_type.c_str(), op_name.c_str());
+  GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", first_clean_size, origin_op_type.c_str(), op_name.c_str());
   op_param.const_inputs.emplace("workspace_size",
-                                TeConstTensorData(nullptr, static_cast<size_t>(clean_size), ge::Tensor()));
+                                TeConstTensorData(nullptr, static_cast<size_t>(first_clean_size), ge::Tensor()));
   clean_size = 0;
   if (!atomic_workspace_info.empty()) {
     auto workspace_bytes = op_desc->GetWorkspaceBytes();
@@ -1247,8 +1253,10 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
     return ge::GRAPH_FAILED;
   }
   int64_t clean_size = 0;
+  int64_t first_clean_size = 0;
   vector<int> workspace_list;
   if (!atomic_output_indices.empty()) {
+    uint32_t index = 0;
     for (auto atomic_output_indice : atomic_output_indices) {
       auto tensor = op_desc->MutableOutputDesc(atomic_output_indice);
       if (tensor == nullptr) {
@@ -1263,8 +1271,15 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, optiling::u
         return ge::GRAPH_FAILED;
       }
       cinfo_json["_workspace_size_list"].push_back(clean_size);
+      if (index == 0) {
+        first_clean_size = clean_size;
+      }
+      index++;
     }
   }
+  GELOGI("Atomic clean size: %ld, op_type:%s, op_name:%s", first_clean_size, origin_op_type.c_str(), op_name.c_str());
+  workspace_list.push_back(first_clean_size);
+  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
   clean_size = 0;
   if (!atomic_workspace_info.empty()) {
     auto workspace_bytes = op_desc->GetWorkspaceBytes();
