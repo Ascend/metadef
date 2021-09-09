@@ -304,7 +304,7 @@ std::string ErrorManager::GetErrorMessage() {
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.empty()) {
-    error_messages.push_back({"E19999", "Unknown error occurred. Please check the log."});
+    return "";
   }
 
   std::stringstream err_stream;
@@ -352,6 +352,13 @@ std::string ErrorManager::GetWarningMessage() {
 ///
 int ErrorManager::OutputErrMessage(int handle) {
   std::string err_msg = GetErrorMessage();
+
+  if (err_msg.empty()) {
+    std::stringstream err_stream;
+    err_stream << "E19999: Inner Error!" << std::endl;
+    err_stream << "        " << "Unknown error occurred. Please check the log." << std::endl;
+    err_msg = err_stream.str();
+  }
 
   if (handle <= fileno(stderr)) {
     std::cout << err_msg << std::endl;
