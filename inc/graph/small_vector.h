@@ -297,10 +297,7 @@ class SmallVector {
     Shrink(size_ - 1, size_);
   }
   void resize(size_type count) {
-      std::cout << "****************" << std::endl;
     if (count < size_) {
-      std::cout << "****************" << std::endl;
-
       Shrink(count, size_);
     } else {
       auto expand_size = count - size_;
