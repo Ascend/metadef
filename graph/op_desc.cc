@@ -1265,18 +1265,13 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
       return GRAPH_PARAM_INVALID;
     }
   }
-  std::unique_ptr<NodeShapeTransUtils> transformer(new(std::nothrow) NodeShapeTransUtils(op_desc));
-  if (transformer == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Alloc Memory failed.");
-    GELOGE(GRAPH_FAILED, "[Alloc][Memory] failed");
-    return GRAPH_FAILED;
-  }
-  auto is_init_success = transformer->Init();
+  NodeShapeTransUtils transformer(op_desc);
+  auto is_init_success = transformer.Init();
   if (!is_init_success) {
     GELOGE(GRAPH_FAILED, "[Call][Init] for transformer failed");
     return GRAPH_FAILED;
   }
-  if (!transformer->CatchFormatAndShape()) {
+  if (!transformer.CatchFormatAndShape()) {
     GELOGE(GRAPH_FAILED, "[Call][CatchFormatAndShape] for transformer failed!");
     return GRAPH_FAILED;
   }
@@ -1285,7 +1280,7 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     GELOGE(GRAPH_FAILED, "[Call][InferFunc] for %s failed. ret:%u", GetName().c_str(), graph_status);
     return GRAPH_FAILED;
   }
-  if (!transformer->UpdateFormatAndShape()) {
+  if (!transformer.UpdateFormatAndShape()) {
     GELOGE(GRAPH_FAILED, "[Call][UpdateFormatAndShape] for transformer failed!");
     return GRAPH_FAILED;
   }

@@ -22,6 +22,7 @@
 #include "graph/ge_tensor.h"
 #undef private
 #undef protected
+#include "graph/utils/transformer_utils.h"
 
 namespace ge {
 class UtestOpDesc : public testing::Test {
@@ -51,6 +52,45 @@ TEST_F(UtestOpDesc, TestOpDescGetSetTensorDesc) {
 
   EXPECT_EQ(op_desc.GetInputDesc("x"), desc);
   EXPECT_EQ(op_desc.GetOutputDesc("y"), desc);
+}
+
+TEST_F(UtestOpDesc, TestNodeShapeTransUtils) {
+
+  NodeShapeTransUtils transformer1(nullptr);
+  EXPECT_NE(transformer1.Init(), true);
+
+  auto tensor_desc = std::make_shared<GeTensorDesc>();
+  tensor_desc->SetShape(GeShape({1, 1, 16, 16}));
+  tensor_desc->SetFormat(FORMAT_FRACTAL_NZ);
+  tensor_desc->SetDataType(DT_FLOAT);
+  tensor_desc->SetOriginFormat(FORMAT_ND);
+
+  auto op_desc = std::make_shared<OpDesc>("test", "Identity");
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddOutputDesc(tensor_desc->Clone());
+  NodeShapeTransUtils transformer2(op_desc);
+  EXPECT_EQ(transformer2.Init(), true);
+  EXPECT_EQ(transformer2.CatchFormatAndShape(), true);
+  EXPECT_EQ(transformer2.UpdateFormatAndShape(), true);
+
+
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddOutputDesc(tensor_desc->Clone());
+
+  NodeShapeTransUtils transformer3(op_desc);
+  EXPECT_EQ(transformer3.Init(), true);
+  EXPECT_EQ(transformer3.CatchFormatAndShape(), true);
+  EXPECT_EQ(transformer3.UpdateFormatAndShape(), true);
+
+
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc->CommonVerify());
 }
 
 }

@@ -93,6 +93,8 @@ set(UT_FILES
     "testcase/resource_context_mgr_unittest.cc"
     "testcase/inference_context_unittest.cc"
     "testcase/constant_utils_unittest.cc"
+    "testcase/func_counter.cc"
+    "testcase/small_vector_ut.cc"
 )
 
 set(GRAPH_SRC_FILES
