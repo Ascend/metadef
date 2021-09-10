@@ -27,8 +27,6 @@
 
 namespace ge {
 
-const size_t kSize = 8;
-
 class NodeShapeTransUtils {
  public:
   bool Init();
@@ -42,6 +40,7 @@ class NodeShapeTransUtils {
   }
 
  private:
+  static const size_t kSize = 8;
   SmallVector<Format, kSize> map_format_in_;
   SmallVector<Format, kSize> map_ori_format_in_;
   SmallVector<DataType, kSize> map_dtype_in_;
