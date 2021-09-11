@@ -57,8 +57,7 @@ do {                                                                            
   std::vector<char> error_string(LIMIT_PER_MESSAGE, '\0');                                                           \
   if (error_message::FormatErrorMessage(error_string.data(), error_string.size(), fmt, ##__VA_ARGS__) > 0) {         \
     if (error_message::FormatErrorMessage(error_string.data(), error_string.size(), "%s[FUNC:%s][FILE:%s][LINE:%d]", \
-                                          error_string.data(), static_cast<const char *>(__FUNCTION__),              \
-                                          TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) > 0) {                 \
+        error_string.data(), &__FUNCTION__[0], TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) > 0) {            \
       (void)ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_string.data()));         \
     }                                                                                                                \
   }                                                                                                                  \
