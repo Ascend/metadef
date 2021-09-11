@@ -24,6 +24,7 @@
 #include "graph/op_desc.h"
 #include "graph/ge_tensor.h"
 #include "graph/small_vector.h"
+#include "graph/ascend_limits.h"
 
 namespace ge {
 
@@ -40,13 +41,12 @@ class NodeShapeTransUtils {
   }
 
  private:
-  static const size_t kSize = 8;
-  SmallVector<Format, kSize> map_format_in_;
-  SmallVector<Format, kSize> map_ori_format_in_;
-  SmallVector<DataType, kSize> map_dtype_in_;
-  SmallVector<Format, kSize> map_format_out_;
-  SmallVector<Format, kSize> map_ori_format_out_;
-  SmallVector<DataType, kSize> map_dtype_out_;
+  SmallVector<Format, kDefaultMaxInputNum> map_format_in_;
+  SmallVector<Format, kDefaultMaxInputNum> map_ori_format_in_;
+  SmallVector<DataType, kDefaultMaxInputNum> map_dtype_in_;
+  SmallVector<Format, kDefaultMaxOutputNum> map_format_out_;
+  SmallVector<Format, kDefaultMaxOutputNum> map_ori_format_out_;
+  SmallVector<DataType, kDefaultMaxOutputNum> map_dtype_out_;
 
   OpDescPtr op_desc_;
   size_t in_num_;
