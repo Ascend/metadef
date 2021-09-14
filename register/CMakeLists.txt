@@ -106,11 +106,9 @@ target_link_libraries(register PRIVATE
 add_library(register_static STATIC
     ${SRC_LIST}
     $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
-    "op_tiling/op_tiling.cc"
-    "op_tiling/op_tiling_info.cc"
-    "op_tiling/op_tiling_utils.cc"
-    "op_tiling/op_tiling_registry.cc"
-    "op_tiling/op_tiling_py.cc"
+    "op_tiling.cpp"
+    "op_tiling_registry.cpp"
+    "op_tiling_registry_impl.cpp"
 )
 
 target_compile_options(register_static PRIVATE
@@ -183,11 +181,9 @@ set_target_properties(register_static PROPERTIES
 
 ############ libop_tiling_o2.a ############
 add_library(op_tiling_o2 STATIC
-    "op_tiling/op_tiling.cc"
-    "op_tiling/op_tiling_info.cc"
-    "op_tiling/op_tiling_utils.cc"
-    "op_tiling/op_tiling_registry.cc"
-    "op_tiling/op_tiling_py.cc"
+    "op_tiling.cpp"
+    "op_tiling_registry.cpp"
+    "op_tiling_registry_impl.cpp"
 )
 
 add_dependencies(op_tiling_o2
@@ -236,7 +232,6 @@ target_compile_options(op_tiling_o2 PRIVATE
 )
 
 target_compile_definitions(op_tiling_o2 PRIVATE
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
     LOG_CPP
 )
 
