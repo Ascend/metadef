@@ -17,89 +17,113 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "register/op_tiling_registry.h"
-#include "op_tiling.cpp"
-#include "graph_builder_utils.h"
+#include "op_tiling/op_tiling.cc"
+
+using namespace std;
+using namespace ge;
+
 namespace optiling {
 using ByteBuffer = std::stringstream;
-class UtestOpTilingRegister : public testing::Test {
+class RegisterOpTilingUT : public testing::Test {
  protected:
   void SetUp() {}
 
   void TearDown() {}
 };
 
-TEST_F(UtestOpTilingRegister, compile_info_test) {
-  std::string key_str = "test_key";
-  std::string val_str = "test_value";
-  optiling::utils::OpCompileInfo compile_info(key_str, val_str);
-  key_str = "key_0";
-  val_str = "val_0";
-  compile_info.SetKey(key_str);
-  compile_info.SetValue(val_str);
-  EXPECT_EQ(compile_info.GetKey(), key_str);
-  EXPECT_EQ(compile_info.GetValue(), val_str);
-}
-
-TEST_F(UtestOpTilingRegister, run_info_test) {
-  int temp = 2;
+TEST_F(RegisterOpTilingUT, byte_buffer_test) {
+  ByteBuffer stream;
   std::string str = "test";
-  int64_t temp1;
-  ByteBuffer str_stream;
-  optiling::utils::OpRunInfo run_info;
-  run_info.AddTilingData(str.c_str());
-  str += "_test1_test2";
-  run_info.AddTilingData(str.c_str());
-  run_info.SetTilingKey(uint32_t(temp));
-  run_info.SetClearAtomic(true);
-  run_info.SetBlockDim(uint32_t(temp));
-  run_info.AddWorkspace(int64_t(temp));
 
-  EXPECT_EQ(run_info.GetBlockDim(), uint32_t(temp));
-  EXPECT_EQ(run_info.GetClearAtomic(), true);
-  EXPECT_EQ(run_info.GetTilingKey(), uint32_t(temp));
-  run_info.GetWorkspace(size_t(0), temp1);
-  EXPECT_EQ(temp1, int64_t(temp));
-  str_stream = run_info.GetAllTilingData();
-  EXPECT_EQ(str_stream.str(), "test_test1_test2"+str);
+  ByteBuffer &str_stream1 = ByteBufferPut(stream, str);
+
+  string value;
+  ByteBuffer &str_stream2 = ByteBufferGet(stream, str);
+
+  char *dest = nullptr;
+  size_t size = ByteBufferGetAll(stream, dest, 2);
+  cout << size << endl;
 }
 
-TEST_F(UtestOpTilingRegister, OpParaCalculateV2_test_unregistered) {
-  int temp = 2;
-  ge::ut::GraphBuilder builder = ge::ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 1, 1);
-  auto graph = builder.GetGraph();
-  auto data_node = graph->FindNode("Data");
-  optiling::utils::OpRunInfo run_info(uint32_t(temp), true, uint32_t(temp));
-  EXPECT_EQ(ge::GRAPH_FAILED, OpParaCalculateV2(*data, run_info));
+TEST_F(RegisterOpTilingUT, op_run_info_test) {
+  std::shared_ptr<utils::OpRunInfo> run_info = make_shared<utils::OpRunInfo>(8, true, 64);
+  int64_t work_space;
+  graphStatus ret = run_info->GetWorkspace(0, work_space);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  vector<int64_t> work_space_vec = {10, 20, 30, 40};
+  run_info->SetWorkspaces(work_space_vec);
+  ret = run_info->GetWorkspace(1, work_space);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(work_space, 20);
+  EXPECT_EQ(run_info->GetWorkspaceNum(), 4);
+  string str = "test";
+  run_info->AddTilingData(str);
+
+  const ByteBuffer &tiling_data = run_info->GetAllTilingData();
+
+  std::shared_ptr<utils::OpRunInfo> run_info_2 = make_shared<utils::OpRunInfo>(*run_info);
+  ret = run_info_2->GetWorkspace(2, work_space);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(work_space, 30);
+
+  utils::OpRunInfo run_info_3 = *run_info;
+  ret = run_info_3.GetWorkspace(3, work_space);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(work_space, 40);
+
+  utils::OpRunInfo &run_info_4 = *run_info;
+  ret = run_info_4.GetWorkspace(0, work_space);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(work_space, 10);
 }
 
-TEST_F(UtestOpTilingRegister, OpAtomicCalculateV2_test_unregistered) {
-  int temp = 2;
-  ge::ut::GraphBuilder builder = ge::ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 1, 1);
-  auto graph = builder.GetGraph();
-  auto data_node = graph->FindNode("Data");
-  optiling::utils::OpRunInfo run_info(uint32_t(temp), true, uint32_t(temp));
-  EXPECT_EQ(ge::GRAPH_FAILED, OpAtomicCalculateV2(*data, run_info));
+TEST_F(RegisterOpTilingUT, op_compile_info_test) {
+  std::shared_ptr<utils::OpCompileInfo> compile_info = make_shared<utils::OpCompileInfo>();
+  string str_key = "key";
+  string str_value = "value";
+  AscendString key(str_key.c_str());
+  AscendString value(str_value.c_str());
+  compile_info->SetKey(key);
+  compile_info->SetValue(value);
+
+  std::shared_ptr<utils::OpCompileInfo> compile_info_2 = make_shared<utils::OpCompileInfo>(key, value);
+  EXPECT_EQ(compile_info_2->GetKey() == key, true);
+  EXPECT_EQ(compile_info_2->GetValue() == value, true);
+
+  std::shared_ptr<utils::OpCompileInfo> compile_info_3 = make_shared<utils::OpCompileInfo>(str_key, str_value);
+  EXPECT_EQ(compile_info_3->GetKey() == key, true);
+  EXPECT_EQ(compile_info_3->GetValue() == value, true);
+
+  std::shared_ptr<utils::OpCompileInfo> compile_info_4 = make_shared<utils::OpCompileInfo>(*compile_info);
+  EXPECT_EQ(compile_info_4->GetKey() == key, true);
+  EXPECT_EQ(compile_info_4->GetValue() == value, true);
+
+  utils::OpCompileInfo compile_info_5 = *compile_info;
+  EXPECT_EQ(compile_info_5.GetKey() == key, true);
+  EXPECT_EQ(compile_info_5.GetValue() == value, true);
+
+  utils::OpCompileInfo &compile_info_6 = *compile_info;
+  EXPECT_EQ(compile_info_6.GetKey() == key, true);
+  EXPECT_EQ(compile_info_6.GetValue() == value, true);
 }
 
-TEST_F(UtestOpTilingRegister, TbeOpTilingPyInterfaceEx2_test_unregistered) {
-  int temp_num = 3;
-  std::string type_str = "conv";
-  std::string temp_str = "temp";
-  std::string inputs_str = "[{"shape":[8, 32, 28, 16], "format":"NC1HWC0"}]";
-  std::string outputs_str = "[{"shape":[8, 32, 28, 16], "format":"NC1HWC0"}]";
-  const char *optype = temp.c_str();
-  const char *compile_info = temp_str.c_str();
-  const char *inputs = inputs_str.c_str();
-  const char *outputs = outputs_str.c_str();
-  char *run_info_json;
-  size_t run_info_len;
-  const char *compile_info_hash;
-  uint64_t *elapse;
-  int res = TbeOpTilingPyInterfaceEx2(optype, compile_info, inputs, outputs,
-                                      run_info_json, run_info_len, compile_info_hash, elapse);
-  EXPECT_EQ(res, 0);
+TEST_F(RegisterOpTilingUT, te_op_paras_test) {
+  OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+  GeShape shape({1,4,1,1});
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddInputDesc("y", tensor_desc);
+  op_desc->AddOutputDesc("z", tensor_desc);
+  int32_t attr_value = 1024;
+  AttrUtils::SetInt(op_desc, "some_int_attr", attr_value);
+  vector<int64_t> attr_vec = {11, 22, 33, 44};
+  AttrUtils::SetListInt(op_desc, "some_int_vec", attr_vec);
+  TeOpParas op_param;
+  op_param.op_type = op_desc->GetType();
+  VarAttrHelper::InitTeOpVarAttr(op_desc, op_param.var_attrs);
+  size_t size = 0;
+  op_param.var_attrs.GetData("some_int_attr", "xxx", size);
+  op_param.var_attrs.GetData("some_int_attr", "Int32", size);
+  op_param.var_attrs.GetData("some_int_vec", "ListInt32", size);
 }
-
 }  // namespace ge
