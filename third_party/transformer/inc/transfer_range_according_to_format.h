@@ -29,6 +29,12 @@
 #include "graph/utils/type_utils.h"
 
 namespace transformer {
+
+struct CalcShapeExtraAttr {
+  int64_t hidden_size;
+  int64_t input_size;
+};
+
 struct RangeAndFormatInfo {
   ge::GeShape old_shape;
   std::vector<std::pair<int64_t, int64_t>> old_range;
@@ -36,17 +42,21 @@ struct RangeAndFormatInfo {
   ge::Format old_format;
   ge::Format new_format;
   ge::DataType current_data_type;
+  int64_t op_impl_type;
   CalcShapeExtraAttr extra_attr;
   RangeAndFormatInfo(ge::GeShape old_shape, std::vector<std::pair<int64_t, int64_t>> old_range,
                      std::vector<std::pair<int64_t, int64_t>> &new_range, ge::Format old_format,
-                     ge::Format new_format, ge::DataType current_data_type) :
+                     ge::Format new_format, ge::DataType current_data_type, int64_t op_impl_type) :
           old_shape(old_shape), old_range(old_range), new_range(new_range), old_format(old_format),
-          new_format(new_format), current_data_type(current_data_type), extra_attr(CalcShapeExtraAttr()) {}
+          new_format(new_format), current_data_type(current_data_type), op_impl_type(op_impl_type),
+          extra_attr(CalcShapeExtraAttr()) {}
   RangeAndFormatInfo(ge::GeShape old_shape, std::vector<std::pair<int64_t, int64_t>> old_range,
                      std::vector<std::pair<int64_t, int64_t>> &new_range, ge::Format old_format,
-                     ge::Format new_format, ge::DataType current_data_type, CalcShapeExtraAttr extra_attr) :
+                     ge::Format new_format, ge::DataType current_data_type, int64_t op_impl_type,
+                     CalcShapeExtraAttr extra_attr) :
           old_shape(old_shape), old_range(old_range), new_range(new_range), old_format(old_format),
-          new_format(new_format), current_data_type(current_data_type), extra_attr(extra_attr) {}
+          new_format(new_format), current_data_type(current_data_type), op_impl_type(op_impl_type),
+          extra_attr(extra_attr) {}
 };
 
 using RangeAndFormat = struct RangeAndFormatInfo;
