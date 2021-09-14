@@ -25,6 +25,25 @@
 #include "transfer_shape_according_to_format.h"
 
 namespace ge {
+namespace {
+bool OriginShapeInitialized(const GeTensorDescPtr &tensor_desc) {
+  // The caller guarantees that the pointer is not null
+  if (!tensor_desc->GetOriginShape().IsScalar()) {
+    return true;
+  }
+  return tensor_desc->IsOriginShapeInitialized();
+}
+bool SameCurrentAndOrigin(const GeTensorDescPtr &tensor_desc) {
+  // The caller guarantees that the pointer is not null
+  if (tensor_desc->GetFormat() == tensor_desc->GetOriginFormat()) {
+    if (tensor_desc->GetShape() == tensor_desc->GetOriginShape()) {
+      return true;
+    }
+    return !OriginShapeInitialized(tensor_desc);
+  }
+  return false;
+}
+}
 bool NodeShapeTransUtils::Init() {
   if (op_desc_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
@@ -73,10 +92,9 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     }
     auto format = tensor_desc_output->GetFormat();
     auto ori_format = tensor_desc_output->GetOriginFormat();
-    if (format == ori_format &&
-        tensor_desc_output->GetShape() == tensor_desc_output->GetOriginShape()) {
+    if (SameCurrentAndOrigin(tensor_desc_output)) {
       GELOGD("Node is %s, output tensor idx is %zu. ori format: %s, format: %s, ori shape:%s, shape:%s is same!"
-             "No need to catch format&shape!", op_desc_->GetName().c_str(), i,
+             "or output original not initialized. No need to catch format&shape!", op_desc_->GetName().c_str(), i,
              TypeUtils::FormatToSerialString(ori_format).c_str(),
              TypeUtils::FormatToSerialString(format).c_str(),
              tensor_desc_output->GetOriginShape().ToString().c_str(),
