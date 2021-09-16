@@ -71,8 +71,11 @@ set(REGISTER_SRC_FILES
     "${METADEF_DIR}/register/infer_data_slice_registry.cc"
     "${METADEF_DIR}/register/ops_kernel_builder_registry.cc"
     "${METADEF_DIR}/register/op_kernel_registry.cpp"
-    "${METADEF_DIR}/register/op_tiling.cpp"
-    "${METADEF_DIR}/register/op_tiling_registry.cpp"
+    "${METADEF_DIR}/register/op_tiling/op_tiling_info.cc"
+    "${METADEF_DIR}/register/op_tiling/op_tiling_registry.cc"
+    "${METADEF_DIR}/register/op_tiling/op_tiling_utils.cc"
+    "${METADEF_DIR}/register/op_tiling/op_tiling.cc"
+    "${METADEF_DIR}/register/op_tiling/op_tiling_py.cc"
     "${METADEF_DIR}/register/register.cpp"
     "${METADEF_DIR}/register/register_format_transfer.cc"
     "${METADEF_DIR}/register/register_pass.cpp"
@@ -90,6 +93,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${METADEF_DIR})
 include_directories(${METADEF_DIR}/graph)
+include_directories(${METADEF_DIR}/register)
 include_directories(${METADEF_DIR}/inc)
 include_directories(${METADEF_DIR}/inc/external)
 include_directories(${METADEF_DIR}/inc/register)
@@ -103,6 +107,9 @@ set(REGISTER_UT_FILES
     "testcase/register_unittest.cc"
     "testcase/register_prototype_unittest.cc"
     "testcase/register_scope_graph_unittest.cc"
+    "testcase/register_op_tiling_v2_ut.cc"
+    "testcase/register_op_tiling_v1_ut.cc"
+    "testcase/register_optiling_unittest.cc"
 )
 
 ############ libut_metadef_register.a ############
@@ -146,6 +153,7 @@ target_link_libraries(ut_register
     gtest_main
     slog_stub
     ascend_protobuf
+    json
     c_sec
     error_manager_stub
     mmpa_stub
