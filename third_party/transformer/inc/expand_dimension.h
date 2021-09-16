@@ -22,24 +22,23 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <unordered_map>
 #include <unordered_set>
 #include "graph/types.h"
 #include "axis_util.h"
 
 namespace transformer {
 
-const int32_t CHWN_DIM_C = 0;
-const int32_t CHWN_DIM_H = 1;
-const int32_t CHWN_DIM_W = 2;
-const int32_t CHWN_DIM_N = 3;
+static const int32_t CHWN_DIM_C = 0;
+static const int32_t CHWN_DIM_H = 1;
+static const int32_t CHWN_DIM_W = 2;
+static const int32_t CHWN_DIM_N = 3;
 
 const size_t DIMENSION_NUM_FOUR = 4;
 const size_t DIMENSION_NUM_FIVE = 5;
 const size_t DIMENSION_NUM_TWO = 2;
 const std::string RESHAPE_TYPE_FORBIDDEN = "FORBIDDEN";
 
-const std::map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
+static const std::map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
     {ge::FORMAT_NCHW, DIMENSION_NUM_FOUR},
     {ge::FORMAT_NHWC, DIMENSION_NUM_FOUR},
     {ge::FORMAT_HWCN, DIMENSION_NUM_FOUR},
@@ -50,109 +49,84 @@ const std::map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
     {ge::FORMAT_ND, DIMENSION_NUM_FOUR}
 };
 
-inline uint32_t GenerateFormatKey(ge::Format format) {
-  return ((static_cast<uint32_t>(format) & 0xff) << 8);
-}
+static const std::map<size_t, std::map<ge::Format, std::string>> DEFAULT_RESHAPE_TYPE {
+    {0, {{ge::FORMAT_NCHW, ""}, {ge::FORMAT_NHWC, ""}, {ge::FORMAT_HWCN, ""}, {ge::FORMAT_CHWN, ""},
+         {ge::FORMAT_NDHWC, ""}, {ge::FORMAT_NCDHW, ""}, {ge::FORMAT_DHWCN, ""}}},
 
-inline uint32_t GenerateReshapeTypeKey(ge::Format format, size_t size) {
-  return ((static_cast<uint32_t>(format) & 0xff) << 8) | (static_cast<uint32_t>(size) & 0xff);
-}
+    {1, {{ge::FORMAT_NCHW, "C"}, {ge::FORMAT_NHWC, "C"}, {ge::FORMAT_HWCN, "C"}, {ge::FORMAT_CHWN, "C"},
+         {ge::FORMAT_NDHWC, "C"}, {ge::FORMAT_NCDHW, "C"}, {ge::FORMAT_DHWCN, "C"}}},
 
-inline uint32_t GenerateAxisIndexKey(ge::Format format, char ch) {
-  return ((static_cast<uint32_t>(format) & 0xff) << 8) | (static_cast<uint32_t>(ch) & 0xff);
-}
+    {2, {{ge::FORMAT_NCHW, "CH"}, {ge::FORMAT_NHWC, "HW"}, {ge::FORMAT_HWCN, "CN"}, {ge::FORMAT_CHWN, "WN"},
+         {ge::FORMAT_NDHWC, "WC"}, {ge::FORMAT_NCDHW, "HW"}, {ge::FORMAT_DHWCN, "CN"}}},
 
-const std::unordered_map<uint32_t, std::string> DEFAULT_RESHAPE_TYPE {
-    {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 0), ""},
-    {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 0), ""},
-    {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 0), ""},
-    {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 0), ""},
-    {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 0), ""},
-    {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 0), ""},
-    {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 0), ""},
+    {3, {{ge::FORMAT_NCHW, "CHW"}, {ge::FORMAT_NHWC, "HWC"}, {ge::FORMAT_HWCN, "WCN"}, {ge::FORMAT_CHWN, "HWN"},
+         {ge::FORMAT_NDHWC, "HWC"}, {ge::FORMAT_NCDHW, "DHW"}, {ge::FORMAT_DHWCN, "WCN"}}},
 
-    {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 1), "C"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 1), "C"},
-    {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 1), "C"},
-    {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 1), "C"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 1), "C"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 1), "C"},
-    {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 1), "C"},
-
-    {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 2), "CH"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 2), "HW"},
-    {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 2), "CN"},
-    {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 2), "WN"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 2), "WC"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 2), "HW"},
-    {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 2), "CN"},
-
-    {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 3), "CHW"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 3), "HWC"},
-    {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 3), "WCN"},
-    {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 3), "HWN"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 3), "HWC"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 3), "DHW"},
-    {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 3), "WCN"},
-
-    {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 4), "DHWC"},
-    {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 4), "CDHW"},
-    {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 4), "HWCN"}
+    {4, {{ge::FORMAT_NDHWC, "DHWC"}, {ge::FORMAT_NCDHW, "CDHW"}, {ge::FORMAT_DHWCN, "HWCN"}}}
 };
 
-const std::unordered_map<uint32_t, int32_t> AXIS_INDEX_OF_FORMAT {
-    {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'N'), AXIS_NCHW_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'C'), AXIS_NCHW_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'H'), AXIS_NCHW_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'W'), AXIS_NCHW_DIM_W},
-
-    {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'N'), AXIS_HWCN_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'C'), AXIS_HWCN_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'H'), AXIS_HWCN_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'W'), AXIS_HWCN_DIM_W},
-
-    {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'N'), AXIS_NHWC_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'C'), AXIS_NHWC_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'H'), AXIS_NHWC_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'W'), AXIS_NHWC_DIM_W},
-
-    {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'N'), CHWN_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'C'), CHWN_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'H'), CHWN_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'W'), CHWN_DIM_W},
-
-    {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'N'), NDHWC_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'C'), NDHWC_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'H'), NDHWC_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'W'), NDHWC_DIM_W},
-    {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'D'), NDHWC_DIM_D},
-
-    {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'N'), NCDHW_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'C'), NCDHW_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'H'), NCDHW_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'W'), NCDHW_DIM_W},
-    {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'D'), NCDHW_DIM_D},
-
-    {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'N'), DHWCN_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'C'), DHWCN_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'H'), DHWCN_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'W'), DHWCN_DIM_W},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'D'), DHWCN_DIM_D},
-
-    {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'N'), DHWNC_DIM_N},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'C'), DHWNC_DIM_C},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'H'), DHWNC_DIM_H},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'W'), DHWNC_DIM_W},
-    {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'D'), DHWNC_DIM_D}
+static const std::map<ge::Format, std::map<std::string, int32_t>> AXIS_INDEX_OF_FORMAT {
+    {ge::FORMAT_NCHW, {{"N", AXIS_NCHW_DIM_N}, {"C", AXIS_NCHW_DIM_C}, {"H", AXIS_NCHW_DIM_H}, {"W", AXIS_NCHW_DIM_W}}},
+    {ge::FORMAT_HWCN, {{"N", AXIS_HWCN_DIM_N}, {"C", AXIS_HWCN_DIM_C}, {"H", AXIS_HWCN_DIM_H}, {"W", AXIS_HWCN_DIM_W}}},
+    {ge::FORMAT_NHWC, {{"N", AXIS_NHWC_DIM_N}, {"C", AXIS_NHWC_DIM_C}, {"H", AXIS_NHWC_DIM_H}, {"W", AXIS_NHWC_DIM_W}}},
+    {ge::FORMAT_CHWN, {{"N", CHWN_DIM_N}, {"C", CHWN_DIM_C}, {"H", CHWN_DIM_H}, {"W", CHWN_DIM_W}}},
+    {ge::FORMAT_NDHWC,
+     {{"N", NDHWC_DIM_N}, {"C", NDHWC_DIM_C}, {"H", NDHWC_DIM_H}, {"W", NDHWC_DIM_W}, {"D", NDHWC_DIM_D}}},
+    {ge::FORMAT_NCDHW,
+     {{"N", NCDHW_DIM_N}, {"C", NCDHW_DIM_C}, {"H", NCDHW_DIM_H}, {"W", NCDHW_DIM_W}, {"D", NCDHW_DIM_D}}},
+    {ge::FORMAT_DHWCN,
+     {{"N", DHWCN_DIM_N}, {"C", DHWCN_DIM_C}, {"H", DHWCN_DIM_H}, {"W", DHWCN_DIM_W}, {"D", DHWCN_DIM_D}}},
+    {ge::FORMAT_DHWNC,
+     {{"N", DHWNC_DIM_N}, {"C", DHWNC_DIM_C}, {"H", DHWNC_DIM_H}, {"W", DHWNC_DIM_W}, {"D", DHWNC_DIM_D}}}
 };
 
+static const std::map<ge::Format, std::unordered_set<std::string>> ALL_VALID_RESHAPE_TYPE {
+        {ge::FORMAT_NCHW, {
+                              "N", "C", "H", "W",
+                              "NC", "NH", "NW", "CH", "CW", "HW",
+                              "NCH", "NCW", "NHW", "CHW"
+                          }},
+        {ge::FORMAT_NHWC, {
+                              "N", "H", "W", "C",
+                              "NH", "NW", "NC", "HW", "HC", "WC",
+                              "NHW", "NHC", "NWC", "HWC"
+                          }},
+        {ge::FORMAT_HWCN, {
+                              "H", "W", "C", "N",
+                              "HW", "HC", "HN", "WC", "WN", "CN",
+                              "HWC", "HWN", "HCN", "WCN"
+                           }},
+        {ge::FORMAT_CHWN, {
+                              "C", "H", "W", "N",
+                              "CH", "CW", "CN", "HW", "HN", "WN",
+                              "CHW", "CHN", "CWN", "HWN"
+                           }},
+        {ge::FORMAT_NDHWC, {
+                              "N", "D", "H", "W", "C",
+                              "ND", "NH", "NW", "NC", "DH", "DW", "DC", "HW", "HC", "WC",
+                              "NDH", "NDW", "NDC", "NHW", "NHC", "NWC", "DHW", "DHC", "DWC", "HWC",
+                              "NDHW", "NDHC", "NDWC", "NHWC", "DHWC"
+                           }},
+        {ge::FORMAT_NCDHW, {
+                               "N", "C", "D", "H", "W",
+                               "NC", "ND", "NH", "NW", "CD", "CH", "CW", "DH", "DW", "HW",
+                               "NCD", "NCH", "NCW", "NDH", "NDW", "NHW", "CDH", "CDW", "CHW", "DHW",
+                               "NCDH", "NCDW", "NCHW", "NDHW", "CDHW"
+                          }},
+        {ge::FORMAT_DHWCN, {
+                               "D", "H", "W", "C", "N",
+                               "DH", "DW", "DC", "DN", "HW", "HC", "HN", "WC", "WN", "CN",
+                               "DHW", "DHC", "DHN", "DWC", "DWN", "DCN", "HWC", "HWN", "HCN", "WCN",
+                               "DHWC", "DHWN", "DHCN", "DWCN", "HWCN"
+                         }}
+};
 /* Pad dimension according to reshape type */
 bool ExpandDimension(const std::string &op_type, const ge::Format &original_format, const ge::Format &final_format,
-                     const uint32_t &tensor_index, const std::string &reshape_type, ge::GeShape &shape);
+                     const uint32_t &tensor_index, const std::string &reshape_type, std::vector<int64_t> &dims);
 
 bool ExpandRangeDimension(const std::string &op_type, const ge::Format &original_format, const ge::Format &final_format,
-                          const uint32_t &tensor_index, const std::string &reshape_type,
-                          std::vector<std::pair<int64_t, int64_t>> &ranges);
+                          const uint32_t &tensor_index, const std::string &reshape_type, std::vector<int64_t> &dims);
+
 } // namespace transformer
 
 #endif //COMMON_UTILS_TRANSFORMER_INC_EXPAND_DIMENSION_H_
