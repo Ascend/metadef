@@ -79,7 +79,6 @@ target_include_directories(graph PRIVATE
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../ops/built-in/op_proto/inc>
