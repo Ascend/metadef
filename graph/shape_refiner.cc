@@ -698,7 +698,9 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceCo
         GELOGD("node:%s get %ld marks from node:%s",
                node->GetName().c_str(), src_context->GetMarks().size(), in_node->GetName().c_str());
         for (auto mark : src_context->GetMarks()) {
-          marks.emplace_back(mark);
+          if (marks.empty()) {
+            marks.emplace_back(mark);
+          }
         }
         auto output_idx = node_idx.second;
         auto output_shape_and_type = src_context->GetOutputHandleShapesAndTypes();
