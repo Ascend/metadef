@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "utils/graph_utils.h"
+#include "graph/utils/graph_utils.h"
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -30,16 +30,16 @@
 #include <atomic>
 #include <mutex>
 
-#include "./ge_context.h"
-#include "debug/ge_util.h"
+#include "graph/ge_context.h"
+#include "graph/debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "proto/ge_ir.pb.h"
-#include "utils/attr_utils.h"
-#include "utils/ge_ir_utils.h"
-#include "utils/node_utils.h"
-#include "utils/file_utils.h"
+#include "graph/utils/attr_utils.h"
+#include "graph/utils/ge_ir_utils.h"
+#include "graph/utils/node_utils.h"
+#include "graph/utils/file_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
-#include "debug/ge_op_types.h"
+#include "graph/debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/op_desc_utils.h"

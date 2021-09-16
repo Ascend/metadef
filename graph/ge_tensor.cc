@@ -19,15 +19,15 @@
 #include <cstring>
 #include <map>
 #include <securec.h>
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_util.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/ge_attr_value.h"
 #include "graph/model_serialize.h"
 #include "proto/ge_ir.pb.h"
-#include "utils/ge_ir_utils.h"
-#include "utils/mem_utils.h"
-#include "utils/tensor_utils.h"
+#include "graph/utils/ge_ir_utils.h"
+#include "graph/utils/mem_utils.h"
+#include "graph/utils/tensor_utils.h"
 
 namespace ge {
 namespace{

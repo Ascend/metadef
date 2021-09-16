@@ -21,11 +21,10 @@
 
 #include "graph/ref_relation.h"
 #include "graph/compute_graph.h"
-#include "utils/mem_utils.h"
-#include "debug/ge_log.h"
-#include "debug/ge_op_types.h"
-#include "debug/ge_util.h"
-#include "debug/ge_attr_define.h"
+#include "graph/utils/mem_utils.h"
+#include "graph/debug/ge_log.h"
+#include "graph/debug/ge_op_types.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/tensor_utils.h"
 

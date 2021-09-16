@@ -18,7 +18,7 @@
 
 #include <algorithm>
 
-#include "debug/ge_util.h"
+#include "graph/debug/ge_util.h"
 
 using domi::domiTensorFormat_t;
 

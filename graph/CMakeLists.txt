@@ -73,11 +73,8 @@ target_include_directories(graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
     #### yellow zone ####
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
@@ -159,13 +156,9 @@ target_include_directories(graph_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../ops/built-in/op_proto/inc>
@@ -269,11 +262,8 @@ target_include_directories(atc_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     ${METADEF_DIR}/../ops/built-in/op_proto/inc
@@ -331,11 +321,8 @@ target_include_directories(fwk_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     ${METADEF_DIR}/../ops/built-in/op_proto/inc
@@ -391,13 +378,9 @@ target_include_directories(graph PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_BINARY_DIR}
         ${CMAKE_BINARY_DIR}/proto/metadef_protos
-        ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
         ${METADEF_DIR}
-        ${METADEF_DIR}/graph
         ${METADEF_DIR}/inc
-        ${METADEF_DIR}/inc/graph
         ${METADEF_DIR}/inc/external
-        ${METADEF_DIR}/inc/external/graph
         ${METADEF_DIR}/../third_party/fwkacllib/inc/ops
         ${METADEF_DIR}/../third_party/fwkacllib/inc
         ${METADEF_DIR}/../inc

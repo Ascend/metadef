@@ -20,7 +20,7 @@
 #include <queue>
 #include <iostream>
 
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_log.h"
 #include "debug/ge_util.h"
 #include "graph/detail/model_serialize_imp.h"
@@ -28,7 +28,7 @@
 #include "graph/ge_tensor_impl.h"
 #include "graph/compute_graph_impl.h"
 #include "proto/ge_ir.pb.h"
-#include "utils/graph_utils.h"
+#include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
 
 using std::map;

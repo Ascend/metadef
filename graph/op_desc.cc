@@ -16,7 +16,7 @@
 
 #include "graph/op_desc.h"
 
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_util.h"
 #include "external/graph/operator.h"
 #include "framework/common/debug/ge_log.h"

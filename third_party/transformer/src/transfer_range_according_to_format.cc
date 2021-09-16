@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-#include "axis_util.h"
 #include "transfer_range_according_to_format.h"
-#include "expand_dimension.h"
 #include "graph/types.h"
-#include "debug/ge_log.h"
-#include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 
 namespace transformer {
 

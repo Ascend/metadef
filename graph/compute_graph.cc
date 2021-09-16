@@ -18,8 +18,8 @@
 
 #include <deque>
 #include "./format_refiner.h"
-#include "./ge_context.h"
-#include "debug/ge_attr_define.h"
+#include "graph/ge_context.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
@@ -29,12 +29,12 @@
 #include "graph/shape_refiner.h"
 #include "graph/compute_graph_impl.h"
 #include "proto/ge_ir.pb.h"
-#include "utils/ge_ir_utils.h"
-#include "utils/graph_utils.h"
-#include "utils/node_utils.h"
-#include "utils/op_desc_utils.h"
-#include "utils/string_utils.h"
-#include "utils/tensor_utils.h"
+#include "graph/utils/ge_ir_utils.h"
+#include "graph/utils/graph_utils.h"
+#include "graph/utils/node_utils.h"
+#include "graph/utils/op_desc_utils.h"
+#include "graph/utils/string_utils.h"
+#include "graph/utils/tensor_utils.h"
 
 namespace ge {
 namespace {

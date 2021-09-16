@@ -31,10 +31,10 @@
 #include "debug/ge_util.h"
 #include "external/graph/operator_factory.h"
 #include "graph/operator_factory_impl.h"
-#include "utils/node_utils.h"
-#include "utils/op_desc_utils.h"
-#include "utils/tensor_utils.h"
-#include "utils/type_utils.h"
+#include "graph/utils/node_utils.h"
+#include "graph/utils/op_desc_utils.h"
+#include "graph/utils/tensor_utils.h"
+#include "graph/utils/type_utils.h"
 
 namespace ge {
 namespace {

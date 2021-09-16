@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "small_vector.h"
+#include "graph/small_vector.h"
 #include <gtest/gtest.h>
 #include "test_structs.h"
 #include "func_counter.h"

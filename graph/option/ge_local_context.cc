@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "./ge_local_context.h"
+#include "graph/ge_local_context.h"
 #include <utility>
 
 namespace ge {

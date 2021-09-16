@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "utils/anchor_utils.h"
+#include "graph/utils/anchor_utils.h"
 #include <algorithm>
-#include "debug/ge_util.h"
+#include "graph/debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace ge {

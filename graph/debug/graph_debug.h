@@ -26,7 +26,7 @@
 #include "graph/compute_graph.h"
 #include "graph/debug/ge_log.h"
 #include "graph/node.h"
-#include "utils/graph_utils.h"
+#include "graph/utils/graph_utils.h"
 
 namespace ge {
 enum DotFileFlag {

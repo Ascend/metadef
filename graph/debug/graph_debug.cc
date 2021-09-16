@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <set>
 #include <vector>
-#include "debug/ge_util.h"
+#include "ge_util.h"
 
 using namespace std;
 
