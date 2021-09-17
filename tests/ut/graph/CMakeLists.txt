@@ -93,10 +93,14 @@ set(UT_FILES
     "testcase/any_value_ut.cc"
     "testcase/attr_store_ut.cc"
     "testcase/attr_serializer_unittest.cc"
-    testcase/attr_serializer_registry_unittest.cc
-    testcase/small_vector_ut.cc
-        testcase/attr_utils_unittest.cc
-        testcase/func_counter.cc testcase/test_std_structs.cc)
+    "testcase/attr_serializer_registry_unittest.cc"
+    "testcase/small_vector_ut.cc"
+    "testcase/attr_utils_unittest.cc"
+    "testcase/func_counter.cc"
+    "testcase/test_std_structs.cc"
+    "testcase/transformer_expand_dims_ut.cc"
+    "testcase/transformer_transfer_shape_ut.cc"
+)
 
 set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/small_vector.cc"
