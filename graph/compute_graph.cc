@@ -1182,7 +1182,7 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) {
   auto next_nodes = node->GetOutAllNodes();
   // If there is input data side
   for (size_t i = 0; i < node->GetAllInDataAnchors().size(); i++) {
-    auto in_data_anchor = node->GetInDataAnchor(static_cast<int>(i));
+    auto in_data_anchor = node->GetInDataAnchor(static_cast<int32_t>(i));
     auto pre_out_data_anchor = in_data_anchor->GetPeerOutAnchor();
     if (pre_out_data_anchor != nullptr) {
       GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(pre_out_data_anchor, in_data_anchor) == GRAPH_SUCCESS,

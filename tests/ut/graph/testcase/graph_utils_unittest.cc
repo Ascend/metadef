@@ -22,6 +22,7 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/op_desc_impl.h"
+#include "graph/ge_local_context.h"
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_attr_define.h"
@@ -40,7 +41,6 @@ bool IfNodeExist(const ComputeGraphPtr &graph, std::function<bool(const NodePtr 
   }
   return false;
 }
-
 /*
  *             data1  const1         data2  const2
  *                \    /                \    /
@@ -432,5 +432,16 @@ TEST_F(UtestGraphUtils, InsertNodeAfter) {
 
   std::vector<ComputeGraphPtr> independent_compile_subgraphs;
   ASSERT_EQ(GraphUtils::InsertNodeAfter(node0->GetOutDataAnchor(0), {}, node1, 0, 0), GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
+  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "2"}};
+  GetThreadLocalContext().SetSessionOption(session_option);
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  const auto &graph0 = graph_builder0.GetGraph();
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
 }
 }  // namespace ge

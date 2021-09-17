@@ -303,7 +303,7 @@ void NodeUtils::UpdateIsInputConst(Node &node) {
   std::vector<bool> is_input_const;
   size_t anchor_num = node.GetAllInDataAnchors().size();
   for (size_t i = 0; i < anchor_num; i++) {
-    auto in_anchor = node.GetInDataAnchor(static_cast<int>(i));
+    auto in_anchor = node.GetInDataAnchor(static_cast<int32_t>(i));
     if (in_anchor == nullptr) {
       is_input_const.push_back(false);
       continue;

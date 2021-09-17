@@ -108,14 +108,14 @@ class Node : public std::enable_shared_from_this<Node> {
   uint32_t GetAllOutDataAnchorsSize() const;
   Vistor<AnchorPtr> GetAllOutAnchors() const;
   Vistor<AnchorPtr> GetAllInAnchors() const;
-  InDataAnchorPtr GetInDataAnchor(int idx) const;
-  OutDataAnchorPtr GetOutDataAnchor(int idx) const;
+  InDataAnchorPtr GetInDataAnchor(int32_t idx) const;
+  OutDataAnchorPtr GetOutDataAnchor(int32_t idx) const;
   InControlAnchorPtr GetInControlAnchor() const;
   OutControlAnchorPtr GetOutControlAnchor() const;
   Vistor<NodePtr> GetInNodes() const;
   Vistor<NodePtr> GetOutNodes() const;
-  AnchorPtr GetInAnchor(int idx) const;
-  AnchorPtr GetOutAnchor(int idx) const;
+  AnchorPtr GetInAnchor(int32_t idx) const;
+  AnchorPtr GetOutAnchor(int32_t idx) const;
 
   bool IsAllInNodesSeen(std::unordered_set<Node *> &nodes_seen) const;
 

@@ -404,8 +404,8 @@ Node::Vistor<AnchorPtr> Node::NodeImpl::GetAllOutAnchors(const ConstNodePtr &own
   return Node::Vistor<AnchorPtr>(owner_node, vec);
 }
 
-InDataAnchorPtr Node::NodeImpl::GetInDataAnchor(int idx) const {
-  if (idx < 0 || idx >= static_cast<int>(in_data_anchors_.size())) {
+InDataAnchorPtr Node::NodeImpl::GetInDataAnchor(int32_t idx) const {
+  if (idx < 0 || idx >= static_cast<int32_t>(in_data_anchors_.size())) {
     GELOGW("[Check][Param] Op %s doesn't have data input %d, type = %s", GetName().c_str(), idx, GetType().c_str());
     return nullptr;
   } else {
@@ -413,9 +413,9 @@ InDataAnchorPtr Node::NodeImpl::GetInDataAnchor(int idx) const {
   }
 }
 
-AnchorPtr Node::NodeImpl::GetInAnchor(int idx) const {
+AnchorPtr Node::NodeImpl::GetInAnchor(int32_t idx) const {
   // Idx can't be less than -1 or >= in_data_anchors_.size(), -1 means index of control anchor_
-  if (idx < -1 || idx >= static_cast<int>(in_data_anchors_.size())) {
+  if (idx < -1 || idx >= static_cast<int32_t>(in_data_anchors_.size())) {
     GELOGW("[Check][Param] Op %s doesn't have input %d, type = %s", GetName().c_str(), idx, GetType().c_str());
     return nullptr;
   } else {
@@ -429,9 +429,9 @@ AnchorPtr Node::NodeImpl::GetInAnchor(int idx) const {
   }
 }
 
-AnchorPtr Node::NodeImpl::GetOutAnchor(int idx) const {
+AnchorPtr Node::NodeImpl::GetOutAnchor(int32_t idx) const {
   // Idx can't be less than -1 or >= out_data_anchors_.size(), -1 means index of control anchor_
-  if (idx < -1 || idx >= static_cast<int>(out_data_anchors_.size())) {
+  if (idx < -1 || idx >= static_cast<int32_t>(out_data_anchors_.size())) {
     REPORT_INNER_ERROR("E19999", "Op:%s(%s) doesn't have index:%d's anchorname",
                        GetName().c_str(), GetType().c_str(), idx);
     GELOGE(GRAPH_FAILED, "[Check][Param] Op[%s] doesn't have index[%d]'s out_anchor which optype is %s.",
@@ -448,8 +448,8 @@ AnchorPtr Node::NodeImpl::GetOutAnchor(int idx) const {
   }
 }
 
-OutDataAnchorPtr Node::NodeImpl::GetOutDataAnchor(int idx) const {
-  if (idx < 0 || idx >= static_cast<int>(out_data_anchors_.size())) {
+OutDataAnchorPtr Node::NodeImpl::GetOutDataAnchor(int32_t idx) const {
+  if (idx < 0 || idx >= static_cast<int32_t>(out_data_anchors_.size())) {
     REPORT_INNER_ERROR("E19999", "Op:%s(%s) doesn't have index:%d's anchorname",
                        GetName().c_str(), GetType().c_str(), idx);
     GELOGE(GRAPH_FAILED, "[Check][Param] Op[%s] doesn't have index[%d]'s out_data_anchor which optype is %s.",
@@ -1074,19 +1074,19 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<AnchorPtr> Node::Get
   return impl_->GetAllOutAnchors(shared_from_this());
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InDataAnchorPtr Node::GetInDataAnchor(int idx) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InDataAnchorPtr Node::GetInDataAnchor(int32_t idx) const {
   return impl_->GetInDataAnchor(idx);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorPtr Node::GetInAnchor(int idx) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorPtr Node::GetInAnchor(int32_t idx) const {
   return impl_->GetInAnchor(idx);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorPtr Node::GetOutAnchor(int idx) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorPtr Node::GetOutAnchor(int32_t idx) const {
   return impl_->GetOutAnchor(idx);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutDataAnchorPtr Node::GetOutDataAnchor(int idx) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutDataAnchorPtr Node::GetOutDataAnchor(int32_t idx) const {
   return impl_->GetOutDataAnchor(idx);
 }
 
