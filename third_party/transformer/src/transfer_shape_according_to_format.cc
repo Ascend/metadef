@@ -65,170 +65,147 @@ namespace {
 }
 ShapeTransferAccordingToFormat::ShapeTransferAccordingToFormat(void) {}
 
-bool ShapeTransferAccordingToFormat::GetNDC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                 const vector<int64_t> &axis_value, const vector<int64_t> &nd_value) {
+bool ShapeTransferAccordingToFormat::GetNDC1HWC0ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>
+        &axis_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
-  new_shape.push_back(axis_value[AXIS_N]);
-  new_shape.push_back(axis_value[AXIS_D]);
-  new_shape.push_back(axis_value[AXIS_C1]);
-  new_shape.push_back(axis_value[AXIS_H]);
-  new_shape.push_back(axis_value[AXIS_W]);
-  new_shape.push_back(axis_value[AXIS_C0]);
+  shape.SetDimNum(DIM_SIZE_SIX);
+  shape.SetDim(0, axis_value[AXIS_N]);
+  shape.SetDim(1, axis_value[AXIS_D]);
+  shape.SetDim(2, axis_value[AXIS_C1]);
+  shape.SetDim(3, axis_value[AXIS_H]);
+  shape.SetDim(4, axis_value[AXIS_W]);
+  shape.SetDim(5, axis_value[AXIS_C0]);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetNCHWShapeByAxisValue(vector<int64_t>& new_shape, const int64_t& impl_type,
-                                                             const vector<int64_t>& axis_value,
-                                                             const vector<int64_t>& nd_value) {
+bool ShapeTransferAccordingToFormat::GetNCHWShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
   /* axis_value is initialized as a size 6 vector. */
-  new_shape.push_back(axis_value[AXIS_N]);
-  new_shape.push_back(axis_value[AXIS_C]);
-  new_shape.push_back(axis_value[AXIS_H]);
-  new_shape.push_back(axis_value[AXIS_W]);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, axis_value[AXIS_N]);
+  shape.SetDim(1, axis_value[AXIS_C]);
+  shape.SetDim(2, axis_value[AXIS_H]);
+  shape.SetDim(3, axis_value[AXIS_W]);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetNHWCShapeByAxisValue(vector<int64_t>& new_shape, const int64_t& impl_type,
-                                                             const vector<int64_t>& axis_value,
-                                                             const vector<int64_t>& nd_value) {
+bool ShapeTransferAccordingToFormat::GetNHWCShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
   /* axis_value is initialized as a size 6 vector. */
-  new_shape.push_back(axis_value[AXIS_N]);
-  new_shape.push_back(axis_value[AXIS_H]);
-  new_shape.push_back(axis_value[AXIS_W]);
-  new_shape.push_back(axis_value[AXIS_C]);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, axis_value[AXIS_N]);
+  shape.SetDim(1, axis_value[AXIS_H]);
+  shape.SetDim(2, axis_value[AXIS_W]);
+  shape.SetDim(3, axis_value[AXIS_C]);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetNC1HWC0ShapeByAxisValue(vector<int64_t>& new_shape, const int64_t& impl_type,
-                                                                const vector<int64_t>& axis_value,
-                                                                const vector<int64_t>& nd_value) {
+bool ShapeTransferAccordingToFormat::GetNC1HWC0ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
   /* axis_value is initialized as a size 6 vector. */
-  if (impl_type == EN_IMPL_HW_TBE || impl_type == EN_IMPL_CUSTOM_TBE || impl_type == EN_IMPL_NON_PERSISTENT_CUSTOM_TBE) {
-    new_shape.push_back(axis_value[AXIS_N]);
-    new_shape.push_back(axis_value[AXIS_C1]);
-    new_shape.push_back(axis_value[AXIS_H]);
-    new_shape.push_back(axis_value[AXIS_W]);
-    new_shape.push_back(axis_value[AXIS_C0]);
-  } else {
-    new_shape.push_back(axis_value[AXIS_N]);
-    new_shape.push_back(axis_value[AXIS_C]);
-    new_shape.push_back(axis_value[AXIS_H]);
-    new_shape.push_back(axis_value[AXIS_W]);
-  }
+  shape.SetDimNum(DIM_SIZE_FIVE);
+  shape.SetDim(0, axis_value[AXIS_N]);
+  shape.SetDim(1, axis_value[AXIS_C1]);
+  shape.SetDim(2, axis_value[AXIS_H]);
+  shape.SetDim(3, axis_value[AXIS_W]);
+  shape.SetDim(4, axis_value[AXIS_C0]);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetFzShapeByAxisValue(vector<int64_t>& new_shape, const int64_t& impl_type,
-                                                           const vector<int64_t>& axis_value,
-                                                           const vector<int64_t>& nd_value) {
+bool ShapeTransferAccordingToFormat::GetFzShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
   /* axis_value is initialized as a size 6 vector. */
-  if (nd_value.size() == SIZE_OF_CN) {
-    auto size_of_original_vec = nd_value.size();
-    new_shape = nd_value;
+  size_t size_of_original_vec = shape.GetDimNum();
+  if (size_of_original_vec == SIZE_OF_CN) {
     /* size_of_original_vec - 1 mean the last value of original vec
      * size_of_original_vec - 2 mean the second last value of original vec */
-    new_shape[size_of_original_vec - MINUS_VALUE_ONE] =
-        DivisionCeiling(nd_value[size_of_original_vec - MINUS_VALUE_ONE], SHAPE_NUMBER_16);
-    new_shape[size_of_original_vec - MINUS_VALUE_TWO] =
-        DivisionCeiling(nd_value[size_of_original_vec - MINUS_VALUE_TWO], axis_value[AXIS_C0]);
-    new_shape.push_back(SHAPE_NUMBER_16);
-    new_shape.push_back(axis_value[AXIS_C0]);
+    shape.SetDim((size_of_original_vec - MINUS_VALUE_ONE),
+        DivisionCeiling(shape.GetDim(size_of_original_vec - MINUS_VALUE_ONE), SHAPE_NUMBER_16));
+    shape.SetDim((size_of_original_vec - MINUS_VALUE_TWO),
+        DivisionCeiling(shape.GetDim(size_of_original_vec - MINUS_VALUE_TWO), axis_value[AXIS_C0]));
+    shape.AppendDim(SHAPE_NUMBER_16);
+    shape.AppendDim(axis_value[AXIS_C0]);
   } else {
-    if (impl_type == EN_IMPL_HW_TBE || impl_type == EN_IMPL_CUSTOM_TBE ||
-        impl_type == EN_IMPL_NON_PERSISTENT_CUSTOM_TBE) {
-      bool has_unknown_shape = axis_value[AXIS_W] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_H] == UNKNOWN_SHAPE_VALUE ||
-                               axis_value[AXIS_C1] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_G] == UNKNOWN_SHAPE_VALUE;
-      int64_t hwc1 = UNKNOWN_SHAPE_VALUE;
-      int64_t axis_n_val = axis_value[AXIS_N];
-      if (!has_unknown_shape) {
-        int64_t group_val = axis_value[AXIS_G];
-        int64_t axis_c1_val = axis_value[AXIS_C1];
-        int64_t axis_g_val = GROUPS_DEFAULT_VALUE;
-        int64_t axis_c_val = axis_value[AXIS_C];
-        if (group_val > GROUPS_DEFAULT_VALUE && axis_n_val >= group_val) {
-          int64_t enlarge_value =
-              GetAsisEnlargeValue(axis_c_val, axis_n_val / group_val, axis_value[AXIS_C0], group_val);
-          axis_g_val = DivisionCeiling(group_val, enlarge_value);
-          INT64_MULCHECK(axis_c_val, enlarge_value);
-          axis_c_val *= enlarge_value;
-          INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
-          axis_n_val = (axis_n_val / group_val) * enlarge_value;
-          axis_c1_val = DivisionCeiling(axis_c_val, axis_value[AXIS_C0]);
-        }
-        INT64_MULCHECK(axis_g_val, axis_c1_val);
-        int64_t g_c1_val = axis_g_val * axis_c1_val;
-        INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
-        g_c1_val *= axis_value[AXIS_H];
-        INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
-        hwc1 = g_c1_val * axis_value[AXIS_W];
+    bool has_unknown_shape = axis_value[AXIS_W] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_H] == UNKNOWN_SHAPE_VALUE ||
+                             axis_value[AXIS_C1] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_G] == UNKNOWN_SHAPE_VALUE;
+    int64_t hwc1 = UNKNOWN_SHAPE_VALUE;
+    int64_t axis_n_val = axis_value[AXIS_N];
+    if (!has_unknown_shape) {
+      int64_t group_val = axis_value[AXIS_G];
+      int64_t axis_c1_val = axis_value[AXIS_C1];
+      int64_t axis_g_val = GROUPS_DEFAULT_VALUE;
+      int64_t axis_c_val = axis_value[AXIS_C];
+      if (group_val > GROUPS_DEFAULT_VALUE && axis_n_val >= group_val) {
+        int64_t enlarge_value =
+                GetAsisEnlargeValue(axis_c_val, axis_n_val / group_val, axis_value[AXIS_C0], group_val);
+        axis_g_val = DivisionCeiling(group_val, enlarge_value);
+        INT64_MULCHECK(axis_c_val, enlarge_value);
+        axis_c_val *= enlarge_value;
+        INT64_MULCHECK(axis_n_val / group_val, enlarge_value);
+        axis_n_val = (axis_n_val / group_val) * enlarge_value;
+        axis_c1_val = DivisionCeiling(axis_c_val, axis_value[AXIS_C0]);
       }
-      new_shape.push_back(hwc1);
-      new_shape.push_back(DivisionCeiling(axis_n_val, NI));
-      new_shape.push_back(NI);
-      new_shape.push_back(axis_value[AXIS_C0]);
-    } else {
-      new_shape.push_back(axis_value[AXIS_N]);
-      new_shape.push_back(axis_value[AXIS_C]);
-      new_shape.push_back(axis_value[AXIS_H]);
-      new_shape.push_back(axis_value[AXIS_W]);
+      INT64_MULCHECK(axis_g_val, axis_c1_val);
+      int64_t g_c1_val = axis_g_val * axis_c1_val;
+      INT64_MULCHECK(g_c1_val, axis_value[AXIS_H]);
+      g_c1_val *= axis_value[AXIS_H];
+      INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
+      hwc1 = g_c1_val * axis_value[AXIS_W];
     }
+    shape.SetDimNum(DIM_DEFAULT_SIZE);
+    shape.SetDim(0, hwc1);
+    shape.SetDim(1, DivisionCeiling(axis_n_val, NI));
+    shape.SetDim(2, NI);
+    shape.SetDim(3, axis_value[AXIS_C0]);
   }
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetHWCNShapeByAxisValue(vector<int64_t>& new_shape, const int64_t& impl_type,
-                                                             const vector<int64_t>& axis_value,
-                                                             const vector<int64_t>& nd_value) {
+bool ShapeTransferAccordingToFormat::GetHWCNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
   /* axis_value is initialized as a size 6 vector. */
-  new_shape.push_back(axis_value[AXIS_H]);
-  new_shape.push_back(axis_value[AXIS_W]);
-  new_shape.push_back(axis_value[AXIS_C]);
-  new_shape.push_back(axis_value[AXIS_N]);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, axis_value[AXIS_H]);
+  shape.SetDim(1, axis_value[AXIS_W]);
+  shape.SetDim(2, axis_value[AXIS_C]);
+  shape.SetDim(3, axis_value[AXIS_N]);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetC1HWNCoC0ShapeByAxisValue(vector<int64_t>& new_shape, const int64_t& impl_type,
-                                                                  const vector<int64_t>& axis_value,
-                                                                  const vector<int64_t>& nd_value) {
+bool ShapeTransferAccordingToFormat::GetC1HWNCoC0ShapeByAxisValue(ge::GeShape &shape,
+                                                                  const vector<int64_t>& axis_value) {
   CHECK(axis_value.empty(), GELOGD("AxisValue is empty!"), return true);
   /* axis_value is initialized as a size 6 vector. */
-  new_shape.push_back(axis_value[AXIS_C1]);
-  new_shape.push_back(axis_value[AXIS_H]);
-  new_shape.push_back(axis_value[AXIS_W]);
-  new_shape.push_back(axis_value[AXIS_N]);
-  new_shape.push_back(axis_value[AXIS_Co]);
-  new_shape.push_back(axis_value[AXIS_C0]);
+  shape.SetDimNum(DIM_SIZE_SIX);
+  shape.SetDim(0, axis_value[AXIS_C1]);
+  shape.SetDim(1, axis_value[AXIS_H]);
+  shape.SetDim(2, axis_value[AXIS_W]);
+  shape.SetDim(3, axis_value[AXIS_N]);
+  shape.SetDim(4, axis_value[AXIS_Co]);
+  shape.SetDim(5, axis_value[AXIS_C0]);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetNzShapeByAxisValue(vector<int64_t>& new_shape, const int64_t& impl_type,
-                                                           const vector<int64_t>& axis_value,
-                                                           const vector<int64_t>& nd_value) {
-  CHECK(nd_value.empty(), GELOGD("nd_value is empty!"), return true);
+bool ShapeTransferAccordingToFormat::GetNzShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
+
+  CHECK(shape.IsScalar(), GELOGD("Origin shape is empty!"), return true);
   CHECK(axis_value.empty() || axis_value.size() <= AXIS_C0,
         GELOGD("AxisValue is empty or its size %zu <= AXIS_C0[%u]", axis_value.size(), AXIS_C0), return true);
-  uint32_t size_of_original_vec = nd_value.size();
+  size_t size_of_original_vec = shape.GetDimNum();
   if (size_of_original_vec < MINIMUM_NZ_SHAPE_DIM_NUM) {
     GELOGD("nd_value's dim num is less than 2!");
     return true;
   }
   /* axis_value is initialized as a size 6 vector. */
-  new_shape = nd_value;
-
   /* size_of_original_vec - 1 mean the last value of original vec
    * size_of_original_vec - 2 mean the second last value of original vec */
-  new_shape[size_of_original_vec - MINUS_VALUE_ONE] =
-      DivisionCeiling(nd_value[size_of_original_vec - MINUS_VALUE_TWO], (int64_t)SHAPE_NUMBER_16);
+  int64_t dim_back_two = shape.GetDim(size_of_original_vec - MINUS_VALUE_TWO);
+  int64_t dim_back_one = shape.GetDim(size_of_original_vec - MINUS_VALUE_ONE);
+  shape.SetDim((size_of_original_vec - MINUS_VALUE_ONE), DivisionCeiling(dim_back_two, (int64_t)SHAPE_NUMBER_16));
 
-  new_shape[size_of_original_vec - MINUS_VALUE_TWO] =
-      DivisionCeiling(nd_value[size_of_original_vec - MINUS_VALUE_ONE], axis_value[AXIS_C0]);
-  new_shape.push_back(SHAPE_NUMBER_16);
-  new_shape.push_back(axis_value[AXIS_C0]);
+  shape.SetDim((size_of_original_vec - MINUS_VALUE_TWO), DivisionCeiling(dim_back_one, axis_value[AXIS_C0]));
+  shape.AppendDim(SHAPE_NUMBER_16);
+  shape.AppendDim(axis_value[AXIS_C0]);
   return true;
 }
 
@@ -254,10 +231,7 @@ bool CheckInputParam(const ShapeAndFormat& shapeAndFormatInfo, ge::Format primar
 }
 
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& shapeAndFormatInfo, int64_t* c) {
-  /* The default new shape is old shape */
-  shapeAndFormatInfo.newShape = shapeAndFormatInfo.oldShape;
-  ge::Format primary_new_format =
-      static_cast<Format>(GetPrimaryFormat(shapeAndFormatInfo.newFormat));
+  ge::Format primary_new_format = static_cast<Format>(GetPrimaryFormat(shapeAndFormatInfo.newFormat));
   if (!CheckInputParam(shapeAndFormatInfo, primary_new_format)) {
     return false;
   }
@@ -274,17 +248,13 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
   GELOGD("Original format is %u, new format %u", shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat);
   GetNewShapeByAxisValueAndFormatPtr getNewShapeFunc = iterGetNewShapeFunc->second;
 
-  vector<int64_t> axis_value;
-  for (uint32_t i = 0; i < AXIS_BOTTOM; i++) {
-    axis_value.push_back(1);
-  }
+  vector<int64_t> axis_value(static_cast<size_t>(AXIS_BOTTOM), 1);
 
   int64_t group = static_cast<int64_t>(ge::GetSubFormat(shapeAndFormatInfo.newFormat));
   if (group > GROUPS_DEFAULT_VALUE) {
     axis_value[AXIS_G] = group;
   }
 
-  vector<int64_t> nd_value;
   uint32_t c0;
   if (mapOfDtypeAndC0.empty()) {
     c0 = SHAPE_NUMBER_16;
@@ -305,37 +275,33 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
     return false;
   }
   bool ret = axisutil_object->GetAxisValueByOriginFormat(
-      shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.oldShape, c0, axis_value, nd_value);
+      shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.oldShape, c0, axis_value);
   if (ret != true && shapeAndFormatInfo.newFormat != ge::FORMAT_FRACTAL_NZ) {
     return true;
   }
 
-  shapeAndFormatInfo.newShape.clear();
-  (*getNewShapeFunc)(shapeAndFormatInfo.newShape, shapeAndFormatInfo.opImplType, axis_value, nd_value);
+  (*getNewShapeFunc)(shapeAndFormatInfo.oldShape, axis_value);
   if (c != nullptr) {
     *c = axis_value[AXIS_C];
   }
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetCHWNShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                                             const vector<int64_t> &axis_value,
-                                                             const vector<int64_t> &nd_value) {
+bool ShapeTransferAccordingToFormat::GetCHWNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value) {
   if (axis_value.empty()) {
     GELOGW("AxisValue is empty!");
     return true;
   }
   /* axis_value is initialized as a size 6 vector. */
-  new_shape.push_back(axis_value[AXIS_C]);
-  new_shape.push_back(axis_value[AXIS_H]);
-  new_shape.push_back(axis_value[AXIS_W]);
-  new_shape.push_back(axis_value[AXIS_N]);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, axis_value[AXIS_C]);
+  shape.SetDim(1, axis_value[AXIS_H]);
+  shape.SetDim(2, axis_value[AXIS_W]);
+  shape.SetDim(3, axis_value[AXIS_N]);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetFz3DShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                                             const vector<int64_t> &axis_value,
-                                                             const vector<int64_t> &nd_value) {
+bool ShapeTransferAccordingToFormat::GetFz3DShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value) {
   if (axis_value.empty()) {
     GELOGW("AxisValue is empty!");
     return true;
@@ -372,18 +338,17 @@ bool ShapeTransferAccordingToFormat::GetFz3DShapeByAxisValue(vector<int64_t> &ne
     INT64_MULCHECK(g_c1_val, axis_value[AXIS_W]);
     gdhwc1 = g_c1_val * axis_value[AXIS_W];
   }
-  new_shape.push_back(gdhwc1);
-  new_shape.push_back(DivisionCeiling(axis_n_val, NI));
-  new_shape.push_back(NI);
-  new_shape.push_back(axis_value[AXIS_C0]);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, gdhwc1);
+  shape.SetDim(1, DivisionCeiling(axis_n_val, NI));
+  shape.SetDim(2, NI);
+  shape.SetDim(3, axis_value[AXIS_C0]);
 
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetFz3DTransposeShapeByAxisValue(vector<int64_t> &new_shape,
-                                                                      const int64_t &impl_type,
-                                                                      const vector<int64_t> &axis_value,
-                                                                      const vector<int64_t> &nd_value) {
+bool ShapeTransferAccordingToFormat::GetFz3DTransposeShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>
+        &axis_value) {
   if (axis_value.empty()) {
     GELOGW("AxisValue is empty!");
     return true;
@@ -399,21 +364,20 @@ bool ShapeTransferAccordingToFormat::GetFz3DTransposeShapeByAxisValue(vector<int
     dhwn1 = UNKNOWN_SHAPE_VALUE;
   }
 
-  new_shape.push_back(dhwn1);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, dhwn1);
   if (axis_value[AXIS_C] == UNKNOWN_SHAPE_VALUE) {
-    new_shape.push_back(UNKNOWN_SHAPE_VALUE);
+    shape.SetDim(1, UNKNOWN_SHAPE_VALUE);
   } else {
-    new_shape.push_back(axis_value[AXIS_C1]);
+    shape.SetDim(1, axis_value[AXIS_C1]);
   }
-  new_shape.push_back(NI);
-  new_shape.push_back(axis_value[AXIS_C0]);
+  shape.SetDim(2, NI);
+  shape.SetDim(3, axis_value[AXIS_C0]);
 
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetFzLstmShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                                               const vector<int64_t> &axis_value,
-                                                               const vector<int64_t> &nd_value) {
+bool ShapeTransferAccordingToFormat::GetFzLstmShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value) {
   if (axis_value.empty()) {
     GELOGW("AxisValue is empty!");
     return true;
@@ -428,41 +392,30 @@ bool ShapeTransferAccordingToFormat::GetFzLstmShapeByAxisValue(vector<int64_t> &
     first_element_of_fz_lstm = UNKNOWN_SHAPE_VALUE;
     second_element_of_fz_lstm = UNKNOWN_SHAPE_VALUE;
   }
-  new_shape.push_back(first_element_of_fz_lstm);
-  new_shape.push_back(second_element_of_fz_lstm);
-  new_shape.push_back(NI);
-  new_shape.push_back(NI);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, first_element_of_fz_lstm);
+  shape.SetDim(1, second_element_of_fz_lstm);
+  shape.SetDim(2, NI);
+  shape.SetDim(3, NI);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetFzC04ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                                              const vector<int64_t> &axis_value,
-                                                              const vector<int64_t> &nd_value) {
+bool ShapeTransferAccordingToFormat::GetFzC04ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value) {
   if (axis_value.empty()) {
     GELOGW("AxisValue is empty!");
     return true;
   }
   /* axis_value is initialized as a size 6 vector. */
-  if (impl_type == EN_IMPL_HW_TBE || impl_type == EN_IMPL_CUSTOM_TBE) {
-    int64_t x = SHAPE_DIM_VALUE_C04 * axis_value[AXIS_H] * axis_value[AXIS_W];
-    new_shape.push_back(DivisionCeiling(x, X0));
-
-
-    new_shape.push_back(DivisionCeiling(axis_value[AXIS_N], NI));
-    new_shape.push_back(NI);
-    new_shape.push_back(X0);
-  } else {
-    new_shape.push_back(axis_value[AXIS_N]);
-    new_shape.push_back(axis_value[AXIS_C]);
-    new_shape.push_back(axis_value[AXIS_H]);
-    new_shape.push_back(axis_value[AXIS_W]);
-  }
+  int64_t x = SHAPE_DIM_VALUE_C04 * axis_value[AXIS_H] * axis_value[AXIS_W];
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, DivisionCeiling(x, X0));
+  shape.SetDim(1, DivisionCeiling(axis_value[AXIS_N], NI));
+  shape.SetDim(2, NI);
+  shape.SetDim(3, X0);
   return true;
 }
 
-bool ShapeTransferAccordingToFormat::GetFzGShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                                            const vector<int64_t> &axis_value,
-                                                            const vector<int64_t> &nd_value) {
+bool ShapeTransferAccordingToFormat::GetFzGShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value) {
   if (axis_value.empty()) {
     GELOGW("AxisValue is empty!");
     return true;
@@ -471,10 +424,11 @@ bool ShapeTransferAccordingToFormat::GetFzGShapeByAxisValue(vector<int64_t> &new
   int64_t new_c = axis_value[AXIS_C] * axis_value[AXIS_G];
   int64_t new_c1 = DivisionCeiling(new_c, axis_value[AXIS_C0]);
   int64_t hwc1 = new_c1 * axis_value[AXIS_H] * axis_value[AXIS_W];
-  new_shape.push_back(hwc1);
-  new_shape.push_back(DivisionCeiling(axis_value[AXIS_N], NI));
-  new_shape.push_back(NI);
-  new_shape.push_back(axis_value[AXIS_C0]);
+  shape.SetDimNum(DIM_DEFAULT_SIZE);
+  shape.SetDim(0, hwc1);
+  shape.SetDim(1, DivisionCeiling(axis_value[AXIS_N], NI));
+  shape.SetDim(2, NI);
+  shape.SetDim(3, axis_value[AXIS_C0]);
   return true;
 }
 
