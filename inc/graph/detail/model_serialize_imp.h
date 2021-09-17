@@ -26,6 +26,7 @@
 #include "graph/ge_tensor.h"
 #include "graph/graph.h"
 #include "graph/node.h"
+#include "graph/model.h"
 
 namespace ge {
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
@@ -69,7 +70,7 @@ class ModelSerializeImp {
   bool UnserializeOpDesc(OpDescPtr &opDesc, proto::OpDef &opDefProto);
   void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<string> &key_in, std::vector<string> &key_out,
                        std::vector<uint32_t> &value_in, std::vector<uint32_t> &value_out, std::vector<string> &opt);
-  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto);
+  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, bool is_dump = false);
 
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &opDefProto);
 
@@ -78,6 +79,11 @@ class ModelSerializeImp {
   bool ParseNodeIndex(const string &node_index, string &nodeName, int32_t &index);
 
   void SetProtobufOwner(const ProtoMsgOwner &bufferProtobufOnwer) { protobuf_owner_ = bufferProtobufOnwer; }
+
+  static bool SerializeAllAttrsFromAnyMap(
+      const std::map<string, AnyValue> &, google::protobuf::Map<std::string, ::ge::proto::AttrDef> *);
+  static bool DeserializeAllAttrsToAttrHolder(
+      const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &, AttrHolder *);
 
  private:
   bool RebuildOwnership(ComputeGraphPtr &compute_graph, std::map<std::string, ComputeGraphPtr> &subgraphs);

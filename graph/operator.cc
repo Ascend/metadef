@@ -455,12 +455,12 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
     return op_desc_->GetOutputsSize();
   }
 
-  graphStatus SetAttr(const string &name, GeAttrValue &&attr_value) {
+  graphStatus SetAttr(const string &name, AnyValue &&attr_value) {
     GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
     return op_desc_->SetAttr(name, std::move(attr_value));
   }
 
-  graphStatus GetAttr(const string &name, GeAttrValue &attr_value) const {
+  graphStatus GetAttr(const string &name, AnyValue &attr_value) const {
     GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
     return op_desc_->GetAttr(name, attr_value);
   }
@@ -1172,30 +1172,29 @@ GE_FUNC_HOST_VISIBILITY size_t Operator::GetOutputsSize() const {
 
 // According to op get the attrs name and type
 namespace {
-const std::map<GeAttrValue::ValueType, std::string> kAttrTypesMap = {
-    {GeAttrValue::VT_NONE, "VT_STRING"},
-    {GeAttrValue::VT_STRING, "VT_STRING"},
-    {GeAttrValue::VT_FLOAT, "VT_FLOAT"},
-    {GeAttrValue::VT_BOOL, "VT_BOOL"},
-    {GeAttrValue::VT_INT, "VT_INT"},
-    {GeAttrValue::VT_TENSOR_DESC, "VT_TENSOR_DESC"},
-    {GeAttrValue::VT_TENSOR, "VT_TENSOR"},
-    {GeAttrValue::VT_BYTES, "VT_BYTES"},
-    {GeAttrValue::VT_GRAPH, "VT_GRAPH"},
-    {GeAttrValue::VT_NAMED_ATTRS, "VT_NAMED_ATTRS"},
-    {GeAttrValue::VT_LIST_LIST_INT, "VT_LIST_LIST_INT"},
-    {GeAttrValue::VT_DATA_TYPE, "VT_DATA_TYPE"},
-    {GeAttrValue::VT_LIST_BASE, "VT_LIST_BASE"},
-    {GeAttrValue::VT_LIST_STRING, "VT_LIST_STRING"},
-    {GeAttrValue::VT_LIST_FLOAT, "VT_LIST_FLOAT"},
-    {GeAttrValue::VT_LIST_BOOL, "VT_LIST_BOOL"},
-    {GeAttrValue::VT_LIST_INT, "VT_LIST_INT"},
-    {GeAttrValue::VT_LIST_TENSOR_DESC, "VT_LIST_TENSOR_DESC"},
-    {GeAttrValue::VT_LIST_TENSOR, "VT_LIST_TENSOR"},
-    {GeAttrValue::VT_LIST_BYTES, "VT_LIST_BYTES"},
-    {GeAttrValue::VT_GRAPH, "VT_GRAPH"},
-    {GeAttrValue::VT_LIST_NAMED_ATTRS, "VT_LIST_NAMED_ATTRS"},
-    {GeAttrValue::VT_LIST_DATA_TYPE, "VT_LIST_DATA_TYPE"},
+const std::map<AnyValue::ValueType, std::string> kAttrTypesMap = {
+    {AnyValue::VT_NONE, "VT_STRING"},
+    {AnyValue::VT_STRING, "VT_STRING"},
+    {AnyValue::VT_FLOAT, "VT_FLOAT"},
+    {AnyValue::VT_BOOL, "VT_BOOL"},
+    {AnyValue::VT_INT, "VT_INT"},
+    {AnyValue::VT_TENSOR_DESC, "VT_TENSOR_DESC"},
+    {AnyValue::VT_TENSOR, "VT_TENSOR"},
+    {AnyValue::VT_BYTES, "VT_BYTES"},
+    {AnyValue::VT_GRAPH, "VT_GRAPH"},
+    {AnyValue::VT_NAMED_ATTRS, "VT_NAMED_ATTRS"},
+    {AnyValue::VT_LIST_LIST_INT, "VT_LIST_LIST_INT"},
+    {AnyValue::VT_DATA_TYPE, "VT_DATA_TYPE"},
+    {AnyValue::VT_LIST_STRING, "VT_LIST_STRING"},
+    {AnyValue::VT_LIST_FLOAT, "VT_LIST_FLOAT"},
+    {AnyValue::VT_LIST_BOOL, "VT_LIST_BOOL"},
+    {AnyValue::VT_LIST_INT, "VT_LIST_INT"},
+    {AnyValue::VT_LIST_TENSOR_DESC, "VT_LIST_TENSOR_DESC"},
+    {AnyValue::VT_LIST_TENSOR, "VT_LIST_TENSOR"},
+    {AnyValue::VT_LIST_BYTES, "VT_LIST_BYTES"},
+    {AnyValue::VT_GRAPH, "VT_GRAPH"},
+    {AnyValue::VT_LIST_NAMED_ATTRS, "VT_LIST_NAMED_ATTRS"},
+    {AnyValue::VT_LIST_DATA_TYPE, "VT_LIST_DATA_TYPE"},
 };
 } // namespace
 const std::map<std::string, std::string> Operator::GetAllAttrNamesAndTypes() const {
@@ -1206,14 +1205,12 @@ const std::map<std::string, std::string> Operator::GetAllAttrNamesAndTypes() con
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
                    REPORT_INNER_ERROR("E19999", "GetOpDescImpl failed, as return nullptr.");
                    return attr_types, "[Get][OpDescImpl] is nullptr.");
-  std::map<string, GeAttrValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
+  std::map<string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
 
-  map<string, GeAttrValue>::iterator iter;
+  map<string, AnyValue>::iterator iter;
   for (iter = attr_map.begin(); iter != attr_map.end(); ++iter) {
     string name = iter->first;
-    GeAttrValue attr_value = iter->second;
-
-    GeAttrValue::ValueType type = attr_value.GetValueType();
+    AnyValue::ValueType type = iter->second.GetValueType();
 
     auto iter2 = kAttrTypesMap.find(type);
     if (iter2 != kAttrTypesMap.end()) {
@@ -1230,14 +1227,12 @@ graphStatus Operator::GetAllAttrNamesAndTypes(std::map<AscendString, AscendStrin
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
                    REPORT_INNER_ERROR("E19999", "GetOpDescImpl failed, as return nullptr.");
                    return GRAPH_FAILED, "[Get][OpDescImpl] is nullptr.");
-  std::map<string, GeAttrValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
+  std::map<string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
 
-  map<string, GeAttrValue>::iterator iter;
+  map<string, AnyValue>::iterator iter;
   for (iter = attr_map.begin(); iter != attr_map.end(); ++iter) {
     string name = iter->first;
-    GeAttrValue attr_value = iter->second;
-
-    GeAttrValue::ValueType type = attr_value.GetValueType();
+    AnyValue::ValueType type = iter->second.GetValueType();
 
     auto iter2 = kAttrTypesMap.find(type);
     if (iter2 != kAttrTypesMap.end()) {
@@ -1584,10 +1579,10 @@ OP_ATTR_GET_IMP(bool &, Bool)
 OP_ATTR_SET_IMP(const vector<bool> &, ListBool)
 OP_ATTR_GET_IMP(vector<bool> &, ListBool) // lint !e665
 
-OP_ATTR_SET_IMP(const GeAttrValue::NAMED_ATTRS &, NamedAttrs)
-OP_ATTR_GET_IMP(GeAttrValue::NAMED_ATTRS &, NamedAttrs)
-OP_ATTR_SET_IMP(const vector<GeAttrValue::NAMED_ATTRS> &, ListNamedAttrs)
-OP_ATTR_GET_IMP(vector<GeAttrValue::NAMED_ATTRS> &, ListNamedAttrs)  // lint !e665
+OP_ATTR_SET_IMP(const NamedAttrs &, NamedAttrs)
+OP_ATTR_GET_IMP(NamedAttrs &, NamedAttrs)
+OP_ATTR_SET_IMP(const vector<NamedAttrs> &, ListNamedAttrs)
+OP_ATTR_GET_IMP(vector<NamedAttrs> &, ListNamedAttrs)  // lint !e665
 
 OP_ATTR_REG_IMP(int64_t, Int)
 OP_ATTR_REG_IMP(const vector<int64_t> &, ListInt)
@@ -1598,8 +1593,8 @@ OP_ATTR_REG_IMP(const vector<string> &, ListStr)
 OP_ATTR_REG_IMP(bool, Bool)
 OP_ATTR_REG_IMP(const vector<bool> &, ListBool)
 OP_ATTR_REG_IMP(const vector<vector<int64_t>> &, ListListInt)
-OP_ATTR_REG_IMP(const GeAttrValue::NAMED_ATTRS &, NamedAttrs)
-OP_ATTR_REG_IMP(const vector<GeAttrValue::NAMED_ATTRS> &, ListNamedAttrs)
+OP_ATTR_REG_IMP(const NamedAttrs &, NamedAttrs)
+OP_ATTR_REG_IMP(const vector<NamedAttrs> &, ListNamedAttrs)
 
 #undef OP_ATTR_SET_IMP
 #undef OP_ATTR_GET_IMP

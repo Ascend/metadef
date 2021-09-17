@@ -48,8 +48,6 @@ class OpDesc;
 using OpDescPtr = shared_ptr<OpDesc>;
 using ConstOpDescPtr = shared_ptr<const OpDesc>;
 
-class GeAttrValue;
-
 using ConstOpDesc = const OpDesc;
 
 class OpDescImpl;
@@ -300,8 +298,8 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   graphStatus InferDataSlice();
 
  protected:
-  ProtoAttrMapHelper MutableAttrMap() override;
-  ConstProtoAttrMapHelper GetAttrMap() const override;
+  ProtoAttrMap &MutableAttrMap() override;
+  ConstProtoAttrMap &GetAttrMap() const override;
 
  private:
   OpDesc(const ProtoMsgOwner &proto_msg_owner, ge::proto::OpDef *op_def);

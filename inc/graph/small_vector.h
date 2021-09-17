@@ -17,7 +17,8 @@
 #ifndef METADEF_CXX_SMALL_VECTOR_H
 #define METADEF_CXX_SMALL_VECTOR_H
 #include <iterator>
-#include <iostream>
+#include <algorithm>
+#include <stdexcept>
 
 namespace ge {
 template<typename T, size_t N>

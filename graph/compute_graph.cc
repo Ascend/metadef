@@ -60,7 +60,6 @@ ComputeGraphImpl::ComputeGraphImpl(const std::string &name)
       sub_graph_(),
       is_valid_flag_(false),
       need_iteration_(false) {
-  attrs_.InitDefault();
 }
 
 string ComputeGraphImpl::GetName() const { return name_; }
@@ -201,31 +200,8 @@ NodePtr ComputeGraphImpl::FindFirstNodeMatchType(const std::string &name) const 
 }
 
 bool ComputeGraphImpl::GraphAttrsAreEqual(const ComputeGraphImpl &r_graph) const {
-  // ProtoMsgOwner <::google::protobuf::Message> is temporarily ignored
-  if ((this->attrs_.protoMsg_ != nullptr) && (r_graph.attrs_.protoMsg_ != nullptr)) {
-    const auto &proto_attr_map = *(this->attrs_.protoMsg_);
-    const auto &r_proto_attr_map = *(r_graph.attrs_.protoMsg_);
-    // 1.Verify graph's ProtoAttrMap size
-    if (proto_attr_map.size() != r_proto_attr_map.size()) {
-      REPORT_INNER_ERROR("E19999", "graph:%s(%zu) not equal to r_graph:%s(%zu)", this->GetName().c_str(),
-                         proto_attr_map.size(), r_graph.GetName().c_str(), r_proto_attr_map.size());
-      GELOGE(GRAPH_FAILED, "[Check][Param] graph:%s(%zu) not equal to r_graph:%s(%zu)",
-             this->GetName().c_str(), proto_attr_map.size(), r_graph.GetName().c_str(), r_proto_attr_map.size());
-      return false;
-    }
-    // 2.Verify graph's ProtoAttrMap key, verify values is temporarily not implemented
-    for (const auto &it : proto_attr_map) {
-      if (r_proto_attr_map.count(it.first) == 0) {
-        REPORT_INNER_ERROR("E19999", "Key:%s not exist in compute graph:%s's ProtoAttrMap, verify failed",
-                           it.first.c_str(), this->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Check][Param] Key:%s not exist in compute graph:%s's ProtoAttrMap, verify failed",
-               it.first.c_str(), this->GetName().c_str());
-        return false;
-      }
-    }
-    return true;
-  }
-  return ((this->attrs_.protoMsg_ == nullptr) && (r_graph.attrs_.protoMsg_ == nullptr));
+  // 整改前实现中，只比较了属性名字，没有比较属性内容，暂时维持这个玩法
+  return attrs_.GetAllAttrNames() == r_graph.attrs_.GetAllAttrNames();
 }
 
 /// Since there may be different input nodes
@@ -1414,10 +1390,12 @@ graphStatus ComputeGraphImpl::InferShapeInNeed(const ComputeGraphPtr &const_grap
   return GRAPH_SUCCESS;
 }
 
-ProtoAttrMapHelper ComputeGraphImpl::MutableAttrMap() { return attrs_; }
+ProtoAttrMap &ComputeGraphImpl::MutableAttrMap() {
+  return attrs_;
+}
 
-ConstProtoAttrMapHelper ComputeGraphImpl::GetAttrMap() const {
-  return ConstProtoAttrMapHelper(attrs_.GetProtoOwner(), attrs_.GetProtoMsg());
+ConstProtoAttrMap &ComputeGraphImpl::GetAttrMap() const {
+  return attrs_;
 }
 
 const std::map<OperatorImplPtr, NodePtr> &ComputeGraphImpl::GetAllNodesInfo() const { return all_nodes_infos_; }
@@ -1925,12 +1903,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InferSh
   return impl_->InferShapeInNeed(shared_from_this(), shared_from_this());
 }
 
-ProtoAttrMapHelper ComputeGraph::MutableAttrMap() {
+ProtoAttrMap &ComputeGraph::MutableAttrMap() {
   return impl_->MutableAttrMap();
 }
 
-ConstProtoAttrMapHelper ComputeGraph::GetAttrMap() const {
-  return impl_->MutableAttrMap();
+ConstProtoAttrMap &ComputeGraph::GetAttrMap() const {
+  return impl_->GetAttrMap();
 }
 
 const std::map<OperatorImplPtr, NodePtr> &ComputeGraph::GetAllNodesInfo() const {

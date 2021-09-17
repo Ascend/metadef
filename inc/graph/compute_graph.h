@@ -229,8 +229,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus ReorderEventNodes();
 
  protected:
-  ProtoAttrMapHelper MutableAttrMap() override;
-  ConstProtoAttrMapHelper GetAttrMap() const override;
+  ProtoAttrMap &MutableAttrMap() override;
+  ConstProtoAttrMap &GetAttrMap() const override;
 
  private:
   graphStatus DFSTopologicalSorting(std::vector<NodePtr> &node_vec, std::map<NodePtr, uint32_t> &map_in_edge_num,

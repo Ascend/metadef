@@ -40,11 +40,11 @@ struct InlineStructB {
     other.a = nullptr;
   }
   InlineStructB &operator=(const InlineStructB &other) {
-    a = new int32_t[10]();
     memcpy(a, other.a, sizeof(int32_t[10]));
     return *this;
   }
   InlineStructB &operator=(InlineStructB &&other) noexcept {
+    delete[] a;
     a = other.a;
     other.a = nullptr;
     return *this;

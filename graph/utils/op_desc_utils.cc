@@ -610,7 +610,7 @@ OpDescUtils::SetWeights(ge::Node &node, const vector<ge::GeTensorPtr> &weights) 
     return GRAPH_PARAM_INVALID;
   }
 
-  ge::GeAttrValue::NAMED_ATTRS named_attrs;
+  ge::NamedAttrs named_attrs;
   (void)ge::AttrUtils::SetListTensor(named_attrs, "key", weights);
   vector<ge::GeTensorPtr> copy_weights;
   (void)ge::AttrUtils::MutableListTensor(named_attrs, "key", copy_weights);
