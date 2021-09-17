@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "./ge_context.h"
-#include "./ge_global_options.h"
-#include "./ge_local_context.h"
+#include "graph/ge_context.h"
+#include "graph/ge_global_options.h"
+#include "graph/ge_local_context.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace ge {

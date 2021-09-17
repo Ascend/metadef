@@ -21,9 +21,9 @@
 #include "graph/node_impl.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/shape_refiner.h"
-#include "utils/ge_ir_utils.h"
-#include "utils/node_utils.h"
-#include "utils/op_desc_utils.h"
+#include "graph/utils/ge_ir_utils.h"
+#include "graph/utils/node_utils.h"
+#include "graph/utils/op_desc_utils.h"
 
 using std::string;
 using std::vector;

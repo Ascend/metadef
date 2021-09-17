@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#include "utils/op_desc_utils.h"
+#include "graph/utils/op_desc_utils.h"
 #include <algorithm>
-#include "debug/ge_attr_define.h"
-#include "debug/ge_op_types.h"
-#include "debug/ge_util.h"
+#include "graph/debug/ge_attr_define.h"
+#include "graph/debug/ge_op_types.h"
+#include "graph/debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "common/util/error_manager/error_manager.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
 #include "graph/ge_attr_value.h"
 #include "graph/op_desc_impl.h"
-#include "utils/graph_utils.h"
-#include "utils/node_utils.h"
-#include "utils/constant_utils.h"
+#include "graph/utils/graph_utils.h"
+#include "graph/utils/node_utils.h"
+#include "graph/utils/constant_utils.h"
 
 using std::vector;
 

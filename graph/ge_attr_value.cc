@@ -18,15 +18,15 @@
 #include <set>
 #include <google/protobuf/text_format.h>
 #include "external/graph/graph.h"
-#include "utils/attr_utils.h"
+#include "graph/utils/attr_utils.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/model_serialize.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/buffer_impl.h"
 #include "graph/op_desc_impl.h"
 #include "proto/ge_ir.pb.h"
-#include "detail/model_serialize_imp.h"
-#include "debug/ge_attr_define.h"
+#include "graph/detail/model_serialize_imp.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_log.h"
 #include "debug/ge_util.h"
 

@@ -30,11 +30,11 @@
 #include "graph/runtime_inference_context.h"
 #include "graph/utils/node_utils.h"
 #include "graph/debug/ge_attr_define.h"
-#include "utils/graph_utils.h"
-#include "utils/op_desc_utils.h"
-#include "utils/tensor_adapter.h"
-#include "utils/tensor_utils.h"
-#include "utils/constant_utils.h"
+#include "graph/utils/graph_utils.h"
+#include "graph/utils/op_desc_utils.h"
+#include "graph/utils/tensor_adapter.h"
+#include "graph/utils/tensor_utils.h"
+#include "graph/utils/constant_utils.h"
 
 using std::enable_shared_from_this;
 using std::make_pair;

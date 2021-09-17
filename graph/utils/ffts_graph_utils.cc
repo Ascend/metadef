@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#include "utils/ffts_graph_utils.h"
+#include "graph/utils/ffts_graph_utils.h"
 
 #include <queue>
 
-#include "debug/ge_util.h"
-#include "utils/graph_utils.h"
-#include "utils/node_utils.h"
+#include "graph/debug/ge_util.h"
+#include "graph/utils/graph_utils.h"
+#include "graph/utils/node_utils.h"
 #include "graph/debug/ge_attr_define.h"
-#include "debug/ge_op_types.h"
+#include "graph/debug/ge_op_types.h"
 
 namespace {
 static uint32_t ffts_plus_subgraph_num = 0;

@@ -54,10 +54,7 @@ target_link_libraries(ut_metadef_proto PRIVATE
 # include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${METADEF_DIR}/inc)
-include_directories(${METADEF_DIR}/inc/graph)
 include_directories(${METADEF_DIR}/inc/external)
-include_directories(${METADEF_DIR}/inc/external/graph)
-include_directories(${METADEF_DIR}/graph)
 include_directories(${METADEF_DIR}/third_party)
 include_directories(${METADEF_DIR}/third_party/graphengine/inc)
 include_directories(${METADEF_DIR}/third_party/graphengine/inc/external)

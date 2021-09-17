@@ -25,13 +25,13 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/model_serialize.h"
 #include "mmpa/mmpa_api.h"
-#include "utils/attr_utils.h"
-#include "utils/ge_ir_utils.h"
+#include "graph/utils/attr_utils.h"
+#include "graph/utils/ge_ir_utils.h"
 #include "proto/ge_ir.pb.h"
 
 using google::protobuf::io::FileInputStream;

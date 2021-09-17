@@ -16,7 +16,7 @@
 
 #include "file_utils.h"
 
-#include "debug/ge_log.h"
+#include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
 
 namespace ge {

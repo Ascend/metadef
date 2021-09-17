@@ -17,9 +17,9 @@
 #include <securec.h>
 #include <gtest/gtest.h>
 #define private public
-#include "ge_tensor.h"
+#include "graph/ge_tensor.h"
 #include "ge_ir.pb.h"
-#include "utils/tensor_utils.h"
+#include "graph/utils/tensor_utils.h"
 #include "graph/ge_tensor_impl.h"
 #include "external/graph/tensor.h"
 #include <iostream>
