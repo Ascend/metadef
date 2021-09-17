@@ -61,13 +61,15 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool SetListTensor(AttrHolderAdapter &&obj, const string &name, const vector<GeTensor> &value);
   static bool SetGraph(AttrHolderAdapter &&obj, const string &name, const ComputeGraphPtr &value);
   static bool SetListGraph(AttrHolderAdapter &&obj, const string &name, const vector<ComputeGraphPtr> &value);
-  static bool SetBytes(AttrHolderAdapter &&obj, const string &name, const GeAttrValue::BYTES &value);
-  static bool SetListBytes(AttrHolderAdapter &&obj, const string &name, const vector<GeAttrValue::BYTES> &value);
-  static bool SetNamedAttrs(AttrHolderAdapter &&obj, const string &name, const GeAttrValue::NAMED_ATTRS &value);
+  static bool SetBytes(AttrHolderAdapter &&obj, const string &name, const Buffer &value);
+  static bool SetListBytes(AttrHolderAdapter &&obj, const string &name, const vector<Buffer> &value);
+  static bool SetNamedAttrs(AttrHolderAdapter &&obj, const string &name, const NamedAttrs &value);
   static bool SetListNamedAttrs(AttrHolderAdapter &&obj, const string &name,
-                                const vector<GeAttrValue::NAMED_ATTRS> &value);
+                                const vector<NamedAttrs> &value);
+  // todo 没搜到有人用，暂时先不实现
   static bool SetListOpDesc(AttrHolderAdapter &&obj, const string &name, const vector<ConstOpDescPtr> &value);
   static bool SetListOpDesc(AttrHolderAdapter &&obj, const string &name, const vector<OpDescPtr> &value);
+  static bool GetListOpDesc(ConstAttrHolderAdapter &&obj, const string &name, vector<OpDescPtr> &value);
 
   // Get
   static bool GetInt(ConstAttrHolderAdapter &&obj, const string &name, int64_t &value);
@@ -90,12 +92,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool MutableListTensor(AttrHolderAdapter &&obj, const string &name, vector<GeTensorPtr> &value);
   static bool GetGraph(ConstAttrHolderAdapter &&obj, const string &name, ComputeGraphPtr &value);
   static bool GetListGraph(ConstAttrHolderAdapter &&obj, const string &name, vector<ComputeGraphPtr> &value);
-  static bool GetBytes(ConstAttrHolderAdapter &&obj, const string &name, GeAttrValue::BYTES &value);
-  static bool GetListBytes(ConstAttrHolderAdapter &&obj, const string &name, vector<GeAttrValue::BYTES> &value);
-  static bool GetNamedAttrs(ConstAttrHolderAdapter &&obj, const string &name, GeAttrValue::NAMED_ATTRS &value);
-  static bool GetListNamedAttrs(ConstAttrHolderAdapter &&obj, const string &name,
-                                vector<GeAttrValue::NAMED_ATTRS> &value);
-  static bool GetListOpDesc(ConstAttrHolderAdapter &&obj, const string &name, vector<OpDescPtr> &value);
+  static bool GetBytes(ConstAttrHolderAdapter &&obj, const string &name, Buffer &value);
+  static bool GetListBytes(ConstAttrHolderAdapter &&obj, const string &name, vector<Buffer> &value);
+  static bool GetNamedAttrs(ConstAttrHolderAdapter &&obj, const string &name, NamedAttrs &value);
+  static bool GetListNamedAttrs(ConstAttrHolderAdapter &&obj, const string &name, vector<NamedAttrs> &value);
   // Value will be moved
   static bool SetZeroCopyBytes(AttrHolderAdapter &&obj, const string &name, Buffer &&buffer);
   static bool GetZeroCopyBytes(ConstAttrHolderAdapter &&obj, const string &name, Buffer &buffer);
@@ -120,7 +120,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
 
   static OpDescPtr CopyOpDesc(const ConstOpDescPtr &orgOpDesc);
   static std::string GetAllAttrsStr(ConstAttrHolderAdapter &&obj);
-  static std::map<string, GeAttrValue> GetAllAttrs(ConstAttrHolderAdapter &&obj);
+  static std::map<string, AnyValue> GetAllAttrs(ConstAttrHolderAdapter &&obj);
   static std::string GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const std::set<std::string> &un_compute_attrs);
   class AttrHolderAdapter {
    public:

@@ -2,6 +2,8 @@ set(GRAPH_SOURCE_LIST
     "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
+    "any_value.cc"
+    "attr_store.cc"
     "attr_value.cc"
     "buffer.cc"
     "aligned_ptr.cc"
@@ -48,7 +50,23 @@ set(GRAPH_SOURCE_LIST
     "utils/transformer_utils.cc"
     "utils/file_utils.cc"
     "resource_context_mgr.cc"
-)
+    "serialization/utils/serialization_util.cc"
+    "serialization/attr_serializer.cc"
+    "serialization/string_serializer.cc"
+    "serialization/data_type_serializer.cc"
+    "serialization/named_attrs_serializer.cc"
+    "serialization/bool_serializer.cc"
+    "serialization/buffer_serializer.cc"
+    "serialization/float_serializer.cc"
+    "serialization/int_serializer.cc"
+    "serialization/tensor_serializer.cc"
+    "serialization/tensor_desc_serializer.cc"
+    "serialization/graph_serializer.cc"
+    "serialization/list_value_serializer.cc"
+    "serialization/list_list_int_serializer.cc"
+    "serialization/list_list_float_serializer.cc"
+    "serialization/attr_serializer_registry.cc"
+    "small_vector.cc")
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
 ######### libgraph.so #############

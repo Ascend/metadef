@@ -90,15 +90,21 @@ set(UT_FILES
     "testcase/resource_context_mgr_unittest.cc"
     "testcase/inference_context_unittest.cc"
     "testcase/constant_utils_unittest.cc"
-    "testcase/func_counter.cc"
-    "testcase/small_vector_ut.cc"
-)
+    "testcase/any_value_ut.cc"
+    "testcase/attr_store_ut.cc"
+    "testcase/attr_serializer_unittest.cc"
+    testcase/attr_serializer_registry_unittest.cc
+    testcase/small_vector_ut.cc
+        testcase/attr_utils_unittest.cc
+        testcase/func_counter.cc testcase/test_std_structs.cc)
 
 set(GRAPH_SRC_FILES
+    "${METADEF_DIR}/graph/small_vector.cc"
     "${METADEF_DIR}/graph/aligned_ptr.cc"
     "${METADEF_DIR}/graph/anchor.cc"
     "${METADEF_DIR}/graph/ascend_string.cc"
     "${METADEF_DIR}/graph/attr_value.cc"
+    "${METADEF_DIR}/graph/attr_store.cc"
     "${METADEF_DIR}/graph/buffer.cc"
     "${METADEF_DIR}/graph/compute_graph.cc"
     "${METADEF_DIR}/graph/debug/graph_debug.cc"
@@ -106,6 +112,7 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/format_refiner.cc"
     "${METADEF_DIR}/graph/ge_attr_define.cc"
     "${METADEF_DIR}/graph/ge_attr_value.cc"
+    "${METADEF_DIR}/graph/any_value.cc"
     "${METADEF_DIR}/graph/ge_tensor.cc"
     "${METADEF_DIR}/graph/gnode.cc"
     "${METADEF_DIR}/graph/graph.cc"
@@ -142,7 +149,22 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
-    "${METADEF_DIR}/third_party/transformer/src/transfer_range_according_to_format.cc"
+    "${METADEF_DIR}/graph/serialization/utils/serialization_util.cc"
+    "${METADEF_DIR}/graph/serialization/attr_serializer_registry.cc"
+    "${METADEF_DIR}/graph/serialization/string_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/data_type_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/graph_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/named_attrs_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/bool_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/buffer_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/float_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/int_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/tensor_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/tensor_desc_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/list_value_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/list_list_int_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/list_list_float_serializer.cc"
+    "${METADEF_DIR}/graph/serialization/attr_serializer_registry.cc"
 )
 
 ############ libut_metadef_graph.a ############

@@ -27,18 +27,18 @@
 #include "graph/detail/any_map.h"
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
+#include "graph/attr_store.h"
 
 namespace google {
 namespace protobuf {
 class Message;
-template <typename Key, typename T>
+template<typename Key, typename T>
 class Map;
 }  // namespace protobuf
 }  // namespace google
 
 namespace ge {
 using std::string;
-class GeAttrValue;
 
 namespace proto {
 class AttrDef;
@@ -51,10 +51,11 @@ class OpDef;
 class GraphDef;
 }  // namespace proto
 
-using ProtoAttrMap = ::google::protobuf::Map<::std::string, ::ge::proto::AttrDef>;  // lint !e1073
+using ProtoAttrMap = AttrStore;
+using ConstProtoAttrMap = const AttrStore;
 using ProtoMsgOwner = std::shared_ptr<::google::protobuf::Message>;
 
-template <class ProtoType>
+template<class ProtoType>
 class GeIrProtoHelper {
  public:
   GeIrProtoHelper(const ProtoMsgOwner &protoOwner, ProtoType *protoMsg)
@@ -66,25 +67,29 @@ class GeIrProtoHelper {
   }
   virtual ~GeIrProtoHelper() = default;
 
-  template <typename T>
+  template<typename T>
   GeIrProtoHelper(const GeIrProtoHelper<T> &other) {
     protoOwner_ = other.protoOwner_;
     protoMsg_ = other.protoMsg_;
   }
-  template <typename T>
+  template<typename T>
   GeIrProtoHelper &operator=(const GeIrProtoHelper<T> &other) {
     protoOwner_ = other.protoOnwer_;
     protoMsg_ = other.protoMsg_;
     return *this;
   }
   void InitDefault();
-  template <typename T>
+  template<typename T>
   bool operator==(const GeIrProtoHelper<T> &other) const {
     return protoOwner_ == other.protoOwner_ && protoMsg_ == other.protoMsg_;
   }
 
-  inline const ProtoMsgOwner &GetProtoOwner() const { return protoOwner_; }
-  inline ProtoType *GetProtoMsg() const { return protoMsg_; }
+  inline const ProtoMsgOwner &GetProtoOwner() const {
+    return protoOwner_;
+  }
+  inline ProtoType *GetProtoMsg() const {
+    return protoMsg_;
+  }
   void CopyValueFrom(const GeIrProtoHelper<const ProtoType> &other) {
     if (other.protoMsg_ != nullptr && protoMsg_ != nullptr) {
       *protoMsg_ = *other.protoMsg_;
@@ -111,19 +116,16 @@ class GeIrProtoHelper {
       std::is_const<ProtoType>::value, typename std::remove_const<ProtoType>::type, const ProtoType>::type>;
 };
 
-using ProtoAttrMapHelper = GeIrProtoHelper<ProtoAttrMap>;
-using ConstProtoAttrMapHelper = GeIrProtoHelper<const ProtoAttrMap>;
-
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
  public:
   AttrHolder() = default;
   virtual ~AttrHolder() = default;
 
-  graphStatus SetAttr(const string &name, const GeAttrValue &value);
+  graphStatus SetAttr(const string &name, const AnyValue &value);
 
-  graphStatus TrySetAttr(const string &name, const GeAttrValue &value);
+  graphStatus TrySetAttr(const string &name, const AnyValue &value);
 
-  graphStatus GetAttr(const string &name, GeAttrValue &value) const;
+  graphStatus GetAttr(const string &name, AnyValue &value) const;
 
   bool HasAttr(const string &name) const;
 
@@ -138,24 +140,24 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
     extAttrs_.Swap(holder.extAttrs_);
   }
 
-  template <class T>
+  template<class T>
   bool SetExtAttr(const string &name, const T &value) {
     return extAttrs_.Set(name, value);
   }
-  template <class T>
+  template<class T>
   T TryGetExtAttr(const string &name, T defaultValue) const {
     T ret(defaultValue);
-    (void)extAttrs_.Get(name, ret);
+    (void) extAttrs_.Get(name, ret);
     return ret;
   }
 
  protected:
   graphStatus AddRequiredAttr(const std::string &name);
   const std::set<string> GetAllAttrNames() const;
-  const std::map<string, GeAttrValue> GetAllAttrs() const;  // lint !e1073
+  const std::map<string, AnyValue> GetAllAttrs() const;  // lint !e1073
 
-  virtual ProtoAttrMapHelper MutableAttrMap() = 0;
-  virtual ConstProtoAttrMapHelper GetAttrMap() const = 0;
+  virtual ProtoAttrMap &MutableAttrMap() = 0;
+  virtual ConstProtoAttrMap &GetAttrMap() const = 0;
 
   friend class ModelSerializeImp;
   friend class AttrUtils;

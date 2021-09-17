@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "graph/small_vector.h"
+
 #include <gtest/gtest.h>
+#include "graph/small_vector.h"
 #include "test_structs.h"
 #include "func_counter.h"
 namespace ge {
@@ -1001,11 +1002,6 @@ TEST_F(SmallVectorUt, InsertListOk) {
   EXPECT_EQ(vec1.size(), 11);
   EXPECT_GE(vec1.capacity(), 11);
   EXPECT_EQ(memcmp(vec1.data(), expect3, sizeof(expect3)), 0);
-}
-
-TEST_F(SmallVectorUt, ShinkOk) {
-  SmallVector<int64_t, 10> vec1{1, 2, 3, 4, 5};
-  vec1.resize(3);
 }
 
 TEST_F(SmallVectorUt, EmplaceOk) {

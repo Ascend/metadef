@@ -87,14 +87,14 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
   auto value_type = attr_value.GetValueType();
   switch (value_type) {
     case GeAttrValue::VT_FLOAT: {
-      GeAttrValue::FLOAT data_f = 0;
+      float data_f = 0;
       (void)attr_value.GetValue(data_f);
       attr->set_f(data_f);
       attr->set_type(onnx::AttributeProto_AttributeType_FLOAT);
       break;
     }
     case GeAttrValue::VT_LIST_FLOAT: {
-      GeAttrValue::LIST_FLOAT data_fs = {};
+      std::vector<float> data_fs = {};
       (void)attr_value.GetValue(data_fs);
       attr->set_type(onnx::AttributeProto_AttributeType_FLOATS);
       for (auto &v : data_fs) {
@@ -103,14 +103,14 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
       break;
     }
     case GeAttrValue::VT_INT: {
-      GeAttrValue::INT data_i = 0;
+      int64_t data_i = 0;
       (void)attr_value.GetValue(data_i);
       attr->set_type(onnx::AttributeProto_AttributeType_INT);
       attr->set_i(data_i);
       break;
     }
     case GeAttrValue::VT_LIST_INT: {
-      GeAttrValue::LIST_INT data_is = {};
+      std::vector<int64_t> data_is = {};
       (void)attr_value.GetValue(data_is);
       attr->set_type(onnx::AttributeProto_AttributeType_INTS);
       for (auto &v : data_is) {
@@ -119,14 +119,14 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
       break;
     }
     case GeAttrValue::VT_STRING: {
-      GeAttrValue::STR data_s;
+      std::string data_s;
       (void)attr_value.GetValue(data_s);
       attr->set_type(onnx::AttributeProto_AttributeType_STRING);
       attr->set_s(data_s);
       break;
     }
     case GeAttrValue::VT_LIST_STRING: {
-      GeAttrValue::LIST_STR data_ss = {};
+      std::vector<std::string> data_ss = {};
       (void)attr_value.GetValue(data_ss);
       attr->set_type(onnx::AttributeProto_AttributeType_STRINGS);
       for (auto &v : data_ss) {
@@ -313,6 +313,7 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       auto layout_origin = TypeUtils::FormatToSerialString(input_desc->GetOriginFormat());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "input_desc_origin_layout:" + std::to_string(i), &layout_origin);
+      // 所有impl_->tensor_descriptor_.GetProtoMsg()的调用都要变成any map和成员函数的调用
       auto tensor_descriptor = input_desc->impl_->tensor_descriptor_.GetProtoMsg();
       if (tensor_descriptor == nullptr) {
         GELOGW("[Add][InAttr] Tensor descriptor of input %u is nullptr", i);

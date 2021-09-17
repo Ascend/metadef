@@ -2042,12 +2042,8 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
   }
   dst_compute_graph->SetGraphTargetNodesInfo(dst_traget_nodes_info);
 
-  // copy attr from old graph to new graph.
-  std::shared_ptr<proto::GraphDef> graph_proto = ComGraphMakeShared<proto::GraphDef>();
-  if (src_compute_graph->impl_->attrs_.GetProtoMsg() != nullptr) {
-    *graph_proto->mutable_attr() = *src_compute_graph->impl_->attrs_.GetProtoMsg();
-    dst_compute_graph->impl_->attrs_ = ProtoAttrMapHelper(graph_proto, graph_proto->mutable_attr());
-  }
+  // graph属性序列化
+  dst_compute_graph->impl_->attrs_ = src_compute_graph->impl_->attrs_;
 
   // copy other members from old graph to new graph.
   dst_compute_graph->impl_->data_format_ = src_compute_graph->impl_->data_format_;

@@ -56,13 +56,11 @@ void Model::Init() {
 }
 
 Model::Model() {
-  attrs_.InitDefault();
   Init();
 }
 
 Model::Model(const string &name, const string &custom_version)
     : name_(name), version_(DEFAULT_VERSION), platform_version_(custom_version) {
-  attrs_.InitDefault();
   Init();
 }
 
@@ -84,7 +82,7 @@ graphStatus Model::Save(Buffer &buffer, bool is_dump) const {
   return buffer.GetSize() > 0 ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
-void Model::SetAttr(const ProtoAttrMapHelper &attrs) { attrs_ = attrs; }
+void Model::SetAttr(const ProtoAttrMap &attrs) { attrs_ = attrs; }
 
 graphStatus Model::Load(const uint8_t *data, size_t len, Model &model) {
   ModelSerialize serialize;
@@ -193,9 +191,9 @@ graphStatus Model::LoadFromFile(const string &file_name) {
   return Load(model_def);
 }
 
-ProtoAttrMapHelper Model::MutableAttrMap() { return attrs_; }
+ProtoAttrMap &Model::MutableAttrMap() { return attrs_; }
 
-ConstProtoAttrMapHelper Model::GetAttrMap() const {
-  return ConstProtoAttrMapHelper(attrs_.GetProtoOwner(), attrs_.GetProtoMsg());
+ConstProtoAttrMap &Model::GetAttrMap() const {
+  return attrs_;
 }
 }  // namespace ge

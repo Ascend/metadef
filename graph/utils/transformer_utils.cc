@@ -130,7 +130,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       continue;
     }
     auto ori_format = tensor_desc_input->GetFormat();
-    auto ori_shape = tensor_desc_input->MutableShape();
+    auto &ori_shape = tensor_desc_input->MutableShape();
     auto curr_format = map_format_in_[i];
     if (curr_format == FORMAT_ND) {
       continue;
@@ -153,7 +153,10 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
                                                        transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     tensor_desc_input->SetFormat(curr_format);
-    tensor_desc_input->SetShape(GeShape(out_dims));
+    ori_shape.SetDimNum(out_dims.size());
+    for (size_t j = 0; j < out_dims.size(); j++) {
+      ori_shape.SetDim(j, out_dims[j]);
+    }
   }
 
   for (size_t i = 0; i < out_num_; i++) {
@@ -169,7 +172,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       tensor_desc_output->SetOriginShape(tensor_desc_output->MutableShape());
       continue;
     }
-    auto ori_shape = tensor_desc_output->MutableShape();
+    auto &ori_shape = tensor_desc_output->MutableShape();
     auto curr_format = tensor_desc_output->GetFormat();
     if (curr_format != map_ori_format_out_[i]) {
       REPORT_INNER_ERROR("E19999", "Node is %s, out tensor idx is %zu. format: %s, "
@@ -208,7 +211,10 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     transformer::ShapeAndFormat shape_and_format_info {ori_shape_dims, out_dims, curr_format, saved_format, dtype,
                                                        transformer::EN_IMPL_CUSTOM_TBE};
     shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
-    tensor_desc_output->SetShape(GeShape(out_dims));
+    ori_shape.SetDimNum(out_dims.size());
+    for (size_t j = 0; j < out_dims.size(); j++) {
+      ori_shape.SetDim(j, out_dims[j]);
+    }
     GELOGD("Node is %s, out tensor idx is %zu. Update format and shape success, ori format: %s, format: %s",
         op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
         TypeUtils::FormatToSerialString(saved_format).c_str());
