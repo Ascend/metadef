@@ -96,6 +96,7 @@ set(UT_FILES
     "testcase/attr_serializer_registry_unittest.cc"
     "testcase/small_vector_ut.cc"
     "testcase/attr_utils_unittest.cc"
+    "testcase/ge_ir_utils_unittest.cc"
     "testcase/func_counter.cc"
     "testcase/test_std_structs.cc"
     "testcase/transformer_expand_dims_ut.cc"
