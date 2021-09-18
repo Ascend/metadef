@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "graph/debug/ge_attr_define.h"
+#include "proto/ge_ir.pb.h"
 #include "debug/ge_log.h"
 #include "debug/ge_util.h"
 #include "graph/detail/model_serialize_imp.h"
@@ -35,7 +36,7 @@
 
 using std::map;
 using std::string;
-
+using ListValue = ge::proto::AttrDef::ListValue;
 namespace ge {
 bool ModelSerializeImp::ParseNodeIndex(const string &node_index, string &node_name, int32_t &index) {
   auto sep = node_index.rfind(":");
@@ -728,6 +729,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
     return false;
   }
   for (const auto &iter : proto_attr_map) {
+    // skip not set attribute
+    if (iter.second.value_case() == proto::AttrDef::VALUE_NOT_SET ||
+        (iter.second.value_case() == proto::AttrDef::kList &&
+          iter.second.list().val_type() == ListValue::VT_LIST_NONE)) {
+      continue;
+    }
+
     auto deserializer =
         AttrSerializerRegistry::GetInstance().GetDeserializer(iter.second.value_case());
     if (deserializer == nullptr) {

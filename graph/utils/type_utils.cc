@@ -246,6 +246,7 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_UINT1", DT_UINT1},                    // dt_uint1 type
     {"DT_INT2", DT_INT2},                      // dt_int2 type
     {"DT_UINT2", DT_UINT2},                    // dt_uint2 type
+    {"RESERVED", DT_UNDEFINED},                      // RESERVED will be deserialized to DT_UNDEFINED
 };
 
 const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
