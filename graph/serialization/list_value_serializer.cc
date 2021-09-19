@@ -28,7 +28,6 @@
 #include "named_attrs_serializer.h"
 #include "graph_serializer.h"
 #include "graph/ge_tensor.h"
-#include "utils/serialization_util.h"
 
 namespace ge {
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
@@ -273,9 +272,7 @@ graphStatus ListValueSerializer::SerializeListDataType(const AnyValue &av, proto
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_dt();
   for (auto value : list_value) {
-    proto::DataType dt;
-    SerializationUtil::GeDataTypeToProto(value, dt);
-    mutable_list->add_dt(dt);
+    mutable_list->add_dt(static_cast<proto::DataType>(value));
   }
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_DATA_TYPE);
 
@@ -369,7 +366,7 @@ graphStatus ListValueSerializer::DeserializeListNamedAttrs(const proto::AttrDef 
 graphStatus ListValueSerializer::DeserializeListDataType(const proto::AttrDef &def, AnyValue &av) {
   std::vector<ge::DataType> values(def.list().dt_size());
   for (int idx = 0; idx < def.list().dt_size(); ++idx) {
-    SerializationUtil::ProtoDataTypeToGe(static_cast<proto::DataType>(def.list().dt(idx)), values[idx]);
+    values[idx] = static_cast<DataType>(def.list().dt(idx));
   }
 
   return av.SetValue(std::move(values));
