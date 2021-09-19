@@ -154,7 +154,6 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
-    "${METADEF_DIR}/graph/serialization/utils/serialization_util.cc"
     "${METADEF_DIR}/graph/serialization/attr_serializer_registry.cc"
     "${METADEF_DIR}/graph/serialization/string_serializer.cc"
     "${METADEF_DIR}/graph/serialization/data_type_serializer.cc"

@@ -20,7 +20,6 @@
 #include "graph/debug/ge_util.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_util.h"
-#include "utils/serialization_util.h"
 #include "graph/ge_tensor.h"
 
 namespace ge {
