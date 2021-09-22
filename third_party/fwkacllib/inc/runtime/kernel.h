@@ -122,6 +122,16 @@ typedef struct rtKernelLaunchNames {
 } rtKernelLaunchNames_t;
 
 /**
+ * @ingroup rt_KernelConfigDump
+ * @brief device dump type
+ */
+typedef enum tagRtDumpKind {
+    RT_DATA_DUMP_KIND_INVALID = -1,
+    RT_DATA_DUMP_KIND_DUMP = 0,
+    RT_DATA_DUMP_KIND_RESERVED
+} rtDumpKind_t;
+
+/**
  * @ingroup rt_kernel
  * @brief args struct
  */
@@ -131,18 +141,11 @@ typedef struct tagRtArgsWithTiling {
     uint32_t argsSizeWithoutTiling; // input + output + tiling addr size
     uint16_t tilingAddrOffset;      // tiling addr offset
     uint16_t tilingDataOffset;      // tiling data offset
-    uint16_t reserved[2];
+    uint16_t hostInputAddrOffset;
+    uint16_t hostInputDataOffset;
+    bool     hasHostMemInput;       // has host memory input data in args or not
+    uint8_t  reserved[7];
 } rtArgsWithTiling_t;
-
-/**
- * @ingroup rt_KernelConfigDump
- * @brief device dump type
- */
-typedef enum tagRtDumpKind {
-    RT_DATA_DUMP_KIND_INVALID = -1,
-    RT_DATA_DUMP_KIND_DUMP = 0,
-    RT_DATA_DUMP_KIND_RESERVED
-} rtDumpKind_t;
 
 /**
  * @ingroup rt_kernel
@@ -369,7 +372,7 @@ RTS_API rtError_t rtKernelLaunch(const void *stubFunc, uint32_t blockDim, void *
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API rtError_t rtKernelLaunchWithHandle(void *handle, const void *devFunc, uint32_t blockDim, void *args, uint32_t argsSize,
-                                            rtSmDesc_t *smDesc, rtStream_t stream_, const void *kernelInfo);
+                                           rtSmDesc_t *smDesc, rtStream_t stream_, const void *kernelInfo);
 
 /**
  * @ingroup rt_kernel
@@ -695,4 +698,3 @@ RTS_API rtError_t rtKernelLaunchWithHandleAndTiling(void *handle, const void *de
 #endif
 
 #endif  // __CCE_RUNTIME_KERNEL_H__
-

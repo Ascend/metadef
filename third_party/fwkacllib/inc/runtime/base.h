@@ -33,6 +33,7 @@ extern "C" {
 #endif
 #endif
 
+#define RT_PROF_MAX_DEV_NUM 64
 typedef int32_t rtError_t;
 static const int32_t RT_ERROR_NONE = 0; // success
 
@@ -80,6 +81,13 @@ typedef enum tagRtLimitType {
     RT_LIMIT_TYPE_LOW_POWER_TIMEOUT = 0,  // timeout for power down , ms
 } rtLimitType_t;
 
+typedef enum {
+  RT_PROF_CTRL_INVALID = 0,
+  RT_PROF_CTRL_SWITCH,
+  RT_PROF_CTRL_REPORTER,
+  RT_PROF_CTRL_BUTT,
+} rtProfCtrlType_t;
+
 typedef struct rtExceptionInfo {
     uint32_t taskid;
     uint32_t streamid;
@@ -87,6 +95,15 @@ typedef struct rtExceptionInfo {
     uint32_t deviceid;
     uint32_t retcode;
 } rtExceptionInfo;
+
+typedef struct rtProfCommandHandle {
+  uint64_t profSwitch;
+  uint64_t profSwitchHi;
+  uint32_t devNums;
+  uint32_t devIdList[RT_PROF_MAX_DEV_NUM];
+  uint32_t modelId;
+  uint32_t type;
+} rtProfCommandHandle_t;
 
 typedef void (*rtErrorCallback)(rtExceptionType);
 
@@ -117,6 +134,8 @@ typedef void *rtLabel_t;
  * @brief model handle.
  */
 typedef void *rtModel_t;
+
+typedef rtError_t (*rtProfCtrlHandle)(uint32_t type, void *data, uint32_t len);
 
 /**
  * @ingroup profiling_base
@@ -356,6 +375,14 @@ RTS_API rtError_t rtLabelCreateExV2(rtLabel_t *label, rtModel_t model, rtStream_
  * @return RT_ERROR_INVALID_VALUE for input null ptr
  */
 RTS_API rtError_t rtGetTaskIdAndStreamID(uint32_t *taskId, uint32_t *streamId);
+
+RTS_API rtError_t rtProfRegisterCtrlCallback(uint32_t logId, rtProfCtrlHandle callback);
+
+RTS_API rtError_t rtSetDeviceIdByGeModelIdx(uint32_t modelIdx, uint32_t deviceId);
+
+RTS_API rtError_t rtUnsetDeviceIdByGeModelIdx(uint32_t modelIdx, uint32_t deviceId);
+
+RTS_API rtError_t rtGetDeviceIdByGeModelIdx(uint32_t modelIdx, uint32_t *deviceId);
 
 #if defined(__cplusplus) && !defined(COMPILE_OMG_PACKAGE)
 }
