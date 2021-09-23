@@ -1354,17 +1354,6 @@
       }
     },
     {
-      "errClass": "Fusion Pass Errors",
-      "errTitle": "Failure to Execute Fusion Pass",
-      "ErrCode": "E20009",
-      "ErrMessage": "Failed to do topological sorting after graph fusion, graph is cyclic, graph name: %s, pass name: %s.",
-      "Arglist": "graph_name,pass_name",
-      "suggestion": {
-        "Possible Cause": "The fusion pass code has a bug.",
-        "Solution": "Check the pass code."
-      }
-    },
-    {
       "errClass": "Command Line Errors",
       "errTitle": "Empty Path",
       "ErrCode": "W21000",
