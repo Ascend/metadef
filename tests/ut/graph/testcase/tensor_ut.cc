@@ -481,4 +481,22 @@ TEST_F(TensorUT, AttrUtils_SetListGeTensorDesc) {
   }
 }
 
+class AscendStringUT : public testing::Test {
+ protected:
+  void SetUp() {}
+
+  void TearDown() {}
+};
+
+TEST_F(AscendStringUT, Hash) {
+  ge::AscendString ascend_string("ABC");
+  EXPECT_EQ(std::hash<ge::AscendString>()(ascend_string), ascend_string.Hash());
+  EXPECT_EQ(std::hash<std::string>()(ascend_string.GetString()), ascend_string.Hash());
+  EXPECT_EQ(std::hash<std::string>()("ABC"), ascend_string.Hash());
+
+  ge::AscendString empty_ascend_string;
+  EXPECT_EQ(std::hash<ge::AscendString>()(empty_ascend_string), empty_ascend_string.Hash());
+  EXPECT_EQ(std::hash<std::string>()(""), empty_ascend_string.Hash());
+}
+
 }  // namespace ge
