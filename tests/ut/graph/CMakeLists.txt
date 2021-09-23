@@ -95,6 +95,8 @@ set(UT_FILES
     "testcase/constant_utils_unittest.cc"
     "testcase/func_counter.cc"
     "testcase/small_vector_ut.cc"
+    "testcase/transformer_expand_dims_ut.cc"
+    "testcase/transformer_transfer_shape_ut.cc"
 )
 
 set(GRAPH_SRC_FILES
