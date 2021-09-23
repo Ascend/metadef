@@ -86,6 +86,17 @@ class PatternFusionBasePass : public GraphPass {
 
   bool CheckOpSupported(const ge::NodePtr &node);
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+  /** check whether the input graph is Cyclic
+  *
+  *  @param graph need to be checked
+  *  @return false or true
+  */
+  bool CheckGraphCycle(ge::ComputeGraph &graph);
+
+  void EnableNetworkAnalysis();
+#endif
+
  private:
   /** match all nodes in graph according to pattern
    *
@@ -102,6 +113,11 @@ class PatternFusionBasePass : public GraphPass {
   std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;
 
   std::unordered_map<ge::NodePtr, std::map<ge::InDataAnchorPtr, ge::OutDataAnchorPtr>> origin_op_anchors_map_;
+
+#ifndef ONLY_COMPILE_OPEN_SRC
+  bool enable_network_analysis_ = false;
+#endif
+
 };
 }  // namespace fe
 
