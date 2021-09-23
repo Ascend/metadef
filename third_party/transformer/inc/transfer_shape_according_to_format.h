@@ -22,6 +22,7 @@
 #include <vector>
 #include "graph/types.h"
 #include "axis_util.h"
+#include "graph/ge_tensor.h"
 
 namespace transformer {
 using std::vector;
@@ -93,18 +94,26 @@ const std::vector<uint32_t> vector_of_dtype_and_c0 = {
 };
 /* The first parameter is axis value, second is new shape and third is
  * op implementation type. */
-using GetNewShapeByAxisValueAndFormat =
-    std::function<bool(vector<int64_t>&, const int64_t&, vector<int64_t>&, vector<int64_t>&)>;
+using GetNewShapeByAxisValueAndFormat = std::function<bool(ge::GeShape&, vector<int64_t>&)>;
 
 using GetNewShapeByAxisValueAndFormatPtr = std::shared_ptr<GetNewShapeByAxisValueAndFormat>;
 
+struct CalcShapeExtraAttr {
+  int64_t hidden_size;
+  int64_t input_size;
+};
+
 struct ShapeAndFormatInfo {
-  const vector<int64_t> &oldShape;
-  vector<int64_t> &newShape;
+  ge::GeShape &oldShape;
   const ge::Format &oldFormat;
   const ge::Format &newFormat;
   const ge::DataType &currentDataType;
-  const int64_t &opImplType;
+  int64_t group_count;
+  CalcShapeExtraAttr extra_attr;
+  ShapeAndFormatInfo(ge::GeShape &old_shape, const ge::Format &old_format, const ge::Format &new_format,
+                     const ge::DataType &data_type)
+                     : oldShape(old_shape), oldFormat(old_format), newFormat(new_format), currentDataType(data_type),
+                       group_count(1), extra_attr({1, 1}) {}
 };
 
 using ShapeAndFormat = struct ShapeAndFormatInfo;
@@ -122,47 +131,33 @@ class ShapeTransferAccordingToFormat {
   bool GetShapeAccordingToFormat(ShapeAndFormat &inputAndOutputInfo, int64_t* c = nullptr);
 
   /* ----------Below is the function of getting new shape---------------------- */
-  static bool GetNDC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                          const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetNDC1HWC0ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetNCHWShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetNCHWShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetNHWCShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetNHWCShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetNC1HWC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                         const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetNC1HWC0ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetFzShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                    const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetFzShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetHWCNShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetHWCNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetC1HWNCoC0ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                           const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetC1HWNCoC0ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetNzShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                    const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetNzShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetFz3DShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetFz3DShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetFz3DTransposeShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                               const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetFz3DTransposeShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetFzLstmShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                        const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetFzLstmShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetFzC04ShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                       const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetFzC04ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetFzGShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                     const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetFzGShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
-  static bool GetCHWNShapeByAxisValue(vector<int64_t> &new_shape, const int64_t &impl_type,
-                                      const vector<int64_t> &axis_value, const vector<int64_t> &nd_value);
+  static bool GetCHWNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
   static int64_t GetAsisEnlargeValue(const int64_t& cin, const int64_t& cout, const int64_t& c0, const int64_t& group);
 
