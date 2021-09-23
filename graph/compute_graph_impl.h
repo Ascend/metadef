@@ -187,8 +187,8 @@ class ComputeGraphImpl {
   graphStatus InferShapeInNeed(const ComputeGraphPtr &const_graph_ptr,
                                const ConstComputeGraphPtr &const_compute_graph);
 
-  ProtoAttrMapHelper MutableAttrMap();
-  ConstProtoAttrMapHelper GetAttrMap() const;
+  ProtoAttrMap &MutableAttrMap();
+  ConstProtoAttrMap &GetAttrMap() const;
 
   const std::map<OperatorImplPtr, NodePtr> &GetAllNodesInfo() const;
   void SetUserDefOutput(const std::string &output_name);
@@ -208,7 +208,7 @@ class ComputeGraphImpl {
   std::string name_;
   std::list<NodePtr> nodes_;
   uint32_t graph_id_ = 0;
-  ProtoAttrMapHelper attrs_;
+  AttrStore attrs_;
   size_t direct_nodes_size_ = 0;
   std::map<OperatorImplPtr, NodePtr> all_nodes_infos_;
   std::vector<NodePtr> target_nodes_info_;

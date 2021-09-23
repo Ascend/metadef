@@ -34,6 +34,7 @@ class TensorUtils {
   static void ShareTensorData(const TensorData &from, TensorData &to);
   static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, TensorData &to);
   static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, GeTensor &to);
+  static void CopyTensor(const GeTensor &from, GeTensor &to);
   static ge::graphStatus GetSize(const GeTensorDesc &tensorDesc, int64_t &size);
   static void SetSize(GeTensorDesc &tensorDesc, int64_t size);
   static uint32_t GetWeightSize(const ConstGeTensorPtr &tensorPtr);

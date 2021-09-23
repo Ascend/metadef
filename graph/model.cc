@@ -25,13 +25,13 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/model_serialize.h"
 #include "mmpa/mmpa_api.h"
-#include "utils/attr_utils.h"
-#include "utils/ge_ir_utils.h"
+#include "graph/utils/attr_utils.h"
+#include "graph/utils/ge_ir_utils.h"
 #include "proto/ge_ir.pb.h"
 
 using google::protobuf::io::FileInputStream;
@@ -56,13 +56,11 @@ void Model::Init() {
 }
 
 Model::Model() {
-  attrs_.InitDefault();
   Init();
 }
 
 Model::Model(const string &name, const string &custom_version)
     : name_(name), version_(DEFAULT_VERSION), platform_version_(custom_version) {
-  attrs_.InitDefault();
   Init();
 }
 
@@ -84,7 +82,7 @@ graphStatus Model::Save(Buffer &buffer, bool is_dump) const {
   return buffer.GetSize() > 0 ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
-void Model::SetAttr(const ProtoAttrMapHelper &attrs) { attrs_ = attrs; }
+void Model::SetAttr(const ProtoAttrMap &attrs) { attrs_ = attrs; }
 
 graphStatus Model::Load(const uint8_t *data, size_t len, Model &model) {
   ModelSerialize serialize;
@@ -193,9 +191,9 @@ graphStatus Model::LoadFromFile(const string &file_name) {
   return Load(model_def);
 }
 
-ProtoAttrMapHelper Model::MutableAttrMap() { return attrs_; }
+ProtoAttrMap &Model::MutableAttrMap() { return attrs_; }
 
-ConstProtoAttrMapHelper Model::GetAttrMap() const {
-  return ConstProtoAttrMapHelper(attrs_.GetProtoOwner(), attrs_.GetProtoMsg());
+ConstProtoAttrMap &Model::GetAttrMap() const {
+  return attrs_;
 }
 }  // namespace ge

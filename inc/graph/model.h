@@ -53,7 +53,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
 
   void SetGraph(const Graph &graph);
 
-  void SetAttr(const ProtoAttrMapHelper &attrs);
+  void SetAttr(const ProtoAttrMap &attrs);
 
   using AttrHolder::GetAllAttrNames;
   using AttrHolder::GetAllAttrs;
@@ -72,12 +72,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
   bool IsValid() const;
 
  protected:
-  ConstProtoAttrMapHelper GetAttrMap() const override;
-  ProtoAttrMapHelper MutableAttrMap() override;
+  ConstProtoAttrMap &GetAttrMap() const override;
+  ProtoAttrMap &MutableAttrMap() override;
 
  private:
   void Init();
-  ProtoAttrMapHelper attrs_;
+  AttrStore attrs_;
   friend class ModelSerializeImp;
   friend class GraphDebugImp;
   friend class OnnxUtils;

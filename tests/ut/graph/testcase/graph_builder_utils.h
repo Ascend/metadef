@@ -32,6 +32,11 @@ class GraphBuilder {
   NodePtr AddNode(const std::string &name, const std::string &type, int in_cnt, int out_cnt,
                   Format format = FORMAT_NCHW, DataType data_type = DT_FLOAT,
                   std::vector<int64_t> shape = {1, 1, 224, 224});
+  NodePtr AddNode(const std::string &name, const std::string &type,
+                  std::initializer_list<std::string> input_names,
+                  std::initializer_list<std::string> output_names,
+                  Format format = FORMAT_NCHW, DataType data_type = DT_FLOAT,
+                  std::vector<int64_t> shape = {1, 1, 224, 224});
   void AddDataEdge(const NodePtr &src_node, int src_idx, const NodePtr &dst_node, int dst_idx);
   void AddControlEdge(const NodePtr &src_node, const NodePtr &dst_node);
   ComputeGraphPtr GetGraph() {

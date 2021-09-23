@@ -78,7 +78,7 @@ void AutoMappingUtil::ConvertTensorList(const domi::tensorflow::AttrValue_ListVa
 }
 
 void AutoMappingUtil::ConvertFunc(const domi::tensorflow::NameAttrList& tf_func,
-                                  ge::GeAttrValue::NAMED_ATTRS& ge_func) {
+                                  ge::NamedAttrs& ge_func) {
   ge_func.SetName(tf_func.name());
   auto& attrs = tf_func.attr();
   for (auto &item : attrs) {
@@ -106,10 +106,10 @@ void AutoMappingUtil::ConvertShapeList(const domi::tensorflow::AttrValue_ListVal
 }
 
 void AutoMappingUtil::ConvertFuncList(const domi::tensorflow::AttrValue_ListValue &list,
-                                      std::vector<ge::GeAttrValue::NAMED_ATTRS> &vec) {
+                                      std::vector<ge::NamedAttrs> &vec) {
   vec.clear();
   for (const auto &e : list.func()) {
-    ge::GeAttrValue::NAMED_ATTRS func;
+    ge::NamedAttrs func;
     ConvertFunc(e, func);
     vec.push_back(func);
   }

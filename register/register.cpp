@@ -16,8 +16,8 @@
 
 #include "external/register/register.h"
 #include <google/protobuf/message.h>
-#include "debug/ge_util.h"
-#include "debug/ge_op_types.h"
+#include "graph/debug/ge_util.h"
+#include "graph/debug/ge_op_types.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"

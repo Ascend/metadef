@@ -27,7 +27,7 @@ namespace ge {
 class GeTensorDescImpl {
  public:
   GeTensorDescImpl();
-  GeTensorDescImpl(GeShape shape, Format format, DataType dt);
+  GeTensorDescImpl(const GeShape &shape, Format format, DataType dt);
   GeTensorDescImpl(const GeTensorDescImpl &desc);
   GeTensorDescImpl(GeTensorDescImpl &&desc);
   GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg);
@@ -35,6 +35,7 @@ class GeTensorDescImpl {
 
   void Init();
   GeShape &ShapeReference() const;
+  GeShape &OriginShapeReference() const;
 
   bool GeTensorDescAttrsAreEqual(const GeTensorDescImpl &r_ge_tensor_desc) const;
   bool operator==(const GeTensorDescImpl &r_ge_tensor_desc) const;
@@ -42,8 +43,8 @@ class GeTensorDescImpl {
   GeTensorDescImpl &operator=(const GeTensorDescImpl &desc);
   GeTensorDescImpl &operator=(GeTensorDescImpl &&desc);
 
-  ProtoAttrMapHelper MutableAttrMap();
-  ConstProtoAttrMapHelper GetAttrMap() const;
+  ProtoAttrMap &MutableAttrMap();
+  ConstProtoAttrMap &GetAttrMap() const;
   void SetShape(const GeShape &shape);
 
   void SetDataType(DataType dataType);
@@ -51,6 +52,9 @@ class GeTensorDescImpl {
   void SetFormat(Format format);
   Format GetFormat() const;
   void SetOriginFormat(Format format);
+  Format GetOriginFormat() const;
+  void SetOriginDataType(DataType dataType);
+  DataType GetOriginDataType() const;
   void SetDeviceType(DeviceType type);
   void SetName(const std::string &name);
   const std::string GetName() const;
@@ -61,10 +65,18 @@ class GeTensorDescImpl {
   friend class TensorUtils;
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
+  friend class GeTensorSerializeUtils;
   friend class OnnxUtils;
   GeIrProtoHelper<proto::TensorDescriptor> tensor_descriptor_;
   // Reference from tensorDescriptor_, do not direct use
-  mutable GeShape __shape_;
+  mutable GeShape shape_;
+  Format format_;
+  DataType dtype_;
+
+  mutable GeShape origin_shape_;
+  Format origin_format_;
+  DataType origin_dtype_;
+  AttrStore attrs_;
 };
 
 class TensorDataImpl {
@@ -98,7 +110,10 @@ class TensorDataImpl {
   friend class TensorUtils;
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
-  GeIrProtoHelper<proto::TensorDescriptor> tensor_descriptor_;
+  friend class GeTensorSerializeUtils;
+  // TODO: 这里修改了TensorData持有的成员类型，来表达和一个GeTensorDesc共享的语义
+  std::shared_ptr<GeTensorDescImpl> tensor_descriptor_;
+//  GeIrProtoHelper<proto::TensorDescriptor> tensor_descriptor_;
   std::shared_ptr<AlignedPtr> aligned_ptr_ = nullptr;
   size_t length_ = 0;
   // functions data() & mutable_data() return address of invalid_data_ when length_ is 0
@@ -146,9 +161,10 @@ class GeTensorImpl {
   friend class TensorUtils;
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
+  friend class GeTensorSerializeUtils;
   GeIrProtoHelper<proto::TensorDef> tensor_def_;
   // Reference from tensor_data_, do not direct use
-  mutable GeTensorDesc __desc_;
+  mutable GeTensorDesc desc_;
   TensorData tensor_data_;
 };
 }  // namespace ge

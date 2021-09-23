@@ -17,8 +17,8 @@
 #include <stack>
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
-#include "debug/ge_op_types.h"
-#include "debug/ge_util.h"
+#include "graph/debug/ge_op_types.h"
+#include "graph/debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/node_impl.h"
 #include "graph/ge_context.h"

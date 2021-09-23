@@ -26,6 +26,7 @@
 #include "graph/aligned_ptr.h"
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
+#include "any_value.h"
 
 namespace ge {
 class GeShapeImpl;
@@ -39,6 +40,8 @@ using GeTensorDescImplPtr = std::shared_ptr<GeTensorDescImpl>;
 
 class GeTensorImpl;
 using GeTensorImplPtr = std::shared_ptr<GeTensorImpl>;
+
+class GeTensorSerializeUtils;
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
  public:
@@ -81,27 +84,26 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   GeShapeImplPtr impl_;
   friend class GeTensorDesc;
   friend class GeTensorDescImpl;
+  friend class GeTensorSerializeUtils;
+  friend class ModelSerialize;
   // Create from proto obj
   GeShape(const ProtoMsgOwner &protoOnwer, proto::ShapeDef *protoMsg);
-
-  void RefTo(const GeShape &shape);
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrHolder {
   friend class TensorUtils;
-  friend class GeAttrValue;
   friend class ModelSerialize;
 
  public:
   GeTensorDesc();
-  explicit GeTensorDesc(GeShape shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
+  explicit GeTensorDesc(const GeShape &shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
   GeTensorDesc(const GeTensorDesc &desc);
   GeTensorDesc(GeTensorDesc &&desc);
 
   ~GeTensorDesc();
   bool operator==(const GeTensorDesc &r_ge_tensor_desc) const;
 
-  void Update(GeShape shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
+  void Update(const GeShape &shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
 
   const GeShape &GetShape() const;
   GeShape &MutableShape();
@@ -118,7 +120,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   graphStatus GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const;
   graphStatus GetOriginShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const;
 
-  GeShape GetOriginShape() const;
+  const GeShape &GetOriginShape() const;
+  // 该方法暂时不实现，因为一旦开放后，当前代码里判断OriginShape是否设置的逻辑就失效了
+  GeShape &MutableOriginShape();
+
   void SetOriginShape(const GeShape &originShape);
   bool IsOriginShapeInitialized() const;
 
@@ -156,8 +161,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   using AttrHolder::SetAttr;
 
  protected:
-  ProtoAttrMapHelper MutableAttrMap() override;
-  ConstProtoAttrMapHelper GetAttrMap() const override;
+  ProtoAttrMap &MutableAttrMap() override;
+  ConstProtoAttrMap &GetAttrMap() const override;
 
  private:
   bool GeTensorDescAttrsAreEqual(const GeTensorDesc &r_ge_tensor_desc) const;
@@ -168,6 +173,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   friend class GeTensorImpl;
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
+  friend class GeTensorSerializeUtils;
   friend class OnnxUtils;
 
   GeTensorDescImplPtr impl_;
@@ -216,6 +222,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   friend class GeTensorImpl;
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
+  friend class GeTensorSerializeUtils;
   friend class TensorUtils;
   TensorDataImplPtr impl_;
 };
@@ -267,6 +274,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
  private:
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
+  friend class GeTensorSerializeUtils;
   friend class OnnxUtils;
   friend class TensorData;
   friend class TensorUtils;
@@ -278,5 +286,22 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   GeTensorImplPtr impl_;
   GeTensorDesc &DescReference() const;
 };
+
+class GeTensorSerializeUtils {
+ public:
+  static void GeShapeAsProto(const GeShape &shape, proto::ShapeDef *proto);
+  static void GeTensorDescAsProto(const GeTensorDescImpl &desc, proto::TensorDescriptor *proto);
+  static void GeTensorDescAsProto(const GeTensorDesc &desc, proto::TensorDescriptor *proto);
+  static void GeTensorAsProto(const GeTensorImpl &tensor, proto::TensorDef *proto);
+  static void GeTensorAsProto(const GeTensor &tensor, proto::TensorDef *proto);
+
+  static void SetAttrToDescriptor(const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &,
+                                  GeIrProtoHelper<proto::TensorDescriptor> &);
+
+  static void AssembleGeShapeFromProto(const proto::ShapeDef *proto, GeShape &shape);
+  static void AssembleGeTensorDescFromProto(const proto::TensorDescriptor *proto, GeTensorDesc &desc);
+  static void AssembleGeTensorFromProto(const proto::TensorDef *proto, GeTensor &tensor);
+};
+
 }  // namespace ge
 #endif  // INC_GRAPH_GE_TENSOR_H_

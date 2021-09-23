@@ -17,7 +17,7 @@
 #include "graph/utils/tensor_utils.h"
 #include <cmath>
 
-#include "debug/ge_log.h"
+#include "graph/debug/ge_log.h"
 #include "graph/utils/type_utils.h"
 #include "mmpa/mmpa_api.h"
 

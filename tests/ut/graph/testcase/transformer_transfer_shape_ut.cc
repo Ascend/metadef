@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 #define private public
-#include "ge_tensor.h"
+#include "graph/ge_tensor.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "axis_util.h"

@@ -129,8 +129,8 @@ class OpDescImpl {
   string GetOutputNameByIndex(uint32_t index) const;
   int GetOutputIndexByName(const string &name) const;
 
-  ProtoAttrMapHelper MutableAttrMap();
-  ConstProtoAttrMapHelper GetAttrMap() const;
+  ProtoAttrMap &MutableAttrMap();
+  ConstProtoAttrMap &GetAttrMap() const;
 
   void SetId(int64_t id);
   int64_t GetId() const;
@@ -227,6 +227,7 @@ class OpDescImpl {
   std::function<graphStatus(Operator &)> infer_data_slice_func_ = nullptr;
   string op_kernel_lib_name_;
   string engine_name_;
+  AttrStore attrs_;
 };
 }  // namespace ge
 #endif  // GRAPH_OP_DESC_IMPL_H_

@@ -24,8 +24,8 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"
-#include "utils/node_utils.h"
-#include "utils/op_desc_utils.h"
+#include "graph/utils/node_utils.h"
+#include "graph/utils/op_desc_utils.h"
 
 namespace ge {
 class NodeImpl {
