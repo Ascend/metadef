@@ -30,6 +30,9 @@ namespace fe {
 static const string STREAM_LABEL = "_stream_label";
 PatternFusionBasePass::PatternFusionBasePass() {
   pattern_fusion_base_pass_impl_ptr_ = std::make_shared<PatternFusionBasePassImpl>();
+#ifndef ONLY_COMPILE_OPEN_SRC
+  EnableNetworkAnalysis();
+#endif
 }
 
 PatternFusionBasePass::~PatternFusionBasePass() {}
@@ -167,6 +170,24 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
     }
 
     Status status = Fusion(graph, mapping, fus_nodes);
+
+#ifndef ONLY_COMPILE_OPEN_SRC
+    bool isGraphCycle = enable_network_analysis_ && CheckGraphCycle(graph);
+    if (isGraphCycle) {
+        GELOGE(FAILED, "Failed to do topological sorting after graph fusion, graph is cyclic, graph name:%s",
+               graph.GetName().c_str());
+        GELOGE(FAILED, "This graph is cyclic. The mappings and new nodes are as follows.");
+        pattern_fusion_base_pass_impl_ptr_->DumpMappings(pattern, mappings);
+
+        std::ostringstream oss;
+        for (const auto &node_ : fus_nodes) {
+          oss << "name:" << node_->GetName() << ", type:" << node_->GetType() << std::endl;
+        }
+        GELOGE(FAILED, "%s", oss.str().c_str());
+        ge::GraphUtils::DumpGEGraphToOnnx(graph, "graph_cyclic_after " + pattern.GetName());
+        return GRAPH_FUSION_CYCLE;
+    }
+#endif
     if (!SetStreamLabelToFusedNodes(fus_nodes, first_node)) {
       return FAILED;
     }
@@ -268,6 +289,27 @@ bool PatternFusionBasePass::CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) {
 bool PatternFusionBasePass::CheckOpSupported(const ge::NodePtr &node) {
   return pattern_fusion_base_pass_impl_ptr_->CheckOpSupported(node);
 }
+
+#ifndef ONLY_COMPILE_OPEN_SRC
+bool PatternFusionBasePass::CheckGraphCycle(ge::ComputeGraph &graph) {
+  Status ret = graph.TopologicalSorting();
+  if (ret != ge::GRAPH_SUCCESS)
+    return true;
+  return false;
+}
+
+void PatternFusionBasePass::EnableNetworkAnalysis() {
+  const char *enable_network_analysis_ptr = std::getenv("ENABLE_NETWORK_ANALYSIS_DEBUG");
+  if (enable_network_analysis_ptr == nullptr) {
+    return;
+  }
+  std::string enable_network_analysis_str(enable_network_analysis_ptr);
+  enable_network_analysis_ = atoi(enable_network_analysis_str.c_str());
+  GELOGD("[GraphOpt][Init][EnableNetworkAnalysis]The enable_network_analysis is: %d",
+         enable_network_analysis_);
+  return;
+}
+#endif
 
 /**
  * @ingroup fe

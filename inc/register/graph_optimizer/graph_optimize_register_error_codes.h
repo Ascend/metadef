@@ -46,6 +46,7 @@ FE_DEF_ERRORNO(0, 0, SUCCESS, 0, "success");
 FE_DEF_ERRORNO(0xFF, 0xFF, FAILED, 0xFFFF, "failed");
 FE_DEF_ERRORNO_COMMON(NOT_CHANGED, 201, "The nodes of the graph not changed.");
 FE_DEF_ERRORNO_COMMON(PARAM_INVALID, 1, "Parameter's invalid!");
+FE_DEF_ERRORNO_COMMON(GRAPH_FUSION_CYCLE, 301, "Graph is cycle after fusion!");
 
 }  // namespace fe
 #endif  // INC_REGISTER_GRAPH_OPTIMIZE_REGISTER_ERROR_CODES_H_
