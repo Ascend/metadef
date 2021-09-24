@@ -466,11 +466,10 @@ const GeTensorDesc &OpDescImpl::GetInputDesc(const string &name) const {
 }
 
 GeTensorDescPtr OpDescImpl::MutableInputDesc(uint32_t index) const {
-  GE_CHK_BOOL_EXEC(index < inputs_desc_.size(),
-                   REPORT_INNER_ERROR("E19999", "index(%u) is out of range(0, %zu), check invalid",
-                                      index, inputs_desc_.size());
-                   GELOGE(ge::FAILED, "[Check][Param] Can't find the input desc %u", index);
-                   return nullptr);
+  if (index >= inputs_desc_.size()) {
+    GELOGW("[Get][InputDesc] Failed to get input desc [%u]", index);
+    return nullptr;
+  }
   if (inputs_desc_[index] == nullptr) {
     return nullptr;
   }
