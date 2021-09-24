@@ -36,6 +36,15 @@ const char* AscendString::GetString() const {
   return (*name_).c_str();
 }
 
+size_t AscendString::Hash() const {
+  if (name_ == nullptr) {
+    const static size_t kEmptyStringHash = std::hash<std::string>()("");
+    return kEmptyStringHash;
+  }
+
+  return std::hash<std::string>()(*name_);
+}
+
 bool AscendString::operator<(const AscendString& d) const {
   if (name_ == nullptr && d.name_ == nullptr) {
     return false;
