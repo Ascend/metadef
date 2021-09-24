@@ -98,9 +98,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   GeTensorDesc();
   explicit GeTensorDesc(const GeShape &shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
   GeTensorDesc(const GeTensorDesc &desc);
-  GeTensorDesc(GeTensorDesc &&desc);
+  GeTensorDesc(GeTensorDesc &&desc) noexcept;
 
-  ~GeTensorDesc();
+  ~GeTensorDesc() override;
   bool operator==(const GeTensorDesc &r_ge_tensor_desc) const;
 
   void Update(const GeShape &shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
@@ -295,12 +295,17 @@ class GeTensorSerializeUtils {
   static void GeTensorAsProto(const GeTensorImpl &tensor, proto::TensorDef *proto);
   static void GeTensorAsProto(const GeTensor &tensor, proto::TensorDef *proto);
 
-  static void SetAttrToDescriptor(const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &,
-                                  GeIrProtoHelper<proto::TensorDescriptor> &);
-
   static void AssembleGeShapeFromProto(const proto::ShapeDef *proto, GeShape &shape);
   static void AssembleGeTensorDescFromProto(const proto::TensorDescriptor *proto, GeTensorDesc &desc);
   static void AssembleGeTensorFromProto(const proto::TensorDef *proto, GeTensor &tensor);
+
+  static void NormalizeGeTensorDescProto(proto::TensorDescriptor *proto);
+  static void GetShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape);
+  static void GetOriginShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape);
+  static void GetDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype);
+  static void GetOriginDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype);
+  static void GetFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format);
+  static void GetOriginFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format);
 };
 
 }  // namespace ge

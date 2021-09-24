@@ -26,22 +26,16 @@
 namespace ge {
 class GeTensorDescImpl {
  public:
-  GeTensorDescImpl();
+  GeTensorDescImpl() = default;
   GeTensorDescImpl(const GeShape &shape, Format format, DataType dt);
-  GeTensorDescImpl(const GeTensorDescImpl &desc);
-  GeTensorDescImpl(GeTensorDescImpl &&desc);
   GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg);
   ~GeTensorDescImpl() = default;
 
-  void Init();
   GeShape &ShapeReference() const;
   GeShape &OriginShapeReference() const;
 
-  bool GeTensorDescAttrsAreEqual(const GeTensorDescImpl &r_ge_tensor_desc) const;
-  bool operator==(const GeTensorDescImpl &r_ge_tensor_desc) const;
-
-  GeTensorDescImpl &operator=(const GeTensorDescImpl &desc);
-  GeTensorDescImpl &operator=(GeTensorDescImpl &&desc);
+  bool GeTensorDescAttrsAreEqual(const GeTensorDescImpl &other) const;
+  bool operator==(const GeTensorDescImpl &other) const;
 
   ProtoAttrMap &MutableAttrMap();
   ConstProtoAttrMap &GetAttrMap() const;
@@ -55,10 +49,8 @@ class GeTensorDescImpl {
   Format GetOriginFormat() const;
   void SetOriginDataType(DataType dataType);
   DataType GetOriginDataType() const;
-  void SetDeviceType(DeviceType type);
   void SetName(const std::string &name);
   const std::string GetName() const;
-  void RefTo(const GeTensorDescImpl &tensorDesc) { tensor_descriptor_ = tensorDesc.tensor_descriptor_; }
 
  private:
   friend class GeTensorImpl;
@@ -67,15 +59,162 @@ class GeTensorDescImpl {
   friend class ModelSerializeImp;
   friend class GeTensorSerializeUtils;
   friend class OnnxUtils;
-  GeIrProtoHelper<proto::TensorDescriptor> tensor_descriptor_;
-  // Reference from tensorDescriptor_, do not direct use
+
+  class ExtMeta {
+   public:
+    bool operator==(const ExtMeta& other) const {
+      return (name == other.name && device_type == other.device_type && size == other.size &&
+        weight_size == other.weight_size && data_offset == other.data_offset &&
+        real_dim_cnt == other.real_dim_cnt && input_tensor == other.input_tensor &&
+        reuse_input == other.reuse_input && reuse_input_index == other.reuse_input_index &&
+        output_tensor == other.output_tensor && cmps_size == other.cmps_size && cmps_tab == other.cmps_tab &&
+        cmps_tab_offset == other.cmps_tab_offset);
+    }
+    // for name
+    std::string GetName() const {
+      return name;
+    }
+
+    void SetName(const std::string &v) {
+      name = v;
+    }
+
+    // for device_type
+    DeviceType GetDeviceType() const {
+      return device_type;
+    }
+
+    void SetDeviceType(DeviceType v) {
+      device_type = v;
+    }
+
+    // for size
+    int64_t GetSize() const {
+      return size;
+    }
+
+    void SetSize(int64_t v) {
+      size = v;
+    }
+
+    // for weight_size
+    int64_t GetWeightSize() const {
+      return weight_size;
+    }
+
+    void SetWeightSize(int64_t v) {
+      weight_size = v;
+    }
+
+    // for data_offset
+    int64_t GetDataOffset() const {
+      return data_offset;
+    }
+
+    void SetDataOffset(int64_t v) {
+      data_offset = v;
+    }
+
+    // for real_dim_cnt
+    int64_t GetRealDimCnt() const {
+      return real_dim_cnt;
+    }
+
+    void SetRealDimCnt(int64_t v) {
+      real_dim_cnt = v;
+    }
+
+    // for input_tensor
+    bool GetInputTensor() const {
+      return input_tensor;
+    }
+
+    void SetInputTensor(bool v) {
+      input_tensor = v;
+    }
+
+    // for reuse_input
+    bool GetReuseInput() const {
+      return reuse_input;
+    }
+
+    void SetReuseInput(bool v) {
+      reuse_input = v;
+    }
+
+    // for reuse_input_index
+    int64_t GetReuseInputIndex() const {
+      return reuse_input_index;
+    }
+
+    void SetReuseInputIndex(int64_t v) {
+      reuse_input_index = v;
+    }
+
+    // for output_tensor
+    bool GetOutputTensor() const {
+      return output_tensor;
+    }
+
+    void SetOutputTensor(bool v) {
+      output_tensor = v;
+    }
+
+    // for cmps_size
+    int64_t GetCmpsSize() const {
+      return cmps_size;
+    }
+
+    void SetCmpsSize(int64_t v) {
+      cmps_size = v;
+    }
+
+    // for cmps_tab
+    std::string GetCmpsTab() const {
+      return cmps_tab;
+    }
+
+    void SetCmpsTab(const std::string &v) {
+      cmps_tab = v;
+    }
+
+    // for cmps_tab_offset
+    int64_t GetCmpsTabOffset() const {
+      return cmps_tab_offset;
+    }
+
+    void SetCmpsTabOffset(int64_t v) {
+      cmps_tab_offset = v;
+    }
+
+   private:
+    std::string name;
+    DeviceType device_type{NPU};
+
+    int64_t size{0};
+    int64_t weight_size{0};
+    int64_t data_offset{0};
+    int64_t real_dim_cnt{0};
+
+    bool input_tensor{false};
+    bool reuse_input{false};
+    int64_t reuse_input_index{0};
+    bool output_tensor{false};
+
+    int64_t cmps_size{0};
+    std::string cmps_tab;
+    int64_t cmps_tab_offset{0};
+  };
+
   mutable GeShape shape_;
-  Format format_;
-  DataType dtype_;
+  Format format_{FORMAT_ND};
+  DataType dtype_{DT_FLOAT};
 
   mutable GeShape origin_shape_;
-  Format origin_format_;
-  DataType origin_dtype_;
+  Format origin_format_{FORMAT_ND};
+  DataType origin_dtype_{DT_UNDEFINED};
+
+  ExtMeta ext_meta_;
   AttrStore attrs_;
 };
 
@@ -111,9 +250,8 @@ class TensorDataImpl {
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
   friend class GeTensorSerializeUtils;
-  // TODO: 这里修改了TensorData持有的成员类型，来表达和一个GeTensorDesc共享的语义
+  // TensorDatat通过持有TensorDesc的impl来表达和一个GeTensorDesc共享的语义
   std::shared_ptr<GeTensorDescImpl> tensor_descriptor_;
-//  GeIrProtoHelper<proto::TensorDescriptor> tensor_descriptor_;
   std::shared_ptr<AlignedPtr> aligned_ptr_ = nullptr;
   size_t length_ = 0;
   // functions data() & mutable_data() return address of invalid_data_ when length_ is 0
