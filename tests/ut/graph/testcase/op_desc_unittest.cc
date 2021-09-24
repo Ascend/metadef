@@ -93,4 +93,17 @@ TEST_F(UtestOpDesc, TestNodeShapeTransUtils) {
   EXPECT_EQ(GRAPH_SUCCESS, op_desc->CommonVerify());
 }
 
+TEST_F(UtestOpDesc, IndexOutOfRange) {
+  auto tensor_desc = std::make_shared<GeTensorDesc>();
+  tensor_desc->SetShape(GeShape({1}));
+  tensor_desc->SetFormat(FORMAT_NCHW);
+  tensor_desc->SetDataType(DT_FLOAT);
+  auto op_desc = std::make_shared<OpDesc>("test", "Identity");
+  op_desc->AddInputDesc(tensor_desc->Clone());
+
+  EXPECT_NE(nullptr, op_desc->MutableInputDesc(0));
+  EXPECT_EQ(nullptr, op_desc->MutableInputDesc(1));
+  EXPECT_EQ(nullptr, op_desc->MutableInputDesc(999));
+}
+
 }
