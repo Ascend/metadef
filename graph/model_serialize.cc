@@ -20,20 +20,23 @@
 #include <queue>
 #include <iostream>
 
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
+#include "proto/ge_ir.pb.h"
 #include "debug/ge_log.h"
 #include "debug/ge_util.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "graph/op_desc_impl.h"
+#include "graph/ge_tensor.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/compute_graph_impl.h"
+#include "graph/serialization/attr_serializer_registry.h"
 #include "proto/ge_ir.pb.h"
-#include "utils/graph_utils.h"
+#include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
 
 using std::map;
 using std::string;
-
+using ListValue = ge::proto::AttrDef::ListValue;
 namespace ge {
 bool ModelSerializeImp::ParseNodeIndex(const string &node_index, string &node_name, int32_t &index) {
   auto sep = node_index.rfind(":");
@@ -58,8 +61,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
     GELOGE(FAILED, "[Check][Param] tensor_proto is null.");
     return false;
   }
-  if (tensor->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
-    *(tensor_proto->mutable_desc()) = *(tensor->impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg());
+  // 这里修改了
+  if (tensor->impl_->tensor_data_.impl_->tensor_descriptor_ != nullptr) {
+    GeTensorSerializeUtils::GeTensorDescAsProto(*tensor->impl_->tensor_data_.impl_->tensor_descriptor_,
+                                                tensor_proto->mutable_desc());
     if ((tensor->GetData().data() == nullptr) && (tensor->GetData().size() != 0)) {
       REPORT_INNER_ERROR("E19999", "param tensor data is null, but data size is not zero.");
       GELOGE(FAILED, "[Check][Param] tensor data is null, but data size is not zero.");
@@ -131,14 +136,6 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
     FixOpDefSubgraphInstanceName(op_desc);
     *op_def_proto = *op_desc->impl_->op_def_.GetProtoMsg();
     //Delete unnecessary attr
-    if (is_dump) {
-      auto attr = op_def_proto->mutable_attr();
-      attr->erase(ATTR_NAME_FRAMEWORK_NODE_DEF);
-      attr->erase(ATTR_NAME_FRAMEWORK_OP_DEF);
-      attr->erase(ATTR_NAME_FRAMEWORK_FUNC_DEF);
-      GE_IF_BOOL_EXEC((op_def_proto->type() == CONSTANT || op_def_proto->type() == CONSTANTOP),
-                      attr->erase(ATTR_NAME_WEIGHTS));
-    }
     op_def_proto->clear_input_desc();
     op_def_proto->clear_output_desc();
     // Input descs
@@ -148,7 +145,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
         auto tensor_desc = op_desc->GetInputDescPtrDfault(i);
         if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr &&
             tensor_desc->impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
-          *op_def_proto->add_input_desc() = *(tensor_desc->impl_->tensor_descriptor_.GetProtoMsg());
+          GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_input_desc());
         }
       }
     }
@@ -159,18 +156,18 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
         auto tensor_desc = op_desc->GetOutputDescPtr(i);
         if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr
             && tensor_desc->impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
-          *op_def_proto->add_output_desc() = *(tensor_desc->impl_->tensor_descriptor_.GetProtoMsg());
+          GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_output_desc());
         }
       }
     }
 
     op_def_proto->set_id(op_desc->GetId());
-    OpDescToAttrDef(op_desc, op_def_proto);
+    OpDescToAttrDef(op_desc, op_def_proto, is_dump);
   }
   return true;
 }
 
-void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto) {
+void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, bool is_dump) {
   proto::AttrDef key_in;
   proto::AttrDef value_in;
   auto op_desc_attr = op_def_proto->mutable_attr();
@@ -183,8 +180,8 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
       key_in.mutable_list()->add_s(item.first);
       value_in.mutable_list()->add_i(item.second);
     }
-    op_desc_attr->insert({"_input_name_key", key_in});
-    op_desc_attr->insert({"_input_name_value", value_in});
+    (*op_desc_attr)["_input_name_key"] = key_in;
+    (*op_desc_attr)["_input_name_value"] = value_in;
   }
   proto::AttrDef key_out;
   proto::AttrDef value_out;
@@ -193,15 +190,29 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
       key_out.mutable_list()->add_s(item.first);
       value_out.mutable_list()->add_i(item.second);
     }
-    op_desc_attr->insert({"_output_name_key", key_out});
-    op_desc_attr->insert({"_output_name_value", value_out});
+    (*op_desc_attr)["_output_name_key"] = key_out;
+    (*op_desc_attr)["_output_name_value"] = value_out;
   }
   proto::AttrDef opt_input;
   if (!op_desc->impl_->optional_input_names_.empty()) {
     for (auto &item : op_desc->impl_->optional_input_names_) {
       opt_input.mutable_list()->add_s(item);
     }
-    op_desc_attr->insert({"_opt_input", opt_input});
+    (*op_desc_attr)["_opt_input"] = opt_input;
+  }
+
+  if (!SerializeAllAttrsFromAnyMap(op_desc->GetAllAttrs(), op_desc_attr)) {
+    GELOGE(GRAPH_FAILED, "OpDesc [%s] attr serialize failed.", op_desc->GetName().c_str());
+    return;
+  }
+
+  if (is_dump) {
+    op_desc_attr->erase(ATTR_NAME_FRAMEWORK_NODE_DEF);
+    op_desc_attr->erase(ATTR_NAME_FRAMEWORK_OP_DEF);
+    op_desc_attr->erase(ATTR_NAME_FRAMEWORK_FUNC_DEF);
+    GE_IF_BOOL_EXEC((op_def_proto->type() == CONSTANT || op_def_proto->type() == CONSTANTOP),
+                    op_desc_attr
+                    ->erase(ATTR_NAME_WEIGHTS));
   }
 }
 
@@ -244,9 +255,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
       GELOGI("Add output to graph proto, node name:%s, index:%d", output.first->GetName().c_str(), output.second);
     }
   }
-  if (graph->impl_ != nullptr && graph->impl_->attrs_.GetProtoMsg() != nullptr) {
-    *graph_proto->mutable_attr() = *graph->impl_->attrs_.GetProtoMsg();
+  // ComputeGraph中的属性序列化
+  if (!SerializeAllAttrsFromAnyMap(graph->GetAllAttrs(), graph_proto->mutable_attr())) {
+    GELOGE(GRAPH_FAILED, "ComputeGraph [%s] serialize attr failed.", graph->GetName().c_str());
+    return false;
   }
+
   for (const auto &node : graph->GetDirectNode()) {
     if (!SerializeNode(node, graph_proto->add_op(), is_dump)) {
       if (node->GetOpDesc() != nullptr) {
@@ -268,9 +282,13 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *mode
   model_proto->set_name(model.GetName());
   model_proto->set_custom_version(model.GetPlatformVersion());
   model_proto->set_version(model.GetVersion());
-  if (model.attrs_.GetProtoMsg()) {
-    *model_proto->mutable_attr() = *model.attrs_.GetProtoMsg();
+
+  // Model属性序列化
+  if (!SerializeAllAttrsFromAnyMap(model.GetAllAttrs(), model_proto->mutable_attr())) {
+    GELOGE(GRAPH_FAILED, "Model [%s] serialize attr failed.", model.GetName().c_str());
+    return false;
   }
+
   auto &graph = model.graph_;
   auto compute_graph = GraphUtils::GetComputeGraph(graph);
   if (compute_graph == nullptr) {
@@ -422,6 +440,11 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   // insert name index by key and value
   AttrDefToOpDesc(op_desc, key_in, key_out, value_in, value_out, opt_input);
 
+  if (!DeserializeAllAttrsToAttrHolder(op_def_proto.attr(), op_desc.get())) {
+    GELOGE(GRAPH_FAILED, "Opdesc [%s] attr deserialize failed", op_def_proto.name().c_str());
+    return false;
+  }
+
   return true;
 }
 
@@ -558,7 +581,12 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
   model.name_ = model_proto.name();
   model.version_ = model_proto.version();
   model.platform_version_ = model_proto.custom_version();
-  model.attrs_ = ProtoAttrMapHelper(protobuf_owner_, model_proto.mutable_attr());
+
+  // Model属性反序列化
+  if (!DeserializeAllAttrsToAttrHolder(model_proto.attr(), &model)) {
+    GELOGE(GRAPH_FAILED, "Model [%s] deserialize attr failed.", model.GetName().c_str());
+    return false;
+  }
 
   auto &graphs_proto = *model_proto.mutable_graph();
   if (!graphs_proto.empty()) {
@@ -623,7 +651,12 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
       graph_output_node_names_.push_back(NodeNameGraphReq{node_name, index, graph});
     }
   }
-  graph->impl_->attrs_ = ProtoAttrMapHelper(protobuf_owner_, graph_proto.mutable_attr());
+  // ComputeGraph 属性反序列化
+  if (!DeserializeAllAttrsToAttrHolder(graph_proto.attr(), graph.get())) {
+    GELOGE(GRAPH_FAILED, "ComputeGraph [%s] deserialize attr failed.", graph->GetName().c_str());
+    return false;
+  }
+
   for (auto &op_def_proto : *graph_proto.mutable_op()) {
     if (!UnserializeNode(graph, op_def_proto)) {
       GELOGE(GRAPH_FAILED, "[Unserialize][Node] failed");
@@ -658,6 +691,67 @@ bool ReadProtoFromBinaryFile(const uint8_t *data, size_t len, google::protobuf::
     REPORT_CALL_ERROR("E19999", "Read proto from BinaryFile failed, len %zu", len);
     GELOGE(GRAPH_FAILED, "[Read][Proto] from BinaryFile failed, len %zu", len);
     return false;
+  }
+  return true;
+}
+
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeAllAttrsFromAnyMap(
+    const std::map<string, AnyValue> &attr_map,
+    google::protobuf::Map<std::string, ::ge::proto::AttrDef> * mutable_attr) {
+
+  if (mutable_attr == nullptr) {
+    GELOGE(GRAPH_FAILED, "mutable_attr is nullptr.");
+    return false;
+  }
+
+  for (const auto &attr : attr_map) {
+    AnyValue attr_value = attr.second;
+    auto serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr_value.GetValueTypeId());
+    if (serializer == nullptr) {
+      GELOGE(GRAPH_FAILED, "Get serialized failed,name:[%s] value type:%u.",
+             attr.first.c_str(), attr_value.GetValueType());
+      return false;
+    }
+    proto::AttrDef attr_def;
+    if (serializer->Serialize(attr_value, attr_def) != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "Attr serialized failed, name:[%s].", attr.first.c_str());
+      return false;
+    }
+    (*mutable_attr)[attr.first] = attr_def;
+  }
+  return true;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::DeserializeAllAttrsToAttrHolder(
+    const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &proto_attr_map, AttrHolder *attr_holder) {
+  if (attr_holder == nullptr) {
+    return false;
+  }
+  for (const auto &iter : proto_attr_map) {
+    // skip not set attribute
+    if (iter.second.value_case() == proto::AttrDef::VALUE_NOT_SET ||
+        (iter.second.value_case() == proto::AttrDef::kList &&
+          iter.second.list().val_type() == ListValue::VT_LIST_NONE)) {
+      continue;
+    }
+
+    auto deserializer =
+        AttrSerializerRegistry::GetInstance().GetDeserializer(iter.second.value_case());
+    if (deserializer == nullptr) {
+      GELOGE(GRAPH_FAILED, "Get deserialize failed, attr type:[%d].", static_cast<int32_t>(iter.second.value_case()));
+      return false;
+    }
+    AnyValue attr_value;
+    if (deserializer->Deserialize(iter.second, attr_value) != GRAPH_SUCCESS) {
+      GELOGE(FAILED, "Attr deserialized failed, name:[%s].", iter.first.c_str());
+      return false;
+    }
+
+    if (attr_holder->SetAttr(iter.first, attr_value) != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "Set attr [%s] failed.", iter.first.c_str());
+      return GRAPH_FAILED;
+    }
   }
   return true;
 }

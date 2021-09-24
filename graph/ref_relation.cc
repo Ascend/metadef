@@ -20,11 +20,11 @@
 #include <set>
 #include <unordered_map>
 
-#include "utils/mem_utils.h"
+#include "graph/utils/mem_utils.h"
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
 
 using namespace std;

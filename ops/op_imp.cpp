@@ -18,8 +18,7 @@
 #include <functional>
 #include <algorithm>
 #include <vector>
-#include "debug/ge_log.h"
-#include "debug/ge_util.h"
+#include "graph/debug/ge_log.h"
 
 using namespace std;
 

@@ -15,7 +15,7 @@
  */
 
 #include "graph/aligned_ptr.h"
-#include "utils/mem_utils.h"
+#include "graph/utils/mem_utils.h"
 #include "graph/debug/ge_log.h"
 
 namespace ge {

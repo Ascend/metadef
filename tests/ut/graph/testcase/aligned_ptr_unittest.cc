@@ -15,15 +15,15 @@
  */
 
 #include <gtest/gtest.h>
-#include "utils/mem_utils.h"
+#include "graph/utils/mem_utils.h"
 #include <memory>
 
 #define private public
 #define protected public
-#include "aligned_ptr.h"
+#include "graph/aligned_ptr.h"
 #undef private
 #undef protected
-#include "aligned_ptr.h"
+#include "graph/aligned_ptr.h"
 
 namespace ge
 {

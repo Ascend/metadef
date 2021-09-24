@@ -19,10 +19,10 @@
 #include "graph/ge_tensor.h"
 #include "graph/debug/ge_attr_define.h"
 #include "securec.h"
-#include "utils/attr_utils.h"
-#include "utils/tensor_adapter.h"
-#include "utils/tensor_utils.h"
-#include "utils/type_utils.h"
+#include "graph/utils/attr_utils.h"
+#include "graph/utils/tensor_adapter.h"
+#include "graph/utils/tensor_utils.h"
+#include "graph/utils/type_utils.h"
 
 namespace {
 const int64_t UNKNOWN_DIM_SIZE = -1;

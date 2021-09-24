@@ -46,10 +46,7 @@ target_include_directories(register PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/..
-    ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
@@ -132,10 +129,7 @@ target_include_directories(register_static PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/..
-    ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####
@@ -199,10 +193,7 @@ target_include_directories(op_tiling_o2 PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/..
-    ${METADEF_DIR}/graph
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     #### yellow zone ####

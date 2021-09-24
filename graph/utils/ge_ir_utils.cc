@@ -17,6 +17,7 @@
 #include "graph/utils/ge_ir_utils.h"
 #include <utility>
 #include "framework/common/debug/ge_log.h"
+#include "graph/detail/model_serialize_imp.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/node_impl.h"
 #include "graph/op_desc_impl.h"
@@ -87,14 +88,14 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
   auto value_type = attr_value.GetValueType();
   switch (value_type) {
     case GeAttrValue::VT_FLOAT: {
-      GeAttrValue::FLOAT data_f = 0;
+      float data_f = 0;
       (void)attr_value.GetValue(data_f);
       attr->set_f(data_f);
       attr->set_type(onnx::AttributeProto_AttributeType_FLOAT);
       break;
     }
     case GeAttrValue::VT_LIST_FLOAT: {
-      GeAttrValue::LIST_FLOAT data_fs = {};
+      std::vector<float> data_fs = {};
       (void)attr_value.GetValue(data_fs);
       attr->set_type(onnx::AttributeProto_AttributeType_FLOATS);
       for (auto &v : data_fs) {
@@ -103,14 +104,14 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
       break;
     }
     case GeAttrValue::VT_INT: {
-      GeAttrValue::INT data_i = 0;
+      int64_t data_i = 0;
       (void)attr_value.GetValue(data_i);
       attr->set_type(onnx::AttributeProto_AttributeType_INT);
       attr->set_i(data_i);
       break;
     }
     case GeAttrValue::VT_LIST_INT: {
-      GeAttrValue::LIST_INT data_is = {};
+      std::vector<int64_t> data_is = {};
       (void)attr_value.GetValue(data_is);
       attr->set_type(onnx::AttributeProto_AttributeType_INTS);
       for (auto &v : data_is) {
@@ -119,14 +120,14 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
       break;
     }
     case GeAttrValue::VT_STRING: {
-      GeAttrValue::STR data_s;
+      std::string data_s;
       (void)attr_value.GetValue(data_s);
       attr->set_type(onnx::AttributeProto_AttributeType_STRING);
       attr->set_s(data_s);
       break;
     }
     case GeAttrValue::VT_LIST_STRING: {
-      GeAttrValue::LIST_STR data_ss = {};
+      std::vector<std::string> data_ss = {};
       (void)attr_value.GetValue(data_ss);
       attr->set_type(onnx::AttributeProto_AttributeType_STRINGS);
       for (auto &v : data_ss) {
@@ -313,6 +314,7 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       auto layout_origin = TypeUtils::FormatToSerialString(input_desc->GetOriginFormat());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "input_desc_origin_layout:" + std::to_string(i), &layout_origin);
+      // 所有impl_->tensor_descriptor_.GetProtoMsg()的调用都要变成any map和成员函数的调用
       auto tensor_descriptor = input_desc->impl_->tensor_descriptor_.GetProtoMsg();
       if (tensor_descriptor == nullptr) {
         GELOGW("[Add][InAttr] Tensor descriptor of input %u is nullptr", i);
@@ -354,7 +356,9 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       auto cmps_tab_offset = tensor_descriptor->cmps_tab_offset();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_cmps_tab_offset:" + std::to_string(i), &cmps_tab_offset);
-      const auto &tensor_desc_map = tensor_descriptor->attr();
+      std::map<string, AnyValue> attr_maps = input_desc->GetAllAttrs();
+      auto tensor_desc_map = tensor_descriptor->attr();
+      ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
       std::string suffix = ":" + std::to_string(i);
       AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForInputDesc, suffix);
     }
@@ -407,8 +411,10 @@ void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *node_proto, const OpDe
       auto real_dim_cnt = tensor_descriptor->real_dim_cnt();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "output_desc_real_dim_cnt:" + std::to_string(i), &real_dim_cnt);
-      const auto &tensor_desc_map = tensor_descriptor->attr();
       std::string suffix = ":" + std::to_string(i);
+      std::map<string, AnyValue> attr_maps = output_desc->GetAllAttrs();
+      auto tensor_desc_map = tensor_descriptor->attr();
+      ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
       AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForOutputDesc, suffix);
     }
   }
@@ -555,7 +561,9 @@ void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace_bytes", workspace_bytes);
       const auto &is_input_const = op_def->is_input_const();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "is_input_const", is_input_const);
-      const auto &op_def_attr_map = op_def->attr();
+      auto op_def_attr_map = op_def->attr();
+      std::map<string, AnyValue> attr_maps = op_desc->GetAllAttrs();
+      ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &op_def_attr_map);
       AddAttrProtoForAttrsFromAttrMap(op_def_attr_map, node_proto);
     } else {
       REPORT_INNER_ERROR("E19999", "GetProtoMsg return nullptr, node:%s.", node->GetName().c_str());

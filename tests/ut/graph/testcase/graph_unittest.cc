@@ -19,9 +19,9 @@
 #define private public
 #include "graph/graph.h"
 #include "graph/operator.h"
-#include "compute_graph.h"
-#include "op_desc.h"
-#include "node.h"
+#include "graph/compute_graph.h"
+#include "graph/op_desc.h"
+#include "graph/node.h"
 #include "graph/utils/graph_utils.h"
 #include "inc/external/graph/operator_reg.h"
 #include "inc/external/graph/operator.h"

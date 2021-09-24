@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 #define private public
-#include "ge_tensor.h"
+#include "graph/ge_tensor.h"
 #include "ge_ir.pb.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/utils/tensor_adapter.h"
@@ -84,7 +84,7 @@ TEST_F(TensorUT, SetData1NoShare) {
 
 TEST_F(TensorUT, Construct1_General) {
   GeTensor t1;
-  ASSERT_EQ(t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg(), t1.GetData().impl_->tensor_descriptor_.GetProtoMsg());
+  ASSERT_EQ(t1.impl_->desc_.impl_, t1.GetData().impl_->tensor_descriptor_);
 
   GeTensorDesc td;
   ASSERT_NE(td.impl_->tensor_descriptor_.GetProtoOwner(), nullptr);
@@ -96,15 +96,14 @@ TEST_F(TensorUT, Construct1_General) {
   GeTensor t2(helper.GetProtoOwner(), helper.GetProtoMsg());
   ASSERT_NE(t2.impl_->tensor_def_.GetProtoOwner(), nullptr);
   ASSERT_NE(t2.impl_->tensor_def_.GetProtoMsg(), nullptr);
-  ASSERT_EQ(t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->tensor_def_.GetProtoOwner());
-  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->tensor_def_.GetProtoOwner());
-  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_EQ(reinterpret_cast<const char *>(t2.impl_->tensor_data_.GetData()), t2.impl_->tensor_def_.GetProtoMsg()->data().data());
+  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
+  ASSERT_EQ(reinterpret_cast<const char *>(t2.impl_->tensor_data_.GetData()),
+            t2.impl_->tensor_def_.GetProtoMsg()->data().data());
 }
 TEST_F(TensorUT, Construct2_CopyDesc) {
   GeTensorDesc desc;
   GeTensor t1(desc);
-  ASSERT_NE(t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg(), desc.impl_->tensor_descriptor_.GetProtoMsg());
+  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg(), desc.impl_->tensor_descriptor_.GetProtoMsg());
 }
 TEST_F(TensorUT, Construct3_ExceptionalScenes) {
   GeIrProtoHelper<ge::proto::TensorDef> helper;
@@ -115,15 +114,15 @@ TEST_F(TensorUT, Construct3_ExceptionalScenes) {
 
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoMsg(), helper.GetProtoMsg());
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoOwner(), nullptr);
-  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
+  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_, t1.impl_->desc_.impl_);
 
   ASSERT_EQ(t2.impl_->tensor_def_.GetProtoMsg(), nullptr);
   ASSERT_EQ(t2.impl_->tensor_def_.GetProtoOwner(), helper.GetProtoOwner());
-  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
+  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
 
   ASSERT_EQ(t3.impl_->tensor_def_.GetProtoMsg(), nullptr);
   ASSERT_EQ(t3.impl_->tensor_def_.GetProtoOwner(), nullptr);
-  ASSERT_EQ(t3.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t3.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
+  ASSERT_EQ(t3.impl_->tensor_data_.impl_->tensor_descriptor_, t3.impl_->desc_.impl_);
 }
 TEST_F(TensorUT, CopyConstruct1_NullTensorDef) {
   GeTensor t1;
@@ -138,12 +137,12 @@ TEST_F(TensorUT, CopyConstruct1_NullTensorDef) {
   // The copy construct share tensor_data_, do not share tensor_desc
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoOwner(), nullptr);
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoMsg(), nullptr);
-  ASSERT_NE(t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_NE(t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner());
-  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoOwner(), t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner());
-  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner());
+  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg(),
+            t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg());
+  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner(),
+            t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner());
+  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_, t1.impl_->desc_.impl_);
+  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
   ASSERT_EQ(t1.impl_->tensor_data_.GetData(), t2.impl_->tensor_data_.GetData());
 
   t1.MutableTensorDesc().SetFormat(FORMAT_NCHW);
@@ -168,22 +167,17 @@ TEST_F(TensorUT, CopyConstruct2_WithTensorDef) {
   t1.SetData(vec);
   GeTensor t2(t1);
 
-  // The copy construct share tensor_data_ and tensor_desc
+  // Copy construct should share tensordata only
   ASSERT_NE(t1.impl_->tensor_def_.GetProtoOwner(), nullptr);
   ASSERT_NE(t1.impl_->tensor_def_.GetProtoMsg(), nullptr);
-  ASSERT_EQ(t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_EQ(t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner());
-  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoOwner(), t1.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner());
-  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->__desc_.impl_->tensor_descriptor_.GetProtoOwner());
+  ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_, t1.impl_->desc_.impl_);
+  ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
   ASSERT_EQ(t1.impl_->tensor_data_.GetData(), t2.impl_->tensor_data_.GetData());
 
   t1.MutableTensorDesc().SetFormat(FORMAT_NCHW);
   ASSERT_EQ(t1.GetTensorDesc().GetFormat(), FORMAT_NCHW);
-  ASSERT_EQ(t2.GetTensorDesc().GetFormat(), FORMAT_NCHW);
   t2.MutableTensorDesc().SetFormat(FORMAT_NHWC);
-  ASSERT_EQ(t1.GetTensorDesc().GetFormat(), FORMAT_NHWC);
+  ASSERT_EQ(t1.GetTensorDesc().GetFormat(), FORMAT_NCHW);
   ASSERT_EQ(t2.GetTensorDesc().GetFormat(), FORMAT_NHWC);
 
   ASSERT_EQ(memcmp(t1.GetData().GetData(), vec.data(), vec.size()), 0);
@@ -253,14 +247,14 @@ TEST_F(TensorUT, SetData_SharedWithoutTensorDef) {
 
 TEST_F(TensorUT, SetDataDelete_success) {
   auto deleter = [](uint8_t *ptr) {
-     delete []ptr;
-     ptr = nullptr;
-   };
-   uint8_t* data_ptr = new uint8_t[10];
-   GeTensor ge_tensor;
-   ge_tensor.SetData(data_ptr, 10, deleter);
-   auto length = ge_tensor.GetData().GetSize();
-   ASSERT_EQ(length, 10);
+    delete[] ptr;
+    ptr = nullptr;
+  };
+  uint8_t *data_ptr = new uint8_t[10];
+  GeTensor ge_tensor;
+  ge_tensor.SetData(data_ptr, 10, deleter);
+  auto length = ge_tensor.GetData().GetSize();
+  ASSERT_EQ(length, 10);
 }
 
 TEST_F(TensorUT, TransTensorDescWithoutOriginShape2GeTensorDesc) {
@@ -336,13 +330,13 @@ TEST_F(TensorUT, NormalizeGeTensorWithOriginShape) {
 TEST_F(TensorUT, GeShapeSetDimNum) {
   ge::GeShape shape;
   EXPECT_EQ(shape.GetDimNum(), 0);
-  shape.SetDimNum(2); // Normal dim nums
+  shape.SetDimNum(2);  // Normal dim nums
   EXPECT_EQ(shape.GetDimNum(), 2);
   EXPECT_EQ(shape.GetDim(0), ge::UNKNOWN_DIM);
   EXPECT_EQ(shape.GetDim(1), ge::UNKNOWN_DIM);
-  shape.SetDimNum(0); // Scalar dim nums
+  shape.SetDimNum(0);  // Scalar dim nums
   EXPECT_EQ(shape.GetDimNum(), 0);
-  shape.SetDimNum(20); // Big dim nums
+  shape.SetDimNum(20);  // Big dim nums
   EXPECT_EQ(shape.GetDimNum(), 20);
   for (int i = 0; i < 20; i++) {
     EXPECT_EQ(shape.GetDim(i), ge::UNKNOWN_DIM);
@@ -374,6 +368,117 @@ TEST_F(TensorUT, GeShapeAppendDim) {
   EXPECT_TRUE(shape.IsUnknownDimNum());
   shape.AppendDim(1);
   EXPECT_FALSE(shape.IsUnknownDimNum());
+}
+
+TEST_F(TensorUT, GeTensorDescGetShape) {
+  ge::GeTensorDesc desc(ge::GeShape(std::vector<int64_t>({1, 2})));
+  auto &shape = desc.GetShape();
+  EXPECT_EQ(shape.GetDim(0), 1);
+  EXPECT_EQ(shape.GetDim(1), 2);
+  const_cast<ge::GeShape *>(&shape)->SetDim(0, 10);
+  const_cast<ge::GeShape *>(&shape)->SetDim(1, 20);
+  auto &shape2 = desc.GetShape();
+  EXPECT_EQ(shape2.GetDim(0), 10);
+  EXPECT_EQ(shape2.GetDim(1), 20);
+}
+
+TEST_F(TensorUT, GeTensorSerializeUtils_GeShape) {
+  GeShape shape({1, 2, 3, 4});
+  proto::ShapeDef shape_proto;
+  GeTensorSerializeUtils::GeShapeAsProto(shape, &shape_proto);
+  GeShape shape_from_proto;
+  GeTensorSerializeUtils::AssembleGeShapeFromProto(&shape_proto, shape_from_proto);
+  EXPECT_EQ(shape, shape_from_proto);
+}
+
+TEST_F(TensorUT, GeTensorSerializeUtils_GeTensorDesc) {
+  GeShape shape({1, 2, 3, 4});
+  GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
+  desc.SetOriginDataType(DT_INT32);
+  desc.SetOriginFormat(FORMAT_NHWC1C0);
+  desc.SetOriginShape(GeShape({4, 3, 2, 1}));
+  proto::TensorDescriptor desc_proto;
+  GeTensorSerializeUtils::GeTensorDescAsProto(desc, &desc_proto);
+  GeTensorDesc desc_from_proto;
+  GeTensorSerializeUtils::AssembleGeTensorDescFromProto(&desc_proto, desc_from_proto);
+  bool res = false;
+  EXPECT_TRUE(AttrUtils::GetBool(desc_from_proto, "origin_shape_initialized", res));
+  EXPECT_TRUE(res);
+  EXPECT_EQ(desc, desc_from_proto);
+}
+
+TEST_F(TensorUT, GeTensorSerializeUtils_GeTensor) {
+  GeShape shape({1, 2, 3, 4});
+  GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
+  desc.SetOriginDataType(DT_INT32);
+  desc.SetOriginFormat(FORMAT_NHWC1C0);
+  desc.SetOriginShape(GeShape({4, 3, 2, 1}));
+  GeTensor tensor(desc);
+  proto::TensorDef tensor_proto;
+  GeTensorSerializeUtils::GeTensorAsProto(tensor, &tensor_proto);
+  GeTensor tensor_from_proto;
+  GeTensorSerializeUtils::AssembleGeTensorFromProto(&tensor_proto, tensor_from_proto);
+  EXPECT_EQ(tensor.GetTensorDesc(), desc);
+  EXPECT_EQ(tensor.GetTensorDesc(), tensor_from_proto.GetTensorDesc());
+}
+
+TEST_F(TensorUT, GeShape_ModifyDimNum) {
+  GeShape shape({1, 2, 3, 4});
+  EXPECT_EQ(shape.GetShapeSize(), 24);
+  EXPECT_EQ(shape.GetDimNum(), 4);
+  shape.SetDimNum(2);
+  EXPECT_EQ(shape.GetDimNum(), 2);
+  EXPECT_FALSE(shape.IsUnknownDimNum());
+  shape.SetIsUnknownDimNum();
+  EXPECT_TRUE(shape.IsUnknownDimNum());
+  EXPECT_EQ(shape.GetShapeSize(), -1);
+  shape.SetDimNum(2);
+  EXPECT_EQ(shape.GetDimNum(), 2);
+  EXPECT_FALSE(shape.IsUnknownDimNum());
+  shape.SetDim(0, 2);
+  shape.SetDim(1, 2);
+  EXPECT_EQ(shape.GetShapeSize(), 4);
+  shape.SetDim(0, INT64_MAX);
+  shape.SetDim(1, 2);
+  EXPECT_EQ(shape.GetShapeSize(), -1);
+}
+
+TEST_F(TensorUT, GeTensorDesc_Update) {
+  GeShape shape({1, 2, 3, 4});
+  GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
+  EXPECT_EQ(desc.GetShape(), shape);
+  EXPECT_EQ(desc.GetFormat(), FORMAT_NC1HWC0);
+  EXPECT_EQ(desc.GetDataType(), DT_FLOAT16);
+  GeShape shape2({4, 3, 2, 1});
+  desc.Update(shape2, FORMAT_NHWC, DT_INT32);
+  EXPECT_EQ(desc.GetShape(), shape2);
+  EXPECT_EQ(desc.GetFormat(), FORMAT_NHWC);
+  EXPECT_EQ(desc.GetDataType(), DT_INT32);
+}
+
+TEST_F(TensorUT, AttrUtils_SetGeTensorDesc) {
+  GeShape shape({1, 2, 3, 4});
+  GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
+  GeTensorDesc obj;
+  ge::AttrUtils::SetTensorDesc(obj, "attr_tensor", desc);
+  GeTensorDesc desc_from_attr;
+  ge::AttrUtils::GetTensorDesc(obj, "attr_tensor", desc_from_attr);
+  EXPECT_EQ(desc, desc_from_attr);
+}
+
+TEST_F(TensorUT, AttrUtils_SetListGeTensorDesc) {
+  GeShape shape({1, 2, 3, 4});
+  std::vector<GeTensorDesc> descs;
+  descs.emplace_back(GeTensorDesc(GeShape({1, 2, 3, 4}), FORMAT_NC1HWC0, DT_FLOAT16));
+  descs.emplace_back(GeTensorDesc(GeShape({4, 3, 2, 1}), FORMAT_NCHW, DT_INT32));
+  GeTensorDesc obj;
+  ge::AttrUtils::SetListTensorDesc(obj, "attr_tensors", descs);
+  std::vector<GeTensorDesc> descs_from_attr;
+  ge::AttrUtils::GetListTensorDesc(obj, "attr_tensors", descs_from_attr);
+  EXPECT_EQ(descs.size(), descs_from_attr.size());
+  for (size_t i = 0; i < descs.size(); i++) {
+    EXPECT_EQ(descs[i], descs_from_attr[i]);
+  }
 }
 
 }  // namespace ge

@@ -16,7 +16,7 @@
 
 #include "graph/op_desc.h"
 
-#include "debug/ge_attr_define.h"
+#include "graph/debug/ge_attr_define.h"
 #include "debug/ge_util.h"
 #include "external/graph/operator.h"
 #include "framework/common/debug/ge_log.h"
@@ -331,6 +331,7 @@ bool OpDescImpl::OpDescMembersAreEqual(const OpDescImpl &r_op_desc) const {
 }
 
 bool OpDescImpl::OpDescAttrsAreEqual(const OpDescImpl &r_op_desc) const {
+  // 看起来当前的本判等函数没有考虑属性，补一下UT确认一下
   const auto &op_def = this->op_def_.GetProtoMsg();
   const auto &r_op_def = r_op_desc.op_def_.GetProtoMsg();
   if ((op_def != nullptr) && (r_op_def != nullptr)) {
@@ -987,16 +988,12 @@ int OpDescImpl::GetOutputIndexByName(const string &name) const {
   return static_cast<int>(it_find->second);
 }
 
-ProtoAttrMapHelper OpDescImpl::MutableAttrMap() {
-  if (op_def_.GetProtoMsg() == nullptr) {
-    GELOGE(GRAPH_FAILED, "[Get][ProtoMsg] failed");
-    return GeIrProtoHelper<ProtoAttrMap>();
-  }
-  return ProtoAttrMapHelper(op_def_.GetProtoOwner(), op_def_.GetProtoMsg()->mutable_attr());
+ProtoAttrMap &OpDescImpl::MutableAttrMap() {
+  return attrs_;
 }
 
-ConstProtoAttrMapHelper OpDescImpl::GetAttrMap() const {
-  return ConstProtoAttrMapHelper(op_def_.GetProtoOwner(), &op_def_.GetProtoMsg()->attr());
+ConstProtoAttrMap &OpDescImpl::GetAttrMap() const {
+  return attrs_;
 }
 
 void OpDescImpl::SetId(int64_t id) {
@@ -1889,11 +1886,11 @@ int OpDesc::GetOutputIndexByName(const string &name) const {
   return impl_->GetOutputIndexByName(name);
 }
 
-ProtoAttrMapHelper OpDesc::MutableAttrMap() {
+ProtoAttrMap &OpDesc::MutableAttrMap() {
   return impl_->MutableAttrMap();
 }
 
-ConstProtoAttrMapHelper OpDesc::GetAttrMap() const {
+ConstProtoAttrMap &OpDesc::GetAttrMap() const {
   return impl_->GetAttrMap();
 }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "utils/graph_utils.h"
+#include "graph/utils/graph_utils.h"
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -30,16 +30,16 @@
 #include <atomic>
 #include <mutex>
 
-#include "./ge_context.h"
-#include "debug/ge_util.h"
+#include "graph/ge_context.h"
+#include "graph/debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "proto/ge_ir.pb.h"
-#include "utils/attr_utils.h"
-#include "utils/ge_ir_utils.h"
-#include "utils/node_utils.h"
-#include "utils/file_utils.h"
+#include "graph/utils/attr_utils.h"
+#include "graph/utils/ge_ir_utils.h"
+#include "graph/utils/node_utils.h"
+#include "graph/utils/file_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
-#include "debug/ge_op_types.h"
+#include "graph/debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/op_desc_utils.h"
@@ -2042,12 +2042,8 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
   }
   dst_compute_graph->SetGraphTargetNodesInfo(dst_traget_nodes_info);
 
-  // copy attr from old graph to new graph.
-  std::shared_ptr<proto::GraphDef> graph_proto = ComGraphMakeShared<proto::GraphDef>();
-  if (src_compute_graph->impl_->attrs_.GetProtoMsg() != nullptr) {
-    *graph_proto->mutable_attr() = *src_compute_graph->impl_->attrs_.GetProtoMsg();
-    dst_compute_graph->impl_->attrs_ = ProtoAttrMapHelper(graph_proto, graph_proto->mutable_attr());
-  }
+  // graph属性序列化
+  dst_compute_graph->impl_->attrs_ = src_compute_graph->impl_->attrs_;
 
   // copy other members from old graph to new graph.
   dst_compute_graph->impl_->data_format_ = src_compute_graph->impl_->data_format_;

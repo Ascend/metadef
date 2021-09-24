@@ -27,9 +27,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "./compute_graph.h"
-#include "./external/graph/types.h"
-#include "./ge_error_codes.h"
+#include "graph/compute_graph.h"
+#include "graph/types.h"
+#include "graph/ge_error_codes.h"
 
 namespace ge {
 // ShapeRefiner performs shape inference for compute graphs

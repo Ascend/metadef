@@ -2,6 +2,8 @@ set(GRAPH_SOURCE_LIST
     "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
+    "any_value.cc"
+    "attr_store.cc"
     "attr_value.cc"
     "buffer.cc"
     "aligned_ptr.cc"
@@ -48,7 +50,22 @@ set(GRAPH_SOURCE_LIST
     "utils/transformer_utils.cc"
     "utils/file_utils.cc"
     "resource_context_mgr.cc"
-)
+    "serialization/attr_serializer.cc"
+    "serialization/string_serializer.cc"
+    "serialization/data_type_serializer.cc"
+    "serialization/named_attrs_serializer.cc"
+    "serialization/bool_serializer.cc"
+    "serialization/buffer_serializer.cc"
+    "serialization/float_serializer.cc"
+    "serialization/int_serializer.cc"
+    "serialization/tensor_serializer.cc"
+    "serialization/tensor_desc_serializer.cc"
+    "serialization/graph_serializer.cc"
+    "serialization/list_value_serializer.cc"
+    "serialization/list_list_int_serializer.cc"
+    "serialization/list_list_float_serializer.cc"
+    "serialization/attr_serializer_registry.cc"
+    "small_vector.cc")
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
 ######### libgraph.so #############
@@ -73,13 +90,9 @@ target_include_directories(graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../ops/built-in/op_proto/inc>
@@ -160,13 +173,9 @@ target_include_directories(graph_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../ops/built-in/op_proto/inc>
@@ -270,11 +279,8 @@ target_include_directories(atc_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     ${METADEF_DIR}/../ops/built-in/op_proto/inc
@@ -332,11 +338,8 @@ target_include_directories(fwk_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/graph
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
     #### yellow zone ####
     ${METADEF_DIR}/../inc
     ${METADEF_DIR}/../ops/built-in/op_proto/inc
@@ -392,13 +395,9 @@ target_include_directories(graph PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_BINARY_DIR}
         ${CMAKE_BINARY_DIR}/proto/metadef_protos
-        ${CMAKE_BINARY_DIR}/proto/metadef_protos/proto
         ${METADEF_DIR}
-        ${METADEF_DIR}/graph
         ${METADEF_DIR}/inc
-        ${METADEF_DIR}/inc/graph
         ${METADEF_DIR}/inc/external
-        ${METADEF_DIR}/inc/external/graph
         ${METADEF_DIR}/../third_party/fwkacllib/inc/ops
         ${METADEF_DIR}/../third_party/fwkacllib/inc
         ${METADEF_DIR}/../inc

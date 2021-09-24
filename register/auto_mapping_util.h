@@ -35,7 +35,7 @@ public:
                           domi::tensorflow::AttrValue &attr_value);
   static void ConvertShape(const domi::tensorflow::TensorShapeProto &shape, vector<int64_t>& shape_dims);
   static graphStatus ConvertTensor(const domi::tensorflow::TensorProto &tensor, ge::GeTensorPtr &weight);
-  static void ConvertFunc(const domi::tensorflow::NameAttrList& tf_func, ge::GeAttrValue::NAMED_ATTRS& ge_func);
+  static void ConvertFunc(const domi::tensorflow::NameAttrList& tf_func, ge::NamedAttrs& ge_func);
 
   static void ConvertDataTypeList(const domi::tensorflow::AttrValue_ListValue &list,
                                   std::vector<ge::DataType> &vec);
@@ -44,7 +44,7 @@ public:
   static void ConvertTensorList(const domi::tensorflow::AttrValue_ListValue &list,
                                 std::vector<ge::GeTensorPtr> &vec);
   static void ConvertFuncList(const domi::tensorflow::AttrValue_ListValue &list,
-                              std::vector<ge::GeAttrValue::NAMED_ATTRS> &vec);
+                              std::vector<ge::NamedAttrs> &vec);
 
   // Get the attribute list list of tensorflow and save it to obj according to the key
   template<typename T>
@@ -87,7 +87,7 @@ public:
       ConvertTensorList(list, vec);
       (void)ge::AttrUtils::SetListTensor(obj, key, vec);
     } else if (list.func_size() > 0) {
-      vector<ge::GeAttrValue::NAMED_ATTRS> vec;
+      vector<ge::NamedAttrs> vec;
       ConvertFuncList(list, vec);
       (void)ge::AttrUtils::SetListNamedAttrs(obj, key, vec);
     } else {
@@ -136,7 +136,7 @@ public:
         break;
       }
       case domi::tensorflow::AttrValue::kFunc: {
-        ge::GeAttrValue::NAMED_ATTRS func;
+        ge::NamedAttrs func;
         ConvertFunc(value.func(), func);
         (void)ge::AttrUtils::SetNamedAttrs(obj, key, func);
         break;
@@ -174,7 +174,7 @@ static void CopyAttrValue(const std::string &key, const ge::GeAttrValue &value, 
       CASE_ATTR_VALUE_TYPE(FLOAT, float, Float);
       CASE_ATTR_VALUE_TYPE(BOOL, bool, Bool);
       CASE_ATTR_VALUE_TYPE(TENSOR, ConstGeTensorPtr, Tensor);
-      CASE_ATTR_VALUE_TYPE(NAMED_ATTRS, ge::GeAttrValue::NAMED_ATTRS, NamedAttrs);
+      CASE_ATTR_VALUE_TYPE(NAMED_ATTRS, ge::NamedAttrs, NamedAttrs);
       CASE_ATTR_VALUE_TYPE(DATA_TYPE, ge::DataType, DataType);
 #undef CASE_ATTR_VALUE_TYPE
       default:
@@ -194,7 +194,7 @@ static void CopyAttrValue(const std::string &key, const ge::GeAttrValue &value, 
       CASE_ATTR_VALUE_TYPE_LIST(FLOAT, float, Float);
       CASE_ATTR_VALUE_TYPE_LIST(BOOL, bool, Bool);
       CASE_ATTR_VALUE_TYPE_LIST(TENSOR, ConstGeTensorPtr, Tensor);
-      CASE_ATTR_VALUE_TYPE_LIST(NAMED_ATTRS, ge::GeAttrValue::NAMED_ATTRS, NamedAttrs);
+      CASE_ATTR_VALUE_TYPE_LIST(NAMED_ATTRS, ge::NamedAttrs, NamedAttrs);
       CASE_ATTR_VALUE_TYPE_LIST(DATA_TYPE, ge::DataType, DataType);
       CASE_ATTR_VALUE_TYPE_LIST(LIST_INT, vector<int64_t>, ListInt);
 #undef CASE_ATTR_VALUE_TYPE_LIST
