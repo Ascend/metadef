@@ -71,11 +71,7 @@ public:
 
   uint64_t GetTilingKey() const { return tiling_key_; }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-public:
-#else
 private:
-#endif
   uint32_t block_dim_;
   bool clear_atomic_;
   uint64_t tiling_key_;
@@ -87,22 +83,6 @@ OpRunInfo::OpRunInfo() {
   impl_ = make_shared<OpRunInfoImpl>();
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-OpRunInfo::OpRunInfo(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key) {
-  impl_ = make_shared<OpRunInfoImpl>(block_dim, clear_atomic, tiling_key);
-}
-
-OpRunInfo::OpRunInfo(const OpRunInfo &runinfo) {
-  impl_ = make_shared<OpRunInfoImpl>();
-  impl_->block_dim_ = runinfo.impl_->block_dim_;
-  impl_->clear_atomic_ = runinfo.impl_->clear_atomic_;
-  impl_->tiling_key_ = runinfo.impl_->tiling_key_;
-  impl_->workspaces_ = runinfo.impl_->workspaces_;
-  std::string temp_str = (runinfo.impl_->tiling_data_).str();
-  impl_->tiling_data_.clear();
-  impl_->tiling_data_ << temp_str;
-}
-#else
 OpRunInfo::OpRunInfo(const uint32_t &block_dim, const bool &clear_atomic, const uint64_t &tiling_key) {
   impl_ = make_shared<OpRunInfoImpl>(block_dim, clear_atomic, tiling_key);
 }
@@ -114,27 +94,11 @@ OpRunInfo::OpRunInfo(const OpRunInfo &runinfo) {
   impl_->SetWorkspaces(workspaces);
   impl_->SetAllTilingData(runinfo.GetAllTilingData());
 }
-#endif
 
 OpRunInfo::OpRunInfo(OpRunInfo &&runinfo) {
   impl_ = std::move(runinfo.impl_);
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-OpRunInfo &OpRunInfo::operator=(const OpRunInfo &runinfo) {
-  if (&runinfo != this) {
-    impl_ = make_shared<OpRunInfoImpl>();
-    impl_->block_dim_ = runinfo.impl_->block_dim_;
-    impl_->clear_atomic_ = runinfo.impl_->clear_atomic_;
-    impl_->tiling_key_ = runinfo.impl_->tiling_key_;
-    impl_->workspaces_ = runinfo.impl_->workspaces_;
-    std::string temp_str = (runinfo.impl_->tiling_data_).str();
-    impl_->tiling_data_.clear();
-    impl_->tiling_data_ << temp_str;
-  }
-  return *this;
-}
-#else
 OpRunInfo &OpRunInfo::operator=(const OpRunInfo &runinfo) {
   if (&runinfo != this) {
     impl_ = make_shared<OpRunInfoImpl>(runinfo.GetBlockDim(), runinfo.GetClearAtomic(), runinfo.GetTilingKey());
@@ -145,7 +109,6 @@ OpRunInfo &OpRunInfo::operator=(const OpRunInfo &runinfo) {
   }
   return *this;
 }
-#endif
 
 OpRunInfo &OpRunInfo::operator=(OpRunInfo &&runinfo) {
   if (&runinfo != this) {
@@ -154,32 +117,6 @@ OpRunInfo &OpRunInfo::operator=(OpRunInfo &&runinfo) {
   return *this;
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void OpRunInfo::SetBlockDim(uint32_t block_dim) {
-  impl_->SetBlockDim(block_dim);
-}
-
-uint32_t OpRunInfo::GetBlockDim() {
-  return impl_->GetBlockDim();
-}
-
-void OpRunInfo::AddWorkspace(int64_t workspace) {
-  impl_->AddWorkspace(workspace);
-}
-
-size_t OpRunInfo::GetWorkspaceNum() {
-  return impl_->GetWorkspaceNum();
-}
-
-ge::graphStatus OpRunInfo::GetWorkspace(size_t idx, int64_t &workspace) {
-  return impl_->GetWorkspace(idx, workspace);
-}
-
-ge::graphStatus OpRunInfo::GetAllWorkspaces(std::vector<int64_t> &workspaces) {
-  impl_->GetAllWorkspaces(workspaces);
-  return ge::GRAPH_SUCCESS;
-}
-#else
 void OpRunInfo::SetBlockDim(const uint32_t &block_dim) {
   impl_->SetBlockDim(block_dim);
 }
@@ -203,7 +140,6 @@ ge::graphStatus OpRunInfo::GetWorkspace(const size_t &idx, int64_t &workspace) c
 void OpRunInfo::GetAllWorkspaces(std::vector<int64_t> &workspaces) const {
   impl_->GetAllWorkspaces(workspaces);
 }
-#endif
 
 void OpRunInfo::SetWorkspaces(const std::vector<int64_t> &workspaces) {
   impl_->SetWorkspaces(workspaces);
@@ -233,15 +169,6 @@ bool OpRunInfo::GetClearAtomic() const {
   return impl_->GetClearAtomic();
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void OpRunInfo::SetTilingKey(uint32_t new_tiling_key) {
-  impl_->SetTilingKey(new_tiling_key);
-}
-
-uint32_t OpRunInfo::GetTilingKey() const {
-  return impl_->GetTilingKey();
-}
-#else
 void OpRunInfo::SetTilingKey(const uint64_t &new_tiling_key) {
   impl_->SetTilingKey(new_tiling_key);
 }
@@ -249,7 +176,6 @@ void OpRunInfo::SetTilingKey(const uint64_t &new_tiling_key) {
 uint64_t OpRunInfo::GetTilingKey() const {
   return impl_->GetTilingKey();
 }
-#endif
 
 class OpCompileInfoImpl {
 public:

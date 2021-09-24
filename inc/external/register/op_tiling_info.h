@@ -93,11 +93,7 @@ public:
   OpRunInfo();
   ~OpRunInfo() = default;
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  OpRunInfo(uint32_t block_dim, bool clear_atomic, uint32_t tiling_key);
-#else
   OpRunInfo(const uint32_t &block_dim, const bool &clear_atomic, const uint64_t &tiling_key);
-#endif
   // Copy
   OpRunInfo(const OpRunInfo &runinfo);
   // Move
@@ -107,15 +103,6 @@ public:
   // Move
   OpRunInfo &operator=(OpRunInfo &&runinfo);
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void SetBlockDim(uint32_t block_dim);
-  uint32_t GetBlockDim();
-
-  void AddWorkspace(int64_t workspace);
-  size_t GetWorkspaceNum();
-  ge::graphStatus GetWorkspace(size_t idx, int64_t &workspace);
-  ge::graphStatus GetAllWorkspaces(std::vector<int64_t> &workspaces);
-#else
   void SetBlockDim(const uint32_t &block_dim);
   uint32_t GetBlockDim() const;
 
@@ -123,7 +110,6 @@ public:
   size_t GetWorkspaceNum() const;
   ge::graphStatus GetWorkspace(const size_t &idx, int64_t &workspace) const;
   void GetAllWorkspaces(std::vector<int64_t> &workspaces) const;
-#endif
   void SetWorkspaces(const std::vector<int64_t> &workspaces);
 
   template<class T>
@@ -137,19 +123,10 @@ public:
   void SetClearAtomic(bool clear_atomic);
   bool GetClearAtomic() const;
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void SetTilingKey(uint32_t new_tiling_key);
-  uint32_t GetTilingKey() const;
-#else
   void SetTilingKey(const uint64_t &new_tiling_key);
   uint64_t GetTilingKey() const;
-#endif
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-public:
-#else
 private:
-#endif
   std::shared_ptr<OpRunInfoImpl> impl_;
 };
 

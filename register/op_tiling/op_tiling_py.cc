@@ -318,11 +318,7 @@ bool DumpRunInfo(const OpRunInfo &run_info, char *run_info_json, const size_t &r
   return memcpy_s(run_info_json, str.size() + 1, str.c_str(), str.size() + 1) == EOK;
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool DumpRunInfoV2(OpRunInfoV2 &run_info, char *run_info_json, const size_t &run_info_len) {
-#else
 bool DumpRunInfoV2(const OpRunInfoV2 &run_info, char *run_info_json, const size_t &run_info_len) {
-#endif
   if (run_info_json == nullptr) {
     REPORT_CALL_ERROR("E19999", "run_info buffer is null");
     return false;
