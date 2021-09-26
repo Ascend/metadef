@@ -499,7 +499,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::InsertNod
   GE_CHECK_NOTNULL(insert_node);
 
   NodePtr src_node = src->GetOwnerNode();
-  GE_CHECK_NOTNULL(src_node);
   if (src_node->GetOwnerComputeGraph() != insert_node->GetOwnerComputeGraph()) {
     REPORT_INNER_ERROR("E19999", "src:%s and insert_node:%s not exist in the same graph.",
                        src_node->GetName().c_str(), insert_node->GetName().c_str());
@@ -754,11 +753,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   }
 
   // file name
-  static std::atomic<int64_t> atomic_file_index(0);
+  static std::atomic_long atomic_file_index(0);
   auto file_index = atomic_file_index.fetch_add(1);
   GELOGD("Start to dump om txt: %ld", file_index);
 
-  thread_local int64_t max_dump_file_num = 0;
+  thread_local long max_dump_file_num = 0;
   if (max_dump_file_num == 0) {
     string opt = "0";
     (void)GetContext().GetOption(OPTION_GE_MAX_DUMP_FILE_NUM, opt);
@@ -822,11 +821,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
                                                                            const std::string &path,
                                                                            const std::string &suffix) {
   // file name
-  static std::atomic<int64_t> atomic_file_index(0);
+  static std::atomic_long atomic_file_index(0);
   auto file_index = atomic_file_index.fetch_add(1);
   GELOGD("Start to dump om txt: %ld", file_index);
 
-  thread_local int64_t max_dump_file_num = 0;
+  thread_local long max_dump_file_num = 0;
   if (max_dump_file_num == 0) {
     string opt = "0";
     (void)GetContext().GetOption(OPTION_GE_MAX_DUMP_FILE_NUM, opt);
@@ -970,8 +969,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     return;
   }
   if (fseek(file, 0L, SEEK_END) == 0) {
-    int64_t fileSize = ftell(file);
-    thread_local int64_t max_dump_file_size = 0;
+    long fileSize = ftell(file);
+    thread_local long max_dump_file_size = 0;
     if (max_dump_file_size == 0) {
       string opt = "0";
       // Can not check return value
@@ -1047,11 +1046,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   }
 
   // 2.Set file name
-  static std::atomic<int64_t> atomic_file_index(0);
+  static std::atomic_long atomic_file_index(0);
   auto file_index = atomic_file_index.fetch_add(1);
   GELOGD("Start to dump ge onnx file: %ld", file_index);
 
-  thread_local int64_t max_dump_file_num = 0;
+  thread_local long max_dump_file_num = 0;
   if (max_dump_file_num == 0) {
     string opt = "0";
     (void)GetContext().GetOption(OPTION_GE_MAX_DUMP_FILE_NUM, opt);
@@ -1122,11 +1121,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
   }
 
   // 2.Set file name
-  static std::atomic<int64_t> atomic_file_index(0);
+  static std::atomic_long atomic_file_index(0);
   auto file_index = atomic_file_index.fetch_add(1);
   GELOGD("Start to dump ge onnx file: %ld", file_index);
 
-  thread_local int64_t max_dump_file_num = 0;
+  thread_local long max_dump_file_num = 0;
   if (max_dump_file_num == 0) {
     string opt = "0";
     (void)GetContext().GetOption(OPTION_GE_MAX_DUMP_FILE_NUM, opt);
@@ -1867,8 +1866,6 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
                                           std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                                           std::unordered_map<std::string, NodePtr> &all_new_nodes,
                                           int32_t depth) {
-  GE_CHECK_NOTNULL(src_compute_graph);
-  GE_CHECK_NOTNULL(dst_compute_graph);
   auto dst_root_compute_graph = FindRootGraph(dst_compute_graph);
   GE_CHECK_NOTNULL(dst_root_compute_graph);
   auto src_root_compute_graph = FindRootGraph(src_compute_graph);
