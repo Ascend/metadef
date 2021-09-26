@@ -141,8 +141,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
       auto size = static_cast<uint32_t>(op_desc->GetAllInputsSize());
       for (uint32_t i = 0; i < size; i++) {
         auto tensor_desc = op_desc->GetInputDescPtrDfault(i);
-        if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr &&
-            tensor_desc->impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
+        if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
           GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_input_desc());
         }
       }
@@ -152,8 +151,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
       auto size = static_cast<uint32_t>(op_desc->GetOutputsSize());
       for (uint32_t i = 0; i < size; i++) {
         auto tensor_desc = op_desc->GetOutputDescPtr(i);
-        if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr
-            && tensor_desc->impl_->tensor_descriptor_.GetProtoMsg() != nullptr) {
+        if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
           GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_output_desc());
         }
       }

@@ -643,6 +643,15 @@ DataType GeTensorDescImpl::GetDataType() const {
   return dtype_;
 }
 
+std::string GeTensorDescImpl::ExtMeta::GetDeviceTypeStr() {
+  auto iter = kDeviceToStrMap.find(device_type);
+  if (iter != kDeviceToStrMap.end()) {
+    return iter->second;
+  }
+  const static std::string kDefaultTypeString{"NPU"};
+  return kDefaultTypeString;
+}
+
 GeTensorDesc::GeTensorDesc()
     : impl_(ComGraphMakeShared<GeTensorDescImpl>()) {}
 

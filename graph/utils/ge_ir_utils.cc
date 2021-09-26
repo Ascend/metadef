@@ -316,45 +316,42 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "input_desc_origin_layout:" + std::to_string(i), &layout_origin);
       // 所有impl_->tensor_descriptor_.GetProtoMsg()的调用都要变成any map和成员函数的调用
-      auto tensor_descriptor = input_desc->impl_->tensor_descriptor_.GetProtoMsg();
-      if (tensor_descriptor == nullptr) {
-        GELOGW("[Add][InAttr] Tensor descriptor of input %u is nullptr", i);
-        continue;
-      }
-      auto size = tensor_descriptor->size();
+      auto &tensor_descriptor = input_desc->impl_->ext_meta_;
+
+      auto size = tensor_descriptor.GetSize();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_size:" + std::to_string(i), &size);
-      auto weight_size = tensor_descriptor->weight_size();
+      auto weight_size = tensor_descriptor.GetWeightSize();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_weight_size:" + std::to_string(i), &weight_size);
-      auto reuse_input = tensor_descriptor->reuse_input();
+      auto reuse_input = tensor_descriptor.GetReuseInput();
       auto reuse_input_int = static_cast<int64_t>(reuse_input);
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_reuse_input:" + std::to_string(i), &reuse_input_int);
-      auto output_tensor = tensor_descriptor->output_tensor();
+      auto output_tensor = tensor_descriptor.GetOutputTensor();
       auto output_tensor_int = static_cast<int64_t>(output_tensor);
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_output_tensor:" + std::to_string(i), &output_tensor_int);
-      auto device_type = tensor_descriptor->device_type();
+      auto device_type = tensor_descriptor.GetDeviceTypeStr();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "input_desc_device_type:" + std::to_string(i), &device_type);
-      auto input_tensor = tensor_descriptor->input_tensor();
+      auto input_tensor = tensor_descriptor.GetInputTensor();
       auto input_tensor_int = static_cast<int64_t>(input_tensor);
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_input_tensor:" + std::to_string(i), &input_tensor_int);
-      auto real_dim_cnt = tensor_descriptor->real_dim_cnt();
+      auto real_dim_cnt = tensor_descriptor.GetRealDimCnt();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_real_dim_cnt:" + std::to_string(i), &real_dim_cnt);
-      auto data_offset = tensor_descriptor->data_offset();
+      auto data_offset = tensor_descriptor.GetDataOffset();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_data_offset:" + std::to_string(i), &data_offset);
-      auto cmps_size = tensor_descriptor->cmps_size();
+      auto cmps_size = tensor_descriptor.GetCmpsSize();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "input_desc_cmps_size:" + std::to_string(i),
                    &cmps_size);
-      auto cmps_tab = tensor_descriptor->cmps_tab();
+      auto cmps_tab = tensor_descriptor.GetCmpsTab();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "input_desc_cmps_tab:" + std::to_string(i), &cmps_tab);
-      auto cmps_tab_offset = tensor_descriptor->cmps_tab_offset();
+      auto cmps_tab_offset = tensor_descriptor.GetCmpsTabOffset();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_cmps_tab_offset:" + std::to_string(i), &cmps_tab_offset);
       std::map<std::string, AnyValue> attr_maps = input_desc->GetAllAttrs();
@@ -395,21 +392,17 @@ void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *node_proto, const OpDe
       auto layout_origin = TypeUtils::FormatToSerialString(output_desc->GetOriginFormat());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "output_desc_origin_layout:" + std::to_string(i), &layout_origin);
-      auto tensor_descriptor = output_desc->impl_->tensor_descriptor_.GetProtoMsg();
-      if (tensor_descriptor == nullptr) {
-        GELOGW("[Add][OutAttr] Tensor descriptor of output %u is nullptr", i);
-        continue;
-      }
-      auto size = tensor_descriptor->size();
+      auto &tensor_descriptor = output_desc->impl_->ext_meta_;
+      auto size = tensor_descriptor.GetSize();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "output_desc_size:" + std::to_string(i),
                    &size);
-      auto weight_size = tensor_descriptor->weight_size();
+      auto weight_size = tensor_descriptor.GetWeightSize();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "output_desc_weight_size:" + std::to_string(i), &weight_size);
-      auto device_type = tensor_descriptor->device_type();
+      auto device_type = tensor_descriptor.GetDeviceTypeStr();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "output_desc_device_type:" + std::to_string(i), &device_type);
-      auto real_dim_cnt = tensor_descriptor->real_dim_cnt();
+      auto real_dim_cnt = tensor_descriptor.GetRealDimCnt();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "output_desc_real_dim_cnt:" + std::to_string(i), &real_dim_cnt);
       std::string suffix = ":" + std::to_string(i);
@@ -1002,14 +995,12 @@ void OnnxUtils::DecodeNodeAttributeForOpInDesc(const onnx::AttributeProto &attr_
     tensor_desc->SetOriginFormat(data_format);
   } else if (attr_name_for_input_desc == "input_desc_size") {
     int64_t input_size = 0;
-    auto tensor_descriptor = tensor_desc->impl_->tensor_descriptor_.GetProtoMsg();
     DecodeAttribute(attr_proto, input_size);
-    tensor_descriptor->set_size(input_size);
+    tensor_desc->impl_->ext_meta_.SetSize(input_size);
   } else if (attr_name_for_input_desc == "input_desc_data_offset") {
-    auto tensor_descriptor = tensor_desc->impl_->tensor_descriptor_.GetProtoMsg();
     int64_t offset = 0;
     DecodeAttribute(attr_proto, offset);
-    tensor_descriptor->set_data_offset(offset);
+    tensor_desc->impl_->ext_meta_.SetDataOffset(offset);
   } else {
     return;
   }
@@ -1047,14 +1038,12 @@ void OnnxUtils::DecodeNodeAttributeForOpOutDesc(const onnx::AttributeProto &attr
     tensor_desc->SetOriginFormat(data_format);
   } else if (attr_name_for_output_desc == "output_desc_size") {
     int64_t output_size = 0;
-    auto tensor_descriptor = tensor_desc->impl_->tensor_descriptor_.GetProtoMsg();
     DecodeAttribute(attr_proto, output_size);
-    tensor_descriptor->set_size(output_size);
+    tensor_desc->impl_->ext_meta_.SetSize(output_size);
   } else if (attr_name_for_output_desc == "output_desc_data_offset") {
-    auto tensor_descriptor = tensor_desc->impl_->tensor_descriptor_.GetProtoMsg();
     int64_t offset = 0;
     DecodeAttribute(attr_proto, offset);
-    tensor_descriptor->set_data_offset(offset);
+    tensor_desc->impl_->ext_meta_.SetDataOffset(offset);
   } else {
     return;
   }
