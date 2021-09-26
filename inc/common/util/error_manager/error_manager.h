@@ -26,10 +26,10 @@
 
 namespace error_message {
 #ifdef __GNUC__
-int32_t FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
+int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
 #define TRIM_PATH(x) (((x).find_last_of('/') != std::string::npos) ? (x).substr((x).find_last_of('/') + 1u) : (x))
 #else
-int32_t FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
+int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
 #define TRIM_PATH(x) (((x).find_last_of('\\') != std::string::npos) ? (x).substr((x).find_last_of('\\') + 1u) : (x))
 #endif
 }
@@ -113,16 +113,16 @@ class ErrorManager {
   /// @brief init
   /// @return int 0(success) -1(fail)
   ///
-  int32_t Init();
+  int Init();
 
   ///
   /// @brief init
   /// @param [in] path: current so path
   /// @return int 0(success) -1(fail)
   ///
-  int32_t Init(std::string path);
+  int Init(std::string path);
 
-  int32_t ReportInterErrMessage(std::string error_code, const std::string &error_msg);
+  int ReportInterErrMessage(std::string error_code, const std::string &error_msg);
 
   ///
   /// @brief Report error message
@@ -130,21 +130,21 @@ class ErrorManager {
   /// @param [in] args_map: parameter map
   /// @return int 0(success) -1(fail)
   ///
-  int32_t ReportErrMessage(std::string error_code, const std::map<std::string, std::string> &args_map);
+  int ReportErrMessage(std::string error_code, const std::map<std::string, std::string> &args_map);
 
   ///
   /// @brief output error message
   /// @param [in] handle: print handle
   /// @return int 0(success) -1(fail)
   ///
-  int32_t OutputErrMessage(int32_t handle);
+  int OutputErrMessage(int handle);
 
   ///
   /// @brief output  message
   /// @param [in] handle: print handle
   /// @return int 0(success) -1(fail)
   ///
-  int32_t OutputMessage(int32_t handle);
+  int OutputMessage(int handle);
 
   std::string GetErrorMessage();
 
@@ -164,7 +164,7 @@ class ErrorManager {
   /// @param [in] msg: failed message map, key is error code, value is op_name
   /// @return int 0(success) -1(fail)
   ///
-  int32_t ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
+  int ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
                                    const std::map<std::string, std::string> &msg);
 
   ///
@@ -173,7 +173,7 @@ class ErrorManager {
   /// @param [out] msg_map: failed message map, key is error code, value is op_name list
   /// @return int 0(success) -1(fail)
   ///
-  int32_t GetMstuneCompileFailedMsg(const std::string &graph_name,
+  int GetMstuneCompileFailedMsg(const std::string &graph_name,
                                 std::map<std::string,
                                 std::vector<std::string>> &msg_map);
 
@@ -217,9 +217,9 @@ class ErrorManager {
   ErrorManager &operator=(const ErrorManager &) = delete;
   ErrorManager &operator=(ErrorManager &&) = delete;
 
-  int32_t ParseJsonFile(std::string path);
+  int ParseJsonFile(std::string path);
 
-  int32_t ReadJsonFile(const std::string &file_path, void *handle);
+  int ReadJsonFile(const std::string &file_path, void *handle);
 
   void ClassifyCompileFailedMsg(const std::map<std::string, std::string> &msg,
                                 std::map<std::string,
