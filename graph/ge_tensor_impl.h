@@ -100,11 +100,11 @@ class GeTensorDescImpl {
     }
 
     // for weight_size
-    int64_t GetWeightSize() const {
+    uint32_t GetWeightSize() const {
       return weight_size;
     }
 
-    void SetWeightSize(int64_t v) {
+    void SetWeightSize(uint32_t v) {
       weight_size = v;
     }
 
@@ -118,11 +118,11 @@ class GeTensorDescImpl {
     }
 
     // for real_dim_cnt
-    int64_t GetRealDimCnt() const {
+    uint32_t GetRealDimCnt() const {
       return real_dim_cnt;
     }
 
-    void SetRealDimCnt(int64_t v) {
+    void SetRealDimCnt(uint32_t v) {
       real_dim_cnt = v;
     }
 
@@ -145,11 +145,11 @@ class GeTensorDescImpl {
     }
 
     // for reuse_input_index
-    int64_t GetReuseInputIndex() const {
+    uint32_t GetReuseInputIndex() const {
       return reuse_input_index;
     }
 
-    void SetReuseInputIndex(int64_t v) {
+    void SetReuseInputIndex(uint32_t v) {
       reuse_input_index = v;
     }
 
@@ -190,22 +190,22 @@ class GeTensorDescImpl {
     }
 
    private:
-    std::string name;
-    DeviceType device_type{NPU};
-
     int64_t size{0};
-    int64_t weight_size{0};
     int64_t data_offset{0};
-    int64_t real_dim_cnt{0};
+    int64_t cmps_tab_offset{0};
+    int64_t cmps_size{0};
 
+    uint32_t weight_size{0U};
+    uint32_t real_dim_cnt{0U};
+    uint32_t reuse_input_index{0U};
+
+    DeviceType device_type{NPU};
     bool input_tensor{false};
     bool reuse_input{false};
-    int64_t reuse_input_index{0};
     bool output_tensor{false};
 
-    int64_t cmps_size{0};
     std::string cmps_tab;
-    int64_t cmps_tab_offset{0};
+    std::string name;
   };
 
   mutable GeShape shape_;

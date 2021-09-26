@@ -1424,25 +1424,24 @@ void GeTensor::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetSize(const GeTensorDesc &tensor_desc,
                                                                                 int64_t &size) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    size = tensor_desc.impl_->ext_meta_.GetSize();
+    return GRAPH_SUCCESS;
   }
-  size = tensor_desc.impl_->ext_meta_.GetSize();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(GeTensorDesc &tensor_desc, int64_t size) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetSize(size);
   }
-  tensor_desc.impl_->ext_meta_.SetSize(size);
 }
 
 uint32_t TensorUtils::GetWeightSize(const GeTensorDesc &tensor_desc) {
-  if (tensor_desc.impl_ == nullptr) {
-    return 0;
+  if (tensor_desc.impl_ != nullptr) {
+    return tensor_desc.impl_->ext_meta_.GetWeightSize();
   }
-  return tensor_desc.impl_->ext_meta_.GetWeightSize();
+  return 0;
 }
 
 uint32_t TensorUtils::GetWeightSize(const GeTensor &tensor) { return GetWeightSize(tensor.GetTensorDesc()); }
@@ -1483,126 +1482,118 @@ uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *base) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetWeightSize(GeTensorDesc &tensor_desc,
                                                                                uint32_t size) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetWeightSize(size);
   }
-  tensor_desc.impl_->ext_meta_.SetWeightSize(size);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetReuseInput(const GeTensorDesc &tensor_desc,
                                                                                       bool &flag) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    flag = tensor_desc.impl_->ext_meta_.GetReuseInput();
+    return GRAPH_SUCCESS;
   }
-  flag = tensor_desc.impl_->ext_meta_.GetReuseInput();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetReuseInput(GeTensorDesc &tensor_desc, bool flag) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetReuseInput(flag);
   }
-  tensor_desc.impl_->ext_meta_.SetReuseInput(flag);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetOutputTensor(const GeTensorDesc &tensor_desc,
                                                                                         bool &flag) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    flag = tensor_desc.impl_->ext_meta_.GetOutputTensor();
+    return GRAPH_SUCCESS;
   }
-  flag = tensor_desc.impl_->ext_meta_.GetOutputTensor();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetOutputTensor(GeTensorDesc &tensor_desc, bool flag) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetOutputTensor(flag);
   }
-  tensor_desc.impl_->ext_meta_.SetOutputTensor(flag);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDeviceType(const GeTensorDesc &tensor_desc,
                                                                                       DeviceType &type) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    type = tensor_desc.impl_->ext_meta_.GetDeviceType();
+    return GRAPH_SUCCESS;
   }
-  type = tensor_desc.impl_->ext_meta_.GetDeviceType();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetDeviceType(GeTensorDesc &tensor_desc,
                                                                                DeviceType type) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetDeviceType(type);
   }
-  tensor_desc.impl_->ext_meta_.SetDeviceType(type);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetInputTensor(const GeTensorDesc &tensor_desc,
                                                                                        bool &flag) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    flag = tensor_desc.impl_->ext_meta_.GetInputTensor();
+    return GRAPH_SUCCESS;
   }
-  flag = tensor_desc.impl_->ext_meta_.GetInputTensor();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetInputTensor(GeTensorDesc &tensor_desc, bool flag) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetInputTensor(flag);
   }
-  tensor_desc.impl_->ext_meta_.SetInputTensor(flag);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRealDimCnt(const GeTensorDesc &tensor_desc,
                                                                                       uint32_t &cnt) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    cnt = tensor_desc.impl_->ext_meta_.GetRealDimCnt();
+    return GRAPH_SUCCESS;
   }
-  cnt = tensor_desc.impl_->ext_meta_.GetRealDimCnt();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetRealDimCnt(GeTensorDesc &tensor_desc,
                                                                                uint32_t cnt) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetRealDimCnt(cnt);
   }
-  tensor_desc.impl_->ext_meta_.SetRealDimCnt(cnt);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::GetReuseInputIndex(const GeTensorDesc &tensor_desc, uint32_t &idx) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    idx = tensor_desc.impl_->ext_meta_.GetReuseInputIndex();
+    return GRAPH_SUCCESS;
   }
-  idx = tensor_desc.impl_->ext_meta_.GetReuseInputIndex();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetReuseInputIndex(GeTensorDesc &tensor_desc,
                                                                                     uint32_t idx) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetReuseInputIndex(idx);
   }
-  tensor_desc.impl_->ext_meta_.SetReuseInputIndex(idx);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDataOffset(const GeTensorDesc &tensor_desc,
                                                                                       int64_t &offset) {
-  if (tensor_desc.impl_ == nullptr) {
-    return GRAPH_FAILED;
+  if (tensor_desc.impl_ != nullptr) {
+    offset = tensor_desc.impl_->ext_meta_.GetDataOffset();
+    return GRAPH_SUCCESS;
   }
-  offset = tensor_desc.impl_->ext_meta_.GetDataOffset();
-  return GRAPH_SUCCESS;
+  return GRAPH_FAILED;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetDataOffset(GeTensorDesc &tensor_desc,
                                                                                int64_t offset) {
-  if (tensor_desc.impl_ == nullptr) {
-    return;
+  if (tensor_desc.impl_ != nullptr) {
+    tensor_desc.impl_->ext_meta_.SetDataOffset(offset);
   }
-  tensor_desc.impl_->ext_meta_.SetDataOffset(offset);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRC(const GeTensorDesc &tensor_desc,
