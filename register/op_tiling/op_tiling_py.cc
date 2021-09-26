@@ -222,8 +222,8 @@ void ParseConstTensorList(const nlohmann::json &shape_list, std::map<std::string
 void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_para,
                            std::map<std::string, std::vector<uint8_t>> &const_values, ge::OpDescPtr op_desc) {
   std::vector<int64_t> shape;
-  std::string format_str;
-  std::string dtype_str;
+  std::string format_str = "nd";
+  std::string dtype_str = "float16";
 
   if (!shape_json.contains("const_value")) {
     GELOGI("Not const tenosr");
@@ -240,9 +240,13 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   }
   if (shape_json.contains("format")) {
     format_str = shape_json["format"].get<std::string>();
+  } else {
+    GELOGI("Current json do not contains key'format', use the default value 'nd'.");
   }
   if (shape_json.contains("dtype")) {
     dtype_str = shape_json["dtype"].get<std::string>();
+  } else {
+    GELOGI("Current json do not contains key'dtype', use the default value 'float16'.");
   }
 
   std::vector<uint8_t> value;
