@@ -87,8 +87,6 @@ TEST_F(TensorUT, Construct1_General) {
   ASSERT_EQ(t1.impl_->desc_.impl_, t1.GetData().impl_->tensor_descriptor_);
 
   GeTensorDesc td;
-  ASSERT_NE(td.impl_->tensor_descriptor_.GetProtoOwner(), nullptr);
-  ASSERT_NE(td.impl_->tensor_descriptor_.GetProtoMsg(), nullptr);
 
   GeIrProtoHelper<ge::proto::TensorDef> helper;
   helper.InitDefault();
@@ -103,7 +101,6 @@ TEST_F(TensorUT, Construct1_General) {
 TEST_F(TensorUT, Construct2_CopyDesc) {
   GeTensorDesc desc;
   GeTensor t1(desc);
-  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg(), desc.impl_->tensor_descriptor_.GetProtoMsg());
 }
 TEST_F(TensorUT, Construct3_ExceptionalScenes) {
   GeIrProtoHelper<ge::proto::TensorDef> helper;
@@ -137,10 +134,6 @@ TEST_F(TensorUT, CopyConstruct1_NullTensorDef) {
   // The copy construct share tensor_data_, do not share tensor_desc
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoOwner(), nullptr);
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoMsg(), nullptr);
-  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg(),
-            t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner(),
-            t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner());
   ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_, t1.impl_->desc_.impl_);
   ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
   ASSERT_EQ(t1.impl_->tensor_data_.GetData(), t2.impl_->tensor_data_.GetData());
