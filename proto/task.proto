@@ -539,7 +539,7 @@ message FftsPlusAicpuCtxDef {
     uint32 aten = 2;
     uint32 pred_cnt_init = 3;
     uint32 pred_cnt = 4;
-    repeated uint32 successor_context_id = 5;   // len = 26
+    repeated uint32 successor_list = 5;   // len = 26
 
     uint32 atm = 6;
     uint32 sqe_index = 7;
@@ -722,3 +722,4 @@ message FftsPlusCondSwitchCtxDef {
     uint32 cmp_value_1 = 23;
     uint32 cmp_value_2 = 24;
 }
+
