@@ -1257,4 +1257,7 @@ const std::string ATTR_NAME_ORIGIN_OUTPUT_TENSOR_NAME = "_origin_output_tensor_n
 // for scope op to record the input and output information of the original graph node
 const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS = "_origin_graph_node_inputs";
 const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS = "_origin_graph_node_outputs";
+
+// for operator resource list(e.g. queues, channels)
+const std::string ATTR_NAME_RESOURCE_LIST = "_resource_list";
 }  // namespace ge

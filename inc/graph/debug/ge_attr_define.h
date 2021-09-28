@@ -1289,6 +1289,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 // for scope op to record the input and output information of the original graph node
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS;
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS;
+
+// for operator resource list(e.g. queues, channels)
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_RESOURCE_LIST;
 }  // namespace ge
 
 /*lint +e618*/
