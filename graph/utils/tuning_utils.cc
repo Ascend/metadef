@@ -232,7 +232,22 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
   auto graph = node->GetOwnerComputeGraph();
   GE_CHECK_NOTNULL(graph);
   OpDescPtr data_op_desc;
-  const vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
+  vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
+  if (weight.empty()) {
+    GE_CHECK_NOTNULL(node->GetOpDesc());
+    NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr(parent_node_attr, nullptr);
+    if ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
+      NodePtr really_parent_node = nullptr;
+      if ((NodeUtils::GetInNodeCrossPartionedCallNode(parent_node, 0, really_parent_node) == GRAPH_SUCCESS) &&
+          (really_parent_node != nullptr) && (NodeUtils::IsConst(*really_parent_node))) {
+        GELOGD("Get in really parent node:%s:%s and parent node:%s:%s for node:%s:%s",
+               really_parent_node->GetName().c_str(), really_parent_node->GetType().c_str(),
+               parent_node->GetName().c_str(), parent_node->GetType().c_str(),
+               node->GetName().c_str(), node->GetType().c_str());
+        weight = OpDescUtils::MutableWeights(really_parent_node);
+      }
+    }
+  }
   if (!weight.empty()) {
     data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), CONSTANT);
   } else {
