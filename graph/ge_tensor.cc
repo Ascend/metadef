@@ -24,6 +24,7 @@
 #include "graph/ge_tensor_impl.h"
 #include "graph/ge_attr_value.h"
 #include "graph/model_serialize.h"
+#include "graph/small_vector.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/utils/ge_ir_utils.h"
@@ -304,7 +305,7 @@ void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDes
 }
 
 class GeShapeImpl {
-  using DimsType = std::vector<int64_t>;
+  using DimsType = SmallVector<int64_t, 8>;
  public:
   GeShapeImpl() = default;
   ~GeShapeImpl() = default;
