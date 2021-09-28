@@ -134,7 +134,8 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
           TypeUtils::DataTypeToSerialString(desc.GetOriginDataType()));
     }
 
-    if (!desc.OriginShapeReference().GetDims().empty()) {
+    const bool *is_origin_shape_init = desc.attrs_.GetByName<bool>(TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED);
+    if (is_origin_shape_init !=  nullptr && *is_origin_shape_init) {
       auto origin_shape_proto_list = (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_SHAPE].mutable_list();
       origin_shape_proto_list->clear_i();
       for (auto dim : desc.OriginShapeReference().GetDims()) {
@@ -151,9 +152,7 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
       proto->set_dtype(kDataTypeMap.at(DT_UNDEFINED));
     }
     proto->set_layout(TypeUtils::FormatToSerialString(desc.GetFormat()));
-    if (!desc.ShapeReference().GetDims().empty()) {
-      GeTensorSerializeUtils::GeShapeAsProto(desc.ShapeReference(), proto->mutable_shape());
-    }
+    GeTensorSerializeUtils::GeShapeAsProto(desc.ShapeReference(), proto->mutable_shape());
   }
 }
 void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDesc &desc, proto::TensorDescriptor *proto) {
