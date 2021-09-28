@@ -117,7 +117,7 @@ void GeTensorSerializeUtils::GeShapeAsProto(const GeShape &shape, proto::ShapeDe
 }
 void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, proto::TensorDescriptor *proto) {
   if (proto != nullptr) {
-    // TODO: 扩展元数据
+    // 扩展元数据
     proto->set_size(desc.ext_meta_.GetSize());
     proto->set_weight_size(desc.ext_meta_.GetWeightSize());
     proto->set_reuse_input(desc.ext_meta_.GetReuseInput());
@@ -542,11 +542,11 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
     GELOGE(INTERNAL_ERROR, "Try assemble ge tensor desc from nullptr proto");
     return;
   }
-  // TODO: 标准化外部传入的TensorDescriptor，基于当前实际的场景，会存在同一个元数据信息存储在TensorDescriptor的不同字段上，
+  // 标准化外部传入的TensorDescriptor，基于当前实际的场景，会存在同一个元数据信息存储在TensorDescriptor的不同字段上，
   //  这个函数内部需要排定优先级，确定最终使用的元数据信息，经过标准化后，TensorDescriptor上的直接成员字段始终是有效的
   GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto_msg);
 
-  // TODO: 获取高频基础元数据
+  // 获取高频基础元数据
   GeTensorSerializeUtils::GetOriginFormatFromDescProto(proto_msg, origin_format_);
   GeTensorSerializeUtils::GetOriginDtypeFromDescProto(proto_msg, origin_dtype_);
   GeTensorSerializeUtils::GetOriginShapeFromDescProto(proto_msg, origin_shape_);
@@ -555,7 +555,7 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
   GeTensorSerializeUtils::GetDtypeFromDescProto(proto_msg, dtype_);
   GeTensorSerializeUtils::GetShapeFromDescProto(proto_msg, shape_);
 
-  // TODO: 获取扩展元数据
+  // 获取扩展元数据
   ext_meta_.SetSize(proto_msg->size());
   ext_meta_.SetWeightSize(proto_msg->weight_size());
   ext_meta_.SetReuseInput(proto_msg->reuse_input());
@@ -571,7 +571,7 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
   ext_meta_.SetCmpsTab(proto_msg->cmps_tab());
   ext_meta_.SetCmpsTabOffset(proto_msg->cmps_tab_offset());
 
-  // TODO: 属性部分放在了GeTensorDesc的构造函数中
+  // 属性部分放在了GeTensorDesc的构造函数中
 }
 
 void GeTensorDescImpl::SetDataType(DataType dtype) {
@@ -607,12 +607,12 @@ GeShape &GeTensorDescImpl::OriginShapeReference() const {
 }
 
 bool GeTensorDescImpl::GeTensorDescAttrsAreEqual(const GeTensorDescImpl &other) const {
-  // TODO: 属性相等的定义保持不变：不比较自定义属性
+  // 属性相等的定义保持不变：不比较自定义属性
   return (shape_ == other.shape_ && dtype_ == other.dtype_ && format_ == other.format_ && ext_meta_ == other.ext_meta_);
 }
 
 bool GeTensorDescImpl::operator==(const GeTensorDescImpl &other) const {
-  // TODO: DescImpl相等的定义保持不变，不比较自定义属性
+  // DescImpl相等的定义保持不变，不比较自定义属性
   return (origin_shape_ == other.origin_shape_ && origin_format_ == other.origin_format_ &&
           origin_dtype_ == other.origin_dtype_ && GeTensorDescAttrsAreEqual(other));
 }
