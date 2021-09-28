@@ -3007,12 +3007,12 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
   }
 
   // Set Input
-  int i = 0;
+  uint32_t index = 0;
   for (const auto &item : graph_info.data_inputs) {
     for (const auto &in_data_anchor : item.second.second) {
-      graph_builder.SetInput(i, { in_data_anchor->GetOwnerNode()->GetName() },
+      graph_builder.SetInput(index, { in_data_anchor->GetOwnerNode()->GetName() },
                              { static_cast<uint32_t>(in_data_anchor->GetIdx()) });
-      i++;
+      index++;
     }
   }
 
