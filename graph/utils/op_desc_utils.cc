@@ -36,7 +36,7 @@ namespace ge {
 const char OP_DESC_QUANT_PARAMS[] = "quantize_factor";
 
 namespace {
-const int CONST_OP_NORMAL_WEIGHT_SIZE = 1;
+const int32_t CONST_OP_NORMAL_WEIGHT_SIZE = 1;
 }
 
 bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
@@ -44,7 +44,7 @@ bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
                    return false, "[Check][Param] node is nullptr");
   GE_CHK_BOOL_EXEC(node->GetOpDesc() != nullptr, REPORT_INNER_ERROR("E19999", "opdesc is nullptr.");
                    return false, "[Check][Param] opdesc is nullptr");
-  vector<int> index_list;
+  vector<int32_t> index_list;
   for (const auto &in_anchor : node->GetAllInDataAnchors()) {
     if (in_anchor->GetPeerOutAnchor() == nullptr) {
       index_list.push_back(in_anchor->GetIdx());

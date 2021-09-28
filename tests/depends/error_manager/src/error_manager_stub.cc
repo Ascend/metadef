@@ -26,7 +26,7 @@
   /// @param [in] path: current so path
   /// @return int 0(success) -1(fail)
   ///
-  int ErrorManager::Init(std::string path) { return 0; }
+  int32_t ErrorManager::Init(std::string path) { return 0; }
 
   ///
   /// @brief Report error message
@@ -34,11 +34,11 @@
   /// @param [in] args_map: parameter map
   /// @return int 0(success) -1(fail)
   ///
-  int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::string, std::string> &args_map) {
+  int32_t ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::string, std::string> &args_map) {
     return 0;
   }
 
-  int ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
+  int32_t ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
     return 0;
   }
 
@@ -53,14 +53,14 @@
   /// @param [in] handle: print handle
   /// @return int 0(success) -1(fail)
   ///
-  int ErrorManager::OutputErrMessage(int handle) { return 0; }
+  int32_t ErrorManager::OutputErrMessage(int32_t handle) { return 0; }
 
   ///
   /// @brief output  message
   /// @param [in] handle: print handle
   /// @return int 0(success) -1(fail)
   ///
-  int ErrorManager::OutputMessage(int handle) { return 0; }
+  int32_t ErrorManager::OutputMessage(int32_t handle) { return 0; }
 
   ///
   /// @brief Report error message
@@ -76,8 +76,8 @@
   /// @param [in] msg: failed message map, key is error code, value is op_name
   /// @return int 0(success) -1(fail)
   ///
-  int ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
-		                                 const std::map<std::string, std::string> &msg) { return 0; }
+  int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
+		                                                 const std::map<std::string, std::string> &msg) { return 0; }
 
   ///
   /// @brief get graph compile failed message in mstune case
@@ -85,10 +85,10 @@
   /// @param [out] msg_map: failed message map, key is error code, value is op_name list
   /// @return int 0(success) -1(fail)
   ///
-  int ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, std::map<std::string, std::vector<std::string>> &msg_map) { return 0; }
+  int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, std::map<std::string, std::vector<std::string>> &msg_map) { return 0; }
 
 namespace error_message {
-int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
+int32_t FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   return 0;
 }
 }

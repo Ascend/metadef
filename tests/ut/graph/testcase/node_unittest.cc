@@ -45,4 +45,22 @@ TEST_F(UtestNode, GetInDataAnchor) {
   auto in_data_anchor1 = data_node->GetInDataAnchor(1);
   EXPECT_EQ(in_data_anchor1, nullptr);
 }
+TEST_F(UtestNode, GetInAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 1, 1);
+  auto graph = builder.GetGraph();
+
+  auto data_node = graph->FindNode("Data");
+  auto in_anchor0 = data_node->GetInAnchor(-2);
+  EXPECT_EQ(in_anchor0, nullptr);
+}
+TEST_F(UtestNode, GetOutAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 1, 1);
+  auto graph = builder.GetGraph();
+
+  auto data_node = graph->FindNode("Data");
+  auto out_anchor0 = data_node->GetOutAnchor(-2);
+  EXPECT_EQ(out_anchor0, nullptr);
+}
 }

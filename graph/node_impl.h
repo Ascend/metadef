@@ -51,10 +51,10 @@ class Node::NodeImpl {
   uint32_t GetAllOutDataAnchorsSize() const;
   Node::Vistor<AnchorPtr> GetAllInAnchors(const ConstNodePtr &owner_node) const;
   Node::Vistor<AnchorPtr> GetAllOutAnchors(const ConstNodePtr &owner_node) const;
-  InDataAnchorPtr GetInDataAnchor(int idx) const;
-  AnchorPtr GetInAnchor(int idx) const;
-  AnchorPtr GetOutAnchor(int idx) const;
-  OutDataAnchorPtr GetOutDataAnchor(int idx) const;
+  InDataAnchorPtr GetInDataAnchor(int32_t idx) const;
+  AnchorPtr GetInAnchor(int32_t idx) const;
+  AnchorPtr GetOutAnchor(int32_t idx) const;
+  OutDataAnchorPtr GetOutDataAnchor(int32_t idx) const;
   InControlAnchorPtr GetInControlAnchor() const;
   OutControlAnchorPtr GetOutControlAnchor() const;
 
