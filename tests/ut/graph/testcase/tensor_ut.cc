@@ -21,6 +21,7 @@
 #include "ge_ir.pb.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/utils/tensor_adapter.h"
+#include "graph/utils/tensor_utils.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_attr_define.h"
 
@@ -501,6 +502,39 @@ TEST_F(AscendStringUT, Hash) {
   ge::AscendString empty_ascend_string;
   EXPECT_EQ(std::hash<ge::AscendString>()(empty_ascend_string), empty_ascend_string.Hash());
   EXPECT_EQ(std::hash<std::string>()(""), empty_ascend_string.Hash());
+}
+
+TEST_F(TensorUT, TensorUtils_GetSteExtMeta) {
+  GeTensorDesc desc;
+
+#define TEST_EXT_META_INNER(NAME, TYPE, V, V1)                                                                         \
+  do {                                                                                                                 \
+    TYPE v = V;                                                                                                        \
+    TYPE v1 = V1;                                                                                                      \
+    TensorUtils::Set##NAME(desc, v);                                                                                   \
+    TensorUtils::Get##NAME(desc, v1);                                                                                  \
+    EXPECT_EQ(v, v1);                                                                                                  \
+  } while (false)
+
+#define TEST_EXT_META_INT64(NAME) TEST_EXT_META_INNER(NAME, int64_t, 0, -1);
+#define TEST_EXT_META_BOOL(NAME) TEST_EXT_META_INNER(NAME, bool, true, false);
+#define TEST_EXT_META_UINT32(NAME) TEST_EXT_META_INNER(NAME, uint32_t, 0, 1);
+
+  TEST_EXT_META_INT64(Size);
+  TEST_EXT_META_INT64(DataOffset);
+
+  TEST_EXT_META_UINT32(RealDimCnt);
+  TEST_EXT_META_UINT32(ReuseInputIndex);
+
+  TEST_EXT_META_BOOL(InputTensor);
+  TEST_EXT_META_BOOL(OutputTensor);
+  TEST_EXT_META_BOOL(ReuseInput);
+
+  desc.SetName("foo");
+  EXPECT_EQ(desc.GetName(), "foo");
+
+  TensorUtils::SetWeightSize(desc, 2021);
+  EXPECT_EQ(TensorUtils::GetWeightSize(desc), 2021);
 }
 
 }  // namespace ge
