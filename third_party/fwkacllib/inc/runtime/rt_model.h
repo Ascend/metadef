@@ -53,6 +53,7 @@ typedef enum tagModelTaskType {
     RT_MODEL_TASK_ALL_KERNEL,
     RT_MODEL_TASK_PROFILER_TRACE_EX,
     RT_MODEL_TASK_FFTS_TASK,
+    RT_MODEL_TASK_FFTS_PLUS_TASK,
 } rtModelTaskType_t;
 
 typedef enum tagModelStreamType {

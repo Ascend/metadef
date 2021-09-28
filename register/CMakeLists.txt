@@ -16,6 +16,7 @@ set(SRC_LIST
     "register_format_transfer.cc"
     "op_kernel_registry.cpp"
     "auto_mapping_util.cpp"
+    "ffts_plus_update_manager.cc"
     "host_cpu_context.cc"
     "tensor_assign.cpp"
     "infer_data_slice_registry.cc"
