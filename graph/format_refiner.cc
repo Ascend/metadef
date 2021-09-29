@@ -299,7 +299,7 @@ graphStatus FormatRefiner::BackInferProcess(std::deque<ge::NodePtr> &nodes, ge::
         }
         nodes.push_back(peer_out_data_node);
       } else {
-        auto status = ReflectionProcess(reflection, nodes, to_be_set_format);
+        status = ReflectionProcess(reflection, nodes, to_be_set_format);
         if (status != GRAPH_SUCCESS) {
           GELOGE(GRAPH_FAILED, "[Reflect][Node] failed! status:%d", status);
           return GRAPH_FAILED;
@@ -382,7 +382,7 @@ graphStatus FormatRefiner::ForwardInferProcess(std::deque<ge::NodePtr> &nodes, g
           }
           nodes.push_back(peer_in_data_node);
         } else {
-          auto status = ReflectionProcess(reflection, nodes, to_be_set_format);
+          status = ReflectionProcess(reflection, nodes, to_be_set_format);
           if (status != GRAPH_SUCCESS) {
             GELOGE(GRAPH_FAILED, "[Reflect][Node] failed! status:%d", status);
             return GRAPH_FAILED;

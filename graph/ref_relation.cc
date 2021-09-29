@@ -472,7 +472,6 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
 
   for (const auto &node : graph.GetAllNodes()) {
     auto node_type = node->GetType();
-    std::vector<NodePtr> ref_nodes;
     auto op_desc = node->GetOpDesc();
     auto sub_graph_names = op_desc->GetSubgraphInstanceNames();
     if (sub_graph_names.empty()) {

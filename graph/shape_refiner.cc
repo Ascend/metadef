@@ -38,7 +38,7 @@
 
 namespace ge {
 namespace {
-const char* const kPreOpInputShapeRange = "_pre_op_in_range";
+const char * const kPreOpInputShapeRange = "_pre_op_in_range";
 
 const static std::set<string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
 const static std::map<string, string> kGeLocalOpMapping{{"StreamMerge", "Merge"}, {"MemcpyAsync", "Identity"}};
@@ -678,9 +678,9 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceCo
     }
 
     auto input_node = out_anchor->GetOwnerNode();
-    auto output_idx = out_anchor->GetIdx();
+    auto output_index = out_anchor->GetIdx();
     map<NodePtr, int32_t> input_nodes_2_out_idx;
-    if (GetRealInNodesAndIndex(input_node, output_idx, input_nodes_2_out_idx) != SUCCESS) {
+    if (GetRealInNodesAndIndex(input_node, output_index, input_nodes_2_out_idx) != SUCCESS) {
       REPORT_CALL_ERROR("E19999", "Failed to get real in nodes and index, node:%s", node->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Get][InNodesAndIndex] of node[%s] failed.", node->GetName().c_str());
       return GRAPH_FAILED;

@@ -699,7 +699,6 @@ bool ReadProtoFromBinaryFile(const uint8_t *data, size_t len, google::protobuf::
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeAllAttrsFromAnyMap(
     const std::map<string, AnyValue> &attr_map,
     google::protobuf::Map<std::string, ::ge::proto::AttrDef> * mutable_attr) {
-
   if (mutable_attr == nullptr) {
     GELOGE(GRAPH_FAILED, "mutable_attr is nullptr.");
     return false;

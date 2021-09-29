@@ -212,9 +212,9 @@ const std::vector<Scope *> &Scope::ScopeImpl::GetAllSubScopes() {
     std::stack<Scope *> scopes;
     scopes.push(scope);
     while (!scopes.empty()) {
-      Scope *scope = scopes.top();
+      Scope *top_scope = scopes.top();
       scopes.pop();
-      auto &impl = scope->impl_;
+      auto &impl = top_scope->impl_;
       const std::unordered_map<std::string, Scope *> &sub_scopes = impl->GetSubScopes();
       for (auto &iter_sub : sub_scopes) {
         all_sub_scopes_.push_back(iter_sub.second);
@@ -1100,9 +1100,9 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
       return;
     }
 
-    for (int i = 0; i < node_def->input_size(); i++) {
+    for (int j = 0; j < node_def->input_size(); j++) {
       ge::GeTensorDesc tensor_desc;
-      tensor_desc.SetName(node_def->input(i));
+      tensor_desc.SetName(node_def->input(j));
       op_desc->AddInputDesc(tensor_desc);
     }
     ret = SetNodeInputOutputAttr(graph_nodes_in_out, op);

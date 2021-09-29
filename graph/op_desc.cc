@@ -1347,7 +1347,7 @@ graphStatus OpDescImpl::AddSubgraphName(const std::string &name) {
   return GRAPH_SUCCESS;
 }
 
-const std::map<std::string, uint32_t> & OpDescImpl::GetSubgraphNameIndexes() const {
+const std::map<std::string, uint32_t> &OpDescImpl::GetSubgraphNameIndexes() const {
   return subgraph_names_to_index_;
 }
 
@@ -2044,7 +2044,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::AddSubgraphNa
   return impl_->AddSubgraphName(name);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::map<std::string, uint32_t> & OpDesc::GetSubgraphNameIndexes()
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::map<std::string, uint32_t> &OpDesc::GetSubgraphNameIndexes()
     const {
   return impl_->GetSubgraphNameIndexes();
 }
