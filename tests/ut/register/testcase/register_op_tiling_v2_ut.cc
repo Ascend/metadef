@@ -215,7 +215,7 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_1) {
   std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_tiling_stub_v2);
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ret, GRAPH_FAILED);
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
@@ -293,7 +293,7 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_4) {
   std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_tiling_stub_v2);
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ret, GRAPH_FAILED);
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 

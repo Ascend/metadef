@@ -134,7 +134,7 @@ TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_1) {
 
   utils::OpRunInfo run_info;
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
 TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_2) {
