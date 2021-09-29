@@ -2930,7 +2930,7 @@ NodePtr GraphUtils::BuildSubgraphNode(ComputeGraph &graph, const std::string &gr
   OpDescBuilder op_desc_builder(graph_name + "_" + PARTITIONEDCALL, PARTITIONEDCALL);
   int i = 0;
   for (const auto &item : graph_info.data_inputs) {
-    for(const auto &in_data_anchor : item.second.second) {
+    for (const auto &in_data_anchor : item.second.second) {
       auto input_desc = item.second.first->GetOwnerNode()->GetOpDesc();
       if (input_desc == nullptr) {
         REPORT_INNER_ERROR("E19999", "op_desc is null, node:%s", item.second.first->GetOwnerNode()->GetName().c_str());
