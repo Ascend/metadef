@@ -270,6 +270,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   // Share tensor_data, tensor_desc
   // replace using TensorUtils::ShareTensor
   GeTensor &operator=(const GeTensor &other);
+  GeTensor &operator=(GeTensor &&other);
 
  private:
   friend class GeAttrValueImp;

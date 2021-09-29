@@ -893,7 +893,7 @@ GeTensorDesc &GeTensorDesc::operator=(const GeTensorDesc &desc) {
 GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   if (&desc != this) {
     AttrHolder::CopyFrom(desc);
-    *impl_ = std::move(*(desc.impl_));
+    impl_ = desc.impl_;
   }
   return *this;
 }
@@ -1404,6 +1404,13 @@ GeTensor::GeTensor(const GeTensor &other)
 GeTensor &GeTensor::operator=(const GeTensor &other) {
   if (&other != this) {
     *impl_ = *(other.impl_);
+  }
+  return *this;
+}
+
+GeTensor &GeTensor::operator=(GeTensor &&other) {
+  if (&other != this) {
+    impl_ = other.impl_;
   }
   return *this;
 }
