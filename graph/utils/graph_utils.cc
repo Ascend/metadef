@@ -2930,16 +2930,16 @@ NodePtr GraphUtils::BuildSubgraphNode(ComputeGraph &graph, const std::string &gr
   OpDescBuilder op_desc_builder(graph_name + "_" + PARTITIONEDCALL, PARTITIONEDCALL);
   int i = 0;
   for (const auto &item : graph_info.data_inputs) {
-    for(const auto &in_data_anchor : item.second.second) {
-      auto input_desc = item.second.first->GetOwnerNode()->GetOpDesc();
+    for (const auto &in_data_anchor : item.second.second) {
+      auto input_desc = in_data_anchor->GetOwnerNode()->GetOpDesc();
       if (input_desc == nullptr) {
-        REPORT_INNER_ERROR("E19999", "op_desc is null, node:%s", item.second.first->GetOwnerNode()->GetName().c_str());
+        REPORT_INNER_ERROR("E19999", "op_desc is null, node:%s", in_data_anchor->GetOwnerNode()->GetName().c_str());
         GELOGE(PARAM_INVALID, "[Check][Param] op_desc is null, node:%s",
-               item.second.first->GetOwnerNode()->GetName().c_str());
+               in_data_anchor->GetOwnerNode()->GetName().c_str());
         return nullptr;
       }
       op_desc_builder.AddInput("args" + std::to_string(i),
-                               input_desc->GetOutputDesc(item.second.first->GetIdx()));
+                               input_desc->GetInputDesc(in_data_anchor->GetIdx()));
       i++;
     }
   }
@@ -3017,7 +3017,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
   // Add outputMapping
   std::map<uint32_t, uint32_t> output_mapping;
-  int j = 0;
+  size_t j = 0;
   for (const auto &item : graph_info.data_inputs) {
     while (j < item.second.second.size()) {
       output_mapping[j] = j;
@@ -3040,7 +3040,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
 graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info) {
   // in data nodes
-  int i = 0;
+  size_t i = 0;
   for (const auto &item : graph_info.data_inputs) {
     for (const auto &in_data_anchor : item.second.second) {
       GE_CHK_STATUS_RET(item.second.first->Unlink(in_data_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed",
