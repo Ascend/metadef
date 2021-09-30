@@ -118,6 +118,12 @@ struct ShapeAndFormatInfo {
 
 using ShapeAndFormat = struct ShapeAndFormatInfo;
 
+static const std::unordered_set<ge::Format> FE_ORIGIN_FORMAT_VECTOR = {
+  ge::FORMAT_NCHW,  ge::FORMAT_NHWC,  ge::FORMAT_HWCN,
+  ge::FORMAT_CHWN,  ge::FORMAT_NDHWC, ge::FORMAT_NCDHW,
+  ge::FORMAT_DHWCN, ge::FORMAT_DHWNC, ge::FORMAT_ND
+};
+
 class ShapeTransferAccordingToFormat {
  public:
   ShapeTransferAccordingToFormat();
