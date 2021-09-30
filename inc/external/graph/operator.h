@@ -383,30 +383,68 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   Graph GetDynamicSubgraph(const char *name, uint32_t index) const;
 
  protected:
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, float))
   void AttrRegister(const std::string &name, float attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<float> &))
   void AttrRegister(const std::string &name, const std::vector<float> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, int64_t))
   void AttrRegister(const std::string &name, int64_t attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<int64_t> &))
   void AttrRegister(const std::string &name, const std::vector<int64_t> &attr_value);
   void AttrRegister(const std::string &name, const std::string &attr_value);
   void AttrRegister(const std::string &name, const std::vector<std::string> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, bool))
   void AttrRegister(const std::string &name, bool attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<bool> &))
   void AttrRegister(const std::string &name, const std::vector<bool> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const Tensor &))
   void AttrRegister(const std::string &name, const Tensor &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<Tensor> &))
   void AttrRegister(const std::string &name, const std::vector<Tensor> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const OpBytes &))
   void AttrRegister(const std::string &name, const OpBytes &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<std::vector<int64_t>> &))
   void AttrRegister(const std::string &name, const std::vector<std::vector<int64_t>> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<ge::DataType> &))
   void AttrRegister(const std::string &name, const std::vector<ge::DataType> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const ge::DataType &))
   void AttrRegister(const std::string &name, const ge::DataType &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const ge::NamedAttrs &))
   void AttrRegister(const std::string &name, const ge::NamedAttrs &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<ge::NamedAttrs> &))
   void AttrRegister(const std::string &name, const std::vector<ge::NamedAttrs> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const AscendString &))
   void AttrRegister(const std::string &name, const AscendString &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char *, const std::vector<AscendString> &))
   void AttrRegister(const std::string &name, const std::vector<AscendString> &attr_value);
+
+  void AttrRegister(const char *name, float attr_value);
+  void AttrRegister(const char *name, const std::vector<float> &attr_value);
+  void AttrRegister(const char *name, int64_t attr_value);
+  void AttrRegister(const char *name, const std::vector<int64_t> &attr_value);
+  void AttrRegister(const char *name, const char *attr_value);
+  void AttrRegister(const char *name, bool attr_value);
+  void AttrRegister(const char *name, const std::vector<bool> &attr_value);
+  void AttrRegister(const char *name, const Tensor &attr_value);
+  void AttrRegister(const char *name, const std::vector<Tensor> &attr_value);
+  void AttrRegister(const char *name, const OpBytes &attr_value);
+  void AttrRegister(const char *name, const std::vector<std::vector<int64_t>> &attr_value);
+  void AttrRegister(const char *name, const std::vector<ge::DataType> &attr_value);
+  void AttrRegister(const char *name, const ge::DataType &attr_value);
+  void AttrRegister(const char *name, const ge::NamedAttrs &attr_value);
+  void AttrRegister(const char *name, const std::vector<ge::NamedAttrs> &attr_value);
+  void AttrRegister(const char *name, const AscendString &attr_value);
+  void AttrRegister(const char *name, const std::vector<AscendString> &attr_value);
 
   explicit Operator(OperatorImplPtr &&op_impl);
 
+  ATTRIBUTED_DEPRECATED(void InputRegister(const char *))
   void InputRegister(const std::string &name);
+  void InputRegister(const char *name);
 
+  ATTRIBUTED_DEPRECATED(void OptionalInputRegister(const char *))
   void OptionalInputRegister(const std::string &name);
+  void OptionalInputRegister(const char *name);
 
   void InferFuncRegister(const std::function<graphStatus(Operator &)> &func);
 
@@ -414,34 +452,62 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   void InferFormatFuncRegister(const std::function<graphStatus(Operator &)> &func);
 
+  ATTRIBUTED_DEPRECATED(void OutputRegister(const char *))
   void OutputRegister(const std::string &name);
+  void OutputRegister(const char *name);
 
+  ATTRIBUTED_DEPRECATED(void DynamicInputRegister(const char *, const unsigned int, bool))
   void DynamicInputRegister(const std::string &name, const unsigned int num, bool is_push_back = true);
+  void DynamicInputRegister(const char *name, const unsigned int num, bool is_push_back = true);
 
+  ATTRIBUTED_DEPRECATED(void DynamicInputRegisterByIndex(const char *, const unsigned int, size_t))
   void DynamicInputRegisterByIndex(const std::string &name, const unsigned int num, size_t index);
+  void DynamicInputRegisterByIndex(const char *name, const unsigned int num, size_t index);
 
+  ATTRIBUTED_DEPRECATED(void DynamicOutputRegister(const char *, const unsigned int, bool))
   void DynamicOutputRegister(const std::string &name, const unsigned int num, bool is_push_back = true);
+  void DynamicOutputRegister(const char *name, const unsigned int num, bool is_push_back = true);
 
+  ATTRIBUTED_DEPRECATED(void RequiredAttrRegister(const char *))
   void RequiredAttrRegister(const std::string &name);
+  void RequiredAttrRegister(const char *name);
 
   graphStatus VerifyAll();
 
   // Only has one output index = 0
+  ATTRIBUTED_DEPRECATED(Operator &SetInput(const char *, uint32_t, const Operator &))
   Operator &SetInput(const std::string &dst_name, uint32_t dst_index,
                      const Operator &src_oprt);
+  Operator &SetInput(const char *dst_name, uint32_t dst_index,
+                     const Operator &src_oprt);
 
+  ATTRIBUTED_DEPRECATED(Operator &SetInput(const char *, uint32_t, const Operator &, const char *))
   Operator &SetInput(const std::string &dst_name, uint32_t dst_index, const Operator &src_oprt,
                      const std::string &name);
+  Operator &SetInput(const char *dst_name, uint32_t dst_index, const Operator &src_oprt,
+                     const char *name);
 
+  ATTRIBUTED_DEPRECATED(void SubgraphRegister(const char *, bool))
   void SubgraphRegister(const std::string &ir_name, bool dynamic);
+  void SubgraphRegister(const char *ir_name, bool dynamic);
+  ATTRIBUTED_DEPRECATED(void SubgraphCountRegister(const char *, uint32_t))
   void SubgraphCountRegister(const std::string &ir_name, uint32_t count);
+  void SubgraphCountRegister(const char *ir_name, uint32_t count);
+  ATTRIBUTED_DEPRECATED(void SetSubgraphBuilder(const char *, uint32_t, const SubgraphBuilder &))
   void SetSubgraphBuilder(const std::string &ir_name, uint32_t index, const SubgraphBuilder &builder);
+  void SetSubgraphBuilder(const char *ir_name, uint32_t index, const SubgraphBuilder &builder);
+  ATTRIBUTED_DEPRECATED(Graph GetSubgraphImpl(const char *) const)
   Graph GetSubgraphImpl(const std::string &name) const;
+  Graph GetSubgraphImpl(const char *name) const;
 
  private:
+  ATTRIBUTED_DEPRECATED(Operator &SetInput(const char *, const OutHandler &))
   Operator &SetInput(const std::string &dst_name, const OutHandler &out_handler);
+  Operator &SetInput(const char *dst_name, const OutHandler &out_handler);
 
+  ATTRIBUTED_DEPRECATED(OutHandler GetOutput(const char *) const)
   OutHandler GetOutput(const std::string &name) const;
+  OutHandler GetOutput(const char *name) const;
 
   OutHandler GetOutput(uint32_t index) const;
 
@@ -449,7 +515,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   OperatorImplPtr operator_impl_{nullptr};
 
+  ATTRIBUTED_DEPRECATED(graphStatus GetInputConstDataOut(const char *, Tensor &) const)
   graphStatus GetInputConstDataOut(const std::string &dst_name, Tensor &data) const;
+  graphStatus GetInputConstDataOut(const char *dst_name, Tensor &data) const;
 
   std::shared_ptr<const Node> GetNode() const;
 };
