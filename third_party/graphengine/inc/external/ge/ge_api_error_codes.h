@@ -78,11 +78,13 @@ class GE_FUNC_VISIBILITY ErrorNoRegisterar {
 };
 
 // Code compose(4 byte), runtime: 2 bit,  type: 2 bit,   level: 3 bit,  sysid: 8 bit, modid: 5 bit, value: 12 bit
-#define GE_ERRORNO(runtime, type, level, sysid, modid, name, value, desc)                              \
-  constexpr ge::Status name =                                                                          \
-    ((0xFF & (static_cast<uint8_t>(runtime))) << 30) | ((0xFF & (static_cast<uint8_t>(type))) << 28) | \
-    ((0xFF & (static_cast<uint8_t>(level))) << 25) | ((0xFF & (static_cast<uint8_t>(sysid))) << 17) |  \
-    ((0xFF & (static_cast<uint8_t>(modid))) << 12) | (0x0FFF & (static_cast<uint16_t>(value)));        \
+#define GE_ERRORNO(runtime, type, level, sysid, modid, name, value, desc)                               \
+  constexpr ge::Status name = (static_cast<uint32_t>(0xFFU & (static_cast<uint32_t>(runtime))) << 30) | \
+                              (static_cast<uint32_t>(0xFFU & (static_cast<uint32_t>(type))) << 28) |    \
+                              (static_cast<uint32_t>(0xFFU & (static_cast<uint32_t>(level))) << 25) |   \
+                              (static_cast<uint32_t>(0xFFU & (static_cast<uint32_t>(sysid))) << 17) |   \
+                              (static_cast<uint32_t>(0xFFU & (static_cast<uint32_t>(modid))) << 12) |   \
+                              (static_cast<uint32_t>(0x0FFFU) & (static_cast<uint32_t>(value)));        \
   const ErrorNoRegisterar g_##name##_errorno(name, desc);
 
 #define GE_ERRORNO_EXTERNAL(name, desc) const ErrorNoRegisterar g_##name##_errorno(name, desc);
@@ -110,9 +112,9 @@ GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_AIPP_MODE_INVALID, "AIPP mode invalid.");
 GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_OP_TASK_TYPE_INVALID, "Task type invalid.");
 GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_OP_KERNEL_TYPE_INVALID, "Kernel type invalid.");
 GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_PLGMGR_PATH_INVALID, "Plugin path is invalid.");
-GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_FORMAT_INVALID, "Format is invalid when transferring shape.");
-GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_SHAPE_INVALID, "Shape is invalid when transferring shape.");
-GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_DATATYPE_INVALID, "Datatype is invalid when transferring shape.");
+GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_FORMAT_INVALID, "Format is invalid.");
+GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_SHAPE_INVALID, "Shape is invalid.");
+GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_DATATYPE_INVALID, "Datatype is invalid.");
 
 GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_MEMORY_ALLOCATION, "Memory allocation error.");
 GE_ERRORNO_EXTERNAL(ACL_ERROR_GE_MEMORY_OPERATE_FAILED, "Failed to operate memory.");

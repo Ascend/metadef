@@ -17,13 +17,13 @@
 #ifndef INC_FRAMEWORK_COMMON_GE_TYPES_H_
 #define INC_FRAMEWORK_COMMON_GE_TYPES_H_
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <string>
 #include <vector>
 
 #include "framework/common/fmk_error_codes.h"
-#include "ge/ge_api_error_codes.h"
+#include "external/ge/ge_api_error_codes.h"
 #include "external/graph/types.h"
 #include "external/ge/ge_api_types.h"
 
@@ -61,14 +61,18 @@ const std::string kTaskTypeAicore = "AI_CORE";
 const std::string kTaskTypeAicpu = "AI_CPU";
 const std::string kTaskTypeInvalid = "TASK_TYPE_INVALID";
 
+// dynamic execute mode
+const char *const kLazyRecompile = "lazy_recompile";
+
 // Data cache, including data address and length
 struct DataBuffer {
  public:
   void *data;       // Data address
   uint64_t length;  // Data length
   bool isDataSupportMemShare = false;
-  DataBuffer(void *dataIn, uint64_t len, bool isSupportMemShare)
-      : data(dataIn), length(len), isDataSupportMemShare(isSupportMemShare) {}
+  uint32_t placement = 0;
+  DataBuffer(void *dataIn, uint64_t len, bool isSupportMemShare, uint32_t placement = 0)
+      : data(dataIn), length(len), isDataSupportMemShare(isSupportMemShare), placement(placement) {}
 
   DataBuffer() : data(nullptr), length(0), isDataSupportMemShare(false) {}
 };
@@ -225,7 +229,11 @@ class GE_FUNC_VISIBILITY ModelListener {
   /// @param [in] resultCode Execution results
   ///
   virtual Status OnComputeDone(uint32_t model_id, uint32_t data_index, uint32_t result_code,
-                               std::vector<ge::OutputTensorInfo> &outputs) = 0;
+                               std::vector<ge::Tensor> &outputs) = 0;
+
+  virtual uint32_t GetResultCode() { return 0; };
+
+  virtual Status ResetResult() { return SUCCESS; };
 };
 
 // OMM configuration item
@@ -267,10 +275,19 @@ struct TaskDescInfo {
 };
 
 struct OpDescInfo {
-  std::string op_name;
-  std::string op_type;
-  uint32_t task_id;
-  uint32_t stream_id;
+  std::string op_name = "";
+  std::string op_type = "";
+  uint32_t task_id = 0;
+  uint32_t stream_id = 0;
+  uint32_t imply_type = 0;
+  uint32_t block_dim = 0;
+  std::string op_file_path = "";
+  std::string dev_func = "";
+  std::string tvm_magic = "";
+  uint32_t tiling_key = 0;
+  std::string tiling_data = "";
+  std::string node_info = "";
+  std::vector<int64_t> workspace_bytes;
   std::vector<Format> input_format;
   std::vector<std::vector<int64_t>> input_shape;
   std::vector<DataType> input_data_type;
@@ -292,6 +309,7 @@ struct DumpConfig {
   std::string dump_mode;
   std::string dump_status;
   std::string dump_op_switch;
+  std::string dump_debug;
   std::vector<ModelDumpConfig> dump_list;
 };
 }  // namespace ge

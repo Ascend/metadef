@@ -20,7 +20,7 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include "ge/ge_api_error_codes.h"
+#include "external/ge/ge_api_error_codes.h"
 
 namespace ge {
 // Initialize parser

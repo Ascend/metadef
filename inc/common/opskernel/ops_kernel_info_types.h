@@ -17,7 +17,7 @@
 #ifndef INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_TYPES_H_
 #define INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_TYPES_H_
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "graph/buffer.h"
