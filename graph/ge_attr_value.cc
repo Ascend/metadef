@@ -112,6 +112,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
     REPORT_CALL_ERROR("E19999", "create proto::OpDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return nullptr;
+  }
   ModelSerializeImp imp;
   (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
 
