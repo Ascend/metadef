@@ -105,4 +105,33 @@ TEST_F(UtestOperater, GetInputConstData_subgraph) {
   ASSERT_EQ(op.GetInputConstData("sub_const", tensor), GRAPH_SUCCESS);
   ASSERT_EQ(op.GetInputConstData("sub_data", tensor), GRAPH_SUCCESS);
 }
+
+TEST_F(UtestOperater, TestOperatorSetInputs) {
+
+  ge::Operator dst_op = ge::Operator("Mul");
+  ge::Operator src_op = ge::Operator("Add");
+  dst_op.InputRegister("x1");
+  dst_op.InputRegister("x2");
+  dst_op.OutputRegister("y");
+
+  src_op.InputRegister("x1");
+  src_op.InputRegister("x2");
+  src_op.OutputRegister("y");
+
+  ASSERT_EQ(src_op.GetInputsSize(), 2U);
+  ASSERT_EQ(dst_op.GetInputsSize(), 2U);
+  // src_index is illegal
+  (void)dst_op.SetInput(0U, src_op, 3U);
+  ASSERT_EQ(src_op.GetInputsSize(), 2U);
+  // dst_index is illegal
+  (void)dst_op.SetInput(3U, src_op, 0U);
+  ASSERT_EQ(src_op.GetInputsSize(), 2U);
+
+  (void)dst_op.SetInput(1U, src_op, 0U);
+  ASSERT_EQ(src_op.GetInputsSize(), 2U);
+
+  ge::Operator null_op;
+  (void)null_op.SetInput(1U, src_op, 0U);
+  ASSERT_EQ(null_op.GetInputsSize(), 0U);
 }
+}  // namespace ge

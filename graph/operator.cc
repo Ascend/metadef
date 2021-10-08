@@ -907,6 +907,21 @@ Operator &Operator::SetInput(const char *dst_name, const ge::Operator &src_oprt,
   return *this;
 }
 
+Operator &Operator::SetInput(uint32_t dst_index, const Operator &src_oprt, uint32_t src_index) {
+  if (operator_impl_ == nullptr) {
+    REPORT_INNER_ERROR("E19999", "operator impl is nullptr, check invalid.");
+    GELOGE(ge::FAILED, "[Check][Param] operator impl is nullptr.");
+    return *this;
+  }
+  std::string dst_name = operator_impl_->GetOpDescImpl()->GetInputNameByIndex(dst_index);
+  if (dst_name.empty()) {
+    REPORT_INNER_ERROR("E19999", "Set by dst_index:%u failed, dst_index is invalid.", dst_index);
+    GELOGE(ge::FAILED, "[GetInputNameByIndex] by index:%u failed, dst_index is invalid.", dst_index);
+    return *this;
+  }
+  return SetInput(dst_name.c_str(), src_oprt, src_index);
+}
+
 Operator &Operator::AddControlInput(const Operator &src_oprt) {
   if (operator_impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "operator impl is nullptr, check invalid.");
