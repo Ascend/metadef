@@ -544,7 +544,7 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
     return;
   }
   // 标准化外部传入的TensorDescriptor，基于当前实际的场景，会存在同一个元数据信息存储在TensorDescriptor的不同字段上，
-  //  这个函数内部需要排定优先级，确定最终使用的元数据信息，经过标准化后，TensorDescriptor上的直接成员字段始终是有效的
+  // 这个函数内部需要排定优先级，确定最终使用的元数据信息，经过标准化后，TensorDescriptor上的直接成员字段始终是有效的
   GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto_msg);
 
   // 获取高频基础元数据
