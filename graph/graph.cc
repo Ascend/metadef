@@ -209,8 +209,8 @@ class GraphImpl {
   bool IsValid() const { return (compute_graph_ != nullptr); }
 
   graphStatus AddOp(const ge::Operator &op) {
-    std::pair<std::map<string, ge::Operator>::iterator, bool> ret;
-    ret = op_list_.emplace(std::pair<string, ge::Operator>(op.GetName(), op));
+    std::pair<std::map<string, ge::Operator>::iterator, bool> ret = op_list_.emplace(std::pair<string,
+                                                                                     ge::Operator>(op.GetName(), op));
     GE_CHK_BOOL_RET_STATUS(ret.second != false, GRAPH_FAILED, "[Check][Param] the op have added before, op name:%s.",
                            op.GetName().c_str());
     return GRAPH_SUCCESS;

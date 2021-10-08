@@ -404,7 +404,7 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &
       }
     }
   }
-  ge::graphStatus ret = ge::GRAPH_FAILED;
+  ge::graphStatus ret;
   if (v2_flag) {
     ret = TurnToOpParaCalculateV2(node, run_info, iter_2);
   } else {
@@ -419,8 +419,8 @@ ge::graphStatus OpAtomicCalculateV1(const ge::OpDescPtr &op_desc_ptr, OpRunInfo 
          OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
   std::vector<int64_t> atomic_output_indices;
   (void) ge::AttrUtils::GetListInt(op_desc_ptr, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
-  std::map<string, std::map<int64_t, int64_t>> atomic_workspace_info;
-  atomic_workspace_info = op_desc_ptr->TryGetExtAttr(ge::EXT_ATTR_ATOMIC_WORKSPACE_INFO, atomic_workspace_info);
+  auto atomic_workspace_info = op_desc_ptr->TryGetExtAttr(ge::EXT_ATTR_ATOMIC_WORKSPACE_INFO,
+                                                          std::map<string, std::map<int64_t, int64_t>> {});
   bool atomic_flag = atomic_output_indices.empty() && atomic_workspace_info.empty();
   if (atomic_flag) {
     GE_LOGE("No ATOMIC_ATTR_OUTPUT_INDEX and EXT_ATTR_ATOMIC_WORKSPACE_INFO found, op_type:%s, op_name:%s",
@@ -535,8 +535,8 @@ ge::graphStatus TurnToOpAtomicCalculateV2(const ge::OpDescPtr &op_desc_ptr, OpRu
          OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
   std::vector<int64_t> atomic_output_indices;
   (void) ge::AttrUtils::GetListInt(op_desc_ptr, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
-  std::map<string, std::map<int64_t, int64_t>> atomic_workspace_info;
-  atomic_workspace_info = op_desc_ptr->TryGetExtAttr(ge::EXT_ATTR_ATOMIC_WORKSPACE_INFO, atomic_workspace_info);
+  auto atomic_workspace_info = op_desc_ptr->TryGetExtAttr(ge::EXT_ATTR_ATOMIC_WORKSPACE_INFO,
+                                                          std::map<string, std::map<int64_t, int64_t>> {});
   bool atomic_flag = atomic_output_indices.empty() && atomic_workspace_info.empty();
   if (atomic_flag) {
     REPORT_CALL_ERROR("E19999",

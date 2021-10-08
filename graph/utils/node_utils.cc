@@ -1120,8 +1120,8 @@ vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, int ind
   for (const std::string &instance_name : subgraph_names) {
     auto subgraph = compute_graph->GetSubgraph(instance_name);
     for (const auto &node_in_subgraph : subgraph->GetDirectNode()) {
-      int parent_index = -1;
       if (NodeUtils::IsSubgraphInput(node_in_subgraph)) {
+        int parent_index = -1;
         (void)AttrUtils::GetInt(node_in_subgraph->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, parent_index);
         if (parent_index == index) {
           in_data_node_vec.emplace_back(node_in_subgraph);

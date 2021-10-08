@@ -2734,8 +2734,8 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
 
   // reuse input
   auto output_op_desc = op_desc->GetOutputDescPtr(output_index);
-  bool reuse_input = false;
   if (output_op_desc != nullptr) {
+    bool reuse_input = false;
     if ((TensorUtils::GetReuseInput(*output_op_desc, reuse_input) == GRAPH_SUCCESS) && reuse_input) {
       uint32_t reuse_input_index = 0;
       if (TensorUtils::GetReuseInputIndex(*output_op_desc, reuse_input_index) == GRAPH_SUCCESS) {

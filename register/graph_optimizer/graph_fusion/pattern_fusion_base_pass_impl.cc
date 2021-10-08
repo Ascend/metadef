@@ -46,8 +46,7 @@ bool PatternFusionBasePassImpl::CheckOpSupported(const ge::OpDescPtr &op_desc_pt
     return false;
   }
 
-  bool result;
-  result = ops_kernel_info_store_ptr_->CheckSupported(op_desc_ptr, un_supported_reason);
+  bool result = ops_kernel_info_store_ptr_->CheckSupported(op_desc_ptr, un_supported_reason);
   return result;
 }
 
@@ -59,8 +58,7 @@ bool PatternFusionBasePassImpl::CheckOpSupported(const ge::NodePtr &node) {
     return false;
   }
 
-  bool result;
-  result = ops_kernel_info_store_ptr_->CheckSupported(node, un_supported_reason);
+  bool result = ops_kernel_info_store_ptr_->CheckSupported(node, un_supported_reason);
   return result;
 }
 
