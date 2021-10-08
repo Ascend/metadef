@@ -645,4 +645,14 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, OpRunInfoV2
 
   return status;
 }
+
+extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<OpRunInfoV2> &run_info) {
+  OpRunInfoV2 fake_run_info;
+  ge::graphStatus status = OpParaCalculateV2(node, fake_run_info);
+  if (status == ge::GRAPH_SUCCESS) {
+    run_info.emplace_back(fake_run_info);
+    run_info.emplace_back(fake_run_info);
+  }
+  return status;
+}
 }  // namespace optiling
