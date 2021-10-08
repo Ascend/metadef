@@ -76,7 +76,6 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
   NodePtr FindNode(const std::string &name) const;
   NodePtr FindFirstNodeMatchType(const std::string &name) const;
-  /*lint -e504*/
   // AddNode with NodePtr
   NodePtr AddNode(NodePtr node);
   NodePtr AddNode(OpDescPtr op);
@@ -145,7 +144,6 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   bool operator==(const ComputeGraph &r_compute_graph) const;
   ComputeGraph& operator=(ge::ComputeGraph compute_graph);
 
-  /*lint +e504*/
   const std::map<std::vector<std::string>, std::vector<std::string>> &GetShareParamLayer() const;
 
   void SetShareParamLayer(const std::map<std::vector<std::string>, std::vector<std::string>> params_share_map);

@@ -96,7 +96,7 @@ class PatternFusionBasePass : public GraphPass {
    */
   bool MatchAll(ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings);
 
-  Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
+  Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);
 
   /** Internal implement class ptr */
   std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;

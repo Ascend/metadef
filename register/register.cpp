@@ -33,7 +33,6 @@
 
 using namespace domi::tensorflow;
 namespace domi {
-/*lint -e1073*/
 namespace {
 const std::string kDefaultFormat = "ND";
 const std::string kSrcFormat = "src_format";
@@ -1154,5 +1153,4 @@ ParseOpToGraphFunc OpRegistry::GetParseOpToGraphFunc(const std::string &op_type,
   }
   return iter->second;
 }
-/*lint +e1073*/
 }  // namespace domi

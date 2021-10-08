@@ -43,10 +43,10 @@ class OpsKernelInfoStore {
   virtual ~OpsKernelInfoStore() {}
 
   // initialize opsKernelInfoStore
-  virtual Status Initialize(const map<string, string> &options) = 0; /*lint -e148*/
+  virtual Status Initialize(const map<string, string> &options) = 0;
 
   // close opsKernelInfoStore
-  virtual Status Finalize() = 0; /*lint -e148*/
+  virtual Status Finalize() = 0;
 
   virtual Status CreateSession(const std::map<std::string, std::string> &session_options) { return SUCCESS; }
 
