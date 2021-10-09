@@ -908,9 +908,10 @@ Operator &Operator::SetInput(const char *dst_name, const ge::Operator &src_oprt,
 }
 
 Operator &Operator::SetInput(uint32_t dst_index, const Operator &src_oprt, uint32_t src_index) {
-  if (operator_impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "operator impl is nullptr, check invalid.");
-    GELOGE(ge::FAILED, "[Check][Param] operator impl is nullptr.");
+  if (operator_impl_ == nullptr || operator_impl_->GetOpDescImpl() == nullptr) {
+    const char *invalid_obj_name = (operator_impl_ == nullptr ? "operator" : "op desc");
+    REPORT_INNER_ERROR("E19999", "%s impl is nullptr, check invalid.", invalid_obj_name);
+    GELOGE(ge::FAILED, "[Check][Param] %s impl is nullptr.", invalid_obj_name);
     return *this;
   }
   std::string dst_name = operator_impl_->GetOpDescImpl()->GetInputNameByIndex(dst_index);
