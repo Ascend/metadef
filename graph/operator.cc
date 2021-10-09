@@ -43,10 +43,7 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-/*lint -save -e529 -e728*/
 namespace ge {
-/*lint -e446 -e732*/
-/*lint -e665*/
 class OpIO {
  public:
   OpIO(const string &name, int index, const OperatorImplPtr &owner) : name_(name), index_(index), owner_(owner) {}
@@ -1551,7 +1548,7 @@ void Operator::BreakConnect() const {
     if (!AttrUtils::Set##AttrUtilsFun(operator_impl_->GetOpDescImpl(), name, attr_value)) {                            \
       GELOGW("[Register][Attr] Reg attr name %s failed", name.c_str());                                                \
     }                                                                                                                  \
-  } // lint !e665
+  }
 
 OP_ATTR_SET_IMP(int64_t, Int)
 OP_ATTR_SET_IMP(int32_t, Int)
@@ -1572,17 +1569,17 @@ OP_ATTR_SET_IMP(const vector<vector<int64_t>> &, ListListInt)
 OP_ATTR_SET_IMP(float, Float)
 OP_ATTR_GET_IMP(float &, Float)
 OP_ATTR_SET_IMP(const vector<float> &, ListFloat)
-OP_ATTR_GET_IMP(vector<float> &, ListFloat) // lint !e665
+OP_ATTR_GET_IMP(vector<float> &, ListFloat)
 
 OP_ATTR_SET_IMP(bool, Bool)
 OP_ATTR_GET_IMP(bool &, Bool)
 OP_ATTR_SET_IMP(const vector<bool> &, ListBool)
-OP_ATTR_GET_IMP(vector<bool> &, ListBool) // lint !e665
+OP_ATTR_GET_IMP(vector<bool> &, ListBool)
 
 OP_ATTR_SET_IMP(const NamedAttrs &, NamedAttrs)
 OP_ATTR_GET_IMP(NamedAttrs &, NamedAttrs)
 OP_ATTR_SET_IMP(const vector<NamedAttrs> &, ListNamedAttrs)
-OP_ATTR_GET_IMP(vector<NamedAttrs> &, ListNamedAttrs)  // lint !e665
+OP_ATTR_GET_IMP(vector<NamedAttrs> &, ListNamedAttrs)
 
 OP_ATTR_REG_IMP(int64_t, Int)
 OP_ATTR_REG_IMP(const vector<int64_t> &, ListInt)
@@ -2715,6 +2712,4 @@ void GraphUtils::BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_node
     OperatorKeeper::GetInstance().CheckOutOperator(op_impl);
   }
 }
-/*lint +e446 +e732*/
-/*lint +e665*/
 } // namespace ge

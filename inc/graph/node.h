@@ -163,7 +163,7 @@ class Node : public std::enable_shared_from_this<Node> {
 
   const std::vector<uint32_t> &GetSendEventIdList() const;
 
-  const std::vector<uint32_t> &GetRecvEventIdList() const;  /*lint !e148*/
+  const std::vector<uint32_t> &GetRecvEventIdList() const;
 
   void GetFusionInputFlowList(kFusionDataFlowVec_t &fusion_input_list);
 

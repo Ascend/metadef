@@ -70,8 +70,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer {
 class BufferUtils {
  public:
   static Buffer CreateShareFrom(const Buffer &other);
-  static Buffer CreateCopyFrom(const Buffer &other);  //lint !e148
-  static Buffer CreateCopyFrom(const std::uint8_t *data, std::size_t buffer_size);  //lint !e148
+  static Buffer CreateCopyFrom(const Buffer &other);
+  static Buffer CreateCopyFrom(const std::uint8_t *data, std::size_t buffer_size);
   static void ShareFrom(const Buffer &from, Buffer &to);
   static void CopyFrom(const Buffer &from, Buffer &to);
 };

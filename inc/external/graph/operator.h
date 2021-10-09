@@ -63,7 +63,6 @@ using std::function;
 using std::shared_ptr;
 using std::string;
 
-/*lint -e148*/
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
  public:
   friend class OperatorImpl;
@@ -98,7 +97,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   explicit Operator(const char *type);
 
   ATTRIBUTED_DEPRECATED(Operator(const char *, const char *))
-  Operator(const string &name, const string &type);  // lint !e148
+  Operator(const string &name, const string &type);
 
   Operator(const AscendString &name, const AscendString &type);
 
@@ -125,7 +124,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   Operator &SetInput(const char *dst_name, const Operator &src_oprt);
 
   ATTRIBUTED_DEPRECATED(Operator &SetInput(const char *, const Operator &, const char *))
-  Operator &SetInput(const string &dst_name, const Operator &src_oprt, const string &name);  // lint !e148
+  Operator &SetInput(const string &dst_name, const Operator &src_oprt, const string &name);
 
   Operator &SetInput(const char *dst_name, const Operator &src_oprt, const char *name);
 
@@ -176,7 +175,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   TensorDesc GetOutputDesc(uint32_t index) const;
 
   ATTRIBUTED_DEPRECATED(graphStatus UpdateOutputDesc(const char *, const TensorDesc &tensor_desc))
-  graphStatus UpdateOutputDesc(const string &name, const TensorDesc &tensor_desc);  // lint !e148
+  graphStatus UpdateOutputDesc(const string &name, const TensorDesc &tensor_desc);
 
   graphStatus UpdateOutputDesc(const char *name, const TensorDesc &tensor_desc);
 
@@ -186,7 +185,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   TensorDesc GetDynamicInputDesc(const char *name, uint32_t index) const;
 
   ATTRIBUTED_DEPRECATED(graphStatus UpdateDynamicInputDesc(const char *, uint32_t, const TensorDesc &))
-  graphStatus UpdateDynamicInputDesc(const string &name, uint32_t index, const TensorDesc &tensor_desc);  // lint !e148
+  graphStatus UpdateDynamicInputDesc(const string &name, uint32_t index, const TensorDesc &tensor_desc);
 
   graphStatus UpdateDynamicInputDesc(const char *name, uint32_t index, const TensorDesc &tensor_desc);
 
@@ -196,16 +195,16 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   TensorDesc GetDynamicOutputDesc(const char *name, uint32_t index) const;
 
   ATTRIBUTED_DEPRECATED(graphStatus UpdateDynamicOutputDesc(const char *, uint32_t, const TensorDesc &))
-  graphStatus UpdateDynamicOutputDesc(const string &name, uint32_t index, const TensorDesc &tensor_desc);  // lint !e148
+  graphStatus UpdateDynamicOutputDesc(const string &name, uint32_t index, const TensorDesc &tensor_desc);
 
   graphStatus UpdateDynamicOutputDesc(const char *name, uint32_t index, const TensorDesc &tensor_desc);
 
-  graphStatus InferShapeAndType();  // lint !e148
+  graphStatus InferShapeAndType();
 
   void SetInferenceContext(const InferenceContextPtr &inference_context);
   InferenceContextPtr GetInferenceContext() const;
 
-  graphStatus VerifyAllAttr(bool disable_common_verifier = false);  // lint !e148
+  graphStatus VerifyAllAttr(bool disable_common_verifier = false);
 
   size_t GetInputsSize() const;
 
@@ -422,14 +421,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   void RequiredAttrRegister(const string &name);
 
-  graphStatus VerifyAll();  // lint !e148
+  graphStatus VerifyAll();
 
   // Only has one output index = 0
   Operator &SetInput(const string &dst_name, uint32_t dst_index,
                      const Operator &src_oprt);
 
   Operator &SetInput(const string &dst_name, uint32_t dst_index, const Operator &src_oprt,
-                     const string &name);  // lint !e148
+                     const string &name);
 
   void SubgraphRegister(const string &ir_name, bool dynamic);
   void SubgraphCountRegister(const string &ir_name, uint32_t count);
@@ -437,7 +436,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   Graph GetSubgraphImpl(const string &name) const;
 
  private:
-  Operator &SetInput(const string &dst_name, const OutHandler &out_handler);  // lint !e148
+  Operator &SetInput(const string &dst_name, const OutHandler &out_handler);
 
   OutHandler GetOutput(const string &name) const;
 
@@ -451,7 +450,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   std::shared_ptr<const Node> GetNode() const;
 };
-/*lint +e148*/
 }  // namespace ge
 
 #endif  // INC_EXTERNAL_GRAPH_OPERATOR_H_

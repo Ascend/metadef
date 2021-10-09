@@ -154,7 +154,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
  protected:
   graphStatus AddRequiredAttr(const std::string &name);
   const std::set<string> GetAllAttrNames() const;
-  const std::map<string, AnyValue> GetAllAttrs() const;  // lint !e1073
+  const std::map<string, AnyValue> GetAllAttrs() const;
 
   virtual ProtoAttrMap &MutableAttrMap() = 0;
   virtual ConstProtoAttrMap &GetAttrMap() const = 0;

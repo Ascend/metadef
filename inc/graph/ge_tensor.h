@@ -192,7 +192,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   graphStatus SetData(const Buffer &data);
   graphStatus SetData(const TensorData &data);
   graphStatus SetData(const uint8_t *data, size_t size);
-  graphStatus SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc);  /*lint !e148*/
+  graphStatus SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc);
 
   const uint8_t *MallocAlignedPtr(size_t size);
 
