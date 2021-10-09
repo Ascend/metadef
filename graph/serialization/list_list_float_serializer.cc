@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 #include "graph/debug/ge_log.h"
 
 namespace ge {
-
 graphStatus ListListFloatSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   std::vector<std::vector<float>> list_list_value;
   graphStatus ret = av.GetValue(list_list_value);

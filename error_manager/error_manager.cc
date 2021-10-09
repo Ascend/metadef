@@ -286,13 +286,13 @@ int ErrorManager::ReportErrMessage(std::string error_code, const std::map<std::s
 
   ErrorManager::ErrorItem error_item = {error_code, error_message};
   if (error_code[0] == 'W') {
-    auto it = find(warning_messages.begin(), warning_messages.end(), error_item);
-    if (it == warning_messages.end()) {
+    auto warning_itr = find(warning_messages.begin(), warning_messages.end(), error_item);
+    if (warning_itr == warning_messages.end()) {
       warning_messages.emplace_back(error_item);
     }
   } else {
-    auto it = find(error_messages.begin(), error_messages.end(), error_item);
-    if (it == error_messages.end()) {
+    auto err_itr = find(error_messages.begin(), error_messages.end(), error_item);
+    if (err_itr == error_messages.end()) {
       error_messages.emplace_back(error_item);
     }
   }

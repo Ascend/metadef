@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright Huawei Technologies Co., Ltd. 2021.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,5 +72,4 @@ void SerializationUtil::ProtoDataTypeToGe(const proto::DataType proto_type, ge::
   }
   ge_type = DT_UNDEFINED;
 }
-
 }  // namespace ge

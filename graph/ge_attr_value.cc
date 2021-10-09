@@ -582,7 +582,6 @@ std::map<string, AnyValue> AttrUtils::GetAllAttrs(ConstAttrHolderAdapter &&obj) 
 
 
 std::string AttrUtils::GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const set<string> &un_compute_attrs) {
-
   std::map<string, AnyValue> attr_map = GetAllAttrs(std::move(obj));
   if (attr_map.empty()) {
     return "";
@@ -609,7 +608,6 @@ std::string AttrUtils::GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const s
   return ss.str();
 }
 std::string AttrUtils::GetAllAttrsStr(ConstAttrHolderAdapter &&obj) {
-
   std::map<string, AnyValue> attr_map = GetAllAttrs(std::move(obj));
   if (attr_map.empty()) {
     return "";
