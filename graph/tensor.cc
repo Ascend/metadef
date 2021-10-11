@@ -539,7 +539,7 @@ Tensor::Tensor(const TensorDesc &tensor_desc) {
 }
 
 Tensor::Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data) {
-  uint64_t shape_size = tensor_desc.GetShape().GetShapeSize();
+  auto shape_size = tensor_desc.GetShape().GetShapeSize();
   DataType data_type = tensor_desc.GetDataType();
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
@@ -548,7 +548,7 @@ Tensor::Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data) 
   }
 
   auto data_size = data.size();
-  if (ret && (shape_size || (data_size != type_length))) {
+  if (ret && (shape_size > 0 || (data_size != type_length))) {
     if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
       GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
     } else {
@@ -562,14 +562,14 @@ Tensor::Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data) 
 }
 
 Tensor::Tensor(const TensorDesc &tensor_desc, const uint8_t *data, size_t size) {
-  uint64_t shape_size = tensor_desc.GetShape().GetShapeSize();
+  auto shape_size = tensor_desc.GetShape().GetShapeSize();
   DataType data_type = tensor_desc.GetDataType();
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
     GELOGW("[Create][Tensor] Datatype %d not found.", data_type);
   }
-  if (ret && (shape_size || (size != type_length))) {
+  if (ret && (shape_size > 0 || (size != type_length))) {
     if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
       GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
     } else {
@@ -584,7 +584,7 @@ Tensor::Tensor(const TensorDesc &tensor_desc, const uint8_t *data, size_t size) 
 }
 
 Tensor::Tensor(TensorDesc &&tensor_desc, std::vector<uint8_t> &&data) {
-  uint64_t shape_size = tensor_desc.GetShape().GetShapeSize();
+  auto shape_size = tensor_desc.GetShape().GetShapeSize();
   DataType data_type = tensor_desc.GetDataType();
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
@@ -593,7 +593,7 @@ Tensor::Tensor(TensorDesc &&tensor_desc, std::vector<uint8_t> &&data) {
   }
 
   auto data_size = data.size();
-  if (ret && (shape_size || (data_size != type_length))) {
+  if (ret && (shape_size > 0 || (data_size != type_length))) {
     if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
       GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
     } else {
@@ -741,7 +741,7 @@ graphStatus Tensor::SetData(uint8_t *data, size_t size, const Tensor::DeleteFunc
 }
 
 graphStatus Tensor::IsValid() {
-  uint64_t shape_size = GetTensorDesc().GetShape().GetShapeSize();
+  auto shape_size = GetTensorDesc().GetShape().GetShapeSize();
   DataType data_type = GetTensorDesc().GetDataType();
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
@@ -752,7 +752,7 @@ graphStatus Tensor::IsValid() {
 
   size_t data_size = GetSize();
   if (data_type != DT_STRING) {
-    if (shape_size || (data_size != type_length)) {
+    if (shape_size > 0 || (data_size != type_length)) {
       if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
         GELOGW("[Check][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
       } else {
