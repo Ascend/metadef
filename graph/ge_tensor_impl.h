@@ -100,11 +100,11 @@ class GeTensorDescImpl {
     }
 
     // for weight_size
-    uint32_t GetWeightSize() const {
+    int64_t GetWeightSize() const {
       return weight_size;
     }
 
-    void SetWeightSize(uint32_t v) {
+    void SetWeightSize(int64_t v) {
       weight_size = v;
     }
 
@@ -194,8 +194,8 @@ class GeTensorDescImpl {
     int64_t data_offset{0};
     int64_t cmps_tab_offset{0};
     int64_t cmps_size{0};
+    int64_t weight_size{0};
 
-    uint32_t weight_size{0U};
     uint32_t real_dim_cnt{0U};
     uint32_t reuse_input_index{0U};
 

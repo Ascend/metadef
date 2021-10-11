@@ -19,7 +19,6 @@
 #include <cstring>
 #include <map>
 #include <securec.h>
-#include "common/math_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "debug/ge_util.h"
 #include "graph/ge_tensor_impl.h"
@@ -34,6 +33,20 @@
 
 namespace ge {
 namespace{
+template <typename T>
+class IntegerChecker {
+ public:
+  template <typename T1>
+  static bool Compat(T1 v) {
+    static_assert((sizeof(T) <= sizeof(uint64_t) && sizeof(T1) <= sizeof(uint64_t)),
+                  "IntegerChecker can only check integers less than 64 bits");
+    if (v >= static_cast<T1>(0)) {
+      return static_cast<uint64_t>(v) <= static_cast<uint64_t>(std::numeric_limits<T>::max());
+    }
+    return static_cast<int64_t>(v) >= static_cast<int64_t>(std::numeric_limits<T>::min());
+  }
+};
+
 const char *const kKeyDataTypeSelfDefined = "__tensor_desc_data_type__";
 const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_UNDEFINED, proto::DT_UNDEFINED},
@@ -559,9 +572,7 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
 
   // get extension tensor desc metadata
   ext_meta_.SetSize(proto_msg->size());
-  if (IntegerChecker<uint32_t>::Compat(proto_msg->weight_size())) {
-    ext_meta_.SetWeightSize(static_cast<uint32_t>(proto_msg->weight_size()));
-  }
+  ext_meta_.SetWeightSize(proto_msg->weight_size());
   ext_meta_.SetReuseInput(proto_msg->reuse_input());
   ext_meta_.SetOutputTensor(proto_msg->output_tensor());
   if (kStrToDeviceMap.find(proto_msg->device_type()) != kStrToDeviceMap.end()) {
@@ -1452,10 +1463,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(GeTenso
 }
 
 uint32_t TensorUtils::GetWeightSize(const GeTensorDesc &tensor_desc) {
-  if (tensor_desc.impl_ != nullptr) {
-    return tensor_desc.impl_->ext_meta_.GetWeightSize();
+  if (tensor_desc.impl_ != nullptr && IntegerChecker<uint32_t>::Compat(tensor_desc.impl_->ext_meta_.GetWeightSize())) {
+    return static_cast<uint32_t>(tensor_desc.impl_->ext_meta_.GetWeightSize());
   }
-  return 0;
+  return 0U;
 }
 
 uint32_t TensorUtils::GetWeightSize(const GeTensor &tensor) { return GetWeightSize(tensor.GetTensorDesc()); }
@@ -1497,7 +1508,7 @@ uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *base) {
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetWeightSize(GeTensorDesc &tensor_desc,
                                                                                uint32_t size) {
   if (tensor_desc.impl_ != nullptr) {
-    tensor_desc.impl_->ext_meta_.SetWeightSize(size);
+    tensor_desc.impl_->ext_meta_.SetWeightSize(static_cast<int64_t>(size));
   }
 }
 

@@ -352,8 +352,8 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_cmps_tab_offset:" + std::to_string(i), &cmps_tab_offset);
       std::map<std::string, AnyValue> attr_maps = input_desc->GetAllAttrs();
-      auto tensor_desc_map = tensor_descriptor->attr();
-      ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
+      google::protobuf::Map<std::string, ge::proto::AttrDef> tensor_desc_map;
+      (void)ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
       std::string suffix = ":" + std::to_string(i);
       AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForInputDesc, suffix);
     }
@@ -404,8 +404,8 @@ void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *node_proto, const OpDe
                    "output_desc_real_dim_cnt:" + std::to_string(i), &real_dim_cnt);
       std::string suffix = ":" + std::to_string(i);
       std::map<std::string, AnyValue> attr_maps = output_desc->GetAllAttrs();
-      auto tensor_desc_map = tensor_descriptor->attr();
-      ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
+      google::protobuf::Map<std::string, ge::proto::AttrDef> tensor_desc_map;
+      (void)ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
       AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForOutputDesc, suffix);
     }
   }
