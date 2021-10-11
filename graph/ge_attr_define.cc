@@ -1244,6 +1244,9 @@ const std::string ATTR_NAME_DEPLOY_DEVICE_ID = "_device_id";
 const std::string ATTR_NAME_DEPLOY_GRAPH_INPUTS = "_graph_inputs";
 const std::string ATTR_NAME_DEPLOY_NEED_RETURN_RESULT = "_need_return_result";
 
+// for qos
+const std::string ATTR_NAME_QOS_SERVICE_LABEL = "_qos_service_label";
+
 // for constant folding, mark potential const
 const std::string ATTR_NAME_POTENTIAL_CONST = "_is_potential_const";
 const std::string ATTR_NAME_POTENTIAL_WEIGHT = "_potential_weight";
