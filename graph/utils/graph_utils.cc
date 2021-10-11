@@ -932,10 +932,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(cons
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToTextFile(
     const google::protobuf::Message &proto, const char *real_path) {
 #ifdef FMK_SUPPORT_DUMP
-  char err_buf[kMaxErrStrLen + 1] = {0};
   const int FILE_AUTHORITY = 0600;
   int fd = mmOpen2(real_path, M_WRONLY | M_CREAT | O_TRUNC, FILE_AUTHORITY);
   if (fd < 0) {
+    char err_buf[kMaxErrStrLen + 1] = {0};
     auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
     REPORT_CALL_ERROR("E19999", "open file:%s failed, errormessage:%s", real_path, err_msg);
     GELOGE(GRAPH_FAILED, "[Open][File] failed for %s, reason:%s", real_path, err_msg);
@@ -946,6 +946,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     REPORT_CALL_ERROR("E19999", "create FileOutputStream failed.");
     GELOGE(GRAPH_FAILED, "[Create][FileOutputStream] Output is nullptr");
     if (mmClose(fd) != 0) {
+      char err_buf[kMaxErrStrLen + 1] = {0};
       auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
       REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", err_msg);
       GELOGE(GRAPH_FAILED, "[Close][FileOutputStream] failed, reason:%s", err_msg);
@@ -958,6 +959,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     GELOGE(GRAPH_FAILED, "[Invoke][Print] Fail to write the file: %s", real_path);
     delete output;
     output = nullptr;
+    char err_buf[kMaxErrStrLen + 1] = {0};
     auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
     GE_CHK_BOOL_EXEC(mmClose(fd) == 0,
                      REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", err_msg);
@@ -966,6 +968,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
   }
   delete output;
   output = nullptr;
+  char err_buf[kMaxErrStrLen + 1] = {0};
   auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
   GE_CHK_BOOL_EXEC(mmClose(fd) == 0,
                    REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", err_msg);
