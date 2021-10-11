@@ -18,6 +18,11 @@
 
 #include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
+#include <cstring>
+
+namespace {
+const size_t kMaxErrStrLen = 128U;
+}  //  namespace
 
 namespace ge {
 std::string RealPath(const char *path) {
@@ -38,7 +43,9 @@ std::string RealPath(const char *path) {
   if (mmRealPath(path, resolved_path, MMPA_MAX_PATH) == EN_OK) {
     res = resolved_path;
   } else {
-    GELOGW("[Util][realpath] Get real_path for %s failed, reason:%s", path, strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    GELOGW("[Util][realpath] Get real_path for %s failed, reason:%s", path, err_msg);
   }
 
   return res;
@@ -70,11 +77,13 @@ int32_t CreateDirectory(const std::string &directory_path) {
         int32_t ret = mmMkdir(tmp_dir_path, M_IRUSR | M_IWUSR | M_IXUSR);  // 700
         if (ret != 0) {
           if (errno != EEXIST) {
+            char err_buf[kMaxErrStrLen + 1] = {0};
+            auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
             REPORT_CALL_ERROR("E19999",
                               "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-                              directory_path.c_str(), strerror(errno));
+                              directory_path.c_str(), err_msg);
             GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",
-                   directory_path.c_str(), strerror(errno));
+                   directory_path.c_str(), err_msg);
             return ret;
           }
         }
@@ -84,11 +93,13 @@ int32_t CreateDirectory(const std::string &directory_path) {
   int32_t ret = mmMkdir(const_cast<char *>(directory_path.c_str()), M_IRUSR | M_IWUSR | M_IXUSR);  // 700
   if (ret != 0) {
     if (errno != EEXIST) {
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
       REPORT_CALL_ERROR("E19999",
                         "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-                        directory_path.c_str(), strerror(errno));
+                        directory_path.c_str(), err_msg);
       GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",
-             directory_path.c_str(), strerror(errno));
+             directory_path.c_str(), err_msg);
       return ret;
     }
   }

@@ -50,6 +50,10 @@
 
 using google::protobuf::io::FileOutputStream;
 
+namespace {
+const size_t kMaxErrStrLen = 128U;
+}  //  namespace
+
 namespace ge {
 enum DumpGraphLevel {
   kDumpLevel1 = 1,
@@ -931,8 +935,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
   const int FILE_AUTHORITY = 0600;
   int fd = mmOpen2(real_path, M_WRONLY | M_CREAT | O_TRUNC, FILE_AUTHORITY);
   if (fd < 0) {
-    REPORT_CALL_ERROR("E19999", "open file:%s failed, errormessage:%s", real_path, strerror(errno));
-    GELOGE(GRAPH_FAILED, "[Open][File] failed for %s, reason:%s", real_path, strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "open file:%s failed, errormessage:%s", real_path, err_msg);
+    GELOGE(GRAPH_FAILED, "[Open][File] failed for %s, reason:%s", real_path, err_msg);
     return;
   }
   google::protobuf::io::FileOutputStream *output = new (std::nothrow) FileOutputStream(fd);
@@ -940,8 +946,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     REPORT_CALL_ERROR("E19999", "create FileOutputStream failed.");
     GELOGE(GRAPH_FAILED, "[Create][FileOutputStream] Output is nullptr");
     if (mmClose(fd) != 0) {
-      REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", strerror(errno));
-      GELOGE(GRAPH_FAILED, "[Close][FileOutputStream] failed, reason:%s", strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", err_msg);
+      GELOGE(GRAPH_FAILED, "[Close][FileOutputStream] failed, reason:%s", err_msg);
     }
     return;
   }
@@ -951,21 +959,27 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     GELOGE(GRAPH_FAILED, "[Invoke][Print] Fail to write the file: %s", real_path);
     delete output;
     output = nullptr;
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
     GE_CHK_BOOL_EXEC(mmClose(fd) == 0,
-                     REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", strerror(errno));
-                     return, "[Close][FileOutputStream] failed, reason:%s", strerror(errno));
+                     REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", err_msg);
+                     return, "[Close][FileOutputStream] failed, reason:%s", err_msg);
     return;
   }
   delete output;
   output = nullptr;
+  char err_buf[kMaxErrStrLen + 1] = {0};
+  auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
   GE_CHK_BOOL_EXEC(mmClose(fd) == 0,
-                   REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", strerror(errno));
-                   return, "[Close][FileOutputStream] failed, reason:%s.", strerror(errno));
+                   REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", err_msg);
+                   return, "[Close][FileOutputStream] failed, reason:%s.", err_msg);
 
   FILE *file = fopen(real_path, "rb");
   if (file == nullptr) {
-    REPORT_CALL_ERROR("E19999", "open file:%s failed, errormessage:%s", real_path, strerror(errno));
-    GELOGE(GRAPH_FAILED, "[Invoke][FOpen] fail to open the file: %s, %s", real_path, strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "open file:%s failed, errormessage:%s", real_path, err_msg);
+    GELOGE(GRAPH_FAILED, "[Invoke][FOpen] fail to open the file: %s, %s", real_path, err_msg);
     return;
   }
   if (fseek(file, 0L, SEEK_END) == 0) {
@@ -981,15 +995,19 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
       GELOGW("[WriteProto][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
              fileSize, max_dump_file_size);
       GE_IF_BOOL_EXEC(remove(real_path) != 0, GELOGW("[WriteProto][RemovePath] Remove path %s failed", real_path));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
       GE_CHK_BOOL_EXEC(fclose(file) == 0,
-                       REPORT_CALL_ERROR("E19999", "close file:%s failed, error:%s", real_path, strerror(errno));
-                       return, "[FClose][File] %s failed error:%s", real_path, strerror(errno));
+                       REPORT_CALL_ERROR("E19999", "close file:%s failed, error:%s", real_path, err_msg);
+                       return, "[FClose][File] %s failed error:%s", real_path, err_msg);
       return;
     }
   }
+  char err_buf[kMaxErrStrLen + 1] = {0};
+  auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
   GE_CHK_BOOL_EXEC(fclose(file) == 0,
-                   REPORT_CALL_ERROR("E19999", "close file:%s failed error:%s", real_path, strerror(errno));
-                   return, "[FClose][File] %s failed error:%s", real_path, strerror(errno));
+                   REPORT_CALL_ERROR("E19999", "close file:%s failed error:%s", real_path, err_msg);
+                   return, "[FClose][File] %s failed error:%s", real_path, err_msg);
 #else
   GELOGW("[Write][Proto] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
@@ -1094,8 +1112,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
     int err_num = errno;
     // linux: ENAMETOOLONG windows: ERANGE
     if (err_num == ENAMETOOLONG || err_num == ERANGE) {
-      REPORT_CALL_ERROR("E19999", "RealPath failed for file:%s. reason:%s", proto_file.c_str(), strerror(errno));
-      GELOGE(GRAPH_FAILED, "[Real][Path] failed for file:%s. reason:%s", proto_file.c_str(), strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      REPORT_CALL_ERROR("E19999", "RealPath failed for file:%s. reason:%s", proto_file.c_str(), err_msg);
+      GELOGE(GRAPH_FAILED, "[Real][Path] failed for file:%s. reason:%s", proto_file.c_str(), err_msg);
       return;
     }
   }
@@ -1159,8 +1179,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
   if (mmRealPath(proto_file.c_str(), real_path.get(), MMPA_MAX_PATH) != EN_OK) {
     // For case a
     if (errno == ENAMETOOLONG) {
-      REPORT_CALL_ERROR("E19999", "RealPath failed for file:%s. reason:%s", proto_file.c_str(), strerror(errno));
-      GELOGE(GRAPH_FAILED, "[Real][Path] failed for file:%s. reason:%s", proto_file.c_str(), strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      REPORT_CALL_ERROR("E19999", "RealPath failed for file:%s. reason:%s", proto_file.c_str(), err_msg);
+      GELOGE(GRAPH_FAILED, "[Real][Path] failed for file:%s. reason:%s", proto_file.c_str(), err_msg);
       return;
     }
   }

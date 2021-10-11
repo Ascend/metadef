@@ -41,6 +41,7 @@ using google::protobuf::io::ZeroCopyInputStream;
 namespace {
 const int DEFAULT_VERSION = 1;
 const int ACCESS_PERMISSION_BITS = 0400;
+const size_t kMaxErrStrLen = 128U;
 }  // namespace
 
 namespace ge {
@@ -117,8 +118,10 @@ graphStatus Model::SaveToFile(const string &file_name) const {
     }
     int fd = mmOpen2(real_path, M_WRONLY | M_CREAT | O_TRUNC, ACCESS_PERMISSION_BITS);
     if (fd < 0) {
-      REPORT_CALL_ERROR("E19999", "open file:%s failed, error:%s ", real_path, strerror(errno));
-      GELOGE(GRAPH_FAILED, "[Open][File] %s failed, error:%s ", real_path, strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      REPORT_CALL_ERROR("E19999", "open file:%s failed, error:%s ", real_path, err_msg);
+      GELOGE(GRAPH_FAILED, "[Open][File] %s failed, error:%s ", real_path, err_msg);
       return GRAPH_FAILED;
     }
     bool ret = ge_proto.SerializeToFileDescriptor(fd);
@@ -126,15 +129,19 @@ graphStatus Model::SaveToFile(const string &file_name) const {
       REPORT_CALL_ERROR("E19999", "SerializeToFileDescriptor failed, file:%s.", real_path);
       GELOGE(GRAPH_FAILED, "[Call][SerializeToFileDescriptor] failed, file:%s.", real_path);
       if (close(fd) != 0) {
-        REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, strerror(errno));
-        GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", real_path, strerror(errno));
+        char err_buf[kMaxErrStrLen + 1] = {0};
+        auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+        REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, err_msg);
+        GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", real_path, err_msg);
         return GRAPH_FAILED;
       }
       return GRAPH_FAILED;
     }
     if (close(fd) != 0) {
-      REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, strerror(errno));
-      GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", real_path, strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, err_msg);
+      GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", real_path, err_msg);
       return GRAPH_FAILED;
     }
     if (!ret) {
@@ -155,14 +162,18 @@ graphStatus Model::LoadFromFile(const string &file_name) {
   }
   INT32 result = mmRealPath(file_name.c_str(), real_path, MMPA_MAX_PATH);
   if (result != EN_OK) {
-    REPORT_CALL_ERROR("E19999", "get realpath failed for %s, error:%s.", file_name.c_str(), strerror(errno));
-    GELOGE(GRAPH_FAILED, "[Get][RealPath] failed for %s, error:%s.", file_name.c_str(), strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "get realpath failed for %s, error:%s.", file_name.c_str(), err_msg);
+    GELOGE(GRAPH_FAILED, "[Get][RealPath] failed for %s, error:%s.", file_name.c_str(), err_msg);
     return GRAPH_FAILED;
   }
   int fd = mmOpen(real_path, M_RDONLY);
   if (fd < 0) {
-    REPORT_CALL_ERROR("E19999", "open file:%s failed, error:%s", real_path, strerror(errno));
-    GELOGE(GRAPH_FAILED, "[Open][File] %s failed, error:%s", real_path, strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "open file:%s failed, error:%s", real_path, err_msg);
+    GELOGE(GRAPH_FAILED, "[Open][File] %s failed, error:%s", real_path, err_msg);
     return GRAPH_FAILED;
   }
 
@@ -172,15 +183,19 @@ graphStatus Model::LoadFromFile(const string &file_name) {
     REPORT_CALL_ERROR("E19999", "ParseFromFileDescriptor failed, file:%s.", real_path);
     GELOGE(GRAPH_FAILED, "[Call][ParseFromFileDescriptor] failed, file:%s.", real_path);
     if (mmClose(fd) != 0) {
-      REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, strerror(errno));
-      GELOGE(GRAPH_FAILED, "[Close][File] %s fail. error:%s", real_path, strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, err_msg);
+      GELOGE(GRAPH_FAILED, "[Close][File] %s fail. error:%s", real_path, err_msg);
       return GRAPH_FAILED;
     }
     return GRAPH_FAILED;
   }
   if (mmClose(fd) != 0) {
-    REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, strerror(errno));
-    GELOGE(GRAPH_FAILED, "[Close][File] %s fail. error:%s", real_path, strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", real_path, err_msg);
+    GELOGE(GRAPH_FAILED, "[Close][File] %s fail. error:%s", real_path, err_msg);
     return GRAPH_FAILED;
   }
   if (!ret) {
