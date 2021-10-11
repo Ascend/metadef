@@ -413,56 +413,6 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &
   return ret;
 }
 
-ge::graphStatus OpAtomicCalculateV1GetCleanSize(const ge::OpDescPtr &op_desc_ptr,
-                                                std::vector<int64_t> &atomic_output_indices,
-                                                nlohmann::json &compile_info_json,
-                                                std::map<string, std::map<int64_t, int64_t>> &atomic_workspace_info,
-                                                TeOpParas &op_param) {
-  int64_t clean_size = 0;
-  int64_t first_clean_size = 0;
-  if (!atomic_output_indices.empty()) {
-    GELOGI("atomic_output_indices is not null, op_name:%s", op_desc_ptr->GetName().c_str());
-    bool is_first_index = true;
-    for (const int64_t &atomic_output_indice : atomic_output_indices) {
-      ge::ConstGeTensorDescPtr tensor = op_desc_ptr->GetOutputDescPtr(atomic_output_indice);
-      if (tensor == nullptr) {
-        GE_LOGE("Get MutableOutputDesc failed. op_type:%s, op_name:%s",
-                OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
-        return ge::GRAPH_FAILED;
-      }
-
-      if (ge::TensorUtils::GetSize(*tensor, clean_size) != ge::GRAPH_SUCCESS) {
-        GE_LOGE("Get size of tensor desc failed. op_type:%s, op_name:%s",
-                OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
-        return ge::GRAPH_FAILED;
-      }
-      compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(clean_size);
-      if (is_first_index) {
-        first_clean_size = clean_size;
-        is_first_index = false;
-      }
-    }
-  }
-
-  GELOGI("Atomic clean size: %ld, op_name:%s", clean_size, op_desc_ptr->GetName().c_str());
-  op_param.op_type = OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN;
-  op_param.const_inputs.emplace("workspace_size",
-                                TeConstTensorData(nullptr, static_cast<size_t>(first_clean_size), ge::Tensor()));
-
-  if (!atomic_workspace_info.empty()) {
-    GELOGI("atomic_workspace_info is not null, op_name:%s", op_desc_ptr->GetName().c_str());
-    auto workspace_bytes = op_desc_ptr->GetWorkspaceBytes();
-    std::map<int64_t, int64_t> workspace_bytes_map = atomic_workspace_info[op_desc_ptr->GetName()];
-    for (auto workspace_idxs : workspace_bytes_map) {
-      int64_t idx = workspace_idxs.first;
-      if (idx < static_cast<int64_t>(workspace_bytes.size())) {
-        compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(workspace_bytes[idx]);
-      }
-    }
-  }
-  return ge::GRAPH_SUCCESS;
-}
-
 ge::graphStatus OpAtomicCalculateV1(const ge::OpDescPtr &op_desc_ptr, OpRunInfo &run_info,
                                     std::unordered_map<std::string, OpTilingFunc>::iterator iter) {
   GELOGI("Begin to do Atomic optiling. op_type:%s, op_name:%s",
@@ -498,13 +448,46 @@ ge::graphStatus OpAtomicCalculateV1(const ge::OpDescPtr &op_desc_ptr, OpRunInfo 
             op_desc_ptr->GetName().c_str(), op_compile_info.str.c_str());
     return ge::GRAPH_FAILED;
   }
+
+  int64_t clean_size = 0;
+  int64_t first_clean_size = 0;
+  if (!atomic_output_indices.empty()) {
+    bool is_first_index = true;
+    for (const int64_t &atomic_output_indice : atomic_output_indices) {
+      ge::ConstGeTensorDescPtr tensor = op_desc_ptr->GetOutputDescPtr(atomic_output_indice);
+      if (tensor == nullptr) {
+        GE_LOGE("Get MutableOutputDesc failed. op_type:%s, op_name:%s",
+                OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
+        return ge::GRAPH_FAILED;
+      }
+
+      if (ge::TensorUtils::GetSize(*tensor, clean_size) != ge::GRAPH_SUCCESS) {
+        GE_LOGE("Get size of tensor desc failed. op_type:%s, op_name:%s",
+                OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
+        return ge::GRAPH_FAILED;
+      }
+      compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(clean_size);
+      if (is_first_index) {
+        first_clean_size = clean_size;
+        is_first_index = false;
+      }
+    }
+  }
+
+  GELOGI("Atomic clean size: %ld, op_name:%s", clean_size, op_desc_ptr->GetName().c_str());
+
   TeOpParas op_param;
-  bool res = OpAtomicCalculateV1GetCleanSize(
-      op_desc_ptr, atomic_output_indices, compile_info_json, atomic_workspace_info, op_param);
-  if (!res) {
-    GE_LOGE("Fail to get clean size, function of atomic op[%s, %s].",
-            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
-    return ge::GRAPH_FAILED;
+  op_param.op_type = OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN;
+  op_param.const_inputs.emplace("workspace_size",
+                                TeConstTensorData(nullptr, static_cast<size_t>(first_clean_size), ge::Tensor()));
+
+  if (!atomic_workspace_info.empty()) {
+    clean_size = 0;
+    auto workspace_bytes = op_desc_ptr->GetWorkspaceBytes();
+    for (auto byte : workspace_bytes) {
+      clean_size += byte;
+    }
+    compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(clean_size);
   }
   GELOGI("op_compile_info's value: %s", compile_info_json.dump().c_str());
   op_compile_info.str = compile_info_json.dump();
@@ -543,52 +526,6 @@ ge::graphStatus TurnToOpAtomicCalculateV1(const ge::OpDescPtr &op_desc_ptr, OpRu
       run_info.AddWorkspace(workspace);
     }
   }
-  return ge::GRAPH_SUCCESS;
-}
-
-ge::graphStatus TurnToOpAtomicCalculateV2GetCleanSize(const ge::OpDescPtr &op_desc_ptr,
-                                                      std::vector<int64_t> &atomic_output_indices,
-                                                      nlohmann::json &compile_info_json, vector<int64_t> &workspace_list,
-                                                      std::map<string, std::map<int64_t, int64_t>> &atomic_workspace_info) {
-  int64_t clean_size = 0;
-  if (!atomic_output_indices.empty()) {
-    GELOGI("atomic_output_indices is not null, op_name:%s", op_desc_ptr->GetName().c_str());
-    bool is_first_index = true;
-    for (const int64_t &atomic_output_indice : atomic_output_indices) {
-      ge::ConstGeTensorDescPtr tensor = op_desc_ptr->GetOutputDescPtr(atomic_output_indice);
-      if (tensor == nullptr) {
-                REPORT_CALL_ERROR("E19999",
-                                  "Get MutableOutputDesc failed. op_type:%s, op_name:%s",
-                                  OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
-        return ge::GRAPH_FAILED;
-      }
-      if (ge::TensorUtils::GetSize(*tensor, clean_size) != ge::GRAPH_SUCCESS) {
-                REPORT_CALL_ERROR("E19999",
-                                  "Get size of tensor desc failed. op_type:%s, op_name:%s",
-                                  OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
-        return ge::GRAPH_FAILED;
-      }
-      compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(clean_size);
-      if (is_first_index) {
-        workspace_list.push_back(clean_size);
-        is_first_index = false;
-      }
-    }
-  }
-
-  if (!atomic_workspace_info.empty()) {
-    GELOGI("atomic_workspace_info is not null, op_name:%s", op_desc_ptr->GetName().c_str());
-    auto workspace_bytes = op_desc_ptr->GetWorkspaceBytes();
-    std::map<int64_t, int64_t> workspace_bytes_map = atomic_workspace_info[op_desc_ptr->GetName()];
-    for (auto workspace_idxs : workspace_bytes_map) {
-      int64_t idx = workspace_idxs.first;
-      if (idx < static_cast<int64_t>(workspace_bytes.size())) {
-        compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(workspace_bytes[idx]);
-        workspace_list.push_back(workspace_bytes[idx]);
-      }
-    }
-  }
-  GELOGI("Atomic clean size: %ld, op_name:%s", clean_size, op_desc_ptr->GetName().c_str());
   return ge::GRAPH_SUCCESS;
 }
 
@@ -631,14 +568,42 @@ ge::graphStatus TurnToOpAtomicCalculateV2(const ge::OpDescPtr &op_desc_ptr, OpRu
   }
 
   vector<int64_t> workspace_list;
-  bool res = TurnToOpAtomicCalculateV2GetCleanSize(op_desc_ptr, atomic_output_indices,
-      compile_info_json, workspace_list, atomic_workspace_info);
-  if (!res) {
-    GE_LOGE("Fail to get clean size, function of atomic op[%s, %s].",
-            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
-    return ge::GRAPH_FAILED;
+  int64_t clean_size = 0;
+  if (!atomic_output_indices.empty()) {
+    bool is_first_index = true;
+    for (const int64_t &atomic_output_indice : atomic_output_indices) {
+      ge::ConstGeTensorDescPtr tensor = op_desc_ptr->GetOutputDescPtr(atomic_output_indice);
+      if (tensor == nullptr) {
+                REPORT_CALL_ERROR("E19999",
+                                  "Get MutableOutputDesc failed. op_type:%s, op_name:%s",
+                                  OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
+        return ge::GRAPH_FAILED;
+      }
+      if (ge::TensorUtils::GetSize(*tensor, clean_size) != ge::GRAPH_SUCCESS) {
+                REPORT_CALL_ERROR("E19999",
+                                  "Get size of tensor desc failed. op_type:%s, op_name:%s",
+                                  OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str(), op_desc_ptr->GetName().c_str());
+        return ge::GRAPH_FAILED;
+      }
+      compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(clean_size);
+      if (is_first_index) {
+        workspace_list.push_back(clean_size);
+        is_first_index = false;
+      }
+    }
   }
-  GELOGI("op_compile_info's value: %s", compile_info_json.dump().c_str());
+
+  if (!atomic_workspace_info.empty()) {
+    clean_size = 0;
+    std::vector<int64_t> workspace_bytes = op_desc_ptr->GetWorkspaceBytes();
+    for (const int64_t &byte : workspace_bytes) {
+      clean_size += byte;
+    }
+    compile_info_json[COMPILE_INFO_WORKSPACE_SIZE_LIST].push_back(clean_size);
+  }
+  workspace_list.push_back(clean_size);
+
+  GELOGI("Atomic clean size: %ld, op_name:%s", clean_size, op_desc_ptr->GetName().c_str());
   ge::Operator op_param(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
   op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
   op_compile_info_json = compile_info_json.dump();
