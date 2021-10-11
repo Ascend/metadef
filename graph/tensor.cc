@@ -562,14 +562,14 @@ Tensor::Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data) 
 }
 
 Tensor::Tensor(const TensorDesc &tensor_desc, const uint8_t *data, size_t size) {
-  auto shape_size = tensor_desc.GetShape().GetShapeSize();
+  uint64_t shape_size = tensor_desc.GetShape().GetShapeSize();
   DataType data_type = tensor_desc.GetDataType();
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
     GELOGW("[Create][Tensor] Datatype %d not found.", data_type);
   }
-  if (ret && (shape_size > 0 || (size != type_length))) {
+  if (ret && (shape_size || (size != type_length))) {
     if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
       GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
     } else {

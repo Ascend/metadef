@@ -373,8 +373,8 @@ int ErrorManager::OutputErrMessage(int handle) {
     mmSsize_t ret = mmWrite(handle, const_cast<char *>(err_msg.c_str()), err_msg.length());
     if (ret == -1) {
       char err_buf[kMaxErrStrLen + 1] = {0};
-      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
-      GELOGE("[Write][File]fail, reason:%s",  err_msg);
+      auto err_msg_s = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      GELOGE("[Write][File]fail, reason:%s",  err_msg_s);
       return -1;
     }
   }
