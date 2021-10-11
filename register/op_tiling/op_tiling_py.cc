@@ -130,6 +130,25 @@ void GetConstDataPointer(const nlohmann::json &json_array, std::vector<uint8_t> 
   const_value = std::vector<uint8_t>(pv_begin, pv_end);
 }
 
+void CopyConstDataWithFloat16(const nlohmann::json &json_array, std::vector<uint8_t> &value) {
+  std::vector<float> const_value = json_array.get<std::vector<float>>();
+  float *const_data_ptr = const_value.data();
+  if (const_data_ptr == nullptr) {
+    GE_LOGE("Get const data pointer failed");
+    return;
+  }
+  std::vector<uint16_t> const_data_vec;
+  size_t size = sizeof(const_value)/sizeof(float);
+  for (size_t i = 0; i < size; ++i) {
+    float const_data = *(const_data_ptr + i);
+    uint16_t const_data_uint16 = FloatToUint16(const_data);
+    const_data_vec.emplace_back(const_data_uint16);
+  }
+  uint8_t *pv_begin = reinterpret_cast<uint8_t *>(const_data_vec.data());
+  uint8_t *pv_end = pv_begin + const_data_vec.size() * sizeof(uint16_t);
+  value = std::vector<uint8_t>(pv_begin, pv_end);
+}
+
 bool CopyConstData(const std::string &dtype, const nlohmann::json &json_array, std::vector<uint8_t> &value) {
   if (dtype == "int8") {
     GetConstDataPointer<int8_t>(json_array, value);
@@ -151,6 +170,8 @@ bool CopyConstData(const std::string &dtype, const nlohmann::json &json_array, s
     GetConstDataPointer<float>(json_array, value);
   } else if (dtype == "double") {
     GetConstDataPointer<double>(json_array, value);
+  } else if (dtype == "float16") {
+    CopyConstDataWithFloat16(json_array, value);
   } else {
     GE_LOGE("Unknown dtype: %s", dtype.c_str());
     return false;
