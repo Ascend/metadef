@@ -3010,19 +3010,19 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
   // Add Input-Mapping
   std::map<uint32_t, uint32_t> input_mapping;
-  for (size_t i = 0; i < graph_info.data_inputs.size(); i++) {
-    input_mapping[i] = i;
+  size_t j = 0U;
+  for (const auto &item : graph_info.data_inputs) {
+    while (j < item.second.second.size()) {
+      input_mapping[j] = j;
+      j++;
+    }
   }
   graph_builder.SetInputMapping(input_mapping);
 
   // Add outputMapping
   std::map<uint32_t, uint32_t> output_mapping;
-  size_t j = 0;
-  for (const auto &item : graph_info.data_inputs) {
-    while (j < item.second.second.size()) {
-      output_mapping[j] = j;
-      j++;
-    }
+  for (size_t i = 0U; i < graph_info.data_inputs.size(); i++) {
+    output_mapping[i] = i;
   }
   graph_builder.SetOutputMapping(output_mapping);
 
