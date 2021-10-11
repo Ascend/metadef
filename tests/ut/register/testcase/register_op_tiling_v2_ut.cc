@@ -215,7 +215,7 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_1) {
   std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_tiling_stub_v2);
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ret, GRAPH_FAILED);
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
@@ -255,6 +255,36 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_3) {
   (void)ge::AttrUtils::SetStr(op_desc, ATOMIC_COMPILE_INFO_JSON, compile_info_json);
   std::vector<int64_t> atomic_output_indices = {1};
   (void) ge::AttrUtils::SetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
+
+  ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
+  NodePtr node = graph->AddNode(op_desc);
+
+  utils::OpRunInfo run_info;
+  std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
+  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_tiling_stub_v2);
+  graphStatus ret = OpAtomicCalculateV2(*node, run_info);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+}
+
+TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_4) {
+  OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddInputDesc("y", tensor_desc);
+  op_desc->AddOutputDesc("z", tensor_desc);
+  string compile_info_key = "compile_info_key";
+  string compile_info_json = "{\"_workspace_size_list\":[]}";
+  (void)ge::AttrUtils::SetStr(op_desc, ATOMIC_COMPILE_INFO_KEY, compile_info_key);
+  (void)ge::AttrUtils::SetStr(op_desc, ATOMIC_COMPILE_INFO_JSON, compile_info_json);
+  std::vector<int64_t> atomic_output_indices = {0};
+  (void) ge::AttrUtils::SetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
+  std::map<string, std::map<int64_t, int64_t>> sub_node_workspace_info;
+  std::map<int64_t, int64_t> sub_node_workspace_value;
+  sub_node_workspace_value[0] = 1;
+  sub_node_workspace_info["relu"] = sub_node_workspace_value;
+  op_desc->SetExtAttr(ge::EXT_ATTR_ATOMIC_WORKSPACE_INFO, sub_node_workspace_info);
 
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
