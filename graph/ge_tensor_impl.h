@@ -252,7 +252,7 @@ class TensorDataImpl {
   friend class GeAttrValueImp;
   friend class ModelSerializeImp;
   friend class GeTensorSerializeUtils;
-  // TensorDatat通过持有TensorDesc的impl来表达和一个GeTensorDesc共享的语义
+  // TensorDatat shared with a GeTensorDesc by holding the impl of GeTensorDesc
   std::shared_ptr<GeTensorDescImpl> tensor_descriptor_;
   std::shared_ptr<AlignedPtr> aligned_ptr_ = nullptr;
   size_t length_ = 0;

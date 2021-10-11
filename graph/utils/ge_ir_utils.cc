@@ -315,7 +315,7 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       auto layout_origin = TypeUtils::FormatToSerialString(input_desc->GetOriginFormat());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "input_desc_origin_layout:" + std::to_string(i), &layout_origin);
-      // 所有impl_->tensor_descriptor_.GetProtoMsg()的调用都要变成any map和成员函数的调用
+
       auto &tensor_descriptor = input_desc->impl_->ext_meta_;
 
       auto size = static_cast<int64_t>(tensor_descriptor.GetSize());

@@ -300,6 +300,9 @@ class GeTensorSerializeUtils {
   static void AssembleGeTensorDescFromProto(const proto::TensorDescriptor *proto, GeTensorDesc &desc);
   static void AssembleGeTensorFromProto(const proto::TensorDef *proto, GeTensor &tensor);
 
+  // normalize the input TensorDescriptor，A metadata information maybe stored in different fields of TensorDescriptor,
+  // This function needs to prioritize and determine the final metadata information used.
+  // After standardization, the direct member field on TensorDescriptor is always valid
   static void NormalizeGeTensorDescProto(proto::TensorDescriptor *proto);
   static void GetShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape);
   static void GetOriginShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape);

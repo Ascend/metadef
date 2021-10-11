@@ -19,6 +19,7 @@
 #include <cstring>
 #include <map>
 #include <securec.h>
+#include "common/math_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "debug/ge_util.h"
 #include "graph/ge_tensor_impl.h"
@@ -118,7 +119,7 @@ void GeTensorSerializeUtils::GeShapeAsProto(const GeShape &shape, proto::ShapeDe
 }
 void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, proto::TensorDescriptor *proto) {
   if (proto != nullptr) {
-    // 扩展元数据
+    // serialize extension tensor meta data
     proto->set_size(desc.ext_meta_.GetSize());
     proto->set_weight_size(desc.ext_meta_.GetWeightSize());
     proto->set_reuse_input(desc.ext_meta_.GetReuseInput());
@@ -134,13 +135,13 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
     proto->set_cmps_tab(desc.ext_meta_.GetCmpsTab());
     proto->set_cmps_tab_offset(desc.ext_meta_.GetCmpsTabOffset());
 
-    // 属性从anymap中拷贝至protobuf
+    // serialize attributes
     if (!ModelSerializeImp::SerializeAllAttrsFromAnyMap(desc.attrs_.GetAllAttrs(), proto->mutable_attr())) {
       GELOGE(GRAPH_FAILED, "GeTensorDesc attr serialize failed.");
       return;
     }
 
-    // 高频字段序列化为属性
+    // serialize member object
     (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_FORMAT].set_s(TypeUtils::FormatToSerialString(desc.GetOriginFormat()));
     if (desc.GetOriginDataType() != DT_UNDEFINED) {
       (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_DATA_TYPE].set_s(
@@ -157,11 +158,10 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
       origin_shape_proto_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_INT);
     }
 
-    // 如果是自定义类型，此时在any map拷贝的时候已经填充了，此时设不设置set_dtype都无所谓了
     auto iter = kDataTypeMap.find(desc.GetDataType());
     if (iter != kDataTypeMap.end()) {
       proto->set_dtype(iter->second);
-    } else {
+    } else { // maybe custom data type
       proto->set_dtype(kDataTypeMap.at(DT_UNDEFINED));
     }
     proto->set_layout(TypeUtils::FormatToSerialString(desc.GetFormat()));
@@ -543,11 +543,12 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
     GELOGE(INTERNAL_ERROR, "Try assemble ge tensor desc from nullptr proto");
     return;
   }
-  // 标准化外部传入的TensorDescriptor，基于当前实际的场景，会存在同一个元数据信息存储在TensorDescriptor的不同字段上，
-  // 这个函数内部需要排定优先级，确定最终使用的元数据信息，经过标准化后，TensorDescriptor上的直接成员字段始终是有效的
+  // normalize the input TensorDescriptor，A metadata information maybe stored in different fields of TensorDescriptor,
+  // This function needs to prioritize and determine the final metadata information used.
+  // After standardization, the direct member field on TensorDescriptor is always valid
   GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto_msg);
 
-  // 获取高频基础元数据
+  // store high frequency attributes to member field
   GeTensorSerializeUtils::GetOriginFormatFromDescProto(proto_msg, origin_format_);
   GeTensorSerializeUtils::GetOriginDtypeFromDescProto(proto_msg, origin_dtype_);
   GeTensorSerializeUtils::GetOriginShapeFromDescProto(proto_msg, origin_shape_);
@@ -556,23 +557,29 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
   GeTensorSerializeUtils::GetDtypeFromDescProto(proto_msg, dtype_);
   GeTensorSerializeUtils::GetShapeFromDescProto(proto_msg, shape_);
 
-  // 获取扩展元数据
+  // get extension tensor desc metadata
   ext_meta_.SetSize(proto_msg->size());
-  ext_meta_.SetWeightSize(proto_msg->weight_size());
+  if (IntegerChecker<uint32_t>::Compat(proto_msg->weight_size())) {
+    ext_meta_.SetWeightSize(static_cast<uint32_t>(proto_msg->weight_size()));
+  }
   ext_meta_.SetReuseInput(proto_msg->reuse_input());
   ext_meta_.SetOutputTensor(proto_msg->output_tensor());
   if (kStrToDeviceMap.find(proto_msg->device_type()) != kStrToDeviceMap.end()) {
     ext_meta_.SetDeviceType(kStrToDeviceMap.at(proto_msg->device_type()));
   }
   ext_meta_.SetInputTensor(proto_msg->input_tensor());
-  ext_meta_.SetRealDimCnt(proto_msg->real_dim_cnt());
-  ext_meta_.SetReuseInputIndex(proto_msg->reuse_input_index());
+  if (IntegerChecker<uint32_t>::Compat(proto_msg->real_dim_cnt())) {
+    ext_meta_.SetRealDimCnt(static_cast<uint32_t>(proto_msg->real_dim_cnt()));
+  }
+  if (IntegerChecker<uint32_t>::Compat(proto_msg->reuse_input_index())) {
+    ext_meta_.SetReuseInputIndex(static_cast<uint32_t>(proto_msg->reuse_input_index()));
+  }
   ext_meta_.SetDataOffset(proto_msg->data_offset());
   ext_meta_.SetCmpsSize(proto_msg->cmps_size());
   ext_meta_.SetCmpsTab(proto_msg->cmps_tab());
   ext_meta_.SetCmpsTabOffset(proto_msg->cmps_tab_offset());
 
-  // 属性部分放在了GeTensorDesc的构造函数中
+  // note that we deserialize attributes in implement of GeTensor constructor
 }
 
 void GeTensorDescImpl::SetDataType(DataType dtype) {
@@ -608,12 +615,12 @@ GeShape &GeTensorDescImpl::OriginShapeReference() const {
 }
 
 bool GeTensorDescImpl::GeTensorDescAttrsAreEqual(const GeTensorDescImpl &other) const {
-  // 属性相等的定义保持不变：不比较自定义属性
+  // The definition of attribute equality remains unchanged
   return (shape_ == other.shape_ && dtype_ == other.dtype_ && format_ == other.format_ && ext_meta_ == other.ext_meta_);
 }
 
 bool GeTensorDescImpl::operator==(const GeTensorDescImpl &other) const {
-  // DescImpl相等的定义保持不变，不比较自定义属性
+  // The definition of attribute equality remains unchanged
   return (origin_shape_ == other.origin_shape_ && origin_format_ == other.origin_format_ &&
           origin_dtype_ == other.origin_dtype_ && GeTensorDescAttrsAreEqual(other));
 }
@@ -1099,7 +1106,6 @@ const std::shared_ptr<AlignedPtr> &TensorData::GetAlignedPtr() {
 GeTensorImpl::GeTensorImpl() : tensor_def_(nullptr, nullptr), desc_(), tensor_data_()  {
   if (desc_.impl_ != nullptr) {
     if (tensor_data_.impl_ != nullptr) {
-      // 这里修改了实现
       tensor_data_.impl_->tensor_descriptor_ = desc_.impl_;
     }
   }
