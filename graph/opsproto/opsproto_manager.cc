@@ -23,6 +23,11 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
+#include <cstring>
+
+namespace {
+const size_t kMaxErrStrLen = 128U;
+}  //  namespace
 
 namespace ge {
 OpsProtoManager *OpsProtoManager::Instance() {
@@ -116,22 +121,28 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
   // Return absolute path when path is accessible
   INT32 result = mmRealPath(path.c_str(), resolved_path, MMPA_MAX_PATH);
   if (result != EN_OK) {
-    GELOGW("[FindSo][Check] Get real_path for file %s failed, reason:%s", path.c_str(), strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    GELOGW("[FindSo][Check] Get real_path for file %s failed, reason:%s", path.c_str(), err_msg);
     return;
   }
 
   INT32 is_dir = mmIsDir(resolved_path);
   // Lib plugin path not exist
   if (is_dir != EN_OK) {
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
       GELOGW("[FindSo][Check] Open directory %s failed, maybe it is not exit or not a dir, errmsg:%s",
-             resolved_path, strerror(errno));
+             resolved_path, err_msg);
       return;
   }
 
   mmDirent **entries = nullptr;
   auto ret = mmScandir(resolved_path, &entries, nullptr, nullptr);
   if (ret < EN_OK) {
-      GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", resolved_path, ret, strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", resolved_path, ret, err_msg);
       return;
   }
   for (int i = 0; i < ret; ++i) {

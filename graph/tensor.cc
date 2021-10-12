@@ -741,7 +741,7 @@ graphStatus Tensor::SetData(uint8_t *data, size_t size, const Tensor::DeleteFunc
 }
 
 graphStatus Tensor::IsValid() {
-  uint64_t shape_size = GetTensorDesc().GetShape().GetShapeSize();
+  auto shape_size = GetTensorDesc().GetShape().GetShapeSize();
   DataType data_type = GetTensorDesc().GetDataType();
   uint32_t type_length;
   bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
@@ -752,7 +752,7 @@ graphStatus Tensor::IsValid() {
 
   size_t data_size = GetSize();
   if (data_type != DT_STRING) {
-    if (shape_size || (data_size != type_length)) {
+    if (shape_size > 0 || (data_size != type_length)) {
       if (type_length != 0 && UINT64_MAX / type_length < shape_size) {
         GELOGW("[Check][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
       } else {

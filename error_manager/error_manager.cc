@@ -24,9 +24,14 @@
 #include <sstream>
 #include <stdarg.h>
 #include <securec.h>
+#include <cstring>
 
 #include "mmpa/mmpa_api.h"
 #include "toolchain/slog.h"
+
+namespace {
+const size_t kMaxErrStrLen = 128U;
+}  //  namespace
 
 #define GE_MODULE_NAME static_cast<int>(GE)
 
@@ -127,7 +132,9 @@ std::string GetSelfLibraryDir(void) {
         return std::string();
     }
     if (mmRealPath(so_path.c_str(), path, MMPA_MAX_PATH) != EN_OK) {
-      GELOGW("Failed to get realpath of %s, reason:%s", so_path.c_str(), strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      GELOGW("Failed to get realpath of %s, reason:%s", so_path.c_str(), err_msg);
       return std::string();
     }
 
@@ -365,7 +372,9 @@ int ErrorManager::OutputErrMessage(int handle) {
   } else {
     mmSsize_t ret = mmWrite(handle, const_cast<char *>(err_msg.c_str()), err_msg.length());
     if (ret == -1) {
-      GELOGE("[Write][File]fail, reason:%s",  strerror(errno));
+      char err_buf[kMaxErrStrLen + 1] = {0};
+      auto err_msg_s = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+      GELOGE("[Write][File]fail, reason:%s",  err_msg_s);
       return -1;
     }
   }
@@ -449,7 +458,9 @@ int ErrorManager::ReadJsonFile(const std::string &file_path, void *handle) {
   }
   const char *file = file_path.data();
   if ((mmAccess2(file, M_F_OK)) != EN_OK) {
-    GELOGW("[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), strerror(errno));
+    char err_buf[kMaxErrStrLen + 1] = {0};
+    auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), err_buf, kMaxErrStrLen);
+    GELOGW("[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), err_msg);
     return -1;
   }
 
