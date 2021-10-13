@@ -69,16 +69,6 @@ bool OpShapeIsUnknown(const OpDescPtr &desc) {
   return false;
 }
 
-bool IsComputableOp(const NodePtr &node) {
-  if (node->GetType() == DATA || node->GetType() == NETOUTPUT) {
-    return false;
-  }
-  if (!node->GetOpDesc()->GetSubgraphInstanceNames().empty()) {
-    return false;
-  }
-  return true;
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::AddSendEventId(const NodePtr &node,
                                                                                      const uint32_t &event_id) {
   GE_CHECK_NOTNULL(node);
@@ -1252,56 +1242,89 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     return GRAPH_FAILED;
   }
   GELOGD("in node:%s index:%d", node->GetName().c_str(), index);
-  peer_node = node->GetType() == DATA ? node : GetInDataNodeByIndex(*node, index);
-  int peer_out_anchor_index = -1;
-  GE_CHECK_NOTNULL(peer_node);
-  while (!IsComputableOp(peer_node)) {
-    if (peer_node->GetType() == DATA) {
-      auto parent_node_2_anchor = GetParentInputAndAnchor(peer_node);
-      GE_CHECK_NOTNULL(parent_node_2_anchor.first);
-      GE_CHECK_NOTNULL(parent_node_2_anchor.second);
-      peer_node = parent_node_2_anchor.first;
-      peer_out_anchor_index = parent_node_2_anchor.second->GetIdx();
-      continue;
-    }
-
-    if (peer_node->GetType() != PARTITIONEDCALL) {
-      if (peer_node->GetOpDesc()->GetSubgraphInstanceNames().empty()) {
-        GELOGI("Node [%s] type [%s], real peer in node [%s] type[%s].", node->GetName().c_str(),
-               node->GetType().c_str(), peer_node->GetName().c_str(), peer_node->GetType().c_str());
-        return GRAPH_SUCCESS;
-      }
-      // other subgraph(if,while,case) currently not support, return node and warn
-      GELOGW("Node [%s] type [%s], real peer in node [%s] type[%s] has subgraph. Current not support.",
-             node->GetName().c_str(), node->GetType().c_str(),
-             peer_node->GetName().c_str(), peer_node->GetType().c_str());
-
+  peer_node = nullptr;
+  if (node->GetType() != DATA) {
+    auto in_anchor = node->GetInDataAnchor(index);
+    GE_CHECK_NOTNULL(in_anchor);
+    auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
+    if (peer_out_data_anchor == nullptr) {
+      GELOGW("[Get][InNode] %u'th input anchor of node %s has no peer out anchor, please check!", index,
+             node->GetName().c_str());
       return GRAPH_SUCCESS;
-    } else {
-      // if peer node is PartionedCall, return owner graph's correspond node
-      auto sub_graph = GetSubgraph(*peer_node, 0);
-      GE_CHECK_NOTNULL(sub_graph);
-      auto sub_graph_netoutput = sub_graph->FindFirstNodeMatchType(NETOUTPUT);
-      GE_CHECK_NOTNULL(sub_graph_netoutput);
+    }
+    auto peer_out_node = peer_out_data_anchor->GetOwnerNode();
+    GE_CHECK_NOTNULL(peer_out_node);
+    if (peer_out_node->GetType() != PARTITIONEDCALL) {
+      peer_node = peer_out_node;
+      GELOGD("in node[%s] peer_node[%s] peer_node type[%s]", node->GetName().c_str(), peer_node->GetName().c_str(),
+             peer_node->GetType().c_str());
+      return GRAPH_SUCCESS;
+    }
+    // if peer node is PartionedCall, return owner graph's correspond node
+    auto op_desc = peer_out_node->GetOpDesc();
+    auto sub_graph_names = op_desc->GetSubgraphInstanceNames();
+    auto root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
+    GE_CHECK_NOTNULL(root_graph);
+    if (sub_graph_names.empty()) {
+      REPORT_INNER_ERROR("E19999", "PartitionedCall Node[%s] does not own sub graph!", op_desc->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] PartitionedCall Node[%s] does not own sub graph!",
+             op_desc->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+    if (sub_graph_names.size() > 1) {
+      REPORT_INNER_ERROR("E19999", "PartitionedCall Node[%s] owns multi sub graph!", op_desc->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] PartitionedCall Node[%s] owns multi sub graph!", op_desc->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+    auto sub_graph = root_graph->GetSubgraph(sub_graph_names[0]);
+    GE_CHECK_NOTNULL(sub_graph);
 
-      for (const auto &in_data_anchor : sub_graph_netoutput->GetAllInDataAnchors()) {
-        auto in_desc = sub_graph_netoutput->GetOpDesc()->MutableInputDesc(in_data_anchor->GetIdx());
-        GE_CHECK_NOTNULL(in_desc);
+    int peer_out_idx = peer_out_data_anchor->GetIdx();
+    for (const auto &n : sub_graph->GetDirectNode()) {
+      if (n->GetType() != NETOUTPUT) {
+        continue;
+      }
+      for (const auto &in_data_anchor : n->GetAllInDataAnchors()) {
+        auto in_desc = n->GetOpDesc()->MutableInputDesc(in_data_anchor->GetIdx());
+        if (in_desc == nullptr) {
+          REPORT_INNER_ERROR("E19999", "Invalid Netoutput node[%s] idx[%d], no tensor on it",
+                             n->GetName().c_str(), in_data_anchor->GetIdx());
+          GELOGE(GRAPH_FAILED, "[Check][Param] Invalid Netoutput node[%s] idx[%d], no tensor on it",
+                 n->GetName().c_str(), in_data_anchor->GetIdx());
+          return GRAPH_FAILED;
+        }
         int ref_o = 0;
         if (!AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
           return GRAPH_FAILED;
         }
-        if (peer_out_anchor_index != ref_o) {
+        if (peer_out_idx != ref_o) {
           continue;
         }
-        peer_node = NodeUtils::GetInDataNodeByIndex(*sub_graph_netoutput, in_data_anchor->GetIdx());
-        GE_CHECK_NOTNULL(peer_node);
-        GELOGD("in node[%s] peer_node[%s] type[%s]", node->GetName().c_str(), peer_node->GetName().c_str(),
+        peer_node = NodeUtils::GetInDataNodeByIndex(*n, in_data_anchor->GetIdx());
+        GELOGD("in node[%s] peer_node[%s] type[%s]",
+               node->GetName().c_str(),
+               peer_node->GetName().c_str(),
                peer_node->GetType().c_str());
-        break;
+        return GRAPH_SUCCESS;
       }
+      return GRAPH_SUCCESS;
     }
+
+    REPORT_INNER_ERROR("E19999", "On graph[%s], no exist NETOUTPUT node", sub_graph->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Get][Node] On graph[%s], no exist NETOUTPUT node", sub_graph->GetName().c_str());
+    return GRAPH_FAILED;
   }
+
+  int ref_i = 0;
+  if (AttrUtils::GetInt(node->GetOpDesc(), kRefIndex, ref_i)) {
+    auto owner_graph = node->GetOwnerComputeGraph();
+    GE_CHECK_NOTNULL(owner_graph);
+    GELOGD("owner_graph:%s  ref_idx:%u", owner_graph->GetName().c_str(), ref_i);
+    auto parent_node = owner_graph->GetParentNode();
+    GE_CHECK_NOTNULL(parent_node);
+    return GetInNodeCrossPartionedCallNode(parent_node, ref_i, peer_node);
+  }
+  GELOGD("returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!", kRefIndex, node->GetName().c_str());
   return GRAPH_SUCCESS;
 }
 
