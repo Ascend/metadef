@@ -65,7 +65,9 @@ set(GRAPH_SOURCE_LIST
     "serialization/list_list_int_serializer.cc"
     "serialization/list_list_float_serializer.cc"
     "serialization/attr_serializer_registry.cc"
-    "small_vector.cc")
+    small_vector.cc
+    operator_impl.cc
+)
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
 ######### libgraph.so #############

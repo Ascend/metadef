@@ -23,6 +23,8 @@
 #include "graph_builder_utils.h"
 #include "graph/utils/constant_utils.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/op_desc_impl.h"
+#include "graph/runtime_inference_context.h"
 
 #undef private
 #undef protected
@@ -186,5 +188,97 @@ TEST_F(UtestOpDescUtils, GetPotentailWeightByIndexAccrossEnter) {
   auto weights = OpDescUtils::GetWeightsFromNodes(nodes_2_out_anchor);
   EXPECT_EQ(weights.size(), 1);
   EXPECT_EQ(weights[0]->GetTensorDesc().GetDataType(), DT_INT32);
+}
+
+TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_01) {
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 23;
+  data_buf[10] = 32;
+  auto ge_tensor = std::make_shared<GeTensor>();
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), "value", ge_tensor);
+  auto case_node = builder.AddNode("Case", "Case", 1, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(const_node, 0, case_node, 0);
+  builder.AddDataEdge(case_node, 0, netoutput, 0);
+  auto parent_graph = builder.GetGraph();
+
+  ut::GraphBuilder sub_builder = ut::GraphBuilder("subgraph_graph");
+  auto sub_data = sub_builder.AddNode("sub_data", "Data", 0, 1);
+  auto sub_const = sub_builder.AddNode("sub_const", "Const", 0, 1);
+  AttrUtils::SetTensor(sub_const->GetOpDesc(), "value", ge_tensor);
+  auto add = sub_builder.AddNode("Add", "Add", 2, 1);
+  auto sub_netoutput = sub_builder.AddNode("sub_netoutput", "NetOutput", 1, 0);
+  sub_builder.AddDataEdge(sub_data, 0, add, 0);
+  sub_builder.AddDataEdge(sub_const, 0, add, 1);
+  sub_builder.AddDataEdge(add, 0, sub_netoutput, 0);
+
+  auto subgraph = sub_builder.GetGraph();
+  subgraph->SetParentNode(case_node);
+  subgraph->SetParentGraph(parent_graph);
+  parent_graph->AddSubgraph(subgraph->GetName(), subgraph);
+  AttrUtils::SetInt(sub_data->GetOpDesc(), "_parent_node_index", 0);
+
+  auto op_desc = add->GetOpDesc();
+  op_desc->impl_->input_name_idx_["sub_data"] = 0;
+  op_desc->impl_->input_name_idx_["sub_const"] = 1;
+  auto op = OpDescUtils::CreateOperatorFromNode(add);
+  const std::string context_id("0");
+  RuntimeInferenceContext::CreateContext(context_id);
+  Tensor tensor;
+  tensor.SetData(data_buf, 4096);
+
+  RuntimeInferenceContext *runtime_infer_ctx = nullptr;
+  RuntimeInferenceContext::GetContext(context_id, &runtime_infer_ctx);
+  int64_t node_id = 1;
+  int output_id = 0;
+  runtime_infer_ctx->SetTensor(node_id, output_id, std::move(tensor));
+  ConstGeTensorBarePtr ge_tensor_res = nullptr;
+  ge_tensor_res = OpDescUtils::GetInputConstData(op, 1);
+
+  ASSERT_TRUE(ge_tensor_res != nullptr);
+  const TensorData tmp(ge_tensor_res->GetData());  
+  const uint8_t* res_buf = tmp.GetData();
+  ASSERT_EQ(res_buf[0], 23);
+  ASSERT_EQ(res_buf[10], 32);
+}
+
+TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_02) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
+  auto enter = builder.AddNode("Enter", "Enter", 1, 1);
+  auto transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data2, 0, enter, 0);
+  builder.AddDataEdge(data, 0, transdata, 0);
+  builder.AddDataEdge(enter, 0, transdata, 1);
+  builder.AddDataEdge(transdata, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 23;
+  data_buf[10] = 32;
+  ge_tensor->SetData(data_buf, 4096);
+
+  auto op_desc = transdata->GetOpDesc();
+  op_desc->impl_->input_name_idx_["Data"] = 0;
+  op_desc->impl_->input_name_idx_["Enter"] = 1;
+  auto tensor_desc = op_desc->MutableInputDesc(0);
+  AttrUtils::SetTensor(tensor_desc, "_value", ge_tensor);
+
+  auto op = OpDescUtils::CreateOperatorFromNode(transdata);
+  ConstGeTensorBarePtr ge_tensor_res = nullptr;
+  ConstGeTensorBarePtr ge_tensor_res2 = nullptr;
+  ge_tensor_res = OpDescUtils::GetInputConstData(op, 0);
+  ge_tensor_res2 = OpDescUtils::GetInputConstData(op, 1);
+  ASSERT_TRUE(ge_tensor_res != nullptr);
+  ASSERT_TRUE(ge_tensor_res2 == nullptr);
+  const TensorData tmp(ge_tensor_res->GetData());  
+  const uint8_t* res_buf = tmp.GetData();
+  ASSERT_EQ(res_buf[0], 23);
+  ASSERT_EQ(res_buf[10], 32);
 }
 }

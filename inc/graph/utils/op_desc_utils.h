@@ -29,6 +29,7 @@
 namespace ge {
 class OpDesc;
 using OpDescPtr = std::shared_ptr<OpDesc>;
+using ConstGeTensorBarePtr = const GeTensor*;
 
 class OpDescUtils {
  public:
@@ -87,7 +88,7 @@ class OpDescUtils {
 
   static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,
       const std::string &subgraph_instance_name, OpDescPtr &op_desc);
-
+  static ConstGeTensorBarePtr GetInputConstData(const Operator &op, uint32_t idx);
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
   static GeTensorPtr MutableWeights(ge::OpDescPtr op_desc);
