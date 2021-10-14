@@ -126,7 +126,7 @@ TEST_F(RegisterOpTilingV2UT, op_para_calculate_v2_1) {
 }
 
 TEST_F(RegisterOpTilingV2UT, op_para_calculate_v2_2) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV3");
+  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluVV");
   GeShape shape({4,3,16,16});
   GeTensorDesc tensor_desc(shape);
   op_desc->AddInputDesc("x", tensor_desc);
@@ -143,8 +143,10 @@ TEST_F(RegisterOpTilingV2UT, op_para_calculate_v2_2) {
   graphStatus ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_FAILED);
 
-  std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
-  tiling_func_map.emplace(OP_TYPE_AUTO_TILING, op_tiling_stub_v2);
+  OpTilingFuncInfo op_func_info(OP_TYPE_AUTO_TILING);
+  op_func_info.tiling_func_v2_ = op_tiling_stub_v2;
+  std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  tiling_func_map.emplace(OP_TYPE_AUTO_TILING, op_func_info);
   ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
   tiling_func_map.erase(OP_TYPE_AUTO_TILING);
@@ -211,9 +213,12 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_1) {
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
 
+  std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+  op_func_info.tiling_func_v2_ = op_tiling_stub_v2;
+  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
+
   utils::OpRunInfo run_info;
-  std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
-  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_tiling_stub_v2);
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
@@ -234,9 +239,11 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_2) {
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
 
+  std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+  op_func_info.tiling_func_v2_ = op_tiling_stub_v2;
+  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
   utils::OpRunInfo run_info;
-  std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
-  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_tiling_stub_v2);
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_FAILED);
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
@@ -259,9 +266,11 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_3) {
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
 
+  std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+  op_func_info.tiling_func_v2_ = op_tiling_stub_v2;
+  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
   utils::OpRunInfo run_info;
-  std::unordered_map<std::string, utils::OpTilingFuncV2> &tiling_func_map = utils::OpTilingRegistryInterf_V2::RegisteredOpInterf();
-  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_tiling_stub_v2);
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_FAILED);
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
