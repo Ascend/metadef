@@ -445,6 +445,11 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
     return false;
   }
 
+  auto proto = op_desc->impl_->op_def_.GetProtoMsg();
+  if (proto != nullptr && proto->mutable_attr() != nullptr) {
+    proto->mutable_attr()->clear();
+  }
+
   return true;
 }
 
