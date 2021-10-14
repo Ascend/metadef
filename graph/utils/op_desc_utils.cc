@@ -28,6 +28,7 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/constant_utils.h"
+#include "graph/operator_impl.h"
 
 using std::vector;
 
@@ -929,6 +930,21 @@ graphStatus OpDescUtils::SetSubgraphInstanceName(const std::string &subgraph_nam
   }
 
   return op_desc->SetSubgraphInstanceName(iter->second, subgraph_instance_name);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, uint32_t idx) {
+  if (op.operator_impl_ == nullptr) {
+    GELOGW("[Check][Param] Op(%s) operator_impl_ is nullptr.", op.GetName().c_str());
+    return nullptr;
+  }
+
+  ConstGeTensorPtr ge_tensor = nullptr;
+  if (op.operator_impl_->GetInputConstData(idx, ge_tensor) == GRAPH_SUCCESS) {
+    return ge_tensor.get();
+  }
+  GELOGW("[Get][ConstInput] Op(%s) %u get input const data failed", op.GetName().c_str(), idx);
+  return nullptr;
 }
 }  // namespace ge
 /*lint +e512 +e737 +e752*/

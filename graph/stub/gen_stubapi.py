@@ -58,6 +58,7 @@ RETURN_STATEMENTS = {
     'size_t': '    return 0;',
     'float': '    return 0.0f;',
     'bool': '    return false;',
+    'ConstGeTensorBarePtr': '    return nullptr;',
 }
 
 """
