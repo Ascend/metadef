@@ -24,6 +24,7 @@
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_attr_define.h"
+#include "framework/common/ge_inner_error_codes.h"
 
 #undef private
 #undef protected
@@ -538,9 +539,9 @@ TEST_F(UtestFftsGraphUtils, CheckRecursionDepth) {
   std::map<ComputeGraphPtr , std::vector<uint32_t>> graph_value;
   ComputeGraphPtr graph = nullptr;
   ASSERT_EQ(FftsGraphUtils::Calculate(graph, nullptr, node_value, graph_value, 10), GRAPH_FAILED);
-  ASSERT_EQ(FftsGraphUtils::Calculate(graph, nullptr, node_value, graph_value, 9), GRAPH_PARAM_INVALID);
+  ASSERT_EQ(FftsGraphUtils::Calculate(graph, nullptr, node_value, graph_value, 9), PARAM_INVALID);
   ASSERT_EQ(FftsGraphUtils::PartitionGraphWithLimit(nullptr, node_value, graph_value, {}, 10), GRAPH_FAILED);
-  ASSERT_EQ(FftsGraphUtils::PartitionGraphWithLimit(nullptr, node_value, graph_value, {}, 9), GRAPH_PARAM_INVALID);
+  ASSERT_EQ(FftsGraphUtils::PartitionGraphWithLimit(nullptr, node_value, graph_value, {}, 9), PARAM_INVALID);
 }
 
 TEST_F(UtestFftsGraphUtils, SplitSubgraph_nullptr_graph) {

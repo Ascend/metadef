@@ -19,7 +19,7 @@
 
 #include <google/protobuf/text_format.h>
 #include "framework/omg/parser/parser_types.h"
-#include "omg/omg_inner_types.h"
+#include "framework/omg/omg_inner_types.h"
 #include "proto/om.pb.h"
 #include "graph/ge_tensor.h"
 #include "graph/op_desc.h"

@@ -141,6 +141,7 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/utils/anchor_utils.cc"
     "${METADEF_DIR}/graph/utils/ge_ir_utils.cc"
     "${METADEF_DIR}/graph/utils/graph_utils.cc"
+    "${METADEF_DIR}/graph/utils/file_utils.cc"
     "${METADEF_DIR}/graph/utils/ffts_graph_utils.cc"
     "${METADEF_DIR}/graph/utils/dumper/ge_graph_dumper.cc"
     "${METADEF_DIR}/graph/utils/node_utils.cc"
@@ -178,6 +179,7 @@ add_library(ut_metadef_graph STATIC
 
 target_compile_definitions(ut_metadef_graph PRIVATE
     google=ascend_private
+    FMK_SUPPORT_DUMP
 )
 
 target_compile_options(ut_metadef_graph PRIVATE

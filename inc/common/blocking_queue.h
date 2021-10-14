@@ -17,7 +17,7 @@
 #ifndef INC_COMMON_BLOCKING_QUEUE_H_
 #define INC_COMMON_BLOCKING_QUEUE_H_
 
-#include <stdint.h>
+#include <cstdint>
 #include <condition_variable>
 #include <list>
 #include <mutex>

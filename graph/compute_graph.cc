@@ -17,7 +17,7 @@
 #include "graph/compute_graph.h"
 
 #include <deque>
-#include "./format_refiner.h"
+#include "graph/format_refiner.h"
 #include "graph/ge_context.h"
 #include "graph/debug/ge_attr_define.h"
 #include "debug/ge_log.h"
@@ -33,7 +33,7 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
-#include "graph/utils/string_utils.h"
+#include "framework/common/string_util.h"
 #include "graph/utils/tensor_utils.h"
 
 namespace ge {

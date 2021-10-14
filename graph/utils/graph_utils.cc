@@ -32,12 +32,9 @@
 
 #include "graph/ge_context.h"
 #include "graph/debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "proto/ge_ir.pb.h"
-#include "graph/utils/attr_utils.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/node_utils.h"
-#include "graph/utils/file_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
 #include "graph/debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"

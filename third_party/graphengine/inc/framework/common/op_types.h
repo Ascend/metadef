@@ -52,8 +52,8 @@ class GE_FUNC_VISIBILITY OpTypeRegistrar {
 #define REGISTER_OPTYPE_DECLARE(var_name, str_name) \
   FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY extern const char *var_name;
 
-#define REGISTER_OPTYPE_DEFINE(var_name, str_name) \
-  const char *var_name = str_name;                 \
+#define REGISTER_OPTYPE_DEFINE(var_name, str_name)           \
+  const char *var_name = str_name;                           \
   const OpTypeRegistrar g_##var_name##_reg(str_name);
 
 #define IS_OPTYPE_EXISTING(str_name) (OpTypeContainer::Instance()->IsExisting(str_name))
