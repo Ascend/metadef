@@ -101,7 +101,7 @@ set(UT_FILES
     "testcase/test_std_structs.cc"
     "testcase/transformer_expand_dims_ut.cc"
     "testcase/transformer_transfer_shape_ut.cc"
-)
+        testcase/op_imp_unittest.cc)
 
 set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/small_vector.cc"
