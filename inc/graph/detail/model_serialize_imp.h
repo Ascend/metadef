@@ -90,6 +90,10 @@ class ModelSerializeImp {
 
   void FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc);
 
+  void ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<string> &opt_input,
+                           std::vector<string> &key_in, std::vector<uint32_t> &value_in,
+                           std::vector<string> &key_out, std::vector<uint32_t> &value_out) const;
+
   std::vector<NodeNameGraphReq> graph_input_node_names_;
   std::vector<NodeNameGraphReq> graph_output_node_names_;
   std::vector<NodeNameNodeReq> node_input_node_names_;
