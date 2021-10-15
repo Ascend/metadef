@@ -415,8 +415,8 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   return true;
 }
 void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, vector<string> &opt_input,
-                                vector<string> &key_in, vector<uint32_t> &value_in, vector<string> &key_out,
-                                vector<uint32_t> &value_out) const {
+                                            vector<string> &key_in, vector<uint32_t> &value_in,
+                                            vector<string> &key_out, vector<uint32_t> &value_out) const {
   if (op_def_proto.attr().count("_opt_input") > 0) {
     auto &name_list = op_def_proto.attr().at("_opt_input").list();
     for (const auto &item_s : name_list.s()) {
