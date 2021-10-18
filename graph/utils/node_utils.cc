@@ -1260,7 +1260,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
       auto parent_node_2_anchor = GetParentInputAndAnchor(peer_node);
       if ((parent_node_2_anchor.first == nullptr) && (parent_node_2_anchor.second == nullptr)) {
         GELOGW("Returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!",
-                 kRefIndex, peer_node->GetName().c_str());
+               kRefIndex, peer_node->GetName().c_str());
         peer_node = nullptr;
         return GRAPH_SUCCESS;
       }
