@@ -101,6 +101,8 @@ set(UT_FILES
     "testcase/test_std_structs.cc"
     "testcase/transformer_expand_dims_ut.cc"
     "testcase/transformer_transfer_shape_ut.cc"
+    "testcase/op_imp_unittest.cc"
+    "testcase/operator_constuct_graph_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES
@@ -127,6 +129,7 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/node.cc"
     "${METADEF_DIR}/graph/op_desc.cc"
     "${METADEF_DIR}/graph/operator.cc"
+    "${METADEF_DIR}/graph/operator_impl.cc"
     "${METADEF_DIR}/graph/operator_factory.cc"
     "${METADEF_DIR}/graph/operator_factory_impl.cc"
     "${METADEF_DIR}/graph/opsproto/opsproto_manager.cc"
@@ -141,6 +144,7 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/utils/anchor_utils.cc"
     "${METADEF_DIR}/graph/utils/ge_ir_utils.cc"
     "${METADEF_DIR}/graph/utils/graph_utils.cc"
+    "${METADEF_DIR}/graph/utils/file_utils.cc"
     "${METADEF_DIR}/graph/utils/ffts_graph_utils.cc"
     "${METADEF_DIR}/graph/utils/dumper/ge_graph_dumper.cc"
     "${METADEF_DIR}/graph/utils/node_utils.cc"
@@ -178,6 +182,7 @@ add_library(ut_metadef_graph STATIC
 
 target_compile_definitions(ut_metadef_graph PRIVATE
     google=ascend_private
+    FMK_SUPPORT_DUMP
 )
 
 target_compile_options(ut_metadef_graph PRIVATE

@@ -257,6 +257,17 @@ TEST_F(TensorUT, SetDataDelete_success) {
   ASSERT_EQ(length, 10);
 }
 
+TEST_F(TensorUT, TensorSetDataDelete_success) {
+  auto deleter = [](uint8_t *ptr) {
+    delete[] ptr;
+    ptr = nullptr;
+  };
+  uint8_t *data_ptr = new uint8_t[10];
+  Tensor tensor;
+  EXPECT_EQ(tensor.SetData(data_ptr, 10, deleter), GRAPH_SUCCESS);
+  EXPECT_EQ(tensor.GetSize(), 10);
+}
+
 TEST_F(TensorUT, TransTensorDescWithoutOriginShape2GeTensorDesc) {
   TensorDesc desc(Shape({1, 2, 3, 4}), FORMAT_NCHW);
   GeTensorDesc ge_desc = TensorAdapter::TensorDesc2GeTensorDesc(desc);

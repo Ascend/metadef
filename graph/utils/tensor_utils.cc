@@ -20,6 +20,8 @@
 #include "graph/debug/ge_log.h"
 #include "graph/utils/type_utils.h"
 #include "mmpa/mmpa_api.h"
+#include "graph/debug/ge_attr_define.h"
+#include "graph/utils/attr_utils.h"
 
 namespace ge {
 namespace {
@@ -237,6 +239,43 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
   }
 }
 
+static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_desc,
+                                                     std::vector<int64_t> &output_dims) {
+  const auto &shape = tensor_desc.GetShape();
+  const std::vector<int64_t> &dims = shape.GetDims();
+  std::vector<int64_t> max_shape_list;
+  // use the max shape set by user
+  bool has_attr = AttrUtils::GetListInt(tensor_desc, ATTR_NAME_TENSOR_MAX_SHAPE, max_shape_list);
+  if (has_attr) {
+    if (max_shape_list.size() == dims.size()) {
+      output_dims = std::move(max_shape_list);
+      return GRAPH_SUCCESS;
+    }
+    REPORT_INNER_ERROR("E19999", "invalid input shape range.");
+    GELOGE(PARAM_INVALID, "[Check][Param]tensor invalid max_shape_list size[%zu], dim size[%zu].",
+           max_shape_list.size(), dims.size());
+    return PARAM_INVALID;
+  }
+  // if max shape attr not set, use shape range
+  std::vector<std::pair<int64_t, int64_t>> range;
+  graphStatus graph_status = tensor_desc.GetShapeRange(range);
+  if (graph_status != GRAPH_SUCCESS) {
+    REPORT_INNER_ERROR("E19999", "Get shape range failed.");
+    GELOGE(PARAM_INVALID, "[Check][Param] GetShapeRange failed.");
+    return graph_status;
+  }
+  if (dims.size() != range.size()) {
+    REPORT_INNER_ERROR("E19999", "Error shape range size.");
+    GELOGE(PARAM_INVALID, "[Check][Param] size not matched dims_size[%zu] range_size[%zu].", dims.size(), range.size());
+    return PARAM_INVALID;
+  }
+  for (size_t i = 0; i < dims.size(); ++i) {
+    int64_t dim = dims[i] < 0 ? range[i].second : dims[i];
+    output_dims.push_back(dim);
+  }
+  return GRAPH_SUCCESS;
+}
+
 ///
 /// Calculate tensor element num.
 /// @param dims dim info
@@ -392,6 +431,7 @@ TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &
   if (graph_status != GRAPH_SUCCESS) {
     return GRAPH_FAILED;
   }
+
   // 64-byte alignment, if size is 0, align to 32 bytes
   if (size_temp > (INT64_MAX - kNum2 * kDataMemAlignSize)) {
     GELOGW("[Util][CalcBytesSize] Mem size %ld after alignment is bigger than INT64_MAX", size_temp);
@@ -402,14 +442,31 @@ TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+TensorUtils::CalcTensorMemSizeForNoTiling(const GeTensorDesc &tensor, Format format, DataType data_type,
+                                          int64_t &mem_size) {
+  std::vector<int64_t> dims;
+  GE_CHK_STATUS_RET(GetMaxShapeDimsFromNoTilingTensor(tensor, dims),
+                    "[Calc][GetMaxShapeDimsFromNoTilingTensor] failed.");
+  return CalcTensorMemSize(GeShape(dims), format, data_type, mem_size);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_temp) {
-  GeShape output_shape = desc_temp.GetShape();
   Format format = desc_temp.GetFormat();
   DataType data_type = desc_temp.GetDataType();
   int64_t output_mem_size = 0;
-  graphStatus graph_status = CalcTensorMemSize(output_shape, format, data_type, output_mem_size);
+
+  bool is_no_tiling = false;
+  (void)AttrUtils::GetBool(desc_temp, ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE, is_no_tiling);
+  graphStatus graph_status;
+  if (is_no_tiling) {
+    graph_status = CalcTensorMemSizeForNoTiling(desc_temp, format, data_type, output_mem_size);
+  } else {
+    graph_status = CalcTensorMemSize(desc_temp.GetShape(), format, data_type, output_mem_size);
+  }
   if (graph_status != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "[Calc][TensorMemSize] failed! type:%s", TypeUtils::DataTypeToSerialString(data_type).c_str());
+    GELOGE(GRAPH_FAILED, "[Calc][TensorMemSize] failed! type:%s, is_no_tiling:%s",
+           TypeUtils::DataTypeToSerialString(data_type).c_str(), is_no_tiling ? "true" : "false");
     return GRAPH_FAILED;
   }
 

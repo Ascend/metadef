@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef COMMON_GRAPH_DEBUG_GE_UTIL_H_
-#define COMMON_GRAPH_DEBUG_GE_UTIL_H_
+#ifndef METADEF_CXX_TENSOR_TYPE_IMPL_H
+#define METADEF_CXX_TENSOR_TYPE_IMPL_H
+#include <vector>
+#include "graph/types.h"
+namespace ge {
+class TensorTypeImpl {
+ public:
+  TensorTypeImpl() = default;
+  ~TensorTypeImpl() = default;
 
-#include "framework/common/util.h"
-#include "graph/debug/ge_log.h"
-#include "graph/ge_error_codes.h"
+  std::vector<DataType> dt_vec_;
+};
+}  // namespace ge
 
-template <typename T, typename... Args>
-static inline std::shared_ptr<T> ComGraphMakeShared(Args &&... args) {
-  using T_nc = typename std::remove_const<T>::type;
-  std::shared_ptr<T> ret(new (std::nothrow) T_nc(std::forward<Args>(args)...));
-  return ret;
-}
-
-#endif  // COMMON_GRAPH_DEBUG_GE_UTIL_H_
+#endif  //METADEF_CXX_TENSOR_TYPE_IMPL_H

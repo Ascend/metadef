@@ -43,46 +43,6 @@
 #include "proto/onnx/ge_onnx.pb.h"
 
 namespace ge {
-const int kOffsetToString = 2;
-
-///
-///  @ingroup ge_ir_utils
-///  @brief RepeatedField->String
-///  @param [in] const rpd_field  RepeatedField
-///  @return String
-///
-template <typename T>
-const std::string ToString(const google::protobuf::RepeatedField<T> &rpd_field) {
-  std::stringstream ss;
-  ss << "[";
-  for (const T &x : rpd_field) {
-    ss << x;
-    ss << ", ";
-  }
-  std::string str_ret = ss.str().substr(0, ss.str().length() - kOffsetToString);
-  str_ret += "]";
-  return str_ret;
-}
-
-///
-///  @ingroup ge_ir_utils
-///  @brief RepeatedPtrField->String
-///  @param [in] const rpd_field  RepeatedPtrField
-///  @return String
-///
-template <typename T>
-const std::string ToString(const google::protobuf::RepeatedPtrField<T> &rpd_ptr_field) {
-  std::stringstream ss;
-  ss << "[";
-  for (const T &x : rpd_ptr_field) {
-    ss << x;
-    ss << ", ";
-  }
-  std::string str_ret = ss.str().substr(0, ss.str().length() - kOffsetToString);
-  str_ret += "]";
-  return str_ret;
-}
-
 ///
 ///  @ingroup ge_ir_utils
 ///  @brief check, if not equal, log with tag
