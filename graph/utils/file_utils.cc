@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "file_utils.h"
+#include "graph/utils/file_utils.h"
 
 #include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"

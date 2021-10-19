@@ -365,48 +365,10 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   std::vector<string> opt_input;
   std::vector<string> key_in;
   std::vector<uint32_t> value_in;
-  if (op_def_proto.attr().count("_opt_input") > 0) {
-    auto &name_list = op_def_proto.attr().at("_opt_input").list();
-    for (const auto &item_s : name_list.s()) {
-      opt_input.push_back(item_s);
-    }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    op_desc_attr->erase("_opt_input");
-  }
-  if (op_def_proto.attr().count("_input_name_key") > 0) {
-    auto &output_name_key_list = op_def_proto.attr().at("_input_name_key").list();
-    for (const auto &item_s : output_name_key_list.s()) {
-      key_in.push_back(item_s);
-    }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    op_desc_attr->erase("_input_name_key");
-  }
-  if (op_def_proto.attr().count("_input_name_value") > 0) {
-    auto &input_name_value_list = op_def_proto.attr().at("_input_name_value").list();
-    for (const auto &item_i : input_name_value_list.i()) {
-      value_in.push_back(static_cast<uint32_t>(item_i));
-    }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    op_desc_attr->erase("_input_name_value");
-  }
   std::vector<string> key_out;
   std::vector<uint32_t> value_out;
-  if (op_def_proto.attr().count("_output_name_key") > 0) {
-    auto &output_name_key_list = op_def_proto.attr().at("_output_name_key").list();
-    for (const auto &item_s : output_name_key_list.s()) {
-      key_out.push_back(item_s);
-    }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    op_desc_attr->erase("_output_name_key");
-  }
-  if (op_def_proto.attr().count("_output_name_value") > 0) {
-    auto &output_name_value_list = op_def_proto.attr().at("_output_name_value").list();
-    for (const auto &item_i : output_name_value_list.i()) {
-      value_out.push_back(static_cast<uint32_t>(item_i));
-    }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    op_desc_attr->erase("_output_name_value");
-  }
+
+  ExtractMetaDataAttr(op_def_proto, opt_input, key_in, value_in, key_out, value_out);
 
   op_desc = std::shared_ptr<OpDesc>(new (std::nothrow) OpDesc(protobuf_owner_, &op_def_proto));
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_CALL_ERROR("E19999", "create OpDesc failed.");
@@ -445,7 +407,56 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
     return false;
   }
 
+  auto proto = op_desc->impl_->op_def_.GetProtoMsg();
+  if (proto != nullptr && proto->mutable_attr() != nullptr) {
+    proto->mutable_attr()->clear();
+  }
+
   return true;
+}
+void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, vector<string> &opt_input,
+                                            vector<string> &key_in, vector<uint32_t> &value_in,
+                                            vector<string> &key_out, vector<uint32_t> &value_out) const {
+  if (op_def_proto.attr().count("_opt_input") > 0) {
+    auto &name_list = op_def_proto.attr().at("_opt_input").list();
+    for (const auto &item_s : name_list.s()) {
+      opt_input.push_back(item_s);
+    }
+    auto op_desc_attr = op_def_proto.mutable_attr();
+    op_desc_attr->erase("_opt_input");
+  }
+  if (op_def_proto.attr().count("_input_name_key") > 0) {
+    auto &output_name_key_list = op_def_proto.attr().at("_input_name_key").list();
+    for (const auto &item_s : output_name_key_list.s()) {
+      key_in.push_back(item_s);
+    }
+    auto op_desc_attr = op_def_proto.mutable_attr();
+    op_desc_attr->erase("_input_name_key");
+  }
+  if (op_def_proto.attr().count("_input_name_value") > 0) {
+    auto &input_name_value_list = op_def_proto.attr().at("_input_name_value").list();
+    for (const auto &item_i : input_name_value_list.i()) {
+      value_in.push_back(static_cast<uint32_t>(item_i));
+    }
+    auto op_desc_attr = op_def_proto.mutable_attr();
+    op_desc_attr->erase("_input_name_value");
+  }
+  if (op_def_proto.attr().count("_output_name_key") > 0) {
+    auto &output_name_key_list = op_def_proto.attr().at("_output_name_key").list();
+    for (const auto &item_s : output_name_key_list.s()) {
+      key_out.push_back(item_s);
+    }
+    auto op_desc_attr = op_def_proto.mutable_attr();
+    op_desc_attr->erase("_output_name_key");
+  }
+  if (op_def_proto.attr().count("_output_name_value") > 0) {
+    auto &output_name_value_list = op_def_proto.attr().at("_output_name_value").list();
+    for (const auto &item_i : output_name_value_list.i()) {
+      value_out.push_back(static_cast<uint32_t>(item_i));
+    }
+    auto op_desc_attr = op_def_proto.mutable_attr();
+    op_desc_attr->erase("_output_name_value");
+  }
 }
 
 bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto) {

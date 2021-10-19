@@ -16,9 +16,9 @@
 
 #include "graph/tuning_utils.h"
 
-#include "../debug/ge_util.h"
-#include "../debug/ge_op_types.h"
-#include "graph/utils/scope_guard.h"
+#include "graph/debug/ge_util.h"
+#include "graph/debug/ge_op_types.h"
+#include "framework/common/scope_guard.h"
 #include "graph/node_impl.h"
 
 namespace ge {

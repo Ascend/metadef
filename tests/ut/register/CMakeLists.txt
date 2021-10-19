@@ -107,9 +107,11 @@ set(REGISTER_UT_FILES
     "testcase/register_unittest.cc"
     "testcase/register_prototype_unittest.cc"
     "testcase/register_scope_graph_unittest.cc"
+    "testcase/register_op_tiling_v3_ut.cc"
     "testcase/register_op_tiling_v2_ut.cc"
     "testcase/register_op_tiling_v1_ut.cc"
     "testcase/register_optiling_unittest.cc"
+    "graph_builder_utils.cc"
 )
 
 ############ libut_metadef_register.a ############

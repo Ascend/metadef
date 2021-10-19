@@ -16,21 +16,13 @@
 
 #include "graph/op_desc.h"
 
-#include "graph/debug/ge_attr_define.h"
-#include "debug/ge_util.h"
-#include "external/graph/operator.h"
-#include "framework/common/debug/ge_log.h"
-#include "common/util/error_manager/error_manager.h"
 #include "graph/common_error_codes.h"
-#include "graph/ge_attr_value.h"
-#include "graph/ge_tensor.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/op_desc_impl.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/transformer_utils.h"
-#include "proto/ge_ir.pb.h"
 
 using std::make_pair;
 using std::shared_ptr;
@@ -631,7 +623,7 @@ const GeTensorDesc &OpDescImpl::GetOutputDesc(const string &name) const {
 }
 
 GeTensorDescPtr OpDescImpl::MutableOutputDesc(uint32_t index) const {
-  GE_CHK_BOOL_RET_STATUS(index < outputs_desc_.size(), nullptr, "Cann't find the output desc %u", index);
+  GE_CHK_BOOL_EXEC(index < outputs_desc_.size(), return nullptr, "Cann't find the output desc %u", index);
   return outputs_desc_[index];
 }
 

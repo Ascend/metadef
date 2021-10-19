@@ -1244,6 +1244,9 @@ const std::string ATTR_NAME_DEPLOY_DEVICE_ID = "_device_id";
 const std::string ATTR_NAME_DEPLOY_GRAPH_INPUTS = "_graph_inputs";
 const std::string ATTR_NAME_DEPLOY_NEED_RETURN_RESULT = "_need_return_result";
 
+// for qos
+const std::string ATTR_NAME_QOS_SERVICE_LABEL = "_qos_service_label";
+
 // for constant folding, mark potential const
 const std::string ATTR_NAME_POTENTIAL_CONST = "_is_potential_const";
 const std::string ATTR_NAME_POTENTIAL_WEIGHT = "_potential_weight";
@@ -1255,4 +1258,16 @@ const std::string ATTR_NAME_ORIGIN_OUTPUT_TENSOR_NAME = "_origin_output_tensor_n
 // for scope op to record the input and output information of the original graph node
 const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_INPUTS = "_origin_graph_node_inputs";
 const std::string ATTR_NAME_ORIGIN_GRAPH_NODE_OUTPUTS = "_origin_graph_node_outputs";
+
+// for operator resource list(e.g. queues, channels)
+const std::string ATTR_NAME_RESOURCE_LIST = "_resource_list";
+
+// for no tiling
+const std::string ATTR_NAME_OP_TILING_INLINE_ENGINE = "_op_tiling_inline_engine";
+const std::string ATTR_NAME_OP_EXPORT_SHAPE_ENGINE = "_op_export_shape_engine";
+const std::string ATTR_NAME_OP_MAX_SHAPE = "_op_max_shape";
+const std::string ATTR_NAME_TENSOR_MAX_SHAPE = "_tensor_max_shape";
+const std::string ATTR_NAME_OP_NO_TILING = "_op_no_tiling";
+const std::string ATTR_NAME_TENSOR_DESC_MEM_OFFSET = "_tensor_desc_mem_offset";
+const std::string ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE = "_tensor_no_tiling_mem_type";
 }  // namespace ge

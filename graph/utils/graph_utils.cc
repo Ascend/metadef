@@ -32,12 +32,9 @@
 
 #include "graph/ge_context.h"
 #include "graph/debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "proto/ge_ir.pb.h"
-#include "graph/utils/attr_utils.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/node_utils.h"
-#include "graph/utils/file_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
 #include "graph/debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"
@@ -3010,19 +3007,19 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
   // Add Input-Mapping
   std::map<uint32_t, uint32_t> input_mapping;
-  for (size_t i = 0; i < graph_info.data_inputs.size(); i++) {
-    input_mapping[i] = i;
+  size_t j = 0U;
+  for (const auto &item : graph_info.data_inputs) {
+    while (j < item.second.second.size()) {
+      input_mapping[j] = j;
+      j++;
+    }
   }
   graph_builder.SetInputMapping(input_mapping);
 
   // Add outputMapping
   std::map<uint32_t, uint32_t> output_mapping;
-  size_t j = 0;
-  for (const auto &item : graph_info.data_inputs) {
-    while (j < item.second.second.size()) {
-      output_mapping[j] = j;
-      j++;
-    }
+  for (size_t i = 0U; i < graph_info.data_inputs.size(); i++) {
+    output_mapping[i] = i;
   }
   graph_builder.SetOutputMapping(output_mapping);
 

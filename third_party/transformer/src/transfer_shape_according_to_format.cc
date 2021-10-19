@@ -232,7 +232,7 @@ bool CheckInputParam(const ShapeAndFormat& shapeAndFormatInfo, ge::Format primar
 
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& shapeAndFormatInfo, int64_t* c) {
   if (shapeAndFormatInfo.oldFormat == ge::FORMAT_ND &&
-      FE_ORIGIN_FORMAT_VECTOR.count(shapeAndFormatInfo.newFormat) > 0) {
+      FE_ORIGIN_FORMAT_VECTOR.count(static_cast<int>(shapeAndFormatInfo.newFormat)) > 0) {
     GELOGD("Do not need to do shape transformation from ND to original format.");
     return SUCCESS;
   }

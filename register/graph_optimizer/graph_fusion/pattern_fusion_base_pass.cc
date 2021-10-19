@@ -74,6 +74,11 @@ Status PatternFusionBasePass::Run(ge::ComputeGraph &graph) {
   if (GraphPassUtil::GetOpTypeMapToGraph(node_map_info, graph) == SUCCESS) {
     node_map_info->run_count++;
   }
+
+  int64_t run_count_attr;
+  if (ge::AttrUtils::GetInt(graph, "run_count", run_count_attr)) {
+    ge::AttrUtils::SetInt(graph, "run_count", ++run_count_attr);
+  }
   // do matching and fusion for each pattern
   bool final_changed = false;
   for (const FusionPattern *pattern : patterns) {

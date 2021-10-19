@@ -17,10 +17,10 @@
 #ifndef INC_COMMON_OPSKERNEL_GE_TASK_INFO_H_
 #define INC_COMMON_OPSKERNEL_GE_TASK_INFO_H_
 
-#include <runtime/rt.h>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
+#include "runtime/rt.h"
 
 using std::string;
 namespace ge {

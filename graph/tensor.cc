@@ -736,6 +736,7 @@ graphStatus Tensor::SetData(uint8_t *data, size_t size, const Tensor::DeleteFunc
       GELOGE(GRAPH_FAILED, "[Call][SetData] Tensor set data with deleter function failed");
       return GRAPH_FAILED;
     }
+    return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
 }

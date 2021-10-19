@@ -235,6 +235,8 @@ target_compile_definitions(op_tiling_o2 PRIVATE
 target_link_libraries(op_tiling_o2 PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+    ascend_protobuf
     json
     c_sec
 )
