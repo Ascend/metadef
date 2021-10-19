@@ -211,8 +211,8 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
     GELOGI("In Op %s dynamic attr [%s] is exist, tensor num: %u.", op_desc->GetName().c_str(), attr_name.c_str(),
            dynamic_tensor_num);
     if (dynamic_tensor_num == 0) {
-      GELOGW("[UpdateDynamicInputOutPutIndex][Check] In op[%s] tensor num of port[%s] is equal 0.", op_desc->GetName().c_str(),
-             dynamic_name_attr.port_name);
+      GELOGW("[UpdateDynamicInputOutPutIndex][Check] In op[%s] tensor num of port[%s] is equal 0.",
+             op_desc->GetName().c_str(), dynamic_name_attr.port_name);
       continue;
     }
     port_dynamic_info[dynamic_name_attr.port_name] = DynamicInfo(dynamic_name_attr.type, 0, dynamic_tensor_num);
