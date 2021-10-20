@@ -56,10 +56,10 @@ Status DecomposeInputName(const std::string &input_name, std::string &node_name,
   }
   try {
     index = static_cast<int32_t>(std::stoi(parts[kPeerOutIndex]));
-  } catch (std::invalid_argument &e) {
+  } catch (std::invalid_argument &) {
     GELOGE(PARAM_INVALID, "Peer out index [%s] is invalid.", parts[kPeerOutIndex].c_str());
     return PARAM_INVALID;
-  } catch (std::out_of_range &e) {
+  } catch (std::out_of_range &) {
     GELOGE(PARAM_INVALID, "Peer out index [%s] is out of range.", parts[kPeerOutIndex].c_str());
     return PARAM_INVALID;
   }

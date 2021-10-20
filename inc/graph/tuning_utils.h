@@ -29,10 +29,10 @@
 #include "graph/utils/tensor_utils.h"
 namespace ge {
 // Configure build mode, default value is "normal"
-const char *const BUILD_MODE = "ge.buildMode";
-const char *const BUILD_STEP = "ge.buildStep";
+constexpr char BUILD_MODE[] = "ge.buildMode";
+constexpr char BUILD_STEP[] = "ge.buildStep";
 // Configure tuning path
-const char *const TUNING_PATH = "ge.tuningPath";
+constexpr char TUNING_PATH[] = "ge.tuningPath";
 // for interface: aclgrphBuildModel
 const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
   BUILD_MODE,
@@ -41,9 +41,9 @@ const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
 };
 
 // Build model
-const char *const BUILD_MODE_NORMAL = "normal";
-const char *const BUILD_MODE_TUNING = "tuning";
-const char *const BUILD_MODE_BASELINE = "baseline";
+constexpr char BUILD_MODE_NORMAL[] = "normal";
+constexpr char BUILD_MODE_TUNING[] = "tuning";
+constexpr char BUILD_MODE_BASELINE[] = "baseline";
 const std::set<std::string> build_mode_options = {
     BUILD_MODE_NORMAL,
     BUILD_MODE_TUNING,
@@ -51,11 +51,11 @@ const std::set<std::string> build_mode_options = {
 };
 
 // Build step
-const char *const BUILD_STEP_BEFORE_UB_MATCH = "before_ub_match";
-const char *const BUILD_STEP_AFTER_UB_MATCH = "after_ub_match";
-const char *const BUILD_STEP_AFTER_BUILDER = "after_builder";
-const char *const BUILD_STEP_AFTER_BUILDER_SUB = "after_builder_sub";
-const char *const BUILD_STEP_AFTER_MERGE = "after_merge";
+constexpr char BUILD_STEP_BEFORE_UB_MATCH[] = "before_ub_match";
+constexpr char BUILD_STEP_AFTER_UB_MATCH[] = "after_ub_match";
+constexpr char BUILD_STEP_AFTER_BUILDER[] = "after_builder";
+constexpr char BUILD_STEP_AFTER_BUILDER_SUB[] = "after_builder_sub";
+constexpr char BUILD_STEP_AFTER_MERGE[] = "after_merge";
 const std::set<std::string> build_step_options = {
     BUILD_STEP_BEFORE_UB_MATCH,
     BUILD_STEP_AFTER_UB_MATCH,
