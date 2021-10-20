@@ -24,7 +24,6 @@
 #include "graph/def_types.h"
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
-#include "graph/usr_types.h"
 #include "register/register_types.h"
 #include "external/register/register_fmk_types.h"
 

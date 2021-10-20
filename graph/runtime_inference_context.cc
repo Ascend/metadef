@@ -66,7 +66,7 @@ graphStatus RuntimeInferenceContext::GetContext(const std::string &context_id, R
 }
 
 
-graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int output_id, Tensor &&tensor) {
+graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int32_t output_id, Tensor &&tensor) {
   std::lock_guard<std::mutex> lk(mu_);
   auto &output_tensors = tensors_[node_id];
   if (static_cast<uint32_t>(output_id) >= output_tensors.size()) {
@@ -91,7 +91,7 @@ graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int output_id, T
   return GRAPH_SUCCESS;
 }
 
-graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, Tensor &tensor) {
+graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int32_t output_id, Tensor &tensor) {
   if (output_id < 0) {
     REPORT_INNER_ERROR("E19999", "param output_id:%d < 0, check invalid.", output_id);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid output index: %d", output_id);
@@ -124,7 +124,7 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, T
   return GRAPH_SUCCESS;
 }
 
-graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int output_id, GeTensorPtr &tensor) {
+graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int32_t output_id, GeTensorPtr &tensor) {
   if (output_id < 0) {
     REPORT_INNER_ERROR("E19999", "Invalid output index: %d", output_id);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid output index: %d", output_id);
