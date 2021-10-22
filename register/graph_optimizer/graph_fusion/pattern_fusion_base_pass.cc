@@ -135,6 +135,21 @@ void InheritAttrFromOriNode(vector<ge::NodePtr> &original_nodes, const ge::NodeP
   }
 }
 
+void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapping &mapping) {
+  std::ostringstream oss;
+  oss << std::endl << "Mapping of pattern ";
+  oss << pattern.GetName() << ":" << std::endl;
+  oss << " Mapping: "  << std::endl;
+  for (const auto &item : mapping) {
+    std::shared_ptr<OpDesc> op_desc = item.first;
+    const ge::NodePtr node = item.second[0];
+    if (op_desc != nullptr && node != nullptr) {
+      oss << "    " << op_desc->id << " -> " << node->GetName() << std::endl;
+    }
+  }
+  GELOGE(FAILED, "%s", oss.str().c_str());
+}
+
 /**
  * @ingroup fe
  * @brief do matching and fusion in graph based on the pattern
@@ -178,8 +193,8 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
     if (isGraphCycle) {
         GELOGE(FAILED, "Failed to do topological sorting after graph fusion, graph is cyclic, graph name:%s",
                graph.GetName().c_str());
-        GELOGE(FAILED, "This graph is cyclic. The mappings and new nodes are as follows.");
-        pattern_fusion_base_pass_impl_ptr_->DumpMappings(pattern, mappings);
+        GELOGE(FAILED, "This graph is cyclic. The mapping and new nodes are as follows.");
+        DumpMapping(pattern, mapping);
 
         std::ostringstream oss;
         for (const auto &node_ : fus_nodes) {

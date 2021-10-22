@@ -95,6 +95,7 @@ class PatternFusionBasePass : public GraphPass {
 
   void EnableNetworkAnalysis();
 
+  void DumpMapping(const FusionPattern &pattern, const Mapping &mapping);
  private:
   /** match all nodes in graph according to pattern
    *
