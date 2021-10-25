@@ -387,13 +387,13 @@ TEST_F(UtestFftsGraphUtils, ClipNodesFromGraph_no_func_node) {
   ASSERT_EQ(FftsGraphUtils::GraphPartition(*subgraph, {data1}), GRAPH_SUCCESS);
 
   std::set<NodePtr> unsupported_nodes;
-  const auto &cast1 = FindNodeWithNamePattern(subgraph, "cast1");
+  auto cast1 = FindNodeWithNamePattern(subgraph, "cast1");
   ASSERT_NE(cast1, nullptr);
   unsupported_nodes.insert(cast1);
-  const auto &cast4 = FindNodeWithNamePattern(subgraph, "cast4");
+  auto cast4 = FindNodeWithNamePattern(subgraph, "cast4");
   ASSERT_NE(cast4, nullptr);
   unsupported_nodes.insert(cast4);
-  const auto &cast5 = FindNodeWithNamePattern(subgraph, "cast5");
+  auto cast5 = FindNodeWithNamePattern(subgraph, "cast5");
   ASSERT_NE(cast5, nullptr);
   unsupported_nodes.insert(cast5);
   ASSERT_EQ(FftsGraphUtils::GraphPartition(*subgraph, unsupported_nodes), GRAPH_SUCCESS);
