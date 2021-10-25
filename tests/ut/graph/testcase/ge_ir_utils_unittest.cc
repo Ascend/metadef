@@ -34,6 +34,7 @@ static ComputeGraphPtr CreateGraph_1_1_224_224(float *tensor_data) {
   const1_td.SetOriginFormat(FORMAT_NCHW);
   const1_td.SetDataType(DT_FLOAT);
   const1_td.SetOriginDataType(DT_FLOAT);
+  ge::AttrUtils::SetListListInt(const1_td, "_cut_info", {{1, 0, 0, 0}});
   GeTensor tensor(const1_td);
   tensor.SetData(reinterpret_cast<uint8_t *>(tensor_data), sizeof(float) * 224 * 224);
   AttrUtils::SetTensor(const1->GetOpDesc(), "value", tensor);
