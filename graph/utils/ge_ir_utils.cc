@@ -500,6 +500,16 @@ void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, prefix + attr_name + suffix, bools);
       }
     }
+    if (attr_type == ge::proto::AttrDef::kListListInt) {
+      const auto &list_value = attr_def.list_list_int();
+      const auto &list_ints = list_value.list_list_i();
+      int64_t list_index = 0;
+      for (const auto &one_ints : list_ints) {
+        const auto &ints = one_ints.list_i();
+        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
+                     prefix + attr_name + suffix + "_" + std::to_string(list_index++), ints);
+      }
+    }
   }
 }
 
