@@ -31,6 +31,7 @@ struct RunContext {
   rtModel_t model;
   rtStream_t stream;
   uint64_t sessionId;
+  uint64_t deviceId;
   uint64_t dataMemSize;
   uint8_t *dataMemBase;
   std::map<int64_t, uint64_t> mem_type_data_mem_size;
