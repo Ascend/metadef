@@ -41,8 +41,8 @@ bool IfNodeExist(const ComputeGraphPtr &graph, std::function<bool(const NodePtr 
   return false;
 }
 
-const NodePtr &FindNodeWithNamePattern(const ComputeGraphPtr &graph, const std::string &pattern,
-                                       bool direct_node_flag = true) {
+NodePtr FindNodeWithNamePattern(const ComputeGraphPtr &graph, const std::string &pattern,
+                                bool direct_node_flag = true) {
   for (const auto &node : graph->GetNodes(direct_node_flag)) {
     const auto &name = node->GetName();
     if (name.find(pattern) != string::npos) {
@@ -381,7 +381,7 @@ TEST_F(UtestFftsGraphUtils, ClipNodesFromGraph_no_func_node) {
   ASSERT_NE(subgraph, nullptr);
 
   ASSERT_EQ(FftsGraphUtils::GraphPartition(*subgraph, {}), GRAPH_SUCCESS);
-  const auto &data1 = FindNodeWithNamePattern(subgraph, "data1");
+  auto data1 = FindNodeWithNamePattern(subgraph, "data1");
   ASSERT_NE(data1, nullptr);
   ASSERT_EQ(FftsGraphUtils::GraphPartition(*subgraph, {data1}), GRAPH_SUCCESS);
 
