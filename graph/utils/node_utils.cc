@@ -1281,29 +1281,29 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
              peer_node->GetName().c_str(), peer_node->GetType().c_str());
 
       return GRAPH_SUCCESS;
-    } else {
-      // if peer node is PartionedCall, return owner graph's correspond node
-      auto sub_graph = GetSubgraph(*peer_node, 0);
-      GE_CHECK_NOTNULL(sub_graph);
-      auto sub_graph_netoutput = sub_graph->FindFirstNodeMatchType(NETOUTPUT);
-      GE_CHECK_NOTNULL(sub_graph_netoutput);
+    }
+    // if peer node is PartionedCall, return owner graph's correspond node
+    auto sub_graph = GetSubgraph(*peer_node, 0);
+    GE_CHECK_NOTNULL(sub_graph);
+    auto sub_graph_netoutput = sub_graph->FindFirstNodeMatchType(NETOUTPUT);
+    GE_CHECK_NOTNULL(sub_graph_netoutput);
 
-      for (const auto &in_data_anchor : sub_graph_netoutput->GetAllInDataAnchors()) {
-        auto in_desc = sub_graph_netoutput->GetOpDesc()->MutableInputDesc(in_data_anchor->GetIdx());
-        GE_CHECK_NOTNULL(in_desc);
-        int32_t ref_o = 0;
-        if (!AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
-          return GRAPH_FAILED;
-        }
-        if (peer_out_anchor_index != ref_o) {
-          continue;
-        }
-        peer_node = NodeUtils::GetInDataNodeByIndex(*sub_graph_netoutput, in_data_anchor->GetIdx());
-        GE_CHECK_NOTNULL(peer_node);
-        GELOGD("in node[%s] peer_node[%s] type[%s]", node->GetName().c_str(), peer_node->GetName().c_str(),
-               peer_node->GetType().c_str());
-        break;
+    for (const auto &in_data_anchor : sub_graph_netoutput->GetAllInDataAnchors()) {
+      auto in_desc = sub_graph_netoutput->GetOpDesc()->MutableInputDesc(in_data_anchor->GetIdx());
+      GE_CHECK_NOTNULL(in_desc);
+      int32_t ref_o = 0;
+      if (!AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
+        return GRAPH_FAILED;
       }
+      if (peer_out_anchor_index != ref_o) {
+        continue;
+      }
+      peer_node = NodeUtils::GetInDataNodeByIndex(*sub_graph_netoutput, in_data_anchor->GetIdx());
+      GE_CHECK_NOTNULL(peer_node);
+      peer_out_anchor_index = in_data_anchor->GetPeerOutAnchor()->GetIdx();
+      GELOGD("in node[%s] peer_node[%s] type[%s] out anchor index[%d].", node->GetName().c_str(),
+             peer_node->GetName().c_str(), peer_node->GetType().c_str(), peer_out_anchor_index);
+      break;
     }
   }
   return GRAPH_SUCCESS;

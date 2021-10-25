@@ -160,6 +160,69 @@ ComputeGraphPtr BuildGraphPartitionCall2() {
   root_graph->AddSubgraph(sub_graph2->GetName(), sub_graph2);
   return root_graph;
 }
+/*                                  -------------------------                 -------------------
+*                                  |      partitioncall_2---------------------|        Mul       |
+*     partitioncall_0--------------|             |           |                |         |        |
+*           |                      |         netoutput       |                |     netoutput    |
+*           |                      --------------------------                  ------------------
+*           |                       -------------
+*           |                      |    data     |
+*           |                      |     |       |
+*     partitioncall_1--------------|   squeeze*  |
+*                                  |     |       |
+*                                  |  netoutput  |
+*                                   -------------
+*/
+ComputeGraphPtr BuildGraphPartitionCall3() {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 0, 1);
+  const auto &partitioncall_1 = root_builder.AddNode("partitioncall_1", PARTITIONEDCALL, 1, 1);
+  root_builder.AddDataEdge(partitioncall_0, 0, partitioncall_1, 0);
+  const auto &root_graph = root_builder.GetGraph();
+
+  // 1.build partitioncall_0 sub graph
+  auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+  const auto &partitioncall_2 = p1_sub_builder.AddNode("partitioncall_2", PARTITIONEDCALL, 0, 1);
+  const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 1, 1);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+  p1_sub_builder.AddDataEdge(partitioncall_2, 0, partitioncall_0_netoutput, 0);
+  const auto &sub_graph = p1_sub_builder.GetGraph();
+  sub_graph->SetParentNode(partitioncall_0);
+  sub_graph->SetParentGraph(root_graph);
+  partitioncall_0->GetOpDesc()->AddSubgraphName("sub0");
+  partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+
+  // 2.build partitioncall_1 sub graph
+  auto p2_sub_builder = ut::GraphBuilder("partitioncall_1_sub");
+  const auto &partitioncall_1_data = p2_sub_builder.AddNode("partitioncall_1_data", DATA, 0, 1);
+  AttrUtils::SetInt(partitioncall_1_data->GetOpDesc(), "_parent_node_index", 0);
+  const auto &partitioncall_1_squeeze = p2_sub_builder.AddNode("partitioncall_1_squeeze", SQUEEZE, 1, 1);
+  const auto &partitioncall_1_netoutput = p2_sub_builder.AddNode("partitioncall_1_netoutput", NETOUTPUT, 1, 1);
+  p2_sub_builder.AddDataEdge(partitioncall_1_data, 0, partitioncall_1_squeeze, 0);
+  p2_sub_builder.AddDataEdge(partitioncall_1_squeeze, 0, partitioncall_1_netoutput, 0);
+  const auto &sub_graph2 = p2_sub_builder.GetGraph();
+  sub_graph2->SetParentNode(partitioncall_1);
+  sub_graph2->SetParentGraph(root_graph);
+  partitioncall_1->GetOpDesc()->AddSubgraphName("sub1");
+  partitioncall_1->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_1_sub");
+
+  // 3 build partitioncall_2 sub graph
+  auto p3_sub_builder = ut::GraphBuilder("partitioncall_2_sub");
+  const auto &partitioncall_2_mul = p3_sub_builder.AddNode("partitioncall_2_mul", "Mul", 0, 1);
+  const auto &partitioncall_2_netoutput = p3_sub_builder.AddNode("partitioncall_2_netoutput", NETOUTPUT, 1, 1);
+  AttrUtils::SetInt(partitioncall_2_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+  p3_sub_builder.AddDataEdge(partitioncall_2_mul, 0, partitioncall_2_netoutput, 0);
+  const auto &sub_graph3 = p3_sub_builder.GetGraph();
+  sub_graph3->SetParentNode(partitioncall_2);
+  sub_graph3->SetParentGraph(sub_graph);
+  partitioncall_2->GetOpDesc()->AddSubgraphName("sub2");
+  partitioncall_2->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_2_sub");
+
+  root_graph->AddSubgraph(sub_graph->GetName(), sub_graph);
+  root_graph->AddSubgraph(sub_graph2->GetName(), sub_graph2);
+  root_graph->AddSubgraph(sub_graph3->GetName(), sub_graph3);
+  return root_graph;
+}
 }
 
 TEST_F(UtestNodeUtils, GetInputConstData) {
@@ -361,5 +424,20 @@ TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_paritioncall_link_partiti
   ret = NodeUtils::GetInNodeCrossPartionedCallNode(partitioncall_0, 1 , expect_peer_node);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
   ASSERT_EQ(expect_peer_node, nullptr);
+}
+
+TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_multi_partitioncall) {
+  auto graph = BuildGraphPartitionCall3();
+  NodePtr expect_peer_node;
+  NodePtr squeeze_node;
+  for (auto &node : graph->GetAllNodes()) {
+    if (node->GetType() == SQUEEZE) {
+      squeeze_node = node;
+    }
+  }
+  auto ret = NodeUtils::GetInNodeCrossPartionedCallNode(squeeze_node, 0 , expect_peer_node);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_NE(expect_peer_node, nullptr);
+  ASSERT_EQ(expect_peer_node->GetName(), "partitioncall_2_mul");
 }
 }  // namespace ge
