@@ -381,8 +381,9 @@ TEST_F(UtestFftsGraphUtils, ClipNodesFromGraph_no_func_node) {
   ASSERT_NE(subgraph, nullptr);
 
   ASSERT_EQ(FftsGraphUtils::GraphPartition(*subgraph, {}), GRAPH_SUCCESS);
+
   auto data1 = FindNodeWithNamePattern(subgraph, "data1");
-  ASSERT_NE(data1, nullptr);
+  ASSERT_NE(data1.get(), nullptr);
   ASSERT_EQ(FftsGraphUtils::GraphPartition(*subgraph, {data1}), GRAPH_SUCCESS);
 
   std::set<NodePtr> unsupported_nodes;
