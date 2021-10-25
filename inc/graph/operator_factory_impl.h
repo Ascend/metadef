@@ -48,7 +48,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
 
   static graphStatus GetOpsTypeList(std::vector<std::string> &all_ops);
 
-  static bool IsExistOp(const string &operator_type);
+  static bool IsExistOp(const std::string &operator_type);
 
   static InferShapeFunc GetInferShapeFunc(const std::string &operator_type);
 
@@ -80,13 +80,13 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
                                                  const bool use_cpu_kernel,
                                                  const InferValueRangeFunc &infer_value_range_func);
 
-  static shared_ptr<std::map<string, OpCreator>> operator_creators_;
-  static shared_ptr<std::map<string, OpCreatorV2>> operator_creators_v2_;
-  static shared_ptr<std::map<string, InferShapeFunc>> operator_infershape_funcs_;
-  static shared_ptr<std::map<string, InferFormatFunc>> operator_inferformat_funcs_;
-  static shared_ptr<std::map<string, VerifyFunc>> operator_verify_funcs_;
-  static shared_ptr<std::map<string, InferDataSliceFunc>> operator_infer_data_slice_funcs_;
-  static shared_ptr<std::map<string, InferValueRangePara>> operator_infer_value_range_paras_;
+  static shared_ptr<std::map<std::string, OpCreator>> operator_creators_;
+  static shared_ptr<std::map<std::string, OpCreatorV2>> operator_creators_v2_;
+  static shared_ptr<std::map<std::string, InferShapeFunc>> operator_infershape_funcs_;
+  static shared_ptr<std::map<std::string, InferFormatFunc>> operator_inferformat_funcs_;
+  static shared_ptr<std::map<std::string, VerifyFunc>> operator_verify_funcs_;
+  static shared_ptr<std::map<std::string, InferDataSliceFunc>> operator_infer_data_slice_funcs_;
+  static shared_ptr<std::map<std::string, InferValueRangePara>> operator_infer_value_range_paras_;
 };
 }  // namespace ge
 

@@ -26,8 +26,8 @@ using std::string;
 namespace ge {
 // when need to eliminate GETaskKernelHcclInfo, so not need DAVINCI_TRAIN/DAVINCI_CLOUD
 struct GETaskKernelHcclInfo {
-  string input_name;
-  string hccl_type;
+  std::string input_name;
+  std::string hccl_type;
   void *inputDataAddr;
   void *outputDataAddr;
   void *workSpaceAddr;

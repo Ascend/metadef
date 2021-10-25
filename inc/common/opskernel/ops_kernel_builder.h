@@ -54,12 +54,12 @@ class OpsKernelBuilder {
   }
 
   // only call aicpu interface to generate task struct
-  virtual Status GenSingleOpRunTask(const NodePtr &node, STR_FWK_OP_KERNEL &task, string &task_info) {
+  virtual Status GenSingleOpRunTask(const NodePtr &node, STR_FWK_OP_KERNEL &task, std::string &task_info) {
     return FAILED;
   }
 
   // only call aicpu interface to generate task struct
-  virtual Status GenMemCopyTask(uint64_t count, STR_FWK_OP_KERNEL &task, string &task_info) {
+  virtual Status GenMemCopyTask(uint64_t count, STR_FWK_OP_KERNEL &task, std::string &task_info) {
     return FAILED;
   }
 };

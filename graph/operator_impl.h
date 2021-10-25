@@ -25,36 +25,36 @@
 namespace ge {
 class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
  public:
-  explicit OperatorImpl(const string &name, const string &type);
+  explicit OperatorImpl(const std::string &name, const std::string &type);
   explicit OperatorImpl(const OpDescPtr &op_desc);
   explicit OperatorImpl(ConstNodePtr node);
   ~OperatorImpl();
 
-  void SetInputImpl(const string &dst_name, const Operator &src_oprt);
-  void SetInputImpl(const string &dst_name, const OutHandler &out_handler);
+  void SetInputImpl(const std::string &dst_name, const Operator &src_oprt);
+  void SetInputImpl(const std::string &dst_name, const OutHandler &out_handler);
   void AddControlInputImp(const Operator &src_oprt);
-  graphStatus GetInputImpl(const string &dst_name, ge::OpIO &out_handler) const;
+  graphStatus GetInputImpl(const std::string &dst_name, ge::OpIO &out_handler) const;
   graphStatus GetInputImpl(uint32_t idx, ge::OpIO &out_handler) const;
-  graphStatus GetInputConstData(const string &dst_name, Tensor &data);
+  graphStatus GetInputConstData(const std::string &dst_name, Tensor &data);
   graphStatus GetInputConstData(uint32_t idx, ConstGeTensorPtr &ge_tensor) const;
-  graphStatus GetInputConstDataOut(const string &dst_name, Tensor &data);
+  graphStatus GetInputConstDataOut(const std::string &dst_name, Tensor &data);
   graphStatus GetInputConstDataOut(uint32_t idx, ConstGeTensorPtr &ge_tensor) const;
-  bool InputIsSet(const string &name);
-  string GetName() const;
-  GeTensorDesc GetInputDesc(const string &name) const;
+  bool InputIsSet(const std::string &name);
+  std::string GetName() const;
+  GeTensorDesc GetInputDesc(const std::string &name) const;
   GeTensorDesc GetInputDesc(uint32_t index) const;
-  graphStatus UpdateInputDesc(const string &name, const GeTensorDesc &tensor_desc);
-  OutHandler GetOutput(const string &name);
+  graphStatus UpdateInputDesc(const std::string &name, const GeTensorDesc &tensor_desc);
+  OutHandler GetOutput(const std::string &name);
   OutHandler GetOutput(uint32_t index);
-  GeTensorDesc GetOutputDesc(const string &name) const;
+  GeTensorDesc GetOutputDesc(const std::string &name) const;
   GeTensorDesc GetOutputDesc(uint32_t index) const;
-  graphStatus UpdateOutputDesc(const string &name, const GeTensorDesc &tensor_desc);
+  graphStatus UpdateOutputDesc(const std::string &name, const GeTensorDesc &tensor_desc);
   size_t GetInputsSize() const;
   size_t GetOutputsSize() const;
-  graphStatus SetAttr(const string &name, AnyValue &&attr_value);
-  graphStatus GetAttr(const string &name, AnyValue &attr_value) const;
+  graphStatus SetAttr(const std::string &name, AnyValue &&attr_value);
+  graphStatus GetAttr(const std::string &name, AnyValue &attr_value) const;
   OpDescPtr GetOpDescImpl() const;
-  void UpdateLinkMapImpl(const string &src_name, OpIO &op_dst);
+  void UpdateLinkMapImpl(const std::string &src_name, OpIO &op_dst);
   Operator ToOperator();
   void ClearOutputLinks() noexcept;
   void ClearInputLinks() noexcept;
@@ -81,8 +81,8 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
  private:
   ge::ConstNodePtr node_{nullptr};
   ge::InferenceContextPtr inference_context_;
-  std::map<string, std::vector<OpIO>> output_links_{};
-  std::map<string, OpIO> input_link_{};
+  std::map<std::string, std::vector<OpIO>> output_links_{};
+  std::map<std::string, OpIO> input_link_{};
   std::vector<std::weak_ptr<OperatorImpl>> control_input_link_{};
   std::vector<std::weak_ptr<OperatorImpl>> control_output_link_{};
   std::map<std::string, SubgraphBuilder> subgraph_names_to_builders_;

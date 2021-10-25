@@ -121,15 +121,15 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   AttrHolder() = default;
   virtual ~AttrHolder() = default;
 
-  graphStatus SetAttr(const string &name, const AnyValue &value);
+  graphStatus SetAttr(const std::string &name, const AnyValue &value);
 
-  graphStatus TrySetAttr(const string &name, const AnyValue &value);
+  graphStatus TrySetAttr(const std::string &name, const AnyValue &value);
 
-  graphStatus GetAttr(const string &name, AnyValue &value) const;
+  graphStatus GetAttr(const std::string &name, AnyValue &value) const;
 
-  bool HasAttr(const string &name) const;
+  bool HasAttr(const std::string &name) const;
 
-  graphStatus DelAttr(const string &name);
+  graphStatus DelAttr(const std::string &name);
 
   void CopyAttrsFrom(const AttrHolder &holder);
 
@@ -141,11 +141,11 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   }
 
   template<class T>
-  bool SetExtAttr(const string &name, const T &value) {
+  bool SetExtAttr(const std::string &name, const T &value) {
     return extAttrs_.Set(name, value);
   }
   template<class T>
-  T TryGetExtAttr(const string &name, T defaultValue) const {
+  T TryGetExtAttr(const std::string &name, T defaultValue) const {
     T ret(defaultValue);
     (void) extAttrs_.Get(name, ret);
     return ret;
@@ -153,8 +153,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
 
  protected:
   graphStatus AddRequiredAttr(const std::string &name);
-  const std::set<string> GetAllAttrNames() const;
-  const std::map<string, AnyValue> GetAllAttrs() const;  // lint !e1073
+  const std::set<std::string> GetAllAttrNames() const;
+  const std::map<std::string, AnyValue> GetAllAttrs() const;
 
   virtual ProtoAttrMap &MutableAttrMap() = 0;
   virtual ConstProtoAttrMap &GetAttrMap() const = 0;
@@ -163,7 +163,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   friend class AttrUtils;
   friend class AttrUtilsHelper;
 
-  std::vector<string> requiredAttrs_;
+  std::vector<std::string> requiredAttrs_;
 
  private:
   AnyMap extAttrs_;

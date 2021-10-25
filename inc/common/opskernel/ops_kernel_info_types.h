@@ -52,15 +52,15 @@ struct Task {
 };
 
 struct OpInfo {
-  string engine;  // which engin
+  std::string engine;  // which engin
   /*lint -e148*/
-  string opKernelLib;  // which opsKernelStore
+  std::string opKernelLib;  // which opsKernelStore
   int computeCost;     // compute cost
   bool flagPartial;    // whether to support is related to shape
   bool flagAsync;      // Whether to support asynchronous
   bool isAtomic;       // whether to support atomic addr clean
-  string opFileName;   // op file name
-  string opFuncName;   // op function name
+  std::string opFileName;   // op file name
+  std::string opFuncName;   // op function name
 };
 }  // namespace ge
 

@@ -461,13 +461,6 @@ std::string TypeUtils::FmkTypeToSerialString(domi::FrameworkType fmk_type) {
   }
 }
 
-static inline void CopyDataFromBuffer(vector<uint8_t> &data, const Buffer &buffer) {
-  data.clear();
-  if (buffer.GetData() != nullptr && buffer.GetSize() != 0) {
-    data.assign(buffer.GetData(), buffer.GetData() + buffer.GetSize());
-  }
-}
-
 bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
   auto it = kDataTypeToLength.find(data_type);
   if (it != kDataTypeToLength.end()) {

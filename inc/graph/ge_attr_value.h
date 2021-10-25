@@ -50,8 +50,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY NamedAttrs : public AttrHol
   NamedAttrs() = default;
   virtual ~NamedAttrs() = default;
   void SetName(const std::string &name);
-  string GetName() const;
-  AnyValue GetItem(const string &key) const;
+  std::string GetName() const;
+  AnyValue GetItem(const std::string &key) const;
 
  protected:
   ProtoAttrMap &MutableAttrMap() override;

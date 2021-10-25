@@ -39,7 +39,7 @@ class Node::NodeImpl {
                           const NodePtr &input_node,
                           const NodePtr &owner_node);
   graphStatus AddLinkFromForParse(const NodePtr &input_node, const NodePtr &owner_node);
-  graphStatus AddLinkFrom(const string &name, const NodePtr &input_node, const NodePtr &owner_node);
+  graphStatus AddLinkFrom(const std::string &name, const NodePtr &input_node, const NodePtr &owner_node);
 
   ComputeGraphPtr GetOwnerComputeGraph() const;
   graphStatus SetOwnerComputeGraph(const ComputeGraphPtr &graph);
@@ -110,11 +110,11 @@ class Node::NodeImpl {
   friend class OnnxUtils;
   OpDescPtr op_;
   std::weak_ptr<ComputeGraph> owner_graph_;
-  vector<InDataAnchorPtr> in_data_anchors_;
-  vector<OutDataAnchorPtr> out_data_anchors_;
+  std::vector<InDataAnchorPtr> in_data_anchors_;
+  std::vector<OutDataAnchorPtr> out_data_anchors_;
   InControlAnchorPtr in_control_anchor_;
   OutControlAnchorPtr out_control_anchor_;
-  map<string, GeAttrValue> attrs_;  // lint !e1073
+  std::map<std::string, GeAttrValue> attrs_;
   bool has_init_{false};
   bool host_node_{false};
   bool anchor_status_updated_{false};

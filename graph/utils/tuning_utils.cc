@@ -107,7 +107,7 @@ graphStatus TuningUtils::ConvertConstToWeightAttr(ComputeGraphPtr &exe_graph) {
     if (node->GetType() == PLACEHOLDER) {
       auto op_desc = node->GetOpDesc();
       GE_CHECK_NOTNULL(op_desc);
-      const vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
+      const std::vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
       if (!weight.empty()) {
         if (!ge::AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, weight[0])) {
           REPORT_CALL_ERROR("E19999", "Set tensor to node[%s] failed", op_desc->GetName().c_str());
@@ -232,7 +232,7 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
   auto graph = node->GetOwnerComputeGraph();
   GE_CHECK_NOTNULL(graph);
   OpDescPtr data_op_desc;
-  vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
+  std::vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
   if (weight.empty()) {
     GE_CHECK_NOTNULL(node->GetOpDesc());
     NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr(parent_node_attr, nullptr);
@@ -599,7 +599,7 @@ graphStatus TuningUtils::HandleEnd(NodePtr &node) {
 }
 
 // part 2
-graphStatus TuningUtils::ConvertFileToGraph(const map<int64_t, string> &options, ge::Graph &graph) {
+graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string> &options, ge::Graph &graph) {
   std::function<void()> callback = [&]() {
     data_2_end_.clear();
     data_node_2_end_node_.clear();
@@ -690,7 +690,7 @@ graphStatus TuningUtils::MergeAllSubGraph(std::vector<ComputeGraphPtr> &subgraph
     (void) output_merged_compute_graph->AddNode(node);
     GELOGD("TUU:graph %s add node %s success", output_merged_compute_graph->GetName().c_str(), node->GetName().c_str());
 
-    vector<string> recover_attr_name;
+    std::vector<std::string> recover_attr_name;
     (void) ge::AttrUtils::GetListStr(node->GetOpDesc(), ATTR_NAME_NEED_RECOVER_ATTR, recover_attr_name);
     if (!recover_attr_name.empty()) {
       for (const auto &attr_name : recover_attr_name) {
@@ -748,7 +748,7 @@ graphStatus TuningUtils::MergeSubGraph(ComputeGraphPtr &subgraph) {
     if (node->GetType() == NETOUTPUT) {
       auto op_desc = node->GetOpDesc();
       GE_CHECK_NOTNULL(op_desc);
-      std::vector<string> out_alias_name;
+      std::vector<std::string> out_alias_name;
       bool has_valid_str =
           (AttrUtils::GetListStr(op_desc, alias_name_attr, out_alias_name)) && (!out_alias_name.empty());
       if (has_valid_str) {
@@ -771,7 +771,7 @@ NodePtr TuningUtils::FindNode(const std::string &name, int64_t &in_index) {
     if (node == nullptr) {
       continue;
     }
-    std::vector<string> out_alias_name;
+    std::vector<std::string> out_alias_name;
     std::vector<int64_t> alias_indexes;
     if (AttrUtils::GetListStr(node->GetOpDesc(), alias_name_attr, out_alias_name) &&
         AttrUtils::GetListInt(node->GetOpDesc(), alias_indexes_attr, alias_indexes) &&
@@ -881,7 +881,7 @@ graphStatus TuningUtils::HandleContinuousInputNodeNextData(NodePtr &node) {
   for (const auto &out_anchor : node->GetAllOutAnchors()) {
     for (const auto &peer_in_anchor : out_anchor->GetPeerAnchors()) {
       auto next_node = peer_in_anchor->GetOwnerNode();
-      vector<string> remove_attr_names;
+      std::vector<std::string> remove_attr_names;
       bool is_no_padding_continuous_input = false;
       bool is_continuous_input = false;
       bool is_no_task = false;

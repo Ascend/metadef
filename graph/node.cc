@@ -25,8 +25,6 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
 
-using std::string;
-using std::vector;
 
 namespace ge {
 Node::NodeImpl::NodeImpl(const OpDescPtr &op, const ComputeGraphPtr &owner_graph)
@@ -100,20 +98,20 @@ graphStatus Node::NodeImpl::Init(const NodePtr &node) {
 
 std::string Node::NodeImpl::GetName() const {
   GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E19999", "original OpDesc is nullptr");
-                   return string(), "[Check][Param] original OpDesc is nullptr");
+                   return std::string(), "[Check][Param] original OpDesc is nullptr");
   return op_->GetName();
 }
 
 std::string Node::NodeImpl::GetType() const {
   GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E19999", "original OpDesc is nullptr");
-                   return string(), "[Check][Param] original OpDesc is nullptr");
+                   return std::string(), "[Check][Param] original OpDesc is nullptr");
   return op_->GetType();
 }
 
 bool Node::NodeImpl::NodeAttrsAreEqual(const NodeImpl &r_node) const {
   const auto &attr_map = this->attrs_;
   const auto &r_attr_map = r_node.attrs_;
-  // 1.Verify node's map<string, AttrValue> size
+  // 1.Verify node's std::map<std::string, AttrValue> size
   if (attr_map.size() != r_attr_map.size()) {
     REPORT_INNER_ERROR("E19999", "param node attr map size:%zu not equal to this attr map size:%zu, "
                        "verify failed, node name: %s.", r_attr_map.size(), attr_map.size(), this->GetName().c_str());
@@ -121,7 +119,7 @@ bool Node::NodeImpl::NodeAttrsAreEqual(const NodeImpl &r_node) const {
            this->GetName().c_str());
     return false;
   }
-  // 2.Verify node's map<string, AttrValue> key, verify values is temporarily not implemented
+  // 2.Verify node's std::map<std::string, AttrValue> key, verify values is temporarily not implemented
   for (const auto &it : attr_map) {
     if (r_attr_map.count(it.first) == 0) {
       REPORT_INNER_ERROR("E19999", "Key of node's attr map verify failed, node name: %s key name: %s.",
@@ -286,7 +284,7 @@ graphStatus Node::NodeImpl::AddLinkFromForParse(const NodePtr &input_node, const
   return GRAPH_SUCCESS;
 }
 
-graphStatus Node::NodeImpl::AddLinkFrom(const string &name, const NodePtr &input_node, const NodePtr &owner_node) {
+graphStatus Node::NodeImpl::AddLinkFrom(const std::string &name, const NodePtr &input_node, const NodePtr &owner_node) {
   GE_CHECK_NOTNULL(input_node);
   // Input_node ---> this
   auto out_anchors = input_node->GetAllOutDataAnchors();
@@ -735,11 +733,11 @@ graphStatus Node::NodeImpl::InferOriginFormat(const ge::ConstNodePtr &owner_node
 }
 
 graphStatus Node::NodeImpl::Verify(const ge::ConstNodePtr &owner_node) const {
-  const string data_type = "Data";
-  const string aipp_data_type = "AippData";
-  const string const_type = "Const";
-  const string const_type_train = "Constant";
-  const string variable_type = "Variable";
+  const std::string data_type = "Data";
+  const std::string aipp_data_type = "AippData";
+  const std::string const_type = "Const";
+  const std::string const_type_train = "Constant";
+  const std::string variable_type = "Variable";
   bool is_unknown_graph = GetOwnerComputeGraph()->GetGraphUnknownFlag();
   GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E19999", "original OpDesc is nullptr, check invalid.");
                    return GRAPH_FAILED, "[Check][Param] original OpDesc is nullptr");
@@ -765,7 +763,7 @@ graphStatus Node::NodeImpl::Verify(const ge::ConstNodePtr &owner_node) const {
     }
   }
 
-  string frameworkop_type = "FrameworkOp";
+  std::string frameworkop_type = "FrameworkOp";
   bool need_update_name = op_->GetType() != frameworkop_type && !is_unknown_graph;
   if (need_update_name) {
     auto node_op = ge::OperatorFactoryImpl::CreateOperator("node_op", op_->GetType());
@@ -1034,7 +1032,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::AddLinkFromForP
   return impl_->AddLinkFromForParse(input_node, shared_from_this());
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::AddLinkFrom(const string &name, NodePtr input_node) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus Node::AddLinkFrom(const std::string &name, NodePtr input_node) {
   return impl_->AddLinkFrom(name, input_node, shared_from_this());
 }
 

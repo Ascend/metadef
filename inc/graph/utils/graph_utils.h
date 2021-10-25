@@ -95,7 +95,7 @@ class GraphUtils {
 
   static graphStatus RecoverGraphOperators(const Graph &graph);
 
-  static ComputeGraphPtr CreateGraphFromOperator(const string &name, const std::vector<Operator> &inputs);
+  static ComputeGraphPtr CreateGraphFromOperator(const std::string &name, const std::vector<Operator> &inputs);
 
   static graphStatus AddEdge(const OutDataAnchorPtr &src, const InDataAnchorPtr &dst);
 
@@ -320,7 +320,7 @@ class GraphUtils {
   /// @param prefix: node name prefix of new graph.
   /// @return ComputeGraphPtr
   ///
-  static ComputeGraphPtr CloneGraph(const ComputeGraphPtr &graph, const string &prefix,
+  static ComputeGraphPtr CloneGraph(const ComputeGraphPtr &graph, const std::string &prefix,
                                     std::vector<NodePtr> &input_nodes, std::vector<NodePtr> &output_nodes);
 
   ///
@@ -331,7 +331,7 @@ class GraphUtils {
   ///
   static graphStatus CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr &src_node);
 
-  static graphStatus TopologicalSortingByName(const ge::ComputeGraphPtr &compute_graph, vector<NodePtr> &node_vec);
+  static graphStatus TopologicalSortingByName(const ge::ComputeGraphPtr &compute_graph, std::vector<NodePtr> &node_vec);
 
   ///
   /// Get reference-mapping of all data_anchors in graph
@@ -448,8 +448,8 @@ class GraphUtils {
   /// @param [in] all_nodes: all nodes in new graph.
   /// @return success: GRAPH_SUCESS
   ///
-  static graphStatus RelinkGraphEdges(const NodePtr &node, const string &prefix,
-                                      const std::unordered_map<string, NodePtr> &all_nodes);
+  static graphStatus RelinkGraphEdges(const NodePtr &node, const std::string &prefix,
+                                      const std::unordered_map<std::string, NodePtr> &all_nodes);
 
   ///
   /// Union ref-mapping

@@ -24,7 +24,7 @@ thread_local GEThreadLocalContext thread_context;
 
 GEThreadLocalContext &GetThreadLocalContext() { return thread_context; }
 
-graphStatus GEThreadLocalContext::GetOption(const string &key, string &option) {
+graphStatus GEThreadLocalContext::GetOption(const std::string &key, std::string &option) {
   auto graph_iter = graph_options_.find(key);
   if (graph_iter != graph_options_.end()) {
     option = graph_iter->second;
@@ -43,35 +43,35 @@ graphStatus GEThreadLocalContext::GetOption(const string &key, string &option) {
   return GRAPH_PARAM_INVALID;
 }
 
-void GEThreadLocalContext::SetGlobalOption(map<string, string> options_map) {
+void GEThreadLocalContext::SetGlobalOption(std::map<std::string, std::string> options_map) {
   global_options_.clear();
   global_options_ = std::move(options_map);
 }
 
-void GEThreadLocalContext::SetSessionOption(map<string, string> options_map) {
+void GEThreadLocalContext::SetSessionOption(std::map<std::string, std::string> options_map) {
   session_options_.clear();
   session_options_ = std::move(options_map);
 }
 
-void GEThreadLocalContext::SetGraphOption(map<std::string, string> options_map) {
+void GEThreadLocalContext::SetGraphOption(std::map<std::string, std::string> options_map) {
   graph_options_.clear();
   graph_options_ = std::move(options_map);
 }
 
-map<string, string> GEThreadLocalContext::GetAllGraphOptions() const {
+std::map<std::string, std::string> GEThreadLocalContext::GetAllGraphOptions() const {
   return graph_options_;
 }
 
-map<string, string> GEThreadLocalContext::GetAllSessionOptions() const {
+std::map<std::string, std::string> GEThreadLocalContext::GetAllSessionOptions() const {
   return session_options_;
 }
 
-map<string, string> GEThreadLocalContext::GetAllGlobalOptions() const {
+std::map<std::string, std::string> GEThreadLocalContext::GetAllGlobalOptions() const {
   return global_options_;
 }
 
-map<string, string> GEThreadLocalContext::GetAllOptions() const {
-  map<string, string> options_all;
+std::map<std::string, std::string> GEThreadLocalContext::GetAllOptions() const {
+  std::map<std::string, std::string> options_all;
   options_all.insert(graph_options_.begin(), graph_options_.end());
   options_all.insert(session_options_.begin(), session_options_.end());
   options_all.insert(global_options_.begin(), global_options_.end());

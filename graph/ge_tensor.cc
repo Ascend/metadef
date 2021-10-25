@@ -81,30 +81,30 @@ const std::map<std::string, DeviceType> kStrToDeviceMap = {
     {"NPU", NPU}, {"CPU", CPU}
 };
 
-const string TENSOR_UTILS_SIZE = "size";
-const string TENSOR_UTILS_WEIGHT_SIZE = "weight_size";
-const string TENSOR_UTILS_REUSE_INPUT = "reuse_input";
-const string TENSOR_UTILS_OUTPUT_TENSOR = "output_tensor";
-const string TENSOR_UTILS_DEVICE_TYPE = "device_type";
-const string TENSOR_UTILS_INPUT_TENSOR = "input_tensor";
-const string TENSOR_UTILS_REAL_DIM_CNT = "real_dim_cnt";
-const string TENSOR_UTILS_REUSE_INPUT_INDEX = "reuse_input_index";
-const string TENSOR_UTILS_DATA_OFFSET = "data_offset";
-const string TENSOR_UTILS_CMPS_SIZE = "cmps_size";
-const string TENSOR_UTILS_CMPS_TAB = "cmps_tab";
-const string TENSOR_UTILS_CMPS_TAB_OFFSET = "cmps_tab_offset";
-const string TENSOR_UTILS_CMPSINFO = "cmps_info";
-const string TENSOR_UTILS_ALLOFFSET_QUANTIZE_INFO = "alloffset_quantize_info";
-const string TENSOR_UTILS_RC = "rc";
-const string TENSOR_UTILS_ORIGIN_SHAPE = "origin_shape";
-const string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
-const string TENSOR_UTILS_ORIGIN_FORMAT = "origin_format";
-const string TENSOR_UTILS_ORIGIN_DATA_TYPE = "origin_data_type";
-const string TENSOR_UTILS_SHAPE_RANGE = "shape_range";
-const string TENSOR_UTILS_ORIGIN_SHAPE_RANGE = "origin_shape_range";
-const string TENSOR_UTILS_VALUE_RANGE = "value_range";
-const string TENSOR_UTILS_REF_PORT_INDEX = "ref_port_index";
-const string TENSOR_UTILS_PLACEMENT = "placement";
+const std::string TENSOR_UTILS_SIZE = "size";
+const std::string TENSOR_UTILS_WEIGHT_SIZE = "weight_size";
+const std::string TENSOR_UTILS_REUSE_INPUT = "reuse_input";
+const std::string TENSOR_UTILS_OUTPUT_TENSOR = "output_tensor";
+const std::string TENSOR_UTILS_DEVICE_TYPE = "device_type";
+const std::string TENSOR_UTILS_INPUT_TENSOR = "input_tensor";
+const std::string TENSOR_UTILS_REAL_DIM_CNT = "real_dim_cnt";
+const std::string TENSOR_UTILS_REUSE_INPUT_INDEX = "reuse_input_index";
+const std::string TENSOR_UTILS_DATA_OFFSET = "data_offset";
+const std::string TENSOR_UTILS_CMPS_SIZE = "cmps_size";
+const std::string TENSOR_UTILS_CMPS_TAB = "cmps_tab";
+const std::string TENSOR_UTILS_CMPS_TAB_OFFSET = "cmps_tab_offset";
+const std::string TENSOR_UTILS_CMPSINFO = "cmps_info";
+const std::string TENSOR_UTILS_ALLOFFSET_QUANTIZE_INFO = "alloffset_quantize_info";
+const std::string TENSOR_UTILS_RC = "rc";
+const std::string TENSOR_UTILS_ORIGIN_SHAPE = "origin_shape";
+const std::string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
+const std::string TENSOR_UTILS_ORIGIN_FORMAT = "origin_format";
+const std::string TENSOR_UTILS_ORIGIN_DATA_TYPE = "origin_data_type";
+const std::string TENSOR_UTILS_SHAPE_RANGE = "shape_range";
+const std::string TENSOR_UTILS_ORIGIN_SHAPE_RANGE = "origin_shape_range";
+const std::string TENSOR_UTILS_VALUE_RANGE = "value_range";
+const std::string TENSOR_UTILS_REF_PORT_INDEX = "ref_port_index";
+const std::string TENSOR_UTILS_PLACEMENT = "placement";
 }
 
 void GeTensorSerializeUtils::GeShapeAsProto(const GeShape &shape, proto::ShapeDef *proto) {
@@ -834,7 +834,7 @@ void GeTensorDesc::SetUnknownDimNumShape() { SetShape(GeShape({UNKNOWN_DIM_NUM})
 
 // for unknown shape
 graphStatus GeTensorDesc::SetValueRange(const std::vector<std::pair<int64_t, int64_t>> &range) {
-  std::vector<vector<int64_t>> value_range;
+  std::vector<std::vector<int64_t>> value_range;
   for (const auto &ele : range) {
     value_range.emplace_back(std::vector<int64_t>({ele.first, ele.second}));
   }
@@ -843,7 +843,7 @@ graphStatus GeTensorDesc::SetValueRange(const std::vector<std::pair<int64_t, int
 }
 
 graphStatus GeTensorDesc::GetValueRange(std::vector<std::pair<int64_t, int64_t>> &range) const {
-  std::vector<vector<int64_t>> value_range;
+  std::vector<std::vector<int64_t>> value_range;
   (void) AttrUtils::GetListListInt(this, TENSOR_UTILS_VALUE_RANGE, value_range);
 
   for (const auto &ele : value_range) {
@@ -860,7 +860,7 @@ graphStatus GeTensorDesc::GetValueRange(std::vector<std::pair<int64_t, int64_t>>
 }
 
 graphStatus GeTensorDesc::SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range) {
-  std::vector<vector<int64_t>> shape_range;
+  std::vector<std::vector<int64_t>> shape_range;
   for (const auto &ele : range) {
     shape_range.emplace_back(std::vector<int64_t>({ele.first, ele.second}));
   }
@@ -869,7 +869,7 @@ graphStatus GeTensorDesc::SetShapeRange(const std::vector<std::pair<int64_t, int
 }
 
 graphStatus GeTensorDesc::SetOriginShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range) {
-  std::vector<vector<int64_t>> origin_shape_range;
+  std::vector<std::vector<int64_t>> origin_shape_range;
   for (const auto &ele : range) {
     origin_shape_range.emplace_back(std::vector<int64_t>({ele.first, ele.second}));
   }
@@ -878,7 +878,7 @@ graphStatus GeTensorDesc::SetOriginShapeRange(const std::vector<std::pair<int64_
 }
 
 graphStatus GeTensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const {
-  std::vector<vector<int64_t>> shape_range;
+  std::vector<std::vector<int64_t>> shape_range;
   (void)AttrUtils::GetListListInt(this, TENSOR_UTILS_SHAPE_RANGE, shape_range);
 
   for (const auto &ele : shape_range) {
@@ -896,7 +896,7 @@ graphStatus GeTensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>>
 }
 
 graphStatus GeTensorDesc::GetOriginShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const {
-  std::vector<vector<int64_t>> origin_shape_range;
+  std::vector<std::vector<int64_t>> origin_shape_range;
   (void)AttrUtils::GetListListInt(this, TENSOR_UTILS_ORIGIN_SHAPE_RANGE, origin_shape_range);
 
   for (const auto &ele : origin_shape_range) {
@@ -969,7 +969,7 @@ DataType GeTensorDesc::GetOriginDataType() const {
 }
 
 std::vector<uint32_t> GeTensorDesc::GetRefPortIndex() const {
-  vector<uint32_t> ref_port_index;
+  std::vector<uint32_t> ref_port_index;
   (void)AttrUtils::GetListInt(this, TENSOR_UTILS_REF_PORT_INDEX, ref_port_index);
   return ref_port_index;
 }
@@ -1226,7 +1226,7 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc) : GeTensorImpl() {
   DescReference() = tensor_desc;
 }
 
-GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const vector<uint8_t> &data) : GeTensorImpl() {
+GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const std::vector<uint8_t> &data) : GeTensorImpl() {
   DescReference() = tensor_desc;
   if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
     GELOGW("[Set][Data] Set data failed");
@@ -1240,7 +1240,7 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const uint8_t *data,
   }
 }
 
-GeTensorImpl::GeTensorImpl(GeTensorDesc &&tensor_desc, vector<uint8_t> &&data) : GeTensorImpl() {
+GeTensorImpl::GeTensorImpl(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&data) : GeTensorImpl() {
   DescReference() = std::move(tensor_desc);
   if (tensor_data_.SetData(data) != GRAPH_SUCCESS) {
     GELOGW("[Set][Data] Set data failed");
@@ -1320,7 +1320,7 @@ void GeTensorImpl::BuildAlignerPtrWithProtoData() {
                                      });
 }
 
-graphStatus GeTensorImpl::SetData(vector<uint8_t> &&data) {
+graphStatus GeTensorImpl::SetData(std::vector<uint8_t> &&data) {
   if (tensor_def_.GetProtoOwner() != nullptr) {
     auto proto_msg = tensor_def_.GetProtoMsg();
     GE_CHECK_NOTNULL(proto_msg);
@@ -1331,7 +1331,7 @@ graphStatus GeTensorImpl::SetData(vector<uint8_t> &&data) {
   return tensor_data_.SetData(data);
 }
 
-graphStatus GeTensorImpl::SetData(const vector<uint8_t> &data) {
+graphStatus GeTensorImpl::SetData(const std::vector<uint8_t> &data) {
   if (tensor_def_.GetProtoOwner() != nullptr) {
     auto proto_msg = tensor_def_.GetProtoMsg();
     GE_CHECK_NOTNULL(proto_msg);
@@ -1444,13 +1444,13 @@ GeTensor::GeTensor(GeTensorImplPtr impl) : impl_(std::move(impl)) {}
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc)
     : impl_(std::shared_ptr<GeTensorImpl>(new GeTensorImpl(tensor_desc))) {}
 
-GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const vector<uint8_t> &data)
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const std::vector<uint8_t> &data)
     : impl_(std::shared_ptr<GeTensorImpl>(new GeTensorImpl(tensor_desc, data))) {}
 
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const uint8_t *data, size_t size)
     : impl_(std::shared_ptr<GeTensorImpl>(new GeTensorImpl(tensor_desc, data, size))) {}
 
-GeTensor::GeTensor(GeTensorDesc &&tensor_desc, vector<uint8_t> &&data)
+GeTensor::GeTensor(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&data)
     : impl_(std::shared_ptr<GeTensorImpl>(new GeTensorImpl(std::move(tensor_desc), std::move(data)))) {}
 
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const Buffer &data)
@@ -1481,11 +1481,11 @@ GeTensorDesc &GeTensor::DescReference() const {
 
 void GeTensor::SetTensorDesc(const GeTensorDesc &tensor_desc) { DescReference() = tensor_desc; }
 
-graphStatus GeTensor::SetData(vector<uint8_t> &&data) {
+graphStatus GeTensor::SetData(std::vector<uint8_t> &&data) {
   return impl_->SetData(data);
 }
 
-graphStatus GeTensor::SetData(const vector<uint8_t> &data) {
+graphStatus GeTensor::SetData(const std::vector<uint8_t> &data) {
   return impl_->SetData(data);
 }
 
@@ -1664,7 +1664,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDevic
   if (tensor_desc.impl_ != nullptr) {
     auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
     GE_CHECK_NOTNULL(tensor_descriptor_msg);
-    string type_str = tensor_descriptor_msg->device_type();
+    std::string type_str = tensor_descriptor_msg->device_type();
     auto iter = kStrToDeviceMap.find(type_str);
     if (iter != kStrToDeviceMap.end()) {
       type = iter->second;

@@ -26,8 +26,6 @@
 
 using std::make_pair;
 using std::shared_ptr;
-using std::string;
-using std::vector;
 
 /*lint -save -e521 -e681 -e732 -e737*/
 namespace ge {
@@ -88,7 +86,7 @@ OpDescImpl::OpDescImpl(const ProtoMsgOwner &proto_msg_owner,
                        ge::proto::OpDef *op_def)
     : op_def_(proto_msg_owner, op_def) {}
 
-string OpDescImpl::GetName() const {
+std::string OpDescImpl::GetName() const {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     return proto_msg->name();
@@ -103,7 +101,7 @@ void OpDescImpl::SetName(const std::string &name) {
   }
 }
 
-string OpDescImpl::GetType() const {
+std::string OpDescImpl::GetType() const {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     return proto_msg->type();
@@ -111,7 +109,7 @@ string OpDescImpl::GetType() const {
   return "";
 }
 
-void OpDescImpl::SetType(const string &type) {
+void OpDescImpl::SetType(const std::string &type) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->set_type(type);
@@ -135,7 +133,7 @@ graphStatus OpDescImpl::AddInputDesc(uint32_t index, const ge::GeTensorDesc &inp
   return ret;
 }
 
-graphStatus OpDescImpl::AddInputDesc(const string &name, const ge::GeTensorDesc &input_desc) {
+graphStatus OpDescImpl::AddInputDesc(const std::string &name, const ge::GeTensorDesc &input_desc) {
   if (input_name_idx_.find(name) != input_name_idx_.end()) {
     GELOGI("input %s is exist,  update it", name.c_str());
     graphStatus ret = UpdateInputDesc(name, input_desc);
@@ -158,9 +156,9 @@ graphStatus OpDescImpl::AddInputDesc(const string &name, const ge::GeTensorDesc 
   }
 }
 
-graphStatus OpDescImpl::AddInputDescMiddle(const string &name, const unsigned int num, size_t index) {
+graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
   for (unsigned int i = 0; i < num; i++) {
-    string input_name = name + std::to_string(i);
+    std::string input_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((input_name_idx_.find(input_name) == input_name_idx_.end()),
                      REPORT_INNER_ERROR("E19999", "Add input tensor_desc is existed. name[%s]", input_name.c_str());
                      GELOGE(ge::FAILED, "[Check][Param] Add input tensor_desc is existed. name[%s]",
@@ -197,9 +195,9 @@ graphStatus OpDescImpl::AddInputDescMiddle(const string &name, const unsigned in
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::AddOutputDescMiddle(const string &name, const unsigned int num, size_t index) {
+graphStatus OpDescImpl::AddOutputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
   for (unsigned int i = 0; i < num; i++) {
-    string output_name = name + std::to_string(i);
+    std::string output_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
                      REPORT_INNER_ERROR("E19999", "Add output tensor_desc is existed. name[%s]", output_name.c_str());
                      return GRAPH_FAILED,
@@ -235,9 +233,9 @@ graphStatus OpDescImpl::AddOutputDescMiddle(const string &name, const unsigned i
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::AddInputDescForward(const string &name, const unsigned int num) {
+graphStatus OpDescImpl::AddInputDescForward(const std::string &name, const unsigned int num) {
   for (unsigned int i = 0; i < num; i++) {
-    string input_name = name + std::to_string(i);
+    std::string input_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((input_name_idx_.find(input_name) == input_name_idx_.end()),
                      REPORT_INNER_ERROR("E19999", "Add input tensor_desc is existed. name[%s]", input_name.c_str());
                      return GRAPH_FAILED,
@@ -262,9 +260,9 @@ graphStatus OpDescImpl::AddInputDescForward(const string &name, const unsigned i
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::AddOutputDescForward(const string &name, const unsigned int num) {
+graphStatus OpDescImpl::AddOutputDescForward(const std::string &name, const unsigned int num) {
   for (unsigned int i = 0; i < num; i++) {
-    string output_name = name + std::to_string(i);
+    std::string output_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
                      REPORT_INNER_ERROR("E19999", "Add output tensor_desc is existed. name[%s]", output_name.c_str());
                      return GRAPH_FAILED,
@@ -289,7 +287,7 @@ graphStatus OpDescImpl::AddOutputDescForward(const string &name, const unsigned 
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::AddOptionalInputDesc(const string &name,
+graphStatus OpDescImpl::AddOptionalInputDesc(const std::string &name,
                                              const ge::GeTensorDesc &input_desc) {
   if (OpDescImpl::AddInputDesc(name, input_desc) == GRAPH_FAILED) {
     return GRAPH_FAILED;
@@ -404,7 +402,7 @@ bool OpDescImpl::operator==(const OpDescImpl &r_op_desc) const {
           OpDescGenTensorDescsAreEqual(r_op_desc));
 }
 
-graphStatus OpDescImpl::UpdateInputDesc(const string &name, const ge::GeTensorDesc &tensor_Desc) {
+graphStatus OpDescImpl::UpdateInputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc) {
   auto it = input_name_idx_.find(name);
   if (it == input_name_idx_.end()) {
     GELOGW("[UpdateInput][Check] Can not find input desc named %s", name.c_str());
@@ -426,7 +424,7 @@ graphStatus OpDescImpl::UpdateInputDesc(const string &name, const ge::GeTensorDe
   return GRAPH_SUCCESS;
 }
 
-bool OpDescImpl::InputIsSet(const string &name) const {
+bool OpDescImpl::InputIsSet(const std::string &name) const {
   auto it = input_name_idx_.find(name);
   if (it != input_name_idx_.end()) {
     GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(),
@@ -450,7 +448,7 @@ const GeTensorDesc &OpDescImpl::GetInputDesc(uint32_t index) const {
   return *(inputs_desc_[index].get());
 }
 
-const GeTensorDesc &OpDescImpl::GetInputDesc(const string &name) const {
+const GeTensorDesc &OpDescImpl::GetInputDesc(const std::string &name) const {
   auto it = input_name_idx_.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it != input_name_idx_.end(), InvalidGeTensorDesc());
   GE_CHK_BOOL_RET_STATUS_NOLOG(it->second < inputs_desc_.size(), InvalidGeTensorDesc());
@@ -472,7 +470,7 @@ GeTensorDescPtr OpDescImpl::MutableInputDesc(uint32_t index) const {
   return inputs_desc_[index];
 }
 
-GeTensorDescPtr OpDescImpl::MutableInputDesc(const string &name) const {
+GeTensorDescPtr OpDescImpl::MutableInputDesc(const std::string &name) const {
   auto input_name_idx = GetAllInputName();
   auto it = input_name_idx.find(name);
   if (it == input_name_idx.end()) {
@@ -483,11 +481,11 @@ GeTensorDescPtr OpDescImpl::MutableInputDesc(const string &name) const {
 }
 
 OpDesc::Vistor<string> OpDescImpl::GetAllInputNames(const ConstOpDescPtr &op_desc) const {
-  vector<string> names;
+  std::vector<std::string> names;
   if (input_name_idx_.empty()) {
     return OpDesc::Vistor<string>(op_desc, names);
   }
-  for (std::pair<string, uint32_t> input : input_name_idx_) {
+  for (std::pair<std::string, uint32_t> input : input_name_idx_) {
     names.push_back(input.first);
   }
   return OpDesc::Vistor<string>(op_desc, names);
@@ -511,7 +509,7 @@ void OpDescImpl::SetOpEngineName(const std::string &name) {
 std::string OpDescImpl::GetOpEngineName() const { return engine_name_; }
 
 OpDesc::Vistor<GeTensorDesc> OpDescImpl::GetAllInputsDesc(const ConstOpDescPtr &op_desc) const {
-  vector<GeTensorDesc> temp{};
+  std::vector<GeTensorDesc> temp{};
   for (const auto &it : inputs_desc_) {
     if (it->IsValid() == GRAPH_SUCCESS) {
       temp.push_back(*it);
@@ -524,7 +522,7 @@ OpDesc::Vistor<GeTensorDesc> OpDescImpl::GetAllInputsDesc(const ConstOpDescPtr &
 }
 
 OpDesc::Vistor<GeTensorDescPtr> OpDescImpl::GetAllInputsDescPtr(const ConstOpDescPtr &op_desc) const {
-  vector<GeTensorDescPtr> temp{};
+  std::vector<GeTensorDescPtr> temp{};
   for (const auto &it : inputs_desc_) {
     if (it->IsValid() == GRAPH_SUCCESS) {
       temp.push_back(it);
@@ -554,7 +552,7 @@ graphStatus OpDescImpl::AddOutputDesc(const ge::GeTensorDesc &output_desc) {
   return AddOutputDesc("__output" + std::to_string(index), output_desc);
 }
 
-graphStatus OpDescImpl::AddOutputDesc(const string &name, const ge::GeTensorDesc &output_desc) {
+graphStatus OpDescImpl::AddOutputDesc(const std::string &name, const ge::GeTensorDesc &output_desc) {
   GE_CHK_BOOL_EXEC((output_name_idx_.find(name) == output_name_idx_.end()),
                    REPORT_INNER_ERROR("E19999", "Add output tensor_Desc is existed. name[%s]", name.c_str());
                    return GRAPH_FAILED,
@@ -590,7 +588,7 @@ graphStatus OpDescImpl::UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc 
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::UpdateOutputDesc(const string &name, const ge::GeTensorDesc &tensor_Desc) {
+graphStatus OpDescImpl::UpdateOutputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc) {
   auto it = output_name_idx_.find(name);
   if (it == output_name_idx_.end()) {
     GELOGW("[Update][OutputDesc] Can not find the output desc named %s", name.c_str());
@@ -615,7 +613,7 @@ const GeTensorDesc &OpDescImpl::GetOutputDesc(uint32_t index) const {
   return *(outputs_desc_[index].get());
 }
 
-const GeTensorDesc &OpDescImpl::GetOutputDesc(const string &name) const {
+const GeTensorDesc &OpDescImpl::GetOutputDesc(const std::string &name) const {
   auto it = output_name_idx_.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it != output_name_idx_.end(), InvalidGeTensorDesc());
   GE_CHK_BOOL_RET_STATUS_NOLOG(it->second < outputs_desc_.size(), InvalidGeTensorDesc());
@@ -627,7 +625,7 @@ GeTensorDescPtr OpDescImpl::MutableOutputDesc(uint32_t index) const {
   return outputs_desc_[index];
 }
 
-GeTensorDescPtr OpDescImpl::MutableOutputDesc(const string &name) const {
+GeTensorDescPtr OpDescImpl::MutableOutputDesc(const std::string &name) const {
   auto it = output_name_idx_.find(name);
   if (it == output_name_idx_.end()) {
     GELOGW("[Update][OutputDesc] Can not find the output desc named %s", name.c_str());
@@ -641,7 +639,7 @@ uint32_t OpDescImpl::GetAllOutputsDescSize() const {
 }
 
 OpDesc::Vistor<GeTensorDesc> OpDescImpl::GetAllOutputsDesc(const ConstOpDescPtr &op_desc) const {
-  vector<GeTensorDesc> temp{};
+  std::vector<GeTensorDesc> temp{};
   for (const auto &it : outputs_desc_) {
     temp.push_back(*it);
   }
@@ -677,7 +675,7 @@ ConstGeTensorDescPtr OpDescImpl::GetInputDescPtrDfault(uint32_t index) const {
   return inputs_desc_[(int32_t)index];
 }
 
-ConstGeTensorDescPtr OpDescImpl::GetInputDescPtr(const string &name) const {
+ConstGeTensorDescPtr OpDescImpl::GetInputDescPtr(const std::string &name) const {
   auto it = input_name_idx_.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it != input_name_idx_.end(), shared_ptr<const GeTensorDesc>());
   return inputs_desc_[it->second];
@@ -691,11 +689,11 @@ graphStatus OpDescImpl::AddRegisterInputName(const std::string &name) {
   return GRAPH_SUCCESS;
 }
 
-vector<string> OpDescImpl::GetRegisterInputName() const {
+vector<std::string> OpDescImpl::GetRegisterInputName() const {
   return register_input_name_;
 }
 
-graphStatus OpDescImpl::AddDynamicInputDesc(const string &name, const unsigned int num, bool is_push_back) {
+graphStatus OpDescImpl::AddDynamicInputDesc(const std::string &name, const unsigned int num, bool is_push_back) {
   if (is_push_back) {
     for (unsigned int i = 0; i < num; i++) {
       if (AddInputDesc(name + std::to_string(i), GeTensorDesc()) != GRAPH_SUCCESS)
@@ -712,14 +710,14 @@ graphStatus OpDescImpl::AddDynamicInputDesc(const string &name, const unsigned i
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::AddDynamicInputDescByIndex(const string &name, const unsigned int num, size_t index) {
+graphStatus OpDescImpl::AddDynamicInputDescByIndex(const std::string &name, const unsigned int num, size_t index) {
   if (AddInputDescMiddle(name, num, index) != GRAPH_SUCCESS) {
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::AddRegisterOutputName(const string &name) {
+graphStatus OpDescImpl::AddRegisterOutputName(const std::string &name) {
   if (find(register_output_name_.begin(), register_output_name_.end(), name) == register_output_name_.end()) {
     register_output_name_.push_back(name);
   }
@@ -727,11 +725,11 @@ graphStatus OpDescImpl::AddRegisterOutputName(const string &name) {
   return GRAPH_SUCCESS;
 }
 
-vector<string> OpDescImpl::GetRegisterOutputName() const {
+vector<std::string> OpDescImpl::GetRegisterOutputName() const {
   return register_output_name_;
 }
 
-graphStatus OpDescImpl::AddDynamicOutputDesc(const string &name, const unsigned int num, bool is_push_back) {
+graphStatus OpDescImpl::AddDynamicOutputDesc(const std::string &name, const unsigned int num, bool is_push_back) {
   if (is_push_back) {
     for (unsigned int i = 0; i < num; i++) {
       if (AddOutputDesc(name + std::to_string(i), GeTensorDesc()) != GRAPH_SUCCESS)
@@ -748,21 +746,21 @@ graphStatus OpDescImpl::AddDynamicOutputDesc(const string &name, const unsigned 
   return GRAPH_SUCCESS;
 }
 
-bool OpDescImpl::IsOptionalInput(const string &name) const {
+bool OpDescImpl::IsOptionalInput(const std::string &name) const {
   return optional_input_names_.find(name) != optional_input_names_.end();
 }
 
 bool OpDescImpl::IsOptionalInput(uint32_t index) const { return IsOptionalInput(GetInputNameByIndex(index)); }
 
-std::map<string, uint32_t> OpDescImpl::GetAllInputName() const { return input_name_idx_; }
+std::map<std::string, uint32_t> OpDescImpl::GetAllInputName() const { return input_name_idx_; }
 
-std::map<string, uint32_t> OpDescImpl::GetAllOutputName() { return output_name_idx_; }
+std::map<std::string, uint32_t> OpDescImpl::GetAllOutputName() { return output_name_idx_; }
 
-std::map<string, uint32_t>& OpDescImpl::MutableAllInputName() { return input_name_idx_; }
+std::map<std::string, uint32_t>& OpDescImpl::MutableAllInputName() { return input_name_idx_; }
 
-std::map<string, uint32_t>& OpDescImpl::MutableAllOutputName() { return output_name_idx_; }
+std::map<std::string, uint32_t>& OpDescImpl::MutableAllOutputName() { return output_name_idx_; }
 
-bool OpDescImpl::UpdateInputName(std::map<string, uint32_t> input_name_idx) {
+bool OpDescImpl::UpdateInputName(std::map<std::string, uint32_t> input_name_idx) {
   // Use inputDesc_.size() to contain the InValid OptionInput.GetInputsSize() will remove default OptionInput name.
   auto input_map_size = inputs_desc_.size();
   auto factory_map_size = input_name_idx.size();
@@ -795,7 +793,7 @@ bool OpDescImpl::UpdateInputName(std::map<string, uint32_t> input_name_idx) {
   return true;
 }
 
-bool OpDescImpl::UpdateOutputName(std::map<string, uint32_t> output_name_idx) {
+bool OpDescImpl::UpdateOutputName(std::map<std::string, uint32_t> output_name_idx) {
   size_t output_map_size = GetAllOutputsDescSize();
   size_t factory_map_size = output_name_idx.size();
   if (output_map_size < factory_map_size) {
@@ -908,7 +906,7 @@ graphStatus OpDescImpl::OpVerify(const OpDescPtr &op_desc) {
   return GRAPH_SUCCESS;
 }
 
-string OpDescImpl::GetInputNameByIndex(uint32_t index) const {
+std::string OpDescImpl::GetInputNameByIndex(uint32_t index) const {
   auto it = input_name_idx_.begin();
   for (; it != input_name_idx_.end(); ++it) {
     if (it->second == index) {
@@ -919,14 +917,14 @@ string OpDescImpl::GetInputNameByIndex(uint32_t index) const {
   return it->first;
 }
 
-int OpDescImpl::GetInputIndexByName(const string &name) const {
+int OpDescImpl::GetInputIndexByName(const std::string &name) const {
   auto it_find = input_name_idx_.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it_find != input_name_idx_.end(), -1);
   return static_cast<int>(it_find->second);
 }
 
-int OpDescImpl::GetValidInputIndexByName(const string &name) const {
-  map<string, uint32_t> valid_input_name_idx{};
+int OpDescImpl::GetValidInputIndexByName(const std::string &name) const {
+  std::map<std::string, uint32_t> valid_input_name_idx{};
   uint32_t j = 0;
   for (size_t i = 0; i < GetAllInputsSize(); i++) {
     if (MutableInputDesc(static_cast<uint32_t>(i)) != nullptr) {
@@ -941,8 +939,8 @@ int OpDescImpl::GetValidInputIndexByName(const string &name) const {
   return static_cast<int>(it_find->second);
 }
 
-string OpDescImpl::GetValidInputNameByIndex(uint32_t index) const {
-  map<string, uint32_t> valid_input_name_idx{};
+std::string OpDescImpl::GetValidInputNameByIndex(uint32_t index) const {
+  std::map<std::string, uint32_t> valid_input_name_idx{};
   uint32_t j = 0;
   for (size_t i = 0; i < GetAllInputsSize(); i++) {
     if (MutableInputDesc(static_cast<uint32_t>(i)) != nullptr) {
@@ -962,7 +960,7 @@ string OpDescImpl::GetValidInputNameByIndex(uint32_t index) const {
   return it->first;
 }
 
-string OpDescImpl::GetOutputNameByIndex(uint32_t index) const {
+std::string OpDescImpl::GetOutputNameByIndex(uint32_t index) const {
   auto it = output_name_idx_.begin();
   for (; it != output_name_idx_.end(); ++it) {
     if (it->second == index) {
@@ -973,7 +971,7 @@ string OpDescImpl::GetOutputNameByIndex(uint32_t index) const {
   return it->first;
 }
 
-int OpDescImpl::GetOutputIndexByName(const string &name) const {
+int OpDescImpl::GetOutputIndexByName(const std::string &name) const {
   auto it_find = output_name_idx_.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it_find != output_name_idx_.end(), -1);
   return static_cast<int>(it_find->second);
@@ -1017,7 +1015,7 @@ int64_t OpDescImpl::GetStreamId() const {
   return 0;
 }
 
-void OpDescImpl::SetInputName(const vector<string> &input_name) {
+void OpDescImpl::SetInputName(const std::vector<std::string> &input_name) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_input_name();
@@ -1027,8 +1025,8 @@ void OpDescImpl::SetInputName(const vector<string> &input_name) {
   }
 }
 
-vector<string> OpDescImpl::GetInputName() const {
-  vector<string> input_name;
+vector<std::string> OpDescImpl::GetInputName() const {
+  std::vector<std::string> input_name;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->input_name()) {
@@ -1038,7 +1036,7 @@ vector<string> OpDescImpl::GetInputName() const {
   return input_name;
 }
 
-void OpDescImpl::SetSrcName(const vector<string> &src_name) {
+void OpDescImpl::SetSrcName(const std::vector<std::string> &src_name) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_src_name();
@@ -1048,8 +1046,8 @@ void OpDescImpl::SetSrcName(const vector<string> &src_name) {
   }
 }
 
-vector<string> OpDescImpl::GetSrcName() const {
-  vector<string> src_name;
+vector<std::string> OpDescImpl::GetSrcName() const {
+  std::vector<std::string> src_name;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->src_name()) {
@@ -1059,7 +1057,7 @@ vector<string> OpDescImpl::GetSrcName() const {
   return src_name;
 }
 
-void OpDescImpl::SetSrcIndex(const vector<int64_t> &src_index) {
+void OpDescImpl::SetSrcIndex(const std::vector<int64_t> &src_index) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_src_index();
@@ -1070,7 +1068,7 @@ void OpDescImpl::SetSrcIndex(const vector<int64_t> &src_index) {
 }
 
 vector<int64_t> OpDescImpl::GetSrcIndex() const {
-  vector<int64_t> src_index;
+  std::vector<int64_t> src_index;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->src_index()) {
@@ -1080,7 +1078,7 @@ vector<int64_t> OpDescImpl::GetSrcIndex() const {
   return src_index;
 }
 
-void OpDescImpl::SetInputOffset(const vector<int64_t> &input) {
+void OpDescImpl::SetInputOffset(const std::vector<int64_t> &input) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_input_i();
@@ -1091,7 +1089,7 @@ void OpDescImpl::SetInputOffset(const vector<int64_t> &input) {
 }
 
 vector<int64_t> OpDescImpl::GetInputOffset() const {
-  vector<int64_t> input;
+  std::vector<int64_t> input;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->input_i()) {
@@ -1101,7 +1099,7 @@ vector<int64_t> OpDescImpl::GetInputOffset() const {
   return input;
 }
 
-void OpDescImpl::SetOutputOffset(const vector<int64_t> &output) {
+void OpDescImpl::SetOutputOffset(const std::vector<int64_t> &output) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_output_i();
@@ -1112,7 +1110,7 @@ void OpDescImpl::SetOutputOffset(const vector<int64_t> &output) {
 }
 
 vector<int64_t> OpDescImpl::GetOutputOffset() const {
-  vector<int64_t> output;
+  std::vector<int64_t> output;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->output_i()) {
@@ -1122,7 +1120,7 @@ vector<int64_t> OpDescImpl::GetOutputOffset() const {
   return output;
 }
 
-void OpDescImpl::SetDstName(const vector<string> &dst_name) {
+void OpDescImpl::SetDstName(const std::vector<std::string> &dst_name) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_dst_name();
@@ -1132,8 +1130,8 @@ void OpDescImpl::SetDstName(const vector<string> &dst_name) {
   }
 }
 
-vector<string> OpDescImpl::GetDstName() const {
-  vector<string> dst_name;
+vector<std::string> OpDescImpl::GetDstName() const {
+  std::vector<std::string> dst_name;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->dst_name()) {
@@ -1143,7 +1141,7 @@ vector<string> OpDescImpl::GetDstName() const {
   return dst_name;
 }
 
-void OpDescImpl::SetDstIndex(const vector<int64_t> &dst_index) {
+void OpDescImpl::SetDstIndex(const std::vector<int64_t> &dst_index) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_dst_index();
@@ -1154,7 +1152,7 @@ void OpDescImpl::SetDstIndex(const vector<int64_t> &dst_index) {
 }
 
 vector<int64_t> OpDescImpl::GetDstIndex() const {
-  vector<int64_t> dst_index;
+  std::vector<int64_t> dst_index;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->dst_index()) {
@@ -1164,7 +1162,7 @@ vector<int64_t> OpDescImpl::GetDstIndex() const {
   return dst_index;
 }
 
-void OpDescImpl::SetWorkspace(const vector<int64_t> &workspace) {
+void OpDescImpl::SetWorkspace(const std::vector<int64_t> &workspace) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_workspace();
@@ -1175,7 +1173,7 @@ void OpDescImpl::SetWorkspace(const vector<int64_t> &workspace) {
 }
 
 vector<int64_t> OpDescImpl::GetWorkspace() const {
-  vector<int64_t> workspace;
+  std::vector<int64_t> workspace;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->workspace()) {
@@ -1185,7 +1183,7 @@ vector<int64_t> OpDescImpl::GetWorkspace() const {
   return workspace;
 }
 
-void OpDescImpl::SetWorkspaceBytes(const vector<int64_t> &workspace_bytes) {
+void OpDescImpl::SetWorkspaceBytes(const std::vector<int64_t> &workspace_bytes) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_workspace_bytes();
@@ -1196,7 +1194,7 @@ void OpDescImpl::SetWorkspaceBytes(const vector<int64_t> &workspace_bytes) {
 }
 
 vector<int64_t> OpDescImpl::GetWorkspaceBytes() const {
-  vector<int64_t> workspace_bytes;
+  std::vector<int64_t> workspace_bytes;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->workspace_bytes()) {
@@ -1206,7 +1204,7 @@ vector<int64_t> OpDescImpl::GetWorkspaceBytes() const {
   return workspace_bytes;
 }
 
-void OpDescImpl::SetIsInputConst(const vector<bool> &is_input_const) {
+void OpDescImpl::SetIsInputConst(const std::vector<bool> &is_input_const) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->clear_is_input_const();
@@ -1217,7 +1215,7 @@ void OpDescImpl::SetIsInputConst(const vector<bool> &is_input_const) {
 }
 
 vector<bool> OpDescImpl::GetIsInputConst() const {
-  vector<bool> is_input_const;
+  std::vector<bool> is_input_const;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto item : proto_msg->is_input_const()) {
@@ -1227,7 +1225,7 @@ vector<bool> OpDescImpl::GetIsInputConst() const {
   return is_input_const;
 }
 
-graphStatus OpDescImpl::RestoreInputNameIdx(const string &name,
+graphStatus OpDescImpl::RestoreInputNameIdx(const std::string &name,
                                             const int &index) {
   if (input_name_idx_.find(name) != input_name_idx_.end()) {
     GELOGI("Restore input name index is existed. name[%s]", name.c_str());
@@ -1236,7 +1234,7 @@ graphStatus OpDescImpl::RestoreInputNameIdx(const string &name,
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::RestoreOutputNameIdx(const string &name,
+graphStatus OpDescImpl::RestoreOutputNameIdx(const std::string &name,
                                              const int &index) {
   if (output_name_idx_.find(name) != output_name_idx_.end()) {
     GELOGI("Restore output name index is existed. name[%s]", name.c_str());
@@ -1355,7 +1353,7 @@ graphStatus OpDescImpl::SetSubgraphInstanceName(uint32_t index, const std::strin
   return GRAPH_SUCCESS;
 }
 
-void OpDescImpl::RegisterSubgraphIrName(const string &name, SubgraphType type) {
+void OpDescImpl::RegisterSubgraphIrName(const std::string &name, SubgraphType type) {
   subgraph_ir_names_to_type_[name] = type;
 }
 
@@ -1437,52 +1435,52 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const ProtoMsgOwne
     (void)AttrUtils::GetInt(this, ATTR_NAME_STREAM_ID, stream_id);
     op_def->set_stream_id(stream_id);
 
-    vector<string> input_name;
+    std::vector<std::string> input_name;
     (void)AttrUtils::GetListStr(this, ATTR_NAME_INPUT_NAME, input_name);
     for (auto &item : input_name) {
       op_def->add_input_name(item);
     }
-    vector<string> src_name;
+    std::vector<std::string> src_name;
     (void)AttrUtils::GetListStr(this, ATTR_NAME_SRC_NAME, src_name);
     for (auto &item : src_name) {
       op_def->add_src_name(item);
     }
-    vector<int64_t> src_index;
+    std::vector<int64_t> src_index;
     (void)AttrUtils::GetListInt(this, ATTR_NAME_SRC_INDEX, src_index);
     for (auto &item : src_index) {
       op_def->add_src_index(item);
     }
-    vector<int64_t> input;
+    std::vector<int64_t> input;
     (void)AttrUtils::GetListInt(this, ATTR_NAME_INPUT, input);
     for (auto &item : input) {
       op_def->add_input_i(item);
     }
-    vector<int64_t> output;
+    std::vector<int64_t> output;
     (void)AttrUtils::GetListInt(this, ATTR_NAME_OUTPUT, output);
     for (auto &item : output) {
       op_def->add_output_i(item);
     }
-    vector<string> dst_name;
+    std::vector<std::string> dst_name;
     (void)AttrUtils::GetListStr(this, ATTR_NAME_DST_NAME, dst_name);
     for (auto &item : dst_name) {
       op_def->add_dst_name(item);
     }
-    vector<int64_t> dst_index;
+    std::vector<int64_t> dst_index;
     (void)AttrUtils::GetListInt(this, ATTR_NAME_DST_INDEX, dst_index);
     for (auto &item : dst_index) {
       op_def->add_dst_index(item);
     }
-    vector<int64_t> workspace;
+    std::vector<int64_t> workspace;
     (void)AttrUtils::GetListInt(this, ATTR_NAME_WORKSPACE, workspace);
     for (auto &item : workspace) {
       op_def->add_workspace(item);
     }
-    vector<int64_t> workspace_bytes;
+    std::vector<int64_t> workspace_bytes;
     (void)AttrUtils::GetListInt(this, ATTR_NAME_WORKSPACE_BYTES, workspace_bytes);
     for (auto &item : workspace_bytes) {
       op_def->add_workspace_bytes(item);
     }
-    vector<bool> is_input_const;
+    std::vector<bool> is_input_const;
     (void)AttrUtils::GetListBool(this, ATTR_NAME_IS_INPUT_CONST, is_input_const);
     for (auto item : is_input_const) {
       op_def->add_is_input_const(item);
@@ -1498,7 +1496,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const ProtoMsgOwne
   }
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY string OpDesc::GetName() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetName() const {
   return impl_->GetName();
 }
 
@@ -1506,11 +1504,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetName(const std::s
   return impl_->SetName(name);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY string OpDesc::GetType() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetType() const {
   return impl_->GetType();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetType(const string &type) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetType(const std::string &type) {
   return impl_->SetType(type);
 }
 
@@ -1522,27 +1520,27 @@ graphStatus OpDesc::AddInputDesc(uint32_t index, const ge::GeTensorDesc &input_d
   return impl_->AddInputDesc(index, input_desc);
 }
 
-graphStatus OpDesc::AddInputDesc(const string &name, const ge::GeTensorDesc &input_desc) {
+graphStatus OpDesc::AddInputDesc(const std::string &name, const ge::GeTensorDesc &input_desc) {
   return impl_->AddInputDesc(name, input_desc);
 }
 
-graphStatus OpDesc::AddInputDescMiddle(const string &name, const unsigned int num, size_t index) {
+graphStatus OpDesc::AddInputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
   return impl_->AddInputDescMiddle(name, num, index);
 }
 
-graphStatus OpDesc::AddOutputDescMiddle(const string &name, const unsigned int num, size_t index) {
+graphStatus OpDesc::AddOutputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
   return impl_->AddOutputDescMiddle(name, num, index);
 }
 
-graphStatus OpDesc::AddInputDescForward(const string &name, const unsigned int num) {
+graphStatus OpDesc::AddInputDescForward(const std::string &name, const unsigned int num) {
   return impl_->AddInputDescForward(name, num);
 }
 
-graphStatus OpDesc::AddOutputDescForward(const string &name, const unsigned int num) {
+graphStatus OpDesc::AddOutputDescForward(const std::string &name, const unsigned int num) {
   return impl_->AddOutputDescForward(name, num);
 }
 
-graphStatus OpDesc::AddOptionalInputDesc(const string &name, const ge::GeTensorDesc &input_desc) {
+graphStatus OpDesc::AddOptionalInputDesc(const std::string &name, const ge::GeTensorDesc &input_desc) {
   return impl_->AddOptionalInputDesc(name, input_desc);
 }
 
@@ -1578,11 +1576,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc& OpDesc::operator=(OpDesc 
   return *this;
 }
 
-graphStatus OpDesc::UpdateInputDesc(const string &name, const ge::GeTensorDesc &tensor_Desc) {
+graphStatus OpDesc::UpdateInputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc) {
   return impl_->UpdateInputDesc(name, tensor_Desc);
 }
 
-bool OpDesc::InputIsSet(const string &name) const {
+bool OpDesc::InputIsSet(const std::string &name) const {
   return impl_->InputIsSet(name);
 }
 
@@ -1590,7 +1588,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const GeTensorDesc &OpDesc::GetIn
   return impl_->GetInputDesc(index);
 }
 
-const GeTensorDesc &OpDesc::GetInputDesc(const string &name) const {
+const GeTensorDesc &OpDesc::GetInputDesc(const std::string &name) const {
   return impl_->GetInputDesc(name);
 }
 
@@ -1598,7 +1596,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDescPtr OpDesc::MutableIn
   return impl_->MutableInputDesc(index);
 }
 
-GeTensorDescPtr OpDesc::MutableInputDesc(const string &name) const {
+GeTensorDescPtr OpDesc::MutableInputDesc(const std::string &name) const {
   return impl_->MutableInputDesc(name);
 }
 
@@ -1616,7 +1614,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetOpKernelLibName(c
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetOpKernelLibName() const {
-  string op_kernel_lib_name = impl_->GetOpKernelLibName();
+  std::string op_kernel_lib_name = impl_->GetOpKernelLibName();
   if (op_kernel_lib_name.empty()) {
     (void)AttrUtils::GetStr(this, ATTR_NAME_OP_KERNEL_LIB_NAME,
                             op_kernel_lib_name);
@@ -1653,7 +1651,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::AddOutputDesc
   return impl_->AddOutputDesc(output_desc);
 }
 
-graphStatus OpDesc::AddOutputDesc(const string &name, const ge::GeTensorDesc &output_desc) {
+graphStatus OpDesc::AddOutputDesc(const std::string &name, const ge::GeTensorDesc &output_desc) {
   return impl_->AddOutputDesc(name, output_desc);
 }
 
@@ -1662,7 +1660,7 @@ OpDesc::UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc) {
   return impl_->UpdateOutputDesc(index, tensor_Desc);
 }
 
-graphStatus OpDesc::UpdateOutputDesc(const string &name, const ge::GeTensorDesc &tensor_Desc) {
+graphStatus OpDesc::UpdateOutputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc) {
   return impl_->UpdateOutputDesc(name, tensor_Desc);
 }
 
@@ -1670,7 +1668,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const GeTensorDesc &OpDesc::GetOu
   return impl_->GetOutputDesc(index);
 }
 
-const GeTensorDesc &OpDesc::GetOutputDesc(const string &name) const {
+const GeTensorDesc &OpDesc::GetOutputDesc(const std::string &name) const {
   return impl_->GetOutputDesc(name);
 }
 
@@ -1678,7 +1676,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDescPtr OpDesc::MutableOu
   return impl_->MutableOutputDesc(index);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDescPtr OpDesc::MutableOutputDesc(const string &name) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+GeTensorDescPtr OpDesc::MutableOutputDesc(const std::string &name) const {
   return impl_->MutableOutputDesc(name);
 }
 
@@ -1711,7 +1710,8 @@ OpDesc::GetInputDescPtrDfault(uint32_t index) const {
   return impl_->GetInputDescPtrDfault(index);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ConstGeTensorDescPtr OpDesc::GetInputDescPtr(const string &name) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+ConstGeTensorDescPtr OpDesc::GetInputDescPtr(const std::string &name) const {
   return impl_->GetInputDescPtr(name);
 }
 
@@ -1719,30 +1719,30 @@ graphStatus OpDesc::AddRegisterInputName(const std::string &name) {
   return impl_->AddRegisterInputName(name);
 }
 
-vector<string> OpDesc::GetRegisterInputName() const {
+vector<std::string> OpDesc::GetRegisterInputName() const {
   return impl_->GetRegisterInputName();
 }
 
-graphStatus OpDesc::AddDynamicInputDesc(const string &name, const unsigned int num, bool is_push_back) {
+graphStatus OpDesc::AddDynamicInputDesc(const std::string &name, const unsigned int num, bool is_push_back) {
   return impl_->AddDynamicInputDesc(name, num, is_push_back);
 }
 
-graphStatus OpDesc::AddDynamicInputDescByIndex(const string &name, const unsigned int num, size_t index) {
+graphStatus OpDesc::AddDynamicInputDescByIndex(const std::string &name, const unsigned int num, size_t index) {
   if (AddInputDescMiddle(name, num, index) != GRAPH_SUCCESS) {
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDesc::AddRegisterOutputName(const string &name) {
+graphStatus OpDesc::AddRegisterOutputName(const std::string &name) {
   return impl_->AddRegisterOutputName(name);
 }
 
-vector<string> OpDesc::GetRegisterOutputName() const {
+vector<std::string> OpDesc::GetRegisterOutputName() const {
   return impl_->GetRegisterOutputName();
 }
 
-graphStatus OpDesc::AddDynamicOutputDesc(const string &name, const unsigned int num, bool is_push_back) {
+graphStatus OpDesc::AddDynamicOutputDesc(const std::string &name, const unsigned int num, bool is_push_back) {
   if (is_push_back) {
     for (unsigned int i = 0; i < num; i++) {
       if (AddOutputDesc(name + std::to_string(i), GeTensorDesc()) != GRAPH_SUCCESS)
@@ -1759,33 +1759,33 @@ graphStatus OpDesc::AddDynamicOutputDesc(const string &name, const unsigned int 
   return GRAPH_SUCCESS;
 }
 
-bool OpDesc::IsOptionalInput(const string &name) const {
+bool OpDesc::IsOptionalInput(const std::string &name) const {
   return impl_->IsOptionalInput(name);
 }
 
 bool OpDesc::IsOptionalInput(uint32_t index) const { return IsOptionalInput(GetInputNameByIndex(index)); }
 
-std::map<string, uint32_t> OpDesc::GetAllInputName() const {
+std::map<std::string, uint32_t> OpDesc::GetAllInputName() const {
   return impl_->GetAllInputName();
 }
 
-std::map<string, uint32_t> OpDesc::GetAllOutputName() {
+std::map<std::string, uint32_t> OpDesc::GetAllOutputName() {
   return impl_->GetAllOutputName();
 }
 
-std::map<string, uint32_t>& OpDesc::MutableAllInputName() {
+std::map<std::string, uint32_t>& OpDesc::MutableAllInputName() {
   return impl_->MutableAllInputName();
 }
 
-std::map<string, uint32_t>& OpDesc::MutableAllOutputName() {
+std::map<std::string, uint32_t>& OpDesc::MutableAllOutputName() {
   return impl_->MutableAllOutputName();
 }
 
-bool OpDesc::UpdateInputName(std::map<string, uint32_t> input_name_idx) {
+bool OpDesc::UpdateInputName(std::map<std::string, uint32_t> input_name_idx) {
   return impl_->UpdateInputName(input_name_idx);
 }
 
-bool OpDesc::UpdateOutputName(std::map<string, uint32_t> output_name_idx) {
+bool OpDesc::UpdateOutputName(std::map<std::string, uint32_t> output_name_idx) {
   return impl_->UpdateOutputName(output_name_idx);
 }
 
@@ -1827,9 +1827,9 @@ graphStatus OpDesc::OpVerify() {
 }
 
 graphStatus OpDesc::CommonVerify() const {
-  for (const string &iname : GetAllInputNames()) {
+  for (const std::string &iname : GetAllInputNames()) {
     // Checking shape of all inputs
-    vector<int64_t> ishape = GetInputDescPtr(iname)->GetShape().GetDims();
+    std::vector<int64_t> ishape = GetInputDescPtr(iname)->GetShape().GetDims();
     if (ishape == DUMMY_SHAPE) {
       continue;
     }
@@ -1853,27 +1853,27 @@ graphStatus OpDesc::CommonVerify() const {
   return GRAPH_SUCCESS;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY string OpDesc::GetInputNameByIndex(uint32_t index) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetInputNameByIndex(uint32_t index) const {
   return impl_->GetInputNameByIndex(index);
 }
 
-int OpDesc::GetInputIndexByName(const string &name) const {
+int OpDesc::GetInputIndexByName(const std::string &name) const {
   return impl_->GetInputIndexByName(name);
 }
 
-int OpDesc::GetValidInputIndexByName(const string &name) const {
+int OpDesc::GetValidInputIndexByName(const std::string &name) const {
   return impl_->GetValidInputIndexByName(name);
 }
 
-string OpDesc::GetValidInputNameByIndex(uint32_t index) const {
+std::string OpDesc::GetValidInputNameByIndex(uint32_t index) const {
   return impl_->GetValidInputNameByIndex(index);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY string OpDesc::GetOutputNameByIndex(uint32_t index) const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetOutputNameByIndex(uint32_t index) const {
   return impl_->GetOutputNameByIndex(index);
 }
 
-int OpDesc::GetOutputIndexByName(const string &name) const {
+int OpDesc::GetOutputIndexByName(const std::string &name) const {
   return impl_->GetOutputIndexByName(name);
 }
 
@@ -1901,92 +1901,94 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int64_t OpDesc::GetStreamId() con
   return impl_->GetStreamId();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetInputName(const vector<string> &input_name) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetInputName(const std::vector<std::string> &input_name) {
   impl_->SetInputName(input_name);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<string> OpDesc::GetInputName() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::string> OpDesc::GetInputName() const {
   return impl_->GetInputName();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetSrcName(const vector<string> &src_name) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetSrcName(const std::vector<std::string> &src_name) {
   impl_->SetSrcName(src_name);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<string> OpDesc::GetSrcName() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::string> OpDesc::GetSrcName() const {
   return impl_->GetSrcName();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetSrcIndex(const vector<int64_t> &src_index) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetSrcIndex(const std::vector<int64_t> &src_index) {
   impl_->SetSrcIndex(src_index);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<int64_t> OpDesc::GetSrcIndex() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetSrcIndex() const {
   return impl_->GetSrcIndex();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetInputOffset(const vector<int64_t> &input) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetInputOffset(const std::vector<int64_t> &input) {
   impl_->SetInputOffset(input);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<int64_t> OpDesc::GetInputOffset() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetInputOffset() const {
   return impl_->GetInputOffset();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetOutputOffset(const vector<int64_t> &output) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetOutputOffset(const std::vector<int64_t> &output) {
   impl_->SetOutputOffset(output);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<int64_t> OpDesc::GetOutputOffset() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetOutputOffset() const {
   return impl_->GetOutputOffset();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetDstName(const vector<string> &dst_name) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetDstName(const std::vector<std::string> &dst_name) {
   impl_->SetDstName(dst_name);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<string> OpDesc::GetDstName() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::string> OpDesc::GetDstName() const {
   return impl_->GetDstName();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetOpInferDepends(const vector<string> &depend_names) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+void OpDesc::SetOpInferDepends(const std::vector<std::string> &depend_names) {
   auto ret = AttrUtils::SetListStr(this, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
   if (!ret) {
     GELOGE(GRAPH_FAILED, "[Set][Attr] op_infer_depends fail.");
   }
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<string> OpDesc::GetOpInferDepends() const {
-  vector<string> depend_names;
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::string> OpDesc::GetOpInferDepends() const {
+  std::vector<std::string> depend_names;
   (void)AttrUtils::GetListStr(this, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
   return depend_names;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetDstIndex(const vector<int64_t> &dst_index) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetDstIndex(const std::vector<int64_t> &dst_index) {
   impl_->SetDstIndex(dst_index);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<int64_t> OpDesc::GetDstIndex() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetDstIndex() const {
   return impl_->GetDstIndex();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetWorkspace(const vector<int64_t> &workspace) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetWorkspace(const std::vector<int64_t> &workspace) {
   impl_->SetWorkspace(workspace);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<int64_t> OpDesc::GetWorkspace() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetWorkspace() const {
   return impl_->GetWorkspace();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetWorkspaceBytes(const vector<int64_t> &workspace_bytes) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+void OpDesc::SetWorkspaceBytes(const std::vector<int64_t> &workspace_bytes) {
   impl_->SetWorkspaceBytes(workspace_bytes);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<int64_t> OpDesc::GetWorkspaceBytes() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetWorkspaceBytes() const {
   return impl_->GetWorkspaceBytes();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIsInputConst(const vector<bool> &is_input_const) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIsInputConst(const std::vector<bool> &is_input_const) {
   impl_->SetIsInputConst(is_input_const);
   // If comes from ME,which is_input_const exist as attrs, outside no need to check GE_TRAIN flag
   auto ret = AttrUtils::SetListBool(this, ATTR_NAME_IS_INPUT_CONST, is_input_const);
@@ -1995,16 +1997,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIsInputConst(cons
   }
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY vector<bool> OpDesc::GetIsInputConst() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<bool> OpDesc::GetIsInputConst() const {
   return impl_->GetIsInputConst();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreInputNameIdx(const string &name,
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreInputNameIdx(const std::string &name,
                                                                                        const int &index) {
   return impl_->RestoreInputNameIdx(name, index);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreOutputNameIdx(const string &name,
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreOutputNameIdx(const std::string &name,
                                                                                         const int &index) {
   return impl_->RestoreOutputNameIdx(name, index);
 }
@@ -2047,7 +2049,7 @@ graphStatus OpDesc::SetSubgraphInstanceName(uint32_t index, const std::string &n
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-void OpDesc::RegisterSubgraphIrName(const string &name, SubgraphType type) {
+void OpDesc::RegisterSubgraphIrName(const std::string &name, SubgraphType type) {
   impl_->RegisterSubgraphIrName(name, type);
 }
 

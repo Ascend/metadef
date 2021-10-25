@@ -80,11 +80,11 @@ struct DynamicInputOutputInfo {
 };
 Status AutoMappingByOpFn(const ge::Operator &op_src, ge::Operator &op);
 Status AutoMappingByOpFnDynamic(const ge::Operator &op_src, ge::Operator &op,
-                                const vector<DynamicInputOutputInfo> &dynamic_name_attr_value);
+                                const std::vector<DynamicInputOutputInfo> &dynamic_name_attr_value);
 ATTRIBUTED_DEPRECATED(Status AutoMappingByOpFn(const ge::Operator &, ge::Operator &))
 Status AutoMappingFn(const google::protobuf::Message *op_src, ge::Operator &op);
 ATTRIBUTED_DEPRECATED(Status AutoMappingByOpFnDynamic(const ge::Operator &, ge::Operator &,
-                      const vector<DynamicInputOutputInfo> &))
+                      const std::vector<DynamicInputOutputInfo> &))
 Status AutoMappingFnDynamic(const google::protobuf::Message *op_src, ge::Operator &op,
                             std::map<std::string, std::pair<std::string, std::string>> dynamic_name_attr_value,
                             int in_pos = -1, int out_pos = -1);
@@ -179,7 +179,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpRegistrationData {
 
   OpRegistrationData &DelInputWithOriginalType(int input_idx, const char *ori_type);
 
-  OpRegistrationData &InputReorderVector(const vector<int> &input_order);
+  OpRegistrationData &InputReorderVector(const std::vector<int> &input_order);
 
   OpRegistrationData &ParseOpToGraphFn(const ParseOpToGraphFunc &parse_op_to_graph_fn);
 

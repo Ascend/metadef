@@ -43,7 +43,7 @@ class OpsKernelInfoStore {
   virtual ~OpsKernelInfoStore() {}
 
   // initialize opsKernelInfoStore
-  virtual Status Initialize(const map<string, string> &options) = 0; /*lint -e148*/
+  virtual Status Initialize(const std::map<std::string, std::string> &options) = 0;
 
   // close opsKernelInfoStore
   virtual Status Finalize() = 0; /*lint -e148*/
@@ -53,7 +53,7 @@ class OpsKernelInfoStore {
   virtual Status DestroySession(const std::map<std::string, std::string> &session_options) { return SUCCESS; }
 
   // get all opsKernelInfo
-  virtual void GetAllOpsKernelInfo(map<string, OpInfo> &infos) const = 0;
+  virtual void GetAllOpsKernelInfo(std::map<std::string, OpInfo> &infos) const = 0;
 
   // whether the opsKernelInfoStore is supported based on the operator attribute
   virtual bool CheckSupported(const OpDescPtr &opDescPtr, std::string &un_supported_reason) const = 0;
@@ -66,8 +66,8 @@ class OpsKernelInfoStore {
   virtual void opsFlagCheck(const ge::Node &node, std::string &opsFlag) {};
 
   // only call fe engine interface to compile single op
-  virtual Status CompileOp(vector<ge::NodePtr> &node_vec) { return SUCCESS; }
-  virtual Status CompileOpRun(vector<ge::NodePtr> &node_vec) { return SUCCESS; }
+  virtual Status CompileOp(std::vector<ge::NodePtr> &node_vec) { return SUCCESS; }
+  virtual Status CompileOpRun(std::vector<ge::NodePtr> &node_vec) { return SUCCESS; }
   // load task for op
   virtual Status LoadTask(GETaskInfo &task) { return SUCCESS; }
 

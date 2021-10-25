@@ -34,7 +34,7 @@ class GraphOptimizer {
   virtual ~GraphOptimizer() {}
 
   // initialize graphOptimizer
-  virtual Status Initialize(const map<string, string> &options) = 0;
+  virtual Status Initialize(const std::map<std::string, std::string> &options) = 0;
 
   // close graphOptimizer
   virtual Status Finalize() = 0;

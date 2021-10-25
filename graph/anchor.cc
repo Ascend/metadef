@@ -34,7 +34,7 @@ class AnchorImpl {
   void SetIdx(int index);
 
   // All peer anchors connected to current anchor
-  vector<std::weak_ptr<Anchor>> peer_anchors_;
+  std::vector<std::weak_ptr<Anchor>> peer_anchors_;
   // The owner node of anchor
   std::weak_ptr<Node> owner_node_;
   // The index of current anchor
@@ -49,7 +49,7 @@ size_t AnchorImpl::GetPeerAnchorsSize() const {
 
 Anchor::Vistor<AnchorPtr> AnchorImpl::GetPeerAnchors(
     const std::shared_ptr<ConstAnchor> &anchor_ptr) const {
-  vector<AnchorPtr> ret;
+  std::vector<AnchorPtr> ret;
   for (const auto &anchor : peer_anchors_) {
     ret.push_back(anchor.lock());
   }
@@ -235,7 +235,7 @@ bool InDataAnchor::IsTypeOf(TYPE type) const {
 OutDataAnchor::OutDataAnchor(const NodePtr &owner_node, int idx) : DataAnchor(owner_node, idx) {}
 
 OutDataAnchor::Vistor<InDataAnchorPtr> OutDataAnchor::GetPeerInDataAnchors() const {
-  vector<InDataAnchorPtr> ret;
+  std::vector<InDataAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
       auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
@@ -261,7 +261,7 @@ uint32_t OutDataAnchor::GetPeerInDataNodesSize() const {
 }
 
 OutDataAnchor::Vistor<InControlAnchorPtr> OutDataAnchor::GetPeerInControlAnchors() const {
-  vector<InControlAnchorPtr> ret;
+  std::vector<InControlAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
       auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
@@ -355,7 +355,7 @@ InControlAnchor::InControlAnchor(const NodePtr &owner_node) : ControlAnchor(owne
 InControlAnchor::InControlAnchor(const NodePtr &owner_node, int idx) : ControlAnchor(owner_node, idx) {}
 
 InControlAnchor::Vistor<OutControlAnchorPtr> InControlAnchor::GetPeerOutControlAnchors() const {
-  vector<OutControlAnchorPtr> ret;
+  std::vector<OutControlAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
       auto out_control_anchor = Anchor::DynamicAnchorCast<OutControlAnchor>(anchor.lock());
@@ -375,7 +375,7 @@ bool InControlAnchor::IsPeerOutAnchorsEmpty() const {
 }
 
 InControlAnchor::Vistor<OutDataAnchorPtr> InControlAnchor::GetPeerOutDataAnchors() const {
-  vector<OutDataAnchorPtr> ret;
+  std::vector<OutDataAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
       auto out_data_anchor = Anchor::DynamicAnchorCast<OutDataAnchor>(anchor.lock());
@@ -427,7 +427,7 @@ OutControlAnchor::OutControlAnchor(const NodePtr &owner_node) : ControlAnchor(ow
 OutControlAnchor::OutControlAnchor(const NodePtr &owner_node, int idx) : ControlAnchor(owner_node, idx) {}
 
 OutControlAnchor::Vistor<InControlAnchorPtr> OutControlAnchor::GetPeerInControlAnchors() const {
-  vector<InControlAnchorPtr> ret;
+  std::vector<InControlAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
       auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
@@ -440,7 +440,7 @@ OutControlAnchor::Vistor<InControlAnchorPtr> OutControlAnchor::GetPeerInControlA
 }
 
 OutControlAnchor::Vistor<InDataAnchorPtr> OutControlAnchor::GetPeerInDataAnchors() const {
-  vector<InDataAnchorPtr> ret;
+  std::vector<InDataAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
       auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());

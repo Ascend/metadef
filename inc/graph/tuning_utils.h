@@ -82,7 +82,7 @@ class TuningUtils {
                                         const std::string &path = "",
                                         const std::string &user_path = "");
   // Recovery `graph` from graph dump files configured in options
-  static graphStatus ConvertFileToGraph(const map<int64_t, string> &options, ge::Graph &graph);
+  static graphStatus ConvertFileToGraph(const std::map<int64_t, std::string> &options, ge::Graph &graph);
 
  private:
   // part 1
