@@ -477,28 +477,7 @@ void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, prefix + attr_name + suffix, &int_value);
     }
     if (attr_type == ge::proto::AttrDef::kList) {
-      const auto &list_value = attr_def.list();
-      auto list_value_type = list_value.val_type();
-      if (list_value_type ==
-          ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_STRING) {
-        if (kDumpLevel == DUMP_ALL) {
-          const auto &strings = list_value.s();
-          AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, prefix + attr_name + suffix, strings);
-        }
-      }
-      if (list_value_type ==
-          ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_FLOAT) {
-        const auto &floats = list_value.f();
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_FLOATS, prefix + attr_name + suffix, floats);
-      }
-      if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_INT) {
-        const auto &ints = list_value.i();
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, prefix + attr_name + suffix, ints);
-      }
-      if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_BOOL) {
-        const auto &bools = list_value.b();
-        AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, prefix + attr_name + suffix, bools);
-      }
+      AddListAttrProto(attr_name, attr_def, prefix, suffix, node_proto);
     }
     if (attr_type == ge::proto::AttrDef::kListListInt) {
       const auto &list_value = attr_def.list_list_int();
@@ -510,6 +489,31 @@ void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
                      prefix + attr_name + suffix + "_" + std::to_string(list_index++), ints);
       }
     }
+  }
+}
+
+void OnnxUtils::AddListAttrProto(const std::string &attr_name,
+                                 const ::ge::proto::AttrDef &attr_def, const std::string &prefix,
+                                 const std::string &suffix, onnx::NodeProto *node_proto) {
+  const auto &list_value = attr_def.list();
+  auto list_value_type = list_value.val_type();
+  if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_STRING) {
+    if (kDumpLevel == DUMP_ALL) {
+      const auto &strings = list_value.s();
+      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, prefix + attr_name + suffix, strings);
+    }
+  }
+  if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_FLOAT) {
+    const auto &floats = list_value.f();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_FLOATS, prefix + attr_name + suffix, floats);
+  }
+  if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_INT) {
+    const auto &ints = list_value.i();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, prefix + attr_name + suffix, ints);
+  }
+  if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_BOOL) {
+    const auto &bools = list_value.b();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, prefix + attr_name + suffix, bools);
   }
 }
 

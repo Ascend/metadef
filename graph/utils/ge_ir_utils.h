@@ -84,6 +84,8 @@ class OnnxUtils {
   static void AddAttrProto(ge::onnx::NodeProto *node_proto, ge::onnx::AttributeProto_AttributeType type,
                            const std::string &name, ::google::protobuf::RepeatedPtrField<::std::string> data);
 
+  static void AddListAttrProto(const std::string &attr_name, const ::ge::proto::AttrDef &attr_def,
+                               const std::string &prefix, const std::string &suffix, onnx::NodeProto *node_proto);
   static void AddAttrProtoFromNodeMembers(const NodePtr &node, ge::onnx::NodeProto *node_proto);
 
   static void AddAttrProtoFromAttribute(const std::pair<const std::string, ge::GeAttrValue> &string_attr_value,

@@ -39,8 +39,11 @@ static ComputeGraphPtr CreateGraph_1_1_224_224(float *tensor_data) {
   AttrUtils::SetTensor(const1->GetOpDesc(), "value", tensor);
   auto add1 = builder.AddNode("add1", "Add", {"x1", "x2"}, {"y"});
   auto netoutput1 = builder.AddNode("NetOutputNode", "NetOutput", {"x"}, {});
-  ge::AttrUtils::SetListListInt(add1->GetOpDesc()->MutableOutputDesc(0), "_cut_info", {{1, 0, 0, 0}});
-
+  ge::AttrUtils::SetListListInt(add1->GetOpDesc()->MutableOutputDesc(0), "list_list_i", {{1, 0, 0, 0}});
+  ge::AttrUtils::SetListInt(add1->GetOpDesc(), "list_i", {1});
+  ge::AttrUtils::SetListStr(add1->GetOpDesc(), "list_s", {"1"});
+  ge::AttrUtils::SetListFloat(add1->GetOpDesc(), "list_f", {1.0});
+  ge::AttrUtils::SetListBool(add1->GetOpDesc(), "list_b", {false});
   builder.AddDataEdge(data1, 0, add1, 0);
   builder.AddDataEdge(const1, 0, add1, 1);
   builder.AddDataEdge(add1, 0, netoutput1, 0);
