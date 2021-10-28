@@ -31,15 +31,15 @@ class ComputeGraphImpl {
   //ComputeGraphImpl(const ComputeGraphImpl& compute_graph) = default;
   ~ComputeGraphImpl() = default;
 
-  string GetName() const;
-  void SetName(const string &name);
+  std::string GetName() const;
+  void SetName(const std::string &name);
 
   size_t GetAllNodesSize(const ConstComputeGraphPtr &compute_graph) const;
   Vistor<NodePtr> GetAllNodes(const ConstComputeGraphPtr &compute_graph) const;
   Vistor<NodePtr> GetAllNodes(const NodeFilter &node_filter,
                               const GraphFilter &graph_filter,
                               const ConstComputeGraphPtr &compute_graph) const;
-  Vistor<NodePtr> AllGraphNodes(vector<ComputeGraphPtr> &subgraphs,
+  Vistor<NodePtr> AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs,
                                 const ConstComputeGraphPtr &compute_graph) const;
   Vistor<NodePtr> GetNodes(bool is_unknown_shape,
                            const ConstComputeGraphPtr &compute_graph) const;
@@ -162,7 +162,7 @@ class ComputeGraphImpl {
                                     std::deque<NodePtr> &stack,
                                     const ConstComputeGraphPtr &compute_graph);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    std::map<string, NodePtr> &breadth_node_map);
+                                    std::map<std::string, NodePtr> &breadth_node_map);
   void TopologicalSorting(std::function<bool (const NodePtr &, const NodePtr &)> comp);
   graphStatus TopologicalSorting(const ComputeGraphPtr &const_graph_ptr,
                                  const ConstComputeGraphPtr &const_compute_graph);

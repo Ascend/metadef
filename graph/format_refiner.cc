@@ -37,8 +37,8 @@ using namespace std;
 namespace ge {
 namespace {
 const size_t kDimSize4d = 4;
-const std::set<string> kChangeDimNodes = {PERMUTE, EXPANDDIMS, SQUEEZE};
-const string kIsGraphInferred = "_is_graph_inferred";
+const std::set<std::string> kChangeDimNodes = {PERMUTE, EXPANDDIMS, SQUEEZE};
+const std::string kIsGraphInferred = "_is_graph_inferred";
 thread_local RefRelations reflection_builder;
 }  // namespace
 
@@ -72,7 +72,7 @@ graphStatus BiasAddFormatFixProcess(ge::NodePtr &node_ptr) {
   if (node_ptr->GetType() != "BiasAdd" && node_ptr->GetType() != "BiasAddGrad") {
     return GRAPH_SUCCESS;
   }
-  std::unordered_map<string, Format> kTfFormatFix = {
+  std::unordered_map<std::string, Format> kTfFormatFix = {
     {"NHWC", FORMAT_NDHWC},
     {"NCHW", FORMAT_NCDHW}
   };

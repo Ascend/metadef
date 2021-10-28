@@ -59,18 +59,18 @@ Model::Model() {
   Init();
 }
 
-Model::Model(const string &name, const string &custom_version)
+Model::Model(const std::string &name, const std::string &custom_version)
     : name_(name), version_(DEFAULT_VERSION), platform_version_(custom_version) {
   Init();
 }
 
-string Model::GetName() const { return name_; }
+std::string Model::GetName() const { return name_; }
 
-void Model::SetName(const string &name) { name_ = name; }
+void Model::SetName(const std::string &name) { name_ = name; }
 
 uint32_t Model::GetVersion() const { return version_; }
 
-string Model::GetPlatformVersion() const { return platform_version_; }
+std::string Model::GetPlatformVersion() const { return platform_version_; }
 
 void Model::SetGraph(const ge::Graph &graph) { graph_ = graph; }
 
@@ -94,7 +94,7 @@ graphStatus Model::Load(ge::proto::ModelDef &model_def) {
   return serialize.UnserializeModel(model_def, *this) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
-graphStatus Model::SaveToFile(const string &file_name) const {
+graphStatus Model::SaveToFile(const std::string &file_name) const {
   Buffer buffer;
   if ((*this).Save(buffer) != GRAPH_SUCCESS) {
     GE_LOGE("[Save][Data] to file:%s fail.", file_name.c_str());
@@ -148,7 +148,7 @@ graphStatus Model::SaveToFile(const string &file_name) const {
 
 bool Model::IsValid() const { return graph_.IsValid(); }
 
-graphStatus Model::LoadFromFile(const string &file_name) {
+graphStatus Model::LoadFromFile(const std::string &file_name) {
   char real_path[MMPA_MAX_PATH] = {0x00};
   if (strlen(file_name.c_str()) >= MMPA_MAX_PATH) {
     return GRAPH_FAILED;

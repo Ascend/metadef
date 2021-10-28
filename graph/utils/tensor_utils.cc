@@ -186,7 +186,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
                                             int64_t &element_cnt) {
   static char parser_priority[MMPA_MAX_PATH] = { 0x00 };
   INT32 res = mmGetEnv("PARSER_PRIORITY", parser_priority, MMPA_MAX_PATH);
-  if (res == EN_OK && string(parser_priority) == "cce") {
+  if (res == EN_OK && std::string(parser_priority) == "cce") {
     if (dims.size() != kDimSize4d) {
       REPORT_INNER_ERROR("E19999", "CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
                          dims.size(), kDimSize4d);
@@ -287,7 +287,7 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
 ///
 static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format format, DataType data_type,
                                         int64_t &element_cnt) {
-  const string format_str = TypeUtils::FormatToSerialString(format);
+  const std::string format_str = TypeUtils::FormatToSerialString(format);
   // Check dims
   for (size_t i = 0; i < dims.size(); ++i) {
     int64_t dim = dims[i];
@@ -347,7 +347,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
       break;
   }
 
-  const string type_str = TypeUtils::DataTypeToSerialString(data_type);
+  const std::string type_str = TypeUtils::DataTypeToSerialString(data_type);
   if (graph_status == GRAPH_SUCCESS) {
     GELOGD(
         "CalcTensorElementCnt end, format=%d(%s),"
@@ -374,8 +374,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
                                                                                           Format format,
                                                                                           DataType data_type,
                                                                                           int64_t &mem_size) {
-  const string format_str = TypeUtils::FormatToSerialString(format);
-  const string type_str = TypeUtils::DataTypeToSerialString(data_type);
+  const std::string format_str = TypeUtils::FormatToSerialString(format);
+  const std::string type_str = TypeUtils::DataTypeToSerialString(data_type);
 
   std::vector<int64_t> dims = shape.GetDims();
   int64_t element_cnt = 0;

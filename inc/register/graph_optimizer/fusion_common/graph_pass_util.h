@@ -30,7 +30,7 @@
 #include <vector>
 
 namespace fe {
-using NodeTypeMap = std::unordered_map<string, std::map<string, ge::NodePtr>>;
+using NodeTypeMap = std::unordered_map<std::string, std::map<std::string, ge::NodePtr>>;
 using NodeTypeMapPtr = std::shared_ptr<NodeTypeMap>;
 struct NodeMapInfo {
   int64_t run_count;
@@ -169,13 +169,13 @@ class GraphPassUtil {
       return;
     }
     NodeTypeMapPtr node_type_map = node_map_info->node_type_map;
-    string real_op_type = ge::NodeUtils::GetNodeType(*node_ptr);
+    std::string real_op_type = ge::NodeUtils::GetNodeType(*node_ptr);
     auto iter = node_type_map->find(real_op_type);
     if (iter != node_type_map->end()) {
       iter->second.emplace(node_ptr->GetName(), node_ptr);
     } else {
       node_type_map->emplace(std::make_pair(real_op_type,
-                                            std::map<string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
+                                            std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
     }
   }
 
@@ -226,7 +226,7 @@ class GraphPassUtil {
     auto iter = node_type_map->find(op_type);
     if (iter == node_type_map->end()) {
       node_type_map->emplace(std::make_pair(op_type,
-                                            std::map<string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
+                                            std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
     } else {
       iter->second.emplace(node_ptr->GetName(), node_ptr);
     }

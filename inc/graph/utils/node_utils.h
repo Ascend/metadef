@@ -163,24 +163,24 @@ class NodeUtils {
   /// @param [in] node
   /// @return Node
   ///
-  static vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, int index);
+  static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, int index);
 
   ///
   /// @brief Get subgraph input data node by index.
   /// @param [in] node
   /// @return Node
   ///
-  static vector<NodePtr> GetSubgraphOutputNodes(const Node &node);
+  static std::vector<NodePtr> GetSubgraphOutputNodes(const Node &node);
 
   static NodePtr GetInDataNodeByIndex(const Node &node, const int index);
 
-  static vector<pair<InDataAnchorPtr, NodePtr>> GetOutDataNodesWithAnchorByIndex(const Node &node, const int index);
+  static std::vector<std::pair<InDataAnchorPtr, NodePtr>> GetOutDataNodesWithAnchorByIndex(const Node &node, const int index);
 
   static ge::ConstNodePtr GetNodeFromOperator(const Operator &oprt);
 
-  static graphStatus GetInputConstData(const ConstNodePtr& node_ptr, const string &dst_name, GeTensorPtr &ge_tensor);
+  static graphStatus GetInputConstData(const ConstNodePtr& node_ptr, const std::string &dst_name, GeTensorPtr &ge_tensor);
 
-  static graphStatus GetInputConstData(const Node &node, const string &dst_name, GeTensorPtr &ge_tensor);
+  static graphStatus GetInputConstData(const Node &node, const std::string &dst_name, GeTensorPtr &ge_tensor);
 
   ///
   /// @brief Get node type in cross subgragh.

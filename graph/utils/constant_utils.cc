@@ -57,8 +57,8 @@ bool ConstantUtils::GetWeight(const OpDescPtr &op_desc, const uint32_t index, Co
     return false;
   }
 
-  vector<uint32_t> weight_indices;
-  vector<ConstGeTensorPtr> weights;
+  std::vector<uint32_t> weight_indices;
+  std::vector<ConstGeTensorPtr> weights;
   if (!GetPotentialWeight(op_desc, weight_indices, weights)) {
     return false;
   }
@@ -78,7 +78,7 @@ bool ConstantUtils::GetWeight(const Operator &op, const uint32_t index, Tensor &
     return false;
   }
   // check potential const attrs
-  vector<uint32_t> weight_indices;
+  std::vector<uint32_t> weight_indices;
   if (op.GetAttr(ATTR_NAME_POTENTIAL_WEIGHT_INDICES, weight_indices) != GRAPH_SUCCESS) {
     GELOGW("Missing ATTR_NAME_POTENTIAL_WEIGHT_INDICES attr on potential const %s.", op.GetName().c_str());
     return false;
@@ -109,8 +109,8 @@ bool ConstantUtils::MutableWeight(const OpDescPtr &op_desc, const uint32_t index
   if (!IsPotentialConst(op_desc)) {
     return false;
   }
-  vector<uint32_t> weight_indices;
-  vector<GeTensorPtr> weights;
+  std::vector<uint32_t> weight_indices;
+  std::vector<GeTensorPtr> weights;
   if (!MutablePotentialWeight(op_desc, weight_indices, weights)) {
     return false;
   }
@@ -131,8 +131,8 @@ bool ConstantUtils::SetWeight(const OpDescPtr &op_desc, const uint32_t index, co
   if (!IsPotentialConst(op_desc)) {
     return false;
   }
-  vector<uint32_t> weight_indices;
-  vector<GeTensorPtr> weights;
+  std::vector<uint32_t> weight_indices;
+  std::vector<GeTensorPtr> weights;
   if (!MutablePotentialWeight(op_desc, weight_indices, weights)) {
     return false;
   }
@@ -146,8 +146,8 @@ bool ConstantUtils::SetWeight(const OpDescPtr &op_desc, const uint32_t index, co
   return false;
 }
 bool ConstantUtils::GetPotentialWeight(const OpDescPtr &op_desc,
-                                       vector<uint32_t> &weight_indices,
-                                       vector<ConstGeTensorPtr> &weights) {
+                                       std::vector<uint32_t> &weight_indices,
+                                       std::vector<ConstGeTensorPtr> &weights) {
   // check potential const attrs
   if (!AttrUtils::GetListInt(op_desc, ATTR_NAME_POTENTIAL_WEIGHT_INDICES, weight_indices)) {
     GELOGW("Missing ATTR_NAME_POTENTIAL_WEIGHT_INDICES attr on potential const %s.", op_desc->GetName().c_str());
@@ -164,8 +164,8 @@ bool ConstantUtils::GetPotentialWeight(const OpDescPtr &op_desc,
   return true;
 }
 
-bool ConstantUtils::MutablePotentialWeight(const OpDescPtr &op_desc, vector<uint32_t> &weight_indices,
-                                                  vector<GeTensorPtr> &weights) {
+bool ConstantUtils::MutablePotentialWeight(const OpDescPtr &op_desc, std::vector<uint32_t> &weight_indices,
+                                           std::vector<GeTensorPtr> &weights) {
   // check potential const attrs
   if (!AttrUtils::GetListInt(op_desc, ATTR_NAME_POTENTIAL_WEIGHT_INDICES, weight_indices)) {
     GELOGW("Missing ATTR_NAME_POTENTIAL_WEIGHT_INDICES attr on potential const %s.", op_desc->GetName().c_str());
@@ -182,8 +182,8 @@ bool ConstantUtils::MutablePotentialWeight(const OpDescPtr &op_desc, vector<uint
   return true;
 }
 bool ConstantUtils::MarkPotentialConst(const OpDescPtr &op_desc,
-                                       const vector<int> indices,
-                                       const vector<GeTensorPtr> weights) {
+                                       const std::vector<int> indices,
+                                       const std::vector<GeTensorPtr> weights) {
   if (indices.size() != weights.size()) {
     return false;
   }

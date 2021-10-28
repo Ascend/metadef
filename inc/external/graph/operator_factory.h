@@ -51,7 +51,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactory {
   static graphStatus GetOpsTypeList(std::vector<AscendString> &all_ops);
 
   ATTRIBUTED_DEPRECATED(bool IsExistOp(const char *))
-  static bool IsExistOp(const string &operator_type);
+  static bool IsExistOp(const std::string &operator_type);
 
   static bool IsExistOp(const char *operator_type);
 };
@@ -59,7 +59,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactory {
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorCreatorRegister {
  public:
   ATTRIBUTED_DEPRECATED(OperatorCreatorRegister(const char *, OpCreatorV2 const &))
-  OperatorCreatorRegister(const string &operator_type, OpCreator const &op_creator);
+  OperatorCreatorRegister(const std::string &operator_type, OpCreator const &op_creator);
   OperatorCreatorRegister(const char *operator_type, OpCreatorV2 const &op_creator);
   ~OperatorCreatorRegister() = default;
 };

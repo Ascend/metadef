@@ -29,19 +29,24 @@
 #include "graph/utils/node_utils.h"
 
 namespace ge {
-OperatorImpl::OperatorImpl(const string &name, const string &type) : op_desc_(ComGraphMakeShared<OpDesc>(name, type)) {
+OperatorImpl::OperatorImpl(const std::string &name, const std::string &type)
+    : op_desc_(ComGraphMakeShared<OpDesc>(name, type)) {
   if (op_desc_ == nullptr) {
     GELOGW("[Check][Param] Make op_desc failed");
   }
 }
+
 OperatorImpl::OperatorImpl(const OpDescPtr &op_desc) : op_desc_(op_desc) {}
+
 OperatorImpl::OperatorImpl(ge::ConstNodePtr node) : node_(std::move(node)) {
   if (node_ != nullptr && node_->GetOpDesc() != nullptr) {
     op_desc_ = node_->GetOpDesc();
   }
 }
+
 OperatorImpl::~OperatorImpl() {}
-void OperatorImpl::SetInputImpl(const string &dst_name, const ge::Operator &src_oprt) {
+
+void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::Operator &src_oprt) {
   GE_CHK_BOOL_EXEC(src_oprt.GetOutputsSize() == 1,
                    REPORT_INNER_ERROR("E19999", "The source operator[%s] must be single output operator",
                                       src_oprt.operator_impl_->op_desc_->GetName().c_str());
@@ -56,7 +61,7 @@ void OperatorImpl::SetInputImpl(const string &dst_name, const ge::Operator &src_
   return SetInputImpl(dst_name, out_handler);
 }
 
-void OperatorImpl::SetInputImpl(const string &dst_name, const ge::OutHandler &out_handler) {
+void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::OutHandler &out_handler) {
   GE_CHK_BOOL_EXEC(out_handler != nullptr, REPORT_INNER_ERROR("E19999", "param out_handler is nullptr, check invalid.");
                    return, "[Check][Param] SetInputImpl faild, as out_handler is nullptr.");
   GE_CHK_BOOL_EXEC(!dst_name.empty(), REPORT_INNER_ERROR("E19999", "param dst_name is empty, check invalid.");
@@ -65,7 +70,7 @@ void OperatorImpl::SetInputImpl(const string &dst_name, const ge::OutHandler &ou
                    return, "[Check][Param] op_desc_ is nullptr.");
   input_link_.insert(std::make_pair(dst_name, *out_handler));
 
-  string src_name = out_handler->GetName();
+  std::string src_name = out_handler->GetName();
   int dst_index = op_desc_->GetInputIndexByName(dst_name);
   GE_CHK_BOOL_EXEC(dst_index >= 0,
                    REPORT_INNER_ERROR("E19999", "Find input index by name failed. name[%s], op name:%s",
@@ -124,7 +129,7 @@ void OperatorImpl::AddControlInputImp(const ge::Operator &src_oprt) {
   src_oprt.operator_impl_->control_output_link_.push_back(shared_from_this());
 }
 
-graphStatus OperatorImpl::GetInputImpl(const string &dst_name, ge::OpIO &out_handler) const {
+graphStatus OperatorImpl::GetInputImpl(const std::string &dst_name, ge::OpIO &out_handler) const {
   auto out = input_link_.find(dst_name);
   if (out == input_link_.end()) {
     return GRAPH_FAILED;
@@ -135,7 +140,7 @@ graphStatus OperatorImpl::GetInputImpl(const string &dst_name, ge::OpIO &out_han
 
 graphStatus OperatorImpl::GetInputImpl(uint32_t idx, ge::OpIO &out_handler) const {
   GE_CHECK_NOTNULL(op_desc_);
-  string dst_name = op_desc_->GetInputNameByIndex(idx);
+  std::string dst_name = op_desc_->GetInputNameByIndex(idx);
   return GetInputImpl(dst_name, out_handler);
 }
 
@@ -205,7 +210,7 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
   return GRAPH_FAILED;
 }
 
-graphStatus OperatorImpl::GetInputConstData(const string &dst_name, Tensor &data) {
+graphStatus OperatorImpl::GetInputConstData(const std::string &dst_name, Tensor &data) {
   GE_CHECK_NOTNULL(op_desc_);
   auto index = op_desc_->GetInputIndexByName(dst_name);
   ConstGeTensorPtr ge_tensor = nullptr;
@@ -261,7 +266,7 @@ graphStatus OperatorImpl::GetInputConstDataOut(uint32_t idx, ConstGeTensorPtr &g
   return GRAPH_FAILED;
 }
 
-graphStatus OperatorImpl::GetInputConstDataOut(const string &dst_name, Tensor &data) {
+graphStatus OperatorImpl::GetInputConstDataOut(const std::string &dst_name, Tensor &data) {
   ge::OpIO out_handle("", 0, nullptr);
   if (GetInputImpl(dst_name, out_handle) != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E19999", "%s get input impl failed", dst_name.c_str());
@@ -280,19 +285,19 @@ graphStatus OperatorImpl::GetInputConstDataOut(const string &dst_name, Tensor &d
   return GRAPH_FAILED;
 }
 
-bool OperatorImpl::InputIsSet(const string &name) {
+bool OperatorImpl::InputIsSet(const std::string &name) {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return false, "[Check][Param] op_desc_ is nullptr.");
   return op_desc_->InputIsSet(name);
 }
 
-string OperatorImpl::GetName() const {
+std::string OperatorImpl::GetName() const {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
-                   return string(), "[Check][Param] op_desc_ is nullptr.");
+                   return std::string(), "[Check][Param] op_desc_ is nullptr.");
   return op_desc_->GetName();
 }
 
-GeTensorDesc OperatorImpl::GetInputDesc(const string &name) const {
+GeTensorDesc OperatorImpl::GetInputDesc(const std::string &name) const {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return GeTensorDesc(), "[Check][Param] op_desc_ is nullptr.");
   return op_desc_->GetInputDesc(name);
@@ -304,14 +309,14 @@ GeTensorDesc OperatorImpl::GetInputDesc(uint32_t index) const {
   return op_desc_->GetInputDesc(index);
 }
 
-graphStatus OperatorImpl::UpdateInputDesc(const string &name, const GeTensorDesc &tensor_desc) {
+graphStatus OperatorImpl::UpdateInputDesc(const std::string &name, const GeTensorDesc &tensor_desc) {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return GRAPH_FAILED, "[Check][Param] op_desc_ is nullptr.");
 
   return op_desc_->UpdateInputDesc(name, tensor_desc);
 }
 
-OutHandler OperatorImpl::GetOutput(const string &name) {
+OutHandler OperatorImpl::GetOutput(const std::string &name) {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return nullptr, "[Check][Param] op_desc_ is nullptr.");
 
@@ -331,7 +336,7 @@ OutHandler OperatorImpl::GetOutput(const string &name) {
 OutHandler OperatorImpl::GetOutput(uint32_t index) {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return nullptr, "[Check][Param] op_desc_ is nullptr.");
-  string name = op_desc_->GetOutputNameByIndex(index);
+  std::string name = op_desc_->GetOutputNameByIndex(index);
   if (name.empty()) {
     REPORT_INNER_ERROR("E19999", "Find src name by index failed. index[%u]", index);
     GELOGE(GRAPH_FAILED, "[Get][OutputName] Find src name by index failed. index[%u]", index);
@@ -346,7 +351,7 @@ OutHandler OperatorImpl::GetOutput(uint32_t index) {
   return output_ptr;
 }
 
-GeTensorDesc OperatorImpl::GetOutputDesc(const string &name) const {
+GeTensorDesc OperatorImpl::GetOutputDesc(const std::string &name) const {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return GeTensorDesc(), "[Check][Param] op_desc_ is nullptr.");
 
@@ -360,7 +365,7 @@ GeTensorDesc OperatorImpl::GetOutputDesc(uint32_t index) const {
   return op_desc_->GetOutputDesc(index);
 }
 
-graphStatus OperatorImpl::UpdateOutputDesc(const string &name, const GeTensorDesc &tensor_desc) {
+graphStatus OperatorImpl::UpdateOutputDesc(const std::string &name, const GeTensorDesc &tensor_desc) {
   GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
 
   auto res = op_desc_->UpdateOutputDesc(name, tensor_desc);
@@ -387,12 +392,12 @@ size_t OperatorImpl::GetOutputsSize() const {
   return op_desc_->GetOutputsSize();
 }
 
-graphStatus OperatorImpl::SetAttr(const string &name, AnyValue &&attr_value) {
+graphStatus OperatorImpl::SetAttr(const std::string &name, AnyValue &&attr_value) {
   GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
   return op_desc_->SetAttr(name, std::move(attr_value));
 }
 
-graphStatus OperatorImpl::GetAttr(const string &name, AnyValue &attr_value) const {
+graphStatus OperatorImpl::GetAttr(const std::string &name, AnyValue &attr_value) const {
   GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
   return op_desc_->GetAttr(name, attr_value);
 }
@@ -401,7 +406,7 @@ OpDescPtr OperatorImpl::GetOpDescImpl() const {
   return op_desc_;
 }
 
-void OperatorImpl::UpdateLinkMapImpl(const string &src_name, OpIO &op_dst) {
+void OperatorImpl::UpdateLinkMapImpl(const std::string &src_name, OpIO &op_dst) {
   auto it_find = output_links_.find(src_name);
   if (it_find == output_links_.end()) {
     std::vector<OpIO> dsts{op_dst};
@@ -450,7 +455,7 @@ void OperatorImpl::SubgraphCountRegister(const std::string &ir_name, uint32_t co
     subgraph_names_to_builders_[ir_name] = nullptr;
   } else {
     for (uint32_t i = 0; i < count; ++i) {
-      string key_name = ir_name + std::to_string(i);
+      std::string key_name = ir_name + std::to_string(i);
       op_desc_->AddSubgraphName(key_name);
       subgraph_names_to_builders_[key_name] = nullptr;
     }
@@ -458,7 +463,7 @@ void OperatorImpl::SubgraphCountRegister(const std::string &ir_name, uint32_t co
 }
 
 void OperatorImpl::SetSubgraphBuilder(const std::string &ir_name, uint32_t index, const SubgraphBuilder &builder) {
-  string key_name = ir_name;
+  std::string key_name = ir_name;
   if (op_desc_->GetSubgraphTypeByIrName(ir_name) == kDynamic) {
     key_name += std::to_string(index);
   }
@@ -474,7 +479,7 @@ void OperatorImpl::SetSubgraphBuilder(const std::string &ir_name, uint32_t index
 }
 
 SubgraphBuilder OperatorImpl::GetSubgraphBuilder(const std::string &ir_name, uint32_t index) const {
-  string key_name = ir_name;
+  std::string key_name = ir_name;
   if (op_desc_->GetSubgraphTypeByIrName(ir_name) == kDynamic) {
     key_name += std::to_string(index);
   }

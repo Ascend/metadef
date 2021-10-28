@@ -24,8 +24,6 @@
 
 
 namespace ge {
-using std::map;
-using std::set;
 void AttrHolder::CopyAttrsFrom(const AttrHolder &holder) {
   MutableAttrMap() = holder.GetAttrMap();
 }
@@ -45,7 +43,7 @@ graphStatus AttrHolder::SetAttr(const std::string &name, const AnyValue &value) 
   }
   return GRAPH_SUCCESS;
 }
-graphStatus AttrHolder::TrySetAttr(const string &name, const AnyValue &value) {
+graphStatus AttrHolder::TrySetAttr(const std::string &name, const AnyValue &value) {
   if (value.IsEmpty()) {
     REPORT_INNER_ERROR("E19999", "param value is empty, check invalid, key of the attr:%s", name.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] value is empty, key of the attr is %s", name.c_str());
@@ -88,11 +86,11 @@ graphStatus AttrHolder::DelAttr(const std::string &name) {
   return MutableAttrMap().Delete(name) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
-const std::map<string, AnyValue> AttrHolder::GetAllAttrs() const {
+const std::map<std::string, AnyValue> AttrHolder::GetAllAttrs() const {
   return GetAttrMap().GetAllAttrs();
 }
 
-const std::set<string> AttrHolder::GetAllAttrNames() const {
+const std::set<std::string> AttrHolder::GetAllAttrNames() const {
   return GetAttrMap().GetAllAttrNames();
 }
 

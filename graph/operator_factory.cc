@@ -50,7 +50,9 @@ graphStatus OperatorFactory::GetOpsTypeList(std::vector<AscendString> &all_ops) 
   return GRAPH_SUCCESS;
 }
 
-bool OperatorFactory::IsExistOp(const string &operator_type) { return OperatorFactoryImpl::IsExistOp(operator_type); }
+bool OperatorFactory::IsExistOp(const std::string &operator_type) {
+  return OperatorFactoryImpl::IsExistOp(operator_type);
+}
 
 bool OperatorFactory::IsExistOp(const char *operator_type) {
   if (operator_type == nullptr) {
@@ -62,7 +64,7 @@ bool OperatorFactory::IsExistOp(const char *operator_type) {
   return OperatorFactoryImpl::IsExistOp(op_type);
 }
 
-OperatorCreatorRegister::OperatorCreatorRegister(const string &operator_type, OpCreator const &op_creator) {
+OperatorCreatorRegister::OperatorCreatorRegister(const std::string &operator_type, OpCreator const &op_creator) {
   (void)OperatorFactoryImpl::RegisterOperatorCreator(operator_type, op_creator);
 }
 

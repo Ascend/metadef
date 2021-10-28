@@ -133,7 +133,7 @@ graphStatus GNode::GetName(AscendString &name) const {
 }
 
 std::pair<GNodePtr, int32_t> GNode::GetInDataNodesAndPortIndexs(const int32_t index) const {
-  pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};
+  std::pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};
   if (impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "node impl is nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: node impl is nullptr.");
@@ -226,7 +226,7 @@ std::vector<std::pair<GNodePtr, int32_t>> GNode::GetOutDataNodesAndPortIndexs(co
     return {};
   }
 
-  vector<std::pair<GNodePtr, int32_t>> gnode_index;
+  std::vector<std::pair<GNodePtr, int32_t>> gnode_index;
   auto in_data_anchors = out_anchor->GetPeerInDataAnchors();
   for (auto &in_data_anchor : in_data_anchors) {
     if (in_data_anchor == nullptr) {
@@ -290,7 +290,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
 
   NodePtr input_data_node = NodeUtils::GetInDataNodeByIndex(*node_ptr, index);
   GE_CHECK_NOTNULL(input_data_node);
-  string op_type = input_data_node->GetType();
+  std::string op_type = input_data_node->GetType();
   if (op_type == CONSTANT || op_type == CONSTANTOP) {
     Operator const_op = OpDescUtils::CreateOperatorFromNode(input_data_node);
     if (const_op.GetAttr(ATTR_NAME_WEIGHTS, data) != GRAPH_SUCCESS) {
@@ -777,7 +777,7 @@ graphStatus GNode::SetAttr(const AscendString &name, std::vector<AscendString> &
     GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: the shared ptr is not valid.");
     return GRAPH_FAILED;
   }
-  vector<std::string> node_attr_vals;
+  std::vector<std::string> node_attr_vals;
   for (auto attr_val : attr_values) {
     if (attr_val.GetString() != nullptr) {
       std::string node_attr_val = attr_val.GetString();
@@ -850,7 +850,7 @@ graphStatus GNode::GetAttr(const AscendString &name, std::vector<AscendString> &
 
   std::string node_name = ascend_name;
   Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);
-  vector<std::string> attr_names;
+  std::vector<std::string> attr_names;
   if (op.GetAttr(node_name, attr_names) != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E19999", "Get attr of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr->GetName().c_str());

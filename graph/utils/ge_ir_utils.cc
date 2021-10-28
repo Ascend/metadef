@@ -141,8 +141,8 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type, const string &name,
-                             void *data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
+                             const std::string &name, void *data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node_proto is nullptr.");
@@ -198,7 +198,8 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type, const string &name,
+void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
+                             const std::string &name,
                              ::google::protobuf::RepeatedField<::google::protobuf::int64> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
@@ -220,8 +221,8 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type, const string &name,
-                             ::google::protobuf::RepeatedField<bool> data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
+                             const std::string &name, ::google::protobuf::RepeatedField<bool> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node proto is nullptr.");
@@ -242,8 +243,8 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type, const string &name,
-                             ::google::protobuf::RepeatedField<float> data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
+                             const std::string &name, ::google::protobuf::RepeatedField<float> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node_proto is nullptr.");
@@ -264,8 +265,8 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type, const string &name,
-                             ::google::protobuf::RepeatedPtrField<::std::string> data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
+                             const std::string &name, ::google::protobuf::RepeatedPtrField<::std::string> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node proto is nullptr.");
@@ -356,7 +357,7 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       auto cmps_tab_offset = tensor_descriptor->cmps_tab_offset();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_cmps_tab_offset:" + std::to_string(i), &cmps_tab_offset);
-      std::map<string, AnyValue> attr_maps = input_desc->GetAllAttrs();
+      std::map<std::string, AnyValue> attr_maps = input_desc->GetAllAttrs();
       auto tensor_desc_map = tensor_descriptor->attr();
       ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
       std::string suffix = ":" + std::to_string(i);
@@ -412,7 +413,7 @@ void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *node_proto, const OpDe
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "output_desc_real_dim_cnt:" + std::to_string(i), &real_dim_cnt);
       std::string suffix = ":" + std::to_string(i);
-      std::map<string, AnyValue> attr_maps = output_desc->GetAllAttrs();
+      std::map<std::string, AnyValue> attr_maps = output_desc->GetAllAttrs();
       auto tensor_desc_map = tensor_descriptor->attr();
       ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
       AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForOutputDesc, suffix);
@@ -576,7 +577,7 @@ void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto
       const auto &is_input_const = op_def->is_input_const();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "is_input_const", is_input_const);
       auto op_def_attr_map = op_def->attr();
-      std::map<string, AnyValue> attr_maps = op_desc->GetAllAttrs();
+      std::map<std::string, AnyValue> attr_maps = op_desc->GetAllAttrs();
       ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &op_def_attr_map);
       AddAttrProtoForAttrsFromAttrMap(op_def_attr_map, node_proto);
     } else {
@@ -598,7 +599,7 @@ bool OnnxUtils::EncodeNodeDesc(const NodePtr &node, onnx::NodeProto *node_proto)
     return false;
   }
 
-  // 2.Encode map<string, GeAttrValue> attrs_ to AttributeProto
+  // 2.Encode std::map<std::string, GeAttrValue> attrs_ to AttributeProto
   for (auto &node_attr : node->impl_->attrs_) {
     AddAttrProtoFromAttribute(node_attr, node_proto);
   }

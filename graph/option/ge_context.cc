@@ -54,7 +54,7 @@ std::map<std::string, std::string> &GetMutableGlobalOptions() {
 }
 
 void GEContext::Init() {
-  string session_id;
+  std::string session_id;
   (void)GetOption("ge.exec.sessionId", session_id);
   try{
     session_id_ = static_cast<uint64_t>(std::stoi(session_id.c_str()));
@@ -66,7 +66,7 @@ void GEContext::Init() {
            session_id.c_str());
   }
 
-  string device_id;
+  std::string device_id;
   (void)GetOption("ge.exec.deviceId", device_id);
   try{
     device_id_ = static_cast<uint32_t>(std::stoi(device_id.c_str()));
@@ -78,7 +78,7 @@ void GEContext::Init() {
            device_id.c_str());
   }
 
-  string job_id;
+  std::string job_id;
   (void)GetOption("ge.exec.jobId", job_id);
   std::string s_job_id = "";
   for (auto c : job_id) {

@@ -25,10 +25,6 @@
 #include "graph/utils/node_adapter.h"
 #include "graph/utils/node_utils.h"
 
-using std::map;
-using std::pair;
-using std::string;
-using std::vector;
 
 namespace {
 const uint32_t kSubgraphIndexOfPartitionedCall = 0U;
@@ -99,7 +95,7 @@ class GraphImpl {
     std::vector<std::pair<ge::NodePtr, int32_t>> output_nodes;
     for (const auto &item : output_indexs) {
       const Operator &output = item.first;
-      const vector<size_t> &indexs = item.second;
+      const std::vector<size_t> &indexs = item.second;
       ge::NodePtr node = compute_graph_->FindNode(output.GetName());
       if (node == nullptr) {
         GELOGW("[SetOutputs][Check] User designated out_node %s not exist in graph, skip it",
@@ -138,7 +134,7 @@ class GraphImpl {
     return GRAPH_SUCCESS;
   }
 
-  graphStatus SetOutputs(const std::vector<pair<Operator, string>> &outputs) {
+  graphStatus SetOutputs(const std::vector<std::pair<Operator, std::string>> &outputs) {
     GE_CHK_BOOL_RET_STATUS(compute_graph_ != nullptr, GRAPH_FAILED, "[Check][Param] set ComputeGraph faild.");
     GE_CHK_BOOL_EXEC_INFO(outputs.size() != 0, return GRAPH_SUCCESS, "set outputs size is 0.");
 
@@ -209,21 +205,20 @@ class GraphImpl {
   bool IsValid() const { return (compute_graph_ != nullptr); }
 
   graphStatus AddOp(const ge::Operator &op) {
-    std::pair<std::map<string, ge::Operator>::iterator, bool> ret;
-    ret = op_list_.emplace(std::pair<string, ge::Operator>(op.GetName(), op));
+    const auto ret = op_list_.emplace(std::pair<std::string, ge::Operator>(op.GetName(), op));
     GE_CHK_BOOL_RET_STATUS(ret.second != false, GRAPH_FAILED, "[Check][Param] the op have added before, op name:%s.",
                            op.GetName().c_str());
     return GRAPH_SUCCESS;
   }
 
-  graphStatus GetAllOpName(std::vector<string> &op_name) const {
+  graphStatus GetAllOpName(std::vector<std::string> &op_name) const {
     for (const auto &it : op_list_) {
       op_name.push_back(it.second.GetName());
     }
     return GRAPH_SUCCESS;
   }
 
-  graphStatus FindOpByName(const string &name, ge::Operator &op) const {
+  graphStatus FindOpByName(const std::string &name, ge::Operator &op) const {
     auto it = op_list_.find(name);
     GE_CHK_BOOL_EXEC(it != op_list_.end(),
                      REPORT_INNER_ERROR("E19999", "there is no op: %s.", name.c_str());
@@ -232,7 +227,7 @@ class GraphImpl {
     return GRAPH_SUCCESS;
   }
 
-  graphStatus FindOpByType(const string &type, std::vector<ge::Operator> &ops) const {
+  graphStatus FindOpByType(const std::string &type, std::vector<ge::Operator> &ops) const {
     for (auto &op : op_list_) {
       auto op_type = op.second.GetOpType();
       if (op_type == type) {
@@ -325,7 +320,7 @@ class GraphImpl {
  private:
   std::string name_;
   std::string output_name_;
-  std::map<string, ge::Operator> op_list_;
+  std::map<std::string, ge::Operator> op_list_;
   ComputeGraphPtr compute_graph_{nullptr};
 };
 
@@ -398,7 +393,7 @@ graphStatus Graph::FindOpByName(const char *name, Operator &op) const {
   return impl_->FindOpByName(op_name, op);
 }
 
-graphStatus Graph::FindOpByType(const string &type, std::vector<ge::Operator> &ops) const {
+graphStatus Graph::FindOpByType(const std::string &type, std::vector<ge::Operator> &ops) const {
   GE_CHECK_NOTNULL(impl_);
   return impl_->FindOpByType(type, ops);
 }
@@ -414,7 +409,7 @@ graphStatus Graph::FindOpByType(const char *type, std::vector<ge::Operator> &ops
   return impl_->FindOpByType(op_type, ops);
 }
 
-Graph &Graph::SetInputs(const vector<ge::Operator> &inputs) {
+Graph &Graph::SetInputs(const std::vector<ge::Operator> &inputs) {
   GE_CHK_BOOL_EXEC(impl_ != nullptr, REPORT_INNER_ERROR("E19999", "graph can not be used, impl is nullptr.");
                    return *this, "[Check][Param] SetInputs failed: graph can not be used, impl is nullptr.");
   GE_CHK_BOOL_EXEC(inputs.size() > 0, REPORT_INNER_ERROR("E19999", "input operator size can not be 0");
@@ -423,7 +418,7 @@ Graph &Graph::SetInputs(const vector<ge::Operator> &inputs) {
   return *this;
 }
 
-Graph &Graph::SetOutputs(const vector<ge::Operator> &outputs) {
+Graph &Graph::SetOutputs(const std::vector<ge::Operator> &outputs) {
   if (impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "graph can not be used, impl is nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.");
@@ -443,7 +438,7 @@ Graph &Graph::SetOutputs(const std::vector<std::pair<Operator, std::vector<size_
   return *this;
 }
 
-Graph &Graph::SetOutputs(const std::vector<pair<Operator, string>> &outputs) {
+Graph &Graph::SetOutputs(const std::vector<std::pair<Operator, std::string>> &outputs) {
   GE_CHK_BOOL_EXEC(impl_ != nullptr, REPORT_INNER_ERROR("E19999", "graph can not be used, impl is nullptr.");
                    return *this, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.")
   (void)impl_->SetOutputs(outputs);
@@ -453,7 +448,7 @@ Graph &Graph::SetOutputs(const std::vector<pair<Operator, string>> &outputs) {
 Graph &Graph::SetOutputs(const std::vector<std::pair<ge::Operator, AscendString>> &outputs) {
   GE_CHK_BOOL_EXEC(impl_ != nullptr, REPORT_INNER_ERROR("E19999", "graph can not be used, impl is nullptr.");
                    return *this, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.")
-  vector<std::pair<ge::Operator, std::string>> graph_outputs;
+  std::vector<std::pair<ge::Operator, std::string>> graph_outputs;
   for (auto &item : outputs) {
     const char *name = item.second.GetString();
     if (name != nullptr) {
@@ -467,7 +462,7 @@ Graph &Graph::SetOutputs(const std::vector<std::pair<ge::Operator, AscendString>
   return *this;
 }
 
-Graph &Graph::SetTargets(const vector<ge::Operator> &targets) {
+Graph &Graph::SetTargets(const std::vector<ge::Operator> &targets) {
   if (impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "graph can not be used, impl is nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetTargets failed: graph can not be used, impl is nullptr.");
@@ -809,7 +804,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraphPtr GraphUtils::GetCo
   return graph.impl_->compute_graph_;
 }
 
-graphStatus Graph::SaveToFile(const string &file_name) const {
+graphStatus Graph::SaveToFile(const std::string &file_name) const {
   Model model = Model();
   model.SetGraph(*this);
   return model.SaveToFile(file_name);
@@ -828,7 +823,7 @@ graphStatus Graph::SaveToFile(const char *file_name) const {
   return model.SaveToFile(file);
 }
 
-graphStatus Graph::LoadFromFile(const string &file_name) {
+graphStatus Graph::LoadFromFile(const std::string &file_name) {
   Model model = Model();
   graphStatus ret = model.LoadFromFile(file_name);
   if (ret != GRAPH_SUCCESS) {
@@ -901,8 +896,8 @@ GraphUtils::CopyGraphImpl(const Graph &src_graph, Graph &dst_graph,
   GE_CHECK_NOTNULL(dst_graph.impl_);
   GE_CHECK_NOTNULL(src_graph.impl_);
 
-  std::map<string, ge::Operator> &dst_op_list = dst_graph.impl_->op_list_;
-  const std::map<string, ge::Operator> &src_op_list = src_graph.impl_->op_list_;
+  std::map<std::string, ge::Operator> &dst_op_list = dst_graph.impl_->op_list_;
+  const std::map<std::string, ge::Operator> &src_op_list = src_graph.impl_->op_list_;
   auto &dst_compute_graph = dst_graph.impl_->compute_graph_;
 
   dst_graph.impl_->output_name_ = src_graph.impl_->output_name_;

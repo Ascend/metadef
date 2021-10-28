@@ -40,8 +40,10 @@ namespace ge {
 namespace {
 const char* const kPreOpInputShapeRange = "_pre_op_in_range";
 
-const static std::set<string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
-const static std::map<string, string> kGeLocalOpMapping{{"StreamMerge", "Merge"}, {"MemcpyAsync", "Identity"}};
+const static std::set<std::string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
+const static std::map<std::string, std::string> kGeLocalOpMapping{
+    { "StreamMerge", "Merge" }, { "MemcpyAsync", "Identity" }
+};
 const int32_t kMaxRecursionDepth = 10;
 
 bool IsOpWithSubgraph(const NodePtr &node) {
@@ -164,7 +166,7 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
   for (size_t i = 0; i < ref_out_tensors.size(); i++) {
     auto ref_out_tensor = ref_out_tensors[i].at(0);
     auto out_shape = ref_out_tensor.MutableShape();
-    vector<std::pair<int64_t, int64_t>> data_shape_range;
+    std::vector<std::pair<int64_t, int64_t>> data_shape_range;
     // ref_i's data and output tensor shape should be same
     for (auto &tensor : ref_data_tensors[i]) {
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
@@ -405,8 +407,8 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
   return UpdateParentNodeForBranch(node, ref_out_tensors);
 }
 
-string Serial(const vector<int64_t> &dims) {
-  string serial_string;
+std::string Serial(const std::vector<int64_t> &dims) {
+  std::string serial_string;
   serial_string += "[";
   for (int64_t dim : dims) {
     serial_string += std::to_string(dim) + " ";
@@ -469,8 +471,8 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
              peer_out_data_node->GetName().c_str(), peer_out_idx,
              TypeUtils::DataTypeToSerialString(peer_out_dtype).c_str());
     } else if ((!in_shape.empty()) && (in_shape != peer_out_shape)) {
-      string in_shape_str = Serial(in_shape);
-      string peer_out_shape_str = Serial(peer_out_shape);
+      std::string in_shape_str = Serial(in_shape);
+      std::string peer_out_shape_str = Serial(peer_out_shape);
       GELOGW("[Update][InputDesc] current node [%s] [%d]\'th in_shape is [%s].peer output node [%s] [%d]\'th "
              "output_shape is [%s]. The two shape should be same! Please check graph and fix it",
              node_ptr->GetName().c_str(), in_idx, in_shape_str.c_str(),
@@ -527,7 +529,7 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     ss << "(origin_shape:" << input_desc->GetOriginShape().ToString() << "),";
     ss << "(origin_format:" << TypeUtils::FormatToSerialString(input_desc->GetOriginFormat()) << "),";
     ss << "(origin_dtype:" << TypeUtils::DataTypeToSerialString(input_desc->GetOriginDataType()) << "),";
-    string range_str;
+    std::string range_str;
     SerialShapeRange(input_desc, range_str);
     ss << "(shape_range:" << range_str << ")]";
     in_idx++;
@@ -545,7 +547,7 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     ss << "(origin_shape:" << output_desc->GetOriginShape().ToString() << "),";
     ss << "(origin_format:" << TypeUtils::FormatToSerialString(output_desc->GetOriginFormat()) << "),";
     ss << "(origin_dtype:" << TypeUtils::DataTypeToSerialString(output_desc->GetOriginDataType()) << "),";
-    string range_str;
+    std::string range_str;
     SerialShapeRange(output_desc, range_str);
     ss << "(shape_range:" << range_str << ")]";
     out_idx++;
@@ -597,7 +599,7 @@ Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, int out_idx, 
         GE_CHECK_NOTNULL(peer_out_data_anchor);
         auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
         if (IsOpWithSubgraph(peer_out_data_node)) {
-          map<NodePtr, int32_t> tmp_nodes;
+          std::map<NodePtr, int32_t> tmp_nodes;
           if (GetOutNodesByParentNodeOutIndex(peer_out_data_node, peer_out_data_anchor->GetIdx(), tmp_nodes,
                                               depth + 1) != SUCCESS) {
             REPORT_CALL_ERROR("E19999", "Get out nodes of %s by index failed.", peer_out_data_node->GetName().c_str());
@@ -618,7 +620,7 @@ Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, int out_idx, 
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus ShapeRefiner::GetRealInNodesAndIndex(NodePtr &input_node, int32_t &output_idx,
-                                                 map<NodePtr, int32_t> &nodes_idx) {
+                                                 std::map<NodePtr, int32_t> &nodes_idx) {
   auto op_desc = input_node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
   while (input_node->GetType() == DATA && op_desc->HasAttr(ATTR_NAME_PARENT_NODE_INDEX)) {
@@ -679,7 +681,7 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceCo
 
     auto input_node = out_anchor->GetOwnerNode();
     auto output_idx = out_anchor->GetIdx();
-    map<NodePtr, int32_t> input_nodes_2_out_idx;
+    std::map<NodePtr, int32_t> input_nodes_2_out_idx;
     if (GetRealInNodesAndIndex(input_node, output_idx, input_nodes_2_out_idx) != SUCCESS) {
       REPORT_CALL_ERROR("E19999", "Failed to get real in nodes and index, node:%s", node->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Get][InNodesAndIndex] of node[%s] failed.", node->GetName().c_str());
@@ -841,7 +843,7 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
   GE_IF_BOOL_EXEC(opdesc == nullptr, REPORT_INNER_ERROR("E19999", "param node has no opdesc, check invalid.");
                   GELOGE(GRAPH_FAILED, "[Get][OpDesc] opdesc is null."); return GRAPH_FAILED);
 
-  vector<ge::DataType> temp_dtype;
+  std::vector<ge::DataType> temp_dtype;
   for (auto &tensor_desc: opdesc->GetAllOutputsDescPtr()) {
       temp_dtype.emplace_back(tensor_desc->GetDataType());
   }

@@ -34,13 +34,11 @@
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
 
-using std::map;
-using std::string;
 using ListValue = ge::proto::AttrDef::ListValue;
 namespace ge {
-bool ModelSerializeImp::ParseNodeIndex(const string &node_index, string &node_name, int32_t &index) {
+bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) {
   auto sep = node_index.rfind(":");
-  if (sep == string::npos) {
+  if (sep == std::string::npos) {
     GELOGW("[Parse][CheckParam] Separator \":\" is not found in node_index.");
     return false;
   }
@@ -324,11 +322,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Unseriali
 }
 
 void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
-                                        std::vector<string> &key_in,
-                                        std::vector<string> &key_out,
+                                        std::vector<std::string> &key_in,
+                                        std::vector<std::string> &key_out,
                                         std::vector<uint32_t> &value_in,
                                         std::vector<uint32_t> &value_out,
-                                        std::vector<string> &opt_input) {
+                                        std::vector<std::string> &opt_input) {
   if (op_desc == nullptr || op_desc->impl_ == nullptr) {
     GELOGE(FAILED, "[Serialize][Opdesc] op desc or impl is nullptr.");
     return;
@@ -339,7 +337,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
              key_in.size(), value_in.size());
     } else {
       for (uint32_t i = 0; i < key_in.size(); ++i) {
-        op_desc->impl_->input_name_idx_.insert(std::pair<string, uint32_t>(key_in.at(i), value_in.at(i)));
+        op_desc->impl_->input_name_idx_.insert(std::pair<std::string, uint32_t>(key_in.at(i), value_in.at(i)));
       }
     }
   }
@@ -349,7 +347,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
              key_out.size(), value_out.size());
     } else {
       for (uint32_t i = 0; i < key_out.size(); ++i) {
-        op_desc->impl_->output_name_idx_.insert(std::pair<string, uint32_t>(key_out.at(i), value_out.at(i)));
+        op_desc->impl_->output_name_idx_.insert(std::pair<std::string, uint32_t>(key_out.at(i), value_out.at(i)));
       }
     }
   }
@@ -362,10 +360,10 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
 
 
 bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) {
-  std::vector<string> opt_input;
-  std::vector<string> key_in;
+  std::vector<std::string> opt_input;
+  std::vector<std::string> key_in;
   std::vector<uint32_t> value_in;
-  std::vector<string> key_out;
+  std::vector<std::string> key_out;
   std::vector<uint32_t> value_out;
 
   ExtractMetaDataAttr(op_def_proto, opt_input, key_in, value_in, key_out, value_out);
@@ -414,9 +412,9 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
 
   return true;
 }
-void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, vector<string> &opt_input,
-                                            vector<string> &key_in, vector<uint32_t> &value_in,
-                                            vector<string> &key_out, vector<uint32_t> &value_out) const {
+void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &opt_input,
+                                            std::vector<std::string> &key_in, std::vector<uint32_t> &value_in,
+                                            std::vector<std::string> &key_out, std::vector<uint32_t> &value_out) const {
   if (op_def_proto.attr().count("_opt_input") > 0) {
     auto &name_list = op_def_proto.attr().at("_opt_input").list();
     for (const auto &item_s : name_list.s()) {
@@ -475,7 +473,7 @@ bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op
   // Inputs
   int dst_index = 0;
   for (const auto &input : op_def_proto.input()) {
-    string node_name;
+    std::string node_name;
     int32_t index = 0;
     if (ParseNodeIndex(input, node_name, index)) {
       node_input_node_names_.push_back(NodeNameNodeReq{node_name, index, node, dst_index, op_def_proto.name()});
@@ -557,7 +555,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
   return true;
 }
 
-bool ModelSerializeImp::RebuildOwnership(ComputeGraphPtr &compute_graph, map<string, ComputeGraphPtr> &subgraphs) {
+bool ModelSerializeImp::RebuildOwnership(ComputeGraphPtr &compute_graph,
+                                         std::map<std::string, ComputeGraphPtr> &subgraphs) {
   std::queue<ComputeGraphPtr> all_graphs;
   all_graphs.emplace(compute_graph);
   while (!all_graphs.empty()) {
@@ -608,7 +607,7 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
     }
 
     // 0 is main graph, following is subgraph.
-    map<string, ComputeGraphPtr> subgraphs;
+    std::map<std::string, ComputeGraphPtr> subgraphs;
     for (int idx = 1; idx < graphs_proto.size(); ++idx) {
       ComputeGraphPtr subgraph;
       ModelSerializeImp impl;
@@ -648,7 +647,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
 
   // Inputs
   for (auto input : graph_proto.input()) {
-    string node_name;
+    std::string node_name;
     int32_t index;
     if (ParseNodeIndex(input, node_name, index)) {
       graph_input_node_names_.push_back(NodeNameGraphReq{node_name, index, graph});
@@ -656,7 +655,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
   }
   // Outputs
   for (auto output : graph_proto.output()) {
-    string node_name;
+    std::string node_name;
     int32_t index;
     if (ParseNodeIndex(output, node_name, index)) {
       graph_output_node_names_.push_back(NodeNameGraphReq{node_name, index, graph});
@@ -708,7 +707,7 @@ bool ReadProtoFromBinaryFile(const uint8_t *data, size_t len, google::protobuf::
 
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeAllAttrsFromAnyMap(
-    const std::map<string, AnyValue> &attr_map,
+    const std::map<std::string, AnyValue> &attr_map,
     google::protobuf::Map<std::string, ::ge::proto::AttrDef> * mutable_attr) {
 
   if (mutable_attr == nullptr) {

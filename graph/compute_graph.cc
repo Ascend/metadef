@@ -40,7 +40,7 @@ namespace ge {
 namespace {
 const size_t OUTPUT_PARAM_SIZE = 2;
 bool IsUseBFS() {
-  string run_mode;
+  std::string run_mode;
   const int base = 10;
   if (ge::GetContext().GetOption(ge::OPTION_GRAPH_RUN_MODE, run_mode) == GRAPH_SUCCESS && !run_mode.empty()) {
     if (GraphRunMode(std::strtol(run_mode.c_str(), nullptr, base)) >= TRAIN) {
@@ -62,9 +62,9 @@ ComputeGraphImpl::ComputeGraphImpl(const std::string &name)
       need_iteration_(false) {
 }
 
-string ComputeGraphImpl::GetName() const { return name_; }
+std::string ComputeGraphImpl::GetName() const { return name_; }
 
-void ComputeGraphImpl::SetName(const string &name) { name_ = name; }
+void ComputeGraphImpl::SetName(const std::string &name) { name_ = name; }
 
 size_t ComputeGraphImpl::GetAllNodesSize(const ConstComputeGraphPtr &compute_graph) const {
   return GetAllNodes(compute_graph).size();
@@ -111,7 +111,7 @@ ComputeGraphImpl::Vistor<NodePtr> ComputeGraphImpl::GetAllNodes(const NodeFilter
   return Vistor<NodePtr>(compute_graph, all_nodes);
 }
 
-ComputeGraphImpl::Vistor<NodePtr> ComputeGraphImpl::AllGraphNodes(vector<ComputeGraphPtr> &subgraphs,
+ComputeGraphImpl::Vistor<NodePtr> ComputeGraphImpl::AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs,
                                                                   const ConstComputeGraphPtr &compute_graph) const {
   std::vector<NodePtr> all_nodes;
   std::deque<NodePtr> candidates;
@@ -824,7 +824,7 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                                                     const ConstComputeGraphPtr &compute_graph) {
   GELOGI("Runing_Bfs_Sort: %s", name_.c_str());
   std::vector<NodePtr> stack_input;
-  std::map<string, NodePtr> breadth_node_map;
+  std::map<std::string, NodePtr> breadth_node_map;
   // Record the number of non data nodes but no input nodes
   GE_CHK_BOOL_EXEC(SortNodes(stack_input, map_in_edge_num, compute_graph) == GRAPH_SUCCESS,
                    return GRAPH_FAILED, "sort nodes failed");
@@ -854,7 +854,7 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
 }
 
 graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                    std::map<string, NodePtr> &breadth_node_map) {
+                                                    std::map<std::string, NodePtr> &breadth_node_map) {
   for (const auto &anchor : node->GetAllOutDataAnchors()) {
     for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
       auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
@@ -1405,9 +1405,9 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
     return;
   }
 
-  vector<string> nodes = StringUtils::Split(output_name, ';');
-  for (string node : nodes) {
-    vector<string> item = StringUtils::Split(node, ':');
+  std::vector<std::string> nodes = StringUtils::Split(output_name, ';');
+  for (std::string node : nodes) {
+    std::vector<std::string> item = StringUtils::Split(node, ':');
     if (item.size() != OUTPUT_PARAM_SIZE) {
       REPORT_INNER_ERROR("W19999", "Check output param size failed, output_name:%s", output_name.c_str());
       GELOGW("[Check][Output] Check output param size failed, output_name:%s", output_name.c_str());
@@ -1444,7 +1444,7 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
 
 const std::string ComputeGraphImpl::GetOutput() {
   static const int resultDefaultSize = 2048;
-  string result;
+  std::string result;
   result.reserve(resultDefaultSize);
   auto iter = out_nodes_map_.begin();
   while (iter != out_nodes_map_.end()) {
@@ -1497,9 +1497,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::ComputeGraph(ge::Co
     : AttrHolder(std::move(compute_graph)),
       impl_(std::shared_ptr<ComputeGraphImpl>(new ComputeGraphImpl(std::move(*(compute_graph.impl_))))) {}
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY string ComputeGraph::GetName() const { return impl_->GetName(); }
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string ComputeGraph::GetName() const { return impl_->GetName(); }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetName(const string &name) { impl_->SetName(name); }
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetName(const std::string &name) {
+  impl_->SetName(name);
+}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY size_t ComputeGraph::GetAllNodesSize() const {
   return GetAllNodes().size();
@@ -1515,7 +1517,7 @@ ComputeGraph::GetAllNodes(const NodeFilter &node_filter, const GraphFilter &grap
   return impl_->GetAllNodes(node_filter, graph_filter, shared_from_this());
 }
 
-ComputeGraph::Vistor<NodePtr> ComputeGraph::AllGraphNodes(vector<ComputeGraphPtr> &subgraphs) const {
+ComputeGraph::Vistor<NodePtr> ComputeGraph::AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs) const {
   return impl_->AllGraphNodes(subgraphs, shared_from_this());
 }
 
@@ -1809,7 +1811,7 @@ graphStatus ComputeGraph::BFSTopologicalSorting(std::vector<NodePtr> &node_vec,
 }
 
 graphStatus ComputeGraph::CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                std::map<string, NodePtr> &breadth_node_map) {
+                                                std::map<std::string, NodePtr> &breadth_node_map) {
   return impl_->CollectBreadthOutNode(node, map_in_edge_num, breadth_node_map);
 }
 

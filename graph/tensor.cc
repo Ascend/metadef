@@ -26,7 +26,7 @@
 
 namespace {
 const int64_t UNKNOWN_DIM_SIZE = -1;
-const string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
+const std::string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
 }  // namespace
 
 namespace ge {
@@ -272,7 +272,7 @@ graphStatus Shape::SetDim(size_t idx, int64_t value) {
 }
 
 std::vector<int64_t> Shape::GetDims() const {
-  vector<int64_t> dims;
+  std::vector<int64_t> dims;
   if (impl_ != nullptr) {
     return impl_->dims_;
   }

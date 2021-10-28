@@ -20,11 +20,11 @@ namespace ge {
 
 class OpIO {
  public:
-  OpIO(const string &name, int index, const OperatorImplPtr &owner) : name_(name), index_(index), owner_(owner) {}
+  OpIO(const std::string &name, int index, const OperatorImplPtr &owner) : name_(name), index_(index), owner_(owner) {}
 
   ~OpIO() = default;
 
-  string GetName() const { return name_; }
+  std::string GetName() const { return name_; }
 
   int GetIndex() const { return index_; }
 
@@ -36,7 +36,7 @@ class OpIO {
   }
 
  private:
-  string name_;
+  std::string name_;
   int index_;
   std::shared_ptr<OperatorImpl> owner_;
 };

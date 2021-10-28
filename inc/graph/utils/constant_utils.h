@@ -34,13 +34,13 @@ class ConstantUtils {
   static bool GetWeight(const Operator &op, const uint32_t index, Tensor &weight);
   static bool MutableWeight(const OpDescPtr &op_desc, const uint32_t index, GeTensorPtr &weight);
   static bool SetWeight(const OpDescPtr &op_desc, const uint32_t index, const GeTensorPtr weight);
-  static bool MarkPotentialConst(const OpDescPtr &op_desc, const vector<int> indices, const vector<GeTensorPtr> weights);
+  static bool MarkPotentialConst(const OpDescPtr &op_desc, const std::vector<int> indices, const std::vector<GeTensorPtr> weights);
   static bool UnMarkPotentialConst(const OpDescPtr &op_desc);
  private:
-  static bool GetPotentialWeight(const OpDescPtr &op_desc, vector<uint32_t> &weight_indices,
-                                 vector<ConstGeTensorPtr> &weights);
-  static bool MutablePotentialWeight(const OpDescPtr &op_desc, vector<uint32_t> &weight_indices,
-                                     vector<GeTensorPtr> &weights);
+  static bool GetPotentialWeight(const OpDescPtr &op_desc, std::vector<uint32_t> &weight_indices,
+                                 std::vector<ConstGeTensorPtr> &weights);
+  static bool MutablePotentialWeight(const OpDescPtr &op_desc, std::vector<uint32_t> &weight_indices,
+                                     std::vector<GeTensorPtr> &weights);
 };
 }
 

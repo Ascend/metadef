@@ -736,7 +736,7 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
 inline graphStatus CheckDumpGraphNum(int64_t file_index) {
   thread_local int64_t max_dump_file_num = 0;
   if (max_dump_file_num == 0) {
-    string opt = "0";
+    std::string opt = "0";
     (void)GetContext().GetOption(OPTION_GE_MAX_DUMP_FILE_NUM, opt);
     max_dump_file_num = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
   }
@@ -963,7 +963,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     int64_t fileSize = ftell(file);
     thread_local int64_t max_dump_file_size = 0;
     if (max_dump_file_size == 0) {
-      string opt = "0";
+      std::string opt = "0";
       // Can not check return value
       (void)GetContext().GetOption(OPTION_GE_MAX_DUMP_FILE_SIZE, opt);
       max_dump_file_size = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
@@ -2173,8 +2173,8 @@ graphStatus GraphUtils::CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr
 /// @param [in] all_nodes: all nodes in new graph.
 /// @return success: GRAPH_SUCESS
 ///
-graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const string &prefix,
-                                         const std::unordered_map<string, NodePtr> &all_nodes) {
+graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string &prefix,
+                                         const std::unordered_map<std::string, NodePtr> &all_nodes) {
   if (node == nullptr || node->GetOpDesc() == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node is nullptr or it's opdesc is nullptr. check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node not valid");
@@ -2692,7 +2692,7 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   bool is_ref = false;
   (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_REFERENCE, is_ref);
   if (is_ref) {
-    const string &output_name = op_desc->GetOutputNameByIndex(output_index);
+    const std::string &output_name = op_desc->GetOutputNameByIndex(output_index);
     for (const auto &input_name : op_desc->GetAllInputNames()) {
       if (!input_name.empty() && (output_name == input_name)) {
         reuse_in_index = op_desc->GetInputIndexByName(input_name);
@@ -4113,8 +4113,9 @@ void PartialGraphBuilder::BuildExistNodes(graphStatus &error_code, std::string &
   GELOGD("Build exist nodes succ.");
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::TopologicalSortingByName(
-        const ge::ComputeGraphPtr &compute_graph, vector<NodePtr> &node_vec) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::TopologicalSortingByName(const ge::ComputeGraphPtr &compute_graph,
+                                                 std::vector<NodePtr> &node_vec) {
   if (compute_graph == nullptr || compute_graph->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "Param compute_graph is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Compute graph or impl is nullptr.");
@@ -4134,8 +4135,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::Topologic
 
   std::queue<NodePtr> stack;
   NodePtr cur_node = nullptr;
-  std::map<string, NodePtr> name_node_map;
-  vector<string> nodes_name;
+  std::map<std::string, NodePtr> name_node_map;
+  std::vector<std::string> nodes_name;
   while (!stack_input.empty() || !stack.empty()) {
     if (!stack.empty()) {
       cur_node = stack.front();

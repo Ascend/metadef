@@ -36,10 +36,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
 
   ~Model() = default;
 
-  Model(const string &name, const string &custom_version);
+  Model(const std::string &name, const std::string &custom_version);
 
-  string GetName() const;
-  void SetName(const string &name);
+  std::string GetName() const;
+  void SetName(const std::string &name);
 
   uint32_t GetVersion() const;
 
@@ -47,7 +47,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
 
   std::string GetPlatformVersion() const;
 
-  void SetPlatformVersion(string version) { platform_version_ = version; }
+  void SetPlatformVersion(std::string version) { platform_version_ = version; }
 
   Graph GetGraph() const;
 
@@ -83,7 +83,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
   friend class OnnxUtils;
   friend class ModelHelper;
   friend class ModelBuilder;
-  string name_;
+  std::string name_;
   uint32_t version_;
   std::string platform_version_{""};
   Graph graph_;

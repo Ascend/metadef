@@ -29,39 +29,39 @@ using namespace std;
 
 namespace ge {
 std::set<std::string> control_anchor;
-std::vector<string> types = {
+std::vector<std::string> types = {
     "DT_FLOAT", "DT_FLOAT16", "DT_INT8",          "DT_INT32",          "DT_UINT8",    "",
     "DT_INT16", "DT_UINT16",  "DT_UINT32",        "DT_INT64",          "DT_UINT64",   "DT_DOUBLE",
     "DT_BOOL",  "DT_DUAL",    "DT_DUAL_SUB_INT8", "DT_DUAL_SUB_UINT8", "DT_UNDEFINED"};
 
-std::vector<string> formats = {"FORMAT_NCHW",
-                               "FORMAT_NHWC",
-                               "FORMAT_ND",
-                               "FORMAT_NC1HWC0",
-                               "FORMAT_FRACTAL_Z",
-                               "FORMAT_NC1C0HWPAD",
-                               "FORMAT_NHWC1C0",
-                               "FORMAT_FSR_NCHW",
-                               "FORMAT_FRACTAL_DECONV",
-                               "FORMAT_C1HWNC0",
-                               "FORMAT_FRACTAL_DECONV_TRANSPOSE",
-                               "FORMAT_FRACTAL_DECONV_SP_STRIDE_TRANS",
-                               "FORMAT_NC1HWC0_C04",
-                               "FORMAT_FRACTAL_Z_C04",
-                               "FORMAT_CHWN",
-                               "FORMAT_FRACTAL_DECONV_SP_STRIDE8_TRANS",
-                               "FORMAT_HWCN",
-                               "FORMAT_NC1KHKWHWC0",
-                               "FORMAT_BN_WEIGHT",
-                               "FORMAT_FILTER_HWCK",
-                               "FORMAT_HASHTABLE_LOOKUP_LOOKUPS",
-                               "FORMAT_HASHTABLE_LOOKUP_KEYS",
-                               "FORMAT_HASHTABLE_LOOKUP_VALUE",
-                               "FORMAT_HASHTABLE_LOOKUP_OUTPUT",
-                               "FORMAT_HASHTABLE_LOOKUP_HITS",
-                               "FORMAT_RESERVED"};
+std::vector<std::string> formats = {"FORMAT_NCHW",
+                                    "FORMAT_NHWC",
+                                    "FORMAT_ND",
+                                    "FORMAT_NC1HWC0",
+                                    "FORMAT_FRACTAL_Z",
+                                    "FORMAT_NC1C0HWPAD",
+                                    "FORMAT_NHWC1C0",
+                                    "FORMAT_FSR_NCHW",
+                                    "FORMAT_FRACTAL_DECONV",
+                                    "FORMAT_C1HWNC0",
+                                    "FORMAT_FRACTAL_DECONV_TRANSPOSE",
+                                    "FORMAT_FRACTAL_DECONV_SP_STRIDE_TRANS",
+                                    "FORMAT_NC1HWC0_C04",
+                                    "FORMAT_FRACTAL_Z_C04",
+                                    "FORMAT_CHWN",
+                                    "FORMAT_FRACTAL_DECONV_SP_STRIDE8_TRANS",
+                                    "FORMAT_HWCN",
+                                    "FORMAT_NC1KHKWHWC0",
+                                    "FORMAT_BN_WEIGHT",
+                                    "FORMAT_FILTER_HWCK",
+                                    "FORMAT_HASHTABLE_LOOKUP_LOOKUPS",
+                                    "FORMAT_HASHTABLE_LOOKUP_KEYS",
+                                    "FORMAT_HASHTABLE_LOOKUP_VALUE",
+                                    "FORMAT_HASHTABLE_LOOKUP_OUTPUT",
+                                    "FORMAT_HASHTABLE_LOOKUP_HITS",
+                                    "FORMAT_RESERVED"};
 
-std::vector<string> data_nodes = {"Const", "Data"};
+std::vector<std::string> data_nodes = {"Const", "Data"};
 
 void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &out_) {
   if (node == nullptr) {
@@ -96,13 +96,13 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
     out_ << TAB << TAB << "<tr>";
   }
   for (const auto &anchor : input_anchors) {
-    string anchor_text = op_desc->GetInputNameByIndex(anchor->GetIdx());
+    std::string anchor_text = op_desc->GetInputNameByIndex(anchor->GetIdx());
 
     out_ << "<td port = " << STR_FMT(INPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << output_cnt << "'>"
          << anchor_text << "</td>";
   }
   if (in_control) {
-    string anchor_text = "ctrl";
+    std::string anchor_text = "ctrl";
     out_ << "<td port = " << STR_FMT(INPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << output_cnt << "'>"
          << anchor_text << "</td>";
   }
@@ -118,7 +118,7 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
     out_ << TAB << TAB << "<tr>";
   }
   for (const auto &anchor : output_anchors) {
-    string anchor_text = op_desc->GetOutputNameByIndex(anchor->GetIdx());
+    std::string anchor_text = op_desc->GetOutputNameByIndex(anchor->GetIdx());
 
     out_ << "<td port = " << STR_FMT(OUTPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << input_cnt << "'>"
          << anchor_text << "</td>";
@@ -152,7 +152,7 @@ void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &ou
       GE_CHECK_NOTNULL_EXEC(op, continue);
       if (in_data_anchor != nullptr) {
         dst_node_name = in_data_anchor->GetOwnerNode()->GetName();
-        string des_anchor_index = op->GetInputNameByIndex(static_cast<uint32_t>(in_data_anchor->GetIdx()));
+        std::string des_anchor_index = op->GetInputNameByIndex(static_cast<uint32_t>(in_data_anchor->GetIdx()));
         out_ << " -> " << STR_FMT(dst_node_name);
         out_ << ":" << INPUT_ANCHOR_PORT(des_anchor_index);
         out_ << "[";
@@ -160,14 +160,14 @@ void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &ou
       auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(peer_in_anchor);
       if (in_control_anchor != nullptr) {
         dst_node_name = in_control_anchor->GetOwnerNode()->GetName();
-        string des_anchor_index = "ctrl";
+        std::string des_anchor_index = "ctrl";
         out_ << " -> " << STR_FMT(dst_node_name);
         out_ << ":" << INPUT_ANCHOR_PORT(des_anchor_index);
         out_ << "[";
         out_ << " style=dashed ";
       }
       if (flag != DOT_NOT_SHOW_EDGE_LABEL && in_data_anchor) {
-        string label;
+        std::string label;
         auto src_ops = src_anchor->GetOwnerNode()->GetOpDesc();
         GE_CHECK_NOTNULL_EXEC(src_ops, return);
         auto src_shape = src_ops->GetOutputDesc(src_anchor->GetIdx()).GetShape();

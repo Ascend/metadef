@@ -171,7 +171,7 @@ graphStatus NodeUtils::ClearInDataAnchor(const NodePtr &node_ptr, const InDataAn
                    return GRAPH_FAILED, "[Check][Param] node or in_data_anchor is nullptr");
   bool find_flag = false;
   uint32_t index = 0;
-  vector<InDataAnchorPtr>::iterator it = node_ptr->impl_->in_data_anchors_.end();
+  std::vector<InDataAnchorPtr>::iterator it = node_ptr->impl_->in_data_anchors_.end();
   for (const auto &tmp : node_ptr->impl_->in_data_anchors_) {
     if (tmp == in_data_anchor) {
       find_flag = true;
@@ -669,14 +669,14 @@ graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unkn
 }
 
 graphStatus NodeUtils::GetInputConstData(const ConstNodePtr& node_ptr,
-                                         const string &dst_name,
+                                         const std::string &dst_name,
                                          GeTensorPtr &ge_tensor) {
   GE_CHECK_NOTNULL(node_ptr);
   return NodeUtils::GetInputConstData(*node_ptr, dst_name, ge_tensor);
 }
 
 graphStatus NodeUtils::GetInputConstData(const Node &node,
-                                         const string &dst_name,
+                                         const std::string &dst_name,
                                          GeTensorPtr &ge_tensor) {
   // For inner compute graph
   auto op_desc = node.GetOpDesc();
@@ -1118,8 +1118,8 @@ Status NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
 /// @param [in] node
 /// @return Node
 ///
-vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, int index) {
-  vector<NodePtr> in_data_node_vec;
+std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, int index) {
+  std::vector<NodePtr> in_data_node_vec;
   auto op_desc = node.GetOpDesc();
   GE_CHECK_NOTNULL_EXEC(op_desc, return in_data_node_vec);
   auto subgraph_names = op_desc->GetSubgraphInstanceNames();
@@ -1146,8 +1146,8 @@ vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, int ind
 /// @param [in] node
 /// @return Node
 ///
-vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
-  vector<NodePtr> out_data_node_vec;
+std::vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
+  std::vector<NodePtr> out_data_node_vec;
   auto op_desc = node.GetOpDesc();
   GE_CHECK_NOTNULL_EXEC(op_desc, return out_data_node_vec);
   auto subgraph_names = op_desc->GetSubgraphInstanceNames();
@@ -1180,8 +1180,9 @@ NodePtr NodeUtils::GetInDataNodeByIndex(const Node &node, const int index) {
   return node.GetInDataAnchor(index)->GetPeerOutAnchor()->GetOwnerNode();
 }
 
-vector<pair<InDataAnchorPtr, NodePtr>> NodeUtils::GetOutDataNodesWithAnchorByIndex(const Node &node, const int index) {
-  vector<pair<InDataAnchorPtr, NodePtr>> out_data_nodes;
+std::vector<std::pair<InDataAnchorPtr, NodePtr>> NodeUtils::GetOutDataNodesWithAnchorByIndex(const Node &node,
+                                                                                             const int index) {
+  std::vector<std::pair<InDataAnchorPtr, NodePtr>> out_data_nodes;
   auto out_data_anchor = node.GetOutDataAnchor(index);
   if (out_data_anchor == nullptr) {
     return out_data_nodes;

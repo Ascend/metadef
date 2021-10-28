@@ -35,7 +35,7 @@ using std::vector;
 
 #define ATTR_String(x, ...)                                                 \
   graphStatus get_attr_##x(AscendString &ret) const {                       \
-    string ret_str = __VA_ARGS__;                                           \
+    std::string ret_str = __VA_ARGS__;                                      \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
       ret = AscendString(ret_str.c_str());                                  \
     }                                                                       \
@@ -48,8 +48,8 @@ using std::vector;
   _THIS_TYPE &set_attr_##x(const function<AscendString()> &v) { return *this; }
 
 #define ATTR_ListString(x, ...)                                             \
-  graphStatus get_attr_##x(vector<AscendString> &ret) const {               \
-    vector<string> ret_strs = __VA_ARGS__;                                  \
+  graphStatus get_attr_##x(std::vector<AscendString> &ret) const {          \
+    std::vector<std::string> ret_strs = __VA_ARGS__;                        \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
       for (auto &ret_str : ret_strs) {                                      \
         ret.emplace_back(ret_str.c_str());                                  \
@@ -57,7 +57,7 @@ using std::vector;
     }                                                                       \
     return GRAPH_SUCCESS;                                                   \
   }                                                                         \
-  _THIS_TYPE &set_attr_##x(const vector<AscendString> &v) {                 \
+  _THIS_TYPE &set_attr_##x(const std::vector<AscendString> &v) {            \
     Operator::SetAttr(#x, v);                                               \
     return *this;                                                           \
   }                                                                         \
@@ -74,8 +74,8 @@ using std::vector;
   }
 
 #define ATTR_ListAscendString(x, ...)                                       \
-  graphStatus get_attr_##x(vector<AscendString> &ret) const {               \
-    vector<AscendString> ret_strs = __VA_ARGS__;                            \
+  graphStatus get_attr_##x(std::vector<AscendString> &ret) const {          \
+    std::vector<AscendString> ret_strs = __VA_ARGS__;                       \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
       for (auto &ret_str : ret_strs) {                                      \
         if (ret_str.GetString() != nullptr) {                               \
@@ -115,13 +115,13 @@ using std::vector;
   _THIS_TYPE &set_attr_##x(const function<AscendString()> &v) { return *this; }
 
 #define REQUIRED_ATTR_ListString(x)                                         \
-  graphStatus get_attr_##x(vector<AscendString> &ret) const {               \
+  graphStatus get_attr_##x(std::vector<AscendString> &ret) const {          \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
       return GRAPH_FAILED;                                                  \
     }                                                                       \
     return GRAPH_SUCCESS;                                                   \
   }                                                                         \
-  _THIS_TYPE &set_attr_##x(const vector<AscendString> &v) {                 \
+  _THIS_TYPE &set_attr_##x(const std::vector<AscendString> &v) {            \
     Operator::SetAttr(#x, v);                                               \
     return *this;                                                           \
   }                                                                         \
@@ -137,7 +137,7 @@ using std::vector;
   }
 
 #define REQUIRED_ATTR_ListAscendString(x)                                   \
-  graphStatus get_attr_##x(vector<AscendString> &ret) const {               \
+  graphStatus get_attr_##x(std::vector<AscendString> &ret) const {          \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
       return GRAPH_FAILED;                                                  \
     }                                                                       \
@@ -187,7 +187,7 @@ class OpReg {
                                                                      \
    public:                                                           \
    ATTRIBUTED_DEPRECATED(x(const char *))                            \
-    explicit x(const string &name) : Operator(name.c_str(), #x) { __##x(); } \
+    explicit x(const std::string &name) : Operator(name.c_str(), #x) { __##x(); } \
     explicit x(const char *name) : Operator(name, #x) { __##x(); }   \
     explicit x(const AscendString &name) : Operator(name, #x) {      \
       __##x(); }                                                     \
@@ -204,7 +204,7 @@ class OpReg {
                                                                             \
  public:                                                                    \
   ATTRIBUTED_DEPRECATED(static const void name_attr_##x(AscendString &))    \
-  static const string name_attr_##x() { return #x; }                        \
+  static const std::string name_attr_##x() { return #x; }                   \
   static const void name_attr_##x(AscendString &attr) {                     \
     attr = AscendString(#x);                                                \
   }                                                                         \
@@ -225,7 +225,7 @@ class OpReg {
  private:                                                                   \
   void __attr_##x() {                                                       \
     Operator::AttrRegister(#x, Op##Type(__VA_ARGS__));                      \
-    string attr_name(#x);                                                   \
+    std::string attr_name(#x);                                              \
     (void)OpReg()
 
 #define REQUIRED_ATTR(x, Type)                                              \
@@ -235,7 +235,7 @@ class OpReg {
                                                                             \
  public:                                                                    \
   ATTRIBUTED_DEPRECATED(static const void name_attr_##x(AscendString &))    \
-  static const string name_attr_##x() { return #x; }                        \
+  static const std::string name_attr_##x() { return #x; }                   \
   static const void name_attr_##x(AscendString &attr_name) {                \
     attr_name = AscendString(#x);                                           \
   }                                                                         \
@@ -256,7 +256,7 @@ class OpReg {
  private:                                                                   \
   void __required_attr_##x() {                                              \
     Operator::RequiredAttrRegister(#x);                                     \
-    string attr_name(#x);                                                   \
+    std::string attr_name(#x);                                              \
     (void)OpReg()
 
 #define INPUT(x, t)                                                            \
@@ -266,12 +266,12 @@ class OpReg {
                                                                                \
  public:                                                                       \
   ATTRIBUTED_DEPRECATED(static const void name_in_##x(AscendString &))         \
-  static const string name_in_##x() { return #x; }                             \
+  static const std::string name_in_##x() { return #x; }                        \
   static const void name_in_##x(AscendString &name) {                          \
     name = AscendString(#x);                                                   \
   }                                                                            \
   ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_input_##x##_by_name(Operator &, const char *)) \
-  _THIS_TYPE &set_input_##x(Operator &v, const string &srcName) {              \
+  _THIS_TYPE &set_input_##x(Operator &v, const std::string &srcName) {         \
     Operator::SetInput(#x, v, srcName.c_str());                                \
     return *this;                                                              \
   }                                                                            \
@@ -304,7 +304,7 @@ class OpReg {
                                                                                \
  public:                                                                       \
  ATTRIBUTED_DEPRECATED(static const void name_in_##x(AscendString &))          \
-  static const string name_in_##x() { return #x; }                             \
+  static const std::string name_in_##x() { return #x; }                        \
   static const void name_in_##x(AscendString &name) {                          \
     name = AscendString(#x);                                                   \
   }                                                                            \
@@ -313,7 +313,7 @@ class OpReg {
     return *this;                                                              \
   }                                                                            \
   ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_input_##x##_by_name(Operator &, const char *))  \
-  _THIS_TYPE &set_input_##x(Operator &v, const string &srcName) {              \
+  _THIS_TYPE &set_input_##x(Operator &v, const std::string &srcName) {         \
     Operator::SetInput(#x, v, srcName.c_str());                                \
     return *this;                                                              \
   }                                                                            \
@@ -342,7 +342,7 @@ class OpReg {
                                                                                  \
  public:                                                                         \
   ATTRIBUTED_DEPRECATED(static const void name_out_##x(AscendString &))          \
-  static const string name_out_##x() { return #x; }                              \
+  static const std::string name_out_##x() { return #x; }                         \
   static const void name_out_##x(AscendString &name) {                           \
     name = AscendString(#x);                                                     \
   }                                                                              \
@@ -381,7 +381,7 @@ class OpReg {
     return *this;                                                                             \
   }                                                                                           \
   ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_dynamic_input_##x(uint32_t, Operator &, const char *))\
-  _THIS_TYPE &set_dynamic_input_##x(uint32_t dstIndex, Operator &v, const string &srcName) {  \
+  _THIS_TYPE &set_dynamic_input_##x(uint32_t dstIndex, Operator &v, const std::string &srcName) {  \
     Operator::SetInput(#x, dstIndex, v, srcName.c_str());                                     \
     return *this;                                                                             \
   }                                                                                           \
@@ -424,7 +424,7 @@ class OpReg {
                                                                                               \
  public:                                                                                      \
   ATTRIBUTED_DEPRECATED(static const void name_graph_##x(AscendString &))                     \
-  static const string name_graph_##x() { return #x; }                                         \
+  static const std::string name_graph_##x() { return #x; }                                    \
   static const void name_graph_##x(AscendString &name) {                                      \
     name = AscendString(#x);                                                                  \
   }                                                                                           \
@@ -452,7 +452,7 @@ class OpReg {
                                                                                               \
  public:                                                                                      \
   ATTRIBUTED_DEPRECATED(static const void name_graph_##x(AscendString &))                     \
-  static const string name_graph_##x() { return #x; }                                         \
+  static const std::string name_graph_##x() { return #x; }                                    \
   static const void name_graph_##x(AscendString &name) {                                      \
     name = AscendString(#x);                                                                  \
   }                                                                                           \
@@ -562,13 +562,13 @@ class OpReg {
 
 graphStatus BroadCastInfer(const function<vector<int64_t>()> &get_in1_shape,
                            const function<vector<int64_t>()> &get_in2_shape,
-                           const function<void(const vector<int64_t> &y_shape)> &set_out_shape);
+                           const function<void(const std::vector<int64_t> &y_shape)> &set_out_shape);
 
 #define BROADCAST_INFER(in1_name, in2_name, out_name)                                       \
   [](Operator op) -> graphStatus {                                                          \
     return BroadCastInfer([&]() { return op.GetInputDescByName(in1_name).GetShape().GetDims(); }, \
                           [&]() { return op.GetInputDescByName(in2_name).GetShape().GetDims(); }, \
-                          [&](const vector<int64_t> &y_shape) {                             \
+                          [&](const std::vector<int64_t> &y_shape) {                        \
                             TensorDesc op_output_desc = op.GetOutputDescByName(out_name);   \
                             op_output_desc.SetShape(ge::Shape(y_shape));                    \
                             (void)op.UpdateOutputDesc(out_name, op_output_desc);});         \
