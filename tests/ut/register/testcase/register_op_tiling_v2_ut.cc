@@ -299,7 +299,7 @@ TEST_F(RegisterOpTilingV2UT, op_ffts_calculate_v2_4) {
   EXPECT_EQ(run_info.size(), 2U);
 }
 
-bool op_tiling_stub_v1(const TeOpParas &op_paras, const OpCompileInfo &compile_info, OpRunInfo &run_info) {
+bool op_tiling_stub_v2(const TeOpParas &op_paras, const OpCompileInfo &compile_info, OpRunInfo &run_info) {
   return false;
 }
 
@@ -320,7 +320,7 @@ TEST_F(RegisterOpTilingV2UT, op_para_calculate_v2_5) {
 
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_func_info.tiling_func_ = op_tiling_stub_v1;
+  op_func_info.tiling_func_ = op_tiling_stub_v2;
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
 
   utils::OpRunInfo run_info;
