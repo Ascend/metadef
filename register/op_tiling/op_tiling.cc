@@ -342,6 +342,7 @@ ge::graphStatus TurnToOpParaCalculateV1(const ge::Node &node, OpRunInfoV2 &run_i
 
 ge::graphStatus TurnToOpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_info,
                                         const OpTilingFuncV2 &tiling_func) {
+  std::cout << "1111111111111111111" << std::endl;
   ge::OpDescPtr op_desc = node.GetOpDesc();
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   std::string op_compile_info_key;

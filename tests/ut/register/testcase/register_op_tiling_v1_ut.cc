@@ -204,6 +204,7 @@ TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_4) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
   GeShape shape;
   GeTensorDesc tensor_desc(shape);
+  tensor_desc.SetOriginShape(shape);
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AddInputDesc("y", tensor_desc);
   op_desc->AddOutputDesc("z", tensor_desc);
@@ -211,7 +212,7 @@ TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_4) {
   string compile_info_json = "{\"_workspace_size_list\":[]}";
   (void)ge::AttrUtils::SetStr(op_desc, ATOMIC_COMPILE_INFO_KEY, compile_info_key);
   (void)ge::AttrUtils::SetStr(op_desc, ATOMIC_COMPILE_INFO_JSON, compile_info_json);
-  std::vector<int64_t> atomic_output_indices = {1};
+  std::vector<int64_t> atomic_output_indices = {0};
   (void) ge::AttrUtils::SetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
 
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
