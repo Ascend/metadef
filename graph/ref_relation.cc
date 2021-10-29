@@ -35,7 +35,7 @@ namespace {
   const std::string kWhile = "While";
   const std::string kIf = "If";
   const std::string kCase = "Case";
-  const std::string kStatelessWhile = "kStatelessWhile";
+  const std::string kStatelessWhile = "StatelessWhile";
 
   std::set<std::string> function_op = {
     kWhile,
