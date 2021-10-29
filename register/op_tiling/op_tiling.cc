@@ -365,8 +365,8 @@ ge::graphStatus TurnToOpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_i
   if (ret) {
     GELOGI("Op tiling v2 succeed. op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   } else {
-    REPORT_CALL_ERROR("E19999", "Fail to call op tiling function v2 of op[%s, %s].",
-                      op_desc->GetType().c_str(), op_desc->GetName().c_str());
+    GELOGW("E19999", "Fail to call op tiling function v2 of op[%s, %s].",
+            op_desc->GetType().c_str(), op_desc->GetName().c_str());
     GELOGW("Fail to call op tiling function v2 of op[%s, %s].",
            op_desc->GetName().c_str(), op_desc->GetType().c_str());
   }
