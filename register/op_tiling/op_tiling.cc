@@ -342,7 +342,6 @@ ge::graphStatus TurnToOpParaCalculateV1(const ge::Node &node, OpRunInfoV2 &run_i
 
 ge::graphStatus TurnToOpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_info,
                                         const OpTilingFuncV2 &tiling_func) {
-  std::cout << "1111111111111111111" << std::endl;
   ge::OpDescPtr op_desc = node.GetOpDesc();
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   std::string op_compile_info_key;
@@ -364,6 +363,7 @@ ge::graphStatus TurnToOpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_i
   ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
   bool ret = (tiling_func)(op_param, op_compile_info, run_info);
   if (ret) {
+    std::cout << "1111111111111111111" << std::endl;
     GELOGI("Op tiling v2 succeed. op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   } else {
     GELOGW("E19999", "Fail to call op tiling function v2 of op[%s, %s].",

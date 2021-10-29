@@ -200,32 +200,4 @@ TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_3) {
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
-TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_4) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  GeShape shape;
-  GeTensorDesc tensor_desc(shape);
-  tensor_desc.SetOriginShape(shape);
-  op_desc->AddInputDesc("x", tensor_desc);
-  op_desc->AddInputDesc("y", tensor_desc);
-  op_desc->AddOutputDesc("z", tensor_desc);
-  string compile_info_key = "compile_info_key";
-  string compile_info_json = "{\"_workspace_size_list\":[]}";
-  (void)ge::AttrUtils::SetStr(op_desc, ATOMIC_COMPILE_INFO_KEY, compile_info_key);
-  (void)ge::AttrUtils::SetStr(op_desc, ATOMIC_COMPILE_INFO_JSON, compile_info_json);
-  std::vector<int64_t> atomic_output_indices = {0};
-  (void) ge::AttrUtils::SetListInt(op_desc, ge::ATOMIC_ATTR_OUTPUT_INDEX, atomic_output_indices);
-
-  ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
-  NodePtr node = graph->AddNode(op_desc);
-
-  std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
-  OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_func_info.tiling_func_ = op_tiling_stub_v2;
-  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
-  utils::OpRunInfo run_info;
-  graphStatus ret = OpAtomicCalculateV2(*node, run_info);
-  EXPECT_EQ(ret, GRAPH_FAILED);
-  tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-}
-
 }
