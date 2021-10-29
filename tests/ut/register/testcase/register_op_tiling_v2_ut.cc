@@ -299,6 +299,10 @@ TEST_F(RegisterOpTilingV2UT, op_ffts_calculate_v2_4) {
   EXPECT_EQ(run_info.size(), 2U);
 }
 
+bool op_tiling_stub_v1(const TeOpParas &op_paras, const OpCompileInfo &compile_info, OpRunInfo &run_info) {
+  return false;
+}
+
 TEST_F(RegisterOpTilingV2UT, op_para_calculate_v2_5) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV2");
   GeShape shape({4,3,16,16});
@@ -313,6 +317,12 @@ TEST_F(RegisterOpTilingV2UT, op_para_calculate_v2_5) {
 
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
+
+  std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+  op_func_info.tiling_func_ = op_tiling_stub_v1;
+  tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
+
   utils::OpRunInfo run_info;
   graphStatus ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);

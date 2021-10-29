@@ -26,10 +26,6 @@ bool op_tiling_stub_v1(const TeOpParas &op_paras, const OpCompileInfo &compile_i
   return true;
 }
 
-bool op_tiling_stub_v2(const TeOpParas &op_paras, const OpCompileInfo &compile_info, OpRunInfo &run_info) {
-  return false;
-}
-
 REGISTER_OP_TILING(ReluV1, op_tiling_stub_v1);
 //REGISTER_OP_TILING(DynamicAtomicAddrClean, op_tiling_stub_v1);
 
