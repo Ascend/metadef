@@ -325,6 +325,7 @@ TEST_F(RegisterOpTilingV2UT, op_para_calculate_v2_5) {
 
   utils::OpRunInfo run_info;
   graphStatus ret = OpParaCalculateV2(*node, run_info);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 }
