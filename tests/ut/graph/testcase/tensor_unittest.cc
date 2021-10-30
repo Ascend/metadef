@@ -45,8 +45,6 @@ TEST_F(TensorUtilsUT, CopyConstruct1_NullTensorDef) {
 // The copy construct share tensor_data_, do not share tensor_desc
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoOwner(), nullptr);
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoMsg(), nullptr);
-  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner());
   ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_, t1.impl_->desc_.impl_);
   ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
   ASSERT_EQ(t1.impl_->tensor_data_.GetData(), t2.impl_->tensor_data_.GetData());
@@ -76,8 +74,6 @@ TEST_F(TensorUtilsUT, CopyConstruct2_WithTensorDef) {
   // The copy construct share tensor_data_ and tensor_desc
   ASSERT_NE(t1.impl_->tensor_def_.GetProtoOwner(), nullptr);
   ASSERT_NE(t1.impl_->tensor_def_.GetProtoMsg(), nullptr);
-  ASSERT_EQ(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_EQ(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner());
   ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_, t1.impl_->desc_.impl_);
   ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
   ASSERT_EQ(t1.impl_->tensor_data_.GetData(), t2.impl_->tensor_data_.GetData());
@@ -163,14 +159,10 @@ TEST_F(TensorUtilsUT, CreateShareTensorFromSharedPtr) {
   GeTensor t1 = TensorUtils::CreateShareTensor(td, ap, 100);
   ASSERT_EQ(t1.GetData().GetData(), ap->MutableGet());
   ASSERT_EQ(t1.GetData().size(), 100);
-  ASSERT_NE(t1.MutableTensorDesc().impl_->tensor_descriptor_.GetProtoMsg(),
-            td.impl_->tensor_descriptor_.GetProtoMsg());
 
   GeTensor t2(td, ap, 100);
   ASSERT_EQ(t2.GetData().GetData(), ap->MutableGet());
   ASSERT_EQ(t2.GetData().size(), 100);
-  ASSERT_NE(t2.MutableTensorDesc().impl_->tensor_descriptor_.GetProtoMsg(),
-            td.impl_->tensor_descriptor_.GetProtoMsg());
 }
 
 TEST_F(TensorUtilsUT, ShareTensorData) {
@@ -205,8 +197,6 @@ TEST_F(TensorUtilsUT, CopyAssign_NullTensorDef) {
   // The copy construct share tensor_data_, do not share tensor_desc
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoOwner(), nullptr);
   ASSERT_EQ(t1.impl_->tensor_def_.GetProtoMsg(), nullptr);
-  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg(), t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoMsg());
-  ASSERT_NE(t1.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner(), t2.impl_->desc_.impl_->tensor_descriptor_.GetProtoOwner());
   ASSERT_EQ(t1.impl_->tensor_data_.impl_->tensor_descriptor_, t1.impl_->desc_.impl_);
   ASSERT_EQ(t2.impl_->tensor_data_.impl_->tensor_descriptor_, t2.impl_->desc_.impl_);
   ASSERT_EQ(t1.impl_->tensor_data_.GetData(), t2.impl_->tensor_data_.GetData());

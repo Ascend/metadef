@@ -24,6 +24,7 @@
 #include "graph/ge_tensor_impl.h"
 #include "graph/ge_attr_value.h"
 #include "graph/model_serialize.h"
+#include "graph/small_vector.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/utils/ge_ir_utils.h"
@@ -32,6 +33,20 @@
 
 namespace ge {
 namespace{
+template <typename T>
+class IntegerChecker {
+ public:
+  template <typename T1>
+  static bool Compat(T1 v) {
+    static_assert((sizeof(T) <= sizeof(uint64_t) && sizeof(T1) <= sizeof(uint64_t)),
+                  "IntegerChecker can only check integers less than 64 bits");
+    if (v >= static_cast<T1>(0)) {
+      return static_cast<uint64_t>(v) <= static_cast<uint64_t>(std::numeric_limits<T>::max());
+    }
+    return static_cast<int64_t>(v) >= static_cast<int64_t>(std::numeric_limits<T>::min());
+  }
+};
+
 const char *const kKeyDataTypeSelfDefined = "__tensor_desc_data_type__";
 const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_UNDEFINED, proto::DT_UNDEFINED},
@@ -117,17 +132,29 @@ void GeTensorSerializeUtils::GeShapeAsProto(const GeShape &shape, proto::ShapeDe
 }
 void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, proto::TensorDescriptor *proto) {
   if (proto != nullptr) {
-    // 后续修改为从anymap中拷贝至protobuf
-    if (desc.tensor_descriptor_.protoMsg_ != nullptr) {
-      *proto = *(desc.tensor_descriptor_.protoMsg_);
+    // serialize extension tensor meta data
+    proto->set_size(desc.ext_meta_.GetSize());
+    proto->set_weight_size(desc.ext_meta_.GetWeightSize());
+    proto->set_reuse_input(desc.ext_meta_.GetReuseInput());
+    proto->set_output_tensor(desc.ext_meta_.GetOutputTensor());
+    if (kDeviceToStrMap.find(desc.ext_meta_.GetDeviceType()) != kDeviceToStrMap.end()) {
+      proto->set_device_type(kDeviceToStrMap.at(desc.ext_meta_.GetDeviceType()));
     }
+    proto->set_input_tensor(desc.ext_meta_.GetInputTensor());
+    proto->set_real_dim_cnt(desc.ext_meta_.GetRealDimCnt());
+    proto->set_reuse_input_index(desc.ext_meta_.GetReuseInputIndex());
+    proto->set_data_offset(desc.ext_meta_.GetDataOffset());
+    proto->set_cmps_size(desc.ext_meta_.GetCmpsSize());
+    proto->set_cmps_tab(desc.ext_meta_.GetCmpsTab());
+    proto->set_cmps_tab_offset(desc.ext_meta_.GetCmpsTabOffset());
 
+    // serialize attributes
     if (!ModelSerializeImp::SerializeAllAttrsFromAnyMap(desc.attrs_.GetAllAttrs(), proto->mutable_attr())) {
       GELOGE(GRAPH_FAILED, "GeTensorDesc attr serialize failed.");
       return;
     }
 
-    // 需要在序列化时将高频字段序列化为属性
+    // serialize member object
     (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_FORMAT].set_s(TypeUtils::FormatToSerialString(desc.GetOriginFormat()));
     if (desc.GetOriginDataType() != DT_UNDEFINED) {
       (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_DATA_TYPE].set_s(
@@ -144,11 +171,10 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
       origin_shape_proto_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_INT);
     }
 
-    // 如果是自定义类型，此时在any map拷贝的时候已经填充了，此时设不设置set_dtype都无所谓了
     auto iter = kDataTypeMap.find(desc.GetDataType());
     if (iter != kDataTypeMap.end()) {
       proto->set_dtype(iter->second);
-    } else {
+    } else { // maybe custom data type
       proto->set_dtype(kDataTypeMap.at(DT_UNDEFINED));
     }
     proto->set_layout(TypeUtils::FormatToSerialString(desc.GetFormat()));
@@ -175,54 +201,6 @@ void GeTensorSerializeUtils::GeTensorAsProto(const GeTensor &tensor, proto::Tens
   GeTensorSerializeUtils::GeTensorAsProto(*tensor.impl_, proto);
 }
 
-void GeTensorSerializeUtils::SetAttrToDescriptor(
-    const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &attr_map,
-    GeIrProtoHelper<proto::TensorDescriptor> &descriptor) {
-  if (descriptor.protoMsg_ == nullptr) {
-    return;
-  }
-  auto iter = attr_map.find(TENSOR_UTILS_SIZE);
-  // 下面这一大车看着是把序列化的属性上的值取出来放到成员上，哎
-  if (iter != attr_map.end()) {
-    descriptor.protoMsg_->set_size(iter->second.i());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_WEIGHT_SIZE))) {
-    descriptor.protoMsg_->set_weight_size(iter->second.i());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_REUSE_INPUT))) {
-    descriptor.protoMsg_->set_reuse_input(iter->second.b());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_OUTPUT_TENSOR))) {
-    descriptor.protoMsg_->set_output_tensor(iter->second.b());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_DEVICE_TYPE))) {
-    descriptor.protoMsg_->set_device_type(iter->second.s());
-  } else {
-    descriptor.protoMsg_->set_device_type("NPU");
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_INPUT_TENSOR))) {
-    descriptor.protoMsg_->set_input_tensor(iter->second.b());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_REAL_DIM_CNT))) {
-    descriptor.protoMsg_->set_real_dim_cnt(iter->second.i());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_REUSE_INPUT_INDEX))) {
-    descriptor.protoMsg_->set_reuse_input_index(iter->second.i());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_DATA_OFFSET))) {
-    descriptor.protoMsg_->set_data_offset(iter->second.i());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_CMPS_SIZE))) {
-    descriptor.protoMsg_->set_cmps_size(iter->second.i());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_CMPS_TAB))) {
-    descriptor.protoMsg_->set_cmps_tab(iter->second.s());
-  }
-  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_CMPS_TAB_OFFSET))) {
-    descriptor.protoMsg_->set_cmps_tab_offset(iter->second.i());
-  }
-}
-
 void GeTensorSerializeUtils::AssembleGeShapeFromProto(const proto::ShapeDef *proto, GeShape &shape) {
   if (proto != nullptr) {
     shape = std::move(GeShape(nullptr, const_cast<proto::ShapeDef *>(proto)));
@@ -239,8 +217,108 @@ void GeTensorSerializeUtils::AssembleGeTensorFromProto(const proto::TensorDef *p
   }
 }
 
+void GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto::TensorDescriptor *proto) {
+  if (proto == nullptr) {
+    return;
+  }
+  auto &attr_map = *(proto->mutable_attr());
+  auto iter = attr_map.find(TENSOR_UTILS_SIZE);
+  if (iter != attr_map.end()) {
+    proto->set_size(iter->second.i());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_WEIGHT_SIZE))) {
+    proto->set_weight_size(iter->second.i());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_REUSE_INPUT))) {
+    proto->set_reuse_input(iter->second.b());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_OUTPUT_TENSOR))) {
+    proto->set_output_tensor(iter->second.b());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_DEVICE_TYPE))) {
+    proto->set_device_type(iter->second.s());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_INPUT_TENSOR))) {
+    proto->set_input_tensor(iter->second.b());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_REAL_DIM_CNT))) {
+    proto->set_real_dim_cnt(iter->second.i());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_REUSE_INPUT_INDEX))) {
+    proto->set_reuse_input_index(iter->second.i());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_DATA_OFFSET))) {
+    proto->set_data_offset(iter->second.i());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_CMPS_SIZE))) {
+    proto->set_cmps_size(iter->second.i());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_CMPS_TAB))) {
+    proto->set_cmps_tab(iter->second.s());
+  }
+  if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_CMPS_TAB_OFFSET))) {
+    proto->set_cmps_tab_offset(iter->second.i());
+  }
+}
+
+void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
+  shape.SetDimNum(static_cast<size_t>(proto->shape().dim_size()));
+  size_t i = 0;
+  for (auto dim : proto->shape().dim()) {
+    (void)shape.SetDim(i++, dim);
+  }
+}
+void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
+  auto &attrs = proto->attr();
+  auto iter = attrs.find(TENSOR_UTILS_ORIGIN_SHAPE);
+  if (iter != attrs.end()) {
+    shape.SetDimNum(iter->second.list().i_size());
+    size_t i = 0;
+    for (auto dim : iter->second.list().i()) {
+      (void)shape.SetDim(i++, dim);
+    }
+  }
+}
+void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
+  dtype = DT_UNDEFINED;
+  auto &attrs = proto->attr();
+  auto iter = attrs.find(kKeyDataTypeSelfDefined);
+  if (iter == attrs.end()) {
+    auto proto_dtype = proto->dtype();
+    for (auto item : kDataTypeMap) {
+      if (item.second == proto_dtype) {
+        dtype = item.first;
+      }
+    }
+  } else { // Custom defined data type set
+    int64_t data_type_proto = iter->second.i();
+    for (auto it : kDataTypeSelfDefinedMap) {
+      if (it.second == data_type_proto) {
+        dtype = it.first;
+      }
+    }
+  }
+}
+void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
+  auto &attrs = proto->attr();
+  auto iter = attrs.find(TENSOR_UTILS_ORIGIN_DATA_TYPE);
+  if (iter != attrs.end()) {
+    dtype = TypeUtils::SerialStringToDataType(iter->second.s());
+  }
+}
+void GeTensorSerializeUtils::GetFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
+  format = TypeUtils::SerialStringToFormat(proto->layout());
+}
+void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
+  auto &attrs = proto->attr();
+  auto iter = attrs.find(TENSOR_UTILS_ORIGIN_FORMAT);
+  if (iter != attrs.end()) {
+    format = TypeUtils::SerialStringToFormat(iter->second.s());
+  }
+}
+
 class GeShapeImpl {
-  using DimsType = std::vector<int64_t>;
+  using DimsType = SmallVector<int64_t, 8>;
  public:
   GeShapeImpl() = default;
   ~GeShapeImpl() = default;
@@ -457,7 +535,7 @@ GeShape &GeShape::operator=(const GeShape &other) {
 
 GeShape &GeShape::operator=(GeShape &&other) {
   if (&other != this) {
-    *impl_ = std::move(*(other.impl_));
+    impl_ = other.impl_;
   }
   return *this;
 }
@@ -466,116 +544,57 @@ bool GeShape::operator==(const GeShape &other) const {
   return *impl_ == *(other.impl_);
 }
 
-GeTensorDescImpl::GeTensorDescImpl() {
-  tensor_descriptor_.InitDefault();
-  Init();
-}
-
 GeTensorDescImpl::GeTensorDescImpl(const GeShape &shape, Format format, DataType dt) : GeTensorDescImpl() {
   SetFormat(format);
   SetDataType(dt);
   shape_ = shape;
 }
 
-GeTensorDescImpl::GeTensorDescImpl(const GeTensorDescImpl &desc) : GeTensorDescImpl() {
-  // 替换为any map后删除该函数
-  tensor_descriptor_.CopyValueFrom(desc.tensor_descriptor_);
-  shape_ = desc.shape_;
-  format_ = desc.format_;
-  dtype_ = desc.dtype_;
-  origin_shape_ = desc.origin_shape_;
-  origin_format_ = desc.origin_format_;
-  origin_dtype_ = desc.origin_dtype_;
-  attrs_ = desc.attrs_;
-}
-
-GeTensorDescImpl::GeTensorDescImpl(GeTensorDescImpl &&desc) : GeTensorDescImpl() {
-  // 替换为any map后删除该函数
-  tensor_descriptor_.MoveValueFrom(std::move(desc.tensor_descriptor_));
-  shape_ = std::move(desc.shape_);
-  format_ = desc.format_;
-  dtype_ = desc.dtype_;
-  origin_shape_ = std::move(desc.origin_shape_);
-  origin_format_ = desc.origin_format_;
-  origin_dtype_ = desc.origin_dtype_;
-  attrs_ = std::move(desc.attrs_);
-}
-
-
 GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg)
     : GeTensorDescImpl() {
-  // 替换为any map后删除该函数
-  if (tensor_descriptor_.protoMsg_ != nullptr && proto_msg != nullptr) {
-    // 后续修改为从protobuf中拷贝至anymap
-    *tensor_descriptor_.protoMsg_ = *proto_msg;
-    auto &attr_map = *(proto_msg->mutable_attr());
-    auto iter = attr_map.find(TENSOR_UTILS_ORIGIN_FORMAT);
-    // 先将高频字段从protobuf中恢复
-    if (iter != attr_map.end()) {
-      origin_format_ = TypeUtils::SerialStringToFormat(iter->second.s());
-    }
-    if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_ORIGIN_DATA_TYPE))) {
-      origin_dtype_ = TypeUtils::SerialStringToDataType(iter->second.s());
-    }
-    if (attr_map.end() != (iter = attr_map.find(TENSOR_UTILS_ORIGIN_SHAPE))) {
-      origin_shape_.SetDimNum(iter->second.list().i_size());
-      size_t i = 0;
-      for (auto dim : iter->second.list().i()) {
-        origin_shape_.SetDim(i++, dim);
-      }
-    }
-
-    GeTensorSerializeUtils::SetAttrToDescriptor(attr_map, tensor_descriptor_);
-
-    dtype_ = DT_UNDEFINED;
-    auto it_data_type = attr_map.find(kKeyDataTypeSelfDefined);
-    if (it_data_type == attr_map.end()) {
-      auto proto_dtype = proto_msg->dtype();
-      for (auto item : kDataTypeMap) {
-        if (item.second == proto_dtype) {
-          dtype_ = item.first;
-        }
-      }
-    } else { // Custom defined data type set
-      int64_t data_type_proto = it_data_type->second.i();
-      for (auto it : kDataTypeSelfDefinedMap) {
-        if (it.second == data_type_proto) {
-          dtype_ = it.first;
-        }
-      }
-    }
-
-    format_ = TypeUtils::SerialStringToFormat(proto_msg->layout());
-
-    auto dim_size = proto_msg->shape().dim_size();
-    if (dim_size > 0) {
-      shape_.SetDimNum(dim_size);
-      auto &proto_dims = proto_msg->shape().dim();
-      size_t i = 0;
-      for (auto dim : proto_dims) {
-        (void)shape_.SetDim(i++, dim);
-      }
-    }
+  if (proto_msg == nullptr) {
+    GELOGE(INTERNAL_ERROR, "Try assemble ge tensor desc from nullptr proto");
+    return;
   }
+  // normalize the input TensorDescriptor，A metadata information maybe stored in different fields of TensorDescriptor,
+  // This function needs to prioritize and determine the final metadata information used.
+  // After standardization, the direct member field on TensorDescriptor is always valid
+  GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto_msg);
+
+  // store high frequency attributes to member field
+  GeTensorSerializeUtils::GetOriginFormatFromDescProto(proto_msg, origin_format_);
+  GeTensorSerializeUtils::GetOriginDtypeFromDescProto(proto_msg, origin_dtype_);
+  GeTensorSerializeUtils::GetOriginShapeFromDescProto(proto_msg, origin_shape_);
+
+  GeTensorSerializeUtils::GetFormatFromDescProto(proto_msg, format_);
+  GeTensorSerializeUtils::GetDtypeFromDescProto(proto_msg, dtype_);
+  GeTensorSerializeUtils::GetShapeFromDescProto(proto_msg, shape_);
+
+  // get extension tensor desc metadata
+  ext_meta_.SetSize(proto_msg->size());
+  ext_meta_.SetWeightSize(proto_msg->weight_size());
+  ext_meta_.SetReuseInput(proto_msg->reuse_input());
+  ext_meta_.SetOutputTensor(proto_msg->output_tensor());
+  if (kStrToDeviceMap.find(proto_msg->device_type()) != kStrToDeviceMap.end()) {
+    ext_meta_.SetDeviceType(kStrToDeviceMap.at(proto_msg->device_type()));
+  }
+  ext_meta_.SetInputTensor(proto_msg->input_tensor());
+  if (IntegerChecker<uint32_t>::Compat(proto_msg->real_dim_cnt())) {
+    ext_meta_.SetRealDimCnt(static_cast<uint32_t>(proto_msg->real_dim_cnt()));
+  }
+  if (IntegerChecker<uint32_t>::Compat(proto_msg->reuse_input_index())) {
+    ext_meta_.SetReuseInputIndex(static_cast<uint32_t>(proto_msg->reuse_input_index()));
+  }
+  ext_meta_.SetDataOffset(proto_msg->data_offset());
+  ext_meta_.SetCmpsSize(proto_msg->cmps_size());
+  ext_meta_.SetCmpsTab(proto_msg->cmps_tab());
+  ext_meta_.SetCmpsTabOffset(proto_msg->cmps_tab_offset());
+
+  // note that we deserialize attributes in implement of GeTensor constructor
 }
 
 void GeTensorDescImpl::SetDataType(DataType dtype) {
   dtype_ = dtype;
-  return;
-  // 原始的逻辑似乎是在表达，先在原始支持类型kDataTypeMap中找，如果找到了，就认为是基本类型，删除自定义类型属性
-  // 如果kDataTypeMap中没找到，则尝试在kDataTypeSelfDefinedMap中找，如果找到了，设置到自定义类型属性上
-  // 后续修改为对Any map的操作，即如果是常规类型，删除kKeyDataTypeSelfDefined，否则设置kKeyDataTypeSelfDefined为自定义枚举
-  if (tensor_descriptor_.protoMsg_ != nullptr) {
-    auto iter_basic_type = kDataTypeMap.find(dtype);
-    if (iter_basic_type != kDataTypeMap.end()) {
-      (void)tensor_descriptor_.protoMsg_->mutable_attr()->erase(kKeyDataTypeSelfDefined);
-    } else {
-      auto iter_custom_type = kDataTypeSelfDefinedMap.find(dtype);
-      if (iter_custom_type != kDataTypeSelfDefinedMap.end()) {
-        (*tensor_descriptor_.protoMsg_->mutable_attr())[kKeyDataTypeSelfDefined].set_i(iter_custom_type->second);
-      }
-    }
-  }
 }
 
 void GeTensorDescImpl::SetOriginDataType(DataType dtype) {
@@ -584,20 +603,6 @@ void GeTensorDescImpl::SetOriginDataType(DataType dtype) {
 
 DataType GeTensorDescImpl::GetOriginDataType() const {
   return origin_dtype_;
-}
-
-void GeTensorDescImpl::Init() {
-  SetFormat(FORMAT_ND);
-  SetDataType(DT_FLOAT);
-  SetOriginFormat(FORMAT_ND);
-  SetOriginDataType(DT_UNDEFINED);
-  SetDeviceType(DeviceType::NPU);
-  if (tensor_descriptor_.GetProtoMsg() == nullptr) {
-    REPORT_CALL_ERROR("E19999", "ProtoType is nullptr.");
-    GELOGE(GRAPH_FAILED, "[Get][ProtoMsg] ProtoType nullptr.");
-    return;
-  }
-  tensor_descriptor_.GetProtoMsg()->set_has_out_attr(true);
 }
 
 void GeTensorDescImpl::SetFormat(Format format) {
@@ -620,50 +625,15 @@ GeShape &GeTensorDescImpl::OriginShapeReference() const {
   return origin_shape_;
 }
 
-bool GeTensorDescImpl::GeTensorDescAttrsAreEqual(const GeTensorDescImpl &r_ge_tensor_desc) const {
-  const auto &tensor_descriptor = this->tensor_descriptor_.GetProtoMsg();
-  const auto &r_tensor_descriptor = r_ge_tensor_desc.tensor_descriptor_.GetProtoMsg();
-  if (shape_.ToString() != r_ge_tensor_desc.shape_.ToString() ||
-      dtype_ != r_ge_tensor_desc.dtype_ ||
-      format_ != r_ge_tensor_desc.format_) {
-    return false;
-  }
-  if ((tensor_descriptor != nullptr) && (r_tensor_descriptor != nullptr)) {
-    // Message TensorDescriptor in ge_ir.proto
-    return (IsEqual(tensor_descriptor->name(), r_tensor_descriptor->name(), "TensorDescriptor.name()") &&
-            IsEqual(tensor_descriptor->has_out_attr(), r_tensor_descriptor->has_out_attr(),
-                    "TensorDescriptor.has_out_attr()") &&
-            IsEqual(tensor_descriptor->size(), r_tensor_descriptor->size(), "TensorDescriptor.size()") &&
-            IsEqual(tensor_descriptor->weight_size(), r_tensor_descriptor->weight_size(),
-                    "TensorDescriptor.weight_size()") &&
-            IsEqual(tensor_descriptor->reuse_input(), r_tensor_descriptor->reuse_input(),
-                    "TensorDescriptor.reuse_input()") &&
-            IsEqual(tensor_descriptor->output_tensor(), r_tensor_descriptor->output_tensor(),
-                    "TensorDescriptor.output_tensor()") &&
-            IsEqual(tensor_descriptor->device_type(), r_tensor_descriptor->device_type(),
-                    "TensorDescriptor.device_type()") &&
-            IsEqual(tensor_descriptor->input_tensor(), r_tensor_descriptor->input_tensor(),
-                    "TensorDescriptor.input_tensor()") &&
-            IsEqual(tensor_descriptor->real_dim_cnt(), r_tensor_descriptor->real_dim_cnt(),
-                    "TensorDescriptor.real_dim_cnt()") &&
-            IsEqual(tensor_descriptor->reuse_input_index(), r_tensor_descriptor->reuse_input_index(),
-                    "TensorDescriptor.reuse_input_index()") &&
-            IsEqual(tensor_descriptor->data_offset(), r_tensor_descriptor->data_offset(),
-                    "TensorDescriptor.data_offset()") &&
-            IsEqual(tensor_descriptor->cmps_size(), r_tensor_descriptor->cmps_size(), "TensorDescriptor.cmps_size()") &&
-            IsEqual(tensor_descriptor->cmps_tab(), r_tensor_descriptor->cmps_tab(), "TensorDescriptor.cmps_tab()") &&
-            IsEqual(tensor_descriptor->cmps_tab_offset(), r_tensor_descriptor->cmps_tab_offset(),
-                    "TensorDescriptor.cmps_tab_offset()"));
-  } else {
-    return ((tensor_descriptor == nullptr) && (r_tensor_descriptor == nullptr));
-  }
+bool GeTensorDescImpl::GeTensorDescAttrsAreEqual(const GeTensorDescImpl &other) const {
+  // The definition of attribute equality remains unchanged
+  return (shape_ == other.shape_ && dtype_ == other.dtype_ && format_ == other.format_ && ext_meta_ == other.ext_meta_);
 }
 
-bool GeTensorDescImpl::operator==(const GeTensorDescImpl &r_ge_tensor_desc) const {
-  return (shape_ == r_ge_tensor_desc.shape_ && origin_shape_ == r_ge_tensor_desc.origin_shape_ &&
-          format_ == r_ge_tensor_desc.format_ && origin_format_ == r_ge_tensor_desc.origin_format_ &&
-          dtype_ == r_ge_tensor_desc.dtype_ && origin_dtype_ == r_ge_tensor_desc.origin_dtype_ &&
-          GeTensorDescAttrsAreEqual(r_ge_tensor_desc));
+bool GeTensorDescImpl::operator==(const GeTensorDescImpl &other) const {
+  // The definition of attribute equality remains unchanged
+  return (origin_shape_ == other.origin_shape_ && origin_format_ == other.origin_format_ &&
+          origin_dtype_ == other.origin_dtype_ && GeTensorDescAttrsAreEqual(other));
 }
 
 ProtoAttrMap &GeTensorDescImpl::MutableAttrMap() {
@@ -680,88 +650,25 @@ Format GeTensorDescImpl::GetFormat() const {
   return format_;
 }
 
-void GeTensorDescImpl::SetDeviceType(DeviceType type) {
-  auto iter = kDeviceToStrMap.find(type);
-  std::string type_str;
-  if (iter != kDeviceToStrMap.end()) {
-    type_str = iter->second;
-  } else {
-    GELOGW("[Set][DeviceType] not found device type.");
-  }
-  auto tensor_descriptor_msg = tensor_descriptor_.GetProtoMsg();
-  if (tensor_descriptor_msg != nullptr) {
-    tensor_descriptor_msg->set_device_type(type_str);
-  }
-}
-
 void GeTensorDescImpl::SetName(const std::string &name) {
-  auto tensor_descriptor_msg = tensor_descriptor_.GetProtoMsg();
-  if (tensor_descriptor_msg != nullptr) {
-    tensor_descriptor_msg->set_name(name);
-    return;
-  }
-  GELOGW("[SetName]tensor_descriptor_msg is null.");
+  ext_meta_.SetName(name);
 }
 
 const std::string GeTensorDescImpl::GetName() const {
-  auto tensor_descriptor_msg = tensor_descriptor_.GetProtoMsg();
-  if (tensor_descriptor_msg != nullptr) {
-    return tensor_descriptor_msg->name();
-  }
-  GELOGW("[GetName]tensor_descriptor_msg is null.");
-  return "";
+  return ext_meta_.GetName();
 }
 
 DataType GeTensorDescImpl::GetDataType() const {
   return dtype_;
-  // 下面仅在当前的自定义类型逻辑确实需要的时候才添加。
-  // 后续变为判断any map是否为空
-  auto tensor_descriptor_msg = tensor_descriptor_.GetProtoMsg();
-  if (tensor_descriptor_msg == nullptr) {
-    auto &attr_map = *(tensor_descriptor_msg->mutable_attr());
-    auto it_data_type = attr_map.find(kKeyDataTypeSelfDefined);
-    if (it_data_type == attr_map.end()) {
-      return dtype_;
-    } else { // Custom defined data type set
-      int64_t data_type_proto = it_data_type->second.i();
-      for (auto it : kDataTypeSelfDefinedMap) {
-        if (it.second == data_type_proto) {
-          return it.first;
-        }
-      }
-    }
-  }
-  return dtype_;
 }
 
-GeTensorDescImpl &GeTensorDescImpl::operator=(const GeTensorDescImpl &desc) {
-  // 替换为any map后删除该函数
-  if (&desc != this) {
-    tensor_descriptor_.CopyValueFrom(desc.tensor_descriptor_);
-    shape_ = desc.shape_;
-    format_ = desc.format_;
-    dtype_ = desc.dtype_;
-    origin_shape_ = desc.origin_shape_;
-    origin_format_ = desc.origin_format_;
-    origin_dtype_ = desc.origin_dtype_;
-    attrs_ = desc.attrs_;
+std::string GeTensorDescImpl::ExtMeta::GetDeviceTypeStr() {
+  auto iter = kDeviceToStrMap.find(device_type);
+  if (iter != kDeviceToStrMap.end()) {
+    return iter->second;
   }
-  return *this;
-}
-
-GeTensorDescImpl &GeTensorDescImpl::operator=(GeTensorDescImpl &&desc) {
-  // 替换为any map后删除该函数
-  if (&desc != this) {
-    tensor_descriptor_.CopyValueFrom(std::move(desc.tensor_descriptor_));
-    shape_ = std::move(desc.shape_);
-    format_ = desc.format_;
-    dtype_ = desc.dtype_;
-    origin_shape_ = std::move(desc.origin_shape_);
-    origin_format_ = desc.origin_format_;
-    origin_dtype_ = desc.origin_dtype_;
-    attrs_ = std::move(desc.attrs_);
-  }
-  return *this;
+  const static std::string kDefaultTypeString{"NPU"};
+  return kDefaultTypeString;
 }
 
 GeTensorDesc::GeTensorDesc()
@@ -777,9 +684,7 @@ GeTensorDesc::GeTensorDesc(const GeTensorDesc &desc)
       impl_(ComGraphMakeShared<GeTensorDescImpl>(*(desc.impl_))) {}
 
 // Default
-GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc)
-    : AttrHolder(std::move(desc)),
-      impl_(ComGraphMakeShared<GeTensorDescImpl>(std::move(*(desc.impl_)))) {}
+GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc) noexcept : AttrHolder(desc), impl_(desc.impl_) {}
 
 GeTensorDesc::~GeTensorDesc() = default;
 
@@ -802,10 +707,6 @@ bool GeTensorDesc::operator==(const GeTensorDesc &r_ge_tensor_desc) const {
 
 GeShape &GeTensorDesc::ShapeReference() const {
   return impl_->ShapeReference();
-}
-
-void GeTensorDesc::RefTo(const GeTensorDesc &tensorDesc) {
-  impl_->RefTo(*(tensorDesc.impl_));
 }
 
 ProtoAttrMap &GeTensorDesc::MutableAttrMap() {
@@ -1010,7 +911,7 @@ GeTensorDesc &GeTensorDesc::operator=(const GeTensorDesc &desc) {
 GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   if (&desc != this) {
     AttrHolder::CopyFrom(desc);
-    *impl_ = std::move(*(desc.impl_));
+    impl_ = desc.impl_;
   }
   return *this;
 }
@@ -1216,7 +1117,6 @@ const std::shared_ptr<AlignedPtr> &TensorData::GetAlignedPtr() {
 GeTensorImpl::GeTensorImpl() : tensor_def_(nullptr, nullptr), desc_(), tensor_data_()  {
   if (desc_.impl_ != nullptr) {
     if (tensor_data_.impl_ != nullptr) {
-      // 这里修改了实现
       tensor_data_.impl_->tensor_descriptor_ = desc_.impl_;
     }
   }
@@ -1525,6 +1425,13 @@ GeTensor &GeTensor::operator=(const GeTensor &other) {
   return *this;
 }
 
+GeTensor &GeTensor::operator=(GeTensor &&other) {
+  if (&other != this) {
+    impl_ = other.impl_;
+  }
+  return *this;
+}
+
 std::shared_ptr<AlignedPtr> GeTensor::GetAlignedPtr() {
   return impl_->GetAlignedPtr();
 }
@@ -1543,10 +1450,7 @@ void GeTensor::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) {
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetSize(const GeTensorDesc &tensor_desc,
                                                                                 int64_t &size) {
   if (tensor_desc.impl_ != nullptr) {
-    // 所有的impl_->tensor_descriptor_.GetProtoMsg()都要替换为any map或者直接调用成员方法
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    GE_CHECK_NOTNULL(tensor_descriptor_msg);
-    size = static_cast<int64_t>(tensor_descriptor_msg->size());
+    size = tensor_desc.impl_->ext_meta_.GetSize();
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1554,23 +1458,15 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetSize(
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(GeTensorDesc &tensor_desc, int64_t size) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_size(size);
-    }
-  } else {
-    GELOGW("Tensor utils set size failed, tensor desc impl is nullptr.");
+    tensor_desc.impl_->ext_meta_.SetSize(size);
   }
 }
 
 uint32_t TensorUtils::GetWeightSize(const GeTensorDesc &tensor_desc) {
-  if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      return static_cast<uint32_t>(tensor_descriptor_msg->weight_size());
-    }
+  if (tensor_desc.impl_ != nullptr && IntegerChecker<uint32_t>::Compat(tensor_desc.impl_->ext_meta_.GetWeightSize())) {
+    return static_cast<uint32_t>(tensor_desc.impl_->ext_meta_.GetWeightSize());
   }
-  return 0;
+  return 0U;
 }
 
 uint32_t TensorUtils::GetWeightSize(const GeTensor &tensor) { return GetWeightSize(tensor.GetTensorDesc()); }
@@ -1612,19 +1508,14 @@ uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *base) {
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetWeightSize(GeTensorDesc &tensor_desc,
                                                                                uint32_t size) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_weight_size(size);
-    }
+    tensor_desc.impl_->ext_meta_.SetWeightSize(static_cast<int64_t>(size));
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetReuseInput(const GeTensorDesc &tensor_desc,
                                                                                       bool &flag) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    GE_CHECK_NOTNULL(tensor_descriptor_msg);
-    flag = tensor_descriptor_msg->reuse_input();
+    flag = tensor_desc.impl_->ext_meta_.GetReuseInput();
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1632,19 +1523,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetReuse
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetReuseInput(GeTensorDesc &tensor_desc, bool flag) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_reuse_input(flag);
-    }
+    tensor_desc.impl_->ext_meta_.SetReuseInput(flag);
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetOutputTensor(const GeTensorDesc &tensor_desc,
                                                                                         bool &flag) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    GE_CHECK_NOTNULL(tensor_descriptor_msg);
-    flag = tensor_descriptor_msg->output_tensor();
+    flag = tensor_desc.impl_->ext_meta_.GetOutputTensor();
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1652,27 +1538,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetOutpu
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetOutputTensor(GeTensorDesc &tensor_desc, bool flag) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_output_tensor(flag);
-    }
+    tensor_desc.impl_->ext_meta_.SetOutputTensor(flag);
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDeviceType(const GeTensorDesc &tensor_desc,
                                                                                       DeviceType &type) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    GE_CHECK_NOTNULL(tensor_descriptor_msg);
-    std::string type_str = tensor_descriptor_msg->device_type();
-    auto iter = kStrToDeviceMap.find(type_str);
-    if (iter != kStrToDeviceMap.end()) {
-      type = iter->second;
-    } else {
-      REPORT_CALL_ERROR("E19999", "GetDeviceType failed, device_type=%s.", type_str.c_str());
-      GELOGE(GRAPH_FAILED, "[Get][DeviceType] failed, data_type=%s.", type_str.c_str());
-      return GRAPH_FAILED;
-    }
+    type = tensor_desc.impl_->ext_meta_.GetDeviceType();
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1680,27 +1553,15 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDevic
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetDeviceType(GeTensorDesc &tensor_desc,
                                                                                DeviceType type) {
-  auto iter = kDeviceToStrMap.find(type);
-  std::string type_str;
-  if (iter != kDeviceToStrMap.end()) {
-    type_str = iter->second;
-  } else {
-    GELOGW("[Set][DeviceType] not found device type[%d].", static_cast<int32_t>(type));
-  }
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_device_type(type_str);
-    }
+    tensor_desc.impl_->ext_meta_.SetDeviceType(type);
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetInputTensor(const GeTensorDesc &tensor_desc,
                                                                                        bool &flag) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    GE_CHECK_NOTNULL(tensor_descriptor_msg);
-    flag = tensor_descriptor_msg->input_tensor();
+    flag = tensor_desc.impl_->ext_meta_.GetInputTensor();
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1708,19 +1569,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetInput
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetInputTensor(GeTensorDesc &tensor_desc, bool flag) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_input_tensor(flag);
-    }
+    tensor_desc.impl_->ext_meta_.SetInputTensor(flag);
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRealDimCnt(const GeTensorDesc &tensor_desc,
                                                                                       uint32_t &cnt) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    GE_CHECK_NOTNULL(tensor_descriptor_msg);
-    cnt = static_cast<uint32_t>(tensor_descriptor_msg->real_dim_cnt());
+    cnt = tensor_desc.impl_->ext_meta_.GetRealDimCnt();
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1729,20 +1585,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRealD
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetRealDimCnt(GeTensorDesc &tensor_desc,
                                                                                uint32_t cnt) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_real_dim_cnt(cnt);
-    }
+    tensor_desc.impl_->ext_meta_.SetRealDimCnt(cnt);
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::GetReuseInputIndex(const GeTensorDesc &tensor_desc, uint32_t &idx) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    GE_CHECK_NOTNULL(tensor_descriptor_msg);
-
-    idx = static_cast<uint32_t>(tensor_descriptor_msg->reuse_input_index());
+    idx = tensor_desc.impl_->ext_meta_.GetReuseInputIndex();
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1751,26 +1601,15 @@ TensorUtils::GetReuseInputIndex(const GeTensorDesc &tensor_desc, uint32_t &idx) 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetReuseInputIndex(GeTensorDesc &tensor_desc,
                                                                                     uint32_t idx) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_reuse_input_index(idx);
-    }
+    tensor_desc.impl_->ext_meta_.SetReuseInputIndex(idx);
   }
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDataOffset(const GeTensorDesc &tensor_desc,
                                                                                       int64_t &offset) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      offset = tensor_descriptor_msg->data_offset();
-      return GRAPH_SUCCESS;
-    } else {
-      GELOGW("tensor_descriptor_msg is nullptr.");
-      return GRAPH_FAILED;
-    }
-  } else {
-    GELOGW("[Get][DataOffset] tensor desc impl is nullptr.");
+    offset = tensor_desc.impl_->ext_meta_.GetDataOffset();
+    return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
 }
@@ -1778,10 +1617,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetDataO
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetDataOffset(GeTensorDesc &tensor_desc,
                                                                                int64_t offset) {
   if (tensor_desc.impl_ != nullptr) {
-    auto tensor_descriptor_msg = tensor_desc.impl_->tensor_descriptor_.GetProtoMsg();
-    if (tensor_descriptor_msg != nullptr) {
-      tensor_descriptor_msg->set_data_offset(offset);
-    }
+    tensor_desc.impl_->ext_meta_.SetDataOffset(offset);
   }
 }
 
