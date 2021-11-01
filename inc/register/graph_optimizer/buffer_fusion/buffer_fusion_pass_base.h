@@ -17,7 +17,6 @@
 #ifndef INC_REGISTER_GRAPH_OPTIMIZER_BUFFER_FUSION_PASS_BASE_H_
 #define INC_REGISTER_GRAPH_OPTIMIZER_BUFFER_FUSION_PASS_BASE_H_
 
-#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -42,9 +41,9 @@ class BufferFusionPassBase {
   virtual std::vector<BufferFusionPattern *> DefinePatterns() = 0;
   virtual Status GetFusionNodes(const BufferFusionMapping &mapping, std::vector<ge::NodePtr> &fusion_nodes);
   virtual Status CalcFusionOpSliceInfo(std::vector<ge::NodePtr> &fusion_nodes, OpCalcInfo &op_slice_info);
-  std::vector<ge::NodePtr> GetMatchedNodes(const BufferFusionMapping &mapping);
-  std::vector<ge::NodePtr> GetMatchedNodesByDescName(const std::string &desc_name, const BufferFusionMapping &mapping);
-  ge::NodePtr GetMatchedHeadNode(const std::vector<ge::NodePtr> &matched_nodes);
+  static std::vector<ge::NodePtr> GetMatchedNodes(const BufferFusionMapping &mapping);
+  static std::vector<ge::NodePtr> GetMatchedNodesByDescName(const std::string &desc_name, const BufferFusionMapping &mapping);
+  static ge::NodePtr GetMatchedHeadNode(const std::vector<ge::NodePtr> &matched_nodes);
 
   void SetName(const std::string &name) { name_ = name; }
 
