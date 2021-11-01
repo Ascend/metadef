@@ -141,8 +141,8 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
       proto->set_device_type(kDeviceToStrMap.at(desc.ext_meta_.GetDeviceType()));
     }
     proto->set_input_tensor(desc.ext_meta_.GetInputTensor());
-    proto->set_real_dim_cnt(desc.ext_meta_.GetRealDimCnt());
-    proto->set_reuse_input_index(desc.ext_meta_.GetReuseInputIndex());
+    proto->set_real_dim_cnt(static_cast<int64_t>(desc.ext_meta_.GetRealDimCnt()));
+    proto->set_reuse_input_index(static_cast<int64_t>(desc.ext_meta_.GetReuseInputIndex()));
     proto->set_data_offset(desc.ext_meta_.GetDataOffset());
     proto->set_cmps_size(desc.ext_meta_.GetCmpsSize());
     proto->set_cmps_tab(desc.ext_meta_.GetCmpsTab());
@@ -263,7 +263,7 @@ void GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto::TensorDescriptor 
 
 void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
   shape.SetDimNum(static_cast<size_t>(proto->shape().dim_size()));
-  size_t i = 0;
+  size_t i = 0U;
   for (auto dim : proto->shape().dim()) {
     (void)shape.SetDim(i++, dim);
   }
@@ -273,7 +273,7 @@ void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDesc
   auto iter = attrs.find(TENSOR_UTILS_ORIGIN_SHAPE);
   if (iter != attrs.end()) {
     shape.SetDimNum(iter->second.list().i_size());
-    size_t i = 0;
+    size_t i = 0U;
     for (auto dim : iter->second.list().i()) {
       (void)shape.SetDim(i++, dim);
     }
@@ -288,6 +288,7 @@ void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor
     for (auto item : kDataTypeMap) {
       if (item.second == proto_dtype) {
         dtype = item.first;
+        return;
       }
     }
   } else { // Custom defined data type set
@@ -295,6 +296,7 @@ void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor
     for (auto it : kDataTypeSelfDefinedMap) {
       if (it.second == data_type_proto) {
         dtype = it.first;
+        return;
       }
     }
   }
@@ -317,8 +319,10 @@ void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDes
   }
 }
 
+const static size_t kDefaultDimsNum = 8U;
+
 class GeShapeImpl {
-  using DimsType = SmallVector<int64_t, 8>;
+  using DimsType = SmallVector<int64_t, kDefaultDimsNum>;
  public:
   GeShapeImpl() = default;
   ~GeShapeImpl() = default;
