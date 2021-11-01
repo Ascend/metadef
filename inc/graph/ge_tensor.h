@@ -98,7 +98,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   GeTensorDesc();
   explicit GeTensorDesc(const GeShape &shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
   GeTensorDesc(const GeTensorDesc &desc);
-  GeTensorDesc(GeTensorDesc &&desc) noexcept;
+  GeTensorDesc(GeTensorDesc &&desc);
 
   ~GeTensorDesc() override;
   bool operator==(const GeTensorDesc &r_ge_tensor_desc) const;

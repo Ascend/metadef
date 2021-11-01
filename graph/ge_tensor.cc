@@ -203,17 +203,17 @@ void GeTensorSerializeUtils::GeTensorAsProto(const GeTensor &tensor, proto::Tens
 
 void GeTensorSerializeUtils::AssembleGeShapeFromProto(const proto::ShapeDef *proto, GeShape &shape) {
   if (proto != nullptr) {
-    shape = std::move(GeShape(nullptr, const_cast<proto::ShapeDef *>(proto)));
+    shape = GeShape(nullptr, const_cast<proto::ShapeDef *>(proto));
   }
 }
 void GeTensorSerializeUtils::AssembleGeTensorDescFromProto(const proto::TensorDescriptor *proto, GeTensorDesc &desc) {
   if (proto != nullptr) {
-    desc = std::move(GeTensorDesc(nullptr, const_cast<proto::TensorDescriptor *>(proto)));
+    desc = GeTensorDesc(nullptr, const_cast<proto::TensorDescriptor *>(proto));
   }
 }
 void GeTensorSerializeUtils::AssembleGeTensorFromProto(const proto::TensorDef *proto, GeTensor &tensor) {
   if (proto != nullptr) {
-    tensor = std::move(GeTensor(nullptr, const_cast<proto::TensorDef *>(proto)));
+    tensor = GeTensor(nullptr, const_cast<proto::TensorDef *>(proto));
   }
 }
 
@@ -688,7 +688,7 @@ GeTensorDesc::GeTensorDesc(const GeTensorDesc &desc)
       impl_(ComGraphMakeShared<GeTensorDescImpl>(*(desc.impl_))) {}
 
 // Default
-GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc) noexcept : AttrHolder(desc), impl_(desc.impl_) {}
+GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc) : AttrHolder(desc), impl_(desc.impl_) {}
 
 GeTensorDesc::~GeTensorDesc() = default;
 

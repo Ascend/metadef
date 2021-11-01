@@ -59,7 +59,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
     GELOGE(FAILED, "[Check][Param] tensor_proto is null.");
     return false;
   }
-  // 这里修改了
+
   if (tensor->impl_->tensor_data_.impl_->tensor_descriptor_ != nullptr) {
     GeTensorSerializeUtils::GeTensorDescAsProto(*tensor->impl_->tensor_data_.impl_->tensor_descriptor_,
                                                 tensor_proto->mutable_desc());
@@ -130,36 +130,39 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
                    REPORT_INNER_ERROR("E19999", "param op_desc impl is null, check invalid.");
                    return false, "[Check][Param] op_desc impl is null.");
 
-  if (op_desc->impl_->op_def_.GetProtoMsg() != nullptr) {
-    FixOpDefSubgraphInstanceName(op_desc);
-    *op_def_proto = *op_desc->impl_->op_def_.GetProtoMsg();
-    //Delete unnecessary attr
-    op_def_proto->clear_input_desc();
-    op_def_proto->clear_output_desc();
-    // Input descs
-    if (op_desc->GetAllInputsSize() > 0) {
-      auto size = static_cast<uint32_t>(op_desc->GetAllInputsSize());
-      for (uint32_t i = 0; i < size; i++) {
-        auto tensor_desc = op_desc->GetInputDescPtrDfault(i);
-        if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
-          GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_input_desc());
-        }
-      }
-    }
-    // Output descs
-    if (op_desc->GetOutputsSize() > 0) {
-      auto size = static_cast<uint32_t>(op_desc->GetOutputsSize());
-      for (uint32_t i = 0; i < size; i++) {
-        auto tensor_desc = op_desc->GetOutputDescPtr(i);
-        if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
-          GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_output_desc());
-        }
-      }
-    }
-
-    op_def_proto->set_id(op_desc->GetId());
-    OpDescToAttrDef(op_desc, op_def_proto, is_dump);
+  if (op_desc->impl_->op_def_.GetProtoMsg() == nullptr) {
+    return true;
   }
+
+  FixOpDefSubgraphInstanceName(op_desc);
+  *op_def_proto = *op_desc->impl_->op_def_.GetProtoMsg();
+  // Delete unnecessary attr
+  op_def_proto->clear_input_desc();
+  op_def_proto->clear_output_desc();
+  // Input descs
+  if (op_desc->GetAllInputsSize() > 0) {
+    auto size = static_cast<uint32_t>(op_desc->GetAllInputsSize());
+    for (uint32_t i = 0; i < size; i++) {
+      auto tensor_desc = op_desc->GetInputDescPtrDfault(i);
+      if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
+        GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_input_desc());
+      }
+    }
+  }
+  // Output descs
+  if (op_desc->GetOutputsSize() > 0) {
+    auto size = static_cast<uint32_t>(op_desc->GetOutputsSize());
+    for (uint32_t i = 0; i < size; i++) {
+      auto tensor_desc = op_desc->GetOutputDescPtr(i);
+      if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
+        GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_output_desc());
+      }
+    }
+  }
+
+  op_def_proto->set_id(op_desc->GetId());
+  OpDescToAttrDef(op_desc, op_def_proto, is_dump);
+
   return true;
 }
 
