@@ -35,7 +35,7 @@ namespace ge {
 namespace{
 template <typename T>
 class IntegerChecker {
- public:
+public:
   template <typename T1>
   static bool Compat(T1 v) {
     static_assert((sizeof(T) <= sizeof(uint64_t) && sizeof(T1) <= sizeof(uint64_t)),
@@ -268,6 +268,7 @@ void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor
     (void)shape.SetDim(i++, dim);
   }
 }
+
 void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
   auto &attrs = proto->attr();
   auto iter = attrs.find(TENSOR_UTILS_ORIGIN_SHAPE);
@@ -279,28 +280,33 @@ void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDesc
     }
   }
 }
+
 void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
   dtype = DT_UNDEFINED;
   auto &attrs = proto->attr();
   auto iter = attrs.find(kKeyDataTypeSelfDefined);
   if (iter == attrs.end()) {
     auto proto_dtype = proto->dtype();
-    for (auto item : kDataTypeMap) {
-      if (item.second == proto_dtype) {
-        dtype = item.first;
-        return;
-      }
+    auto founded = std::find_if(
+        kDataTypeMap.begin(), kDataTypeMap.end(),
+        [proto_dtype](const std::pair<DataType, ge::proto::DataType> &item) { return item.second == proto_dtype; });
+    if (founded != kDataTypeMap.end()) {
+      dtype = founded->first;
+      return;
     }
-  } else { // Custom defined data type set
+  } else {  // Custom defined data type set
     int64_t data_type_proto = iter->second.i();
-    for (auto it : kDataTypeSelfDefinedMap) {
-      if (it.second == data_type_proto) {
-        dtype = it.first;
-        return;
-      }
+    auto founded = std::find_if(kDataTypeSelfDefinedMap.begin(), kDataTypeSelfDefinedMap.end(),
+                                [data_type_proto](const std::pair<DataType, int> &item) {
+                                  return item.second == data_type_proto;
+                                });
+    if (founded != kDataTypeSelfDefinedMap.end()) {
+      dtype = founded->first;
+      return;
     }
   }
 }
+
 void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
   auto &attrs = proto->attr();
   auto iter = attrs.find(TENSOR_UTILS_ORIGIN_DATA_TYPE);
@@ -308,9 +314,11 @@ void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDesc
     dtype = TypeUtils::SerialStringToDataType(iter->second.s());
   }
 }
+
 void GeTensorSerializeUtils::GetFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
   format = TypeUtils::SerialStringToFormat(proto->layout());
 }
+
 void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
   auto &attrs = proto->attr();
   auto iter = attrs.find(TENSOR_UTILS_ORIGIN_FORMAT);
@@ -514,18 +522,10 @@ int64_t GeShape::GetShapeSize() const {
   return impl_->GetShapeSize();
 }
 
-///
-/// @brief Check is unknown shape
-/// @return bool
-/// ///
 bool GeShape::IsUnknownShape() const {
   return impl_->IsUnknownShape();
 }
 
-///
-/// @brief Check is a scalar
-/// @return bool
-///
 bool GeShape::IsScalar() const {
   return impl_->IsScalar();
 }

@@ -412,6 +412,17 @@ TEST_F(TensorUT, GeTensorSerializeUtils_GeTensorDesc) {
   EXPECT_EQ(desc, desc_from_proto);
 }
 
+TEST_F(TensorUT, GeTensorSerializeUtils_Dtype) {
+  proto::TensorDescriptor desc_proto;
+  ge::proto::AttrDef custom_dtype;
+  custom_dtype.set_i(13);
+  (void)desc_proto.mutable_attr()->insert({"__tensor_desc_data_type__", custom_dtype});
+  ge::DataType dtype;
+  GeTensorSerializeUtils::GetDtypeFromDescProto(&desc_proto, dtype);
+  EXPECT_EQ(dtype, ge::DT_DUAL);
+}
+
+
 TEST_F(TensorUT, GeTensorSerializeUtils_GeTensor) {
   GeShape shape({1, 2, 3, 4});
   GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
