@@ -48,8 +48,8 @@ std::vector<ge::NodePtr> BufferFusionPassBase::GetMatchedNodesByDescName(const s
                                                                          const BufferFusionMapping &mapping) {
   std::vector<ge::NodePtr> nodes;
   for (const auto &item : mapping) {
-    const BufferFusionOpDesc *op_desc = item.first;
-    if (op_desc != nullptr && op_desc->desc_name == desc_name) {
+    const BufferFusionOpDesc *const op_desc = item.first;
+    if ((op_desc != nullptr) && (op_desc->desc_name == desc_name)) {
       for (const auto &node : item.second) {
         nodes.push_back(node);
       }
@@ -60,7 +60,7 @@ std::vector<ge::NodePtr> BufferFusionPassBase::GetMatchedNodesByDescName(const s
 
 ge::NodePtr BufferFusionPassBase::GetMatchedHeadNode(const std::vector<ge::NodePtr> &matched_nodes) {
   for (const auto &node : matched_nodes) {
-    auto input_nodes = node->GetInDataNodes();
+    const auto input_nodes = node->GetInDataNodes();
     bool find_flag = false;
     for (const auto &in_node : input_nodes) {
       // find the node from fuison sub graph

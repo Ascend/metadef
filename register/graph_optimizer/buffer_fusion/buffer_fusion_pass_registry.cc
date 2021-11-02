@@ -26,17 +26,17 @@ namespace fe {
 class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
  public:
   void RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
-                    BufferFusionPassRegistry::CreateFn create_fn) {
-    std::lock_guard<std::mutex> lock(mu_);
-    auto iter = create_fns_.find(pass_type);
+                    const BufferFusionPassRegistry::CreateFn create_fun) {
+    const std::lock_guard<std::mutex> lock(mu_);
+    const auto iter = create_fns_.find(pass_type);
     if (iter != create_fns_.end()) {
-      create_fns_[pass_type][pass_name] = create_fn;
+      create_fns_[pass_type][pass_name] = create_fun;
       GELOGI("UbFusionPass[type=%d,name=%s]: the pass type already exists.", pass_type, pass_name.c_str());
       return;
     }
 
     std::map<std::string, BufferFusionPassRegistry::CreateFn> create_fn_map;
-    create_fn_map[pass_name] = create_fn;
+    create_fn_map[pass_name] = create_fun;
     create_fns_[pass_type] = create_fn_map;
     GELOGI("UbFusionPass[type=%d,name=%s]: the pass type does not exists.", pass_type, pass_name.c_str());
   }
@@ -68,13 +68,13 @@ BufferFusionPassRegistry &BufferFusionPassRegistry::GetInstance() {
 }
 
 void BufferFusionPassRegistry::RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
-                                            CreateFn create_fn) {
+                                            CreateFn create_fun) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]UbFusionPass[type=%d,name=%s]: failed to register the ub fusion pass",
            pass_type, pass_name.c_str());
     return;
   }
-  impl_->RegisterPass(pass_type, pass_name, create_fn);
+  impl_->RegisterPass(pass_type, pass_name, create_fun);
 }
 
 std::map<std::string, BufferFusionPassRegistry::CreateFn> BufferFusionPassRegistry::GetCreateFnByType(
@@ -88,8 +88,8 @@ std::map<std::string, BufferFusionPassRegistry::CreateFn> BufferFusionPassRegist
 
 BufferFusionPassRegistrar::BufferFusionPassRegistrar(const BufferFusionPassType &pass_type,
                                                      const std::string &pass_name,
-                                                     BufferFusionPassBase *(*create_fn)()) {
-  if (pass_type < BUILT_IN_AI_CORE_BUFFER_FUSION_PASS || pass_type >= BUFFER_FUSION_PASS_TYPE_RESERVED) {
+                                                     BufferFusionPassBase *(*create_fun)()) {
+  if ((pass_type < BUILT_IN_AI_CORE_BUFFER_FUSION_PASS) || (pass_type >= BUFFER_FUSION_PASS_TYPE_RESERVED)) {
     GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_type] value %d is not supported.", pass_type);
     return;
   }
@@ -99,7 +99,7 @@ BufferFusionPassRegistrar::BufferFusionPassRegistrar(const BufferFusionPassType 
     return;
   }
 
-  BufferFusionPassRegistry::GetInstance().RegisterPass(pass_type, pass_name, create_fn);
+  BufferFusionPassRegistry::GetInstance().RegisterPass(pass_type, pass_name, create_fun);
 }
 
 }  // namespace fe
