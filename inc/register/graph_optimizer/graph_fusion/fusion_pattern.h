@@ -22,13 +22,6 @@
 #include <string>
 #include <vector>
 
-using std::initializer_list;
-using std::map;
-using std::string;
-using std::vector;
-
-using namespace std;
-
 namespace fe {
 
 /** Fusion pattern
@@ -52,7 +45,11 @@ class FusionPattern {
   };
 
  public:
+#ifdef ONLY_COMPILE_OPEN_SRC
   explicit FusionPattern(std::string name = "");
+#else
+  explicit FusionPattern(const std::string name = "");
+#endif
   ~FusionPattern();
 
   /** set pattern name
@@ -68,7 +65,7 @@ class FusionPattern {
    * @param types op type list
    * @return FusionPattern
    */
-  FusionPattern &AddOpDesc(const std::string &id, const initializer_list<std::string> &types = {});
+  FusionPattern &AddOpDesc(const std::string &id, const std::initializer_list<std::string> &types = {});
 
   /** add Op description with vector
    *
@@ -87,7 +84,7 @@ class FusionPattern {
    *
    * @return FusionPattern
    */
-  FusionPattern &SetInputs(const std::string &id, const initializer_list<std::string> &input_ids);
+  FusionPattern &SetInputs(const std::string &id, const std::initializer_list<std::string> &input_ids);
 
   /** set input Ops with unknown number of args
    *
@@ -140,8 +137,9 @@ class FusionPattern {
    */
   void Dump() const;
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   void GetOpDescList(std::vector<std::shared_ptr<OpDesc>> &op_desc_list);
-
+#endif
   /** get OpDesc based on ID, return nullptr if failed
    *
    * @param id pattern id
