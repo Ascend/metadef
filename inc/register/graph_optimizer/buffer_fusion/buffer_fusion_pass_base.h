@@ -41,9 +41,23 @@ class BufferFusionPassBase {
   virtual std::vector<BufferFusionPattern *> DefinePatterns() = 0;
   virtual Status GetFusionNodes(const BufferFusionMapping &mapping, std::vector<ge::NodePtr> &fusion_nodes);
   virtual Status CalcFusionOpSliceInfo(std::vector<ge::NodePtr> &fusion_nodes, OpCalcInfo &op_slice_info);
+#ifdef ONLY_COMPILE_OPEN_SRC
+  std::vector<ge::NodePtr> GetMatchedNodes(const BufferFusionMapping &mapping);
+#else
   static std::vector<ge::NodePtr> GetMatchedNodes(const BufferFusionMapping &mapping);
-  static std::vector<ge::NodePtr> GetMatchedNodesByDescName(const std::string &desc_name, const BufferFusionMapping &mapping);
+#endif
+#ifdef ONLY_COMPILE_OPEN_SRC
+  std::vector<ge::NodePtr> GetMatchedNodesByDescName(const std::string &desc_name,
+                                                     const BufferFusionMapping &mapping);
+#else
+  static std::vector<ge::NodePtr> GetMatchedNodesByDescName(const std::string &desc_name,
+                                                            const BufferFusionMapping &mapping);
+#endif
+#ifdef ONLY_COMPILE_OPEN_SRC
+  ge::NodePtr GetMatchedHeadNode(const std::vector<ge::NodePtr> &matched_nodes);
+#else
   static ge::NodePtr GetMatchedHeadNode(const std::vector<ge::NodePtr> &matched_nodes);
+#endif
 
   void SetName(const std::string &name) { name_ = name; }
 
