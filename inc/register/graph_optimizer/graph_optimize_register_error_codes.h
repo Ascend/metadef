@@ -32,7 +32,7 @@ namespace fe {
 *  Build error code
 */
 #define FE_DEF_ERRORNO(sysid, modid, name, value, desc)                            \
-  static constexpr fe::Status (name) =                                             \
+  static constexpr fe::Status name =                                               \
       ((((static_cast<uint32_t>((0xFF) & (static_cast<uint8_t>(sysid)))) << 24) |  \
        ((static_cast<uint32_t>((0xFF) & (static_cast<uint8_t>(modid)))) << 16)) |  \
        ((0xFFFF) & (static_cast<uint16_t>(value))));
@@ -40,7 +40,7 @@ namespace fe {
 using Status = uint32_t;
 
 #define FE_DEF_ERRORNO_COMMON(name, value, desc)                  \
-  FE_DEF_ERRORNO(SYSID_FE, FE_MODID_COMMON, (name), (value), (desc))
+  FE_DEF_ERRORNO(SYSID_FE, FE_MODID_COMMON, name, value, desc)
 
 using Status = uint32_t;
 
