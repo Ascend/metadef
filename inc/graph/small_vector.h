@@ -425,7 +425,6 @@ class SmallVector {
     FreeStorage();
     allocated_storage_ = new_storage;
     capacity_ = new_cap;
-    size_ += range_len;
     return new_storage + range_begin;
   }
   iterator ExpandSize(size_type range_begin, size_type range_len) {
@@ -440,7 +439,9 @@ class SmallVector {
   }
   iterator Expand(size_type range_begin, size_type range_len) {
     if (range_len + size_ > capacity_) {
-      return ExpandCap(range_begin, range_len);
+      auto ret = ExpandCap(range_begin, range_len);
+      size_ += range_len;
+      return ret;
     } else {
       return ExpandSize(range_begin, range_len);
     }
