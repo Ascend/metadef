@@ -952,5 +952,10 @@ ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, uint32_t
   GELOGW("[Get][ConstInput] Op(%s) %u get input const data failed", op.GetName().c_str(), idx);
   return nullptr;
 }
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+void OpDescUtils::SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *context) {
+  op.operator_impl_->runtime_context_ = context;
+}
 }  // namespace ge
 /*lint +e512 +e737 +e752*/

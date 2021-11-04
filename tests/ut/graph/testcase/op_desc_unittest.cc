@@ -19,7 +19,9 @@
 #define protected public
 #define private public
 #include "graph/op_desc.h"
+#include "graph/op_desc_impl.h"
 #include "graph/ge_tensor.h"
+#include "graph/utils/ge_ir_utils.h"
 #undef private
 #undef protected
 #include "graph/utils/transformer_utils.h"
@@ -104,6 +106,78 @@ TEST_F(UtestOpDesc, IndexOutOfRange) {
   EXPECT_NE(nullptr, op_desc->MutableInputDesc(0));
   EXPECT_EQ(nullptr, op_desc->MutableInputDesc(1));
   EXPECT_EQ(nullptr, op_desc->MutableInputDesc(999));
+}
+
+TEST_F(UtestOpDesc, SerializeMetadata) {
+  OpDescImpl impl;
+  impl.meta_data_.inputs_.emplace_back("input");
+  impl.meta_data_.input_names_.emplace_back("names");
+  impl.meta_data_.src_names_.push_back("src");
+  impl.meta_data_.dst_names_.push_back("dst");
+  impl.meta_data_.dst_indexes_.push_back(2);
+  impl.meta_data_.src_indexes_.push_back(2);
+  impl.meta_data_.input_offsets_.push_back(987654321);
+  impl.meta_data_.output_offsets_.push_back(987654321);
+  impl.meta_data_.workspaces.push_back(222);
+  impl.meta_data_.workspace_bytes_list_.push_back(111);
+  impl.meta_data_.is_input_consts_.push_back(false);
+
+  proto::OpDef def;
+  impl.SerializeMetaDataToOpDef(&def);
+  EXPECT_EQ(def.input(0), "input");
+  EXPECT_EQ(def.input_name(0), "names");
+  EXPECT_EQ(def.src_name(0), "src");
+  EXPECT_EQ(def.dst_name(0), "dst");
+  EXPECT_EQ(def.dst_index(0), 2);
+  EXPECT_EQ(def.src_index(0), 2);
+  EXPECT_EQ(def.input_i(0), 987654321);
+  EXPECT_EQ(def.output_i(0), 987654321);
+  EXPECT_EQ(def.workspace(0), 222);
+  EXPECT_EQ(def.workspace_bytes(0), 111);
+  EXPECT_EQ(def.is_input_const(0), false);
+}
+
+TEST_F(UtestOpDesc, DeSerializeMetadata) {
+  proto::OpDef def;
+  def.add_input("input");
+  def.add_input_name("names");
+  def.add_src_name("src");
+  def.add_dst_name("dst");
+  def.add_dst_index(2);
+  def.add_src_index(2);
+  def.add_input_i(987654321);
+  def.add_output_i(987654321);
+  def.add_workspace(222);
+  def.add_workspace_bytes(222);
+  def.add_is_input_const(false);
+  OpDescImpl impl;
+  impl.DeSerializeOpDefToMetaData(def);
+  EXPECT_EQ(impl.meta_data_.inputs_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.inputs_[0], "input");
+  EXPECT_EQ(impl.meta_data_.input_names_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.input_names_[0], "names");
+  EXPECT_EQ(impl.meta_data_.src_names_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.src_names_[0], "src");
+  EXPECT_EQ(impl.meta_data_.dst_names_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.dst_names_[0], "dst");
+  EXPECT_EQ(impl.meta_data_.dst_indexes_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.dst_indexes_[0], 2);
+  EXPECT_EQ(impl.meta_data_.src_indexes_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.src_indexes_[0], 2);
+  EXPECT_EQ(impl.meta_data_.input_offsets_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.input_offsets_[0], 987654321);
+  EXPECT_EQ(impl.meta_data_.output_offsets_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.output_offsets_[0], 987654321);
+  EXPECT_EQ(impl.meta_data_.workspaces.size(), 1);
+  EXPECT_EQ(impl.meta_data_.workspaces[0], 222);
+  EXPECT_EQ(impl.meta_data_.workspace_bytes_list_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.workspace_bytes_list_[0], 222);
+  EXPECT_EQ(impl.meta_data_.is_input_consts_.size(), 1);
+  EXPECT_EQ(impl.meta_data_.is_input_consts_[0], false);
+
+  OpDescImpl impl1;
+  impl1.DeSerializeOpDefToMetaData(def);
+  EXPECT_TRUE(impl1.OpDescAttrsAreEqual(impl));
 }
 
 }
