@@ -256,9 +256,8 @@ bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc_vec,
   return true;
 }
 
-void FeedTeOpConstTensor(const ge::Node &node, const ge::OpDescPtr &op_desc,
+void FeedTeOpConstTensor(const ge::Operator &op, const ge::OpDescPtr &op_desc,
                          std::map<std::string, TeConstTensorData> &const_inputs) {
-  ge::Operator op = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
   std::vector<std::string> depend_names;
   (void)ge::AttrUtils::GetListStr(op_desc, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
   for (const std::string &depend : depend_names) {
@@ -277,8 +276,8 @@ void FeedTeOpConstTensor(const ge::Node &node, const ge::OpDescPtr &op_desc,
   }
 }
 
-ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info, const OpTilingFunc &tiling_func) {
-  ge::OpDescPtr op_desc = node.GetOpDesc();
+ge::graphStatus OpParaCalculate(const ge::Operator &op, OpRunInfo &run_info, const OpTilingFunc &tiling_func) {
+  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   TeOpParas op_param;
   op_param.op_type = op_desc->GetType();
@@ -293,7 +292,7 @@ ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info, const
   if (!FeedTeOpTensorArg(outputs, op_param.outputs, op_desc)) {
     return ge::GRAPH_FAILED;
   }
-  FeedTeOpConstTensor(node, op_desc, op_param.const_inputs);
+  FeedTeOpConstTensor(op, op_desc, op_param.const_inputs);
 
   OpCompileInfo op_compile_info;
   if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY, op_compile_info.key)) {
@@ -316,14 +315,19 @@ ge::graphStatus OpParaCalculate(const ge::Node &node, OpRunInfo &run_info, const
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
-ge::graphStatus TurnToOpParaCalculateV1(const ge::Node &node, OpRunInfoV2 &run_info, const OpTilingFunc &tiling_func) {
+ge::graphStatus TurnToOpParaCalculateV1(const ge::Operator &op, OpRunInfoV2 &run_info,
+                                        const OpTilingFunc &tiling_func) {
   OpRunInfo run_info_struct;
   run_info_struct.block_dim = run_info.GetBlockDim();
   run_info_struct.clear_atomic = run_info.GetClearAtomic();
   run_info_struct.tiling_key = run_info.GetTilingKey();
-  if (OpParaCalculate(node, run_info_struct, tiling_func) != ge::GRAPH_SUCCESS) {
+  if (OpParaCalculate(op, run_info_struct, tiling_func) != ge::GRAPH_SUCCESS) {
+    ge::AscendString op_type;
+    (void)op.GetOpType(op_type);
+    ge::AscendString op_name;
+    (void)op.GetName(op_name);
     REPORT_CALL_ERROR("E19999", "OpParaCalculate failed, op_type[%s], op_name[%s]",
-                      node.GetType().c_str(), node.GetName().c_str());
+                      op_type.GetString(), op_name.GetString());
     return ge::GRAPH_FAILED;
   }
 
@@ -339,9 +343,9 @@ ge::graphStatus TurnToOpParaCalculateV1(const ge::Node &node, OpRunInfoV2 &run_i
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus TurnToOpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_info,
+ge::graphStatus TurnToOpParaCalculateV2(const ge::Operator &op_param, OpRunInfoV2 &run_info,
                                         const OpTilingFuncV2 &tiling_func) {
-  ge::OpDescPtr op_desc = node.GetOpDesc();
+  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   std::string op_compile_info_key;
   if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY, op_compile_info_key)) {
@@ -359,7 +363,6 @@ ge::graphStatus TurnToOpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_i
   ReplaceEmptyShapeOfTensorDesc(op_desc, indexes);
   AddNameToTensordesc(op_desc);
 
-  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
   bool ret = (tiling_func)(op_param, op_compile_info, run_info);
   if (ret) {
     GELOGI("Do optiling v2 succeed. op_type:%s, op_name:%s",
@@ -372,11 +375,10 @@ ge::graphStatus TurnToOpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_i
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
-ge::graphStatus TurnToOpParaCalculateV3(const ge::Node &node, OpRunInfoV2 &run_info,
+ge::graphStatus TurnToOpParaCalculateV3(const ge::Operator &op_param, OpRunInfoV2 &run_info,
                                         const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func) {
-  ge::OpDescPtr op_desc = node.GetOpDesc();
+  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
-  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
   std::string op_compile_info_key;
   if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY, op_compile_info_key)) {
     GE_LOGE("Op[%s] does not have attr[%s].", op_desc->GetName().c_str(), COMPILE_INFO_KEY.c_str());
@@ -417,16 +419,17 @@ ge::graphStatus TurnToOpParaCalculateV3(const ge::Node &node, OpRunInfoV2 &run_i
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
-extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &run_info) {
-  std::string op_type = node.GetType();
+extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_info) {
+  ge::AscendString op_type;
+  (void)op.GetOpType(op_type);
   auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
-  auto iter = op_func_map.find(op_type);
+  auto iter = op_func_map.find(op_type.GetString());
   if (iter == op_func_map.end()) {
-    GELOGI("Do optiling function is not found by op type[%s].", op_type.c_str());
+    GELOGI("Do optiling function is not found by op type[%s].", op_type.GetString());
     iter = op_func_map.find(OP_TYPE_AUTO_TILING);
     if (iter == op_func_map.end()) {
-      GELOGI("Optiling function of op type[%s] is not found by Autotiling.", op_type.c_str());
-      REPORT_CALL_ERROR("E19999", "Optiling function is not found. op_type[%s].", op_type.c_str());
+      GELOGI("Optiling func of op type[%s] is not found by Autotiling.", op_type.GetString());
+      REPORT_CALL_ERROR("E19999", "Optiling func is not found. op_type:%s", op_type.GetString());
       return ge::GRAPH_FAILED;
     }
   }
@@ -435,15 +438,15 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &
   if (op_func_info.IsFunctionV3()) {
     const OpTilingFuncV3 &tiling_func = op_func_info.GetOpTilingFuncV3();
     const OpParseFuncV3 &parse_func = op_func_info.GetOpParseFuncV3();
-    ret = TurnToOpParaCalculateV3(node, run_info, tiling_func, parse_func);
+    ret = TurnToOpParaCalculateV3(op, run_info, tiling_func, parse_func);
   } else if (op_func_info.IsFunctionV2()) {
     const OpTilingFuncV2  &tiling_func = op_func_info.GetOpTilingFuncV2();
-    ret = TurnToOpParaCalculateV2(node, run_info, tiling_func);
+    ret = TurnToOpParaCalculateV2(op, run_info, tiling_func);
   } else if (op_func_info.IsFunctionV1()) {
     const OpTilingFunc  &tiling_func = op_func_info.GetOpTilingFunc();
-    ret = TurnToOpParaCalculateV1(node, run_info, tiling_func);
+    ret = TurnToOpParaCalculateV1(op, run_info, tiling_func);
   } else {
-    GE_LOGE("Optiling func of op type[%s] is all empty.", op_type.c_str());
+    GE_LOGE("Optiling func of op type[%s] is all empty.", op_type.GetString());
   }
 
   return ret;
@@ -772,7 +775,8 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, OpRunInfoV2
 
 extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<OpRunInfoV2> &run_info) {
   OpRunInfoV2 fake_run_info;
-  ge::graphStatus status = OpParaCalculateV2(node, fake_run_info);
+  ge::Operator op_param = ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this());
+  ge::graphStatus status = OpParaCalculateV2(op_param, fake_run_info);
   if (status == ge::GRAPH_SUCCESS) {
     run_info.emplace_back(fake_run_info);
     run_info.emplace_back(fake_run_info);
