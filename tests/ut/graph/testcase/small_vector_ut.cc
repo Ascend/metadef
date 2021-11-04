@@ -1285,7 +1285,36 @@ TEST_F(SmallVectorUt, CompareOperator) {
   EXPECT_TRUE(vec1 <= vec3);
   EXPECT_TRUE(vec3 < vec4);
   EXPECT_TRUE(vec3 <= vec4);
-
 }
 
+TEST_F(SmallVectorUt, ReserveOk1) {
+  SmallVector<int32_t, 4> vec1;
+  EXPECT_EQ(vec1.size(), 0);
+  EXPECT_EQ(vec1.capacity(), 4);
+
+  vec1.reserve(3);
+  EXPECT_EQ(vec1.size(), 0);
+  EXPECT_EQ(vec1.capacity(), 4);
+
+  vec1.reserve(5);
+  EXPECT_EQ(vec1.size(), 0);
+  EXPECT_GE(vec1.capacity(), 5);
+}
+
+TEST_F(SmallVectorUt, ReserveOk2) {
+  SmallVector<int32_t, 4> vec1{1,2,3};
+  EXPECT_EQ(vec1.size(), 3);
+  EXPECT_EQ(vec1.capacity(), 4);
+
+  vec1.reserve(3);
+  EXPECT_EQ(vec1.size(), 3);
+  EXPECT_EQ(vec1.capacity(), 4);
+
+  vec1.reserve(5);
+  EXPECT_EQ(vec1.size(), 3);
+  EXPECT_GE(vec1.capacity(), 5);
+  EXPECT_EQ(vec1[0], 1);
+  EXPECT_EQ(vec1[1], 2);
+  EXPECT_EQ(vec1[2], 3);
+}
 }  // namespace ge
