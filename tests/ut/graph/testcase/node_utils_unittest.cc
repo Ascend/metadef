@@ -440,4 +440,24 @@ TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_multi_partitioncall) {
   ASSERT_NE(expect_peer_node, nullptr);
   ASSERT_EQ(expect_peer_node->GetName(), "partitioncall_2_mul");
 }
+
+TEST_F(UtestNodeUtils, GetConstOpType_CONST) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("const1", CONSTANT, 0, 1);
+  std::cout << data->GetType() << std::endl;
+  std::string op_type;
+  auto ret = NodeUtils::GetConstOpType(data, op_type);
+  ASSERT_EQ(ret, true);
+  ASSERT_EQ(op_type, "Const");
+}
+
+TEST_F(UtestNodeUtils, GetConstOpType_DATA) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  std::cout << data->GetType() << std::endl;
+  std::string op_type;
+  auto ret = NodeUtils::GetConstOpType(data, op_type);
+  ASSERT_EQ(ret, false);
+}
+
 }  // namespace ge
