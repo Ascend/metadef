@@ -1829,6 +1829,29 @@ graphStatus GraphUtils::CopyGraph(const Graph &src_graph, Graph &dst_graph) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph,
+                                         ComputeGraphPtr &dst_compute_graph) {
+  GE_CHECK_NOTNULL(src_compute_graph);
+  if (src_compute_graph->GetParentGraph() != nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][RootGraph] Only support copy root graph, current graph name:%s, "
+                         "parent graph name:%s.", src_compute_graph->GetName().c_str(),
+           src_compute_graph->GetParentGraph()->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+
+  int32_t depth = 0;
+  std::map<ConstNodePtr, NodePtr> old_2_new_node;
+  std::map<ConstOpDescPtr, OpDescPtr> old_2_new_op_desc;
+  graphStatus ret = CopyComputeGraph(src_compute_graph, dst_compute_graph,
+                                     old_2_new_node, old_2_new_op_desc, depth);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "[Copy][ComputeGraphPtr] failed, ret:%d.", ret);
+    return GRAPH_FAILED;
+  }
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph,
                                           ComputeGraphPtr &dst_compute_graph,
                                           std::map<ConstNodePtr, NodePtr> &node_old_2_new,
