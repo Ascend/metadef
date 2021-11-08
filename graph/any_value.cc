@@ -218,13 +218,6 @@ AnyValue AnyValue::Copy() const {
   AnyValue av(*this);
   return av;
 }
-bool AnyValue::operator==(const AnyValue &other) const noexcept {
-  if (operate_ == nullptr) {
-    return operate_ == other.operate_;
-  }
-  // 这里仅仅是沿用历史实现，比对指针感觉不太对
-  return operate_ == other.operate_ && GetAddr() == other.GetAddr();
-}
 const void *AnyValue::GetAddr() const {
   void *addr = nullptr;
   operate_(kOpGetAddr, this, &addr);

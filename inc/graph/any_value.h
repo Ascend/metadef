@@ -99,7 +99,6 @@ class AnyValue {
   }
   AnyValue &operator=(AnyValue &&other) noexcept;
   AnyValue &operator=(const AnyValue &other);
-  bool operator==(const AnyValue &other) const noexcept;
   ~AnyValue() {
     Clear();
   }
