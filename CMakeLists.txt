@@ -78,6 +78,7 @@ set(METADEF_PROTO_LIST
     "${METADEF_DIR}/proto/tensorflow/tensor_shape.proto"
     "${METADEF_DIR}/proto/tensorflow/types.proto"
     "${METADEF_DIR}/proto/tensorflow/versions.proto"
+    "${METADEF_DIR}/proto/var_manager.proto"
 )
 
 protobuf_generate(metadef_protos METADEF_PROTO_SRCS METADEF_PROTO_HDRS ${METADEF_PROTO_LIST} TARGET)
@@ -91,6 +92,7 @@ set(METADEF_GRAPH_PROTO_SRCS
     "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/fwk_adapter.pb.cc"
     "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/op_mapping.pb.cc"
     "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/onnx/ge_onnx.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/var_manager.pb.cc"
 )
 
 set(METADEF_TENSORFLOW_PROTO_SRCS

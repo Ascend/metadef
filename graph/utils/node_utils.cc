@@ -1047,12 +1047,13 @@ bool NodeUtils::GetConstOpType(const NodePtr &node, std::string &type) {
     return false;
   }
 
-  if ((node->GetType() == CONSTANT) || (node->GetType() == CONSTANTOP)) {
+  auto node_type = node->GetType();
+  if ((node_type == CONSTANT) || (node_type == CONSTANTOP) || (node_type == FILECONSTANT)) {
     type = node->GetType();
     return true;
   }
 
-  if (node->GetType() != DATA) {
+  if (node_type != DATA) {
     return false;   // not subgraph input node
   }
 

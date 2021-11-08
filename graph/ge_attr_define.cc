@@ -766,6 +766,8 @@ const std::string ATTR_MODEL_OPP_VERSION = "opp_version";
 
 const std::string ATTR_MODEL_SESSION_SCOPE_MEMORY_SIZE = "session_scope_memory_size";
 
+const std::string ATTR_NAME_FILE_CONSTANT_ID = "file_id";
+
 // Public attribute
 const std::string ATTR_NAME_IMPLY_TYPE = "imply_type";
 
