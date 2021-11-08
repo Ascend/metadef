@@ -711,14 +711,4 @@ TEST_F(AnyValueUt, SwapWithEmpty) {
   EXPECT_TRUE(av1.IsEmpty());
   EXPECT_EQ(*av2.Get<int64_t>(), 10);
 }
-
-TEST_F(AnyValueUt, EqualWithEmpty) {
-  AnyValue av1;
-  AnyValue av2 = AnyValue::CreateFrom<int64_t>(10);
-  AnyValue av3;
-
-  EXPECT_FALSE(av1 == av2);
-  EXPECT_FALSE(av2 == av1);
-  EXPECT_TRUE(av1 == av3);
-}
 }  // namespace ge

@@ -126,13 +126,6 @@ TEST_F(UtestGeAttrValue, SetListIntGetByGeAttrValue) {
   EXPECT_EQ(li1_out, std::vector<int64_t>({1,2,3,4,5}));
 }
 
-TEST_F(UtestGeAttrValue, EqualOperator) {
-  auto gav1 = GeAttrValue::CreateFrom<std::vector<int64_t>>(std::vector<int64_t>({1,2,3,4,5}));
-  auto gav2 = gav1.Copy();
-  EXPECT_FALSE(gav1 == gav2);
-}
-
-
 TEST_F(UtestGeAttrValue, SetGetAttr_GeTensor) {
   OpDescPtr op_desc = std::make_shared<OpDesc>("const1", "Identity");
   GeTensorDesc td;
