@@ -281,4 +281,21 @@ TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_02) {
   ASSERT_EQ(res_buf[0], 23);
   ASSERT_EQ(res_buf[10], 32);
 }
+
+
+TEST_F(UtestOpDescUtils, DefaultInferFormat) {
+  auto tensor_desc = std::make_shared<GeTensorDesc>();
+  tensor_desc->SetShape(GeShape());
+  tensor_desc->SetFormat(FORMAT_ND);
+  tensor_desc->SetDataType(DT_FLOAT);
+  auto op_desc = std::make_shared<OpDesc>("test", "Identity");
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  op_desc->AddOutputDesc(tensor_desc->Clone());
+
+  EXPECT_EQ(op_desc->DefaultInferFormat(), 0);
+  auto input_desc = op_desc->MutableInputDesc(0);
+  EXPECT_EQ(input_desc->GetFormat(), FORMAT_ND);
+  auto output_desc = op_desc->MutableOutputDesc(0);
+  EXPECT_EQ(output_desc->GetFormat(), FORMAT_ND);
+}
 }
