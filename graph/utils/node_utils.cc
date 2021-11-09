@@ -1256,7 +1256,13 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   GELOGD("in node:%s index:%d", node->GetName().c_str(), index);
   peer_node = (node->GetType() == DATA) ? node : GetInDataNodeByIndex(*node, index);
   int32_t peer_out_anchor_index = -1;
-  GE_CHECK_NOTNULL(peer_node);
+  if (peer_node == nullptr) {
+    // tmp solution
+    // A->B
+    // Asuming A and B belongs to different engine, during graph partition, A will be set to B's extra attr as parent node.
+    // when FE get parent node A from B, check A's in_anchor peer_out_anchor is null. But dump graph is good. wired thing. 
+    return GRAPH_SUCCESS;
+  }
   while (!IsComputableOp(peer_node)) {
     if (peer_node->GetType() == DATA) {
       auto parent_node_2_anchor = GetParentInputAndAnchor(peer_node);
