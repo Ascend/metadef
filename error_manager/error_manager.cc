@@ -203,18 +203,34 @@ int32_t ErrorManager::Init() {
 }
 
 int32_t ErrorManager::ReportInterErrMessage(std::string error_code, const std::string &error_msg) {
+  const uint64_t kMaxWorkSize = 1000;
+  if (!is_init_) {
+    GELOGI("ErrorManager has not inited, can't report error message");
+    return -1;
+  }
   if (!IsInnerErrorCode(error_code)) {
     GELOGE("[Report][Error]error_code %s is not internal error code", error_code.c_str());
     return -1;
   }
 
   if (error_context_.work_stream_id == 0) {
+    if (error_message_per_work_id_.size() > kMaxWorkSize) {
+      GELOGE("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
+             error_code.c_str(), kMaxWorkSize);
+      return -1;
+    }
     GenWorkStreamIdDefault();
   }
 
   std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
+
+  if (error_messages.size() > kMaxWorkSize) {
+    GELOGE("[Report][Error]error_code %s, error work_stream_id:%u item size exceed %lu, skip record",
+            error_code.c_str(), error_context_.work_stream_id, kMaxWorkSize);
+    return -1;
+  }
 
   ErrorManager::ErrorItem item = {error_code, error_msg};
   if (error_code[0] == 'W') {
