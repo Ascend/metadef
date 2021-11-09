@@ -175,7 +175,7 @@ ComputeGraphPtr BuildGraphPartitionCall2() {
 */
 ComputeGraphPtr BuildGraphPartitionCall3() {
   auto root_builder = ut::GraphBuilder("root");
-  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 0, 1);
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 1, 1);
   const auto &partitioncall_1 = root_builder.AddNode("partitioncall_1", PARTITIONEDCALL, 1, 1);
   root_builder.AddDataEdge(partitioncall_0, 0, partitioncall_1, 0);
   const auto &root_graph = root_builder.GetGraph();
@@ -439,6 +439,20 @@ TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_multi_partitioncall) {
   ASSERT_EQ(ret, GRAPH_SUCCESS);
   ASSERT_NE(expect_peer_node, nullptr);
   ASSERT_EQ(expect_peer_node->GetName(), "partitioncall_2_mul");
+}
+
+TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_temp_test_return_success_when_peer_node_null) {
+  auto graph = BuildGraphPartitionCall3();
+  NodePtr expect_peer_node;
+  NodePtr partition_node;
+  for (auto &node : graph->GetAllNodes()) {
+    if (node->GetName() == "partitioncall_0") {
+      partition_node = node;
+    }
+  }
+  auto ret = NodeUtils::GetInNodeCrossPartionedCallNode(partition_node, 0 , expect_peer_node);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(expect_peer_node, nullptr);
 }
 
 TEST_F(UtestNodeUtils, GetConstOpType_CONST) {
