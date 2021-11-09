@@ -3044,7 +3044,7 @@ graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const Grap
                         item.second.first->GetOwnerNode()->GetName().c_str(), item.second.first->GetIdx(),
                         in_data_anchor->GetOwnerNode()->GetName().c_str(), in_data_anchor->GetIdx());
       GE_CHK_STATUS_RET(item.second.first->LinkTo(subgraph_node->GetInDataAnchor(i)),
-                        "[Add][DataEdge] %s:%d->%s:%zu failed.",
+                        "[Add][DataEdge] %s:%d->%s:%u failed.",
                         item.second.first->GetOwnerNode()->GetName().c_str(),
                         item.second.first->GetIdx(), subgraph_node->GetName().c_str(), item.first);
       i++;
@@ -3058,7 +3058,7 @@ graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const Grap
       GE_CHK_STATUS_RET(item.second.first->Unlink(peer_in_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed.",
                         item.second.first->GetOwnerNode()->GetName().c_str(), item.second.first->GetIdx(),
                         peer_in_anchor->GetOwnerNode()->GetName().c_str(), peer_in_anchor->GetIdx());
-      GE_CHK_STATUS_RET(out_data_anchor->LinkTo(peer_in_anchor), "[Add][DataEdge] %s:%zu->%s:%d failed.",
+      GE_CHK_STATUS_RET(out_data_anchor->LinkTo(peer_in_anchor), "[Add][DataEdge] %s:%u->%s:%d failed.",
                         subgraph_node->GetName().c_str(), item.first, peer_in_anchor->GetOwnerNode()->GetName().c_str(),
                         peer_in_anchor->GetIdx());
     }
