@@ -72,6 +72,7 @@ set(GRAPH_SOURCE_LIST
     "compile_cache_policy/compile_cache_hasher.cc"
     "compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
     "compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
+    "profiler.cc"
 )
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
