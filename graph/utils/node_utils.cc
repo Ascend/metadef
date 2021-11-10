@@ -1259,8 +1259,9 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   if (peer_node == nullptr) {
     // tmp solution
     // A->B
-    // Asuming A and B belongs to different engine, during graph partition, A will be set to B's extra attr as parent node.
-    // when FE get parent node A from B, check A's in_anchor peer_out_anchor is null. But dump graph is good. wired thing. 
+    // Asuming A and B belongs to different engine, during graph partition, A will be set to B's extra attr as
+    // parent node. when FE get parent node A from B, check A's in_anchor peer_out_anchor is null.
+    // But dump graph is good. weird thing.
     return GRAPH_SUCCESS;
   }
   while (!IsComputableOp(peer_node)) {
