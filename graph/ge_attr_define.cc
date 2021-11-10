@@ -1021,6 +1021,7 @@ const std::string ATTR_NAME_NEED_LX_FUSION = "_lx_fusion";
 const std::string ATTR_NAME_OPTIMIZE_GROUP = "_optimize_group";
 const std::string ATTR_NAME_OP_COMPILE_STRATEGY = "_op_compile_strategy";
 const std::string ATTR_NAME_TBE_KERNEL_NAME = "_tbe_kernel_name";
+const std::string ATTR_NAME_TBE_KERNEL_NAME_FOR_LOAD = "_tbe_kernel_name_for_load";
 const std::string ATTR_NAME_TBE_KERNEL_BUFFER = "_tbe_kernel_buffer";
 const std::string ATTR_NAME_DATA_SLICE = "_data_slice";
 const std::string ATTR_NAME_NEED_RECOVER_ATTR = "_need_recover_attr";
