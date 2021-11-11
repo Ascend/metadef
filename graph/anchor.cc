@@ -24,24 +24,24 @@
 namespace ge {
 class AnchorImpl {
  public:
-  AnchorImpl(const NodePtr &owner_node, int idx);
+  AnchorImpl(const NodePtr &owner_node, int32_t idx);
   ~AnchorImpl() = default;
   size_t GetPeerAnchorsSize() const;
   Anchor::Vistor<AnchorPtr> GetPeerAnchors(const std::shared_ptr<ConstAnchor> &anchor_ptr) const;
   AnchorPtr GetFirstPeerAnchor() const;
   NodePtr GetOwnerNode() const;
-  int GetIdx() const;
-  void SetIdx(int index);
+  int32_t GetIdx() const;
+  void SetIdx(int32_t index);
 
   // All peer anchors connected to current anchor
   std::vector<std::weak_ptr<Anchor>> peer_anchors_;
   // The owner node of anchor
   std::weak_ptr<Node> owner_node_;
   // The index of current anchor
-  int idx_;
+  int32_t idx_;
 };
 
-AnchorImpl::AnchorImpl(const NodePtr &owner_node, int idx) : owner_node_(owner_node), idx_(idx) {}
+AnchorImpl::AnchorImpl(const NodePtr &owner_node, int32_t idx) : owner_node_(owner_node), idx_(idx) {}
 
 size_t AnchorImpl::GetPeerAnchorsSize() const {
   return peer_anchors_.size();
@@ -66,16 +66,16 @@ AnchorPtr AnchorImpl::GetFirstPeerAnchor() const {
 
 NodePtr AnchorImpl::GetOwnerNode() const { return owner_node_.lock(); }
 
-int AnchorImpl::GetIdx() const { return idx_; }
+int32_t AnchorImpl::GetIdx() const { return idx_; }
 
 void AnchorImpl::SetIdx(int index) { idx_ = index; }
 
-Anchor::Anchor(const NodePtr &owner_node, int idx)
-    : impl_(std::shared_ptr<AnchorImpl>(new AnchorImpl(owner_node, idx))) {}
+Anchor::Anchor(const NodePtr &owner_node, const int32_t idx)
+    : enable_shared_from_this(), impl_(std::shared_ptr<AnchorImpl>(new AnchorImpl(owner_node, idx))) {}
 
 Anchor::~Anchor() = default;
 
-bool Anchor::IsTypeOf(TYPE type) const { return strcmp(Anchor::TypeOf<Anchor>(), type) == 0; }
+bool Anchor::IsTypeOf(const TYPE type) const { return std::string(Anchor::TypeOf<Anchor>()) == std::string(type); }
 
 size_t Anchor::GetPeerAnchorsSize() const {
   return impl_->GetPeerAnchorsSize();
@@ -96,7 +96,7 @@ NodePtr Anchor::GetOwnerNode() const {
 void Anchor::UnlinkAll() noexcept {
   if (!impl_->peer_anchors_.empty()) {
     do {
-      auto peer_anchor_ptr = impl_->peer_anchors_.begin()->lock();
+      const auto peer_anchor_ptr = impl_->peer_anchors_.begin()->lock();
       (void)Unlink(peer_anchor_ptr);
     } while (!impl_->peer_anchors_.empty());
   }
@@ -108,20 +108,20 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
     GELOGE(GRAPH_FAILED, "[Check][Param] peer anchor is invalid.");
     return GRAPH_FAILED;
   }
-  auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
+  const auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [peer](const std::weak_ptr<Anchor> &an) {
     auto anchor = an.lock();
     return peer->Equal(anchor);
   });
 
   if (it == impl_->peer_anchors_.end()) {
-    GELOGW("[Check][Param] Unlink failed , as this anchor is not connected to peer");
+    GELOGW("[Check][Param] Unlink failed , as this anchor is not connected to peer.");
     return GRAPH_FAILED;
   }
 
-  auto it_peer = std::find_if(peer->impl_->peer_anchors_.begin(), peer->impl_->peer_anchors_.end(),
+  const auto it_peer = std::find_if(peer->impl_->peer_anchors_.begin(), peer->impl_->peer_anchors_.end(),
       [this](const std::weak_ptr<Anchor> &an) {
-        auto anchor = an.lock();
+        const auto anchor = an.lock();
         return Equal(anchor);
       });
 
@@ -138,9 +138,9 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
   GE_CHK_BOOL_RET_STATUS(old_peer != nullptr, GRAPH_FAILED, "[Check][Param] this old peer anchor is nullptr");
   GE_CHK_BOOL_RET_STATUS(first_peer != nullptr, GRAPH_FAILED, "[Check][Param] this first peer anchor is nullptr");
   GE_CHK_BOOL_RET_STATUS(second_peer != nullptr, GRAPH_FAILED, "[Check][Param] this second peer anchor is nullptr");
-  auto this_it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
+  const auto this_it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [old_peer](const std::weak_ptr<Anchor> &an) {
-    auto anchor = an.lock();
+    const auto anchor = an.lock();
     return old_peer->Equal(anchor);
   });
 
@@ -149,11 +149,11 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
                          this->GetOwnerNode()->GetName().c_str(), this->GetIdx(),
                          old_peer->GetOwnerNode()->GetName().c_str(), old_peer->GetIdx());
 
-  auto old_it = std::find_if(old_peer->impl_->peer_anchors_.begin(), old_peer->impl_->peer_anchors_.end(),
-                             [this](const std::weak_ptr<Anchor> &an) {
-                               auto anchor = an.lock();
-                               return Equal(anchor);
-                             });
+  const auto old_it = std::find_if(old_peer->impl_->peer_anchors_.begin(), old_peer->impl_->peer_anchors_.end(),
+                                   [this](const std::weak_ptr<Anchor> &an) {
+                                     auto anchor = an.lock();
+                                     return Equal(anchor);
+                                   });
   GE_CHK_BOOL_RET_STATUS(old_it != old_peer->impl_->peer_anchors_.end(), GRAPH_FAILED,
                          "[Check][Param] old_peer(%s, %d) is not connected to this anchor(%s, %d)",
                          old_peer->GetOwnerNode()->GetName().c_str(), old_peer->GetIdx(),
@@ -166,33 +166,36 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
 }
 
 bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
-  auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
+  const auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [peer](const std::weak_ptr<Anchor> &an) {
-    auto anchor = an.lock();
-    GE_CHK_BOOL_RET_STATUS(peer != nullptr, false, "[Check][Param] this old peer anchor is nullptr");
+    const auto anchor = an.lock();
+    if (peer == nullptr) {
+      GELOGE(GRAPH_FAILED, "[Check][Param] this old peer anchor is nullptr");
+      return false;
+    }
     return peer->Equal(anchor);
   });
   return (it != impl_->peer_anchors_.end());
 }
 
-int Anchor::GetIdx() const {
+int32_t Anchor::GetIdx() const {
   return impl_->GetIdx();
 }
 
-void Anchor::SetIdx(int index) {
+void Anchor::SetIdx(const int32_t index) {
   impl_->SetIdx(index);
 }
 
-DataAnchor::DataAnchor(const NodePtr &owner_node, int idx) : Anchor(owner_node, idx) {}
+DataAnchor::DataAnchor(const NodePtr &owner_node, const int32_t idx) : Anchor(owner_node, idx) {}
 
-bool DataAnchor::IsTypeOf(TYPE type) const {
-  if (strcmp(Anchor::TypeOf<DataAnchor>(), type) == 0) {
+bool DataAnchor::IsTypeOf(const TYPE type) const {
+  if (std::string(Anchor::TypeOf<DataAnchor>()) == std::string(type)) {
     return true;
   }
   return Anchor::IsTypeOf(type);
 }
 
-InDataAnchor::InDataAnchor(const NodePtr &owner_node, int idx) : DataAnchor(owner_node, idx) {}
+InDataAnchor::InDataAnchor(const NodePtr &owner_node, const int32_t idx) : DataAnchor(owner_node, idx) {}
 
 OutDataAnchorPtr InDataAnchor::GetPeerOutAnchor() const {
   if (impl_ == nullptr || impl_->peer_anchors_.empty()) {
@@ -204,8 +207,8 @@ OutDataAnchorPtr InDataAnchor::GetPeerOutAnchor() const {
 
 graphStatus InDataAnchor::LinkFrom(const OutDataAnchorPtr &src) {
   // InDataAnchor must be only linkfrom once
-  if (src == nullptr || src->impl_ == nullptr ||
-      impl_ == nullptr || !impl_->peer_anchors_.empty())  {
+  if ((src == nullptr) || (src->impl_ == nullptr) ||
+      (impl_ == nullptr) || !impl_->peer_anchors_.empty())  {
     REPORT_INNER_ERROR("E19999", "src anchor is invalid or the peerAnchors is not empty.");
     GELOGE(GRAPH_FAILED, "[Check][Param] src anchor is invalid or the peerAnchors is not empty.");
     return GRAPH_FAILED;
@@ -215,30 +218,30 @@ graphStatus InDataAnchor::LinkFrom(const OutDataAnchorPtr &src) {
   return GRAPH_SUCCESS;
 }
 
-bool InDataAnchor::Equal(AnchorPtr anchor) const {
-  auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor);
+bool InDataAnchor::Equal(const AnchorPtr anchor) const {
+  const auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor);
   if (in_data_anchor != nullptr) {
-    if (GetOwnerNode() == in_data_anchor->GetOwnerNode() && GetIdx() == in_data_anchor->GetIdx()) {
+    if ((GetOwnerNode() == in_data_anchor->GetOwnerNode()) && (GetIdx() == in_data_anchor->GetIdx())) {
       return true;
     }
   }
   return false;
 }
 
-bool InDataAnchor::IsTypeOf(TYPE type) const {
-  if (strcmp(Anchor::TypeOf<InDataAnchor>(), type) == 0) {
+bool InDataAnchor::IsTypeOf(const TYPE type) const {
+  if (std::string(Anchor::TypeOf<InDataAnchor>()) == std::string(type)) {
     return true;
   }
   return DataAnchor::IsTypeOf(type);
 }
 
-OutDataAnchor::OutDataAnchor(const NodePtr &owner_node, int idx) : DataAnchor(owner_node, idx) {}
+OutDataAnchor::OutDataAnchor(const NodePtr &owner_node, const int32_t idx) : DataAnchor(owner_node, idx) {}
 
 OutDataAnchor::Vistor<InDataAnchorPtr> OutDataAnchor::GetPeerInDataAnchors() const {
   std::vector<InDataAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
-      auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
+      const auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
       if (in_data_anchor != nullptr) {
         ret.push_back(in_data_anchor);
       }
@@ -248,10 +251,10 @@ OutDataAnchor::Vistor<InDataAnchorPtr> OutDataAnchor::GetPeerInDataAnchors() con
 }
 
 uint32_t OutDataAnchor::GetPeerInDataNodesSize() const {
-  uint32_t out_nums = 0;
+  uint32_t out_nums = 0U;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
-      auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
+      const auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
       if (in_data_anchor != nullptr && in_data_anchor->GetOwnerNode() != nullptr) {
         out_nums++;
       }
@@ -264,7 +267,7 @@ OutDataAnchor::Vistor<InControlAnchorPtr> OutDataAnchor::GetPeerInControlAnchors
   std::vector<InControlAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
-      auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
+      const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
       if (in_control_anchor != nullptr) {
         ret.push_back(in_control_anchor);
       }
@@ -274,7 +277,7 @@ OutDataAnchor::Vistor<InControlAnchorPtr> OutDataAnchor::GetPeerInControlAnchors
 }
 
 graphStatus OutDataAnchor::LinkTo(const InDataAnchorPtr &dest) {
-  if (dest == nullptr || dest->impl_ == nullptr ||
+  if ((dest == nullptr) || (dest->impl_ == nullptr) ||
       !dest->impl_->peer_anchors_.empty()) {
     REPORT_INNER_ERROR("E19999", "dest anchor is nullptr or the peerAnchors is not empty.");
     GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is nullptr or the peerAnchors is not empty.");
@@ -321,19 +324,19 @@ graphStatus OutControlAnchor::LinkTo(const InDataAnchorPtr &dest) {
   return GRAPH_SUCCESS;
 }
 
-bool OutDataAnchor::Equal(AnchorPtr anchor) const {
+bool OutDataAnchor::Equal(const AnchorPtr anchor) const {
   CHECK_FALSE_EXEC(anchor != nullptr, return false);
-  auto out_data_anchor = Anchor::DynamicAnchorCast<OutDataAnchor>(anchor);
+  const auto out_data_anchor = Anchor::DynamicAnchorCast<OutDataAnchor>(anchor);
   if (out_data_anchor != nullptr) {
-    if (GetOwnerNode() == out_data_anchor->GetOwnerNode() && GetIdx() == out_data_anchor->GetIdx()) {
+    if ((GetOwnerNode() == out_data_anchor->GetOwnerNode()) && (GetIdx() == out_data_anchor->GetIdx())) {
       return true;
     }
   }
   return false;
 }
 
-bool OutDataAnchor::IsTypeOf(TYPE type) const {
-  if (strcmp(Anchor::TypeOf<OutDataAnchor>(), type) == 0) {
+bool OutDataAnchor::IsTypeOf(const TYPE type) const {
+  if (std::string(Anchor::TypeOf<OutDataAnchor>()) == std::string(type)) {
     return true;
   }
   return DataAnchor::IsTypeOf(type);
@@ -341,10 +344,10 @@ bool OutDataAnchor::IsTypeOf(TYPE type) const {
 
 ControlAnchor::ControlAnchor(const NodePtr &owner_node) : Anchor(owner_node, -1) {}
 
-ControlAnchor::ControlAnchor(const NodePtr &owner_node, int idx) : Anchor(owner_node, idx) {}
+ControlAnchor::ControlAnchor(const NodePtr &owner_node, const int32_t idx) : Anchor(owner_node, idx) {}
 
-bool ControlAnchor::IsTypeOf(TYPE type) const {
-  if (strcmp(Anchor::TypeOf<ControlAnchor>(), type) == 0) {
+bool ControlAnchor::IsTypeOf(const TYPE type) const {
+  if (std::string(Anchor::TypeOf<ControlAnchor>()) == std::string(type)) {
     return true;
   }
   return Anchor::IsTypeOf(type);
@@ -352,13 +355,13 @@ bool ControlAnchor::IsTypeOf(TYPE type) const {
 
 InControlAnchor::InControlAnchor(const NodePtr &owner_node) : ControlAnchor(owner_node) {}
 
-InControlAnchor::InControlAnchor(const NodePtr &owner_node, int idx) : ControlAnchor(owner_node, idx) {}
+InControlAnchor::InControlAnchor(const NodePtr &owner_node, const int32_t idx) : ControlAnchor(owner_node, idx) {}
 
 InControlAnchor::Vistor<OutControlAnchorPtr> InControlAnchor::GetPeerOutControlAnchors() const {
   std::vector<OutControlAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
-      auto out_control_anchor = Anchor::DynamicAnchorCast<OutControlAnchor>(anchor.lock());
+      const auto out_control_anchor = Anchor::DynamicAnchorCast<OutControlAnchor>(anchor.lock());
       if (out_control_anchor != nullptr) {
         ret.push_back(out_control_anchor);
       }
@@ -378,7 +381,7 @@ InControlAnchor::Vistor<OutDataAnchorPtr> InControlAnchor::GetPeerOutDataAnchors
   std::vector<OutDataAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
-      auto out_data_anchor = Anchor::DynamicAnchorCast<OutDataAnchor>(anchor.lock());
+      const auto out_data_anchor = Anchor::DynamicAnchorCast<OutDataAnchor>(anchor.lock());
       if (out_data_anchor != nullptr) {
         ret.push_back(out_data_anchor);
       }
@@ -403,10 +406,10 @@ graphStatus InControlAnchor::LinkFrom(const OutControlAnchorPtr &src) {
   return GRAPH_SUCCESS;
 }
 
-bool InControlAnchor::Equal(AnchorPtr anchor) const {
+bool InControlAnchor::Equal(const AnchorPtr anchor) const {
   CHECK_FALSE_EXEC(anchor != nullptr, REPORT_INNER_ERROR("E19999", "param anchor is nullptr, check invalid");
                    GELOGE(GRAPH_FAILED, "[Check][Param] anchor is invalid."); return false);
-  auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor);
+  const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor);
   if (in_control_anchor != nullptr) {
     if (GetOwnerNode() == in_control_anchor->GetOwnerNode()) {
       return true;
@@ -415,8 +418,8 @@ bool InControlAnchor::Equal(AnchorPtr anchor) const {
   return false;
 }
 
-bool InControlAnchor::IsTypeOf(TYPE type) const {
-  if (strcmp(Anchor::TypeOf<InControlAnchor>(), type) == 0) {
+bool InControlAnchor::IsTypeOf(const TYPE type) const {
+  if (std::string(Anchor::TypeOf<InControlAnchor>()) == std::string(type)) {
     return true;
   }
   return ControlAnchor::IsTypeOf(type);
@@ -424,13 +427,13 @@ bool InControlAnchor::IsTypeOf(TYPE type) const {
 
 OutControlAnchor::OutControlAnchor(const NodePtr &owner_node) : ControlAnchor(owner_node) {}
 
-OutControlAnchor::OutControlAnchor(const NodePtr &owner_node, int idx) : ControlAnchor(owner_node, idx) {}
+OutControlAnchor::OutControlAnchor(const NodePtr &owner_node, const int32_t idx) : ControlAnchor(owner_node, idx) {}
 
 OutControlAnchor::Vistor<InControlAnchorPtr> OutControlAnchor::GetPeerInControlAnchors() const {
   std::vector<InControlAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
-      auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
+      const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
       if (in_control_anchor != nullptr) {
         ret.push_back(in_control_anchor);
       }
@@ -443,7 +446,7 @@ OutControlAnchor::Vistor<InDataAnchorPtr> OutControlAnchor::GetPeerInDataAnchors
   std::vector<InDataAnchorPtr> ret;
   if (impl_ != nullptr) {
     for (const auto &anchor : impl_->peer_anchors_) {
-      auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
+      const auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
       if (in_data_anchor != nullptr) {
         ret.push_back(in_data_anchor);
       }
@@ -468,8 +471,8 @@ graphStatus OutControlAnchor::LinkTo(const InControlAnchorPtr &dest) {
   return GRAPH_SUCCESS;
 }
 
-bool OutControlAnchor::Equal(AnchorPtr anchor) const {
-  auto out_control_anchor = Anchor::DynamicAnchorCast<OutControlAnchor>(anchor);
+bool OutControlAnchor::Equal(const AnchorPtr anchor) const {
+  const auto out_control_anchor = Anchor::DynamicAnchorCast<OutControlAnchor>(anchor);
   if (out_control_anchor != nullptr) {
     if (GetOwnerNode() == out_control_anchor->GetOwnerNode()) {
       return true;
@@ -478,8 +481,8 @@ bool OutControlAnchor::Equal(AnchorPtr anchor) const {
   return false;
 }
 
-bool OutControlAnchor::IsTypeOf(TYPE type) const {
-  if (strcmp(Anchor::TypeOf<OutControlAnchor>(), type) == 0) {
+bool OutControlAnchor::IsTypeOf(const TYPE type) const {
+  if (std::string(Anchor::TypeOf<OutControlAnchor>()) == std::string(type)) {
     return true;
   }
   return ControlAnchor::IsTypeOf(type);

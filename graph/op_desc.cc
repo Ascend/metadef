@@ -156,8 +156,8 @@ graphStatus OpDescImpl::AddInputDesc(const std::string &name, const ge::GeTensor
   }
 }
 
-graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
-  for (unsigned int i = 0; i < num; i++) {
+graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const uint32_t num, size_t index) {
+  for (uint32_t i = 0; i < num; i++) {
     std::string input_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((input_name_idx_.find(input_name) == input_name_idx_.end()),
                      REPORT_INNER_ERROR("E19999", "Add input tensor_desc is existed. name[%s]", input_name.c_str());
@@ -195,8 +195,8 @@ graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const unsign
   return GRAPH_SUCCESS;
 }
 
-graphStatus OpDescImpl::AddOutputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
-  for (unsigned int i = 0; i < num; i++) {
+graphStatus OpDescImpl::AddOutputDescMiddle(const std::string &name, const uint32_t num, size_t index) {
+  for (uint32_t i = 0; i < num; i++) {
     std::string output_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
                      REPORT_INNER_ERROR("E19999", "Add output tensor_desc is existed. name[%s]", output_name.c_str());
@@ -693,9 +693,9 @@ vector<std::string> OpDescImpl::GetRegisterInputName() const {
   return register_input_name_;
 }
 
-graphStatus OpDescImpl::AddDynamicInputDesc(const std::string &name, const unsigned int num, bool is_push_back) {
+graphStatus OpDescImpl::AddDynamicInputDesc(const std::string &name, const uint32_t num, bool is_push_back) {
   if (is_push_back) {
-    for (unsigned int i = 0; i < num; i++) {
+    for (uint32_t i = 0; i < num; i++) {
       if (AddInputDesc(name + std::to_string(i), GeTensorDesc()) != GRAPH_SUCCESS)
         return GRAPH_FAILED;
     }
@@ -1236,7 +1236,7 @@ vector<bool> OpDescImpl::GetIsInputConst() const {
 }
 
 graphStatus OpDescImpl::RestoreInputNameIdx(const std::string &name,
-                                            const int &index) {
+                                            const int32_t &index) {
   if (input_name_idx_.find(name) != input_name_idx_.end()) {
     GELOGI("Restore input name index is existed. name[%s]", name.c_str());
   }
@@ -1245,7 +1245,7 @@ graphStatus OpDescImpl::RestoreInputNameIdx(const std::string &name,
 }
 
 graphStatus OpDescImpl::RestoreOutputNameIdx(const std::string &name,
-                                             const int &index) {
+                                             const int32_t &index) {
   if (output_name_idx_.find(name) != output_name_idx_.end()) {
     GELOGI("Restore output name index is existed. name[%s]", name.c_str());
   }
@@ -1534,11 +1534,11 @@ graphStatus OpDesc::AddInputDesc(const std::string &name, const ge::GeTensorDesc
   return impl_->AddInputDesc(name, input_desc);
 }
 
-graphStatus OpDesc::AddInputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
+graphStatus OpDesc::AddInputDescMiddle(const std::string &name, const uint32_t num, size_t index) {
   return impl_->AddInputDescMiddle(name, num, index);
 }
 
-graphStatus OpDesc::AddOutputDescMiddle(const std::string &name, const unsigned int num, size_t index) {
+graphStatus OpDesc::AddOutputDescMiddle(const std::string &name, const uint32_t num, size_t index) {
   return impl_->AddOutputDescMiddle(name, num, index);
 }
 
@@ -1733,7 +1733,7 @@ vector<std::string> OpDesc::GetRegisterInputName() const {
   return impl_->GetRegisterInputName();
 }
 
-graphStatus OpDesc::AddDynamicInputDesc(const std::string &name, const unsigned int num, bool is_push_back) {
+graphStatus OpDesc::AddDynamicInputDesc(const std::string &name, const uint32_t num, bool is_push_back) {
   return impl_->AddDynamicInputDesc(name, num, is_push_back);
 }
 
@@ -1752,9 +1752,9 @@ vector<std::string> OpDesc::GetRegisterOutputName() const {
   return impl_->GetRegisterOutputName();
 }
 
-graphStatus OpDesc::AddDynamicOutputDesc(const std::string &name, const unsigned int num, bool is_push_back) {
+graphStatus OpDesc::AddDynamicOutputDesc(const std::string &name, const uint32_t num, bool is_push_back) {
   if (is_push_back) {
-    for (unsigned int i = 0; i < num; i++) {
+    for (uint32_t i = 0; i < num; i++) {
       if (AddOutputDesc(name + std::to_string(i), GeTensorDesc()) != GRAPH_SUCCESS)
         return GRAPH_FAILED;
     }
@@ -1867,7 +1867,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetInputNameB
   return impl_->GetInputNameByIndex(index);
 }
 
-int OpDesc::GetInputIndexByName(const std::string &name) const {
+int32_t OpDesc::GetInputIndexByName(const std::string &name) const {
   return impl_->GetInputIndexByName(name);
 }
 
@@ -1883,7 +1883,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetOutputName
   return impl_->GetOutputNameByIndex(index);
 }
 
-int OpDesc::GetOutputIndexByName(const std::string &name) const {
+int32_t OpDesc::GetOutputIndexByName(const std::string &name) const {
   return impl_->GetOutputIndexByName(name);
 }
 
