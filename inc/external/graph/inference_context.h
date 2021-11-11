@@ -37,11 +37,11 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ShapeAndType {
   ShapeAndType();
   ~ShapeAndType() = default;
 
-  ShapeAndType(const Shape &shape, DataType dataType);
+  ShapeAndType(const Shape &shape, DataType data_type);
 
   void SetShape(const Shape &shape);
 
-  void SetType(DataType dataType);
+  void SetType(DataType data_type);
 
   Shape GetShape() const;
 

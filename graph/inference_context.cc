@@ -76,8 +76,8 @@ DataType ShapeAndType::GetDataType() const {
   return DT_UNDEFINED;
 }
 
-InferenceContext::InferenceContext(std::unique_ptr<InnerInferenceContext> &impl) {
-  inner_inference_context_ = std::move(impl);
+InferenceContext::InferenceContext(std::unique_ptr<InnerInferenceContext> &inner_context) {
+  inner_inference_context_ = std::move(inner_context);
 }
 
 std::unique_ptr<InferenceContext> InferenceContext::Create(void *resource_context_mgr) {
@@ -148,7 +148,7 @@ graphStatus InferenceContext::SetResourceContext(const ge::AscendString &key, Re
                          "Please check session initialized success or not.");
     return GRAPH_FAILED;
   }
-  inner_inference_context_->resource_context_mgr->SetResourceContext(key.GetString(), resource_context);
+  (void)inner_inference_context_->resource_context_mgr->SetResourceContext(key.GetString(), resource_context);
   return GRAPH_SUCCESS;
 }
 
@@ -157,7 +157,7 @@ graphStatus InferenceContext::AddChangedResourceKey(const ge::AscendString &key)
     GELOGE(GRAPH_PARAM_INVALID, "Resource key is null, invalid param.");
     return GRAPH_PARAM_INVALID;
   }
-  inner_inference_context_->changed_resource_keys.insert(key.GetString());
+  (void)inner_inference_context_->changed_resource_keys.insert(key.GetString());
   return GRAPH_SUCCESS;
 }
 
@@ -174,7 +174,7 @@ graphStatus InferenceContext::RegisterReliedOnResourceKey(const ge::AscendString
     GELOGE(GRAPH_PARAM_INVALID, "Resource key is null, invalid param.");
     return GRAPH_PARAM_INVALID;
   }
-  inner_inference_context_->relied_resource_keys.insert(key.GetString());
+  (void)inner_inference_context_->relied_resource_keys.insert(key.GetString());
   return GRAPH_SUCCESS;
 }
 
