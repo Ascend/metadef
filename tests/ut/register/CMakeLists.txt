@@ -67,6 +67,8 @@ set(REGISTER_SRC_FILES
     "${METADEF_DIR}/register/graph_optimizer/graph_fusion/graph_fusion_pass_base.cc"
     "${METADEF_DIR}/register/graph_optimizer/graph_fusion/pattern_fusion_base_pass.cc"
     "${METADEF_DIR}/register/graph_optimizer/graph_fusion/pattern_fusion_base_pass_impl.cc"
+    "${METADEF_DIR}/register/graph_optimizer/graph_fusion/large_bm.cc"
+    "${METADEF_DIR}/register/graph_optimizer/graph_fusion/connection_matrix.cc"
     "${METADEF_DIR}/register/host_cpu_context.cc"
     "${METADEF_DIR}/register/infer_data_slice_registry.cc"
     "${METADEF_DIR}/register/ops_kernel_builder_registry.cc"
@@ -112,6 +114,7 @@ set(REGISTER_UT_FILES
     "testcase/register_op_tiling_v1_ut.cc"
     "testcase/register_optiling_unittest.cc"
     "graph_builder_utils.cc"
+    "testcase/graph_fusion_clycle_detection_unittest.cc"
 )
 
 ############ libut_metadef_register.a ############
