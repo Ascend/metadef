@@ -25,7 +25,6 @@
 #include "common/opskernel/ops_kernel_info_store.h"
 #include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 #include "register/graph_optimizer/graph_fusion/graph_pass.h"
-#include "register/graph_optimizer/graph_fusion/connection_matrix.h"
 
 using std::initializer_list;
 using std::map;
@@ -71,33 +70,6 @@ class PatternFusionBasePass : public GraphPass {
    */
   virtual Status Run(ge::ComputeGraph &graph, OpsKernelInfoStorePtr ops_kernel_info_store_ptr);
 
-#ifndef ONLY_COMPILE_OPEN_SRC
-  /* Detect whether there are cycles in graph
-   * after fusing all nodes in param fusion_nodes.
-   *
-   * Compared with Cycle Detection
-   * @param fusion_nodes: each vector in fusion_nodes
-   * will be fused into an entity(which could contains
-   * more than one node). The caller should put all original
-   * nodes which are expected to be fused into one larger node
-   * into each sub-vector of fusion_nodes.
-   *
-   * This function can tell whether there are a cycle after
-   * fusing all nodes in fusion_nodes. Each vector in 2-d
-   * vector fusion_nodes will be fused into an entity.
-   *
-   *
-   * This interface cannot detect whether there are cycles
-   * inside the fused nodes.
-   *
-   * e.g. {a, b, c, d} -> {e, f}
-   * Because the edge information is not given for e and f
-   * so this function we cannot tell if e and f are in a
-   * cycle.
-   * */
-  bool CycleDetection(const ge::ComputeGraph &graph,
-                      const std::vector<std::vector<ge::NodePtr>> &fusion_nodes);
-#endif
  protected:
   virtual std::vector<FusionPattern *> DefinePatterns() = 0;
   virtual Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, std::vector<ge::NodePtr> &new_nodes) = 0;
@@ -136,43 +108,13 @@ class PatternFusionBasePass : public GraphPass {
 
   Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
 
-#ifndef ONLY_COMPILE_OPEN_SRC
-  /* Check whether there are cycles after fusing scope_nodes as an
-   * entity. The algorithm is:
-   * If one of the output node of scope nodes has an edged linked to
-   * the scope nodes again, there will be a cycle.
-   * e.g.
-   *               A
-   *             /  \
-   *            B    \
-   *           /      \
-   *          D------->C
-   *          |        |
-   * After fusion A/B/C, the graph looks like:
-   *              <---
-   *             /    \
-   *           ABC--->D
-   * There obviously a cycle in the fused graph.
-   *             */
-  bool DetectOneScope(const std::vector<ge::NodePtr> &scope_nodes);
-
-  bool CheckEachPeerOut(const ge::NodePtr &node,
-                        const std::unordered_set<ge::NodePtr> &scope_nodes_set,
-                        const std::vector<ge::NodePtr> &scope_nodes);
-#endif
   /** Internal implement class ptr */
   std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;
 
   std::unordered_map<ge::NodePtr, std::map<ge::InDataAnchorPtr, ge::OutDataAnchorPtr>> origin_op_anchors_map_;
-#ifndef ONLY_COMPILE_OPEN_SRC
-  /* For detecting cycles, we will only build connectivity once.
-   * One time generation of connectivity needs O(n+e) where n is
-   * total number of nodes and e is total number of edges, which is
-   * not tolerable. And this requires one pass only executed once.
-   * */
-  std::shared_ptr<ConnectionMatrix> connectivity_{nullptr};
-#endif
+
   bool enable_network_analysis_ = false;
+
 };
 }  // namespace fe
 
