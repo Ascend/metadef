@@ -48,6 +48,7 @@ bool CompileInfoCache::HasCompileInfo(const std::string &key) {
 }
 
 void* CompileInfoCache::GetCompileInfo(const std::string &key) {
+  std::lock_guard<std::mutex> lock_guard(compile_info_mutex_);
   auto iter = this->compile_info_map_.find(key);
   if (iter == this->compile_info_map_.end()) {
     return nullptr;
