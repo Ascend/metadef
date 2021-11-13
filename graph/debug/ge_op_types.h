@@ -19,9 +19,8 @@
 
 #include "graph/compiler_options.h"
 
+#define GE_REGISTER_OPTYPE(var_name, str_name) static const char *(var_name) METADEF_ATTRIBUTE_UNUSED = (str_name)
 namespace ge {
-#define GE_REGISTER_OPTYPE(var_name, str_name) static const char *var_name METADEF_ATTRIBUTE_UNUSED = str_name
-
 GE_REGISTER_OPTYPE(DATA, "Data");
 GE_REGISTER_OPTYPE(AIPPDATA, "AippData");
 GE_REGISTER_OPTYPE(MATMUL, "MatMul");
@@ -77,5 +76,5 @@ GE_REGISTER_OPTYPE(NODE_NAME_NET_OUTPUT, "Node_Output");
 GE_REGISTER_OPTYPE(RECV, "Recv");
 GE_REGISTER_OPTYPE(SEND, "Send");
 GE_REGISTER_OPTYPE(NOOP, "NoOp");
-};  // namespace ge
+}  // namespace ge
 #endif  // COMMON_GRAPH_DEBUG_GE_OP_TYPES_H_

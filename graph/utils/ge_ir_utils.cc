@@ -29,14 +29,14 @@ const char *const kNodeTypeForSubgraph = "subgraph";
 const char *const kPrefixForInputDesc = "input_desc_attr_";
 const char *const kPrefixForOutputDesc = "output_desc_attr_";
 const char *const kDumpGEGraph = "DUMP_GE_GRAPH";
-const int8_t kMaxRecursionDepth = 10;
-const int kBase = 10;
-char kDumpGeGraph[MMPA_MAX_PATH] = { 0x00 };
+const int8_t kMaxRecursiveDepth = 10;
+const int32_t kDecimalBase = 10;
+char kDumpGeGraphEnv[MMPA_MAX_PATH] = {};
 const int64_t kDumpLevel =
-    (mmGetEnv(kDumpGEGraph, kDumpGeGraph, MMPA_MAX_PATH) == EN_OK) ?
-    std::strtol(kDumpGeGraph, nullptr, kBase) : ge::OnnxUtils::NO_DUMP;
-const int64_t kInputPrefixLength = 5;
-const int64_t kOutputPrefixLength = 6;
+    (mmGetEnv(kDumpGEGraph, &(kDumpGeGraphEnv[0U]), static_cast<UINT32>(MMPA_MAX_PATH)) == EN_OK) ?
+    std::strtol(&(kDumpGeGraphEnv[0U]), nullptr, kDecimalBase) : ge::OnnxUtils::NO_DUMP;
+const uint64_t kInputPrefixLength = 5U;
+const uint64_t kOutputPrefixLength = 6U;
 using AttrDefPair = ::google::protobuf::MapPair<std::string, ge::proto::AttrDef>;
 }  // namespace
 
@@ -54,13 +54,13 @@ const std::map<ge::DataType, onnx::TensorProto_DataType> kGeDataTypeToOnnxMap = 
 }
 
 struct AttrNameComp {
-  inline bool operator()(const onnx::AttributeProto &lsh, const onnx::AttributeProto &rsh) {
+  inline bool operator()(const onnx::AttributeProto &lsh, const onnx::AttributeProto &rsh) const {
     return lsh.name() < rsh.name();
   }
 };
 
-onnx::TensorProto_DataType OnnxUtils::EncodeDataType(DataType data_type) {
-  auto it = kGeDataTypeToOnnxMap.find(data_type);
+onnx::TensorProto_DataType OnnxUtils::EncodeDataType(const DataType data_type) {
+  const auto it = kGeDataTypeToOnnxMap.find(data_type);
   if (it != kGeDataTypeToOnnxMap.end()) {
     return it->second;
   } else {
@@ -70,22 +70,22 @@ onnx::TensorProto_DataType OnnxUtils::EncodeDataType(DataType data_type) {
 }
 
 void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge::GeAttrValue> &string_attr_value,
-                                          onnx::NodeProto *node_proto) {
+                                          onnx::NodeProto *const node_proto) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr, check invalid");
     GELOGE(FAILED, "[Check][Param] Node proto is nullptr.");
     return;
   }
-  auto attr = node_proto->add_attribute();
+  const auto attr = node_proto->add_attribute();
   if (attr == nullptr) {
     REPORT_INNER_ERROR("E19999", "add attr to node proto return nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] attr is nullptr.");
     return;
   }
-  auto attr_name = string_attr_value.first;
+  const auto attr_name = string_attr_value.first;
   attr->set_name(attr_name);
-  auto attr_value = string_attr_value.second;
-  auto value_type = attr_value.GetValueType();
+  const auto attr_value = string_attr_value.second;
+  const auto value_type = attr_value.GetValueType();
   switch (value_type) {
     case GeAttrValue::VT_FLOAT: {
       float data_f = 0;
@@ -141,14 +141,14 @@ void OnnxUtils::AddAttrProtoFromAttribute(const std::pair<const std::string, ge:
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
-                             const std::string &name, void *data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *const node_proto, const onnx::AttributeProto_AttributeType type,
+                             const std::string &name, const void *const data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node_proto is nullptr.");
     return;
   }
-  auto attr = node_proto->add_attribute();
+  const auto attr = node_proto->add_attribute();
   if (attr == nullptr) {
     REPORT_INNER_ERROR("E19999", "add attr to node proto return nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] attr is nullptr.");
@@ -157,37 +157,37 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   attr->set_name(name);
   switch (type) {
     case onnx::AttributeProto_AttributeType_FLOAT:
-      attr->set_f((*(static_cast<float *>(data))));
+      attr->set_f((*(static_cast<const float *const>(data))));
       attr->set_type(onnx::AttributeProto_AttributeType_FLOAT);
       break;
 
     case onnx::AttributeProto_AttributeType_FLOATS:
       attr->set_type(onnx::AttributeProto_AttributeType_FLOATS);
-      for (auto &v : (*(static_cast<std::vector<float> *>(data)))) {
+      for (auto &v : (*(static_cast<const std::vector<float> *const>(data)))) {
         attr->add_floats(v);
       }
       break;
 
     case onnx::AttributeProto_AttributeType_INT:
       attr->set_type(onnx::AttributeProto_AttributeType_INT);
-      attr->set_i((*(static_cast<int64_t *>(data))));
+      attr->set_i((*(static_cast<const int64_t *const>(data))));
       break;
 
     case onnx::AttributeProto_AttributeType_INTS:
       attr->set_type(onnx::AttributeProto_AttributeType_INTS);
-      for (auto &v : *(static_cast<std::vector<int64_t> *>(data))) {
+      for (auto &v : *(static_cast<const std::vector<int64_t> *const>(data))) {
         attr->add_ints(v);
       }
       break;
 
     case onnx::AttributeProto_AttributeType_STRING:
       attr->set_type(onnx::AttributeProto_AttributeType_STRING);
-      attr->set_s((*(static_cast<std::string *>(data))));
+      attr->set_s((*(static_cast<const std::string *const>(data))));
       break;
 
     case onnx::AttributeProto_AttributeType_STRINGS:
       attr->set_type(onnx::AttributeProto_AttributeType_STRINGS);
-      for (auto &v : *(static_cast<std::vector<std::string> *>(data))) {
+      for (auto &v : *(static_cast<const std::vector<std::string> *const>(data))) {
         attr->add_strings(v);
       }
       break;
@@ -198,16 +198,16 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
+void OnnxUtils::AddAttrProto(onnx::NodeProto *const node_proto, const onnx::AttributeProto_AttributeType type,
                              const std::string &name,
-                             ::google::protobuf::RepeatedField<::google::protobuf::int64> data) {
+                             const ::google::protobuf::RepeatedField<::google::protobuf::int64> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node_proto is nullptr.");
     return;
   }
   if (!data.empty()) {
-    auto attr = node_proto->add_attribute();
+    const auto attr = node_proto->add_attribute();
     if (attr == nullptr) {
       REPORT_INNER_ERROR("E19999", "add attr to node proto return nullptr.");
       GELOGE(GRAPH_FAILED, "[Check][Param] attr is nullptr.");
@@ -221,15 +221,15 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
-                             const std::string &name, ::google::protobuf::RepeatedField<bool> data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *const node_proto, const onnx::AttributeProto_AttributeType type,
+                             const std::string &name, const ::google::protobuf::RepeatedField<bool> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node proto is nullptr.");
     return;
   }
   if (!data.empty()) {
-    auto attr = node_proto->add_attribute();
+    const auto attr = node_proto->add_attribute();
     if (attr == nullptr) {
       REPORT_INNER_ERROR("E19999", "add attr to node proto return nullptr.");
       GELOGE(GRAPH_FAILED, "[Check][Param] attr is nullptr.");
@@ -243,15 +243,15 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
-                             const std::string &name, ::google::protobuf::RepeatedField<float> data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *const node_proto, const onnx::AttributeProto_AttributeType type,
+                             const std::string &name, const ::google::protobuf::RepeatedField<float> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node_proto is nullptr.");
     return;
   }
   if (!data.empty()) {
-    auto attr = node_proto->add_attribute();
+    const auto attr = node_proto->add_attribute();
     if (attr == nullptr) {
       REPORT_INNER_ERROR("E19999", "add attr to node proto return nullptr.");
       GELOGE(GRAPH_FAILED, "[Check][Param] attr is nullptr.");
@@ -265,15 +265,15 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_AttributeType type,
-                             const std::string &name, ::google::protobuf::RepeatedPtrField<::std::string> data) {
+void OnnxUtils::AddAttrProto(onnx::NodeProto *const node_proto, const onnx::AttributeProto_AttributeType type,
+                             const std::string &name, const ::google::protobuf::RepeatedPtrField<::std::string> data) {
   if (node_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_proto is nullptr.");
     GELOGE(FAILED, "[Check][Param] Node proto is nullptr.");
     return;
   }
   if (!data.empty()) {
-    auto attr = node_proto->add_attribute();
+    const auto attr = node_proto->add_attribute();
     if (attr == nullptr) {
       REPORT_INNER_ERROR("E19999", "add attr to node proto return nullptr.");
       GELOGE(GRAPH_FAILED, "[Check][Param] attr is nullptr.");
@@ -287,38 +287,51 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *node_proto, onnx::AttributeProto_A
   }
 }
 
-void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDescPtr &op_desc) {
-  auto size_in = static_cast<int64_t>(op_desc->GetAllInputsSize());
+void OnnxUtils::AddAllAttr(onnx::NodeProto *const node_proto, const ConstGeTensorDescPtr &op_desc,
+                           const char *const prefix, const uint32_t idx) {
+  std::map<std::string, AnyValue> attr_maps = op_desc->GetAllAttrs();
+  google::protobuf::Map<std::string, ge::proto::AttrDef> tensor_desc_map;
+  (void)ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
+  std::string suffix = ":" + std::to_string(idx);
+  AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForInputDesc, suffix);
+}
+
+void OnnxUtils::AddShapeFormatAndDtypeIntoProto(const bool is_input, onnx::NodeProto *const node_proto,
+                                                const ge::ConstGeTensorDescPtr &desc, const uint32_t idx) {
+  std::string prefix = is_input ? "input_desc_" : "output_desc_";
+  const auto data_type = ge::TypeUtils::DataTypeToSerialString(desc->GetDataType());
+  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
+               prefix + "dtype:" + std::to_string(idx), &data_type);
+  const auto data_type_origin = ge::TypeUtils::DataTypeToSerialString(desc->GetOriginDataType());
+  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
+               prefix + "origin_dtype:" + std::to_string(idx), &data_type_origin);
+  const auto dims = desc->GetShape().GetDims();
+  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
+               prefix + "shape:" + std::to_string(idx), &dims);
+  const auto dims_origin = desc->GetOriginShape().GetDims();
+  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
+               prefix + "origin_shape:" + std::to_string(idx), &dims_origin);
+  const auto layout = ge::TypeUtils::FormatToSerialString(desc->GetFormat());
+  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
+               prefix + "layout:" + std::to_string(idx), &layout);
+  const auto layout_origin = ge::TypeUtils::FormatToSerialString(desc->GetOriginFormat());
+  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
+               prefix + "origin_layout:" + std::to_string(idx), &layout_origin);
+}
+
+void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *const node_proto, const OpDescPtr &op_desc) {
+  const auto size_in = op_desc->GetAllInputsSize();
   AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "input_desc_nums", &size_in);
-  if (size_in > 0) {
-    for (uint32_t i = 0; i < size_in; i++) {
-      auto input_desc = op_desc->GetInputDescPtrDfault(i);
+  if (size_in > 0U) {
+    for (uint32_t i = 0U; i < size_in; i++) {
+      const auto input_desc = op_desc->GetInputDescPtrDfault(i);
       if (input_desc == nullptr || input_desc->impl_ == nullptr) {
         GELOGW("[Add][InAttr] Input desc of input %u is nullptr", i);
         continue;
       }
-      auto data_type = TypeUtils::DataTypeToSerialString(input_desc->GetDataType());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
-                   "input_desc_dtype:" + std::to_string(i), &data_type);
-      auto data_type_origin = TypeUtils::DataTypeToSerialString(input_desc->GetOriginDataType());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
-                   "input_desc_origin_dtype:" + std::to_string(i), &data_type_origin);
-      auto dims = input_desc->GetShape().GetDims();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
-                   "input_desc_shape:" + std::to_string(i), &dims);
-      auto dims_origin = input_desc->GetOriginShape().GetDims();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
-                   "input_desc_origin_shape:" + std::to_string(i), &dims_origin);
-      auto layout = TypeUtils::FormatToSerialString(input_desc->GetFormat());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
-                   "input_desc_layout:" + std::to_string(i), &layout);
-      auto layout_origin = TypeUtils::FormatToSerialString(input_desc->GetOriginFormat());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
-                   "input_desc_origin_layout:" + std::to_string(i), &layout_origin);
-
+      AddShapeFormatAndDtypeIntoProto(true, node_proto, input_desc, i);
       auto &tensor_descriptor = input_desc->impl_->ext_meta_;
-
-      auto size = static_cast<int64_t>(tensor_descriptor.GetSize());
+      const auto size = static_cast<int64_t>(tensor_descriptor.GetSize());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_size:" + std::to_string(i), &size);
       auto weight_size = static_cast<int64_t>(tensor_descriptor.GetWeightSize());
@@ -343,52 +356,31 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *node_proto, const OpDes
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_data_offset:" + std::to_string(i), &data_offset);
       auto cmps_size = static_cast<int64_t>(tensor_descriptor.GetCmpsSize());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "input_desc_cmps_size:" + std::to_string(i),
-                   &cmps_size);
+      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
+                   "input_desc_cmps_size:" + std::to_string(i), &cmps_size);
       auto cmps_tab = tensor_descriptor.GetCmpsTab();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    "input_desc_cmps_tab:" + std::to_string(i), &cmps_tab);
       auto cmps_tab_offset = static_cast<int64_t>(tensor_descriptor.GetCmpsTabOffset());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "input_desc_cmps_tab_offset:" + std::to_string(i), &cmps_tab_offset);
-      std::map<std::string, AnyValue> attr_maps = input_desc->GetAllAttrs();
-      google::protobuf::Map<std::string, ge::proto::AttrDef> tensor_desc_map;
-      (void)ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
-      std::string suffix = ":" + std::to_string(i);
-      AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForInputDesc, suffix);
+      AddAllAttr(node_proto, input_desc, kPrefixForInputDesc, i);
     }
   }
 }
 
-void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *node_proto, const OpDescPtr &op_desc) {
+void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *const node_proto, const OpDescPtr &op_desc) {
   // Output describes
-  auto size_out = static_cast<int64_t>(op_desc->GetOutputsSize());
+  const auto size_out = static_cast<int64_t>(op_desc->GetOutputsSize());
   AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "output_desc_nums", &size_out);
-  if (size_out > 0) {
-    for (uint32_t i = 0; i < size_out; i++) {
-      auto output_desc = op_desc->GetOutputDescPtr(i);
+  if (size_out > 0U) {
+    for (uint32_t i = 0U; i < size_out; i++) {
+      const auto output_desc = op_desc->GetOutputDescPtr(i);
       if (output_desc == nullptr || output_desc->impl_ == nullptr) {
         GELOGW("[Add][OutAttr] Output desc of output %u is nullptr", i);
         continue;
       }
-      auto data_type = TypeUtils::DataTypeToSerialString(output_desc->GetDataType());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
-                   "output_desc_dtype:" + std::to_string(i), &data_type);
-      auto origin_data_type = TypeUtils::DataTypeToSerialString(output_desc->GetOriginDataType());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
-                   "output_desc_origin_dtype:" + std::to_string(i), &origin_data_type);
-      auto dims = output_desc->GetShape().GetDims();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
-                   "output_desc_shape:" + std::to_string(i), &dims);
-      auto dims_origin = output_desc->GetOriginShape().GetDims();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
-                   "output_desc_origin_shape:" + std::to_string(i), &dims_origin);
-      auto layout = TypeUtils::FormatToSerialString(output_desc->GetFormat());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, "output_desc_layout:" + std::to_string(i),
-                   &layout);
-      auto layout_origin = TypeUtils::FormatToSerialString(output_desc->GetOriginFormat());
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
-                   "output_desc_origin_layout:" + std::to_string(i), &layout_origin);
+      AddShapeFormatAndDtypeIntoProto(false, node_proto, output_desc, i);
       auto &tensor_descriptor = output_desc->impl_->ext_meta_;
       auto size = static_cast<int64_t>(tensor_descriptor.GetSize());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "output_desc_size:" + std::to_string(i),
@@ -402,17 +394,13 @@ void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *node_proto, const OpDe
       auto real_dim_cnt = static_cast<int64_t>(tensor_descriptor.GetRealDimCnt());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT,
                    "output_desc_real_dim_cnt:" + std::to_string(i), &real_dim_cnt);
-      std::string suffix = ":" + std::to_string(i);
-      std::map<std::string, AnyValue> attr_maps = output_desc->GetAllAttrs();
-      google::protobuf::Map<std::string, ge::proto::AttrDef> tensor_desc_map;
-      (void)ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
-      AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForOutputDesc, suffix);
+      AddAllAttr(node_proto, output_desc, kPrefixForOutputDesc, i);
     }
   }
 }
 
-void OnnxUtils::AddAttrProtoForOpInAndOutDesc(onnx::NodeProto *node_proto, const OpDescPtr &op_desc) {
-  if (node_proto == nullptr || op_desc == nullptr) {
+void OnnxUtils::AddAttrProtoForOpInAndOutDesc(onnx::NodeProto *const node_proto, const OpDescPtr &op_desc) {
+  if ((node_proto == nullptr) || (op_desc == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node_proto or op_desc is nullptr");
     GELOGE(GRAPH_FAILED, "[Check][Param] node_proto or op_desc is nullptr");
     return;
@@ -422,49 +410,49 @@ void OnnxUtils::AddAttrProtoForOpInAndOutDesc(onnx::NodeProto *node_proto, const
 }
 
 void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
-    const ::google::protobuf::Map<std::string, ::ge::proto::AttrDef> &attr_map, onnx::NodeProto *node_proto,
+    const ::google::protobuf::Map<std::string, ::ge::proto::AttrDef> &attr_map, onnx::NodeProto *const node_proto,
     const std::string& prefix, const std::string& suffix) {
   for (const auto &item : attr_map) {
-    auto attr_name = item.first;
-    auto attr_def = item.second;
-    auto attr_type = attr_def.value_case();
+    const auto attr_name = item.first;
+    const auto attr_def = item.second;
+    const auto attr_type = attr_def.value_case();
     if (attr_type == ge::proto::AttrDef::kT) {
       const auto &tensor_def = attr_def.t();
       const auto &tensor_desc = tensor_def.desc();
-      auto data_type = ge::proto::DataType_Name(tensor_desc.dtype());
+      const auto data_type = ge::proto::DataType_Name(tensor_desc.dtype());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    prefix + attr_name + "_desc_dtype" + suffix, &data_type);
-      auto dims = tensor_desc.shape().dim();
+      const auto dims = tensor_desc.shape().dim();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS,
                    prefix + attr_name + "_desc_shape" + suffix, dims);
-      auto layout = tensor_desc.layout();
+      const auto layout = tensor_desc.layout();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                    prefix + attr_name + "_desc_layout" + suffix, &layout);
-      auto device_type = tensor_desc.device_type();
+      const auto device_type = tensor_desc.device_type();
       AddAttrProto(node_proto, ge::onnx::AttributeProto_AttributeType_STRING,
                    prefix + attr_name + "_desc_device_type" + suffix, &device_type);
       if (kDumpLevel == DUMP_ALL) {
-        auto data = tensor_def.data();
+        const auto data = tensor_def.data();
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                      prefix + attr_name + "_data" + suffix, &data);
       }
     }
     if (attr_type == ge::proto::AttrDef::kS) {
       if (kDumpLevel == DUMP_ALL) {
-        auto str_value = attr_def.s();
+        const auto str_value = attr_def.s();
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, prefix + attr_name + suffix, &str_value);
       }
     }
     if (attr_type == ge::proto::AttrDef::kI) {
-      auto int_value = attr_def.i();
+      const auto int_value = attr_def.i();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, prefix + attr_name + suffix, &int_value);
     }
     if (attr_type == ge::proto::AttrDef::kF) {
-      auto float_value = attr_def.f();
+      const auto float_value = attr_def.f();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_FLOAT, prefix + attr_name + suffix, &float_value);
     }
     if (attr_type == ge::proto::AttrDef::kB) {
-      auto int_value = static_cast<int64_t>(attr_def.b());
+      const auto int_value = static_cast<int64_t>(attr_def.b());
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, prefix + attr_name + suffix, &int_value);
     }
     if (attr_type == ge::proto::AttrDef::kList) {
@@ -508,31 +496,70 @@ void OnnxUtils::AddListAttrProto(const std::string &attr_name,
   }
 }
 
-void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto *node_proto) {
-  if (node == nullptr || node->impl_ == nullptr) {
+void OnnxUtils::AddCommonAttrIntoProto(const NodePtr &node,
+                                       onnx::NodeProto *const node_proto,
+                                       const OpDescPtr &op_desc) {
+  const auto op_def = op_desc->impl_->op_def_.GetProtoMsg();
+  if (op_def != nullptr) {
+    const auto id = op_def->id();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "id", &id);
+    const auto stream_id = op_def->stream_id();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "stream_id", &stream_id);
+    const auto &input_name = op_def->input_name();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "input_name", input_name);
+    const auto &src_name = op_def->src_name();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "src_name", src_name);
+    const auto &src_index = op_def->src_index();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "src_index", src_index);
+    const auto &dst_name = op_def->dst_name();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "dst_name", dst_name);
+    const auto &dst_index = op_def->dst_index();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "dst_index", dst_index);
+    const auto &input_i = op_def->input_i();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "input_i", input_i);
+    const auto &output_i = op_def->output_i();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "output_i", output_i);
+    const auto &workspace = op_def->workspace();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace", workspace);
+    const auto &workspace_bytes = op_def->workspace_bytes();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace_bytes", workspace_bytes);
+    const auto &is_input_const = op_def->is_input_const();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "is_input_const", is_input_const);
+    auto op_def_attr_map = op_def->attr();
+    std::map<std::string, AnyValue> attr_maps = op_desc->GetAllAttrs();
+    ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &op_def_attr_map);
+    AddAttrProtoForAttrsFromAttrMap(op_def_attr_map, node_proto);
+  } else {
+    REPORT_INNER_ERROR("E19999", "GetProtoMsg return nullptr, node:%s.", node->GetName().c_str());
+    GELOGE(FAILED, "[Get][ProtoMsg] Opdef is nullptr");
+  }
+}
+
+void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto *const node_proto) {
+  if ((node == nullptr) || (node->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node is nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] node is nullptr");
     return;
   }
   // 1.Attributes added from node's methods
-  auto send_list = node->impl_->send_event_id_list_;
+  const auto send_list = node->impl_->send_event_id_list_;
   if (!send_list.empty()) {
     AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "send_event_id_list", &send_list);
   }
-  auto recv_list = node->impl_->recv_event_id_list_;
+  const auto recv_list = node->impl_->recv_event_id_list_;
   if (!recv_list.empty()) {
     AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "recv_event_id_list", &recv_list);
   }
-  auto op_desc = node->impl_->op_;
+  const auto op_desc = node->impl_->op_;
   if (op_desc != nullptr && op_desc->impl_ != nullptr) {
     // for input_name_idx_ in opdesc
-    auto input_name_2_indexs = op_desc->GetAllInputName();
+    const auto input_name_2_indexs = op_desc->GetAllInputName();
     ::google::protobuf::RepeatedPtrField<::std::string> input_names;
     ::google::protobuf::RepeatedField<::google::protobuf::int64> input_indexes;
     for (const auto &input_name_2_index: input_name_2_indexs) {
       std::string input_name = input_name_2_index.first;
       input_names.Add(std::move(input_name));
-      input_indexes.Add(input_name_2_index.second);
+      input_indexes.Add(static_cast<int64_t>(input_name_2_index.second));
     }
     AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "_input_name_key", input_names);
     AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "_input_name_value", input_indexes);
@@ -540,41 +567,7 @@ void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto
     // Input and out describes
     AddAttrProtoForOpInAndOutDesc(node_proto, op_desc);
     // Others
-    auto op_def = op_desc->impl_->op_def_.GetProtoMsg();
-    if (op_def != nullptr) {
-      auto id = op_def->id();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "id", &id);
-      auto stream_id = op_def->stream_id();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "stream_id", &stream_id);
-      const auto &input_name = op_def->input_name();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "input_name", input_name);
-      const auto &src_name = op_def->src_name();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "src_name", src_name);
-      const auto &src_index = op_def->src_index();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "src_index", src_index);
-      const auto &dst_name = op_def->dst_name();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "dst_name", dst_name);
-      const auto &dst_index = op_def->dst_index();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "dst_index", dst_index);
-      const auto &input_i = op_def->input_i();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "input_i", input_i);
-      const auto &output_i = op_def->output_i();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "output_i", output_i);
-      const auto &workspace = op_def->workspace();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace", workspace);
-      const auto &workspace_bytes = op_def->workspace_bytes();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace_bytes", workspace_bytes);
-      const auto &is_input_const = op_def->is_input_const();
-      AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "is_input_const", is_input_const);
-      auto op_def_attr_map = op_def->attr();
-      std::map<std::string, AnyValue> attr_maps = op_desc->GetAllAttrs();
-      ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &op_def_attr_map);
-      AddAttrProtoForAttrsFromAttrMap(op_def_attr_map, node_proto);
-    } else {
-      REPORT_INNER_ERROR("E19999", "GetProtoMsg return nullptr, node:%s.", node->GetName().c_str());
-      GELOGE(FAILED, "[Get][ProtoMsg] Opdef is nullptr");
-      return;
-    }
+    AddCommonAttrIntoProto(node, node_proto, op_desc);
   } else {
     REPORT_INNER_ERROR("E19999", "Opdesc is nullptr, node:%s", node->GetName().c_str());
     GELOGE(FAILED, "[Check][Param] Opdesc is nullptr");
@@ -582,7 +575,7 @@ void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto
   }
 }
 
-bool OnnxUtils::EncodeNodeDesc(const NodePtr &node, onnx::NodeProto *node_proto) {
+bool OnnxUtils::EncodeNodeDesc(const NodePtr &node, onnx::NodeProto *const node_proto) {
   if ((node == nullptr) || (node->impl_ == nullptr) || (node_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or node_proto is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeOpDesc: Input Para Node Invalid");
@@ -601,7 +594,7 @@ bool OnnxUtils::EncodeNodeDesc(const NodePtr &node, onnx::NodeProto *node_proto)
   return true;
 }
 
-void OnnxUtils::EncodeNodeLinkForNetronVisual(const NodePtr &node, onnx::NodeProto *node_proto) {
+void OnnxUtils::EncodeNodeLinkForNetronVisual(const NodePtr &node, onnx::NodeProto *const node_proto) {
   if ((node == nullptr) || (node_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or node_proto is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeNodeLinkForNetronVisual: Input Para Node Invalid");
@@ -613,13 +606,13 @@ void OnnxUtils::EncodeNodeLinkForNetronVisual(const NodePtr &node, onnx::NodePro
       node_proto->add_output(node_name + ":" + std::to_string(out_data_anchor->GetIdx()));
     }
   }
-  auto out_control_anchor = node->GetOutControlAnchor();
+  const auto out_control_anchor = node->GetOutControlAnchor();
   if ((out_control_anchor != nullptr) && (!out_control_anchor->GetPeerInControlAnchors().empty())) {
     node_proto->add_output(node_name + kControlAnchorIndex);
   }
 }
 
-bool OnnxUtils::EncodeNodeLink(const NodePtr &node, onnx::NodeProto *node_proto) {
+bool OnnxUtils::EncodeNodeLink(const NodePtr &node, onnx::NodeProto *const node_proto) {
   if ((node == nullptr) || (node_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or node_proto is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeNodeLink: Input Para Node Invalid");
@@ -628,7 +621,7 @@ bool OnnxUtils::EncodeNodeLink(const NodePtr &node, onnx::NodeProto *node_proto)
   node_proto->clear_input();
   // 1. Add input by in data edge
   for (const auto &in_data_anchor : node->GetAllInDataAnchors()) {
-    auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
+    const auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
     if ((peer_out_anchor != nullptr) && (peer_out_anchor->GetOwnerNode() != nullptr)) {
       node_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":" +
                             std::to_string(peer_out_anchor->GetIdx()));
@@ -639,9 +632,9 @@ bool OnnxUtils::EncodeNodeLink(const NodePtr &node, onnx::NodeProto *node_proto)
   }
 
   // 2. Add input by in control edge
-  auto in_control_anchor = node->GetInControlAnchor();
+  const auto in_control_anchor = node->GetInControlAnchor();
   if (in_control_anchor != nullptr) {
-    auto peer_out_anchors = in_control_anchor->GetPeerOutControlAnchors();
+    const auto peer_out_anchors = in_control_anchor->GetPeerOutControlAnchors();
     for (const auto &peer_out_anchor : peer_out_anchors) {
       if (peer_out_anchor->GetOwnerNode()) {
         node_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + kControlAnchorIndex);
@@ -658,7 +651,7 @@ bool OnnxUtils::EncodeNodeLink(const NodePtr &node, onnx::NodeProto *node_proto)
   return true;
 }
 
-bool OnnxUtils::EncodeNode(const NodePtr &node, onnx::NodeProto *node_proto) {
+bool OnnxUtils::EncodeNode(const NodePtr &node, onnx::NodeProto *const node_proto) {
   if ((node == nullptr) || (node_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or node_proto is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeNode: Input Para Node Invalid");
@@ -682,7 +675,7 @@ bool OnnxUtils::EncodeNode(const NodePtr &node, onnx::NodeProto *node_proto) {
   return EncodeNodeLink(node, node_proto);
 }
 
-void OnnxUtils::EncodeTypeProtoTensorType(const NodePtr &node, onnx::TypeProto_Tensor *tensor_type) {
+void OnnxUtils::EncodeTypeProtoTensorType(const NodePtr &node, onnx::TypeProto_Tensor *const tensor_type) {
   if ((node == nullptr) || (tensor_type == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or tensor type is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeTypeProtoTensorType: Input Para Node or tensor_type Invalid");
@@ -693,40 +686,40 @@ void OnnxUtils::EncodeTypeProtoTensorType(const NodePtr &node, onnx::TypeProto_T
     GELOGW("[Encode][Tensor] op_desc is empty, name %s, type %s", node->GetName().c_str(), node->GetType().c_str());
     return;
   }
-  for (size_t i = 0; i < op_desc->GetOutputsSize(); i++) {
-    const ConstGeTensorDescPtr &ge_tensor = op_desc->GetOutputDescPtr(i);
+  for (size_t i = 0U; i < op_desc->GetOutputsSize(); ++i) {
+    const ConstGeTensorDescPtr &ge_tensor = op_desc->GetOutputDescPtr(static_cast<uint32_t>(i));
     if (ge_tensor == nullptr) {
       GELOGW("[Encode][Tensor] Output desc %zu of node %s is nullptr", i, node->GetName().c_str());
       continue;
     }
-    auto ge_data_type = ge_tensor->GetDataType();
-    auto onnx_data_type = EncodeDataType(ge_data_type);
+    const auto ge_data_type = ge_tensor->GetDataType();
+    const auto onnx_data_type = EncodeDataType(ge_data_type);
     tensor_type->set_elem_type(onnx_data_type);
-    onnx::TensorShapeProto *shape = tensor_type->mutable_shape();
+    onnx::TensorShapeProto *const shape = tensor_type->mutable_shape();
     if (shape == nullptr) {
       GELOGW("[Encode][Tensor] Shape is nullptr");
       continue;
     }
-    for (auto d : ge_tensor->GetShape().GetDims()) {
-      auto dim = shape->add_dim();
+    for (const auto d : ge_tensor->GetShape().GetDims()) {
+      const auto dim = shape->add_dim();
       dim->set_dim_value(d);
     }
   }
 }
 
-void OnnxUtils::EncodeValueInfo(const NodePtr &node, onnx::ValueInfoProto *value_info_proto) {
+void OnnxUtils::EncodeValueInfo(const NodePtr &node, onnx::ValueInfoProto *const value_info_proto) {
   if ((node == nullptr) || (value_info_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or value info proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeValueInfo: Input Param Node or value_info_proto Invalid");
     return;
   }
   value_info_proto->set_name(node->GetName());
-  onnx::TypeProto *t = value_info_proto->mutable_type();
-  onnx::TypeProto_Tensor *tensor_type = t->mutable_tensor_type();
+  onnx::TypeProto *const t = value_info_proto->mutable_type();
+  onnx::TypeProto_Tensor *const tensor_type = t->mutable_tensor_type();
   EncodeTypeProtoTensorType(node, tensor_type);
 }
 
-bool OnnxUtils::EncodeGraph(const ConstComputeGraphPtr &graph, onnx::GraphProto *graph_proto) {
+bool OnnxUtils::EncodeGraph(const ConstComputeGraphPtr &graph, onnx::GraphProto *const graph_proto) {
   if ((graph == nullptr) || (graph_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param graph or graph proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeGraph: Input para Invalid");
@@ -735,12 +728,12 @@ bool OnnxUtils::EncodeGraph(const ConstComputeGraphPtr &graph, onnx::GraphProto 
   graph_proto->set_name(graph->GetName());
   // 1. Add graph inputs
   for (const auto &input : graph->GetInputNodes()) {
-    auto value_info_proto = graph_proto->add_input();
+    const auto value_info_proto = graph_proto->add_input();
     EncodeValueInfo(input, value_info_proto);
   }
   // 2. Add graph outputs
   for (const auto &output : graph->GetOutputNodes()) {
-    auto value_info_proto = graph_proto->add_output();
+    const auto value_info_proto = graph_proto->add_output();
     EncodeValueInfo(output, value_info_proto);
   }
   // 3. Add nodes
@@ -754,17 +747,17 @@ bool OnnxUtils::EncodeGraph(const ConstComputeGraphPtr &graph, onnx::GraphProto 
 }
 
 bool OnnxUtils::ConvertGeModelToModelProto(const ge::Model &model, onnx::ModelProto &model_proto) {
-  model_proto.set_model_version(model.GetVersion());
+  model_proto.set_model_version(static_cast<int64_t>(model.GetVersion()));
   model_proto.set_ir_version(onnx::IR_VERSION);
   model_proto.set_producer_name(model.GetName());
   auto &graph = model.graph_;
-  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  const auto compute_graph = GraphUtils::GetComputeGraph(graph);
   if (compute_graph == nullptr) {
     REPORT_INNER_ERROR("E19999", "GetComputeGraph for model return nullptr.");
     GELOGE(GRAPH_FAILED, "[Invoke][GetComputeGraph] return nullptr");
     return false;
   }
-  auto graph_proto = model_proto.mutable_graph();
+  const auto graph_proto = model_proto.mutable_graph();
   if (graph_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "mutable_graph return nullptr, graph:%s",  compute_graph->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Invoke][MutableGraph] return nullptr, graph:%s", compute_graph->GetName().c_str());
@@ -781,17 +774,17 @@ bool OnnxUtils::ConvertGeModelToModelProto(const ge::Model &model, onnx::ModelPr
       GELOGW("[Convert][GeModel] Graph %s subgraph is nullptr, skip EncodeGraph", compute_graph->GetName().c_str());
       continue;
     }
-    auto node_proto = graph_proto->add_node();
+    const auto node_proto = graph_proto->add_node();
     if (node_proto == nullptr) {
       GELOGW("[Convert][GeModel] Add node failed");
       continue;
     }
     node_proto->set_name(sub_compute_graph->GetName());
     node_proto->set_op_type(kNodeTypeForSubgraph);
-    auto attr = node_proto->add_attribute();
+    const auto attr = node_proto->add_attribute();
     attr->set_name("graph");
     attr->set_type(onnx::AttributeProto_AttributeType_GRAPH);
-    auto sub_graph_proto = attr->mutable_g();
+    const auto sub_graph_proto = attr->mutable_g();
     if (sub_graph_proto == nullptr) {
       GELOGW("[Convert][GeModel] Sub graph proto is nullptr");
       continue;
@@ -824,32 +817,32 @@ ge::DataType OnnxUtils::DecodeDataType(onnx::TensorProto_DataType data_type) {
   }
 }
 
-bool OnnxUtils::ParseNameIndex(const std::string &node_name_index, std::string &node_name, int32_t &index) {
-  auto sep = node_name_index.rfind(':');
+bool OnnxUtils::ParseNameAndIndex(const std::string &node_name_index, std::string &node_name, int32_t &idx) {
+  const auto sep = node_name_index.rfind(':');
   if (sep == std::string::npos) {
     return false;
   }
-  node_name = node_name_index.substr(0, sep);
-  auto index_str = node_name_index.substr(sep + 1);
-  index = static_cast<int32_t>(std::strtol(index_str.c_str(), nullptr, 10));
+  node_name = node_name_index.substr(0U, sep);
+  const auto index_str = node_name_index.substr(sep + 1U);
+  idx = static_cast<int32_t>(std::strtol(index_str.c_str(), nullptr, kDecimalBase));
   return true;
 }
 
-bool OnnxUtils::DecodeNodeLinkImp(const NodeLinkInfo &item, NodePtr &node_ptr) {
+bool OnnxUtils::DecodeNodeLinkImp(const NodeLinkInfo &item, const NodePtr &node_ptr) {
   if (node_ptr == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node_ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] DecodeNodeLinkImp: node_ptr is nullptr");
     return false;
   }
   // Data edge
-  if (item.src_out_index >= 0) {
-    auto src_anchor = node_ptr->GetOutDataAnchor(item.src_out_index);
-    auto dst_anchor = item.dst_node->GetInDataAnchor(item.dst_in_index);
+  if (item.GetSrcOutIndex() >= 0) {
+    const auto src_anchor = node_ptr->GetOutDataAnchor(item.GetSrcOutIndex());
+    const auto dst_anchor = item.GetDstNode()->GetInDataAnchor(item.GetDstInIndex());
     if ((src_anchor == nullptr) || (dst_anchor == nullptr)) {
-      REPORT_INNER_ERROR("E19999", "Get DataAnchor failed, %s:%d, %s:%d ", item.src_node_name.c_str(),
-                         item.src_out_index, item.dst_node_name.c_str(), item.dst_in_index);
-      GELOGE(GRAPH_FAILED, "[Get][DataAnchor] failed, %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
-             item.dst_node_name.c_str(), item.dst_in_index);
+      REPORT_INNER_ERROR("E19999", "Get DataAnchor failed, %s:%d, %s:%d ", item.GetSrcNodeName().c_str(),
+                         item.GetSrcOutIndex(), item.GetDstNodeName().c_str(), item.GetDstInIndex());
+      GELOGE(GRAPH_FAILED, "[Get][DataAnchor] failed, %s:%d, %s:%d ", item.GetSrcNodeName().c_str(),
+             item.GetSrcOutIndex(), item.GetDstNodeName().c_str(), item.GetDstInIndex());
       return false;
     }
     if (src_anchor->LinkTo(dst_anchor) != GRAPH_SUCCESS) {
@@ -859,18 +852,19 @@ bool OnnxUtils::DecodeNodeLinkImp(const NodeLinkInfo &item, NodePtr &node_ptr) {
     }
     // Control edge
   } else {
-    auto src_anchor = node_ptr->GetOutControlAnchor();
-    auto dst_anchor = item.dst_node->GetInControlAnchor();
+    const auto src_anchor = node_ptr->GetOutControlAnchor();
+    const auto dst_anchor = item.GetDstNode()->GetInControlAnchor();
     if ((src_anchor == nullptr) || (dst_anchor == nullptr)) {
-      REPORT_INNER_ERROR("E19999", "Get ControlAnchor failed, %s:%d, %s:%d ", item.src_node_name.c_str(),
-                         item.src_out_index, item.dst_node_name.c_str(), item.dst_in_index);
-      GELOGE(GRAPH_FAILED, "[Get][ControlAnchor] failed, %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
-             item.dst_node_name.c_str(), item.dst_in_index);
+      REPORT_INNER_ERROR("E19999", "Get ControlAnchor failed, %s:%d, %s:%d ", item.GetSrcNodeName().c_str(),
+                         item.GetSrcOutIndex(), item.GetDstNodeName().c_str(), item.GetDstInIndex());
+      GELOGE(GRAPH_FAILED, "[Get][ControlAnchor] failed, %s:%d, %s:%d ", item.GetSrcNodeName().c_str(),
+             item.GetSrcOutIndex(), item.GetDstNodeName().c_str(), item.GetDstInIndex());
       return false;
     }
     if (src_anchor->LinkTo(dst_anchor) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "src anchor(%s) link to dst anchor(%s) failed.",
-                        src_anchor->GetOwnerNode()->GetName().c_str(), dst_anchor->GetOwnerNode()->GetName().c_str());
+          REPORT_CALL_ERROR("E19999", "src anchor(%s) link to dst anchor(%s) failed.",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Invoke][LinkTo] Control Anchor: src anchor(%s) link to dst anchor(%s) failed",
              src_anchor->GetOwnerNode()->GetName().c_str(), dst_anchor->GetOwnerNode()->GetName().c_str());
       return false;
@@ -883,7 +877,7 @@ bool OnnxUtils::DecodeNodeLink(const std::vector<onnx::NodeProto> &node_proto_ve
                                const std::map<std::string, NodePtr> &node_map) {
   for (const auto &node_proto : node_proto_vector) {
     const auto &node_name = node_proto.name();
-    auto dst_node = node_map.find(node_name);
+    const auto dst_node = node_map.find(node_name);
     if ((dst_node == node_map.end()) || (dst_node->second == nullptr)) {
       REPORT_INNER_ERROR("E19999", "destination node: %s find failed or is nullptr", node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] destination node: %s find failed or is nullptr", node_name.c_str());
@@ -893,15 +887,15 @@ bool OnnxUtils::DecodeNodeLink(const std::vector<onnx::NodeProto> &node_proto_ve
     for (const auto &input : node_proto.input()) {
       std::string input_node_name;
       int32_t index = 0;
-      if (ParseNameIndex(input, input_node_name, index)) {
-        auto item = NodeLinkInfo{input_node_name, index, dst_node->second, dst_index, node_proto.name()};
-        auto src_node = node_map.find(input_node_name);
+      if (ParseNameAndIndex(input, input_node_name, index)) {
+        const auto item = NodeLinkInfo{input_node_name, index, dst_node->second, dst_index, node_proto.name()};
+        const auto src_node = node_map.find(input_node_name);
         if (src_node == node_map.end()) {
           REPORT_INNER_ERROR("E19999", "find src node: %s failed", input_node_name.c_str());
           GELOGE(GRAPH_FAILED, "[Check][Param] find src node: %s failed", input_node_name.c_str());
           return false;
         }
-        auto node_ptr = src_node->second;
+        const auto node_ptr = src_node->second;
         if (node_ptr == nullptr) {
           REPORT_INNER_ERROR("E19999", "src node: %s is nullptr", input_node_name.c_str());
           GELOGE(GRAPH_FAILED, "[Check][Param] src node: %s is nullptr", input_node_name.c_str());
@@ -926,7 +920,7 @@ void OnnxUtils::DecodeAttribute(const ge::onnx::AttributeProto &attr_proto, std:
     GELOGE(GRAPH_FAILED, "[Check][Param] Attribute %s call wrong decode attribute function", attr_proto.name().c_str());
     return;
   }
-  for (int i = 0; i < attr_proto.strings_size(); i++) {
+  for (int32_t i = 0; i < attr_proto.strings_size(); i++) {
     strings.push_back(attr_proto.strings(i));
   }
 }
@@ -946,7 +940,7 @@ void OnnxUtils::DecodeAttribute(const ge::onnx::AttributeProto &attr_proto, std:
     GELOGE(GRAPH_FAILED, "[Check][Param] Attribute %s call wrong decode attribute function", attr_proto.name().c_str());
     return;
   }
-  for (int i = 0; i < attr_proto.ints_size(); i++) {
+  for (int32_t i = 0; i < attr_proto.ints_size(); i++) {
     ints.push_back(attr_proto.ints(i));
   }
 }
@@ -961,34 +955,35 @@ void OnnxUtils::DecodeAttribute(const ge::onnx::AttributeProto &attr_proto, int6
 }
 
 void OnnxUtils::DecodeNodeAttributeForOpInDesc(const onnx::AttributeProto &attr_proto,
-                                               const std::string &attr_name_for_input_desc, int32_t index,
-                                               OpDescPtr &op_desc) {
-  auto tensor_desc = op_desc->MutableInputDesc(static_cast<uint32_t>(index));
+                                               const std::string &attr_name_for_input_desc,
+                                               const int32_t idx,
+                                               const OpDescPtr &op_desc) {
+  const auto tensor_desc = op_desc->MutableInputDesc(static_cast<uint32_t>(idx));
   if (tensor_desc == nullptr || tensor_desc->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "MutableInputDesc index:%d return nullptr, op:%s, attr:%s",
-                       index, op_desc->GetName().c_str(), attr_name_for_input_desc.c_str());
+                       idx, op_desc->GetName().c_str(), attr_name_for_input_desc.c_str());
     GELOGE(GRAPH_FAILED, "[Invoke][MutableInputDesc] index:%d return nullptr, op name %s, attr name %s",
-           index, op_desc->GetName().c_str(), attr_name_for_input_desc.c_str());
+           idx, op_desc->GetName().c_str(), attr_name_for_input_desc.c_str());
     return;
   }
   if (attr_name_for_input_desc == "input_desc_dtype") {
-    auto data_type = TypeUtils::SerialStringToDataType(attr_proto.s());
+    const auto data_type = TypeUtils::SerialStringToDataType(attr_proto.s());
     tensor_desc->SetDataType(data_type);
   } else if (attr_name_for_input_desc == "input_desc_shape") {
     std::vector<std::int64_t> ints;
     DecodeAttribute(attr_proto, ints);
-    GeShape ge_shape(ints);
+    const GeShape ge_shape(ints);
     tensor_desc->SetShape(ge_shape);
   } else if (attr_name_for_input_desc == "input_desc_layout") {
-    auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
+    const auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
     tensor_desc->SetFormat(data_format);
   } else if (attr_name_for_input_desc == "input_desc_origin_shape") {
     std::vector<std::int64_t> ints;
     DecodeAttribute(attr_proto, ints);
-    GeShape ge_shape(ints);
+    const GeShape ge_shape(ints);
     tensor_desc->SetOriginShape(ge_shape);
   } else if (attr_name_for_input_desc == "input_desc_origin_layout") {
-    auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
+    const auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
     tensor_desc->SetOriginFormat(data_format);
   } else if (attr_name_for_input_desc == "input_desc_size") {
     int64_t input_size = 0;
@@ -1004,9 +999,9 @@ void OnnxUtils::DecodeNodeAttributeForOpInDesc(const onnx::AttributeProto &attr_
 }
 
 void OnnxUtils::DecodeNodeAttributeForOpOutDesc(const onnx::AttributeProto &attr_proto,
-                                                const std::string &attr_name_for_output_desc, int32_t index,
-                                                OpDescPtr &op_desc) {
-  auto tensor_desc = op_desc->MutableOutputDesc(static_cast<uint32_t>(index));
+                                                const std::string &attr_name_for_output_desc,
+                                                const int32_t index, const OpDescPtr &op_desc) {
+  const auto tensor_desc = op_desc->MutableOutputDesc(static_cast<uint32_t>(index));
   if (tensor_desc == nullptr || tensor_desc->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "MutableOutputDesc index:%d return nullptr, op:%s, attr:%s",
                        index, op_desc->GetName().c_str(), attr_name_for_output_desc.c_str());
@@ -1015,23 +1010,23 @@ void OnnxUtils::DecodeNodeAttributeForOpOutDesc(const onnx::AttributeProto &attr
     return;
   }
   if (attr_name_for_output_desc == "output_desc_dtype") {
-    auto data_type = TypeUtils::SerialStringToDataType(attr_proto.s());
+    const auto data_type = TypeUtils::SerialStringToDataType(attr_proto.s());
     tensor_desc->SetDataType(data_type);
   } else if (attr_name_for_output_desc == "output_desc_shape") {
     std::vector<std::int64_t> ints;
     DecodeAttribute(attr_proto, ints);
-    GeShape ge_shape(ints);
+    const GeShape ge_shape(ints);
     tensor_desc->SetShape(ge_shape);
   } else if (attr_name_for_output_desc == "output_desc_layout") {
-    auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
+    const auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
     tensor_desc->SetFormat(data_format);
   } else if (attr_name_for_output_desc == "output_desc_origin_shape") {
     std::vector<std::int64_t> ints;
     DecodeAttribute(attr_proto, ints);
-    GeShape ge_shape(ints);
+    const GeShape ge_shape(ints);
     tensor_desc->SetOriginShape(ge_shape);
   } else if (attr_name_for_output_desc == "output_desc_origin_layout") {
-    auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
+    const auto data_format = TypeUtils::SerialStringToFormat(attr_proto.s());
     tensor_desc->SetOriginFormat(data_format);
   } else if (attr_name_for_output_desc == "output_desc_size") {
     int64_t output_size = 0;
@@ -1047,30 +1042,31 @@ void OnnxUtils::DecodeNodeAttributeForOpOutDesc(const onnx::AttributeProto &attr
 }
 
 void OnnxUtils::DecodeNodeAttributeForOpInAndOutDesc(const onnx::AttributeProto &attr_proto,
-                                                     const std::string &attr_name_for_input_output_desc, int32_t index,
-                                                     OpDescPtr &op_desc) {
+                                                     const std::string &attr_name_for_input_output_desc,
+                                                     const int32_t idx,
+                                                     const OpDescPtr &op_desc) {
   if (op_desc == nullptr) {
     REPORT_INNER_ERROR("E19999", "param op_desc is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] op_desc is nullptr");
     return;
   }
-  if (attr_name_for_input_output_desc.substr(0, kInputPrefixLength) == "input") {
-    DecodeNodeAttributeForOpInDesc(attr_proto, attr_name_for_input_output_desc, index, op_desc);
-  } else if (attr_name_for_input_output_desc.substr(0, kOutputPrefixLength) == "output") {
-    DecodeNodeAttributeForOpOutDesc(attr_proto, attr_name_for_input_output_desc, index, op_desc);
+  if (attr_name_for_input_output_desc.substr(0U, kInputPrefixLength) == "input") {
+    DecodeNodeAttributeForOpInDesc(attr_proto, attr_name_for_input_output_desc, idx, op_desc);
+  } else if (attr_name_for_input_output_desc.substr(0U, kOutputPrefixLength) == "output") {
+    DecodeNodeAttributeForOpOutDesc(attr_proto, attr_name_for_input_output_desc, idx, op_desc);
   } else {
     return;
   }
 }
 
 void OnnxUtils::DecodeNodeAttributeForOpDef(const onnx::AttributeProto &attr_proto, ge::proto::OpDef &op_def) {
-  auto attr_map = op_def.mutable_attr();
+  const auto attr_map = op_def.mutable_attr();
   const auto &attr_name = attr_proto.name();
   ge::proto::AttrDef op_attr;
   int64_t value = 0;
   DecodeAttribute(attr_proto, value);
   op_attr.set_i(value);
-  attr_map->insert(AttrDefPair(attr_name, op_attr));
+  (void)attr_map->insert(AttrDefPair(attr_name, op_attr));
 }
 
 void OnnxUtils::DecodeNodeAttributeForOpDesc(const onnx::AttributeProto &attr_proto, OpDescPtr &op_desc) {
@@ -1082,7 +1078,7 @@ void OnnxUtils::DecodeNodeAttributeForOpDesc(const onnx::AttributeProto &attr_pr
   const auto &attr_name = attr_proto.name();
   std::string attr_name_for_input_output_desc;
   int32_t index = 0;
-  if (!ParseNameIndex(attr_name, attr_name_for_input_output_desc, index)) {
+  if (!ParseNameAndIndex(attr_name, attr_name_for_input_output_desc, index)) {
     if (attr_name == "id") {
       op_desc->SetId(attr_proto.i());
     } else if (attr_name == "stream_id") {
@@ -1122,8 +1118,8 @@ void OnnxUtils::DecodeNodeAttributeForOpDesc(const onnx::AttributeProto &attr_pr
   }
 }
 
-bool OnnxUtils::DecodeNodeDesc(const onnx::NodeProto *node_proto, OpDescPtr &op_desc) {
-  if (op_desc == nullptr || node_proto == nullptr) {
+bool OnnxUtils::DecodeNodeDesc(const onnx::NodeProto *const node_proto, OpDescPtr &op_desc) {
+  if ((op_desc == nullptr) || (node_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param op_desc or node_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Op_desc is nullptr or node_proto is nullptr");
     return false;
@@ -1131,40 +1127,75 @@ bool OnnxUtils::DecodeNodeDesc(const onnx::NodeProto *node_proto, OpDescPtr &op_
   // 1. Decode node_proto name and type
   op_desc->SetName(node_proto->name());
   const auto &node_type_with_ge_prefix = node_proto->op_type();
-  auto sep = node_type_with_ge_prefix.find(':');
+  const auto sep = node_type_with_ge_prefix.find(':');
   if (sep == std::string::npos) {
     return false;
   }
-  auto node_type = node_type_with_ge_prefix.substr(sep + 1);
+  const auto node_type = node_type_with_ge_prefix.substr(sep + 1U);
   op_desc->SetType(node_type);
   // 2. Add empty input and output desc
   for (const auto &attr : node_proto->attribute()) {
     if (attr.name() == "input_desc_nums") {
-      auto size_in = attr.i();
+      const auto size_in = attr.i();
       for (int64_t i = 0; i < size_in; i++) {
-        GeTensorDesc ge_tensor_desc;
+        const GeTensorDesc ge_tensor_desc;
         GE_CHK_BOOL_EXEC(op_desc->AddInputDesc(ge_tensor_desc) == GRAPH_SUCCESS, continue, "Add inputdesc failed.");
       }
     }
     if (attr.name() == "output_desc_nums") {
-      auto size_out = attr.i();
+      const auto size_out = attr.i();
       for (int64_t i = 0; i < size_out; i++) {
-        GeTensorDesc ge_tensor_desc;
+        const GeTensorDesc ge_tensor_desc;
         GE_CHK_BOOL_EXEC(op_desc->AddOutputDesc(ge_tensor_desc) == GRAPH_SUCCESS, continue, "Add outputdesc failed.");
       }
     }
   }
   // 3.Decode node_proto attributes
-  for (int i = 0; i < node_proto->attribute_size(); i++) {
+  for (decltype(node_proto->attribute_size()) i = 0; i < node_proto->attribute_size(); i++) {
     DecodeNodeAttributeForOpDesc(node_proto->attribute(i), op_desc);
   }
   return true;
 }
 
-bool OnnxUtils::DecodeGraph(int recursion_depth, const onnx::GraphProto &graph_proto, ComputeGraphPtr &graph) {
-  if (recursion_depth > kMaxRecursionDepth) {
-    REPORT_INNER_ERROR("E19999", "param recursion_depth:%d is bigger than kMaxRecursionDepth:%d",
-                       recursion_depth, kMaxRecursionDepth);
+bool OnnxUtils::AddInputAndOutputNodesForGraph(const onnx::GraphProto &graph_proto,
+                                               ComputeGraphPtr &graph,
+                                               const std::map<std::string, NodePtr> &node_map) {
+  // Add inputs nodes for graph
+  for (const auto &input : graph_proto.input()) {
+    const auto &input_node_name = input.name();
+    const auto input_node_item = node_map.find(input_node_name);
+    if (input_node_item == node_map.end()) {
+      REPORT_INNER_ERROR("E19999", "cannot find graph's input node %s in node_", input_node_name.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph's input node %s in node_", input_node_name.c_str());
+      return false;
+    }
+    const auto ret = graph->AddInputNode(input_node_item->second);
+    GE_CHK_BOOL_EXEC(ret != nullptr, continue,
+                     "[Add][InputNode] %s failed, graph:%s", input_node_name.c_str(), graph->GetName().c_str());
+  }
+  // Add outputs nodes for graph
+  for (const auto &output : graph_proto.output()) {
+    const auto &output_name = output.name();
+    const auto output_node_item = node_map.find(output_name);
+    if (output_node_item == node_map.end()) {
+      REPORT_INNER_ERROR("E19999", "cannot find graph's output node %s in node_", output_name.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph's output node %s in node_", output_name.c_str());
+      return false;
+    }
+    const auto ret = graph->AddOutputNode(output_node_item->second);
+    if (ret == nullptr) {
+      GELOGW("[Decode][Graph] Add output node %s failed", output_name.c_str());
+      continue;
+    }
+  }
+  return true;
+}
+
+bool OnnxUtils::DecodeGraph(const int32_t recursion_depth,
+                            const onnx::GraphProto &graph_proto, ComputeGraphPtr &graph) {
+  if (recursion_depth > kMaxRecursiveDepth) {
+    REPORT_INNER_ERROR("E19999", "param recursion_depth:%d is bigger than kMaxRecursiveDepth:%d",
+                       recursion_depth, kMaxRecursiveDepth);
     GELOGE(GRAPH_FAILED, "[Check][Param] DecodeGraph: recursion depth is too large, abort");
     return false;
   }
@@ -1184,7 +1215,7 @@ bool OnnxUtils::DecodeGraph(int recursion_depth, const onnx::GraphProto &graph_p
       // in this case, node only have one attr, whose type is AttributeProto_AttributeType_GRAPH
       const auto &node_attr = node_proto.attribute(0);
       if ((node_attr.type() == onnx::AttributeProto_AttributeType_GRAPH) &&
-          DecodeGraph(recursion_depth + 1, node_attr.g(), compute_graph)) {
+          (DecodeGraph(recursion_depth + 1, node_attr.g(), compute_graph))) {
         (void)graph->AddSubGraph(compute_graph);
       } else {
         REPORT_INNER_ERROR("E19999", "Decode sub graph %s failed with node type:%d", node_proto.name().c_str(),
@@ -1203,7 +1234,7 @@ bool OnnxUtils::DecodeGraph(int recursion_depth, const onnx::GraphProto &graph_p
         return false;
       }
       auto node = graph->AddNode(op_desc);
-      node_map.insert(std::make_pair(node_proto.name(), node));
+      (void)node_map.insert(std::make_pair(node_proto.name(), node));
     }
   }
   /// We get all nodes in graph here
@@ -1213,35 +1244,7 @@ bool OnnxUtils::DecodeGraph(int recursion_depth, const onnx::GraphProto &graph_p
     return false;
   }
 
-  // 2. Add inputs nodes for graph
-  for (const auto &input : graph_proto.input()) {
-    const auto &input_node_name = input.name();
-    auto input_node_item = node_map.find(input_node_name);
-    if (input_node_item == node_map.end()) {
-      REPORT_INNER_ERROR("E19999", "cannot find graph's input node %s in node_", input_node_name.c_str());
-      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph's input node %s in node_", input_node_name.c_str());
-      return false;
-    }
-    auto ret = graph->AddInputNode(input_node_item->second);
-    GE_CHK_BOOL_EXEC(ret != nullptr, continue,
-                     "[Add][InputNode] %s failed, graph:%s", input_node_name.c_str(), graph->GetName().c_str());
-  }
-  // 3. Add outputs nodes for graph
-  for (const auto &output : graph_proto.output()) {
-    const auto &output_node_name = output.name();
-    auto output_node_item = node_map.find(output_node_name);
-    if (output_node_item == node_map.end()) {
-      REPORT_INNER_ERROR("E19999", "cannot find graph's output node %s in node_", output_node_name.c_str());
-      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph's output node %s in node_", output_node_name.c_str());
-      return false;
-    }
-    auto ret = graph->AddOutputNode(output_node_item->second);
-    if (ret == nullptr) {
-      GELOGW("[Decode][Graph] Add output node %s failed", output_node_name.c_str());
-      continue;
-    }
-  }
-  return true;
+  return AddInputAndOutputNodesForGraph(graph_proto, graph, node_map);
 }
 
 bool OnnxUtils::ConvertModelProtoToGeModel(const onnx::ModelProto &model_proto, ge::Model &model) {

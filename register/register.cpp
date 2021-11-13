@@ -709,7 +709,7 @@ OpRegistrationDataImpl::OpRegistrationDataImpl(const std::string &om_optype)
 OpRegistrationData::~OpRegistrationData() = default;
 
 OpRegistrationData::OpRegistrationData(const std::string &om_optype) {
-  impl_ = ComGraphMakeShared<OpRegistrationDataImpl>(om_optype);
+  impl_ = ge::ComGraphMakeShared<OpRegistrationDataImpl>(om_optype);
   if (impl_ == nullptr) {
     GELOGW("[Check][Param] make impl failed!");
   }
@@ -720,7 +720,7 @@ OpRegistrationData::OpRegistrationData(const char *om_op_type) {
   if (om_op_type != nullptr) {
     op_type = om_op_type;
   }
-  impl_ = ComGraphMakeShared<OpRegistrationDataImpl>(op_type);
+  impl_ = ge::ComGraphMakeShared<OpRegistrationDataImpl>(op_type);
   if (impl_ == nullptr) {
     GELOGW("[Check][Param] make impl failed!");
   }

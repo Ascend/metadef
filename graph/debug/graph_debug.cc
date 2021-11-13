@@ -20,9 +20,7 @@
 #include <vector>
 #include "ge_util.h"
 
-using namespace std;
-
-#define TAB "    "
+const std::string TAB = "    ";
 #define STR_FMT(str) (" \"" + std::string(str) + "\" ")
 #define INPUT_ANCHOR_PORT(name) ("__input__" + (name))
 #define OUTPUT_ANCHOR_PORT(name) ("__output__" + (name))
@@ -70,15 +68,15 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   }
 
   bool in_control = false;
-  auto name = node->GetName();
+  const auto name = node->GetName();
   out_ << TAB << STR_FMT(name);
   auto input_cnt = std::max(static_cast<size_t>(1), node->GetAllInDataAnchors().size());
-  auto output_cnt = std::max(static_cast<size_t>(1), node->GetAllOutDataAnchors().size());
+  const auto output_cnt = std::max(static_cast<size_t>(1), node->GetAllOutDataAnchors().size());
   if (control_anchor.find(node->GetName()) != control_anchor.end()) {
     input_cnt++;
     in_control = true;
   }
-  auto max_col = input_cnt * output_cnt;
+  const auto max_col = input_cnt * output_cnt;
   out_ << "[\n";
   if (find(data_nodes.begin(), data_nodes.end(), node->GetType()) != data_nodes.end()) {
     out_ << TAB << TAB << "shape=plaintext, color=goldenrod\n";
@@ -89,20 +87,20 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   out_ << TAB << TAB << R"(<table border="0" cellborder="1" align="center")"
        << ">" << std::endl;
 
-  auto input_anchors = node->GetAllInDataAnchors();
-  auto op_desc = node->GetOpDesc();
+  const auto input_anchors = node->GetAllInDataAnchors();
+  const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL_EXEC(op_desc, return);
   if (!input_anchors.empty()) {
     out_ << TAB << TAB << "<tr>";
   }
   for (const auto &anchor : input_anchors) {
-    std::string anchor_text = op_desc->GetInputNameByIndex(anchor->GetIdx());
+    const std::string anchor_text = op_desc->GetInputNameByIndex(static_cast<uint32_t>(anchor->GetIdx()));
 
     out_ << "<td port = " << STR_FMT(INPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << output_cnt << "'>"
          << anchor_text << "</td>";
   }
   if (in_control) {
-    std::string anchor_text = "ctrl";
+    const std::string anchor_text = "ctrl";
     out_ << "<td port = " << STR_FMT(INPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << output_cnt << "'>"
          << anchor_text << "</td>";
   }
@@ -113,12 +111,12 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   out_ << TAB << TAB << "<tr><td colspan='" << max_col << "'>"
        << "<b>" << node->GetType() << "</b></td></tr>\n";
   // Output
-  auto output_anchors = node->GetAllOutDataAnchors();
+  const auto output_anchors = node->GetAllOutDataAnchors();
   if (!output_anchors.empty()) {
     out_ << TAB << TAB << "<tr>";
   }
   for (const auto &anchor : output_anchors) {
-    std::string anchor_text = op_desc->GetOutputNameByIndex(anchor->GetIdx());
+    const std::string anchor_text = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(anchor->GetIdx()));
 
     out_ << "<td port = " << STR_FMT(OUTPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << input_cnt << "'>"
          << anchor_text << "</td>";
@@ -130,66 +128,47 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   out_ << TAB << TAB << "</table>\n" << TAB << ">];\n";
 }
 
-void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &out_, uint32_t flag) {
+void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &out_, const uint32_t flag) {
   if (node == nullptr) {
     GELOGI("Some nodes are null.");
     return;
   }
-  auto all_out_anchor = node->GetAllOutDataAnchors();
-  auto op_desc = node->GetOpDesc();
+  const auto all_out_anchor = node->GetAllOutDataAnchors();
+  const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL_EXEC(op_desc, return);
   for (const auto &anchor : all_out_anchor) {
-    auto src_anchor = anchor;
-    auto src_node_name = node->GetName();
-    auto src_anchor_index = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(src_anchor->GetIdx()));
-    auto des_anchors = anchor->GetPeerAnchors();
+    const auto src_anchor = anchor;
+    const auto src_node_name = node->GetName();
+    const auto src_anchor_index = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(src_anchor->GetIdx()));
+    const auto des_anchors = anchor->GetPeerAnchors();
     for (const auto &peer_in_anchor : des_anchors) {
-      auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(peer_in_anchor);
+      const auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(peer_in_anchor);
       std::string dst_node_name;
       out_ << TAB << STR_FMT(src_node_name);
       out_ << ":" << OUTPUT_ANCHOR_PORT(src_anchor_index);
-      auto op = peer_in_anchor->GetOwnerNode()->GetOpDesc();
+      const auto op = peer_in_anchor->GetOwnerNode()->GetOpDesc();
       GE_CHECK_NOTNULL_EXEC(op, continue);
       if (in_data_anchor != nullptr) {
         dst_node_name = in_data_anchor->GetOwnerNode()->GetName();
-        std::string des_anchor_index = op->GetInputNameByIndex(static_cast<uint32_t>(in_data_anchor->GetIdx()));
+        const std::string des_anchor_index = op->GetInputNameByIndex(static_cast<uint32_t>(in_data_anchor->GetIdx()));
         out_ << " -> " << STR_FMT(dst_node_name);
         out_ << ":" << INPUT_ANCHOR_PORT(des_anchor_index);
         out_ << "[";
       }
-      auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(peer_in_anchor);
+      const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(peer_in_anchor);
       if (in_control_anchor != nullptr) {
         dst_node_name = in_control_anchor->GetOwnerNode()->GetName();
-        std::string des_anchor_index = "ctrl";
+        const std::string des_anchor_index = "ctrl";
         out_ << " -> " << STR_FMT(dst_node_name);
         out_ << ":" << INPUT_ANCHOR_PORT(des_anchor_index);
         out_ << "[";
         out_ << " style=dashed ";
       }
-      if (flag != DOT_NOT_SHOW_EDGE_LABEL && in_data_anchor) {
-        std::string label;
-        auto src_ops = src_anchor->GetOwnerNode()->GetOpDesc();
+      if ((flag != static_cast<uint32_t>(DotFileFlag::DOT_NOT_SHOW_EDGE_LABEL)) && in_data_anchor) {
+        const auto src_ops = src_anchor->GetOwnerNode()->GetOpDesc();
         GE_CHECK_NOTNULL_EXEC(src_ops, return);
-        auto src_shape = src_ops->GetOutputDesc(src_anchor->GetIdx()).GetShape();
-        auto dim = src_shape.GetDims();
-        std::ostringstream tensor_info;
-        if (dim.size() > 0) {
-          for (size_t i = 0; i < dim.size(); i++) {
-            if (i != dim.size() - 1) {
-              tensor_info << dim[i] << "x";
-            } else {
-              tensor_info << dim[i];
-            }
-          }
-        } else {
-          tensor_info << "?";
-        }
-        auto src_tensor_desc = src_ops->GetOutputDescPtr(src_anchor->GetIdx());
-        GE_CHECK_NOTNULL_EXEC(src_tensor_desc, return);
-        auto format = src_tensor_desc->GetFormat();
-        auto datatype = src_tensor_desc->GetDataType();
-        tensor_info << " : " << formats[format] << " : " << types[datatype];
-        label = tensor_info.str();
+        GE_CHECK_NOTNULL_EXEC(src_ops->GetOutputDescPtr(static_cast<uint32_t>(src_anchor->GetIdx())), return);
+        std::string label = GetSrcOpStr(src_ops, src_anchor);
         out_ << "label=" << STR_FMT(label);
       }
       out_ << "]" << std::endl;
@@ -198,8 +177,8 @@ void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &ou
 }
 
 graphStatus GraphDebugPrinter::DumpGraphDotFile(const Graph &graph, const std::string &output_dot_file_name,
-                                                uint32_t flag) {
-  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+                                                const uint32_t flag) {
+  const auto compute_graph = GraphUtils::GetComputeGraph(graph);
   if (compute_graph == nullptr) {
     GELOGI("Compute graph is NULL .");
     return GRAPH_SUCCESS;
@@ -208,7 +187,7 @@ graphStatus GraphDebugPrinter::DumpGraphDotFile(const Graph &graph, const std::s
 }
 
 graphStatus GraphDebugPrinter::DumpGraphDotFile(const ComputeGraphPtr graph, const std::string &output_dot_file_name,
-                                                uint32_t flag) {
+                                                const uint32_t flag) {
   if (graph == nullptr) {
     GELOGI("graph is null.");
     return GRAPH_SUCCESS;
@@ -218,11 +197,11 @@ graphStatus GraphDebugPrinter::DumpGraphDotFile(const ComputeGraphPtr graph, con
   out_ << TAB << R"(ratio=compress;size="8, 100")" << std::endl;
   out_ << TAB << R"(node[fontname="Consolas"])" << std::endl;
   out_ << TAB << R"(edge[fontsize = "8" fontname = "Consolas" color="dimgray" ])" << std::endl;
-  auto all_nodes = graph->GetAllNodes();
+  const auto all_nodes = graph->GetAllNodes();
   for (const auto &node : all_nodes) {
     for (const auto &temp : node->GetAllOutDataAnchors()) {
       for (const auto &peer : temp->GetPeerAnchors()) {
-        auto temp_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(peer);
+        const auto temp_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(peer);
         if (temp_control_anchor) {
           (void)control_anchor.insert(peer->GetOwnerNode()->GetName());
         }
@@ -243,5 +222,29 @@ graphStatus GraphDebugPrinter::DumpGraphDotFile(const ComputeGraphPtr graph, con
     GELOGW("[DumpGraph][OpenFile] Open file %s failed.", output_dot_file_name.c_str());
   }
   return GRAPH_SUCCESS;
+}
+
+std::string GraphDebugPrinter::GetSrcOpStr(const OpDescPtr &src_ops, const OutDataAnchorPtr &src_anchor) {
+  std::string label;
+  const auto src_shape = src_ops->GetOutputDesc(static_cast<uint32_t>(src_anchor->GetIdx())).GetShape();
+  const auto dim = src_shape.GetDims();
+  std::ostringstream tensor_info;
+  if (dim.size() > 0UL) {
+    for (size_t i = 0UL; i < dim.size(); i++) {
+      if (i != (dim.size() - 1UL)) {
+        tensor_info << dim[i] << "x";
+      } else {
+        tensor_info << dim[i];
+      }
+    }
+  } else {
+    tensor_info << "?";
+  }
+  const auto src_tensor_desc = src_ops->GetOutputDescPtr(static_cast<uint32_t>(src_anchor->GetIdx()));
+  const auto format = src_tensor_desc->GetFormat();
+  const auto datatype = src_tensor_desc->GetDataType();
+  tensor_info << " : " << formats[format] << " : " << types[datatype];
+  label = tensor_info.str();
+  return label;
 }
 }  // namespace ge
