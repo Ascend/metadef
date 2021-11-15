@@ -403,7 +403,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
     after_tiling = std::chrono::steady_clock::now();
   }
   if (!rc) {
-    REPORT_CALL_ERROR("E19999", "Optiling failed. op_type:%s", optype);
+    GELOGW("Optiling failed. op_type:%s", optype);
     return 0;
   }
 
@@ -465,7 +465,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
     after_tiling = std::chrono::steady_clock::now();
   }
   if (!rc) {
-    REPORT_CALL_ERROR("E19999", "Optiling failed. op_type:%s", optype);
+    GELOGW("Optiling failed. op_type:%s", optype);
     return 0;
   }
 
@@ -526,7 +526,7 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
     after_tiling = std::chrono::steady_clock::now();
   }
   if (!rc) {
-    REPORT_CALL_ERROR("E19999", "Optiling failed. op_type:%s", optype);
+    GELOGW("Optiling failed. op_type:%s", optype);
     return 0;
   }
 

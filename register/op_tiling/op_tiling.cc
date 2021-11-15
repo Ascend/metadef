@@ -410,10 +410,8 @@ ge::graphStatus TurnToOpParaCalculateV3(const ge::Node &node, OpRunInfoV2 &run_i
     GELOGI("Do op tiling v3 succeed. op_type:%s, op_name:%s",
            op_desc->GetType().c_str(), op_desc->GetName().c_str());
   } else {
-    REPORT_CALL_ERROR("E19999", "Fail to call op tiling v3 function of op[%s, %s].",
-                      op_desc->GetType().c_str(), op_desc->GetName().c_str());
-    GE_LOGE("Fail to call op tiling function v3 of op[%s, %s].",
-            op_desc->GetName().c_str(), op_desc->GetType().c_str());
+    GELOGW("Fail to call op tiling function v3 of op[%s, %s].",
+           op_desc->GetName().c_str(), op_desc->GetType().c_str());
   }
   RecoveryEmptyShapeOfTensorDesc(op_desc, indexes);
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
@@ -567,10 +565,8 @@ ge::graphStatus OpAtomicCalculateV1(const ge::OpDescPtr &op_desc_ptr, OpRunInfo 
     GELOGI("Atomic optiling v1 succeed. op_type:%s, op_name:%s.",
            op_desc_ptr->GetType().c_str(), op_desc_ptr->GetName().c_str());
   } else {
-    REPORT_CALL_ERROR("E19999", "Fail to call op tiling v1 function of atomic op[%s, %s].",
-                      op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
-    GE_LOGE("Fail to call op tiling v1 function of atomic op[%s, %s].",
-            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
+    GELOGW("Fail to call op tiling v1 function of atomic op[%s, %s].",
+           op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
   }
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
@@ -687,10 +683,8 @@ ge::graphStatus TurnToOpAtomicCalculateV2(const ge::OpDescPtr &op_desc_ptr, OpRu
     GELOGI("Atomic optiling v2 succeed. op_type:%s, op_name:%s.",
            op_desc_ptr->GetType().c_str(), op_desc_ptr->GetName().c_str());
   } else {
-    REPORT_CALL_ERROR("E19999", "Fail to call op tiling v2 function of atomic op[%s, %s].",
-                      op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
-    GE_LOGE("Fail to call op tiling v2 function of atomic op[%s, %s].",
-            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
+    GELOGW("Fail to call op tiling v2 function of atomic op[%s, %s].",
+           op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
   }
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
@@ -743,10 +737,8 @@ ge::graphStatus TurnToOpAtomicCalculateV3(const ge::OpDescPtr &op_desc_ptr, OpRu
     GELOGI("Atomic optiling v3 succeed. op_type:%s, op_name:%s.",
            op_desc_ptr->GetType().c_str(), op_desc_ptr->GetName().c_str());
   } else {
-    REPORT_CALL_ERROR("E19999", "Fail to call op tiling v3 function of atomic op[%s, %s].",
-                      op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
-    GE_LOGE("Fail to call op tiling v3 function of atomic op[%s, %s].",
-            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
+    GELOGW("Fail to call op tiling v3 function of atomic op[%s, %s].",
+           op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
   }
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
