@@ -38,18 +38,16 @@ class METADEF_FUNC_VISIBILITY FormatRefiner {
   static graphStatus InferOrigineFormat(const ge::ComputeGraphPtr &graph);
 
  private:
-  static graphStatus RefreshConstantOutProcess(const ComputeGraphPtr &graph, const OpDescPtr &op_desc);
-  static graphStatus GetAnchorPoints(const ge::ComputeGraphPtr &graph, std::vector<ge::NodePtr> &anchor_points,
-                                     std::vector<ge::NodePtr> &data_nodes,
-                                     std::unordered_map<ge::NodePtr, bool> &node_status);
-  static graphStatus AnchorProcess(const ge::NodePtr &anchor_node, std::unordered_map<ge::NodePtr, bool> &node_status);
-  static void RefreshOriginFormatOfAnchor(std::vector<ge::NodePtr> &anchor_points);
-  static graphStatus BackInferProcess(std::deque<ge::NodePtr> &nodes, ge::NodePtr &node,
-                                      std::unordered_map<ge::NodePtr, bool> &node_status);
-  static graphStatus ForwardInferProcess(std::deque<ge::NodePtr> &nodes, ge::NodePtr &node,
-                                         std::unordered_map<ge::NodePtr, bool> &node_status);
-  static graphStatus DataNodeFormatProcess(const ComputeGraphPtr &graph, std::vector<ge::NodePtr> &data_nodes,
-                                           ge::Format data_format, std::unordered_map<ge::NodePtr, bool> &node_status);
+  static graphStatus RefreshConstantOutProcess(const ComputeGraphPtr &com_graph, const OpDescPtr &op_desc);
+  static graphStatus GetAnchorPoints(const ge::ComputeGraphPtr &com_graph, std::vector<ge::NodePtr> &anchor_points,
+                                     std::vector<ge::NodePtr> &anchor_data_nodes);
+  static graphStatus AnchorProcess(const ge::NodePtr &anchor_node);
+  static void RefreshOriginFormatOfAnchor(const std::vector<ge::NodePtr> &anchor_points);
+  static graphStatus BackInferProcess(std::deque<ge::NodePtr> &nodes, const ge::NodePtr &node);
+  static graphStatus ForwardInferProcess(std::deque<ge::NodePtr> &nodes, const ge::NodePtr &node);
+  static graphStatus DataNodeFormatProcess(const ComputeGraphPtr &graph,
+                                           const std::vector<ge::NodePtr> &anchor_data_nodes,
+                                           const ge::Format data_format);
   static bool IsGraphInferred(const ComputeGraphPtr &graph);
 };
 }  // namespace ge
