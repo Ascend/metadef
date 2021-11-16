@@ -1867,7 +1867,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
     }
 
     op_desc->SetName(n->GetName());
-    NodePtr node = dst_compute_graph->AddNode(op_desc);
+    NodePtr node = dst_compute_graph->AddNode(op_desc, n->GetOpDesc()->GetId());
     if (node == nullptr) {
       REPORT_CALL_ERROR("E19999", "AddNode %s to graph:%s failed",
                         op_desc->GetName().c_str(), dst_compute_graph->GetName().c_str());
