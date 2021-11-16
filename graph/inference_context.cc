@@ -26,7 +26,7 @@ class ShapeAndTypeImpl {
   ShapeAndTypeImpl() = default;
   ~ShapeAndTypeImpl() = default;
 
-  ShapeAndTypeImpl(const Shape &shape, DataType data_type) : shape_(shape), data_type_(data_type) {}
+  ShapeAndTypeImpl(const Shape &shape, const DataType data_type) : shape_(shape), data_type_(data_type) {}
 
   Shape shape_;
   DataType data_type_ = DT_UNDEFINED;

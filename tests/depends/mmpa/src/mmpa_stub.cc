@@ -16,6 +16,7 @@
 
 #include "mmpa/mmpa_api.h"
 
+typedef int mmErrorMSg;
 
 INT32 mmOpen(const CHAR *path_name, INT32 flags) {
   INT32 fd = HANDLE_INVALID_VALUE;
@@ -229,10 +230,10 @@ INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
   return 0;
 }
 
-INT32 mmGetErrorCode()
-{
-  return 0;
-}
+//INT32 mmGetErrorCode()
+//{
+  //return 0;
+//}
 
 INT32 mmIsDir(const CHAR *fileName)
 {
@@ -273,3 +274,18 @@ INT32 mmGetPid()
 {
   return (INT32)getpid();
 }
+
+INT32 mmGetErrorCode(VOID)
+{
+  INT32 ret = (INT32)errno;
+  return ret;
+}
+
+CHAR *mmGetErrorFormatMessage(mmErrorMSg errnum, CHAR *buf, mmSize size)
+{
+  if ((buf == NULL) || (size <= 0)) {
+    return NULL;
+  }
+  return strerror_r(errnum, buf, size);
+}
+

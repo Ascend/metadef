@@ -29,8 +29,8 @@ using std::shared_ptr;
 
 /*lint -save -e521 -e681 -e732 -e737*/
 namespace ge {
-static GeTensorDesc& InvalidGeTensorDesc() {
-  static GeTensorDesc kGlobalInvalidGeTensorDesc;
+static const GeTensorDesc& InvalidGeTensorDesc() {
+  const static GeTensorDesc kGlobalInvalidGeTensorDesc;
   return kGlobalInvalidGeTensorDesc;
 }
 
@@ -671,7 +671,7 @@ ConstGeTensorDescPtr OpDescImpl::GetInputDescPtr(uint32_t index) const {
 }
 
 ConstGeTensorDescPtr OpDescImpl::GetInputDescPtrDfault(uint32_t index) const {
-  GE_CHK_BOOL_RET_STATUS_NOLOG((index) < (uint32_t)(inputs_desc_.size()), nullptr);
+  GE_CHK_BOOL_RET_STATUS_NOLOG((index) < static_cast<uint32_t>(inputs_desc_.size()), nullptr);
   return inputs_desc_[(int32_t)index];
 }
 
@@ -847,7 +847,7 @@ graphStatus OpDescImpl::InferShapeAndType(const OpDescPtr &op_desc) {
     }
   }
   Operator op_proxy = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-  graphStatus ret = (graphStatus)infer_func_(op_proxy);
+  graphStatus ret = static_cast<graphStatus>(infer_func_(op_proxy));
   op_proxy.BreakConnect();
   return ret;
 }
@@ -909,7 +909,7 @@ graphStatus OpDescImpl::OpVerify(const OpDescPtr &op_desc) {
   }
   if (verifier_func_ != nullptr) {
     Operator op_proxy = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-    graphStatus ret = (graphStatus)verifier_func_(op_proxy);
+    graphStatus ret = static_cast<graphStatus>(verifier_func_(op_proxy));
     op_proxy.BreakConnect();
     return ret;
   }
@@ -935,8 +935,8 @@ int OpDescImpl::GetInputIndexByName(const std::string &name) const {
 
 int OpDescImpl::GetValidInputIndexByName(const std::string &name) const {
   std::map<std::string, uint32_t> valid_input_name_idx{};
-  uint32_t j = 0;
-  for (size_t i = 0; i < GetAllInputsSize(); i++) {
+  uint32_t j = 0U;
+  for (size_t i = 0U; i < GetAllInputsSize(); i++) {
     if (MutableInputDesc(static_cast<uint32_t>(i)) != nullptr) {
       auto valid_name = GetInputNameByIndex(static_cast<uint32_t>(i));
       GE_CHK_BOOL_RET_STATUS_NOLOG(!valid_name.empty(), -1);
@@ -944,19 +944,19 @@ int OpDescImpl::GetValidInputIndexByName(const std::string &name) const {
       j++;
     }
   }
-  auto it_find = valid_input_name_idx.find(name);
+  const auto it_find = valid_input_name_idx.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it_find != valid_input_name_idx.end(), -1);
-  return static_cast<int>(it_find->second);
+  return static_cast<int32_t>(it_find->second);
 }
 
-std::string OpDescImpl::GetValidInputNameByIndex(uint32_t index) const {
+std::string OpDescImpl::GetValidInputNameByIndex(const uint32_t index) const {
   std::map<std::string, uint32_t> valid_input_name_idx{};
-  uint32_t j = 0;
-  for (size_t i = 0; i < GetAllInputsSize(); i++) {
+  uint32_t j = 0U;
+  for (size_t i = 0U; i < GetAllInputsSize(); i++) {
     if (MutableInputDesc(static_cast<uint32_t>(i)) != nullptr) {
-      auto valid_name = GetInputNameByIndex(static_cast<uint32_t>(i));
+      const auto valid_name = GetInputNameByIndex(static_cast<uint32_t>(i));
       GE_CHK_BOOL_RET_STATUS_NOLOG(!valid_name.empty(), "");
-      valid_input_name_idx.insert({valid_name, j});
+      (void)valid_input_name_idx.insert({valid_name, j});
       j++;
     }
   }
@@ -970,7 +970,7 @@ std::string OpDescImpl::GetValidInputNameByIndex(uint32_t index) const {
   return it->first;
 }
 
-std::string OpDescImpl::GetOutputNameByIndex(uint32_t index) const {
+std::string OpDescImpl::GetOutputNameByIndex(const uint32_t index) const {
   auto it = output_name_idx_.begin();
   for (; it != output_name_idx_.end(); ++it) {
     if (it->second == index) {
@@ -981,10 +981,10 @@ std::string OpDescImpl::GetOutputNameByIndex(uint32_t index) const {
   return it->first;
 }
 
-int OpDescImpl::GetOutputIndexByName(const std::string &name) const {
-  auto it_find = output_name_idx_.find(name);
+int32_t OpDescImpl::GetOutputIndexByName(const std::string &name) const {
+  const auto it_find = output_name_idx_.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it_find != output_name_idx_.end(), -1);
-  return static_cast<int>(it_find->second);
+  return static_cast<int32_t>(it_find->second);
 }
 
 ProtoAttrMap &OpDescImpl::MutableAttrMap() {
@@ -995,7 +995,7 @@ ConstProtoAttrMap &OpDescImpl::GetAttrMap() const {
   return attrs_;
 }
 
-void OpDescImpl::SetId(int64_t id) {
+void OpDescImpl::SetId(const int64_t id) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->set_id(id);
@@ -1003,14 +1003,14 @@ void OpDescImpl::SetId(int64_t id) {
 }
 
 int64_t OpDescImpl::GetId() const {
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     return proto_msg->id();
   }
   return 0;
 }
 
-void OpDescImpl::SetStreamId(int64_t stream_id) {
+void OpDescImpl::SetStreamId(const int64_t stream_id) {
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     proto_msg->set_stream_id(stream_id);
@@ -1018,7 +1018,7 @@ void OpDescImpl::SetStreamId(int64_t stream_id) {
 }
 
 int64_t OpDescImpl::GetStreamId() const {
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     return proto_msg->stream_id();
   }
@@ -1037,7 +1037,7 @@ void OpDescImpl::SetInputName(const std::vector<std::string> &input_name) {
 
 vector<std::string> OpDescImpl::GetInputName() const {
   std::vector<std::string> input_name;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->input_name()) {
       input_name.push_back(item);
@@ -1058,7 +1058,7 @@ void OpDescImpl::SetSrcName(const std::vector<std::string> &src_name) {
 
 vector<std::string> OpDescImpl::GetSrcName() const {
   std::vector<std::string> src_name;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->src_name()) {
       src_name.push_back(item);
@@ -1079,7 +1079,7 @@ void OpDescImpl::SetSrcIndex(const std::vector<int64_t> &src_index) {
 
 vector<int64_t> OpDescImpl::GetSrcIndex() const {
   std::vector<int64_t> src_index;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->src_index()) {
       src_index.push_back(item);
@@ -1100,7 +1100,7 @@ void OpDescImpl::SetInputOffset(const std::vector<int64_t> &input) {
 
 vector<int64_t> OpDescImpl::GetInputOffset() const {
   std::vector<int64_t> input;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->input_i()) {
       input.push_back(item);
@@ -1121,7 +1121,7 @@ void OpDescImpl::SetOutputOffset(const std::vector<int64_t> &output) {
 
 vector<int64_t> OpDescImpl::GetOutputOffset() const {
   std::vector<int64_t> output;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->output_i()) {
       output.push_back(item);
@@ -1142,7 +1142,7 @@ void OpDescImpl::SetDstName(const std::vector<std::string> &dst_name) {
 
 vector<std::string> OpDescImpl::GetDstName() const {
   std::vector<std::string> dst_name;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->dst_name()) {
       dst_name.push_back(item);
@@ -1163,7 +1163,7 @@ void OpDescImpl::SetDstIndex(const std::vector<int64_t> &dst_index) {
 
 vector<int64_t> OpDescImpl::GetDstIndex() const {
   std::vector<int64_t> dst_index;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->dst_index()) {
       dst_index.push_back(item);
@@ -1184,7 +1184,7 @@ void OpDescImpl::SetWorkspace(const std::vector<int64_t> &workspace) {
 
 vector<int64_t> OpDescImpl::GetWorkspace() const {
   std::vector<int64_t> workspace;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
     for (auto &item : proto_msg->workspace()) {
       workspace.push_back(item);
@@ -1207,7 +1207,7 @@ vector<int64_t> OpDescImpl::GetWorkspaceBytes() const {
   std::vector<int64_t> workspace_bytes;
   auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
-    for (auto &item : proto_msg->workspace_bytes()) {
+    for (const auto &item : proto_msg->workspace_bytes()) {
       workspace_bytes.push_back(item);
     }
   }
@@ -1226,9 +1226,9 @@ void OpDescImpl::SetIsInputConst(const std::vector<bool> &is_input_const) {
 
 vector<bool> OpDescImpl::GetIsInputConst() const {
   std::vector<bool> is_input_const;
-  auto proto_msg = op_def_.GetProtoMsg();
+  const auto proto_msg = op_def_.GetProtoMsg();
   if (proto_msg != nullptr) {
-    for (auto item : proto_msg->is_input_const()) {
+    for (const auto item : proto_msg->is_input_const()) {
       is_input_const.push_back(item);
     }
   }
@@ -1262,7 +1262,7 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     }
   }
   NodeShapeTransUtils transformer(op_desc);
-  auto is_init_success = transformer.Init();
+  const auto is_init_success = transformer.Init();
   if (!is_init_success) {
     GELOGE(GRAPH_FAILED, "[Call][Init] for transformer failed");
     return GRAPH_FAILED;
@@ -1271,8 +1271,8 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     GELOGE(GRAPH_FAILED, "[Call][CatchFormatAndShape] for transformer failed!");
     return GRAPH_FAILED;
   }
-  graphStatus graph_status = (graphStatus)infer_func_(op);
-  if (graph_status != GRAPH_SUCCESS && graph_status != GRAPH_NODE_NEED_REPASS) {
+  const graphStatus graph_status = static_cast<graphStatus>(infer_func_(op));
+  if ((graph_status != GRAPH_SUCCESS) && (graph_status != GRAPH_NODE_NEED_REPASS)) {
     GELOGE(GRAPH_FAILED, "[Call][InferFunc] for %s failed. ret:%u", GetName().c_str(), graph_status);
     return GRAPH_FAILED;
   }
@@ -1290,12 +1290,12 @@ graphStatus OpDescImpl::CallInferFormatFunc(Operator &op, const ConstOpDescPtr &
       return DefaultInferFormat(op_desc);
     }
   }
-  return (graphStatus)infer_format_func_(op);
+  return static_cast<graphStatus>(infer_format_func_(op));
 }
 
 graphStatus OpDescImpl::CallInferValueRangeFunc(Operator &op, const ConstOpDescPtr &op_desc) {
   if (infer_value_range_func_ == nullptr) {
-    auto infer_value_range_param = OperatorFactoryImpl::GetInferValueRangePara(GetType());
+    const auto infer_value_range_param = OperatorFactoryImpl::GetInferValueRangePara(GetType());
     if (!infer_value_range_param.is_initialized) {
       REPORT_CALL_ERROR("E19999", "Node %s does not register func to infer value range.", GetName().c_str());
       GELOGE(GRAPH_PARAM_INVALID, "Node %s does not register func to infer value range.", GetName().c_str());
@@ -1311,11 +1311,11 @@ graphStatus OpDescImpl::CallInferValueRangeFunc(Operator &op, const ConstOpDescP
       return GRAPH_PARAM_INVALID;
     }
   }
-  return (graphStatus) infer_value_range_func_(op);
+  return static_cast<graphStatus>(infer_value_range_func_(op));
 }
 
-std::string OpDescImpl::GetSubgraphInstanceName(uint32_t index) const {
-  if (static_cast<size_t>(index) >= subgraph_instance_names_.size()) {
+std::string OpDescImpl::GetSubgraphInstanceName(const size_t index) const {
+  if (index >= subgraph_instance_names_.size()) {
     return "";
   }
   return subgraph_instance_names_.at(index);
@@ -1341,9 +1341,9 @@ graphStatus OpDescImpl::AddSubgraphName(const std::string &name) {
     GELOGW("[Add][Subgraph] Subgraph name %s exists, index %u", name.c_str(), iter->second);
     return GRAPH_FAILED;
   }
-  auto size = subgraph_names_to_index_.size();
+  const auto size = subgraph_names_to_index_.size();
   subgraph_names_to_index_[name] = size;
-  subgraph_instance_names_.resize(size + 1);
+  subgraph_instance_names_.resize(size + 1U);
   return GRAPH_SUCCESS;
 }
 
@@ -1351,10 +1351,11 @@ const std::map<std::string, uint32_t> & OpDescImpl::GetSubgraphNameIndexes() con
   return subgraph_names_to_index_;
 }
 
-graphStatus OpDescImpl::SetSubgraphInstanceName(uint32_t index, const std::string &name) {
+graphStatus OpDescImpl::SetSubgraphInstanceName(const size_t index, const std::string &name) {
   GELOGI("Add sub graph instance name is %s, index is %u", name.c_str(), index);
   if (index >= subgraph_instance_names_.size()) {
-    REPORT_INNER_ERROR("E19999", "Index %u exceeds the max instance count %zu", index, subgraph_instance_names_.size());
+    REPORT_INNER_ERROR("E19999", "Index %zu exceeds the max instance count %zu",
+                       index, subgraph_instance_names_.size());
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Index %u exceeds the max instance count %zu", index,
            subgraph_instance_names_.size());
     return GRAPH_PARAM_INVALID;
@@ -1363,7 +1364,7 @@ graphStatus OpDescImpl::SetSubgraphInstanceName(uint32_t index, const std::strin
   return GRAPH_SUCCESS;
 }
 
-void OpDescImpl::RegisterSubgraphIrName(const std::string &name, SubgraphType type) {
+void OpDescImpl::RegisterSubgraphIrName(const std::string &name, const SubgraphType type) {
   subgraph_ir_names_to_type_[name] = type;
 }
 
@@ -1372,7 +1373,7 @@ const std::map<std::string, SubgraphType> &OpDescImpl::GetSubgraphIrNames() cons
 }
 
 SubgraphType OpDescImpl::GetSubgraphTypeByIrName(const std::string &name) const {
-  auto iter = subgraph_ir_names_to_type_.find(name);
+  const auto iter = subgraph_ir_names_to_type_.find(name);
   if (iter == subgraph_ir_names_to_type_.end()) {
     return kSubgraphTypeEnd;
   }
@@ -1382,12 +1383,12 @@ SubgraphType OpDescImpl::GetSubgraphTypeByIrName(const std::string &name) const 
 
 graphStatus OpDescImpl::GetSubgraphNameByInstanceName(const std::string &instance_name,
                                                       std::string &subgraph_name) const {
-  for (size_t idx = 0; idx < subgraph_instance_names_.size(); ++idx) {
+  for (size_t idx = 0U; idx < subgraph_instance_names_.size(); ++idx) {
     if (subgraph_instance_names_[idx] != instance_name) {  // find subgraph index.
       continue;
     }
 
-    for (auto name_to_index : subgraph_names_to_index_) {
+    for (const auto name_to_index : subgraph_names_to_index_) {
       if (name_to_index.second != idx) {   // find subgraph name.
         continue;
       }
@@ -1409,32 +1410,32 @@ graphStatus OpDescImpl::InferDataSlice(const OpDescPtr &op_desc) {
     }
   }
   Operator op_proxy = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-  graphStatus ret = (graphStatus)infer_data_slice_func_(op_proxy);
+  const graphStatus ret = static_cast<graphStatus>(infer_data_slice_func_(op_proxy));
   op_proxy.BreakConnect();
   return ret;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc()
-    : impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl())) {
+    : enable_shared_from_this(), AttrHolder(), impl_(ComGraphMakeShared<OpDescImpl>()) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::~OpDesc() {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const std::string &name, const std::string &type)
-    : impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(name, type))) {}
+    : enable_shared_from_this(), AttrHolder(), impl_(ComGraphMakeShared<OpDescImpl>(name, type)) {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const OpDesc &op_desc)
-    : AttrHolder(op_desc),
-      impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(*(op_desc.impl_)))) {}
+    : enable_shared_from_this(), AttrHolder(op_desc),
+      impl_(ComGraphMakeShared<OpDescImpl>(*(op_desc.impl_))) {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(OpDesc &&op_desc)
-    : AttrHolder(std::move(op_desc)),
-      impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(std::move(*(op_desc.impl_))))) {}
+    : enable_shared_from_this(), AttrHolder(std::move(op_desc)),
+      impl_(ComGraphMakeShared<OpDescImpl>(std::move(*(op_desc.impl_)))) {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const ProtoMsgOwner &proto_msg_owner,
                                                               ge::proto::OpDef *op_def)
-    : impl_(std::shared_ptr<OpDescImpl>(new OpDescImpl(proto_msg_owner, op_def))) {
-  if (op_def != nullptr && !op_def->has_out_attr()) {
+    : enable_shared_from_this(), AttrHolder(), impl_(ComGraphMakeShared<OpDescImpl>(proto_msg_owner, op_def)) {
+  if ((op_def != nullptr) && (!op_def->has_out_attr())) {
     op_def->set_has_out_attr(true);
 
     int64_t id = 0;
@@ -1492,14 +1493,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const ProtoMsgOwne
     }
     std::vector<bool> is_input_const;
     (void)AttrUtils::GetListBool(this, ATTR_NAME_IS_INPUT_CONST, is_input_const);
-    for (auto item : is_input_const) {
+    for (const auto item : is_input_const) {
       op_def->add_is_input_const(item);
     }
-    auto input_desc_mutable_list = (*op_def->mutable_attr())[ATTR_NAME_INPUT_DESC].mutable_list();
+    const auto input_desc_mutable_list = (*op_def->mutable_attr())[ATTR_NAME_INPUT_DESC].mutable_list();
     if (input_desc_mutable_list != nullptr) {
       *op_def->mutable_input_desc() = *(input_desc_mutable_list->mutable_td());
     }
-    auto output_desc_mutable_list = (*op_def->mutable_attr())[ATTR_NAME_OUTPUT_DESC].mutable_list();
+    const auto output_desc_mutable_list = (*op_def->mutable_attr())[ATTR_NAME_OUTPUT_DESC].mutable_list();
     if (output_desc_mutable_list != nullptr) {
       *op_def->mutable_output_desc() = *(output_desc_mutable_list->mutable_td());
     }
@@ -1542,11 +1543,11 @@ graphStatus OpDesc::AddOutputDescMiddle(const std::string &name, const uint32_t 
   return impl_->AddOutputDescMiddle(name, num, index);
 }
 
-graphStatus OpDesc::AddInputDescForward(const std::string &name, const unsigned int num) {
+graphStatus OpDesc::AddInputDescForward(const std::string &name, const uint32_t num) {
   return impl_->AddInputDescForward(name, num);
 }
 
-graphStatus OpDesc::AddOutputDescForward(const std::string &name, const unsigned int num) {
+graphStatus OpDesc::AddOutputDescForward(const std::string &name, const uint32_t num) {
   return impl_->AddOutputDescForward(name, num);
 }
 
@@ -1555,8 +1556,8 @@ graphStatus OpDesc::AddOptionalInputDesc(const std::string &name, const ge::GeTe
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-OpDesc::UpdateInputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc) {
-  return impl_->UpdateInputDesc(index, tensor_Desc);
+OpDesc::UpdateInputDesc(uint32_t index, const ge::GeTensorDesc &tensor_desc) {
+  return impl_->UpdateInputDesc(index, tensor_desc);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::OpDescMembersAreEqual(const OpDesc &r_op_desc) const {
@@ -1586,8 +1587,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc& OpDesc::operator=(OpDesc 
   return *this;
 }
 
-graphStatus OpDesc::UpdateInputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc) {
-  return impl_->UpdateInputDesc(name, tensor_Desc);
+graphStatus OpDesc::UpdateInputDesc(const std::string &name, const ge::GeTensorDesc &tensor_desc) {
+  return impl_->UpdateInputDesc(name, tensor_desc);
 }
 
 bool OpDesc::InputIsSet(const std::string &name) const {
@@ -1616,7 +1617,7 @@ GE_FUNC_HOST_VISIBILITY OpDesc::Vistor<string> OpDesc::GetAllInputNames() const 
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetOpKernelLibName(const std::string &name) {
   impl_->SetOpKernelLibName(name);
-  auto ret = AttrUtils::SetStr(this, ATTR_NAME_OP_KERNEL_LIB_NAME, name);
+  const auto ret = AttrUtils::SetStr(this, ATTR_NAME_OP_KERNEL_LIB_NAME, name);
   if (!ret) {
     REPORT_CALL_ERROR("E19999", "set %s to op failed.", ATTR_NAME_OP_KERNEL_LIB_NAME.c_str());
     GELOGE(GRAPH_FAILED, "[Set][Str] %s to op failed.", ATTR_NAME_OP_KERNEL_LIB_NAME.c_str());
@@ -1666,12 +1667,12 @@ graphStatus OpDesc::AddOutputDesc(const std::string &name, const ge::GeTensorDes
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-OpDesc::UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc) {
-  return impl_->UpdateOutputDesc(index, tensor_Desc);
+OpDesc::UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc &tensor_desc) {
+  return impl_->UpdateOutputDesc(index, tensor_desc);
 }
 
-graphStatus OpDesc::UpdateOutputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc) {
-  return impl_->UpdateOutputDesc(name, tensor_Desc);
+graphStatus OpDesc::UpdateOutputDesc(const std::string &name, const ge::GeTensorDesc &tensor_desc) {
+  return impl_->UpdateOutputDesc(name, tensor_desc);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const GeTensorDesc &OpDesc::GetOutputDesc(uint32_t index) const {
@@ -1754,13 +1755,15 @@ vector<std::string> OpDesc::GetRegisterOutputName() const {
 
 graphStatus OpDesc::AddDynamicOutputDesc(const std::string &name, const uint32_t num, bool is_push_back) {
   if (is_push_back) {
-    for (uint32_t i = 0; i < num; i++) {
-      if (AddOutputDesc(name + std::to_string(i), GeTensorDesc()) != GRAPH_SUCCESS)
+    for (uint32_t i = 0U; i < num; i++) {
+      if (AddOutputDesc(name + std::to_string(i), GeTensorDesc()) != GRAPH_SUCCESS) {
         return GRAPH_FAILED;
+      }
     }
   } else {
-    if (AddOutputDescForward(name, num) != GRAPH_SUCCESS)
+    if (AddOutputDescForward(name, num) != GRAPH_SUCCESS) {
       return GRAPH_FAILED;
+    }
   }
 
   if (AddRegisterOutputName(name) != GRAPH_SUCCESS) {
@@ -1839,7 +1842,7 @@ graphStatus OpDesc::OpVerify() {
 graphStatus OpDesc::CommonVerify() const {
   for (const std::string &iname : GetAllInputNames()) {
     // Checking shape of all inputs
-    std::vector<int64_t> ishape = GetInputDescPtr(iname)->GetShape().GetDims();
+    const std::vector<int64_t> ishape = GetInputDescPtr(iname)->GetShape().GetDims();
     if (ishape == DUMMY_SHAPE) {
       continue;
     }
@@ -1871,7 +1874,7 @@ int32_t OpDesc::GetInputIndexByName(const std::string &name) const {
   return impl_->GetInputIndexByName(name);
 }
 
-int OpDesc::GetValidInputIndexByName(const std::string &name) const {
+int32_t OpDesc::GetValidInputIndexByName(const std::string &name) const {
   return impl_->GetValidInputIndexByName(name);
 }
 
@@ -1961,7 +1964,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::string> OpDesc::
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 void OpDesc::SetOpInferDepends(const std::vector<std::string> &depend_names) {
-  auto ret = AttrUtils::SetListStr(this, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
+  const auto ret = AttrUtils::SetListStr(this, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
   if (!ret) {
     GELOGE(GRAPH_FAILED, "[Set][Attr] op_infer_depends fail.");
   }
@@ -2001,8 +2004,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetW
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIsInputConst(const std::vector<bool> &is_input_const) {
   impl_->SetIsInputConst(is_input_const);
   // If comes from ME,which is_input_const exist as attrs, outside no need to check GE_TRAIN flag
-  auto ret = AttrUtils::SetListBool(this, ATTR_NAME_IS_INPUT_CONST, is_input_const);
-  if (ret != true) {
+  const auto ret = AttrUtils::SetListBool(this, ATTR_NAME_IS_INPUT_CONST, is_input_const);
+  if (!ret) {
     GELOGE(GRAPH_FAILED, "[Set][Attr] is_input_const fail.");
   }
 }
@@ -2012,12 +2015,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<bool> OpDesc::GetIsIn
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreInputNameIdx(const std::string &name,
-                                                                                       const int &index) {
+                                                                                       const int32_t &index) {
   return impl_->RestoreInputNameIdx(name, index);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreOutputNameIdx(const std::string &name,
-                                                                                        const int &index) {
+                                                                                        const int32_t &index) {
   return impl_->RestoreOutputNameIdx(name, index);
 }
 

@@ -672,6 +672,15 @@ void ErrorManager::SetStage(const std::string &first_stage, const std::string &s
   error_context_.second_stage = second_stage;
 }
 
+void ErrorManager::SetStage(const char *first_stage, size_t first_len, const char *second_stage, size_t second_len) {
+  if (first_stage != nullptr) {
+    error_context_.first_stage.assign(first_stage, first_len);
+  }
+  if (second_stage != nullptr) {
+    error_context_.second_stage.assign(second_stage, second_len);
+  }
+}
+
 bool ErrorManager::IsInnerErrorCode(const std::string &error_code) {
   const std::string kInterErrorCodePrefix = "9999";
   if (!IsValidErrorCode(error_code)) {
