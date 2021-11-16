@@ -20,12 +20,12 @@
 #include "framework/common/util.h"
 #include "graph/debug/ge_log.h"
 #include "graph/ge_error_codes.h"
-
-template <typename T, typename... Args>
-static inline std::shared_ptr<T> ComGraphMakeShared(Args &&... args) {
+namespace ge {
+template<typename T, typename... Args>
+static inline std::shared_ptr<T> ComGraphMakeShared(Args &&...args) {
   using T_nc = typename std::remove_const<T>::type;
-  std::shared_ptr<T> ret(new (std::nothrow) T_nc(std::forward<Args>(args)...));
+  const std::shared_ptr<T> ret(new (std::nothrow) T_nc(std::forward<Args>(args)...));
   return ret;
 }
-
+}  // namespace ge
 #endif  // COMMON_GRAPH_DEBUG_GE_UTIL_H_

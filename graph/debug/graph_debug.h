@@ -29,19 +29,23 @@
 #include "graph/utils/graph_utils.h"
 
 namespace ge {
-enum DotFileFlag {
+enum class DotFileFlag : uint32_t {
   // Show nodes, edges, size, type and format
   DOT_FLAG_DEFAULT = 0,
   DOT_NOT_SHOW_EDGE_LABEL = 1,
 };
 class GraphDebugPrinter {
- public:
+public:
   static graphStatus DumpGraphDotFile(const Graph &graph, const std::string &output_dot_file_name,
-                                      uint32_t flag = DOT_FLAG_DEFAULT);
+                                      const uint32_t flag = static_cast<uint32_t>(DotFileFlag::DOT_FLAG_DEFAULT));
   static graphStatus DumpGraphDotFile(const ComputeGraphPtr graph, const std::string &output_dot_file_name,
-                                      uint32_t flag = DOT_FLAG_DEFAULT);
+                                      const uint32_t flag = static_cast<uint32_t>(DotFileFlag::DOT_FLAG_DEFAULT));
   static void DumpNodeToDot(const NodePtr node, std::ostringstream &out_);
-  static void DumpEdgeToDot(const NodePtr node, std::ostringstream &out_, uint32_t flag = DOT_FLAG_DEFAULT);
+  static void DumpEdgeToDot(const NodePtr node, std::ostringstream &out_,
+                            const uint32_t flag = static_cast<uint32_t>(DotFileFlag::DOT_FLAG_DEFAULT));
+
+private:
+  static std::string GetSrcOpStr(const OpDescPtr &src_ops, const OutDataAnchorPtr &src_anchor);
 };
 }  // namespace ge
 
