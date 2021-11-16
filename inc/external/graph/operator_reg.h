@@ -68,7 +68,7 @@ using std::vector;
   graphStatus get_attr_##x(AscendString &ret) const {                       \
     AscendString ret_str = __VA_ARGS__;                                     \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
-      ret = AscendString(ret_str.c_str());                                  \
+      ret = AscendString(ret_str);                                          \
     }                                                                       \
     return GRAPH_SUCCESS;                                                   \
   }
