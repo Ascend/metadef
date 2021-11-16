@@ -47,6 +47,9 @@ public:
   }
 };
 
+static const size_t PAIR_ELEMENT_SIZE = 2UL;
+static const size_t PAIR_ELEMENT_KEY = 0UL;
+static const size_t PAIR_ELEMENT_VALUE = 1UL;
 const char *const kKeyDataTypeSelfDefined = "__tensor_desc_data_type__";
 const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_UNDEFINED, proto::DT_UNDEFINED},
@@ -155,14 +158,15 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
     }
 
     // serialize member object
-    (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_FORMAT].set_s(TypeUtils::FormatToSerialString(desc.GetOriginFormat()));
+    (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_FORMAT].set_s(
+        TypeUtils::FormatToSerialString(desc.GetOriginFormat()));
     if (desc.GetOriginDataType() != DT_UNDEFINED) {
       (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_DATA_TYPE].set_s(
           TypeUtils::DataTypeToSerialString(desc.GetOriginDataType()));
     }
 
     const bool *is_origin_shape_init = desc.attrs_.GetByName<bool>(TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED);
-    if (is_origin_shape_init !=  nullptr && *is_origin_shape_init) {
+    if ((is_origin_shape_init !=  nullptr) && *is_origin_shape_init) {
       auto origin_shape_proto_list = (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_SHAPE].mutable_list();
       origin_shape_proto_list->clear_i();
       for (auto dim : desc.OriginShapeReference().GetDims()) {
@@ -191,7 +195,7 @@ void GeTensorSerializeUtils::GeTensorAsProto(const GeTensorImpl &tensor, proto::
       GeTensorDescAsProto(tensor.desc_, proto->mutable_desc());
     }
   } else {
-    if (tensor.tensor_data_.impl_ != nullptr && tensor.tensor_data_.impl_->tensor_descriptor_ != nullptr) {
+    if ((tensor.tensor_data_.impl_ != nullptr) && (tensor.tensor_data_.impl_->tensor_descriptor_ != nullptr)) {
       GeTensorDescAsProto(*tensor.tensor_data_.impl_->tensor_descriptor_, proto->mutable_desc());
     }
     proto->set_data(tensor.tensor_data_.data(), tensor.tensor_data_.size());
@@ -206,7 +210,8 @@ void GeTensorSerializeUtils::AssembleGeShapeFromProto(const proto::ShapeDef *pro
     shape = GeShape(nullptr, const_cast<proto::ShapeDef *>(proto));
   }
 }
-void GeTensorSerializeUtils::AssembleGeTensorDescFromProto(const proto::TensorDescriptor *proto, GeTensorDesc &desc) {
+void GeTensorSerializeUtils::AssembleGeTensorDescFromProto(
+    const proto::TensorDescriptor *proto, GeTensorDesc &desc) {
   if (proto != nullptr) {
     desc = GeTensorDesc(nullptr, const_cast<proto::TensorDescriptor *>(proto));
   }
@@ -273,7 +278,7 @@ void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDesc
   auto &attrs = proto->attr();
   auto iter = attrs.find(TENSOR_UTILS_ORIGIN_SHAPE);
   if (iter != attrs.end()) {
-    shape.SetDimNum(iter->second.list().i_size());
+    shape.SetDimNum(static_cast<size_t>(iter->second.list().i_size()));
     size_t i = 0U;
     for (auto dim : iter->second.list().i()) {
       (void)shape.SetDim(i++, dim);
@@ -289,7 +294,9 @@ void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor
     auto proto_dtype = proto->dtype();
     auto founded = std::find_if(
         kDataTypeMap.begin(), kDataTypeMap.end(),
-        [proto_dtype](const std::pair<DataType, ge::proto::DataType> &item) { return item.second == proto_dtype; });
+        [proto_dtype](const std::pair<DataType, ge::proto::DataType> &item) {
+          return item.second == proto_dtype;
+        });
     if (founded != kDataTypeMap.end()) {
       dtype = founded->first;
       return;
@@ -374,23 +381,23 @@ void GeShapeImpl::AppendDim(int64_t dim_size) {
 }
 
 bool GeShapeImpl::IsUnknownDimNum() const {
-  return dims_.size() == 1 && dims_[0] == UNKNOWN_DIM_NUM;
+  return (dims_.size() == 1UL) && (dims_[0UL] == UNKNOWN_DIM_NUM);
 }
 
 void GeShapeImpl::SetIsUnknownDimNum() {
-  dims_.resize(1, UNKNOWN_DIM_NUM);
-  dims_[0] = UNKNOWN_DIM_NUM;
+  dims_.resize(1UL, UNKNOWN_DIM_NUM);
+  dims_[0UL] = UNKNOWN_DIM_NUM;
 }
 
 size_t GeShapeImpl::GetDimNum() const {
   if (IsUnknownDimNum()) {
-    return 0;
+    return 0UL;
   }
   return dims_.size();
 }
 
 int64_t GeShapeImpl::GetDim(size_t idx) const {
-  return idx < dims_.size() ? dims_[idx] : 0;
+  return (idx < dims_.size()) ? dims_[idx] : 0UL;
 }
 
 graphStatus GeShapeImpl::SetDim(size_t idx, int64_t value) {
@@ -417,7 +424,7 @@ std::string GeShapeImpl::ToString() const {
 
   std::stringstream ss;
   ss << dims_[0];
-  for (size_t i = 1; i < dims_.size(); i++) {
+  for (size_t i = 1UL; i < dims_.size(); i++) {
     ss << "," << dims_[i];
   }
   return ss.str();
@@ -429,12 +436,12 @@ int64_t GeShapeImpl::GetShapeSize() const {
   }
   int64_t shape_size = 1;
   for (auto dim : dims_) {
-    if (dim == UNKNOWN_DIM || dim == UNKNOWN_DIM_NUM || dim < 0) {
+    if ((dim == UNKNOWN_DIM) || (dim == UNKNOWN_DIM_NUM) || (dim < 0)) {
       return -1;
     } else if (dim == 0) {
       return 0;
     } else {
-      if (shape_size > INT64_MAX / dim) {
+      if (shape_size > (INT64_MAX / dim)) {
         return -1;
       }
       shape_size *= dim;
@@ -631,13 +638,14 @@ GeShape &GeTensorDescImpl::OriginShapeReference() const {
 
 bool GeTensorDescImpl::GeTensorDescAttrsAreEqual(const GeTensorDescImpl &other) const {
   // The definition of attribute equality remains unchanged
-  return (shape_ == other.shape_ && dtype_ == other.dtype_ && format_ == other.format_ && ext_meta_ == other.ext_meta_);
+  return (shape_ == other.shape_) && (dtype_ == other.dtype_) &&
+      (format_ == other.format_) && (ext_meta_ == other.ext_meta_);
 }
 
 bool GeTensorDescImpl::operator==(const GeTensorDescImpl &other) const {
   // The definition of attribute equality remains unchanged
-  return (origin_shape_ == other.origin_shape_ && origin_format_ == other.origin_format_ &&
-          origin_dtype_ == other.origin_dtype_ && GeTensorDescAttrsAreEqual(other));
+  return (origin_shape_ == other.origin_shape_) && (origin_format_ == other.origin_format_) &&
+      (origin_dtype_ == other.origin_dtype_) && GeTensorDescAttrsAreEqual(other);
 }
 
 ProtoAttrMap &GeTensorDescImpl::MutableAttrMap() {
@@ -675,17 +683,16 @@ std::string GeTensorDescImpl::ExtMeta::GetDeviceTypeStr() {
   return kDefaultTypeString;
 }
 
-GeTensorDesc::GeTensorDesc()
-    : impl_(ComGraphMakeShared<GeTensorDescImpl>()) {}
+GeTensorDesc::GeTensorDesc() : AttrHolder(),
+    impl_(ComGraphMakeShared<GeTensorDescImpl>()) {}
 
 // Default
-GeTensorDesc::GeTensorDesc(const GeShape &shape, Format format, DataType dt)
-    : impl_(ComGraphMakeShared<GeTensorDescImpl>(shape, format, dt)) {}
+GeTensorDesc::GeTensorDesc(const GeShape &shape, Format format, DataType dt) : AttrHolder(),
+    impl_(ComGraphMakeShared<GeTensorDescImpl>(shape, format, dt)) {}
 
 // Default
-GeTensorDesc::GeTensorDesc(const GeTensorDesc &desc)
-    : AttrHolder(desc),
-      impl_(ComGraphMakeShared<GeTensorDescImpl>(*(desc.impl_))) {}
+GeTensorDesc::GeTensorDesc(const GeTensorDesc &desc) : AttrHolder(desc),
+    impl_(ComGraphMakeShared<GeTensorDescImpl>(*(desc.impl_))) {}
 
 // Default
 GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc) : AttrHolder(desc), impl_(desc.impl_) {}
@@ -753,12 +760,12 @@ graphStatus GeTensorDesc::GetValueRange(std::vector<std::pair<int64_t, int64_t>>
 
   for (const auto &ele : value_range) {
     // here must be only two elemenet because pair
-    if (ele.size() != 2) {
+    if (ele.size() != PAIR_ELEMENT_SIZE) {
       REPORT_INNER_ERROR("E19999", "value_range must contain only 2 value but really is %zu", ele.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] value_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
-    range.emplace_back(std::make_pair(ele[0], ele[1]));
+    range.emplace_back(std::make_pair(ele[PAIR_ELEMENT_KEY], ele[PAIR_ELEMENT_VALUE]));
   }
 
   return GRAPH_SUCCESS;
@@ -788,12 +795,12 @@ graphStatus GeTensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>>
 
   for (const auto &ele : shape_range) {
     // here must be only two elemenet because pair
-    if (ele.size() != 2) {
+    if (ele.size() != PAIR_ELEMENT_SIZE) {
       REPORT_INNER_ERROR("E19999", "shape_range must contain only 2 value but really is %zu", ele.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] shape_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
-    std::pair<int64_t, int64_t> pair({ele[0], ele[1]});
+    std::pair<int64_t, int64_t> pair({ele[PAIR_ELEMENT_KEY], ele[PAIR_ELEMENT_VALUE]});
     range.emplace_back(pair);
   }
 
@@ -806,12 +813,12 @@ graphStatus GeTensorDesc::GetOriginShapeRange(std::vector<std::pair<int64_t, int
 
   for (const auto &ele : origin_shape_range) {
     // here must be only two elemenet because pair
-    if (ele.size() != 2) {
+    if (ele.size() != PAIR_ELEMENT_SIZE) {
       REPORT_INNER_ERROR("E19999", "origin_shape_range must contain only 2 value but really is %zu", ele.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] origin_shape_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
-    std::pair<int64_t, int64_t> pair({ele[0], ele[1]});
+    std::pair<int64_t, int64_t> pair({ele[PAIR_ELEMENT_KEY], ele[PAIR_ELEMENT_VALUE]});
     range.emplace_back(pair);
   }
 
@@ -896,7 +903,7 @@ void GeTensorDesc::SetPlacement(Placement placement) {
 graphStatus GeTensorDesc::IsValid() const {
   auto dtype = this->GetDataType();
   auto format = this->GetFormat();
-  if (dtype == DT_UNDEFINED && format == FORMAT_RESERVED) {
+  if ((dtype == DT_UNDEFINED) && (format == FORMAT_RESERVED)) {
     return GRAPH_PARAM_INVALID;
   }
   return GRAPH_SUCCESS;
@@ -920,7 +927,7 @@ GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   return *this;
 }
 
-uint32_t TensorDataImpl::invalid_data_ = 0x3A2D2900;
+uint32_t TensorDataImpl::invalid_data_ = 0x3A2D2900U;
 
 TensorDataImpl::TensorDataImpl(const TensorDataImpl &other) {
   // Share data
@@ -940,7 +947,7 @@ TensorDataImpl &TensorDataImpl::operator=(const TensorDataImpl &other) {
 }
 
 graphStatus TensorDataImpl::SetData(const uint8_t *data, size_t size) {
-  if (size == 0) {
+  if (size == 0UL) {
     GELOGI("size is 0");
     clear();
     return GRAPH_SUCCESS;
@@ -984,7 +991,7 @@ void TensorDataImpl::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t siz
 }
 
 graphStatus TensorDataImpl::SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc) {
-  if (size == 0) {
+  if (size == 0UL) {
     GELOGW("[Set][Data] Input size is 0");
     clear();
     return GRAPH_SUCCESS;
@@ -1000,7 +1007,7 @@ graphStatus TensorDataImpl::SetData(uint8_t *data, size_t size, const AlignedPtr
 }
 
 const uint8_t *TensorDataImpl::MallocAlignedPtr(size_t size) {
-  if (size == 0) {
+  if (size == 0UL) {
     GELOGW("[Check][Param] Input data size is 0");
     clear();
     return reinterpret_cast<const uint8_t *>(&invalid_data_);
@@ -1024,7 +1031,7 @@ const uint8_t *TensorDataImpl::MallocAlignedPtr(size_t size) {
 size_t TensorDataImpl::GetSize() const { return length_; }
 
 const uint8_t *TensorDataImpl::GetData() const {
-  if (length_ == 0) {
+  if (length_ == 0UL) {
     return reinterpret_cast<const uint8_t *>(&invalid_data_);
   }
   if (aligned_ptr_ == nullptr) {
@@ -1034,7 +1041,7 @@ const uint8_t *TensorDataImpl::GetData() const {
 }
 
 uint8_t *TensorDataImpl::GetData() {
-  if (length_ == 0) {
+  if (length_ == 0UL) {
     return reinterpret_cast<uint8_t *>(&invalid_data_);
   }
   if (aligned_ptr_ == nullptr) {
@@ -1045,14 +1052,14 @@ uint8_t *TensorDataImpl::GetData() {
 
 void TensorDataImpl::clear() {
   aligned_ptr_.reset();
-  length_ = 0;
+  length_ = 0UL;
 }
 
 uint8_t TensorDataImpl::operator[](size_t index) const {
-  if (aligned_ptr_ != nullptr && index < length_) {
+  if ((aligned_ptr_ != nullptr) && (index < length_)) {
     return *(aligned_ptr_->MutableGet() + index);
   }
-  return 0xff;
+  return static_cast<uint8_t>(0xff);
 }
 
 TensorData::TensorData()
@@ -1153,7 +1160,7 @@ GeTensorImpl::GeTensorImpl(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&da
 
 GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const Buffer &data) : GeTensorImpl() {
   DescReference() = tensor_desc;
-  if (data.size() == 0) {
+  if (data.size() == 0UL) {
     GELOGI("GetSize res is 0.");
   }
   if (data.data() == nullptr) {
@@ -1180,7 +1187,7 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, size_t size) : GeTen
 GeTensorImpl::GeTensorImpl(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg)
     : tensor_def_(proto_owner, proto_msg) {
   // 这里后续改为反序列化接口调用，从proto恢复GeTensorDesc
-  desc_ = GeTensorDesc(proto_owner, proto_msg == nullptr ? nullptr : proto_msg->mutable_desc());
+  desc_ = GeTensorDesc(proto_owner, (proto_msg == nullptr) ? nullptr : proto_msg->mutable_desc());
   tensor_data_ = TensorData();
   if (tensor_data_.impl_ != nullptr && desc_.impl_ != nullptr) {
     // 之前没有把TensorData上的proto变为GeTensorDesc，因为TensorData创建后不会修改，多个TensorData通过GeIrProto共享
@@ -1247,7 +1254,7 @@ graphStatus GeTensorImpl::SetData(const std::vector<uint8_t> &data) {
 }
 
 graphStatus GeTensorImpl::SetData(const uint8_t *data, size_t size) {
-  if (size > 0) {
+  if (size > 0UL) {
     GE_CHECK_NOTNULL(data);
   }
   if (tensor_def_.GetProtoOwner() != nullptr) {
@@ -1264,7 +1271,7 @@ graphStatus GeTensorImpl::SetData(const Buffer &data) {
   if (tensor_def_.GetProtoOwner() != nullptr) {
     auto proto_msg = tensor_def_.GetProtoMsg();
     GE_CHECK_NOTNULL(proto_msg);
-    if (data.size() == 0) {
+    if (data.size() == 0UL) {
       GELOGI("GetSize res is 0.");
     }
     if (data.data() == nullptr) {
