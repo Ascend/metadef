@@ -67,7 +67,7 @@ graphStatus AttrHolder::AddRequiredAttr(const std::string &name) {
 }
 
 graphStatus AttrHolder::GetAttr(const std::string &name, AnyValue &value) const {
-  auto av = GetAttrMap().GetAnyValue(name);
+  const auto av = GetAttrMap().GetAnyValue(name);
   if (av == nullptr) {
     return GRAPH_FAILED;
   }

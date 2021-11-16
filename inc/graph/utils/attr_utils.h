@@ -101,8 +101,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool GetZeroCopyBytes(ConstAttrHolderAdapter &&obj, const std::string &name, Buffer &buffer);
   // Value will be moved
   static bool SetZeroCopyListBytes(AttrHolderAdapter &&obj, const std::string &name,
-                                   std::vector<Buffer> &listBuffer);
-  static bool GetZeroCopyListBytes(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<Buffer> &listBuffer);
+                                   std::vector<Buffer> &list_buffer);
+  static bool GetZeroCopyListBytes(ConstAttrHolderAdapter &&obj, const std::string &name,
+                                   std::vector<Buffer> &list_buffer);
 
   static bool SetListListInt(AttrHolderAdapter &&obj, const std::string &name, const std::vector<vector<int64_t>> &value);
   static bool GetListListInt(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<vector<int64_t>> &value);
@@ -116,9 +117,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool SetDataType(AttrHolderAdapter &&obj, const std::string &name, const ge::DataType &value);
   static bool GetDataType(ConstAttrHolderAdapter &&obj, const std::string &name, ge::DataType &value);
 
-  static OpDescPtr CloneOpDesc(const ConstOpDescPtr &orgOpDesc);
+  static OpDescPtr CloneOpDesc(const ConstOpDescPtr &org_op_desc);
 
-  static OpDescPtr CopyOpDesc(const ConstOpDescPtr &orgOpDesc);
+  static OpDescPtr CopyOpDesc(const ConstOpDescPtr &org_op_desc);
   static std::string GetAllAttrsStr(ConstAttrHolderAdapter &&obj);
   static std::map<std::string, AnyValue> GetAllAttrs(ConstAttrHolderAdapter &&obj);
   static std::string GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const std::set<std::string> &un_compute_attrs);

@@ -22,6 +22,10 @@
 #include <vector>
 
 namespace ge {
+using char_t = char;
+using float32_t = float;
+using float64_t = double;
+
 static const int64_t UNKNOWN_DIM = -1;
 static const int64_t UNKNOWN_DIM_NUM = -2;
 static const std::vector<int64_t> UNKNOWN_SHAPE = {-1};
