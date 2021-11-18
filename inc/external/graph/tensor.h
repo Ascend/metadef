@@ -74,10 +74,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorDesc {
   void SetFormat(Format format);
 
   Shape GetOriginShape() const;
-  void SetOriginShape(const Shape &originShape);
+  void SetOriginShape(const Shape &origin_shape);
 
   Format GetOriginFormat() const;
-  void SetOriginFormat(Format originFormat);
+  void SetOriginFormat(Format origin_format);
 
   DataType GetDataType() const;
   void SetDataType(DataType dt);
@@ -86,16 +86,16 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorDesc {
   std::string GetName() const;
   graphStatus GetName(AscendString &name);
 
-  ATTRIBUTED_DEPRECATED(void SetName(const char *))
+  ATTRIBUTED_DEPRECATED(void SetName(const char_t *))
   void SetName(const std::string &name);
-  void SetName(const char *name);
+  void SetName(const char_t *name);
 
   // Attr acess
   void SetSize(int64_t size);
   int64_t GetSize() const;
 
   int64_t GetRealDimCnt() const;
-  void SetRealDimCnt(const int64_t realDimCnt);
+  void SetRealDimCnt(const int64_t real_dim_cnt);
 
   void SetPlacement(Placement placement);
   Placement GetPlacement() const;
@@ -114,13 +114,13 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Tensor {
   using DeleteFunc = std::function<void(uint8_t *)>;
   Tensor();
   ~Tensor() = default;
-  explicit Tensor(const TensorDesc &tensorDesc);
-  Tensor(const TensorDesc &tensorDesc, const std::vector<uint8_t> &data);
-  Tensor(const TensorDesc &tensorDesc, const uint8_t *data, size_t size);
+  explicit Tensor(const TensorDesc &tensor_desc);
+  Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data);
+  Tensor(const TensorDesc &tensor_desc, const uint8_t *data, size_t size);
   Tensor(TensorDesc &&tensorDesc, std::vector<uint8_t> &&data);
 
   TensorDesc GetTensorDesc() const;
-  graphStatus SetTensorDesc(const TensorDesc &tensorDesc);
+  graphStatus SetTensorDesc(const TensorDesc &tensor_desc);
 
   const uint8_t *GetData() const;
   uint8_t *GetData();
@@ -130,9 +130,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Tensor {
   graphStatus SetData(std::vector<uint8_t> &&data);
   graphStatus SetData(const std::vector<uint8_t> &data);
   graphStatus SetData(const uint8_t *data, size_t size);
-  ATTRIBUTED_DEPRECATED(graphStatus SetData(const char *data))
+  ATTRIBUTED_DEPRECATED(graphStatus SetData(const char_t *data))
   graphStatus SetData(const std::string &data);
-  graphStatus SetData(const char *data);
+  graphStatus SetData(const char_t *data);
   ATTRIBUTED_DEPRECATED(graphStatus SetData(const std::vector<AscendString> &))
   graphStatus SetData(const std::vector<std::string> &data);
   graphStatus SetData(const std::vector<AscendString> &datas);

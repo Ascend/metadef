@@ -63,15 +63,15 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus AnchorUtils::SetStatu
 }
 
 bool AnchorUtils::HasControlEdge(const AnchorPtr &anchor) {
-  auto control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(anchor);
+  const auto control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(anchor);
   if (control_anchor != nullptr) {
-    return (control_anchor->GetPeerAnchors().size() != 0);
+    return (control_anchor->GetPeerAnchors().size() != 0U);
   }
 
-  auto data_anchor = Anchor::DynamicAnchorCast<DataAnchor>(anchor);
+  const auto data_anchor = Anchor::DynamicAnchorCast<DataAnchor>(anchor);
   if (data_anchor) {
     for (const auto &peer : data_anchor->GetPeerAnchors()) {
-      auto peer_cast = Anchor::DynamicAnchorCast<ControlAnchor>(peer);
+      const auto peer_cast = Anchor::DynamicAnchorCast<ControlAnchor>(peer);
       if (peer_cast) {
         return true;
       }
@@ -86,19 +86,19 @@ bool AnchorUtils::HasControlEdge(const AnchorPtr &anchor) {
 bool AnchorUtils::IsControlEdge(const AnchorPtr &src, const AnchorPtr &dst) {
   GE_CHK_BOOL_EXEC(src != nullptr, return false, "src is null.");
   GE_CHK_BOOL_RET_STATUS_NOLOG(src->IsLinkedWith(dst), false);
-  auto src_control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(src);
-  auto dst_control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(dst);
+  const auto src_control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(src);
+  const auto dst_control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(dst);
   return (src_control_anchor || dst_control_anchor);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int AnchorUtils::GetIdx(const AnchorPtr &anchor) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int32_t AnchorUtils::GetIdx(const AnchorPtr &anchor) {
   // Check if it can add edge between DataAnchor
-  auto data_anchor = Anchor::DynamicAnchorCast<DataAnchor>(anchor);
+  const auto data_anchor = Anchor::DynamicAnchorCast<DataAnchor>(anchor);
   if (data_anchor != nullptr) {
     return data_anchor->GetIdx();
   }
   // Check if it can add edge between ControlAnchor
-  auto control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(anchor);
+  const auto control_anchor = Anchor::DynamicAnchorCast<ControlAnchor>(anchor);
   if (control_anchor != nullptr) {
     return control_anchor->GetIdx();
   }

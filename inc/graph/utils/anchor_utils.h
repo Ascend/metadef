@@ -24,22 +24,22 @@ namespace ge {
 class AnchorUtils {
  public:
   // Get anchor format
-  static Format GetFormat(const DataAnchorPtr &dataAnchor);
+  static Format GetFormat(const DataAnchorPtr &data_anchor);
 
   // Set anchor format
-  static graphStatus SetFormat(const DataAnchorPtr &dataAnchor, Format dataFormat);
+  static graphStatus SetFormat(const DataAnchorPtr &data_anchor, Format data_format);
 
   // Get anchor status
-  static AnchorStatus GetStatus(const DataAnchorPtr &dataAnchor);
+  static AnchorStatus GetStatus(const DataAnchorPtr &data_anchor);
 
   // Set anchor status
-  static graphStatus SetStatus(const DataAnchorPtr &dataAnchor, AnchorStatus anchorStatus);
+  static graphStatus SetStatus(const DataAnchorPtr &data_anchor, AnchorStatus anchor_status);
 
   static bool HasControlEdge(const AnchorPtr &anchor);
 
   static bool IsControlEdge(const AnchorPtr &src, const AnchorPtr &dst);
 
-  static int GetIdx(const AnchorPtr &anchor);
+  static int32_t GetIdx(const AnchorPtr &anchor);
 };
 }  // namespace ge
 #endif  // INC_GRAPH_UTILS_ANCHOR_UTILS_H_
