@@ -26,6 +26,7 @@
 
 namespace {
 const int64_t UNKNOWN_DIM_SIZE = -1;
+const std::string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
 }  // namespace
 
 namespace ge {
@@ -813,7 +814,9 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
 TensorDesc TensorAdapter::GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_desc) {
   TensorDesc tensor_desc(Shape(ge_tensor_desc.GetShape().GetDims()), ge_tensor_desc.GetFormat(),
                          ge_tensor_desc.GetDataType());
-  if (TensorUtils::IsOriginShapeInited(ge_tensor_desc)) {
+  bool original_shape_initialized = false;
+  (void)AttrUtils::GetBool(ge_tensor_desc, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, original_shape_initialized);
+  if (original_shape_initialized) {
     tensor_desc.SetOriginShape(Shape(ge_tensor_desc.GetOriginShape().GetDims()));
   }
   tensor_desc.SetOriginFormat(ge_tensor_desc.GetOriginFormat());

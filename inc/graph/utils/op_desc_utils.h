@@ -25,7 +25,6 @@
 #include "graph/op_desc.h"
 #include "graph/operator.h"
 #include "graph/range_vistor.h"
-#include "graph/runtime_inference_context.h"
 
 namespace ge {
 class OpDesc;
@@ -90,7 +89,6 @@ class OpDescUtils {
   static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,
       const std::string &subgraph_instance_name, OpDescPtr &op_desc);
   static ConstGeTensorBarePtr GetInputConstData(const Operator &op, uint32_t idx);
-  static void SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *context);
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
   static GeTensorPtr MutableWeights(ge::OpDescPtr op_desc);

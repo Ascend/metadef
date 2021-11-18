@@ -165,9 +165,8 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
           TypeUtils::DataTypeToSerialString(desc.GetOriginDataType()));
     }
 
-    const bool is_origin_shape_init = desc.ext_meta_.IsOriginShapeInited();
-    (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED].set_b(is_origin_shape_init);
-    if (is_origin_shape_init) {
+    const bool *is_origin_shape_init = desc.attrs_.GetByName<bool>(TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED);
+    if ((is_origin_shape_init !=  nullptr) && *is_origin_shape_init) {
       auto origin_shape_proto_list = (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_SHAPE].mutable_list();
       origin_shape_proto_list->clear_i();
       for (auto dim : desc.OriginShapeReference().GetDims()) {
@@ -602,12 +601,6 @@ GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::Tens
   ext_meta_.SetCmpsTab(proto_msg->cmps_tab());
   ext_meta_.SetCmpsTabOffset(proto_msg->cmps_tab_offset());
 
-  auto &attr_map = *(proto_msg->mutable_attr());
-  const auto iter = attr_map.find(TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED);
-  if (iter != attr_map.end()) {
-    ext_meta_.SetOriginShapeInited(iter->second.b());
-  }
-
   // note that we deserialize attributes in implement of GeTensor constructor
 }
 
@@ -838,11 +831,13 @@ const GeShape &GeTensorDesc::GetOriginShape() const {
 
 void GeTensorDesc::SetOriginShape(const GeShape &origin_shape) {
   impl_->OriginShapeReference() = origin_shape;
-  impl_->SetOriginShapeInited(true);
+  (void)AttrUtils::SetBool(this, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, true);
 }
 
 bool GeTensorDesc::IsOriginShapeInitialized() const {
-  return impl_->IsOriginShapeInited();
+  bool original_shape_initialized = false;
+  (void)AttrUtils::GetBool(this, TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED, original_shape_initialized);
+  return original_shape_initialized;
 }
 
 Format GeTensorDesc::GetFormat() const {
@@ -1644,10 +1639,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRC(co
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetRC(GeTensorDesc &tensor_desc, uint32_t rc) {
   (void)AttrUtils::SetInt(&tensor_desc, TENSOR_UTILS_RC, rc);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY  bool TensorUtils::IsOriginShapeInited(const GeTensorDesc &tensor_desc) {
-  return tensor_desc.impl_->IsOriginShapeInited();
 }
 
 GeTensor TensorUtils::CreateShareTensor(const GeTensor &other) {

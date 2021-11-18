@@ -178,6 +178,10 @@ class NodeUtils {
 
   static ge::ConstNodePtr GetNodeFromOperator(const Operator &oprt);
 
+  static graphStatus GetInputConstData(const ConstNodePtr& node_ptr, const std::string &dst_name, GeTensorPtr &ge_tensor);
+
+  static graphStatus GetInputConstData(const Node &node, const std::string &dst_name, GeTensorPtr &ge_tensor);
+
   ///
   /// @brief Get node type in cross subgragh.
   /// @param [in] node

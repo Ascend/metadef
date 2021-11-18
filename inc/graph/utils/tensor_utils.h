@@ -59,7 +59,6 @@ class TensorUtils {
   static void SetDataOffset(GeTensorDesc &tensorDesc, int64_t offset);
   static ge::graphStatus GetRC(const GeTensorDesc &tensorDesc, uint32_t &rc);
   static void SetRC(GeTensorDesc &tensorDesc, uint32_t rc);
-  static bool IsOriginShapeInited(const GeTensorDesc &tensor_desc);
 
   ///
   /// calculate tensor mem size.

@@ -72,7 +72,6 @@ set(UT_FILES
     "testcase/tensor_unittest.cc"
     "testcase/type_utils_unittest.cc"
     "testcase/aligned_ptr_unittest.cc"
-    "testcase/object_pool_unittest.cc"
     "testcase/tensor_ut.cc"
     "testcase/node_utils_unittest.cc"
     "testcase/node_unittest.cc"

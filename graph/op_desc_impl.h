@@ -18,63 +18,15 @@
 #define GRAPH_OP_DESC_IMPL_H_
 
 #include <string>
-#include <utility>
 #include <vector>
 #include "graph/op_desc.h"
-#include "graph/small_vector.h"
-#include "graph/ascend_limits.h"
 
 namespace ge {
-class OpDescImpl;
-class MetaDataStore {
- public:
-  using SmallIntVector = SmallVector<int64_t, kDefaultMaxInputNum>;
-  MetaDataStore() = default;
-  ~MetaDataStore() = default;
-  MetaDataStore(std::string name, std::string type) : name_(std::move(name)), type_(std::move(type)) {}
-  const string &GetName() const {return name_;}
-  const string &GetType() const {return type_;}
-  const vector<std::string> &GetInputs() const {return inputs_;}
-  bool HasOutAttr() const {return has_out_attr_;}
-  int64_t GetId() const {return id_;}
-  int64_t GetStreamId() const {return stream_id_;}
-  const vector<std::string> &GetInputNames() const {return input_names_;}
-  const vector<std::string> &GetSrcNames() const {return src_names_;}
-  const vector<int64_t> &GetSrcIndexes() const {return src_indexes_;}
-  const vector<std::string> &GetDstNames() const {return dst_names_;}
-  const vector<int64_t> &GetDstIndexes() const {return dst_indexes_;}
-  const vector<int64_t> &GetInputOffsets() const {return input_offsets_;}
-  const vector<int64_t> &GetOutputOffsets() const {return output_offsets_;}
-  const vector<bool> &GetIsInputConsts() const {return is_input_consts_;}
-  const vector<std::string> &GetSubgraphNames() const {return subgraph_names_;}
-  void AddSubGraphName(const string &name) {subgraph_names_.push_back(name);}
-
- private:
-  friend class OpDescImpl;
-  std::string name_;
-  std::string type_;
-  std::vector<std::string> inputs_;
-  bool has_out_attr_{false};
-  int64_t id_{0};
-  int64_t stream_id_{0};
-  std::vector<std::string> input_names_;
-  std::vector<std::string> src_names_;
-  std::vector<int64_t> src_indexes_;
-  std::vector<std::string> dst_names_;
-  std::vector<int64_t> dst_indexes_;
-  std::vector<int64_t> input_offsets_;
-  std::vector<int64_t> output_offsets_;
-  SmallIntVector workspaces;
-  SmallIntVector workspace_bytes_list_;
-  std::vector<bool> is_input_consts_;
-  std::vector<std::string> subgraph_names_;
-};
-
 class OpDescImpl {
  public:
   OpDescImpl();
   OpDescImpl(const std::string &name, const std::string &type);
-  explicit OpDescImpl(const ge::proto::OpDef &op_def);
+  OpDescImpl(const ProtoMsgOwner &proto_msg_owner, ge::proto::OpDef *op_def);
 
   ~OpDescImpl() = default;
 
@@ -237,13 +189,12 @@ class OpDescImpl {
   graphStatus InferDataSlice(const OpDescPtr &op_desc);
 
  private:
-  void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
-  void SerializeMetaDataToOpDef(proto::OpDef *op_def);
   friend class AttrUtils;
   friend class OpDescUtils;
   friend class ModelSerializeImp;
   friend class OnnxUtils;
   friend class GraphUtils;
+  GeIrProtoHelper<ge::proto::OpDef> op_def_;
   std::vector<std::string> subgraph_instance_names_;
 
   // subgraph names to index, for a `if` operator:
@@ -276,7 +227,6 @@ class OpDescImpl {
   std::function<graphStatus(Operator &)> infer_data_slice_func_ = nullptr;
   std::string op_kernel_lib_name_;
   std::string engine_name_;
-  MetaDataStore meta_data_;
   AttrStore attrs_;
 };
 }  // namespace ge
