@@ -17,6 +17,8 @@
 #ifndef INC_EXTERNAL_GRAPH_GE_ERROR_CODES_H_
 #define INC_EXTERNAL_GRAPH_GE_ERROR_CODES_H_
 
+#include <cstdint>
+
 namespace ge {
 #if(defined(HOST_VISIBILITY)) && (defined(__GNUC__))
 #define GE_FUNC_HOST_VISIBILITY __attribute__((visibility("default")))
