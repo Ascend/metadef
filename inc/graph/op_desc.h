@@ -74,6 +74,8 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   OpDesc(OpDesc &&op_desc);
 
+  explicit OpDesc(const ge::proto::OpDef &op_def);
+
   OpDesc();
 
   ~OpDesc();
@@ -302,7 +304,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   ConstProtoAttrMap &GetAttrMap() const override;
 
  private:
-  OpDesc(const ProtoMsgOwner &proto_msg_owner, ge::proto::OpDef *op_def);
   bool OpDescMembersAreEqual(const OpDesc &r_op_desc) const;
   bool OpDescAttrsAreEqual(const OpDesc &r_op_desc) const;
   bool OpDescGenTensorDescsAreEqual(const OpDesc &r_op_desc) const;

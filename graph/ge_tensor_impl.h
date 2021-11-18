@@ -51,6 +51,12 @@ class GeTensorDescImpl {
   DataType GetOriginDataType() const;
   void SetName(const std::string &name);
   const std::string GetName() const;
+  bool IsOriginShapeInited() const {
+    return ext_meta_.IsOriginShapeInited();
+  }
+  void SetOriginShapeInited(const bool origin_shape_inited) {
+    ext_meta_.SetOriginShapeInited(origin_shape_inited);
+  }
 
  private:
   friend class GeTensorImpl;
@@ -68,7 +74,7 @@ class GeTensorDescImpl {
         real_dim_cnt == other.real_dim_cnt && input_tensor == other.input_tensor &&
         reuse_input == other.reuse_input && reuse_input_index == other.reuse_input_index &&
         output_tensor == other.output_tensor && cmps_size == other.cmps_size && cmps_tab == other.cmps_tab &&
-        cmps_tab_offset == other.cmps_tab_offset);
+        cmps_tab_offset == other.cmps_tab_offset && origin_shape_inited_ == other.origin_shape_inited_);
     }
     // for name
     std::string GetName() const {
@@ -189,6 +195,14 @@ class GeTensorDescImpl {
       cmps_tab_offset = v;
     }
 
+    bool IsOriginShapeInited() const {
+      return origin_shape_inited_;
+    }
+
+    void SetOriginShapeInited(const bool origin_shape_inited) {
+      origin_shape_inited_ = origin_shape_inited;
+    }
+
    private:
     int64_t size{0};
     int64_t data_offset{0};
@@ -203,6 +217,7 @@ class GeTensorDescImpl {
     bool input_tensor{false};
     bool reuse_input{false};
     bool output_tensor{false};
+    bool origin_shape_inited_{false};
 
     std::string cmps_tab;
     std::string name;
