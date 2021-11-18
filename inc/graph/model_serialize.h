@@ -38,7 +38,7 @@ class ModelSerialize {
 
   ComputeGraphPtr UnserializeGraph(const uint8_t *data, size_t len);
 
-  Buffer SerializeOpDesc(const ConstOpDescPtr &opDesc);
+  Buffer SerializeOpDesc(const ConstOpDescPtr &op_desc);
   OpDescPtr UnserializeOpDesc(const uint8_t *data, size_t len);
 
   size_t GetSerializeModelSize(const Model &model);

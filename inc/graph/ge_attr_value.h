@@ -45,6 +45,29 @@ using ConstComputeGraphPtr = std::shared_ptr<const ComputeGraph>;
 
 class GeTensorDesc;
 
+template<typename T>
+bool SetAttrValue(AttrStore &attrs, const std::string &name, T &&value) {
+  return attrs.SetByName(name, std::forward<T>(value));
+}
+
+template<typename T>
+bool GetAttrValue(const AttrStore &attrs, const std::string &name, T &value) {
+  const auto p = attrs.GetByName<T>(name);
+  if (p == nullptr) {
+    return false;
+  }
+  value = *p;
+  return true;
+}
+
+template<typename T, typename RT = typename std::decay<T>::type>
+RT *SetAndGetAttrValue(AttrStore &attrs, const std::string &name, T &&value) {
+  if (!attrs.SetByName(name, std::forward<T>(value))) {
+    return nullptr;
+  }
+  return attrs.MutableGetByName<RT>(name);
+}
+
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY NamedAttrs : public AttrHolder {
  public:
   NamedAttrs() = default;

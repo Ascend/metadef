@@ -21,12 +21,12 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "graph/model.h"
 #include "graph/anchor.h"
 #include "graph/detail/attributes_holder.h"
 #include "graph/ge_tensor.h"
 #include "graph/graph.h"
 #include "graph/node.h"
-#include "graph/model.h"
 
 namespace ge {
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
@@ -47,38 +47,41 @@ struct NodeNameNodeReq {
 
 class ModelSerializeImp {
  public:
-  bool SerializeModel(const Model &model, proto::ModelDef *modeProto, bool is_dump = false);
+  bool SerializeModel(const Model &model, proto::ModelDef *model_proto, const bool is_dump = false);
 
-  bool SerializeGraph(const ConstComputeGraphPtr &graph, proto::GraphDef *graphProto, bool is_dump = false);
+  bool SerializeGraph(const ConstComputeGraphPtr &graph,
+                      proto::GraphDef *graph_proto,
+                      const bool is_dump = false);
 
-  bool SerializeEdge(const NodePtr &node, proto::OpDef *opDefProto);
+  bool SerializeEdge(const NodePtr &node, proto::OpDef *op_def_proto);
 
-  bool SerializeOpDesc(const ConstOpDescPtr &node, proto::OpDef *opDefProto, bool is_dump = false);
+  bool SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false);
 
-  bool SerializeNode(const NodePtr &node, proto::OpDef *opDefProto, bool is_dump = false);
+  bool SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump = false);
 
-  bool SerializeTensor(const ConstGeTensorPtr &tensor, proto::TensorDef *tensorProto);
+  bool SerializeTensor(const ConstGeTensorPtr &tensor, proto::TensorDef *tensor_proto);
 
-  bool UnserializeModel(Model &model, proto::ModelDef &modeProto);
+  bool UnserializeModel(Model &model, proto::ModelDef &model_proto);
 
-  bool UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, proto::GraphDef &graphProto);
+  bool UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, proto::GraphDef &graph_proto);
 
-  bool UnserializeGraph(ComputeGraphPtr &graph, proto::GraphDef &graphProto);
+  bool UnserializeGraph(ComputeGraphPtr &graph, proto::GraphDef &graph_proto);
 
   bool HandleNodeNameRef();
 
-  bool UnserializeOpDesc(OpDescPtr &opDesc, proto::OpDef &opDefProto);
-  void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_in, std::vector<std::string> &key_out,
-                       std::vector<uint32_t> &value_in, std::vector<uint32_t> &value_out, std::vector<std::string> &opt);
-  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, bool is_dump = false);
+  bool UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto);
+  void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_in,
+                       std::vector<std::string> &key_out, std::vector<uint32_t> &value_in,
+                       std::vector<uint32_t> &value_out, std::vector<std::string> &opt_input);
+  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false);
 
-  bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &opDefProto);
+  bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
 
-  bool UnserializeTensor(GeTensorPtr &tensor, proto::TensorDef &tensorProto);
+  bool UnserializeTensor(GeTensorPtr &tensor, proto::TensorDef &tensor_proto);
 
-  bool ParseNodeIndex(const std::string &node_index, std::string &nodeName, int32_t &index);
+  bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index);
 
-  void SetProtobufOwner(const ProtoMsgOwner &bufferProtobufOnwer) { protobuf_owner_ = bufferProtobufOnwer; }
+  void SetProtobufOwner(const ProtoMsgOwner &buffer_proto_buf_onwer) { protobuf_owner_ = buffer_proto_buf_onwer; }
 
   static bool SerializeAllAttrsFromAnyMap(
       const std::map<std::string, AnyValue> &, google::protobuf::Map<std::string, ::ge::proto::AttrDef> *);
