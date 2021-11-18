@@ -53,6 +53,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassReceiver {
   PassReceiver(PassRegistrationData &reg_data);
   ~PassReceiver() = default;
 };
+}  // namespace ge
 
 #define REGISTER_CUSTOM_PASS(name) REGISTER_CUSTOM_PASS_UNIQ_HELPER(__COUNTER__, name)
 #define REGISTER_CUSTOM_PASS_UNIQ_HELPER(ctr, name) REGISTER_CUSTOM_PASS_UNIQ(ctr, name)
@@ -60,6 +61,5 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassReceiver {
   static ::ge::PassReceiver register_pass##ctr      \
       __attribute__((unused)) =                     \
           ::ge::PassRegistrationData(name)
-}  // namespace ge
 
 #endif  // INC_EXTERNAL_REGISTER_REGISTER_PASS_H_

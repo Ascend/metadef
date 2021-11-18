@@ -28,9 +28,9 @@ enum FrameworkType {
   CAFFE = 0,
   MINDSPORE = 1,
   TENSORFLOW = 3,
-  ANDROID_NN,
-  ONNX,
-  FRAMEWORK_RESERVED,
+  ANDROID_NN = 4,
+  ONNX = 5,
+  FRAMEWORK_RESERVED = 6
 };
 }  // namespace domi
 
