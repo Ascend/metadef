@@ -322,6 +322,9 @@ enum class ImplyType : unsigned int {
   HCCL,         // Hccl
   INVALID = 0xFFFFFFFF,
 };
+using char_t = ge::char_t;
+using float32_t = ge::float32_t;
+using float64_t = ge::float64_t;
 }  // namespace domi
 
 #endif  // INC_EXTERNAL_GRAPH_TYPES_H_

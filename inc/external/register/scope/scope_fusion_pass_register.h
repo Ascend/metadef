@@ -242,6 +242,11 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeAttrValue {
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeBaseFeature {
  public:
   virtual bool Match(const Scope *scope) = 0;
+  ScopeBaseFeature() = default;
+  ScopeBaseFeature(const ScopeBaseFeature &) = delete;
+  ScopeBaseFeature &operator=(const ScopeBaseFeature &) = delete;
+  ScopeBaseFeature(ScopeBaseFeature &&) = delete;
+  ScopeBaseFeature &operator=(ScopeBaseFeature &&) = delete;
   virtual ~ScopeBaseFeature(){};
 };
 
@@ -286,7 +291,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFeature : ScopeBaseFea
                const char *sub_scope_mask, int step = 0);
   ScopeFeature(ScopeFeature const &feature);
   ScopeFeature &operator=(ScopeFeature const &feature);
-  ~ScopeFeature();
+  ~ScopeFeature() override;
   bool Match(const Scope *scope) override;
 
  private:
@@ -330,6 +335,10 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopesResult {
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeBasePass {
  public:
   ScopeBasePass();
+  ScopeBasePass(const ScopeBasePass &) = delete;
+  ScopeBasePass &operator=(const ScopeBasePass &) = delete;
+  ScopeBasePass(ScopeBasePass &&) = delete;
+  ScopeBasePass &operator=(ScopeBasePass &&) = delete;
   virtual ~ScopeBasePass();
 
  protected:
@@ -384,18 +393,16 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFusionPassRegistrar {
   ScopeFusionPassRegistrar(const char *pass_name, ScopeBasePass *(*create_fn)(), bool is_general);
   ~ScopeFusionPassRegistrar() {}
 };
-
+}  // namespace ge
 #define REGISTER_SCOPE_FUSION_PASS(pass_name, scope_pass, is_general) \
-  REGISTER_SCOPE_FUSION_PASS_UNIQ_HELPER(__COUNTER__, pass_name, scope_pass, is_general)
+  REGISTER_SCOPE_FUSION_PASS_UNIQ_HELPER(__COUNTER__, (pass_name), scope_pass, is_general)
 
 #define REGISTER_SCOPE_FUSION_PASS_UNIQ_HELPER(ctr, pass_name, scope_pass, is_general) \
-  REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, pass_name, scope_pass, is_general)
+  REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, (pass_name), scope_pass, is_general)
 
-#define REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, pass_name, scope_pass, is_general)                                 \
+#define REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, pass_name, scope_pass, is_general)                   \
   static ::ge::ScopeFusionPassRegistrar register_scope_fusion_pass##ctr __attribute__((unused)) = \
-      ::ge::ScopeFusionPassRegistrar(pass_name,                                                   \
-                                     []() -> ::ge::ScopeBasePass * { return new (std::nothrow) scope_pass(); }, \
-                                     is_general)
-}  // namespace ge
-
+      ::ge::ScopeFusionPassRegistrar(                                                             \
+          (pass_name), []() -> ::ge::ScopeBasePass * { return new (std::nothrow) scope_pass(); }, is_general)
 #endif  // EXTERNAL_REGISTER_SCOPE_SCOPE_FUSION_PASS_REGISTER_H_
+

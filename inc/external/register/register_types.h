@@ -17,7 +17,6 @@
 #ifndef INC_EXTERNAL_REGISTER_REGISTER_TYPES_H_
 #define INC_EXTERNAL_REGISTER_REGISTER_TYPES_H_
 
-namespace domi {
 #if(defined(HOST_VISIBILITY)) && (defined(__GNUC__))
 #define FMK_FUNC_HOST_VISIBILITY __attribute__((visibility("default")))
 #else
@@ -33,6 +32,7 @@ namespace domi {
 #else
 #define ATTRIBUTED_DEPRECATED(replacement) __declspec(deprecated("Please use " #replacement " instead."))
 #endif
+namespace domi {
 
 ///
 /// @ingroup domi
