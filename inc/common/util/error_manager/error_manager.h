@@ -193,6 +193,8 @@ class ErrorManager {
 
   void SetStage(const std::string &first_stage, const std::string &second_stage);
 
+  void SetStage(const char *first_stage, size_t first_len, const char *second_stage, size_t second_len);
+
  private:
   struct ErrorInfoConfig {
     std::string error_id;

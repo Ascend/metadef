@@ -426,7 +426,7 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Node &node, OpRunInfoV2 &
     iter = op_func_map.find(OP_TYPE_AUTO_TILING);
     if (iter == op_func_map.end()) {
       GELOGI("Optiling function of op type[%s] is not found by Autotiling.", op_type.c_str());
-      REPORT_CALL_ERROR("E19999", "Optiling function is not found. op_type[%s].", op_type.c_str());
+      REPORT_CALL_ERROR("EZ9999", "Optiling function is not found. op_type[%s].", op_type.c_str());
       return ge::GRAPH_FAILED;
     }
   }

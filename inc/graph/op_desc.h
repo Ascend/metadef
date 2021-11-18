@@ -95,13 +95,13 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus AddInputDesc(uint32_t index, const ge::GeTensorDesc &input_desc);
 
-  graphStatus AddInputDescForward(const std::string &name, const unsigned int num);
+  graphStatus AddInputDescForward(const std::string &name, const uint32_t num);
 
-  graphStatus AddInputDescMiddle(const std::string &name, const unsigned int num, size_t index);
+  graphStatus AddInputDescMiddle(const std::string &name, const uint32_t num, size_t index);
 
-  graphStatus AddOutputDescMiddle(const std::string &name, const unsigned int num, size_t index);
+  graphStatus AddOutputDescMiddle(const std::string &name, const uint32_t num, size_t index);
 
-  graphStatus AddOutputDescForward(const std::string &name, const unsigned int num);
+  graphStatus AddOutputDescForward(const std::string &name, const uint32_t num);
 
   graphStatus AddOptionalInputDesc(const std::string &name, const GeTensorDesc &input_desc);
 
@@ -161,11 +161,11 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   ConstGeTensorDescPtr GetInputDescPtr(const std::string &name) const;
 
-  graphStatus AddDynamicInputDesc(const std::string &name, const unsigned int num, bool isPushBack = true);
+  graphStatus AddDynamicInputDesc(const std::string &name, const uint32_t num, bool is_push_back = true);
 
-  graphStatus AddDynamicInputDescByIndex(const std::string &name, const unsigned int num, size_t index);
+  graphStatus AddDynamicInputDescByIndex(const std::string &name, const uint32_t num, size_t index);
 
-  graphStatus AddDynamicOutputDesc(const std::string &name, const unsigned int num, bool isPushBack = true);
+  graphStatus AddDynamicOutputDesc(const std::string &name, const uint32_t num, bool is_push_back = true);
 
   bool IsOptionalInput(const std::string &name) const;
 
@@ -179,9 +179,9 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   std::map<std::string, uint32_t>& MutableAllOutputName();
 
-  bool UpdateInputName(std::map<std::string, uint32_t> inputNameIdx);
+  bool UpdateInputName(std::map<std::string, uint32_t> input_name_idx);
 
-  bool UpdateOutputName(std::map<std::string, uint32_t> outputNameIdx);
+  bool UpdateOutputName(std::map<std::string, uint32_t> output_name_idx);
 
   void AddInferFunc(const std::function<graphStatus(Operator &)> &func);
 
@@ -235,7 +235,7 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   std::vector<int64_t> GetSrcIndex() const;
   void SetInputOffset(const std::vector<int64_t> &input);
   std::vector<int64_t> GetInputOffset() const;
-  void SetOutputOffset(const std::vector<int64_t> &input);
+  void SetOutputOffset(const std::vector<int64_t> &output);
   std::vector<int64_t> GetOutputOffset() const;
   void SetDstName(const std::vector<std::string> &dst_name);
   std::vector<std::string> GetDstName() const;
@@ -253,16 +253,16 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   std::string GetInputNameByIndex(uint32_t index) const;
   std::string GetValidInputNameByIndex(uint32_t index) const;
-  int GetValidInputIndexByName(const std::string &name) const;
-  int GetInputIndexByName(const std::string &name) const;
+  int32_t GetValidInputIndexByName(const std::string &name) const;
+  int32_t GetInputIndexByName(const std::string &name) const;
 
   std::string GetOutputNameByIndex(uint32_t index) const;
 
-  int GetOutputIndexByName(const std::string &name) const;
+  int32_t GetOutputIndexByName(const std::string &name) const;
 
-  graphStatus RestoreInputNameIdx(const std::string &name, const int &index);
+  graphStatus RestoreInputNameIdx(const std::string &name, const int32_t &index);
 
-  graphStatus RestoreOutputNameIdx(const std::string &name, const int &index);
+  graphStatus RestoreOutputNameIdx(const std::string &name, const int32_t &index);
 
   graphStatus CallInferFunc(Operator &op);
 
