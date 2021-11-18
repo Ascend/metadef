@@ -141,6 +141,9 @@ class GraphUtils {
 
   static graphStatus CopyGraph(const Graph &src_graph, Graph &dst_graph);
 
+  // copy root compute graph
+  static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph);
+
   static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph,
                                       ComputeGraphPtr &dst_compute_graph,
                                       std::map<ConstNodePtr, NodePtr> &node_old_2_new,
