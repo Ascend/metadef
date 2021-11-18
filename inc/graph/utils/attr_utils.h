@@ -43,8 +43,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool SetListInt(AttrHolderAdapter &&obj, const std::string &name, const std::vector<int32_t> &value);
   static bool SetListInt(AttrHolderAdapter &&obj, const std::string &name, std::initializer_list<int64_t> &&value);
 
-  static bool SetFloat(AttrHolderAdapter &&obj, const std::string &name, const float &value);
-  static bool SetListFloat(AttrHolderAdapter &&obj, const std::string &name, const std::vector<float> &value);
+  static bool SetFloat(AttrHolderAdapter &&obj, const std::string &name, const float32_t &value);
+  static bool SetListFloat(AttrHolderAdapter &&obj, const std::string &name, const std::vector<float32_t> &value);
   static bool SetBool(AttrHolderAdapter &&obj, const std::string &name, const bool &value);
   static bool SetListBool(AttrHolderAdapter &&obj, const std::string &name, const std::vector<bool> &value);
   static bool SetStr(AttrHolderAdapter &&obj, const std::string &name, const std::string &value);
@@ -78,8 +78,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<int64_t> &value);
   static bool GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<int32_t> &value);
   static bool GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<uint32_t> &value);
-  static bool GetFloat(ConstAttrHolderAdapter &&obj, const std::string &name, float &value);
-  static bool GetListFloat(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<float> &value);
+  static bool GetFloat(ConstAttrHolderAdapter &&obj, const std::string &name, float32_t &value);
+  static bool GetListFloat(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<float32_t> &value);
   static bool GetBool(ConstAttrHolderAdapter &&obj, const std::string &name, bool &value);
   static bool GetListBool(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<bool> &value);
   static bool GetStr(ConstAttrHolderAdapter &&obj, const std::string &name, std::string &value);
@@ -105,11 +105,15 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool GetZeroCopyListBytes(ConstAttrHolderAdapter &&obj, const std::string &name,
                                    std::vector<Buffer> &list_buffer);
 
-  static bool SetListListInt(AttrHolderAdapter &&obj, const std::string &name, const std::vector<vector<int64_t>> &value);
-  static bool GetListListInt(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<vector<int64_t>> &value);
+  static bool SetListListInt(AttrHolderAdapter &&obj, const std::string &name,
+                             const std::vector<vector<int64_t>> &value);
+  static bool GetListListInt(ConstAttrHolderAdapter &&obj, const std::string &name,
+                             std::vector<vector<int64_t>> &value);
 
-  static bool SetListListFloat(AttrHolderAdapter &&obj, const std::string &name, const std::vector<vector<float>> &value);
-  static bool GetListListFloat(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<vector<float>> &value);
+  static bool SetListListFloat(AttrHolderAdapter &&obj, const std::string &name,
+                               const std::vector<vector<float32_t>> &value);
+  static bool GetListListFloat(ConstAttrHolderAdapter &&obj, const std::string &name,
+                               std::vector<vector<float32_t>> &value);
 
   static bool SetListDataType(AttrHolderAdapter &&obj, const std::string &name, const std::vector<ge::DataType> &value);
   static bool GetListDataType(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<ge::DataType> &value);

@@ -33,28 +33,29 @@
 #include "proto/ge_ir.pb.h"
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
+#include "utils/mem_utils.h"
 
 using ListValue = ge::proto::AttrDef::ListValue;
 namespace ge {
 bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) {
-  auto sep = node_index.rfind(":");
+  const auto sep = node_index.rfind(":");
   if (sep == std::string::npos) {
     GELOGW("[Parse][CheckParam] Separator \":\" is not found in node_index.");
     return false;
   }
-  node_name = node_index.substr(0, sep);
-  auto index_str = node_index.substr(sep + 1);
+  node_name = node_index.substr(0UL, sep);
+  const auto index_str = node_index.substr(sep + 1UL);
   index = static_cast<int32_t>(std::strtol(index_str.c_str(), nullptr, 10));
   return true;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeTensor(const ConstGeTensorPtr &tensor,
-                                                                                       proto::TensorDef *tensor_proto) {
+    proto::TensorDef *tensor_proto) {
   GE_CHK_BOOL_EXEC(tensor != nullptr, REPORT_INNER_ERROR("E19999", "param tensor is nullptr, check invalid.");
                    return false, "[Check][Param] tensor is null.");
   GE_CHK_BOOL_EXEC(tensor_proto != nullptr, REPORT_INNER_ERROR("E19999", "param tensor_proto is null, check invalid.");
                    return false, "[Check][Param] tensor_proto is null.");
-  if (tensor->impl_ == nullptr || tensor->impl_->tensor_data_.impl_ == nullptr) {
+  if ((tensor->impl_ == nullptr) || (tensor->impl_->tensor_data_.impl_ == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param tensor impl is null, check invalid.");
     GELOGE(FAILED, "[Check][Param] tensor_proto is null.");
     return false;
@@ -63,7 +64,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   if (tensor->impl_->tensor_data_.impl_->tensor_descriptor_ != nullptr) {
     GeTensorSerializeUtils::GeTensorDescAsProto(*tensor->impl_->tensor_data_.impl_->tensor_descriptor_,
                                                 tensor_proto->mutable_desc());
-    if ((tensor->GetData().data() == nullptr) && (tensor->GetData().size() != 0)) {
+    if ((tensor->GetData().data() == nullptr) && (tensor->GetData().size() != 0UL)) {
       REPORT_INNER_ERROR("E19999", "param tensor data is null, but data size is not zero.");
       GELOGE(FAILED, "[Check][Param] tensor data is null, but data size is not zero.");
       return false;
@@ -84,7 +85,7 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_
   // Inputs
   for (const auto &in_data_anchor : node->GetAllInDataAnchors()) {
     if (in_data_anchor != nullptr) {
-      auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
+      const auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
       if (peer_out_anchor != nullptr && peer_out_anchor->GetOwnerNode()) {
         op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":" +
                                 std::to_string(peer_out_anchor->GetIdx()));
@@ -94,9 +95,9 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_
     }
   }
   // Control edge
-  auto control_anchor = node->GetInControlAnchor();
-  if (control_anchor != nullptr) {
-    auto peer_out_anchors = control_anchor->GetPeerOutControlAnchors();
+  const auto in_control_anchor = node->GetInControlAnchor();
+  if (in_control_anchor != nullptr) {
+    const auto peer_out_anchors = in_control_anchor->GetPeerOutControlAnchors();
     for (const auto &peer_out_anchor : peer_out_anchors) {
       if (peer_out_anchor != nullptr && peer_out_anchor->GetOwnerNode()) {
         op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":-1");
@@ -113,14 +114,15 @@ void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_de
     return;
   }
 
-  if (op_def_subgraph_name_size == 0) {
+  if (op_def_subgraph_name_size == 0UL) {
     for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
       op_desc->impl_->meta_data_.AddSubGraphName(name);
     }
   }
 }
 
-bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, bool is_dump) {
+bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto,
+                                        const bool is_dump) {
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr. check invalid.");
                    return false, "[Check][Param] op_desc is null.");
   GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E19999", "param op_def_proto is null, check invalid.");
@@ -161,7 +163,8 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
   return true;
 }
 
-void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, bool is_dump) {
+void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto,
+                                        const bool is_dump) {
   proto::AttrDef key_in;
   proto::AttrDef value_in;
   auto op_desc_attr = op_def_proto->mutable_attr();
@@ -172,20 +175,20 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
   if (!op_desc->impl_->input_name_idx_.empty()) {
     for (auto &item : op_desc->impl_->input_name_idx_) {
       key_in.mutable_list()->add_s(item.first);
-      value_in.mutable_list()->add_i(item.second);
+      value_in.mutable_list()->add_i(static_cast<int64_t>(item.second));
     }
-    (*op_desc_attr)["_input_name_key"] = key_in;
-    (*op_desc_attr)["_input_name_value"] = value_in;
+    (void) op_desc_attr->insert({"_input_name_key", key_in});
+    (void) op_desc_attr->insert({"_input_name_value", value_in});
   }
   proto::AttrDef key_out;
   proto::AttrDef value_out;
   if (!op_desc->impl_->output_name_idx_.empty()) {
     for (auto &item : op_desc->impl_->output_name_idx_) {
       key_out.mutable_list()->add_s(item.first);
-      value_out.mutable_list()->add_i(item.second);
+      value_out.mutable_list()->add_i(static_cast<int64_t>(item.second));
     }
-    (*op_desc_attr)["_output_name_key"] = key_out;
-    (*op_desc_attr)["_output_name_value"] = value_out;
+    (void) op_desc_attr->insert({"_output_name_key", key_out});
+    (void) op_desc_attr->insert({"_output_name_value", value_out});
   }
   proto::AttrDef opt_input;
   if (!op_desc->impl_->optional_input_names_.empty()) {
@@ -204,14 +207,13 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
     op_desc_attr->erase(ATTR_NAME_FRAMEWORK_NODE_DEF);
     op_desc_attr->erase(ATTR_NAME_FRAMEWORK_OP_DEF);
     op_desc_attr->erase(ATTR_NAME_FRAMEWORK_FUNC_DEF);
-    GE_IF_BOOL_EXEC((op_def_proto->type() == CONSTANT || op_def_proto->type() == CONSTANTOP),
-                    op_desc_attr
-                    ->erase(ATTR_NAME_WEIGHTS));
+    GE_IF_BOOL_EXEC(((op_def_proto->type() == CONSTANT) || (op_def_proto->type() == CONSTANTOP)),
+                    op_desc_attr->erase(ATTR_NAME_WEIGHTS));
   }
 }
 
-bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, bool is_dump) {
-  if (node == nullptr || op_def_proto == nullptr) {
+bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump) {
+  if ((node == nullptr) || (op_def_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or op_def_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param node or op_def_proto is nullptr, check invalid.");
     return false;
@@ -229,8 +231,8 @@ bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeGraph(const ConstComputeGraphPtr &graph,
                                                                                       proto::GraphDef *graph_proto,
-                                                                                      bool is_dump) {
-  if (graph == nullptr || graph_proto == nullptr) {
+                                                                                      const bool is_dump) {
+  if ((graph == nullptr) || (graph_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param graph or graph_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param graph or graph_proto is nullptr, check invalid.");
     return false;
@@ -267,7 +269,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   return true;
 }
 
-bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *model_proto, bool is_dump) {
+bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *model_proto, const bool is_dump) {
   if (model_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param model_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param model_proto is nullptr, check Invalid");
@@ -284,7 +286,7 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *mode
   }
 
   auto &graph = model.graph_;
-  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  const auto compute_graph = GraphUtils::GetComputeGraph(graph);
   if (compute_graph == nullptr) {
     REPORT_CALL_ERROR("E19999", "get compute graph from graph failed as graph is invalid.");
     GELOGE(GRAPH_FAILED, "[Get][ComputeGraph] return nullptr");
@@ -295,7 +297,7 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *mode
     return false;
   }
 
-  for (auto subgraph : compute_graph->GetAllSubgraphs()) {
+  for (const auto subgraph : compute_graph->GetAllSubgraphs()) {
     if (!SerializeGraph(subgraph, model_proto->add_graph(), is_dump)) {
       GELOGE(GRAPH_FAILED, "[Serialize][Subgraph] failed");
       return false;
@@ -323,7 +325,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
                                         std::vector<uint32_t> &value_in,
                                         std::vector<uint32_t> &value_out,
                                         std::vector<std::string> &opt_input) {
-  if (op_desc == nullptr || op_desc->impl_ == nullptr) {
+  if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
     GELOGE(FAILED, "[Serialize][Opdesc] op desc or impl is nullptr.");
     return;
   }
@@ -332,8 +334,8 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
       GELOGW("[ParseAttrDef][CheckParam] Input key and value vector size is different. key_size=%zu, value_size=%zu.",
              key_in.size(), value_in.size());
     } else {
-      for (uint32_t i = 0; i < key_in.size(); ++i) {
-        op_desc->impl_->input_name_idx_.insert(std::pair<std::string, uint32_t>(key_in.at(i), value_in.at(i)));
+      for (size_t i = 0UL; i < key_in.size(); ++i) {
+        (void) op_desc->impl_->input_name_idx_.insert(std::pair<std::string, uint32_t>(key_in.at(i), value_in.at(i)));
       }
     }
   }
@@ -342,18 +344,17 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
       GELOGW("[ParseAttrDef][CheckParam] Output key and value vector size is different. key_size=%zu, value_size=%zu.",
              key_out.size(), value_out.size());
     } else {
-      for (uint32_t i = 0; i < key_out.size(); ++i) {
-        op_desc->impl_->output_name_idx_.insert(std::pair<std::string, uint32_t>(key_out.at(i), value_out.at(i)));
+      for (size_t i = 0UL; i < key_out.size(); ++i) {
+        (void)op_desc->impl_->output_name_idx_.insert(std::pair<std::string, uint32_t>(key_out.at(i), value_out.at(i)));
       }
     }
   }
   if (!opt_input.empty()) {
     for (const auto &i : opt_input) {
-      op_desc->impl_->optional_input_names_.insert(i);
+      (void) op_desc->impl_->optional_input_names_.insert(i);
     }
   }
 }
-
 
 bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) {
   std::vector<std::string> opt_input;
@@ -407,7 +408,7 @@ void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vec
                                             std::vector<std::string> &key_in, std::vector<uint32_t> &value_in,
                                             std::vector<std::string> &key_out, std::vector<uint32_t> &value_out) const {
   if (op_def_proto.attr().count("_opt_input") > 0) {
-    auto &name_list = op_def_proto.attr().at("_opt_input").list();
+    const auto &name_list = op_def_proto.attr().at("_opt_input").list();
     for (const auto &item_s : name_list.s()) {
       opt_input.push_back(item_s);
     }
@@ -415,31 +416,31 @@ void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vec
     op_desc_attr->erase("_opt_input");
   }
   if (op_def_proto.attr().count("_input_name_key") > 0) {
-    auto &output_name_key_list = op_def_proto.attr().at("_input_name_key").list();
+    const auto &output_name_key_list = op_def_proto.attr().at("_input_name_key").list();
     for (const auto &item_s : output_name_key_list.s()) {
       key_in.push_back(item_s);
     }
     auto op_desc_attr = op_def_proto.mutable_attr();
     op_desc_attr->erase("_input_name_key");
   }
-  if (op_def_proto.attr().count("_input_name_value") > 0) {
-    auto &input_name_value_list = op_def_proto.attr().at("_input_name_value").list();
+  if (op_def_proto.attr().count("_input_name_value") > 0UL) {
+    const auto &input_name_value_list = op_def_proto.attr().at("_input_name_value").list();
     for (const auto &item_i : input_name_value_list.i()) {
       value_in.push_back(static_cast<uint32_t>(item_i));
     }
     auto op_desc_attr = op_def_proto.mutable_attr();
     op_desc_attr->erase("_input_name_value");
   }
-  if (op_def_proto.attr().count("_output_name_key") > 0) {
-    auto &output_name_key_list = op_def_proto.attr().at("_output_name_key").list();
+  if (op_def_proto.attr().count("_output_name_key") > 0UL) {
+    const auto &output_name_key_list = op_def_proto.attr().at("_output_name_key").list();
     for (const auto &item_s : output_name_key_list.s()) {
       key_out.push_back(item_s);
     }
     auto op_desc_attr = op_def_proto.mutable_attr();
     op_desc_attr->erase("_output_name_key");
   }
-  if (op_def_proto.attr().count("_output_name_value") > 0) {
-    auto &output_name_value_list = op_def_proto.attr().at("_output_name_value").list();
+  if (op_def_proto.attr().count("_output_name_value") > 0UL) {
+    const auto &output_name_value_list = op_def_proto.attr().at("_output_name_value").list();
     for (const auto &item_i : output_name_value_list.i()) {
       value_out.push_back(static_cast<uint32_t>(item_i));
     }
@@ -452,17 +453,17 @@ bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op
   GE_RT_FALSE_CHECK_NOTNULL(graph);
   OpDescPtr op_desc = nullptr;
   if (!UnserializeOpDesc(op_desc, op_def_proto)) {
-    GELOGE(false, "[Unserialize][OpDesc] error.");
+    GELOGE(ge::INTERNAL_ERROR, "[Unserialize][OpDesc] error.");
     return false;
   }
 
-  NodePtr node = graph->AddNode(op_desc, op_desc->GetId());
+  const NodePtr node = graph->AddNode(op_desc, op_desc->GetId());
   GE_CHK_BOOL_EXEC(node != nullptr,
                    REPORT_CALL_ERROR("E19999", "add node to graph:%s failed", graph->GetName().c_str());
                    return false, "[Add][Node] to graph:%s failed.", graph->GetName().c_str());
 
   // Inputs
-  int dst_index = 0;
+  int32_t dst_index = 0;
   for (const auto &input : op_def_proto.input()) {
     std::string node_name;
     int32_t index = 0;
@@ -480,7 +481,7 @@ bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op
 bool ModelSerializeImp::HandleNodeNameRef() {
   // Edges
   for (auto &item : node_input_node_names_) {
-    auto src_node_it = node_map_.find(item.src_node_name);
+    const auto src_node_it = node_map_.find(item.src_node_name);
     if (src_node_it == node_map_.end()) {
       REPORT_INNER_ERROR("E19999", "cannot find edge node %s", item.src_node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] cannot find edge node %s", item.src_node_name.c_str());
@@ -488,8 +489,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
     }
     GE_IF_BOOL_EXEC(src_node_it->second == nullptr || item.dst_node == nullptr, continue);
     if (item.src_out_index >= 0) {
-      auto src_anchor = src_node_it->second->GetOutDataAnchor(item.src_out_index);
-      auto dst_anchor = item.dst_node->GetInDataAnchor(item.dst_in_index);
+      const auto src_anchor = src_node_it->second->GetOutDataAnchor(item.src_out_index);
+      const auto dst_anchor = item.dst_node->GetInDataAnchor(item.dst_in_index);
       if (src_anchor == nullptr || dst_anchor == nullptr) {
         REPORT_CALL_ERROR("E19999", "get Anchor failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
                           item.dst_node_name.c_str(), item.dst_in_index);
@@ -497,33 +498,33 @@ bool ModelSerializeImp::HandleNodeNameRef() {
                item.dst_node_name.c_str(), item.dst_in_index);
         return false;
       }
-      GE_CHK_BOOL_ONLY_LOG((src_anchor->LinkTo(dst_anchor) == GRAPH_SUCCESS), " linkTo failed.");  // lint !e737
+      GE_CHK_BOOL_ONLY_LOG((src_anchor->LinkTo(dst_anchor) == GRAPH_SUCCESS), " linkTo failed.");
     } else {
       // Control edge
-      auto src_anchor = src_node_it->second->GetOutControlAnchor();
-      auto dst_anchor = item.dst_node->GetInControlAnchor();
+      const auto src_anchor = src_node_it->second->GetOutControlAnchor();
+      const auto dst_anchor = item.dst_node->GetInControlAnchor();
       if (src_anchor != nullptr && dst_anchor != nullptr) {
-        GE_CHK_BOOL_ONLY_LOG((src_anchor->LinkTo(dst_anchor) == GRAPH_SUCCESS), " linkTo failed.");  // lint !e737
+        GE_CHK_BOOL_ONLY_LOG((src_anchor->LinkTo(dst_anchor) == GRAPH_SUCCESS), " linkTo failed.");
       }
     }
   }
   // Graph input
   for (auto &item : graph_input_node_names_) {
-    auto node_it = node_map_.find(item.node_name);
+    const auto node_it = node_map_.find(item.node_name);
     if (node_it == node_map_.end()) {
       REPORT_INNER_ERROR("E19999", "cannot find graph input node %s", item.node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph input node %s", item.node_name.c_str());
       return false;
     }
     GE_IF_BOOL_EXEC(item.graph == nullptr, continue);
-    auto ret = item.graph->AddInputNode(node_it->second);
+    const auto ret = item.graph->AddInputNode(node_it->second);
     if (ret == nullptr) {
       return false;
     }
   }
   // Graph output
   for (auto &item : graph_output_node_names_) {
-    auto node_it = node_map_.find(item.node_name);
+    const auto node_it = node_map_.find(item.node_name);
     if (node_it == node_map_.end()) {
       REPORT_INNER_ERROR("E19999", "cannot find graph output node %s", item.node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph output node %s", item.node_name.c_str());
@@ -531,7 +532,7 @@ bool ModelSerializeImp::HandleNodeNameRef() {
     }
 
     GE_IF_BOOL_EXEC(item.graph == nullptr, continue);
-    auto ret = item.graph->AddOutputNodeByIndex(node_it->second, item.index);
+    const auto ret = item.graph->AddOutputNodeByIndex(node_it->second, item.index);
     GELOGI("node name:%s, item.index:%d", node_it->second->GetName().c_str(), item.index);
     if (ret == nullptr) {
       REPORT_CALL_ERROR("E19999", "add output node to graph:%s failed.", item.graph->GetName().c_str());
@@ -551,13 +552,13 @@ bool ModelSerializeImp::RebuildOwnership(ComputeGraphPtr &compute_graph,
   std::queue<ComputeGraphPtr> all_graphs;
   all_graphs.emplace(compute_graph);
   while (!all_graphs.empty()) {
-    ComputeGraphPtr graph = all_graphs.front();
+    const ComputeGraphPtr graph = all_graphs.front();
     all_graphs.pop();
 
     for (const NodePtr &node : graph->GetDirectNode()) {
       const OpDescPtr op_desc = node->GetOpDesc();
       for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
-        auto it = subgraphs.find(name);
+        const auto it = subgraphs.find(name);
         if (it == subgraphs.end()) {
           REPORT_INNER_ERROR("E19999", "Node:%s, Subgraph:%s not found, num:%zu.",
                              op_desc->GetName().c_str(), name.c_str(), subgraphs.size());
@@ -569,7 +570,7 @@ bool ModelSerializeImp::RebuildOwnership(ComputeGraphPtr &compute_graph,
         ComputeGraphPtr &subgraph = it->second;
         subgraph->SetParentGraph(graph);
         subgraph->SetParentNode(node);
-        compute_graph->AddSubgraph(subgraph->GetName(), subgraph);
+        (void) compute_graph->AddSubgraph(subgraph->GetName(), subgraph);
         all_graphs.emplace(subgraph);
       }
     }
@@ -599,7 +600,7 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
 
     // 0 is main graph, following is subgraph.
     std::map<std::string, ComputeGraphPtr> subgraphs;
-    for (int idx = 1; idx < graphs_proto.size(); ++idx) {
+    for (auto idx = 1; idx < graphs_proto.size(); ++idx) {
       ComputeGraphPtr subgraph;
       ModelSerializeImp impl;
       if (!impl.UnserializeGraphWithoutEdge(subgraph, graphs_proto[idx])) {
@@ -615,9 +616,11 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
       subgraphs[subgraph->GetName()] = subgraph;
     }
 
-    if (!subgraphs.empty() && !RebuildOwnership(compute_graph_ptr, subgraphs)) {
-      GELOGE(GRAPH_FAILED, "[Rebuild][GraphOwnerShip] failed");
-      return false;
+    if (!subgraphs.empty()) {
+      if (!RebuildOwnership(compute_graph_ptr, subgraphs)) {
+        GELOGE(GRAPH_FAILED, "[Rebuild][GraphOwnerShip] failed");
+        return false;
+      }
     }
   }
 
@@ -637,7 +640,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
   }
 
   // Inputs
-  for (auto input : graph_proto.input()) {
+  for (const auto &input : graph_proto.input()) {
     std::string node_name;
     int32_t index;
     if (ParseNodeIndex(input, node_name, index)) {
@@ -645,7 +648,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
     }
   }
   // Outputs
-  for (auto output : graph_proto.output()) {
+  for (const auto &output : graph_proto.output()) {
     std::string node_name;
     int32_t index;
     if (ParseNodeIndex(output, node_name, index)) {
@@ -679,13 +682,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Unseriali
   return true;
 }
 
-bool ReadProtoFromBinaryFile(const uint8_t *data, size_t len, google::protobuf::Message *proto) {
+static bool ReadProtoFromBinaryFile(const uint8_t *const data, const size_t len, google::protobuf::Message *proto) {
   GE_CHK_BOOL_EXEC(data != nullptr, REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
                    return false, "[Check][Param] data is null.");
   GE_CHK_BOOL_EXEC(proto != nullptr, REPORT_INNER_ERROR("E19999", "param proto is nullptr, check invalid.");
                    return false, "[Check][Param] proto is null.");
 
-  google::protobuf::io::CodedInputStream coded_stream(data, len);
+  google::protobuf::io::CodedInputStream coded_stream(data, static_cast<int32_t>(len));
   // 2048M -1
   coded_stream.SetTotalBytesLimit(INT32_MAX, -1);
   if (!proto->ParseFromCodedStream(&coded_stream)) {
@@ -757,10 +760,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
   return true;
 }
 
-Buffer ModelSerialize::SerializeModel(const Model &model, bool is_dump) {
+Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) {
   proto::ModelDef model_def;
-  ModelSerializeImp imp;
-  if (!imp.SerializeModel(model, &model_def, is_dump)) {
+  ModelSerializeImp model_imp;
+  if (!model_imp.SerializeModel(model, &model_def, is_dump)) {
     return Buffer();
   }
 #if !defined(__ANDROID__) && !defined(ANDROID)
@@ -768,10 +771,10 @@ Buffer ModelSerialize::SerializeModel(const Model &model, bool is_dump) {
 #else
   Buffer buffer(model_def.ByteSize());
 #endif
-  GE_CHK_BOOL_ONLY_LOG(buffer.GetSize() != 0, "get size failed");
+  GE_CHK_BOOL_ONLY_LOG(buffer.GetSize() != 0UL, "get size failed");
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  auto ret = model_def.SerializeToArray(buffer.GetData(), static_cast<int>(buffer.GetSize()));
-  if (ret != true) {
+  const auto ret = model_def.SerializeToArray(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
+  if (!ret) {
     GELOGW("[Serialize][Model] Serialize to array failed");
   }
   return buffer;
@@ -781,7 +784,7 @@ size_t ModelSerialize::GetSerializeModelSize(const Model &model) {
   proto::ModelDef model_def;
   ModelSerializeImp imp;
   if (!imp.SerializeModel(model, &model_def)) {
-    return 0;
+    return 0UL;
   }
 #if !defined(__ANDROID__) && !defined(ANDROID)
   return model_def.ByteSizeLong();
@@ -790,7 +793,7 @@ size_t ModelSerialize::GetSerializeModelSize(const Model &model) {
 #endif
 }
 
-bool ModelSerialize::UnserializeModel(const uint8_t *data, size_t len, Model &model) {
+bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t len, Model &model) {
   if (data == nullptr) {
     REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
@@ -811,9 +814,9 @@ bool ModelSerialize::UnserializeModel(const uint8_t *data, size_t len, Model &mo
     return false;
   }
 
-  ModelSerializeImp imp;
-  imp.SetProtobufOwner(model_proto_ptr);
-  if (!imp.UnserializeModel(model, model_proto)) {
+  ModelSerializeImp model_imp;
+  model_imp.SetProtobufOwner(model_proto_ptr);
+  if (!model_imp.UnserializeModel(model, model_proto)) {
     GELOGE(GRAPH_FAILED, "[Unserialize][Model] failed");
     return false;
   }
@@ -821,13 +824,13 @@ bool ModelSerialize::UnserializeModel(const uint8_t *data, size_t len, Model &mo
 }
 
 bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &model) {
-  std::shared_ptr<proto::ModelDef> model_def_ptr = ComGraphMakeShared<proto::ModelDef>(model_def);
+  const std::shared_ptr<proto::ModelDef> model_def_ptr = ComGraphMakeShared<proto::ModelDef>(model_def);
   GE_CHK_BOOL_EXEC(model_def_ptr != nullptr, REPORT_CALL_ERROR("E19999", "create ModelDef failed.");
                    return false, "[Create][ModelDef] mode_def make shared failed");
 
-  ModelSerializeImp imp;
-  imp.SetProtobufOwner(model_def_ptr);
-  if (!imp.UnserializeModel(model, *model_def_ptr)) {
+  ModelSerializeImp model_imp;
+  model_imp.SetProtobufOwner(model_def_ptr);
+  if (!model_imp.UnserializeModel(model, *model_def_ptr)) {
     GELOGE(GRAPH_FAILED, "[Unserialize][Model] fail");
     return false;
   }
@@ -897,7 +900,8 @@ ComputeGraphPtr ModelSerialize::UnserializeGraph(const uint8_t *data, size_t len
   return graph;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer ModelSerialize::SerializeOpDesc(const ConstOpDescPtr &op_desc) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer ModelSerialize::SerializeOpDesc(
+    const ConstOpDescPtr &op_desc) {
   proto::OpDef op_def;
   ModelSerializeImp imp;
   if (!imp.SerializeOpDesc(op_desc, &op_def)) {
