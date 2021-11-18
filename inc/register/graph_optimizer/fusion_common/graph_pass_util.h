@@ -172,7 +172,7 @@ class GraphPassUtil {
     std::string real_op_type = ge::NodeUtils::GetNodeType(*node_ptr);
     auto iter = node_type_map->find(real_op_type);
     if (iter != node_type_map->end()) {
-      iter->second.emplace(node_ptr->GetName(), node_ptr);
+      iter->second[node_ptr->GetName()] = node_ptr;
     } else {
       node_type_map->emplace(std::make_pair(real_op_type,
                                             std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
