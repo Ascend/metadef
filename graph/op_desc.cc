@@ -875,11 +875,6 @@ graphStatus OpDescImpl::DefaultInferFormat(const ConstOpDescPtr &op_desc) {
   GELOGD("Default infer format.node[%s], first none nod format is:%d", GetName().c_str(), first_none_nd_format);
 
   for (const auto &input_desc : input_descs) {
-    auto dim_num = input_desc->GetShape().GetDimNum();
-    if (dim_num == 0) {
-      GELOGD("Node: %s, input is scalar, skip set format.", op_desc->GetName().c_str());
-      continue;
-    }
     Format origin_format = input_desc->GetOriginFormat();
     GELOGD("Default infer format[in].node[%s].origin format is:%d", GetName().c_str(), origin_format);
     if (origin_format == FORMAT_ND) {
@@ -888,11 +883,6 @@ graphStatus OpDescImpl::DefaultInferFormat(const ConstOpDescPtr &op_desc) {
     }
   }
   for (const auto &output_desc : output_descs) {
-    auto dim_num = output_desc->GetShape().GetDimNum();
-    if (dim_num == 0) {
-      GELOGD("Node: %s, output is scalar, skip set format.", op_desc->GetName().c_str());
-      continue;
-    }
     Format origin_format = output_desc->GetOriginFormat();
     GELOGD("Default infer format[out].node[%s].origin format is:%d", GetName().c_str(), origin_format);
     if (origin_format == FORMAT_ND) {
