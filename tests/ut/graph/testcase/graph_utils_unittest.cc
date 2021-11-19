@@ -162,34 +162,7 @@ void BuildGraphForUnfold(ComputeGraphPtr &graph, ComputeGraphPtr &subgraph) {
 
   return;
 }
-
-ComputeGraphPtr BuildGraphWithSubGraph() {
-  auto root_builder = ut::GraphBuilder("root");
-  const auto &case0 = root_builder.AddNode("case0", "Case", 0, 0);
-  const auto &root_graph = root_builder.GetGraph();
-
-  auto sub_builder1 = ut::GraphBuilder("sub1");
-  const auto &data1 = sub_builder1.AddNode("data1", "Data", 0, 0);
-  const auto &sub_graph1 = sub_builder1.GetGraph();
-  root_graph->AddSubGraph(sub_graph1);
-  sub_graph1->SetParentNode(case0);
-  sub_graph1->SetParentGraph(root_graph);
-  case0->GetOpDesc()->AddSubgraphName("branch1");
-  case0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
-
-  auto sub_builder2 = ut::GraphBuilder("sub2");
-  const auto &data2 = sub_builder2.AddNode("data2", "Data", 0, 0);
-  const auto &sub_graph2 = sub_builder2.GetGraph();
-  root_graph->AddSubGraph(sub_graph2);
-  sub_graph2->SetParentNode(case0);
-  sub_graph2->SetParentGraph(root_graph);
-  case0->GetOpDesc()->AddSubgraphName("branch1");
-  case0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
-  case0->GetOpDesc()->AddSubgraphName("branch2");
-  case0->GetOpDesc()->SetSubgraphInstanceName(1, "sub2");
-  return root_graph;
 }
-} // namespace
 
 class UtestGraphUtils : public testing::Test {
  protected:
@@ -470,25 +443,5 @@ TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
   GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
-}
-
-TEST_F(UtestGraphUtils, CopyRootComputeGraph) {
-  auto graph = BuildGraphWithSubGraph();
-  // check origin graph size
-  ASSERT_EQ(graph->GetAllNodesSize(), 3);
-  ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>(ComputeGraph("dst"));
-  // test copy root graph success
-  auto ret = GraphUtils::CopyComputeGraph(graph, dst_compute_graph);
-  ASSERT_EQ(ret, GRAPH_SUCCESS);
-  ASSERT_EQ(dst_compute_graph->GetAllNodesSize(), 3);
-  // test copy subgraph failed
-  auto sub1_graph = graph->GetSubgraph("sub1");
-  ret = GraphUtils::CopyComputeGraph(sub1_graph, dst_compute_graph);
-  ASSERT_EQ(ret, GRAPH_FAILED);
-
-  // test copy dst compute_graph null
-  ComputeGraphPtr empty_dst_compute_graph;
-  ret = GraphUtils::CopyComputeGraph(graph, empty_dst_compute_graph);
-  ASSERT_EQ(ret, GRAPH_FAILED);
 }
 }  // namespace ge
