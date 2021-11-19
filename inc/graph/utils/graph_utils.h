@@ -75,7 +75,7 @@ struct NodeIndexIO {
   ~NodeIndexIO() {}
 
   NodePtr node_ = nullptr;
-  uint32_t index_ = 0;
+  uint32_t index_ = 0U;
   IOType io_type_ = kOut;
   std::string value_;
 
@@ -98,9 +98,6 @@ class GraphUtils {
   static ComputeGraphPtr CreateGraphFromOperator(const std::string &name, const std::vector<Operator> &inputs);
 
   static graphStatus AddEdge(const OutDataAnchorPtr &src, const InDataAnchorPtr &dst);
-
-  static graphStatus AddEdge(const OutDataAnchorPtr &src, const Format &src_format, const InDataAnchorPtr &dst,
-                             const Format &dst_format);
 
   static graphStatus AddEdge(const AnchorPtr &src, const AnchorPtr &dst);
 
@@ -135,9 +132,6 @@ class GraphUtils {
   static graphStatus RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph, const NodePtr &remove_node);
 
   static graphStatus RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const NodePtr &node);
-
-  static graphStatus InsertTransNode(ComputeGraphPtr compute_graph, const InDataAnchorPtr &in_data_anchor,
-                                     const std::vector<OpDescPtr> &vec_op_desc);
 
   static graphStatus CopyGraph(const Graph &src_graph, Graph &dst_graph);
 
@@ -198,9 +192,9 @@ class GraphUtils {
                                   const std::string &path,
                                   const std::string &suffix);
 
-  static bool LoadGEGraph(const char *file, ge::ComputeGraph &compute_graph);
+  static bool LoadGEGraph(const char_t *file, ge::ComputeGraph &compute_graph);
 
-  static bool LoadGEGraph(const char *file, ge::ComputeGraphPtr &compute_graph);
+  static bool LoadGEGraph(const char_t *file, ge::ComputeGraphPtr &compute_graph);
 
   static void BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_nodes_infos);
 
@@ -209,11 +203,9 @@ class GraphUtils {
   static void DumpGrphToOnnx(const ge::ComputeGraph &compute_graph,
                              const std::string &path, const std::string &suffix);
 
-  static bool LoadGEGraphFromOnnx(const char *file, ge::ComputeGraph &compute_graph);
+  static bool ReadProtoFromTextFile(const char_t *file, google::protobuf::Message *proto);
 
-  static bool ReadProtoFromTextFile(const char *file, google::protobuf::Message *message);
-
-  static void WriteProtoToTextFile(const google::protobuf::Message &proto, const char *real_path);
+  static void WriteProtoToTextFile(const google::protobuf::Message &proto, const char_t *real_path);
 
   static graphStatus AppendInputNode(const ComputeGraphPtr &graph, const NodePtr &node);
 
@@ -304,14 +296,6 @@ class GraphUtils {
   ///
   static graphStatus MoveOutCtrlEdges(NodePtr &src_node, NodePtr &dst_node);
 
-  ///
-  /// Copy all in-data edges from `src_node` to `dst_node`
-  /// @param src_node
-  /// @param dst_node
-  /// @return
-  ///
-  static graphStatus CopyInDataEdges(const NodePtr &src_node, NodePtr &dst_node);
-
   static ComputeGraphPtr FindRootGraph(ComputeGraphPtr graph);
 
   ///
@@ -330,8 +314,6 @@ class GraphUtils {
   /// @return success: GRAPH_SUCESS
   ///
   static graphStatus CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr &src_node);
-
-  static graphStatus TopologicalSortingByName(const ge::ComputeGraphPtr &compute_graph, std::vector<NodePtr> &node_vec);
 
   ///
   /// Get reference-mapping of all data_anchors in graph
@@ -807,7 +789,7 @@ class PartialGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] node
   /// @return PartialGraphBuilder
   ///
-  PartialGraphBuilder &AddExistNode(const NodePtr &node);
+  PartialGraphBuilder &AddExistNode(const NodePtr &exist_node);
 
   ///
   /// @brief Build multi nodes with links
