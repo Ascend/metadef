@@ -68,6 +68,7 @@ include_directories(${CMAKE_BINARY_DIR}/proto/ge/proto)
 
 set(UT_FILES
     "testcase/graph_unittest.cc"
+    "testcase/ge_tensor_unittest.cc"
     "testcase/types_unittest.cc"
     "testcase/tensor_unittest.cc"
     "testcase/type_utils_unittest.cc"
