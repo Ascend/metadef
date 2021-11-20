@@ -21,9 +21,6 @@
 #include <vector>
 #include "graph/ge_error_codes.h"
 
-using std::string;
-using std::map;
-
 namespace ge {
 class GEThreadLocalContext {
  public:

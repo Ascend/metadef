@@ -38,8 +38,6 @@ class Map;
 }  // namespace google
 
 namespace ge {
-using std::string;
-
 namespace proto {
 class AttrDef;
 class TensorDef;
@@ -58,7 +56,7 @@ using ProtoMsgOwner = std::shared_ptr<::google::protobuf::Message>;
 template<class ProtoType>
 class GeIrProtoHelper {
  public:
-  GeIrProtoHelper(const ProtoMsgOwner &protoOwner, ProtoType *protoMsg)
+  GeIrProtoHelper(const ProtoMsgOwner &protoOwner, ProtoType *const protoMsg)
       : protoOwner_(protoOwner), protoMsg_(protoMsg) {}
 
   GeIrProtoHelper() {
@@ -91,12 +89,12 @@ class GeIrProtoHelper {
     return protoMsg_;
   }
   void CopyValueFrom(const GeIrProtoHelper<const ProtoType> &other) {
-    if (other.protoMsg_ != nullptr && protoMsg_ != nullptr) {
+    if ((other.protoMsg_ != nullptr) && (protoMsg_ != nullptr)) {
       *protoMsg_ = *other.protoMsg_;
     }
   }
   void MoveValueFrom(GeIrProtoHelper<ProtoType> &&other) {
-    if (other.protoMsg_ != nullptr && protoMsg_ != nullptr) {
+    if ((other.protoMsg_ != nullptr) && (protoMsg_ != nullptr)) {
       *protoMsg_ = std::move(*other.protoMsg_);
     }
   }
@@ -104,7 +102,7 @@ class GeIrProtoHelper {
   void Swap(GeIrProtoHelper<ProtoType> &other) {
     protoOwner_.swap(other.protoOwner_);
 
-    ProtoType *temp = protoMsg_;
+    ProtoType *const temp = protoMsg_;
     protoMsg_ = other.protoMsg_;
     other.protoMsg_ = temp;
   }
@@ -145,7 +143,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
     return extAttrs_.Set(name, value);
   }
   template<class T>
-  T TryGetExtAttr(const std::string &name, T defaultValue) const {
+  T TryGetExtAttr(const std::string &name, const T defaultValue) const {
     T ret(defaultValue);
     (void) extAttrs_.Get(name, ret);
     return ret;
@@ -163,9 +161,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   friend class AttrUtils;
   friend class AttrUtilsHelper;
 
-  std::vector<std::string> requiredAttrs_;
-
  private:
+  std::vector<std::string> requiredAttrs_;
   AnyMap extAttrs_;
 };
 }  // namespace ge

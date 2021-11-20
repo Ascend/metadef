@@ -32,12 +32,29 @@ namespace ge {
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
 
 struct NodeNameGraphReq {
+   public:
+    NodeNameGraphReq(const std::string &name, const int32_t index, const ComputeGraphPtr &graph)
+      : node_name(name), index(index), graph(graph) {}
+    friend class ModelSerializeImp;
+
+   private:
     std::string node_name;
     int32_t index;
     ComputeGraphPtr graph;
 };
 
 struct NodeNameNodeReq {
+   public:
+    NodeNameNodeReq(const std::string &src_name, const int32_t src_index, const NodePtr dst_node,
+                    const int32_t dst_index, const std::string &dst_name)
+        : src_node_name(src_name),
+          src_out_index(src_index),
+          dst_node(dst_node),
+          dst_in_index(dst_index),
+          dst_node_name(dst_name) {}
+
+    friend class ModelSerializeImp;
+   private:
     std::string src_node_name;
     int32_t src_out_index;
     NodePtr dst_node;

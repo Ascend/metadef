@@ -37,7 +37,7 @@ class TypeID {
   bool operator==(const TypeID &__arg) const { return type_ == __arg.type_; }
 
  private:
-  explicit TypeID(const std::string type) : type_(std::move(type)) {}
+  explicit TypeID(const std::string &type) : type_(type) {}
 
   std::string type_;
 };
@@ -71,8 +71,6 @@ class AnyMap {
     Placeholder &operator=(const Placeholder &) = delete;
     Placeholder(Placeholder &&) = delete;
     Placeholder &operator=(Placeholder &&) = delete;
-    
-
     virtual const TypeID &GetTypeInfo() const = 0;
   };
 

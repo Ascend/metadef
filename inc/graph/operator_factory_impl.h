@@ -28,14 +28,16 @@ namespace ge {
 struct InferValueRangePara {
  public:
   InferValueRangePara() = default;
-  InferValueRangePara(WHEN_CALL call, bool cpu_kernel, InferValueRangeFunc func) {
+  InferValueRangePara(const WHEN_CALL call, const bool cpu_kernel, const InferValueRangeFunc func) {
     is_initialized = true;
     use_cpu_kernel = cpu_kernel;
     when_call = call;
     infer_value_func = func;
   }
+  friend class OpDescImpl;
+  friend class InferValueRangePass;
   ~InferValueRangePara() = default;
- public:
+private:
   bool is_initialized = false;
   bool use_cpu_kernel = false;
   WHEN_CALL when_call = INPUT_IS_DYNAMIC;
