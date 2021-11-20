@@ -128,7 +128,7 @@ bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *scope) {
       return true;
     }
   } else {
-    if ((impl->GetOpTypeNum(node_type_) != -1) && (impl->GetOpTypeNum(node_type_) % step_ == num_)) {
+    if ((impl->GetOpTypeNum(node_type_) != -1) && ((impl->GetOpTypeNum(node_type_) % step_) == num_)) {
       GELOGI("NodeOpTypeFeature, node type:%s, num:%d, match scope:%s",
              node_type_.c_str(), num_, scope->Name().c_str());
       return true;
@@ -138,11 +138,11 @@ bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *scope) {
   return false;
 }
 
-NodeOpTypeFeature::NodeOpTypeFeature(std::string nodeType, int num, int step) {
+NodeOpTypeFeature::NodeOpTypeFeature(std::string nodeType, int32_t num, int32_t step) {
   impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(nodeType, num, step));
 }
 
-NodeOpTypeFeature::NodeOpTypeFeature(const char *node_type, int num, int step) {
+NodeOpTypeFeature::NodeOpTypeFeature(const char *node_type, int32_t num, int32_t step) {
   std::string op_type;
   if (node_type != nullptr) {
     op_type = node_type;

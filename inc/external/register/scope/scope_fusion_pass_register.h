@@ -252,9 +252,9 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeBaseFeature {
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBaseFeature {
  public:
-  ATTRIBUTED_DEPRECATED(NodeOpTypeFeature(const char *, int, int))
-  NodeOpTypeFeature(std::string nodeType, int num, int step = 0);
-  NodeOpTypeFeature(const char *node_type, int num, int step = 0);
+  ATTRIBUTED_DEPRECATED(NodeOpTypeFeature(const char *, int32_t, int32_t))
+  NodeOpTypeFeature(std::string nodeType, int32_t num, int32_t step = 0);
+  NodeOpTypeFeature(const char *node_type, int32_t num, int32_t step = 0);
   NodeOpTypeFeature(NodeOpTypeFeature const &feature);
   NodeOpTypeFeature &operator=(NodeOpTypeFeature const &feature);
   ~NodeOpTypeFeature();

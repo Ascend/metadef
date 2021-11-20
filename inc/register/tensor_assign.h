@@ -62,17 +62,17 @@ class TensorAssign {
 
   static bool CheckUnsignedEightByte(tensorflow::DataType data_type);
 
-  static Status GetDoubleByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector, int count,
+  static Status GetDoubleByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector, int32_t count,
                                  GeTensorPtr &weight);
-  static Status GetByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector, int count,
+  static Status GetByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector, int32_t count,
                            GeTensorPtr &weight);
 
   static Status GetStringVal(int32_t val_size, const google::protobuf::RepeatedPtrField<std::string> &val_vector,
-                             int count, GeTensorPtr &weight);
+                             int32_t count, GeTensorPtr &weight);
 
-  static void SetGeTensorWeightData(const TensorProto &tensor, int32_t val_size, int count, GeTensorPtr &weight);
+  static void SetGeTensorWeightData(const TensorProto &tensor, int32_t val_size, int32_t count, GeTensorPtr &weight);
 
-  static void SetWeightData(tensorflow::DataType data_type, int count, const std::string &tensor_content,
+  static void SetWeightData(tensorflow::DataType data_type, int32_t count, const std::string &tensor_content,
                             GeTensorPtr &weight);
 
   template <typename T>
@@ -81,7 +81,7 @@ class TensorAssign {
     bool zerosLike = (count != val_size && val_size == 1);
     T *addr = new (std::nothrow) T[count]();
     GE_CHECK_NOTNULL(addr);
-    int minCount = (count > val_size) ? val_size : count;
+    const int32_t minCount = (count > val_size) ? val_size : count;
     if (!zerosLike) {
       for (int32_t i = 0; i < minCount; i++) {
         *(addr + i) = val_vector.Get(i);

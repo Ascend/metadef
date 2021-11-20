@@ -151,12 +151,12 @@ bool TensorAssign::CheckUnsignedEightByte(tensorflow::DataType data_type) {
 }
 
 Status TensorAssign::GetDoubleByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
-                                      int count, GeTensorPtr &weight) {
+                                      int32_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
-  bool zerosLike = (count != val_size && val_size == 1);
+  const bool zerosLike = (count != val_size && val_size == 1);
   uint16_t *addr = new (std::nothrow) uint16_t[count]();
   GE_CHECK_NOTNULL(addr);
-  int minCount = (count > val_size) ? val_size : count;
+  const int32_t minCount = (count > val_size) ? val_size : count;
   if (!zerosLike) {
     for (int32_t i = 0; i < minCount; i++) {
       *(addr + i) = static_cast<uint16_t>(val_vector.Get(i));
@@ -169,7 +169,7 @@ Status TensorAssign::GetDoubleByteVal(int32_t val_size, const google::protobuf::
       *(addr + i) = static_cast<uint16_t>(val_vector.Get(0));
     }
   }
-  weight->SetData(reinterpret_cast<uint8_t *>(addr), count * sizeof(uint16_t));
+  (void)weight->SetData(reinterpret_cast<uint8_t *>(addr), static_cast<size_t>(count) * sizeof(uint16_t));
   GE_DELETE_NEW_ARRAY(addr);
   return SUCCESS;
 }
@@ -177,11 +177,11 @@ Status TensorAssign::GetDoubleByteVal(int32_t val_size, const google::protobuf::
 Status TensorAssign::GetByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector, int count,
                                 GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
-  bool zerosLike = (count != val_size && val_size == 1);
+  const bool zerosLike = ((count != val_size) && (val_size == 1));
   uint8_t *addr = new (std::nothrow) uint8_t[count]();
   GE_CHECK_NOTNULL(addr);
-  int minCount = (count > val_size) ? val_size : count;
   if (!zerosLike) {
+    const int32_t minCount = (count > val_size) ? val_size : count;
     for (int32_t i = 0; i < minCount; i++) {
       *(addr + i) = static_cast<uint8_t>(val_vector.Get(i));
     }
@@ -193,16 +193,16 @@ Status TensorAssign::GetByteVal(int32_t val_size, const google::protobuf::Repeat
       *(addr + i) = static_cast<uint8_t>(val_vector.Get(0));
     }
   }
-  weight->SetData(addr, count * sizeof(uint8_t));
+  (void)weight->SetData(addr, static_cast<size_t>(count) * sizeof(uint8_t));
   GE_DELETE_NEW_ARRAY(addr);
   return SUCCESS;
 }
 
 Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::RepeatedPtrField<std::string> &val_vector,
-                                  int count, GeTensorPtr &weight) {
+                                  int32_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
-  bool flag = (count != val_size && val_size == 1);
-  int min_count = (count > val_size) ? val_size : count;
+  const bool flag = (count != val_size && val_size == 1);
+  const int32_t min_count = (count > val_size) ? val_size : count;
   size_t total_size = 0;
   if (!flag) {
     for (int32_t i = 0; i < min_count; i++) {
@@ -221,11 +221,11 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
       if (i < val_size) {
         const string &str = val_vector.Get(i);
         string_head[i].len = static_cast<uint64_t>(str.size());
-        CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1, str.c_str(), str.size() + 1) == EOK,
+        CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
                          GELOGW("[GetStringVal][Copy] memcpy failed"));
-        raw_data += (str.size() + 1);
+        raw_data += (str.size() + 1U);
       } else {
-        string_head[i].len = 0;
+        string_head[i].len = 0U;
         raw_data += 1;
       }
     }
@@ -243,17 +243,17 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
     for (int32_t i = 0; i < count; ++i) {
       string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       string_head[i].len = static_cast<uint64_t>(str.size());
-      CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1, str.c_str(), str.size() + 1) == EOK,
+      CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
                        GELOGW("[GetStringVal][Copy] memcpy failed"));
-      raw_data += (str.size() + 1);
+      raw_data += (str.size() + 1U);
     }
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   }
   return SUCCESS;
 }
 
-void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, int32_t val_size, int count, GeTensorPtr &weight) {
-  tensorflow::DataType data_type = tensor.dtype();
+void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, int32_t val_size, int32_t count, GeTensorPtr &weight) {
+  const tensorflow::DataType data_type = tensor.dtype();
   if (CheckFloatVal(data_type)) {
     (void)GetVal(val_size, tensor.float_val(), count, weight);
   } else if (CheckComplex64Val(data_type)) {
@@ -285,7 +285,7 @@ void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, int32_t val_
   }
 }
 
-void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, const std::string &tensor_content,
+void TensorAssign::SetWeightData(tensorflow::DataType data_type, int32_t count, const std::string &tensor_content,
                                  GeTensorPtr &weight) {
   if (weight == nullptr) {
     GE_LOGE("weight is nullptr.");
@@ -307,21 +307,22 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(double));
   } else if (CheckStringVal(data_type)) {
     std::string weight_content;
-    if (tensor_content.size() > 1) {
-      weight_content = tensor_content.substr(1);  // first byte is tensor length
+    if (tensor_content.size() > 1U) {
+      weight_content = tensor_content.substr(1U);  // first byte is tensor length
     }
-    size_t total_size = weight_content.size() + sizeof(ge::StringHead) + 1;
+    size_t total_size = weight_content.size() + sizeof(ge::StringHead) + 1U;
     std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
     GE_CHECK_NOTNULL_EXEC(addr, return);
     ge::StringHead *string_head = reinterpret_cast<ge::StringHead *>(addr.get());
     char *raw_data = addr.get() + sizeof(ge::StringHead);
     string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
     string_head->len = static_cast<uint64_t>(weight_content.size());
-    CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1, weight_content.c_str(),
-                              weight_content.size() + 1) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
+    CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(),
+                              weight_content.size() + 1U) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   } else {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(float));
+    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()),
+                    static_cast<size_t>(count) * sizeof(float));
   }
 }
 
@@ -378,7 +379,7 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
   tensorflow::DataType data_type = tensor.dtype();
   int32_t datatype_val_size = 0;
 
-  auto iter = datatype_val_size_map.find(data_type);
+  const auto iter = datatype_val_size_map.find(data_type);
   if (iter != datatype_val_size_map.end()) {
     datatype_val_size = iter->second;
   } else {
@@ -389,13 +390,13 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
 
   std::vector<int64_t> shape_vec;
   // There is tensor shape, get the dimension
-  int count = 1;
+  int32_t count = 1;
   GE_IF_BOOL_EXEC(
       tensor.has_tensor_shape(), const tensorflow::TensorShapeProto &tensor_shape = tensor.tensor_shape();
-      for (int i = 0; i < tensor_shape.dim_size(); i++) {
+      for (int32_t i = 0; i < tensor_shape.dim_size(); i++) {
         const tensorflow::TensorShapeProto_Dim &shape_dim = tensor_shape.dim(i);
         shape_vec.push_back(shape_dim.size());
-        int64_t dim = shape_vec[i];
+        const int64_t dim = shape_vec[i];
         // tensorflow support weights shape [0],have no weights
         GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(dim < 0, return FAILED, "Dim size invalid");
         GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((count != 0 && dim >= INT64_MAX / count), return FAILED,
