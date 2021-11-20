@@ -293,7 +293,7 @@ void OnnxUtils::AddAllAttr(onnx::NodeProto *const node_proto, const ConstGeTenso
   google::protobuf::Map<std::string, ge::proto::AttrDef> tensor_desc_map;
   (void)ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &tensor_desc_map);
   std::string suffix = ":" + std::to_string(idx);
-  AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, kPrefixForInputDesc, suffix);
+  AddAttrProtoForAttrsFromAttrMap(tensor_desc_map, node_proto, prefix, suffix);
 }
 
 void OnnxUtils::AddShapeFormatAndDtypeIntoProto(const bool is_input, onnx::NodeProto *const node_proto,
