@@ -238,7 +238,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   for (const auto &output_name : register_output_names) {
     if (port_dynamic_info.find(output_name) != port_dynamic_info.end()) {
       port_dynamic_info[output_name].inset_index = output_index + out_increment;
-      cosnt uint32_t tensor_num = port_dynamic_info[output_name].tensor_num;
+      const uint32_t tensor_num = port_dynamic_info[output_name].tensor_num;
       out_increment += tensor_num > 0U ? tensor_num - 1U : 0U;
       GELOGI("Dynamic output name[%s] insert index: %u, tensor num: %u, op proto index: %u", output_name.c_str(),
              port_dynamic_info[output_name].inset_index, tensor_num, output_index);
