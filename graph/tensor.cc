@@ -183,7 +183,7 @@ class TensorImpl {
       return GRAPH_FAILED;
     }
     size_t total_size = 0U;
-    std::accumulate(data.begin(), data.end(), total_size, [](size_t total, std::string str) {
+    total_size = std::accumulate(data.begin(), data.end(), total_size, [&](size_t total, std::string str) {
       /// Extra 16 bytes store string head
       /// Extra 1 byte store '\0'
       return total += (str.size() + sizeof(StringHead) + 1U);
