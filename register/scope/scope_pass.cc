@@ -127,7 +127,7 @@ Status ScopeBasePass::ScopeBasePassImpl::AddFusionScopesResultToScopeGraph(std::
 
 Status ScopeBasePass::ScopeBasePassImpl::Run(std::shared_ptr<ScopeGraph> &scope_graph) {
   GE_CHECK_NOTNULL(scope_graph);
-  const ScopeTree *scope_tree = scope_graph->GetScopeTree();
+  const ScopeTree *const scope_tree = scope_graph->GetScopeTree();
   GE_CHECK_NOTNULL(scope_tree);
   GE_CHECK_NOTNULL(parent_);
   patterns_ = parent_->DefinePatterns();
@@ -179,24 +179,24 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchAllBatches(const ScopeTree *scope_tr
   for (auto &scope_patterns : patterns_) {
     std::vector<Scope *> tmp_results;
     std::vector<Scope *> last_results;
-    uint32_t batch_num = 0;
+    uint32_t batch_num = 0U;
     for (auto &batch_patterns : scope_patterns) {
       ++batch_num;
       std::vector<Scope *> one_results;
-      bool is_matched = MatchOneBatch(scope_tree, batch_patterns, one_results);
+      const bool is_matched = MatchOneBatch(scope_tree, batch_patterns, one_results);
       if (!is_matched) {
         break;
       }
       if (batch_num == scope_patterns.size()) {
-        last_results.insert(last_results.end(), one_results.begin(), one_results.end());
+        (void)last_results.insert(last_results.end(), one_results.begin(), one_results.end());
       } else {
-        tmp_results.insert(tmp_results.end(), one_results.begin(), one_results.end());
+        (void)tmp_results.insert(tmp_results.end(), one_results.begin(), one_results.end());
       }
     }
     for (auto &tmp : tmp_results) {
       bool rollback = true;
       for (auto &result : last_results) {
-        if ((result->Name().length() <= tmp->Name().length()) && (tmp->Name().find(result->Name()) == 0)) {
+        if ((result->Name().length() <= tmp->Name().length()) && (tmp->Name().find(result->Name()) == 0U)) {
           rollback = false;
           break;
         }
@@ -206,7 +206,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchAllBatches(const ScopeTree *scope_tr
         impl->SetSubType("");
       }
     }
-    results.insert(results.end(), last_results.begin(), last_results.end());
+    (void)results.insert(results.end(), last_results.begin(), last_results.end());
   }
 
   return !(results.empty());
@@ -222,7 +222,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchOneBatch(const ScopeTree *scope_tree
 
   int32_t find = 0;
   auto &impl_scope_tree = scope_tree->impl_;
-  const Scope *root = impl_scope_tree->Root();
+  const Scope *const root = impl_scope_tree->Root();
   if (root != nullptr) {
     auto &impl_scope = root->impl_;
     const std::unordered_map<std::string, Scope *> &sub_scopes = impl_scope->GetSubScopes();
@@ -235,12 +235,12 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchOneBatch(const ScopeTree *scope_tree
     }
   }
 
-  return find > 0 ? true : false;
+  return (find > 0) ? true : false;
 }
 
 bool ScopeBasePass::ScopeBasePassImpl::MatchOneScope(const ScopePattern *pattern, Scope *scope,
                                                      std::vector<Scope *> &results) {
-  if (pattern == nullptr || scope == nullptr) {
+  if ((pattern == nullptr) || (scope == nullptr)) {
     GELOGE(PARAM_INVALID, "Input param is nullptr");
     return false;
   }
@@ -259,7 +259,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchOneScope(const ScopePattern *pattern
   std::stack<Scope *> scopes;
   scopes.push(scope);
   while (!scopes.empty()) {
-    Scope *current_scope = scopes.top();
+    const Scope *const current_scope = scopes.top();
     scopes.pop();
     auto &current_scope_impl = current_scope->impl_;
     const std::unordered_map<std::string, Scope *> &sub_scopes = current_scope_impl->GetSubScopes();
@@ -274,7 +274,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchOneScope(const ScopePattern *pattern
       }
     }
   }
-  return find > 0 ? true : false;
+  return (find > 0) ? true : false;
 }
 
 Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<ScopeGraph> &scope_graph) {
@@ -293,16 +293,16 @@ Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<Sc
     auto &impl = result.second->impl_;
     const std::map<std::string, std::vector<int32_t>> &inputs = impl->GetInputs();
     for (auto &input : inputs) {
-      std::vector<int32_t> indexs = input.second;
-      for (int32_t index : indexs) {
+      const std::vector<int32_t> indexs = input.second;
+      for (const int32_t index : indexs) {
         GELOGI("FusionScope input node:%s,%d", input.first.c_str(), index);
       }
     }
 
     const std::map<std::string, std::vector<int32_t>> &outputs = impl->GetOutputs();
     for (auto &output : outputs) {
-      std::vector<int32_t> indexs = output.second;
-      for (int32_t index : indexs) {
+      const std::vector<int32_t> indexs = output.second;
+      for (const int32_t index : indexs) {
         GELOGI("FusionScope output node:%s,%d", output.first.c_str(), index);
       }
     }

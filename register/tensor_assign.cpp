@@ -252,7 +252,8 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
   return SUCCESS;
 }
 
-void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, int32_t val_size, int32_t count, GeTensorPtr &weight) {
+void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, int32_t val_size,
+                                         int32_t count, GeTensorPtr &weight) {
   const tensorflow::DataType data_type = tensor.dtype();
   if (CheckFloatVal(data_type)) {
     (void)GetVal(val_size, tensor.float_val(), count, weight);
