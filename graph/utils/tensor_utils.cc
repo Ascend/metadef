@@ -26,7 +26,7 @@
 namespace ge {
 namespace {
 // When nc1hwc0 dim size = 5, calc element count directly.
-const uint32_t kNc1hwc0CalcByDimsSize = 5;
+const uint32_t kNc1hwc0CalcByDimsSize = 5U;
 
 // Unknown shape element num
 const int64_t kElementCntUnknownShape = -1;
@@ -35,34 +35,34 @@ const int64_t kElementCntUnknownShape = -1;
 const int64_t kMemSizeUnknownShape = -1;
 
 // Nchw and nhwc dim size must be 4
-const uint32_t kDimSize4d = 4;
+const uint32_t kDimSize4d = 4U;
 
 // C1HWNCoC0 dim size must be 6
-const uint32_t kDimSizeC1hwncoc0 = 6;
+const uint32_t kDimSizeC1hwncoc0 = 6U;
 
 // Cube size is 16
-const uint32_t kTheCubeSize = 16;
+const uint32_t kTheCubeSize = 16U;
 
 // Default c0 size equals cube size.
 const uint32_t kC0SizeDefault = kTheCubeSize;
 
 // Size equals int8 cube size is 32
-const uint32_t kC0SizeInt8 = 32;
+const uint32_t kC0SizeInt8 = 32U;
 
 // NCHW dim N index
-const int32_t kNchwDimIdxN = 0;
+const uint32_t kNchwDimIdxN = 0U;
 // NCHW dim C index
-const int32_t kNchwDimIdxC = 1;
+const uint32_t kNchwDimIdxC = 1U;
 // NCHW dim H index
-const int32_t kNchwDimIdxH = 2;
+const uint32_t kNchwDimIdxH = 2U;
 // NCHW dim W index
-const int32_t kNchwDimIdxW = 3;
+const uint32_t kNchwDimIdxW = 3U;
 
-const int kDataMemAlignSize = 32;
-const int kNum2 = 2;
+const int64_t kDataMemAlignSize = 32;
+const int64_t kNum2 = 2;
 
-const char *const kShapeRangeInvalid = "format of shape range is invalid";
-const char *const kShapeRangeSample = "\"[1~20,3,3~6,-1]\"";
+const char_t *const kShapeRangeInvalid = "format of shape range is invalid";
+const char_t *const kShapeRangeSample = "\"[1~20,3,3~6,-1]\"";
 }  // namespace
 
 ///
@@ -106,7 +106,7 @@ static bool CheckMultiplyOverflowInt64(const int64_t &a, const int64_t &b) {
 ///
 static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_t &element_cnt) {
   element_cnt = 1;
-  for (int64_t dim : dims) {
+  for (const int64_t dim : dims) {
     if (CheckMultiplyOverflowInt64(element_cnt, dim)) {
       REPORT_INNER_ERROR("E19999", "result will overflow when multiplying %ld and %ld.", element_cnt, dim);
       GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcElementCntByDims failed, when multiplying %ld and %ld.",
@@ -141,8 +141,8 @@ static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, F
 /// @return c0 size
 ///
 static uint32_t GetDimC0(DataType &data_type) {
-  bool is_int8_size = (data_type == DT_INT8) || (data_type == DT_UINT8) || (data_type == DT_DUAL_SUB_UINT8) ||
-                      (data_type == DT_DUAL_SUB_INT8) || (data_type == DT_BOOL) || (data_type == DT_QINT8);
+  const bool is_int8_size = (data_type == DT_INT8) || (data_type == DT_UINT8) || (data_type == DT_DUAL_SUB_UINT8) ||
+                            (data_type == DT_DUAL_SUB_INT8) || (data_type == DT_BOOL) || (data_type == DT_QINT8);
   return is_int8_size ? kC0SizeInt8 : kC0SizeDefault;
 }
 
@@ -164,13 +164,17 @@ static graphStatus CalcElementCntOfNc1hwc0(const std::vector<int64_t> &dims, Dat
     GELOGE(GRAPH_FAILED, "[Check][Param] CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.",
            dims.size(), kDimSize4d, kNc1hwc0CalcByDimsSize);
     return GRAPH_FAILED;
+  } else {
+    // else branch
   }
 
-  auto c0 = static_cast<int64_t>(GetDimC0(data_type));
+  const auto c0 = static_cast<int64_t>(GetDimC0(data_type));
   // Nc1hwc0 dims is according to nchw, dim c index is 1.
-  auto c1 = static_cast<int64_t>(std::ceil(dims[kNchwDimIdxC] * 1.0 / c0));
+  const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIdxC]) * 1.0 /
+                  static_cast<float64_t>(c0)));
   // Store dims is split c to c1 and c0.
-  std::vector<int64_t> store_dims = {dims[kNchwDimIdxN], c1, dims[kNchwDimIdxH], dims[kNchwDimIdxW], c0};
+  const std::vector<int64_t> store_dims = {dims[kNchwDimIdxN], c1,
+                                           dims[kNchwDimIdxH], dims[kNchwDimIdxW], c0};
   return CalcElementCntByDims(store_dims, element_cnt);
 }
 
@@ -184,9 +188,9 @@ static graphStatus CalcElementCntOfNc1hwc0(const std::vector<int64_t> &dims, Dat
 ///
 static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, DataType data_type,
                                             int64_t &element_cnt) {
-  static char parser_priority[MMPA_MAX_PATH] = { 0x00 };
-  INT32 res = mmGetEnv("PARSER_PRIORITY", parser_priority, MMPA_MAX_PATH);
-  if (res == EN_OK && std::string(parser_priority) == "cce") {
+  static char_t parser_priority[MMPA_MAX_PATH]{};
+  const INT32 res = mmGetEnv("PARSER_PRIORITY", &parser_priority[0], static_cast<uint32_t>(MMPA_MAX_PATH));
+  if ((res == EN_OK) && (std::string(parser_priority) == "cce")) {
     if (dims.size() != kDimSize4d) {
       REPORT_INNER_ERROR("E19999", "CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
                          dims.size(), kDimSize4d);
@@ -194,16 +198,18 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
              dims.size(), kDimSize4d);
       return GRAPH_FAILED;
     }
-    auto c0 = static_cast<int64_t>(GetDimC0(data_type));
+    const auto c0 = static_cast<int64_t>(GetDimC0(data_type));
     // FractalZ dims is according to nchw, dim c index is 1.
-    auto c1 = static_cast<int64_t>(std::ceil(dims[kNchwDimIdxC] * 1.0 / c0));
+    const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIdxC]) * 1.0 /
+                    static_cast<float64_t>(c0)));
 
     // Spread NC1HWC0 as a two dimension array, n as column dimension,
     // C1HWC0 as row dimension
-    std::vector<int64_t> r_count_vec = {c1, dims[kNchwDimIdxH], dims[kNchwDimIdxW], c0};
+    const std::vector<int64_t> r_count_vec = {c1, dims[kNchwDimIdxH],
+                                              dims[kNchwDimIdxW], c0};
 
     int64_t r_count = 1;
-    graphStatus graph_status = CalcElementCntByDims(r_count_vec, r_count);
+    const graphStatus graph_status = CalcElementCntByDims(r_count_vec, r_count);
     if (graph_status != GRAPH_SUCCESS) {
       GELOGE(graph_status, "[Get][Cnt] Calc [%ld, %ld, %ld, %ld] element count failed.",
              c1, dims[kNchwDimIdxH], dims[kNchwDimIdxW], c0);
@@ -211,12 +217,13 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
     }
 
     // Cube count in n
-    auto nc_cnt = static_cast<int64_t>(std::ceil(dims[kNchwDimIdxN] * 1.0 / kTheCubeSize));
+    const auto nc_cnt = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIdxN]) * 1.0 /
+                        static_cast<float64_t>(kTheCubeSize)));
 
     // Cube count in vertical direction(C1HWC0)
-    int64_t vc_cnt = r_count / c0;
+    const int64_t vc_cnt = r_count / c0;
     // Element count in each cube
-    int64_t cube_elem_cnt = c0 * kTheCubeSize;
+    const int64_t cube_elem_cnt = c0 * static_cast<int64_t>(kTheCubeSize);
 
     if (CheckMultiplyOverflowInt64(nc_cnt, vc_cnt)) {
       REPORT_INNER_ERROR("E19999", "The multiplication of %ld and %ld will overflow.", nc_cnt, vc_cnt);
@@ -224,7 +231,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
       return GRAPH_FAILED;
     }
     // Read data times needed by cube
-    int64_t c_cnt = nc_cnt * vc_cnt;
+    const int64_t c_cnt = nc_cnt * vc_cnt;
 
     if (CheckMultiplyOverflowInt64(c_cnt, cube_elem_cnt)) {
       REPORT_INNER_ERROR("E19999", "The multiplication of %ld and %ld will overflow.", c_cnt, cube_elem_cnt);
@@ -289,8 +296,8 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
                                         int64_t &element_cnt) {
   const std::string format_str = TypeUtils::FormatToSerialString(format);
   // Check dims
-  for (size_t i = 0; i < dims.size(); ++i) {
-    int64_t dim = dims[i];
+  for (size_t i = 0U; i < dims.size(); ++i) {
+    const int64_t dim = dims[i];
     if (dim < 0) {
       GELOGI("It's unknown shape, as dims[%zu]=%ld negative, format=%d(%s).", i, dim, format, format_str.c_str());
       element_cnt = kElementCntUnknownShape;
@@ -299,6 +306,8 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
       GELOGI("No need calc element count, as dims[%zu]=%ld, format=%d(%s).", i, dim, format, format_str.c_str());
       element_cnt = 0;
       return GRAPH_SUCCESS;
+    } else {
+      // else branch
     }
   }
 
@@ -377,9 +386,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
   const std::string format_str = TypeUtils::FormatToSerialString(format);
   const std::string type_str = TypeUtils::DataTypeToSerialString(data_type);
 
-  std::vector<int64_t> dims = shape.GetDims();
+  const std::vector<int64_t> dims = shape.GetDims();
   int64_t element_cnt = 0;
-  graphStatus status = CalcTensorElementCnt(dims, format, data_type, element_cnt);
+  const graphStatus status = CalcTensorElementCnt(dims, format, data_type, element_cnt);
   if (status != GRAPH_SUCCESS) {
     GELOGE(status, "[Calc][TensorElementCnt] failed, status=%u format=%d(%s) data_type=%d(%s).",
            status, format, format_str.c_str(), data_type, type_str.c_str());
@@ -396,14 +405,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
   }
 
   if ((data_type == DT_STRING) || (data_type == DT_STRING_REF)) {
-    uint32_t type_size = 0;
-    bool result = TypeUtils::GetDataTypeLength(data_type, type_size);
+    uint32_t type_size = 0U;
+    const bool result = TypeUtils::GetDataTypeLength(data_type, type_size);
     if (!result) {
       REPORT_CALL_ERROR("E19999", "GetDataTypeLength failed, data_type=%d(%s).", data_type, type_str.c_str());
       GELOGE(GRAPH_FAILED, "[Get][DataTypeLength] failed, data_type=%d(%s).", data_type, type_str.c_str());
       return GRAPH_FAILED;
     }
-    auto type_size_int64 = static_cast<int64_t>(type_size);
+    const auto type_size_int64 = static_cast<int64_t>(type_size);
     if (CheckMultiplyOverflowInt64(element_cnt, type_size_int64)) {
       ErrorManager::GetInstance().ATCReportErrMessage(
           "E19013", {"function", "var1", "var2"},
@@ -427,16 +436,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_temp) {
-  graphStatus graph_status = GetTensorSizeInBytes(desc_temp, size_temp);
+  const graphStatus graph_status = GetTensorSizeInBytes(desc_temp, size_temp);
   if (graph_status != GRAPH_SUCCESS) {
     return GRAPH_FAILED;
   }
 
   // 64-byte alignment, if size is 0, align to 32 bytes
-  if (size_temp > (INT64_MAX - kNum2 * kDataMemAlignSize)) {
+  if (size_temp > (INT64_MAX - (kNum2 * kDataMemAlignSize))) {
     GELOGW("[Util][CalcBytesSize] Mem size %ld after alignment is bigger than INT64_MAX", size_temp);
   } else {
-    size_temp = ((size_temp + kNum2 * kDataMemAlignSize - 1) / kDataMemAlignSize) * kDataMemAlignSize;
+    size_temp = ((size_temp + (kNum2 * kDataMemAlignSize) - 1) / kDataMemAlignSize) * kDataMemAlignSize;
   }
   return GRAPH_SUCCESS;
 }
@@ -484,7 +493,7 @@ TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_t
 }
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std::pair<int64_t, int64_t>> &shape_range) {
-  if (shape.GetDimNum() == 0 || shape_range.empty()) {
+  if ((shape.GetDimNum() == 0U) || shape_range.empty()) {
     GELOGD(" Shape or shape range is empty, no need to check.");
     return GRAPH_SUCCESS;
   }
@@ -497,16 +506,16 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
     return PARAM_INVALID;
   }
 
-  for (size_t idx = 0; idx < shape.GetDimNum(); idx++) {
-    auto cur_dim = shape.GetDim(idx);
+  for (size_t idx = 0U; idx < shape.GetDimNum(); idx++) {
+    const auto cur_dim = shape.GetDim(idx);
     if (cur_dim == UNKNOWN_DIM) {
       GELOGD("[Check][InputShape]cur shape dim [%ld] is dynamic, no need to check.", cur_dim);
       continue;
     }
-    auto left_range = shape_range[idx].first;
-    auto right_range = shape_range[idx].second;
+    const auto left_range = shape_range[idx].first;
+    const auto right_range = shape_range[idx].second;
     if (left_range < 0) {
-      std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
+      const std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
       ErrorManager::GetInstance().ATCReportErrMessage("E10048", {"shape_range", "reason", "sample"},
                                                       {error_range, kShapeRangeInvalid, kShapeRangeSample});
       GELOGE(PARAM_INVALID, "[Check][Param] Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
@@ -515,7 +524,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
     }
 
     if (cur_dim < left_range) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim","shape_range_left", "shape_range_right"},
+      ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim", "shape_range_left", "shape_range_right"},
                                                       {std::to_string(cur_dim), std::to_string(left_range),
                                                        std::to_string(right_range)});
       GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
@@ -525,7 +534,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
 
     if (right_range < 0) {
       if (right_range != UNKNOWN_DIM) {
-        std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
+        const std::string error_range = std::to_string(left_range) + " ~ " + std::to_string(right_range);
         ErrorManager::GetInstance().ATCReportErrMessage("E10048", {"shape_range", "reason", "sample"},
                                                         {error_range, kShapeRangeInvalid, kShapeRangeSample});
         GELOGE(PARAM_INVALID, "[Check][Param] Given shape range[%s] is invalid, reason: %s, correct sample is %s.",
@@ -534,7 +543,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
       }
     } else {
       if (cur_dim > right_range) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim","shape_range_left", "shape_range_right"},
+        ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim", "shape_range_left", "shape_range_right"},
                                                         {std::to_string(cur_dim), std::to_string(left_range),
                                                          std::to_string(right_range)});
         GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
