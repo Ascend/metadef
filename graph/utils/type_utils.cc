@@ -72,57 +72,57 @@ const std::map<Format, std::string> kFormatToStringMap = {
     {FORMAT_END, "END"},
     {FORMAT_MAX, "MAX"}};
 
-const std::map<domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
-  {domi::DOMI_TENSOR_NCHW, FORMAT_NCHW},
-  {domi::DOMI_TENSOR_NHWC, FORMAT_NHWC},
-  {domi::DOMI_TENSOR_ND, FORMAT_ND},
-  {domi::DOMI_TENSOR_NC1HWC0, FORMAT_NC1HWC0},
-  {domi::DOMI_TENSOR_FRACTAL_Z, FORMAT_FRACTAL_Z},
-  {domi::DOMI_TENSOR_NC1C0HWPAD, FORMAT_NC1C0HWPAD},
-  {domi::DOMI_TENSOR_NHWC1C0, FORMAT_NHWC1C0},
-  {domi::DOMI_TENSOR_FSR_NCHW, FORMAT_FSR_NCHW},
-  {domi::DOMI_TENSOR_FRACTAL_DECONV, FORMAT_FRACTAL_DECONV},
-  {domi::DOMI_TENSOR_BN_WEIGHT, FORMAT_BN_WEIGHT},
-  {domi::DOMI_TENSOR_CHWN, FORMAT_CHWN},
-  {domi::DOMI_TENSOR_FILTER_HWCK, FORMAT_FILTER_HWCK},
-  {domi::DOMI_TENSOR_NDHWC, FORMAT_NDHWC},
-  {domi::DOMI_TENSOR_NCDHW, FORMAT_NCDHW},
-  {domi::DOMI_TENSOR_DHWCN, FORMAT_DHWCN},
-  {domi::DOMI_TENSOR_DHWNC, FORMAT_DHWNC},
-  {domi::DOMI_TENSOR_RESERVED, FORMAT_RESERVED}
+const std::map<domi::domiTensorFormat_t, Format> kDomiFormatToGeFormat = {
+    {domi::DOMI_TENSOR_NCHW, FORMAT_NCHW},
+    {domi::DOMI_TENSOR_NHWC, FORMAT_NHWC},
+    {domi::DOMI_TENSOR_ND, FORMAT_ND},
+    {domi::DOMI_TENSOR_NC1HWC0, FORMAT_NC1HWC0},
+    {domi::DOMI_TENSOR_FRACTAL_Z, FORMAT_FRACTAL_Z},
+    {domi::DOMI_TENSOR_NC1C0HWPAD, FORMAT_NC1C0HWPAD},
+    {domi::DOMI_TENSOR_NHWC1C0, FORMAT_NHWC1C0},
+    {domi::DOMI_TENSOR_FSR_NCHW, FORMAT_FSR_NCHW},
+    {domi::DOMI_TENSOR_FRACTAL_DECONV, FORMAT_FRACTAL_DECONV},
+    {domi::DOMI_TENSOR_BN_WEIGHT, FORMAT_BN_WEIGHT},
+    {domi::DOMI_TENSOR_CHWN, FORMAT_CHWN},
+    {domi::DOMI_TENSOR_FILTER_HWCK, FORMAT_FILTER_HWCK},
+    {domi::DOMI_TENSOR_NDHWC, FORMAT_NDHWC},
+    {domi::DOMI_TENSOR_NCDHW, FORMAT_NCDHW},
+    {domi::DOMI_TENSOR_DHWCN, FORMAT_DHWCN},
+    {domi::DOMI_TENSOR_DHWNC, FORMAT_DHWNC},
+    {domi::DOMI_TENSOR_RESERVED, FORMAT_RESERVED}
 };
 
 const std::set<std::string> kInternalFormat = {
-  "NC1HWC0",
-  "FRACTAL_Z",
-  "NC1C0HWPAD",
-  "NHWC1C0",
-  "FRACTAL_DECONV",
-  "C1HWNC0",
-  "FRACTAL_DECONV_TRANSPOSE",
-  "FRACTAL_DECONV_SP_STRIDE_TRANS",
-  "NC1HWC0_C04",
-  "FRACTAL_Z_C04",
-  "FRACTAL_DECONV_SP_STRIDE8_TRANS",
-  "NC1KHKWHWC0",
-  "C1HWNCoC0",
-  "FRACTAL_ZZ",
-  "FRACTAL_NZ",
-  "NDC1HWC0",
-  "FRACTAL_Z_3D",
-  "FRACTAL_Z_3D_TRANSPOSE",
-  "FRACTAL_ZN_LSTM",
-  "FRACTAL_Z_G",
-  "ND_RNN_BIAS",
-  "FRACTAL_ZN_RNN"
+    "NC1HWC0",
+    "FRACTAL_Z",
+    "NC1C0HWPAD",
+    "NHWC1C0",
+    "FRACTAL_DECONV",
+    "C1HWNC0",
+    "FRACTAL_DECONV_TRANSPOSE",
+    "FRACTAL_DECONV_SP_STRIDE_TRANS",
+    "NC1HWC0_C04",
+    "FRACTAL_Z_C04",
+    "FRACTAL_DECONV_SP_STRIDE8_TRANS",
+    "NC1KHKWHWC0",
+    "C1HWNCoC0",
+    "FRACTAL_ZZ",
+    "FRACTAL_NZ",
+    "NDC1HWC0",
+    "FRACTAL_Z_3D",
+    "FRACTAL_Z_3D_TRANSPOSE",
+    "FRACTAL_ZN_LSTM",
+    "FRACTAL_Z_G",
+    "ND_RNN_BIAS",
+    "FRACTAL_ZN_RNN"
 };
 
 const std::map<std::string, Format> kDataFormatMap = {
-  {"NCHW", FORMAT_NCHW},
-  {"NHWC", FORMAT_NHWC},
-  {"NDHWC", FORMAT_NDHWC},
-  {"NCDHW", FORMAT_NCDHW},
-  {"ND",   FORMAT_ND}};
+    {"NCHW", FORMAT_NCHW},
+    {"NHWC", FORMAT_NHWC},
+    {"NDHWC", FORMAT_NDHWC},
+    {"NCDHW", FORMAT_NCDHW},
+    {"ND",   FORMAT_ND}};
 
 const std::map<std::string, Format> kStringToFormatMap = {
     {"NCHW", FORMAT_NCHW},
@@ -199,8 +199,8 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_QUINT8, "DT_QUINT8"},                  // quint8 type
     {DT_QUINT16, "DT_QUINT16"},                // quint16 type
     {DT_RESOURCE, "DT_RESOURCE"},              // resource type
-    {DT_STRING_REF, "DT_STRING_REF"},          // string ref type
-    {DT_STRING, "DT_STRING"},                  // string type
+    {DT_STRING_REF, "DT_STRING_REF"},          // std::string ref type
+    {DT_STRING, "DT_STRING"},                  // std::string type
     {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
     {DT_BF16, "DT_BFLOAT16"},                  // dt_bfloat16 type
     {DT_INT4, "DT_INT4"},                      // dt_variant type
@@ -236,8 +236,8 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_QUINT8", DT_QUINT8},                  // quint8 type
     {"DT_QUINT16", DT_QUINT16},                // quint16 type
     {"DT_RESOURCE", DT_RESOURCE},              // resource type
-    {"DT_STRING_REF", DT_STRING_REF},          // string ref type
-    {"DT_STRING", DT_STRING},                  // string type
+    {"DT_STRING_REF", DT_STRING_REF},          // std::string ref type
+    {"DT_STRING", DT_STRING},                  // std::string type
     // add for json input
     {"DT_FLOAT32", DT_FLOAT},
     {"DT_VARIANT", DT_VARIANT},                // dt_variant type
@@ -250,8 +250,8 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
 };
 
 const std::map<ge::DataType, uint32_t> kDataTypeToLength = {
-    {DT_STRING_REF, sizeof(uint64_t) * 2},
-    {DT_STRING, sizeof(uint64_t) * 2},
+    {DT_STRING_REF, sizeof(uint64_t) * 2U},
+    {DT_STRING, sizeof(uint64_t) * 2U},
 };
 
 const std::map<domi::FrameworkType, std::string> kFmkTypeToString = {
@@ -264,33 +264,33 @@ const std::map<domi::FrameworkType, std::string> kFmkTypeToString = {
 };
 
 const std::map<domi::ImplyType, std::string> kImplyTypeToString = {
-  {domi::ImplyType::BUILDIN, "buildin"},
-  {domi::ImplyType::TVM, "tvm"},
-  {domi::ImplyType::CUSTOM, "custom"},
-  {domi::ImplyType::AI_CPU, "ai_cpu"},
-  {domi::ImplyType::CCE, "cce"},
-  {domi::ImplyType::GELOCAL, "gelocal"},
-  {domi::ImplyType::HCCL, "hccl"},
-  {domi::ImplyType::INVALID, "invalid"}
+    {domi::ImplyType::BUILDIN, "buildin"},
+    {domi::ImplyType::TVM, "tvm"},
+    {domi::ImplyType::CUSTOM, "custom"},
+    {domi::ImplyType::AI_CPU, "ai_cpu"},
+    {domi::ImplyType::CCE, "cce"},
+    {domi::ImplyType::GELOCAL, "gelocal"},
+    {domi::ImplyType::HCCL, "hccl"},
+    {domi::ImplyType::INVALID, "invalid"}
 };
 }
 
 
 std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
-  auto it = kImplyTypeToString.find(imply_type);
+  const auto it = kImplyTypeToString.find(imply_type);
   if (it != kImplyTypeToString.end()) {
     return it->second;
   } else {
     REPORT_INNER_ERROR("E19999", "ImplyTypeToSerialString: imply_type not support %u",
-                       static_cast<unsigned int>(imply_type));
+                       static_cast<uint32_t>(imply_type));
     GELOGE(GRAPH_FAILED, "[Check][Param] ImplyTypeToSerialString: imply_type not support %u",
-           static_cast<unsigned int>(imply_type));
+           static_cast<uint32_t>(imply_type));
     return "UNDEFINED";
   }
 }
 
 bool TypeUtils::IsDataTypeValid(DataType dt) {
-  uint32_t num = static_cast<uint32_t>(dt);
+  const uint32_t num = static_cast<uint32_t>(dt);
   GE_CHK_BOOL_EXEC((num < DT_MAX),
                    REPORT_INNER_ERROR("E19999", "param dt:%d >= DT_MAX:%d, check invalid", num, DT_MAX);
                    return false, "[Check][Param] The DataType is invalid, dt:%u >= DT_MAX:%d", num, DT_MAX);
@@ -298,7 +298,7 @@ bool TypeUtils::IsDataTypeValid(DataType dt) {
 }
 
 std::string TypeUtils::DataTypeToSerialString(DataType data_type) {
-  auto it = kDataTypeToStringMap.find(data_type);
+  const auto it = kDataTypeToStringMap.find(data_type);
   if (it != kDataTypeToStringMap.end()) {
     return it->second;
   } else {
@@ -308,7 +308,7 @@ std::string TypeUtils::DataTypeToSerialString(DataType data_type) {
 }
 
 DataType TypeUtils::SerialStringToDataType(const std::string &str) {
-  auto it = kStringTodataTypeMap.find(str);
+  const auto it = kStringTodataTypeMap.find(str);
   if (it != kStringTodataTypeMap.end()) {
     return it->second;
   } else {
@@ -329,9 +329,9 @@ bool TypeUtils::IsFormatValid(Format format) {
 }
 
 bool TypeUtils::IsDataTypeValid(std::string dt) {
-  transform(dt.begin(), dt.end(), dt.begin(), ::toupper);
-  std::string key = "DT_" + dt;
-  auto it = kStringTodataTypeMap.find(key);
+  (void)transform(dt.begin(), dt.end(), dt.begin(), &::toupper);
+  const std::string key = "DT_" + dt;
+  const auto it = kStringTodataTypeMap.find(key);
   if (it == kStringTodataTypeMap.end()) {
     return false;
   }
@@ -339,8 +339,8 @@ bool TypeUtils::IsDataTypeValid(std::string dt) {
 }
 
 bool TypeUtils::IsFormatValid(std::string format) {
-  transform(format.begin(), format.end(), format.begin(), ::toupper);
-  auto it = kStringToFormatMap.find(format);
+  (void)transform(format.begin(), format.end(), format.begin(), &::toupper);
+  const auto it = kStringToFormatMap.find(format);
   if (it == kStringToFormatMap.end()) {
     return false;
   }
@@ -348,14 +348,14 @@ bool TypeUtils::IsFormatValid(std::string format) {
 }
 
 bool TypeUtils::IsInternalFormat(Format format) {
-  std::string serial_format = FormatToSerialString(static_cast<Format>(GetPrimaryFormat(format)));
-  auto iter = kInternalFormat.find(serial_format);
-  bool result = (iter == kInternalFormat.end()) ? false : true;
+  const std::string serial_format = FormatToSerialString(static_cast<Format>(GetPrimaryFormat(format)));
+  const auto iter = kInternalFormat.find(serial_format);
+  const bool result = (iter == kInternalFormat.end()) ? false : true;
   return result;
 }
 
 std::string TypeUtils::FormatToSerialString(Format format) {
-  auto it = kFormatToStringMap.find(static_cast<Format>(GetPrimaryFormat(format)));
+  const auto it = kFormatToStringMap.find(static_cast<Format>(GetPrimaryFormat(format)));
   if (it != kFormatToStringMap.end()) {
     if (HasSubFormat(format)) {
       return it->second + ":" + std::to_string(GetSubFormat(format));
@@ -376,7 +376,7 @@ Format TypeUtils::SerialStringToFormat(const std::string &str) {
     return FORMAT_RESERVED;
   }
   int32_t primary_format;
-  auto it = kStringToFormatMap.find(primary_format_str);
+  const auto it = kStringToFormatMap.find(primary_format_str);
   if (it != kStringToFormatMap.end()) {
     primary_format = it->second;
   } else {
@@ -395,7 +395,7 @@ Format TypeUtils::DataFormatToFormat(const std::string &str) {
     return FORMAT_RESERVED;
   }
   int32_t primary_format;
-  auto it = kDataFormatMap.find(primary_format_str);
+  const auto it = kDataFormatMap.find(primary_format_str);
   if (it != kDataFormatMap.end()) {
     primary_format = it->second;
   } else {
@@ -408,12 +408,13 @@ Format TypeUtils::DataFormatToFormat(const std::string &str) {
 
 graphStatus TypeUtils::SplitFormatFromStr(const std::string &str,
                                           std::string &primary_format_str, int32_t &sub_format) {
-  size_t split_pos = str.find_first_of(':');
+  const size_t split_pos = str.find_first_of(':');
   if (split_pos != std::string::npos) {
-    std::string sub_format_str = str.substr(split_pos + 1);
+    const std::string sub_format_str = str.substr(split_pos + 1U);
     try {
-      primary_format_str = str.substr(0, split_pos);
-      if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(), [](char c) { return isdigit(c) == 0; })) {
+      primary_format_str = str.substr(0U, split_pos);
+      if (std::any_of(sub_format_str.cbegin(), sub_format_str.cend(),
+                      [](const char_t c) { return !static_cast<bool>(isdigit(c)); })) {
         REPORT_CALL_ERROR("E19999", "sub_format: %s is not digital.", sub_format_str.c_str());
         GELOGE(GRAPH_FAILED, "[Check][Param] sub_format: %s is not digital.", sub_format_str.c_str());
         return GRAPH_FAILED;
@@ -442,7 +443,7 @@ graphStatus TypeUtils::SplitFormatFromStr(const std::string &str,
 }
 
 Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {
-  auto it = kDomiFormatToGeFormat.find(domi_format);
+  const auto it = kDomiFormatToGeFormat.find(domi_format);
   if (it != kDomiFormatToGeFormat.end()) {
     return it->second;
   }
@@ -452,7 +453,7 @@ Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {
 }
 
 std::string TypeUtils::FmkTypeToSerialString(domi::FrameworkType fmk_type) {
-  auto it = kFmkTypeToString.find(fmk_type);
+  const auto it = kFmkTypeToString.find(fmk_type);
   if (it != kFmkTypeToString.end()) {
     return it->second;
   } else {
@@ -462,13 +463,13 @@ std::string TypeUtils::FmkTypeToSerialString(domi::FrameworkType fmk_type) {
 }
 
 bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
-  auto it = kDataTypeToLength.find(data_type);
+  const auto it = kDataTypeToLength.find(data_type);
   if (it != kDataTypeToLength.end()) {
     length = it->second;
     return true;
   }
 
-  int size = GetSizeByDataType(data_type);
+  const int32_t size = GetSizeByDataType(data_type);
   if (size > 0) {
     length = static_cast<uint32_t>(size);
     return true;
@@ -480,7 +481,7 @@ bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
 }
 bool TypeUtils::CheckUint64MulOverflow(uint64_t a, uint32_t b) {
   // Not overflow
-  if (a == 0) {
+  if (a == 0U) {
     return false;
   }
   if (b <= (ULLONG_MAX / a)) {
