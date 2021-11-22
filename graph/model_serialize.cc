@@ -108,7 +108,8 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_
 }
 
 void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc) {
-  size_t op_def_subgraph_name_size = op_desc->impl_->meta_data_.GetSubgraphNames().size();
+  proto::OpDef *op_def_proto = op_desc->impl_->op_def_.GetProtoMsg();
+  size_t op_def_subgraph_name_size = op_def_proto->subgraph_name_size();
   size_t op_desc_subgraph_name_size = op_desc->GetSubgraphInstanceNames().size();
   if (op_def_subgraph_name_size == op_desc_subgraph_name_size) {
     return;
@@ -116,7 +117,7 @@ void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_de
 
   if (op_def_subgraph_name_size == 0UL) {
     for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
-      op_desc->impl_->meta_data_.AddSubGraphName(name);
+      op_def_proto->add_subgraph_name(name);
     }
   }
 }
@@ -131,8 +132,12 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
                    REPORT_INNER_ERROR("E19999", "param op_desc impl is null, check invalid.");
                    return false, "[Check][Param] op_desc impl is null.");
 
+  if (op_desc->impl_->op_def_.GetProtoMsg() == nullptr) {
+    return true;
+  }
+
   FixOpDefSubgraphInstanceName(op_desc);
-  op_desc->impl_->SerializeMetaDataToOpDef(op_def_proto);
+  *op_def_proto = *op_desc->impl_->op_def_.GetProtoMsg();
   // Delete unnecessary attr
   op_def_proto->clear_input_desc();
   op_def_proto->clear_output_desc();
@@ -365,7 +370,7 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
 
   ExtractMetaDataAttr(op_def_proto, opt_input, key_in, value_in, key_out, value_out);
 
-  op_desc = ComGraphMakeShared<OpDesc>(op_def_proto);
+  op_desc = std::shared_ptr<OpDesc>(new (std::nothrow) OpDesc(protobuf_owner_, &op_def_proto));
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_CALL_ERROR("E19999", "create OpDesc failed.");
                    return false, "[Create][OpDesc] op_desc is nullptr.");
   GE_CHK_BOOL_EXEC(op_desc->impl_ != nullptr, REPORT_CALL_ERROR("E19999", "create OpDesc impl failed.");
@@ -400,6 +405,11 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   if (!DeserializeAllAttrsToAttrHolder(op_def_proto.attr(), op_desc.get())) {
     GELOGE(GRAPH_FAILED, "Opdesc [%s] attr deserialize failed", op_def_proto.name().c_str());
     return false;
+  }
+
+  auto proto = op_desc->impl_->op_def_.GetProtoMsg();
+  if (proto != nullptr && proto->mutable_attr() != nullptr) {
+    proto->mutable_attr()->clear();
   }
 
   return true;

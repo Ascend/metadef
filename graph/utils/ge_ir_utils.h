@@ -184,6 +184,8 @@ class OnnxUtils {
                                                    const int32_t idx,
                                                    const OpDescPtr &op_desc);
 
+  static void DecodeNodeAttributeForOpDef(const ge::onnx::AttributeProto &attr_proto, ge::proto::OpDef &op_def);
+
   static void DecodeNodeAttributeForOpDesc(const ge::onnx::AttributeProto &attr_proto, OpDescPtr &op_desc);
 
   static bool DecodeNodeLinkImp(const NodeLinkInfo &item, const NodePtr &node_ptr);
@@ -202,7 +204,9 @@ class OnnxUtils {
   static void AddAllAttr(onnx::NodeProto *const node_proto, const ConstGeTensorDescPtr &op_desc,
                          const char *const prefix, const uint32_t idx);
 
-  static void AddCommonAttrIntoProto(onnx::NodeProto *const node_proto, const OpDescPtr &op_def);
+  static void AddCommonAttrIntoProto(const NodePtr &node,
+                                     onnx::NodeProto *const node_proto,
+                                     const OpDescPtr &op_def);
 
   static bool AddInputAndOutputNodesForGraph(const onnx::GraphProto &graph_proto,
                                              ComputeGraphPtr &graph,

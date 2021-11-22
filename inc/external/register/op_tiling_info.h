@@ -110,7 +110,6 @@ public:
   size_t GetWorkspaceNum() const;
   ge::graphStatus GetWorkspace(const size_t &idx, int64_t &workspace) const;
   void GetAllWorkspaces(std::vector<int64_t> &workspaces) const;
-  const std::vector<int64_t> &GetAllWorkspaces() const;
   void SetWorkspaces(const std::vector<int64_t> &workspaces);
 
   template<class T>

@@ -157,6 +157,22 @@ graphStatus GetFromInputDesc(const OpDescPtr &op_desc, int index, ConstGeTensorP
   }
   return GRAPH_FAILED;
 }
+
+graphStatus GetFromRuntimeContext(const NodePtr &peer_node, const OutDataAnchorPtr &out_data_anchor,
+                                  ConstGeTensorPtr &ge_tensor) {
+  auto context_id = std::to_string(GetContext().ContextId());
+  RuntimeInferenceContext *runtime_infer_ctx = nullptr;
+  if (RuntimeInferenceContext::GetContext(context_id, &runtime_infer_ctx) == GRAPH_SUCCESS) {
+    GELOGD("To get constant from runtime inference context. context_id = %s", context_id.c_str());
+    GeTensorPtr tensor_value = nullptr;
+    if (runtime_infer_ctx->GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(),
+                                     tensor_value) == GRAPH_SUCCESS) {
+      ge_tensor = tensor_value;
+      return GRAPH_SUCCESS;
+    }
+  }
+  return GRAPH_FAILED;
+}
 }  // namespace
 
 
@@ -212,26 +228,19 @@ graphStatus OperatorImpl::GetInputConstData(uint32_t idx, ConstGeTensorPtr &ge_t
     return GetInputConstDataOut(idx, ge_tensor);
   }
 
-  // from runtime context
+  // For inner compute graph
+  auto op_desc = node->GetOpDesc();
+  GE_CHECK_NOTNULL(op_desc);
+  if (GetFromInputDesc(op_desc, idx, ge_tensor) == GRAPH_SUCCESS) {
+    return GRAPH_SUCCESS;
+  }
+
   auto in_data_anchor = node->GetInDataAnchor(idx);
   GE_CHECK_NOTNULL(in_data_anchor);
   auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
   GE_CHECK_NOTNULL(out_data_anchor);
   auto peer_node = out_data_anchor->GetOwnerNode();
-
-  if (runtime_context_ != nullptr) {
-    GeTensorPtr tensor_value = nullptr;
-    if (runtime_context_->GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(),
-                                    tensor_value) == GRAPH_SUCCESS) {
-      ge_tensor = tensor_value;
-      return GRAPH_SUCCESS;
-    }
-  }
-
-  // For inner compute graph
-  auto op_desc = node->GetOpDesc();
-  GE_CHECK_NOTNULL(op_desc);
-  if (GetFromInputDesc(op_desc, idx, ge_tensor) == GRAPH_SUCCESS) {
+  if (GetFromRuntimeContext(peer_node, out_data_anchor, ge_tensor) == GRAPH_SUCCESS) {
     return GRAPH_SUCCESS;
   }
 

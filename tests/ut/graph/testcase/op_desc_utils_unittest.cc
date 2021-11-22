@@ -224,15 +224,16 @@ TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_01) {
   op_desc->impl_->input_name_idx_["sub_data"] = 0;
   op_desc->impl_->input_name_idx_["sub_const"] = 1;
   auto op = OpDescUtils::CreateOperatorFromNode(add);
-  RuntimeInferenceContext runtime_ctx;
-  OpDescUtils::SetRuntimeContextToOperator(op, &runtime_ctx);
-  GeTensorDesc desc;
-  GeTensorPtr tensor = std::make_shared<GeTensor>(desc);
-  tensor->SetData(data_buf, 4096);
+  const std::string context_id("0");
+  RuntimeInferenceContext::CreateContext(context_id);
+  Tensor tensor;
+  tensor.SetData(data_buf, 4096);
 
+  RuntimeInferenceContext *runtime_infer_ctx = nullptr;
+  RuntimeInferenceContext::GetContext(context_id, &runtime_infer_ctx);
   int64_t node_id = 1;
   int output_id = 0;
-  runtime_ctx.SetTensor(node_id, output_id, std::move(tensor));
+  runtime_infer_ctx->SetTensor(node_id, output_id, std::move(tensor));
   ConstGeTensorBarePtr ge_tensor_res = nullptr;
   ge_tensor_res = OpDescUtils::GetInputConstData(op, 1);
 

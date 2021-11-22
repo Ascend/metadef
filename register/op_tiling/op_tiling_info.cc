@@ -46,8 +46,6 @@ public:
 
   void GetAllWorkspaces(std::vector<int64_t> &workspaces) const { workspaces = workspaces_; }
 
-  const std::vector<int64_t> &GetAllWorkspaces() const { return workspaces_; }
-
   void SetWorkspaces(const std::vector<int64_t> &workspaces) { workspaces_ = workspaces; }
 
   void AddTilingData(const char *value, size_t size) {
@@ -141,10 +139,6 @@ ge::graphStatus OpRunInfo::GetWorkspace(const size_t &idx, int64_t &workspace) c
 
 void OpRunInfo::GetAllWorkspaces(std::vector<int64_t> &workspaces) const {
   impl_->GetAllWorkspaces(workspaces);
-}
-
-const std::vector<int64_t> &OpRunInfo::GetAllWorkspaces() const {
-  return impl_->GetAllWorkspaces();
 }
 
 void OpRunInfo::SetWorkspaces(const std::vector<int64_t> &workspaces) {

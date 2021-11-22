@@ -496,40 +496,43 @@ void OnnxUtils::AddListAttrProto(const std::string &attr_name,
   }
 }
 
-void OnnxUtils::AddCommonAttrIntoProto(onnx::NodeProto *const node_proto, const OpDescPtr &op_desc) {
-  auto meta_data = op_desc->impl_->meta_data_;
-  auto id = meta_data.GetId();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "id", &id);
-  auto stream_id = meta_data.GetStreamId();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "stream_id", &stream_id);
-  auto input_name = meta_data.GetInputNames();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "input_name", &input_name);
-  auto src_name = meta_data.GetSrcNames();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "src_name", &src_name);
-  auto src_index = meta_data.GetSrcIndexes();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "src_index", &src_index);
-  auto dst_name = meta_data.GetDstNames();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "dst_name", &dst_name);
-  auto dst_index = meta_data.GetDstIndexes();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "dst_index", &dst_index);
-  auto input_i = meta_data.GetInputOffsets();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "input_i", &input_i);
-  auto output_i = meta_data.GetOutputOffsets();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "output_i", &output_i);
-  auto workspace = op_desc->impl_->GetWorkspace();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace", &workspace);
-  auto workspace_bytes = op_desc->impl_->GetWorkspaceBytes();
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace_bytes", &workspace_bytes);
-  const auto &is_input_const = meta_data.GetIsInputConsts();
-  vector<int64_t> int_const(is_input_const.size());
-  for (size_t idx = 0UL; idx < is_input_const.size(); ++idx) {
-    int_const[idx] = static_cast<int64_t>(is_input_const[idx]);
+void OnnxUtils::AddCommonAttrIntoProto(const NodePtr &node,
+                                       onnx::NodeProto *const node_proto,
+                                       const OpDescPtr &op_desc) {
+  const auto op_def = op_desc->impl_->op_def_.GetProtoMsg();
+  if (op_def != nullptr) {
+    const auto id = op_def->id();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "id", &id);
+    const auto stream_id = op_def->stream_id();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INT, "stream_id", &stream_id);
+    const auto &input_name = op_def->input_name();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "input_name", input_name);
+    const auto &src_name = op_def->src_name();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "src_name", src_name);
+    const auto &src_index = op_def->src_index();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "src_index", src_index);
+    const auto &dst_name = op_def->dst_name();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, "dst_name", dst_name);
+    const auto &dst_index = op_def->dst_index();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "dst_index", dst_index);
+    const auto &input_i = op_def->input_i();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "input_i", input_i);
+    const auto &output_i = op_def->output_i();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "output_i", output_i);
+    const auto &workspace = op_def->workspace();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace", workspace);
+    const auto &workspace_bytes = op_def->workspace_bytes();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "workspace_bytes", workspace_bytes);
+    const auto &is_input_const = op_def->is_input_const();
+    AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "is_input_const", is_input_const);
+    auto op_def_attr_map = op_def->attr();
+    std::map<std::string, AnyValue> attr_maps = op_desc->GetAllAttrs();
+    ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &op_def_attr_map);
+    AddAttrProtoForAttrsFromAttrMap(op_def_attr_map, node_proto);
+  } else {
+    REPORT_INNER_ERROR("E19999", "GetProtoMsg return nullptr, node:%s.", node->GetName().c_str());
+    GELOGE(FAILED, "[Get][ProtoMsg] Opdef is nullptr");
   }
-  AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "is_input_const", &int_const);
-  google::protobuf::Map<std::string, ::ge::proto::AttrDef> op_def_attr_map;
-  std::map<string, AnyValue> attr_maps = op_desc->GetAllAttrs();
-  (void)ModelSerializeImp::SerializeAllAttrsFromAnyMap(attr_maps, &op_def_attr_map);
-  AddAttrProtoForAttrsFromAttrMap(op_def_attr_map, node_proto);
 }
 
 void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto *const node_proto) {
@@ -564,7 +567,7 @@ void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto
     // Input and out describes
     AddAttrProtoForOpInAndOutDesc(node_proto, op_desc);
     // Others
-    AddCommonAttrIntoProto(node_proto, op_desc);
+    AddCommonAttrIntoProto(node, node_proto, op_desc);
   } else {
     REPORT_INNER_ERROR("E19999", "Opdesc is nullptr, node:%s", node->GetName().c_str());
     GELOGE(FAILED, "[Check][Param] Opdesc is nullptr");
@@ -1056,6 +1059,16 @@ void OnnxUtils::DecodeNodeAttributeForOpInAndOutDesc(const onnx::AttributeProto 
   }
 }
 
+void OnnxUtils::DecodeNodeAttributeForOpDef(const onnx::AttributeProto &attr_proto, ge::proto::OpDef &op_def) {
+  const auto attr_map = op_def.mutable_attr();
+  const auto &attr_name = attr_proto.name();
+  ge::proto::AttrDef op_attr;
+  int64_t value = 0;
+  DecodeAttribute(attr_proto, value);
+  op_attr.set_i(value);
+  (void)attr_map->insert(AttrDefPair(attr_name, op_attr));
+}
+
 void OnnxUtils::DecodeNodeAttributeForOpDesc(const onnx::AttributeProto &attr_proto, OpDescPtr &op_desc) {
   if (op_desc == nullptr || op_desc->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "param op_desc is nullptr, check invalid.");
@@ -1087,11 +1100,7 @@ void OnnxUtils::DecodeNodeAttributeForOpDesc(const onnx::AttributeProto &attr_pr
       DecodeAttribute(attr_proto, ints);
       op_desc->SetDstIndex(ints);
     } else if (attr_name == "fusion_scope") {
-      int64_t val = 0;
-      DecodeAttribute(attr_proto, val);
-      AnyValue av;
-      av.SetValue(val);
-      op_desc->SetAttr(attr_proto.name(), av);
+      DecodeNodeAttributeForOpDef(attr_proto, *op_desc->impl_->op_def_.GetProtoMsg());
     } else if (attr_name == "input_i") {
       std::vector<std::int64_t> ints;
       DecodeAttribute(attr_proto, ints);
