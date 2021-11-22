@@ -43,11 +43,7 @@ namespace fe {
     }                                          \
   } while (0)
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-FusionPattern::FusionPattern(std::string name) : name_(name), output_(nullptr), has_error_(false) {}
-#else
 FusionPattern::FusionPattern(const std::string name) : name_(name), output_(nullptr), has_error_(false) {}
-#endif
 
 FusionPattern::~FusionPattern() {}
 
