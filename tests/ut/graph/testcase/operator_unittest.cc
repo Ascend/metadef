@@ -107,7 +107,6 @@ TEST_F(UtestOperater, GetInputConstData_subgraph) {
 }
 
 TEST_F(UtestOperater, TestOperatorSetInputs) {
-
   ge::Operator dst_op = ge::Operator("Mul");
   ge::Operator src_op = ge::Operator("Add");
   dst_op.InputRegister("x1");
@@ -133,5 +132,320 @@ TEST_F(UtestOperater, TestOperatorSetInputs) {
   ge::Operator null_op;
   (void)null_op.SetInput(1U, src_op, 0U);
   ASSERT_EQ(null_op.GetInputsSize(), 0U);
+}
+
+TEST_F(UtestOperater, AttrRegister_Float) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  float value = 1.0;
+  op.AttrRegister(attr.c_str(), value);
+  float ret = 0;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_FLOAT_EQ(value, ret);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListFloat) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<float> value = {1.0, 2.0};
+  op.AttrRegister(attr.c_str(), value);
+  std::vector<float> ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_FLOAT_EQ(value[0], ret[0]);
+  ASSERT_FLOAT_EQ(value[1], ret[1]);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_Int) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  int64_t value = 1;
+  op.AttrRegister(attr.c_str(), value);
+  int64_t ret = 0;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value, ret);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListInt) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<int64_t> value = {1, 2};
+  op.AttrRegister(attr.c_str(), value);
+  std::vector<int64_t> ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value[0], ret[0]);
+  ASSERT_EQ(value[1], ret[1]);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_String) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::string value = "on";
+  op.AttrRegister(attr.c_str(), value.c_str());
+  std::string ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value, ret);
+  op.AttrRegister(nullptr, value.c_str());
+}
+
+TEST_F(UtestOperater, AttrRegister_Bool) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  bool value = true;
+  op.AttrRegister(attr.c_str(), value);
+  bool ret = false;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value, ret);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListBool) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<bool> value = {false, true};
+  op.AttrRegister(attr.c_str(), value);
+  std::vector<bool> ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value[0], ret[0]);
+  ASSERT_EQ(value[1], ret[1]);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_Tensor) {
+  auto op = Operator("Data");
+  auto value = Tensor();
+  op.AttrRegister("attr", value);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListTensor) {
+  auto op = Operator("Data");
+  std::vector<Tensor> value = {Tensor()};
+  op.AttrRegister("attr", value);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_OpBytes) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  auto value = OpBytes{1, 2, 3};
+  op.AttrRegister(attr.c_str(), value);
+  OpBytes ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value[0], ret[0]);
+  ASSERT_EQ(value[1], ret[1]);
+  ASSERT_EQ(value[2], ret[2]);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListListInt) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<std::vector<int64_t>> value = {{1, 2}, {3}};
+  op.AttrRegister(attr.c_str(), value);
+  std::vector<std::vector<int64_t>> ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value[0][0], ret[0][0]);
+  ASSERT_EQ(value[0][1], ret[0][1]);
+  ASSERT_EQ(value[1][0], ret[1][0]);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListDataType) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<DataType> value = {DataType::DT_FLOAT, DataType::DT_INT64};
+  op.AttrRegister(attr.c_str(), value);
+  std::vector<DataType> ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value[0], ret[0]);
+  ASSERT_EQ(value[1], ret[1]);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_DataType) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  auto value = DataType::DT_FLOAT;
+  op.AttrRegister(attr.c_str(), value);
+  DataType ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value, ret);
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_NamedAttrs) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  auto value = NamedAttrs();
+  value.SetName("name");
+  op.AttrRegister(attr.c_str(), value);
+  NamedAttrs ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value.GetName(), ret.GetName());
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListNamedAttrs) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<NamedAttrs> value = {NamedAttrs()};
+  value[0].SetName("name");
+  op.AttrRegister(attr.c_str(), value);
+  std::vector<NamedAttrs> ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(value[0].GetName(), ret[0].GetName());
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_AscendString) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  auto value = AscendString("1");
+  op.AttrRegister(attr.c_str(), value);
+  AscendString ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(std::string(value.GetString()), std::string(ret.GetString()));
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListAscendString) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<AscendString> value = {AscendString("1")};
+  op.AttrRegister(attr.c_str(), value);
+  std::vector<AscendString> ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(std::string(value[0].GetString()), std::string(ret[0].GetString()));
+  op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, InputRegister) {
+  auto op = Operator("Data");
+  std::string name = "data";
+  op.InputRegister(name.c_str());
+  op.InputRegister(nullptr);
+}
+
+TEST_F(UtestOperater, OptionalInputRegister) {
+  auto op = Operator("Data");
+  std::string name = "data";
+  op.OptionalInputRegister(name.c_str());
+  op.OptionalInputRegister(nullptr);
+}
+
+TEST_F(UtestOperater, OutputRegister) {
+  auto op = Operator("Data");
+  std::string name = "data";
+  op.OutputRegister(name.c_str());
+  op.OutputRegister(nullptr);
+}
+
+TEST_F(UtestOperater, DynamicInputRegister) {
+  auto op = Operator("Data");
+  std::string name = "data";
+  op.DynamicInputRegister(name.c_str(), 1);
+  op.DynamicInputRegister(nullptr, 1);
+}
+
+TEST_F(UtestOperater, DynamicInputRegisterByIndex) {
+  auto op = Operator("Data");
+  std::string name = "data";
+  op.DynamicInputRegisterByIndex(name.c_str(), 1, 0);
+  op.DynamicInputRegisterByIndex(nullptr, 1, 0);
+}
+
+TEST_F(UtestOperater, DynamicOutputRegister) {
+  auto op = Operator("Data");
+  std::string name = "data";
+  op.DynamicOutputRegister(name.c_str(), 1);
+  op.DynamicOutputRegister(nullptr, 1);
+}
+
+TEST_F(UtestOperater, RequiredAttrRegister) {
+  auto op = Operator("Data");
+  std::string name = "data";
+  op.RequiredAttrRegister(name.c_str());
+  op.RequiredAttrRegister(nullptr);
+}
+
+TEST_F(UtestOperater, SetInput_WithoutName) {
+  auto op = Operator("Add");
+  std::string dst_name = "data";
+  uint32_t dst_index = 1;
+  auto dst_op = Operator("Data");
+  op.SetInput(dst_name.c_str(), dst_index, dst_op);
+  op.SetInput(nullptr, dst_index, dst_op);
+}
+
+TEST_F(UtestOperater, SetInput_WithName) {
+  std::string name = "add";
+  auto op = Operator("Add");
+  std::string dst_name = "data";
+  uint32_t dst_index = 1;
+  auto dst_op = Operator("Data");
+  op.SetInput(dst_name.c_str(), dst_index, dst_op, name.c_str());
+  op.SetInput(nullptr, dst_index, dst_op, name.c_str());
+  op.SetInput(dst_name.c_str(), dst_index, dst_op, nullptr);
+}
+
+TEST_F(UtestOperater, SubgraphRegister) {
+  std::string name = "add";
+  auto op = Operator("Add");
+  bool dynamic = true;
+  op.SubgraphRegister(name.c_str(), dynamic);
+  op.SubgraphRegister(nullptr, dynamic);
+}
+
+TEST_F(UtestOperater, SubgraphCountRegister) {
+  std::string name = "add";
+  auto op = Operator("Add");
+  uint32_t count = 1;
+  op.SubgraphCountRegister(name.c_str(), count);
+  op.SubgraphCountRegister(nullptr, count);
+}
+
+TEST_F(UtestOperater, SetSubgraphBuilder) {
+  std::string name = "add";
+  auto op = Operator("Add");
+  uint32_t index = 1;
+  SubgraphBuilder builder = []() {return Graph();};
+  op.SetSubgraphBuilder(name.c_str(), index, builder);
+  op.SetSubgraphBuilder(nullptr, index, builder);
+}
+
+TEST_F(UtestOperater, GetSubgraphImpl) {
+  std::string name = "add";
+  auto op = Operator("Add");
+  op.GetSubgraphImpl(name.c_str());
+  op.GetSubgraphImpl(nullptr);
+}
+
+TEST_F(UtestOperater, SetInput_Handler) {
+  std::string name = "add";
+  std::string type = "Add";
+  int index = 1;
+  auto op = Operator(type);
+  auto handler = OutHandler(nullptr);
+  op.SetInput(name.c_str(), handler);
+  op.SetInput(nullptr, handler);
+}
+
+TEST_F(UtestOperater, GetOutput) {
+  std::string name = "add";
+  auto op = Operator("Add");
+  op.GetOutput(name.c_str());
+  op.GetOutput(nullptr);
+}
+
+TEST_F(UtestOperater, GetInputConstDataOut) {
+  std::string name = "add";
+  auto op = Operator("Add");
+  Tensor a = Tensor();
+  ASSERT_EQ(op.GetInputConstDataOut(name.c_str(), a), GRAPH_FAILED);
+  ASSERT_EQ(op.GetInputConstDataOut(nullptr, a), GRAPH_FAILED);
 }
 }  // namespace ge

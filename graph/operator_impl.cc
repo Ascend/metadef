@@ -53,7 +53,7 @@ void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::Operator 
                    return, "[Check][Param] The source operator[%s] must be single output operator",
                          src_oprt.operator_impl_->op_desc_->GetName().c_str());
 
-  auto out_handler = src_oprt.GetOutput(0);
+  auto out_handler = src_oprt.GetOutput(0U);
   if (out_handler == nullptr) {
     return;
   }
