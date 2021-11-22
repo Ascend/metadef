@@ -21,6 +21,7 @@
 #include "graph/op_desc.h"
 #include "graph/node.h"
 #include "graph/operator.h"
+#include "graph/runtime_inference_context.h"
 #include "op_io.h"
 namespace ge {
 class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
@@ -86,6 +87,7 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
   std::vector<std::weak_ptr<OperatorImpl>> control_input_link_{};
   std::vector<std::weak_ptr<OperatorImpl>> control_output_link_{};
   std::map<std::string, SubgraphBuilder> subgraph_names_to_builders_;
+  RuntimeInferenceContext *runtime_context_{nullptr};
 
  private:
   friend class GraphBuilderImpl;

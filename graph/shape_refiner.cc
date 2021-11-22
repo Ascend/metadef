@@ -787,7 +787,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
   return GRAPH_SUCCESS;
 }
 
-graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph) {
+graphStatus ShapeRefiner::DoInferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph) {
   const auto op_desc = node->GetOpDesc();
   const auto origin_type = NodeUtils::GetNodeType(*node);
 
@@ -836,7 +836,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool before_subgraph) {
+graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, Operator &op, bool before_subgraph) {
   GE_IF_BOOL_EXEC(node == nullptr, REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid");
                   GELOGE(GRAPH_FAILED, "[Check][Param] node is null."); return GRAPH_FAILED);
   auto opdesc = node->GetOpDesc();
@@ -848,9 +848,8 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, bool 
       temp_dtype.emplace_back(tensor_desc->GetDataType());
   }
   PrintInOutTensorShape(node, "before_infershape when running");
-  Operator op = OpDescUtils::CreateOperatorFromNode(node);
 
-  graphStatus status = InferShapeAndTypeForRunning(node, op, before_subgraph);
+  graphStatus status = DoInferShapeAndTypeForRunning(node, op, before_subgraph);
   if ((status == GRAPH_PARAM_INVALID) || (status == GRAPH_SUCCESS)) {
     // ensure the dtype is not changed after infershape in running
     auto after_opdesc = node->GetOpDesc();
@@ -966,7 +965,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, bool before_sub
     return GRAPH_FAILED;
   }
   PrintInOutTensorShape(node, "before_infershape");
-  Operator op = OpDescUtils::CreateOperatorFromNode(node);
+  Operator op = OpDescUtils::CreateOperatorFromNode(node);  // do not need runtime context
 
   if (!is_unknown_graph) {
     InferenceContextPtr inference_context;
