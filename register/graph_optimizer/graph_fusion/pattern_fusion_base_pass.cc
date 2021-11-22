@@ -316,7 +316,7 @@ void PrintAllNodes(const std::vector<ge::NodePtr> &scope_nodes) {
     }
   }
 }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
 bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
                                              const std::unordered_set<ge::NodePtr> &scope_nodes_set,
                                              const std::vector<ge::NodePtr> &scope_nodes) {
@@ -381,7 +381,6 @@ bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
   }
   return false;
 }
-#endif
 
 bool PatternFusionBasePass::CheckGraphCycle(ge::ComputeGraph &graph) {
   Status ret = graph.TopologicalSorting();

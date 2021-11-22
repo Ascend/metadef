@@ -67,18 +67,6 @@ FusionPassRegistry &FusionPassRegistry::GetInstance() {
   return instance;
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void FusionPassRegistry::RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
-                                      CreateFn create_fn) {
-  if (impl_ == nullptr) {
-    GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]param impl is nullptr, GraphFusionPass[type=%d,name=%s]: "
-           "failed to register the graph fusion pass",
-           pass_type, pass_name.c_str());
-    return;
-  }
-  impl_->RegisterPass(pass_type, pass_name, create_fn);
-}
-#else
 void FusionPassRegistry::RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
                                       CreateFn create_fn) const {
   if (impl_ == nullptr) {
@@ -89,7 +77,6 @@ void FusionPassRegistry::RegisterPass(const GraphFusionPassType &pass_type, cons
   }
   impl_->RegisterPass(pass_type, pass_name, create_fn);
 }
-#endif
 
 std::map<std::string, FusionPassRegistry::CreateFn> FusionPassRegistry::GetCreateFnByType(
     const GraphFusionPassType &pass_type) {

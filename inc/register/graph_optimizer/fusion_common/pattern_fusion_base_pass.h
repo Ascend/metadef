@@ -71,7 +71,6 @@ class PatternFusionBasePass : public GraphPass {
    */
   virtual Status Run(ge::ComputeGraph &graph, OpsKernelInfoStorePtr ops_kernel_info_store_ptr);
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   /* Detect whether there are cycles in graph
    * after fusing all nodes in param fusion_nodes.
    *
@@ -97,7 +96,7 @@ class PatternFusionBasePass : public GraphPass {
    * */
   bool CycleDetection(const ge::ComputeGraph &graph,
                       const std::vector<std::vector<ge::NodePtr>> &fusion_nodes);
-#endif
+
  protected:
   virtual std::vector<FusionPattern *> DefinePatterns() = 0;
   virtual Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, std::vector<ge::NodePtr> &new_nodes) = 0;
@@ -136,7 +135,6 @@ class PatternFusionBasePass : public GraphPass {
 
   Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   /* Check whether there are cycles after fusing scope_nodes as an
    * entity. The algorithm is:
    * If one of the output node of scope nodes has an edged linked to
@@ -159,19 +157,19 @@ class PatternFusionBasePass : public GraphPass {
   bool CheckEachPeerOut(const ge::NodePtr &node,
                         const std::unordered_set<ge::NodePtr> &scope_nodes_set,
                         const std::vector<ge::NodePtr> &scope_nodes);
-#endif
+
   /** Internal implement class ptr */
   std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;
 
   std::unordered_map<ge::NodePtr, std::map<ge::InDataAnchorPtr, ge::OutDataAnchorPtr>> origin_op_anchors_map_;
-#ifndef ONLY_COMPILE_OPEN_SRC
+
   /* For detecting cycles, we will only build connectivity once.
    * One time generation of connectivity needs O(n+e) where n is
    * total number of nodes and e is total number of edges, which is
    * not tolerable. And this requires one pass only executed once.
    * */
   std::shared_ptr<ConnectionMatrix> connectivity_{nullptr};
-#endif
+
   bool enable_network_analysis_ = false;
 };
 }  // namespace fe

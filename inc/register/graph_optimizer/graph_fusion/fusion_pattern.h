@@ -45,11 +45,7 @@ class FusionPattern {
   };
 
  public:
-#ifdef ONLY_COMPILE_OPEN_SRC
-  explicit FusionPattern(std::string name = "");
-#else
   explicit FusionPattern(const std::string name = "");
-#endif
   ~FusionPattern();
 
   /** set pattern name
@@ -137,9 +133,6 @@ class FusionPattern {
    */
   void Dump() const;
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void GetOpDescList(std::vector<std::shared_ptr<OpDesc>> &op_desc_list);
-#endif
   /** get OpDesc based on ID, return nullptr if failed
    *
    * @param id pattern id
