@@ -7,7 +7,6 @@
 #include "graph/operator.h"
 #include "graph/compute_graph.h"
 #include "graph/utils/attr_utils.h"
-#include "graph/utils/op_desc_utils.h"
 #include "register/op_tiling_registry.h"
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_tiling_constants.h"
@@ -44,9 +43,8 @@ TEST_F(RegisterOpTilingV1UT, op_para_calculate_v1_1) {
 
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
-  auto op = OpDescUtils::CreateOperatorFromNode(node);
   utils::OpRunInfo run_info;
-  graphStatus ret = OpParaCalculateV2(op, run_info);
+  graphStatus ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
@@ -65,15 +63,14 @@ TEST_F(RegisterOpTilingV1UT, op_para_calculate_v1_2) {
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
   utils::OpRunInfo run_info;
-  auto op = OpDescUtils::CreateOperatorFromNode(node);
-  graphStatus ret = OpParaCalculateV2(op, run_info);
+  graphStatus ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_FAILED);
 
   OpTilingFuncInfo op_func_info(OP_TYPE_AUTO_TILING);
   op_func_info.tiling_func_ = op_tiling_stub_v1;
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   tiling_func_map.emplace(OP_TYPE_AUTO_TILING, op_func_info);
-  ret = OpParaCalculateV2(op, run_info);
+  ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
   tiling_func_map.erase(OP_TYPE_AUTO_TILING);
 }
@@ -93,8 +90,7 @@ TEST_F(RegisterOpTilingV1UT, op_para_calculate_v1_3) {
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
   utils::OpRunInfo run_info;
-  auto op = OpDescUtils::CreateOperatorFromNode(node);
-  graphStatus ret = OpParaCalculateV2(op, run_info);
+  graphStatus ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
@@ -116,8 +112,7 @@ TEST_F(RegisterOpTilingV1UT, op_para_calculate_v1_4) {
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
   utils::OpRunInfo run_info;
-  auto op = OpDescUtils::CreateOperatorFromNode(node);
-  graphStatus ret = OpParaCalculateV2(op, run_info);
+  graphStatus ret = OpParaCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 

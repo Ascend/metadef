@@ -32,8 +32,8 @@ class ShapeRefiner {
   static graphStatus InferShapeAndType(const NodePtr &node, bool before_subgraph);
   static graphStatus InferShapeAndType(const NodePtr &node);
   static graphStatus InferShapeAndType(const ConstNodePtr &node, Operator &op);
-  static graphStatus DoInferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph);
-  static graphStatus InferShapeAndTypeForRunning(const NodePtr &node, Operator &op, bool before_subgraph);
+  static graphStatus InferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph);
+  static graphStatus InferShapeAndTypeForRunning(const NodePtr &node, bool before_subgraph);
   static void ClearContextMap();
   static graphStatus CreateInferenceContext(const NodePtr &node,
                                             InferenceContextPtr &inference_context);

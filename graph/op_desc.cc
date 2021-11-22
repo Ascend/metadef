@@ -67,111 +67,53 @@ const std::string ATTR_NAME_OP_INFER_DEPENDS = "_op_infer_depends";
 const std::string ATTR_NAME_OP_KERNEL_LIB_NAME = "_ge_attr_op_kernel_lib_name";
 
 OpDescImpl::OpDescImpl() {
-  meta_data_.has_out_attr_ = true;
-}
-
-OpDescImpl::OpDescImpl(const std::string &name, const std::string &type) : meta_data_(name, type) {
-  meta_data_.has_out_attr_ = true;
-}
-
-OpDescImpl::OpDescImpl(const ge::proto::OpDef &op_def) : meta_data_(op_def.name(), op_def.type()) {
-  // proto deserialize meta_data
-  DeSerializeOpDefToMetaData(op_def);
-}
-
-void OpDescImpl::DeSerializeOpDefToMetaData(const proto::OpDef &op_def) {
-  meta_data_.has_out_attr_ = op_def.has_out_attr();
-  meta_data_.id_ = op_def.id();
-  meta_data_.stream_id_ = op_def.stream_id();
-  meta_data_.inputs_.clear();
-  meta_data_.inputs_.insert(meta_data_.inputs_.end(), op_def.input().cbegin(), op_def.input().cend());
-  meta_data_.input_names_.clear();
-  meta_data_.input_names_.insert(meta_data_.input_names_.end(),
-                                 op_def.input_name().cbegin(), op_def.input_name().cend());
-  meta_data_.src_names_.clear();
-  meta_data_.src_names_.insert(meta_data_.src_names_.end(),
-                               op_def.src_name().cbegin(), op_def.src_name().cend());
-  meta_data_.src_indexes_.clear();
-  meta_data_.src_indexes_.insert(meta_data_.src_indexes_.end(),
-                                 op_def.src_index().cbegin(), op_def.src_index().cend());
-  meta_data_.dst_names_.clear();
-  meta_data_.dst_names_.insert(meta_data_.dst_names_.end(),
-                               op_def.dst_name().cbegin(), op_def.dst_name().cend());
-  meta_data_.dst_indexes_.clear();
-  meta_data_.dst_indexes_.insert(meta_data_.dst_indexes_.end(),
-                                 op_def.dst_index().cbegin(), op_def.dst_index().cend());
-  meta_data_.input_offsets_.clear();
-  meta_data_.input_offsets_.insert(meta_data_.input_offsets_.end(),
-                                   op_def.input_i().cbegin(), op_def.input_i().cend());
-  meta_data_.output_offsets_.clear();
-  meta_data_.output_offsets_.insert(meta_data_.output_offsets_.end(),
-                                    op_def.output_i().cbegin(), op_def.output_i().cend());
-  meta_data_.workspaces.clear();
-  meta_data_.workspaces.insert(meta_data_.workspaces.end(),
-                               op_def.workspace().cbegin(), op_def.workspace().cend());
-  meta_data_.workspace_bytes_list_.clear();
-  meta_data_.workspace_bytes_list_.insert(meta_data_.workspace_bytes_list_.end(),
-                                          op_def.workspace_bytes().cbegin(), op_def.workspace_bytes().cend());
-  meta_data_.is_input_consts_.clear();
-  meta_data_.is_input_consts_.insert(meta_data_.is_input_consts_.end(),
-                                     op_def.is_input_const().cbegin(), op_def.is_input_const().cend());
-  meta_data_.subgraph_names_.clear();
-  meta_data_.subgraph_names_.insert(meta_data_.subgraph_names_.end(),
-                                    op_def.subgraph_name().cbegin(), op_def.subgraph_name().cend());
-}
-
-void OpDescImpl::SerializeMetaDataToOpDef(proto::OpDef *op_def) {
-  op_def->set_name(meta_data_.name_);
-  op_def->set_type(meta_data_.type_);
-  op_def->set_has_out_attr(meta_data_.has_out_attr_);
-  op_def->set_id(meta_data_.id_);
-  op_def->set_stream_id(meta_data_.stream_id_);
-  op_def->clear_input();
-  for (const auto &input : meta_data_.inputs_) {op_def->add_input(input);}
-  op_def->clear_input_name();
-  for (const auto &input_name : meta_data_.input_names_) {op_def->add_input_name(input_name);}
-  op_def->clear_src_name();
-  for (const auto &src_name : meta_data_.src_names_) {op_def->add_src_name(src_name);}
-  op_def->clear_src_index();
-  for (const auto src_idx : meta_data_.src_indexes_) {op_def->add_src_index(src_idx);}
-  op_def->clear_dst_name();
-  for (const auto &dst_name : meta_data_.dst_names_) {op_def->add_dst_name(dst_name);}
-  op_def->clear_dst_index();
-  for (const auto dst_idx : meta_data_.dst_indexes_) {op_def->add_dst_index(dst_idx);}
-  op_def->clear_input_i();
-  for (const auto input_i : meta_data_.input_offsets_) {op_def->add_input_i(input_i);}
-  op_def->clear_output_i();
-  for (const auto output_i : meta_data_.output_offsets_) {op_def->add_output_i(output_i);}
-  op_def->clear_workspace();
-  for (const auto workspace : meta_data_.workspaces) {op_def->add_workspace(workspace);}
-  op_def->clear_workspace_bytes();
-  for (const auto workspace_bytes : meta_data_.workspace_bytes_list_) {
-    op_def->add_workspace_bytes(workspace_bytes);
-  }
-  op_def->clear_is_input_const();
-  for (const auto is_input_const : meta_data_.is_input_consts_) {
-    op_def->add_is_input_const(is_input_const);
-  }
-  op_def->clear_subgraph_name();
-  for (const auto &subgraph_name : meta_data_.subgraph_names_) {
-    op_def->add_subgraph_name(subgraph_name);
+  op_def_.InitDefault();
+  if (op_def_.GetProtoMsg() != nullptr) {
+    op_def_.GetProtoMsg()->set_has_out_attr(true);
   }
 }
 
-string OpDescImpl::GetName() const {
-  return meta_data_.name_;
+OpDescImpl::OpDescImpl(const std::string &name, const std::string &type) {
+  op_def_.InitDefault();
+  if (op_def_.GetProtoMsg() != nullptr) {
+    op_def_.GetProtoMsg()->set_has_out_attr(true);
+  }
+  SetName(name);
+  SetType(type);
+}
+
+OpDescImpl::OpDescImpl(const ProtoMsgOwner &proto_msg_owner,
+                       ge::proto::OpDef *op_def)
+    : op_def_(proto_msg_owner, op_def) {}
+
+std::string OpDescImpl::GetName() const {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    return proto_msg->name();
+  }
+  return "";
 }
 
 void OpDescImpl::SetName(const std::string &name) {
-  meta_data_.name_ = name;
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->set_name(name);
+  }
 }
 
-string OpDescImpl::GetType() const {
-  return meta_data_.type_;
+std::string OpDescImpl::GetType() const {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    return proto_msg->type();
+  }
+  return "";
 }
 
-void OpDescImpl::SetType(const string &type) {
-  meta_data_.type_ = type;
+void OpDescImpl::SetType(const std::string &type) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->set_type(type);
+  }
 }
 
 graphStatus OpDescImpl::AddInputDesc(const ge::GeTensorDesc &input_desc) {
@@ -380,23 +322,30 @@ bool OpDescImpl::OpDescMembersAreEqual(const OpDescImpl &r_op_desc) const {
 
 bool OpDescImpl::OpDescAttrsAreEqual(const OpDescImpl &r_op_desc) const {
   // 看起来当前的本判等函数没有考虑属性，补一下UT确认一下
-  const auto &r_data = r_op_desc.meta_data_;
-  return (IsEqual(meta_data_.name_, r_data.name_, "meta_data_.name_") &&
-  IsEqual(meta_data_.type_, r_data.type_, "meta_data_.type_") &&
-  IsEqual(meta_data_.inputs_, r_data.inputs_, "meta_data_.inputs_") &&
-  IsEqual(meta_data_.has_out_attr_, r_data.has_out_attr_, "meta_data_.has_out_attr_") &&
-  IsEqual(meta_data_.stream_id_, r_data.stream_id_, "meta_data_.stream_id_") &&
-  IsEqual(meta_data_.input_names_, r_data.input_names_, "meta_data_.input_names_") &&
-  IsEqual(meta_data_.src_names_, r_data.src_names_, "meta_data_.src_names_") &&
-  IsEqual(meta_data_.dst_names_, r_data.dst_names_, "meta_data_.dst_names_") &&
-  IsEqual(meta_data_.src_indexes_, r_data.src_indexes_, "meta_data_.src_indexes_") &&
-  IsEqual(meta_data_.dst_indexes_, r_data.dst_indexes_, "meta_data_.dst_indexes_") &&
-  IsEqual(meta_data_.input_offsets_, r_data.input_offsets_, "meta_data_.input_offsets_") &&
-  IsEqual(meta_data_.output_offsets_, r_data.output_offsets_, "meta_data_.output_offsets_") &&
-  IsEqual(meta_data_.workspaces, r_data.workspaces, "meta_data_.workspaces") &&
-  IsEqual(meta_data_.workspace_bytes_list_, r_data.workspace_bytes_list_,
-          "meta_data_.workspace_bytes_list_") &&
-  IsEqual(meta_data_.is_input_consts_, r_data.is_input_consts_, "meta_data_.is_input_consts_"));
+  const auto &op_def = this->op_def_.GetProtoMsg();
+  const auto &r_op_def = r_op_desc.op_def_.GetProtoMsg();
+  if ((op_def != nullptr) && (r_op_def != nullptr)) {
+    // Message OpDef in ge_ir.proto
+    return (
+        IsEqual(op_def->name(), r_op_def->name(), "OpDef_.name()") &&
+        IsEqual(op_def->type(), r_op_def->type(), "OpDef_.type()") &&
+        IsEqual(ToString(op_def->input()), ToString(r_op_def->input()), "OpDef_.input()") &&
+        IsEqual(op_def->has_out_attr(), r_op_def->has_out_attr(), "OpDef_.has_out_attr()") &&
+        IsEqual(op_def->stream_id(), r_op_def->stream_id(), "OpDef_.stream_id()") &&
+        IsEqual(ToString(op_def->input_name()), ToString(r_op_def->input_name()), "OpDef_.input_name()") &&
+        IsEqual(ToString(op_def->src_name()), ToString(r_op_def->src_name()), "OpDef_.src_name()") &&
+        IsEqual(ToString(op_def->dst_name()), ToString(r_op_def->dst_name()), "OpDef_.dst_name()") &&
+        IsEqual(ToString(op_def->src_index()), ToString(r_op_def->src_index()), "OpDef_.src_index()") &&
+        IsEqual(ToString(op_def->dst_index()), ToString(r_op_def->dst_index()), "OpDef_.dst_index()") &&
+        IsEqual(ToString(op_def->input_i()), ToString(r_op_def->input_i()), "OpDef_.input_i()") &&
+        IsEqual(ToString(op_def->output_i()), ToString(r_op_def->output_i()), "OpDef_.output_i()") &&
+        IsEqual(ToString(op_def->workspace()), ToString(r_op_def->workspace()), "OpDef_.workspace()") &&
+        IsEqual(ToString(op_def->workspace_bytes()), ToString(r_op_def->workspace_bytes()),
+                "OpDef_.workspace_bytes()") &&
+        IsEqual(ToString(op_def->is_input_const()), ToString(r_op_def->is_input_const()), "OpDef_.is_input_const()"));
+  } else {
+    return ((op_def == nullptr) && (r_op_def == nullptr));
+  }
 }
 
 bool OpDescImpl::OpDescGenTensorDescsAreEqual(const OpDescImpl &r_op_desc)
@@ -1036,108 +985,244 @@ ConstProtoAttrMap &OpDescImpl::GetAttrMap() const {
   return attrs_;
 }
 
-void OpDescImpl::SetId(int64_t id) {
-  meta_data_.id_ = id;
+void OpDescImpl::SetId(const int64_t id) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->set_id(id);
+  }
 }
 
 int64_t OpDescImpl::GetId() const {
-  return meta_data_.id_;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    return proto_msg->id();
+  }
+  return 0;
 }
 
-void OpDescImpl::SetStreamId(int64_t stream_id) {
-  meta_data_.stream_id_ = stream_id;
+void OpDescImpl::SetStreamId(const int64_t stream_id) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->set_stream_id(stream_id);
+  }
 }
 
 int64_t OpDescImpl::GetStreamId() const {
-  return meta_data_.stream_id_;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    return proto_msg->stream_id();
+  }
+  return 0;
 }
 
-void OpDescImpl::SetInputName(const vector<string> &input_name) {
-  meta_data_.input_names_ = input_name;
+void OpDescImpl::SetInputName(const std::vector<std::string> &input_name) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_input_name();
+    for (auto &item : input_name) {
+      proto_msg->add_input_name(item);
+    }
+  }
 }
 
-vector<string> OpDescImpl::GetInputName() const {
-  return meta_data_.input_names_;
+vector<std::string> OpDescImpl::GetInputName() const {
+  std::vector<std::string> input_name;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->input_name()) {
+      input_name.push_back(item);
+    }
+  }
+  return input_name;
 }
 
-void OpDescImpl::SetSrcName(const vector<string> &src_name) {
-  meta_data_.src_names_ = src_name;
+void OpDescImpl::SetSrcName(const std::vector<std::string> &src_name) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_src_name();
+    for (auto &item : src_name) {
+      proto_msg->add_src_name(item);
+    }
+  }
 }
 
-vector<string> OpDescImpl::GetSrcName() const {
-  return meta_data_.src_names_;
+vector<std::string> OpDescImpl::GetSrcName() const {
+  std::vector<std::string> src_name;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->src_name()) {
+      src_name.push_back(item);
+    }
+  }
+  return src_name;
 }
 
-void OpDescImpl::SetSrcIndex(const vector<int64_t> &src_index) {
-  meta_data_.src_indexes_ = src_index;
+void OpDescImpl::SetSrcIndex(const std::vector<int64_t> &src_index) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_src_index();
+    for (auto &item : src_index) {
+      proto_msg->add_src_index(item);
+    }
+  }
 }
 
 vector<int64_t> OpDescImpl::GetSrcIndex() const {
-  return meta_data_.src_indexes_;
+  std::vector<int64_t> src_index;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->src_index()) {
+      src_index.push_back(item);
+    }
+  }
+  return src_index;
 }
 
-void OpDescImpl::SetInputOffset(const vector<int64_t> &input) {
-  meta_data_.input_offsets_ = input;
+void OpDescImpl::SetInputOffset(const std::vector<int64_t> &input) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_input_i();
+    for (auto &item : input) {
+      proto_msg->add_input_i(item);
+    }
+  }
 }
 
 vector<int64_t> OpDescImpl::GetInputOffset() const {
-  return meta_data_.input_offsets_;
+  std::vector<int64_t> input;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->input_i()) {
+      input.push_back(item);
+    }
+  }
+  return input;
 }
 
-void OpDescImpl::SetOutputOffset(const vector<int64_t> &output) {
-  meta_data_.output_offsets_ = output;
+void OpDescImpl::SetOutputOffset(const std::vector<int64_t> &output) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_output_i();
+    for (auto &item : output) {
+      proto_msg->add_output_i(item);
+    }
+  }
 }
 
 vector<int64_t> OpDescImpl::GetOutputOffset() const {
-  return meta_data_.output_offsets_;
+  std::vector<int64_t> output;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->output_i()) {
+      output.push_back(item);
+    }
+  }
+  return output;
 }
 
-void OpDescImpl::SetDstName(const vector<string> &dst_name) {
-  meta_data_.dst_names_ = dst_name;
+void OpDescImpl::SetDstName(const std::vector<std::string> &dst_name) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_dst_name();
+    for (auto &item : dst_name) {
+      proto_msg->add_dst_name(item);
+    }
+  }
 }
 
-vector<string> OpDescImpl::GetDstName() const {
-  return meta_data_.dst_names_;
+vector<std::string> OpDescImpl::GetDstName() const {
+  std::vector<std::string> dst_name;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->dst_name()) {
+      dst_name.push_back(item);
+    }
+  }
+  return dst_name;
 }
 
-void OpDescImpl::SetDstIndex(const vector<int64_t> &dst_index) {
-  meta_data_.dst_indexes_ = dst_index;
+void OpDescImpl::SetDstIndex(const std::vector<int64_t> &dst_index) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_dst_index();
+    for (auto &item : dst_index) {
+      proto_msg->add_dst_index(item);
+    }
+  }
 }
 
 vector<int64_t> OpDescImpl::GetDstIndex() const {
-  return meta_data_.dst_indexes_;
+  std::vector<int64_t> dst_index;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->dst_index()) {
+      dst_index.push_back(item);
+    }
+  }
+  return dst_index;
 }
 
-void OpDescImpl::SetWorkspace(const vector<int64_t> &workspace) {
-  meta_data_.workspaces.assign(workspace.cbegin(), workspace.cend());
+void OpDescImpl::SetWorkspace(const std::vector<int64_t> &workspace) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_workspace();
+    for (auto &item : workspace) {
+      proto_msg->add_workspace(item);
+    }
+  }
 }
 
 vector<int64_t> OpDescImpl::GetWorkspace() const {
-  vector<int64_t> res(meta_data_.workspaces.size());
-  for (size_t i = 0UL; i < meta_data_.workspaces.size(); ++i) {
-    res[i] = meta_data_.workspaces[i];
+  std::vector<int64_t> workspace;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (auto &item : proto_msg->workspace()) {
+      workspace.push_back(item);
+    }
   }
-  return res;
+  return workspace;
 }
 
-void OpDescImpl::SetWorkspaceBytes(const vector<int64_t> &workspace_bytes) {
-  meta_data_.workspace_bytes_list_.assign(workspace_bytes.cbegin(), workspace_bytes.cend());
+void OpDescImpl::SetWorkspaceBytes(const std::vector<int64_t> &workspace_bytes) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_workspace_bytes();
+    for (auto &item : workspace_bytes) {
+      proto_msg->add_workspace_bytes(item);
+    }
+  }
 }
 
 vector<int64_t> OpDescImpl::GetWorkspaceBytes() const {
-  vector<int64_t> res(meta_data_.workspace_bytes_list_.size());
-  for (size_t i = 0UL; i < meta_data_.workspace_bytes_list_.size(); ++i) {
-    res[i] = meta_data_.workspace_bytes_list_[i];
+  std::vector<int64_t> workspace_bytes;
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (const auto &item : proto_msg->workspace_bytes()) {
+      workspace_bytes.push_back(item);
+    }
   }
-  return res;
+  return workspace_bytes;
 }
 
-void OpDescImpl::SetIsInputConst(const vector<bool> &is_input_const) {
-  meta_data_.is_input_consts_ = is_input_const;
+void OpDescImpl::SetIsInputConst(const std::vector<bool> &is_input_const) {
+  auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    proto_msg->clear_is_input_const();
+    for (auto item : is_input_const) {
+      proto_msg->add_is_input_const(item);
+    }
+  }
 }
 
 vector<bool> OpDescImpl::GetIsInputConst() const {
-  return meta_data_.is_input_consts_;
+  std::vector<bool> is_input_const;
+  const auto proto_msg = op_def_.GetProtoMsg();
+  if (proto_msg != nullptr) {
+    for (const auto item : proto_msg->is_input_const()) {
+      is_input_const.push_back(item);
+    }
+  }
+  return is_input_const;
 }
 
 graphStatus OpDescImpl::RestoreInputNameIdx(const std::string &name,
@@ -1337,8 +1422,80 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(OpDesc &&op_desc)
     : enable_shared_from_this(), AttrHolder(std::move(op_desc)),
       impl_(ComGraphMakeShared<OpDescImpl>(std::move(*(op_desc.impl_)))) {}
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const ge::proto::OpDef &op_def)
-    : impl_(ComGraphMakeShared<OpDescImpl>(op_def)) {}
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc(const ProtoMsgOwner &proto_msg_owner,
+                                                              ge::proto::OpDef *op_def)
+    : enable_shared_from_this(), AttrHolder(), impl_(ComGraphMakeShared<OpDescImpl>(proto_msg_owner, op_def)) {
+  if ((op_def != nullptr) && (!op_def->has_out_attr())) {
+    op_def->set_has_out_attr(true);
+
+    int64_t id = 0;
+    (void)AttrUtils::GetInt(this, ATTR_NAME_ID, id);
+    op_def->set_id(id);
+
+    int64_t stream_id = 0;
+    (void)AttrUtils::GetInt(this, ATTR_NAME_STREAM_ID, stream_id);
+    op_def->set_stream_id(stream_id);
+
+    std::vector<std::string> input_name;
+    (void)AttrUtils::GetListStr(this, ATTR_NAME_INPUT_NAME, input_name);
+    for (auto &item : input_name) {
+      op_def->add_input_name(item);
+    }
+    std::vector<std::string> src_name;
+    (void)AttrUtils::GetListStr(this, ATTR_NAME_SRC_NAME, src_name);
+    for (auto &item : src_name) {
+      op_def->add_src_name(item);
+    }
+    std::vector<int64_t> src_index;
+    (void)AttrUtils::GetListInt(this, ATTR_NAME_SRC_INDEX, src_index);
+    for (auto &item : src_index) {
+      op_def->add_src_index(item);
+    }
+    std::vector<int64_t> input;
+    (void)AttrUtils::GetListInt(this, ATTR_NAME_INPUT, input);
+    for (auto &item : input) {
+      op_def->add_input_i(item);
+    }
+    std::vector<int64_t> output;
+    (void)AttrUtils::GetListInt(this, ATTR_NAME_OUTPUT, output);
+    for (auto &item : output) {
+      op_def->add_output_i(item);
+    }
+    std::vector<std::string> dst_name;
+    (void)AttrUtils::GetListStr(this, ATTR_NAME_DST_NAME, dst_name);
+    for (auto &item : dst_name) {
+      op_def->add_dst_name(item);
+    }
+    std::vector<int64_t> dst_index;
+    (void)AttrUtils::GetListInt(this, ATTR_NAME_DST_INDEX, dst_index);
+    for (auto &item : dst_index) {
+      op_def->add_dst_index(item);
+    }
+    std::vector<int64_t> workspace;
+    (void)AttrUtils::GetListInt(this, ATTR_NAME_WORKSPACE, workspace);
+    for (auto &item : workspace) {
+      op_def->add_workspace(item);
+    }
+    std::vector<int64_t> workspace_bytes;
+    (void)AttrUtils::GetListInt(this, ATTR_NAME_WORKSPACE_BYTES, workspace_bytes);
+    for (auto &item : workspace_bytes) {
+      op_def->add_workspace_bytes(item);
+    }
+    std::vector<bool> is_input_const;
+    (void)AttrUtils::GetListBool(this, ATTR_NAME_IS_INPUT_CONST, is_input_const);
+    for (const auto item : is_input_const) {
+      op_def->add_is_input_const(item);
+    }
+    const auto input_desc_mutable_list = (*op_def->mutable_attr())[ATTR_NAME_INPUT_DESC].mutable_list();
+    if (input_desc_mutable_list != nullptr) {
+      *op_def->mutable_input_desc() = *(input_desc_mutable_list->mutable_td());
+    }
+    const auto output_desc_mutable_list = (*op_def->mutable_attr())[ATTR_NAME_OUTPUT_DESC].mutable_list();
+    if (output_desc_mutable_list != nullptr) {
+      *op_def->mutable_output_desc() = *(output_desc_mutable_list->mutable_td());
+    }
+  }
+}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetName() const {
   return impl_->GetName();
