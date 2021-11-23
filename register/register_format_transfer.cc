@@ -24,8 +24,6 @@ struct FormatTransferRegistry {
     src_dst_builder[src][dst] = std::move(builder);
     return SUCCESS;
   }
-
-private:
   std::map<Format, std::map<Format, FormatTransferBuilder>> src_dst_builder;
 };
 
