@@ -23,7 +23,6 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/type_utils.h"
 #include "graph/utils/attr_utils.h"
-#include "graph/types.h"
 #include "register/register_error_codes.h"
 #include "register/tensor_assign.h"
 
@@ -31,7 +30,7 @@ namespace domi {
 namespace {
 using GeTensorDesc = ge::GeTensorDesc;
 using GeShape = ge::GeShape;
-const char_t *const kOriginElementNumAttrName = "origin_element_num";
+const char *const kOriginElementNumAttrName = "origin_element_num";
 const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_FLOAT, ge::DataType::DT_FLOAT},
     {domi::tensorflow::DataType::DT_HALF, ge::DataType::DT_FLOAT16},
@@ -198,7 +197,8 @@ Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::
   return SUCCESS;
 }
 
-Status TensorAssign::GetStringVal(const int32_t val_size, const google::protobuf::RepeatedPtrField<std::string> &val_vector,
+Status TensorAssign::GetStringVal(const int32_t val_size,
+                                  const google::protobuf::RepeatedPtrField<std::string> &val_vector,
                                   const int32_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
   const bool flag = (count != val_size && val_size == 1);
@@ -211,11 +211,11 @@ Status TensorAssign::GetStringVal(const int32_t val_size, const google::protobuf
       total_size += (val_vector[i].size() + sizeof(ge::StringHead) + 1);
     }
     total_size += (count - min_count) * (sizeof(ge::StringHead) + 1);
-    std::unique_ptr<char_t[]> addr(new (std::nothrow) char_t[total_size]());
+    std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
     GE_CHECK_NOTNULL(addr);
     ge::StringHead *string_head = reinterpret_cast<ge::StringHead *>(addr.get());
     // front 16 bytes store head of each string
-    char_t *raw_data = addr.get() + count * sizeof(ge::StringHead);
+    char *raw_data = addr.get() + count * sizeof(ge::StringHead);
     for (int32_t i = 0; i < count; ++i) {
       string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       if (i < val_size) {
@@ -319,7 +319,7 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
     string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
     string_head->len = static_cast<uint64_t>(weight_content.size());
     CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(),
-                     weight_content.size() + 1) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
+                              weight_content.size() + 1) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   } else {
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()),

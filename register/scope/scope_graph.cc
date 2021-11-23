@@ -998,7 +998,8 @@ void ScopeTree::ScopeTreeImpl::AddNodeToScope(ge::OperatorPtr &node_def) {
   }
 }
 
-std::vector<std::string> ScopeTree::ScopeTreeImpl::SplitNodeName(const std::string &node_name, const char_t delim) const {
+std::vector<std::string> ScopeTree::ScopeTreeImpl::SplitNodeName(const std::string &node_name,
+                                                                 const char_t delim) const {
   std::vector<std::string> items;
   std::vector<std::string> scopes;
   if (node_name == "") {

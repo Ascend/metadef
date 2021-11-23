@@ -197,7 +197,7 @@ bool NodeAttrFeature::NodeAttrFeatureImpl::Match(const Scope *scope) {
     }
 
     switch (datatype_) {
-      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_FLOAT, float32_t, GetFloat, 0.0)
+      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_FLOAT, float, GetFloat, 0.0)
       CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_INT32, int64_t, GetInt, 0)
       CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_STRING, std::string, GetStr, "")
       CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_BOOL, bool, GetBool, false)
