@@ -20,7 +20,7 @@
 #include "external/register/register_pass.h"
 
 namespace ge {
-PassReceiver::PassReceiver(const PassRegistrationData &reg_data) {
+PassReceiver::PassReceiver(PassRegistrationData &reg_data) {
   CustomPassHelper::Instance().Insert(reg_data);
 }
 

@@ -20,10 +20,12 @@ namespace ge {
 namespace formats {
 namespace {
 struct FormatTransferRegistry {
-  Status RegisterBuilder(Format src, Format dst, FormatTransferBuilder builder) {
+  Status RegisterBuilder(const Format src, const Format dst, FormatTransferBuilder builder) {
     src_dst_builder[src][dst] = std::move(builder);
     return SUCCESS;
   }
+
+private:
   std::map<Format, std::map<Format, FormatTransferBuilder>> src_dst_builder;
 };
 
@@ -33,7 +35,7 @@ FormatTransferRegistry &GetFormatTransferRegistry() {
 }
 }  // namespace
 
-FormatTransferRegister::FormatTransferRegister(FormatTransferBuilder builder, Format src, Format dst) {
+FormatTransferRegister::FormatTransferRegister(FormatTransferBuilder builder, const Format src, const Format dst) {
   (void)GetFormatTransferRegistry().RegisterBuilder(src, dst, std::move(builder));
   // RegisterBuilder() always return success, no need to check value
 }
@@ -41,11 +43,11 @@ FormatTransferRegister::FormatTransferRegister(FormatTransferBuilder builder, Fo
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<FormatTransfer> BuildFormatTransfer(
     const TransArgs &args) {
   auto &registry = GetFormatTransferRegistry();
-  auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
+  const auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
   if (dst_builder == registry.src_dst_builder.end()) {
     return nullptr;
   }
-  auto builder_iter = dst_builder->second.find(static_cast<Format>(GetPrimaryFormat(args.dst_format)));
+  const auto builder_iter = dst_builder->second.find(static_cast<Format>(GetPrimaryFormat(args.dst_format)));
   if (builder_iter == dst_builder->second.end()) {
     return nullptr;
   }
@@ -54,11 +56,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<FormatTransfer> B
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool FormatTransferExists(const TransArgs &args) {
   auto &registry = GetFormatTransferRegistry();
-  auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
+  const auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
   if (dst_builder == registry.src_dst_builder.end()) {
     return false;
   }
-  return dst_builder->second.count(static_cast<Format>(GetPrimaryFormat(args.dst_format))) > 0;
+  return dst_builder->second.count(static_cast<Format>(GetPrimaryFormat(args.dst_format))) > 0U;
 }
 }  // namespace formats
 }  // namespace ge
