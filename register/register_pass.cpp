@@ -38,12 +38,12 @@ private:
   CustomPassFunc custom_pass_fn_ = nullptr;
 };
 
-PassRegistrationDataImpl::PassRegistrationDataImpl(std::string pass_name)
+PassRegistrationDataImpl::PassRegistrationDataImpl(const std::string &pass_name)
     : pass_name_(pass_name),
       priority_(INT_MAX),
       custom_pass_fn_(nullptr) {}
 
-PassRegistrationData::PassRegistrationData(const std::string &pass_name) {
+PassRegistrationData::PassRegistrationData(std::string pass_name) {
   impl_ = std::shared_ptr<PassRegistrationDataImpl>(new (std::nothrow) PassRegistrationDataImpl(pass_name));
   if (impl_ == nullptr) {
     GELOGW("[Check][Param] make impl failed, pass_name:%s", pass_name.c_str());
