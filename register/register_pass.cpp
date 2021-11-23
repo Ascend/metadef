@@ -14,10 +14,10 @@
  * limitations under the License.
 */
 
-#include "external/register/register_pass.h"
-#include "register/custom_pass_helper.h"
 #include <climits>
+#include "register/custom_pass_helper.h"
 #include "graph/debug/ge_log.h"
+#include "external/register/register_pass.h"
 
 namespace ge {
 PassReceiver::PassReceiver(PassRegistrationData &reg_data) {

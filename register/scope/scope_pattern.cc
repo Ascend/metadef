@@ -20,6 +20,7 @@
 #include "graph/debug/ge_util.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/attr_utils.h"
+#include "graph/types.h"
 
 namespace ge {
 namespace {
@@ -78,7 +79,7 @@ void ScopeAttrValue::SetIntValue(int64_t value) {
   impl_->SetIntValue(value);
 }
 
-void ScopeAttrValue::SetFloatValue(float value) {
+void ScopeAttrValue::SetFloatValue(float32_t value) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Failed to invoke SetFloatValue(), ScopeAttrValue is not properly initialized.");
     return;
@@ -94,7 +95,7 @@ void ScopeAttrValue::SetStringValue(std::string value) {
   impl_->SetStringValue(value);
 }
 
-void ScopeAttrValue::SetStringValue(const char *value) {
+void ScopeAttrValue::SetStringValue(const char_t *value) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Failed to invoke SetStringValue(), ScopeAttrValue is not properly initialized.");
     return;
@@ -142,7 +143,7 @@ NodeOpTypeFeature::NodeOpTypeFeature(std::string nodeType, int32_t num, int32_t 
   impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(nodeType, num, step));
 }
 
-NodeOpTypeFeature::NodeOpTypeFeature(const char *node_type, int32_t num, int32_t step) {
+NodeOpTypeFeature::NodeOpTypeFeature(const char_t *node_type, int32_t num, int32_t step) {
   std::string op_type;
   if (node_type != nullptr) {
     op_type = node_type;
@@ -196,7 +197,7 @@ bool NodeAttrFeature::NodeAttrFeatureImpl::Match(const Scope *scope) {
     }
 
     switch (datatype_) {
-      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_FLOAT, float, GetFloat, 0.0)
+      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_FLOAT, float32_t, GetFloat, 0.0)
       CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_INT32, int64_t, GetInt, 0)
       CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_STRING, std::string, GetStr, "")
       CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_BOOL, bool, GetBool, false)
@@ -213,7 +214,7 @@ NodeAttrFeature::NodeAttrFeature(std::string nodeType, std::string attr_name,
                                                                                       datatype, attr_value));
 }
 
-NodeAttrFeature::NodeAttrFeature(const char *node_type, const char *attr_name,
+NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const_t char *attr_name,
                                  ge::DataType data_type, ScopeAttrValue &attr_value) {
   std::string str_node_type;
   if (node_type != nullptr) {
@@ -310,8 +311,8 @@ ScopeFeature::ScopeFeature(std::string sub_type, int32_t num, std::string suffix
                                                                                 sub_scope_mask, step));
 }
 
-ScopeFeature::ScopeFeature(const char *sub_type, int32_t num, const char *suffix,
-                           const char *sub_scope_mask, int step) {
+ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char *suffix,
+                           const char_t *sub_scope_mask, int step) {
   std::string str_sub_type;
   if (sub_type != nullptr) {
     str_sub_type = sub_type;
@@ -422,7 +423,7 @@ ScopePattern &ScopePattern::SetSubType(const std::string &sub_type) {
   return *this;
 }
 
-ScopePattern &ScopePattern::SetSubType(const char *sub_type) {
+ScopePattern &ScopePattern::SetSubType(const char_t *sub_type) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Failed to invoke SetSubType(), ScopePattern is not properly initialized.");
     return *this;

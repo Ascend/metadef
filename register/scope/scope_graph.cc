@@ -23,14 +23,15 @@
 #include "graph/ge_tensor.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/types.h"
 
 namespace ge {
 namespace {
 using NodeEdges = std::map<int32_t, std::set<std::pair<std::string, int32_t>>>;
 using GraphNodesInOut = std::unordered_map<std::string, std::pair<NodeEdges, NodeEdges>>;
-const char *const kTfIdentityType = "Identity";
-const char *const kTfConstType = "Const";
-const char *const kNumerics = "0123456789";
+const char_t *const kTfIdentityType = "Identity";
+const char_t *const kTfConstType = "Const";
+const char_t *const kNumerics = "0123456789";
 const size_t kInputPartsSize = 2U;
 const size_t kInputNodeName = 0U;
 const size_t kPeerOutIndex = 1U;
@@ -289,7 +290,7 @@ Status Scope::Init(const std::string &name, const std::string &sub_type, Scope *
   return impl_->Init(name, sub_type, father_scope);
 }
 
-Status Scope::Init(const char *name, const char *sub_type, Scope *father_scope) {
+Status Scope::Init(const char_t *name, const char_t *sub_type, Scope *father_scope) {
   std::string scope_name;
   std::string scope_sub_type;
   if (name != nullptr) {
@@ -344,7 +345,7 @@ Scope *Scope::GetSubScope(const std::string &scope_name) const {
   return impl_->GetSubScope(scope_name);
 }
 
-Scope *Scope::GetSubScope(const char *scope_name) const {
+Scope *Scope::GetSubScope(const char_t *scope_name) const {
   std::string str_scope_name;
   if (scope_name != nullptr) {
     str_scope_name = scope_name;
@@ -442,7 +443,7 @@ FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const std::string &fusion_node_
   impl_ = std::unique_ptr<InnerNodeInfoImpl>(new (std::nothrow) InnerNodeInfoImpl(fusion_node_name));
 }
 
-FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char *fusion_node_name) {
+FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name) {
   std::string str_fusion_node_name;
   if (fusion_node_name != nullptr) {
     str_fusion_node_name = fusion_node_name;
@@ -455,8 +456,8 @@ FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const std::string &fusion_node_
   impl_ = std::unique_ptr<InnerNodeInfoImpl>(new (std::nothrow) InnerNodeInfoImpl(fusion_node_name, name, type));
 }
 
-FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char *fusion_node_name, const char *name,
-                                                 const char *type) {
+FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name, const char_t *name,
+                                                 const char_t *type) {
   std::string node_name;
   if (fusion_node_name != nullptr) {
     node_name = fusion_node_name;
@@ -493,7 +494,7 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetName(co
   return *this;
 }
 
-FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetName(const char *name) {
+FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetName(const char_t *name) {
   if ((impl_ != nullptr) && (name != nullptr)) {
     std::string str_name = name;
     impl_->SetName(str_name);
@@ -508,7 +509,7 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetType(co
   return *this;
 }
 
-FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetType(const char *type) {
+FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetType(const char_t *type) {
   if (impl_ != nullptr && type != nullptr) {
     std::string str_type = type;
     impl_->SetType(str_type);
@@ -524,7 +525,7 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertInpu
   return *this;
 }
 
-FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertInput(const char *input_node,
+FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertInput(const char_t *input_node,
                                                                                   int32_t peer_out_idx) {
   if ((impl_ != nullptr) && (input_node != nullptr)) {
     std::string str_input_node = input_node;
@@ -541,7 +542,7 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertOutp
   return *this;
 }
 
-FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertOutput(const char *output_node,
+FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertOutput(const char_t *output_node,
                                                                                    int32_t peer_in_idx) {
   if ((impl_ != nullptr) && (output_node != nullptr)) {
     std::string str_output_node = output_node;
@@ -572,8 +573,8 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::SetInputFormat(const std::str
   return ge::GRAPH_PARAM_INVALID;
 }
 
-ge::graphStatus FusionScopesResult::InnerNodeInfo::SetInputFormat(const char *input_name,
-                                                                  const char *format) {
+ge::graphStatus FusionScopesResult::InnerNodeInfo::SetInputFormat(const char_t *input_name,
+                                                                  const char_t *format) {
   if ((impl_ != nullptr) && (input_name != nullptr) && (format != nullptr)) {
     const std::string str_input_name = input_name;
     const std::string str_format = format;
@@ -590,8 +591,8 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::SetOutputFormat(const std::st
   return ge::GRAPH_PARAM_INVALID;
 }
 
-ge::graphStatus FusionScopesResult::InnerNodeInfo::SetOutputFormat(const char *output_name,
-                                                                   const char *format) {
+ge::graphStatus FusionScopesResult::InnerNodeInfo::SetOutputFormat(const char_t *output_name,
+                                                                   const char_t *format) {
   if ((impl_ != nullptr) && (output_name != nullptr) && (format != nullptr)) {
     const std::string str_output_name = output_name;
     const std::string str_format = format;
@@ -608,8 +609,8 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicInputFormat(const s
   return ge::GRAPH_PARAM_INVALID;
 }
 
-ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicInputFormat(const char *input_name, uint32_t index,
-                                                                         const char *format) {
+ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicInputFormat(const char_t *input_name, uint32_t index,
+                                                                         const char_t *format) {
   if ((impl_ != nullptr) && (input_name != nullptr) && (format != nullptr)) {
     const std::string str_input_name = input_name;
     const std::string str_format = format;
@@ -626,8 +627,8 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicOutputFormat(const 
   return ge::GRAPH_PARAM_INVALID;
 }
 
-ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicOutputFormat(const char *output_name,
-                                                                          uint32_t index, const char *format) {
+ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicOutputFormat(const char_t *output_name,
+                                                                          uint32_t index, const char_t *format) {
   if (impl_ != nullptr && output_name != nullptr && format != nullptr) {
     std::string str_output_name = output_name;
     std::string str_format = format;
@@ -673,7 +674,7 @@ std::vector<std::pair<std::string, int32_t>> FusionScopesResult::InnerNodeInfo::
 }
 
 ge::graphStatus FusionScopesResult::InnerNodeInfo::GetInputs(
-  std::vector<std::pair<AscendString, int32_t>> &inputs) const {
+    std::vector<std::pair<AscendString, int32_t>> &inputs) const {
   std::vector<std::pair<std::string, int32_t>> tmps;
   if (impl_ != nullptr) {
     tmps = impl_->GetInputs();
@@ -693,7 +694,7 @@ std::vector<std::pair<std::string, int32_t>> FusionScopesResult::InnerNodeInfo::
 }
 
 ge::graphStatus FusionScopesResult::InnerNodeInfo::GetOutputs(
-  std::vector<std::pair<AscendString, int32_t>> &outputs) const {
+    std::vector<std::pair<AscendString, int32_t>> &outputs) const {
   std::vector<std::pair<std::string, int32_t>> tmps;
   if (impl_ != nullptr) {
     tmps = impl_->GetOutputs();
@@ -822,7 +823,7 @@ void FusionScopesResult::SetName(const std::string &name) {
   impl_->SetName(name);
 }
 
-void FusionScopesResult::SetName(const char *name) {
+void FusionScopesResult::SetName(const char_t *name) {
   std::string str_name;
   if (name != nullptr) {
     str_name = name;
@@ -834,7 +835,7 @@ void FusionScopesResult::SetType(const std::string &type) {
   impl_->SetType(type);
 }
 
-void FusionScopesResult::SetType(const char *type) {
+void FusionScopesResult::SetType(const char_t *type) {
   std::string str_type;
   if (type != nullptr) {
     str_type = type;
@@ -846,7 +847,7 @@ void FusionScopesResult::SetDescription(const std::string &description) {
   impl_->SetDescription(description);
 }
 
-void FusionScopesResult::SetDescription(const char *description) {
+void FusionScopesResult::SetDescription(const char_t *description) {
   std::string str_desc;
   if (description != nullptr) {
     str_desc = description;
@@ -871,7 +872,7 @@ void FusionScopesResult::InsertInputs(const std::string &inner_op_name, const st
   impl_->InsertInputs(inner_op_name, index_map);
 }
 
-void FusionScopesResult::InsertInputs(const char *inner_op_name, const std::vector<int32_t> &index_map) {
+void FusionScopesResult::InsertInputs(const char_t *inner_op_name, const std::vector<int32_t> &index_map) {
   std::string op_name;
   if (inner_op_name != nullptr) {
     op_name = inner_op_name;
@@ -883,7 +884,7 @@ void FusionScopesResult::InsertOutputs(const std::string &inner_op_name, const s
   impl_->InsertOutputs(inner_op_name, index_map);
 }
 
-void FusionScopesResult::InsertOutputs(const char *inner_op_name, const std::vector<int32_t> &index_map) {
+void FusionScopesResult::InsertOutputs(const char_t *inner_op_name, const std::vector<int32_t> &index_map) {
   std::string op_name;
   if (inner_op_name != nullptr) {
     op_name = inner_op_name;
@@ -899,7 +900,7 @@ FusionScopesResult::InnerNodeInfo *FusionScopesResult::AddInnerNode(const std::s
   return impl_->AddInnerNode(name, type);
 }
 
-FusionScopesResult::InnerNodeInfo *FusionScopesResult::AddInnerNode(const char *name, const char *type) {
+FusionScopesResult::InnerNodeInfo *FusionScopesResult::AddInnerNode(const char_t *name, const char_t *type) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
     return nullptr;
@@ -997,7 +998,7 @@ void ScopeTree::ScopeTreeImpl::AddNodeToScope(ge::OperatorPtr &node_def) {
   }
 }
 
-std::vector<std::string> ScopeTree::ScopeTreeImpl::SplitNodeName(const std::string &node_name, const char delim) const {
+std::vector<std::string> ScopeTree::ScopeTreeImpl::SplitNodeName(const std::string &node_name, const char_t delim) const {
   std::vector<std::string> items;
   std::vector<std::string> scopes;
   if (node_name == "") {
