@@ -214,7 +214,7 @@ NodeAttrFeature::NodeAttrFeature(std::string nodeType, std::string attr_name,
                                                                                       datatype, attr_value));
 }
 
-NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const_t char *attr_name,
+NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_name,
                                  ge::DataType data_type, ScopeAttrValue &attr_value) {
   std::string str_node_type;
   if (node_type != nullptr) {
