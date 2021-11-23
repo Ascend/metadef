@@ -38,7 +38,7 @@ private:
   CustomPassFunc custom_pass_fn_ = nullptr;
 };
 
-PassRegistrationDataImpl::PassRegistrationDataImpl(const std::string &pass_name)
+PassRegistrationDataImpl::PassRegistrationDataImpl(std::string pass_name)
     : pass_name_(pass_name),
       priority_(INT_MAX),
       custom_pass_fn_(nullptr) {}
