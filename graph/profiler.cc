@@ -114,6 +114,7 @@ const ProfilingRecord *Profiler::GetRecords() const {
 }
 Profiler::ConstStringsPointer Profiler::GetStrings() const {
   return &(indexes_to_str_[0]);
-};
+}
+Profiler::~Profiler() = default;
 }
 }

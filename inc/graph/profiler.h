@@ -56,6 +56,8 @@ class Profiler {
   using ConstStringsPointer = char const(*)[kMaxStrLen];
   ConstStringsPointer GetStrings() const;
 
+  ~Profiler();
+
  private:
   Profiler();
   void DumpByIndex(int64_t index, std::ostream &out_stream) const;
