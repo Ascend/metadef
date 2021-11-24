@@ -69,6 +69,7 @@ class ProfilerUt : public testing::Test {};
 TEST_F(ProfilerUt, OneRecord) {
   auto p = Profiler::Create();
   p->Record(0, 1, 2, kEventStart);
+  EXPECT_EQ(p->GetRecordNum(), 1);
 
   std::stringstream ss;
   p->Dump(ss);
@@ -101,6 +102,7 @@ TEST_F(ProfilerUt, MultipleRecords) {
   auto p = Profiler::Create();
   p->Record(0, 1, 2, kEventStart);
   p->Record(0, 1, 2, kEventEnd);
+  EXPECT_EQ(p->GetRecordNum(), 2);
 
   std::stringstream ss;
   p->Dump(ss);
@@ -233,6 +235,26 @@ TEST_F(ProfilerUt, EventTypeBeyondRange) {
   EXPECT_EQ(elements[3], "UNKNOWN(2)");
   EXPECT_EQ(elements[4], "UNKNOWN(3)");
 }
+
+TEST_F(ProfilerUt, GetRecords) {
+  auto p = Profiler::Create();
+  p->Record(0, 1, 2, kEventTypeEnd);
+  auto rec = p->GetRecords();
+  EXPECT_EQ(rec->element, 0);
+  EXPECT_EQ(rec->thread, 1);
+  EXPECT_EQ(rec->event, 2);
+  EXPECT_EQ(rec->et, kEventTypeEnd);
+}
+
+TEST_F(ProfilerUt, GetStrings) {
+  auto p = Profiler::Create();
+  p->RegisterString(0, "Node1");
+  p->RegisterString(2, "InferShape");
+  auto s = p->GetStrings();
+  EXPECT_EQ(strcmp(s[0], "Node1"), 0);
+  EXPECT_EQ(strcmp(s[2], "InferShape"), 0);
+}
+
 /* takes very long time
 TEST_F(ProfilerUt, BeyondMaxRecordsNum) {
   auto p = Profiler::Create();

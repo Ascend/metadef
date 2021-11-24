@@ -51,6 +51,11 @@ class Profiler {
   void Reset();
   void Dump(std::ostream &out_stream) const;
 
+  size_t GetRecordNum() const noexcept;
+  const ProfilingRecord *GetRecords() const;
+  using ConstStringsPointer = char const(*)[kMaxStrLen];
+  ConstStringsPointer GetStrings() const;
+
  private:
   Profiler();
   void DumpByIndex(int64_t index, std::ostream &out_stream) const;

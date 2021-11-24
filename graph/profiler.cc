@@ -99,6 +99,15 @@ void Profiler::Reset(){
 }
 std::unique_ptr<Profiler> Profiler::Create() {
   return std::unique_ptr<Profiler>(new(std::nothrow) Profiler());
+}
+size_t Profiler::GetRecordNum() const noexcept {
+  return record_size_;
+}
+const ProfilingRecord *Profiler::GetRecords() const {
+  return &(records_[0]);
+}
+Profiler::ConstStringsPointer Profiler::GetStrings() const {
+  return &(indexes_to_str_[0]);
 };
 }
 }
