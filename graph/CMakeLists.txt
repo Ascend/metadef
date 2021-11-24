@@ -65,8 +65,13 @@ set(GRAPH_SOURCE_LIST
     "serialization/list_list_int_serializer.cc"
     "serialization/list_list_float_serializer.cc"
     "serialization/attr_serializer_registry.cc"
-    small_vector.cc
-    operator_impl.cc
+    "small_vector.cc"
+    "operator_impl.cc"
+    "compile_cache_policy/compile_cache_policy.cc"
+    "compile_cache_policy/compile_cache_state.cc"
+    "compile_cache_policy/compile_cache_hasher.cc"
+    "compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
+    "compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
 )
 
 if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
