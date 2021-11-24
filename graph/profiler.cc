@@ -32,7 +32,7 @@ int64_t GetThread() {
   return tid;
 }
 void DumpEventType(EventType et, std::ostream &out_stream) {
-  switch(et) {
+  switch (et) {
     case kEventStart:
       out_stream << "Start";
       break;
@@ -99,7 +99,7 @@ void Profiler::DumpByIndex(int64_t index, std::ostream &out_stream) const {
   }
 }
 Profiler::Profiler() : record_size_(0), records_(), indexes_to_str_() {}
-void Profiler::Reset(){
+void Profiler::Reset() {
   // 不完全reset，indexes_to_str_还是有值的
   record_size_ = 0;
 }
