@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 #include "graph/profiler.h"
+#include <cstring>
 #include "mmpa/mmpa_api.h"
 #include "securec.h"
-#include <cstring>
+#include "graph/debug/ge_log.h"
 
 namespace ge {
 namespace profiling {
@@ -54,7 +55,12 @@ void Profiler::RegisterString(int64_t index, const std::string &str) {
   if (index >= kMaxStrIndex) {
     return;
   }
-  (void) strcpy_s(indexes_to_str_[index], kMaxStrLen, str.c_str());
+
+  // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
+  auto ret = strncpy_s(indexes_to_str_[index], kMaxStrLen, str.c_str(), kMaxStrLen - 1);
+  if (ret != EN_OK) {
+    GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
+  }
 }
 void Profiler::Record(int64_t element, int64_t thread, int64_t event, EventType et) {
   auto current_index = record_size_++;

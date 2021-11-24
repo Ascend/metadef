@@ -67,4 +67,4 @@ class Profiler {
 };
 }
 }
-#endif  //METADEF_CXX_PROFILER_H
+#endif  // METADEF_CXX_PROFILER_H
