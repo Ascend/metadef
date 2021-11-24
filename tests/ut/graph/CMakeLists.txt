@@ -109,6 +109,8 @@ set(UT_FILES
     "testcase/model_serialize_unittest.cc"
     "testcase/ref_relation_unittes.cc"
     "testcase/tensor_utils_unittest.cc"
+    "testcase/compile_cache_policy_hasher_unittest.cc"
+    "testcase/compile_cache_policy_unittest.cc"
 
 )
 
@@ -180,6 +182,11 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/serialization/list_list_int_serializer.cc"
     "${METADEF_DIR}/graph/serialization/list_list_float_serializer.cc"
     "${METADEF_DIR}/graph/serialization/attr_serializer_registry.cc"
+    "${METADEF_DIR}/graph/compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
+    "${METADEF_DIR}/graph/compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
+    "${METADEF_DIR}/graph/compile_cache_policy/compile_cache_policy.cc"
+    "${METADEF_DIR}/graph/compile_cache_policy/compile_cache_state.cc"
+    "${METADEF_DIR}/graph/compile_cache_policy/compile_cache_hasher.cc"
 )
 
 ############ libut_metadef_graph.a ############

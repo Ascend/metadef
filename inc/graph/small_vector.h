@@ -511,6 +511,21 @@ template<typename T, size_t N>
 void swap(ge::SmallVector<T, N> &sv1, ge::SmallVector<T, N> &sv2) {
   sv1.swap(sv2);
 }
+namespace {
+  constexpr size_t SV_HASH_SEED = 0x7863a7de;
+  constexpr size_t SV_COMBINE_KEY = 0x9e3779b9;
+}
+template<typename T, size_t N>
+struct hash<ge::SmallVector<T, N>> {
+  size_t operator()(const ge::SmallVector<T, N> &sv) const {
+    size_t seed = SV_HASH_SEED;
+    std::hash<T> hasher;
+    for (auto &item : sv) {
+      seed ^= hasher(item) + SV_COMBINE_KEY + (seed << 6) + (seed >> 2);
+    }
+    return seed;
+  }
+};
 }  // namespace std
 
 #endif  //METADEF_CXX_SMALL_VECTOR_H
