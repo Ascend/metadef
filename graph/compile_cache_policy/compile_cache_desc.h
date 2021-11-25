@@ -26,8 +26,8 @@
 #include <vector>
 #include <unordered_map>
 namespace ge {
-using ShapeType = SmallVector<int64_t, kDefaultMaxRank>;
-using ShapeRangeType = SmallVector<std::pair<int64_t, int64_t>, kDefaultMaxRank>;
+using ShapeType = std::vector<int64_t>;
+using ShapeRangeType = std::vector<std::pair<int64_t, int64_t>>;
 
 class BinaryHolder {
 public:
@@ -52,7 +52,7 @@ public:
     data_ptr_ = data;
     data_len_ = data_len;
   }
-  
+
   const void *GetDataPtr() const noexcept {
     if (holder_.get() != nullptr) {
       return holder_.get();

@@ -54,7 +54,7 @@ public:
 
 private:
   CompileCachePolicy() = default;
-  static void PolicyInit(); 
+  static void PolicyInit();
 
   CompileCacheState compile_cache_state_;
   MatchPolicyPtr mp_ = nullptr;
