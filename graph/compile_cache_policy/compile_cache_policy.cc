@@ -45,7 +45,7 @@ std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(MatchPolicyPtr mp
   auto ccp = std::unique_ptr<CompileCachePolicy>(new CompileCachePolicy());
   ccp->SetAgingPolicy(ap);
   ccp->SetMatchPolicy(mp);
-  
+
   GELOGI("[CompileCachePolicy] Create CompileCachePolicy success;");
   return ccp;
 }
