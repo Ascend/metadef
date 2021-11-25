@@ -82,7 +82,7 @@ std::vector<CacheItem> CompileCacheState::DelCache(const DelCacheFunc &func) {
 }
 
 std::vector<CacheItem> CompileCacheState::DelCache(const std::vector<CacheItem> &delete_item) {
-  DelCacheFunc lamb = [&, &delete_item] (CacheInfo &info) -> bool {
+  DelCacheFunc lamb = [&, delete_item] (CacheInfo &info) -> bool {
     auto iter = std::find(delete_item.begin(), delete_item.end(), info.GetItem());
     return iter != delete_item.end();
   };

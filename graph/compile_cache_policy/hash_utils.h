@@ -18,6 +18,8 @@
 #define GRAPH_COMPILE_CACHE_POLICY_HASH_UTILS_H_
 #include <stdint.h>
 #include <functional>
+#include <vector>
+#include "graph/small_vector.h"
 namespace ge {
 using CacheHashKey = uint64_t;
 class HashUtils {
@@ -28,6 +30,22 @@ public:
   static inline CacheHashKey HashCombine(CacheHashKey seed, const T &value) {
     std::hash<T> hasher;
     seed ^= hasher(value) + COMBINE_KEY + (seed << 6) + (seed >> 2);
+    return seed;
+  }
+
+  template <typename T, size_t N>
+  static inline CacheHashKey HashCombine(CacheHashKey seed, const SmallVector<T, N> &values) {
+    for (const auto &val : values) {
+      seed = HashCombine(seed, val);
+    }
+    return seed;
+  }
+
+  template <typename T>
+  static inline CacheHashKey HashCombine(CacheHashKey seed, const std::vector<T> &values) {
+    for (const auto &val : values) {
+      seed = HashCombine(seed, val);
+    }
     return seed;
   }
 
