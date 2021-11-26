@@ -19,7 +19,8 @@
 
 #include <map>
 #include <string>
-#include "./graph_optimizer_types.h"
+#include "graph_optimizer_types.h"
+#include "optimize_utility.h"
 #include "common/ge_inner_error_codes.h"
 #include "common/opskernel/ops_kernel_info_types.h"
 #include "graph/compute_graph.h"
@@ -34,7 +35,8 @@ class GraphOptimizer {
   virtual ~GraphOptimizer() {}
 
   // initialize graphOptimizer
-  virtual Status Initialize(const std::map<std::string, std::string> &options) = 0;
+  virtual Status Initialize(const std::map<std::string, std::string> &options,
+                            OptimizeUtility *const optimize_utility) = 0;
 
   // close graphOptimizer
   virtual Status Finalize() = 0;
