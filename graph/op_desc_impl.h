@@ -84,28 +84,26 @@ class OpDescImpl {
   void SetType(const std::string &type);
 
   graphStatus AddInputDesc(const ge::GeTensorDesc &input_desc);
-  graphStatus AddInputDesc(uint32_t index, const ge::GeTensorDesc &input_desc);
+  graphStatus AddInputDesc(const uint32_t index, const ge::GeTensorDesc &input_desc);
   graphStatus AddInputDesc(const std::string &name, const ge::GeTensorDesc &input_desc);
-  graphStatus AddInputDescMiddle(const std::string &name, const uint32_t num, size_t index);
-  graphStatus AddOutputDescMiddle(const std::string &name, const uint32_t num, size_t index);
+  graphStatus AddInputDescMiddle(const std::string &name, const uint32_t num, const size_t index);
+  graphStatus AddOutputDescMiddle(const std::string &name, const uint32_t num, const size_t index);
   graphStatus AddInputDescForward(const std::string &name, const uint32_t num);
   graphStatus AddOutputDescForward(const std::string &name, const uint32_t num);
   graphStatus AddOptionalInputDesc(const std::string &name, const ge::GeTensorDesc &input_desc);
 
-  graphStatus UpdateInputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc);
+  graphStatus UpdateInputDesc(const uint32_t index, const ge::GeTensorDesc &tensor_Desc);
   graphStatus UpdateInputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc);
 
   bool OpDescMembersAreEqual(const OpDescImpl &r_op_desc) const;
   bool OpDescAttrsAreEqual(const OpDescImpl &r_op_desc) const;
   bool OpDescGenTensorDescsAreEqual(const OpDescImpl &r_op_desc) const;
 
-  bool operator==(const OpDescImpl &r_op_desc) const;
-
   bool InputIsSet(const std::string &name) const;
 
-  const GeTensorDesc &GetInputDesc(uint32_t index) const;
+  const GeTensorDesc &GetInputDesc(const uint32_t index) const;
   const GeTensorDesc &GetInputDesc(const std::string &name) const;
-  GeTensorDescPtr MutableInputDesc(uint32_t index) const;
+  GeTensorDescPtr MutableInputDesc(const uint32_t index) const;
   GeTensorDescPtr MutableInputDesc(const std::string &name) const;
   OpDesc::Vistor<string> GetAllInputNames(const ConstOpDescPtr &op_desc) const;
 
@@ -122,35 +120,35 @@ class OpDescImpl {
 
   graphStatus AddOutputDesc(const ge::GeTensorDesc &output_desc);
   graphStatus AddOutputDesc(const std::string &name, const ge::GeTensorDesc &output_desc);
-  graphStatus UpdateOutputDesc(uint32_t index, const ge::GeTensorDesc &tensor_Desc);
+  graphStatus UpdateOutputDesc(const uint32_t index, const ge::GeTensorDesc &tensor_Desc);
   graphStatus UpdateOutputDesc(const std::string &name, const ge::GeTensorDesc &tensor_Desc);
-  const GeTensorDesc &GetOutputDesc(uint32_t index) const;
+  const GeTensorDesc &GetOutputDesc(const uint32_t index) const;
   const GeTensorDesc &GetOutputDesc(const std::string &name) const;
-  GeTensorDescPtr MutableOutputDesc(uint32_t index) const;
+  GeTensorDescPtr MutableOutputDesc(const uint32_t index) const;
   GeTensorDescPtr MutableOutputDesc(const std::string &name) const;
 
   uint32_t GetAllOutputsDescSize() const;
   OpDesc::Vistor<GeTensorDesc> GetAllOutputsDesc(const ConstOpDescPtr &op_desc) const;
   OpDesc::Vistor<GeTensorDescPtr> GetAllOutputsDescPtr(const ConstOpDescPtr &op_desc) const;
-  ConstGeTensorDescPtr GetOutputDescPtr(uint32_t index) const;
+  ConstGeTensorDescPtr GetOutputDescPtr(const uint32_t index) const;
   size_t GetOutputsSize() const;
 
-  ConstGeTensorDescPtr GetInputDescPtr(uint32_t index) const;
-  ConstGeTensorDescPtr GetInputDescPtrDfault(uint32_t index) const;
+  ConstGeTensorDescPtr GetInputDescPtr(const uint32_t index) const;
+  ConstGeTensorDescPtr GetInputDescPtrDfault(const uint32_t index) const;
   ConstGeTensorDescPtr GetInputDescPtr(const std::string &name) const;
 
   graphStatus AddRegisterInputName(const std::string &name);
   std::vector<std::string> GetRegisterInputName() const;
 
-  graphStatus AddDynamicInputDesc(const std::string &name, const uint32_t num, bool is_push_back);
-  graphStatus AddDynamicInputDescByIndex(const std::string &name, const uint32_t num, size_t index);
+  graphStatus AddDynamicInputDesc(const std::string &name, const uint32_t num, const bool is_push_back);
+  graphStatus AddDynamicInputDescByIndex(const std::string &name, const uint32_t num, const size_t index);
 
   graphStatus AddRegisterOutputName(const std::string &name);
   std::vector<std::string> GetRegisterOutputName() const;
 
-  graphStatus AddDynamicOutputDesc(const std::string &name, const uint32_t num, bool is_push_back);
+  graphStatus AddDynamicOutputDesc(const std::string &name, const uint32_t num, const bool is_push_back);
   bool IsOptionalInput(const std::string &name) const;
-  bool IsOptionalInput(uint32_t index) const;
+  bool IsOptionalInput(const uint32_t index) const;
   std::map<std::string, uint32_t> GetAllInputName() const;
   std::map<std::string, uint32_t> GetAllOutputName();
   std::map<std::string, uint32_t>& MutableAllInputName();
@@ -166,10 +164,10 @@ class OpDescImpl {
   void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
 
   graphStatus InferShapeAndType(const OpDescPtr &op_desc);
-  graphStatus DefaultInferFormat(const ConstOpDescPtr &op_desc);
+  graphStatus DefaultInferFormat(const ConstOpDescPtr &op_desc) const;
   graphStatus OpVerify(const OpDescPtr &op_desc);
 
-  std::string GetInputNameByIndex(uint32_t index) const;
+  std::string GetInputNameByIndex(const uint32_t index) const;
   int32_t GetInputIndexByName(const std::string &name) const;
   int32_t GetValidInputIndexByName(const std::string &name) const;
   std::string GetValidInputNameByIndex(const uint32_t index) const;
@@ -238,7 +236,7 @@ class OpDescImpl {
 
  private:
   void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
-  void SerializeMetaDataToOpDef(proto::OpDef *op_def);
+  void SerializeMetaDataToOpDef(proto::OpDef * const op_def);
   friend class AttrUtils;
   friend class OpDescUtils;
   friend class ModelSerializeImp;

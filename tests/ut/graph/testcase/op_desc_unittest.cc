@@ -180,4 +180,22 @@ TEST_F(UtestOpDesc, DeSerializeMetadata) {
   EXPECT_TRUE(impl1.OpDescAttrsAreEqual(impl));
 }
 
+TEST_F(UtestOpDesc, AddDescForward) {
+  GeTensorDesc desc(GeShape(), FORMAT_NCHW, DT_INT32);
+  OpDesc op_desc("foo", "Foo");
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddOutputDesc("x", desc));
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddOutputDesc("y", desc));
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddOutputDesc("z", desc));
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddOutputDescForward("t", 2));
+
+  EXPECT_EQ(5, op_desc.GetOutputsSize());
+
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDesc("x", desc));
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDesc("y", desc));
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDesc("z", desc));
+  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDescForward("t", 2));
+
+  EXPECT_EQ(5, op_desc.GetInputsSize());
+}
+
 }

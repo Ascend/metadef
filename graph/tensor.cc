@@ -93,8 +93,8 @@ class TensorDescValue {
       return false;
     }
     size_t remain_size = len;
-    auto dst_addr = reinterpret_cast<uintptr_t>(dst.get());
-    auto src_addr = reinterpret_cast<uintptr_t>(src.get());
+    auto dst_addr = reinterpret_cast<uintptr_t>(reinterpret_cast<void *>(dst.get()));
+    auto src_addr = reinterpret_cast<uintptr_t>(reinterpret_cast<void *>(src.get()));
     while (remain_size > SECUREC_MEM_MAX_LEN) {
       if (memcpy_s(reinterpret_cast<void *>(dst_addr), SECUREC_MEM_MAX_LEN,
                    reinterpret_cast<const void *>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
@@ -151,7 +151,7 @@ class TensorImpl {
     if (!data.empty()) {
       /// Extra 16 bytes store string head
       /// Extra 1 byte store '\0'
-      size_t total_size = data.size() + sizeof(StringHead) + 1U;
+      const size_t total_size = data.size() + sizeof(StringHead) + 1U;
       const std::unique_ptr<char_t[]> buff(new (std::nothrow) char_t[total_size]());
       if (buff == nullptr) {
         REPORT_CALL_ERROR("E19999", "allocate string raw data buff failed, size:%zu", total_size);
@@ -182,10 +182,10 @@ class TensorImpl {
       return GRAPH_FAILED;
     }
     size_t total_size = 0U;
-    total_size = std::accumulate(data.begin(), data.end(), total_size, [&](size_t total, std::string str) {
+    total_size = std::accumulate(data.begin(), data.end(), total_size, [&](size_t total, const std::string& str) {
       /// Extra 16 bytes store string head
       /// Extra 1 byte store '\0'
-      return total += (str.size() + sizeof(StringHead) + 1U);
+      return total += str.size() + sizeof(StringHead) + 1U;
     });
 
     const std::unique_ptr<char_t[]> buff(new (std::nothrow) char_t[total_size]);
@@ -246,7 +246,7 @@ size_t Shape::GetDimNum() const {
   if (impl_ != nullptr) {
     for (const auto i : impl_->dims_) {
       if (i == UNKNOWN_DIM_NUM) {
-        return 0;
+        return 0U;
       }
     }
     return impl_->dims_.size();
@@ -542,7 +542,7 @@ Tensor::Tensor(const TensorDesc &tensor_desc) {
   impl = ComGraphMakeShared<TensorImpl>(tensor_desc);  // lint !e665
 }
 
-void CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size) {
+void Tensor::CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size) {
   uint32_t type_length;
   const bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
@@ -812,18 +812,10 @@ TensorDesc TensorAdapter::GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_
   (void)TensorUtils::GetSize(ge_tensor_desc, size);
   tensor_desc.SetSize(size);
 
-  uint32_t real_dim_cnt = 0;
+  uint32_t real_dim_cnt = 0U;
   (void)TensorUtils::GetRealDimCnt(ge_tensor_desc, real_dim_cnt);
   tensor_desc.SetRealDimCnt(static_cast<int64_t>(real_dim_cnt));
   return tensor_desc;
-}
-
-GeTensorPtr TensorAdapter::Tensor2GeTensor(const Tensor &tensor) {
-  GeTensorPtr ge_tensor;
-  if (tensor.impl != nullptr) {
-    ge_tensor = ComGraphMakeShared<GeTensor>(tensor.impl->ge_tensor.Clone());  // lint !e665
-  }
-  return ge_tensor;
 }
 
 Tensor TensorAdapter::GeTensor2Tensor(const ConstGeTensorPtr &ge_tensor) {

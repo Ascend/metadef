@@ -28,8 +28,7 @@ using ConstGeTensorPtr = std::shared_ptr<const GeTensor>;
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorAdapter {
  public:
   static GeTensorDesc TensorDesc2GeTensorDesc(const TensorDesc &tensor_desc);
-  static TensorDesc GeTensorDesc2TensorDesc(const GeTensorDesc &geTensor_desc);
-  static GeTensorPtr Tensor2GeTensor(const Tensor &tensor);
+  static TensorDesc GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_desc);
   static Tensor GeTensor2Tensor(const ConstGeTensorPtr &ge_tensor);
 
   static ConstGeTensorPtr AsGeTensorPtr(const Tensor &tensor);  // Share value
