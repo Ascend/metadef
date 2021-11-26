@@ -491,4 +491,62 @@ TEST_F(UtestGraphUtils, CopyRootComputeGraph) {
   ret = GraphUtils::CopyComputeGraph(graph, empty_dst_compute_graph);
   ASSERT_EQ(ret, GRAPH_FAILED);
 }
+
+TEST_F(UtestGraphUtils, DumpGraphByName) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 0);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  // test dump_level 0
+  GraphUtils::DumpGEGrph(graph, "./test_graph_0.txt", 0);
+  ComputeGraphPtr com_graph0 = std::make_shared<ComputeGraph>("TestGraph0");
+  bool state = GraphUtils::LoadGEGraph("./test_graph_0.txt", *com_graph0);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph0->GetAllNodesSize(), 4);
+  for (auto &node_ptr : com_graph0->GetAllNodes()) {
+    ASSERT_EQ((node_ptr == nullptr), false);
+    if (node_ptr->GetType() == CONSTANT) {
+      auto op_desc = node_ptr->GetOpDesc();
+      ASSERT_EQ((op_desc == nullptr), false);
+      ConstGeTensorPtr ge_tensor_ptr;
+      ASSERT_EQ(AttrUtils::GetTensor(op_desc, ATTR_NAME_WEIGHTS, ge_tensor_ptr), false);
+    }
+  }
+
+  // test dump_level 1
+  GraphUtils::DumpGEGrph(graph, "./test_graph_1.txt", 1);
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
+  state = GraphUtils::LoadGEGraph("./test_graph_1.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
+  for (auto &node_ptr : com_graph1->GetAllNodes()) {
+    ASSERT_EQ((node_ptr == nullptr), false);
+    if (node_ptr->GetType() == CONSTANT) {
+      auto op_desc = node_ptr->GetOpDesc();
+      ASSERT_EQ((op_desc == nullptr), false);
+      ConstGeTensorPtr ge_tensor_ptr;
+      ASSERT_EQ(AttrUtils::GetTensor(op_desc, ATTR_NAME_WEIGHTS, ge_tensor_ptr), true);
+      ASSERT_EQ((ge_tensor_ptr == nullptr), false);
+      const TensorData tensor_data = ge_tensor_ptr->GetData();
+      const uint8_t *buff = tensor_data.GetData();
+      ASSERT_EQ((buff == nullptr), false);
+      ASSERT_EQ(buff[0], 7);
+      ASSERT_EQ(buff[10], 8);
+    }
+  }
+}
+
 }  // namespace ge

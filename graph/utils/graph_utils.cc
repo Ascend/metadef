@@ -70,6 +70,7 @@ const char_t *const kDumpStrSubgraphFunc = "sub_graph";
 const char_t *const kDumpStrAicpu = "Aicpu";
 const size_t kNameMax = 255U;
 const int32_t kCopyGraphMaxRecursionDepth = 10;
+const int32_t kNameWidth = 5;
 const std::set<std::string> kMergeInputSkipTypes{ STREAMACTIVE, STREAMSWITCH, CONSTANT, CONSTANTOP };
 };
 
@@ -661,25 +662,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const ge::ComputeGraphPtr &graph,
-                                                                           const std::string &path,
-                                                                           const std::string &suffix) {
-  // file name
-  static std::atomic<int64_t> atomic_file_index(0);
-  const auto file_index = atomic_file_index.fetch_add(1);
-  GELOGD("Start to dump om txt: %ld", file_index);
-  if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) { return; }
-
-  std::stringstream stream_file_name;
-  stream_file_name << path.c_str() << "/ge_proto_" << std::setw(5) << std::setfill('0')
-                   << file_index;
-  stream_file_name << "_" << suffix << ".txt";
-  const std::string proto_file = stream_file_name.str();
-
+                                                                           const std::string &file_path,
+                                                                           const int64_t dump_level) {
   // Create buffer
   ge::Model model("", "");
   model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
   Buffer buffer;
-  const int64_t dump_level = ge::OnnxUtils::NO_DUMP;
   (void)model.Save(buffer, dump_level != ge::OnnxUtils::DUMP_ALL);
 
   // Write file
@@ -691,14 +679,31 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
       return;
     }
     char_t real_path[MMPA_MAX_PATH] = {'\0'};
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strnlen(proto_file.c_str(), sizeof(real_path)) >= sizeof(real_path),
-                                   REPORT_INNER_ERROR("E19999", "file path is too longer! file:%s", proto_file.c_str());
-                                   return, "[Check][Param] file path is too longer! file:%s", proto_file.c_str());
-    GE_IF_BOOL_EXEC(mmRealPath(proto_file.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK,
-                    GELOGI("file %s does not exist, it will be created.", proto_file.c_str()));
+    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strnlen(file_path.c_str(), sizeof(real_path)) >= sizeof(real_path),
+                                   REPORT_INNER_ERROR("E19999", "file path is too longer! file:%s", file_path.c_str());
+                                   return, "[Check][Param] file path is too longer! file:%s", file_path.c_str());
+    GE_IF_BOOL_EXEC(mmRealPath(file_path.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK,
+                    GELOGI("file %s does not exist, it will be created.", file_path.c_str()));
 
     GraphUtils::WriteProtoToTextFile(ge_proto, &(real_path[0]));
   }
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const ge::ComputeGraphPtr &graph,
+                                                                           const std::string &path,
+                                                                           const std::string &suffix) {
+  // file name
+  static std::atomic<int64_t> atomic_file_index(0);
+  const auto file_index = atomic_file_index.fetch_add(1);
+  GELOGD("Start to dump om txt: %ld", file_index);
+  if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) { return; }
+
+  std::stringstream stream_file_name;
+  stream_file_name << path.c_str() << "/ge_proto_" << std::setw(kNameWidth) << std::setfill('0')
+                   << file_index;
+  stream_file_name << "_" << suffix << ".txt";
+  const std::string proto_file = stream_file_name.str();
+  DumpGEGrph(graph, proto_file, ge::OnnxUtils::NO_DUMP);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(const char_t *file,

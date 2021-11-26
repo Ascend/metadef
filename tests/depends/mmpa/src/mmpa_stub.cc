@@ -227,7 +227,15 @@ INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
 
 INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
 {
-  return 0;
+  INT32 ret = EN_OK;
+  if ((path == NULL) || (realPath == NULL) || (realPathLen < MMPA_MAX_PATH)) {
+    return EN_INVALID_PARAM;
+  }
+  const CHAR *ptr = realpath(path, realPath);
+  if (ptr == NULL) {
+    ret = EN_ERROR;
+  }
+  return ret;
 }
 
 //INT32 mmGetErrorCode()
