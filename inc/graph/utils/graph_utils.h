@@ -36,13 +36,13 @@
   do {                                                                                                             \
     GraphUtils::DumpGEGraph(compute_graph, name);                                                                  \
     GraphUtils::DumpGEGraphToOnnx(*compute_graph, name);                                                           \
-    uint64_t i = 0;                                                                                                \
+    uint64_t i = 0U;                                                                                               \
     for (const auto &sub_graph_func : compute_graph->GetAllSubgraphs()) {                                          \
-      auto sub_graph_func_name = std::string(name) + std::string("_sub_graph_") + std::to_string(i++);             \
+      const auto sub_graph_func_name = std::string(name) + std::string("_sub_graph_") + std::to_string(i++);       \
       GraphUtils::DumpGEGraph(sub_graph_func, sub_graph_func_name);                                                \
       GraphUtils::DumpGEGraphToOnnx(*sub_graph_func, sub_graph_func_name);                                         \
     }                                                                                                              \
-  } while (0)
+  } while (false)
 
 namespace {
 struct GraphInfo {
