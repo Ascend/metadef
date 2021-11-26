@@ -413,4 +413,40 @@ TEST_F(UtestNodeUtils, GetConstOpType_DATA) {
   ASSERT_EQ(ret, false);
 }
 
+TEST_F(UtestNodeUtils, GetNodeUnknownShapeStatus) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("add", "Add", 2, 1, FORMAT_NHWC, DT_FLOAT, {16, 228, 228, 3});
+  auto graph = builder.GetGraph();
+
+  auto add_node = graph->FindNode("add");
+  ASSERT_NE(add_node, nullptr);
+  bool is_unknown = false;
+  auto ret = NodeUtils::GetNodeUnknownShapeStatus(*add_node, is_unknown);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(is_unknown, false);
+
+  ASSERT_NE(add_node->GetOpDesc(), nullptr);
+  auto out_desc = add_node->GetOpDesc()->MutableOutputDesc(0);
+  ASSERT_NE(out_desc, nullptr);
+  out_desc->SetShape(GeShape({-1, 228, 228, 3}));
+  is_unknown = false;
+  (void)NodeUtils::GetNodeUnknownShapeStatus(*add_node, is_unknown);
+  EXPECT_EQ(is_unknown, true);
+  out_desc->SetShape(GeShape({-2}));
+  is_unknown = false;
+  (void)NodeUtils::GetNodeUnknownShapeStatus(*add_node, is_unknown);
+  EXPECT_EQ(is_unknown, true);
+
+  auto in_desc = add_node->GetOpDesc()->MutableInputDesc(0);
+  ASSERT_NE(in_desc, nullptr);
+  in_desc->SetShape(GeShape({-1, 228, 228, 3}));
+  is_unknown = false;
+  (void)NodeUtils::GetNodeUnknownShapeStatus(*add_node, is_unknown);
+  EXPECT_EQ(is_unknown, true);
+  in_desc->SetShape(GeShape({-2}));
+  is_unknown = false;
+  (void)NodeUtils::GetNodeUnknownShapeStatus(*add_node, is_unknown);
+  EXPECT_EQ(is_unknown, true);
+}
+
 }  // namespace ge
