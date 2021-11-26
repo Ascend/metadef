@@ -34,7 +34,7 @@ class NodeShapeTransUtils {
   bool CatchFormatAndShape();
   bool UpdateFormatAndShape();
 
-  explicit NodeShapeTransUtils(OpDescPtr op_desc) : op_desc_(op_desc), in_num_(0), out_num_(0) {
+  explicit NodeShapeTransUtils(const OpDescPtr op_desc) : op_desc_(op_desc), in_num_(0U), out_num_(0U) {
   }
 
   ~NodeShapeTransUtils() {
