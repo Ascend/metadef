@@ -478,7 +478,7 @@ bool AttrUtils::MutableTensor(AttrHolderAdapter &&obj, const std::string &name, 
   if (tensor == nullptr) {
     return false;
   }
-  value = std::shared_ptr<GeTensor>(tensor, [](GeTensor *p) { (void) p; });
+  value = std::shared_ptr<GeTensor>(tensor, [](const GeTensor *const ptr) { (void) ptr; });
   return true;
 }
 
@@ -488,7 +488,7 @@ bool AttrUtils::GetTensor(ConstAttrHolderAdapter &&obj, const std::string &name,
   if (tensor == nullptr) {
     return false;
   }
-  value = std::shared_ptr<const GeTensor>(tensor, [](const GeTensor *p) { (void) p; });
+  value = std::shared_ptr<const GeTensor>(tensor, [](const GeTensor *const ptr) { (void) ptr; });
   return true;
 }
 
@@ -501,7 +501,7 @@ bool AttrUtils::GetListTensor(ConstAttrHolderAdapter &&obj, const std::string &n
   }
   value.resize(tensors->size());
   for (size_t i = 0UL; i < tensors->size(); ++i) {
-    value[i] = std::shared_ptr<const GeTensor>(&(*tensors)[i], [](const GeTensor *p) { (void) p; });
+    value[i] = std::shared_ptr<const GeTensor>(&(*tensors)[i], [](const GeTensor *const ptr) { (void) ptr; });
   }
   return true;
 }
@@ -514,7 +514,7 @@ bool AttrUtils::MutableListTensor(AttrHolderAdapter &&obj, const std::string &na
   }
   value.resize(tensors->size());
   for (size_t i = 0UL; i < tensors->size(); ++i) {
-    value[i] = std::shared_ptr<GeTensor>(&(*tensors)[i], [](GeTensor *p) { (void) p; });
+    value[i] = std::shared_ptr<GeTensor>(&(*tensors)[i], [](const GeTensor *const ptr) { (void) ptr; });
   }
   return true;
 }

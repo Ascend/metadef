@@ -26,20 +26,20 @@
 namespace ge {
 class ModelSerialize {
  public:
-  Buffer SerializeModel(const Model &model, bool is_dump = false);
+  Buffer SerializeModel(const Model &model, const bool is_dump = false);
 
   Model UnserializeModel(const uint8_t *data, size_t len);
   Model UnserializeModel(ge::proto::ModelDef &model_def);
 
-  bool UnserializeModel(const uint8_t *data, size_t len, Model &model);
+  bool UnserializeModel(const uint8_t *data, const size_t len, Model &model);
   bool UnserializeModel(ge::proto::ModelDef &model_def, Model &model);
 
   Buffer SerializeGraph(const ComputeGraphPtr &graph);
 
-  ComputeGraphPtr UnserializeGraph(const uint8_t *data, size_t len);
+  ComputeGraphPtr UnserializeGraph(const uint8_t *data, const size_t len);
 
   Buffer SerializeOpDesc(const ConstOpDescPtr &op_desc);
-  OpDescPtr UnserializeOpDesc(const uint8_t *data, size_t len);
+  OpDescPtr UnserializeOpDesc(const uint8_t *data, const size_t len);
 
   size_t GetSerializeModelSize(const Model &model);
 

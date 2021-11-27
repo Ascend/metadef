@@ -53,13 +53,13 @@ class ModelSerializeImp {
                       proto::GraphDef *graph_proto,
                       const bool is_dump = false);
 
-  bool SerializeEdge(const NodePtr &node, proto::OpDef *op_def_proto);
+  bool SerializeEdge(const NodePtr &node, proto::OpDef *op_def_proto) const;
 
   bool SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false);
 
   bool SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump = false);
 
-  bool SerializeTensor(const ConstGeTensorPtr &tensor, proto::TensorDef *tensor_proto);
+  bool SerializeTensor(const ConstGeTensorPtr &tensor, proto::TensorDef *tensor_proto) const;
 
   bool UnserializeModel(Model &model, proto::ModelDef &model_proto);
 
@@ -72,26 +72,26 @@ class ModelSerializeImp {
   bool UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto);
   void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_in,
                        std::vector<std::string> &key_out, std::vector<uint32_t> &value_in,
-                       std::vector<uint32_t> &value_out, std::vector<std::string> &opt_input);
-  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false);
+                       std::vector<uint32_t> &value_out, std::vector<std::string> &opt_input) const;
+  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false) const;
 
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
 
   bool UnserializeTensor(GeTensorPtr &tensor, proto::TensorDef &tensor_proto);
 
-  bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index);
+  bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const;
 
   void SetProtobufOwner(const ProtoMsgOwner &buffer_proto_buf_onwer) { protobuf_owner_ = buffer_proto_buf_onwer; }
 
   static bool SerializeAllAttrsFromAnyMap(
       const std::map<std::string, AnyValue> &, google::protobuf::Map<std::string, ::ge::proto::AttrDef> *);
   static bool DeserializeAllAttrsToAttrHolder(
-      const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &, AttrHolder *);
+      const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &proto_attr_map, AttrHolder *attr_holder);
 
  private:
-  bool RebuildOwnership(ComputeGraphPtr &compute_graph, std::map<std::string, ComputeGraphPtr> &subgraphs);
+  bool RebuildOwnership(ComputeGraphPtr &compute_graph, std::map<std::string, ComputeGraphPtr> &subgraphs) const;
 
-  void FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc);
+  void FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc) const;
 
   void ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &opt_input,
                            std::vector<std::string> &key_in, std::vector<uint32_t> &value_in,

@@ -78,13 +78,13 @@ static graphStatus BiasAddFormatFixProcess(const ge::NodePtr &graph_node_ptr) {
     GE_CHECK_NOTNULL(in_desc);
     const auto dim_num = in_desc->MutableShape().GetDimNum();
     if (dim_num == 5UL) { // 5 means dim num
-      const auto format = in_desc->GetOriginFormat();
-      const auto key = TypeUtils::FormatToSerialString(format);
-      const auto fixed_format = (kTfFormatFix.count(key) == 0UL) ? format : kTfFormatFix.at(key);
+      const auto org_format = in_desc->GetOriginFormat();
+      const auto key = TypeUtils::FormatToSerialString(org_format);
+      const auto fixed_format = (kTfFormatFix.count(key) == 0UL) ? org_format : kTfFormatFix.at(key);
       in_desc->SetOriginFormat(fixed_format);
       in_desc->SetFormat(fixed_format);
       GELOGD("Fix the %zu'th input of node[%s]. Origin format is %s , after fixed it is %s",
-             i, graph_node_ptr->GetName().c_str(), TypeUtils::FormatToSerialString(format).c_str(),
+             i, graph_node_ptr->GetName().c_str(), TypeUtils::FormatToSerialString(org_format).c_str(),
              TypeUtils::FormatToSerialString(fixed_format).c_str());
     } else if (dim_num < 4UL) {
       in_desc->SetOriginFormat(FORMAT_ND);
@@ -159,8 +159,8 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
     // do peer_out_node name and index as key to lookup reflections
     const ge::RefCell key(peer_in_data_node->GetName(), peer_in_data_node, ge::NODE_IN, idx);
     std::unordered_set<RefCell, RefCellHash> reflection;
-    auto status = reflection_builder.LookUpRefRelations(key, reflection);
-    if (status != GRAPH_SUCCESS) {
+    auto ret_status = reflection_builder.LookUpRefRelations(key, reflection);
+    if (ret_status != GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E19999", "LookUpRefRelations failed! Node is [%s], the %d input edge",
                         (peer_in_data_node->GetName()).c_str(), idx);
       GELOGE(GRAPH_FAILED, "[Call][LookUpRefRelations] failed! Node is [%s], the %d input edge",
@@ -195,8 +195,8 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
 
         // Call operator infer format api (forward) to get out format
         GELOGD("call infer format func[Back]!Node is [%s] ", (peer_in_data_node->GetName()).c_str());
-        status = peer_in_data_node->InferOriginFormat();
-        GE_IF_BOOL_EXEC(status != GRAPH_SUCCESS,
+        ret_status = peer_in_data_node->InferOriginFormat();
+        GE_IF_BOOL_EXEC(ret_status != GRAPH_SUCCESS,
                         GELOGE(GRAPH_FAILED, "[Infer][Format] failed, node:%s", (peer_in_data_node->GetName()).c_str());
         return GRAPH_FAILED);
         nodes.push_back(peer_in_data_node);
