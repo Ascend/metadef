@@ -17,10 +17,10 @@
 #include "graph/attr_store.h"
 
 namespace ge {
-AnyValue *AttrStore::GetOrCreateAnyValue(AttrId attr_id) {
+AnyValue *AttrStore::GetOrCreateAnyValue(AttrId attr_id) const {
   return const_cast<AnyValue *>(GetAnyValue(attr_id));
 }
-AnyValue *AttrStore::MutableAnyValue(AttrId attr_id) noexcept {
+AnyValue *AttrStore::MutableAnyValue(AttrId attr_id) const noexcept {
   return const_cast<AnyValue *>(GetAnyValue(attr_id));
 }
 const AnyValue *AttrStore::GetAnyValue(AttrId attr_id) const noexcept {
@@ -50,7 +50,7 @@ const AnyValue *AttrStore::GetAnyValue(const std::string &name) const noexcept {
 
   return nullptr;
 }
-AnyValue *AttrStore::MutableAnyValue(const std::string &name) noexcept {
+AnyValue *AttrStore::MutableAnyValue(const std::string &name) const noexcept {
   return const_cast<AnyValue *>(GetAnyValue(name));
 }
 AnyValue *AttrStore::GetOrCreateAnyValue(const std::string &name) {
@@ -131,10 +131,10 @@ bool AttrStore::PreDefinedAttrStore::Delete(AttrSubId index) {
   attrs_[index].Clear();
   return true;
 }
-AnyValue *AttrStore::PreDefinedAttrStore::GetOrCreateAnyValue(AttrSubId index) {
+AnyValue *AttrStore::PreDefinedAttrStore::GetOrCreateAnyValue(AttrSubId index) const {
   return const_cast<AnyValue *>(GetAnyValue(index));
 }
-AnyValue *AttrStore::PreDefinedAttrStore::MutableAnyValue(AttrSubId index) noexcept {
+AnyValue *AttrStore::PreDefinedAttrStore::MutableAnyValue(AttrSubId index) const noexcept {
   return const_cast<AnyValue *>(GetAnyValue(index));
 }
 const AnyValue *AttrStore::PreDefinedAttrStore::GetAnyValue(AttrSubId index) const noexcept {
@@ -155,7 +155,7 @@ bool AttrStore::CustomDefinedAttrStore::Delete(const std::string &name) {
 AnyValue *AttrStore::CustomDefinedAttrStore::GetOrCreateAnyValue(const std::string &name) {
   return &attrs_[name];
 }
-AnyValue *AttrStore::CustomDefinedAttrStore::MutableAnyValue(const std::string &name) noexcept {
+AnyValue *AttrStore::CustomDefinedAttrStore::MutableAnyValue(const std::string &name) const noexcept {
   return const_cast<AnyValue *>(GetAnyValue(name));
 }
 const AnyValue *AttrStore::CustomDefinedAttrStore::GetAnyValue(const std::string &name) const noexcept {

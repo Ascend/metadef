@@ -36,12 +36,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer {
   Buffer();
   Buffer(const Buffer &other);
 
-  explicit Buffer(std::size_t bufferSize, std::uint8_t defualtVal = 0);
+  explicit Buffer(const std::size_t buffer_size, const std::uint8_t default_val = 0U);
 
   ~Buffer();
 
   Buffer &operator=(const Buffer &other);
-  static Buffer CopyFrom(const std::uint8_t *data, std::size_t bufferSize);
+  static Buffer CopyFrom(const std::uint8_t * const data, const std::size_t buffer_size);
 
   const std::uint8_t *GetData() const;
   std::uint8_t *GetData();
@@ -53,14 +53,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer {
   std::uint8_t *data();
   std::size_t size() const;
   void clear();
-  uint8_t operator[](size_t index) const;
+  uint8_t operator[](const size_t index) const;
 
  private:
   BufferImplPtr impl_;
 
   // Create from protobuf obj
-  Buffer(const ProtoMsgOwner &protoOnwer, proto::AttrDef *buffer);
-  Buffer(const ProtoMsgOwner &protoOnwer, std::string *buffer);
+  Buffer(const ProtoMsgOwner &proto_owner, proto::AttrDef * const buffer);
+  Buffer(const ProtoMsgOwner &proto_owner, std::string * const buffer);
 
   friend class GeAttrValueImp;
   friend class GeTensor;
@@ -70,8 +70,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer {
 class BufferUtils {
  public:
   static Buffer CreateShareFrom(const Buffer &other);
-  static Buffer CreateCopyFrom(const Buffer &other);  //lint !e148
-  static Buffer CreateCopyFrom(const std::uint8_t *data, std::size_t buffer_size);  //lint !e148
+  static Buffer CreateCopyFrom(const Buffer &other);
+  static Buffer CreateCopyFrom(const std::uint8_t * const data, const std::size_t buffer_size);
   static void ShareFrom(const Buffer &from, Buffer &to);
   static void CopyFrom(const Buffer &from, Buffer &to);
 };
