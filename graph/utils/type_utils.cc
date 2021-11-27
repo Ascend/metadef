@@ -199,8 +199,8 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_QUINT8, "DT_QUINT8"},                  // quint8 type
     {DT_QUINT16, "DT_QUINT16"},                // quint16 type
     {DT_RESOURCE, "DT_RESOURCE"},              // resource type
-    {DT_STRING_REF, "DT_STRING_REF"},          // std::string ref type
-    {DT_STRING, "DT_STRING"},                  // std::string type
+    {DT_STRING_REF, "DT_STRING_REF"},          // string ref type
+    {DT_STRING, "DT_STRING"},                  // string type
     {DT_VARIANT, "DT_VARIANT"},                // dt_variant type
     {DT_BF16, "DT_BFLOAT16"},                  // dt_bfloat16 type
     {DT_INT4, "DT_INT4"},                      // dt_variant type
@@ -236,8 +236,8 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_QUINT8", DT_QUINT8},                  // quint8 type
     {"DT_QUINT16", DT_QUINT16},                // quint16 type
     {"DT_RESOURCE", DT_RESOURCE},              // resource type
-    {"DT_STRING_REF", DT_STRING_REF},          // std::string ref type
-    {"DT_STRING", DT_STRING},                  // std::string type
+    {"DT_STRING_REF", DT_STRING_REF},          // string ref type
+    {"DT_STRING", DT_STRING},                  // string type
     // add for json input
     {"DT_FLOAT32", DT_FLOAT},
     {"DT_VARIANT", DT_VARIANT},                // dt_variant type
