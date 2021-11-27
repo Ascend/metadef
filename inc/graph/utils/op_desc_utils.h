@@ -55,25 +55,25 @@ class OpDescUtils {
   static graphStatus SetWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &weights_map);
   static graphStatus ClearWeights(ge::NodePtr node);
 
-  static bool ClearInputDesc(ge::OpDescPtr op_desc, uint32_t index);
+  static bool ClearInputDesc(const ge::OpDescPtr op_desc, const uint32_t index);
   static bool ClearInputDesc(const ge::NodePtr& node);
-  static bool ClearOutputDesc(const ge::OpDescPtr& op_desc, uint32_t index);
+  static bool ClearOutputDesc(const ge::OpDescPtr& op_desc, const uint32_t index);
   static bool ClearOutputDesc(const ge::NodePtr& node);
   static std::vector<ge::NodePtr> GetConstInputs(const ge::Node& node);
   static std::vector<ge::NodePtr> GetConstInputs(const ge::ConstNodePtr& node);
   static size_t GetNonConstInputsSize(const ge::Node& node);
   static size_t GetNonConstInputsSize(ge::ConstNodePtr node);
   // Index: Indicates the index of all non const inputs
-  static GeTensorDesc GetNonConstInputTensorDesc(const ge::Node& node, size_t index_non_const = 0);
-  static GeTensorDesc GetNonConstInputTensorDesc(const ge::ConstNodePtr& node, size_t index_non_const = 0);
-  static bool GetNonConstInputIndex(const ge::Node& node, size_t index_non_const, size_t& index);
-  static bool GetNonConstInputIndex(const ge::ConstNodePtr& node, size_t index_non_const, size_t& index);
+  static GeTensorDesc GetNonConstInputTensorDesc(const ge::Node& node, const size_t index_non_const = 0);
+  static GeTensorDesc GetNonConstInputTensorDesc(const ge::ConstNodePtr& node, const size_t index_non_const = 0);
+  static bool GetNonConstInputIndex(const ge::Node& node, const size_t index_non_const, size_t& index);
+  static bool GetNonConstInputIndex(const ge::ConstNodePtr& node, const size_t index_non_const, size_t& index);
   // Index: Indicates the index of all inputs
   static bool IsNonConstInput(const ge::Node& node, size_t index = 0);
   static bool IsNonConstInput(const ge::ConstNodePtr& node, size_t index = 0);
 
   static std::vector<ge::GeTensorDesc> GetNonConstTensorDesc(const ge::ConstNodePtr& node);
-  static graphStatus AddConstOpToAnchor(InDataAnchorPtr in_anchor, const GeTensorPtr& tensor_ptr);
+  static graphStatus AddConstOpToAnchor(const InDataAnchorPtr in_anchor, const GeTensorPtr& tensor_ptr);
 
   static Operator CreateOperatorFromOpDesc(OpDescPtr op_desc);
   static Operator CreateOperatorFromNode(ge::ConstNodePtr node_ptr);
@@ -93,7 +93,7 @@ class OpDescUtils {
   static void SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *context);
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
-  static GeTensorPtr MutableWeights(ge::OpDescPtr op_desc);
+  static GeTensorPtr MutableWeights(const ge::OpDescPtr op_desc);
   static graphStatus SetWeights(ge::OpDesc& op_desc, const GeTensorPtr weight);
   static graphStatus SetWeights(ge::OpDescPtr op_desc, const GeTensorPtr weight);
 };
@@ -128,7 +128,7 @@ class OpDescBuilder {
   /// @param [in] num
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicInput(const std::string &name, uint32_t num);
+  OpDescBuilder& AddDynamicInput(const std::string &name, const uint32_t num);
 
   ///
   /// @brief Add dynamic input
@@ -137,7 +137,7 @@ class OpDescBuilder {
   /// @param [in] tensor
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicInput(const std::string &name, uint32_t num, const GeTensorDesc &tensor);
+  OpDescBuilder& AddDynamicInput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor);
 
   ///
   /// @brief Add output
@@ -160,7 +160,7 @@ class OpDescBuilder {
   /// @param [in] num
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicOutput(const std::string &name, uint32_t num);
+  OpDescBuilder& AddDynamicOutput(const std::string &name, const uint32_t num);
 
   ///
   /// @brief Add dynamic output
@@ -169,7 +169,7 @@ class OpDescBuilder {
   /// @param [in] tensor
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicOutput(const std::string &name, uint32_t num, const GeTensorDesc &tensor);
+  OpDescBuilder& AddDynamicOutput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor);
 
   ///
   /// @brief Build op_desc
