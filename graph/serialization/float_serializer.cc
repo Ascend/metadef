@@ -21,7 +21,7 @@
 namespace ge {
 graphStatus FloatSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   float value;
-  graphStatus ret = av.GetValue(value);
+  const graphStatus ret = av.GetValue(value);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get float attr.");
     return GRAPH_FAILED;

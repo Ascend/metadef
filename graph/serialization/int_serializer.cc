@@ -21,7 +21,7 @@
 namespace ge {
 graphStatus IntSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   int64_t value;
-  graphStatus ret = av.GetValue(value);
+  const graphStatus ret = av.GetValue(value);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get int attr.");
     return GRAPH_FAILED;

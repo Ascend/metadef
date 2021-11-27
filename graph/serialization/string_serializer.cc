@@ -22,7 +22,7 @@
 namespace ge {
 graphStatus StringSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   std::string value;
-  graphStatus ret = av.GetValue(value);
+  const graphStatus ret = av.GetValue(value);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get string attr.");
     return GRAPH_FAILED;

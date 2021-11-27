@@ -65,11 +65,11 @@ AttrSerializerRegistry &AttrSerializerRegistry::GetInstance() {
   return instance;
 }
 
-void AttrSerializerRegistry::RegisterGeIrAttrSerializer(GeIrAttrSerializerBuilder builder,
-                                                        TypeId obj_type,
-                                                        proto::AttrDef::ValueCase proto_type) {
-  std::lock_guard<std::mutex> lock_guard(mutex_);
-  if (serializer_map_.count(obj_type) > 0) {
+void AttrSerializerRegistry::RegisterGeIrAttrSerializer(const GeIrAttrSerializerBuilder& builder,
+                                                        const TypeId obj_type,
+                                                        const proto::AttrDef::ValueCase proto_type) {
+  const std::lock_guard<std::mutex> lock_guard(mutex_);
+  if (serializer_map_.count(obj_type) > 0U) {
     return;
   }
   std::unique_ptr<GeIrAttrSerializer> serializer = builder();
@@ -79,7 +79,7 @@ void AttrSerializerRegistry::RegisterGeIrAttrSerializer(GeIrAttrSerializerBuilde
 }
 
 GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(TypeId obj_type) {
-  auto iter = serializer_map_.find(obj_type);
+  const auto iter = serializer_map_.find(obj_type);
   if (iter == serializer_map_.end()) {
     // print type
     REPORT_INNER_ERROR("E19999", "Serializer for type has not been registered");
@@ -90,7 +90,7 @@ GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(TypeId obj_type) {
 }
 
 GeIrAttrSerializer *AttrSerializerRegistry::GetDeserializer(proto::AttrDef::ValueCase proto_type) {
-  auto iter = deserializer_map_.find(proto_type);
+  const auto iter = deserializer_map_.find(proto_type);
   if (iter == deserializer_map_.end()) {
     REPORT_INNER_ERROR("E19999",
                        "Deserializer for type [%d] has not been registered",
@@ -101,9 +101,9 @@ GeIrAttrSerializer *AttrSerializerRegistry::GetDeserializer(proto::AttrDef::Valu
   return iter->second;
 }
 
-AttrSerializerRegistrar::AttrSerializerRegistrar(GeIrAttrSerializerBuilder builder,
-                                                 TypeId obj_type,
-                                                 proto::AttrDef::ValueCase proto_type) {
+AttrSerializerRegistrar::AttrSerializerRegistrar(const GeIrAttrSerializerBuilder builder,
+                                                 const TypeId obj_type,
+                                                 const proto::AttrDef::ValueCase proto_type) {
   if (builder == nullptr) {
     GELOGE(FAILED, "SerializerBuilder is nullptr.");
     return;

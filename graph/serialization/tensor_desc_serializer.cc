@@ -25,7 +25,7 @@
 namespace ge {
 graphStatus GeTensorDescSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   GeTensorDesc tensor_desc;
-  graphStatus ret = av.GetValue(tensor_desc);
+  const graphStatus ret = av.GetValue(tensor_desc);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get tensor_desc attr.");
     return GRAPH_FAILED;

@@ -20,21 +20,20 @@
 #include "graph/debug/ge_log.h"
 
 namespace ge {
-
 graphStatus ListListIntSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   std::vector<std::vector<int64_t>> list_list_value;
-  graphStatus ret = av.GetValue(list_list_value);
+  const graphStatus ret = av.GetValue(list_list_value);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_list_int attr.");
     return GRAPH_FAILED;
   }
-  auto mutable_list_list = def.mutable_list_list_int();
+  const auto mutable_list_list = def.mutable_list_list_int();
   GE_CHECK_NOTNULL(mutable_list_list);
   mutable_list_list->clear_list_list_i();
   for (const auto &list_value : list_list_value) {
-    auto list_i = mutable_list_list->add_list_list_i();
+    const auto list_i = mutable_list_list->add_list_list_i();
     GE_CHECK_NOTNULL(list_i);
-    for (int64_t val:list_value) {
+    for (const int64_t val : list_value) {
       list_i->add_list_i(val);
     }
   }
@@ -42,9 +41,9 @@ graphStatus ListListIntSerializer::Serialize(const AnyValue &av, proto::AttrDef 
 }
 graphStatus ListListIntSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av) {
   std::vector<std::vector<int64_t>> values;
-  for (int idx = 0; idx < def.list_list_int().list_list_i_size(); ++idx) {
+  for (size_t idx = 0U; idx < static_cast<size_t>(def.list_list_int().list_list_i_size()); ++idx) {
     std::vector<int64_t> vec;
-    for (int i = 0; i < def.list_list_int().list_list_i(idx).list_i_size(); ++i) {
+    for (size_t i = 0U; i < static_cast<size_t>(def.list_list_int().list_list_i(idx).list_i_size()); ++i) {
       vec.push_back(def.list_list_int().list_list_i(idx).list_i(i));
     }
     values.push_back(vec);

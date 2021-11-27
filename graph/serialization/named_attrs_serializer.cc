@@ -22,7 +22,6 @@
 
 namespace ge {
 graphStatus NamedAttrsSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
-
   ge::NamedAttrs named_attrs;
   graphStatus ret = av.GetValue(named_attrs);
   if (ret != GRAPH_SUCCESS) {

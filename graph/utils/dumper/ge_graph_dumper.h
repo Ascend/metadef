@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_89E3042EF25240149AD95BEE22C88126
-#define INC_89E3042EF25240149AD95BEE22C88126
+#ifndef GRAPH_UTILS_DUMPER_GE_GRAPH_DUMPER_H_
+#define GRAPH_UTILS_DUMPER_GE_GRAPH_DUMPER_H_
 
 #include "graph/compute_graph.h"
 
 namespace ge {
 struct GeGraphDumper {
-  virtual void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix){}
+  virtual void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix) const {}
   virtual ~GeGraphDumper() {}
 };
 
 struct GraphDumperRegistry {
   static GeGraphDumper &GetDumper();
-  static void Register(GeGraphDumper &);
+  static void Register(GeGraphDumper &dumper);
 };
 
 }  // namespace ge

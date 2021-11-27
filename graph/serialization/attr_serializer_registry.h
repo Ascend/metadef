@@ -24,6 +24,20 @@
 
 #include "graph/type_utils.h"
 #include "attr_serializer.h"
+
+#define REG_GEIR_SERIALIZER(cls, obj_type, bin_type)                                       \
+    REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(__COUNTER__, cls, obj_type, bin_type)
+
+#define REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(ctr, cls, obj_type, bin_type)              \
+    REG_GEIR_SERIALIZER_BUILDER_UNIQ(ctr, cls, obj_type, bin_type)
+
+#define REG_GEIR_SERIALIZER_BUILDER_UNIQ(ctr, cls, obj_type, bin_type)                     \
+  static ::ge::AttrSerializerRegistrar register_serialize##ctr                             \
+      __attribute__((unused)) =                                                            \
+          ::ge::AttrSerializerRegistrar([]()->std::unique_ptr<ge::GeIrAttrSerializer>{     \
+               return std::unique_ptr<ge::GeIrAttrSerializer>(new(std::nothrow)cls());     \
+          }, obj_type, bin_type)
+
 namespace ge {
 using GeIrAttrSerializerBuilder = std::function<std::unique_ptr<GeIrAttrSerializer>()>;
 class AttrSerializerRegistry {
@@ -33,6 +47,8 @@ class AttrSerializerRegistry {
   AttrSerializerRegistry &operator=(const AttrSerializerRegistry &) = delete;
   AttrSerializerRegistry &operator=(AttrSerializerRegistry &&) = delete;
 
+  ~AttrSerializerRegistry() = default;
+
   static AttrSerializerRegistry &GetInstance();
   /**
    * 注册一个GE IR的序列化、反序列化handler
@@ -40,9 +56,9 @@ class AttrSerializerRegistry {
    * @param obj_type 内存中的数据类型，可以通过`GetTypeId<T>`函数获得
    * @param proto_type protobuf数据类型枚举值
    */
-  void RegisterGeIrAttrSerializer(GeIrAttrSerializerBuilder builder,
-                                  TypeId obj_type,
-                                  proto::AttrDef::ValueCase proto_type);
+  void RegisterGeIrAttrSerializer(const GeIrAttrSerializerBuilder &builder,
+                                  const TypeId obj_type,
+                                  const proto::AttrDef::ValueCase proto_type);
 
   GeIrAttrSerializer *GetSerializer(TypeId obj_type);
   GeIrAttrSerializer *GetDeserializer(proto::AttrDef::ValueCase proto_type);
@@ -58,23 +74,11 @@ class AttrSerializerRegistry {
 
 class AttrSerializerRegistrar {
  public:
-  AttrSerializerRegistrar(GeIrAttrSerializerBuilder builder, TypeId obj_type, proto::AttrDef::ValueCase proto_type);
+  AttrSerializerRegistrar(const GeIrAttrSerializerBuilder builder,
+                          const TypeId obj_type,
+                          const proto::AttrDef::ValueCase proto_type);
   ~AttrSerializerRegistrar() = default;
 };
-
-#define REG_GEIR_SERIALIZER(cls, obj_type, bin_type)                                       \
-    REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(__COUNTER__, cls, obj_type, bin_type)
-
-#define REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(ctr, cls, obj_type, bin_type)              \
-    REG_GEIR_SERIALIZER_BUILDER_UNIQ(ctr, cls, obj_type, bin_type)
-
-#define REG_GEIR_SERIALIZER_BUILDER_UNIQ(ctr, cls, obj_type, bin_type)                     \
-  static ::ge::AttrSerializerRegistrar register_serialize##ctr                             \
-      __attribute__((unused)) =                                                            \
-          ::ge::AttrSerializerRegistrar([]()->std::unique_ptr<ge::GeIrAttrSerializer>{     \
-               return std::unique_ptr<ge::GeIrAttrSerializer>(new(std::nothrow)cls());     \
-          }, obj_type, bin_type)
-
 }  // namespace ge
 
 #endif  //METADEF_CXX_ATTR_SERIALIZER_REGISTRY_H

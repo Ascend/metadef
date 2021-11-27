@@ -23,8 +23,8 @@ namespace ge {
 class StringSerializer : public GeIrAttrSerializer {
  public:
   StringSerializer() = default;
-  graphStatus Serialize(const AnyValue &av, proto::AttrDef &def);
-  graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av);
+  graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
+  graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 };
 }  // namespace ge
 
