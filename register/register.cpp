@@ -228,8 +228,8 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
       input_increment += tensor_num > 0 ? tensor_num - 1 : 0;
       GELOGI("Dynamic input name[%s] insert index: %u, tensor num: %u, op proto index: %u", input_name.c_str(),
              port_dynamic_info[input_name].inset_index, tensor_num, input_index);
+      input_index++;
     }
-    input_index++;
   }
   const vector<string> register_output_names = op_desc->GetRegisterOutputName();
   uint32_t output_index = 0;
@@ -241,8 +241,8 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
       out_increment += tensor_num > 0 ? tensor_num - 1 : 0;
       GELOGI("Dynamic output name[%s] insert index: %u, tensor num: %u, op proto index: %u", output_name.c_str(),
              port_dynamic_info[output_name].inset_index, tensor_num, output_index);
+      output_index++;
     }
-    output_index++;
   }
   return SUCCESS;
 }
