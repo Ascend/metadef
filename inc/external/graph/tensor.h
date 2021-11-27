@@ -117,7 +117,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Tensor {
   explicit Tensor(const TensorDesc &tensor_desc);
   Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data);
   Tensor(const TensorDesc &tensor_desc, const uint8_t *data, size_t size);
-  Tensor(TensorDesc &&tensorDesc, std::vector<uint8_t> &&data);
+  Tensor(TensorDesc &&tensor_desc, std::vector<uint8_t> &&data);
 
   TensorDesc GetTensorDesc() const;
   graphStatus SetTensorDesc(const TensorDesc &tensor_desc);
@@ -142,6 +142,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Tensor {
   Tensor Clone() const;
 
  private:
+  void CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size);
   std::shared_ptr<TensorImpl> impl;
   friend class TensorAdapter;
 };
