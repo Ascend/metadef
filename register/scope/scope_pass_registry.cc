@@ -20,8 +20,6 @@
 #include <vector>
 #include "graph/debug/ge_log.h"
 
-using ge::MEMALLOC_FAILED;
-
 namespace ge {
 struct CreatePassFnPack {
   bool is_enable;
@@ -30,8 +28,8 @@ struct CreatePassFnPack {
 
 void ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::RegisterScopeFusionPass(
     const std::string &pass_name, ScopeFusionPassRegistry::CreateFn create_fn, bool is_general) {
-  std::lock_guard<std::mutex> lock(mu_);
-  auto iter = std::find(pass_names_.begin(), pass_names_.end(), pass_name);
+  const std::lock_guard<std::mutex> lock(mu_);
+  const auto iter = std::find(pass_names_.begin(), pass_names_.end(), pass_name);
   if (iter != pass_names_.end()) {
     GELOGW("[Register][Check] ScopeFusionPass %s already exists and will not be overwritten",
            pass_name.c_str());
@@ -43,13 +41,14 @@ void ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::RegisterScopeFusionPa
   create_fn_pack.create_fn = create_fn;
   create_fn_packs_[pass_name] = create_fn_pack;
   pass_names_.push_back(pass_name);
-  GELOGI("Register scope fusion pass, pass name = %s, is_enable = %d.", pass_name.c_str(), is_general);
+  GELOGI("Register scope fusion pass, pass name = %s, is_enable = %s.",
+         pass_name.c_str(), is_general ? "true" : "false");
 }
 
 ScopeFusionPassRegistry::CreateFn ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::GetCreateFn(
     const std::string &pass_name) {
-  std::lock_guard<std::mutex> lock(mu_);
-  auto it = create_fn_packs_.find(pass_name);
+  const std::lock_guard<std::mutex> lock(mu_);
+  const auto it = create_fn_packs_.find(pass_name);
   if (it == create_fn_packs_.end()) {
     GELOGW("[Get][CreateFun] ScopeFusionPass %s not registered", pass_name.c_str());
     return nullptr;
@@ -65,9 +64,9 @@ ScopeFusionPassRegistry::CreateFn ScopeFusionPassRegistry::ScopeFusionPassRegist
 }
 
 std::vector<std::string> ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::GetAllRegisteredPasses() {
-  std::lock_guard<std::mutex> lock(mu_);
+  const std::lock_guard<std::mutex> lock(mu_);
   std::vector<std::string> all_passes;
-  for (size_t i = 0; i < pass_names_.size(); ++i) {
+  for (size_t i = 0U; i < pass_names_.size(); ++i) {
     if (create_fn_packs_[pass_names_[i]].is_enable) {
       all_passes.push_back(pass_names_[i]);
     }
@@ -78,8 +77,8 @@ std::vector<std::string> ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::G
 
 bool ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::SetPassEnableFlag(
     const std::string pass_name, const bool flag) {
-  std::lock_guard<std::mutex> lock(mu_);
-  auto it = create_fn_packs_.find(pass_name);
+  const std::lock_guard<std::mutex> lock(mu_);
+  const auto it = create_fn_packs_.find(pass_name);
   if (it == create_fn_packs_.end()) {
     GELOGW("[Set][EnableFlag] ScopeFusionPass %s not registered", pass_name.c_str());
     return false;
@@ -94,7 +93,7 @@ bool ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::SetPassEnableFlag(
 
 std::unique_ptr<ScopeBasePass> ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::CreateScopeFusionPass(
     const std::string &pass_name) {
-  auto create_fn = GetCreateFn(pass_name);
+  const auto create_fn = GetCreateFn(pass_name);
   if (create_fn == nullptr) {
     GELOGD("Create scope fusion pass failed, pass name = %s.", pass_name.c_str());
     return nullptr;
@@ -117,7 +116,7 @@ ScopeFusionPassRegistry& ScopeFusionPassRegistry::GetInstance() {
 void ScopeFusionPassRegistry::RegisterScopeFusionPass(const std::string &pass_name, CreateFn create_fn,
                                                       bool is_general) {
   if (impl_ == nullptr) {
-    GELOGE(MEMALLOC_FAILED, "Failed to register %s, ScopeFusionPassRegistry is not properly initialized.",
+    GELOGE(ge::MEMALLOC_FAILED, "Failed to register %s, ScopeFusionPassRegistry is not properly initialized.",
            pass_name.c_str());
     return;
   }
@@ -127,7 +126,7 @@ void ScopeFusionPassRegistry::RegisterScopeFusionPass(const std::string &pass_na
 void ScopeFusionPassRegistry::RegisterScopeFusionPass(const char *pass_name, CreateFn create_fn,
                                                       bool is_general) {
   if (impl_ == nullptr) {
-    GELOGE(MEMALLOC_FAILED, "Failed to register %s, ScopeFusionPassRegistry is not properly initialized.",
+    GELOGE(ge::MEMALLOC_FAILED, "Failed to register %s, ScopeFusionPassRegistry is not properly initialized.",
            pass_name);
     return;
   }

@@ -26,11 +26,10 @@
 #include "register/register_error_codes.h"
 #include "register/tensor_assign.h"
 
-using GeTensorDesc = ge::GeTensorDesc;
-using GeShape = ge::GeShape;
-
 namespace domi {
 namespace {
+using GeTensorDesc = ge::GeTensorDesc;
+using GeShape = ge::GeShape;
 const char *const kOriginElementNumAttrName = "origin_element_num";
 const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_FLOAT, ge::DataType::DT_FLOAT},
@@ -81,8 +80,8 @@ const std::map<uint32_t, ge::DataType> data_type_map = {
 };
 }  // namespace
 
-ge::DataType TensorAssign::ConvertTensorflowDataType(uint32_t tf_data_type) {
-  auto search = data_type_map.find(tf_data_type);
+ge::DataType TensorAssign::ConvertTensorflowDataType(const uint32_t tf_data_type) {
+  const auto search = data_type_map.find(tf_data_type);
   if (search != data_type_map.end()) {
     return search->second;
   } else {
@@ -90,74 +89,74 @@ ge::DataType TensorAssign::ConvertTensorflowDataType(uint32_t tf_data_type) {
   }
 }
 
-bool TensorAssign::CheckBoolVal(tensorflow::DataType data_type) {
+bool TensorAssign::CheckBoolVal(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_BOOL) || (data_type == tensorflow::DT_BOOL_REF));
 }
 
-bool TensorAssign::CheckHalfVal(tensorflow::DataType data_type) {
+bool TensorAssign::CheckHalfVal(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_HALF) || (data_type == tensorflow::DT_BFLOAT16) ||
           (data_type == tensorflow::DT_HALF_REF) || (data_type == tensorflow::DT_BFLOAT16_REF));
 }
 
-bool TensorAssign::CheckFloatVal(tensorflow::DataType data_type) {
+bool TensorAssign::CheckFloatVal(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_FLOAT) || (data_type == tensorflow::DT_FLOAT_REF));
 }
 
-bool TensorAssign::CheckDoubleVal(tensorflow::DataType data_type) {
+bool TensorAssign::CheckDoubleVal(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_DOUBLE) || (data_type == tensorflow::DT_DOUBLE_REF));
 }
 
-bool TensorAssign::CheckComplex64Val(tensorflow::DataType data_type) {
+bool TensorAssign::CheckComplex64Val(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_COMPLEX64) || (data_type == tensorflow::DT_COMPLEX64_REF));
 }
 
-bool TensorAssign::CheckComplex128Val(tensorflow::DataType data_type) {
+bool TensorAssign::CheckComplex128Val(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_COMPLEX128) || (data_type == tensorflow::DT_COMPLEX128_REF));
 }
 
-bool TensorAssign::CheckStringVal(tensorflow::DataType data_type) {
+bool TensorAssign::CheckStringVal(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_STRING) || (data_type == tensorflow::DT_STRING_REF));
 }
 
-bool TensorAssign::CheckByte(tensorflow::DataType data_type) {
+bool TensorAssign::CheckByte(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_UINT8) || (data_type == tensorflow::DT_INT8) ||
           (data_type == tensorflow::DT_QINT8) || (data_type == tensorflow::DT_QUINT8) ||
           (data_type == tensorflow::DT_UINT8_REF) || (data_type == tensorflow::DT_INT8_REF) ||
           (data_type == tensorflow::DT_QINT8_REF) || (data_type == tensorflow::DT_QUINT8_REF));
 }
 
-bool TensorAssign::CheckDoubleByte(tensorflow::DataType data_type) {
+bool TensorAssign::CheckDoubleByte(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_INT16) || (data_type == tensorflow::DT_UINT16) ||
           (data_type == tensorflow::DT_QINT16) || (data_type == tensorflow::DT_QUINT16) ||
           (data_type == tensorflow::DT_INT16_REF) || (data_type == tensorflow::DT_UINT16_REF) ||
           (data_type == tensorflow::DT_QINT16_REF) || (data_type == tensorflow::DT_QUINT16_REF));
 }
 
-bool TensorAssign::CheckSignedFourByte(tensorflow::DataType data_type) {
+bool TensorAssign::CheckSignedFourByte(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_INT32) || (data_type == tensorflow::DT_QINT32) ||
           (data_type == tensorflow::DT_INT32_REF) || (data_type == tensorflow::DT_QINT32_REF));
 }
 
-bool TensorAssign::CheckUnsignedFourByte(tensorflow::DataType data_type) {
+bool TensorAssign::CheckUnsignedFourByte(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_UINT32) || (data_type == tensorflow::DT_UINT32_REF));
 }
 
-bool TensorAssign::CheckSignedEightByte(tensorflow::DataType data_type) {
+bool TensorAssign::CheckSignedEightByte(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_INT64) || (data_type == tensorflow::DT_INT64_REF));
 }
 
-bool TensorAssign::CheckUnsignedEightByte(tensorflow::DataType data_type) {
+bool TensorAssign::CheckUnsignedEightByte(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_UINT64) || (data_type == tensorflow::DT_UINT64_REF));
 }
 
-Status TensorAssign::GetDoubleByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
-                                      int count, GeTensorPtr &weight) {
+Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
+                                      const int32_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
-  bool zerosLike = (count != val_size && val_size == 1);
+  const bool zerosLike = ((count != val_size) && (val_size == 1));
   uint16_t *addr = new (std::nothrow) uint16_t[count]();
   GE_CHECK_NOTNULL(addr);
-  int minCount = (count > val_size) ? val_size : count;
   if (!zerosLike) {
+    const int32_t minCount = (count > val_size) ? val_size : count;
     for (int32_t i = 0; i < minCount; i++) {
       *(addr + i) = static_cast<uint16_t>(val_vector.Get(i));
     }
@@ -169,19 +168,19 @@ Status TensorAssign::GetDoubleByteVal(int32_t val_size, const google::protobuf::
       *(addr + i) = static_cast<uint16_t>(val_vector.Get(0));
     }
   }
-  weight->SetData(reinterpret_cast<uint8_t *>(addr), count * sizeof(uint16_t));
+  (void)weight->SetData(reinterpret_cast<uint8_t *>(addr), static_cast<size_t>(count) * sizeof(uint16_t));
   GE_DELETE_NEW_ARRAY(addr);
   return SUCCESS;
 }
 
-Status TensorAssign::GetByteVal(int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector, int count,
-                                GeTensorPtr &weight) {
+Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
+                                const int32_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
-  bool zerosLike = (count != val_size && val_size == 1);
+  const bool zerosLike = ((count != val_size) && (val_size == 1));
   uint8_t *addr = new (std::nothrow) uint8_t[count]();
   GE_CHECK_NOTNULL(addr);
-  int minCount = (count > val_size) ? val_size : count;
   if (!zerosLike) {
+    const int32_t minCount = (count > val_size) ? val_size : count;
     for (int32_t i = 0; i < minCount; i++) {
       *(addr + i) = static_cast<uint8_t>(val_vector.Get(i));
     }
@@ -193,16 +192,17 @@ Status TensorAssign::GetByteVal(int32_t val_size, const google::protobuf::Repeat
       *(addr + i) = static_cast<uint8_t>(val_vector.Get(0));
     }
   }
-  weight->SetData(addr, count * sizeof(uint8_t));
+  (void)weight->SetData(addr, static_cast<size_t>(count) * sizeof(uint8_t));
   GE_DELETE_NEW_ARRAY(addr);
   return SUCCESS;
 }
 
-Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::RepeatedPtrField<std::string> &val_vector,
-                                  int count, GeTensorPtr &weight) {
+Status TensorAssign::GetStringVal(const int32_t val_size,
+                                  const google::protobuf::RepeatedPtrField<std::string> &val_vector,
+                                  const int32_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
-  bool flag = (count != val_size && val_size == 1);
-  int min_count = (count > val_size) ? val_size : count;
+  const bool flag = (count != val_size && val_size == 1);
+  const int32_t min_count = (count > val_size) ? val_size : count;
   size_t total_size = 0;
   if (!flag) {
     for (int32_t i = 0; i < min_count; i++) {
@@ -221,11 +221,11 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
       if (i < val_size) {
         const string &str = val_vector.Get(i);
         string_head[i].len = static_cast<uint64_t>(str.size());
-        CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1, str.c_str(), str.size() + 1) == EOK,
+        CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
                          GELOGW("[GetStringVal][Copy] memcpy failed"));
-        raw_data += (str.size() + 1);
+        raw_data += (str.size() + 1U);
       } else {
-        string_head[i].len = 0;
+        string_head[i].len = 0U;
         raw_data += 1;
       }
     }
@@ -243,17 +243,18 @@ Status TensorAssign::GetStringVal(int32_t val_size, const google::protobuf::Repe
     for (int32_t i = 0; i < count; ++i) {
       string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       string_head[i].len = static_cast<uint64_t>(str.size());
-      CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1, str.c_str(), str.size() + 1) == EOK,
+      CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
                        GELOGW("[GetStringVal][Copy] memcpy failed"));
-      raw_data += (str.size() + 1);
+      raw_data += (str.size() + 1U);
     }
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   }
   return SUCCESS;
 }
 
-void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, int32_t val_size, int count, GeTensorPtr &weight) {
-  tensorflow::DataType data_type = tensor.dtype();
+void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int32_t val_size,
+                                         const int32_t count, GeTensorPtr &weight) {
+  const tensorflow::DataType data_type = tensor.dtype();
   if (CheckFloatVal(data_type)) {
     (void)GetVal(val_size, tensor.float_val(), count, weight);
   } else if (CheckComplex64Val(data_type)) {
@@ -285,8 +286,8 @@ void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, int32_t val_
   }
 }
 
-void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, const std::string &tensor_content,
-                                 GeTensorPtr &weight) {
+void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int32_t count,
+                                 const std::string &tensor_content, GeTensorPtr &weight) {
   if (weight == nullptr) {
     GE_LOGE("weight is nullptr.");
     return;
@@ -307,21 +308,22 @@ void TensorAssign::SetWeightData(tensorflow::DataType data_type, int count, cons
     weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(double));
   } else if (CheckStringVal(data_type)) {
     std::string weight_content;
-    if (tensor_content.size() > 1) {
-      weight_content = tensor_content.substr(1);  // first byte is tensor length
+    if (tensor_content.size() > 1U) {
+      weight_content = tensor_content.substr(1U);  // first byte is tensor length
     }
-    size_t total_size = weight_content.size() + sizeof(ge::StringHead) + 1;
+    size_t total_size = weight_content.size() + sizeof(ge::StringHead) + 1U;
     std::unique_ptr<char[]> addr(new (std::nothrow) char[total_size]());
     GE_CHECK_NOTNULL_EXEC(addr, return);
     ge::StringHead *string_head = reinterpret_cast<ge::StringHead *>(addr.get());
     char *raw_data = addr.get() + sizeof(ge::StringHead);
     string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
     string_head->len = static_cast<uint64_t>(weight_content.size());
-    CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1, weight_content.c_str(),
+    CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(),
                               weight_content.size() + 1) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
     weight->SetData(reinterpret_cast<const uint8_t *>(addr.get()), total_size);
   } else {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()), count * sizeof(float));
+    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content.data()),
+                    static_cast<size_t>(count) * sizeof(float));
   }
 }
 
@@ -375,10 +377,10 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
       {tensorflow::DT_RESOURCE_REF, tensor.resource_handle_val().size()},
       {tensorflow::DT_VARIANT_REF, tensor.variant_val().size()},
   };
-  tensorflow::DataType data_type = tensor.dtype();
+  const tensorflow::DataType data_type = tensor.dtype();
   int32_t datatype_val_size = 0;
 
-  auto iter = datatype_val_size_map.find(data_type);
+  const auto iter = datatype_val_size_map.find(data_type);
   if (iter != datatype_val_size_map.end()) {
     datatype_val_size = iter->second;
   } else {
@@ -389,13 +391,13 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
 
   std::vector<int64_t> shape_vec;
   // There is tensor shape, get the dimension
-  int count = 1;
+  int32_t count = 1;
   GE_IF_BOOL_EXEC(
       tensor.has_tensor_shape(), const tensorflow::TensorShapeProto &tensor_shape = tensor.tensor_shape();
-      for (int i = 0; i < tensor_shape.dim_size(); i++) {
+      for (int32_t i = 0; i < tensor_shape.dim_size(); i++) {
         const tensorflow::TensorShapeProto_Dim &shape_dim = tensor_shape.dim(i);
         shape_vec.push_back(shape_dim.size());
-        int64_t dim = shape_vec[i];
+        const int64_t dim = shape_vec[i];
         // tensorflow support weights shape [0],have no weights
         GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(dim < 0, return FAILED, "Dim size invalid");
         GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((count != 0 && dim >= INT64_MAX / count), return FAILED,
@@ -432,10 +434,10 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
   return SUCCESS;
 }
 
-Status TensorAssign::SetGeTensorDataType(int64_t data_type, GeTensorPtr &weight) {
+Status TensorAssign::SetGeTensorDataType(const int64_t data_type, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
   GeTensorDesc tmp_desc = weight->GetTensorDesc();
-  tmp_desc.SetDataType(ge::DataType(data_type));
+  tmp_desc.SetDataType(static_cast<ge::DataType>(data_type));
   weight->SetTensorDesc(tmp_desc);
   return SUCCESS;
 }

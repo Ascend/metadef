@@ -15,8 +15,8 @@
 */
 
 #include "external/register/register_pass.h"
-#include "register/custom_pass_helper.h"
 #include <climits>
+#include "register/custom_pass_helper.h"
 #include "graph/debug/ge_log.h"
 
 namespace ge {
@@ -31,6 +31,8 @@ class PassRegistrationDataImpl {
 
   explicit PassRegistrationDataImpl(const std::string &pass_name);
 
+private:
+  friend class PassRegistrationData;
   std::string pass_name_;
   int32_t priority_ = INT_MAX;
   CustomPassFunc custom_pass_fn_ = nullptr;
@@ -93,13 +95,13 @@ CustomPassHelper &CustomPassHelper::Instance() {
 }
 
 void CustomPassHelper::Insert(const PassRegistrationData &reg_data) {
-  registration_datas_.insert(reg_data);
+  (void)registration_datas_.insert(reg_data);
 }
 
 Status CustomPassHelper::Run(ge::GraphPtr &graph) {
   for (auto &item : registration_datas_) {
     GELOGD("Start to run custom pass [%s]!", item.GetPassName().c_str());
-    auto custom_pass_fn = item.GetCustomPassFn();
+    const auto custom_pass_fn = item.GetCustomPassFn();
     if (custom_pass_fn == nullptr) {
       GELOGW("[Check][Param] Get custom_pass_fn of custom pass %s failed", item.GetPassName().c_str());
       continue;
