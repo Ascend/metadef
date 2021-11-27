@@ -52,9 +52,15 @@ TEST_F(UtestRegister, test_register_dynamic_outputs_op_only_has_partial_output) 
   // get op_src
   ge::Operator op_src = OpDescUtils::CreateOperatorFromNode(node_src);
   ge::Operator op_dst = ge::Operator("ParseSingleExample");
+  std::shared_ptr<ge::OpDesc> op_desc_dst = ge::OpDescUtils::GetOpDescFromOperator(op_dst);
+  op_desc_dst->AddRegisterInputName("dense_defaults");
+  op_desc_dst->AddRegisterOutputName("sparse_indices");
+  op_desc_dst->AddRegisterOutputName("sparse_values");
+  op_desc_dst->AddRegisterOutputName("sparse_shapes");
+  op_desc_dst->AddRegisterOutputName("dense_values");
 
   // simulate parse_single_example plugin
-   std::vector<DynamicInputOutputInfo> value;
+  std::vector<DynamicInputOutputInfo> value;
   DynamicInputOutputInfo input(kInput, "dense_defaults", 14, "Tdense", 6);
   value.push_back(input);
   DynamicInputOutputInfo output(kOutput, "sparse_indices", 14, "num_sparse", 10);
