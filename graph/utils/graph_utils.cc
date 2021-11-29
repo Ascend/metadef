@@ -68,6 +68,11 @@ const char_t *const kDumpStrPartition = "partition";
 const char_t *const kDumpStrOptimizeSubgraph = "OptimizeSubGraph";
 const char_t *const kDumpStrSubgraphFunc = "sub_graph";
 const char_t *const kDumpStrAicpu = "Aicpu";
+#ifdef __GNUC__
+const std::string KDumpSeparator = "/";
+#else
+const std::string KDumpSeparator = "\\";
+#endif
 const size_t kNameMax = 255U;
 const int32_t kCopyGraphMaxRecursionDepth = 10;
 const int32_t kNameWidth = 5;
@@ -661,9 +666,23 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
 #endif
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const ge::ComputeGraphPtr &graph,
-                                                                           const std::string &file_path,
-                                                                           const int64_t dump_level) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::string &file_path,
+                              const int64_t dump_level) {
+  const auto sep = file_path.rfind(KDumpSeparator.c_str());
+  if (sep == std::string::npos) {
+    REPORT_INNER_ERROR("E19999", "Separator is not found in file_path. file_path:%s", file_path.c_str());
+    GELOGE(GRAPH_FAILED, "[CheckParam] Separator is not found in file_path.file_path:%s", file_path.c_str());
+    return GRAPH_FAILED;
+  }
+  const std::string file_name = file_path.substr(sep + 1UL, file_path.length());
+  const std::string path_dir = file_path.substr(0UL, sep + 1UL);
+  if ((file_name.length() == 0) || (path_dir.length() == 0)) {
+    REPORT_INNER_ERROR("E19999", "Path or name invalid! file_path:%s", file_path.c_str());
+    GELOGE(GRAPH_FAILED, "[Invalid]path or name invalid.file_path:%s", file_path.c_str());
+    return GRAPH_FAILED;
+  }
+
   // Create buffer
   ge::Model model("", "");
   model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
@@ -675,18 +694,21 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
   if (buffer.GetData() != nullptr) {
     const std::string str(reinterpret_cast<const char_t *>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
+      REPORT_INNER_ERROR("E19999", "parse from std::string failed.");
       GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
-      return;
+      return GRAPH_FAILED;
     }
     char_t real_path[MMPA_MAX_PATH] = {'\0'};
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strnlen(file_path.c_str(), sizeof(real_path)) >= sizeof(real_path),
-                                   REPORT_INNER_ERROR("E19999", "file path is too longer! file:%s", file_path.c_str());
-                                   return, "[Check][Param] file path is too longer! file:%s", file_path.c_str());
-    GE_IF_BOOL_EXEC(mmRealPath(file_path.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK,
-                    GELOGI("file %s does not exist, it will be created.", file_path.c_str()));
-
-    GraphUtils::WriteProtoToTextFile(ge_proto, &(real_path[0]));
+    if (mmRealPath(path_dir.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK) {
+      REPORT_INNER_ERROR("E19999", "Directory does not exist! file:%s", path_dir.c_str());
+      GELOGE(GRAPH_FAILED, "[Get][RealPath]Directory %s does not exist.", path_dir.c_str());
+      return GRAPH_FAILED;
+    }
+    const std::string path = real_path;
+    const std::string real_path_name = path + KDumpSeparator + file_name;
+    GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
   }
+  return GRAPH_SUCCESS;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const ge::ComputeGraphPtr &graph,
@@ -703,7 +725,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
                    << file_index;
   stream_file_name << "_" << suffix << ".txt";
   const std::string proto_file = stream_file_name.str();
-  DumpGEGrph(graph, proto_file, ge::OnnxUtils::NO_DUMP);
+  (void)DumpGEGraphByPath(graph, proto_file, ge::OnnxUtils::NO_DUMP);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(const char_t *file,
@@ -780,7 +802,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
   if (output == nullptr) {
     REPORT_CALL_ERROR("E19999", "create FileOutputStream failed.");
     GELOGE(GRAPH_FAILED, "[Create][FileOutputStream] Output is nullptr");
-    if (mmClose(fd) != 0) {
+    if (mmClose(fd) != 0) { 
       REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", strerror(errno));
       GELOGE(GRAPH_FAILED, "[Close][FileOutputStream] failed, reason:%s", strerror(errno));
     }
