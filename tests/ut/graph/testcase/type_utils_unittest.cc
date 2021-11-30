@@ -24,9 +24,21 @@ class UtestTypeUtils : public testing::Test {
   void TearDown() {}
 };
 
+TEST_F(UtestTypeUtils, IsDataTypeValid) {
+  ASSERT_FALSE(TypeUtils::IsDataTypeValid(DT_MAX));
+  ASSERT_TRUE(TypeUtils::IsDataTypeValid(DT_INT4));
+
+  ASSERT_FALSE(TypeUtils::IsDataTypeValid("MAX"));
+  ASSERT_TRUE(TypeUtils::IsDataTypeValid("UINT64"));
+  ASSERT_TRUE(TypeUtils::IsDataTypeValid("STRING_REF"));
+}
+
 TEST_F(UtestTypeUtils, IsFormatValid) {
   ASSERT_TRUE(TypeUtils::IsFormatValid(FORMAT_NCHW));
   ASSERT_FALSE(TypeUtils::IsFormatValid(FORMAT_END));
+
+  ASSERT_TRUE(TypeUtils::IsFormatValid("DECONV_SP_STRIDE8_TRANS"));
+  ASSERT_FALSE(TypeUtils::IsFormatValid("FORMAT_END"));
 }
 
 TEST_F(UtestTypeUtils, IsInternalFormat) {
@@ -51,6 +63,8 @@ TEST_F(UtestTypeUtils, SerialStringToFormat) {
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:"), FORMAT_RESERVED);  // invalid_argument exception
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:65535"), GetFormatFromSub(FORMAT_FRACTAL_Z, 0xffff));
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:65536"), FORMAT_RESERVED);
+  ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:9999999999999999999999999999"), FORMAT_RESERVED);
+  ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:qianduoduo"), FORMAT_RESERVED);
 }
 
 TEST_F(UtestTypeUtils, DataFormatToFormat) {
@@ -62,13 +76,32 @@ TEST_F(UtestTypeUtils, DataFormatToFormat) {
   ASSERT_EQ(TypeUtils::DataFormatToFormat("NCHW:1%"), FORMAT_RESERVED);
 }
 
-TEST_F(UtestTypeUtils, IsDataTypeValid) {
-  ASSERT_EQ(TypeUtils::IsDataTypeValid(DT_MAX), false);
+TEST_F(UtestTypeUtils, ImplyTypeToSSerialString) {
+  ASSERT_EQ(TypeUtils::ImplyTypeToSerialString(domi::ImplyType::BUILDIN), "buildin");
 }
 
-TEST_F(UtestTypeUtils, DataTypeToSerialString) {
+TEST_F(UtestTypeUtils, DataTypeAndSerialString) {
   ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_INT2), "DT_INT2");
   ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_UINT2), "DT_UINT2");
   ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_UINT1), "DT_UINT1");
+  ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_MAX), "UNDEFINED");
+
+  ASSERT_EQ(TypeUtils::SerialStringToDataType("DT_UINT1"), DT_UINT1);
+  ASSERT_EQ(TypeUtils::SerialStringToDataType("DT_INT2"), DT_INT2);
+  ASSERT_EQ(TypeUtils::SerialStringToDataType("DT_MAX"), DT_UNDEFINED);
+}
+
+TEST_F(UtestTypeUtils, DomiFormatToFormat) {
+  ASSERT_EQ(TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t::DOMI_TENSOR_NDHWC), FORMAT_NDHWC);
+}
+
+TEST_F(UtestTypeUtils, FmkTypeToSerialString) {
+  ASSERT_EQ(TypeUtils::FmkTypeToSerialString(domi::FrameworkType::CAFFE), "caffe");
+}
+
+TEST_F(UtestTypeUtils, CheckUint64MulOverflow) {
+  ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0x00ULL, 0x00UL));
+  ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0x02ULL, 0x01UL));
+  ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0xFFFFFFFFULL, 0xFFFFFFFUL));
 }
 }

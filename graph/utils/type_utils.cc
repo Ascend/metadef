@@ -212,9 +212,7 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
 const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_UNDEFINED", DT_UNDEFINED},            // Used to indicate a DataType field has not been set.
     {"DT_FLOAT", DT_FLOAT},                    // float type
-    {
-        "DT_FLOAT16", DT_FLOAT16,
-    },                                         // fp16 type
+    {"DT_FLOAT16", DT_FLOAT16},                // fp16 type
     {"DT_INT8", DT_INT8},                      // int8 type
     {"DT_INT16", DT_INT16},                    // int16 type
     {"DT_UINT16", DT_UINT16},                  // uint16 type
