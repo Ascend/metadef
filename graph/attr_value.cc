@@ -18,6 +18,11 @@
 #include "debug/ge_util.h"
 #include "graph/ge_attr_value.h"
 
+namespace ge {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrValue::AttrValue() {
+  impl = ComGraphMakeShared<AttrValueImpl>();
+}
+
 #define ATTR_VALUE_SET_GET_IMP(type)                 \
   graphStatus AttrValue::GetValue(type &val) const { \
     if (impl != nullptr) {                           \
@@ -26,18 +31,13 @@
     return GRAPH_FAILED;                             \
   }
 
-namespace ge {
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrValue::AttrValue() {
-  impl = ComGraphMakeShared<AttrValueImpl>();
-}
-
 ATTR_VALUE_SET_GET_IMP(AttrValue::STR)
 ATTR_VALUE_SET_GET_IMP(AttrValue::INT)
 ATTR_VALUE_SET_GET_IMP(AttrValue::FLOAT)
 
 graphStatus AttrValue::GetValue(AscendString &val) {
   std::string val_get;
-  const auto status = GetValue(val_get);
+  auto status = GetValue(val_get);
   if (status != GRAPH_SUCCESS) {
     return status;
   }

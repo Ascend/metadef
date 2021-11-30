@@ -27,7 +27,7 @@ namespace ge {
 class GeTensorDescImpl {
  public:
   GeTensorDescImpl() = default;
-  GeTensorDescImpl(const GeShape &shape, const Format format, const DataType dt);
+  GeTensorDescImpl(const GeShape &shape, Format format, DataType dt);
   GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg);
   ~GeTensorDescImpl() = default;
 
@@ -39,15 +39,15 @@ class GeTensorDescImpl {
 
   ProtoAttrMap &MutableAttrMap();
   ConstProtoAttrMap &GetAttrMap() const;
-  void SetShape(const GeShape &shape) const;
+  void SetShape(const GeShape &shape);
 
-  void SetDataType(const DataType dtype);
+  void SetDataType(DataType dataType);
   DataType GetDataType() const;
-  void SetFormat(const Format format);
+  void SetFormat(Format format);
   Format GetFormat() const;
   void SetOriginFormat(Format format);
   Format GetOriginFormat() const;
-  void SetOriginDataType(const DataType dtype);
+  void SetOriginDataType(DataType dataType);
   DataType GetOriginDataType() const;
   void SetName(const std::string &name);
   const std::string GetName() const;
@@ -92,7 +92,7 @@ class GeTensorDescImpl {
 
     std::string GetDeviceTypeStr();
 
-    void SetDeviceType(const DeviceType v) {
+    void SetDeviceType(DeviceType v) {
       device_type = v;
     }
 
@@ -110,7 +110,7 @@ class GeTensorDescImpl {
       return weight_size;
     }
 
-    void SetWeightSize(const int64_t v) {
+    void SetWeightSize(int64_t v) {
       weight_size = v;
     }
 
@@ -119,7 +119,7 @@ class GeTensorDescImpl {
       return data_offset;
     }
 
-    void SetDataOffset(const int64_t v) {
+    void SetDataOffset(int64_t v) {
       data_offset = v;
     }
 
@@ -128,7 +128,7 @@ class GeTensorDescImpl {
       return real_dim_cnt;
     }
 
-    void SetRealDimCnt(const uint32_t v) {
+    void SetRealDimCnt(uint32_t v) {
       real_dim_cnt = v;
     }
 
@@ -137,7 +137,7 @@ class GeTensorDescImpl {
       return input_tensor;
     }
 
-    void SetInputTensor(const bool v) {
+    void SetInputTensor(bool v) {
       input_tensor = v;
     }
 
@@ -146,7 +146,7 @@ class GeTensorDescImpl {
       return reuse_input;
     }
 
-    void SetReuseInput(const bool v) {
+    void SetReuseInput(bool v) {
       reuse_input = v;
     }
 
@@ -155,7 +155,7 @@ class GeTensorDescImpl {
       return reuse_input_index;
     }
 
-    void SetReuseInputIndex(const uint32_t v) {
+    void SetReuseInputIndex(uint32_t v) {
       reuse_input_index = v;
     }
 
@@ -164,7 +164,7 @@ class GeTensorDescImpl {
       return output_tensor;
     }
 
-    void SetOutputTensor(const bool v) {
+    void SetOutputTensor(bool v) {
       output_tensor = v;
     }
 
@@ -245,11 +245,11 @@ class TensorDataImpl {
 
   TensorDataImpl &operator=(const TensorDataImpl &other);
 
-  graphStatus SetData(const uint8_t * const data, const size_t size);
-  graphStatus SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);
-  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size);
+  graphStatus SetData(const uint8_t *data, size_t size);
+  graphStatus SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc);
+  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size);
 
-  const uint8_t *MallocAlignedPtr(const size_t size);
+  const uint8_t *MallocAlignedPtr(size_t size);
 
   size_t GetSize() const;
   const uint8_t *GetData() const;
@@ -257,9 +257,9 @@ class TensorDataImpl {
 
   void clear();
 
-  uint8_t operator[](const size_t index) const;
+  uint8_t operator[](size_t index) const;
 
-  const std::shared_ptr<AlignedPtr> &GetAlignedPtr() const { return aligned_ptr_; }
+  const std::shared_ptr<AlignedPtr> &GetAlignedPtr() { return aligned_ptr_; }
 
  private:
   friend class GeTensorImpl;
@@ -270,7 +270,7 @@ class TensorDataImpl {
   // TensorDatat shared with a GeTensorDesc by holding the impl of GeTensorDesc
   std::shared_ptr<GeTensorDescImpl> tensor_descriptor_;
   std::shared_ptr<AlignedPtr> aligned_ptr_ = nullptr;
-  size_t length_ = 0UL;
+  size_t length_ = 0;
   // functions data() & mutable_data() return address of invalid_data_ when length_ is 0
   // defined for coding convenience
   static uint32_t invalid_data_;
@@ -281,11 +281,11 @@ class GeTensorImpl {
   GeTensorImpl();
   explicit GeTensorImpl(const GeTensorDesc &tensor_desc);
   GeTensorImpl(const GeTensorDesc &tensor_desc, const std::vector<uint8_t> &data);
-  GeTensorImpl(const GeTensorDesc &tensor_desc, const uint8_t * const data, const size_t size);
+  GeTensorImpl(const GeTensorDesc &tensor_desc, const uint8_t *data, size_t size);
   GeTensorImpl(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&data);
   GeTensorImpl(const GeTensorDesc &tensor_desc, const Buffer &data);
-  GeTensorImpl(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size);
-  GeTensorImpl(const GeTensorDesc &tensor_desc, const size_t size);
+  GeTensorImpl(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> aligned_ptr, size_t size);
+  GeTensorImpl(const GeTensorDesc &tensor_desc, size_t size);
   GeTensorImpl(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg);
   GeTensorImpl(const GeTensorImpl &other);
 
@@ -297,18 +297,18 @@ class GeTensorImpl {
   void BuildAlignerPtrWithProtoData();
   graphStatus SetData(std::vector<uint8_t> &&data);
   graphStatus SetData(const std::vector<uint8_t> &data);
-  graphStatus SetData(const uint8_t * const data, size_t const size);
+  graphStatus SetData(const uint8_t *data, size_t size);
   graphStatus SetData(const Buffer &data);
   graphStatus SetData(const TensorData &data);
-  graphStatus SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);
+  graphStatus SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc);
   void ClearData();
   void Clone(GeTensorImpl &tensor) const;
 
-  std::shared_ptr<AlignedPtr> GetAlignedPtr() const;
+  std::shared_ptr<AlignedPtr> GetAlignedPtr();
   const TensorData &GetData() const { return tensor_data_; }
   TensorData &MutableData() { return tensor_data_; }
   // zero copy SetData
-  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size) {
+  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size) {
     tensor_data_.SetData(std::move(aligned_ptr), size);
   }
 

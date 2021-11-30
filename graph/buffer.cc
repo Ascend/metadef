@@ -19,12 +19,11 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/buffer_impl.h"
 #include "graph/debug/ge_util.h"
-#include "graph/utils/mem_utils.h"
 
 namespace ge {
 BufferImpl::BufferImpl() {
   data_.InitDefault();
-  if (data_.GetProtoMsg() != nullptr) {
+  if (data_.GetProtoMsg()) {
     buffer_ = data_.GetProtoMsg()->mutable_bt();
   }
 }
@@ -36,11 +35,11 @@ BufferImpl::BufferImpl(const BufferImpl &other) {
 
 BufferImpl::~BufferImpl() {}
 
-BufferImpl::BufferImpl(const std::size_t buffer_size, const std::uint8_t default_val) : BufferImpl() {  // default
-  auto const proto_msg = data_.GetProtoMsg();
+BufferImpl::BufferImpl(std::size_t buffer_size, std::uint8_t default_val) : BufferImpl() {  // default
+  auto proto_msg = data_.GetProtoMsg();
   if (proto_msg != nullptr) {
     try {
-      proto_msg->set_bt(std::string(buffer_size, static_cast<char_t>(default_val)));
+      proto_msg->set_bt(std::string(buffer_size, default_val));
       buffer_ = proto_msg->mutable_bt();
     } catch (std::bad_alloc &e) {
       REPORT_CALL_ERROR("E19999", "failed to alloc buffer memory, buffer size %zu", buffer_size);
@@ -50,8 +49,8 @@ BufferImpl::BufferImpl(const std::size_t buffer_size, const std::uint8_t default
   }
 }
 
-void BufferImpl::CopyFrom(const std::uint8_t * const data, const std::size_t buffer_size) {
-  auto const proto_msg = data_.GetProtoMsg();
+void BufferImpl::CopyFrom(const std::uint8_t *data, std::size_t buffer_size) {
+  auto proto_msg = data_.GetProtoMsg();
   if ((proto_msg != nullptr) && (data != nullptr)) {
     try {
       proto_msg->set_bt(data, buffer_size);
@@ -64,15 +63,14 @@ void BufferImpl::CopyFrom(const std::uint8_t * const data, const std::size_t buf
   }
 }
 
-BufferImpl::BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner,
-                       proto::AttrDef * const buffer)
+BufferImpl::BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, proto::AttrDef *buffer)
     : data_(proto_owner, buffer) {
   if (data_.GetProtoMsg() != nullptr) {
     buffer_ = data_.GetProtoMsg()->mutable_bt();
   }
 }
 
-BufferImpl::BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, std::string * const buffer)
+BufferImpl::BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, std::string *buffer)
     : data_(proto_owner, nullptr) {
   buffer_ = buffer;
 }
@@ -88,16 +86,16 @@ BufferImpl &BufferImpl::operator=(const BufferImpl &other) {
 
 const std::uint8_t *BufferImpl::GetData() const {
   if (buffer_ != nullptr) {
-    return reinterpret_cast<const uint8_t*>(buffer_->data());
+    return (const std::uint8_t *)buffer_->data();
   }
   return nullptr;
 }
 
 std::uint8_t *BufferImpl::GetData() {
-  if ((buffer_ != nullptr) && (!buffer_->empty())) {
+  if (buffer_ != nullptr && !buffer_->empty()) {
     // Avoid copy on write
-    (void)(*buffer_)[0UL];
-    return reinterpret_cast<uint8_t *>(const_cast<char_t *>(buffer_->data()));
+    (void)(*buffer_)[0];
+    return reinterpret_cast<uint8_t *>(const_cast<char *>(buffer_->data()));
   }
   return nullptr;
 }
@@ -106,7 +104,7 @@ std::size_t BufferImpl::GetSize() const {
   if (buffer_ != nullptr) {
     return buffer_->size();
   }
-  return 0UL;
+  return 0;
 }
 
 void BufferImpl::ClearBuffer() {
@@ -115,24 +113,24 @@ void BufferImpl::ClearBuffer() {
   }
 }
 
-uint8_t BufferImpl::operator[](const size_t index) const {
-  if ((buffer_ != nullptr) && (index < buffer_->size())) {
-    return static_cast<uint8_t>((*buffer_)[index]);
+uint8_t BufferImpl::operator[](size_t index) const {
+  if (buffer_ != nullptr && index < buffer_->size()) {
+    return (uint8_t)(*buffer_)[index];
   }
-  return 0xffU;
+  return 0xff;
 }
 
-Buffer::Buffer() : impl_(MakeShared<BufferImpl>()) {}
+Buffer::Buffer() : impl_(std::shared_ptr<BufferImpl>(new BufferImpl())) {}
 
 Buffer::Buffer(const Buffer &other)
-    : impl_(MakeShared<BufferImpl>(*(other.impl_))) {}
+    : impl_(std::shared_ptr<BufferImpl>(new BufferImpl(*(other.impl_)))) {}
 
-Buffer::Buffer(const std::size_t buffer_size, const std::uint8_t default_val)
-    : impl_(MakeShared<BufferImpl>(buffer_size, default_val)) {}
+Buffer::Buffer(std::size_t buffer_size, std::uint8_t default_val)
+    : impl_(std::shared_ptr<BufferImpl>(new BufferImpl(buffer_size, default_val))) {}
 
 Buffer::~Buffer() {}
 
-Buffer Buffer::CopyFrom(const std::uint8_t * const data, const std::size_t buffer_size) {
+Buffer Buffer::CopyFrom(const std::uint8_t *data, std::size_t buffer_size) {
   Buffer buffer;
   if (buffer.impl_ != nullptr) {
     buffer.impl_->CopyFrom(data, buffer_size);
@@ -140,11 +138,11 @@ Buffer Buffer::CopyFrom(const std::uint8_t * const data, const std::size_t buffe
   return buffer;
 }
 
-Buffer::Buffer(const ProtoMsgOwner &proto_owner, proto::AttrDef * const buffer)
-    : impl_(MakeShared<BufferImpl>(proto_owner, buffer)) {}
+Buffer::Buffer(const std::shared_ptr<google::protobuf::Message> &proto_owner, proto::AttrDef *buffer)
+    : impl_(std::shared_ptr<BufferImpl>(new BufferImpl(proto_owner, buffer))) {}
 
-Buffer::Buffer(const ProtoMsgOwner &proto_owner, std::string * const buffer)
-    : impl_(MakeShared<BufferImpl>(proto_owner, buffer)) {}
+Buffer::Buffer(const std::shared_ptr<google::protobuf::Message> &proto_owner, std::string *buffer)
+    : impl_(std::shared_ptr<BufferImpl>(new BufferImpl(proto_owner, buffer))) {}
 
 Buffer &Buffer::operator=(const Buffer &other) {
   if (&other != this) {
@@ -179,7 +177,7 @@ std::size_t Buffer::size() const { return GetSize(); }
 
 void Buffer::clear() { return ClearBuffer(); }
 
-uint8_t Buffer::operator[](const size_t index) const {
+uint8_t Buffer::operator[](size_t index) const {
   return (*impl_)[index];
 }
 
@@ -191,7 +189,7 @@ Buffer BufferUtils::CreateCopyFrom(const Buffer &other) {
   return BufferUtils::CreateCopyFrom(other.GetData(), other.GetSize());
 }
 
-Buffer BufferUtils::CreateCopyFrom(const std::uint8_t * const data, const std::size_t buffer_size) {
+Buffer BufferUtils::CreateCopyFrom(const std::uint8_t *data, std::size_t buffer_size) {
   return Buffer::CopyFrom(data, buffer_size);
 }
 

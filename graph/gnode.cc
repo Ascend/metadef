@@ -27,67 +27,6 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
 
-#define NODE_ATTR_GET_IMP(ArgType)                                                                                     \
-  graphStatus GNode::GetAttr(const AscendString &name, ArgType &attr_value) const {                                    \
-    const char_t *const ascend_name = name.GetString();                                                                \
-    if (ascend_name == nullptr) {                                                                                      \
-      REPORT_INNER_ERROR("E19999", "ascend std::string error.");                                                       \
-      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetAttr: ascend std::string error.");                                \
-      return GRAPH_PARAM_INVALID;                                                                                      \
-    }                                                                                                                  \
-                                                                                                                       \
-    if (impl_ == nullptr) {                                                                                            \
-      REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");                                            \
-      GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: node impl is nullptr.");                                           \
-      return GRAPH_FAILED;                                                                                             \
-    }                                                                                                                  \
-                                                                                                                       \
-    const std::shared_ptr<Node> node_ptr_share = impl_->node_ptr_.lock();                                              \
-    if (node_ptr_share == nullptr) {                                                                                   \
-      REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");                                  \
-      GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: the node shared ptr is not valid.");                               \
-      return GRAPH_FAILED;                                                                                             \
-    }                                                                                                                  \
-                                                                                                                       \
-    const std::string node_name = ascend_name;                                                                         \
-    const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr_share);                                           \
-    if (op.GetAttr(node_name, attr_value) != GRAPH_SUCCESS) {                                                          \
-      REPORT_CALL_ERROR("E19999", "GetAttr of node[%s] failed.", node_ptr_share->GetName().c_str());                   \
-      GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr_share->GetName().c_str());                      \
-      return GRAPH_FAILED;                                                                                             \
-    }                                                                                                                  \
-                                                                                                                       \
-    return GRAPH_SUCCESS;                                                                                              \
-  }
-
-#define NODE_ATTR_SET_IMP(ArgType)                                                                                     \
-  graphStatus GNode::SetAttr(const AscendString &name, ArgType &attr_value) const {                                    \
-    const char_t *const ascend_name = name.GetString();                                                                \
-    if (ascend_name == nullptr) {                                                                                      \
-      REPORT_INNER_ERROR("E19999", "ascend std::string error.");                                                       \
-      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: ascend std::string error.");                                \
-      return GRAPH_PARAM_INVALID;                                                                                      \
-    }                                                                                                                  \
-                                                                                                                       \
-    if (impl_ == nullptr) {                                                                                            \
-      REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");                                            \
-      GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: node impl is nullptr.");                                           \
-      return GRAPH_FAILED;                                                                                             \
-    }                                                                                                                  \
-                                                                                                                       \
-    const std::shared_ptr<Node> node_ptr_share = impl_->node_ptr_.lock();                                              \
-    if (node_ptr_share == nullptr) {                                                                                   \
-      REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");                                  \
-      GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: the node shared ptr is not valid.");                               \
-      return GRAPH_FAILED;                                                                                             \
-    }                                                                                                                  \
-                                                                                                                       \
-    const std::string node_name = ascend_name;                                                                         \
-    Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr_share);                                                 \
-    (void)op.SetAttr(node_name, attr_value);                                                                           \
-    return GRAPH_SUCCESS;                                                                                              \
-  }
-
 namespace ge {
 class NodeImpl {
  public:
@@ -651,16 +590,77 @@ graphStatus GNode::UpdateOutputDesc(const int32_t index, const TensorDesc &tenso
   return GRAPH_SUCCESS;
 }
 
+#define NODE_ATTR_GET_IMP(ArgType)                                                                                     \
+  graphStatus GNode::GetAttr(const AscendString &name, ArgType &attr_value) const {                                    \
+    const char* ascend_name = name.GetString();                                                                        \
+    if (ascend_name == nullptr) {                                                                                      \
+      REPORT_INNER_ERROR("E19999", "ascend string error.");                                                            \
+      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetAttr: ascend string error.");                                     \
+      return GRAPH_PARAM_INVALID;                                                                                      \
+    }                                                                                                                  \
+                                                                                                                       \
+    if (impl_ == nullptr) {                                                                                            \
+      REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");                                            \
+      GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: node impl is nullptr.");                                           \
+      return GRAPH_FAILED;                                                                                             \
+    }                                                                                                                  \
+                                                                                                                       \
+    std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();                                                          \
+    if (node_ptr == nullptr) {                                                                                         \
+      REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");                                  \
+      GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: the node shared ptr is not valid.");                               \
+      return GRAPH_FAILED;                                                                                             \
+    }                                                                                                                  \
+                                                                                                                       \
+    std::string node_name = ascend_name;                                                                               \
+    Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);                                                       \
+    if (op.GetAttr(node_name, attr_value) != GRAPH_SUCCESS) {                                                          \
+      REPORT_CALL_ERROR("E19999", "GetAttr of node[%s] failed.", node_ptr->GetName().c_str());                         \
+      GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr->GetName().c_str());                            \
+      return GRAPH_FAILED;                                                                                             \
+    }                                                                                                                  \
+                                                                                                                       \
+    return GRAPH_SUCCESS;                                                                                              \
+  }
+
+#define NODE_ATTR_SET_IMP(ArgType)                                                                                     \
+  graphStatus GNode::SetAttr(const AscendString &name, ArgType &attr_value) const {                                    \
+    const char* ascend_name = name.GetString();                                                                        \
+    if (ascend_name == nullptr) {                                                                                      \
+      REPORT_INNER_ERROR("E19999", "ascend string error.");                                                            \
+      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: ascend string error.");                                     \
+      return GRAPH_PARAM_INVALID;                                                                                      \
+    }                                                                                                                  \
+                                                                                                                       \
+    if (impl_ == nullptr) {                                                                                            \
+      REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");                                            \
+      GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: node impl is nullptr.");                                           \
+      return GRAPH_FAILED;                                                                                             \
+    }                                                                                                                  \
+                                                                                                                       \
+    std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();                                                          \
+    if (node_ptr == nullptr) {                                                                                         \
+      REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");                                  \
+      GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: the node shared ptr is not valid.");                               \
+      return GRAPH_FAILED;                                                                                             \
+    }                                                                                                                  \
+                                                                                                                       \
+    std::string node_name = ascend_name;                                                                               \
+    Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);                                                       \
+    (void)op.SetAttr(node_name, attr_value);                                                                           \
+    return GRAPH_SUCCESS;                                                                                              \
+  }
+
 NODE_ATTR_GET_IMP(int64_t)
 NODE_ATTR_GET_IMP(int32_t)
 NODE_ATTR_GET_IMP(uint32_t)
-NODE_ATTR_GET_IMP(float32_t)
+NODE_ATTR_GET_IMP(float)
 NODE_ATTR_GET_IMP(bool)
 NODE_ATTR_GET_IMP(Tensor)
 NODE_ATTR_GET_IMP(std::vector<int64_t>)
 NODE_ATTR_GET_IMP(std::vector<int32_t>)
 NODE_ATTR_GET_IMP(std::vector<uint32_t>)
-NODE_ATTR_GET_IMP(std::vector<float32_t>)
+NODE_ATTR_GET_IMP(std::vector<float>)
 NODE_ATTR_GET_IMP(std::vector<bool>)
 NODE_ATTR_GET_IMP(std::vector<Tensor>)
 NODE_ATTR_GET_IMP(OpBytes)
@@ -672,13 +672,13 @@ NODE_ATTR_GET_IMP(AttrValue)
 NODE_ATTR_SET_IMP(int64_t)
 NODE_ATTR_SET_IMP(int32_t)
 NODE_ATTR_SET_IMP(uint32_t)
-NODE_ATTR_SET_IMP(float32_t)
+NODE_ATTR_SET_IMP(float)
 NODE_ATTR_SET_IMP(bool)
 NODE_ATTR_SET_IMP(Tensor)
 NODE_ATTR_SET_IMP(std::vector<int64_t>)
 NODE_ATTR_SET_IMP(std::vector<int32_t>)
 NODE_ATTR_SET_IMP(std::vector<uint32_t>)
-NODE_ATTR_SET_IMP(std::vector<float32_t>)
+NODE_ATTR_SET_IMP(std::vector<float>)
 NODE_ATTR_SET_IMP(std::vector<bool>)
 NODE_ATTR_SET_IMP(std::vector<Tensor>)
 NODE_ATTR_SET_IMP(OpBytes)
