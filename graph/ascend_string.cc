@@ -16,12 +16,11 @@
 
 #include "external/graph/ascend_string.h"
 #include "debug/ge_log.h"
-#include "graph/utils/mem_utils.h"
 
 namespace ge {
 AscendString::AscendString(const char* name) {
   if (name != nullptr) {
-    name_ = MakeShared<std::string>(name);
+    name_ = std::shared_ptr<std::string>(new (std::nothrow) std::string(name)); //lint !e1524
     if (name_ == nullptr) {
       REPORT_CALL_ERROR("E19999", "new string failed.");
       GELOGE(FAILED, "[New][String]AscendString[%s] make shared failed.", name);
@@ -53,9 +52,8 @@ bool AscendString::operator<(const AscendString& d) const {
     return true;
   } else if (d.name_ == nullptr) {
     return false;
-  } else {
-    return (*name_ < *(d.name_));
   }
+  return (*name_ < *(d.name_));
 }
 
 bool AscendString::operator>(const AscendString& d) const {
@@ -65,9 +63,8 @@ bool AscendString::operator>(const AscendString& d) const {
     return false;
   } else if (d.name_ == nullptr) {
     return true;
-  } else {
-    return(*name_ > *(d.name_));
   }
+  return(*name_ > *(d.name_));
 }
 
 bool AscendString::operator==(const AscendString& d) const {
@@ -77,9 +74,8 @@ bool AscendString::operator==(const AscendString& d) const {
     return false;
   } else if (d.name_ == nullptr) {
     return false;
-  } else {
-    return (*name_ == *(d.name_));
   }
+  return (*name_ == *(d.name_));
 }
 
 bool AscendString::operator<=(const AscendString& d) const {
@@ -87,9 +83,8 @@ bool AscendString::operator<=(const AscendString& d) const {
     return true;
   } else if (d.name_ == nullptr) {
     return false;
-  } else {
-    return (*name_ <= *(d.name_));
   }
+  return (*name_ <= *(d.name_));
 }
 
 bool AscendString::operator>=(const AscendString& d) const {
@@ -97,9 +92,8 @@ bool AscendString::operator>=(const AscendString& d) const {
     return true;
   } else if (name_ == nullptr) {
     return false;
-  } else {
-    return (*name_ >= *(d.name_));
   }
+  return (*name_ >= *(d.name_));
 }
 
 bool AscendString::operator!=(const AscendString& d) const {
@@ -109,8 +103,7 @@ bool AscendString::operator!=(const AscendString& d) const {
     return true;
   } else if (d.name_ == nullptr) {
     return true;
-  } else {
-    return (*name_ != *(d.name_));
   }
+  return (*name_ != *(d.name_));
 }
 }  // namespace ge

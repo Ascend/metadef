@@ -26,39 +26,39 @@ namespace ge {
 class TensorUtils {
  public:
   static GeTensor CreateShareTensor(const GeTensor &other);
-  static GeTensor CreateShareTensor(const GeTensorDesc &tensor_desc,
+  static GeTensor CreateShareTensor(const GeTensorDesc &tensorDesc,
                                     std::shared_ptr<AlignedPtr> aligned_ptr,
-                                    const size_t size);
+                                    size_t size);
   static void ShareTensor(const GeTensor &from, GeTensor &to);
   static TensorData CreateShareTensorData(const TensorData &other);
   static void ShareTensorData(const TensorData &from, TensorData &to);
-  static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, const size_t size, TensorData &to);
-  static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, const size_t size, GeTensor &to);
+  static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, TensorData &to);
+  static void ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, GeTensor &to);
   static void CopyTensor(const GeTensor &from, GeTensor &to);
-  static ge::graphStatus GetSize(const GeTensorDesc &tensor_desc, int64_t &size);
-  static void SetSize(GeTensorDesc &tensor_desc, int64_t size);
+  static ge::graphStatus GetSize(const GeTensorDesc &tensorDesc, int64_t &size);
+  static void SetSize(GeTensorDesc &tensorDesc, int64_t size);
   static uint32_t GetWeightSize(const ConstGeTensorPtr &tensorPtr);
   static uint32_t GetWeightSize(const GeTensor &tensor);
-  static uint32_t GetWeightSize(const GeTensorDesc &tensor_desc);
+  static uint32_t GetWeightSize(const GeTensorDesc &tensorDesc);
   static uint8_t *GetWeightAddr(const ConstGeTensorPtr &tensorPtr, uint8_t *base);
   static uint8_t *GetWeightAddr(const GeTensor &tensor, uint8_t *base);
-  static void SetWeightSize(GeTensorDesc &tensor_desc, const uint32_t size);
-  static ge::graphStatus GetReuseInput(const GeTensorDesc &tensor_desc, bool &flag);
-  static void SetReuseInput(GeTensorDesc &tensor_desc, const bool flag);
-  static ge::graphStatus GetOutputTensor(const GeTensorDesc &tensor_desc, bool &flag);
-  static void SetOutputTensor(GeTensorDesc &tensor_desc, const bool flag);
-  static graphStatus GetDeviceType(const GeTensorDesc &tensor_desc, DeviceType &type);
-  static void SetDeviceType(GeTensorDesc &tensor_desc, const DeviceType type);
-  static ge::graphStatus GetInputTensor(const GeTensorDesc &tensor_desc, bool &flag);
-  static void SetInputTensor(GeTensorDesc &tensor_desc, const bool flag);
-  static ge::graphStatus GetRealDimCnt(const GeTensorDesc &tensor_desc, uint32_t &cnt);
-  static void SetRealDimCnt(GeTensorDesc &tensor_desc, const uint32_t cnt);
-  static ge::graphStatus GetReuseInputIndex(const GeTensorDesc &tensor_desc, uint32_t &idx);
-  static void SetReuseInputIndex(GeTensorDesc &tensor_desc, const uint32_t idx);
-  static ge::graphStatus GetDataOffset(const GeTensorDesc &tensor_desc, int64_t &offset);
-  static void SetDataOffset(GeTensorDesc &tensor_desc, const int64_t offset);
-  static ge::graphStatus GetRC(const GeTensorDesc &tensor_desc, uint32_t &rc);
-  static void SetRC(GeTensorDesc &tensor_desc, const uint32_t rc);
+  static void SetWeightSize(GeTensorDesc &tensorDesc, uint32_t size);
+  static ge::graphStatus GetReuseInput(const GeTensorDesc &tensorDesc, bool &flag);
+  static void SetReuseInput(GeTensorDesc &tensorDesc, bool flag);
+  static ge::graphStatus GetOutputTensor(const GeTensorDesc &tensorDesc, bool &flag);
+  static void SetOutputTensor(GeTensorDesc &tensorDesc, bool flag);
+  static graphStatus GetDeviceType(const GeTensorDesc &tensorDesc, DeviceType &type);
+  static void SetDeviceType(GeTensorDesc &tensorDesc, DeviceType type);
+  static ge::graphStatus GetInputTensor(const GeTensorDesc &tensorDesc, bool &flag);
+  static void SetInputTensor(GeTensorDesc &tensorDesc, bool flag);
+  static ge::graphStatus GetRealDimCnt(const GeTensorDesc &tensorDesc, uint32_t &cnt);
+  static void SetRealDimCnt(GeTensorDesc &tensorDesc, uint32_t cnt);
+  static ge::graphStatus GetReuseInputIndex(const GeTensorDesc &tensorDesc, uint32_t &idx);
+  static void SetReuseInputIndex(GeTensorDesc &tensorDesc, uint32_t idx);
+  static ge::graphStatus GetDataOffset(const GeTensorDesc &tensorDesc, int64_t &offset);
+  static void SetDataOffset(GeTensorDesc &tensorDesc, int64_t offset);
+  static ge::graphStatus GetRC(const GeTensorDesc &tensorDesc, uint32_t &rc);
+  static void SetRC(GeTensorDesc &tensorDesc, uint32_t rc);
   static bool IsOriginShapeInited(const GeTensorDesc &tensor_desc);
 
   ///

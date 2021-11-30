@@ -50,12 +50,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   explicit GeShape(std::vector<int64_t> s);
 
   size_t GetDimNum() const;
-  void SetDimNum(const size_t dim_num);
-  void AppendDim(const int64_t dim_size);
+  void SetDimNum(size_t dim_num);
+  void AppendDim(int64_t dim_size);
   bool IsUnknownDimNum() const;
   void SetIsUnknownDimNum();
   // If the idx is invalid, return 0
-  int64_t GetDim(const size_t idx) const;
+  int64_t GetDim(size_t idx) const;
   graphStatus SetDim(size_t idx, int64_t value);
   std::vector<int64_t> GetDims() const;
 
@@ -87,7 +87,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   friend class GeTensorSerializeUtils;
   friend class ModelSerialize;
   // Create from proto obj
-  GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg);
+  GeShape(const ProtoMsgOwner &protoOnwer, proto::ShapeDef *protoMsg);
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrHolder {
@@ -96,14 +96,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
 
  public:
   GeTensorDesc();
-  explicit GeTensorDesc(const GeShape &shape, const Format format = FORMAT_ND, const DataType dt = DT_FLOAT);
+  explicit GeTensorDesc(const GeShape &shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
   GeTensorDesc(const GeTensorDesc &desc);
   GeTensorDesc(GeTensorDesc &&desc);
 
   ~GeTensorDesc() override;
   bool operator==(const GeTensorDesc &r_ge_tensor_desc) const;
 
-  void Update(const GeShape &shape, const Format format = FORMAT_ND, const DataType dt = DT_FLOAT);
+  void Update(const GeShape &shape, Format format = FORMAT_ND, DataType dt = DT_FLOAT);
 
   const GeShape &GetShape() const;
   GeShape &MutableShape();
@@ -124,23 +124,23 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   // 该方法暂时不实现，因为一旦开放后，当前代码里判断OriginShape是否设置的逻辑就失效了
   GeShape &MutableOriginShape();
 
-  void SetOriginShape(const GeShape &origin_shape);
+  void SetOriginShape(const GeShape &originShape);
   bool IsOriginShapeInitialized() const;
 
   Format GetFormat() const;
-  void SetFormat(const Format format);
+  void SetFormat(Format format);
 
   Format GetOriginFormat() const;
-  void SetOriginFormat(const Format origin_format);
+  void SetOriginFormat(Format originFormat);
 
   void SetName(const std::string &name);
   const std::string GetName() const;
 
   DataType GetDataType() const;
-  void SetDataType(const DataType data_type);
+  void SetDataType(DataType dt);
 
   DataType GetOriginDataType() const;
-  void SetOriginDataType(const DataType origin_data_type);
+  void SetOriginDataType(DataType originDataType);
 
   std::vector<uint32_t> GetRefPortIndex() const;
   void SetRefPortByIndex(const std::vector<uint32_t> &index);
@@ -168,7 +168,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   bool GeTensorDescAttrsAreEqual(const GeTensorDesc &r_ge_tensor_desc) const;
 
   // Create from proto obj
-  GeTensorDesc(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg);
+  GeTensorDesc(const ProtoMsgOwner &protoOnwer, proto::TensorDescriptor *protoMsg);
   friend class GeTensor;
   friend class GeTensorImpl;
   friend class GeAttrValueImp;
@@ -191,8 +191,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   graphStatus SetData(const std::vector<uint8_t> &data);
   graphStatus SetData(const Buffer &data);
   graphStatus SetData(const TensorData &data);
-  graphStatus SetData(const uint8_t * const data, const size_t size);
-  graphStatus SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);
+  graphStatus SetData(const uint8_t *data, size_t size);
+  graphStatus SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc);  /*lint !e148*/
 
   const uint8_t *MallocAlignedPtr(size_t size);
 
@@ -200,7 +200,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   std::uint8_t *data();
   std::size_t size() const;
   void clear();
-  uint8_t operator[](const size_t index) const;
+  uint8_t operator[](size_t index) const;
 
   std::size_t GetSize() const;
   const std::uint8_t *GetData() const;
@@ -216,7 +216,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   TensorData(const TensorData &other);
   // zero copy SetData
   // replace using TensorUtils::ShareAlignedPtr(std::shared_ptr<AlignedPtr> ptr, size_t size, TensorData &to)
-  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size);
+  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size);
  private:
   friend class GeTensor;
   friend class GeTensorImpl;
@@ -231,17 +231,17 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
  public:
   GeTensor();
   GeTensor(GeTensor &&other) noexcept;
-  explicit GeTensor(const GeTensorDesc &tensor_desc);
-  explicit GeTensor(const GeTensorDesc &tensor_desc, const std::vector<uint8_t> &data);
-  explicit GeTensor(const GeTensorDesc &tensor_desc, const Buffer &data);
-  explicit GeTensor(const GeTensorDesc &tensor_desc, const uint8_t * const data, const size_t size);
-  explicit GeTensor(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&data);
-  explicit GeTensor(const GeTensorDesc &tensor_desc, const size_t size);
+  explicit GeTensor(const GeTensorDesc &tensorDesc);
+  explicit GeTensor(const GeTensorDesc &tensorDesc, const std::vector<uint8_t> &data);
+  explicit GeTensor(const GeTensorDesc &tensorDesc, const Buffer &data);
+  explicit GeTensor(const GeTensorDesc &tensorDesc, const uint8_t *data, size_t size);
+  explicit GeTensor(GeTensorDesc &&tensorDesc, std::vector<uint8_t> &&data);
+  explicit GeTensor(const GeTensorDesc &tensorDesc, size_t size);
   ~GeTensor();
 
   const GeTensorDesc &GetTensorDesc() const;
   GeTensorDesc &MutableTensorDesc();
-  void SetTensorDesc(const GeTensorDesc &tensor_desc);
+  void SetTensorDesc(const GeTensorDesc &tensorDesc);
 
   std::shared_ptr<AlignedPtr> GetAlignedPtr();
 
@@ -251,16 +251,16 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   graphStatus SetData(std::vector<uint8_t> &&data);
   graphStatus SetData(const std::vector<uint8_t> &data);
   graphStatus SetData(const Buffer &data);
-  graphStatus SetData(const uint8_t * const data, const size_t size);
+  graphStatus SetData(const uint8_t *data, size_t size);
   graphStatus SetData(const TensorData &data);
-  graphStatus SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);
+  graphStatus SetData(uint8_t *data, size_t size, const AlignedPtr::Deleter &delete_fuc);
 
   void ClearData();
   GeTensor Clone() const;
 
   // zero copy SetData
   // replace using TensorUtils::ShareAlignedPtr
-  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size);
+  void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, size_t size);
   // zero copy construction, share aligned_ptr, do not share tensor_desc
   // replace using TensorUtils::CreateShareTensor
   GeTensor(const GeTensorDesc &td, std::shared_ptr<AlignedPtr> aligned_ptr, size_t size);
