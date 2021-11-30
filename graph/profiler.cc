@@ -57,7 +57,7 @@ void Profiler::RegisterString(int64_t index, const std::string &str) {
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  auto ret = strncpy_s(indexes_to_str_[index], kMaxStrLen, str.c_str(), kMaxStrLen - 1);
+  auto ret = strncpy_s(GetStrings()[index], kMaxStrLen, str.c_str(), kMaxStrLen - 1);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
   }
@@ -92,10 +92,10 @@ void Profiler::Dump(std::ostream &out_stream) const {
   out_stream << "Profiling dump end" << std::endl;
 }
 void Profiler::DumpByIndex(int64_t index, std::ostream &out_stream) const {
-  if (index < 0 || index >= kMaxStrIndex || strnlen(indexes_to_str_[index], kMaxStrLen) == 0) {
+  if (index < 0 || index >= kMaxStrIndex || strnlen(GetStrings()[index], kMaxStrLen) == 0) {
     out_stream << "UNKNOWN(" << index << ")";
   } else {
-    out_stream << '[' << indexes_to_str_[index] << "]";
+    out_stream << '[' << GetStrings()[index] << "]";
   }
 }
 Profiler::Profiler() : record_size_(0), records_(), indexes_to_str_() {}
@@ -113,7 +113,10 @@ const ProfilingRecord *Profiler::GetRecords() const {
   return &(records_[0]);
 }
 Profiler::ConstStringsPointer Profiler::GetStrings() const {
-  return &(indexes_to_str_[0]);
+  return indexes_to_str_;
+}
+Profiler::StringsPointer Profiler::GetStrings() {
+  return indexes_to_str_;
 }
 Profiler::~Profiler() = default;
 }

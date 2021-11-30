@@ -52,8 +52,11 @@ class Profiler {
 
   size_t GetRecordNum() const noexcept;
   const ProfilingRecord *GetRecords() const;
+
   using ConstStringsPointer = char const(*)[kMaxStrLen];
+  using StringsPointer = char (*)[kMaxStrLen];
   ConstStringsPointer GetStrings() const;
+  StringsPointer GetStrings() ;
 
   ~Profiler();
 
@@ -64,7 +67,7 @@ class Profiler {
  private:
   std::atomic<size_t> record_size_;
   std::array<ProfilingRecord, kMaxRecordNum> records_;
-  std::array<char[kMaxStrLen], kMaxStrIndex> indexes_to_str_;
+  char indexes_to_str_[kMaxStrIndex][kMaxStrLen];
 };
 }
 }

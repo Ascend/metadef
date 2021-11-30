@@ -264,6 +264,16 @@ TEST_F(ProfilerUt, RegisterTooLongString) {
   EXPECT_EQ(strcmp(s[2], "InferShape"), 0);
 }
 
+TEST_F(ProfilerUt, ModifyStrings) {
+  auto p = Profiler::Create();
+  p->RegisterString(0, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz");
+  p->RegisterString(2, "InferShape");
+  auto s = p->GetStrings();
+  strcpy(s[2], "Tiling");
+  EXPECT_EQ(strcmp(s[0], "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijk"), 0);
+  EXPECT_EQ(strcmp(p->GetStrings()[2], "Tiling"), 0);
+}
+
 /* takes very long time
 TEST_F(ProfilerUt, BeyondMaxRecordsNum) {
   auto p = Profiler::Create();
