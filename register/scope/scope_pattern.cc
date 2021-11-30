@@ -23,21 +23,6 @@
 #include "graph/types.h"
 
 namespace ge {
-namespace {
-#define CHECK_NODE_ATTR_FEATURE_DATA(DTYPE, TYPE, FUNC_NAME, INIT_VALUE)                                  \
-  case DTYPE: {                                                                                           \
-    TYPE value = INIT_VALUE;                                                                              \
-    if (!ge::AttrUtils::FUNC_NAME(op_desc, attr_name_, value)) {                                          \
-      GELOGE(ge::PARAM_INVALID, "op:%s %s attr is null", op_desc->GetName().c_str(), attr_name_.c_str()); \
-      return false;                                                                                       \
-    }                                                                                                     \
-    if (attr_value_.impl_->FUNC_NAME##Value() == value) {                                                 \
-      GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());                                   \
-      return true;                                                                                        \
-    }                                                                                                     \
-    break;                                                                                                \
-  }
-}  // namespace
 ScopeAttrValue::ScopeAttrValue() {
   impl_ = std::unique_ptr<ScopeAttrValueImpl>(new (std::nothrow) ScopeAttrValueImpl);
 }
@@ -139,11 +124,13 @@ bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *scope) {
   return false;
 }
 
-NodeOpTypeFeature::NodeOpTypeFeature(std::string nodeType, int32_t num, int32_t step) {
+NodeOpTypeFeature::NodeOpTypeFeature(std::string nodeType, int32_t num, int32_t step)
+    : ScopeBaseFeature() {
   impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(nodeType, num, step));
 }
 
-NodeOpTypeFeature::NodeOpTypeFeature(const char_t *node_type, int32_t num, int32_t step) {
+NodeOpTypeFeature::NodeOpTypeFeature(const char_t *node_type, int32_t num, int32_t step)
+    : ScopeBaseFeature() {
   std::string op_type;
   if (node_type != nullptr) {
     op_type = node_type;
@@ -151,7 +138,7 @@ NodeOpTypeFeature::NodeOpTypeFeature(const char_t *node_type, int32_t num, int32
   impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(op_type, num, step));
 }
 
-NodeOpTypeFeature::NodeOpTypeFeature(NodeOpTypeFeature const &feature) {
+NodeOpTypeFeature::NodeOpTypeFeature(NodeOpTypeFeature const &feature) : ScopeBaseFeature() {
   impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(feature.impl_->node_type_,
                                                                                           feature.impl_->num_,
                                                                                           feature.impl_->step_));
@@ -190,32 +177,46 @@ bool NodeAttrFeature::NodeAttrFeatureImpl::Match(const Scope *scope) {
     if (node_type_ != node_op->GetOpType()) {
       continue;
     }
-    auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(*node_op);
+    const auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(*node_op);
     if (op_desc == nullptr) {
       GELOGE(ge::PARAM_INVALID, "Op desc is nullptr.");
       return false;
     }
 
+    Status result = SUCCESS;
     switch (datatype_) {
-      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_FLOAT, float, GetFloat, 0.0)
-      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_INT32, int64_t, GetInt, 0)
-      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_STRING, std::string, GetStr, "")
-      CHECK_NODE_ATTR_FEATURE_DATA(ge::DT_BOOL, bool, GetBool, false)
+      case ge::DT_FLOAT:
+        result = CheckNodeAttrFeatureData(0.0F, op_desc, scope);
+        break;
+      case ge::DT_INT32:
+        result = CheckNodeAttrFeatureData(static_cast<int64_t>(0), op_desc, scope);
+        break;
+      case ge::DT_STRING:
+        result = CheckNodeAttrFeatureData("", op_desc, scope);
+        break;
+      case ge::DT_BOOL:
+        result = CheckNodeAttrFeatureData(false, op_desc, scope);
+        break;
       default:
         break;
+    }
+    if (result != FAILED) {
+      return (result == PARAM_INVALID) ? false : true;
     }
   }
   return false;
 }
 
 NodeAttrFeature::NodeAttrFeature(std::string nodeType, std::string attr_name,
-                                 ge::DataType datatype, ScopeAttrValue &attr_value) {
+                                 ge::DataType datatype, ScopeAttrValue &attr_value)
+    : ScopeBaseFeature() {
   impl_ = std::unique_ptr<NodeAttrFeatureImpl>(new (std::nothrow) NodeAttrFeatureImpl(nodeType, attr_name,
                                                                                       datatype, attr_value));
 }
 
 NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_name,
-                                 ge::DataType data_type, ScopeAttrValue &attr_value) {
+                                 ge::DataType data_type, ScopeAttrValue &attr_value)
+    : ScopeBaseFeature() {
   std::string str_node_type;
   if (node_type != nullptr) {
     str_node_type = node_type;
@@ -228,7 +229,7 @@ NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_nam
                                                                                       data_type, attr_value));
 }
 
-NodeAttrFeature::NodeAttrFeature(NodeAttrFeature const &feature) {
+NodeAttrFeature::NodeAttrFeature(NodeAttrFeature const &feature) : ScopeBaseFeature() {
   impl_ = std::unique_ptr<NodeAttrFeatureImpl>(new (std::nothrow) NodeAttrFeatureImpl(feature.impl_->node_type_,
                                                                                       feature.impl_->attr_name_,
                                                                                       feature.impl_->datatype_,
@@ -261,14 +262,14 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
   int32_t count = 0;
   bool sub_scope_name_matched = false;
   for (auto &scp : scopes) {
-    if (sub_type_.length() > 0 && sub_type_ == scp->SubType()) {
+    if ((sub_type_.length() > 0UL) && (sub_type_ == scp->SubType())) {
       ++count;
     }
     if (sub_scope_name_matched) {
       continue;
     }
     auto &sub_impl = scp->impl_;
-    sub_scope_name_matched = (sub_scope_mask_.length() > 0) &&
+    sub_scope_name_matched = (sub_scope_mask_.length() > 0UL) &&
                              (sub_scope_mask_.length() < scp->Name().length()) &&
                              (sub_impl->LastName().find(sub_scope_mask_) != std::string::npos);
   }
@@ -276,7 +277,7 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
   if ((sub_type_.length() > 0) && (step_ == 0) && (count != num_)) {
     return false;
   }
-  if ((sub_scope_mask_.length() > 0) && !sub_scope_name_matched) {
+  if ((sub_scope_mask_.length() > 0UL) && (!sub_scope_name_matched)) {
     return false;
   }
 
@@ -285,11 +286,11 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
 
 bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *scope) {
   auto &impl = scope->impl_;
-  std::string scope_name = scope->Name();
+  const std::string scope_name = scope->Name();
   if (suffix_.length() > scope_name.length()) {
     return false;
   }
-  if (suffix_.length() > 0) {
+  if (suffix_.length() > 0UL) {
     const std::string &last_name = impl->LastName();
     if (suffix_ != last_name) {
       return false;
@@ -306,13 +307,15 @@ bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *scope) {
 }
 
 ScopeFeature::ScopeFeature(std::string sub_type, int32_t num, std::string suffix,
-                           std::string sub_scope_mask, int step) {
+                           std::string sub_scope_mask, int step)
+    : ScopeBaseFeature() {
   impl_ = std::unique_ptr<ScopeFeatureImpl>(new (std::nothrow) ScopeFeatureImpl(sub_type, num, suffix,
                                                                                 sub_scope_mask, step));
 }
 
 ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char *suffix,
-                           const char_t *sub_scope_mask, int step) {
+                           const char_t *sub_scope_mask, int step)
+    : ScopeBaseFeature() {
   std::string str_sub_type;
   if (sub_type != nullptr) {
     str_sub_type = sub_type;
@@ -329,7 +332,7 @@ ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char *suff
                                                                                 str_sub_scope_mask, step));
 }
 
-ScopeFeature::ScopeFeature(ScopeFeature const &feature) {
+ScopeFeature::ScopeFeature(ScopeFeature const &feature) : ScopeBaseFeature() {
   impl_ = std::unique_ptr<ScopeFeatureImpl>(new (std::nothrow) ScopeFeatureImpl(feature.impl_->sub_type_,
                                                                                 feature.impl_->num_,
                                                                                 feature.impl_->suffix_,
