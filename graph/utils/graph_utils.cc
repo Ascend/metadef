@@ -671,14 +671,20 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
                               const int64_t dump_level) {
   const auto sep = file_path.rfind(KDumpSeparator.c_str());
   if (sep == std::string::npos) {
-    REPORT_INNER_ERROR("E19999", "Separator is not found in file_path. file_path:%s", file_path.c_str());
+    REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
+                       std::vector<std::string>({
+                       file_path.c_str(),
+                       "Separator is not found in file_path."}));
     GELOGE(GRAPH_FAILED, "[CheckParam] Separator is not found in file_path.file_path:%s", file_path.c_str());
     return GRAPH_FAILED;
   }
   const std::string file_name = file_path.substr(sep + 1UL, file_path.length());
   const std::string path_dir = file_path.substr(0UL, sep + 1UL);
   if ((file_name.length() == 0) || (path_dir.length() == 0)) {
-    REPORT_INNER_ERROR("E19999", "Path or name invalid! file_path:%s", file_path.c_str());
+    REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
+                       std::vector<std::string>({
+                       file_path.c_str(),
+                       "Path or filename is not set."}));
     GELOGE(GRAPH_FAILED, "[Invalid]path or name invalid.file_path:%s", file_path.c_str());
     return GRAPH_FAILED;
   }
@@ -694,13 +700,15 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
   if (buffer.GetData() != nullptr) {
     const std::string str(reinterpret_cast<const char_t *>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
-      REPORT_INNER_ERROR("E19999", "parse from std::string failed.");
       GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
       return GRAPH_FAILED;
     }
     char_t real_path[MMPA_MAX_PATH] = {'\0'};
     if (mmRealPath(path_dir.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK) {
-      REPORT_INNER_ERROR("E19999", "Directory does not exist! file:%s", path_dir.c_str());
+      REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
+                         std::vector<std::string>({
+                         path_dir.c_str(),
+                         "Directory does not exist."}));
       GELOGE(GRAPH_FAILED, "[Get][RealPath]Directory %s does not exist.", path_dir.c_str());
       return GRAPH_FAILED;
     }

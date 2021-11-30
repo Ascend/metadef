@@ -1167,6 +1167,17 @@
       }
     },
     {
+      "errClass": "Invalid Path Name",
+      "errTitle": "Input Path Name Error",
+      "ErrCode": "E19026",
+      "ErrMessage": "Input path name [%s] is invalid. Reason: %s",
+      "Arglist": "pathname,reason",
+      "suggestion": {
+        "Possible Cause": "The input path does not exist or is invalid.",
+        "Solution": "Try again with a valid path."
+      }
+    },
+    {
       "errClass": "Default Error",
       "errTitle": "System Terminated",
       "ErrCode": "E19999",
