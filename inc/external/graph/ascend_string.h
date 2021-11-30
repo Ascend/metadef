@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include "graph/types.h"
 
 namespace ge {
 class AscendString {
@@ -28,9 +29,9 @@ class AscendString {
 
   ~AscendString() = default;
 
-  AscendString(const char* name);
+  AscendString(const char_t* const name);
 
-  const char* GetString() const;
+  const char_t* GetString() const;
 
   size_t Hash() const;
 

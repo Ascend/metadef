@@ -25,14 +25,8 @@
 #include "./ge_error_codes.h"
 #include "ascend_string.h"
 
-using std::make_shared;
-using std::map;
-using std::pair;
-using std::string;
 using std::to_string;
 using std::unique_ptr;
-using std::vector;
-
 namespace ge {
 class AttrValueImpl;
 /*lint -e148*/
@@ -49,7 +43,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrValue {
   template <typename T, typename DT>
   graphStatus GetValue(DT &val) const {
     T valGet;
-    auto status = GetValue(valGet);
+    const auto status = GetValue(valGet);
     if (status != GRAPH_SUCCESS) {
       return status;
     }
