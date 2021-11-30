@@ -257,7 +257,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBa
   NodeOpTypeFeature(const char *node_type, int num, int step = 0);
   NodeOpTypeFeature(NodeOpTypeFeature const &feature);
   NodeOpTypeFeature &operator=(NodeOpTypeFeature const &feature);
-  ~NodeOpTypeFeature();
+  ~NodeOpTypeFeature() override;
   bool Match(const Scope *scope) override;
 
  private:
@@ -268,13 +268,11 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBa
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeAttrFeature : ScopeBaseFeature {
  public:
   ATTRIBUTED_DEPRECATED(NodeAttrFeature(const char *, const char *, ge::DataType, ScopeAttrValue &))
-  NodeAttrFeature(std::string nodeType, std::string attr_name,
-                  ge::DataType datatype, ScopeAttrValue &attr_value);
-  NodeAttrFeature(const char *node_type, const char *attr_name,
-                  ge::DataType datatype, ScopeAttrValue &attr_value);
+  NodeAttrFeature(std::string nodeType, std::string attr_name, ge::DataType datatype, ScopeAttrValue &attr_value);
+  NodeAttrFeature(const char *node_type, const char *attr_name, ge::DataType datatype, ScopeAttrValue &attr_value);
   NodeAttrFeature(NodeAttrFeature const &feature);
   NodeAttrFeature &operator=(NodeAttrFeature const &feature);
-  ~NodeAttrFeature();
+  ~NodeAttrFeature() override;
   bool Match(const Scope *scope) override;
 
  private:
