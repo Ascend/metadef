@@ -194,9 +194,9 @@ class GraphUtils {
   static void DumpGEGrph(const ge::ComputeGraphPtr &graph,
                                   const std::string &path,
                                   const std::string &suffix);
-  static void DumpGEGrph(const ge::ComputeGraphPtr &graph,
-                         const std::string &file_path,
-                         const int64_t dump_level);
+  static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
+                                       const std::string &file_path,
+                                       const int64_t dump_level);
   static bool LoadGEGraph(const char_t *file, ge::ComputeGraph &compute_graph);
 
   static bool LoadGEGraph(const char_t *file, ge::ComputeGraphPtr &compute_graph);
