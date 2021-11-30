@@ -513,7 +513,7 @@ TEST_F(UtestGraphUtils, DumpGraphByPath) {
   // test dump_level 0
   auto ret = GraphUtils::DumpGEGraphByPath(graph, "./test/test_graph_0.txt", 0);
   ASSERT_EQ((ret != 0), true);
-  auto ret = GraphUtils::DumpGEGraphByPath(graph, "/", 0);
+  ret = GraphUtils::DumpGEGraphByPath(graph, "/", 0);
   ASSERT_EQ((ret != 0), true);
   ret = GraphUtils::DumpGEGraphByPath(graph, "test_graph_0.txt", 0);
   ASSERT_EQ((ret != 0), true);
