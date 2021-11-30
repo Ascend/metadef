@@ -207,6 +207,67 @@ bool NodeAttrFeature::NodeAttrFeatureImpl::Match(const Scope *scope) {
   return false;
 }
 
+Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const bool init_value,
+                                                                      const ge::OpDescPtr &op_desc,
+                                                                      const Scope *const scope) {
+  bool value = init_value;
+  if (!ge::AttrUtils::GetBool(op_desc, attr_name_, value)) {
+    GELOGE(ge::PARAM_INVALID, "op:%s %s attr is null", op_desc->GetName().c_str(), attr_name_.c_str());
+    return PARAM_INVALID;
+  }
+  if (attr_value_.impl_->GetBoolValue() == value) {
+    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    return SUCCESS;
+  }
+  return FAILED;
+}
+
+Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const std::string init_value,
+                                                                      const ge::OpDescPtr &op_desc,
+                                                                      const Scope *const scope) {
+  std::string value = init_value;
+  if (!ge::AttrUtils::GetStr(op_desc, attr_name_, value)) {
+    GELOGE(ge::PARAM_INVALID, "op:%s %s attr is null", op_desc->GetName().c_str(), attr_name_.c_str());
+    return PARAM_INVALID;
+  }
+  if (attr_value_.impl_->GetStrValue() == value) {
+    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    return SUCCESS;
+  }
+  return FAILED;
+}
+
+Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const int64_t init_value,
+                                                                      const ge::OpDescPtr &op_desc,
+                                                                      const Scope *const scope) {
+  int64_t value = init_value;
+  if (!ge::AttrUtils::GetInt(op_desc, attr_name_, value)) {
+    GELOGE(ge::PARAM_INVALID, "op:%s %s attr is null", op_desc->GetName().c_str(), attr_name_.c_str());
+    return PARAM_INVALID;
+  }
+  if (attr_value_.impl_->GetIntValue() == value) {
+    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    return SUCCESS;
+  }
+  return FAILED;
+}
+
+Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const float32_t init_value,
+                                                                      const ge::OpDescPtr &op_desc,
+                                                                      const Scope *const scope) {
+  float32_t value = init_value;
+  if (!ge::AttrUtils::GetFloat(op_desc, attr_name_, value)) {
+    GELOGE(ge::PARAM_INVALID, "op:%s %s attr is null", op_desc->GetName().c_str(), attr_name_.c_str());
+    return PARAM_INVALID;
+  }
+
+  if (FloatIsEqual(attr_value_.impl_->GetFloatValue(), value)) {
+    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    return SUCCESS;
+  }
+  return FAILED;
+}
+
 NodeAttrFeature::NodeAttrFeature(std::string nodeType, std::string attr_name,
                                  ge::DataType datatype, ScopeAttrValue &attr_value)
     : ScopeBaseFeature() {

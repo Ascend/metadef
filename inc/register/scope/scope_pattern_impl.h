@@ -17,7 +17,12 @@
 #ifndef REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H_
 #define REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H_
 
+#include <stdexcept>
+#include <limits>
+#include <cmath>
 #include "external/register/scope/scope_fusion_pass_register.h"
+#include "external/graph/types.h"
+#include "graph/compute_graph.h"
 
 namespace ge {
 class ScopeAttrValue::ScopeAttrValueImpl {
@@ -60,6 +65,19 @@ class NodeAttrFeature::NodeAttrFeatureImpl : ScopeBaseFeature {
       : node_type_(nodeType), attr_name_(attr_name), datatype_(datatype), attr_value_(attr_value) {}
   ~NodeAttrFeatureImpl() {}
   bool Match(const Scope *scope) override;
+  Status CheckNodeAttrFeatureData(const bool init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
+  Status CheckNodeAttrFeatureData(const std::string init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
+  Status CheckNodeAttrFeatureData(const int64_t init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
+  Status CheckNodeAttrFeatureData(const float32_t init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
+  template<class T>
+  typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type FloatIsEqual(const T x, const T y) const
+  {
+    // It is used for floating point comparisons.
+    // It mainly uses relative precision to judge whether floating-point numbers are equal.
+    // the 2 is ULPs
+    return (std::fabs(x - y) <= (std::numeric_limits<T>::epsilon() * std::fabs(x + y) * 2.0)) ||
+           (std::fabs(x - y) < std::numeric_limits<T>::min());
+  }
 
  public:
   std::string node_type_;                        // Node type
