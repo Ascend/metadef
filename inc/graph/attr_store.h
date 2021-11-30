@@ -79,13 +79,13 @@ class AttrStore {
   std::set<std::string> GetAllAttrNames() const;
   std::map<std::string, AnyValue> GetAllAttrs() const;
 
-  AnyValue *MutableAnyValue(const std::string &name) noexcept;
+  AnyValue *MutableAnyValue(const std::string &name) const noexcept;
   AnyValue *GetOrCreateAnyValue(const std::string &name);
   const AnyValue *GetAnyValue(const std::string &name) const noexcept;
 
  private:
-  AnyValue *MutableAnyValue(AttrId attr_id) noexcept;
-  AnyValue *GetOrCreateAnyValue(AttrId attr_id);
+  AnyValue *MutableAnyValue(AttrId attr_id) const noexcept;
+  AnyValue *GetOrCreateAnyValue(AttrId attr_id) const;
   const AnyValue *GetAnyValue(AttrId attr_id) const noexcept;
 
  private:
@@ -97,8 +97,8 @@ class AttrStore {
     bool Delete(AttrSubId index);
     void Swap(PreDefinedAttrStore &other);
 
-    AnyValue *GetOrCreateAnyValue(AttrSubId index);
-    AnyValue *MutableAnyValue(AttrSubId index) noexcept;
+    AnyValue *GetOrCreateAnyValue(AttrSubId index) const;
+    AnyValue *MutableAnyValue(AttrSubId index) const noexcept;
     const AnyValue *GetAnyValue(AttrSubId index) const noexcept;
 
     void Resize(size_t s);
@@ -114,7 +114,7 @@ class AttrStore {
     void Swap(CustomDefinedAttrStore &other);
 
     AnyValue *GetOrCreateAnyValue(const std::string &name);
-    AnyValue *MutableAnyValue(const std::string &name) noexcept;
+    AnyValue *MutableAnyValue(const std::string &name) const noexcept;
     const AnyValue *GetAnyValue(const std::string &name) const noexcept;
 
     void GetAllNames(std::set<std::string> &names) const;

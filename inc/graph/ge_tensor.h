@@ -50,12 +50,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   explicit GeShape(std::vector<int64_t> s);
 
   size_t GetDimNum() const;
-  void SetDimNum(size_t dim_num);
-  void AppendDim(int64_t dim_size);
+  void SetDimNum(const size_t dim_num);
+  void AppendDim(const int64_t dim_size);
   bool IsUnknownDimNum() const;
   void SetIsUnknownDimNum();
   // If the idx is invalid, return 0
-  int64_t GetDim(size_t idx) const;
+  int64_t GetDim(const size_t idx) const;
   graphStatus SetDim(size_t idx, int64_t value);
   std::vector<int64_t> GetDims() const;
 
@@ -87,7 +87,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   friend class GeTensorSerializeUtils;
   friend class ModelSerialize;
   // Create from proto obj
-  GeShape(const ProtoMsgOwner &protoOnwer, proto::ShapeDef *protoMsg);
+  GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg);
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrHolder {
