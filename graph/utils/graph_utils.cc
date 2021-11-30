@@ -802,7 +802,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
   if (output == nullptr) {
     REPORT_CALL_ERROR("E19999", "create FileOutputStream failed.");
     GELOGE(GRAPH_FAILED, "[Create][FileOutputStream] Output is nullptr");
-    if (mmClose(fd) != 0) { 
+    if (mmClose(fd) != 0) {
       REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", strerror(errno));
       GELOGE(GRAPH_FAILED, "[Close][FileOutputStream] failed, reason:%s", strerror(errno));
     }

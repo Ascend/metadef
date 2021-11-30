@@ -467,9 +467,9 @@ TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
   auto graph_builder0 = ut::GraphBuilder("test_graph0");
   const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
   const auto &graph0 = graph_builder0.GetGraph();
-  (void)GraphUtils::DumpGEGrph(graph0, "./", "1");
-  (void)GraphUtils::DumpGEGrph(graph0, "./", "1");
-  (void)GraphUtils::DumpGEGrph(graph0, "./", "1");
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
 }
 
 TEST_F(UtestGraphUtils, CopyRootComputeGraph) {
@@ -492,7 +492,7 @@ TEST_F(UtestGraphUtils, CopyRootComputeGraph) {
   ASSERT_EQ(ret, GRAPH_FAILED);
 }
 
-TEST_F(UtestGraphUtils, DumpGraphByName) {
+TEST_F(UtestGraphUtils, DumpGraphByPath) {
   auto ge_tensor = std::make_shared<GeTensor>();
   uint8_t data_buf[4096] = {0};
   data_buf[0] = 7;
@@ -513,6 +513,8 @@ TEST_F(UtestGraphUtils, DumpGraphByName) {
   // test dump_level 0
   auto ret = GraphUtils::DumpGEGraphByPath(graph, "./test/test_graph_0.txt", 0);
   ASSERT_EQ((ret != 0), true);
+  ret = GraphUtils::DumpGEGraphByPath(graph, "test_graph_0.txt", 0);
+  ASSERT_EQ((ret != 0), true);
   ret = GraphUtils::DumpGEGraphByPath(graph, "./test_graph_0.txt", 0);
   ASSERT_EQ(ret, 0);
   ComputeGraphPtr com_graph0 = std::make_shared<ComputeGraph>("TestGraph0");
@@ -530,7 +532,8 @@ TEST_F(UtestGraphUtils, DumpGraphByName) {
   }
 
   // test dump_level 1
-  (void)GraphUtils::DumpGEGraphByPath(graph, "./test_graph_1.txt", 1);
+  ret = GraphUtils::DumpGEGraphByPath(graph, "./test_graph_1.txt", 1);
+  ASSERT_EQ(ret, 0);
   ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
   state = GraphUtils::LoadGEGraph("./test_graph_1.txt", *com_graph1);
   ASSERT_EQ(state, true);
