@@ -614,7 +614,7 @@ void ComputeGraphImpl::SetAllSubgraphs(const std::vector<std::shared_ptr<Compute
   sub_graph_ = subgraphs;
 }
 
-shared_ptr<ComputeGraph> ComputeGraphImpl::GetParentGraph() const {
+shared_ptr<ComputeGraph> ComputeGraphImpl::GetParentGraph() {
   return parent_graph_.lock();
 }
 
@@ -622,7 +622,7 @@ void ComputeGraphImpl::SetParentGraph(const shared_ptr<ComputeGraph> &parent) {
   parent_graph_ = parent;
 }
 
-shared_ptr<Node> ComputeGraphImpl::GetParentNode() const {
+shared_ptr<Node> ComputeGraphImpl::GetParentNode() {
   return parent_node_.lock();
 }
 
@@ -660,7 +660,7 @@ graphStatus ComputeGraphImpl::UpdateInputMapping(const std::map<uint32_t, uint32
 /// @brief Update output-mapping
 /// @param [in] output_mapping : index_of_cur_graph_node_output -> index_of_new_graph_node_output
 /// @return graphStatus
-graphStatus ComputeGraphImpl::UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping) const {
+graphStatus ComputeGraphImpl::UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping) {
   const NodePtr net_output = FindFirstNodeMatchType(NETOUTPUT);
   if (net_output == nullptr) {
     REPORT_INNER_ERROR("E19999", "UpdateOutputMapping failed: node type %s not exist in graph.", NETOUTPUT);
@@ -850,7 +850,7 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
 }
 
 graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                    std::map<std::string, NodePtr> &breadth_node_map) const {
+                                                    std::map<std::string, NodePtr> &breadth_node_map) {
   for (const auto &anchor : node->GetAllOutDataAnchors()) {
     for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
       const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
@@ -1016,7 +1016,7 @@ graphStatus ComputeGraphImpl::SortNodes(std::vector<NodePtr> &stack,
   return GRAPH_SUCCESS;
 }
 
-size_t ComputeGraphImpl::GetInEdgeSize(const NodePtr &node) const {
+size_t ComputeGraphImpl::GetInEdgeSize(const NodePtr &node) {
   size_t in_edge_size = 0UL;
   if (node == nullptr) {
     return in_edge_size;
@@ -1041,7 +1041,7 @@ size_t ComputeGraphImpl::GetInEdgeSize(const NodePtr &node) const {
   return in_edge_size;
 }
 
-size_t ComputeGraphImpl::GetOutEdgeSize(const NodePtr &node) const {
+size_t ComputeGraphImpl::GetOutEdgeSize(const NodePtr &node) {
   size_t out_edge_size = 0UL;
   if (node == nullptr) {
     return out_edge_size;
@@ -1140,7 +1140,7 @@ void ComputeGraphImpl::Swap(ComputeGraphImpl &graph) {
   std::swap(is_unknown_shape_graph_, graph.is_unknown_shape_graph_);
 }
 
-void ComputeGraphImpl::SetNodesOwner(const ComputeGraphPtr &compute_graph) const {
+void ComputeGraphImpl::SetNodesOwner(const ComputeGraphPtr &compute_graph) {
   for (const auto &node : nodes_) {
     if (node == nullptr) {
       continue;
@@ -1297,7 +1297,7 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) {
   return RemoveExtraOutEdge(node);
 }
 
-graphStatus ComputeGraphImpl::RemoveExtraOutEdge(const NodePtr &node) const {
+graphStatus ComputeGraphImpl::RemoveExtraOutEdge(const NodePtr &node) {
   GE_CHECK_NOTNULL(node);
   // Remove redundant output edges
   for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
@@ -1336,7 +1336,7 @@ graphStatus ComputeGraphImpl::RemoveExtraOutEdge(const NodePtr &node) const {
   return GRAPH_SUCCESS;
 }
 
-graphStatus ComputeGraphImpl::Verify(const ConstComputeGraphPtr compute_graph) const {
+graphStatus ComputeGraphImpl::Verify(const ConstComputeGraphPtr compute_graph) {
   const bool is_unknown_graph = GetGraphUnknownFlag();
   for (const auto &node_ptr : GetAllNodes(compute_graph)) {
     GE_CHECK_NOTNULL(node_ptr);
@@ -1441,7 +1441,7 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
   }
 }
 
-const std::string ComputeGraphImpl::GetOutput() const {
+const std::string ComputeGraphImpl::GetOutput() {
   static const int32_t resultDefaultSize = 2048;
   std::string result;
   result.reserve(static_cast<uint64_t>(resultDefaultSize));
@@ -1711,7 +1711,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::AppendGraphOut
   impl_->AppendGraphOutNodes(out_nodes_map);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY shared_ptr<ComputeGraph> ComputeGraph::GetParentGraph() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY shared_ptr<ComputeGraph> ComputeGraph::GetParentGraph() {
   return impl_->GetParentGraph();
 }
 
@@ -1720,7 +1720,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetParentGraph
   impl_->SetParentGraph(parent);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY shared_ptr<Node> ComputeGraph::GetParentNode() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY shared_ptr<Node> ComputeGraph::GetParentNode() {
   return impl_->GetParentNode();
 }
 
@@ -1815,7 +1815,7 @@ graphStatus ComputeGraph::BFSTopologicalSorting(std::vector<NodePtr> &node_vec,
 }
 
 graphStatus ComputeGraph::CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                std::map<std::string, NodePtr> &breadth_node_map) const {
+                                                std::map<std::string, NodePtr> &breadth_node_map) {
   return impl_->CollectBreadthOutNode(node, map_in_edge_num, breadth_node_map);
 }
 
@@ -1836,11 +1836,11 @@ graphStatus ComputeGraph::SortNodes(std::vector<NodePtr> &stack, std::map<NodePt
   return impl_->SortNodes(stack, map_in_edge_num, shared_from_this());
 }
 
-size_t ComputeGraph::GetInEdgeSize(const NodePtr &node) const {
+size_t ComputeGraph::GetInEdgeSize(const NodePtr &node) {
   return impl_->GetInEdgeSize(node);
 }
 
-size_t ComputeGraph::GetOutEdgeSize(const NodePtr &node) const {
+size_t ComputeGraph::GetOutEdgeSize(const NodePtr &node) {
   return impl_->GetOutEdgeSize(node);
 }
 
@@ -1945,7 +1945,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetAllNodesInf
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetGraphOutNodesInfo(
-    const std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
+    std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
   impl_->SetGraphOutNodesInfo(out_nodes_info);
 }
 

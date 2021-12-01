@@ -154,9 +154,9 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
   void AppendGraphOutNodes(const std::map<std::string, std::vector<int32_t>> out_nodes_map);
 
-  std::shared_ptr<ComputeGraph> GetParentGraph() const;
+  std::shared_ptr<ComputeGraph> GetParentGraph();
   void SetParentGraph(const shared_ptr<ComputeGraph> &parent);
-  std::shared_ptr<Node> GetParentNode() const;
+  std::shared_ptr<Node> GetParentNode();
   void SetParentNode(const shared_ptr<Node> &parent);
 
   const std::map<std::string, std::vector<int32_t>> &GetGraphOutNodes() const;
@@ -197,7 +197,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
   void SetAllNodesInfo(const std::map<OperatorImplPtr, NodePtr> &nodes);
 
-  void SetGraphOutNodesInfo(const std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info);
+  void SetGraphOutNodesInfo(std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info);
   void AppendGraphOutNodesInfo(std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info);
   const std::vector<std::pair<NodePtr, int32_t>> &GetGraphOutNodesInfo() const;
 
@@ -236,13 +236,13 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus BFSTopologicalSorting(std::vector<NodePtr> &node_vec, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::deque<NodePtr> &stack);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    std::map<string, NodePtr> &breadth_node_map) const;
+                                    std::map<string, NodePtr> &breadth_node_map);
 
   graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &mapInEdgeNum);
   Vistor<NodePtr> AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs) const;
   Vistor<NodePtr> GetAllNodes(const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
-  size_t GetInEdgeSize(const NodePtr &node) const;
-  size_t GetOutEdgeSize(const NodePtr &node) const;
+  size_t GetInEdgeSize(const NodePtr &node);
+  size_t GetOutEdgeSize(const NodePtr &node);
   graphStatus RemoveExtraOutEdge(const NodePtr &node);
   bool GraphMembersAreEqual(const ComputeGraph &r_graph) const;
   bool GraphAttrsAreEqual(const ComputeGraph &r_graph) const;
