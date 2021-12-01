@@ -25,7 +25,7 @@
 #include "graph/debug/ge_op_types.h"
 
 namespace {
-static uint32_t ffts_plus_subgraph_num = 0U;
+static uint32_t kFftsPlusSubgraphNum = 0U;
 const uint32_t kMaxiumRecursionDepth = 10U;
 }
 
@@ -193,7 +193,7 @@ graphStatus FftsGraphUtils::SplitSubgraph(const ComputeGraphPtr &subgraph,
                                           const std::vector<std::pair<bool, std::set<NodePtr>>> &split_nodes) {
   for (const auto &item : split_nodes) {
     if ((item.first) && (!item.second.empty())) {
-      const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(ffts_plus_subgraph_num++);
+      const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
       const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, item.second, subgraph_name);
       if (new_subgraph == nullptr) {
         REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());
@@ -216,7 +216,7 @@ graphStatus FftsGraphUtils::BuildFftsPlusSubgraphWithAllNodes(const ComputeGraph
   GE_CHECK_NOTNULL(subgraph);
   std::set<NodePtr> calc_nodes;
   CollectCalcNodeInSubgraph(subgraph, calc_nodes);
-  const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(ffts_plus_subgraph_num++);
+  const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
   const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, calc_nodes, subgraph_name);
   if (new_subgraph == nullptr) {
     REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());
@@ -566,7 +566,7 @@ graphStatus FftsGraphUtils::PartitionGraphWithLimit(const ComputeGraphPtr &graph
   }
 
   for (const auto &item : split_nodes) {
-    const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(ffts_plus_subgraph_num++);
+    const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
     const auto &subgraph = GraphUtils::BuildSubgraphWithNodes(graph, item.second, subgraph_name);
     if (subgraph == nullptr) {
       REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());

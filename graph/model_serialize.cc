@@ -36,8 +36,6 @@
 #include "utils/mem_utils.h"
 
 namespace ge {
-using ListValue = ge::proto::AttrDef::ListValue;
-
 bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const {
   const auto sep = node_index.rfind(":");
   if (sep == std::string::npos) {
@@ -736,7 +734,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
     // skip not set attribute
     if ((iter.second.value_case() == proto::AttrDef::VALUE_NOT_SET) ||
         ((iter.second.value_case() == proto::AttrDef::kList) &&
-            (iter.second.list().val_type() == ListValue::VT_LIST_NONE))) {
+            (iter.second.list().val_type() == ge::proto::AttrDef::ListValue::VT_LIST_NONE))) {
       continue;
     }
 

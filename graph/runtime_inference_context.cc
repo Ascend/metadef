@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#include "graph/runtime_inference_context.h"
-#include "graph/utils/tensor_adapter.h"
 #include <cstdint>
 #include <utility>
+
+#include "graph/runtime_inference_context.h"
+#include "graph/utils/tensor_adapter.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace ge {
