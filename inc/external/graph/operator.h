@@ -64,6 +64,7 @@ using std::function;
 using std::shared_ptr;
 using std::string;
 
+/*lint -e148*/
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
  public:
   friend class OperatorImpl;
@@ -245,13 +246,13 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   ATTRIBUTED_DEPRECATED(graphStatus GetAttr(const std::string &, std::vector<uint32_t> &) const)
   graphStatus GetAttr(const std::string &name, std::vector<uint32_t> &attr_value) const;
   ATTRIBUTED_DEPRECATED(Operator &SetAttr(const char_t *, float32_t attr_value))
-  Operator &SetAttr(const std::string &name, float32_t attr_value);
+  Operator &SetAttr(const std::string &name, float attr_value);
   ATTRIBUTED_DEPRECATED(graphStatus GetAttr(const char_t *, float32_t &) const)
-  graphStatus GetAttr(const std::string &name, float32_t &attr_value) const;
+  graphStatus GetAttr(const std::string &name, float &attr_value) const;
   ATTRIBUTED_DEPRECATED(Operator &SetAttr(const char_t *, const std::vector<float32_t> &))
-  Operator &SetAttr(const std::string &name, const std::vector<float32_t> &attr_value);
+  Operator &SetAttr(const std::string &name, const std::vector<float> &attr_value);
   ATTRIBUTED_DEPRECATED(graphStatus GetAttr(const char_t *, std::vector<float32_t> &) const)
-  graphStatus GetAttr(const std::string &name, std::vector<float32_t> &attr_value) const;
+  graphStatus GetAttr(const std::string &name, std::vector<float> &attr_value) const;
   ATTRIBUTED_DEPRECATED(Operator &SetAttr(const char_t *, AttrValue &&))
   Operator &SetAttr(const std::string &name, AttrValue &&attr_value);
   ATTRIBUTED_DEPRECATED(graphStatus GetAttr(const char_t *, AttrValue &) const)
@@ -312,56 +313,56 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   graphStatus GetAttr(const char_t *name, int64_t &attr_value) const;
   graphStatus GetAttr(const char_t *name, int32_t &attr_value) const;
   graphStatus GetAttr(const char_t *name, uint32_t &attr_value) const;
-  Operator &SetAttr(const char_t *name, const std::vector<int64_t> &attr_value);
-  Operator &SetAttr(const char_t *name, const std::vector<int32_t> &attr_value);
-  Operator &SetAttr(const char_t *name, const std::vector<uint32_t> &attr_value);
+  Operator &SetAttr(const char *name, const std::vector<int64_t> &attr_value);
+  Operator &SetAttr(const char *name, const std::vector<int32_t> &attr_value);
+  Operator &SetAttr(const char *name, const std::vector<uint32_t> &attr_value);
   Operator &SetAttr(const char_t *name, std::initializer_list<int64_t> &&attr_value);
-  graphStatus GetAttr(const char_t *name, std::vector<int64_t> &attr_value) const;
-  graphStatus GetAttr(const char_t *name, std::vector<int32_t> &attr_value) const;
-  graphStatus GetAttr(const char_t *name, std::vector<uint32_t> &attr_value) const;
+  graphStatus GetAttr(const char *name, std::vector<int64_t> &attr_value) const;
+  graphStatus GetAttr(const char *name, std::vector<int32_t> &attr_value) const;
+  graphStatus GetAttr(const char *name, std::vector<uint32_t> &attr_value) const;
 
   Operator &SetAttr(const char_t *name, float32_t attr_value);
   graphStatus GetAttr(const char_t *name, float32_t &attr_value) const;
-  Operator &SetAttr(const char_t *name, const std::vector<float32_t> &attr_value);
-  graphStatus GetAttr(const char_t *name, std::vector<float32_t> &attr_value) const;
+  Operator &SetAttr(const char *name, const std::vector<float> &attr_value);
+  graphStatus GetAttr(const char *name, std::vector<float> &attr_value) const;
   Operator &SetAttr(const char_t *name, AttrValue &&attr_value);
   graphStatus GetAttr(const char_t *name, AttrValue &attr_value) const;
 
   Operator &SetAttr(const char_t *name, const char_t *attr_value);
   Operator &SetAttr(const char_t *name, const AscendString &attr_value);
   graphStatus GetAttr(const char_t *name, AscendString &attr_value) const;
-  Operator &SetAttr(const char_t *name, const std::vector<AscendString> &attr_values);
-  graphStatus GetAttr(const char_t *name, std::vector<AscendString> &attr_values) const;
+  Operator &SetAttr(const char *name, const std::vector<AscendString> &attr_values);
+  graphStatus GetAttr(const char *name, std::vector<AscendString> &attr_values) const;
 
   Operator &SetAttr(const char_t *name, bool attr_value);
   graphStatus GetAttr(const char_t *name, bool &attr_value) const;
-  Operator &SetAttr(const char_t *name, const std::vector<bool> &attr_value);
-  graphStatus GetAttr(const char_t *name, std::vector<bool> &attr_value) const;
+  Operator &SetAttr(const char *name, const std::vector<bool> &attr_value);
+  graphStatus GetAttr(const char *name, std::vector<bool> &attr_value) const;
 
   Operator &SetAttr(const char_t *name, const Tensor &attr_value);
   graphStatus GetAttr(const char_t *name, Tensor &attr_value) const;
-  Operator &SetAttr(const char_t *name, const std::vector<Tensor> &attr_value);
-  graphStatus GetAttr(const char_t *name, std::vector<Tensor> &attr_value) const;
+  Operator &SetAttr(const char *name, const std::vector<Tensor> &attr_value);
+  graphStatus GetAttr(const char *name, std::vector<Tensor> &attr_value) const;
 
   // Bytes type
   Operator &SetAttr(const char_t *name, const OpBytes &attr_value);
   // Bytes type
-  graphStatus GetAttr(const char_t *name, OpBytes &attr_value) const;
+  graphStatus GetAttr(const char *name, OpBytes &attr_value) const;
 
-  Operator &SetAttr(const char_t *name, const std::vector<std::vector<int64_t>> &attr_value);
-  graphStatus GetAttr(const char_t *name, std::vector<std::vector<int64_t>> &attr_value) const;
+  Operator &SetAttr(const char *name, const std::vector<std::vector<int64_t>> &attr_value);
+  graphStatus GetAttr(const char *name, std::vector<std::vector<int64_t>> &attr_value) const;
 
-  Operator &SetAttr(const char_t *name, const std::vector<ge::DataType> &attr_value);
-  graphStatus GetAttr(const char_t *name, std::vector<ge::DataType> &attr_value) const;
+  Operator &SetAttr(const char *name, const std::vector<ge::DataType> &attr_value);
+  graphStatus GetAttr(const char *name, std::vector<ge::DataType> &attr_value) const;
 
-  Operator &SetAttr(const char_t *name, const ge::DataType &attr_value);
-  graphStatus GetAttr(const char_t *name, ge::DataType &attr_value) const;
+  Operator &SetAttr(const char *name, const ge::DataType &attr_value);
+  graphStatus GetAttr(const char *name, ge::DataType &attr_value) const;
 
   // func type
   Operator &SetAttr(const char_t *name, const ge::NamedAttrs &attr_value);
   graphStatus GetAttr(const char_t *name, ge::NamedAttrs &attr_value) const;
-  Operator &SetAttr(const char_t *name, const std::vector<ge::NamedAttrs> &attr_value);
-  graphStatus GetAttr(const char_t *name, std::vector<ge::NamedAttrs> &attr_value) const;
+  Operator &SetAttr(const char *name, const std::vector<ge::NamedAttrs> &attr_value);
+  graphStatus GetAttr(const char *name, std::vector<ge::NamedAttrs> &attr_value) const;
 
   void BreakConnect() const;
 
@@ -521,6 +522,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   std::shared_ptr<const Node> GetNode() const;
 };
+/*lint +e148*/
 }  // namespace ge
 
 #endif  // INC_EXTERNAL_GRAPH_OPERATOR_H_
