@@ -1,4 +1,4 @@
-set(GRAPH_SOURCE_LIST
+    set(GRAPH_SOURCE_LIST
     "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
@@ -177,6 +177,13 @@ target_compile_definitions(graph_static PRIVATE
     LOG_CPP
 )
 
+target_include_directories(graph_static PUBLIC
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/graph
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/external/graph
+)
+
 target_include_directories(graph_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
@@ -222,7 +229,6 @@ target_link_libraries(graph_static PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-    ascend_protobuf_static
     c_sec
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
     -ldl

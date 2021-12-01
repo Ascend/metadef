@@ -127,6 +127,14 @@ target_compile_definitions(register_static PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
     LOG_CPP
 )
+
+target_include_directories(register_static PUBLIC
+    ${METADEF_DIR}/graph
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/register
+)
+
 target_include_directories(register_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}
@@ -162,7 +170,6 @@ target_include_directories(register_static PRIVATE
 )
 
 target_link_libraries(register_static PRIVATE
-    ascend_protobuf_static
     c_sec
     json
     $<BUILD_INTERFACE:intf_pub>
