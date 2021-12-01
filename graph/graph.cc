@@ -544,32 +544,16 @@ graphStatus Graph::RemoveNode(GNode &node) {
 }
 
 graphStatus Graph::RemoveNode(GNode &node, bool contain_subgraph) {
-  if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "graph can not be used, impl is nullptr.");
-    GELOGE(GRAPH_FAILED, "[Check][Param] RemoveNode: graph can not be used, impl is nullptr.");
-    return GRAPH_FAILED;
-  }
+  GE_CHECK_NOTNULL(impl_);
 
   const NodePtr node_ptr = NodeAdapter::GNode2Node(node);
-  if (node_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "gnode to node failed.");
-    GELOGE(GRAPH_FAILED, "[Get][Node] RemoveNode: gnode to node failed.");
-    return GRAPH_FAILED;
-  }
+  GE_CHECK_NOTNULL(node_ptr);
 
   const ComputeGraphPtr owner_compute_graph = node_ptr->GetOwnerComputeGraph();
-  if (owner_compute_graph == nullptr) {
-    REPORT_CALL_ERROR("E19999", "node:%s owner graph is nullptr", node_ptr->GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Get][Graph] RemoveNode: owner graph of node[%s] is invalid.", node_ptr->GetName().c_str());
-    return GRAPH_FAILED;
-  }
+  GE_CHECK_NOTNULL(owner_compute_graph);
 
   ComputeGraphPtr compute_graph_ptr = impl_->GetComputeGraph();
-  if (compute_graph_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "impl compute graph is nullptr.");
-    GELOGE(GRAPH_FAILED, "[Get][Graph] compute graph of node[%s] is nullptr.", node_ptr->GetName().c_str());
-    return GRAPH_FAILED;
-  }
+  GE_CHECK_NOTNULL(compute_graph_ptr);
 
   if (contain_subgraph) {
     if (!GraphUtils::IsNodeInGraphRecursively(compute_graph_ptr, *node_ptr)) {

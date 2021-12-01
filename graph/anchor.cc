@@ -68,7 +68,7 @@ NodePtr AnchorImpl::GetOwnerNode() const { return owner_node_.lock(); }
 
 int32_t AnchorImpl::GetIdx() const { return idx_; }
 
-void AnchorImpl::SetIdx(int index) { idx_ = index; }
+void AnchorImpl::SetIdx(int32_t index) { idx_ = index; }
 
 Anchor::Anchor(const NodePtr &owner_node, const int32_t idx)
     : enable_shared_from_this(), impl_(std::shared_ptr<AnchorImpl>(new AnchorImpl(owner_node, idx))) {}

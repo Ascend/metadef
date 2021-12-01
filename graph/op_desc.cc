@@ -1616,7 +1616,7 @@ bool OpDesc::IsOptionalInput(const std::string &name) const {
   return impl_->IsOptionalInput(name);
 }
 
-bool OpDesc::IsOptionalInput(uint32_t index) const { return IsOptionalInput(GetInputNameByIndex(index)); }
+bool OpDesc::IsOptionalInput(const uint32_t index) const { return IsOptionalInput(GetInputNameByIndex(index)); }
 
 std::map<std::string, uint32_t> OpDesc::GetAllInputName() const {
   return impl_->GetAllInputName();

@@ -218,7 +218,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ControlAnchor : public Anch
  public:
   explicit ControlAnchor(const NodePtr &owner_node);
 
-  explicit ControlAnchor(const NodePtr &owner_node, int32_t idx);
+  explicit ControlAnchor(const NodePtr &owner_node, const int32_t idx);
 
   virtual ~ControlAnchor() = default;
 
@@ -234,7 +234,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InControlAnchor : public Co
  public:
   explicit InControlAnchor(const NodePtr &owner_node);
 
-  explicit InControlAnchor(const NodePtr &owner_node, int32_t idx);
+  explicit InControlAnchor(const NodePtr &owner_node, const int32_t idx);
 
   virtual ~InControlAnchor() = default;
 
@@ -262,7 +262,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutControlAnchor : public C
 
   explicit OutControlAnchor(const NodePtr &owner_node);
 
-  explicit OutControlAnchor(const NodePtr &owner_node, int32_t idx);
+  explicit OutControlAnchor(const NodePtr &owner_node, const int32_t idx);
 
   virtual ~OutControlAnchor() = default;
 
