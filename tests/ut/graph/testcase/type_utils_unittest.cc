@@ -63,8 +63,6 @@ TEST_F(UtestTypeUtils, SerialStringToFormat) {
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:"), FORMAT_RESERVED);  // invalid_argument exception
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:65535"), GetFormatFromSub(FORMAT_FRACTAL_Z, 0xffff));
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:65536"), FORMAT_RESERVED);
-  ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:9999999999999999999999999999"), FORMAT_RESERVED);
-  ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:qianduoduo"), FORMAT_RESERVED);
 }
 
 TEST_F(UtestTypeUtils, DataFormatToFormat) {
@@ -80,12 +78,14 @@ TEST_F(UtestTypeUtils, ImplyTypeToSSerialString) {
   ASSERT_EQ(TypeUtils::ImplyTypeToSerialString(domi::ImplyType::BUILDIN), "buildin");
 }
 
-TEST_F(UtestTypeUtils, DataTypeAndSerialString) {
+TEST_F(UtestTypeUtils, DataTypeToSerialString) {
   ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_INT2), "DT_INT2");
   ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_UINT2), "DT_UINT2");
   ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_UINT1), "DT_UINT1");
   ASSERT_EQ(TypeUtils::DataTypeToSerialString(DT_MAX), "UNDEFINED");
+}
 
+TEST_F(UtestTypeUtils, SerialStringToDataType) {
   ASSERT_EQ(TypeUtils::SerialStringToDataType("DT_UINT1"), DT_UINT1);
   ASSERT_EQ(TypeUtils::SerialStringToDataType("DT_INT2"), DT_INT2);
   ASSERT_EQ(TypeUtils::SerialStringToDataType("DT_MAX"), DT_UNDEFINED);
@@ -102,6 +102,6 @@ TEST_F(UtestTypeUtils, FmkTypeToSerialString) {
 TEST_F(UtestTypeUtils, CheckUint64MulOverflow) {
   ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0x00ULL, 0x00UL));
   ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0x02ULL, 0x01UL));
-  ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0xFFFFFFFFULL, 0xFFFFFFFUL));
+  ASSERT_TRUE(TypeUtils::CheckUint64MulOverflow(0xFFFFFFFFFFFFULL, 0xFFFFFFFUL));
 }
 }
