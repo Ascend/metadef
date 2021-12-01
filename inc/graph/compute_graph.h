@@ -156,7 +156,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
   std::shared_ptr<ComputeGraph> GetParentGraph() const;
   void SetParentGraph(const shared_ptr<ComputeGraph> &parent);
-  std::shared_ptr<Node> GetParentNode() const;
+  std::shared_ptr<Node> GetParentNode();
   void SetParentNode(const shared_ptr<Node> &parent);
 
   const std::map<std::string, std::vector<int32_t>> &GetGraphOutNodes() const;
