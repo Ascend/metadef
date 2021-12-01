@@ -1273,4 +1273,11 @@ const std::string ATTR_NAME_TENSOR_MAX_SHAPE = "_tensor_max_shape";
 const std::string ATTR_NAME_OP_NO_TILING = "_op_no_tiling";
 const std::string ATTR_NAME_TENSOR_DESC_MEM_OFFSET = "_tensor_desc_mem_offset";
 const std::string ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE = "_tensor_no_tiling_mem_type";
+
+// for subgraph multi dims
+const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INDEX = "_subgraph_multi_dims_index";
+const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INPUT_SHAPE = "_subgraph_multi_dims_input_shape";
+const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INPUT_DIMS = "_subgraph_multi_dims_input_dims";
+const std::string ATTR_NAME_SUBGRAPH_IS_MULTI_DIMS = "_subgraph_is_multi_dims";
+const std::string ATTR_NAME_OP_MULTI_DIMS_INPUT_DIMS = "_op_multi_dims_input_dims";
 }  // namespace ge

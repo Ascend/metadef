@@ -444,10 +444,13 @@ TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::CalcTensorMemSizeForNoTiling(const GeTensorDesc &tensor, Format format, DataType data_type,
                                           int64_t &mem_size) {
-  std::vector<int64_t> dims;
-  GE_CHK_STATUS_RET(GetMaxShapeDimsFromNoTilingTensor(tensor, dims),
-                    "[Calc][GetMaxShapeDimsFromNoTilingTensor] failed.");
-  return CalcTensorMemSize(GeShape(dims), format, data_type, mem_size);
+  if (tensor.GetShape().IsUnknownShape()) {
+    std::vector<int64_t> dims;
+    GE_CHK_STATUS_RET(GetMaxShapeDimsFromNoTilingTensor(tensor, dims),
+                      "[Calc][GetMaxShapeDimsFromNoTilingTensor] failed.");
+    return CalcTensorMemSize(GeShape(dims), format, data_type, mem_size);
+  }
+  return CalcTensorMemSize(tensor.GetShape(), format, data_type, mem_size);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
