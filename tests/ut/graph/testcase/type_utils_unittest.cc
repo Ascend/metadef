@@ -63,6 +63,7 @@ TEST_F(UtestTypeUtils, SerialStringToFormat) {
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:"), FORMAT_RESERVED);  // invalid_argument exception
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:65535"), GetFormatFromSub(FORMAT_FRACTAL_Z, 0xffff));
   ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:65536"), FORMAT_RESERVED);
+  ASSERT_EQ(TypeUtils::SerialStringToFormat("FRACTAL_Z:9223372036854775807"), FORMAT_RESERVED);
 }
 
 TEST_F(UtestTypeUtils, DataFormatToFormat) {
