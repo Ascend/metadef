@@ -1279,7 +1279,7 @@ void Operator::AttrRegister(const char *name, const vector<float> &attr_value) {
 }
 
 void Operator::AttrRegister(const char *name, const char *attr_value) {
-  if (name == nullptr || attr_value == nullptr) {
+  if ((name == nullptr) || (attr_value == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr or attr_value is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator input parameters is nullptr.");
     return;

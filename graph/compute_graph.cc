@@ -399,7 +399,7 @@ NodePtr ComputeGraphImpl::AddOutputNodeByIndex(const NodePtr node, const int32_t
   NodePtr result = node;
   // [output_nodes_info_ : should not be null]
   for (const auto &item : output_nodes_info_) {
-    if (item.first->GetName() == node->GetName() && item.second == index) {
+    if ((item.first->GetName() == node->GetName()) && (item.second == index)) {
       already_have = true;
       result = item.first;
       break;
@@ -826,7 +826,7 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                    return GRAPH_FAILED, "sort nodes failed");
 
   // Only data nodes here
-  while (!stack_input.empty() || !stack.empty()) {
+  while ((!stack_input.empty()) || (!stack.empty())) {
     NodePtr node = nullptr;
     if (!stack.empty()) {
       node = stack.back();
