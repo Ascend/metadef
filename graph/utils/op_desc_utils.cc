@@ -324,7 +324,7 @@ size_t OpDescUtils::GetNonConstInputsSize(const ge::Node &node) {
         continue;
       }
     }
-    return input_num;
+    return input_num;  // lint !e712
   } else {
     GE_IF_BOOL_EXEC(
         node.GetInDataNodes().size() < GetConstInputs(node).size(),
