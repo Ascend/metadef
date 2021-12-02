@@ -85,16 +85,16 @@ class Node::NodeImpl {
   const std::vector<uint32_t> &GetSendEventIdList() const { return send_event_id_list_; }
   const std::vector<uint32_t> &GetRecvEventIdList() const { return recv_event_id_list_; }
 
-  void GetFusionInputFlowList(kFusionDataFlowVec_t &fusion_input_list) {
+  void GetFusionInputFlowList(kFusionDataFlowVec_t &fusion_input_list) const {
     fusion_input_list = fusion_input_dataflow_list_;
   }
-  void GetFusionOutputFlowList(kFusionDataFlowVec_t &fusion_output_list) {
+  void GetFusionOutputFlowList(kFusionDataFlowVec_t &fusion_output_list) const {
     fusion_output_list = fusion_output_dataflow_list_;
   }
-  void SetFusionInputFlowList(kFusionDataFlowVec_t &fusion_input_list) {
+  void SetFusionInputFlowList(const kFusionDataFlowVec_t &fusion_input_list) {
     fusion_input_dataflow_list_ = fusion_input_list;
   }
-  void SetFusionOutputFlowList(kFusionDataFlowVec_t &fusion_output_list) {
+  void SetFusionOutputFlowList(const kFusionDataFlowVec_t &fusion_output_list) {
     fusion_output_dataflow_list_ = fusion_output_list;
   }
 

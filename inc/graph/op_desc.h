@@ -99,9 +99,9 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus AddInputDescForward(const std::string &name, const uint32_t num);
 
-  graphStatus AddInputDescMiddle(const std::string &name, const uint32_t num, size_t index);
+  graphStatus AddInputDescMiddle(const std::string &name, const uint32_t num, const size_t index);
 
-  graphStatus AddOutputDescMiddle(const std::string &name, const uint32_t num, size_t index);
+  graphStatus AddOutputDescMiddle(const std::string &name, const uint32_t num, const size_t index);
 
   graphStatus AddOutputDescForward(const std::string &name, const uint32_t num);
 
@@ -283,7 +283,7 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   graphStatus AddSubgraphName(const std::string &name);
   const std::map<std::string, uint32_t> &GetSubgraphNameIndexes() const;
 
-  std::string GetSubgraphInstanceName(uint32_t index) const;
+  std::string GetSubgraphInstanceName(const uint32_t index) const;
   const std::vector<std::string> &GetSubgraphInstanceNames() const;
   /// Does not provide functions `AddSubgraphInstance` or `AppendSubgraphInstance`,
   /// because this kind of functions will only append a new subgraph instance name
