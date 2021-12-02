@@ -62,7 +62,7 @@ inline bool IsLogEnable(int32_t module_name, int32_t log_level) {
   dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
 
 namespace error_message {
-int32_t FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
+int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...) {
   int32_t ret;
   va_list arg_list;
 
@@ -681,7 +681,7 @@ void ErrorManager::SetStage(const char *first_stage, size_t first_len, const cha
   }
 }
 
-bool ErrorManager::IsInnerErrorCode(const std::string &error_code) {
+bool ErrorManager::IsInnerErrorCode(const std::string &error_code) const {
   const std::string kInterErrorCodePrefix = "9999";
   if (!IsValidErrorCode(error_code)) {
     return false;

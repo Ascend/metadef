@@ -25,12 +25,14 @@
 #include <cstring>
 
 namespace error_message {
+using char_t = char;
 #ifdef __GNUC__
-int32_t FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) __attribute__((format(printf, 3, 4)));
-#define TRIM_PATH(x) (((x).find_last_of('/') != std::string::npos) ? (x).substr((x).find_last_of('/') + 1u) : (x))
+int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max,
+                           const char_t *format, ...)__attribute__((format(printf, 3, 4)));
+#define TRIM_PATH(x) (((x).find_last_of('/') != std::string::npos) ? (x).substr((x).find_last_of('/') + 1U) : (x))
 #else
-int32_t FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...);
-#define TRIM_PATH(x) (((x).find_last_of('\\') != std::string::npos) ? (x).substr((x).find_last_of('\\') + 1u) : (x))
+int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...);
+#define TRIM_PATH(x) (((x).find_last_of('\\') != std::string::npos) ? (x).substr((x).find_last_of('\\') + 1U) : (x))
 #endif
 }
 
@@ -67,31 +69,31 @@ do {                                                                            
 
 namespace error_message {
   // first stage
-  constexpr char const *kInitialize   = "INIT";
-  constexpr char const *kModelCompile = "COMP";
-  constexpr char const *kModelLoad    = "LOAD";
-  constexpr char const *kModelExecute = "EXEC";
-  constexpr char const *kFinalize     = "FINAL";
+  constexpr char_t const *kInitialize   = "INIT";
+  constexpr char_t const *kModelCompile = "COMP";
+  constexpr char_t const *kModelLoad    = "LOAD";
+  constexpr char_t const *kModelExecute = "EXEC";
+  constexpr char_t const *kFinalize     = "FINAL";
 
   // SecondStage
   // INITIALIZE
-  constexpr char const *kParser               = "PARSER";
-  constexpr char const *kOpsProtoInit         = "OPS_PRO";
-  constexpr char const *kSystemInit           = "SYS";
-  constexpr char const *kEngineInit           = "ENGINE";
-  constexpr char const *kOpsKernelInit        = "OPS_KER";
-  constexpr char const *kOpsKernelBuilderInit = "OPS_KER_BLD";
+  constexpr char_t const *kParser               = "PARSER";
+  constexpr char_t const *kOpsProtoInit         = "OPS_PRO";
+  constexpr char_t const *kSystemInit           = "SYS";
+  constexpr char_t const *kEngineInit           = "ENGINE";
+  constexpr char_t const *kOpsKernelInit        = "OPS_KER";
+  constexpr char_t const *kOpsKernelBuilderInit = "OPS_KER_BLD";
   // MODEL_COMPILE
-  constexpr char const *kPrepareOptimize    = "PRE_OPT";
-  constexpr char const *kOriginOptimize     = "ORI_OPT";
-  constexpr char const *kSubGraphOptimize   = "SUB_OPT";
-  constexpr char const *kMergeGraphOptimize = "MERGE_OPT";
-  constexpr char const *kPreBuild           = "PRE_BLD";
-  constexpr char const *kStreamAlloc        = "STM_ALLOC";
-  constexpr char const *kMemoryAlloc        = "MEM_ALLOC";
-  constexpr char const *kTaskGenerate       = "TASK_GEN";
+  constexpr char_t const *kPrepareOptimize    = "PRE_OPT";
+  constexpr char_t const *kOriginOptimize     = "ORI_OPT";
+  constexpr char_t const *kSubGraphOptimize   = "SUB_OPT";
+  constexpr char_t const *kMergeGraphOptimize = "MERGE_OPT";
+  constexpr char_t const *kPreBuild           = "PRE_BLD";
+  constexpr char_t const *kStreamAlloc        = "STM_ALLOC";
+  constexpr char_t const *kMemoryAlloc        = "MEM_ALLOC";
+  constexpr char_t const *kTaskGenerate       = "TASK_GEN";
   // COMMON
-  constexpr char const *kOther = "DEFAULT";
+  constexpr char_t const *kOther = "DEFAULT";
 
   struct Context {
     uint64_t work_stream_id;
@@ -221,17 +223,17 @@ class ErrorManager {
 
   int32_t ParseJsonFile(std::string path);
 
-  int32_t ReadJsonFile(const std::string &file_path, void *handle);
+  static int32_t ReadJsonFile(const std::string &file_path, void *handle);
 
   void ClassifyCompileFailedMsg(const std::map<std::string, std::string> &msg,
                                 std::map<std::string,
                                 std::vector<std::string>> &classfied_msg);
 
-  bool IsInnerErrorCode(const std::string &error_code);
+  bool IsInnerErrorCode(const std::string &error_code) const;
 
-  inline bool IsValidErrorCode(const std::string &error_code) {
-    const uint32_t kErrorCodeValidLength = 6;
-    return error_code.size() == kErrorCodeValidLength;
+  inline bool IsValidErrorCode(const std::string &error_codes) const {
+    const uint32_t kErrorCodeValidLength = 6U;
+    return error_codes.size() == kErrorCodeValidLength;
   }
 
   std::vector<ErrorItem> &GetErrorMsgContainerByWorkId(uint64_t work_id);
@@ -250,5 +252,4 @@ class ErrorManager {
 
   thread_local static error_message::Context error_context_;
 };
-
 #endif  // ERROR_MANAGER_H_
