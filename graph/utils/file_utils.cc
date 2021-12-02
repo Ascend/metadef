@@ -66,14 +66,14 @@ int32_t CreateDirectory(const std::string &directory_path) {
     return -1;
   }
   char_t tmp_dir_path[MMPA_MAX_PATH] = {};
-  const auto mode = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) |
+  const auto mkdir_mode = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) |
                                           static_cast<uint32_t>(M_IWUSR) |
                                           static_cast<uint32_t>(M_IXUSR));
   for (size_t i = 0U; i < dir_path_len; i++) {
     tmp_dir_path[i] = directory_path[i];
     if ((tmp_dir_path[i] == '\\') || (tmp_dir_path[i] == '/')) {
       if (mmAccess2(&(tmp_dir_path[0U]), M_F_OK) != EN_OK) {
-        const int32_t ret = mmMkdir(&(tmp_dir_path[0U]), mode);  // 700
+        const int32_t ret = mmMkdir(&(tmp_dir_path[0U]), mkdir_mode);  // 700
         if (ret != 0) {
           if (errno != EEXIST) {
                 REPORT_CALL_ERROR("E19999",
@@ -87,7 +87,7 @@ int32_t CreateDirectory(const std::string &directory_path) {
       }
     }
   }
-  const int32_t ret = mmMkdir(static_cast<const char_t *>(directory_path.c_str()), mode);  // 700
+  const int32_t ret = mmMkdir(static_cast<const char_t *>(directory_path.c_str()), mkdir_mode);  // 700
   if (ret != 0) {
     if (errno != EEXIST) {
       REPORT_CALL_ERROR("E19999",

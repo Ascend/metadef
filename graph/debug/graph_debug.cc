@@ -19,8 +19,9 @@
 #include <set>
 #include <vector>
 #include "ge_util.h"
-
+namespace {
 const std::string TAB = "    ";
+}
 #define STR_FMT(str) (" \"" + std::string(str) + "\" ")
 #define INPUT_ANCHOR_PORT(name) ("__input__" + (name))
 #define OUTPUT_ANCHOR_PORT(name) ("__output__" + (name))

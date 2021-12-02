@@ -41,7 +41,7 @@ bool ConstantUtils::IsConstant(const OpDescPtr &op_desc) {
 
 bool ConstantUtils::IsPotentialConst(const OpDescPtr &op_desc) {
   bool is_potential_const = false;
-  auto has_attr = AttrUtils::GetBool(op_desc, ATTR_NAME_POTENTIAL_CONST, is_potential_const);
+  const auto has_attr = AttrUtils::GetBool(op_desc, ATTR_NAME_POTENTIAL_CONST, is_potential_const);
   return (has_attr && is_potential_const);
 }
 
@@ -62,7 +62,7 @@ bool ConstantUtils::GetWeight(const OpDescPtr &op_desc, const uint32_t index, Co
   if (!GetPotentialWeight(op_desc, weight_indices, weights)) {
     return false;
   }
-  for (size_t i = 0; i < weight_indices.size(); ++i) {
+  for (size_t i = 0U; i < weight_indices.size(); ++i) {
     if (weight_indices[i] == index) {
       weight = weights[i];
       return true;
@@ -93,7 +93,7 @@ bool ConstantUtils::GetWeight(const Operator &op, const uint32_t index, Tensor &
     return false;
   }
 
-  for (size_t i = 0; i < weight_indices.size(); ++i) {
+  for (size_t i = 0U; i < weight_indices.size(); ++i) {
     if (weight_indices[i] == index) {
       weight = weights[i];
       return true;
@@ -115,7 +115,7 @@ bool ConstantUtils::MutableWeight(const OpDescPtr &op_desc, const uint32_t index
     return false;
   }
 
-  for (size_t i = 0; i < weight_indices.size(); ++i) {
+  for (size_t i = 0U; i < weight_indices.size(); ++i) {
     if (weight_indices[i] == index) {
       weight = weights[i];
       return true;
@@ -137,7 +137,7 @@ bool ConstantUtils::SetWeight(const OpDescPtr &op_desc, const uint32_t index, co
     return false;
   }
 
-  for (size_t i = 0; i < weight_indices.size(); ++i) {
+  for (size_t i = 0U; i < weight_indices.size(); ++i) {
     if (weight_indices[i] == index) {
       weights[i] = weight;
       return AttrUtils::SetListTensor(op_desc, ATTR_NAME_POTENTIAL_WEIGHT, weights);

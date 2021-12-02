@@ -108,8 +108,6 @@ class OnnxUtils {
                                               const std::string &prefix = "",
                                               const std::string &suffix = "");
 
-  static void AddAttrProtoForAttrsFromOpDef(const ge::proto::OpDef *op_def, ge::onnx::NodeProto *node_proto);
-
   static ge::onnx::TensorProto_DataType EncodeDataType(const ge::DataType data_type);
 
   static void EncodeNodeLinkForNetronVisual(const NodePtr &node, ge::onnx::NodeProto *const node_proto);
@@ -160,7 +158,7 @@ class OnnxUtils {
   // Parse node name and index
   static bool ParseNameAndIndex(const std::string &node_name_index, std::string &node_name, int32_t &idx);
 
-  static ge::DataType DecodeDataType(ge::onnx::TensorProto_DataType data_type);
+  static ge::DataType DecodeDataType(const ge::onnx::TensorProto_DataType data_type);
 
   static void DecodeAttribute(const ge::onnx::AttributeProto &attr_proto, std::vector<std::string> &strings);
 
@@ -200,9 +198,9 @@ class OnnxUtils {
                                               const ge::ConstGeTensorDescPtr &desc, const uint32_t idx);
 
   static void AddAllAttr(onnx::NodeProto *const node_proto, const ConstGeTensorDescPtr &op_desc,
-                         const char *const prefix, const uint32_t idx);
+                         const char_t *const prefix, const uint32_t idx);
 
-  static void AddCommonAttrIntoProto(onnx::NodeProto *const node_proto, const OpDescPtr &op_def);
+  static void AddCommonAttrIntoProto(onnx::NodeProto *const node_proto, const OpDescPtr &op_desc);
 
   static bool AddInputAndOutputNodesForGraph(const onnx::GraphProto &graph_proto,
                                              ComputeGraphPtr &graph,

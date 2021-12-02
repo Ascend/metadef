@@ -17,14 +17,16 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_LIST_VALUE_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_LIST_VALUE_SERIALIZER_H_
 
+#include <map>
+
 #include "attr_serializer.h"
 #include "attr_serializer_registry.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/ge_attr_value.h"
-#include <map>
+
 namespace ge {
-typedef graphStatus (*Serializer)(const AnyValue &av, proto::AttrDef &def);
-typedef graphStatus (*Deserializer)(const proto::AttrDef &def, AnyValue &av);
+using Serializer = graphStatus (*)(const AnyValue &av, proto::AttrDef &def);
+using Deserializer = graphStatus (*)(const proto::AttrDef &def, AnyValue &av);
 class ListValueSerializer : public GeIrAttrSerializer {
  public:
   ListValueSerializer() = default;
