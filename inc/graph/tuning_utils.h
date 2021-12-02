@@ -78,7 +78,7 @@ class TuningUtils {
   // `tuning_path` means path to save the graphs
   static graphStatus ConvertGraphToFile(std::vector<ComputeGraphPtr> tuning_subgraphs,
                                         std::vector<ComputeGraphPtr> non_tuning_subgraphs = {},
-                                        bool exe_flag = false,
+                                        const bool exe_flag = false,
                                         const std::string &path = "",
                                         const std::string &user_path = "");
   // Recovery `graph` from graph dump files configured in options
@@ -110,8 +110,8 @@ class TuningUtils {
 
   static SubgraphCreateOutNode create_output_;
   // part 2
-  static graphStatus MergeAllSubGraph(std::vector<ComputeGraphPtr> &graphs,
-                                      ComputeGraphPtr &graph);
+  static graphStatus MergeAllSubGraph(std::vector<ComputeGraphPtr> &subgraphs,
+                                      ComputeGraphPtr &output_merged_compute_graph);
   static graphStatus MergeSubGraph(const ComputeGraphPtr &subgraph);
   // Deletes new data and output nodes added by call `MakeExeGraph()` func in part 1
   static graphStatus RemoveDataNetoutputEdge(ComputeGraphPtr &graph);

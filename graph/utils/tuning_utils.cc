@@ -73,7 +73,8 @@ std::string TuningUtils::GetNodeNameByAnchor(const Anchor * const anchor) {
 // part 1
 graphStatus TuningUtils::ConvertGraphToFile(std::vector<ComputeGraphPtr> tuning_subgraphs,
                                             std::vector<ComputeGraphPtr> non_tuning_subgraphs,
-                                            bool exe_flag, const std::string &path, const std::string &user_path) {
+                                            const bool exe_flag, const std::string &path,
+                                            const std::string &user_path) {
   int64_t i = 0;
   int64_t j = 0;
   const std::lock_guard<std::mutex> lock(mutex_);
@@ -113,7 +114,7 @@ graphStatus TuningUtils::ConvertConstToWeightAttr(const ComputeGraphPtr &exe_gra
     if (weight.empty()) {
       continue;
     }
-    if (!ge::AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, weight[0])) {
+    if (!ge::AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, weight[0U])) {
       REPORT_CALL_ERROR("E19999", "Set tensor to node[%s] failed", op_desc->GetName().c_str());
       GELOGE(FAILED, "[Set][Tensor] to node[%s] failed", op_desc->GetName().c_str());
       return FAILED;
@@ -237,10 +238,10 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
   std::vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
   if (weight.empty()) {
     GE_CHECK_NOTNULL(node->GetOpDesc());
-    NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr(parent_node_attr, nullptr);
+    const NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr(parent_node_attr, nullptr);
     if ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
       NodePtr really_parent_node = nullptr;
-      if ((NodeUtils::GetInNodeCrossPartionedCallNode(parent_node, 0, really_parent_node) == GRAPH_SUCCESS) &&
+      if ((NodeUtils::GetInNodeCrossPartionedCallNode(parent_node, 0U, really_parent_node) == GRAPH_SUCCESS) &&
           (really_parent_node != nullptr) && (NodeUtils::IsConst(*really_parent_node))) {
         GELOGD("Get in really parent node:%s:%s and parent node:%s:%s for node:%s:%s",
                really_parent_node->GetName().c_str(), really_parent_node->GetType().c_str(),
