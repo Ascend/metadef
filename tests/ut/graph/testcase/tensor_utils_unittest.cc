@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "graph/ge_tensor.h"
 #include "graph/utils/tensor_utils.h"
+#include "graph/debug/ge_attr_define.h"
+#include "graph/utils/attr_utils.h"
 #include <iostream>
 using namespace std;
 
@@ -409,6 +411,15 @@ TEST_F(ge_test_tensor_utils, GetTensorSizeInBytes_FAILED) {
   GeTensorDesc tensorDesc;
   int64_t size;
 //  MOCKER(TensorUtils::CalcTensorMemSize).stubs().will(returnValue(GRAPH_FAILED));
+  graphStatus ret = TensorUtils::GetTensorSizeInBytes(tensorDesc, size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, GetTensorSizeInBytes_NoTiling_SUCCESS) {
+  GeTensorDesc tensorDesc(GeShape({1, -1}));
+  tensorDesc.SetShapeRange({{1, 1}, {1, 10}});
+  int64_t size;
+  (void)AttrUtils::SetBool(&tensorDesc, ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE, true);
   graphStatus ret = TensorUtils::GetTensorSizeInBytes(tensorDesc, size);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
