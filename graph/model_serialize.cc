@@ -36,8 +36,6 @@
 #include "utils/mem_utils.h"
 
 namespace ge {
-using ListValue = ge::proto::AttrDef::ListValue;
-
 bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const {
   const auto sep = node_index.rfind(":");
   if (sep == std::string::npos) {
@@ -141,7 +139,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
   if (op_desc->GetAllInputsSize() > 0UL) {
     const auto size = static_cast<uint32_t>(op_desc->GetAllInputsSize());
     for (uint32_t i = 0U; i < size; i++) {
-      auto tensor_desc = op_desc->GetInputDescPtrDfault(i);
+      const auto tensor_desc = op_desc->GetInputDescPtrDfault(i);
       if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
         GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_input_desc());
       }
@@ -373,7 +371,7 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
                    return false, "[Create][OpDesc] op_desc impl is nullptr.");
   // Input tensor
   for (auto &input_desc : *op_def_proto.mutable_input_desc()) {
-    std::shared_ptr<GeTensorDesc> temp_value =
+    const std::shared_ptr<GeTensorDesc> temp_value =
         std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(protobuf_owner_, &input_desc));
     GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
                      return false, "[Create][GeTensorDesc] temp_value is nullptr.");
@@ -381,7 +379,7 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   }
   // Output tensor
   for (auto &output_desc : *op_def_proto.mutable_output_desc()) {
-    std::shared_ptr<GeTensorDesc> temp_value =
+    const std::shared_ptr<GeTensorDesc> temp_value =
         std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(protobuf_owner_, &output_desc));
     GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
                      return false, "[Create][GeTensorDesc] temp_value is nullptr.");
@@ -413,40 +411,35 @@ void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vec
     for (const auto &item_s : name_list.s()) {
       opt_input.push_back(item_s);
     }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    (void) op_desc_attr->erase("_opt_input");
+    (void) op_def_proto.mutable_attr()->erase("_opt_input");
   }
   if (op_def_proto.attr().count("_input_name_key") > 0UL) {
     const auto &output_name_key_list = op_def_proto.attr().at("_input_name_key").list();
     for (const auto &item_s : output_name_key_list.s()) {
       key_in.push_back(item_s);
     }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    (void) op_desc_attr->erase("_input_name_key");
+    (void) op_def_proto.mutable_attr()->erase("_input_name_key");
   }
   if (op_def_proto.attr().count("_input_name_value") > 0UL) {
     const auto &input_name_value_list = op_def_proto.attr().at("_input_name_value").list();
     for (const auto &item_i : input_name_value_list.i()) {
       value_in.push_back(static_cast<uint32_t>(item_i));
     }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    (void) op_desc_attr->erase("_input_name_value");
+    (void) op_def_proto.mutable_attr()->erase("_input_name_value");
   }
   if (op_def_proto.attr().count("_output_name_key") > 0UL) {
     const auto &output_name_key_list = op_def_proto.attr().at("_output_name_key").list();
     for (const auto &item_s : output_name_key_list.s()) {
       key_out.push_back(item_s);
     }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    (void) op_desc_attr->erase("_output_name_key");
+    (void) op_def_proto.mutable_attr()->erase("_output_name_key");
   }
   if (op_def_proto.attr().count("_output_name_value") > 0UL) {
     const auto &output_name_value_list = op_def_proto.attr().at("_output_name_value").list();
     for (const auto &item_i : output_name_value_list.i()) {
       value_out.push_back(static_cast<uint32_t>(item_i));
     }
-    auto op_desc_attr = op_def_proto.mutable_attr();
-    (void) op_desc_attr->erase("_output_name_value");
+    (void) op_def_proto.mutable_attr()->erase("_output_name_value");
   }
 }
 
@@ -736,7 +729,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
     // skip not set attribute
     if ((iter.second.value_case() == proto::AttrDef::VALUE_NOT_SET) ||
         ((iter.second.value_case() == proto::AttrDef::kList) &&
-            (iter.second.list().val_type() == ListValue::VT_LIST_NONE))) {
+            (iter.second.list().val_type() == ge::proto::AttrDef::ListValue::VT_LIST_NONE))) {
       continue;
     }
 
