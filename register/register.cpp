@@ -44,12 +44,18 @@ const std::string kTfOutputDesc = "output_tensor_desc";
 const std::string kFuncNameKey = "name";
 
 struct DynamicInfo {
-  DynamicType type;
-  uint32_t inset_index;
-  uint32_t tensor_num;
   DynamicInfo() : type(kInvalid), inset_index(0U), tensor_num(0U) {}
   DynamicInfo(DynamicType dynamic_type, uint32_t index, uint32_t num) :
               type(dynamic_type), inset_index(index), tensor_num(num) {}
+
+  DynamicType GetType() const {return type;}
+  uint32_t GetInsetIndex() const {return inset_index;}
+  uint32_t GetTensorNum() const {return tensor_num;}
+  void SetInsetIndex(uint32_t insetIndex) {inset_index = insetIndex;}
+private:
+  DynamicType type;
+  uint32_t inset_index;
+  uint32_t tensor_num;
 };
 
 std::set<std::string> GetSubgraphAttrNames(const ge::Operator &op) {
@@ -224,11 +230,11 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t input_increment = 0U;
   for (const auto &input_name : register_input_names) {
     if (port_dynamic_info.find(input_name) != port_dynamic_info.end()) {
-      port_dynamic_info[input_name].inset_index = input_index + input_increment;
-      const uint32_t tensor_num = port_dynamic_info[input_name].tensor_num;
+      port_dynamic_info[input_name].SetInsetIndex(input_index + input_increment);
+      const uint32_t tensor_num = port_dynamic_info[input_name].GetTensorNum();
       input_increment += tensor_num > 0U ? tensor_num - 1U : 0U;
       GELOGI("Dynamic input name[%s] insert index: %u, tensor num: %u, op proto index: %u", input_name.c_str(),
-             port_dynamic_info[input_name].inset_index, tensor_num, input_index);
+             port_dynamic_info[input_name].GetInsetIndex(), tensor_num, input_index);
       input_index++;
     }
   }
@@ -237,11 +243,11 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t out_increment = 0U;
   for (const auto &output_name : register_output_names) {
     if (port_dynamic_info.find(output_name) != port_dynamic_info.end()) {
-      port_dynamic_info[output_name].inset_index = output_index + out_increment;
-      const uint32_t tensor_num = port_dynamic_info[output_name].tensor_num;
+      port_dynamic_info[output_name].SetInsetIndex(output_index + out_increment);
+      const uint32_t tensor_num = port_dynamic_info[output_name].GetTensorNum();
       out_increment += tensor_num > 0U ? tensor_num - 1U : 0U;
       GELOGI("Dynamic output name[%s] insert index: %u, tensor num: %u, op proto index: %u", output_name.c_str(),
-             port_dynamic_info[output_name].inset_index, tensor_num, output_index);
+             port_dynamic_info[output_name].GetInsetIndex(), tensor_num, output_index);
       output_index++;
     }
   }
@@ -373,13 +379,13 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
   vector<pair<string, DynamicInfo>> port_dynamic_info_vec(port_dynamic_info.begin(), port_dynamic_info.end());
   std::sort(port_dynamic_info_vec.begin(), port_dynamic_info_vec.end(),
             [](const pair<string, DynamicInfo> &p1, const pair<string, DynamicInfo> &p2)
-            { return p1.second.inset_index < p2.second.inset_index; });
+            { return p1.second.GetInsetIndex() < p2.second.GetInsetIndex(); });
   // 5. add dynamic input and output
   for (const auto &dynamic_info : port_dynamic_info_vec) {
     const string port_name = dynamic_info.first;
-    const DynamicType dynamic_type = dynamic_info.second.type;
-    const uint32_t insert_index = dynamic_info.second.inset_index;
-    const uint32_t tensor_num = dynamic_info.second.tensor_num;
+    const DynamicType dynamic_type = dynamic_info.second.GetType();
+    const uint32_t insert_index = dynamic_info.second.GetInsetIndex();
+    const uint32_t tensor_num = dynamic_info.second.GetTensorNum();
 
     if (dynamic_type == kInput) {
       (void)op_desc_dst->AddInputDescMiddle(port_name, tensor_num, insert_index);
@@ -683,7 +689,9 @@ class OpRegistrationDataImpl {
   OpRegistrationDataImpl() = default;
   ~OpRegistrationDataImpl() = default;
   explicit OpRegistrationDataImpl(const std::string &om_optype);
-
+private:
+  friend class OpRegistrationData;
+  friend class OpRegistry;
   domi::FrameworkType fmk_type_;
   std::set<std::string> ori_optype_set_;                   // OP type in the original model, there may be multiple
   std::string om_optype_;                                  // OP type in OM model

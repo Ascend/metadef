@@ -80,24 +80,23 @@ class TensorAssign {
   template <typename T>
   static Status GetVal(const int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector,
                        const int32_t count, GeTensorPtr &weight) {
-    const bool zerosLike = ((count != val_size) && (val_size == 1));
-    T *addr = new (std::nothrow) T[count]();
+    const std::unique_ptr<T[]> addr(new (std::nothrow) T[count]());
     GE_CHECK_NOTNULL(addr);
-    const int32_t minCount = (count > val_size) ? val_size : count;
+    const bool zerosLike = ((count != val_size) && (val_size == 1));
     if (!zerosLike) {
+      const int32_t minCount = (count > val_size) ? val_size : count;
       for (int32_t i = 0; i < minCount; i++) {
-        *(addr + i) = val_vector.Get(i);
+        addr[i] = val_vector.Get(i);
       }
       for (int32_t i = minCount; i < count; i++) {
-        *(addr + i) = val_vector.Get(minCount - 1);
+        addr[i] = val_vector.Get(minCount - 1);
       }
     } else {
       for (int32_t i = 0; i < count; i++) {
-        *(addr + i) = val_vector.Get(0);
+        addr[i] = val_vector.Get(0);
       }
     }
-    (void)weight->SetData(reinterpret_cast<uint8_t *>(addr), count * sizeof(T));
-    GE_DELETE_NEW_ARRAY(addr);
+    (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.get()), count * sizeof(T));
     return SUCCESS;
   }
 };

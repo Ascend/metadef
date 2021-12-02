@@ -24,6 +24,7 @@ struct FormatTransferRegistry {
     src_dst_builder[src][dst] = std::move(builder);
     return SUCCESS;
   }
+
   std::map<Format, std::map<Format, FormatTransferBuilder>> src_dst_builder;
 };
 
@@ -42,11 +43,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<FormatTransfer> B
     const TransArgs &args) {
   auto &registry = GetFormatTransferRegistry();
   const auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
-  if (dst_builder == registry.src_dst_builder.end()) {
+  if (dst_builder == registry.src_dst_builder.cend()) {
     return nullptr;
   }
   const auto builder_iter = dst_builder->second.find(static_cast<Format>(GetPrimaryFormat(args.dst_format)));
-  if (builder_iter == dst_builder->second.end()) {
+  if (builder_iter == dst_builder->second.cend()) {
     return nullptr;
   }
   return builder_iter->second();
@@ -55,7 +56,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<FormatTransfer> B
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool FormatTransferExists(const TransArgs &args) {
   auto &registry = GetFormatTransferRegistry();
   const auto dst_builder = registry.src_dst_builder.find(static_cast<Format>(GetPrimaryFormat(args.src_format)));
-  if (dst_builder == registry.src_dst_builder.end()) {
+  if (dst_builder == registry.src_dst_builder.cend()) {
     return false;
   }
   return dst_builder->second.count(static_cast<Format>(GetPrimaryFormat(args.dst_format))) > 0U;
