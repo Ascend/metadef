@@ -106,14 +106,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
                                    std::vector<Buffer> &list_buffer);
 
   static bool SetListListInt(AttrHolderAdapter &&obj, const std::string &name,
-                             const std::vector<vector<int64_t>> &value);
+                             const std::vector<std::vector<int64_t>> &value);
   static bool GetListListInt(ConstAttrHolderAdapter &&obj, const std::string &name,
-                             std::vector<vector<int64_t>> &value);
+                             std::vector<std::vector<int64_t>> &value);
 
   static bool SetListListFloat(AttrHolderAdapter &&obj, const std::string &name,
-                               const std::vector<vector<float32_t>> &value);
+                               const std::vector<std::vector<float32_t>> &value);
   static bool GetListListFloat(ConstAttrHolderAdapter &&obj, const std::string &name,
-                               std::vector<vector<float32_t>> &value);
+                               std::vector<std::vector<float32_t>> &value);
 
   static bool SetListDataType(AttrHolderAdapter &&obj, const std::string &name, const std::vector<ge::DataType> &value);
   static bool GetListDataType(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<ge::DataType> &value);

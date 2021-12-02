@@ -24,6 +24,7 @@
 #include "external/ge/ge_api_error_codes.h"
 #include "register/register_error_codes.h"
 #include "register/register_fmk_types.h"
+#include "graph/types.h"
 
 namespace ge {
 class ProtoTypeBasePass {
@@ -39,7 +40,8 @@ class ProtoTypePassRegistry {
 
   static ProtoTypePassRegistry &GetInstance();
 
-  void RegisterProtoTypePass(const char *pass_name, CreateFn create_fn, domi::FrameworkType fmk_type);
+  void RegisterProtoTypePass(const char_t *const pass_name, const CreateFn &create_fn,
+                             const domi::FrameworkType &fmk_type);
 
   std::vector<std::pair<std::string, CreateFn>> GetCreateFnByType(domi::FrameworkType fmk_type) const;
 
@@ -51,7 +53,8 @@ class ProtoTypePassRegistry {
 
 class ProtoTypePassRegistrar {
  public:
-  ProtoTypePassRegistrar(const char *pass_name, ProtoTypeBasePass *(*create_fn)(), domi::FrameworkType fmk_type);
+  ProtoTypePassRegistrar(const char_t *const pass_name, ProtoTypeBasePass *(*const create_fn)(),
+                         const domi::FrameworkType &fmk_type);
   ~ProtoTypePassRegistrar() {}
 };
 

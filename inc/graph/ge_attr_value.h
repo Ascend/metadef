@@ -92,6 +92,11 @@ class AttrValueImpl {
   AttrValueImpl() = default;
   ~AttrValueImpl() = default;
 
+  friend class AttrValue;
+  friend class AttrHolder;
+  friend class Operator;
+
+private:
   AnyValue geAttrValue_;
 };
 }  // namespace ge

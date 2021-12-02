@@ -27,7 +27,7 @@ OpsKernelBuilderRegistry::~OpsKernelBuilderRegistry() {
   }
 }
 void OpsKernelBuilderRegistry::Register(const string &lib_name, const OpsKernelBuilderPtr &instance) {
-  auto it = kernel_builders_.emplace(lib_name, instance);
+  const auto it = kernel_builders_.emplace(lib_name, instance);
   if (it.second) {
     GELOGI("Done registering OpsKernelBuilder successfully, kernel lib name = %s", lib_name.c_str());
   } else {
@@ -41,7 +41,7 @@ void OpsKernelBuilderRegistry::UnregisterAll() {
 }
 
 void OpsKernelBuilderRegistry::Unregister(const string &lib_name) {
-  kernel_builders_.erase(lib_name);
+  (void)kernel_builders_.erase(lib_name);
   GELOGI("OpsKernelBuilder of %s is unregistered", lib_name.c_str());
 }
 
@@ -54,7 +54,7 @@ OpsKernelBuilderRegistry &OpsKernelBuilderRegistry::GetInstance() {
 }
 
 OpsKernelBuilderRegistrar::OpsKernelBuilderRegistrar(const string &kernel_lib_name,
-                                                     OpsKernelBuilderRegistrar::CreateFn fn)
+                                                     const OpsKernelBuilderRegistrar::CreateFn fn)
     : kernel_lib_name_(kernel_lib_name) {
   GELOGI("To register OpsKernelBuilder, kernel lib name = %s", kernel_lib_name.c_str());
   std::shared_ptr<OpsKernelBuilder> builder;

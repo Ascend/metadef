@@ -22,15 +22,17 @@
 #include <utility>
 #include <vector>
 
+#include "graph/types.h"
+
 namespace ge {
 class OpKernelBin {
  public:
-  OpKernelBin(std::string name, std::vector<char> &&data) : name_(std::move(name)), data_(std::move(data)) {}
+  OpKernelBin(const std::string &name, std::vector<char> &&data) : name_(name), data_(std::move(data)) {}
 
   ~OpKernelBin() = default;
 
   const std::string &GetName() const { return name_; }
-  const uint8_t *GetBinData() const { return (const uint8_t *)data_.data(); }
+  const uint8_t *GetBinData() const { return reinterpret_cast<const uint8_t *>(data_.data()); }
   size_t GetBinDataSize() const { return data_.size(); }
   OpKernelBin(const OpKernelBin &) = delete;
   const OpKernelBin &operator=(const OpKernelBin &) = delete;
@@ -41,9 +43,9 @@ class OpKernelBin {
 };
 
 using OpKernelBinPtr = std::shared_ptr<OpKernelBin>;
-const char *const OP_EXTATTR_NAME_TBE_KERNEL = "tbeKernel";
-const char *const OP_EXTATTR_NAME_THREAD_TBE_KERNEL = "thread_tbeKernel";
-const char *const OP_EXTATTR_CUSTAICPU_KERNEL = "cust_aicpu_kernel";
+constexpr char_t OP_EXTATTR_NAME_TBE_KERNEL[] = "tbeKernel";
+constexpr char_t OP_EXTATTR_NAME_THREAD_TBE_KERNEL[] = "thread_tbeKernel";
+constexpr char_t OP_EXTATTR_CUSTAICPU_KERNEL[] = "cust_aicpu_kernel";
 }  // namespace ge
 
 #endif  // INC_GRAPH_OP_KERNEL_BIN_H_
