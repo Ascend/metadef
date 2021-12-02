@@ -130,7 +130,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       continue;
     }
     const auto ori_format = tensor_desc_input->GetFormat();
-    const auto ori_shape = tensor_desc_input->MutableShape();
+    auto &ori_shape = tensor_desc_input->MutableShape();
     const auto curr_format = map_format_in_[i];
     if (curr_format == FORMAT_ND) {
       continue;
