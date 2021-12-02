@@ -165,7 +165,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       tensor_desc_output->SetOriginShape(tensor_desc_output->MutableShape());
       continue;
     }
-    const auto ori_shape = tensor_desc_output->MutableShape();
+    auto &ori_shape = tensor_desc_output->MutableShape();
     const auto curr_format = tensor_desc_output->GetFormat();
     if (curr_format != map_ori_format_out_[i]) {
       REPORT_INNER_ERROR("E19999", "Node is %s, out tensor idx is %zu. format: %s, "
