@@ -20,13 +20,14 @@
 
 namespace ge {
 struct GeGraphDumper {
-  virtual void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix) const {}
-  virtual ~GeGraphDumper() {}
+  virtual void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix) = 0;
+  virtual ~GeGraphDumper() = default;
 };
 
 struct GraphDumperRegistry {
   static GeGraphDumper &GetDumper();
   static void Register(GeGraphDumper &dumper);
+  static void Unregister();
 };
 
 }  // namespace ge

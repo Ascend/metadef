@@ -112,6 +112,7 @@ set(UT_FILES
     "testcase/compile_cache_policy_hasher_unittest.cc"
     "testcase/compile_cache_policy_unittest.cc"
     "testcase/profiler_unittest.cc"
+    "testcase/ge_graph_dumper_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES

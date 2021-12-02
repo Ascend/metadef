@@ -18,16 +18,20 @@
 
 namespace ge {
 namespace {
-GeGraphDumper default_dumper;
+struct DefaultDumper : GeGraphDumper {
+  void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix) override {}
+};
+DefaultDumper default_dumper;
 GeGraphDumper *register_checker = &default_dumper;
 }
 
 GeGraphDumper &GraphDumperRegistry::GetDumper() {
   return *register_checker;
 }
-
 void GraphDumperRegistry::Register(GeGraphDumper &dumper) {
   register_checker = &dumper;
 }
-
+void GraphDumperRegistry::Unregister() {
+  register_checker = &default_dumper;
+}
 }  // namespace ge
