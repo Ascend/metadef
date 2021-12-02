@@ -107,9 +107,8 @@ void CreateTFGraphDef(domi::tensorflow::GraphDef &graph_def) {
 TEST_F(AutoMappingUtils, FindAttrValue) {
   const std::string attr_name = "";
   domi::tensorflow::AttrValue attr_num;
-  domi::tensorflow::NodeDef *node1 = new domi::tensorflow::NodeDef();
-  ge::AutoMappingUtil::FindAttrValue(node1, attr_name, attr_num);
-  delete node1;
+  domi::tensorflow::NodeDef node1;
+  ge::AutoMappingUtil::FindAttrValue(&node1, attr_name, attr_num);
 
   domi::tensorflow::GraphDef graph_def;
   CreateTFGraphDef(graph_def);
@@ -126,22 +125,20 @@ TEST_F(AutoMappingUtils, ConvertShape) {
 
   shape.set_unknown_rank(true);
   ge::AutoMappingUtil::ConvertShape(shape, shape_dims);
-  //EXPECT_EQ(shape_dims[0], ge::UNKNOWN_SHAPE);
 
   shape.set_unknown_rank(false);
   shape.add_dim();
   ge::AutoMappingUtil::ConvertShape(shape, shape_dims);
-  //EXPECT_EQ(shape_dims[0], );
 }
 
 TEST_F(AutoMappingUtils, ConvertTensor) {
+  ge::graphStatus ret;
   domi::tensorflow::TensorProto tensor;
   ge::GeTensorPtr weight;
 
-  ge::AutoMappingUtil::ConvertTensor(tensor, weight);
-
   tensor.set_dtype(domi::tensorflow::DataType_INT_MAX_SENTINEL_DO_NOT_USE_);
-  ge::AutoMappingUtil::ConvertTensor(tensor, weight);
+  ret = ge::AutoMappingUtil::ConvertTensor(tensor, weight);
+  EXPECT_EQ(ret, GRAPH_FAILED);
 
   tensor.set_dtype(domi::tensorflow::DT_UINT16_REF);
   ge::AutoMappingUtil::ConvertTensor(tensor, weight);
