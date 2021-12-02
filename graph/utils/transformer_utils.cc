@@ -61,13 +61,13 @@ bool NodeShapeTransUtils::Init() {
   return true;
 }
 bool NodeShapeTransUtils::CatchFormatAndShape() {
-  for (size_t i = 0; i < in_num_; i++) {
-    auto tensor_desc_input = op_desc_->MutableInputDesc(i);
+  for (size_t i = 0UL; i < in_num_; i++) {
+    const auto tensor_desc_input = op_desc_->MutableInputDesc(static_cast<uint32_t>(i));
     if (tensor_desc_input == nullptr) {
       continue;
     }
-    auto format = tensor_desc_input->GetFormat();
-    auto ori_format = tensor_desc_input->GetOriginFormat();
+    const auto format = tensor_desc_input->GetFormat();
+    const auto ori_format = tensor_desc_input->GetOriginFormat();
     if (format == ori_format &&
         tensor_desc_input->GetShape() == tensor_desc_input->GetOriginShape()) {
       GELOGD("Node is %s, input tensor idx is %zu. ori format: %s, format: %s, ori shape:%s, shape:%s is same! "
@@ -85,13 +85,13 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     tensor_desc_input->SetShape(tensor_desc_input->GetOriginShape());
   }
 
-  for (size_t i = 0; i < out_num_; i++) {
-    auto tensor_desc_output = op_desc_->MutableOutputDesc(i);
+  for (size_t i = 0UL; i < out_num_; i++) {
+    const auto tensor_desc_output = op_desc_->MutableOutputDesc(static_cast<uint32_t>(i));
     if (tensor_desc_output == nullptr) {
       continue;
     }
-    auto format = tensor_desc_output->GetFormat();
-    auto ori_format = tensor_desc_output->GetOriginFormat();
+    const auto format = tensor_desc_output->GetFormat();
+    const auto ori_format = tensor_desc_output->GetOriginFormat();
     if (SameCurrentAndOrigin(tensor_desc_output)) {
       GELOGD("Node is %s, output tensor idx is %zu. ori format: %s, format: %s, ori shape:%s, shape:%s is same!"
              "or output original not initialized. No need to catch format&shape!", op_desc_->GetName().c_str(), i,
@@ -116,8 +116,8 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
 
 bool NodeShapeTransUtils::UpdateFormatAndShape() {
   transformer::ShapeTransferAccordingToFormat shape_transfer;
-  for (size_t i = 0; i < in_num_; i++) {
-    auto tensor_desc_input = op_desc_->MutableInputDesc(i);
+  for (size_t i = 0UL; i < in_num_; i++) {
+    const auto tensor_desc_input = op_desc_->MutableInputDesc(static_cast<uint32_t>(i));
     if (tensor_desc_input == nullptr) {
       continue;
     }
@@ -129,13 +129,13 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       tensor_desc_input->SetOriginShape(tensor_desc_input->MutableShape());
       continue;
     }
-    auto ori_format = tensor_desc_input->GetFormat();
+    const auto ori_format = tensor_desc_input->GetFormat();
     auto &ori_shape = tensor_desc_input->MutableShape();
-    auto curr_format = map_format_in_[i];
+    const auto curr_format = map_format_in_[i];
     if (curr_format == FORMAT_ND) {
       continue;
     }
-    ge::DataType dtype =  map_dtype_in_[i];
+    const ge::DataType dtype =  map_dtype_in_[i];
 
     // FE set and Ge get for PadDimention
     std::string infer_reshape_type;
@@ -152,8 +152,8 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     tensor_desc_input->SetFormat(curr_format);
   }
 
-  for (size_t i = 0; i < out_num_; i++) {
-    auto tensor_desc_output = op_desc_->MutableOutputDesc(i);
+  for (size_t i = 0UL; i < out_num_; i++) {
+    const auto tensor_desc_output = op_desc_->MutableOutputDesc(static_cast<uint32_t>(i));
     if (tensor_desc_output == nullptr) {
       continue;
     }
@@ -166,7 +166,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       continue;
     }
     auto &ori_shape = tensor_desc_output->MutableShape();
-    auto curr_format = tensor_desc_output->GetFormat();
+    const auto curr_format = tensor_desc_output->GetFormat();
     if (curr_format != map_ori_format_out_[i]) {
       REPORT_INNER_ERROR("E19999", "Node is %s, out tensor idx is %zu. format: %s, "
                          "recorded origin format: %s is not same", op_desc_->GetName().c_str(), i,
@@ -179,7 +179,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       return GRAPH_FAILED;
     }
     tensor_desc_output->SetOriginShape(ori_shape);
-    auto saved_format = map_format_out_[i];
+    const auto saved_format = map_format_out_[i];
     if (saved_format == FORMAT_ND) {
       GELOGD("Nodeis %s, out tensor idx is %zu. ori format: %s, recorded format: %s is same! No need to transfer",
              op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
@@ -187,20 +187,20 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       continue;
     }
     tensor_desc_output->SetFormat(saved_format);
-    ge::DataType dtype =  tensor_desc_output->GetDataType();
+    const ge::DataType dtype =  tensor_desc_output->GetDataType();
 
     // FE set and Ge get for PadDimention
     std::string infer_reshape_type;
     (void) AttrUtils::GetStr(*tensor_desc_output, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
-    bool is_success = transformer::ExpandDimension(op_desc_->GetType(), curr_format, saved_format, i,
-                                                   infer_reshape_type, ori_shape);
+    const bool is_success = transformer::ExpandDimension(op_desc_->GetType(), curr_format, saved_format, i,
+                                                         infer_reshape_type, ori_shape);
     if (!is_success) {
       REPORT_CALL_ERROR("E19999", "ExpandDimension failed, op type:%s.", op_desc_->GetType().c_str());
       GELOGE(GRAPH_FAILED, "[Call][ExpandDimension] failed, op type:%s.", op_desc_->GetType().c_str());
       return GRAPH_FAILED;
     }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape, curr_format, saved_format, dtype};
-    shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
+    (void)shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     GELOGD("Node is %s, out tensor idx is %zu. Update format and shape success, ori format: %s, format: %s",
         op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
         TypeUtils::FormatToSerialString(saved_format).c_str());
