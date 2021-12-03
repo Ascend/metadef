@@ -22,6 +22,7 @@
 #include <sstream>
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
+#include "graph/types.h"
 #include "mmpa/mmpa_api.h"
 
 namespace ge {
@@ -31,7 +32,7 @@ OpsProtoManager *OpsProtoManager::Instance() {
 }
 
 bool OpsProtoManager::Initialize(const std::map<std::string, std::string> &options) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  const std::lock_guard<std::mutex> lock(mutex_);
 
   if (is_init_) {
     GELOGI("OpsProtoManager is already initialized.");
@@ -39,7 +40,7 @@ bool OpsProtoManager::Initialize(const std::map<std::string, std::string> &optio
   }
 
   /*lint -e1561*/
-  auto proto_iter = options.find("ge.opsProtoLibPath");
+  const auto proto_iter = options.find("ge.opsProtoLibPath");
   /*lint +e1561*/
   if (proto_iter == options.end()) {
     GELOGW("[Initialize][CheckOption] Option \"ge.opsProtoLibPath\" not set");
@@ -55,7 +56,7 @@ bool OpsProtoManager::Initialize(const std::map<std::string, std::string> &optio
 }
 
 void OpsProtoManager::Finalize() {
-  std::lock_guard<std::mutex> lock(mutex_);
+  const std::lock_guard<std::mutex> lock(mutex_);
 
   if (!is_init_) {
     GELOGI("OpsProtoManager is not initialized.");
@@ -65,7 +66,7 @@ void OpsProtoManager::Finalize() {
   for (auto handle : handles_) {
     if (handle != nullptr) {
       if (mmDlclose(handle) != 0) {
-        const char *error = mmDlerror();
+        const char_t *error = mmDlerror();
         error = (error == nullptr) ? "" : error;
         GELOGW("[Finalize][CloseHandle] close handle failed, reason:%s", error);
         continue;
@@ -79,7 +80,7 @@ void OpsProtoManager::Finalize() {
   is_init_ = false;
 }
 
-static std::vector<std::string> Split(const std::string &str, char delim) {
+static std::vector<std::string> Split(const std::string &str, char_t delim) {
   std::vector<std::string> elems;
   if (str.empty()) {
     elems.emplace_back("");
@@ -93,8 +94,8 @@ static std::vector<std::string> Split(const std::string &str, char delim) {
     elems.push_back(item);
   }
 
-  auto str_size = str.size();
-  if (str_size > 0 && str[str_size - 1] == delim) {
+  const auto str_size = str.size();
+  if ((str_size > 0UL) && (str[str_size - 1UL] == delim)) {
     elems.emplace_back("");
   }
 
@@ -112,44 +113,44 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
                                                     path.size(), MMPA_MAX_PATH);
                                  return, "[Check][Param] path is invalid");
 
-  char resolved_path[MMPA_MAX_PATH] = {0};
+  char_t resolved_path[MMPA_MAX_PATH] = {'0'};
 
   // Nullptr is returned when the path does not exist or there is no permission
   // Return absolute path when path is accessible
-  INT32 result = mmRealPath(path.c_str(), resolved_path, MMPA_MAX_PATH);
+  const INT32 result = mmRealPath(path.c_str(), resolved_path, MMPA_MAX_PATH);
   if (result != EN_OK) {
     GELOGW("[FindSo][Check] Get real_path for file %s failed, reason:%s", path.c_str(), strerror(errno));
     return;
   }
 
-  INT32 is_dir = mmIsDir(resolved_path);
+  const INT32 is_dir = mmIsDir(resolved_path);
   // Lib plugin path not exist
   if (is_dir != EN_OK) {
-      GELOGW("[FindSo][Check] Open directory %s failed, maybe it is not exit or not a dir, errmsg:%s",
-             resolved_path, strerror(errno));
-      return;
+    GELOGW("[FindSo][Check] Open directory %s failed, maybe it is not exit or not a dir, errmsg:%s",
+           resolved_path, strerror(errno));
+    return;
   }
 
   mmDirent **entries = nullptr;
-  auto ret = mmScandir(resolved_path, &entries, nullptr, nullptr);
+  const auto ret = mmScandir(resolved_path, &entries, nullptr, nullptr);
   if (ret < EN_OK) {
-      GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", resolved_path, ret, strerror(errno));
-      return;
+    GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", resolved_path, ret, strerror(errno));
+    return;
   }
-  for (int i = 0; i < ret; ++i) {
-      mmDirent *dir_ent = entries[i];
-      std::string name = std::string(dir_ent->d_name);
-      if (strcmp(name.c_str(), ".") == 0 || strcmp(name.c_str(), "..") == 0) {
-          continue;
-      }
-      std::string full_name = path + "/" + name;
-      const std::string so_suff = ".so";
+  for (int32_t i = 0; i < ret; ++i) {
+    mmDirent *dir_ent = entries[i];
+    const std::string name = std::string(dir_ent->d_name);
+    if ((strcmp(name.c_str(), ".") == 0) || (strcmp(name.c_str(), "..") == 0)) {
+      continue;
+    }
+    const std::string full_name = path + "/" + name;
+    const std::string so_suff = ".so";
 
-      if (dir_ent->d_type != DT_DIR && name.size() >= so_suff.size() &&
-          name.compare(name.size() - so_suff.size(), so_suff.size(), so_suff) == 0) {
-          file_list.push_back(full_name);
-          GELOGI("OpsProtoManager Parse full name = %s \n", full_name.c_str());
-      }
+    if ((static_cast<int32_t>(dir_ent->d_type) != DT_DIR) && (name.size() >= so_suff.size()) &&
+        (name.compare(name.size() - so_suff.size(), so_suff.size(), so_suff) == 0)) {
+      file_list.push_back(full_name);
+      GELOGI("OpsProtoManager Parse full name = %s \n", full_name.c_str());
+    }
   }
   mmScandirFree(entries, ret);
   GELOGI("Found %d libs.", ret);
@@ -157,15 +158,15 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
 
 static void GetPluginSoFileList(const std::string &path, std::vector<std::string> &file_list) {
   // Support multi lib directory with ":" as delimiter
-  std::vector<std::string> v_path = Split(path, ':');
+  const std::vector<std::string> v_path = Split(path, ':');
 
-  for (size_t i = 0; i < v_path.size(); ++i) {
+  for (size_t i = 0UL; i < v_path.size(); ++i) {
     FindParserSo(v_path[i], file_list);
     GELOGI("OpsProtoManager full name = %s", v_path[i].c_str());
   }
 }
 
-void OpsProtoManager::LoadOpsProtoPluginSo(std::string &path) {
+void OpsProtoManager::LoadOpsProtoPluginSo(const std::string &path) {
   if (path.empty()) {
     REPORT_INNER_ERROR("E19999", "filePath is empty. please check your text file.");
     GELOGE(GRAPH_FAILED, "[Check][Param] filePath is empty. please check your text file.");
@@ -186,10 +187,10 @@ void OpsProtoManager::LoadOpsProtoPluginSo(std::string &path) {
          "trusted.");
 
   // Load .so file
-  for (auto elem : file_list) {
+  for (const auto elem : file_list) {
     void *handle = mmDlopen(elem.c_str(), MMPA_RTLD_NOW | MMPA_RTLD_GLOBAL);
     if (handle == nullptr) {
-      const char *error = mmDlerror();
+      const char_t *error = mmDlerror();
       error = (error == nullptr) ? "" : error;
       GELOGW("[LoadSo][Open] OpsProtoManager dlopen failed, plugin name:%s. Message(%s).", elem.c_str(), error);
       continue;

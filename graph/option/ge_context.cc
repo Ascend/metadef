@@ -17,22 +17,23 @@
 #include "graph/ge_context.h"
 #include "graph/ge_global_options.h"
 #include "graph/ge_local_context.h"
+#include "graph/types.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace ge {
 namespace {
 const int64_t kMinTrainingTraceJobId = 65536;
-const int kDecimal = 10;
-const char *kHostExecPlacement = "HOST";
+const int32_t kDecimal = 10;
+const char_t *kHostExecPlacement = "HOST";
 }
 GEContext &GetContext() {
   static GEContext ge_context{};
   return ge_context;
 }
 
-thread_local uint64_t GEContext::session_id_ = 0;
-thread_local uint64_t GEContext::context_id_ = 0;
-thread_local uint64_t GEContext::work_stream_id_ = 0;
+thread_local uint64_t GEContext::session_id_ = 0UL;
+thread_local uint64_t GEContext::context_id_ = 0UL;
+thread_local uint64_t GEContext::work_stream_id_ = 0UL;
 
 graphStatus GEContext::GetOption(const std::string &key, std::string &option) {
   return GetThreadLocalContext().GetOption(key, option);
@@ -81,20 +82,20 @@ void GEContext::Init() {
   std::string job_id;
   (void)GetOption("ge.exec.jobId", job_id);
   std::string s_job_id = "";
-  for (auto c : job_id) {
-    if (c >= '0' && c <= '9') {
+  for (const auto c : job_id) {
+    if ((c >= '0') && (c <= '9')) {
       s_job_id += c;
     }
   }
   if (s_job_id == "") {
-    trace_id_ = kMinTrainingTraceJobId;
+    trace_id_ = static_cast<size_t>(kMinTrainingTraceJobId);
     return;
   }
-  int64_t d_job_id = std::strtoll(s_job_id.c_str(), nullptr, kDecimal);
+  const int64_t d_job_id = static_cast<int64_t>(std::strtoll(s_job_id.c_str(), nullptr, kDecimal));
   if (d_job_id < kMinTrainingTraceJobId) {
-    trace_id_ = d_job_id + kMinTrainingTraceJobId;
+    trace_id_ = static_cast<size_t>(d_job_id + kMinTrainingTraceJobId);
   } else {
-    trace_id_ = d_job_id;
+    trace_id_ = static_cast<size_t>(d_job_id);
   }
 }
 
@@ -108,12 +109,12 @@ uint32_t GEContext::DeviceId() { return device_id_; }
 
 uint64_t GEContext::TraceId() { return trace_id_; }
 
-void GEContext::SetSessionId(uint64_t session_id) { session_id_ = session_id; }
+void GEContext::SetSessionId(const uint64_t session_id) { session_id_ = session_id; }
 
-void GEContext::SetContextId(uint64_t context_id) { context_id_ = context_id; }
+void GEContext::SetContextId(const uint64_t context_id) { context_id_ = context_id; }
 
-void GEContext::SetWorkStreamId(uint64_t work_stream_id) { work_stream_id_ = work_stream_id; }
+void GEContext::SetWorkStreamId(const uint64_t work_stream_id) { work_stream_id_ = work_stream_id; }
 
-void GEContext::SetCtxDeviceId(uint32_t device_id) { device_id_ = device_id; }
+void GEContext::SetCtxDeviceId(const uint32_t device_id) { device_id_ = device_id; }
 
 }  // namespace ge

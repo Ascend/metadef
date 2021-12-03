@@ -23,7 +23,7 @@
 namespace ge {
 graphStatus NamedAttrsSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   ge::NamedAttrs named_attrs;
-  graphStatus ret = av.GetValue(named_attrs);
+  const graphStatus ret = av.GetValue(named_attrs);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get named attrs.");
     return GRAPH_FAILED;
@@ -40,16 +40,16 @@ graphStatus NamedAttrsSerializer::Serialize(const ge::NamedAttrs &named_attr, pr
   GE_CHECK_NOTNULL(mutable_attr);
 
   auto attrs = AttrUtils::GetAllAttrs(named_attr);
-  for (auto iter = attrs.begin(); iter != attrs.end(); ++iter) {
-    AnyValue attr_value = iter->second;
-    auto serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr_value.GetValueTypeId());
+  for (auto attr : attrs) {
+    const AnyValue attr_value = attr.second;
+    const auto serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr_value.GetValueTypeId());
     GE_CHECK_NOTNULL(serializer);
     proto::AttrDef attr_def;
     if (serializer->Serialize(attr_value, attr_def) != GRAPH_SUCCESS) {
-      GELOGE(FAILED, "Attr serialized failed, name:[%s].", iter->first.c_str());
+      GELOGE(FAILED, "Attr serialized failed, name:[%s].", attr.first.c_str());
       return FAILED;
     }
-    (*mutable_attr)[iter->first] = attr_def;
+    (*mutable_attr)[attr.first] = attr_def;
   }
   return GRAPH_SUCCESS;
 }
@@ -66,18 +66,17 @@ graphStatus NamedAttrsSerializer::Deserialize(const proto::AttrDef &def, AnyValu
 graphStatus NamedAttrsSerializer::Deserialize(const proto::NamedAttrs &proto_attr, ge::NamedAttrs &named_attrs) {
   named_attrs.SetName(proto_attr.name());
   auto proto_attr_map = proto_attr.attr();
-  for (auto iter = proto_attr_map.begin(); iter != proto_attr_map.end(); ++iter) {
-    auto deserializer =
-        AttrSerializerRegistry::GetInstance().GetDeserializer(iter->second.value_case());
+  for (auto proto_attr : proto_attr_map) {
+    const auto deserializer = AttrSerializerRegistry::GetInstance().GetDeserializer(proto_attr.second.value_case());
     GE_CHECK_NOTNULL(deserializer);
     AnyValue attr_value;
-    if (deserializer->Deserialize(iter->second, attr_value) != GRAPH_SUCCESS) {
-      GELOGE(FAILED, "Attr deserialized failed, name:[%s].", iter->first.c_str());
+    if (deserializer->Deserialize(proto_attr.second, attr_value) != GRAPH_SUCCESS) {
+      GELOGE(FAILED, "Attr deserialized failed, name:[%s].", proto_attr.first.c_str());
       return FAILED;
     }
-    if (named_attrs.SetAttr(iter->first, attr_value) != GRAPH_SUCCESS) {
+    if (named_attrs.SetAttr(proto_attr.first, attr_value) != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "NamedAttrs [%s] set attr [%s] failed.",
-             named_attrs.GetName().c_str(), iter->first.c_str());
+             named_attrs.GetName().c_str(), proto_attr.first.c_str());
       return GRAPH_FAILED;
     }
   }

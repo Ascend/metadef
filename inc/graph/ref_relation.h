@@ -65,7 +65,7 @@ struct RefCellHash{
 class RefRelations {
 public:
   graphStatus LookUpRefRelations(const RefCell &key, std::unordered_set<RefCell, RefCellHash> &result);
-  graphStatus BuildRefRelations(ge::ComputeGraph &root_graph);
+  graphStatus BuildRefRelations(ge::ComputeGraph &graph);
   graphStatus Clear();
 
   RefRelations();
