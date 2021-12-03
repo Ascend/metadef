@@ -18,6 +18,14 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/detail/model_serialize_imp.h"
+#include "graph/utils/ge_ir_utils.h"
+#include "graph/utils/attr_utils.h"
+#include "graph/op_desc.h"
+#include "graph/compute_graph.h"
+#include "graph_builder_utils.h"
+#include "graph/node.h"
+#include "graph/node_impl.h"
+#include "test_std_structs.h"
 #undef private
 #undef protected
 
@@ -136,6 +144,37 @@ static GeAttrValue::NamedAttrs CreateNamedAttrs(const string& name, std::map<str
         namedAttrs.SetAttr(it.first, it.second);
     }
     return namedAttrs;
+}
+
+static ComputeGraphPtr CreateGraph_1_1_224_224(float *tensor_data) {
+  ut::GraphBuilder builder("graph1");
+  auto data1 = builder.AddNode("data1", "Data", {}, {"y"});
+  AttrUtils::SetInt(data1->GetOpDesc(), "index", 0);
+  auto const1 = builder.AddNode("const1", "Const", {}, {"y"});
+  GeTensorDesc const1_td;
+  const1_td.SetShape(GeShape({1, 1, 224, 224}));
+  const1_td.SetOriginShape(GeShape({1, 1, 224, 224}));
+  const1_td.SetFormat(FORMAT_NCHW);
+  const1_td.SetOriginFormat(FORMAT_NCHW);
+  const1_td.SetDataType(DT_FLOAT);
+  const1_td.SetOriginDataType(DT_FLOAT);
+  GeTensor tensor(const1_td);
+  tensor.SetData(reinterpret_cast<uint8_t *>(tensor_data), sizeof(float) * 224 * 224);
+  AttrUtils::SetTensor(const1->GetOpDesc(), "value", tensor);
+  auto add1 = builder.AddNode("add1", "Add", {"x1", "x2"}, {"y"});
+  add1->impl_->attrs_["test_attr1"] = GeAttrValue::CreateFrom<int64_t>(100);
+  add1->impl_->attrs_["test_attr2"] = GeAttrValue::CreateFrom<string>("test");
+  auto netoutput1 = builder.AddNode("NetOutputNode", "NetOutput", {"x"}, {});
+  ge::AttrUtils::SetListListInt(add1->GetOpDesc()->MutableOutputDesc(0), "list_list_i", {{1, 0, 0, 0}});
+  ge::AttrUtils::SetListInt(add1->GetOpDesc(), "list_i", {1});
+  ge::AttrUtils::SetListStr(add1->GetOpDesc(), "list_s", {"1"});
+  ge::AttrUtils::SetListFloat(add1->GetOpDesc(), "list_f", {1.0});
+  ge::AttrUtils::SetListBool(add1->GetOpDesc(), "list_b", {false});
+  builder.AddDataEdge(data1, 0, add1, 0);
+  builder.AddDataEdge(const1, 0, add1, 1);
+  builder.AddDataEdge(add1, 0, netoutput1, 0);
+
+  return builder.GetGraph();
 }
 
 TEST(UTEST_ge_model_serialize, simple)
@@ -1614,4 +1653,32 @@ TEST(UTEST_ge_model_unserialize, test_invalid_CodeBuffer)
         auto opDesc = serialize.UnserializeOpDesc((uint8_t*) nullptr, 100);
         EXPECT_FALSE(opDesc != nullptr);
     }
+}
+
+TEST(UTEST_ge_model_unserialize, UnserializeTensorTest)
+{
+    ge::ModelSerializeImp serialize_imp;
+    GeTensorPtr tensor;
+    proto::TensorDef tensor_proto;
+    bool ret = serialize_imp.UnserializeTensor(tensor, tensor_proto);
+    EXPECT_EQ(ret, true);
+}
+
+TEST(UTEST_ge_model_unserialize, RebuildOwnershipTest)
+{
+    ge::ModelSerializeImp serialize_imp;
+    float tensor_data[224 * 224] = {1.0f};
+    ComputeGraphPtr compute_graph = CreateGraph_1_1_224_224(tensor_data);
+    std::map<std::string, ComputeGraphPtr> subgraphs;
+    bool ret = serialize_imp.RebuildOwnership(compute_graph, subgraphs);
+    EXPECT_EQ(ret, true);
+}
+
+TEST(UTEST_ge_model_unserialize, UnserializeModelTest)
+{
+    ge::ModelSerialize serialize;
+    ge::proto::ModelDef model_def;
+    Model model;
+    bool ret = serialize.UnserializeModel(model_def, model);
+    EXPECT_EQ(ret, false);
 }

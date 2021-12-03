@@ -3,6 +3,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/attr_utils.h"
+#include "graph/debug/ge_log.h"
 #include <iostream>
 using namespace std;
 
@@ -391,11 +392,15 @@ TEST_F(ge_test_tensor_utils, GetTensorMemorySizeInBytes_SUCCESS) {
 }
 
 TEST_F(ge_test_tensor_utils, GetTensorMemorySizeInBytes_FAILED) {
-  GeTensorDesc tensorDesc;
+  vector<int64_t> dims({2, 3, 4, 5});
+  GeShape ge_shape(dims);
+  Format format;
+  DataType data_type;
+  GeTensorDesc tensorDesc(ge_shape, format, data_type);
   int64_t size;
 //  MOCKER(TensorUtils::GetTensorSizeInBytes).stubs().will(returnValue(GRAPH_FAILED));
   graphStatus ret = TensorUtils::GetTensorMemorySizeInBytes(tensorDesc, size);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
 TEST_F(ge_test_tensor_utils, GetTensorSizeInBytes_SUCCESS) {
@@ -421,6 +426,125 @@ TEST_F(ge_test_tensor_utils, GetTensorSizeInBytes_NoTiling_SUCCESS) {
   int64_t size;
   (void)AttrUtils::SetBool(&tensorDesc, ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE, true);
   graphStatus ret = TensorUtils::GetTensorSizeInBytes(tensorDesc, size);
+}
+
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeFilterHwckTest) {
+  vector<int64_t> dims({2, 3, 4, 5});
+  GeShape ge_shape(dims);
+  Format format = FORMAT_FILTER_HWCK;
+  DataType data_type = DT_STRING;
+  int64_t mem_size = 0;
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeFractalZnRnn) {
+  vector<int64_t> dims({2, 3, 4, 5});
+  GeShape ge_shape(dims);
+  Format format = FORMAT_FRACTAL_ZN_RNN;
+  DataType data_type = DT_STRING;
+  int64_t mem_size = 0;
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, CheckShapeByShapeRangeShapeRangeIsNull) {
+  vector<int64_t> dims({2, 3, 4, 5, 6, 7, 8});
+  GeShape ge_shape(dims);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  graphStatus ret =
+      TensorUtils::CheckShapeByShapeRange(ge_shape, shape_range);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, CheckShapeByShapeRangeFailTest) {
+  vector<int64_t> dims({2, 3, 4, 5, 6, 7, 8});
+  GeShape ge_shape(dims);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(1, 1));
+  graphStatus ret =
+      TensorUtils::CheckShapeByShapeRange(ge_shape, shape_range);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(ge_test_tensor_utils, CheckShapeByShapeRangeLeftRangeLessThan0) {
+  vector<int64_t> dims({2, 3, 4, 5});
+  GeShape ge_shape(dims);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(-1, 1));
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(2, 2));
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(3, 3));
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(4, 4));
+  graphStatus ret =
+      TensorUtils::CheckShapeByShapeRange(ge_shape, shape_range);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(ge_test_tensor_utils, CheckShapeByShapeRangeCurDimIsUnknownDim) {
+  vector<int64_t> dims({-1, -1});
+  GeShape ge_shape(dims);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(1, 1));
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(2, 2));
+  graphStatus ret =
+      TensorUtils::CheckShapeByShapeRange(ge_shape, shape_range);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, CheckShapeByShapeRangeCurDimLessThanLeftRange) {
+  vector<int64_t> dims({1, 2});
+  GeShape ge_shape(dims);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(3, 3));
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(4, 4));
+  graphStatus ret =
+      TensorUtils::CheckShapeByShapeRange(ge_shape, shape_range);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(ge_test_tensor_utils, CheckShapeByShapeRangeRightRangeLessThan0) {
+  vector<int64_t> dims({3, 4});
+  GeShape ge_shape(dims);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(3, -3));
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(4, -4));
+  graphStatus ret =
+      TensorUtils::CheckShapeByShapeRange(ge_shape, shape_range);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(ge_test_tensor_utils, CheckShapeByShapeRangeCurDimGreaterThanRightRange) {
+  vector<int64_t> dims({5, 6});
+  GeShape ge_shape(dims);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(3, 3));
+  shape_range.push_back(std::make_pair<int64_t, int64_t>(4, 4));
+  graphStatus ret =
+      TensorUtils::CheckShapeByShapeRange(ge_shape, shape_range);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingSuccess) {
+  GeTensorDesc tensor;
+  Format format = FORMAT_NCHW;
+  DataType data_type = DT_STRING;
+  int64_t mem_size = 0;
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingDimsSizeIs0) {
+  vector<int64_t> dims({});
+  GeShape ge_shape(dims);
+  Format format = FORMAT_FRACTAL_Z;
+  DataType data_type;
+  int64_t mem_size = 0;
+  GeTensorDesc tensor(ge_shape, format, data_type);
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 }
