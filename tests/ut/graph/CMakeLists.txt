@@ -20,6 +20,8 @@ set(CMAKE_CXX_STANDARD 11)
 # include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${METADEF_DIR}/graph)
+include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
+include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
 include_directories(${METADEF_DIR}/third_party)
 include_directories(${METADEF_DIR}/third_party/graphengine/inc)
 include_directories(${METADEF_DIR}/third_party/graphengine/inc/external)

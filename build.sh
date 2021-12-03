@@ -148,7 +148,7 @@ build_metadef()
   fi
   
   if [ "X$ENABLE_METADEF_UT" = "Xon" ]; then
-    make ut_graph ut_register -j8
+    make ut_graph ut_register -j${THREAD_NUM}
   else
     make ${VERBOSE} -j${THREAD_NUM} && make install
   fi

@@ -1,4 +1,4 @@
-    set(GRAPH_SOURCE_LIST
+set(GRAPH_SOURCE_LIST
     "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
@@ -134,6 +134,7 @@ target_include_directories(graph PRIVATE
     $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party>
     ${METADEF_DIR}/third_party/transformer/inc
 )
+
 
 target_link_options(graph PRIVATE
     -Wl,-Bsymbolic
