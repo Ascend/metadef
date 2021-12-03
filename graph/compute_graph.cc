@@ -315,7 +315,7 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
     return nullptr;
   }
   op->SetId(static_cast<int64_t>(GetDirectNodesSize()));
-  NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
+  const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS,
                   REPORT_CALL_ERROR("E19999", "node %s init failed.", op->GetName().c_str());
@@ -323,7 +323,7 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
   return AddNodeFront(node_ptr);
 }
 
-NodePtr ComputeGraphImpl::AddNode(NodePtr node) {
+NodePtr ComputeGraphImpl::AddNode(const NodePtr node) {
   if (node == nullptr || node->GetOpDesc() == nullptr) {
     REPORT_INNER_ERROR("E19999", "the node ptr or op desc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op desc ptr should not be null.");
@@ -335,14 +335,14 @@ NodePtr ComputeGraphImpl::AddNode(NodePtr node) {
   return node;
 }
 
-NodePtr ComputeGraphImpl::AddNode(OpDescPtr op, const ComputeGraphPtr &compute_graph) {
+NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const ComputeGraphPtr &compute_graph) {
   if (op == nullptr) {
     REPORT_INNER_ERROR("E19999", "The OpDesc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The OpDesc ptr should not be null.");
     return nullptr;
   }
   op->SetId(static_cast<int64_t>(GetDirectNodesSize()));
-  NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
+  const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node_ptr == nullptr,
                   REPORT_CALL_ERROR("E19999", "create node failed.");
                   GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
@@ -750,7 +750,7 @@ graphStatus ComputeGraphImpl::InsertGraphEvents(const ConstComputeGraphPtr &comp
   std::vector<ComputeGraphPtr> subgraphs;
   const auto nodes = AllGraphNodes(subgraphs, compute_graph);
   for (size_t i = 0UL; i < nodes.size(); ++i) {
-    NodePtr node = nodes.at(i);   // [node: should not be null]
+    const NodePtr node = nodes.at(i);   // [node: should not be null]
     node->GetOpDesc()->SetId(static_cast<int64_t>(i));  // [node->GetOpDesc(): should not be null]
   }
 
@@ -785,7 +785,7 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
       for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
         GE_CHECK_NOTNULL(peer_in_anchor);
         const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
-        if (iter != map_in_edge_num.end() && (--iter->second == 0)) {
+        if (iter != map_in_edge_num.end() && (--iter->second == 0U)) {
           out_nodes.push_back(peer_in_anchor->GetOwnerNode());
         }
       }
@@ -793,7 +793,7 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
       for (const auto &peer_in_anchor : anchor->GetPeerInControlAnchors()) {
         GE_CHECK_NOTNULL(peer_in_anchor);
         const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
-        if (iter != map_in_edge_num.end() && (--iter->second == 0)) {
+        if (iter != map_in_edge_num.end() && (--iter->second == 0U)) {
           out_nodes.push_back(peer_in_anchor->GetOwnerNode());
         }
       }
@@ -804,7 +804,7 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
                                                      : node->GetOutControlAnchor()->GetPeerAnchors()) {
           GE_CHECK_NOTNULL(peer_in_anchor);
           const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
-          if (iter != map_in_edge_num.end() && (--iter->second == 0)) {
+          if (iter != map_in_edge_num.end() && (--iter->second == 0U)) {
             out_nodes.push_back(peer_in_anchor->GetOwnerNode());
           }
         }
@@ -849,7 +849,8 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
   return GRAPH_SUCCESS;
 }
 
-graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
+graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node,
+                                                    std::map<NodePtr, uint32_t> &map_in_edge_num,
                                                     std::map<std::string, NodePtr> &breadth_node_map) {
   for (const auto &anchor : node->GetAllOutDataAnchors()) {
     for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
@@ -861,7 +862,7 @@ graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node, std::ma
 
     for (const auto &peer_in_anchor : anchor->GetPeerInControlAnchors()) {
       const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
-      if (iter != map_in_edge_num.end() && (--iter->second == 0)) {
+      if (iter != map_in_edge_num.end() && (--iter->second == 0U)) {
         (void)breadth_node_map.emplace(peer_in_anchor->GetOwnerNode()->GetName(), peer_in_anchor->GetOwnerNode());
       }
     }
@@ -869,7 +870,7 @@ graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node, std::ma
   if (node->GetOutControlAnchor() != nullptr) {
     for (const AnchorPtr peer_in_anchor : node->GetOutControlAnchor()->GetPeerAnchors()) {
       const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
-      if (iter != map_in_edge_num.end() && (--iter->second == 0)) {
+      if (iter != map_in_edge_num.end() && (--iter->second == 0U)) {
         (void)breadth_node_map.emplace(peer_in_anchor->GetOwnerNode()->GetName(), peer_in_anchor->GetOwnerNode());
       }
     }
@@ -964,7 +965,7 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
 
   ClearNodeList();
   for (size_t i = 0UL; i < node_vec.size(); i++) {
-    NodePtr node = node_vec[i];   // [node: should not be null]
+    const NodePtr node = node_vec[i];   // [node: should not be null]
     node->GetOpDesc()->SetId(static_cast<int64_t>(i));  // [node->GetOpDesc(): should not be null]
     PushBackToNodeList(node);
   }

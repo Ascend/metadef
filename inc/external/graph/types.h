@@ -252,7 +252,7 @@ class TensorTypeImpl;
 struct TensorType {
   explicit TensorType(DataType dt);
 
-  TensorType(const std::initializer_list<DataType> &types);
+  TensorType(const std::initializer_list<DataType> &initial_types);
 
   static TensorType ALL() {
     return TensorType{DT_BOOL,   DT_COMPLEX128, DT_COMPLEX64, DT_DOUBLE, DT_FLOAT,  DT_FLOAT16, DT_INT16,

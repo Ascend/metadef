@@ -39,11 +39,6 @@
 #include "operator_impl.h"
 #include "external/graph/operator.h"
 
-using std::enable_shared_from_this;
-using std::make_pair;
-using std::shared_ptr;
-using std::to_string;
-
 #define OP_ATTR_SET_IMP(ArgType, AttrUtilsFun)                                                                         \
   Operator &ge::Operator::SetAttr(const std::string &name, ArgType attr_value) {                                       \
     if ((operator_impl_ == nullptr) || (operator_impl_->GetOpDescImpl() == nullptr)) {                                 \
@@ -1007,7 +1002,7 @@ int32_t Operator::GetDynamicInputNum(const char_t *name) const {
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
                    REPORT_INNER_ERROR("E19999", "GetOpDescImpl failed, as return nullptr.");
                    return 0, "[Get][OpDescImpl] is nullptr.");
-  std::string op_name = name;
+  const std::string op_name = name;
   int32_t num = 0;
   GE_CHK_BOOL_EXEC(AttrUtils::GetInt(operator_impl_->GetOpDescImpl(), DYNAMIC_INPUT_TD_NUM(op_name), num),
                    REPORT_INNER_ERROR("E19999", "get attr %s failed, op:%s.", op_name.c_str(),
@@ -1040,7 +1035,7 @@ void Operator::DynamicOutputRegister(const char *name, const unsigned int num, b
   DynamicOutputRegister(op_name, num, is_push_back);
 }
 
-int Operator::GetDynamicOutputNum(const std::string &name) const {
+int32_t Operator::GetDynamicOutputNum(const std::string &name) const {
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, REPORT_INNER_ERROR("E19999", "operator_impl_ is nullptr, check invalid");
                    return 0, "[Check][Param] operator impl is nullptr.");
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
@@ -1062,7 +1057,7 @@ int32_t Operator::GetDynamicOutputNum(const char_t *name) const {
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
                    REPORT_INNER_ERROR("E19999", "GetOpDescImpl failed, as return nullptr.");
                    return 0, "[Get][OpDescImpl] is nullptr.");
-  std::string op_name = name;
+  const std::string op_name = name;
   int32_t num = 0;
   GE_CHK_BOOL_EXEC(AttrUtils::GetInt(operator_impl_->GetOpDescImpl(), DYNAMIC_OUTPUT_TD_NUM(op_name), num),
                    REPORT_INNER_ERROR("E19999", "get attr %s failed, op:%s.", op_name.c_str(),
@@ -1101,8 +1096,8 @@ graphStatus Operator::VerifyAll() {
   for (const std::string &iname : operator_impl_->GetOpDescImpl()->GetAllInputNames()) {
     GE_CHK_BOOL_RET_STATUS(operator_impl_->GetOpDescImpl()->IsOptionalInput(iname) || operator_impl_->InputIsSet(iname),
                            GRAPH_FAILED, "[Check][Param] operator input %s is not linked.", iname.c_str());
-    std::vector<int64_t> ishape = operator_impl_->GetOpDescImpl()->GetInputDesc(iname).GetShape().GetDims();
-    for (int64_t dim : ishape) {
+    const std::vector<int64_t>& ishape = operator_impl_->GetOpDescImpl()->GetInputDesc(iname).GetShape().GetDims();
+    for (const int64_t &dim : ishape) {
       GE_CHK_BOOL_RET_STATUS(dim > 0, GRAPH_FAILED,
                              "[Check][Param] operator input %s shape contains negative or zero dimension, "
                              "node:%s, index:%d.",
@@ -1129,7 +1124,7 @@ std::string Operator::GetOpType() const {
 graphStatus Operator::GetOpType(AscendString &type) const {
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, REPORT_INNER_ERROR("E19999", "operator_impl_ is nullptr, check invalid");
                    return GRAPH_FAILED, "[Check][Param] Operator impl is nullptr.");
-  std::string op_type = OperatorImpl::GetOpDesc(*this)->GetType();
+  const std::string op_type = OperatorImpl::GetOpDesc(*this)->GetType();
   type = op_type.c_str();
   return GRAPH_SUCCESS;
 }
@@ -1546,7 +1541,7 @@ Operator &Operator::SetAttr(const char_t *name, const std::vector<AscendString> 
   return *this;
 }
 
-graphStatus Operator::GetAttr(const char_t *name, std::vector<AscendString> &attr_value) const {
+graphStatus Operator::GetAttr(const char_t *name, std::vector<AscendString> &attr_values) const {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "Operator input parameters name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1564,7 +1559,7 @@ graphStatus Operator::GetAttr(const char_t *name, std::vector<AscendString> &att
     return GRAPH_FAILED;
   }
   for (auto &op_attr_value : op_attr_values) {
-    attr_value.emplace_back(AscendString(op_attr_value.c_str()));
+    attr_values.emplace_back(AscendString(op_attr_value.c_str()));
   }
   return GRAPH_SUCCESS;
 }
@@ -2130,7 +2125,7 @@ std::vector<std::string> Operator::GetSubgraphNames() const {
 }
 
 graphStatus Operator::GetSubgraphNames(std::vector<AscendString> &names) const {
-  std::vector<std::string> subgraph_names = operator_impl_->GetSubgraphNames();
+  const std::vector<std::string> subgraph_names = operator_impl_->GetSubgraphNames();
   for (auto &subgraph_name : subgraph_names) {
     names.emplace_back(subgraph_name.c_str());
   }
@@ -2521,7 +2516,7 @@ private:
   std::map<OperatorImplPtr, NodePtr> all_nodes_info_{};
 };
 
-inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {
+static inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {
   for (const auto &graph : compute_graph->GetAllSubgraphs()) {
     std::set<std::string> node_names;
     for (auto const &node : graph->GetDirectNode()) {
@@ -2538,7 +2533,7 @@ inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {
 
   std::set<std::string> node_names;
   for (auto const &node : compute_graph->GetDirectNode()) {
-    auto result = node_names.insert(node->GetName());
+    const auto result = node_names.insert(node->GetName());
     if (!result.second) {
       REPORT_INNER_ERROR("E19999", "[Check][Param] graph %s has same name node%s",
                          compute_graph->GetName().c_str(), node->GetName().c_str());

@@ -75,7 +75,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   using OpInt = int64_t;
   using OpFloat = float32_t;
-  using OpString = string;
+  using OpString = std::string;
   using OpAscendString = AscendString;
   using OpBool = bool;
   using OpTensor = Tensor;
