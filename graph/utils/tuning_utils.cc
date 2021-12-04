@@ -35,6 +35,26 @@ const char_t *const non_tuning_subgraph_prefix = "/subgraph_";
 const std::set<std::string> kPartitionOpTypes = {PLACEHOLDER, END};
 const std::set<std::string> kExeTypes = {DATA, CONSTANT, NETOUTPUT};
 }
+const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
+    BUILD_MODE,
+    BUILD_STEP,
+    TUNING_PATH
+};
+
+const std::set<std::string> build_mode_options = {
+    BUILD_MODE_NORMAL,
+    BUILD_MODE_TUNING,
+    BUILD_MODE_BASELINE
+};
+
+const std::set<std::string> build_step_options = {
+    BUILD_STEP_BEFORE_UB_MATCH,
+    BUILD_STEP_AFTER_UB_MATCH,
+    BUILD_STEP_AFTER_BUILDER,
+    BUILD_STEP_AFTER_BUILDER_SUB,
+    BUILD_STEP_AFTER_MERGE
+};
+
 NodeNametoNodeNameMap TuningUtils::data_2_end_;
 NodetoNodeNameMap TuningUtils::data_node_2_end_node_ ;
 NodetoNodeMap TuningUtils::data_node_2_netoutput_node_;
@@ -165,14 +185,14 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
   }
   GELOGI("TUU:clear [%s] session_graph_id success", exe_graph->GetName().c_str());
   // if not make exe, just dump and return
-  if (!help_info.exe_flag) {
+  if (!help_info.exe_flag_) {
     if (ConvertConstToWeightAttr(exe_graph) != SUCCESS) {
       REPORT_CALL_ERROR("E19999", "Convert const to weight attr of graph %s failed", exe_graph->GetName().c_str());
       GELOGE(FAILED, "[Convert][Const] to weight attr of graph %s failed", exe_graph->GetName().c_str());
       return FAILED;
     }
-    DumpGraphToPath(exe_graph, help_info.index, help_info.is_tuning_graph, help_info.path);
-    GELOGI("TUU:just return, dump original sub_graph[%s]index[%ld]", exe_graph->GetName().c_str(), help_info.index);
+    DumpGraphToPath(exe_graph, help_info.index_, help_info.is_tuning_graph_, help_info.path_);
+    GELOGI("TUU:just return, dump original sub_graph[%s]index[%ld]", exe_graph->GetName().c_str(), help_info.index_);
     return SUCCESS;
   }
   // modify sub graph
@@ -205,10 +225,10 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
     return ret;
   }
   // dump subgraphs which modified by us
-  if (help_info.user_path.empty()) {
-    DumpGraphToPath(exe_graph, help_info.index, help_info.is_tuning_graph, help_info.path);
+  if (help_info.user_path_.empty()) {
+    DumpGraphToPath(exe_graph, help_info.index_, help_info.is_tuning_graph_, help_info.path_);
   } else {
-    GraphUtils::DumpGEGraph(exe_graph, "", true, help_info.user_path);
+    GraphUtils::DumpGEGraph(exe_graph, "", true, help_info.user_path_);
   }
   return SUCCESS;
 }

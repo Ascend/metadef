@@ -29,40 +29,26 @@
 #include "graph/utils/tensor_utils.h"
 namespace ge {
 // Configure build mode, default value is "normal"
-constexpr char BUILD_MODE[] = "ge.buildMode";
-constexpr char BUILD_STEP[] = "ge.buildStep";
+constexpr char_t BUILD_MODE[] = "ge.buildMode";
+constexpr char_t BUILD_STEP[] = "ge.buildStep";
 // Configure tuning path
-constexpr char TUNING_PATH[] = "ge.tuningPath";
+constexpr char_t TUNING_PATH[] = "ge.tuningPath";
 // for interface: aclgrphBuildModel
-const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
-  BUILD_MODE,
-  BUILD_STEP,
-  TUNING_PATH
-};
+extern const std::set<std::string> ir_builder_supported_options_for_lx_fusion;
 
 // Build model
-constexpr char BUILD_MODE_NORMAL[] = "normal";
-constexpr char BUILD_MODE_TUNING[] = "tuning";
-constexpr char BUILD_MODE_BASELINE[] = "baseline";
-const std::set<std::string> build_mode_options = {
-    BUILD_MODE_NORMAL,
-    BUILD_MODE_TUNING,
-    BUILD_MODE_BASELINE
-};
+constexpr char_t BUILD_MODE_NORMAL[] = "normal";
+constexpr char_t BUILD_MODE_TUNING[] = "tuning";
+constexpr char_t BUILD_MODE_BASELINE[] = "baseline";
+extern const std::set<std::string> build_mode_options;
 
 // Build step
-constexpr char BUILD_STEP_BEFORE_UB_MATCH[] = "before_ub_match";
-constexpr char BUILD_STEP_AFTER_UB_MATCH[] = "after_ub_match";
-constexpr char BUILD_STEP_AFTER_BUILDER[] = "after_builder";
-constexpr char BUILD_STEP_AFTER_BUILDER_SUB[] = "after_builder_sub";
-constexpr char BUILD_STEP_AFTER_MERGE[] = "after_merge";
-const std::set<std::string> build_step_options = {
-    BUILD_STEP_BEFORE_UB_MATCH,
-    BUILD_STEP_AFTER_UB_MATCH,
-    BUILD_STEP_AFTER_BUILDER,
-    BUILD_STEP_AFTER_BUILDER_SUB,
-    BUILD_STEP_AFTER_MERGE
-};
+constexpr char_t BUILD_STEP_BEFORE_UB_MATCH[] = "before_ub_match";
+constexpr char_t BUILD_STEP_AFTER_UB_MATCH[] = "after_ub_match";
+constexpr char_t BUILD_STEP_AFTER_BUILDER[] = "after_builder";
+constexpr char_t BUILD_STEP_AFTER_BUILDER_SUB[] = "after_builder_sub";
+constexpr char_t BUILD_STEP_AFTER_MERGE[] = "after_merge";
+extern const std::set<std::string> build_step_options;
 
 using SubgraphCreateOutNode = std::unordered_map<ComputeGraphPtr, NodePtr>;
 using NodetoNodeMap = std::unordered_map<NodePtr, NodePtr>;
@@ -84,14 +70,23 @@ class TuningUtils {
   // Recovery `graph` from graph dump files configured in options
   static graphStatus ConvertFileToGraph(const std::map<int64_t, std::string> &options, ge::Graph &graph);
 
- private:
+private:
   // part 1
-  struct HelpInfo {
-    int64_t index;
-    bool exe_flag;
-    bool is_tuning_graph;
-    const std::string &path;
-    const std::string &user_path;
+  class HelpInfo {
+    HelpInfo(const int64_t index, const bool exe_flag, const bool is_tuning_graph, const std::string &path,
+             const std::string &user_path) : index_(index),
+                                             exe_flag_(exe_flag),
+                                             is_tuning_graph_(is_tuning_graph),
+                                             path_(path),
+                                             user_path_(user_path) {}
+    ~HelpInfo() = default;
+   private:
+    int64_t index_;
+    bool exe_flag_;
+    bool is_tuning_graph_;
+    const std::string &path_;
+    const std::string &user_path_;
+    friend class TuningUtils;
   };
   static graphStatus MakeExeGraph(ComputeGraphPtr &exe_graph,
                                   const HelpInfo& help_info);
