@@ -31,7 +31,7 @@ class OpsProtoManager {
   void Finalize();
 
  private:
-  void LoadOpsProtoPluginSo(std::string &path);
+  void LoadOpsProtoPluginSo(const std::string &path);
 
   std::string pluginPath_;
   std::vector<void *> handles_;

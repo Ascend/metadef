@@ -23,7 +23,7 @@ Operator OperatorFactory::CreateOperator(const std::string &operator_name, const
 }
 
 Operator OperatorFactory::CreateOperator(const char *operator_name, const char *operator_type) {
-  if (operator_name == nullptr || operator_type == nullptr) {
+  if ((operator_name == nullptr) || (operator_type == nullptr)) {
     REPORT_INNER_ERROR("E19999", "Create Operator input parameter is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Create Operator input parameter is nullptr.");
     return Operator();

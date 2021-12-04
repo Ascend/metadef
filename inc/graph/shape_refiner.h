@@ -28,12 +28,12 @@ namespace ge {
 // ShapeRefiner performs shape inference for compute graphs
 class ShapeRefiner {
  public:
-  static graphStatus InferShapeAndType(const ConstNodePtr &node, Operator &op, bool before_subgraph);
-  static graphStatus InferShapeAndType(const NodePtr &node, bool before_subgraph);
+  static graphStatus InferShapeAndType(const ConstNodePtr &node, Operator &op, const bool before_subgraph);
+  static graphStatus InferShapeAndType(const NodePtr &node, const bool before_subgraph);
   static graphStatus InferShapeAndType(const NodePtr &node);
   static graphStatus InferShapeAndType(const ConstNodePtr &node, Operator &op);
-  static graphStatus DoInferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, bool before_subgraph);
-  static graphStatus InferShapeAndTypeForRunning(const NodePtr &node, Operator &op, bool before_subgraph);
+  static graphStatus DoInferShapeAndTypeForRunning(const ConstNodePtr &node, Operator &op, const bool before_subgraph);
+  static graphStatus InferShapeAndTypeForRunning(const NodePtr &node, Operator &op, const bool before_subgraph);
   static void ClearContextMap();
   static graphStatus CreateInferenceContext(const NodePtr &node,
                                             InferenceContextPtr &inference_context);
@@ -46,7 +46,7 @@ class ShapeRefiner {
   static void PrintInOutTensorShape(const ge::NodePtr &node, const std::string &phase);
   static graphStatus GetRealInNodesAndIndex(NodePtr &input_node, int32_t &output_idx,
                                             std::map<NodePtr, int32_t> &nodes_idx);
-  static graphStatus PostProcessAfterInfershape(const NodePtr &node, Operator &op, bool is_unknown_graph);
+  static graphStatus PostProcessAfterInfershape(const NodePtr &node, const Operator &op, const bool is_unknown_graph);
   static graphStatus UpdateInputOutputDesc(const NodePtr &node);
 };
 }  // namespace ge

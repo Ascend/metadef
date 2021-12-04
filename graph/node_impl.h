@@ -32,7 +32,7 @@ class Node::NodeImpl {
   bool NodeMembersAreEqual(const NodeImpl &r_node) const;
   bool NodeAnchorIsEqual(const AnchorPtr &left_anchor,
                          const AnchorPtr &right_anchor,
-                         size_t i) const;
+                         const size_t i) const;
 
   graphStatus AddLinkFrom(const NodePtr &input_node, const NodePtr &owner_node);
   graphStatus AddLinkFrom(const uint32_t &index,
@@ -45,16 +45,16 @@ class Node::NodeImpl {
   graphStatus SetOwnerComputeGraph(const ComputeGraphPtr &graph);
   graphStatus ClearOwnerGraph(const ComputeGraphPtr &graph);
 
-  Node::Vistor<InDataAnchorPtr> GetAllInDataAnchors(const ConstNodePtr &owner_node) const;
-  Node::Vistor<OutDataAnchorPtr> GetAllOutDataAnchors(const ConstNodePtr &owner_node) const;
+  Node::Vistor<InDataAnchorPtr> GetAllInDataAnchors(const ConstNodePtr &node_ptr) const;
+  Node::Vistor<OutDataAnchorPtr> GetAllOutDataAnchors(const ConstNodePtr &node_ptr) const;
   uint32_t GetAllInDataAnchorsSize() const;
   uint32_t GetAllOutDataAnchorsSize() const;
   Node::Vistor<AnchorPtr> GetAllInAnchors(const ConstNodePtr &owner_node) const;
   Node::Vistor<AnchorPtr> GetAllOutAnchors(const ConstNodePtr &owner_node) const;
-  InDataAnchorPtr GetInDataAnchor(int32_t idx) const;
-  AnchorPtr GetInAnchor(int32_t idx) const;
-  AnchorPtr GetOutAnchor(int32_t idx) const;
-  OutDataAnchorPtr GetOutDataAnchor(int32_t idx) const;
+  InDataAnchorPtr GetInDataAnchor(const int32_t idx) const;
+  AnchorPtr GetInAnchor(const int32_t idx) const;
+  AnchorPtr GetOutAnchor(const int32_t idx) const;
+  OutDataAnchorPtr GetOutDataAnchor(const int32_t idx) const;
   InControlAnchorPtr GetInControlAnchor() const;
   OutControlAnchorPtr GetOutControlAnchor() const;
 

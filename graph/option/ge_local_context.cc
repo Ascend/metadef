@@ -25,17 +25,17 @@ thread_local GEThreadLocalContext thread_context;
 GEThreadLocalContext &GetThreadLocalContext() { return thread_context; }
 
 graphStatus GEThreadLocalContext::GetOption(const std::string &key, std::string &option) {
-  auto graph_iter = graph_options_.find(key);
+  const auto graph_iter = graph_options_.find(key);
   if (graph_iter != graph_options_.end()) {
     option = graph_iter->second;
     return GRAPH_SUCCESS;
   }
-  auto session_iter = session_options_.find(key);
+  const auto session_iter = session_options_.find(key);
   if (session_iter != session_options_.end()) {
     option = session_iter->second;
     return GRAPH_SUCCESS;
   }
-  auto global_iter = global_options_.find(key);
+  const auto global_iter = global_options_.find(key);
   if (global_iter != global_options_.end()) {
     option = global_iter->second;
     return GRAPH_SUCCESS;
