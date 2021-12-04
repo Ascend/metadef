@@ -94,7 +94,7 @@ class AnyValue {
   AnyValue(AnyValue &&other) noexcept;
   AnyValue(const AnyValue &other) {
     if (!other.IsEmpty()) {
-      other.operate_(kOpClone, &other, this);
+      other.operate_(OperateType::kOpClone, &other, this);
     }
   }
   AnyValue &operator=(AnyValue &&other) noexcept;
@@ -117,7 +117,7 @@ class AnyValue {
   graphStatus SetValue(const T &value);
 
   template<typename T>
-  graphStatus SetValue(std::initializer_list<T> val);
+  graphStatus SetValue(std::initializer_list<T> values);
 
   template<typename T>
   graphStatus GetValue(T &value) const;
@@ -135,7 +135,7 @@ class AnyValue {
     if (operate_ == nullptr) {
       return;
     }
-    operate_(kOpClear, nullptr, this);
+    operate_(OperateType::kOpClear, nullptr, this);
   }
 
   bool IsEmpty() const noexcept {
@@ -152,7 +152,7 @@ class AnyValue {
   const void *GetAddr() const;
 
  private:
-  enum OperateType { kOpClear, kOpGetAddr, kOpClone, kOpMove, kGetTypeId, kOperateTypeEnd };
+  enum class OperateType { kOpClear, kOpGetAddr, kOpClone, kOpMove, kGetTypeId, kOperateTypeEnd };
 
   template<typename T>
   struct InlineOperations {
@@ -192,30 +192,30 @@ void AnyValue::AllocateOperations<T>::Construct(T &&value, AnyValue *av) {
 template<typename T>
 void AnyValue::AllocateOperations<T>::Operate(AnyValue::OperateType ot, const AnyValue *av, void *out) {
   switch (ot) {
-    case kOpClear: {
-      auto av_p = reinterpret_cast<AnyValue *>(out);
-      delete reinterpret_cast<T *>(av_p->holder_.pointer);
+    case OperateType::kOpClear: {
+      auto av_p = static_cast<AnyValue *>(out);
+      delete static_cast<T *>(av_p->holder_.pointer);
       av_p->holder_.pointer = nullptr;
       av_p->operate_ = nullptr;
       break;
     }
-    case kOpGetAddr:
-      *reinterpret_cast<void **>(out) = const_cast<void *>(av->holder_.pointer);
+    case OperateType::kOpGetAddr:
+      *static_cast<void **>(out) = const_cast<void *>(av->holder_.pointer);
       break;
-    case kOpClone:
-      reinterpret_cast<AnyValue *>(out)->holder_.pointer =
-          new (std::nothrow) T(*reinterpret_cast<const T *>(av->holder_.pointer));
-      reinterpret_cast<AnyValue *>(out)->operate_ = av->operate_;
+    case OperateType::kOpClone:
+      static_cast<AnyValue *>(out)->holder_.pointer =
+          new (std::nothrow) T(*static_cast<const T *>(av->holder_.pointer));
+      static_cast<AnyValue *>(out)->operate_ = av->operate_;
       break;
-    case kOpMove: {
-      auto av_p = reinterpret_cast<AnyValue *>(out);
+    case OperateType::kOpMove: {
+      auto av_p = static_cast<AnyValue *>(out);
       av_p->holder_.pointer = av->holder_.pointer;
       av_p->operate_ = av->operate_;
       const_cast<AnyValue *>(av)->holder_.pointer = nullptr;
       break;
     }
-    case kGetTypeId:
-      *reinterpret_cast<TypeId *>(out) = GetTypeId<T>();
+    case OperateType::kGetTypeId:
+      *static_cast<TypeId *>(out) = GetTypeId<T>();
       break;
     default:
       break;
@@ -233,30 +233,30 @@ void AnyValue::InlineOperations<T>::Construct(T &&value, AnyValue *av) {
 template<typename T>
 void AnyValue::InlineOperations<T>::Operate(AnyValue::OperateType ot, const AnyValue *av, void *out) {
   switch (ot) {
-    case kOpClear: {
-      auto av_p = reinterpret_cast<AnyValue *>(out);
+    case OperateType::kOpClear: {
+      auto av_p = static_cast<AnyValue *>(out);
       reinterpret_cast<T *>(&av_p->holder_.inline_buf)->~T();
       av_p->operate_ = nullptr;
       break;
     }
-    case kOpGetAddr:
-      *reinterpret_cast<void **>(out) = const_cast<void *>(reinterpret_cast<const void *>(&av->holder_.inline_buf));
+    case OperateType::kOpGetAddr:
+      *static_cast<void **>(out) = const_cast<void *>(reinterpret_cast<const void *>(&av->holder_.inline_buf));
       break;
-    case kOpClone: {
-      auto av_p = reinterpret_cast<AnyValue *>(out);
+    case OperateType::kOpClone: {
+      auto av_p = static_cast<AnyValue *>(out);
       new (&av_p->holder_.inline_buf) T(*reinterpret_cast<const T *>(&av->holder_.inline_buf));
       av_p->operate_ = av->operate_;
       break;
     }
-    case kOpMove: {
-      auto av_p = reinterpret_cast<AnyValue *>(out);
+    case OperateType::kOpMove: {
+      auto av_p = static_cast<AnyValue *>(out);
       auto moved_t_p = const_cast<T *>(reinterpret_cast<const T *>(&av->holder_.inline_buf));
       new (&av_p->holder_.inline_buf) T(std::move(*moved_t_p));
       av_p->operate_ = av->operate_;
       break;
     }
-    case kGetTypeId:
-      *reinterpret_cast<TypeId *>(out) = GetTypeId<T>();
+    case OperateType::kGetTypeId:
+      *static_cast<TypeId *>(out) = GetTypeId<T>();
       break;
     default:
       break;
@@ -312,7 +312,7 @@ const T *AnyValue::Get() const {
   if (IsEmpty()) {
     return nullptr;
   }
-  return reinterpret_cast<const T *>(GetAddr());
+  return static_cast<const T *>(GetAddr());
 }
 template<typename T>
 graphStatus AnyValue::GetValue(T &value) const {
@@ -333,7 +333,7 @@ bool AnyValue::SameType() const noexcept {
     return false;
   }
   TypeId tid = kInvalidTypeId;
-  operate_(kGetTypeId, this, &tid);
+  operate_(OperateType::kGetTypeId, this, &tid);
   return tid == GetTypeId<T>();
 }
 }  // namespace ge

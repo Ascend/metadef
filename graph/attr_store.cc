@@ -17,6 +17,8 @@
 #include "graph/attr_store.h"
 
 namespace ge {
+const AttrId kInvalidAttrId = GetAttrId(0xffffffff, 0);
+
 AnyValue *AttrStore::GetOrCreateAnyValue(AttrId attr_id) const {
   return const_cast<AnyValue *>(GetAnyValue(attr_id));
 }
@@ -25,9 +27,9 @@ AnyValue *AttrStore::MutableAnyValue(AttrId attr_id) const noexcept {
 }
 const AnyValue *AttrStore::GetAnyValue(AttrId attr_id) const noexcept {
   auto attr_type = GetAttrType(attr_id);
-  if (attr_type == kAttrPredefinedInIr) {
+  if (attr_type == static_cast<uint32_t>(AttrType::kAttrPredefinedInIr)) {
     return pre_defined_attrs_.GetAnyValue(GetSubAttrId(attr_id));
-  } else if (attr_type == kAttrGeneral) {
+  } else if (attr_type == static_cast<uint32_t>(AttrType::kAttrGeneral)) {
     return nullptr;  // general不支持
   }
   return nullptr;
