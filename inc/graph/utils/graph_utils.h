@@ -225,8 +225,8 @@ class GraphUtils {
   /// @param io_map
   /// @return
   ///
-  static graphStatus IsolateNode(const NodePtr &node, const std::initializer_list<int> &io_map);
-  static graphStatus IsolateNode(const NodePtr &node, const std::vector<int> &io_map);
+  static graphStatus IsolateNode(const NodePtr &node, const std::initializer_list<int32_t> &io_map);
+  static graphStatus IsolateNode(const NodePtr &node, const std::vector<int32_t> &io_map);
 
   ///
   /// Isolate `node` which must be one input one output, equivalent to
@@ -248,10 +248,12 @@ class GraphUtils {
   /// @return
   ///
   static graphStatus ReplaceNodeAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                        std::initializer_list<int> inputs_map, std::initializer_list<int> outputs_map);
+                                        const std::initializer_list<int32_t> inputs_map,
+                                        const std::initializer_list<int32_t> outputs_map);
 
   static graphStatus ReplaceNodeAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                        const std::vector<int> &inputs_map, const std::vector<int> &outputs_map);
+                                        const std::vector<int32_t> &inputs_map,
+                                        const std::vector<int32_t> &outputs_map);
 
   ///
   /// Replace `old_node` data anchors with `new_node`'s according to `inputs_map` and `outputs_map`.
@@ -267,11 +269,12 @@ class GraphUtils {
   /// @return
   ///
   static graphStatus ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                            std::initializer_list<int> inputs_map,
-                                            std::initializer_list<int> outputs_map);
+                                            std::initializer_list<int32_t> inputs_map,
+                                            std::initializer_list<int32_t> outputs_map);
 
   static graphStatus ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                            const std::vector<int> &inputs_map, const std::vector<int> &outputs_map);
+                                            const std::vector<int32_t> &inputs_map,
+                                            const std::vector<int32_t> &outputs_map);
 
   ///
   /// Copy all in-control edges from `src_node` to `dst_node`

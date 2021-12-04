@@ -63,14 +63,14 @@ class NodeUtils {
                                                         InControlAnchorPtr &in_control);
 
   static graphStatus ClearInDataAnchor(const NodePtr &node_ptr, const InDataAnchorPtr &in_data_anchor);
-  static graphStatus SetAllAnchorStatus(const NodePtr &nodePtr);
+  static graphStatus SetAllAnchorStatus(const NodePtr &node_ptr);
   static graphStatus SetAllAnchorStatus(Node &node);
-  static bool IsAnchorStatusSet(const NodePtr &nodePtr);
+  static bool IsAnchorStatusSet(const NodePtr &node_ptr);
   static bool IsAnchorStatusSet(const Node &node);
 
   static graphStatus MoveOutputEdges(const NodePtr &origin_node, const NodePtr &new_node);
 
-  static void UpdateIsInputConst(const NodePtr &nodePtr);
+  static void UpdateIsInputConst(const NodePtr &node_ptr);
   static void UpdateIsInputConst(Node &node);
   static bool IsConst(const Node &node);
   static void UnlinkAll(const Node &node);
