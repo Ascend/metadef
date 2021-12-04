@@ -1283,5 +1283,5 @@ const std::string ATTR_NAME_OP_MULTI_DIMS_INPUT_DIMS = "_op_multi_dims_input_dim
 
 // for support BlockDim
 const std::string ATTR_NAME_SUPPORT_BLOCKDIM_FLAG = "support_blockdim_flag";
-const std::string ATTR_NAME_BLOCKDIM_INDEX = "block_index";
+const std::string ATTR_NAME_BLOCKDIM_INDEX = "blockdim_index";
 }  // namespace ge
