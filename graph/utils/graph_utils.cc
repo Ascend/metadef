@@ -2697,7 +2697,7 @@ void GraphUtils::BuildGraphInfoFromNodes(const std::set<NodePtr> &nodes, GraphIn
   std::map<OutDataAnchorPtr, size_t> data_input_index_map;
   for (const auto &node : nodes) {
     // graph nodes
-    graph_info.nodes.emplace(node);
+    graph_info.nodes_.emplace(node);
     // in data
     BuildInDataEdgesFromNode(node, nodes, data_input_index_map, graph_info);
     // out data
@@ -2710,23 +2710,23 @@ void GraphUtils::BuildGraphInfoFromNodes(const std::set<NodePtr> &nodes, GraphIn
                      return nodes.count(peer_in_anchor->GetOwnerNode()) == 0;
                    });
       if (!peer_data_anchors.empty()) {
-        size_t output_index = graph_info.data_outputs.size();
-        graph_info.data_outputs[output_index] = std::make_pair(out_data_anchor, peer_data_anchors);
+        size_t output_index = graph_info.data_outputs_.size();
+        graph_info.data_outputs_[output_index] = std::make_pair(out_data_anchor, peer_data_anchors);
       }
     }
     // in ctrl
     for (const auto &in_ctrl_node : node->GetInControlNodes()) {
       if (nodes.count(in_ctrl_node) == 0) {
-        graph_info.ctrl_inputs.emplace_back(in_ctrl_node->GetOutControlAnchor(), node->GetInControlAnchor());
+        graph_info.ctrl_inputs_.emplace_back(in_ctrl_node->GetOutControlAnchor(), node->GetInControlAnchor());
       } else {
-        graph_info.inner_ctrl_edges.emplace_back(std::make_pair(in_ctrl_node->GetOutControlAnchor(),
-                                                                node->GetInControlAnchor()));
+        graph_info.inner_ctrl_edges_.emplace_back(std::make_pair(in_ctrl_node->GetOutControlAnchor(),
+                                                                 node->GetInControlAnchor()));
       }
     }
     // out ctrl
     for (const auto &out_ctrl_node : node->GetOutControlNodes()) {
       if (nodes.count(out_ctrl_node) == 0) {
-        graph_info.ctrl_outputs.emplace_back(node->GetOutControlAnchor(), out_ctrl_node->GetInControlAnchor());
+        graph_info.ctrl_outputs_.emplace_back(node->GetOutControlAnchor(), out_ctrl_node->GetInControlAnchor());
       }
     }
   }
@@ -2743,15 +2743,15 @@ void GraphUtils::BuildInDataEdgesFromNode(const NodePtr &node, const std::set<No
     if (nodes.count(peer_out_anchor->GetOwnerNode()) == 0) {
       size_t input_index;
       if (data_input_index_map.count(peer_out_anchor) == 0) {
-        input_index = graph_info.data_inputs.size();
+        input_index = graph_info.data_inputs_.size();
         data_input_index_map[peer_out_anchor] = input_index;
-        graph_info.data_inputs[input_index].first = peer_out_anchor;
+        graph_info.data_inputs_[input_index].first = peer_out_anchor;
       } else {
         input_index = data_input_index_map[peer_out_anchor];
       }
-      graph_info.data_inputs[input_index].second.emplace_back(in_data_anchor);
+      graph_info.data_inputs_[input_index].second.emplace_back(in_data_anchor);
     } else {
-      graph_info.inner_data_edges.emplace_back(std::make_pair(peer_out_anchor, in_data_anchor));
+      graph_info.inner_data_edges_.emplace_back(std::make_pair(peer_out_anchor, in_data_anchor));
     }
   }
 }
@@ -2760,7 +2760,7 @@ NodePtr GraphUtils::BuildSubgraphNode(ComputeGraph &graph, const std::string &gr
                                       const GraphInfo &graph_info) {
   OpDescBuilder op_desc_builder(graph_name + "_" + PARTITIONEDCALL, PARTITIONEDCALL);
   int i = 0;
-  for (const auto &item : graph_info.data_inputs) {
+  for (const auto &item : graph_info.data_inputs_) {
     for (const auto &in_data_anchor : item.second.second) {
       auto input_desc = in_data_anchor->GetOwnerNode()->GetOpDesc();
       if (input_desc == nullptr) {
@@ -2774,7 +2774,7 @@ NodePtr GraphUtils::BuildSubgraphNode(ComputeGraph &graph, const std::string &gr
       i++;
     }
   }
-  for (const auto &item : graph_info.data_outputs) {
+  for (const auto &item : graph_info.data_outputs_) {
     auto output_desc = item.second.first->GetOwnerNode()->GetOpDesc();
     if (output_desc == nullptr) {
       REPORT_INNER_ERROR("E19999", "op_desc is null, node:%s",
@@ -2807,13 +2807,13 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
   graph_builder.SetParentNode(subgraph_node);
 
   // Add node
-  for (const auto &node : graph_info.nodes) {
+  for (const auto &node : graph_info.nodes_) {
     graph_builder.AddNode(AttrUtils::CopyOpDesc(node->GetOpDesc()));
   }
 
   // Set Input
   uint32_t index = 0;
-  for (const auto &item : graph_info.data_inputs) {
+  for (const auto &item : graph_info.data_inputs_) {
     for (const auto &in_data_anchor : item.second.second) {
       graph_builder.SetInput(index, { in_data_anchor->GetOwnerNode()->GetName() },
                              { static_cast<uint32_t>(in_data_anchor->GetIdx()) });
@@ -2822,19 +2822,19 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
   }
 
   // Add Outputs
-  for (const auto &item : graph_info.data_outputs) {
+  for (const auto &item : graph_info.data_outputs_) {
     graph_builder.AddOutput(item.second.first->GetOwnerNode()->GetName(),
                             item.second.first->GetIdx());
   }
 
   // Add Data Edges
-  for (const auto &data_edge : graph_info.inner_data_edges) {
+  for (const auto &data_edge : graph_info.inner_data_edges_) {
     graph_builder.AddDataLink(data_edge.first->GetOwnerNode()->GetName(), data_edge.first->GetIdx(),
                               data_edge.second->GetOwnerNode()->GetName(), data_edge.second->GetIdx());
   }
 
   // Add Ctrl Edges
-  for (const auto &ctrl_edge : graph_info.inner_ctrl_edges) {
+  for (const auto &ctrl_edge : graph_info.inner_ctrl_edges_) {
     graph_builder.AddControlLink(ctrl_edge.first->GetOwnerNode()->GetName(),
                                  ctrl_edge.second->GetOwnerNode()->GetName());
   }
@@ -2842,7 +2842,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
   // Add Input-Mapping
   std::map<uint32_t, uint32_t> input_mapping;
   size_t j = 0U;
-  for (const auto &item : graph_info.data_inputs) {
+  for (const auto &item : graph_info.data_inputs_) {
     while (j < item.second.second.size()) {
       input_mapping[j] = j;
       j++;
@@ -2852,7 +2852,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
   // Add outputMapping
   std::map<uint32_t, uint32_t> output_mapping;
-  for (size_t i = 0U; i < graph_info.data_inputs.size(); i++) {
+  for (size_t i = 0U; i < graph_info.data_inputs_.size(); i++) {
     output_mapping[i] = i;
   }
   graph_builder.SetOutputMapping(output_mapping);
@@ -2872,7 +2872,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info) {
   // in data nodes
   size_t i = 0;
-  for (const auto &item : graph_info.data_inputs) {
+  for (const auto &item : graph_info.data_inputs_) {
     for (const auto &in_data_anchor : item.second.second) {
       GE_CHK_STATUS_RET(item.second.first->Unlink(in_data_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed",
                         item.second.first->GetOwnerNode()->GetName().c_str(), item.second.first->GetIdx(),
@@ -2885,7 +2885,7 @@ graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const Grap
     }
   }
   // out data nodes
-  for (const auto &item : graph_info.data_outputs) {
+  for (const auto &item : graph_info.data_outputs_) {
     const auto &out_data_anchor = subgraph_node->GetOutDataAnchor(item.first);
     GE_CHECK_NOTNULL(out_data_anchor);
     for (const auto &peer_in_anchor : item.second.second) {
@@ -2903,7 +2903,7 @@ graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const Grap
 
 graphStatus GraphUtils::RelinkCtrlEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info) {
   // in ctrl nodes
-  for (const auto &ctrl_input : graph_info.ctrl_inputs) {
+  for (const auto &ctrl_input : graph_info.ctrl_inputs_) {
     GE_CHK_STATUS_RET(ctrl_input.first->Unlink(ctrl_input.second), "[Remove][CtrlEdge] %s->%s failed",
                       ctrl_input.first->GetOwnerNode()->GetName().c_str(),
                       ctrl_input.second->GetOwnerNode()->GetName().c_str());
@@ -2913,7 +2913,7 @@ graphStatus GraphUtils::RelinkCtrlEdges(const NodePtr &subgraph_node, const Grap
     }
   }
   // out ctrl nodes
-  for (const auto &ctrl_output : graph_info.ctrl_outputs) {
+  for (const auto &ctrl_output : graph_info.ctrl_outputs_) {
     GE_CHK_STATUS_RET(ctrl_output.first->Unlink(ctrl_output.second), "[Remove][CtrlEdge] %s->%s failed.",
                       ctrl_output.first->GetOwnerNode()->GetName().c_str(),
                       ctrl_output.second->GetOwnerNode()->GetName().c_str());

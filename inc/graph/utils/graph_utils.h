@@ -44,42 +44,37 @@
     }                                                                                                              \
   } while (false)
 
-namespace {
-struct GraphInfo {
-  std::set<ge::NodePtr> nodes;
-  std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_inputs;
-  std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_outputs;
-  std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> ctrl_inputs;
-  std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> ctrl_outputs;
-  std::list<std::pair<ge::OutDataAnchorPtr, ge::InDataAnchorPtr>> inner_data_edges;
-  std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> inner_ctrl_edges;
-};
-}
-
 namespace ge {
 enum IOType { kIn, kOut };
 
-struct NodeIndexIO {
-  NodeIndexIO(NodePtr node, uint32_t index, IOType io_type)
+class NodeIndexIO {
+ public:
+  NodeIndexIO(const NodePtr node, const uint32_t index, const IOType io_type)
       : node_(std::move(node)), index_(index), io_type_(io_type) {
     if (node_ != nullptr) {
-      value_ = node_->GetName() + (io_type_ == kOut ? "_out_" : "_in_") + std::to_string(index_);
+      value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
     }
   }
-  NodeIndexIO(NodePtr node, int index, IOType io_type)
+  NodeIndexIO(const NodePtr node, const int32_t index, const IOType io_type)
       : node_(std::move(node)), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
     if (node_ != nullptr) {
-      value_ = node_->GetName() + (io_type_ == kOut ? "_out_" : "_in_") + std::to_string(index_);
+      value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
+    }
+  }
+  NodeIndexIO(const NodePtr &node, const int64_t index, const IOType io_type)
+      : node_(node), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
+    if (node_ != nullptr) {
+      value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
     }
   }
   ~NodeIndexIO() {}
+
+  const std::string &ToString() const { return value_; }
 
   NodePtr node_ = nullptr;
   uint32_t index_ = 0U;
   IOType io_type_ = kOut;
   std::string value_;
-
-  const std::string &ToString() const { return value_; }
 };
 
 class GraphUtils {
@@ -168,13 +163,16 @@ class GraphUtils {
   /// @param [in] output_index
   /// @return graphStatus
   ///
-  static graphStatus InsertNodeAfter(const OutDataAnchorPtr &src, const std::vector<InDataAnchorPtr> &dsts,
-                                     const NodePtr &insert_node, uint32_t input_index = 0, uint32_t output_index = 0);
+  static graphStatus InsertNodeAfter(const OutDataAnchorPtr &src,
+                                     const std::vector<InDataAnchorPtr> &dsts,
+                                     const NodePtr &insert_node,
+                                     uint32_t input_index = 0U,
+                                     uint32_t output_index = 0U);
 
   static graphStatus InsertNodeBefore(const InDataAnchorPtr &dst,
                                       const NodePtr &insert_node,
-                                      uint32_t input_index = 0,
-                                      uint32_t output_index = 0);
+                                      uint32_t input_index = 0U,
+                                      uint32_t output_index = 0U);
 
   static graphStatus RemoveJustNode(ComputeGraphPtr compute_graph, const NodePtr &node);
 
@@ -373,6 +371,20 @@ class GraphUtils {
                                     const std::function<bool(const ComputeGraphPtr &)> &filter);
 
  private:
+  class GraphInfo {
+  public:
+    GraphInfo() = default;
+    ~GraphInfo() = default;
+  private:
+    std::set<ge::NodePtr> nodes_;
+    std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_inputs_;
+    std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_outputs_;
+    std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> ctrl_inputs_;
+    std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> ctrl_outputs_;
+    std::list<std::pair<ge::OutDataAnchorPtr, ge::InDataAnchorPtr>> inner_data_edges_;
+    std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> inner_ctrl_edges_;
+    friend class GraphUtils;
+  };
   ///
   /// Get reference-mapping for in_data_anchors of node
   /// @param [in] node
@@ -487,10 +499,6 @@ class GraphUtils {
 class ComputeGraphBuilder {
  public:
   ComputeGraphBuilder() : owner_graph_(nullptr) {}
-  ComputeGraphBuilder(const ComputeGraphBuilder &) = delete;
-  ComputeGraphBuilder &operator=(const ComputeGraphBuilder &) = delete;
-  ComputeGraphBuilder(const ComputeGraphBuilder &&) = delete;
-  ComputeGraphBuilder &operator=(const ComputeGraphBuilder &&) = delete;
   ~ComputeGraphBuilder() = default;
 
   ///
@@ -563,22 +571,29 @@ class ComputeGraphBuilder {
   ///
   void BuildCtrlLinks(graphStatus &error_code, std::string &error_msg);
 
-  ComputeGraphPtr owner_graph_;
+ private:
+  ComputeGraphBuilder(const ComputeGraphBuilder &) = delete;
+  ComputeGraphBuilder &operator=(const ComputeGraphBuilder &) = delete;
+  ComputeGraphBuilder(const ComputeGraphBuilder &&) = delete;
+  ComputeGraphBuilder &operator=(const ComputeGraphBuilder &&) = delete;
 
+  ComputeGraphPtr owner_graph_;
   // node_name -> node
   std::map<std::string, NodePtr> node_names_;
   std::vector<OpDescPtr> nodes_;
-
   // <src_node_name, out_anchor_ind> -> <dst_node_name, in_anchor_ind>
   std::vector<std::pair<std::pair<std::string, uint32_t>, std::pair<std::string, uint32_t>>> data_links_;
   // src_node_name -> dst_node_name
   std::vector<std::pair<std::string, std::string>> ctrl_links_;
+
+  friend class CompleteGraphBuilder;
+  friend class PartialGraphBuilder;
 };
 
 class CompleteGraphBuilder : public ComputeGraphBuilder {
  public:
-  explicit CompleteGraphBuilder(std::string name, bool retval_flag = true)
-      : name_(std::move(name)), parent_node_(nullptr), retval_flag_(retval_flag) {}
+  explicit CompleteGraphBuilder(const std::string name, const bool retval_flag = true)
+      : ComputeGraphBuilder(), name_(std::move(name)), parent_node_(nullptr), retval_flag_(retval_flag) {}
   CompleteGraphBuilder(const CompleteGraphBuilder &) = delete;
   CompleteGraphBuilder &operator=(const CompleteGraphBuilder &) = delete;
   CompleteGraphBuilder(const CompleteGraphBuilder &&) = delete;

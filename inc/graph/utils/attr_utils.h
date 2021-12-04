@@ -24,11 +24,9 @@
 #include "graph/detail/attributes_holder.h"
 #include "graph/ge_attr_value.h"
 #include "graph/types.h"
+#include "graph/op_desc.h"
 
 namespace ge {
-class OpDesc;
-using OpDescPtr = std::shared_ptr<OpDesc>;
-using ConstOpDescPtr = std::shared_ptr<const OpDesc>;
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
  public:
@@ -66,10 +64,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool SetNamedAttrs(AttrHolderAdapter &&obj, const std::string &name, const NamedAttrs &value);
   static bool SetListNamedAttrs(AttrHolderAdapter &&obj, const std::string &name,
                                 const std::vector<NamedAttrs> &value);
-  // todo 没搜到有人用，暂时先不实现
-  static bool SetListOpDesc(AttrHolderAdapter &&obj, const std::string &name, const std::vector<ConstOpDescPtr> &value);
-  static bool SetListOpDesc(AttrHolderAdapter &&obj, const std::string &name, const std::vector<OpDescPtr> &value);
-  static bool GetListOpDesc(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<OpDescPtr> &value);
 
   // Get
   static bool GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, int64_t &value);
@@ -129,28 +123,44 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static std::string GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const std::set<std::string> &un_compute_attrs);
   class AttrHolderAdapter {
    public:
-    AttrHolderAdapter(AttrHolder *obj) : obj_(obj) {}
+    AttrHolderAdapter(AttrHolder *const obj) : obj_(obj) {}
     ~AttrHolderAdapter() {}
     template <class T>
     AttrHolderAdapter(const std::shared_ptr<T> &obj) : obj_(obj.get()) {}
+    AttrHolderAdapter(const AttrHolderAdapter &obj) : obj_(obj.get()) {}
     AttrHolderAdapter(AttrHolder &obj) : obj_(&obj) {}
-    operator bool() const { return obj_ != nullptr; }
-    AttrHolder *operator->() { return obj_; }
-    AttrHolder *get() { return obj_; }
+    AttrHolder *operator->() const { return obj_; }
+    AttrHolder *get() const { return obj_; }
 
+    AttrHolderAdapter &operator=(const AttrHolderAdapter &rls) {
+      if (&rls != this) {
+        obj_ = rls.obj_;
+      }
+      return *this;
+    }
+
+   private:
     AttrHolder *obj_;
   };
 
   class ConstAttrHolderAdapter {
    public:
-    ConstAttrHolderAdapter(const AttrHolder *obj) : obj_(obj) {}
+    ConstAttrHolderAdapter(const AttrHolder *const obj) : obj_(obj) {}
     ~ConstAttrHolderAdapter() {}
     template <class T>
     ConstAttrHolderAdapter(const std::shared_ptr<T> obj) : obj_(obj.get()) {}
+    ConstAttrHolderAdapter(const ConstAttrHolderAdapter &obj) : obj_(obj.get()) {}
     ConstAttrHolderAdapter(const AttrHolder &obj) : obj_(&obj) {}
     operator bool() const { return obj_ != nullptr; }
     const AttrHolder *operator->() const { return obj_; }
     const AttrHolder *get() const { return obj_; }
+
+    ConstAttrHolderAdapter &operator=(const ConstAttrHolderAdapter &rls) {
+      if (&rls != this) {
+        obj_ = rls.obj_;
+      }
+      return *this;
+    }
 
    private:
     const AttrHolder *obj_;

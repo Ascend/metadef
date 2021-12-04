@@ -17,7 +17,6 @@
 #ifndef INC_GRAPH_COMPILER_OPTIONS_H_
 #define INC_GRAPH_COMPILER_OPTIONS_H_
 
-namespace ge {
 #ifdef __GNUC__
 #define METADEF_ATTRIBUTE_UNUSED __attribute__((unused))
 #define METADEF_FUNCTION_IDENTIFIER __PRETTY_FUNCTION__
@@ -42,6 +41,5 @@ namespace ge {
 #define GE_FUNC_HOST_VISIBILITY
 #define GE_FUNC_DEV_VISIBILITY
 #endif
-}  // namespace ge
 
 #endif  // INC_GRAPH_COMPILER_OPTIONS_H_

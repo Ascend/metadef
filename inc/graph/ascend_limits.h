@@ -17,9 +17,8 @@
 #ifndef METADEF_CXX_ASCEND_LIMITS_H
 #define METADEF_CXX_ASCEND_LIMITS_H
 namespace ge {
-constexpr int kDefaultMaxAttrNum = 6;
-constexpr int kDefaultMaxInputNum = 8;
-constexpr int kDefaultMaxOutputNum = 8;
-constexpr int kDefaultMaxRank = 8;
+constexpr int32_t kDefaultMaxInputNum = 8;
+constexpr int32_t kDefaultMaxOutputNum = 8;
+constexpr int32_t kDefaultMaxRank = 8;
 }
 #endif  //METADEF_CXX_ASCEND_LIMITS_H

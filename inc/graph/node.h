@@ -44,6 +44,10 @@ class Anchor;
 
 using AnchorPtr = std::shared_ptr<Anchor>;
 
+class DataAnchor;
+
+using DataAnchorPtr = std::shared_ptr<DataAnchor>;
+
 class InDataAnchor;
 
 using InDataAnchorPtr = std::shared_ptr<InDataAnchor>;
@@ -88,11 +92,6 @@ class Node : public std::enable_shared_from_this<Node> {
   Node &operator=(const Node &) = delete;
   bool operator==(const Node &r_node) const;
 
- protected:
-  Node();
-  Node(const OpDescPtr &op, const ComputeGraphPtr &owner_graph);
-
- public:
   graphStatus Init();
 
   std::string GetName() const;
@@ -178,6 +177,10 @@ class Node : public std::enable_shared_from_this<Node> {
 
   void SetOrigNode(const NodePtr &orignode);
   NodePtr GetOrigNode();
+
+ protected:
+  Node();
+  Node(const OpDescPtr &op, const ComputeGraphPtr &owner_graph);
 
  private:
   bool NodeMembersAreEqual(const Node &r_node) const;

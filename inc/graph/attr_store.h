@@ -23,6 +23,36 @@
 
 #include "any_value.h"
 
+#define SET_IMPL(key, value) \
+    auto v = GetOrCreateAnyValue(key);  \
+    if (v == nullptr) {  \
+      return false;  \
+    }  \
+    (void)v->SetValue(value);  \
+    return true;
+
+#define SET_IMPL_RVALUE(key, value) \
+  auto v = GetOrCreateAnyValue(key);  \
+  if (v == nullptr) {  \
+  return false;  \
+  }  \
+  (void)v->SetValue(std::forward<T>(value));  \
+  return true;
+
+#define GET_IMPL(key) \
+    auto v = GetAnyValue(key);  \
+    if (v == nullptr) {  \
+      return nullptr;  \
+    }  \
+    return v->Get<T>();
+
+#define MUTABLE_IMPL(key) \
+    auto v = MutableAnyValue(key);  \
+    if (v == nullptr) {  \
+      return nullptr;  \
+    }  \
+    return v->MutableGet<T>();
+
 namespace ge {
 using AttrId = uint64_t;
 using AttrSubId = uint32_t;
@@ -31,34 +61,34 @@ enum AttrType {
   kAttrGeneral,         // 通用属性
   kAttrTypeEnd
 };
-constexpr inline uint32_t GetAttrType(AttrId id) {
-  return id >> 32;
+constexpr inline uint32_t GetAttrType(const AttrId id) {
+  return id >> 32U;
 }
-constexpr inline uint32_t GetSubAttrId(AttrId id) {
-  return id & 0xffffffff;
+constexpr inline uint32_t GetSubAttrId(const AttrId id) {
+  return id & 0xffffffffU;
 }
-constexpr inline AttrId GetAttrId(uint32_t type, uint32_t sub_id) {
-  return static_cast<uint64_t>(type) << 32 | static_cast<uint64_t>(sub_id);
+constexpr inline AttrId GetAttrId(const uint32_t type, const uint32_t sub_id) {
+  return (static_cast<uint64_t>(type) << 32U) | static_cast<uint64_t>(sub_id);
 }
-constexpr AttrId kInvalidAttrId = GetAttrId(0xffffffff, 0);
+constexpr AttrId kInvalidAttrId = GetAttrId(0xffffffffU, 0U);
 
 class AttrStore {
  public:
   static AttrStore Create(size_t pre_defined_attr_count);
 
   template<typename T>
-  bool Set(AttrId attr_id, T &&value);
+  bool Set(const AttrId attr_id, T &&value);
   template<typename T>
-  bool Set(AttrId attr_id, const T &value);
+  bool Set(const AttrId attr_id, const T &value);
   template<typename T>
   bool SetByName(const std::string &name, T &&value);
   template<typename T>
   bool SetByName(const std::string &name, const T &value);
 
   template<typename T>
-  const T *Get(AttrId attr_id) const;
+  const T *Get(const AttrId attr_id) const;
   template<typename T>
-  T *MutableGet(AttrId attr_id);
+  T *MutableGet(const AttrId attr_id);
   template<typename T>
   const T *GetByName(const std::string &name) const;
   template<typename T>
@@ -89,10 +119,8 @@ class AttrStore {
   const AnyValue *GetAnyValue(AttrId attr_id) const noexcept;
 
  private:
-  constexpr static int kDefaultMaxAttrCount = 8;
-
   class PreDefinedAttrStore {
-   public:
+  public:
     bool Exists(AttrSubId index) const noexcept;
     bool Delete(AttrSubId index);
     void Swap(PreDefinedAttrStore &other);
@@ -133,28 +161,12 @@ class AttrStore {
   CustomDefinedAttrStore general_attrs_;
 };
 
-#define SET_IMPL(key, value) \
-    auto v = GetOrCreateAnyValue(key);  \
-    if (v == nullptr) {  \
-      return false;  \
-    }  \
-    v->SetValue(value);  \
-    return true;
-
-#define SET_IMPL_RVALUE(key, value) \
-  auto v = GetOrCreateAnyValue(key);  \
-  if (v == nullptr) {  \
-  return false;  \
-  }  \
-  v->SetValue(std::forward<T>(value));  \
-  return true;
-
 template<typename T>
-bool AttrStore::Set(AttrId attr_id, const T &value) {
+bool AttrStore::Set(const AttrId attr_id, const T &value) {
   SET_IMPL(attr_id, value)
 }
 template<typename T>
-bool AttrStore::Set(AttrId attr_id, T &&value) {
+bool AttrStore::Set(const AttrId attr_id, T &&value) {
   SET_IMPL_RVALUE(attr_id, value)
 }
 template<typename T>
@@ -166,15 +178,8 @@ bool AttrStore::SetByName(const std::string &name, const T &value) {
   SET_IMPL(name, value)
 }
 
-#define GET_IMPL(key) \
-    auto v = GetAnyValue(key);  \
-    if (v == nullptr) {  \
-      return nullptr;  \
-    }  \
-    return v->Get<T>();
-
 template<typename T>
-const T *AttrStore::Get(AttrId attr_id) const {
+const T *AttrStore::Get(const AttrId attr_id) const {
   GET_IMPL(attr_id)
 }
 template<typename T>
@@ -182,14 +187,8 @@ const T *AttrStore::GetByName(const std::string &name) const {
   GET_IMPL(name)
 }
 
-#define MUTABLE_IMPL(key) \
-    auto v = MutableAnyValue(key);  \
-    if (v == nullptr) {  \
-      return nullptr;  \
-    }  \
-    return v->MutableGet<T>();
 template<typename T>
-T *AttrStore::MutableGet(AttrId attr_id) {
+T *AttrStore::MutableGet(const AttrId attr_id) {
   MUTABLE_IMPL(attr_id)
 }
 template<typename T>
