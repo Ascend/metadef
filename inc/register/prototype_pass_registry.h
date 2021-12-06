@@ -43,7 +43,7 @@ class ProtoTypePassRegistry {
   void RegisterProtoTypePass(const char_t *const pass_name, const CreateFn &create_fn,
                              const domi::FrameworkType &fmk_type);
 
-  std::vector<std::pair<std::string, CreateFn>> GetCreateFnByType(domi::FrameworkType fmk_type) const;
+  std::vector<std::pair<std::string, CreateFn>> GetCreateFnByType(const domi::FrameworkType &fmk_type) const;
 
  private:
   ProtoTypePassRegistry();

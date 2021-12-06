@@ -86,8 +86,8 @@ ScopeBasePass::ScopeBasePassImpl::~ScopeBasePassImpl() {
   }
 }
 
-Status ScopeBasePass::ScopeBasePassImpl::AddFusionScopesResultToScopeGraph(std::shared_ptr<ScopeGraph> &scope_graph,
-                                                                           std::vector<ScopesResult> &scope_results) {
+Status ScopeBasePass::ScopeBasePassImpl::AddFusionScopesResultToScopeGraph(
+    const std::shared_ptr<ScopeGraph> &scope_graph, std::vector<ScopesResult> &scope_results) {
   for (auto &rlt : scope_results) {
     FusionScopesResult *fusion_rlt = new (std::nothrow) FusionScopesResult();
     if (fusion_rlt == nullptr) {
@@ -212,7 +212,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchAllBatches(const ScopeTree *scope_tr
   return !(results.empty());
 }
 
-bool ScopeBasePass::ScopeBasePassImpl::MatchOneBatch(const ScopeTree *scope_tree,
+bool ScopeBasePass::ScopeBasePassImpl::MatchOneBatch(const ScopeTree *const scope_tree,
                                                      const std::vector<ScopePattern *> &patternlist,
                                                      std::vector<Scope *> &results) {
   if (scope_tree == nullptr) {

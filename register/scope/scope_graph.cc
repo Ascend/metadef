@@ -72,15 +72,15 @@ Status DecomposeInputName(const std::string &input_name, std::string &node_name,
   return SUCCESS;
 }
 
-void AddEdgeCtx(const std::string &peer_node_name, cosnt int32_t peer_index,
+void AddEdgeCtx(const std::string &peer_node_name, const int32_t peer_index,
                 const int32_t curr_index, NodeEdges &node_edges) {
   (void)node_edges[curr_index].insert({peer_node_name, peer_index});
 }
 
-Status GetGraphDefInOutMap(const domi::tensorflow::GraphDef *const graph_def, GraphNodesInOut &in_out_map) {
+Status GetGraphDefInOutMap(domi::tensorflow::GraphDef *graph_def, GraphNodesInOut &in_out_map) {
   GE_CHECK_NOTNULL(graph_def);
   for (int32_t i = 0; i < graph_def->node_size(); i++) {
-    const domi::tensorflow::NodeDef *const node = graph_def->mutable_node(i);
+    const domi::tensorflow::NodeDef *node = graph_def->mutable_node(i);
     const std::string &node_name = node->name();
     int32_t input_index = 0;
     for (const auto &input : node->input()) {
@@ -187,7 +187,8 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
     const std::vector<ge::OperatorPtr> &sub_nodes = impl->Nodes();
     if (!sub_nodes.empty()) {
       for (const auto sub_node : sub_nodes) {
-        (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(sub_node->GetName()), sub_node));
+        (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(sub_node->GetName()),
+                                                                            sub_node));
       }
     }
   }
@@ -423,7 +424,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetOutputF
 }
 
 ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetDynamicInputFormat(
-    const std::string &input_name, uint32_t index, const std::string &format) {
+    const std::string &input_name, const uint32_t index, const std::string &format) {
   ge::TensorDesc input_tesor_desc = operator_.GetDynamicInputDesc(input_name, index);
   const auto ge_format = ge::TypeUtils::SerialStringToFormat(format);
   input_tesor_desc.SetOriginFormat(ge_format);
@@ -432,7 +433,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetDynamic
 }
 
 ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetDynamicOutputFormat(
-    const std::string &output_name, cosnt uint32_t index, const std::string &format) {
+    const std::string &output_name, const uint32_t index, const std::string &format) {
   ge::TensorDesc output_tesor_desc = operator_.GetDynamicOutputDesc(output_name, index);
   const auto ge_format = ge::TypeUtils::SerialStringToFormat(format);
   output_tesor_desc.SetOriginFormat(ge_format);
@@ -497,7 +498,7 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetName(co
 
 FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetName(const char_t *name) {
   if ((impl_ != nullptr) && (name != nullptr)) {
-    std::string str_name = name;
+    const std::string str_name = name;
     impl_->SetName(str_name);
   }
   return *this;
@@ -511,8 +512,8 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetType(co
 }
 
 FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::SetType(const char_t *type) {
-  if (impl_ != nullptr && type != nullptr) {
-    std::string str_type = type;
+  if ((impl_ != nullptr) && (type != nullptr)) {
+    const std::string str_type = type;
     impl_->SetType(str_type);
   }
   return *this;
@@ -529,7 +530,7 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertInpu
 FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertInput(const char_t *input_node,
                                                                                   int32_t peer_out_idx) {
   if ((impl_ != nullptr) && (input_node != nullptr)) {
-    std::string str_input_node = input_node;
+    const std::string str_input_node = input_node;
     impl_->InsertInput(str_input_node, peer_out_idx);
   }
   return *this;
@@ -546,7 +547,7 @@ FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertOutp
 FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::InsertOutput(const char_t *output_node,
                                                                                    int32_t peer_in_idx) {
   if ((impl_ != nullptr) && (output_node != nullptr)) {
-    std::string str_output_node = output_node;
+    const std::string str_output_node = output_node;
     impl_->InsertOutput(str_output_node, peer_in_idx);
   }
   return *this;
@@ -630,9 +631,9 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicOutputFormat(const 
 
 ge::graphStatus FusionScopesResult::InnerNodeInfo::SetDynamicOutputFormat(const char_t *output_name,
                                                                           uint32_t index, const char_t *format) {
-  if (impl_ != nullptr && output_name != nullptr && format != nullptr) {
-    std::string str_output_name = output_name;
-    std::string str_format = format;
+  if ((impl_ != nullptr) && (output_name != nullptr) && (format != nullptr)) {
+    const std::string str_output_name = output_name;
+    const std::string str_format = format;
     return impl_->SetDynamicOutputFormat(str_output_name, index, str_format);
   }
   return ge::GRAPH_PARAM_INVALID;
@@ -687,7 +688,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::GetInputs(
 }
 
 std::vector<std::pair<std::string, int32_t>> FusionScopesResult::InnerNodeInfo::GetOutputs() const {
-  std::vector<std::pair<std::string, int32_t>> tmp;
+  const std::vector<std::pair<std::string, int32_t>> tmp;
   if (impl_ != nullptr) {
     return impl_->GetOutputs();
   }
@@ -730,7 +731,7 @@ bool FusionScopesResult::FusionScopesResultImpl::FindNodes(const std::string &no
 
 bool FusionScopesResult::FusionScopesResultImpl::FindScopes(const std::string &scope_name) const {
   for (auto &scope : scopes_) {
-    if (scope->Name().length() < scope_name.length() && scope_name.find(scope->Name()) == 0) {
+    if ((scope->Name().length() < scope_name.length()) && (scope_name.find(scope->Name()) == 0U)) {
       return true;
     }
   }
@@ -744,9 +745,9 @@ FusionScopesResult::InnerNodeInfo *FusionScopesResult::FusionScopesResultImpl::A
 }
 
 FusionScopesResult::InnerNodeInfo *FusionScopesResult::FusionScopesResultImpl::MutableRecentInnerNode() {
-  size_t size = inner_node_infos_.size();
-  if (size >= 1) {
-    return &(inner_node_infos_[size - 1]);
+  const size_t size = inner_node_infos_.size();
+  if (size >= 1U) {
+    return &(inner_node_infos_[size - 1U]);
   }
   return nullptr;
 }
@@ -777,22 +778,22 @@ ge::graphStatus FusionScopesResult::FusionScopesResultImpl::CheckInnerNodesInfo(
       return ge::GRAPH_PARAM_INVALID;
     }
     for (const auto &input : info.GetInputs()) {
-      input_from_scope += (input.first == kInputFromFusionScope) ? 1 : 0;
+      input_from_scope += static_cast<size_t>((input.first == kInputFromFusionScope) ? 1UL : 0UL);
     }
     for (const auto &input : info.GetOutputs()) {
-      output_to_scope += (input.first == kOutputToFusionScope) ? 1 : 0;
+      output_to_scope += static_cast<size_t>((input.first == kOutputToFusionScope) ? 1UL : 0UL);
     }
   }
   size_t scope_input = 0U;
   size_t scope_output = 0U;
   for (const auto &input : inputs_) {
     for (const auto &idx : input.second) {
-      scope_input += (idx != kFusionDisableIndex) ? 1 : 0;
+      scope_input += static_cast<size_t>((idx != kFusionDisableIndex) ? 1UL : 0UL);
     }
   }
   for (const auto &output : outputs_) {
     for (const auto &idx : output.second) {
-      scope_output += (idx != kFusionDisableIndex) ? 1 : 0;
+      scope_output += static_cast<size_t>((idx != kFusionDisableIndex) ? 1UL : 0UL);
     }
   }
   if ((input_from_scope != scope_input) || (output_to_scope != scope_output)) {
@@ -975,7 +976,7 @@ void ScopeTree::ScopeTreeImpl::AddNodeToScope(ge::OperatorPtr &node_def) {
     auto &impl = super_scope->impl_;
     impl->OpsNumInc(node_def->GetOpType());
 
-    if (i == (scopes.size() - 1)) {
+    if (i == (scopes.size() - 1U)) {
       impl->AddNode(node_def);
     } else {
       Scope *sub_scope = impl->GetSubScope(scopes[i]);
@@ -1164,7 +1165,7 @@ bool ScopeGraph::ScopeGraphImpl::FusionOpChildIgnore(const ScopeFusionOpInfo &in
 }
 
 std::vector<int32_t> ScopeGraph::ScopeGraphImpl::GetFusionResultInputOrOutput(const ScopeFusionOpInfo &info,
-                                                                              bool input) {
+                                                                              const bool input) {
   std::vector<int32_t> indexs;
   const auto fusion_iter = fusion_results_.find(info.fusion_node_name);
   if (fusion_iter == fusion_results_.end()) {
@@ -1195,7 +1196,7 @@ std::vector<int32_t> ScopeGraph::ScopeGraphImpl::GetFusionResultInputOrOutput(co
   return indexs;
 }
 
-bool ScopeGraph::ScopeGraphImpl::IsFusionOp(const domi::tensorflow::NodeDef *node_def) {
+bool ScopeGraph::ScopeGraphImpl::IsFusionOp(const domi::tensorflow::NodeDef *const node_def) {
   if (node_def == nullptr) {
     GELOGE(PARAM_INVALID, "Input node_def is nullptr.");
     return false;
@@ -1210,14 +1211,14 @@ bool ScopeGraph::ScopeGraphImpl::IsFusionOp(const domi::tensorflow::NodeDef *nod
   return false;
 }
 
-Status ScopeGraph::ScopeGraphImpl::GetInputOrOutputIndex(const ScopeFusionOpInfo &info, int32_t old_index,
-                                                         bool input, int32_t &new_index) {
+Status ScopeGraph::ScopeGraphImpl::GetInputOrOutputIndex(const ScopeFusionOpInfo &info, const int32_t old_index,
+                                                         const bool input, int32_t &new_index) {
   if (old_index == -1) {
     new_index = -1;
     return SUCCESS;
   }
 
-  std::vector<int32_t> indexs = GetFusionResultInputOrOutput(info, input);
+  const std::vector<int32_t> indexs = GetFusionResultInputOrOutput(info, input);
   GELOGD("GetNodeindex, node_name:%s, fusion_node_name:%s, fusion_op_type:%s, old_index:%d, size:%zu.",
          info.node_name.c_str(), info.fusion_node_name.c_str(), info.fusion_op_type.c_str(), old_index, indexs.size());
   if (static_cast<int32_t>(indexs.size()) < (old_index + 1)) {
@@ -1232,7 +1233,7 @@ Status ScopeGraph::ScopeGraphImpl::GetInputOrOutputIndex(const ScopeFusionOpInfo
 }
 
 FusionScopesResult *ScopeGraph::ScopeGraphImpl::GetFusionScopesResults(
-    const domi::tensorflow::NodeDef *node_def) const {
+    const domi::tensorflow::NodeDef *const node_def) const {
   if (node_def == nullptr) {
     return nullptr;
   }
@@ -1275,7 +1276,7 @@ Status ScopeGraph::GetNodesMap(std::unordered_map<AscendString, ge::OperatorPtr>
     tmps = impl_->GetNodesMap();
   }
   for (auto &tmp : tmps) {
-    AscendString node(tmp.first.c_str());
+    const AscendString node(tmp.first.c_str());
     nodes_map[node] = tmp.second;
   }
   return SUCCESS;

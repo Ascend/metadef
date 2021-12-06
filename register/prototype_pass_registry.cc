@@ -46,7 +46,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
   }
 
   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> GetCreateFnByType(
-    domi::FrameworkType fmk_type) {
+    const domi::FrameworkType &fmk_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     const auto iter = create_fns_.find(fmk_type);
     if (iter == create_fns_.end()) {
@@ -86,7 +86,7 @@ void ProtoTypePassRegistry::RegisterProtoTypePass(const char_t *const pass_name,
 }
 
 std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> ProtoTypePassRegistry::GetCreateFnByType(
-    domi::FrameworkType fmk_type) const {
+    const domi::FrameworkType &fmk_type) const {
   if (impl_ == nullptr) {
     GELOGE(MEMALLOC_FAILED, "ProtoTypePassRegistry is not properly initialized.");
     return std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>{};

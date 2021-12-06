@@ -77,7 +77,7 @@ class AnyMap {
   template <typename VT>
   class Holder : public Placeholder {
    public:
-    explicit Holder(const VT &value) : value_(value) {}
+    explicit Holder(const VT &value) : Placeholder(), value_(value) {}
 
     ~Holder() override = default;
 
