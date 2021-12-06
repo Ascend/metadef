@@ -20,9 +20,9 @@
 #include "external/graph/ge_error_codes.h"
 
 namespace ge {
-const graphStatus NO_DEPENDENCE_FUNC = 50331647;
-const graphStatus NO_OVERLAP_DIM = 50331646;
-const graphStatus NOT_SUPPORT_SLICE = 50331645;
+constexpr graphStatus NO_DEPENDENCE_FUNC = 50331647U;
+constexpr graphStatus NO_OVERLAP_DIM = 50331646U;
+constexpr graphStatus NOT_SUPPORT_SLICE = 50331645U;
 }  // namespace ge
 
 #endif  // INC_GRAPH_COMMON_ERROR_CODES_H_

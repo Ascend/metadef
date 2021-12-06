@@ -25,9 +25,6 @@
 #include "graph/compiler_options.h"
 
 namespace ge {
-
-using std::shared_ptr;
-
 class BufferImpl;
 using BufferImplPtr = std::shared_ptr<BufferImpl>;
 

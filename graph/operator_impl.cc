@@ -30,13 +30,13 @@
 
 namespace ge {
 OperatorImpl::OperatorImpl(const std::string &name, const std::string &type)
-    : op_desc_(ComGraphMakeShared<OpDesc>(name, type)) {
+    : enable_shared_from_this(), op_desc_(ComGraphMakeShared<OpDesc>(name, type)) {
   if (op_desc_ == nullptr) {
     GELOGW("[Check][Param] Make op_desc failed");
   }
 }
 
-OperatorImpl::OperatorImpl(const OpDescPtr &op_desc) : op_desc_(op_desc) {}
+OperatorImpl::OperatorImpl(const OpDescPtr &op_desc) : enable_shared_from_this(), op_desc_(op_desc) {}
 
 OperatorImpl::OperatorImpl(ge::ConstNodePtr node) : node_(std::move(node)) {
   if (node_ != nullptr && node_->GetOpDesc() != nullptr) {
@@ -47,13 +47,13 @@ OperatorImpl::OperatorImpl(ge::ConstNodePtr node) : node_(std::move(node)) {
 OperatorImpl::~OperatorImpl() {}
 
 void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::Operator &src_oprt) {
-  GE_CHK_BOOL_EXEC(src_oprt.GetOutputsSize() == 1,
+  GE_CHK_BOOL_EXEC(src_oprt.GetOutputsSize() == 1U,
                    REPORT_INNER_ERROR("E19999", "The source operator[%s] must be single output operator",
                                       src_oprt.operator_impl_->op_desc_->GetName().c_str());
                    return, "[Check][Param] The source operator[%s] must be single output operator",
                          src_oprt.operator_impl_->op_desc_->GetName().c_str());
 
-  auto out_handler = src_oprt.GetOutput(0U);
+  const auto out_handler = src_oprt.GetOutput(0U);
   if (out_handler == nullptr) {
     return;
   }
@@ -68,16 +68,16 @@ void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::OutHandle
                    return, "[Check][Param] dst name is empty");
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr.");
                    return, "[Check][Param] op_desc_ is nullptr.");
-  input_link_.insert(std::make_pair(dst_name, *out_handler));
+  (void)input_link_.insert(std::make_pair(dst_name, *out_handler));
 
-  std::string src_name = out_handler->GetName();
-  int dst_index = op_desc_->GetInputIndexByName(dst_name);
+  const std::string src_name = out_handler->GetName();
+  const int32_t dst_index = op_desc_->GetInputIndexByName(dst_name);
   GE_CHK_BOOL_EXEC(dst_index >= 0,
                    REPORT_INNER_ERROR("E19999", "Find input index by name failed. name[%s], op name:%s",
                                       dst_name.c_str(), op_desc_->GetName().c_str());
                    return, "[Get][InputIndex] Find input index by name failed. name[%s], op name:%s", dst_name.c_str(),
                          op_desc_->GetName().c_str());
-  auto out_op_impl = out_handler->GetOwner();
+  const auto out_op_impl = out_handler->GetOwner();
   GE_CHK_BOOL_EXEC(out_op_impl != nullptr && out_op_impl->GetOpDescImpl() != nullptr,
                    REPORT_INNER_ERROR("E19999", "out_handler invalid. name[%s]", dst_name.c_str());
                    return, "[Get][Impl] out_handler invalid. name[%s]", dst_name.c_str());
@@ -86,10 +86,10 @@ void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::OutHandle
     is_const = true;
   }
   auto is_input_const = op_desc_->GetIsInputConst();
-  for (int i = static_cast<int>(is_input_const.size()); i <= dst_index; ++i) {
+  for (int32_t i = static_cast<int32_t>(is_input_const.size()); i <= dst_index; ++i) {
     is_input_const.push_back(false);
   }
-  is_input_const[dst_index] = is_const;
+  is_input_const[static_cast<size_t>(dst_index)] = is_const;
   op_desc_->SetIsInputConst(is_input_const);
 
   OpIO in_handler(dst_name, dst_index, shared_from_this());
@@ -99,7 +99,7 @@ void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::OutHandle
 
   out_op_impl->UpdateLinkMapImpl(src_name, in_handler);
   auto src_output_desc = out_op_impl->GetOutputDesc(src_name);
-  auto dst_input_desc = op_desc_->GetInputDesc(dst_name);
+  const auto dst_input_desc = op_desc_->GetInputDesc(dst_name);
   if (dst_input_desc.GetFormat() == FORMAT_RESERVED) {
     src_output_desc.SetFormat(FORMAT_ND);
     src_output_desc.SetOriginFormat(FORMAT_ND);
@@ -130,7 +130,7 @@ void OperatorImpl::AddControlInputImp(const ge::Operator &src_oprt) {
 }
 
 graphStatus OperatorImpl::GetInputImpl(const std::string &dst_name, ge::OpIO &out_handler) const {
-  auto out = input_link_.find(dst_name);
+  const auto out = input_link_.find(dst_name);
   if (out == input_link_.end()) {
     return GRAPH_FAILED;
   }
@@ -138,16 +138,16 @@ graphStatus OperatorImpl::GetInputImpl(const std::string &dst_name, ge::OpIO &ou
   return GRAPH_SUCCESS;
 }
 
-graphStatus OperatorImpl::GetInputImpl(uint32_t idx, ge::OpIO &out_handler) const {
+graphStatus OperatorImpl::GetInputImpl(const uint32_t idx, ge::OpIO &out_handler) const {
   GE_CHECK_NOTNULL(op_desc_);
-  std::string dst_name = op_desc_->GetInputNameByIndex(idx);
+  const std::string dst_name = op_desc_->GetInputNameByIndex(idx);
   return GetInputImpl(dst_name, out_handler);
 }
 
 namespace {
-graphStatus GetFromInputDesc(const OpDescPtr &op_desc, int index, ConstGeTensorPtr &ge_tensor) {
+graphStatus GetFromInputDesc(const OpDescPtr &op_desc, const int32_t index, ConstGeTensorPtr &ge_tensor) {
   // if tensor has host mem, init data by ATTR_NAME_VALUE first
-  auto tensor = op_desc->MutableInputDesc(index);
+  const auto tensor = op_desc->MutableInputDesc(static_cast<uint32_t>(index));
   GeTensorPtr tensor_value = nullptr;
   if (AttrUtils::MutableTensor(tensor, ATTR_NAME_VALUE, tensor_value)) {
     GELOGD("Get ATTR_NAME_VALUE from %d input of %s, Tensor addr is %p, tensor value data type is %d.", index,
@@ -165,30 +165,31 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
                                           ConstGeTensorPtr &ge_tensor) const {
   auto peer_node_2_out_anchor = std::make_pair(peer_node, out_data_anchor);
   if (peer_node->GetType() == ENTER || peer_node->GetType() == REFENTER) {
-    auto enter_in_data_anchor = peer_node->GetInDataAnchor(0);
+    const auto enter_in_data_anchor = peer_node->GetInDataAnchor(0);
     GE_CHECK_NOTNULL(enter_in_data_anchor);
-    auto enter_peer_out_data_anchor = enter_in_data_anchor->GetPeerOutAnchor();
+    const auto enter_peer_out_data_anchor = enter_in_data_anchor->GetPeerOutAnchor();
     GE_CHECK_NOTNULL(enter_peer_out_data_anchor);
     peer_node = enter_peer_out_data_anchor->GetOwnerNode();
     peer_node_2_out_anchor.first = peer_node;
     peer_node_2_out_anchor.second = enter_peer_out_data_anchor;
   }
-  auto peer_op_desc = peer_node->GetOpDesc();
+  const auto peer_op_desc = peer_node->GetOpDesc();
   GE_CHECK_NOTNULL(peer_op_desc);
-  auto peer_op_type = peer_op_desc->GetType();
+  const auto peer_op_type = peer_op_desc->GetType();
   if (ConstantUtils::IsConstant(peer_op_desc)) {
-    return ConstantUtils::GetWeight(peer_op_desc, peer_node_2_out_anchor.second->GetIdx(), ge_tensor) ? GRAPH_SUCCESS
-                                                                                                      : GRAPH_FAILED;
-  } else if (peer_op_type == DATA) {
+    return ConstantUtils::GetWeight(peer_op_desc, static_cast<uint32_t>(peer_node_2_out_anchor.second->GetIdx()),
+                                    ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
+  }
+  if (peer_op_type == DATA) {
     auto parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(peer_node);
     while ((parent_node_2_out_anchor.first != nullptr) && (parent_node_2_out_anchor.first->GetType() == DATA)) {
       parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(parent_node_2_out_anchor.first);
     }
     if ((parent_node_2_out_anchor.first != nullptr) && (ConstantUtils::IsConstant(parent_node_2_out_anchor.first))) {
-      auto op_desc = parent_node_2_out_anchor.first->GetOpDesc();
+      const auto op_desc = parent_node_2_out_anchor.first->GetOpDesc();
       GE_CHECK_NOTNULL(op_desc);
-      return ConstantUtils::GetWeight(op_desc, parent_node_2_out_anchor.second->GetIdx(), ge_tensor) ? GRAPH_SUCCESS
-                                                                                                     : GRAPH_FAILED;
+      return ConstantUtils::GetWeight(op_desc, static_cast<uint32_t>(parent_node_2_out_anchor.second->GetIdx()),
+                                      ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
     }
   }
   return GRAPH_FAILED;
@@ -196,9 +197,9 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
 
 graphStatus OperatorImpl::GetInputConstData(const std::string &dst_name, Tensor &data) {
   GE_CHECK_NOTNULL(op_desc_);
-  auto index = op_desc_->GetInputIndexByName(dst_name);
+  const auto index = op_desc_->GetInputIndexByName(dst_name);
   ConstGeTensorPtr ge_tensor = nullptr;
-  if (GetInputConstData(index, ge_tensor) == GRAPH_SUCCESS) {
+  if (GetInputConstData(static_cast<uint32_t>(index), ge_tensor) == GRAPH_SUCCESS) {
     data = TensorAdapter::GeTensor2Tensor(ge_tensor);
     return GRAPH_SUCCESS;
   }
@@ -206,16 +207,16 @@ graphStatus OperatorImpl::GetInputConstData(const std::string &dst_name, Tensor 
   return GRAPH_FAILED;
 }
 
-graphStatus OperatorImpl::GetInputConstData(uint32_t idx, ConstGeTensorPtr &ge_tensor) const {
-  auto node = GetNode();
+graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr &ge_tensor) const {
+  const auto node = GetNode();
   if (node == nullptr) {
     return GetInputConstDataOut(idx, ge_tensor);
   }
 
   // from runtime context
-  auto in_data_anchor = node->GetInDataAnchor(idx);
+  const auto in_data_anchor = node->GetInDataAnchor(static_cast<int32_t>(idx));
   GE_CHECK_NOTNULL(in_data_anchor);
-  auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
+  const auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
   GE_CHECK_NOTNULL(out_data_anchor);
   auto peer_node = out_data_anchor->GetOwnerNode();
 
@@ -229,16 +230,16 @@ graphStatus OperatorImpl::GetInputConstData(uint32_t idx, ConstGeTensorPtr &ge_t
   }
 
   // For inner compute graph
-  auto op_desc = node->GetOpDesc();
+  const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
-  if (GetFromInputDesc(op_desc, idx, ge_tensor) == GRAPH_SUCCESS) {
+  if (GetFromInputDesc(op_desc, static_cast<int32_t>(idx), ge_tensor) == GRAPH_SUCCESS) {
     return GRAPH_SUCCESS;
   }
 
   return GetFromPeerNode(peer_node, out_data_anchor, ge_tensor);
 }
 
-graphStatus OperatorImpl::GetInputConstDataOut(uint32_t idx, ConstGeTensorPtr &ge_tensor) const {
+graphStatus OperatorImpl::GetInputConstDataOut(const uint32_t idx, ConstGeTensorPtr &ge_tensor) const {
   ge::OpIO out_handle("", 0, nullptr);
   if (GetInputImpl(idx, out_handle) != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E19999", "index: %u get input impl failed", idx);
@@ -248,7 +249,7 @@ graphStatus OperatorImpl::GetInputConstDataOut(uint32_t idx, ConstGeTensorPtr &g
   if (out_handle.GetOwner() != nullptr && out_handle.GetOwner()->GetOpDescImpl() != nullptr) {
     const auto &op_desc_impl_type = out_handle.GetOwner()->GetOpDescImpl()->GetType();
     if (op_desc_impl_type == CONSTANTOP || op_desc_impl_type == CONSTANT) {
-      auto op_desc = out_handle.GetOwner()->GetOpDescImpl();
+      const auto op_desc = out_handle.GetOwner()->GetOpDescImpl();
       if (AttrUtils::GetTensor(op_desc, ATTR_NAME_WEIGHTS, ge_tensor)) {
         return GRAPH_SUCCESS;
       }
@@ -257,7 +258,7 @@ graphStatus OperatorImpl::GetInputConstDataOut(uint32_t idx, ConstGeTensorPtr &g
   return GRAPH_FAILED;
 }
 
-graphStatus OperatorImpl::GetInputConstDataOut(const std::string &dst_name, Tensor &data) {
+graphStatus OperatorImpl::GetInputConstDataOut(const std::string &dst_name, Tensor &data) const {
   ge::OpIO out_handle("", 0, nullptr);
   if (GetInputImpl(dst_name, out_handle) != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E19999", "%s get input impl failed", dst_name.c_str());
@@ -265,11 +266,9 @@ graphStatus OperatorImpl::GetInputConstDataOut(const std::string &dst_name, Tens
     return GRAPH_FAILED;
   }
   if (out_handle.GetOwner() != nullptr && out_handle.GetOwner()->GetOpDescImpl() != nullptr) {
-    Operator const_op(out_handle.GetOwner());
+    const Operator const_op(out_handle.GetOwner());
     const auto &op_desc_impl_type = out_handle.GetOwner()->GetOpDescImpl()->GetType();
-    if (op_desc_impl_type == CONSTANTOP) {
-      return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
-    } else if (op_desc_impl_type == CONSTANT) {
+    if ((op_desc_impl_type == CONSTANTOP) || (op_desc_impl_type == CONSTANT)) {
       return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
     }
   }
@@ -294,7 +293,7 @@ GeTensorDesc OperatorImpl::GetInputDesc(const std::string &name) const {
   return op_desc_->GetInputDesc(name);
 }
 
-GeTensorDesc OperatorImpl::GetInputDesc(uint32_t index) const {
+GeTensorDesc OperatorImpl::GetInputDesc(const uint32_t index) const {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return GeTensorDesc(), "[Check][Param] op_desc_ is nullptr.");
   return op_desc_->GetInputDesc(index);
@@ -311,11 +310,11 @@ OutHandler OperatorImpl::GetOutput(const std::string &name) {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return nullptr, "[Check][Param] op_desc_ is nullptr.");
 
-  int src_index = op_desc_->GetOutputIndexByName(name);
+  int32_t src_index = op_desc_->GetOutputIndexByName(name);
   GE_CHK_BOOL_EXEC(src_index >= 0,
                    REPORT_INNER_ERROR("E19999", "Find src index by name failed. name[%s]", name.c_str());
                    return nullptr, "[Get][OutputIndex] Find src index by name failed. name[%s]", name.c_str());
-  shared_ptr<OpIO> output_ptr = ComGraphMakeShared<OpIO>(name, src_index, shared_from_this());
+  const shared_ptr<OpIO> output_ptr = ComGraphMakeShared<OpIO>(name, src_index, shared_from_this());
   if (output_ptr == nullptr) {
     REPORT_CALL_ERROR("E19999", "OpIO make shared failed");
     GELOGE(GRAPH_FAILED, "[Call][ComGraphMakeShared] OpIO make shared failed");
@@ -333,7 +332,7 @@ OutHandler OperatorImpl::GetOutput(uint32_t index) {
     GELOGE(GRAPH_FAILED, "[Get][OutputName] Find src name by index failed. index[%u]", index);
     return nullptr;
   }
-  shared_ptr<OpIO> output_ptr = ComGraphMakeShared<OpIO>(name, index, shared_from_this());
+  const shared_ptr<OpIO> output_ptr = ComGraphMakeShared<OpIO>(name, index, shared_from_this());
   if (output_ptr == nullptr) {
     REPORT_CALL_ERROR("E19999", "OpIO make shared failed");
     GELOGE(GRAPH_FAILED, "[Call][ComGraphMakeShared] OpIO make shared failed");
@@ -349,7 +348,7 @@ GeTensorDesc OperatorImpl::GetOutputDesc(const std::string &name) const {
   return op_desc_->GetOutputDesc(name);
 }
 
-GeTensorDesc OperatorImpl::GetOutputDesc(uint32_t index) const {
+GeTensorDesc OperatorImpl::GetOutputDesc(const uint32_t index) const {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
                    return GeTensorDesc(), "[Check][Param] op_desc_ is nullptr.");
 
@@ -359,9 +358,9 @@ GeTensorDesc OperatorImpl::GetOutputDesc(uint32_t index) const {
 graphStatus OperatorImpl::UpdateOutputDesc(const std::string &name, const GeTensorDesc &tensor_desc) {
   GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
 
-  auto res = op_desc_->UpdateOutputDesc(name, tensor_desc);
+  const auto res = op_desc_->UpdateOutputDesc(name, tensor_desc);
   if (res == GRAPH_SUCCESS) {
-    for (auto ol : output_links_[name]) {
+    for (const auto ol : output_links_[name]) {
       if (ol.GetOwner() == nullptr) {
         GELOGW("[Update][Check] %s get owner is nullptr", ol.GetName().c_str());
         continue;
@@ -379,11 +378,11 @@ size_t OperatorImpl::GetInputsSize() const {
 }
 
 size_t OperatorImpl::GetOutputsSize() const {
-  GE_IF_BOOL_EXEC(op_desc_ == nullptr, return 0);
+  GE_IF_BOOL_EXEC(op_desc_ == nullptr, return 0U);
   return op_desc_->GetOutputsSize();
 }
 
-graphStatus OperatorImpl::SetAttr(const std::string &name, AnyValue &&attr_value) {
+graphStatus OperatorImpl::SetAttr(const std::string &name, const AnyValue &&attr_value) {
   GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
   return op_desc_->SetAttr(name, std::move(attr_value));
 }
@@ -397,11 +396,11 @@ OpDescPtr OperatorImpl::GetOpDescImpl() const {
   return op_desc_;
 }
 
-void OperatorImpl::UpdateLinkMapImpl(const std::string &src_name, OpIO &op_dst) {
-  auto it_find = output_links_.find(src_name);
+void OperatorImpl::UpdateLinkMapImpl(const std::string &src_name, const OpIO &op_dst) {
+  const auto it_find = output_links_.find(src_name);
   if (it_find == output_links_.end()) {
     std::vector<OpIO> dsts{op_dst};
-    output_links_.insert(std::make_pair(src_name, dsts));
+    (void)output_links_.insert(std::make_pair(src_name, dsts));
   } else {
     it_find->second.push_back(op_dst);
   }
@@ -436,30 +435,31 @@ InferenceContextPtr OperatorImpl::GetInferenceContext() const {
   return inference_context_;
 }
 
-void OperatorImpl::SubgraphRegister(const std::string &ir_name, bool dynamic) {
+void OperatorImpl::SubgraphRegister(const std::string &ir_name, const bool dynamic) {
   op_desc_->RegisterSubgraphIrName(ir_name, dynamic ? kDynamic : kStatic);
 }
 
-void OperatorImpl::SubgraphCountRegister(const std::string &ir_name, uint32_t count) {
+void OperatorImpl::SubgraphCountRegister(const std::string &ir_name, const uint32_t count) {
   if (op_desc_->GetSubgraphTypeByIrName(ir_name) == kStatic) {
-    op_desc_->AddSubgraphName(ir_name);
+    (void)op_desc_->AddSubgraphName(ir_name);
     subgraph_names_to_builders_[ir_name] = nullptr;
   } else {
-    for (uint32_t i = 0; i < count; ++i) {
-      std::string key_name = ir_name + std::to_string(i);
-      op_desc_->AddSubgraphName(key_name);
+    for (uint32_t i = 0U; i < count; ++i) {
+      const std::string key_name = ir_name + std::to_string(i);
+      (void)op_desc_->AddSubgraphName(key_name);
       subgraph_names_to_builders_[key_name] = nullptr;
     }
   }
 }
 
-void OperatorImpl::SetSubgraphBuilder(const std::string &ir_name, uint32_t index, const SubgraphBuilder &builder) {
+void OperatorImpl::SetSubgraphBuilder(const std::string &ir_name, const uint32_t index,
+                                      const SubgraphBuilder &builder) {
   std::string key_name = ir_name;
   if (op_desc_->GetSubgraphTypeByIrName(ir_name) == kDynamic) {
     key_name += std::to_string(index);
   }
 
-  auto it = subgraph_names_to_builders_.find(key_name);
+  const auto it = subgraph_names_to_builders_.find(key_name);
   if (it == subgraph_names_to_builders_.end()) {
     REPORT_INNER_ERROR("E19999", "Failed to set subgraph builder for name %s index %u.", ir_name.c_str(), index);
     GELOGE(PARAM_INVALID, "[Check][Param] Failed to set subgraph builder for name %s index %u.", ir_name.c_str(),
@@ -469,7 +469,7 @@ void OperatorImpl::SetSubgraphBuilder(const std::string &ir_name, uint32_t index
   it->second = builder;
 }
 
-SubgraphBuilder OperatorImpl::GetSubgraphBuilder(const std::string &ir_name, uint32_t index) const {
+SubgraphBuilder OperatorImpl::GetSubgraphBuilder(const std::string &ir_name, const uint32_t index) const {
   std::string key_name = ir_name;
   if (op_desc_->GetSubgraphTypeByIrName(ir_name) == kDynamic) {
     key_name += std::to_string(index);
@@ -479,7 +479,7 @@ SubgraphBuilder OperatorImpl::GetSubgraphBuilder(const std::string &ir_name, uin
 }
 
 SubgraphBuilder OperatorImpl::GetSubgraphBuilder(const std::string &name) const {
-  auto iter = subgraph_names_to_builders_.find(name);
+  const auto iter = subgraph_names_to_builders_.find(name);
   if (iter == subgraph_names_to_builders_.end()) {
     REPORT_INNER_ERROR("E19999", "Failed to get subgraph builder for name %s", name.c_str());
     GELOGE(PARAM_INVALID, "[Check][Param] Failed to get subgraph builder for name %s", name.c_str());
@@ -492,10 +492,10 @@ SubgraphBuilder OperatorImpl::GetSubgraphBuilder(const std::string &name) const 
 std::vector<std::string> OperatorImpl::GetSubgraphNames() const {
   auto &ir_names = op_desc_->GetSubgraphIrNames();
   std::vector<std::string> names(ir_names.size());
-  std::transform(ir_names.begin(), ir_names.end(), names.begin(),
-                 [](const std::pair<std::string, SubgraphType> &name_to_type) {
-                   return name_to_type.first;
-                 });
+  (void)std::transform(ir_names.begin(), ir_names.end(), names.begin(),
+                       [](const std::pair<std::string, SubgraphType> &name_to_type) {
+                         return name_to_type.first;
+                       });
   return names;
 }
 

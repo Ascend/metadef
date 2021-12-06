@@ -25,7 +25,7 @@ class AlignedPtr {
  public:
   using Deleter = std::function<void(uint8_t *)>;
   using Allocator = std::function<void(std::unique_ptr<uint8_t[], Deleter> &base_addr)>;
-  explicit AlignedPtr(const size_t buffer_size, const size_t alignment = 16);
+  explicit AlignedPtr(const size_t buffer_size, const size_t alignment = 16U);
   AlignedPtr() = default;
   ~AlignedPtr() = default;
   AlignedPtr(const AlignedPtr &) = delete;
@@ -34,7 +34,7 @@ class AlignedPtr {
   AlignedPtr &operator=(AlignedPtr &&) = delete;
 
   const uint8_t *Get() const { return aligned_addr_; }
-  uint8_t *MutableGet() { return aligned_addr_; }
+  uint8_t *MutableGet() const { return aligned_addr_; }
   std::unique_ptr<uint8_t[], AlignedPtr::Deleter> Reset();
 
   static std::shared_ptr<AlignedPtr> BuildFromAllocFunc(const AlignedPtr::Allocator &alloc_func,

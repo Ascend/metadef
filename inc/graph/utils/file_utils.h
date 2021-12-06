@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <string>
-
+#include "external/graph/types.h"
 
 namespace ge {
 ///
@@ -29,7 +29,7 @@ namespace ge {
 /// @param [in] path of input file
 /// @param [out] Absolute path of a file. If the absolute path cannot be obtained, an empty string is returned
 ///
-std::string RealPath(const char *path);
+std::string RealPath(const char_t *path);
 
 ///
 /// @ingroup domi_common

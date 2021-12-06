@@ -122,9 +122,9 @@ class ErrorManager {
   /// @param [in] path: current so path
   /// @return int 0(success) -1(fail)
   ///
-  int32_t Init(std::string path);
+  int32_t Init(const std::string path);
 
-  int32_t ReportInterErrMessage(std::string error_code, const std::string &error_msg);
+  int32_t ReportInterErrMessage(const std::string error_code, const std::string &error_msg);
 
   ///
   /// @brief Report error message
@@ -132,7 +132,7 @@ class ErrorManager {
   /// @param [in] args_map: parameter map
   /// @return int 0(success) -1(fail)
   ///
-  int32_t ReportErrMessage(std::string error_code, const std::map<std::string, std::string> &args_map);
+  int32_t ReportErrMessage(const std::string error_code, const std::map<std::string, std::string> &args_map);
 
   ///
   /// @brief output error message
@@ -157,7 +157,7 @@ class ErrorManager {
   /// @param [in] key: vector parameter key
   /// @param [in] value: vector parameter value
   ///
-  void ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key = {},
+  void ATCReportErrMessage(const std::string error_code, const std::vector<std::string> &key = {},
                            const std::vector<std::string> &value = {});
 
   ///
@@ -167,7 +167,7 @@ class ErrorManager {
   /// @return int 0(success) -1(fail)
   ///
   int32_t ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
-                                   const std::map<std::string, std::string> &msg);
+                                       const std::map<std::string, std::string> &msg);
 
   ///
   /// @brief get graph compile failed message in mstune case
@@ -185,17 +185,18 @@ class ErrorManager {
 
   // @brief generate work_stream_id by args sessionid and graphid, clear error_message stored by same work_stream_id
   // used in external api entrance
-  void GenWorkStreamIdBySessionGraph(uint64_t session_id, uint64_t graph_id);
+  void GenWorkStreamIdBySessionGraph(const uint64_t session_id, const uint64_t graph_id);
 
   const std::string &GetLogHeader();
 
   error_message::Context &GetErrorManagerContext();
 
-  void SetErrorContext(error_message::Context error_context);
+  void SetErrorContext(const error_message::Context error_context);
 
   void SetStage(const std::string &first_stage, const std::string &second_stage);
 
-  void SetStage(const char *first_stage, size_t first_len, const char *second_stage, size_t second_len);
+  void SetStage(const error_message::char_t *first_stage, const size_t first_len,
+                const error_message::char_t *second_stage, const size_t second_len);
 
  private:
   struct ErrorInfoConfig {
@@ -221,13 +222,13 @@ class ErrorManager {
   ErrorManager &operator=(const ErrorManager &) = delete;
   ErrorManager &operator=(ErrorManager &&) = delete;
 
-  int32_t ParseJsonFile(std::string path);
+  int32_t ParseJsonFile(const std::string path);
 
   static int32_t ReadJsonFile(const std::string &file_path, void *handle);
 
   void ClassifyCompileFailedMsg(const std::map<std::string, std::string> &msg,
                                 std::map<std::string,
-                                std::vector<std::string>> &classfied_msg);
+                                std::vector<std::string>> &classified_msg);
 
   bool IsInnerErrorCode(const std::string &error_code) const;
 
@@ -239,8 +240,8 @@ class ErrorManager {
   std::vector<ErrorItem> &GetErrorMsgContainerByWorkId(uint64_t work_id);
   std::vector<ErrorItem> &GetWarningMsgContainerByWorkId(uint64_t work_id);
 
-  void ClearErrorMsgContainerByWorkId(uint64_t work_stream_id);
-  void ClearWarningMsgContainerByWorkId(uint64_t work_stream_id);
+  void ClearErrorMsgContainerByWorkId(const uint64_t work_stream_id);
+  void ClearWarningMsgContainerByWorkId(const uint64_t work_stream_id);
 
   bool is_init_ = false;
   std::mutex mutex_;

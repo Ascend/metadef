@@ -423,7 +423,7 @@ Operator &Operator::SetInput(const char *dst_name, const ge::OutHandler &out_han
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator dst_name is nullptr.");
     return *this;
   }
-  std::string op_dst_name = dst_name;
+  const std::string op_dst_name = dst_name;
   return SetInput(op_dst_name, out_handler);
 }
 

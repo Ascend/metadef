@@ -44,6 +44,10 @@ class Anchor;
 
 using AnchorPtr = std::shared_ptr<Anchor>;
 
+class DataAnchor;
+
+using DataAnchorPtr = std::shared_ptr<DataAnchor>;
+
 class InDataAnchor;
 
 using InDataAnchorPtr = std::shared_ptr<InDataAnchor>;
@@ -88,11 +92,6 @@ class Node : public std::enable_shared_from_this<Node> {
   Node &operator=(const Node &) = delete;
   bool operator==(const Node &r_node) const;
 
- protected:
-  Node();
-  Node(const OpDescPtr &op, const ComputeGraphPtr &ownerGraph);
-
- public:
   graphStatus Init();
 
   std::string GetName() const;
@@ -108,14 +107,14 @@ class Node : public std::enable_shared_from_this<Node> {
   uint32_t GetAllOutDataAnchorsSize() const;
   Vistor<AnchorPtr> GetAllOutAnchors() const;
   Vistor<AnchorPtr> GetAllInAnchors() const;
-  InDataAnchorPtr GetInDataAnchor(int32_t idx) const;
-  OutDataAnchorPtr GetOutDataAnchor(int32_t idx) const;
+  InDataAnchorPtr GetInDataAnchor(const int32_t idx) const;
+  OutDataAnchorPtr GetOutDataAnchor(const int32_t idx) const;
   InControlAnchorPtr GetInControlAnchor() const;
   OutControlAnchorPtr GetOutControlAnchor() const;
   Vistor<NodePtr> GetInNodes() const;
   Vistor<NodePtr> GetOutNodes() const;
-  AnchorPtr GetInAnchor(int32_t idx) const;
-  AnchorPtr GetOutAnchor(int32_t idx) const;
+  AnchorPtr GetInAnchor(const int32_t idx) const;
+  AnchorPtr GetOutAnchor(const int32_t idx) const;
 
   bool IsAllInNodesSeen(std::unordered_set<Node *> &nodes_seen) const;
 
@@ -147,7 +146,7 @@ class Node : public std::enable_shared_from_this<Node> {
 
   OpDescPtr GetOpDesc() const;
 
-  graphStatus UpdateOpDesc(const OpDescPtr &op);
+  graphStatus UpdateOpDesc(const OpDescPtr &op_desc);
 
   graphStatus AddLinkFrom(const NodePtr &input_node);
 
@@ -157,9 +156,9 @@ class Node : public std::enable_shared_from_this<Node> {
 
   graphStatus AddLinkFromForParse(const NodePtr &input_node);
 
-  void AddSendEventId(uint32_t event_id);
+  void AddSendEventId(const uint32_t event_id);
 
-  void AddRecvEventId(uint32_t event_id);
+  void AddRecvEventId(const uint32_t event_id);
 
   const std::vector<uint32_t> &GetSendEventIdList() const;
 
@@ -174,17 +173,21 @@ class Node : public std::enable_shared_from_this<Node> {
   void SetFusionOutputFlowList(kFusionDataFlowVec_t &fusion_output_list);
 
   bool GetHostNode() const;
-  void SetHostNode(bool is_host);
+  void SetHostNode(const bool is_host);
 
   void SetOrigNode(const NodePtr &orignode);
   NodePtr GetOrigNode();
+
+ protected:
+  Node();
+  Node(const OpDescPtr &op, const ComputeGraphPtr &owner_graph);
 
  private:
   bool NodeMembersAreEqual(const Node &r_node) const;
   bool NodeAttrsAreEqual(const Node &r_node) const;
   bool NodeInConnectsAreEqual(const Node &r_node) const;
   bool NodeOutConnectsAreEqual(const Node &r_node) const;
-  bool NodeAnchorIsEqual(const AnchorPtr &l_anchor, const AnchorPtr &r_anchor, size_t i) const;
+  bool NodeAnchorIsEqual(const AnchorPtr &left_anchor, const AnchorPtr &right_anchor, const size_t i) const;
   NodeImplPtr impl_;
   friend class NodeUtils;
   friend class OnnxUtils;

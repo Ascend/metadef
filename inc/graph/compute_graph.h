@@ -77,9 +77,9 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   NodePtr FindNode(const std::string &name) const;
   NodePtr FindFirstNodeMatchType(const std::string &name) const;
   // AddNode with NodePtr
-  NodePtr AddNode(NodePtr node);
-  NodePtr AddNode(OpDescPtr op);
-  NodePtr AddNode(OpDescPtr op, const int64_t id);    // for unserialize
+  NodePtr AddNode(const NodePtr node);
+  NodePtr AddNode(const OpDescPtr op);
+  NodePtr AddNode(const OpDescPtr op, const int64_t id);    // for unserialize
   NodePtr AddNodeFront(const NodePtr node);
   NodePtr AddNodeFront(const OpDescPtr &op);
   NodePtr AddInputNode(const NodePtr node);
@@ -126,7 +126,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   ///
   graphStatus UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
 
-  void TopologicalSorting(std::function<bool (const NodePtr &, const NodePtr &)> comp);
+  void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);
   graphStatus TopologicalSorting();
   bool IsValid() const;
   void InValid();
@@ -136,10 +136,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
   graphStatus IsolateNode(const NodePtr &node);
   graphStatus Verify();
-  graphStatus InferShape();
   graphStatus InferOriginFormat();
   graphStatus InferShapeInNeed();
-  graphStatus InsertEventNodes();
   graphStatus InsertGraphEvents();
   bool operator==(const ComputeGraph &r_graph) const;
   ComputeGraph& operator=(ge::ComputeGraph compute_graph);

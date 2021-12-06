@@ -64,7 +64,7 @@ class FftsGraphUtils {
                                const CalcFunc &calc_func,
                                std::map<NodePtr, std::vector<uint32_t>> &node_value,
                                std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value,
-                               const uint32_t recursive_depth = 1);
+                               const uint32_t recursive_depth = 1U);
 
   static std::vector<uint32_t> Calculate(const NodePtr &node, const CalcFunc &calc_func,
                                         std::map<NodePtr, std::vector<uint32_t>> &node_value,
@@ -79,7 +79,7 @@ class FftsGraphUtils {
                                              std::map<NodePtr, std::vector<uint32_t>> &node_value,
                                              std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value,
                                              const std::vector<uint32_t> &upper_limit,
-                                             const uint32_t recursive_depth = 1);
+                                             const uint32_t recursive_depth = 1U);
 
   static graphStatus SplitFuncNode(const std::vector<NodePtr> exceed_single_node,
                                    std::map<NodePtr, std::vector<uint32_t>> &node_value,

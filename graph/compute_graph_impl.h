@@ -63,7 +63,7 @@ class ComputeGraphImpl {
   NodePtr AddNodeFront(const OpDescPtr &op, const ComputeGraphPtr &compute_graph);
   NodePtr AddNode(const NodePtr node);
   NodePtr AddNode(const OpDescPtr op, const ComputeGraphPtr &compute_graph);
-  NodePtr AddNode(OpDescPtr op, const int64_t id, const ComputeGraphPtr &compute_graph);
+  NodePtr AddNode(const OpDescPtr op, const int64_t id, const ComputeGraphPtr &compute_graph);
   NodePtr AddInputNode(const NodePtr node);
   NodePtr AddOutputNode(const NodePtr node);
   NodePtr AddOutputNodeByIndex(const NodePtr node, const int32_t index);
@@ -121,7 +121,7 @@ class ComputeGraphImpl {
   const std::map<uint32_t, std::string> &GetGraphOpName() const { return op_name_map_; }
   void SetAllNodesInfo(const std::map<OperatorImplPtr, NodePtr> &nodes) { all_nodes_infos_ = nodes; }
 
-  void SetGraphOutNodesInfo(std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
+  void SetGraphOutNodesInfo(const std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
     output_nodes_info_ = out_nodes_info;
   }
 

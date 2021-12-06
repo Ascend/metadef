@@ -20,11 +20,10 @@
 #include "graph/compiler_options.h"
 
 #include <memory>
-#include <string>
-#include <vector>
 #include "graph/ge_error_codes.h"
 #include "graph/range_vistor.h"
 #include "graph/types.h"
+#include "graph/node.h"
 
 namespace ge {
 enum AnchorStatus {
@@ -33,47 +32,7 @@ enum AnchorStatus {
   ANCHOR_DATA = 2,  // Effective
   ANCHOR_RESERVED = 3
 };
-using std::string;
-using std::vector;
-
-class Node;
-
-using NodePtr = std::shared_ptr<Node>;
-
-class Edge;
-
-using EdgePtr = std::shared_ptr<Edge>;
-
-class Anchor;
-
-using AnchorPtr = std::shared_ptr<Anchor>;
-
-class DataAnchor;
-
-using DataAnchorPtr = std::shared_ptr<DataAnchor>;
-
-class InDataAnchor;
-
-using InDataAnchorPtr = std::shared_ptr<InDataAnchor>;
-
-class OutDataAnchor;
-
-using OutDataAnchorPtr = std::shared_ptr<OutDataAnchor>;
-
-class ControlAnchor;
-
-using ControlAnchorPtr = std::shared_ptr<ControlAnchor>;
-
-class InControlAnchor;
-
-using InControlAnchorPtr = std::shared_ptr<InControlAnchor>;
-
-class OutControlAnchor;
-
-using OutControlAnchorPtr = std::shared_ptr<OutControlAnchor>;
-
 using ConstAnchor = const Anchor;
-
 class AnchorImpl;
 using AnchorImplPtr = std::shared_ptr<AnchorImpl>;
 
@@ -86,7 +45,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Anchor : public std::enable
   using Vistor = RangeVistor<T, std::shared_ptr<ConstAnchor>>;
 
   Anchor(const NodePtr& owner_node, const int32_t idx);
-
+  Anchor(const Anchor &) = delete;
+  Anchor(Anchor &&) = delete;
+  Anchor &operator=(const Anchor &) = delete;
+  Anchor &operator=(Anchor &&) = delete;
   virtual ~Anchor();
 
  protected:
@@ -124,7 +86,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Anchor : public std::enable
   void SetIdx(const int32_t index);
 
  protected:
-  AnchorImplPtr impl_;
   template <class T>
   static Anchor::TYPE TypeOf() {
     static_assert(std::is_base_of<Anchor, T>::value, "T must be a Anchor!");
@@ -133,18 +94,21 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Anchor : public std::enable
 
  public:
   template <class T>
-  static std::shared_ptr<T> DynamicAnchorCast(AnchorPtr anchorPtr) {
+  static std::shared_ptr<T> DynamicAnchorCast(const AnchorPtr anchorPtr) {
     static_assert(std::is_base_of<Anchor, T>::value, "T must be a Anchor!");
-    if (anchorPtr == nullptr || !anchorPtr->IsTypeOf<T>()) {
+    if ((anchorPtr == nullptr) || (!anchorPtr->IsTypeOf<T>())) {
       return nullptr;
     }
     return std::static_pointer_cast<T>(anchorPtr);
   }
 
   template <typename T>
-  bool IsTypeOf() {
+  bool IsTypeOf() const {
     return IsTypeOf(TypeOf<T>());
   }
+
+ protected:
+  AnchorImplPtr impl_;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY DataAnchor : public Anchor {
@@ -152,7 +116,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY DataAnchor : public Anchor 
 
  public:
   explicit DataAnchor(const NodePtr &owner_node, const int32_t idx);
-
+  DataAnchor(const DataAnchor &) = delete;
+  DataAnchor &operator=(const DataAnchor &) = delete;
+  DataAnchor(DataAnchor &&) = delete;
+  DataAnchor &operator=(DataAnchor &&) = delete;
   virtual ~DataAnchor() = default;
 
  protected:
@@ -219,11 +186,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ControlAnchor : public Anch
   explicit ControlAnchor(const NodePtr &owner_node);
 
   explicit ControlAnchor(const NodePtr &owner_node, const int32_t idx);
-
   virtual ~ControlAnchor() = default;
 
  protected:
   bool IsTypeOf(const TYPE type) const override;
+  ControlAnchor(const ControlAnchor &) = delete;
+  ControlAnchor &operator=(const ControlAnchor &) = delete;
+  ControlAnchor(ControlAnchor &&) = delete;
+  ControlAnchor &operator=(ControlAnchor &&) = delete;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InControlAnchor : public ControlAnchor {

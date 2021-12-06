@@ -87,7 +87,7 @@ class AnyValue {
     VT_LIST_GRAPH = VT_LIST_BASE + VT_GRAPH,
     VT_LIST_NAMED_ATTRS = VT_LIST_BASE + VT_NAMED_ATTRS,
     VT_LIST_DATA_TYPE = VT_LIST_BASE + VT_DATA_TYPE,
-    };
+  };
 
  public:
   AnyValue() = default;
