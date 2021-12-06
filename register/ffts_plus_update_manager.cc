@@ -40,8 +40,8 @@ void FftsPlusUpdateManager::RegisterCreator(const std::string &core_type, const 
   }
 
   std::unique_lock<std::mutex> lk(mutex_);
-  const auto it = creators_.find(core_type);
-  if (it != creators_.end()) {
+  const std::map<std::string, FftsCtxUpdateCreatorFun>::const_iterator it = creators_.find(core_type);
+  if (it != creators_.cend()) {
     GELOGW("Creator already exist for core type: %s", core_type.c_str());
     return;
   }

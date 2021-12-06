@@ -34,7 +34,7 @@ class ScopesResult::ScopesResultImpl {
 
 class ScopeBasePass::ScopeBasePassImpl {
  public:
-  ScopeBasePassImpl(ScopeBasePass *parent) : parent_(parent) {}
+  explicit ScopeBasePassImpl(ScopeBasePass *parent) : parent_(parent) {}
   virtual ~ScopeBasePassImpl();
 
   Status Run(std::shared_ptr<ScopeGraph> &scope_graph);

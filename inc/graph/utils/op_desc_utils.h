@@ -17,13 +17,11 @@
 #ifndef INC_GRAPH_UTILS_OP_DESC_UTILS_H_
 #define INC_GRAPH_UTILS_OP_DESC_UTILS_H_
 
-#include <memory>
 #include <string>
 #include <vector>
 #include "graph/def_types.h"
 #include "graph/node.h"
 #include "graph/op_desc.h"
-#include "graph/operator.h"
 #include "graph/range_vistor.h"
 #include "graph/runtime_inference_context.h"
 

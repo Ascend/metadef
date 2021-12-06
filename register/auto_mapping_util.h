@@ -164,9 +164,9 @@ static void CopyAttrValue(const std::string &key, const ge::GeAttrValue &value, 
     switch (value_type) {
 #define CASE_ATTR_VALUE_TYPE(GeValueType, ValueType, FuncName)    \
       case GeAttrValue::VT_##GeValueType: {                       \
-        ValueType value;                                          \
-        (void) ge::AttrUtils::Get##FuncName(obj_src, key, value); \
-        (void) ge::AttrUtils::Set##FuncName(obj, key, value);     \
+        ValueType val;                                            \
+        (void) ge::AttrUtils::Get##FuncName(obj_src, key, val);   \
+        (void) ge::AttrUtils::Set##FuncName(obj, key, val);       \
         break;                                                    \
       }
       CASE_ATTR_VALUE_TYPE(STRING, string, Str);

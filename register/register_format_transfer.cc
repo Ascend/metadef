@@ -16,6 +16,10 @@
 
 #include "register/register_format_transfer.h"
 
+#include <map>
+
+#include "ge/ge_api_error_codes.h"
+
 namespace ge {
 namespace formats {
 namespace {
