@@ -32,7 +32,7 @@ using FusionInnerNodesInfo = std::vector<std::tuple<std::string, std::string,   
 class Scope::ScopeImpl {
  public:
   ScopeImpl() : father_scope_(nullptr) {}
-  Status Init(const std::string &name, const std::string &sub_type = "", Scope *father_scope = nullptr);
+  Status Init(const std::string &name, const std::string &sub_type = "", Scope *const father_scope = nullptr);
   ~ScopeImpl();
 
   const std::string &Name() const { return name_; }
@@ -82,7 +82,7 @@ class FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl {
   ge::graphStatus BuildOperator();
   ge::graphStatus SetInputFormat(const std::string &input_name, const std::string &format) ;
   ge::graphStatus SetOutputFormat(const std::string &output_name, const std::string &format);
-  ge::graphStatus SetDynamicInputFormat(const std::string &input_name, uint32_t index, const std::string &format);
+  ge::graphStatus SetDynamicInputFormat(const std::string &input_name, const uint32_t index, const std::string &format);
   ge::graphStatus SetDynamicOutputFormat(const std::string &output_name, uint32_t index, const std::string &format);
   std::string GetName() const { return name_; }
   std::string GetType() const { return type_; }

@@ -72,14 +72,15 @@ Status DecomposeInputName(const std::string &input_name, std::string &node_name,
   return SUCCESS;
 }
 
-void AddEdgeCtx(const std::string &peer_node_name, int32_t peer_index, int32_t curr_index, NodeEdges &node_edges) {
+void AddEdgeCtx(const std::string &peer_node_name, cosnt int32_t peer_index,
+                const int32_t curr_index, NodeEdges &node_edges) {
   (void)node_edges[curr_index].insert({peer_node_name, peer_index});
 }
 
-Status GetGraphDefInOutMap(domi::tensorflow::GraphDef *graph_def, GraphNodesInOut &in_out_map) {
+Status GetGraphDefInOutMap(const domi::tensorflow::GraphDef *const graph_def, GraphNodesInOut &in_out_map) {
   GE_CHECK_NOTNULL(graph_def);
   for (int32_t i = 0; i < graph_def->node_size(); i++) {
-    const domi::tensorflow::NodeDef *node = graph_def->mutable_node(i);
+    const domi::tensorflow::NodeDef *const node = graph_def->mutable_node(i);
     const std::string &node_name = node->name();
     int32_t input_index = 0;
     for (const auto &input : node->input()) {
@@ -109,7 +110,7 @@ void GetInOutStr(const GraphNodesInOut &in_out_map, const string &node_name,
   const auto inputs_data = in_out_iter->second.first;
   for (const auto &input_data : inputs_data) {
     for (const auto &name_index : input_data.second) {
-      std::string item = std::to_string(input_data.first) + ":" +  name_index.first +
+      const std::string item = std::to_string(input_data.first) + ":" +  name_index.first +
                          ":" + std::to_string(name_index.second);
       inputs.push_back(item);
     }
@@ -118,7 +119,7 @@ void GetInOutStr(const GraphNodesInOut &in_out_map, const string &node_name,
   const auto outputs_data = in_out_iter->second.second;
   for (const auto &output_data : outputs_data) {
     for (const auto &name_index : output_data.second) {
-      std::string item = std::to_string(output_data.first) + ":" +  name_index.first +
+      const std::string item = std::to_string(output_data.first) + ":" +  name_index.first +
         ":" + std::to_string(name_index.second);
       outputs.push_back(item);
     }
@@ -136,7 +137,7 @@ Status SetNodeInputOutputAttr(const GraphNodesInOut &in_out_map, OperatorPtr &op
 }
 }  // namespace
 
-Status Scope::ScopeImpl::Init(const std::string &name, const std::string &sub_type, Scope *father_scope) {
+Status Scope::ScopeImpl::Init(const std::string &name, const std::string &sub_type, Scope *const father_scope) {
   name_ = name;
   sub_type_ = sub_type;
   father_scope_ = father_scope;
@@ -177,7 +178,7 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
 
   if (!nodes_.empty()) {
     for (const auto &node : nodes_) {
-      all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(node->GetName()), node));
+      (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(node->GetName()), node));
     }
   }
   const std::vector<Scope *> &scopes = GetAllSubScopes();
@@ -185,8 +186,8 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
     auto &impl = scope->impl_;
     const std::vector<ge::OperatorPtr> &sub_nodes = impl->Nodes();
     if (!sub_nodes.empty()) {
-      for (auto sub_node : sub_nodes) {
-        all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(sub_node->GetName()), sub_node));
+      for (const auto sub_node : sub_nodes) {
+        (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(sub_node->GetName()), sub_node));
       }
     }
   }
@@ -207,13 +208,13 @@ const std::vector<Scope *> &Scope::ScopeImpl::GetAllSubScopes() {
   }
 
   for (auto &iter : sub_scopes_) {
-    Scope *scope = iter.second;
+    Scope *const scope = iter.second;
     all_sub_scopes_.push_back(scope);
 
     std::stack<Scope *> scopes;
     scopes.push(scope);
     while (!scopes.empty()) {
-      Scope *scope = scopes.top();
+      Scope *const scope = scopes.top();
       scopes.pop();
       auto &impl = scope->impl_;
       const std::unordered_map<std::string, Scope *> &sub_scopes = impl->GetSubScopes();
@@ -245,7 +246,7 @@ void Scope::ScopeImpl::OpsNumInc(const std::string &op_type) {
 }
 
 const std::string Scope::ScopeImpl::LastName() const {
-  std::vector<std::string> names = ge::StringUtils::Split(name_, '/');
+  const std::vector<std::string> names = ge::StringUtils::Split(name_, '/');
   // if vector size is less than 2, there is no multilevel directory, return origin name.
   if (names.size() < 2U) {
     GELOGI("Input name is already the last name, input name:%s.", name_.c_str());
@@ -261,7 +262,7 @@ std::string Scope::ScopeImpl::TrimScopeIndex(const std::string &scope_name) {
   const auto index = scope_name.find_last_of("_");
   if (index != std::string::npos) {
     // index_str after "_" is integer
-    std::string index_str = scope_name.substr(index + 1U, scope_name.length());
+    const std::string index_str = scope_name.substr(index + 1U, scope_name.length());
     if (index_str.find_first_not_of(kNumerics) != std::string::npos) {
       return scope_name;
     }
@@ -431,7 +432,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetDynamic
 }
 
 ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetDynamicOutputFormat(
-    const std::string &output_name, uint32_t index, const std::string &format) {
+    const std::string &output_name, cosnt uint32_t index, const std::string &format) {
   ge::TensorDesc output_tesor_desc = operator_.GetDynamicOutputDesc(output_name, index);
   const auto ge_format = ge::TypeUtils::SerialStringToFormat(format);
   output_tesor_desc.SetOriginFormat(ge_format);
@@ -1115,7 +1116,7 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
       return;
     }
 
-    nodes_map_.emplace(op->GetName(), op);
+    (void)nodes_map_.emplace(op->GetName(), op);
     if (op->GetOpType() != kTfIdentityType || op->GetOpType() != kTfConstType) {
       auto &impl = scope_tree_->impl_;
       impl->AddNodeToScope(op);
