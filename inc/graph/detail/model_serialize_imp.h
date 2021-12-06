@@ -76,8 +76,6 @@ class ModelSerializeImp {
 
   bool SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump = false);
 
-  bool SerializeTensor(const ConstGeTensorPtr &tensor, proto::TensorDef *tensor_proto) const;
-
   bool UnserializeModel(Model &model, proto::ModelDef &model_proto);
 
   bool UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, proto::GraphDef &graph_proto);
@@ -93,8 +91,6 @@ class ModelSerializeImp {
   void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false) const;
 
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
-
-  bool UnserializeTensor(GeTensorPtr &tensor, proto::TensorDef &tensor_proto);
 
   bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const;
 
