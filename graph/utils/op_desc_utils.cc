@@ -457,7 +457,7 @@ bool OpDescUtils::IsNonConstInput(const ge::Node &node, const size_t index) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::IsNonConstInput(const ge::ConstNodePtr &node,
-                                                                                 size_t index) {
+                                                                                 const size_t index) {
   CHECK_FALSE_EXEC(node != nullptr, return false);
   return IsNonConstInput(*node, index);
 }

@@ -450,13 +450,13 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
 /// @param [in] handle:  print handle
 /// @return int 0(success) -1(fail)
 ///
-int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *handle) {
+int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const handle) {
   GELOGI("Begin to read json file");
   if (file_path.empty()) {
     GELOGW("[Read][JsonFile]path %s is not valid", file_path.c_str());
     return -1;
   }
-  nlohmann::json *json_file = reinterpret_cast<nlohmann::json *>(handle);
+  nlohmann::json *const json_file = reinterpret_cast<nlohmann::json *const>(handle);
   if (json_file == nullptr) {
     GELOGW("[Check][Param]JsonFile is nullptr");
     return -1;
