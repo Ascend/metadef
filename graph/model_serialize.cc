@@ -95,7 +95,7 @@ void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_de
 }
 
 bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto,
-                                        const bool is_dump) {
+                                        const bool is_dump) const {
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr. check invalid.");
                    return false, "[Check][Param] op_desc is null.");
   GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E19999", "param op_def_proto is null, check invalid.");
@@ -185,7 +185,7 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
   }
 }
 
-bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump) {
+bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump) const {
   if ((node == nullptr) || (op_def_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or op_def_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param node or op_def_proto is nullptr, check invalid.");
@@ -204,7 +204,7 @@ bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeGraph(const ConstComputeGraphPtr &graph,
                                                                                       proto::GraphDef *graph_proto,
-                                                                                      const bool is_dump) {
+                                                                                      const bool is_dump) const {
   if ((graph == nullptr) || (graph_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param graph or graph_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param graph or graph_proto is nullptr, check invalid.");
@@ -242,7 +242,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   return true;
 }
 
-bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *model_proto, const bool is_dump) {
+bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *model_proto, const bool is_dump) const {
   if (model_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param model_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param model_proto is nullptr, check Invalid");
@@ -317,7 +317,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
   }
 }
 
-bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) {
+bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) const {
   std::vector<std::string> opt_input;
   std::vector<std::string> key_in;
   std::vector<uint32_t> value_in;
