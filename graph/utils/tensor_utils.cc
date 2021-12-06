@@ -97,7 +97,7 @@ static bool CheckMultiplyOverflowInt64(const int64_t &a, const int64_t &b) {
   return false;
 }
 
-/// 
+///
 /// Calculate element num by dims directly.
 /// @param dims dim info
 /// @param element_cnt element count
