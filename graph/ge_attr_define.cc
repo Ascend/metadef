@@ -1151,6 +1151,7 @@ const std::string ATTR_VARIABLE_PLACEMENT = "_variable_placement";
 const std::string ATTR_INPUT_MEMORY_TYPE = "_input_memory_type";
 const std::string ATTR_OUTPUT_MEMORY_TYPE = "_output_memory_type";
 const std::string ATTR_NAME_SPECIAL_OUTPUT_SIZE = "_special_output_size";
+const std::string ATTR_NAME_SPECIAL_INPUT_SIZE = "_special_input_size";
 
 // stage
 const std::string ATTR_STAGE_LEVEL = "_stage_level";
