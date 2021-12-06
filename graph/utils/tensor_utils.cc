@@ -32,7 +32,7 @@ const uint32_t kNc1hwc0CalcByDimsSize = 5U;
 const int64_t kElementCntUnknownShape = -1;
 
 // Unknown shape mem size
-const int64_t kMemSizeUnknownShape = -1;
+const int64_t kUnknownShapeMemSize = -1;
 
 // Nchw and nhwc dim size must be 4
 const uint32_t kDimSize4d = 4U;
@@ -50,13 +50,13 @@ const uint32_t kC0SizeDefault = kTheCubeSize;
 const uint32_t kC0SizeInt8 = 32U;
 
 // NCHW dim N index
-const uint32_t kNchwDimIdxN = 0U;
+const uint32_t kNchwDimIndexN = 0U;
 // NCHW dim C index
-const uint32_t kNchwDimIdxC = 1U;
+const uint32_t kNchwDimIndexC = 1U;
 // NCHW dim H index
-const uint32_t kNchwDimIdxH = 2U;
+const uint32_t kNchwDimIndexH = 2U;
 // NCHW dim W index
-const uint32_t kNchwDimIdxW = 3U;
+const uint32_t kNchwDimIndexW = 3U;
 
 const int64_t kDataMemAlignSize = 32;
 const int64_t kNum2 = 2;
@@ -97,7 +97,7 @@ static bool CheckMultiplyOverflowInt64(const int64_t &a, const int64_t &b) {
   return false;
 }
 
-///
+/// 
 /// Calculate element num by dims directly.
 /// @param dims dim info
 /// @param element_cnt element count
@@ -126,8 +126,8 @@ static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_
 /// @return GRAPH_SUCCESS:success
 ///         other:failed
 ///
-static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, Format format, uint32_t fixed_dim_size,
-                                             int64_t &element_cnt) {
+static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, Format format,
+                                             const uint32_t fixed_dim_size, int64_t &element_cnt) {
   if (dims.size() != fixed_dim_size) {
     GELOGW("[Util][CalcElemCnt] Format %d(%s) need dim size=%u but %zu, calc as ND.",
            format, TypeUtils::FormatToSerialString(format).c_str(), fixed_dim_size, dims.size());
@@ -170,11 +170,11 @@ static graphStatus CalcElementCntOfNc1hwc0(const std::vector<int64_t> &dims, Dat
 
   const auto c0 = static_cast<int64_t>(GetDimC0(data_type));
   // Nc1hwc0 dims is according to nchw, dim c index is 1.
-  const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIdxC]) * 1.0 /
+  const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIndexC]) * 1.0 /
                   static_cast<float64_t>(c0)));
   // Store dims is split c to c1 and c0.
-  const std::vector<int64_t> store_dims = {dims[kNchwDimIdxN], c1,
-                                           dims[kNchwDimIdxH], dims[kNchwDimIdxW], c0};
+  const std::vector<int64_t> store_dims = {dims[kNchwDimIndexN], c1,
+                                           dims[kNchwDimIndexH], dims[kNchwDimIndexW], c0};
   return CalcElementCntByDims(store_dims, element_cnt);
 }
 
@@ -200,24 +200,24 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
     }
     const auto c0 = static_cast<int64_t>(GetDimC0(data_type));
     // FractalZ dims is according to nchw, dim c index is 1.
-    const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIdxC]) * 1.0 /
+    const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIndexC]) * 1.0 /
                     static_cast<float64_t>(c0)));
 
     // Spread NC1HWC0 as a two dimension array, n as column dimension,
     // C1HWC0 as row dimension
-    const std::vector<int64_t> r_count_vec = {c1, dims[kNchwDimIdxH],
-                                              dims[kNchwDimIdxW], c0};
+    const std::vector<int64_t> r_count_vec = {c1, dims[kNchwDimIndexH],
+                                              dims[kNchwDimIndexW], c0};
 
     int64_t r_count = 1;
     const graphStatus graph_status = CalcElementCntByDims(r_count_vec, r_count);
     if (graph_status != GRAPH_SUCCESS) {
       GELOGE(graph_status, "[Get][Cnt] Calc [%ld, %ld, %ld, %ld] element count failed.",
-             c1, dims[kNchwDimIdxH], dims[kNchwDimIdxW], c0);
+             c1, dims[kNchwDimIndexH], dims[kNchwDimIndexW], c0);
       return graph_status;
     }
 
     // Cube count in n
-    const auto nc_cnt = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIdxN]) * 1.0 /
+    const auto nc_cnt = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIndexN]) * 1.0 /
                         static_cast<float64_t>(kTheCubeSize)));
 
     // Cube count in vertical direction(C1HWC0)
@@ -252,7 +252,7 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
   const std::vector<int64_t> &dims = shape.GetDims();
   std::vector<int64_t> max_shape_list;
   // use the max shape set by user
-  bool has_attr = AttrUtils::GetListInt(tensor_desc, ATTR_NAME_TENSOR_MAX_SHAPE, max_shape_list);
+  const bool has_attr = AttrUtils::GetListInt(tensor_desc, ATTR_NAME_TENSOR_MAX_SHAPE, max_shape_list);
   if (has_attr) {
     if (max_shape_list.size() == dims.size()) {
       output_dims = std::move(max_shape_list);
@@ -265,7 +265,7 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
   }
   // if max shape attr not set, use shape range
   std::vector<std::pair<int64_t, int64_t>> range;
-  graphStatus graph_status = tensor_desc.GetShapeRange(range);
+  const graphStatus graph_status = tensor_desc.GetShapeRange(range);
   if (graph_status != GRAPH_SUCCESS) {
     REPORT_INNER_ERROR("E19999", "Get shape range failed.");
     GELOGE(PARAM_INVALID, "[Check][Param] GetShapeRange failed.");
@@ -276,8 +276,8 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
     GELOGE(PARAM_INVALID, "[Check][Param] size not matched dims_size[%zu] range_size[%zu].", dims.size(), range.size());
     return PARAM_INVALID;
   }
-  for (size_t i = 0; i < dims.size(); ++i) {
-    int64_t dim = dims[i] < 0 ? range[i].second : dims[i];
+  for (size_t i = 0U; i < dims.size(); ++i) {
+    const int64_t dim = (dims[i] < 0) ? range[i].second : dims[i];
     output_dims.push_back(dim);
   }
   return GRAPH_SUCCESS;
@@ -292,7 +292,7 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
 /// @return GRAPH_SUCCESS:success
 ///         other:failed
 ///
-static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format format, DataType data_type,
+static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, const Format format, const DataType data_type,
                                         int64_t &element_cnt) {
   const std::string format_str = TypeUtils::FormatToSerialString(format);
   // Check dims
@@ -380,8 +380,8 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, Format
 /// @return GRAPH_SUCCESS:success, other:failed
 ///
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTensorMemSize(const GeShape &shape,
-                                                                                          Format format,
-                                                                                          DataType data_type,
+                                                                                          const Format format,
+                                                                                          const DataType data_type,
                                                                                           int64_t &mem_size) {
   const std::string format_str = TypeUtils::FormatToSerialString(format);
   const std::string type_str = TypeUtils::DataTypeToSerialString(data_type);
@@ -396,7 +396,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
   }
   // Support unknown shape
   if (element_cnt < 0) {
-    mem_size = kMemSizeUnknownShape;
+    mem_size = kUnknownShapeMemSize;
     GELOGD(
         "element_cnt is unknown. "
         "format=%d(%s), data_type=%d(%s), mem_size=%ld",
@@ -451,8 +451,8 @@ TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-TensorUtils::CalcTensorMemSizeForNoTiling(const GeTensorDesc &tensor, Format format, DataType data_type,
-                                          int64_t &mem_size) {
+TensorUtils::CalcTensorMemSizeForNoTiling(const GeTensorDesc &tensor, const Format format,
+                                          const DataType data_type, int64_t &mem_size) {
   if (tensor.GetShape().IsUnknownShape()) {
     std::vector<int64_t> dims;
     GE_CHK_STATUS_RET(GetMaxShapeDimsFromNoTilingTensor(tensor, dims),
@@ -464,8 +464,8 @@ TensorUtils::CalcTensorMemSizeForNoTiling(const GeTensorDesc &tensor, Format for
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_temp) {
-  Format format = desc_temp.GetFormat();
-  DataType data_type = desc_temp.GetDataType();
+  const Format format = desc_temp.GetFormat();
+  const DataType data_type = desc_temp.GetDataType();
   int64_t output_mem_size = 0;
 
   bool is_no_tiling = false;
