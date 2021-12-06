@@ -28,6 +28,10 @@
 #include "common/ge_inner_error_codes.h"
 #include "graph/node.h"
 #include "proto/task.pb.h"
+using std::map;
+using std::string;
+using std::to_string;
+using std::vector;
 
 namespace ge {
 class OpDesc;

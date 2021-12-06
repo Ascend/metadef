@@ -22,6 +22,7 @@
 #include <vector>
 #include "runtime/rt.h"
 
+using std::string;
 namespace ge {
 // when need to eliminate GETaskKernelHcclInfo, so not need DAVINCI_TRAIN/DAVINCI_CLOUD
 struct GETaskKernelHcclInfo {
