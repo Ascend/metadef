@@ -310,10 +310,6 @@ TEST_F(AttrSerializerUt, OpToString) {
   google::protobuf::Map<std::string, ge::proto::AttrDef> attr_map = op_def.attr();
   std::string op_str = op_def.SerializeAsString();
   EXPECT_TRUE(attr_map.count("tensor") > 0);
-
-  ModelSerialize serialize;
-  auto new_op = serialize.UnserializeOpDesc((uint8_t *)op_str.data(), op_str.size());
-  EXPECT_TRUE(AttrUtils::HasAttr(new_op, "tensor"));
 }
 
 TEST_F(AttrSerializerUt, ListFloatAttr) {
