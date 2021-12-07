@@ -937,7 +937,6 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         EXPECT_EQ(tensorDesc1.GetDataType(), DT_INT8);
     }
 }
-
 TEST(UTEST_ge_model_unserialize, RebuildOwnershipTest)
 {
     ge::ModelSerializeImp serialize_imp;

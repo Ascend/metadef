@@ -708,4 +708,26 @@ TEST_F(UtestNodeUtils, GetSubgraph) {
   EXPECT_EQ(NodeUtils::GetSubgraph(*node, 0), nullptr);
 }
 
+TEST_F(UtestNodeUtils, AddGetEventId) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  uint32_t event_id = 100;
+
+  auto ret = NodeUtils::AddSendEventId(data, event_id);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ret = NodeUtils::AddRecvEventId(data, event_id);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+
+  std::vector<uint32_t> vec_send;
+  ret = NodeUtils::GetSendEventIdList(data, vec_send);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ret = NodeUtils::GetRecvEventIdList(data, vec_send);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, ClearSendRcvInfo) {
+  ASSERT_EQ(NodeUtils::ClearSendInfo(), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::ClearRecvInfo(), GRAPH_SUCCESS);
+}
+
 }  // namespace ge
