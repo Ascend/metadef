@@ -116,6 +116,11 @@ set(UT_FILES
     "testcase/ge_graph_dumper_unittest.cc"
     "testcase/file_utils_unittest.cc"
     "testcase/ge_local_context_unittest.cc"
+    "testcase/anchor_unittest.cc"
+    "testcase/model_unittest.cc"
+    "testcase/ge_context_unittest.cc"
+    "testcase/anchor_utils_unittest.cc"
+    "testcase/attributes_holder_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES
