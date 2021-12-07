@@ -5,6 +5,11 @@ message Shape {
     repeated uint64 dim = 1;
 }
 
+enum AddressType {
+    TRADITIONAL_ADDR = 0;
+    NOTILING_ADDR = 1;
+}
+
 message Output {
     int32 data_type = 1;
     int32 format = 2;
@@ -16,6 +21,7 @@ message Output {
     int32 original_output_format = 8;
     uint64 size = 9;
     Shape origin_shape = 10;
+    AddressType addr_type = 11;
 }
 
 message Input {
@@ -25,6 +31,7 @@ message Input {
     uint64 address = 4;
     uint64 size = 5;
     Shape origin_shape = 6;
+    AddressType addr_type = 7;
 }
 
 enum BufferType {
