@@ -51,7 +51,7 @@ class OpDescUtils {
   static graphStatus SetWeights(ge::Node& node, const std::vector<ge::GeTensorPtr>& weights);
   static graphStatus SetWeights(ge::NodePtr node, const std::vector<ge::GeTensorPtr> &weights);
   static graphStatus SetWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &weights_map);
-  static graphStatus ClearWeights(ge::NodePtr node);
+  static graphStatus ClearWeights(const ge::NodePtr node);
 
   static bool ClearInputDesc(const ge::OpDescPtr op_desc, const uint32_t index);
   static bool ClearInputDesc(const ge::NodePtr& node);
@@ -60,15 +60,15 @@ class OpDescUtils {
   static std::vector<ge::NodePtr> GetConstInputs(const ge::Node& node);
   static std::vector<ge::NodePtr> GetConstInputs(const ge::ConstNodePtr& node);
   static size_t GetNonConstInputsSize(const ge::Node& node);
-  static size_t GetNonConstInputsSize(ge::ConstNodePtr node);
+  static size_t GetNonConstInputsSize(const ge::ConstNodePtr node);
   // Index: Indicates the index of all non const inputs
   static GeTensorDesc GetNonConstInputTensorDesc(const ge::Node& node, const size_t index_non_const = 0);
   static GeTensorDesc GetNonConstInputTensorDesc(const ge::ConstNodePtr& node, const size_t index_non_const = 0);
   static bool GetNonConstInputIndex(const ge::Node& node, const size_t index_non_const, size_t& index);
   static bool GetNonConstInputIndex(const ge::ConstNodePtr& node, const size_t index_non_const, size_t& index);
   // Index: Indicates the index of all inputs
-  static bool IsNonConstInput(const ge::Node& node, size_t index = 0);
-  static bool IsNonConstInput(const ge::ConstNodePtr& node, size_t index = 0);
+  static bool IsNonConstInput(const ge::Node& node, const size_t index = 0);
+  static bool IsNonConstInput(const ge::ConstNodePtr& node, const size_t index = 0);
 
   static std::vector<ge::GeTensorDesc> GetNonConstTensorDesc(const ge::ConstNodePtr& node);
   static graphStatus AddConstOpToAnchor(const InDataAnchorPtr in_anchor, const GeTensorPtr& tensor_ptr);
@@ -78,7 +78,7 @@ class OpDescUtils {
   static OpDescPtr GetOpDescFromOperator(const Operator& oprt);
   static graphStatus CopyOperatorLinks(const std::map<std::string, ge::Operator> &src_op_list,
                                        std::map<std::string, ge::Operator> &dst_op_list);
-  static graphStatus CopyOperators(ComputeGraphPtr &dst_compute_graph,
+  static graphStatus CopyOperators(const ComputeGraphPtr &dst_compute_graph,
                                    const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                    const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                                    const std::map<std::string, ge::Operator> &src_op_list,

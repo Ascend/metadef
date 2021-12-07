@@ -22,19 +22,20 @@
 #include <list>
 #include <mutex>
 
-static const int kDefaultMaxQueueSize = 2048;
+namespace ge {
+constexpr uint32_t kDefaultMaxQueueSize = 2048U;
 
 template <typename T>
 class BlockingQueue {
  public:
-  explicit BlockingQueue(uint32_t max_size = kDefaultMaxQueueSize) : max_size_(max_size), is_stoped_(false) {}
+  explicit BlockingQueue(const uint32_t max_size = kDefaultMaxQueueSize) : max_size_(max_size), is_stoped_(false) {}
 
   ~BlockingQueue() {}
 
   bool Pop(T &item) {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    while (queue_.empty() && !is_stoped_) {
+    while (queue_.empty() && (!is_stoped_)) {
       empty_cond_.wait(lock);
     }
 
@@ -50,10 +51,10 @@ class BlockingQueue {
     return true;
   }
 
-  bool Push(const T &item, bool is_wait = true) {
+  bool Push(const T &item, const bool is_wait = true) {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    while (queue_.size() >= max_size_ && !is_stoped_) {
+    while ((queue_.size() >= max_size_) && (!is_stoped_)) {
       if (!is_wait) {
         return false;
       }
@@ -71,10 +72,10 @@ class BlockingQueue {
     return true;
   }
 
-  bool Push(T &&item, bool is_wait = true) {
+  bool Push(T &&item, const bool is_wait = true) {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    while (queue_.size() >= max_size_ && !is_stoped_) {
+    while ((queue_.size() >= max_size_) && (!is_stoped_)) {
       if (!is_wait) {
         return false;
       }
@@ -94,7 +95,7 @@ class BlockingQueue {
 
   void Stop() {
     {
-      std::unique_lock<std::mutex> lock(mutex_);
+      const std::unique_lock<std::mutex> lock(mutex_);
       is_stoped_ = true;
     }
 
@@ -103,13 +104,13 @@ class BlockingQueue {
   }
 
   void Restart() {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     is_stoped_ = false;
   }
 
   // if the queue is stoped ,need call this function to release the unprocessed items
   std::list<T> GetRemainItems() {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
 
     if (!is_stoped_) {
       return std::list<T>();
@@ -119,18 +120,18 @@ class BlockingQueue {
   }
 
   bool IsFull() {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     return queue_.size() >= max_size_;
   }
 
   void Clear() {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     queue_.clear();
   }
 
-  void SetMaxSize(uint32_t size) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    if (size == 0) {
+  void SetMaxSize(const uint32_t size) {
+    const std::unique_lock<std::mutex> lock(mutex_);
+    if (size == 0U) {
       max_size_ = kDefaultMaxQueueSize;
       return;
     }
@@ -138,8 +139,8 @@ class BlockingQueue {
   }
 
   uint32_t Size() {
-    std::unique_lock<std::mutex> lock(mutex_);
-    return queue_.size();
+    const std::unique_lock<std::mutex> lock(mutex_);
+    return static_cast<uint32_t>(queue_.size());
   }
 
  private:
@@ -151,5 +152,6 @@ class BlockingQueue {
 
   bool is_stoped_;
 };
+}  // namespace ge
 
 #endif  // INC_COMMON_BLOCKING_QUEUE_H_

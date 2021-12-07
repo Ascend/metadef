@@ -59,7 +59,7 @@ class OpsKernelInfoStore {
   virtual bool CheckSupported(const OpDescPtr &opDescPtr, std::string &un_supported_reason) const = 0;
 
   virtual bool CheckAccuracySupported(const OpDescPtr &opDescPtr, std::string &un_supported_reason,
-                                      bool realQuery = false) const {
+                                      const bool realQuery = false) const {
     return CheckSupported(opDescPtr, un_supported_reason);
   }
   // opsFlag opsFlag[0] indicates constant folding is supported or not
@@ -79,7 +79,7 @@ class OpsKernelInfoStore {
   }
 
   virtual bool CheckAccuracySupported(const ge::NodePtr &node, std::string &un_supported_reason,
-                                      bool realQuery = false) const {
+                                      const bool realQuery = false) const {
     if (node == nullptr) {
       return false;
     }

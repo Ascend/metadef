@@ -178,7 +178,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator OpDescUtils::CreateOpera
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-OpDescUtils::CopyOperators(ComputeGraphPtr &dst_compute_graph,
+OpDescUtils::CopyOperators(const ComputeGraphPtr &dst_compute_graph,
                            const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                            const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                            const std::map<std::string, ge::Operator> &src_op_list,

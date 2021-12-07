@@ -26,7 +26,7 @@
 namespace ge {
 class OpsKernelBuilder {
  public:
-  enum Mode {
+  enum class Mode {
     kNormal,
     kFfts,
     kFftsPlus

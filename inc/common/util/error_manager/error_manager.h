@@ -224,7 +224,7 @@ class ErrorManager {
 
   int32_t ParseJsonFile(const std::string path);
 
-  static int32_t ReadJsonFile(const std::string &file_path, void *handle);
+  static int32_t ReadJsonFile(const std::string &file_path, void *const handle);
 
   void ClassifyCompileFailedMsg(const std::map<std::string, std::string> &msg,
                                 std::map<std::string,
