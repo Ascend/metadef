@@ -93,6 +93,7 @@ set(UT_FILES
     "testcase/inference_context_unittest.cc"
     "testcase/constant_utils_unittest.cc"
     "testcase/any_value_ut.cc"
+    "testcase/ascend_string_unittest.cc"
     "testcase/attr_store_ut.cc"
     "testcase/attr_serializer_unittest.cc"
     "testcase/attr_serializer_registry_unittest.cc"
