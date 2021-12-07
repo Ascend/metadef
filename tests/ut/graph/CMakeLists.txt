@@ -113,6 +113,8 @@ set(UT_FILES
     "testcase/compile_cache_policy_unittest.cc"
     "testcase/profiler_unittest.cc"
     "testcase/ge_graph_dumper_unittest.cc"
+    "testcase/file_utils_unittest.cc"
+    "testcase/ge_local_context_unittest.cc"
 )
 
 set(GRAPH_SRC_FILES
@@ -145,9 +147,9 @@ set(GRAPH_SRC_FILES
     "${METADEF_DIR}/graph/opsproto/opsproto_manager.cc"
     "${METADEF_DIR}/graph/option/ge_context.cc"
     "${METADEF_DIR}/graph/option/ge_local_context.cc"
-    "${METADEF_DIR}/graph/profiler.cc"
     "${METADEF_DIR}/graph/ref_relation.cc"
     "${METADEF_DIR}/graph/runtime_inference_context.cc"
+    "${METADEF_DIR}/graph/profiler.cc"
     "${METADEF_DIR}/graph/shape_refiner.cc"
     "${METADEF_DIR}/graph/tensor.cc"
     "${METADEF_DIR}/graph/types.cc"
