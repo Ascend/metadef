@@ -13,11 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gtest/gtest.h>
+
+#include <string.h>
 #include "graph/utils/file_utils.h"
+#include <gtest/gtest.h>
+#include "graph/debug/ge_util.h"
 
 namespace ge {
-class UtestFileUtils : public testing::Test {
+class UtestFileUtils : public testing::Test { 
+ public:
+  std::string str1 = "/longpath/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  std::string str2 = "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  std::string str3 = str1 + str2 + str2 + str2 + str2 + str2 + str2;
+  const char *str4 = str3.c_str();
+  const char *str5 = "/abc/efg";
+
  protected:
   void SetUp() {}
   void TearDown() {}
@@ -64,5 +74,16 @@ TEST_F(UtestFileUtils, CreateDirectoryPathIsGreaterThanMaxPath) {
   int ret = 0;
   ret = ge::CreateDirectory(directory_path);
   EXPECT_EQ(ret, -1);
+}
+
+TEST_F(UtestFileUtils, RealPath) {
+  ASSERT_EQ(ge::RealPath(nullptr), "");
+  ASSERT_EQ(ge::RealPath(str4), "");
+  ASSERT_EQ(ge::RealPath(str5), "");
+}
+
+TEST_F(UtestFileUtils, CreateDirectory) {
+  ASSERT_EQ(ge::CreateDirectory("~/test"), -1); 
+  ASSERT_EQ(ge::CreateDirectory(UtestFileUtils::str3), -1);
 }
 } // namespace ge

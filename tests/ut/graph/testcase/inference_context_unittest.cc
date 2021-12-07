@@ -127,4 +127,55 @@ TEST_F(TestInferenceConext, transformer_util) {
   ASSERT_EQ(transformer->CatchFormatAndShape(), true);
   ASSERT_EQ(transformer->UpdateFormatAndShape(), true);
 }
+
+TEST_F(TestInferenceConext, ShapeAndType) {
+  ShapeAndType SAndT;
+
+  Shape shape;
+  DataType data_type;
+
+  shape = SAndT.GetShape();
+  //ASSERT_NE(shape, NULL);
+  data_type = SAndT.GetDataType();
+  //ASSERT_NE(data_type, NULL);
+
+  ShapeAndType SAndT2(shape, data_type);
+
+  SAndT2.SetShape(shape);
+  SAndT2.SetType(data_type);
+}
+
+TEST_F(TestInferenceConext, SetGetInputHandleShapesAndTypes) {
+  InferenceContextPtr write_inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());
+
+  std::vector<std::vector<ShapeAndType>> input_handle_shapes_and_types;
+  std::vector<std::vector<ShapeAndType>> input_handle_shapes_and_types_2;
+
+  write_inference_context->SetInputHandleShapesAndTypes(std::move(input_handle_shapes_and_types));
+  input_handle_shapes_and_types_2 = write_inference_context->GetInputHandleShapesAndTypes();
+  ASSERT_EQ(input_handle_shapes_and_types_2.empty(), true);
+}
+
+TEST_F(TestInferenceConext, SetGetOutputHandleShapesAndTypes) {
+  InferenceContextPtr write_inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());
+
+  std::vector<std::vector<ShapeAndType>> output_handle_shapes_and_types;
+  std::vector<std::vector<ShapeAndType>> output_handle_shapes_and_types_2;
+
+  write_inference_context->SetOutputHandleShapesAndTypes(output_handle_shapes_and_types);
+  write_inference_context->SetOutputHandleShapesAndTypes(std::move(output_handle_shapes_and_types));
+  output_handle_shapes_and_types_2 = write_inference_context->GetOutputHandleShapesAndTypes();
+  ASSERT_EQ(output_handle_shapes_and_types_2.empty(), true);
+}
+
+TEST_F(TestInferenceConext, SetGetMarks) {
+  InferenceContextPtr write_inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create());
+
+  const std::vector<AscendString> marks;
+  std::vector<AscendString> marks_2;
+  write_inference_context->SetMarks(marks);
+  write_inference_context->GetMarks(marks_2);
+  ASSERT_EQ(marks, marks_2);
+}
+
 } // namespace ge

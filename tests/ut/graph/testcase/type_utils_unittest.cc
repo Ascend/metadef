@@ -16,6 +16,7 @@
 
 #include "graph/utils/type_utils.h"
 #include <gtest/gtest.h>
+#include "graph/debug/ge_util.h"
 
 namespace ge {
 class UtestTypeUtils : public testing::Test {
@@ -104,5 +105,25 @@ TEST_F(UtestTypeUtils, CheckUint64MulOverflow) {
   ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0x00ULL, 0x00UL));
   ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0x02ULL, 0x01UL));
   ASSERT_TRUE(TypeUtils::CheckUint64MulOverflow(0xFFFFFFFFFFFFULL, 0xFFFFFFFUL));
+}
+
+TEST_F(UtestTypeUtils, ImplyTypeToSerialString) {
+  ASSERT_EQ(TypeUtils::ImplyTypeToSerialString(domi::ImplyType::BUILDIN), "buildin");
+}
+
+TEST_F(UtestTypeUtils, DomiFormatToFormat2) {
+  ASSERT_EQ(TypeUtils::DomiFormatToFormat(domi::DOMI_TENSOR_NCHW), FORMAT_NCHW);
+  ASSERT_EQ(TypeUtils::DomiFormatToFormat(domi::DOMI_TENSOR_RESERVED), FORMAT_RESERVED);
+}
+
+TEST_F(UtestTypeUtils, CheckUint64MulOverflow2) {
+  ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(0, 1));
+  ASSERT_FALSE(TypeUtils::CheckUint64MulOverflow(1, 1));
+  ASSERT_TRUE(TypeUtils::CheckUint64MulOverflow(ULLONG_MAX, 2));
+}
+
+TEST_F(UtestTypeUtils, FmkTypeToSerialString2) {
+  ASSERT_EQ(TypeUtils::FmkTypeToSerialString(domi::CAFFE), "caffe");
+  ASSERT_EQ(TypeUtils::FmkTypeToSerialString(static_cast<domi::FrameworkType>(domi::FRAMEWORK_RESERVED + 1)), "");
 }
 }

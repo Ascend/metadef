@@ -20,10 +20,13 @@
 #define private public
 
 #include "external/graph/operator.h"
+#include "graph/operator_impl.h"
 #include "external/graph/tensor.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/op_desc_impl.h"
+#include "graph/tensor_type_impl.h"
 #include "graph_builder_utils.h"
+#include <string.h>
 
 #undef private
 #undef protected
@@ -132,6 +135,10 @@ TEST_F(UtestOperater, TestOperatorSetInputs) {
   ge::Operator null_op;
   (void)null_op.SetInput(1U, src_op, 0U);
   ASSERT_EQ(null_op.GetInputsSize(), 0U);
+
+  std::string dst_name = "x1";
+  (void)dst_op.SetInput(dst_name, src_op, 0U);
+  ASSERT_EQ(dst_op.GetInputsSize(), 2U);
 }
 
 TEST_F(UtestOperater, AttrRegister_Float) {
@@ -312,6 +319,17 @@ TEST_F(UtestOperater, AttrRegister_AscendString) {
   op.AttrRegister(nullptr, value);
 }
 
+TEST_F(UtestOperater, AttrRegister_AscendString2) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  auto value = AscendString("1");
+  op.AttrRegister(attr, value);
+  AscendString ret;
+  op.GetAttr(attr.c_str(), ret);
+  ASSERT_EQ(std::string(value.GetString()), std::string(ret.GetString()));
+  op.AttrRegister(attr, AscendString(""));
+}
+
 TEST_F(UtestOperater, AttrRegister_ListAscendString) {
   auto op = Operator("Data");
   std::string attr = "attr";
@@ -321,6 +339,16 @@ TEST_F(UtestOperater, AttrRegister_ListAscendString) {
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(std::string(value[0].GetString()), std::string(ret[0].GetString()));
   op.AttrRegister(nullptr, value);
+}
+
+TEST_F(UtestOperater, AttrRegister_ListString) {
+  auto op = Operator("Data");
+  std::string attr = "attr";
+  std::vector<std::string> value ;
+  op.AttrRegister(attr, value);
+  std::vector<std::string> ret;
+  op.GetAttr(attr, ret);
+  ASSERT_EQ(ret.size(), 0);
 }
 
 TEST_F(UtestOperater, InputRegister) {
@@ -448,4 +476,328 @@ TEST_F(UtestOperater, GetInputConstDataOut) {
   ASSERT_EQ(op.GetInputConstDataOut(name.c_str(), a), GRAPH_FAILED);
   ASSERT_EQ(op.GetInputConstDataOut(nullptr, a), GRAPH_FAILED);
 }
+
+TEST_F(UtestOperater, testTensorType) {
+  DataType dt(DT_INT16);
+  TensorType tt1(dt);
+  EXPECT_EQ(tt1.tensor_type_impl_->dt_vec_[0], DT_INT16);
+
+  const std::initializer_list<DataType> types = {DT_INT8, DT_UINT8, DT_INT16};
+  TensorType tt2(types);
+  EXPECT_EQ(tt2.tensor_type_impl_->dt_vec_.size(), 3);
+}
+
+TEST_F(UtestOperater, CreateOperator) {
+  Operator op;
+  OpDescPtr op_desc;
+
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  EXPECT_FALSE(op.IsEmpty());
+}
+
+TEST_F(UtestOperater, testGetName) {
+  AscendString name;
+  Operator op("one_op", "add");
+  op.GetName(name);
+
+  const char *str = name.GetString();
+  EXPECT_EQ(strcmp(str, "one_op"), 0);
+}
+
+TEST_F(UtestOperater, GetInputConstData2) {
+  Operator op;
+  OpDescPtr op_desc;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  std::string dst_name("dst_name");
+  Tensor td;
+
+  EXPECT_NE(op.GetInputConstData(dst_name, td), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestOperater, GetNode) {
+  Operator op;
+  OpDescPtr op_desc;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  EXPECT_EQ(op.GetNode(), nullptr);
+}
+
+TEST_F(UtestOperater, GetInputDesc) {
+  Operator op;
+  OpDescPtr op_desc;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  std::string str_name = "input_desc_name";
+  TensorDesc td = op.GetInputDesc(str_name);
+
+  EXPECT_EQ(td.GetName().length(), 0);
+}
+
+TEST_F(UtestOperater, TryGetInputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  TensorDesc td;
+  auto ret = op.TryGetInputDesc("input_name_1", td);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+
+  std:string str = "input_name_2";
+  ret = op.TryGetInputDesc(str, td);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, UpdateInputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  TensorDesc td;
+  std:string str = "input_name";
+  auto ret = op.UpdateInputDesc(str, td);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+
+  ret = op.UpdateInputDesc("input_name", td);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, GetOutputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  std:string str = "output_name";
+  TensorDesc td = op.GetOutputDesc(str);
+  EXPECT_EQ(td.GetName().length(), 0);
+}
+
+TEST_F(UtestOperater, UpdateOutputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  TensorDesc td;
+  std:string str = "output_name";
+  auto ret = op.UpdateOutputDesc(str, td);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, GetDynamicInputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  std:string str = "input_name";
+  TensorDesc td_1 = op.GetDynamicInputDesc(str, 0);
+  TensorDesc td_2 = op.GetDynamicInputDesc("input_name", 0);
+  EXPECT_EQ(td_1.GetName().length(), 0);
+  EXPECT_EQ(td_2.GetName().length(), 0);
+}
+
+TEST_F(UtestOperater, UpdateDynamicInputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  TensorDesc td_1;
+  std:string str = "input_name";
+  auto ret = op.UpdateDynamicInputDesc(str, 0, td_1);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  ret = op.UpdateDynamicInputDesc("input_name", 0, td_1);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, GetDynamicOutputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  string str = "output_name";
+  TensorDesc td_1 = op.GetDynamicOutputDesc(str, 0);
+  TensorDesc td_2 = op.GetDynamicOutputDesc("output_name", 0);
+  EXPECT_EQ(td_1.GetName().length(), 0);
+  EXPECT_EQ(td_2.GetName().length(), 0);
+}
+
+TEST_F(UtestOperater, UpdateDynamicOutputDesc) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  TensorDesc td_1;
+  string str = "output_name";
+  auto ret = op.UpdateDynamicOutputDesc(str, 0, td_1);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  ret = op.UpdateDynamicOutputDesc("output_name", 0, td_1);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, InferShapeAndType) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  auto ret = op.InferShapeAndType();
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, VerifyAllAttr) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  auto ret = op.VerifyAllAttr(true);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+
+  ret = op.VerifyAllAttr(false);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, GetAllAttrNamesAndTypes) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  auto ret = op.GetAllAttrNamesAndTypes();
+  EXPECT_EQ(ret.size(), 0);
+
+  std::map<AscendString, AscendString> attr_name_types;
+  auto ret_2 = op.GetAllAttrNamesAndTypes(attr_name_types);
+  EXPECT_EQ(ret_2, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, FuncRegister) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  std::function<graphStatus(Operator &)> func;
+
+  op.InferFuncRegister(func);
+
+  if (op.operator_impl_->GetOpDescImpl() != nullptr) {
+    printf("FuncRegister GetOpDescImpl is not null!\n");
+    //auto ret1 = op.operator_impl_->GetOpDescImpl()->GetInferFunc();
+    //EXPECT_EQ(ret1, nullptr);
+  } else {
+    printf("FuncRegister GetOpDescImpl is null!\n");
+  }
+
+  ASSERT_NE(op.operator_impl_, nullptr);
+}
+
+TEST_F(UtestOperater, FuncRegister2) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+  std::function<graphStatus(Operator &)> func;
+
+  op.InferFormatFuncRegister(func);
+  op.VerifierFuncRegister(func);
+
+  ASSERT_NE(op.operator_impl_, nullptr);
+}
+
+TEST_F(UtestOperater, GetDynamicInputNum) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  int num1 = op.GetDynamicInputNum("input_name");
+  EXPECT_EQ(num1, 0);
+
+  int num2 = op.GetDynamicInputNum(std::string("input_name"));
+  EXPECT_EQ(num2, 0);
+}
+
+TEST_F(UtestOperater, GetDynamicOutputNum) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  int num1 = op.GetDynamicOutputNum("output_name");
+  EXPECT_EQ(num1, 0);
+
+  int num2 = op.GetDynamicOutputNum(std::string("output_name"));
+  EXPECT_EQ(num2, 0);
+}
+
+TEST_F(UtestOperater, VerifyAll) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  auto ret = op.VerifyAll();
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, GetOperatorImplPtr) {
+  Operator op;
+  OpDescPtr op_desc_1;
+  op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  auto ret = op.GetOperatorImplPtr();
+  EXPECT_NE(ret, nullptr);
+}
+
+TEST_F(UtestOperater, AddControlInput_Exception) {
+  Operator op1;
+  Operator op2;
+  OpDescPtr op_desc_1;
+  op2 = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
+
+  auto ret = op1.AddControlInput(op2);
+  EXPECT_EQ(op1.IsEmpty(), ret.IsEmpty());
+}
+
+TEST_F(UtestOperater, SetAttr1) {
+  Operator op1;
+  Operator op2;
+
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  char_t *name = "data name";
+  char_t *attr_value = "abc";
+
+  op2 = op1.SetAttr(name, attr_value);
+  std::string value1;
+
+  op1.GetAttr(name, value1);
+  printf("c_str1 = %s\n", value1.c_str());
+
+  std::string value2;
+  op2.GetAttr(name, value2);
+  printf("c_str2 = %s\n", value2.c_str());
+  EXPECT_EQ(value2, std::string("abc"));
+
+  op1.SetAttr(nullptr, nullptr);
+}
+
+TEST_F(UtestOperater, SetAttr2) {
+  Operator op1;
+  Operator op2;
+
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  char_t *name = "data name";
+  AscendString attr_value = "abc";
+
+  op2 = op1.SetAttr(name, attr_value);
+
+  std::string value2;
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2, std::string("abc"));
+
+  op1.SetAttr(nullptr, attr_value);
+}
+
+
+
+
 }  // namespace ge

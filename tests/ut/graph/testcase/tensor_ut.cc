@@ -19,6 +19,7 @@
 #define private public
 #include "graph/ge_tensor.h"
 #include "ge_ir.pb.h"
+#include "graph/debug/ge_util.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/tensor_utils.h"
@@ -546,6 +547,176 @@ TEST_F(TensorUT, TensorUtils_GetSteExtMeta) {
 
   TensorUtils::SetWeightSize(desc, 2021);
   EXPECT_EQ(TensorUtils::GetWeightSize(desc), 2021);
+}
+
+TEST_F(TensorUT, Tensor_Construct3) {
+  std::vector<int64_t> shape{3};
+  uint8_t *data = new uint8_t[3]{1, 2, 3};
+  size_t size = 3;
+  TensorDesc tensor_desc(Shape(shape), FORMAT_ND, DT_UINT8);
+  Tensor tensor(tensor_desc, data, size);
+}
+
+TEST_F(TensorUT, Tensor_Construct4) {
+  std::vector<uint8_t> value{1, 2, 3};
+  std::vector<int64_t> shape{3};
+  TensorDesc tensor_desc(Shape(shape), FORMAT_ND, DT_UINT8);
+  Tensor tensor(std::move(tensor_desc), std::move(value));
+}
+
+TEST_F(TensorUT, Tensor_SetData) {
+  Tensor t1;
+  std::vector<uint8_t> vec;
+  for (uint8_t i = 0; i < 10; ++i) {
+    vec.push_back(i);
+  }
+  EXPECT_EQ(t1.SetData(vec), GRAPH_SUCCESS);
+
+  Tensor t2;
+  std::string str1 = "abc";
+  EXPECT_EQ(t2.SetData(str1), GRAPH_SUCCESS);
+
+  Tensor t3;
+  std::vector<std::string> vec_str;
+  EXPECT_EQ(t3.SetData(vec_str), GRAPH_FAILED);
+  for (uint8_t i = 0; i < 10; ++i) {
+    vec_str.push_back(std::to_string(i));
+  }
+  EXPECT_EQ(t3.SetData(vec_str), GRAPH_SUCCESS);
+
+  Tensor t4;
+  char *str2 = "def";
+  EXPECT_EQ(t4.SetData(str2), GRAPH_SUCCESS);
+
+  Tensor t5;
+  char * str3[3] = {"123", "456", "789"};
+  std::vector<AscendString> vec_asc_str;
+  for (uint8_t i = 0; i < 3; ++i) {
+    vec_asc_str.push_back(AscendString(str3[i]));
+  }
+  EXPECT_EQ(t5.SetData(vec_asc_str), GRAPH_SUCCESS);
+}
+
+TEST_F(TensorUT, Shape_SetDim) {
+  size_t idx = 1;
+  int64_t value = 2;
+
+  Shape shape1;
+  EXPECT_EQ(shape1.SetDim(idx, value), GRAPH_FAILED);
+
+  std::vector<int64_t> dims;
+  for(int64_t i = 0; i < 3; i++) {
+    dims.push_back(i);
+  }
+
+  Shape shape2(dims);
+   EXPECT_EQ(shape2.SetDim(idx, value), GRAPH_SUCCESS);
+}
+
+TEST_F(TensorUT, TensorDesc_Construct1) {
+  std::vector<int64_t> shape{3};
+  TensorDesc tensor_desc1(Shape(shape), FORMAT_ND, DT_UINT8);
+  TensorDesc tensor_desc2(std::move(tensor_desc1));
+
+  TensorDesc tensor_desc3(Shape(shape), FORMAT_ND, DT_UINT8);
+  TensorDesc tensor_desc4 = std::move(tensor_desc3);
+
+  tensor_desc4.Update(Shape(shape), FORMAT_ND, DT_UINT16);
+
+  TensorDesc tensor_desc5;
+  tensor_desc5.GetShape();
+}
+
+TEST_F(TensorUT, TensorDesc_GetSetShape) {
+  std::vector<std::pair<int64_t, int64_t>> range;
+  TensorDesc tensor_desc1;
+  tensor_desc1.GetShape();
+  tensor_desc1.GetOriginShape();
+
+  EXPECT_EQ(tensor_desc1.GetShapeRange(range), GRAPH_SUCCESS);
+  EXPECT_EQ(tensor_desc1.SetShapeRange(range), GRAPH_SUCCESS);
+
+  EXPECT_EQ(tensor_desc1.SetUnknownDimNumShape(), GRAPH_SUCCESS);
+
+  std::vector<int64_t> shape{3};
+  TensorDesc tensor_desc2(Shape(shape), FORMAT_ND, DT_UINT8);
+  EXPECT_EQ(tensor_desc2.SetUnknownDimNumShape(), GRAPH_SUCCESS);
+}
+
+TEST_F(TensorUT, TensorDesc_SetDataType) {
+  std::vector<int64_t> shape{3};
+  TensorDesc tensor_desc1(Shape(shape), FORMAT_ND, DT_UINT8);
+  tensor_desc1.SetDataType(DT_UINT16);
+}
+
+TEST_F(TensorUT, TensorDesc_GetSetName) {
+  std::vector<int64_t> shape{3};
+  TensorDesc tensor_desc1(Shape(shape), FORMAT_ND, DT_UINT8);
+  tensor_desc1.SetName("abc");
+
+  AscendString name;
+  tensor_desc1.GetName(name);
+  EXPECT_EQ(name, AscendString("abc"));
+}
+
+TEST_F(TensorUT, Tensor_SetTensorDesc_GetData) {
+  std::vector<int64_t> shape{3};
+  TensorDesc tensor_desc1(Shape(shape), FORMAT_ND, DT_UINT8);
+
+  Tensor t1;
+  auto ret = t1.SetTensorDesc(tensor_desc1);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  uint8_t *data1 = NULL;
+  data1 = t1.GetData();
+  EXPECT_NE(data1, nullptr);
+
+  const uint8_t *data2 = NULL;
+  data2 = t1.GetData();
+  EXPECT_NE(data2, nullptr);
+}
+
+TEST_F(TensorUT, unique_ptr_Tensor_ResetData) {
+  Tensor t1;
+  std::unique_ptr<uint8_t[], Tensor::DeleteFunc> pt;
+  pt = t1.ResetData();
+}
+
+TEST_F(TensorUT, Tensor_IsValid_Clone) {
+  Tensor t1;
+  Tensor t2;
+
+  std::vector<int64_t> shape{3};
+  TensorDesc tensor_desc1(Shape(shape), FORMAT_ND, DT_UINT8);
+  t1.SetTensorDesc(tensor_desc1);
+
+  EXPECT_EQ(t1.IsValid(), GRAPH_FAILED);
+
+  t2 = t1.Clone();
+}
+
+TEST_F(TensorUT, TensorAdapter_GetGeTensorFromTensor) {
+  Tensor t1;
+
+  GeTensor gt = TensorAdapter::AsGeTensorShared(t1);
+
+  ConstGeTensorPtr cgtptr = TensorAdapter::AsGeTensorPtr(t1);
+  EXPECT_NE(cgtptr, nullptr);
+}
+
+TEST_F(TensorUT, TensorAdapter_AsTensor) {
+  GeTensor gt1;
+  std::vector<uint8_t> vec;
+  for (uint8_t i = 0; i < 100; ++i) {
+    vec.push_back(i * 2);
+  }
+  gt1.SetData(vec);
+
+  Tensor t1;
+  t1 = TensorAdapter::AsTensor(gt1);
+
+  const GeTensor gt2;
+  const Tensor t2 = TensorAdapter::AsTensor(gt2);
 }
 
 }  // namespace ge
