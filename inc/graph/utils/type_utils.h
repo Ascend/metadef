@@ -47,7 +47,7 @@ class TypeUtils {
   static std::string FmkTypeToSerialString(const domi::FrameworkType fmk_type);
 
   static bool GetDataTypeLength(const ge::DataType data_type, uint32_t &length);
-  static bool CheckUint64MulOverflow(const uint64_t a, const uint64_t b);
+  static bool CheckUint64MulOverflow(const uint64_t a, const uint32_t b);
 };
 }  // namespace ge
 #endif  // INC_GRAPH_UTILS_TYPE_UTILS_H_

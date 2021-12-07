@@ -477,12 +477,12 @@ bool TypeUtils::GetDataTypeLength(const ge::DataType data_type, uint32_t &length
     return false;
   }
 }
-bool TypeUtils::CheckUint64MulOverflow(const uint64_t a, const uint64_t b) {
+bool TypeUtils::CheckUint64MulOverflow(const uint64_t a, const uint32_t b) {
   // Not overflow
   if (a == 0U) {
     return false;
   }
-  if (b <= (UINT64_MAX / a)) {
+  if (b <= (ULLONG_MAX / a)) {
     return false;
   }
   return true;
