@@ -30,7 +30,7 @@ message BroadcastInfo {
 }
 
 message BroadcastMultiInfo {
-  map<string, BroadcastInfo> boardcast_info = 1;
+  map<string, BroadcastInfo> broadcast_info = 1;
 }
 
 message VarResourceInfo {
@@ -48,7 +48,7 @@ message MemResourceInfo {
   uint64 var_mem_size = 2;
 }
 
-message VarManageInfo {
+message VarManagerInfo {
   uint32 version = 1;
   uint64 session_id = 2;
   uint32 device_id = 3;
@@ -59,4 +59,19 @@ message VarManageInfo {
   uint64 use_max_mem_size = 8;
   VarResourceInfo var_resource = 9;
   map<uint32, MemResourceInfo> mem_resource_map = 10;
+}
+
+message MultiVarManagerInfo {
+  repeated VarManagerInfo var_manager_info = 1;
+}
+
+message SharedContentDescription {
+  uint64 session_id = 1;
+  string node_name = 2;
+  uint64 head_offset = 3;
+  uint64 total_length = 4;
+  uint64 current_offset = 5;
+  uint32 mem_type = 6;
+  ge.proto.TensorDescriptor tensor_desc = 7;
+  bytes om_content = 8;
 }
