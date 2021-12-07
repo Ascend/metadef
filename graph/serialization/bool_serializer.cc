@@ -21,13 +21,13 @@
 
 namespace ge {
 graphStatus BoolSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
-  bool value;
-  const graphStatus ret = av.GetValue(value);
+  bool val;
+  const graphStatus ret = av.GetValue(val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get bool attr.");
     return GRAPH_FAILED;
   }
-  def.set_b(value);
+  def.set_b(val);
   return GRAPH_SUCCESS;
 }
 

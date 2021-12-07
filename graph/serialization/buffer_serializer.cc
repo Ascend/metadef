@@ -22,14 +22,14 @@
 
 namespace ge {
 graphStatus BufferSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
-  Buffer value;
-  const graphStatus ret = av.GetValue(value);
+  Buffer val;
+  const graphStatus ret = av.GetValue(val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get buffer attr.");
     return GRAPH_FAILED;
   }
-  if ((value.data()!= nullptr) && (value.size() > 0)) {
-    def.set_bt(value.GetData(), value.GetSize());
+  if ((val.data()!= nullptr) && (val.size() > 0U)) {
+    def.set_bt(val.GetData(), val.GetSize());
   }
   return GRAPH_SUCCESS;
 }

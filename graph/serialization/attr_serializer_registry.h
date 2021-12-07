@@ -60,8 +60,8 @@ class AttrSerializerRegistry {
                                   const TypeId obj_type,
                                   const proto::AttrDef::ValueCase proto_type);
 
-  GeIrAttrSerializer *GetSerializer(TypeId obj_type);
-  GeIrAttrSerializer *GetDeserializer(proto::AttrDef::ValueCase proto_type);
+  GeIrAttrSerializer *GetSerializer(const TypeId obj_type);
+  GeIrAttrSerializer *GetDeserializer(const proto::AttrDef::ValueCase proto_type);
 
  private:
   AttrSerializerRegistry() = default;

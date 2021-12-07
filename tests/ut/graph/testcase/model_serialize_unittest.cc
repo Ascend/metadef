@@ -938,15 +938,6 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
     }
 }
 
-TEST(UTEST_ge_model_unserialize, UnserializeTensorTest)
-{
-    ge::ModelSerializeImp serialize_imp;
-    GeTensorPtr tensor;
-    proto::TensorDef tensor_proto;
-    bool ret = serialize_imp.UnserializeTensor(tensor, tensor_proto);
-    EXPECT_EQ(ret, true);
-}
-
 TEST(UTEST_ge_model_unserialize, RebuildOwnershipTest)
 {
     ge::ModelSerializeImp serialize_imp;

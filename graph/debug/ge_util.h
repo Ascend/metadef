@@ -24,7 +24,13 @@ namespace ge {
 template<typename T, typename... Args>
 static inline std::shared_ptr<T> ComGraphMakeShared(Args &&...args) {
   using T_nc = typename std::remove_const<T>::type;
-  const std::shared_ptr<T> ret(new (std::nothrow) T_nc(std::forward<Args>(args)...));
+  std::shared_ptr<T> ret = nullptr;
+  try {
+    ret = std::make_shared<T_nc>(std::forward<Args>(args)...);
+  } catch (const std::bad_alloc &) {
+    ret = nullptr;
+    GELOGE(ge::FAILED, "Make shared failed");
+  }
   return ret;
 }
 }  // namespace ge
