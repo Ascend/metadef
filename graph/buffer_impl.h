@@ -26,18 +26,18 @@ class BufferImpl {
   BufferImpl();
   ~BufferImpl();
   BufferImpl(const BufferImpl &other);
-  BufferImpl(std::size_t buffer_size, std::uint8_t default_val);
+  BufferImpl(const std::size_t buffer_size, const std::uint8_t default_val);
 
-  void CopyFrom(const std::uint8_t *data, std::size_t buffer_size);
-  BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, proto::AttrDef *buffer);
-  BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, std::string *buffer);
+  void CopyFrom(const std::uint8_t * const data, std::size_t buffer_size);
+  BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, proto::AttrDef * const buffer);
+  BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, std::string * const buffer);
 
   BufferImpl &operator=(const BufferImpl &other);
   const std::uint8_t *GetData() const;
   std::uint8_t *GetData();
   std::size_t GetSize() const;
   void ClearBuffer();
-  uint8_t operator[](size_t index) const;
+  uint8_t operator[](const size_t index) const;
 
  private:
   friend class GeAttrValueImp;

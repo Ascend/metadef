@@ -45,7 +45,7 @@ class GeTensorDescImpl {
   DataType GetDataType() const;
   void SetFormat(const Format format);
   Format GetFormat() const;
-  void SetOriginFormat(Format format);
+  void SetOriginFormat(const Format format);
   Format GetOriginFormat() const;
   void SetOriginDataType(const DataType dtype);
   DataType GetOriginDataType() const;
@@ -69,12 +69,13 @@ class GeTensorDescImpl {
   class ExtMeta {
    public:
     bool operator==(const ExtMeta& other) const {
-      return (name == other.name && device_type == other.device_type && size == other.size &&
-        weight_size == other.weight_size && data_offset == other.data_offset &&
-        real_dim_cnt == other.real_dim_cnt && input_tensor == other.input_tensor &&
-        reuse_input == other.reuse_input && reuse_input_index == other.reuse_input_index &&
-        output_tensor == other.output_tensor && cmps_size == other.cmps_size && cmps_tab == other.cmps_tab &&
-        cmps_tab_offset == other.cmps_tab_offset && origin_shape_inited_ == other.origin_shape_inited_);
+      return (name == other.name) && (device_type == other.device_type) && (size == other.size) &&
+        (weight_size == other.weight_size) && (data_offset == other.data_offset) &&
+        (real_dim_cnt == other.real_dim_cnt) && (input_tensor == other.input_tensor) &&
+        (reuse_input == other.reuse_input) && (reuse_input_index == other.reuse_input_index) &&
+        (output_tensor == other.output_tensor) && (cmps_size == other.cmps_size) &&
+        (cmps_tab == other.cmps_tab) && (cmps_tab_offset == other.cmps_tab_offset) &&
+        (other.origin_shape_inited_ ? origin_shape_inited_ : !origin_shape_inited_);
     }
     // for name
     std::string GetName() const {
@@ -101,7 +102,7 @@ class GeTensorDescImpl {
       return size;
     }
 
-    void SetSize(int64_t v) {
+    void SetSize(const int64_t v) {
       size = v;
     }
 
@@ -173,7 +174,7 @@ class GeTensorDescImpl {
       return cmps_size;
     }
 
-    void SetCmpsSize(int64_t v) {
+    void SetCmpsSize(const int64_t v) {
       cmps_size = v;
     }
 
@@ -191,7 +192,7 @@ class GeTensorDescImpl {
       return cmps_tab_offset;
     }
 
-    void SetCmpsTabOffset(int64_t v) {
+    void SetCmpsTabOffset(const int64_t v) {
       cmps_tab_offset = v;
     }
 
