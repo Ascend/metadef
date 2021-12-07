@@ -115,6 +115,7 @@ set(REGISTER_UT_FILES
     "testcase/register_optiling_unittest.cc"
     "graph_builder_utils.cc"
     "testcase/graph_fusion_clycle_detection_unittest.cc"
+    "testcase/auto_mapping_util_unittest.cc"
 )
 
 ############ libut_metadef_register.a ############
