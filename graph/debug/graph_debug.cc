@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-#include "graph/debug/graph_debug.h"
 #include <algorithm>
 #include <set>
 #include <vector>
+
 #include "ge_util.h"
+#include "graph/types.h"
+#include "graph/debug/graph_debug.h"
+
 namespace {
 const std::string TAB = "    ";
-}
-#define STR_FMT(str) (" \"" + std::string(str) + "\" ")
-#define INPUT_ANCHOR_PORT(name) ("__input__" + (name))
-#define OUTPUT_ANCHOR_PORT(name) ("__output__" + (name))
-
-namespace ge {
 std::set<std::string> control_anchor;
 std::vector<std::string> types = {
     "DT_FLOAT", "DT_FLOAT16", "DT_INT8",          "DT_INT32",          "DT_UINT8",    "",
@@ -62,6 +59,20 @@ std::vector<std::string> formats = {"FORMAT_NCHW",
 
 std::vector<std::string> data_nodes = {"Const", "Data"};
 
+inline string StrFmt(const std::string &str) {
+  return " \"" + str + "\" ";
+}
+
+inline string InputAnchorPort(const std::string &name) {
+  return "__input__" + name;
+}
+
+inline string OutputAnchorPort(const std::string &name) {
+  return "__output__" + name;
+}
+}
+
+namespace ge {
 void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &out_) {
   if (node == nullptr) {
     GELOGI("Some nodes are null.");
@@ -70,7 +81,7 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
 
   bool in_control = false;
   const auto name = node->GetName();
-  out_ << TAB << STR_FMT(name);
+  out_ << TAB << StrFmt(name);
   auto input_cnt = std::max(static_cast<size_t>(1), node->GetAllInDataAnchors().size());
   const auto output_cnt = std::max(static_cast<size_t>(1), node->GetAllOutDataAnchors().size());
   if (control_anchor.find(node->GetName()) != control_anchor.end()) {
@@ -97,12 +108,12 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   for (const auto &anchor : input_anchors) {
     const std::string anchor_text = op_desc->GetInputNameByIndex(static_cast<uint32_t>(anchor->GetIdx()));
 
-    out_ << "<td port = " << STR_FMT(INPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << output_cnt << "'>"
+    out_ << "<td port = " << StrFmt(InputAnchorPort(anchor_text)) << " colspan='" << output_cnt << "'>"
          << anchor_text << "</td>";
   }
   if (in_control) {
     const std::string anchor_text = "ctrl";
-    out_ << "<td port = " << STR_FMT(INPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << output_cnt << "'>"
+    out_ << "<td port = " << StrFmt(InputAnchorPort(anchor_text)) << " colspan='" << output_cnt << "'>"
          << anchor_text << "</td>";
   }
   if (!input_anchors.empty()) {
@@ -119,7 +130,7 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   for (const auto &anchor : output_anchors) {
     const std::string anchor_text = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(anchor->GetIdx()));
 
-    out_ << "<td port = " << STR_FMT(OUTPUT_ANCHOR_PORT(anchor_text)) << " colspan='" << input_cnt << "'>"
+    out_ << "<td port = " << StrFmt(OutputAnchorPort(anchor_text)) << " colspan='" << input_cnt << "'>"
          << anchor_text << "</td>";
   }
 
@@ -145,23 +156,25 @@ void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &ou
     for (const auto &peer_in_anchor : des_anchors) {
       const auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(peer_in_anchor);
       std::string dst_node_name;
-      out_ << TAB << STR_FMT(src_node_name);
-      out_ << ":" << OUTPUT_ANCHOR_PORT(src_anchor_index);
+      out_ << TAB << StrFmt(src_node_name);
+      out_ << ":" << OutputAnchorPort(src_anchor_index);
       const auto op = peer_in_anchor->GetOwnerNode()->GetOpDesc();
-      GE_CHECK_NOTNULL_EXEC(op, continue);
+      if (op == nullptr) {
+        continue;
+      }
       if (in_data_anchor != nullptr) {
         dst_node_name = in_data_anchor->GetOwnerNode()->GetName();
         const std::string des_anchor_index = op->GetInputNameByIndex(static_cast<uint32_t>(in_data_anchor->GetIdx()));
-        out_ << " -> " << STR_FMT(dst_node_name);
-        out_ << ":" << INPUT_ANCHOR_PORT(des_anchor_index);
+        out_ << " -> " << StrFmt(dst_node_name);
+        out_ << ":" << InputAnchorPort(des_anchor_index);
         out_ << "[";
       }
       const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(peer_in_anchor);
       if (in_control_anchor != nullptr) {
         dst_node_name = in_control_anchor->GetOwnerNode()->GetName();
         const std::string des_anchor_index = "ctrl";
-        out_ << " -> " << STR_FMT(dst_node_name);
-        out_ << ":" << INPUT_ANCHOR_PORT(des_anchor_index);
+        out_ << " -> " << StrFmt(dst_node_name);
+        out_ << ":" << InputAnchorPort(des_anchor_index);
         out_ << "[";
         out_ << " style=dashed ";
       }
@@ -169,8 +182,8 @@ void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &ou
         const auto src_ops = src_anchor->GetOwnerNode()->GetOpDesc();
         GE_CHECK_NOTNULL_EXEC(src_ops, return);
         GE_CHECK_NOTNULL_EXEC(src_ops->GetOutputDescPtr(static_cast<uint32_t>(src_anchor->GetIdx())), return);
-        std::string label = GetSrcOpStr(src_ops, src_anchor);
-        out_ << "label=" << STR_FMT(label);
+        const std::string label = GetSrcOpStr(src_ops, src_anchor);
+        out_ << "label=" << StrFmt(label);
       }
       out_ << "]" << std::endl;
     }
@@ -230,7 +243,7 @@ std::string GraphDebugPrinter::GetSrcOpStr(const OpDescPtr &src_ops, const OutDa
   const auto src_shape = src_ops->GetOutputDesc(static_cast<uint32_t>(src_anchor->GetIdx())).GetShape();
   const auto dim = src_shape.GetDims();
   std::ostringstream tensor_info;
-  if (dim.size() > 0UL) {
+  if (!dim.empty()) {
     for (size_t i = 0UL; i < dim.size(); i++) {
       if (i != (dim.size() - 1UL)) {
         tensor_info << dim[i] << "x";

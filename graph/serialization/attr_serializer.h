@@ -26,7 +26,8 @@ namespace ge {
 /**
  * 所有的serializer都应该是无状态的、可并发调用的，全局仅构造一份，后续多线程并发调用
  */
-struct GeIrAttrSerializer {
+class GeIrAttrSerializer {
+ public:
   virtual graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) = 0;
   virtual graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) = 0;
   virtual ~GeIrAttrSerializer() = default;

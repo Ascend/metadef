@@ -68,7 +68,7 @@ AttrSerializerRegistry &AttrSerializerRegistry::GetInstance() {
 void AttrSerializerRegistry::RegisterGeIrAttrSerializer(const GeIrAttrSerializerBuilder& builder,
                                                         const TypeId obj_type,
                                                         const proto::AttrDef::ValueCase proto_type) {
-  const std::lock_guard<std::mutex> lock_guard(mutex_);
+  const std::lock_guard<std::mutex> lck_guard(mutex_);
   if (serializer_map_.count(obj_type) > 0U) {
     return;
   }
@@ -78,7 +78,7 @@ void AttrSerializerRegistry::RegisterGeIrAttrSerializer(const GeIrAttrSerializer
   serializer_holder_.push_back(std::move(serializer));
 }
 
-GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(TypeId obj_type) {
+GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(const TypeId obj_type) {
   const auto iter = serializer_map_.find(obj_type);
   if (iter == serializer_map_.end()) {
     // print type
@@ -89,7 +89,7 @@ GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(TypeId obj_type) {
   return iter->second;
 }
 
-GeIrAttrSerializer *AttrSerializerRegistry::GetDeserializer(proto::AttrDef::ValueCase proto_type) {
+GeIrAttrSerializer *AttrSerializerRegistry::GetDeserializer(const proto::AttrDef::ValueCase proto_type) {
   const auto iter = deserializer_map_.find(proto_type);
   if (iter == deserializer_map_.end()) {
     REPORT_INNER_ERROR("E19999",
