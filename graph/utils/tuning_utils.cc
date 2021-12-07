@@ -34,6 +34,7 @@ const char_t *const tuning_subgraph_prefix = "/aicore_subgraph_";
 const char_t *const non_tuning_subgraph_prefix = "/subgraph_";
 const std::set<std::string> kPartitionOpTypes = {PLACEHOLDER, END};
 const std::set<std::string> kExeTypes = {DATA, CONSTANT, NETOUTPUT};
+const size_t kConstOpNormalWeightSize = 1U;
 }
 const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
     BUILD_MODE,
@@ -258,7 +259,7 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
   std::vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
   if (weight.empty()) {
     GE_CHECK_NOTNULL(node->GetOpDesc());
-    const NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr(parent_node_attr, nullptr);
+    const NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr<NodePtr>(parent_node_attr, nullptr);
     if ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
       NodePtr really_parent_node = nullptr;
       if ((NodeUtils::GetInNodeCrossPartionedCallNode(parent_node, 0U, really_parent_node) == GRAPH_SUCCESS) &&
@@ -271,15 +272,25 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
       }
     }
   }
+  GeTensorDesc output_desc;
   if (!weight.empty()) {
     data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), CONSTANT);
+    if (weight.size() != kConstOpNormalWeightSize) {
+      GELOGE(FAILED, "const op weight size %zu should be 1 for node:%s", weight.size(), node->GetName().c_str());
+      return FAILED;
+    }
+    output_desc = weight[0U]->GetTensorDesc();
+    GELOGD("Create const node for %s, output_desc shape is:%s",
+           node->GetName().c_str(), output_desc.GetShape().ToString().c_str());
   } else {
     data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), DATA);
+    const auto pld_op_desc = node->GetOpDesc();
+    GE_CHECK_NOTNULL(pld_op_desc);
+    output_desc = pld_op_desc->GetOutputDesc(0U); // only one output for pld and data
+    GELOGD("Create data node for %s, output_desc shape is:%s",
+           node->GetName().c_str(), output_desc.GetShape().ToString().c_str());
   }
   GE_CHECK_NOTNULL(data_op_desc);
-  const auto pld_op_desc = node->GetOpDesc();
-  GE_CHECK_NOTNULL(pld_op_desc);
-  const auto output_desc = pld_op_desc->GetOutputDesc(0U); // only one output for pld and data
   // data inputdesc & outputdesc set as same
   if (data_op_desc->AddInputDesc(output_desc) != SUCCESS) {
     REPORT_CALL_ERROR("E19999", "AddInputDesc failed, TUU:data node %s", data_op_desc->GetName().c_str());
