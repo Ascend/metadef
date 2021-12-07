@@ -48,32 +48,6 @@ bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::strin
   return true;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeTensor(const ConstGeTensorPtr &tensor,
-    proto::TensorDef *tensor_proto) const {
-  GE_CHK_BOOL_EXEC(tensor != nullptr, REPORT_INNER_ERROR("E19999", "param tensor is nullptr, check invalid.");
-                   return false, "[Check][Param] tensor is null.");
-  GE_CHK_BOOL_EXEC(tensor_proto != nullptr, REPORT_INNER_ERROR("E19999", "param tensor_proto is null, check invalid.");
-                   return false, "[Check][Param] tensor_proto is null.");
-  if ((tensor->impl_ == nullptr) || (tensor->impl_->tensor_data_.impl_ == nullptr)) {
-    REPORT_INNER_ERROR("E19999", "param tensor impl is null, check invalid.");
-    GELOGE(FAILED, "[Check][Param] tensor_proto is null.");
-    return false;
-  }
-
-  if (tensor->impl_->tensor_data_.impl_->tensor_descriptor_ != nullptr) {
-    GeTensorSerializeUtils::GeTensorDescAsProto(*tensor->impl_->tensor_data_.impl_->tensor_descriptor_,
-                                                tensor_proto->mutable_desc());
-    if ((tensor->GetData().data() == nullptr) && (tensor->GetData().size() != 0UL)) {
-      REPORT_INNER_ERROR("E19999", "param tensor data is null, but data size is not zero.");
-      GELOGE(FAILED, "[Check][Param] tensor data is null, but data size is not zero.");
-      return false;
-    }
-    tensor_proto->set_data(tensor->GetData().data(), tensor->GetData().size());
-    return true;
-  }
-  return false;
-}
-
 bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_proto) const {
   GE_CHK_BOOL_EXEC(node != nullptr, REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
                    return false, "[Check][Param] node is null.");
@@ -304,18 +278,6 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *mode
   }
 
   return true;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::UnserializeTensor(
-    GeTensorPtr &tensor, proto::TensorDef &tensor_proto) {
-  tensor = std::shared_ptr<GeTensor>(new (std::nothrow) GeTensor(protobuf_owner_, &tensor_proto));
-  if (tensor == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create GeTensor failed.");
-    GELOGE(GRAPH_FAILED, "[Create][GeTensor] tensor is nullptr");
-    return false;
-  } else {
-    return true;
-  }
 }
 
 void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
@@ -693,7 +655,6 @@ static bool ReadProtoFromBinaryFile(const uint8_t *const data, const size_t len,
   return true;
 }
 
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeAllAttrsFromAnyMap(
     const std::map<std::string, AnyValue> &attr_map,
     google::protobuf::Map<std::string, ::ge::proto::AttrDef> * mutable_attr) {
@@ -773,19 +734,6 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) {
   return buffer;
 }
 
-size_t ModelSerialize::GetSerializeModelSize(const Model &model) {
-  proto::ModelDef model_def;
-  ModelSerializeImp imp;
-  if (!imp.SerializeModel(model, &model_def)) {
-    return 0UL;
-  }
-#if !defined(__ANDROID__) && !defined(ANDROID)
-  return model_def.ByteSizeLong();
-#else
-  return model_def.ByteSize();
-#endif
-}
-
 bool ModelSerialize::UnserializeModel(const uint8_t *data, const size_t len, Model &model) {
   if (data == nullptr) {
     REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
@@ -828,121 +776,5 @@ bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &mod
     return false;
   }
   return model.IsValid();
-}
-
-Model ModelSerialize::UnserializeModel(const uint8_t *data, size_t len) {
-  Model model;
-  (void)UnserializeModel(data, len, model);
-  return model;
-}
-
-Model ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def) {
-  Model model;
-  (void)UnserializeModel(model_def, model);
-  return model;
-}
-
-Buffer ModelSerialize::SerializeGraph(const ComputeGraphPtr &graph) {
-  proto::GraphDef graph_def;
-  ModelSerializeImp imp;
-  if (!imp.SerializeGraph(graph, &graph_def)) {
-    return Buffer();
-  }
-#if !defined(__ANDROID__) && !defined(ANDROID)
-  Buffer buffer(graph_def.ByteSizeLong());
-#else
-  Buffer buffer(graph_def.ByteSize());
-#endif
-  GE_CHK_BOOL_ONLY_LOG((buffer.GetSize() != 0UL), "get size failed");
-  GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  const auto ret = graph_def.SerializeToArray(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
-  if (!ret) {
-    REPORT_CALL_ERROR("E19999", "SerializeToArray failed");
-    GE_LOGE("[Call][SerializeToArray] fail.");
-  }
-
-  return buffer;
-}
-
-ComputeGraphPtr ModelSerialize::UnserializeGraph(const uint8_t *data, const size_t len) {
-  if (data == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
-    GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
-    return nullptr;
-  }
-
-  std::shared_ptr<proto::GraphDef> graph_proto_ptr;
-  graph_proto_ptr = ComGraphMakeShared<proto::GraphDef>();
-  if (graph_proto_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create GraphDef failed.");
-    GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
-    return nullptr;
-  }
-  proto::GraphDef &graph_proto = *graph_proto_ptr;
-  if (!ReadProtoFromBinaryFile(data, len, &graph_proto)) {
-    GELOGE(GRAPH_FAILED, "[Read][Proto] from binaryfile fail");
-    return nullptr;
-  }
-
-  ComputeGraphPtr graph;
-  ModelSerializeImp imp;
-  imp.SetProtobufOwner(graph_proto_ptr);
-  if (!imp.UnserializeGraph(graph, graph_proto)) {
-    return nullptr;
-  }
-  return graph;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Buffer ModelSerialize::SerializeOpDesc(
-    const ConstOpDescPtr &op_desc) {
-  proto::OpDef op_def;
-  ModelSerializeImp imp;
-  if (!imp.SerializeOpDesc(op_desc, &op_def)) {
-    return Buffer();
-  }
-#if !defined(__ANDROID__) && !defined(ANDROID)
-  Buffer buffer(op_def.ByteSizeLong());
-#else
-  Buffer buffer(op_def.ByteSize());
-#endif
-  GE_CHK_BOOL_ONLY_LOG((buffer.GetSize() != 0UL), "get size failed");
-  GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  const auto ret = op_def.SerializeToArray(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
-  if (!ret) {
-    REPORT_CALL_ERROR("E19999", "SerializeToArray failed.");
-    GE_LOGE("[Call][SerializeToArray] fail.");
-  }
-
-  return buffer;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr ModelSerialize::UnserializeOpDesc(const uint8_t *data,
-                                                                                           const size_t len) {
-  if (data == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
-    GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
-    return nullptr;
-  }
-
-  std::shared_ptr<proto::OpDef> op_def_ptr;
-  op_def_ptr = ComGraphMakeShared<proto::OpDef>();
-  if (op_def_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create OpDef failed.");
-    GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
-    return nullptr;
-  }
-  proto::OpDef &op_def = *op_def_ptr;
-  if (!ReadProtoFromBinaryFile(data, len, &op_def)) {
-    GELOGE(GRAPH_FAILED, "[Read][Proto] from binaryfile fail");
-    return nullptr;
-  }
-
-  OpDescPtr op_desc;
-  ModelSerializeImp imp;
-  imp.SetProtobufOwner(op_def_ptr);
-  if (!imp.UnserializeOpDesc(op_desc, op_def)) {
-    GELOGW("[Deserialize][OpDesc] Deserialize op_desc failed");
-  }
-  return op_desc;
 }
 }  // namespace ge
