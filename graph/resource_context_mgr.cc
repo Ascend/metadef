@@ -27,7 +27,7 @@ ResourceContext *ResourceContextMgr::GetResourceContext(const std::string &resou
   return resource_keys_to_contexts_[resource_key].get();
 }
 
-graphStatus ResourceContextMgr::SetResourceContext(const std::string &resource_key, ResourceContext *context) {
+graphStatus ResourceContextMgr::SetResourceContext(const std::string &resource_key, ResourceContext *const context) {
   std::lock_guard<std::mutex> lk(ctx_mu_);
   resource_keys_to_contexts_[resource_key] = std::unique_ptr<ResourceContext>(context);
   return GRAPH_SUCCESS;

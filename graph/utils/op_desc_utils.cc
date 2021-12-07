@@ -16,6 +16,7 @@
 
 #include "graph/utils/op_desc_utils.h"
 #include <algorithm>
+#include <memory>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_util.h"
@@ -25,6 +26,7 @@
 #include "graph/compute_graph.h"
 #include "graph/ge_attr_value.h"
 #include "graph/op_desc_impl.h"
+#include "graph/operator.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/constant_utils.h"

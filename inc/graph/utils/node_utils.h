@@ -21,6 +21,7 @@
 #include <map>
 #include <vector>
 #include "external/graph/operator.h"
+#include "graph/anchor.h"
 #include "graph/node.h"
 
 namespace ge {

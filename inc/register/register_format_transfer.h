@@ -21,8 +21,7 @@
 #include <memory>
 #include <vector>
 
-#include "external/graph/types.h"
-#include "ge/ge_api_error_codes.h"
+#include "external/ge/ge_api_types.h"
 
 namespace ge {
 namespace formats {

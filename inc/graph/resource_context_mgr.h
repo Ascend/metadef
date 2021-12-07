@@ -40,7 +40,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ResourceContextMgr {
    * @param context
    * @return status
    */
-  graphStatus SetResourceContext(const std::string &resource_key, ResourceContext *context);
+  graphStatus SetResourceContext(const std::string &resource_key, ResourceContext *const context);
   /**
    * Given resource_key , node reiled on this resource, mgr will keep the relation
    * @param resource_key

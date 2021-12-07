@@ -54,7 +54,7 @@ OpsKernelBuilderRegistry &OpsKernelBuilderRegistry::GetInstance() {
 }
 
 OpsKernelBuilderRegistrar::OpsKernelBuilderRegistrar(const string &kernel_lib_name,
-                                                     const OpsKernelBuilderRegistrar::CreateFn fn)
+                                                     OpsKernelBuilderRegistrar::CreateFn const fn)
     : kernel_lib_name_(kernel_lib_name) {
   GELOGI("To register OpsKernelBuilder, kernel lib name = %s", kernel_lib_name.c_str());
   std::shared_ptr<OpsKernelBuilder> builder;

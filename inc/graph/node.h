@@ -74,7 +74,7 @@ using ConstNode = const Node;
 
 using NodeToOutAnchor = std::pair<NodePtr, OutDataAnchorPtr>;
 
-typedef std::vector<std::multimap<std::string, ge::AnchorPtr>> kFusionDataFlowVec_t;
+using kFusionDataFlowVec_t = std::vector<std::multimap<std::string, ge::AnchorPtr>>;
 
 // Node is a component of ComputeGraph
 class Node : public std::enable_shared_from_this<Node> {
