@@ -166,43 +166,43 @@ std::unordered_map<TypeId, AnyValue::ValueType> type_ids_to_value_type = {
 void AnyValue::Swap(AnyValue &other) noexcept {
   AnyValue tmp;
   if (!other.IsEmpty()) {
-    other.operate_(kOpMove, &other, &tmp);
+    other.operate_(OperateType::kOpMove, &other, &tmp);
   }
 
   other.Clear();
   if (!IsEmpty()) {
-    operate_(kOpMove, this, &other);
+    operate_(OperateType::kOpMove, this, &other);
   }
 
   Clear();
   if (!tmp.IsEmpty()) {
-    tmp.operate_(kOpMove, &tmp, this);
+    tmp.operate_(OperateType::kOpMove, &tmp, this);
   }
 }
 
 AnyValue::AnyValue(AnyValue &&other) noexcept {
   if (!other.IsEmpty()) {
-    other.operate_(kOpMove, &other, this);
+    other.operate_(OperateType::kOpMove, &other, this);
   }
 }
 AnyValue &AnyValue::operator=(AnyValue &&other) noexcept {
   Clear();
   if (!other.IsEmpty()) {
-    other.operate_(kOpMove, &other, this);
+    other.operate_(OperateType::kOpMove, &other, this);
   }
   return *this;
 }
 AnyValue &AnyValue::operator=(const AnyValue &other) {
   Clear();
   if (!other.IsEmpty()) {
-    other.operate_(kOpClone, &other, this);
+    other.operate_(OperateType::kOpClone, &other, this);
   }
   return *this;
 }
 TypeId AnyValue::GetValueTypeId() const noexcept {
   TypeId vt{kInvalidTypeId};
   if (!IsEmpty()) {
-    operate_(kGetTypeId, this, &vt);
+    operate_(OperateType::kGetTypeId, this, &vt);
   }
   return vt;
 }
@@ -220,7 +220,7 @@ AnyValue AnyValue::Copy() const {
 }
 const void *AnyValue::GetAddr() const {
   void *addr = nullptr;
-  operate_(kOpGetAddr, this, &addr);
+  operate_(OperateType::kOpGetAddr, this, &addr);
   return addr;
 }
 }  // namespace ge
