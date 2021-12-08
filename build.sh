@@ -188,7 +188,8 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     cd ${BASEPATH}
     rm -rf ${BASEPATH}/cov
     mkdir ${BASEPATH}/cov
-    lcov -c -d build/tests/ut/graph -d build/tests/ut/register -d build/graph/CMakeFiles/graph_static.dir -d build/register/CMakeFiles/register_static.dir/ -o cov/coverage.info
+    lcov -c -d build/graph/CMakeFiles/graph_static.dir -d build/register/CMakeFiles/register_static.dir/ -o cov/tmp.info
+    lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/*' '*/ops/*' '*/register/graph_optimizer/*' -o cov/coverage.info
     cd ${BASEPATH}/cov
     genhtml coverage.info
 fi
