@@ -438,7 +438,7 @@ TEST_F(UtestOpDesc, UpdateInputName_success) {
   auto tensor_desc = std::make_shared<GeTensorDesc>();
   tensor_desc->SetShape(GeShape({1}));
   tensor_desc->SetFormat(FORMAT_NCHW);
-  tensor_desc->SetDataType(DT_FLOAT); 
+  tensor_desc->SetDataType(DT_FLOAT);
   auto op_desc = std::make_shared<OpDesc>();
 
   op_desc->AddInputDesc("name1", tensor_desc->Clone());
@@ -459,7 +459,7 @@ TEST_F(UtestOpDesc, UpdateOutputName_success) {
   auto tensor_desc = std::make_shared<GeTensorDesc>();
   tensor_desc->SetShape(GeShape({1}));
   tensor_desc->SetFormat(FORMAT_NCHW);
-  tensor_desc->SetDataType(DT_FLOAT); 
+  tensor_desc->SetDataType(DT_FLOAT);
   auto op_desc = std::make_shared<OpDesc>();
 
   op_desc->AddOutputDesc("name1", tensor_desc->Clone());
@@ -478,8 +478,8 @@ TEST_F(UtestOpDesc, UpdateOutputName_success) {
 
 TEST_F(UtestOpDesc, GetInferFunc_success) {
   auto op_desc = std::make_shared<OpDesc>();
-  const auto add_func = [](Operator &op) { 
-    return GRAPH_SUCCESS; 
+  const auto add_func = [](Operator &op) {
+    return GRAPH_SUCCESS;
   };
   op_desc->AddInferFunc(add_func);
 
@@ -489,25 +489,12 @@ TEST_F(UtestOpDesc, GetInferFunc_success) {
   EXPECT_EQ(func(op), GRAPH_SUCCESS);
 }
 
-TEST_F(UtestOpDesc, GetInferFormatFunc_success) {
-  auto op_desc = std::make_shared<OpDesc>();
-  const auto add_func = [](Operator &op) { 
-    return GRAPH_SUCCESS; 
-  };
-  op_desc->AddInferFormatFunc(add_func);
-
-  Operator op;
-  auto func = op_desc->GetInferFormatFunc();
-  EXPECT_EQ(func == nullptr, false);
-  EXPECT_EQ(func(op), GRAPH_SUCCESS);
-}
-
 TEST_F(UtestOpDesc, InferDataSlice_success) {
   auto op_desc = std::make_shared<OpDesc>();
   const auto func = [](Operator &op) { return GRAPH_SUCCESS; };
   EXPECT_EQ(op_desc->InferDataSlice(), NO_DEPENDENCE_FUNC);
-  const auto infer_data_slice_func = [](Operator &op) { 
-    return GRAPH_SUCCESS; 
+  const auto infer_data_slice_func = [](Operator &op) {
+    return GRAPH_SUCCESS;
   };
   auto op = std::make_shared<Operator>();
   op_desc->SetType("test");
@@ -518,7 +505,7 @@ TEST_F(UtestOpDesc, InferDataSlice_success) {
 TEST_F(UtestOpDesc, InferShapeAndType_success) {
   auto op_desc = std::make_shared<OpDesc>();
   EXPECT_EQ(op_desc->InferShapeAndType(), GRAPH_SUCCESS);
-  const auto add_func = [](Operator &op) { 
+  const auto add_func = [](Operator &op) {
     return GRAPH_SUCCESS;
   };
   op_desc->AddInferFunc(add_func);
@@ -528,25 +515,11 @@ TEST_F(UtestOpDesc, InferShapeAndType_success) {
 TEST_F(UtestOpDesc, OpVerify_success) {
   auto op_desc = std::make_shared<OpDesc>();
   EXPECT_EQ(op_desc->OpVerify(), GRAPH_SUCCESS);
-  const auto verify_func = [](Operator &op) { 
+  const auto verify_func = [](Operator &op) {
     return GRAPH_SUCCESS;
   };
   op_desc->AddVerifierFunc(verify_func);
   EXPECT_EQ(op_desc->OpVerify(), GRAPH_SUCCESS);
-}
-
-TEST_F(UtestOpDesc, GetValidInputIndexByName_success) {
-  auto op_desc = std::make_shared<OpDesc>();
-  auto tensor_desc = std::make_shared<GeTensorDesc>();
-  tensor_desc->SetShape(GeShape({1}));
-  tensor_desc->SetFormat(FORMAT_NCHW);
-  tensor_desc->SetDataType(DT_FLOAT);
-
-  op_desc->AddInputDesc("name1", tensor_desc->Clone());
-  op_desc->AddInputDesc("name2", tensor_desc->Clone());
-
-  EXPECT_EQ(op_desc->GetValidInputIndexByName("name1"), 0);
-  EXPECT_EQ(op_desc->GetValidInputIndexByName("name2"), 1);
 }
 
 TEST_F(UtestOpDesc, GetValidInputNameByIndex_success) {
@@ -624,15 +597,6 @@ TEST_F(UtestOpDesc, GetDstName_success) {
   EXPECT_EQ(get_dst_name[0], "dst");
 }
 
-TEST_F(UtestOpDesc, GetDstIndex_success) {
-  auto op_desc = std::make_shared<OpDesc>();
-  std::vector<int64_t> dst_index{2};
-  op_desc->SetDstIndex(dst_index);
-  auto get_dst_index = op_desc->GetDstIndex();
-  EXPECT_EQ(get_dst_index.size(), 1);
-  EXPECT_EQ(get_dst_index[0], 2);
-}
-
 TEST_F(UtestOpDesc, Set_GetOpInferDepends_success) {
   auto op_desc = std::make_shared<OpDesc>("verify", "Rule");
   std::vector<std::string> depend_names {"depend_name1", "depend_name2"};
@@ -650,28 +614,6 @@ TEST_F(UtestOpDesc, GetWorkspace_success) {
   auto get_workspace = op_desc->GetWorkspace();
   EXPECT_EQ(get_workspace.size(), 1);
   EXPECT_EQ(get_workspace[0], 222);
-}
-
-TEST_F(UtestOpDesc, RestoreInputNameIdx_success) {
-  auto op_desc = std::make_shared<OpDesc>();
-  auto tensor_desc = std::make_shared<GeTensorDesc>();
-  tensor_desc->SetShape(GeShape({1}));
-  tensor_desc->SetFormat(FORMAT_NCHW);
-  tensor_desc->SetDataType(DT_FLOAT);
-
-  op_desc->AddInputDesc("name1", tensor_desc->Clone());
-  EXPECT_EQ(op_desc->RestoreInputNameIdx("name2",1), GRAPH_SUCCESS);
-}
-
-TEST_F(UtestOpDesc, RestoreOutputNameIdx_success) {
-  auto op_desc = std::make_shared<OpDesc>();
-  auto tensor_desc = std::make_shared<GeTensorDesc>();
-  tensor_desc->SetShape(GeShape({1}));
-  tensor_desc->SetFormat(FORMAT_NCHW);
-  tensor_desc->SetDataType(DT_FLOAT);
-
-  op_desc->AddOutputDesc("name1", tensor_desc->Clone());
-  EXPECT_EQ(op_desc->RestoreOutputNameIdx("name2",1), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestOpDesc, GetSubgraphNameByInstanceName_success) {

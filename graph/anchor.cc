@@ -31,17 +31,24 @@ class AnchorImpl {
   AnchorPtr GetFirstPeerAnchor() const;
   NodePtr GetOwnerNode() const;
   int32_t GetIdx() const;
-  void SetIdx(int32_t index);
+  void SetIdx(const int32_t index);
 
+ private:
   // All peer anchors connected to current anchor
   std::vector<std::weak_ptr<Anchor>> peer_anchors_;
   // The owner node of anchor
   std::weak_ptr<Node> owner_node_;
   // The index of current anchor
   int32_t idx_;
+
+  friend class Anchor;
+  friend class OutControlAnchor;
+  friend class InControlAnchor;
+  friend class OutDataAnchor;
+  friend class InDataAnchor;
 };
 
-AnchorImpl::AnchorImpl(const NodePtr &owner_node, int32_t idx) : owner_node_(owner_node), idx_(idx) {}
+AnchorImpl::AnchorImpl(const NodePtr &owner_node, const int32_t idx) : owner_node_(owner_node), idx_(idx) {}
 
 size_t AnchorImpl::GetPeerAnchorsSize() const {
   return peer_anchors_.size();
@@ -68,7 +75,7 @@ NodePtr AnchorImpl::GetOwnerNode() const { return owner_node_.lock(); }
 
 int32_t AnchorImpl::GetIdx() const { return idx_; }
 
-void AnchorImpl::SetIdx(int32_t index) { idx_ = index; }
+void AnchorImpl::SetIdx(const int32_t index) { idx_ = index; }
 
 Anchor::Anchor(const NodePtr &owner_node, const int32_t idx)
     : enable_shared_from_this(), impl_(std::shared_ptr<AnchorImpl>(new AnchorImpl(owner_node, idx))) {}
@@ -110,7 +117,7 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
   }
   const auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [peer](const std::weak_ptr<Anchor> &an) {
-    auto anchor = an.lock();
+    const auto anchor = an.lock();
     return peer->Equal(anchor);
   });
 
@@ -208,7 +215,7 @@ OutDataAnchorPtr InDataAnchor::GetPeerOutAnchor() const {
 graphStatus InDataAnchor::LinkFrom(const OutDataAnchorPtr &src) {
   // InDataAnchor must be only linkfrom once
   if ((src == nullptr) || (src->impl_ == nullptr) ||
-      (impl_ == nullptr) || !impl_->peer_anchors_.empty())  {
+      (impl_ == nullptr) || (!impl_->peer_anchors_.empty()))  {
     REPORT_INNER_ERROR("E19999", "src anchor is invalid or the peerAnchors is not empty.");
     GELOGE(GRAPH_FAILED, "[Check][Param] src anchor is invalid or the peerAnchors is not empty.");
     return GRAPH_FAILED;
@@ -278,7 +285,7 @@ OutDataAnchor::Vistor<InControlAnchorPtr> OutDataAnchor::GetPeerInControlAnchors
 
 graphStatus OutDataAnchor::LinkTo(const InDataAnchorPtr &dest) {
   if ((dest == nullptr) || (dest->impl_ == nullptr) ||
-      !dest->impl_->peer_anchors_.empty()) {
+      (!dest->impl_->peer_anchors_.empty())) {
     REPORT_INNER_ERROR("E19999", "dest anchor is nullptr or the peerAnchors is not empty.");
     GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is nullptr or the peerAnchors is not empty.");
     return GRAPH_FAILED;

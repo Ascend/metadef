@@ -169,7 +169,6 @@ class OpDescImpl {
 
   std::string GetInputNameByIndex(const uint32_t index) const;
   int32_t GetInputIndexByName(const std::string &name) const;
-  int32_t GetValidInputIndexByName(const std::string &name) const;
   std::string GetValidInputNameByIndex(const uint32_t index) const;
 
   std::string GetOutputNameByIndex(const uint32_t index) const;
@@ -203,7 +202,6 @@ class OpDescImpl {
   std::vector<std::string> GetDstName() const;
 
   void SetDstIndex(const std::vector<int64_t> &dst_index);
-  std::vector<int64_t> GetDstIndex() const;
 
   void SetWorkspace(const std::vector<int64_t> &workspace);
   std::vector<int64_t> GetWorkspace() const;
@@ -213,9 +211,6 @@ class OpDescImpl {
 
   void SetIsInputConst(const std::vector<bool> &is_input_const);
   std::vector<bool> GetIsInputConst() const;
-
-  graphStatus RestoreInputNameIdx(const std::string &name, const int32_t &index);
-  graphStatus RestoreOutputNameIdx(const std::string &name, const int32_t &index);
 
   graphStatus CallInferFunc(Operator &op, const OpDescPtr &op_desc);
   graphStatus CallInferFormatFunc(Operator &op, const ConstOpDescPtr &op_desc);

@@ -61,7 +61,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
   using AttrHolder::HasAttr;
   using AttrHolder::SetAttr;
 
-  graphStatus Save(Buffer &buffer, bool is_dump = false) const;
+  graphStatus Save(Buffer &buffer, const bool is_dump = false) const;
 
   graphStatus SaveToFile(const string& file_name) const;
   // Model will be rewrite
