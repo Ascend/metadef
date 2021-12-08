@@ -706,7 +706,7 @@ std::string AttrUtils::GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj,
   std::map<std::string, std::string> ordered_attrs;
   for (auto &attr : attr_map) {
     proto::AttrDef attr_def;
-    auto *serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
+    auto *const serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
     if ((serializer == nullptr) || (serializer->Serialize(attr.second, attr_def) != GRAPH_SUCCESS)) {
       ordered_attrs[attr.first] = "";
       continue;
@@ -732,7 +732,7 @@ std::string AttrUtils::GetAllAttrsStr(ConstAttrHolderAdapter &&obj) {
   std::map<std::string, std::string> ordered_attrs;
   for (auto &attr : attr_map) {
     proto::AttrDef attr_def;
-    auto *serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
+    auto *const serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
     if ((serializer == nullptr) || (serializer->Serialize(attr.second, attr_def) != GRAPH_SUCCESS)) {
       ordered_attrs[attr.first] = "";
       continue;

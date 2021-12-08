@@ -64,17 +64,17 @@ struct NodeNameNodeReq {
 
 class ModelSerializeImp {
  public:
-  bool SerializeModel(const Model &model, proto::ModelDef *model_proto, const bool is_dump = false);
+  bool SerializeModel(const Model &model, proto::ModelDef *const model_proto, const bool is_dump = false);
 
   bool SerializeGraph(const ConstComputeGraphPtr &graph,
-                      proto::GraphDef *graph_proto,
+                      proto::GraphDef *const graph_proto,
                       const bool is_dump = false);
 
-  bool SerializeEdge(const NodePtr &node, proto::OpDef *op_def_proto) const;
+  bool SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto) const;
 
-  bool SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false);
+  bool SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto, const bool is_dump = false);
 
-  bool SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump = false);
+  bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump = false);
 
   bool UnserializeModel(Model &model, proto::ModelDef &model_proto);
 
@@ -87,8 +87,8 @@ class ModelSerializeImp {
   bool UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto);
   void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_in,
                        std::vector<std::string> &key_out, std::vector<uint32_t> &value_in,
-                       std::vector<uint32_t> &value_out, std::vector<std::string> &opt_input) const;
-  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto, const bool is_dump = false) const;
+                       std::vector<uint32_t> &value_out, const std::vector<std::string> &opt_input) const;
+  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto, const bool is_dump = false) const;
 
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
 
@@ -96,10 +96,10 @@ class ModelSerializeImp {
 
   void SetProtobufOwner(const ProtoMsgOwner &buffer_proto_buf_onwer) { protobuf_owner_ = buffer_proto_buf_onwer; }
 
-  static bool SerializeAllAttrsFromAnyMap(
-      const std::map<std::string, AnyValue> &, google::protobuf::Map<std::string, ::ge::proto::AttrDef> *);
+  static bool SerializeAllAttrsFromAnyMap(const std::map<std::string, AnyValue> &attr_map,
+      google::protobuf::Map<std::string, ::ge::proto::AttrDef> *const mutable_attr);
   static bool DeserializeAllAttrsToAttrHolder(
-      const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &proto_attr_map, AttrHolder *attr_holder);
+      const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &proto_attr_map, AttrHolder *const attr_holder);
 
  private:
   bool RebuildOwnership(ComputeGraphPtr &compute_graph, std::map<std::string, ComputeGraphPtr> &subgraphs) const;
