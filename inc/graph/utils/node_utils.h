@@ -21,6 +21,7 @@
 #include <map>
 #include <vector>
 #include "external/graph/operator.h"
+#include "external/graph/types.h"
 #include "graph/anchor.h"
 #include "graph/node.h"
 
@@ -58,7 +59,7 @@ class NodeUtils {
   static graphStatus ClearSendInfo();
   static graphStatus ClearRecvInfo();
 
-  static graphStatus GetSingleOutputNodeOfNthLayer(const NodePtr &src, int depth, NodePtr &dst);
+  static graphStatus GetSingleOutputNodeOfNthLayer(const NodePtr &src, int32_t depth, NodePtr &dst);
 
   static graphStatus GetDataOutAnchorAndControlInAnchor(const NodePtr &node_ptr, OutDataAnchorPtr &out_data,
                                                         InControlAnchorPtr &in_control);
@@ -164,7 +165,7 @@ class NodeUtils {
   /// @param [in] node
   /// @return Node
   ///
-  static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, int index);
+  static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, int32_t index);
 
   ///
   /// @brief Get subgraph input data node by index.
@@ -173,9 +174,10 @@ class NodeUtils {
   ///
   static std::vector<NodePtr> GetSubgraphOutputNodes(const Node &node);
 
-  static NodePtr GetInDataNodeByIndex(const Node &node, const int index);
+  static NodePtr GetInDataNodeByIndex(const Node &node, const int32_t index);
 
-  static std::vector<std::pair<InDataAnchorPtr, NodePtr>> GetOutDataNodesWithAnchorByIndex(const Node &node, const int index);
+  static std::vector<std::pair<InDataAnchorPtr, NodePtr>> GetOutDataNodesWithAnchorByIndex(
+      const Node &node, const int32_t index);
 
   static ge::ConstNodePtr GetNodeFromOperator(const Operator &oprt);
 
@@ -206,7 +208,7 @@ class NodeUtils {
   ///
   static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
 
-  static graphStatus SetNodeParallelGroup(Node &node, const char *group_name);
+  static graphStatus SetNodeParallelGroup(Node &node, const char_t *group_name);
 
   static graphStatus UpdateInputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape);
   static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape);

@@ -24,10 +24,11 @@ namespace ge {
 using InferDataSliceFunc = std::function<graphStatus(Operator &)>;
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferDataSliceFuncRegister {
- public:
-  InferDataSliceFuncRegister(const char *operator_type, const InferDataSliceFunc &infer_data_slice_func);
-  ~InferDataSliceFuncRegister() = default;
+public:
+InferDataSliceFuncRegister(const char_t *const operator_type, const InferDataSliceFunc &infer_data_slice_func);
+~InferDataSliceFuncRegister() = default;
 };
+}  // namespace ge
 
 // infer data slice func register
 #define IMPLEMT_COMMON_INFER_DATA_SLICE(func_name) \
@@ -36,13 +37,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferDataSliceFuncRegister 
 #define IMPLEMT_INFER_DATA_SLICE(op_name, func_name) \
   GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY static graphStatus func_name(op::op_name &op)
 
-#define INFER_DATA_SLICE_FUNC(op_name, x) [&](Operator &v) { return x((op::op_name &)v); }
+#define INFER_DATA_SLICE_FUNC(op_name, x) [&](Operator &v) { return (x)((op::op_name &)v); }
 
 #define __INFER_DATA_SLICE_FUNC_REG_IMPL__(op_name, x, n) \
-  static const InferDataSliceFuncRegister PASTE(ids_register, n)(#op_name, x)
+  static const InferDataSliceFuncRegister PASTE(ids_register, n)(#op_name, (x))
 
 #define INFER_DATA_SLICE_FUNC_REG(op_name, x) \
-  __INFER_DATA_SLICE_FUNC_REG_IMPL__(op_name, INFER_DATA_SLICE_FUNC(op_name, x), __COUNTER__)
-}  // namespace ge
+  __INFER_DATA_SLICE_FUNC_REG_IMPL__(op_name, INFER_DATA_SLICE_FUNC(op_name, (x)), __COUNTER__)
 
 #endif  // INC_REGISTER_INFER_DATA_SLICE_REGISTRY_H_

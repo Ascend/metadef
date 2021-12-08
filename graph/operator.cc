@@ -117,7 +117,6 @@ using std::to_string;
       GELOGW("[Register][Attr] Reg attr name %s failed", name.c_str());                                                \
     }                                                                                                                  \
   }
-
 namespace ge {
 TensorType::TensorType(DataType dt) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
@@ -1135,7 +1134,7 @@ graphStatus Operator::GetOpType(AscendString &type) const {
 }
 
 Operator &Operator::SetInput(const std::string &dst_name, uint32_t dst_index, const ge::Operator &src_oprt) {
-  std::string dynamic_dst_name = DYNAMIN_INPUT_NAME(dst_name, dst_index);
+  std::string dynamic_dst_name = dst_name + std::to_string(dst_index);
   return SetInput(dynamic_dst_name, src_oprt);
 }
 
@@ -1151,7 +1150,7 @@ Operator &Operator::SetInput(const char *dst_name, uint32_t dst_index, const ge:
 
 Operator &Operator::SetInput(const std::string &dst_name, uint32_t dst_index, const ge::Operator &src_oprt,
                              const std::string &name) {
-  std::string dynamic_dst_name = DYNAMIN_INPUT_NAME(dst_name, dst_index);
+  std::string dynamic_dst_name = dst_name + std::to_string(dst_index);
   return SetInput(dynamic_dst_name, src_oprt, name);
 }
 
