@@ -246,32 +246,40 @@ TEST_F(ProfilerUt, GetRecords) {
   EXPECT_EQ(rec->et, kEventTypeEnd);
 }
 
-TEST_F(ProfilerUt, GetStrings) {
+TEST_F(ProfilerUt, GetStringHashes) {
   auto p = Profiler::Create();
   p->RegisterString(0, "Node1");
   p->RegisterString(2, "InferShape");
-  auto s = p->GetStrings();
-  EXPECT_EQ(strcmp(s[0], "Node1"), 0);
-  EXPECT_EQ(strcmp(s[2], "InferShape"), 0);
+  auto s = p->GetStringHashes();
+  EXPECT_EQ(strcmp(s[0].str, "Node1"), 0);
+  EXPECT_EQ(strcmp(s[2].str, "InferShape"), 0);
+  p->RegisterStringHash(3, 0x55, "Node2");
+  p->RegisterStringHash(4, 0xaa, "Tiling");
+  EXPECT_EQ(s[3].hash == 0x55, true);
+  EXPECT_EQ(s[4].hash == 0xaa, true);
+  p->UpdateHashByIndex(0, 0x5a);
+  p->UpdateHashByIndex(2, 0xa5);
+  EXPECT_EQ(s[0].hash == 0x5a, true);
+  EXPECT_EQ(s[2].hash == 0xa5, true);
 }
 
 TEST_F(ProfilerUt, RegisterTooLongString) {
   auto p = Profiler::Create();
   p->RegisterString(0, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz");
   p->RegisterString(2, "InferShape");
-  auto s = p->GetStrings();
-  EXPECT_EQ(strcmp(s[0], "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijk"), 0);
-  EXPECT_EQ(strcmp(s[2], "InferShape"), 0);
+  auto s = p->GetStringHashes();
+  EXPECT_EQ(strcmp(s[0].str, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijk"), 0);
+  EXPECT_EQ(strcmp(s[2].str, "InferShape"), 0);
 }
 
 TEST_F(ProfilerUt, ModifyStrings) {
   auto p = Profiler::Create();
   p->RegisterString(0, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz");
   p->RegisterString(2, "InferShape");
-  auto s = p->GetStrings();
-  strcpy(s[2], "Tiling");
-  EXPECT_EQ(strcmp(s[0], "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijk"), 0);
-  EXPECT_EQ(strcmp(p->GetStrings()[2], "Tiling"), 0);
+  auto s = p->GetStringHashes();
+  strcpy(s[2].str, "Tiling");
+  EXPECT_EQ(strcmp(s[0].str, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijk"), 0);
+  EXPECT_EQ(strcmp(p->GetStringHashes()[2].str, "Tiling"), 0);
 }
 
 /* takes very long time
