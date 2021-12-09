@@ -51,17 +51,39 @@ void DumpEventType(EventType et, std::ostream &out_stream) {
 void Profiler::RecordCurrentThread(int64_t element, int64_t event, EventType et) {
   Record(element, GetThread(), event, et);
 }
+
+void Profiler::UpdateHashByIndex(const int64_t index, const uint64_t hash) {
+  if (index >= kMaxStrIndex) {
+    return;
+  }
+  GetStringHashes()[index].hash = hash;
+}
+
 void Profiler::RegisterString(int64_t index, const std::string &str) {
   if (index >= kMaxStrIndex) {
     return;
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  auto ret = strncpy_s(GetStrings()[index], kMaxStrLen, str.c_str(), kMaxStrLen - 1);
+  auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
   }
 }
+
+void Profiler::RegisterStringHash(int64_t index, uint64_t hash, const std::string &str) {
+  if (index >= kMaxStrIndex) {
+    return;
+  }
+
+  // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
+  auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1);
+  if (ret != EN_OK) {
+    GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
+  }
+  GetStringHashes()[index].hash = hash;
+}
+
 void Profiler::Record(int64_t element, int64_t thread, int64_t event, EventType et) {
   auto current_index = record_size_++;
   if (current_index >= kMaxRecordNum) {
@@ -92,15 +114,15 @@ void Profiler::Dump(std::ostream &out_stream) const {
   out_stream << "Profiling dump end" << std::endl;
 }
 void Profiler::DumpByIndex(int64_t index, std::ostream &out_stream) const {
-  if (index < 0 || index >= kMaxStrIndex || strnlen(GetStrings()[index], kMaxStrLen) == 0) {
+  if (index < 0 || index >= kMaxStrIndex || strnlen(GetStringHashes()[index].str, kMaxStrLen) == 0) {
     out_stream << "UNKNOWN(" << index << ")";
   } else {
-    out_stream << '[' << GetStrings()[index] << "]";
+    out_stream << '[' << GetStringHashes()[index].str << "]";
   }
 }
-Profiler::Profiler() : record_size_(0), records_(), indexes_to_str_() {}
+Profiler::Profiler() : record_size_(0), records_(), indexes_to_str_hashes_() {}
 void Profiler::Reset() {
-  // 不完全reset，indexes_to_str_还是有值的
+  // 不完全reset，indexes_to_str_hashes_还是有值的
   record_size_ = 0;
 }
 std::unique_ptr<Profiler> Profiler::Create() {
@@ -112,11 +134,11 @@ size_t Profiler::GetRecordNum() const noexcept {
 const ProfilingRecord *Profiler::GetRecords() const {
   return &(records_[0]);
 }
-Profiler::ConstStringsPointer Profiler::GetStrings() const {
-  return indexes_to_str_;
+Profiler::ConstStringHashesPointer Profiler::GetStringHashes() const {
+  return indexes_to_str_hashes_;
 }
-Profiler::StringsPointer Profiler::GetStrings() {
-  return indexes_to_str_;
+Profiler::StringHashesPointer Profiler::GetStringHashes() {
+  return indexes_to_str_hashes_;
 }
 Profiler::~Profiler() = default;
 }
