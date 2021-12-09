@@ -724,7 +724,7 @@ graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<Compu
   return GRAPH_SUCCESS;
 }
 
-ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, uint32_t index) {
+ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, const uint32_t index) {
   const auto op_desc = node.GetOpDesc();
   if (op_desc == nullptr) {
     return nullptr;
