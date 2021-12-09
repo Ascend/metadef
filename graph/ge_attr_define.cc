@@ -1159,6 +1159,7 @@ const std::string ATTR_STAGE_LEVEL = "_stage_level";
 // input_output_offset
 const std::string ATTR_ZERO_COPY_BASIC_OFFSET = "_zero_copy_basic_offset";
 const std::string ATTR_ZERO_COPY_RELATIVE_OFFSET = "_zero_copy_relative_offset";
+const std::string ATTR_IS_ZERO_COPY_BLOCK = "_is_zero_copy_block";
 
 // mark node cannot be deleted
 const std::string ATTR_NAME_CANNOT_BE_DELETED = "_cannot_be_deleted";
