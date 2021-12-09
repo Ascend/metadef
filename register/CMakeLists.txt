@@ -110,8 +110,7 @@ add_library(register_static STATIC
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
     "op_tiling/op_tiling_registry.cc"
-    "op_tiling/op_tiling_py.cc"
-)
+    "op_tiling/op_tiling_py.cc")
 
 target_compile_options(register_static PRIVATE
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
@@ -191,8 +190,7 @@ add_library(op_tiling_o2 STATIC
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
     "op_tiling/op_tiling_registry.cc"
-    "op_tiling/op_tiling_py.cc"
-)
+    "op_tiling/op_tiling_py.cc")
 
 add_dependencies(op_tiling_o2
     metadef_protos
