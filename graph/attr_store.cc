@@ -19,28 +19,30 @@
 namespace ge {
 const AttrId kInvalidAttrId = GetAttrId(0xffffffff, 0);
 
-AnyValue *AttrStore::GetOrCreateAnyValue(AttrId attr_id) const {
+AnyValue *AttrStore::GetOrCreateAnyValue(const AttrId attr_id) const {
   return const_cast<AnyValue *>(GetAnyValue(attr_id));
 }
-AnyValue *AttrStore::MutableAnyValue(AttrId attr_id) const noexcept {
+AnyValue *AttrStore::MutableAnyValue(const AttrId attr_id) const noexcept {
   return const_cast<AnyValue *>(GetAnyValue(attr_id));
 }
-const AnyValue *AttrStore::GetAnyValue(AttrId attr_id) const noexcept {
-  auto attr_type = GetAttrType(attr_id);
+const AnyValue *AttrStore::GetAnyValue(const AttrId attr_id) const noexcept {
+  const auto attr_type = GetAttrType(attr_id);
   if (attr_type == static_cast<uint32_t>(AttrType::kAttrPredefinedInIr)) {
     return pre_defined_attrs_.GetAnyValue(GetSubAttrId(attr_id));
   } else if (attr_type == static_cast<uint32_t>(AttrType::kAttrGeneral)) {
     return nullptr;  // general不支持
+  } else {
+    // empty
   }
   return nullptr;
 }
-AttrStore AttrStore::Create(size_t pre_defined_attr_count) {
+AttrStore AttrStore::Create(const size_t pre_defined_attr_count) {
   AttrStore as;
   as.pre_defined_attrs_.Resize(pre_defined_attr_count);
   return as;
 }
 const AnyValue *AttrStore::GetAnyValue(const std::string &name) const noexcept {
-  auto id = GetIdByName(name);
+  const auto id = GetIdByName(name);
   if (id != kInvalidAttrId) {
     return pre_defined_attrs_.GetAnyValue(GetSubAttrId(id));
   }
@@ -56,33 +58,33 @@ AnyValue *AttrStore::MutableAnyValue(const std::string &name) const noexcept {
   return const_cast<AnyValue *>(GetAnyValue(name));
 }
 AnyValue *AttrStore::GetOrCreateAnyValue(const std::string &name) {
-  auto id = GetIdByName(name);
+  const auto id = GetIdByName(name);
   if (id != kInvalidAttrId) {
     return pre_defined_attrs_.GetOrCreateAnyValue(GetSubAttrId(id));
   }
   return general_attrs_.GetOrCreateAnyValue(name);
 }
 AttrId AttrStore::GetIdByName(const std::string &name) const noexcept {
-  auto iter = names_to_id_.find(name);
+  const auto iter = names_to_id_.find(name);
   if (iter == names_to_id_.end()) {
     return kInvalidAttrId;
   }
   return iter->second;
 }
-void AttrStore::SetNameAndId(std::string name, AttrId id) {
+void AttrStore::SetNameAndId(std::string name, const AttrId id) {
   names_to_id_[std::move(name)] = id;
 }
-bool AttrStore::Exists(AttrId attr_id) const noexcept {
+bool AttrStore::Exists(const AttrId attr_id) const noexcept {
   return GetAnyValue(attr_id) != nullptr;
 }
 bool AttrStore::Exists(const std::string &name) const noexcept {
   return GetAnyValue(name) != nullptr;
 }
 bool AttrStore::Delete(const std::string &name) {
-  auto iter = names_to_id_.find(name);
+  const auto iter = names_to_id_.find(name);
   if (iter != names_to_id_.end()) {
-    auto sub_id = GetSubAttrId(iter->second);
-    names_to_id_.erase(iter);
+    const auto sub_id = GetSubAttrId(iter->second);
+    (void)names_to_id_.erase(iter);
     return pre_defined_attrs_.Delete(sub_id);
   }
   return general_attrs_.Delete(name);
@@ -90,7 +92,7 @@ bool AttrStore::Delete(const std::string &name) {
 std::set<std::string> AttrStore::GetAllAttrNames() const {
   std::set<std::string> names;
   for (const auto &iter : names_to_id_) {
-    names.insert(iter.first);
+    (void)names.insert(iter.first);
   }
   general_attrs_.GetAllNames(names);
   return names;
@@ -98,7 +100,7 @@ std::set<std::string> AttrStore::GetAllAttrNames() const {
 std::map<std::string, AnyValue> AttrStore::GetAllAttrs() const {
   std::map<std::string, AnyValue> attrs;
   for (const auto &iter : names_to_id_) {
-    auto av = pre_defined_attrs_.GetAnyValue(GetSubAttrId(iter.second));
+    const auto av = pre_defined_attrs_.GetAnyValue(GetSubAttrId(iter.second));
     if (av == nullptr) {
       // error
       continue;
@@ -117,42 +119,42 @@ void AttrStore::Swap(AttrStore &other) {
 }
 
 
-void AttrStore::PreDefinedAttrStore::Resize(size_t s) {
+void AttrStore::PreDefinedAttrStore::Resize(const size_t s) {
   attrs_.resize(s);
 }
-bool AttrStore::PreDefinedAttrStore::Exists(AttrSubId index) const noexcept {
+bool AttrStore::PreDefinedAttrStore::Exists(const AttrSubId index) const noexcept {
   if (index >= attrs_.size()) {
     return false;
   }
-  return !attrs_[index].IsEmpty();
+  return !attrs_[static_cast<size_t>(index)].IsEmpty();
 }
-bool AttrStore::PreDefinedAttrStore::Delete(AttrSubId index) {
+bool AttrStore::PreDefinedAttrStore::Delete(const AttrSubId index) {
   if (!Exists(index)) {
     return false;
   }
-  attrs_[index].Clear();
+  attrs_[static_cast<size_t>(index)].Clear();
   return true;
 }
-AnyValue *AttrStore::PreDefinedAttrStore::GetOrCreateAnyValue(AttrSubId index) const {
+AnyValue *AttrStore::PreDefinedAttrStore::GetOrCreateAnyValue(const AttrSubId index) const {
   return const_cast<AnyValue *>(GetAnyValue(index));
 }
-AnyValue *AttrStore::PreDefinedAttrStore::MutableAnyValue(AttrSubId index) const noexcept {
+AnyValue *AttrStore::PreDefinedAttrStore::MutableAnyValue(const AttrSubId index) const noexcept {
   return const_cast<AnyValue *>(GetAnyValue(index));
 }
-const AnyValue *AttrStore::PreDefinedAttrStore::GetAnyValue(AttrSubId index) const noexcept {
+const AnyValue *AttrStore::PreDefinedAttrStore::GetAnyValue(const AttrSubId index) const noexcept {
   if (index >= attrs_.size()) {
     return nullptr;
   }
-  return &attrs_[index];
+  return &attrs_[static_cast<size_t>(index)];
 }
 void AttrStore::PreDefinedAttrStore::Swap(AttrStore::PreDefinedAttrStore &other) {
   attrs_.swap(other.attrs_);
 }
 bool AttrStore::CustomDefinedAttrStore::Exists(const std::string &name) const noexcept {
-  return attrs_.count(name) > 0;
+  return attrs_.count(name) > 0UL;
 }
 bool AttrStore::CustomDefinedAttrStore::Delete(const std::string &name) {
-  return attrs_.erase(name) == 1;
+  return attrs_.erase(name) == 1UL;
 }
 AnyValue *AttrStore::CustomDefinedAttrStore::GetOrCreateAnyValue(const std::string &name) {
   return &attrs_[name];
@@ -161,7 +163,7 @@ AnyValue *AttrStore::CustomDefinedAttrStore::MutableAnyValue(const std::string &
   return const_cast<AnyValue *>(GetAnyValue(name));
 }
 const AnyValue *AttrStore::CustomDefinedAttrStore::GetAnyValue(const std::string &name) const noexcept {
-  auto iter = attrs_.find(name);
+  const auto iter = attrs_.find(name);
   if (iter != attrs_.end()) {
     return &iter->second;
   } else {
@@ -170,7 +172,7 @@ const AnyValue *AttrStore::CustomDefinedAttrStore::GetAnyValue(const std::string
 }
 void AttrStore::CustomDefinedAttrStore::GetAllNames(std::set<std::string> &names) const {
   for (const auto &iter : attrs_) {
-    names.insert(iter.first);
+    (void)names.insert(iter.first);
   }
 }
 void AttrStore::CustomDefinedAttrStore::GetAllAttrs(std::map<std::string, AnyValue> &names_to_attr) const {
@@ -182,7 +184,7 @@ void AttrStore::CustomDefinedAttrStore::Swap(AttrStore::CustomDefinedAttrStore &
   attrs_.swap(other.attrs_);
 }
 bool AttrStore::SetAnyValueByName(const std::string &name, const AnyValue &value) {
-  auto av = GetOrCreateAnyValue(name);
+  const auto av = GetOrCreateAnyValue(name);
   if (av == nullptr) {
     return false;
   }

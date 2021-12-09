@@ -191,8 +191,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   graphStatus SetData(const std::vector<uint8_t> &data);
   graphStatus SetData(const Buffer &data);
   graphStatus SetData(const TensorData &data);
-  graphStatus SetData(const uint8_t * const data, const size_t size);
-  graphStatus SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);  /*lint !e148*/
+  graphStatus SetData(const uint8_t *const data, const size_t size);
+  graphStatus SetData(uint8_t *const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);  /*lint !e148*/
 
   const uint8_t *MallocAlignedPtr(const size_t size);
 
@@ -234,7 +234,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   explicit GeTensor(const GeTensorDesc &tensor_desc);
   explicit GeTensor(const GeTensorDesc &tensor_desc, const std::vector<uint8_t> &data);
   explicit GeTensor(const GeTensorDesc &tensor_desc, const Buffer &data);
-  explicit GeTensor(const GeTensorDesc &tensor_desc, const uint8_t * const data, const size_t size);
+  explicit GeTensor(const GeTensorDesc &tensor_desc, const uint8_t *const data, const size_t size);
   explicit GeTensor(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&data);
   explicit GeTensor(const GeTensorDesc &tensor_desc, const size_t size);
   ~GeTensor();
@@ -251,9 +251,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   graphStatus SetData(std::vector<uint8_t> &&data);
   graphStatus SetData(const std::vector<uint8_t> &data);
   graphStatus SetData(const Buffer &data);
-  graphStatus SetData(const uint8_t * const data, const size_t size);
+  graphStatus SetData(const uint8_t *const data, const size_t size);
   graphStatus SetData(const TensorData &data);
-  graphStatus SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);
+  graphStatus SetData(uint8_t *const data, const size_t size, const AlignedPtr::Deleter &delete_fuc);
 
   void ClearData();
   GeTensor Clone() const;
