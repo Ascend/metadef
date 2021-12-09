@@ -139,7 +139,7 @@ class GraphImpl {
 
   graphStatus SetOutputs(const std::vector<std::pair<Operator, std::string>> &outputs) {
     GE_CHK_BOOL_RET_STATUS(compute_graph_ != nullptr, GRAPH_FAILED, "[Check][Param] set ComputeGraph faild.");
-    GE_CHK_BOOL_EXEC_INFO(outputs.size() != 0, return GRAPH_SUCCESS, "set outputs size is 0.");
+    GE_CHK_BOOL_EXEC_INFO(outputs.size() != 0UL, return GRAPH_SUCCESS, "set outputs size is 0.");
 
     // Construct specified output
     std::vector<std::pair<ge::NodePtr, int32_t>> output_nodes;
@@ -212,7 +212,7 @@ class GraphImpl {
 
   graphStatus AddOp(const ge::Operator &op) {
     const auto ret = op_list_.emplace(std::pair<std::string, ge::Operator>(op.GetName(), op));
-    GE_CHK_BOOL_RET_STATUS(ret.second != false, GRAPH_FAILED, "[Check][Param] the op have added before, op name:%s.",
+    GE_CHK_BOOL_RET_STATUS(ret.second, GRAPH_FAILED, "[Check][Param] the op have added before, op name:%s.",
                            op.GetName().c_str());
     return GRAPH_SUCCESS;
   }
@@ -267,8 +267,8 @@ class GraphImpl {
     return compute_graph_;
   }
 
-  graphStatus RemoveEdge(NodePtr &src_node_ptr, const int32_t src_port_index,
-                         NodePtr &dst_node_ptr, const int32_t dst_port_index) {
+  graphStatus RemoveEdge(const NodePtr &src_node_ptr, const int32_t src_port_index,
+                         const NodePtr &dst_node_ptr, const int32_t dst_port_index) {
     GE_CHECK_NOTNULL(src_node_ptr);
     GE_CHECK_NOTNULL(dst_node_ptr);
 
@@ -337,7 +337,7 @@ Graph::Graph(const std::string &name) {
   }
 }
 
-Graph::Graph(const char *name) {
+Graph::Graph(const char_t *name) {
   if (name != nullptr) {
     std::string graph_name = name;
     impl_ = ComGraphMakeShared<GraphImpl>(graph_name);
@@ -385,7 +385,7 @@ graphStatus Graph::FindOpByName(const std::string &name, Operator &op) const {
   return impl_->FindOpByName(name, op);
 }
 
-graphStatus Graph::FindOpByName(const char *name, Operator &op) const {
+graphStatus Graph::FindOpByName(const char_t *name, Operator &op) const {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] FindOpByName: name is nullptr.");
@@ -404,7 +404,7 @@ graphStatus Graph::FindOpByType(const std::string &type, std::vector<ge::Operato
   return impl_->FindOpByType(type, ops);
 }
 
-graphStatus Graph::FindOpByType(const char *type, std::vector<ge::Operator> &ops) const {
+graphStatus Graph::FindOpByType(const char_t *type, std::vector<ge::Operator> &ops) const {
   if (type == nullptr) {
     REPORT_INNER_ERROR("E19999", "param type is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] FindOpByType: type is nullptr.");
@@ -456,7 +456,7 @@ Graph &Graph::SetOutputs(const std::vector<std::pair<ge::Operator, AscendString>
                    return *this, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.")
   std::vector<std::pair<ge::Operator, std::string>> graph_outputs;
   for (auto &item : outputs) {
-    const char * const name = item.second.GetString();
+    const char_t * const name = item.second.GetString();
     if (name != nullptr) {
       graph_outputs.emplace_back((std::pair<ge::Operator, std::string>(item.first, name)));
     } else {
@@ -757,7 +757,7 @@ graphStatus Graph::AddControlEdge(GNode &src_node, GNode &dst_node) {
 }
 
 GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const AscendString &name) {
-  const char* ascend_name = name.GetString();
+  const char_t *ascend_name = name.GetString();
   if (ascend_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "ascend string error");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] ascend string error.");
@@ -770,8 +770,8 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
     return nullptr;
   }
 
-  std::string graph_name = ascend_name;
-  ComputeGraphPtr compute_graph = GraphUtils::CreateGraphFromOperator(graph_name, inputs);
+  const std::string graph_name = ascend_name;
+  const ComputeGraphPtr compute_graph = GraphUtils::CreateGraphFromOperator(graph_name, inputs);
   if (compute_graph == nullptr) {
     REPORT_CALL_ERROR("E19999", "create compute graph from op failed, name:%s", graph_name.c_str());
     GELOGE(GRAPH_FAILED, "[Create][ComputeGraph] failed, name:%s.", graph_name.c_str());
@@ -779,7 +779,7 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
   }
 
   compute_graph->SetInputSize(static_cast<uint32_t>(inputs.size()));
-  GraphPtr graph_ptr = GraphUtils::CreateGraphPtrFromComputeGraph(compute_graph);
+  const GraphPtr graph_ptr = GraphUtils::CreateGraphPtrFromComputeGraph(compute_graph);
   if (graph_ptr == nullptr) {
     REPORT_CALL_ERROR("E19999", "create graph from compute graph:%s failed.", compute_graph->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Create][Graph] from compute graph:%s failed.", compute_graph->GetName().c_str());
@@ -800,7 +800,7 @@ graphStatus Graph::SaveToFile(const std::string &file_name) const {
   return model.SaveToFile(file_name);
 }
 
-graphStatus Graph::SaveToFile(const char *file_name) const {
+graphStatus Graph::SaveToFile(const char_t *file_name) const {
   if (file_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "file name is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] file name is nullptr.");
@@ -823,7 +823,7 @@ graphStatus Graph::LoadFromFile(const std::string &file_name) {
   return GRAPH_SUCCESS;
 }
 
-graphStatus Graph::LoadFromFile(const char *file_name) {
+graphStatus Graph::LoadFromFile(const char_t *file_name) {
   if (file_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param file name is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] file name is nullptr.");

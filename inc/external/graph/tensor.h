@@ -142,7 +142,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Tensor {
   Tensor Clone() const;
 
  private:
-  void CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size);
   std::shared_ptr<TensorImpl> impl;
   friend class TensorAdapter;
 };

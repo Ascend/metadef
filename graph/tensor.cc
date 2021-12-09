@@ -82,10 +82,10 @@ class TensorDescValue {
     return *this;
   }
 
+ private:
   std::unique_ptr<uint8_t[]> const_data_buffer_ = nullptr;
   size_t const_data_len_ = 0U;
 
- private:
   static bool CloneValue(std::unique_ptr<uint8_t[]> &dst, const std::unique_ptr<uint8_t[]> &src,
                          const std::size_t len) {
     dst = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[len]);
@@ -110,6 +110,7 @@ class TensorDescValue {
     }
     return true;
   }
+  friend class TensorDesc;
 };
 
 class TensorDescImpl {
@@ -119,6 +120,7 @@ class TensorDescImpl {
   TensorDescImpl(const Shape &shape, const Format format, const DataType dt)
     : shape_(shape), format_(format), data_type_(dt) {}
 
+ private:
   Shape shape_;
   std::vector<std::pair<int64_t, int64_t>> range_;
   Format format_ = FORMAT_ND;
@@ -132,6 +134,9 @@ class TensorDescImpl {
   std::string name_;
   Placement placement_ = kPlacementHost;
   TensorDescValue tensor_desc_value_;
+
+  friend class TensorDesc;
+  friend class TensorAdapter;
 };
 
 class TensorImpl {
@@ -217,7 +222,10 @@ class TensorImpl {
     return GRAPH_SUCCESS;
   }
 
+ private:
   GeTensor ge_tensor;
+  friend class Tensor;
+  friend class TensorAdapter;
 };
 
 class ShapeImpl {
@@ -235,7 +243,9 @@ class ShapeImpl {
     dims_ = is_unknown_dim_num ? std::vector<int64_t>({UNKNOWN_DIM_NUM}) : dims;
   }
 
+ private:
   std::vector<int64_t> dims_;
+  friend class Shape;
 };
 
 Shape::Shape() { impl_ = ComGraphMakeShared<ShapeImpl>(); }
@@ -542,7 +552,7 @@ Tensor::Tensor(const TensorDesc &tensor_desc) {
   impl = ComGraphMakeShared<TensorImpl>(tensor_desc);  // lint !e665
 }
 
-void Tensor::CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size) {
+static void CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size) {
   uint32_t type_length;
   const bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {

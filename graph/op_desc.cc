@@ -24,6 +24,7 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/transformer_utils.h"
 #include "graph/debug/ge_attr_define.h"
+#include "register/op_tiling/op_tiling_constants.h"
 
 namespace {
 using std::make_pair;
@@ -62,8 +63,6 @@ const std::string ATTR_NAME_WORKSPACE = "workspace";
 const std::string ATTR_NAME_WORKSPACE_BYTES = "workspace_bytes";
 
 const std::string ATTR_NAME_IS_INPUT_CONST = "is_input_const";
-
-const std::string ATTR_NAME_OP_INFER_DEPENDS = "_op_infer_depends";
 
 const std::string ATTR_NAME_OP_KERNEL_LIB_NAME = "_ge_attr_op_kernel_lib_name";
 
@@ -439,7 +438,7 @@ const {
     }
   }
   // 3.Verify all outputs desc equal
-  for (uint32_t i = 0u; i < outputs_desc_size; i++) {
+  for (uint32_t i = 0U; i < outputs_desc_size; i++) {
     const auto &out_ge_tensor_desc = this->GetOutputDesc(i);
     const auto &r_out_ge_tensor_desc = r_op_desc.GetOutputDesc(i);
     if (!(out_ge_tensor_desc == r_out_ge_tensor_desc)) {
@@ -599,7 +598,7 @@ size_t OpDescImpl::GetInputsSize() const {
 size_t OpDescImpl::GetAllInputsSize() const { return inputs_desc_.size(); }
 
 graphStatus OpDescImpl::AddOutputDesc(const ge::GeTensorDesc &output_desc) {
-  int32_t index = static_cast<int>(outputs_desc_.size());
+  const int32_t index = static_cast<int32_t>(outputs_desc_.size());
   return AddOutputDesc("__output" + std::to_string(index), output_desc);
 }
 
@@ -608,7 +607,7 @@ graphStatus OpDescImpl::AddOutputDesc(const std::string &name, const ge::GeTenso
                    REPORT_INNER_ERROR("E19999", "Add output tensor_Desc is existed. name[%s]", name.c_str());
                    return GRAPH_FAILED,
                    "[Check][Param] Add output tensor_Desc is existed. name[%s]", name.c_str());
-  int32_t index = static_cast<int>(outputs_desc_.size());
+  const int32_t index = static_cast<int32_t>(outputs_desc_.size());
 
   const std::shared_ptr<GeTensorDesc> tensor = ComGraphMakeShared<GeTensorDesc>(output_desc);
   if (tensor == nullptr) {
@@ -660,7 +659,7 @@ graphStatus OpDescImpl::UpdateOutputDesc(const std::string &name, const ge::GeTe
 }
 
 const GeTensorDesc &OpDescImpl::GetOutputDesc(const uint32_t index) const {
-  GE_CHK_BOOL_RET_STATUS_NOLOG(index < outputs_desc_.size(), InvalidGeTensorDesc());
+  GE_CHK_BOOL_RET_STATUS_NOLOG(static_cast<size_t>(index) < outputs_desc_.size(), InvalidGeTensorDesc());
   return *(outputs_desc_[index].get());
 }
 
@@ -884,8 +883,6 @@ std::function<graphStatus(Operator &)> OpDescImpl::GetVerifyFunc() const { retur
 
 void OpDescImpl::AddInferFunc(const std::function<graphStatus(Operator &)> &func) { infer_func_ = func; }
 
-std::function<graphStatus(Operator &)> OpDescImpl::GetInferFormatFunc() const { return infer_format_func_; }
-
 void OpDescImpl::AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func) { infer_format_func_ = func; }
 
 void OpDescImpl::AddVerifierFunc(const std::function<graphStatus(Operator &)> &func) { verifier_func_ = func; }
@@ -975,22 +972,6 @@ std::string OpDescImpl::GetInputNameByIndex(const uint32_t index) const {
 int32_t OpDescImpl::GetInputIndexByName(const std::string &name) const {
   const auto it_find = input_name_idx_.find(name);
   GE_CHK_BOOL_RET_STATUS_NOLOG(it_find != input_name_idx_.end(), -1);
-  return static_cast<int>(it_find->second);
-}
-
-int32_t OpDescImpl::GetValidInputIndexByName(const std::string &name) const {
-  std::map<std::string, uint32_t> valid_input_name_idx{};
-  uint32_t j = 0U;
-  for (size_t i = 0U; i < GetAllInputsSize(); i++) {
-    if (MutableInputDesc(static_cast<uint32_t>(i)) != nullptr) {
-      const auto valid_name = GetInputNameByIndex(static_cast<uint32_t>(i));
-      GE_CHK_BOOL_RET_STATUS_NOLOG(!valid_name.empty(), -1);
-      (void)valid_input_name_idx.insert({valid_name, j});
-      j++;
-    }
-  }
-  const auto it_find = valid_input_name_idx.find(name);
-  GE_CHK_BOOL_RET_STATUS_NOLOG(it_find != valid_input_name_idx.end(), -1);
   return static_cast<int32_t>(it_find->second);
 }
 
@@ -1108,10 +1089,6 @@ void OpDescImpl::SetDstIndex(const vector<int64_t> &dst_index) {
   meta_data_.dst_indexes_ = dst_index;
 }
 
-vector<int64_t> OpDescImpl::GetDstIndex() const {
-  return meta_data_.dst_indexes_;
-}
-
 void OpDescImpl::SetWorkspace(const vector<int64_t> &workspace) {
   meta_data_.workspaces.assign(workspace.cbegin(), workspace.cend());
 }
@@ -1142,24 +1119,6 @@ void OpDescImpl::SetIsInputConst(const vector<bool> &is_input_const) {
 
 vector<bool> OpDescImpl::GetIsInputConst() const {
   return meta_data_.is_input_consts_;
-}
-
-graphStatus OpDescImpl::RestoreInputNameIdx(const std::string &name,
-                                            const int32_t &index) {
-  if (input_name_idx_.find(name) != input_name_idx_.end()) {
-    GELOGI("Restore input name index is existed. name[%s]", name.c_str());
-  }
-  (void)input_name_idx_.insert(make_pair(name, index));
-  return GRAPH_SUCCESS;
-}
-
-graphStatus OpDescImpl::RestoreOutputNameIdx(const std::string &name,
-                                             const int32_t &index) {
-  if (output_name_idx_.find(name) != output_name_idx_.end()) {
-    GELOGI("Restore output name index is existed. name[%s]", name.c_str());
-  }
-  (void)output_name_idx_.insert(make_pair(name, index));
-  return GRAPH_SUCCESS;
 }
 
 graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
@@ -1246,7 +1205,7 @@ void OpDescImpl::RemoveSubgraphInstanceName(const std::string &name) {
 
 graphStatus OpDescImpl::AddSubgraphName(const std::string &name) {
   GELOGI("Add subgraph name is %s", name.c_str());
-  auto iter = subgraph_names_to_index_.find(name);
+  const auto iter = subgraph_names_to_index_.find(name);
   if (iter != subgraph_names_to_index_.end()) {
     GELOGW("[Add][Subgraph] Subgraph name %s exists, index %u", name.c_str(), iter->second);
     return GRAPH_FAILED;
@@ -1416,15 +1375,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::operator==(const OpD
           OpDescGenTensorDescsAreEqual(r_op_desc));
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc& OpDesc::operator=(OpDesc op_desc) {
-  if (&op_desc == this) {
-    return *this;
-  }
-  AttrHolder::Swap(op_desc);
-  *impl_ = *(op_desc.impl_);
-  return *this;
-}
-
 graphStatus OpDesc::UpdateInputDesc(const std::string &name, const ge::GeTensorDesc &tensor_desc) {
   return impl_->UpdateInputDesc(name, tensor_desc);
 }
@@ -1448,6 +1398,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDescPtr OpDesc::MutableIn
 GeTensorDescPtr OpDesc::MutableInputDesc(const std::string &name) const {
   return impl_->MutableInputDesc(name);
 }
+
+bool OpDesc::IsOptionalInput(const uint32_t index) const { return IsOptionalInput(GetInputNameByIndex(index)); }
 
 GE_FUNC_HOST_VISIBILITY OpDesc::Vistor<string> OpDesc::GetAllInputNames() const {
   return impl_->GetAllInputNames(shared_from_this());
@@ -1616,8 +1568,6 @@ bool OpDesc::IsOptionalInput(const std::string &name) const {
   return impl_->IsOptionalInput(name);
 }
 
-bool OpDesc::IsOptionalInput(const uint32_t index) const { return IsOptionalInput(GetInputNameByIndex(index)); }
-
 std::map<std::string, uint32_t> OpDesc::GetAllInputName() const {
   return impl_->GetAllInputName();
 }
@@ -1652,10 +1602,6 @@ std::function<graphStatus(Operator &)> OpDesc::GetVerifyFunc() const {
 
 void OpDesc::AddInferFunc(const std::function<graphStatus(Operator &)> &func) {
   impl_->AddInferFunc(func);
-}
-
-std::function<graphStatus(Operator &)> OpDesc::GetInferFormatFunc() const {
-  return impl_->GetInferFormatFunc();
 }
 
 void OpDesc::AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func) {
@@ -1712,10 +1658,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetInputNameB
 
 int32_t OpDesc::GetInputIndexByName(const std::string &name) const {
   return impl_->GetInputIndexByName(name);
-}
-
-int32_t OpDesc::GetValidInputIndexByName(const std::string &name) const {
-  return impl_->GetValidInputIndexByName(name);
 }
 
 std::string OpDesc::GetValidInputNameByIndex(const uint32_t index) const {
@@ -1804,7 +1746,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::string> OpDesc::
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 void OpDesc::SetOpInferDepends(const std::vector<std::string> &depend_names) {
-  const auto ret = AttrUtils::SetListStr(this, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
+  const auto ret = AttrUtils::SetListStr(this, optiling::ATTR_NAME_OP_INFER_DEPENDS, depend_names);
   if (!ret) {
     GELOGE(GRAPH_FAILED, "[Set][Attr] op_infer_depends fail.");
   }
@@ -1812,16 +1754,12 @@ void OpDesc::SetOpInferDepends(const std::vector<std::string> &depend_names) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<std::string> OpDesc::GetOpInferDepends() const {
   std::vector<std::string> depend_names;
-  (void)AttrUtils::GetListStr(this, ATTR_NAME_OP_INFER_DEPENDS, depend_names);
+  (void)AttrUtils::GetListStr(this, optiling::ATTR_NAME_OP_INFER_DEPENDS, depend_names);
   return depend_names;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetDstIndex(const std::vector<int64_t> &dst_index) {
   impl_->SetDstIndex(dst_index);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<int64_t> OpDesc::GetDstIndex() const {
-  return impl_->GetDstIndex();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetWorkspace(const std::vector<int64_t> &workspace) {
@@ -1852,16 +1790,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIsInputConst(cons
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<bool> OpDesc::GetIsInputConst() const {
   return impl_->GetIsInputConst();
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreInputNameIdx(const std::string &name,
-                                                                                       const int32_t &index) {
-  return impl_->RestoreInputNameIdx(name, index);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::RestoreOutputNameIdx(const std::string &name,
-                                                                                        const int32_t &index) {
-  return impl_->RestoreOutputNameIdx(name, index);
 }
 
 graphStatus OpDesc::CallInferFunc(Operator &op) {
