@@ -777,6 +777,8 @@ TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode){
       nt_node = node;
     }
   }
+  EXPECT_NE(sq_node, nullptr);
+  EXPECT_NE(sq_node, nullptr);
   EXPECT_NE(sq_node->GetType(), DATA);
   EXPECT_EQ(sq_node->GetType(), SQUEEZE);
   EXPECT_NE(sq_node->GetType(), PARTITIONEDCALL);
@@ -790,8 +792,6 @@ TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode){
   EXPECT_NE(nt_node->GetType(), PARTITIONEDCALL);
   EXPECT_EQ(nt_node->GetOpDesc()->GetSubgraphInstanceNames().empty(), true);
   EXPECT_EQ(NodeUtils::GetInNodeCrossPartionedCallNode(nt_node, 0 , expect_peer_node), GRAPH_SUCCESS);
-  nt_node->impl_->op_->impl_->subgraph_instance_names_.clear();
-  EXPECT_EQ(NodeUtils::GetInNodeCrossPartionedCallNode(nt_node, 0 , expect_peer_node), GRAPH_SUCCESS);
 }
 
 
@@ -804,6 +804,7 @@ TEST_F(UtestNodeUtils, GetInNodeCrossSubgraph){
       dt_node = node;
     }
   }
+  EXPECT_NE(dt_node, nullptr);
   EXPECT_NE(NodeUtils::GetInNodeCrossSubgraph(dt_node), nullptr);
   auto owner_graph = dt_node->GetOwnerComputeGraph();
   owner_graph->impl_->parent_node_ = MakeNullptr<Node>();
