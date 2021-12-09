@@ -23,8 +23,6 @@
 #include "graph/buffer.h"
 #include "runtime/rt_model.h"
 
-using std::string;
-
 namespace ge {
 /*lint -e148*/
 struct RunContext {
