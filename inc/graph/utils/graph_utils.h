@@ -31,13 +31,13 @@
 #include "graph/model.h"
 #include "graph/node.h"
 #include "graph/utils/anchor_utils.h"
-
+/*lint -e148*/
 #define GE_DUMP(compute_graph, name)                                                                               \
   do {                                                                                                             \
     GraphUtils::DumpGEGraph(compute_graph, name);                                                                  \
-    GraphUtils::DumpGEGraphToOnnx(*compute_graph, name);                                                           \
+    GraphUtils::DumpGEGraphToOnnx(*(compute_graph), name);                                                         \
     uint64_t i = 0U;                                                                                               \
-    for (const auto &sub_graph_func : compute_graph->GetAllSubgraphs()) {                                          \
+    for (const auto &sub_graph_func : (compute_graph)->GetAllSubgraphs()) {                                        \
       const auto sub_graph_func_name = std::string(name) + std::string("_sub_graph_") + std::to_string(i++);       \
       GraphUtils::DumpGEGraph(sub_graph_func, sub_graph_func_name);                                                \
       GraphUtils::DumpGEGraphToOnnx(*sub_graph_func, sub_graph_func_name);                                         \
@@ -225,8 +225,8 @@ class GraphUtils {
   /// @param io_map
   /// @return
   ///
-  static graphStatus IsolateNode(const NodePtr &node, const std::initializer_list<int> &io_map);
-  static graphStatus IsolateNode(const NodePtr &node, const std::vector<int> &io_map);
+  static graphStatus IsolateNode(const NodePtr &node, const std::initializer_list<int32_t> &io_map);
+  static graphStatus IsolateNode(const NodePtr &node, const std::vector<int32_t> &io_map);
 
   ///
   /// Isolate `node` which must be one input one output, equivalent to
@@ -248,10 +248,12 @@ class GraphUtils {
   /// @return
   ///
   static graphStatus ReplaceNodeAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                        std::initializer_list<int> inputs_map, std::initializer_list<int> outputs_map);
+                                        const std::initializer_list<int32_t> inputs_map,
+                                        const std::initializer_list<int32_t> outputs_map);
 
   static graphStatus ReplaceNodeAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                        const std::vector<int> &inputs_map, const std::vector<int> &outputs_map);
+                                        const std::vector<int32_t> &inputs_map,
+                                        const std::vector<int32_t> &outputs_map);
 
   ///
   /// Replace `old_node` data anchors with `new_node`'s according to `inputs_map` and `outputs_map`.
@@ -267,11 +269,12 @@ class GraphUtils {
   /// @return
   ///
   static graphStatus ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                            std::initializer_list<int> inputs_map,
-                                            std::initializer_list<int> outputs_map);
+                                            std::initializer_list<int32_t> inputs_map,
+                                            std::initializer_list<int32_t> outputs_map);
 
   static graphStatus ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                            const std::vector<int> &inputs_map, const std::vector<int> &outputs_map);
+                                            const std::vector<int32_t> &inputs_map,
+                                            const std::vector<int32_t> &outputs_map);
 
   ///
   /// Copy all in-control edges from `src_node` to `dst_node`
@@ -831,4 +834,5 @@ class PartialGraphBuilder : public ComputeGraphBuilder {
   std::vector<NodePtr> exist_nodes_;
 };
 }  // namespace ge
+/*lint +e148*/
 #endif  // INC_GRAPH_UTILS_GRAPH_UTILS_H_

@@ -25,8 +25,8 @@
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
 
-#define protected public
-#define private public
+#undef private
+#undef protected
 
 namespace ge {
 class UtestNodeUtils : public testing::Test {
@@ -35,7 +35,14 @@ class UtestNodeUtils : public testing::Test {
 
   void TearDown() {}
 };
+
 namespace {
+
+template<class T>
+std::shared_ptr<T> make_nullptr(){
+  return nullptr;
+}
+
 /*                                  -------------------------
 *                                  |  partitioncall_0_const1* |
 *     partitioncall_0--------------|             |           |
@@ -447,6 +454,280 @@ TEST_F(UtestNodeUtils, GetNodeUnknownShapeStatus) {
   is_unknown = false;
   (void)NodeUtils::GetNodeUnknownShapeStatus(*add_node, is_unknown);
   EXPECT_EQ(is_unknown, true);
+}
+
+TEST_F(UtestNodeUtils, SendRecv) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  std::vector<uint32_t> vec_send;
+  std::vector<uint32_t> vec_recv;
+  EXPECT_EQ(NodeUtils::GetSendEventIdList(data, vec_send), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::GetRecvEventIdList(data, vec_recv), GRAPH_FAILED);
+  const uint32_t sid = 10;
+  const uint32_t rid = 20;
+  EXPECT_EQ(NodeUtils::AddSendEventId(data, sid), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::AddRecvEventId(data, rid), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::GetSendEventIdList(data, vec_send), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::GetRecvEventIdList(data, vec_recv), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::ClearSendInfo(), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::ClearRecvInfo(), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, GetSingleOutputNodeOfNthLayer) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto dest = builder.AddNode("Dest", "Dest", 11, 22);
+  EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(data, 0, dest), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(data, 1, dest), GRAPH_FAILED);
+}
+
+TEST_F(UtestNodeUtils, GetDataOutAnchorAndControlInAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data, 111);
+  InControlAnchorPtr inc_anch = std::make_shared<InControlAnchor>(data, 33);
+  EXPECT_EQ(NodeUtils::GetDataOutAnchorAndControlInAnchor(data, out_anch, inc_anch), GRAPH_FAILED);
+}
+
+TEST_F(UtestNodeUtils, ClearInDataAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data, 111);
+  EXPECT_EQ(NodeUtils::ClearInDataAnchor(data, in_anch), GRAPH_FAILED);
+}
+
+TEST_F(UtestNodeUtils, SetStatus) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  EXPECT_EQ(NodeUtils::SetAllAnchorStatus(data), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::SetAllAnchorStatus(*data), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::IsAnchorStatusSet(data), true);
+  EXPECT_EQ(NodeUtils::IsAnchorStatusSet(nullptr), false);
+  EXPECT_EQ(NodeUtils::IsAnchorStatusSet(*data), true);
+  data->impl_ = nullptr;
+  EXPECT_EQ(NodeUtils::SetAllAnchorStatus(*data), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::IsAnchorStatusSet(*data), false);
+}
+
+TEST_F(UtestNodeUtils, MoveOutputEdges) {
+  EXPECT_EQ(NodeUtils::MoveOutputEdges(nullptr, nullptr), GRAPH_FAILED);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto dest = builder.AddNode("Dest", "Dest", 11, 22);
+  EXPECT_EQ(NodeUtils::MoveOutputEdges(data, dest), GRAPH_FAILED);
+}
+
+TEST_F(UtestNodeUtils, UpdateIsInputConst) {
+  NodeUtils::UpdateIsInputConst(nullptr);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  NodeUtils::UpdateIsInputConst(data);
+  NodeUtils::UpdateIsInputConst(*data);
+  data->impl_->op_ = nullptr;
+  NodeUtils::UpdateIsInputConst(data);
+}
+
+TEST_F(UtestNodeUtils, UnlinkAll) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  NodeUtils::UnlinkAll(*data);
+}
+
+TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(nullptr), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_SUCCESS);
+  data->impl_->op_ = nullptr;
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_FAILED);
+}
+
+TEST_F(UtestNodeUtils, AppendRemoveAnchor) {
+  EXPECT_EQ(NodeUtils::AppendInputAnchor(nullptr, 0), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::RemoveInputAnchor(nullptr, 0), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::AppendOutputAnchor(nullptr, 0), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::RemoveOutputAnchor(nullptr, 0), GRAPH_FAILED);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  EXPECT_EQ(NodeUtils::AppendInputAnchor(data, 11), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::RemoveInputAnchor(data, 11), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::AppendOutputAnchor(data, 22), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::RemoveOutputAnchor(data, 22), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, IsInNodesEmpty) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*data), true);
+  data->impl_ = nullptr;
+  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*data), false);
+}
+
+TEST_F(UtestNodeUtils, GetDesc) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+
+  EXPECT_NE(NodeUtils::GetOutputDesc(*data, 0).GetName(), "name1");
+  EXPECT_NE(NodeUtils::GetInputDesc(*data, 0).GetName(), "name1");
+  data->impl_->op_ = nullptr;
+  EXPECT_EQ(NodeUtils::GetOutputDesc(*data, 0).GetName(), "");
+  EXPECT_EQ(NodeUtils::GetInputDesc(*data, 0).GetName(), "");
+}
+
+TEST_F(UtestNodeUtils, GetAllSubgraphs) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  EXPECT_EQ(NodeUtils::GetAllSubgraphs(*data).size(), 0);
+  data->impl_->op_ = nullptr;
+  EXPECT_EQ(NodeUtils::GetAllSubgraphs(*data).size(), 0);
+}
+
+TEST_F(UtestNodeUtils, UpdateShape) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  GeShape oshape = GeShape();
+  GeShape ishape = GeShape();
+  EXPECT_EQ(NodeUtils::UpdateOutputShape(*data, 0, oshape), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::UpdateInputShape(*data, 0, ishape), GRAPH_PARAM_INVALID);
+  data->impl_->op_ = nullptr;
+  EXPECT_EQ(NodeUtils::UpdateOutputShape(*data, 0, oshape), GRAPH_PARAM_INVALID);
+  EXPECT_EQ(NodeUtils::UpdateInputShape(*data, 0, ishape), GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestNodeUtils, SetSubgraph) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto gragh = builder.GetGraph();
+  EXPECT_EQ(NodeUtils::SetSubgraph(*data, 0, nullptr), GRAPH_PARAM_INVALID);
+  EXPECT_EQ(NodeUtils::SetSubgraph(*data, 0, gragh), GRAPH_PARAM_INVALID);
+  data->impl_->op_->AddSubgraphName("g1");
+  data->impl_->op_->AddSubgraphName("g2");
+  EXPECT_EQ(NodeUtils::SetSubgraph(*data, 0, gragh), GRAPH_SUCCESS);
+  data->impl_->owner_graph_ = make_nullptr<ComputeGraph>();
+  EXPECT_EQ(NodeUtils::SetSubgraph(*data, 0, gragh), GRAPH_PARAM_INVALID);
+  data->impl_->op_ = nullptr;
+  EXPECT_EQ(NodeUtils::SetSubgraph(*data, 0, gragh), GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestNodeUtils, IsSubgraphInput) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::IsSubgraphInput(node), false);
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 0, 1);
+  const auto &partitioncall_1 = root_builder.AddNode("partitioncall_1", PARTITIONEDCALL, 1, 1);
+  root_builder.AddDataEdge(partitioncall_0, 0, partitioncall_1, 0);
+  const auto &root_graph = root_builder.GetGraph();
+  auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+  const auto &partitioncall_0_const1 = p1_sub_builder.AddNode("partitioncall_0_const1", CONSTANT, 0, 1);
+  const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 1, 1);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+  p1_sub_builder.AddDataEdge(partitioncall_0_const1, 0, partitioncall_0_netoutput, 0);
+  const auto &sub_graph = p1_sub_builder.GetGraph();
+  sub_graph->SetParentNode(partitioncall_0);
+  sub_graph->SetParentGraph(root_graph);
+  partitioncall_0->GetOpDesc()->AddSubgraphName("f");
+  partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+  EXPECT_EQ(NodeUtils::IsSubgraphInput(partitioncall_0_const1), false);
+}
+
+TEST_F(UtestNodeUtils, IsDynamicShape) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::IsDynamicShape(*node), false);
+}
+
+TEST_F(UtestNodeUtils, IsWhileVaryingInput) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 0, 1);
+  const auto &partitioncall_1 = root_builder.AddNode("partitioncall_1", PARTITIONEDCALL, 1, 1);
+  root_builder.AddDataEdge(partitioncall_0, 0, partitioncall_1, 0);
+  const auto &root_graph = root_builder.GetGraph();
+  auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+  const auto &partitioncall_0_const1 = p1_sub_builder.AddNode("partitioncall_0_const1", CONSTANT, 0, 1);
+  const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 1, 1);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+  p1_sub_builder.AddDataEdge(partitioncall_0_const1, 0, partitioncall_0_netoutput, 0);
+  const auto &sub_graph = p1_sub_builder.GetGraph();
+  sub_graph->SetParentNode(partitioncall_0);
+  sub_graph->SetParentGraph(root_graph);
+  partitioncall_0->GetOpDesc()->AddSubgraphName("f");
+  partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+  auto sub2_builder = ut::GraphBuilder("partitioncall_0_sub2");
+  const auto &partitioncall_11 = root_builder.AddNode("partitioncall_11", PARTITIONEDCALL, 0, 1);
+  partitioncall_11->SetOwnerComputeGraph(sub_graph);
+  EXPECT_EQ(NodeUtils::IsWhileVaryingInput(partitioncall_11), false);
+}
+
+TEST_F(UtestNodeUtils, RemoveSubgraphsOnNode) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::RemoveSubgraphsOnNode(node), GRAPH_SUCCESS);
+  node->impl_->op_->SetSubgraphInstanceName(0, "name");
+  node->impl_->op_->SetSubgraphInstanceName(1, "name1");
+  EXPECT_EQ(NodeUtils::RemoveSubgraphsOnNode(node), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndex) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::GetSubgraphDataNodesByIndex(*node, 0).size(), 0);
+}
+
+TEST_F(UtestNodeUtils, GetOutDataNodesWithAnchorByIndex) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::GetOutDataNodesWithAnchorByIndex(*node, 0).size(), 0);
+}
+
+TEST_F(UtestNodeUtils, GetInConstNodeTypeCrossSubgraph) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::GetInConstNodeTypeCrossSubgraph(node), "Node");
+}
+
+TEST_F(UtestNodeUtils, CreatNodeWithoutGraph) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  OpDescPtr od = std::make_shared<OpDesc>("name", "type");
+  EXPECT_NE(NodeUtils::CreatNodeWithoutGraph(od), nullptr);
+  EXPECT_EQ(NodeUtils::CreatNodeWithoutGraph(nullptr), nullptr);
+}
+
+TEST_F(UtestNodeUtils, SetNodeParallelGroup) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::SetNodeParallelGroup(*node, nullptr), GRAPH_FAILED);
+  EXPECT_NE(NodeUtils::SetNodeParallelGroup(*node, "node_group"), GRAPH_FAILED);
+}
+
+TEST_F(UtestNodeUtils, GetSubgraph) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::GetSubgraph(*node, 0), nullptr);
+  node->impl_->op_ = nullptr;
+  EXPECT_EQ(NodeUtils::GetSubgraph(*node, 0), nullptr);
+}
+
+TEST_F(UtestNodeUtils, AddGetEventId) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  uint32_t event_id = 100;
+
+  auto ret = NodeUtils::AddSendEventId(data, event_id);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ret = NodeUtils::AddRecvEventId(data, event_id);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+
+  std::vector<uint32_t> vec_send;
+  ret = NodeUtils::GetSendEventIdList(data, vec_send);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ret = NodeUtils::GetRecvEventIdList(data, vec_send);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, ClearSendRcvInfo) {
+  ASSERT_EQ(NodeUtils::ClearSendInfo(), GRAPH_SUCCESS);
+  ASSERT_EQ(NodeUtils::ClearRecvInfo(), GRAPH_SUCCESS);
 }
 
 }  // namespace ge

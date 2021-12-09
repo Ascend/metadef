@@ -55,7 +55,7 @@ struct OpInfo {
   std::string engine;  // which engin
   /*lint -e148*/
   std::string opKernelLib;  // which opsKernelStore
-  int computeCost;     // compute cost
+  int32_t computeCost;     // compute cost
   bool flagPartial;    // whether to support is related to shape
   bool flagAsync;      // Whether to support asynchronous
   bool isAtomic;       // whether to support atomic addr clean

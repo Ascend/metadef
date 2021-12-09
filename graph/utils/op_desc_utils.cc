@@ -16,6 +16,7 @@
 
 #include "graph/utils/op_desc_utils.h"
 #include <algorithm>
+#include <memory>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_util.h"
@@ -25,6 +26,7 @@
 #include "graph/compute_graph.h"
 #include "graph/ge_attr_value.h"
 #include "graph/op_desc_impl.h"
+#include "graph/operator.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/constant_utils.h"
@@ -457,7 +459,7 @@ bool OpDescUtils::IsNonConstInput(const ge::Node &node, const size_t index) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::IsNonConstInput(const ge::ConstNodePtr &node,
-                                                                                 size_t index) {
+                                                                                 const size_t index) {
   CHECK_FALSE_EXEC(node != nullptr, return false);
   return IsNonConstInput(*node, index);
 }

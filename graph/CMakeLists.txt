@@ -135,6 +135,7 @@ target_include_directories(graph PRIVATE
     ${METADEF_DIR}/third_party/transformer/inc
 )
 
+
 target_link_options(graph PRIVATE
     -Wl,-Bsymbolic
 )
@@ -175,6 +176,13 @@ target_compile_definitions(graph_static PRIVATE
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
     LOG_CPP
+)
+
+target_include_directories(graph_static PUBLIC
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/graph
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/external/graph
 )
 
 target_include_directories(graph_static PRIVATE
@@ -222,7 +230,6 @@ target_link_libraries(graph_static PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-    ascend_protobuf_static
     c_sec
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
     -ldl

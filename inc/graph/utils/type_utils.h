@@ -30,24 +30,24 @@
 namespace ge {
 class TypeUtils {
  public:
-  static bool IsDataTypeValid(DataType dt);
-  static bool IsFormatValid(Format format);
+  static bool IsDataTypeValid(const DataType dt);
+  static bool IsFormatValid(const Format format);
   static bool IsDataTypeValid(std::string dt); // for user json input
   static bool IsFormatValid(std::string format); // for user json input
-  static bool IsInternalFormat(Format format);
+  static bool IsInternalFormat(const Format format);
 
-  static std::string ImplyTypeToSerialString(domi::ImplyType imply_type);
-  static std::string DataTypeToSerialString(DataType data_type);
+  static std::string ImplyTypeToSerialString(const domi::ImplyType imply_type);
+  static std::string DataTypeToSerialString(const DataType data_type);
   static DataType SerialStringToDataType(const std::string &str);
-  static std::string FormatToSerialString(Format format);
+  static std::string FormatToSerialString(const Format format);
   static Format SerialStringToFormat(const std::string &str);
   static Format DataFormatToFormat(const std::string &str);
   static graphStatus SplitFormatFromStr(const std::string &str, std::string &primary_format_str, int32_t &sub_format);
-  static Format DomiFormatToFormat(domi::domiTensorFormat_t domi_format);
-  static std::string FmkTypeToSerialString(domi::FrameworkType fmk_type);
+  static Format DomiFormatToFormat(const domi::domiTensorFormat_t domi_format);
+  static std::string FmkTypeToSerialString(const domi::FrameworkType fmk_type);
 
-  static bool GetDataTypeLength(ge::DataType data_type, uint32_t &length);
-  static bool CheckUint64MulOverflow(uint64_t a, uint32_t b);
+  static bool GetDataTypeLength(const ge::DataType data_type, uint32_t &length);
+  static bool CheckUint64MulOverflow(const uint64_t a, const uint32_t b);
 };
 }  // namespace ge
 #endif  // INC_GRAPH_UTILS_TYPE_UTILS_H_

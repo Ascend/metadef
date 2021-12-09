@@ -19,33 +19,33 @@
 
 namespace ge {
 ResourceContext *ResourceContextMgr::GetResourceContext(const std::string &resource_key) {
-  std::lock_guard<std::mutex> lk(ctx_mu_);
-  auto iter = resource_keys_to_contexts_.find(resource_key);
+  const std::lock_guard<std::mutex> lk(ctx_mu_);
+  const auto iter = resource_keys_to_contexts_.find(resource_key);
   if (iter == resource_keys_to_contexts_.end()) {
     return nullptr;
   }
   return resource_keys_to_contexts_[resource_key].get();
 }
 
-graphStatus ResourceContextMgr::SetResourceContext(const std::string &resource_key, ResourceContext *context) {
-  std::lock_guard<std::mutex> lk(ctx_mu_);
+graphStatus ResourceContextMgr::SetResourceContext(const std::string &resource_key, ResourceContext *const context) {
+  const std::lock_guard<std::mutex> lk(ctx_mu_);
   resource_keys_to_contexts_[resource_key] = std::unique_ptr<ResourceContext>(context);
   return GRAPH_SUCCESS;
 }
 
 graphStatus ResourceContextMgr::RegisterNodeReliedOnResource(const std::string &resource_key, NodePtr &node) {
-  std::lock_guard<std::mutex> lk(ctx_mu_);
-  resource_keys_to_read_nodes_[resource_key].emplace(node);
+  const std::lock_guard<std::mutex> lk(ctx_mu_);
+  (void)resource_keys_to_read_nodes_[resource_key].emplace(node);
   return GRAPH_SUCCESS;
 }
 
 std::unordered_set<NodePtr> &ResourceContextMgr::MutableNodesReliedOnResource(const std::string &resource_key) {
-  std::lock_guard<std::mutex> lk(ctx_mu_);
+  const std::lock_guard<std::mutex> lk(ctx_mu_);
   return resource_keys_to_read_nodes_[resource_key];
 }
 
 graphStatus ResourceContextMgr::ClearContext() {
-  std::lock_guard<std::mutex> lk_resource(ctx_mu_);
+  const std::lock_guard<std::mutex> lk_resource(ctx_mu_);
   resource_keys_to_contexts_.clear();
   resource_keys_to_read_nodes_.clear();
   return GRAPH_SUCCESS;

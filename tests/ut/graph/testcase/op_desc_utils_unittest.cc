@@ -36,6 +36,12 @@ class UtestOpDescUtils : public testing::Test {
 
   void TearDown() {}
 };
+
+template<class T>
+std::shared_ptr<T> make_nullptr(){
+  return nullptr;
+}
+
 namespace {
 ///     Data    const1
 ///        \  /
@@ -297,4 +303,75 @@ TEST_F(UtestOpDescUtils, DefaultInferFormat) {
   auto output_desc = op_desc->MutableOutputDesc(0);
   EXPECT_EQ(output_desc->GetFormat(), FORMAT_ND);
 }
+
+
+TEST_F(UtestOpDescUtils, OpDescBuilder) {
+  OpDescBuilder builder("name", "type");
+  builder.AddDynamicInput("AddDy", 1);
+  EXPECT_NE(&builder, nullptr);
+  const GeTensorDesc ten = GeTensorDesc(GeShape());
+  builder.AddDynamicInput(std::string("AddDy2"), 2, ten);
+  EXPECT_NE(&builder, nullptr);
+  builder.AddDynamicOutput("AddDyOut", 3);
+  EXPECT_NE(&builder, nullptr);
+  builder.AddDynamicOutput(std::string("AddDyOut2"), 4, ten);
+  EXPECT_NE(&builder, nullptr);
+}
+
+TEST_F(UtestOpDescUtils, OpDescUtils) {
+  OpDescPtr odp = std::make_shared<OpDesc>("name", "type");
+  EXPECT_EQ(OpDescUtils::SetSubgraphInstanceName("subgraph_name", "subgraph_instance_name", odp), GRAPH_PARAM_INVALID);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 1, 1);
+  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
+  GeTensorPtr tp = std::make_shared<GeTensor>();
+  EXPECT_EQ(OpDescUtils::MutableWeights(make_nullptr<OpDesc>()), nullptr);
+  EXPECT_EQ(OpDescUtils::ClearWeights(data_node), GRAPH_SUCCESS);
+  NodePtr np = std::make_shared<Node>();
+  EXPECT_EQ(OpDescUtils::ClearWeights(np), GRAPH_PARAM_INVALID);
+  EXPECT_EQ(OpDescUtils::ClearInputDesc(data_node), true);
+  odp->AddInputDesc(GeTensorDesc());
+  EXPECT_EQ(OpDescUtils::GetWeights(data_node).size(), 0);
+  EXPECT_EQ(OpDescUtils::GetWeights(nullptr).size(), 0);
+  EXPECT_EQ(OpDescUtils::GetConstInputNode(*data_node).size(), 0);
+  EXPECT_EQ(OpDescUtils::SetWeights(*odp, nullptr), GRAPH_FAILED);
+  EXPECT_EQ(OpDescUtils::ClearInputDesc(odp, 0), true);
+  EXPECT_EQ(OpDescUtils::ClearInputDesc(odp, 1), false);
+  EXPECT_EQ(odp->impl_->inputs_desc_.size(), 0);
+  EXPECT_EQ(OpDescUtils::HasQuantizeFactorParams(odp), false);
+  EXPECT_EQ(OpDescUtils::ClearOutputDesc(data_node), true);
+  EXPECT_EQ(OpDescUtils::ClearOutputDesc(odp, 0), false);
+  EXPECT_EQ(OpDescUtils::HasQuantizeFactorParams(*odp), false);
+  EXPECT_EQ(OpDescUtils::IsNonConstInput(*data_node, 1), false);
+  EXPECT_EQ(OpDescUtils::IsNonConstInput(data_node, 1), false);
+}
+
+TEST_F(UtestOpDescUtils, OpDescUtilsSupply) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 1, 1);
+  auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
+  auto one_node = builder.AddNode("One", "One", 3, 3);
+  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
+  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 222);
+  auto node3 = builder.AddNode("Data3", "Data3", 3, 3);
+  InControlAnchorPtr inc_anch = std::make_shared<InControlAnchor>(node3, 33);
+  EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtils::GetConstInputNode(*attr_node).size(), 0);
+  std::vector<ge::NodePtr> node_v;
+  node_v.push_back(data_node);
+  node_v.push_back(attr_node);
+  EXPECT_EQ(OpDescUtils::GetInputData(node_v).size(), 0);
+  EXPECT_EQ(OpDescUtils::GetNonConstInputsSize(*attr_node), 1);
+  EXPECT_EQ(OpDescUtils::GetNonConstInputsSize(attr_node), 1);
+  EXPECT_EQ(OpDescUtils::GetNonConstInputTensorDesc(*attr_node, 1), GeTensorDesc());
+  EXPECT_EQ(OpDescUtils::GetNonConstInputTensorDesc(attr_node, 1), GeTensorDesc());
+  size_t st = 0;
+  EXPECT_EQ(OpDescUtils::GetNonConstInputIndex(attr_node, 1, st), false);
+  EXPECT_EQ(OpDescUtils::GetConstInputs(nullptr).size(), 0);
+  EXPECT_EQ(OpDescUtils::GetNonConstTensorDesc(attr_node).size(), 1);
+  Operator op("name", "type");
+  op.operator_impl_ = nullptr;
+  EXPECT_EQ(OpDescUtils::GetInputConstData(op, 0), nullptr);
+}
+
 }

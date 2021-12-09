@@ -38,17 +38,17 @@ using std::placeholders::_2;
 
 graphStatus ListValueSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   const static std::map<AnyValue::ValueType, std::function<graphStatus(const AnyValue &, proto::AttrDef &)>>
-      type_serializer_map =
-      {{AnyValue::VT_LIST_INT, std::bind(&ListValueSerializer::SerializeListInt, this, _1, _2)},
-       {AnyValue::VT_LIST_FLOAT, std::bind(&ListValueSerializer::SerializeListFloat, this, _1, _2)},
-       {AnyValue::VT_LIST_BOOL, std::bind(&ListValueSerializer::SerializeListBool, this, _1, _2)},
-       {AnyValue::VT_LIST_BYTES, std::bind(&ListValueSerializer::SerializeListBuffer, this, _1, _2)},
-       {AnyValue::VT_LIST_DATA_TYPE, std::bind(&ListValueSerializer::SerializeListDataType, this, _1, _2)},
-       {AnyValue::VT_LIST_STRING, std::bind(&ListValueSerializer::SerializeListString, this, _1, _2)},
-       {AnyValue::VT_LIST_NAMED_ATTRS, std::bind(&ListValueSerializer::SerializeListNamedAttrs, this, _1, _2)},
-       {AnyValue::VT_LIST_TENSOR_DESC, std::bind(&ListValueSerializer::SerializeListGeTensorDesc, this, _1, _2)},
-       {AnyValue::VT_LIST_TENSOR, std::bind(&ListValueSerializer::SerializeListGeTensor, this, _1, _2)},
-       {AnyValue::VT_LIST_GRAPH, std::bind(&ListValueSerializer::SerializeListGraphDef, this, _1, _2)},
+      type_serializer_map = {
+          {AnyValue::VT_LIST_INT, std::bind(&ListValueSerializer::SerializeListInt, _1, _2)},
+          {AnyValue::VT_LIST_FLOAT, std::bind(&ListValueSerializer::SerializeListFloat, _1, _2)},
+          {AnyValue::VT_LIST_BOOL, std::bind(&ListValueSerializer::SerializeListBool, _1, _2)},
+          {AnyValue::VT_LIST_BYTES, std::bind(&ListValueSerializer::SerializeListBuffer, _1, _2)},
+          {AnyValue::VT_LIST_DATA_TYPE, std::bind(&ListValueSerializer::SerializeListDataType, _1, _2)},
+          {AnyValue::VT_LIST_STRING, std::bind(&ListValueSerializer::SerializeListString, _1, _2)},
+          {AnyValue::VT_LIST_NAMED_ATTRS, std::bind(&ListValueSerializer::SerializeListNamedAttrs, _1, _2)},
+          {AnyValue::VT_LIST_TENSOR_DESC, std::bind(&ListValueSerializer::SerializeListGeTensorDesc, _1, _2)},
+          {AnyValue::VT_LIST_TENSOR, std::bind(&ListValueSerializer::SerializeListGeTensor, _1, _2)},
+          {AnyValue::VT_LIST_GRAPH, std::bind(&ListValueSerializer::SerializeListGraphDef, _1, _2)},
       };
 
   const auto iter = type_serializer_map.find(av.GetValueType());
@@ -60,17 +60,17 @@ graphStatus ListValueSerializer::Serialize(const AnyValue &av, proto::AttrDef &d
 }
 graphStatus ListValueSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av) {
   const static std::map<ListValue::ListValueType, std::function<graphStatus(const proto::AttrDef &def, AnyValue &av)>>
-      type_deserializer_map =
-      {{ListValue::VT_LIST_INT, std::bind(&ListValueSerializer::DeserializeListInt, this, _1, _2)},
-       {ListValue::VT_LIST_FLOAT, std::bind(&ListValueSerializer::DeserializeListFloat, this, _1, _2)},
-       {ListValue::VT_LIST_STRING, std::bind(&ListValueSerializer::DeserializeListString, this, _1, _2)},
-       {ListValue::VT_LIST_BYTES, std::bind(&ListValueSerializer::DeserializeListBuffer, this, _1, _2)},
-       {ListValue::VT_LIST_BOOL, std::bind(&ListValueSerializer::DeserializeListBool, this, _1, _2)},
-       {ListValue::VT_LIST_DATA_TYPE, std::bind(&ListValueSerializer::DeserializeListDataType, this, _1, _2)},
-       {ListValue::VT_LIST_NAMED_ATTRS, std::bind(&ListValueSerializer::DeserializeListNamedAttrs, this, _1, _2)},
-       {ListValue::VT_LIST_TENSOR_DESC, std::bind(&ListValueSerializer::DeserializeListGeTensorDesc, this, _1, _2)},
-       {ListValue::VT_LIST_TENSOR, std::bind(&ListValueSerializer::DeserializeListGeTensor, this, _1, _2)},
-       {ListValue::VT_LIST_GRAPH, std::bind(&ListValueSerializer::DeserializeListGraphDef, this, _1, _2)},
+      type_deserializer_map = {
+          {ListValue::VT_LIST_INT, std::bind(&ListValueSerializer::DeserializeListInt, _1, _2)},
+          {ListValue::VT_LIST_FLOAT, std::bind(&ListValueSerializer::DeserializeListFloat, _1, _2)},
+          {ListValue::VT_LIST_STRING, std::bind(&ListValueSerializer::DeserializeListString, _1, _2)},
+          {ListValue::VT_LIST_BYTES, std::bind(&ListValueSerializer::DeserializeListBuffer, _1, _2)},
+          {ListValue::VT_LIST_BOOL, std::bind(&ListValueSerializer::DeserializeListBool, _1, _2)},
+          {ListValue::VT_LIST_DATA_TYPE, std::bind(&ListValueSerializer::DeserializeListDataType, _1, _2)},
+          {ListValue::VT_LIST_NAMED_ATTRS, std::bind(&ListValueSerializer::DeserializeListNamedAttrs, _1, _2)},
+          {ListValue::VT_LIST_TENSOR_DESC, std::bind(&ListValueSerializer::DeserializeListGeTensorDesc, _1, _2)},
+          {ListValue::VT_LIST_TENSOR, std::bind(&ListValueSerializer::DeserializeListGeTensor, _1, _2)},
+          {ListValue::VT_LIST_GRAPH, std::bind(&ListValueSerializer::DeserializeListGraphDef, _1, _2)},
       };
 
   const auto iter = type_deserializer_map.find(def.list().val_type());
@@ -82,8 +82,8 @@ graphStatus ListValueSerializer::Deserialize(const proto::AttrDef &def, AnyValue
 }
 
 graphStatus ListValueSerializer::SerializeListInt(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<int64_t> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<int64_t> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_int attr.");
     return GRAPH_FAILED;
@@ -91,16 +91,16 @@ graphStatus ListValueSerializer::SerializeListInt(const AnyValue &av, proto::Att
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_i();
-  for (const auto value : list_value) {
-    mutable_list->add_i(value);
+  for (const auto val : list_val) {
+    mutable_list->add_i(val);
   }
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_INT);
   return GRAPH_SUCCESS;
 }
 
 graphStatus ListValueSerializer::SerializeListString(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<std::string> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<std::string> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_string attr.");
     return GRAPH_FAILED;
@@ -108,16 +108,16 @@ graphStatus ListValueSerializer::SerializeListString(const AnyValue &av, proto::
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_s();
-  for (const auto &value : list_value) {
-    mutable_list->add_s(value);
+  for (const auto &val : list_val) {
+    mutable_list->add_s(val);
   }
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_STRING);
   return GRAPH_SUCCESS;
 }
 
 graphStatus ListValueSerializer::SerializeListFloat(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<float> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<float> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_float attr.");
     return GRAPH_FAILED;
@@ -125,8 +125,8 @@ graphStatus ListValueSerializer::SerializeListFloat(const AnyValue &av, proto::A
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_f();
-  for (const auto value : list_value) {
-    mutable_list->add_f(value);
+  for (const auto val : list_val) {
+    mutable_list->add_f(val);
   }
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_FLOAT);
 
@@ -134,8 +134,8 @@ graphStatus ListValueSerializer::SerializeListFloat(const AnyValue &av, proto::A
 }
 
 graphStatus ListValueSerializer::SerializeListBool(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<bool> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<bool> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_bool attr.");
     return GRAPH_FAILED;
@@ -143,8 +143,8 @@ graphStatus ListValueSerializer::SerializeListBool(const AnyValue &av, proto::At
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_b();
-  for (const auto value : list_value) {
-    mutable_list->add_b(value);
+  for (const auto val : list_val) {
+    mutable_list->add_b(val);
   }
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_BOOL);
 
@@ -152,8 +152,8 @@ graphStatus ListValueSerializer::SerializeListBool(const AnyValue &av, proto::At
 }
 
 graphStatus ListValueSerializer::SerializeListGeTensorDesc(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<ge::GeTensorDesc> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<ge::GeTensorDesc> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_tensor_desc attr.");
     return GRAPH_FAILED;
@@ -161,10 +161,10 @@ graphStatus ListValueSerializer::SerializeListGeTensorDesc(const AnyValue &av, p
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_td();
-  for (const auto &value : list_value) {
+  for (const auto &val : list_val) {
     const auto attr_proto = mutable_list->add_td();
     GE_CHECK_NOTNULL(attr_proto);
-    GeTensorSerializeUtils::GeTensorDescAsProto(value, attr_proto);
+    GeTensorSerializeUtils::GeTensorDescAsProto(val, attr_proto);
   }
 
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_TENSOR_DESC);
@@ -173,8 +173,8 @@ graphStatus ListValueSerializer::SerializeListGeTensorDesc(const AnyValue &av, p
 }
 
 graphStatus ListValueSerializer::SerializeListGeTensor(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<GeTensor> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<GeTensor> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_tensor attr_value.");
     return GRAPH_FAILED;
@@ -182,10 +182,10 @@ graphStatus ListValueSerializer::SerializeListGeTensor(const AnyValue &av, proto
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_t();
-  for (const auto &value : list_value) {
+  for (const auto &val : list_val) {
     const auto attr_proto = mutable_list->add_t();
     GE_CHECK_NOTNULL(attr_proto);
-    GeTensorSerializeUtils::GeTensorAsProto(value, attr_proto);
+    GeTensorSerializeUtils::GeTensorAsProto(val, attr_proto);
   }
 
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_TENSOR);
@@ -193,8 +193,8 @@ graphStatus ListValueSerializer::SerializeListGeTensor(const AnyValue &av, proto
   return GRAPH_SUCCESS;
 }
 graphStatus ListValueSerializer::SerializeListBuffer(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<Buffer> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<Buffer> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_buffer attr.");
     return GRAPH_FAILED;
@@ -202,9 +202,9 @@ graphStatus ListValueSerializer::SerializeListBuffer(const AnyValue &av, proto::
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_bt();
-  for (auto value : list_value) {
-    if ((value.GetData() != nullptr) && (value.size() > 0U)) {
-      mutable_list->add_bt(value.GetData(), value.GetSize());
+  for (auto val : list_val) {
+    if ((val.GetData() != nullptr) && (val.size() > 0U)) {
+      mutable_list->add_bt(val.GetData(), val.GetSize());
     }
   }
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_BYTES);
@@ -213,8 +213,8 @@ graphStatus ListValueSerializer::SerializeListBuffer(const AnyValue &av, proto::
 }
 
 graphStatus ListValueSerializer::SerializeListGraphDef(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<proto::GraphDef> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<proto::GraphDef> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_graph attr_value.");
     return GRAPH_FAILED;
@@ -223,7 +223,7 @@ graphStatus ListValueSerializer::SerializeListGraphDef(const AnyValue &av, proto
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_g();
-  for (const auto &graph : list_value) {
+  for (const auto &graph : list_val) {
     const auto mutable_graph = mutable_list->add_g();
     GE_CHECK_NOTNULL(mutable_graph);
     *mutable_graph = graph;
@@ -235,8 +235,8 @@ graphStatus ListValueSerializer::SerializeListGraphDef(const AnyValue &av, proto
 }
 
 graphStatus ListValueSerializer::SerializeListNamedAttrs(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<ge::NamedAttrs> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<ge::NamedAttrs> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_named_attr attr.");
     return GRAPH_FAILED;
@@ -248,11 +248,11 @@ graphStatus ListValueSerializer::SerializeListNamedAttrs(const AnyValue &av, pro
   const auto named_attr_serializer = dynamic_cast<NamedAttrsSerializer *>(attr_serializer);
   GE_CHECK_NOTNULL(named_attr_serializer);
 
-  for (const auto &value : list_value) {
+  for (const auto &val : list_val) {
     const auto attr_proto = mutable_list->add_na();
     GE_CHECK_NOTNULL(attr_proto);
-    if (named_attr_serializer->Serialize(value, attr_proto) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "NamedAttr [%s] serialize failed.", value.GetName().c_str());
+    if (named_attr_serializer->Serialize(val, attr_proto) != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "NamedAttr [%s] serialize failed.", val.GetName().c_str());
       return GRAPH_FAILED;
     }
   }
@@ -262,8 +262,8 @@ graphStatus ListValueSerializer::SerializeListNamedAttrs(const AnyValue &av, pro
   return GRAPH_SUCCESS;
 }
 graphStatus ListValueSerializer::SerializeListDataType(const AnyValue &av, proto::AttrDef &def) {
-  std::vector<ge::DataType> list_value;
-  const graphStatus ret = av.GetValue(list_value);
+  std::vector<ge::DataType> list_val;
+  const graphStatus ret = av.GetValue(list_val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get list_datatype attr.");
     return GRAPH_FAILED;
@@ -271,8 +271,8 @@ graphStatus ListValueSerializer::SerializeListDataType(const AnyValue &av, proto
   const auto mutable_list = def.mutable_list();
   GE_CHECK_NOTNULL(mutable_list);
   mutable_list->clear_dt();
-  for (const auto value : list_value) {
-    mutable_list->add_dt(static_cast<proto::DataType>(value));
+  for (const auto val : list_val) {
+    mutable_list->add_dt(static_cast<proto::DataType>(val));
   }
   mutable_list->set_val_type(proto::AttrDef::ListValue::VT_LIST_DATA_TYPE);
 
@@ -282,7 +282,7 @@ graphStatus ListValueSerializer::SerializeListDataType(const AnyValue &av, proto
 graphStatus ListValueSerializer::DeserializeListInt(const proto::AttrDef &def, AnyValue &av) {
   std::vector<int64_t> values(static_cast<size_t>(def.list().i_size()));
   for (auto idx = 0; idx < def.list().i_size(); ++idx) {
-    values[idx] = def.list().i(idx);
+    values[static_cast<size_t>(idx)] = def.list().i(idx);
   }
   return av.SetValue(std::move(values));
 }
@@ -290,7 +290,7 @@ graphStatus ListValueSerializer::DeserializeListInt(const proto::AttrDef &def, A
 graphStatus ListValueSerializer::DeserializeListString(const proto::AttrDef &def, AnyValue &av) {
   std::vector<std::string> values(static_cast<size_t>(def.list().s_size()));
   for (auto idx = 0; idx < def.list().s_size(); ++idx) {
-    values[idx] = def.list().s(idx);
+    values[static_cast<size_t>(idx)] = def.list().s(idx);
   }
   return av.SetValue(std::move(values));
 }
@@ -298,7 +298,7 @@ graphStatus ListValueSerializer::DeserializeListString(const proto::AttrDef &def
 graphStatus ListValueSerializer::DeserializeListFloat(const proto::AttrDef &def, AnyValue &av) {
   std::vector<float> values(static_cast<size_t>(def.list().f_size()));
   for (auto idx = 0; idx < def.list().f_size(); ++idx) {
-    values[idx] = def.list().f(idx);
+    values[static_cast<size_t>(idx)] = def.list().f(idx);
   }
 
   return av.SetValue(std::move(values));
@@ -307,7 +307,7 @@ graphStatus ListValueSerializer::DeserializeListFloat(const proto::AttrDef &def,
 graphStatus ListValueSerializer::DeserializeListBool(const proto::AttrDef &def, AnyValue &av) {
   std::vector<bool> values(static_cast<size_t>(def.list().b_size()));
   for (auto idx = 0; idx < def.list().b_size(); ++idx) {
-    values[idx] = def.list().b(idx);
+    values[static_cast<size_t>(idx)] = def.list().b(idx);
   }
   return av.SetValue(std::move(values));
 }
@@ -315,7 +315,7 @@ graphStatus ListValueSerializer::DeserializeListBool(const proto::AttrDef &def, 
 graphStatus ListValueSerializer::DeserializeListGeTensorDesc(const proto::AttrDef &def, AnyValue &av) {
   std::vector<ge::GeTensorDesc> values(static_cast<size_t>(def.list().td_size()));
   for (auto idx = 0; idx < def.list().td_size(); ++idx) {
-    GeTensorSerializeUtils::AssembleGeTensorDescFromProto(&def.list().td(idx), values[idx]);
+    GeTensorSerializeUtils::AssembleGeTensorDescFromProto(&def.list().td(idx), values[static_cast<size_t>(idx)]);
   }
 
   return av.SetValue(std::move(values));
@@ -324,7 +324,7 @@ graphStatus ListValueSerializer::DeserializeListGeTensorDesc(const proto::AttrDe
 graphStatus ListValueSerializer::DeserializeListGeTensor(const proto::AttrDef &def, AnyValue &av) {
   std::vector<GeTensor> values(static_cast<size_t>(def.list().t_size()));
   for (auto idx = 0; idx < def.list().t_size(); ++idx) {
-    GeTensorSerializeUtils::AssembleGeTensorFromProto(&def.list().t(idx), values[idx]);
+    GeTensorSerializeUtils::AssembleGeTensorFromProto(&def.list().t(idx), values[static_cast<size_t>(idx)]);
   }
 
   return av.SetValue(std::move(values));
@@ -333,7 +333,7 @@ graphStatus ListValueSerializer::DeserializeListGeTensor(const proto::AttrDef &d
 graphStatus ListValueSerializer::DeserializeListBuffer(const proto::AttrDef &def, AnyValue &av) {
   std::vector<Buffer> values(static_cast<size_t>(def.list().bt_size()));
   for (auto idx = 0; idx < def.list().bt_size(); ++idx) {
-    values[idx] =
+    values[static_cast<size_t>(idx)] =
         Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(def.list().bt(idx).data()), def.list().bt(idx).size());
   }
 
@@ -342,7 +342,7 @@ graphStatus ListValueSerializer::DeserializeListBuffer(const proto::AttrDef &def
 graphStatus ListValueSerializer::DeserializeListGraphDef(const proto::AttrDef &def, AnyValue &av) {
   std::vector<proto::GraphDef> values(static_cast<size_t>(def.list().g_size()));
   for (auto idx = 0; idx < def.list().g_size(); ++idx) {
-    values[idx] = def.list().g(idx);
+    values[static_cast<size_t>(idx)] = def.list().g(idx);
   }
   return av.SetValue(std::move(values));
 }
@@ -355,7 +355,8 @@ graphStatus ListValueSerializer::DeserializeListNamedAttrs(const proto::AttrDef 
 
   std::vector<ge::NamedAttrs> values(static_cast<size_t>(def.list().na_size()));
   for (auto idx = 0; idx < def.list().na_size(); ++idx) {
-    if (named_attr_deserializer->Deserialize(def.list().na(idx), values[idx]) != GRAPH_SUCCESS) {
+    if (named_attr_deserializer->Deserialize(def.list().na(idx), values[static_cast<size_t>(idx)])
+        != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "NamedAttr [%s] deserialize failed.", def.list().na(idx).name().c_str());
       return GRAPH_FAILED;
     }
@@ -366,7 +367,7 @@ graphStatus ListValueSerializer::DeserializeListNamedAttrs(const proto::AttrDef 
 graphStatus ListValueSerializer::DeserializeListDataType(const proto::AttrDef &def, AnyValue &av) {
   std::vector<ge::DataType> values(static_cast<size_t>(def.list().dt_size()));
   for (auto idx = 0; idx < def.list().dt_size(); ++idx) {
-    values[idx] = static_cast<DataType>(def.list().dt(idx));
+    values[static_cast<size_t>(idx)] = static_cast<DataType>(def.list().dt(idx));
   }
 
   return av.SetValue(std::move(values));

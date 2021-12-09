@@ -68,8 +68,8 @@ bool NodeShapeTransUtils::CatchFormatAndShape() {
     }
     const auto format = tensor_desc_input->GetFormat();
     const auto ori_format = tensor_desc_input->GetOriginFormat();
-    if (format == ori_format &&
-        tensor_desc_input->GetShape() == tensor_desc_input->GetOriginShape()) {
+    if ((format == ori_format) &&
+        (tensor_desc_input->GetShape() == tensor_desc_input->GetOriginShape())) {
       GELOGD("Node is %s, input tensor idx is %zu. ori format: %s, format: %s, ori shape:%s, shape:%s is same! "
              "No need to catch format&shape!", op_desc_->GetName().c_str(), i,
              TypeUtils::FormatToSerialString(ori_format).c_str(),
@@ -140,15 +140,15 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     // FE set and Ge get for PadDimention
     std::string infer_reshape_type;
     (void) AttrUtils::GetStr(*tensor_desc_input, ATTR_NAME_RESHAPE_INFER_TYPE, infer_reshape_type);
-    bool is_success = transformer::ExpandDimension(op_desc_->GetType(), ori_format, curr_format, i,
-                                                   infer_reshape_type, ori_shape);
+    const bool is_success = transformer::ExpandDimension(op_desc_->GetType(), ori_format, curr_format, i,
+                                                         infer_reshape_type, ori_shape);
     if (!is_success) {
       REPORT_CALL_ERROR("E19999", "ExpandDimension failed, op type:%s", op_desc_->GetType().c_str());
       GELOGE(GRAPH_FAILED, "[Call][ExpandDimension] failed, op type:%s", op_desc_->GetType().c_str());
-      return GRAPH_FAILED;
+      return false;
     }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape, ori_format, curr_format, dtype};
-    shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
+    (void)shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
     tensor_desc_input->SetFormat(curr_format);
   }
 
@@ -176,7 +176,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
              "recorded origin format: %s is not same", op_desc_->GetName().c_str(), i,
              TypeUtils::FormatToSerialString(curr_format).c_str(),
              TypeUtils::FormatToSerialString(map_ori_format_out_[i]).c_str());
-      return GRAPH_FAILED;
+      return false;
     }
     tensor_desc_output->SetOriginShape(ori_shape);
     const auto saved_format = map_format_out_[i];
@@ -197,7 +197,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     if (!is_success) {
       REPORT_CALL_ERROR("E19999", "ExpandDimension failed, op type:%s.", op_desc_->GetType().c_str());
       GELOGE(GRAPH_FAILED, "[Call][ExpandDimension] failed, op type:%s.", op_desc_->GetType().c_str());
-      return GRAPH_FAILED;
+      return false;
     }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape, curr_format, saved_format, dtype};
     (void)shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);

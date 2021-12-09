@@ -131,7 +131,7 @@ graphStatus FftsGraphUtils::SplitNodesWithCheck(const ComputeGraphPtr &graph,
   std::set<NodePtr> visited_nodes;
   while (!(cur_nodes.empty() && next_nodes.empty())) {
     const auto &is_cur_stage = [support_flag, nodes_need_clip](const NodePtr &node_ptr) -> bool {
-      return support_flag == (nodes_need_clip.count(node_ptr) == 0U);
+      return (support_flag == (nodes_need_clip.count(node_ptr) == 0U));
     };
     SplitNodes(calc_nodes, is_cur_stage, visited_nodes, cur_nodes, next_nodes);
     std::set<NodePtr> cur_split_nodes;
@@ -183,7 +183,7 @@ void FftsGraphUtils::SplitNodes(const std::set<NodePtr> &calc_nodes,
       if (is_cur_stage(out_node)) {
         (void)nodes.push(out_node);
       } else {
-        next_nodes.insert(out_node);
+        (void)next_nodes.insert(out_node);
       }
     }
   }
@@ -230,7 +230,7 @@ graphStatus FftsGraphUtils::BuildFftsPlusSubgraphWithAllNodes(const ComputeGraph
 
 void FftsGraphUtils::CollectCalcNodeInSubgraph(const ComputeGraphPtr &subgraph, std::set<NodePtr> &calc_nodes) {
   std::set<NodePtr> edge_nodes;
-  std::set<std::string> ctrl_goto_types = { LABELSET, LABELGOTOEX, LABELSWITCHBYINDEX };
+  const std::set<std::string> ctrl_goto_types = { LABELSET, LABELGOTOEX, LABELSWITCHBYINDEX };
   // collect end nodes
   CollectEndNodeInSubgraph(subgraph, ctrl_goto_types, edge_nodes);
   // collect start nodes
@@ -302,7 +302,7 @@ ComputeGraphPtr FftsGraphUtils::GetFftsPlusGraph(ComputeGraph &graph) {
     GELOGE(GRAPH_FAILED, "[Get][Subgraph] failed, node:%s", parent_node->GetName().c_str());
     return nullptr;
   }
-  if (subgraphs.size() != 1) {
+  if (subgraphs.size() != 1U) {
     REPORT_INNER_ERROR("E19999", "Number of subgraphs in parent_node:%s is %zu, graph:%s",
                        parent_node->GetName().c_str(), subgraphs.size(), graph.GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] Number of subgraphs in parent_node:%s is %zu, graph:%s",
@@ -322,7 +322,7 @@ graphStatus FftsGraphUtils::SetAttrForFftsPlusSubgraph(const ComputeGraphPtr &su
   (void)AttrUtils::SetStr(parent_node->GetOpDesc(), ATTR_NAME_FFTS_PLUS_SUB_GRAPH, subgraph->GetName().c_str());
   for (const auto &node : subgraph->GetAllNodes()) {
     // depend on SGT api, need modify
-    (void)AttrUtils::SetInt(node->GetOpDesc(), ATTR_NAME_THREAD_SCOPE_ID, 0U);
+    (void)AttrUtils::SetInt(node->GetOpDesc(), ATTR_NAME_THREAD_SCOPE_ID, 0);
   }
   return GRAPH_SUCCESS;
 }
@@ -371,7 +371,7 @@ graphStatus FftsGraphUtils::GraphPartition(ComputeGraph &graph,
     }
     // op_desc of node should not be null
     if ((parent->GetType() != PARTITIONEDCALL) ||
-        (parent->GetOpDesc()->GetSubgraphInstanceNames().size() != 1)) {
+        (parent->GetOpDesc()->GetSubgraphInstanceNames().size() != 1U)) {
       return false;
     }
     return !parent->GetOpDesc()->HasAttr(ATTR_NAME_FFTS_PLUS_SUB_GRAPH);
@@ -559,7 +559,7 @@ graphStatus FftsGraphUtils::PartitionGraphWithLimit(const ComputeGraphPtr &graph
         (void)exceed_single_node.emplace_back(node);
         cur_value.clear();
       } else {
-        split_nodes[split_level].emplace(node);
+        (void)split_nodes[split_level].emplace(node);
         cur_value = cur_node_value;
       }
     }

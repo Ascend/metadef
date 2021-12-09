@@ -34,27 +34,27 @@ class ListValueSerializer : public GeIrAttrSerializer {
   graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av);
 
  private:
-  graphStatus SerializeListInt(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListString(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListFloat(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListBool(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListGeTensorDesc(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListGeTensor(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListBuffer(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListGraphDef(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListNamedAttrs(const AnyValue &av, proto::AttrDef &def);
-  graphStatus SerializeListDataType(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListInt(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListString(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListFloat(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListBool(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListGeTensorDesc(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListGeTensor(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListBuffer(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListGraphDef(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListNamedAttrs(const AnyValue &av, proto::AttrDef &def);
+  static graphStatus SerializeListDataType(const AnyValue &av, proto::AttrDef &def);
 
-  graphStatus DeserializeListInt(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListString(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListFloat(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListBool(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListGeTensorDesc(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListGeTensor(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListBuffer(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListGraphDef(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListNamedAttrs(const proto::AttrDef &def, AnyValue &av);
-  graphStatus DeserializeListDataType(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListInt(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListString(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListFloat(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListBool(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListGeTensorDesc(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListGeTensor(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListBuffer(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListGraphDef(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListNamedAttrs(const proto::AttrDef &def, AnyValue &av);
+  static graphStatus DeserializeListDataType(const proto::AttrDef &def, AnyValue &av);
 
 };
 }  // namespace ge

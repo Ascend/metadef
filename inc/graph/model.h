@@ -88,7 +88,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
   std::string platform_version_{""};
   Graph graph_;
 };
-}  // namespace ge
 using ModelPtr = std::shared_ptr<ge::Model>;
+}  // namespace ge
 
 #endif  // INC_GRAPH_MODEL_H_

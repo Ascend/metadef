@@ -362,7 +362,7 @@ class GeShapeImpl {
   void SetIsUnknownDimNum();
   size_t GetDimNum() const;
   int64_t GetDim(const size_t idx) const;
-  graphStatus SetDim(size_t idx, int64_t value);
+  graphStatus SetDim(const size_t idx, const int64_t value);
   std::vector<int64_t> ShapeImplGetDims() const;
   std::string ShapeImplToString() const;
   int64_t GetShapeSize() const;
@@ -416,7 +416,7 @@ int64_t GeShapeImpl::GetDim(const size_t idx) const {
   }
 }
 
-graphStatus GeShapeImpl::SetDim(size_t idx, int64_t value) {
+graphStatus GeShapeImpl::SetDim(const size_t idx, const int64_t value) {
   if (idx < dims_.size()) {
     dims_[idx] = value;
     return GRAPH_SUCCESS;
@@ -639,7 +639,7 @@ void GeTensorDescImpl::SetFormat(const Format format) {
   format_ = format;
 }
 
-void GeTensorDescImpl::SetOriginFormat(Format format) {
+void GeTensorDescImpl::SetOriginFormat(const Format format) {
   origin_format_ = format;
 }
 
@@ -917,7 +917,7 @@ Placement GeTensorDesc::GetPlacement() const {
   return static_cast<Placement>(placement);
 }
 
-void GeTensorDesc::SetPlacement(Placement placement) {
+void GeTensorDesc::SetPlacement(const Placement placement) {
   (void)AttrUtils::SetInt(this, TENSOR_UTILS_PLACEMENT, static_cast<int64_t>(placement));
 }
 
@@ -1380,7 +1380,7 @@ GeTensor::GeTensor(const GeTensorDesc &tensor_desc)
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const std::vector<uint8_t> &data)
     : impl_(MakeShared<GeTensorImpl>(tensor_desc, data)) {}
 
-GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const uint8_t * const data, size_t size)
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const uint8_t * const data, const size_t size)
     : impl_(MakeShared<GeTensorImpl>(tensor_desc, data, size)) {}
 
 GeTensor::GeTensor(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&data)
@@ -1489,7 +1489,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetSize(
   return GRAPH_FAILED;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(GeTensorDesc &tensor_desc, int64_t size) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(
+    GeTensorDesc &tensor_desc, const int64_t size) {
   if (tensor_desc.impl_ != nullptr) {
     tensor_desc.impl_->ext_meta_.SetSize(size);
   }
@@ -1512,7 +1513,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t TensorUtils::GetWeightSi
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAddr(const ConstGeTensorPtr &tensor_ptr,
-                                                                                   uint8_t *base) {
+                                                                                   uint8_t * const base) {
   if (tensor_ptr == nullptr) {
     REPORT_INNER_ERROR("E19999", "param tensor_ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] tensor_ptr is null.");
@@ -1521,7 +1522,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAd
   return GetWeightAddr(*tensor_ptr, base);
 }
 
-uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *base) {
+uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t * const base) {
   if (base == nullptr) {
     REPORT_INNER_ERROR("E19999", "param base is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] base is null.");
@@ -1681,7 +1682,7 @@ GeTensor TensorUtils::CreateShareTensor(const GeTensor &other) {
 GeTensor TensorUtils::CreateShareTensor(const GeTensorDesc &tensor_desc,
                                         std::shared_ptr<AlignedPtr> aligned_ptr,
                                         const size_t size) {
-  GeTensor tensor(tensor_desc);
+  const GeTensor tensor(tensor_desc);
   if (tensor.impl_ != nullptr) {
     ShareAlignedPtr(std::move(aligned_ptr), size, tensor.impl_->tensor_data_);
   }

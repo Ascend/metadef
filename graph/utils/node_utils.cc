@@ -15,6 +15,7 @@
  */
 #include "graph/utils/node_utils.h"
 #include <stack>
+#include <securec.h>
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_op_types.h"
@@ -27,7 +28,6 @@
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
 #include "graph/utils/constant_utils.h"
-#include <securec.h>
 
 namespace ge {
 std::map<NodePtr, std::vector<uint32_t>> NodeUtils::map_send_info_{};
@@ -54,7 +54,7 @@ bool OpShapeIsUnknown(const OpDescPtr &desc) {
     const auto ge_shape = ptr->GetShape();
     auto dims = ge_shape.GetDims();
     if (std::any_of(dims.begin(), dims.end(),
-                    [](const int64_t dim) { return ((dim == UNKNOWN_DIM) || dim == (UNKNOWN_DIM_NUM)); })) {
+                    [](const int64_t dim) { return ((dim == UNKNOWN_DIM) || (dim == (UNKNOWN_DIM_NUM))); })) {
       return true;
     }
   }
@@ -62,7 +62,7 @@ bool OpShapeIsUnknown(const OpDescPtr &desc) {
     const auto ge_shape = ptr->GetShape();
     auto dims = ge_shape.GetDims();
     if (std::any_of(dims.begin(), dims.end(),
-                    [](const int64_t dim) { return ((dim == UNKNOWN_DIM) || dim == (UNKNOWN_DIM_NUM)); })) {
+                    [](const int64_t dim) { return ((dim == UNKNOWN_DIM) || (dim == (UNKNOWN_DIM_NUM))); })) {
       return true;
     }
   }
@@ -137,7 +137,7 @@ graphStatus NodeUtils::GetSingleOutputNodeOfNthLayer(const NodePtr &src, int dep
     if (src->GetOutDataNodes().size() != 1U) {
       return GRAPH_FAILED;
     }
-    cur_ptr = src->GetOutDataNodes().at(0);
+    cur_ptr = src->GetOutDataNodes().at(0UL);
     GE_CHECK_NOTNULL(cur_ptr);
   }
   dst = cur_ptr;
@@ -503,7 +503,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, uint32_t num) {
     return GRAPH_FAILED;
   }
 
-  GeTensorDesc data_desc(GeShape(), FORMAT_ND, DT_FLOAT);
+  const GeTensorDesc data_desc(GeShape(), FORMAT_ND, DT_FLOAT);
   const OpDescPtr &op_desc = node->GetOpDesc();
   for (size_t i = op_desc->GetOutputsSize(); i < num; ++i) {
     if (op_desc->AddOutputDesc(data_desc) != GRAPH_SUCCESS) {
@@ -514,7 +514,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, uint32_t num) {
   }
 
   for (size_t i = node->impl_->out_data_anchors_.size(); i < num; ++i) {
-    auto anchor = ComGraphMakeShared<OutDataAnchor>(node, i);
+    const auto anchor = ComGraphMakeShared<OutDataAnchor>(node, i);
     if (anchor == nullptr) {
       REPORT_CALL_ERROR("E19999", "Current out data anchor is null, make shared_ptr failed.");
       GELOGE(OUT_OF_MEMORY, "[Create][OutDataAnchor] Current out data anchor is null, make shared_ptr failed.");
@@ -558,7 +558,7 @@ bool NodeUtils::IsInNodesEmpty(const Node &node) {
   }
   for (const auto &in_anchor : node.impl_->in_data_anchors_) {
     if (in_anchor != nullptr) {
-      auto out_anchor = in_anchor->GetPeerOutAnchor();
+      const auto out_anchor = in_anchor->GetPeerOutAnchor();
       if (out_anchor != nullptr) {
         if (out_anchor->GetOwnerNode() != nullptr) {
           return false;
@@ -569,7 +569,7 @@ bool NodeUtils::IsInNodesEmpty(const Node &node) {
 
   if ((node.impl_->in_control_anchor_ != nullptr) &&
       (!node.impl_->in_control_anchor_->IsPeerOutAnchorsEmpty())) {
-    auto peer_out_control_anchors = node.impl_->in_control_anchor_->GetPeerOutControlAnchors();
+    const auto peer_out_control_anchors = node.impl_->in_control_anchor_->GetPeerOutControlAnchors();
     for (const auto &out_control_anchor : peer_out_control_anchors) {
       if (out_control_anchor != nullptr) {
         if (out_control_anchor->GetOwnerNode() != nullptr) {
@@ -582,7 +582,7 @@ bool NodeUtils::IsInNodesEmpty(const Node &node) {
   return true;
 }
 GeTensorDesc NodeUtils::GetOutputDesc(const Node &node, uint32_t index) {
-  auto desc = node.GetOpDesc();
+  const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GeTensorDesc();
   }
@@ -621,7 +621,7 @@ graphStatus NodeUtils::UpdateInputShape(const Node &node, uint32_t index, const 
 }
 
 graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unknow) {
-  auto desc = node.GetOpDesc();
+  const auto desc = node.GetOpDesc();
   GE_CHECK_NOTNULL(desc);
   // check self
   is_unknow = OpShapeIsUnknown(desc);
@@ -642,7 +642,7 @@ graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unkn
       src_graph = owner_graph;
     }
     GELOGD("src graph is %s, owner graph name is %s", src_graph->GetName().c_str(), owner_graph->GetName().c_str());
-    auto root_graph = GraphUtils::FindRootGraph(src_graph);
+    const auto root_graph = GraphUtils::FindRootGraph(src_graph);
     if (root_graph == nullptr) {
       REPORT_INNER_ERROR("E19999", "node:%s has no root graph.", node.GetName().c_str());
       GE_LOGE("[Get][Graph] Node %s gets null root graph", node.GetName().c_str());
@@ -725,7 +725,7 @@ graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<Compu
 }
 
 ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, uint32_t index) {
-  auto op_desc = node.GetOpDesc();
+  const auto op_desc = node.GetOpDesc();
   if (op_desc == nullptr) {
     return nullptr;
   }
@@ -861,7 +861,7 @@ NodePtr NodeUtils::GetParentInput(const NodePtr &node) {
   return node == nullptr ? node : GetParentInput(*node);
 }
 NodeToOutAnchor NodeUtils::GetParentInputAndAnchor(const NodePtr &node) {
-  uint32_t parent_index = 0;
+  uint32_t parent_index = 0U;
   if (!AttrUtils::GetInt(node->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
     return {nullptr, nullptr};
   }
@@ -877,7 +877,7 @@ NodeToOutAnchor NodeUtils::GetParentInputAndAnchor(const NodePtr &node) {
     return {nullptr, nullptr};
   }
 
-  const InDataAnchorPtr &in_anchor = parent_node->GetInDataAnchor(parent_index);
+  const InDataAnchorPtr &in_anchor = parent_node->GetInDataAnchor(static_cast<int32_t>(parent_index));
   if (in_anchor == nullptr) {
     return {nullptr, nullptr};
   }
@@ -988,7 +988,7 @@ bool NodeUtils::GetConstOpType(const NodePtr &node, std::string &type) {
 /// @param [in] node
 /// @return return GRAPH_SUCCESS if remove successfully, other for failed.
 ///
-Status NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
+graphStatus NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
   GE_CHECK_NOTNULL(node);
   const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
@@ -1145,7 +1145,7 @@ NodePtr NodeUtils::GetInNodeCrossSubgraph(const NodePtr &node) {
 
     const auto owner_graph = input_node->GetOwnerComputeGraph();
     const auto parent_node = owner_graph->GetParentNode();
-    if ((parent_node == nullptr) || (kWhileOpTypes.count(parent_node->GetType()) > 0)) {
+    if ((parent_node == nullptr) || (kWhileOpTypes.count(parent_node->GetType()) > 0UL)) {
       return node;       // not in subgraph or while subgraph.
     }
 
@@ -1161,7 +1161,7 @@ NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
     GELOGE(GRAPH_FAILED, "[Check][Param] The OpDesc ptr should not be null.");
     return nullptr;
   }
-  NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
+  const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
   if (node_ptr == nullptr) {
     REPORT_CALL_ERROR("E19999", "create node failed.");
     GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!");
@@ -1179,11 +1179,9 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   peer_node = (node->GetType() == DATA) ? node : GetInDataNodeByIndex(*node, index);
   int32_t peer_out_anchor_index = -1;
   if (peer_node == nullptr) {
-    // tmp solution
     // A->B
     // Asuming A and B belongs to different engine, during graph partition, A will be set to B's extra attr as
     // parent node. when FE get parent node A from B, check A's in_anchor peer_out_anchor is null.
-    // But dump graph is good. weird thing.
     return GRAPH_SUCCESS;
   }
   while (!IsComputableOp(peer_node)) {
@@ -1247,7 +1245,7 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) 
     return GRAPH_FAILED;
   }
   std::string current_group;
-  std::string new_group(group_name);
+  const std::string new_group(group_name);
   if (AttrUtils::GetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, current_group)) {
     if (new_group != current_group) {
       GE_LOGE("[Compare][Attr]Failed to set parallel group name %s on node %s, group conflict with existing %s",
@@ -1269,11 +1267,11 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) 
 }
 
 graphStatus NodeUtils::UpdateInputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
-  auto desc = node.GetOpDesc();
+  const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GRAPH_PARAM_INVALID;
   }
-  auto input_desc = desc->MutableInputDesc(index);
+  const auto input_desc = desc->MutableInputDesc(index);
   if (input_desc == nullptr) {
     return GRAPH_PARAM_INVALID;
   }
@@ -1283,11 +1281,11 @@ graphStatus NodeUtils::UpdateInputOriginalShapeAndShape(const Node &node, uint32
 }
 
 graphStatus NodeUtils::UpdateOutputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
-  auto desc = node.GetOpDesc();
+  const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GRAPH_PARAM_INVALID;
   }
-  auto output_desc = desc->MutableOutputDesc(index);
+  const auto output_desc = desc->MutableOutputDesc(index);
   if (output_desc == nullptr) {
     return GRAPH_PARAM_INVALID;
   }

@@ -15,12 +15,10 @@
  */
 
 #include "graph/utils/type_utils.h"
-
 #include <algorithm>
-
+#include "graph/buffer.h"
 #include "graph/debug/ge_util.h"
-
-using domi::domiTensorFormat_t;
+#include "external/graph/types.h"
 
 namespace ge {
 namespace{
@@ -212,9 +210,7 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
 const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_UNDEFINED", DT_UNDEFINED},            // Used to indicate a DataType field has not been set.
     {"DT_FLOAT", DT_FLOAT},                    // float type
-    {
-        "DT_FLOAT16", DT_FLOAT16,
-    },                                         // fp16 type
+    {"DT_FLOAT16", DT_FLOAT16},                // fp16 type
     {"DT_INT8", DT_INT8},                      // int8 type
     {"DT_INT16", DT_INT16},                    // int16 type
     {"DT_UINT16", DT_UINT16},                  // uint16 type
@@ -276,7 +272,7 @@ const std::map<domi::ImplyType, std::string> kImplyTypeToString = {
 }
 
 
-std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
+std::string TypeUtils::ImplyTypeToSerialString(const domi::ImplyType imply_type) {
   const auto it = kImplyTypeToString.find(imply_type);
   if (it != kImplyTypeToString.end()) {
     return it->second;
@@ -289,7 +285,7 @@ std::string TypeUtils::ImplyTypeToSerialString(domi::ImplyType imply_type) {
   }
 }
 
-bool TypeUtils::IsDataTypeValid(DataType dt) {
+bool TypeUtils::IsDataTypeValid(const DataType dt) {
   const uint32_t num = static_cast<uint32_t>(dt);
   GE_CHK_BOOL_EXEC((num < DT_MAX),
                    REPORT_INNER_ERROR("E19999", "param dt:%d >= DT_MAX:%d, check invalid", num, DT_MAX);
@@ -297,7 +293,7 @@ bool TypeUtils::IsDataTypeValid(DataType dt) {
   return true;
 }
 
-std::string TypeUtils::DataTypeToSerialString(DataType data_type) {
+std::string TypeUtils::DataTypeToSerialString(const DataType data_type) {
   const auto it = kDataTypeToStringMap.find(data_type);
   if (it != kDataTypeToStringMap.end()) {
     return it->second;
@@ -318,8 +314,8 @@ DataType TypeUtils::SerialStringToDataType(const std::string &str) {
   }
 }
 
-bool TypeUtils::IsFormatValid(Format format) {
-  uint32_t num = static_cast<uint32_t>(GetPrimaryFormat(format));
+bool TypeUtils::IsFormatValid(const Format format) {
+  const uint32_t num = static_cast<uint32_t>(GetPrimaryFormat(format));
   GE_CHK_BOOL_EXEC((num <= FORMAT_RESERVED),
                    REPORT_INNER_ERROR("E19999", "The Format is invalid, num:%u > FORMAT_RESERVED:%d",
                                       num, FORMAT_RESERVED);
@@ -347,14 +343,14 @@ bool TypeUtils::IsFormatValid(std::string format) {
   return true;
 }
 
-bool TypeUtils::IsInternalFormat(Format format) {
+bool TypeUtils::IsInternalFormat(const Format format) {
   const std::string serial_format = FormatToSerialString(static_cast<Format>(GetPrimaryFormat(format)));
   const auto iter = kInternalFormat.find(serial_format);
   const bool result = (iter == kInternalFormat.end()) ? false : true;
   return result;
 }
 
-std::string TypeUtils::FormatToSerialString(Format format) {
+std::string TypeUtils::FormatToSerialString(const Format format) {
   const auto it = kFormatToStringMap.find(static_cast<Format>(GetPrimaryFormat(format)));
   if (it != kFormatToStringMap.end()) {
     if (HasSubFormat(format)) {
@@ -442,7 +438,7 @@ graphStatus TypeUtils::SplitFormatFromStr(const std::string &str,
   return GRAPH_SUCCESS;
 }
 
-Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {
+Format TypeUtils::DomiFormatToFormat(const domi::domiTensorFormat_t domi_format) {
   const auto it = kDomiFormatToGeFormat.find(domi_format);
   if (it != kDomiFormatToGeFormat.end()) {
     return it->second;
@@ -452,7 +448,7 @@ Format TypeUtils::DomiFormatToFormat(domi::domiTensorFormat_t domi_format) {
   return FORMAT_RESERVED;
 }
 
-std::string TypeUtils::FmkTypeToSerialString(domi::FrameworkType fmk_type) {
+std::string TypeUtils::FmkTypeToSerialString(const domi::FrameworkType fmk_type) {
   const auto it = kFmkTypeToString.find(fmk_type);
   if (it != kFmkTypeToString.end()) {
     return it->second;
@@ -462,7 +458,7 @@ std::string TypeUtils::FmkTypeToSerialString(domi::FrameworkType fmk_type) {
   }
 }
 
-bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
+bool TypeUtils::GetDataTypeLength(const ge::DataType data_type, uint32_t &length) {
   const auto it = kDataTypeToLength.find(data_type);
   if (it != kDataTypeToLength.end()) {
     length = it->second;
@@ -479,7 +475,7 @@ bool TypeUtils::GetDataTypeLength(ge::DataType data_type, uint32_t &length) {
     return false;
   }
 }
-bool TypeUtils::CheckUint64MulOverflow(uint64_t a, uint32_t b) {
+bool TypeUtils::CheckUint64MulOverflow(const uint64_t a, const uint32_t b) {
   // Not overflow
   if (a == 0U) {
     return false;

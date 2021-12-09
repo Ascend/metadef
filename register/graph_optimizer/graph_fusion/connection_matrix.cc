@@ -15,7 +15,6 @@
  */
 #include "register/graph_optimizer/graph_fusion/connection_matrix.h"
 
-
 namespace fe {
 ConnectionMatrix::ConnectionMatrix() : size_(0) {};
 
@@ -31,10 +30,11 @@ Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
       max_id = id;
     }
   }
+
   size_t total_size = static_cast<size_t>(max_id + 1);
   bit_maps.reserve(total_size);
   size_ = total_size;
-  for (size_t i = 0; i < direct_nodes.size(); i++) {
+  for (size_t i = 0; i < total_size; i++) {
     bit_maps.emplace_back(size_);
   }
 

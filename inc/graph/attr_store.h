@@ -56,10 +56,10 @@
 namespace ge {
 using AttrId = uint64_t;
 using AttrSubId = uint32_t;
-enum AttrType {
-  kAttrPredefinedInIr,  // IR预定义的属性
-  kAttrGeneral,         // 通用属性
-  kAttrTypeEnd
+enum class AttrType : uint32_t {
+  kAttrPredefinedInIr = 0U,  // IR预定义的属性
+  kAttrGeneral = 1U,         // 通用属性
+  kAttrTypeEnd = 2U
 };
 constexpr inline uint32_t GetAttrType(const AttrId id) {
   return id >> 32U;
@@ -70,7 +70,7 @@ constexpr inline uint32_t GetSubAttrId(const AttrId id) {
 constexpr inline AttrId GetAttrId(const uint32_t type, const uint32_t sub_id) {
   return (static_cast<uint64_t>(type) << 32U) | static_cast<uint64_t>(sub_id);
 }
-constexpr AttrId kInvalidAttrId = GetAttrId(0xffffffffU, 0U);
+extern const AttrId kInvalidAttrId;
 
 class AttrStore {
  public:

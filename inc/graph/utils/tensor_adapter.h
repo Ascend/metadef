@@ -20,11 +20,9 @@
 #include <memory>
 #include "graph/ge_tensor.h"
 #include "graph/tensor.h"
+#include "graph/ge_attr_value.h"
 
 namespace ge {
-using GeTensorPtr = std::shared_ptr<GeTensor>;
-using ConstGeTensorPtr = std::shared_ptr<const GeTensor>;
-
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorAdapter {
  public:
   static GeTensorDesc TensorDesc2GeTensorDesc(const TensorDesc &tensor_desc);

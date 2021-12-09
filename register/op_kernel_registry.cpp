@@ -6,7 +6,7 @@
 namespace ge {
 class OpKernelRegistry::OpKernelRegistryImpl {
  public:
-  void RegisterHostCpuOp(const std::string &op_type, OpKernelRegistry::CreateFn create_fn) {
+  void RegisterHostCpuOp(const std::string &op_type, OpKernelRegistry::CreateFn const create_fn) {
     std::lock_guard<std::mutex> lock(mu_);
     create_fns_[op_type] = create_fn;
   }

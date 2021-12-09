@@ -17,6 +17,7 @@
 #ifndef TENSOR_ASSIGN_H_
 #define TENSOR_ASSIGN_H_
 
+#include "external/register/register_error_codes.h"
 #include "graph/ge_tensor.h"
 #include "proto/tensorflow/tensor.pb.h"
 

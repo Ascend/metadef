@@ -78,7 +78,7 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   OpDesc();
 
-  ~OpDesc();
+  ~OpDesc() override;
 
   bool operator==(const OpDesc &r_op_desc) const;
   OpDesc& operator=(OpDesc op_desc);
