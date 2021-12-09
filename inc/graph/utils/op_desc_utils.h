@@ -24,7 +24,7 @@
 #include "graph/op_desc.h"
 #include "graph/range_vistor.h"
 #include "graph/runtime_inference_context.h"
-
+/*lint -e148*/
 namespace ge {
 class OpDesc;
 using OpDescPtr = std::shared_ptr<OpDesc>;
@@ -182,5 +182,5 @@ class OpDescBuilder {
   std::vector<std::pair<std::string, GeTensorDesc>> outputs_;
 };
 }  // namespace ge
-
+/*lint +e148*/
 #endif  // INC_GRAPH_UTILS_OP_DESC_UTILS_H_
