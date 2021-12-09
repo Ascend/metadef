@@ -38,7 +38,7 @@ namespace ge {
 const char_t OP_DESC_QUANT_PARAMS[] = "quantize_factor";
 
 namespace {
-const int32_t CONST_OP_NORMAL_WEIGHT_SIZE = 1;
+const uint32_t CONST_OP_NORMAL_WEIGHT_SIZE = 1U;
 }
 
 bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
@@ -240,7 +240,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::NodePtr> OpDescUt
 
 std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(const ge::Node &node) {
   std::vector<std::pair<NodePtr, OutDataAnchorPtr>> ret;
-  auto in_nodes_and_anchors = node.GetInDataNodesAndAnchors();
+  const auto in_nodes_and_anchors = node.GetInDataNodesAndAnchors();
   for (const auto &in_node_2_anchor : in_nodes_and_anchors) {
     auto in_node = in_node_2_anchor.first;
     auto in_node_2_out_anchor = in_node_2_anchor;
@@ -264,7 +264,7 @@ std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(const ge::N
           break;
         }
         // Enter node has and only has one input
-        if (in_node->GetInDataNodes().size() != 1) {
+        if (in_node->GetInDataNodes().size() != 1U) {
           GELOGW("[Get][ConstInput] Check number of input_nodes for Enter node %s failed, input_node_num=%zu.",
                  in_node->GetName().c_str(), in_node->GetInDataNodes().size());
           break;
@@ -305,7 +305,8 @@ vector<ConstGeTensorPtr> OpDescUtils::GetWeightsFromNodes(
     const auto input_node = input_node_2_anchor.first;
     GeTensorPtr temp_weight ;
     (void)ConstantUtils::MutableWeight(input_node->GetOpDesc(),
-                                       input_node_2_anchor.second->GetIdx(), temp_weight);
+                                       static_cast<uint32_t>(input_node_2_anchor.second->GetIdx()),
+                                       temp_weight);
     if (temp_weight == nullptr) {
       REPORT_CALL_ERROR("E19999", "const op's weight is null, name: %s", input_node->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Invoke][MutableWeights] const op's weight is null, name: %s",
@@ -501,12 +502,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::GeTensorDesc> OpD
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 std::vector<ge::NodePtr> OpDescUtils::GetConstInputs(const ge::Node &node) {
   std::vector<ge::NodePtr> ret;
-  auto in_anchors = node.GetAllInDataAnchors();
+  const auto in_anchors = node.GetAllInDataAnchors();
   for (const auto &in_anchor : in_anchors) {
-    auto out_anchor = in_anchor->GetPeerOutAnchor();
-    if (out_anchor == nullptr) continue;
+    const auto out_anchor = in_anchor->GetPeerOutAnchor();
+    if (out_anchor == nullptr) {
+      continue;
+    }
 
-    auto in_node = out_anchor->GetOwnerNode();
+    const auto in_node = out_anchor->GetOwnerNode();
     if (in_node->GetType() == CONSTANT) {
       ret.push_back(in_node);
     } else if (in_node->GetType() == SWITCH && node.GetType() == MATMUL) {
@@ -897,7 +900,7 @@ OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name, const ui
 /// @return OpDescPtr
 ///
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescBuilder::Build() {
-  OpDescPtr op_desc = shared_ptr<OpDesc>(new (std::nothrow) OpDesc(name_, type_));
+  const OpDescPtr op_desc = shared_ptr<OpDesc>(new (std::nothrow) OpDesc(name_, type_));
   if (op_desc == nullptr) {
     REPORT_CALL_ERROR("E19999", "create opdesc failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
     GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
@@ -944,7 +947,7 @@ graphStatus OpDescUtils::SetSubgraphInstanceName(const std::string &subgraph_nam
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, uint32_t idx) {
+ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, const uint32_t idx) {
   if (op.operator_impl_ == nullptr) {
     GELOGW("[Check][Param] Op(%s) operator_impl_ is nullptr.", op.GetName().c_str());
     return nullptr;

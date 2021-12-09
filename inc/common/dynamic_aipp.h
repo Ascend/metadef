@@ -23,7 +23,7 @@
 * @ingroup dnn
 * @brief struct define of dynamic aipp batch parameter.
 */
-typedef struct tagAippDynamicBatchPara {
+struct tagAippDynamicBatchPara {
   int8_t cropSwitch;     // crop switch
   int8_t scfSwitch;      // resize switch
   int8_t paddingSwitch;  // 0: unable padding
@@ -64,13 +64,14 @@ typedef struct tagAippDynamicBatchPara {
   uint16_t dtcPixelVarReciChn3;  // sfr_dtc_pixel_variance_reci_ch3
 
   int8_t reserve1[16];  // 32B assign, for ub copy
-} kAippDynamicBatchPara;
+};
+using kAippDynamicBatchPara = tagAippDynamicBatchPara;
 
 /**
 * @ingroup dnn
 * @brief struct define of dynamic aipp parameter. lite:64+96*batchNum byte ; tiny:64+64*batchNum byte
 */
-typedef struct tagAippDynamicPara {
+struct tagAippDynamicPara {
   uint8_t inputFormat;    // input format：YUV420SP_U8/XRGB8888_U8/RGB888_U8
   int8_t cscSwitch;       // csc switch
   int8_t rbuvSwapSwitch;  // rb/ub swap switch
@@ -99,6 +100,7 @@ typedef struct tagAippDynamicPara {
   int8_t reserve4[16];  // 32B assign, for ub copy
 
   kAippDynamicBatchPara aippBatchPara;  // allow transfer several batch para.
-} kAippDynamicPara;
+};
+using kAippDynamicPara = tagAippDynamicPara;
 
 #endif  // INC_COMMON_DYNAMIC_AIPP_H_
