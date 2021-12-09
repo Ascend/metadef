@@ -197,7 +197,7 @@ TEST_F(UtestNode, NodeAnchorIsEqual) {
   OutDataAnchorPtr out_anch1 = std::make_shared<OutDataAnchor>(data_node, 333);
   EXPECT_EQ(in_anch1->LinkFrom(out_anch1), GRAPH_SUCCESS);
   EXPECT_EQ(data_node->NodeAnchorIsEqual(in_anch1, in_anch2, 2), false);
-  OutDataAnchorPtr out_anch2 = std::make_shared<OutDataAnchor>(MakeNullptr<Node>(), 444);
+  OutDataAnchorPtr out_anch2 = std::make_shared<OutDataAnchor>(nullptr, 444);
   EXPECT_EQ(in_anch2->LinkFrom(out_anch2), GRAPH_SUCCESS);
   EXPECT_EQ(data_node->NodeAnchorIsEqual(in_anch1, in_anch2, 2), false);
 }
@@ -281,7 +281,8 @@ TEST_F(UtestNode, AddLinkByStringInputDescFailure) {
   EXPECT_EQ(data_node->NodeAnchorIsEqual(out_anch, inc_anch, 1),false);
   EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
   data_node->impl_->op_->impl_->input_name_idx_["input_name"] = 10;
-  data_node->impl_->op_->impl_->outputs_desc_.push_back(MakeNullptr<GeTensorDesc>());
+  //data_node->impl_->op_->impl_->outputs_desc_.push_back(MakeNullptr<GeTensorDesc>());
+  data_node->impl_->op_->impl_->outputs_desc_.push_back(nullptr);
   auto odesc = data_node->GetOpDesc()->GetOutputDesc(0);
   attr_node->impl_->op_->impl_->input_name_idx_["__input5"] = -1;
   auto it = attr_node->impl_->op_->impl_->input_name_idx_.find("__input5");
@@ -295,7 +296,8 @@ TEST_F(UtestNode, AddLinkByStringInputDescFailure) {
 TEST_F(UtestNode, Verify) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data_node = builder.AddNode("Data", "Data", 1, 1);
-  data_node->impl_->in_data_anchors_.push_back(MakeNullptr<InDataAnchor>());
+  //data_node->impl_->in_data_anchors_.push_back(MakeNullptr<InDataAnchor>());
+  data_node->impl_->in_data_anchors_.push_back(nullptr);
   EXPECT_EQ(data_node->Verify(), GRAPH_SUCCESS);
   auto node_op = ge::OperatorFactoryImpl::CreateOperator("node_op", data_node->impl_->op_->GetType());
   EXPECT_NE(OperatorFactoryImpl::operator_creators_v2_, nullptr);

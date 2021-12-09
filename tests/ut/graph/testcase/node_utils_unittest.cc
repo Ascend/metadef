@@ -681,8 +681,6 @@ TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndex) {
   EXPECT_EQ(NodeUtils::GetSubgraphDataNodesByIndex(*node, 0).size(), 0);
   auto op_desc = node->GetOpDesc();
   auto subgraph_names = op_desc->GetSubgraphInstanceNames();
-  //op_desc->impl_->subgraph_instance_names_.push_back("sub");
-  //EXPECT_EQ(NodeUtils::GetSubgraphDataNodesByIndex(*node, 0).size(), 0);
 }
 
 
@@ -806,6 +804,9 @@ TEST_F(UtestNodeUtils, GetInNodeCrossSubgraph){
       dt_node = node;
     }
   }
+  EXPECT_NE(NodeUtils::GetInNodeCrossSubgraph(dt_node), nullptr);
+  auto owner_graph = dt_node->GetOwnerComputeGraph();
+  owner_graph->impl_->parent_node_ = MakeNullptr<Node>();
   EXPECT_NE(NodeUtils::GetInNodeCrossSubgraph(dt_node), nullptr);
 }
 
