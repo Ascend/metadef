@@ -17,20 +17,18 @@
 #ifndef TENSOR_ASSIGN_H_
 #define TENSOR_ASSIGN_H_
 
-#include "external/register/register_error_codes.h"
+#include <vector>
 #include "graph/ge_tensor.h"
+#include "external/register/register_error_codes.h"
 #include "proto/tensorflow/tensor.pb.h"
 
 namespace domi {
 using GeTensorPtr = std::shared_ptr<ge::GeTensor>;
 using Status = uint32_t;
-using domi::tensorflow::TensorProto;
-using google::protobuf::int32;
-using google::protobuf::int64;
 
 class TensorAssign {
  public:
-  static Status SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight);
+  static Status SetGeTensor(const domi::tensorflow::TensorProto &tensor, GeTensorPtr &weight);
 
   static Status SetGeTensorDataType(const int64_t data_type, GeTensorPtr &weight);
 
@@ -63,16 +61,17 @@ class TensorAssign {
 
   static bool CheckUnsignedEightByte(const tensorflow::DataType data_type);
 
-  static Status GetDoubleByteVal(const int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
+  static Status GetDoubleByteVal(const int32_t val_size,
+                                 const google::protobuf::RepeatedField<google::protobuf::int32> &val_vector,
                                  const int32_t count, GeTensorPtr &weight);
-
-  static Status GetByteVal(const int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
+  static Status GetByteVal(const int32_t val_size,
+                           const google::protobuf::RepeatedField<google::protobuf::int32> &val_vector,
                            const int32_t count, GeTensorPtr &weight);
 
   static Status GetStringVal(const int32_t val_size, const google::protobuf::RepeatedPtrField<std::string> &val_vector,
                              const int32_t count, GeTensorPtr &weight);
 
-  static void SetGeTensorWeightData(const TensorProto &tensor, const int32_t val_size,
+  static void SetGeTensorWeightData(const domi::tensorflow::TensorProto &tensor, const int32_t val_size,
                                     const int32_t count, GeTensorPtr &weight);
 
   static void SetWeightData(const tensorflow::DataType data_type, const int32_t count,
@@ -86,14 +85,15 @@ class TensorAssign {
     const bool zerosLike = ((count != val_size) && (val_size == 1));
     if (!zerosLike) {
       const int32_t minCount = (count > val_size) ? val_size : count;
-      for (int32_t i = 0; i < minCount; i++) {
-        addr[i] = val_vector.Get(i);
+      const size_t minSize = static_cast<size_t>(minCount);
+      for (size_t i = 0UL; i < minSize; i++) {
+        addr[i] = val_vector.Get(static_cast<int32_t>(i));
       }
-      for (int32_t i = minCount; i < count; i++) {
+      for (size_t i = minSize; i < static_cast<size_t>(count); i++) {
         addr[i] = val_vector.Get(minCount - 1);
       }
     } else {
-      for (int32_t i = 0; i < count; i++) {
+      for (size_t i = 0UL; i < static_cast<size_t>(count); i++) {
         addr[i] = val_vector.Get(0);
       }
     }

@@ -28,8 +28,6 @@
 #include "detail/attributes_holder.h"
 #include "graph/range_vistor.h"
 
-#define DYNAMIN_INPUT_NAME(name, index) (((name)) + std::to_string((index)))
-#define DYNAMIN_OUTPUT_NAME(name, index) (((name)) + std::to_string((index)))
 namespace ge {
 using std::map;
 using std::pair;
