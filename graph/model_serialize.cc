@@ -48,7 +48,7 @@ bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::strin
   return true;
 }
 
-bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *op_def_proto) const {
+bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto) const {
   GE_CHK_BOOL_EXEC(node != nullptr, REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
                    return false, "[Check][Param] node is null.");
   GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E19999", "param op_def_proto is null, check invalid.");
@@ -94,7 +94,7 @@ void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_de
   }
 }
 
-bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto,
+bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
                                         const bool is_dump) {
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr. check invalid.");
                    return false, "[Check][Param] op_desc is null.");
@@ -136,11 +136,11 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
   return true;
 }
 
-void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *op_def_proto,
+void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
                                         const bool is_dump) const {
   proto::AttrDef key_in;
   proto::AttrDef value_in;
-  auto op_desc_attr = op_def_proto->mutable_attr();
+  auto const op_desc_attr = op_def_proto->mutable_attr();
   if (op_desc == nullptr || op_desc->impl_ == nullptr) {
     GELOGE(FAILED, "[Check][Param] op desc or impl is nullptr.");
     return;
@@ -185,7 +185,7 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
   }
 }
 
-bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_proto, const bool is_dump) {
+bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump) {
   if ((node == nullptr) || (op_def_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or op_def_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param node or op_def_proto is nullptr, check invalid.");
@@ -203,8 +203,7 @@ bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *op_def_
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeGraph(const ConstComputeGraphPtr &graph,
-                                                                                      proto::GraphDef *graph_proto,
-                                                                                      const bool is_dump) {
+    proto::GraphDef *const graph_proto, const bool is_dump) {
   if ((graph == nullptr) || (graph_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param graph or graph_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param graph or graph_proto is nullptr, check invalid.");
@@ -242,7 +241,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   return true;
 }
 
-bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *model_proto, const bool is_dump) {
+bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *const model_proto, const bool is_dump) {
   if (model_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param model_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param model_proto is nullptr, check Invalid");
@@ -285,7 +284,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
                                         std::vector<std::string> &key_out,
                                         std::vector<uint32_t> &value_in,
                                         std::vector<uint32_t> &value_out,
-                                        std::vector<std::string> &opt_input) const {
+                                        const std::vector<std::string> &opt_input) const {
   if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
     GELOGE(FAILED, "[Serialize][Opdesc] op desc or impl is nullptr.");
     return;
@@ -638,7 +637,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Unseriali
   return true;
 }
 
-static bool ReadProtoFromBinaryFile(const uint8_t *const data, const size_t len, google::protobuf::Message *proto) {
+static bool ReadProtoFromBinaryFile(const uint8_t *const data, const size_t len,
+                                    google::protobuf::Message *const proto) {
   GE_CHK_BOOL_EXEC(data != nullptr, REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
                    return false, "[Check][Param] data is null.");
   GE_CHK_BOOL_EXEC(proto != nullptr, REPORT_INNER_ERROR("E19999", "param proto is nullptr, check invalid.");
@@ -657,7 +657,7 @@ static bool ReadProtoFromBinaryFile(const uint8_t *const data, const size_t len,
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeAllAttrsFromAnyMap(
     const std::map<std::string, AnyValue> &attr_map,
-    google::protobuf::Map<std::string, ::ge::proto::AttrDef> * mutable_attr) {
+    google::protobuf::Map<std::string, ::ge::proto::AttrDef> *const mutable_attr) {
   if (mutable_attr == nullptr) {
     GELOGE(GRAPH_FAILED, "mutable_attr is nullptr.");
     return false;
@@ -682,7 +682,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::DeserializeAllAttrsToAttrHolder(
-    const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &proto_attr_map, AttrHolder *attr_holder) {
+    const google::protobuf::Map<std::string, ::ge::proto::AttrDef> &proto_attr_map, AttrHolder *const attr_holder) {
   if (attr_holder == nullptr) {
     return false;
   }
