@@ -61,11 +61,17 @@ class FFTSPlusTaskUpdate {
 
   virtual Status GetAutoThreadParam(const NodePtr &node, const std::vector<optiling::utils::OpRunInfo> &op_run_info,
                                     AutoThreadParam &auto_thread_param) {
+    (void)node;
+    (void)op_run_info;
+    (void)auto_thread_param;
     return SUCCESS;
   }
 
   virtual Status UpdateSubTaskAndCache(const NodePtr &node, const AutoThreadSubTaskFlush &sub_task_flush,
                                        rtFftsPlusTaskInfo_t &ffts_plus_task_info) {
+    (void)node;
+    (void)sub_task_flush;
+    (void)ffts_plus_task_info;
     return SUCCESS;
   }
 };
