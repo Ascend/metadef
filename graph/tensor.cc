@@ -167,8 +167,8 @@ class TensorImpl {
       // Front 8 bytes store pointer of string
       char_t *const raw_data = PtrToPtr<void, char_t>(
           ValueToPtr(PtrToValue(PtrToPtr<char_t, void>(buff.get())) + sizeof(*string_head)));
-      string_head->addr = PtrToValue(static_cast<void *>(raw_data));
-      string_head->len = static_cast<uint64_t>(data.size());
+      string_head->addr = sizeof(StringHead);
+      string_head->len = static_cast<int64_t>(data.size());
       const int32_t memcpy_ret = memcpy_s(raw_data, total_size - sizeof(StringHead),  data.c_str(), data.size() + 1U);
       if (memcpy_ret != EOK) {
         REPORT_CALL_ERROR("E19999", "memcpy data failed, ret:%d, size:%zu.", memcpy_ret, data.size() + 1U);
@@ -206,8 +206,8 @@ class TensorImpl {
     uint64_t raw_data = PtrToValue(static_cast<void *>(buff.get())) + (data.size() * sizeof(*string_head));
     uint64_t ptr_size = data.size() * sizeof(StringHead);
     for (size_t i = 0U; i < data.size(); ++i) {
-      PtrAdd<StringHead>(string_head, data.size(), i)->addr = raw_data;
-      PtrAdd<StringHead>(string_head, data.size(), i)->len = static_cast<uint64_t>(data[i].size());
+      PtrAdd<StringHead>(string_head, data.size(), i)->addr = static_cast<int64_t>(ptr_size);
+      PtrAdd<StringHead>(string_head, data.size(), i)->len = static_cast<int64_t>(data[i].size());
       if (total_size < ptr_size) {
         REPORT_INNER_ERROR("E19999", "Subtraction invalid, total_size:%zu, ptr_size:%lu", total_size, ptr_size);
         GELOGE(GRAPH_FAILED, "[Check][Param] Subtraction invalid, total_size: %zu, ptr_size: %lu",
