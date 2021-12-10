@@ -21,7 +21,8 @@
 #include <memory>
 #include <vector>
 
-#include "external/ge/ge_api_types.h"
+#include "external/graph/types.h"
+#include "ge/ge_api_error_codes.h"
 
 namespace ge {
 namespace formats {
@@ -46,19 +47,34 @@ struct TransResult {
 
 class FormatTransfer {
  public:
+  FormatTransfer() = default;
   virtual ~FormatTransfer() = default;
   virtual Status TransFormat(const TransArgs &args, TransResult &result) = 0;
   virtual Status TransShape(Format src_format, const std::vector<int64_t> &src_shape, DataType data_type,
                             Format dst_format, std::vector<int64_t> &dst_shape) = 0;
+
+ private:
+  FormatTransfer(const FormatTransfer &) = delete;
+  FormatTransfer &operator=(const FormatTransfer &) = delete;
 };
 
 using FormatTransferBuilder = std::function<std::shared_ptr<FormatTransfer>()>;
 
 class FormatTransferRegister {
  public:
-  FormatTransferRegister(FormatTransferBuilder builder, Format src, Format dst);
+  FormatTransferRegister(FormatTransferBuilder builder, const Format src, const Format dst);
   ~FormatTransferRegister() = default;
 };
+
+/// Build a formattransfer according to 'args'
+/// @param args
+/// @param result
+/// @return
+std::shared_ptr<FormatTransfer> BuildFormatTransfer(const TransArgs &args);
+
+bool FormatTransferExists(const TransArgs &args);
+}  // namespace formats
+}  // namespace ge
 
 #define REGISTER_FORMAT_TRANSFER(TransferClass, format1, format2)                    \
   namespace {                                                                        \
@@ -72,16 +88,7 @@ class FormatTransferRegister {
         }                                                                            \
         return ptr;                                                                  \
       },                                                                             \
-      format1, format2);                                                             \
+      (format1), (format2));                                                         \
   }
 
-/// Build a formattransfer according to 'args'
-/// @param args
-/// @param result
-/// @return
-std::shared_ptr<FormatTransfer> BuildFormatTransfer(const TransArgs &args);
-
-bool FormatTransferExists(const TransArgs &args);
-}  // namespace formats
-}  // namespace ge
 #endif  // INC_REGISTER_REGISTER_FORMAT_TRANSFER_H_

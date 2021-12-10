@@ -23,21 +23,11 @@
 namespace ge {
 class AnchorUtils {
  public:
-  // Get anchor format
-  static Format GetFormat(const DataAnchorPtr &data_anchor);
-
-  // Set anchor format
-  static graphStatus SetFormat(const DataAnchorPtr &data_anchor, Format data_format);
-
   // Get anchor status
   static AnchorStatus GetStatus(const DataAnchorPtr &data_anchor);
 
   // Set anchor status
-  static graphStatus SetStatus(const DataAnchorPtr &data_anchor, AnchorStatus anchor_status);
-
-  static bool HasControlEdge(const AnchorPtr &anchor);
-
-  static bool IsControlEdge(const AnchorPtr &src, const AnchorPtr &dst);
+  static graphStatus SetStatus(const DataAnchorPtr &data_anchor, const AnchorStatus anchor_status);
 
   static int32_t GetIdx(const AnchorPtr &anchor);
 };

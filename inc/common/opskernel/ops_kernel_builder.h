@@ -14,8 +14,8 @@
  * limitations under the License.
 */
 
-#ifndef INC_COMMON_OPSKERNELUTILS_OPS_KERNEL_INFO_UTILS_H_
-#define INC_COMMON_OPSKERNELUTILS_OPS_KERNEL_INFO_UTILS_H_
+#ifndef INC_COMMON_OPSKERNEL_OPS_KERNEL_BUILDER_H_
+#define INC_COMMON_OPSKERNEL_OPS_KERNEL_BUILDER_H_
 
 #include "external/ge/ge_api_error_codes.h"
 #include "cce/aicpu_engine_struct.h"
@@ -33,6 +33,10 @@ class OpsKernelBuilder {
   };
   OpsKernelBuilder() = default;
   virtual ~OpsKernelBuilder() = default;
+  OpsKernelBuilder(const OpsKernelBuilder &) = delete;
+  OpsKernelBuilder(OpsKernelBuilder &&) = delete;
+  OpsKernelBuilder &operator=(const OpsKernelBuilder &) = delete;
+  OpsKernelBuilder &operator=(OpsKernelBuilder &&) = delete;
 
   // initialize OpsKernelBuilder
   virtual Status Initialize(const std::map<std::string, std::string> &options) = 0;

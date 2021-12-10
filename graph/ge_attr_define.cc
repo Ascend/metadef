@@ -1159,6 +1159,7 @@ const std::string ATTR_STAGE_LEVEL = "_stage_level";
 // input_output_offset
 const std::string ATTR_ZERO_COPY_BASIC_OFFSET = "_zero_copy_basic_offset";
 const std::string ATTR_ZERO_COPY_RELATIVE_OFFSET = "_zero_copy_relative_offset";
+const std::string ATTR_IS_ZERO_COPY_BLOCK = "_is_zero_copy_block";
 
 // mark node cannot be deleted
 const std::string ATTR_NAME_CANNOT_BE_DELETED = "_cannot_be_deleted";
@@ -1281,4 +1282,8 @@ const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INPUT_SHAPE = "_subgraph_multi_d
 const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INPUT_DIMS = "_subgraph_multi_dims_input_dims";
 const std::string ATTR_NAME_SUBGRAPH_IS_MULTI_DIMS = "_subgraph_is_multi_dims";
 const std::string ATTR_NAME_OP_MULTI_DIMS_INPUT_DIMS = "_op_multi_dims_input_dims";
+
+// for support BlockDim
+const std::string ATTR_NAME_SUPPORT_BLOCKDIM_FLAG = "_support_blockdim_flag";
+const std::string ATTR_NAME_BLOCKDIM_INDEX = "_blockdim_index";
 }  // namespace ge

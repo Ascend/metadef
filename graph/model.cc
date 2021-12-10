@@ -39,28 +39,28 @@ using google::protobuf::io::FileInputStream;
 using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
 
-const int32_t DEFAULT_VERSION = 1U;
+const int32_t DEFAULT_VERSION = 1;
 const int32_t ACCESS_PERMISSION_BITS = 0400;
 static ge::ModelSerialize SERIALIZE;
 }  // namespace
 
 namespace ge {
 static char_t *GetStrError() {
-  constexpr size_t kMaxErrorStringLen = 128U;
-  char_t err_buf[kMaxErrorStringLen + 1U] = {};
-  const auto str_error = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrorStringLen);
+  constexpr size_t kMaxErrorStrLen = 128U;
+  char_t err_buf[kMaxErrorStrLen + 1U] = {};
+  const auto str_error = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrorStrLen);
   return str_error;
 }
 
 void Model::Init() {
-  (void)AttrUtils::SetInt(this, ATTR_MODEL_MEMORY_SIZE, 0U);
-  (void)AttrUtils::SetInt(this, ATTR_MODEL_P2P_MEMORY_SIZE, 0U);
-  (void)AttrUtils::SetInt(this, ATTR_MODEL_STREAM_NUM, 0U);
-  (void)AttrUtils::SetInt(this, ATTR_MODEL_EVENT_NUM, 0U);
-  (void)AttrUtils::SetInt(this, ATTR_MODEL_LABEL_NUM, 0U);
-  (void)AttrUtils::SetInt(this, ATTR_MODEL_WEIGHT_SIZE, 0U);
+  (void)AttrUtils::SetInt(this, ATTR_MODEL_MEMORY_SIZE, 0);
+  (void)AttrUtils::SetInt(this, ATTR_MODEL_P2P_MEMORY_SIZE, 0);
+  (void)AttrUtils::SetInt(this, ATTR_MODEL_STREAM_NUM, 0);
+  (void)AttrUtils::SetInt(this, ATTR_MODEL_EVENT_NUM, 0);
+  (void)AttrUtils::SetInt(this, ATTR_MODEL_LABEL_NUM, 0);
+  (void)AttrUtils::SetInt(this, ATTR_MODEL_WEIGHT_SIZE, 0);
   (void)AttrUtils::SetStr(this, ATTR_MODEL_TARGET_TYPE, TARGET_TYPE_MINI);
-  version_ = 0;
+  version_ = 0U;
 }
 
 Model::Model() :AttrHolder() {
@@ -84,7 +84,7 @@ void Model::SetGraph(const ge::Graph &graph) { graph_ = graph; }
 
 Graph Model::GetGraph() const { return graph_; }
 
-graphStatus Model::Save(Buffer &buffer, bool is_dump) const {
+graphStatus Model::Save(Buffer &buffer, const bool is_dump) const {
   buffer = SERIALIZE.SerializeModel(*this, is_dump);
   return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }

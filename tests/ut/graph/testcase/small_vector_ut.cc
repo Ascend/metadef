@@ -1318,3 +1318,33 @@ TEST_F(SmallVectorUt, ReserveOk2) {
   EXPECT_EQ(vec1[2], 3);
 }
 }  // namespace ge
+
+namespace test_open {
+  using ge::SmallVector;
+  class OpenSmallVectorUt : public testing::Test {};
+
+  TEST_F(OpenSmallVectorUt, CompareOperator) {
+  SmallVector<int32_t, 4> vec1({1,2,3,4});
+  SmallVector<int32_t, 4> vec2({1,2,3,4});
+  SmallVector<int32_t, 5> vec3({1,2,3,4,5});
+  SmallVector<int32_t, 5> vec4({1,2,3,5});
+  SmallVector<int32_t, 4> vec5({1,2,3,5});
+  SmallVector<int32_t, 4> vec6({1,2,3,4,5});
+
+  EXPECT_TRUE(vec1 == vec2);
+  EXPECT_FALSE(vec1 == vec3);
+  EXPECT_FALSE(vec1 == vec4);
+  EXPECT_FALSE(vec1 == vec5);
+  EXPECT_FALSE(vec1 == vec6);
+  EXPECT_TRUE(vec1 <= vec2);
+  EXPECT_TRUE(vec1 >= vec2);
+  EXPECT_FALSE(vec1 != vec2);
+  EXPECT_TRUE(vec1 != vec3);
+  EXPECT_FALSE(vec1 == vec3);
+
+  EXPECT_TRUE(vec1 < vec3);
+  EXPECT_TRUE(vec1 <= vec3);
+  EXPECT_TRUE(vec3 < vec4);
+  EXPECT_TRUE(vec3 <= vec4);
+}
+} // namespace test_open

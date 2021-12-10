@@ -24,7 +24,7 @@
 #include "graph/op_desc.h"
 #include "graph/range_vistor.h"
 #include "graph/runtime_inference_context.h"
-
+/*lint -e148*/
 namespace ge {
 class OpDesc;
 using OpDescPtr = std::shared_ptr<OpDesc>;
@@ -62,13 +62,13 @@ class OpDescUtils {
   static size_t GetNonConstInputsSize(const ge::Node& node);
   static size_t GetNonConstInputsSize(const ge::ConstNodePtr node);
   // Index: Indicates the index of all non const inputs
-  static GeTensorDesc GetNonConstInputTensorDesc(const ge::Node& node, const size_t index_non_const = 0);
-  static GeTensorDesc GetNonConstInputTensorDesc(const ge::ConstNodePtr& node, const size_t index_non_const = 0);
+  static GeTensorDesc GetNonConstInputTensorDesc(const ge::Node& node, const size_t index_non_const = 0UL);
+  static GeTensorDesc GetNonConstInputTensorDesc(const ge::ConstNodePtr& node, const size_t index_non_const = 0UL);
   static bool GetNonConstInputIndex(const ge::Node& node, const size_t index_non_const, size_t& index);
   static bool GetNonConstInputIndex(const ge::ConstNodePtr& node, const size_t index_non_const, size_t& index);
   // Index: Indicates the index of all inputs
-  static bool IsNonConstInput(const ge::Node& node, const size_t index = 0);
-  static bool IsNonConstInput(const ge::ConstNodePtr& node, const size_t index = 0);
+  static bool IsNonConstInput(const ge::Node& node, const size_t index = 0UL);
+  static bool IsNonConstInput(const ge::ConstNodePtr& node, const size_t index = 0UL);
 
   static std::vector<ge::GeTensorDesc> GetNonConstTensorDesc(const ge::ConstNodePtr& node);
   static graphStatus AddConstOpToAnchor(const InDataAnchorPtr in_anchor, const GeTensorPtr& tensor_ptr);
@@ -87,7 +87,7 @@ class OpDescUtils {
 
   static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,
       const std::string &subgraph_instance_name, OpDescPtr &op_desc);
-  static ConstGeTensorBarePtr GetInputConstData(const Operator &op, uint32_t idx);
+  static ConstGeTensorBarePtr GetInputConstData(const Operator &op, const uint32_t idx);
   static void SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *context);
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
@@ -182,5 +182,5 @@ class OpDescBuilder {
   std::vector<std::pair<std::string, GeTensorDesc>> outputs_;
 };
 }  // namespace ge
-
+/*lint +e148*/
 #endif  // INC_GRAPH_UTILS_OP_DESC_UTILS_H_

@@ -724,7 +724,7 @@ graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<Compu
   return GRAPH_SUCCESS;
 }
 
-ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, uint32_t index) {
+ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, const uint32_t index) {
   const auto op_desc = node.GetOpDesc();
   if (op_desc == nullptr) {
     return nullptr;
@@ -1179,11 +1179,9 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   peer_node = (node->GetType() == DATA) ? node : GetInDataNodeByIndex(*node, index);
   int32_t peer_out_anchor_index = -1;
   if (peer_node == nullptr) {
-    // tmp solution
     // A->B
     // Asuming A and B belongs to different engine, during graph partition, A will be set to B's extra attr as
     // parent node. when FE get parent node A from B, check A's in_anchor peer_out_anchor is null.
-    // But dump graph is good. weird thing.
     return GRAPH_SUCCESS;
   }
   while (!IsComputableOp(peer_node)) {

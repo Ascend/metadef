@@ -49,24 +49,6 @@ using SubAnchorPtr = std::shared_ptr<SubAnchor>;
 
 class AnchorUtilsUt : public testing::Test {};
 
-TEST_F(AnchorUtilsUt, GetFormat) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto node = builder.AddNode("Data", "Data", 1, 1);
-  InDataAnchorPtr inanch = std::make_shared<InDataAnchor>(node, 111);
-  EXPECT_NE(AnchorUtils::GetFormat(inanch),FORMAT_RESERVED);
-  EXPECT_EQ(AnchorUtils::GetFormat(inanch),FORMAT_ND);
-  EXPECT_EQ(AnchorUtils::GetFormat(nullptr),FORMAT_RESERVED);
-}
-
-TEST_F(AnchorUtilsUt, SetFormat) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto node = builder.AddNode("Data", "Data", 1, 1);
-  InDataAnchorPtr inanch = std::make_shared<InDataAnchor>(node, 111);
-  EXPECT_EQ(AnchorUtils::SetFormat(inanch,  FORMAT_NCHW), GRAPH_SUCCESS);
-  EXPECT_EQ(AnchorUtils::SetFormat(inanch,  FORMAT_RESERVED), GRAPH_FAILED);
-  EXPECT_EQ(AnchorUtils::SetFormat(nullptr, FORMAT_NCHW), GRAPH_FAILED);
-}
-
 TEST_F(AnchorUtilsUt, GetStatus) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto node = builder.AddNode("Data", "Data", 1, 1);
@@ -83,37 +65,6 @@ TEST_F(AnchorUtilsUt, SetStatus) {
   EXPECT_EQ(AnchorUtils::SetStatus(inanch,  ANCHOR_DATA), GRAPH_SUCCESS);
   EXPECT_EQ(AnchorUtils::SetStatus(inanch,  ANCHOR_RESERVED), GRAPH_FAILED);
   EXPECT_EQ(AnchorUtils::SetStatus(nullptr, ANCHOR_DATA), GRAPH_FAILED);
-}
-
-TEST_F(AnchorUtilsUt, HasControlEdge) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto node = builder.AddNode("Data", "Data", 1, 1);
-  InControlAnchorPtr inanch = std::make_shared<InControlAnchor>(node, 111);
-  EXPECT_EQ(AnchorUtils::HasControlEdge(inanch), false);
-  SubAnchorPtr sanch = std::make_shared<SubAnchor>(node, 222);
-  EXPECT_EQ(AnchorUtils::HasControlEdge(sanch), false);
-
-  ut::GraphBuilder builder2 = ut::GraphBuilder("graph");
-  auto node2 = builder2.AddNode("Data", "Data", 2, 2);
-  OutDataAnchorPtr outanch = std::make_shared<OutDataAnchor>(node2, 22);
-  EXPECT_EQ(AnchorUtils::HasControlEdge(outanch), false);
-  auto node3 = builder2.AddNode("Data", "Data", 3, 3);
-  InControlAnchorPtr peerctr = std::make_shared<InControlAnchor>(node3, 33);
-  EXPECT_EQ(outanch->LinkTo(peerctr), GRAPH_SUCCESS);
-  EXPECT_EQ(AnchorUtils::HasControlEdge(outanch), true);
-}
-
-TEST_F(AnchorUtilsUt, IsControlEdge) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto node = builder.AddNode("Data", "Data", 1, 1);
-  InControlAnchorPtr inanch = std::make_shared<InControlAnchor>(node, 111);
-
-  ut::GraphBuilder builder2 = ut::GraphBuilder("graph");
-  auto node2 = builder2.AddNode("Data", "Data", 2, 2);
-  OutControlAnchorPtr outanch = std::make_shared<OutControlAnchor>(node2, 22);
-  EXPECT_EQ(AnchorUtils::IsControlEdge(inanch, outanch), false);
-  EXPECT_EQ(inanch->LinkFrom(outanch), 0);
-  EXPECT_EQ(AnchorUtils::IsControlEdge(inanch, outanch), true);
 }
 
 TEST_F(AnchorUtilsUt, GetIdx) {

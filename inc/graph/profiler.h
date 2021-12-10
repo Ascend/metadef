@@ -40,10 +40,18 @@ struct ProfilingRecord {
   EventType et;
   std::chrono::time_point<std::chrono::system_clock> timestamp;
 };
+
+struct StrHash {
+    char str[kMaxStrLen];
+    uint64_t hash;
+};
+
 class Profiler {
  public:
   static std::unique_ptr<Profiler> Create();
+  void UpdateHashByIndex(const int64_t index, const uint64_t hash);
   void RegisterString(int64_t index, const std::string &str);
+  void RegisterStringHash(int64_t index, uint64_t hash, const std::string &str);
   void Record(int64_t element, int64_t thread, int64_t event, EventType et);
   void RecordCurrentThread(int64_t element, int64_t event, EventType et);
 
@@ -53,10 +61,10 @@ class Profiler {
   size_t GetRecordNum() const noexcept;
   const ProfilingRecord *GetRecords() const;
 
-  using ConstStringsPointer = char const(*)[kMaxStrLen];
-  using StringsPointer = char (*)[kMaxStrLen];
-  ConstStringsPointer GetStrings() const;
-  StringsPointer GetStrings() ;
+  using ConstStringHashesPointer = StrHash const(*);
+  using StringHashesPointer = StrHash (*);
+  ConstStringHashesPointer GetStringHashes() const;
+  StringHashesPointer GetStringHashes() ;
 
   ~Profiler();
 
@@ -67,7 +75,7 @@ class Profiler {
  private:
   std::atomic<size_t> record_size_;
   std::array<ProfilingRecord, kMaxRecordNum> records_;
-  char indexes_to_str_[kMaxStrIndex][kMaxStrLen];
+  StrHash indexes_to_str_hashes_[kMaxStrIndex];
 };
 }
 }

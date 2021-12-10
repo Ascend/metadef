@@ -38,7 +38,6 @@ class Node;
 
 using NodePtr = std::shared_ptr<Node>;
 using ConstNodePtr = std::shared_ptr<const Node>;
-using NodeRef = std::weak_ptr<Node>;
 
 class Anchor;
 

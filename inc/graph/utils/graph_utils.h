@@ -31,7 +31,7 @@
 #include "graph/model.h"
 #include "graph/node.h"
 #include "graph/utils/anchor_utils.h"
-
+/*lint -e148*/
 #define GE_DUMP(compute_graph, name)                                                                               \
   do {                                                                                                             \
     GraphUtils::DumpGEGraph(compute_graph, name);                                                                  \
@@ -50,13 +50,13 @@ enum IOType { kIn, kOut };
 class NodeIndexIO {
  public:
   NodeIndexIO(const NodePtr node, const uint32_t index, const IOType io_type)
-      : node_(std::move(node)), index_(index), io_type_(io_type) {
+      : node_(node), index_(index), io_type_(io_type) {
     if (node_ != nullptr) {
       value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
     }
   }
   NodeIndexIO(const NodePtr node, const int32_t index, const IOType io_type)
-      : node_(std::move(node)), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
+      : node_(node), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
     if (node_ != nullptr) {
       value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
     }
@@ -596,7 +596,7 @@ class ComputeGraphBuilder {
 class CompleteGraphBuilder : public ComputeGraphBuilder {
  public:
   explicit CompleteGraphBuilder(const std::string name, const bool retval_flag = true)
-      : ComputeGraphBuilder(), name_(std::move(name)), parent_node_(nullptr), retval_flag_(retval_flag) {}
+      : ComputeGraphBuilder(), name_(name), parent_node_(nullptr), retval_flag_(retval_flag) {}
   CompleteGraphBuilder(const CompleteGraphBuilder &) = delete;
   CompleteGraphBuilder &operator=(const CompleteGraphBuilder &) = delete;
   CompleteGraphBuilder(const CompleteGraphBuilder &&) = delete;
@@ -834,4 +834,5 @@ class PartialGraphBuilder : public ComputeGraphBuilder {
   std::vector<NodePtr> exist_nodes_;
 };
 }  // namespace ge
+/*lint +e148*/
 #endif  // INC_GRAPH_UTILS_GRAPH_UTILS_H_

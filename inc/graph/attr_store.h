@@ -74,7 +74,7 @@ extern const AttrId kInvalidAttrId;
 
 class AttrStore {
  public:
-  static AttrStore Create(size_t pre_defined_attr_count);
+  static AttrStore Create(const size_t pre_defined_attr_count);
 
   template<typename T>
   bool Set(const AttrId attr_id, T &&value);
@@ -95,9 +95,9 @@ class AttrStore {
   T *MutableGetByName(const std::string &name);
 
   AttrId GetIdByName(const std::string &name) const noexcept;
-  void SetNameAndId(std::string name, AttrId id);
+  void SetNameAndId(std::string name, const AttrId id);
 
-  bool Exists(AttrId attr_id) const noexcept;
+  bool Exists(const AttrId attr_id) const noexcept;
   bool Exists(const std::string &name) const noexcept;
 
   bool Delete(const std::string &name);
@@ -114,22 +114,22 @@ class AttrStore {
   const AnyValue *GetAnyValue(const std::string &name) const noexcept;
 
  private:
-  AnyValue *MutableAnyValue(AttrId attr_id) const noexcept;
-  AnyValue *GetOrCreateAnyValue(AttrId attr_id) const;
-  const AnyValue *GetAnyValue(AttrId attr_id) const noexcept;
+  AnyValue *MutableAnyValue(const AttrId attr_id) const noexcept;
+  AnyValue *GetOrCreateAnyValue(const AttrId attr_id) const;
+  const AnyValue *GetAnyValue(const AttrId attr_id) const noexcept;
 
  private:
   class PreDefinedAttrStore {
   public:
-    bool Exists(AttrSubId index) const noexcept;
-    bool Delete(AttrSubId index);
+    bool Exists(const AttrSubId index) const noexcept;
+    bool Delete(const AttrSubId index);
     void Swap(PreDefinedAttrStore &other);
 
-    AnyValue *GetOrCreateAnyValue(AttrSubId index) const;
-    AnyValue *MutableAnyValue(AttrSubId index) const noexcept;
-    const AnyValue *GetAnyValue(AttrSubId index) const noexcept;
+    AnyValue *GetOrCreateAnyValue(const AttrSubId index) const;
+    AnyValue *MutableAnyValue(const AttrSubId index) const noexcept;
+    const AnyValue *GetAnyValue(const AttrSubId index) const noexcept;
 
-    void Resize(size_t s);
+    void Resize(const size_t s);
 
    private:
     std::vector<AnyValue> attrs_;

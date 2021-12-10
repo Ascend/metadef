@@ -280,27 +280,4 @@ TEST_F(RegisterOpTilingV2UT, op_atomic_calculate_v2_3) {
   EXPECT_EQ(ret, GRAPH_FAILED);
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
-
-TEST_F(RegisterOpTilingV2UT, op_ffts_calculate_v2_4) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV2");
-  GeShape shape;
-  GeTensorDesc tensor_desc(shape);
-  op_desc->AddInputDesc("x", tensor_desc);
-  op_desc->AddInputDesc("y", tensor_desc);
-  op_desc->AddOutputDesc("z", tensor_desc);
-  string compile_info_key = "compile_info_key";
-  string compile_info_json = "compile_info_jsoncompile_info_jsoncompile_info_jsoncompile_info_jsoncompile_info_json";
-  (void)ge::AttrUtils::SetStr(op_desc, COMPILE_INFO_KEY, compile_info_key);
-  (void)ge::AttrUtils::SetStr(op_desc, COMPILE_INFO_JSON, compile_info_json);
-
-  vector<string> depend_names = {"x"};
-  AttrUtils::SetListStr(op_desc, "_op_infer_depends", depend_names);
-
-  ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
-  NodePtr node = graph->AddNode(op_desc);
-  std::vector<OpRunInfoV2> run_info;
-  graphStatus ret = OpFftsCalculateV2(*node, run_info);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
-  EXPECT_EQ(run_info.size(), 2U);
-}
 }

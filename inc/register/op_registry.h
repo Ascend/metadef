@@ -29,18 +29,18 @@
 namespace domi {
 enum RemoveInputType {
   OMG_MOVE_TYPE_DTYPE = 0,
-  OMG_MOVE_TYPE_VALUE,
-  OMG_MOVE_TYPE_SHAPE,
-  OMG_MOVE_TYPE_FORMAT,
-  OMG_MOVE_TYPE_AXIS,
-  OMG_MOVE_TYPE_SCALAR_VALUE,
+  OMG_MOVE_TYPE_VALUE = 1,
+  OMG_MOVE_TYPE_SHAPE = 2,
+  OMG_MOVE_TYPE_FORMAT = 3,
+  OMG_MOVE_TYPE_AXIS = 4,
+  OMG_MOVE_TYPE_SCALAR_VALUE = 5,
   OMG_REMOVE_TYPE_WITH_COND = 1000,
-  OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE,
-  OMG_INPUT_REORDER,
+  OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE = 1001,
+  OMG_INPUT_REORDER = 1002,
 };
 
 struct RemoveInputConfigure {
-  int inputIdx = INT_MAX;
+  int32_t inputIdx = INT_MAX;
   std::string attrName;
   RemoveInputType moveType;
   bool attrValue = false;
