@@ -35,32 +35,6 @@ ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t data_len)
   return buf;
 }
 
-CompileInfoCache::CompileInfoCache() {}
-CompileInfoCache::~CompileInfoCache() {}
-
-CompileInfoCache& CompileInfoCache::Instance() {
-  static CompileInfoCache compile_info_cache_instance;
-  return compile_info_cache_instance;
-}
-
-bool CompileInfoCache::HasCompileInfo(const std::string &key) {
-  return this->compile_info_map_.find(key) != this->compile_info_map_.end();
-}
-
-void* CompileInfoCache::GetCompileInfo(const std::string &key) {
-  std::lock_guard<std::mutex> lock_guard(compile_info_mutex_);
-  auto iter = this->compile_info_map_.find(key);
-  if (iter == this->compile_info_map_.end()) {
-    return nullptr;
-  }
-  return iter->second;
-}
-
-void CompileInfoCache::SetCompileInfo(const std::string &key, void *value) {
-  std::lock_guard<std::mutex> lock_guard(compile_info_mutex_);
-  this->compile_info_map_.emplace(key, value);
-}
-
 std::unordered_map<std::string, OpTilingFunc> &OpTilingRegistryInterf::RegisteredOpInterf() {
   static std::unordered_map<std::string, OpTilingFunc> interf;
   return interf;
@@ -91,6 +65,9 @@ OpTilingFuncInfo::OpTilingFuncInfo(const std::string &op_type)
   : op_type_(op_type), tiling_func_(nullptr), tiling_func_v2_(nullptr), tiling_func_v3_(nullptr),
     parse_func_v3_(nullptr) {}
 
+bool OpTilingFuncInfo::IsFunctionV4() {
+  return this->tiling_func_v4_ != nullptr && this->parse_func_v4_ != nullptr;
+}
 bool OpTilingFuncInfo::IsFunctionV3() {
   return this->tiling_func_v3_ != nullptr && this->parse_func_v3_ != nullptr;
 }
@@ -110,6 +87,10 @@ void OpTilingFuncInfo::SetOpTilingFuncV3(OpTilingFuncV3 &tiling_func, OpParseFun
   this->tiling_func_v3_ = tiling_func;
   this->parse_func_v3_ = parse_func;
 }
+void OpTilingFuncInfo::SetOpTilingFuncV4(OpTilingFuncV4 &tiling_func, OpParseFuncV4 &parse_func) {
+  this->tiling_func_v4_ = tiling_func;
+  this->parse_func_v4_ = parse_func;
+}
 const OpTilingFunc& OpTilingFuncInfo::GetOpTilingFunc() {
   return this->tiling_func_;
 }
@@ -121,6 +102,12 @@ const OpTilingFuncV3& OpTilingFuncInfo::GetOpTilingFuncV3() {
 }
 const OpParseFuncV3& OpTilingFuncInfo::GetOpParseFuncV3() {
   return this->parse_func_v3_;
+}
+const OpTilingFuncV4& OpTilingFuncInfo::GetOpTilingFuncV4() {
+  return this->tiling_func_v4_;
+}
+const OpParseFuncV4& OpTilingFuncInfo::GetOpParseFuncV4() {
+  return this->parse_func_v4_;
 }
 
 std::unordered_map<std::string, OpTilingFuncInfo> &OpTilingFuncRegistry::RegisteredOpFuncInfo() {
@@ -165,5 +152,19 @@ OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type,
     iter->second.SetOpTilingFuncV3(tiling_func, parse_func);
   }
   GELOGI("Register op tiling and parse function V3 for op_type:%s", op_type.c_str());
+}
+
+OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type,
+                                           OpTilingFuncV4 tiling_func, OpParseFuncV4 parse_func) {
+  auto &op_func_map = RegisteredOpFuncInfo();
+  auto iter = op_func_map.find(op_type);
+  if (iter == op_func_map.end()) {
+    OpTilingFuncInfo op_func_info(op_type);
+    op_func_info.SetOpTilingFuncV4(tiling_func, parse_func);
+    op_func_map.emplace(op_type, op_func_info);
+  } else {
+    iter->second.SetOpTilingFuncV4(tiling_func, parse_func);
+  }
+  GELOGI("Register op tiling and parse function V4 for op_type:%s", op_type.c_str());
 }
 }  // namespace optiling

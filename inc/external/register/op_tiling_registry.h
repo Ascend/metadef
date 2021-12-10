@@ -22,10 +22,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <mutex>
 #include "external/graph/operator.h"
 #include "external/register/register_error_codes.h"
 #include "external/register/register_types.h"
+#include "external/register/op_compile_info_base.h"
 #include "external/register/op_tiling_info.h"
 
 #define REGISTER_OP_TILING(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER(optype, opfunc, __COUNTER__)
@@ -51,6 +51,16 @@
 #define REGISTER_OP_TILING_UNIQ_V3(optype, tilingfunc, parsefunc, counter)                                             \
   static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV3##counter(#optype, tilingfunc, parsefunc)
 
+#define REGISTER_OP_TILING_V4(optype, tilingfunc, parsefunc)                                                           \
+  REGISTER_OP_TILING_UNIQ_HELPER_V4(optype, tilingfunc, parsefunc, __COUNTER__)
+
+#define REGISTER_OP_TILING_UNIQ_HELPER_V4(optype, tilingfunc, parsefunc, counter)                                      \
+  REGISTER_OP_TILING_UNIQ_V4(optype, tilingfunc, parsefunc, counter)
+
+#define REGISTER_OP_TILING_UNIQ_V4(optype, tilingfunc, parsefunc, counter)                                             \
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV4##counter(#optype, tilingfunc, parsefunc)
+
+
 using Status = domi::Status;
 namespace optiling {
 template<class T>
@@ -68,22 +78,6 @@ ByteBuffer &ByteBufferGet(ByteBuffer &buf, T &value) {
 
 size_t ByteBufferGetAll(ByteBuffer &buf, char *dest, size_t dest_len);
 ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t dest_len);
-
-class CompileInfoCache {
-public:
-  CompileInfoCache(const CompileInfoCache &) = delete;
-  CompileInfoCache &operator=(const CompileInfoCache &) = delete;
-  static CompileInfoCache& Instance();
-  bool HasCompileInfo(const std::string &key);
-  void* GetCompileInfo(const std::string &key);
-  void SetCompileInfo(const std::string &key, void* value);
-
-private:
-  CompileInfoCache();
-  ~CompileInfoCache();
-  mutable std::mutex compile_info_mutex_;
-  std::unordered_map<std::string, void *> compile_info_map_;
-};
 
 using OpTilingFunc = std::function<bool(const TeOpParas &, const OpCompileInfo &, OpRunInfo &)>;
 using OpTilingFuncPtr = std::shared_ptr<OpTilingFunc>;
@@ -104,11 +98,11 @@ public:
   ~OpTilingRegistryInterf_V2() = default;
   static std::unordered_map<std::string, OpTilingFuncV2> &RegisteredOpInterf();
 };
-namespace utils {
-}  // namespace utils
 
 using OpTilingFuncV3 = std::function<bool(const ge::Operator &, const void *, OpRunInfoV2 &)>;
 using OpParseFuncV3 = std::function<void*(const ge::Operator &, const ge::AscendString &)>;
+using OpTilingFuncV4 = std::function<bool(const ge::Operator &, const CompileInfoPtr, OpRunInfoV2 &)>;
+using OpParseFuncV4 = std::function<CompileInfoPtr(const ge::Operator &, const ge::AscendString &)>;
 
 class OpTilingFuncInfo {
 public:
@@ -116,16 +110,20 @@ public:
   OpTilingFuncInfo() = default;
   ~OpTilingFuncInfo() = default;
 
+  bool IsFunctionV4();
   bool IsFunctionV3();
   bool IsFunctionV2();
   bool IsFunctionV1();
   void SetOpTilingFunc(OpTilingFunc &tiling_func);
   void SetOpTilingFuncV2(OpTilingFuncV2 &tiling_func);
   void SetOpTilingFuncV3(OpTilingFuncV3 &tiling_func, OpParseFuncV3 &parse_func);
+  void SetOpTilingFuncV4(OpTilingFuncV4 &tiling_func, OpParseFuncV4 &parse_func);
   const OpTilingFunc& GetOpTilingFunc();
   const OpTilingFuncV2& GetOpTilingFuncV2();
   const OpTilingFuncV3& GetOpTilingFuncV3();
   const OpParseFuncV3& GetOpParseFuncV3();
+  const OpTilingFuncV4& GetOpTilingFuncV4();
+  const OpParseFuncV4& GetOpParseFuncV4();
   const std::string& GetOpType() const {
     return op_type_;
   }
@@ -136,6 +134,8 @@ private:
   OpTilingFuncV2 tiling_func_v2_;
   OpTilingFuncV3 tiling_func_v3_;
   OpParseFuncV3 parse_func_v3_;
+  OpTilingFuncV4 tiling_func_v4_;
+  OpParseFuncV4 parse_func_v4_;
 };
 
 class FMK_FUNC_HOST_VISIBILITY OpTilingFuncRegistry {
@@ -143,6 +143,7 @@ public:
   OpTilingFuncRegistry(const std::string &op_type, OpTilingFunc tiling_func);
   OpTilingFuncRegistry(const std::string &op_type, OpTilingFuncV2 tiling_func);
   OpTilingFuncRegistry(const std::string &op_type, OpTilingFuncV3 tiling_func, OpParseFuncV3 parse_func);
+  OpTilingFuncRegistry(const std::string &op_type, OpTilingFuncV4 tiling_func, OpParseFuncV4 parse_func);
   ~OpTilingFuncRegistry() = default;
   static std::unordered_map<std::string, OpTilingFuncInfo> &RegisteredOpFuncInfo();
 };

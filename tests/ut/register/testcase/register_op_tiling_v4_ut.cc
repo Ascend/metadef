@@ -18,60 +18,39 @@ using namespace std;
 using namespace ge;
 
 namespace optiling {
-class RegisterOpTilingV3UT : public testing::Test {
+class CompileInfoJson : public CompileInfoBase {
+public:
+  CompileInfoJson(const std::string &json) : json_str_(json) {}
+  ~CompileInfoJson() {}
+private:
+  std::string json_str_;
+};
+
+class RegisterOpTilingV4UT : public testing::Test {
 protected:
   void SetUp() {}
 
   void TearDown() {}
 };
-bool op_tiling_stub_v3(const Operator &op, const void* value, OpRunInfoV2 &run_info) {
+bool op_tiling_stub_v4(const Operator &op, const CompileInfoPtr value, OpRunInfoV2 &run_info) {
   return true;
 }
 
-void* op_parse_stub_v3(const Operator &op, const ge::AscendString &compile_info_json) {
+CompileInfoPtr op_parse_stub_v4(const Operator &op, const ge::AscendString &compile_info_json) {
 //  static void *p = new int(3);
-  static int x = 1024;
-  void *p = &x;
-  return p;
+  CompileInfoPtr info = std::make_shared<CompileInfoJson>("qwer");
+  return info;
 }
 
-void* op_parse_stub_null_v3(const Operator &op, const ge::AscendString &compile_info_json) {
+CompileInfoPtr op_parse_stub_null_v4(const Operator &op, const ge::AscendString &compile_info_json) {
   return nullptr;
 }
 
-void* op_parse_stub_dt1_v3(const Operator &op, const ge::AscendString &compile_info_json) {
-//  static void *p = new int(3);
-  static int x = 1024;
-  void *p = &x;
-  return p;
-}
+REGISTER_OP_TILING_V4(ReluV4, op_tiling_stub_v4, op_parse_stub_v4);
+REGISTER_OP_TILING_V4(ReluNullV4, op_tiling_stub_v4, op_parse_stub_null_v4);
 
-void* op_parse_stub_dt2_v3(const Operator &op, const ge::AscendString &compile_info_json) {
-//  static void *p = new int(3);
-  static int x = 1024;
-  void *p = &x;
-  return p;
-}
-
-void* op_parse_stub_dt3_v3(const Operator &op, const ge::AscendString &compile_info_json) {
-//  static void *p = new int(3);
-  static int x = 1024;
-  void *p = &x;
-  return p;
-}
-
-void* op_parse_stub_dt4_v3(const Operator &op, const ge::AscendString &compile_info_json) {
-//  static void *p = new int(3);
-  static int x = 1024;
-  void *p = &x;
-  return p;
-}
-
-REGISTER_OP_TILING_V3(ReluV3, op_tiling_stub_v3, op_parse_stub_v3);
-REGISTER_OP_TILING_V3(ReluNullV3, op_tiling_stub_v3, op_parse_stub_null_v3);
-
-TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_1) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV3");
+TEST_F(RegisterOpTilingV4UT, op_para_calculate_v4_1) {
+  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV4");
   GeShape shape({4,3,14,14});
   GeTensorDesc tensor_desc(shape);
   op_desc->AddInputDesc("x", tensor_desc);
@@ -89,14 +68,14 @@ TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_1) {
   graphStatus ret = OpParaCalculateV2(op, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 
-  bool flag = CompileInfoCache::Instance().HasCompileInfo("compile_info_key");
+  bool flag = CompileInfoManager::Instance().HasCompileInfo("compile_info_key");
   EXPECT_EQ(flag, true);
 
   ret = OpParaCalculateV2(op, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_2) {
+TEST_F(RegisterOpTilingV4UT, op_para_calculate_v4_2) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluVV3");
   GeShape shape({4,3,14,14});
   GeTensorDesc tensor_desc(shape);
@@ -116,8 +95,8 @@ TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_2) {
   EXPECT_EQ(ret, GRAPH_FAILED);
 
   OpTilingFuncInfo op_func_info(OP_TYPE_AUTO_TILING);
-  op_func_info.tiling_func_v3_ = op_tiling_stub_v3;
-  op_func_info.parse_func_v3_ = op_parse_stub_v3;
+  op_func_info.tiling_func_v4_ = op_tiling_stub_v4;
+  op_func_info.parse_func_v4_ = op_parse_stub_v4;
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   tiling_func_map.emplace(OP_TYPE_AUTO_TILING, op_func_info);
   ret = OpParaCalculateV2(op, run_info);
@@ -125,8 +104,8 @@ TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_2) {
   tiling_func_map.erase(OP_TYPE_AUTO_TILING);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_3) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV3");
+TEST_F(RegisterOpTilingV4UT, op_para_calculate_v4_3) {
+  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV4");
   GeShape shape;
   GeTensorDesc tensor_desc(shape);
   op_desc->AddInputDesc("x", tensor_desc);
@@ -151,8 +130,8 @@ TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_3) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_4) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluNullV3");
+TEST_F(RegisterOpTilingV4UT, op_para_calculate_v4_4) {
+  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluNullV4");
   GeShape shape({4,3,14,14});
   GeTensorDesc tensor_desc(shape);
   op_desc->AddInputDesc("x", tensor_desc);
@@ -171,7 +150,7 @@ TEST_F(RegisterOpTilingV3UT, op_para_calculate_v3_4) {
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_1) {
+TEST_F(RegisterOpTilingV4UT, op_atomic_calculate_v4_1) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
   GeShape shape;
   GeTensorDesc tensor_desc(shape);
@@ -190,8 +169,8 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_1) {
 
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_func_info.tiling_func_v3_ = op_tiling_stub_v3;
-  op_func_info.parse_func_v3_ = op_parse_stub_dt1_v3;
+  op_func_info.tiling_func_v4_ = op_tiling_stub_v4;
+  op_func_info.parse_func_v4_ = op_parse_stub_v4;
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
 
   utils::OpRunInfo run_info;
@@ -203,7 +182,7 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_1) {
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_2) {
+TEST_F(RegisterOpTilingV4UT, op_atomic_calculate_v4_2) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
   GeShape shape;
   GeTensorDesc tensor_desc(shape);
@@ -220,8 +199,8 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_2) {
 
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_func_info.tiling_func_v3_ = op_tiling_stub_v3;
-  op_func_info.parse_func_v3_ = op_parse_stub_dt2_v3;
+  op_func_info.tiling_func_v4_ = op_tiling_stub_v4;
+  op_func_info.parse_func_v4_ = op_parse_stub_v4;
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
 
   utils::OpRunInfo run_info;
@@ -230,7 +209,7 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_2) {
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_3) {
+TEST_F(RegisterOpTilingV4UT, op_atomic_calculate_v4_3) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
   GeShape shape;
   GeTensorDesc tensor_desc(shape);
@@ -249,8 +228,8 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_3) {
 
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_func_info.tiling_func_v3_ = op_tiling_stub_v3;
-  op_func_info.parse_func_v3_ = op_parse_stub_dt3_v3;
+  op_func_info.tiling_func_v4_ = op_tiling_stub_v4;
+  op_func_info.parse_func_v4_ = op_parse_stub_v4;
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
 
   utils::OpRunInfo run_info;
@@ -259,7 +238,7 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_3) {
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_4) {
+TEST_F(RegisterOpTilingV4UT, op_atomic_calculate_v4_4) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
   GeShape shape;
   GeTensorDesc tensor_desc(shape);
@@ -281,8 +260,8 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_4) {
 
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_func_info.tiling_func_v3_ = op_tiling_stub_v3;
-  op_func_info.parse_func_v3_ = op_parse_stub_dt4_v3;
+  op_func_info.tiling_func_v4_ = op_tiling_stub_v4;
+  op_func_info.parse_func_v4_ = op_parse_stub_v4;
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
 
   utils::OpRunInfo run_info;
@@ -291,7 +270,7 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_4) {
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
-TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_5) {
+TEST_F(RegisterOpTilingV4UT, op_atomic_calculate_v4_5) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
   GeShape shape;
   GeTensorDesc tensor_desc(shape);
@@ -310,8 +289,8 @@ TEST_F(RegisterOpTilingV3UT, op_atomic_calculate_v3_5) {
 
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   OpTilingFuncInfo op_func_info(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_func_info.tiling_func_v3_ = op_tiling_stub_v3;
-  op_func_info.parse_func_v3_ = op_parse_stub_null_v3;
+  op_func_info.tiling_func_v4_ = op_tiling_stub_v4;
+  op_func_info.parse_func_v4_ = op_parse_stub_null_v4;
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
 
   utils::OpRunInfo run_info;
