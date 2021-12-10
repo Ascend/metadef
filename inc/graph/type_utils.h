@@ -40,6 +40,7 @@ constexpr TypeId kInvalidTypeId = nullptr;
 
 template<typename T>
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId(const T &obj) {
+  (void)obj;
   return GetTypeId<T>();
 }
 
