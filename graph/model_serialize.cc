@@ -195,11 +195,7 @@ bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *const o
     GELOGE(GRAPH_FAILED, "[Serialize][OpDesc] failed, node:%s", node->GetName().c_str());
     return false;
   }
-  if (SerializeEdge(node, op_def_proto)) {
-    return true;
-  } else {
-    return false;
-  }
+  return SerializeEdge(node, op_def_proto);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeGraph(const ConstComputeGraphPtr &graph,
@@ -231,10 +227,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
 
   for (const auto &node : graph->GetDirectNode()) {
     if (!SerializeNode(node, graph_proto->add_op(), is_dump)) {
-      if (node->GetOpDesc() != nullptr) {
-        REPORT_CALL_ERROR("E19999", "op desc of node:%s is nullptr.", node->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Get][OpDesc] Serialize Node %s failed as node opdesc is null", node->GetName().c_str());
-      }
       return false;
     }
   }
