@@ -26,6 +26,8 @@
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/debug/ge_util.h"
+#include "graph/utils/op_desc_utils.h"
 
 #undef private
 #undef protected
@@ -555,6 +557,973 @@ TEST_F(UtestGraphUtils, DumpGraphByPath) {
       ASSERT_EQ(buff[10], 8);
     }
   }
+}
+
+TEST_F(UtestGraphUtils, AddEdgeAnchorPtrIsNull) {
+  AnchorPtr src;
+  AnchorPtr dst;
+  int ret = GraphUtils::AddEdge(src, dst);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, AddEdgeAnchorPtrSuccess) {
+  auto builder = ut::GraphBuilder("root");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  const auto &node1 = builder.AddNode("node1", "node", 1, 1);
+  int ret = GraphUtils::AddEdge(node0->GetOutAnchor(0), node1->GetInAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  int ret2 = GraphUtils::AddEdge(node0->GetOutAnchor(0), node1->GetInControlAnchor());
+  EXPECT_EQ(ret2, GRAPH_SUCCESS);
+
+  int ret3 = GraphUtils::AddEdge(node0->GetOutControlAnchor(), node1->GetInControlAnchor());
+  EXPECT_EQ(ret3, GRAPH_SUCCESS);
+
+  int ret4 = GraphUtils::AddEdge(node0->GetOutControlAnchor(), node1->GetInDataAnchor(0));
+  EXPECT_EQ(ret4, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, AddEdgeControlAnchorPtrIsNull) {
+  OutControlAnchorPtr src;
+  InControlAnchorPtr dst;
+  int ret = GraphUtils::AddEdge(src, dst);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, AddEdgeDataAnchorPtrIsNull) {
+  OutDataAnchorPtr src;
+  InControlAnchorPtr dst;
+  int ret = GraphUtils::AddEdge(src, dst);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveEdgeAnchorPtrIsNull) {
+  AnchorPtr src;
+  AnchorPtr dst;
+  int ret = GraphUtils::RemoveEdge(src, dst);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveEdgeOutDataAnchorPtrIsNull) {
+  OutDataAnchorPtr src;
+  InControlAnchorPtr  dst;
+  int ret = GraphUtils::RemoveEdge(src, dst);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveEdgeFail) {
+  auto builder = ut::GraphBuilder("root");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  const auto &node1 = builder.AddNode("node1", "node", 1, 1);
+  builder.AddDataEdge(node0, 0, node1, 0);
+  builder.AddControlEdge(node0, node1);
+  int ret = GraphUtils::RemoveEdge(node0->GetOutDataAnchor(0), node1->GetInControlAnchor());
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, InsertNodeBetweenDataAnchorsSuccess) {
+  auto builder = ut::GraphBuilder("root");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  const auto &node1 = builder.AddNode("node1", "node", 1, 1);
+  const auto &node2 = builder.AddNode("node2", "node", 1, 1);
+  NodePtr new_node(node1);
+  builder.AddDataEdge(node0, 0, node2, 0);
+  builder.AddControlEdge(node0, node2);
+  int ret = GraphUtils::InsertNodeBetweenDataAnchors(node0->GetOutDataAnchor(0),
+                                                     node2->GetInDataAnchor(0), new_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyRemoveNodeIsNull) {
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  NodePtr remove_node;
+  int ret = GraphUtils::RemoveSubgraphRecursively(compute_graph, remove_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyFail) {
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  auto builder = ut::GraphBuilder("root");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  NodePtr remove_node(node0);
+  int ret = GraphUtils::RemoveSubgraphRecursively(compute_graph, remove_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveNodeWithoutRelinkNodePtrIsNull) {
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  NodePtr remove_node;
+  int ret = GraphUtils::RemoveNodeWithoutRelink(compute_graph, remove_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveNodeWithoutRelinkFail) {
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  auto builder = ut::GraphBuilder("root");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  NodePtr remove_node(node0);
+  int ret = GraphUtils::RemoveNodeWithoutRelink(compute_graph, remove_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, InsertNodeAfterAddEdgefail) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  const auto &graph0 = graph_builder0.GetGraph();
+  std::vector<InDataAnchorPtr> dsts;
+  dsts.push_back(node0->GetInDataAnchor(0));
+  int ret = GraphUtils::InsertNodeAfter(node0->GetOutDataAnchor(0), dsts, node0, 1, 0);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+
+  int ret2 = GraphUtils::InsertNodeAfter(node0->GetOutDataAnchor(0), dsts, node0, 0, 1);
+  EXPECT_EQ(ret2, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, InsertNodeAfterTypeIsSwitch) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", SWITCH, 1, 1);
+  const auto &graph0 = graph_builder0.GetGraph();
+  std::vector<InDataAnchorPtr> dsts;
+  dsts.push_back(node0->GetInDataAnchor(0));
+  int ret = GraphUtils::InsertNodeAfter(node0->GetOutDataAnchor(0), dsts, node0, 0, 0);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, InsertNodeAfterSrcOwnerComputeGraphNotEqualDstOwnerComputeGraph) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  const auto &graph0 = graph_builder0.GetGraph();
+
+  auto graph_builder1 = ut::GraphBuilder("test_graph1");
+  const auto &node1 = graph_builder1.AddNode("data1", DATA, 1, 1);
+  const auto &graph1 = graph_builder1.GetGraph();
+
+  std::vector<InDataAnchorPtr> dsts;
+  dsts.push_back(node1->GetInDataAnchor(0));
+  int ret = GraphUtils::InsertNodeAfter(node0->GetOutDataAnchor(0), dsts, node0, 0, 0);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, InsertNodeBeforeGetOwnerComputeGraphFail) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  const auto &graph0 = graph_builder0.GetGraph();
+
+  auto graph_builder1 = ut::GraphBuilder("test_graph1");
+  const auto &node1 = graph_builder1.AddNode("data1", DATA, 1, 1);
+  const auto &graph1 = graph_builder1.GetGraph();
+
+  int ret = GraphUtils::InsertNodeBefore(node0->GetInDataAnchor(0), node1, 0, 0);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, InsertNodeBeforeInsertCodeGetInDataAnchorFail) {
+  auto builder = ut::GraphBuilder("test");
+  const auto &var = builder.AddNode("var", VARIABLE, 0, 1);
+  const auto &assign = builder.AddNode("assign", "Assign", 1, 1);
+  const auto &allreduce = builder.AddNode("allreduce", "HcomAllReduce", 1, 1);
+  const auto &atomic_clean = builder.AddNode("atomic_clean", ATOMICADDRCLEAN, 0, 0);
+  const auto &netoutput1 = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  const auto &identity = builder.AddNode("identity", "Identity", 1, 1);
+
+  builder.AddDataEdge(var, 0, assign, 0);
+  builder.AddDataEdge(var,0,allreduce,0);
+  builder.AddControlEdge(assign, allreduce);
+  builder.AddControlEdge(atomic_clean, allreduce);
+  auto graph = builder.GetGraph();
+
+  int ret = GraphUtils::InsertNodeBefore(allreduce->GetInDataAnchor(0), identity, 0, 5);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveJustNodeNodeIsNull) {
+  ComputeGraph compute_graph("test_graph0");
+  int ret = GraphUtils::RemoveJustNode(compute_graph, nullptr);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveJustNodeFail) {
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  auto graph_builder0 = ut::GraphBuilder("Test0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  int ret = GraphUtils::RemoveJustNode(compute_graph, node0);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, MatchDumpStrIsFalse) {
+  std::string suffix;
+  bool ret = GraphUtils::MatchDumpStr(suffix);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, LoadGEGraphComputeGraphIsNull) {
+  char_t *file;
+  ge::ComputeGraph compute_graph("");
+  bool ret = GraphUtils::LoadGEGraph(file, compute_graph);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, LoadGEGraphFileIsNull) {
+  char_t *file;
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  bool ret = GraphUtils::LoadGEGraph(file, compute_graph);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, LoadGEGraphComputeGraphPtrSuccess) {
+  char_t *file = "./test_graph_0.txt";
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("");
+  bool ret = GraphUtils::LoadGEGraph(file, compute_graph);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, ReadProtoFromTextFileFileIsNull) {
+  google::protobuf::Message *proto;
+  bool ret = GraphUtils::ReadProtoFromTextFile(nullptr, proto);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeNodeIsNull) {
+  NodePtr node;
+  std::vector<int> io_map = {1, 2, 3};
+  int ret = GraphUtils::IsolateNode(node, io_map);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeIoMapIsNull) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  std::vector<int> io_map;
+  int ret = GraphUtils::IsolateNode(node0, io_map);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeIoMapSizeIsGreaterThanOutDataAnchorsSize) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  std::vector<int> io_map = {1, 2, 3, 4};
+  int ret = GraphUtils::IsolateNode(node0, io_map);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeOutDataAnchorsIsNull) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 0);
+  std::vector<int> io_map = {1};
+  int ret = GraphUtils::IsolateNode(node0, io_map);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeInDataAnchorsIsNull) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 0, 1);
+  std::vector<int> io_map = {1};
+  int ret = GraphUtils::IsolateNode(node0, io_map);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeInitializerListTest) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  std::initializer_list<int> io_map;
+  int ret = GraphUtils::IsolateNode(node0, io_map);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeDataAnchorsNodeIsNull) {
+  NodePtr new_node;
+  NodePtr old_node;
+  std::vector<int> inputs_map = {1, 2};
+  std::vector<int> outputs_map = {1, 2};
+  int ret = GraphUtils::ReplaceNodeDataAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeDataAnchorsReplaceOutDataAnchorsFail) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &new_node = graph_builder0.AddNode("data1", DATA, 1, 1);
+  const auto &old_node = graph_builder0.AddNode("data0", DATA, 0, 0);
+  std::vector<int> inputs_map;
+  std::vector<int> outputs_map = {1, 2};
+  int ret = GraphUtils::ReplaceNodeDataAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeDataAnchorsReplaceInDataAnchorsFail) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &new_node = graph_builder0.AddNode("data1", DATA, 1, 1);
+  const auto &old_node = graph_builder0.AddNode("data0", DATA, 0, 0);
+  std::vector<int> inputs_map = {1, 2};
+  std::vector<int> outputs_map;
+  int ret = GraphUtils::ReplaceNodeDataAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeDataAnchorsSuccess) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &new_node = graph_builder0.AddNode("data1", DATA, 1, 1);
+  const auto &old_node = graph_builder0.AddNode("data0", DATA, 0, 0);
+  std::vector<int> inputs_map;
+  std::vector<int> outputs_map;
+  int ret = GraphUtils::ReplaceNodeDataAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeOneIONodeIsNull) {
+  NodePtr node;
+  int ret = GraphUtils::IsolateNodeOneIO(node);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeOneIOInDataIs0) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node = graph_builder0.AddNode("data1", DATA, 0, 1);
+  int ret = GraphUtils::IsolateNodeOneIO(node);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeOneIOOutDataIs0) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node = graph_builder0.AddNode("data1", DATA, 1, 0);
+  int ret = GraphUtils::IsolateNodeOneIO(node);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, IsolateNodeOneIOSuccess) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &node = graph_builder0.AddNode("data1", DATA, 1, 1);
+  int ret = GraphUtils::IsolateNodeOneIO(node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeAnchorsNodeIsNull) {
+  NodePtr new_node;
+  NodePtr old_node;
+  std::vector<int> inputs_map = {1, 2};
+  std::vector<int> outputs_map = {1, 2};
+  int ret = GraphUtils::ReplaceNodeAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeAnchorsReplaceNodeDataAnchorsFail) {
+  auto graph_builder0 = ut::GraphBuilder("test_graph0");
+  const auto &new_node = graph_builder0.AddNode("data1", DATA, 1, 1);
+  const auto &old_node = graph_builder0.AddNode("data0", DATA, 0, 0);
+  std::vector<int> inputs_map = {1, 2};
+  std::vector<int> outputs_map = {1, 2};
+  int ret = GraphUtils::ReplaceNodeAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeAnchorsSuccess) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &new_node = builder.AddNode("data1", "node", 1, 1);
+  const auto &old_node = builder.AddNode("data0", "node", 1, 1);
+  builder.AddDataEdge(new_node, 0, old_node, 0);
+  builder.AddControlEdge(new_node, old_node);
+  std::vector<int> inputs_map = {0};
+  std::vector<int> outputs_map = {0};
+  int ret = GraphUtils::ReplaceNodeAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeAnchorsInitializerListTest) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &new_node = builder.AddNode("data1", "node", 1, 1);
+  const auto &old_node = builder.AddNode("data0", "node", 1, 1);
+  builder.AddDataEdge(new_node, 0, old_node, 0);
+  builder.AddControlEdge(new_node, old_node);
+  std::initializer_list<int> inputs_map;
+  std::initializer_list<int> outputs_map;
+  int ret = GraphUtils::ReplaceNodeAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, ReplaceNodeDataAnchorsInitializerListTest) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &new_node = builder.AddNode("data1", DATA, 1, 1);
+  const auto &old_node = builder.AddNode("data0", DATA, 1, 1);
+  std::initializer_list<int> inputs_map;
+  std::initializer_list<int> outputs_map;
+  int ret = GraphUtils::ReplaceNodeDataAnchors(new_node, old_node, inputs_map, outputs_map);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, CopyInCtrlEdgesNodeIsNull) {
+  NodePtr src_node;
+  NodePtr dst_node;
+  int ret = GraphUtils::CopyInCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, CopyInCtrlEdgesSrcCtrlInNodesIsEmpty) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &src_node = builder.AddNode("data0", "data", 1, 1);
+  NodePtr dst_node = builder.AddNode("data1", "data", 1, 1);
+  int ret = GraphUtils::CopyInCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, CopyInCtrlEdgesSuccess) {
+  auto builder = ut::GraphBuilder("test");
+  const auto &src_node = builder.AddNode("src_node", "node", 1, 1);
+  NodePtr dst_node = builder.AddNode("dst_node", "node", 1, 1);
+  builder.AddDataEdge(src_node, 0, dst_node, 0);
+  builder.AddControlEdge(src_node, dst_node);
+  int ret = GraphUtils::CopyInCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, MoveInCtrlEdgesNodeIsNull) {
+  NodePtr src_node;
+  NodePtr dst_node;
+  int ret = GraphUtils::MoveInCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, MoveInCtrlEdgesSuccess) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &src_node = builder.AddNode("data0", "data", 1, 1);
+  NodePtr dst_node = builder.AddNode("data1", "data", 1, 1);
+  int ret = GraphUtils::MoveInCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, CopyOutCtrlEdgesNodeIsNull) {
+  NodePtr src_node;
+  NodePtr dst_node;
+  int ret = GraphUtils::CopyOutCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CopyOutCtrlEdgesOutCtrlNodesIsEmpty) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &src_node = builder.AddNode("data0", "data", 1, 1);
+  NodePtr dst_node = builder.AddNode("data1", "data", 1, 1);
+  int ret = GraphUtils::CopyOutCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, CopyOutCtrlEdgesSuccess) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &src_node = builder.AddNode("src_node", NETOUTPUT, 1, 1);
+  NodePtr dst_node = builder.AddNode("dst_node", NETOUTPUT, 1, 1);
+  auto graph = builder.GetGraph();
+  builder.AddControlEdge(src_node, dst_node);
+
+  int ret = GraphUtils::CopyOutCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, MoveOutCtrlEdgesNodeIsNull) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  NodePtr src_node;
+  NodePtr dst_node;
+  int ret = GraphUtils::MoveOutCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, MoveOutCtrlEdgesSuccess) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  NodePtr src_node = builder.AddNode("src_node", NETOUTPUT, 1, 1);
+  NodePtr dst_node = builder.AddNode("dst_node", NETOUTPUT, 1, 1);
+  int ret = GraphUtils::MoveOutCtrlEdges(src_node, dst_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, AppendInputNodeSuccess) {
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node = builder.AddNode("node", "node", 1, 1);
+  int ret = GraphUtils::AppendInputNode(compute_graph, node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, CopyGraphDstrGraphIsNull) {
+  Graph src_graph("test0");
+  Graph dst_graph("");
+  int ret = GraphUtils::CopyGraph(src_graph, dst_graph);
+  EXPECT_EQ(ret, ge::PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, CopyComputeGraphDepthGreaterThanKCopyGraphMaxRecursionDepth) {
+  ComputeGraphPtr src_compute_graph = std::make_shared<ComputeGraph>("Test0");
+  ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>("Test1");
+  std::map<ConstNodePtr, NodePtr> node_old_2_new;
+  std::map<ConstOpDescPtr, OpDescPtr> op_desc_old_2_new;
+  int32_t depth = 20;
+  int ret = 
+      GraphUtils::CopyComputeGraph(src_compute_graph, dst_compute_graph, node_old_2_new, op_desc_old_2_new, depth);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CopyMembersSrcComputerGraphIsNull) {
+  ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>("Test1");
+  std::unordered_map<std::string, NodePtr> all_new_nodes;
+  int ret = 
+      GraphUtils::CopyMembers(nullptr, dst_compute_graph, all_new_nodes);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CopyMembersDstComputerGraphIsNull) {
+  ComputeGraphPtr src_compute_graph = std::make_shared<ComputeGraph>("Test0");
+  ComputeGraphPtr dst_compute_graph;
+  std::unordered_map<std::string, NodePtr> all_new_nodes;
+  int ret = GraphUtils::CopyMembers(src_compute_graph, dst_compute_graph, all_new_nodes);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CloneGraph) {
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node0 = builder.AddNode("node0", DATA, 1, 1);
+  const auto &node1 = builder.AddNode("node1", NETOUTPUT, 1, 1);
+  auto graph = builder.GetGraph();
+  std::string prefix;
+  std::vector<NodePtr> input_nodes;
+  std::vector<NodePtr> output_nodes;
+  std::unordered_map<std::string, NodePtr> all_new_nodes;
+  ComputeGraphPtr new_compute_graph = GraphUtils::CloneGraph(graph, prefix, input_nodes, output_nodes);
+  EXPECT_NE(new_compute_graph, nullptr);
+}
+
+TEST_F(UtestGraphUtils, CopyTensorAttrsDstDescIsNull) {
+  OpDescPtr dst_desc;
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &src_node = builder.AddNode("src_node", DATA, 1, 1);
+  int ret = GraphUtils::CopyTensorAttrs(dst_desc, src_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CopyTensorAttrsSrcNodeIsNull) {
+  OpDescPtr dst_desc = std::make_shared<OpDesc>("test", "test");
+  NodePtr src_node;
+  int ret = GraphUtils::CopyTensorAttrs(dst_desc, src_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CopyTensorAttrsFail) {
+  OpDescPtr dst_desc = std::make_shared<OpDesc>();
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &src_node = builder.AddNode("src_node", DATA, 1, 1);
+  int ret = GraphUtils::CopyTensorAttrs(dst_desc, src_node);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RelinkGraphEdgesNodeIsNull) {
+  NodePtr node;
+  std::string prefix;
+  std::unordered_map<std::string, NodePtr> all_nodes;
+  int ret = GraphUtils::RelinkGraphEdges(node, prefix, all_nodes);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RelinkGraphEdgesAllNodesIsNull) {
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node = builder.AddNode("node", DATA, 1, 1);
+  std::string prefix;
+  std::unordered_map<std::string, NodePtr> all_nodes;
+  int ret = GraphUtils::RelinkGraphEdges(node, prefix, all_nodes);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RelinkGraphEdgesFail) {
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node1 = builder.AddNode("node1", DATA, 1, 1);
+  const auto &node2 = builder.AddNode("node2", DATA, 1, 1);
+  std::string prefix;
+  std::unordered_map<std::string, NodePtr> all_nodes;
+  all_nodes.insert(make_pair("node2", node2));
+  int ret = GraphUtils::RelinkGraphEdges(node1, prefix, all_nodes);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, GetRefMappingSuccess) {
+  auto builder = ut::GraphBuilder("Test1");
+  auto graph = builder.GetGraph();
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::GetRefMapping(graph, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, FindNodeFromAllNodesGraphIsNull) {
+  ComputeGraphPtr graph;
+  std::string name;
+  NodePtr node = GraphUtils::FindNodeFromAllNodes(graph, name);
+  EXPECT_EQ(node, nullptr);
+}
+
+TEST_F(UtestGraphUtils, FindNodeFromAllNodesSuccess) {
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node1 = builder.AddNode("node1", DATA, 1, 1);
+  auto graph = builder.GetGraph();
+  std::string name = "node1";
+  NodePtr node = GraphUtils::FindNodeFromAllNodes(graph, name);
+  EXPECT_EQ(node->GetName(), "node1");
+}
+
+TEST_F(UtestGraphUtils, FindNodeFromAllNodesNameIsNull) {
+  auto builder = ut::GraphBuilder("Test1");
+  auto graph = builder.GetGraph();
+  std::string name;
+  NodePtr node = GraphUtils::FindNodeFromAllNodes(graph, name);
+  EXPECT_EQ(node, nullptr);
+}
+
+TEST_F(UtestGraphUtils, HandleInAnchorMappingSuccess) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("Test0");
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node1 = builder.AddNode("node1", NETOUTPUT, 1, 1);
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::HandleInAnchorMapping(graph, node1, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, HandleInAnchorMappingNodeTypeIsMERGE) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("Test0");
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node1 = builder.AddNode("node1", MERGE, 1, 1);
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::HandleInAnchorMapping(graph, node1, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, HandleSubgraphInputFail) {
+  auto builder = ut::GraphBuilder("Test1");
+  const auto &node1 = builder.AddNode("node1", DATA, 1, 1);
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::HandleSubgraphInput(node1, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, HandleSubgraphInputUpdateRefMappingFail) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(input1, 0, func, 0);
+  builder.AddDataEdge(var1, 0, func, 1);
+  builder.AddDataEdge(func, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+  graph->SetParentNode(func);
+
+  AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::HandleSubgraphInput(input1, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, HandleSubgraphInputSuccess) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  auto graph = builder.GetGraph();
+  graph->SetParentNode(func);
+
+  AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::HandleSubgraphInput(input1, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, HandleMergeInputPeerOutAnchorIsNull) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  auto graph = builder.GetGraph();
+  graph->SetParentNode(func);
+
+  AttrUtils::SetStr(input1->GetOpDesc(), ATTR_NAME_NEXT_ITERATION, "data1");
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::HandleMergeInput(input1, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, HandleMergeInputPeerOutAnchorIsNotNull) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(input1, 0, func, 0);
+  builder.AddDataEdge(var1, 0, func, 1);
+  builder.AddDataEdge(func, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  NodeIndexIO node_index_io(func, 0, kOut);
+  std::list<NodeIndexIO> symbol_list;
+  symbol_list.push_back(node_index_io);
+  symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
+
+  std::map<std::string, std::string> anchor_to_symbol;
+  anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
+  int ret = GraphUtils::HandleMergeInput(func, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, HandleSubgraphOutput) {
+  auto builder = ut::GraphBuilder("test2");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(input1, 0, func, 0);
+  builder.AddDataEdge(var1, 0, func, 1);
+  builder.AddDataEdge(func, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  graph->SetParentNode(func);
+  AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  NodeIndexIO node_index_io(func, 0, kOut);
+  std::list<NodeIndexIO> symbol_list;
+  symbol_list.push_back(node_index_io);
+  symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
+
+  std::map<std::string, std::string> anchor_to_symbol;
+  anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
+  int ret = GraphUtils::HandleSubgraphOutput(func, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, ge::PARAM_INVALID);
+}
+
+TEST_F(UtestGraphUtils, UnionSymbolMappingSuccess) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &input2 = builder.AddNode("data2", DATA, 1, 1);
+  const auto &var2 = builder.AddNode("var2", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(input1, 0, func, 0);
+  builder.AddDataEdge(var1, 0, func, 1);
+  builder.AddDataEdge(input2, 0, func, 2);
+  builder.AddDataEdge(var2, 0, func, 3);
+  builder.AddDataEdge(func, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  graph->SetParentNode(func);
+  AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  AttrUtils::SetInt(input2->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 1);
+
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  NodeIndexIO node_index1(input1, 0, kOut);
+  NodeIndexIO node_index2(input2, 0, kOut);
+  std::list<NodeIndexIO> symbol_list;
+  symbol_list.push_back(node_index1);
+  symbol_list.push_back(node_index2);
+  symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
+  symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var2_out_0", symbol_list));
+
+  std::map<std::string, std::string> anchor_to_symbol;
+  anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
+  anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
+
+  std::string symbol;
+  int ret = GraphUtils::UnionSymbolMapping(node_index1, node_index2, symbol_to_anchors, anchor_to_symbol, symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, UpdateRefMappingSuccess) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &input2 = builder.AddNode("data2", DATA, 1, 1);
+  const auto &var2 = builder.AddNode("var2", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(input1, 0, func, 0);
+  builder.AddDataEdge(var1, 0, func, 1);
+  builder.AddDataEdge(input2, 0, func, 2);
+  builder.AddDataEdge(var2, 0, func, 3);
+  builder.AddDataEdge(func, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  graph->SetParentNode(func);
+  AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  AttrUtils::SetInt(input2->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 1);
+
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  NodeIndexIO cur_node_info(input1, 0, kOut);
+  NodeIndexIO exist_node_info(input2, 0, kOut);
+  std::list<NodeIndexIO> symbol_list;
+  symbol_list.push_back(cur_node_info);
+  symbol_list.push_back(exist_node_info);
+  symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
+  symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var2_out_0", symbol_list));
+
+  std::map<std::string, std::string> anchor_to_symbol;
+  anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
+  anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
+
+  std::string symbol;
+  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, UpdateRefMappingSymbolToAnchorsIsNull) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &var1 = builder.AddNode("var1", VARIABLEV2, 1, 1);
+  const auto &input2 = builder.AddNode("data2", DATA, 1, 1);
+  const auto &var2 = builder.AddNode("var2", VARIABLEV2, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(input1, 0, func, 0);
+  builder.AddDataEdge(var1, 0, func, 1);
+  builder.AddDataEdge(input2, 0, func, 2);
+  builder.AddDataEdge(var2, 0, func, 3);
+  builder.AddDataEdge(func, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  graph->SetParentNode(func);
+  AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  AttrUtils::SetInt(input2->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 1);
+
+  NodeIndexIO cur_node_info(input1, 0, kOut);
+  NodeIndexIO exist_node_info(input2, 0, kOut);
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
+  anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
+
+  std::string symbol;
+  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputOutDataAnchorPtrIsNull) {
+  OutDataAnchorPtr out_data_anchor;
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(out_data_anchor, reuse_in_index);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputFail) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputPassThroughOK) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", NETOUTPUT, 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputTypeIsMergeSuccess) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", MERGE, 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputRefOpFail) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node1 = builder.AddNode("node", "node", 1, 1);
+  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_REFERENCE, true);
+
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node1->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsNoPaddingRefFromInputSuccess) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node1 = builder.AddNode("node", "node", 1, 1);
+  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, true);
+  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, true);
+  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_OUTPUT_REUSE_INPUT, true);
+
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsNoPaddingRefFromInput(node1->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, IsNodeInGraphRecursivelySuccess) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test0");
+  Node node;
+  node.SetOwnerComputeGraph(graph);
+ 
+  bool ret = GraphUtils::IsNodeInGraphRecursively(graph, node);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, IsNodeInGraphRecursivelyFail) {
+  auto builder = ut::GraphBuilder("test0");
+  Node node;
+  node.SetOwnerComputeGraph(builder.GetGraph());
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test1");
+  bool ret = GraphUtils::IsNodeInGraphRecursively(graph, node);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsUnknownShapeGraphFail) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test1");
+  bool ret = GraphUtils::IsUnknownShapeGraph(graph);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsUnknownShapeGraphGraphIsNull) {
+  ComputeGraphPtr graph;
+  bool ret = GraphUtils::IsUnknownShapeGraph(graph);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsUnknownShapeGraphSuccess) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("add", "Add", 2, 1, FORMAT_NHWC, DT_FLOAT, {16, 228, 228, 3});
+  auto graph = builder.GetGraph();
+
+  auto add_node = graph->FindNode("add");
+  auto out_desc = add_node->GetOpDesc()->MutableOutputDesc(0);
+  out_desc->SetShape(GeShape({-1, 228, 228, 3}));
+
+  bool ret = GraphUtils::IsUnknownShapeGraph(graph);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, UnfoldSubgraphSuccess) {
+  ut::GraphBuilder builder = ut::GraphBuilder("test0");
+  auto graph = builder.GetGraph();
+  std::function<bool(const ComputeGraphPtr &)> filter;
+  int ret = GraphUtils::UnfoldSubgraph(graph, filter);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, MergeInputNodesFail) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node1 = builder.AddNode("node", DATA, 1, 1);
+  auto graph = builder.GetGraph();
+  graph->SetParentNode(node1);
+  
+  int ret = GraphUtils::MergeInputNodes(graph);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, MergeNetOutputNodeSuccess) {
+  auto builder = ut::GraphBuilder("test2");
+  const auto &node1 = builder.AddNode("node", DATA, 1, 1);
+  auto graph = builder.GetGraph();
+  graph->SetParentNode(node1);
+  
+  int ret = GraphUtils::MergeNetOutputNode(graph);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 }  // namespace ge

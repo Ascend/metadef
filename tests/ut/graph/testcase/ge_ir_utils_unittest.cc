@@ -78,5 +78,89 @@ TEST_F(GeIrUtilsUt, ModelSerialize) {
   EXPECT_FALSE(ge::IsEqual(300, 20, "tag"));
 }
 
+TEST_F(GeIrUtilsUt, EncodeDataTypeUndefined) {
+  DataType data_type = DT_DUAL;
+  int ret = OnnxUtils::EncodeDataType(data_type);
+  EXPECT_EQ(ret, onnx::TensorProto_DataType_UNDEFINED);
+}
+
+TEST_F(GeIrUtilsUt, EncodeNodeDescFail) {
+  NodePtr node;
+  onnx::NodeProto *node_proto;
+  bool ret = OnnxUtils::EncodeNodeDesc(node, node_proto);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, EncodeGraphFail) {
+  ConstComputeGraphPtr graph;
+  onnx::GraphProto *graph_proto;
+  bool ret = OnnxUtils::EncodeGraph(graph, graph_proto);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, DecodeDataTypeSuccess) {
+  onnx::TensorProto_DataType data_type = onnx::TensorProto_DataType_INT64;
+  ge::DataType dt = OnnxUtils::DecodeDataType(data_type);
+  EXPECT_EQ(dt, DT_INT64);
+}
+
+TEST_F(GeIrUtilsUt, DecodeDataTypeFail) {
+  onnx::TensorProto_DataType data_type;
+  ge::DataType dt = OnnxUtils::DecodeDataType(data_type);
+  EXPECT_EQ(dt, DT_UNDEFINED);
+}
+
+TEST_F(GeIrUtilsUt, EncodeNodeFail) {
+  NodePtr node;
+  onnx::NodeProto *node_proto;
+  bool ret = OnnxUtils::EncodeNode(node, node_proto);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, EncodeNodeLinkFail) {
+  NodePtr node;
+  onnx::NodeProto *node_proto;
+  bool ret = OnnxUtils::EncodeNodeLink(node, node_proto);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, ConvertGeModelToModelProtoFail) {
+  ge::Model model;
+  onnx::ModelProto model_proto;
+  bool ret = OnnxUtils::ConvertGeModelToModelProto(model, model_proto);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, ConvertGeModelToModelProtoGraphProtoIsNull) {
+  ge::Model model("model", "");
+  ComputeGraphPtr compute_graph;
+  model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(compute_graph));
+  onnx::ModelProto model_proto;
+  bool ret = OnnxUtils::ConvertGeModelToModelProto(model, model_proto);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, DecodeNodeLinkImpFail) {
+  OnnxUtils::NodeLinkInfo item;
+  NodePtr node_ptr;
+  bool ret = OnnxUtils::DecodeNodeLinkImp(item, node_ptr);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, DecodeNodeDescFail) {
+  onnx::NodeProto *node_proto;
+  OpDescPtr op_desc;
+  bool ret = OnnxUtils::DecodeNodeDesc(node_proto, op_desc);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(GeIrUtilsUt, DecodeGraphFail) {
+  int32_t recursion_depth = 20;
+  onnx::GraphProto graph_proto;
+  ComputeGraphPtr graph;
+  bool ret = OnnxUtils::DecodeGraph(recursion_depth, graph_proto, graph);
+  EXPECT_EQ(ret, false);
+}
+
 
 }
