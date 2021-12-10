@@ -1243,14 +1243,13 @@ void GeTensorImpl::BuildAlignerPtrWithProtoData() {
 
   tensor_data_.impl_->length_ = proto_msg->data().size();
   tensor_data_.impl_->aligned_ptr_.reset();
-  tensor_data_.impl_->aligned_ptr_ =
-      AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
-                                       ptr.reset(const_cast<uint8_t *>(
-                                           reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
-                                     },
-                                     [](uint8_t *ptr) {
-                                       ptr = nullptr;
-                                     });
+  tensor_data_.impl_->aligned_ptr_ = AlignedPtr::BuildFromAllocFunc(
+      [&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
+        ptr.reset(const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
+      },
+      [](const uint8_t *ptr) {
+        ptr = nullptr;
+      });
 }
 
 graphStatus GeTensorImpl::SetData(std::vector<uint8_t> &&data) {
@@ -1395,8 +1394,8 @@ GeTensor::GeTensor(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> 
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const size_t size)
     : impl_(MakeShared<GeTensorImpl>(tensor_desc, size)) {}
 
-GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *protoMsg)
-    : impl_(MakeShared<GeTensorImpl>(proto_owner, protoMsg)) {}
+GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg)
+    : impl_(MakeShared<GeTensorImpl>(proto_owner, proto_msg)) {}
 
 GeTensor::~GeTensor() = default;
 
