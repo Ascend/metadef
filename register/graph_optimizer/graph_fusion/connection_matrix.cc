@@ -34,7 +34,7 @@ Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
   size_t total_size = static_cast<size_t>(max_id + 1);
   bit_maps.reserve(total_size);
   size_ = total_size;
-  for (size_t i = 0; i < direct_nodes.size(); i++) {
+  for (size_t i = 0; i < total_size; i++) {
     bit_maps.emplace_back(size_);
   }
 
