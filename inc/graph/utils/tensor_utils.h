@@ -50,7 +50,7 @@ class TensorUtils {
   static graphStatus GetDeviceType(const GeTensorDesc &tensor_desc, DeviceType &type);
   static void SetDeviceType(GeTensorDesc &tensor_desc, const DeviceType type);
   static ge::graphStatus GetInputTensor(const GeTensorDesc &tensor_desc, bool &flag);
-  static void SetInputTensor(GeTensorDesc &tensor_desc, bool flag);
+  static void SetInputTensor(GeTensorDesc &tensor_desc, const bool flag);
   static ge::graphStatus GetRealDimCnt(const GeTensorDesc &tensor_desc, uint32_t &cnt);
   static void SetRealDimCnt(GeTensorDesc &tensor_desc, const uint32_t cnt);
   static ge::graphStatus GetReuseInputIndex(const GeTensorDesc &tensor_desc, uint32_t &idx);

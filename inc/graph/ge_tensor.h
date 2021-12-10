@@ -146,7 +146,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   void SetRefPortByIndex(const std::vector<uint32_t> &index);
 
   Placement GetPlacement() const;
-  void SetPlacement(Placement placement);
+  void SetPlacement(const Placement placement);
 
   GeTensorDesc Clone() const;
   GeTensorDesc &operator=(const GeTensorDesc &desc);
@@ -263,7 +263,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
   void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size);
   // zero copy construction, share aligned_ptr, do not share tensor_desc
   // replace using TensorUtils::CreateShareTensor
-  GeTensor(const GeTensorDesc &td, std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size);
+  GeTensor(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size);
   // Share tensor_data, tensor_desc
   // replace using TensorUtils::CreateShareTensor
   GeTensor(const GeTensor &other);
