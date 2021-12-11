@@ -126,7 +126,7 @@ static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_
 /// @return GRAPH_SUCCESS:success
 ///         other:failed
 ///
-static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, Format format,
+static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, const Format format,
                                              const uint32_t fixed_dim_size, int64_t &element_cnt) {
   if (dims.size() != fixed_dim_size) {
     GELOGW("[Util][CalcElemCnt] Format %d(%s) need dim size=%u but %zu, calc as ND.",
