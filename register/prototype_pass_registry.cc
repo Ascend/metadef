@@ -46,7 +46,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
   }
 
   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> GetCreateFnByType(
-    const domi::FrameworkType &fmk_type) {
+    domi::FrameworkType fmk_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     const auto iter = create_fns_.find(fmk_type);
     if (iter == create_fns_.end()) {
