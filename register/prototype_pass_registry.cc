@@ -86,7 +86,7 @@ void ProtoTypePassRegistry::RegisterProtoTypePass(const char_t *const pass_name,
 }
 
 std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> ProtoTypePassRegistry::GetCreateFnByType(
-    const domi::FrameworkType &fmk_type) const {
+    domi::FrameworkType fmk_type) const {
   if (impl_ == nullptr) {
     GELOGE(MEMALLOC_FAILED, "ProtoTypePassRegistry is not properly initialized.");
     return std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>{};
