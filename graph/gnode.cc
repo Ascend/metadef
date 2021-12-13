@@ -197,7 +197,7 @@ graphStatus GNode::GetName(AscendString &name) const {
 }
 
 std::pair<GNodePtr, int32_t> GNode::GetInDataNodesAndPortIndexs(const int32_t index) const {
-  std::pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};
+  const std::pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};
   if (impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "node impl is nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: node impl is nullptr.");
