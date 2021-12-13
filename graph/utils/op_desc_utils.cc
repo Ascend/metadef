@@ -437,17 +437,18 @@ bool OpDescUtils::IsNonConstInput(const ge::Node &node, const size_t index) {
   bool ret = false;
   if (index < node.GetAllInDataAnchors().size()) {
     if (NodeUtils::IsAnchorStatusSet(node)) {
-      ret = (ge::AnchorUtils::GetStatus(node.GetInDataAnchor(static_cast<int>(index))) == ANCHOR_DATA);  // lint !e712
+      ret = (ge::AnchorUtils::GetStatus(node.GetInDataAnchor(static_cast<int32_t>(index))) ==
+             ANCHOR_DATA); // lint !e712
     } else {
       for (const auto &anchor : node.GetAllInDataAnchors()) {
-        if (anchor->GetIdx() != static_cast<int>(index)) {
+        if (anchor->GetIdx() != static_cast<int32_t>(index)) {
           continue;
         }
-        auto peer_anchor = anchor->GetPeerOutAnchor();
+        const auto peer_anchor = anchor->GetPeerOutAnchor();
         if (peer_anchor == nullptr) {
           break;
         }
-        auto owner_node = peer_anchor->GetOwnerNode();
+        const auto owner_node = peer_anchor->GetOwnerNode();
         if (owner_node == nullptr) {
           break;
         }
@@ -482,17 +483,17 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::GeTensorDesc> OpD
   if (NodeUtils::IsAnchorStatusSet(*node)) {
     for (const auto &in_anchor : node->GetAllInDataAnchors()) {
       if (ge::AnchorUtils::GetStatus(in_anchor) == ANCHOR_DATA) {
-        ret.push_back(node->GetOpDesc()->GetInputDesc(in_anchor->GetIdx()));
+        ret.push_back(node->GetOpDesc()->GetInputDesc(static_cast<uint32_t>(in_anchor->GetIdx())));
       }
     }
   } else {
     for (const auto &in_anchor : node->GetAllInDataAnchors()) {
-      auto out_anchor = in_anchor->GetPeerOutAnchor();
+      const auto out_anchor = in_anchor->GetPeerOutAnchor();
       if (out_anchor == nullptr || out_anchor->GetOwnerNode()->GetOpDesc() == nullptr) {
         continue;
       }
       if (out_anchor->GetOwnerNode()->GetOpDesc()->GetType() != CONSTANT) {
-        ret.push_back(node->GetOpDesc()->GetInputDesc(in_anchor->GetIdx()));
+        ret.push_back(node->GetOpDesc()->GetInputDesc(static_cast<uint32_t>(in_anchor->GetIdx())));
       }
     }
   }
@@ -962,7 +963,7 @@ ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, const ui
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-void OpDescUtils::SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *context) {
+void OpDescUtils::SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *const context) {
   op.operator_impl_->runtime_context_ = context;
 }
 }  // namespace ge
