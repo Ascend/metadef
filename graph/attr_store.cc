@@ -17,7 +17,7 @@
 #include "graph/attr_store.h"
 
 namespace ge {
-const AttrId kInvalidAttrId = GetAttrId(0xffffffff, 0);
+const AttrId constInvalidAttrId = GetAttrId(0xffffffffU, 0U);
 
 AnyValue *AttrStore::GetOrCreateAnyValue(const AttrId attr_id) const {
   return const_cast<AnyValue *>(GetAnyValue(attr_id));
@@ -43,11 +43,11 @@ AttrStore AttrStore::Create(const size_t pre_defined_attr_count) {
 }
 const AnyValue *AttrStore::GetAnyValue(const std::string &name) const noexcept {
   const auto id = GetIdByName(name);
-  if (id != kInvalidAttrId) {
+  if (id != constInvalidAttrId) {
     return pre_defined_attrs_.GetAnyValue(GetSubAttrId(id));
   }
 
-  auto av = general_attrs_.GetAnyValue(name);
+  const AnyValue *av = general_attrs_.GetAnyValue(name);
   if (av != nullptr) {
     return av;
   }
@@ -59,7 +59,7 @@ AnyValue *AttrStore::MutableAnyValue(const std::string &name) const noexcept {
 }
 AnyValue *AttrStore::GetOrCreateAnyValue(const std::string &name) {
   const auto id = GetIdByName(name);
-  if (id != kInvalidAttrId) {
+  if (id != constInvalidAttrId) {
     return pre_defined_attrs_.GetOrCreateAnyValue(GetSubAttrId(id));
   }
   return general_attrs_.GetOrCreateAnyValue(name);
@@ -67,7 +67,7 @@ AnyValue *AttrStore::GetOrCreateAnyValue(const std::string &name) {
 AttrId AttrStore::GetIdByName(const std::string &name) const noexcept {
   const auto iter = names_to_id_.find(name);
   if (iter == names_to_id_.end()) {
-    return kInvalidAttrId;
+    return constInvalidAttrId;
   }
   return iter->second;
 }

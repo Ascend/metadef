@@ -354,7 +354,7 @@ class GeShapeImpl {
   GeShapeImpl() = default;
   ~GeShapeImpl() = default;
   explicit GeShapeImpl(const std::vector<int64_t> &dims);
-  GeShapeImpl(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg);
+  explicit GeShapeImpl(proto::ShapeDef *proto_msg);
 
   void SetDimNum(const size_t dim_num);
   void AppendDim(const int64_t dim_size);
@@ -476,7 +476,7 @@ bool GeShapeImpl::IsScalar() const {
   return dims_.empty();
 }
 
-GeShapeImpl::GeShapeImpl(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg) {
+GeShapeImpl::GeShapeImpl(proto::ShapeDef *proto_msg) {
   if (proto_msg != nullptr) {
     for (auto &dim : *proto_msg->mutable_dim()) {
       dims_.emplace_back(dim);
@@ -492,7 +492,7 @@ GeShape::GeShape() : impl_(MakeShared<GeShapeImpl>()) {}
 GeShape::GeShape(std::vector<int64_t> s)
     : impl_(MakeShared<GeShapeImpl>(std::move(s))) {}
 GeShape::GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg)
-    : impl_(MakeShared<GeShapeImpl>(proto_owner, proto_msg)) {}
+    : impl_(MakeShared<GeShapeImpl>(proto_msg)) {}
 
 GeShape::GeShape(const GeShape &other)
     : impl_(MakeShared<GeShapeImpl>(*(other.impl_))) {}
@@ -574,7 +574,7 @@ GeTensorDescImpl::GeTensorDescImpl(const GeShape &shape, const Format format, co
   shape_ = shape;
 }
 
-GeTensorDescImpl::GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg)
+GeTensorDescImpl::GeTensorDescImpl(proto::TensorDescriptor *proto_msg)
     : GeTensorDescImpl() {
   if (proto_msg == nullptr) {
     GELOGE(INTERNAL_ERROR, "Try assemble ge tensor desc from nullptr proto");
@@ -723,7 +723,7 @@ GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc) : AttrHolder(desc), impl_(desc.i
 GeTensorDesc::~GeTensorDesc() = default;
 
 GeTensorDesc::GeTensorDesc(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg)
-    : AttrHolder(), impl_(ComGraphMakeShared<GeTensorDescImpl>(proto_owner, proto_msg)) {
+    : AttrHolder(), impl_(ComGraphMakeShared<GeTensorDescImpl>(proto_msg)) {
   if (proto_msg != nullptr) {
     if (!ModelSerializeImp::DeserializeAllAttrsToAttrHolder(proto_msg->attr(), this)) {
       GELOGW("GeTensorDesc attr deserialize failed.");

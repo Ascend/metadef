@@ -28,7 +28,7 @@ class GeTensorDescImpl {
  public:
   GeTensorDescImpl() = default;
   GeTensorDescImpl(const GeShape &shape, const Format format, const DataType dt);
-  GeTensorDescImpl(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg);
+  GeTensorDescImpl(proto::TensorDescriptor *proto_msg);
   ~GeTensorDescImpl() = default;
 
   GeShape &ShapeReference() const;
