@@ -102,7 +102,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY FusionScopesResult {
   void SetDescription(const char *description);
   ATTRIBUTED_DEPRECATED(const Status Name(AscendString &) const)
   const std::string &Name() const;
-  const Status Name(AscendString &name) const;
+  Status Name(AscendString &name) const;
   const std::vector<ge::OperatorPtr> &Nodes() const;
   ATTRIBUTED_DEPRECATED(void InsertInputs(const char *, const std::vector<int32_t> &))
   void InsertInputs(const std::string &inner_op_name, const std::vector<int32_t> &index_map);

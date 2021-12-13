@@ -29,6 +29,7 @@
 #include "proto/tensorflow/node_def.pb.h"
 #include "register/auto_mapping_util.h"
 #include "register/op_registry.h"
+#include "register/register_utils.h"
 #include "graph/graph.h"
 
 using namespace domi::tensorflow;
@@ -403,7 +404,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
 }
 
 // Convert tensorflow property to ge property
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFn(const Message *op_src, ge::Operator &op) {
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status OperatorAutoMapping(const Message *op_src, ge::Operator &op) {
   std::shared_ptr<ge::OpDesc> op_dst = ge::OpDescUtils::GetOpDescFromOperator(op);
   // Analysis of tensorflow operator parameters based on key value
   GE_CHECK_NOTNULL(op_src);
@@ -433,6 +434,10 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFn(const Mess
     return FAILED;
   }
   return SUCCESS;
+}
+
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFn(const Message *op_src, ge::Operator &op) {
+  return OperatorAutoMapping(op_src, op);
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const ge::Operator &op_src,
