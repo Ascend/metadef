@@ -17,7 +17,6 @@
 #ifndef INC_GRAPH_OP_KERNEL_BIN_H_
 #define INC_GRAPH_OP_KERNEL_BIN_H_
 
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

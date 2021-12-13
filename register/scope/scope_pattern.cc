@@ -100,7 +100,7 @@ void ScopeAttrValue::SetBoolValue(bool value) {
   impl_->SetBoolValue(value);
 }
 
-bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *scope) {
+bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *const scope) {
   if (scope == nullptr) {
     GELOGE(PARAM_INVALID, "Input scope is nullptr.");
     return false;
@@ -335,7 +335,7 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
                              (sub_impl->LastName().find(sub_scope_mask_) != std::string::npos);
   }
 
-  if ((sub_type_.length() > 0) && (step_ == 0) && (count != num_)) {
+  if ((sub_type_.length() > 0UL) && (step_ == 0) && (count != num_)) {
     return false;
   }
   if ((sub_scope_mask_.length() > 0UL) && (!sub_scope_name_matched)) {
@@ -345,7 +345,7 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
   return true;
 }
 
-bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *scope) {
+bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *const scope) {
   auto &impl = scope->impl_;
   const std::string scope_name = scope->Name();
   if (suffix_.length() > scope_name.length()) {
@@ -368,14 +368,14 @@ bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *scope) {
 }
 
 ScopeFeature::ScopeFeature(std::string sub_type, int32_t num, std::string suffix,
-                           std::string sub_scope_mask, int step)
+                           std::string sub_scope_mask, int32_t step)
     : ScopeBaseFeature() {
   impl_ = std::unique_ptr<ScopeFeatureImpl>(new (std::nothrow) ScopeFeatureImpl(sub_type, num, suffix,
                                                                                 sub_scope_mask, step));
 }
 
-ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char *suffix,
-                           const char_t *sub_scope_mask, int step)
+ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char_t *suffix,
+                           const char_t *sub_scope_mask, int32_t step)
     : ScopeBaseFeature() {
   std::string str_sub_type;
   if (sub_type != nullptr) {

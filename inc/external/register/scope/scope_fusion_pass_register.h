@@ -227,10 +227,10 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeAttrValue {
   ~ScopeAttrValue();
 
   void SetIntValue(int64_t value);
-  void SetFloatValue(float value);
+  void SetFloatValue(float32_t value);
   ATTRIBUTED_DEPRECATED(void SetStringValue(const char *))
   void SetStringValue(std::string value);
-  void SetStringValue(const char *value);
+  void SetStringValue(const char_t *value);
   void SetBoolValue(bool value);
 
  private:
@@ -253,8 +253,8 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeBaseFeature {
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBaseFeature {
  public:
   ATTRIBUTED_DEPRECATED(NodeOpTypeFeature(const char *, int, int))
-  NodeOpTypeFeature(std::string nodeType, int num, int step = 0);
-  NodeOpTypeFeature(const char *node_type, int num, int step = 0);
+  NodeOpTypeFeature(std::string nodeType, int32_t num, int32_t step = 0);
+  NodeOpTypeFeature(const char_t *node_type, int32_t num, int32_t step = 0);
   NodeOpTypeFeature(NodeOpTypeFeature const &feature);
   NodeOpTypeFeature &operator=(NodeOpTypeFeature const &feature);
   ~NodeOpTypeFeature() override;
@@ -270,8 +270,8 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeAttrFeature : ScopeBase
   ATTRIBUTED_DEPRECATED(NodeAttrFeature(const char *, const char *, ge::DataType, ScopeAttrValue &))
   NodeAttrFeature(std::string nodeType, std::string attr_name,
                   ge::DataType datatype, ScopeAttrValue &attr_value);
-  NodeAttrFeature(const char *node_type, const char *attr_name,
-                  ge::DataType datatype, ScopeAttrValue &attr_value);
+  NodeAttrFeature(const char_t *node_type, const char_t *attr_name,
+                  ge::DataType data_type, ScopeAttrValue &attr_value);
   NodeAttrFeature(NodeAttrFeature const &feature);
   NodeAttrFeature &operator=(NodeAttrFeature const &feature);
   ~NodeAttrFeature() override;
@@ -286,9 +286,9 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFeature : ScopeBaseFea
  public:
   ATTRIBUTED_DEPRECATED(ScopeFeature(const char *, int32_t, const char *, const char *, int))
   ScopeFeature(std::string sub_type, int32_t num, std::string suffix = "",
-               std::string sub_scope_mask = "", int step = 0);
-  ScopeFeature(const char *sub_type, int32_t num, const char *suffix,
-               const char *sub_scope_mask, int step = 0);
+               std::string sub_scope_mask = "", int32_t step = 0);
+  ScopeFeature(const char_t *sub_type, int32_t num, const char_t *suffix,
+               const char_t *sub_scope_mask, int32_t step = 0);
   ScopeFeature(ScopeFeature const &feature);
   ScopeFeature &operator=(ScopeFeature const &feature);
   ~ScopeFeature() override;
@@ -305,7 +305,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopePattern {
   ~ScopePattern();
   ATTRIBUTED_DEPRECATED(ScopePattern &SetSubType(const char *))
   ScopePattern &SetSubType(const std::string &sub_type);
-  ScopePattern &SetSubType(const char *sub_type);
+  ScopePattern &SetSubType(const char_t *sub_type);
   ScopePattern &AddNodeOpTypeFeature(NodeOpTypeFeature feature);
   ScopePattern &AddNodeAttrFeature(NodeAttrFeature feature);
   ScopePattern &AddScopeFeature(ScopeFeature feature);
@@ -383,7 +383,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeUtil {
  public:
   ATTRIBUTED_DEPRECATED(static AscendString StringReplaceAll(const char *, const char *, const char *))
   static std::string StringReplaceAll(std::string str, const std::string &old_value, const std::string &new_value);
-  static AscendString StringReplaceAll(const char *str, const char *old_value, const char *new_value);
+  static AscendString StringReplaceAll(const char_t *str, const char_t *old_value, const char_t *new_value);
   static void FreeScopePatterns(ScopeFusionPatterns &patterns);
   static void FreeOneBatchPattern(std::vector<ScopePattern *> &one_batch_pattern);
 };

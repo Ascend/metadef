@@ -250,7 +250,7 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
       }
       raw_data += (str.size() + 1U);
     }
-    weight->SetData(reinterpret_cast<const uint8_t *>(addr.data()), total_size);
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(addr.data()), total_size);
   }
   return SUCCESS;
 }
@@ -299,23 +299,23 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
          count, DataType_Name(data_type).c_str());
   const auto tensor_content_data = tensor_content.data();
   if (CheckByte(data_type)) {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
-                    static_cast<size_t>(count) * sizeof(uint8_t));
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                          static_cast<size_t>(count) * sizeof(uint8_t));
   } else if (CheckBoolVal(data_type)) {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
-                    static_cast<size_t>(count) * sizeof(bool));
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                          static_cast<size_t>(count) * sizeof(bool));
   } else if (CheckHalfVal(data_type) || CheckDoubleByte(data_type)) {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
-                    static_cast<size_t>(count) * sizeof(uint16_t));
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                          static_cast<size_t>(count) * sizeof(uint16_t));
   } else if (CheckSignedFourByte(data_type) || CheckUnsignedFourByte(data_type)) {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
-                    static_cast<size_t>(count) * sizeof(uint32_t));
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                          static_cast<size_t>(count) * sizeof(uint32_t));
   } else if (CheckSignedEightByte(data_type) || CheckUnsignedEightByte(data_type)) {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
-                    static_cast<size_t>(count) * sizeof(uint64_t));
+   (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                         static_cast<size_t>(count) * sizeof(uint64_t));
   } else if (CheckDoubleVal(data_type) || CheckComplex128Val(data_type)) {
-    weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
-                    static_cast<size_t>(count) * sizeof(double));
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                          static_cast<size_t>(count) * sizeof(double));
   } else if (CheckStringVal(data_type)) {
     std::string weight_content;
     if (tensor_content.size() > 1U) {
@@ -409,8 +409,8 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
         const int64_t dim = shape_vec[i];
         // tensorflow support weights shape [0],have no weights
         GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(dim < 0, return FAILED, "Dim size invalid");
-        GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((count != 0 && dim >= INT64_MAX / count), return FAILED,
-                                       "Dim size exceeds INT64_MAX");
+        GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(((count != 0) && (dim >= (std::numeric_limits<int64_t>::max() / count))),
+                                       return FAILED, "Dim size exceeds INT64_MAX");
         count *= dim;
       });
   const GeShape shape(shape_vec);
