@@ -52,16 +52,6 @@ struct GETaskInfo {
   std::vector<GETaskKernelHcclInfo> kernelHcclInfo;
 };
 
-struct HcomOpertion {
-  std::string hcclType;
-  void *inputPtr;
-  void *outputPtr;
-  uint64_t count;
-  int32_t dataType;
-  int32_t opType;
-  int32_t root;
-};
-
 struct HcomRemoteAccessAddrInfo
 {
   uint32_t remotetRankID;
