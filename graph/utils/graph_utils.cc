@@ -68,11 +68,6 @@ const char_t *const kDumpStrPartition = "partition";
 const char_t *const kDumpStrOptimizeSubgraph = "OptimizeSubGraph";
 const char_t *const kDumpStrSubgraphFunc = "sub_graph";
 const char_t *const kDumpStrAicpu = "Aicpu";
-#ifdef __GNUC__
-const char_t *const KDumpSeparator = "/";
-#else
-const char_t *const KDumpSeparator = "\\";
-#endif
 const size_t kNameMax = 255U;
 const int32_t kCopyGraphMaxRecursionDepth = 10;
 const int32_t kNameWidth = 5;
@@ -669,7 +664,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::string &file_path,
                               const int64_t dump_level) {
-  const auto sep = file_path.rfind(KDumpSeparator);
+  const auto sep = file_path.rfind(MMPA_PATH_SEPARATOR_STR);
   if (sep == std::string::npos) {
     REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
                        std::vector<std::string>({
@@ -713,7 +708,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
       return GRAPH_FAILED;
     }
     const std::string path = real_path;
-    const std::string real_path_name = path + std::string(KDumpSeparator) + file_name;
+    const std::string real_path_name = path + std::string(MMPA_PATH_SEPARATOR_STR) + file_name;
     GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
   }
   return GRAPH_SUCCESS;
