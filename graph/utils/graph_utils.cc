@@ -1867,7 +1867,7 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
   dst_compute_graph->impl_->op_name_map_ = src_compute_graph->impl_->op_name_map_;
   dst_compute_graph->impl_->out_nodes_map_ = src_compute_graph->impl_->out_nodes_map_;
   dst_compute_graph->impl_->params_share_map_ = src_compute_graph->impl_->params_share_map_;
-
+  dst_compute_graph->impl_->graph_id_ = src_compute_graph->impl_->graph_id_;
   return GRAPH_SUCCESS;
 }
 
