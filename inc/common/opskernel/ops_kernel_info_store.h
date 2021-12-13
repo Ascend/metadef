@@ -41,6 +41,10 @@ class OpsKernelInfoStore {
   OpsKernelInfoStore() {}
 
   virtual ~OpsKernelInfoStore() {}
+  OpsKernelInfoStore(const OpsKernelInfoStore &) = delete;
+  OpsKernelInfoStore(OpsKernelInfoStore &&) = delete;
+  OpsKernelInfoStore &operator=(const OpsKernelInfoStore &) = delete;
+  OpsKernelInfoStore &operator=(OpsKernelInfoStore &&) = delete;
 
   // initialize opsKernelInfoStore
   virtual Status Initialize(const std::map<std::string, std::string> &options) = 0;
@@ -48,9 +52,15 @@ class OpsKernelInfoStore {
   // close opsKernelInfoStore
   virtual Status Finalize() = 0; /*lint -e148*/
 
-  virtual Status CreateSession(const std::map<std::string, std::string> &session_options) { return SUCCESS; }
+  virtual Status CreateSession(const std::map<std::string, std::string> &session_options) {
+    (void)session_options;
+    return SUCCESS;
+  }
 
-  virtual Status DestroySession(const std::map<std::string, std::string> &session_options) { return SUCCESS; }
+  virtual Status DestroySession(const std::map<std::string, std::string> &session_options) {
+    (void)session_options;
+    return SUCCESS;
+  }
 
   // get all opsKernelInfo
   virtual void GetAllOpsKernelInfo(std::map<std::string, OpInfo> &infos) const = 0;
@@ -60,16 +70,29 @@ class OpsKernelInfoStore {
 
   virtual bool CheckAccuracySupported(const OpDescPtr &opDescPtr, std::string &un_supported_reason,
                                       const bool realQuery = false) const {
+    (void)realQuery;
     return CheckSupported(opDescPtr, un_supported_reason);
   }
   // opsFlag opsFlag[0] indicates constant folding is supported or not
-  virtual void opsFlagCheck(const ge::Node &node, std::string &opsFlag) {};
+  virtual void opsFlagCheck(const ge::Node &node, std::string &opsFlag) {
+    (void)node;
+    (void)opsFlag;
+  };
 
   // only call fe engine interface to compile single op
-  virtual Status CompileOp(std::vector<ge::NodePtr> &node_vec) { return SUCCESS; }
-  virtual Status CompileOpRun(std::vector<ge::NodePtr> &node_vec) { return SUCCESS; }
+  virtual Status CompileOp(std::vector<ge::NodePtr> &node_vec) {
+    (void) node_vec;
+    return SUCCESS;
+  }
+  virtual Status CompileOpRun(std::vector<ge::NodePtr> &node_vec) {
+    (void)node_vec;
+    return SUCCESS;
+  }
   // load task for op
-  virtual Status LoadTask(GETaskInfo &task) { return SUCCESS; }
+  virtual Status LoadTask(GETaskInfo &task) {
+    (void)task;
+    return SUCCESS;
+  }
 
   virtual bool CheckSupported(const ge::NodePtr &node, std::string &un_supported_reason) const {
     if (node == nullptr) {
@@ -80,13 +103,17 @@ class OpsKernelInfoStore {
 
   virtual bool CheckAccuracySupported(const ge::NodePtr &node, std::string &un_supported_reason,
                                       const bool realQuery = false) const {
+    (void)realQuery;
     if (node == nullptr) {
       return false;
     }
     return CheckAccuracySupported(node->GetOpDesc(), un_supported_reason, realQuery);
   }
   // Set cut support info
-  virtual Status SetCutSupportedInfo(const ge::NodePtr &node) { return SUCCESS; }
+  virtual Status SetCutSupportedInfo(const ge::NodePtr &node) {
+    (void)node;
+    return SUCCESS;
+  }
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_STORE_H_

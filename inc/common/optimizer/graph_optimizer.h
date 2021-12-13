@@ -43,11 +43,13 @@ class GraphOptimizer {
 
   // optimize original graph for FE quant optimize
   virtual Status OptimizeGraphPrepare(ComputeGraph& graph) {
+    (void)graph;
     return SUCCESS;
   }
 
   // optimize graph before build for RTS
   virtual Status OptimizeGraphBeforeBuild(ComputeGraph& graph) {
+    (void)graph;
     return SUCCESS;
   }
 
@@ -56,6 +58,7 @@ class GraphOptimizer {
 
   // optimize original graph, using for conversion operator insert in graph preparation stage
   virtual Status OptimizeOriginalGraphJudgeInsert(ComputeGraph &graph) {
+    (void)graph;
     return SUCCESS;
   }
 
@@ -69,13 +72,23 @@ class GraphOptimizer {
   virtual Status GetAttributes(GraphOptimizerAttribute &attrs) const = 0;
 
   // optimize streamed Graph
-  virtual Status OptimizeStreamGraph(ComputeGraph &graph, const RunContext &context) { return SUCCESS; }
+  virtual Status OptimizeStreamGraph(ComputeGraph &graph, const RunContext &context) {
+    (void)graph;
+    (void)context;
+    return SUCCESS;
+  }
 
   // op compile
-  virtual Status OptimizeFusedGraphAfterGraphSlice(ComputeGraph &graph) { return SUCCESS; }
+  virtual Status OptimizeFusedGraphAfterGraphSlice(ComputeGraph &graph) {
+    (void)graph;
+    return SUCCESS;
+  }
 
   // optimize whole graph, using after stage1
-  virtual Status OptimizeAfterStage1(ComputeGraph &graph) { return SUCCESS; }
+  virtual Status OptimizeAfterStage1(ComputeGraph &graph) {
+    (void)graph;
+    return SUCCESS;
+  }
 };
 }  // namespace ge
 /*lint +e148*/

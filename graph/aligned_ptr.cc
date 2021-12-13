@@ -24,7 +24,7 @@ AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
   if (alignment > 0U) {
     alloc_size = buffer_size + alignment - 1U;
   }
-  if ((buffer_size == 0u) || (alloc_size < buffer_size)) {
+  if ((buffer_size == 0U) || (alloc_size < buffer_size)) {
     GELOGW("[Allocate][Buffer] Allocate empty buffer or overflow, size=%zu, alloc_size=%zu", buffer_size, alloc_size);
     return;
   }
@@ -51,7 +51,7 @@ AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
 std::unique_ptr<uint8_t[], AlignedPtr::Deleter> AlignedPtr::Reset() {
   const auto deleter_func = base_.get_deleter();
   if (deleter_func == nullptr) {
-    base_.release();
+    (void)base_.release();
     return std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(aligned_addr_, nullptr);
   } else {
     const auto base_addr = base_.release();

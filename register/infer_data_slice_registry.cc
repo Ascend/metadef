@@ -16,9 +16,10 @@
 
 #include "graph/operator_factory_impl.h"
 #include "register/infer_data_slice_registry.h"
+#include "external/graph/types.h"
 
 namespace ge {
-InferDataSliceFuncRegister::InferDataSliceFuncRegister(const char *operator_type,
+InferDataSliceFuncRegister::InferDataSliceFuncRegister(const char_t *const operator_type,
                                                        const InferDataSliceFunc &infer_data_slice_func) {
   (void)OperatorFactoryImpl::RegisterInferDataSliceFunc(operator_type, infer_data_slice_func);
 }

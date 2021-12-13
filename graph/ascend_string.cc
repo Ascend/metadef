@@ -19,7 +19,7 @@
 #include "graph/utils/mem_utils.h"
 
 namespace ge {
-AscendString::AscendString(const char* name) {
+AscendString::AscendString(const char_t* name) {
   if (name != nullptr) {
     name_ = MakeShared<std::string>(name);
     if (name_ == nullptr) {
@@ -29,7 +29,7 @@ AscendString::AscendString(const char* name) {
   }
 }
 
-const char* AscendString::GetString() const {
+const char_t* AscendString::GetString() const {
   if (name_ == nullptr) {
     return nullptr;
   }

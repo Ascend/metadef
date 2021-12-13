@@ -51,6 +51,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpsKernelBuilderRegistrar
 private:
   std::string kernel_lib_name_;
 };
+}  // namespace ge
 
 #define REGISTER_OPS_KERNEL_BUILDER(kernel_lib_name, builder) \
     REGISTER_OPS_KERNEL_BUILDER_UNIQ_HELPER(__COUNTER__, kernel_lib_name, builder)
@@ -61,9 +62,8 @@ private:
 #define REGISTER_OPS_KERNEL_BUILDER_UNIQ(ctr, kernel_lib_name, builder)                         \
   static ::ge::OpsKernelBuilderRegistrar register_op_kernel_builder_##ctr                       \
       __attribute__((unused)) =                                                                 \
-          ::ge::OpsKernelBuilderRegistrar(kernel_lib_name, []()->::ge::OpsKernelBuilder* {      \
-            return new (std::nothrow) builder();                                                \
+          ::ge::OpsKernelBuilderRegistrar((kernel_lib_name), []()->::ge::OpsKernelBuilder* {    \
+            return new (std::nothrow) (builder)();                                              \
           })
-}  // namespace ge
 
 #endif // INC_REGISTER_OPS_KERNEL_BUILDER_REGISTRY_H_

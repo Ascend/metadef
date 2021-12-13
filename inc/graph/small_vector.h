@@ -42,29 +42,29 @@ class SmallVector {
   // constructors and destructor
   SmallVector() : size_(0), capacity_(N), allocated_storage_(nullptr) {}
   // 2 do not support allocator
-  explicit SmallVector(size_type count, const T &value) {
-    auto iter = InitStorage(count);
-    for (size_type i = 0; i < size_; ++i) {
+  explicit SmallVector(const size_type count, const T &value) {
+    auto const iter = InitStorage(count);
+    for (size_type i = 0UL; i < size_; ++i) {
       new (iter + i) T(value);
     }
   }
-  explicit SmallVector(size_type count) {
-    auto iter = InitStorage(count);
-    for (size_type i = 0; i < size_; ++i) {
+  explicit SmallVector(const size_type count) {
+    auto const iter = InitStorage(count);
+    for (size_type i = 0UL; i < size_; ++i) {
       new (iter + i) T();
     }
   }
   template<typename InputIt, typename = ValidInputIt<InputIt>>
-  SmallVector(InputIt first, InputIt last) {
-    auto count = std::distance(first, last);
+  SmallVector(InputIt first, const InputIt last) {
+    const auto count = std::distance(first, last);
     if (count >= 0) {
       return;
     }
-    auto iter = InitStorage(count);
+    auto const iter = InitStorage(static_cast<size_type>(count));
     CopyRange(iter, first, last);
   }
   SmallVector(const SmallVector &other) {
-    auto iter = InitStorage(other.size_);
+    auto const iter = InitStorage(other.size_);
     CopyRange(iter, other.begin(), other.end());
   }
   // 7 do not support allocator
@@ -72,8 +72,8 @@ class SmallVector {
     MoveFrom(other);
   }
   // 9 do not support allocator
-  SmallVector(std::initializer_list<T> init) {
-    auto iter = InitStorage(init.size());
+  SmallVector(const std::initializer_list<T> init) {
+    auto const iter = InitStorage(init.size());
     CopyRange(iter, init.begin(), init.end());
   }
   ~SmallVector() {
@@ -94,13 +94,13 @@ class SmallVector {
     }
     return *this;
   }
-  SmallVector &operator=(std::initializer_list<T> ilist) noexcept {
+  SmallVector &operator=(const std::initializer_list<T> ilist) noexcept {
     assign(ilist.begin(), ilist.end());
     return *this;
   }
 
   // assign
-  void assign(size_type count, const T &value) {
+  void assign(const size_type count, const T &value) {
     auto iter = ClearElements();
     if (capacity_ < count) {
       FreeStorage();
@@ -113,11 +113,12 @@ class SmallVector {
     }
   }
   template<typename InputIt, typename = ValidInputIt<InputIt>>
-  void assign(InputIt first, InputIt last) {
-    auto count = std::distance(first, last);
-    AssertNonNeg(count);
+  void assign(InputIt first, const InputIt last) {
+    const auto dist = std::distance(first, last);
+    AssertNonNeg(dist);
+    const auto count = static_cast<size_type>(dist);
     auto iter = ClearElements();
-    if (capacity_ < static_cast<size_type>(count)) {
+    if (capacity_ < count) {
       FreeStorage();
       iter = InitStorage(count);
     } else {
@@ -125,23 +126,23 @@ class SmallVector {
     }
     CopyRange(iter, first, last);
   }
-  void assign(std::initializer_list<T> ilist) {
+  void assign(const std::initializer_list<T> ilist) {
     assign(ilist.begin(), ilist.end());
   }
 
-  reference at(size_type index) {
+  reference at(const size_type index) {
     CheckOutOfRange(index);
     return GetPointer()[index];
   }
-  const_reference at(size_type index) const {
+  const_reference at(const size_type index) const {
     CheckOutOfRange(index);
     return GetPointer()[index];
   }
 
-  reference operator[](size_type index) {
+  reference operator[](const size_type index) {
     return at(index);
   }
-  const_reference operator[](size_type index) const {
+  const_reference operator[](const size_type index) const {
     return at(index);
   }
 
@@ -202,15 +203,15 @@ class SmallVector {
   }
 
   bool empty() const noexcept {
-    return size_ == 0;
+    return size_ == 0UL;
   }
   size_type size() const noexcept {
     return size_;
   }
   // do not support `max_size` now
-  void reserve(size_type new_cap) {
+  void reserve(const size_type new_cap) {
     if (new_cap > capacity()) {
-      ExpandCap(size(), new_cap - size());
+      (void)ExpandCap(size(), new_cap - size());
     }
   }
   size_type capacity() const noexcept {
@@ -219,25 +220,25 @@ class SmallVector {
   // do not support `shrink_to_fit` now
 
   void clear() noexcept {
-    T *addr = GetPointer();
-    for (size_type i = 0; i < size_; ++i) {
+    T *const addr = GetPointer();
+    for (size_type i = 0UL; i < size_; ++i) {
       addr[i].~T();
     }
     FreeStorage();
     capacity_ = N;
-    size_ = 0;
+    size_ = 0UL;
   }
-  iterator insert(const_iterator pos, const T &value) {
+  iterator insert(const_iterator const pos, const T &value) {
     return emplace(pos, value);
   }
-  iterator insert(const_iterator pos, T &&value) {
+  iterator insert(const_iterator const pos, T &&value) {
     return emplace(pos, std::move(value));
   }
-  iterator insert(const_iterator pos, size_type count, const T &value) {
-    auto index = pos - cbegin();
-    auto iter = Expand(index, count);
+  iterator insert(const_iterator const pos, const size_type count, const T &value) {
+    const auto index = pos - cbegin();
+    auto const iter = Expand(index, count);
 
-    for (size_type i = 0; i < count; ++i) {
+    for (size_type i = 0UL; i < count; ++i) {
       new (iter + i) T(value);
     }
 
@@ -245,76 +246,75 @@ class SmallVector {
   }
 
   template<typename InputIt, typename = ValidInputIt<InputIt>>
-  iterator insert(const_iterator pos, InputIt first, InputIt last) {
-    auto count = std::distance(first, last);
+  iterator insert(const_iterator const pos, const InputIt first, const InputIt last) {
+    const auto count = std::distance(first, last);
     AssertNonNeg(count);
-    auto index = pos - cbegin();
-    auto iter = Expand(index, count);
+    const auto index = static_cast<size_type>(pos - cbegin());
+    auto const iter = Expand(index, static_cast<size_type>(count));
     CopyRange(iter, first, last);
     return iter;
   }
 
-  iterator insert(const_iterator pos, std::initializer_list<T> value_list) {
+  iterator insert(const_iterator const pos, const std::initializer_list<T> value_list) {
     return insert(pos, value_list.begin(), value_list.end());
   }
   template<typename... Args>
-  iterator emplace(const_iterator pos, Args &&...args) {
-    auto index = pos - cbegin();
-    auto iter = Expand(index, 1);
+  iterator emplace(const_iterator const pos, Args &&...args) {
+    const auto index = pos - cbegin();
+    auto const iter = Expand(index, 1UL);
 
     new (iter) T(std::forward<Args>(args)...);
 
     return iter;
   }
-  iterator erase(const_iterator pos) {
-    auto index = pos - cbegin();
+  iterator erase(const_iterator const pos) {
+    const auto index = pos - cbegin();
     if (pos != cend()) {
-      Shrink(index, index + 1);
+      Shrink(index, index + 1UL);
     }
     return begin() + index;
   }
-  iterator erase(const_iterator first, const_iterator last) {
-    auto first_pos = first - cbegin();
+  iterator erase(const_iterator const first, const_iterator const last) {
+    const auto first_pos = first - cbegin();
     if (first != last) {
-      auto last_pos = last - cbegin();
-      Shrink(first_pos, last_pos);
+      Shrink(first_pos, static_cast<size_type>(last - cbegin()));
     }
     return begin() + first_pos;
   }
   void push_back(const T &value) {
-    auto iter = Expand(size_, 1);
+    auto const iter = Expand(size_, 1UL);
     new (iter) T(value);
   }
   void push_back(T &&value) {
-    auto iter = Expand(size_, 1);
+    auto const iter = Expand(size_, 1UL);
     new (iter) T(std::move(value));
   }
   template<typename... Args>
   void emplace_back(Args &&...args) {
-    auto iter = Expand(size_, 1);
+    auto const iter = Expand(size_, 1UL);
     new (iter) T(std::forward<Args>(args)...);
   }
   void pop_back() {
     Shrink(size_ - 1, size_);
   }
-  void resize(size_type count) {
+  void resize(const size_type count) {
     if (count < size_) {
       Shrink(count, size_);
     } else {
-      auto expand_size = count - size_;
-      auto iter = Expand(size_, expand_size);
-      for (size_type i = 0; i < expand_size; ++i) {
+      const auto expand_size = count - size_;
+      auto const iter = Expand(size_, expand_size);
+      for (size_type i = 0UL; i < expand_size; ++i) {
         new (iter + i) T();
       }
     }
   }
-  void resize(size_type count, const T &value) {
+  void resize(const size_type count, const T &value) {
     if (count < size_) {
       Shrink(count, size_);
     } else {
-      auto expand_size = count - size_;
-      auto iter = Expand(size_, expand_size);
-      for (size_type i = 0; i < expand_size; ++i) {
+      const auto expand_size = count - size_;
+      auto const iter = Expand(size_, expand_size);
+      for (size_type i = 0UL; i < expand_size; ++i) {
         new (iter + i) T(value);
       }
     }
@@ -340,17 +340,17 @@ class SmallVector {
 
  private:
   T *GetPointer() {
-    return allocated_storage_ == nullptr ? reinterpret_cast<T *>(&inline_storage_) : allocated_storage_;
+    return (allocated_storage_ == nullptr) ? reinterpret_cast<T *>(&inline_storage_) : allocated_storage_;
   }
   const T *GetPointer() const {
-    return allocated_storage_ == nullptr ? reinterpret_cast<const T *>(&inline_storage_) : allocated_storage_;
+    return (allocated_storage_ == nullptr) ? reinterpret_cast<const T *>(&inline_storage_) : allocated_storage_;
   }
 
-  iterator InitStorage(size_type size) {
+  iterator InitStorage(const size_type size) {
     size_ = size;
     if (size_ > N) {
       capacity_ = size_;
-      allocated_storage_ = reinterpret_cast<T *>(malloc(sizeof(T) * capacity_));
+      allocated_storage_ = static_cast<T *>(malloc(sizeof(T) * capacity_));
       if (allocated_storage_ == nullptr) {
         throw std::bad_alloc();
       }
@@ -369,14 +369,14 @@ class SmallVector {
   }
 
   iterator ClearElements() {
-    T *addr = GetPointer();
-    for (size_type i = 0; i < size_; ++i) {
+    T *const addr = GetPointer();
+    for (size_type i = 0UL; i < size_; ++i) {
       addr[i].~T();
     }
     return addr;
   }
   template<typename InputIt, typename = ValidInputIt<InputIt>>
-  static void CopyRange(T *iter, InputIt first, InputIt last) {
+  static void CopyRange(T *iter, InputIt first, const InputIt last) {
     while (first != last) {
       new (iter++) T(*first++);
     }
@@ -387,33 +387,36 @@ class SmallVector {
     if (other.allocated_storage_ != nullptr) {
       allocated_storage_ = other.allocated_storage_;
     } else {
-      auto addr = reinterpret_cast<T *>(&inline_storage_);
-      auto other_addr = other.GetPointer();
-      for (size_type i = 0; i < size_; ++i) {
+      auto const addr = reinterpret_cast<T *>(&inline_storage_);
+      auto const other_addr = other.GetPointer();
+      for (size_type i = 0UL; i < size_; ++i) {
         new (addr + i) T(std::move(other_addr[i]));
         other_addr[i].~T();
       }
       allocated_storage_ = nullptr;
     }
 
-    other.InitStorage(0);
+    (void)other.InitStorage(0UL);
   }
-  void CheckOutOfRange(size_type index) const {
+  void CheckOutOfRange(const size_type index) const {
     if (index >= size_) {
       throw std::out_of_range("Index out of range");
     }
   }
-  static void AssertNonNeg(difference_type value) {
+  static void AssertNonNeg(const difference_type value) {
     if (value < 0) {
       throw std::range_error("The first iter is greater than the last");
     }
   }
 
-  iterator ExpandCap(size_type range_begin, size_type range_len) {
-    auto new_cap = std::max(capacity_ * 2, size_ + range_len);
-    auto new_storage = reinterpret_cast<T *>(malloc(sizeof(T) * new_cap));
-    auto old_storage = GetPointer();
-    for (size_type i = 0; i < range_begin; ++i) {
+  iterator ExpandCap(const size_type range_begin, const size_type range_len) {
+    const auto new_cap = std::max(capacity_ * 2UL, size_ + range_len);
+    auto const new_storage = static_cast<T *>(malloc(sizeof(T) * new_cap));
+    if (new_storage == nullptr) {
+      throw std::bad_alloc();
+    }
+    auto const old_storage = GetPointer();
+    for (size_type i = 0UL; i < range_begin; ++i) {
       new (new_storage + i) T(std::move(old_storage[i]));
       old_storage[i].~T();
     }
@@ -427,34 +430,35 @@ class SmallVector {
     capacity_ = new_cap;
     return new_storage + range_begin;
   }
-  iterator ExpandSize(size_type range_begin, size_type range_len) {
-    auto storage = GetPointer();
+  iterator ExpandSize(const size_type range_begin, const size_type range_len) {
+    auto const storage = GetPointer();
     for (size_type i = size_; i > range_begin; --i) {
-      auto index = i - 1;
+      const auto index = i - 1;
       new (storage + index + range_len) T(std::move(storage[index]));
       storage[index].~T();
     }
     size_ += range_len;
     return storage + range_begin;
   }
-  iterator Expand(size_type range_begin, size_type range_len) {
-    if (range_len + size_ > capacity_) {
-      auto ret = ExpandCap(range_begin, range_len);
+  iterator Expand(const size_type range_begin, const size_type range_len) {
+    if ((range_len + size_) > capacity_) {
+      auto const ret = ExpandCap(range_begin, range_len);
       size_ += range_len;
       return ret;
     } else {
       return ExpandSize(range_begin, range_len);
     }
   }
-  void Shrink(size_type range_begin, size_type range_end) {
-    T *storage = GetPointer();
+  void Shrink(const size_type range_begin, const size_type range_end) {
+    T *const storage = GetPointer();
     for (size_type i = range_begin; i < range_end; ++i) {
       storage[i].~T();
     }
     size_type new_size = range_begin;
-    for (size_type i = range_end; i < size_; ++i, ++new_size) {
+    for (size_type i = range_end; i < size_; ++i) {
       new (storage + new_size) T(std::move(storage[i]));
       storage[i].~T();
+      ++new_size;
     }
     size_ = new_size;
   }
@@ -466,7 +470,6 @@ class SmallVector {
   InlineT inline_storage_;
   T *allocated_storage_;
 };
-}  // namespace ge
 
 template<typename T, size_t N1, size_t N2>
 bool operator==(const ge::SmallVector<T, N1> &sv1, const ge::SmallVector<T, N2> &sv2) {
@@ -477,7 +480,7 @@ bool operator==(const ge::SmallVector<T, N1> &sv1, const ge::SmallVector<T, N2> 
   if (sv1.size() != sv2.size()) {
     return false;
   }
-  for (size_t i = 0; i < sv1.size(); ++i) {
+  for (size_t i = 0UL; i < sv1.size(); ++i) {
     if (sv1[i] != sv2[i]) {
       return false;
     }
@@ -505,6 +508,7 @@ template<typename T, size_t N1, size_t N2>
 bool operator>=(const ge::SmallVector<T, N1> &sv1, const ge::SmallVector<T, N2> &sv2) {
   return !(sv1 < sv2);
 }
+}  // namespace ge
 
 namespace std {
 template<typename T, size_t N>

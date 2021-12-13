@@ -28,8 +28,6 @@
 #include "detail/attributes_holder.h"
 #include "graph/range_vistor.h"
 
-#define DYNAMIN_INPUT_NAME(name, index) (((name)) + std::to_string((index)))
-#define DYNAMIN_OUTPUT_NAME(name, index) (((name)) + std::to_string((index)))
 namespace ge {
 using std::map;
 using std::pair;
@@ -81,7 +79,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   ~OpDesc() override;
 
   bool operator==(const OpDesc &r_op_desc) const;
-  OpDesc& operator=(OpDesc op_desc);
 
   std::string GetName() const;
 
@@ -116,6 +113,8 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   const GeTensorDesc &GetInputDesc(const uint32_t index) const;
 
   const GeTensorDesc &GetInputDesc(const std::string &name) const;
+
+  bool IsOptionalInput(const uint32_t index) const;
 
   Vistor<string> GetAllInputNames() const;
 
@@ -171,8 +170,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   bool IsOptionalInput(const std::string &name) const;
 
-  bool IsOptionalInput(const uint32_t index) const;
-
   std::map<std::string, uint32_t> GetAllInputName() const;
 
   std::map<std::string, uint32_t> GetAllOutputName();
@@ -192,8 +189,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   graphStatus InferShapeAndType();
 
   void AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func);
-
-  std::function<graphStatus(Operator &)> GetInferFormatFunc() const;
 
   graphStatus DefaultInferFormat();
 
@@ -242,7 +237,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   void SetDstName(const std::vector<std::string> &dst_name);
   std::vector<std::string> GetDstName() const;
   void SetDstIndex(const std::vector<int64_t> &dst_index);
-  std::vector<int64_t> GetDstIndex() const;
   void SetWorkspace(const std::vector<int64_t> &workspace);
   std::vector<int64_t> GetWorkspace() const;
   void SetWorkspaceBytes(const std::vector<int64_t> &workspace_bytes);
@@ -255,16 +249,11 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   std::string GetInputNameByIndex(const uint32_t index) const;
   std::string GetValidInputNameByIndex(const uint32_t index) const;
-  int32_t GetValidInputIndexByName(const std::string &name) const;
   int32_t GetInputIndexByName(const std::string &name) const;
 
   std::string GetOutputNameByIndex(const uint32_t index) const;
 
   int32_t GetOutputIndexByName(const std::string &name) const;
-
-  graphStatus RestoreInputNameIdx(const std::string &name, const int32_t &index);
-
-  graphStatus RestoreOutputNameIdx(const std::string &name, const int32_t &index);
 
   graphStatus CallInferFunc(Operator &op);
 

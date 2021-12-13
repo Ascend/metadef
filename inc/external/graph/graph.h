@@ -32,14 +32,15 @@ class GraphImpl;
 using GraphImplPtr = std::shared_ptr<GraphImpl>;
 using GraphPtr = std::shared_ptr<Graph>;
 
+/*lint -e148*/
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Graph {
   friend class GraphUtils;
 
  public:
-  ATTRIBUTED_DEPRECATED(Graph(const char *))
+  ATTRIBUTED_DEPRECATED(Graph(const char_t *))
   explicit Graph(const std::string &name);
 
-  explicit Graph(const char *name);
+  explicit Graph(const char_t *name);
 
   Graph() = default;
 
@@ -62,30 +63,30 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Graph {
 
   graphStatus AddOp(const ge::Operator &op);
 
-  ATTRIBUTED_DEPRECATED(graphStatus FindOpByName(const char *, ge::Operator &))
+  ATTRIBUTED_DEPRECATED(graphStatus FindOpByName(const char_t *, ge::Operator &))
   graphStatus FindOpByName(const std::string &name, ge::Operator &op) const;
 
-  graphStatus FindOpByName(const char *name, ge::Operator &op) const;
+  graphStatus FindOpByName(const char_t *name, ge::Operator &op) const;
 
-  ATTRIBUTED_DEPRECATED(graphStatus FindOpByType(const char *, std::vector<ge::Operator> &))
+  ATTRIBUTED_DEPRECATED(graphStatus FindOpByType(const char_t *, std::vector<ge::Operator> &))
   graphStatus FindOpByType(const std::string &type, std::vector<ge::Operator> &ops) const;
 
-  graphStatus FindOpByType(const char *type, std::vector<ge::Operator> &ops) const;
+  graphStatus FindOpByType(const char_t *type, std::vector<ge::Operator> &ops) const;
 
   ATTRIBUTED_DEPRECATED(graphStatus GetAllOpName(std::vector<AscendString> &) const)
   graphStatus GetAllOpName(std::vector<std::string> &op_name) const;
 
   graphStatus GetAllOpName(std::vector<AscendString> &names) const;
 
-  ATTRIBUTED_DEPRECATED(graphStatus SaveToFile(const char *file_name) const)
+  ATTRIBUTED_DEPRECATED(graphStatus SaveToFile(const char_t *file_name) const)
   graphStatus SaveToFile(const std::string &file_name) const;
 
-  graphStatus SaveToFile(const char *file_name) const;
+  graphStatus SaveToFile(const char_t *file_name) const;
 
-  ATTRIBUTED_DEPRECATED(graphStatus LoadFromFile(const char *))
+  ATTRIBUTED_DEPRECATED(graphStatus LoadFromFile(const char_t *))
   graphStatus LoadFromFile(const std::string &file_name);
 
-  graphStatus LoadFromFile(const char *file_name);
+  graphStatus LoadFromFile(const char_t *file_name);
 
   ATTRIBUTED_DEPRECATED(graphStatus GetName(AscendString &) const)
   const std::string &GetName() const;

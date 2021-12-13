@@ -70,11 +70,13 @@ class GeTensorDescImpl {
    public:
     bool operator==(const ExtMeta& other) const {
       return (name == other.name) && (device_type == other.device_type) && (size == other.size) &&
-        (weight_size == other.weight_size) && (data_offset == other.data_offset) &&
-        (real_dim_cnt == other.real_dim_cnt) && (input_tensor == other.input_tensor) &&
-        (reuse_input == other.reuse_input) && (reuse_input_index == other.reuse_input_index) &&
-        (output_tensor == other.output_tensor) && (cmps_size == other.cmps_size) &&
-        (cmps_tab == other.cmps_tab) && (cmps_tab_offset == other.cmps_tab_offset) &&
+        (weight_size == other.weight_size) && (cmps_tab_offset == other.cmps_tab_offset) &&
+        (reuse_input_index == other.reuse_input_index) && (cmps_tab == other.cmps_tab) &&
+        (data_offset == other.data_offset) && (cmps_size == other.cmps_size) &&
+        (real_dim_cnt == other.real_dim_cnt) &&
+        (other.reuse_input ? reuse_input : !reuse_input) &&
+        (other.input_tensor ? input_tensor : !input_tensor) &&
+        (other.output_tensor ? output_tensor : !output_tensor) &&
         (other.origin_shape_inited_ ? origin_shape_inited_ : !origin_shape_inited_);
     }
     // for name

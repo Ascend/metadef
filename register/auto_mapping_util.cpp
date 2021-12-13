@@ -16,12 +16,18 @@
 #include "register/auto_mapping_util.h"
 #include "graph/debug/ge_util.h"
 
+namespace {
+const int32_t kMaxFuncRecursiveDepth = 30;
+}  // namespace
 namespace ge {
 
 // Convert tensorflow property to ge property
-bool AutoMappingUtil::FindAttrValue(const domi::tensorflow::NodeDef *nodeDef, const string &attr_name,
+bool AutoMappingUtil::FindAttrValue(const domi::tensorflow::NodeDef *const nodeDef, const string &attr_name,
                                     domi::tensorflow::AttrValue &attr_value) {
-  GE_CHECK_NOTNULL(nodeDef);
+  if (nodeDef == nullptr) {
+    GE_LOGE("nodeDef is nullptr.");
+    return false;
+  }
   const google::protobuf::Map<std::string, domi::tensorflow::AttrValue> &attr = nodeDef->attr();
   const google::protobuf::Map<std::string, domi::tensorflow::AttrValue>::const_iterator it = attr.find(attr_name);
   if (it != attr.end()) {
@@ -40,7 +46,7 @@ void AutoMappingUtil::ConvertShape(const domi::tensorflow::TensorShapeProto &sha
       shape_dims.push_back(dim.size());
     }
   } else {
-   shape_dims = ge::UNKNOWN_SHAPE;
+    shape_dims = ge::UNKNOWN_SHAPE;
   }
 }
 
@@ -50,8 +56,8 @@ graphStatus AutoMappingUtil::ConvertTensor(const domi::tensorflow::TensorProto &
     GE_LOGE("Weight is nullptr.");
     return GRAPH_FAILED;
   }
-  domi::tensorflow::DataType tf_data_type = tensor.dtype();
-  ge::DataType ge_data_type = domi::TensorAssign::ConvertTensorflowDataType(tf_data_type);
+  const domi::tensorflow::DataType tf_data_type = tensor.dtype();
+  const ge::DataType ge_data_type = domi::TensorAssign::ConvertTensorflowDataType(tf_data_type);
   if (domi::TensorAssign::SetGeTensorDataType(ge_data_type, weight) != domi::SUCCESS) {
     GE_LOGE("Set Ge tensor data type failed.");
     return GRAPH_FAILED;
@@ -68,8 +74,7 @@ void AutoMappingUtil::ConvertTensorList(const domi::tensorflow::AttrValue_ListVa
   vec.clear();
   for (auto &tensor : list.tensor()) {
     ge::GeTensorPtr ge_tensor = nullptr;
-    graphStatus ret = ConvertTensor(tensor, ge_tensor);
-    if (ret != GRAPH_SUCCESS) {
+    if (ConvertTensor(tensor, ge_tensor) != GRAPH_SUCCESS) {
       GE_LOGE("Convert tensor failed.");
       return;
     }
@@ -78,11 +83,15 @@ void AutoMappingUtil::ConvertTensorList(const domi::tensorflow::AttrValue_ListVa
 }
 
 void AutoMappingUtil::ConvertFunc(const domi::tensorflow::NameAttrList& tf_func,
-                                  ge::NamedAttrs& ge_func) {
+                                  ge::NamedAttrs& ge_func, const int32_t recursive_depth) {
+  if (recursive_depth >= kMaxFuncRecursiveDepth) {
+    GELOGW("The call stack has exceeded the maximum recursive depth");
+    return;
+  }
   ge_func.SetName(tf_func.name());
   auto& attrs = tf_func.attr();
   for (auto &item : attrs) {
-    ConvertValue(item.first, item.second, ge_func);
+    ConvertValue(item.first, item.second, ge_func, recursive_depth + 1);
   }
 }
 
@@ -90,8 +99,7 @@ void AutoMappingUtil::ConvertDataTypeList(const domi::tensorflow::AttrValue_List
                                           std::vector<ge::DataType> &vec) {
   vec.clear();
   for (auto &e : list.type()) {
-    ge::DataType ge_data_type = domi::TensorAssign::ConvertTensorflowDataType(static_cast<uint32_t>(e));
-    vec.push_back(ge_data_type);
+    vec.push_back(domi::TensorAssign::ConvertTensorflowDataType(static_cast<uint32_t>(e)));
   }
 }
 
@@ -106,11 +114,15 @@ void AutoMappingUtil::ConvertShapeList(const domi::tensorflow::AttrValue_ListVal
 }
 
 void AutoMappingUtil::ConvertFuncList(const domi::tensorflow::AttrValue_ListValue &list,
-                                      std::vector<ge::NamedAttrs> &vec) {
+                                      std::vector<ge::NamedAttrs> &vec, const int32_t recursive_depth) {
+  if (recursive_depth >= kMaxFuncRecursiveDepth) {
+    GELOGW("The call stack has exceeded the maximum recursive depth");
+    return;
+  }
   vec.clear();
   for (const auto &e : list.func()) {
     ge::NamedAttrs func;
-    ConvertFunc(e, func);
+    ConvertFunc(e, func, recursive_depth + 1);
     vec.push_back(func);
   }
 }

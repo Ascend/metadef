@@ -50,7 +50,7 @@ public:
 static const size_t PAIR_ELEMENT_SIZE = 2UL;
 static const size_t PAIR_ELEMENT_KEY = 0UL;
 static const size_t PAIR_ELEMENT_VALUE = 1UL;
-const char_t * const kKeyDataTypeSelfDefined = "__tensor_desc_data_type__";
+const char_t *const kKeyDataTypeSelfDefined = "__tensor_desc_data_type__";
 const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_UNDEFINED, proto::DT_UNDEFINED},
     {DT_FLOAT, proto::DT_FLOAT},
@@ -967,7 +967,7 @@ TensorDataImpl &TensorDataImpl::operator=(const TensorDataImpl &other) {
   return *this;
 }
 
-graphStatus TensorDataImpl::SetData(const uint8_t * const data, const size_t size) {
+graphStatus TensorDataImpl::SetData(const uint8_t *const data, const size_t size) {
   if (size == 0UL) {
     GELOGI("size is 0");
     clear();
@@ -1011,7 +1011,7 @@ void TensorDataImpl::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size
   length_ = size;
 }
 
-graphStatus TensorDataImpl::SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
+graphStatus TensorDataImpl::SetData(uint8_t *const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
   if (size == 0UL) {
     GELOGW("[Set][Data] Input size is 0");
     clear();
@@ -1103,11 +1103,11 @@ graphStatus TensorData::SetData(const std::vector<uint8_t> &data) { return SetDa
 graphStatus TensorData::SetData(const Buffer &data) { return SetData(data.data(), data.size()); }
 graphStatus TensorData::SetData(const TensorData &data) { return SetData(data.data(), data.size()); }
 
-graphStatus TensorData::SetData(const uint8_t * const data, const size_t size) {
+graphStatus TensorData::SetData(const uint8_t *const data, const size_t size) {
   return impl_->SetData(data, size);
 }
 
-graphStatus TensorData::SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
+graphStatus TensorData::SetData(uint8_t *const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
   return impl_->SetData(data, size, delete_fuc);
 }
 
@@ -1165,7 +1165,7 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const std::vector<ui
   }
 }
 
-GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const uint8_t * const data, const size_t size)
+GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const uint8_t *const data, const size_t size)
     : GeTensorImpl() {
   DescReference() = tensor_desc;
   if (tensor_data_.SetData(data, size) != GRAPH_SUCCESS) {
@@ -1243,14 +1243,13 @@ void GeTensorImpl::BuildAlignerPtrWithProtoData() {
 
   tensor_data_.impl_->length_ = proto_msg->data().size();
   tensor_data_.impl_->aligned_ptr_.reset();
-  tensor_data_.impl_->aligned_ptr_ =
-      AlignedPtr::BuildFromAllocFunc([&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
-                                       ptr.reset(const_cast<uint8_t *>(
-                                           reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
-                                     },
-                                     [](uint8_t *ptr) {
-                                       ptr = nullptr;
-                                     });
+  tensor_data_.impl_->aligned_ptr_ = AlignedPtr::BuildFromAllocFunc(
+      [&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
+        ptr.reset(const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
+      },
+      [](const uint8_t *ptr) {
+        (void)ptr;
+      });
 }
 
 graphStatus GeTensorImpl::SetData(std::vector<uint8_t> &&data) {
@@ -1275,7 +1274,7 @@ graphStatus GeTensorImpl::SetData(const std::vector<uint8_t> &data) {
   return tensor_data_.SetData(data);
 }
 
-graphStatus GeTensorImpl::SetData(const uint8_t * const data, const size_t size) {
+graphStatus GeTensorImpl::SetData(const uint8_t *const data, const size_t size) {
   if (size > 0UL) {
     GE_CHECK_NOTNULL(data);
   }
@@ -1310,7 +1309,7 @@ graphStatus GeTensorImpl::SetData(const TensorData &data) {
   return SetData(data.data(), data.size());
 }
 
-graphStatus GeTensorImpl::SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
+graphStatus GeTensorImpl::SetData(uint8_t *const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
   return tensor_data_.SetData(data, size, delete_fuc);
 }
 
@@ -1380,7 +1379,7 @@ GeTensor::GeTensor(const GeTensorDesc &tensor_desc)
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const std::vector<uint8_t> &data)
     : impl_(MakeShared<GeTensorImpl>(tensor_desc, data)) {}
 
-GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const uint8_t * const data, const size_t size)
+GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const uint8_t *const data, const size_t size)
     : impl_(MakeShared<GeTensorImpl>(tensor_desc, data, size)) {}
 
 GeTensor::GeTensor(GeTensorDesc &&tensor_desc, std::vector<uint8_t> &&data)
@@ -1395,8 +1394,8 @@ GeTensor::GeTensor(const GeTensorDesc &tensor_desc, std::shared_ptr<AlignedPtr> 
 GeTensor::GeTensor(const GeTensorDesc &tensor_desc, const size_t size)
     : impl_(MakeShared<GeTensorImpl>(tensor_desc, size)) {}
 
-GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *protoMsg)
-    : impl_(MakeShared<GeTensorImpl>(proto_owner, protoMsg)) {}
+GeTensor::GeTensor(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg)
+    : impl_(MakeShared<GeTensorImpl>(proto_owner, proto_msg)) {}
 
 GeTensor::~GeTensor() = default;
 
@@ -1422,7 +1421,7 @@ graphStatus GeTensor::SetData(const std::vector<uint8_t> &data) {
   return impl_->SetData(data);
 }
 
-graphStatus GeTensor::SetData(const uint8_t * const data, const size_t size) {
+graphStatus GeTensor::SetData(const uint8_t *const data, const size_t size) {
   return impl_->SetData(data, size);
 }
 
@@ -1434,7 +1433,7 @@ graphStatus GeTensor::SetData(const TensorData &data) {
   return SetData(data.data(), data.size());
 }
 
-graphStatus GeTensor::SetData(uint8_t * const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
+graphStatus GeTensor::SetData(uint8_t *const data, const size_t size, const AlignedPtr::Deleter &delete_fuc) {
   return impl_->SetData(data, size, delete_fuc);
 }
 
@@ -1513,7 +1512,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t TensorUtils::GetWeightSi
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAddr(const ConstGeTensorPtr &tensor_ptr,
-                                                                                   uint8_t * const base) {
+                                                                                   uint8_t *const base) {
   if (tensor_ptr == nullptr) {
     REPORT_INNER_ERROR("E19999", "param tensor_ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] tensor_ptr is null.");
@@ -1522,7 +1521,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAd
   return GetWeightAddr(*tensor_ptr, base);
 }
 
-uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t * const base) {
+uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *const base) {
   if (base == nullptr) {
     REPORT_INNER_ERROR("E19999", "param base is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] base is null.");

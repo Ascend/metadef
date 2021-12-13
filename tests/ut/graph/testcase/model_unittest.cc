@@ -112,7 +112,10 @@ TEST_F(ModelUt, Save) {
   auto md = SubModel("md2", "test");
   auto graph = BuildGraph();
   md.SetGraph(graph);
-  //EXPECT_EQ(md.SaveToFile("/tmp/hw2.proto"),GRAPH_SUCCESS);
+  std::time_t tt = std::time(0);
+  std::stringstream ss;
+  ss << "/tmp/" << tt << ".proto";
+  md.SaveToFile(ss.str());
 }
 
 }  // namespace ge

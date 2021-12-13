@@ -28,11 +28,15 @@ class ShapeAndTypeImpl {
 
   ShapeAndTypeImpl(const Shape &shape, const DataType data_type) : shape_(shape), data_type_(data_type) {}
 
+ private:
   Shape shape_;
   DataType data_type_ = DT_UNDEFINED;
+
+  friend class ShapeAndType;
 };
 
 struct InnerInferenceContext {
+private:
   // For deliver to op in pair, help to support dynamic shape
   std::vector<std::string> marks;
   std::vector<std::vector<ShapeAndType>> input_handle_shapes_and_types;
@@ -42,6 +46,8 @@ struct InnerInferenceContext {
   // For read op, register relied resource
   std::set<AscendString> relied_resource_keys;
   ResourceContextMgr *resource_context_mgr = nullptr;
+
+  friend class InferenceContext;
 };
 
 ShapeAndType::ShapeAndType() { shape_and_type_impl_ = ComGraphMakeShared<ShapeAndTypeImpl>(); }

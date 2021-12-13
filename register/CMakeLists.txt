@@ -36,7 +36,7 @@ add_library(register SHARED
 )
 
 target_compile_options(register PRIVATE
-    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
 )
 
 target_compile_definitions(register PRIVATE
@@ -110,11 +110,10 @@ add_library(register_static STATIC
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
     "op_tiling/op_tiling_registry.cc"
-    "op_tiling/op_tiling_py.cc"
-)
+    "op_tiling/op_tiling_py.cc")
 
 target_compile_options(register_static PRIVATE
-    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:/utf-8>
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
@@ -191,8 +190,7 @@ add_library(op_tiling_o2 STATIC
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
     "op_tiling/op_tiling_registry.cc"
-    "op_tiling/op_tiling_py.cc"
-)
+    "op_tiling/op_tiling_py.cc")
 
 add_dependencies(op_tiling_o2
     metadef_protos
@@ -233,7 +231,7 @@ target_include_directories(op_tiling_o2 PRIVATE
 
 target_compile_options(op_tiling_o2 PRIVATE
     -O2
-    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
 )
 
 target_compile_definitions(op_tiling_o2 PRIVATE

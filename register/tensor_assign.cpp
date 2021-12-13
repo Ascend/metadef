@@ -32,6 +32,9 @@ namespace domi {
 namespace {
 using GeTensorDesc = ge::GeTensorDesc;
 using GeShape = ge::GeShape;
+using domi::tensorflow::TensorProto;
+using google::protobuf::int32;
+using google::protobuf::int64;
 const char *const kOriginElementNumAttrName = "origin_element_num";
 const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_FLOAT, ge::DataType::DT_FLOAT},
