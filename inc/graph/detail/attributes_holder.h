@@ -41,6 +41,7 @@ namespace ge {
 namespace proto {
 class AttrDef;
 class TensorDef;
+class TensorDescriptor;
 class ShapeDef;
 class NamedAttrs;
 class ModelDef;
