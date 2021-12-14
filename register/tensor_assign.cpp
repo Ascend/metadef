@@ -160,7 +160,6 @@ Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::prot
   GE_CHECK_NOTNULL(weight);
   const bool zerosLike = ((count != val_size) && (val_size == 1));
   std::vector<uint16_t> addr(static_cast<uint64_t>(count));
-  GE_CHECK_NOTNULL(addr);
   if (!zerosLike) {
     const int32_t minCount = (count > val_size) ? val_size : count;
     for (int32_t i = 0; i < minCount; i++) {
