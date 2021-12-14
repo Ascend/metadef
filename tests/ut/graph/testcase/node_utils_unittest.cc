@@ -26,6 +26,7 @@
 #include "graph/debug/ge_op_types.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/compute_graph_impl.h"
+#include "graph/anchor.h"
 
 #undef private
 #undef protected
@@ -482,6 +483,13 @@ TEST_F(UtestNodeUtils, GetSingleOutputNodeOfNthLayer) {
   auto attr = builder.AddNode("Attr", "Attr", 1, 2);
   EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(data, 0, dest), GRAPH_FAILED);
   EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(data, 1, dest), GRAPH_FAILED);
+  auto const1 = builder.AddNode("const1", "Const", 1, 1);
+  auto const2 = builder.AddNode("const2", "Const", 1, 1);
+  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(const1, 111);
+  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(const2, 222);
+  EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
+  EXPECT_EQ(const2->GetOutDataNodes().size(), 1);
+  EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(const2, 1, const1), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestNodeUtils, GetDataOutAnchorAndControlInAnchor) {
@@ -494,9 +502,21 @@ TEST_F(UtestNodeUtils, GetDataOutAnchorAndControlInAnchor) {
 
 TEST_F(UtestNodeUtils, ClearInDataAnchor) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto data = builder.AddNode("Data", "Data", 1, 1);
   InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data, 111);
   EXPECT_EQ(NodeUtils::ClearInDataAnchor(data, in_anch), GRAPH_FAILED);
+
+  auto const1 = builder.AddNode("const1", "Const", 1, 1);
+  auto const2 = builder.AddNode("const2", "Const", 1, 1);
+  InDataAnchorPtr in_anch1 = std::make_shared<InDataAnchor>(const1, 111);
+  InDataAnchorPtr in_anch2 = std::make_shared<InDataAnchor>(const2, 111);
+  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(const2, 222);
+  EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
+  EXPECT_EQ(const2->GetOutDataNodes().size(), 1);
+  EXPECT_EQ(const1->impl_->in_data_anchors_.size(), 2);
+  auto anch = const1->impl_->in_data_anchors_.at(0);
+  EXPECT_EQ(NodeUtils::ClearInDataAnchor(const1, in_anch2), GRAPH_FAILED);
+  EXPECT_EQ(NodeUtils::ClearInDataAnchor(const1, anch), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestNodeUtils, SetStatus) {
@@ -518,13 +538,19 @@ TEST_F(UtestNodeUtils, MoveOutputEdges) {
   auto data = builder.AddNode("Data", "Data", 0, 1);
   auto dest = builder.AddNode("Dest", "Dest", 11, 22);
   auto attr = builder.AddNode("Attr", "Attr", 1, 1);
+  auto node2 = builder.AddNode("Data2", "Data2", 2, 1);
+  InDataAnchorPtr peer = std::make_shared<InDataAnchor>(node2, 22);
   EXPECT_EQ(NodeUtils::MoveOutputEdges(data, dest), GRAPH_FAILED);
-  EXPECT_EQ(data->GetAllOutDataAnchors().size(), 1);
   EXPECT_EQ(dest->GetAllOutDataAnchors().size(), 22);
   EXPECT_EQ(NodeUtils::MoveOutputEdges(data, attr), GRAPH_SUCCESS);
+
+  auto const1 = builder.AddNode("const1", "Const", 1, 1);
+  auto const2 = builder.AddNode("const2", "Const", 1, 1);
+  EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::MoveOutputEdges(const2, const1), GRAPH_SUCCESS);
 }
 
-TEST_F(UtestNodeUtils, UpdateIsInputConst) {
+TEST_F(UtestNodeUtils, UpdateIsInputConst_Normal) {
   NodeUtils::UpdateIsInputConst(nullptr);
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 0, 1);
@@ -533,6 +559,20 @@ TEST_F(UtestNodeUtils, UpdateIsInputConst) {
   data->impl_->op_ = nullptr;
   NodeUtils::UpdateIsInputConst(data);
 }
+
+
+TEST_F(UtestNodeUtils, UpdateIsInputConst_OutDataAnchorNullptr) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 1, 1);
+  auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
+  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
+  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 222);
+  EXPECT_EQ(out_anch->LinkTo(in_anch), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_node->GetAllInDataAnchors().size(), 3);
+  NodeUtils::UpdateIsInputConst(attr_node);
+}
+
 
 TEST_F(UtestNodeUtils, UnlinkAll) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
@@ -545,8 +585,22 @@ TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc) {
   auto data = builder.AddNode("Data", "Data", 0, 1);
   EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(nullptr), GRAPH_FAILED);
   EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_SUCCESS);
+  data->GetOwnerComputeGraph()->SetGraphUnknownFlag(true);
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_SUCCESS);
   data->impl_->op_ = nullptr;
   EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_FAILED);
+}
+
+TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc_LinkInData) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 1, 1);
+  auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
+  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
+  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 222);
+  EXPECT_EQ(out_anch->LinkTo(in_anch), GRAPH_SUCCESS);
+  EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(attr_node), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data_node), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestNodeUtils, AppendRemoveAnchor) {
@@ -566,8 +620,19 @@ TEST_F(UtestNodeUtils, IsInNodesEmpty) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 0, 1);
   EXPECT_EQ(NodeUtils::IsInNodesEmpty(*data), true);
+  InDataAnchorPtr in_anch1 = std::make_shared<InDataAnchor>(data, 111);
   data->impl_ = nullptr;
   EXPECT_EQ(NodeUtils::IsInNodesEmpty(*data), false);
+
+  auto const1 = builder.AddNode("const1", "Const", 1, 1);
+  auto const2 = builder.AddNode("const2", "Const", 1, 1);
+  InDataAnchorPtr in_anch11 = std::make_shared<InDataAnchor>(const1, 111);
+  InDataAnchorPtr in_anch22 = std::make_shared<InDataAnchor>(const2, 111);
+  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(const2, 222);
+  EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
+  EXPECT_EQ(const2->GetOutDataNodes().size(), 1);
+  EXPECT_EQ(const1->impl_->in_data_anchors_.size(), 2);
+  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*const1), false);
 }
 
 TEST_F(UtestNodeUtils, GetDesc) {
@@ -661,7 +726,7 @@ TEST_F(UtestNodeUtils, IsWhileVaryingInput) {
   partitioncall_0->GetOpDesc()->AddSubgraphName("f");
   partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
   auto sub2_builder = ut::GraphBuilder("partitioncall_0_sub2");
-  const auto &partitioncall_11 = root_builder.AddNode("partitioncall_11", PARTITIONEDCALL, 0, 1);
+  const auto &partitioncall_11 = root_builder.AddNode("partitioncall_11", DATA, 0, 1);
   partitioncall_11->SetOwnerComputeGraph(sub_graph);
   EXPECT_EQ(NodeUtils::IsWhileVaryingInput(partitioncall_11), false);
 }
@@ -677,10 +742,38 @@ TEST_F(UtestNodeUtils, RemoveSubgraphsOnNode) {
 
 TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndex) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto node = builder.AddNode("Node", "Node", 11, 22);
+  auto node = builder.AddNode("Node", "Const", 1, 1);
   EXPECT_EQ(NodeUtils::GetSubgraphDataNodesByIndex(*node, 0).size(), 0);
-  auto op_desc = node->GetOpDesc();
-  auto subgraph_names = op_desc->GetSubgraphInstanceNames();
+}
+
+TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndexSubgraph) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &data = root_builder.AddNode("data", DATA, 1, 1);
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 3, 3);
+  const auto &partitioncall_1 = root_builder.AddNode("partitioncall_1", PARTITIONEDCALL, 1, 1);
+  root_builder.AddDataEdge(data, 0, partitioncall_0, 1);
+  root_builder.AddDataEdge(partitioncall_0, 1, partitioncall_1, 0);
+  const auto &root_graph = root_builder.GetGraph();
+
+  // 1.build partitioncall_0 sub graph
+  auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+  const auto &partitioncall_0_data = p1_sub_builder.AddNode("partitioncall_0_data", DATA, 0, 1);
+  AttrUtils::SetInt(partitioncall_0_data->GetOpDesc(), "_parent_node_index", 1);
+  const auto &partitioncall_0_cast = p1_sub_builder.AddNode("partitioncall_0_cast", "Cast", 1, 1);
+  const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 3, 3);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(1), "_parent_node_index", 1);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(2), "_parent_node_index", 2);
+  p1_sub_builder.AddDataEdge(partitioncall_0_data, 0, partitioncall_0_cast, 0);
+  p1_sub_builder.AddDataEdge(partitioncall_0_cast, 0, partitioncall_0_netoutput, 1);
+  const auto &sub_graph = p1_sub_builder.GetGraph();
+  root_graph->AddSubgraph("partitioncall_0_sub", sub_graph);
+  sub_graph->SetParentNode(partitioncall_0);
+  sub_graph->SetParentGraph(root_graph);
+  partitioncall_0->GetOpDesc()->AddSubgraphName("f");
+  partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+  auto compute_graph = partitioncall_0->GetOwnerComputeGraph();
+  EXPECT_NE(compute_graph, nullptr);
 }
 
 
@@ -809,6 +902,39 @@ TEST_F(UtestNodeUtils, GetInNodeCrossSubgraph){
   auto owner_graph = dt_node->GetOwnerComputeGraph();
   owner_graph->impl_->parent_node_ = MakeNullptr<Node>();
   EXPECT_NE(NodeUtils::GetInNodeCrossSubgraph(dt_node), nullptr);
+}
+
+TEST_F(UtestNodeUtils, GetConstOpType) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("nt", NETOUTPUT, 0, 1);
+  std::string op_type;
+  EXPECT_EQ(NodeUtils::GetConstOpType(data, op_type), false);
+}
+
+TEST_F(UtestNodeUtils, IsWhileVaryingInputFalse) {
+  EXPECT_EQ(NodeUtils::IsWhileVaryingInput(nullptr), false);
+}
+
+TEST_F(UtestNodeUtils, IsSubgraphOutput) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 11, 22);
+  EXPECT_EQ(NodeUtils::IsSubgraphOutput(node), false);
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", "_is_unknown_shape", 0, 1);
+  const auto &partitioncall_1 = root_builder.AddNode("partitioncall_1", "_is_unknown_shape", 1, 1);
+  root_builder.AddDataEdge(partitioncall_0, 0, partitioncall_1, 0);
+  const auto &root_graph = root_builder.GetGraph();
+  auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+  const auto &partitioncall_0_const1 = p1_sub_builder.AddNode("partitioncall_0_const1", CONSTANT, 0, 1);
+  const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 1, 1);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+  p1_sub_builder.AddDataEdge(partitioncall_0_const1, 0, partitioncall_0_netoutput, 0);
+  const auto &sub_graph = p1_sub_builder.GetGraph();
+  sub_graph->SetParentNode(partitioncall_0);
+  sub_graph->SetParentGraph(root_graph);
+  partitioncall_0->GetOpDesc()->AddSubgraphName("f");
+  partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+  EXPECT_EQ(NodeUtils::IsSubgraphOutput(partitioncall_0_const1), false);
 }
 
 

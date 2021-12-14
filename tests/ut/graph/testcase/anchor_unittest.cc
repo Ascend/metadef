@@ -206,6 +206,7 @@ TEST_F(AnchorUt, SubInDataAnchor) {
 TEST_F(AnchorUt, SubOutDataAnchor) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto node = builder.AddNode("Data", "Data", 1, 1);
+  auto attr = builder.AddNode("Attr", "Attr", 1, 1);
   SubOutDataAnchorPtr out_anch = std::make_shared<SubOutDataAnchor>(node, 111);
   out_anch->SetIdx(222);
   EXPECT_EQ(out_anch->GetIdx(), 222);
@@ -216,6 +217,7 @@ TEST_F(AnchorUt, SubOutDataAnchor) {
   auto node2 = builder.AddNode("Data", "Data", 2, 2);
   InDataAnchorPtr peer = std::make_shared<InDataAnchor>(node2, 22);
   EXPECT_EQ(out_anch->LinkTo(peer), GRAPH_SUCCESS);
+
   auto node3 = builder.AddNode("Data", "Data", 3, 3);
   InControlAnchorPtr peerctr = std::make_shared<InControlAnchor>(node3, 33);
   EXPECT_EQ(out_anch->LinkTo(peerctr), GRAPH_SUCCESS);
