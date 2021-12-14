@@ -1790,6 +1790,9 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
     return GRAPH_FAILED;
   }
 
+  // inherit all attr from old graph to new graph
+  InheritOriginalAttr(src_compute_graph, dst_compute_graph);
+
   return GRAPH_SUCCESS;
 }
 
@@ -1879,7 +1882,7 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
                                        std::vector<NodePtr> &input_nodes, std::vector<NodePtr> &output_nodes) {
   GE_CHK_BOOL_EXEC(graph != nullptr, REPORT_INNER_ERROR("E18888", "param graph is nullptr, check invalid.");
                    return nullptr, "[Check][Param] Original graph is null");
-  const ComputeGraphPtr new_graph = ComGraphMakeShared<ComputeGraph>(graph->GetName());
+  ComputeGraphPtr new_graph = ComGraphMakeShared<ComputeGraph>(graph->GetName());
   GE_CHK_BOOL_EXEC(new_graph != nullptr,
                    REPORT_CALL_ERROR("E18888", "create computegraph %s failed.", graph->GetName().c_str());
                    return nullptr, "[Create][ComputeGraph] %s failed", graph->GetName().c_str());
@@ -1935,17 +1938,8 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
     }
   }
 
-  std::string session_graph_id;
-  if (AttrUtils::GetStr(*graph, ATTR_NAME_SESSION_GRAPH_ID, session_graph_id)) {
-    const bool ret = AttrUtils::SetStr(*new_graph, ATTR_NAME_SESSION_GRAPH_ID, session_graph_id);
-    if (!ret) {
-      REPORT_CALL_ERROR("E18888", "set attr ATTR_NAME_SESSION_GRAPH_ID failed, ret:%d, graph:%s",
-                        static_cast<int32_t>(ret), new_graph->GetName().c_str());
-      GELOGE(GRAPH_FAILED, "[Set][Attr] ATTR_NAME_SESSION_GRAPH_ID failed, ret:%d, graph:%s.",
-             static_cast<int32_t>(ret), new_graph->GetName().c_str());
-      return nullptr;
-    }
-  }
+  // inherit all attr from old graph to new graph
+  InheritOriginalAttr(graph, new_graph);
 
   // copy info of output nodes from old graph to new graph.
   const std::vector<std::pair<NodePtr, int32_t>> out_nodes_info = graph->GetGraphOutNodesInfo();
@@ -3105,6 +3099,16 @@ graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph) {
   }
 
   return GRAPH_SUCCESS;
+}
+
+void GraphUtils::InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph,
+                                     ComputeGraphPtr &dst_compute_graph) {
+  const std::map<string, GeAttrValue> &original_attrs = AttrUtils::GetAllAttrs(src_compute_graph);
+  for (auto const &attr_iter : original_attrs) {
+    if (dst_compute_graph->TrySetAttr(attr_iter.first, attr_iter.second) != GRAPH_SUCCESS) {
+      GELOGW("Set inherit original attr[%s] failed, Please Check.", attr_iter.first.c_str());
+    }
+  }
 }
 
 ///

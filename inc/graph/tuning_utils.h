@@ -102,16 +102,22 @@ private:
   static graphStatus AddAttrToNetOutputForMergeGraph(const NodePtr &end, const NodePtr &out_node, const int64_t index);
   static void DumpGraphToPath(const ComputeGraphPtr &exe_graph, const int64_t index,
                               const bool is_tuning_graph, std::string path);
+  static void TryGetWeight(const NodePtr &node, std::vector<ge::GeTensorPtr> &weight);
 
   static SubgraphCreateOutNode create_output_;
   // part 2
-  static graphStatus MergeAllSubGraph(std::vector<ComputeGraphPtr> &subgraphs,
+  static graphStatus MergeGraph(const std::vector<ComputeGraphPtr> &subgraphs,
+                                ComputeGraphPtr &output_merged_compute_graph);
+  static graphStatus MergeAllSubGraph(const std::vector<ComputeGraphPtr> &subgraphs,
                                       ComputeGraphPtr &output_merged_compute_graph);
   static graphStatus MergeSubGraph(const ComputeGraphPtr &subgraph);
   // Deletes new data and output nodes added by call `MakeExeGraph()` func in part 1
   static graphStatus RemoveDataNetoutputEdge(ComputeGraphPtr &graph);
   static graphStatus HandleContinuousInputNodeNextData(const NodePtr &node);
   static NodePtr FindNode(const std::string &name, int64_t &in_index);
+  static graphStatus LoadGraphFromFile(const std::map<int64_t, std::string> &options,
+                                       std::vector<ComputeGraphPtr> &root_graphs,
+                                       std::map<std::string, std::vector<ComputeGraphPtr>> &name_to_subgraphs);
 
   static NodeNametoNodeNameMap data_2_end_;
   static NodetoNodeNameMap data_node_2_end_node_;

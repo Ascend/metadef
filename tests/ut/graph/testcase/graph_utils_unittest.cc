@@ -1109,6 +1109,7 @@ TEST_F(UtestGraphUtils, CloneGraph) {
   const auto &node0 = builder.AddNode("node0", DATA, 1, 1);
   const auto &node1 = builder.AddNode("node1", NETOUTPUT, 1, 1);
   auto graph = builder.GetGraph();
+  (void) AttrUtils::SetStr(graph, ATTR_NAME_SESSION_GRAPH_ID, "0");
   std::string prefix;
   std::vector<NodePtr> input_nodes;
   std::vector<NodePtr> output_nodes;
