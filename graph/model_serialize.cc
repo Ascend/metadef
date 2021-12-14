@@ -136,7 +136,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
   return true;
 }
 
-void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
+void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, const proto::OpDef *const op_def_proto,
                                         const bool is_dump) const {
   proto::AttrDef key_in;
   proto::AttrDef value_in;
@@ -308,7 +308,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
   }
 }
 
-bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) {
+bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, const proto::OpDef &op_def_proto) {
   std::vector<std::string> opt_input;
   std::vector<std::string> key_in;
   std::vector<uint32_t> value_in;
