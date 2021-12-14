@@ -280,7 +280,7 @@ TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_02) {
   ge_tensor_res2 = OpDescUtils::GetInputConstData(op, 1);
   ASSERT_TRUE(ge_tensor_res != nullptr);
   ASSERT_TRUE(ge_tensor_res2 == nullptr);
-  const TensorData tmp(ge_tensor_res->GetData());  
+  const TensorData tmp(ge_tensor_res->GetData());
   const uint8_t* res_buf = tmp.GetData();
   ASSERT_EQ(res_buf[0], 23);
   ASSERT_EQ(res_buf[10], 32);

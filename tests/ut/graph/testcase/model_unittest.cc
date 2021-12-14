@@ -123,7 +123,7 @@ TEST_F(ModelUt, Save_Failure) {
   md.SetGraph(graph);
   std::stringstream fn;
   fn << "/tmp/";
-  for (int i=0;i<4096;i++){
+  for (int i = 0; i < 4096; i++){
     fn << "a";
   }
   fn << ".proto";
@@ -135,7 +135,7 @@ TEST_F(ModelUt, Load_Longname) {
   auto md = SubModel("md2", "test");
   std::stringstream fn;
   fn << "/tmp/";
-  for (int i=0;i<4096;i++){
+  for (int i = 0; i < 4096; i++){
     fn << "a";
   }
   fn << ".proto";
