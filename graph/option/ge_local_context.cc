@@ -18,24 +18,23 @@
 #include <utility>
 
 namespace ge {
-namespace {
-thread_local GEThreadLocalContext thread_context;
+GEThreadLocalContext &GetThreadLocalContext() {
+  static thread_local GEThreadLocalContext thread_context;
+  return thread_context;
 }
 
-GEThreadLocalContext &GetThreadLocalContext() { return thread_context; }
-
 graphStatus GEThreadLocalContext::GetOption(const std::string &key, std::string &option) {
-  const auto graph_iter = graph_options_.find(key);
+  const std::map<std::string, std::string>::const_iterator graph_iter = graph_options_.find(key);
   if (graph_iter != graph_options_.end()) {
     option = graph_iter->second;
     return GRAPH_SUCCESS;
   }
-  const auto session_iter = session_options_.find(key);
+  const std::map<std::string, std::string>::const_iterator session_iter = session_options_.find(key);
   if (session_iter != session_options_.end()) {
     option = session_iter->second;
     return GRAPH_SUCCESS;
   }
-  const auto global_iter = global_options_.find(key);
+  const std::map<std::string, std::string>::const_iterator global_iter = global_options_.find(key);
   if (global_iter != global_options_.end()) {
     option = global_iter->second;
     return GRAPH_SUCCESS;
@@ -72,9 +71,9 @@ std::map<std::string, std::string> GEThreadLocalContext::GetAllGlobalOptions() c
 
 std::map<std::string, std::string> GEThreadLocalContext::GetAllOptions() const {
   std::map<std::string, std::string> options_all;
-  options_all.insert(graph_options_.begin(), graph_options_.end());
-  options_all.insert(session_options_.begin(), session_options_.end());
-  options_all.insert(global_options_.begin(), global_options_.end());
+  options_all.insert(graph_options_.cbegin(), graph_options_.cend());
+  options_all.insert(session_options_.cbegin(), session_options_.cend());
+  options_all.insert(global_options_.cbegin(), global_options_.cend());
   return options_all;
 }
 }  // namespace ge

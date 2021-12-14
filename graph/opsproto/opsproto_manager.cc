@@ -20,6 +20,7 @@
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/types.h"
@@ -39,9 +40,7 @@ bool OpsProtoManager::Initialize(const std::map<std::string, std::string> &optio
     return true;
   }
 
-  /*lint -e1561*/
   const auto proto_iter = options.find("ge.opsProtoLibPath");
-  /*lint +e1561*/
   if (proto_iter == options.end()) {
     GELOGW("[Initialize][CheckOption] Option \"ge.opsProtoLibPath\" not set");
     return false;
@@ -63,7 +62,7 @@ void OpsProtoManager::Finalize() {
     return;
   }
 
-  for (auto handle : handles_) {
+  for (const auto handle : handles_) {
     if (handle != nullptr) {
       if (mmDlclose(handle) != 0) {
         const char_t *error = mmDlerror();
@@ -80,7 +79,7 @@ void OpsProtoManager::Finalize() {
   is_init_ = false;
 }
 
-static std::vector<std::string> Split(const std::string &str, char_t delim) {
+static std::vector<std::string> SplitStr(const std::string &str, const char_t delim) {
   std::vector<std::string> elems;
   if (str.empty()) {
     elems.emplace_back("");
@@ -108,39 +107,39 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
     GELOGI("realPath is empty");
     return;
   }
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path.size() >= MMPA_MAX_PATH,
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path.size() >= static_cast<size_t>(MMPA_MAX_PATH),
                                  REPORT_INNER_ERROR("E19999", "param path size:%zu >= max path:%d",
                                                     path.size(), MMPA_MAX_PATH);
                                  return, "[Check][Param] path is invalid");
 
-  char_t resolved_path[MMPA_MAX_PATH] = {'0'};
+  char_t resolved_path[MMPA_MAX_PATH] = {};
 
   // Nullptr is returned when the path does not exist or there is no permission
   // Return absolute path when path is accessible
-  const INT32 result = mmRealPath(path.c_str(), resolved_path, MMPA_MAX_PATH);
+  const INT32 result = mmRealPath(path.c_str(), &(resolved_path[0U]), MMPA_MAX_PATH);
   if (result != EN_OK) {
     GELOGW("[FindSo][Check] Get real_path for file %s failed, reason:%s", path.c_str(), strerror(errno));
     return;
   }
 
-  const INT32 is_dir = mmIsDir(resolved_path);
+  const INT32 is_dir = mmIsDir(&(resolved_path[0U]));
   // Lib plugin path not exist
   if (is_dir != EN_OK) {
     GELOGW("[FindSo][Check] Open directory %s failed, maybe it is not exit or not a dir, errmsg:%s",
-           resolved_path, strerror(errno));
+           &(resolved_path[0U]), strerror(errno));
     return;
   }
 
   mmDirent **entries = nullptr;
-  const auto ret = mmScandir(resolved_path, &entries, nullptr, nullptr);
+  const auto ret = mmScandir(&(resolved_path[0U]), &entries, nullptr, nullptr);
   if (ret < EN_OK) {
-    GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", resolved_path, ret, strerror(errno));
+    GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", &(resolved_path[0U]), ret, strerror(errno));
     return;
   }
   for (int32_t i = 0; i < ret; ++i) {
-    mmDirent *dir_ent = entries[i];
+    const mmDirent *const dir_ent = entries[i];
     const std::string name = std::string(dir_ent->d_name);
-    if ((strcmp(name.c_str(), ".") == 0) || (strcmp(name.c_str(), "..") == 0)) {
+    if ((strncmp(name.c_str(), ".", 1U) == 0) || (strncmp(name.c_str(), "..", 2U) == 0)) {
       continue;
     }
     const std::string full_name = path + "/" + name;
@@ -158,7 +157,7 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
 
 static void GetPluginSoFileList(const std::string &path, std::vector<std::string> &file_list) {
   // Support multi lib directory with ":" as delimiter
-  const std::vector<std::string> v_path = Split(path, ':');
+  const std::vector<std::string> v_path = SplitStr(path, ':');
 
   for (size_t i = 0UL; i < v_path.size(); ++i) {
     FindParserSo(v_path[i], file_list);
@@ -188,7 +187,8 @@ void OpsProtoManager::LoadOpsProtoPluginSo(const std::string &path) {
 
   // Load .so file
   for (const auto elem : file_list) {
-    void *handle = mmDlopen(elem.c_str(), MMPA_RTLD_NOW | MMPA_RTLD_GLOBAL);
+    void *const handle = mmDlopen(elem.c_str(), static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
+        static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
     if (handle == nullptr) {
       const char_t *error = mmDlerror();
       error = (error == nullptr) ? "" : error;

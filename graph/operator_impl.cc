@@ -38,7 +38,7 @@ OperatorImpl::OperatorImpl(const std::string &name, const std::string &type)
 
 OperatorImpl::OperatorImpl(const OpDescPtr &op_desc) : enable_shared_from_this(), op_desc_(op_desc) {}
 
-OperatorImpl::OperatorImpl(ge::ConstNodePtr node) : node_(std::move(node)) {
+OperatorImpl::OperatorImpl(const ge::ConstNodePtr node) : enable_shared_from_this(), node_(std::move(node)) {
   if (node_ != nullptr && node_->GetOpDesc() != nullptr) {
     op_desc_ = node_->GetOpDesc();
   }
@@ -92,7 +92,7 @@ void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::OutHandle
   is_input_const[static_cast<size_t>(dst_index)] = is_const;
   op_desc_->SetIsInputConst(is_input_const);
 
-  OpIO in_handler(dst_name, dst_index, shared_from_this());
+  const OpIO in_handler(dst_name, dst_index, shared_from_this());
   GE_CHK_BOOL_EXEC(out_op_impl != nullptr,
                    REPORT_INNER_ERROR("E19999", "out_handler invalid. name[%s]", dst_name.c_str());
                    return, "[Get][Impl] of out_handler failed.");
@@ -373,7 +373,7 @@ graphStatus OperatorImpl::UpdateOutputDesc(const std::string &name, const GeTens
 }
 
 size_t OperatorImpl::GetInputsSize() const {
-  GE_IF_BOOL_EXEC(op_desc_ == nullptr, return 0);
+  GE_IF_BOOL_EXEC(op_desc_ == nullptr, return 0UL);
   return op_desc_->GetInputsSize();
 }
 

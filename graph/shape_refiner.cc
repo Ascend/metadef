@@ -21,8 +21,6 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <map>
-#include <set>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
 
@@ -79,7 +77,7 @@ graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
       const auto shape = tensor.MutableShape();
       int64_t size = 1;
       for (const auto dim : shape.GetDims()) {
-        if ((dim != 0) && (INT64_MAX / dim < size)) {
+        if ((dim != 0) && ((INT64_MAX / dim) < size)) {
           REPORT_INNER_ERROR("E19999", "The shape:%s size overflow, node:%s",
                              shape.ToString().c_str(), node->GetName().c_str());
           GELOGE(PARAM_INVALID, "[Check][Overflow] The shape size overflow");
@@ -112,7 +110,7 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
     if (ref_out_tensors[i].empty()) {
       continue;
     }
-    auto ref_out_tensor = ref_out_tensors[i].at(0U);
+    auto &ref_out_tensor = ref_out_tensors[i].at(0U);
     ge::GeShape &ref_out_tensor_shape = ref_out_tensor.MutableShape();
     for (auto &tensor : ref_out_tensors[i]) {
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
@@ -129,12 +127,11 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
         break;
       }
       for (size_t j = 0UL; j < ref_out_tensor_shape.GetDims().size(); j++) {
-        if (ref_out_tensor_shape.GetDim(j) == shape.GetDim(j)) {
-          continue;
+        if (ref_out_tensor_shape.GetDim(j) != shape.GetDim(j)) {
+          GELOGD("node is %s, i : %zu, j: %zu ,shape size: %lu, ref_out_tensor_shape size: %lu",
+                 node->GetName().c_str(), i, j, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
+          (void) ref_out_tensor_shape.SetDim(j, UNKNOWN_DIM);
         }
-        GELOGD("node is %s, i : %zu, j: %zu ,shape size: %lu, ref_out_tensor_shape size: %lu",
-               node->GetName().c_str(), i, j, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
-        (void)ref_out_tensor_shape.SetDim(j, UNKNOWN_DIM);
       }
     }
     (void)node->GetOpDesc()->UpdateOutputDesc(static_cast<uint32_t>(i), ref_out_tensor);
@@ -154,8 +151,8 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
            node->GetName().c_str(), ref_data_tensors.size(), ref_out_tensors.size());
     return GRAPH_FAILED;
   }
-  for (size_t i = 0; i < ref_data_tensors.size(); i++) {
-    if (ref_out_tensors[i].size() != 1UL) {
+  for (size_t i = 0U; i < ref_data_tensors.size(); i++) {
+    if (ref_out_tensors[i].size() != 1U) {
       REPORT_INNER_ERROR("E19999", "while op, every output should only find one output tensor in all graph!");
       GELOGE(GRAPH_FAILED, "[Check][Param] while op, every output should only find one output tensor in all graph!");
       return GRAPH_FAILED;
@@ -350,7 +347,7 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
   const auto root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
 
   for (const auto &name : sub_graph_names) {
-    auto sub_graph = root_graph->GetSubgraph(name);
+    const auto sub_graph = root_graph->GetSubgraph(name);
     if (sub_graph == nullptr) {
       REPORT_INNER_ERROR("E19999", "Can not find the subgraph %s for node %s", name.c_str(), node->GetName().c_str());
       GE_LOGE("[Get][Subgraph] Can not find the subgraph %s for node %s", name.c_str(), node->GetName().c_str());
@@ -477,6 +474,7 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
              "output_shape is [%s]. The two shape should be same! Please check graph and fix it",
              node_ptr->GetName().c_str(), in_idx, in_shape_str.c_str(),
              peer_out_data_node->GetName().c_str(), peer_out_idx, peer_out_shape_str.c_str());
+    } else {
     }
     // refresh current node input desc
     in_desc->SetOriginShape(peer_out_desc->GetOriginShape());
@@ -492,8 +490,7 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
     if (ge::AttrUtils::GetListInt(*peer_out_desc, kPreOpInputShapeRange, pre_op_in_range)) {
       (void)ge::AttrUtils::SetListInt(*in_desc, kPreOpInputShapeRange, pre_op_in_range);
     }
-    ge::TensorUtils::SetRealDimCnt(*in_desc,
-                                   static_cast<uint32_t>(peer_out_desc->MutableShape().GetDims().size()));
+    ge::TensorUtils::SetRealDimCnt(*in_desc, static_cast<uint32_t>(peer_out_desc->MutableShape().GetDims().size()));
   }
   return GRAPH_SUCCESS;
 }
@@ -566,7 +563,7 @@ void ShapeRefiner::PushToContextMap(const NodePtr &node, const InferenceContextP
   (void)context_map.emplace(node, inference_context);
 }
 
-Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const int32_t out_idx,
+static Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const int32_t out_idx,
                                        std::map<NodePtr, int32_t> &out_nodes, const int32_t depth) {
   if (depth > kMaxRecursionDepth) {
     REPORT_CALL_ERROR("E19999", "Exceed max recursion depth: %d.", kMaxRecursionDepth);
@@ -578,7 +575,7 @@ Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const int32_t
     return SUCCESS;
   }
   GELOGD("Node: %s, out index: %d.", parent_node->GetName().c_str(), out_idx);
-  auto subgraph_output_nodes = NodeUtils::GetSubgraphOutputNodes(*parent_node);
+  const auto subgraph_output_nodes = NodeUtils::GetSubgraphOutputNodes(*parent_node);
   for (const auto &netoutput : subgraph_output_nodes) {
     GE_CHECK_NOTNULL(netoutput);
     const auto output_desc = netoutput->GetOpDesc();

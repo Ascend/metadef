@@ -72,14 +72,12 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
 
   static OpDescPtr GetOpDesc(const Operator &oprt);
 
- public:
-  OpDescPtr op_desc_ = nullptr;
-
  private:
   graphStatus GetFromPeerNode(NodePtr &peer_node, const OutDataAnchorPtr &out_data_anchor,
                               ConstGeTensorPtr &ge_tensor) const;
 
  private:
+  OpDescPtr op_desc_ = nullptr;
   ge::ConstNodePtr node_{nullptr};
   ge::InferenceContextPtr inference_context_;
   std::map<std::string, std::vector<OpIO>> output_links_{};
