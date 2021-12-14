@@ -726,9 +726,9 @@ TEST_F(UtestNodeUtils, IsWhileVaryingInput) {
   partitioncall_0->GetOpDesc()->AddSubgraphName("f");
   partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
   auto sub2_builder = ut::GraphBuilder("partitioncall_0_sub2");
-  const auto &partitioncall_11 = root_builder.AddNode("partitioncall_11", DATA, 0, 1);
-  partitioncall_11->SetOwnerComputeGraph(sub_graph);
-  EXPECT_EQ(NodeUtils::IsWhileVaryingInput(partitioncall_11), false);
+  const auto &data11 = root_builder.AddNode("data11", DATA, 0, 1);
+  data11->SetOwnerComputeGraph(sub_graph);
+  EXPECT_EQ(NodeUtils::IsWhileVaryingInput(data11), false);
 }
 
 TEST_F(UtestNodeUtils, RemoveSubgraphsOnNode) {
