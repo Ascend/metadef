@@ -21,6 +21,7 @@
 #include "cce/aicpu_engine_struct.h"
 #include "common/opskernel/ops_kernel_info_types.h"
 #include "graph/node.h"
+#include "external/ge/ge_api_types.h"
 #include "proto/task.pb.h"
 
 namespace ge {
@@ -69,7 +70,7 @@ class OpsKernelBuilder {
   }
 
   // only call aicpu interface to generate task struct
-  virtual Status GenMemCopyTask(uint64_t count, STR_FWK_OP_KERNEL &task, std::string &task_info) {
+  virtual Status GenMemCopyTask(const uint64_t count, STR_FWK_OP_KERNEL &task, std::string &task_info) {
     (void)count;
     (void)task;
     (void)task_info;
@@ -77,4 +78,4 @@ class OpsKernelBuilder {
   }
 };
 }  // namespace ge
-#endif // INC_COMMON_OPSKERNELUTILS_OPS_KERNEL_INFO_UTILS_H_
+#endif // INC_COMMON_OPSKERNEL_OPS_KERNEL_BUILDER_H_
