@@ -730,7 +730,7 @@ bool FusionScopesResult::FusionScopesResultImpl::FindNodes(const std::string &no
 
 bool FusionScopesResult::FusionScopesResultImpl::FindScopes(const std::string &scope_name) const {
   for (auto &scope : scopes_) {
-    if (scope->Name().length() < scope_name.length() && scope_name.find(scope->Name()) == 0U) {
+    if (scope->Name().length() < scope_name.length() && scope_name.find(scope->Name()) == 0) {
       return true;
     }
   }
