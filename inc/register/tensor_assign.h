@@ -97,7 +97,7 @@ class TensorAssign {
         addr[i] = val_vector.Get(0);
       }
     }
-    (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.get()), count * sizeof(T));
+    (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.get()), static_cast<size_t>(count) * sizeof(T));
     return SUCCESS;
   }
 };

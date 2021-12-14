@@ -18,6 +18,7 @@
 #define REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H_
 
 #include "external/register/scope/scope_fusion_pass_register.h"
+#include "external/graph/types.h"
 #include "graph/operator_factory.h"
 #include "proto/tensorflow/graph.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
@@ -42,7 +43,6 @@ class Scope::ScopeImpl {
   void AddNode(ge::OperatorPtr &node_def);
   const std::vector<ge::OperatorPtr> &Nodes() const { return nodes_; }
   const std::unordered_map<std::string, ge::OperatorPtr> &AllNodesMap();
-  const std::map<std::string, ge::OperatorPtr> &AllNodesMapNew();
   void AddSubScope(Scope *const scope) { sub_scopes_[scope->Name()] = scope; }
   Scope *GetSubScope(const std::string &scope_name) const;
   const std::unordered_map<std::string, Scope *> &GetSubScopes() const { return sub_scopes_; }
@@ -112,7 +112,9 @@ class FusionScopesResult::FusionScopesResultImpl {
   const std::string &Description() const { return description_; }
   void AddNodes(std::vector<ge::OperatorPtr> nodes);
   const std::vector<ge::OperatorPtr> &Nodes() const { return nodes_; }
-  void AddScopes(const std::vector<Scope *> &scopes) { scopes_.insert(scopes_.end(), scopes.begin(), scopes.end()); }
+  void AddScopes(const std::vector<Scope *> &scopes) {
+    (void)scopes_.insert(scopes_.end(), scopes.begin(), scopes.end());
+  }
   const std::vector<Scope *> &Scopes() const { return scopes_; }
   const std::map<std::string, std::vector<int32_t>> &GetInputs() const { return inputs_; }
   const std::map<std::string, std::vector<int32_t>> &GetOutputs() const { return outputs_; }
@@ -151,7 +153,7 @@ class ScopeTree::ScopeTreeImpl {
   const Scope *Root() const { return root_; }
 
  private:
-  std::vector<std::string> SplitNodeName(const std::string &node_name, char delim) const;
+  std::vector<std::string> SplitNodeName(const std::string &node_name, char_t delim) const;
   Scope *root_;
   std::vector<Scope *> scopes_;
 };
@@ -188,7 +190,6 @@ class ScopeGraph::ScopeGraphImpl {
  private:
   std::vector<int32_t> GetFusionResultInputOrOutput(const ScopeFusionOpInfo &info,
                                                     bool input);  // input:true,output:false
-  void CheckScopesResult(FusionScopesResult *fusion_node);
   std::unordered_map<std::string, FusionScopesResult *> fusion_results_;
   std::unordered_map<std::string, ge::OperatorPtr> nodes_map_;
   std::map<std::string, ge::OperatorPtr> nodes_map_new_;

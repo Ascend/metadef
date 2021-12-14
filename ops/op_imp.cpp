@@ -32,7 +32,7 @@ graphStatus BroadCastRankAndDim(const std::vector<int64_t> &x1_shape, const std:
   }
   for (size_t i = 0UL; i < x2_shape.size(); i++) {
     const size_t  idx_diff = static_cast<size_t>(i + len_diff);
-    if ((x1_shape[i + len_diff] != x2_shape[i]) && (std::min(x1_shape[idx_diff], x2_shape[i]) != 1)) {
+    if ((x1_shape[idx_diff] != x2_shape[i]) && (std::min(x1_shape[idx_diff], x2_shape[i]) != 1)) {
       GE_LOGE("operands could not be broadcast together");
       return GRAPH_FAILED;
     }

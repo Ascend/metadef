@@ -433,7 +433,7 @@ class SmallVector {
   iterator ExpandSize(const size_type range_begin, const size_type range_len) {
     auto const storage = GetPointer();
     for (size_type i = size_; i > range_begin; --i) {
-      const auto index = i - 1;
+      const auto index = i - 1UL;
       new (storage + index + range_len) T(std::move(storage[index]));
       storage[index].~T();
     }

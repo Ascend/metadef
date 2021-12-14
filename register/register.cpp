@@ -464,11 +464,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const 
       index++;
   }
 
-  const map<string, ge::GeAttrValue> attr_values = op_desc_src->GetAllAttrs();
-  for (auto &attr_value : attr_values) {
-    ge::AutoMappingUtil::CopyAttrValue(attr_value.first, attr_value.second, op_desc_src, op_desc_dst);
-  }
-
+  op_desc_dst->CopyAttrsFrom(*op_desc_src);
   const Status ret = SetOpdescInputOutputFormat(op_desc_dst);
   if (ret != SUCCESS) {
     GELOGE(FAILED, "[Set][Format]op_name:%s", op_desc_dst->GetName().c_str());

@@ -18,6 +18,7 @@
 #define COMMON_AUTO_MAPPING_UTIL_H_
 
 #include <vector>
+#include "external/graph/types.h"
 #include "framework/common/debug/ge_log.h"
 #include "proto/tensorflow/attr_value.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
@@ -153,58 +154,6 @@ class AutoMappingUtil {
         break;
     }
   }
-
-template<typename T>
-static void CopyAttrValue(const std::string &key, const ge::GeAttrValue &value, T &obj_src, T &obj) {
-  GeAttrValue::ValueType value_type = value.GetValueType();
-  bool is_one_type = value_type == GeAttrValue::VT_STRING || value_type == GeAttrValue::VT_INT ||
-                     value_type == GeAttrValue::VT_FLOAT || value_type == GeAttrValue::VT_BOOL ||
-                     value_type == GeAttrValue::VT_TENSOR || value_type == GeAttrValue::VT_NAMED_ATTRS ||
-                     value_type == GeAttrValue::VT_DATA_TYPE;
-  if (is_one_type) {
-    switch (value_type) {
-#define CASE_ATTR_VALUE_TYPE(GeValueType, ValueType, FuncName)    \
-      case GeAttrValue::VT_##GeValueType: {                       \
-        ValueType val;                                            \
-        (void) ge::AttrUtils::Get##FuncName(obj_src, key, val);   \
-        (void) ge::AttrUtils::Set##FuncName(obj, key, val);       \
-        break;                                                    \
-      }
-      CASE_ATTR_VALUE_TYPE(STRING, string, Str);
-      CASE_ATTR_VALUE_TYPE(INT, int64_t, Int);
-      CASE_ATTR_VALUE_TYPE(FLOAT, float, Float);
-      CASE_ATTR_VALUE_TYPE(BOOL, bool, Bool);
-      CASE_ATTR_VALUE_TYPE(TENSOR, ConstGeTensorPtr, Tensor);
-      CASE_ATTR_VALUE_TYPE(NAMED_ATTRS, ge::NamedAttrs, NamedAttrs);
-      CASE_ATTR_VALUE_TYPE(DATA_TYPE, ge::DataType, DataType);
-#undef CASE_ATTR_VALUE_TYPE
-      default:
-        break;
-    }
-  } else {
-    switch (value_type) {
-#define CASE_ATTR_VALUE_TYPE_LIST(GeValueType, ValueType, FuncName)   \
-      case GeAttrValue::VT_LIST_##GeValueType: {                      \
-        std::vector<ValueType> value;                                      \
-        (void) ge::AttrUtils::GetList##FuncName(obj_src, key, value); \
-        (void) ge::AttrUtils::SetList##FuncName(obj, key, value);     \
-        break;                                                        \
-      }
-      CASE_ATTR_VALUE_TYPE_LIST(STRING, string, Str);
-      CASE_ATTR_VALUE_TYPE_LIST(INT, int64_t, Int);
-      CASE_ATTR_VALUE_TYPE_LIST(FLOAT, float, Float);
-      CASE_ATTR_VALUE_TYPE_LIST(BOOL, bool, Bool);
-      CASE_ATTR_VALUE_TYPE_LIST(TENSOR, ConstGeTensorPtr, Tensor);
-      CASE_ATTR_VALUE_TYPE_LIST(NAMED_ATTRS, ge::NamedAttrs, NamedAttrs);
-      CASE_ATTR_VALUE_TYPE_LIST(DATA_TYPE, ge::DataType, DataType);
-      CASE_ATTR_VALUE_TYPE_LIST(LIST_INT, std::vector<int64_t>, ListInt);
-#undef CASE_ATTR_VALUE_TYPE_LIST
-      default:
-        GELOGW("[Copy][AttrValue] Attr value type %d is not supported.", static_cast<int>(value_type));
-        break;
-    }
-  }
-}
 };
 }  // namespace ge
 #endif  // COMMON_AUTO_MAPPING_UTIL_H_
