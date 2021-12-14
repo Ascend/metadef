@@ -78,7 +78,7 @@ static int64_t CeilDiv(const int64_t n1, const int64_t n2) {
   if (n1 == 0) {
     return 0;
   }
-  return (n2 != 0) ? ((n1 - 1) / n2 + 1) : 0;
+  return (n2 != 0) ? (((n1 - 1) / n2) + 1) : 0;
 }
 
 ///
@@ -125,7 +125,7 @@ int64_t GetSizeInBytes(int64_t element_count, DataType data_type) {
     return -1;
   } else if (type_size > kDataTypeSizeBitOffset) {
     const auto bit_size = type_size - kDataTypeSizeBitOffset;
-    if (CheckInt64MulOverflow(element_count, bit_size) == FAILED) {
+    if (CheckInt64MulOverflow(element_count, static_cast<int64_t>(bit_size)) == FAILED) {
       REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
                          element_count, bit_size);
       GELOGE(GRAPH_FAILED, "[Check][overflow]GetSizeInBytes failed, when multiplying %ld and %d.",
@@ -134,7 +134,7 @@ int64_t GetSizeInBytes(int64_t element_count, DataType data_type) {
     }
     return CeilDiv(element_count * bit_size, kBitNumOfOneByte);
   } else {
-    if (CheckInt64MulOverflow(element_count, type_size) == FAILED) {
+    if (CheckInt64MulOverflow(element_count, static_cast<int64_t>(type_size)) == FAILED) {
       REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
                          element_count, type_size);
       GELOGE(GRAPH_FAILED, "[Check][overflow]GetSizeInBytes failed, when multiplying %ld and %d.",

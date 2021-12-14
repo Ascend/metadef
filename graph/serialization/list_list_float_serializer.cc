@@ -41,9 +41,9 @@ graphStatus ListListFloatSerializer::Serialize(const AnyValue &av, proto::AttrDe
 }
 graphStatus ListListFloatSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av) {
   std::vector<std::vector<float>> values;
-  for (size_t idx = 0U; idx < static_cast<size_t>(def.list_list_float().list_list_f_size()); ++idx) {
+  for (auto idx = 0; idx < def.list_list_float().list_list_f_size(); ++idx) {
     std::vector<float> vec;
-    for (size_t i = 0U; i <  static_cast<size_t>(def.list_list_float().list_list_f(idx).list_f_size()); ++i) {
+    for (auto i = 0; i <  def.list_list_float().list_list_f(idx).list_f_size(); ++i) {
       vec.push_back(def.list_list_float().list_list_f(idx).list_f(i));
     }
     values.push_back(vec);
@@ -52,6 +52,6 @@ graphStatus ListListFloatSerializer::Deserialize(const proto::AttrDef &def, AnyV
   return av.SetValue(std::move(values));
 }
 
-REG_GEIR_SERIALIZER(ListListFloatSerializer,
+REG_GEIR_SERIALIZER(list_list_float_serializer, ListListFloatSerializer,
                     GetTypeId<std::vector<std::vector<float>>>(), proto::AttrDef::kListListFloat);
 }  // namespace ge

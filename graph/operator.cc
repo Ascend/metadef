@@ -121,14 +121,14 @@ namespace ge {
 TensorType::TensorType(DataType dt) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
   if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->dt_vec_.push_back(dt);
+    tensor_type_impl_->GetMutableDateTypeVec().push_back(dt);
   }
 }
 
 TensorType::TensorType(const std::initializer_list<DataType> &initial_types) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
   if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->dt_vec_ = initial_types;
+    tensor_type_impl_->GetMutableDateTypeVec() = initial_types;
   }
 }
 

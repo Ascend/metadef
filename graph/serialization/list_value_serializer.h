@@ -25,8 +25,6 @@
 #include "graph/ge_attr_value.h"
 
 namespace ge {
-using Serializer = graphStatus (*)(const AnyValue &av, proto::AttrDef &def);
-using Deserializer = graphStatus (*)(const proto::AttrDef &def, AnyValue &av);
 class ListValueSerializer : public GeIrAttrSerializer {
  public:
   ListValueSerializer() = default;

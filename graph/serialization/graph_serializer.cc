@@ -21,7 +21,7 @@
 
 namespace ge {
 graphStatus GraphSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
-  auto graph = def.mutable_g();
+  const auto graph = def.mutable_g();
   GE_CHECK_NOTNULL(graph);
 
   if (av.GetValue(*graph) != GRAPH_SUCCESS) {
@@ -36,5 +36,5 @@ graphStatus GraphSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av
   return av.SetValue(def.g());
 }
 
-REG_GEIR_SERIALIZER(GraphSerializer, GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
+REG_GEIR_SERIALIZER(graph_serializer, GraphSerializer, GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
 }  // namespace ge

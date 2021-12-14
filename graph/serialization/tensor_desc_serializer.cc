@@ -41,5 +41,5 @@ graphStatus GeTensorDescSerializer::Deserialize(const proto::AttrDef &def, AnyVa
   return av.SetValue(std::move(tensor_desc));
 }
 
-REG_GEIR_SERIALIZER(GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+REG_GEIR_SERIALIZER(tensor_desc_serialzier, GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
 }  // namespace ge

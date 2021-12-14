@@ -52,6 +52,6 @@ graphStatus ListListIntSerializer::Deserialize(const proto::AttrDef &def, AnyVal
   return av.SetValue(std::move(values));
 }
 
-REG_GEIR_SERIALIZER(ListListIntSerializer,
+REG_GEIR_SERIALIZER(list_list_int_serializer, ListListIntSerializer,
                     GetTypeId<std::vector<std::vector<int64_t>>>(), proto::AttrDef::kListListInt);
 }  // namespace ge

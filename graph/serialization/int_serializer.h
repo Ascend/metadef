@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef METADEF_GRAPH_SERIALIZATION_INT64_SERIALIZER_H_
-#define METADEF_GRAPH_SERIALIZATION_INT64_SERIALIZER_H_
+#ifndef METADEF_GRAPH_SERIALIZATION_INT_SERIALIZER_H_
+#define METADEF_GRAPH_SERIALIZATION_INT_SERIALIZER_H_
 
 #include "attr_serializer.h"
 #include "attr_serializer_registry.h"

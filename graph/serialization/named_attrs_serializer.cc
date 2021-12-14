@@ -83,5 +83,5 @@ graphStatus NamedAttrsSerializer::Deserialize(const proto::NamedAttrs &proto_att
   return GRAPH_SUCCESS;
 }
 
-REG_GEIR_SERIALIZER(NamedAttrsSerializer, GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
+REG_GEIR_SERIALIZER(named_attr_serializer, NamedAttrsSerializer, GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
 }  // namespace ge

@@ -35,30 +35,34 @@
 #include "graph/debug/ge_log.h"
 
 namespace ge {
-REG_GEIR_SERIALIZER(BoolSerializer, GetTypeId<bool>(), proto::AttrDef::kB);
-REG_GEIR_SERIALIZER(BufferSerializer, GetTypeId<ge::Buffer>(), proto::AttrDef::kBt);
-REG_GEIR_SERIALIZER(DataTypeSerializer, GetTypeId<ge::DataType>(), proto::AttrDef::kDt);
-REG_GEIR_SERIALIZER(FloatSerializer, GetTypeId<float>(), proto::AttrDef::kF);
-REG_GEIR_SERIALIZER(GraphSerializer, GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
-REG_GEIR_SERIALIZER(IntSerializer, GetTypeId<int64_t>(), proto::AttrDef::kI);
-REG_GEIR_SERIALIZER(ListListFloatSerializer,
+REG_GEIR_SERIALIZER(attr_bool, BoolSerializer, GetTypeId<bool>(), proto::AttrDef::kB);
+REG_GEIR_SERIALIZER(attr_buffer, BufferSerializer, GetTypeId<ge::Buffer>(), proto::AttrDef::kBt);
+REG_GEIR_SERIALIZER(attr_data_type, DataTypeSerializer, GetTypeId<ge::DataType>(), proto::AttrDef::kDt);
+REG_GEIR_SERIALIZER(attr_float, FloatSerializer, GetTypeId<float>(), proto::AttrDef::kF);
+REG_GEIR_SERIALIZER(attr_graph, GraphSerializer, GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
+REG_GEIR_SERIALIZER(attr_int, IntSerializer, GetTypeId<int64_t>(), proto::AttrDef::kI);
+REG_GEIR_SERIALIZER(attr_list, ListListFloatSerializer,
                     GetTypeId<std::vector<std::vector<float>>>(), proto::AttrDef::kListListFloat);
-REG_GEIR_SERIALIZER(ListListIntSerializer,
+REG_GEIR_SERIALIZER(attr_list_list_int, ListListIntSerializer,
                     GetTypeId<std::vector<std::vector<int64_t>>>(), proto::AttrDef::kListListInt);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<int64_t>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<std::string>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<float>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<bool>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<GeTensorDesc>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<GeTensor>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<Buffer>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<proto::GraphDef>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<ge::NamedAttrs>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<ge::DataType>>(), proto::AttrDef::kList);
-REG_GEIR_SERIALIZER(NamedAttrsSerializer, GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
-REG_GEIR_SERIALIZER(StringSerializer, GetTypeId<std::string>(), proto::AttrDef::kS);
-REG_GEIR_SERIALIZER(GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
-REG_GEIR_SERIALIZER(GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
+REG_GEIR_SERIALIZER(attr_list_int, ListValueSerializer, GetTypeId<std::vector<int64_t>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_str, ListValueSerializer, GetTypeId<std::vector<std::string>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_float, ListValueSerializer, GetTypeId<std::vector<float>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_bool, ListValueSerializer, GetTypeId<std::vector<bool>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_tensor_desc, ListValueSerializer,
+                    GetTypeId<std::vector<GeTensorDesc>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_tensor, ListValueSerializer, GetTypeId<std::vector<GeTensor>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_buffer, ListValueSerializer, GetTypeId<std::vector<Buffer>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_graph_def, ListValueSerializer,
+                    GetTypeId<std::vector<proto::GraphDef>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_named_attrs, ListValueSerializer,
+                    GetTypeId<std::vector<ge::NamedAttrs>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_list_data_type, ListValueSerializer,
+                    GetTypeId<std::vector<ge::DataType>>(), proto::AttrDef::kList);
+REG_GEIR_SERIALIZER(attr_named_attrs, NamedAttrsSerializer, GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
+REG_GEIR_SERIALIZER(attr_str, StringSerializer, GetTypeId<std::string>(), proto::AttrDef::kS);
+REG_GEIR_SERIALIZER(attr_tensor_desc, GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+REG_GEIR_SERIALIZER(attr_tensor, GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
 
 AttrSerializerRegistry &AttrSerializerRegistry::GetInstance() {
   static AttrSerializerRegistry instance;

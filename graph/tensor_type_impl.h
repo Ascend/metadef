@@ -24,6 +24,10 @@ class TensorTypeImpl {
   TensorTypeImpl() = default;
   ~TensorTypeImpl() = default;
 
+  std::vector<DataType> &GetMutableDateTypeVec() {
+      return dt_vec_;
+  }
+ private:
   std::vector<DataType> dt_vec_;
 };
 }  // namespace ge

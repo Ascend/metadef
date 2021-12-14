@@ -35,5 +35,5 @@ graphStatus DataTypeSerializer::Deserialize(const proto::AttrDef &def, AnyValue 
   return av.SetValue(static_cast<DataType>(def.dt()));
 }
 
-REG_GEIR_SERIALIZER(DataTypeSerializer, GetTypeId<ge::DataType>(), proto::AttrDef::kDt);
+REG_GEIR_SERIALIZER(data_type_serializer, DataTypeSerializer, GetTypeId<ge::DataType>(), proto::AttrDef::kDt);
 }  // namespace ge

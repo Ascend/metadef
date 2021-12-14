@@ -164,7 +164,7 @@ void FftsGraphUtils::SplitNodes(const std::set<NodePtr> &calc_nodes,
   while (!nodes.empty()) {
     const auto &node = nodes.front();
     nodes.pop();
-    if (calc_nodes.count(node) > 0U) {
+    if (calc_nodes.find(node) != calc_nodes.end()) {
       (void)cur_nodes.insert(node);
     } else {
       // op_desc of node should not be null
@@ -499,8 +499,8 @@ bool FftsGraphUtils::IsValueValid(const ComputeGraphPtr &graph, const std::vecto
     }
   }
 
-  const auto is_node_value_match = [upper_limit](const std::pair<NodePtr, std::vector<uint32_t>> &pair) {
-    return pair.second.size() != upper_limit.size();
+  const auto is_node_value_match = [upper_limit](const std::pair<NodePtr, std::vector<uint32_t>> &pair_item) {
+    return pair_item.second.size() != upper_limit.size();
   };
   if (std::find_if(node_value.begin(), node_value.end(), is_node_value_match) != node_value.end()) {
     REPORT_INNER_ERROR("E19999", "Node value size not match");
@@ -508,8 +508,8 @@ bool FftsGraphUtils::IsValueValid(const ComputeGraphPtr &graph, const std::vecto
     return false;
   }
 
-  const auto is_graph_value_match = [upper_limit](const std::pair<ComputeGraphPtr, std::vector<uint32_t>> &pair) {
-    return pair.second.size() != upper_limit.size();
+  const auto is_graph_value_match = [upper_limit](const std::pair<ComputeGraphPtr, std::vector<uint32_t>> &pair_item) {
+    return pair_item.second.size() != upper_limit.size();
   };
   if (std::find_if(graph_value.begin(), graph_value.end(), is_graph_value_match) != graph_value.end()) {
     REPORT_INNER_ERROR("E19999", "Graph value size not match");

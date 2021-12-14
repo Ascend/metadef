@@ -35,5 +35,5 @@ graphStatus BoolSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av)
   return av.SetValue(def.b());
 }
 
-REG_GEIR_SERIALIZER(BoolSerializer, GetTypeId<bool>(), proto::AttrDef::kB);
+REG_GEIR_SERIALIZER(bool_serializer, BoolSerializer, GetTypeId<bool>(), proto::AttrDef::kB);
 }  // namespace ge

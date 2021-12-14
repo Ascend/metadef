@@ -39,5 +39,5 @@ graphStatus BufferSerializer::Deserialize(const proto::AttrDef &def, AnyValue &a
   return av.SetValue(std::move(buffer));
 }
 
-REG_GEIR_SERIALIZER(BufferSerializer, GetTypeId<ge::Buffer>(), proto::AttrDef::kBt);
+REG_GEIR_SERIALIZER(buffer_serializer, BufferSerializer, GetTypeId<ge::Buffer>(), proto::AttrDef::kBt);
 }  // namespace ge
