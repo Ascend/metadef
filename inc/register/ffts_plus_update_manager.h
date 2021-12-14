@@ -70,9 +70,9 @@ class FftsPlusUpdateManager {
 #define REGISTER_FFTS_PLUS_CTX_TASK_UPDATER_UNIQ_HELPER(ctr, type, clazz) \
     REGISTER_FFTS_PLUS_CTX_TASK_UPDATER_UNIQ(ctr, type, clazz)
 
-#define REGISTER_FFTS_PLUS_CTX_TASK_UPDATER_UNIQ(ctr, type, clazz)                          \
-    ge::FftsPlusUpdateManager::FftsPlusUpdateRegistrar g_##type##_creator##ctr(type, []() { \
-      return std::shared_ptr<clazz>(new(std::nothrow) clazz());                             \
+#define REGISTER_FFTS_PLUS_CTX_TASK_UPDATER_UNIQ(ctr, type, clazz)                              \
+    ge::FftsPlusUpdateManager::FftsPlusUpdateRegistrar g_##type##_creator##ctr((type), []() {   \
+      return std::shared_ptr<clazz>(new(std::nothrow) (clazz)());                             \
     })
 
 #endif // INC_REGISTER_FFTS_PLUS_UPDATE_MANAGER_H_

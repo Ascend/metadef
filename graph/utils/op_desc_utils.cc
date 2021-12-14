@@ -962,7 +962,7 @@ ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, const ui
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-void OpDescUtils::SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *context) {
+void OpDescUtils::SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *const context) {
   op.operator_impl_->runtime_context_ = context;
 }
 }  // namespace ge
