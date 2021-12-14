@@ -507,6 +507,17 @@ TEST_F(UtestOpDescUtils, GetNonConstInputTensorDesc) {
   EXPECT_EQ(OpDescUtils::GetNonConstInputTensorDesc(attr_node, 1), GeTensorDesc());
 }
 
+TEST_F(UtestOpDescUtils, GetNonConstInputTensorDesc_SetStatus) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
+  EXPECT_EQ(attr_node->GetAllInDataAnchors().size(), 2);
+  auto in_anch = attr_node->GetAllInDataAnchors().at(0);
+  EXPECT_NE(in_anch, nullptr);
+
+  EXPECT_EQ(NodeUtils::SetAllAnchorStatus(attr_node), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtils::GetNonConstInputTensorDesc(attr_node, 1), GeTensorDesc());
+}
+
 TEST_F(UtestOpDescUtils, IsNonConstInput) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
@@ -557,6 +568,12 @@ TEST_F(UtestOpDescUtils, MutableWeights) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto ph = builder.AddNode("ph", "PlaceHolder", 1, 1);
   EXPECT_EQ(OpDescUtils::MutableWeights(*ph).size(), 0);
+}
+
+TEST_F(UtestOpDescUtils, MutableWeights_Nullptr) {
+  OpDescPtr odp = std::make_shared<OpDesc>();
+  odp = nullptr;
+  EXPECT_EQ(OpDescUtils::MutableWeights(odp), nullptr);
 }
 
 TEST_F(UtestOpDescUtils, SetWeights) {
