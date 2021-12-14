@@ -178,7 +178,7 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
 
   if (!nodes_.empty()) {
     for (const auto &node : nodes_) {
-      (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(node->GetName()), node));
+      all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(node->GetName()), node));
     }
   }
   const std::vector<Scope *> &scopes = GetAllSubScopes();
@@ -187,8 +187,7 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
     const std::vector<ge::OperatorPtr> &sub_nodes = impl->Nodes();
     if (!sub_nodes.empty()) {
       for (const auto sub_node : sub_nodes) {
-        (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(sub_node->GetName()),
-                                                                            sub_node));
+        all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(sub_node->GetName()), sub_node));
       }
     }
   }
@@ -731,7 +730,7 @@ bool FusionScopesResult::FusionScopesResultImpl::FindNodes(const std::string &no
 
 bool FusionScopesResult::FusionScopesResultImpl::FindScopes(const std::string &scope_name) const {
   for (auto &scope : scopes_) {
-    if ((scope->Name().length() < scope_name.length()) && (scope_name.find(scope->Name()) == 0U)) {
+    if (scope->Name().length() < scope_name.length() && scope_name.find(scope->Name()) == 0U) {
       return true;
     }
   }
@@ -1117,7 +1116,7 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
       return;
     }
 
-    (void)nodes_map_.emplace(op->GetName(), op);
+    nodes_map_.emplace(op->GetName(), op);
     if (op->GetOpType() != kTfIdentityType || op->GetOpType() != kTfConstType) {
       auto &impl = scope_tree_->impl_;
       impl->AddNodeToScope(op);
