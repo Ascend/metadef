@@ -54,7 +54,7 @@ class OpsKernelBuilder {
 
   // generate task for op with different mode
   virtual Status GenerateTask(const Node &node, RunContext &context, std::vector<domi::TaskDef> &tasks,
-                              OpsKernelBuilder::Mode) const {
+                              OpsKernelBuilder::Mode) {
     (void)node;
     (void)context;
     (void)tasks;
@@ -62,7 +62,7 @@ class OpsKernelBuilder {
   }
 
   // only call aicpu interface to generate task struct
-  virtual Status GenSingleOpRunTask(const NodePtr &node, STR_FWK_OP_KERNEL &task, std::string &task_info) const {
+  virtual Status GenSingleOpRunTask(const NodePtr &node, STR_FWK_OP_KERNEL &task, std::string &task_info) {
     (void)node;
     (void)task;
     (void)task_info;
@@ -70,7 +70,7 @@ class OpsKernelBuilder {
   }
 
   // only call aicpu interface to generate task struct
-  virtual Status GenMemCopyTask(const uint64_t count, STR_FWK_OP_KERNEL &task, std::string &task_info) const {
+  virtual Status GenMemCopyTask(const uint64_t count, STR_FWK_OP_KERNEL &task, std::string &task_info) {
     (void)count;
     (void)task;
     (void)task_info;
@@ -78,4 +78,4 @@ class OpsKernelBuilder {
   }
 };
 }  // namespace ge
-#endif // INC_COMMON_OPSKERNELUTILS_OPS_KERNEL_INFO_UTILS_H_
+#endif // INC_COMMON_OPSKERNEL_OPS_KERNEL_BUILDER_H_
