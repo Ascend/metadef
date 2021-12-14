@@ -45,7 +45,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpsKernelBuilderRegistry 
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpsKernelBuilderRegistrar {
  public:
   using CreateFn = OpsKernelBuilder *(*)();
-  OpsKernelBuilderRegistrar(const std::string &kernel_lib_name, CreateFn const fn);
+  OpsKernelBuilderRegistrar(const std::string &kernel_lib_name, const CreateFn fn);
   ~OpsKernelBuilderRegistrar();
 
 private:
