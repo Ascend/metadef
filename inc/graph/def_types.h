@@ -28,6 +28,14 @@ struct StringHead {
   uint64_t addr;  // the addr of string
   uint64_t len;   // the length of string
 };
+
+inline uint64_t PtrToValue(const void *ptr) {
+  return static_cast<const uint64_t>(reinterpret_cast<const uintptr_t>(ptr));
+}
+
+inline void *ValueToPtr(const uint64_t value) {
+  return reinterpret_cast<void *>(static_cast<const uintptr_t>(value));
+}
 }  // namespace ge
 
 #endif  // INC_GRAPH_DEF_TYPES_H_

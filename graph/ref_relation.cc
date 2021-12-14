@@ -26,15 +26,15 @@
 #include "debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/def_types.h"
 
 namespace ge {
 namespace {
-  const char_t *kRefIndex = "_parent_node_index";
-  const std::string kWhile = "While";
-  const std::string kIf = "If";
-  const std::string kCase = "Case";
-  const std::string kStatelessWhile = "StatelessWhile";
-
+  const char_t *kRefIdx = "_parent_node_index";
+  const char_t *kWhile = "While";
+  const char_t *kIf = "If";
+  const char_t *kCase = "Case";
+  const char_t *kStatelessWhile = "StatelessWhile";
   std::set<std::string> function_op = {kWhile, kIf, kCase};
 }
 
@@ -42,7 +42,7 @@ namespace {
 class RefRelations::Impl {
 public:
   graphStatus LookUpRefRelations(const RefCell &key, std::unordered_set<RefCell, RefCellHash> &result) {
-    const auto number = static_cast<size_t>(reinterpret_cast<uintptr_t>(key.node.get()));
+    const size_t number = PtrToValue(key.node.get());
     const std::string lookup_key =
         key.node_name + std::to_string(key.in_out) + std::to_string(key.in_out_idx) + std::to_string(number);
     const auto iter = look_up_table_.find(lookup_key);
@@ -63,6 +63,7 @@ public:
     return GRAPH_SUCCESS;
   };
 private:
+  friend class RefRelations;
   graphStatus BuildLookUpTables();
   graphStatus BuildRefRelationsForBranch(
                   const NodePtr &root_node,
@@ -78,18 +79,17 @@ private:
                   const NodePtr &root_node,
                   const std::vector<std::vector<NodePtr>> &classed_data_nodes,
                   const std::vector<std::vector<std::pair<NodePtr, size_t>>> &classed_netoutput_nodes,
-                  std::vector<std::vector<RefCell>> &node_refs);
+                  std::vector<std::vector<RefCell>> &node_refs) const;
   void GetDataAndNetoutputOfSubGraph(
                   const ge::ComputeGraph &root_graph,
-                  std::vector<NodePtr> &data_nodes,
+                  std::vector<NodePtr> &graph_data_nodes,
                   std::vector<NodePtr> &netoutput_nodes,
                   const std::vector<std::string> &sub_graph_names,
                   const std::string &node_type) const;
 
   graphStatus GetRootGraph(ge::ComputeGraph &graph, ge::ComputeGraph &root_graph) const;
-  graphStatus ProcessSubgraphDataNodes(
-                 std::vector<NodePtr> &data_nodes,
-                 std::vector<std::vector<NodePtr>> &classed_data_nodes) const;
+  graphStatus ProcessSubgraphDataNodes(std::vector<NodePtr> &graph_data_nodes,
+                                       std::vector<std::vector<NodePtr>> &classed_data_nodes) const;
   graphStatus ProcessSubgraphNetoutput(
                   const std::vector<NodePtr> &netoutput_nodes,
                   std::vector<std::vector<std::pair<NodePtr, size_t>>> &classed_netoutput_nodes) const;
@@ -165,7 +165,7 @@ graphStatus RefRelations::Impl::BuildLookUpTables() {
       for (const auto &ref_cell : ele) {
         const std::string key = ref_cell.node_name + std::to_string(ref_cell.in_out) +
           std::to_string(ref_cell.in_out_idx) +
-          std::to_string(static_cast<size_t>(reinterpret_cast<uintptr_t>(ref_cell.node.get())));
+          std::to_string(PtrToValue(ref_cell.node.get()));
         look_up_table_[key] = ele;
       }
     }
@@ -174,7 +174,8 @@ graphStatus RefRelations::Impl::BuildLookUpTables() {
 }
 
 graphStatus RefRelations::Impl::BuildRefRelationsForWhile(
-    const NodePtr &root_node, const std::vector<std::vector<NodePtr>> &classed_data_nodes,
+    const NodePtr &root_node,
+    const std::vector<std::vector<NodePtr>> &classed_data_nodes,
     const std::vector<std::vector<std::pair<NodePtr, size_t>>> &classed_netoutput_nodes,
     std::vector<std::vector<RefCell>> &node_refs) const {
   GELOGD("Enter BuildRefRelations for while op!");
@@ -256,13 +257,13 @@ graphStatus RefRelations::Impl::BuildRefRelationsForWhile(
     const auto net_in_desc = netoutput->GetOpDesc()->MutableInputDesc(static_cast<uint32_t>(in_data_anchor_idx));
     int32_t ref_d = 0;
     int32_t ref_n = 0;
-    (void)AttrUtils::GetInt(peer_out_data_node->GetOpDesc(), kRefIndex, ref_d);
-    (void)AttrUtils::GetInt(net_in_desc, kRefIndex, ref_n);
-    size_t ref_dst = static_cast<size_t>(ref_d);
-    size_t ref_net = static_cast<size_t>(ref_n);
+    (void)AttrUtils::GetInt(peer_out_data_node->GetOpDesc(), kRefIdx, ref_d);
+    (void)AttrUtils::GetInt(net_in_desc, kRefIdx, ref_n);
+    const size_t ref_desc = static_cast<size_t>(ref_d);
+    const size_t ref_in = static_cast<size_t>(ref_n);
 
-    (void)node_refs[ref_dst].insert(node_refs[ref_dst].end(), node_refs[ref_net].begin(), node_refs[ref_net].end());
-    (void)node_refs[ref_net].insert(node_refs[ref_net].end(), node_refs[ref_dst].begin(), node_refs[ref_dst].end());
+    (void)node_refs[ref_desc].insert(node_refs[ref_desc].end(), node_refs[ref_in].begin(), node_refs[ref_in].end());
+    (void)node_refs[ref_in].insert(node_refs[ref_in].end(), node_refs[ref_desc].begin(), node_refs[ref_desc].end());
   }
 
   return GRAPH_SUCCESS;
@@ -272,7 +273,7 @@ graphStatus RefRelations::Impl::BuildRelationsWithFuncNodeType(
     const NodePtr &root_node,
     const std::vector<std::vector<NodePtr>> &classed_data_nodes,
     const std::vector<std::vector<std::pair<NodePtr, size_t>>> &classed_netoutput_nodes,
-    std::vector<std::vector<RefCell>> &node_refs) {
+    std::vector<std::vector<RefCell>> &node_refs) const {
   // data_nodes has been sorted
   const auto node_type = root_node->GetType();
 
@@ -285,12 +286,11 @@ graphStatus RefRelations::Impl::BuildRelationsWithFuncNodeType(
   return status;
 }
 
-void RefRelations::Impl::GetDataAndNetoutputOfSubGraph(
-    const ge::ComputeGraph &root_graph,
-    std::vector<NodePtr> &data_nodes,
-    std::vector<NodePtr> &netoutput_nodes,
-    const std::vector<std::string> &sub_graph_names,
-    const std::string &node_type) const {
+void RefRelations::Impl::GetDataAndNetoutputOfSubGraph(const ge::ComputeGraph &root_graph,
+                                                       std::vector<NodePtr> &graph_data_nodes,
+                                                       std::vector<NodePtr> &netoutput_nodes,
+                                                       const std::vector<std::string> &sub_graph_names,
+                                                       const std::string &node_type) const {
   int32_t sub_graph_idx = 0;
   for (const auto &name : sub_graph_names) {
     const auto sub_graph = root_graph.GetSubgraph(name);
@@ -302,7 +302,7 @@ void RefRelations::Impl::GetDataAndNetoutputOfSubGraph(
     for (const auto &sub_graph_node : sub_graph->GetDirectNode()) {
       const auto sub_graph_node_type = sub_graph_node->GetType();
       if (sub_graph_node_type == DATA) {
-        data_nodes.emplace_back(sub_graph_node);
+        graph_data_nodes.emplace_back(sub_graph_node);
       }
       if (sub_graph_node_type == NETOUTPUT) {
         // if while, the first subgraph must be cond subgraph.
@@ -333,30 +333,29 @@ graphStatus RefRelations::Impl::GetRootGraph(ge::ComputeGraph &graph, ge::Comput
   return GRAPH_SUCCESS;
 }
 
-graphStatus RefRelations::Impl::ProcessSubgraphDataNodes(
-    std::vector<NodePtr> &data_nodes,
-    std::vector<std::vector<NodePtr>> &classed_data_nodes) const {
+graphStatus RefRelations::Impl::ProcessSubgraphDataNodes(std::vector<NodePtr> &graph_data_nodes,
+                                                         std::vector<std::vector<NodePtr>> &classed_data_nodes) const {
   GELOGD("start to process subgraph data nodes!");
   int32_t max_ref_idx = 0;
-  for (const auto &e : data_nodes) {
+  for (const auto &e : graph_data_nodes) {
     int32_t i;
     bool is_exist = true;
-    is_exist = AttrUtils::GetInt(e->GetOpDesc(), kRefIndex, i);
+    is_exist = AttrUtils::GetInt(e->GetOpDesc(), kRefIdx, i);
     if (!is_exist) {
       REPORT_INNER_ERROR("E19999", "Invalid SubGraph NetOutput node[%s].no attr %s",
-                         e->GetName().c_str(), kRefIndex);
+                         e->GetName().c_str(), kRefIdx);
       GELOGE(GRAPH_FAILED, "[Get][Int] Invalid SubGraph NetOutput node[%s].no attr %s",
-             e->GetName().c_str(), kRefIndex);
+             e->GetName().c_str(), kRefIdx);
       return GRAPH_FAILED;
     }
     max_ref_idx = (i > max_ref_idx) ? i : max_ref_idx;
   }
-  classed_data_nodes.resize(static_cast<size_t>(max_ref_idx + 1));
-  while (!data_nodes.empty()) {
-    auto data = data_nodes.back();
-    data_nodes.pop_back();
+  classed_data_nodes.resize(static_cast<size_t>(max_ref_idx) + 1UL);
+  while (!graph_data_nodes.empty()) {
+    auto data = graph_data_nodes.back();
+    graph_data_nodes.pop_back();
     int32_t ref_idx = 0;
-    (void)AttrUtils::GetInt(data->GetOpDesc(), kRefIndex, ref_idx);
+    (void)AttrUtils::GetInt(data->GetOpDesc(), kRefIdx, ref_idx);
     if (ref_idx >= static_cast<int32_t>(classed_data_nodes.size())) {
       return GRAPH_FAILED;
     }
@@ -385,7 +384,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
         return GRAPH_FAILED;
       }
       int32_t ref_o;
-      if (AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
+      if (AttrUtils::GetInt(in_desc, kRefIdx, ref_o)) {
         max_ref_idx = (ref_o > max_ref_idx) ? ref_o : max_ref_idx;
       } else {
         REPORT_INNER_ERROR("E19999", "Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
@@ -396,7 +395,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
       }
     }
   }
-  classed_netoutput_nodes.resize(static_cast<size_t>(max_ref_idx + 1));
+  classed_netoutput_nodes.resize(static_cast<size_t>(max_ref_idx) + 1UL);
   // re-sort according ref idx
   for (const auto &sub_netoutput_node : netoutput_nodes) {
     const auto op_desc = sub_netoutput_node->GetOpDesc();
@@ -405,12 +404,13 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
     for (const auto &in_data_anchor : sub_netoutput_node->GetAllInDataAnchors()) {
       const auto in_desc = op_desc->MutableInputDesc(static_cast<uint32_t>(in_data_anchor->GetIdx()));
       int32_t ref_o;
-      if (AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
+      if (AttrUtils::GetInt(in_desc, kRefIdx, ref_o)) {
         if (ref_o >= static_cast<int32_t>(classed_netoutput_nodes.size())) {
           return GRAPH_FAILED;
         }
-        classed_netoutput_nodes[static_cast<size_t>(ref_o)].emplace_back(
-            std::pair<NodePtr, size_t>({sub_netoutput_node, static_cast<size_t>(in_data_anchor->GetIdx())}));
+        classed_netoutput_nodes[static_cast<size_t>(ref_o)].emplace_back(std::pair<NodePtr, size_t>(
+            {sub_netoutput_node, static_cast<size_t>(in_data_anchor->GetIdx())}
+        ));
       }
     }
   }
@@ -467,13 +467,13 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
     if (sub_graph_names.empty()) {
       continue;
     }
-    std::vector<NodePtr> data_nodes;
+    std::vector<NodePtr> graph_data_nodes;
     std::vector<NodePtr> netoutput_nodes;
     // Get data and netoutput of sub_graph
-    GetDataAndNetoutputOfSubGraph(root_graph, data_nodes, netoutput_nodes, sub_graph_names, node_type);
+    GetDataAndNetoutputOfSubGraph(root_graph, graph_data_nodes, netoutput_nodes, sub_graph_names, node_type);
     std::vector<std::vector<NodePtr>> classed_data_nodes;   // resize according to ref_idx
     std::vector<std::vector<std::pair<NodePtr, size_t>>> classed_netoutput_nodes;   // resize according to ref_idx
-    status = ProcessSubgraphDataNodes(data_nodes, classed_data_nodes);
+    status = ProcessSubgraphDataNodes(graph_data_nodes, classed_data_nodes);
     if (status != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "[Process][SubgraphDataNodes] failed! ret:%d", status);
       return status;
@@ -525,9 +525,9 @@ graphStatus RefRelations::LookUpRefRelations(const RefCell &key, std::unordered_
   return impl_->LookUpRefRelations(key, result);
 }
 
-graphStatus RefRelations::BuildRefRelations(ge::ComputeGraph &root_graph) {
+graphStatus RefRelations::BuildRefRelations(ge::ComputeGraph &graph) {
   GE_CHECK_NOTNULL(impl_);
-  return impl_->BuildRefRelations(root_graph);
+  return impl_->BuildRefRelations(graph);
 }
 
 graphStatus RefRelations::Clear() {

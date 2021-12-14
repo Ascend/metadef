@@ -22,7 +22,7 @@
 
 namespace ge {
 namespace {
-const int64_t kMinTrainingTraceJobId = 65536;
+const uint64_t kMinTrainingTraceJobId = 65536U;
 const int32_t kDecimal = 10;
 const char_t *kHostExecPlacement = "HOST";
 }
@@ -88,22 +88,22 @@ void GEContext::Init() {
     }
   }
   if (s_job_id == "") {
-    trace_id_ = static_cast<size_t>(kMinTrainingTraceJobId);
+    trace_id_ = kMinTrainingTraceJobId;
     return;
   }
-  const int64_t d_job_id = static_cast<int64_t>(std::strtoll(s_job_id.c_str(), nullptr, kDecimal));
-  if (d_job_id < kMinTrainingTraceJobId) {
-    trace_id_ = static_cast<size_t>(d_job_id + kMinTrainingTraceJobId);
+  const auto d_job_id = std::strtoll(s_job_id.c_str(), nullptr, kDecimal);
+  if (static_cast<uint64_t>(d_job_id) < kMinTrainingTraceJobId) {
+    trace_id_ = static_cast<uint64_t>(d_job_id) + kMinTrainingTraceJobId;
   } else {
-    trace_id_ = static_cast<size_t>(d_job_id);
+    trace_id_ = static_cast<uint64_t>(d_job_id);
   }
 }
 
 uint64_t GEContext::SessionId() { return session_id_; }
 
-uint64_t GEContext::ContextId() { return context_id_; }
+uint64_t GEContext::ContextId() const { return context_id_; }
 
-uint64_t GEContext::WorkStreamId() { return work_stream_id_; }
+uint64_t GEContext::WorkStreamId() const { return work_stream_id_; }
 
 uint32_t GEContext::DeviceId() { return device_id_; }
 

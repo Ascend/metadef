@@ -22,11 +22,11 @@
 namespace ge {
 class GEContext {
  public:
+  uint64_t WorkStreamId() const;
   graphStatus GetOption(const std::string &key, std::string &option);
   bool GetHostExecFlag();
   uint64_t SessionId();
-  uint64_t ContextId();
-  uint64_t WorkStreamId();
+  uint64_t ContextId() const;
   uint32_t DeviceId();
   uint64_t TraceId();
   void Init();
