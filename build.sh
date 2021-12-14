@@ -137,7 +137,7 @@ build_metadef()
   if [[ "X$ENABLE_GITEE" = "Xon" ]]; then
     CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GITEE=ON"
   fi
-  
+
   CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
   echo "${CMAKE_ARGS}"
   cmake ${CMAKE_ARGS} ..
@@ -146,7 +146,7 @@ build_metadef()
     echo "execute command: cmake ${CMAKE_ARGS} .. failed."
     return 1
   fi
-  
+
   if [ "X$ENABLE_METADEF_UT" = "Xon" ]; then
     make ut_graph ut_register -j${THREAD_NUM}
   else
@@ -209,7 +209,7 @@ generate_package()
   rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
   rm -rf ${OUTPUT_PATH:?}/${ACL_PATH}/
   rm -rf ${OUTPUT_PATH:?}/${ATC_PATH}/
-  
+
   mk_dir "${OUTPUT_PATH}/${FWK_PATH}"
   mk_dir "${OUTPUT_PATH}/${ATC_PATH}"
   mk_dir "${OUTPUT_PATH}/${ACL_PATH}"
@@ -236,11 +236,14 @@ generate_package_for_cann()
 
   METADEF_LIB_PATH="lib"
   COMPILER_PATH="compiler/lib64"
+  RUNTIME_PATH="runtime/lib64"
   COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
 
   rm -rf ${OUTPUT_PATH:?}/${COMPILER_PATH}/
+  rm -rf ${OUTPUT_PATH:?}/${RUNTIME_PATH}/
 
   mk_dir "${OUTPUT_PATH}/${COMPILER_PATH}"
+  mk_dir "${OUTPUT_PATH}/${RUNTIME_PATH}"
 
   find output/ -name metadef_lib.tar -exec rm {} \;
 
@@ -249,11 +252,13 @@ generate_package_for_cann()
   for lib in "${COMMON_LIB[@]}";
   do
     find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${COMPILER_PATH} \;
+    find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${RUNTIME_PATH} \;
   done
 
   find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${COMPILER_PATH} \;
+  find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${RUNTIME_PATH} \;
 
-  tar -cf metadef_lib.tar compiler
+  tar -cf metadef_lib.tar compiler runtime
 }
 
 if [[ "X$ENABLE_METADEF_UT" = "Xoff" ]]; then
