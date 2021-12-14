@@ -51,7 +51,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   using Vistor = RangeVistor<T, std::shared_ptr<ConstComputeGraph>>;
 
   explicit ComputeGraph(const std::string &name);
-  ~ComputeGraph() override;
+  virtual ~ComputeGraph() override;
   ComputeGraph(const ge::ComputeGraph& compute_graph);
   ComputeGraph(ge::ComputeGraph&& compute_graph);
 
@@ -67,8 +67,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   Vistor<NodePtr> GetAllNodes() const;
   // is_unknown_shape: false, same with GetAllNodes func
   // is_unknown_shape: true, same with GetDirectNodes func
-  Vistor<NodePtr> GetNodes(bool is_unknown_shape) const;
-  Vistor<NodePtr> GetNodes(bool is_unknown_shape, const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
+  Vistor<NodePtr> GetNodes(const bool is_unknown_shape) const;
+  Vistor<NodePtr> GetNodes(const bool is_unknown_shape, const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
   size_t GetDirectNodesSize() const;
   Vistor<NodePtr> GetDirectNode() const;
   Vistor<NodePtr> GetInputNodes() const;
@@ -77,9 +77,9 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   NodePtr FindNode(const std::string &name) const;
   NodePtr FindFirstNodeMatchType(const std::string &name) const;
   // AddNode with NodePtr
-  NodePtr AddNode(NodePtr node);
-  NodePtr AddNode(OpDescPtr op);
-  NodePtr AddNode(OpDescPtr op, const int64_t id);    // for unserialize
+  NodePtr AddNode(const NodePtr node);
+  NodePtr AddNode(const OpDescPtr op);
+  NodePtr AddNode(const OpDescPtr op, const int64_t id);    // for unserialize
   NodePtr AddNodeFront(const NodePtr node);
   NodePtr AddNodeFront(const OpDescPtr &op);
   NodePtr AddInputNode(const NodePtr node);
@@ -126,7 +126,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   ///
   graphStatus UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
 
-  void TopologicalSorting(std::function<bool (const NodePtr &, const NodePtr &)> comp);
+  void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);
   graphStatus TopologicalSorting();
   bool IsValid() const;
   void InValid();
@@ -139,7 +139,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus InferOriginFormat();
   graphStatus InferShapeInNeed();
   graphStatus InsertGraphEvents();
-  bool operator==(const ComputeGraph &r_compute_graph) const;
+  bool operator==(const ComputeGraph &r_graph) const;
   ComputeGraph& operator=(ge::ComputeGraph compute_graph);
 
   const std::map<std::vector<std::string>, std::vector<std::string>> &GetShareParamLayer() const;
@@ -225,8 +225,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus ReorderEventNodes();
 
  protected:
-  ProtoAttrMap &MutableAttrMap() override;
-  ConstProtoAttrMap &GetAttrMap() const override;
+  virtual ProtoAttrMap &MutableAttrMap() override;
+  virtual ConstProtoAttrMap &GetAttrMap() const override;
 
  private:
   graphStatus DFSTopologicalSorting(std::vector<NodePtr> &node_vec, std::map<NodePtr, uint32_t> &map_in_edge_num,
@@ -236,7 +236,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::map<string, NodePtr> &breadth_node_map);
 
-  graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &mapInEdgeNum);
+  graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &map_in_edge_num);
   Vistor<NodePtr> AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs) const;
   Vistor<NodePtr> GetAllNodes(const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
   size_t GetInEdgeSize(const NodePtr &node);
@@ -244,8 +244,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus RemoveExtraOutEdge(const NodePtr &node);
   bool GraphMembersAreEqual(const ComputeGraph &r_graph) const;
   bool GraphAttrsAreEqual(const ComputeGraph &r_graph) const;
-  bool VectorInputNodePtrIsEqual(const std::vector<NodePtr> &r_node_ptr_vector,
-                                 const std::vector<NodePtr> &l_node_ptr_vector) const;
+  bool VectorInputNodePtrIsEqual(const std::vector<NodePtr> &left_nodes,
+                                 const std::vector<NodePtr> &right_nodes) const;
 
   void SetNodesOwner();
   /**
