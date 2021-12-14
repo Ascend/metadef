@@ -25,14 +25,14 @@
 #include "graph/type_utils.h"
 #include "attr_serializer.h"
 
-#define REG_GEIR_SERIALIZER(cls, obj_type, bin_type)                                       \
-    REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(__COUNTER__, cls, obj_type, bin_type)
+#define REG_GEIR_SERIALIZER(serializer_name, cls, obj_type, bin_type)                              \
+    REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(serializer_name, __COUNTER__, cls, obj_type, bin_type)
 
-#define REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(ctr, cls, obj_type, bin_type)              \
-    REG_GEIR_SERIALIZER_BUILDER_UNIQ(ctr, cls, obj_type, bin_type)
+#define REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(name, ctr, cls, obj_type, bin_type)                \
+    REG_GEIR_SERIALIZER_BUILDER_UNIQ(name, ctr, cls, obj_type, bin_type)
 
-#define REG_GEIR_SERIALIZER_BUILDER_UNIQ(ctr, cls, obj_type, bin_type)                     \
-  static ::ge::AttrSerializerRegistrar register_serialize##ctr                             \
+#define REG_GEIR_SERIALIZER_BUILDER_UNIQ(name, ctr, cls, obj_type, bin_type)               \
+  static ::ge::AttrSerializerRegistrar register_serialize_##name##ctr                      \
       __attribute__((unused)) =                                                            \
           ::ge::AttrSerializerRegistrar([]()->std::unique_ptr<ge::GeIrAttrSerializer>{     \
                return std::unique_ptr<ge::GeIrAttrSerializer>(new(std::nothrow)cls());     \

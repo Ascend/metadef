@@ -17,10 +17,11 @@
 #include "float_serializer.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/debug/ge_log.h"
+#include "graph/types.h"
 
 namespace ge {
 graphStatus FloatSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
-  float value;
+  float32_t value;
   const graphStatus ret = av.GetValue(value);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get float attr.");
@@ -34,5 +35,5 @@ graphStatus FloatSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av
   return av.SetValue(def.f());
 }
 
-REG_GEIR_SERIALIZER(FloatSerializer, GetTypeId<float>(), proto::AttrDef::kF);
+REG_GEIR_SERIALIZER(float_serializer, FloatSerializer, GetTypeId<float>(), proto::AttrDef::kF);
 }  // namespace ge

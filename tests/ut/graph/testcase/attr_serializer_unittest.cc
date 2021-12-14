@@ -86,7 +86,7 @@ ComputeGraphPtr CreateGraph_1_1_224_224(float *tensor_data) {
 class AttrSerializerUt : public testing::Test {};
 
 TEST_F(AttrSerializerUt, StringAttr) {
-  REG_GEIR_SERIALIZER(StringSerializer, GetTypeId<std::string>(), proto::AttrDef::kS);
+  REG_GEIR_SERIALIZER(str_serializer, StringSerializer, GetTypeId<std::string>(), proto::AttrDef::kS);
 
   auto op_desc = std::make_shared<OpDesc>();
   AttrUtils::SetStr(op_desc, "str_name", "test_string1");
@@ -112,7 +112,7 @@ TEST_F(AttrSerializerUt, StringAttr) {
 }
 
 TEST_F(AttrSerializerUt, IntAttr) {
-  REG_GEIR_SERIALIZER(IntSerializer, GetTypeId<int64_t>(), proto::AttrDef::kI);
+  REG_GEIR_SERIALIZER(int_serializer, IntSerializer, GetTypeId<int64_t>(), proto::AttrDef::kI);
 
   auto op_desc = std::make_shared<OpDesc>();
 
@@ -140,7 +140,7 @@ TEST_F(AttrSerializerUt, IntAttr) {
 }
 
 TEST_F(AttrSerializerUt, FloatAttr) {
-  REG_GEIR_SERIALIZER(FloatSerializer, GetTypeId<float>(), proto::AttrDef::kF);
+  REG_GEIR_SERIALIZER(float_serializer, FloatSerializer, GetTypeId<float>(), proto::AttrDef::kF);
 
   auto op_desc = std::make_shared<OpDesc>();
 
@@ -168,7 +168,8 @@ TEST_F(AttrSerializerUt, FloatAttr) {
 }
 
 TEST_F(AttrSerializerUt, TensorDescAttr) {
-  REG_GEIR_SERIALIZER(GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+  REG_GEIR_SERIALIZER(tensor_desc_serializer, GeTensorDescSerializer,
+                      GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
 
   GeTensorDesc td;
   td.SetShape(GeShape(std::vector<int64_t>({1, 1, 224, 224})));
@@ -203,7 +204,7 @@ TEST_F(AttrSerializerUt, TensorDescAttr) {
 }
 
 TEST_F(AttrSerializerUt, BoolAttr) {
-  REG_GEIR_SERIALIZER(BoolSerializer, GetTypeId<bool>(), proto::AttrDef::kI);
+  REG_GEIR_SERIALIZER(bool_serializer, BoolSerializer, GetTypeId<bool>(), proto::AttrDef::kI);
 
   auto op_desc = std::make_shared<OpDesc>();
 
@@ -231,7 +232,8 @@ TEST_F(AttrSerializerUt, BoolAttr) {
 }
 
 TEST_F(AttrSerializerUt, DataTypeAttr) {
-  REG_GEIR_SERIALIZER(DataTypeSerializer, GetTypeId<DataType>(), proto::AttrDef::kDt);
+  REG_GEIR_SERIALIZER(data_type_serializer, DataTypeSerializer,
+                      GetTypeId<DataType>(), proto::AttrDef::kDt);
 
   auto op_desc = std::make_shared<OpDesc>();
   DataType dt = DT_DOUBLE;
@@ -258,10 +260,13 @@ TEST_F(AttrSerializerUt, DataTypeAttr) {
 }
 
 TEST_F(AttrSerializerUt, NamedAttr) {
-  REG_GEIR_SERIALIZER(NamedAttrsSerializer, GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
-  REG_GEIR_SERIALIZER(GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
-  REG_GEIR_SERIALIZER(GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
-  REG_GEIR_SERIALIZER(GraphSerializer, GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
+  REG_GEIR_SERIALIZER(named_attr_serializer, NamedAttrsSerializer,
+                      GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
+  REG_GEIR_SERIALIZER(tesnor_serializer, GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
+  REG_GEIR_SERIALIZER(tensor_desc_serializer, GeTensorDescSerializer,
+                      GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+  REG_GEIR_SERIALIZER(graph_desc_serializer, GraphSerializer,
+                      GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
 
   AnyValue value;
   value.SetValue(1.2f);
@@ -295,8 +300,8 @@ TEST_F(AttrSerializerUt, NamedAttr) {
 }
 
 TEST_F(AttrSerializerUt, OpToString) {
-  REG_GEIR_SERIALIZER(GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
-  REG_GEIR_SERIALIZER(GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+  REG_GEIR_SERIALIZER(tensor_serializer, GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
+  REG_GEIR_SERIALIZER(tensor_desc_serializer, GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
 
   auto op_desc = std::make_shared<OpDesc>();
   float data[224 * 224] = {1.0f};
@@ -313,7 +318,8 @@ TEST_F(AttrSerializerUt, OpToString) {
 }
 
 TEST_F(AttrSerializerUt, ListFloatAttr) {
-  REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<float>>(), proto::AttrDef::kList);
+  REG_GEIR_SERIALIZER(float_serializer, ListValueSerializer,
+                      GetTypeId<std::vector<float>>(), proto::AttrDef::kList);
 
   auto op_desc = std::make_shared<OpDesc>();
   vector<float> val = {1.2f, 1.3f, 1.4f};
@@ -340,7 +346,8 @@ TEST_F(AttrSerializerUt, ListFloatAttr) {
 }
 
 TEST_F(AttrSerializerUt, ListIntAttr) {
-  REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<int64_t>>(), proto::AttrDef::kList);
+  REG_GEIR_SERIALIZER(list_int_serializer, ListValueSerializer,
+                      GetTypeId<std::vector<int64_t>>(), proto::AttrDef::kList);
 
   auto op_desc = std::make_shared<OpDesc>();
   vector<int64_t> val = {-1, 224, 224, 224};
@@ -366,7 +373,7 @@ TEST_F(AttrSerializerUt, ListIntAttr) {
 }
 
 TEST_F(AttrSerializerUt, ListListFloatAttr) {
-  REG_GEIR_SERIALIZER(ListListFloatSerializer, GetTypeId<std::vector<std::vector<float>>>(),
+  REG_GEIR_SERIALIZER(list_float_serializer, ListListFloatSerializer, GetTypeId<std::vector<std::vector<float>>>(),
                       proto::AttrDef::kListListFloat);
 
   auto op_desc = std::make_shared<OpDesc>();
@@ -394,7 +401,7 @@ TEST_F(AttrSerializerUt, ListListFloatAttr) {
 }
 
 TEST_F(AttrSerializerUt, ListListIntAttr) {
-  REG_GEIR_SERIALIZER(ListListIntSerializer, GetTypeId<std::vector<std::vector<int64_t>>>(),
+  REG_GEIR_SERIALIZER(list_int_serializer, ListListIntSerializer, GetTypeId<std::vector<std::vector<int64_t>>>(),
                       proto::AttrDef::kListListInt);
 
   auto op_desc = std::make_shared<OpDesc>();
@@ -422,7 +429,8 @@ TEST_F(AttrSerializerUt, ListListIntAttr) {
 }
 
 TEST_F(AttrSerializerUt, SetAttrToComputeGraph) {
-  REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<DataType>>(), proto::AttrDef::kList);
+  REG_GEIR_SERIALIZER(list_data_type_serializer, ListValueSerializer,
+                      GetTypeId<std::vector<DataType>>(), proto::AttrDef::kList);
 
   float tensor[224 * 224] = {1.0f};
   auto computer_graph = CreateGraph_1_1_224_224(tensor);
@@ -477,15 +485,21 @@ TEST_F(AttrSerializerUt, SetAttrToComputeGraph) {
 }
 
 TEST_F(AttrSerializerUt, SetListAttrToComputeGraph) {
-  REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<NamedAttrs>>(), proto::AttrDef::kList);
-  REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<GeTensor>>(), proto::AttrDef::kList);
-  REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<GeTensorDesc>>(), proto::AttrDef::kList);
-  REG_GEIR_SERIALIZER(ListValueSerializer, GetTypeId<std::vector<proto::GraphDef>>(), proto::AttrDef::kList);
-
-  REG_GEIR_SERIALIZER(NamedAttrsSerializer, GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
-  REG_GEIR_SERIALIZER(GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
-  REG_GEIR_SERIALIZER(GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
-  REG_GEIR_SERIALIZER(GraphSerializer, GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
+  REG_GEIR_SERIALIZER(list_named_attr_serializer, ListValueSerializer,
+                      GetTypeId<std::vector<NamedAttrs>>(), proto::AttrDef::kList);
+  REG_GEIR_SERIALIZER(list_tensor_serializer, ListValueSerializer,
+                      GetTypeId<std::vector<GeTensor>>(), proto::AttrDef::kList);
+  REG_GEIR_SERIALIZER(list_tensor_desc_serializer, ListValueSerializer,
+                      GetTypeId<std::vector<GeTensorDesc>>(), proto::AttrDef::kList);
+  REG_GEIR_SERIALIZER(list_graph_def_serializer, ListValueSerializer,
+                      GetTypeId<std::vector<proto::GraphDef>>(), proto::AttrDef::kList);
+  REG_GEIR_SERIALIZER(list_named_attr_serializer, NamedAttrsSerializer,
+                      GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
+  REG_GEIR_SERIALIZER(list_tensor_serializer, GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
+  REG_GEIR_SERIALIZER(list_tensor_desc_serializer, GeTensorDescSerializer,
+                      GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+  REG_GEIR_SERIALIZER(list_graph_def_serializer, GraphSerializer,
+                      GetTypeId<proto::GraphDef>(), proto::AttrDef::kG);
 
   float tensor[224 * 224] = {1.0f};
   auto computer_graph = CreateGraph_1_1_224_224(tensor);

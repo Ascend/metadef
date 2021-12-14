@@ -30,8 +30,9 @@ void RuntimeInferenceContext::Release() {
 graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int32_t output_id, GeTensorPtr tensor) {
   const std::lock_guard<std::mutex> lk(mu_);
   auto &output_ge_tensors = ge_tensors_[node_id];
-  if (static_cast<uint32_t>(output_id) >= output_ge_tensors.size()) {
-    output_ge_tensors.resize(static_cast<size_t>(output_id + 1));
+  if (static_cast<size_t>(output_id) >= output_ge_tensors.size()) {
+    size_t output_tensor_size = static_cast<size_t>(output_id) + 1U;
+    output_ge_tensors.resize(output_tensor_size);
   }
 
   GELOGD("Set tensor for node_id = %ld, output_id = %d", node_id, output_id);

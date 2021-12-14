@@ -28,7 +28,7 @@ namespace ge {
 class AttrSerializerRegistryUt : public testing::Test {};
 
 TEST_F(AttrSerializerRegistryUt, StringReg) {
-  REG_GEIR_SERIALIZER(ge::StringSerializer, GetTypeId<std::string>(), proto::AttrDef::kS);
+  REG_GEIR_SERIALIZER(serializer_for_ut, ge::StringSerializer, GetTypeId<std::string>(), proto::AttrDef::kS);
   GeIrAttrSerializer *serializer = AttrSerializerRegistry::GetInstance().GetSerializer(GetTypeId<std::string>());
   GeIrAttrSerializer *deserializer = AttrSerializerRegistry::GetInstance().GetDeserializer(proto::AttrDef::kS);
   ASSERT_NE(serializer, nullptr);
