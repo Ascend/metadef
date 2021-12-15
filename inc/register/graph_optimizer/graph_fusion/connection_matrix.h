@@ -26,7 +26,7 @@
 namespace fe {
 class ConnectionMatrix {
 public:
-  ConnectionMatrix();
+  ConnectionMatrix(const ge::ComputeGraph &graph);
 
   ~ConnectionMatrix();
 
@@ -59,6 +59,8 @@ private:
   size_t size_;
 
   std::vector<ge::LargeBitmap> bit_maps;
+
+  std::map<std::string, int64_t> name_to_index_;
 };
 }
 #endif  // INC_REGISTER_GRAPH_OPTIMIZER_GRAPH_FUSION_CONNECTION_MATRIX_H_
