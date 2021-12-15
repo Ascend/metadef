@@ -87,12 +87,11 @@ InferenceContext::InferenceContext(std::unique_ptr<InnerInferenceContext> &inner
 }
 
 std::unique_ptr<InferenceContext> InferenceContext::Create(void *resource_context_mgr) {
-  std::unique_ptr<InnerInferenceContext> inner_context =
-      std::unique_ptr<InnerInferenceContext>(new (std::nothrow) InnerInferenceContext());
+  std::unique_ptr<InnerInferenceContext> inner_context = ComGraphMakeUnique<InnerInferenceContext>();
   if (inner_context == nullptr) {
     return nullptr;
   }
-  inner_context->resource_context_mgr = reinterpret_cast<ResourceContextMgr *>(resource_context_mgr);
+  inner_context->resource_context_mgr = static_cast<ResourceContextMgr *>(resource_context_mgr);
 
   return std::unique_ptr<InferenceContext>(new (std::nothrow) InferenceContext(inner_context));
 }

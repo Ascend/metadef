@@ -40,15 +40,15 @@ using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
 
 const int32_t DEFAULT_VERSION = 1;
-const int32_t ACCESS_PERMISSION_BITS = 0400;
+const int32_t ACCESS_PERMISSION_BITS = 256; // 0400;
 static ge::ModelSerialize SERIALIZE;
 }  // namespace
 
 namespace ge {
 static char_t *GetStrError() {
-  constexpr size_t kMaxErrorStrLen = 128U;
-  char_t err_buf[kMaxErrorStrLen + 1U] = {};
-  const auto str_error = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrorStrLen);
+  constexpr size_t kMaxErrLen = 128U;
+  char_t err_buf[kMaxErrLen + 1U] = {};
+  const auto str_error = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrLen);
   return str_error;
 }
 
