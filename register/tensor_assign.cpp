@@ -27,7 +27,6 @@
 #include "register/register_error_codes.h"
 #include "register/tensor_assign.h"
 #include "graph/types.h"
-#include "graph/def_types.h"
 
 namespace domi {
 namespace {
@@ -218,7 +217,7 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     // front 16 bytes store head of each string
     auto raw_data = addr.data() + (static_cast<size_t>(count) * sizeof(ge::StringHead));
     for (int32_t i = 0; i < count; ++i) {
-      string_head[i].addr = ge::PtrToValue(raw_data);
+      string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       if (i < val_size) {
         const string &str = val_vector.Get(i);
         string_head[i].len = static_cast<uint64_t>(str.size());
@@ -241,7 +240,7 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     ge::StringHead *const string_head = reinterpret_cast<ge::StringHead *>(addr.data());
     auto raw_data = addr.data() + (static_cast<size_t>(count) * sizeof(ge::StringHead));
     for (int32_t i = 0; i < count; ++i) {
-      string_head[i].addr = ge::PtrToValue(raw_data);
+      string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
       string_head[i].len = static_cast<uint64_t>(str.size());
       const bool b = memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK;
       if (!b) {
@@ -324,7 +323,7 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
     std::vector<uint8_t> addr(total_size);
     ge::StringHead *const string_head = reinterpret_cast<ge::StringHead *>(addr.data());
     const auto raw_data = addr.data() + sizeof(ge::StringHead);
-    string_head->addr = ge::PtrToValue(raw_data);
+    string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
     string_head->len = static_cast<uint64_t>(weight_content.size());
     CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(),
                               weight_content.size() + 1) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));

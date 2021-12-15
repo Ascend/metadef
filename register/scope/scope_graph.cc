@@ -1124,7 +1124,7 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
     }
     AscendString name;
     op->GetName(name);
-    nodes_map_.emplace(std::string(name.GetString()) , op);
+    nodes_map_.emplace(std::string(name.GetString()), op);
     if (op->GetOpType() != kTfIdentityType || op->GetOpType() != kTfConstType) {
       auto &impl = scope_tree_->impl_;
       impl->AddNodeToScope(op);
