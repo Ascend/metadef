@@ -177,8 +177,10 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
   }
 
   if (!nodes_.empty()) {
+    AscendString name;
     for (const auto &node : nodes_) {
-      all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(node->GetName()), node));
+      node->GetName(name);
+      (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(name.GetString()), node));
     }
   }
   const std::vector<Scope *> &scopes = GetAllSubScopes();
