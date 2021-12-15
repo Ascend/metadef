@@ -28,45 +28,45 @@
 #include "external/register/register_types.h"
 #include "external/register/op_tiling_info.h"
 
-#define REGISTER_OP_TILING(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER(optype, opfunc, __COUNTER__)
+#define REGISTER_OP_TILING(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER(optype, (opfunc), __COUNTER__)
 
-#define REGISTER_OP_TILING_UNIQ_HELPER(optype, opfunc, counter) REGISTER_OP_TILING_UNIQ(optype, opfunc, counter)
+#define REGISTER_OP_TILING_UNIQ_HELPER(optype, opfunc, counter) REGISTER_OP_TILING_UNIQ(optype, (opfunc), counter)
 
 #define REGISTER_OP_TILING_UNIQ(optype, opfunc, counter)                                                               \
-  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV1##counter(#optype, opfunc)
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV1##counter(#optype, (opfunc))
 
-#define REGISTER_OP_TILING_V2(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER_V2(optype, opfunc, __COUNTER__)
+#define REGISTER_OP_TILING_V2(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER_V2(optype, (opfunc), __COUNTER__)
 
-#define REGISTER_OP_TILING_UNIQ_HELPER_V2(optype, opfunc, counter) REGISTER_OP_TILING_UNIQ_V2(optype, opfunc, counter)
+#define REGISTER_OP_TILING_UNIQ_HELPER_V2(optype, opfunc, counter) REGISTER_OP_TILING_UNIQ_V2(optype, (opfunc), counter)
 
 #define REGISTER_OP_TILING_UNIQ_V2(optype, opfunc, counter)                                                            \
-  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV2##counter(#optype, opfunc)
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV2##counter(#optype, (opfunc))
 
 #define REGISTER_OP_TILING_V3(optype, tilingfunc, parsefunc)                                                           \
-  REGISTER_OP_TILING_UNIQ_HELPER_V3(optype, tilingfunc, parsefunc, __COUNTER__)
+  REGISTER_OP_TILING_UNIQ_HELPER_V3(optype, (tilingfunc), (parsefunc), __COUNTER__)
 
 #define REGISTER_OP_TILING_UNIQ_HELPER_V3(optype, tilingfunc, parsefunc, counter)                                      \
-  REGISTER_OP_TILING_UNIQ_V3(optype, tilingfunc, parsefunc, counter)
+  REGISTER_OP_TILING_UNIQ_V3(optype, (tilingfunc), (parsefunc), counter)
 
 #define REGISTER_OP_TILING_UNIQ_V3(optype, tilingfunc, parsefunc, counter)                                             \
-  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV3##counter(#optype, tilingfunc, parsefunc)
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV3##counter(#optype, (tilingfunc), (parsefunc))
 
 using Status = domi::Status;
 namespace optiling {
 template<class T>
 ByteBuffer &ByteBufferPut(ByteBuffer &buf, const T &value) {
-  buf.write(reinterpret_cast<const char *>(&value), sizeof(value));
-  buf.flush();
+  (void) buf.write(reinterpret_cast<const ge::char_t *>(&value), static_cast<int64_t>(sizeof(value)));
+  (void) buf.flush();
   return buf;
 }
 
 template<class T>
 ByteBuffer &ByteBufferGet(ByteBuffer &buf, T &value) {
-  buf.read(reinterpret_cast<char *>(&value), sizeof(value));
+  (void) buf.read(reinterpret_cast<ge::char_t *>(&value), static_cast<int64_t>(sizeof(value)));
   return buf;
 }
 
-size_t ByteBufferGetAll(ByteBuffer &buf, char *dest, size_t dest_len);
+size_t ByteBufferGetAll(ByteBuffer &buf, ge::char_t *dest, size_t dest_len);
 ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t dest_len);
 
 class CompileInfoCache {
