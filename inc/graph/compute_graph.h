@@ -139,7 +139,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus InferOriginFormat();
   graphStatus InferShapeInNeed();
   graphStatus InsertGraphEvents();
-  bool operator==(const ComputeGraph &r_graph) const;
+  bool operator==(const ComputeGraph &r_compute_graph) const;
   ComputeGraph& operator=(ge::ComputeGraph compute_graph);
 
   const std::map<std::vector<std::string>, std::vector<std::string>> &GetShareParamLayer() const;
