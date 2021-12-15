@@ -34,18 +34,13 @@ TEST_F(GeContextUt, All) {
   EXPECT_EQ(cont.GetHostExecFlag(), false);
   EXPECT_EQ(GetMutableGlobalOptions().size(), 0);
   EXPECT_EQ(cont.SessionId(), 0);
-  EXPECT_EQ(cont.ContextId(), 0);
-  EXPECT_EQ(cont.WorkStreamId(), 0);
   EXPECT_EQ(cont.DeviceId(), 0);
   EXPECT_EQ(cont.TraceId(), 65536);
 
   cont.SetSessionId(1);
   cont.SetContextId(2);
-  cont.SetWorkStreamId(3);
   cont.SetCtxDeviceId(4);
   EXPECT_EQ(cont.SessionId(), 1);
-  EXPECT_EQ(cont.ContextId(), 2);
-  EXPECT_EQ(cont.WorkStreamId(), 3);
   EXPECT_EQ(cont.DeviceId(), 4);
 }
 

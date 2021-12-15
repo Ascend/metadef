@@ -139,6 +139,25 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
   return GRAPH_SUCCESS;
 }
 
+void SetShapeRangeForWhile(GeShape &data_shape, const GeShape &out_shape, bool &need_infer_again,
+                           std::vector<std::pair<int64_t, int64_t>> &data_shape_range) {
+  for (size_t j = 0U; j < data_shape.GetDimNum(); ++j) {
+    if (data_shape.GetDim(j) != out_shape.GetDim(j)) {
+      if (data_shape.GetDim(j) != UNKNOWN_DIM) {
+        // if input data is fix shape, output is different, need_infer_again
+        need_infer_again = true;
+      }
+      (void) data_shape.SetDim(j, UNKNOWN_DIM);
+    }
+    // set shape rang of while, if dim is unknown ,set shape range as {1,-1}
+    if (data_shape.GetDim(j) == UNKNOWN_DIM) {
+      data_shape_range.emplace_back(std::make_pair(1, UNKNOWN_DIM));
+    } else {
+      data_shape_range.emplace_back(std::make_pair(data_shape.GetDim(j), data_shape.GetDim(j)));
+    }
+  }
+}
+
 graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
                                      std::vector<std::vector<GeTensorDesc>> &ref_data_tensors,
                                      std::vector<std::vector<GeTensorDesc>> &ref_out_tensors) {
@@ -181,21 +200,7 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
         if (data_shape.GetDimNum() != out_shape.GetDimNum()) {
           ref_out_tensor.SetUnknownDimNumShape();
         } else {
-          for (size_t j = 0; j < data_shape.GetDimNum(); ++j) {
-            if (data_shape.GetDim(j) != out_shape.GetDim(j)) {
-              if (data_shape.GetDim(j) != UNKNOWN_DIM) {
-                // if input data is fix shape, output is different, need_infer_again
-                need_infer_again = true;
-              }
-              (void)data_shape.SetDim(j, UNKNOWN_DIM);
-            }
-            // set shape rang of while, if dim is unknown ,set shape range as {1,-1}
-            if (data_shape.GetDim(j) == UNKNOWN_DIM) {
-              data_shape_range.emplace_back(std::make_pair(1, UNKNOWN_DIM));
-            } else {
-              data_shape_range.emplace_back(std::make_pair(data_shape.GetDim(j), data_shape.GetDim(j)));
-            }
-          }
+          SetShapeRangeForWhile(data_shape, out_shape, need_infer_again, data_shape_range);
           ref_out_tensor.SetShape(data_shape);
           (void)ref_out_tensor.SetShapeRange(data_shape_range);
         }
