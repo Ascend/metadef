@@ -82,9 +82,9 @@ class ComputeGraphImpl {
   std::vector<std::shared_ptr<ComputeGraph>> GetAllSubgraphs() const;
   void SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs);
 
-  shared_ptr<ComputeGraph> GetParentGraph();
+  shared_ptr<ComputeGraph> GetParentGraph() const;
   void SetParentGraph(const shared_ptr<ComputeGraph> &parent);
-  shared_ptr<Node> GetParentNode();
+  shared_ptr<Node> GetParentNode() const;
   void SetParentNode(const shared_ptr<Node> &parent);
 
   const std::map<std::string, std::vector<int32_t>> &GetGraphOutNodes() const { return out_nodes_map_; }
@@ -121,7 +121,7 @@ class ComputeGraphImpl {
   const std::map<uint32_t, std::string> &GetGraphOpName() const { return op_name_map_; }
   void SetAllNodesInfo(const std::map<OperatorImplPtr, NodePtr> &nodes) { all_nodes_infos_ = nodes; }
 
-  void SetGraphOutNodesInfo(const std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
+  void SetGraphOutNodesInfo(std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
     output_nodes_info_ = out_nodes_info;
   }
 
@@ -148,7 +148,7 @@ class ComputeGraphImpl {
   void SetSummaryFlag(const bool is_summary_graph) { is_summary_graph_ = is_summary_graph; }
 
   graphStatus UpdateInputMapping(const std::map<uint32_t, uint32_t> &input_mapping);
-  graphStatus UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
+  graphStatus UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping) const;
   graphStatus ReorderEventNodes(const ConstComputeGraphPtr &compute_graph);
   graphStatus InsertGraphEvents(const ConstComputeGraphPtr &compute_graph);
 
@@ -162,7 +162,7 @@ class ComputeGraphImpl {
                                     const ConstComputeGraphPtr &compute_graph);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::map<std::string, NodePtr> &breadth_node_map);
-  void TopologicalSorting(std::function<bool (const NodePtr &, const NodePtr &)> comp);
+  void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);
   graphStatus TopologicalSorting(const ComputeGraphPtr &const_graph_ptr,
                                  const ConstComputeGraphPtr &const_compute_graph);
   graphStatus TopologicalSortingGraph(const ConstComputeGraphPtr &compute_graph,
@@ -170,18 +170,18 @@ class ComputeGraphImpl {
   graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &map_in_edge_num,
                         const ConstComputeGraphPtr &compute_graph);
 
-  size_t GetInEdgeSize(const NodePtr &node);
-  size_t GetOutEdgeSize(const NodePtr &node);
+  size_t GetInEdgeSize(const NodePtr &node) const;
+  size_t GetOutEdgeSize(const NodePtr &node) const;
 
   bool IsValid() const;
   void InValid();
-  void Dump(const ConstComputeGraphPtr &compute_graph) const;
+  void Dump(const ConstComputeGraphPtr &graph) const;
   void Swap(ComputeGraphImpl &graph);
 
   void SetNodesOwner(const ComputeGraphPtr &compute_graph);
   graphStatus IsolateNode(const NodePtr &node);
-  graphStatus RemoveExtraOutEdge(const NodePtr &node);
-  graphStatus Verify(const ConstComputeGraphPtr compute_graph);
+  graphStatus RemoveExtraOutEdge(const NodePtr &node) const;
+  graphStatus Verify(const ConstComputeGraphPtr compute_graph) const;
 
   graphStatus InferShapeInNeed(const ComputeGraphPtr &const_graph_ptr,
                                const ConstComputeGraphPtr &const_compute_graph);
@@ -200,6 +200,23 @@ class ComputeGraphImpl {
 
   void EmplaceBackToNodeList(const NodePtr &node);
   void ClearNodeList();
+ private:
+  void inline GetAllNodesFromOpdesc(const OpDescPtr &op_desc, const GraphFilter &graph_filter,
+                                    std::deque<NodePtr>& candidates, const NodePtr node) const;
+  void inline GetAllNodesFromOpdesc(std::vector<ComputeGraphPtr> &subgraphs, const OpDescPtr &op_desc,
+                                    std::deque<NodePtr>& candidates) const;
+
+  template<typename AnchorPtr>
+  void inline GetOutNodesFromAnchor(const AnchorPtr &peer_in_anchor, std::map<NodePtr, uint32_t> &map_in_edge_num,
+                                    std::vector<NodePtr> &out_nodes) {
+    const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
+    if (iter != map_in_edge_num.end()) {
+      --iter->second;
+      if (iter->second == 0U) {
+        out_nodes.push_back(peer_in_anchor->GetOwnerNode());
+      }
+    }
+  }
 
  private:
   friend class ModelSerializeImp;
