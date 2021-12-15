@@ -188,8 +188,10 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
     auto &impl = scope->impl_;
     const std::vector<ge::OperatorPtr> &sub_nodes = impl->Nodes();
     if (!sub_nodes.empty()) {
+      AscendString name;
       for (const auto sub_node : sub_nodes) {
-        all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(sub_node->GetName()), sub_node));
+        node->GetName(name);
+        (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(name.GetString()), sub_node));
       }
     }
   }
@@ -732,7 +734,10 @@ bool FusionScopesResult::FusionScopesResultImpl::FindNodes(const std::string &no
 
 bool FusionScopesResult::FusionScopesResultImpl::FindScopes(const std::string &scope_name) const {
   for (auto &scope : scopes_) {
-    if (scope->Name().length() < scope_name.length() && scope_name.find(scope->Name()) == 0) {
+    AscendString name;
+    scope->Name(name);
+    if (std::string(name.GetString()).length() < scope_name.length() &&
+        scope_name.find(std::string(name.GetString())) == 0U) {
       return true;
     }
   }
@@ -1117,8 +1122,9 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
       GELOGE(FAILED, "Failed to set input output attr, op:%s.", op->GetName().c_str());
       return;
     }
-
-    nodes_map_.emplace(op->GetName(), op);
+    AscendString name;
+    op->GetName(name);
+    nodes_map_.emplace(std::string(name.GetString()) , op);
     if (op->GetOpType() != kTfIdentityType || op->GetOpType() != kTfConstType) {
       auto &impl = scope_tree_->impl_;
       impl->AddNodeToScope(op);
