@@ -101,10 +101,6 @@ void GEContext::Init() {
 
 uint64_t GEContext::SessionId() { return session_id_; }
 
-uint64_t GEContext::ContextId() const { return context_id_; }
-
-uint64_t GEContext::WorkStreamId() const { return work_stream_id_; }
-
 uint32_t GEContext::DeviceId() { return device_id_; }
 
 uint64_t GEContext::TraceId() { return trace_id_; }
@@ -112,8 +108,6 @@ uint64_t GEContext::TraceId() { return trace_id_; }
 void GEContext::SetSessionId(const uint64_t session_id) { session_id_ = session_id; }
 
 void GEContext::SetContextId(const uint64_t context_id) { context_id_ = context_id; }
-
-void GEContext::SetWorkStreamId(const uint64_t work_stream_id) { work_stream_id_ = work_stream_id; }
 
 void GEContext::SetCtxDeviceId(const uint32_t device_id) { device_id_ = device_id; }
 
