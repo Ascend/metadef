@@ -180,7 +180,7 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
     AscendString name;
     for (const auto &node : nodes_) {
       node->GetName(name);
-      (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(name.GetString()), node));
+      (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(name.GetString(), node));
     }
   }
   const std::vector<Scope *> &scopes = GetAllSubScopes();
@@ -191,7 +191,7 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
       AscendString name;
       for (const auto sub_node : sub_nodes) {
         sub_node->GetName(name);
-        (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(std::string(name.GetString()), sub_node));
+        (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(name.GetString(), sub_node));
       }
     }
   }
