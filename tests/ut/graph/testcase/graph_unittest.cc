@@ -248,6 +248,7 @@ TEST_F(UtestGraph, SetOutputs_ops) {
   Graph graph;
   graph.SetOutputs(outputs);
   EXPECT_EQ(graph.GetAllNodes().size(), 0);
+  // EXPECT_TRUE(graph.impl_->output_name_.empty()); // impl缺少头文件，找不到声明
 }
 
 TEST_F(UtestGraph, SetOutputs_string) {

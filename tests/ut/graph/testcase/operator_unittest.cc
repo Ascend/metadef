@@ -842,6 +842,7 @@ TEST_F(UtestOperater, SetAttr_vector_AscendString) {
   std::vector<AscendString> value2;
   op2.GetAttr(name, value2);
 
+  EXPECT_TRUE(value2.size() > 1);
   EXPECT_EQ(value2[1].GetString(), std::string("def"));
 
   op1.SetAttr(nullptr, attr_value);
