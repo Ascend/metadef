@@ -400,7 +400,7 @@ TEST_F(UtestCycleDetection, Coverage_02) {
 TEST_F(UtestCycleDetection, Coverage_03) {
   std::vector<ge::NodePtr> fusion_nodes;
   auto graph = BuildFusionGraph06(kNoCycleCase2, fusion_nodes);
-  auto connectivity = std::shared_ptr<fe::ConnectionMatrix>(new(std::nothrow) fe::ConnectionMatrix());
+  auto connectivity = std::shared_ptr<fe::ConnectionMatrix>(new(std::nothrow) fe::ConnectionMatrix(*graph));
   connectivity->Generate(*graph);
   connectivity->Update(*graph, fusion_nodes);
 }
