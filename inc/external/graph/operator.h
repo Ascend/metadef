@@ -457,17 +457,17 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   void OutputRegister(const std::string &name);
   void OutputRegister(const char_t *name);
 
-  ATTRIBUTED_DEPRECATED(void DynamicInputRegister(const char_t *, const unsigned int, bool))
-  void DynamicInputRegister(const std::string &name, const unsigned int num, bool is_push_back = true);
-  void DynamicInputRegister(const char_t *name, const unsigned int num, bool is_push_back = true);
+  ATTRIBUTED_DEPRECATED(void DynamicInputRegister(const char_t *, const uint32_t, bool))
+  void DynamicInputRegister(const std::string &name, const uint32_t num, bool is_push_back = true);
+  void DynamicInputRegister(const char_t *name, const uint32_t num, bool is_push_back = true);
 
-  ATTRIBUTED_DEPRECATED(void DynamicInputRegisterByIndex(const char_t *, const unsigned int, size_t))
-  void DynamicInputRegisterByIndex(const std::string &name, const unsigned int num, size_t index);
-  void DynamicInputRegisterByIndex(const char_t *name, const unsigned int num, size_t index);
+  ATTRIBUTED_DEPRECATED(void DynamicInputRegisterByIndex(const char_t *, const uint32_t, size_t))
+  void DynamicInputRegisterByIndex(const std::string &name, const uint32_t num, size_t index);
+  void DynamicInputRegisterByIndex(const char_t *name, const uint32_t num, size_t index);
 
-  ATTRIBUTED_DEPRECATED(void DynamicOutputRegister(const char_t *, const unsigned int, bool))
-  void DynamicOutputRegister(const std::string &name, const unsigned int num, bool is_push_back = true);
-  void DynamicOutputRegister(const char_t *name, const unsigned int num, bool is_push_back = true);
+  ATTRIBUTED_DEPRECATED(void DynamicOutputRegister(const char_t *, const uint32_t, bool))
+  void DynamicOutputRegister(const std::string &name, const uint32_t num, bool is_push_back = true);
+  void DynamicOutputRegister(const char_t *name, const uint32_t num, bool is_push_back = true);
 
   ATTRIBUTED_DEPRECATED(void RequiredAttrRegister(const char_t *))
   void RequiredAttrRegister(const std::string &name);
