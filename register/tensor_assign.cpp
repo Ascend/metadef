@@ -35,7 +35,7 @@ using GeShape = ge::GeShape;
 using domi::tensorflow::TensorProto;
 using google::protobuf::int32;
 using google::protobuf::int64;
-const char *const kOriginElementNumAttrName = "origin_element_num";
+const char_t *const kOriginElementNumAttrName = "origin_element_num";
 const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_FLOAT, ge::DataType::DT_FLOAT},
     {domi::tensorflow::DataType::DT_HALF, ge::DataType::DT_FLOAT16},
@@ -158,23 +158,21 @@ Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::prot
                                       const int32_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
   const bool zerosLike = ((count != val_size) && (val_size == 1));
-  uint16_t *addr = new (std::nothrow) uint16_t[count]();
-  GE_CHECK_NOTNULL(addr);
+  std::vector<uint16_t> addr(static_cast<uint64_t>(count));
   if (!zerosLike) {
     const int32_t minCount = (count > val_size) ? val_size : count;
     for (int32_t i = 0; i < minCount; i++) {
-      *(addr + i) = static_cast<uint16_t>(val_vector.Get(i));
+      addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(i));
     }
     for (int32_t i = minCount; i < count; i++) {
-      *(addr + i) = static_cast<uint16_t>(val_vector.Get(minCount - 1));
+      addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(minCount - 1));
     }
   } else {
     for (int32_t i = 0; i < count; i++) {
-      *(addr + i) = static_cast<uint16_t>(val_vector.Get(0));
+      addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(0));
     }
   }
-  (void)weight->SetData(reinterpret_cast<uint8_t *>(addr), static_cast<size_t>(count) * sizeof(uint16_t));
-  GE_DELETE_NEW_ARRAY(addr);
+  (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.data()), static_cast<size_t>(count) * sizeof(uint16_t));
   return SUCCESS;
 }
 

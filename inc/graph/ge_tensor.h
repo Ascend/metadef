@@ -26,7 +26,6 @@
 #include "graph/aligned_ptr.h"
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
-#include "any_value.h"
 
 namespace ge {
 class GeShapeImpl;
