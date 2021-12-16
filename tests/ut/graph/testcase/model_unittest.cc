@@ -88,7 +88,6 @@ TEST_F(ModelUt, SetGet) {
   EXPECT_EQ(*v,val);
   md2.SetAttr(attr);
   EXPECT_EQ(md2.Save(buf,true), GRAPH_SUCCESS);
-
 }
 
 TEST_F(ModelUt, Load) {
@@ -116,6 +115,36 @@ TEST_F(ModelUt, Save) {
   std::stringstream ss;
   ss << "/tmp/" << tt << ".proto";
   md.SaveToFile(ss.str());
+}
+
+TEST_F(ModelUt, Save_Failure) {
+  auto md = SubModel("md2", "test");
+  auto graph = BuildGraph();
+  md.SetGraph(graph);
+  std::stringstream fn;
+  fn << "/tmp/";
+  for (int i = 0; i < 4096; i++){
+    fn << "a";
+  }
+  fn << ".proto";
+  md.SaveToFile(fn.str());
+  EXPECT_EQ(md.SaveToFile("/proc/non.proto"), GRAPH_FAILED);
+}
+
+TEST_F(ModelUt, Load_Longname) {
+  auto md = SubModel("md2", "test");
+  std::stringstream fn;
+  fn << "/tmp/";
+  for (int i = 0; i < 4096; i++){
+    fn << "a";
+  }
+  fn << ".proto";
+  EXPECT_EQ(md.LoadFromFile(fn.str()),GRAPH_FAILED);
+}
+
+TEST_F(ModelUt, Load_Nonfilename) {
+  auto md = SubModel("md2", "test");
+  EXPECT_EQ(md.LoadFromFile("/tmp/non-exsit"),GRAPH_FAILED);
 }
 
 }  // namespace ge

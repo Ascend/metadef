@@ -67,6 +67,7 @@ TEST_F(AnchorUtilsUt, SetStatus) {
   EXPECT_EQ(AnchorUtils::SetStatus(nullptr, ANCHOR_DATA), GRAPH_FAILED);
 }
 
+
 TEST_F(AnchorUtilsUt, GetIdx) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto node = builder.AddNode("Data", "Data", 1, 1);

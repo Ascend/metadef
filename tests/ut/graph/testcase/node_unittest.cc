@@ -281,7 +281,6 @@ TEST_F(UtestNode, AddLinkByStringInputDescFailure) {
   EXPECT_EQ(data_node->NodeAnchorIsEqual(out_anch, inc_anch, 1),false);
   EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
   data_node->impl_->op_->impl_->input_name_idx_["input_name"] = 10;
-  //data_node->impl_->op_->impl_->outputs_desc_.push_back(MakeNullptr<GeTensorDesc>());
   data_node->impl_->op_->impl_->outputs_desc_.push_back(nullptr);
   auto odesc = data_node->GetOpDesc()->GetOutputDesc(0);
   attr_node->impl_->op_->impl_->input_name_idx_["__input5"] = -1;
@@ -296,7 +295,6 @@ TEST_F(UtestNode, AddLinkByStringInputDescFailure) {
 TEST_F(UtestNode, Verify) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data_node = builder.AddNode("Data", "Data", 1, 1);
-  //data_node->impl_->in_data_anchors_.push_back(MakeNullptr<InDataAnchor>());
   data_node->impl_->in_data_anchors_.push_back(nullptr);
   EXPECT_EQ(data_node->Verify(), GRAPH_SUCCESS);
   auto node_op = ge::OperatorFactoryImpl::CreateOperator("node_op", data_node->impl_->op_->GetType());
