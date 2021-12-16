@@ -55,7 +55,7 @@ const std::string OP_PATTERN_DROPOUTDOMASKV3D = "DropOutDoMaskV3D";
 const std::string OP_PATTERN_CONV3D_BACKPROP_INPUT = "Conv3d_backprop_input";
 const std::string OP_PATTERN_CONV_BACKPROP_FILTER = "Conv2d_backprop_filter";
 const std::string OP_PATTERN_GEMM = "GEMM";
-
+const std::string OP_PATTERN_FIXPIPE = "fixpipe";
 const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                               OP_PATTERN_COMMONREDUCE,
                                               OP_PATTERN_BROAD_CAST,
@@ -85,7 +85,8 @@ const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                               OP_PATTERN_DROPOUTDOMASKV3D,
                                               OP_PATTERN_CONV3D_BACKPROP_INPUT,
                                               OP_PATTERN_CONV_BACKPROP_FILTER,
-                                              OP_PATTERN_GEMM
+                                              OP_PATTERN_GEMM,
+                                              OP_PATTERN_FIXPIPE
 };
 }  // namespace fe
 
