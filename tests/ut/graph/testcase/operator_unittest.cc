@@ -1024,6 +1024,7 @@ TEST_F(UtestOperater, SetAttr_vector_DataType) {
   op.GetAttr(nullptr, attr_value_out);
   op.GetAttr(name, attr_value_out);
 
+  EXPECT_TRUE(attr_value_out.size() > 2);
   EXPECT_EQ(attr_value_out[2], DT_INT32);
 }
 

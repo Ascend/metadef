@@ -354,12 +354,12 @@ TEST_F(OperatorConstructGraphUt, GetOpsTypeList) {
   std::vector<std::string> all_ops;
   auto ret = OperatorFactory::GetOpsTypeList(all_ops);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
-  EXPECT_EQ(all_ops.size(), 8);
+  EXPECT_EQ(all_ops.size(), 11);
 
   std::vector<AscendString> all_ops2;
   ret = OperatorFactory::GetOpsTypeList(all_ops2);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
-  EXPECT_EQ(all_ops2.size(), 8);
+  EXPECT_EQ(all_ops2.size(), 11);
 }
 
 TEST_F(OperatorConstructGraphUt, InferFuncRegister) {

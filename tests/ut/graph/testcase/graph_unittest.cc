@@ -477,20 +477,20 @@ TEST_F(UtestGraph, ConstructFromInputs1) {
   EXPECT_EQ(ret, nullptr);
 }
 
-REG_OP(Const)
+REG_OP(Phony0)
     .OUTPUT(y,
             TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8, DT_INT32, DT_INT64, DT_UINT32,
                         DT_UINT64, DT_BOOL, DT_DOUBLE}))
     .ATTR(value, Tensor, Tensor())
-    .OP_END_FACTORY_REG(Const);
+    .OP_END_FACTORY_REG(Phony0);
 
-REG_OP(OCG2)
+REG_OP(Phony1)
     .DYNAMIC_INPUT(x, TensorType::NumberType())
     .OUTPUT(y, TensorType::NumberType())
     .REQUIRED_ATTR(N, Int)
-    .OP_END_FACTORY_REG(OCG2);
+    .OP_END_FACTORY_REG(Phony1);
 
-REG_OP(OCG3)
+REG_OP(Phony2)
     .INPUT(x,
            TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8, DT_INT32, DT_INT64, DT_UINT32,
                        DT_UINT64, DT_BOOL, DT_DOUBLE}))
@@ -500,13 +500,13 @@ REG_OP(OCG3)
                         DT_UINT64, DT_BOOL, DT_DOUBLE}))
     .ATTR(axis, Int, 0)
     .ATTR(num_axes, Int, -1)
-    .OP_END_FACTORY_REG(OCG3);
+    .OP_END_FACTORY_REG(Phony2);
 
 TEST_F(UtestGraph, ConstructFromInputs2) {
   Graph graph;
-  Operator op1 = op::Const("op1");
-  Operator op2 = op::OCG2("op2");
-  Operator op3 = op::OCG3("op3");
+  Operator op1 = op::Phony0("op1");
+  Operator op2 = op::Phony1("op2");
+  Operator op3 = op::Phony2("op3");
   std::vector<Operator> inputs = {op1, op2, op3};
   AscendString name = "graph_name";
 
@@ -576,9 +576,9 @@ TEST_F(UtestGraph, GetOpName) {
 
 TEST_F(UtestGraph, FindOpByName) {
   Graph graph;
-  Operator op1 = op::Const("op1");
-  Operator op2 = op::OCG2("op2");
-  Operator op3 = op::OCG3("op3");
+  Operator op1 = op::Phony0("op1");
+  Operator op2 = op::Phony1("op2");
+  Operator op3 = op::Phony2("op3");
   std::vector<Operator> inputs = {op1, op2, op3};
   AscendString name = "graph_name";
 
@@ -598,9 +598,9 @@ TEST_F(UtestGraph, FindOpByName) {
 
 TEST_F(UtestGraph, FindOpByType) {
   Graph graph;
-  Operator op1 = op::Const("op1");
-  Operator op2 = op::OCG2("op2");
-  Operator op3 = op::OCG3("op3");
+  Operator op1 = op::Phony0("op1");
+  Operator op2 = op::Phony1("op2");
+  Operator op3 = op::Phony2("op3");
   std::vector<Operator> inputs = {op1, op2, op3};
   AscendString name = "graph_name";
 
