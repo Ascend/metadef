@@ -109,6 +109,7 @@ add_library(register_static STATIC
     "op_tiling/op_tiling.cc"
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
+    "op_tiling/op_compile_info_manager.cc"
     "op_tiling/op_tiling_registry.cc"
     "op_tiling/op_tiling_py.cc")
 
@@ -189,6 +190,7 @@ add_library(op_tiling_o2 STATIC
     "op_tiling/op_tiling.cc"
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
+    "op_tiling/op_compile_info_manager.cc"
     "op_tiling/op_tiling_registry.cc"
     "op_tiling/op_tiling_py.cc")
 
@@ -201,6 +203,7 @@ target_include_directories(op_tiling_o2 PRIVATE
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/register
     ${METADEF_DIR}/..
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
