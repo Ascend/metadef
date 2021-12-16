@@ -38,7 +38,7 @@ OperatorImpl::OperatorImpl(const std::string &name, const std::string &type)
 
 OperatorImpl::OperatorImpl(const OpDescPtr &op_desc) : enable_shared_from_this(), op_desc_(op_desc) {}
 
-OperatorImpl::OperatorImpl(const ge::ConstNodePtr node) : enable_shared_from_this(), node_(std::move(node)) {
+OperatorImpl::OperatorImpl(const ConstNodePtr node) : enable_shared_from_this(), node_(std::move(node)) {
   if (node_ != nullptr && node_->GetOpDesc() != nullptr) {
     op_desc_ = node_->GetOpDesc();
   }

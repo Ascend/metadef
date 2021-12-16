@@ -480,6 +480,7 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
              node_ptr->GetName().c_str(), in_idx, in_shape_str.c_str(),
              peer_out_data_node->GetName().c_str(), peer_out_idx, peer_out_shape_str.c_str());
     } else {
+      // do nothing
     }
     // refresh current node input desc
     in_desc->SetOriginShape(peer_out_desc->GetOriginShape());
@@ -569,7 +570,7 @@ void ShapeRefiner::PushToContextMap(const NodePtr &node, const InferenceContextP
 }
 
 static Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const int32_t out_idx,
-                                       std::map<NodePtr, int32_t> &out_nodes, const int32_t depth) {
+                                              std::map<NodePtr, int32_t> &out_nodes, const int32_t depth) {
   if (depth > kMaxRecursionDepth) {
     REPORT_CALL_ERROR("E19999", "Exceed max recursion depth: %d.", kMaxRecursionDepth);
     GELOGE(FAILED, "[Validate][Depth] Exceed max recursion depth: %d.", kMaxRecursionDepth);
@@ -658,7 +659,7 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, InferenceC
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceContextMgr *resource_context_mgr,
+graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceContextMgr *const resource_context_mgr,
                                                  InferenceContextPtr &inference_context) {
   GE_CHECK_NOTNULL(node);
   inference_context = std::shared_ptr<InferenceContext>(InferenceContext::Create(resource_context_mgr));
@@ -879,7 +880,7 @@ graphStatus ShapeRefiner::UpdateInputOutputDesc(const NodePtr &node) {
   const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
   for (const auto &out_anchor : node->GetAllOutDataAnchors()) {
-    auto output_tensor = op_desc->MutableOutputDesc(static_cast<uint32_t>(out_anchor->GetIdx()));
+    auto const output_tensor = op_desc->MutableOutputDesc(static_cast<uint32_t>(out_anchor->GetIdx()));
     GE_IF_BOOL_EXEC(output_tensor == nullptr, continue);
     GE_IF_BOOL_EXEC(output_tensor->MutableShape().GetDims().empty(),
                     output_tensor->SetOriginShape(output_tensor->GetShape()));

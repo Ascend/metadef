@@ -85,10 +85,11 @@ class ModelSerializeImp {
   bool HandleNodeNameRef();
 
   bool UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto);
-  void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_in,
-                       std::vector<std::string> &key_out, std::vector<uint32_t> &value_in,
-                       std::vector<uint32_t> &value_out, const std::vector<std::string> &opt_input) const;
-  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto, const bool is_dump = false) const;
+  void AttrDefToOpDescIn(OpDescPtr &op_desc, std::vector<std::string> &key_in, std::vector<uint32_t> &value_in) const;
+  void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_out, std::vector<uint32_t> &value_out,
+                       const std::vector<std::string> &opt_input) const;
+  void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
+                       const bool is_dump = false) const;
 
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
 
@@ -106,9 +107,10 @@ class ModelSerializeImp {
 
   void FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc) const;
 
-  void ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &opt_input,
-                           std::vector<std::string> &key_in, std::vector<uint32_t> &value_in,
-                           std::vector<std::string> &key_out, std::vector<uint32_t> &value_out) const;
+  void ExtractMetaDataAttrIn(proto::OpDef &op_def_proto, std::vector<std::string> &opt_input,
+                             std::vector<std::string> &key_in, std::vector<uint32_t> &value_in) const;
+  void ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &key_out,
+                           std::vector<uint32_t> &value_out) const;
 
   std::vector<NodeNameGraphReq> graph_input_node_names_;
   std::vector<NodeNameGraphReq> graph_output_node_names_;
