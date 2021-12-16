@@ -20,6 +20,9 @@
 #define private public
 
 #include "external/graph/operator.h"
+#include "external/graph/operator_factory.h"
+#include "external/graph/attr_value.h"
+#include "graph/ge_attr_value.h"
 #include "graph/operator_impl.h"
 #include "external/graph/tensor.h"
 #include "graph/utils/op_desc_utils.h"
@@ -443,6 +446,31 @@ TEST_F(UtestOperater, SetSubgraphBuilder) {
   SubgraphBuilder builder = []() {return Graph();};
   op.SetSubgraphBuilder(name.c_str(), index, builder);
   op.SetSubgraphBuilder(nullptr, index, builder);
+
+  SubgraphBuilder builder2;
+  builder2 = op.GetSubgraphBuilder(name);
+
+  SubgraphBuilder builder3;
+  builder3 = op.GetDynamicSubgraphBuilder(nullptr, 0);
+  builder3 = op.GetDynamicSubgraphBuilder("add", 0);
+
+  std::vector<std::string> vec_name;
+  vec_name = op.GetSubgraphNames();
+  EXPECT_EQ(vec_name.size(), 0);
+
+  op.GetSubgraph(nullptr);
+  Graph graph = op.GetSubgraph(name);
+  EXPECT_EQ(graph.GetName(), "");
+
+  graph = op.GetSubgraph("add");
+  EXPECT_EQ(graph.GetName(), "");
+
+  op.GetDynamicSubgraph(nullptr, 0);
+  graph = op.GetDynamicSubgraph(name, 0);
+  EXPECT_EQ(graph.GetName(), "");
+
+  graph = op.GetDynamicSubgraph("add", 0);
+  EXPECT_EQ(graph.GetName(), "");
 }
 
 TEST_F(UtestOperater, GetSubgraphImpl) {
@@ -751,7 +779,7 @@ TEST_F(UtestOperater, AddControlInput_Exception) {
   EXPECT_EQ(op1.IsEmpty(), ret.IsEmpty());
 }
 
-TEST_F(UtestOperater, SetAttr1) {
+TEST_F(UtestOperater, SetAttr_char_array) {
   Operator op1;
   Operator op2;
 
@@ -776,7 +804,7 @@ TEST_F(UtestOperater, SetAttr1) {
   op1.SetAttr(nullptr, nullptr);
 }
 
-TEST_F(UtestOperater, SetAttr2) {
+TEST_F(UtestOperater, SetAttr_AscendString) {
   Operator op1;
   Operator op2;
 
@@ -787,17 +815,265 @@ TEST_F(UtestOperater, SetAttr2) {
   char_t *name = "data name";
   AscendString attr_value = "abc";
 
+  op1.SetAttr(nullptr, attr_value);
   op2 = op1.SetAttr(name, attr_value);
 
   std::string value2;
   op2.GetAttr(name, value2);
-
   EXPECT_EQ(value2, std::string("abc"));
 
-  op1.SetAttr(nullptr, attr_value);
+  AscendString value3;
+  EXPECT_EQ(op2.GetAttr(nullptr, value3), GRAPH_FAILED);
 }
 
+TEST_F(UtestOperater, SetAttr_vector_AscendString) {
+  Operator op1;
+  Operator op2;
 
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
 
+  char_t *name = "data name";
+  std::vector<AscendString> attr_value = {AscendString("abc"), AscendString("def")};
 
+  op2 = op1.SetAttr(name, attr_value);
+
+  std::vector<AscendString> value2;
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2[1].GetString(), std::string("def"));
+
+  op1.SetAttr(nullptr, attr_value);
+  EXPECT_EQ(op2.GetAttr(nullptr, value2), GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, SetAttr_vector_AscendString2) {
+  Operator op1;
+  Operator op2;
+
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  char_t *name = "data name";
+  std::vector<AscendString> attr_value = {AscendString("abc"), AscendString("def")};
+
+  op2 = op1.SetAttr(name, attr_value);
+
+  std::vector<AscendString> value2;
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2[1].GetString(), std::string("def"));
+
+  op2 = op1.SetAttr(nullptr, attr_value);
+  EXPECT_EQ(op2.GetAttr(nullptr, value2), GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, SetAttr_Tensor) {
+  Operator op1;
+  Operator op2;
+
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  char_t *name = "data name";
+  TensorDesc tensor_desc;
+  std::vector<uint8_t> data = {1, 2, 3};
+  Tensor attr_value(tensor_desc, data);
+
+  op2 = op1.SetAttr(name, attr_value);
+
+  Tensor value2;
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2.GetSize(), attr_value.GetSize());
+}
+
+TEST_F(UtestOperater, SetAttr_Tensor2) {
+  Operator op1;
+  Operator op2;
+
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+
+  std::string name = "data name";
+  TensorDesc tensor_desc;
+  std::vector<uint8_t> data = {1, 2, 3};
+  Tensor attr_value(tensor_desc, data);
+
+  op2 = op1.SetAttr(name, attr_value);
+
+  Tensor value2;
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2.GetSize(), attr_value.GetSize());
+}
+
+TEST_F(UtestOperater, SetAttr_vector_Tensor) {
+  Operator op1;
+  Operator op2;
+
+  op1 = Operator("Data");
+  std::vector<Tensor> attr_value = {Tensor()};
+
+  std::string name = "data name";
+  op2 = op1.SetAttr(name, attr_value);
+
+  std::vector<Tensor>  value2;
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2.size(), attr_value.size());
+}
+
+TEST_F(UtestOperater, SetAttr_vector_Tensor2) {
+  Operator op1;
+  Operator op2;
+
+  op1 = Operator("Data");
+  std::vector<Tensor> attr_value = {Tensor()};
+
+  op1.SetAttr(nullptr, attr_value);
+
+  char_t *name = "data name";
+  op2 = op1.SetAttr(name, attr_value);
+
+  std::vector<Tensor>  value2;
+  op2.GetAttr(nullptr, value2);
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2.size(), attr_value.size());
+}
+
+TEST_F(UtestOperater, SetAttr_OpBytes) {
+  Operator op1;
+  Operator op2;
+
+  op1 = Operator("Data");
+  auto attr_value = OpBytes{1, 2, 3};
+
+  op1.SetAttr(nullptr, attr_value);
+
+  char_t *name = "data name";
+  op2 = op1.SetAttr(name, attr_value);
+
+  OpBytes  value2;
+  op2.GetAttr(nullptr, value2);
+  op2.GetAttr(name, value2);
+
+  EXPECT_EQ(value2.size(), attr_value.size());
+}
+
+TEST_F(UtestOperater, SetAttr_OpBytes2) {
+  Operator op1;
+  Operator op2;
+
+  op1 = Operator("Data");
+  auto attr_value = OpBytes{1, 2, 3};
+
+  std::string name = "data name";
+  op2 = op1.SetAttr(name, attr_value);
+
+  OpBytes  value2;
+  op2.GetAttr(name, value2);
+  EXPECT_EQ(value2.size(), attr_value.size());
+}
+
+TEST_F(UtestOperater, SetAttr_AttrValue) {
+  Operator op;
+  op = Operator("Data");
+  AttrValue attr_value;
+  op.SetAttr(nullptr, std::move(attr_value));
+
+  char_t *name = "data name";
+  op.SetAttr(name, 10);
+  AttrValue attr_value2;
+
+  EXPECT_EQ(op.GetAttr(name, attr_value2), GRAPH_SUCCESS);
+  int64_t value = 0;
+  attr_value2.GetValue<int64_t>(value);
+  EXPECT_EQ(value, 10);
+
+  char_t *name2 = "foo";
+  op.SetAttr(name2, std::move(attr_value2));
+  AttrValue attr_value3;
+  op.GetAttr(name2, attr_value3);
+  attr_value3.GetValue<int64_t>(value);
+  EXPECT_EQ(value, 10);
+
+  AttrValue attr_value4;
+  op.GetAttr(std::string(name2), attr_value4);
+  attr_value4.GetValue<int64_t>(value);
+  EXPECT_EQ(value, 10);
+}
+
+TEST_F(UtestOperater, SetAttr_vector_DataType) {
+  Operator op;
+  op = Operator("Data");
+
+  char_t *name = "data name";
+  std::vector<ge::DataType> attr_value = {DT_INT8, DT_INT16, DT_INT32};
+
+  op.SetAttr(nullptr, attr_value);
+  op.SetAttr(name, attr_value);
+
+  std::vector<ge::DataType> attr_value_out;
+
+  op.GetAttr(nullptr, attr_value_out);
+  op.GetAttr(name, attr_value_out);
+
+  EXPECT_EQ(attr_value_out[2], DT_INT32);
+}
+
+TEST_F(UtestOperater, SetAttr_vector_DataType2) {
+  Operator op;
+  op = Operator("Data");
+
+  std::string name = "data name";
+  std::vector<ge::DataType> attr_value = {DT_INT8, DT_INT16, DT_INT32};
+
+  op.SetAttr(name, attr_value);
+
+  std::vector<ge::DataType> attr_value_out;
+
+  op.GetAttr(name, attr_value_out);
+
+  EXPECT_EQ(attr_value_out[1], DT_INT16);
+}
+
+TEST_F(UtestOperater, SetAttr_DataType) {
+  Operator op;
+  op = Operator("Data");
+
+  char_t *name = "data name";
+  ge::DataType attr_value = DT_INT16;
+
+  op.SetAttr(nullptr, attr_value);
+  op.SetAttr(name, attr_value);
+
+  ge::DataType attr_value_out;
+
+  op.GetAttr(nullptr, attr_value_out);
+  op.GetAttr(name, attr_value_out);
+
+  EXPECT_EQ(attr_value_out, DT_INT16);
+}
+
+TEST_F(UtestOperater, SetAttr_DataType2) {
+  Operator op;
+  op = Operator("Data");
+
+  std::string name = "data name";
+  ge::DataType attr_value = DT_INT16;
+
+  op.SetAttr(name, attr_value);
+
+  ge::DataType attr_value_out;
+
+  op.GetAttr(name, attr_value_out);
+
+  EXPECT_EQ(attr_value_out, DT_INT16);
+}
 }  // namespace ge

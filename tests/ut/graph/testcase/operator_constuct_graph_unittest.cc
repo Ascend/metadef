@@ -17,6 +17,7 @@
 #include "graph/operator_reg.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/attr_value.h"
+#include "external/graph/operator_factory.h"
 
 namespace ge {
 REG_OP(Const)
@@ -211,6 +212,7 @@ TEST_F(OperatorConstructGraphUt, SetGetAttrOk) {
   op.SetAttr("Hello", 10);
   EXPECT_EQ(op.GetAttr("Hello", value), GRAPH_SUCCESS);
   EXPECT_EQ(value, 10);
+  op = OperatorFactory::CreateOperator(nullptr, "OCG3");
 }
 
 TEST_F(OperatorConstructGraphUt, SetGetAttrByAnyValueOk) {
@@ -324,7 +326,6 @@ TEST_F(OperatorConstructGraphUt, SetGetSubgraphBuilderOk1) {
   auto then_graph = if_op.get_subgraph_builder_then_branch()();
   EXPECT_EQ(then_graph.GetName(as), GRAPH_SUCCESS);
   EXPECT_EQ(strcmp(as.GetString(), "FromSubgraphBuilder2"), 0);
-
   EXPECT_EQ(if_op.GetSubgraphBuilder("Hello"), nullptr);
 }
 
@@ -347,5 +348,57 @@ TEST_F(OperatorConstructGraphUt, SetGetSubgraphBuilderOk2) {
   auto case3 = case_op.get_dynamic_subgraph_builder_branches(2)();
   EXPECT_EQ(case3.GetName(as), GRAPH_SUCCESS);
   EXPECT_EQ(strcmp(as.GetString(), "case3"), 0);
+}
+
+TEST_F(OperatorConstructGraphUt, GetOpsTypeList) {
+  std::vector<std::string> all_ops;
+  auto ret = OperatorFactory::GetOpsTypeList(all_ops);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(all_ops.size(), 8);
+
+  std::vector<AscendString> all_ops2;
+  ret = OperatorFactory::GetOpsTypeList(all_ops2);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(all_ops2.size(), 8);
+}
+
+TEST_F(OperatorConstructGraphUt, InferFuncRegister) {
+  InferShapeFunc infer_shape_func;
+  InferShapeFuncRegister(nullptr, infer_shape_func);
+  InferShapeFuncRegister("OCG3", infer_shape_func);
+  InferShapeFuncRegister(std::string("OCG3"), infer_shape_func);
+
+  InferFormatFunc infer_format_func;
+  InferFormatFuncRegister(nullptr, infer_format_func);
+  InferFormatFuncRegister("OCG3", infer_format_func);
+  InferFormatFuncRegister(std::string("OCG3"), infer_format_func);
+
+  VerifyFunc verify_func;
+  VerifyFuncRegister(nullptr, verify_func);
+  VerifyFuncRegister("OCG3", verify_func);
+  VerifyFuncRegister(std::string("OCG3"), verify_func);
+}
+
+TEST_F(OperatorConstructGraphUt, IsExistOp) {
+  Operator op;
+  op = OperatorFactory::CreateOperator("op", "OCG3");
+
+  OpCreator op_creator;
+  OperatorCreatorRegister( std::string("OCG3"), op_creator);
+
+  bool ret = OperatorFactory::IsExistOp(nullptr);
+  EXPECT_FALSE(ret);
+  ret = OperatorFactory::IsExistOp("add");
+  EXPECT_FALSE(ret);
+
+  std::string op_type = "add";
+  ret = OperatorFactory::IsExistOp(op_type);
+  EXPECT_FALSE(ret);
+
+  ret = OperatorFactory::IsExistOp("OCG3");
+  EXPECT_TRUE(ret);
+
+  ret = OperatorFactory::IsExistOp(std::string("OCG3"));
+  EXPECT_TRUE(ret);
 }
 }  // namespace ge

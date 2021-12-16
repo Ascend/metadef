@@ -194,4 +194,35 @@ TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
   EXPECT_EQ(ShapeRefiner::InferShapeAndType(enter1, true), GRAPH_FAILED);
 }
 
+TEST_F(UtestShapeRefiner, UpdateOutputForMultiBatch) {
+  auto graph = CreateGraphWithMultiSubgraph();
+  graph->SetGraphUnknownFlag(false);
+  auto subgraph = graph->GetSubgraph("sub_graph1");
+  auto relu = subgraph->FindNode("sub_relu1");
+
+  auto op = OpDescUtils::CreateOperatorFromNode(relu);
+
+  auto ret = ShapeRefiner::InferShapeAndType(relu, op, false);
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(UtestShapeRefiner, InferShapeAndType) {
+  auto graph = CreateGraphWithMultiSubgraph();
+  graph->SetGraphUnknownFlag(false);
+  auto subgraph = graph->GetSubgraph("sub_graph1");
+  auto relu = subgraph->FindNode("sub_relu1");
+
+  ShapeRefiner::ClearContextMap();
+
+  auto subgraph3 = graph->GetSubgraph("sub_graph3");
+  auto relu2 = subgraph3->FindNode("sub_relu2");
+
+  InferenceContextPtr inference_context;
+  ShapeRefiner::CreateInferenceContext(relu2, inference_context);
+  ShapeRefiner::PushToContextMap(relu2, inference_context);
+
+  auto ret = ShapeRefiner::InferShapeAndType(relu);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
 } // namespace ge
