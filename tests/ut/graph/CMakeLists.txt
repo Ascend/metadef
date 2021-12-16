@@ -80,6 +80,7 @@ set(UT_FILES
     "testcase/tensor_utils_unittest.cc"
     "testcase/compile_cache_policy_hasher_unittest.cc"
     "testcase/compile_cache_policy_unittest.cc"
+    "testcase/compute_graph_unittest.cc"
     "testcase/profiler_unittest.cc"
     "testcase/ge_graph_dumper_unittest.cc"
     "testcase/file_utils_unittest.cc"
