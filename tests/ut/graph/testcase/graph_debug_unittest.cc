@@ -107,18 +107,18 @@ ComputeGraphPtr BuildGraphPartitionCall() {
 }
 
 TEST_F(UtestGraphDebugPrinter, Normal) {
-	auto graph = BuildGraphPartitionCall();
-	EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(graph, "./p.graph"), GRAPH_SUCCESS);
+    auto graph = BuildGraphPartitionCall();
+    EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(graph, "./p.graph"), GRAPH_SUCCESS);
 }
 
 
 TEST_F(UtestGraphDebugPrinter, Abnormal) {
-	std::ostringstream out;
-	GraphDebugPrinter::DumpNodeToDot(nullptr, out);
-	GraphDebugPrinter::DumpEdgeToDot(nullptr, out, 1);
-	EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(nullptr, "p2.graph", 1), GRAPH_SUCCESS);
-	GraphPtr gp = std::make_shared<Graph>("graph");
-	EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(*gp, "p1.graph"), GRAPH_SUCCESS);
+    std::ostringstream out;
+    GraphDebugPrinter::DumpNodeToDot(nullptr, out);
+    GraphDebugPrinter::DumpEdgeToDot(nullptr, out, 1);
+    EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(nullptr, "p2.graph", 1), GRAPH_SUCCESS);
+    GraphPtr gp = std::make_shared<Graph>("graph");
+    EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(*gp, "p1.graph"), GRAPH_SUCCESS);
 }
 
 
