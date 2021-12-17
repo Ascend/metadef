@@ -74,6 +74,7 @@ set(UT_FILES
     "testcase/transformer_transfer_shape_ut.cc"
     "testcase/op_imp_unittest.cc"
     "testcase/operator_constuct_graph_unittest.cc"
+    "testcase/opsproto_manager_unittest.cc"
     "testcase/format_refiner_unittes.cc"
     "testcase/model_serialize_unittest.cc"
     "testcase/ref_relation_unittes.cc"

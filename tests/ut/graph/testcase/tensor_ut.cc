@@ -550,11 +550,12 @@ TEST_F(TensorUT, TensorUtils_GetSteExtMeta) {
 }
 
 TEST_F(TensorUT, Tensor_Construct3) {
-  std::vector<int64_t> shape{3};
-  uint8_t *data = new uint8_t[3]{1, 2, 3};
-  size_t size = 3;
+  std::vector<int64_t> shape{4};
+  uint8_t *data = new uint8_t[4]{1, 2, 3, 4};
+  size_t size = 4;
   TensorDesc tensor_desc(Shape(shape), FORMAT_ND, DT_UINT8);
   Tensor tensor(tensor_desc, data, size);
+  EXPECT_EQ(tensor.GetSize(), 4);
 }
 
 TEST_F(TensorUT, Tensor_Construct4) {
@@ -562,6 +563,7 @@ TEST_F(TensorUT, Tensor_Construct4) {
   std::vector<int64_t> shape{3};
   TensorDesc tensor_desc(Shape(shape), FORMAT_ND, DT_UINT8);
   Tensor tensor(std::move(tensor_desc), std::move(value));
+  EXPECT_EQ(tensor.GetSize(), 3);
 }
 
 TEST_F(TensorUT, Tensor_SetData) {
@@ -622,9 +624,10 @@ TEST_F(TensorUT, TensorDesc_Construct1) {
   TensorDesc tensor_desc4 = std::move(tensor_desc3);
 
   tensor_desc4.Update(Shape(shape), FORMAT_ND, DT_UINT16);
+  EXPECT_EQ(tensor_desc4.GetDataType(), DT_UINT16);
 
   TensorDesc tensor_desc5;
-  tensor_desc5.GetShape();
+  EXPECT_EQ(tensor_desc5.GetShape().GetShapeSize(), 0);
 }
 
 TEST_F(TensorUT, TensorDesc_GetSetShape) {
