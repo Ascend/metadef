@@ -41,9 +41,9 @@ graphStatus ListListIntSerializer::Serialize(const AnyValue &av, proto::AttrDef 
 }
 graphStatus ListListIntSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av) {
   std::vector<std::vector<int64_t>> values;
-  for (size_t idx = 0U; idx < static_cast<size_t>(def.list_list_int().list_list_i_size()); ++idx) {
+  for (auto idx = 0; idx < def.list_list_int().list_list_i_size(); ++idx) {
     std::vector<int64_t> vec;
-    for (size_t i = 0U; i < static_cast<size_t>(def.list_list_int().list_list_i(idx).list_i_size()); ++i) {
+    for (auto i = 0; i < def.list_list_int().list_list_i(idx).list_i_size(); ++i) {
       vec.push_back(def.list_list_int().list_list_i(idx).list_i(i));
     }
     values.push_back(vec);

@@ -246,7 +246,7 @@ enum Placement {
 /// @return
 ///
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-const char *GetFormatName(Format format);
+const char_t *GetFormatName(Format format);
 
 class TensorTypeImpl;
 struct TensorType {

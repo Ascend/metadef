@@ -66,7 +66,6 @@ class OnnxUtils {
 
   static bool ConvertGeModelToModelProto(const ge::Model &model, ge::onnx::ModelProto &model_proto);
 
-  static bool ConvertModelProtoToGeModel(const ge::onnx::ModelProto &model_proto, ge::Model &model);
 
  private:
   // Part 1: from IR convert to ONNX Protobuf
@@ -157,8 +156,6 @@ class OnnxUtils {
 
   // Parse node name and index
   static bool ParseNameAndIndex(const std::string &node_name_index, std::string &node_name, int32_t &idx);
-
-  static ge::DataType DecodeDataType(const ge::onnx::TensorProto_DataType data_type);
 
   static void DecodeAttribute(const ge::onnx::AttributeProto &attr_proto, std::vector<std::string> &strings);
 
