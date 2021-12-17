@@ -30,11 +30,12 @@ if (ENABLE_OPEN_SRC)
     endif ()
 endif()
 
+if (NOT ENABLE_MS_TESTCASES)
+    target_link_libraries(graph_static PRIVATE
+        ascend_protobuf_static
+    )
 
-target_link_libraries(graph_static PRIVATE
-    ascend_protobuf_static
-)
-
-target_link_libraries(register_static PRIVATE
-    ascend_protobuf_static
-)
+    target_link_libraries(register_static PRIVATE
+        ascend_protobuf_static
+    )
+endif()
