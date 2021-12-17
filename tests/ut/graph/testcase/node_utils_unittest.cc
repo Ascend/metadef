@@ -937,5 +937,9 @@ TEST_F(UtestNodeUtils, IsSubgraphOutput) {
   EXPECT_EQ(NodeUtils::IsSubgraphOutput(partitioncall_0_const1), false);
 }
 
+TEST_F(UtestNodeUtils, IsDynamicShape_Null) {
+  EXPECT_EQ(NodeUtils::IsDynamicShape(nullptr), false);
+}
+
 
 }  // namespace ge
