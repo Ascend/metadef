@@ -18,6 +18,7 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/attr_value.h"
 #include "external/graph/operator_factory.h"
+#include "graph/operator_factory_impl.h"
 
 namespace ge {
 REG_OP(Const)
@@ -362,6 +363,11 @@ TEST_F(OperatorConstructGraphUt, GetOpsTypeList) {
   EXPECT_EQ(all_ops2.size(), 11);
 }
 
+static graphStatus stub_func(Operator &op)
+{
+  return GRAPH_SUCCESS;
+}
+
 TEST_F(OperatorConstructGraphUt, InferFuncRegister) {
   InferShapeFunc infer_shape_func;
   InferShapeFuncRegister(nullptr, infer_shape_func);
@@ -373,10 +379,12 @@ TEST_F(OperatorConstructGraphUt, InferFuncRegister) {
   InferFormatFuncRegister("OCG3", infer_format_func);
   InferFormatFuncRegister(std::string("OCG3"), infer_format_func);
 
-  VerifyFunc verify_func;
+  VerifyFunc verify_func = stub_func;
   VerifyFuncRegister(nullptr, verify_func);
   VerifyFuncRegister("OCG3", verify_func);
   VerifyFuncRegister(std::string("OCG3"), verify_func);
+
+  EXPECT_NE(OperatorFactoryImpl::GetVerifyFunc("OCG3"), nullptr);
 }
 
 TEST_F(OperatorConstructGraphUt, IsExistOp) {
