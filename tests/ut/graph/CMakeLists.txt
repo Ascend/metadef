@@ -90,6 +90,8 @@ set(UT_FILES
     "testcase/ge_context_unittest.cc"
     "testcase/anchor_utils_unittest.cc"
     "testcase/attributes_holder_unittest.cc"
+    "testcase/graph_debug_unittest.cc"
+    "testcase/tuning_utils_unittest.cc"
 )
 
 add_executable(ut_graph ${UT_FILES})
