@@ -369,21 +369,22 @@ static graphStatus stub_func(Operator &op)
 }
 
 TEST_F(OperatorConstructGraphUt, InferFuncRegister) {
-  InferShapeFunc infer_shape_func;
+  InferShapeFunc infer_shape_func = stub_func;
   InferShapeFuncRegister(nullptr, infer_shape_func);
   InferShapeFuncRegister("OCG3", infer_shape_func);
   InferShapeFuncRegister(std::string("OCG3"), infer_shape_func);
+  EXPECT_NE(OperatorFactoryImpl::GetInferShapeFunc("OCG3"), nullptr);
 
-  InferFormatFunc infer_format_func;
+  InferFormatFunc infer_format_func = stub_func;
   InferFormatFuncRegister(nullptr, infer_format_func);
   InferFormatFuncRegister("OCG3", infer_format_func);
   InferFormatFuncRegister(std::string("OCG3"), infer_format_func);
+  EXPECT_NE(OperatorFactoryImpl::GetInferFormatFunc("OCG3"), nullptr);
 
   VerifyFunc verify_func = stub_func;
   VerifyFuncRegister(nullptr, verify_func);
   VerifyFuncRegister("OCG3", verify_func);
   VerifyFuncRegister(std::string("OCG3"), verify_func);
-
   EXPECT_NE(OperatorFactoryImpl::GetVerifyFunc("OCG3"), nullptr);
 }
 
