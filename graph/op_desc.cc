@@ -660,7 +660,7 @@ graphStatus OpDescImpl::UpdateOutputDesc(const std::string &name, const ge::GeTe
 
 const GeTensorDesc &OpDescImpl::GetOutputDesc(const uint32_t index) const {
   GE_CHK_BOOL_RET_STATUS_NOLOG(static_cast<size_t>(index) < outputs_desc_.size(), InvalidGeTensorDesc());
-  return *(outputs_desc_[static_cast<size_t>(index)].get());
+  return *(outputs_desc_[index].get());
 }
 
 const GeTensorDesc &OpDescImpl::GetOutputDesc(const std::string &name) const {
@@ -1338,6 +1338,10 @@ graphStatus OpDesc::AddInputDescMiddle(const std::string &name, const uint32_t n
 
 graphStatus OpDesc::AddOutputDescMiddle(const std::string &name, const uint32_t num, const size_t index) {
   return impl_->AddOutputDescMiddle(name, num, index);
+}
+
+graphStatus OpDesc::AddInputDescForward(const std::string &name, const uint32_t num) {
+  return impl_->AddInputDescForward(name, num);
 }
 
 graphStatus OpDesc::AddOutputDescForward(const std::string &name, const uint32_t num) {
