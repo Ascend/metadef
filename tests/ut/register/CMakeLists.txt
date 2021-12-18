@@ -45,6 +45,9 @@ set(REGISTER_UT_FILES
     "testcase/tensor_assign_unittest.cc"
     "testcase/scope_pattern_unittest.cc"
     "testcase/scope_util_unittest.cc"
+    "testcase/register_pass_unittest.cc"
+    "testcase/ops_kernel_builder_registry_unittest.cc"
+    "testcase/op_kernel_registry_unittest.cc"
 )
 add_executable(ut_register
     ${REGISTER_UT_FILES}
