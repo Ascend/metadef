@@ -27,6 +27,7 @@
 #include "graph/ge_attr_value.h"
 #include "graph/op_desc_impl.h"
 #include "graph/operator.h"
+#include "graph/utils/mem_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/constant_utils.h"
