@@ -43,6 +43,8 @@ set(REGISTER_UT_FILES
     "testcase/graph_fusion_clycle_detection_unittest.cc"
     "testcase/auto_mapping_util_unittest.cc"
     "testcase/tensor_assign_unittest.cc"
+    "testcase/scope_pattern_unittest.cc"
+    "testcase/scope_util_unittest.cc"
 )
 add_executable(ut_register
     ${REGISTER_UT_FILES}
