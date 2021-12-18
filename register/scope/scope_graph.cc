@@ -991,7 +991,7 @@ void ScopeTree::ScopeTreeImpl::AddNodeToScope(ge::OperatorPtr &node_def) {
     if (i == (scopes.size() - 1U)) {
       impl->AddNode(node_def);
     } else {
-      Scope *sub_scope = impl->GetSubScope(scopes[i]);
+      Scope *sub_scope = impl->GetSubScope(scopes[static_cast<uint64_t>(i)]);
       if (sub_scope == nullptr) {
         sub_scope = new (std::nothrow) Scope();
         if (sub_scope == nullptr) {
@@ -1023,14 +1023,14 @@ std::vector<std::string> ScopeTree::ScopeTreeImpl::SplitNodeName(const std::stri
   items = ge::StringUtils::Split(node_name, delim);
   std::string scope;
   for (uint32_t i = 0U; i < items.size(); ++i) {
-    if (items[i].length() == 0U) {
+    if (items[static_cast<uint64_t>(i)].length() == 0U) {
       continue;
     }
 
     if (i == 0U) {
-      scope = items[i];
+      scope = items[static_cast<uint64_t>(i)];
     } else {
-      scope = scope + items[i];
+      scope = scope + items[static_cast<uint64_t>(i)];
     }
 
     if (i != (items.size() - 1U)) {
@@ -1169,7 +1169,7 @@ bool ScopeGraph::ScopeGraphImpl::IsFusionOpChild(const std::string &node_name,
   return find;
 }
 
-bool ScopeGraph::ScopeGraphImpl::FusionOpChildIgnore(const ScopeFusionOpInfo &info) const {
+bool ScopeGraph::ScopeGraphImpl::FusionOpChildIgnore(const ScopeFusionOpInfo &info) {
   if ((!(GetFusionResultInputOrOutput(info, true).empty())) ||
       (!(GetFusionResultInputOrOutput(info, false).empty()))) {
     return false;

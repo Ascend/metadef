@@ -32,8 +32,8 @@
 #include "register/register_utils.h"
 #include "graph/graph.h"
 
-using namespace domi::tensorflow;
 namespace domi {
+using namespace domi::tensorflow;
 /*lint -e1073*/
 namespace {
 const std::string kDefaultFormat = "ND";
@@ -100,44 +100,36 @@ std::set<std::string> GetSubgraphAttrNames(const ge::Operator &op) {
 /// \return
 Status AutoMappingFunction(const std::pair<std::string, domi::tensorflow::AttrValue> &func_attr,
                            std::shared_ptr<ge::OpDesc> &op_desc) {
-  switch (func_attr.second.value_case()) {
-    case domi::tensorflow::AttrValue::kFunc:
-    {
-      const auto &func_signature = func_attr.second.func().name();
-      const auto ret = ge::OpDescUtils::SetSubgraphInstanceName(func_attr.first, func_signature, op_desc);
+ if (func_attr.second.value_case() == domi::tensorflow::AttrValue::kFunc) {
+    const auto &func_signature = func_attr.second.func().name();
+    if (ge::OpDescUtils::SetSubgraphInstanceName(func_attr.first, func_signature, op_desc) != ge::GRAPH_SUCCESS) {
+      GE_LOGE("Failed to set subgraph instance %s for node %s type %s, instance name %s",
+              func_attr.first.c_str(), op_desc->GetName().c_str(),
+              op_desc->GetType().c_str(), func_signature.c_str());
+      return FAILED;
+    }
+  } else if (func_attr.second.value_case() == domi::tensorflow::AttrValue::kList) {
+    uint32_t i = 0U;
+    for (auto &dyn_func_attr : func_attr.second.list().func()) {
+      const auto &func_signature = dyn_func_attr.name();
+      const auto subgraph_name = func_attr.first + std::to_string(i++);
+      auto ret = op_desc->AddSubgraphName(subgraph_name);
       if (ret != ge::GRAPH_SUCCESS) {
-        GE_LOGE("Failed to set subgraph instance %s for node %s type %s, instance name %s",
-            func_attr.first.c_str(), op_desc->GetName().c_str(),
-            op_desc->GetType().c_str(), func_signature.c_str());
+        GE_LOGE("Failed to add subgraph name %s to node %s type %s",
+                subgraph_name.c_str(), op_desc->GetName().c_str(), op_desc->GetType().c_str());
         return FAILED;
       }
-      break;
-    }
-    case domi::tensorflow::AttrValue::kList:
-    {
-      uint32_t i = 0U;
-      for (auto &dyn_func_attr : func_attr.second.list().func()) {
-        const auto &func_signature = dyn_func_attr.name();
-        const auto subgraph_name = func_attr.first + std::to_string(i++);
-        auto ret = op_desc->AddSubgraphName(subgraph_name);
-        if (ret != ge::GRAPH_SUCCESS) {
-          GE_LOGE("Failed to add subgraph name %s to node %s type %s",
-              subgraph_name.c_str(), op_desc->GetName().c_str(), op_desc->GetType().c_str());
-          return FAILED;
-        }
-        ret = ge::OpDescUtils::SetSubgraphInstanceName(subgraph_name, func_signature, op_desc);
-        if (ret != ge::GRAPH_SUCCESS) {
-          GE_LOGE("Failed to set dynamic subgraph instance %s for node %s type %s, instance name %s",
-                  func_attr.first.c_str(), op_desc->GetName().c_str(),
-                  op_desc->GetType().c_str(), func_signature.c_str());
-          return FAILED;
-        }
+      ret = ge::OpDescUtils::SetSubgraphInstanceName(subgraph_name, func_signature, op_desc);
+      if (ret != ge::GRAPH_SUCCESS) {
+        GE_LOGE("Failed to set dynamic subgraph instance %s for node %s type %s, instance name %s",
+                func_attr.first.c_str(), op_desc->GetName().c_str(),
+                op_desc->GetType().c_str(), func_signature.c_str());
+        return FAILED;
       }
-      break;
     }
-    default:
-      GE_LOGE("Unexpected attr value type %d for func", static_cast<int32_t>(func_attr.second.value_case()));
-      return FAILED;
+  } else {
+    GE_LOGE("Unexpected attr value type %d for func", static_cast<int32_t>(func_attr.second.value_case()));
+    return FAILED;
   }
   return SUCCESS;
 }
@@ -527,9 +519,9 @@ namespace {
   }
 }
 
-Status AutoMappingSubgraphOutput(const ge::ComputeGraphPtr &graph,
-                                 const std::function<Status(int32_t netoutput_index,
-                                                            int32_t &parent_output_index)> &output) {
+static Status AutoMappingSubgraphOutput(const ge::ComputeGraphPtr &graph,
+                                        const std::function<Status(int32_t netoutput_index,
+                                                                   int32_t &parent_output_index)> &output) {
   GE_CHECK_NOTNULL(graph);
   GE_CHECK_NOTNULL(output);
   const auto &output_node = graph->FindFirstNodeMatchType(ge::NETOUTPUT);
@@ -568,7 +560,7 @@ Status AutoMappingSubgraphOutput(const ge::ComputeGraphPtr &graph,
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY
-Status AutoMappingSubgraphIndexByDataNode(const ge::ComputeGraphPtr &compute_graph,
+static Status AutoMappingSubgraphIndexByDataNode(const ge::ComputeGraphPtr &compute_graph,
     const std::function<Status(int32_t data_index, int32_t &parent_input_index)> &input) {
   const auto nodes = FindNodesByType(compute_graph, "Data");
   for (size_t i = 0U; i < nodes.size(); ++i) {
@@ -620,7 +612,7 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
       return FAILED;
     }
     int32_t parent_index = -1;
-    ret = output(index, parent_index);
+    ret = output(static_cast<int32_t>(index), parent_index);
     if (ret != SUCCESS) {
       GELOGE(FAILED, "[Get][ParentIndex:output]retval index %ld, error code %u", index, ret);
       return FAILED;

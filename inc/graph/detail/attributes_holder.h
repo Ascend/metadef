@@ -88,7 +88,7 @@ class GeIrProtoHelper {
   inline ProtoType *GetProtoMsg() const {
     return protoMsg_;
   }
-  void CopyValueFrom(const GeIrProtoHelper<const ProtoType> &other) const{
+  void CopyValueFrom(const GeIrProtoHelper<const ProtoType> &other) {
     if ((other.protoMsg_ != nullptr) && (protoMsg_ != nullptr)) {
       *protoMsg_ = *other.protoMsg_;
     }
