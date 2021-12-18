@@ -28,10 +28,14 @@ namespace ge {
 class OpDescImpl;
 class MetaDataStore {
  public:
-  using SmallIntVector = SmallVector<int64_t, static_cast<size_t>(kDefaultMaxInputNum)>;
+  using SmallIntVector = SmallVector<int64_t, kDefaultMaxInputNum>;
   MetaDataStore() = default;
   ~MetaDataStore() = default;
   MetaDataStore(std::string name, std::string type) : name_(std::move(name)), type_(std::move(type)) {}
+  const string &GetName() const {return name_;}
+  const string &GetType() const {return type_;}
+  const vector<std::string> &GetInputs() const {return inputs_;}
+  bool HasOutAttr() const {return has_out_attr_;}
   int64_t GetId() const {return id_;}
   int64_t GetStreamId() const {return stream_id_;}
   const vector<std::string> &GetInputNames() const {return input_names_;}
@@ -155,6 +159,7 @@ class OpDescImpl {
   std::function<graphStatus(Operator &)> GetInferFunc() const;
   std::function<graphStatus(Operator &)> GetVerifyFunc() const;
   void AddInferFunc(const std::function<graphStatus(Operator &)> &func);
+  std::function<graphStatus(Operator &)> GetInferFormatFunc() const;
   void AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func);
   void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
 

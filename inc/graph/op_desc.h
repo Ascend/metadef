@@ -94,6 +94,8 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus AddInputDesc(const uint32_t index, const ge::GeTensorDesc &input_desc);
 
+  graphStatus AddInputDescForward(const std::string &name, const uint32_t num);
+
   graphStatus AddInputDescMiddle(const std::string &name, const uint32_t num, const size_t index);
 
   graphStatus AddOutputDescMiddle(const std::string &name, const uint32_t num, const size_t index);

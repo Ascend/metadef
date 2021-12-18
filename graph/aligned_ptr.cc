@@ -17,8 +17,6 @@
 #include "graph/aligned_ptr.h"
 #include "graph/utils/mem_utils.h"
 #include "graph/debug/ge_log.h"
-#include "graph/debug/ge_util.h"
-#include "graph/def_types.h"
 
 namespace ge {
 AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
@@ -31,7 +29,11 @@ AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
     return;
   }
 
-  base_ = ComGraphMakeUnique<uint8_t[]>(alloc_size);
+  base_ =
+    std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(new (std::nothrow) uint8_t[alloc_size], [](const uint8_t *ptr) {
+    delete[] ptr;
+    ptr = nullptr;
+  });
   if (base_ == nullptr) {
     GELOGW("[Allocate][Buffer] Allocate buffer failed, size=%zu", alloc_size);
     return;
@@ -42,7 +44,7 @@ AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
   } else {
     const size_t offset = alignment - 1U;
     aligned_addr_ =
-        reinterpret_cast<uint8_t *>((PtrToValue(static_cast<void *>(base_.get())) + offset) & ~offset);
+        reinterpret_cast<uint8_t *>((static_cast<size_t>(reinterpret_cast<uintptr_t>(base_.get())) + offset) & ~offset);
   }
 }
 
