@@ -593,7 +593,4 @@ TEST_F(UtestOpDescUtils, SetWeights) {
   EXPECT_EQ(OpDescUtils::SetWeights(*const1, weights_map), GRAPH_PARAM_INVALID);
 }
 
-
-
-
 }
