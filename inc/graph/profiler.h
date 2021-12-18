@@ -52,8 +52,11 @@ class Profiler {
   void UpdateHashByIndex(const int64_t index, const uint64_t hash);
   void RegisterString(int64_t index, const std::string &str);
   void RegisterStringHash(int64_t index, uint64_t hash, const std::string &str);
-  void Record(int64_t element, int64_t thread, int64_t event, EventType et);
+  void Record(int64_t element, int64_t thread, int64_t event, EventType et,
+              std::chrono::time_point<std::chrono::system_clock> time_point);
   void RecordCurrentThread(int64_t element, int64_t event, EventType et);
+  void RecordCurrentThread(int64_t element, int64_t event, EventType et,
+                           std::chrono::time_point<std::chrono::system_clock> time_point);
 
   void Reset();
   void Dump(std::ostream &out_stream) const;
