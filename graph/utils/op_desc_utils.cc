@@ -704,7 +704,7 @@ OpDescUtils::SetWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &we
         return GRAPH_PARAM_INVALID;
       }
       const auto const_node = owner_graph->AddNodeFront(const_opdesc);
-      if (node.AddLinkFrom(static_cast<const uint32_t>(pair.first), const_node) != GRAPH_SUCCESS) {
+      if (node.AddLinkFrom(static_cast<uint32_t>(pair.first), const_node) != GRAPH_SUCCESS) {
         REPORT_CALL_ERROR("E19999", "op %s add const to input index[%d] failed", node.GetName().c_str(), pair.first);
         GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] op %s add const to input index[%d] failed",
                node.GetName().c_str(), pair.first);
@@ -901,7 +901,7 @@ OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name, const ui
 /// @return OpDescPtr
 ///
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescBuilder::Build() {
-  const OpDescPtr op_desc = shared_ptr<OpDesc>(new (std::nothrow) OpDesc(name_, type_));
+  const OpDescPtr op_desc = MakeShared<OpDesc>(name_, type_);
   if (op_desc == nullptr) {
     REPORT_CALL_ERROR("E19999", "create opdesc failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
     GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
