@@ -201,6 +201,18 @@ TEST_F(UtestTuningUtils, HandlePld) {
     ut::GraphBuilder builder = ut::GraphBuilder("graph");
     auto node0 = builder.AddNode("Data0", "Data", 1, 1);
     EXPECT_EQ(TuningUtils::HandlePld(node0), FAILED);
+    AttrUtils::SetStr(node0->GetOpDesc(), "parentOpType", "Hello world");
+    AttrUtils::SetStr(node0->GetOpDesc(), "_parentNodeName", "Hello world0");
+    AttrUtils::SetInt(node0->GetOpDesc(), "anchorIndex", 1);
+    AttrUtils::SetStr(node0->GetOpDesc(), "_peerNodeName", "Hello world0");
+    EXPECT_EQ(TuningUtils::HandlePld(node0), FAILED);
+    auto node2 = builder.AddNode("placeholder2", PLACEHOLDER, 1, 1);
+    auto node3 = builder.AddNode("data3", DATA, 1, 1);
+    AttrUtils::SetStr(node2->GetOpDesc(), "parentOpType", "Hello world");
+    AttrUtils::SetStr(node2->GetOpDesc(), "_parentNodeName", "Hello world0");
+    AttrUtils::SetInt(node2->GetOpDesc(), "anchorIndex", 1);
+    AttrUtils::SetStr(node2->GetOpDesc(), "_peerNodeName", "Hello world0");
+    EXPECT_EQ(TuningUtils::HandlePld(node2), SUCCESS);
 }
 
 TEST_F(UtestTuningUtils, CreateNetOutput) {
@@ -269,6 +281,8 @@ TEST_F(UtestTuningUtils, HandleEnd) {
 TEST_F(UtestTuningUtils, ConvertFileToGraph) {
     std::map<int64_t, std::string> options;
     Graph g;
+    EXPECT_EQ(TuningUtils::ConvertFileToGraph(options, g), SUCCESS);
+    options[1] = "opt1";
     EXPECT_EQ(TuningUtils::ConvertFileToGraph(options, g), SUCCESS);
 }
 
@@ -388,6 +402,27 @@ TEST_F(UtestTuningUtils, RemoveDataNetoutputEdge_FindNode) {
     EXPECT_EQ(TuningUtils::RemoveDataNetoutputEdge(graph), SUCCESS);
     TuningUtils::netoutput_nodes_.clear();
     TuningUtils::data_node_2_end_node_.clear();
+}
+
+TEST_F(UtestTuningUtils, MergeAllSubGraph) {
+    auto builder0 = ut::GraphBuilder("sub0");
+    const auto &placeholder_0 = builder0.AddNode("placeholder_0", PLACEHOLDER, 0, 1);
+    const auto &placeholder_1 = builder0.AddNode("placeholder_1", PLACEHOLDER, 1, 1);
+    auto graph0 = builder0.GetGraph();
+    auto builder1 = ut::GraphBuilder("sub1");
+    const auto &placeholder_2 = builder1.AddNode("placeholder_2", PLACEHOLDER, 0, 1);
+    const auto &placeholder_3 = builder1.AddNode("placeholder_3", PLACEHOLDER, 1, 1);
+    auto graph1 = builder1.GetGraph();
+    std::vector<ComputeGraphPtr> vec;
+    vec.push_back(graph0);
+    vec.push_back(graph1);
+    auto output_builder = ut::GraphBuilder("output");
+    auto output_graph = output_builder.GetGraph();
+    TuningUtils::merged_graph_nodes_.push_back(placeholder_0);
+    TuningUtils::merged_graph_nodes_.push_back(placeholder_1);
+    TuningUtils::merged_graph_nodes_.push_back(placeholder_2);
+    TuningUtils::merged_graph_nodes_.push_back(placeholder_3);
+    EXPECT_EQ(TuningUtils::MergeAllSubGraph(vec, output_graph), GRAPH_FAILED);
 }
 
 } // namespace ge
