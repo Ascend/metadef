@@ -183,7 +183,7 @@ class ScopeGraph::ScopeGraphImpl {
   const std::unordered_map<std::string, ge::OperatorPtr> &GetNodesMap() const { return nodes_map_; }
   const std::map<std::string, ge::OperatorPtr> &GetNodesMapNew() const { return nodes_map_new_; }
   bool IsFusionOpChild(const std::string &node_name, std::vector<ScopeFusionOpInfo> &info_list);
-  bool FusionOpChildIgnore(const ScopeFusionOpInfo &info);
+  bool FusionOpChildIgnore(const ScopeFusionOpInfo &info) const;
   bool IsFusionOp(const domi::tensorflow::NodeDef *node_def);
   Status GetInputOrOutputIndex(const ScopeFusionOpInfo &info, int32_t old_index, bool input, int32_t &new_index);
 

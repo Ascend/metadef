@@ -1169,7 +1169,7 @@ bool ScopeGraph::ScopeGraphImpl::IsFusionOpChild(const std::string &node_name,
   return find;
 }
 
-bool ScopeGraph::ScopeGraphImpl::FusionOpChildIgnore(const ScopeFusionOpInfo &info) {
+bool ScopeGraph::ScopeGraphImpl::FusionOpChildIgnore(const ScopeFusionOpInfo &info) const {
   if ((!(GetFusionResultInputOrOutput(info, true).empty())) ||
       (!(GetFusionResultInputOrOutput(info, false).empty()))) {
     return false;

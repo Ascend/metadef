@@ -50,8 +50,8 @@ class ScopeBasePass::ScopeBasePassImpl {
 
   bool MatchOneBatch(const ScopeTree *const scope_tree, const std::vector<ScopePattern *> &patternlist,
                      std::vector<Scope *> &results);
-  bool MatchOneScope(const ScopePattern *pattern, Scope *scope, std::vector<Scope *> &results);
-  Status PrintFusionScopeInfo(std::shared_ptr<ScopeGraph> &scope_graph);
+  static bool MatchOneScope(const ScopePattern *pattern, Scope *scope, std::vector<Scope *> &results);
+  static Status PrintFusionScopeInfo(std::shared_ptr<ScopeGraph> &scope_graph);
 
  private:
   std::vector<ScopeFusionPatterns> patterns_;
