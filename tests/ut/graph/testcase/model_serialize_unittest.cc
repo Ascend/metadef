@@ -955,3 +955,150 @@ TEST(UTEST_ge_model_unserialize, UnserializeModelTest)
     bool ret = serialize.UnserializeModel(model_def, model);
     EXPECT_EQ(ret, false);
 }
+
+TEST(UTEST_ge_model_unserialize, SerializeGraphGraphIsNull)
+{
+    ge::ModelSerializeImp model_serialize_imp;
+    ConstComputeGraphPtr graph;
+    proto::GraphDef *graph_proto;
+    bool is_dump;
+    bool ret = model_serialize_imp.SerializeGraph(graph, graph_proto, is_dump);
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, SerializeAllAttrsFromAnyMapMutableAttrIsNull)
+{
+    ge::ModelSerializeImp model_serialize_imp;
+    std::map<std::string, AnyValue> attr_map;
+    google::protobuf::Map<std::string, ::ge::proto::AttrDef> *mutable_attr = nullptr;
+    bool ret = model_serialize_imp.SerializeAllAttrsFromAnyMap(attr_map, mutable_attr);
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, DeserializeAllAttrsToAttrHolderHolderIsNull)
+{
+    ge::ModelSerializeImp model_serialize_imp;
+    google::protobuf::Map<std::string, ::ge::proto::AttrDef> proto_attr_map;
+    AttrHolder *attr_holder = nullptr;
+    bool ret = model_serialize_imp.DeserializeAllAttrsToAttrHolder(proto_attr_map, attr_holder);
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, UnserializeModelDataIsNull)
+{
+    ge::ModelSerialize serialize;
+    uint8_t *data = nullptr;
+    size_t len; 
+    Model model;
+    bool ret = serialize.UnserializeModel(data, len, model);
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, HandleNodeNameEdgesSrcNodeIsNull)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test1");
+    auto dst_node = builder.AddNode("dst_node", "NetOutput", 1, 0);
+    NodeNameNodeReq node_req("src_node", 1, dst_node, 0, "dst_node");
+    model_impl.node_input_node_names_.push_back(node_req);
+    bool ret = model_impl.HandleNodeNameRef();
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, HandleNodeNameEdgesSrcAnchorIsNull)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test1");
+    auto dst_node = builder.AddNode("dst_node", "NetOutput", 1, 0);
+    NodeNameNodeReq node_req("src_node", 1, dst_node, 0, "dst_node");
+    model_impl.node_input_node_names_.push_back(node_req);
+    model_impl.node_map_.insert(pair<std::string, NodePtr>("src_node", dst_node));
+    bool ret = model_impl.HandleNodeNameRef();
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, HandleNodeNameControlEdgeSuccess)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test1");
+    auto dst_node = builder.AddNode("dst_node", "NetOutput", 1, 0);
+    NodeNameNodeReq node_req("src_node", -1, dst_node, 0, "dst_node");
+    model_impl.node_input_node_names_.push_back(node_req);
+    model_impl.node_map_.insert(pair<std::string, NodePtr>("src_node", dst_node));
+    bool ret = model_impl.HandleNodeNameRef();
+    EXPECT_EQ(ret, true);
+}
+
+TEST(UTEST_ge_model_unserialize, HandleNodeNameGraphInputNodeMapIsNull)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test");
+    auto graph = builder.GetGraph();
+    NodeNameGraphReq graph_req("node1", 1, graph);
+    model_impl.graph_input_node_names_.push_back(graph_req);
+    bool ret = model_impl.HandleNodeNameRef();
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, HandleNodeNameGraphInputFail)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test");
+    auto graph = builder.GetGraph();
+    auto node1 = builder.AddNode("node1", "NetOutput", 1, 0);
+    NodeNameGraphReq graph_req("node1", 1, graph);
+    model_impl.graph_input_node_names_.push_back(graph_req);
+    model_impl.node_map_.insert(pair<std::string, NodePtr>("node1", nullptr));
+    bool ret = model_impl.HandleNodeNameRef();
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, HandleNodeNameGraphOutputNodeMapIsNull)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test");
+    auto graph = builder.GetGraph();
+    NodeNameGraphReq graph_req("node1", 1, graph);
+    model_impl.graph_output_node_names_.push_back(graph_req);
+    bool ret = model_impl.HandleNodeNameRef();
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, HandleNodeNameGraphOutputSuccess)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test");
+    auto graph = builder.GetGraph();
+    auto node1 = builder.AddNode("node1", "Data", 1, 0);
+    NodeNameGraphReq graph_req("node1", 1, graph);
+    model_impl.graph_output_node_names_.push_back(graph_req);
+    model_impl.node_map_.insert(pair<std::string, NodePtr>("node1", node1));
+    bool ret = model_impl.HandleNodeNameRef();
+    EXPECT_EQ(ret, true);
+}
+
+TEST(UTEST_ge_model_unserialize, UnserializeGraphFail)
+{
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test");
+    auto graph = builder.GetGraph();
+    NodeNameGraphReq graph_req("node1", 1, graph);
+    model_impl.graph_input_node_names_.push_back(graph_req);
+    proto::GraphDef graph_proto;
+    bool ret = model_impl.UnserializeGraph(graph, graph_proto);
+    EXPECT_EQ(ret, false);
+}
+
+TEST(UTEST_ge_model_unserialize, UnserializeModelFail)
+{
+    proto::ModelDef model_proto;
+    auto attrs = model_proto.add_graph()->add_op()->mutable_attr();
+    Model model;
+    ge::ModelSerializeImp model_impl;
+    auto builder = ut::GraphBuilder("test");
+    auto graph = builder.GetGraph();
+    NodeNameGraphReq graph_req("node1", 1, graph);
+    model_impl.graph_input_node_names_.push_back(graph_req);
+    bool ret = model_impl.UnserializeModel(model, model_proto);
+    EXPECT_EQ(ret, false);
+}

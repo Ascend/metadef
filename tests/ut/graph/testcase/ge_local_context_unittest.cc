@@ -113,4 +113,38 @@ TEST_F(UtestGeLocalContext, GetAllOptionsTest) {
     std::string ret_value3 = options_all["555"];
     EXPECT_EQ(ret_value3, "eee");
 }
+
+TEST_F(UtestGeLocalContext, GetGraphOptionSuccess) {
+    GEThreadLocalContext ge_local_context;
+    std::map<std::string, std::string> graph_maps;
+    std::string graph_key1 = "test1";
+    std::string graph_value1 = "node1";
+    std::string graph_key2 = "test2";
+    std::string graph_value2 = "node2";
+    graph_maps.insert(std::make_pair(graph_key1, graph_value1));
+    graph_maps.insert(std::make_pair(graph_key2, graph_value2));
+    ge_local_context.SetGraphOption(graph_maps);
+
+    std::string find_key = "test1";
+    std::string option;
+    int ret =  ge_local_context.GetOption(find_key, option);
+    EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGeLocalContext, GetGlobalOptionSuccess) {
+    GEThreadLocalContext ge_local_context;
+    std::map<std::string, std::string> graph_maps;
+    std::string global_key1 = "global1";
+    std::string global_value1 = "node1";
+    std::string global_key2 = "global2";
+    std::string global_value2 = "node2";
+    graph_maps.insert(std::make_pair(global_key1, global_value1));
+    graph_maps.insert(std::make_pair(global_key2, global_value2));
+    ge_local_context.SetGlobalOption(graph_maps);
+
+    std::string find_key = "global1";
+    std::string option;
+    int ret =  ge_local_context.GetOption(find_key, option);
+    EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
 } // namespace ge

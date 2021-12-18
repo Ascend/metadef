@@ -193,6 +193,37 @@ ComputeGraphPtr BuildGraphWithSubGraph() {
 }
 } // namespace
 
+namespace {
+class UtestComputeGraphBuilder : public ComputeGraphBuilder {
+ public:
+  virtual ComputeGraphPtr Build(graphStatus &error_code, std::string &error_msg) {
+    auto graph = std::make_shared<ComputeGraph>("test");
+    auto op_desc = std::make_shared<OpDesc>("node", "node");
+    NodePtr node = graph->AddNode(op_desc);
+    std::map<std::string, NodePtr> node_names_;
+    node_names_.insert(pair<std::string, NodePtr>("node", node));
+    return graph;
+  }
+
+  NodePtr GetNode(const std::string &name);
+  std::vector<NodePtr> GetAllNodes();
+  void BuildNodes(graphStatus &error_code, std::string &error_msg);
+};
+
+NodePtr UtestComputeGraphBuilder::GetNode(const std::string &name) {
+  return ComputeGraphBuilder::GetNode(name);
+}
+
+std::vector<NodePtr> UtestComputeGraphBuilder::GetAllNodes() {
+  return ComputeGraphBuilder::GetAllNodes();
+}
+
+void UtestComputeGraphBuilder::BuildNodes(graphStatus &error_code, std::string &error_msg) {
+  return ComputeGraphBuilder::BuildNodes(error_code, error_msg);
+}
+
+} // namespace
+
 class UtestGraphUtils : public testing::Test {
  protected:
   void SetUp() {}
@@ -1524,6 +1555,338 @@ TEST_F(UtestGraphUtils, MergeNetOutputNodeSuccess) {
   
   int ret = GraphUtils::MergeNetOutputNode(graph);
   EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, RemoveJustNodeGraphImplIsNull) {
+  ComputeGraph compute_graph("");
+  compute_graph.impl_ = nullptr;
+  auto graph_builder0 = ut::GraphBuilder("Test0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  int ret = GraphUtils::RemoveJustNode(compute_graph, node0);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, GetNodeFail) {
+  UtestComputeGraphBuilder graph;
+  NodePtr node_ptr = graph.GetNode("node1");
+  EXPECT_EQ(node_ptr, nullptr);
+}
+
+TEST_F(UtestGraphUtils, GetAllNodeNodeSizeIs0) {
+  UtestComputeGraphBuilder graph;
+  std::vector<NodePtr> node_ptr = graph.GetAllNodes();
+  EXPECT_EQ(node_ptr.size(), 0);
+}
+
+TEST_F(UtestGraphUtils, BuildExistNodesTest) {
+  PartialGraphBuilder builder;
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+  builder.BuildExistNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_SUCCESS);
+  EXPECT_EQ(msg, "");
+
+  builder.exist_nodes_.push_back(nullptr);
+  builder.BuildExistNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+
+  builder.exist_nodes_.clear();
+  auto gbuilder = ut::GraphBuilder("test2");
+  auto node = gbuilder.AddNode("node", DATA, 1, 1);
+  auto opdsc = std::make_shared<OpDesc>("node1", "node");
+  builder.AddExistNode(node);
+  builder.AddNode(opdsc);
+  EXPECT_EQ(builder.exist_nodes_.size(), 1);
+  builder.BuildExistNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+
+  err = GRAPH_SUCCESS;
+  msg = "";
+  builder.owner_graph_ = node->GetOwnerComputeGraph();
+  builder.BuildExistNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_SUCCESS);
+  EXPECT_EQ(msg, "");
+}
+
+TEST_F(UtestGraphUtils, PartialGraphBuilderBuildTest) {
+  PartialGraphBuilder par_graph_builder;
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+  ComputeGraphPtr computer_graph;
+  computer_graph = par_graph_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "graph is NULL.");
+  EXPECT_EQ(computer_graph, nullptr);
+
+  auto builder = ut::GraphBuilder("test1");
+  auto node = builder.AddNode("node", DATA, 1, 1);
+  par_graph_builder.SetOwnerGraph(node->GetOwnerComputeGraph());
+  computer_graph = par_graph_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "graph is NULL.");
+  EXPECT_EQ(computer_graph, nullptr);
+}
+
+TEST_F(UtestGraphUtils, CompleteGraphBuilderBuilder) {
+  CompleteGraphBuilder complete_builder("");
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  complete_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_SUCCESS);
+  EXPECT_EQ(msg, "");
+}
+
+TEST_F(UtestGraphUtils, CompleteGraphBuilderBuildGraphTargets) {
+  CompleteGraphBuilder complete_builder("test1");
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  //node_names_ is null
+  complete_builder.AddTarget("Data_1");
+  complete_builder.BuildGraphTargets(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+}
+
+TEST_F(UtestGraphUtils, BuildNetOutputNodeWithLinkTest) {
+  CompleteGraphBuilder complete_builder("test1");
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+  auto builder = ut::GraphBuilder("test2");
+  auto node = builder.AddNode("node", DATA, 1, 1);
+  auto node2 = builder.AddNode("node2", NETOUTPUT, 1, 0);
+  complete_builder.owner_graph_ = node->GetOwnerComputeGraph();
+
+  OpDescPtr net_output_desc;
+  std::vector<OutDataAnchorPtr> peer_out_anchors;
+  complete_builder.BuildNetOutputNodeWithLink(net_output_desc, peer_out_anchors, err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+
+  err = GRAPH_SUCCESS;
+  msg = "";
+  net_output_desc = std::make_shared<OpDesc>("test", "test");
+  complete_builder.AddTarget("Data_1");
+  complete_builder.BuildNetOutputNodeWithLink(net_output_desc, peer_out_anchors, err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+
+  err = GRAPH_SUCCESS;
+  msg = "";
+  uint32_t index = 1;
+  complete_builder.input_mapping_.insert(pair<uint32_t, uint32_t>(1, 0));
+  auto ret_node = complete_builder.AddDataNode(index, err, msg);
+  EXPECT_EQ(ret_node, complete_builder.node_names_["Data_1"]);
+  complete_builder.BuildNetOutputNodeWithLink(net_output_desc, peer_out_anchors, err, msg);
+  EXPECT_EQ(err, GRAPH_SUCCESS);
+  EXPECT_EQ(msg, "");
+}
+
+TEST_F(UtestGraphUtils, AddDataNodeTest) {
+  CompleteGraphBuilder complete_builder("test1");
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  auto builder = ut::GraphBuilder("test2");
+  auto node = builder.AddNode("node", DATA, 1, 1);
+
+  uint32_t index = 1;
+  complete_builder.input_mapping_.insert(pair<uint32_t, uint32_t>(1, 1));
+  complete_builder.owner_graph_ = node->GetOwnerComputeGraph();
+
+  auto ret_node = complete_builder.AddDataNode(index, err, msg);
+  EXPECT_EQ(err, GRAPH_SUCCESS);
+  EXPECT_EQ(msg, "");
+  EXPECT_EQ(ret_node, complete_builder.node_names_["Data_1"]);
+}
+
+TEST_F(UtestGraphUtils, AddNetOutputNodeTest) {
+  CompleteGraphBuilder complete_builder("test1");
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  // graph_outputs_ and graph_targets_ is null
+  complete_builder.AddNetOutputNode(err, msg);
+  EXPECT_EQ(err, GRAPH_SUCCESS);
+  EXPECT_EQ(msg, "");
+
+  // node_names_ is null
+  complete_builder.AddTarget("Data_1");
+  complete_builder.graph_outputs_.push_back(pair<std::string, uint32_t>("Data_1", 0));
+  complete_builder.AddNetOutputNode(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+
+  // node is nullptr
+  err = GRAPH_SUCCESS;
+  msg = "";
+  complete_builder.node_names_.insert(pair<std::string, NodePtr>("Data_1", nullptr));
+  complete_builder.AddNetOutputNode(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "AddNetOutputNode failed: node is NULL.");
+}
+
+TEST_F(UtestGraphUtils, AddRetValNodesTest) {
+  CompleteGraphBuilder complete_builder("test1");
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  //node_names_ is null
+  complete_builder.graph_outputs_.push_back(pair<std::string, uint32_t>("Data_1", 0));
+  complete_builder.AddRetValNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "AddRetValNode failed: node Data_1 not exist in graph.");
+ 
+  //node_names_ node is nullptr
+  err = GRAPH_SUCCESS;
+  msg = "";
+  complete_builder.node_names_.insert(pair<std::string, NodePtr>("Data_1", nullptr));
+  complete_builder.AddRetValNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "AddRetValNode failed: node is NULL.");
+
+  //node_names_ node is not nullptr
+  auto builder = ut::GraphBuilder("test2");
+  auto node = builder.AddNode("node", DATA, 1, 0);
+  complete_builder.owner_graph_ = node->GetOwnerComputeGraph();
+  
+  complete_builder.node_names_.clear();
+  complete_builder.node_names_.insert(pair<std::string, NodePtr>("Data_1", node));
+  complete_builder.output_mapping_.insert(pair<uint32_t, uint32_t>(0, 0));
+  err = GRAPH_SUCCESS;
+  msg = "";
+  complete_builder.AddRetValNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+}
+
+TEST_F(UtestGraphUtils, BuildCtrlLinksTest) {
+  PartialGraphBuilder par_builder;
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  auto builder = ut::GraphBuilder("test1");
+  auto node = builder.AddNode("node_input", DATA, 1, 1);
+  auto node2 = builder.AddNode("node_output", NETOUTPUT, 1, 1);
+  par_builder.SetOwnerGraph(node->GetOwnerComputeGraph());
+
+  par_builder.AddControlLink("node_input", "node_output");
+  ComputeGraphPtr graph;
+  graph = par_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+  EXPECT_EQ(graph, nullptr);
+
+  par_builder.node_names_.insert(pair<std::string, NodePtr>("node_input", nullptr));
+  par_builder.node_names_.insert(pair<std::string, NodePtr>("node_output", nullptr));
+  err = GRAPH_SUCCESS;
+  msg = "";
+  graph = par_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+  EXPECT_EQ(graph, nullptr);
+
+  par_builder.node_names_.clear();
+  par_builder.node_names_.insert(pair<std::string, NodePtr>("node_input", node));
+  par_builder.node_names_.insert(pair<std::string, NodePtr>("node_output", node2));
+  err = GRAPH_SUCCESS;
+  msg = "";
+  graph = par_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_SUCCESS);
+  EXPECT_EQ(msg, "");
+  EXPECT_EQ(graph, node->GetOwnerComputeGraph());
+}
+
+TEST_F(UtestGraphUtils, BuildDataLinksTest) {
+  PartialGraphBuilder par_builder;
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  auto builder = ut::GraphBuilder("test1");
+  auto node = builder.AddNode("node_input", DATA, 1, 1);
+  auto node2 = builder.AddNode("node_output", NETOUTPUT, 1, 1);
+  par_builder.SetOwnerGraph(node->GetOwnerComputeGraph());
+
+  par_builder.AddDataLink("node_input", 1, "node_output", 1);
+  ComputeGraphPtr graph;
+  graph = par_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+  EXPECT_EQ(graph, nullptr);
+
+  par_builder.node_names_.insert(pair<std::string, NodePtr>("node_input", nullptr));
+  par_builder.node_names_.insert(pair<std::string, NodePtr>("node_output", nullptr));
+  err = GRAPH_SUCCESS;
+  msg = "";
+  graph = par_builder.Build(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_NE(msg, "");
+  EXPECT_EQ(graph, nullptr);
+}
+
+TEST_F(UtestGraphUtils, PostProcessTest) {
+  CompleteGraphBuilder complete_builder("test1");
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  auto builder = ut::GraphBuilder("test2");
+  auto node1 = builder.AddNode("node1", DATA, 1, 1);
+  auto owner_graph = node1->GetOwnerComputeGraph();
+  complete_builder.owner_graph_ = owner_graph;
+  
+  auto builder2 = ut::GraphBuilder("test3");
+  auto node2 = builder2.AddNode("node", "node", 1, 1);
+  complete_builder.parent_node_ = node2;
+  auto parent_graph = complete_builder.parent_node_->GetOwnerComputeGraph();
+  
+  std::string graph_id;
+  AttrUtils::SetStr(parent_graph, ATTR_NAME_SESSION_GRAPH_ID, graph_id);
+
+  AnyValue any_value;
+  any_value.SetValue(1);
+  complete_builder.parent_node_->GetOwnerComputeGraph()->SetAttr(ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED, any_value);
+  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED, true);
+  
+  complete_builder.PostProcess(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "Copy attr _dynamic_shape_partitioned failed.");
+}
+
+
+TEST_F(UtestGraphUtils, GetRefMappingTest) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test0");
+  auto op_desc = std::make_shared<OpDesc>("node1", "node1");
+  graph->AddNode(op_desc);
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::GetRefMapping(graph, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestGraphUtils, ComputeGraphBuilderBuildNodesTest) {
+  UtestComputeGraphBuilder utest_graph_builder;
+  graphStatus err = GRAPH_SUCCESS;
+  std::string msg = "";
+
+  //owner_graph_ is null
+  utest_graph_builder.BuildNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "graph is NULL.");
+
+  //nodes_ is null
+  auto builder = ut::GraphBuilder("test1");
+  auto node1 = builder.AddNode("node1", DATA, 1, 1);
+  auto owner_graph = node1->GetOwnerComputeGraph();
+  utest_graph_builder.owner_graph_ = owner_graph;
+  err = GRAPH_SUCCESS;
+  msg = "";
+  utest_graph_builder.nodes_.push_back(nullptr);
+  utest_graph_builder.BuildNodes(err, msg);
+  EXPECT_EQ(err, GRAPH_FAILED);
+  EXPECT_EQ(msg, "op_desc is NULL.");
 }
 
 }  // namespace ge
