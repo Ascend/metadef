@@ -48,6 +48,8 @@ set(REGISTER_UT_FILES
     "testcase/register_pass_unittest.cc"
     "testcase/ops_kernel_builder_registry_unittest.cc"
     "testcase/op_kernel_registry_unittest.cc"
+    "testcase/fusion_statistics.cc"
+    "testcase/register_graph_fusion.cc"
 )
 add_executable(ut_register
     ${REGISTER_UT_FILES}
