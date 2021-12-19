@@ -137,14 +137,14 @@ class GraphUtils {
                                       ComputeGraphPtr &dst_compute_graph,
                                       std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                       std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
-                                      int32_t depth);
+                                      const int32_t depth);
 
   static graphStatus CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph,
                                        ComputeGraphPtr &dst_compute_graph,
                                        std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                        std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                                        std::unordered_map<std::string, NodePtr> &all_new_nodes,
-                                       int32_t depth);
+                                       const int32_t depth);
 
   static graphStatus CopyMembers(const ComputeGraphPtr &src_compute_graph,
                                  ComputeGraphPtr &dst_compute_graph,
@@ -166,19 +166,19 @@ class GraphUtils {
   static graphStatus InsertNodeAfter(const OutDataAnchorPtr &src,
                                      const std::vector<InDataAnchorPtr> &dsts,
                                      const NodePtr &insert_node,
-                                     uint32_t input_index = 0U,
-                                     uint32_t output_index = 0U);
+                                     const uint32_t input_index = 0U,
+                                     const uint32_t output_index = 0U);
 
   static graphStatus InsertNodeBefore(const InDataAnchorPtr &dst,
                                       const NodePtr &insert_node,
-                                      uint32_t input_index = 0U,
-                                      uint32_t output_index = 0U);
+                                      const uint32_t input_index = 0U,
+                                      const uint32_t output_index = 0U);
 
-  static graphStatus RemoveJustNode(ComputeGraphPtr compute_graph, const NodePtr &node);
+  static graphStatus RemoveJustNode(const ComputeGraphPtr compute_graph, const NodePtr &node);
 
   static graphStatus RemoveJustNode(ComputeGraph &compute_graph, const NodePtr &node);
 
-  static void RecordOriginalNames(std::vector<ge::NodePtr> original_nodes, const ge::NodePtr &node);
+  static void RecordOriginalNames(const std::vector<ge::NodePtr> original_nodes, const ge::NodePtr &node);
 
   static void RecordOriginalNames(std::vector<std::string> names_tmp, const ge::NodePtr &node);
 
@@ -195,9 +195,9 @@ class GraphUtils {
   static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
                                        const std::string &file_path,
                                        const int64_t dump_level);
-  static bool LoadGEGraph(const char_t *file, ge::ComputeGraph &compute_graph);
+  static bool LoadGEGraph(const char_t *const file, ge::ComputeGraph &compute_graph);
 
-  static bool LoadGEGraph(const char_t *file, ge::ComputeGraphPtr &compute_graph);
+  static bool LoadGEGraph(const char_t *const file, ge::ComputeGraphPtr &compute_graph);
 
   static void BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_nodes_infos);
 
@@ -206,7 +206,7 @@ class GraphUtils {
   static void DumpGrphToOnnx(const ge::ComputeGraph &compute_graph,
                              const std::string &path, const std::string &suffix);
 
-  static bool ReadProtoFromTextFile(const char_t *file, google::protobuf::Message *proto);
+  static bool ReadProtoFromTextFile(const char_t *file, google::protobuf::Message *const proto);
 
   static void WriteProtoToTextFile(const google::protobuf::Message &proto, const char_t *real_path);
 
@@ -269,8 +269,8 @@ class GraphUtils {
   /// @return
   ///
   static graphStatus ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
-                                            std::initializer_list<int32_t> inputs_map,
-                                            std::initializer_list<int32_t> outputs_map);
+                                            const std::initializer_list<int32_t> inputs_map,
+                                            const std::initializer_list<int32_t> outputs_map);
 
   static graphStatus ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
                                             const std::vector<int32_t> &inputs_map,
@@ -519,8 +519,8 @@ class ComputeGraphBuilder {
   /// @param [in] in_anchor_ind
   /// @return ComputeGraphBuilder
   ///
-  virtual ComputeGraphBuilder &AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
-                                           const std::string &dst_name, uint32_t in_anchor_ind);
+  virtual ComputeGraphBuilder &AddDataLink(const std::string &src_name, const uint32_t out_anchor_ind,
+                                           const std::string &dst_name, const uint32_t in_anchor_ind);
 
   ///
   /// @brief Add ctrl-link among nodes in graph
@@ -636,7 +636,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] anchor_inds
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder &SetInput(uint32_t index, const std::vector<std::string> &node_names,
+  CompleteGraphBuilder &SetInput(const uint32_t index, const std::vector<std::string> &node_names,
                                  const std::vector<uint32_t> &anchor_inds);
 
   ///
@@ -644,7 +644,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] index
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder &SetUselessInput(uint32_t index);
+  CompleteGraphBuilder &SetUselessInput(const uint32_t index);
 
   ///
   /// @brief Add output anchor for graph
@@ -706,7 +706,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [out] error_msg
   /// @return void
   ///
-  NodePtr AddDataNode(uint32_t index, graphStatus &error_code, std::string &error_msg);
+  NodePtr AddDataNode(const uint32_t index, graphStatus &error_code, std::string &error_msg);
 
   ///
   /// @brief Add RetVal nodes
@@ -789,8 +789,8 @@ class PartialGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] in_anchor_ind
   /// @return PartialGraphBuilder
   ///
-  PartialGraphBuilder &AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
-                                   const std::string &dst_name, uint32_t in_anchor_ind) override;
+  PartialGraphBuilder &AddDataLink(const std::string &src_name, const uint32_t out_anchor_ind,
+                                   const std::string &dst_name, const uint32_t in_anchor_ind) override;
 
   ///
   /// @brief Add ctrl-link among nodes in graph

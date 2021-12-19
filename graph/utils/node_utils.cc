@@ -127,7 +127,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::ClearRecvI
   return GRAPH_SUCCESS;
 }
 
-graphStatus NodeUtils::GetSingleOutputNodeOfNthLayer(const NodePtr &src, int depth, NodePtr &dst) {
+graphStatus NodeUtils::GetSingleOutputNodeOfNthLayer(const NodePtr &src, const int32_t depth, NodePtr &dst) {
   GE_CHECK_NOTNULL(src);
   NodePtr cur_ptr;
   if (depth < 1) {
@@ -437,7 +437,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::UpdatePeer
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, uint32_t num) {
+graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
@@ -468,7 +468,7 @@ graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, uint32_t num) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, uint32_t num) {
+graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
@@ -496,7 +496,7 @@ graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, uint32_t num) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, uint32_t num) {
+graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "Input node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
@@ -527,7 +527,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, uint32_t num) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus NodeUtils::RemoveOutputAnchor(const NodePtr &node, uint32_t num) {
+graphStatus NodeUtils::RemoveOutputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "Input node is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
@@ -581,21 +581,21 @@ bool NodeUtils::IsInNodesEmpty(const Node &node) {
 
   return true;
 }
-GeTensorDesc NodeUtils::GetOutputDesc(const Node &node, uint32_t index) {
+GeTensorDesc NodeUtils::GetOutputDesc(const Node &node, const uint32_t index) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GeTensorDesc();
   }
   return desc->GetOutputDesc(index);
 }
-GeTensorDesc NodeUtils::GetInputDesc(const Node &node, uint32_t index) {
+GeTensorDesc NodeUtils::GetInputDesc(const Node &node, const uint32_t index) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GeTensorDesc();
   }
   return desc->GetInputDesc(index);
 }
-graphStatus NodeUtils::UpdateOutputShape(const Node &node, uint32_t index, const GeShape &shape) {
+graphStatus NodeUtils::UpdateOutputShape(const Node &node, const uint32_t index, const GeShape &shape) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GRAPH_PARAM_INVALID;
@@ -607,7 +607,7 @@ graphStatus NodeUtils::UpdateOutputShape(const Node &node, uint32_t index, const
   output_desc->SetShape(shape);
   return GRAPH_SUCCESS;
 }
-graphStatus NodeUtils::UpdateInputShape(const Node &node, uint32_t index, const GeShape &shape) {
+graphStatus NodeUtils::UpdateInputShape(const Node &node, const uint32_t index, const GeShape &shape) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GRAPH_PARAM_INVALID;
@@ -736,7 +736,7 @@ ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, const uint32_t index) {
   return root_graph->GetSubgraph(op_desc->GetSubgraphInstanceName(index));
 }
 
-graphStatus NodeUtils::SetSubgraph(Node &node, uint32_t index, const ComputeGraphPtr &subgraph) {
+graphStatus NodeUtils::SetSubgraph(Node &node, const uint32_t index, const ComputeGraphPtr &subgraph) {
   if (subgraph == nullptr) {
     REPORT_INNER_ERROR("E19999", "Failed to set subgraph to node %s index %u, null subgraph",
                        node.GetName().c_str(), index);
@@ -1041,7 +1041,7 @@ graphStatus NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
 /// @param [in] node
 /// @return Node
 ///
-std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, int index) {
+std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, const int32_t index) {
   std::vector<NodePtr> in_data_node_vec;
   const auto op_desc = node.GetOpDesc();
   GE_CHECK_NOTNULL_EXEC(op_desc, return in_data_node_vec);
@@ -1238,7 +1238,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   return GRAPH_SUCCESS;
 }
 
-graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) {
+graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *const group_name) {
   if (group_name == nullptr) {
     GE_LOGE("[Check][Parameter]Get nullptr when set parallel group on node:%s", node.GetName().c_str());
     REPORT_INNER_ERROR("E19999", "Get nullptr when set parallel group on node:%s", node.GetName().c_str());
@@ -1266,7 +1266,7 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *group_name) 
   return GRAPH_SUCCESS;
 }
 
-graphStatus NodeUtils::UpdateInputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
+graphStatus NodeUtils::UpdateInputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GRAPH_PARAM_INVALID;
@@ -1280,7 +1280,7 @@ graphStatus NodeUtils::UpdateInputOriginalShapeAndShape(const Node &node, uint32
   return GRAPH_SUCCESS;
 }
 
-graphStatus NodeUtils::UpdateOutputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape) {
+graphStatus NodeUtils::UpdateOutputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GRAPH_PARAM_INVALID;

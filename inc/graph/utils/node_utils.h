@@ -59,7 +59,7 @@ class NodeUtils {
   static graphStatus ClearSendInfo();
   static graphStatus ClearRecvInfo();
 
-  static graphStatus GetSingleOutputNodeOfNthLayer(const NodePtr &src, int32_t depth, NodePtr &dst);
+  static graphStatus GetSingleOutputNodeOfNthLayer(const NodePtr &src, const int32_t depth, NodePtr &dst);
 
   static graphStatus GetDataOutAnchorAndControlInAnchor(const NodePtr &node_ptr, OutDataAnchorPtr &out_data,
                                                         InControlAnchorPtr &in_control);
@@ -78,17 +78,17 @@ class NodeUtils {
   static void UnlinkAll(const Node &node);
   static graphStatus UpdatePeerNodeInputDesc(const NodePtr &node_ptr);
 
-  static graphStatus AppendInputAnchor(const NodePtr &node, uint32_t num);
-  static graphStatus RemoveInputAnchor(const NodePtr &node, uint32_t num);
+  static graphStatus AppendInputAnchor(const NodePtr &node, const uint32_t num);
+  static graphStatus RemoveInputAnchor(const NodePtr &node, const uint32_t num);
 
-  static graphStatus AppendOutputAnchor(const NodePtr &node, uint32_t num);
-  static graphStatus RemoveOutputAnchor(const NodePtr &node, uint32_t num);
+  static graphStatus AppendOutputAnchor(const NodePtr &node, const uint32_t num);
+  static graphStatus RemoveOutputAnchor(const NodePtr &node, const uint32_t num);
 
   static bool IsInNodesEmpty(const Node &node);
-  static GeTensorDesc GetOutputDesc(const Node &node, uint32_t index);
-  static GeTensorDesc GetInputDesc(const Node &node, uint32_t index);
-  static graphStatus UpdateOutputShape(const Node &node, uint32_t index, const GeShape &shape);
-  static graphStatus UpdateInputShape(const Node &node, uint32_t index, const GeShape &shape);
+  static GeTensorDesc GetOutputDesc(const Node &node, const uint32_t index);
+  static GeTensorDesc GetInputDesc(const Node &node, const uint32_t index);
+  static graphStatus UpdateOutputShape(const Node &node, const uint32_t index, const GeShape &shape);
+  static graphStatus UpdateInputShape(const Node &node, const uint32_t index, const GeShape &shape);
   // check node whether unknown shape.If node shape contain -1 or -2,out param "is_unknow" will be true;
   // for func op, it will check subgraph yet, if some node shape of subgraph contain -1 or -2,
   // the out param "is_unknow" will be true too
@@ -100,7 +100,7 @@ class NodeUtils {
   static std::vector<ComputeGraphPtr> GetAllSubgraphs(const Node &node);
   static graphStatus GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs);
   static ComputeGraphPtr GetSubgraph(const Node &node, const uint32_t index);
-  static graphStatus SetSubgraph(Node &node, uint32_t index, const ComputeGraphPtr &subgraph);
+  static graphStatus SetSubgraph(Node &node, const uint32_t index, const ComputeGraphPtr &subgraph);
   static NodePtr CreatNodeWithoutGraph(const OpDescPtr op_desc);
   ///
   /// Check if node is input of subgraph
@@ -165,7 +165,7 @@ class NodeUtils {
   /// @param [in] node
   /// @return Node
   ///
-  static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, int32_t index);
+  static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, const int32_t index);
 
   ///
   /// @brief Get subgraph input data node by index.
@@ -208,10 +208,10 @@ class NodeUtils {
   ///
   static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
 
-  static graphStatus SetNodeParallelGroup(Node &node, const char_t *group_name);
+  static graphStatus SetNodeParallelGroup(Node &node, const char_t *const group_name);
 
-  static graphStatus UpdateInputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape);
-  static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, uint32_t index, const GeShape &shape);
+  static graphStatus UpdateInputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
+  static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
 
 private:
   static std::map<NodePtr, std::vector<uint32_t>> map_send_info_;
