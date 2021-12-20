@@ -40,6 +40,8 @@ class UtestTuningUtils : public testing::Test {
   void SetUp() {
   }
   void TearDown() {
+  	TuningUtils::netoutput_nodes_.clear();
+    TuningUtils::data_node_2_end_node_.clear();
   }
 };
 
@@ -173,8 +175,6 @@ TEST_F(UtestTuningUtils, PrintCheckLog) {
     TuningUtils::netoutput_nodes_.push_back(data0);
     TuningUtils::netoutput_nodes_.push_back(data1);
     EXPECT_NE(TuningUtils::PrintCheckLog(), "");
-    TuningUtils::data_2_end_.clear();
-    TuningUtils::netoutput_nodes_.clear();
 }
 
 TEST_F(UtestTuningUtils, GetNodeNameByAnchor) {
@@ -277,7 +277,6 @@ TEST_F(UtestTuningUtils, CreateNetOutput) {
     EXPECT_EQ(TuningUtils::CreateNetOutput(node0, node1), SUCCESS);
     TuningUtils::create_output_[graph] = nullptr;
     EXPECT_EQ(TuningUtils::CreateNetOutput(node0, node1), SUCCESS);
-    TuningUtils::create_output_.clear();
 }
 
 TEST_F(UtestTuningUtils, AddAttrToNetOutputForMergeGraph) {
@@ -340,7 +339,6 @@ TEST_F(UtestTuningUtils, HandleEnd) {
     EXPECT_EQ(node4->AddLinkFrom(node5), GRAPH_SUCCESS);
     TuningUtils::create_output_[graph] = node5;
     EXPECT_EQ(TuningUtils::HandleEnd(node4), SUCCESS);
-    TuningUtils::create_output_.clear();
 }
 
 TEST_F(UtestTuningUtils, ConvertFileToGraph) {
@@ -396,7 +394,6 @@ TEST_F(UtestTuningUtils, FindNode) {
     AttrUtils::SetListStr(node0->GetOpDesc(), "_aliasName", {"Data0", "str2", "str3"});
     AttrUtils::SetListInt(node0->GetOpDesc(), "_aliasIndexes", {0, 1, 2});
     EXPECT_NE(TuningUtils::FindNode("Data0", in_index), nullptr);
-    TuningUtils::netoutput_nodes_.clear();
 }
 
 TEST_F(UtestTuningUtils, ConvertConstToWeightAttr) {
@@ -470,8 +467,6 @@ TEST_F(UtestTuningUtils, RemoveDataNetoutputEdge) {
     EXPECT_EQ(netoutput_1->GetInControlAnchor()->LinkFrom(noopnode->GetOutControlAnchor()), GRAPH_SUCCESS);
     EXPECT_EQ(noopnode->GetInControlAnchor()->LinkFrom(netoutput_2->GetOutControlAnchor()), GRAPH_SUCCESS);
     EXPECT_EQ(TuningUtils::RemoveDataNetoutputEdge(graph), GRAPH_SUCCESS);
-    TuningUtils::data_node_2_end_node_.clear();
-    TuningUtils::netoutput_nodes_.clear();
 }
 
 TEST_F(UtestTuningUtils, RemoveDataNetoutputEdge_FindNode) {
@@ -488,18 +483,16 @@ TEST_F(UtestTuningUtils, RemoveDataNetoutputEdge_FindNode) {
     EXPECT_EQ(placeholder_0->AddLinkFrom(placeholder_1), GRAPH_SUCCESS);
     auto graph = builder.GetGraph();
     EXPECT_EQ(TuningUtils::RemoveDataNetoutputEdge(graph), SUCCESS);
-    TuningUtils::netoutput_nodes_.clear();
-    TuningUtils::data_node_2_end_node_.clear();
 }
 
 TEST_F(UtestTuningUtils, MergeAllSubGraph) {
     auto builder0 = ut::GraphBuilder("sub0");
-    const auto placeholder_0 = builder0.AddNode("placeholder_0", PLACEHOLDER, 0, 1);
-    const auto placeholder_1 = builder0.AddNode("placeholder_1", PLACEHOLDER, 1, 1);
+    const auto &placeholder_0 = builder0.AddNode("placeholder_0", PLACEHOLDER, 0, 1);
+    const auto &placeholder_1 = builder0.AddNode("placeholder_1", PLACEHOLDER, 1, 1);
     auto graph0 = builder0.GetGraph();
     auto builder1 = ut::GraphBuilder("sub1");
-    const auto placeholder_2 = builder1.AddNode("placeholder_2", PLACEHOLDER, 0, 1);
-    const auto placeholder_3 = builder1.AddNode("placeholder_3", PLACEHOLDER, 1, 1);
+    const auto &placeholder_2 = builder1.AddNode("placeholder_2", PLACEHOLDER, 0, 1);
+    const auto &placeholder_3 = builder1.AddNode("placeholder_3", PLACEHOLDER, 1, 1);
     auto graph1 = builder1.GetGraph();
     std::vector<ComputeGraphPtr> vec;
     vec.push_back(graph0);
@@ -518,7 +511,6 @@ TEST_F(UtestTuningUtils, MergeAllSubGraph) {
     vals.push_back("2");
     AttrUtils::SetListStr(placeholder_0->GetOpDesc(), ATTR_NAME_NEED_RECOVER_ATTR, vals);
     EXPECT_EQ(TuningUtils::MergeAllSubGraph(vec, output_graph), SUCCESS);
-    TuningUtils::merged_graph_nodes_.clear();
 }
 
 
