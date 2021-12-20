@@ -1286,4 +1286,8 @@ const std::string ATTR_NAME_OP_MULTI_DIMS_INPUT_DIMS = "_op_multi_dims_input_dim
 // for support BlockDim
 const std::string ATTR_NAME_SUPPORT_BLOCKDIM_FLAG = "_support_blockdim_flag";
 const std::string ATTR_NAME_BLOCKDIM_INDEX = "_blockdim_index";
+
+// for support dynamic data flow ops
+const std::string ATTR_NAME_DATA_FLOW_HANDLE = "_data_flow_handle";
+const std::string ATTR_NAME_DATA_FLOW_MAX_SIZE = "_data_flow_max_size";
 }  // namespace ge
