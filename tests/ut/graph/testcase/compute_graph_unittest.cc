@@ -22,6 +22,7 @@
 #include "graph/op_desc_impl.h"
 #include "graph/ge_tensor.h"
 #include "graph/utils/ge_ir_utils.h"
+#include "graph_builder_utils.h"
 #undef private
 #undef protected
 #include "debug/ge_op_types.h"
@@ -255,4 +256,16 @@ TEST_F(UtestComputeGraph, UpdateOutputMapping_success) {
   EXPECT_EQ(graph->UpdateOutputMapping(output_mapping), GRAPH_SUCCESS);
 }
 
+TEST_F(UtestComputeGraph, ReorderEventNodes_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode(ATTR_NAME_PARENT_NODE_INDEX, SEND, 1, 1);
+  const auto &node2 = builder.AddNode(ATTR_NAME_PARENT_NODE_INDEX, RECV, 1, 1);
+  const auto &node3 = builder.AddNode(ATTR_NAME_PARENT_NODE_INDEX, RECV, 1, 1);
+  builder.AddControlEdge(node1, node2);
+  builder.AddControlEdge(node3, node1);
+  builder.AddControlEdge(node2, node3);
+  auto graph = builder.GetGraph();
+
+  EXPECT_EQ(graph->ReorderEventNodes(), GRAPH_SUCCESS);
+}
 }

@@ -52,6 +52,7 @@ set(REGISTER_UT_FILES
     "testcase/op_kernel_registry_unittest.cc"
     "testcase/fusion_statistics.cc"
     "testcase/register_graph_fusion.cc"
+    "testcase/register_format_transfer_unittest.cc"
 )
 add_executable(ut_register
     ${REGISTER_UT_FILES}
