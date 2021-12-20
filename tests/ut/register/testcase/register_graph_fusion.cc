@@ -526,8 +526,8 @@ const char *kPatternRelu = "Relu";
     }                                                   \
   } while (0)
 
-
- class TestPass : public fe::PatternFusionBasePass {
+string pass_name_test = "CastCastFusionPass";
+class TestPass : public fe::PatternFusionBasePass {
   using Mapping = std::map<const std::shared_ptr<OpDesc>, std::vector<ge::NodePtr>>;
  protected:
   vector<FusionPattern *> DefinePatterns() override {
@@ -547,7 +547,11 @@ const char *kPatternRelu = "Relu";
 
     return patterns;
   }
+
   Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, vector <ge::NodePtr> &new_nodes) override {
+    FusionPattern pattern("CastCastFusionPass");
+    DumpMapping(pattern, mapping);
+    CheckGraphCycle(graph);
     ge::NodePtr cast_Node0 = GetNodeFromMapping(kPatternCast0, mapping);
     UT_CHECK(cast_Node0 == nullptr, GELOGD("cast_Node0 is null,fusion failed."),
              return NOT_CHANGED);
@@ -652,7 +656,7 @@ const char *kPatternRelu = "Relu";
   }
 };
 
-
+REGISTER_PASS(pass_name_test, BUILT_IN_GRAPH_PASS, TestPass);
 
 TEST_F(UTESTGraphFusionPass, cast_relu_cast_01)
 {
