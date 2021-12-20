@@ -218,11 +218,6 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
     }
     GELOGI("In Op %s dynamic attr [%s] is exist, tensor num: %u.", op_desc->GetName().c_str(), attr_name.c_str(),
            dynamic_tensor_num);
-    if (dynamic_tensor_num == 0U) {
-      GELOGW("[UpdateDynamicInputOutPutIndex][Check] In op[%s] tensor num of port[%s] is equal 0.",
-             op_desc->GetName().c_str(), dynamic_name_attr.port_name);
-      continue;
-    }
     port_dynamic_info[dynamic_name_attr.port_name] = DynamicInfo(dynamic_name_attr.type, 0U, dynamic_tensor_num);
   }
 
@@ -230,27 +225,37 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t input_index = 0U;
   uint32_t input_increment = 0U;
   for (const auto &input_name : register_input_names) {
-    if (port_dynamic_info.find(input_name) != port_dynamic_info.end()) {
+    auto input_iter = port_dynamic_info.find(input_name);
+    if (input_iter != port_dynamic_info.end()) {
       port_dynamic_info[input_name].SetInsetIndex(input_index + input_increment);
       const uint32_t tensor_num = port_dynamic_info[input_name].GetTensorNum();
+      if (tensor_num == 0U) {
+        port_dynamic_info.erase(input_iter);
+        continue;
+      }
       input_increment += (tensor_num > 0U) ? (tensor_num - 1U) : 0U;
       GELOGI("Dynamic input name[%s] insert index: %u, tensor num: %u, op proto index: %u", input_name.c_str(),
              port_dynamic_info[input_name].GetInsetIndex(), tensor_num, input_index);
-      input_index++;
     }
+    input_index++;
   }
   const vector<string> register_output_names = op_desc->GetRegisterOutputName();
   uint32_t output_index = 0U;
   uint32_t out_increment = 0U;
   for (const auto &output_name : register_output_names) {
-    if (port_dynamic_info.find(output_name) != port_dynamic_info.end()) {
+    auto output_iter = port_dynamic_info.find(output_name);
+    if (output_iter != port_dynamic_info.end()) {
       port_dynamic_info[output_name].SetInsetIndex(output_index + out_increment);
       const uint32_t tensor_num = port_dynamic_info[output_name].GetTensorNum();
+      if (tensor_num == 0U) {
+        port_dynamic_info.erase(output_iter);
+        continue;
+      }
       out_increment += (tensor_num > 0U) ? (tensor_num - 1U) : 0U;
       GELOGI("Dynamic output name[%s] insert index: %u, tensor num: %u, op proto index: %u", output_name.c_str(),
              port_dynamic_info[output_name].GetInsetIndex(), tensor_num, output_index);
-      output_index++;
     }
+    output_index++;
   }
   return SUCCESS;
 }
@@ -390,9 +395,11 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
 
     if (dynamic_type == kInput) {
       (void)op_desc_dst->AddInputDescMiddle(port_name, tensor_num, static_cast<size_t>(insert_index));
+      (void)ge::AttrUtils::SetInt(op_desc_dst, DYNAMIC_INPUT_TD_NUM(port_name), tensor_num);
       GELOGI("Op[%s] add dynamic input[%u]", op_desc_dst->GetName().c_str(), tensor_num);
     } else if (dynamic_type == kOutput) {
       (void)op_desc_dst->AddOutputDescMiddle(port_name, tensor_num, static_cast<size_t>(insert_index));
+      (void)ge::AttrUtils::SetInt(op_desc_dst, DYNAMIC_OUTPUT_TD_NUM(port_name), tensor_num);
       GELOGI("Op[%s] add dynamic output[%u]", op_desc_dst->GetName().c_str(), tensor_num);
     } else {
       GELOGW("Do not add input or output desc with dynamic type :[%d].", static_cast<int32_t>(dynamic_type));
