@@ -42,4 +42,69 @@ TEST_F(UtestOpsKernelBuilderRegistry, GetAllKernelBuildersTest) {
     EXPECT_EQ(ops_map["ops1"], opsptr);
 }
 
+TEST_F(UtestOpsKernelBuilderRegistry, RegisterTest) {
+    ge::OpsKernelBuilderRegistry ops_registry;
+    std::string name = "register1";
+    OpsKernelBuilderPtr instance = std::shared_ptr<OpsKernelBuilder>();
+    ops_registry.Register(name, instance);
+    std::map<std::string, OpsKernelBuilderPtr> kernel_builders_;
+    kernel_builders_ = ops_registry.GetAll();
+    EXPECT_EQ(kernel_builders_.size(), 1);
+    EXPECT_EQ(kernel_builders_["register1"], instance);
+}
+
+TEST_F(UtestOpsKernelBuilderRegistry, UnregisterTest) {
+    ge::OpsKernelBuilderRegistry ops_registry;
+    std::string name1 = "register1";
+    OpsKernelBuilderPtr opsPtr1 = std::shared_ptr<OpsKernelBuilder>();
+    ops_registry.Register(name1, opsPtr1);
+
+    std::string name2 = "register2";
+    OpsKernelBuilderPtr opsPtr2 = std::shared_ptr<OpsKernelBuilder>();
+    ops_registry.Register(name2, opsPtr2);
+
+    std::map<std::string, OpsKernelBuilderPtr> ops_map;
+    ops_map = ops_registry.GetAll();
+    EXPECT_EQ(ops_map.size(), 2);
+    EXPECT_EQ(ops_map["register1"], opsPtr1);
+    EXPECT_EQ(ops_map["register2"], opsPtr2);
+
+    ops_registry.Unregister("register1");
+    ops_map = ops_registry.GetAll();
+    EXPECT_EQ(ops_map.size(), 1);
+    EXPECT_EQ(ops_map.count("register1"), 0);
+}
+
+TEST_F(UtestOpsKernelBuilderRegistry, UnregisterAllTest) {
+    ge::OpsKernelBuilderRegistry ops_registry;
+    std::string name1 = "register1";
+    OpsKernelBuilderPtr opsPtr1 = std::shared_ptr<OpsKernelBuilder>();
+    ops_registry.Register(name1, opsPtr1);
+
+    std::string name2 = "register2";
+    OpsKernelBuilderPtr opsPtr2 = std::shared_ptr<OpsKernelBuilder>();
+    ops_registry.Register(name2, opsPtr2);
+
+    std::map<std::string, OpsKernelBuilderPtr> ops_map;
+    ops_map = ops_registry.GetAll();
+    EXPECT_EQ(ops_map.size(), 2);
+    EXPECT_EQ(ops_map["register1"], opsPtr1);
+    EXPECT_EQ(ops_map["register2"], opsPtr2);
+
+    ops_registry.UnregisterAll();
+    ops_map = ops_registry.GetAll();
+    EXPECT_EQ(ops_map.size(), 0);
+    EXPECT_EQ(ops_map.count("register1"), 0);
+    EXPECT_EQ(ops_map.count("register2"), 0);
+}
+
+TEST_F(UtestOpsKernelBuilderRegistry, OpsKernelBuilderRegistrarTest) {
+    std::string name = "register";
+    ge::OpsKernelBuilderRegistrar::CreateFn fn = nullptr;
+    OpsKernelBuilderRegistrar ops_rar(name, fn);
+    std::map<std::string, OpsKernelBuilderPtr> ops_map;
+    ops_map = OpsKernelBuilderRegistry::GetInstance().GetAll();
+    EXPECT_EQ(ops_map.size(), 1);
+}
+
 } // namespace ge
