@@ -18,6 +18,7 @@
 #include <gmock/gmock.h>
 #include <vector>
 #include <iostream>
+#include "graph/debug/ge_util.h"
 
 #define private public
 #define protected public
@@ -41,6 +42,9 @@ TEST_F(UtestScopePass, ScopesResultImplFail) {
 
   std::vector<OperatorPtr> nodes;
   scopeRstOri.SetNodes(nodes);
+
+  std::vector<Scope *> scopes;
+  scopeRstOri.SetScopes(scopes);
 
   ScopesResult scopeRst1(scopeRstOri);
   EXPECT_EQ(scopeRst1.impl_->GetScopes().empty(), true);
@@ -96,7 +100,7 @@ TEST_F(UtestScopePass, ScopesResultRegister) {
 }
 
 namespace {
-class ScopePass : public ScopeBasePass {
+class ScopePass1 : public ScopeBasePass {
 public:
   ScopePattern *scoPattern1;
   ScopePattern *scoPattern2;
@@ -120,7 +124,7 @@ protected:
     return scoPattern;
   }
   std::string PassName() {
-    return std::string("passName");
+    return std::string("passName1");
   }
   Status LastMatchScopesAndOPs(std::shared_ptr<ScopeGraph> &scope_graph,
                                std::vector<ScopesResult> &results) {
@@ -131,6 +135,62 @@ protected:
     return;
   }
 };
+
+class ScopePass2 : public ScopeBasePass {
+protected:
+  std::vector<ScopeFusionPatterns> DefinePatterns() {
+    std::vector<std::vector<std::vector<ScopePattern *>>> scoPattern;
+    return scoPattern;
+  }
+  std::string PassName() {
+    return std::string("passName2");
+  }
+  Status LastMatchScopesAndOPs(std::shared_ptr<ScopeGraph> &scope_graph,
+                               std::vector<ScopesResult> &results) {
+    return FAILED;
+  }
+  void GenerateFusionResult(const std::vector<Scope *> &scopes,
+                            FusionScopesResult *fusion_rlt) {
+    return;
+  }
+};
+
+class ScopePass3 : public ScopeBasePass {
+public:
+  ScopePattern *scoPattern1;
+  ScopePattern *scoPattern2;
+
+protected:
+  std::vector<ScopeFusionPatterns> DefinePatterns() {
+    std::vector<std::vector<std::vector<ScopePattern *>>> scoPattern;
+    std::vector<std::vector<ScopePattern *>> scoPatternSub;
+    std::vector<ScopePattern *> scoPatternSubSub1;
+    std::vector<ScopePattern *> scoPatternSubSub2;
+
+    scoPattern1 = new ScopePattern();
+    scoPattern2 = new ScopePattern();
+    scoPatternSubSub1.push_back(scoPattern1);
+    scoPatternSubSub2.push_back(scoPattern2);
+
+    scoPatternSub.push_back(scoPatternSubSub1);
+    scoPatternSub.push_back(scoPatternSubSub2);
+
+    scoPattern.push_back(scoPatternSub);
+    return scoPattern;
+  }
+  std::string PassName() {
+    return std::string("passName1");
+  }
+  Status LastMatchScopesAndOPs(std::shared_ptr<ScopeGraph> &scope_graph,
+                               std::vector<ScopesResult> &results) {
+    return FAILED;
+  }
+  void GenerateFusionResult(const std::vector<Scope *> &scopes,
+                            FusionScopesResult *fusion_rlt) {
+    return;
+  }
+};
+
 
 void CreateGraph(domi::tensorflow::GraphDef &graph_def) {
   // 1. add node
@@ -201,19 +261,189 @@ void CreateGraph(domi::tensorflow::GraphDef &graph_def) {
 
 TEST_F(UtestScopePass, ScopePassRun1) {
   // no scope match
-  Status ret;
+  Status retStatus;
   domi::tensorflow::GraphDef graph_def;
   CreateGraph(graph_def);
 
   std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
   ASSERT_NE(scope_graph, nullptr);
-  ret = scope_graph->Init();
-  ASSERT_EQ(ret, SUCCESS);
+  retStatus = scope_graph->Init();
+  ASSERT_EQ(retStatus, SUCCESS);
   auto &impl = scope_graph->impl_;
   impl->BuildScopeGraph(&graph_def);
 
-  ScopePass scoBasePass;
-  ret = scoBasePass.impl_->Run(scope_graph);
-  EXPECT_EQ(ret, domi::SUCCESS);
+  ScopePass1 scoBasePass;
+  retStatus = scoBasePass.impl_->Run(scope_graph);
+  EXPECT_EQ(retStatus, SUCCESS);
 }
+
+TEST_F(UtestScopePass, ScopePassRun2) {
+  // MatchAllBatches failed
+  Status retStatus;
+  domi::tensorflow::GraphDef graph_def;
+  CreateGraph(graph_def);
+
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  retStatus = scope_graph->Init();
+  ASSERT_EQ(retStatus, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+
+  ScopePass2 scoBasePass;
+  retStatus = scoBasePass.impl_->Run(scope_graph);
+  EXPECT_EQ(retStatus, domi::SCOPE_NOT_CHANGED);
+}
+
+TEST_F(UtestScopePass, ScopePassRun3) {
+  // LastMatchScopesAndOPs failed
+  Status retStatus;
+  domi::tensorflow::GraphDef graph_def;
+  CreateGraph(graph_def);
+
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  retStatus = scope_graph->Init();
+  ASSERT_EQ(retStatus, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+
+  ScopePass3 scoBasePass;
+  retStatus = scoBasePass.impl_->Run(scope_graph);
+  EXPECT_EQ(retStatus, domi::SCOPE_NOT_CHANGED);
+}
+
+TEST_F(UtestScopePass, AddFusionScopesResultToScopeGraph1) {
+  Status retStatus;
+  std::vector<ScopesResult> scope_results;
+  domi::tensorflow::GraphDef graph_def;
+  CreateGraph(graph_def);
+
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  retStatus = scope_graph->Init();
+  ASSERT_EQ(retStatus, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+
+  ScopePass1 scoBasePass;
+  ScopesResult scopeRst;
+  std::vector<Scope *> scopes;
+  std::vector<OperatorPtr> nodes;
+  // add scope
+  Scope scope1;
+  scope1.Init("scope1", "type1");
+  scopes.push_back(&scope1);
+  Scope scope2;
+  scope2.Init("scope2", "type2");
+  scopes.push_back(&scope2);
+  scopeRst.SetScopes(scopes);
+  // add node
+  OperatorPtr node1(new (std::nothrow) ge::Operator("add", "Add"));
+  nodes.push_back(node1);
+  OperatorPtr node2(new (std::nothrow) ge::Operator("sub", "Sub"));
+  nodes.push_back(node2);
+  OperatorPtr node3(new (std::nothrow) ge::Operator("mul", "Mul"));
+  nodes.push_back(node3);
+  scopeRst.SetNodes(nodes);
+  // add scope result
+  scope_results.push_back(scopeRst);
+  retStatus = scoBasePass.impl_->AddFusionScopesResultToScopeGraph(scope_graph, scope_results);
+  EXPECT_EQ(retStatus, SUCCESS);
+}
+
+TEST_F(UtestScopePass, ScopePassWithWrongInput) {
+  ScopePass1 scoBasePass;
+  const std::vector<ScopePattern *> patternlist;
+  std::vector<Scope *> results;
+  bool retBool;
+  Status retStatus;
+
+  retBool = scoBasePass.impl_->MatchOneBatch(nullptr, patternlist, results);
+  EXPECT_EQ(retBool, false);
+
+  retBool = scoBasePass.impl_->MatchOneScope(nullptr, nullptr, results);
+  EXPECT_EQ(retBool, false);
+
+  retBool = scoBasePass.impl_->MatchAllBatches(nullptr, results);
+  EXPECT_EQ(retBool, false);
+
+  std::shared_ptr<ScopeGraph> scope_graph;
+  scope_graph.reset();
+  retStatus = scoBasePass.impl_->PrintFusionScopeInfo(scope_graph);
+  EXPECT_EQ(retStatus, PARAM_INVALID);
+}
+
+TEST_F(UtestScopePass, MatchOneScope) {
+  bool retBool;
+  Status retStatus;
+  domi::tensorflow::GraphDef graph_def;
+  CreateGraph(graph_def);
+
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  retStatus = scope_graph->Init();
+  ASSERT_EQ(retStatus, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+
+  const ScopeTree *scopeTree = scope_graph->GetScopeTree();
+  std::vector<Scope *> scopes = scopeTree->impl_->scopes_;
+
+  ScopePattern scoPattern;
+  NodeOpTypeFeature feature("nodeType", 0);
+  scoPattern.AddNodeOpTypeFeature(feature);
+
+  std::vector<Scope *> results;
+  ScopePass1 scoBasePass;
+  for (auto scope : scopes)
+  {
+    retBool = scoBasePass.impl_->MatchOneScope(&scoPattern, scope, results);
+    EXPECT_EQ(retBool, false);
+  }
+}
+
+TEST_F(UtestScopePass, PrintFusionScopeInfo) {
+  bool retBool;
+  Status retStatus;
+  domi::tensorflow::GraphDef graph_def;
+  CreateGraph(graph_def);
+
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  retStatus = scope_graph->Init();
+  ASSERT_EQ(retStatus, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+
+  FusionScopesResult *fusionResult = new (std::nothrow) FusionScopesResult();
+  ASSERT_NE(fusionResult, nullptr);
+  retStatus = fusionResult->Init();
+  EXPECT_EQ(retStatus, SUCCESS);
+  // init
+  fusionResult->SetName("fusionRstName");
+  fusionResult->SetType("fusionRstype");
+  fusionResult->SetDescription("fusionRstDesc");
+  // add nodes for check fusionOp
+  std::vector<OperatorPtr> fusionRstNodes;
+  OperatorPtr op1(new (std::nothrow) ge::Operator("Sub", "Sub"));
+  fusionRstNodes.push_back(op1);
+  OperatorPtr op2(new (std::nothrow) ge::Operator("Mul", "Mul"));
+  fusionRstNodes.push_back(op2);
+  fusionResult->impl_->AddNodes(fusionRstNodes);
+  // insert inputs outputs
+  std::vector<int32_t> index_map = {1, 2};
+  fusionResult->InsertInputs("Sub", index_map);
+  fusionResult->InsertOutputs("Mul", index_map);
+  // add scopes(null)
+  std::vector<Scope *> scopes = {nullptr, nullptr};
+  fusionResult->impl_->AddScopes(scopes);
+
+  impl->AddFusionScopesResult(fusionResult);
+
+  ScopePass1 scoBasePass;
+  retBool = scoBasePass.impl_->PrintFusionScopeInfo(scope_graph);
+  EXPECT_EQ(retBool, true);
+}
+
 

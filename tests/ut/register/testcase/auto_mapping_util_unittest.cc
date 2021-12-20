@@ -28,12 +28,12 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/type_utils.h"
-#include "proto/tensorflow/node_def.pb.h"
 #include "register/op_registry.h"
 #include "graph/graph.h"
 #include "graph/utils/attr_utils.h"
 #define private public
 #define protected public
+#include "proto/tensorflow/node_def.pb.h"
 #include "register/auto_mapping_util.h"
 #include "external/register/scope/scope_fusion_pass_register.h"
 #include "register/scope/scope_graph_impl.h"
@@ -374,3 +374,17 @@ TEST_F(AutoMappingUtils, CopyAttrValueOutputTest) {
     EXPECT_EQ(ret, domi::SUCCESS);
     EXPECT_EQ(op_dst.GetOutputsSize(), 4);
 }
+
+TEST_F(AutoMappingUtils, ConvertValueTest) {
+  ge::NamedAttrs ge_func;
+  std::string convertName = "convertName";
+  domi::tensorflow::AttrValue value;
+
+  value.set_s(std::string("valueString"));
+  value.set_has_s();
+  ge::AutoMappingUtil::ConvertValue(convertName, value, ge_func, 0);
+  std::string valueStr;
+  ge::AttrUtils::GetStr(ge_func, convertName, valueStr);
+  EXPECT_EQ(valueStr=="valueString", true);
+}
+
