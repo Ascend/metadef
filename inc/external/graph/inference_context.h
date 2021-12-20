@@ -22,10 +22,11 @@
 #include <vector>
 #include <set>
 
-#include "./tensor.h"
-#include "./types.h"
+#include "tensor.h"
+#include "types.h"
 #include "ascend_string.h"
 #include "resource_context.h"
+#include "ge_error_codes.h"
 
 namespace ge {
 class InferenceContext;
