@@ -29,7 +29,10 @@ ConnectionMatrix::ConnectionMatrix(const ge::ComputeGraph &graph) {
   }
 };
 
-ConnectionMatrix::~ConnectionMatrix() {}
+ConnectionMatrix::~ConnectionMatrix() {
+  bit_maps.clear();
+  name_to_index_.clear();
+}
 
 
 Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
