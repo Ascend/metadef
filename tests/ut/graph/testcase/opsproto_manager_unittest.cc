@@ -35,13 +35,28 @@ class OpsprotoManagerUt : public testing::Test {
   void TearDown() {}
 };
 
-TEST_F(OpsprotoManagerUt, Instance) {
+TEST_F(OpsprotoManagerUt, Instance_Initialize_Finalize) {
   OpsProtoManager *opspm = nullptr;
-
   opspm = OpsProtoManager::Instance();
-
   EXPECT_NE(opspm, nullptr);
+
+  const std::map<std::string, std::string> options = {
+    {"ge.mockLibPath", "./gtest_build-prefix/src/gtest_build-build/googlemock/"},
+    {"ge.opsProtoLibPath", "./protobuf_build-prefix/src/protobuf_build-build/"}};
+
+  auto ret = opspm->Initialize(options);
+  EXPECT_TRUE(ret);
+
+  opspm->Finalize();
+  EXPECT_EQ(opspm->handles_.size(), 0);
+  EXPECT_EQ(opspm->is_init_, false);
 }
 
+TEST_F(OpsprotoManagerUt, LoadOpsProtoPluginSo) {
+  OpsProtoManager *opspm = OpsProtoManager::Instance();
+  opspm->LoadOpsProtoPluginSo("");
+  opspm->LoadOpsProtoPluginSo("./protobuf_build-prefix/src/protobuf_build-build/");
 
+  EXPECT_EQ(opspm->handles_.size(), 0);
+}
 }  // namespace ge
