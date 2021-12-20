@@ -24,14 +24,14 @@
 #include "graph/utils/graph_utils.h"
 
 namespace fe {
-static const int TBE_FUSION_OP_NUM_MAX = 5;
-static const int TBE_PATTERN_NUM_MAX = 5;
-static const int TBE_PATTERN_NUM_NONE = 0;
-static const int TBE_PATTERN_NUM_DEFAULT = 1;
-static const int TBE_OUTPUT_BRANCH_DEFAULT = 0;
-static const int TBE_OUTPUT_BRANCH_SINGLE = 1;
-static const int TBE_OUTPUT_BRANCH_MULTI = 2;
-static const int TBE_PATTERN_GROUPID_INVALID = -1;
+const int TBE_FUSION_OP_NUM_MAX = 5;
+const int TBE_PATTERN_NUM_MAX = 5;
+const int TBE_PATTERN_NUM_NONE = 0;
+const int TBE_PATTERN_NUM_DEFAULT = 1;
+const int TBE_OUTPUT_BRANCH_DEFAULT = 0;
+const int TBE_OUTPUT_BRANCH_SINGLE = 1;
+const int TBE_OUTPUT_BRANCH_MULTI = 2;
+const int TBE_PATTERN_GROUPID_INVALID = -1;
 
 enum SkipStatus { DISABLED = 0, AVAILABLE = 1, SKIPPED = 2 };
 
@@ -80,17 +80,30 @@ class BufferFusionPattern {
 
   BufferFusionPattern &SetHead(const std::vector<std::string> &op_patterns);
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   std::string GetName();
   int64_t GetOpMaxCount();
   std::vector<BufferFusionOpDesc *> GetOpDescs();
-  bool GetOutputs(BufferFusionOpDesc *op_desc, std::vector<BufferFusionOpDesc *> &outputs, bool ignore_repeat = false);
   std::vector<BufferFusionOpDesc *> GetHead();
   int64_t GetErrorCnt();
+#else
+  std::string GetName() const;
+  int64_t GetOpMaxCount() const;
+  std::vector<BufferFusionOpDesc *> GetOpDescs() const;
+  std::vector<BufferFusionOpDesc *> GetHead() const;
+  int64_t GetErrorCnt() const;
+#endif
+  bool GetOutputs(BufferFusionOpDesc *op_desc, std::vector<BufferFusionOpDesc *> &outputs, bool ignore_repeat = false);
   void InitRepeatCurr(const BufferFusionPattern &pattern);
 
  private:
+#ifdef ONLY_COMPILE_OPEN_SRC
   BufferFusionOpDesc *GetOpDesc(const std::string &desc_name);
   void UpdateSkipStatus(BufferFusionOpDesc *op_desc);
+#else
+  BufferFusionOpDesc *GetOpDesc(const std::string &desc_name) const;
+  void UpdateSkipStatus(BufferFusionOpDesc *op_desc) const;
+#endif
   std::string name_;
   int64_t op_max_count_;
   std::vector<BufferFusionOpDesc *> ops_;

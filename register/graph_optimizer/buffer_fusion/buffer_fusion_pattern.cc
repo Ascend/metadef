@@ -26,11 +26,12 @@ using std::vector;
 
 namespace fe {
 inline bool IsAddOverflow(int64_t a, int64_t b) {
-  return ((b > 0) && (a > ((int64_t)INT64_MAX - b))) || ((b < 0) && (a < ((int64_t)INT64_MIN - b)));
+  return ((b > 0) && (a > (static_cast<int64_t>(INT64_MAX) - b))) || \
+      ((b < 0) && (a < (static_cast<int64_t>(INT64_MIN) - b)));
 }
 
-BufferFusionPattern::BufferFusionPattern(string name, int64_t max_count)
-    : name_(name), op_max_count_(max_count), error_count_(0) {}
+BufferFusionPattern::BufferFusionPattern(string name, int64_t op_max_count)
+    : name_(name), op_max_count_(op_max_count), error_count_(0) {}
 
 BufferFusionPattern::~BufferFusionPattern() {
   for (auto op : ops_) {
@@ -261,7 +262,11 @@ BufferFusionPattern &BufferFusionPattern::SetHead(const std::vector<string> &hea
   return *this;
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void BufferFusionPattern::UpdateSkipStatus(BufferFusionOpDesc *op_desc) {
+#else
+void BufferFusionPattern::UpdateSkipStatus(BufferFusionOpDesc *op_desc) const {
+#endif
   if (op_desc->out_branch_type == TBE_OUTPUT_BRANCH_MULTI) {
     for (auto &input_desc : op_desc->inputs) {
       if (input_desc->types.size() != op_desc->types.size()) {
@@ -288,6 +293,7 @@ void BufferFusionPattern::UpdateSkipStatus(BufferFusionOpDesc *op_desc) {
  * @param [in] desc_name: fusion pattern desc name
  * @return BufferFusionOpDesc*: description ptr
  */
+#ifdef ONLY_COMPILE_OPEN_SRC
 BufferFusionOpDesc *BufferFusionPattern::GetOpDesc(const string &desc_name) {
   auto it = op_map_.find(desc_name);
   if (it != op_map_.end()) return it->second;
@@ -302,4 +308,20 @@ int64_t BufferFusionPattern::GetOpMaxCount() { return op_max_count_; }
 int64_t BufferFusionPattern::GetErrorCnt() { return error_count_; }
 
 std::vector<BufferFusionOpDesc *> BufferFusionPattern::GetOpDescs() { return ops_; }
+#else
+BufferFusionOpDesc *BufferFusionPattern::GetOpDesc(const string &desc_name) const {
+  auto it = op_map_.find(desc_name);
+  if (it != op_map_.end()) return it->second;
+
+  return nullptr;
+}
+
+std::vector<BufferFusionOpDesc *> BufferFusionPattern::GetHead() const { return head_; }
+
+std::string BufferFusionPattern::GetName() const { return name_; }
+int64_t BufferFusionPattern::GetOpMaxCount() const { return op_max_count_; }
+int64_t BufferFusionPattern::GetErrorCnt() const { return error_count_; }
+
+std::vector<BufferFusionOpDesc *> BufferFusionPattern::GetOpDescs() const { return ops_; }
+#endif
 }  // namespace fe

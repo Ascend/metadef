@@ -26,6 +26,8 @@
 #include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 #include "register/graph_optimizer/graph_fusion/graph_pass.h"
 
+namespace fe {
+
 using std::initializer_list;
 using std::map;
 using std::string;
@@ -33,7 +35,6 @@ using std::vector;
 
 using namespace std;
 
-namespace fe {
 enum GraphFusionPassType {
   BUILT_IN_GRAPH_PASS = 0,
   BUILT_IN_VECTOR_CORE_GRAPH_PASS,
@@ -100,7 +101,11 @@ class GraphFusionPassBase : public GraphPass {
    * @return SUCCESS, successfully add edge
    * @return FAILED, fail
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   bool MatchAll(ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings);
+#else
+  bool MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings) const;
+#endif
 
   Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
 
