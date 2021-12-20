@@ -29,7 +29,6 @@ using namespace testing;
 
 namespace ge {
 
-
 class ScopeUtilUt : public testing::Test {
  protected:
   void SetUp() {}
@@ -39,7 +38,28 @@ class ScopeUtilUt : public testing::Test {
 TEST_F(ScopeUtilUt, StringReplaceAll) {
   AscendString str = ScopeUtil::StringReplaceAll("123456", "123", "abc");
   EXPECT_EQ(str.GetString(), string("abc456"));
+
+  string str2 = ScopeUtil::StringReplaceAll(string("abc456"), string("456"), string("def"));
+  EXPECT_EQ(str2, string("abcdef"));
 }
 
+TEST_F(ScopeUtilUt, FreeScopePatterns) {
+  std::vector<std::vector<ScopePattern *>> scoPatternSub;
+  std::vector<ScopePattern *> scoPatternSubSub1;
+  std::vector<ScopePattern *> scoPatternSubSub2;
+  ScopePattern *scoPattern1;
+  ScopePattern *scoPattern2;
+
+  scoPattern1 = new ScopePattern();
+  scoPattern2 = new ScopePattern();
+  scoPatternSubSub1.push_back(scoPattern1);
+  scoPatternSubSub2.push_back(scoPattern2);
+
+  scoPatternSub.push_back(scoPatternSubSub1);
+  scoPatternSub.push_back(scoPatternSubSub2);
+
+  ScopeUtil::FreeScopePatterns(scoPatternSub);
+  EXPECT_EQ(scoPatternSub.size(), 0);
+}
 
 }  // namespace ge
