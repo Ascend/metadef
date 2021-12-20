@@ -49,7 +49,12 @@ void DumpEventType(EventType et, std::ostream &out_stream) {
 }
 
 void Profiler::RecordCurrentThread(int64_t element, int64_t event, EventType et) {
-  Record(element, GetThread(), event, et);
+  Record(element, GetThread(), event, et, std::chrono::system_clock::now());
+}
+
+void Profiler::RecordCurrentThread(int64_t element, int64_t event, EventType et,
+                                   std::chrono::time_point<std::chrono::system_clock> time_point) {
+  Record(element, GetThread(), event, et, time_point);
 }
 
 void Profiler::UpdateHashByIndex(const int64_t index, const uint64_t hash) {
@@ -84,12 +89,13 @@ void Profiler::RegisterStringHash(int64_t index, uint64_t hash, const std::strin
   GetStringHashes()[index].hash = hash;
 }
 
-void Profiler::Record(int64_t element, int64_t thread, int64_t event, EventType et) {
+void Profiler::Record(int64_t element, int64_t thread, int64_t event, EventType et,
+                      std::chrono::time_point<std::chrono::system_clock> time_point) {
   auto current_index = record_size_++;
   if (current_index >= kMaxRecordNum) {
     return;
   }
-  records_[current_index] = ProfilingRecord({element, thread, event, et, std::chrono::system_clock::now()});
+  records_[current_index] = ProfilingRecord({element, thread, event, et, time_point});
 }
 void Profiler::Dump(std::ostream &out_stream) const {
   size_t print_size = record_size_;
