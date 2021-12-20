@@ -547,4 +547,82 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingDimsSizeIs0) {
       TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
+
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingFail) {
+  vector<int64_t> dims({0, -1});
+  GeShape ge_shape(dims);
+  Format format;
+  DataType data_type;
+  int64_t mem_size = 0;
+  GeTensorDesc tensor(ge_shape);
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(ge_test_tensor_utils, GetMaxShapeDimsFromNoTilingTensorFail) {
+  vector<int64_t> dims({0, -1});
+  GeShape ge_shape(dims);
+  Format format;
+  DataType data_type;
+  int64_t mem_size = 0;
+  GeTensorDesc tensor(ge_shape);
+  std::vector<int64_t> max_shape_list;
+  max_shape_list.push_back(1);
+  AttrUtils::SetListInt(tensor, ATTR_NAME_TENSOR_MAX_SHAPE, max_shape_list);
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(ge_test_tensor_utils, GetMaxShapeDimsFromNoTilingTensorSuccess) {
+  vector<int64_t> dims({0, -1});
+  GeShape ge_shape(dims);
+  Format format;
+  DataType data_type;
+  int64_t mem_size = 0;
+  GeTensorDesc tensor(ge_shape);
+  std::vector<int64_t> max_shape_list;
+  max_shape_list.push_back(1);
+  max_shape_list.push_back(2);
+  AttrUtils::SetListInt(tensor, ATTR_NAME_TENSOR_MAX_SHAPE, max_shape_list);
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, GetMaxShapeDimsFromNoTilingTensorGetShapeRangeFail) {
+  vector<int64_t> dims({0, -1});
+  GeShape ge_shape(dims);
+  Format format;
+  DataType data_type;
+  int64_t mem_size = 0;
+  GeTensorDesc tensor(ge_shape);
+
+  std::vector<std::vector<int64_t>> range;
+  range.push_back(std::vector<int64_t>(1));
+  AttrUtils::SetListListInt(tensor, "shape_range", range);
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(ge_test_tensor_utils, GetTensorSizeInBytesOutputMemSizeLessThan0) {
+  GeTensorDesc tensorDesc(GeShape({1, -1}));
+  int64_t size;
+  (void)AttrUtils::SetBool(&tensorDesc, ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE, false);
+  graphStatus ret = TensorUtils::GetTensorSizeInBytes(tensorDesc, size);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeDataTypeIsDtStringRef) {
+  vector<int64_t> dims({0, 0});
+  GeShape ge_shape(dims);
+  Format format;
+  DataType data_type = DT_STRING_REF;
+  int64_t mem_size;
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
 }
