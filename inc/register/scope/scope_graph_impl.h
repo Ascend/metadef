@@ -43,7 +43,7 @@ class Scope::ScopeImpl {
   void AddNode(ge::OperatorPtr &node_def);
   const std::vector<ge::OperatorPtr> &Nodes() const { return nodes_; }
   const std::unordered_map<std::string, ge::OperatorPtr> &AllNodesMap();
-  void AddSubScope(Scope *const scope) { sub_scopes_[scope->Name()] = scope; }
+  void AddSubScope(Scope *const scope);
   Scope *GetSubScope(const std::string &scope_name) const;
   const std::unordered_map<std::string, Scope *> &GetSubScopes() const { return sub_scopes_; }
   const std::vector<Scope *> &GetAllSubScopes();

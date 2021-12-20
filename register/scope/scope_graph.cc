@@ -198,6 +198,12 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
   return all_nodes_map_;
 }
 
+void Scope::ScopeImpl::AddSubScope(Scope *const scope) {
+  AscendString name;
+  (void)scope->Name(name);
+  sub_scopes_[name.GetString()] = scope;
+}
+
 Scope *Scope::ScopeImpl::GetSubScope(const std::string &scope_name) const {
   const auto iter = sub_scopes_.find(scope_name);
   if (iter != sub_scopes_.end()) {
@@ -867,7 +873,7 @@ const std::string &FusionScopesResult::Name() const {
   return impl_->Name();
 }
 
-const Status FusionScopesResult::Name(AscendString &name) const {
+Status FusionScopesResult::Name(AscendString &name) const {
   name = AscendString(impl_->Name().c_str());
   return SUCCESS;
 }

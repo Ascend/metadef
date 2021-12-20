@@ -157,7 +157,7 @@ TEST_F(UtestScopeGraph, test_build_scope_graph_succ) {
 TEST_F(UtestScopeGraph, test_build_scope_graph_node_without_inout) {
   domi::tensorflow::GraphDef graph_def;
   auto no_op = graph_def.add_node();
-  no_op->set_name("no_op");
+  no_op->set_name("test_scope/no_op");
   no_op->set_op("NoOp");
 
   std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
@@ -169,7 +169,7 @@ TEST_F(UtestScopeGraph, test_build_scope_graph_node_without_inout) {
 
   auto nodes_map = impl->GetNodesMap();
   EXPECT_EQ(nodes_map.size(), 1);
-  auto iter = nodes_map.find("no_op");
+  auto iter = nodes_map.find("test_scope/no_op");
   ASSERT_NE(iter, nodes_map.end());
   std::vector<std::string> inputs;
   std::vector<std::string> outputs;
