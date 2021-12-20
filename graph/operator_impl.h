@@ -21,6 +21,7 @@
 #include "graph/op_desc.h"
 #include "graph/node.h"
 #include "graph/operator.h"
+#include "graph/inference_context.h"
 #include "graph/runtime_inference_context.h"
 #include "op_io.h"
 namespace ge {
@@ -28,7 +29,7 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
  public:
   explicit OperatorImpl(const std::string &name, const std::string &type);
   explicit OperatorImpl(const OpDescPtr &op_desc);
-  explicit OperatorImpl(ConstNodePtr node);
+  explicit OperatorImpl(const ConstNodePtr node);
   ~OperatorImpl();
 
   void SetInputImpl(const std::string &dst_name, const Operator &src_oprt);

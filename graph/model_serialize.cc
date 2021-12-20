@@ -271,12 +271,8 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *cons
   return true;
 }
 
-void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
-                                        std::vector<std::string> &key_in,
-                                        std::vector<std::string> &key_out,
-                                        std::vector<uint32_t> &value_in,
-                                        std::vector<uint32_t> &value_out,
-                                        const std::vector<std::string> &opt_input) const {
+void ModelSerializeImp::AttrDefToOpDescIn(OpDescPtr &op_desc, std::vector<std::string> &key_in,
+                                          std::vector<uint32_t> &value_in) const {
   if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
     GELOGE(FAILED, "[Serialize][Opdesc] op desc or impl is nullptr.");
     return;
@@ -290,6 +286,15 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc,
         (void) op_desc->impl_->input_name_idx_.insert(std::pair<std::string, uint32_t>(key_in.at(i), value_in.at(i)));
       }
     }
+  }
+}
+
+void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_out,
+                                        std::vector<uint32_t> &value_out,
+                                        const std::vector<std::string> &opt_input) const {
+  if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
+    GELOGE(FAILED, "[Serialize][Opdesc] op desc or impl is nullptr.");
+    return;
   }
   if (!key_out.empty()) {
     if (key_out.size() != value_out.size()) {
@@ -315,7 +320,8 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   std::vector<std::string> key_out;
   std::vector<uint32_t> value_out;
 
-  ExtractMetaDataAttr(op_def_proto, opt_input, key_in, value_in, key_out, value_out);
+  ExtractMetaDataAttrIn(op_def_proto, opt_input, key_in, value_in);
+  ExtractMetaDataAttr(op_def_proto, key_out, value_out);
 
   op_desc = ComGraphMakeShared<OpDesc>(op_def_proto);
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_CALL_ERROR("E19999", "create OpDesc failed.");
@@ -347,7 +353,8 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   }
 
   // insert name index by key and value
-  AttrDefToOpDesc(op_desc, key_in, key_out, value_in, value_out, opt_input);
+  AttrDefToOpDescIn(op_desc, key_in, value_in);
+  AttrDefToOpDesc(op_desc, key_out, value_out, opt_input);
 
   if (!DeserializeAllAttrsToAttrHolder(op_def_proto.attr(), op_desc.get())) {
     GELOGE(GRAPH_FAILED, "Opdesc [%s] attr deserialize failed", op_def_proto.name().c_str());
@@ -356,9 +363,9 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
 
   return true;
 }
-void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &opt_input,
-                                            std::vector<std::string> &key_in, std::vector<uint32_t> &value_in,
-                                            std::vector<std::string> &key_out, std::vector<uint32_t> &value_out) const {
+
+void ModelSerializeImp::ExtractMetaDataAttrIn(proto::OpDef &op_def_proto, std::vector<std::string> &opt_input,
+                                              std::vector<std::string> &key_in, std::vector<uint32_t> &value_in) const {
   if (op_def_proto.attr().count("_opt_input") > 0UL) {
     const auto &name_list = op_def_proto.attr().at("_opt_input").list();
     for (const auto &item_s : name_list.s()) {
@@ -380,6 +387,10 @@ void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vec
     }
     (void) op_def_proto.mutable_attr()->erase("_input_name_value");
   }
+}
+
+void ModelSerializeImp::ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &key_out,
+                                            std::vector<uint32_t> &value_out) const {
   if (op_def_proto.attr().count("_output_name_key") > 0UL) {
     const auto &output_name_key_list = op_def_proto.attr().at("_output_name_key").list();
     for (const auto &item_s : output_name_key_list.s()) {

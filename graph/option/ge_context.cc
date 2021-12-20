@@ -50,8 +50,8 @@ bool GEContext::GetHostExecFlag() {
 }
 
 std::map<std::string, std::string> &GetMutableGlobalOptions() {
-  static std::map<std::string, std::string> global_options{};
-  return global_options;
+  static std::map<std::string, std::string> context_global_options{};
+  return context_global_options;
 }
 
 void GEContext::Init() {

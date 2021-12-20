@@ -38,7 +38,7 @@ class ShapeRefiner {
   static graphStatus CreateInferenceContext(const NodePtr &node,
                                             InferenceContextPtr &inference_context);
   static graphStatus CreateInferenceContext(const NodePtr &node,
-                                            ResourceContextMgr *resource_context_mgr,
+                                            ResourceContextMgr *const resource_context_mgr,
                                             InferenceContextPtr &inference_context);
   static void PushToContextMap(const NodePtr &node, const InferenceContextPtr &inference_context);
 
