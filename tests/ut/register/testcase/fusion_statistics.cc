@@ -83,6 +83,7 @@ TEST_F(UtestFusionStatistics, test_02) {
 
   fs_instance.UpdateBufferFusionMatchTimes(fusion_info);
 
+  fs_instance.UpdateBufferFusionEffectTimes(fusion_info);
   string session_graph_id = "0_1";
   std::map<std::string, fe::FusionInfo> graph_fusion_info_map;
   std::map<std::string, fe::FusionInfo> buffer_fusion_info_map;
