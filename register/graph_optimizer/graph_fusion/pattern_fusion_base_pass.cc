@@ -361,7 +361,7 @@ bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
                                            const std::vector<std::vector<ge::NodePtr>> &fusion_nodes) {
   if (connectivity_ == nullptr) {
     try {
-      connectivity_ = std::make_shared<fe::ConnectionMatrix>(graph);
+      connectivity_ = std::unique_ptr<fe::ConnectionMatrix>(new(std::nothrow) fe::ConnectionMatrix(graph));
     } catch (...) {
       GELOGW("Make shared failed");
       return false;
