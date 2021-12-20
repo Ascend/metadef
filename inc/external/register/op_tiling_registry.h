@@ -77,7 +77,7 @@ ByteBuffer &ByteBufferGet(ByteBuffer &buf, T &value) {
 }
 
 size_t ByteBufferGetAll(ByteBuffer &buf, ge::char_t *dest, size_t dest_len);
-ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t dest_len);
+ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t data_len);
 
 using OpTilingFunc = std::function<bool(const TeOpParas &, const OpCompileInfo &, OpRunInfo &)>;
 using OpTilingFuncPtr = std::shared_ptr<OpTilingFunc>;

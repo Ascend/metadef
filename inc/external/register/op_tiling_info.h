@@ -18,10 +18,7 @@
 #define INC_EXTERNAL_REGISTER_OP_TILING_INFO_H_
 
 #include <sstream>
-#include <string>
-#include <vector>
 #include <map>
-#include <memory>
 #include "external/graph/ge_error_codes.h"
 #include "external/graph/ascend_string.h"
 #include "external/graph/tensor.h"
@@ -29,7 +26,7 @@
 namespace optiling {
 using ByteBuffer = std::stringstream;
 
-enum TensorArgType {
+enum class TensorArgType {
   TA_NONE,
   TA_SINGLE,
   TA_LIST,

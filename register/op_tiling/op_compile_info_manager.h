@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_REGISTER_OP_COMPILE_INFO_H_
-#define INC_REGISTER_OP_COMPILE_INFO_H_
+#ifndef REGISTER_OP_TILING_COMPILE_INFO_MANAGER_H_
+#define REGISTER_OP_TILING_COMPILE_INFO_MANAGER_H_
 
 #include <string>
 #include <mutex>
@@ -56,4 +56,4 @@ private:
   std::unordered_map<std::string, void *> compile_info_map_;
 };
 }  // namespace optiling
-#endif  // INC_REGISTER_OP_COMPILE_INFO_H_
+#endif  // REGISTER_OP_TILING_COMPILE_INFO_MANAGER_H_

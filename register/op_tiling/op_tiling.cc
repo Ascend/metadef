@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "op_tiling.h"
+#include "register/op_tiling.h"
 
 #include <nlohmann/json.hpp>
 #include "common/util/error_manager/error_manager.h"
@@ -212,12 +212,12 @@ public:
 };
 
 bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc_vec,
-                       std::vector<TeOpTensorArg> &tensor_arg, ge::OpDescPtr &op_desc) {
+                       std::vector<TeOpTensorArg> &tensor_arg, const ge::OpDescPtr &op_desc) {
   size_t index = 0;
   for (ge::GeTensorDescPtr &tensor_desc_ptr : tensor_desc_vec) {
     TeOpTensorArg arg_tensor;
     TeOpTensor tensor;
-    arg_tensor.arg_type = TA_SINGLE;
+    arg_tensor.arg_type = TensorArgType::TA_SINGLE;
     tensor.shape = tensor_desc_ptr->MutableShape().GetDims();
     if (tensor.shape.empty()) {
       tensor.shape = {1};
