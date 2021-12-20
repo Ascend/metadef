@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 #include "graph/anchor.h"
-#include "graph/types.h"
 #include "runtime/kernel.h"
 
 namespace fe {
@@ -43,30 +42,30 @@ struct FusionDataFlow {
   std::pair<std::string, ge::AnchorPtr> node_dataindex_pair;
 };
 
-typedef struct tag_l2_fusion_data {
+using L2FusionData_t = struct tag_l2_fusion_data {
   uint32_t l2Index;
   uint64_t l2Addr;
   uint64_t l2PageNum;
-} L2FusionData_t;
-typedef std::map<uint64_t, L2FusionData_t> L2FusionDataMap_t;
+};
+using L2FusionDataMap_t = std::map<uint64_t, L2FusionData_t>;
 
-typedef struct tag_fe_sm_desc {
+using fe_sm_desc_t = struct tag_fe_sm_desc {
   rtL2Ctrl_t l2ctrl;
   std::string node_name[L2_MAXDATANUM];
   uint8_t output_index[L2_MAXDATANUM];
-} fe_sm_desc_t;
+};
 
-typedef struct TagTaskL2FusionInfo {
+using TaskL2FusionInfo_t = struct TagTaskL2FusionInfo {
   std::string node_name;
   fe_sm_desc_t l2_info;
   L2FusionDataMap_t input;
   L2FusionDataMap_t output;
   uint32_t is_used;
-} TaskL2FusionInfo_t;
+};
 
 using L2FusionInfoPtr = std::shared_ptr<TaskL2FusionInfo_t>;
 
-typedef struct ToOpStruct {
+using ToOpStruct_t = struct ToOpStruct {
   int64_t op_l1_space = 0;
   std::vector<int64_t> op_l1_fusion_type;
   int64_t op_l1_workspace_flag = 0; // for workspace flag
@@ -83,7 +82,7 @@ typedef struct ToOpStruct {
     op_l1_space = -1;
     op_l1_workspace_size = -1;
   }
-} ToOpStruct_t;
+};
 
 enum SlicePattern {
   ELEMENT_WISE = 0,
@@ -144,10 +143,10 @@ struct FEOpsStoreInfo {
                    need_pre_compile(false), need_compile(false) {}
 };
 
-enum ISAArchVersion { EN_ISA_ARCH_V100 = 0, EN_ISA_ARCH_V200, EN_ISA_ARCH_V210 };
+enum class ISAArchVersion { EN_ISA_ARCH_V100 = 0, EN_ISA_ARCH_V200, EN_ISA_ARCH_V210 };
 
 // Don't change the order, only add new mode in the end.
-enum AppendArgsMode { NO_ARGS = 0, L2_BUFFER_ARGS = 1, L2_CACHE_ARGS = 999};
+enum class AppendArgsMode { NO_ARGS = 0, L2_BUFFER_ARGS = 1, L2_CACHE_ARGS = 999};
 
 enum BufferFusionMode { EN_OPTIMIZE_DISABLE = 0, EN_L2_BUFFER, EN_L2_FUSION };
 

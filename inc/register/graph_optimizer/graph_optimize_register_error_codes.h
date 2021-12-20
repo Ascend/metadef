@@ -20,13 +20,13 @@
 #include <map>
 #include <string>
 
+namespace fe {
+
 /** Assigned SYS ID */
 const uint8_t SYSID_FE = 3;
 
 /** Common module ID */
 const uint8_t FE_MODID_COMMON = 50;
-
-namespace fe {
 
 /**  FE error code definiton Macro
 *  Build error code
