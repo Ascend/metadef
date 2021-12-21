@@ -57,6 +57,8 @@ TEST_F(UtestFileUtils, CreateDirectorySuccess) {
   std::string directory_path = "D:\\123\\456";
   int32_t ret = ge::CreateDirectory(directory_path);
   EXPECT_EQ(ret, 0);
+  int delete_ret = remove(directory_path.c_str());
+  EXPECT_EQ(delete_ret, 0);
 }
 
 TEST_F(UtestFileUtils, CreateDirectoryFail) {
