@@ -551,8 +551,12 @@ class TestPass : public fe::PatternFusionBasePass {
   Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, vector <ge::NodePtr> &new_nodes) override {
     FusionPattern pattern("CastCastFusionPass");
     DumpMapping(pattern, mapping);
+
     CheckGraphCycle(graph);
     ge::NodePtr cast_Node0 = GetNodeFromMapping(kPatternCast0, mapping);
+    CheckOpSupported(cast_Node0);
+    CheckOpSupported(cast_Node0->GetOpDesc());
+
     UT_CHECK(cast_Node0 == nullptr, GELOGD("cast_Node0 is null,fusion failed."),
              return NOT_CHANGED);
     ge::OpDescPtr cast_desc0 = cast_Node0->GetOpDesc();
@@ -656,8 +660,6 @@ class TestPass : public fe::PatternFusionBasePass {
   }
 };
 
-REGISTER_PASS(pass_name_test, BUILT_IN_GRAPH_PASS, TestPass);
-
 TEST_F(UTESTGraphFusionPass, cast_relu_cast_01)
 {
   ComputeGraphPtr graph = CreateCastReluCastGraph1();
@@ -691,19 +693,42 @@ TEST_F(UTESTGraphFusionPass, cast_relu_cast_01)
   }
 }
 
+class UtOpsKernel : public OpsKernelInfoStore {
+  // initialize opsKernelInfoStore
+  Status Initialize(const std::map<std::string, std::string> &options) override {}
+
+  // close opsKernelInfoStore
+  Status Finalize() override {}
+
+  // get all opsKernelInfo
+  void GetAllOpsKernelInfo(std::map<std::string, OpInfo> &infos) const override {}
+
+  // whether the opsKernelInfoStore is supported based on the operator attribute
+  bool CheckSupported(const OpDescPtr &opDescPtr, std::string &un_supported_reason) const override {
+    return true;
+  }
+};
+
 TEST_F(UTESTGraphFusionPass, cast_relu_cast_02)
 {
   ComputeGraphPtr graph = CreateCastReluCastGraph2();
   TestPass pass;
-  fe::Status status = pass.Run(*graph, nullptr);
+  std::shared_ptr<UtOpsKernel> ops_kernel = std::make_shared<UtOpsKernel>();
+
+  std::shared_ptr<OpsKernelInfoStore> base = ops_kernel;
+  fe::Status status = pass.Run(*graph, base);
   EXPECT_EQ(fe::NOT_CHANGED, status);
 
 }
 TEST_F(UTESTGraphFusionPass, cast_relu_cast_03)
 {
   ComputeGraphPtr graph = CreateCastReluCastGraph3();
+
   TestPass pass;
-  fe::Status status = pass.Run(*graph, nullptr);
+  std::shared_ptr<UtOpsKernel> ops_kernel = std::make_shared<UtOpsKernel>();
+
+  std::shared_ptr<OpsKernelInfoStore> base = ops_kernel;
+  fe::Status status = pass.Run(*graph, base);
   EXPECT_EQ(fe::NOT_CHANGED, status);
 
 }
@@ -711,7 +736,10 @@ TEST_F(UTESTGraphFusionPass, cast_relu_cast_04)
 {
   ComputeGraphPtr graph = CreateCastReluCastGraph4();
   TestPass pass;
-  fe::Status status = pass.Run(*graph, nullptr);
+  std::shared_ptr<UtOpsKernel> ops_kernel = std::make_shared<UtOpsKernel>();
+
+  std::shared_ptr<OpsKernelInfoStore> base = ops_kernel;
+  fe::Status status = pass.Run(*graph, base);
   EXPECT_EQ(fe::NOT_CHANGED, status);
 
 }
@@ -720,17 +748,35 @@ TEST_F(UTESTGraphFusionPass, cast_relu_cast_05)
   ComputeGraphPtr graph = CreateCastReluCastGraph5();
   TestPass pass;
   DumpGraph(graph, "test1");
-  fe::Status status = pass.Run(*graph, nullptr);
+  std::shared_ptr<UtOpsKernel> ops_kernel = std::make_shared<UtOpsKernel>();
+
+  std::shared_ptr<OpsKernelInfoStore> base = ops_kernel;
+  fe::Status status = pass.Run(*graph, base);
   EXPECT_EQ(fe::SUCCESS, status);
   DumpGraph(graph, "test1");
 
 }
 TEST_F(UTESTGraphFusionPass, cast_relu_cast_06)
 {
+
   ComputeGraphPtr graph = CreateCastReluCastGraph6();
   TestPass pass;
-  fe::Status status = pass.Run(*graph, nullptr);
+  std::shared_ptr<UtOpsKernel> ops_kernel = std::make_shared<UtOpsKernel>();
+
+  std::shared_ptr<OpsKernelInfoStore> base = ops_kernel;
+  fe::Status status = pass.Run(*graph, base);
   EXPECT_EQ(fe::NOT_CHANGED, status);
 
+}
+
+TEST_F(UTESTGraphFusionPass, coverage_01) {
+  REGISTER_PASS(pass_name_test, GRAPH_FUSION_PASS_TYPE_RESERVED, TestPass);
+  REGISTER_PASS("", BUILT_IN_GRAPH_PASS, TestPass);
+  REGISTER_PASS(pass_name_test, BUILT_IN_GRAPH_PASS, TestPass);
+  REGISTER_PASS(pass_name_test, BUILT_IN_GRAPH_PASS, TestPass);
+  std::map<string, FusionPassRegistry::CreateFn> create_fns =
+      FusionPassRegistry::GetInstance().GetCreateFnByType(SECOND_ROUND_BUILT_IN_GRAPH_PASS);
+  create_fns =
+      FusionPassRegistry::GetInstance().GetCreateFnByType(BUILT_IN_GRAPH_PASS);
 }
 }
