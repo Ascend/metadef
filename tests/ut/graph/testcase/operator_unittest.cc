@@ -30,6 +30,11 @@
 #include "graph/tensor_type_impl.h"
 #include "graph_builder_utils.h"
 #include <string.h>
+#include "graph/utils/tensor_utils.h"
+#include "graph/compute_graph_impl.h"
+#include "graph/utils/graph_utils.h"
+#include "graph/utils/node_utils.h"
+#include "inc/external/graph/graph.h"
 
 #undef private
 #undef protected
@@ -1077,5 +1082,92 @@ TEST_F(UtestOperater, SetAttr_DataType2) {
   op.GetAttr(name, attr_value_out);
 
   EXPECT_EQ(attr_value_out, DT_INT16);
+}
+
+TEST_F(UtestOperater, CopyOperators1) {
+
+  ge::OpDescPtr add_op(new ge::OpDesc("add_0", "add"));
+  std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
+  auto add_node = compute_graph->AddNode(add_op);
+  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+
+  ge::OpDescPtr add_op_2(new ge::OpDesc("add_2", "add"));
+  std::shared_ptr<ge::ComputeGraph> compute_graph_2(new ge::ComputeGraph("test_graph_2"));
+  auto add_node_2 = compute_graph->AddNode(add_op_2);
+  Graph graph2 = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph_2);
+
+  Operator op1("op1");
+  Operator op2("op2");
+  Operator op3("op3");
+  graph.AddOp(op1);
+  graph.AddOp(op2);
+  graph.AddOp(op3);
+
+  auto ret = GraphUtils::CopyGraph(graph, graph2);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestOperater, CopyOperators2) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
+  auto op_desc = transdata->GetOpDesc();
+  op_desc->impl_->input_name_idx_["Data"] = 0;
+  op_desc->impl_->input_name_idx_["Enter"] = 1;
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
+
+  Operator op1 = OpDescUtils::CreateOperatorFromNode(transdata);
+  Operator op2 = OpDescUtils::CreateOperatorFromNode(data);
+  Operator op3 = OpDescUtils::CreateOperatorFromNode(data2);
+
+  ComputeGraphPtr compt_graph = builder.GetGraph();
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(compt_graph);
+  graph.AddOp(op1);
+  graph.AddOp(op2);
+  graph.AddOp(op3);
+
+  ut::GraphBuilder builder2 = ut::GraphBuilder("graph2");
+  auto data3 = builder2.AddNode("Data3", "Data", 0, 1);
+  ComputeGraphPtr compt_graph2 = builder2.GetGraph();
+  Graph graph2 = GraphUtils::CreateGraphFromComputeGraph(compt_graph2);
+
+  auto ret = GraphUtils::CopyGraph(graph, graph2);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestOperater, CopyOperators3) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
+  auto op_desc = transdata->GetOpDesc();
+  op_desc->impl_->input_name_idx_["Data"] = 0;
+  op_desc->impl_->input_name_idx_["Enter"] = 1;
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
+
+  Operator op1 = OpDescUtils::CreateOperatorFromNode(transdata);
+  Operator op2 = OpDescUtils::CreateOperatorFromNode(data);
+  Operator op3 = OpDescUtils::CreateOperatorFromNode(data2);
+
+  ComputeGraphPtr compt_graph = builder.GetGraph();
+  Graph src_graph = GraphUtils::CreateGraphFromComputeGraph(compt_graph);
+  src_graph.AddOp(op1);
+  src_graph.AddOp(op2);
+  src_graph.AddOp(op3);
+
+  ut::GraphBuilder builder2 = ut::GraphBuilder("graph2");
+  auto data3 = builder2.AddNode("Data3", "Data", 0, 1);
+  ComputeGraphPtr dst_compute_graph = builder2.GetGraph();
+  Graph dst_graph = GraphUtils::CreateGraphFromComputeGraph(dst_compute_graph);
+
+  std::map<std::string, ge::Operator> src_op_list =
+    {{string("op1"), op1}, {string("op2"), op2}, {string("op3"), op3}};
+  std::map<std::string, ge::Operator> dst_op_list;
+
+  std::map<ConstNodePtr, NodePtr> node_old_2_new;
+  std::map<ConstOpDescPtr, OpDescPtr> op_desc_old_2_new;
+
+  auto ret = OpDescUtils::CopyOperators(dst_compute_graph, node_old_2_new,
+                                        op_desc_old_2_new, src_op_list, dst_op_list);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 }  // namespace ge
