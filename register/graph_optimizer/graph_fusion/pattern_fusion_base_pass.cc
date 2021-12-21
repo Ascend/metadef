@@ -77,14 +77,14 @@ Status PatternFusionBasePass::Run(ge::ComputeGraph &graph) {
 
   int64_t run_count_attr;
   if (ge::AttrUtils::GetInt(graph, "run_count", run_count_attr)) {
-    ge::AttrUtils::SetInt(graph, "run_count", ++run_count_attr);
+    (void)ge::AttrUtils::SetInt(graph, "run_count", ++run_count_attr);
   }
   // do matching and fusion for each pattern
   bool final_changed = false;
   for (const FusionPattern *pattern : patterns) {
     if (pattern != nullptr) {
       bool changed = false;
-      Status ret = RunOnePattern(graph, *pattern, changed);
+      const Status ret = RunOnePattern(graph, *pattern, changed);
       if (ret != SUCCESS) {
         GELOGW("[RunFusionPass][Check] run pattern %s failed, graph is not changed by it.", pattern->GetName().c_str());
         return ret;
@@ -111,8 +111,11 @@ static bool CheckStreamLabel(vector<ge::NodePtr> &fused_nodes) {
   }
   return true;
 }
-
+#ifdef ONLY_COMPILE_OPEN_SRC
 static bool SetStreamLabelToFusedNodes(vector<ge::NodePtr> &fused_nodes, ge::NodePtr first_node) {
+#else
+static bool SetStreamLabelToFusedNodes(vector<ge::NodePtr> &fused_nodes, const ge::NodePtr first_node) {
+#endif
   string stream_label = "";
   if (ge::AttrUtils::GetStr(first_node->GetOpDesc(), STREAM_LABEL, stream_label)) {
     for (ge::NodePtr &node : fused_nodes) {
@@ -124,18 +127,25 @@ static bool SetStreamLabelToFusedNodes(vector<ge::NodePtr> &fused_nodes, ge::Nod
   }
   return true;
 }
-
+#ifdef ONLY_COMPILE_OPEN_SRC
 void InheritAttrFromOriNode(vector<ge::NodePtr> &original_nodes, const ge::NodePtr &fusion_node) {
+#else
+void InheritAttrFromOriNode(const vector<ge::NodePtr> &original_nodes, const ge::NodePtr &fusion_node) {
+#endif
   for (const auto &origin_node : original_nodes) {
-    int64_t keep_dtype_ = false;
+    int64_t keep_dtype_ = static_cast<int64_t>(false);
     if (ge::AttrUtils::GetInt(origin_node->GetOpDesc(), "_keep_dtype", keep_dtype_) && keep_dtype_ != 0) {
-      ge::AttrUtils::SetInt(fusion_node->GetOpDesc(), "_keep_dtype", keep_dtype_);
+      (void)ge::AttrUtils::SetInt(fusion_node->GetOpDesc(), "_keep_dtype", keep_dtype_);
       break;
     }
   }
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapping &mapping) {
+#else
+void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapping &mapping) const {
+#endif
   std::ostringstream oss;
   oss << std::endl << "Mapping of pattern ";
   oss << pattern.GetName() << ":" << std::endl;
@@ -209,7 +219,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
       return FAILED;
     }
 
-    if (status != SUCCESS && status != NOT_CHANGED) {
+    if ((status != SUCCESS) && (status != NOT_CHANGED)) {
       GELOGE(status, "[Fuse][Graph]Fail with pattern[%s].", pattern.GetName().c_str());
       return status;
     }
@@ -224,7 +234,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
           }
         }
       }
-      SetDataDumpAttr(original_nodes, fus_nodes);
+      (void)SetDataDumpAttr(original_nodes, fus_nodes);
       for (ge::NodePtr &node : fus_nodes) {
         (void)GraphPassUtil::AddNodeFromOpTypeMap(node_map_info, node);
         /* If one of the original node has attribute like keep_dtype_, the fused node
@@ -232,7 +242,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
         InheritAttrFromOriNode(original_nodes, node);
       }
     }
-    changed = (changed || status == SUCCESS);
+    changed = (changed || (status == SUCCESS));
   }
 
   // get match times and effect times
@@ -252,7 +262,7 @@ Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_node
     if (iter != origin_op_anchors_map_.end()) {
       for (const auto &anchor_iter : iter->second) {
         auto next_node_in_anchor = anchor_iter.first;
-        auto fusion_node_out_data_anchor = next_node_in_anchor->GetPeerOutAnchor();
+        const auto fusion_node_out_data_anchor = next_node_in_anchor->GetPeerOutAnchor();
         if (fusion_node_out_data_anchor == nullptr) {
           GELOGW("[Set][Attr] peer_out_anchor is null");
           return FAILED;
@@ -265,7 +275,7 @@ Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_node
           return FAILED;
         }
         if (pattern_fusion_base_pass_impl_ptr_->IsNodesExist(fusion_node, fus_nodes)) {
-          auto origin_node_out_anchor = anchor_iter.second;
+          const auto origin_node_out_anchor = anchor_iter.second;
           if (origin_node_out_anchor == nullptr) {
             GELOGW("[Set][Attr] ori_out_anchor of node %s is null", ori_node->GetName().c_str());
             return FAILED;
@@ -290,7 +300,7 @@ Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_node
   }
 
   if (fus_nodes.size() > 1) {
-    bool is_multi_op = true;
+    const bool is_multi_op = true;
     for (ge::NodePtr &node : fus_nodes) {
       ge::AttrUtils::SetBool(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_IS_MULTIOP, is_multi_op);
     }
@@ -317,9 +327,15 @@ void PrintAllNodes(const std::vector<ge::NodePtr> &scope_nodes) {
   }
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
                                              const std::unordered_set<ge::NodePtr> &scope_nodes_set,
                                              const std::vector<ge::NodePtr> &scope_nodes) {
+#else
+bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
+                                             const std::unordered_set<ge::NodePtr> &scope_nodes_set,
+                                             const std::vector<ge::NodePtr> &scope_nodes) const {
+#endif
   for (const auto &peer_out : node->GetOutAllNodes()) {
     if (scope_nodes_set.count(peer_out)) {
       continue;
@@ -344,7 +360,7 @@ bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
 
 bool PatternFusionBasePass::DetectOneScope(const std::vector<ge::NodePtr> &scope_nodes) {
   /* Create a set for accelerating the searching. */
-  std::unordered_set<ge::NodePtr> scope_nodes_set(scope_nodes.begin(), scope_nodes.end());
+  const std::unordered_set<ge::NodePtr> scope_nodes_set(scope_nodes.begin(), scope_nodes.end());
 
   for (const auto &node: scope_nodes) {
     if (node == nullptr) {
@@ -383,7 +399,7 @@ bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
 }
 
 bool PatternFusionBasePass::CheckGraphCycle(ge::ComputeGraph &graph) const {
-  Status ret = graph.TopologicalSorting();
+  const Status ret = graph.TopologicalSorting();
   if (ret != ge::GRAPH_SUCCESS) {
     return true;
   }
@@ -395,7 +411,7 @@ void PatternFusionBasePass::EnableNetworkAnalysis() {
   if (enable_network_analysis_ptr == nullptr) {
     return;
   }
-  std::string enable_network_analysis_str(enable_network_analysis_ptr);
+  const std::string enable_network_analysis_str(enable_network_analysis_ptr);
   enable_network_analysis_ = atoi(enable_network_analysis_str.c_str());
   GELOGD("[GraphOpt][Init][EnableNetworkAnalysis]The enable_network_analysis is: %d",
          enable_network_analysis_);
