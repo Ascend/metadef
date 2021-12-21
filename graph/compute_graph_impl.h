@@ -121,7 +121,7 @@ class ComputeGraphImpl {
   const std::map<uint32_t, std::string> &GetGraphOpName() const { return op_name_map_; }
   void SetAllNodesInfo(const std::map<OperatorImplPtr, NodePtr> &nodes) { all_nodes_infos_ = nodes; }
 
-  void SetGraphOutNodesInfo(std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
+  void SetGraphOutNodesInfo(const std::vector<std::pair<NodePtr, int32_t>> &out_nodes_info) {
     output_nodes_info_ = out_nodes_info;
   }
 
@@ -208,7 +208,7 @@ class ComputeGraphImpl {
 
   template<typename AnchorPtr>
   void inline GetOutNodesFromAnchor(const AnchorPtr &peer_in_anchor, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    std::vector<NodePtr> &out_nodes) {
+                                    std::vector<NodePtr> &out_nodes) const {
     const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
     if (iter != map_in_edge_num.end()) {
       --iter->second;

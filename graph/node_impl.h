@@ -59,7 +59,7 @@ class Node::NodeImpl {
   OutControlAnchorPtr GetOutControlAnchor() const;
 
   Node::Vistor<NodePtr> GetInNodes(const ConstNodePtr &owner_node) const;
-  bool IsAllInNodesSeen(std::unordered_set<Node *> &nodes_seen) const;
+  bool IsAllInNodesSeen(const std::unordered_set<Node *> &nodes_seen) const;
   Node::Vistor<NodePtr> GetInDataNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetInControlNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetOutNodes(const ConstNodePtr &owner_node) const;
