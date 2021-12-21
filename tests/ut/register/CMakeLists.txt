@@ -36,6 +36,7 @@ set(REGISTER_UT_FILES
     "testcase/register_scope_graph_unittest.cc"
     "testcase/register_scope_pass_unittest.cc"
     "testcase/register_scope_pass_registry_unittest.cc"
+    "testcase/infer_data_slice_registry_unittest.cc"
     "testcase/register_op_tiling_v4_ut.cc"
     "testcase/register_op_tiling_v3_ut.cc"
     "testcase/register_op_tiling_v2_ut.cc"
