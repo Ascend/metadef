@@ -25,12 +25,13 @@
 #include "graph/debug/ge_op_types.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/compute_graph_impl.h"
+#include "external/register/register.h"
 #undef private
 #undef protected
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include "external/register/register.h"
+
 #include "framework/common/debug/ge_log.h"
 #include "register/op_registry.h"
 
@@ -96,6 +97,9 @@ TEST_F(UtestRegister, test_register_dynamic_outputs_op_only_has_partial_output) 
   value.push_back(output2);
   DynamicInputOutputInfo output3(kOutput, "dense_values", 12, "Tdense", 6);
   value.push_back(output3);
+  DynamicInputOutputInfo invalidput(kInvalid, "Invalid", 7, "Invalid", 7);
+  value.push_back(invalidput);
+
   // pre_check
   EXPECT_EQ(op_dst.GetOutputsSize(), 0);
   auto ret = AutoMappingByOpFnDynamic(op_src, op_dst, value);
@@ -171,399 +175,501 @@ void GraphInit(domi::tensorflow::GraphDef &graph_def) {
 
 
 int32_t AutoMappingSubgraphIndexInput(int32_t data_index) {
-    return 0;
+  return 0;
 }
 int32_t AutoMappingSubgraphIndexOutput(int32_t netoutput_index) {
-    return 0;
+  return 0;
 }
 Status AutoMappingSubgraphIndexInput2(int32_t data_index, int32_t &parent_input_index) {
-    return domi::SUCCESS;
+  return domi::SUCCESS;
 }
 Status AutoMappingSubgraphIndexOutput2(int32_t netoutput_index, int32_t &parent_output_index) {
-    parent_output_index++;
-    return domi::SUCCESS;
+  parent_output_index++;
+  return domi::SUCCESS;
 }
 Status AutoMappingSubgraphIndexOutput2Failed(int32_t netoutput_index, int32_t &parent_output_index) {
-    return domi::FAILED;
+  return domi::FAILED;
 }
 
 TEST_F(UtestRegister, AutoMappingSubgraphIndex) {
-    Status stat;
-    auto builder = ut::GraphBuilder("root");
-    auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
-    auto input = builder.AddNode("data", DATA, 1, 1);
-    input->impl_->op_->impl_->meta_data_.type_ = "Data";
-    auto func_node = builder.AddNode("func_node", FRAMEWORKOP, 1, 1);
-    func_node->impl_->op_->impl_->meta_data_.type_ = "FrameworkOp";
-    builder.AddDataEdge(input, 0, func_node, 0);
-    builder.AddDataEdge(func_node, 0, output, 0);
+  Status stat;
+  auto builder = ut::GraphBuilder("root");
+  auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  auto input = builder.AddNode("data", DATA, 1, 1);
+  input->impl_->op_->impl_->meta_data_.type_ = "Data";
+  auto func_node = builder.AddNode("func_node", FRAMEWORKOP, 1, 1);
+  func_node->impl_->op_->impl_->meta_data_.type_ = "FrameworkOp";
+  builder.AddDataEdge(input, 0, func_node, 0);
+  builder.AddDataEdge(func_node, 0, output, 0);
 
-    auto computeGraph = builder.GetGraph();
-    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-    stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput, AutoMappingSubgraphIndexOutput);
-    EXPECT_EQ(stat, domi::FAILED);
+  auto computeGraph = builder.GetGraph();
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
+  stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput, AutoMappingSubgraphIndexOutput);
+  EXPECT_EQ(stat, domi::FAILED);
 }
 
 TEST_F(UtestRegister, AutoMappingSubgraphIndexByDataNode) {
-    Status stat;
-    auto builder = ut::GraphBuilder("root");
-    auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
-    auto func_node = builder.AddNode("func_node", PARTITIONEDCALL, 1, 1);
-    builder.AddDataEdge(func_node, 0, output, 0);
+  Status stat;
+  auto builder = ut::GraphBuilder("root");
+  auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  auto func_node = builder.AddNode("func_node", PARTITIONEDCALL, 1, 1);
+  builder.AddDataEdge(func_node, 0, output, 0);
 
-    auto computeGraph = builder.GetGraph();
-    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-    stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
-    EXPECT_EQ(stat, domi::SUCCESS);
+  auto computeGraph = builder.GetGraph();
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
+  stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
+  EXPECT_EQ(stat, domi::SUCCESS);
 
-    auto input = builder.AddNode("Retval", DATA, 1, 1);
-    input->impl_->op_->impl_->meta_data_.type_ = "_Retval";
-    AttrUtils::SetInt(input->GetOpDesc(), "retval_index", 0);
-    builder.AddDataEdge(input, 0, func_node, 0);
-    stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
-    EXPECT_EQ(stat, domi::SUCCESS);
+  auto input = builder.AddNode("Retval", DATA, 1, 1);
+  input->impl_->op_->impl_->meta_data_.type_ = "_Retval";
+  AttrUtils::SetInt(input->GetOpDesc(), "retval_index", 0);
+  builder.AddDataEdge(input, 0, func_node, 0);
+  stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
+  EXPECT_EQ(stat, domi::SUCCESS);
 }
 
 TEST_F(UtestRegister, AutoMappingSubgraphIndexByDataNode2) {
-    Status stat;
-    auto builder = ut::GraphBuilder("root");
-    auto input = builder.AddNode("index", DATA, 1, 1);
-    input->impl_->op_->impl_->meta_data_.type_ = "Data";
-    AttrUtils::SetInt(input->GetOpDesc(), "index", 0);
-    auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
-    auto func_node = builder.AddNode("func_node", PARTITIONEDCALL, 1, 1);
-    builder.AddDataEdge(input, 0, func_node, 0);
-    builder.AddDataEdge(func_node, 0, output, 0);
+  Status stat;
+  auto builder = ut::GraphBuilder("root");
+  auto input = builder.AddNode("index", DATA, 1, 1);
+  input->impl_->op_->impl_->meta_data_.type_ = "Data";
+  AttrUtils::SetInt(input->GetOpDesc(), "index", 0);
+  auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  auto func_node = builder.AddNode("func_node", PARTITIONEDCALL, 1, 1);
+  builder.AddDataEdge(input, 0, func_node, 0);
+  builder.AddDataEdge(func_node, 0, output, 0);
 
-    auto computeGraph = builder.GetGraph();
-    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-    stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
-    EXPECT_EQ(stat, domi::SUCCESS);
+  auto computeGraph = builder.GetGraph();
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
+  stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
+  EXPECT_EQ(stat, domi::SUCCESS);
 }
 
 
 TEST_F(UtestRegister, AutoMappingSubgraphOutputFail) {
-    Status stat;
-    auto builder = ut::GraphBuilder("root");
-    auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
-    auto input = builder.AddNode("data", DATA, 1, 1);
-    input->impl_->op_->impl_->meta_data_.type_ = "Data";
-    auto func_node = builder.AddNode("func_node", FRAMEWORKOP, 1, 1);
-    func_node->impl_->op_->impl_->meta_data_.type_ = "FrameworkOp";
-    builder.AddDataEdge(input, 0, func_node, 0);
-    builder.AddDataEdge(func_node, 0, output, 0);
+  Status stat;
+  auto builder = ut::GraphBuilder("root");
+  auto output = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  auto input = builder.AddNode("data", DATA, 1, 1);
+  input->impl_->op_->impl_->meta_data_.type_ = "Data";
+  auto func_node = builder.AddNode("func_node", FRAMEWORKOP, 1, 1);
+  func_node->impl_->op_->impl_->meta_data_.type_ = "FrameworkOp";
+  builder.AddDataEdge(input, 0, func_node, 0);
+  builder.AddDataEdge(func_node, 0, output, 0);
 
-    auto computeGraph = builder.GetGraph();
-    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
+  auto computeGraph = builder.GetGraph();
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
 
-    stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2Failed);
-    EXPECT_EQ(stat, domi::FAILED);
+  stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2Failed);
+  EXPECT_EQ(stat, domi::FAILED);
 }
 
 TEST_F(UtestRegister, AutoMappingFnDynamicInputTest) {
-    Status stat;
-	domi::tensorflow::GraphDef graph_def;
-	GraphInit(graph_def);
-    map<std::string, std::pair<std::string, std::string>> name_attr_value;
-    name_attr_value.insert(make_pair(std::string("in"), make_pair(std::string("dynamicName1"), std::string("int"))));
-    name_attr_value.insert(make_pair(std::string("out"), make_pair(std::string("dynamicName2"), std::string("float"))));
+  Status stat;
+  domi::tensorflow::GraphDef graph_def;
+  GraphInit(graph_def);
+  map<std::string, std::pair<std::string, std::string>> name_attr_value;
+  name_attr_value.insert(make_pair(std::string("in"), make_pair(std::string("dynamicName1"), std::string("int"))));
+  name_attr_value.insert(make_pair(std::string("out"), make_pair(std::string("dynamicName2"), std::string("float"))));
 
-    ge::Operator op_dst = ge::Operator("Add", "int");
-    const domi::tensorflow::NodeDef *node;
+  ge::Operator op_dst = ge::Operator("Add", "int");
+  const domi::tensorflow::NodeDef *node;
 
-    int32_t node_size = graph_def.node_size();
-    for(int i=0; i<node_size; i++) {
-        node = graph_def.mutable_node(i);
-        stat = AutoMappingFnDynamic(node, op_dst, name_attr_value, 1, 1);
-        EXPECT_EQ(stat, domi::SUCCESS);
-    }
+  int32_t node_size = graph_def.node_size();
+  for(int i=0; i<node_size; i++) {
+    node = graph_def.mutable_node(i);
+    stat = AutoMappingFnDynamic(node, op_dst, name_attr_value, 1, 1);
+    EXPECT_EQ(stat, domi::SUCCESS);
+  }
 }
 
+TEST_F(UtestRegister, AutoMappingFnDynamicInput) {
+  Status retStat;
+  domi::tensorflow::GraphDef graph_def;
+  GraphInit(graph_def);
+
+  ge::Operator op_dst = ge::Operator("Add", "int");
+  domi::tensorflow::NodeDef *node = graph_def.mutable_node(0);
+
+  // test for add attrs
+  map<std::string, std::pair<std::string, std::string>> name_attrs;
+  domi::tensorflow::AttrValue inValue;
+  inValue.set_s(std::string("stringValue"));
+  inValue.set_i(66);
+  node->mutable_attr()->insert({"inVal", inValue});
+  name_attrs.insert(make_pair(std::string("in"), make_pair(std::string("inName1"), std::string("inVal"))));
+  retStat = AutoMappingFnDynamic(node, op_dst, name_attrs, 1, 1);
+  EXPECT_EQ(retStat, domi::SUCCESS);
+}
+
+TEST_F(UtestRegister, AutoMappingFnDynamicOutput) {
+  Status retStat;
+  domi::tensorflow::GraphDef graph_def;
+  GraphInit(graph_def);
+
+  ge::Operator op_dst = ge::Operator("Add", "int");
+  domi::tensorflow::NodeDef *node = graph_def.mutable_node(0);
+
+  // test for add attrs
+  map<std::string, std::pair<std::string, std::string>> name_attrs;
+  domi::tensorflow::AttrValue outValue;
+  outValue.set_b(true);
+  outValue.set_i(88);
+  node->mutable_attr()->insert({"outVal", outValue});
+  name_attrs.insert(make_pair(std::string("out"), make_pair(std::string("outName1"), std::string("outVal"))));
+  retStat = AutoMappingFnDynamic(node, op_dst, name_attrs, 1, 1);
+  EXPECT_EQ(retStat, domi::SUCCESS);
+}
+
+TEST_F(UtestRegister, AutoMappingFunctionkFunc) {
+  Status retStat;
+  domi::tensorflow::GraphDef graph_def;
+  GraphInit(graph_def);
+
+  ge::Operator op_dst = ge::Operator("Add", "int");
+  op_dst.SubgraphRegister("subVal", true);
+  op_dst.SubgraphCountRegister("subVal", 6);
+
+  // test for add attrs
+  domi::tensorflow::NodeDef *node = graph_def.mutable_node(0);
+  map<std::string, std::pair<std::string, std::string>> name_attrs;
+  domi::tensorflow::AttrValue attrValue;
+  attrValue.set_i(88);
+  domi::tensorflow::NameAttrList *nameAttrList = new domi::tensorflow::NameAttrList();
+  nameAttrList->set_name("nameAttrList");
+  attrValue.unsafe_arena_set_allocated_func(nameAttrList);
+  node->mutable_attr()->insert({"subVal", attrValue});
+  name_attrs.insert(make_pair(std::string("out"), make_pair(std::string("outName1"), std::string("subVal"))));
+  retStat = AutoMappingFnDynamic(node, op_dst, name_attrs, 1, 1);
+  EXPECT_EQ(retStat, domi::FAILED);
+}
+
+TEST_F(UtestRegister, AutoMappingFunctionkList) {
+  Status retStat;
+  domi::tensorflow::GraphDef graph_def;
+  GraphInit(graph_def);
+
+  ge::Operator op_dst = ge::Operator("Add", "int");
+  op_dst.SubgraphRegister("subVal", true);
+
+  // test for add attrs
+  domi::tensorflow::NodeDef *node = graph_def.mutable_node(0);
+  map<std::string, std::pair<std::string, std::string>> name_attrs;
+  domi::tensorflow::AttrValue attrValue;
+  attrValue.set_i(88);
+  domi::tensorflow::AttrValue_ListValue *attrValListVal = new domi::tensorflow::AttrValue_ListValue();
+  attrValListVal->add_s("list0");
+  attrValListVal->add_s("list1");
+  attrValue.unsafe_arena_set_allocated_list(attrValListVal);
+  // list.func
+  domi::tensorflow::NameAttrList *nameAttrList = new domi::tensorflow::NameAttrList();
+  nameAttrList->set_name("nameAttrList");
+  attrValListVal->add_func();
+ 
+  node->mutable_attr()->insert({"subVal", attrValue});
+  name_attrs.insert(make_pair(std::string("out"), make_pair(std::string("outName1"), std::string("subVal"))));
+  retStat = AutoMappingFnDynamic(node, op_dst, name_attrs, 1, 1);
+  EXPECT_EQ(retStat, domi::SUCCESS);
+}
+
+
 domi::Status inputFunc(int32_t data_index, int32_t &parent_input_index) {
-    parent_input_index++;
-    return (parent_input_index<0) ? domi::FAILED : domi::SUCCESS;
+  parent_input_index++;
+  return (parent_input_index<0) ? domi::FAILED : domi::SUCCESS;
 }
 
 domi::Status outputFunc(int32_t netoutput_index, int32_t &parent_output_index) {
-    parent_output_index++;
-    return (parent_output_index<2) ? domi::FAILED : domi::SUCCESS;
+  parent_output_index++;
+  return (parent_output_index<2) ? domi::FAILED : domi::SUCCESS;
 }
 
 domi::Status AutoMappingSubgraphIOIndexFuncCB(const ge::Graph &graph,
-    const std::function<Status(int32_t data_index, int32_t &parent_input_index)> &input,
-    const std::function<Status(int32_t netoutput_index, int32_t &parent_output_index)> &output) {
-    static int test_idx = -2;
+  const std::function<Status(int32_t data_index, int32_t &parent_input_index)> &input,
+  const std::function<Status(int32_t netoutput_index, int32_t &parent_output_index)> &output) {
+  static int test_idx = -2;
 
-    switch(test_idx)
-    {
-        case -2:
-            return input(0, test_idx);
-        case -1:
-            return input(0, test_idx);
-        case 0:
-            return output(0, test_idx);
-        case 1:
-            return output(0, test_idx);
-    }
+  switch(test_idx)
+  {
+    case -2:
+      return input(0, test_idx);
+    case -1:
+      return input(0, test_idx);
+    case 0:
+      return output(0, test_idx);
+    case 1:
+      return output(0, test_idx);
+  }
 }
 
 TEST_F(UtestRegister, FrameworkRegistryTest) {
-    REGISTER_AUTOMAPPING_SUBGRAPH_IO_INDEX_FUNC(TENSORFLOW, AutoMappingSubgraphIOIndexFuncCB);
+  REGISTER_AUTOMAPPING_SUBGRAPH_IO_INDEX_FUNC(TENSORFLOW, AutoMappingSubgraphIOIndexFuncCB);
 
-    FrameworkRegistry &cur = FrameworkRegistry::Instance();
-    cur.AddAutoMappingSubgraphIOIndexFunc(domi::CAFFE, AutoMappingSubgraphIOIndexFuncCB);
+  FrameworkRegistry &cur = FrameworkRegistry::Instance();
+  cur.AddAutoMappingSubgraphIOIndexFunc(domi::CAFFE, AutoMappingSubgraphIOIndexFuncCB);
 
-    const ge::Graph graph("graph_test");
-    AutoMappingSubgraphIOIndexFunc func = cur.GetAutoMappingSubgraphIOIndexFunc(domi::CAFFE);
-    EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::FAILED);
-    EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::SUCCESS);
-    EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::FAILED);
-    EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::SUCCESS);
+  const ge::Graph graph("graph_test");
+  AutoMappingSubgraphIOIndexFunc func = cur.GetAutoMappingSubgraphIOIndexFunc(domi::CAFFE);
+  EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::FAILED);
+  EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::SUCCESS);
+  EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::FAILED);
+  EXPECT_EQ(func(graph, inputFunc, outputFunc), domi::SUCCESS);
 }
 
+TEST_F(UtestRegister, OpRegistrationDataWithNoImpl) {
+  OpRegistrationData opRegData(std::string("OmOptype"));
+  opRegData.impl_.reset();
+  
+  EXPECT_EQ(opRegData.GetOmOptype()=="", true);
+  EXPECT_EQ(opRegData.GetFrameworkType(), domi::FRAMEWORK_RESERVED);
+  EXPECT_EQ(opRegData.GetOriginOpTypeSet().empty(), true);
+  EXPECT_EQ(opRegData.GetParseParamFn(), nullptr);
+  EXPECT_EQ(opRegData.GetParseParamByOperatorFn(), nullptr);
+  EXPECT_EQ(opRegData.GetFusionParseParamFn(), nullptr);
+  EXPECT_EQ(opRegData.GetFusionParseParamByOpFn(), nullptr);
+  EXPECT_EQ(opRegData.GetImplyType(), domi::ImplyType::BUILDIN);
+  EXPECT_EQ(opRegData.GetParseSubgraphPostFn(), nullptr);
+  EXPECT_EQ(opRegData.GetParseOpToGraphFn(), nullptr);
+  ParseSubgraphFuncV2 func;
+  EXPECT_EQ(opRegData.GetParseSubgraphPostFn(func), domi::FAILED);
+}
 
 TEST_F(UtestRegister, OmOptypeTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
-    OpReceiver oprcver(opRegData);
-    opRegData.GetOmOptype();
+  OpRegistrationData opRegData(std::string("OmOptype"));
+  OpReceiver oprcver(opRegData);
+  opRegData.GetOmOptype();
 
-    AscendString OmOptype;
-    Status stat = opRegData.GetOmOptype(OmOptype);
-    EXPECT_EQ(stat, domi::SUCCESS);
+  AscendString OmOptype;
+  Status stat = opRegData.GetOmOptype(OmOptype);
+  EXPECT_EQ(stat, domi::SUCCESS);
 }
 
 TEST_F(UtestRegister, FrameworkTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    opRegData.FrameworkType(domi::MINDSPORE);
-    EXPECT_EQ(opRegData.GetFrameworkType(), domi::MINDSPORE);
+  opRegData.FrameworkType(domi::MINDSPORE);
+  EXPECT_EQ(opRegData.GetFrameworkType(), domi::MINDSPORE);
 }
 
 TEST_F(UtestRegister, OriOpTypeTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
-    OpRegistrationData opRegData2("OmOptype2");
+  OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData2("OmOptype2");
 
-    std::initializer_list<std::string> OptypeList1{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList1);
-    std::vector<AscendString> OptypeList2 = {AscendString("Div"), AscendString("Mul")};
-    opRegData.OriginOpType(OptypeList2);
+  std::initializer_list<std::string> OptypeList1{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList1);
+  std::vector<AscendString> OptypeList2 = {AscendString("Div"), AscendString("Mul")};
+  opRegData.OriginOpType(OptypeList2);
 
-    opRegData2.OriginOpType(std::string("Add"));
-    opRegData2.OriginOpType("Sub");
+  opRegData2.OriginOpType(std::string("Add"));
+  opRegData2.OriginOpType("Sub");
 
-    opRegData.GetOriginOpTypeSet();
-    std::set<ge::AscendString> opTypeSet;
-    Status stat = opRegData.GetOriginOpTypeSet(opTypeSet);
-    EXPECT_EQ(stat, domi::SUCCESS);
+  opRegData.GetOriginOpTypeSet();
+  std::set<ge::AscendString> opTypeSet;
+  Status stat = opRegData.GetOriginOpTypeSet(opTypeSet);
+  EXPECT_EQ(stat, domi::SUCCESS);
 }
 
 TEST_F(UtestRegister, OpRegistryImplyTypeTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
-    std::vector<AscendString> OptypeList2 = {AscendString("Div"), AscendString("Mul")};
-    opRegData.OriginOpType(OptypeList2);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
+  std::vector<AscendString> OptypeList2 = {AscendString("Div"), AscendString("Mul")};
+  opRegData.OriginOpType(OptypeList2);
 
-    // set ImplyType
-    opRegData.ImplyType(domi::ImplyType::CUSTOM);
-    EXPECT_EQ(opRegData.GetImplyType(), domi::ImplyType::CUSTOM);
+  // set ImplyType
+  opRegData.ImplyType(domi::ImplyType::CUSTOM);
+  EXPECT_EQ(opRegData.GetImplyType(), domi::ImplyType::CUSTOM);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
 
-    domi::ImplyType implType = opReg->GetImplyTypeByOriOpType(std::string("Add"));
-    EXPECT_EQ(implType, domi::ImplyType::CUSTOM);
+  domi::ImplyType implType = opReg->GetImplyTypeByOriOpType(std::string("Add"));
+  EXPECT_EQ(implType, domi::ImplyType::CUSTOM);
 
-    implType = opReg->GetImplyType(std::string("OmOptype"));
-    EXPECT_EQ(implType, domi::ImplyType::CUSTOM);
-    implType = opReg->GetImplyType(std::string("strOmOptype"));
-    EXPECT_EQ(implType, domi::ImplyType::BUILDIN);
+  implType = opReg->GetImplyType(std::string("OmOptype"));
+  EXPECT_EQ(implType, domi::ImplyType::CUSTOM);
+  implType = opReg->GetImplyType(std::string("strOmOptype"));
+  EXPECT_EQ(implType, domi::ImplyType::BUILDIN);
 
-    vector<std::string> vecOpType;
-    vecOpType.clear();
-    opReg->GetOpTypeByImplyType(vecOpType, domi::ImplyType::CUSTOM);
-    EXPECT_EQ(vecOpType.empty(), false);
-    vecOpType.clear();
-    opReg->GetOpTypeByImplyType(vecOpType, domi::ImplyType::AI_CPU);
-    EXPECT_EQ(vecOpType.empty(), true);
+  vector<std::string> vecOpType;
+  vecOpType.clear();
+  opReg->GetOpTypeByImplyType(vecOpType, domi::ImplyType::CUSTOM);
+  EXPECT_EQ(vecOpType.empty(), false);
+  vecOpType.clear();
+  opReg->GetOpTypeByImplyType(vecOpType, domi::ImplyType::AI_CPU);
+  EXPECT_EQ(vecOpType.empty(), true);
 }
 
 TEST_F(UtestRegister, DelInputWithTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
+  OpRegistrationData opRegData(std::string("OmOptype"));
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
 
-    opRegData.ParseParamsFn(domi::AutoMappingFn);
-    EXPECT_NE(opRegData.GetParseParamFn(), nullptr);
+  opRegData.ParseParamsFn(domi::AutoMappingFn);
+  EXPECT_NE(opRegData.GetParseParamFn(), nullptr);
 
-    // insert input into vector
-    const vector<int> input_order{0, 1, 3, 2};
-    opRegData.InputReorderVector(input_order);
+  // insert input into vector
+  const vector<int> input_order{0, 1, 3, 2};
+  opRegData.InputReorderVector(input_order);
 
-    opRegData.DelInputWithCond(1, std::string("attrName_1"), true);
-    opRegData.DelInputWithCond(2, "attrName_2", false);
+  opRegData.DelInputWithCond(1, std::string("attrName_1"), true);
+  opRegData.DelInputWithCond(2, "attrName_2", false);
 
-    opRegData.DelInputWithOriginalType(3, std::string("Add"));
-    opRegData.DelInputWithOriginalType(4, "Sub");
+  opRegData.DelInputWithOriginalType(3, std::string("Add"));
+  opRegData.DelInputWithOriginalType(4, "Sub");
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    ASSERT_NE(opReg, nullptr);
-    bool retBool = opReg->Register(opRegData);
-    ASSERT_EQ(retBool, true);
+  OpRegistry *opReg = OpRegistry::Instance();
+  ASSERT_NE(opReg, nullptr);
+  bool retBool = opReg->Register(opRegData);
+  ASSERT_EQ(retBool, true);
 
-    std::vector<RemoveInputConfigure> rmConfigVec;
-    rmConfigVec = opReg->GetRemoveInputConfigure(std::string("Add"));
-    EXPECT_EQ(rmConfigVec.empty(), true);
-    rmConfigVec = opReg->GetRemoveInputConfigure(std::string("Mul"));
-    EXPECT_EQ(rmConfigVec.empty(), true);
-    rmConfigVec = opReg->GetRemoveInputConfigure(std::string("Mul666"));
-    EXPECT_EQ(rmConfigVec.empty(), true);
-
+  std::vector<RemoveInputConfigure> rmConfigVec;
+  rmConfigVec = opReg->GetRemoveInputConfigure(std::string("Add"));
+  EXPECT_EQ(rmConfigVec.empty(), true);
+  rmConfigVec = opReg->GetRemoveInputConfigure(std::string("Mul"));
+  EXPECT_EQ(rmConfigVec.empty(), true);
+  rmConfigVec = opReg->GetRemoveInputConfigure(std::string("Mul666"));
+  EXPECT_EQ(rmConfigVec.empty(), true);
 }
 
 TEST_F(UtestRegister, GetOmTypeByOriOpTypeTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
-    std::string om_type;
-    EXPECT_EQ(opReg->GetOmTypeByOriOpType(std::string("Sub"), om_type), true);
-    EXPECT_EQ(opReg->GetOmTypeByOriOpType(std::string("Sub1"), om_type), false);
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
+  std::string om_type;
+  EXPECT_EQ(opReg->GetOmTypeByOriOpType(std::string("Sub"), om_type), true);
+  EXPECT_EQ(opReg->GetOmTypeByOriOpType(std::string("Sub1"), om_type), false);
 }
 
 domi::Status FusionParseParamsFnCB(const std::vector<const google::protobuf::Message *> Msg, ge::Operator &Op) {
-    return domi::SUCCESS;
+  return domi::SUCCESS;
 }
-
 domi::Status FusionParseParamsFnCB2(const std::vector<ge::Operator> &VecOp, ge::Operator &Op) { 
-    return domi::FAILED; 
+  return domi::FAILED; 
 }
-
 domi::Status ParseSubgraphPostFnCB(const std::string &subgraph_name, const ge::Graph &graph) { 
-    return domi::SUCCESS; 
+  return domi::SUCCESS; 
 }
-
 domi::Status ParseSubgraphPostFnCB2(const ge::AscendString &subgraph_name, const ge::Graph &graph) { 
-    return domi::SUCCESS; 
+  return domi::SUCCESS; 
 }
-
 domi::Status ParseOpToGraphFnCB(const ge::Operator &Op, ge::Graph &Graph) { 
-    return domi::SUCCESS; 
+  return domi::SUCCESS; 
 }
 
 TEST_F(UtestRegister, ParseParamFuncTest) {
-    const std::string strOmOptype = "OmOptype";
-    OpRegistrationData opRegData(strOmOptype);
+  const std::string strOmOptype = "OmOptype";
+  OpRegistrationData opRegData(strOmOptype);
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
-    std::vector<AscendString> OptypeListAStr = {AscendString("Div"), AscendString("Mul")};
-    opRegData.OriginOpType(OptypeListAStr);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
+  std::vector<AscendString> OptypeListAStr = {AscendString("Div"), AscendString("Mul")};
+  opRegData.OriginOpType(OptypeListAStr);
 
-    opRegData.ParseParamsFn(domi::AutoMappingFn);
-    EXPECT_NE(opRegData.GetParseParamFn(), nullptr);
+  opRegData.ParseParamsFn(domi::AutoMappingFn);
+  EXPECT_NE(opRegData.GetParseParamFn(), nullptr);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
 
-    EXPECT_EQ(opReg->GetParseParamFunc(std::string("OmOptype1"), std::string("Sub")), nullptr);
-    EXPECT_EQ(opReg->GetParseParamFunc(std::string("OmOptype"), std::string("Sub")), nullptr);
+  EXPECT_EQ(opReg->GetParseParamFunc(std::string("OmOptype1"), std::string("Sub")), nullptr);
+  EXPECT_EQ(opReg->GetParseParamFunc(std::string("OmOptype"), std::string("Sub")), nullptr);
 }
 
 TEST_F(UtestRegister, FusionParseParamFuncTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
 
-    opRegData.FusionParseParamsFn(FusionParseParamsFnCB);
-    EXPECT_NE(opRegData.GetFusionParseParamFn(), nullptr);
+  opRegData.FusionParseParamsFn(FusionParseParamsFnCB);
+  EXPECT_NE(opRegData.GetFusionParseParamFn(), nullptr);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
 
-    EXPECT_EQ(opReg->GetFusionParseParamFunc(std::string("OmOptype"), std::string("Sub")), nullptr);
-    EXPECT_EQ(opReg->GetFusionParseParamFunc(std::string("OmOptype1"), std::string("Sub")), nullptr);
+  EXPECT_EQ(opReg->GetFusionParseParamFunc(std::string("OmOptype"), std::string("Sub")), nullptr);
+  EXPECT_EQ(opReg->GetFusionParseParamFunc(std::string("OmOptype1"), std::string("Sub")), nullptr);
 }
 
 TEST_F(UtestRegister, GetParseOpToGraphFuncTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
 
-    opRegData.ParseOpToGraphFn(ParseOpToGraphFnCB);
-    EXPECT_NE(opRegData.GetParseOpToGraphFn(), nullptr);
+  opRegData.ParseOpToGraphFn(ParseOpToGraphFnCB);
+  EXPECT_NE(opRegData.GetParseOpToGraphFn(), nullptr);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
-    std::string om_type;
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
+  std::string om_type;
 
-    EXPECT_EQ(opReg->GetParseOpToGraphFunc(std::string("OmOptype"), std::string("Add")), nullptr);
-    EXPECT_EQ(opReg->GetParseOpToGraphFunc(std::string("OmOptype"), std::string("Mul")), nullptr);
+  EXPECT_EQ(opReg->GetParseOpToGraphFunc(std::string("OmOptype"), std::string("Add")), nullptr);
+  EXPECT_EQ(opReg->GetParseOpToGraphFunc(std::string("OmOptype"), std::string("Mul")), nullptr);
 }
 
 TEST_F(UtestRegister, ParseParamByOperatorFuncTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
 
-    opRegData.ParseParamsByOperatorFn(domi::AutoMappingByOpFn);
-    EXPECT_NE(opRegData.GetParseParamByOperatorFn(), nullptr);
+  opRegData.ParseParamsByOperatorFn(domi::AutoMappingByOpFn);
+  EXPECT_NE(opRegData.GetParseParamByOperatorFn(), nullptr);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
 
-    EXPECT_EQ(opReg->GetParseParamByOperatorFunc(std::string("int")), nullptr);
-    EXPECT_EQ(opReg->GetParseParamByOperatorFunc(std::string("Add")), nullptr);
+  EXPECT_EQ(opReg->GetParseParamByOperatorFunc(std::string("int")), nullptr);
+  EXPECT_EQ(opReg->GetParseParamByOperatorFunc(std::string("Add")), nullptr);
 }
 
 TEST_F(UtestRegister, FusionParseParamByOpFuncTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
 
-    opRegData.FusionParseParamsFn(FusionParseParamsFnCB);
-    EXPECT_NE(opRegData.GetFusionParseParamFn(), nullptr);
+  opRegData.FusionParseParamsFn(FusionParseParamsFnCB);
+  EXPECT_NE(opRegData.GetFusionParseParamFn(), nullptr);
 
-    opRegData.FusionParseParamsFn(FusionParseParamsFnCB2);
-    EXPECT_NE(opRegData.GetFusionParseParamByOpFn(), nullptr);
+  opRegData.FusionParseParamsFn(FusionParseParamsFnCB2);
+  EXPECT_NE(opRegData.GetFusionParseParamByOpFn(), nullptr);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
 
-    EXPECT_EQ(opReg->GetFusionParseParamByOpFunc(std::string("strOmOptype"), std::string("Add")), nullptr);
-    EXPECT_EQ(opReg->GetFusionParseParamByOpFunc(std::string("OmOptype"), std::string("Add")), nullptr);
+  EXPECT_EQ(opReg->GetFusionParseParamByOpFunc(std::string("strOmOptype"), std::string("Add")), nullptr);
+  EXPECT_EQ(opReg->GetFusionParseParamByOpFunc(std::string("OmOptype"), std::string("Add")), nullptr);
 }
 
 TEST_F(UtestRegister, ParseSubgraphPostFnTest) {
-    OpRegistrationData opRegData(std::string("OmOptype"));
+  OpRegistrationData opRegData(std::string("OmOptype"));
 
-    std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
-    opRegData.OriginOpType(OptypeList);
+  std::initializer_list<std::string> OptypeList{std::string("Add"), std::string("Sub")};
+  opRegData.OriginOpType(OptypeList);
 
-    opRegData.ParseSubgraphPostFn(ParseSubgraphPostFnCB);
-    EXPECT_NE(opRegData.GetParseSubgraphPostFn(), nullptr);
+  opRegData.ParseSubgraphPostFn(ParseSubgraphPostFnCB);
+  EXPECT_NE(opRegData.GetParseSubgraphPostFn(), nullptr);
 
-    opRegData.ParseSubgraphPostFn(ParseSubgraphPostFnCB2);
-    EXPECT_NE(opRegData.GetParseSubgraphPostFn(), nullptr);
+  opRegData.ParseSubgraphPostFn(ParseSubgraphPostFnCB2);
+  EXPECT_NE(opRegData.GetParseSubgraphPostFn(), nullptr);
 
-    ParseSubgraphFuncV2 Getfunc;
-    opRegData.GetParseSubgraphPostFn(Getfunc);
+  ParseSubgraphFuncV2 Getfunc;
+  opRegData.GetParseSubgraphPostFn(Getfunc);
 
-    OpRegistry *opReg = OpRegistry::Instance();
-    opReg->Register(opRegData);
+  OpRegistry *opReg = OpRegistry::Instance();
+  opReg->Register(opRegData);
 
-    EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("strOmOptype")), nullptr);
-    EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("OmOptype")), nullptr);
+  EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("strOmOptype")), nullptr);
+  EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("OmOptype")), nullptr);
 
-    domi::ParseSubgraphFuncV2 parse_subgraph_func;
-    EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("OmOptype"), parse_subgraph_func), domi::SUCCESS);
-    EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("strOmOptype"), parse_subgraph_func), domi::FAILED);
+  domi::ParseSubgraphFuncV2 parse_subgraph_func;
+  EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("OmOptype"), parse_subgraph_func), domi::SUCCESS);
+  EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("strOmOptype"), parse_subgraph_func), domi::FAILED);
 }
