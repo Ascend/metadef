@@ -40,4 +40,21 @@ TEST_F(UtestOpKernelRegistry, IsRegisteredTest) {
     EXPECT_EQ(ret, false);
 }
 
+TEST_F(UtestOpKernelRegistry, HostCpuOpTest) {
+  OpKernelRegistry op_registry;
+  std::string op_type = "registry";
+  OpKernelRegistry::CreateFn fn = nullptr;
+  op_registry.RegisterHostCpuOp(op_type, fn);
+  std::unique_ptr<HostCpuOp> host_cpu = op_registry.CreateHostCpuOp(op_type);
+  EXPECT_EQ(host_cpu, nullptr);
+}
+
+TEST_F(UtestOpKernelRegistry, HostCpuOpRegistrarTest) {
+  OpKernelRegistry op_registry;
+  HostCpuOpRegistrar host_strar(nullptr, []()->::ge::HostCpuOp* {return nullptr;});
+  std::string op_type = "registry";
+  std::unique_ptr<HostCpuOp> host_cpu = op_registry.CreateHostCpuOp(op_type);
+  EXPECT_EQ(host_cpu, nullptr);
+}
+
 } // namespace ge
