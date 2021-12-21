@@ -21,7 +21,7 @@
 #include "op_tiling/op_tiling_constants.h"
 
 namespace optiling {
-void AddNameToTensordesc(ge::OpDescPtr &op_desc) {
+void AddNameToTensordesc(const ge::OpDescPtr &op_desc) {
   if (!op_desc->HasAttr(ATTR_NAME_OP_INFER_DEPENDS)) {
     return;
   }
@@ -35,7 +35,7 @@ void AddNameToTensordesc(ge::OpDescPtr &op_desc) {
   }
 }
 
-void ReplaceEmptyShapeOfTensorDesc(ge::OpDescPtr &op_desc, std::vector<int32_t> &indexes) {
+void ReplaceEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, std::vector<int32_t> &indexes) {
   size_t input_size = op_desc->GetAllInputsSize();
   for (size_t i = 0; i < input_size; ++i) {
     ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableInputDesc(i);
@@ -63,7 +63,7 @@ void ReplaceEmptyShapeOfTensorDesc(ge::OpDescPtr &op_desc, std::vector<int32_t> 
   }
 }
 
-void RecoveryEmptyShapeOfTensorDesc(ge::OpDescPtr &op_desc, const std::vector<int32_t> &indexes) {
+void RecoveryEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, const std::vector<int32_t> &indexes) {
   for (const int32_t &index : indexes) {
     ge::GeTensorDescPtr tensor_desc_ptr;
     if (index >= 0) {

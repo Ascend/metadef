@@ -67,7 +67,7 @@ ByteBuffer &ByteBufferGet(ByteBuffer &buf, T &value) {
 }
 
 size_t ByteBufferGetAll(ByteBuffer &buf, char *dest, size_t dest_len);
-ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t dest_len);
+ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t data_len);
 
 class CompileInfoCache {
 public:
@@ -104,8 +104,6 @@ public:
   ~OpTilingRegistryInterf_V2() = default;
   static std::unordered_map<std::string, OpTilingFuncV2> &RegisteredOpInterf();
 };
-namespace utils {
-}  // namespace utils
 
 using OpTilingFuncV3 = std::function<bool(const ge::Operator &, const void *, OpRunInfoV2 &)>;
 using OpParseFuncV3 = std::function<void*(const ge::Operator &, const ge::AscendString &)>;

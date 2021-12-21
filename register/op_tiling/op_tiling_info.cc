@@ -155,8 +155,8 @@ void OpRunInfo::InternelSetTiling(const ByteBuffer &value) {
   impl_->SetAllTilingData(value);
 }
 
-void OpRunInfo::AddTilingData(const char *_value, size_t _size) {
-  impl_->AddTilingData(_value, _size);
+void OpRunInfo::AddTilingData(const char *value, size_t size) {
+  impl_->AddTilingData(value, size);
 }
 
 ByteBuffer &OpRunInfo::GetAllTilingData() {
@@ -167,8 +167,8 @@ const ByteBuffer &OpRunInfo::GetAllTilingData() const {
   return impl_->GetAllTilingData();
 }
 
-void OpRunInfo::SetClearAtomic(bool clear_atomic_input) {
-  impl_->SetClearAtomic(clear_atomic_input);
+void OpRunInfo::SetClearAtomic(bool clear_atomic) {
+  impl_->SetClearAtomic(clear_atomic);
 }
 
 bool OpRunInfo::GetClearAtomic() const {
@@ -239,12 +239,12 @@ OpCompileInfo &OpCompileInfo::operator=(OpCompileInfo &&compileinfo) {
   return *this;
 }
 
-void OpCompileInfo::SetKey(const ge::AscendString &_key) {
-  impl_->SetKey(_key);
+void OpCompileInfo::SetKey(const ge::AscendString &key) {
+  impl_->SetKey(key);
 }
 
-void OpCompileInfo::SetValue(const ge::AscendString &_value) {
-  impl_->SetValue(_value);
+void OpCompileInfo::SetValue(const ge::AscendString &value) {
+  impl_->SetValue(value);
 }
 
 const ge::AscendString &OpCompileInfo::GetKey() const {

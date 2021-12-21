@@ -52,15 +52,15 @@ void ParseShapeDesc(const nlohmann::json &shape, std::vector<TeOpTensor> &tensor
 void ParseShapeDescList(const nlohmann::json &shape_list, std::vector<TeOpTensorArg> &op_args) {
   for (const auto &elem : shape_list) {
     TeOpTensorArg tensor_arg;
-    tensor_arg.arg_type = TA_NONE;
+    tensor_arg.arg_type = TensorArgType::TA_NONE;
 
     if (elem.is_array()) {
-      tensor_arg.arg_type = TA_LIST;
+      tensor_arg.arg_type = TensorArgType::TA_LIST;
       for (const auto &shape : elem) {
         ParseShapeDesc(shape, tensor_arg.tensor);
       }
     } else {
-      tensor_arg.arg_type = TA_SINGLE;
+      tensor_arg.arg_type = TensorArgType::TA_SINGLE;
       ParseShapeDesc(elem, tensor_arg.tensor);
     }
     op_args.emplace_back(tensor_arg);
