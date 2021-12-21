@@ -28,6 +28,12 @@ TEST_F(UtestCompileCachePolicy, CreateCCPSuccess_1) {
   ASSERT_NE(ccp, nullptr);
 }
 
+TEST_F(UtestCompileCachePolicy, CreateCCPSuccess_2) {
+  auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(MATCH_POLICY_EXACT_ONLY);
+  auto ap_ptr = PolicyManager::GetInstance().GetAgingPolicy(AGING_POLICY_LRU);
+  auto ccp = ge::CompileCachePolicy::Create(mp_ptr, ap_ptr);
+  ASSERT_NE(ccp, nullptr);
+}
 
 TEST_F(UtestCompileCachePolicy, CreateCCPFailed_1) {
   auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(MATCH_POLICY_EXACT_ONLY);
@@ -51,7 +57,8 @@ TEST_F(UtestCompileCachePolicy, AddCacheSuccess_1) {
   SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
   SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
   SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
+  uint8_t value = 9;
+  uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
@@ -63,6 +70,47 @@ TEST_F(UtestCompileCachePolicy, AddCacheSuccess_1) {
   ASSERT_NE(cache_item, -1);
 }
 
+TEST_F(UtestCompileCachePolicy, AddCacheSuccess_2) {
+  int64_t uid = 100UL;
+  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
+  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
+  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
+  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
+  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
+  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  uint8_t value = 9;
+  uint8_t *data = &value;
+  BinaryHolder holder = BinaryHolder();
+  holder.SharedFrom(data, 1);
+  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
+  CompileCacheDesc ccd1 = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
+                              formats, origin_formats, data_types, other_desc);
+
+  auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
+  CacheItem cache_item = ccp->AddCache(ccd1);
+  ASSERT_NE(cache_item, -1);
+
+  uid++;
+  CompileCacheDesc ccd2 = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
+                              formats, origin_formats, data_types, other_desc);
+  cache_item = ccp->AddCache(ccd2);
+  ASSERT_NE(cache_item, -1);
+
+  bool is_same = CompileCacheDesc::IsSameCompileDesc(ccd1, ccd2);
+  ASSERT_NE(is_same, false);
+}
+
+TEST_F(UtestCompileCachePolicy, CacheHashKey_1) {
+  CacheHashKey seed = 234;
+  SmallVector<CacheHashKey, 3> values = {{2,3,4}};
+
+  CacheHashKey result = HashUtils::HashCombine(seed, values);
+
+  // Hash result of HashUtils::HashCombine
+  // Same with another UT GetCacheDescShapeHash
+  ASSERT_EQ(result, 11093890198896ULL);
+}
+
 TEST_F(UtestCompileCachePolicy, FindCacheSuccess_1) {
   int64_t uid = 100UL;
   SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
@@ -71,7 +119,8 @@ TEST_F(UtestCompileCachePolicy, FindCacheSuccess_1) {
   SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
   SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
   SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
+  uint8_t value = 9;
+  uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
@@ -92,7 +141,8 @@ TEST_F(UtestCompileCachePolicy, DeleteCacheSuccess_1) {
   SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
   SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
   SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
+  uint8_t value = 9;
+  uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
@@ -121,7 +171,8 @@ TEST_F(UtestCompileCachePolicy, AgingCacheSuccess_1) {
   SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
   SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
   SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
+  uint8_t value = 9;
+  uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
