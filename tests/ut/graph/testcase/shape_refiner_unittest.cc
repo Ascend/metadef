@@ -24,6 +24,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph_builder_utils.h"
+#include "graph/debug/ge_op_types.h"
 
 namespace ge {
 class UtestShapeRefiner : public testing::Test {
@@ -225,4 +226,53 @@ TEST_F(UtestShapeRefiner, InferShapeAndType) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
+TEST_F(UtestShapeRefiner, InferShapeAndType2) {
+  auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
+  auto node = CreateNode(graph, "enter", "Enter", 1, 1);
+  auto op = OpDescUtils::CreateOperatorFromNode(node);
+  bool before_subgraph = false;
+
+  auto ret = ShapeRefiner::InferShapeAndType(node, op, before_subgraph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestShapeRefiner, InferShapeAndType3) {
+  auto root_graph = std::make_shared<ComputeGraph>("test_infer_shape");
+  auto root_node = CreateNode(root_graph, "enter", "Enter", 1, 1);
+  auto op_desc = root_node->GetOpDesc();
+  op_desc->AddSubgraphName("sub_graph");
+  op_desc->SetSubgraphInstanceName(0, "sub_graph");
+
+  auto subgraph = std::make_shared<ComputeGraph>("sub_graph");
+  subgraph->SetParentNode(root_node);
+  subgraph->SetParentGraph(root_graph);
+  root_graph->AddSubgraph("sub_graph", subgraph);
+
+  Operator op = OpDescUtils::CreateOperatorFromNode(root_node);
+
+  auto ret = ShapeRefiner::InferShapeAndType(root_node, op, false);
+  EXPECT_NE(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestShapeRefiner, InferShapeAndType4) {
+  auto root_graph = std::make_shared<ComputeGraph>("test_infer_shape");
+  NodePtr root_node = CreateNode(root_graph, "enter", "Enter", 1, 1);
+  auto op_desc = root_node->GetOpDesc();
+  op_desc->AddSubgraphName("sub_graph");
+  op_desc->SetSubgraphInstanceName(0, "sub_graph");
+
+  auto subgraph = std::make_shared<ComputeGraph>("sub_graph");
+  NodePtr sub_node = CreateNode(subgraph, "netoutput", "Netoutput", 1, 1);
+  auto sub_op_desc = sub_node->GetOpDesc();
+  sub_op_desc->SetType(NETOUTPUT);
+
+  subgraph->SetParentNode(root_node);
+  subgraph->SetParentGraph(root_graph);
+  root_graph->AddSubgraph("sub_graph", subgraph);
+
+  Operator op = OpDescUtils::CreateOperatorFromNode(root_node);
+
+  auto ret = ShapeRefiner::InferShapeAndType(root_node, op, false);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
 } // namespace ge
