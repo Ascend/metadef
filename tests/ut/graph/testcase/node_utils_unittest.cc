@@ -500,6 +500,16 @@ TEST_F(UtestNodeUtils, GetDataOutAnchorAndControlInAnchor) {
   EXPECT_EQ(NodeUtils::GetDataOutAnchorAndControlInAnchor(data, out_anch, inc_anch), GRAPH_FAILED);
 }
 
+TEST_F(UtestNodeUtils, GetDataOutAnchorAndControlInAnchor_Peer) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data0 = builder.AddNode("Data0", "Data", 0, 1);
+  auto data1 = builder.AddNode("Data1", "Data", 0, 1);
+  OutDataAnchorPtr out_data;
+  InControlAnchorPtr in_control;
+  EXPECT_EQ(data0->GetAllOutDataAnchors().at(0)->LinkTo(data1->GetInControlAnchor()), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::GetDataOutAnchorAndControlInAnchor(data0, out_data, in_control), GRAPH_SUCCESS);
+}
+
 TEST_F(UtestNodeUtils, ClearInDataAnchor) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 1, 1);
@@ -550,6 +560,19 @@ TEST_F(UtestNodeUtils, MoveOutputEdges) {
   EXPECT_EQ(NodeUtils::MoveOutputEdges(const2, const1), GRAPH_SUCCESS);
 }
 
+TEST_F(UtestNodeUtils, MoveOutputEdges_Link) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data0 = builder.AddNode("Data0", DATA, 1, 1);
+  auto data1 = builder.AddNode("Data1", DATA, 1, 1);
+  auto data2 = builder.AddNode("Data2", DATA, 1, 1);
+  auto data3 = builder.AddNode("Data3", DATA, 1, 1);
+  auto data4 = builder.AddNode("Data4", DATA, 1, 1);
+  EXPECT_EQ(data0->GetAllOutDataAnchors().at(0)->LinkTo(data2->GetInControlAnchor()), GRAPH_SUCCESS);
+  EXPECT_EQ(data0->GetOutControlAnchor()->LinkTo(data3->GetInControlAnchor()), GRAPH_SUCCESS);
+  EXPECT_EQ(data0->GetOutControlAnchor()->LinkTo(data4->GetInDataAnchor(0)), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtils::MoveOutputEdges(data0, data1), GRAPH_SUCCESS);
+}
+
 TEST_F(UtestNodeUtils, UpdateIsInputConst_Normal) {
   NodeUtils::UpdateIsInputConst(nullptr);
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
@@ -558,6 +581,18 @@ TEST_F(UtestNodeUtils, UpdateIsInputConst_Normal) {
   NodeUtils::UpdateIsInputConst(*data);
   data->impl_->op_ = nullptr;
   NodeUtils::UpdateIsInputConst(data);
+}
+
+TEST_F(UtestNodeUtils, UpdateIsInputConst_Nullptr) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data1 = builder.AddNode("Data1", DATA, 2, 2);
+  auto data2 = builder.AddNode("Data2", DATA, 1, 1);
+  data1->impl_->in_data_anchors_.at(1) = nullptr;
+  EXPECT_EQ(data1->GetInDataAnchor(0)->LinkFrom(data2->GetOutDataAnchor(0)), GRAPH_SUCCESS);
+  auto node = data2->GetOutDataAnchor(0)->GetOwnerNode();
+  auto p = node.get();
+  p = nullptr;
+  NodeUtils::UpdateIsInputConst(data1);
 }
 
 
@@ -591,6 +626,20 @@ TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc) {
   EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_FAILED);
 }
 
+TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc_PeerIndata) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data1 = builder.AddNode("Data1", DATA, 1, 1);
+  auto data2 = builder.AddNode("Data2", DATA, 1, 1);
+  auto data3 = builder.AddNode("Data3", DATA, 1, 1);
+  EXPECT_EQ(data1->GetOutDataAnchor(0)->LinkTo(data2->GetInDataAnchor(0)), GRAPH_SUCCESS);
+  auto node = data2->GetInDataAnchor(0)->GetOwnerNode();
+  node->GetOpDesc()->SetId(1);
+  data1->GetOpDesc()->SetId(10);
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data1), GRAPH_SUCCESS);
+  node->impl_->op_ = nullptr;
+  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data1), GRAPH_SUCCESS);
+}
+
 TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc_LinkInData) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data_node = builder.AddNode("Data", "Data", 1, 1);
@@ -616,6 +665,23 @@ TEST_F(UtestNodeUtils, AppendRemoveAnchor) {
   EXPECT_EQ(NodeUtils::RemoveOutputAnchor(data, 22), GRAPH_SUCCESS);
 }
 
+TEST_F(UtestNodeUtils, RemoveInputAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 1, 1);
+  EXPECT_EQ(data->GetOpDesc()->GetInputsSize(), 1);
+  EXPECT_EQ(data->GetOpDesc()->AddInputDesc(GeTensorDesc()), GRAPH_SUCCESS);
+  EXPECT_EQ(data->GetOpDesc()->GetInputsSize(), 2);
+  EXPECT_EQ(NodeUtils::RemoveInputAnchor(data, 0), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, RemoveOutputAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 1, 1);
+  EXPECT_EQ(data->GetOpDesc()->GetOutputsSize(), 1);
+  EXPECT_EQ(NodeUtils::RemoveOutputAnchor(data, 0), GRAPH_SUCCESS);
+}
+
+
 TEST_F(UtestNodeUtils, IsInNodesEmpty) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 0, 1);
@@ -632,6 +698,16 @@ TEST_F(UtestNodeUtils, IsInNodesEmpty) {
   EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
   EXPECT_EQ(const2->GetOutDataNodes().size(), 1);
   EXPECT_EQ(const1->impl_->in_data_anchors_.size(), 2);
+  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*const1), false);
+}
+
+TEST_F(UtestNodeUtils, IsInNodesEmpty_Peer) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto const1 = builder.AddNode("const1", "Const", 1, 1);
+  auto const2 = builder.AddNode("const2", "Const", 1, 1);
+  EXPECT_EQ(const1->GetInControlAnchor()->LinkFrom(const2->GetOutControlAnchor()), GRAPH_SUCCESS);
+  EXPECT_EQ(const2->GetOutDataNodes().size(), 0);
+  EXPECT_EQ(const1->impl_->in_data_anchors_.size(), 1);
   EXPECT_EQ(NodeUtils::IsInNodesEmpty(*const1), false);
 }
 
@@ -729,6 +805,23 @@ TEST_F(UtestNodeUtils, IsWhileVaryingInput) {
   const auto &data11 = root_builder.AddNode("data11", DATA, 0, 1);
   data11->SetOwnerComputeGraph(sub_graph);
   EXPECT_EQ(NodeUtils::IsWhileVaryingInput(data11), false);
+}
+
+TEST_F(UtestNodeUtils, IsWhileVaryingInput_While) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &while1 = root_builder.AddNode("while1", "While", 1, 1);
+  const auto &root_graph = root_builder.GetGraph();
+  auto sub_builder = ut::GraphBuilder("sub");
+  const auto &const1 = sub_builder.AddNode("const1", CONSTANT, 1, 1);
+  const auto &netoutput = sub_builder.AddNode("netoutput", NETOUTPUT, 1, 1);
+  const auto &data0 = sub_builder.AddNode("data0", DATA, 1, 1);
+  const auto &sub_graph = sub_builder.GetGraph();
+  sub_graph->SetParentNode(while1);
+  sub_graph->SetParentGraph(root_graph);
+  EXPECT_EQ(NodeUtils::IsWhileVaryingInput(data0), false);
+  //EXPECT_EQ(NodeUtils::IsWhileVaryingInput(while1), false);
+  EXPECT_EQ(AttrUtils::SetInt(data0->GetOpDesc(), "_parent_node_index", 1), true);
+  EXPECT_EQ(NodeUtils::IsWhileVaryingInput(data0), true);
 }
 
 TEST_F(UtestNodeUtils, RemoveSubgraphsOnNode) {

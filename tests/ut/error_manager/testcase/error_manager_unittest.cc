@@ -102,6 +102,7 @@ TEST_F(UtestErrorManager, GetErrorMessage) {
   EXPECT_EQ(instance.GetErrorMessage(), "");
 }
 
+
 TEST_F(UtestErrorManager, GetWarningMessage) {
   auto &instance = ErrorManager::GetInstance();
   EXPECT_EQ(instance.GetWarningMessage(), "");
@@ -193,12 +194,5 @@ TEST_F(UtestErrorManager, ReportMstuneCompileFailedMsg_Success) {
   instance.compile_failed_msg_map_["root_graph_name"] = std::map<std::string, std::vector<std::string>>();
   EXPECT_EQ(instance.ReportMstuneCompileFailedMsg(root_graph_name, msg), 0);
 }
-
-TEST_F(UtestErrorManager, ReadJsonFile) {
-  auto &instance = ErrorManager::GetInstance();
-  EXPECT_EQ(instance.ReadJsonFile("", nullptr), -1);
-}
-
-
 
 }
