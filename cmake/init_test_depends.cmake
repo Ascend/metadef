@@ -11,3 +11,6 @@ target_compile_options(graph_static PRIVATE
 
 target_compile_options(register_static PRIVATE
     -g --coverage -fprofile-arcs -fPIC -O0 -ftest-coverage)
+
+target_compile_options(error_manager_static PRIVATE
+    -g --coverage -fprofile-arcs -fPIC -O0 -ftest-coverage)
