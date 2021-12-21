@@ -22,3 +22,4 @@ endif()
 
 add_subdirectory(graph)
 add_subdirectory(register)
+add_subdirectory(error_manager)
