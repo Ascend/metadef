@@ -476,7 +476,10 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const 
       index++;
   }
 
-  op_desc_dst->CopyAttrsFrom(*op_desc_src);
+  for (const auto &iter : op_desc_src->GetAllAttrs()) {
+    (void) op_desc_dst->SetAttr(iter.first, iter.second);
+  }
+
   const Status ret = SetOpdescInputOutputFormat(op_desc_dst);
   if (ret != SUCCESS) {
     GELOGE(FAILED, "[Set][Format]op_name:%s", op_desc_dst->GetName().c_str());
