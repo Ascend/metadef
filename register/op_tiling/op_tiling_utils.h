@@ -23,9 +23,9 @@
 #include "graph/debug/ge_log.h"
 
 namespace optiling {
-void AddNameToTensordesc(ge::OpDescPtr &op_desc);
-void ReplaceEmptyShapeOfTensorDesc(ge::OpDescPtr &op_desc, std::vector<int32_t> &indexes);
-void RecoveryEmptyShapeOfTensorDesc(ge::OpDescPtr &op_desc, const std::vector<int32_t> &indexes);
+void AddNameToTensordesc(const ge::OpDescPtr &op_desc);
+void ReplaceEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, std::vector<int32_t> &indexes);
+void RecoveryEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, const std::vector<int32_t> &indexes);
 
 union Fp32
 {

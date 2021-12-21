@@ -22,17 +22,17 @@
 #include "graph/types.h"
 
 namespace optiling {
-static const std::string COMPILE_INFO_JSON = "compile_info_json";
-static const std::string COMPILE_INFO_KEY = "compile_info_key";
-static const std::string COMPILE_INFO_WORKSPACE_SIZE_LIST = "_workspace_size_list";
-static const std::string ATOMIC_COMPILE_INFO_JSON = "_atomic_compile_info_json";
-static const std::string ATOMIC_COMPILE_INFO_KEY = "_atomic_compile_info_key";
-static const std::string ATTR_NAME_ATOMIC_CLEAN_WORKSPACE = "_optiling_atomic_add_mem_size";
-static const std::string ATTR_NAME_OP_INFER_DEPENDS = "_op_infer_depends";
-static const std::string OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN = "DynamicAtomicAddrClean";
-static const std::string OP_TYPE_AUTO_TILING = "AutoTiling";
+const std::string COMPILE_INFO_JSON = "compile_info_json";
+const std::string COMPILE_INFO_KEY = "compile_info_key";
+const std::string COMPILE_INFO_WORKSPACE_SIZE_LIST = "_workspace_size_list";
+const std::string ATOMIC_COMPILE_INFO_JSON = "_atomic_compile_info_json";
+const std::string ATOMIC_COMPILE_INFO_KEY = "_atomic_compile_info_key";
+const std::string ATTR_NAME_ATOMIC_CLEAN_WORKSPACE = "_optiling_atomic_add_mem_size";
+const std::string ATTR_NAME_OP_INFER_DEPENDS = "_op_infer_depends";
+const std::string OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN = "DynamicAtomicAddrClean";
+const std::string OP_TYPE_AUTO_TILING = "AutoTiling";
 
-static const std::map<ge::DataType, std::string> DATATYPE_STRING_MAP {
+const std::map<ge::DataType, std::string> DATATYPE_STRING_MAP {
     {ge::DT_FLOAT, "float32"},
     {ge::DT_FLOAT16, "float16"},
     {ge::DT_INT8, "int8"},
