@@ -18,6 +18,7 @@
 #define protected public
 #define private public
 #include "graph/compute_graph.h"
+#include "graph/compute_graph_impl.h"
 #include "graph/op_desc.h"
 #include "graph/op_desc_impl.h"
 #include "graph/ge_tensor.h"
@@ -267,5 +268,250 @@ TEST_F(UtestComputeGraph, ReorderEventNodes_success) {
   auto graph = builder.GetGraph();
 
   EXPECT_EQ(graph->ReorderEventNodes(), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, DFSTopologicalSorting_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+  std::vector<NodePtr> vec_nodes{node1, node2, node3};
+
+  builder.AddControlEdge(node1, node2);
+  builder.AddControlEdge(node3, node1);
+
+  std::vector<NodePtr> stack{};
+  auto graph = builder.GetGraph();
+  std::map<NodePtr, uint32_t> map_in_edge_num{};
+  EXPECT_EQ(graph->DFSTopologicalSorting(vec_nodes, map_in_edge_num, stack, false),
+    GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, BFSTopologicalSorting_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+  std::vector<NodePtr> vec_nodes{node1, node2, node3};
+
+  builder.AddControlEdge(node1, node2);
+  builder.AddControlEdge(node3, node1);
+
+  std::deque<NodePtr> stack{};
+  auto graph = builder.GetGraph();
+  std::map<NodePtr, uint32_t> map_in_edge_num{};
+  EXPECT_EQ(graph->BFSTopologicalSorting(vec_nodes, map_in_edge_num, stack), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, CollectBreadthOutNode_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 2, 2);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+  builder.AddDataEdge(node1, 0, node2, 0);
+  builder.AddDataEdge(node2, 0, node1, 0);
+  builder.AddControlEdge(node2, node1);
+  builder.AddControlEdge(node1, node3);
+  std::map<NodePtr, uint32_t> map_in_edge_num{};
+  std::map<std::string, NodePtr> breadth_node_map{};
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->CollectBreadthOutNode(node1, map_in_edge_num, breadth_node_map), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, TopologicalSorting_success) {
+  const auto func = [](const NodePtr &node1, const NodePtr &node2) -> bool { return true; };
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
+  auto graph = builder.GetGraph();
+  graph->TopologicalSorting(func);
+  EXPECT_EQ(node1->GetOpDesc()->GetId(), 1);
+  EXPECT_EQ(node2->GetOpDesc()->GetId(), 0);
+}
+
+TEST_F(UtestComputeGraph, SortNodes_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+  const auto &node4 = builder.AddNode("node4", "node4", 1, 0);
+
+  builder.AddControlEdge(node1, node2);
+  builder.AddControlEdge(node3, node1);
+  builder.AddControlEdge(node2, node4);
+  auto graph = builder.GetGraph();
+  std::map<NodePtr, uint32_t> map_in_edge_num{{node1, 2},{node2, 2},{node3, 2}};
+  std::vector<NodePtr> stack{};
+  EXPECT_EQ(graph->SortNodes(stack, map_in_edge_num), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, GetInEdgeSize_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 2, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 0, 1);
+  builder.AddDataEdge(node2, 0, node1, 0);
+  builder.AddDataEdge(node3, 0, node1, 1);
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->GetInEdgeSize(node1), 2);
+}
+
+TEST_F(UtestComputeGraph, GetOutEdgeSize_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 2);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 0);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 0);
+  builder.AddDataEdge(node1, 0, node2, 0);
+  builder.AddDataEdge(node1, 1, node3, 0);
+  auto graph = builder.GetGraph();
+  graph->Dump();
+  EXPECT_EQ(graph->GetOutEdgeSize(node1), 2);
+}
+
+TEST_F(UtestComputeGraph, IsValid_success) {
+  auto graph = std::make_shared<ComputeGraph>("graph");
+  EXPECT_EQ(graph->IsValid(), false);
+}
+
+TEST_F(UtestComputeGraph, InValid_success) {
+  const auto func = [](const NodePtr &node1, const NodePtr &node2) -> bool { return true; };
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
+  auto graph = builder.GetGraph();
+  graph->TopologicalSorting(func);
+  EXPECT_EQ(graph->IsValid(), true);
+  graph->InValid();
+  EXPECT_EQ(graph->IsValid(), false);
+}
+
+TEST_F(UtestComputeGraph, Swap_success) {
+  auto builder1 = ut::GraphBuilder("graph1");
+  const auto &node1 = builder1.AddNode("node1", "node1", 0, 0);
+  auto graph1 = builder1.GetGraph();
+  auto builder2 = ut::GraphBuilder("graph2");
+  const auto &node2 = builder2.AddNode("node2", "node2", 0, 0);
+  const auto &node3 = builder2.AddNode("node3", "node3", 0, 0);
+  auto graph2 = builder2.GetGraph();
+
+  graph1->Swap(*(graph2));
+  EXPECT_EQ(graph1->GetNodes(false).size(), 2);
+  EXPECT_EQ(graph2->GetNodes(false).size(), 1);
+  EXPECT_EQ(graph1->GetName(), "graph2");
+  EXPECT_EQ(graph2->GetName(), "graph1");
+}
+
+TEST_F(UtestComputeGraph, InsertToNodeList_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
+  const auto &node3 = builder.AddNode("node3", "node1", 0, 0);
+  auto graph = builder.GetGraph();
+  graph->InsertToNodeList(graph->impl_->nodes_.begin(), node3);
+  EXPECT_EQ(*(graph->impl_->nodes_.begin()), node3);
+}
+
+TEST_F(UtestComputeGraph, PushBackToNodeList_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
+  const auto &node3 = builder.AddNode("node3", "node3", 0, 0);
+  auto graph = builder.GetGraph();
+  graph->PushBackToNodeList(node1);
+  auto node_list = graph->GetDirectNode();
+  EXPECT_EQ(*(node_list.end() - 1), node1);
+}
+
+TEST_F(UtestComputeGraph, EmplaceBackToNodeList_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
+  const auto &node3 = builder.AddNode("node3", "node1", 0, 0);
+  auto graph = builder.GetGraph();
+  graph->EmplaceBackToNodeList(node1);
+  auto node_list = graph->GetDirectNode();
+  EXPECT_EQ(*(node_list.end() - 1) , node1);
+}
+
+TEST_F(UtestComputeGraph, ClearNodeList_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
+  const auto &node3 = builder.AddNode("node3", "node1", 0, 0);
+  auto graph = builder.GetGraph();
+  graph->ClearNodeList();
+  EXPECT_EQ(graph->GetDirectNode().size(), 0);
+}
+
+TEST_F(UtestComputeGraph, IsolateNode_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 2, 2);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 0);
+  const auto &node4 = builder.AddNode("node4", "node4", 0, 1);
+  const auto &node5 = builder.AddNode("node5", "node5", 1, 0);
+  builder.AddDataEdge(node2, 0, node1, 0);
+  builder.AddDataEdge(node1, 0, node3, 0);
+  builder.AddControlEdge(node1, node4);
+  builder.AddControlEdge(node5, node1);
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->IsolateNode(node1), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, RemoveExtraOutEdge_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 0);
+  builder.AddControlEdge(node1, node2);
+  builder.AddControlEdge(node3, node1);
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->RemoveExtraOutEdge(node1), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, Verify_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->Verify(), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, InferOriginFormat_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 1);
+  builder.AddDataEdge(node1, 0, node2, 0);
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->InferOriginFormat(), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, InferShapeInNeed_success) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 0);
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 1);
+  builder.AddDataEdge(node1, 0, node2, 0);
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->InferShapeInNeed(), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, SetSessionID_success) {
+  auto graph = std::make_shared<ComputeGraph>("graph");
+  auto session_id = graph->GetSessionID() + 1;
+  graph->SetSessionID(session_id);
+  EXPECT_EQ(graph->GetSessionID(), session_id);
+}
+
+TEST_F(UtestComputeGraph, SetGraphID_success) {
+  auto graph = std::make_shared<ComputeGraph>("graph");
+  auto graph_id = graph->GetGraphID() + 1;
+  graph->SetGraphID(graph_id);
+  EXPECT_EQ(graph->GetGraphID(), graph_id);
+}
+
+TEST_F(UtestComputeGraph, SetSummaryGraph_success) {
+  auto graph = std::make_shared<ComputeGraph>("graph");
+  auto summary_flag = !graph->IsSummaryGraph();
+  graph->SetSummaryFlag(summary_flag);
+  EXPECT_EQ(graph->IsSummaryGraph(), summary_flag);
 }
 }
