@@ -329,20 +329,20 @@ TEST_F(UtestScopeGraph, ScopeImplAddNodesTest) {
     const ScopeTree *scopeTree = scope_graph->GetScopeTree();
 
     OperatorPtr nodeDef1 = nullptr;
-    scopeTree->impl_->scopes_.front()->impl_->AddNode(nodeDef1);
+    scopeTree->GetAllScopes().front()->impl_->AddNode(nodeDef1);
     scopeTree->impl_->AddNodeToScope(nodeDef1);
 
     OperatorPtr nodeDef2(new (std::nothrow) ge::Operator("add0/sub0", "Add"));
-    scopeTree->impl_->scopes_.front()->impl_->AddNode(nodeDef2);
+    scopeTree->GetAllScopes().front()->impl_->AddNode(nodeDef2);
     scopeTree->impl_->AddNodeToScope(nodeDef2);
-    EXPECT_EQ(scopeTree->impl_->scopes_.empty(), false);
+    EXPECT_EQ(scopeTree->GetAllScopes().empty(), false);
 
     std::unordered_map<AscendString, ge::OperatorPtr> node_map;
-    scopeTree->impl_->scopes_.front()->AllNodesMap();
-    ret = scopeTree->impl_->scopes_.front()->AllNodesMap(node_map);
+    scopeTree->GetAllScopes().front()->AllNodesMap();
+    ret = scopeTree->GetAllScopes().front()->AllNodesMap(node_map);
     EXPECT_EQ(ret, ge::SUCCESS); 
 
-    std::vector<Scope *> scopes = scopeTree->impl_->scopes_.front()->impl_->GetAllSubScopes();
+    std::vector<Scope *> scopes = scopeTree->GetAllScopes().front()->impl_->GetAllSubScopes();
     EXPECT_EQ(scopes.empty(), false);
 }
 
@@ -356,9 +356,9 @@ TEST_F(UtestScopeGraph, GetScopeLastName) {
     auto &impl = scope_graph->impl_;
     impl->BuildScopeGraph(&graph_def);
     const ScopeTree *scopeTree = scope_graph->GetScopeTree();
-    scopeTree->impl_->scopes_.front()->LastName();
+    scopeTree->GetAllScopes().front()->LastName();
     AscendString name;
-    ret = scopeTree->impl_->scopes_.front()->LastName(name);
+    ret = scopeTree->GetAllScopes().front()->LastName(name);
     EXPECT_EQ(ret, ge::SUCCESS);
 }
 
@@ -373,19 +373,19 @@ TEST_F(UtestScopeGraph, TrimScopeIndex) {
     const ScopeTree *scopeTree = scope_graph->GetScopeTree();
 
     std::string scope_str = "scope_str_2";
-    std::string retStr1 = scopeTree->impl_->scopes_.front()->impl_->TrimScopeIndex(scope_str);
+    std::string retStr1 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
     EXPECT_EQ(retStr1 == scope_str, false);
     
     scope_str = "scope_str_9223372036854775807";
-    std::string retStr2 = scopeTree->impl_->scopes_.front()->impl_->TrimScopeIndex(scope_str);
+    std::string retStr2 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
     EXPECT_EQ(retStr2 == scope_str, true);
     
     scope_str = "scope_str_";
-    std::string retStr3 = scopeTree->impl_->scopes_.front()->impl_->TrimScopeIndex(scope_str);
+    std::string retStr3 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
     EXPECT_EQ(retStr3 == scope_str, true);
 
     scope_str = "scope_66666";
-    std::string retStr4 = scopeTree->impl_->scopes_.front()->impl_->TrimScopeIndex(scope_str);
+    std::string retStr4 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
     EXPECT_EQ(retStr4 == scope_str, false);
 }
 
@@ -402,21 +402,21 @@ TEST_F(UtestScopeGraph, ScopeImplOpTypeTest) {
 
     const std::string op_type1 = "Add";
     const std::string op_type2 = "Mul666";
-    retInt = scopeTree->impl_->scopes_.front()->impl_->GetOpTypeNum(op_type1);
+    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type1);
     EXPECT_EQ(retInt, -1);
-    retInt = scopeTree->impl_->scopes_.front()->impl_->GetOpTypeNum(std::string("type1"));
+    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(std::string("type1"));
     EXPECT_EQ(retInt, -1);
 
-    scopeTree->impl_->scopes_.front()->impl_->OpsNumInc(op_type1);
-    scopeTree->impl_->scopes_.front()->impl_->OpsNumInc(op_type1);
-    scopeTree->impl_->scopes_.front()->impl_->OpsNumInc(op_type2);
-    retInt = scopeTree->impl_->scopes_.front()->impl_->GetOpTypeNum(op_type1);
+    scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type1);
+    scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type1);
+    scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type2);
+    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type1);
     EXPECT_EQ(retInt, 2);
-    retInt = scopeTree->impl_->scopes_.front()->impl_->GetOpTypeNum(op_type2);
+    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type2);
     EXPECT_EQ(retInt, 1);
 
-    scopeTree->impl_->scopes_.front()->impl_->ClearTypeAndSubType();
-    const std::vector<Scope *> &sub_scopes = scopeTree->impl_->scopes_.front()->impl_->GetAllSubScopes();
+    scopeTree->GetAllScopes().front()->impl_->ClearTypeAndSubType();
+    const std::vector<Scope *> &sub_scopes = scopeTree->GetAllScopes().front()->impl_->GetAllSubScopes();
     for (auto &sub_scope : sub_scopes) {
         std::string type = sub_scope->SubType();
         EXPECT_EQ(type == "", true);
@@ -437,30 +437,30 @@ TEST_F(UtestScopeGraph, scopeGraphInit) {
     // init
     const char_t *name = "init_name";
     const char_t *sub_type = "sub_type";
-    scopeTree->impl_->scopes_.front()->Init(name, sub_type, nullptr);
+    scopeTree->GetAllScopes().front()->Init(name, sub_type, nullptr);
 
     // Name
     AscendString a_name;
-    ret = scopeTree->impl_->scopes_.front()->Name(a_name);
+    ret = scopeTree->GetAllScopes().front()->Name(a_name);
     EXPECT_EQ(ret, ge::SUCCESS);
 
     // SubType
-    scopeTree->impl_->scopes_.front()->SubType();
+    scopeTree->GetAllScopes().front()->SubType();
     AscendString type;
-    ret = scopeTree->impl_->scopes_.front()->SubType(type);
+    ret = scopeTree->GetAllScopes().front()->SubType(type);
     EXPECT_EQ(ret, ge::SUCCESS);
 
     // GetScope
-    const Scope *scope1 = scopeTree->impl_->scopes_.front()->GetSubScope(std::string("Add"));
+    const Scope *scope1 = scopeTree->GetAllScopes().front()->GetSubScope(std::string("Add"));
     EXPECT_EQ(scope1, nullptr);
     // Used to test function overloading
-    const Scope *scope2 = scopeTree->impl_->scopes_.front()->GetSubScope("Add");
+    const Scope *scope2 = scopeTree->GetAllScopes().front()->GetSubScope("Add");
     EXPECT_EQ(scope2, nullptr);
 
-    const Scope *scope3 = scopeTree->impl_->scopes_.front()->GetFatherScope();
+    const Scope *scope3 = scopeTree->GetAllScopes().front()->GetFatherScope();
     EXPECT_EQ(scope3, nullptr);
 
-    std::vector<Scope *> scopes = scopeTree->impl_->scopes_.front()->GetAllSubScopes();
+    std::vector<Scope *> scopes = scopeTree->GetAllScopes().front()->GetAllSubScopes();
     EXPECT_EQ(scopes.empty(), true);
 
     // GetNodesMap

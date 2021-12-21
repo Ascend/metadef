@@ -382,8 +382,13 @@ TEST_F(AutoMappingUtils, ConvertValueTest) {
 
   value.set_s(std::string("valueString"));
   value.set_has_s();
-  ge::AutoMappingUtil::ConvertValue(convertName, value, ge_func, 0);
+  auto op_desc = std::make_shared<OpDesc>();
+  ge::AutoMappingUtil::ConvertValue(convertName, value, op_desc, 0);
   std::string valueStr;
+  ge::AttrUtils::GetStr(op_desc, convertName, valueStr);
+  EXPECT_EQ(valueStr=="valueString", true);
+
+  ge::AutoMappingUtil::ConvertValue(convertName, value, ge_func, 0);
   ge::AttrUtils::GetStr(ge_func, convertName, valueStr);
   EXPECT_EQ(valueStr=="valueString", true);
 }
