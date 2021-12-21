@@ -340,6 +340,90 @@ Status TbeCommonRules2FusionPass::GetFusionNodes(const BufferFusionMapping &mapp
   return ge::GRAPH_SUCCESS;
 }
 
+static const char PATTERN_STRIDED_READ[] = "stridedread";
+static const char PATTERN_CONV[] = "convolution";
+static const char PATTERN_STRIDED_WRITE[] = "stridedwrite";
+static const int FUSION_OP_NUM_MAX = 10;
+
+class ConveragePass : public BufferFusionPassBase {
+ public:
+  explicit ConveragePass() {}
+
+  ~ConveragePass() override {}
+
+ protected:
+
+  /*
+  * @brief:  define common rules0 ops fusion pattern
+  *
+  *   (StrideRead) + conv2_d + (dequant) + ele-wise*N + (quant) + (StrideWrite)
+  *   restriction: 1.each node must be single output and single reference
+  *                2.the range of N is 0 to 5
+  *                3.allow multiple input, but only one input can be fusion
+  *
+  * @return BufferFusionPattern: return all valid patterns.
+  */
+  vector<BufferFusionPattern *> DefinePatterns() override {
+    vector<BufferFusionPattern *> patterns;
+    string pass_name = "ConveragePass";
+    BufferFusionPattern *pattern = new (std::nothrow) BufferFusionPattern(pass_name, 10);
+    UT_CHECK((pattern == nullptr),
+             GE_LOGE("[SubGraphOpt][CommonRules0Fus][DefPtn] New an object failed."),
+             return patterns);
+    GELOGD("Start to define %s pass pattern.", pass_name.c_str());
+    // define pattern rules
+    pattern->AddOpDesc("", {OP_PATTERN_STRIDED_READ}, TBE_PATTERN_NUM_NONE,
+                       TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+
+    pattern->AddOpDesc("test", {OP_PATTERN_STRIDED_READ}, TBE_PATTERN_NUM_DEFAULT,
+                       TBE_PATTERN_NUM_NONE, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+
+    pattern->AddOpDesc("test", {OP_PATTERN_STRIDED_READ}, TBE_PATTERN_NUM_NONE,
+                       TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+    pattern->AddOpDesc("test", {OP_PATTERN_STRIDED_READ}, TBE_PATTERN_NUM_NONE,
+                       TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+    pattern->AddOpDesc("head1", {OP_PATTERN_STRIDED_READ}, 2,
+                       3, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+    pattern->AddOpDesc("head2", {OP_PATTERN_STRIDED_READ}, 1,
+                       1, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+
+    pattern->AddOpDesc(PATTERN_CONV, {OP_PATTERN_CONV}, TBE_PATTERN_NUM_NONE, TBE_PATTERN_NUM_DEFAULT,
+               TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
+            .AddOpDesc(PATTERN_DEPTHWISECONV, {OP_PATTERN_DEPTHWISE_CONV}, TBE_PATTERN_NUM_NONE,
+               TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+    pattern->AddOpDesc(PATTERN_STRIDED_READ, {OP_PATTERN_STRIDED_READ}, TBE_PATTERN_NUM_NONE,
+                       TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE);
+
+    pattern->SetOutputs("", {PATTERN_CONV, PATTERN_DEPTHWISECONV});
+    pattern->SetOutputs("1", {PATTERN_CONV, PATTERN_DEPTHWISECONV});
+    pattern->SetOutputs(PATTERN_STRIDED_READ, {"1", PATTERN_DEPTHWISECONV});
+    pattern->SetOutputs(PATTERN_STRIDED_READ, {PATTERN_STRIDED_READ});
+    pattern->SetOutputs(PATTERN_STRIDED_READ, {PATTERN_CONV, PATTERN_DEPTHWISECONV});
+    pattern->SetOutputs(PATTERN_STRIDED_READ, {PATTERN_CONV, PATTERN_DEPTHWISECONV});
+
+
+    vector<string> heads;
+    pattern->SetHead(heads);
+
+    heads = {""};
+    pattern->SetHead(heads);
+
+    heads = {"head1"};
+    pattern->SetHead(heads);
+
+    heads = {PATTERN_CONV};
+    pattern->SetHead(heads);
+
+    heads = {PATTERN_CONV, "head2"};
+    pattern->SetHead(heads);
+
+    auto conv_desc = pattern->GetOpDesc(PATTERN_CONV);
+    pattern->UpdateSkipStatus(conv_desc);
+
+    pattern->GetOpDescs();
+  }
+};
+
 class TbeCommonRules0FusionPass : public BufferFusionPassBase {
  public:
   explicit TbeCommonRules0FusionPass() {}
@@ -381,10 +465,7 @@ class TbeCommonRules0FusionPass : public BufferFusionPassBase {
 };
 
 namespace {
-static const char PATTERN_STRIDED_READ[] = "stridedread";
-static const char PATTERN_CONV[] = "convolution";
-static const char PATTERN_STRIDED_WRITE[] = "stridedwrite";
-static const int FUSION_OP_NUM_MAX = 10;
+
 // white list of OP_PATTERN_ELEMWISE
 static const vector<string> WHITELIST_OF_OP_PATTERN_ELEMWISE = {
     "Eltwise", "LeakyRelu", "Vadd", "Relu", "Relu6", "Relu6D",
@@ -650,6 +731,16 @@ Status TbeCommonRules0FusionPass::GetFusionNodes(const BufferFusionMapping &mapp
   return ge::GRAPH_SUCCESS;
 }
 
+BufferFusionPassType  type = BUFFER_FUSION_PASS_TYPE_RESERVED;
+REGISTER_BUFFER_FUSION_PASS("MetadefBufferFusionPassTest", type, TbeCommonRules0FusionPass);
+
+REGISTER_BUFFER_FUSION_PASS("", BUILT_IN_AI_CORE_BUFFER_FUSION_PASS,
+                            TbeCommonRules0FusionPass);
+
+REGISTER_BUFFER_FUSION_PASS("MetadefBufferFusionPassTest", BUILT_IN_AI_CORE_BUFFER_FUSION_PASS,
+                            TbeCommonRules0FusionPass);
+REGISTER_BUFFER_FUSION_PASS("MetadefBufferFusionPassTest", BUILT_IN_AI_CORE_BUFFER_FUSION_PASS,
+                            TbeCommonRules0FusionPass);
 
 Status Run(ge::ComputeGraph &graph, std::shared_ptr<BufferFusionPassBase> &pass) {
   // 1. get pattern info
@@ -693,7 +784,7 @@ Status Run(ge::ComputeGraph &graph, std::shared_ptr<BufferFusionPassBase> &pass)
     pass->GetName();
 
     std::vector<ge::NodePtr> fusion_nodes;
-    pass->GetFusionNodes(mapping, fusion_nodes);
+    EXPECT_EQ(fe::SUCCESS, pass->GetFusionNodes(mapping, fusion_nodes));
 
 //    OpCalcInfo op_slice_info;
 //    pass->CalcFusionOpSliceInfo(fusion_nodes, op_slice_info);
@@ -2056,9 +2147,45 @@ TEST_F(UB_FUSION_UT_CONV_ELT_RELU, conv_eltwise_relu_quant_fusion_pass) {
   RunPass(*graph);
 }
 
-TEST_F(UB_FUSION_UT_CONV_ELT_RELU, conv_eltwise_relu_quant_fusion_pass_no_fusion) {
+TEST_F(UB_FUSION_UT_CONV_ELT_RELU, coverage_01) {
 
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  BuildGraphConvEltReluQuant1(graph, 1);
+
+  std::shared_ptr<BufferFusionPassBase> pass = std::make_shared<ConveragePass>();
+  std::vector<ge::NodePtr> fusion_nodes;
+  BufferFusionMapping mapping;
+  EXPECT_EQ(fe::SUCCESS, pass->GetFusionNodes(mapping, fusion_nodes));
+
+  std::vector<ge::NodePtr> matched_nodes;
+  for (auto node : graph->GetDirectNode()) {
+    matched_nodes.emplace_back(node);
+  }
+
+  pass->GetMatchedHeadNode(matched_nodes);
+
+  std::vector<BufferFusionPattern *> patterns= pass->DefinePatterns();
+  for (auto &pattern : patterns) {
+    delete pattern;
+  }
+}
+
+TEST_F(UB_FUSION_UT_CONV_ELT_RELU, conv_eltwise_relu_quant_fusion_pass_no_fusion) {
+  std::map<string, BufferFusionPassRegistry::CreateFn> create_fns =
+      BufferFusionPassRegistry::GetInstance().GetCreateFnByType(BUILT_IN_AI_CORE_BUFFER_FUSION_PASS);
   ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
   BuildGraphConvEltReluQuant2(graph, 1);
   RunPass(*graph);
+}
+
+TEST_F(UB_FUSION_UT_CONV_ELT_RELU, converage_01) {
+  std::map<string, BufferFusionPassRegistry::CreateFn> create_fns =
+      BufferFusionPassRegistry::GetInstance().GetCreateFnByType(BUILT_IN_AI_CORE_BUFFER_FUSION_PASS);
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  BuildGraphConvEltReluQuant2(graph, 1);
+  std::shared_ptr<BufferFusionPassBase> common0 = std::make_shared<TbeCommonRules0FusionPass>();
+  std::vector<BufferFusionPattern *> patterns= common0->DefinePatterns();
+  for (auto &pattern : patterns) {
+    delete pattern;
+  }
 }

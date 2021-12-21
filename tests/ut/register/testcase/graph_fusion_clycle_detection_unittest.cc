@@ -395,9 +395,30 @@ TEST_F(UtestCycleDetection, Coverage_02) {
   ge::LargeBitmap c(5);
   c.SetValues(0);
   EXPECT_EQ(a == c, true);
+
+  EXPECT_EQ(a != c, false);
 }
 
 TEST_F(UtestCycleDetection, Coverage_03) {
+  ge::LargeBitmap a(6);
+  a.SetValues(1);
+  a.SetBit(10000);
+  a.GetBit(10000);
+
+  ge::LargeBitmap b(5);
+  b.SetValues(2);
+
+  a.And(b);
+  a.Or(b);
+
+  ge::LargeBitmap c(5);
+  c.SetValues(0);
+  EXPECT_EQ(a == c, false);
+
+  EXPECT_EQ(a != c, true);
+}
+
+TEST_F(UtestCycleDetection, Coverage_04) {
   std::vector<ge::NodePtr> fusion_nodes;
   auto graph = BuildFusionGraph06(kNoCycleCase2, fusion_nodes);
   auto connectivity = std::shared_ptr<fe::ConnectionMatrix>(new(std::nothrow) fe::ConnectionMatrix(*graph));
