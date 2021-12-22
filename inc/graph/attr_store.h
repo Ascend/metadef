@@ -24,7 +24,7 @@
 #include "any_value.h"
 
 #define SET_IMPL(key, value) \
-    auto v = GetOrCreateAnyValue(key);  \
+    auto *const v = GetOrCreateAnyValue(key);  \
     if (v == nullptr) {  \
       return false;  \
     }  \
@@ -32,22 +32,22 @@
     return true;
 
 #define SET_IMPL_RVALUE(key, value) \
-  auto v = GetOrCreateAnyValue(key);  \
-  if (v == nullptr) {  \
-  return false;  \
-  }  \
-  (void)v->SetValue(std::forward<T>(value));  \
-  return true;
+    auto *const v = GetOrCreateAnyValue(key);  \
+    if (v == nullptr) {  \
+      return false;  \
+    }  \
+    (void)v->SetValue(std::forward<T>(value));  \
+    return true;
 
 #define GET_IMPL(key) \
-    auto v = GetAnyValue(key);  \
+    auto *const v = GetAnyValue(key);  \
     if (v == nullptr) {  \
       return nullptr;  \
     }  \
     return v->Get<T>();
 
 #define MUTABLE_IMPL(key) \
-    auto v = MutableAnyValue(key);  \
+    auto *const v = MutableAnyValue(key);  \
     if (v == nullptr) {  \
       return nullptr;  \
     }  \
@@ -70,7 +70,6 @@ constexpr inline uint32_t GetSubAttrId(const AttrId id) {
 constexpr inline AttrId GetAttrId(const uint32_t type, const uint32_t sub_id) {
   return (static_cast<uint64_t>(type) << 32U) | static_cast<uint64_t>(sub_id);
 }
-extern const AttrId kInvalidAttrId;
 
 class AttrStore {
  public:

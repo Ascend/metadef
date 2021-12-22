@@ -20,8 +20,6 @@
 #include <atomic>
 #include <memory>
 #include <vector>
-#include "graph/attr_value_serializable.h"
-#include "graph/buffer.h"
 namespace ge {
 // used for data type of DT_STRING
 struct StringHead {

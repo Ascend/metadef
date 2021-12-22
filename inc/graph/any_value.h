@@ -23,6 +23,7 @@
 #include "graph/types.h"
 #include "type_utils.h"
 #include "external/graph/ge_error_codes.h"
+#include "graph/def_types.h"
 namespace ge {
 class Buffer;
 class GeTensor;
@@ -156,16 +157,16 @@ class AnyValue {
 
   template<typename T>
   struct InlineOperations {
-    static void Operate(OperateType ot, const AnyValue *av, void *out);
-    static void Construct(const T &value, AnyValue *av);
-    static void Construct(T &&value, AnyValue *av);
+    static void Operate(const OperateType ot, const AnyValue *const av, void *const out);
+    static void Construct(const T &value, AnyValue *const av);
+    static void Construct(T &&value, AnyValue *const av);
   };
 
   template<typename T>
   struct AllocateOperations {
-    static void Operate(OperateType ot, const AnyValue *av, void *out);
-    static void Construct(const T &value, AnyValue *av);
-    static void Construct(T &&value, AnyValue *av);
+    static void Operate(const OperateType ot, const AnyValue *const av, void *const out);
+    static void Construct(const T &value, AnyValue *const av);
+    static void Construct(T &&value, AnyValue *const av);
   };
 
  private:
@@ -180,83 +181,86 @@ class AnyValue {
 using GeAttrValue = AnyValue;
 
 template<typename T>
-void AnyValue::AllocateOperations<T>::Construct(const T &value, AnyValue *av) {
+void AnyValue::AllocateOperations<T>::Construct(const T &value, AnyValue *const av) {
   av->holder_.pointer = new (std::nothrow) T(value);
   av->operate_ = AnyValue::AllocateOperations<T>::Operate;
 }
 template<typename T>
-void AnyValue::AllocateOperations<T>::Construct(T &&value, AnyValue *av) {
+void AnyValue::AllocateOperations<T>::Construct(T &&value, AnyValue *const av) {
   av->holder_.pointer = ::new (std::nothrow) T(std::forward<T>(value));
   av->operate_ = AnyValue::AllocateOperations<T>::Operate;
 }
 template<typename T>
-void AnyValue::AllocateOperations<T>::Operate(AnyValue::OperateType ot, const AnyValue *av, void *out) {
+void AnyValue::AllocateOperations<T>::Operate(const AnyValue::OperateType ot, const AnyValue *const av,
+                                              void *const out) {
   switch (ot) {
     case OperateType::kOpClear: {
-      auto av_p = static_cast<AnyValue *>(out);
-      delete static_cast<T *>(av_p->holder_.pointer);
+      auto *const av_p = PtrToPtr<void, AnyValue>(out);
+      delete PtrToPtr<void, T>(av_p->holder_.pointer);
       av_p->holder_.pointer = nullptr;
       av_p->operate_ = nullptr;
       break;
     }
     case OperateType::kOpGetAddr:
-      *static_cast<void **>(out) = const_cast<void *>(av->holder_.pointer);
+      *PtrToPtr<void, void *>(out) = const_cast<void *>(av->holder_.pointer);
       break;
     case OperateType::kOpClone:
-      static_cast<AnyValue *>(out)->holder_.pointer =
-          new (std::nothrow) T(*static_cast<const T *>(av->holder_.pointer));
-      static_cast<AnyValue *>(out)->operate_ = av->operate_;
+      PtrToPtr<void, AnyValue>(out)->holder_.pointer =
+          new (std::nothrow) T(*PtrToPtr<const void, const T>(av->holder_.pointer));
+      PtrToPtr<void, AnyValue>(out)->operate_ = av->operate_;
       break;
     case OperateType::kOpMove: {
-      auto av_p = static_cast<AnyValue *>(out);
+      auto *const av_p = PtrToPtr<void, AnyValue>(out);
       av_p->holder_.pointer = av->holder_.pointer;
       av_p->operate_ = av->operate_;
       const_cast<AnyValue *>(av)->holder_.pointer = nullptr;
       break;
     }
     case OperateType::kGetTypeId:
-      *static_cast<TypeId *>(out) = GetTypeId<T>();
+      *PtrToPtr<void, TypeId>(out) = GetTypeId<T>();
       break;
     default:
       break;
   }
 }
 template<typename T>
-void AnyValue::InlineOperations<T>::Construct(const T &value, AnyValue *av) {
+void AnyValue::InlineOperations<T>::Construct(const T &value, AnyValue * const av) {
   ::new (&(av->holder_.inline_buf)) T(value);
   av->operate_ = AnyValue::InlineOperations<T>::Operate;
 }
 template<typename T>
-void AnyValue::InlineOperations<T>::Construct(T &&value, AnyValue *av) {
+void AnyValue::InlineOperations<T>::Construct(T &&value, AnyValue *const av) {
   Construct(value, av);
 }
 template<typename T>
-void AnyValue::InlineOperations<T>::Operate(AnyValue::OperateType ot, const AnyValue *av, void *out) {
+void AnyValue::InlineOperations<T>::Operate(const AnyValue::OperateType ot, const AnyValue *const av,
+                                            void *const out) {
   switch (ot) {
     case OperateType::kOpClear: {
-      auto av_p = static_cast<AnyValue *>(out);
-      reinterpret_cast<T *>(&av_p->holder_.inline_buf)->~T();
+      auto *const av_p = PtrToPtr<void, AnyValue>(out);
+      PtrToPtr<std::aligned_storage<sizeof(void *)>::type, T>(&av_p->holder_.inline_buf)->~T();
       av_p->operate_ = nullptr;
       break;
     }
     case OperateType::kOpGetAddr:
-      *static_cast<void **>(out) = const_cast<void *>(reinterpret_cast<const void *>(&av->holder_.inline_buf));
+      *PtrToPtr<void, void *>(out) = const_cast<void *>(reinterpret_cast<const void *>(&av->holder_.inline_buf));
       break;
     case OperateType::kOpClone: {
-      auto av_p = static_cast<AnyValue *>(out);
-      new (&av_p->holder_.inline_buf) T(*reinterpret_cast<const T *>(&av->holder_.inline_buf));
+      auto *const av_p = PtrToPtr<void, AnyValue>(out);
+      new (&av_p->holder_.inline_buf) T(*PtrToPtr<const std::aligned_storage<sizeof(void *)>::type,
+                                                  const T>(&av->holder_.inline_buf));
       av_p->operate_ = av->operate_;
       break;
     }
     case OperateType::kOpMove: {
-      auto av_p = static_cast<AnyValue *>(out);
-      auto moved_t_p = const_cast<T *>(reinterpret_cast<const T *>(&av->holder_.inline_buf));
+      auto *const av_p = PtrToPtr<void, AnyValue>(out);
+      auto *const moved_t_p = const_cast<T *>(reinterpret_cast<const T *>(&av->holder_.inline_buf));
       new (&av_p->holder_.inline_buf) T(std::move(*moved_t_p));
       av_p->operate_ = av->operate_;
       break;
     }
     case OperateType::kGetTypeId:
-      *static_cast<TypeId *>(out) = GetTypeId<T>();
+      *PtrToPtr<void, TypeId>(out) = GetTypeId<T>();
       break;
     default:
       break;
@@ -312,11 +316,11 @@ const T *AnyValue::Get() const {
   if (IsEmpty()) {
     return nullptr;
   }
-  return static_cast<const T *>(GetAddr());
+  return PtrToPtr<const void, const T>(GetAddr());
 }
 template<typename T>
 graphStatus AnyValue::GetValue(T &value) const {
-  auto p = Get<T>();
+  auto *const p = Get<T>();
   if (p == nullptr) {
     return GRAPH_FAILED;
   }

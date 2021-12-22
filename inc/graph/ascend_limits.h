@@ -21,6 +21,5 @@
 namespace ge {
 constexpr uint32_t kDefaultMaxInputNum = 8U;
 constexpr uint32_t kDefaultMaxOutputNum = 8U;
-constexpr int32_t kDefaultMaxRank = 8;
 }
 #endif  //METADEF_CXX_ASCEND_LIMITS_H
