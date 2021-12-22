@@ -47,7 +47,7 @@ const AnyValue *AttrStore::GetAnyValue(const std::string &name) const noexcept {
     return pre_defined_attrs_.GetAnyValue(GetSubAttrId(id));
   }
 
-  const AnyValue *av = general_attrs_.GetAnyValue(name);
+  const AnyValue *const av = general_attrs_.GetAnyValue(name);
   if (av != nullptr) {
     return av;
   }

@@ -140,7 +140,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus InferShapeInNeed();
   graphStatus InsertGraphEvents();
   bool operator==(const ComputeGraph &r_compute_graph) const;
-  ComputeGraph& operator=(ge::ComputeGraph compute_graph);
+  ComputeGraph& operator=(ge::ComputeGraph &compute_graph);
 
   const std::map<std::vector<std::string>, std::vector<std::string>> &GetShareParamLayer() const;
 
@@ -239,9 +239,9 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &map_in_edge_num);
   Vistor<NodePtr> AllGraphNodes(std::vector<ComputeGraphPtr> &subgraphs) const;
   Vistor<NodePtr> GetAllNodes(const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
-  size_t GetInEdgeSize(const NodePtr &node);
-  size_t GetOutEdgeSize(const NodePtr &node);
-  graphStatus RemoveExtraOutEdge(const NodePtr &node);
+  size_t GetInEdgeSize(const NodePtr &node) const;
+  size_t GetOutEdgeSize(const NodePtr &node) const;
+  graphStatus RemoveExtraOutEdge(const NodePtr &node) const;
   bool GraphMembersAreEqual(const ComputeGraph &r_graph) const;
   bool GraphAttrsAreEqual(const ComputeGraph &r_graph) const;
   bool VectorInputNodePtrIsEqual(const std::vector<NodePtr> &left_nodes,

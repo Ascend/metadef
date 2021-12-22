@@ -331,7 +331,7 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   // Input tensor
   for (auto &input_desc : *op_def_proto.mutable_input_desc()) {
     const std::shared_ptr<GeTensorDesc> temp_value =
-        std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(protobuf_owner_, &input_desc));
+        std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(&input_desc));
     GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
                      return false, "[Create][GeTensorDesc] temp_value is nullptr.");
     op_desc->impl_->inputs_desc_.push_back(temp_value);
@@ -339,7 +339,7 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   // Output tensor
   for (auto &output_desc : *op_def_proto.mutable_output_desc()) {
     const std::shared_ptr<GeTensorDesc> temp_value =
-        std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(protobuf_owner_, &output_desc));
+        std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(&output_desc));
     GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
                      return false, "[Create][GeTensorDesc] temp_value is nullptr.");
     op_desc->impl_->outputs_desc_.push_back(temp_value);

@@ -854,7 +854,7 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
 }
 
 graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                    std::map<std::string, NodePtr> &breadth_node_map) {
+    std::map<std::string, NodePtr> &breadth_node_map) const {
   for (const auto &anchor : node->GetAllOutDataAnchors()) {
     for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
       const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
@@ -1595,7 +1595,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::operator==(
   return *impl_ == *(r_compute_graph.impl_);
 }
 
-ComputeGraph& ComputeGraph::operator=(ge::ComputeGraph compute_graph) {
+ComputeGraph& ComputeGraph::operator=(ge::ComputeGraph &compute_graph) {
   if (&compute_graph == this) {
     return *this;
   }
@@ -1850,11 +1850,11 @@ graphStatus ComputeGraph::SortNodes(std::vector<NodePtr> &stack, std::map<NodePt
   return impl_->SortNodes(stack, map_in_edge_num, shared_from_this());
 }
 
-size_t ComputeGraph::GetInEdgeSize(const NodePtr &node) {
+size_t ComputeGraph::GetInEdgeSize(const NodePtr &node) const {
   return impl_->GetInEdgeSize(node);
 }
 
-size_t ComputeGraph::GetOutEdgeSize(const NodePtr &node) {
+size_t ComputeGraph::GetOutEdgeSize(const NodePtr &node) const {
   return impl_->GetOutEdgeSize(node);
 }
 
@@ -1907,7 +1907,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::Isolate
   return impl_->IsolateNode(node);
 }
 
-graphStatus ComputeGraph::RemoveExtraOutEdge(const NodePtr &node) {
+graphStatus ComputeGraph::RemoveExtraOutEdge(const NodePtr &node) const {
   return impl_->RemoveExtraOutEdge(node);
 }
 

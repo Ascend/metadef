@@ -86,7 +86,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   friend class GeTensorSerializeUtils;
   friend class ModelSerialize;
   // Create from proto obj
-  GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg);
+  GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *const proto_msg);
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrHolder {
@@ -167,7 +167,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   bool GeTensorDescAttrsAreEqual(const GeTensorDesc &r_ge_tensor_desc) const;
 
   // Create from proto obj
-  GeTensorDesc(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg);
+  explicit GeTensorDesc(proto::TensorDescriptor *const proto_msg);
   friend class GeTensor;
   friend class GeTensorImpl;
   friend class GeAttrValueImp;

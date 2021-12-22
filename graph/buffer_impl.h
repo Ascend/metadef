@@ -28,7 +28,7 @@ class BufferImpl {
   BufferImpl(const BufferImpl &other);
   BufferImpl(const std::size_t buffer_size, const std::uint8_t default_val);
 
-  void CopyFrom(const std::uint8_t *const data, std::size_t buffer_size);
+  void CopyFrom(const std::uint8_t *const data, const std::size_t buffer_size);
   BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, proto::AttrDef *const buffer);
   BufferImpl(const std::shared_ptr<google::protobuf::Message> &proto_owner, std::string *const buffer);
 
