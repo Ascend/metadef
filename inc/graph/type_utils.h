@@ -30,10 +30,10 @@ class GraphDef;
 
 template<typename T>
 struct GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeIdHolder {
-  static char id;
+  static char_t id;
 };
 
-template<typename T> char TypeIdHolder<T>::id = 0;
+template<typename T> char_t TypeIdHolder<T>::id = static_cast<char_t>(0);
 
 using TypeId = void *;
 constexpr TypeId kInvalidTypeId = nullptr;

@@ -27,6 +27,7 @@
 #include <vector>
 #include "detail/attributes_holder.h"
 #include "graph/range_vistor.h"
+#include "graph/ge_tensor.h"
 
 namespace ge {
 using std::map;
@@ -36,18 +37,6 @@ using std::string;
 using std::vector;
 
 class Operator;
-class GeTensorDesc;
-
-using GeTensorDescPtr = shared_ptr<GeTensorDesc>;
-using ConstGeTensorDescPtr = shared_ptr<const GeTensorDesc>;
-
-class OpDesc;
-
-using OpDescPtr = shared_ptr<OpDesc>;
-using ConstOpDescPtr = shared_ptr<const OpDesc>;
-
-using ConstOpDesc = const OpDesc;
-
 class OpDescImpl;
 using OpDescImplPtr = std::shared_ptr<OpDescImpl>;
 
@@ -59,8 +48,11 @@ enum SubgraphType {
 
 class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
  public:
+  using OpDescPtr = std::shared_ptr<OpDesc>;
+  using ConstOpDescPtr = std::shared_ptr<const OpDesc>;
+
   template <class T>
-  using Vistor = RangeVistor<T, shared_ptr<ConstOpDesc>>;
+  using Vistor = RangeVistor<T, shared_ptr<const OpDesc>>;
 
   friend class GraphBuilderImpl;
 
@@ -303,5 +295,8 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   friend class OnnxUtils;
   friend class GraphUtils;
 };
+
+using OpDescPtr = OpDesc::OpDescPtr;
+using ConstOpDescPtr = OpDesc::ConstOpDescPtr;
 }  // namespace ge
 #endif  // INC_GRAPH_OP_DESC_H_

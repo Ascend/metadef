@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_GRAPH_RESOURCE_CONTEXT_MRG_H_
-#define INC_GRAPH_RESOURCE_CONTEXT_MRG_H_
+#ifndef INC_GRAPH_RESOURCE_CONTEXT_MGR_H_
+#define INC_GRAPH_RESOURCE_CONTEXT_MGR_H_
 
 #include <string>
 #include <map>
@@ -68,4 +68,4 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ResourceContextMgr {
   std::map<std::string, std::unordered_set<NodePtr>> resource_keys_to_read_nodes_;
 };
 }  // namespace ge
-#endif  //  INC_GRAPH_RESOURCE_CONTEXT_MRG_H_
+#endif  //  INC_GRAPH_RESOURCE_CONTEXT_MGR_H_

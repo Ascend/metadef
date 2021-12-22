@@ -25,7 +25,6 @@
 #include "graph/ascend_limits.h"
 
 namespace ge {
-class OpDescImpl;
 class MetaDataStore {
  public:
   using SmallIntVector = SmallVector<int64_t, static_cast<size_t>(kDefaultMaxInputNum)>;

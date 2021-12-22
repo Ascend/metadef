@@ -90,9 +90,8 @@ class FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl {
   std::vector<std::pair<std::string, int32_t>> GetOutputs() const { return inner_node_outputs_; }
   ge::Operator *MutableOperator() { return &operator_; }
 
- public:
-  ge::Operator operator_;
  private:
+  ge::Operator operator_;
   std::string fusion_node_name_;
   std::string name_;
   std::string type_;

@@ -310,6 +310,7 @@ class GeTensorSerializeUtils {
   static void GetFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format);
   static void GetOriginFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format);
 };
-
+using GeTensorDescPtr = std::shared_ptr<GeTensorDesc>;
+using ConstGeTensorDescPtr = std::shared_ptr<const GeTensorDesc>;
 }  // namespace ge
 #endif  // INC_GRAPH_GE_TENSOR_H_

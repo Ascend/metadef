@@ -21,12 +21,13 @@
 #include <ostream>
 #include <chrono>
 #include <atomic>
+#include "external/graph/types.h"
 
 namespace ge {
 namespace profiling {
-constexpr size_t kMaxStrLen = 64;
+constexpr size_t kMaxStrLen = 64UL;
 constexpr int64_t kMaxStrIndex = 1024 * 1024;
-constexpr size_t kMaxRecordNum = 10 * 1024 * 1024;
+constexpr size_t kMaxRecordNum = 10UL * 1024UL * 1024UL;
 enum EventType {
   kEventStart,
   kEventEnd,
@@ -42,7 +43,7 @@ struct ProfilingRecord {
 };
 
 struct StrHash {
-    char str[kMaxStrLen];
+    char_t str[kMaxStrLen];
     uint64_t hash;
 };
 
