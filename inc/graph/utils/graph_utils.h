@@ -34,7 +34,7 @@
 /*lint -e148*/
 #define GE_DUMP(compute_graph, name)                                                                               \
   do {                                                                                                             \
-    GraphUtils::DumpGEGraph(compute_graph, name);                                                                  \
+    GraphUtils::DumpGEGraph((compute_graph), (name));                                                              \
     GraphUtils::DumpGEGraphToOnnx(*(compute_graph), name);                                                         \
     uint64_t i = 0U;                                                                                               \
     for (const auto &sub_graph_func : (compute_graph)->GetAllSubgraphs()) {                                        \
