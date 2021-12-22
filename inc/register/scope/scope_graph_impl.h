@@ -152,7 +152,7 @@ class ScopeTree::ScopeTreeImpl {
   const Scope *Root() const { return root_; }
 
  private:
-  std::vector<std::string> SplitNodeName(const std::string &node_name, char_t delim) const;
+  std::vector<std::string> SplitNodeName(const std::string &node_name, const char_t delim) const;
   Scope *root_;
   std::vector<Scope *> scopes_;
 };
@@ -177,18 +177,19 @@ class ScopeGraph::ScopeGraphImpl {
   void BuildScopeGraph(domi::tensorflow::GraphDef *graph_def);
   void AddFusionScopesResult(FusionScopesResult *result);
   const std::unordered_map<std::string, FusionScopesResult *> &FusionScopesResults() const { return fusion_results_; }
-  FusionScopesResult *GetFusionScopesResults(const domi::tensorflow::NodeDef *node_def) const;
+  FusionScopesResult *GetFusionScopesResults(const domi::tensorflow::NodeDef *const node_def) const;
   FusionScopesResult *GetFusionScopesResults(const std::string &node_name) const;
   const std::unordered_map<std::string, ge::OperatorPtr> &GetNodesMap() const { return nodes_map_; }
   const std::map<std::string, ge::OperatorPtr> &GetNodesMapNew() const { return nodes_map_new_; }
   bool IsFusionOpChild(const std::string &node_name, std::vector<ScopeFusionOpInfo> &info_list);
   bool FusionOpChildIgnore(const ScopeFusionOpInfo &info);
-  bool IsFusionOp(const domi::tensorflow::NodeDef *node_def);
-  Status GetInputOrOutputIndex(const ScopeFusionOpInfo &info, int32_t old_index, bool input, int32_t &new_index);
+  bool IsFusionOp(const domi::tensorflow::NodeDef *const node_def);
+  Status GetInputOrOutputIndex(const ScopeFusionOpInfo &info, const int32_t old_index,
+                               const bool input, int32_t &new_index);
 
  private:
   std::vector<int32_t> GetFusionResultInputOrOutput(const ScopeFusionOpInfo &info,
-                                                    bool input);  // input:true,output:false
+                                                    const bool input);  // input:true,output:false
   std::unordered_map<std::string, FusionScopesResult *> fusion_results_;
   std::unordered_map<std::string, ge::OperatorPtr> nodes_map_;
   std::map<std::string, ge::OperatorPtr> nodes_map_new_;

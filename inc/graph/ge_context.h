@@ -30,7 +30,6 @@ class GEContext {
   void Init();
   void SetSessionId(const uint64_t session_id);
   void SetContextId(const uint64_t context_id);
-  void SetWorkStreamId(const uint64_t work_stream_id);
   void SetCtxDeviceId(const uint32_t device_id);
  private:
   thread_local static uint64_t session_id_;
