@@ -230,7 +230,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
     GELOGE(FAILED, "[Get][DynamicAttrNum] fail, op_name:%s", op_desc->GetName().c_str());
     return FAILED;
   }
-  
+
   const vector<string> register_input_names = op_desc->GetRegisterInputName();
   uint32_t input_index = 0U;
   uint32_t input_increment = 0U;
