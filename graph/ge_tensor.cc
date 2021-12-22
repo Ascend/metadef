@@ -214,7 +214,7 @@ void GeTensorSerializeUtils::AssembleGeShapeFromProto(const proto::ShapeDef *pro
 void GeTensorSerializeUtils::AssembleGeTensorDescFromProto(
     const proto::TensorDescriptor *proto, GeTensorDesc &desc) {
   if (proto != nullptr) {
-    desc = GeTensorDesc(nullptr, const_cast<proto::TensorDescriptor *>(proto));
+    desc = GeTensorDesc(const_cast<proto::TensorDescriptor *>(proto));
   }
 }
 void GeTensorSerializeUtils::AssembleGeTensorFromProto(const proto::TensorDef *proto, GeTensor &tensor) {
@@ -354,7 +354,7 @@ class GeShapeImpl {
   GeShapeImpl() = default;
   ~GeShapeImpl() = default;
   explicit GeShapeImpl(const std::vector<int64_t> &dims);
-  explicit GeShapeImpl(proto::ShapeDef *proto_msg);
+  explicit GeShapeImpl(proto::ShapeDef *const proto_msg);
 
   void SetDimNum(const size_t dim_num);
   void AppendDim(const int64_t dim_size);
@@ -476,7 +476,7 @@ bool GeShapeImpl::IsScalar() const {
   return dims_.empty();
 }
 
-GeShapeImpl::GeShapeImpl(proto::ShapeDef *proto_msg) {
+GeShapeImpl::GeShapeImpl(proto::ShapeDef *const proto_msg) {
   if (proto_msg != nullptr) {
     for (auto &dim : *proto_msg->mutable_dim()) {
       dims_.emplace_back(dim);
@@ -489,17 +489,13 @@ bool GeShapeImpl::operator==(const GeShapeImpl &other) const {
 }
 
 GeShape::GeShape() : impl_(MakeShared<GeShapeImpl>()) {}
-GeShape::GeShape(std::vector<int64_t> s)
-    : impl_(MakeShared<GeShapeImpl>(std::move(s))) {}
-GeShape::GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *proto_msg)
-    : impl_(MakeShared<GeShapeImpl>(proto_msg)) {}
-
-GeShape::GeShape(const GeShape &other)
-    : impl_(MakeShared<GeShapeImpl>(*(other.impl_))) {}
-
-GeShape::GeShape(GeShape &&other)
-    : impl_(MakeShared<GeShapeImpl>(std::move(*(other.impl_)))) {}
-
+GeShape::GeShape(std::vector<int64_t> s) : impl_(MakeShared<GeShapeImpl>(std::move(s))) {}
+GeShape::GeShape(const GeShape &other) : impl_(MakeShared<GeShapeImpl>(*(other.impl_))) {}
+GeShape::GeShape(GeShape &&other) : impl_(MakeShared<GeShapeImpl>(std::move(*(other.impl_)))) {}
+GeShape::GeShape(const ProtoMsgOwner &proto_owner, proto::ShapeDef *const proto_msg)
+    : impl_(MakeShared<GeShapeImpl>(proto_msg)) {
+  (void)proto_owner;
+}
 GeShape::~GeShape() = default;
 
 size_t GeShape::GetDimNum() const {
@@ -574,7 +570,7 @@ GeTensorDescImpl::GeTensorDescImpl(const GeShape &shape, const Format format, co
   shape_ = shape;
 }
 
-GeTensorDescImpl::GeTensorDescImpl(proto::TensorDescriptor *proto_msg)
+GeTensorDescImpl::GeTensorDescImpl(proto::TensorDescriptor *const proto_msg)
     : GeTensorDescImpl() {
   if (proto_msg == nullptr) {
     GELOGE(INTERNAL_ERROR, "Try assemble ge tensor desc from nullptr proto");
@@ -722,7 +718,7 @@ GeTensorDesc::GeTensorDesc(GeTensorDesc &&desc) : AttrHolder(desc), impl_(desc.i
 
 GeTensorDesc::~GeTensorDesc() = default;
 
-GeTensorDesc::GeTensorDesc(const ProtoMsgOwner &proto_owner, proto::TensorDescriptor *proto_msg)
+GeTensorDesc::GeTensorDesc(proto::TensorDescriptor *const proto_msg)
     : AttrHolder(), impl_(ComGraphMakeShared<GeTensorDescImpl>(proto_msg)) {
   if (proto_msg != nullptr) {
     if (!ModelSerializeImp::DeserializeAllAttrsToAttrHolder(proto_msg->attr(), this)) {
@@ -984,11 +980,11 @@ graphStatus TensorDataImpl::SetData(const uint8_t *const data, const size_t size
   }
 
   size_t remain_size = size;
-  auto dst_addr = reinterpret_cast<uintptr_t>(aligned_ptr_->MutableGet());
-  auto src_addr = reinterpret_cast<uintptr_t>(data);
+  auto dst_addr = PtrToValue(aligned_ptr_->MutableGet());
+  auto src_addr = PtrToValue(data);
   while (remain_size > SECUREC_MEM_MAX_LEN) {
-    if (memcpy_s(reinterpret_cast<void *>(dst_addr), SECUREC_MEM_MAX_LEN,
-                 reinterpret_cast<const void *>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
+    if (memcpy_s(ValueToPtr(dst_addr), SECUREC_MEM_MAX_LEN,
+                 ValueToPtr(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
       REPORT_CALL_ERROR("E19999", "memcpy failed, size = %lu", SECUREC_MEM_MAX_LEN);
       GELOGE(INTERNAL_ERROR, "[Memcpy][Data] failed, size = %lu", SECUREC_MEM_MAX_LEN);
       return GRAPH_FAILED;
@@ -997,8 +993,8 @@ graphStatus TensorDataImpl::SetData(const uint8_t *const data, const size_t size
     dst_addr += SECUREC_MEM_MAX_LEN;
     src_addr += SECUREC_MEM_MAX_LEN;
   }
-  if (memcpy_s(reinterpret_cast<void *>(dst_addr), remain_size,
-               reinterpret_cast<const void *>(src_addr), remain_size) != EOK) {
+  if (memcpy_s(ValueToPtr(dst_addr), remain_size,
+               ValueToPtr(src_addr), remain_size) != EOK) {
     REPORT_CALL_ERROR("E19999", "memcpy failed, size=%zu", remain_size);
     GELOGE(INTERNAL_ERROR, "[Memcpy][Data] failed, size=%zu", remain_size);
     return GRAPH_FAILED;
@@ -1031,7 +1027,7 @@ const uint8_t *TensorDataImpl::MallocAlignedPtr(const size_t size) {
   if (size == 0UL) {
     GELOGW("[Check][Param] Input data size is 0");
     clear();
-    return reinterpret_cast<const uint8_t *>(&invalid_data_);
+    return static_cast<const uint8_t *>(static_cast<void *>(&invalid_data_));
   }
   if (length_ != size) {
     aligned_ptr_.reset();
@@ -1053,7 +1049,7 @@ size_t TensorDataImpl::GetSize() const { return length_; }
 
 const uint8_t *TensorDataImpl::GetData() const {
   if (length_ == 0UL) {
-    return reinterpret_cast<const uint8_t *>(&invalid_data_);
+    return static_cast<const uint8_t *>(static_cast<void *>(&invalid_data_));
   }
   if (aligned_ptr_ == nullptr) {
     return nullptr;
@@ -1063,7 +1059,7 @@ const uint8_t *TensorDataImpl::GetData() const {
 
 uint8_t *TensorDataImpl::GetData() {
   if (length_ == 0UL) {
-    return reinterpret_cast<uint8_t *>(&invalid_data_);
+    return static_cast<uint8_t *>(static_cast<void *>(&invalid_data_));
   }
   if (aligned_ptr_ == nullptr) {
     return nullptr;
@@ -1078,7 +1074,7 @@ void TensorDataImpl::clear() {
 
 uint8_t TensorDataImpl::operator[](const size_t index) const {
   if ((aligned_ptr_ != nullptr) && (index < length_)) {
-    return *(aligned_ptr_->MutableGet() + index);
+    return *static_cast<uint8_t *>(ValueToPtr(PtrToValue(aligned_ptr_->MutableGet()) + index));
   }
   return static_cast<uint8_t>(0xffU);
 }
@@ -1209,7 +1205,7 @@ GeTensorImpl::GeTensorImpl(const GeTensorDesc &tensor_desc, const size_t size) :
 GeTensorImpl::GeTensorImpl(const ProtoMsgOwner &proto_owner, proto::TensorDef *proto_msg)
     : tensor_def_(proto_owner, proto_msg) {
   // 这里后续改为反序列化接口调用，从proto恢复GeTensorDesc
-  desc_ = GeTensorDesc(proto_owner, (proto_msg == nullptr) ? nullptr : proto_msg->mutable_desc());
+  desc_ = GeTensorDesc((proto_msg == nullptr) ? nullptr : proto_msg->mutable_desc());
   tensor_data_ = TensorData();
   if (tensor_data_.impl_ != nullptr && desc_.impl_ != nullptr) {
     // 之前没有把TensorData上的proto变为GeTensorDesc，因为TensorData创建后不会修改，多个TensorData通过GeIrProto共享
@@ -1223,7 +1219,9 @@ GeTensorImpl::GeTensorImpl(const ProtoMsgOwner &proto_owner, proto::TensorDef *p
     if (proto_owner != nullptr) {
       BuildAlignerPtrWithProtoData();
     } else {
-      (void)tensor_data_.SetData(reinterpret_cast<const uint8_t *>(proto_msg->data().data()), proto_msg->data().size());
+      (void)tensor_data_.SetData(
+          static_cast<const uint8_t *>(static_cast<const void *>(proto_msg->data().data())),
+          proto_msg->data().size());
     }
   }
 }
@@ -1234,7 +1232,8 @@ GeTensorDesc &GeTensorImpl::DescReference() const {
 
 void GeTensorImpl::BuildAlignerPtrWithProtoData() {
   auto const proto_msg = tensor_def_.GetProtoMsg();
-  if ((proto_msg == nullptr) || (reinterpret_cast<const uint8_t *>(proto_msg->data().data()) == tensor_data_.data())) {
+  if ((proto_msg == nullptr) ||
+      (static_cast<const uint8_t *>(static_cast<const void *>(proto_msg->data().data())) == tensor_data_.data())) {
     return;
   }
   if (tensor_data_.impl_ == nullptr) {
@@ -1245,9 +1244,10 @@ void GeTensorImpl::BuildAlignerPtrWithProtoData() {
   tensor_data_.impl_->aligned_ptr_.reset();
   tensor_data_.impl_->aligned_ptr_ = AlignedPtr::BuildFromAllocFunc(
       [&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
-        ptr.reset(const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
+        ptr.reset(const_cast<uint8_t *>(static_cast<const uint8_t *>(
+                  static_cast<const void *>(proto_msg->data().data()))));
       },
-      [](const uint8_t *ptr) {
+      [](const uint8_t *const ptr) {
         (void)ptr;
       });
 }
@@ -1537,7 +1537,7 @@ uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *const base)
     return const_cast<uint8_t *>(tensor.GetData().data());
   }
 
-  return base + weight_data_offset;
+  return static_cast<uint8_t *>(ValueToPtr(PtrToValue(base) + weight_data_offset));
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetWeightSize(GeTensorDesc &tensor_desc,
@@ -1742,8 +1742,7 @@ void TensorUtils::CopyTensor(const GeTensor &from, GeTensor &to) {
   }
   if (from.impl_->tensor_def_.GetProtoOwner() != nullptr) {
     to.impl_->tensor_def_.CopyValueFrom(from.impl_->tensor_def_);
-    to.impl_->desc_.impl_ = GeTensorDesc(to.impl_->tensor_def_.GetProtoOwner(),
-                                         to.impl_->tensor_def_.GetProtoMsg()->mutable_desc()).impl_;
+    to.impl_->desc_.impl_ = GeTensorDesc(to.impl_->tensor_def_.GetProtoMsg()->mutable_desc()).impl_;
     to.impl_->desc_.impl_->attrs_ = from.impl_->desc_.impl_->attrs_;
     to.impl_->tensor_data_.impl_->tensor_descriptor_ = to.impl_->desc_.impl_;
     to.BuildAlignerPtrWithProtoData();

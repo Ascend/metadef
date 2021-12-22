@@ -49,10 +49,8 @@
       GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: the node shared ptr is not valid.");                               \
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
-                                                                                                                       \
-    const std::string node_name = ascend_name;                                                                         \
     const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr_share);                                           \
-    if (op.GetAttr(node_name, attr_value) != GRAPH_SUCCESS) {                                                          \
+    if (op.GetAttr(ascend_name, attr_value) != GRAPH_SUCCESS) {                                                        \
       REPORT_CALL_ERROR("E19999", "GetAttr of node[%s] failed.", node_ptr_share->GetName().c_str());                   \
       GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr_share->GetName().c_str());                      \
       return GRAPH_FAILED;                                                                                             \
@@ -83,9 +81,8 @@
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
                                                                                                                        \
-    const std::string node_name = ascend_name;                                                                         \
     Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr_share);                                                 \
-    (void)op.SetAttr(node_name, attr_value);                                                                           \
+    (void)op.SetAttr(ascend_name, attr_value);                                                                         \
     return GRAPH_SUCCESS;                                                                                              \
   }
 
@@ -254,7 +251,7 @@ std::vector<GNodePtr> GNode::GetInControlNodes() const {
   }
 
   std::vector<GNodePtr> gnodes;
-  auto in_control_nodes = node_ptr->GetInControlNodes();
+  const auto in_control_nodes = node_ptr->GetInControlNodes();
   for (auto &in_control_node : in_control_nodes) {
     GNodePtr gnode = NodeAdapter::Node2GNodePtr(in_control_node);
     if (gnode == nullptr) {
@@ -345,7 +342,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
     return GRAPH_FAILED;
   }
 
-  std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
+  const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
     REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputConstData: the node shared ptr is not valid.");
@@ -659,13 +656,13 @@ graphStatus GNode::UpdateOutputDesc(const int32_t index, const TensorDesc &tenso
 NODE_ATTR_GET_IMP(int64_t)
 NODE_ATTR_GET_IMP(int32_t)
 NODE_ATTR_GET_IMP(uint32_t)
-NODE_ATTR_GET_IMP(float)
+NODE_ATTR_GET_IMP(float32_t)
 NODE_ATTR_GET_IMP(bool)
 NODE_ATTR_GET_IMP(Tensor)
 NODE_ATTR_GET_IMP(std::vector<int64_t>)
 NODE_ATTR_GET_IMP(std::vector<int32_t>)
 NODE_ATTR_GET_IMP(std::vector<uint32_t>)
-NODE_ATTR_GET_IMP(std::vector<float>)
+NODE_ATTR_GET_IMP(std::vector<float32_t>)
 NODE_ATTR_GET_IMP(std::vector<bool>)
 NODE_ATTR_GET_IMP(std::vector<Tensor>)
 NODE_ATTR_GET_IMP(OpBytes)
@@ -677,13 +674,13 @@ NODE_ATTR_GET_IMP(AttrValue)
 NODE_ATTR_SET_IMP(int64_t)
 NODE_ATTR_SET_IMP(int32_t)
 NODE_ATTR_SET_IMP(uint32_t)
-NODE_ATTR_SET_IMP(float)
+NODE_ATTR_SET_IMP(float32_t)
 NODE_ATTR_SET_IMP(bool)
 NODE_ATTR_SET_IMP(Tensor)
 NODE_ATTR_SET_IMP(std::vector<int64_t>)
 NODE_ATTR_SET_IMP(std::vector<int32_t>)
 NODE_ATTR_SET_IMP(std::vector<uint32_t>)
-NODE_ATTR_SET_IMP(std::vector<float>)
+NODE_ATTR_SET_IMP(std::vector<float32_t>)
 NODE_ATTR_SET_IMP(std::vector<bool>)
 NODE_ATTR_SET_IMP(std::vector<Tensor>)
 NODE_ATTR_SET_IMP(OpBytes)

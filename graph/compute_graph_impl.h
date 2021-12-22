@@ -161,7 +161,7 @@ class ComputeGraphImpl {
                                     std::deque<NodePtr> &stack,
                                     const ConstComputeGraphPtr &compute_graph);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    std::map<std::string, NodePtr> &breadth_node_map);
+                                    std::map<std::string, NodePtr> &breadth_node_map) const;
   void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);
   graphStatus TopologicalSorting(const ComputeGraphPtr &const_graph_ptr,
                                  const ConstComputeGraphPtr &const_compute_graph);
