@@ -78,7 +78,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
   static graphStatus RegisterInferValueRangeFunc(const std::string &operator_type);
 
   static graphStatus RegisterInferValueRangeFunc(const std::string &operator_type,
-                                                 WHEN_CALL when_call,
+                                                 const WHEN_CALL when_call,
                                                  const bool use_cpu_kernel,
                                                  const InferValueRangeFunc &infer_value_range_func);
 

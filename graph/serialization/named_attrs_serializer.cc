@@ -33,14 +33,14 @@ graphStatus NamedAttrsSerializer::Serialize(const AnyValue &av, proto::AttrDef &
   return Serialize(named_attrs, func);
 }
 
-graphStatus NamedAttrsSerializer::Serialize(const ge::NamedAttrs &named_attr, proto::NamedAttrs* proto_attr) {
+graphStatus NamedAttrsSerializer::Serialize(const ge::NamedAttrs &named_attr, proto::NamedAttrs* proto_attr) const {
   GE_CHECK_NOTNULL(proto_attr);
   proto_attr->set_name(named_attr.GetName().c_str());
-  auto mutable_attr = proto_attr->mutable_attr();
+  const auto mutable_attr = proto_attr->mutable_attr();
   GE_CHECK_NOTNULL(mutable_attr);
 
-  auto attrs = AttrUtils::GetAllAttrs(named_attr);
-  for (auto attr : attrs) {
+  const auto attrs = AttrUtils::GetAllAttrs(named_attr);
+  for (const auto &attr : attrs) {
     const AnyValue attr_value = attr.second;
     const auto serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr_value.GetValueTypeId());
     GE_CHECK_NOTNULL(serializer);
@@ -63,10 +63,10 @@ graphStatus NamedAttrsSerializer::Deserialize(const proto::AttrDef &def, AnyValu
   return av.SetValue(std::move(value));
 }
 
-graphStatus NamedAttrsSerializer::Deserialize(const proto::NamedAttrs &proto_attr, ge::NamedAttrs &named_attrs) {
+graphStatus NamedAttrsSerializer::Deserialize(const proto::NamedAttrs &proto_attr, ge::NamedAttrs &named_attrs) const {
   named_attrs.SetName(proto_attr.name());
-  auto proto_attr_map = proto_attr.attr();
-  for (auto proto_attr : proto_attr_map) {
+  const auto proto_attr_map = proto_attr.attr();
+  for (const auto &proto_attr : proto_attr_map) {
     const auto deserializer = AttrSerializerRegistry::GetInstance().GetDeserializer(proto_attr.second.value_case());
     GE_CHECK_NOTNULL(deserializer);
     AnyValue attr_value;

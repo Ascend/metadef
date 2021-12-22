@@ -485,7 +485,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetInNodes(const ge::ConstNodePtr &owner_n
       vec.push_back(node);
     }
 
-    auto peer_out_control_anchors = in_control_anchor_->GetPeerOutControlAnchors();
+    const auto peer_out_control_anchors = in_control_anchor_->GetPeerOutControlAnchors();
     for (const auto &out_control_anchor : peer_out_control_anchors) {
       const auto node = out_control_anchor->GetOwnerNode();
       vec.push_back(node);
@@ -494,7 +494,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetInNodes(const ge::ConstNodePtr &owner_n
   return Node::Vistor<NodePtr>(owner_node, vec);
 }
 
-bool Node::NodeImpl::IsAllInNodesSeen(std::unordered_set<Node *> &nodes_seen) const {
+bool Node::NodeImpl::IsAllInNodesSeen(const std::unordered_set<Node *> &nodes_seen) const {
   for (const auto &in_anchor : in_data_anchors_) {
     GE_CHK_BOOL_EXEC((in_anchor != nullptr),
                      continue, "[Check][Param] in_data_anchor is nullptr, node:%s", GetName().c_str());
@@ -535,7 +535,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetInDataNodes(const ge::ConstNodePtr &own
   for (const auto &in_anchor : in_data_anchors_) {
     GE_CHK_BOOL_EXEC((in_anchor != nullptr), continue,
                      "[Check][Param] in_data_anchor is nullptr, node:%s", GetName().c_str());
-    auto anchor_ptr = in_anchor->GetPeerOutAnchor();
+    const auto anchor_ptr = in_anchor->GetPeerOutAnchor();
     if (anchor_ptr == nullptr) {
       continue;
     }
@@ -567,7 +567,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetOutNodes(const ge::ConstNodePtr &owner_
     }
   }
   if (out_control_anchor_ != nullptr) {
-    auto peer_in_control_anchors = out_control_anchor_->GetPeerInControlAnchors();
+    const auto peer_in_control_anchors = out_control_anchor_->GetPeerInControlAnchors();
     for (const auto &in_control_anchor : peer_in_control_anchors) {
       const auto node = in_control_anchor->GetOwnerNode();
       vec.push_back(node);
@@ -587,7 +587,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetInAllNodes(const ge::ConstNodePtr &owne
   return Node::Vistor<NodePtr>(owner_node, vec);
 }
 
-Node::Vistor<NodePtr> Node::NodeImpl::GetOutDataNodes(const std::shared_ptr<const Node> &owner_node) const {
+Node::Vistor<NodePtr> Node::NodeImpl::GetOutDataNodes(const ConstNodePtr &owner_node) const {
   std::vector<NodePtr> vec;
   for (const auto &out_anchor : out_data_anchors_) {
     GE_CHK_BOOL_EXEC((out_anchor != nullptr), continue,
@@ -821,10 +821,10 @@ Node::Vistor<std::pair<NodePtr, InDataAnchorPtr>> Node::NodeImpl::GetOutDataNode
 }
 
 Node::Node()
-    : enable_shared_from_this(), impl_(std::shared_ptr<NodeImpl>(new NodeImpl())) {}
+    : enable_shared_from_this(), impl_(std::make_shared<NodeImpl>()) {}
 
 Node::Node(const OpDescPtr &op, const ComputeGraphPtr &owner_graph)
-    : enable_shared_from_this(), impl_(std::shared_ptr<NodeImpl>(new NodeImpl(op, owner_graph))) {}
+    : enable_shared_from_this(), impl_(std::make_shared<NodeImpl>(op, owner_graph)) {}
 
 Node::~Node() {}
 
@@ -967,7 +967,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::AddLinkFrom(con
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::AddLinkFrom(const uint32_t &index,
-                                                                             NodePtr input_node) {
+                                                                             const NodePtr input_node) {
   return impl_->AddLinkFrom(index, input_node, shared_from_this());
 }
 
@@ -976,7 +976,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::AddLinkFromForP
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus Node::AddLinkFrom(const std::string &name, NodePtr input_node) {
+graphStatus Node::AddLinkFrom(const std::string &name, const NodePtr input_node) {
   return impl_->AddLinkFrom(name, input_node, shared_from_this());
 }
 
@@ -1102,8 +1102,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::UpdateOpDesc(co
   return impl_->UpdateOpDesc(op_desc);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<std::pair<NodePtr, OutDataAnchorPtr>>
-Node::GetInDataNodesAndAnchors() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<NodeToOutAnchor> Node::GetInDataNodesAndAnchors() const {
   return impl_->GetInDataNodesAndAnchors(shared_from_this());
 }
 

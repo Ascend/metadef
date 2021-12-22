@@ -31,11 +31,6 @@ class OpIO {
 
   OperatorImplPtr GetOwner() const { return owner_; }
 
-  bool operator==(const OpIO &r_value) const {
-    return (this->name_ == r_value.GetName()) && (this->index_ == r_value.GetIndex()) &&
-        (this->GetOwner() == r_value.GetOwner());
-  }
-
  private:
   std::string name_;
   int32_t index_;
