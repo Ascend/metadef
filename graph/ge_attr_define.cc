@@ -1281,4 +1281,8 @@ const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INPUT_SHAPE = "_subgraph_multi_d
 const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INPUT_DIMS = "_subgraph_multi_dims_input_dims";
 const std::string ATTR_NAME_SUBGRAPH_IS_MULTI_DIMS = "_subgraph_is_multi_dims";
 const std::string ATTR_NAME_OP_MULTI_DIMS_INPUT_DIMS = "_op_multi_dims_input_dims";
+
+// for support BlockDim
+const std::string ATTR_NAME_SUPPORT_BLOCKDIM_FLAG = "_support_blockdim_flag";
+const std::string ATTR_NAME_BLOCKDIM_INDEX = "_blockdim_index";
 }  // namespace ge
