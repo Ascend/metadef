@@ -26,8 +26,6 @@
 #include "graph/runtime_inference_context.h"
 /*lint -e148*/
 namespace ge {
-class OpDesc;
-using OpDescPtr = std::shared_ptr<OpDesc>;
 using ConstGeTensorBarePtr = const GeTensor*;
 
 class OpDescUtils {
