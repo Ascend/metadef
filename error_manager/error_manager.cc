@@ -216,6 +216,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     return -1;
   }
 
+  const std::unique_lock<std::mutex> lock(mutex_);
   if (error_context_.work_stream_id == 0UL) {
     if (error_message_per_work_id_.size() > kMaxWorkSize) {
       GELOGE("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
@@ -225,7 +226,8 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     GenWorkStreamIdDefault();
   }
 
-  const std::unique_lock<std::mutex> lock(mutex_);
+  GELOGI("report error message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
+
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
@@ -265,6 +267,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
 
   if (error_context_.work_stream_id == 0UL) { GenWorkStreamIdDefault(); }
 
+  GELOGI("report error message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
   const auto it = error_map_.find(error_code);
   if (it == error_map_.end()) {
     GELOGE("[Report][Error]error_code %s is not registered", error_code.c_str());
@@ -312,6 +315,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
 }
 
 std::string ErrorManager::GetErrorMessage() {
+  GELOGI("current work_stream_id:%lu", error_context_.work_stream_id);
   const std::unique_lock<std::mutex> lock(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
 
@@ -346,6 +350,7 @@ std::string ErrorManager::GetErrorMessage() {
 }
 
 std::string ErrorManager::GetWarningMessage() {
+  GELOGI("current work_stream_id:%lu", error_context_.work_stream_id);
   const std::unique_lock<std::mutex> lock(mutex_);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
@@ -433,6 +438,7 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
                error_info.error_id.c_str(), path.c_str());
         return -1;
       }
+      GELOGI("add error code %s success", error_info.error_id.c_str());
       (void)error_map_.emplace(error_info.error_id, error_info);
     }
   } catch (const nlohmann::json::exception &e) {
@@ -440,7 +446,7 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
     return -1;
   }
 
-  GELOGI("Parse json file success");
+  GELOGI("Parse json file:%s success", path.c_str());
   return 0;
 }
 

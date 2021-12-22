@@ -20,11 +20,14 @@
 
 namespace ge {
 class AgingPolicy {
-public:
+ public:
   AgingPolicy() = default;
   virtual ~AgingPolicy() = default;
 
   virtual std::vector<CacheItem> DoAging(const CCStatType &cc_state) const = 0;
+ private:
+  AgingPolicy &operator=(const AgingPolicy &anging_polocy) = delete;
+  AgingPolicy(const AgingPolicy &anging_polocy) = delete;
 };
 }
 #endif

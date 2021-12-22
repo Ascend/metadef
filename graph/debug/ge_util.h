@@ -33,5 +33,33 @@ static inline std::shared_ptr<T> ComGraphMakeShared(Args &&...args) {
   }
   return ret;
 }
+template <typename T>
+struct ComGraphMakeUniq {
+  typedef std::unique_ptr<T> unique_object;
+};
+
+template <typename T>
+struct ComGraphMakeUniq<T[]> {
+  typedef std::unique_ptr<T[]> unique_array;
+};
+
+template <typename T, size_t B>
+struct ComGraphMakeUniq<T[B]> {
+  struct invalid_type { };
+};
+
+template <typename T, typename... Args>
+static inline typename ComGraphMakeUniq<T>::unique_object ComGraphMakeUnique(Args &&... args) {
+  typedef typename std::remove_const<T>::type T_nc;
+  return std::unique_ptr<T>(new (std::nothrow) T_nc(std::forward<Args>(args)...));
+}
+
+template <typename T>
+static inline typename ComGraphMakeUniq<T>::unique_array ComGraphMakeUnique(const size_t num) {
+  return std::unique_ptr<T>(new (std::nothrow) typename std::remove_extent<T>::type[num]());
+}
+
+template <typename T, typename... Args>
+static inline typename ComGraphMakeUniq<T>::invalid_type ComGraphMakeUnique(Args &&...) = delete;
 }  // namespace ge
 #endif  // COMMON_GRAPH_DEBUG_GE_UTIL_H_

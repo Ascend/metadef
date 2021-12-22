@@ -72,7 +72,7 @@ TEST_F(UtestCompileCachePolicyHasher, GetCacheDescHashWithoutShape) {
   auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
                               formats, origin_formats, data_types, other_desc);
   auto seed = CompileCacheHasher::GetCacheDescHashWithoutShape(ccd);
-  ASSERT_EQ(seed, 266203561920);
+  ASSERT_EQ(seed, 4617134413513640029);
 
   delete data;
   data = nullptr;
@@ -93,7 +93,7 @@ TEST_F(UtestCompileCachePolicyHasher, GetCacheDescShapeHash) {
   auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
                               formats, origin_formats, data_types, other_desc);
   auto seed = CompileCacheHasher::GetCacheDescShapeHash(ccd);
-  ASSERT_EQ(seed, 134049801424);
+  ASSERT_EQ(seed, 8487203673785339670);
 
   delete data;
   data = nullptr;

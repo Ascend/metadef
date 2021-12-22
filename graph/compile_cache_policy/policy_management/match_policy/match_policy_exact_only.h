@@ -19,8 +19,8 @@
 namespace ge {
 class MatchPolicyExactOnly : public MatchPolicy {
 public:
-  CacheItem GetCacheItem(const CCStatType &cc_state, const CompileCacheDesc &desc) const override;
-  ~MatchPolicyExactOnly() override = default;
+  virtual CacheItem GetCacheItem(const CCStatType &cc_state, const CompileCacheDesc &desc) const override;
+  virtual ~MatchPolicyExactOnly() override = default;
 };
 }
 #endif

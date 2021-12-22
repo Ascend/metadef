@@ -20,11 +20,11 @@
 namespace ge {
 class AgingPolicyLru : public AgingPolicy {
 public:
-  ~AgingPolicyLru() override = default;
+  virtual ~AgingPolicyLru() override = default;
   void SetDeleteInterval(const int64_t &interval) {
     delete_interval_ = interval;
   }
-  std::vector<CacheItem> DoAging(const CCStatType &cc_state) const override;
+  virtual std::vector<CacheItem> DoAging(const CCStatType &cc_state) const override;
 
 private:
   int64_t delete_interval_ = 0L;

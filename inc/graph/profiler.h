@@ -50,13 +50,13 @@ class Profiler {
  public:
   static std::unique_ptr<Profiler> Create();
   void UpdateHashByIndex(const int64_t index, const uint64_t hash);
-  void RegisterString(int64_t index, const std::string &str);
-  void RegisterStringHash(int64_t index, uint64_t hash, const std::string &str);
-  void Record(int64_t element, int64_t thread, int64_t event, EventType et,
-              std::chrono::time_point<std::chrono::system_clock> time_point);
-  void RecordCurrentThread(int64_t element, int64_t event, EventType et);
-  void RecordCurrentThread(int64_t element, int64_t event, EventType et,
-                           std::chrono::time_point<std::chrono::system_clock> time_point);
+  void RegisterString(const int64_t index, const std::string &str);
+  void RegisterStringHash(const int64_t index, const uint64_t hash, const std::string &str);
+  void Record(const int64_t element, const int64_t thread, const int64_t event, const EventType et,
+              const std::chrono::time_point<std::chrono::system_clock> time_point);
+  void RecordCurrentThread(const int64_t element, const int64_t event, const EventType et);
+  void RecordCurrentThread(const int64_t element, const int64_t event, const EventType et,
+                           const std::chrono::time_point<std::chrono::system_clock> time_point);
 
   void Reset();
   void Dump(std::ostream &out_stream) const;
@@ -73,7 +73,7 @@ class Profiler {
 
  private:
   Profiler();
-  void DumpByIndex(int64_t index, std::ostream &out_stream) const;
+  void DumpByIndex(const int64_t index, std::ostream &out_stream) const;
 
  private:
   std::atomic<size_t> record_size_;

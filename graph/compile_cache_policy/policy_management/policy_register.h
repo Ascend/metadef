@@ -40,18 +40,18 @@ public:
     return instance;
   }
   void RegisterMatchPolicy(const MatchPolicyType match_policy_type, const MatchPolicyPtr ptr) {
-    std::lock_guard<std::mutex> lock(mu_);
-    match_policy_registry_.emplace(match_policy_type, ptr);
+    const std::lock_guard<std::mutex> lock(mu_);
+    (void)match_policy_registry_.emplace(match_policy_type, ptr);
     return;
   }
 
   void RegisterAgingPolicy(const AgingPolicyType aging_policy_type, const AgingPolicyPtr ptr) {
-    std::lock_guard<std::mutex> lock(mu_);
-    aging_policy_registry_.emplace(aging_policy_type, ptr);
+    const std::lock_guard<std::mutex> lock(mu_);
+    (void)aging_policy_registry_.emplace(aging_policy_type, ptr);
   }
 
   MatchPolicyPtr GetMatchPolicy(const MatchPolicyType match_policy_type) {
-    auto iter = match_policy_registry_.find(match_policy_type);
+    const auto iter = match_policy_registry_.find(match_policy_type);
     if (iter != match_policy_registry_.end()) {
       auto &mp_ptr = iter->second;
       if (mp_ptr != nullptr) {
@@ -69,7 +69,7 @@ public:
     return nullptr;
   }
   AgingPolicyPtr GetAgingPolicy(const AgingPolicyType aging_policy_type) {
-    auto iter = aging_policy_registry_.find(aging_policy_type);
+    const auto iter = aging_policy_registry_.find(aging_policy_type);
     if (iter != aging_policy_registry_.end()) {
       auto &ap_ptr = iter->second;
       if (ap_ptr != nullptr) {

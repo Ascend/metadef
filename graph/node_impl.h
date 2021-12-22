@@ -79,8 +79,8 @@ class Node::NodeImpl {
   Node::Vistor<std::pair<NodePtr, InDataAnchorPtr>>
   GetOutDataNodesAndAnchors(const ConstNodePtr &owner_node) const;
 
-  void AddSendEventId(uint32_t event_id) { send_event_id_list_.push_back(event_id); }
-  void AddRecvEventId(uint32_t event_id) { recv_event_id_list_.push_back(event_id); }
+  void AddSendEventId(const uint32_t event_id) { send_event_id_list_.push_back(event_id); }
+  void AddRecvEventId(const uint32_t event_id) { recv_event_id_list_.push_back(event_id); }
 
   const std::vector<uint32_t> &GetSendEventIdList() const { return send_event_id_list_; }
   const std::vector<uint32_t> &GetRecvEventIdList() const { return recv_event_id_list_; }
@@ -99,7 +99,7 @@ class Node::NodeImpl {
   }
 
   bool GetHostNode() const { return host_node_; }
-  void SetHostNode(bool is_host) { host_node_ = is_host; }
+  void SetHostNode(const bool is_host) { host_node_ = is_host; }
 
   void SetOrigNode(const NodePtr &orignode) { orig_node_ = orignode; }
   NodePtr GetOrigNode() { return orig_node_; }

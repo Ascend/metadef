@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_CACHE_DESC_H_
-#define GRAPH_COMPILE_CACHE_POLICY_CACHE_DESC_H_
+#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H_
+#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H_
 #include "graph/small_vector.h"
 #include "graph/ascend_limits.h"
 #include "graph/types.h"
 #include "graph/debug/ge_log.h"
+#include "graph/debug/ge_util.h"
+#include "graph/def_types.h"
 #include "hash_utils.h"
 #include <securec.h>
 #include <string>
@@ -30,15 +32,14 @@ using ShapeType = std::vector<int64_t>;
 using ShapeRangeType = std::vector<std::pair<int64_t, int64_t>>;
 
 class BinaryHolder {
-public:
+ public:
   BinaryHolder() = default;
 
   BinaryHolder(const BinaryHolder &other) {
-    if (other.GetDataPtr() != nullptr && other.GetDataLen() != 0) {
+    if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
       data_len_ = other.GetDataLen();
-      uint8_t *data = new (std::nothrow) uint8_t[data_len_];
-      auto mem_ret = memcpy_s(data, data_len_, other.GetDataPtr(), data_len_);
-      holder_.reset(data);
+      holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
+      const auto mem_ret = memcpy_s(holder_.get(), data_len_, other.GetDataPtr(), data_len_);
       if (mem_ret != EOK) {
         GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] Memcpy Falied.");
       }
@@ -68,8 +69,8 @@ public:
     if (this->GetDataLen() != second.GetDataLen()) {
       return false;
     }
-    auto this_data = this->GetDataPtr();
-    auto second_data = second.GetDataPtr();
+    const auto this_data = this->GetDataPtr();
+    const auto second_data = second.GetDataPtr();
     if (((this_data == nullptr) && (second_data != nullptr)) ||
         ((this_data != nullptr) && (second_data == nullptr))) {
       return true;
@@ -82,25 +83,28 @@ public:
     }
     return false;
   }
-private:
+ private:
   std::unique_ptr<uint8_t[]> holder_ = nullptr;
   void *data_ptr_ = nullptr;
-  size_t data_len_ = 0;
+  size_t data_len_ = 0UL;
 };
 
 class CompileCacheDesc {
   friend class CompileCacheHasher;
-public:
+ public:
   CompileCacheDesc() = delete;
 
-  CompileCacheDesc(int64_t unique_id,
-                   SmallVector<ShapeType, kDefaultMaxInputNum> shapes,
-                   SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes,
-                   SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges,
-                   SmallVector<Format, kDefaultMaxInputNum> formats,
-                   SmallVector<Format, kDefaultMaxInputNum> origin_formats,
-                   SmallVector<DataType, kDefaultMaxInputNum> data_types,
-                   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc) {}
+  CompileCacheDesc(const int64_t unique_id,
+                   const SmallVector<ShapeType, kDefaultMaxInputNum> shapes,
+                   const SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes,
+                   const SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges,
+                   const SmallVector<Format, kDefaultMaxInputNum> formats,
+                   const SmallVector<Format, kDefaultMaxInputNum> origin_formats,
+                   const SmallVector<DataType, kDefaultMaxInputNum> data_types,
+                   const SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc) :
+                   unique_id_(unique_id), shapes_(shapes), origin_shapes_(origin_shapes),
+                   shape_ranges_(shape_ranges), formats_(formats), origin_formats_(origin_formats),
+                   data_types_(data_types), other_desc_(other_desc) {}
 
   ~CompileCacheDesc() = default;
   static bool IsSameCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second) {
@@ -113,7 +117,7 @@ public:
       return false;
     }
 
-    for (size_t idx = 0L; idx < first.other_desc_.size(); idx++) {
+    for (size_t idx = 0UL; idx < first.other_desc_.size(); idx++) {
       if (first.other_desc_[idx] != second.other_desc_[idx]) {
         return false;
       }
@@ -121,8 +125,8 @@ public:
     return true;
   }
 
-private:
-  int64_t unique_id_ = 0UL;
+ private:
+  int64_t unique_id_ = 0L;
   SmallVector<ShapeType, kDefaultMaxInputNum> shapes_;
   SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes_;
   SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges_;
@@ -138,9 +142,9 @@ struct hash<ge::BinaryHolder> {
   size_t operator()(const ge::BinaryHolder &value) const {
     GE_CHECK_NOTNULL(value.GetDataPtr());
     size_t seed = ge::HashUtils::MultiHash();
-    const uint8_t *u8_data = reinterpret_cast<const uint8_t *>(value.GetDataPtr());
+    const uint64_t u8_data = ge::PtrToValue(value.GetDataPtr());
     for (size_t idx = 0UL; idx < value.GetDataLen(); idx++) {
-      seed = ge::HashUtils::HashCombine(seed, *(u8_data + idx));
+      seed = ge::HashUtils::HashCombine(seed, *(static_cast<uint8_t *>(ge::ValueToPtr(u8_data + idx))));
     }
     return seed;
   }

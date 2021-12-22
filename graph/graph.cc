@@ -600,14 +600,14 @@ graphStatus Graph::RemoveEdge(GNode &src_node, const int32_t src_port_index,
     return GRAPH_FAILED;
   }
 
-  NodePtr src_node_ptr = NodeAdapter::GNode2Node(src_node);
+  const NodePtr src_node_ptr = NodeAdapter::GNode2Node(src_node);
   if (src_node_ptr == nullptr) {
     REPORT_CALL_ERROR("E19999", "src gnode to node failed.");
     GELOGE(GRAPH_FAILED, "[Get][Node] src gnode to node failed.");
     return GRAPH_FAILED;
   }
 
-  NodePtr dst_node_ptr = NodeAdapter::GNode2Node(dst_node);
+  const NodePtr dst_node_ptr = NodeAdapter::GNode2Node(dst_node);
   if (dst_node_ptr == nullptr) {
     REPORT_CALL_ERROR("E19999", "dst gnode to node failed.");
     GELOGE(GRAPH_FAILED, "[Get][Node] dst gnode to node failed.");
@@ -757,7 +757,7 @@ graphStatus Graph::AddControlEdge(GNode &src_node, GNode &dst_node) {
 }
 
 GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const AscendString &name) {
-  const char_t *ascend_name = name.GetString();
+  const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "ascend string error");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] ascend string error.");
@@ -809,13 +809,13 @@ graphStatus Graph::SaveToFile(const char_t *file_name) const {
 
   Model model = Model();
   model.SetGraph(*this);
-  std::string file = file_name;
+  const std::string file = file_name;
   return model.SaveToFile(file);
 }
 
 graphStatus Graph::LoadFromFile(const std::string &file_name) {
   Model model = Model();
-  graphStatus ret = model.LoadFromFile(file_name);
+  const graphStatus ret = model.LoadFromFile(file_name);
   if (ret != GRAPH_SUCCESS) {
     return ret;
   }

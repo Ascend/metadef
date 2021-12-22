@@ -97,7 +97,7 @@ TEST_F(UtestCompileCachePolicy, AddCacheSuccess_2) {
   ASSERT_NE(cache_item, -1);
 
   bool is_same = CompileCacheDesc::IsSameCompileDesc(ccd1, ccd2);
-  ASSERT_NE(is_same, false);
+  ASSERT_NE(is_same, true);
 }
 
 TEST_F(UtestCompileCachePolicy, CacheHashKey_1) {
@@ -181,7 +181,7 @@ TEST_F(UtestCompileCachePolicy, AgingCacheSuccess_1) {
 
   auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
   CacheItem cache_item = ccp->AddCache(ccd);
-  
+
   std::vector<CacheItem> del_item = ccp->DoAging();
   ASSERT_EQ(cache_item, del_item[0]);
 }

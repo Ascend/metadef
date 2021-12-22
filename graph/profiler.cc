@@ -18,20 +18,18 @@
 #include "mmpa/mmpa_api.h"
 #include "securec.h"
 #include "graph/debug/ge_log.h"
+#include "graph/debug/ge_util.h"
+#include "external/graph/types.h"
 
 namespace ge {
 namespace profiling {
 namespace {
-constexpr char kVersion[] = "1.0";
+constexpr char_t kVersion[] = "1.0";
 int64_t GetThread() {
-#ifdef __GNUC__
-  thread_local static auto tid = static_cast<int64_t>(syscall(__NR_gettid));
-#else
-  thread_local static auto tid = static_cast<int64_t>(GetCurrentThreadId());
-#endif
+  thread_local static auto tid = mmGetTid();
   return tid;
 }
-void DumpEventType(EventType et, std::ostream &out_stream) {
+void DumpEventType(const EventType et, std::ostream &out_stream) {
   switch (et) {
     case kEventStart:
       out_stream << "Start";
@@ -48,12 +46,12 @@ void DumpEventType(EventType et, std::ostream &out_stream) {
 }
 }
 
-void Profiler::RecordCurrentThread(int64_t element, int64_t event, EventType et) {
+void Profiler::RecordCurrentThread(const int64_t element, const int64_t event, const EventType et) {
   Record(element, GetThread(), event, et, std::chrono::system_clock::now());
 }
 
-void Profiler::RecordCurrentThread(int64_t element, int64_t event, EventType et,
-                                   std::chrono::time_point<std::chrono::system_clock> time_point) {
+void Profiler::RecordCurrentThread(const int64_t element, const int64_t event, const EventType et,
+                                   const std::chrono::time_point<std::chrono::system_clock> time_point) {
   Record(element, GetThread(), event, et, time_point);
 }
 
@@ -64,33 +62,33 @@ void Profiler::UpdateHashByIndex(const int64_t index, const uint64_t hash) {
   GetStringHashes()[index].hash = hash;
 }
 
-void Profiler::RegisterString(int64_t index, const std::string &str) {
+void Profiler::RegisterString(const int64_t index, const std::string &str) {
   if (index >= kMaxStrIndex) {
     return;
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1);
+  const auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
   }
 }
 
-void Profiler::RegisterStringHash(int64_t index, uint64_t hash, const std::string &str) {
+void Profiler::RegisterStringHash(const int64_t index, const uint64_t hash, const std::string &str) {
   if (index >= kMaxStrIndex) {
     return;
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1);
+  const auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
   }
   GetStringHashes()[index].hash = hash;
 }
 
-void Profiler::Record(int64_t element, int64_t thread, int64_t event, EventType et,
-                      std::chrono::time_point<std::chrono::system_clock> time_point) {
+void Profiler::Record(const int64_t element, const int64_t thread, const int64_t event, const EventType et,
+                      const std::chrono::time_point<std::chrono::system_clock> time_point) {
   auto current_index = record_size_++;
   if (current_index >= kMaxRecordNum) {
     return;
@@ -105,7 +103,7 @@ void Profiler::Dump(std::ostream &out_stream) const {
                << records_.size() << " will be dropped" << std::endl;
     print_size = records_.size();
   }
-  for (size_t i = 0; i < print_size; ++i) {
+  for (size_t i = 0UL; i < print_size; ++i) {
     auto &rec = records_[i];
     // in format: <timestamp> <thread-id> <module-id> <record-type> <event-type>
     out_stream << std::chrono::duration_cast<std::chrono::nanoseconds>(rec.timestamp.time_since_epoch()).count() << ' ';
@@ -119,17 +117,17 @@ void Profiler::Dump(std::ostream &out_stream) const {
   }
   out_stream << "Profiling dump end" << std::endl;
 }
-void Profiler::DumpByIndex(int64_t index, std::ostream &out_stream) const {
-  if (index < 0 || index >= kMaxStrIndex || strnlen(GetStringHashes()[index].str, kMaxStrLen) == 0) {
+void Profiler::DumpByIndex(const int64_t index, std::ostream &out_stream) const {
+  if ((index < 0) || (index >= kMaxStrIndex) || (strnlen(GetStringHashes()[index].str, kMaxStrLen) == 0UL)) {
     out_stream << "UNKNOWN(" << index << ")";
   } else {
     out_stream << '[' << GetStringHashes()[index].str << "]";
   }
 }
-Profiler::Profiler() : record_size_(0), records_(), indexes_to_str_hashes_() {}
+Profiler::Profiler() : record_size_(0UL), records_(), indexes_to_str_hashes_() {}
 void Profiler::Reset() {
   // 不完全reset，indexes_to_str_hashes_还是有值的
-  record_size_ = 0;
+  record_size_ = 0UL;
 }
 std::unique_ptr<Profiler> Profiler::Create() {
   return std::unique_ptr<Profiler>(new(std::nothrow) Profiler());
@@ -138,7 +136,7 @@ size_t Profiler::GetRecordNum() const noexcept {
   return record_size_;
 }
 const ProfilingRecord *Profiler::GetRecords() const {
-  return &(records_[0]);
+  return &(records_[0UL]);
 }
 Profiler::ConstStringHashesPointer Profiler::GetStringHashes() const {
   return indexes_to_str_hashes_;
