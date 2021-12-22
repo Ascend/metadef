@@ -31,9 +31,4 @@ class HostCpuContext {
 };
 } // namespace ge
 
-extern "C" {
-// Unified definition for registering host_cpu_kernel_wrapper when so is opened
-FMK_FUNC_HOST_VISIBILITY ge::Status Initialize(const ge::HostCpuContext &ctx);
-}
-
 #endif //INC_REGISTER_HOST_CPU_CONTEXT_H_
