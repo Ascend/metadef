@@ -17,6 +17,7 @@
 #include "compile_cache_policy.h"
 #include "graph/compile_cache_policy/policy_management/match_policy/match_policy_exact_only.h"
 #include "graph/compile_cache_policy/policy_management/aging_policy/aging_policy_lru.h"
+#include "debug/ge_util.h"
 
 #include "graph/debug/ge_util.h"
 
@@ -32,8 +33,9 @@ void CompileCachePolicy::PolicyInit() {
   }
   return;
 }
-std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(MatchPolicyPtr mp,
-                                                               AgingPolicyPtr ap) {
+
+std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicyPtr mp,
+                                                               const AgingPolicyPtr ap) {
   if (mp == nullptr) {
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] param match policy must not be null.");
     return nullptr;
@@ -43,21 +45,21 @@ std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(MatchPolicyPtr mp
     return nullptr;
   }
   auto ccp = std::unique_ptr<CompileCachePolicy>(new CompileCachePolicy());
-  ccp->SetAgingPolicy(ap);
-  ccp->SetMatchPolicy(mp);
+  (void)ccp->SetAgingPolicy(ap);
+  (void)ccp->SetMatchPolicy(mp);
 
   GELOGI("[CompileCachePolicy] Create CompileCachePolicy success;");
   return ccp;
 }
 
-std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(MatchPolicyType mp_type,
-                                                               AgingPolicyType ap_type) {
+std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicyType mp_type,
+                                                               const AgingPolicyType ap_type) {
   CompileCachePolicy::PolicyInit();
-  auto mp = PolicyManager::GetInstance().GetMatchPolicy(mp_type);
-  auto ap = PolicyManager::GetInstance().GetAgingPolicy(ap_type);
+  const auto mp = PolicyManager::GetInstance().GetMatchPolicy(mp_type);
+  const auto ap = PolicyManager::GetInstance().GetAgingPolicy(ap_type);
   auto ccp = std::unique_ptr<CompileCachePolicy>(new CompileCachePolicy());
-  ccp->SetAgingPolicy(ap);
-  ccp->SetMatchPolicy(mp);
+  (void)ccp->SetAgingPolicy(ap);
+  (void)ccp->SetMatchPolicy(mp);
   GELOGI("[CompileCachePolicy] Create CompileCachePolicy with match_policy: %d, aging_policy: %d success;",
          mp_type, ap_type);
   return ccp;
@@ -98,8 +100,8 @@ std::vector<CacheItem> CompileCachePolicy::DeleteCache(const DelCacheFunc &func)
 }
 
 std::vector<CacheItem> CompileCachePolicy::DoAging() {
-  auto delete_item = ap_->DoAging(compile_cache_state_.GetState());
-  compile_cache_state_.DelCache(delete_item);
+  const auto delete_item = ap_->DoAging(compile_cache_state_.GetState());
+  (void)compile_cache_state_.DelCache(delete_item);
   return delete_item;
 }
 }  // namespace ge

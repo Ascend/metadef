@@ -17,12 +17,12 @@
 #include "graph/compile_cache_policy/compile_cache_hasher.h"
 namespace ge {
 CacheItem MatchPolicyExactOnly::GetCacheItem(const CCStatType &cc_state, const CompileCacheDesc &desc) const {
-  CacheHashKey hash_key = CompileCacheHasher::GetCacheDescHashWithoutShape(desc);
+  const CacheHashKey hash_key = CompileCacheHasher::GetCacheDescHashWithoutShape(desc);
   const auto &iter = cc_state.find(hash_key);
   if (iter == cc_state.end()) {
       return KInvalidCacheItem;
   }
-  CacheHashKey shape_hash_key = CompileCacheHasher::GetCacheDescShapeHash(desc);
+  const CacheHashKey shape_hash_key = CompileCacheHasher::GetCacheDescShapeHash(desc);
   const auto &info_vec = iter->second;
   for (const auto &cached_info : info_vec) {
     if ((cached_info.GetShapeHash() == shape_hash_key) &&

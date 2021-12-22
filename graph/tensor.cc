@@ -88,24 +88,24 @@ class TensorDescValue {
 
   static bool CloneValue(std::unique_ptr<uint8_t[]> &dst, const std::unique_ptr<uint8_t[]> &src,
                          const std::size_t len) {
-    dst = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[len]);
+    dst = ComGraphMakeUnique<uint8_t[]>(len);
     if (dst == nullptr) {
       return false;
     }
     size_t remain_size = len;
-    auto dst_addr = reinterpret_cast<uintptr_t>(reinterpret_cast<void *>(dst.get()));
-    auto src_addr = reinterpret_cast<uintptr_t>(reinterpret_cast<void *>(src.get()));
+    auto dst_addr = PtrToValue(static_cast<void *>(dst.get()));
+    auto src_addr = PtrToValue(static_cast<void *>(src.get()));
     while (remain_size > SECUREC_MEM_MAX_LEN) {
-      if (memcpy_s(reinterpret_cast<void *>(dst_addr), SECUREC_MEM_MAX_LEN,
-                   reinterpret_cast<const void *>(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
+      if (memcpy_s(ValueToPtr(dst_addr), SECUREC_MEM_MAX_LEN,
+                   ValueToPtr(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
         return false;
       }
       remain_size -= SECUREC_MEM_MAX_LEN;
       dst_addr += SECUREC_MEM_MAX_LEN;
       src_addr += SECUREC_MEM_MAX_LEN;
     }
-    if ((remain_size != 0U) && (memcpy_s(reinterpret_cast<void *>(dst_addr), remain_size,
-                                         reinterpret_cast<const void *>(src_addr), remain_size) != EOK)) {
+    if ((remain_size != 0U) && (memcpy_s(ValueToPtr(dst_addr), remain_size,
+                                         ValueToPtr(src_addr), remain_size) != EOK)) {
       return false;
     }
     return true;
@@ -157,16 +157,17 @@ class TensorImpl {
       /// Extra 16 bytes store string head
       /// Extra 1 byte store '\0'
       const size_t total_size = data.size() + sizeof(StringHead) + 1U;
-      const std::unique_ptr<char_t[]> buff(new (std::nothrow) char_t[total_size]());
+      const std::unique_ptr<char_t[]> buff = ComGraphMakeUnique<char_t[]>(total_size);
       if (buff == nullptr) {
         REPORT_CALL_ERROR("E19999", "allocate string raw data buff failed, size:%zu", total_size);
         GELOGE(GRAPH_FAILED, "[New][Buffer] allocate string raw data buff failed");
         return GRAPH_FAILED;
       }
-      StringHead * const string_head = reinterpret_cast<StringHead *>(buff.get());
+      StringHead *const string_head = reinterpret_cast<StringHead *>(buff.get());
       // Front 8 bytes store pointer of string
-      char_t * const raw_data = buff.get() + sizeof(StringHead);
-      string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(reinterpret_cast<void *>(raw_data)));
+      char_t *const raw_data = static_cast<char_t *>(
+          ValueToPtr(PtrToValue(static_cast<void *>(buff.get())) + sizeof(*string_head)));
+      string_head->addr = PtrToValue(static_cast<void *>(raw_data));
       string_head->len = static_cast<uint64_t>(data.size());
       const int32_t memcpy_ret = memcpy_s(raw_data, total_size - sizeof(StringHead),  data.c_str(), data.size() + 1U);
       if (memcpy_ret != EOK) {
@@ -190,10 +191,11 @@ class TensorImpl {
     total_size = std::accumulate(data.begin(), data.end(), total_size, [&](size_t total, const std::string& str) {
       /// Extra 16 bytes store string head
       /// Extra 1 byte store '\0'
-      return total += str.size() + sizeof(StringHead) + 1U;
+      total += str.size() + sizeof(StringHead) + 1U;
+      return total;
     });
 
-    const std::unique_ptr<char_t[]> buff(new (std::nothrow) char_t[total_size]);
+    const std::unique_ptr<char_t[]> buff = ComGraphMakeUnique<char_t[]>(total_size);
     if (buff == nullptr) {
       REPORT_CALL_ERROR("E19999", "allocate string raw data buff failed, size:%zu", total_size);
       GELOGE(GRAPH_FAILED, "[New][Buffer] allocate string raw data buff failed");
@@ -201,10 +203,10 @@ class TensorImpl {
     }
     // Front some bytes store head of each string
     StringHead * const string_head = reinterpret_cast<StringHead *>(buff.get());
-    char_t *raw_data = buff.get() + (data.size() * sizeof(StringHead));
+    uint64_t raw_data = PtrToValue(static_cast<void *>(buff.get())) + (data.size() * sizeof(*string_head));
     uint64_t ptr_size = data.size() * sizeof(StringHead);
     for (size_t i = 0U; i < data.size(); ++i) {
-      string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(reinterpret_cast<void *>(raw_data)));
+      string_head[i].addr = raw_data;
       string_head[i].len = static_cast<uint64_t>(data[i].size());
       if (total_size < ptr_size) {
         REPORT_INNER_ERROR("E19999", "Subtraction invalid, total_size:%zu, ptr_size:%lu", total_size, ptr_size);
@@ -212,7 +214,8 @@ class TensorImpl {
                total_size, ptr_size);
         return GRAPH_FAILED;
       }
-      const int32_t memcpy_ret = memcpy_s(raw_data, total_size - ptr_size, data[i].c_str(), data[i].size() + 1U);
+      const int32_t memcpy_ret = memcpy_s(ValueToPtr(raw_data), total_size - ptr_size,
+                                          data[i].c_str(), data[i].size() + 1U);
       GE_CHK_BOOL_RET_STATUS(memcpy_ret == EOK, GRAPH_FAILED, "copy data failed");
       raw_data += (data[i].size() + 1U);
       ptr_size += (data[i].size() + 1U);

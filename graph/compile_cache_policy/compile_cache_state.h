@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_STAT_H_
-#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_STAT_H_
+#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_STATE_H_
+#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_STATE_H_
 
 #include "compile_cache_desc.h"
 #include "graph/ge_error_codes.h"
@@ -23,7 +23,7 @@
 #include <vector>
 #include <functional>
 #include <unordered_map>
-#include <ctime>
+#include <chrono>
 #include <queue>
 #include <mutex>
 namespace ge {
@@ -37,7 +37,7 @@ using CCStatType = std::unordered_map<uint64_t, std::vector<CacheInfo>>;
 class CacheInfo {
 friend class CompileCacheState;
 public:
-  CacheInfo(time_t time_stamp, CacheHashKey shape_hash, CacheItem item, const CompileCacheDesc &desc):
+  CacheInfo(const time_t time_stamp, const CacheHashKey shape_hash, const CacheItem item, const CompileCacheDesc &desc):
             time_stamp_(time_stamp), shape_hash_(shape_hash), item_(item), desc_(desc) {}
   CacheInfo(const CacheInfo &other) :
             time_stamp_(other.time_stamp_), shape_hash_(other.shape_hash_),
@@ -53,7 +53,7 @@ public:
   ~CacheInfo() = default;
 
   void RefreshTimeStamp() {
-    time_stamp_ = std::time(nullptr);
+    time_stamp_ = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   }
 
   const time_t &GetTimeStamp() const noexcept {

@@ -31,8 +31,8 @@
 namespace ge {
 enum class DotFileFlag : uint32_t {
   // Show nodes, edges, size, type and format
-  DOT_FLAG_DEFAULT = 0,
-  DOT_NOT_SHOW_EDGE_LABEL = 1,
+  DOT_FLAG_DEFAULT = 0U,
+  DOT_NOT_SHOW_EDGE_LABEL = 1U,
 };
 class GraphDebugPrinter {
 public:

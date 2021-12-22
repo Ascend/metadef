@@ -24,7 +24,7 @@
 namespace ge {
 class AnchorImpl {
  public:
-  AnchorImpl(const NodePtr &owner_node, int32_t idx);
+  AnchorImpl(const NodePtr &owner_node, const int32_t idx);
   ~AnchorImpl() = default;
   size_t GetPeerAnchorsSize() const;
   Anchor::Vistor<AnchorPtr> GetPeerAnchors(const std::shared_ptr<ConstAnchor> &anchor_ptr) const;
@@ -78,29 +78,50 @@ int32_t AnchorImpl::GetIdx() const { return idx_; }
 void AnchorImpl::SetIdx(const int32_t index) { idx_ = index; }
 
 Anchor::Anchor(const NodePtr &owner_node, const int32_t idx)
-    : enable_shared_from_this(), impl_(std::shared_ptr<AnchorImpl>(new AnchorImpl(owner_node, idx))) {}
+    : enable_shared_from_this(), impl_(ComGraphMakeShared<AnchorImpl>(owner_node, idx)) {}
 
 Anchor::~Anchor() = default;
 
 bool Anchor::IsTypeOf(const TYPE type) const { return std::string(Anchor::TypeOf<Anchor>()) == std::string(type); }
 
 size_t Anchor::GetPeerAnchorsSize() const {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return 0UL;
+  }
   return impl_->GetPeerAnchorsSize();
 }
 
 Anchor::Vistor<AnchorPtr> Anchor::GetPeerAnchors() const {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    std::vector<AnchorPtr> ret;
+    return Anchor::Vistor<AnchorPtr>(shared_from_this(), ret);
+  }
   return impl_->GetPeerAnchors(shared_from_this());
 }
 
 AnchorPtr Anchor::GetFirstPeerAnchor() const {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return nullptr;
+  }
   return impl_->GetFirstPeerAnchor();
 }
 
 NodePtr Anchor::GetOwnerNode() const {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return nullptr;
+  }
   return impl_->GetOwnerNode();
 }
 
 void Anchor::UnlinkAll() noexcept {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return;
+  }
   if (!impl_->peer_anchors_.empty()) {
     do {
       const auto peer_anchor_ptr = impl_->peer_anchors_.begin()->lock();
@@ -115,6 +136,7 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
     GELOGE(GRAPH_FAILED, "[Check][Param] peer anchor is invalid.");
     return GRAPH_FAILED;
   }
+  GE_CHK_BOOL_RET_STATUS(impl_ != nullptr, GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr");
   const auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [peer](const std::weak_ptr<Anchor> &an) {
     const auto anchor = an.lock();
@@ -145,6 +167,7 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
   GE_CHK_BOOL_RET_STATUS(old_peer != nullptr, GRAPH_FAILED, "[Check][Param] this old peer anchor is nullptr");
   GE_CHK_BOOL_RET_STATUS(first_peer != nullptr, GRAPH_FAILED, "[Check][Param] this first peer anchor is nullptr");
   GE_CHK_BOOL_RET_STATUS(second_peer != nullptr, GRAPH_FAILED, "[Check][Param] this second peer anchor is nullptr");
+  GE_CHK_BOOL_RET_STATUS(impl_ != nullptr, GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr");
   const auto this_it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [old_peer](const std::weak_ptr<Anchor> &an) {
     const auto anchor = an.lock();
@@ -173,6 +196,7 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
 }
 
 bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
+  GE_CHK_BOOL_RET_STATUS(impl_ != nullptr, false, "[Check][Param] impl_ of anchor is nullptr");
   const auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [peer](const std::weak_ptr<Anchor> &an) {
     const auto anchor = an.lock();
@@ -186,10 +210,15 @@ bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
 }
 
 int32_t Anchor::GetIdx() const {
+  GE_CHK_BOOL_RET_STATUS(impl_ != nullptr, 0, "[Check][Param] impl_ of anchor is nullptr");
   return impl_->GetIdx();
 }
 
 void Anchor::SetIdx(const int32_t index) {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return;
+  }
   impl_->SetIdx(index);
 }
 

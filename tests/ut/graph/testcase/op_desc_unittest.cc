@@ -191,13 +191,6 @@ TEST_F(UtestOpDesc, AddDescForward) {
   EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddOutputDescForward("t", 2));
 
   EXPECT_EQ(5, op_desc.GetOutputsSize());
-
-  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDesc("x", desc));
-  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDesc("y", desc));
-  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDesc("z", desc));
-  EXPECT_EQ(GRAPH_SUCCESS, op_desc.AddInputDescForward("t", 2));
-
-  EXPECT_EQ(5, op_desc.GetInputsSize());
 }
 
 TEST_F(UtestOpDesc, AddInputDesc1_success) {
@@ -259,17 +252,6 @@ TEST_F(UtestOpDesc, UpdateInputDesc_success) {
 
   EXPECT_EQ(op_desc->UpdateInputDesc(1, tensor_desc->Clone()), GRAPH_SUCCESS);
   EXPECT_EQ(op_desc->UpdateInputDesc(4, tensor_desc->Clone()), GRAPH_FAILED);
-}
-
-TEST_F(UtestOpDesc, AddInputDescForward_success) {
-  auto tensor_desc = std::make_shared<GeTensorDesc>();
-  tensor_desc->SetShape(GeShape({1}));
-  tensor_desc->SetFormat(FORMAT_NCHW);
-  tensor_desc->SetDataType(DT_FLOAT);
-  auto op_desc = std::make_shared<OpDesc>();
-  op_desc->AddInputDesc(tensor_desc->Clone());
-  op_desc->AddInputDesc(tensor_desc->Clone());
-  EXPECT_EQ(op_desc->AddInputDescForward("test", 1), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestOpDesc, AddOutputDescForward_success) {

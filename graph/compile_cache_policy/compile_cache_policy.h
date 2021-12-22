@@ -36,9 +36,8 @@ public:
   CompileCachePolicy &operator=(const CompileCachePolicy &) = delete;
   CompileCachePolicy &operator=(CompileCachePolicy &&) = delete;
 
-  static std::unique_ptr<CompileCachePolicy> Create(MatchPolicyPtr mp, AgingPolicyPtr ap);
-
-  static std::unique_ptr<CompileCachePolicy> Create(MatchPolicyType mp_type, AgingPolicyType ap_type);
+  static std::unique_ptr<CompileCachePolicy> Create(const MatchPolicyPtr mp, const AgingPolicyPtr ap);
+  static std::unique_ptr<CompileCachePolicy> Create(const MatchPolicyType mp_type, const AgingPolicyType ap_type);
 
   graphStatus SetMatchPolicy(const MatchPolicyPtr mp);
 
