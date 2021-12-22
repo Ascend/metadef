@@ -29,7 +29,6 @@
 #include "proto/tensorflow/node_def.pb.h"
 #include "register/auto_mapping_util.h"
 #include "register/op_registry.h"
-#include "register/register_utils.h"
 #include "graph/graph.h"
 
 using namespace domi::tensorflow;
@@ -199,7 +198,7 @@ Status GetDynamicTensorNum(const std::shared_ptr<ge::OpDesc> &op_desc, const str
   return SUCCESS;
 }
 
-Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
+Status GetDynamicAttrNum(const std::shared_ptr<ge::OpDesc> &op_desc,
     const vector<DynamicInputOutputInfo> &dynamic_name_attrs, map<string, DynamicInfo> &port_dynamic_info) {
   GE_CHECK_NOTNULL(op_desc);
   for (const auto &dynamic_name_attr : dynamic_name_attrs) {
@@ -220,7 +219,17 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
            dynamic_tensor_num);
     port_dynamic_info[dynamic_name_attr.port_name] = DynamicInfo(dynamic_name_attr.type, 0U, dynamic_tensor_num);
   }
+  return SUCCESS;
+}
 
+Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
+    const vector<DynamicInputOutputInfo> &dynamic_name_attrs, map<string, DynamicInfo> &port_dynamic_info) {
+  GE_CHECK_NOTNULL(op_desc);
+  if (GetDynamicAttrNum(op_desc, dynamic_name_attrs, port_dynamic_info) != SUCCESS) {
+    GELOGE(FAILED, "[Get][DynamicAttrNum] fail, op_name:%s", op_desc->GetName().c_str());
+    return FAILED;
+  }
+  
   const vector<string> register_input_names = op_desc->GetRegisterInputName();
   uint32_t input_index = 0U;
   uint32_t input_increment = 0U;
@@ -411,7 +420,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
 }
 
 // Convert tensorflow property to ge property
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status OperatorAutoMapping(const Message *op_src, ge::Operator &op) {
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFn(const Message *op_src, ge::Operator &op) {
   std::shared_ptr<ge::OpDesc> op_dst = ge::OpDescUtils::GetOpDescFromOperator(op);
   // Analysis of tensorflow operator parameters based on key value
   GE_CHECK_NOTNULL(op_src);
@@ -441,10 +450,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status OperatorAutoMapping(cons
     return FAILED;
   }
   return SUCCESS;
-}
-
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFn(const Message *op_src, ge::Operator &op) {
-  return OperatorAutoMapping(op_src, op);
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const ge::Operator &op_src,
