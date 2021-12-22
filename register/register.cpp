@@ -29,6 +29,7 @@
 #include "proto/tensorflow/node_def.pb.h"
 #include "register/auto_mapping_util.h"
 #include "register/op_registry.h"
+#include "register/register_utils.h"
 #include "graph/graph.h"
 
 using namespace domi::tensorflow;
