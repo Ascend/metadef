@@ -480,7 +480,7 @@ bool TypeUtils::CheckUint64MulOverflow(const uint64_t a, const uint32_t b) {
   if (a == 0U) {
     return false;
   }
-  if (b <= (ULLONG_MAX / a)) {
+  if (b <= (std::numeric_limits<uint64_t>::max() / a)) {
     return false;
   }
   return true;
