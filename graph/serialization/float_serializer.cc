@@ -21,13 +21,13 @@
 
 namespace ge {
 graphStatus FloatSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
-  float32_t value;
-  const graphStatus ret = av.GetValue(value);
+  float32_t val;
+  const graphStatus ret = av.GetValue(val);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(FAILED, "Failed to get float attr.");
     return GRAPH_FAILED;
   }
-  def.set_f(value);
+  def.set_f(val);
   return GRAPH_SUCCESS;
 }
 

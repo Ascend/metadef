@@ -803,16 +803,6 @@ static std::map<onnx::TensorProto_DataType, ge::DataType> onnxDataTypeToGeMap = 
     {onnx::TensorProto_DataType_DOUBLE, DT_DOUBLE}, {onnx::TensorProto_DataType_BOOL, DT_BOOL},
 };
 
-ge::DataType OnnxUtils::DecodeDataType(const onnx::TensorProto_DataType data_type) {
-  const auto it = onnxDataTypeToGeMap.find(data_type);
-  if (it != onnxDataTypeToGeMap.end()) {
-    return it->second;
-  } else {
-    GELOGW("[Decode][DataType] Datatype %u not support", data_type);
-    return ge::DT_UNDEFINED;
-  }
-}
-
 bool OnnxUtils::ParseNameAndIndex(const std::string &node_name_index, std::string &node_name, int32_t &idx) {
   const auto sep = node_name_index.rfind(':');
   if (sep == std::string::npos) {
@@ -1235,20 +1225,5 @@ bool OnnxUtils::DecodeGraph(const int32_t recursion_depth,
   }
 
   return AddInputAndOutputNodesForGraph(graph_proto, graph, node_map);
-}
-
-bool OnnxUtils::ConvertModelProtoToGeModel(const onnx::ModelProto &model_proto, ge::Model &model) {
-  model.name_ = model_proto.producer_name();
-  model.version_ = static_cast<uint32_t>(model_proto.model_version());
-
-  auto &graph_proto = model_proto.graph();
-  ComputeGraphPtr compute_graph;
-  // 0 means recursion depth, father call
-  if (!DecodeGraph(0, graph_proto, compute_graph)) {
-    GELOGE(GRAPH_FAILED, "[Decode][Graph] from graph_proto:%s failed", model.name_.c_str());
-    return false;
-  }
-  model.graph_ = GraphUtils::CreateGraphFromComputeGraph(compute_graph);
-  return true;
 }
 }  // namespace ge

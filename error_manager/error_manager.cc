@@ -29,7 +29,7 @@
 #include "toolchain/slog.h"
 
 #define GE_MODULE_NAME static_cast<int32_t>(GE)
-
+namespace {
 class GeLog {
  public:
   static uint64_t GetTid() {
@@ -47,19 +47,34 @@ inline bool IsLogEnable(const int32_t module_name, const int32_t log_level) {
   // 1:enable, 0:disable
   return (enable == 1);
 }
+}
 
-#define GELOGE(fmt, ...)                                                      \
-  dlog_error(GE_MODULE_NAME, "%lu %s: %s" fmt, GeLog::GetTid(), __FUNCTION__, \
-             ErrorManager::GetInstance().GetLogHeader().c_str(), ##__VA_ARGS__)
-#define GELOGW(fmt, ...)                      \
-  if (IsLogEnable(GE_MODULE_NAME, DLOG_WARN)) \
-  dlog_warn(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
-#define GELOGI(fmt, ...)                      \
-  if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) \
-  dlog_info(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
-#define GELOGD(fmt, ...)                       \
-  if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) \
-  dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), __FUNCTION__, ##__VA_ARGS__)
+#define GELOGE(fmt, ...) \
+  do {                                                                                            \
+    dlog_error(GE_MODULE_NAME, "%lu %s: %s" fmt, GeLog::GetTid(), &__FUNCTION__[0],               \
+               ErrorManager::GetInstance().GetLogHeader().c_str(), ##__VA_ARGS__);                \
+  } while (false)
+
+#define GELOGW(fmt, ...)                                                                          \
+  do {                                                                                            \
+    if (IsLogEnable(GE_MODULE_NAME, DLOG_WARN)) {                                                 \
+      dlog_warn(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+    }                                                                                             \
+  } while (false)
+
+#define GELOGI(fmt, ...)                                                                          \
+  do {                                                                                            \
+    if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {                                                 \
+      dlog_info(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+    }                                                                                             \
+  } while (false)
+
+#define GELOGD(fmt, ...)                                                                           \
+  do {                                                                                             \
+    if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) {                                                 \
+      dlog_debug(GE_MODULE_NAME, "%lu %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+    }                                                                                              \
+  } while (false)
 
 namespace error_message {
 int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...) {
@@ -68,9 +83,8 @@ int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format
 
   va_start(arg_list, format);
   ret = vsprintf_s(str_dst, dst_max, format, arg_list);
-  va_end(arg_list);
   (void)arg_list;
-
+  va_end(arg_list);
   if (ret < 0) {
     GELOGE("[Check][Param] FormatErrorMessage failed, ret:%d, pattern:%s", ret, format);
   }
@@ -79,7 +93,6 @@ int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format
 }
 
 namespace {
-
 #ifdef __GNUC__
 const error_message::char_t *const kErrorCodePath = "../conf/error_manager/error_code.json";
 const error_message::char_t *const kSeparator = "/";
@@ -94,22 +107,29 @@ const error_message::char_t *const kErrMessage = "ErrMessage";
 const error_message::char_t *const kArgList = "Arglist";
 const uint64_t kLength = 2UL;
 
-std::string &Ltrim(std::string &s) {
-  (void)s.erase(s.begin(),
-                std::find_if(s.begin(), s.end(), [](const error_message::char_t c) { return !std::isspace(c); }));
+std::string Ltrim(std::string s) {
+  (void) s.erase(s.begin(),
+                 std::find_if(s.begin(),
+                              s.end(),
+                              [](const error_message::char_t c) {
+                                return (std::isspace(static_cast<int32_t>(c)) == 0);
+                              }));
   return s;
 }
 
-std::string &Rtrim(std::string &s) {
-  (void)s.erase(
-      std::find_if(s.rbegin(), s.rend(), [](const error_message::char_t c) { return !std::isspace(c); }).base(),
-      s.end());
+std::string Rtrim(std::string s) {
+  (void) s.erase(std::find_if(s.rbegin(),
+                              s.rend(),
+                              [](const error_message::char_t c) {
+                                return (std::isspace(static_cast<int32_t>(c)) == 0);
+                              }).base(),
+                 s.end());
   return s;
 }
 
 /// @ingroup domi_common
 /// @brief trim space
-std::string &Trim(std::string &s) { return Ltrim(Rtrim(s)); }
+std::string Trim(std::string &s) { return Ltrim(Rtrim(s)); }
 
 ///
 /// @brief Obtain error manager self library path
@@ -118,30 +138,30 @@ std::string &Trim(std::string &s) { return Ltrim(Rtrim(s)); }
 std::string GetSelfLibraryDir(void) {
   mmDlInfo dl_info;
   if (mmDladdr(reinterpret_cast<void *>(GetSelfLibraryDir), &dl_info) != EN_OK) {
-    const char *error = mmDlerror();
+    const error_message::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
     GELOGW("Failed to read the shared library file path! reason:%s", error);
     return std::string();
   } else {
     std::string so_path = dl_info.dli_fname;
-    error_message::char_t path[MMPA_MAX_PATH] = {'0'};
-    if (so_path.length() >= MMPA_MAX_PATH) {
-        GELOGW("The shared library file path is too long!");
-        return std::string();
+    error_message::char_t path[MMPA_MAX_PATH] = {};
+    if (so_path.length() >= static_cast<size_t>(MMPA_MAX_PATH)) {
+      GELOGW("The shared library file path is too long!");
+      return std::string();
     }
-    if (mmRealPath(so_path.c_str(), path, MMPA_MAX_PATH) != EN_OK) {
+    if (mmRealPath(so_path.c_str(), &(path[0]), MMPA_MAX_PATH) != EN_OK) {
       GELOGW("Failed to get realpath of %s, reason:%s", so_path.c_str(), strerror(errno));
       return std::string();
     }
 
-    so_path = path;
-    so_path = so_path.substr(0UL, so_path.rfind(kSeparator) + 1UL);
+    so_path = &(path[0]);
+    so_path = so_path.substr(0U, so_path.rfind(kSeparator) + 1U);
     return so_path;
   }
 }
 
 // split string
-std::vector<std::string> Split(const std::string &str, error_message::char_t delim) {
+std::vector<std::string> SplitByDelim(const std::string &str, const error_message::char_t delim) {
   std::vector<std::string> elems;
 
   if (str.empty()) {
@@ -156,18 +176,16 @@ std::vector<std::string> Split(const std::string &str, error_message::char_t del
     elems.push_back(Trim(item));
   }
   const auto str_size = str.size();
-  if ((str_size > 0UL) && (str[str_size - 1UL] == delim)) {
+  if ((str_size > 0U) && (str[str_size - 1U] == delim)) {
     elems.emplace_back("");
   }
 
   return elems;
 }
-
 }  // namespace
 
-using namespace error_message;
 
-thread_local Context ErrorManager::error_context_ = {0UL, "", "", ""};
+thread_local error_message::Context ErrorManager::error_context_ = {0UL, "", "", ""};
 
 ///
 /// @brief Obtain ErrorManager instance
@@ -202,7 +220,7 @@ int32_t ErrorManager::Init(const std::string path) {
 /// @return int 0(success) -1(fail)
 ///
 int32_t ErrorManager::Init() {
-    return Init(GetSelfLibraryDir());
+  return Init(GetSelfLibraryDir());
 }
 
 int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const std::string &error_msg) {
@@ -263,7 +281,9 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
     return 0;
   }
 
-  if (error_context_.work_stream_id == 0UL) { GenWorkStreamIdDefault(); }
+  if (error_context_.work_stream_id == 0UL) {
+    GenWorkStreamIdDefault();
+  }
 
   const auto it = error_map_.find(error_code);
   if (it == error_map_.end()) {
@@ -297,8 +317,8 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   }
 
   const std::unique_lock<std::mutex> lock(mutex_);
-  auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
-  auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
+  auto &error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
+  auto &warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   ErrorManager::ErrorItem error_item = {error_code, error_message};
   if (error_code[0UL] == 'W') {
@@ -347,7 +367,7 @@ std::string ErrorManager::GetErrorMessage() {
 
 std::string ErrorManager::GetWarningMessage() {
   const std::unique_lock<std::mutex> lock(mutex_);
-  auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
+  auto &warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   std::stringstream warning_stream;
   for (auto &item : warning_messages) {
@@ -426,7 +446,7 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
       ErrorInfoConfig error_info;
       error_info.error_id = error_list_json[i][kErrCode];
       error_info.error_message = error_list_json[i][kErrMessage];
-      error_info.arg_list = Split(error_list_json[i][kArgList], ',');
+      error_info.arg_list = SplitByDelim(error_list_json[i][kArgList], ',');
       const auto it = error_map_.find(error_info.error_id);
       if (it != error_map_.end()) {
         GELOGW("[Check][Config]There are the same error code %s in %s",
@@ -461,7 +481,7 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
     GELOGW("[Check][Param]JsonFile is nullptr");
     return -1;
   }
-  const error_message::char_t *file = file_path.data();
+  const error_message::char_t *const file = file_path.data();
   if ((mmAccess2(file, M_F_OK)) != EN_OK) {
     GELOGW("[Read][JsonFile] %s is not exist, error %s", file_path.c_str(), strerror(errno));
     return -1;
@@ -659,11 +679,11 @@ const std::string &ErrorManager::GetLogHeader() {
   return error_context_.log_header;
 }
 
-Context &ErrorManager::GetErrorManagerContext() {
+error_message::Context &ErrorManager::GetErrorManagerContext() {
   return error_context_;
 }
 
-void ErrorManager::SetErrorContext(const Context error_context) {
+void ErrorManager::SetErrorContext(const error_message::Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);

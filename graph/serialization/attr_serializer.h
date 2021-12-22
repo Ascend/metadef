@@ -31,6 +31,7 @@ class GeIrAttrSerializer {
   virtual graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) = 0;
   virtual graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) = 0;
   virtual ~GeIrAttrSerializer() = default;
+
 };
 }  // namespace ge
 

@@ -31,7 +31,7 @@ graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int32_t output_i
   const std::lock_guard<std::mutex> lk(mu_);
   auto &output_ge_tensors = ge_tensors_[node_id];
   if (static_cast<size_t>(output_id) >= output_ge_tensors.size()) {
-    size_t output_tensor_size = static_cast<size_t>(output_id) + 1U;
+    const size_t output_tensor_size = static_cast<size_t>(output_id) + 1U;
     output_ge_tensors.resize(output_tensor_size);
   }
 

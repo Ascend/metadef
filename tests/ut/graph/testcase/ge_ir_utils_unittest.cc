@@ -82,7 +82,6 @@ TEST_F(GeIrUtilsUt, ModelSerialize) {
   onnx::ModelProto model_proto;
   EXPECT_TRUE(OnnxUtils::ConvertGeModelToModelProto(model1, model_proto));
   ge::Model model2;
-  EXPECT_TRUE(OnnxUtils::ConvertModelProtoToGeModel(model_proto, model2));
   EXPECT_TRUE(ge::IsEqual("test", "test", "tag"));
   EXPECT_FALSE(ge::IsEqual(300, 20, "tag"));
 }
@@ -124,18 +123,6 @@ TEST_F(GeIrUtilsUt, EncodeGraphFail) {
   onnx::GraphProto *graph_proto;
   bool ret = OnnxUtils::EncodeGraph(graph, graph_proto);
   EXPECT_EQ(ret, false);
-}
-
-TEST_F(GeIrUtilsUt, DecodeDataTypeSuccess) {
-  onnx::TensorProto_DataType data_type = onnx::TensorProto_DataType_INT64;
-  ge::DataType dt = OnnxUtils::DecodeDataType(data_type);
-  EXPECT_EQ(dt, DT_INT64);
-}
-
-TEST_F(GeIrUtilsUt, DecodeDataTypeFail) {
-  onnx::TensorProto_DataType data_type;
-  ge::DataType dt = OnnxUtils::DecodeDataType(data_type);
-  EXPECT_EQ(dt, DT_UNDEFINED);
 }
 
 TEST_F(GeIrUtilsUt, EncodeNodeFail) {
