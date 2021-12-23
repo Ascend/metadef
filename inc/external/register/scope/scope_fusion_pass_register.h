@@ -395,14 +395,14 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFusionPassRegistrar {
 };
 }  // namespace ge
 #define REGISTER_SCOPE_FUSION_PASS(pass_name, scope_pass, is_general) \
-  REGISTER_SCOPE_FUSION_PASS_UNIQ_HELPER(__COUNTER__, (pass_name), scope_pass, (is_general))
+  REGISTER_SCOPE_FUSION_PASS_UNIQ_HELPER(__COUNTER__, (pass_name), (scope_pass), (is_general))
 
 #define REGISTER_SCOPE_FUSION_PASS_UNIQ_HELPER(ctr, pass_name, scope_pass, is_general) \
-  REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, (pass_name), scope_pass, (is_general))
+  REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, (pass_name), (scope_pass), (is_general))
 
 #define REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, pass_name, scope_pass, is_general)                   \
   static ::ge::ScopeFusionPassRegistrar register_scope_fusion_pass##ctr __attribute__((unused)) = \
       ::ge::ScopeFusionPassRegistrar(                                                             \
-          (pass_name), []() -> ::ge::ScopeBasePass * { return new (std::nothrow) scope_pass(); }, (is_general))
+          (pass_name), []() -> ::ge::ScopeBasePass * { return new (std::nothrow) (scope_pass)(); }, (is_general))
 #endif  // EXTERNAL_REGISTER_SCOPE_SCOPE_FUSION_PASS_REGISTER_H_
 
