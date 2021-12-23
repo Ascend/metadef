@@ -75,21 +75,21 @@ const char_t *const kShapeRangeSample = "\"[1~20,3,3~6,-1]\"";
 static bool CheckMultiplyOverflowInt64(const int64_t &a, const int64_t &b) {
   if (a > 0) {
     if (b > 0) {
-      if (a > (INT64_MAX / b)) {
+      if (a > (std::numeric_limits<int64_t>::max() / b)) {
         return true;
       }
     } else {
-      if (b < (INT64_MIN / a)) {
+      if (b < (std::numeric_limits<int64_t>::min() / a)) {
         return true;
       }
     }
   } else {
     if (b > 0) {
-      if (a < (INT64_MIN / b)) {
+      if (a < (std::numeric_limits<int64_t>::min() / b)) {
         return true;
       }
     } else {
-      if ((a != 0) && (b < (INT64_MAX / a))) {
+      if ((a != 0) && (b < (std::numeric_limits<int64_t>::max() / a))) {
         return true;
       }
     }
@@ -442,7 +442,7 @@ TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &
   }
 
   // 64-byte alignment, if size is 0, align to 32 bytes
-  if (size_temp > (INT64_MAX - (kNum2 * kDataMemAlignSize))) {
+  if (size_temp > (std::numeric_limits<int64_t>::max() - (kNum2 * kDataMemAlignSize))) {
     GELOGW("[Util][CalcBytesSize] Mem size %ld after alignment is bigger than INT64_MAX", size_temp);
   } else {
     size_temp = ((size_temp + (kNum2 * kDataMemAlignSize) - 1) / kDataMemAlignSize) * kDataMemAlignSize;
@@ -485,9 +485,9 @@ TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_t
   if (output_mem_size < 0) {
     REPORT_INNER_ERROR("E19999",
                        "After calc concat tensor memory size, output_mem_size = %ld, out of data range [0, %ld]",
-                       output_mem_size, INT64_MAX);
+                       output_mem_size, std::numeric_limits<int64_t>::max());
     GELOGE(GRAPH_FAILED, "[Check][Param] After calc concat tensor memory size, "
-           "output_mem_size = %ld, out of data range [0, %ld]", output_mem_size, INT64_MAX);
+           "output_mem_size = %ld, out of data range [0, %ld]", output_mem_size, std::numeric_limits<int64_t>::max());
     return GRAPH_FAILED;
   }
 
