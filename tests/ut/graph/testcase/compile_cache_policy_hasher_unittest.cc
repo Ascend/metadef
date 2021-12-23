@@ -30,7 +30,7 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderOnly) {
   BinaryHolder holder1 = BinaryHolder();
   holder1.SharedFrom(data1, 1);
 
-  const void *dataPtr = holder1.GetDataPtr();
+  const uint8_t *dataPtr = holder1.GetDataPtr();
   ASSERT_NE(dataPtr, nullptr);
   size_t size1 = holder1.GetDataLen();
   ASSERT_EQ(size1, 1UL);
@@ -59,20 +59,20 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderOnly) {
 
 TEST_F(UtestCompileCachePolicyHasher, GetCacheDescHashWithoutShape) {
   int64_t uid = 100UL;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
-  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
-  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  CompileCacheDesc::TensorInfoArgs tensor_info_args;
+  tensor_info_args.shapes = {{2,3,4}};
+  tensor_info_args.origin_shapes = {{2,3,4}};
+  tensor_info_args.shape_ranges = {};
+  tensor_info_args.formats = {FORMAT_ND};
+  tensor_info_args.origin_formats = {FORMAT_ND};
+  tensor_info_args.data_types = {DT_FLOAT};
   uint8_t *data = new uint8_t(9);
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
+  auto ccd = CompileCacheDesc(uid, tensor_info_args);
   auto seed = CompileCacheHasher::GetCacheDescHashWithoutShape(ccd);
-  ASSERT_EQ(seed, 4617134413513640029);
+  ASSERT_EQ(seed, 34605809643570136);
 
   delete data;
   data = nullptr;
@@ -80,18 +80,18 @@ TEST_F(UtestCompileCachePolicyHasher, GetCacheDescHashWithoutShape) {
 
 TEST_F(UtestCompileCachePolicyHasher, GetCacheDescShapeHash) {
   int64_t uid = 100UL;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
-  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
-  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  CompileCacheDesc::TensorInfoArgs tensor_info_args;
+  tensor_info_args.shapes = {{2,3,4}};
+  tensor_info_args.origin_shapes = {{2,3,4}};
+  tensor_info_args.shape_ranges = {};
+  tensor_info_args.formats = {FORMAT_ND};
+  tensor_info_args.origin_formats = {FORMAT_ND};
+  tensor_info_args.data_types = {DT_FLOAT};
   uint8_t *data = new uint8_t(9);
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
+  auto ccd = CompileCacheDesc(uid, tensor_info_args);
   auto seed = CompileCacheHasher::GetCacheDescShapeHash(ccd);
   ASSERT_EQ(seed, 8487203673785339670);
 

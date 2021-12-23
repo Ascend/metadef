@@ -23,10 +23,10 @@
 namespace ge {
 using MatchPolicyPtr = std::shared_ptr<MatchPolicy>;
 using AgingPolicyPtr = std::shared_ptr<AgingPolicy>;
-enum MatchPolicyType {
+enum class MatchPolicyType {
   MATCH_POLICY_EXACT_ONLY = 0
 };
-enum AgingPolicyType {
+enum class AgingPolicyType {
   AGING_POLICY_LRU = 0
 };
 

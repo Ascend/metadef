@@ -25,9 +25,9 @@ namespace ge {
 void CompileCachePolicy::PolicyInit() {
   static bool policy_init_flag = false;
   if (!policy_init_flag) {
-    PolicyManager::GetInstance().RegisterMatchPolicy(MATCH_POLICY_EXACT_ONLY,
+    PolicyManager::GetInstance().RegisterMatchPolicy(MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
                                                      std::make_shared<MatchPolicyExactOnly>());
-    PolicyManager::GetInstance().RegisterAgingPolicy(AGING_POLICY_LRU,
+    PolicyManager::GetInstance().RegisterAgingPolicy(AgingPolicyType::AGING_POLICY_LRU,
                                                      std::make_shared<AgingPolicyLru>());
     policy_init_flag = true;
   }
@@ -86,7 +86,7 @@ CacheItem CompileCachePolicy::AddCache(const CompileCacheDesc &compile_cache_des
   return cache_item;
 }
 
-CacheItem CompileCachePolicy::FindCache(const CompileCacheDesc &compile_cache_desc) {
+CacheItem CompileCachePolicy::FindCache(const CompileCacheDesc &compile_cache_desc) const {
   if (mp_ == nullptr) {
     return 12345;
   }

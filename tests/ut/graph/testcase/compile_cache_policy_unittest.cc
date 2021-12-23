@@ -24,19 +24,19 @@ class UtestCompileCachePolicy : public testing::Test {
 };
 
 TEST_F(UtestCompileCachePolicy, CreateCCPSuccess_1) {
-  auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
   ASSERT_NE(ccp, nullptr);
 }
 
 TEST_F(UtestCompileCachePolicy, CreateCCPSuccess_2) {
-  auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(MATCH_POLICY_EXACT_ONLY);
-  auto ap_ptr = PolicyManager::GetInstance().GetAgingPolicy(AGING_POLICY_LRU);
+  auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY);
+  auto ap_ptr = PolicyManager::GetInstance().GetAgingPolicy(ge::AgingPolicyType::AGING_POLICY_LRU);
   auto ccp = ge::CompileCachePolicy::Create(mp_ptr, ap_ptr);
   ASSERT_NE(ccp, nullptr);
 }
 
 TEST_F(UtestCompileCachePolicy, CreateCCPFailed_1) {
-  auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(MATCH_POLICY_EXACT_ONLY);
+  auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY);
   auto ap_ptr = nullptr;
   auto ccp = ge::CompileCachePolicy::Create(mp_ptr, ap_ptr);
   ASSERT_EQ(ccp, nullptr);
@@ -51,48 +51,47 @@ TEST_F(UtestCompileCachePolicy, CreateCCPFailed_2) {
 
 TEST_F(UtestCompileCachePolicy, AddCacheSuccess_1) {
   int64_t uid = 100UL;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
-  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
-  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  CompileCacheDesc::TensorInfoArgs tensor_info_args;
+  tensor_info_args.shapes = {{2,3,4}};
+  tensor_info_args.origin_shapes = {{2,3,4}};
+  tensor_info_args.shape_ranges = {};
+  tensor_info_args.formats = {FORMAT_ND};
+  tensor_info_args.origin_formats = {FORMAT_ND};
+  tensor_info_args.data_types = {DT_FLOAT};
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
+  auto ccd = CompileCacheDesc(uid, tensor_info_args);
 
-  auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
   CacheItem cache_item = ccp->AddCache(ccd);
   ASSERT_NE(cache_item, -1);
 }
 
 TEST_F(UtestCompileCachePolicy, AddCacheSuccess_2) {
   int64_t uid = 100UL;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
-  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
-  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  CompileCacheDesc::TensorInfoArgs tensor_info_args;
+  tensor_info_args.shapes = {{2,3,4}};
+  tensor_info_args.origin_shapes = {{2,3,4}};
+  tensor_info_args.shape_ranges = {};
+  tensor_info_args.formats = {FORMAT_ND};
+  tensor_info_args.origin_formats = {FORMAT_ND};
+  tensor_info_args.data_types = {DT_FLOAT};
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  CompileCacheDesc ccd1 = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
+  CompileCacheDesc ccd1 = CompileCacheDesc(uid, tensor_info_args);
 
-  auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
   CacheItem cache_item = ccp->AddCache(ccd1);
   ASSERT_NE(cache_item, -1);
 
   uid++;
-  CompileCacheDesc ccd2 = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
+  CompileCacheDesc ccd2 = CompileCacheDesc(uid, tensor_info_args);
   cache_item = ccp->AddCache(ccd2);
   ASSERT_NE(cache_item, -1);
 
@@ -113,20 +112,20 @@ TEST_F(UtestCompileCachePolicy, CacheHashKey_1) {
 
 TEST_F(UtestCompileCachePolicy, FindCacheSuccess_1) {
   int64_t uid = 100UL;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
-  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
-  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  CompileCacheDesc::TensorInfoArgs tensor_info_args;
+  tensor_info_args.shapes = {{2,3,4}};
+  tensor_info_args.origin_shapes = {{2,3,4}};
+  tensor_info_args.shape_ranges = {};
+  tensor_info_args.formats = {FORMAT_ND};
+  tensor_info_args.origin_formats = {FORMAT_ND};
+  tensor_info_args.data_types = {DT_FLOAT};
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
-  auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
+  auto ccd = CompileCacheDesc(uid, tensor_info_args);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
   CacheItem cache_item = ccp->AddCache(ccd);
 
   CacheItem cache_item_find = ccp->FindCache(ccd);
@@ -135,21 +134,21 @@ TEST_F(UtestCompileCachePolicy, FindCacheSuccess_1) {
 
 TEST_F(UtestCompileCachePolicy, DeleteCacheSuccess_1) {
   int64_t uid = 100UL;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
-  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
-  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  CompileCacheDesc::TensorInfoArgs tensor_info_args;
+  tensor_info_args.shapes = {{2,3,4}};
+  tensor_info_args.origin_shapes = {{2,3,4}};
+  tensor_info_args.shape_ranges = {};
+  tensor_info_args.formats = {FORMAT_ND};
+  tensor_info_args.origin_formats = {FORMAT_ND};
+  tensor_info_args.data_types = {DT_FLOAT};
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
+  auto ccd = CompileCacheDesc(uid, tensor_info_args);
 
-  auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
   CacheItem cache_item = ccp->AddCache(ccd);
 
   auto lamb = [&](CacheInfo info) -> bool {
@@ -165,21 +164,21 @@ TEST_F(UtestCompileCachePolicy, DeleteCacheSuccess_1) {
 
 TEST_F(UtestCompileCachePolicy, AgingCacheSuccess_1) {
   int64_t uid = 100UL;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes = {{2,3,4}};
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes = {{2,3,4}};
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges = {};
-  SmallVector<Format, kDefaultMaxInputNum> formats = {FORMAT_ND};
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats = {FORMAT_ND};
-  SmallVector<DataType, kDefaultMaxInputNum> data_types = {DT_FLOAT};
+  CompileCacheDesc::TensorInfoArgs tensor_info_args;
+  tensor_info_args.shapes = {{2,3,4}};
+  tensor_info_args.origin_shapes = {{2,3,4}};
+  tensor_info_args.shape_ranges = {};
+  tensor_info_args.formats = {FORMAT_ND};
+  tensor_info_args.origin_formats = {FORMAT_ND};
+  tensor_info_args.data_types = {DT_FLOAT};
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, shapes, origin_shapes, shape_ranges,
-                              formats, origin_formats, data_types, other_desc);
+  auto ccd = CompileCacheDesc(uid, tensor_info_args);
 
-  auto ccp = ge::CompileCachePolicy::Create(MATCH_POLICY_EXACT_ONLY, AGING_POLICY_LRU);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
   CacheItem cache_item = ccp->AddCache(ccd);
 
   std::vector<CacheItem> del_item = ccp->DoAging();

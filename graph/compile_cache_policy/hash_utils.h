@@ -16,9 +16,9 @@
 
 #ifndef GRAPH_COMPILE_CACHE_POLICY_HASH_UTILS_H_
 #define GRAPH_COMPILE_CACHE_POLICY_HASH_UTILS_H_
-#include <stdint.h>
-#include <functional>
+#include <cstdint>
 #include <vector>
+#include <functional>
 #include "graph/small_vector.h"
 namespace ge {
 using CacheHashKey = uint64_t;
