@@ -69,7 +69,7 @@ ge::NodePtr BufferFusionPassBase::GetMatchedHeadNode(const std::vector<ge::NodeP
         break;
       }
     }
-    if (find_flag == false) {
+    if (!find_flag) {
       return node;
     }
   }

@@ -165,7 +165,12 @@ Status GraphFusionPassBase::RunOnePattern(ge::ComputeGraph &graph, const FusionP
 // 4. repeat step 3 until all the Ops in pattern are matched
 // 5. if all the Ops in pattern are matched successfully, return the mapping of
 //    PatternOp and GraphNode
+#ifdef ONLY_COMPILE_OPEN_SRC
 bool GraphFusionPassBase::MatchAll(ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings) {
+#else
+bool GraphFusionPassBase::MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern,
+    Mappings &mappings) const {
+#endif
   vector<ge::NodePtr> matched_output_nodes;
 
   // find all the output nodes of pattern in the graph based on Op type

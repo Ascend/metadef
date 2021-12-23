@@ -27,14 +27,13 @@
 #include "common/opskernel/ops_kernel_info_store.h"
 #include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 
+namespace fe {
 using std::initializer_list;
 using std::map;
 using std::string;
 using std::vector;
 
 using namespace std;
-
-namespace fe {
 
 using OpDesc = FusionPattern::OpDesc;
 using Mapping = map<const std::shared_ptr<OpDesc>, vector<ge::NodePtr>>;
@@ -59,9 +58,9 @@ class PatternFusionBasePassImpl {
 
   PatternFusionBasePassImpl &operator=(const PatternFusionBasePassImpl &) = delete;
 
-  bool CheckOpSupported(const ge::OpDescPtr &op_desc_ptr);
+  bool CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) const;
 
-  bool CheckOpSupported(const ge::NodePtr &node);
+  bool CheckOpSupported(const ge::NodePtr &node) const;
 
   bool IsNodesExist(ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes);
 
@@ -75,7 +74,7 @@ class PatternFusionBasePassImpl {
 
   std::string GetNodeType(ge::NodePtr node);
 
-  bool GetMatchOutputNodes(ge::ComputeGraph &graph, const FusionPattern &pattern,
+  bool GetMatchOutputNodes(const ge::ComputeGraph &graph, const FusionPattern &pattern,
                            vector<ge::NodePtr> &matched_output_nodes);
 
  private:

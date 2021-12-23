@@ -43,7 +43,11 @@ Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
   return ge::GRAPH_SUCCESS;
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void ConnectionMatrix::Update(ge::ComputeGraph &graph, vector<ge::NodePtr> &fusion_nodes) {
+#else
+void ConnectionMatrix::Update(const ge::ComputeGraph &graph, vector<ge::NodePtr> &fusion_nodes) {
+#endif
   ge::LargeBitmap new_bit_vector(graph.GetDirectNode().size());
   new_bit_vector.SetValues(0);
   for (size_t i = 0; i < fusion_nodes.size(); i++) {

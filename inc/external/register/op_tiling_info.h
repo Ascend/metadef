@@ -19,6 +19,7 @@
 
 #include <sstream>
 #include <map>
+#include <memory>
 #include "external/graph/ge_error_codes.h"
 #include "external/graph/ascend_string.h"
 #include "external/graph/tensor.h"

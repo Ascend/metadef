@@ -27,6 +27,7 @@
 #include "register/graph_optimizer/graph_fusion/graph_pass.h"
 #include "register/graph_optimizer/graph_fusion/connection_matrix.h"
 
+namespace fe {
 using std::initializer_list;
 using std::map;
 using std::string;
@@ -34,7 +35,6 @@ using std::vector;
 
 using namespace std;
 
-namespace fe {
 using OpsKernelInfoStorePtr = std::shared_ptr<ge::OpsKernelInfoStore>;
 class PatternFusionBasePassImpl;
 using PatternFusionBasePassImplPtr = std::shared_ptr<PatternFusionBasePassImpl>;
@@ -108,18 +108,27 @@ class PatternFusionBasePass : public GraphPass {
   void ClearOutputAnchorMap();
 
   Status SetDataDumpAttr(std::vector<ge::NodePtr> &original_nodes, std::vector<ge::NodePtr> &fus_nodes);
-
+#ifdef ONLY_COMPILE_OPEN_SRC
   bool CheckOpSupported(const ge::OpDescPtr &op_desc_ptr);
 
   bool CheckOpSupported(const ge::NodePtr &node);
-
   /** check whether the input graph is Cyclic
   *
   *  @param graph need to be checked
   *  @return false or true
   */
   bool CheckGraphCycle(ge::ComputeGraph &graph);
+#else
+  bool CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) const;
 
+  bool CheckOpSupported(const ge::NodePtr &node) const;
+  /** check whether the input graph is Cyclic
+  *
+  *  @param graph need to be checked
+  *  @return false or true
+  */
+  bool CheckGraphCycle(ge::ComputeGraph &graph) const;
+#endif
   void EnableNetworkAnalysis();
 
   void DumpMapping(const FusionPattern &pattern, const Mapping &mapping);
@@ -131,7 +140,11 @@ class PatternFusionBasePass : public GraphPass {
    * @return SUCCESS, successfully add edge
    * @return FAILED, fail
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   bool MatchAll(ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings);
+#else
+  bool MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings);
+#endif
 
   Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
 

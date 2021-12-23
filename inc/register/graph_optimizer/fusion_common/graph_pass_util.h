@@ -232,8 +232,13 @@ class GraphPassUtil {
     }
   }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void RemoveNodeFromNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type,
                                         ge::NodePtr &node_ptr) {
+#else
+  static void RemoveNodeFromNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type,
+                                        const ge::NodePtr &node_ptr) {
+#endif
     if (node_type_map == nullptr || node_ptr == nullptr) {
       return;
     }
@@ -256,7 +261,11 @@ class GraphPassUtil {
     if (iter->second.empty()) {
       return;
     }
+#ifdef ONLY_COMPILE_OPEN_SRC
     for (auto node_iter = iter->second.begin(); node_iter != iter->second.end(); node_iter++) {
+#else
+    for (auto node_iter = iter->second.cbegin(); node_iter != iter->second.cend(); node_iter++) {
+#endif
       nodes.push_back(node_iter->second);
     }
   }
