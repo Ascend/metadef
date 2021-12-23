@@ -16,6 +16,13 @@
 
 #ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H_
 #define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H_
+
+#include <string>
+#include <vector>
+#include <unordered_map>
+
+#include <securec.h>
+
 #include "graph/small_vector.h"
 #include "graph/ascend_limits.h"
 #include "graph/types.h"
@@ -23,10 +30,7 @@
 #include "graph/debug/ge_util.h"
 #include "graph/def_types.h"
 #include "hash_utils.h"
-#include <securec.h>
-#include <string>
-#include <vector>
-#include <unordered_map>
+
 namespace ge {
 using ShapeType = std::vector<int64_t>;
 using ShapeRangeType = std::vector<std::pair<int64_t, int64_t>>;
@@ -39,22 +43,34 @@ class BinaryHolder {
     if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
       data_len_ = other.GetDataLen();
       holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
-      const auto mem_ret = memcpy_s(holder_.get(), data_len_, other.GetDataPtr(), data_len_);
+      const auto mem_ret = memcpy_s(holder_.get(), data_len_,
+                                    ge::PtrToPtr<const uint8_t, const void>(other.GetDataPtr()), data_len_);
       if (mem_ret != EOK) {
         GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] Memcpy Falied.");
       }
     }
   }
-  BinaryHolder &operator=(const BinaryHolder &other) = delete;
+  BinaryHolder &operator=(const BinaryHolder &other) {
+    if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
+      data_len_ = other.GetDataLen();
+      holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
+      const auto mem_ret = memcpy_s(holder_.get(), data_len_,
+                                    ge::PtrToPtr<const uint8_t, const void>(other.GetDataPtr()), data_len_);
+      if (mem_ret != EOK) {
+        GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] Memcpy Falied.");
+      }
+    }
+    return *this;
+  }
 
   ~BinaryHolder() = default;
 
-  void SharedFrom(void *data, const size_t data_len) {
+  void SharedFrom(uint8_t *data, const size_t data_len) {
     data_ptr_ = data;
     data_len_ = data_len;
   }
 
-  const void *GetDataPtr() const noexcept {
+  const uint8_t *GetDataPtr() const noexcept {
     if (holder_.get() != nullptr) {
       return holder_.get();
     }
@@ -85,26 +101,33 @@ class BinaryHolder {
   }
  private:
   std::unique_ptr<uint8_t[]> holder_ = nullptr;
-  void *data_ptr_ = nullptr;
+  uint8_t *data_ptr_ = nullptr;
   size_t data_len_ = 0UL;
 };
 
 class CompileCacheDesc {
   friend class CompileCacheHasher;
  public:
+  struct TensorInfoArgs {
+    SmallVector<ShapeType, kDefaultMaxInputNum> shapes;
+    SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes;
+    SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges;
+    SmallVector<Format, kDefaultMaxInputNum> formats;
+    SmallVector<Format, kDefaultMaxInputNum> origin_formats;
+    SmallVector<DataType, kDefaultMaxInputNum> data_types;
+    SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc;
+  };
+
   CompileCacheDesc() = delete;
 
-  CompileCacheDesc(const int64_t unique_id,
-                   const SmallVector<ShapeType, kDefaultMaxInputNum> shapes,
-                   const SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes,
-                   const SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges,
-                   const SmallVector<Format, kDefaultMaxInputNum> formats,
-                   const SmallVector<Format, kDefaultMaxInputNum> origin_formats,
-                   const SmallVector<DataType, kDefaultMaxInputNum> data_types,
-                   const SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc) :
-                   unique_id_(unique_id), shapes_(shapes), origin_shapes_(origin_shapes),
-                   shape_ranges_(shape_ranges), formats_(formats), origin_formats_(origin_formats),
-                   data_types_(data_types), other_desc_(other_desc) {}
+  CompileCacheDesc(const int64_t unique_id, const TensorInfoArgs &tensor_info_args) : unique_id_(unique_id),
+                   shapes_(tensor_info_args.shapes),
+                   origin_shapes_(tensor_info_args.origin_shapes),
+                   shape_ranges_(tensor_info_args.shape_ranges),
+                   formats_(tensor_info_args.formats),
+                   origin_formats_(tensor_info_args.origin_formats),
+                   data_types_(tensor_info_args.data_types),
+                   other_desc_(tensor_info_args.other_desc) {}
 
   ~CompileCacheDesc() = default;
   static bool IsSameCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second) {
@@ -142,7 +165,7 @@ struct hash<ge::BinaryHolder> {
   size_t operator()(const ge::BinaryHolder &value) const {
     GE_CHECK_NOTNULL(value.GetDataPtr());
     size_t seed = ge::HashUtils::MultiHash();
-    const uint64_t u8_data = ge::PtrToValue(value.GetDataPtr());
+    const uint64_t u8_data = ge::PtrToValue(ge::PtrToPtr<const uint8_t, const void>(value.GetDataPtr()));
     for (size_t idx = 0UL; idx < value.GetDataLen(); idx++) {
       seed = ge::HashUtils::HashCombine(seed, *(static_cast<uint8_t *>(ge::ValueToPtr(u8_data + idx))));
     }

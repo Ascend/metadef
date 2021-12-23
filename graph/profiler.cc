@@ -19,6 +19,7 @@
 #include "securec.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
+#include "graph/def_types.h"
 #include "external/graph/types.h"
 
 namespace ge {
@@ -59,7 +60,7 @@ void Profiler::UpdateHashByIndex(const int64_t index, const uint64_t hash) {
   if (index >= kMaxStrIndex) {
     return;
   }
-  GetStringHashes()[index].hash = hash;
+  PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->hash = hash;
 }
 
 void Profiler::RegisterString(const int64_t index, const std::string &str) {
@@ -68,7 +69,8 @@ void Profiler::RegisterString(const int64_t index, const std::string &str) {
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  const auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
+  const auto ret = strncpy_s(PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->str,
+                             kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
   }
@@ -80,11 +82,12 @@ void Profiler::RegisterStringHash(const int64_t index, const uint64_t hash, cons
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  const auto ret = strncpy_s(GetStringHashes()[index].str, kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
+  const auto ret = strncpy_s(PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->str,
+                             kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
   }
-  GetStringHashes()[index].hash = hash;
+  PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->hash = hash;
 }
 
 void Profiler::Record(const int64_t element, const int64_t thread, const int64_t event, const EventType et,
@@ -118,10 +121,11 @@ void Profiler::Dump(std::ostream &out_stream) const {
   out_stream << "Profiling dump end" << std::endl;
 }
 void Profiler::DumpByIndex(const int64_t index, std::ostream &out_stream) const {
-  if ((index < 0) || (index >= kMaxStrIndex) || (strnlen(GetStringHashes()[index].str, kMaxStrLen) == 0UL)) {
+  if ((index < 0) || (index >= kMaxStrIndex)
+      || (strnlen(PtrAdd<const StrHash>(GetStringHashes(), kMaxStrIndex, index)->str, kMaxStrLen) == 0UL)) {
     out_stream << "UNKNOWN(" << index << ")";
   } else {
-    out_stream << '[' << GetStringHashes()[index].str << "]";
+    out_stream << '[' << PtrAdd<const StrHash>(GetStringHashes(), kMaxStrIndex, index)->str << "]";
   }
 }
 Profiler::Profiler() : record_size_(0UL), records_(), indexes_to_str_hashes_() {}

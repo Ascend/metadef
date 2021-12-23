@@ -578,8 +578,8 @@ TEST_F(ge_test_tensor_utils, GetMaxShapeDimsFromNoTilingTensorFail) {
 TEST_F(ge_test_tensor_utils, GetMaxShapeDimsFromNoTilingTensorSuccess) {
   vector<int64_t> dims({0, -1});
   GeShape ge_shape(dims);
-  Format format;
-  DataType data_type;
+  Format format = FORMAT_ND;
+  DataType data_type = DT_FLOAT;
   int64_t mem_size = 0;
   GeTensorDesc tensor(ge_shape);
   std::vector<int64_t> max_shape_list;

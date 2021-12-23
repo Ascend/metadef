@@ -206,8 +206,8 @@ class TensorImpl {
     uint64_t raw_data = PtrToValue(static_cast<void *>(buff.get())) + (data.size() * sizeof(*string_head));
     uint64_t ptr_size = data.size() * sizeof(StringHead);
     for (size_t i = 0U; i < data.size(); ++i) {
-      string_head[i].addr = raw_data;
-      string_head[i].len = static_cast<uint64_t>(data[i].size());
+      PtrAdd<StringHead>(string_head, data.size(), i)->addr = raw_data;
+      PtrAdd<StringHead>(string_head, data.size(), i)->len = static_cast<uint64_t>(data[i].size());
       if (total_size < ptr_size) {
         REPORT_INNER_ERROR("E19999", "Subtraction invalid, total_size:%zu, ptr_size:%lu", total_size, ptr_size);
         GELOGE(GRAPH_FAILED, "[Check][Param] Subtraction invalid, total_size: %zu, ptr_size: %lu",

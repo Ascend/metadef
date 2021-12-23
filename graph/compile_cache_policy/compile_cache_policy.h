@@ -45,7 +45,7 @@ public:
 
   CacheItem AddCache(const CompileCacheDesc &compile_cache_desc);
 
-  CacheItem FindCache(const CompileCacheDesc &compile_cache_desc);
+  CacheItem FindCache(const CompileCacheDesc &compile_cache_desc) const;
 
   std::vector<CacheItem> DeleteCache(const DelCacheFunc &func);
 
