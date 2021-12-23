@@ -667,6 +667,19 @@ TEST_F(UtestOperater, GetAllAttrNamesAndTypes) {
   EXPECT_EQ(ret_2, GRAPH_FAILED);
 }
 
+TEST_F(UtestOperater, GetAllAttrs) {
+  Operator op("name", "type");
+  const std::string name = "name";
+  std::string value("value");
+  op.SetAttr(name, value);
+  std::map<AscendString, AscendString> attr_name_types;
+  auto ret = op.GetAllAttrNamesAndTypes(attr_name_types);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  auto attr_types = op.GetAllAttrNamesAndTypes();
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
 TEST_F(UtestOperater, FuncRegister) {
   Operator op;
   OpDescPtr op_desc_1;

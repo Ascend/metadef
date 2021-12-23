@@ -113,6 +113,7 @@
     }                                                                                                                  \
   }
 namespace ge {
+const int32_t kMaxDepth = 20;
 TensorType::TensorType(DataType dt) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
   if (tensor_type_impl_ != nullptr) {
@@ -808,9 +809,9 @@ const std::map<std::string, std::string> Operator::GetAllAttrNamesAndTypes() con
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
                    REPORT_INNER_ERROR("E19999", "GetOpDescImpl failed, as return nullptr.");
                    return attr_types, "[Get][OpDescImpl] is nullptr.");
-  std::map<std::string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
+  const std::map<std::string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
 
-  for (auto &iter : attr_map) {
+  for (const auto &iter : attr_map) {
     const std::string name = iter.first;
     const AnyValue::ValueType type = iter.second.GetValueType();
 
@@ -829,15 +830,15 @@ graphStatus Operator::GetAllAttrNamesAndTypes(std::map<AscendString, AscendStrin
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
                    REPORT_INNER_ERROR("E19999", "GetOpDescImpl failed, as return nullptr.");
                    return GRAPH_FAILED, "[Get][OpDescImpl] is nullptr.");
-  std::map<std::string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
+  const std::map<std::string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
 
-  for (auto iter : attr_map) {
-    std::string name = iter.first;
-    AnyValue::ValueType type = iter.second.GetValueType();
+  for (const auto &iter : attr_map) {
+    const std::string name = iter.first;
+    const AnyValue::ValueType type = iter.second.GetValueType();
 
-    auto iter2 = kAttrTypesMap.find(type);
+    const auto iter2 = kAttrTypesMap.find(type);
     if (iter2 != kAttrTypesMap.end()) {
-      AscendString temp(name.c_str());
+      const AscendString temp(name.c_str());
       attr_name_types[temp] = AscendString(iter2->second.c_str());
     }
   }
@@ -1162,8 +1163,8 @@ Operator &Operator::SetInput(const char_t *dst_name, uint32_t dst_index, const g
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return *this;
   }
-  std::string op_dst_name = dst_name;
-  std::string op_name = name;
+  const std::string op_dst_name = dst_name;
+  const std::string op_name = name;
   return SetInput(op_dst_name, dst_index, src_oprt, op_name);
 }
 
@@ -1239,7 +1240,7 @@ void Operator::AttrRegister(const char_t *name, int64_t attr_value) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1249,7 +1250,7 @@ void Operator::AttrRegister(const char_t *name, const vector<int64_t> &attr_valu
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1259,7 +1260,7 @@ void Operator::AttrRegister(const char_t *name, float32_t attr_value) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1269,7 +1270,7 @@ void Operator::AttrRegister(const char_t *name, const vector<float32_t> &attr_va
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1279,8 +1280,8 @@ void Operator::AttrRegister(const char_t *name, const char_t *attr_value) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator input parameters is nullptr.");
     return;
   }
-  std::string op_name = name;
-  std::string op_attr_value = attr_value;
+  const std::string op_name = name;
+  const std::string op_attr_value = attr_value;
   AttrRegister(op_name, op_attr_value);
 }
 
@@ -1290,7 +1291,7 @@ void Operator::AttrRegister(const char_t *name, bool attr_value) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1300,7 +1301,7 @@ void Operator::AttrRegister(const char_t *name, const vector<bool> &attr_value) 
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1310,7 +1311,7 @@ void Operator::AttrRegister(const char_t *name, const vector<vector<int64_t>> &a
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1320,7 +1321,7 @@ void Operator::AttrRegister(const char_t *name, const NamedAttrs &attr_value) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1330,7 +1331,7 @@ void Operator::AttrRegister(const char_t *name, const vector<NamedAttrs> &attr_v
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1357,7 +1358,7 @@ void Operator::AttrRegister(const char_t *name, const AscendString &attr_value) 
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   if (attr_value.GetString() == nullptr) {
     REPORT_INNER_ERROR("E19999", "Attr %s register param is invalid.", name);
     GELOGE(GRAPH_FAILED, "[Check][Param] Attr %s register param is invalid.", name);
@@ -1368,7 +1369,7 @@ void Operator::AttrRegister(const char_t *name, const AscendString &attr_value) 
     GELOGE(GRAPH_FAILED, "[Check][Param] operator impl is nullptr, name %s.", op_name.c_str());
     return;
   }
-  std::string str_attr_value = attr_value.GetString();
+  const std::string str_attr_value = attr_value.GetString();
   if (!AttrUtils::SetStr(operator_impl_->GetOpDescImpl(), op_name, str_attr_value)) {
     GELOGW("[Register][Attr] Reg attr name %s failed", op_name.c_str());
   }
@@ -1400,7 +1401,7 @@ void Operator::AttrRegister(const char_t *name, const std::vector<AscendString> 
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1969,7 +1970,7 @@ void Operator::AttrRegister(const char_t *name, const std::vector<ge::DataType> 
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -1990,7 +1991,7 @@ void Operator::AttrRegister(const char_t *name, const ge::DataType &attr_value) 
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -2012,7 +2013,7 @@ void Operator::AttrRegister(const char_t *name, const Tensor &attr_value) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -2037,7 +2038,7 @@ void Operator::AttrRegister(const char_t *name, const vector<Tensor> &attr_value
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -2059,7 +2060,7 @@ void Operator::AttrRegister(const char_t *name, const OpBytes &attr_value) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = name;
+  const std::string op_name = name;
   AttrRegister(op_name, attr_value);
 }
 
@@ -2078,7 +2079,7 @@ void Operator::SubgraphRegister(const char_t *ir_name, bool dynamic) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = ir_name;
+  const std::string op_name = ir_name;
   SubgraphRegister(op_name, dynamic);
 }
 
@@ -2097,7 +2098,7 @@ void Operator::SubgraphCountRegister(const char_t *ir_name, uint32_t count) {
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
     return;
   }
-  std::string op_name = ir_name;
+  const std::string op_name = ir_name;
   SubgraphCountRegister(op_name, count);
 }
 
@@ -2116,7 +2117,7 @@ void Operator::SetSubgraphBuilder(const char_t *ir_name, uint32_t index, const S
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator ir_name is nullptr.");
     return;
   }
-  std::string op_ir_name = ir_name;
+  const std::string op_ir_name = ir_name;
   SetSubgraphBuilder(op_ir_name, index, builder);
 }
 
@@ -2372,7 +2373,7 @@ private:
         }
       }
     }
-    return MoveSubgraphToRoot(graph_);
+    return MoveSubgraphToRoot(0, graph_);
   }
 
   graphStatus WalkAllSubgraphs(const NodePtr &node, const OperatorImplPtr &op_impl) {
@@ -2406,7 +2407,13 @@ private:
     return GRAPH_SUCCESS;
   }
 
-  graphStatus MoveSubgraphToRoot(const ComputeGraphPtr &graph) const {
+  graphStatus MoveSubgraphToRoot(const int32_t recursion_depth, const ComputeGraphPtr &graph) const {
+    if (recursion_depth > kMaxDepth) {
+      REPORT_INNER_ERROR("E19999", "param recursion_depth:%d is bigger than kMaxRecursiveDepth:%d",
+                         recursion_depth, kMaxDepth);
+      GELOGE(GRAPH_FAILED, "[Check][Param] DecodeGraph: recursion depth is too large, abort");
+      return GRAPH_FAILED;
+    }
     const ComputeGraphPtr &root_graph = GraphUtils::FindRootGraph(graph);
     if (root_graph == nullptr) {
       REPORT_CALL_ERROR("E19999", "failed to find root graph of %s", graph->GetName().c_str());
@@ -2418,7 +2425,7 @@ private:
       const auto subgraphs = graph->GetAllSubgraphs();
 
       for (auto &subgraph : subgraphs) {
-        if (MoveSubgraphToRoot(subgraph) != GRAPH_SUCCESS) {
+        if (MoveSubgraphToRoot(recursion_depth + 1, subgraph) != GRAPH_SUCCESS) {
             return GRAPH_FAILED;
         }
       }
@@ -2429,7 +2436,7 @@ private:
           return GRAPH_FAILED;
         }
         graph->RemoveSubgraph(subgraph->GetName());
-        if (MoveSubgraphToRoot(subgraph) != GRAPH_SUCCESS) {
+        if (MoveSubgraphToRoot(recursion_depth + 1, subgraph) != GRAPH_SUCCESS) {
             return GRAPH_FAILED;
         }
       }
