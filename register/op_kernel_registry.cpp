@@ -6,7 +6,7 @@
 namespace ge {
 class OpKernelRegistry::OpKernelRegistryImpl {
  public:
-  void RegisterHostCpuOp(const std::string &op_type, OpKernelRegistry::CreateFn const create_fn) {
+  void RegisterHostCpuOp(const std::string &op_type, const OpKernelRegistry::CreateFn create_fn) {
     const std::lock_guard<std::mutex> lock(mu_);
     create_fns_[op_type] = create_fn;
   }
@@ -49,7 +49,7 @@ bool OpKernelRegistry::IsRegistered(const std::string &op_type) {
   return impl_->GetCreateFn(op_type) != nullptr;
 }
 
-void OpKernelRegistry::RegisterHostCpuOp(const std::string &op_type, CreateFn const create_fn) {
+void OpKernelRegistry::RegisterHostCpuOp(const std::string &op_type, const CreateFn create_fn) {
   if (impl_ == nullptr) {
     GELOGE(MEMALLOC_FAILED,
            "[Check][Param:impl_]Failed to register %s, OpKernelRegistry is not properly initialized",

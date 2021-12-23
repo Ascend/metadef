@@ -31,7 +31,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpKernelRegistry {
 
   bool IsRegistered(const std::string &op_type);
 
-  void RegisterHostCpuOp(const std::string &op_type, CreateFn const create_fn);
+  void RegisterHostCpuOp(const std::string &op_type, const CreateFn create_fn);
 
   std::unique_ptr<HostCpuOp> CreateHostCpuOp(const std::string &op_type);
 

@@ -17,7 +17,7 @@
 #ifndef COMPRESS_H
 #define COMPRESS_H
 
-#include <uchar.h>
+#include <cuchar>
 
 enum CmpStatus {
     RET_SUCCESS = 0,

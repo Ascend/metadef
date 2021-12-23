@@ -17,6 +17,7 @@
 #ifndef COMPRESS_WEIGHT_H
 #define COMPRESS_WEIGHT_H
 
+#include <cstdint>
 #include "compress.h"
 
 const int SHAPE_SIZE_WEIGHT = 4;

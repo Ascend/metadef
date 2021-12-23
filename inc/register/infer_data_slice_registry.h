@@ -19,6 +19,7 @@
 
 #include "external/graph/ge_error_codes.h"
 #include "external/graph/operator.h"
+#include "external/graph/types.h"
 
 namespace ge {
 using InferDataSliceFunc = std::function<graphStatus(Operator &)>;
