@@ -34,8 +34,6 @@ class GEContext {
  private:
   thread_local static uint64_t session_id_;
   thread_local static uint64_t context_id_;
-  // now use pid/tid or sessionid/graphid concat, set in external api
-  thread_local static uint64_t work_stream_id_;
   uint32_t device_id_ = 0U;
   uint64_t trace_id_ = 0U;
 };  // class GEContext

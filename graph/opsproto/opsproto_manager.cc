@@ -24,6 +24,7 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/types.h"
+#include "graph/def_types.h"
 #include "mmpa/mmpa_api.h"
 
 namespace ge {
@@ -40,13 +41,13 @@ bool OpsProtoManager::Initialize(const std::map<std::string, std::string> &optio
     return true;
   }
 
-  const auto proto_iter = options.find("ge.opsProtoLibPath");
-  if (proto_iter == options.end()) {
+  const std::map<std::string, std::string>::const_iterator iter = options.find("ge.opsProtoLibPath");
+  if (iter == options.end()) {
     GELOGW("[Initialize][CheckOption] Option \"ge.opsProtoLibPath\" not set");
     return false;
   }
 
-  pluginPath_ = proto_iter->second;
+  pluginPath_ = iter->second;
   LoadOpsProtoPluginSo(pluginPath_);
 
   is_init_ = true;
@@ -132,12 +133,12 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
 
   mmDirent **entries = nullptr;
   const auto ret = mmScandir(&(resolved_path[0U]), &entries, nullptr, nullptr);
-  if (ret < EN_OK) {
+  if ((ret < EN_OK) || (entries == nullptr)) {
     GELOGW("[FindSo][Scan] Scan directory %s failed, ret:%d, reason:%s", &(resolved_path[0U]), ret, strerror(errno));
     return;
   }
   for (int32_t i = 0; i < ret; ++i) {
-    const mmDirent *const dir_ent = entries[i];
+    const mmDirent *const dir_ent = *PtrAdd<mmDirent*>(entries, ret, i);
     const std::string name = std::string(dir_ent->d_name);
     if ((strncmp(name.c_str(), ".", 1U) == 0) || (strncmp(name.c_str(), "..", 2U) == 0)) {
       continue;
@@ -159,7 +160,7 @@ static void GetPluginSoFileList(const std::string &path, std::vector<std::string
   // Support multi lib directory with ":" as delimiter
   const std::vector<std::string> v_path = SplitStr(path, ':');
 
-  for (size_t i = 0UL; i < v_path.size(); ++i) {
+  for (auto i = 0UL; i < v_path.size(); ++i) {
     FindParserSo(v_path[i], file_list);
     GELOGI("OpsProtoManager full name = %s", v_path[i].c_str());
   }

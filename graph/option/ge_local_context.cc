@@ -61,14 +61,6 @@ std::map<std::string, std::string> GEThreadLocalContext::GetAllGraphOptions() co
   return graph_options_;
 }
 
-std::map<std::string, std::string> GEThreadLocalContext::GetAllSessionOptions() const {
-  return session_options_;
-}
-
-std::map<std::string, std::string> GEThreadLocalContext::GetAllGlobalOptions() const {
-  return global_options_;
-}
-
 std::map<std::string, std::string> GEThreadLocalContext::GetAllOptions() const {
   std::map<std::string, std::string> options_all;
   options_all.insert(graph_options_.cbegin(), graph_options_.cend());
