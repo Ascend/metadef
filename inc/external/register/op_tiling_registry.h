@@ -52,13 +52,13 @@
   static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV3##counter(#optype, (tilingfunc), (parsefunc))
 
 #define REGISTER_OP_TILING_V4(optype, tilingfunc, parsefunc)                                                           \
-  REGISTER_OP_TILING_UNIQ_HELPER_V4(optype, tilingfunc, parsefunc, __COUNTER__)
+  REGISTER_OP_TILING_UNIQ_HELPER_V4(optype, (tilingfunc), (parsefunc), __COUNTER__)
 
 #define REGISTER_OP_TILING_UNIQ_HELPER_V4(optype, tilingfunc, parsefunc, counter)                                      \
-  REGISTER_OP_TILING_UNIQ_V4(optype, tilingfunc, parsefunc, counter)
+  REGISTER_OP_TILING_UNIQ_V4(optype, (tilingfunc), (parsefunc), counter)
 
 #define REGISTER_OP_TILING_UNIQ_V4(optype, tilingfunc, parsefunc, counter)                                             \
-  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV4##counter(#optype, tilingfunc, parsefunc)
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV4##counter(#optype, (tilingfunc), (parsefunc))
 
 
 using Status = domi::Status;
