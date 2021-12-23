@@ -37,7 +37,7 @@ class PlatFormInfos {
   void SetVectorCoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes);
   void SetPlatformRes(const std::string &label, std::map<std::string, std::string> &res);
   std::map<std::string, std::vector<std::string>> GetFixPipeDtypeMap();
-  void SetFixPipeDtypeMap(std::map<std::string, std::vector<std::string>> fixpipe_dtype_map);
+  void SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map);
  private:
   PlatFormInfosImplPtr platform_infos_impl_{nullptr};
 };
@@ -52,7 +52,7 @@ class OptionalInfos {
   uint32_t GetAICoreNum();
   std::string GetL1FusionFlag();
   std::map<std::string, std::vector<std::string>> GetFixPipeDtypeMap();
-  void SetFixPipeDtypeMap(std::map<std::string, std::vector<std::string>> fixpipe_dtype_map);
+  void SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map);
   void SetSocVersion(std::string soc_version);
   void SetCoreType(std::string core_type);
   void SetAICoreNum(uint32_t ai_core_num);
