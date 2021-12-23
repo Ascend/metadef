@@ -1837,6 +1837,17 @@
       "Solution": "Clean up unnecessary allocations."
     }
   },
+   {
+    "errClass": "Environment Errors",
+    "errTitle": "device number is invalid",
+    "ErrCode": "EI0008",
+    "ErrMessage": "Check the total number of devices[%s] failed，info[%s].",
+    "Arglist": "devNum, reason",
+    "suggestion": {
+      "Possible Cause": "devNum error.",
+      "Solution": "Please make sure that devNum is 2^n."
+    }
+  },
   {
       "ErrCode": "E50000",
       "ErrMessage": "The op [%s] missing [%s] parameter",
