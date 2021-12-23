@@ -35,7 +35,6 @@ TEST_F(GeContextUt, All) {
   EXPECT_EQ(GetMutableGlobalOptions().size(), 0);
   EXPECT_EQ(cont.SessionId(), 0);
   EXPECT_EQ(cont.DeviceId(), 0);
-  EXPECT_EQ(cont.TraceId(), 65536);
 
   cont.SetSessionId(1);
   cont.SetContextId(2);

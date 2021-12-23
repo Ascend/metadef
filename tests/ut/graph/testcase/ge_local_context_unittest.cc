@@ -23,39 +23,6 @@ class UtestGeLocalContext : public testing::Test {
   void TearDown() {}
 };
 
-TEST_F(UtestGeLocalContext, GetAllGlobalOptionsTest) {
-    GEThreadLocalContext ge_local_context;
-    std::map<std::string, std::string> global_maps;
-    std::string key = "abc";
-    std::string value = "aaa";
-    global_maps.insert(std::make_pair(key, value));
-    ge_local_context.SetGlobalOption(global_maps);
-
-    std::map<std::string, std::string> global_options_;
-    global_options_ = ge_local_context.GetAllGlobalOptions();
-    std::string ret_value = global_options_[key];
-    EXPECT_EQ(ret_value, "aaa");
-}
-
-TEST_F(UtestGeLocalContext, GetAllSessionOptionsTest) {
-    GEThreadLocalContext ge_local_context;
-    std::map<std::string, std::string> session_maps;
-    std::string key1 = "111";
-    std::string value1 = "aaa";
-    std::string key2 = "222";
-    std::string value2 = "bbb";
-    session_maps.insert(std::make_pair(key1, value1));
-    session_maps.insert(std::make_pair(key2, value2));
-    ge_local_context.SetSessionOption(session_maps);
-
-    std::map<std::string, std::string> session_options_;
-    session_options_ = ge_local_context.GetAllSessionOptions();
-    std::string ret_value1 = session_options_[key1];
-    EXPECT_EQ(ret_value1, "aaa");
-    std::string ret_value2 = session_options_[key2];
-    EXPECT_EQ(ret_value2, "bbb");
-}
-
 TEST_F(UtestGeLocalContext, GetAllGraphOptionsTest) {
     GEThreadLocalContext ge_local_context;
     std::map<std::string, std::string> graph_maps;

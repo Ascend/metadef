@@ -28,7 +28,7 @@ class ModelSerialize {
  public:
   Buffer SerializeModel(const Model &model, const bool is_dump = false);
 
-  bool UnserializeModel(const uint8_t *data, const size_t len, Model &model);
+  bool UnserializeModel(const uint8_t *const data, const size_t len, Model &model);
 
   bool UnserializeModel(ge::proto::ModelDef &model_def, Model &model);
 

@@ -737,7 +737,7 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) {
   return buffer;
 }
 
-bool ModelSerialize::UnserializeModel(const uint8_t *data, const size_t len, Model &model) {
+bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t len, Model &model) {
   if (data == nullptr) {
     REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
