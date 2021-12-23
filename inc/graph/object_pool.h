@@ -30,6 +30,7 @@ class ObjectPool {
   ObjectPool(ObjectPool &) = delete;
   ObjectPool(ObjectPool &&) = delete;
   ObjectPool &operator=(const ObjectPool &) = delete;
+  ObjectPool &operator=(ObjectPool &&) = delete;
 
   template<typename... Args>
   std::unique_ptr<T> Acquire(Args &&...args) {

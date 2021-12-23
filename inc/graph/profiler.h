@@ -17,7 +17,6 @@
 #define METADEF_CXX_PROFILER_H
 #include <memory>
 #include <array>
-#include <vector>
 #include <ostream>
 #include <chrono>
 #include <atomic>

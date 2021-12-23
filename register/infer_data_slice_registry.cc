@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "graph/operator_factory_impl.h"
 #include "register/infer_data_slice_registry.h"
 #include "external/graph/types.h"
+#include "graph/operator_factory_impl.h"
 
 namespace ge {
 InferDataSliceFuncRegister::InferDataSliceFuncRegister(const char_t *const operator_type,
