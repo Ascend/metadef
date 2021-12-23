@@ -298,5 +298,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
 using OpDescPtr = OpDesc::OpDescPtr;
 using ConstOpDescPtr = OpDesc::ConstOpDescPtr;
+using ConstOpDesc = const OpDesc;
 }  // namespace ge
 #endif  // INC_GRAPH_OP_DESC_H_
