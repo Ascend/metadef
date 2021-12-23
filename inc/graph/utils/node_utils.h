@@ -25,6 +25,7 @@
 #include "graph/anchor.h"
 #include "graph/node.h"
 
+/*lint -e148*/
 namespace ge {
 // Op types of Const like Opps.
 extern const std::set<std::string> kConstOpTypes;
@@ -218,4 +219,5 @@ private:
   static std::map<NodePtr, std::vector<uint32_t>> map_recv_info_;
 };
 }  // namespace ge
+/*lint +e148*/
 #endif  // INC_GRAPH_UTILS_NODE_UTILS_H_
