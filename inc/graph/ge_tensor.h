@@ -293,7 +293,7 @@ class GeTensorSerializeUtils {
   static void GeTensorAsProto(const GeTensor &tensor, proto::TensorDef *proto);
 
   static void AssembleGeShapeFromProto(const proto::ShapeDef *proto, GeShape &shape);
-  static void AssembleGeTensorDescFromProto(const proto::TensorDescriptor *proto, GeTensorDesc &desc);
+  static void AssembleGeTensorDescFromProto(const proto::TensorDescriptor *const proto, GeTensorDesc &desc);
   static void AssembleGeTensorFromProto(const proto::TensorDef *proto, GeTensor &tensor);
 
   // normalize the input TensorDescriptor，A metadata information maybe stored in different fields of TensorDescriptor,
