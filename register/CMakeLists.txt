@@ -109,6 +109,7 @@ add_library(register_static STATIC
     "op_tiling/op_tiling.cc"
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
+    "op_tiling/op_tiling_attr_utils.cc"
     "op_tiling/op_compile_info_manager.cc"
     "op_tiling/op_tiling_registry.cc"
     "op_tiling/op_tiling_py.cc")
@@ -190,6 +191,7 @@ add_library(op_tiling_o2 STATIC
     "op_tiling/op_tiling.cc"
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"
+    "op_tiling/op_tiling_attr_utils.cc"
     "op_tiling/op_compile_info_manager.cc"
     "op_tiling/op_tiling_registry.cc"
     "op_tiling/op_tiling_py.cc")
