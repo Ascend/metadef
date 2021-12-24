@@ -38,7 +38,7 @@ graphStatus GEContext::GetOption(const std::string &key, std::string &option) {
   return GetThreadLocalContext().GetOption(key, option);
 }
 
-bool GEContext::GetHostExecFlag() {
+bool GEContext::GetHostExecFlag() const {
   std::string exec_placement;
   if (GetThreadLocalContext().GetOption("ge.exec.placement", exec_placement) != GRAPH_SUCCESS) {
     GELOGD("get option ge.exec.placement failed.");
@@ -98,11 +98,9 @@ void GEContext::Init() {
   }
 }
 
-uint64_t GEContext::SessionId() { return session_id_; }
+uint64_t GEContext::SessionId() const { return session_id_; }
 
-uint32_t GEContext::DeviceId() { return device_id_; }
-
-uint64_t GEContext::TraceId() { return trace_id_; }
+uint32_t GEContext::DeviceId() const { return device_id_; }
 
 void GEContext::SetSessionId(const uint64_t session_id) { session_id_ = session_id; }
 

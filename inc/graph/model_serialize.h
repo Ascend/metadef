@@ -26,11 +26,11 @@
 namespace ge {
 class ModelSerialize {
  public:
-  Buffer SerializeModel(const Model &model, const bool is_dump = false);
+  Buffer SerializeModel(const Model &model, const bool is_dump = false) const;
 
-  bool UnserializeModel(const uint8_t *const data, const size_t len, Model &model);
+  bool UnserializeModel(const uint8_t *const data, const size_t len, Model &model) const;
 
-  bool UnserializeModel(ge::proto::ModelDef &model_def, Model &model);
+  bool UnserializeModel(ge::proto::ModelDef &model_def, Model &model) const;
 
  private:
   friend class ModelSerializeImp;
