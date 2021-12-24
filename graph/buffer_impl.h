@@ -19,6 +19,7 @@
 
 #include <string>
 #include "proto/ge_ir.pb.h"
+#include "graph/detail/attributes_holder.h"
 
 namespace ge {
 class BufferImpl {
