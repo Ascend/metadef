@@ -25,8 +25,14 @@
 #include "./ge_error_codes.h"
 #include "ascend_string.h"
 
+using std::make_shared;
+using std::map;
+using std::pair;
+using std::string;
 using std::to_string;
 using std::unique_ptr;
+using std::vector;
+
 namespace ge {
 class AttrValueImpl;
 /*lint -e148*/
