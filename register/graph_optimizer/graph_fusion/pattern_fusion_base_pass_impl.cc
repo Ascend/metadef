@@ -38,7 +38,7 @@ void PatternFusionBasePassImpl::SetOpsKernelInfoStore(OpsKernelInfoStorePtr ops_
   ops_kernel_info_store_ptr_ = ops_kernel_info_store_ptr;
 }
 
-bool PatternFusionBasePassImpl::CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) {
+bool PatternFusionBasePassImpl::CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) const {
   std::string un_supported_reason;
 
   if (ops_kernel_info_store_ptr_ == nullptr) {
@@ -51,7 +51,7 @@ bool PatternFusionBasePassImpl::CheckOpSupported(const ge::OpDescPtr &op_desc_pt
   return result;
 }
 
-bool PatternFusionBasePassImpl::CheckOpSupported(const ge::NodePtr &node) {
+bool PatternFusionBasePassImpl::CheckOpSupported(const ge::NodePtr &node) const {
   std::string un_supported_reason;
 
   if (ops_kernel_info_store_ptr_ == nullptr) {
@@ -236,7 +236,7 @@ void PatternFusionBasePassImpl::GetInDataAnchors(const ge::NodePtr &node,
   }
 }
 
-bool PatternFusionBasePassImpl::GetMatchOutputNodes(ge::ComputeGraph &graph, const FusionPattern &pattern,
+bool PatternFusionBasePassImpl::GetMatchOutputNodes(const ge::ComputeGraph &graph, const FusionPattern &pattern,
                                                     vector<ge::NodePtr> &matched_output_nodes) {
   std::shared_ptr<FusionPattern::OpDesc> output_op_desc = pattern.GetOutput();
   if (output_op_desc == nullptr) {
