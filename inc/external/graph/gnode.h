@@ -24,7 +24,7 @@
 #include "./types.h"
 #include "./tensor.h"
 #include "./ascend_string.h"
-/*lint -e148*/
+
 namespace ge {
 class AttrValue;
 class GNode;
@@ -125,5 +125,5 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GNode {
    friend class NodeAdapter;
 };
 }  // namespace ge
-/*lint +e148*/
+
 #endif  // INC_EXTERNAL_GRAPH_NODE_H_
