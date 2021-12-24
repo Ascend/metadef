@@ -28,6 +28,7 @@
 #include "named_attrs_serializer.h"
 #include "graph_serializer.h"
 #include "graph/ge_tensor.h"
+#include "graph/def_types.h"
 
 namespace ge {
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
@@ -334,7 +335,7 @@ graphStatus ListValueSerializer::DeserializeListBuffer(const proto::AttrDef &def
   std::vector<Buffer> values(static_cast<size_t>(def.list().bt_size()));
   for (auto idx = 0; idx < def.list().bt_size(); ++idx) {
     values[static_cast<size_t>(idx)] =
-        Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(def.list().bt(idx).data()), def.list().bt(idx).size());
+        Buffer::CopyFrom(PtrToPtr<const char_t, const uint8_t>(def.list().bt(idx).data()), def.list().bt(idx).size());
   }
 
   return av.SetValue(std::move(values));

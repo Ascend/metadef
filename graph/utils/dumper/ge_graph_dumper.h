@@ -20,6 +20,11 @@
 
 namespace ge {
 struct GeGraphDumper {
+  GeGraphDumper() = default;
+  GeGraphDumper(const GeGraphDumper &) = delete;
+  GeGraphDumper &operator=(const GeGraphDumper &) = delete;
+  GeGraphDumper(GeGraphDumper &&) = delete;
+  GeGraphDumper &operator=(GeGraphDumper &&) = delete;
   virtual void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix) = 0;
   virtual ~GeGraphDumper() = default;
 };

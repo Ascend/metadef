@@ -234,7 +234,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     return -1;
   }
 
-  const std::unique_lock<std::mutex> lock(mutex_);
+  const std::unique_lock<std::mutex> lck(mutex_);
   if (error_context_.work_stream_id == 0UL) {
     if (error_message_per_work_id_.size() > kMaxWorkSize) {
       GELOGE("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
@@ -336,7 +336,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
 
 std::string ErrorManager::GetErrorMessage() {
   GELOGI("current work_stream_id:%lu", error_context_.work_stream_id);
-  const std::unique_lock<std::mutex> lock(mutex_);
+  const std::unique_lock<std::mutex> lck(mutex_);
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.empty()) {
@@ -371,7 +371,7 @@ std::string ErrorManager::GetErrorMessage() {
 
 std::string ErrorManager::GetWarningMessage() {
   GELOGI("current work_stream_id:%lu", error_context_.work_stream_id);
-  const std::unique_lock<std::mutex> lock(mutex_);
+  const std::unique_lock<std::mutex> lck(mutex_);
   auto &warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   std::stringstream warning_stream;
@@ -645,7 +645,8 @@ void ErrorManager::GenWorkStreamIdDefault() {
   const int32_t tid = mmGetTid();
 
   const uint64_t kPidOffset = 100000UL;
-  const uint64_t work_stream_id = static_cast<uint64_t>((pid * kPidOffset) + tid);
+  const uint64_t work_stream_id = static_cast<uint64_t>((static_cast<uint32_t>(pid) * kPidOffset) +
+      static_cast<uint32_t>(tid));
   error_context_.work_stream_id = work_stream_id;
 
   ClearErrorMsgContainerByWorkId(work_stream_id);
@@ -654,7 +655,7 @@ void ErrorManager::GenWorkStreamIdDefault() {
 
 void ErrorManager::GenWorkStreamIdBySessionGraph(const uint64_t session_id, const uint64_t graph_id) {
   const uint64_t kSessionIdOffset = 100000UL;
-  uint64_t work_stream_id = (session_id * kSessionIdOffset) + graph_id;
+  const uint64_t work_stream_id = (session_id * kSessionIdOffset) + graph_id;
   error_context_.work_stream_id = work_stream_id;
 
   ClearErrorMsgContainerByWorkId(work_stream_id);
