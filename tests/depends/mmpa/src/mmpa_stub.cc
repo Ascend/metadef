@@ -265,6 +265,7 @@ CHAR *mmDlerror()
 
 INT32 mmDladdr(VOID *addr, mmDlInfo *info)
 {
+  info->dli_fname = "/tmp/mmDlInfo.txt";
   return 0;
 }
 
