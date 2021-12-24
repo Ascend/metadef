@@ -15,11 +15,15 @@
  */
 #include <gtest/gtest.h>
 #include <iostream>
+#define protected public
+#define private public
 #include "test_structs.h"
 #include "func_counter.h"
 #include "graph/anchor.h"
 #include "graph/node.h"
 #include "graph_builder_utils.h"
+#define protected public
+#define private public
 
 namespace ge {
 namespace {
@@ -242,6 +246,11 @@ TEST_F(AnchorUt, SubOutDataAnchor) {
   auto nodelast = builder.AddNode("Data", "Data", 23, 23);
   SubInDataAnchorPtr peerd23 = std::make_shared<SubInDataAnchor>(nodelast, 223);
   EXPECT_EQ(out_anch->LinkTo(peerd23), GRAPH_FAILED);
+
+  auto node4 = builder.AddNode("Data4", "Data", 1, 1);
+  InDataAnchorPtr peerin2 = std::make_shared<InDataAnchor>(node4, 44);
+  out_anch->impl_ = nullptr;
+  EXPECT_EQ(out_anch->LinkTo(peerin2), GRAPH_FAILED);
 }
 
 
@@ -277,6 +286,10 @@ TEST_F(AnchorUt, SubInControlAnchor) {
   EXPECT_EQ(inc_anch->EncaEq(nullptr),false);
   EXPECT_EQ(inc_anch->EncaIsTypeOf("nnn"),false);
   inc_anch->UnlinkAll();
+  auto node24 = builder.AddNode("Data24", "Data", 2, 2);
+  OutControlAnchorPtr peer24 = std::make_shared<OutControlAnchor>(node24, 24);
+  inc_anch->impl_ = nullptr;
+  EXPECT_EQ(inc_anch->LinkFrom(peer24), GRAPH_FAILED);
 }
 
 
@@ -321,6 +334,11 @@ TEST_F(AnchorUt, SubOutControlAnchor) {
   auto nodelast = builder.AddNode("Data", "Data", 23, 23);
   SubInDataAnchorPtr peerd23 = std::make_shared<SubInDataAnchor>(nodelast, 223);
   EXPECT_EQ(outc_anch->LinkTo(peerd23), GRAPH_FAILED);
+
+  auto node4 = builder.AddNode("Data4", "Data", 1, 1);
+  InControlAnchorPtr peerctr4 = std::make_shared<InControlAnchor>(node4, 44);
+  outc_anch->impl_ = nullptr;
+  EXPECT_EQ(outc_anch->LinkTo(peerctr4), GRAPH_FAILED);
 }
 
 
