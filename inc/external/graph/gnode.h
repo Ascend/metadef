@@ -24,7 +24,7 @@
 #include "./types.h"
 #include "./tensor.h"
 #include "./ascend_string.h"
-
+/*lint -e148*/
 namespace ge {
 class AttrValue;
 class GNode;
@@ -77,14 +77,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GNode {
   graphStatus GetAttr(const AscendString &name, int64_t &attr_value) const;
   graphStatus GetAttr(const AscendString &name, int32_t &attr_value) const;
   graphStatus GetAttr(const AscendString &name, uint32_t &attr_value) const;
-  graphStatus GetAttr(const AscendString &name, float &attr_value) const;
+  graphStatus GetAttr(const AscendString &name, float32_t &attr_value) const;
   graphStatus GetAttr(const AscendString &name, AscendString &attr_value) const;
   graphStatus GetAttr(const AscendString &name, bool &attr_value) const;
   graphStatus GetAttr(const AscendString &name, Tensor &attr_value) const;
   graphStatus GetAttr(const AscendString &name, std::vector<int64_t> &attr_value) const;
   graphStatus GetAttr(const AscendString &name, std::vector<int32_t> &attr_value) const;
   graphStatus GetAttr(const AscendString &name, std::vector<uint32_t> &attr_value) const;
-  graphStatus GetAttr(const AscendString &name, std::vector<float> &attr_value) const;
+  graphStatus GetAttr(const AscendString &name, std::vector<float32_t> &attr_value) const;
   graphStatus GetAttr(const AscendString &name, std::vector<AscendString> &attr_values) const;
   graphStatus GetAttr(const AscendString &name, std::vector<bool> &attr_value) const;
   graphStatus GetAttr(const AscendString &name, std::vector<Tensor> &attr_value) const;
@@ -97,14 +97,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GNode {
   graphStatus SetAttr(const AscendString &name, int64_t &attr_value) const;
   graphStatus SetAttr(const AscendString &name, int32_t &attr_value) const;
   graphStatus SetAttr(const AscendString &name, uint32_t &attr_value) const;
-  graphStatus SetAttr(const AscendString &name, float &attr_value) const;
+  graphStatus SetAttr(const AscendString &name, float32_t &attr_value) const;
   graphStatus SetAttr(const AscendString &name, AscendString &attr_value) const;
   graphStatus SetAttr(const AscendString &name, bool &attr_value) const;
   graphStatus SetAttr(const AscendString &name, Tensor &attr_value) const;
   graphStatus SetAttr(const AscendString &name, std::vector<int64_t> &attr_value) const;
   graphStatus SetAttr(const AscendString &name, std::vector<int32_t> &attr_value) const;
   graphStatus SetAttr(const AscendString &name, std::vector<uint32_t> &attr_value) const;
-  graphStatus SetAttr(const AscendString &name, std::vector<float> &attr_value) const;
+  graphStatus SetAttr(const AscendString &name, std::vector<float32_t> &attr_value) const;
   graphStatus SetAttr(const AscendString &name, std::vector<AscendString> &attr_values) const;
   graphStatus SetAttr(const AscendString &name, std::vector<bool> &attr_value) const;
   graphStatus SetAttr(const AscendString &name, std::vector<Tensor> &attr_value) const;
@@ -125,5 +125,5 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GNode {
    friend class NodeAdapter;
 };
 }  // namespace ge
-
+/*lint +e148*/
 #endif  // INC_EXTERNAL_GRAPH_NODE_H_
