@@ -87,6 +87,11 @@ class OpsKernelInfoStore {
   }
   // Set cut support info
   virtual Status SetCutSupportedInfo(const ge::NodePtr &node) { return SUCCESS; }
+  // unload task for op
+  virtual Status UnloadTask(GETaskInfo &task) {
+    (void)task;
+    return SUCCESS;
+  }
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_STORE_H_
