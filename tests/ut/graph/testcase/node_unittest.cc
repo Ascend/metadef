@@ -308,4 +308,13 @@ TEST_F(UtestNode, Verify) {
   EXPECT_EQ(node_op2.IsEmpty(), true);
 }
 
+
+TEST_F(UtestNode, GetOutControlNodes) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node1 = builder.AddNode("Data1", "Data", 1, 1);
+  auto data_node2 = builder.AddNode("Data2", "Data", 1, 1);
+  EXPECT_EQ(data_node1->GetOutDataAnchor(0)->LinkTo(data_node2->GetInControlAnchor()), GRAPH_SUCCESS);
+  EXPECT_EQ(data_node1->GetOutControlNodes().size(), 1);
+}
+
 }

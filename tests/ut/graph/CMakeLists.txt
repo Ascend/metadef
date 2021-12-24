@@ -107,6 +107,6 @@ target_compile_definitions(ut_graph PRIVATE
 
 target_link_libraries(ut_graph
     $<BUILD_INTERFACE:intf_pub>
-    graph_static
-    gtest gtest_main slog_stub ascend_protobuf c_sec error_manager_stub mmpa_stub -lrt -ldl -lgcov
+    graph_static error_manager_static
+    gtest gtest_main slog_stub ascend_protobuf c_sec mmpa_stub -lrt -ldl -lgcov
 )

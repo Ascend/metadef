@@ -788,14 +788,14 @@ TEST_F(UtestGraphUtils, MatchDumpStrIsFalse) {
 }
 
 TEST_F(UtestGraphUtils, LoadGEGraphComputeGraphIsNull) {
-  char_t *file;
+  char_t *file = nullptr;
   ge::ComputeGraph compute_graph("");
   bool ret = GraphUtils::LoadGEGraph(file, compute_graph);
   EXPECT_EQ(ret, false);
 }
 
 TEST_F(UtestGraphUtils, LoadGEGraphFileIsNull) {
-  char_t *file;
+  char_t *file = nullptr;
   ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
   bool ret = GraphUtils::LoadGEGraph(file, compute_graph);
   EXPECT_EQ(ret, false);

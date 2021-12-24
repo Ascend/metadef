@@ -80,7 +80,7 @@ target_link_libraries(ut_register
     ascend_protobuf
     json
     c_sec
-    error_manager_stub
+    error_manager_static
     mmpa_stub
     -lrt
     -ldl

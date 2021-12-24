@@ -15,6 +15,7 @@
  */
 #include <gtest/gtest.h>
 #include <memory>
+#include <fstream>
 #define protected public
 #define private public
 #include "inc/common/util/error_manager/error_manager.h"
@@ -40,6 +41,7 @@ TEST_F(UtestErrorManager, Init_faild) {
   EXPECT_EQ(instance.Init(""), -1);
   instance.is_init_ = true;
   EXPECT_EQ(instance.Init(""), 0);
+  EXPECT_EQ(instance.Init(), 0);
 }
 
 TEST_F(UtestErrorManager, FormatErrorMessage) {
@@ -100,6 +102,11 @@ TEST_F(UtestErrorManager, ReportErrMessage_Normal) {
 TEST_F(UtestErrorManager, GetErrorMessage) {
   auto &instance = ErrorManager::GetInstance();
   EXPECT_EQ(instance.GetErrorMessage(), "");
+  std::vector<ErrorManager::ErrorItem> vec;
+  vec.push_back(ErrorManager::ErrorItem());
+  instance.error_message_per_work_id_[0] = vec;
+  instance.error_context_.work_stream_id = 0;
+  EXPECT_NE(instance.GetErrorMessage(), "");
 }
 
 
@@ -111,6 +118,7 @@ TEST_F(UtestErrorManager, GetWarningMessage) {
 TEST_F(UtestErrorManager, OutputErrMessage) {
   auto &instance = ErrorManager::GetInstance();
   EXPECT_EQ(instance.OutputErrMessage(1), 0);
+  EXPECT_EQ(instance.OutputErrMessage(10000), -1);
 }
 
 TEST_F(UtestErrorManager, OutputMessage) {
@@ -193,6 +201,63 @@ TEST_F(UtestErrorManager, ReportMstuneCompileFailedMsg_Success) {
   EXPECT_EQ(instance.ReportMstuneCompileFailedMsg(root_graph_name, msg), 0);
   instance.compile_failed_msg_map_["root_graph_name"] = std::map<std::string, std::vector<std::string>>();
   EXPECT_EQ(instance.ReportMstuneCompileFailedMsg(root_graph_name, msg), 0);
+}
+
+TEST_F(UtestErrorManager, ReadJsonFile) {
+  auto &instance = ErrorManager::GetInstance();
+  EXPECT_EQ(instance.ReadJsonFile("", nullptr), -1);
+  EXPECT_EQ(instance.ReadJsonFile("json", nullptr), -1);
+  std::ofstream out("out.json");
+  if (out.is_open()){
+    out << "{\"name\":\"value\"}\n";
+    out.close();
+  }
+  char buf[1024] = {0};
+  EXPECT_EQ(instance.ReadJsonFile("out.json", buf), 0);
+}
+
+TEST_F(UtestErrorManager, ParseJsonFile) {
+  auto &instance = ErrorManager::GetInstance();
+  std::ofstream out("out.json");
+  if (out.is_open()){
+    out << "{\"name\":\"value\"}\n";
+    out.close();
+  }
+  EXPECT_EQ(instance.ParseJsonFile("out.json"), -1);
+  std::ofstream out1("out1.json");
+  if (out1.is_open()){
+    out1 << "{\"error_info_list\":[\"err1\"]}";
+    out1.close();
+  }
+  EXPECT_EQ(instance.ParseJsonFile("out1.json"), -1);
+  std::ofstream out2("out2.json");
+  if (out2.is_open()){
+    out2 << "{\"error_info_list\":\"err1\"}";
+    out2.close();
+  }
+  EXPECT_EQ(instance.ParseJsonFile("out2.json"), -1);
+  std::ofstream out3("out3.json");
+  if (out3.is_open()){
+    out3 << "{\"error_info_list\":[{\"ErrCode\":\"1\", \"ErrMessage\":\"message\", \"Arglist\":\"1,2,3\"}]}";
+    out3.close();
+  }
+  EXPECT_EQ(instance.ParseJsonFile("out3.json"), 0);
+  instance.error_map_["1"] = ErrorManager::ErrorInfoConfig();
+  EXPECT_EQ(instance.ParseJsonFile("out3.json"), -1);
+}
+
+TEST_F(UtestErrorManager, ClearErrorMsgContainerByWorkId) {
+  auto &instance = ErrorManager::GetInstance();
+  instance.error_message_per_work_id_[0] = std::vector<ErrorManager::ErrorItem>();
+  instance.ClearErrorMsgContainerByWorkId(0);
+}
+
+TEST_F(UtestErrorManager, GetErrorMsgContainerByWorkId) {
+  auto &instance = ErrorManager::GetInstance();
+  std::vector<ErrorManager::ErrorItem> vec;
+  vec.push_back(ErrorManager::ErrorItem());
+  instance.error_message_per_work_id_[0] = vec;
+  EXPECT_EQ(instance.GetErrorMsgContainerByWorkId(0).size(), 1);
 }
 
 }
