@@ -42,8 +42,8 @@ class TensorUtils {
   static uint32_t GetWeightSize(const ConstGeTensorPtr &tensor_ptr);
   static uint32_t GetWeightSize(const GeTensor &tensor);
   static uint32_t GetWeightSize(const GeTensorDesc &tensor_desc);
-  static uint8_t *GetWeightAddr(const ConstGeTensorPtr &tensor_ptr, uint8_t * const base);
-  static uint8_t *GetWeightAddr(const GeTensor &tensor, uint8_t * const base);
+  static uint8_t *GetWeightAddr(const ConstGeTensorPtr &tensor_ptr, uint8_t *const base);
+  static uint8_t *GetWeightAddr(const GeTensor &tensor, const uint8_t *const base);
   static void SetWeightSize(GeTensorDesc &tensor_desc, const uint32_t size);
   static ge::graphStatus GetReuseInput(const GeTensorDesc &tensor_desc, bool &flag);
   static void SetReuseInput(GeTensorDesc &tensor_desc, const bool flag);

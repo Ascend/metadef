@@ -1162,7 +1162,7 @@ void ComputeGraphImpl::SetNodesOwner(const ComputeGraphPtr &compute_graph) {
   }
 }
 
-graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) {
+graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
   GE_CHECK_NOTNULL(node);
   const auto next_nodes = node->GetOutAllNodes();
   // If there is input data side

@@ -212,7 +212,7 @@ void GeTensorSerializeUtils::AssembleGeShapeFromProto(const proto::ShapeDef *pro
   }
 }
 void GeTensorSerializeUtils::AssembleGeTensorDescFromProto(
-    const proto::TensorDescriptor *proto, GeTensorDesc &desc) {
+    const proto::TensorDescriptor *const proto, GeTensorDesc &desc) {
   if (proto != nullptr) {
     desc = GeTensorDesc(const_cast<proto::TensorDescriptor *>(proto));
   }
@@ -1027,7 +1027,7 @@ const uint8_t *TensorDataImpl::MallocAlignedPtr(const size_t size) {
   if (size == 0UL) {
     GELOGW("[Check][Param] Input data size is 0");
     clear();
-    return static_cast<const uint8_t *>(static_cast<void *>(&invalid_data_));
+    return PtrToPtr<uint32_t, uint8_t>(&invalid_data_);
   }
   if (length_ != size) {
     aligned_ptr_.reset();
@@ -1049,7 +1049,7 @@ size_t TensorDataImpl::GetSize() const { return length_; }
 
 const uint8_t *TensorDataImpl::GetData() const {
   if (length_ == 0UL) {
-    return static_cast<const uint8_t *>(static_cast<void *>(&invalid_data_));
+    return PtrToPtr<uint32_t, uint8_t>(&invalid_data_);
   }
   if (aligned_ptr_ == nullptr) {
     return nullptr;
@@ -1059,7 +1059,7 @@ const uint8_t *TensorDataImpl::GetData() const {
 
 uint8_t *TensorDataImpl::GetData() {
   if (length_ == 0UL) {
-    return static_cast<uint8_t *>(static_cast<void *>(&invalid_data_));
+    return PtrToPtr<uint32_t, uint8_t>(&invalid_data_);
   }
   if (aligned_ptr_ == nullptr) {
     return nullptr;
@@ -1073,8 +1073,9 @@ void TensorDataImpl::clear() {
 }
 
 uint8_t TensorDataImpl::operator[](const size_t index) const {
-  if ((aligned_ptr_ != nullptr) && (index < length_)) {
-    return *static_cast<uint8_t *>(ValueToPtr(PtrToValue(aligned_ptr_->MutableGet()) + index));
+  const uint8_t *const value_ptr = PtrAdd<uint8_t>(aligned_ptr_->MutableGet(), length_, index);
+  if (value_ptr != nullptr) {
+    return *value_ptr;
   }
   return static_cast<uint8_t>(0xffU);
 }
@@ -1219,8 +1220,7 @@ GeTensorImpl::GeTensorImpl(const ProtoMsgOwner &proto_owner, proto::TensorDef *p
     if (proto_owner != nullptr) {
       BuildAlignerPtrWithProtoData();
     } else {
-      (void)tensor_data_.SetData(
-          static_cast<const uint8_t *>(static_cast<const void *>(proto_msg->data().data())),
+      (void)tensor_data_.SetData(PtrToPtr<const char, const uint8_t>(proto_msg->data().data()),
           proto_msg->data().size());
     }
   }
@@ -1244,8 +1244,8 @@ void GeTensorImpl::BuildAlignerPtrWithProtoData() {
   tensor_data_.impl_->aligned_ptr_.reset();
   tensor_data_.impl_->aligned_ptr_ = AlignedPtr::BuildFromAllocFunc(
       [&proto_msg](std::unique_ptr<uint8_t[], AlignedPtr::Deleter> &ptr) {
-        ptr.reset(const_cast<uint8_t *>(static_cast<const uint8_t *>(
-                  static_cast<const void *>(proto_msg->data().data()))));
+        ptr.reset(const_cast<uint8_t *>(PtrToPtr<const char, const uint8_t>(
+            proto_msg->data().data())));
       },
       [](const uint8_t *const ptr) {
         (void)ptr;
@@ -1521,7 +1521,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAd
   return GetWeightAddr(*tensor_ptr, base);
 }
 
-uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *const base) {
+uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, const uint8_t *const base) {
   if (base == nullptr) {
     REPORT_INNER_ERROR("E19999", "param base is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] base is null.");
@@ -1536,8 +1536,8 @@ uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, uint8_t *const base)
     // The weight of offset 0 is still in const op, still get from ATTR_NAME_WEIGHTS.
     return const_cast<uint8_t *>(tensor.GetData().data());
   }
-
-  return static_cast<uint8_t *>(ValueToPtr(PtrToValue(base) + weight_data_offset));
+  return PtrToPtr<void, uint8_t>(ValueToPtr(PtrToValue(base) +
+      static_cast<uint64_t>(weight_data_offset)));
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetWeightSize(GeTensorDesc &tensor_desc,
