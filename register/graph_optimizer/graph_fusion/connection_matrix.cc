@@ -14,36 +14,33 @@
  * limitations under the License.
  */
 #include "register/graph_optimizer/graph_fusion/connection_matrix.h"
-
+#include "graph/debug/ge_log.h"
 
 namespace fe {
-ConnectionMatrix::ConnectionMatrix() : size_(0) {};
+ConnectionMatrix::ConnectionMatrix(const ge::ComputeGraph &graph) {
+  auto direct_nodes = graph.GetDirectNode();
+  size_ = direct_nodes.size();
+  bit_maps.reserve(size_);
+  int64_t index_loop = 0;
+  for (const auto &node : direct_nodes) {
+    name_to_index_[node->GetName()] = index_loop;
+    bit_maps.emplace_back(size_);
+    index_loop++;
+  }
+};
 
-ConnectionMatrix::~ConnectionMatrix() {}
+ConnectionMatrix::~ConnectionMatrix() {
+  bit_maps.clear();
+  name_to_index_.clear();
+}
 
 
 Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
-  int64_t max_id = 0;
-  auto direct_nodes = graph.GetDirectNode();
-  for (const auto &node : direct_nodes) {
-    int64_t id = node->GetOpDesc()->GetId();
-    if (id > max_id) {
-      max_id = id;
-    }
-  }
-  size_t total_size = static_cast<size_t>(max_id + 1);
-  bit_maps.reserve(total_size);
-  size_ = total_size;
-  for (size_t i = 0; i < total_size; i++) {
-    bit_maps.emplace_back(size_);
-  }
-
-  for (auto &node : direct_nodes) {
+  for (auto &node : graph.GetDirectNode()) {
     auto inputs = node->GetInAllNodes();
     SetConnectivity(inputs, node);
   }
-
-  return SUCCESS;
+  return ge::GRAPH_SUCCESS;
 }
 
 #ifdef ONLY_COMPILE_OPEN_SRC
@@ -86,7 +83,13 @@ void ConnectionMatrix::SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inpu
 }
 
 int64_t ConnectionMatrix::GetIndex(const ge::NodePtr &node) const {
-  return node->GetOpDesc()->GetId();
+  auto iter = name_to_index_.find(node->GetName());
+  if (iter != name_to_index_.end()) {
+    return iter->second;
+  } else {
+    GE_LOGE("node %s is not found in name_to_index_", node->GetName().c_str());
+    return 0;
+  }
 }
 
 bool ConnectionMatrix::IsConnected(const ge::NodePtr &a, const ge::NodePtr &b) const {

@@ -181,7 +181,7 @@ class PatternFusionBasePass : public GraphPass {
    * total number of nodes and e is total number of edges, which is
    * not tolerable. And this requires one pass only executed once.
    * */
-  std::shared_ptr<ConnectionMatrix> connectivity_{nullptr};
+  std::unique_ptr<ConnectionMatrix> connectivity_{nullptr};
 
   bool enable_network_analysis_ = false;
 };
