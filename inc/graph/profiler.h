@@ -70,9 +70,9 @@ class Profiler {
   StringHashesPointer GetStringHashes() ;
 
   ~Profiler();
+  Profiler();
 
  private:
-  Profiler();
   void DumpByIndex(const int64_t index, std::ostream &out_stream) const;
 
  private:

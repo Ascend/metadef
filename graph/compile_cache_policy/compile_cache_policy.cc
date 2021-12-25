@@ -44,7 +44,7 @@ std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicy
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] param aging policy must not be null.");
     return nullptr;
   }
-  auto ccp = std::unique_ptr<CompileCachePolicy>(new CompileCachePolicy());
+  auto ccp = ComGraphMakeUnique<CompileCachePolicy>();
   (void)ccp->SetAgingPolicy(ap);
   (void)ccp->SetMatchPolicy(mp);
 
@@ -57,7 +57,7 @@ std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicy
   CompileCachePolicy::PolicyInit();
   const auto mp = PolicyManager::GetInstance().GetMatchPolicy(mp_type);
   const auto ap = PolicyManager::GetInstance().GetAgingPolicy(ap_type);
-  auto ccp = std::unique_ptr<CompileCachePolicy>(new CompileCachePolicy());
+  auto ccp = ComGraphMakeUnique<CompileCachePolicy>();
   (void)ccp->SetAgingPolicy(ap);
   (void)ccp->SetMatchPolicy(mp);
   GELOGI("[CompileCachePolicy] Create CompileCachePolicy with match_policy: %d, aging_policy: %d success;",

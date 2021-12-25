@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H_
-#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H_
+#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H
+#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H
 
 #include <string>
 #include <vector>
@@ -65,7 +65,7 @@ class BinaryHolder {
 
   ~BinaryHolder() = default;
 
-  void SharedFrom(uint8_t *data, const size_t data_len) {
+  void SharedFrom(uint8_t *const data, const size_t data_len) {
     data_ptr_ = data;
     data_len_ = data_len;
   }
@@ -109,6 +109,8 @@ class CompileCacheDesc {
   friend class CompileCacheHasher;
  public:
   struct TensorInfoArgs {
+    friend class CompileCacheDesc;
+   private:
     SmallVector<ShapeType, kDefaultMaxInputNum> shapes;
     SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes;
     SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges;
@@ -167,7 +169,7 @@ struct hash<ge::BinaryHolder> {
     size_t seed = ge::HashUtils::MultiHash();
     const uint64_t u8_data = ge::PtrToValue(ge::PtrToPtr<const uint8_t, const void>(value.GetDataPtr()));
     for (size_t idx = 0UL; idx < value.GetDataLen(); idx++) {
-      seed = ge::HashUtils::HashCombine(seed, *(static_cast<uint8_t *>(ge::ValueToPtr(u8_data + idx))));
+      seed = ge::HashUtils::HashCombine(seed, *(ge::PtrToPtr<void, uint8_t>(ge::ValueToPtr(u8_data + idx))));
     }
     return seed;
   }

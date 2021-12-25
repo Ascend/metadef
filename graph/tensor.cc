@@ -165,8 +165,8 @@ class TensorImpl {
       }
       StringHead *const string_head = reinterpret_cast<StringHead *>(buff.get());
       // Front 8 bytes store pointer of string
-      char_t *const raw_data = static_cast<char_t *>(
-          ValueToPtr(PtrToValue(static_cast<void *>(buff.get())) + sizeof(*string_head)));
+      char_t *const raw_data = PtrToPtr<void, char_t>(
+          ValueToPtr(PtrToValue(PtrToPtr<char_t, void>(buff.get())) + sizeof(*string_head)));
       string_head->addr = PtrToValue(static_cast<void *>(raw_data));
       string_head->len = static_cast<uint64_t>(data.size());
       const int32_t memcpy_ret = memcpy_s(raw_data, total_size - sizeof(StringHead),  data.c_str(), data.size() + 1U);

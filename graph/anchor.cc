@@ -95,7 +95,7 @@ size_t Anchor::GetPeerAnchorsSize() const {
 Anchor::Vistor<AnchorPtr> Anchor::GetPeerAnchors() const {
   if (impl_ == nullptr) {
     GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
-    std::vector<AnchorPtr> ret;
+    const std::vector<AnchorPtr> ret;
     return Anchor::Vistor<AnchorPtr>(shared_from_this(), ret);
   }
   return impl_->GetPeerAnchors(shared_from_this());
@@ -181,7 +181,7 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
 
   const auto old_it = std::find_if(old_peer->impl_->peer_anchors_.begin(), old_peer->impl_->peer_anchors_.end(),
                                    [this](const std::weak_ptr<Anchor> &an) {
-                                     auto anchor = an.lock();
+                                     const auto anchor = an.lock();
                                      return Equal(anchor);
                                    });
   GE_CHK_BOOL_RET_STATUS(old_it != old_peer->impl_->peer_anchors_.end(), GRAPH_FAILED,
@@ -196,7 +196,10 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
 }
 
 bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
-  GE_CHK_BOOL_RET_STATUS(impl_ != nullptr, false, "[Check][Param] impl_ of anchor is nullptr");
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return false;
+  }
   const auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [peer](const std::weak_ptr<Anchor> &an) {
     const auto anchor = an.lock();
@@ -210,7 +213,10 @@ bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
 }
 
 int32_t Anchor::GetIdx() const {
-  GE_CHK_BOOL_RET_STATUS(impl_ != nullptr, 0, "[Check][Param] impl_ of anchor is nullptr");
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return 0;
+  }
   return impl_->GetIdx();
 }
 

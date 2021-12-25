@@ -27,7 +27,7 @@ namespace profiling {
 namespace {
 constexpr char_t kVersion[] = "1.0";
 int64_t GetThread() {
-  thread_local static auto tid = mmGetTid();
+  thread_local static int64_t tid = static_cast<int64_t>(mmGetTid());
   return tid;
 }
 void DumpEventType(const EventType et, std::ostream &out_stream) {
@@ -60,7 +60,7 @@ void Profiler::UpdateHashByIndex(const int64_t index, const uint64_t hash) {
   if (index >= kMaxStrIndex) {
     return;
   }
-  PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->hash = hash;
+  PtrAdd<StrHash>(GetStringHashes(), static_cast<size_t>(kMaxStrIndex), static_cast<size_t>(index))->hash = hash;
 }
 
 void Profiler::RegisterString(const int64_t index, const std::string &str) {
@@ -69,7 +69,8 @@ void Profiler::RegisterString(const int64_t index, const std::string &str) {
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  const auto ret = strncpy_s(PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->str,
+  const auto ret = strncpy_s(PtrAdd<StrHash>(GetStringHashes(),
+                                             static_cast<size_t>(kMaxStrIndex), static_cast<size_t>(index))->str,
                              kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
@@ -82,12 +83,13 @@ void Profiler::RegisterStringHash(const int64_t index, const uint64_t hash, cons
   }
 
   // can not use strcpy_s, which will copy nothing when the length of str beyond kMaxStrLen
-  const auto ret = strncpy_s(PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->str,
+  const auto ret = strncpy_s(PtrAdd<StrHash>(GetStringHashes(),
+                                             static_cast<size_t>(kMaxStrIndex), static_cast<size_t>(index))->str,
                              kMaxStrLen, str.c_str(), kMaxStrLen - 1UL);
   if (ret != EN_OK) {
     GELOGW("Register string failed, index %ld, str %s", index, str.c_str());
   }
-  PtrAdd<StrHash>(GetStringHashes(), kMaxStrIndex, index)->hash = hash;
+  PtrAdd<StrHash>(GetStringHashes(), static_cast<size_t>(kMaxStrIndex), static_cast<size_t>(index))->hash = hash;
 }
 
 void Profiler::Record(const int64_t element, const int64_t thread, const int64_t event, const EventType et,
@@ -100,7 +102,8 @@ void Profiler::Record(const int64_t element, const int64_t thread, const int64_t
 }
 void Profiler::Dump(std::ostream &out_stream) const {
   size_t print_size = record_size_;
-  out_stream << "Profiler version: " << kVersion << ", dump start, records num: " << print_size << std::endl;
+  out_stream << "Profiler version: " << static_cast<const char_t *>(kVersion)
+             << ", dump start, records num: " << print_size << std::endl;
   if (print_size > records_.size()) {
     out_stream << "Too many records(" << print_size << "), the records after "
                << records_.size() << " will be dropped" << std::endl;
@@ -121,11 +124,14 @@ void Profiler::Dump(std::ostream &out_stream) const {
   out_stream << "Profiling dump end" << std::endl;
 }
 void Profiler::DumpByIndex(const int64_t index, std::ostream &out_stream) const {
-  if ((index < 0) || (index >= kMaxStrIndex)
-      || (strnlen(PtrAdd<const StrHash>(GetStringHashes(), kMaxStrIndex, index)->str, kMaxStrLen) == 0UL)) {
+  if ((index < 0) || (index >= kMaxStrIndex) ||
+      (strnlen(PtrAdd<const StrHash>(GetStringHashes(),
+          static_cast<size_t>(kMaxStrIndex),
+          static_cast<size_t>(index))->str, kMaxStrLen) == 0UL)) {
     out_stream << "UNKNOWN(" << index << ")";
   } else {
-    out_stream << '[' << PtrAdd<const StrHash>(GetStringHashes(), kMaxStrIndex, index)->str << "]";
+    out_stream << '[' << PtrAdd<const StrHash>(GetStringHashes(),
+        static_cast<size_t>(kMaxStrIndex), static_cast<size_t>(index))->str << "]";
   }
 }
 Profiler::Profiler() : record_size_(0UL), records_(), indexes_to_str_hashes_() {}
@@ -134,7 +140,7 @@ void Profiler::Reset() {
   record_size_ = 0UL;
 }
 std::unique_ptr<Profiler> Profiler::Create() {
-  return std::unique_ptr<Profiler>(new(std::nothrow) Profiler());
+  return ComGraphMakeUnique<Profiler>();
 }
 size_t Profiler::GetRecordNum() const noexcept {
   return record_size_;

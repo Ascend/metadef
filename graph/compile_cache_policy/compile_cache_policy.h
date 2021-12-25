@@ -51,8 +51,9 @@ public:
 
   std::vector<CacheItem> DoAging();
 
-private:
   CompileCachePolicy() = default;
+
+private:
   static void PolicyInit();
 
   CompileCacheState compile_cache_state_;
