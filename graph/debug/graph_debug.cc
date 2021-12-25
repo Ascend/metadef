@@ -57,7 +57,7 @@ std::vector<std::string> formats = {"FORMAT_NCHW",
                                     "FORMAT_HASHTABLE_LOOKUP_HITS",
                                     "FORMAT_RESERVED"};
 
-std::vector<std::string> data_nodes = {"Const", "Data"};
+std::vector<std::string> data_const_nodes = {"Const", "Data"};
 
 inline string StrFmt(const std::string &str) {
   return " \"" + str + "\" ";
@@ -90,7 +90,7 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   }
   const auto max_col = input_cnt * output_cnt;
   out_ << "[\n";
-  if (find(data_nodes.begin(), data_nodes.end(), node->GetType()) != data_nodes.end()) {
+  if (find(data_const_nodes.begin(), data_const_nodes.end(), node->GetType()) != data_const_nodes.end()) {
     out_ << TAB << TAB << "shape=plaintext, color=goldenrod\n";
   } else {
     out_ << TAB << TAB << "shape=plaintext, color=deepskyblue\n";
