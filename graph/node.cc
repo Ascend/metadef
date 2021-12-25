@@ -1045,7 +1045,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<NodePtr> Node::GetIn
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool Node::IsAllInNodesSeen(
-    std::unordered_set<Node *> &nodes_seen) const {
+    const std::unordered_set<Node *> &nodes_seen) const {
   return impl_->IsAllInNodesSeen(nodes_seen);
 }
 
@@ -1102,7 +1102,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::UpdateOpDesc(co
   return impl_->UpdateOpDesc(op_desc);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<NodeToOutAnchor> Node::GetInDataNodesAndAnchors() const {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<std::pair<NodePtr, OutDataAnchorPtr>>
+    Node::GetInDataNodesAndAnchors() const {
   return impl_->GetInDataNodesAndAnchors(shared_from_this());
 }
 
@@ -1137,12 +1138,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void Node::GetFusionOutputFlowLis
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void Node::SetFusionInputFlowList(
-    kFusionDataFlowVec_t &fusion_input_list) {
+    const kFusionDataFlowVec_t &fusion_input_list) {
   impl_->SetFusionInputFlowList(fusion_input_list);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void Node::SetFusionOutputFlowList(
-    kFusionDataFlowVec_t &fusion_output_list) {
+    const kFusionDataFlowVec_t &fusion_output_list) {
   impl_->SetFusionOutputFlowList(fusion_output_list);
 }
 
