@@ -49,6 +49,7 @@ const std::set<std::string> kForOpTypes{ "For" };
 const char_t *const kRefIndex = "_parent_node_index";
 const char_t *const kPartSrcGraph = "part_src_graph";
 
+namespace {
 bool OpShapeIsUnknown(const OpDescPtr &desc) {
   for (const auto &ptr : desc->GetAllInputsDescPtr()) {
     const auto ge_shape = ptr->GetShape();
@@ -78,6 +79,7 @@ bool IsComputableOp(const NodePtr &node) {
   }
   return true;
 }
+} // namespace
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::AddSendEventId(const NodePtr &node,
                                                                                      const uint32_t &event_id) {
@@ -183,9 +185,10 @@ graphStatus NodeUtils::ClearInDataAnchor(const NodePtr &node_ptr, const InDataAn
     }
     index++;
   }
-  for (; it != node_ptr->impl_->in_data_anchors_.end(); ++it) {
+  while (it != node_ptr->impl_->in_data_anchors_.end()) {
     (*it)->SetIdx(static_cast<int32_t>(index));
     index++;
+    ++it;
   }
 
   if (!find_flag) {
@@ -233,12 +236,13 @@ graphStatus NodeUtils::MoveOutputEdges(const NodePtr &origin_node, const NodePtr
     return GRAPH_FAILED;
   }
   auto origin_out_data_anchors = origin_node->GetAllOutDataAnchors();
+  const auto origin_out_data_anchors_size = origin_out_data_anchors.size();
   auto new_out_data_anchors = new_node->GetAllOutDataAnchors();
-  if (origin_out_data_anchors.size() != new_out_data_anchors.size()) {
+  if (origin_out_data_anchors_size != new_out_data_anchors.size()) {
     return GRAPH_FAILED;
   }
 
-  for (size_t i = 0UL; i < origin_out_data_anchors.size(); ++i) {
+  for (size_t i = 0UL; i < origin_out_data_anchors_size; ++i) {
     for (const auto &peer_anchor : origin_out_data_anchors.at(i)->GetPeerInDataAnchors()) {
       GE_CHK_BOOL_EXEC(origin_out_data_anchors.at(i)->Unlink(peer_anchor) == GRAPH_SUCCESS,
                        REPORT_CALL_ERROR("E19999", "unlink peer_dataanchor failed, node:%s",
@@ -1093,7 +1097,7 @@ std::vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
   return out_data_node_vec;
 }
 
-NodePtr NodeUtils::GetInDataNodeByIndex(const Node &node, const int index) {
+NodePtr NodeUtils::GetInDataNodeByIndex(const Node &node, const int32_t index) {
   if (node.GetInDataAnchor(index) == nullptr) {
     return nullptr;
   }
@@ -1104,7 +1108,7 @@ NodePtr NodeUtils::GetInDataNodeByIndex(const Node &node, const int index) {
 }
 
 std::vector<std::pair<InDataAnchorPtr, NodePtr>> NodeUtils::GetOutDataNodesWithAnchorByIndex(const Node &node,
-                                                                                             const int index) {
+                                                                                             const int32_t index) {
   std::vector<std::pair<InDataAnchorPtr, NodePtr>> out_data_nodes;
   const auto out_data_anchor = node.GetOutDataAnchor(index);
   if (out_data_anchor == nullptr) {
@@ -1176,7 +1180,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     return GRAPH_FAILED;
   }
   GELOGD("in node:%s index:%d", node->GetName().c_str(), index);
-  peer_node = (node->GetType() == DATA) ? node : GetInDataNodeByIndex(*node, index);
+  peer_node = (node->GetType() == DATA) ? node : GetInDataNodeByIndex(*node, static_cast<int32_t>(index));
   int32_t peer_out_anchor_index = -1;
   if (peer_node == nullptr) {
     // A->B
@@ -1186,7 +1190,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   }
   while (!IsComputableOp(peer_node)) {
     if (peer_node->GetType() == DATA) {
-      auto parent_node_2_anchor = GetParentInputAndAnchor(peer_node);
+      const auto parent_node_2_anchor = GetParentInputAndAnchor(peer_node);
       if ((parent_node_2_anchor.first == nullptr) && (parent_node_2_anchor.second == nullptr)) {
         GELOGW("Returned peer_out_node is nullptr because no attr[%s] on DATA[%s] node!",
                kRefIndex, peer_node->GetName().c_str());
@@ -1212,13 +1216,14 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
       return GRAPH_SUCCESS;
     }
     // if peer node is PartionedCall, return owner graph's correspond node
-    auto sub_graph = GetSubgraph(*peer_node, 0);
+    const auto sub_graph = GetSubgraph(*peer_node, 0U);
     GE_CHECK_NOTNULL(sub_graph);
-    auto sub_graph_netoutput = sub_graph->FindFirstNodeMatchType(NETOUTPUT);
+    const auto sub_graph_netoutput = sub_graph->FindFirstNodeMatchType(NETOUTPUT);
     GE_CHECK_NOTNULL(sub_graph_netoutput);
 
     for (const auto &in_data_anchor : sub_graph_netoutput->GetAllInDataAnchors()) {
-      auto in_desc = sub_graph_netoutput->GetOpDesc()->MutableInputDesc(in_data_anchor->GetIdx());
+      const auto in_desc = sub_graph_netoutput->GetOpDesc()->MutableInputDesc(
+          static_cast<uint32_t>(in_data_anchor->GetIdx()));
       GE_CHECK_NOTNULL(in_desc);
       int32_t ref_o = 0;
       if (!AttrUtils::GetInt(in_desc, kRefIndex, ref_o)) {
@@ -1238,7 +1243,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   return GRAPH_SUCCESS;
 }
 
-graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char *const group_name) {
+graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char_t *const group_name) {
   if (group_name == nullptr) {
     GE_LOGE("[Check][Parameter]Get nullptr when set parallel group on node:%s", node.GetName().c_str());
     REPORT_INNER_ERROR("E19999", "Get nullptr when set parallel group on node:%s", node.GetName().c_str());
