@@ -1068,13 +1068,13 @@ bool ComputeGraphImpl::IsValid() const { return is_valid_flag_; }
 
 void ComputeGraphImpl::InValid() { is_valid_flag_ = false; }
 
-void ComputeGraphImpl::Dump(const ConstComputeGraphPtr &compute_graph) const {
+void ComputeGraphImpl::Dump(const ConstComputeGraphPtr &graph) const {
   if (!IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {
     return;
   }
 
   GELOGI("graph name = %s.", GetName().c_str());
-  for (const auto &node : GetAllNodes(compute_graph)) {
+  for (const auto &node : GetAllNodes(graph)) {
     GELOGD("node name = %s.", node->GetName().c_str());
     for (const auto &anchor : node->GetAllOutDataAnchors()) {
       for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
@@ -1577,8 +1577,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::GraphMembersAr
   return impl_->GraphMembersAreEqual(*(r_graph.impl_));
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::operator==(const ComputeGraph &r_graph) const {
-  return *impl_ == *(r_graph.impl_);
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+bool ComputeGraph::operator==(const ComputeGraph &r_compute_graph) const {
+  return *impl_ == *(r_compute_graph.impl_);
 }
 
 ComputeGraph& ComputeGraph::operator=(ge::ComputeGraph compute_graph) {
