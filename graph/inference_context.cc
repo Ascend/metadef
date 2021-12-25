@@ -91,7 +91,7 @@ std::unique_ptr<InferenceContext> InferenceContext::Create(void *resource_contex
   if (inner_context == nullptr) {
     return nullptr;
   }
-  inner_context->resource_context_mgr = static_cast<ResourceContextMgr *>(resource_context_mgr);
+  inner_context->resource_context_mgr = PtrToPtr<void, ResourceContextMgr>(resource_context_mgr);
 
   return std::unique_ptr<InferenceContext>(new (std::nothrow) InferenceContext(inner_context));
 }

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#define protected public
+#define private public
 #include "graph/compile_cache_policy/compile_cache_hasher.h"
 namespace ge {
 class UtestCompileCachePolicyHasher : public testing::Test {

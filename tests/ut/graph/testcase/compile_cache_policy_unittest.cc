@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#define protected public
+#define private public
 #include "graph/compile_cache_policy/compile_cache_policy.h"
 #include "graph/compile_cache_policy/compile_cache_state.h"
+
 namespace ge {
 class UtestCompileCachePolicy : public testing::Test {
  protected:
