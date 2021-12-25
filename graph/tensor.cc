@@ -161,7 +161,7 @@ class TensorImpl {
       StringHead * const string_head = reinterpret_cast<StringHead *>(buff.get());
       // Front 8 bytes store pointer of string
       char_t * const raw_data = buff.get() + sizeof(StringHead);
-      string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(reinterpret_cast<void *>(raw_data)));
+      string_head->addr = PtrToValue(static_cast<void *>(raw_data));
       string_head->len = static_cast<uint64_t>(data.size());
       const int32_t memcpy_ret = memcpy_s(raw_data, total_size - sizeof(StringHead),  data.c_str(), data.size() + 1U);
       if (memcpy_ret != EOK) {
@@ -542,7 +542,7 @@ Tensor::Tensor(const TensorDesc &tensor_desc) {
   impl = ComGraphMakeShared<TensorImpl>(tensor_desc);  // lint !e665
 }
 
-void Tensor::CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size) {
+static void CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size) {
   uint32_t type_length;
   const bool ret = TypeUtils::GetDataTypeLength(data_type, type_length);
   if (!ret) {
