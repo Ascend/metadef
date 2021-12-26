@@ -21,7 +21,6 @@
 #include "graph/node.h"
 
 namespace ge {
-using NodePtr = std::shared_ptr<Node>;
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY NodeAdapter {
  public:
   static GNode Node2GNode(const NodePtr &node);

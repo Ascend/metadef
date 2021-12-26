@@ -22,16 +22,16 @@
 
 namespace ge {
 namespace {
-graphStatus BroadCastRankAndDim(const std::vector<int64_t> &x1_shape, const std::vector<int64_t> &x2_shape,
-                                const int64_t len_diff,
-                                const std::function<void(const std::vector<int64_t> &out_shape)> &set_out_shape) {
+static graphStatus BroadCastRankAndDim(
+    const std::vector<int64_t> &x1_shape, const std::vector<int64_t> &x2_shape, const int64_t len_diff,
+    const std::function<void(const std::vector<int64_t> &out_shape)> &set_out_shape) {
   std::vector<int64_t> y_shape;
   y_shape.reserve(x1_shape.size());
   for (size_t i = 0UL; i < static_cast<size_t>(len_diff); i++) {
     y_shape.push_back(x1_shape[i]);
   }
   for (size_t i = 0UL; i < x2_shape.size(); i++) {
-    const size_t  idx_diff = static_cast<size_t>(i + len_diff);
+    const size_t idx_diff = i + static_cast<size_t>(len_diff);
     if ((x1_shape[idx_diff] != x2_shape[i]) && (std::min(x1_shape[idx_diff], x2_shape[i]) != 1)) {
       GE_LOGE("operands could not be broadcast together");
       return GRAPH_FAILED;

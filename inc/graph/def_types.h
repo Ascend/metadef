@@ -27,7 +27,7 @@ struct StringHead {
   uint64_t len;   // the length of string
 };
 
-inline uint64_t PtrToValue(const void *ptr) {
+inline uint64_t PtrToValue(const void *const ptr) {
   return static_cast<const uint64_t>(reinterpret_cast<const uintptr_t>(ptr));
 }
 
@@ -36,8 +36,13 @@ inline void *ValueToPtr(const uint64_t value) {
 }
 
 template<typename TI, typename TO>
-inline TO *PtrToPtr(TI *ptr) {
+inline TO *PtrToPtr(TI *const ptr) {
   return reinterpret_cast<TO *>(ptr);
+}
+
+template<typename TI, typename TO>
+inline const TO *PtrToPtr(const TI *const ptr) {
+  return reinterpret_cast<const TO *>(ptr);
 }
 
 template<typename T>
