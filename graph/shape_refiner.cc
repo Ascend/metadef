@@ -77,7 +77,7 @@ graphStatus UpdateOutputForMultiBatch(const ConstNodePtr &node,
       const auto shape = tensor.MutableShape();
       int64_t size = 1;
       for (const auto dim : shape.GetDims()) {
-        if ((dim != 0) && ((INT64_MAX / dim) < size)) {
+        if ((dim != 0) && ((std::numeric_limits<int64_t>::max() / dim) < size)) {
           REPORT_INNER_ERROR("E19999", "The shape:%s size overflow, node:%s",
                              shape.ToString().c_str(), node->GetName().c_str());
           GELOGE(PARAM_INVALID, "[Check][Overflow] The shape size overflow");

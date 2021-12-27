@@ -151,6 +151,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
 
   graphStatus IsValid() const;
 
+  // Create from proto obj
+  explicit GeTensorDesc(proto::TensorDescriptor *const proto_msg);
   using AttrHolder::DelAttr;
   using AttrHolder::GetAllAttrs;
   using AttrHolder::GetAttr;
@@ -164,8 +166,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
  private:
   bool GeTensorDescAttrsAreEqual(const GeTensorDesc &r_ge_tensor_desc) const;
 
-  // Create from proto obj
-  explicit GeTensorDesc(proto::TensorDescriptor *const proto_msg);
   friend class GeTensor;
   friend class GeTensorImpl;
   friend class GeAttrValueImp;

@@ -64,17 +64,18 @@ struct NodeNameNodeReq {
 
 class ModelSerializeImp {
  public:
-  bool SerializeModel(const Model &model, proto::ModelDef *const model_proto, const bool is_dump = false);
+  bool SerializeModel(const Model &model, proto::ModelDef *const model_proto, const bool is_dump = false) const;
 
   bool SerializeGraph(const ConstComputeGraphPtr &graph,
                       proto::GraphDef *const graph_proto,
-                      const bool is_dump = false);
+                      const bool is_dump = false) const;
 
   bool SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto) const;
 
-  bool SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto, const bool is_dump = false);
+  bool SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
+                       const bool is_dump = false) const;
 
-  bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump = false);
+  bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump = false) const;
 
   bool UnserializeModel(Model &model, proto::ModelDef &model_proto);
 
@@ -84,7 +85,7 @@ class ModelSerializeImp {
 
   bool HandleNodeNameRef();
 
-  bool UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto);
+  bool UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) const;
   void AttrDefToOpDescIn(OpDescPtr &op_desc, std::vector<std::string> &key_in, std::vector<uint32_t> &value_in) const;
   void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_out, std::vector<uint32_t> &value_out,
                        const std::vector<std::string> &opt_input) const;

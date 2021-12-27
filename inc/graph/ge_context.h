@@ -23,10 +23,9 @@ namespace ge {
 class GEContext {
  public:
   graphStatus GetOption(const std::string &key, std::string &option);
-  bool GetHostExecFlag();
-  uint64_t SessionId();
-  uint32_t DeviceId();
-  uint64_t TraceId();
+  bool GetHostExecFlag() const;
+  uint64_t SessionId() const;
+  uint32_t DeviceId() const;
   void Init();
   void SetSessionId(const uint64_t session_id);
   void SetContextId(const uint64_t context_id);

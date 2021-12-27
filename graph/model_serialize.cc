@@ -95,7 +95,7 @@ void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_de
 }
 
 bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
-                                        const bool is_dump) {
+                                        const bool is_dump) const {
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E19999", "param op_desc is nullptr. check invalid.");
                    return false, "[Check][Param] op_desc is null.");
   GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E19999", "param op_def_proto is null, check invalid.");
@@ -185,7 +185,7 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
   }
 }
 
-bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump) {
+bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump) const {
   if ((node == nullptr) || (op_def_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param node or op_def_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param node or op_def_proto is nullptr, check invalid.");
@@ -199,7 +199,7 @@ bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *const o
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeGraph(const ConstComputeGraphPtr &graph,
-    proto::GraphDef *const graph_proto, const bool is_dump) {
+    proto::GraphDef *const graph_proto, const bool is_dump) const {
   if ((graph == nullptr) || (graph_proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param graph or graph_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param graph or graph_proto is nullptr, check invalid.");
@@ -233,7 +233,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   return true;
 }
 
-bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *const model_proto, const bool is_dump) {
+bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *const model_proto,
+                                       const bool is_dump) const {
   if (model_proto == nullptr) {
     REPORT_INNER_ERROR("E19999", "param model_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param model_proto is nullptr, check Invalid");
@@ -313,7 +314,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::str
   }
 }
 
-bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) {
+bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) const {
   std::vector<std::string> opt_input;
   std::vector<std::string> key_in;
   std::vector<uint32_t> value_in;
@@ -330,16 +331,14 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
                    return false, "[Create][OpDesc] op_desc impl is nullptr.");
   // Input tensor
   for (auto &input_desc : *op_def_proto.mutable_input_desc()) {
-    const std::shared_ptr<GeTensorDesc> temp_value =
-        std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(&input_desc));
+    const std::shared_ptr<GeTensorDesc> temp_value = ComGraphMakeShared<GeTensorDesc>(&input_desc);
     GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
                      return false, "[Create][GeTensorDesc] temp_value is nullptr.");
     op_desc->impl_->inputs_desc_.push_back(temp_value);
   }
   // Output tensor
   for (auto &output_desc : *op_def_proto.mutable_output_desc()) {
-    const std::shared_ptr<GeTensorDesc> temp_value =
-        std::shared_ptr<GeTensorDesc>(new (std::nothrow) GeTensorDesc(&output_desc));
+    const std::shared_ptr<GeTensorDesc> temp_value = ComGraphMakeShared<GeTensorDesc>(&output_desc);
     GE_CHK_BOOL_EXEC(temp_value != nullptr, REPORT_CALL_ERROR("E19999", "create GeTensorDesc failed.");
                      return false, "[Create][GeTensorDesc] temp_value is nullptr.");
     op_desc->impl_->outputs_desc_.push_back(temp_value);
@@ -717,7 +716,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
   return true;
 }
 
-Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) {
+Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) const {
   proto::ModelDef model_def;
   ModelSerializeImp model_imp;
   if (!model_imp.SerializeModel(model, &model_def, is_dump)) {
@@ -737,7 +736,7 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) {
   return buffer;
 }
 
-bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t len, Model &model) {
+bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t len, Model &model) const {
   if (data == nullptr) {
     REPORT_INNER_ERROR("E19999", "param data is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
@@ -767,7 +766,7 @@ bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t le
   return model.IsValid();
 }
 
-bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &model) {
+bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &model) const {
   const std::shared_ptr<proto::ModelDef> model_def_ptr = ComGraphMakeShared<proto::ModelDef>(model_def);
   GE_CHK_BOOL_EXEC(model_def_ptr != nullptr, REPORT_CALL_ERROR("E19999", "create ModelDef failed.");
                    return false, "[Create][ModelDef] mode_def make shared failed");

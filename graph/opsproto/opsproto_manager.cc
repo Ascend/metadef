@@ -87,10 +87,10 @@ static std::vector<std::string> SplitStr(const std::string &str, const char_t de
     return elems;
   }
 
-  std::stringstream ss(str);
+  std::stringstream str_stream(str);
   std::string item;
 
-  while (getline(ss, item, delim)) {
+  while (getline(str_stream, item, delim)) {
     elems.push_back(item);
   }
 
@@ -138,7 +138,7 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
     return;
   }
   for (int32_t i = 0; i < ret; ++i) {
-    const mmDirent *const dir_ent = *PtrAdd<mmDirent*>(entries, ret, i);
+    const mmDirent *const dir_ent = *PtrAdd<mmDirent*>(entries, ret, static_cast<size_t>(i));
     const std::string name = std::string(dir_ent->d_name);
     if ((strncmp(name.c_str(), ".", 1U) == 0) || (strncmp(name.c_str(), "..", 2U) == 0)) {
       continue;
