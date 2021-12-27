@@ -1466,7 +1466,7 @@ GraphUtils::ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_n
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyInCtrlEdges(const NodePtr &src_node,
-                                                                                       NodePtr &dst_node) {
+                                                                                       const NodePtr &dst_node) {
   if ((src_node == nullptr) || (dst_node == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param src_node or dst_node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
@@ -1503,7 +1503,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyInCtr
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::MoveInCtrlEdges(const NodePtr &src_node,
-                                                                                       NodePtr &dst_node) {
+                                                                                       const NodePtr &dst_node) {
   if (src_node == nullptr || dst_node == nullptr) {
     REPORT_INNER_ERROR("E19999", "param src_node or dst_node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
@@ -1521,7 +1521,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::MoveInCtr
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOutCtrlEdges(const NodePtr &src_node,
-                                                                                        NodePtr &dst_node) {
+                                                                                        const NodePtr &dst_node) {
   if (src_node == nullptr || dst_node == nullptr) {
     REPORT_INNER_ERROR("E19999", "param src_node or dst_node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");

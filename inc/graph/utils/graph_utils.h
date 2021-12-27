@@ -206,7 +206,7 @@ class GraphUtils {
   static void DumpGrphToOnnx(const ge::ComputeGraph &compute_graph,
                              const std::string &path, const std::string &suffix);
 
-  static bool ReadProtoFromTextFile(const char_t *file, google::protobuf::Message *const proto);
+  static bool ReadProtoFromTextFile(const char_t *const file, google::protobuf::Message *const proto);
 
   static void WriteProtoToTextFile(const google::protobuf::Message &proto, const char_t *real_path);
 
@@ -282,9 +282,9 @@ class GraphUtils {
   /// @param dst_node
   /// @return
   ///
-  static graphStatus CopyInCtrlEdges(const NodePtr &src_node, NodePtr &dst_node);
+  static graphStatus CopyInCtrlEdges(const NodePtr &src_node, const NodePtr &dst_node);
 
-  static graphStatus MoveInCtrlEdges(const NodePtr &src_node, NodePtr &dst_node);
+  static graphStatus MoveInCtrlEdges(const NodePtr &src_node, const NodePtr &dst_node);
 
   ///
   /// Copy all out-control edges from `src_node` to `dst_node`
@@ -292,7 +292,7 @@ class GraphUtils {
   /// @param dst_node
   /// @return success: GRAPH_SUCESS
   ///
-  static graphStatus CopyOutCtrlEdges(const NodePtr &src_node, NodePtr &dst_node);
+  static graphStatus CopyOutCtrlEdges(const NodePtr &src_node, const NodePtr &dst_node);
 
   ///
   /// Move all out-control edges from `src_node` to `dst_node`
@@ -618,8 +618,8 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] in_anchor_ind
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder &AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
-                                    const std::string &dst_name, uint32_t in_anchor_ind) override;
+  CompleteGraphBuilder &AddDataLink(const std::string &src_name, const uint32_t out_anchor_ind,
+                                    const std::string &dst_name, const uint32_t in_anchor_ind) override;
 
   ///
   /// @brief Add ctrl-link among nodes in graph
