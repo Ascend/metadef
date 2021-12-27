@@ -67,11 +67,6 @@ set(GRAPH_SOURCE_LIST
     "serialization/attr_serializer_registry.cc"
     "small_vector.cc"
     "operator_impl.cc"
-    "compile_cache_policy/compile_cache_policy.cc"
-    "compile_cache_policy/compile_cache_state.cc"
-    "compile_cache_policy/compile_cache_hasher.cc"
-    "compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
-    "compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
     "profiler.cc"
 )
 
