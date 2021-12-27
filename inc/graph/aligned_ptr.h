@@ -34,7 +34,7 @@ class AlignedPtr {
   AlignedPtr &operator=(AlignedPtr &&) = delete;
 
   const uint8_t *Get() const { return aligned_addr_; }
-  uint8_t *MutableGet() const { return aligned_addr_; }
+  uint8_t *MutableGet() { return aligned_addr_; }
   std::unique_ptr<uint8_t[], AlignedPtr::Deleter> Reset();
 
   static std::shared_ptr<AlignedPtr> BuildFromAllocFunc(const AlignedPtr::Allocator &alloc_func,

@@ -64,18 +64,18 @@ class AnyValue {
   // 后续整改掉
   enum ValueType {
     VT_NONE = 0,
-    VT_STRING,
-    VT_FLOAT,
-    VT_BOOL,
-    VT_INT,
-    VT_TENSOR_DESC,
-    VT_TENSOR,
-    VT_BYTES,
-    VT_GRAPH,
-    VT_NAMED_ATTRS,
-    VT_LIST_LIST_INT,
-    VT_DATA_TYPE,
-    VT_LIST_LIST_FLOAT,
+    VT_STRING = 1,
+    VT_FLOAT = 2,
+    VT_BOOL = 3,
+    VT_INT = 4,
+    VT_TENSOR_DESC = 5,
+    VT_TENSOR = 6,
+    VT_BYTES = 7,
+    VT_GRAPH = 8,
+    VT_NAMED_ATTRS = 9,
+    VT_LIST_LIST_INT = 10,
+    VT_DATA_TYPE = 11,
+    VT_LIST_LIST_FLOAT = 12,
 
     VT_LIST_BASE = 1000,
     VT_LIST_STRING = VT_LIST_BASE + VT_STRING,
@@ -170,6 +170,7 @@ class AnyValue {
   };
 
  private:
+  using ValueBuf = std::aligned_storage<sizeof(void *)>::type;
   using ValueHolder = union {
     void *pointer;
     std::aligned_storage<sizeof(void *)>::type inline_buf;
@@ -225,7 +226,7 @@ void AnyValue::AllocateOperations<T>::Operate(const AnyValue::OperateType ot, co
 }
 template<typename T>
 void AnyValue::InlineOperations<T>::Construct(const T &value, AnyValue * const av) {
-  ::new (&(av->holder_.inline_buf)) T(value);
+  (void)::new (&(av->holder_.inline_buf)) T(value);
   av->operate_ = AnyValue::InlineOperations<T>::Operate;
 }
 template<typename T>
@@ -243,19 +244,19 @@ void AnyValue::InlineOperations<T>::Operate(const AnyValue::OperateType ot, cons
       break;
     }
     case OperateType::kOpGetAddr:
-      *PtrToPtr<void, void *>(out) = const_cast<void *>(reinterpret_cast<const void *>(&av->holder_.inline_buf));
+      *PtrToPtr<void, void *>(out) = const_cast<void *>(PtrToPtr<const ValueBuf, const void>(&av->holder_.inline_buf));
       break;
     case OperateType::kOpClone: {
       auto *const av_p = PtrToPtr<void, AnyValue>(out);
-      new (&av_p->holder_.inline_buf) T(*PtrToPtr<const std::aligned_storage<sizeof(void *)>::type,
-                                                  const T>(&av->holder_.inline_buf));
+      (void)new (&av_p->holder_.inline_buf) T(*PtrToPtr<const std::aligned_storage<sizeof(void *)>::type,
+                                                        const T>(&av->holder_.inline_buf));
       av_p->operate_ = av->operate_;
       break;
     }
     case OperateType::kOpMove: {
       auto *const av_p = PtrToPtr<void, AnyValue>(out);
-      auto *const moved_t_p = const_cast<T *>(reinterpret_cast<const T *>(&av->holder_.inline_buf));
-      new (&av_p->holder_.inline_buf) T(std::move(*moved_t_p));
+      auto *const moved_t_p = const_cast<T *>(PtrToPtr<const ValueBuf, const T>(&av->holder_.inline_buf));
+      (void)new (&av_p->holder_.inline_buf) T(std::move(*moved_t_p));
       av_p->operate_ = av->operate_;
       break;
     }
@@ -329,7 +330,15 @@ graphStatus AnyValue::GetValue(T &value) const {
 }
 template<class T>
 T *AnyValue::MutableGet() {
-  return const_cast<T *>(Get<T>());
+  if (!SameType<T>()) {
+    return nullptr;
+  }
+  if (IsEmpty()) {
+    return nullptr;
+  }
+  void *addr = nullptr;
+  operate_(OperateType::kOpGetAddr, this, &addr);
+  return PtrToPtr<void, T>(addr);
 }
 template<class T>
 bool AnyValue::SameType() const noexcept {
