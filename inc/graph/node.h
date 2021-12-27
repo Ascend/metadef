@@ -108,7 +108,7 @@ class Node : public std::enable_shared_from_this<Node> {
   AnchorPtr GetInAnchor(const int32_t idx) const;
   AnchorPtr GetOutAnchor(const int32_t idx) const;
 
-  bool IsAllInNodesSeen(std::unordered_set<Node *> &nodes_seen) const;
+  bool IsAllInNodesSeen(const std::unordered_set<Node *> &nodes_seen) const;
 
   // All in Data nodes
   Vistor<NodePtr> GetInDataNodes() const;
@@ -160,9 +160,9 @@ class Node : public std::enable_shared_from_this<Node> {
 
   void GetFusionOutputFlowList(kFusionDataFlowVec_t &fusion_output_list);
 
-  void SetFusionInputFlowList(kFusionDataFlowVec_t &fusion_input_list);
+  void SetFusionInputFlowList(const kFusionDataFlowVec_t &fusion_input_list);
 
-  void SetFusionOutputFlowList(kFusionDataFlowVec_t &fusion_output_list);
+  void SetFusionOutputFlowList(const kFusionDataFlowVec_t &fusion_output_list);
 
   bool GetHostNode() const;
   void SetHostNode(const bool is_host);
