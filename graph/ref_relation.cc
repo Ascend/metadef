@@ -525,9 +525,9 @@ graphStatus RefRelations::LookUpRefRelations(const RefCell &key, std::unordered_
   return impl_->LookUpRefRelations(key, result);
 }
 
-graphStatus RefRelations::BuildRefRelations(ge::ComputeGraph &root_graph) {
+graphStatus RefRelations::BuildRefRelations(ge::ComputeGraph &graph) {
   GE_CHECK_NOTNULL(impl_);
-  return impl_->BuildRefRelations(root_graph);
+  return impl_->BuildRefRelations(graph);
 }
 
 graphStatus RefRelations::Clear() {
