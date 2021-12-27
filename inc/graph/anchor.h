@@ -77,7 +77,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Anchor : public std::enable
   graphStatus ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &first_peer, const AnchorPtr &second_peer);
 
   // Judge if the anchor is linked with the given anchor
-  bool IsLinkedWith(const AnchorPtr &peer);
+  bool IsLinkedWith(const AnchorPtr &peer) const;
 
   // Get anchor index of the node
   int32_t GetIdx() const;

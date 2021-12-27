@@ -29,12 +29,12 @@ namespace ge {
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY RuntimeInferenceContext {
  public:
   graphStatus SetTensor(int64_t node_id, int32_t output_id, GeTensorPtr tensor);
-  graphStatus GetTensor(int64_t node_id, int32_t output_id, GeTensorPtr &tensor);
+  graphStatus GetTensor(int64_t node_id, int32_t output_id, GeTensorPtr &tensor) const;
   void Release();
 
  private:
   std::map<int64_t, std::vector<GeTensorPtr>> ge_tensors_;
-  std::mutex mu_;
+  mutable std::mutex mu_;
 };
 } // namespace ge
 

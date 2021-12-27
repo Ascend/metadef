@@ -195,7 +195,7 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
   return GRAPH_SUCCESS;
 }
 
-bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
+bool Anchor::IsLinkedWith(const AnchorPtr &peer) const {
   if (impl_ == nullptr) {
     GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
     return false;
