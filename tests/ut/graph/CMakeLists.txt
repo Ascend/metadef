@@ -78,8 +78,6 @@ set(UT_FILES
     "testcase/model_serialize_unittest.cc"
     "testcase/ref_relation_unittes.cc"
     "testcase/tensor_utils_unittest.cc"
-    "testcase/compile_cache_policy_hasher_unittest.cc"
-    "testcase/compile_cache_policy_unittest.cc"
     "testcase/profiler_unittest.cc"
     "testcase/ge_graph_dumper_unittest.cc"
     "testcase/file_utils_unittest.cc"
