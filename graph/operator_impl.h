@@ -21,6 +21,7 @@
 #include "graph/op_desc.h"
 #include "graph/node.h"
 #include "graph/operator.h"
+#include "graph/inference_context.h"
 #include "graph/runtime_inference_context.h"
 #include "op_io.h"
 namespace ge {
