@@ -81,92 +81,6 @@ bool IsComputableOp(const NodePtr &node) {
 }
 } // namespace
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::AddSendEventId(const NodePtr &node,
-                                                                                     const uint32_t &event_id) {
-  GE_CHECK_NOTNULL(node);
-  map_send_info_[node].push_back(event_id);
-  return GRAPH_SUCCESS;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::AddRecvEventId(const NodePtr &node,
-                                                                                     const uint32_t &event_id) {
-  GE_CHECK_NOTNULL(node);
-  map_recv_info_[node].push_back(event_id);
-  return GRAPH_SUCCESS;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-NodeUtils::GetSendEventIdList(const NodePtr &node, std::vector<uint32_t> &vec_send) {
-  GE_CHECK_NOTNULL(node);
-  const auto find = map_send_info_.find(node);
-  if (find == map_send_info_.end()) {
-    return GRAPH_FAILED;
-  } else {
-    vec_send = find->second;
-    return GRAPH_SUCCESS;
-  }
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-NodeUtils::GetRecvEventIdList(const NodePtr &node, std::vector<uint32_t> &vec_recv) {
-  GE_CHECK_NOTNULL(node);
-  const auto find = map_recv_info_.find(node);
-  if (find == map_recv_info_.end()) {
-    return GRAPH_FAILED;
-  } else {
-    vec_recv = find->second;
-    return GRAPH_SUCCESS;
-  }
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::ClearSendInfo() {
-  map_send_info_.clear();
-  return GRAPH_SUCCESS;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::ClearRecvInfo() {
-  map_recv_info_.clear();
-  return GRAPH_SUCCESS;
-}
-
-graphStatus NodeUtils::GetSingleOutputNodeOfNthLayer(const NodePtr &src, const int32_t depth, NodePtr &dst) {
-  GE_CHECK_NOTNULL(src);
-  NodePtr cur_ptr;
-  if (depth < 1) {
-    return GRAPH_FAILED;
-  }
-  for (int32_t i = 0; i < depth; i++) {
-    if (src->GetOutDataNodes().size() != 1U) {
-      return GRAPH_FAILED;
-    }
-    cur_ptr = src->GetOutDataNodes().at(0UL);
-    GE_CHECK_NOTNULL(cur_ptr);
-  }
-  dst = cur_ptr;
-  return GRAPH_SUCCESS;
-}
-
-graphStatus NodeUtils::GetDataOutAnchorAndControlInAnchor(const NodePtr &node_ptr, OutDataAnchorPtr &out_data,
-                                                          InControlAnchorPtr &in_control) {
-  GE_CHECK_NOTNULL(node_ptr);
-  for (const auto &p : node_ptr->GetAllOutDataAnchors()) {
-    GE_CHK_BOOL_EXEC((p != nullptr),
-                     REPORT_INNER_ERROR("E19999", "GetAllOutDataAnchors is nullptr, node:%s.",
-                                        node_ptr->GetName().c_str());
-                     continue, "[Get][AllOutDataAnchors] is nullptr, node:%s", node_ptr->GetName().c_str());
-    for (const auto &p_in : p->GetPeerInControlAnchors()) {
-      GE_CHK_BOOL_EXEC((p_in != nullptr),
-                       REPORT_INNER_ERROR("E19999", "GetPeerInControlAnchors is nullptr, node:%s",
-                                          node_ptr->GetName().c_str());
-                       continue, "[Get][PeerInDataAnchors] is nullptr, node:%s", node_ptr->GetName().c_str());
-      out_data = p;
-      in_control = p_in;
-      return GRAPH_SUCCESS;
-    }
-  }
-  return GRAPH_FAILED;
-}
-
 graphStatus NodeUtils::ClearInDataAnchor(const NodePtr &node_ptr, const InDataAnchorPtr &in_data_anchor) {
   GE_CHK_BOOL_EXEC((node_ptr != nullptr) && (node_ptr->impl_ != nullptr) && (in_data_anchor != nullptr),
                    REPORT_INNER_ERROR("E19999", "param node or in_data_anchor is nullptr, check invalid.");
@@ -355,91 +269,6 @@ void NodeUtils::UnlinkAll(const Node &node) {
   }
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::UpdatePeerNodeInputDesc(const NodePtr &node_ptr) {
-  if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param node_ptr is nullptr, check invalid.");
-    GELOGE(GRAPH_FAILED, "[Check][Param] Nodeptr is nullptr");
-    return GRAPH_FAILED;
-  }
-  auto op_desc = node_ptr->GetOpDesc();
-  if (op_desc == nullptr) {
-    return GRAPH_FAILED;
-  }
-  bool is_unknown_graph = node_ptr->GetOwnerComputeGraph()->GetGraphUnknownFlag();
-  if (is_unknown_graph) {
-    return GRAPH_SUCCESS;
-  }
-  for (const auto &out_anchor : node_ptr->GetAllOutDataAnchors()) {
-    auto output_tensor = op_desc->MutableOutputDesc(out_anchor->GetIdx());
-    auto out_dims = output_tensor->GetShape().GetDims();
-    auto out_dtype = output_tensor->GetDataType();
-
-    GELOGD("node name is %s, origin shape is %ld, origin format is %s, origin data type is %s",
-           node_ptr->GetName().c_str(), output_tensor->GetOriginShape().GetShapeSize(),
-           TypeUtils::FormatToSerialString(output_tensor->GetOriginFormat()).c_str(),
-           TypeUtils::DataTypeToSerialString(output_tensor->GetOriginDataType()).c_str());
-
-    for (const auto &peer_anchor : out_anchor->GetPeerInDataAnchors()) {
-      auto peer_anchor_opdesc = peer_anchor->GetOwnerNode()->GetOpDesc();
-      if (peer_anchor_opdesc == nullptr) {
-        REPORT_INNER_ERROR("E19999", "peer data anchor ownernode:%s get op desc return nullptr.",
-                           peer_anchor->GetOwnerNode()->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Invoke][GetOpDesc]peer data anchor ownernode:%s get op desc return nullptr.",
-               peer_anchor->GetOwnerNode()->GetName().c_str());
-        continue;
-      }
-      if (op_desc->GetId() < peer_anchor_opdesc->GetId() ||
-          peer_anchor_opdesc->GetType() == CONSTANT ||
-          peer_anchor_opdesc->GetType() == CONSTANTOP) {
-          GELOGD("no need to UpdatePeerNodeInputDesc");
-          continue;
-      }
-      auto peer_input_desc = peer_anchor->GetOwnerNode()->GetOpDesc()->MutableInputDesc(peer_anchor->GetIdx());
-      if (peer_input_desc == nullptr) {
-        REPORT_INNER_ERROR("E19999", "node:%s out anchor to in anchor(%d)'s input desc is nullptr",
-                           peer_anchor->GetOwnerNode()->GetName().c_str(), peer_anchor->GetIdx());
-        GELOGE(GRAPH_FAILED, "[Invoke][MutableInputDesc] node:%s out anchor to in anchor(%d)'s input desc is nullptr",
-               peer_anchor->GetOwnerNode()->GetName().c_str(), peer_anchor->GetIdx());
-        continue;
-      }
-      // check shape and dtype continuity. do not stop process
-      auto peer_input_dims = peer_input_desc->GetShape().GetDims();
-      auto peer_input_dtype = peer_input_desc->GetDataType();
-      if (out_dtype != peer_input_dtype) {
-        GELOGW("[Update][PeerInput] current node [%s] [%d]\'th out_dtype is [%s].peer input node [%s] [%d]\'th "
-               "input_dtype is [%s].The two dtype should be same! Please check graph and fix it",
-               node_ptr->GetName().c_str(), out_anchor->GetIdx(), TypeUtils::DataTypeToSerialString(out_dtype).c_str(),
-               peer_anchor->GetOwnerNode()->GetName().c_str(), peer_anchor->GetIdx(),
-               TypeUtils::DataTypeToSerialString(peer_input_dtype).c_str());
-      } else if ((!peer_input_dims.empty()) && (out_dims != peer_input_dims)) {
-        GELOGW("[Update][PeerInput] current node [%s] [%d]\'th out_shape is [%s].peer input node [%s] [%d]\'th "
-               "input_shape is [%s].The two shape should be same! Please check graph and fix it",
-               node_ptr->GetName().c_str(), out_anchor->GetIdx(), output_tensor->GetShape().ToString().c_str(),
-               peer_anchor->GetOwnerNode()->GetName().c_str(), peer_anchor->GetIdx(),
-               peer_input_desc->GetShape().ToString().c_str());
-      }
-      GELOGI("Peer input opdesc name is %s, need to flush: shape size is %zu, datatype is %d, original datatype is %d",
-             peer_anchor->GetOwnerNode()->GetOpDesc()->GetName().c_str(),
-             output_tensor->GetShape().GetDimNum(), output_tensor->GetDataType(),
-             output_tensor->GetOriginDataType());
-      peer_input_desc->SetOriginShape(output_tensor->GetOriginShape());
-      peer_input_desc->SetShape(output_tensor->GetShape());
-      peer_input_desc->SetDataType(output_tensor->GetDataType());
-      peer_input_desc->SetOriginDataType(output_tensor->GetOriginDataType());
-      std::vector<std::pair<int64_t, int64_t>> shape_range;
-      (void) output_tensor->GetShapeRange(shape_range);
-      peer_input_desc->SetShapeRange(shape_range);
-      ge::TensorUtils::SetRealDimCnt(*peer_input_desc,
-                                     static_cast<uint32_t>(output_tensor->GetShape().GetDims().size()));
-      GELOGI("Peer input opdesc name is %s, shape size is %zu, datatype is %d, original datatype is %d",
-             peer_anchor->GetOwnerNode()->GetOpDesc()->GetName().c_str(),
-             peer_input_desc->GetShape().GetDimNum(), peer_input_desc->GetDataType(),
-             peer_input_desc->GetOriginDataType());
-    }
-  }
-  return GRAPH_SUCCESS;
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
@@ -554,74 +383,12 @@ graphStatus NodeUtils::RemoveOutputAnchor(const NodePtr &node, const uint32_t nu
   return GRAPH_SUCCESS;
 }
 
-bool NodeUtils::IsInNodesEmpty(const Node &node) {
-  if (node.impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Node impl is null, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] Node impl is null");
-    return false;
-  }
-  for (const auto &in_anchor : node.impl_->in_data_anchors_) {
-    if (in_anchor != nullptr) {
-      const auto out_anchor = in_anchor->GetPeerOutAnchor();
-      if (out_anchor != nullptr) {
-        if (out_anchor->GetOwnerNode() != nullptr) {
-          return false;
-        }
-      }
-    }
-  }
-
-  if ((node.impl_->in_control_anchor_ != nullptr) &&
-      (!node.impl_->in_control_anchor_->IsPeerOutAnchorsEmpty())) {
-    const auto peer_out_control_anchors = node.impl_->in_control_anchor_->GetPeerOutControlAnchors();
-    for (const auto &out_control_anchor : peer_out_control_anchors) {
-      if (out_control_anchor != nullptr) {
-        if (out_control_anchor->GetOwnerNode() != nullptr) {
-          return false;
-        }
-      }
-    }
-  }
-
-  return true;
-}
 GeTensorDesc NodeUtils::GetOutputDesc(const Node &node, const uint32_t index) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
     return GeTensorDesc();
   }
   return desc->GetOutputDesc(index);
-}
-GeTensorDesc NodeUtils::GetInputDesc(const Node &node, const uint32_t index) {
-  const auto desc = node.GetOpDesc();
-  if (desc == nullptr) {
-    return GeTensorDesc();
-  }
-  return desc->GetInputDesc(index);
-}
-graphStatus NodeUtils::UpdateOutputShape(const Node &node, const uint32_t index, const GeShape &shape) {
-  const auto desc = node.GetOpDesc();
-  if (desc == nullptr) {
-    return GRAPH_PARAM_INVALID;
-  }
-  const auto output_desc = desc->MutableOutputDesc(index);
-  if (output_desc == nullptr) {
-    return GRAPH_PARAM_INVALID;
-  }
-  output_desc->SetShape(shape);
-  return GRAPH_SUCCESS;
-}
-graphStatus NodeUtils::UpdateInputShape(const Node &node, const uint32_t index, const GeShape &shape) {
-  const auto desc = node.GetOpDesc();
-  if (desc == nullptr) {
-    return GRAPH_PARAM_INVALID;
-  }
-  const auto input_desc = desc->MutableInputDesc(index);
-  if (input_desc == nullptr) {
-    return GRAPH_PARAM_INVALID;
-  }
-  input_desc->SetShape(shape);
-  return GRAPH_SUCCESS;
 }
 
 graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unknow) {
@@ -684,22 +451,6 @@ std::string NodeUtils::GetNodeType(const Node &node) {
 
 std::string NodeUtils::GetNodeType(const NodePtr &node) {
   return node == nullptr ? "" : GetNodeType(*node);
-}
-
-std::vector<ComputeGraphPtr> NodeUtils::GetAllSubgraphs(const Node &node) {
-  const auto op_desc = node.GetOpDesc();
-  if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Failed to get op desc from node %s ", node.GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] Failed to get op desc from node %s ", node.GetName().c_str());
-    return {};
-  }
-  const auto root_graph = GraphUtils::FindRootGraph(node.GetOwnerComputeGraph());
-  if (root_graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Failed to find root graph from node %s ", node.GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Get][Graph] Failed to find root graph from node %s ", node.GetName().c_str());
-    return {};
-  }
-  return root_graph->GetAllSubgraphs();
 }
 
 graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs) {

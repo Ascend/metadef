@@ -52,19 +52,6 @@ extern const std::set<std::string> kForOpTypes;
 
 class NodeUtils {
  public:
-  static graphStatus AddSendEventId(const NodePtr &node, const uint32_t &event_id);
-  static graphStatus AddRecvEventId(const NodePtr &node, const uint32_t &event_id);
-  static graphStatus GetSendEventIdList(const NodePtr &node, std::vector<uint32_t> &vec_send);
-  static graphStatus GetRecvEventIdList(const NodePtr &node, std::vector<uint32_t> &vec_recv);
-
-  static graphStatus ClearSendInfo();
-  static graphStatus ClearRecvInfo();
-
-  static graphStatus GetSingleOutputNodeOfNthLayer(const NodePtr &src, const int32_t depth, NodePtr &dst);
-
-  static graphStatus GetDataOutAnchorAndControlInAnchor(const NodePtr &node_ptr, OutDataAnchorPtr &out_data,
-                                                        InControlAnchorPtr &in_control);
-
   static graphStatus ClearInDataAnchor(const NodePtr &node_ptr, const InDataAnchorPtr &in_data_anchor);
   static graphStatus SetAllAnchorStatus(const NodePtr &node_ptr);
   static graphStatus SetAllAnchorStatus(Node &node);
@@ -77,7 +64,6 @@ class NodeUtils {
   static void UpdateIsInputConst(Node &node);
   static bool IsConst(const Node &node);
   static void UnlinkAll(const Node &node);
-  static graphStatus UpdatePeerNodeInputDesc(const NodePtr &node_ptr);
 
   static graphStatus AppendInputAnchor(const NodePtr &node, const uint32_t num);
   static graphStatus RemoveInputAnchor(const NodePtr &node, const uint32_t num);
@@ -85,11 +71,7 @@ class NodeUtils {
   static graphStatus AppendOutputAnchor(const NodePtr &node, const uint32_t num);
   static graphStatus RemoveOutputAnchor(const NodePtr &node, const uint32_t num);
 
-  static bool IsInNodesEmpty(const Node &node);
   static GeTensorDesc GetOutputDesc(const Node &node, const uint32_t index);
-  static GeTensorDesc GetInputDesc(const Node &node, const uint32_t index);
-  static graphStatus UpdateOutputShape(const Node &node, const uint32_t index, const GeShape &shape);
-  static graphStatus UpdateInputShape(const Node &node, const uint32_t index, const GeShape &shape);
   // check node whether unknown shape.If node shape contain -1 or -2,out param "is_unknow" will be true;
   // for func op, it will check subgraph yet, if some node shape of subgraph contain -1 or -2,
   // the out param "is_unknow" will be true too
@@ -98,7 +80,6 @@ class NodeUtils {
   static std::string GetNodeType(const Node &node);
   static std::string GetNodeType(const NodePtr &node);
 
-  static std::vector<ComputeGraphPtr> GetAllSubgraphs(const Node &node);
   static graphStatus GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs);
   static ComputeGraphPtr GetSubgraph(const Node &node, const uint32_t index);
   static graphStatus SetSubgraph(Node &node, const uint32_t index, const ComputeGraphPtr &subgraph);

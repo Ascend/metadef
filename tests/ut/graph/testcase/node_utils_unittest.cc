@@ -459,57 +459,6 @@ TEST_F(UtestNodeUtils, GetNodeUnknownShapeStatus) {
   EXPECT_EQ(is_unknown, true);
 }
 
-TEST_F(UtestNodeUtils, SendRecv) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-  std::vector<uint32_t> vec_send;
-  std::vector<uint32_t> vec_recv;
-  EXPECT_EQ(NodeUtils::GetSendEventIdList(data, vec_send), GRAPH_FAILED);
-  EXPECT_EQ(NodeUtils::GetRecvEventIdList(data, vec_recv), GRAPH_FAILED);
-  const uint32_t sid = 10;
-  const uint32_t rid = 20;
-  EXPECT_EQ(NodeUtils::AddSendEventId(data, sid), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::AddRecvEventId(data, rid), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::GetSendEventIdList(data, vec_send), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::GetRecvEventIdList(data, vec_recv), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::ClearSendInfo(), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::ClearRecvInfo(), GRAPH_SUCCESS);
-}
-
-TEST_F(UtestNodeUtils, GetSingleOutputNodeOfNthLayer) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 1, 1);
-  auto dest = builder.AddNode("Dest", "Dest", 11, 22);
-  auto attr = builder.AddNode("Attr", "Attr", 1, 2);
-  EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(data, 0, dest), GRAPH_FAILED);
-  EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(data, 1, dest), GRAPH_FAILED);
-  auto const1 = builder.AddNode("const1", "Const", 1, 1);
-  auto const2 = builder.AddNode("const2", "Const", 1, 1);
-  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(const1, 111);
-  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(const2, 222);
-  EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
-  EXPECT_EQ(const2->GetOutDataNodes().size(), 1);
-  EXPECT_EQ(NodeUtils::GetSingleOutputNodeOfNthLayer(const2, 1, const1), GRAPH_SUCCESS);
-}
-
-TEST_F(UtestNodeUtils, GetDataOutAnchorAndControlInAnchor) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data, 111);
-  InControlAnchorPtr inc_anch = std::make_shared<InControlAnchor>(data, 33);
-  EXPECT_EQ(NodeUtils::GetDataOutAnchorAndControlInAnchor(data, out_anch, inc_anch), GRAPH_FAILED);
-}
-
-TEST_F(UtestNodeUtils, GetDataOutAnchorAndControlInAnchor_Peer) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data0 = builder.AddNode("Data0", "Data", 0, 1);
-  auto data1 = builder.AddNode("Data1", "Data", 0, 1);
-  OutDataAnchorPtr out_data;
-  InControlAnchorPtr in_control;
-  EXPECT_EQ(data0->GetAllOutDataAnchors().at(0)->LinkTo(data1->GetInControlAnchor()), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::GetDataOutAnchorAndControlInAnchor(data0, out_data, in_control), GRAPH_SUCCESS);
-}
-
 TEST_F(UtestNodeUtils, ClearInDataAnchor) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 1, 1);
@@ -615,43 +564,6 @@ TEST_F(UtestNodeUtils, UnlinkAll) {
   NodeUtils::UnlinkAll(*data);
 }
 
-TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(nullptr), GRAPH_FAILED);
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_SUCCESS);
-  data->GetOwnerComputeGraph()->SetGraphUnknownFlag(true);
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_SUCCESS);
-  data->impl_->op_ = nullptr;
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data), GRAPH_FAILED);
-}
-
-TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc_PeerIndata) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data1 = builder.AddNode("Data1", DATA, 1, 1);
-  auto data2 = builder.AddNode("Data2", DATA, 1, 1);
-  auto data3 = builder.AddNode("Data3", DATA, 1, 1);
-  EXPECT_EQ(data1->GetOutDataAnchor(0)->LinkTo(data2->GetInDataAnchor(0)), GRAPH_SUCCESS);
-  auto node = data2->GetInDataAnchor(0)->GetOwnerNode();
-  node->GetOpDesc()->SetId(1);
-  data1->GetOpDesc()->SetId(10);
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data1), GRAPH_SUCCESS);
-  node->impl_->op_ = nullptr;
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data1), GRAPH_SUCCESS);
-}
-
-TEST_F(UtestNodeUtils, UpdatePeerNodeInputDesc_LinkInData) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data_node = builder.AddNode("Data", "Data", 1, 1);
-  auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
-  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
-  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 222);
-  EXPECT_EQ(out_anch->LinkTo(in_anch), GRAPH_SUCCESS);
-  EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(attr_node), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::UpdatePeerNodeInputDesc(data_node), GRAPH_SUCCESS);
-}
-
 TEST_F(UtestNodeUtils, AppendRemoveAnchor) {
   EXPECT_EQ(NodeUtils::AppendInputAnchor(nullptr, 0), GRAPH_FAILED);
   EXPECT_EQ(NodeUtils::RemoveInputAnchor(nullptr, 0), GRAPH_FAILED);
@@ -679,67 +591,6 @@ TEST_F(UtestNodeUtils, RemoveOutputAnchor) {
   auto data = builder.AddNode("Data", "Data", 1, 1);
   EXPECT_EQ(data->GetOpDesc()->GetOutputsSize(), 1);
   EXPECT_EQ(NodeUtils::RemoveOutputAnchor(data, 0), GRAPH_SUCCESS);
-}
-
-
-TEST_F(UtestNodeUtils, IsInNodesEmpty) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*data), true);
-  InDataAnchorPtr in_anch1 = std::make_shared<InDataAnchor>(data, 111);
-  data->impl_ = nullptr;
-  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*data), false);
-
-  auto const1 = builder.AddNode("const1", "Const", 1, 1);
-  auto const2 = builder.AddNode("const2", "Const", 1, 1);
-  InDataAnchorPtr in_anch11 = std::make_shared<InDataAnchor>(const1, 111);
-  InDataAnchorPtr in_anch22 = std::make_shared<InDataAnchor>(const2, 111);
-  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(const2, 222);
-  EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
-  EXPECT_EQ(const2->GetOutDataNodes().size(), 1);
-  EXPECT_EQ(const1->impl_->in_data_anchors_.size(), 2);
-  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*const1), false);
-}
-
-TEST_F(UtestNodeUtils, IsInNodesEmpty_Peer) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto const1 = builder.AddNode("const1", "Const", 1, 1);
-  auto const2 = builder.AddNode("const2", "Const", 1, 1);
-  EXPECT_EQ(const1->GetInControlAnchor()->LinkFrom(const2->GetOutControlAnchor()), GRAPH_SUCCESS);
-  EXPECT_EQ(const2->GetOutDataNodes().size(), 0);
-  EXPECT_EQ(const1->impl_->in_data_anchors_.size(), 1);
-  EXPECT_EQ(NodeUtils::IsInNodesEmpty(*const1), false);
-}
-
-TEST_F(UtestNodeUtils, GetDesc) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-
-  EXPECT_NE(NodeUtils::GetOutputDesc(*data, 0).GetName(), "name1");
-  EXPECT_NE(NodeUtils::GetInputDesc(*data, 0).GetName(), "name1");
-  data->impl_->op_ = nullptr;
-  EXPECT_EQ(NodeUtils::GetOutputDesc(*data, 0).GetName(), "");
-  EXPECT_EQ(NodeUtils::GetInputDesc(*data, 0).GetName(), "");
-}
-
-TEST_F(UtestNodeUtils, GetAllSubgraphs) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-  EXPECT_EQ(NodeUtils::GetAllSubgraphs(*data).size(), 0);
-  data->impl_->op_ = nullptr;
-  EXPECT_EQ(NodeUtils::GetAllSubgraphs(*data).size(), 0);
-}
-
-TEST_F(UtestNodeUtils, UpdateShape) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data = builder.AddNode("Data", "Data", 0, 1);
-  GeShape oshape = GeShape();
-  GeShape ishape = GeShape();
-  EXPECT_EQ(NodeUtils::UpdateOutputShape(*data, 0, oshape), GRAPH_SUCCESS);
-  EXPECT_EQ(NodeUtils::UpdateInputShape(*data, 0, ishape), GRAPH_PARAM_INVALID);
-  data->impl_->op_ = nullptr;
-  EXPECT_EQ(NodeUtils::UpdateOutputShape(*data, 0, oshape), GRAPH_PARAM_INVALID);
-  EXPECT_EQ(NodeUtils::UpdateInputShape(*data, 0, ishape), GRAPH_PARAM_INVALID);
 }
 
 TEST_F(UtestNodeUtils, SetSubgraph) {
