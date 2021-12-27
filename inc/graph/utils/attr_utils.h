@@ -132,13 +132,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
     AttrHolder *operator->() const { return obj_; }
     AttrHolder *get() const { return obj_; }
 
-    AttrHolderAdapter &operator=(const AttrHolderAdapter &rls) {
-      if (&rls != this) {
-        obj_ = rls.obj_;
-      }
-      return *this;
-    }
-
    private:
     AttrHolder *obj_;
   };
@@ -154,13 +147,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
     operator bool() const { return obj_ != nullptr; }
     const AttrHolder *operator->() const { return obj_; }
     const AttrHolder *get() const { return obj_; }
-
-    ConstAttrHolderAdapter &operator=(const ConstAttrHolderAdapter &rls) {
-      if (&rls != this) {
-        obj_ = rls.obj_;
-      }
-      return *this;
-    }
 
    private:
     const AttrHolder *obj_;

@@ -23,36 +23,6 @@
 
 #include "any_value.h"
 
-#define SET_IMPL(key, value) \
-    auto *const v = GetOrCreateAnyValue(key);  \
-    if (v == nullptr) {  \
-      return false;  \
-    }  \
-    (void)v->SetValue(value);  \
-    return true;
-
-#define SET_IMPL_RVALUE(key, value) \
-    auto *const v = GetOrCreateAnyValue(key);  \
-    if (v == nullptr) {  \
-      return false;  \
-    }  \
-    (void)v->SetValue(std::forward<T>(value));  \
-    return true;
-
-#define GET_IMPL(key) \
-    auto *const v = GetAnyValue(key);  \
-    if (v == nullptr) {  \
-      return nullptr;  \
-    }  \
-    return v->Get<T>();
-
-#define MUTABLE_IMPL(key) \
-    auto *const v = MutableAnyValue(key);  \
-    if (v == nullptr) {  \
-      return nullptr;  \
-    }  \
-    return v->MutableGet<T>();
-
 namespace ge {
 using AttrId = uint64_t;
 using AttrSubId = uint32_t;
@@ -76,9 +46,9 @@ class AttrStore {
   static AttrStore Create(const size_t pre_defined_attr_count);
 
   template<typename T>
-  bool Set(const AttrId attr_id, T &&value);
+  bool Set(const AttrId attr_id, T &&value) const;
   template<typename T>
-  bool Set(const AttrId attr_id, const T &value);
+  bool Set(const AttrId attr_id, const T &value) const;
   template<typename T>
   bool SetByName(const std::string &name, T &&value);
   template<typename T>
@@ -161,38 +131,74 @@ class AttrStore {
 };
 
 template<typename T>
-bool AttrStore::Set(const AttrId attr_id, const T &value) {
-  SET_IMPL(attr_id, value)
+bool AttrStore::Set(const AttrId attr_id, const T &value) const {
+  auto *const v = GetOrCreateAnyValue(attr_id);
+  if (v == nullptr) {
+    return false;
+  }
+  (void)v->SetValue(value);
+  return true;
 }
 template<typename T>
-bool AttrStore::Set(const AttrId attr_id, T &&value) {
-  SET_IMPL_RVALUE(attr_id, value)
+bool AttrStore::Set(const AttrId attr_id, T &&value) const {
+  auto *const v = GetOrCreateAnyValue(attr_id);
+  if (v == nullptr) {
+    return false;
+  }
+  (void)v->SetValue(std::forward<T>(value));
+  return true;
 }
 template<typename T>
 bool AttrStore::SetByName(const std::string &name, T &&value) {
-  SET_IMPL_RVALUE(name, value)
+  auto *const v = GetOrCreateAnyValue(name);
+  if (v == nullptr) {
+    return false;
+  }
+  (void)v->SetValue(std::forward<T>(value));
+  return true;
 }
 template<typename T>
 bool AttrStore::SetByName(const std::string &name, const T &value) {
-  SET_IMPL(name, value)
+  auto *const v = GetOrCreateAnyValue(name);
+  if (v == nullptr) {
+    return false;
+  }
+  (void)v->SetValue(value);
+  return true;
 }
 
 template<typename T>
 const T *AttrStore::Get(const AttrId attr_id) const {
-  GET_IMPL(attr_id)
+  auto *const v = GetAnyValue(attr_id);
+  if (v == nullptr) {
+    return nullptr;
+  }
+  return v->Get<T>();
 }
 template<typename T>
 const T *AttrStore::GetByName(const std::string &name) const {
-  GET_IMPL(name)
+  auto *const v = GetAnyValue(name);
+  if (v == nullptr) {
+    return nullptr;
+  }
+  return v->Get<T>();
 }
 
 template<typename T>
 T *AttrStore::MutableGet(const AttrId attr_id) {
-  MUTABLE_IMPL(attr_id)
+  auto *const v = MutableAnyValue(attr_id);
+  if (v == nullptr) {
+    return nullptr;
+  }
+  return v->MutableGet<T>();
 }
 template<typename T>
 T *AttrStore::MutableGetByName(const std::string &name) {
-  MUTABLE_IMPL(name)
+  auto *const v = MutableAnyValue(name);
+  if (v == nullptr) {
+    return nullptr;
+  }
+  return v->MutableGet<T>();
 }
 
 }  // namespace ge
