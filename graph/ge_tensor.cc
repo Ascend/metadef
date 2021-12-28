@@ -378,10 +378,9 @@ private:
 
 // Default
 GeShapeImpl::GeShapeImpl(const std::vector<int64_t> &dims) {
-  dims_.reserve(dims.size());
-  for (auto dim : dims) {
-    dims_.emplace_back(dim);
-  }
+  dims_.resize(dims.size());
+
+  std::copy(dims.begin(), dims.end(), dims_.begin());
 }
 
 void GeShapeImpl::SetDimNum(const size_t dim_num) {
@@ -426,10 +425,10 @@ graphStatus GeShapeImpl::SetDim(const size_t idx, const int64_t value) {
 
 std::vector<int64_t> GeShapeImpl::ShapeImplGetDims() const {
   std::vector<int64_t> dims;
-  dims.reserve(dims_.size());
-  for (auto dim : dims_) {
-    dims.emplace_back(dim);
-  }
+
+  dims.resize(dims_.size());
+  std::copy(dims_.begin(), dims_.end(), dims.begin());
+
   return dims;
 }
 
@@ -478,9 +477,10 @@ bool GeShapeImpl::IsScalar() const {
 
 GeShapeImpl::GeShapeImpl(proto::ShapeDef *const proto_msg) {
   if (proto_msg != nullptr) {
-    for (auto &dim : *proto_msg->mutable_dim()) {
-      dims_.emplace_back(dim);
-    }
+    const auto &dims = *proto_msg->mutable_dim();
+
+    dims_.resize(dims.size());
+    std::copy(dims.begin(), dims.end(), dims_.begin());
   }
 }
 
@@ -1512,7 +1512,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t TensorUtils::GetWeightSi
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAddr(const ConstGeTensorPtr &tensor_ptr,
-                                                                                   uint8_t *const base) {
+                                                                                   const uint8_t *const base) {
   if (tensor_ptr == nullptr) {
     REPORT_INNER_ERROR("E19999", "param tensor_ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] tensor_ptr is null.");
