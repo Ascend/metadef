@@ -254,7 +254,7 @@ GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
     all_nodes.emplace_back(node);
     candidates.pop_front();
 
-    OpDescPtr op_desc = node->GetOpDesc();
+    const OpDescPtr op_desc = node->GetOpDesc();
     if (op_desc == nullptr) {
       continue;
     }
@@ -572,7 +572,7 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   }
 }
 
-inline graphStatus CheckDumpGraphNum(int64_t file_index) {
+inline graphStatus CheckDumpGraphNum(const int64_t file_index) {
   thread_local int64_t max_dump_file_num = 0;
   if (max_dump_file_num == 0) {
     std::string opt = "0";
@@ -590,7 +590,7 @@ inline graphStatus CheckDumpGraphNum(int64_t file_index) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(const ge::ComputeGraphPtr &graph,
                                                                             const std::string &suffix,
-                                                                            bool is_always_dump,
+                                                                            const bool is_always_dump,
                                                                             const std::string &user_graph_name) {
 #ifdef FMK_SUPPORT_DUMP
   GraphDumperRegistry::GetDumper().Dump(graph, suffix);
@@ -658,6 +658,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
     GraphUtils::WriteProtoToTextFile(ge_proto, &(real_path[0U]));
   }
 #else
+  (void)is_always_dump;
   GELOGW("[DumpGraph][Check] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
 }
@@ -676,7 +677,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
   }
   const std::string file_name = file_path.substr(sep + 1UL, file_path.length());
   const std::string path_dir = file_path.substr(0UL, sep + 1UL);
-  if ((file_name.length() == 0) || (path_dir.length() == 0)) {
+  if ((file_name.length() == 0UL) || (path_dir.length() == 0UL)) {
     REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
                        std::vector<std::string>({
                        file_path.c_str(),
@@ -793,7 +794,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(cons
 
 // Printing protocol messages in text format is useful for debugging and human editing of messages.
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToTextFile(
-    const google::protobuf::Message &proto, const char_t *real_path) {
+    const google::protobuf::Message &proto, const char_t *const real_path) {
 #ifdef FMK_SUPPORT_DUMP
   const MODE FILE_AUTHORITY = 384U; // 0600U in octal
   const int32_t fd = mmOpen2(real_path, M_WRONLY | M_CREAT | O_TRUNC, FILE_AUTHORITY);
@@ -802,7 +803,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     GELOGE(GRAPH_FAILED, "[Open][File] failed for %s, reason:%s", real_path, strerror(errno));
     return;
   }
-  google::protobuf::io::FileOutputStream *output = new (std::nothrow) google::protobuf::io::FileOutputStream(fd);
+  auto output = ComGraphMakeUnique<google::protobuf::io::FileOutputStream>(fd);
   if (output == nullptr) {
     REPORT_CALL_ERROR("E19999", "create FileOutputStream failed.");
     GELOGE(GRAPH_FAILED, "[Create][FileOutputStream] Output is nullptr");
@@ -812,19 +813,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
     }
     return;
   }
-  const bool ret = google::protobuf::TextFormat::Print(proto, output);
+  const bool ret = google::protobuf::TextFormat::Print(proto, output.get());
   if (!ret) {
     REPORT_CALL_ERROR("E19999", "write file:%s failed.", real_path);
     GELOGE(GRAPH_FAILED, "[Invoke][Print] Fail to write the file: %s", real_path);
-    delete output;
-    output = nullptr;
     GE_CHK_BOOL_EXEC(mmClose(fd) == 0,
                      REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", strerror(errno));
                      return, "[Close][FileOutputStream] failed, reason:%s", strerror(errno));
     return;
   }
-  delete output;
-  output = nullptr;
+  output.reset();
   GE_CHK_BOOL_EXEC(mmClose(fd) == 0,
                    REPORT_CALL_ERROR("E19999", "close FileOutputStream failed, reason:%s.", strerror(errno));
                    return, "[Close][FileOutputStream] failed, reason:%s.", strerror(errno));
@@ -858,6 +856,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
                    REPORT_CALL_ERROR("E19999", "close file:%s failed error:%s", real_path, strerror(errno));
                    return, "[FClose][File] %s failed error:%s", real_path, strerror(errno));
 #else
+  (void)proto;
+  (void)real_path;
   GELOGW("[Write][Proto] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
 }
@@ -937,7 +937,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
     GELOGE(GRAPH_FAILED, "[Check][Param] File name is too longer!, file:%s", proto_file.c_str());
     return;
   }
-  std::unique_ptr<char[]> real_path(new (std::nothrow) char[MMPA_MAX_PATH]{0});
+  const auto real_path = ComGraphMakeUnique<char_t[]>(static_cast<size_t>(MMPA_MAX_PATH));
   GE_CHECK_NOTNULL_EXEC(real_path, return);
 
   /// Returning nullptr means 3 case as follows:
@@ -985,7 +985,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
     GELOGE(GRAPH_FAILED, "[Check][Param] File name is too longer!, file:%s", proto_file.c_str());
     return;
   }
-  std::unique_ptr<char[]> real_path(new (std::nothrow) char[MMPA_MAX_PATH]{0});
+  const auto real_path = ComGraphMakeUnique<char_t[]>(static_cast<size_t>(MMPA_MAX_PATH));
   if (real_path == nullptr) {
     GELOGE(GRAPH_FAILED, "[New][RealPath] failed.");
     return;
@@ -1145,7 +1145,7 @@ InNodesToOut GetFullConnectIONodes(const NodePtr &node) {
   return in_nodes_to_out;
 }
 
-graphStatus RelinkControlNodeIfNeed(const NodePtr &node, InNodesToOut &in_nodes_to_out,
+graphStatus RelinkControlNodeIfNeed(const NodePtr &node, const InNodesToOut &in_nodes_to_out,
                                     InNodesToOut &connected_data_in_to_out) {
   GE_CHECK_NOTNULL(node);
   for (const auto &in_node_to_out : in_nodes_to_out) {
@@ -2807,39 +2807,40 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
                                           const std::string &subgraph_name) {
   CompleteGraphBuilder graph_builder(subgraph_name, false);
   // Add parent node
-  graph_builder.SetParentNode(subgraph_node);
+  (void)graph_builder.SetParentNode(subgraph_node);
 
   // Add node
   for (const auto &node : graph_info.nodes_) {
-    graph_builder.AddNode(AttrUtils::CopyOpDesc(node->GetOpDesc()));
+    (void)graph_builder.AddNode(AttrUtils::CopyOpDesc(node->GetOpDesc()));
   }
 
   // Set Input
   uint32_t index = 0;
   for (const auto &item : graph_info.data_inputs_) {
     for (const auto &in_data_anchor : item.second.second) {
-      graph_builder.SetInput(index, { in_data_anchor->GetOwnerNode()->GetName() },
-                             { static_cast<uint32_t>(in_data_anchor->GetIdx()) });
+      (void)graph_builder.SetInput(index, { in_data_anchor->GetOwnerNode()->GetName() },
+                                   { static_cast<uint32_t>(in_data_anchor->GetIdx()) });
       index++;
     }
   }
 
   // Add Outputs
   for (const auto &item : graph_info.data_outputs_) {
-    graph_builder.AddOutput(item.second.first->GetOwnerNode()->GetName(),
-                            item.second.first->GetIdx());
+    (void)graph_builder.AddOutput(item.second.first->GetOwnerNode()->GetName(),
+                                  static_cast<uint32_t>(item.second.first->GetIdx()));
   }
 
   // Add Data Edges
   for (const auto &data_edge : graph_info.inner_data_edges_) {
-    graph_builder.AddDataLink(data_edge.first->GetOwnerNode()->GetName(), data_edge.first->GetIdx(),
-                              data_edge.second->GetOwnerNode()->GetName(), data_edge.second->GetIdx());
+    (void)graph_builder.AddDataLink(data_edge.first->GetOwnerNode()->GetName(),
+        static_cast<uint32_t>(data_edge.first->GetIdx()), data_edge.second->GetOwnerNode()->GetName(),
+        static_cast<uint32_t>(data_edge.second->GetIdx()));
   }
 
   // Add Ctrl Edges
   for (const auto &ctrl_edge : graph_info.inner_ctrl_edges_) {
-    graph_builder.AddControlLink(ctrl_edge.first->GetOwnerNode()->GetName(),
-                                 ctrl_edge.second->GetOwnerNode()->GetName());
+    (void)graph_builder.AddControlLink(ctrl_edge.first->GetOwnerNode()->GetName(),
+                                       ctrl_edge.second->GetOwnerNode()->GetName());
   }
 
   // Add Input-Mapping
@@ -2851,18 +2852,18 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
       j++;
     }
   }
-  graph_builder.SetInputMapping(input_mapping);
+  (void)graph_builder.SetInputMapping(input_mapping);
 
   // Add outputMapping
   std::map<uint32_t, uint32_t> output_mapping;
   for (size_t i = 0U; i < graph_info.data_inputs_.size(); i++) {
     output_mapping[i] = i;
   }
-  graph_builder.SetOutputMapping(output_mapping);
+  (void)graph_builder.SetOutputMapping(output_mapping);
 
   graphStatus error_code = GRAPH_SUCCESS;
   std::string error_msg;
-  ComputeGraphPtr subgraph = graph_builder.Build(error_code, error_msg);
+  const ComputeGraphPtr subgraph = graph_builder.Build(error_code, error_msg);
   if (subgraph == nullptr) {
     REPORT_CALL_ERROR("E19999", "Build subgraph %s failed:%s.", subgraph_node->GetName().c_str(), error_msg.c_str());
     GELOGE(error_code, "[Build][Subgraph] %s failed:%s.", subgraph_node->GetName().c_str(), error_msg.c_str());
@@ -2889,7 +2890,7 @@ graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const Grap
   }
   // out data nodes
   for (const auto &item : graph_info.data_outputs_) {
-    const auto &out_data_anchor = subgraph_node->GetOutDataAnchor(static_cast<int32_t>(item.first));
+    const auto &out_data_anchor = subgraph_node->GetOutDataAnchor(static_cast<const int32_t>(item.first));
     GE_CHECK_NOTNULL(out_data_anchor);
     for (const auto &peer_in_anchor : item.second.second) {
       GE_CHK_STATUS_RET(item.second.first->Unlink(peer_in_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed.",

@@ -186,7 +186,7 @@ class GraphUtils {
 
   static void DumpGEGraph(const ge::ComputeGraphPtr &graph,
                           const std::string &suffix,
-                          bool is_always_dump = false,
+                          const bool is_always_dump = false,
                           const std::string &user_graph_name = "");
 
   static void DumpGEGrph(const ge::ComputeGraphPtr &graph,
@@ -208,7 +208,7 @@ class GraphUtils {
 
   static bool ReadProtoFromTextFile(const char_t *const file, google::protobuf::Message *const proto);
 
-  static void WriteProtoToTextFile(const google::protobuf::Message &proto, const char_t *real_path);
+  static void WriteProtoToTextFile(const google::protobuf::Message &proto, const char_t *const real_path);
 
   static graphStatus AppendInputNode(const ComputeGraphPtr &graph, const NodePtr &node);
 
