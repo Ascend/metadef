@@ -107,7 +107,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
   if (op_def == nullptr) {
     REPORT_CALL_ERROR("E19999", "create proto::OpDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
-    return nullptr;  // lint !e665
+    return nullptr;
   }
   ModelSerializeImp imp;
   (void) imp.SerializeOpDesc(org_op_desc, op_def.get());
@@ -597,7 +597,7 @@ bool AttrUtils::GetListGraph(AttrUtils::ConstAttrHolderAdapter &&obj, const std:
       REPORT_CALL_ERROR("E19999", "create proto::GraphDef failed.");
       GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
       graph_def = nullptr;
-      return false;  // lint !e665
+      return false;
     } else {
       ComputeGraphPtr graph = nullptr;
       ModelSerializeImp imp;
@@ -606,7 +606,7 @@ bool AttrUtils::GetListGraph(AttrUtils::ConstAttrHolderAdapter &&obj, const std:
         REPORT_CALL_ERROR("E19999", "UnserializeGraph failed.");
         GELOGE(GRAPH_FAILED, "[Unserialize][Graph] Failed");
         return false;
-      }  // lint !e514
+      }
       value[i] = graph;
     }
   }
@@ -698,7 +698,6 @@ std::map<std::string, AnyValue> AttrUtils::GetAllAttrs(ConstAttrHolderAdapter &&
 
 std::string AttrUtils::GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj,
                                            const std::set<std::string> &un_compute_attrs) {
-
   const std::map<std::string, AnyValue> attr_map = GetAllAttrs(std::move(obj));
   if (attr_map.empty()) {
     return "";
