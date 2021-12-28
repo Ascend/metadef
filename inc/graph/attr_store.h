@@ -32,10 +32,10 @@ enum class AttrType : uint32_t {
   kAttrTypeEnd = 2U
 };
 constexpr inline uint32_t GetAttrType(const AttrId id) {
-  return id >> 32U;
+  return static_cast<uint32_t>(id >> 32U);
 }
 constexpr inline uint32_t GetSubAttrId(const AttrId id) {
-  return id & 0xffffffffU;
+  return static_cast<uint32_t>(id & 0xffffffffU);
 }
 constexpr inline AttrId GetAttrId(const uint32_t type, const uint32_t sub_id) {
   return (static_cast<uint64_t>(type) << 32U) | static_cast<uint64_t>(sub_id);
