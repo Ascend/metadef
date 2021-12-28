@@ -16,6 +16,8 @@
 
 #ifndef METADEF_CXX_ASCEND_LIMITS_H
 #define METADEF_CXX_ASCEND_LIMITS_H
+#include <cstdint>
+
 namespace ge {
 constexpr int32_t kDefaultMaxInputNum = 8;
 constexpr int32_t kDefaultMaxOutputNum = 8;
