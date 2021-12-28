@@ -18,7 +18,7 @@
 #define INC_COMMON_DYNAMIC_AIPP_H_
 
 #include <cstdint>
-
+namespace ge {
 /**
 * @ingroup dnn
 * @brief struct define of dynamic aipp batch parameter.
@@ -102,5 +102,5 @@ struct tagAippDynamicPara {
   kAippDynamicBatchPara aippBatchPara;  // allow transfer several batch para.
 };
 using kAippDynamicPara = tagAippDynamicPara;
-
+} // namespace ge
 #endif  // INC_COMMON_DYNAMIC_AIPP_H_
