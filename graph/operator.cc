@@ -422,7 +422,7 @@ Operator &Operator::SetInput(const std::string &dst_name, const ge::OutHandler &
   return *this;
 }
 
-Operator &Operator::SetInput(const char *dst_name, const ge::OutHandler &out_handler) {
+Operator &Operator::SetInput(const char_t *dst_name, const ge::OutHandler &out_handler) {
   if (dst_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param dst_name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator dst_name is nullptr.");
@@ -536,7 +536,7 @@ graphStatus Operator::GetInputConstDataOut(const std::string &dst_name, Tensor &
   return GRAPH_SUCCESS;
 }
 
-graphStatus Operator::GetInputConstDataOut(const char *dst_name, Tensor &data) const {
+graphStatus Operator::GetInputConstDataOut(const char_t *dst_name, Tensor &data) const {
   if (dst_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param dst_name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator dst_name is nullptr.");
@@ -629,7 +629,7 @@ OutHandler Operator::GetOutput(const std::string &name) const {
   return operator_impl_->GetOutput(name);
 }
 
-OutHandler Operator::GetOutput(const char *name) const {
+OutHandler Operator::GetOutput(const char_t *name) const {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -861,7 +861,7 @@ void Operator::InputRegister(const std::string &name) {
   (void)operator_impl_->GetOpDescImpl()->AddInputDesc(name, GeTensorDesc());
 }
 
-void Operator::InputRegister(const char *name) {
+void Operator::InputRegister(const char_t *name) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -882,7 +882,7 @@ void Operator::OptionalInputRegister(const std::string &name) {
                                                               GeTensorDesc(GeShape(), FORMAT_RESERVED, DT_UNDEFINED));
 }
 
-void Operator::OptionalInputRegister(const char *name) {
+void Operator::OptionalInputRegister(const char_t *name) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -932,7 +932,7 @@ void Operator::OutputRegister(const std::string &name) {
   (void)operator_impl_->GetOpDescImpl()->AddOutputDesc(name, GeTensorDesc());
 }
 
-void Operator::OutputRegister(const char *name) {
+void Operator::OutputRegister(const char_t *name) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -942,7 +942,7 @@ void Operator::OutputRegister(const char *name) {
   OutputRegister(op_name);
 }
 
-void Operator::DynamicInputRegister(const std::string &name, const unsigned int num, bool is_push_back) {
+void Operator::DynamicInputRegister(const std::string &name, const uint32_t num, bool is_push_back) {
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, REPORT_INNER_ERROR("E19999", "operator_impl_ is nullptr, check invalid");
                    return, "[Check][Param] operator impl is nullptr.");
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
@@ -956,7 +956,7 @@ void Operator::DynamicInputRegister(const std::string &name, const unsigned int 
   (void)operator_impl_->GetOpDescImpl()->AddDynamicInputDesc(name, num, is_push_back);
 }
 
-void Operator::DynamicInputRegister(const char *name, const unsigned int num, bool is_push_back) {
+void Operator::DynamicInputRegister(const char_t *name, const uint32_t num, bool is_push_back) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -966,7 +966,7 @@ void Operator::DynamicInputRegister(const char *name, const unsigned int num, bo
   DynamicInputRegister(op_name, num, is_push_back);
 }
 
-void Operator::DynamicInputRegisterByIndex(const std::string &name, const unsigned int num, size_t index) {
+void Operator::DynamicInputRegisterByIndex(const std::string &name, const uint32_t num, size_t index) {
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, REPORT_INNER_ERROR("E19999", "operator_impl_ is nullptr, check invalid");
                    return, "[Check][Param] operator impl is nullptr.");
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
@@ -975,7 +975,7 @@ void Operator::DynamicInputRegisterByIndex(const std::string &name, const unsign
   (void)(operator_impl_->GetOpDescImpl()->AddDynamicInputDescByIndex(name, num, index));
 }
 
-void Operator::DynamicInputRegisterByIndex(const char *name, const unsigned int num, size_t index) {
+void Operator::DynamicInputRegisterByIndex(const char_t *name, const uint32_t num, size_t index) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -985,7 +985,7 @@ void Operator::DynamicInputRegisterByIndex(const char *name, const unsigned int 
   DynamicInputRegisterByIndex(op_name, num, index);
 }
 
-int Operator::GetDynamicInputNum(const std::string &name) const {
+int32_t Operator::GetDynamicInputNum(const std::string &name) const {
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, REPORT_INNER_ERROR("E19999", "operator_impl_ is nullptr, check invalid");
                    return 0, "[Check][Param] operator impl is nullptr.");
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
@@ -1030,7 +1030,7 @@ void Operator::DynamicOutputRegister(const std::string &name, const uint32_t num
   (void)operator_impl_->GetOpDescImpl()->AddDynamicOutputDesc(name, num, is_push_back);
 }
 
-void Operator::DynamicOutputRegister(const char *name, const unsigned int num, bool is_push_back) {
+void Operator::DynamicOutputRegister(const char_t *name, const uint32_t num, bool is_push_back) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1040,7 +1040,7 @@ void Operator::DynamicOutputRegister(const char *name, const unsigned int num, b
   DynamicOutputRegister(op_name, num, is_push_back);
 }
 
-int Operator::GetDynamicOutputNum(const std::string &name) const {
+int32_t Operator::GetDynamicOutputNum(const std::string &name) const {
   GE_CHK_BOOL_EXEC(operator_impl_ != nullptr, REPORT_INNER_ERROR("E19999", "operator_impl_ is nullptr, check invalid");
                    return 0, "[Check][Param] operator impl is nullptr.");
   GE_CHK_BOOL_EXEC(operator_impl_->GetOpDescImpl() != nullptr,
@@ -1080,7 +1080,7 @@ void Operator::RequiredAttrRegister(const std::string &name) {
   (void)(operator_impl_->GetOpDescImpl()->AddRequiredAttr(name));
 }
 
-void Operator::RequiredAttrRegister(const char *name) {
+void Operator::RequiredAttrRegister(const char_t *name) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1139,7 +1139,7 @@ Operator &Operator::SetInput(const std::string &dst_name, uint32_t dst_index, co
   return SetInput(dynamic_dst_name, src_oprt);
 }
 
-Operator &Operator::SetInput(const char *dst_name, uint32_t dst_index, const ge::Operator &src_oprt) {
+Operator &Operator::SetInput(const char_t *dst_name, uint32_t dst_index, const ge::Operator &src_oprt) {
   if (dst_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param dst_name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator dst_name is nullptr.");
@@ -1155,8 +1155,8 @@ Operator &Operator::SetInput(const std::string &dst_name, uint32_t dst_index, co
   return SetInput(dynamic_dst_name, src_oprt, name);
 }
 
-Operator &Operator::SetInput(const char *dst_name, uint32_t dst_index, const ge::Operator &src_oprt,
-                             const char *name) {
+Operator &Operator::SetInput(const char_t *dst_name, uint32_t dst_index, const ge::Operator &src_oprt,
+                             const char_t *name) {
   if (dst_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param dst_name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator dst_name is nullptr.");
@@ -1217,8 +1217,8 @@ OP_ATTR_GET_IMP(std::vector<ge::NamedAttrs> &, ListNamedAttrs)
 
 OP_ATTR_REG_IMP(int64_t, Int)
 OP_ATTR_REG_IMP(const std::vector<int64_t> &, ListInt)
-OP_ATTR_REG_IMP(float, Float)
-OP_ATTR_REG_IMP(const std::vector<float> &, ListFloat)
+OP_ATTR_REG_IMP(float32_t, Float)
+OP_ATTR_REG_IMP(const std::vector<float32_t> &, ListFloat)
 OP_ATTR_REG_IMP(bool, Bool)
 OP_ATTR_REG_IMP(const std::vector<bool> &, ListBool)
 OP_ATTR_REG_IMP(const std::vector<std::vector<int64_t>> &, ListListInt)
@@ -1238,7 +1238,7 @@ void Operator::AttrRegister(const std::string &name, const std::vector<std::stri
   AttrRegister(name.c_str(), attr_values);
 }
 
-void Operator::AttrRegister(const char *name, int64_t attr_value) {
+void Operator::AttrRegister(const char_t *name, int64_t attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1248,7 +1248,7 @@ void Operator::AttrRegister(const char *name, int64_t attr_value) {
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, const vector<int64_t> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const vector<int64_t> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1258,7 +1258,7 @@ void Operator::AttrRegister(const char *name, const vector<int64_t> &attr_value)
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, float attr_value) {
+void Operator::AttrRegister(const char_t *name, float32_t attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1268,7 +1268,7 @@ void Operator::AttrRegister(const char *name, float attr_value) {
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, const vector<float> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const vector<float32_t> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1278,7 +1278,7 @@ void Operator::AttrRegister(const char *name, const vector<float> &attr_value) {
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, const char *attr_value) {
+void Operator::AttrRegister(const char_t *name, const char_t *attr_value) {
   if ((name == nullptr) || (attr_value == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr or attr_value is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator input parameters is nullptr.");
@@ -1289,7 +1289,7 @@ void Operator::AttrRegister(const char *name, const char *attr_value) {
   AttrRegister(op_name, op_attr_value);
 }
 
-void Operator::AttrRegister(const char *name, bool attr_value) {
+void Operator::AttrRegister(const char_t *name, bool attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1299,7 +1299,7 @@ void Operator::AttrRegister(const char *name, bool attr_value) {
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, const vector<bool> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const vector<bool> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1309,7 +1309,7 @@ void Operator::AttrRegister(const char *name, const vector<bool> &attr_value) {
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, const vector<vector<int64_t>> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const vector<vector<int64_t>> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1319,7 +1319,7 @@ void Operator::AttrRegister(const char *name, const vector<vector<int64_t>> &att
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, const NamedAttrs &attr_value) {
+void Operator::AttrRegister(const char_t *name, const NamedAttrs &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1329,7 +1329,7 @@ void Operator::AttrRegister(const char *name, const NamedAttrs &attr_value) {
   AttrRegister(op_name, attr_value);
 }
 
-void Operator::AttrRegister(const char *name, const vector<NamedAttrs> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const vector<NamedAttrs> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1356,7 +1356,7 @@ void Operator::AttrRegister(const std::string &name, const AscendString &attr_va
   }
 }
 
-void Operator::AttrRegister(const char *name, const AscendString &attr_value) {
+void Operator::AttrRegister(const char_t *name, const AscendString &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1399,7 +1399,7 @@ void Operator::AttrRegister(const std::string &name, const std::vector<AscendStr
   }
 }
 
-void Operator::AttrRegister(const char *name, const std::vector<AscendString> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const std::vector<AscendString> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1546,7 +1546,7 @@ Operator &Operator::SetAttr(const char_t *name, const std::vector<AscendString> 
   return *this;
 }
 
-graphStatus Operator::GetAttr(const char_t *name, std::vector<AscendString> &attr_value) const {
+graphStatus Operator::GetAttr(const char_t *name, std::vector<AscendString> &attr_values) const {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "Operator input parameters name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1564,7 +1564,7 @@ graphStatus Operator::GetAttr(const char_t *name, std::vector<AscendString> &att
     return GRAPH_FAILED;
   }
   for (auto &op_attr_value : op_attr_values) {
-    attr_value.emplace_back(AscendString(op_attr_value.c_str()));
+    attr_values.emplace_back(AscendString(op_attr_value.c_str()));
   }
   return GRAPH_SUCCESS;
 }
@@ -1968,7 +1968,7 @@ void Operator::AttrRegister(const std::string &name, const std::vector<ge::DataT
   }
 }
 
-void Operator::AttrRegister(const char *name, const std::vector<ge::DataType> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const std::vector<ge::DataType> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -1989,7 +1989,7 @@ void Operator::AttrRegister(const std::string &name, const ge::DataType &attr_va
   }
 }
 
-void Operator::AttrRegister(const char *name, const ge::DataType &attr_value) {
+void Operator::AttrRegister(const char_t *name, const ge::DataType &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -2011,7 +2011,7 @@ void Operator::AttrRegister(const std::string &name, const Tensor &attr_value) {
   }
 }
 
-void Operator::AttrRegister(const char *name, const Tensor &attr_value) {
+void Operator::AttrRegister(const char_t *name, const Tensor &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -2036,7 +2036,7 @@ void Operator::AttrRegister(const std::string &name, const std::vector<Tensor> &
   }
 }
 
-void Operator::AttrRegister(const char *name, const vector<Tensor> &attr_value) {
+void Operator::AttrRegister(const char_t *name, const vector<Tensor> &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -2058,7 +2058,7 @@ void Operator::AttrRegister(const std::string &name, const OpBytes &attr_value) 
   }
 }
 
-void Operator::AttrRegister(const char *name, const OpBytes &attr_value) {
+void Operator::AttrRegister(const char_t *name, const OpBytes &attr_value) {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -2077,7 +2077,7 @@ void Operator::SubgraphRegister(const std::string &ir_name, bool dynamic) {
   operator_impl_->SubgraphRegister(ir_name, dynamic ? static_cast<bool>(kDynamic) : static_cast<bool>(kStatic));
 }
 
-void Operator::SubgraphRegister(const char *ir_name, bool dynamic) {
+void Operator::SubgraphRegister(const char_t *ir_name, bool dynamic) {
   if (ir_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -2096,7 +2096,7 @@ void Operator::SubgraphCountRegister(const std::string &ir_name, uint32_t count)
   operator_impl_->SubgraphCountRegister(ir_name, count);
 }
 
-void Operator::SubgraphCountRegister(const char *ir_name, uint32_t count) {
+void Operator::SubgraphCountRegister(const char_t *ir_name, uint32_t count) {
   if (ir_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -2115,7 +2115,7 @@ void Operator::SetSubgraphBuilder(const std::string &ir_name, uint32_t index, co
   operator_impl_->SetSubgraphBuilder(ir_name, index, builder);
 }
 
-void Operator::SetSubgraphBuilder(const char *ir_name, uint32_t index, const SubgraphBuilder &builder) {
+void Operator::SetSubgraphBuilder(const char_t *ir_name, uint32_t index, const SubgraphBuilder &builder) {
   if (ir_name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param ir_name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator ir_name is nullptr.");
@@ -2225,7 +2225,7 @@ Graph Operator::GetSubgraphImpl(const std::string &name) const {
   return GraphUtils::CreateGraphFromComputeGraph(subgraph);
 }
 
-Graph Operator::GetSubgraphImpl(const char *name) const {
+Graph Operator::GetSubgraphImpl(const char_t *name) const {
   if (name == nullptr) {
     REPORT_INNER_ERROR("E19999", "param name is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Operator name is nullptr.");
@@ -2521,7 +2521,7 @@ private:
   std::map<OperatorImplPtr, NodePtr> all_nodes_info_{};
 };
 
-inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {
+static inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {
   for (const auto &graph : compute_graph->GetAllSubgraphs()) {
     std::set<std::string> node_names;
     for (auto const &node : graph->GetDirectNode()) {
