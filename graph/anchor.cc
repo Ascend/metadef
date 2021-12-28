@@ -57,9 +57,11 @@ size_t AnchorImpl::GetPeerAnchorsSize() const {
 Anchor::Vistor<AnchorPtr> AnchorImpl::GetPeerAnchors(
     const std::shared_ptr<ConstAnchor> &anchor_ptr) const {
   std::vector<AnchorPtr> ret;
-  for (const auto &anchor : peer_anchors_) {
-    ret.push_back(anchor.lock());
-  }
+  ret.resize(peer_anchors_.size());
+  (void)std::transform(peer_anchors_.begin(), peer_anchors_.end(), ret.begin(),
+                       [] (std::weak_ptr<Anchor> anchor) {
+                         return anchor.lock();
+                       });
   return Anchor::Vistor<AnchorPtr>(anchor_ptr, ret);
 }
 

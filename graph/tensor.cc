@@ -257,12 +257,9 @@ Shape::Shape(const std::vector<int64_t> &dims) { impl_ = ComGraphMakeShared<Shap
 
 size_t Shape::GetDimNum() const {
   if (impl_ != nullptr) {
-    for (const auto i : impl_->dims_) {
-      if (i == UNKNOWN_DIM_NUM) {
-        return 0U;
-      }
-    }
-    return impl_->dims_.size();
+    bool ret = std::any_of(std::begin(impl_->dims_), std::end(impl_->dims_),
+                           [] (int64_t i) { return i == UNKNOWN_DIM_NUM; });
+    return ret ? 0U : impl_->dims_.size();
   }
   return 0U;
 }
@@ -321,17 +318,17 @@ int64_t Shape::GetShapeSize() const {
 }
 
 TensorDesc::TensorDesc() {
-  impl = ComGraphMakeShared<TensorDescImpl>();  // lint !e665
+  impl = ComGraphMakeShared<TensorDescImpl>();
 }
 
 TensorDesc::TensorDesc(Shape shape, Format format, DataType dt) {
-  impl = ComGraphMakeShared<TensorDescImpl>(shape, format, dt);  // lint !e665
+  impl = ComGraphMakeShared<TensorDescImpl>(shape, format, dt);
   SetRealDimCnt(static_cast<int64_t>(shape.GetDimNum()));
 }
 
 TensorDesc::TensorDesc(const TensorDesc &desc) {
   // Copy
-  impl = ComGraphMakeShared<TensorDescImpl>();  // lint !e665
+  impl = ComGraphMakeShared<TensorDescImpl>();
   if (desc.impl != nullptr && impl != nullptr) {
     *impl = *desc.impl;
   }
@@ -552,7 +549,7 @@ bool TensorDesc::GetConstData(uint8_t **const_data_buffer, size_t &const_data_le
 Tensor::Tensor() { impl = ComGraphMakeShared<TensorImpl>(); }
 
 Tensor::Tensor(const TensorDesc &tensor_desc) {
-  impl = ComGraphMakeShared<TensorImpl>(tensor_desc);  // lint !e665
+  impl = ComGraphMakeShared<TensorImpl>(tensor_desc);
 }
 
 static void CheckTensorParam(const uint64_t shape_size, const DataType data_type, const size_t data_size) {
@@ -577,19 +574,19 @@ static void CheckTensorParam(const uint64_t shape_size, const DataType data_type
 Tensor::Tensor(const TensorDesc &tensor_desc, const std::vector<uint8_t> &data) {
   CheckTensorParam(static_cast<uint64_t>(tensor_desc.GetShape().GetShapeSize()),
                    tensor_desc.GetDataType(), data.size());
-  impl = ComGraphMakeShared<TensorImpl>(tensor_desc, data);  // lint !e665
+  impl = ComGraphMakeShared<TensorImpl>(tensor_desc, data);
 }
 
 Tensor::Tensor(const TensorDesc &tensor_desc, const uint8_t *data, size_t size) {
   CheckTensorParam(static_cast<uint64_t>(tensor_desc.GetShape().GetShapeSize()),
                    tensor_desc.GetDataType(), size);
-  impl = ComGraphMakeShared<TensorImpl>(tensor_desc, data, size);  // lint !e665
+  impl = ComGraphMakeShared<TensorImpl>(tensor_desc, data, size);
 }
 
 Tensor::Tensor(TensorDesc &&tensor_desc, std::vector<uint8_t> &&data) {
   CheckTensorParam(static_cast<uint64_t>(tensor_desc.GetShape().GetShapeSize()),
                    tensor_desc.GetDataType(), data.size());
-  impl = ComGraphMakeShared<TensorImpl>(std::move(tensor_desc), std::move(data));  // lint !e665
+  impl = ComGraphMakeShared<TensorImpl>(std::move(tensor_desc), std::move(data));
 }
 
 TensorDesc Tensor::GetTensorDesc() const {
@@ -842,7 +839,7 @@ Tensor TensorAdapter::GeTensor2Tensor(const ConstGeTensorPtr &ge_tensor) {
 ConstGeTensorPtr TensorAdapter::AsGeTensorPtr(const Tensor &tensor) {
   GeTensorPtr ge_tensor;
   if (tensor.impl != nullptr) {
-    ge_tensor = ComGraphMakeShared<GeTensor>(tensor.impl->ge_tensor);  // lint !e665
+    ge_tensor = ComGraphMakeShared<GeTensor>(tensor.impl->ge_tensor);
   }
   return ge_tensor;
 }
@@ -850,7 +847,7 @@ ConstGeTensorPtr TensorAdapter::AsGeTensorPtr(const Tensor &tensor) {
 GeTensorPtr TensorAdapter::AsGeTensorPtr(Tensor &tensor) {
   GeTensorPtr ge_tensor;
   if (tensor.impl != nullptr) {
-    ge_tensor = ComGraphMakeShared<GeTensor>(tensor.impl->ge_tensor);  // lint !e665
+    ge_tensor = ComGraphMakeShared<GeTensor>(tensor.impl->ge_tensor);
   }
   return ge_tensor;
 }

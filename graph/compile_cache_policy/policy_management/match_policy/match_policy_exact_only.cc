@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,17 @@ CacheItem MatchPolicyExactOnly::GetCacheItem(const CCStatType &cc_state, const C
   }
   const CacheHashKey shape_hash_key = CompileCacheHasher::GetCacheDescShapeHash(desc);
   const auto &info_vec = iter->second;
-  for (const auto &cached_info : info_vec) {
-    if ((cached_info.GetShapeHash() == shape_hash_key) &&
-        (CompileCacheDesc::IsSameCompileDesc(cached_info.GetCompileCacheDesc(), desc))) {
-      return cached_info.GetItem();
-    }
+
+  auto cached_info = std::find_if(info_vec.begin(), info_vec.end(),
+                                  [&shape_hash_key, &desc] (const CacheInfo &cached_info) {
+                                    return (cached_info.GetShapeHash() == shape_hash_key) &&
+                                           (CompileCacheDesc::IsSameCompileDesc(cached_info.GetCompileCacheDesc(),
+                                                                                desc));
+                                  });
+  if (cached_info != info_vec.end()) {
+    return cached_info->GetItem();
+  } else {
+    return KInvalidCacheItem;
   }
-  return KInvalidCacheItem;
 }
 }

@@ -102,7 +102,7 @@ void Profiler::Record(const int64_t element, const int64_t thread, const int64_t
 }
 void Profiler::Dump(std::ostream &out_stream) const {
   size_t print_size = record_size_;
-  out_stream << "Profiler version: " << static_cast<const char_t *>(kVersion)
+  out_stream << "Profiler version: " << &kVersion[0]
              << ", dump start, records num: " << print_size << std::endl;
   if (print_size > records_.size()) {
     out_stream << "Too many records(" << print_size << "), the records after "

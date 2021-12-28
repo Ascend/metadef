@@ -42,7 +42,7 @@ AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
   } else {
     const size_t offset = alignment - 1U;
     aligned_addr_ =
-        reinterpret_cast<uint8_t *>((PtrToValue(static_cast<void *>(base_.get())) + offset) & ~offset);
+        PtrToPtr<void, uint8_t>(ValueToPtr((PtrToValue(PtrToPtr<uint8_t, void>(base_.get())) + offset) & ~offset));
   }
 }
 
