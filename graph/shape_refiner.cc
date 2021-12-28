@@ -815,7 +815,7 @@ graphStatus ShapeRefiner::DoInferShapeAndTypeForRunning(const ConstNodePtr &node
     }
     op_desc->AddInferFunc(infer_func);
     ret = op_desc->CallInferFunc(op);
-    GELOGI("op CallInferFunc second. ret: %u", ret);
+    GELOGI("op CallInferFunc second, ret: %u", ret);
   }
   if (ret != GRAPH_SUCCESS) {
     return ret;
