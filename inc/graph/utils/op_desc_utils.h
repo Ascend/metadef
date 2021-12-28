@@ -88,7 +88,7 @@ class OpDescUtils {
   static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,
       const std::string &subgraph_instance_name, OpDescPtr &op_desc);
   static ConstGeTensorBarePtr GetInputConstData(const Operator &op, uint32_t idx);
-  static void SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *context);
+  static void SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *const context);
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
   static GeTensorPtr MutableWeights(const ge::OpDescPtr op_desc);
