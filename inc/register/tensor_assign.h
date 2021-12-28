@@ -19,6 +19,7 @@
 
 #include <vector>
 #include "graph/ge_tensor.h"
+#include "graph/def_types.h"
 #include "external/register/register_error_codes.h"
 #include "proto/tensorflow/tensor.pb.h"
 
@@ -97,7 +98,7 @@ class TensorAssign {
         addr[i] = val_vector.Get(0);
       }
     }
-    (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.get()), static_cast<size_t>(count) * sizeof(T));
+    (void)weight->SetData(ge::PtrToPtr<T, uint8_t>(addr.get()), static_cast<size_t>(count) * sizeof(T));
     return SUCCESS;
   }
 };

@@ -17,5 +17,4 @@
 #include "attr_serializer.h"
 
 namespace ge {
-
 }

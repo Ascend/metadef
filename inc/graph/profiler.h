@@ -27,7 +27,7 @@ namespace profiling {
 constexpr size_t kMaxStrLen = 64UL;
 constexpr int64_t kMaxStrIndex = 1024 * 1024;
 constexpr size_t kMaxRecordNum = 10UL * 1024UL * 1024UL;
-enum EventType {
+enum class EventType {
   kEventStart,
   kEventEnd,
   kEventTimestamp,

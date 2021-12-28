@@ -17,8 +17,6 @@
 #ifndef METADEF_CXX_SMALL_VECTOR_H
 #define METADEF_CXX_SMALL_VECTOR_H
 #include <iterator>
-#include <algorithm>
-#include <stdexcept>
 #include <memory>
 #include "graph/def_types.h"
 
@@ -136,11 +134,11 @@ class SmallVector {
 
   reference at(const size_type index) {
     CheckOutOfRange(index);
-    return GetPointer()[index];
+    return *GetPointer(index);
   }
   const_reference at(const size_type index) const {
     CheckOutOfRange(index);
-    return GetPointer()[index];
+    return *GetPointer(index);
   }
 
   reference operator[](const size_type index) {
@@ -179,13 +177,13 @@ class SmallVector {
     return GetPointer();
   }
   iterator end() noexcept {
-    return GetPointer() + size_;
+    return GetPointer(size_);
   }
   const_iterator end() const noexcept {
-    return GetPointer() + size_;
+    return GetPointer(size_);
   }
   const_iterator cend() const noexcept {
-    return GetPointer() + size_;
+    return GetPointer(size_);
   }
   reverse_iterator rbegin() noexcept {
     return reverse_iterator(end());
@@ -272,14 +270,14 @@ class SmallVector {
     if (pos != cend()) {
       Shrink(index, index + 1UL);
     }
-    return begin() + index;
+    return GetPointer(index);
   }
   iterator erase(const_iterator const first, const_iterator const last) {
     const auto first_pos = static_cast<size_type>(std::distance(cbegin(), first));
     if (first != last) {
-      Shrink(first_pos, static_cast<size_type>(last - cbegin()));
+      Shrink(first_pos, static_cast<size_type>(std::distance(cbegin(), last)));
     }
-    return begin() + first_pos;
+    return GetPointer(first_pos);
   }
   void push_back(const T &value) {
     auto const iter = Expand(size_, 1UL);
@@ -337,11 +335,13 @@ class SmallVector {
   }
 
  private:
-  T *GetPointer() {
-    return (allocated_storage_ == nullptr) ? PtrToPtr<InlineT, T>(&inline_storage_) : allocated_storage_;
+  T *GetPointer(size_type idx = 0UL) {
+    auto const base = (allocated_storage_ == nullptr) ? PtrToPtr<InlineT, T>(&inline_storage_) : allocated_storage_;
+    return base + idx;
   }
-  const T *GetPointer() const {
-    return (allocated_storage_ == nullptr) ? PtrToPtr<InlineT, T>(&inline_storage_) : allocated_storage_;
+  const T *GetPointer(size_type idx = 0UL) const {
+    auto const base = (allocated_storage_ == nullptr) ? PtrToPtr<InlineT, T>(&inline_storage_) : allocated_storage_;
+    return base + idx;
   }
 
   iterator InitStorage(const size_type size) {
@@ -454,12 +454,12 @@ class SmallVector {
     }
   }
   void Shrink(const size_type range_begin, const size_type range_end) {
-    T *old_ptr = GetPointer() + range_begin;
+    T *old_ptr = GetPointer(range_begin);
     for (size_type i = range_begin; i < range_end; ++i) {
       allocator_.destroy(old_ptr++);
     }
     size_type new_size = range_begin;
-    T *new_ptr = GetPointer() + range_begin;
+    T *new_ptr = GetPointer(range_begin);
     for (size_type i = range_end; i < size_; ++i) {
       allocator_.construct(new_ptr++, std::move(*old_ptr));
       allocator_.destroy(old_ptr++);

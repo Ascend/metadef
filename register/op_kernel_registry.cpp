@@ -2,6 +2,7 @@
 #include <mutex>
 #include <map>
 #include "graph/debug/ge_log.h"
+#include "graph/debug/ge_util.h"
 
 namespace ge {
 class OpKernelRegistry::OpKernelRegistryImpl {
@@ -27,7 +28,7 @@ class OpKernelRegistry::OpKernelRegistryImpl {
 };
 
 OpKernelRegistry::OpKernelRegistry() {
-  impl_ = std::unique_ptr<OpKernelRegistryImpl>(new(std::nothrow) OpKernelRegistryImpl);
+  impl_ = ge::ComGraphMakeUnique<OpKernelRegistryImpl>();
 }
 
 OpKernelRegistry::~OpKernelRegistry() {
