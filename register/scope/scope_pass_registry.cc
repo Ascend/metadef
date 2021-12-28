@@ -19,6 +19,7 @@
 #include <map>
 #include <vector>
 #include "graph/debug/ge_log.h"
+#include "graph/debug/ge_util.h"
 
 namespace ge {
 struct CreatePassFnPack {
@@ -103,7 +104,7 @@ std::unique_ptr<ScopeBasePass> ScopeFusionPassRegistry::ScopeFusionPassRegistryI
 }
 
 ScopeFusionPassRegistry::ScopeFusionPassRegistry() {
-  impl_ = std::unique_ptr<ScopeFusionPassRegistryImpl>(new (std::nothrow) ScopeFusionPassRegistryImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopeFusionPassRegistryImpl>();
 }
 
 ScopeFusionPassRegistry::~ScopeFusionPassRegistry() {}

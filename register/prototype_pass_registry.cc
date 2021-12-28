@@ -18,6 +18,7 @@
 
 #include "graph/debug/ge_log.h"
 #include "graph/types.h"
+#include "graph/debug/ge_util.h"
 
 namespace ge {
 class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
@@ -62,7 +63,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
 };
 
 ProtoTypePassRegistry::ProtoTypePassRegistry() {
-  impl_ = std::unique_ptr<ProtoTypePassRegistryImpl>(new (std::nothrow) ProtoTypePassRegistryImpl);
+  impl_ = ge::ComGraphMakeUnique<ProtoTypePassRegistryImpl>();
 }
 
 ProtoTypePassRegistry::~ProtoTypePassRegistry() {}

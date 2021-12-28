@@ -24,11 +24,11 @@
 
 namespace ge {
 ScopeAttrValue::ScopeAttrValue() {
-  impl_ = std::unique_ptr<ScopeAttrValueImpl>(new (std::nothrow) ScopeAttrValueImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopeAttrValueImpl>();
 }
 
 ScopeAttrValue::ScopeAttrValue(ScopeAttrValue const &attr_value) {
-  impl_ = std::unique_ptr<ScopeAttrValueImpl>(new (std::nothrow) ScopeAttrValueImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopeAttrValueImpl>();
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "ScopeAttrValue is not properly initialized.");
     return;
@@ -126,7 +126,7 @@ bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *const scope) {
 
 NodeOpTypeFeature::NodeOpTypeFeature(std::string nodeType, int32_t num, int32_t step)
     : ScopeBaseFeature() {
-  impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(nodeType, num, step));
+  impl_ = ge::ComGraphMakeUnique<NodeOpTypeFeatureImpl>(nodeType, num, step);
 }
 
 NodeOpTypeFeature::NodeOpTypeFeature(const char_t *node_type, int32_t num, int32_t step)
@@ -135,13 +135,12 @@ NodeOpTypeFeature::NodeOpTypeFeature(const char_t *node_type, int32_t num, int32
   if (node_type != nullptr) {
     op_type = node_type;
   }
-  impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(op_type, num, step));
+  impl_ = ge::ComGraphMakeUnique<NodeOpTypeFeatureImpl>(op_type, num, step);
 }
 
 NodeOpTypeFeature::NodeOpTypeFeature(NodeOpTypeFeature const &feature) : ScopeBaseFeature() {
-  impl_ = std::unique_ptr<NodeOpTypeFeatureImpl>(new (std::nothrow) NodeOpTypeFeatureImpl(feature.impl_->node_type_,
-                                                                                          feature.impl_->num_,
-                                                                                          feature.impl_->step_));
+  impl_ = ge::ComGraphMakeUnique<NodeOpTypeFeatureImpl>(feature.impl_->node_type_, feature.impl_->num_,
+                                                        feature.impl_->step_);
 }
 
 NodeOpTypeFeature &NodeOpTypeFeature::operator=(NodeOpTypeFeature const &feature) {
@@ -271,8 +270,7 @@ Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const floa
 NodeAttrFeature::NodeAttrFeature(std::string nodeType, std::string attr_name,
                                  ge::DataType datatype, ScopeAttrValue &attr_value)
     : ScopeBaseFeature() {
-  impl_ = std::unique_ptr<NodeAttrFeatureImpl>(new (std::nothrow) NodeAttrFeatureImpl(nodeType, attr_name,
-                                                                                      datatype, attr_value));
+  impl_ = ge::ComGraphMakeUnique<NodeAttrFeatureImpl>(nodeType, attr_name, datatype, attr_value);
 }
 
 NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_name,
@@ -286,15 +284,12 @@ NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_nam
   if (attr_name != nullptr) {
     str_attr_name = attr_name;
   }
-  impl_ = std::unique_ptr<NodeAttrFeatureImpl>(new (std::nothrow) NodeAttrFeatureImpl(str_node_type, str_attr_name,
-                                                                                      data_type, attr_value));
+  impl_ = ge::ComGraphMakeUnique<NodeAttrFeatureImpl>(str_node_type, str_attr_name, data_type, attr_value);
 }
 
 NodeAttrFeature::NodeAttrFeature(NodeAttrFeature const &feature) : ScopeBaseFeature() {
-  impl_ = std::unique_ptr<NodeAttrFeatureImpl>(new (std::nothrow) NodeAttrFeatureImpl(feature.impl_->node_type_,
-                                                                                      feature.impl_->attr_name_,
-                                                                                      feature.impl_->datatype_,
-                                                                                      feature.impl_->attr_value_));
+  impl_ = ge::ComGraphMakeUnique<NodeAttrFeatureImpl>(feature.impl_->node_type_, feature.impl_->attr_name_,
+                                                      feature.impl_->datatype_, feature.impl_->attr_value_);
 }
 
 NodeAttrFeature &NodeAttrFeature::operator=(NodeAttrFeature const &feature) {
@@ -370,8 +365,7 @@ bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *const scope) {
 ScopeFeature::ScopeFeature(std::string sub_type, int32_t num, std::string suffix,
                            std::string sub_scope_mask, int32_t step)
     : ScopeBaseFeature() {
-  impl_ = std::unique_ptr<ScopeFeatureImpl>(new (std::nothrow) ScopeFeatureImpl(sub_type, num, suffix,
-                                                                                sub_scope_mask, step));
+  impl_ = ge::ComGraphMakeUnique<ScopeFeatureImpl>(sub_type, num, suffix, sub_scope_mask, step);
 }
 
 ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char_t *suffix,
@@ -389,16 +383,13 @@ ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char_t *su
   if (sub_scope_mask != nullptr) {
     str_sub_scope_mask = sub_scope_mask;
   }
-  impl_ = std::unique_ptr<ScopeFeatureImpl>(new (std::nothrow) ScopeFeatureImpl(str_sub_type, num, str_suffix,
-                                                                                str_sub_scope_mask, step));
+  impl_ = ge::ComGraphMakeUnique<ScopeFeatureImpl>(str_sub_type, num, str_suffix, str_sub_scope_mask, step);
 }
 
 ScopeFeature::ScopeFeature(ScopeFeature const &feature) : ScopeBaseFeature() {
-  impl_ = std::unique_ptr<ScopeFeatureImpl>(new (std::nothrow) ScopeFeatureImpl(feature.impl_->sub_type_,
-                                                                                feature.impl_->num_,
-                                                                                feature.impl_->suffix_,
-                                                                                feature.impl_->sub_scope_mask_,
-                                                                                feature.impl_->step_));
+  impl_ = ge::ComGraphMakeUnique<ScopeFeatureImpl>(feature.impl_->sub_type_, feature.impl_->num_,
+                                                  feature.impl_->suffix_, feature.impl_->sub_scope_mask_,
+                                                  feature.impl_->step_);
 }
 
 ScopeFeature &ScopeFeature::operator=(ScopeFeature const &feature) {
@@ -473,7 +464,7 @@ void ScopePattern::ScopePatternImpl::AddScopeFeature(ScopeFeature &feature) {
 }
 
 ScopePattern::ScopePattern() {
-  impl_ = std::unique_ptr<ScopePatternImpl>(new (std::nothrow) ScopePatternImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopePatternImpl>();
 }
 
 ScopePattern::~ScopePattern() {}

@@ -31,6 +31,7 @@
 #include "register/op_registry.h"
 #include "register/register_utils.h"
 #include "graph/graph.h"
+#include "graph/debug/ge_util.h"
 
 namespace domi {
 using namespace domi::tensorflow;
@@ -666,7 +667,7 @@ AutoMappingSubgraphIOIndexFunc FrameworkRegistryImpl::GetAutoMappingSubgraphIOIn
 }
 
 FrameworkRegistry::FrameworkRegistry() {
-  impl_ = std::unique_ptr<FrameworkRegistryImpl>(new (std::nothrow) FrameworkRegistryImpl());
+  impl_ = ge::ComGraphMakeUnique<FrameworkRegistryImpl>();
   if (impl_ == nullptr) {
     GELOGW("[Check][Param] make impl failed");
   }

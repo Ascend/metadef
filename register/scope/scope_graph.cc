@@ -24,6 +24,7 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/types.h"
+#include "graph/debug/ge_util.h"
 
 namespace ge {
 namespace {
@@ -292,7 +293,7 @@ std::string Scope::ScopeImpl::TrimScopeIndex(const std::string &scope_name) {
 Scope::Scope() {}
 
 Status Scope::Init(const std::string &name, const std::string &sub_type, Scope *father_scope) {
-  impl_ = std::unique_ptr<ScopeImpl>(new (std::nothrow) ScopeImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopeImpl>();
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Make unique_ptr of ScopeImpl failed.");
     return ge::MEMALLOC_FAILED;
@@ -310,7 +311,7 @@ Status Scope::Init(const char_t *name, const char_t *sub_type, Scope *father_sco
   if (sub_type != nullptr) {
     scope_sub_type = sub_type;
   }
-  impl_ = std::unique_ptr<ScopeImpl>(new (std::nothrow) ScopeImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopeImpl>();
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Make unique_ptr of ScopeImpl failed.");
     return ge::MEMALLOC_FAILED;
@@ -451,7 +452,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetDynamic
 }
 
 FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const std::string &fusion_node_name) {
-  impl_ = std::unique_ptr<InnerNodeInfoImpl>(new (std::nothrow) InnerNodeInfoImpl(fusion_node_name));
+  impl_ = ge::ComGraphMakeUnique<InnerNodeInfoImpl>(fusion_node_name);
 }
 
 FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name) {
@@ -459,12 +460,12 @@ FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name)
   if (fusion_node_name != nullptr) {
     str_fusion_node_name = fusion_node_name;
   }
-  impl_ = std::unique_ptr<InnerNodeInfoImpl>(new (std::nothrow) InnerNodeInfoImpl(str_fusion_node_name));
+  impl_ = ge::ComGraphMakeUnique<InnerNodeInfoImpl>(str_fusion_node_name);
 }
 
 FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const std::string &fusion_node_name, const std::string &name,
                                                  const std::string &type) {
-  impl_ = std::unique_ptr<InnerNodeInfoImpl>(new (std::nothrow) InnerNodeInfoImpl(fusion_node_name, name, type));
+  impl_ = ge::ComGraphMakeUnique<InnerNodeInfoImpl>(fusion_node_name, name, type);
 }
 
 FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name, const char_t *name,
@@ -481,8 +482,7 @@ FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name,
   if (type != nullptr) {
     str_type = type;
   }
-  impl_ = std::unique_ptr<InnerNodeInfoImpl>(new (std::nothrow) InnerNodeInfoImpl(node_name,
-                                                                                     str_name, str_type));
+  impl_ = ge::ComGraphMakeUnique<InnerNodeInfoImpl>(fusion_node_name, name, type);
 }
 
 FusionScopesResult::InnerNodeInfo::InnerNodeInfo(FusionScopesResult::InnerNodeInfo &&other) noexcept
@@ -822,7 +822,7 @@ ge::graphStatus FusionScopesResult::FusionScopesResultImpl::CheckInnerNodesInfo(
 FusionScopesResult::FusionScopesResult() {}
 
 Status FusionScopesResult::Init() {
-  impl_ = std::unique_ptr<FusionScopesResultImpl>(new (std::nothrow) FusionScopesResultImpl);
+  impl_ = ge::ComGraphMakeUnique<FusionScopesResultImpl>();
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Make unique_ptr of FusionScopesResultImpl failed.");
     return ge::MEMALLOC_FAILED;
@@ -1048,7 +1048,7 @@ ScopeTree::ScopeTree() {}
 ScopeTree::~ScopeTree() {}
 
 Status ScopeTree::Init() {
-  impl_ = std::unique_ptr<ScopeTreeImpl>(new (std::nothrow) ScopeTreeImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopeTreeImpl>();
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Make unique_ptr of FusionScopesResultImpl failed.");
     return ge::MEMALLOC_FAILED;
@@ -1267,7 +1267,7 @@ ScopeGraph::ScopeGraph() {}
 ScopeGraph::~ScopeGraph() {}
 
 Status ScopeGraph::Init() {
-  impl_ = std::unique_ptr<ScopeGraphImpl>(new (std::nothrow) ScopeGraphImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopeGraphImpl>();
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Make unique_ptr of ScopeGraphImpl failed.");
     return ge::MEMALLOC_FAILED;

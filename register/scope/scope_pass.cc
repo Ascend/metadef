@@ -24,11 +24,11 @@
 
 namespace ge {
 ScopesResult::ScopesResult() {
-  impl_ = std::unique_ptr<ScopesResultImpl>(new (std::nothrow) ScopesResultImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopesResultImpl>();
 }
 
 ScopesResult::ScopesResult(ScopesResult const &result) {
-  impl_ = std::unique_ptr<ScopesResultImpl>(new (std::nothrow) ScopesResultImpl);
+  impl_ = ge::ComGraphMakeUnique<ScopesResultImpl>();
   if (impl_ == nullptr || result.impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "ScopesResult is not properly initialized.");
     return;
@@ -327,7 +327,7 @@ Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<Sc
 }
 
 ScopeBasePass::ScopeBasePass() {
-  impl_ = std::unique_ptr<ScopeBasePassImpl>(new (std::nothrow) ScopeBasePassImpl(this));
+  impl_ = ge::ComGraphMakeUnique<ScopeBasePassImpl>(this);
 }
 
 ScopeBasePass::~ScopeBasePass() {}
