@@ -276,7 +276,7 @@ NodeAttrFeature::NodeAttrFeature(std::string nodeType, std::string attr_name,
 }
 
 NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_name,
-                                 ge::DataType data_type, ScopeAttrValue &attr_value)
+                                 ge::DataType datatype, ScopeAttrValue &attr_value)
     : ScopeBaseFeature() {
   std::string str_node_type;
   if (node_type != nullptr) {
@@ -287,7 +287,7 @@ NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_nam
     str_attr_name = attr_name;
   }
   impl_ = std::unique_ptr<NodeAttrFeatureImpl>(new (std::nothrow) NodeAttrFeatureImpl(str_node_type, str_attr_name,
-                                                                                      data_type, attr_value));
+                                                                                      datatype, attr_value));
 }
 
 NodeAttrFeature::NodeAttrFeature(NodeAttrFeature const &feature) : ScopeBaseFeature() {
@@ -345,7 +345,7 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
   return true;
 }
 
-bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *scope) {
+bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *const scope) {
   auto &impl = scope->impl_;
   const std::string scope_name = scope->Name();
   if (suffix_.length() > scope_name.length()) {

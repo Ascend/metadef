@@ -36,9 +36,9 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY PassRegistrationData {
 
   PassRegistrationData(std::string pass_name);
 
-  PassRegistrationData &Priority(const int32_t &);
+  PassRegistrationData &Priority(const int32_t &priority);
 
-  PassRegistrationData &CustomPassFn(const CustomPassFunc &);
+  PassRegistrationData &CustomPassFn(const CustomPassFunc &custom_pass_fn);
 
   std::string GetPassName() const;
   int32_t GetPriority() const;
