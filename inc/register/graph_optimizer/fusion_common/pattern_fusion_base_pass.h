@@ -52,7 +52,7 @@ class PatternFusionBasePass : public GraphPass {
 #ifdef ONLY_COMPILE_OPEN_SRC
   virtual ~PatternFusionBasePass();
 #else
-  virtual ~PatternFusionBasePass() override;
+  ~PatternFusionBasePass() override;
 #endif
 
   /** execute pass

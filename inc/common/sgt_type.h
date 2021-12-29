@@ -42,8 +42,7 @@ struct DimRange {
   int64_t lower;
   int64_t higher;
   bool operator==(const DimRange& dim_range) const {
-    return this->higher == dim_range.higher &&
-           this->lower == dim_range.lower;
+    return (this->higher == dim_range.higher) && (this->lower == dim_range.lower);
   }
 };
 
@@ -85,11 +84,11 @@ enum class CACHE_OPERATION {
   CACHE_OPERATION_BOTTOM = 3
 };
 
-void inline SetBitOne(uint32_t pos, uint32_t &bm) {
+void inline SetBitOne(const uint32_t pos, uint32_t &bm) {
   bm |= (0x1 << pos);
 }
 
-void inline SetBitOne(uint32_t pos, uint64_t &bm) {
+void inline SetBitOne(const uint32_t pos, uint64_t &bm) {
   bm |= (0x1 << pos);
 }
 

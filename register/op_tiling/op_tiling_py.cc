@@ -304,10 +304,13 @@ std::string DumpByteBuffer(const ByteBuffer &buf) {
   static const char hex_digits[] = "0123456789ABCDEF";
   std::string str = buf.str();
   std::string output;
-  output.reserve(str.size() * static_cast<uint32_t>(2));
+  const uint32_t num_two = 2;
+  const uint32_t num_four = 4;
+  const uint32_t num_fifteen = 15;
+  output.reserve(str.size() * num_two);
   for (unsigned char c : str) {
-    output.push_back(hex_digits[c >> 4]);
-    output.push_back(hex_digits[c & 15]);
+    output.push_back(hex_digits[c >> num_four]);
+    output.push_back(hex_digits[c & num_fifteen]);
   }
   return output;
 }
