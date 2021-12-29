@@ -345,7 +345,7 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
   return true;
 }
 
-bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *scope) {
+bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *const scope) {
   auto &impl = scope->impl_;
   const std::string scope_name = scope->Name();
   if (suffix_.length() > scope_name.length()) {

@@ -56,7 +56,7 @@ using FormatTransferBuilder = std::function<std::shared_ptr<FormatTransfer>()>;
 
 class FormatTransferRegister {
  public:
-  FormatTransferRegister(FormatTransferBuilder builder, Format src, Format dst);
+  FormatTransferRegister(FormatTransferBuilder builder, const Format src, const Format dst);
   ~FormatTransferRegister() = default;
 };
 

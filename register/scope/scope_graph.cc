@@ -213,9 +213,9 @@ const std::vector<Scope *> &Scope::ScopeImpl::GetAllSubScopes() {
     std::stack<Scope *> scopes;
     scopes.push(scope);
     while (!scopes.empty()) {
-      Scope *scope = scopes.top();
+      Scope *sub_scope = scopes.top();
       scopes.pop();
-      auto &impl = scope->impl_;
+      auto &impl = sub_scope->impl_;
       const std::unordered_map<std::string, Scope *> &sub_scopes = impl->GetSubScopes();
       for (auto &iter_sub : sub_scopes) {
         all_sub_scopes_.push_back(iter_sub.second);

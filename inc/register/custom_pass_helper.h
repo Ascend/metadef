@@ -34,9 +34,9 @@ class CustomPassHelper {
  public:
   static CustomPassHelper &Instance();
 
-  void Insert(const PassRegistrationData &);
+  void Insert(const PassRegistrationData &reg_data);
 
-  Status Run(ge::GraphPtr &);
+  Status Run(ge::GraphPtr &graph);
 
   ~CustomPassHelper() = default;
 
