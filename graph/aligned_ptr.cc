@@ -17,6 +17,7 @@
 #include "graph/aligned_ptr.h"
 #include "graph/utils/mem_utils.h"
 #include "graph/debug/ge_log.h"
+#include "graph/def_types.h"
 
 namespace ge {
 AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
@@ -44,7 +45,7 @@ AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
   } else {
     const size_t offset = alignment - 1U;
     aligned_addr_ =
-        reinterpret_cast<uint8_t *>((static_cast<size_t>(reinterpret_cast<uintptr_t>(base_.get())) + offset) & ~offset);
+        PtrToPtr<void, uint8_t>(ValueToPtr((PtrToValue(PtrToPtr<uint8_t, void>(base_.get())) + offset) & ~offset));
   }
 }
 
@@ -58,7 +59,7 @@ std::unique_ptr<uint8_t[], AlignedPtr::Deleter> AlignedPtr::Reset() {
     return
       std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(aligned_addr_, [deleter_func, base_addr](const uint8_t *ptr) {
       deleter_func(base_addr);
-      ptr = nullptr;
+      (void)ptr;
     });
   }
 }
