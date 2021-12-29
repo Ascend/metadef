@@ -466,7 +466,6 @@ class SmallVector {
   InlineT inline_storage_;
   T *allocated_storage_;
 };
-}  // namespace ge
 
 template<typename T, size_t N1, size_t N2>
 bool operator==(const ge::SmallVector<T, N1> &sv1, const ge::SmallVector<T, N2> &sv2) {
@@ -505,6 +504,7 @@ template<typename T, size_t N1, size_t N2>
 bool operator>=(const ge::SmallVector<T, N1> &sv1, const ge::SmallVector<T, N2> &sv2) {
   return !(sv1 < sv2);
 }
+}  // namespace ge
 
 namespace std {
 template<typename T, size_t N>
