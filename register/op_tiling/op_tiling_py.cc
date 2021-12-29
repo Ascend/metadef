@@ -120,7 +120,7 @@ template<typename T>
 void GetConstDataPointer(const nlohmann::json &json_array, std::vector<uint8_t> &const_value) {
   std::vector<T> value = json_array.get<std::vector<T>>();
   uint8_t *pv_begin = reinterpret_cast<uint8_t *>(value.data());
-  uint8_t *pv_end = pv_begin + value.size() * sizeof(T);
+  uint8_t *pv_end = pv_begin + (value.size() * sizeof(T));
   const_value = std::vector<uint8_t>(pv_begin, pv_end);
 }
 
@@ -132,14 +132,14 @@ void CopyConstDataWithFloat16(const nlohmann::json &json_array, std::vector<uint
     return;
   }
   std::vector<uint16_t> const_data_vec;
-  size_t size = sizeof(const_value)/sizeof(float);
+  const size_t size = sizeof(const_value)/sizeof(float);
   for (size_t i = 0; i < size; ++i) {
     float const_data = *(const_data_ptr + i);
     uint16_t const_data_uint16 = FloatToUint16(const_data);
     const_data_vec.emplace_back(const_data_uint16);
   }
   uint8_t *pv_begin = reinterpret_cast<uint8_t *>(const_data_vec.data());
-  uint8_t *pv_end = pv_begin + const_data_vec.size() * sizeof(uint16_t);
+  uint8_t *pv_end = pv_begin + (const_data_vec.size() * sizeof(uint16_t));
   value = std::vector<uint8_t>(pv_begin, pv_end);
 }
 
@@ -200,7 +200,7 @@ void ParseConstShapeDesc(const nlohmann::json &shape_json, std::map<std::string,
   }
 
   std::vector<uint8_t> value;
-  bool bres = CopyConstData(dtype_str, shape_json["const_value"], value);
+  const bool bres = CopyConstData(dtype_str, shape_json["const_value"], value);
   if (!bres) {
     GE_LOGE("CopyConstData faild.  buffer is null");
     return;
@@ -261,7 +261,7 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   }
 
   std::vector<uint8_t> value;
-  bool bres = CopyConstData(dtype_str, shape_json["const_value"], value);
+  const bool bres = CopyConstData(dtype_str, shape_json["const_value"], value);
   if (!bres) {
     REPORT_CALL_ERROR("E19999", "CopyConstData faild.  buffer is null");
     return;
@@ -283,7 +283,7 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   ge::GeTensorPtr const_tensor_ptr = std::make_shared<ge::GeTensor>(const_tensor);
   ge::OpDescPtr const_op_desc = ge::OpDescUtils::CreateConstOp(const_tensor_ptr);
   ge::Operator const_op = ge::OpDescUtils::CreateOperatorFromOpDesc(const_op_desc);
-  op_para.SetInput(name.c_str(), const_op);
+  (void)op_para.SetInput(name.c_str(), const_op);
   return;
 }
 
@@ -304,7 +304,7 @@ std::string DumpByteBuffer(const ByteBuffer &buf) {
   static const char hex_digits[] = "0123456789ABCDEF";
   std::string str = buf.str();
   std::string output;
-  output.reserve(str.size() * 2);
+  output.reserve(str.size() * static_cast<uint32_t>(2));
   for (unsigned char c : str) {
     output.push_back(hex_digits[c >> 4]);
     output.push_back(hex_digits[c & 15]);
@@ -325,7 +325,7 @@ bool DumpRunInfo(const OpRunInfo &run_info, char *run_info_json, const size_t &r
   json_obj["clear_atomic"] = run_info.clear_atomic;
   json_obj["tiling_key"] = run_info.tiling_key;
 
-  std::string str = json_obj.dump();
+  const std::string str = json_obj.dump();
   if (str.size() >= run_info_len) {
     GE_LOGE("runinfo too large. %zu/%zu", str.size(), run_info_len);
     return false;
@@ -352,7 +352,7 @@ bool DumpRunInfoV2(const OpRunInfoV2 &run_info, char *run_info_json, const size_
   json_obj["clear_atomic"] = run_info.GetClearAtomic();
   json_obj["tiling_key"] = run_info.GetTilingKey();
 
-  std::string str = json_obj.dump();
+  const std::string str = json_obj.dump();
   if (str.size() >= run_info_len) {
     REPORT_CALL_ERROR("E19999", "runinfo too large. %zu/%zu", str.size(), run_info_len);
     return false;
@@ -364,20 +364,20 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
                                                const char *outputs, char *run_info_json, size_t run_info_len,
                                                const char *compile_info_hash, uint64_t *elapse,
                                                const OpTilingFunc &tiling_func) {
-  if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
+  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
   }
 
-  std::chrono::time_point<std::chrono::steady_clock> before_tiling, after_tiling;
-  std::string compile_info_str = compile_info;
+  std::chrono::time_point<std::chrono::steady_clock> before_tiling;
+  std::chrono::time_point<std::chrono::steady_clock> after_tiling;
   TeOpParas op_params;
   op_params.op_type = optype;
   std::map<std::string, std::vector<uint8_t>> const_values;
   try {
-    nlohmann::json inputs_json = nlohmann::json::parse(inputs);
-    nlohmann::json outputs_json = nlohmann::json::parse(outputs);
+    const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
+    const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
     ParseShapeDescList(inputs_json, op_params.inputs);
     ParseShapeDescList(outputs_json, op_params.outputs);
     ParseConstTensorList(inputs_json, op_params.const_inputs, const_values);
@@ -388,18 +388,18 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
   GELOGI("Optiling func found, op_type:%s", optype);
 
   OpCompileInfo op_compile_info{compile_info, ""};
-  if (compile_info_hash) {
+  if (compile_info_hash != nullptr) {
     op_compile_info.key = compile_info_hash;
   }
 
   OpRunInfo run_info;
-  if (elapse) {
+  if (elapse != nullptr) {
     before_tiling = std::chrono::steady_clock::now();
   }
 
-  bool rc = (tiling_func)(op_params, op_compile_info, run_info);
+  const bool rc = (tiling_func)(op_params, op_compile_info, run_info);
 
-  if (elapse) {
+  if (elapse != nullptr) {
     after_tiling = std::chrono::steady_clock::now();
   }
   if (!rc) {
@@ -407,14 +407,15 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
     return 0;
   }
 
-  if (elapse) {
-    *elapse = std::chrono::duration_cast<std::chrono::microseconds>(after_tiling - before_tiling).count();
-    *(elapse + 1) = last_op_tiling_perf;
+  if (elapse != nullptr) {
+    *elapse = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(\
+        after_tiling - before_tiling).count());
+    *(elapse + 1) = static_cast<uint64_t>(last_op_tiling_perf);
     last_op_tiling_perf = -1;
   }
 
   GELOGI("Optiling succeed. op_type:%s", optype);
-  DumpRunInfo(run_info, run_info_json, run_info_len);
+  (void)DumpRunInfo(run_info, run_info_json, run_info_len);
   return 1;
 }
 
@@ -422,7 +423,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
                                             const char *outputs, char *run_info_json, size_t run_info_len,
                                             const char *compile_info_hash, uint64_t *elapse,
                                             const OpTilingFuncV2 &tiling_func) {
-  if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
+  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
@@ -430,15 +431,16 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
 
   GELOGI("Optiling func v2 found, op_type:%s", optype);
 
-  std::chrono::time_point<std::chrono::steady_clock> before_tiling, after_tiling;
+  std::chrono::time_point<std::chrono::steady_clock> before_tiling;
+  std::chrono::time_point<std::chrono::steady_clock> after_tiling;
   std::string compile_info_str = compile_info;
   std::string optype_str = optype;
   ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
   try {
-    nlohmann::json inputs_json = nlohmann::json::parse(inputs);
-    nlohmann::json outputs_json = nlohmann::json::parse(outputs);
+    const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
+    const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
     ParseShapeDescListV2(inputs_json, op_desc, true);
     ParseShapeDescListV2(outputs_json, op_desc, false);
     operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
@@ -449,19 +451,19 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
   }
 
   OpCompileInfoV2 op_compile_info{" ", compile_info_str};
-  ge::AscendString opCompileInfoHash(compile_info_hash);
-  if (compile_info_hash) {
+  const ge::AscendString opCompileInfoHash(compile_info_hash);
+  if (compile_info_hash != nullptr) {
     op_compile_info.SetKey(opCompileInfoHash);
   }
 
-  OpRunInfoV2 run_info(uint32_t(0), false, uint64_t(0));
-  if (elapse) {
+  OpRunInfoV2 run_info(static_cast<uint32_t>(0), false, static_cast<uint64_t>(0));
+  if (elapse != nullptr) {
     before_tiling = std::chrono::steady_clock::now();
   }
 
-  bool rc = (tiling_func)(operator_param, op_compile_info, run_info);
+  const bool rc = (tiling_func)(operator_param, op_compile_info, run_info);
 
-  if (elapse) {
+  if (elapse != nullptr) {
     after_tiling = std::chrono::steady_clock::now();
   }
   if (!rc) {
@@ -469,14 +471,15 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
     return 0;
   }
 
-  if (elapse) {
-    *elapse = std::chrono::duration_cast<std::chrono::microseconds>(after_tiling - before_tiling).count();
-    *(elapse + 1) = last_op_tiling_perf;
+  if (elapse != nullptr) {
+    *elapse = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(\
+        after_tiling - before_tiling).count());
+    *(elapse + 1) = static_cast<uint64_t>(last_op_tiling_perf);
     last_op_tiling_perf = -1;
   }
 
   GELOGI("Op tiling v2 succeed. op_type:%s", optype);
-  DumpRunInfoV2(run_info, run_info_json, run_info_len);
+  (void)DumpRunInfoV2(run_info, run_info_json, run_info_len);
   return 1;
 }
 
@@ -484,7 +487,7 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse,
                                          const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func) {
-  if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
+  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
@@ -492,15 +495,15 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
 
   GELOGI("Optiling func v3 found, op_type:%s", optype);
 
-  std::chrono::time_point<std::chrono::steady_clock> before_tiling, after_tiling;
-  std::string compile_info_str = compile_info;
+  std::chrono::time_point<std::chrono::steady_clock> before_tiling;
+  std::chrono::time_point<std::chrono::steady_clock> after_tiling;
   std::string optype_str = optype;
   ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
   try {
-    nlohmann::json inputs_json = nlohmann::json::parse(inputs);
-    nlohmann::json outputs_json = nlohmann::json::parse(outputs);
+    const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
+    const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
     ParseShapeDescListV2(inputs_json, op_desc, true);
     ParseShapeDescListV2(outputs_json, op_desc, false);
     operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
@@ -513,16 +516,16 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
     return 0;
   }
 
-  ge::AscendString compile_info_json_str = compile_info;
+  const ge::AscendString compile_info_json_str = compile_info;
   void* op_compile_json_ptr = (parse_func)(operator_param, compile_info_json_str);
 
-  OpRunInfoV2 run_info(uint32_t(0), false, uint64_t(0));
-  if (elapse) {
+  OpRunInfoV2 run_info(static_cast<uint32_t>(0), false, static_cast<uint64_t>(0));
+  if (elapse != nullptr) {
     before_tiling = std::chrono::steady_clock::now();
   }
-  bool rc = (tiling_func)(operator_param, op_compile_json_ptr, run_info);
+  const bool rc = (tiling_func)(operator_param, op_compile_json_ptr, run_info);
 
-  if (elapse) {
+  if (elapse != nullptr) {
     after_tiling = std::chrono::steady_clock::now();
   }
   if (!rc) {
@@ -530,14 +533,15 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
     return 0;
   }
 
-  if (elapse) {
-    *elapse = std::chrono::duration_cast<std::chrono::microseconds>(after_tiling - before_tiling).count();
-    *(elapse + 1) = last_op_tiling_perf;
+  if (elapse != nullptr) {
+    *elapse = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>\
+        (after_tiling - before_tiling).count());
+    *(elapse + 1) = static_cast<uint64_t>(last_op_tiling_perf);
     last_op_tiling_perf = -1;
   }
 
   GELOGI("Op tiling v3 succeed. op_type:%s", optype);
-  DumpRunInfoV2(run_info, run_info_json, run_info_len);
+  (void)DumpRunInfoV2(run_info, run_info_json, run_info_len);
   return 1;
 }
 
@@ -545,7 +549,7 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse,
                                          const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func) {
-  if (optype == nullptr || compile_info == nullptr || inputs == nullptr || outputs == nullptr) {
+  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
@@ -553,15 +557,15 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
 
   GELOGI("Optiling func v4 found, op_type:%s", optype);
 
-  std::chrono::time_point<std::chrono::steady_clock> before_tiling, after_tiling;
-  std::string compile_info_str = compile_info;
+  std::chrono::time_point<std::chrono::steady_clock> before_tiling;
+  std::chrono::time_point<std::chrono::steady_clock> after_tiling;
   std::string op_type_str = optype;
   ge::OpDescPtr op_desc_ptr = std::make_shared<ge::OpDesc>("", op_type_str);
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
   try {
-    nlohmann::json inputs_json = nlohmann::json::parse(inputs);
-    nlohmann::json outputs_json = nlohmann::json::parse(outputs);
+    const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
+    const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
     ParseShapeDescListV2(inputs_json, op_desc_ptr, true);
     ParseShapeDescListV2(outputs_json, op_desc_ptr, false);
     operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_ptr);
@@ -574,16 +578,16 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
     return 0;
   }
 
-  ge::AscendString compile_info_json = compile_info;
-  CompileInfoPtr op_compile_json_ptr = (parse_func)(operator_param, compile_info_json);
+  const ge::AscendString compile_info_json = compile_info;
+  const CompileInfoPtr op_compile_json_ptr = (parse_func)(operator_param, compile_info_json);
 
-  OpRunInfoV2 run_info(uint32_t(0), false, uint64_t(0));
-  if (elapse) {
+  OpRunInfoV2 run_info(static_cast<uint32_t>(0), false, static_cast<uint64_t>(0));
+  if (elapse != nullptr) {
     before_tiling = std::chrono::steady_clock::now();
   }
-  bool rc = (tiling_func)(operator_param, op_compile_json_ptr, run_info);
+  const bool rc = (tiling_func)(operator_param, op_compile_json_ptr, run_info);
 
-  if (elapse) {
+  if (elapse != nullptr) {
     after_tiling = std::chrono::steady_clock::now();
   }
   if (!rc) {
@@ -592,13 +596,14 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
   }
 
   if (elapse) {
-    *elapse = std::chrono::duration_cast<std::chrono::microseconds>(after_tiling - before_tiling).count();
-    *(elapse + 1) = last_op_tiling_perf;
+    *elapse = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(\
+        after_tiling - before_tiling).count());
+    *(elapse + 1) = static_cast<uint64_t>(last_op_tiling_perf);
     last_op_tiling_perf = -1;
   }
 
   GELOGI("Op tiling v4 succeed. op_type:%s", optype);
-  DumpRunInfoV2(run_info, run_info_json, run_info_len);
+  (void)DumpRunInfoV2(run_info, run_info_json, run_info_len);
   return 1;
 }
 
@@ -613,7 +618,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
     if (iter == op_func_map.end()) {
       GELOGI("Optiling func of op type[%s] is not found by Autotiling.", optype);
       REPORT_CALL_ERROR("E19999", "Optiling func is not found. op_type:%s", optype);
-      return ge::GRAPH_FAILED;
+      return static_cast<int32_t>(ge::GRAPH_FAILED);
     }
   }
   OpTilingFuncInfo &op_func_info = iter->second;
