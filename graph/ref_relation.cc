@@ -26,6 +26,7 @@
 #include "debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/def_types.h"
 
 namespace ge {
 namespace {
@@ -42,7 +43,7 @@ namespace {
 class RefRelations::Impl {
 public:
   graphStatus LookUpRefRelations(const RefCell &key, std::unordered_set<RefCell, RefCellHash> &result) {
-    const auto number = static_cast<size_t>(reinterpret_cast<uintptr_t>(key.node.get()));
+    const size_t number = PtrToValue(key.node.get());
     const std::string lookup_key =
         key.node_name + std::to_string(key.in_out) + std::to_string(key.in_out_idx) + std::to_string(number);
     const auto iter = look_up_table_.find(lookup_key);
