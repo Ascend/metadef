@@ -20,8 +20,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "graph/types.h"
+#include "graph/def_types.h"
 
 namespace ge {
 class OpKernelBin {
@@ -31,7 +30,7 @@ class OpKernelBin {
   ~OpKernelBin() = default;
 
   const std::string &GetName() const { return name_; }
-  const uint8_t *GetBinData() const { return reinterpret_cast<const uint8_t *>(data_.data()); }
+  const uint8_t *GetBinData() const { return ge::PtrToPtr<const char_t, const uint8_t>(data_.data()); }
   size_t GetBinDataSize() const { return data_.size(); }
   OpKernelBin(const OpKernelBin &) = delete;
   const OpKernelBin &operator=(const OpKernelBin &) = delete;

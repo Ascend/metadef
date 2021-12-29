@@ -89,37 +89,32 @@ ScopeBasePass::ScopeBasePassImpl::~ScopeBasePassImpl() {
 Status ScopeBasePass::ScopeBasePassImpl::AddFusionScopesResultToScopeGraph(
     const std::shared_ptr<ScopeGraph> &scope_graph, std::vector<ScopesResult> &scope_results) {
   for (auto &rlt : scope_results) {
-    FusionScopesResult *fusion_rlt = new (std::nothrow) FusionScopesResult();
+    std::unique_ptr<FusionScopesResult> fusion_rlt = ComGraphMakeUnique<FusionScopesResult>();
     if (fusion_rlt == nullptr) {
       GELOGE(FAILED, "Alloc fusion_rlt failed.");
       return FAILED;
     }
     if (fusion_rlt->Init() != SUCCESS) {
       GELOGE(FAILED, "Init fusion_rlt failed.");
-      delete fusion_rlt;
-      fusion_rlt = nullptr;
       return FAILED;
     }
     auto &impl_fusion_rlt = fusion_rlt->impl_;
     auto &impl_scope_rlt = rlt.impl_;
     if (impl_scope_rlt == nullptr) {
       GELOGE(ge::MEMALLOC_FAILED, "ScopesResult is not properly initialized.");
-      delete fusion_rlt;
-      fusion_rlt = nullptr;
       continue;
     }
 
     impl_fusion_rlt->AddNodes(impl_scope_rlt->GetNodes());
     impl_fusion_rlt->AddScopes(impl_scope_rlt->GetScopes());
 
-    parent_->GenerateFusionResult(impl_scope_rlt->GetScopes(), fusion_rlt);
+    parent_->GenerateFusionResult(impl_scope_rlt->GetScopes(), fusion_rlt.get());
     if (impl_fusion_rlt->Type() == kScopeInvalidType) {
       GELOGE(FAILED, "Failed to set inner node for fusion op %s.", impl_fusion_rlt->Type().c_str());
-      delete fusion_rlt;
       return FAILED;
     }
     auto &impl_scope_graph = scope_graph->impl_;
-    impl_scope_graph->AddFusionScopesResult(fusion_rlt);
+    impl_scope_graph->AddFusionScopesResult(fusion_rlt.release());
   }
 
   return SUCCESS;

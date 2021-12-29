@@ -124,7 +124,7 @@ void ScopeFusionPassRegistry::RegisterScopeFusionPass(const std::string &pass_na
   impl_->RegisterScopeFusionPass(pass_name, create_fn, is_general);
 }
 
-void ScopeFusionPassRegistry::RegisterScopeFusionPass(const char *pass_name, CreateFn create_fn,
+void ScopeFusionPassRegistry::RegisterScopeFusionPass(const char_t *pass_name, CreateFn create_fn,
                                                       bool is_general) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Failed to register %s, ScopeFusionPassRegistry is not properly initialized.",
@@ -138,7 +138,7 @@ void ScopeFusionPassRegistry::RegisterScopeFusionPass(const char *pass_name, Cre
   impl_->RegisterScopeFusionPass(str_pass_name, create_fn, is_general);
 }
 
-ScopeFusionPassRegistrar::ScopeFusionPassRegistrar(const char *pass_name, ScopeBasePass *(*create_fn)(),
+ScopeFusionPassRegistrar::ScopeFusionPassRegistrar(const char_t *pass_name, ScopeBasePass *(*create_fn)(),
                                                    bool is_general) {
   if (pass_name == nullptr) {
     GELOGE(PARAM_INVALID, "Failed to register scope fusion pass, pass name is null.");

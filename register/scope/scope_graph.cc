@@ -61,7 +61,7 @@ Status DecomposeInputName(const std::string &input_name, std::string &node_name,
   } catch (std::invalid_argument &) {
     GELOGE(PARAM_INVALID, "Peer out index [%s] is invalid.", parts[kPeerOutIndex].c_str());
     return PARAM_INVALID;
-  } catch (std::out_of_range &) {
+  } catch (...) {
     GELOGE(PARAM_INVALID, "Peer out index [%s] is out of range.", parts[kPeerOutIndex].c_str());
     return PARAM_INVALID;
   }
@@ -180,7 +180,7 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
   if (!nodes_.empty()) {
     AscendString name;
     for (const auto &node : nodes_) {
-      node->GetName(name);
+      (void)node->GetName(name);
       (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(name.GetString(), node));
     }
   }
@@ -191,7 +191,7 @@ const std::unordered_map<std::string, ge::OperatorPtr> &Scope::ScopeImpl::AllNod
     if (!sub_nodes.empty()) {
       AscendString name;
       for (const auto sub_node : sub_nodes) {
-        sub_node->GetName(name);
+        (void)sub_node->GetName(name);
         (void)all_nodes_map_.insert(std::pair<std::string, ge::OperatorPtr>(name.GetString(), sub_node));
       }
     }
@@ -225,9 +225,9 @@ const std::vector<Scope *> &Scope::ScopeImpl::GetAllSubScopes() {
     std::stack<Scope *> scopes;
     scopes.push(scope);
     while (!scopes.empty()) {
-      Scope *const scope = scopes.top();
+      Scope *const sub_scope = scopes.top();
       scopes.pop();
-      auto &impl = scope->impl_;
+      auto &impl = sub_scope->impl_;
       const std::unordered_map<std::string, Scope *> &sub_scopes = impl->GetSubScopes();
       for (auto &iter_sub : sub_scopes) {
         all_sub_scopes_.push_back(iter_sub.second);
@@ -741,9 +741,9 @@ bool FusionScopesResult::FusionScopesResultImpl::FindNodes(const std::string &no
 bool FusionScopesResult::FusionScopesResultImpl::FindScopes(const std::string &scope_name) const {
   for (auto &scope : scopes_) {
     AscendString name;
-    scope->Name(name);
-    if (std::string(name.GetString()).length() < scope_name.length() &&
-        scope_name.find(std::string(name.GetString())) == 0U) {
+    (void)scope->Name(name);
+    if ((std::string(name.GetString()).length() < scope_name.length()) &&
+        (scope_name.find(std::string(name.GetString())) == 0U)) {
       return true;
     }
   }
@@ -1129,8 +1129,8 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
       return;
     }
     AscendString name;
-    op->GetName(name);
-    nodes_map_.emplace(std::string(name.GetString()), op);
+    (void)op->GetName(name);
+    (void)nodes_map_.emplace(std::string(name.GetString()), op);
     if (op->GetOpType() != kTfIdentityType || op->GetOpType() != kTfConstType) {
       auto &impl = scope_tree_->impl_;
       impl->AddNodeToScope(op);
@@ -1239,7 +1239,7 @@ Status ScopeGraph::ScopeGraphImpl::GetInputOrOutputIndex(const ScopeFusionOpInfo
            info.node_name.c_str(), info.fusion_node_name.c_str(), info.fusion_op_type.c_str(), old_index);
     new_index = kFusionDisableIndex;
   } else {
-    new_index = indexs[static_cast<int32_t>(old_index)];
+    new_index = indexs[static_cast<uint64_t>(old_index)];
   }
   GELOGD("RESULT: new index:%d.", new_index);
   return SUCCESS;

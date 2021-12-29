@@ -32,6 +32,8 @@
 #include "register/register_utils.h"
 #include "graph/graph.h"
 #include "graph/debug/ge_util.h"
+#include "graph/ascend_limits.h"
+#include "graph/def_types.h"
 
 namespace domi {
 using namespace domi::tensorflow;
@@ -144,14 +146,14 @@ Status CheckDynamicInfo(const vector<DynamicInputOutputInfo> &dynamic_name_attr_
       return PARAM_INVALID;
     }
 
-    const int64_t port_name_len = static_cast<int64_t>(strlen(dynamic_info.port_name));
+    const int64_t port_name_len = static_cast<int64_t>(strnlen(dynamic_info.port_name, ge::kMaxNameLen));
     if ((dynamic_info.port_name == nullptr) || (port_name_len != dynamic_info.port_name_len)) {
       GELOGE(PARAM_INVALID, "[Check][Param]port_name:%s, port_name_len:%ld",
              dynamic_info.port_name, dynamic_info.port_name_len);
       return PARAM_INVALID;
     }
 
-    const int64_t attr_name_len = static_cast<int64_t>(strlen(dynamic_info.attr_name));
+    const int64_t attr_name_len = static_cast<int64_t>(strnlen(dynamic_info.attr_name, ge::kMaxNameLen));
     if ((dynamic_info.attr_name == nullptr) || (attr_name_len != dynamic_info.attr_name_len)) {
       GELOGE(PARAM_INVALID, "[Check][Param]attr_name:%s, attr_name_len:%ld",
              dynamic_info.attr_name, dynamic_info.attr_name_len);
@@ -228,7 +230,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t input_index = 0U;
   uint32_t input_increment = 0U;
   for (const auto &input_name : register_input_names) {
-    auto input_iter = port_dynamic_info.find(input_name);
+    const auto input_iter = port_dynamic_info.find(input_name);
     if (input_iter != port_dynamic_info.end()) {
       port_dynamic_info[input_name].SetInsetIndex(input_index + input_increment);
       const uint32_t tensor_num = port_dynamic_info[input_name].GetTensorNum();
@@ -246,7 +248,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t output_index = 0U;
   uint32_t out_increment = 0U;
   for (const auto &output_name : register_output_names) {
-    auto output_iter = port_dynamic_info.find(output_name);
+    const auto output_iter = port_dynamic_info.find(output_name);
     if (output_iter != port_dynamic_info.end()) {
       port_dynamic_info[output_name].SetInsetIndex(output_index + out_increment);
       const uint32_t tensor_num = port_dynamic_info[output_name].GetTensorNum();
@@ -317,7 +319,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
   }
 
   // add dynamic input and output
-  const NodeDef *const node = reinterpret_cast<const NodeDef *>(op_src);
+  const NodeDef *const node = ge::PtrToPtr<const google::protobuf::Message, const NodeDef>(op_src);
   for (const auto &it : dynamic_name_attr_value) {
     const std::string flag = it.first;
     const std::pair<std::string, std::string> name_value = it.second;
@@ -355,6 +357,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
       (void)op_desc->AddDynamicOutputDesc(dynamic_name, static_cast<uint32_t>(dynamic_tensor_num), is_pushback);
       (void)ge::AttrUtils::SetInt(op_desc, DYNAMIC_OUTPUT_TD_NUM(dynamic_name), dynamic_tensor_num);
       GELOGI("In NodeDef %s add dynamic output[%d]", node->name().c_str(), dynamic_tensor_num);
+    } else {
+      // no operation
     }
   }
   return SUCCESS;
@@ -398,11 +402,12 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
 
     if (dynamic_type == kInput) {
       (void)op_desc_dst->AddInputDescMiddle(port_name, tensor_num, static_cast<size_t>(insert_index));
-      (void)ge::AttrUtils::SetInt(op_desc_dst, DYNAMIC_INPUT_TD_NUM(port_name), tensor_num);
+      (void)ge::AttrUtils::SetInt(op_desc_dst, DYNAMIC_INPUT_TD_NUM(port_name), static_cast<const int64_t>(tensor_num));
       GELOGI("Op[%s] add dynamic input[%u]", op_desc_dst->GetName().c_str(), tensor_num);
     } else if (dynamic_type == kOutput) {
       (void)op_desc_dst->AddOutputDescMiddle(port_name, tensor_num, static_cast<size_t>(insert_index));
-      (void)ge::AttrUtils::SetInt(op_desc_dst, DYNAMIC_OUTPUT_TD_NUM(port_name), tensor_num);
+      (void)ge::AttrUtils::SetInt(op_desc_dst, DYNAMIC_OUTPUT_TD_NUM(port_name),
+                                  static_cast<const int64_t>(tensor_num));
       GELOGI("Op[%s] add dynamic output[%u]", op_desc_dst->GetName().c_str(), tensor_num);
     } else {
       GELOGW("Do not add input or output desc with dynamic type :[%d].", static_cast<int32_t>(dynamic_type));
@@ -452,7 +457,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFn(const Mess
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFn(const ge::Operator &op_src,
                                                                           ge::Operator &op) {
-  std::shared_ptr<ge::OpDesc> op_desc_src = ge::OpDescUtils::GetOpDescFromOperator(op_src);
+  const std::shared_ptr<ge::OpDesc> op_desc_src = ge::OpDescUtils::GetOpDescFromOperator(op_src);
   std::shared_ptr<ge::OpDesc> op_desc_dst = ge::OpDescUtils::GetOpDescFromOperator(op);
   GE_CHECK_NOTNULL(op_desc_src);
   GE_CHECK_NOTNULL(op_desc_dst);
@@ -509,7 +514,6 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
 }
 
 namespace {
-  const std::string ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE = "original_type";
   std::vector<std::shared_ptr<ge::Node>> FindNodesByType(const ge::ComputeGraphPtr &graph, const std::string &type) {
     std::vector<std::shared_ptr<ge::Node>> nodes;
     for (const auto &node : graph->GetDirectNode()) {
@@ -520,7 +524,7 @@ namespace {
       }
       if (node->GetOpDesc()->GetType() == "FrameworkOp") {
         std::string original_type;
-        if (!ge::AttrUtils::GetStr(node->GetOpDesc(), ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, original_type)) {
+        if (!ge::AttrUtils::GetStr(node->GetOpDesc(), ge::ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, original_type)) {
           // if there is no ref index on the TensorDesc, it means the output data will be ignored outer.
           continue;
         }
@@ -943,7 +947,7 @@ OpRegistrationData &OpRegistrationData::DelInputWithCond(int32_t input_idx, cons
   return *this;
 }
 
-OpRegistrationData &OpRegistrationData::InputReorderVector(const vector<int> &input_order) {
+OpRegistrationData &OpRegistrationData::InputReorderVector(const vector<int32_t> &input_order) {
   if (impl_ != nullptr) {
     struct RemoveInputConfigure register_input;
     register_input.inputIdx = 0;

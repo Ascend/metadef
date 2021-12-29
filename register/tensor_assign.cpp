@@ -27,6 +27,7 @@
 #include "register/register_error_codes.h"
 #include "register/tensor_assign.h"
 #include "graph/types.h"
+#include "graph/def_types.h"
 
 namespace domi {
 namespace {
@@ -172,7 +173,7 @@ Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::prot
       addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(0));
     }
   }
-  (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.data()), static_cast<size_t>(count) * sizeof(uint16_t));
+  (void)weight->SetData(ge::PtrToPtr<uint16_t, uint8_t>(addr.data()), static_cast<size_t>(count) * sizeof(uint16_t));
   return SUCCESS;
 }
 
@@ -213,23 +214,25 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     }
     total_size += (static_cast<size_t>(count) - static_cast<size_t>(min_count)) * (sizeof(ge::StringHead) + 1U);
     std::vector<uint8_t> addr(total_size);
-    ge::StringHead *const string_head = reinterpret_cast<ge::StringHead *>(addr.data());
+    ge::StringHead *const string_head = ge::PtrToPtr<uint8_t, ge::StringHead>(addr.data());
     // front 16 bytes store head of each string
-    auto raw_data = addr.data() + (static_cast<size_t>(count) * sizeof(ge::StringHead));
+    auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
+                                        static_cast<size_t>(count) * sizeof(ge::StringHead));
     for (int32_t i = 0; i < count; ++i) {
-      string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
+      ge::PtrAdd<ge::StringHead>(string_head, count + 1U, static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
       if (i < val_size) {
         const string &str = val_vector.Get(i);
-        string_head[i].len = static_cast<uint64_t>(str.size());
+        ge::PtrAdd<ge::StringHead>(string_head, count + 1U,
+                                   static_cast<size_t>(i))->len = static_cast<uint64_t>(str.size());
         CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
                          GELOGW("[GetStringVal][Copy] memcpy failed"));
-        raw_data += (str.size() + 1U);
+        raw_data = ge::PtrAdd<uint8_t>(raw_data, total_size + 1U, str.size() + 1U);
       } else {
-        string_head[i].len = 0U;
-        raw_data += 1;
+        ge::PtrAdd<ge::StringHead>(string_head, count + 1U, static_cast<size_t>(i))->len = 0U;
+        raw_data = ge::PtrAdd<uint8_t>(raw_data, total_size + 1U, 1U);
       }
     }
-    (void)weight->SetData(reinterpret_cast<const uint8_t *>(addr.data()), total_size);
+    (void)weight->SetData(ge::PtrToPtr<uint8_t, const uint8_t>(addr.data()), total_size);
   } else {
     const string &str = val_vector.Get(0);
     // extra 16 bytes store head of string
@@ -237,18 +240,20 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     total_size = (str.size() + sizeof(ge::StringHead) + 1U) * static_cast<size_t>(count);
     std::vector<uint8_t> addr(total_size);
     // front 16 bytes store head of each string
-    ge::StringHead *const string_head = reinterpret_cast<ge::StringHead *>(addr.data());
-    auto raw_data = addr.data() + (static_cast<size_t>(count) * sizeof(ge::StringHead));
+    ge::StringHead *const string_head = ge::PtrToPtr<uint8_t, ge::StringHead>(addr.data());
+    auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
+                                        static_cast<size_t>(count) * sizeof(ge::StringHead));
     for (int32_t i = 0; i < count; ++i) {
-      string_head[i].addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
-      string_head[i].len = static_cast<uint64_t>(str.size());
+      ge::PtrAdd<ge::StringHead>(string_head, count + 1U, static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
+      ge::PtrAdd<ge::StringHead>(string_head, count + 1U,
+                                 static_cast<size_t>(i))->len =static_cast<uint64_t>(str.size());
       const bool b = memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK;
       if (!b) {
         GELOGW("[GetStringVal][Copy] memcpy failed");
       }
-      raw_data += (str.size() + 1U);
+      raw_data = ge::PtrAdd<uint8_t>(raw_data, total_size + 1U, str.size() + 1U);
     }
-    (void)weight->SetData(reinterpret_cast<const uint8_t *>(addr.data()), total_size);
+    (void)weight->SetData(ge::PtrToPtr<uint8_t, const uint8_t>(addr.data()), total_size);
   }
   return SUCCESS;
 }
@@ -321,13 +326,13 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
     }
     const size_t total_size = weight_content.size() + sizeof(ge::StringHead) + 1U;
     std::vector<uint8_t> addr(total_size);
-    ge::StringHead *const string_head = reinterpret_cast<ge::StringHead *>(addr.data());
-    const auto raw_data = addr.data() + sizeof(ge::StringHead);
-    string_head->addr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(raw_data));
+    ge::StringHead *const string_head = ge::PtrToPtr<uint8_t, ge::StringHead>(addr.data());
+    const auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U, sizeof(ge::StringHead));
+    string_head->addr = ge::PtrToValue(raw_data);
     string_head->len = static_cast<uint64_t>(weight_content.size());
     CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(),
                               weight_content.size() + 1) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
-    (void)weight->SetData(reinterpret_cast<const uint8_t *>(addr.data()), total_size);
+    (void)weight->SetData(ge::PtrToPtr<uint8_t, const uint8_t>(addr.data()), total_size);
   } else {
     (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(float));

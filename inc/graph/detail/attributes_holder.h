@@ -70,9 +70,20 @@ class GeIrProtoHelper {
     protoOwner_ = other.protoOwner_;
     protoMsg_ = other.protoMsg_;
   }
+
+  GeIrProtoHelper(const GeIrProtoHelper<ProtoType> &other) {
+    protoOwner_ = other.protoOwner_;
+    protoMsg_ = other.protoMsg_;
+  }
   template<typename T>
   GeIrProtoHelper &operator=(const GeIrProtoHelper<T> &other) {
     protoOwner_ = other.protoOnwer_;
+    protoMsg_ = other.protoMsg_;
+    return *this;
+  }
+
+  GeIrProtoHelper &operator=(const GeIrProtoHelper<ProtoType> &other) {
+    protoOwner_ = other.protoOwner_;
     protoMsg_ = other.protoMsg_;
     return *this;
   }
@@ -107,11 +118,15 @@ class GeIrProtoHelper {
     other.protoMsg_ = temp;
   }
 
+  friend class GeIrProtoHelper<typename std::conditional<
+      std::is_const<ProtoType>::value, typename std::remove_const<ProtoType>::type, const ProtoType>::type>;
+  friend class ComputerGraphImpl;
+  friend class GeTensorSerializeUtils;
+
+private:
   // protoMsg_ is part of protoOwner_, they have the same runtime
   ProtoMsgOwner protoOwner_ = nullptr;
   ProtoType *protoMsg_ = nullptr;
-  friend class GeIrProtoHelper<typename std::conditional<
-      std::is_const<ProtoType>::value, typename std::remove_const<ProtoType>::type, const ProtoType>::type>;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
@@ -162,10 +177,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   friend class AttrUtils;
   friend class AttrUtilsHelper;
 
-  std::vector<std::string> requiredAttrs_;
-
  private:
   AnyMap extAttrs_;
+  std::vector<std::string> requiredAttrs_;
 };
 }  // namespace ge
 #endif  // INC_GRAPH_DETAIL_ATTRIBUTES_HOLDER_H_
