@@ -21,7 +21,6 @@
 #include <string>
 #include "graph_optimizer_types.h"
 #include "optimize_utility.h"
-#include "external/ge/ge_api_types.h"
 #include "common/ge_inner_error_codes.h"
 #include "common/opskernel/ops_kernel_info_types.h"
 #include "graph/compute_graph.h"
