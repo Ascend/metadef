@@ -423,7 +423,7 @@ class SmallVector {
       allocator_.destroy(old_ptr++);
     }
 
-    new_ptr += range_len;
+    new_ptr = PtrAdd(new_ptr, new_cap + 1UL, range_len);
     for (size_type i = range_begin; i < size_; ++i) {
       allocator_.construct(new_ptr++, std::move(*old_ptr));
       allocator_.destroy(old_ptr++);
@@ -435,15 +435,15 @@ class SmallVector {
     return new_storage + range_begin;
   }
   iterator ExpandSize(const size_type range_begin, const size_type range_len) {
-    auto const storage = GetPointer();
-    auto old_end = end() - 1UL;
-    auto new_end = end() + range_len - 1UL;
+    auto const  begin_storage = GetPointer(range_begin);
+    auto old_end = GetPointer(size_ - 1UL);
+    auto new_end = GetPointer(size_ + range_len - 1UL);
     for (size_type i = size_; i > range_begin; --i) {
       allocator_.construct(new_end--, std::move(*old_end));
       allocator_.destroy(old_end--);
     }
     size_ += range_len;
-    return storage + range_begin;
+    return begin_storage;
   }
   iterator Expand(const size_type range_begin, const size_type range_len) {
     if ((range_len + size_) > capacity_) {
