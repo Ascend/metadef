@@ -18,6 +18,7 @@
 #include <climits>
 #include "register/custom_pass_helper.h"
 #include "graph/debug/ge_log.h"
+#include "graph/debug/ge_util.h"
 
 namespace ge {
 PassReceiver::PassReceiver(PassRegistrationData &reg_data) {
@@ -44,7 +45,7 @@ PassRegistrationDataImpl::PassRegistrationDataImpl(const std::string &pass_name)
       custom_pass_fn_(nullptr) {}
 
 PassRegistrationData::PassRegistrationData(std::string pass_name) {
-  impl_ = std::shared_ptr<PassRegistrationDataImpl>(new (std::nothrow) PassRegistrationDataImpl(pass_name));
+  impl_ = ComGraphMakeShared<PassRegistrationDataImpl>(pass_name);
   if (impl_ == nullptr) {
     GELOGW("[Check][Param] make impl failed, pass_name:%s", pass_name.c_str());
   }
