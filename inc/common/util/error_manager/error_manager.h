@@ -29,10 +29,20 @@ using char_t = char;
 #ifdef __GNUC__
 int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max,
                            const char_t *format, ...)__attribute__((format(printf, 3, 4)));
-#define TRIM_PATH(x) (((x).find_last_of('/') != std::string::npos) ? (x).substr((x).find_last_of('/') + 1U) : (x))
+inline std::string TrimPath(const std::string &str) {
+  if (str.find_last_of('/') != std::string::npos) {
+    return str.substr(str.find_last_of('/') + 1U);
+  }
+  return str;
+}
 #else
 int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...);
-#define TRIM_PATH(x) (((x).find_last_of('\\') != std::string::npos) ? (x).substr((x).find_last_of('\\') + 1U) : (x))
+inline std::string TrimPath(const std::string &str) {
+  if (str.find_last_of('\\') != std::string::npos) {
+    return str.substr(str.find_last_of('\\') + 1U);
+  }
+  return str;
+}
 #endif
 }
 
@@ -59,7 +69,8 @@ do {                                                                            
   std::vector<char> error_string(LIMIT_PER_MESSAGE, '\0');                                                           \
   if (error_message::FormatErrorMessage(error_string.data(), error_string.size(), fmt, ##__VA_ARGS__) > 0) {         \
     if (error_message::FormatErrorMessage(error_string.data(), error_string.size(), "%s[FUNC:%s][FILE:%s][LINE:%d]", \
-        error_string.data(), &__FUNCTION__[0], TRIM_PATH(std::string(__FILE__)).c_str(), __LINE__) > 0) {            \
+        error_string.data(), &__FUNCTION__[0], error_message::TrimPath(std::string(__FILE__)).c_str(),               \
+        __LINE__) > 0) {                                                                                             \
       (void)ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_string.data()));         \
     }                                                                                                                \
   }                                                                                                                  \
