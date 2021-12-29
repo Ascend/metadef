@@ -2421,7 +2421,11 @@ private:
 
     if (root_graph == graph) {
       const auto subgraphs = graph->GetAllSubgraphs();
-
+      (void)std::any_of(subgraphs.begin(), subgraphs.end(), [&](const std::shared_ptr<ComputeGraph> &subgraph) {
+        if (MoveSubgraphToRoot(subgraph) != GRAPH_SUCCESS) {
+            return GRAPH_FAILED;
+        }
+      });
       for (auto &subgraph : subgraphs) {
         if (MoveSubgraphToRoot(subgraph) != GRAPH_SUCCESS) {
             return GRAPH_FAILED;
