@@ -276,7 +276,7 @@ NodeAttrFeature::NodeAttrFeature(std::string nodeType, std::string attr_name,
 }
 
 NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_name,
-                                 ge::DataType datatype, ScopeAttrValue &attr_value)
+                                 ge::DataType data_type, ScopeAttrValue &attr_value)
     : ScopeBaseFeature() {
   std::string str_node_type;
   if (node_type != nullptr) {
@@ -287,7 +287,7 @@ NodeAttrFeature::NodeAttrFeature(const char_t *node_type, const char_t *attr_nam
     str_attr_name = attr_name;
   }
   impl_ = std::unique_ptr<NodeAttrFeatureImpl>(new (std::nothrow) NodeAttrFeatureImpl(str_node_type, str_attr_name,
-                                                                                      datatype, attr_value));
+                                                                                      data_type, attr_value));
 }
 
 NodeAttrFeature::NodeAttrFeature(NodeAttrFeature const &feature) : ScopeBaseFeature() {
