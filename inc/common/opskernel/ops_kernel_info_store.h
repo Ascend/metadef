@@ -50,7 +50,7 @@ class OpsKernelInfoStore {
 
   virtual Status CreateSession(const std::map<std::string, std::string> &session_options) {
     (void)session_options;
-    return SUCCESS; 
+    return SUCCESS;
   }
 
   virtual Status DestroySession(const std::map<std::string, std::string> &session_options) {
