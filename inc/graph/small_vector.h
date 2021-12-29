@@ -18,6 +18,7 @@
 #define METADEF_CXX_SMALL_VECTOR_H
 #include <iterator>
 #include <memory>
+#include <algorithm>
 #include "graph/def_types.h"
 
 namespace ge {
