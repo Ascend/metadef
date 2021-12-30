@@ -90,7 +90,11 @@ class BufferFusionPattern {
 
  private:
   BufferFusionOpDesc *GetOpDesc(const std::string &desc_name) const;
+#ifdef ONLY_COMPILE_OPEN_SRC
   void UpdateSkipStatus(BufferFusionOpDesc *op_desc) const;
+#else
+  void UpdateSkipStatus(const BufferFusionOpDesc *op_desc) const;
+#endif
   std::string name_;
   int64_t op_max_count_;
   std::vector<BufferFusionOpDesc *> ops_;

@@ -37,7 +37,7 @@ public:
   size_t GetWorkspaceNum() const { return workspaces_.size(); }
 
   ge::graphStatus GetWorkspace(const size_t &idx, int64_t &workspace) const {
-    if (!workspaces_.empty() && idx < workspaces_.size()) {
+    if ((!workspaces_.empty()) && (idx < workspaces_.size())) {
       workspace = workspaces_[idx];
       return ge::GRAPH_SUCCESS;
     }
@@ -50,9 +50,9 @@ public:
 
   void SetWorkspaces(const std::vector<int64_t> &workspaces) { workspaces_ = workspaces; }
 
-  void AddTilingData(const char *value, size_t size) {
-    tiling_data_.write(value, size);
-    tiling_data_.flush();
+  void AddTilingData(const char *value, const size_t size) {
+    (void)tiling_data_.write(value, static_cast<std::streamsize>(size));
+    (void)tiling_data_.flush();
   }
 
   const ByteBuffer &GetAllTilingData() const { return tiling_data_; }
@@ -61,11 +61,11 @@ public:
 
   void SetAllTilingData(const ByteBuffer &value) {
     tiling_data_.clear();
-    std::string temp = value.str();
+    const std::string temp = value.str();
     tiling_data_ << temp;
   }
 
-  void SetClearAtomic(bool clear_atomic) { clear_atomic_ = clear_atomic; }
+  void SetClearAtomic(const bool clear_atomic) { clear_atomic_ = clear_atomic; }
 
   bool GetClearAtomic() const { return clear_atomic_; }
 
@@ -155,7 +155,11 @@ void OpRunInfo::InternelSetTiling(const ByteBuffer &value) {
   impl_->SetAllTilingData(value);
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void OpRunInfo::AddTilingData(const char *value, size_t size) {
+#else
+void OpRunInfo::AddTilingData(const ge::char_t *value, const size_t size) {
+#endif
   impl_->AddTilingData(value, size);
 }
 
@@ -167,7 +171,11 @@ const ByteBuffer &OpRunInfo::GetAllTilingData() const {
   return impl_->GetAllTilingData();
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void OpRunInfo::SetClearAtomic(bool clear_atomic) {
+#else
+void OpRunInfo::SetClearAtomic(const bool clear_atomic) {
+#endif
   impl_->SetClearAtomic(clear_atomic);
 }
 

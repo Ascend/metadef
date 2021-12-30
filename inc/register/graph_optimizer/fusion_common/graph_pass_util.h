@@ -163,8 +163,11 @@ class GraphPassUtil {
     }
     return ge::TypeUtils::SerialStringToDataType(origin_data_type_str);
   }
-
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void AddNodeFromOpTypeMap(NodeMapInfoPtr &node_map_info, ge::NodePtr &node_ptr) {
+#else
+  static void AddNodeFromOpTypeMap(const NodeMapInfoPtr &node_map_info, const ge::NodePtr &node_ptr) {
+#endif
     if (node_map_info == nullptr || node_ptr == nullptr) {
       return;
     }
@@ -219,7 +222,12 @@ class GraphPassUtil {
     (void)ge::AttrUtils::SetListStr(node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
   }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void AddNodeToNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type, ge::NodePtr &node_ptr) {
+#else
+  static void AddNodeToNodeTypeMap(const NodeTypeMapPtr &node_type_map, const std::string &op_type,
+                                   const ge::NodePtr &node_ptr) {
+#endif
     if (node_type_map == nullptr || node_ptr == nullptr) {
       return;
     }

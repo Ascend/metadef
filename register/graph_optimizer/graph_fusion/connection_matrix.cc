@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "register/graph_optimizer/graph_fusion/connection_matrix.h"
 #include "graph/debug/ge_log.h"
 
@@ -33,7 +34,6 @@ ConnectionMatrix::~ConnectionMatrix() {
   bit_maps.clear();
   name_to_index_.clear();
 }
-
 
 Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
   for (auto &node : graph.GetDirectNode()) {
@@ -63,8 +63,7 @@ void ConnectionMatrix::Update(const ge::ComputeGraph &graph, vector<ge::NodePtr>
   }
 }
 
-void ConnectionMatrix::SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inputs,
-                                       const ge::NodePtr &node) {
+void ConnectionMatrix::SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inputs, const ge::NodePtr &node) {
   ge::LargeBitmap &bitmap = GetBitMap(node);
   if (std::find(inputs.begin(), inputs.end(), node) == inputs.end()) {
     bitmap.SetValues(0);

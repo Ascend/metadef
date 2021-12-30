@@ -262,7 +262,11 @@ BufferFusionPattern &BufferFusionPattern::SetHead(const std::vector<string> &hea
   return *this;
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void BufferFusionPattern::UpdateSkipStatus(BufferFusionOpDesc *op_desc) const {
+#else
+void BufferFusionPattern::UpdateSkipStatus(const BufferFusionOpDesc *op_desc) const {
+#endif
   if (op_desc->out_branch_type == TBE_OUTPUT_BRANCH_MULTI) {
     for (auto &input_desc : op_desc->inputs) {
       if (input_desc->types.size() != op_desc->types.size()) {

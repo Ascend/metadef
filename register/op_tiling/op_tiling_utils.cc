@@ -25,9 +25,9 @@ void AddNameToTensordesc(const ge::OpDescPtr &op_desc) {
   if (!op_desc->HasAttr(ATTR_NAME_OP_INFER_DEPENDS)) {
     return;
   }
-  size_t input_size = op_desc->GetAllInputsSize();
+  const size_t input_size = op_desc->GetAllInputsSize();
   for (size_t i = 0; i < input_size; i++) {
-    ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableInputDesc(i);
+    const ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableInputDesc(i);
     if (tensor_desc_ptr == nullptr) {
       continue;
     }
@@ -36,29 +36,29 @@ void AddNameToTensordesc(const ge::OpDescPtr &op_desc) {
 }
 
 void ReplaceEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, std::vector<int32_t> &indexes) {
-  size_t input_size = op_desc->GetAllInputsSize();
+  const size_t input_size = op_desc->GetAllInputsSize();
   for (size_t i = 0; i < input_size; ++i) {
-    ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableInputDesc(i);
+    const ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableInputDesc(static_cast<uint32_t>(i));
     if (tensor_desc_ptr == nullptr) {
       continue;
     }
     if (tensor_desc_ptr->MutableShape().IsScalar()) {
-      indexes.push_back(i);
+      indexes.push_back(static_cast<int32_t>(i));
       tensor_desc_ptr->MutableShape().SetDimNum(1);
-      tensor_desc_ptr->MutableShape().SetDim(0, 1);
+      (void)tensor_desc_ptr->MutableShape().SetDim(0, 1);
     }
   }
 
-  size_t output_size = op_desc->GetOutputsSize();
+  const size_t output_size = op_desc->GetOutputsSize();
   for (size_t i = 0; i < output_size; ++i) {
-    ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableOutputDesc(i);
+    const ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableOutputDesc(static_cast<uint32_t>(i));
     if (tensor_desc_ptr == nullptr) {
       continue;
     }
     if (tensor_desc_ptr->MutableShape().IsScalar()) {
-      indexes.push_back(-1 - i);
+      indexes.push_back(static_cast<int32_t>(-1 - i));
       tensor_desc_ptr->MutableShape().SetDimNum(1);
-      tensor_desc_ptr->MutableShape().SetDim(0, 1);
+      (void)tensor_desc_ptr->MutableShape().SetDim(0, 1);
     }
   }
 }
@@ -67,9 +67,9 @@ void RecoveryEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, const std::vec
   for (const int32_t &index : indexes) {
     ge::GeTensorDescPtr tensor_desc_ptr;
     if (index >= 0) {
-      tensor_desc_ptr = op_desc->MutableInputDesc(index);
+      tensor_desc_ptr = op_desc->MutableInputDesc(static_cast<uint32_t>(index));
     } else {
-      tensor_desc_ptr = op_desc->MutableOutputDesc(std::abs(index) - 1);
+      tensor_desc_ptr = op_desc->MutableOutputDesc(static_cast<uint32_t>(std::abs(index) - 1));
     }
     if (tensor_desc_ptr == nullptr) {
       continue;

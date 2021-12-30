@@ -57,6 +57,7 @@ class PatternFusionBasePassImpl {
   void SetOpsKernelInfoStore(OpsKernelInfoStorePtr ops_kernel_info_store_ptr);
 
   PatternFusionBasePassImpl &operator=(const PatternFusionBasePassImpl &) = delete;
+  PatternFusionBasePassImpl(const PatternFusionBasePassImpl &another_pattern_fusion) = delete;
 
   bool CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) const;
 

@@ -66,7 +66,6 @@ inline uint16_t FloatToUint16(const float &value) {
   return out;
 }
 
-
 #define OP_TILING_MAKE_SHARED(exec_expr0, exec_expr1) \
   do {                                                \
     try {                                             \

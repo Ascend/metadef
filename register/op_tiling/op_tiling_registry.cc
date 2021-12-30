@@ -18,20 +18,20 @@
 #include "framework/common/debug/ge_log.h"
 
 namespace optiling {
-size_t ByteBufferGetAll(ByteBuffer &buf, char *dest, size_t dest_len) {
+size_t ByteBufferGetAll(ByteBuffer &buf, ge::char_t *dest, size_t dest_len) {
   size_t nread = 0;
   size_t rn = 0;
   do {
-    rn = buf.readsome(dest + nread, dest_len - nread);
+    rn = static_cast<size_t>(buf.readsome(dest + nread, static_cast<std::streamsize>(dest_len - nread)));
     nread += rn;
-  } while (rn > 0 && dest_len > nread);
+  } while ((rn > 0) && (dest_len > nread));
 
   return nread;
 }
 
 ByteBuffer &ByteBufferPut(ByteBuffer &buf, const uint8_t *data, size_t data_len) {
-  buf.write(reinterpret_cast<const char *>(data), data_len);
-  buf.flush();
+  (void)buf.write(reinterpret_cast<const ge::char_t *>(data), static_cast<std::streamsize>(data_len));
+  (void)buf.flush();
   return buf;
 }
 
@@ -42,7 +42,7 @@ std::unordered_map<std::string, OpTilingFunc> &OpTilingRegistryInterf::Registere
 
 OpTilingRegistryInterf::OpTilingRegistryInterf(std::string op_type, OpTilingFunc func) {
   auto &interf = RegisteredOpInterf();
-  interf.emplace(op_type, func);
+  (void)interf.emplace(op_type, func);
   GELOGI("Register tiling function: op_type:%s, funcPointer:%p, registered count:%zu", op_type.c_str(),
          func.target<OpTilingFuncPtr>(), interf.size());
 }
@@ -55,11 +55,9 @@ std::unordered_map<std::string, OpTilingFuncV2> &OpTilingRegistryInterf_V2::Regi
 
 OpTilingRegistryInterf_V2::OpTilingRegistryInterf_V2(const std::string &op_type, OpTilingFuncV2 func) {
   auto &interf = RegisteredOpInterf();
-  interf.emplace(op_type, std::move(func));
+  (void)interf.emplace(op_type, std::move(func));
   GELOGI("Register tiling function by new method: op_type:%s, registered count:%zu", op_type.c_str(), interf.size());
 }
-namespace utils {
-}  // namespace utils
 
 OpTilingFuncInfo::OpTilingFuncInfo(const std::string &op_type)
   : op_type_(op_type), tiling_func_(nullptr), tiling_func_v2_(nullptr), tiling_func_v3_(nullptr),
@@ -117,11 +115,11 @@ std::unordered_map<std::string, OpTilingFuncInfo> &OpTilingFuncRegistry::Registe
 
 OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type, OpTilingFunc tiling_func) {
   auto &op_func_map = RegisteredOpFuncInfo();
-  auto iter = op_func_map.find(op_type);
+  const auto iter = op_func_map.find(op_type);
   if (iter == op_func_map.end()) {
     OpTilingFuncInfo op_func_info(op_type);
     op_func_info.SetOpTilingFunc(tiling_func);
-    op_func_map.emplace(op_type, op_func_info);
+    (void)op_func_map.emplace(op_type, op_func_info);
   } else {
     iter->second.SetOpTilingFunc(tiling_func);
   }
@@ -129,11 +127,11 @@ OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type, OpTilingF
 }
 OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type, OpTilingFuncV2 tiling_func) {
   auto &op_func_map = RegisteredOpFuncInfo();
-  auto iter = op_func_map.find(op_type);
+  const auto iter = op_func_map.find(op_type);
   if (iter == op_func_map.end()) {
     OpTilingFuncInfo op_func_info(op_type);
     op_func_info.SetOpTilingFuncV2(tiling_func);
-    op_func_map.emplace(op_type, op_func_info);
+    (void)op_func_map.emplace(op_type, op_func_info);
   } else {
     iter->second.SetOpTilingFuncV2(tiling_func);
   }
@@ -143,11 +141,11 @@ OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type, OpTilingF
 OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type,
                                            OpTilingFuncV3 tiling_func, OpParseFuncV3 parse_func) {
   auto &op_func_map = RegisteredOpFuncInfo();
-  auto iter = op_func_map.find(op_type);
+  const auto iter = op_func_map.find(op_type);
   if (iter == op_func_map.end()) {
     OpTilingFuncInfo op_func_info(op_type);
     op_func_info.SetOpTilingFuncV3(tiling_func, parse_func);
-    op_func_map.emplace(op_type, op_func_info);
+    (void)op_func_map.emplace(op_type, op_func_info);
   } else {
     iter->second.SetOpTilingFuncV3(tiling_func, parse_func);
   }
@@ -157,11 +155,11 @@ OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type,
 OpTilingFuncRegistry::OpTilingFuncRegistry(const std::string &op_type,
                                            OpTilingFuncV4 tiling_func, OpParseFuncV4 parse_func) {
   auto &op_func_map = RegisteredOpFuncInfo();
-  auto iter = op_func_map.find(op_type);
+  const auto iter = op_func_map.find(op_type);
   if (iter == op_func_map.end()) {
     OpTilingFuncInfo op_func_info(op_type);
     op_func_info.SetOpTilingFuncV4(tiling_func, parse_func);
-    op_func_map.emplace(op_type, op_func_info);
+    (void)op_func_map.emplace(op_type, op_func_info);
   } else {
     iter->second.SetOpTilingFuncV4(tiling_func, parse_func);
   }

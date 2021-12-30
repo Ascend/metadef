@@ -235,7 +235,7 @@ void ParseConstTensorList(const nlohmann::json &shape_list, std::map<std::string
 }
 
 void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_para,
-                           std::map<std::string, std::vector<uint8_t>> &const_values, ge::OpDescPtr op_desc) {
+                           std::map<std::string, std::vector<uint8_t>> &const_values) {
   std::vector<int64_t> shape;
   std::string format_str;
   std::string dtype_str;
@@ -283,19 +283,19 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   ge::GeTensorPtr const_tensor_ptr = std::make_shared<ge::GeTensor>(const_tensor);
   ge::OpDescPtr const_op_desc = ge::OpDescUtils::CreateConstOp(const_tensor_ptr);
   ge::Operator const_op = ge::OpDescUtils::CreateOperatorFromOpDesc(const_op_desc);
-  op_para.SetInput(name, const_op);
+  op_para.SetInput(name.c_str(), const_op);
   return;
 }
 
 void ParseConstTensorListV2(const nlohmann::json &shape_list, ge::Operator &operator_para,
-                            std::map<std::string, std::vector<uint8_t>> &const_values, ge::OpDescPtr op_desc) {
+                            std::map<std::string, std::vector<uint8_t>> &const_values) {
   for (const auto &elem : shape_list) {
     if (elem.is_array()) {
       for (const auto &shape : elem) {
-        ParseConstShapeDescV2(shape, operator_para, const_values, op_desc);
+        ParseConstShapeDescV2(shape, operator_para, const_values);
       }
     } else {
-      ParseConstShapeDescV2(elem, operator_para, const_values, op_desc);
+      ParseConstShapeDescV2(elem, operator_para, const_values);
     }
   }
 }
@@ -387,7 +387,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
   }
   GELOGI("Optiling func found, op_type:%s", optype);
 
-  OpCompileInfo op_compile_info{compile_info};
+  OpCompileInfo op_compile_info{compile_info, ""};
   if (compile_info_hash) {
     op_compile_info.key = compile_info_hash;
   }
@@ -442,7 +442,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
     ParseShapeDescListV2(inputs_json, op_desc, true);
     ParseShapeDescListV2(outputs_json, op_desc, false);
     operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-    ParseConstTensorListV2(inputs_json, operator_param, const_values, op_desc);
+    ParseConstTensorListV2(inputs_json, operator_param, const_values);
   } catch (...) {
     REPORT_CALL_ERROR("E19999", "Failed to parse json_str. %s, %s, %s", compile_info, inputs, outputs);
     return 0;
@@ -504,7 +504,7 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
     ParseShapeDescListV2(inputs_json, op_desc, true);
     ParseShapeDescListV2(outputs_json, op_desc, false);
     operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-    ParseConstTensorListV2(inputs_json, operator_param, const_values, op_desc);
+    ParseConstTensorListV2(inputs_json, operator_param, const_values);
   } catch (...) {
     REPORT_CALL_ERROR("E19999", "Failed to parse json_str. %s, %s, %s", compile_info, inputs, outputs);
     return 0;
@@ -565,7 +565,7 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
     ParseShapeDescListV2(inputs_json, op_desc_ptr, true);
     ParseShapeDescListV2(outputs_json, op_desc_ptr, false);
     operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_ptr);
-    ParseConstTensorListV2(inputs_json, operator_param, const_values, op_desc_ptr);
+    ParseConstTensorListV2(inputs_json, operator_param, const_values);
   } catch (...) {
     REPORT_CALL_ERROR("E19999", "Failed to parse json during tiling v4. %s, %s, %s", compile_info, inputs, outputs);
     return 0;

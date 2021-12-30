@@ -31,7 +31,7 @@ bool CompileInfoManager::HasCompileInfo(const std::string &key) {
 
 CompileInfoPtr CompileInfoManager::GetCompileInfo(const std::string &key) {
   std::lock_guard<std::mutex> lock_guard(compile_info_mutex_);
-  auto iter = this->compile_info_map_.find(key);
+  const auto iter = this->compile_info_map_.find(key);
   if (iter == this->compile_info_map_.end()) {
     return nullptr;
   }
@@ -40,7 +40,7 @@ CompileInfoPtr CompileInfoManager::GetCompileInfo(const std::string &key) {
 
 void CompileInfoManager::SetCompileInfo(const std::string &key, CompileInfoPtr compile_info_ptr) {
   std::lock_guard<std::mutex> lock_guard(compile_info_mutex_);
-  this->compile_info_map_.emplace(key, compile_info_ptr);
+  (void)this->compile_info_map_.emplace(key, compile_info_ptr);
 }
 
 CompileInfoCache::CompileInfoCache() {}
@@ -57,7 +57,7 @@ bool CompileInfoCache::HasCompileInfo(const std::string &key) {
 
 void* CompileInfoCache::GetCompileInfo(const std::string &key) {
   std::lock_guard<std::mutex> lock_guard(compile_info_mutex_);
-  auto iter = this->compile_info_map_.find(key);
+  const auto iter = this->compile_info_map_.find(key);
   if (iter == this->compile_info_map_.end()) {
     return nullptr;
   }
@@ -66,6 +66,6 @@ void* CompileInfoCache::GetCompileInfo(const std::string &key) {
 
 void CompileInfoCache::SetCompileInfo(const std::string &key, void *value) {
   std::lock_guard<std::mutex> lock_guard(compile_info_mutex_);
-  this->compile_info_map_.emplace(key, value);
+  (void)this->compile_info_map_.emplace(key, value);
 }
 }  // namespace optiling

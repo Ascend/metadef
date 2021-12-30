@@ -17,7 +17,6 @@
 #ifndef INC_REGISTER_GRAPH_OPTIMIZER_GRAPH_PASS_H_
 #define INC_REGISTER_GRAPH_OPTIMIZER_GRAPH_PASS_H_
 
-#include <string>
 #include "register/graph_optimizer/graph_fusion/pass.h"
 
 namespace fe {
@@ -35,7 +34,11 @@ class GraphPass : public Pass<ge::ComputeGraph> {
    * @return NOT_CHANGED, the graph did not change
    * @return FAILED, fail to modify graph
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   virtual Status Run(ge::ComputeGraph &graph) = 0;
+#else
+  virtual Status Run(ge::ComputeGraph &graph) override = 0;
+#endif
 };
 
 }  // namespace fe

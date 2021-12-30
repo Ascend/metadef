@@ -58,7 +58,11 @@ class GraphFusionPassBase : public GraphPass {
   using Mappings = std::vector<Mapping>;
 
   GraphFusionPassBase();
+#ifdef ONLY_COMPILE_OPEN_SRC
   virtual ~GraphFusionPassBase();
+#else
+  virtual ~GraphFusionPassBase() override;
+#endif
 
   /** execute pass
    *
@@ -103,7 +107,7 @@ class GraphFusionPassBase : public GraphPass {
    */
   bool MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings) const;
 
-  Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
+  Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);
 
   /** Internal implement class ptr */
   std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;

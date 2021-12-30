@@ -712,8 +712,8 @@ ge::graphStatus TurnToOpAtomicCalculateV2(const ge::OpDescPtr &op_desc_ptr, OpRu
             op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
     return ge::GRAPH_FAILED;
   }
-  ge::Operator op_param(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
+  ge::Operator op_param(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str());
+  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE.c_str(), workspace_list);
 
   std::string op_compile_info_key;
   if (!ge::AttrUtils::GetStr(op_desc_ptr, ATOMIC_COMPILE_INFO_KEY, op_compile_info_key)) {
@@ -754,8 +754,8 @@ ge::graphStatus TurnToOpAtomicCalculateV3(const ge::OpDescPtr &op_desc_ptr, OpRu
             op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
     return ge::GRAPH_FAILED;
   }
-  ge::Operator op_param(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE, workspace_list);
+  ge::Operator op_param(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN.c_str());
+  op_param.SetAttr(ATTR_NAME_ATOMIC_CLEAN_WORKSPACE.c_str(), workspace_list);
 
   std::string op_compile_info_key;
   if (!ge::AttrUtils::GetStr(op_desc_ptr, ATOMIC_COMPILE_INFO_KEY, op_compile_info_key)) {

@@ -46,9 +46,7 @@ bool PatternFusionBasePassImpl::CheckOpSupported(const ge::OpDescPtr &op_desc_pt
     return false;
   }
 
-  bool result;
-  result = ops_kernel_info_store_ptr_->CheckSupported(op_desc_ptr, un_supported_reason);
-  return result;
+  return ops_kernel_info_store_ptr_->CheckSupported(op_desc_ptr, un_supported_reason);
 }
 
 bool PatternFusionBasePassImpl::CheckOpSupported(const ge::NodePtr &node) const {
@@ -59,9 +57,7 @@ bool PatternFusionBasePassImpl::CheckOpSupported(const ge::NodePtr &node) const 
     return false;
   }
 
-  bool result;
-  result = ops_kernel_info_store_ptr_->CheckSupported(node, un_supported_reason);
-  return result;
+  return ops_kernel_info_store_ptr_->CheckSupported(node, un_supported_reason);
 }
 
 bool PatternFusionBasePassImpl::IsNodesExist(ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes) {

@@ -64,15 +64,15 @@
 using Status = domi::Status;
 namespace optiling {
 template<class T>
-ByteBuffer &ByteBufferPut(ByteBuffer &buf, const T &value) {
-  (void) buf.write(reinterpret_cast<const ge::char_t *>(&value), static_cast<int64_t>(sizeof(value)));
+ByteBuffer &ByteBufferPut(ByteBuffer &buf, const T &buffer_value) {
+  (void) buf.write(reinterpret_cast<const ge::char_t *>(&buffer_value), static_cast<int64_t>(sizeof(buffer_value)));
   (void) buf.flush();
   return buf;
 }
 
 template<class T>
-ByteBuffer &ByteBufferGet(ByteBuffer &buf, T &value) {
-  (void) buf.read(reinterpret_cast<ge::char_t *>(&value), static_cast<int64_t>(sizeof(value)));
+ByteBuffer &ByteBufferGet(ByteBuffer &buf, T &buffer_value) {
+  (void) buf.read(reinterpret_cast<ge::char_t *>(&buffer_value), static_cast<int64_t>(sizeof(buffer_value)));
   return buf;
 }
 

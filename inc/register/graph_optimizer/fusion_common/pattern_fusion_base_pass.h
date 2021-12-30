@@ -50,7 +50,11 @@ class PatternFusionBasePass : public GraphPass {
   using Mappings = std::vector<Mapping>;
 
   PatternFusionBasePass();
+#ifdef ONLY_COMPILE_OPEN_SRC
   virtual ~PatternFusionBasePass();
+#else
+  virtual ~PatternFusionBasePass() override;
+#endif
 
   /** execute pass
    *
@@ -132,7 +136,7 @@ class PatternFusionBasePass : public GraphPass {
    */
   bool MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings);
 
-  Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
+  Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);
 
   /* Check whether there are cycles after fusing scope_nodes as an
    * entity. The algorithm is:
