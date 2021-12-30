@@ -336,11 +336,11 @@ class SmallVector {
   }
 
  private:
-  T *GetPointer(size_type idx = 0UL) {
+  T *GetPointer(const size_type idx = 0UL) {
     auto const base = (allocated_storage_ == nullptr) ? PtrToPtr<InlineT, T>(&inline_storage_) : allocated_storage_;
     return base + idx;
   }
-  const T *GetPointer(size_type idx = 0UL) const {
+  const T *GetPointer(const size_type idx = 0UL) const {
     auto const base = (allocated_storage_ == nullptr) ? PtrToPtr<InlineT, T>(&inline_storage_) : allocated_storage_;
     return base + idx;
   }

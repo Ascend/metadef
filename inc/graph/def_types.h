@@ -46,7 +46,7 @@ inline const TO *PtrToPtr(const TI *const ptr) {
 }
 
 template<typename T>
-inline T *PtrAdd(T *ptr, const size_t max_buf_len, const size_t idx) {
+inline T *PtrAdd(T *const ptr, const size_t max_buf_len, const size_t idx) {
   if ((ptr != nullptr) && (idx < max_buf_len)) {
     return reinterpret_cast<T *>(ptr + idx);
   }
