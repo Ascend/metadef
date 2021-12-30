@@ -1361,7 +1361,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::IsolateNo
 
   /// We must get full connections info before re-link data io, because the data
   /// edges may be unlinked when relink data io
-  auto in_nodes_to_out = GetFullConnectIONodes(node);
+  const auto in_nodes_to_out = GetFullConnectIONodes(node);
 
   InNodesToOut data_in_to_out;
   auto ret = RelinkDataIO(node, io_map, data_in_to_out);
@@ -2815,7 +2815,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
   }
 
   // Set Input
-  uint32_t index = 0;
+  uint32_t index = 0U;
   for (const auto &item : graph_info.data_inputs_) {
     for (const auto &in_data_anchor : item.second.second) {
       (void)graph_builder.SetInput(index, { in_data_anchor->GetOwnerNode()->GetName() },
