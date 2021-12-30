@@ -150,27 +150,19 @@ Status GraphFusionPassBase::RunOnePattern(ge::ComputeGraph &graph, const FusionP
 /**
  * @ingroup fe
  * @brief match all nodes in graph according to pattern
+ * match nodes in graph according to pattern, the algorithm is shown as following:
+ * 1. get output node from pattern
+ * 2. Search for candidate nodes in Graph (network Graph generated after parsing) according to Op Type and
+ * (optional), and add the candidate node to the list of candidates
+ * 3. For each Node in the candidate list, check whether the type and the number
+ * of precursors are consistent with the description of corresponding Op
+ * in pattern. If they are consistent, add the precursor Node to the
+ * candidate list, and add "PatternOp-GraphNode" to the mapping; otherwise, return an empty mapping
+ * 4. repeat step 3 until all the Ops in pattern are matched
+ * 5. if all the Ops in pattern are matched successfully, return the mapping of PatternOp and GraphNode
  */
-// match nodes in graph according to pattern, the algorithm is shown as
-// following:
-// 1. get output node from pattern
-// 2. Search for candidate nodes in Graph (network Graph generated after
-//    parsing) according to Op Type and
-// (optional), and add the candidate node to the list of candidates
-// 3. For each Node in the candidate list, check whether the type and the number
-//    of precursors are consistent with the description of corresponding Op
-//    in pattern. If they are consistent, add the precursor Node to the
-//    candidate list, and add "PatternOp-GraphNode" to the mapping; otherwise,
-//    return an empty mapping
-// 4. repeat step 3 until all the Ops in pattern are matched
-// 5. if all the Ops in pattern are matched successfully, return the mapping of
-//    PatternOp and GraphNode
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool GraphFusionPassBase::MatchAll(ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings) {
-#else
 bool GraphFusionPassBase::MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern,
     Mappings &mappings) const {
-#endif
   vector<ge::NodePtr> matched_output_nodes;
 
   // find all the output nodes of pattern in the graph based on Op type

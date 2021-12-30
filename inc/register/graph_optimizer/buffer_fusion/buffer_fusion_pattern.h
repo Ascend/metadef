@@ -80,30 +80,17 @@ class BufferFusionPattern {
 
   BufferFusionPattern &SetHead(const std::vector<std::string> &op_patterns);
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  std::string GetName();
-  int64_t GetOpMaxCount();
-  std::vector<BufferFusionOpDesc *> GetOpDescs();
-  std::vector<BufferFusionOpDesc *> GetHead();
-  int64_t GetErrorCnt();
-#else
   std::string GetName() const;
   int64_t GetOpMaxCount() const;
   std::vector<BufferFusionOpDesc *> GetOpDescs() const;
   std::vector<BufferFusionOpDesc *> GetHead() const;
   int64_t GetErrorCnt() const;
-#endif
   bool GetOutputs(BufferFusionOpDesc *op_desc, std::vector<BufferFusionOpDesc *> &outputs, bool ignore_repeat = false);
   void InitRepeatCurr(const BufferFusionPattern &pattern);
 
  private:
-#ifdef ONLY_COMPILE_OPEN_SRC
-  BufferFusionOpDesc *GetOpDesc(const std::string &desc_name);
-  void UpdateSkipStatus(BufferFusionOpDesc *op_desc);
-#else
   BufferFusionOpDesc *GetOpDesc(const std::string &desc_name) const;
   void UpdateSkipStatus(BufferFusionOpDesc *op_desc) const;
-#endif
   std::string name_;
   int64_t op_max_count_;
   std::vector<BufferFusionOpDesc *> ops_;
