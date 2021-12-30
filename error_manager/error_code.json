@@ -3116,6 +3116,17 @@
         "Possible Cause": "No parser is registered for the optype in ONNX model conversion.",
         "Solution": "Submit an issue to request for support at https://gitee.com/ascend, or remove this type of operators from your model."
       }
+    },
+    {
+      "errClass": "Command Line Errors",
+      "errTitle": "Invalid Path",
+      "ErrCode": "EK0001",
+      "ErrMessage": "Path [%s] for [%s] is invalid or does not exist. The Path name can only contain A-Za-z0-9-_.",
+      "Arglist": "value,parameter",
+      "suggestion": {
+        "Possible Cause": "Path does not exist or path name invalid. The Path name can only contain A-Za-z0-9-_.",
+        "Solution": "Try again with a valid path."
+      }
     }
   ]
 }
