@@ -1256,7 +1256,7 @@ graphStatus OpDescImpl::GetSubgraphNameByInstanceName(const std::string &instanc
       continue;
     }
 
-    for (const auto name_to_index : subgraph_names_to_index_) {
+    for (const auto &name_to_index : subgraph_names_to_index_) {
       if (name_to_index.second != idx) {   // find subgraph name.
         continue;
       }
