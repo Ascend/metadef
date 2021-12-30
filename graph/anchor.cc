@@ -50,9 +50,11 @@ size_t AnchorImpl::GetPeerAnchorsSize() const {
 Anchor::Vistor<AnchorPtr> AnchorImpl::GetPeerAnchors(
     const std::shared_ptr<ConstAnchor> &anchor_ptr) const {
   std::vector<AnchorPtr> ret;
-  for (const auto &anchor : peer_anchors_) {
-    ret.push_back(anchor.lock());
-  }
+  ret.resize(peer_anchors_.size());
+  (void)std::transform(peer_anchors_.begin(), peer_anchors_.end(), ret.begin(),
+                       [] (std::weak_ptr<Anchor> anchor) {
+                         return anchor.lock();
+                       });
   return Anchor::Vistor<AnchorPtr>(anchor_ptr, ret);
 }
 
@@ -71,7 +73,7 @@ int32_t AnchorImpl::GetIdx() const { return idx_; }
 void AnchorImpl::SetIdx(int32_t index) { idx_ = index; }
 
 Anchor::Anchor(const NodePtr &owner_node, const int32_t idx)
-    : enable_shared_from_this(), impl_(std::shared_ptr<AnchorImpl>(new AnchorImpl(owner_node, idx))) {}
+    : enable_shared_from_this(), impl_(ComGraphMakeShared<AnchorImpl>(owner_node, idx)) {}
 
 Anchor::~Anchor() = default;
 
@@ -165,7 +167,7 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
   return GRAPH_SUCCESS;
 }
 
-bool Anchor::IsLinkedWith(const AnchorPtr &peer) {
+bool Anchor::IsLinkedWith(const AnchorPtr &peer) const {
   const auto it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [peer](const std::weak_ptr<Anchor> &an) {
     const auto anchor = an.lock();
