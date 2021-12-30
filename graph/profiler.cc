@@ -33,13 +33,13 @@ int64_t GetThread() {
 }
 void DumpEventType(EventType et, std::ostream &out_stream) {
   switch (et) {
-    case kEventStart:
+    case EventType::kEventStart:
       out_stream << "Start";
       break;
-    case kEventEnd:
+    case EventType::kEventEnd:
       out_stream << "End";
       break;
-    case kEventTimestamp:
+    case EventType::kEventTimestamp:
       break;
     default:
       out_stream << "UNKNOWN(" << static_cast<int64_t>(et) << ")";

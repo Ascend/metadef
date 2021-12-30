@@ -68,7 +68,7 @@ class ProfilerUt : public testing::Test {};
 
 TEST_F(ProfilerUt, OneRecord) {
   auto p = Profiler::Create();
-  p->Record(0, 1, 2, kEventStart);
+  p->Record(0, 1, 2, EventType::kEventStart);
   EXPECT_EQ(p->GetRecordNum(), 1);
 
   std::stringstream ss;
@@ -85,7 +85,7 @@ TEST_F(ProfilerUt, OneRecord) {
 
 TEST_F(ProfilerUt, TimeStampRecord) {
   auto p = Profiler::Create();
-  p->Record(0, 1, 2, kEventTimestamp);
+  p->Record(0, 1, 2, EventType::kEventTimestamp);
 
   std::stringstream ss;
   p->Dump(ss);
@@ -100,8 +100,8 @@ TEST_F(ProfilerUt, TimeStampRecord) {
 
 TEST_F(ProfilerUt, MultipleRecords) {
   auto p = Profiler::Create();
-  p->Record(0, 1, 2, kEventStart);
-  p->Record(0, 1, 2, kEventEnd);
+  p->Record(0, 1, 2, EventType::kEventStart);
+  p->Record(0, 1, 2, EventType::kEventEnd);
   EXPECT_EQ(p->GetRecordNum(), 2);
 
   std::stringstream ss;
@@ -128,7 +128,7 @@ TEST_F(ProfilerUt, RecordStr) {
   auto p = Profiler::Create();
   p->RegisterString(0, "Node1");
   p->RegisterString(2, "InferShape");
-  p->Record(0, 1, 2, kEventStart);
+  p->Record(0, 1, 2, EventType::kEventStart);
 
   std::stringstream ss;
   p->Dump(ss);
@@ -144,8 +144,8 @@ TEST_F(ProfilerUt, RecordStr) {
 
 TEST_F(ProfilerUt, RecordCurrentThread) {
   auto p = Profiler::Create();
-  p->RecordCurrentThread(0, 2, kEventStart);
-  p->RecordCurrentThread(0, 2, kEventEnd);
+  p->RecordCurrentThread(0, 2, EventType::kEventStart);
+  p->RecordCurrentThread(0, 2, EventType::kEventEnd);
 
   std::stringstream ss;
   p->Dump(ss);
@@ -169,7 +169,7 @@ TEST_F(ProfilerUt, Reset) {
   auto p = Profiler::Create();
   p->RegisterString(0, "Node1");
   p->RegisterString(2, "InferShape");
-  p->Record(0, 1, 2, kEventStart);
+  p->Record(0, 1, 2, EventType::kEventStart);
   p->Reset();
   std::stringstream ss;
   p->Dump(ss);
@@ -181,7 +181,7 @@ TEST_F(ProfilerUt, ResetRemainsRegisteredString) {
   auto p = Profiler::Create();
   p->RegisterString(0, "Node1");
   p->RegisterString(2, "InferShape");
-  p->Record(0, 1, 2, kEventStart);
+  p->Record(0, 1, 2, EventType::kEventStart);
   p->Reset();
   std::stringstream ss;
   p->Dump(ss);
@@ -189,7 +189,7 @@ TEST_F(ProfilerUt, ResetRemainsRegisteredString) {
   EXPECT_EQ(lines.size(), 2);
 
 
-  p->Record(0, 1, 2, kEventStart);
+  p->Record(0, 1, 2, EventType::kEventStart);
   ss = std::stringstream();
   p->Dump(ss);
   lines = SplitLines(ss.str());
@@ -206,7 +206,7 @@ TEST_F(ProfilerUt, RegisterStringBeyondMaxSize) {
   auto p = Profiler::Create();
   p->RegisterString(2, "InferShape");
   p->RegisterString(kMaxStrIndex, "[Node1]");
-  p->Record(kMaxStrIndex, 1, 2, kEventStart);
+  p->Record(kMaxStrIndex, 1, 2, EventType::kEventStart);
 
   std::stringstream ss;
   p->Dump(ss);
@@ -222,7 +222,7 @@ TEST_F(ProfilerUt, RegisterStringBeyondMaxSize) {
 
 TEST_F(ProfilerUt, EventTypeBeyondRange) {
   auto p = Profiler::Create();
-  p->Record(0, 1, 2, kEventTypeEnd);
+  p->Record(0, 1, 2, EventType::kEventTypeEnd);
 
   std::stringstream ss;
   p->Dump(ss);
@@ -238,12 +238,12 @@ TEST_F(ProfilerUt, EventTypeBeyondRange) {
 
 TEST_F(ProfilerUt, GetRecords) {
   auto p = Profiler::Create();
-  p->Record(0, 1, 2, kEventTypeEnd);
+  p->Record(0, 1, 2, EventType::kEventTypeEnd);
   auto rec = p->GetRecords();
   EXPECT_EQ(rec->element, 0);
   EXPECT_EQ(rec->thread, 1);
   EXPECT_EQ(rec->event, 2);
-  EXPECT_EQ(rec->et, kEventTypeEnd);
+  EXPECT_EQ(rec->et, EventType::kEventTypeEnd);
 }
 
 TEST_F(ProfilerUt, GetStringHashes) {

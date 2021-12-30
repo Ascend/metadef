@@ -76,7 +76,7 @@ std::unique_ptr<HostCpuOp> OpKernelRegistry::CreateHostCpuOp(const std::string &
   return std::unique_ptr<HostCpuOp>(create_fn());
 }
 
-HostCpuOpRegistrar::HostCpuOpRegistrar(const char *op_type, HostCpuOp *(*create_fn)()) {
+HostCpuOpRegistrar::HostCpuOpRegistrar(const char *op_type, HostCpuOp *(*const create_fn)()) {
   if (op_type == nullptr) {
     GELOGE(PARAM_INVALID, "[Check][Param:op_type]is null,Failed to register host cpu op");
     return;
