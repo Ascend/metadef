@@ -33,7 +33,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY HostCpuOp {
 
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY HostCpuOpRegistrar {
  public:
-  HostCpuOpRegistrar(const char *op_type, HostCpuOp *(*create_fn)());
+  HostCpuOpRegistrar(const char *op_type, HostCpuOp *(*const create_fn)());
   ~HostCpuOpRegistrar() = default;
 };
 

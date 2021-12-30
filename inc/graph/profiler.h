@@ -17,7 +17,6 @@
 #define METADEF_CXX_PROFILER_H
 #include <memory>
 #include <array>
-#include <vector>
 #include <ostream>
 #include <chrono>
 #include <atomic>
@@ -27,7 +26,7 @@ namespace profiling {
 constexpr size_t kMaxStrLen = 64;
 constexpr int64_t kMaxStrIndex = 1024 * 1024;
 constexpr size_t kMaxRecordNum = 10 * 1024 * 1024;
-enum EventType {
+enum class EventType {
   kEventStart,
   kEventEnd,
   kEventTimestamp,
