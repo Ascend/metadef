@@ -177,9 +177,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   friend class AttrUtils;
   friend class AttrUtilsHelper;
 
+  std::vector<std::string> requiredAttrs_;
  private:
   AnyMap extAttrs_;
-  std::vector<std::string> requiredAttrs_;
 };
 }  // namespace ge
 #endif  // INC_GRAPH_DETAIL_ATTRIBUTES_HOLDER_H_

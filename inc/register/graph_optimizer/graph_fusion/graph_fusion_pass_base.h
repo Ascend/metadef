@@ -101,11 +101,7 @@ class GraphFusionPassBase : public GraphPass {
    * @return SUCCESS, successfully add edge
    * @return FAILED, fail
    */
-#ifdef ONLY_COMPILE_OPEN_SRC
-  bool MatchAll(ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings);
-#else
   bool MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings) const;
-#endif
 
   Status RunOnePattern(ge::ComputeGraph &graph, const FusionPattern &pattern, bool &changed);  // lint !e148
 

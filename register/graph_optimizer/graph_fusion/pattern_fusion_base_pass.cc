@@ -299,19 +299,11 @@ Status PatternFusionBasePass::SetDataDumpAttr(vector<ge::NodePtr> &original_node
   return SUCCESS;
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool PatternFusionBasePass::CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) {
-  return pattern_fusion_base_pass_impl_ptr_->CheckOpSupported(op_desc_ptr);
-}
-
-bool PatternFusionBasePass::CheckOpSupported(const ge::NodePtr &node) {
-#else
 bool PatternFusionBasePass::CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) const {
   return pattern_fusion_base_pass_impl_ptr_->CheckOpSupported(op_desc_ptr);
 }
 
 bool PatternFusionBasePass::CheckOpSupported(const ge::NodePtr &node) const {
-#endif
   return pattern_fusion_base_pass_impl_ptr_->CheckOpSupported(node);
 }
 
@@ -390,14 +382,6 @@ bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
   return false;
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool PatternFusionBasePass::CheckGraphCycle(ge::ComputeGraph &graph) {
-  Status ret = graph.TopologicalSorting();
-  if (ret != ge::GRAPH_SUCCESS)
-    return true;
-  return false;
-}
-#else
 bool PatternFusionBasePass::CheckGraphCycle(ge::ComputeGraph &graph) const {
   Status ret = graph.TopologicalSorting();
   if (ret != ge::GRAPH_SUCCESS) {
@@ -405,7 +389,6 @@ bool PatternFusionBasePass::CheckGraphCycle(ge::ComputeGraph &graph) const {
   }
   return false;
 }
-#endif
 
 void PatternFusionBasePass::EnableNetworkAnalysis() {
   const char *enable_network_analysis_ptr = std::getenv("ENABLE_NETWORK_ANALYSIS_DEBUG");
@@ -422,27 +405,19 @@ void PatternFusionBasePass::EnableNetworkAnalysis() {
 /**
  * @ingroup fe
  * @brief match all nodes in graph according to pattern
+ * match nodes in graph according to pattern, the algorithm is shown as following:
+ * 1. get output node from pattern
+ * 2. Search for candidate nodes in Graph (network Graph generated after parsing) according to Op Type and
+ * (optional), and add the candidate node to the list of candidates
+ * 3. For each Node in the candidate list, check whether the type and the number
+ * of precursors are consistent with the description of corresponding Op in pattern.
+ * If they are consistent, add the precursor Node to the
+ * candidate list, and add "PatternOp-GraphNode" to the mapping; otherwise, return an empty mapping
+ * 4. repeat step 3 until all the Ops in pattern are matched
+ * 5. if all the Ops in pattern are matched successfully, return the mapping of PatternOp and GraphNode
  */
-// match nodes in graph according to pattern, the algorithm is shown as
-// following:
-// 1. get output node from pattern
-// 2. Search for candidate nodes in Graph (network Graph generated after
-//    parsing) according to Op Type and
-// (optional), and add the candidate node to the list of candidates
-// 3. For each Node in the candidate list, check whether the type and the number
-//    of precursors are consistent with the description of corresponding Op
-//    in pattern. If they are consistent, add the precursor Node to the
-//    candidate list, and add "PatternOp-GraphNode" to the mapping; otherwise,
-//    return an empty mapping
-// 4. repeat step 3 until all the Ops in pattern are matched
-// 5. if all the Ops in pattern are matched successfully, return the mapping of
-//    PatternOp and GraphNode
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool PatternFusionBasePass::MatchAll(ge::ComputeGraph &graph, const FusionPattern &pattern, Mappings &mappings) {
-#else
 bool PatternFusionBasePass::MatchAll(const ge::ComputeGraph &graph, const FusionPattern &pattern,
     Mappings &mappings) {
-#endif
   vector<ge::NodePtr> matched_output_nodes;
 
   // find all the output nodes of pattern in the graph based on Op type
