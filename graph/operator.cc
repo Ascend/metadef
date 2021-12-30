@@ -126,10 +126,10 @@ TensorType::TensorType(DataType dt) {
   }
 }
 
-TensorType::TensorType(const std::initializer_list<DataType> &initial_types) {
+TensorType::TensorType(const std::initializer_list<DataType> &types) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
   if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->dt_vec_ = initial_types;
+    tensor_type_impl_->dt_vec_ = types;
   }
 }
 
