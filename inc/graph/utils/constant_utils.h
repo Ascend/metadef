@@ -19,6 +19,7 @@
 #include "graph/node.h"
 #include "graph/operator.h"
 #include "graph/op_desc.h"
+#include "graph/tensor.h"
 
 namespace ge {
 class ConstantUtils {
