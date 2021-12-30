@@ -126,10 +126,10 @@ TensorType::TensorType(DataType dt) {
   }
 }
 
-TensorType::TensorType(const std::initializer_list<DataType> &initial_types) {
+TensorType::TensorType(const std::initializer_list<DataType> &types) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
   if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->dt_vec_ = initial_types;
+    tensor_type_impl_->dt_vec_ = types;
   }
 }
 
@@ -2421,11 +2421,7 @@ private:
 
     if (root_graph == graph) {
       const auto subgraphs = graph->GetAllSubgraphs();
-      (void)std::any_of(subgraphs.begin(), subgraphs.end(), [&](const std::shared_ptr<ComputeGraph> &subgraph) {
-        if (MoveSubgraphToRoot(subgraph) != GRAPH_SUCCESS) {
-            return GRAPH_FAILED;
-        }
-      });
+
       for (auto &subgraph : subgraphs) {
         if (MoveSubgraphToRoot(subgraph) != GRAPH_SUCCESS) {
             return GRAPH_FAILED;
