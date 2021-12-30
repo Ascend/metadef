@@ -308,7 +308,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
   }
 
   // add dynamic input and output
-  const NodeDef *const node = reinterpret_cast<const NodeDef *>(op_src);
+  const NodeDef *const node = ge::PtrToPtr<const google::protobuf::Message, const NodeDef>(op_src);
   for (const auto &it : dynamic_name_attr_value) {
     const std::string flag = it.first;
     const std::pair<std::string, std::string> name_value = it.second;
