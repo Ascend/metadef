@@ -1248,8 +1248,8 @@ void GeTensorImpl::BuildAlignerPtrWithProtoData() {
                                        ptr.reset(const_cast<uint8_t *>(
                                            reinterpret_cast<const uint8_t *>(proto_msg->data().data())));
                                      },
-                                     [](uint8_t *ptr) {
-                                       ptr = nullptr;
+                                     [](const uint8_t *const ptr) {
+                                       (void)ptr;
                                      });
 }
 
