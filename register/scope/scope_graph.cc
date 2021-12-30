@@ -61,7 +61,7 @@ Status DecomposeInputName(const std::string &input_name, std::string &node_name,
     GELOGE(PARAM_INVALID, "Peer out index [%s] is invalid.", parts[kPeerOutIndex].c_str());
     return PARAM_INVALID;
   } catch (...) {
-    GELOGE(PARAM_INVALID, "Peer out index [%s] is out of range.", parts[kPeerOutIndex].c_str());
+    GELOGE(PARAM_INVALID, "Parse string value [%s] to int failed.", parts[kPeerOutIndex].c_str());
     return PARAM_INVALID;
   }
   if (index < 0) {

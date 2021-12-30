@@ -30,6 +30,7 @@
 #include "register/auto_mapping_util.h"
 #include "register/op_registry.h"
 #include "graph/graph.h"
+#include "graph/def_types.h"
 
 using namespace domi::tensorflow;
 namespace domi {
