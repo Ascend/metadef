@@ -380,7 +380,7 @@ private:
 GeShapeImpl::GeShapeImpl(const std::vector<int64_t> &dims) {
   dims_.resize(dims.size());
 
-  std::copy(dims.begin(), dims.end(), dims_.begin());
+  (void)std::copy(dims.begin(), dims.end(), dims_.begin());
 }
 
 void GeShapeImpl::SetDimNum(const size_t dim_num) {
@@ -427,7 +427,7 @@ std::vector<int64_t> GeShapeImpl::ShapeImplGetDims() const {
   std::vector<int64_t> dims;
 
   dims.resize(dims_.size());
-  std::copy(dims_.begin(), dims_.end(), dims.begin());
+  (void)std::copy(dims_.begin(), dims_.end(), dims.begin());
 
   return dims;
 }
@@ -479,8 +479,8 @@ GeShapeImpl::GeShapeImpl(proto::ShapeDef *const proto_msg) {
   if (proto_msg != nullptr) {
     const auto &dims = *proto_msg->mutable_dim();
 
-    dims_.resize(dims.size());
-    std::copy(dims.begin(), dims.end(), dims_.begin());
+    dims_.resize(static_cast<size_t>(dims.size()));
+    (void)std::copy(dims.begin(), dims.end(), dims_.begin());
   }
 }
 
