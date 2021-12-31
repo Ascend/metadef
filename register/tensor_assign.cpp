@@ -219,7 +219,8 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
                                         static_cast<size_t>(count) * sizeof(ge::StringHead));
     for (int32_t i = 0; i < count; ++i) {
-      ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U, static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
+      ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
+                                 static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
       if (i < val_size) {
         const string &str = val_vector.Get(i);
         ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
