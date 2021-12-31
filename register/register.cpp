@@ -36,7 +36,6 @@
 #include "graph/def_types.h"
 
 namespace domi {
-using namespace domi::tensorflow;
 /*lint -e1073*/
 namespace {
 const std::string kDefaultFormat = "ND";
@@ -319,7 +318,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
   }
 
   // add dynamic input and output
-  const NodeDef *const node = ge::PtrToPtr<const google::protobuf::Message, const NodeDef>(op_src);
+  const domi::tensorflow::NodeDef *const node = ge::PtrToPtr<const google::protobuf::Message,
+                                                             const domi::tensorflow::NodeDef>(op_src);
   for (const auto &it : dynamic_name_attr_value) {
     const std::string flag = it.first;
     const std::pair<std::string, std::string> name_value = it.second;
@@ -426,7 +426,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status OperatorAutoMapping(cons
   GE_CHECK_NOTNULL(op_dst);
 
   const auto subgraph_attr_names = GetSubgraphAttrNames(op);
-  const domi::tensorflow::NodeDef *const node_src = dynamic_cast<const domi::tensorflow::NodeDef *>(op_src);
+  const domi::tensorflow::NodeDef *const node_src = ge::PtrToPtr<const ascend_private::protobuf::Message,
+                                                                 const domi::tensorflow::NodeDef>(op_src);
   GE_CHECK_NOTNULL(node_src);
   op_dst->SetName(node_src->name());
   for (const auto &attr_pair : node_src->attr()) {
