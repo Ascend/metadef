@@ -107,7 +107,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
   if (op_def == nullptr) {
     REPORT_CALL_ERROR("E19999", "create proto::OpDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
-    return nullptr;  // lint !e665
+    return nullptr;
   }
   ModelSerializeImp imp;
   (void) imp.SerializeOpDesc(org_op_desc, op_def.get());
@@ -525,7 +525,7 @@ bool AttrUtils::SetGraph(AttrUtils::AttrHolderAdapter &&obj, const std::string &
   if (graph_def == nullptr) {
     return false;
   }
-  ModelSerializeImp imp;
+  const ModelSerializeImp imp;
   if (!imp.SerializeGraph(value, graph_def)) {
     REPORT_CALL_ERROR("E19999", "SerializeGraph failed when add ComputeGraph to attr %s", name.c_str());
     GELOGE(GRAPH_FAILED, "[Serialize][Graph] Failed when add ComputeGraph to attr %s", name.c_str());
@@ -546,7 +546,7 @@ bool AttrUtils::SetListGraph(AttrUtils::AttrHolderAdapter &&obj, const std::stri
     return false;
   }
   for (size_t i = 0UL; i < value.size(); ++i) {
-    ModelSerializeImp imp;
+    const ModelSerializeImp imp;
     if (!imp.SerializeGraph(value[i], &attr_graphs->at(i))) {
           REPORT_CALL_ERROR("E19999", "SerializeGraph failed when add ComputeGraph to attr %s", name.c_str());
       GELOGE(GRAPH_FAILED, "[Serialize][Graph] Failed when add ComputeGraph to attr %s", name.c_str());
@@ -714,14 +714,14 @@ std::string AttrUtils::GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj,
     ordered_attrs[attr.first] = attr_def.SerializeAsString();
   }
 
-  std::stringstream ss;
+  std::stringstream str_stream;
   for (auto &attr : ordered_attrs) {
     if (un_compute_attrs.find(attr.first) != un_compute_attrs.end()) {
       continue;
     }
-    ss << attr.first << ":" << attr.second << ";";
+    str_stream << attr.first << ":" << attr.second << ";";
   }
-  return ss.str();
+  return str_stream.str();
 }
 std::string AttrUtils::GetAllAttrsStr(ConstAttrHolderAdapter &&obj) {
   const auto attr_map = GetAllAttrs(std::move(obj));

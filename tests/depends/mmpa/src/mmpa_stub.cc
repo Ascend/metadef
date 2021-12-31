@@ -208,7 +208,7 @@ INT32 mmGetFileSize(const CHAR *file_name, ULONGLONG *length) {
 
 INT32 mmScandir(const CHAR *path, mmDirent ***entryList, mmFilter filterFunc,  mmSort sort)
 {
-  return 0;
+  return scandir(path, entryList, filterFunc, sort);
 }
 
 VOID mmScandirFree(mmDirent **entryList, INT32 count)
