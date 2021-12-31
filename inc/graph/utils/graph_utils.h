@@ -31,7 +31,7 @@
 #include "graph/model.h"
 #include "graph/node.h"
 #include "graph/utils/anchor_utils.h"
-/*lint -e148*/
+
 #define GE_DUMP(compute_graph, name)                                                                               \
   do {                                                                                                             \
     GraphUtils::DumpGEGraph(compute_graph, name);                                                                  \
@@ -834,5 +834,5 @@ class PartialGraphBuilder : public ComputeGraphBuilder {
   std::vector<NodePtr> exist_nodes_;
 };
 }  // namespace ge
-/*lint +e148*/
+
 #endif  // INC_GRAPH_UTILS_GRAPH_UTILS_H_
