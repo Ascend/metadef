@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <sstream>
+#include <nlohmann/json.hpp>
 #include "graph/op_desc.h"
 #include "graph/debug/ge_log.h"
 
@@ -26,6 +27,10 @@ namespace optiling {
 void AddNameToTensordesc(const ge::OpDescPtr &op_desc);
 void ReplaceEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, std::vector<int32_t> &indexes);
 void RecoveryEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, const std::vector<int32_t> &indexes);
+void CheckAndSetAttr(const char *attrs, ge::Operator &operator_param);
+
+using ParseAndSetAttrValueFunc = std::function<void(ge::Operator &, const nlohmann::json &, const std::string &)>;
+using ParseAndSetAttrValuePtr = std::shared_ptr<ParseAndSetAttrValueFunc>;
 
 union Fp32
 {

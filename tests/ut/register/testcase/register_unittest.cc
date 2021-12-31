@@ -31,9 +31,16 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
 #include "framework/common/debug/ge_log.h"
 #include "register/op_registry.h"
+#include "op_tiling/op_tiling_utils.h"
+#include "register/op_tiling_registry.h"
+#include "op_tiling/op_tiling_utils.h"
+#include "op_tiling/op_tiling_constants.h"
+#include "register/op_compile_info_base.h"
+#include "op_tiling.h"
 
 #include "graph/graph.h"
 #include "graph/utils/attr_utils.h"
@@ -52,12 +59,60 @@
 
 using namespace domi;
 using namespace ge;
+using namespace optiling;
+
+class CompileInfoJson : public CompileInfoBase {
+public:
+  CompileInfoJson(const std::string &json) : json_str_(json) {}
+  ~CompileInfoJson() {}
+private:
+  std::string json_str_;
+};
+
 class UtestRegister : public testing::Test {
  protected:
   void SetUp() {}
 
   void TearDown() {}
 };
+
+extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile_info, const char *inputs,
+                                         const char *outputs, char *run_info_json, size_t run_info_len,
+                                         const char *compile_info_hash, uint64_t *elapse);
+
+extern "C" int TbeOpTilingPyInterfaceExV2(const char *optype, const char *compile_info, const char *inputs,
+                                          const char *outputs, char *run_info_json, size_t run_info_len,
+                                          const char *compile_info_hash, uint64_t *elapse,
+                                          const char *attrs);
+
+bool op_tiling_stub_v2(const Operator &op, const utils::OpCompileInfo &compile_info, utils::OpRunInfo &run_info) {
+  return true;
+}
+
+bool op_tiling_stub_v3(const Operator &op, const void* value, OpRunInfoV2 &run_info) {
+  return true;
+}
+
+void* op_parse_stub_v3(const Operator &op, const ge::AscendString &compile_info_json) {
+//  static void *p = new int(3);
+  static int x = 1024;
+  void *p = &x;
+  return p;
+}
+
+bool op_tiling_stub_v4(const Operator &op, const CompileInfoPtr value, OpRunInfoV2 &run_info) {
+  return true;
+}
+
+CompileInfoPtr op_parse_stub_v4(const Operator &op, const ge::AscendString &compile_info_json) {
+//  static void *p = new int(3);
+  CompileInfoPtr info = std::make_shared<CompileInfoJson>("qwer");
+  return info;
+}
+
+REGISTER_OP_TILING_V2(ReluV2, op_tiling_stub_v2);
+REGISTER_OP_TILING_V3(ReluV3, op_tiling_stub_v3, op_parse_stub_v3);
+REGISTER_OP_TILING_V4(ReluV4, op_tiling_stub_v4, op_parse_stub_v4);
 
 TEST_F(UtestRegister, test_register_dynamic_outputs_op_only_has_partial_output) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
@@ -672,4 +727,106 @@ TEST_F(UtestRegister, ParseSubgraphPostFnTest) {
   domi::ParseSubgraphFuncV2 parse_subgraph_func;
   EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("OmOptype"), parse_subgraph_func), domi::SUCCESS);
   EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("strOmOptype"), parse_subgraph_func), domi::FAILED);
+}
+
+TEST_F(UtestRegister, check_and_set_attr) {
+  const nlohmann::json j = R"([
+      {
+          "name": "test_0",
+          "dtype": "str",
+          "value": "1"
+      },
+      {
+          "name": "test_1",
+          "dtype": "list_int",
+          "value": [
+            1,
+            1,
+            1,
+            1
+          ]
+      },
+      {
+          "name": "test_2"
+      },
+      {
+          "name": "test_2",
+          "dtype": "list_list_int",
+          "value": [
+            [1, 2],
+            [1, 2],
+            [1, 2],
+            [1, 2]
+          ]
+      },
+      {
+          "name": "test_3",
+          "dtype": "test",
+          "value": "1"
+      }
+      ])"_json;
+
+  std::string json_str = j.dump();
+  ge::Operator op("NULL");
+  optiling::CheckAndSetAttr(json_str.c_str(), op);
+  const char *json = nullptr;
+  optiling::CheckAndSetAttr(json, op);
+}
+
+TEST_F(UtestRegister, optiling_py_interface) {
+  const nlohmann::json j = R"([
+      {
+          "name": "test_0",
+          "dtype": "str",
+          "value": "1"
+      },
+      {
+          "name": "test_1",
+          "dtype": "list_int",
+          "value": [
+            1,
+            1,
+            1,
+            1
+          ]
+      },
+      {
+          "name": "test_2"
+      },
+      {
+          "name": "test_2",
+          "dtype": "list_list_int",
+          "value": [
+            [1, 2],
+            [1, 2],
+            [1, 2],
+            [1, 2]
+          ]
+      },
+      {
+          "name": "test_3",
+          "dtype": "test",
+          "value": "1"
+      }
+      ])"_json;
+
+  std::string json_str = j.dump();
+  ge::Operator op("NULL");
+  const char* optype = "ReluV2";
+  const char* optype_v3 = "ReluV3";
+  const char* optype_v4 = "ReluV4";
+  const char* cmp_info = "";
+  const char* inputs = "";
+  const char* outputs = "";
+  char* runinfo = "";
+  size_t size = 3;
+  const char* cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  const char *attrs = json_str.c_str();
+  TbeOpTilingPyInterfaceExV2(optype, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse, attrs);
+  TbeOpTilingPyInterfaceExV2(optype_v3, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse, attrs);
+  TbeOpTilingPyInterfaceExV2(optype_v4, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse, attrs);
+  TbeOpTilingPyInterfaceEx2(optype, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
+  TbeOpTilingPyInterfaceEx2(optype_v3, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
+  TbeOpTilingPyInterfaceEx2(optype_v4, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
 }
