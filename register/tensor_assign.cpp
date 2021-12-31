@@ -219,16 +219,17 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
                                         static_cast<size_t>(count) * sizeof(ge::StringHead));
     for (int32_t i = 0; i < count; ++i) {
-      ge::PtrAdd<ge::StringHead>(string_head, count + 1U, static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
+      ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
+                                 static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
       if (i < val_size) {
         const string &str = val_vector.Get(i);
-        ge::PtrAdd<ge::StringHead>(string_head, count + 1U,
+        ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
                                    static_cast<size_t>(i))->len = static_cast<uint64_t>(str.size());
         CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
                          GELOGW("[GetStringVal][Copy] memcpy failed"));
         raw_data = ge::PtrAdd<uint8_t>(raw_data, total_size + 1U, str.size() + 1U);
       } else {
-        ge::PtrAdd<ge::StringHead>(string_head, count + 1U, static_cast<size_t>(i))->len = 0U;
+        ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U, static_cast<size_t>(i))->len = 0U;
         raw_data = ge::PtrAdd<uint8_t>(raw_data, total_size + 1U, 1U);
       }
     }
@@ -244,8 +245,9 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
                                         static_cast<size_t>(count) * sizeof(ge::StringHead));
     for (int32_t i = 0; i < count; ++i) {
-      ge::PtrAdd<ge::StringHead>(string_head, count + 1U, static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
-      ge::PtrAdd<ge::StringHead>(string_head, count + 1U,
+      ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
+                                 static_cast<size_t>(i))->addr = ge::PtrToValue(raw_data);
+      ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
                                  static_cast<size_t>(i))->len =static_cast<uint64_t>(str.size());
       const bool b = memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK;
       if (!b) {
