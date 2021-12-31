@@ -100,7 +100,7 @@ void ScopeAttrValue::SetBoolValue(bool value) {
   impl_->SetBoolValue(value);
 }
 
-bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *scope) {
+bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *const scope) {
   if (scope == nullptr) {
     GELOGE(PARAM_INVALID, "Input scope is nullptr.");
     return false;
@@ -374,8 +374,8 @@ ScopeFeature::ScopeFeature(std::string sub_type, int32_t num, std::string suffix
                                                                                 sub_scope_mask, step));
 }
 
-ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char *suffix,
-                           const char_t *sub_scope_mask, int step)
+ScopeFeature::ScopeFeature(const char_t *sub_type, int32_t num, const char_t *suffix,
+                           const char_t *sub_scope_mask, int32_t step)
     : ScopeBaseFeature() {
   std::string str_sub_type;
   if (sub_type != nullptr) {
