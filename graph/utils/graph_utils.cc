@@ -648,7 +648,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
       GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
       return;
     }
-    char_t real_path[MMPA_MAX_PATH] = {'\0'};
+    char_t real_path[MMPA_MAX_PATH] = {};
     GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strnlen(proto_file.c_str(), sizeof(real_path)) >= sizeof(real_path),
                                    REPORT_INNER_ERROR("E19999", "file path is too longer! file:%s", proto_file.c_str());
                                    return, "[Check][Param] file path is too longer!");
@@ -700,7 +700,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
       GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
       return GRAPH_FAILED;
     }
-    char_t real_path[MMPA_MAX_PATH] = {'\0'};
+    char_t real_path[MMPA_MAX_PATH] = {};
     if (mmRealPath(path_dir.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK) {
       REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
                          std::vector<std::string>({
