@@ -258,7 +258,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBa
   NodeOpTypeFeature(NodeOpTypeFeature const &feature);
   NodeOpTypeFeature &operator=(NodeOpTypeFeature const &feature);
   ~NodeOpTypeFeature() override;
-  bool Match(const Scope *const scope) override;
+  bool Match(const Scope *scope) override;
 
  private:
   class NodeOpTypeFeatureImpl;

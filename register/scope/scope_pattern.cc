@@ -157,7 +157,7 @@ NodeOpTypeFeature &NodeOpTypeFeature::operator=(NodeOpTypeFeature const &feature
 
 NodeOpTypeFeature::~NodeOpTypeFeature() {}
 
-bool NodeOpTypeFeature::Match(const Scope *const scope) {
+bool NodeOpTypeFeature::Match(const Scope *scope) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "Failed to invoke Match(), NodeOpTypeFeature is not properly initialized.");
     return false;
