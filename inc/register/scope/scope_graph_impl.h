@@ -83,7 +83,7 @@ class FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl {
   ge::graphStatus SetInputFormat(const std::string &input_name, const std::string &format) ;
   ge::graphStatus SetOutputFormat(const std::string &output_name, const std::string &format);
   ge::graphStatus SetDynamicInputFormat(const std::string &input_name, const uint32_t index, const std::string &format);
-  ge::graphStatus SetDynamicOutputFormat(const std::string &output_name, uint32_t index, const std::string &format);
+  ge::graphStatus SetDynamicOutputFormat(const std::string &output_name, const uint32_t index, const std::string &format);
   std::string GetName() const { return name_; }
   std::string GetType() const { return type_; }
   std::vector<std::pair<std::string, int32_t>> GetInputs() const { return inner_node_inputs_; }

@@ -235,7 +235,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
       port_dynamic_info[input_name].SetInsetIndex(input_index + input_increment);
       const uint32_t tensor_num = port_dynamic_info[input_name].GetTensorNum();
       if (tensor_num == 0U) {
-        port_dynamic_info.erase(input_iter);
+        (void)port_dynamic_info.erase(input_iter);
         continue;
       }
       input_increment += (tensor_num > 0U) ? (tensor_num - 1U) : 0U;
@@ -253,7 +253,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
       port_dynamic_info[output_name].SetInsetIndex(output_index + out_increment);
       const uint32_t tensor_num = port_dynamic_info[output_name].GetTensorNum();
       if (tensor_num == 0U) {
-        port_dynamic_info.erase(output_iter);
+        (void)port_dynamic_info.erase(output_iter);
         continue;
       }
       out_increment += (tensor_num > 0U) ? (tensor_num - 1U) : 0U;
