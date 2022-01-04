@@ -19,7 +19,6 @@
 
 #include <vector>
 #include "graph/attr_value_serializable.h"
-#include "graph/buffer.h"
 #include "graph/def_types.h"
 #include "graph/ge_error_codes.h"
 #include "graph/ge_tensor.h"
