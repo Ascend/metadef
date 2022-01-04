@@ -23,8 +23,8 @@
 namespace ge {
 // used for data type of DT_STRING
 struct StringHead {
-  uint64_t addr;  // the addr of string
-  uint64_t len;   // the length of string
+  int64_t addr;  // the addr of string
+  int64_t len;   // the length of string
 };
 
 inline uint64_t PtrToValue(const void *const ptr) {

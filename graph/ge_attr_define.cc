@@ -1271,6 +1271,7 @@ const std::string ATTR_NAME_RESOURCE_LIST = "_resource_list";
 const std::string ATTR_NAME_OP_TILING_INLINE_ENGINE = "_op_tiling_inline_engine";
 const std::string ATTR_NAME_OP_EXPORT_SHAPE_ENGINE = "_op_export_shape_engine";
 const std::string ATTR_NAME_OP_MAX_SHAPE = "_op_max_shape";
+const std::string ATTR_NAME_OP_MAX_SIZE = "_op_max_size";
 const std::string ATTR_NAME_TENSOR_MAX_SHAPE = "_tensor_max_shape";
 const std::string ATTR_NAME_OP_NO_TILING = "_op_no_tiling";
 const std::string ATTR_NAME_TENSOR_DESC_MEM_OFFSET = "_tensor_desc_mem_offset";
