@@ -27,6 +27,7 @@
 #include "graph/ge_attr_value.h"
 #include "graph/op_desc_impl.h"
 #include "graph/operator.h"
+#include "graph/utils/mem_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/constant_utils.h"
@@ -897,7 +898,7 @@ OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name, const ui
 /// @return OpDescPtr
 ///
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescBuilder::Build() {
-  OpDescPtr op_desc = shared_ptr<OpDesc>(new (std::nothrow) OpDesc(name_, type_));
+  OpDescPtr op_desc = MakeShared<OpDesc>(name_, type_);
   if (op_desc == nullptr) {
     REPORT_CALL_ERROR("E19999", "create opdesc failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
     GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
