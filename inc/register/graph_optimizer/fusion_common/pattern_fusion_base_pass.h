@@ -32,7 +32,6 @@ using std::initializer_list;
 using std::map;
 using std::string;
 using std::vector;
-
 using namespace std;
 
 using OpsKernelInfoStorePtr = std::shared_ptr<ge::OpsKernelInfoStore>;
@@ -63,7 +62,7 @@ class PatternFusionBasePass : public GraphPass {
    * @return NOT_CHANGED, the graph did not change
    * @return FAILED, fail to modify graph
    */
-  Status Run(ge::ComputeGraph &graph) override;
+  virtual Status Run(ge::ComputeGraph &graph) override;
 
   /** execute pass
    *
@@ -124,8 +123,11 @@ class PatternFusionBasePass : public GraphPass {
   bool CheckGraphCycle(ge::ComputeGraph &graph) const;
 
   void EnableNetworkAnalysis();
-
+#ifdef ONLY_COMPILE_OPEN_SRC
   void DumpMapping(const FusionPattern &pattern, const Mapping &mapping);
+#else
+  void DumpMapping(const FusionPattern &pattern, const Mapping &mapping) const;
+#endif
  private:
   /** match all nodes in graph according to pattern
    *
@@ -156,11 +158,15 @@ class PatternFusionBasePass : public GraphPass {
    * There obviously a cycle in the fused graph.
    *             */
   bool DetectOneScope(const std::vector<ge::NodePtr> &scope_nodes);
-
+#ifdef ONLY_COMPILE_OPEN_SRC
   bool CheckEachPeerOut(const ge::NodePtr &node,
                         const std::unordered_set<ge::NodePtr> &scope_nodes_set,
                         const std::vector<ge::NodePtr> &scope_nodes);
-
+#else
+  bool CheckEachPeerOut(const ge::NodePtr &node,
+                        const std::unordered_set<ge::NodePtr> &scope_nodes_set,
+                        const std::vector<ge::NodePtr> &scope_nodes) const;
+#endif
   /** Internal implement class ptr */
   std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;
 

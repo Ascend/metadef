@@ -27,12 +27,10 @@
 #include "register/graph_optimizer/graph_fusion/graph_pass.h"
 
 namespace fe {
-
 using std::initializer_list;
 using std::map;
 using std::string;
 using std::vector;
-
 using namespace std;
 
 enum GraphFusionPassType {
@@ -71,7 +69,7 @@ class GraphFusionPassBase : public GraphPass {
    * @return NOT_CHANGED, the graph did not change
    * @return FAILED, fail to modify graph
    */
-  Status Run(ge::ComputeGraph &graph) override;
+  virtual Status Run(ge::ComputeGraph &graph) override;
 
  protected:
   /** define pattern

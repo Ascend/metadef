@@ -69,7 +69,7 @@ void ConnectionMatrix::SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inpu
     bitmap.SetValues(0);
   }
 
-  bitmap.SetBit(GetIndex(node));
+  bitmap.SetBit(static_cast<size_t>(GetIndex(node)));
   for (const ge::NodePtr &input : inputs) {
     if (input != node) {
       bitmap.Or(GetBitMap(input));
@@ -88,7 +88,7 @@ int64_t ConnectionMatrix::GetIndex(const ge::NodePtr &node) const {
 }
 
 bool ConnectionMatrix::IsConnected(const ge::NodePtr &a, const ge::NodePtr &b) const {
-  return GetBitMap(b).GetBit(GetIndex(a));
+  return GetBitMap(b).GetBit(static_cast<size_t>(GetIndex(a)));
 }
 
 const ge::LargeBitmap &ConnectionMatrix::GetBitMap(const ge::NodePtr &node) const {

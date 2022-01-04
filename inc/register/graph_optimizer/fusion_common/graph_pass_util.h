@@ -139,7 +139,11 @@ class GraphPassUtil {
    *
    * @param tensor_desc,usually is output_desc
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void SetDataDumpOriginDataType(ge::DataType origin_data_type, ge::GeTensorDescPtr tensor_desc) {
+#else
+  static void SetDataDumpOriginDataType(const ge::DataType origin_data_type, ge::GeTensorDescPtr tensor_desc) {
+#endif
     std::string origin_data_type_str = "RESERVED";
     if (origin_data_type != ge::DT_UNDEFINED) {
       origin_data_type_str = ge::TypeUtils::DataTypeToSerialString(origin_data_type);
@@ -173,12 +177,12 @@ class GraphPassUtil {
     }
     NodeTypeMapPtr node_type_map = node_map_info->node_type_map;
     std::string real_op_type = ge::NodeUtils::GetNodeType(*node_ptr);
-    auto iter = node_type_map->find(real_op_type);
+    const auto iter = node_type_map->find(real_op_type);
     if (iter != node_type_map->end()) {
       iter->second[node_ptr->GetName()] = node_ptr;
     } else {
-      node_type_map->emplace(std::make_pair(real_op_type,
-                                            std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
+      (void)node_type_map->emplace(std::make_pair(real_op_type,
+          std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
     }
   }
 
@@ -231,12 +235,12 @@ class GraphPassUtil {
     if (node_type_map == nullptr || node_ptr == nullptr) {
       return;
     }
-    auto iter = node_type_map->find(op_type);
+    const auto iter = node_type_map->find(op_type);
     if (iter == node_type_map->end()) {
       node_type_map->emplace(std::make_pair(op_type,
                                             std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
     } else {
-      iter->second.emplace(node_ptr->GetName(), node_ptr);
+      (void)iter->second.emplace(node_ptr->GetName(), node_ptr);
     }
   }
 
@@ -245,9 +249,9 @@ class GraphPassUtil {
     if (node_type_map == nullptr || node_ptr == nullptr) {
       return;
     }
-    auto iter = node_type_map->find(op_type);
+    const auto iter = node_type_map->find(op_type);
     if (iter != node_type_map->end()) {
-      iter->second.erase(node_ptr->GetName());
+      (void)iter->second.erase(node_ptr->GetName());
     }
   }
 
@@ -257,7 +261,7 @@ class GraphPassUtil {
       return;
     }
 
-    auto iter = node_type_map->find(op_type);
+    const auto iter = node_type_map->find(op_type);
     if (iter == node_type_map->end()) {
       return;
     }
