@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "hash_utils.h"
 #include "compile_cache_hasher.h"
+
 namespace ge {
 CacheHashKey CompileCacheHasher::GetCacheDescHashWithoutShape(const CompileCacheDesc &cache_desc) {
   CacheHashKey hash_key = HashUtils::MultiHash(cache_desc.unique_id_);
   hash_key = HashUtils::MultiHash(hash_key, cache_desc.formats_, cache_desc.origin_formats_,
-                                            cache_desc.data_types_, cache_desc.other_desc_);
+                                  cache_desc.data_types_, cache_desc.other_desc_);
   return hash_key;
 }
 CacheHashKey CompileCacheHasher::GetCacheDescShapeHash(const CompileCacheDesc &cache_desc) {
