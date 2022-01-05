@@ -30,8 +30,9 @@ struct FormatTransferRegistry {
   }
 
   std::shared_ptr<FormatTransfer> GenerateFormatTransfer(const Format src, const Format dst){
-    const auto dst_builder = src_dst_builder.find(src);
-    if (dst_builder == src_dst_builder.end()) {
+    const std::map<Format,
+                   std::map<Format, FormatTransferBuilder>>::const_iterator dst_builder = src_dst_builder.find(src);
+    if (dst_builder == src_dst_builder.cend()) {
       return nullptr;
     }
     const auto builder_iter = dst_builder->second.find(dst);
@@ -42,8 +43,9 @@ struct FormatTransferRegistry {
   }
 
   bool IsFormatTransferExists(const Format src, const Format dst) {
-    const auto dst_builder = src_dst_builder.find(src);
-    if (dst_builder == src_dst_builder.end()) {
+    const std::map<Format,
+                   std::map<Format, FormatTransferBuilder>>::const_iterator dst_builder = src_dst_builder.find(src);
+    if (dst_builder == src_dst_builder.cend()) {
       return false;
     }
     return dst_builder->second.count(dst) > 0UL;
