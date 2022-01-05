@@ -364,7 +364,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
                                                const char *outputs, char *run_info_json, size_t run_info_len,
                                                const char *compile_info_hash, uint64_t *elapse,
                                                const OpTilingFunc &tiling_func) {
-  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
+  if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
@@ -423,7 +423,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
                                             const char *outputs, char *run_info_json, size_t run_info_len,
                                             const char *compile_info_hash, uint64_t *elapse,
                                             const OpTilingFuncV2 &tiling_func) {
-  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
+  if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
@@ -433,7 +433,7 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
 
   std::chrono::time_point<std::chrono::steady_clock> before_tiling;
   std::chrono::time_point<std::chrono::steady_clock> after_tiling;
-  std::string compile_info_str = compile_info;
+  const std::string compile_info_str = compile_info;
   std::string optype_str = optype;
   ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("", optype_str);
   std::map<std::string, std::vector<uint8_t>> const_values;
@@ -487,7 +487,7 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse,
                                          const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func) {
-  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
+  if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
@@ -549,7 +549,7 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse,
                                          const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func) {
-  if (optype == nullptr || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
+  if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
@@ -595,7 +595,7 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
     return 0;
   }
 
-  if (elapse) {
+  if (elapse != nullptr) {
     *elapse = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(\
         after_tiling - before_tiling).count());
     *(elapse + 1) = static_cast<uint64_t>(last_op_tiling_perf);
