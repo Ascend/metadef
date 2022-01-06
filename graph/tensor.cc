@@ -167,7 +167,7 @@ class TensorImpl {
       // Front 8 bytes store pointer of string
       char_t *const raw_data = PtrToPtr<void, char_t>(
           ValueToPtr(PtrToValue(PtrToPtr<char_t, void>(buff.get())) + sizeof(*string_head)));
-      string_head->addr = sizeof(StringHead);
+      string_head->addr = static_cast<int64_t>(sizeof(StringHead));
       string_head->len = static_cast<int64_t>(data.size());
       const int32_t memcpy_ret = memcpy_s(raw_data, total_size - sizeof(StringHead),  data.c_str(), data.size() + 1U);
       if (memcpy_ret != EOK) {
@@ -257,8 +257,8 @@ Shape::Shape(const std::vector<int64_t> &dims) { impl_ = ComGraphMakeShared<Shap
 
 size_t Shape::GetDimNum() const {
   if (impl_ != nullptr) {
-    bool ret = std::any_of(std::begin(impl_->dims_), std::end(impl_->dims_),
-                           [] (int64_t i) { return i == UNKNOWN_DIM_NUM; });
+    const bool ret = std::any_of(std::begin(impl_->dims_), std::end(impl_->dims_),
+                                 [] (const int64_t i) { return i == UNKNOWN_DIM_NUM; });
     return ret ? 0U : impl_->dims_.size();
   }
   return 0U;

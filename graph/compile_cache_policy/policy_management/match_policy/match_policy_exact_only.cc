@@ -25,12 +25,12 @@ CacheItem MatchPolicyExactOnly::GetCacheItem(const CCStatType &cc_state, const C
   const CacheHashKey shape_hash_key = CompileCacheHasher::GetCacheDescShapeHash(desc);
   const auto &info_vec = iter->second;
 
-  auto cached_info = std::find_if(info_vec.begin(), info_vec.end(),
-                                  [&shape_hash_key, &desc] (const CacheInfo &cached_info) {
-                                    return (cached_info.GetShapeHash() == shape_hash_key) &&
-                                           (CompileCacheDesc::IsSameCompileDesc(cached_info.GetCompileCacheDesc(),
-                                                                                desc));
-                                  });
+  const auto cached_info = std::find_if(info_vec.begin(), info_vec.end(),
+                                        [&shape_hash_key, &desc] (const CacheInfo &cached) {
+                                          return (cached.GetShapeHash() == shape_hash_key) &&
+                                                 (CompileCacheDesc::IsSameCompileDesc(cached.GetCompileCacheDesc(),
+                                                                                      desc));
+                                        });
   if (cached_info != info_vec.end()) {
     return cached_info->GetItem();
   } else {
