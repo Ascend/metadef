@@ -1797,8 +1797,8 @@
     "errClass": "Environment Errors",
     "errTitle": "Invalid Ranktable Configuration",
     "ErrCode": "EI0004",
-    "ErrMessage": "Invalid ranktable, with rankID [%s] and local devID [%s]. Check that ranktable [%s] is valid and the environment setup matches the ranktable.",
-    "Arglist": "rankid,devId,ranktable_path",
+    "ErrMessage": "Invalid ranktable, with rank_id [%s] and local device_id [%s]. Check that ranktable [%s] is valid and the environment setup matches the ranktable.",
+    "Arglist": "rank_id,device_id,ranktable_path",
     "suggestion": {
       "Possible Cause": "The cluster configuration in the ranktable file does not match that of the actual operating environment, or the configuration format is invalid",
       "Solution": "Try again with a valid cluster configuration in the ranktable file. Ensure that the configuration matches the operating environment."
