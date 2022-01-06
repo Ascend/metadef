@@ -59,7 +59,7 @@ Anchor::Vistor<AnchorPtr> AnchorImpl::GetPeerAnchors(
   std::vector<AnchorPtr> ret;
   ret.resize(peer_anchors_.size());
   (void)std::transform(peer_anchors_.begin(), peer_anchors_.end(), ret.begin(),
-                       [] (std::weak_ptr<Anchor> anchor) {
+                       [] (const std::weak_ptr<Anchor> anchor) {
                          return anchor.lock();
                        });
   return Anchor::Vistor<AnchorPtr>(anchor_ptr, ret);
