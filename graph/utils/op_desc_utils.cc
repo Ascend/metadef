@@ -532,6 +532,106 @@ std::vector<ge::NodePtr> OpDescUtils::GetConstInputs(const ge::Node &node) {
   return ret;
 }
 
+
+graphStatus OpDescUtils::SetNoneConstNodeWeights(ge::Node &node, const std::vector<ge::GeTensorPtr> &weights) {
+  const auto input_nodes = GetConstInputs(node);
+  if (weights.size() < input_nodes.size()) {
+    REPORT_INNER_ERROR("E19999", "weights count:%zu can't be less than const input count:%zu, node:%s(%s)",
+                       weights.size(), input_nodes.size(), node.GetName().c_str(), node.GetType().c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] weights count:%zu can't be less than const input count:%zu",
+           weights.size(), input_nodes.size());
+    return GRAPH_PARAM_INVALID;
+  }
+
+  ge::NamedAttrs named_attrs;
+  (void)ge::AttrUtils::SetListTensor(named_attrs, "key", weights);
+  std::vector<ge::GeTensorPtr> copy_weights;
+  (void)ge::AttrUtils::MutableListTensor(named_attrs, "key", copy_weights);
+
+  for (size_t i = 0UL; i < input_nodes.size(); ++i) {
+    if (input_nodes[i]->GetOpDesc() != nullptr) {
+      if (SetWeights(input_nodes[i]->GetOpDesc(), copy_weights[i]) != GRAPH_SUCCESS) {
+        REPORT_INNER_ERROR("E19999", "set weights failed, node:%s(%s)",
+                           input_nodes[i]->GetName().c_str(), input_nodes[i]->GetType().c_str());
+        GELOGE(GRAPH_FAILED, "[Set][Weights] failed, node:%s(%s)",
+               input_nodes[i]->GetName().c_str(), input_nodes[i]->GetType().c_str());
+        return GRAPH_FAILED;
+      }
+    }
+  }
+
+  // If set more weights than constop, need to add constop
+  for (size_t i = input_nodes.size(); i < copy_weights.size(); ++i) {
+    // Use org weight before SetWeights Overwrite
+    const auto const_opdesc = CreateConstOp(copy_weights[i]);
+    GE_CHECK_NOTNULL(const_opdesc);
+
+    const auto owner_graph = node.GetOwnerComputeGraph();
+    if (owner_graph == nullptr) {
+      REPORT_CALL_ERROR("E19999", "node's graph is empty, node name: %s", node.GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Get][Graph] node's graph is empty, name: %s", node.GetName().c_str());
+      return GRAPH_PARAM_INVALID;
+    }
+    const auto const_node = owner_graph->AddNodeFront(const_opdesc);
+    GE_CHK_BOOL_EXEC(node.AddLinkFrom(const_node) == GRAPH_SUCCESS,
+                     REPORT_CALL_ERROR("E19999", "node:%s add link failed.", node.GetName().c_str());
+                     GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] graph add link failed! node:%s",
+                            node.GetName().c_str());
+                     return GRAPH_FAILED);
+    const std::vector<ge::NodePtr> original_nodes;
+    ge::GraphUtils::RecordOriginalNames(original_nodes, const_node);
+  }
+  return GRAPH_SUCCESS;
+}
+
+graphStatus OpDescUtils::SetNoneConstNodeWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &weights_map) {
+  for (const auto &pair:weights_map) {
+    const auto idx = pair.first;
+    // idx = in data anchor size is valid, it meant to add a new const node
+    if ((idx < 0) || (static_cast<size_t>(idx) > node.GetAllInDataAnchorsSize())) {
+      REPORT_CALL_ERROR("E19999", "Invalid map key: %d of node[%s].", idx, node.GetName().c_str());
+      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid map key: %d of node[%s].", idx, node.GetName().c_str());
+      return GRAPH_PARAM_INVALID;
+    }
+    const auto peer_node = NodeUtils::GetInDataNodeByIndex(node, idx);
+    if (peer_node != nullptr) {
+      // a. update const input node
+      if (peer_node->GetType() != CONSTANT) {
+        REPORT_INNER_ERROR("E19999", "op %s [%d]'s input node should be const, but is %s type:%s ",
+                           node.GetName().c_str(), pair.first,
+                           peer_node->GetName().c_str(), peer_node->GetType().c_str());
+        GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] op %s [%d]'s input node should be const, but is %s type:%s ",
+               node.GetName().c_str(), pair.first, peer_node->GetName().c_str(), peer_node->GetType().c_str());
+      }
+      if (SetWeights(peer_node->GetOpDesc(), pair.second) != GRAPH_SUCCESS) {
+        REPORT_INNER_ERROR("E19999", "set weights failed, node:%s(%s)",
+                           peer_node->GetName().c_str(), peer_node->GetType().c_str());
+        GELOGE(GRAPH_FAILED, "[Set][Weights] failed, node:%s(%s)",
+               peer_node->GetName().c_str(), peer_node->GetType().c_str());
+        return GRAPH_FAILED;
+      }
+    } else {
+      // b. create new const input node
+      const auto const_opdesc = CreateConstOp(pair.second);
+      GE_CHECK_NOTNULL(const_opdesc);
+      const auto owner_graph = node.GetOwnerComputeGraph();
+      if (owner_graph == nullptr) {
+        REPORT_CALL_ERROR("E19999", "node's graph is empty, node name: %s", node.GetName().c_str());
+        GELOGE(GRAPH_PARAM_INVALID, "[Get][Graph] node's graph is empty, name: %s", node.GetName().c_str());
+        return GRAPH_PARAM_INVALID;
+      }
+      const auto const_node = owner_graph->AddNodeFront(const_opdesc);
+      if (node.AddLinkFrom(static_cast<const uint32_t>(pair.first), const_node) != GRAPH_SUCCESS) {
+        REPORT_CALL_ERROR("E19999", "op %s add const to input index[%d] failed", node.GetName().c_str(), pair.first);
+        GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] op %s add const to input index[%d] failed",
+               node.GetName().c_str(), pair.first);
+        return GRAPH_FAILED;
+      }
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 std::vector<GeTensorPtr> OpDescUtils::MutableWeights(const ge::Node &node) {
   std::vector<GeTensorPtr> ret;
@@ -617,48 +717,7 @@ OpDescUtils::SetWeights(ge::Node &node, const std::vector<ge::GeTensorPtr> &weig
     return GRAPH_PARAM_INVALID;
   }
 
-  const auto input_nodes = GetConstInputs(node);
-  if (weights.size() < input_nodes.size()) {
-    REPORT_INNER_ERROR("E19999", "weights count:%zu can't be less than const input count:%zu, node:%s(%s)",
-                       weights.size(), input_nodes.size(), node.GetName().c_str(), node.GetType().c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] weights count:%zu can't be less than const input count:%zu",
-           weights.size(), input_nodes.size());
-    return GRAPH_PARAM_INVALID;
-  }
-
-  ge::NamedAttrs named_attrs;
-  (void)ge::AttrUtils::SetListTensor(named_attrs, "key", weights);
-  std::vector<ge::GeTensorPtr> copy_weights;
-  (void)ge::AttrUtils::MutableListTensor(named_attrs, "key", copy_weights);
-
-  for (size_t i = 0UL; i < input_nodes.size(); ++i) {
-    if (input_nodes[i]->GetOpDesc() != nullptr) {
-      SetWeights(input_nodes[i]->GetOpDesc(), copy_weights[i]);
-    }
-  }
-
-  // If set more weights than constop, need to add constop
-  for (size_t i = input_nodes.size(); i < copy_weights.size(); ++i) {
-    // Use org weight before SetWeights Overwrite
-    const auto const_opdesc = CreateConstOp(copy_weights[i]);
-    GE_CHECK_NOTNULL(const_opdesc);
-
-    const auto owner_graph = node.GetOwnerComputeGraph();
-    if (owner_graph == nullptr) {
-      REPORT_CALL_ERROR("E19999", "node's graph is empty, node name: %s", node.GetName().c_str());
-      GELOGE(GRAPH_FAILED, "[Get][Graph] node's graph is empty, name: %s", node.GetName().c_str());
-      return GRAPH_PARAM_INVALID;
-    }
-    const auto const_node = owner_graph->AddNodeFront(const_opdesc);
-    GE_CHK_BOOL_EXEC(node.AddLinkFrom(const_node) == GRAPH_SUCCESS,
-                     REPORT_CALL_ERROR("E19999", "node:%s add link failed.", node.GetName().c_str());
-                     GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] graph add link failed! node:%s",
-                            node.GetName().c_str());
-                     return GRAPH_FAILED);
-    const std::vector<ge::NodePtr> original_nodes;
-    ge::GraphUtils::RecordOriginalNames(original_nodes, const_node);
-  }
-  return GRAPH_SUCCESS;
+  return SetNoneConstNodeWeights(node, weights);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
@@ -675,43 +734,9 @@ OpDescUtils::SetWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &we
     return GRAPH_PARAM_INVALID;
   }
   // 2. node is not const
-  for (const auto &pair:weights_map) {
-    const auto idx = pair.first;
-    // idx = in data anchor size is valid, it meant to add a new const node
-    if ((idx < 0) || (static_cast<size_t>(idx) > node.GetAllInDataAnchorsSize())) {
-      REPORT_CALL_ERROR("E19999", "Invalid map key: %d of node[%s].", idx, node.GetName().c_str());
-      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid map key: %d of node[%s].", idx, node.GetName().c_str());
-      return GRAPH_PARAM_INVALID;
-    }
-    const auto peer_node = NodeUtils::GetInDataNodeByIndex(node, idx);
-    if (peer_node != nullptr) {
-      // a. update const input node
-      if (peer_node->GetType() != CONSTANT) {
-        REPORT_INNER_ERROR("E19999", "op %s [%d]'s input node should be const, but is %s type:%s ",
-                           node.GetName().c_str(), pair.first,
-                           peer_node->GetName().c_str(), peer_node->GetType().c_str());
-        GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] op %s [%d]'s input node should be const, but is %s type:%s ",
-               node.GetName().c_str(), pair.first, peer_node->GetName().c_str(), peer_node->GetType().c_str());
-      }
-      SetWeights(peer_node->GetOpDesc(), pair.second);
-    } else {
-      // b. create new const input node
-      const auto const_opdesc = CreateConstOp(pair.second);
-      GE_CHECK_NOTNULL(const_opdesc);
-      const auto owner_graph = node.GetOwnerComputeGraph();
-      if (owner_graph == nullptr) {
-        REPORT_CALL_ERROR("E19999", "node's graph is empty, node name: %s", node.GetName().c_str());
-        GELOGE(GRAPH_PARAM_INVALID, "[Get][Graph] node's graph is empty, name: %s", node.GetName().c_str());
-        return GRAPH_PARAM_INVALID;
-      }
-      const auto const_node = owner_graph->AddNodeFront(const_opdesc);
-      if (node.AddLinkFrom(static_cast<uint32_t>(pair.first), const_node) != GRAPH_SUCCESS) {
-        REPORT_CALL_ERROR("E19999", "op %s add const to input index[%d] failed", node.GetName().c_str(), pair.first);
-        GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] op %s add const to input index[%d] failed",
-               node.GetName().c_str(), pair.first);
-        return GRAPH_FAILED;
-      }
-    }
+  auto ret = SetNoneConstNodeWeights(node, weights_map);
+  if (ret != GRAPH_SUCCESS) {
+    return ret;
   }
   NodeUtils::UpdateIsInputConst(node);
   return GRAPH_SUCCESS;
