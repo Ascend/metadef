@@ -121,7 +121,7 @@ FusionPattern &FusionPattern::SetInputs(const std::string &id, const std::vector
  */
 FusionPattern &FusionPattern::SetOutput(const std::string &id) {
   FE_PATTERN_ERROR_RETURN_IF(id.empty(), "Id cannot be empty.");
-  std::shared_ptr<FusionPattern::OpDesc> op_desc = GetOpDesc(id);
+  const std::shared_ptr<FusionPattern::OpDesc> op_desc = GetOpDesc(id);
   FE_PATTERN_ERROR_RETURN_IF(op_desc == nullptr, "Id does not exist. (id:%s)", id.c_str());
 
   op_desc->is_output = true;
@@ -167,6 +167,7 @@ const std::string &FusionPattern::GetName() const { return name_; }
  * @ingroup fe
  * @brief get the OpDesc of input Ops (const)
  */
+
 const std::vector<std::shared_ptr<FusionPattern::OpDesc>> *FusionPattern::GetInputs(
     const std::shared_ptr<FusionPattern::OpDesc> op_desc) {
   if (op_desc == nullptr) {
@@ -213,7 +214,7 @@ void FusionPattern::Dump() const {
  * @brief get OpDesc based on ID, return nullptr if failed
  */
 std::shared_ptr<FusionPattern::OpDesc> FusionPattern::GetOpDesc(const std::string &id) const {
-  auto it = op_map_.find(id);
+  const auto it = op_map_.find(id);
   if (it != op_map_.end()) {
     return it->second;
   }

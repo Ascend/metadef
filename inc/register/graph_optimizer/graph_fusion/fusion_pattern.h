@@ -120,7 +120,11 @@ class FusionPattern {
    *
    * @return op_desc's iniput opdesc list
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   static const std::vector<std::shared_ptr<OpDesc>> *GetInputs(std::shared_ptr<OpDesc> op_desc);
+#else
+  static const std::vector<std::shared_ptr<OpDesc>> *GetInputs(const std::shared_ptr<FusionPattern::OpDesc> op_desc);
+#endif
 
   /** get the OpDesc of output Op
    *

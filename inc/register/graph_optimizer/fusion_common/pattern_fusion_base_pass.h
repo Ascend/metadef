@@ -104,8 +104,13 @@ class PatternFusionBasePass : public GraphPass {
   virtual std::vector<FusionPattern *> DefinePatterns() = 0;
   virtual Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, std::vector<ge::NodePtr> &new_nodes) = 0;
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   std::vector<ge::NodePtr> GetNodesFromMapping(const Mapping &mapping);
   ge::NodePtr GetNodeFromMapping(const std::string &id, const Mapping &mapping);
+#else
+  std::vector<ge::NodePtr> GetNodesFromMapping(const Mapping &mapping) const;
+  ge::NodePtr GetNodeFromMapping(const std::string &id, const Mapping &mapping) const;
+#endif
 
   void RecordOutputAnchorMap(ge::NodePtr output_node);
   void ClearOutputAnchorMap();

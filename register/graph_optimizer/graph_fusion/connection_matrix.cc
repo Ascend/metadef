@@ -19,7 +19,7 @@
 
 namespace fe {
 ConnectionMatrix::ConnectionMatrix(const ge::ComputeGraph &graph) {
-  auto direct_nodes = graph.GetDirectNode();
+  const auto direct_nodes = graph.GetDirectNode();
   size_ = direct_nodes.size();
   bit_maps.reserve(size_);
   int64_t index_loop = 0;
@@ -37,13 +37,17 @@ ConnectionMatrix::~ConnectionMatrix() {
 
 Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
   for (auto &node : graph.GetDirectNode()) {
-    auto inputs = node->GetInAllNodes();
+    const auto inputs = node->GetInAllNodes();
     SetConnectivity(inputs, node);
   }
   return ge::GRAPH_SUCCESS;
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void ConnectionMatrix::Update(const ge::ComputeGraph &graph, vector<ge::NodePtr> &fusion_nodes) {
+#else
+void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const vector<ge::NodePtr> &fusion_nodes) {
+#endif
   ge::LargeBitmap new_bit_vector(graph.GetDirectNode().size());
   new_bit_vector.SetValues(0);
   for (size_t i = 0; i < fusion_nodes.size(); i++) {
@@ -52,7 +56,7 @@ void ConnectionMatrix::Update(const ge::ComputeGraph &graph, vector<ge::NodePtr>
   for (auto &node : graph.GetDirectNode()) {
     bool is_connected_to_fusion = false;
     for (size_t i = 0; i < fusion_nodes.size(); i++) {
-      if (GetBitMap(node).GetBit(GetIndex(fusion_nodes[i]))) {
+      if (GetBitMap(node).GetBit(static_cast<size_t>(GetIndex(fusion_nodes[i])))) {
         is_connected_to_fusion = true;
         break;
       }
@@ -78,7 +82,7 @@ void ConnectionMatrix::SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inpu
 }
 
 int64_t ConnectionMatrix::GetIndex(const ge::NodePtr &node) const {
-  auto iter = name_to_index_.find(node->GetName());
+  const auto iter = name_to_index_.find(node->GetName());
   if (iter != name_to_index_.end()) {
     return iter->second;
   } else {
@@ -92,10 +96,10 @@ bool ConnectionMatrix::IsConnected(const ge::NodePtr &a, const ge::NodePtr &b) c
 }
 
 const ge::LargeBitmap &ConnectionMatrix::GetBitMap(const ge::NodePtr &node) const {
-  return bit_maps[GetIndex(node)];
+  return bit_maps[static_cast<uint64_t>(GetIndex(node))];
 }
 
 ge::LargeBitmap &ConnectionMatrix::GetBitMap(const ge::NodePtr &node) {
-  return bit_maps[GetIndex(node)];
+  return bit_maps[static_cast<uint64_t>(GetIndex(node))];
 }
 }

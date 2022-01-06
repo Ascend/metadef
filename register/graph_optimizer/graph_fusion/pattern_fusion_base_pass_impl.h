@@ -28,11 +28,14 @@
 #include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 
 namespace fe {
+#ifdef ONLY_COMPILE_OPEN_SRC
 using std::initializer_list;
 using std::map;
 using std::string;
 using std::vector;
 using namespace std;
+#else
+#endif
 
 using OpDesc = FusionPattern::OpDesc;
 using Mapping = std::map<const std::shared_ptr<OpDesc>, std::vector<ge::NodePtr>>;
@@ -51,9 +54,15 @@ class PatternFusionBasePassImpl {
 
   void GetPatterns(std::vector<FusionPattern *> &patterns);
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   void SetPatterns(std::vector<FusionPattern *> &patterns);
 
   void SetOpsKernelInfoStore(OpsKernelInfoStorePtr ops_kernel_info_store_ptr);
+#else
+  void SetPatterns(const std::vector<FusionPattern *> &patterns);
+
+  void SetOpsKernelInfoStore(const OpsKernelInfoStorePtr ops_kernel_info_store_ptr);
+#endif
 
   PatternFusionBasePassImpl &operator=(const PatternFusionBasePassImpl &) = delete;
   PatternFusionBasePassImpl(const PatternFusionBasePassImpl &another_pattern_fusion) = delete;
@@ -62,20 +71,25 @@ class PatternFusionBasePassImpl {
 
   bool CheckOpSupported(const ge::NodePtr &node) const;
 
-  bool IsNodesExist(ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes);
 #ifdef ONLY_COMPILE_OPEN_SRC
+  bool IsNodesExist(ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes);
+
   bool IsMatched(std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node, const Mapping &mapping);
-#else
-  bool IsMatched(const std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node, const Mapping &mapping);
-#endif
 
   void DumpMappings(const FusionPattern &pattern, const Mappings &mappings);
 
   bool IsOpTypeExist(const std::string &type, const std::vector<std::string> &types);
 
-#ifdef ONLY_COMPILE_OPEN_SRC
   bool MatchFromOutput(ge::NodePtr output_node, std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping);
 #else
+  static bool IsNodesExist(const ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes);
+
+  static bool IsMatched(const std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node, const Mapping &mapping);
+
+  void DumpMappings(const FusionPattern &pattern, const Mappings &mappings) const;
+
+  static bool IsOpTypeExist(const std::string &type, const std::vector<std::string> &types);
+
   bool MatchFromOutput(const ge::NodePtr output_node, const std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping);
 #endif
 
@@ -92,11 +106,13 @@ class PatternFusionBasePassImpl {
   bool MatchFromOutput(std::vector<ge::NodePtr> &candidate_nodes,
                        std::vector<std::shared_ptr<OpDesc>> &candidate_op_descs, Mapping &mapping);
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   bool MatchAllEdges(const size_t &input_size, const std::unique_ptr<bool[]> &usage_flags);
 
-#ifdef ONLY_COMPILE_OPEN_SRC
   void GetInDataAnchors(const ge::NodePtr &node, std::vector<ge::InDataAnchorPtr> &in_anchor_vec);
 #else
+  static bool MatchAllEdges(const size_t &input_size, const std::unique_ptr<bool[]> &usage_flags);
+
   static void GetInDataAnchors(const ge::NodePtr &node, std::vector<ge::InDataAnchorPtr> &in_anchor_vec);
 #endif
 };
