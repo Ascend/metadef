@@ -332,8 +332,9 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
     const auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U, sizeof(ge::StringHead));
     string_head->addr = static_cast<int64_t>(ge::PtrToValue(raw_data));
     string_head->len = static_cast<int64_t>(weight_content.size());
-    CHECK_FALSE_EXEC(memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(),
-                              weight_content.size() + 1U) == EOK, GELOGW("[SetWeight][Copy] memcpy failed"));
+    CHECK_FALSE_EXEC(
+        memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(), weight_content.size() + 1U) == EOK,
+        GELOGW("[SetWeight][Copy] memcpy failed"));
     (void)weight->SetData(ge::PtrToPtr<uint8_t, const uint8_t>(addr.data()), total_size);
   } else {
     (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
