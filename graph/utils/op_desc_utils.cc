@@ -502,8 +502,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::GeTensorDesc> OpD
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-std::vector<ge::NodePtr> OpDescUtils::GetConstInputs(const ge::Node &node) {
+std::vector<ge::NodePtr> OpDescUtils::GetConstInputs(const ge::Node &node, const uint32_t depth) {
   std::vector<ge::NodePtr> ret;
+  if (depth == 0U) {
+    return ret;
+  }
+
   const auto in_anchors = node.GetAllInDataAnchors();
   for (const auto &in_anchor : in_anchors) {
     const auto out_anchor = in_anchor->GetPeerOutAnchor();
@@ -516,7 +520,7 @@ std::vector<ge::NodePtr> OpDescUtils::GetConstInputs(const ge::Node &node) {
       ret.push_back(in_node);
     } else if (in_node->GetType() == SWITCH && node.GetType() == MATMUL) {
       // const --> switch --> matmul
-      auto switch_input = GetConstInputs(*in_node);
+      auto switch_input = GetConstInputs(*in_node, depth - 1U);
       if (switch_input.size() > 0U) {
         (void)ret.insert(ret.end(), switch_input.begin(), switch_input.end());
       }

@@ -56,7 +56,7 @@ class OpDescUtils {
   static bool ClearInputDesc(const ge::NodePtr& node);
   static bool ClearOutputDesc(const ge::OpDescPtr& op_desc, const uint32_t index);
   static bool ClearOutputDesc(const ge::NodePtr& node);
-  static std::vector<ge::NodePtr> GetConstInputs(const ge::Node& node);
+  static std::vector<ge::NodePtr> GetConstInputs(const ge::Node& node, const uint32_t depth = 64U);
   static std::vector<ge::NodePtr> GetConstInputs(const ge::ConstNodePtr& node);
   static size_t GetNonConstInputsSize(const ge::Node& node);
   static size_t GetNonConstInputsSize(const ge::ConstNodePtr node);
