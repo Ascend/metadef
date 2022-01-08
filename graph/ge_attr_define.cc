@@ -1205,6 +1205,7 @@ const std::string ATTR_NAME_FFTS_PLUS_SUB_GRAPH = "_ffts_plus_sub_graph";
 const std::string ATTR_NAME_COMPOSITE_ENGINE_NAME = "_composite_engine_name";
 const std::string ATTR_NAME_COMPOSITE_ENGINE_KERNEL_LIB_NAME = "_composite_engine_kernel_lib_name";
 const std::string ATTR_NAME_CUBE_VECTOR_CORE_TYPE = "_cube_vector_core_type";
+const std::string ATTR_NAME_CACHE_PERSIST = "_cache_persist";
 const std::string ATTR_NAME_ALIAS_ENGINE_NAME = "_alias_engine_name";
 
 // mark fuzz build scene
