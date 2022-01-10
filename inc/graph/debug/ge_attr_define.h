@@ -1316,6 +1316,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 // for support dynamic data flow ops
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_DATA_FLOW_HANDLE;
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_DATA_FLOW_MAX_SIZE;
+
+// mark node inserted by ge
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_IS_INSERTED_BY_GE;
 }  // namespace ge
 
 /*lint +e618*/

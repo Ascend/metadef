@@ -1291,4 +1291,7 @@ const std::string ATTR_NAME_BLOCKDIM_INDEX = "_blockdim_index";
 // for support dynamic data flow ops
 const std::string ATTR_NAME_DATA_FLOW_HANDLE = "_data_flow_handle";
 const std::string ATTR_NAME_DATA_FLOW_MAX_SIZE = "_data_flow_max_size";
+
+// mark node inserted by ge
+const std::string ATTR_NAME_IS_INSERTED_BY_GE = "_is_inserted_by_ge";
 }  // namespace ge
