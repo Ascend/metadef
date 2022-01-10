@@ -60,6 +60,9 @@ message TaskDef {
     KernelDefWithHandle kernel_with_handle = 40;
     FftsTaskDef ffts_task = 41;
     FftsPlusTaskDef ffts_plus_task = 42;
+    DSATaskDef dsa_task = 43;
+    CmoTaskDef cmo_task = 44;
+    CmoBarrierTaskDef cmo_barrier_task = 45;
 }
 
 message KernelDef {
@@ -313,6 +316,32 @@ message ManualThreadDmuDef {
 
 message ManualThreadDependencyDef {
     repeated uint32 dependency = 1;
+}
+
+message DSATaskDef {
+    uint32 op_index = 1;
+    uint32 start = 2; // start, the value is 1
+    uint32 sqe_type = 3;
+    uint32 distribution_type = 4;
+    uint32 data_type = 5;
+    uint32 alg_type = 6;
+    uint32 input_vld = 7;
+    uint32 input_value_addr_flag = 8;
+    uint32 input1_value_or_ptr = 9;
+    uint32 input2_value_or_ptr = 10;
+    uint32 seed_value_or_ptr = 11;
+    uint32 random_count_value_or_ptr = 12;
+    DSATaskArgsDef args = 13;
+}
+
+message DSATaskArgsDef {
+    uint64 output_addr = 1;
+    uint64 workspace_philox_count_addr = 2;
+    uint64 workspace_input_addr = 3;
+    bytes seed_value_or_addr = 4;
+    bytes random_count_value_or_addr = 5;
+    bytes input1_value_or_addr = 6;
+    bytes input2_value_or_addr = 7;
 }
 
 message FftsPlusTaskDef {
@@ -735,4 +764,29 @@ message FftsPlusCachePersistCtxDef {
     uint32 persistent_size = 7;
     uint32 persistent_en = 8;
     uint32 persistent_id = 9;
+}
+
+message CmoTaskDef {
+    uint32 cmo_type = 1;
+    uint32 logic_id = 2;
+    uint32 op_code = 3;
+    uint32 qos = 4;
+    uint32 part_id = 5;
+    uint32 pmg = 6;
+    uint32 num_inner = 7;
+    uint32 num_outer = 8;
+    uint32 length_inner = 9;
+    uint32 source_addr = 10;
+    uint32 strider_outer = 11;
+    uint32 strider_inner = 12;
+}
+
+message CmoBarrierTaskDef {
+    uint32 logic_id_num = 1;
+    repeated CmoBarrierInfoDef barrier_info = 2;
+}
+
+message CmoBarrierInfoDef {
+    uint32 com_type = 1;
+    uint32 logic_id = 2;
 }
