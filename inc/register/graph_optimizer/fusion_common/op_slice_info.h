@@ -65,7 +65,7 @@ class InputSplitInfo {
   void SetAxis(std::vector<int64_t>& axis);
   void SetHeadOverLap(std::vector<int64_t>& head_over_lap);
   void SetTailOverLap(std::vector<int64_t>& tail_over_lap);
-  bool IsPtrNull();
+  bool IsPtrNull() const;
  private:
   InputSplitInfoImplPtr split_impl_{nullptr};
 };
@@ -80,7 +80,7 @@ class OutputSplitInfo {
   std::vector<int64_t> GetAxis() const;
   void SetIndex(const size_t& idx);
   void SetAxis(std::vector<int64_t>& axis);
-  bool IsPtrNull();
+  bool IsPtrNull() const;
  private:
   OutputSplitInfoImplPtr split_impl_{nullptr};
 };
@@ -95,7 +95,7 @@ class InputReduceInfo {
   std::vector<int64_t> GetAxis() const;
   void SetIndex(const size_t& idx);
   void SetAxis(std::vector<int64_t>& axis);
-  bool IsPtrNull();
+  bool IsPtrNull() const;
  private:
   InputReduceInfoImplPtr reduce_impl_{nullptr};
 };
@@ -112,7 +112,7 @@ class OutputReduceInfo {
   void SetIndex(const size_t& idx);
   void SetReduceType(const OpReduceType& reduce_type);
   void SetIsAtomic(const bool& is_atomic);
-  bool IsPtrNull();
+  bool IsPtrNull() const;
  private:
   OutputReduceInfoImplPtr reduce_impl_{nullptr};
 };
@@ -134,7 +134,7 @@ class AxisSplitMap {
   void AddOutputSplitInfo(OutputSplitInfo& output_split_info);
   void SetOutputSplitInfos(std::vector<OutputSplitInfo>& output_split_vec);
   void SetOutputSplitInfos(std::vector<OutputSplitInfoPtr>& output_split_vec);
-  bool IsPtrNull();
+  bool IsPtrNull() const;
  private:
   AxisSplitMapImplPtr aixs_split_impl_{nullptr};
 };
@@ -156,7 +156,7 @@ class AxisReduceMap {
   void AddOutputReduceInfo(OutputReduceInfo& output_reduce_info);
   void SetOutputReduceInfos(std::vector<OutputReduceInfo>& output_reduce_vec);
   void SetOutputReduceInfos(std::vector<OutputReduceInfoPtr>& output_reduce_vec);
-  bool IsPtrNull();
+  bool IsPtrNull() const;
  private:
   AxisReduceMapImplPtr aixs_reduce_impl_{nullptr};
 };
@@ -181,7 +181,7 @@ class OpCalcInfo {
   void SetL1FusionEnable(const OpL1FusionType& l1_fusion_enable);
   void SetMinTbeL1Space(const int64_t& min_tbe_l1_space);
   void DelAxisSplitMapBaseAxis(std::vector<int64_t>& axis);
-  bool IsPtrNull();
+  bool IsPtrNull() const;
  private:
   OpCalcInfoImplPtr op_calc_info_impl_{nullptr};
 };
