@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <nlohmann/json.hpp>
 #include "securec.h"
 #include "graph/ge_tensor.h"
 #include "graph/op_desc.h"
@@ -28,6 +27,50 @@
 
 namespace optiling {
 thread_local int64_t last_op_tiling_perf = -1;
+
+template<typename T>
+void ParseAndSetAttrValue(ge::Operator &op, const nlohmann::json &attr, const std::string &attr_name) {
+  T attr_value = attr["value"].get<T>();
+  (void)op.SetAttr(attr_name.c_str(), attr_value);
+}
+
+template<typename T>
+void ParseAndSetAttrListValue(ge::Operator &op, const nlohmann::json &attr, const std::string &attr_name) {
+  std::vector<T> attr_value = attr["value"].get<std::vector<T>>();
+  (void)op.SetAttr(attr_name.c_str(), attr_value);
+}
+
+void ParseAndSetAttrListListValue(ge::Operator &op, const nlohmann::json &attr, const std::string &attr_name) {
+  std::vector<std::vector<int32_t>> attr_value_int32 = attr["value"].get<std::vector<std::vector<int32_t>>>();
+  std::vector<std::vector<int64_t>> attr_value_int64;
+  std::vector<int64_t> temp_int64_vec;
+  for (const auto &vec_int32 : attr_value_int32) {
+    for (const auto &item : vec_int32) {
+      int64_t tmp = static_cast<int64_t>(item);
+      temp_int64_vec.emplace_back(tmp);
+    }
+    attr_value_int64.emplace_back(temp_int64_vec);
+    temp_int64_vec.clear();
+  }
+
+  (void)op.SetAttr(attr_name.c_str(), attr_value_int64);
+}
+
+const std::map<std::string, ParseAndSetAttrValuePtr> parse_attr_dtype_map = {
+    {"bool", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<bool>)},
+    {"float", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<float>)},
+    {"float32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<float>)},
+    {"int", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<int32_t>)},
+    {"int32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<int32_t>)},
+    {"str", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<std::string>)},
+    {"list_bool", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<bool>)},
+    {"list_float", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<float>)},
+    {"list_float32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<float>)},
+    {"list_int", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<int32_t>)},
+    {"list_int32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<int32_t>)},
+    {"list_str", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<std::string>)},
+    {"list_list_int", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListListValue)},
+    {"list_list_int32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListListValue)}};
 
 void ParseShapeDesc(const nlohmann::json &shape, std::vector<TeOpTensor> &tensors) {
   TeOpTensor tensor;
@@ -104,6 +147,29 @@ void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, const
   }
 }
 
+void ParseAndSetAttr(const nlohmann::json &attr, ge::Operator &op) {
+  if (!attr.contains("name") || !attr.contains("dtype") || !attr.contains("value")) {
+    REPORT_CALL_ERROR("E19999", "cur attr does not contain name or dtype or value.");
+    return;
+  }
+  std::string attr_name;
+  std::string dtype;
+  attr_name = attr["name"].get<std::string>();
+  dtype = attr["dtype"].get<std::string>();
+  auto iter = parse_attr_dtype_map.find(dtype);
+  if (iter == parse_attr_dtype_map.end()) {
+    REPORT_CALL_ERROR("E19999", "Unknown dtype[%s], which is unsupported.", dtype.c_str());
+    return;
+  }
+  ParseAndSetAttrValuePtr func_ptr = iter->second;
+  if (func_ptr == nullptr) {
+    GE_LOGE("ParseAndSetAttrValueFunc ptr cannot be null!");
+    return;
+  }
+  (*func_ptr)(op, attr, attr_name);
+  GELOGD("Finish to set attr[name: %s] to Operator.", attr_name.c_str());
+}
+
 void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_desc, const bool &is_input) {
   for (const auto &elem : shape_list) {
     if (elem.is_array()) {
@@ -113,6 +179,12 @@ void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_de
     } else {
       ParseShapeDescV2(elem, op_desc, is_input);
     }
+  }
+}
+
+void ParseAndSetAttrsList(const nlohmann::json &attrs_list, ge::Operator &op) {
+  for (const auto &attr : attrs_list) {
+    ParseAndSetAttr(attr, op);
   }
 }
 
@@ -422,16 +494,37 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
   return 1;
 }
 
+void CheckAndSetAttr(const char *attrs, ge::Operator &operator_param) {
+  if (attrs != nullptr) {
+    GELOGD("Attrs set from pyAPI is: %s", attrs);
+    const nlohmann::json attrs_json = nlohmann::json::parse(attrs);
+    ParseAndSetAttrsList(attrs_json, operator_param);
+  } else {
+    GELOGD("Attrs has not been set.");
+  }
+  return;
+}
+
+void ParseInputsAndOutputs(const char *inputs, const char *outputs, ge::OpDescPtr &op_desc,
+    ge::Operator &operator_param, std::map<std::string, std::vector<uint8_t>> &const_values) {
+  const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
+  const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
+  ParseShapeDescListV2(inputs_json, op_desc, true);
+  ParseShapeDescListV2(outputs_json, op_desc, false);
+  operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  ParseConstTensorListV2(inputs_json, operator_param, const_values);
+}
+
 extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *compile_info, const char *inputs,
                                             const char *outputs, char *run_info_json, size_t run_info_len,
                                             const char *compile_info_hash, uint64_t *elapse,
-                                            const OpTilingFuncV2 &tiling_func) {
+                                            const OpTilingFuncV2 &tiling_func,
+                                            const char *attrs) {
   if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
   }
-
   GELOGI("Optiling func v2 found, op_type:%s", optype);
 
   std::chrono::time_point<std::chrono::steady_clock> before_tiling;
@@ -442,12 +535,8 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
   try {
-    const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
-    const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
-    ParseShapeDescListV2(inputs_json, op_desc, true);
-    ParseShapeDescListV2(outputs_json, op_desc, false);
-    operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-    ParseConstTensorListV2(inputs_json, operator_param, const_values);
+    ParseInputsAndOutputs(inputs, outputs, op_desc, operator_param, const_values);
+    CheckAndSetAttr(attrs, operator_param);
   } catch (...) {
     REPORT_CALL_ERROR("E19999", "Failed to parse json_str. %s, %s, %s", compile_info, inputs, outputs);
     return 0;
@@ -489,13 +578,13 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
 extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile_info, const char *inputs,
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse,
-                                         const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func) {
+                                         const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func,
+                                         const char *attrs) {
   if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
   }
-
   GELOGI("Optiling func v3 found, op_type:%s", optype);
 
   std::chrono::time_point<std::chrono::steady_clock> before_tiling;
@@ -505,12 +594,8 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
   try {
-    const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
-    const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
-    ParseShapeDescListV2(inputs_json, op_desc, true);
-    ParseShapeDescListV2(outputs_json, op_desc, false);
-    operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-    ParseConstTensorListV2(inputs_json, operator_param, const_values);
+    ParseInputsAndOutputs(inputs, outputs, op_desc, operator_param, const_values);
+    CheckAndSetAttr(attrs, operator_param);
   } catch (...) {
     REPORT_CALL_ERROR("E19999", "Failed to parse json_str. %s, %s, %s", compile_info, inputs, outputs);
     return 0;
@@ -551,13 +636,13 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
 extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile_info, const char *inputs,
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse,
-                                         const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func) {
+                                         const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func,
+                                         const char *attrs) {
   if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
     return 0;
   }
-
   GELOGI("Optiling func v4 found, op_type:%s", optype);
 
   std::chrono::time_point<std::chrono::steady_clock> before_tiling;
@@ -567,12 +652,8 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
   try {
-    const nlohmann::json inputs_json = nlohmann::json::parse(inputs);
-    const nlohmann::json outputs_json = nlohmann::json::parse(outputs);
-    ParseShapeDescListV2(inputs_json, op_desc_ptr, true);
-    ParseShapeDescListV2(outputs_json, op_desc_ptr, false);
-    operator_param = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_ptr);
-    ParseConstTensorListV2(inputs_json, operator_param, const_values);
+    ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_param, const_values);
+    CheckAndSetAttr(attrs, operator_param);
   } catch (...) {
     REPORT_CALL_ERROR("E19999", "Failed to parse json during tiling v4. %s, %s, %s", compile_info, inputs, outputs);
     return 0;
@@ -630,16 +711,58 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
     const OpTilingFuncV4 &tiling_func = op_func_info.GetOpTilingFuncV4();
     const OpParseFuncV4 &parse_func = op_func_info.GetOpParseFuncV4();
     ret = TbeOpTilingPyInterfaceEx4(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
-                                    compile_info_hash, elapse, tiling_func, parse_func);
+                                    compile_info_hash, elapse, tiling_func, parse_func, nullptr);
   } else if (op_func_info.IsFunctionV3()) {
     const OpTilingFuncV3 &tiling_func = op_func_info.GetOpTilingFuncV3();
     const OpParseFuncV3 &parse_func = op_func_info.GetOpParseFuncV3();
     ret = TbeOpTilingPyInterfaceEx3(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
-                                    compile_info_hash, elapse, tiling_func, parse_func);
+                                    compile_info_hash, elapse, tiling_func, parse_func, nullptr);
   } else if (op_func_info.IsFunctionV2()) {
     const OpTilingFuncV2  &tiling_func = op_func_info.GetOpTilingFuncV2();
     ret = TbeOpTilingPyInterfaceEx2New(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
-                                       compile_info_hash, elapse, tiling_func);
+                                       compile_info_hash, elapse, tiling_func, nullptr);
+  } else if (op_func_info.IsFunctionV1()) {
+    const OpTilingFunc  &tiling_func = op_func_info.GetOpTilingFunc();
+    ret = TbeOpTilingPyInterfaceEx2BackUp(optype, compile_info, inputs, outputs, run_info_json,
+                                          run_info_len, compile_info_hash, elapse, tiling_func);
+  } else {
+    GE_LOGE("Optiling func of op type[%s] is all empty.", optype);
+  }
+
+  return ret;
+}
+
+extern "C" int TbeOpTilingPyInterfaceExV2(const char *optype, const char *compile_info, const char *inputs,
+                                          const char *outputs, char *run_info_json, size_t run_info_len,
+                                          const char *compile_info_hash, uint64_t *elapse,
+                                          const char *attrs) {
+  auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  auto iter = op_func_map.find(optype);
+  if (iter == op_func_map.end()) {
+    GELOGI("Op tiling function is not found by op type[%s].", optype);
+    iter = op_func_map.find(OP_TYPE_AUTO_TILING);
+    if (iter == op_func_map.end()) {
+      GELOGI("Optiling func of op type[%s] is not found by Autotiling.", optype);
+      REPORT_CALL_ERROR("E19999", "Optiling func is not found. op_type:%s", optype);
+      return static_cast<int32_t>(ge::GRAPH_FAILED);
+    }
+  }
+  OpTilingFuncInfo &op_func_info = iter->second;
+  int ret = 0;
+  if (op_func_info.IsFunctionV4()) {
+    const OpTilingFuncV4 &tiling_func = op_func_info.GetOpTilingFuncV4();
+    const OpParseFuncV4 &parse_func = op_func_info.GetOpParseFuncV4();
+    ret = TbeOpTilingPyInterfaceEx4(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                    compile_info_hash, elapse, tiling_func, parse_func, attrs);
+  } else if (op_func_info.IsFunctionV3()) {
+    const OpTilingFuncV3 &tiling_func = op_func_info.GetOpTilingFuncV3();
+    const OpParseFuncV3 &parse_func = op_func_info.GetOpParseFuncV3();
+    ret = TbeOpTilingPyInterfaceEx3(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                    compile_info_hash, elapse, tiling_func, parse_func, attrs);
+  } else if (op_func_info.IsFunctionV2()) {
+    const OpTilingFuncV2  &tiling_func = op_func_info.GetOpTilingFuncV2();
+    ret = TbeOpTilingPyInterfaceEx2New(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                       compile_info_hash, elapse, tiling_func, attrs);
   } else if (op_func_info.IsFunctionV1()) {
     const OpTilingFunc  &tiling_func = op_func_info.GetOpTilingFunc();
     ret = TbeOpTilingPyInterfaceEx2BackUp(optype, compile_info, inputs, outputs, run_info_json,
@@ -654,7 +777,8 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
 extern "C" int TbeOpTilingPyInterfaceEx(const char *optype, const char *compile_info, const char *inputs,
                                         const char *outputs, char *run_info_json, size_t run_info_len,
                                         uint64_t *elapse) {
-  return TbeOpTilingPyInterfaceEx2(optype, compile_info, inputs, outputs, run_info_json, run_info_len, nullptr, elapse);
+  return TbeOpTilingPyInterfaceEx2(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                   nullptr, elapse);
 }
 
 extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_info, const char *inputs,
