@@ -78,6 +78,12 @@ class GraphOptimizer {
     return SUCCESS;
   }
 
+  // optimize streamed whole Graph
+  virtual Status OptimizeStreamedWholeGraph(ComputeGraph &graph) {
+    (void)graph;
+    return SUCCESS;
+  }
+
   // op compile
   virtual Status OptimizeFusedGraphAfterGraphSlice(ComputeGraph &graph) {
     (void)graph;
