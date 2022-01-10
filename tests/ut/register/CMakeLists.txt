@@ -42,6 +42,7 @@ set(REGISTER_UT_FILES
     "testcase/register_op_tiling_v2_ut.cc"
     "testcase/register_op_tiling_v1_ut.cc"
     "testcase/register_optiling_unittest.cc"
+    "testcase/op_tiling_attr_utils_test.cc"
     "graph_builder_utils.cc"
     "testcase/graph_fusion_clycle_detection_unittest.cc"
     "testcase/auto_mapping_util_unittest.cc"
