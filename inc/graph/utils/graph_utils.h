@@ -45,6 +45,17 @@
   } while (false)
 
 namespace ge {
+enum class MemType {
+  OUTPUT_MEM,
+  WORKSPACE_MEM
+};
+
+struct MemReuseInfo {
+  NodePtr node;
+  MemType mem_type;
+  uint32_t index;
+};
+
 enum IOType { kIn, kOut };
 
 class NodeIndexIO {
