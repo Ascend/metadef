@@ -32,7 +32,7 @@ public:
   virtual const std::uint8_t *GetData() = 0;
 };
 
-ge::graphStatus GetOperatorAttrValue(const ge::Operator &op, const char *attr_name, const char *attr_dype,
+ge::graphStatus GetOperatorAttrValue(const ge::Operator &op, const char *attr_name, const char *attr_dtype,
                                      AttrDataPtr &attr_data_ptr, const char *target_dtype = nullptr);
 
 }  // namespace optiling

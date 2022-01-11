@@ -99,11 +99,11 @@ static const std::vector<AttrDataType> kValidDstDTypeList {
 
 static const uint32_t kBitsOfByte = 8;
 
-inline uint32_t GenerateAttrFuncKey(AttrDataType attr_dtype) {
+inline uint32_t GenerateAttrFuncKey(const AttrDataType attr_dtype) {
   return ((static_cast<uint32_t>(attr_dtype) & 0xff) << kBitsOfByte) | (static_cast<uint32_t>(attr_dtype) & 0xff);
 }
 
-inline uint32_t GenerateAttrFuncKey(AttrDataType src_dtype, AttrDataType dest_dtype) {
+inline uint32_t GenerateAttrFuncKey(const AttrDataType src_dtype, const AttrDataType dest_dtype) {
   return ((static_cast<uint32_t>(src_dtype) & 0xff) << kBitsOfByte) | (static_cast<uint32_t>(dest_dtype) & 0xff);
 }
 
@@ -119,15 +119,15 @@ public:
     return attr_data_manager;
   }
 
-  bool VerifyAttrDtype(AttrDataType src_dtype, AttrDataType dst_dtype) {
-    uint32_t func_key = GenerateAttrFuncKey(src_dtype, dst_dtype);
+  bool VerifyAttrDtype(const AttrDataType src_dtype, const AttrDataType dst_dtype) {
+    const uint32_t func_key = GenerateAttrFuncKey(src_dtype, dst_dtype);
     const auto iter = attr_func_.find(func_key);
     return iter != attr_func_.end();
   }
 
-  AttrDataPtr GetOpAttrValue(const ge::Operator &op, const char *attr_name, AttrDataType src_dtype,
-                             AttrDataType dst_dtype) {
-    uint32_t func_key = GenerateAttrFuncKey(src_dtype, dst_dtype);
+  AttrDataPtr GetOpAttrValue(const ge::Operator &op, const char *attr_name, const AttrDataType src_dtype,
+                             const AttrDataType dst_dtype) {
+    const uint32_t func_key = GenerateAttrFuncKey(src_dtype, dst_dtype);
     const auto iter = attr_func_.find(func_key);
     if (iter == attr_func_.end()) {
       return nullptr;
@@ -147,7 +147,8 @@ private:
     }
     std::vector<T> attr_vec;
     attr_vec.push_back(attr_value);
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<T>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<T>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -162,7 +163,8 @@ private:
       GELOGW("Vector value of attr[%s] is empty.", attr_name);
       return nullptr;
     }
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<T>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<T>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -176,7 +178,8 @@ private:
     std::vector<int8_t> attr_vec;
     attr_vec.push_back(static_cast<int8_t>(attr_value));
 
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<int8_t>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<int8_t>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -192,7 +195,8 @@ private:
       attr_vec.push_back(c);
     }
 
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<char>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<char>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -206,7 +210,8 @@ private:
     std::vector<uint32_t> attr_vec;
     attr_vec.push_back(static_cast<uint32_t>(attr_value));
 
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<uint32_t>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<uint32_t>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -227,7 +232,8 @@ private:
       attr_vec.push_back(static_cast<uint32_t>(int_value));
     }
 
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<uint32_t>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<uint32_t>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -241,7 +247,8 @@ private:
     std::vector<uint16_t> attr_vec;
     attr_vec.push_back(FloatToUint16(attr_value));
 
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<uint16_t>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<uint16_t>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -262,7 +269,8 @@ private:
       attr_vec.push_back(FloatToUint16(fp_value));
     }
 
-    AttrDataPtr attr_data_ptr = std::make_shared<AttrDataImpl<uint16_t>>(attr_vec);
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<uint16_t>>(attr_vec), return nullptr);
     return attr_data_ptr;
   }
 
@@ -305,7 +313,7 @@ ge::graphStatus GetOperatorAttrValue(const ge::Operator &op, const char *attr_na
     GELOGW("Attr data type[%s] of attr[%s] is not supported.", attr_dtype, attr_name);
     return ge::GRAPH_FAILED;
   }
-  AttrDataType src_dtype = iter->second;
+  const AttrDataType src_dtype = iter->second;
   if (std::find(kValidSrcDTypeList.begin(), kValidSrcDTypeList.end(), src_dtype) == kValidSrcDTypeList.end()) {
     GELOGW("Attr data type[%s] of attr[%s] is not supported.", attr_dtype, attr_name);
     return ge::GRAPH_FAILED;
