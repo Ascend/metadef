@@ -776,7 +776,7 @@ message CmoTaskDef {
     uint32 num_inner = 7;
     uint32 num_outer = 8;
     uint32 length_inner = 9;
-    uint32 source_addr = 10;
+    uint64 source_addr = 10;
     uint32 strider_outer = 11;
     uint32 strider_inner = 12;
 }
@@ -787,6 +787,6 @@ message CmoBarrierTaskDef {
 }
 
 message CmoBarrierInfoDef {
-    uint32 com_type = 1;
+    uint32 cmo_type = 1;
     uint32 logic_id = 2;
 }
