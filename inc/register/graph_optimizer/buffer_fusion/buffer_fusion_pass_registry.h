@@ -30,7 +30,11 @@ class BufferFusionPassRegistry {
 
   static BufferFusionPassRegistry &GetInstance();
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   void RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name, CreateFn create_fun);
+#else
+  void RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name, const CreateFn &create_fun);
+#endif
 
   std::map<std::string, CreateFn> GetCreateFnByType(const BufferFusionPassType &pass_type);
 

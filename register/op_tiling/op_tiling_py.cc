@@ -26,6 +26,9 @@
 #include "op_tiling/op_tiling_constants.h"
 
 namespace optiling {
+using ParseAndSetAttrValueFunc = std::function<void(ge::Operator &, const nlohmann::json &, const std::string &)>;
+using ParseAndSetAttrValuePtr = std::shared_ptr<ParseAndSetAttrValueFunc>;
+
 thread_local int64_t last_op_tiling_perf = -1;
 
 template<typename T>

@@ -270,20 +270,20 @@ private:
 };
 
 const std::map<uint32_t, GetOpAttrValueFunc> AttrDataManager::attr_func_ = {
-  {GenerateAttrFuncKey(AttrDataType::BOOL), &AttrDataManager::GetBoolAttrValue},
-  {GenerateAttrFuncKey(AttrDataType::INT32), &AttrDataManager::GetAttrValue<int32_t>},
-  {GenerateAttrFuncKey(AttrDataType::FLOAT32), &AttrDataManager::GetAttrValue<float>},
-  {GenerateAttrFuncKey(AttrDataType::LIST_INT32), &AttrDataManager::GetAttrValue<int32_t, true>},
-  {GenerateAttrFuncKey(AttrDataType::LIST_FLOAT32), &AttrDataManager::GetAttrValue<float, true>},
-  {GenerateAttrFuncKey(AttrDataType::STRING), &AttrDataManager::GetStrAttrValue},
-  {GenerateAttrFuncKey(AttrDataType::INT32, AttrDataType::UINT32),
-   &AttrDataManager::GetIntAttrValueAndToUint},
-  {GenerateAttrFuncKey(AttrDataType::LIST_INT32, AttrDataType::LIST_UINT32),
-   &AttrDataManager::GetListIntAttrValueAndToListUint},
-  {GenerateAttrFuncKey(AttrDataType::FLOAT32, AttrDataType::FLOAT16),
-   &AttrDataManager::GetFloatAttrValueAndToFp16},
-  {GenerateAttrFuncKey(AttrDataType::LIST_FLOAT32, AttrDataType::LIST_FLOAT16),
-   &AttrDataManager::GetListFloatAttrValueAndToListFp16}
+    {GenerateAttrFuncKey(AttrDataType::BOOL), &AttrDataManager::GetBoolAttrValue},
+    {GenerateAttrFuncKey(AttrDataType::INT32), &AttrDataManager::GetAttrValue<int32_t>},
+    {GenerateAttrFuncKey(AttrDataType::FLOAT32), &AttrDataManager::GetAttrValue<float>},
+    {GenerateAttrFuncKey(AttrDataType::LIST_INT32), &AttrDataManager::GetAttrValue<int32_t, true>},
+    {GenerateAttrFuncKey(AttrDataType::LIST_FLOAT32), &AttrDataManager::GetAttrValue<float, true>},
+    {GenerateAttrFuncKey(AttrDataType::STRING), &AttrDataManager::GetStrAttrValue},
+    {GenerateAttrFuncKey(AttrDataType::INT32, AttrDataType::UINT32),
+     &AttrDataManager::GetIntAttrValueAndToUint},
+    {GenerateAttrFuncKey(AttrDataType::LIST_INT32, AttrDataType::LIST_UINT32),
+     &AttrDataManager::GetListIntAttrValueAndToListUint},
+    {GenerateAttrFuncKey(AttrDataType::FLOAT32, AttrDataType::FLOAT16),
+     &AttrDataManager::GetFloatAttrValueAndToFp16},
+    {GenerateAttrFuncKey(AttrDataType::LIST_FLOAT32, AttrDataType::LIST_FLOAT16),
+     &AttrDataManager::GetListFloatAttrValueAndToListFp16}
 };
 
 ge::graphStatus GetOperatorAttrValue(const ge::Operator &op, const char *attr_name, const char *attr_dtype,

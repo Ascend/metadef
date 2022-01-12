@@ -52,8 +52,13 @@ class GraphPassUtil {
    *
    * @param fusion_node, usually is fusion node
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void SetOutputDescAttr(uint32_t origin_index, uint32_t fusion_index, ge::NodePtr origin_node,
                                 ge::NodePtr fusion_node) {
+#else
+  static void SetOutputDescAttr(const uint32_t &origin_index, const uint32_t &fusion_index,
+                                const ge::NodePtr &origin_node, const ge::NodePtr &fusion_node) {
+#endif
     if (fusion_node->GetOpDesc() == nullptr) {
       return;
     }
@@ -72,7 +77,7 @@ class GraphPassUtil {
 
     std::vector<std::string> original_names;
     if (ge::AttrUtils::GetListStr(origin_node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names) &&
-        original_names.size() > 0) {
+        (original_names.size() > 0)) {
       std::string original_name;
       if (ge::AttrUtils::GetStr(origin_node_output_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_NAME, original_name)) {
         (void)ge::AttrUtils::SetStr(fusion_node_output_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_NAME, original_name);
@@ -84,18 +89,20 @@ class GraphPassUtil {
                                       origin_output_index);
         }
 
-        ge::DataType origin_data_type = GetDataDumpOriginDataType(origin_node_output_desc);
+        const ge::DataType origin_data_type = GetDataDumpOriginDataType(origin_node_output_desc);
         if (origin_data_type != ge::DT_UNDEFINED) {
           SetDataDumpOriginDataType(origin_data_type, fusion_node_output_desc);
         }
-        ge::Format origin_format = GetDataDumpOriginFormat(origin_node_output_desc);
+        const ge::Format origin_format = GetDataDumpOriginFormat(origin_node_output_desc);
         if (origin_format != ge::FORMAT_RESERVED) {
           SetDataDumpOriginFormat(origin_format, fusion_node_output_desc);
         }
       }
     } else {
-      (void)ge::AttrUtils::SetStr(fusion_node_output_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_NAME, origin_node->GetName());
-      (void)ge::AttrUtils::SetInt(fusion_node_output_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OUTPUT_INDEX, origin_index);
+      (void)ge::AttrUtils::SetStr(fusion_node_output_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_NAME,
+                                  origin_node->GetName());
+      (void)ge::AttrUtils::SetInt(fusion_node_output_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OUTPUT_INDEX,
+                                  static_cast<int64_t>(origin_index));
       SetDataDumpOriginDataType(origin_node_output_desc->GetOriginDataType(), fusion_node_output_desc);
       SetDataDumpOriginFormat(origin_node_output_desc->GetOriginFormat(), fusion_node_output_desc);
     }
@@ -107,7 +114,11 @@ class GraphPassUtil {
    *
    * @return format of this tensor_desc
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   static ge::Format GetDataDumpOriginFormat(ge::GeTensorDescPtr tensor_desc) {
+#else
+  static ge::Format GetDataDumpOriginFormat(const ge::GeTensorDescPtr &tensor_desc) {
+#endif
     std::string origin_format_str;
     if (!ge::AttrUtils::GetStr(tensor_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_FORMAT, origin_format_str)) {
       // Can not get the certificate and it's not set,return directly
@@ -125,7 +136,11 @@ class GraphPassUtil {
    *
    * @param tensor_desc,usually is output_desc
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void SetDataDumpOriginFormat(ge::Format origin_format, ge::GeTensorDescPtr tensor_desc) {
+#else
+  static void SetDataDumpOriginFormat(const ge::Format &origin_format, ge::GeTensorDescPtr tensor_desc) {
+#endif
     std::string origin_format_str = "RESERVED";
     if (origin_format != ge::FORMAT_RESERVED) {
       origin_format_str = ge::TypeUtils::FormatToSerialString(origin_format);
@@ -157,7 +172,11 @@ class GraphPassUtil {
    *
    * @return format of this tensor_desc
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   static ge::DataType GetDataDumpOriginDataType(ge::GeTensorDescPtr tensor_desc) {
+#else
+  static ge::DataType GetDataDumpOriginDataType(const ge::GeTensorDescPtr &tensor_desc) {
+#endif
     std::string origin_data_type_str;
     if (!ge::AttrUtils::GetStr(tensor_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_DATA_TYPE, origin_data_type_str)) {
       return ge::DT_UNDEFINED;
@@ -167,6 +186,7 @@ class GraphPassUtil {
     }
     return ge::TypeUtils::SerialStringToDataType(origin_data_type_str);
   }
+
 #ifdef ONLY_COMPILE_OPEN_SRC
   static void AddNodeFromOpTypeMap(NodeMapInfoPtr &node_map_info, ge::NodePtr &node_ptr) {
 #else
@@ -194,7 +214,11 @@ class GraphPassUtil {
     return SUCCESS;
   }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void RecordOriginalNames(std::vector<ge::NodePtr> original_nodes, ge::NodePtr node) {
+#else
+  static void RecordOriginalNames(const std::vector<ge::NodePtr> &original_nodes, ge::NodePtr node) {
+#endif
     // 1. get the original_names
     std::vector<std::string> original_names;
     for (ge::NodePtr original_node : original_nodes) {
@@ -202,9 +226,9 @@ class GraphPassUtil {
         return;
       }
 
-      ge::OpDescPtr origin_op_desc_ptr = original_node->GetOpDesc();
+      const ge::OpDescPtr origin_op_desc_ptr = original_node->GetOpDesc();
       std::vector<std::string> names_tmp;
-      bool is_has_attr = ge::AttrUtils::GetListStr(origin_op_desc_ptr, 
+      const bool is_has_attr = ge::AttrUtils::GetListStr(origin_op_desc_ptr, 
                                                    ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, 
                                                    names_tmp);
       if (is_has_attr) {
@@ -237,8 +261,8 @@ class GraphPassUtil {
     }
     const auto iter = node_type_map->find(op_type);
     if (iter == node_type_map->end()) {
-      node_type_map->emplace(std::make_pair(op_type,
-                                            std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
+      (void)node_type_map->emplace(std::make_pair(op_type,
+          std::map<std::string, ge::NodePtr>{{node_ptr->GetName(), node_ptr}}));
     } else {
       (void)iter->second.emplace(node_ptr->GetName(), node_ptr);
     }

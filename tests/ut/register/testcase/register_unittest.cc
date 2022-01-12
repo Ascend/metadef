@@ -729,50 +729,6 @@ TEST_F(UtestRegister, ParseSubgraphPostFnTest) {
   EXPECT_EQ(opReg->GetParseSubgraphPostFunc(std::string("strOmOptype"), parse_subgraph_func), domi::FAILED);
 }
 
-TEST_F(UtestRegister, check_and_set_attr) {
-  const nlohmann::json j = R"([
-      {
-          "name": "test_0",
-          "dtype": "str",
-          "value": "1"
-      },
-      {
-          "name": "test_1",
-          "dtype": "list_int",
-          "value": [
-            1,
-            1,
-            1,
-            1
-          ]
-      },
-      {
-          "name": "test_2"
-      },
-      {
-          "name": "test_2",
-          "dtype": "list_list_int",
-          "value": [
-            [1, 2],
-            [1, 2],
-            [1, 2],
-            [1, 2]
-          ]
-      },
-      {
-          "name": "test_3",
-          "dtype": "test",
-          "value": "1"
-      }
-      ])"_json;
-
-  std::string json_str = j.dump();
-  ge::Operator op("NULL");
-  optiling::CheckAndSetAttr(json_str.c_str(), op);
-  const char *json = nullptr;
-  optiling::CheckAndSetAttr(json, op);
-}
-
 TEST_F(UtestRegister, optiling_py_interface) {
   const nlohmann::json j = R"([
       {
