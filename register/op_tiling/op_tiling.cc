@@ -362,7 +362,6 @@ ge::graphStatus TurnToOpParaCalculateV2(const ge::Operator &op_param, OpRunInfoV
 
   std::vector<int32_t> indexes;
   ReplaceEmptyShapeOfTensorDesc(op_desc, indexes);
-  AddNameToTensordesc(op_desc);
 
   const bool ret = (tiling_func)(op_param, op_compile_info, run_info);
   if (ret) {
@@ -406,7 +405,6 @@ ge::graphStatus TurnToOpParaCalculateV3(const ge::Operator &op_param, OpRunInfoV
 
   std::vector<int32_t> indexes;
   ReplaceEmptyShapeOfTensorDesc(op_desc, indexes);
-  AddNameToTensordesc(op_desc);
 
   const bool ret = (tiling_func)(op_param, op_compile_json_ptr, run_info);
   if (ret) {
@@ -450,7 +448,6 @@ ge::graphStatus TurnToOpParaCalculateV4(const ge::Operator &op_param, OpRunInfoV
 
   std::vector<int32_t> indexes;
   ReplaceEmptyShapeOfTensorDesc(op_desc, indexes);
-  AddNameToTensordesc(op_desc);
 
   const bool ret = (tiling_func)(op_param, op_compile_info_ptr, run_info);
   if (ret) {

@@ -30,37 +30,6 @@ bool op_tiling_stub_v2(const Operator &op, const utils::OpCompileInfo &compile_i
 
 REGISTER_OP_TILING_V2(ReluV2, op_tiling_stub_v2);
 
-TEST_F(RegisterOpTilingV2UT, AddNameToTensordesc_1) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV2");
-  GeShape shape({4,3,16,16});
-  GeTensorDesc tensor_desc(shape);
-  op_desc->AddInputDesc("x", tensor_desc);
-  op_desc->AddInputDesc("y", tensor_desc);
-  op_desc->AddOutputDesc("z", tensor_desc);
-  vector<string> depend_names = {"x"};
-  AttrUtils::SetListStr(op_desc, "_op_infer_depends", depend_names);
-  EXPECT_EQ(op_desc->MutableInputDesc(0)->GetName(), "");
-  EXPECT_EQ(op_desc->MutableInputDesc(1)->GetName(), "");
-  AddNameToTensordesc(op_desc);
-  EXPECT_EQ(op_desc->MutableInputDesc(0)->GetName(), "x");
-  EXPECT_EQ(op_desc->MutableInputDesc(1)->GetName(), "y");
-}
-
-TEST_F(RegisterOpTilingV2UT, AddNameToTensordesc_2) {
-  OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV2");
-  GeShape shape({4,3,16,16});
-  GeTensorDesc tensor_desc(shape);
-  op_desc->AddInputDesc("x", tensor_desc);
-  op_desc->AddInputDesc("y", tensor_desc);
-  op_desc->AddOutputDesc("z", tensor_desc);
-
-  EXPECT_EQ(op_desc->MutableInputDesc(0)->GetName(), "");
-  EXPECT_EQ(op_desc->MutableInputDesc(1)->GetName(), "");
-  AddNameToTensordesc(op_desc);
-  EXPECT_EQ(op_desc->MutableInputDesc(0)->GetName(), "");
-  EXPECT_EQ(op_desc->MutableInputDesc(1)->GetName(), "");
-}
-
 TEST_F(RegisterOpTilingV2UT, replace_and_recovery_tensor_1) {
   OpDescPtr op_desc = make_shared<OpDesc>("relu", "ReluV2");
   GeShape shape;
