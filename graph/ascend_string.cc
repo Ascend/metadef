@@ -47,38 +47,38 @@ size_t AscendString::Hash() const {
 }
 
 bool AscendString::operator<(const AscendString& d) const {
-  if (name_ == nullptr && d.name_ == nullptr) {
+  if ((name_ == nullptr) && (d.name_ == nullptr)) {
     return false;
   } else if (name_ == nullptr) {
     return true;
   } else if (d.name_ == nullptr) {
     return false;
   } else {
-    return (*name_ < *(d.name_));
+    return (*name_) < (*(d.name_));
   }
 }
 
 bool AscendString::operator>(const AscendString& d) const {
-  if (name_ == nullptr && d.name_ == nullptr) {
+  if ((name_ == nullptr) && (d.name_ == nullptr)) {
     return false;
   } else if (name_ == nullptr) {
     return false;
   } else if (d.name_ == nullptr) {
     return true;
   } else {
-    return(*name_ > *(d.name_));
+    return (*name_) > (*(d.name_));
   }
 }
 
 bool AscendString::operator==(const AscendString& d) const {
-  if (name_ == nullptr && d.name_ == nullptr) {
+  if ((name_ == nullptr) && (d.name_ == nullptr)) {
     return true;
   } else if (name_ == nullptr) {
     return false;
   } else if (d.name_ == nullptr) {
     return false;
   } else {
-    return (*name_ == *(d.name_));
+    return (*name_) == (*(d.name_));
   }
 }
 
@@ -88,7 +88,7 @@ bool AscendString::operator<=(const AscendString& d) const {
   } else if (d.name_ == nullptr) {
     return false;
   } else {
-    return (*name_ <= *(d.name_));
+    return (*name_) <= (*(d.name_));
   }
 }
 
@@ -98,19 +98,19 @@ bool AscendString::operator>=(const AscendString& d) const {
   } else if (name_ == nullptr) {
     return false;
   } else {
-    return (*name_ >= *(d.name_));
+    return (*name_) >= (*(d.name_));
   }
 }
 
 bool AscendString::operator!=(const AscendString& d) const {
-  if (name_ == nullptr && d.name_ == nullptr) {
+  if ((name_ == nullptr) && (d.name_ == nullptr)) {
     return false;
   } else if (name_ == nullptr) {
     return true;
   } else if (d.name_ == nullptr) {
     return true;
   } else {
-    return (*name_ != *(d.name_));
+    return (*name_) != (*(d.name_));
   }
 }
 }  // namespace ge

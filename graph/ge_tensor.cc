@@ -34,7 +34,7 @@
 namespace ge {
 namespace{
 template <typename T>
-class IntegerChecker {
+class IntegerCheckerFun {
 public:
   template <typename T1>
   static bool Compat(T1 const v) {
@@ -425,7 +425,6 @@ graphStatus GeShapeImpl::SetDim(const size_t idx, const int64_t value) {
 
 std::vector<int64_t> GeShapeImpl::ShapeImplGetDims() const {
   std::vector<int64_t> dims;
-
   dims.resize(dims_.size());
   (void)std::copy(dims_.begin(), dims_.end(), dims.begin());
 
@@ -561,7 +560,7 @@ GeShape &GeShape::operator=(GeShape &&other) {
 }
 
 bool GeShape::operator==(const GeShape &other) const {
-  return *impl_ == *(other.impl_);
+  return (*impl_) == (*(other.impl_));
 }
 
 GeTensorDescImpl::GeTensorDescImpl(const GeShape &shape, const Format format, const DataType dt) : GeTensorDescImpl() {
@@ -599,10 +598,10 @@ GeTensorDescImpl::GeTensorDescImpl(proto::TensorDescriptor *const proto_msg)
     ext_meta_.SetDeviceType(kStrToDeviceMap.at(proto_msg->device_type()));
   }
   ext_meta_.SetInputTensor(proto_msg->input_tensor());
-  if (IntegerChecker<uint32_t>::Compat(proto_msg->real_dim_cnt())) {
+  if (IntegerCheckerFun<uint32_t>::Compat(proto_msg->real_dim_cnt())) {
     ext_meta_.SetRealDimCnt(static_cast<uint32_t>(proto_msg->real_dim_cnt()));
   }
-  if (IntegerChecker<uint32_t>::Compat(proto_msg->reuse_input_index())) {
+  if (IntegerCheckerFun<uint32_t>::Compat(proto_msg->reuse_input_index())) {
     ext_meta_.SetReuseInputIndex(static_cast<uint32_t>(proto_msg->reuse_input_index()));
   }
   ext_meta_.SetDataOffset(proto_msg->data_offset());
@@ -732,7 +731,7 @@ bool GeTensorDesc::GeTensorDescAttrsAreEqual(const GeTensorDesc &r_ge_tensor_des
 }
 
 bool GeTensorDesc::operator==(const GeTensorDesc &r_ge_tensor_desc) const {
-  return *impl_ == *r_ge_tensor_desc.impl_;
+  return (*impl_) == (*(r_ge_tensor_desc.impl_));
 }
 
 GeShape &GeTensorDesc::ShapeReference() const {
@@ -1208,7 +1207,7 @@ GeTensorImpl::GeTensorImpl(const ProtoMsgOwner &proto_owner, proto::TensorDef *p
   // 这里后续改为反序列化接口调用，从proto恢复GeTensorDesc
   desc_ = GeTensorDesc((proto_msg == nullptr) ? nullptr : proto_msg->mutable_desc());
   tensor_data_ = TensorData();
-  if (tensor_data_.impl_ != nullptr && desc_.impl_ != nullptr) {
+  if ((tensor_data_.impl_ != nullptr) && (desc_.impl_ != nullptr)) {
     // 之前没有把TensorData上的proto变为GeTensorDesc，因为TensorData创建后不会修改，多个TensorData通过GeIrProto共享
     // 但是！原本的语义是TensorData上的proto::TensorDescriptor与Tensor上的GeTensorDesc是共享的，当GeTensorDesc改造完
     // 这种共享的能力就消失了，这会导致在GeTensor创建后，对GeTensorDesc的修改无法反应到TensorData上，看起来只能将TensorData
@@ -1233,7 +1232,7 @@ GeTensorDesc &GeTensorImpl::DescReference() const {
 void GeTensorImpl::BuildAlignerPtrWithProtoData() {
   auto const proto_msg = tensor_def_.GetProtoMsg();
   if ((proto_msg == nullptr) ||
-      (static_cast<const uint8_t *>(static_cast<const void *>(proto_msg->data().data())) == tensor_data_.data())) {
+      (PtrToPtr<const char, const uint8_t>(proto_msg->data().data()) == tensor_data_.data())) {
     return;
   }
   if (tensor_data_.impl_ == nullptr) {
@@ -1324,10 +1323,10 @@ void GeTensorImpl::ClearData() {
 }
 
 void GeTensorImpl::Clone(GeTensorImpl &tensor) const {
-  if (tensor.desc_.impl_ != nullptr && desc_.impl_ != nullptr) {
+  if ((tensor.desc_.impl_ != nullptr) && (desc_.impl_ != nullptr)) {
     *(tensor.desc_.impl_) = *(desc_.impl_);
   }
-  if (tensor.tensor_data_.impl_ != nullptr && tensor.desc_.impl_ != nullptr) {
+  if ((tensor.tensor_data_.impl_ != nullptr) && (tensor.desc_.impl_ != nullptr)) {
     tensor.tensor_data_.impl_->tensor_descriptor_ = tensor.desc_.impl_;
   }
   (void)tensor.SetData(GetData());
@@ -1351,7 +1350,7 @@ GeTensorImpl &GeTensorImpl::operator=(const GeTensorImpl &other) {
       tensor_def_ = other.tensor_def_;
       // 这里修改了
       desc_ = other.desc_;
-      if (tensor_data_.impl_ != nullptr && desc_.impl_ != nullptr) {
+      if ((tensor_data_.impl_ != nullptr) && (desc_.impl_ != nullptr)) {
         tensor_data_.impl_->tensor_descriptor_ = desc_.impl_;
       }
       BuildAlignerPtrWithProtoData();
@@ -1359,7 +1358,7 @@ GeTensorImpl &GeTensorImpl::operator=(const GeTensorImpl &other) {
       // share tensor_data, do not share tensor_desc, tensor_def is null
       desc_ = other.desc_;
       tensor_data_ = other.tensor_data_;
-      if (tensor_data_.impl_ != nullptr && desc_.impl_ != nullptr) {
+      if ((tensor_data_.impl_ != nullptr) && (desc_.impl_ != nullptr)) {
         tensor_data_.impl_->tensor_descriptor_ = desc_.impl_;
       }
     }
@@ -1496,7 +1495,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(
 }
 
 uint32_t TensorUtils::GetWeightSize(const GeTensorDesc &tensor_desc) {
-  if (tensor_desc.impl_ != nullptr && IntegerChecker<uint32_t>::Compat(tensor_desc.impl_->ext_meta_.GetWeightSize())) {
+  if ((tensor_desc.impl_ != nullptr) &&
+      IntegerCheckerFun<uint32_t>::Compat(tensor_desc.impl_->ext_meta_.GetWeightSize())) {
     return static_cast<uint32_t>(tensor_desc.impl_->ext_meta_.GetWeightSize());
   }
   return 0U;
@@ -1692,7 +1692,7 @@ void TensorUtils::ShareTensor(const GeTensor &from, GeTensor &to) {
   if (&from == &to) {
     return;
   }
-  if (from.impl_ != nullptr && to.impl_ != nullptr) {
+  if ((from.impl_ != nullptr) && (to.impl_ != nullptr)) {
     if (from.impl_->tensor_def_.GetProtoOwner() != nullptr) {
       // 这种场景下看原来的逻辑，已经没有什么是不是共享的了，所以直接改成了impl共享，幸好impl是shared ptr
       // 但是之前似乎有个啥逻辑。是假定可以把shared ptr当成unique用的，得风暴下，记不得了
@@ -1710,7 +1710,7 @@ void TensorUtils::ShareTensorData(const TensorData &from, TensorData &to) {
     return;
   }
   // Share data
-  if (from.impl_ != nullptr && to.impl_ != nullptr) {
+  if ((from.impl_ != nullptr) && (to.impl_ != nullptr)) {
     to.impl_->tensor_descriptor_ = from.impl_->tensor_descriptor_;
     to.impl_->aligned_ptr_ = from.impl_->aligned_ptr_;
     to.impl_->length_ = from.impl_->length_;
@@ -1737,7 +1737,7 @@ void TensorUtils::CopyTensor(const GeTensor &from, GeTensor &to) {
   if (&from == &to) {
     return;
   }
-  if (from.impl_ == nullptr || to.impl_ == nullptr) {
+  if ((from.impl_ == nullptr) || (to.impl_ == nullptr)) {
     return;
   }
   if (from.impl_->tensor_def_.GetProtoOwner() != nullptr) {

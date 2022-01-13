@@ -352,7 +352,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
   const NodePtr input_data_node = NodeUtils::GetInDataNodeByIndex(*node_ptr, index);
   GE_CHECK_NOTNULL(input_data_node);
   const std::string op_type = input_data_node->GetType();
-  if (op_type == CONSTANT || op_type == CONSTANTOP) {
+  if ((op_type == CONSTANT) || (op_type == CONSTANTOP)) {
     const Operator const_op = OpDescUtils::CreateOperatorFromNode(input_data_node);
     if (const_op.GetAttr(ATTR_NAME_WEIGHTS, data) != GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E19999", "Input data node[%s] of node[%s] get data failed.",
