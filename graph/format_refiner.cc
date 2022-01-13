@@ -66,7 +66,7 @@ static graphStatus ReflectionProcess(const std::unordered_set<RefCell, RefCellHa
 
 static graphStatus BiasAddFormatFixProcess(const ge::NodePtr &graph_node_ptr) {
   // 5 meas dim num
-  if (graph_node_ptr->GetType() != "BiasAdd" && graph_node_ptr->GetType() != "BiasAddGrad") {
+  if ((graph_node_ptr->GetType() != "BiasAdd") && (graph_node_ptr->GetType() != "BiasAddGrad")) {
     return GRAPH_SUCCESS;
   }
   const std::unordered_map<std::string, Format> kTfFormatFix = {
@@ -390,7 +390,7 @@ graphStatus FormatRefiner::ForwardInferProcess(std::deque<ge::NodePtr> &nodes, c
 
 void FormatRefiner::RefreshOriginFormatOfAnchor(const std::vector<ge::NodePtr> &anchor_points) {
   for (const auto &node : anchor_points) {
-    if (node == nullptr || node->GetOpDesc() == nullptr) {
+    if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
       continue;
     }
     for (const auto &input_desc : node->GetOpDesc()->GetAllInputsDescPtr()) {

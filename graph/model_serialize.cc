@@ -59,7 +59,7 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
   for (const auto &in_data_anchor : node->GetAllInDataAnchors()) {
     if (in_data_anchor != nullptr) {
       const auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
-      if (peer_out_anchor != nullptr && peer_out_anchor->GetOwnerNode()) {
+      if ((peer_out_anchor != nullptr) && peer_out_anchor->GetOwnerNode()) {
         op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":" +
                                 std::to_string(peer_out_anchor->GetIdx()));
       } else {
@@ -72,7 +72,7 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
   if (in_control_anchor != nullptr) {
     const auto peer_out_anchors = in_control_anchor->GetPeerOutControlAnchors();
     for (const auto &peer_out_anchor : peer_out_anchors) {
-      if (peer_out_anchor != nullptr && peer_out_anchor->GetOwnerNode()) {
+      if ((peer_out_anchor != nullptr) && peer_out_anchor->GetOwnerNode()) {
         op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":-1");
       }
     }
@@ -114,7 +114,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
     const auto size = static_cast<uint32_t>(op_desc->GetAllInputsSize());
     for (uint32_t i = 0U; i < size; i++) {
       const auto tensor_desc = op_desc->GetInputDescPtrDfault(i);
-      if (tensor_desc != nullptr && tensor_desc->impl_ != nullptr) {
+      if ((tensor_desc != nullptr) && (tensor_desc->impl_ != nullptr)) {
         GeTensorSerializeUtils::GeTensorDescAsProto(*tensor_desc, op_def_proto->add_input_desc());
       }
     }
@@ -138,14 +138,14 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
 
 void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
                                         const bool is_dump) const {
-  proto::AttrDef key_in;
-  proto::AttrDef value_in;
   auto const op_desc_attr = op_def_proto->mutable_attr();
-  if (op_desc == nullptr || op_desc->impl_ == nullptr) {
+  if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
     GELOGE(FAILED, "[Check][Param] op desc or impl is nullptr.");
     return;
   }
   if (!op_desc->impl_->input_name_idx_.empty()) {
+    proto::AttrDef key_in;
+    proto::AttrDef value_in;
     for (auto &item : op_desc->impl_->input_name_idx_) {
       key_in.mutable_list()->add_s(item.first);
       value_in.mutable_list()->add_i(static_cast<int64_t>(item.second));
@@ -153,9 +153,9 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
     (void) op_desc_attr->insert({"_input_name_key", key_in});
     (void) op_desc_attr->insert({"_input_name_value", value_in});
   }
-  proto::AttrDef key_out;
-  proto::AttrDef value_out;
   if (!op_desc->impl_->output_name_idx_.empty()) {
+    proto::AttrDef key_out;
+    proto::AttrDef value_out;
     for (auto &item : op_desc->impl_->output_name_idx_) {
       key_out.mutable_list()->add_s(item.first);
       value_out.mutable_list()->add_i(static_cast<int64_t>(item.second));
@@ -163,8 +163,8 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
     (void) op_desc_attr->insert({"_output_name_key", key_out});
     (void) op_desc_attr->insert({"_output_name_value", value_out});
   }
-  proto::AttrDef opt_input;
   if (!op_desc->impl_->optional_input_names_.empty()) {
+    proto::AttrDef opt_input;
     for (auto &item : op_desc->impl_->optional_input_names_) {
       opt_input.mutable_list()->add_s(item);
     }
@@ -444,11 +444,11 @@ bool ModelSerializeImp::HandleNodeNameRef() {
       GELOGE(GRAPH_FAILED, "[Check][Param] cannot find edge node %s", item.src_node_name.c_str());
       return false;
     }
-    GE_IF_BOOL_EXEC(src_node_it->second == nullptr || item.dst_node == nullptr, continue);
+    GE_IF_BOOL_EXEC((src_node_it->second == nullptr) || (item.dst_node == nullptr), continue);
     if (item.src_out_index >= 0) {
       const auto src_anchor = src_node_it->second->GetOutDataAnchor(item.src_out_index);
       const auto dst_anchor = item.dst_node->GetInDataAnchor(item.dst_in_index);
-      if (src_anchor == nullptr || dst_anchor == nullptr) {
+      if ((src_anchor == nullptr) || (dst_anchor == nullptr)) {
         REPORT_CALL_ERROR("E19999", "get Anchor failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
                           item.dst_node_name.c_str(), item.dst_in_index);
         GELOGE(GRAPH_FAILED, "[Get][Anchor] failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
@@ -460,7 +460,7 @@ bool ModelSerializeImp::HandleNodeNameRef() {
       // Control edge
       const auto src_anchor = src_node_it->second->GetOutControlAnchor();
       const auto dst_anchor = item.dst_node->GetInControlAnchor();
-      if (src_anchor != nullptr && dst_anchor != nullptr) {
+      if ((src_anchor != nullptr) && (dst_anchor != nullptr)) {
         GE_CHK_BOOL_ONLY_LOG((src_anchor->LinkTo(dst_anchor) == GRAPH_SUCCESS), " linkTo failed.");
       }
     }
@@ -590,7 +590,7 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
 
 bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, proto::GraphDef &graph_proto) {
   graph = ComGraphMakeShared<ComputeGraph>(graph_proto.name());
-  if (graph == nullptr || graph->impl_ == nullptr) {
+  if ((graph == nullptr) || (graph->impl_ == nullptr)) {
     REPORT_CALL_ERROR("E19999", "create ComputeGraph failed.");
     GELOGE(GRAPH_FAILED, "[Create][ComputeGraph] ComputeGraph make shared failed");
     return false;
@@ -667,14 +667,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
 
   for (const auto &attr : attr_map) {
     const AnyValue attr_value = attr.second;
-    const auto serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr_value.GetValueTypeId());
-    if (serializer == nullptr) {
+    const auto value_serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr_value.GetValueTypeId());
+    if (value_serializer == nullptr) {
       GELOGE(GRAPH_FAILED, "Get serialized failed,name:[%s] value type:%u.",
              attr.first.c_str(), attr_value.GetValueType());
       return false;
     }
     proto::AttrDef attr_def;
-    if (serializer->Serialize(attr_value, attr_def) != GRAPH_SUCCESS) {
+    if (value_serializer->Serialize(attr_value, attr_def) != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "Attr serialized failed, name:[%s].", attr.first.c_str());
       return false;
     }

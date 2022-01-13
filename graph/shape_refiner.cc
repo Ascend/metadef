@@ -347,8 +347,8 @@ graphStatus UpdateParentNodeOutTensor(const ConstNodePtr &node) {
     return GRAPH_SUCCESS;
   }
 
-  std::vector<std::vector<GeTensorDesc>> ref_data_tensors(node->GetAllInDataAnchorsSize());
-  std::vector<std::vector<GeTensorDesc>> ref_out_tensors(node->GetAllOutDataAnchorsSize());
+  std::vector<std::vector<GeTensorDesc>> ref_data_tensors(static_cast<size_t>(node->GetAllInDataAnchorsSize()));
+  std::vector<std::vector<GeTensorDesc>> ref_out_tensors(static_cast<size_t>(node->GetAllOutDataAnchorsSize()));
   const auto root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
 
   for (const auto &name : sub_graph_names) {
@@ -451,7 +451,7 @@ graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
       continue;
     }
     const auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
-    if (peer_out_data_node == nullptr || peer_out_data_node->GetOpDesc() == nullptr) {
+    if ((peer_out_data_node == nullptr) || (peer_out_data_node->GetOpDesc() == nullptr)) {
       continue;
     }
     const int32_t peer_out_idx = peer_out_data_anchor->GetIdx();
@@ -620,7 +620,7 @@ graphStatus ShapeRefiner::GetRealInNodesAndIndex(NodePtr &input_node, int32_t &o
                                                  std::map<NodePtr, int32_t> &nodes_idx) {
   auto op_desc = input_node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
-  while (input_node->GetType() == DATA && op_desc->HasAttr(ATTR_NAME_PARENT_NODE_INDEX)) {
+  while ((input_node->GetType() == DATA) && (op_desc->HasAttr(ATTR_NAME_PARENT_NODE_INDEX))) {
     int32_t ref_i = 0;
     (void)AttrUtils::GetInt(op_desc, ATTR_NAME_PARENT_NODE_INDEX, ref_i);
     const auto owner_graph = input_node->GetOwnerComputeGraph();
@@ -677,9 +677,9 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceCo
     }
 
     auto input_node = out_anchor->GetOwnerNode();
-    auto output_idx = out_anchor->GetIdx();
+    auto out_idx = out_anchor->GetIdx();
     std::map<NodePtr, int32_t> input_nodes_2_out_idx;
-    if (GetRealInNodesAndIndex(input_node, output_idx, input_nodes_2_out_idx) != SUCCESS) {
+    if (GetRealInNodesAndIndex(input_node, out_idx, input_nodes_2_out_idx) != SUCCESS) {
       REPORT_CALL_ERROR("E19999", "Failed to get real in nodes and index, node:%s", node->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Get][InNodesAndIndex] of node[%s] failed.", node->GetName().c_str());
       return GRAPH_FAILED;
@@ -762,7 +762,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
     if (!op_desc->UpdateInputName(temp_op_desc->GetAllInputName())) {
       GELOGW("[InferShape][UpdateInputName] Update input name failed");
       for (const auto &out_desc : op_desc->GetAllOutputsDescPtr()) {
-        if (out_desc != nullptr && out_desc->GetShape().GetDims().empty()) {
+        if ((out_desc != nullptr) && out_desc->GetShape().GetDims().empty()) {
           break;
         }
         return GRAPH_SUCCESS;
@@ -810,7 +810,7 @@ graphStatus ShapeRefiner::DoInferShapeAndTypeForRunning(const ConstNodePtr &node
     GELOGD("NodeUtils::GetNodeType return value is: [%s]", origin_type.c_str());
     const auto it = kGeLocalOpMapping.find(origin_type);
     const auto infer_func =
-        OperatorFactoryImpl::GetInferShapeFunc(it == kGeLocalOpMapping.end() ? origin_type : it->second);
+        OperatorFactoryImpl::GetInferShapeFunc((it == kGeLocalOpMapping.end()) ? origin_type : it->second);
     if (infer_func == nullptr) {
       REPORT_INNER_ERROR("E19999", "Failed to Get InferFunc. type is %s", origin_type.c_str());
       GELOGE(GRAPH_FAILED, "[Get][InferFunc] failed. type is %s", origin_type.c_str());

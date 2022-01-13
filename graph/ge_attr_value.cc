@@ -139,7 +139,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
-  if (org_op_desc == nullptr || org_op_desc->impl_ == nullptr) {
+  if ((org_op_desc == nullptr) || (org_op_desc->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E19999", "org_op_desc is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
@@ -705,8 +705,8 @@ std::string AttrUtils::GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj,
   std::map<std::string, std::string> ordered_attrs;
   for (auto &attr : attr_map) {
     proto::AttrDef attr_def;
-    auto *const serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
-    if ((serializer == nullptr) || (serializer->Serialize(attr.second, attr_def) != GRAPH_SUCCESS)) {
+    auto *const value_serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
+    if ((value_serializer == nullptr) || (value_serializer->Serialize(attr.second, attr_def) != GRAPH_SUCCESS)) {
       ordered_attrs[attr.first] = "";
       continue;
     }
@@ -731,8 +731,8 @@ std::string AttrUtils::GetAllAttrsStr(ConstAttrHolderAdapter &&obj) {
   std::map<std::string, std::string> ordered_attrs;
   for (auto &attr : attr_map) {
     proto::AttrDef attr_def;
-    auto *const serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
-    if ((serializer == nullptr) || (serializer->Serialize(attr.second, attr_def) != GRAPH_SUCCESS)) {
+    auto *const value_serializer = AttrSerializerRegistry::GetInstance().GetSerializer(attr.second.GetValueTypeId());
+    if ((value_serializer == nullptr) || (value_serializer->Serialize(attr.second, attr_def) != GRAPH_SUCCESS)) {
       ordered_attrs[attr.first] = "";
       continue;
     }

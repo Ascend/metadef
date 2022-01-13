@@ -245,7 +245,7 @@ graphStatus RefRelations::Impl::BuildRefRelationsForWhile(
       continue;
     }
     const auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
-    if (peer_out_data_node == nullptr || peer_out_data_node->GetOpDesc() == nullptr) {
+    if ((peer_out_data_node == nullptr) || (peer_out_data_node->GetOpDesc() == nullptr)) {
       GELOGW("[RefRelations][Check] Node[%s]\'s peer_out_data_node or peer_out_data_node desc is null",
              netoutput->GetName().c_str());
       continue;

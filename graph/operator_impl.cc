@@ -39,7 +39,7 @@ OperatorImpl::OperatorImpl(const std::string &name, const std::string &type)
 OperatorImpl::OperatorImpl(const OpDescPtr &op_desc) : enable_shared_from_this(), op_desc_(op_desc) {}
 
 OperatorImpl::OperatorImpl(const ConstNodePtr node) : enable_shared_from_this(), node_(std::move(node)) {
-  if (node_ != nullptr && node_->GetOpDesc() != nullptr) {
+  if ((node_ != nullptr) && (node_->GetOpDesc() != nullptr)) {
     op_desc_ = node_->GetOpDesc();
   }
 }
@@ -78,7 +78,7 @@ void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::OutHandle
                    return, "[Get][InputIndex] Find input index by name failed. name[%s], op name:%s", dst_name.c_str(),
                          op_desc_->GetName().c_str());
   const auto out_op_impl = out_handler->GetOwner();
-  GE_CHK_BOOL_EXEC(out_op_impl != nullptr && out_op_impl->GetOpDescImpl() != nullptr,
+  GE_CHK_BOOL_EXEC((out_op_impl != nullptr) && (out_op_impl->GetOpDescImpl() != nullptr),
                    REPORT_INNER_ERROR("E19999", "out_handler invalid. name[%s]", dst_name.c_str());
                    return, "[Get][Impl] out_handler invalid. name[%s]", dst_name.c_str());
   bool is_const = false;
@@ -164,7 +164,7 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
                                           const OutDataAnchorPtr &out_data_anchor,
                                           ConstGeTensorPtr &ge_tensor) const {
   auto peer_node_2_out_anchor = std::make_pair(peer_node, out_data_anchor);
-  if (peer_node->GetType() == ENTER || peer_node->GetType() == REFENTER) {
+  if ((peer_node->GetType() == ENTER) || (peer_node->GetType() == REFENTER)) {
     const auto enter_in_data_anchor = peer_node->GetInDataAnchor(0);
     GE_CHECK_NOTNULL(enter_in_data_anchor);
     const auto enter_peer_out_data_anchor = enter_in_data_anchor->GetPeerOutAnchor();
@@ -246,9 +246,9 @@ graphStatus OperatorImpl::GetInputConstDataOut(const uint32_t idx, ConstGeTensor
     GELOGE(FAILED, "[Get][InputImpl] failed, input index: %u", idx);
     return GRAPH_FAILED;
   }
-  if (out_handle.GetOwner() != nullptr && out_handle.GetOwner()->GetOpDescImpl() != nullptr) {
+  if ((out_handle.GetOwner() != nullptr) && (out_handle.GetOwner()->GetOpDescImpl() != nullptr)) {
     const auto &op_desc_impl_type = out_handle.GetOwner()->GetOpDescImpl()->GetType();
-    if (op_desc_impl_type == CONSTANTOP || op_desc_impl_type == CONSTANT) {
+    if ((op_desc_impl_type == CONSTANTOP) || (op_desc_impl_type == CONSTANT)) {
       const auto op_desc = out_handle.GetOwner()->GetOpDescImpl();
       if (AttrUtils::GetTensor(op_desc, ATTR_NAME_WEIGHTS, ge_tensor)) {
         return GRAPH_SUCCESS;
@@ -265,7 +265,7 @@ graphStatus OperatorImpl::GetInputConstDataOut(const std::string &dst_name, Tens
     GELOGE(FAILED, "[Get][InputImpl] failed, dst_name:%s", dst_name.c_str());
     return GRAPH_FAILED;
   }
-  if (out_handle.GetOwner() != nullptr && out_handle.GetOwner()->GetOpDescImpl() != nullptr) {
+  if ((out_handle.GetOwner() != nullptr) && (out_handle.GetOwner()->GetOpDescImpl() != nullptr)) {
     const Operator const_op(out_handle.GetOwner());
     const auto &op_desc_impl_type = out_handle.GetOwner()->GetOpDescImpl()->GetType();
     if ((op_desc_impl_type == CONSTANTOP) || (op_desc_impl_type == CONSTANT)) {
