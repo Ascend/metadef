@@ -213,6 +213,21 @@ TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_2) {
   EXPECT_EQ(ret, ge::GRAPH_FAILED);
 }
 
+TEST_F(RegisterOpTilingUT, PostProcCalculateV2_SUCCESS) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &node = root_builder.AddNode("relu", "ReluV2", 1, 1);
+  Operator op = OpDescUtils::CreateOperatorFromNode(node);
+  OpDescPtr op_desc = node->GetOpDesc();
+  (void)ge::AttrUtils::SetStr(op_desc, "_alias_engine_name", "TEST");
+  std::vector<int64_t> workspaces = { 1, 2, 3};
+  OpRunInfoV2 run_info;
+  run_info.SetWorkspaces(workspaces);
+  workspaces.emplace_back(5);
+  op_desc->SetWorkspaceBytes(workspaces);
+  ge::graphStatus ret = PostProcCalculateV2(op, run_info);
+  EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
+}
+
 TEST_F(RegisterOpTilingUT, UpDateNodeShapeBySliceInfo1) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &node = root_builder.AddNode("relu", "ReluV2", 1, 1);
