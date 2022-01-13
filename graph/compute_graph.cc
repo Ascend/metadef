@@ -103,7 +103,7 @@ ComputeGraphImpl::Vistor<NodePtr> ComputeGraphImpl::GetAllNodes(const NodeFilter
     NodePtr node = candidates.front();
     candidates.pop_front();
 
-    if (node_filter == nullptr || node_filter(*node)) {
+    if ((node_filter == nullptr) || node_filter(*node)) {
       all_nodes.emplace_back(node);
     }
 
@@ -232,7 +232,7 @@ bool ComputeGraphImpl::VectorInputNodePtrIsEqual(const std::vector<NodePtr> &lef
     return false;
   }
   for (size_t j = 0UL; j < left_nodes_size; j++) {
-    if (left_nodes.at(j) == nullptr || right_nodes.at(j) == nullptr) {
+    if ((left_nodes.at(j) == nullptr) || (right_nodes.at(j) == nullptr)) {
       REPORT_INNER_ERROR("E19999", "left_nodes.at(%zu) or right_nodes.at(%zu) is nullptr", j, j);
       GELOGE(GRAPH_FAILED, "[Check][Param] left_nodes.at(%zu) or right_nodes.at(%zu) is nullptr", j, j);
       return false;
@@ -287,7 +287,7 @@ bool ComputeGraphImpl::operator==(const ComputeGraphImpl &r_graph) const {
                     REPORT_INNER_ERROR("E19999", "left_node:%s not find in r_graph:%s",
                                        node_name.c_str(), r_graph.GetName().c_str());
                     GELOGE(GRAPH_FAILED, "[Check][Param] right_node is NULL!!!"); return false);
-    if (!(*right_node == *left_node)) {
+    if (!((*right_node) == (*left_node))) {
       REPORT_INNER_ERROR("E19999", "Compare graph failed, node:%s not equal.", node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Compare][Graph] failed, node:%s not equal.", node_name.c_str());
       return false;
@@ -296,7 +296,7 @@ bool ComputeGraphImpl::operator==(const ComputeGraphImpl &r_graph) const {
 
   // Thirdly: Recursively determine whether the sub graphs are equal
   for (size_t i = 0UL; i < this->sub_graph_.size(); i++) {
-    if (!(*((this->sub_graph_)[i]) == *((r_graph.sub_graph_)[i]))) {
+    if (!((*((this->sub_graph_)[i])) == (*((r_graph.sub_graph_)[i])))) {
       return false;
     }
   }
@@ -304,7 +304,7 @@ bool ComputeGraphImpl::operator==(const ComputeGraphImpl &r_graph) const {
 }
 
 NodePtr ComputeGraphImpl::AddNodeFront(const NodePtr node) {
-  if (node == nullptr || node->GetOpDesc() == nullptr) {
+  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     REPORT_INNER_ERROR("E19999", "The node ptr or op desc should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op desc should not be null.");
     return nullptr;
@@ -336,7 +336,7 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
 }
 
 NodePtr ComputeGraphImpl::AddNode(const NodePtr node) {
-  if (node == nullptr || node->GetOpDesc() == nullptr) {
+  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     REPORT_INNER_ERROR("E19999", "the node ptr or op desc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op desc ptr should not be null.");
     return nullptr;
@@ -401,7 +401,7 @@ NodePtr ComputeGraphImpl::AddOutputNode(const NodePtr node) {
 }
 
 NodePtr ComputeGraphImpl::AddOutputNodeByIndex(const NodePtr node, const int32_t index) {
-  if (node == nullptr || node->GetOpDesc() == nullptr) {
+  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     REPORT_INNER_ERROR("E19999", "The node ptr or opdesc should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or opdesc should not be null.");
     return nullptr;
@@ -434,10 +434,10 @@ graphStatus ComputeGraphImpl::RemoveConstInput(const NodePtr &node) {
 
   for (const auto &in_anchor : node->GetAllInDataAnchors()) {
     const auto out_anchor = in_anchor->GetPeerOutAnchor();
-    if (out_anchor == nullptr || out_anchor->GetOwnerNode() == nullptr) {
+    if ((out_anchor == nullptr) || (out_anchor->GetOwnerNode() == nullptr)) {
       continue;
     }
-    if (out_anchor->GetOwnerNode()->GetType() == CONSTANT || out_anchor->GetOwnerNode()->GetType() == CONSTANTOP) {
+    if ((out_anchor->GetOwnerNode()->GetType() == CONSTANT) || (out_anchor->GetOwnerNode()->GetType() == CONSTANTOP)) {
       GE_CHK_BOOL_RET_STATUS(GraphUtils::RemoveEdge(out_anchor, in_anchor) == GRAPH_SUCCESS, GRAPH_FAILED,
                              "[Remove][Edge] from const op %s failed.", out_anchor->GetOwnerNode()->GetName().c_str());
       if (out_anchor->GetOwnerNode()->GetOutNodes().size() == 0UL) {
@@ -601,7 +601,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraphImpl::RemoveSubg
   }
   auto vec_iter = sub_graph_.begin();
   while (vec_iter != sub_graph_.end()) {
-    if (*vec_iter == iter->second) {
+    if ((*vec_iter) == iter->second) {
       (void)sub_graph_.erase(vec_iter);
       break;
     }
@@ -614,7 +614,7 @@ std::shared_ptr<ComputeGraph> ComputeGraphImpl::GetSubgraph(const std::string &n
   const std::shared_ptr<ComputeGraph> parent = parent_graph_.lock();
   if (parent == nullptr) {
     const auto iter = names_to_subgraph_.find(name);
-    return iter == names_to_subgraph_.end() ? nullptr : iter->second;
+    return (iter == names_to_subgraph_.end()) ? nullptr : iter->second;
   } else {
     return parent->GetSubgraph(name);
   }
@@ -1091,7 +1091,7 @@ void ComputeGraphImpl::Dump(const ConstComputeGraphPtr &graph) const {
     GELOGD("node name = %s.", node->GetName().c_str());
     for (const auto &anchor : node->GetAllOutDataAnchors()) {
       for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
-        GE_IF_BOOL_EXEC(peer_in_anchor != nullptr && peer_in_anchor->GetOwnerNode() != nullptr,
+        GE_IF_BOOL_EXEC((peer_in_anchor != nullptr) && (peer_in_anchor->GetOwnerNode() != nullptr),
                         GELOGI("node name = %s, out data node name = %s.", node->GetName().c_str(),
                                peer_in_anchor->GetOwnerNode()->GetName().c_str()));
       }
@@ -1104,12 +1104,12 @@ void ComputeGraphImpl::Dump(const ConstComputeGraphPtr &graph) const {
     const auto out_control_anchor = node->GetOutControlAnchor();
     if (out_control_anchor != nullptr) {
       for (const auto &peer_in_anchor : out_control_anchor->GetPeerInControlAnchors()) {
-        GE_IF_BOOL_EXEC(peer_in_anchor != nullptr && peer_in_anchor->GetOwnerNode() != nullptr,
+        GE_IF_BOOL_EXEC((peer_in_anchor != nullptr) && (peer_in_anchor->GetOwnerNode() != nullptr),
                         GELOGI("node name = %s, out control node name = %s.", node->GetName().c_str(),
                                peer_in_anchor->GetOwnerNode()->GetName().c_str()));
       }
       for (const auto &peer_in_anchor : out_control_anchor->GetPeerInDataAnchors()) {
-        GE_IF_BOOL_EXEC(peer_in_anchor != nullptr && peer_in_anchor->GetOwnerNode() != nullptr,
+        GE_IF_BOOL_EXEC((peer_in_anchor != nullptr) && (peer_in_anchor->GetOwnerNode() != nullptr),
                         GELOGI("node name = %s, out control node name = %s.", node->GetName().c_str(),
                                peer_in_anchor->GetOwnerNode()->GetName().c_str()));
       }
@@ -1177,8 +1177,8 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
                        return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
                        pre_out_data_anchor->GetOwnerNode()->GetName().c_str(),
                        in_data_anchor->GetOwnerNode()->GetName().c_str());
-      GE_IF_BOOL_EXEC(pre_out_data_anchor->GetOwnerNode()->GetType() == CONSTANT ||
-                      pre_out_data_anchor->GetOwnerNode()->GetType() == CONSTANTOP,
+      GE_IF_BOOL_EXEC((pre_out_data_anchor->GetOwnerNode()->GetType() == CONSTANT) ||
+                      (pre_out_data_anchor->GetOwnerNode()->GetType() == CONSTANTOP),
                       continue);
       for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
         for (const auto &next_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
@@ -1592,7 +1592,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::GraphMembersAr
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::operator==(
     const ComputeGraph &r_compute_graph) const {
-  return *impl_ == *(r_compute_graph.impl_);
+  return (*impl_) == (*(r_compute_graph.impl_));
 }
 
 ComputeGraph& ComputeGraph::operator=(ge::ComputeGraph &compute_graph) {
