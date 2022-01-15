@@ -24,6 +24,7 @@
 #include "graph/utils/graph_utils.h"
 
 namespace fe {
+#ifdef ONLY_COMPILE_OPEN_SRC
 const int TBE_FUSION_OP_NUM_MAX = 5;
 const int TBE_PATTERN_NUM_MAX = 5;
 const int TBE_PATTERN_NUM_NONE = 0;
@@ -32,6 +33,16 @@ const int TBE_OUTPUT_BRANCH_DEFAULT = 0;
 const int TBE_OUTPUT_BRANCH_SINGLE = 1;
 const int TBE_OUTPUT_BRANCH_MULTI = 2;
 const int TBE_PATTERN_GROUPID_INVALID = -1;
+#else
+const int64_t TBE_FUSION_OP_NUM_MAX = 5L;
+const int64_t TBE_PATTERN_NUM_MAX = 5L;
+const int64_t TBE_PATTERN_NUM_NONE = 0L;
+const int64_t TBE_PATTERN_NUM_DEFAULT = 1L;
+const int64_t TBE_OUTPUT_BRANCH_DEFAULT = 0L;
+const int64_t TBE_OUTPUT_BRANCH_SINGLE = 1L;
+const int64_t TBE_OUTPUT_BRANCH_MULTI = 2L;
+const int64_t TBE_PATTERN_GROUPID_INVALID = -1L;
+#endif
 
 enum SkipStatus { DISABLED = 0, AVAILABLE = 1, SKIPPED = 2 };
 
@@ -67,18 +78,18 @@ class BufferFusionPattern {
 
   virtual ~BufferFusionPattern();
 
-  BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &patterns,
+  BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
                                  int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
                                  ShapeTypeRule shape_type_rule = ONLY_SUPPORT_STATIC,
                                  bool not_pattern = false);
 
-  BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &patterns,
+  BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &output_ids,
                                   int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
                                   bool ignore_output_num = false);
 
-  BufferFusionPattern &SetHead(const std::vector<std::string> &op_patterns);
+  BufferFusionPattern &SetHead(const std::vector<std::string> &head_ids);
 
   std::string GetName() const;
   int64_t GetOpMaxCount() const;
@@ -86,7 +97,6 @@ class BufferFusionPattern {
   std::vector<BufferFusionOpDesc *> GetHead() const;
   int64_t GetErrorCnt() const;
   bool GetOutputs(BufferFusionOpDesc *op_desc, std::vector<BufferFusionOpDesc *> &outputs, bool ignore_repeat = false);
-  void InitRepeatCurr(const BufferFusionPattern &pattern);
 
  private:
   BufferFusionOpDesc *GetOpDesc(const std::string &desc_name) const;

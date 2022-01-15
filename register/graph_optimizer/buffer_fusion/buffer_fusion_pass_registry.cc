@@ -42,9 +42,9 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
   }
 
   std::map<std::string, BufferFusionPassRegistry::CreateFn> GetCreateFn(const BufferFusionPassType &pass_type) {
-    std::lock_guard<std::mutex> lock(mu_);
+    const std::lock_guard<std::mutex> lock(mu_);
     std::map<std::string, BufferFusionPassRegistry::CreateFn> result;
-    auto iter = create_fns_.find(pass_type);
+    const auto iter = create_fns_.find(pass_type);
     if (iter == create_fns_.end()) {
       return result;
     }
@@ -68,7 +68,11 @@ BufferFusionPassRegistry &BufferFusionPassRegistry::GetInstance() {
 }
 
 void BufferFusionPassRegistry::RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
+#ifdef ONLY_COMPILE_OPEN_SRC
                                             CreateFn create_fun) {
+#else
+                                            const CreateFn &create_fun) {
+#endif
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]UbFusionPass[type=%d,name=%s]: failed to register the ub fusion pass",
            pass_type, pass_name.c_str());

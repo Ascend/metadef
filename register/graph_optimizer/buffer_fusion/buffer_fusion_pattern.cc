@@ -20,12 +20,16 @@
 #include "graph/debug/ge_log.h"
 #include "register/graph_optimizer/graph_optimize_register_error_codes.h"
 
+namespace fe {
 using std::map;
 using std::string;
 using std::vector;
 
-namespace fe {
+#ifdef ONLY_COMPILE_OPEN_SRC
 inline bool IsAddOverflow(int64_t a, int64_t b) {
+#else
+inline bool IsAddOverflow(const int64_t &a, const int64_t &b) {
+#endif
   return ((b > 0) && (a > (static_cast<int64_t>(INT64_MAX) - b))) || \
       ((b < 0) && (a < (static_cast<int64_t>(INT64_MIN) - b)));
 }
@@ -97,7 +101,7 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->not_pattern = not_pattern;
   if (repeate_max > repeate_min) {
     for (int64_t i = repeate_min; i < repeate_max; i++) {
-      op->multi_output_skip_status.insert(std::pair<int64_t, SkipStatus>(i, SkipStatus::DISABLED));
+      (void)op->multi_output_skip_status.insert(std::pair<int64_t, SkipStatus>(i, SkipStatus::DISABLED));
     }
   }
   ops_.push_back(op);
@@ -177,10 +181,9 @@ bool BufferFusionPattern::GetOutputs(BufferFusionOpDesc *op_desc, std::vector<Bu
     GELOGW("[GetOutputs][Check] op_desc is null.");
     return false;
   }
-  string desc_n = op_desc->desc_name;
 
   // add curr desc can be reused while repeat_curr < repeate_max
-  if (!ignore_repeat && op_desc->repeate_curr < op_desc->repeate_max) {
+  if ((!ignore_repeat) && (op_desc->repeate_curr < op_desc->repeate_max)) {
     outputs.push_back(op_desc);
   }
 
@@ -279,7 +282,7 @@ void BufferFusionPattern::UpdateSkipStatus(const BufferFusionOpDesc *op_desc) co
           break;
         }
       }
-      if (is_same_type && input_desc->ignore_output_num == true) {
+      if (is_same_type && (input_desc->ignore_output_num)) {
         for (int64_t i = input_desc->repeate_min; i < input_desc->repeate_max; i++) {
           input_desc->multi_output_skip_status[i] = SkipStatus::AVAILABLE;
         }
@@ -294,9 +297,10 @@ void BufferFusionPattern::UpdateSkipStatus(const BufferFusionOpDesc *op_desc) co
  * @return BufferFusionOpDesc*: description ptr
  */
 BufferFusionOpDesc *BufferFusionPattern::GetOpDesc(const string &desc_name) const {
-  auto it = op_map_.find(desc_name);
-  if (it != op_map_.end()) return it->second;
-
+  const auto it = op_map_.find(desc_name);
+  if (it != op_map_.end()) {
+    return it->second;
+  }
   return nullptr;
 }
 

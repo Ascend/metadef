@@ -17,10 +17,15 @@
 #include "graph/debug/ge_log.h"
 
 namespace ge {
-constexpr size_t kBitsEachValue = 64;
+constexpr size_t kBitsEachValue = 64UL;
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 LargeBitmap::LargeBitmap(size_t size)
     : size_(size), bits_((size + kBitsEachValue - 1) / kBitsEachValue, 0) {}
+#else
+LargeBitmap::LargeBitmap(const size_t &size)
+    : size_(size), bits_((size + kBitsEachValue - 1UL) / kBitsEachValue, 0UL) {}
+#endif
 
 bool LargeBitmap::operator==(const LargeBitmap &another_bm) const {
   return bits_ == another_bm.bits_;
@@ -30,11 +35,19 @@ bool LargeBitmap::operator!=(const LargeBitmap &another_bm) const {
   return bits_ != another_bm.bits_;
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void LargeBitmap::SetValues(uint64_t value) {
+#else
+void LargeBitmap::SetValues(const uint64_t &value) {
+#endif
   std::fill(bits_.begin(), bits_.end(), value);
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 void LargeBitmap::SetBit(size_t index) {
+#else
+void LargeBitmap::SetBit(const size_t &index) {
+#endif
   if (index < size_) {
     bits_[index / kBitsEachValue] |= 1ull << (index % kBitsEachValue);
   } else {
@@ -43,7 +56,11 @@ void LargeBitmap::SetBit(size_t index) {
   }
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 bool LargeBitmap::GetBit(size_t index) const {
+#else
+bool LargeBitmap::GetBit(const size_t &index) const {
+#endif
   if (index < size_) {
     return bits_[index / kBitsEachValue] & (1ull << (index % kBitsEachValue));
   } else {
@@ -53,8 +70,8 @@ bool LargeBitmap::GetBit(size_t index) const {
 }
 
 void LargeBitmap::Or(const LargeBitmap &another_bm) {
-  size_t index = 0;
-  size_t another_size = another_bm.bits_.size();
+  size_t index = 0UL;
+  const size_t another_size = another_bm.bits_.size();
   for (auto &bit : bits_) {
     if (index >= another_size) {
       return;
@@ -65,8 +82,8 @@ void LargeBitmap::Or(const LargeBitmap &another_bm) {
 }
 
 void LargeBitmap::And(const LargeBitmap &another_bm) {
-  size_t index = 0;
-  size_t another_size = another_bm.bits_.size();
+  size_t index = 0UL;
+  const size_t another_size = another_bm.bits_.size();
   for (auto &bit : bits_) {
     if (index >= another_size) {
       return;
