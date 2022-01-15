@@ -143,8 +143,9 @@ typedef struct tagRtArgsWithTiling {
     uint16_t tilingDataOffset;      // tiling data offset
     uint16_t hostInputAddrOffset;
     uint16_t hostInputDataOffset;
-    bool     hasHostMemInput;       // has host memory input data in args or not
-    uint8_t  reserved[7];
+    uint8_t hasHostMemInput;       // has host memory input data in args or not
+    uint8_t isNoNeedH2DCopy;       // is no need host to device copy
+    uint8_t  reserved[6];
 } rtArgsWithTiling_t;
 
 /**
