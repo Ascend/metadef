@@ -28,8 +28,6 @@
 namespace ffts {
 const std::string kAttrSgtJsonInfo = "_sgt_json_info";
 const std::string kAttrSgtStructInfo = "_sgt_struct_info";
-/*const uint32_t kMaxPersistNum = 8;
-const int64_t kBytesInMB = 1048576;*/
 const char kSgtTillingNum = 2;
 
 struct OpCut {
