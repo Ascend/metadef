@@ -95,7 +95,7 @@ std::map<std::string, FusionPassRegistry::CreateFn> FusionPassRegistry::GetCreat
 
 FusionPassRegistrar::FusionPassRegistrar(const GraphFusionPassType &pass_type, const std::string &pass_name,
                                          GraphPass *(*create_fn)()) {
-  if (pass_type < BUILT_IN_GRAPH_PASS || pass_type >= GRAPH_FUSION_PASS_TYPE_RESERVED) {
+  if ((pass_type < BUILT_IN_GRAPH_PASS) || (pass_type >= GRAPH_FUSION_PASS_TYPE_RESERVED)) {
     GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_type] value:%d is not supported.", pass_type);
     return;
   }

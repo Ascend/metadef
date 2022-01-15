@@ -35,7 +35,6 @@ GraphFusionPassBase::~GraphFusionPassBase() {}
  * @brief execute pass
  */
 Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
-  Mappings mappings;
   bool is_patterns_ok = true;
   // build Pattern
   std::vector<FusionPattern *> patterns;
@@ -45,7 +44,7 @@ Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
     patterns = DefinePatterns();
     for (FusionPattern *pattern : patterns) {
       if (pattern != nullptr) {
-        bool ok = pattern->Build();
+        const bool ok = pattern->Build();
         if (!ok) {
           GELOGW("[RunFusionPass][Check] pattern: %s build failed", pattern->GetName().c_str());
           invalid_patterns += pattern->GetName() + ",";
@@ -68,7 +67,7 @@ Status GraphFusionPassBase::Run(ge::ComputeGraph &graph) {
   }
   // do matching and fusion for each pattern
   bool final_changed = false;
-  for (const FusionPattern *pattern : patterns) {
+  for (const FusionPattern * const pattern : patterns) {
     if (pattern != nullptr) {
       bool changed = false;
       const Status ret = RunOnePattern(graph, *pattern, changed);
@@ -90,7 +89,7 @@ Status GraphFusionPassBase::RunOnePattern(ge::ComputeGraph &graph, const FusionP
   changed = false;
   Mappings mappings;
   int32_t effect_times = 0;
-  uint32_t graph_id = graph.GetGraphID();
+  const uint32_t graph_id = graph.GetGraphID();
   FusionInfo fusion_info(graph.GetSessionID(), to_string(graph_id), GetName(), static_cast<int32_t>(mappings.size()),
                          effect_times);
   // match all patterns in graph, and save them to mappings
@@ -118,8 +117,8 @@ Status GraphFusionPassBase::RunOnePattern(ge::ComputeGraph &graph, const FusionP
       }
     }
 
-    Status status = Fusion(graph, mapping, fus_nodes);
-    if (status != SUCCESS && status != NOT_CHANGED) {
+    const Status status = Fusion(graph, mapping, fus_nodes);
+    if ((status != SUCCESS) && (status != NOT_CHANGED)) {
       GELOGE(status, "[Fuse][Graph]Fail with pattern[%s].", pattern.GetName().c_str());
       return status;
     }
@@ -192,7 +191,7 @@ bool GraphFusionPassBase::MatchAll(const ge::ComputeGraph &graph, const FusionPa
  */
 ge::NodePtr GraphFusionPassBase::GetNodeFromMapping(const std::string &id, const Mapping &mapping) {
   for (auto &item : mapping) {
-    std::shared_ptr<OpDesc> op_desc = item.first;
+    const std::shared_ptr<OpDesc> op_desc = item.first;
     if (op_desc != nullptr && op_desc->id == id) {
       if (item.second.empty()) {
         return nullptr;
