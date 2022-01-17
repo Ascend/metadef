@@ -16,25 +16,9 @@
 
 #include "op_tiling/op_tiling_utils.h"
 #include <string>
-#include "graph/ge_tensor.h"
 #include "graph/utils/attr_utils.h"
-#include "op_tiling/op_tiling_constants.h"
 
 namespace optiling {
-void AddNameToTensordesc(const ge::OpDescPtr &op_desc) {
-  if (!op_desc->HasAttr(ATTR_NAME_OP_INFER_DEPENDS)) {
-    return;
-  }
-  const size_t input_size = op_desc->GetAllInputsSize();
-  for (size_t i = 0; i < input_size; i++) {
-    const ge::GeTensorDescPtr tensor_desc_ptr = op_desc->MutableInputDesc(i);
-    if (tensor_desc_ptr == nullptr) {
-      continue;
-    }
-    tensor_desc_ptr->SetName(op_desc->GetInputNameByIndex(i));
-  }
-}
-
 void ReplaceEmptyShapeOfTensorDesc(const ge::OpDescPtr &op_desc, std::vector<int32_t> &indexes) {
   const size_t input_size = op_desc->GetAllInputsSize();
   for (size_t i = 0; i < input_size; ++i) {
