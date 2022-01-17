@@ -1295,4 +1295,9 @@ const std::string ATTR_NAME_DATA_FLOW_MAX_SIZE = "_data_flow_max_size";
 
 // mark node inserted by ge
 const std::string ATTR_NAME_IS_INSERTED_BY_GE = "_is_inserted_by_ge";
+
+// for cmo feature
+const std::string ATTR_NAME_MEMORY_REUSE_INFO = "_mem_reuse_info";
+const std::string ATTR_NAME_OP_READ_WRITE_INDEX = "_op_read_write_index";
+const std::string ATTR_NAME_MEM_RELEASE_FIRST_REUSE_FIRST = "_mem_release_first_reuse_first";
 }  // namespace ge
