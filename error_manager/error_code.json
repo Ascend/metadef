@@ -1233,6 +1233,50 @@
       }
     },
     {
+      "errClass": "Argument Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "E39003",
+      "ErrMessage": "Argument pidSign is invalid.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "The signature of user process is empty.",
+        "Solution": "Check argument pidSign send by TSD"
+      }
+    },
+    {
+      "errClass": "System Errors",
+      "errTitle": "Driver Function Call Failure",
+      "ErrCode": "E39004",
+      "ErrMessage": "Get device num and device list failed.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Get device info from driver failed.",
+        "Solution": "Check device driver service from device log"
+      }
+    },
+    {
+      "errClass": "System Errors",
+      "errTitle": "Cgroup add Failure",
+      "ErrCode": "E39005",
+      "ErrMessage": "Add aicpu_scheduler to cgroup failed.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Cgroup config wrong.",
+        "Solution": "Check aicpu cgroup info from device log."
+      }
+    },
+    {
+      "errClass": "System Errors",
+      "errTitle": "AicpuScheduler init failed",
+      "ErrCode": "E39006",
+      "ErrMessage": "Failed to init aicpu.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Something wrong with aicpu_scheduler",
+        "Solution": "Check init info from device log"
+      }
+    },
+    {
       "errClass": "Command Line Errors",
       "errTitle": "Invalid GE Initialization Argument",
       "ErrCode": "E20100",
