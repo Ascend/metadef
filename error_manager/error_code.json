@@ -3171,6 +3171,61 @@
         "Possible Cause": "Path does not exist or path name invalid. The Path name can only contain A-Za-z0-9-_.",
         "Solution": "Try again with a valid path."
       }
-    }
+    },
+    {
+      "errClass": "System Errors",
+      "errTitle": "System Function Call Failure",
+      "ErrCode": "EJ9001",
+      "ErrMessage": "Failed to set the max FD.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "The fd runs out.",
+        "Solution": "Set max fd to 65536."
+      }
+    },
+    {
+      "errClass": "Argument Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "EJ9002",
+      "ErrMessage": "Add hccp to cgroup failed.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "An incorrect argument is passed when the HCCP process is started.",
+        "Solution": "Pass a correct argument."
+      }
+    },
+    {
+      "errClass": "Log Errors",
+      "errTitle": "Log Attribute Setting Error",
+      "ErrCode": "EJ9003",
+      "ErrMessage": "Failed to set the log level or the attribute for sending logs to the host.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "An exception occurred when invoking the log module.",
+        "Solution": "Check the log settings."
+      }
+    },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "SO File Read Failure",
+      "ErrCode": "EJ9004",
+      "ErrMessage": "The SO file is not found. Check that the existing SO file is correct.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "roce_user_so or ibverbs_so does not exist.",
+        "Solution": "Install a correct software package."
+      }
+    },
+    {
+       "errClass": "Process Errors",
+       "errTitle": "HCCP Process Initialization Failure",
+       "ErrCode": "EJ0005",
+       "ErrMessage": "Some HCCP process on the device does not exit, please restart the environment or log in to the device and kill the hccp preocess.",
+       "Arglist": "",
+       "suggestion": {
+         "Possible Cause": "The HCCP process is not destroyed by the TSD.",
+         "Solution": "Destroy the existing HCCP process and start a new HCCP process."
+        }
+      }
   ]
 }
