@@ -15,7 +15,6 @@ set(SRC_LIST
     "graph_optimizer/buffer_fusion/buffer_fusion_pass_base.cc"
     "graph_optimizer/buffer_fusion/buffer_fusion_pattern.cc"
     "graph_optimizer/fusion_statistic/fusion_statistic_recorder.cc"
-    "register_format_transfer.cc"
     "op_kernel_registry.cpp"
     "auto_mapping_util.cpp"
     "ffts_plus_update_manager.cc"
