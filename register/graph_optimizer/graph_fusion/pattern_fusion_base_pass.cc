@@ -104,7 +104,7 @@ static bool CheckStreamLabel(std::vector<ge::NodePtr> &fused_nodes) {
     }
     if (stream_label == "") {
       stream_label = stream_label_tmp;
-    } else if (stream_label != "" && stream_label != stream_label_tmp) {
+    } else if ((stream_label != "") && (stream_label != stream_label_tmp)) {
       return false;
     }
   }
@@ -151,8 +151,8 @@ void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapp
   oss << " Mapping: "  << std::endl;
   for (const auto &item : mapping) {
     const std::shared_ptr<OpDesc> op_desc = item.first;
-    const ge::NodePtr node = item.second[0];
-    if (op_desc != nullptr && node != nullptr) {
+    const ge::NodePtr node = item.second[0U];
+    if ((op_desc != nullptr) && (node != nullptr)) {
       oss << "    " << op_desc->id << " -> " << node->GetName() << std::endl;
     }
   }
@@ -287,8 +287,8 @@ Status PatternFusionBasePass::SetDataDumpAttr(std::vector<ge::NodePtr> &original
             GELOGW("[Set][Attr] origin_node is null");
             return FAILED;
           }
-          uint32_t origin_index = static_cast<uint32_t>(origin_node_out_anchor->GetIdx());
-          uint32_t fusion_index = static_cast<uint32_t>(fusion_node_out_data_anchor->GetIdx());
+          const uint32_t origin_index = static_cast<uint32_t>(origin_node_out_anchor->GetIdx());
+          const uint32_t fusion_index = static_cast<uint32_t>(fusion_node_out_data_anchor->GetIdx());
           (void)GraphPassUtil::SetOutputDescAttr(origin_index, fusion_index, origin_node, fusion_node);
         }
       }
@@ -341,7 +341,7 @@ bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
       continue;
     }
     for (const auto &node_temp :scope_nodes) {
-      if (node_temp == nullptr || node_temp == node) {
+      if ((node_temp == nullptr) || (node_temp == node)) {
         continue;
       }
       GELOGD("Check %s and %s.", peer_out->GetName().c_str(), node_temp->GetName().c_str());
@@ -495,7 +495,7 @@ ge::NodePtr PatternFusionBasePass::GetNodeFromMapping(const std::string &id, con
 #endif
   for (auto &item : mapping) {
     const std::shared_ptr<OpDesc> op_desc = item.first;
-    if (op_desc != nullptr && op_desc->id == id) {
+    if ((op_desc != nullptr) && (op_desc->id == id)) {
       if (item.second.empty()) {
         return nullptr;
       } else {
