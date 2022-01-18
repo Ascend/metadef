@@ -192,7 +192,7 @@ bool GraphFusionPassBase::MatchAll(const ge::ComputeGraph &graph, const FusionPa
 ge::NodePtr GraphFusionPassBase::GetNodeFromMapping(const std::string &id, const Mapping &mapping) {
   for (auto &item : mapping) {
     const std::shared_ptr<OpDesc> op_desc = item.first;
-    if (op_desc != nullptr && op_desc->id == id) {
+    if ((op_desc != nullptr) && (op_desc->id == id)) {
       if (item.second.empty()) {
         return nullptr;
       } else {

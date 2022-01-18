@@ -80,7 +80,7 @@ bool PatternFusionBasePassImpl::IsMatched(std::shared_ptr<OpDesc> op_desc, const
 bool PatternFusionBasePassImpl::IsMatched(const std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node,
                                           const Mapping &mapping) {
 #endif
-  if (op_desc == nullptr || node == nullptr) {
+  if ((op_desc == nullptr) || (node == nullptr)) {
     GELOGD("opDesc or node could not be null");
     return false;
   }
@@ -88,7 +88,7 @@ bool PatternFusionBasePassImpl::IsMatched(const std::shared_ptr<OpDesc> op_desc,
   const auto iter = mapping.find(op_desc);
 
   // check op_desc does not exist in mapping
-  return iter != mapping.end() && (find(iter->second.begin(), iter->second.end(), node) != iter->second.end());
+  return (iter != mapping.end()) && (find(iter->second.begin(), iter->second.end(), node) != iter->second.end());
 }
 
 #ifdef ONLY_COMPILE_OPEN_SRC
@@ -105,7 +105,7 @@ void PatternFusionBasePassImpl::DumpMappings(const FusionPattern &pattern, const
     for (const auto &item : mapping) {
       const std::shared_ptr<OpDesc> op_desc = item.first;
       const ge::NodePtr node = item.second[0];
-      if (op_desc != nullptr && node != nullptr) {
+      if ((op_desc != nullptr) && (node != nullptr)) {
         oss << "    " << op_desc->id << " -> " << node->GetName() << std::endl;
       }
     }
@@ -202,7 +202,7 @@ bool PatternFusionBasePassImpl::MatchFromOutput(std::vector<ge::NodePtr> &candid
 
   for (const auto &in_anchor : in_anchors) {
     const ge::NodePtr input_node = in_anchor->GetPeerOutAnchor()->GetOwnerNode();
-    for (uint32_t j = 0; j < inputs_desc->size(); j++) {
+    for (uint32_t j = 0U; j < inputs_desc->size(); j++) {
       const std::shared_ptr<OpDesc> input_desc = inputs_desc->at(static_cast<size_t>(j));
       if (input_desc == nullptr) {
         GELOGW("[Match][Output] input_desc %u of op %s is null, pattern matching failed.", j, op_id.c_str());
@@ -248,8 +248,8 @@ bool PatternFusionBasePassImpl::MatchAllEdges(const size_t &input_size, const st
 void PatternFusionBasePassImpl::GetInDataAnchors(const ge::NodePtr &node,
                                                  std::vector<ge::InDataAnchorPtr> &in_anchor_vec) {
   for (const auto in_anchor : node->GetAllInDataAnchors()) {
-    if (in_anchor == nullptr || in_anchor->GetPeerOutAnchor() == nullptr ||
-        in_anchor->GetPeerOutAnchor()->GetOwnerNode() == nullptr) {
+    if ((in_anchor == nullptr) || (in_anchor->GetPeerOutAnchor() == nullptr) ||
+        (in_anchor->GetPeerOutAnchor()->GetOwnerNode() == nullptr)) {
       continue;
     }
     in_anchor_vec.push_back(in_anchor);

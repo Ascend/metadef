@@ -49,13 +49,13 @@ void ConnectionMatrix::Update(const ge::ComputeGraph &graph, vector<ge::NodePtr>
 void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const vector<ge::NodePtr> &fusion_nodes) {
 #endif
   ge::LargeBitmap new_bit_vector(graph.GetDirectNode().size());
-  new_bit_vector.SetValues(0);
+  new_bit_vector.SetValues(0U);
   for (size_t i = 0; i < fusion_nodes.size(); i++) {
     new_bit_vector.Or(GetBitMap(fusion_nodes[i]));
   }
   for (auto &node : graph.GetDirectNode()) {
     bool is_connected_to_fusion = false;
-    for (size_t i = 0; i < fusion_nodes.size(); i++) {
+    for (size_t i = 0U; i < fusion_nodes.size(); i++) {
       if (GetBitMap(node).GetBit(static_cast<size_t>(GetIndex(fusion_nodes[i])))) {
         is_connected_to_fusion = true;
         break;
