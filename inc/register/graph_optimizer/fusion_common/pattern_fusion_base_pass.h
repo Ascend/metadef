@@ -49,11 +49,8 @@ class PatternFusionBasePass : public GraphPass {
   using Mappings = std::vector<Mapping>;
 
   PatternFusionBasePass();
-#ifdef ONLY_COMPILE_OPEN_SRC
   virtual ~PatternFusionBasePass();
-#else
-  ~PatternFusionBasePass() override;
-#endif
+
 
   /** execute pass
    *
