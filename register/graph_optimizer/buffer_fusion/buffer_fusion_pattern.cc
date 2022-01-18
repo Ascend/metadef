@@ -58,8 +58,9 @@ BufferFusionPattern::~BufferFusionPattern() {
  * with the value
  * @return BufferFusionPattern: pattern object
  */
-BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
-                                                    int64_t repeate_min, int64_t repeate_max, int64_t group_id,
+BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name,
+                                                    const std::vector<std::string> &types,
+                                                    int64_t repeat_min, int64_t repeat_max, int64_t group_id,
                                                     ShapeTypeRule shape_type_rule, bool not_pattern) {
   if (desc_name.empty()) {
     GELOGW("[AddOpDesc][Check] Desc_name cannot be empty.");
@@ -67,9 +68,9 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
     return *this;
   }
 
-  if (repeate_min > repeate_max) {
+  if (repeat_min > repeat_max) {
     GELOGW("[AddOpDesc][Check] Check desc %s failed as repeat_min > repeat_max, repeat_min=%ld, repeat_max=%ld",
-           desc_name.c_str(), repeate_min, repeate_max);
+           desc_name.c_str(), repeat_min, repeat_max);
     error_count_++;
     return *this;
   }
@@ -89,8 +90,8 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
 
   op->desc_name = desc_name;
   op->types = types;
-  op->repeate_min = repeate_min;
-  op->repeate_max = repeate_max;
+  op->repeate_min = repeat_min;
+  op->repeate_max = repeat_max;
   op->repeate_curr = 0;
   op->group_id = group_id;
   op->shape_type_rule = shape_type_rule;
@@ -99,8 +100,8 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->ignore_input_num = false;
   op->ignore_output_num = false;
   op->not_pattern = not_pattern;
-  if (repeate_max > repeate_min) {
-    for (int64_t i = repeate_min; i < repeate_max; i++) {
+  if (repeat_max > repeat_min) {
+    for (int64_t i = repeat_min; i < repeat_max; i++) {
       (void)op->multi_output_skip_status.insert(std::pair<int64_t, SkipStatus>(i, SkipStatus::DISABLED));
     }
   }

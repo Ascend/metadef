@@ -139,7 +139,7 @@ class GraphPassUtil {
 #ifdef ONLY_COMPILE_OPEN_SRC
   static void SetDataDumpOriginFormat(ge::Format origin_format, ge::GeTensorDescPtr tensor_desc) {
 #else
-  static void SetDataDumpOriginFormat(const ge::Format &origin_format, ge::GeTensorDescPtr tensor_desc) {
+  static void SetDataDumpOriginFormat(const ge::Format &origin_format, const ge::GeTensorDescPtr &tensor_desc) {
 #endif
     std::string origin_format_str = "RESERVED";
     if (origin_format != ge::FORMAT_RESERVED) {
@@ -192,7 +192,7 @@ class GraphPassUtil {
 #else
   static void AddNodeFromOpTypeMap(const NodeMapInfoPtr &node_map_info, const ge::NodePtr &node_ptr) {
 #endif
-    if (node_map_info == nullptr || node_ptr == nullptr) {
+    if ((node_map_info == nullptr) || (node_ptr == nullptr)) {
       return;
     }
     NodeTypeMapPtr node_type_map = node_map_info->node_type_map;
@@ -217,20 +217,20 @@ class GraphPassUtil {
 #ifdef ONLY_COMPILE_OPEN_SRC
   static void RecordOriginalNames(std::vector<ge::NodePtr> original_nodes, ge::NodePtr node) {
 #else
-  static void RecordOriginalNames(const std::vector<ge::NodePtr> &original_nodes, ge::NodePtr node) {
+  static void RecordOriginalNames(const std::vector<ge::NodePtr> &original_nodes, const ge::NodePtr &node) {
 #endif
     // 1. get the original_names
     std::vector<std::string> original_names;
-    for (ge::NodePtr original_node : original_nodes) {
-      if (original_node == nullptr || original_node->GetOpDesc() == nullptr) {
+    for (const ge::NodePtr &original_node : original_nodes) {
+      if ((original_node == nullptr) || (original_node->GetOpDesc() == nullptr)) {
         return;
       }
 
       const ge::OpDescPtr origin_op_desc_ptr = original_node->GetOpDesc();
       std::vector<std::string> names_tmp;
-      const bool is_has_attr = ge::AttrUtils::GetListStr(origin_op_desc_ptr, 
-                                                   ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, 
-                                                   names_tmp);
+      const bool is_has_attr = ge::AttrUtils::GetListStr(origin_op_desc_ptr,
+                                                         ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES,
+                                                         names_tmp);
       if (is_has_attr) {
         for (const auto &node_name : names_tmp) {
           if (!node_name.empty()) {
@@ -243,7 +243,7 @@ class GraphPassUtil {
     }
 
     // 2. set the dump attr
-    if (node == nullptr || node->GetOpDesc() == nullptr) {
+    if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
       return;
     }
     ge::OpDescPtr node_op_desc_ptr = node->GetOpDesc();
@@ -256,7 +256,7 @@ class GraphPassUtil {
   static void AddNodeToNodeTypeMap(const NodeTypeMapPtr &node_type_map, const std::string &op_type,
                                    const ge::NodePtr &node_ptr) {
 #endif
-    if (node_type_map == nullptr || node_ptr == nullptr) {
+    if ((node_type_map == nullptr) || (node_ptr == nullptr)) {
       return;
     }
     const auto iter = node_type_map->find(op_type);
@@ -270,7 +270,7 @@ class GraphPassUtil {
 
   static void RemoveNodeFromNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type,
                                         const ge::NodePtr &node_ptr) {
-    if (node_type_map == nullptr || node_ptr == nullptr) {
+    if ((node_type_map == nullptr) || (node_ptr == nullptr)) {
       return;
     }
     const auto iter = node_type_map->find(op_type);

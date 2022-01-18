@@ -80,10 +80,9 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse);
 
-extern "C" int TbeOpTilingPyInterfaceExV2(const char *optype, const char *compile_info, const char *inputs,
-                                          const char *outputs, char *run_info_json, size_t run_info_len,
-                                          const char *compile_info_hash, uint64_t *elapse,
-                                          const char *attrs);
+extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_info, const char *compile_info_hash,
+                                      const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
+                                      size_t run_info_len, uint64_t *elapse);
 
 bool op_tiling_stub_v2(const Operator &op, const utils::OpCompileInfo &compile_info, utils::OpRunInfo &run_info) {
   return true;
@@ -779,9 +778,9 @@ TEST_F(UtestRegister, optiling_py_interface) {
   const char* cmp_info_hash = "";
   uint64_t *elapse = nullptr;
   const char *attrs = json_str.c_str();
-  TbeOpTilingPyInterfaceExV2(optype, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse, attrs);
-  TbeOpTilingPyInterfaceExV2(optype_v3, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse, attrs);
-  TbeOpTilingPyInterfaceExV2(optype_v4, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse, attrs);
+  TbeOpTilingPyInterface(optype, cmp_info, cmp_info_hash, attrs, attrs, attrs, runinfo, size, elapse);
+  TbeOpTilingPyInterface(optype_v3, cmp_info, cmp_info_hash, attrs, attrs, attrs, runinfo, size, elapse);
+  TbeOpTilingPyInterface(optype_v4, cmp_info, cmp_info_hash, attrs, attrs, attrs, runinfo, size, elapse);
   TbeOpTilingPyInterfaceEx2(optype, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
   TbeOpTilingPyInterfaceEx2(optype_v3, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
   TbeOpTilingPyInterfaceEx2(optype_v4, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
