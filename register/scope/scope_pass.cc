@@ -29,7 +29,7 @@ ScopesResult::ScopesResult() {
 
 ScopesResult::ScopesResult(ScopesResult const &result) {
   impl_ = ge::ComGraphMakeUnique<ScopesResultImpl>();
-  if (impl_ == nullptr || result.impl_ == nullptr) {
+  if ((impl_ == nullptr) || (result.impl_ == nullptr)) {
     GELOGE(ge::MEMALLOC_FAILED, "ScopesResult is not properly initialized.");
     return;
   }
@@ -42,7 +42,7 @@ ScopesResult &ScopesResult::operator=(ScopesResult const &result) {
   if (&result == this) {
     return *this;
   }
-  if (impl_ == nullptr || result.impl_ == nullptr) {
+  if ((impl_ == nullptr) || (result.impl_ == nullptr)) {
     GELOGE(ge::MEMALLOC_FAILED, "ScopesResult is not properly initialized.");
     return *this;
   }
