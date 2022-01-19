@@ -1220,11 +1220,11 @@ const std::map<std::string, uint32_t> &OpDescImpl::GetSubgraphNameIndexes() cons
 }
 
 graphStatus OpDescImpl::SetSubgraphInstanceName(const size_t index, const std::string &name) {
-  GELOGI("Add sub graph instance name is %s, index is %u", name.c_str(), index);
+  GELOGI("Add sub graph instance name is %s, index is %zu", name.c_str(), index);
   if (index >= subgraph_instance_names_.size()) {
     REPORT_INNER_ERROR("E19999", "Index %zu exceeds the max instance count %zu",
                        index, subgraph_instance_names_.size());
-    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Index %u exceeds the max instance count %zu", index,
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Index %zu exceeds the max instance count %zu", index,
            subgraph_instance_names_.size());
     return GRAPH_PARAM_INVALID;
   }

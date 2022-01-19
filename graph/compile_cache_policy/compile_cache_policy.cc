@@ -61,7 +61,7 @@ std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicy
   (void)ccp->SetAgingPolicy(ap);
   (void)ccp->SetMatchPolicy(mp);
   GELOGI("[CompileCachePolicy] Create CompileCachePolicy with match_policy: %d, aging_policy: %d success;",
-         mp_type, ap_type);
+         static_cast<int32_t>(mp_type), static_cast<int32_t>(ap_type));
   return ccp;
 }
 
@@ -95,7 +95,7 @@ CacheItem CompileCachePolicy::FindCache(const CompileCacheDesc &compile_cache_de
 
 std::vector<CacheItem> CompileCachePolicy::DeleteCache(const DelCacheFunc &func) {
   const auto delete_items = compile_cache_state_.DelCache(func);
-  GELOGI("[CompileCachePolicy] [DeleteCache] Delete %d CompileCacheInfo", delete_items.size());
+  GELOGI("[CompileCachePolicy] [DeleteCache] Delete %zu CompileCacheInfo", delete_items.size());
   return delete_items;
 }
 
