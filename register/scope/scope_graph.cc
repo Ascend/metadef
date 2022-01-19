@@ -470,18 +470,6 @@ FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const std::string &fusion_node_
 
 FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name, const char_t *name,
                                                  const char_t *type) {
-  std::string node_name;
-  if (fusion_node_name != nullptr) {
-    node_name = fusion_node_name;
-  }
-  std::string str_name;
-  if (name != nullptr) {
-    str_name = name;
-  }
-  std::string str_type;
-  if (type != nullptr) {
-    str_type = type;
-  }
   impl_ = ge::ComGraphMakeUnique<InnerNodeInfoImpl>(fusion_node_name, name, type);
 }
 
@@ -1131,7 +1119,9 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
     AscendString name;
     (void)op->GetName(name);
     (void)nodes_map_.emplace(std::string(name.GetString()), op);
-    if (op->GetOpType() != kTfIdentityType || op->GetOpType() != kTfConstType) {
+    AscendString type;
+    op->GetOpType(type);
+    if ((type.GetString() != kTfIdentityType) || (type.GetString() != kTfConstType)) {
       auto &impl = scope_tree_->impl_;
       impl->AddNodeToScope(op);
     }
@@ -1217,7 +1207,9 @@ bool ScopeGraph::ScopeGraphImpl::IsFusionOp(const domi::tensorflow::NodeDef *con
   for (auto &fusion_result : fusion_results_) {
     const FusionScopesResult *const fusion_node = fusion_result.second;
     auto &impl = fusion_node->impl_;
-    if (impl->Type() == node_def->op() && fusion_node->Name() == node_def->name()) {
+    AscendString name;
+    fusion_node->Name(name);
+    if ((impl->Type() == node_def->op()) && (name.GetString() == node_def->name())) {
       return true;
     }
   }

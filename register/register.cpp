@@ -431,7 +431,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status OperatorAutoMapping(cons
   GE_CHECK_NOTNULL(node_src);
   op_dst->SetName(node_src->name());
   for (const auto &attr_pair : node_src->attr()) {
-    if (attr_pair.first == kTfInputDesc || attr_pair.first == kTfOutputDesc) {
+    if ((attr_pair.first == kTfInputDesc) || (attr_pair.first == kTfOutputDesc)) {
       continue;
     }
     if (subgraph_attr_names.count(attr_pair.first) > 0U) {
