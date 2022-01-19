@@ -59,13 +59,13 @@ public:
       } else {
         GELOGE(ge::GRAPH_FAILED,
                "[GetMatchPolicy] failed. Match policy type : %d was incorrectly registered",
-               match_policy_type);
+               static_cast<int32_t>(match_policy_type));
         return nullptr;
       }
     }
     GELOGE(ge::GRAPH_FAILED,
            "[GetMatchPolicy] failed. Match policy type : %d  has not been registered",
-           match_policy_type);
+           static_cast<int32_t>(match_policy_type));
     return nullptr;
   }
   AgingPolicyPtr GetAgingPolicy(const AgingPolicyType aging_policy_type) {
@@ -77,13 +77,13 @@ public:
       } else {
         GELOGE(ge::GRAPH_FAILED,
                "[GetAgingPolicy] failed. Match policy type : %d was incorrectly registered",
-               aging_policy_type);
+               static_cast<int32_t>(aging_policy_type));
         return nullptr;
       }
     }
     GELOGE(ge::GRAPH_FAILED,
            "[GetAgingPolicy] failed. Match policy type : %d  has not been registered",
-           aging_policy_type);
+           static_cast<int32_t>(aging_policy_type));
     return nullptr;
   }
 private:

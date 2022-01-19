@@ -109,13 +109,13 @@ bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *const scope) {
 
   if (step_ == 0) {
     if (impl->GetOpTypeNum(node_type_) == num_) {
-      GELOGI("NodeOpTypeFeature, node type:%s, num:%d, match scope:%s",
+      GELOGI("NodeOpTypeFeature, node type:%s, num:%ld, match scope:%s",
              node_type_.c_str(), num_, scope->Name().c_str());
       return true;
     }
   } else {
     if ((impl->GetOpTypeNum(node_type_) != -1) && ((impl->GetOpTypeNum(node_type_) % step_) == num_)) {
-      GELOGI("NodeOpTypeFeature, node type:%s, num:%d, match scope:%s",
+      GELOGI("NodeOpTypeFeature, node type:%s, num:%ld, match scope:%s",
              node_type_.c_str(), num_, scope->Name().c_str());
       return true;
     }
