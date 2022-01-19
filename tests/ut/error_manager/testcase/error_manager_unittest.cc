@@ -109,6 +109,21 @@ TEST_F(UtestErrorManager, GetErrorMessage) {
   EXPECT_NE(instance.GetErrorMessage(), "");
 }
 
+TEST_F(UtestErrorManager, GetErrorOtherMessage) {
+  auto &instance = ErrorManager::GetInstance();
+  std::vector<ErrorManager::ErrorItem> vec;
+  ErrorManager::ErrorItem item;
+  item.error_id = "E18888";
+  item.error_message = "ERROR";
+  vec.push_back(item);
+  ErrorManager::ErrorItem item1;
+  item1.error_id = "E19999";
+  item1.error_message = "ERROR";
+  vec.push_back(item1);
+  instance.error_message_per_work_id_[0] = vec;
+  instance.error_context_.work_stream_id = 0;
+  EXPECT_NE(instance.GetErrorMessage(), "");
+}
 
 TEST_F(UtestErrorManager, GetWarningMessage) {
   auto &instance = ErrorManager::GetInstance();

@@ -134,7 +134,7 @@ void Anchor::UnlinkAll() noexcept {
 
 graphStatus Anchor::Unlink(const AnchorPtr &peer) {
   if (peer == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param peer is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param peer is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] peer anchor is invalid.");
     return GRAPH_FAILED;
   }
@@ -253,7 +253,7 @@ graphStatus InDataAnchor::LinkFrom(const OutDataAnchorPtr &src) {
   // InDataAnchor must be only linkfrom once
   if ((src == nullptr) || (src->impl_ == nullptr) ||
       (impl_ == nullptr) || (!impl_->peer_anchors_.empty()))  {
-    REPORT_INNER_ERROR("E19999", "src anchor is invalid or the peerAnchors is not empty.");
+    REPORT_INNER_ERROR("E18888", "src anchor is invalid or the peerAnchors is not empty.");
     GELOGE(GRAPH_FAILED, "[Check][Param] src anchor is invalid or the peerAnchors is not empty.");
     return GRAPH_FAILED;
   }
@@ -323,12 +323,12 @@ OutDataAnchor::Vistor<InControlAnchorPtr> OutDataAnchor::GetPeerInControlAnchors
 graphStatus OutDataAnchor::LinkTo(const InDataAnchorPtr &dest) {
   if ((dest == nullptr) || (dest->impl_ == nullptr) ||
       (!dest->impl_->peer_anchors_.empty())) {
-    REPORT_INNER_ERROR("E19999", "dest anchor is nullptr or the peerAnchors is not empty.");
+    REPORT_INNER_ERROR("E18888", "dest anchor is nullptr or the peerAnchors is not empty.");
     GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is nullptr or the peerAnchors is not empty.");
     return GRAPH_FAILED;
   }
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "anchor param is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "anchor param is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] owner anchor is invalid.");;
     return GRAPH_FAILED;
   }
@@ -339,7 +339,7 @@ graphStatus OutDataAnchor::LinkTo(const InDataAnchorPtr &dest) {
 
 graphStatus OutDataAnchor::LinkTo(const InControlAnchorPtr &dest) {
   if (dest == nullptr || dest->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param dest is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param dest is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is invalid.");
     return GRAPH_FAILED;
   }
@@ -354,12 +354,12 @@ graphStatus OutDataAnchor::LinkTo(const InControlAnchorPtr &dest) {
 
 graphStatus OutControlAnchor::LinkTo(const InDataAnchorPtr &dest) {
   if (dest == nullptr || dest->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param dest is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param dest is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is invalid.");
     return GRAPH_FAILED;
   }
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "anchor param is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "anchor param is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] owner anchor is invalid.");;
     return GRAPH_FAILED;
   }
@@ -436,12 +436,12 @@ InControlAnchor::Vistor<OutDataAnchorPtr> InControlAnchor::GetPeerOutDataAnchors
 
 graphStatus InControlAnchor::LinkFrom(const OutControlAnchorPtr &src) {
   if (src == nullptr || src->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param src is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param src is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] src anchor is invalid.");
     return GRAPH_FAILED;
   }
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "anchor param is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "anchor param is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] owner anchor is invalid.");;
     return GRAPH_FAILED;
   }
@@ -451,7 +451,7 @@ graphStatus InControlAnchor::LinkFrom(const OutControlAnchorPtr &src) {
 }
 
 bool InControlAnchor::Equal(const AnchorPtr anchor) const {
-  CHECK_FALSE_EXEC(anchor != nullptr, REPORT_INNER_ERROR("E19999", "param anchor is nullptr, check invalid");
+  CHECK_FALSE_EXEC(anchor != nullptr, REPORT_INNER_ERROR("E18888", "param anchor is nullptr, check invalid");
                    GELOGE(GRAPH_FAILED, "[Check][Param] anchor is invalid."); return false);
   const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor);
   if (in_control_anchor != nullptr) {
@@ -501,12 +501,12 @@ OutControlAnchor::Vistor<InDataAnchorPtr> OutControlAnchor::GetPeerInDataAnchors
 
 graphStatus OutControlAnchor::LinkTo(const InControlAnchorPtr &dest) {
   if (dest == nullptr || dest->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param dest is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param dest is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] dest anchor is invalid.");
     return GRAPH_FAILED;
   }
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "anchor param is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "anchor param is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] owner anchor is invalid.");;
     return GRAPH_FAILED;
   }

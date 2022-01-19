@@ -71,7 +71,7 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, in
     return false;
   }
   if (int64_val > INT32_MAX) {
-    REPORT_INNER_ERROR("E19999", "%ld int64_t value cannot cast to int32_t", int64_val);
+    REPORT_INNER_ERROR("E18888", "%ld int64_t value cannot cast to int32_t", int64_val);
     GELOGE(GRAPH_FAILED, "[Check][Param] %ld int64_t value cannot cast to int32_t", int64_val);
     return false;
   }
@@ -86,7 +86,7 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, ui
     return false;
   }
   if (int64_val > static_cast<int64_t>(UINT32_MAX)) {
-    REPORT_INNER_ERROR("E19999", "%ld int64_t value cannot cast to uint32_t", int64_val);
+    REPORT_INNER_ERROR("E18888", "%ld int64_t value cannot cast to uint32_t", int64_val);
     GELOGE(GRAPH_FAILED, "[Check][Param] %ld int64_t value cannot cast to uint32_t", int64_val);
     return false;
   }
@@ -98,14 +98,14 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, ui
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(const ConstOpDescPtr &org_op_desc) {
   if (org_op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "org_op_desc is null, check invalid");
+    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
   }
   std::shared_ptr<proto::OpDef> op_def;
   op_def = ComGraphMakeShared<proto::OpDef>();
   if (op_def == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create proto::OpDef failed.");
+    REPORT_CALL_ERROR("E18888", "create proto::OpDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return nullptr;
   }
@@ -115,13 +115,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
   imp.SetProtobufOwner(op_def);
   OpDescPtr op_desc = nullptr;
   GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
-                   REPORT_CALL_ERROR("E19999", "UnserializeOpDesc failed");
+                   REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed");
                    return op_desc, "[Call][UnserializeOpDesc] op_desc unserialize failed");
   op_desc->extAttrs_ = org_op_desc->extAttrs_;
 
   // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
   if (op_desc->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "op_desc impl is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "op_desc impl is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Op desc impl is nullptr.");
     return nullptr;
   }
@@ -140,13 +140,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
   if ((org_op_desc == nullptr) || (org_op_desc->impl_ == nullptr)) {
-    REPORT_INNER_ERROR("E19999", "org_op_desc is null, check invalid");
+    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
   }
   const std::shared_ptr<proto::OpDef> op_def = ComGraphMakeShared<proto::OpDef>();
   if (op_def == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create proto::OpDef failed");
+    REPORT_CALL_ERROR("E18888", "create proto::OpDef failed");
     GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return nullptr;
   }
@@ -156,14 +156,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(c
   imp.SetProtobufOwner(op_def);
   OpDescPtr op_desc = nullptr;
   if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
-    REPORT_CALL_ERROR("E19999", "UnserializeOpDesc failed.");
+    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
     return nullptr;
   }
 
   op_desc->extAttrs_ = org_op_desc->extAttrs_;
 
   if (op_desc->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "op desc impl is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "op desc impl is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] op desc impl is null.");
     return nullptr;
   }
@@ -372,7 +372,7 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
 
   for (size_t i = 0UL; i < int64_list.size(); ++i) {
     if (int64_list[i] > INT32_MAX) {
-      REPORT_INNER_ERROR("E19999", "index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
+      REPORT_INNER_ERROR("E18888", "index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
       GELOGE(GRAPH_FAILED, "[Check][Param] index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
       return false;
     }
@@ -390,7 +390,7 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
 
   for (size_t i = 0UL; i < int64_list.size(); ++i) {
     if (int64_list[i] > static_cast<int64_t>(UINT32_MAX)) {
-      REPORT_INNER_ERROR("E19999", "index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
+      REPORT_INNER_ERROR("E18888", "index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
       GELOGE(GRAPH_FAILED, "[Check][Param] index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
       return false;
     }
@@ -527,7 +527,7 @@ bool AttrUtils::SetGraph(AttrUtils::AttrHolderAdapter &&obj, const std::string &
   }
   const ModelSerializeImp imp;
   if (!imp.SerializeGraph(value, graph_def)) {
-    REPORT_CALL_ERROR("E19999", "SerializeGraph failed when add ComputeGraph to attr %s", name.c_str());
+    REPORT_CALL_ERROR("E18888", "SerializeGraph failed when add ComputeGraph to attr %s", name.c_str());
     GELOGE(GRAPH_FAILED, "[Serialize][Graph] Failed when add ComputeGraph to attr %s", name.c_str());
     (void) obj->MutableAttrMap().Delete(name);
     return false;
@@ -548,7 +548,7 @@ bool AttrUtils::SetListGraph(AttrUtils::AttrHolderAdapter &&obj, const std::stri
   for (size_t i = 0UL; i < value.size(); ++i) {
     const ModelSerializeImp imp;
     if (!imp.SerializeGraph(value[i], &attr_graphs->at(i))) {
-          REPORT_CALL_ERROR("E19999", "SerializeGraph failed when add ComputeGraph to attr %s", name.c_str());
+          REPORT_CALL_ERROR("E18888", "SerializeGraph failed when add ComputeGraph to attr %s", name.c_str());
       GELOGE(GRAPH_FAILED, "[Serialize][Graph] Failed when add ComputeGraph to attr %s", name.c_str());
       (void) obj->MutableAttrMap().Delete(name);
       return false;
@@ -566,7 +566,7 @@ bool AttrUtils::GetGraph(AttrUtils::ConstAttrHolderAdapter &&obj, const std::str
   // 下一步对这里做整改，直接传入attr_graph_def，避免这一次拷贝
   const auto graph_def = ComGraphMakeShared<proto::GraphDef>(*attr_graph_def);
   if (graph_def == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create proto::GraphDef failed.");
+    REPORT_CALL_ERROR("E18888", "create proto::GraphDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
     return false;
   }
@@ -574,7 +574,7 @@ bool AttrUtils::GetGraph(AttrUtils::ConstAttrHolderAdapter &&obj, const std::str
   ModelSerializeImp imp;
   imp.SetProtobufOwner(graph_def);
   if (!imp.UnserializeGraph(value, *graph_def)) {
-    REPORT_CALL_ERROR("E19999", "UnserializeGraph failed when get attr ComputeGraph by name %s", name.c_str());
+    REPORT_CALL_ERROR("E18888", "UnserializeGraph failed when get attr ComputeGraph by name %s", name.c_str());
     GELOGE(GRAPH_FAILED, "[Unserialize][Graph] Failed when get attr ComputeGraph by name %s", name.c_str());
     return false;
   }
@@ -594,7 +594,7 @@ bool AttrUtils::GetListGraph(AttrUtils::ConstAttrHolderAdapter &&obj, const std:
     std::shared_ptr<proto::GraphDef> graph_def;
     graph_def = ComGraphMakeShared<proto::GraphDef>(graph_defs->at(i));
     if (graph_def == nullptr) {
-      REPORT_CALL_ERROR("E19999", "create proto::GraphDef failed.");
+      REPORT_CALL_ERROR("E18888", "create proto::GraphDef failed.");
       GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
       graph_def = nullptr;
       return false;
@@ -603,7 +603,7 @@ bool AttrUtils::GetListGraph(AttrUtils::ConstAttrHolderAdapter &&obj, const std:
       ModelSerializeImp imp;
       imp.SetProtobufOwner(static_cast<const ProtoMsgOwner &>(graph_def));
       if (!imp.UnserializeGraph(graph, *graph_def)) {
-        REPORT_CALL_ERROR("E19999", "UnserializeGraph failed.");
+        REPORT_CALL_ERROR("E18888", "UnserializeGraph failed.");
         GELOGE(GRAPH_FAILED, "[Unserialize][Graph] Failed");
         return false;
       }

@@ -325,7 +325,7 @@ graphStatus RefRelations::Impl::GetRootGraph(ge::ComputeGraph &graph, ge::Comput
   }
   const auto root_graph_ptr = GraphUtils::FindRootGraph(parent_graph_ptr);
   if (root_graph_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get null root graph, graph:%s", parent_graph_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get null root graph, graph:%s", parent_graph_ptr->GetName().c_str());
     GE_LOGE("[Find][Graph] Get null root graph");
     return GRAPH_PARAM_INVALID;
   }
@@ -342,7 +342,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphDataNodes(std::vector<NodePtr> &g
     bool is_exist = true;
     is_exist = AttrUtils::GetInt(e->GetOpDesc(), kRefIdx, i);
     if (!is_exist) {
-      REPORT_INNER_ERROR("E19999", "Invalid SubGraph NetOutput node[%s].no attr %s",
+      REPORT_INNER_ERROR("E18888", "Invalid SubGraph NetOutput node[%s].no attr %s",
                          e->GetName().c_str(), kRefIdx);
       GELOGE(GRAPH_FAILED, "[Get][Int] Invalid SubGraph NetOutput node[%s].no attr %s",
              e->GetName().c_str(), kRefIdx);
@@ -377,7 +377,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
     for (const auto &in_data_anchor : sub_netoutput_node->GetAllInDataAnchors()) {
       const auto in_desc = op_desc->MutableInputDesc(static_cast<uint32_t>(in_data_anchor->GetIdx()));
       if (in_desc == nullptr) {
-        REPORT_INNER_ERROR("E19999", "Invalid NetOutput node [%s] idx [%d], no tensor on it",
+        REPORT_INNER_ERROR("E18888", "Invalid NetOutput node [%s] idx [%d], no tensor on it",
                            sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
         GELOGE(GRAPH_FAILED, "[Get][Tensor] Invalid NetOutput node [%s] idx [%d], no tensor on it",
                sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
@@ -387,7 +387,7 @@ graphStatus RefRelations::Impl::ProcessSubgraphNetoutput(
       if (AttrUtils::GetInt(in_desc, kRefIdx, ref_o)) {
         max_ref_idx = (ref_o > max_ref_idx) ? ref_o : max_ref_idx;
       } else {
-        REPORT_INNER_ERROR("E19999", "Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
+        REPORT_INNER_ERROR("E18888", "Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
                            sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
         GELOGE(GRAPH_FAILED, "[Get][Int] Invalid NetOutput node [%s] idx [%d], no attr[_parent_node_index] on it",
                sub_netoutput_node->GetName().c_str(), in_data_anchor->GetIdx());
@@ -514,7 +514,7 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
 RefRelations::RefRelations() {
   impl_ = MakeShared<Impl>();
   if (impl_ == nullptr) {
-    REPORT_CALL_ERROR("E19999", "new impl failed.");
+    REPORT_CALL_ERROR("E18888", "new impl failed.");
     GELOGE(GRAPH_FAILED, "[New][Impl] MakeShared failed!");
     return;
   }

@@ -124,28 +124,28 @@ graphStatus Model::SaveToFile(const std::string &file_name) const {
         mmOpen2(&real_path[0], static_cast<int32_t>(static_cast<uint32_t>(M_WRONLY) | static_cast<uint32_t>(M_CREAT) |
             static_cast<uint32_t>(O_TRUNC)), static_cast<uint32_t>(ACCESS_PERMISSION_BITS));
     if (fd < 0) {
-      REPORT_CALL_ERROR("E19999", "open file:%s failed, error:%s ", &real_path[0], GetStrError());
+      REPORT_CALL_ERROR("E18888", "open file:%s failed, error:%s ", &real_path[0], GetStrError());
       GELOGE(GRAPH_FAILED, "[Open][File] %s failed, error:%s ", &real_path[0], GetStrError());
       return GRAPH_FAILED;
     }
     const bool ret = ge_proto.SerializeToFileDescriptor(fd);
     if (!ret) {
-      REPORT_CALL_ERROR("E19999", "SerializeToFileDescriptor failed, file:%s.", &real_path[0]);
+      REPORT_CALL_ERROR("E18888", "SerializeToFileDescriptor failed, file:%s.", &real_path[0]);
       GELOGE(GRAPH_FAILED, "[Call][SerializeToFileDescriptor] failed, file:%s.", &real_path[0]);
       if (close(fd) != 0) {
-        REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
+        REPORT_CALL_ERROR("E18888", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
         GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", &real_path[0], GetStrError());
         return GRAPH_FAILED;
       }
       return GRAPH_FAILED;
     }
     if (close(fd) != 0) {
-      REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
+      REPORT_CALL_ERROR("E18888", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
       GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", &real_path[0], GetStrError());
       return GRAPH_FAILED;
     }
     if (!ret) {
-      REPORT_CALL_ERROR("E19999", "SerializeToFileDescriptor failed, file:%s.", &real_path[0]);
+      REPORT_CALL_ERROR("E18888", "SerializeToFileDescriptor failed, file:%s.", &real_path[0]);
       GELOGE(GRAPH_FAILED, "[Call][SerializeToFileDescriptor] failed, file:%s.", &real_path[0]);
       return GRAPH_FAILED;
     }
@@ -162,13 +162,13 @@ graphStatus Model::LoadFromFile(const std::string &file_name) {
   }
   const INT32 result = mmRealPath(file_name.c_str(), &real_path[0], MMPA_MAX_PATH);
   if (result != EN_OK) {
-    REPORT_CALL_ERROR("E19999", "get realpath failed for %s, error:%s.", file_name.c_str(), GetStrError());
+    REPORT_CALL_ERROR("E18888", "get realpath failed for %s, error:%s.", file_name.c_str(), GetStrError());
     GELOGE(GRAPH_FAILED, "[Get][RealPath] failed for %s, error:%s.", file_name.c_str(), GetStrError());
     return GRAPH_FAILED;
   }
   const int32_t fd = mmOpen(&real_path[0], M_RDONLY);
   if (fd < 0) {
-    REPORT_CALL_ERROR("E19999", "open file:%s failed, error:%s", &real_path[0], GetStrError());
+    REPORT_CALL_ERROR("E18888", "open file:%s failed, error:%s", &real_path[0], GetStrError());
     GELOGE(GRAPH_FAILED, "[Open][File] %s failed, error:%s", &real_path[0], GetStrError());
     return GRAPH_FAILED;
   }
@@ -176,22 +176,22 @@ graphStatus Model::LoadFromFile(const std::string &file_name) {
   ge::proto::ModelDef model_def;
   const bool ret = model_def.ParseFromFileDescriptor(fd);
   if (!ret) {
-    REPORT_CALL_ERROR("E19999", "ParseFromFileDescriptor failed, file:%s.", &real_path[0]);
+    REPORT_CALL_ERROR("E18888", "ParseFromFileDescriptor failed, file:%s.", &real_path[0]);
     GELOGE(GRAPH_FAILED, "[Call][ParseFromFileDescriptor] failed, file:%s.", &real_path[0]);
     if (mmClose(fd) != 0) {
-      REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
+      REPORT_CALL_ERROR("E18888", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
       GELOGE(GRAPH_FAILED, "[Close][File] %s fail. error:%s", &real_path[0], GetStrError());
       return GRAPH_FAILED;
     }
     return GRAPH_FAILED;
   }
   if (mmClose(fd) != 0) {
-    REPORT_CALL_ERROR("E19999", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
+    REPORT_CALL_ERROR("E18888", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
     GELOGE(GRAPH_FAILED, "[Close][File] %s fail. error:%s", &real_path[0], GetStrError());
     return GRAPH_FAILED;
   }
   if (!ret) {
-    REPORT_CALL_ERROR("E19999", "ParseFromFileDescriptor failed, file:%s.", &real_path[0]);
+    REPORT_CALL_ERROR("E18888", "ParseFromFileDescriptor failed, file:%s.", &real_path[0]);
     GELOGE(GRAPH_FAILED, "[Call][ParseFromFileDescriptor] failed, file:%s.", &real_path[0]);
     return GRAPH_FAILED;
   }

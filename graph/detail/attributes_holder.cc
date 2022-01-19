@@ -34,7 +34,7 @@ void AttrHolder::CopyFrom(const AttrHolder &holder) {
 
 graphStatus AttrHolder::SetAttr(const std::string &name, const AnyValue &value) {
   if (value.IsEmpty()) {
-    REPORT_INNER_ERROR("E19999", "param value is empty, check invalid, key of the attr:%s", name.c_str());
+    REPORT_INNER_ERROR("E18888", "param value is empty, check invalid, key of the attr:%s", name.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] value is empty, key of the attr is %s", name.c_str());
     return GRAPH_FAILED;
   }
@@ -45,7 +45,7 @@ graphStatus AttrHolder::SetAttr(const std::string &name, const AnyValue &value) 
 }
 graphStatus AttrHolder::TrySetAttr(const std::string &name, const AnyValue &value) {
   if (value.IsEmpty()) {
-    REPORT_INNER_ERROR("E19999", "param value is empty, check invalid, key of the attr:%s", name.c_str());
+    REPORT_INNER_ERROR("E18888", "param value is empty, check invalid, key of the attr:%s", name.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] value is empty, key of the attr is %s", name.c_str());
     return GRAPH_FAILED;
   }
@@ -99,7 +99,7 @@ void GeIrProtoHelper<proto::AttrDef>::InitDefault() {
   std::shared_ptr<proto::AttrDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::AttrDef>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create AttrDef failed.");
+    REPORT_CALL_ERROR("E18888", "create AttrDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][AttrDef] proto::AttrDef make shared failed");
     return;
   }
@@ -112,7 +112,7 @@ void GeIrProtoHelper<proto::TensorDef>::InitDefault() {
   std::shared_ptr<proto::TensorDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::TensorDef>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create TensorDef failed.");
+    REPORT_CALL_ERROR("E18888", "create TensorDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][TensorDef] proto::TensorDef make shared failed");
     return;
   }
@@ -125,7 +125,7 @@ void GeIrProtoHelper<proto::TensorDescriptor>::InitDefault() {
   std::shared_ptr<proto::TensorDescriptor> proto_owner;
   proto_owner = ComGraphMakeShared<proto::TensorDescriptor>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create TensorDescriptor failed.");
+    REPORT_CALL_ERROR("E18888", "create TensorDescriptor failed.");
     GELOGE(GRAPH_FAILED, "[Create][TensorDescriptor] proto::TensorDescriptor make shared failed");
     return;
   }
@@ -138,7 +138,7 @@ void GeIrProtoHelper<proto::ShapeDef>::InitDefault() {
   std::shared_ptr<proto::ShapeDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::ShapeDef>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create ShapeDef failed.");
+    REPORT_CALL_ERROR("E18888", "create ShapeDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][ShapeDef] proto::ShapeDef make shared failed");
     return;
   }
@@ -151,7 +151,7 @@ void GeIrProtoHelper<proto::NamedAttrs>::InitDefault() {
   std::shared_ptr<proto::NamedAttrs> proto_owner;
   proto_owner = ComGraphMakeShared<proto::NamedAttrs>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create NamedAttrs failed.");
+    REPORT_CALL_ERROR("E18888", "create NamedAttrs failed.");
     GELOGE(GRAPH_FAILED, "[Create][NamedAttrs] proto::NamedAttrs make shared failed");
     return;
   }
@@ -164,7 +164,7 @@ void GeIrProtoHelper<proto::ModelDef>::InitDefault() {
   std::shared_ptr<proto::ModelDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::ModelDef>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create ModelDef failed.");
+    REPORT_CALL_ERROR("E18888", "create ModelDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][ModelDef] proto::ModelDef make shared failed");
     return;
   }
@@ -177,7 +177,7 @@ void GeIrProtoHelper<proto::OpDef>::InitDefault() {
   std::shared_ptr<proto::OpDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::OpDef>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create OpDef failed.");
+    REPORT_CALL_ERROR("E18888", "create OpDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
     return;
   }
@@ -190,7 +190,7 @@ void GeIrProtoHelper<proto::GraphDef>::InitDefault() {
   std::shared_ptr<proto::GraphDef> proto_owner;
   proto_owner = ComGraphMakeShared<proto::GraphDef>();
   if (proto_owner == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create GraphDef failed.");
+    REPORT_CALL_ERROR("E18888", "create GraphDef failed.");
     GELOGE(GRAPH_FAILED, "[Create][GraphDef] proto::GraphDef make shared failed");
     return;
   }

@@ -779,7 +779,7 @@ graphStatus GeTensorDesc::GetValueRange(std::vector<std::pair<int64_t, int64_t>>
   for (const auto &ele : value_range) {
     // here must be only two elemenet because pair
     if (ele.size() != PAIR_ELEMENT_SIZE) {
-      REPORT_INNER_ERROR("E19999", "value_range must contain only 2 value but really is %zu", ele.size());
+      REPORT_INNER_ERROR("E18888", "value_range must contain only 2 value but really is %zu", ele.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] value_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
@@ -814,7 +814,7 @@ graphStatus GeTensorDesc::GetShapeRange(std::vector<std::pair<int64_t, int64_t>>
   for (const auto &ele : shape_range) {
     // here must be only two elemenet because pair
     if (ele.size() != PAIR_ELEMENT_SIZE) {
-      REPORT_INNER_ERROR("E19999", "shape_range must contain only 2 value but really is %zu", ele.size());
+      REPORT_INNER_ERROR("E18888", "shape_range must contain only 2 value but really is %zu", ele.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] shape_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
@@ -832,7 +832,7 @@ graphStatus GeTensorDesc::GetOriginShapeRange(std::vector<std::pair<int64_t, int
   for (const auto &ele : origin_shape_range) {
     // here must be only two elemenet because pair
     if (ele.size() != PAIR_ELEMENT_SIZE) {
-      REPORT_INNER_ERROR("E19999", "origin_shape_range must contain only 2 value but really is %zu", ele.size());
+      REPORT_INNER_ERROR("E18888", "origin_shape_range must contain only 2 value but really is %zu", ele.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] origin_shape_range must contain only 2 value but really is %zu", ele.size());
       return GRAPH_FAILED;
     }
@@ -984,7 +984,7 @@ graphStatus TensorDataImpl::SetData(const uint8_t *const data, const size_t size
   while (remain_size > SECUREC_MEM_MAX_LEN) {
     if (memcpy_s(ValueToPtr(dst_addr), SECUREC_MEM_MAX_LEN,
                  ValueToPtr(src_addr), SECUREC_MEM_MAX_LEN) != EOK) {
-      REPORT_CALL_ERROR("E19999", "memcpy failed, size = %lu", SECUREC_MEM_MAX_LEN);
+      REPORT_CALL_ERROR("E18888", "memcpy failed, size = %lu", SECUREC_MEM_MAX_LEN);
       GELOGE(INTERNAL_ERROR, "[Memcpy][Data] failed, size = %lu", SECUREC_MEM_MAX_LEN);
       return GRAPH_FAILED;
     }
@@ -994,7 +994,7 @@ graphStatus TensorDataImpl::SetData(const uint8_t *const data, const size_t size
   }
   if (memcpy_s(ValueToPtr(dst_addr), remain_size,
                ValueToPtr(src_addr), remain_size) != EOK) {
-    REPORT_CALL_ERROR("E19999", "memcpy failed, size=%zu", remain_size);
+    REPORT_CALL_ERROR("E18888", "memcpy failed, size=%zu", remain_size);
     GELOGE(INTERNAL_ERROR, "[Memcpy][Data] failed, size=%zu", remain_size);
     return GRAPH_FAILED;
   }
@@ -1013,7 +1013,7 @@ graphStatus TensorDataImpl::SetData(uint8_t *const data, const size_t size, cons
     return GRAPH_SUCCESS;
   }
   if (data == nullptr) {
-    REPORT_CALL_ERROR("E19999", "data is nullptr");
+    REPORT_CALL_ERROR("E18888", "data is nullptr");
     GELOGE(GRAPH_FAILED, "[Check][Param] data is nullptr");
     return GRAPH_FAILED;
   }
@@ -1035,7 +1035,7 @@ const uint8_t *TensorDataImpl::MallocAlignedPtr(const size_t size) {
   if (aligned_ptr_ == nullptr) {
     aligned_ptr_ = MakeShared<AlignedPtr>(length_);
     if (aligned_ptr_ == nullptr) {
-      REPORT_CALL_ERROR("E19999", "create AlignedPtr failed.");
+      REPORT_CALL_ERROR("E18888", "create AlignedPtr failed.");
       GELOGE(INTERNAL_ERROR, "[Create][AlignedPtr] failed.");
       return nullptr;
     }
@@ -1514,7 +1514,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t TensorUtils::GetWeightSi
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAddr(const ConstGeTensorPtr &tensor_ptr,
                                                                                    const uint8_t *const base) {
   if (tensor_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param tensor_ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param tensor_ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] tensor_ptr is null.");
     return nullptr;
   }
@@ -1523,7 +1523,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint8_t *TensorUtils::GetWeightAd
 
 uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, const uint8_t *const base) {
   if (base == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param base is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param base is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] base is null.");
     return nullptr;
   }

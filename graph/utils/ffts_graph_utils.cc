@@ -196,7 +196,7 @@ graphStatus FftsGraphUtils::SplitSubgraph(const ComputeGraphPtr &subgraph,
       const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
       const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, item.second, subgraph_name);
       if (new_subgraph == nullptr) {
-        REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());
+        REPORT_CALL_ERROR("E18888", "Build subgraph %s failed", subgraph_name.c_str());
         GELOGE(GRAPH_FAILED, "[Build][Subgraph] %s failed", subgraph_name.c_str());
         return GRAPH_FAILED;
       }
@@ -219,7 +219,7 @@ graphStatus FftsGraphUtils::BuildFftsPlusSubgraphWithAllNodes(const ComputeGraph
   const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
   const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, calc_nodes, subgraph_name);
   if (new_subgraph == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());
+    REPORT_CALL_ERROR("E18888", "Build subgraph %s failed", subgraph_name.c_str());
     GELOGE(GRAPH_FAILED, "[Build][Subgraph] %s failed", subgraph_name.c_str());
     return GRAPH_FAILED;
   }
@@ -292,18 +292,18 @@ void FftsGraphUtils::CollectEndNodeInSubgraph(const ComputeGraphPtr &subgraph,
 ComputeGraphPtr FftsGraphUtils::GetFftsPlusGraph(ComputeGraph &graph) {
   const auto &parent_node = graph.GetParentNode();
   if (parent_node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "parent node of graph %s is null", graph.GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "parent node of graph %s is null", graph.GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] parent node of graph %s is null", graph.GetName().c_str());
     return nullptr;
   }
   std::vector<ComputeGraphPtr> subgraphs;
   if (NodeUtils::GetDirectSubgraphs(parent_node, subgraphs) != GRAPH_SUCCESS) {
-    REPORT_INNER_ERROR("E19999", "Get subgraph failed, node:%s", parent_node->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get subgraph failed, node:%s", parent_node->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Subgraph] failed, node:%s", parent_node->GetName().c_str());
     return nullptr;
   }
   if (subgraphs.size() != 1U) {
-    REPORT_INNER_ERROR("E19999", "Number of subgraphs in parent_node:%s is %zu, graph:%s",
+    REPORT_INNER_ERROR("E18888", "Number of subgraphs in parent_node:%s is %zu, graph:%s",
                        parent_node->GetName().c_str(), subgraphs.size(), graph.GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] Number of subgraphs in parent_node:%s is %zu, graph:%s",
            parent_node->GetName().c_str(), subgraphs.size(), graph.GetName().c_str());
@@ -315,7 +315,7 @@ ComputeGraphPtr FftsGraphUtils::GetFftsPlusGraph(ComputeGraph &graph) {
 graphStatus FftsGraphUtils::SetAttrForFftsPlusSubgraph(const ComputeGraphPtr &subgraph) {
   const auto &parent_node = subgraph->GetParentNode();
   if (parent_node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Parent node of subgraph %s is null", subgraph->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Parent node of subgraph %s is null", subgraph->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] Parent node of subgraph %s is null", subgraph->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -345,7 +345,7 @@ graphStatus FftsGraphUtils::GraphPartition(ComputeGraph &graph,
   GE_CHK_STATUS_RET(Calculate(ffts_plus_graph, calc_func, node_value, graph_value),
                     "[Calculate][Value] failed for graph %s", ffts_plus_graph->GetName().c_str());
   if (!IsValueValid(ffts_plus_graph, upper_limit, node_value, graph_value)) {
-    REPORT_CALL_ERROR("E19999", "Check value invalid");
+    REPORT_CALL_ERROR("E18888", "Check value invalid");
     GELOGE(GRAPH_FAILED, "[Check][Value] invalid");
     return GRAPH_FAILED;
   }
@@ -388,7 +388,7 @@ graphStatus FftsGraphUtils::Calculate(const ComputeGraphPtr &graph,
                                       std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value,
                                       const uint32_t recursive_depth) {
   if (recursive_depth >= kMaxiumRecursionDepth) {
-    REPORT_INNER_ERROR("E19999", "param depth:%u >= %u(allow max subgraphs)", recursive_depth, kMaxiumRecursionDepth);
+    REPORT_INNER_ERROR("E18888", "param depth:%u >= %u(allow max subgraphs)", recursive_depth, kMaxiumRecursionDepth);
     GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%u > %u(allow max subgraphs)",
            recursive_depth, kMaxiumRecursionDepth);
     return GRAPH_FAILED;
@@ -402,7 +402,7 @@ graphStatus FftsGraphUtils::Calculate(const ComputeGraphPtr &graph,
     } else {
       cur_node_value = Calculate(node, calc_func, node_value, graph_value, recursive_depth);
       if (cur_node_value.empty()) {
-        REPORT_INNER_ERROR("E19999", "Calculate value for func node %s failed", node->GetName().c_str());
+        REPORT_INNER_ERROR("E18888", "Calculate value for func node %s failed", node->GetName().c_str());
         GELOGE(GRAPH_FAILED, "[Calculate][Value] for func node %s failed", node->GetName().c_str());
         return GRAPH_FAILED;
       }
@@ -411,7 +411,7 @@ graphStatus FftsGraphUtils::Calculate(const ComputeGraphPtr &graph,
     if (cur_graph_value.empty()) {
       cur_graph_value = cur_node_value;
     } else if (cur_graph_value.size() != cur_node_value.size()) {
-      REPORT_INNER_ERROR("E19999", "Value size not match, value size of graph %s is %zu, "
+      REPORT_INNER_ERROR("E18888", "Value size not match, value size of graph %s is %zu, "
                                    "value size of node %s is %zu", graph->GetName().c_str(), cur_graph_value.size(),
                          node->GetName().c_str(), cur_node_value.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] Value size not match, value size of graph %s is %zu, "
@@ -433,7 +433,7 @@ std::vector<uint32_t> FftsGraphUtils::Calculate(const NodePtr &node, const CalcF
                                                 const uint32_t recursive_depth) {
   std::vector<ComputeGraphPtr> subgraphs;
   if (NodeUtils::GetDirectSubgraphs(node, subgraphs) != GRAPH_SUCCESS) {
-    REPORT_INNER_ERROR("E19999", "Get subgraphs failed");
+    REPORT_INNER_ERROR("E18888", "Get subgraphs failed");
     GELOGE(GRAPH_FAILED, "[Get][Subgraphs] failed");
     return {};
   }
@@ -441,7 +441,7 @@ std::vector<uint32_t> FftsGraphUtils::Calculate(const NodePtr &node, const CalcF
   for (const auto &subgraph : subgraphs) {
     if (graph_value.count(subgraph) == 0U) {
       if (Calculate(subgraph, calc_func, node_value, graph_value, recursive_depth + 1U) != GRAPH_SUCCESS) {
-        REPORT_INNER_ERROR("E19999", "Calculate value failed, graph %s, parent_node:%s",
+        REPORT_INNER_ERROR("E18888", "Calculate value failed, graph %s, parent_node:%s",
                            subgraph->GetName().c_str(), node->GetName().c_str());
         GELOGE(GRAPH_FAILED, "[Calculate][Value] failed, graph %s, parent_node:%s",
                subgraph->GetName().c_str(), node->GetName().c_str());
@@ -449,7 +449,7 @@ std::vector<uint32_t> FftsGraphUtils::Calculate(const NodePtr &node, const CalcF
       }
     }
     if (graph_value.find(subgraph) == graph_value.end()) {
-      REPORT_INNER_ERROR("E19999", "Find value failed for graph %s", subgraph->GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "Find value failed for graph %s", subgraph->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Find][Value] failed for graph %s", subgraph->GetName().c_str());
       return {};
     }
@@ -457,7 +457,7 @@ std::vector<uint32_t> FftsGraphUtils::Calculate(const NodePtr &node, const CalcF
     if (cur_node_value.empty()) {
       cur_node_value = subgraph_value;
     } else if (cur_node_value.size() != subgraph_value.size()) {
-      REPORT_INNER_ERROR("E19999", "Value size not match, value size of node %s is %zu, value size of subgraph %s "
+      REPORT_INNER_ERROR("E18888", "Value size not match, value size of node %s is %zu, value size of subgraph %s "
                                    "is %zu", node->GetName().c_str(), cur_node_value.size(),
                          subgraph->GetName().c_str(), subgraph_value.size());
       GELOGE(GRAPH_FAILED, "[Check][Param] Value size not match, value size of node %s is %zu, "
@@ -478,13 +478,13 @@ bool FftsGraphUtils::IsValueValid(const ComputeGraphPtr &graph, const std::vecto
                                   const std::map<ComputeGraphPtr, std::vector<uint32_t>> &graph_value) {
   std::vector<ComputeGraphPtr> subgraphs;
   if (GraphUtils::GetSubgraphsRecursively(graph, subgraphs) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Get subgraphs failed, graph:%s", graph->GetName().c_str());
+    REPORT_CALL_ERROR("E18888", "Get subgraphs failed, graph:%s", graph->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Subgraphs] failed, graph:%s", graph->GetName().c_str());
     return false;
   }
   for (const auto &subgraph : subgraphs) {
     if (graph_value.count(subgraph) == 0U) {
-      REPORT_INNER_ERROR("E19999", "Find graph value failed, graph:%s", subgraph->GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "Find graph value failed, graph:%s", subgraph->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] Find graph value failed, graph:%s", subgraph->GetName().c_str());
       return false;
     }
@@ -492,7 +492,7 @@ bool FftsGraphUtils::IsValueValid(const ComputeGraphPtr &graph, const std::vecto
     CollectCalcNodeInSubgraph(subgraph, calc_nodes);
     for (const auto &node : calc_nodes) {
       if (node_value.count(node) == 0U) {
-        REPORT_INNER_ERROR("E19999", "Find node value failed, node:%s", node->GetName().c_str());
+        REPORT_INNER_ERROR("E18888", "Find node value failed, node:%s", node->GetName().c_str());
         GELOGE(GRAPH_FAILED, "[Check][Param] Find node value failed, node:%s", node->GetName().c_str());
         return false;
       }
@@ -503,7 +503,7 @@ bool FftsGraphUtils::IsValueValid(const ComputeGraphPtr &graph, const std::vecto
     return pair_item.second.size() != upper_limit.size();
   };
   if (std::find_if(node_value.begin(), node_value.end(), is_node_value_match) != node_value.end()) {
-    REPORT_INNER_ERROR("E19999", "Node value size not match");
+    REPORT_INNER_ERROR("E18888", "Node value size not match");
     GELOGE(GRAPH_FAILED, "[Check][Param] Node value size not match");
     return false;
   }
@@ -512,7 +512,7 @@ bool FftsGraphUtils::IsValueValid(const ComputeGraphPtr &graph, const std::vecto
     return pair_item.second.size() != upper_limit.size();
   };
   if (std::find_if(graph_value.begin(), graph_value.end(), is_graph_value_match) != graph_value.end()) {
-    REPORT_INNER_ERROR("E19999", "Graph value size not match");
+    REPORT_INNER_ERROR("E18888", "Graph value size not match");
     GELOGE(GRAPH_FAILED, "[Check][Param] Graph value size not match");
     return false;
   }
@@ -526,7 +526,7 @@ graphStatus FftsGraphUtils::PartitionGraphWithLimit(const ComputeGraphPtr &graph
                                                     const std::vector<uint32_t> &upper_limit,
                                                     const uint32_t recursive_depth) {
   if (recursive_depth >= kMaxiumRecursionDepth) {
-    REPORT_INNER_ERROR("E19999", "param depth:%u >= %u(allow max subgraphs)", recursive_depth, kMaxiumRecursionDepth);
+    REPORT_INNER_ERROR("E18888", "param depth:%u >= %u(allow max subgraphs)", recursive_depth, kMaxiumRecursionDepth);
     GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%u > %u(allow max subgraphs)",
            recursive_depth, kMaxiumRecursionDepth);
     return GRAPH_FAILED;
@@ -569,7 +569,7 @@ graphStatus FftsGraphUtils::PartitionGraphWithLimit(const ComputeGraphPtr &graph
     const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
     const auto &subgraph = GraphUtils::BuildSubgraphWithNodes(graph, item.second, subgraph_name);
     if (subgraph == nullptr) {
-      REPORT_CALL_ERROR("E19999", "Build subgraph %s failed", subgraph_name.c_str());
+      REPORT_CALL_ERROR("E18888", "Build subgraph %s failed", subgraph_name.c_str());
       GELOGE(GRAPH_FAILED, "[Build][Subgraph] %s failed", subgraph_name.c_str());
       return GRAPH_FAILED;
     }

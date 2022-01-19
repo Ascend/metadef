@@ -83,7 +83,7 @@ bool IsComputableOp(const NodePtr &node) {
 
 graphStatus NodeUtils::ClearInDataAnchor(const NodePtr &node_ptr, const InDataAnchorPtr &in_data_anchor) {
   GE_CHK_BOOL_EXEC((node_ptr != nullptr) && (node_ptr->impl_ != nullptr) && (in_data_anchor != nullptr),
-                   REPORT_INNER_ERROR("E19999", "param node or in_data_anchor is nullptr, check invalid.");
+                   REPORT_INNER_ERROR("E18888", "param node or in_data_anchor is nullptr, check invalid.");
                    return GRAPH_FAILED, "[Check][Param] node or in_data_anchor is nullptr");
   bool find_flag = false;
   uint32_t index = 0U;
@@ -112,17 +112,17 @@ graphStatus NodeUtils::ClearInDataAnchor(const NodePtr &node_ptr, const InDataAn
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::SetAllAnchorStatus(const NodePtr &node_ptr) {
-  GE_CHK_BOOL_EXEC(node_ptr != nullptr, REPORT_INNER_ERROR("E19999", "param node_ptr is nullptr, check invalid");
+  GE_CHK_BOOL_EXEC(node_ptr != nullptr, REPORT_INNER_ERROR("E18888", "param node_ptr is nullptr, check invalid");
                    return GRAPH_FAILED, "[Check][Param] node is nullptr");
   GE_CHK_BOOL_EXEC(SetAllAnchorStatus(*node_ptr) == GRAPH_SUCCESS,
-                   REPORT_CALL_ERROR("E19999", "SetAllAnchorStatus failed, node:%s", node_ptr->GetName().c_str());
+                   REPORT_CALL_ERROR("E18888", "SetAllAnchorStatus failed, node:%s", node_ptr->GetName().c_str());
                    return GRAPH_FAILED, "[Set][AllAnchorStatus] failed, node:%s", node_ptr->GetName().c_str());
   return GRAPH_SUCCESS;
 }
 
 graphStatus NodeUtils::SetAllAnchorStatus(Node &node) {
   if (node.impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Param node impl is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "Param node impl is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Node impl is nullptr.");
     return GRAPH_FAILED;
   }
@@ -131,14 +131,14 @@ graphStatus NodeUtils::SetAllAnchorStatus(Node &node) {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool NodeUtils::IsAnchorStatusSet(const NodePtr &node_ptr) {
-  GE_CHK_BOOL_EXEC(node_ptr != nullptr, REPORT_INNER_ERROR("E19999", "param node_ptr is nullptr, check invalid");
+  GE_CHK_BOOL_EXEC(node_ptr != nullptr, REPORT_INNER_ERROR("E18888", "param node_ptr is nullptr, check invalid");
                    return false, "[Check][Param] node is nullptr");
   return IsAnchorStatusSet(*node_ptr);
 }
 
 bool NodeUtils::IsAnchorStatusSet(const Node &node) {
   if (node.impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Param node impl is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "Param node impl is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Node impl is nullptr.");
     return false;
   }
@@ -159,22 +159,22 @@ graphStatus NodeUtils::MoveOutputEdges(const NodePtr &origin_node, const NodePtr
   for (size_t i = 0UL; i < origin_out_data_anchors_size; ++i) {
     for (const auto &peer_anchor : origin_out_data_anchors.at(i)->GetPeerInDataAnchors()) {
       GE_CHK_BOOL_EXEC(origin_out_data_anchors.at(i)->Unlink(peer_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "unlink peer_dataanchor failed, node:%s",
+                       REPORT_CALL_ERROR("E18888", "unlink peer_dataanchor failed, node:%s",
                                          origin_node->GetName().c_str());
                        continue, "[Unlink][PeerAnchor] failed, node:%s", origin_node->GetName().c_str());
       GE_CHK_BOOL_EXEC(new_out_data_anchors.at(i)->LinkTo(peer_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "LinkTo peer_dataanchor failed, node:%s",
+                       REPORT_CALL_ERROR("E18888", "LinkTo peer_dataanchor failed, node:%s",
                                          new_node->GetName().c_str());
                        continue, "[LinkTo][PeerAnchor] failed, node:%s", new_node->GetName().c_str());
     }
 
     for (const auto &peer_anchor : origin_out_data_anchors.at(i)->GetPeerInControlAnchors()) {
       GE_CHK_BOOL_EXEC(origin_out_data_anchors.at(i)->Unlink(peer_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "unlink peer_controlanchor failed, node:%s",
+                       REPORT_CALL_ERROR("E18888", "unlink peer_controlanchor failed, node:%s",
                                          origin_node->GetName().c_str());
                        continue, "[Unlink][PeerAnchor] failed, node:%s", origin_node->GetName().c_str());
       GE_CHK_BOOL_EXEC(new_out_data_anchors.at(i)->LinkTo(peer_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "LinkTo peer_controlanchor failed, node:%s",
+                       REPORT_CALL_ERROR("E18888", "LinkTo peer_controlanchor failed, node:%s",
                                          new_node->GetName().c_str());
                        continue, "[LinkTo][PeerAnchor] failed, node:%s", new_node->GetName().c_str());
     }
@@ -186,7 +186,7 @@ graphStatus NodeUtils::MoveOutputEdges(const NodePtr &origin_node, const NodePtr
   GE_CHECK_NOTNULL(new_out_control_anchor);
   for (const auto &peer_anchor : origin_out_control_anchor->GetPeerInControlAnchors()) {
     GE_CHK_BOOL_EXEC(new_out_control_anchor->LinkTo(peer_anchor) == GRAPH_SUCCESS,
-                     REPORT_CALL_ERROR("E19999", "linkto peer_anchor from %s to %s failed.",
+                     REPORT_CALL_ERROR("E18888", "linkto peer_anchor from %s to %s failed.",
                                        new_out_control_anchor->GetOwnerNode()->GetName().c_str(),
                                        peer_anchor->GetOwnerNode()->GetName().c_str());
                      continue, "[LinkTo][PeerAnchor] from %s to %s failed",
@@ -195,7 +195,7 @@ graphStatus NodeUtils::MoveOutputEdges(const NodePtr &origin_node, const NodePtr
   }
   for (const auto &peer_anchor : origin_out_control_anchor->GetPeerInDataAnchors()) {
     GE_CHK_BOOL_EXEC(new_out_control_anchor->LinkTo(peer_anchor) == GRAPH_SUCCESS,
-                     REPORT_CALL_ERROR("E19999", "linkto peer_anchor from %s to %s failed.",
+                     REPORT_CALL_ERROR("E18888", "linkto peer_anchor from %s to %s failed.",
                                        new_out_control_anchor->GetOwnerNode()->GetName().c_str(),
                                        peer_anchor->GetOwnerNode()->GetName().c_str());
                      continue, "[LinkTo][PeerAnchor] from %s to %s failed",
@@ -215,7 +215,7 @@ bool NodeUtils::IsConst(const Node &node) {
 
 void NodeUtils::UpdateIsInputConst(const NodePtr &node_ptr) {
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param node_ptr is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param node_ptr is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] node is null");
     return;
   }
@@ -253,7 +253,7 @@ void NodeUtils::UpdateIsInputConst(Node &node) {
     }
   }
   if (node.GetOpDesc() == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node has no opdesc.");
+    REPORT_INNER_ERROR("E18888", "node has no opdesc.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Node get opdesc is nullptr");
     return;
   }
@@ -272,7 +272,7 @@ void NodeUtils::UnlinkAll(const Node &node) {
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
   }
@@ -281,7 +281,7 @@ graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num
   const auto &op_desc = node->GetOpDesc();
   for (size_t i = op_desc->GetInputsSize(); i < num; ++i) {
     if (op_desc->AddInputDesc(data_desc) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "AddInputDesc failed, op:%s", op_desc->GetName().c_str());
+      REPORT_CALL_ERROR("E18888", "AddInputDesc failed, op:%s", op_desc->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Add][InputDesc] failed, op:%s", op_desc->GetName().c_str());
       return GRAPH_FAILED;
     }
@@ -290,7 +290,7 @@ graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num
   for (size_t i = node->impl_->in_data_anchors_.size(); i < num; ++i) {
     const auto anchor = ComGraphMakeShared<InDataAnchor>(node, i);
     if (anchor == nullptr) {
-      REPORT_CALL_ERROR("E19999", "Current in data anchor is null, make shared_ptr failed.");
+      REPORT_CALL_ERROR("E18888", "Current in data anchor is null, make shared_ptr failed.");
       GELOGE(OUT_OF_MEMORY, "[Create][InDataAnchor] Current in data anchor is null, make shared_ptr failed.");
       return GRAPH_FAILED;
     }
@@ -303,7 +303,7 @@ graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param node is null, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
   }
@@ -331,7 +331,7 @@ graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, const uint32_t num
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Input node is null, check invalid.");
+    REPORT_INNER_ERROR("E18888", "Input node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
   }
@@ -340,7 +340,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, const uint32_t nu
   const OpDescPtr &op_desc = node->GetOpDesc();
   for (size_t i = op_desc->GetOutputsSize(); i < num; ++i) {
     if (op_desc->AddOutputDesc(data_desc) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "Add output desc failed, op:%s", op_desc->GetName().c_str());
+      REPORT_CALL_ERROR("E18888", "Add output desc failed, op:%s", op_desc->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Add][OutputDesc] failed, op:%s", op_desc->GetName().c_str());
       return GRAPH_FAILED;
     }
@@ -349,7 +349,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, const uint32_t nu
   for (size_t i = node->impl_->out_data_anchors_.size(); i < num; ++i) {
     const auto anchor = ComGraphMakeShared<OutDataAnchor>(node, i);
     if (anchor == nullptr) {
-      REPORT_CALL_ERROR("E19999", "Current out data anchor is null, make shared_ptr failed.");
+      REPORT_CALL_ERROR("E18888", "Current out data anchor is null, make shared_ptr failed.");
       GELOGE(OUT_OF_MEMORY, "[Create][OutDataAnchor] Current out data anchor is null, make shared_ptr failed.");
       return GRAPH_FAILED;
     }
@@ -362,7 +362,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, const uint32_t nu
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::RemoveOutputAnchor(const NodePtr &node, const uint32_t num) {
   if (node == nullptr || node->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Input node is null, check invalid");
+    REPORT_INNER_ERROR("E18888", "Input node is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
   }
@@ -415,7 +415,7 @@ graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unkn
     GELOGD("src graph is %s, owner graph name is %s", src_graph->GetName().c_str(), owner_graph->GetName().c_str());
     const auto root_graph = GraphUtils::FindRootGraph(src_graph);
     if (root_graph == nullptr) {
-      REPORT_INNER_ERROR("E19999", "node:%s has no root graph.", node.GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "node:%s has no root graph.", node.GetName().c_str());
       GE_LOGE("[Get][Graph] Node %s gets null root graph", node.GetName().c_str());
       return GRAPH_PARAM_INVALID;
     }
@@ -425,7 +425,7 @@ graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unkn
       for (const auto &node_ptr : sub_graph->GetDirectNode()) {
         const auto status = GetNodeUnknownShapeStatus(*node_ptr, is_unknow);
         if (status != GRAPH_SUCCESS) {
-          REPORT_CALL_ERROR("E19999", "GetNodeUnknownShapeStatus failed, node:%s, status:%d",
+          REPORT_CALL_ERROR("E18888", "GetNodeUnknownShapeStatus failed, node:%s, status:%d",
                             node_ptr->GetName().c_str(), status);
           GE_LOGE("[Get][NodeUnknownShapeStatus] failed! node:%s, status:%d", node_ptr->GetName().c_str(), status);
           return status;
@@ -455,14 +455,14 @@ std::string NodeUtils::GetNodeType(const NodePtr &node) {
 
 graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs) {
   if (node == nullptr || node->GetOpDesc() == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node or op_desc is null");
+    REPORT_INNER_ERROR("E18888", "node or op_desc is null");
     GELOGE(GRAPH_FAILED, "[Check][Param] node or op_desc is null");
     return GRAPH_FAILED;
   }
 
   const auto &root_graph = GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
   if (root_graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Failed to find root graph from node %s ", node->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Failed to find root graph from node %s ", node->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Graph] Failed to find root graph from node %s ", node->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -493,7 +493,7 @@ ComputeGraphPtr NodeUtils::GetSubgraph(const Node &node, const uint32_t index) {
 
 graphStatus NodeUtils::SetSubgraph(Node &node, const uint32_t index, const ComputeGraphPtr &subgraph) {
   if (subgraph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Failed to set subgraph to node %s index %u, null subgraph",
+    REPORT_INNER_ERROR("E18888", "Failed to set subgraph to node %s index %u, null subgraph",
                        node.GetName().c_str(), index);
     GE_LOGE("[Check][Param] Failed to set subgraph to node %s index %u, null subgraph", node.GetName().c_str(), index);
     return GRAPH_PARAM_INVALID;
@@ -504,13 +504,13 @@ graphStatus NodeUtils::SetSubgraph(Node &node, const uint32_t index, const Compu
   }
   const auto root_graph = GraphUtils::FindRootGraph(node.GetOwnerComputeGraph());
   if (root_graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Failed to add subgraph to node %s, null root graph", node.GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Failed to add subgraph to node %s, null root graph", node.GetName().c_str());
     GE_LOGE("[Get][Graph] Failed to add subgraph to node %s, null root graph", node.GetName().c_str());
     return GRAPH_PARAM_INVALID;
   }
   const auto ret = op_desc->SetSubgraphInstanceName(index, subgraph->GetName());
   if (ret != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Failed to set subgraph to node %s index %u", node.GetName().c_str(), index);
+    REPORT_CALL_ERROR("E18888", "Failed to set subgraph to node %s index %u", node.GetName().c_str(), index);
     GE_LOGE("[Set][Name] Failed to set subgraph to node %s index %u", node.GetName().c_str(), index);
     return ret;
   }
@@ -912,13 +912,13 @@ NodePtr NodeUtils::GetInNodeCrossSubgraph(const NodePtr &node) {
 
 NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The OpDesc ptr should not be null.");
+    REPORT_INNER_ERROR("E18888", "The OpDesc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The OpDesc ptr should not be null.");
     return nullptr;
   }
   const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
   if (node_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create node failed.");
+    REPORT_CALL_ERROR("E18888", "create node failed.");
     GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!");
     return nullptr;
   }
@@ -997,7 +997,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
 graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char_t *const group_name) {
   if (group_name == nullptr) {
     GE_LOGE("[Check][Parameter]Get nullptr when set parallel group on node:%s", node.GetName().c_str());
-    REPORT_INNER_ERROR("E19999", "Get nullptr when set parallel group on node:%s", node.GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get nullptr when set parallel group on node:%s", node.GetName().c_str());
     return GRAPH_FAILED;
   }
   std::string current_group;
@@ -1006,7 +1006,7 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char_t *const grou
     if (new_group != current_group) {
       GE_LOGE("[Compare][Attr]Failed to set parallel group name %s on node %s, group conflict with existing %s",
               new_group.c_str(), node.GetName().c_str(), group_name);
-      REPORT_INNER_ERROR("E19999", "Failed to set parallel group name %s on node %s, group conflict with existing %s",
+      REPORT_INNER_ERROR("E18888", "Failed to set parallel group name %s on node %s, group conflict with existing %s",
                          new_group.c_str(), node.GetName().c_str(), group_name);
       return GRAPH_FAILED;
     }
@@ -1015,7 +1015,7 @@ graphStatus NodeUtils::SetNodeParallelGroup(Node &node, const char_t *const grou
   if (!AttrUtils::SetStr(node.GetOpDesc(), ATTR_NAME_PARALLEL_GROUP, new_group)) {
     GE_LOGE("[Set][Attr] Failed to set parallel group name %s on node %s",
             group_name, node.GetName().c_str());
-    REPORT_INNER_ERROR("E19999", "Failed to set parallel group name %s on node %s",
+    REPORT_INNER_ERROR("E18888", "Failed to set parallel group name %s on node %s",
                        group_name, node.GetName().c_str());
     return GRAPH_FAILED;
   }

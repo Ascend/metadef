@@ -108,7 +108,7 @@ static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_
   element_cnt = 1;
   for (const int64_t dim : dims) {
     if (CheckMultiplyOverflowInt64(element_cnt, dim)) {
-      REPORT_INNER_ERROR("E19999", "result will overflow when multiplying %ld and %ld.", element_cnt, dim);
+      REPORT_INNER_ERROR("E18888", "result will overflow when multiplying %ld and %ld.", element_cnt, dim);
       GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcElementCntByDims failed, when multiplying %ld and %ld.",
              element_cnt, dim);
       return GRAPH_FAILED;
@@ -159,7 +159,7 @@ static graphStatus CalcElementCntOfNc1hwc0(const std::vector<int64_t> &dims, Dat
   if (dims.size() == kNc1hwc0CalcByDimsSize) {
     return CalcElementCntByDims(dims, element_cnt);
   } else if (dims.size() != kDimSize4d) {
-    REPORT_INNER_ERROR("E19999", "CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.",
+    REPORT_INNER_ERROR("E18888", "CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.",
                        dims.size(), kDimSize4d, kNc1hwc0CalcByDimsSize);
     GELOGE(GRAPH_FAILED, "[Check][Param] CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.",
            dims.size(), kDimSize4d, kNc1hwc0CalcByDimsSize);
@@ -192,7 +192,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
   const INT32 res = mmGetEnv("PARSER_PRIORITY", &parser_priority[0], static_cast<uint32_t>(MMPA_MAX_PATH));
   if ((res == EN_OK) && (std::string(parser_priority) == "cce")) {
     if (dims.size() != kDimSize4d) {
-      REPORT_INNER_ERROR("E19999", "CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
+      REPORT_INNER_ERROR("E18888", "CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
                          dims.size(), kDimSize4d);
       GELOGE(GRAPH_FAILED, "[Check][Param] CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
              dims.size(), kDimSize4d);
@@ -226,7 +226,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
     const int64_t cube_elem_cnt = c0 * static_cast<int64_t>(kTheCubeSize);
 
     if (CheckMultiplyOverflowInt64(nc_cnt, vc_cnt)) {
-      REPORT_INNER_ERROR("E19999", "The multiplication of %ld and %ld will overflow.", nc_cnt, vc_cnt);
+      REPORT_INNER_ERROR("E18888", "The multiplication of %ld and %ld will overflow.", nc_cnt, vc_cnt);
       GELOGE(GRAPH_FAILED, "[Check][Overflow] The multiplication of %ld and %ld is overflow.", nc_cnt, vc_cnt);
       return GRAPH_FAILED;
     }
@@ -234,7 +234,7 @@ static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, Da
     const int64_t c_cnt = nc_cnt * vc_cnt;
 
     if (CheckMultiplyOverflowInt64(c_cnt, cube_elem_cnt)) {
-      REPORT_INNER_ERROR("E19999", "The multiplication of %ld and %ld will overflow.", c_cnt, cube_elem_cnt);
+      REPORT_INNER_ERROR("E18888", "The multiplication of %ld and %ld will overflow.", c_cnt, cube_elem_cnt);
       GELOGE(GRAPH_FAILED, "[Check][Overflow] The multiplication of %ld and %ld is overflow.", c_cnt, cube_elem_cnt);
       return GRAPH_FAILED;
     }
@@ -258,7 +258,7 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
       output_dims = std::move(max_shape_list);
       return GRAPH_SUCCESS;
     }
-    REPORT_INNER_ERROR("E19999", "invalid input shape range.");
+    REPORT_INNER_ERROR("E18888", "invalid input shape range.");
     GELOGE(PARAM_INVALID, "[Check][Param]tensor invalid max_shape_list size[%zu], dim size[%zu].",
            max_shape_list.size(), dims.size());
     return PARAM_INVALID;
@@ -267,12 +267,12 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
   std::vector<std::pair<int64_t, int64_t>> range;
   const graphStatus graph_status = tensor_desc.GetShapeRange(range);
   if (graph_status != GRAPH_SUCCESS) {
-    REPORT_INNER_ERROR("E19999", "Get shape range failed.");
+    REPORT_INNER_ERROR("E18888", "Get shape range failed.");
     GELOGE(PARAM_INVALID, "[Check][Param] GetShapeRange failed.");
     return graph_status;
   }
   if (dims.size() != range.size()) {
-    REPORT_INNER_ERROR("E19999", "Error shape range size.");
+    REPORT_INNER_ERROR("E18888", "Error shape range size.");
     GELOGE(PARAM_INVALID, "[Check][Param] size not matched dims_size[%zu] range_size[%zu].", dims.size(), range.size());
     return PARAM_INVALID;
   }
@@ -350,7 +350,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, const 
       graph_status = CalcElementCntByDims(dims, element_cnt);
       break;
     default:
-      REPORT_INNER_ERROR("E19999", "unsupported format, format=%d(%s).", format, format_str.c_str());
+      REPORT_INNER_ERROR("E18888", "unsupported format, format=%d(%s).", format, format_str.c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] unsupported format, format=%d(%s).", format, format_str.c_str());
       graph_status = GRAPH_FAILED;
       break;
@@ -363,7 +363,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, const 
         " data_type=%d(%s), element_cnt=%ld.",
         format, format_str.c_str(), data_type, type_str.c_str(), element_cnt);
   } else {
-    REPORT_INNER_ERROR("E19999", "CalcTensorElementCnt failed, format=%d(%s), data_type=%d(%s).",
+    REPORT_INNER_ERROR("E18888", "CalcTensorElementCnt failed, format=%d(%s), data_type=%d(%s).",
                        format, format_str.c_str(), data_type, type_str.c_str());
     GELOGE(GRAPH_FAILED, "[Calc][TensorElementCnt] failed, format=%d(%s), data_type=%d(%s).",
            format, format_str.c_str(), data_type, type_str.c_str());
@@ -408,7 +408,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
     uint32_t type_size = 0U;
     const bool result = TypeUtils::GetDataTypeLength(data_type, type_size);
     if (!result) {
-      REPORT_CALL_ERROR("E19999", "GetDataTypeLength failed, data_type=%d(%s).", data_type, type_str.c_str());
+      REPORT_CALL_ERROR("E18888", "GetDataTypeLength failed, data_type=%d(%s).", data_type, type_str.c_str());
       GELOGE(GRAPH_FAILED, "[Get][DataTypeLength] failed, data_type=%d(%s).", data_type, type_str.c_str());
       return GRAPH_FAILED;
     }
@@ -483,7 +483,7 @@ TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_t
   }
 
   if (output_mem_size < 0) {
-    REPORT_INNER_ERROR("E19999",
+    REPORT_INNER_ERROR("E18888",
                        "After calc concat tensor memory size, output_mem_size = %ld, out of data range [0, %ld]",
                        output_mem_size, std::numeric_limits<int64_t>::max());
     GELOGE(GRAPH_FAILED, "[Check][Param] After calc concat tensor memory size, "

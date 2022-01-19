@@ -116,7 +116,7 @@ static Status CheckInt64MulOverflow(const int64_t a, const int64_t b) {
 
 int64_t GetSizeInBytes(int64_t element_count, DataType data_type) {
   if (element_count < 0) {
-    REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, element_count:%ld less than 0.", element_count);
+    REPORT_INNER_ERROR("E18888", "GetSizeInBytes failed, element_count:%ld less than 0.", element_count);
     GELOGE(GRAPH_FAILED, "[Check][param]GetSizeInBytes failed, element_count:%ld less than 0.", element_count);
     return -1;
   }
@@ -127,7 +127,7 @@ int64_t GetSizeInBytes(int64_t element_count, DataType data_type) {
   } else if (type_size > kDataTypeSizeBitOffset) {
     const auto bit_size = type_size - kDataTypeSizeBitOffset;
     if (CheckInt64MulOverflow(element_count, static_cast<int64_t>(bit_size)) == FAILED) {
-      REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
+      REPORT_INNER_ERROR("E18888", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
                          element_count, bit_size);
       GELOGE(GRAPH_FAILED, "[Check][overflow]GetSizeInBytes failed, when multiplying %ld and %d.",
              element_count, bit_size);
@@ -136,7 +136,7 @@ int64_t GetSizeInBytes(int64_t element_count, DataType data_type) {
     return CeilDiv(element_count * bit_size, kBitNumOfOneByte);
   } else {
     if (CheckInt64MulOverflow(element_count, static_cast<int64_t>(type_size)) == FAILED) {
-      REPORT_INNER_ERROR("E19999", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
+      REPORT_INNER_ERROR("E18888", "GetSizeInBytes failed, int64 mul overflow %ld, %d.",
                          element_count, type_size);
       GELOGE(GRAPH_FAILED, "[Check][overflow]GetSizeInBytes failed, when multiplying %ld and %d.",
              element_count, type_size);

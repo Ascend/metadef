@@ -43,7 +43,7 @@ graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int32_t output_i
 
 graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int32_t output_id, GeTensorPtr &tensor) const {
   if (output_id < 0) {
-    REPORT_INNER_ERROR("E19999", "Invalid output index: %d", output_id);
+    REPORT_INNER_ERROR("E18888", "Invalid output index: %d", output_id);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid output index: %d", output_id);
     return GRAPH_PARAM_INVALID;
   }
@@ -57,7 +57,7 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int32_t output_i
 
   auto &output_tensors = iter->second;
   if (static_cast<uint32_t>(output_id) >= output_tensors.size()) {
-    REPORT_INNER_ERROR("E19999", "Node output is not registered. node_id = %ld, output index = %d",
+    REPORT_INNER_ERROR("E18888", "Node output is not registered. node_id = %ld, output index = %d",
                        node_id, output_id);
     GELOGE(GRAPH_FAILED, "[Check][Param] Node output is not registered. node_id = %ld, output index = %d",
            node_id, output_id);

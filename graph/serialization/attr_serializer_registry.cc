@@ -86,7 +86,7 @@ GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(const TypeId obj_type)
   const auto iter = serializer_map_.find(obj_type);
   if (iter == serializer_map_.end()) {
     // print type
-    REPORT_INNER_ERROR("E19999", "Serializer for type has not been registered");
+    REPORT_INNER_ERROR("E18888", "Serializer for type has not been registered");
     GELOGE(FAILED, "Serializer for type has not been registered");
     return nullptr;
   }
@@ -96,7 +96,7 @@ GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(const TypeId obj_type)
 GeIrAttrSerializer *AttrSerializerRegistry::GetDeserializer(const proto::AttrDef::ValueCase proto_type) {
   const auto iter = deserializer_map_.find(proto_type);
   if (iter == deserializer_map_.end()) {
-    REPORT_INNER_ERROR("E19999",
+    REPORT_INNER_ERROR("E18888",
                        "Deserializer for type [%d] has not been registered",
                        static_cast<int32_t>(proto_type));
     GELOGE(FAILED, "Deserializer for type [%d] has not been registered", static_cast<int32_t>(proto_type));

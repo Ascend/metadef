@@ -223,7 +223,7 @@ bool ComputeGraphImpl::VectorInputNodePtrIsEqual(const std::vector<NodePtr> &lef
   const auto left_nodes_size = left_nodes.size();
   const auto right_nodes_size = right_nodes.size();
   if (left_nodes_size != right_nodes_size) {
-    REPORT_INNER_ERROR("E19999", "Check failed with graph input_nodes_: "
+    REPORT_INNER_ERROR("E18888", "Check failed with graph input_nodes_: "
                        "left inputNodes size %zu is different with right inputNodes size %zu .",
                        left_nodes_size, right_nodes_size);
     GELOGE(GRAPH_FAILED, "[Check][Param] failed with graph input_nodes_: "
@@ -233,14 +233,14 @@ bool ComputeGraphImpl::VectorInputNodePtrIsEqual(const std::vector<NodePtr> &lef
   }
   for (size_t j = 0UL; j < left_nodes_size; j++) {
     if ((left_nodes.at(j) == nullptr) || (right_nodes.at(j) == nullptr)) {
-      REPORT_INNER_ERROR("E19999", "left_nodes.at(%zu) or right_nodes.at(%zu) is nullptr", j, j);
+      REPORT_INNER_ERROR("E18888", "left_nodes.at(%zu) or right_nodes.at(%zu) is nullptr", j, j);
       GELOGE(GRAPH_FAILED, "[Check][Param] left_nodes.at(%zu) or right_nodes.at(%zu) is nullptr", j, j);
       return false;
     }
     const auto &left_input_name = left_nodes.at(j)->GetName();
     const auto &right_input_name = right_nodes.at(j)->GetName();
     if (left_input_name != right_input_name) {
-      REPORT_INNER_ERROR("E19999", "Check failed with graph input_nodes_: "
+      REPORT_INNER_ERROR("E18888", "Check failed with graph input_nodes_: "
                          "left inputNode name %s is different with right inputNode name %s at inputNodes index %zu.",
                          left_input_name.c_str(), right_input_name.c_str(), j);
       GELOGE(GRAPH_FAILED, "[Check][Param] failed with graph input_nodes_: "
@@ -276,7 +276,7 @@ bool ComputeGraphImpl::operator==(const ComputeGraphImpl &r_graph) const {
   // Secondly: Node equal means the link relationship between node and node itself equal
   for (const auto &left_node : nodes_) {
     if (left_node == nullptr) {
-      REPORT_INNER_ERROR("E19999", "left_node is nullptr, graph:%s", this->GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "left_node is nullptr, graph:%s", this->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] left_node is nullptr");
       return false;
     }
@@ -284,11 +284,11 @@ bool ComputeGraphImpl::operator==(const ComputeGraphImpl &r_graph) const {
     // After TopologicalSorting, node order can change, so find node by name
     const auto &right_node = r_graph.FindNode(node_name);
     GE_IF_BOOL_EXEC(right_node == nullptr,
-                    REPORT_INNER_ERROR("E19999", "left_node:%s not find in r_graph:%s",
+                    REPORT_INNER_ERROR("E18888", "left_node:%s not find in r_graph:%s",
                                        node_name.c_str(), r_graph.GetName().c_str());
                     GELOGE(GRAPH_FAILED, "[Check][Param] right_node is NULL!!!"); return false);
     if (!((*right_node) == (*left_node))) {
-      REPORT_INNER_ERROR("E19999", "Compare graph failed, node:%s not equal.", node_name.c_str());
+      REPORT_INNER_ERROR("E18888", "Compare graph failed, node:%s not equal.", node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Compare][Graph] failed, node:%s not equal.", node_name.c_str());
       return false;
     }
@@ -305,7 +305,7 @@ bool ComputeGraphImpl::operator==(const ComputeGraphImpl &r_graph) const {
 
 NodePtr ComputeGraphImpl::AddNodeFront(const NodePtr node) {
   if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
-    REPORT_INNER_ERROR("E19999", "The node ptr or op desc should not be null.");
+    REPORT_INNER_ERROR("E18888", "The node ptr or op desc should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op desc should not be null.");
     return nullptr;
   }
@@ -322,7 +322,7 @@ NodePtr ComputeGraphImpl::AddNodeFront(const NodePtr node) {
 NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
                                        const ComputeGraphPtr &compute_graph) {
   if (op == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The OpDesc ptr should not be null.");
+    REPORT_INNER_ERROR("E18888", "The OpDesc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The OpDesc ptr should not be null.");
     return nullptr;
   }
@@ -330,14 +330,14 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
   const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS,
-                  REPORT_CALL_ERROR("E19999", "node %s init failed.", op->GetName().c_str());
+                  REPORT_CALL_ERROR("E18888", "node %s init failed.", op->GetName().c_str());
                   GELOGE(GRAPH_FAILED, "node init fail."); return nullptr);
   return AddNodeFront(node_ptr);
 }
 
 NodePtr ComputeGraphImpl::AddNode(const NodePtr node) {
   if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
-    REPORT_INNER_ERROR("E19999", "the node ptr or op desc ptr should not be null.");
+    REPORT_INNER_ERROR("E18888", "the node ptr or op desc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op desc ptr should not be null.");
     return nullptr;
   }
@@ -349,34 +349,34 @@ NodePtr ComputeGraphImpl::AddNode(const NodePtr node) {
 
 NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const ComputeGraphPtr &compute_graph) {
   if (op == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The OpDesc ptr should not be null.");
+    REPORT_INNER_ERROR("E18888", "The OpDesc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The OpDesc ptr should not be null.");
     return nullptr;
   }
   op->SetId(static_cast<int64_t>(GetDirectNodesSize()));
   const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node_ptr == nullptr,
-                  REPORT_CALL_ERROR("E19999", "create node failed.");
+                  REPORT_CALL_ERROR("E18888", "create node failed.");
                   GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS,
-                  REPORT_CALL_ERROR("E19999", "node:%s init failed.", op->GetName().c_str());
+                  REPORT_CALL_ERROR("E18888", "node:%s init failed.", op->GetName().c_str());
                   GELOGE(GRAPH_FAILED, "[Init][Node] %s fail.", op->GetName().c_str()); return nullptr);
   return AddNode(node_ptr);
 }
 
 NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const int64_t id, const ComputeGraphPtr &compute_graph) {
   if (op == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The OpDesc ptr should not be null.");
+    REPORT_INNER_ERROR("E18888", "The OpDesc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The OpDesc ptr should not be null.");
     return nullptr;
   }
   op->SetId(id);
   const NodePtr node = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node == nullptr,
-                  REPORT_CALL_ERROR("E19999", "create node failed.");
+                  REPORT_CALL_ERROR("E18888", "create node failed.");
                   GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node->Init() != GRAPH_SUCCESS,
-                  REPORT_CALL_ERROR("E19999", "node init failed.");
+                  REPORT_CALL_ERROR("E18888", "node init failed.");
                   GELOGE(GRAPH_FAILED, "[Init][Node] fail."); return nullptr);
   node->SetHostNode(is_valid_flag_);
   PushBackToNodeList(node);
@@ -385,7 +385,7 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const int64_t id, const Co
 
 NodePtr ComputeGraphImpl::AddInputNode(const NodePtr node) {
   if (node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The node ptr should not be null.");
+    REPORT_INNER_ERROR("E18888", "The node ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
     return nullptr;
   }
@@ -402,7 +402,7 @@ NodePtr ComputeGraphImpl::AddOutputNode(const NodePtr node) {
 
 NodePtr ComputeGraphImpl::AddOutputNodeByIndex(const NodePtr node, const int32_t index) {
   if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
-    REPORT_INNER_ERROR("E19999", "The node ptr or opdesc should not be null.");
+    REPORT_INNER_ERROR("E18888", "The node ptr or opdesc should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or opdesc should not be null.");
     return nullptr;
   }
@@ -454,7 +454,7 @@ graphStatus ComputeGraphImpl::RemoveConstInput(const NodePtr &node) {
 
 graphStatus ComputeGraphImpl::RemoveNode(const NodePtr &node) {
   if (node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The node ptr should not be null, graph:%s.", name_.c_str());
+    REPORT_INNER_ERROR("E18888", "The node ptr should not be null, graph:%s.", name_.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
     return GRAPH_FAILED;
   }
@@ -485,7 +485,7 @@ graphStatus ComputeGraphImpl::RemoveNode(const NodePtr &node) {
 // Used in sub_graph scenes
 graphStatus ComputeGraphImpl::RemoveInputNode(const NodePtr &node) {
   if (node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The node ptr should not be null, graph:%s.", name_.c_str());
+    REPORT_INNER_ERROR("E18888", "The node ptr should not be null, graph:%s.", name_.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
     return GRAPH_FAILED;
   }
@@ -501,7 +501,7 @@ graphStatus ComputeGraphImpl::RemoveInputNode(const NodePtr &node) {
 // Used in sub_graph scenes
 graphStatus ComputeGraphImpl::RemoveOutputNode(const NodePtr &node) {
   if (node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The node ptr should not be null, graph:%s.", name_.c_str());
+    REPORT_INNER_ERROR("E18888", "The node ptr should not be null, graph:%s.", name_.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
     return GRAPH_FAILED;
   }
@@ -523,7 +523,7 @@ graphStatus ComputeGraphImpl::RemoveOutputNode(const NodePtr &node) {
 
 std::shared_ptr<ComputeGraph> ComputeGraphImpl::AddSubGraph(const std::shared_ptr<ComputeGraph> &sub_graph) {
   if (sub_graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The graph ptr should not be null, graph:%s.", name_.c_str());
+    REPORT_INNER_ERROR("E18888", "The graph ptr should not be null, graph:%s.", name_.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] The graph ptr should not be null.");
     return nullptr;
   }
@@ -534,7 +534,7 @@ std::shared_ptr<ComputeGraph> ComputeGraphImpl::AddSubGraph(const std::shared_pt
 
 graphStatus ComputeGraphImpl::RemoveSubGraph(const std::shared_ptr<ComputeGraph> &sub_graph) {
   if (sub_graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "The graph ptr should not be null, graph:%s.", name_.c_str());
+    REPORT_INNER_ERROR("E18888", "The graph ptr should not be null, graph:%s.", name_.c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] The graph ptr should not be null.");
     return GRAPH_FAILED;
   }
@@ -552,24 +552,24 @@ graphStatus ComputeGraphImpl::RemoveSubGraph(const std::shared_ptr<ComputeGraph>
 graphStatus ComputeGraphImpl::AddSubgraph(const std::string &name,
                                           const std::shared_ptr<ComputeGraph> &subgraph) {
   if (subgraph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Try to add a null subgraph, name %s", name.c_str());
+    REPORT_INNER_ERROR("E18888", "Try to add a null subgraph, name %s", name.c_str());
     GE_LOGE("[Check][Param] Try to add a null subgraph, name %s", name.c_str());
     return GRAPH_PARAM_INVALID;
   }
   const auto parent_graph = subgraph->GetParentGraph();
   if (parent_graph == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Try to add subgraph without parent graph, name %s", name.c_str());
+    REPORT_CALL_ERROR("E18888", "Try to add subgraph without parent graph, name %s", name.c_str());
     GE_LOGE("[Get][Graph] Try to add subgraph without parent graph, name %s", name.c_str());
     return GRAPH_PARAM_INVALID;
   }
   const auto parent_node = subgraph->GetParentNode();
   if (parent_node == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Try to add a subgraph without parent node, name %s", name.c_str());
+    REPORT_CALL_ERROR("E18888", "Try to add a subgraph without parent node, name %s", name.c_str());
     GE_LOGE("[Get][Node] Try to add a subgraph without parent node, name %s", name.c_str());
     return GRAPH_PARAM_INVALID;
   }
   if (parent_node->GetOwnerComputeGraph() != parent_graph) {
-    REPORT_INNER_ERROR("E19999", "Try to add a subgraph which parent node's graph is not equal to "
+    REPORT_INNER_ERROR("E18888", "Try to add a subgraph which parent node's graph is not equal to "
                        "the subgraph's parent graph, subgraph name %s, parent node name %s",
                        subgraph->GetName().c_str(), parent_graph->GetName().c_str());
     GE_LOGE("[Check][Param] Try to add a subgraph which parent node's graph is not equal to "
@@ -585,7 +585,7 @@ graphStatus ComputeGraphImpl::AddSubgraph(const std::string &name,
            name.c_str());
   }
   if (names_to_subgraph_.find(name) != names_to_subgraph_.end()) {
-    REPORT_INNER_ERROR("E19999", "The subgraph %s existed", name.c_str());
+    REPORT_INNER_ERROR("E18888", "The subgraph %s existed", name.c_str());
     GE_LOGE("[Check][Param] The subgraph %s existed", name.c_str());
     return GRAPH_PARAM_INVALID;
   }
@@ -659,7 +659,7 @@ graphStatus ComputeGraphImpl::UpdateInputMapping(const std::map<uint32_t, uint32
         continue;
       }
       if (!ge::AttrUtils::SetInt(input->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, static_cast<int64_t>(iter->second))) {
-        REPORT_CALL_ERROR("E19999", "set attr ATTR_NAME_PARENT_NODE_INDEX failed, op:%s.",
+        REPORT_CALL_ERROR("E18888", "set attr ATTR_NAME_PARENT_NODE_INDEX failed, op:%s.",
                           input->GetOpDesc()->GetName().c_str());
         GE_LOGE("[Call][SetInt] UpdateInputMapping failed: set attr ATTR_NAME_PARENT_NODE_INDEX failed, op:%s.",
                 input->GetOpDesc()->GetName().c_str());
@@ -677,13 +677,13 @@ graphStatus ComputeGraphImpl::UpdateInputMapping(const std::map<uint32_t, uint32
 graphStatus ComputeGraphImpl::UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping) const {
   const NodePtr net_output = FindFirstNodeMatchType(NETOUTPUT);
   if (net_output == nullptr) {
-    REPORT_INNER_ERROR("E19999", "UpdateOutputMapping failed: node type %s not exist in graph.", NETOUTPUT);
+    REPORT_INNER_ERROR("E18888", "UpdateOutputMapping failed: node type %s not exist in graph.", NETOUTPUT);
     GE_LOGE("[Get][NodeType] UpdateOutputMapping failed: node type %s not exist in graph.", NETOUTPUT);
     return GRAPH_FAILED;
   }
   const OpDescPtr op_desc = net_output->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "net output's op desc pr should not be null.");
+    REPORT_INNER_ERROR("E18888", "net output's op desc pr should not be null.");
     GE_LOGE("[Get][OpDesc] UpdateOutputMapping failed: op_desc is NULL.");
     return GRAPH_FAILED;
   }
@@ -700,14 +700,14 @@ graphStatus ComputeGraphImpl::UpdateOutputMapping(const std::map<uint32_t, uint3
       continue;
     }
     if (!ge::AttrUtils::SetInt(tensor, ATTR_NAME_PARENT_NODE_INDEX, static_cast<int64_t>(iter->second))) {
-      REPORT_CALL_ERROR("E19999", "op %s set %zu input tensor attr ATTR_NAME_PARENT_NODE_INDEX failed.",
+      REPORT_CALL_ERROR("E18888", "op %s set %zu input tensor attr ATTR_NAME_PARENT_NODE_INDEX failed.",
                         op_desc->GetName().c_str(), i);
       GE_LOGE("[Set][Int] op %s set %zu input tensor attr ATTR_NAME_PARENT_NODE_INDEX failed.",
               op_desc->GetName().c_str(), i);
       return GRAPH_FAILED;
     }
     if (op_desc->UpdateInputDesc(static_cast<uint32_t>(i), tensor) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "op %s update %zu input_tensor failed.", op_desc->GetName().c_str(), i);
+      REPORT_CALL_ERROR("E18888", "op %s update %zu input_tensor failed.", op_desc->GetName().c_str(), i);
       GE_LOGE("[Update][InputDesc] UpdateOutputMapping failed: update %zu input_tensor failed.", i);
       return GRAPH_FAILED;
     }
@@ -745,7 +745,7 @@ graphStatus ComputeGraphImpl::ReorderEventNodes(const ConstComputeGraphPtr &comp
 graphStatus ComputeGraphImpl::InsertGraphEvents(const ConstComputeGraphPtr &compute_graph) {
   auto status = ReorderEventNodes(compute_graph);
   if (status != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Graph [%s] record event nodes failed, status:%d", name_.c_str(), status);
+    REPORT_CALL_ERROR("E18888", "Graph [%s] record event nodes failed, status:%d", name_.c_str(), status);
     GELOGE(status, "[Reorder][EventNodes] failed for Graph:%s, status:%d", name_.c_str(), status);
     return status;
   }
@@ -754,7 +754,7 @@ graphStatus ComputeGraphImpl::InsertGraphEvents(const ConstComputeGraphPtr &comp
   for (const auto graph : sub_graph_) {
     status = graph->ReorderEventNodes();
     if (status != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "ReorderEventNodes failed for SubGraph:%s, status:%d",
+      REPORT_CALL_ERROR("E18888", "ReorderEventNodes failed for SubGraph:%s, status:%d",
                         graph->GetName().c_str(), status);
       GELOGE(status, "[Reorder][EventNodes] failed for SubGraph:%s, status:%d", graph->GetName().c_str(), status);
       return status;
@@ -903,7 +903,7 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
   auto ret = TopologicalSortingGraph(const_compute_graph);
   if (ret != GRAPH_SUCCESS) {
     GE_DUMP(const_graph_ptr, "black_box" + name_);
-    REPORT_CALL_ERROR("E19999", "Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
+    REPORT_CALL_ERROR("E18888", "Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
     GELOGE(ret, "[Sort][Graph] Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
     return ret;
   }
@@ -917,7 +917,7 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
     ret = sub_graph->TopologicalSortingGraph();
     if (ret != GRAPH_SUCCESS) {
       GE_DUMP(sub_graph, "black_box" + sub_graph->GetName());
-      REPORT_CALL_ERROR("E19999", "Sub graph[%s] topological sort failed, saved to file black_box",
+      REPORT_CALL_ERROR("E18888", "Sub graph[%s] topological sort failed, saved to file black_box",
                         sub_graph->GetName().c_str());
       GELOGE(ret, "[Sort][Graph] Sub graph[%s] topological sort failed, saved to file black_box",
              sub_graph->GetName().c_str());
@@ -963,7 +963,7 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
     for (auto &node : node_vec) {
       (void)itered_nodes_set.insert(node.get());
     }
-    REPORT_INNER_ERROR("E19999", "Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph:%s",
+    REPORT_INNER_ERROR("E18888", "Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph:%s",
                        GetDirectNodesSize(), node_vec.size(), name_.c_str());
     GE_LOGE("[Check][Param] Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.",
             GetDirectNodesSize(), node_vec.size());
@@ -1171,7 +1171,7 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
     const auto pre_out_data_anchor = in_data_anchor->GetPeerOutAnchor();
     if (pre_out_data_anchor != nullptr) {
       GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(pre_out_data_anchor, in_data_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                       REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                          pre_out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                          in_data_anchor->GetOwnerNode()->GetName().c_str());
                        return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
@@ -1183,14 +1183,14 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
       for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
         for (const auto &next_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
           GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_data_anchor, next_in_data_anchor) == GRAPH_SUCCESS,
-                           REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                           REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                              out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                              next_in_data_anchor->GetOwnerNode()->GetName().c_str());
                            return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
                            out_data_anchor->GetOwnerNode()->GetName().c_str(),
                            next_in_data_anchor->GetOwnerNode()->GetName().c_str());
           GE_CHK_BOOL_EXEC(GraphUtils::AddEdge(pre_out_data_anchor, next_in_data_anchor) == GRAPH_SUCCESS,
-                           REPORT_CALL_ERROR("E19999", "add edge from %s to %s failed",
+                           REPORT_CALL_ERROR("E18888", "add edge from %s to %s failed",
                                              pre_out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                              next_in_data_anchor->GetOwnerNode()->GetName().c_str());
                            return GRAPH_FAILED, "[Add][Edge] from %s to %s failed",
@@ -1199,14 +1199,14 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
         }
         for (const auto &next_in_ctrl_anchor : out_data_anchor->GetPeerInControlAnchors()) {
           GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_data_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                           REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                           REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                              out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                              next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                            return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
                            out_data_anchor->GetOwnerNode()->GetName().c_str(),
                            next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
           GE_CHK_BOOL_EXEC(GraphUtils::AddEdge(pre_out_data_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                           REPORT_CALL_ERROR("E19999", "add edge from %s to %s failed",
+                           REPORT_CALL_ERROR("E18888", "add edge from %s to %s failed",
                                              pre_out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                              next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                            return GRAPH_FAILED, "[Add][Edge] from %s to %s failed",
@@ -1220,14 +1220,14 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
       GE_CHECK_NOTNULL(pre_out_ctrl_anchor);
       for (const auto &next_in_ctrl_anchor : out_ctrl_anchor->GetPeerInControlAnchors()) {
         GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_ctrl_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                         REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                         REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                            out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                                            next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                          return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
                          out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                          next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
         GE_CHK_BOOL_EXEC(GraphUtils::AddEdge(pre_out_ctrl_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                         REPORT_CALL_ERROR("E19999", "add edge from %s to %s failed",
+                         REPORT_CALL_ERROR("E18888", "add edge from %s to %s failed",
                                            pre_out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                                            next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                          return GRAPH_FAILED, "[Add][Edge] from %s to %s failed",
@@ -1242,7 +1242,7 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
   GE_CHECK_NOTNULL(in_ctrl_anchor);
   for (const auto &pre_out_ctrl_anchor : in_ctrl_anchor->GetPeerOutControlAnchors()) {
     GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(pre_out_ctrl_anchor, in_ctrl_anchor) == GRAPH_SUCCESS,
-                     REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                     REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                        pre_out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                                        in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                      return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
@@ -1251,14 +1251,14 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
     for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
       for (const auto &next_in_ctrl_anchor : out_data_anchor->GetPeerInControlAnchors()) {
         GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_data_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                         REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                         REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                            out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                            next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                          return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
                          out_data_anchor->GetOwnerNode()->GetName().c_str(),
                          next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
         GE_CHK_BOOL_EXEC(GraphUtils::AddEdge(pre_out_ctrl_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                         REPORT_CALL_ERROR("E19999", "add edge from %s to %s failed",
+                         REPORT_CALL_ERROR("E18888", "add edge from %s to %s failed",
                                            pre_out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                                            next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                          return GRAPH_FAILED, "[Add][Edge] from %s to %s failed",
@@ -1270,14 +1270,14 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
     if (out_ctrl_anchor != nullptr) {
       for (const auto &next_in_ctrl_anchor : out_ctrl_anchor->GetPeerInControlAnchors()) {
         GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_ctrl_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                         REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                         REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                            out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                                            next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                          return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
                          out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                          next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
         GE_CHK_BOOL_EXEC(GraphUtils::AddEdge(pre_out_ctrl_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                         REPORT_CALL_ERROR("E19999", "add edge from %s to %s failed",
+                         REPORT_CALL_ERROR("E18888", "add edge from %s to %s failed",
                                            pre_out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                                            next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                          return GRAPH_FAILED, "[Add][Edge] from %s to %s failed",
@@ -1289,7 +1289,7 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
 
   for (const auto &out_peer_data_anchor : in_ctrl_anchor->GetPeerOutDataAnchors()) {
     GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_peer_data_anchor, in_ctrl_anchor) == GRAPH_SUCCESS,
-                     REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                     REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                        out_peer_data_anchor->GetOwnerNode()->GetName().c_str(),
                                        in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                      return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
@@ -1298,7 +1298,7 @@ graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
     for (const auto &next_node : next_nodes) {
       const auto next_in_control_anchor = next_node->GetInControlAnchor();
       GE_CHK_BOOL_EXEC(GraphUtils::AddEdge(out_peer_data_anchor, next_in_control_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "add edge from %s to %s failed",
+                       REPORT_CALL_ERROR("E18888", "add edge from %s to %s failed",
                                          out_peer_data_anchor->GetOwnerNode()->GetName().c_str(),
                                          next_in_control_anchor->GetOwnerNode()->GetName().c_str());
                        return GRAPH_FAILED, "[Add][Edge] from %s to %s failed",
@@ -1316,7 +1316,7 @@ graphStatus ComputeGraphImpl::RemoveExtraOutEdge(const NodePtr &node) const {
   for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
     for (const auto &next_in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
       GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_data_anchor, next_in_data_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                       REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                          out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                          next_in_data_anchor->GetOwnerNode()->GetName().c_str());
                        return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
@@ -1326,7 +1326,7 @@ graphStatus ComputeGraphImpl::RemoveExtraOutEdge(const NodePtr &node) const {
 
     for (const auto &next_in_ctrl_anchor : out_data_anchor->GetPeerInControlAnchors()) {
       GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_data_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                       REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                          out_data_anchor->GetOwnerNode()->GetName().c_str(),
                                          next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                        return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
@@ -1338,7 +1338,7 @@ graphStatus ComputeGraphImpl::RemoveExtraOutEdge(const NodePtr &node) const {
   if (out_ctrl_anchor != nullptr) {
     for (const auto &next_in_ctrl_anchor : out_ctrl_anchor->GetPeerInControlAnchors()) {
       GE_CHK_BOOL_EXEC(GraphUtils::RemoveEdge(out_ctrl_anchor, next_in_ctrl_anchor) == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed",
+                       REPORT_CALL_ERROR("E18888", "remove edge from %s to %s failed",
                                          out_ctrl_anchor->GetOwnerNode()->GetName().c_str(),
                                          next_in_ctrl_anchor->GetOwnerNode()->GetName().c_str());
                        return GRAPH_FAILED, "[Remove][Edge] from %s to %s failed",
@@ -1356,7 +1356,7 @@ graphStatus ComputeGraphImpl::Verify(const ConstComputeGraphPtr compute_graph) c
     GE_CHECK_NOTNULL(node_ptr->GetOpDesc());
     GE_IF_BOOL_EXEC(is_unknown_graph, continue);
     GE_CHK_BOOL_EXEC(node_ptr->GetOpDesc()->CommonVerify() == GRAPH_SUCCESS,
-                     REPORT_CALL_ERROR("E19999", "Verifying %s failed.", node_ptr->GetName().c_str());
+                     REPORT_CALL_ERROR("E18888", "Verifying %s failed.", node_ptr->GetName().c_str());
                      return GRAPH_FAILED, "[Call][CommonVerify] Verifying %s failed.", node_ptr->GetName().c_str());
   }
   return GRAPH_SUCCESS;
@@ -1372,7 +1372,7 @@ graphStatus ComputeGraphImpl::InferShapeInNeed(const ComputeGraphPtr &const_grap
     (void)ge::AttrUtils::GetBool(op_desc, NEED_INFER, is_need_infer);
     if (is_need_infer) {
       GE_CHK_BOOL_EXEC(node_ptr->Verify() == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "Verifying %s failed.", node_ptr->GetName().c_str());
+                       REPORT_CALL_ERROR("E18888", "Verifying %s failed.", node_ptr->GetName().c_str());
                        return GRAPH_FAILED, "[Call][Verify] Verifying %s failed.", node_ptr->GetName().c_str());
 
       const graphStatus status = node_ptr->InferShapeAndType();
@@ -1381,7 +1381,7 @@ graphStatus ComputeGraphImpl::InferShapeInNeed(const ComputeGraphPtr &const_grap
                             " and subsequent operators no longer perform shape inference.",
                             node_ptr->GetName().c_str());
       GE_CHK_BOOL_EXEC(status == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E19999", "Inferring %s failed.", node_ptr->GetName().c_str());
+                       REPORT_CALL_ERROR("E18888", "Inferring %s failed.", node_ptr->GetName().c_str());
                        return GRAPH_FAILED, "[Call][InferShapeAndType] Inferring %s failed.",
                        node_ptr->GetName().c_str());
 
@@ -1421,7 +1421,7 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
   for (const std::string node : nodes) {
     std::vector<std::string> item = StringUtils::Split(node, ':');
     if (item.size() != OUTPUT_PARAM_SIZE) {
-      REPORT_INNER_ERROR("W19999", "Check output param size failed, output_name:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W18888", "Check output param size failed, output_name:%s", output_name.c_str());
       GELOGW("[Check][Output] Check output param size failed, output_name:%s", output_name.c_str());
       continue;
     }
@@ -1430,15 +1430,15 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
     try {
       index = stoi(StringUtils::Trim(item[1UL]));
     } catch (const std::out_of_range &) {
-      REPORT_INNER_ERROR("W19999", "Catch out_of_range exception, output_name:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W18888", "Catch out_of_range exception, output_name:%s", output_name.c_str());
       GELOGW("[Catch][Exception] Catch out_of_range exception, output_name:%s", output_name.c_str());
       continue;
     } catch (const std::invalid_argument &) {
-      REPORT_INNER_ERROR("W19999", "Catch invalid_argument exception, output_name:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W18888", "Catch invalid_argument exception, output_name:%s", output_name.c_str());
       GELOGW("[Catch][Exception] Catch invalid_argument exception, output_name:%s", output_name.c_str());
       continue;
     } catch (...) {
-      REPORT_INNER_ERROR("W19999", "Catch exception, output_name:%s", output_name.c_str());
+      REPORT_INNER_ERROR("W18888", "Catch exception, output_name:%s", output_name.c_str());
       GELOGW("[Catch][Exception] Catch exception, output_name:%s", output_name.c_str());
       continue;
     }

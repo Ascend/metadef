@@ -32,26 +32,26 @@
   graphStatus GNode::GetAttr(const AscendString &name, ArgType &attr_value) const {                                    \
     const char_t *const ascend_name = name.GetString();                                                                \
     if (ascend_name == nullptr) {                                                                                      \
-      REPORT_INNER_ERROR("E19999", "ascend std::string error.");                                                       \
+      REPORT_INNER_ERROR("E18888", "ascend std::string error.");                                                       \
       GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetAttr: ascend std::string error.");                                \
       return GRAPH_PARAM_INVALID;                                                                                      \
     }                                                                                                                  \
                                                                                                                        \
     if (impl_ == nullptr) {                                                                                            \
-      REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");                                            \
+      REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");                                            \
       GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: node impl is nullptr.");                                           \
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
                                                                                                                        \
     const std::shared_ptr<Node> node_ptr_share = impl_->node_ptr_.lock();                                              \
     if (node_ptr_share == nullptr) {                                                                                   \
-      REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");                                  \
+      REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");                                  \
       GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: the node shared ptr is not valid.");                               \
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
     const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr_share);                                           \
     if (op.GetAttr(ascend_name, attr_value) != GRAPH_SUCCESS) {                                                        \
-      REPORT_CALL_ERROR("E19999", "GetAttr of node[%s] failed.", node_ptr_share->GetName().c_str());                   \
+      REPORT_CALL_ERROR("E18888", "GetAttr of node[%s] failed.", node_ptr_share->GetName().c_str());                   \
       GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr_share->GetName().c_str());                      \
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
@@ -63,20 +63,20 @@
   graphStatus GNode::SetAttr(const AscendString &name, ArgType &attr_value) const {                                    \
     const char_t *const ascend_name = name.GetString();                                                                \
     if (ascend_name == nullptr) {                                                                                      \
-      REPORT_INNER_ERROR("E19999", "ascend std::string error.");                                                       \
+      REPORT_INNER_ERROR("E18888", "ascend std::string error.");                                                       \
       GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: ascend std::string error.");                                \
       return GRAPH_PARAM_INVALID;                                                                                      \
     }                                                                                                                  \
                                                                                                                        \
     if (impl_ == nullptr) {                                                                                            \
-      REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");                                            \
+      REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");                                            \
       GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: node impl is nullptr.");                                           \
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
                                                                                                                        \
     const std::shared_ptr<Node> node_ptr_share = impl_->node_ptr_.lock();                                              \
     if (node_ptr_share == nullptr) {                                                                                   \
-      REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");                                  \
+      REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");                                  \
       GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: the node shared ptr is not valid.");                               \
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
@@ -103,7 +103,7 @@ private:
 
 NodePtr NodeAdapter::GNode2Node(const ge::GNode &node) {
   if (node.impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param graph_node.impl_ is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param graph_node.impl_ is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GNode2Node: gnode impl is nullptr.");
     return nullptr;
   }
@@ -113,7 +113,7 @@ NodePtr NodeAdapter::GNode2Node(const ge::GNode &node) {
 
 GNode NodeAdapter::Node2GNode(const ge::NodePtr &node) {
   if (node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Node2GNode: node is nullptr");
     return GNode();
   }
@@ -130,14 +130,14 @@ GNode NodeAdapter::Node2GNode(const ge::NodePtr &node) {
 
 GNodePtr NodeAdapter::Node2GNodePtr(const ge::NodePtr &node) {
   if (node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param node is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Node2GNodePtr: node is nullptr");
     return nullptr;
   }
 
   const GNodePtr gnode = MakeShared<GNode>();
   if (gnode == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create GNode failed.");
+    REPORT_CALL_ERROR("E18888", "create GNode failed.");
     GELOGE(GRAPH_FAILED, "[Create][GNode] Node2GNodePtr: gnode is nullptr, node[%s].", node->GetName().c_str());
     return nullptr;
   }
@@ -156,14 +156,14 @@ GNode::GNode() { impl_ = ComGraphMakeShared<NodeImpl>(); }
 
 graphStatus GNode::GetType(AscendString &type) const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "impl_ is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "impl_ is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetType: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "node ptr is nullptr, check invalid.");
+    REPORT_CALL_ERROR("E18888", "node ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetType: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -176,14 +176,14 @@ graphStatus GNode::GetType(AscendString &type) const {
 
 graphStatus GNode::GetName(AscendString &name) const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetName: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "node ptr is nullptr, check invalid.");
+    REPORT_CALL_ERROR("E18888", "node ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetName: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -196,21 +196,21 @@ graphStatus GNode::GetName(AscendString &name) const {
 std::pair<GNodePtr, int32_t> GNode::GetInDataNodesAndPortIndexs(const int32_t index) const {
   const std::pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: node impl is nullptr.");
     return gnode_idx;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node ptr is not valid.");
+    REPORT_INNER_ERROR("E18888", "the node ptr is not valid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: the node shared ptr is not valid.");
     return gnode_idx;
   }
 
   const auto in_anchor = node_ptr->GetInDataAnchor(index);
   if (in_anchor == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to get in data node of index[%d] from node[%s], "
+    REPORT_CALL_ERROR("E18888", "Failed to get in data node of index[%d] from node[%s], "
                       "the anchor does not exist", index, node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Anchor] Failed to get in data node of index[%d] from node[%s], "
            "the anchor does not exist", index, node_ptr->GetName().c_str());
@@ -219,7 +219,7 @@ std::pair<GNodePtr, int32_t> GNode::GetInDataNodesAndPortIndexs(const int32_t in
 
   const auto out_anchor = in_anchor->GetPeerOutAnchor();
   if (out_anchor == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to get in data node of index[%d] from node [%s], "
+    REPORT_CALL_ERROR("E18888", "Failed to get in data node of index[%d] from node [%s], "
                       "the data input does not exist", index, node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Anchor] Failed to get in data node of index[%d] from node [%s], "
            "the data input does not exist", index, node_ptr->GetName().c_str());
@@ -238,14 +238,14 @@ std::pair<GNodePtr, int32_t> GNode::GetInDataNodesAndPortIndexs(const int32_t in
 
 std::vector<GNodePtr> GNode::GetInControlNodes() const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: node impl is nullptr.");
     return {};
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Gnode: node ptr is not valid.");
+    REPORT_INNER_ERROR("E18888", "Gnode: node ptr is not valid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: the node shared ptr is not valid.");
     return {};
   }
@@ -266,21 +266,21 @@ std::vector<GNodePtr> GNode::GetInControlNodes() const {
 
 std::vector<std::pair<GNodePtr, int32_t>> GNode::GetOutDataNodesAndPortIndexs(const int32_t index) const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: node impl is nullptr.");
     return {};
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Gnode: the node shared ptr is not valid.");
     return {};
   }
 
   const auto out_anchor = node_ptr->GetOutDataAnchor(index);
   if (out_anchor == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to get out data node of index %d from node %s, "
+    REPORT_CALL_ERROR("E18888", "Failed to get out data node of index %d from node %s, "
            "the anchor does not exists", index, node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Anchor] Failed to get out data node of index %d from node %s, "
            "the anchor does not exists", index, node_ptr->GetName().c_str());
@@ -291,7 +291,7 @@ std::vector<std::pair<GNodePtr, int32_t>> GNode::GetOutDataNodesAndPortIndexs(co
   const auto in_data_anchors = out_anchor->GetPeerInDataAnchors();
   for (auto &in_data_anchor : in_data_anchors) {
     if (in_data_anchor == nullptr) {
-      REPORT_INNER_ERROR("E19999", "In data anchor of node[%s] is nullptr.", node_ptr->GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "In data anchor of node[%s] is nullptr.", node_ptr->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] In data anchor of node[%s] is nullptr.", node_ptr->GetName().c_str());
       return {};
     }
@@ -309,14 +309,14 @@ std::vector<std::pair<GNodePtr, int32_t>> GNode::GetOutDataNodesAndPortIndexs(co
 
 std::vector<GNodePtr> GNode::GetOutControlNodes() const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutControlNodes: node impl is nullptr.");
     return {};
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutControlNodes: the node shared ptr is not valid.");
     return {};
   }
@@ -337,14 +337,14 @@ std::vector<GNodePtr> GNode::GetOutControlNodes() const {
 
 graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputConstData: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputConstData: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -355,7 +355,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
   if ((op_type == CONSTANT) || (op_type == CONSTANTOP)) {
     const Operator const_op = OpDescUtils::CreateOperatorFromNode(input_data_node);
     if (const_op.GetAttr(ATTR_NAME_WEIGHTS, data) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "Input data node[%s] of node[%s] get data failed.",
+      REPORT_CALL_ERROR("E18888", "Input data node[%s] of node[%s] get data failed.",
                         input_data_node->GetName().c_str(), node_ptr->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Get][Attr] Input data node[%s] of node[%s] get data failed.",
              input_data_node->GetName().c_str(), node_ptr->GetName().c_str());
@@ -371,7 +371,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
         ((parent_node->GetType() == CONSTANT) || (parent_node->GetType() == CONSTANTOP))) {
       const Operator const_op =  OpDescUtils::CreateOperatorFromNode(parent_node);
       if (const_op.GetAttr(ATTR_NAME_WEIGHTS, data) != GRAPH_SUCCESS) {
-        REPORT_CALL_ERROR("E19999", "Input data node[%s] of node[%s] get data failed.",
+        REPORT_CALL_ERROR("E18888", "Input data node[%s] of node[%s] get data failed.",
                           parent_node->GetName().c_str(), node_ptr->GetName().c_str());
         GELOGE(GRAPH_FAILED, "[Get][Attr] Input data node[%s] of node[%s] get data failed.",
                parent_node->GetName().c_str(), node_ptr->GetName().c_str());
@@ -382,7 +382,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
   } else {
     // empty
   }
-  REPORT_INNER_ERROR("E19999", "Node[%s] has no const input.", node_ptr->GetName().c_str());
+  REPORT_INNER_ERROR("E18888", "Node[%s] has no const input.", node_ptr->GetName().c_str());
   GELOGE(GRAPH_NODE_WITHOUT_CONST_INPUT, "[Check][Param] Node[%s] has no const input.", node_ptr->GetName().c_str());
   return GRAPH_NODE_WITHOUT_CONST_INPUT;
 }
@@ -390,27 +390,27 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
 graphStatus GNode::GetInputIndexByName(const AscendString &name, int32_t &index) {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "ascend string error.");
+    REPORT_INNER_ERROR("E18888", "ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetInputIndexByName: ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputIndexByName: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputIndexByName: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "get Op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "get Op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -424,27 +424,27 @@ graphStatus GNode::GetInputIndexByName(const AscendString &name, int32_t &index)
 graphStatus GNode::GetOutputIndexByName(const AscendString &name, int32_t &index) {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "ascend string error.");
+    REPORT_INNER_ERROR("E18888", "ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetOutputIndexByName: ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutputIndexByName: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutputIndexByName: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -457,21 +457,21 @@ graphStatus GNode::GetOutputIndexByName(const AscendString &name, int32_t &index
 
 size_t GNode::GetInputsSize() const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputsSize: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputsSize: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -481,21 +481,21 @@ size_t GNode::GetInputsSize() const {
 
 size_t GNode::GetOutputsSize() const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutputsSize: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutputsSize: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -505,34 +505,34 @@ size_t GNode::GetOutputsSize() const {
 
 graphStatus GNode::GetInputDesc(const int32_t index, TensorDesc &tensor_desc) const {
   if (index < 0) {
-    REPORT_INNER_ERROR("E19999", "index:%d can not be less than zero, check invalid.", index);
+    REPORT_INNER_ERROR("E18888", "index:%d can not be less than zero, check invalid.", index);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetInputDesc: index[%d] cannot be less than zero.", index);
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputDesc: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetInputDesc: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
   const ConstGeTensorDescPtr ge_tensor_desc = op_desc->GetInputDescPtr(static_cast<uint32_t>(index));
   if (ge_tensor_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get tensor desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get tensor desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][TensorDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -543,34 +543,34 @@ graphStatus GNode::GetInputDesc(const int32_t index, TensorDesc &tensor_desc) co
 
 graphStatus GNode::UpdateInputDesc(const int32_t index, const TensorDesc &tensor_desc) {
   if (index < 0) {
-    REPORT_INNER_ERROR("E19999", "index:%d cannot be less than zero.", index);
+    REPORT_INNER_ERROR("E18888", "index:%d cannot be less than zero.", index);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] UpdateInputDesc: index[%d] cannot be less than zero.", index);
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] UpdateInputDesc: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] UpdateInputDesc: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
   const GeTensorDesc ge_tensor_desc = TensorAdapter::TensorDesc2GeTensorDesc(tensor_desc);
   if (op_desc->UpdateInputDesc(static_cast<uint32_t>(index), ge_tensor_desc) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Update input desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_CALL_ERROR("E18888", "Update input desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Update][InputDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -580,34 +580,34 @@ graphStatus GNode::UpdateInputDesc(const int32_t index, const TensorDesc &tensor
 
 graphStatus GNode::GetOutputDesc(const int32_t index, TensorDesc &tensor_desc) const {
   if (index < 0) {
-    REPORT_INNER_ERROR("E19999", "index:%d cannot be less than zero.", index);
+    REPORT_INNER_ERROR("E18888", "index:%d cannot be less than zero.", index);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetOutputDesc: index[%d] cannot be less than zero.", index);
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutputDesc: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetOutputDesc: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
   const ConstGeTensorDescPtr ge_tensor_desc = op_desc->GetOutputDescPtr(static_cast<uint32_t>(index));
   if (ge_tensor_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get tensor desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get tensor desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][TensorDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -618,34 +618,34 @@ graphStatus GNode::GetOutputDesc(const int32_t index, TensorDesc &tensor_desc) c
 
 graphStatus GNode::UpdateOutputDesc(const int32_t index, const TensorDesc &tensor_desc) {
   if (index < 0) {
-    REPORT_INNER_ERROR("E19999", "index:%d cannot be less than zero.", index);
+    REPORT_INNER_ERROR("E18888", "index:%d cannot be less than zero.", index);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Gnode: index[%d] cannot be less than zero.", index);
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] UpdateOutputDesc: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] UpdateOutputDesc: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
   const GeTensorDesc ge_tensor_desc = TensorAdapter::TensorDesc2GeTensorDesc(tensor_desc);
   if (op_desc->UpdateOutputDesc(static_cast<uint32_t>(index), ge_tensor_desc) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Update input desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_CALL_ERROR("E18888", "Update input desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Update][InputDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -691,20 +691,20 @@ NODE_ATTR_SET_IMP(ge::DataType)
 graphStatus GNode::SetAttr(const AscendString &name, AttrValue &attr_value) const {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "ascend string error.");
+    REPORT_INNER_ERROR("E18888", "ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: the shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -718,27 +718,27 @@ graphStatus GNode::SetAttr(const AscendString &name, AttrValue &attr_value) cons
 graphStatus GNode::SetAttr(const AscendString &name, AscendString &attr_value) const {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "name ascend string error");
+    REPORT_INNER_ERROR("E18888", "name ascend string error");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: name ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
 
   const char_t *const ascend_attr_value = attr_value.GetString();
   if (ascend_attr_value == nullptr) {
-    REPORT_INNER_ERROR("E19999", "attr value ascend string error.");
+    REPORT_INNER_ERROR("E18888", "attr value ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: attr value ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: the shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -753,7 +753,7 @@ graphStatus GNode::SetAttr(const AscendString &name, AscendString &attr_value) c
 graphStatus GNode::SetAttr(const AscendString &name, std::vector<AscendString> &attr_values) const {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "name ascend string error.");
+    REPORT_INNER_ERROR("E18888", "name ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: name ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
@@ -761,21 +761,21 @@ graphStatus GNode::SetAttr(const AscendString &name, std::vector<AscendString> &
   for (auto &attr_val : attr_values) {
     const char_t *const ascend_attr_value = attr_val.GetString();
     if (ascend_attr_value == nullptr) {
-      REPORT_INNER_ERROR("E19999", "param attr values is invalid");
+      REPORT_INNER_ERROR("E18888", "param attr values is invalid");
       GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] SetAttr: attr val error.");
       return GRAPH_PARAM_INVALID;
     }
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] SetAttr: the shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -796,20 +796,20 @@ graphStatus GNode::SetAttr(const AscendString &name, std::vector<AscendString> &
 graphStatus GNode::GetAttr(const AscendString &name, AscendString &attr_value) const {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "name ascend string error.");
+    REPORT_INNER_ERROR("E18888", "name ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "GetAttr: name ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -818,7 +818,7 @@ graphStatus GNode::GetAttr(const AscendString &name, AscendString &attr_value) c
   const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);
   std::string op_name;
   if (op.GetAttr(node_name, op_name) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Get attr of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_CALL_ERROR("E18888", "Get attr of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] Get attr of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -832,20 +832,20 @@ graphStatus GNode::GetAttr(const AscendString &name, AscendString &attr_value) c
 graphStatus GNode::GetAttr(const AscendString &name, std::vector<AscendString> &attr_values) const {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "name ascend string error.");
+    REPORT_INNER_ERROR("E18888", "name ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GetAttr: name ascend string error.");
     return GRAPH_PARAM_INVALID;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetAttr: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
@@ -854,7 +854,7 @@ graphStatus GNode::GetAttr(const AscendString &name, std::vector<AscendString> &
   const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);
   std::vector<std::string> attr_names;
   if (op.GetAttr(node_name, attr_names) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Get attr of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_CALL_ERROR("E18888", "Get attr of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -870,33 +870,33 @@ graphStatus GNode::GetAttr(const AscendString &name, std::vector<AscendString> &
 bool GNode::HasAttr(const AscendString &name) {
   const char_t *const ascend_name = name.GetString();
   if (ascend_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "ascend string error.");
+    REPORT_INNER_ERROR("E18888", "ascend string error.");
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] HasAttr: ascend string error.");
     return false;
   }
 
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] HasAttr: node impl is nullptr.");
     return false;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] HasAttr: the node shared ptr is not valid.");
     return false;
   }
 
   const OpDescPtr op_desc = node_ptr->GetOpDesc();
   if (op_desc == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Get op desc of node[%s] failed.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][OpDesc] of node[%s] failed.", node_ptr->GetName().c_str());
     return false;
   }
   const std::string attr_name = ascend_name;
   if (!op_desc->HasAttr(attr_name)) {
-    REPORT_CALL_ERROR("E19999", "Node[%s] has no attr name[%s]", node_ptr->GetName().c_str(), attr_name.c_str());
+    REPORT_CALL_ERROR("E18888", "Node[%s] has no attr name[%s]", node_ptr->GetName().c_str(), attr_name.c_str());
     GELOGE(GRAPH_FAILED, "[Call][HasAttr] Node[%s] has no attr name[%s]",
            node_ptr->GetName().c_str(), attr_name.c_str());
     return false;
@@ -907,21 +907,21 @@ bool GNode::HasAttr(const AscendString &name) {
 
 graphStatus GNode::GetSubgraph(uint32_t index, GraphPtr &graph) const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetSubgraph: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetSubgraph: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const ComputeGraphPtr compute_graph_ptr = NodeUtils::GetSubgraph(*node_ptr, index);
   if (compute_graph_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "get subgraph[%u] failed from node[%s].",
+    REPORT_INNER_ERROR("E18888", "get subgraph[%u] failed from node[%s].",
                        index, node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][SubGraph] subgraph[%u] from node[%s] is nullptr.",
            index, node_ptr->GetName().c_str());
@@ -930,7 +930,7 @@ graphStatus GNode::GetSubgraph(uint32_t index, GraphPtr &graph) const {
 
   graph = GraphUtils::CreateGraphPtrFromComputeGraph(compute_graph_ptr);
   if (graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "create compute graph failed from %s.", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "create compute graph failed from %s.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Create][Graph] failed from %s.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
@@ -940,40 +940,40 @@ graphStatus GNode::GetSubgraph(uint32_t index, GraphPtr &graph) const {
 
 graphStatus GNode::GetALLSubgraphs(std::vector<GraphPtr> &graph_list) const {
   if (impl_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "node impl is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "node impl is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetALLSubgraphs: node impl is nullptr.");
     return GRAPH_FAILED;
   }
 
   const std::shared_ptr<Node> node_ptr = impl_->node_ptr_.lock();
   if (node_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "the node shared ptr is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "the node shared ptr is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] GetALLSubgraphs: the node shared ptr is not valid.");
     return GRAPH_FAILED;
   }
 
   const auto root_graph = GraphUtils::FindRootGraph(node_ptr->GetOwnerComputeGraph());
   if (root_graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Failed to find root graph from node %s ", node_ptr->GetName().c_str());
+    REPORT_INNER_ERROR("E18888", "Failed to find root graph from node %s ", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][RootGraph] Failed to find root graph from node %s ", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
   const std::vector<ComputeGraphPtr> sub_graphs = root_graph->GetAllSubgraphs();
   if (sub_graphs.empty()) {
-    REPORT_CALL_ERROR("E19999", "get all subgraphs failed from node[%s].", node_ptr->GetName().c_str());
+    REPORT_CALL_ERROR("E18888", "get all subgraphs failed from node[%s].", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Get][ALLSubGraphs] failed from node[%s].", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
   for (auto &sub_graph : sub_graphs) {
     if (sub_graph == nullptr) {
-      REPORT_INNER_ERROR("E19999", "get subgraph failed from node[%s].", node_ptr->GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "get subgraph failed from node[%s].", node_ptr->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Get][SubGraph] failed from node[%s].", node_ptr->GetName().c_str());
       return GRAPH_FAILED;
     }
     GraphPtr graph = GraphUtils::CreateGraphPtrFromComputeGraph(sub_graph);
     if (graph == nullptr) {
-      REPORT_CALL_ERROR("E19999", "create compute graph failed from node[%s].", node_ptr->GetName().c_str());
+      REPORT_CALL_ERROR("E18888", "create compute graph failed from node[%s].", node_ptr->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Create][ComputeGraph] failed from node[%s].", node_ptr->GetName().c_str());
       return GRAPH_FAILED;
     }

@@ -64,13 +64,13 @@ std::unique_ptr<uint8_t[], AlignedPtr::Deleter> AlignedPtr::Reset() {
 std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::Allocator &alloc_func,
                                                            const AlignedPtr::Deleter &delete_func) {
   if ((alloc_func == nullptr) || (delete_func == nullptr)) {
-      REPORT_INNER_ERROR("E19999", "alloc_func or delete_func is nullptr, check invalid");
+      REPORT_INNER_ERROR("E18888", "alloc_func or delete_func is nullptr, check invalid");
       GELOGE(FAILED, "[Check][Param] alloc_func/delete_func is null");
       return nullptr;
   }
   const auto aligned_ptr = MakeShared<AlignedPtr>();
   if (aligned_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create AlignedPtr failed.");
+    REPORT_CALL_ERROR("E18888", "create AlignedPtr failed.");
     GELOGE(INTERNAL_ERROR, "[Create][AlignedPtr] make shared for AlignedPtr failed");
     return nullptr;
   }
@@ -78,7 +78,7 @@ std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::All
   alloc_func(aligned_ptr->base_);
   aligned_ptr->base_.get_deleter() = delete_func;
   if (aligned_ptr->base_ == nullptr) {
-    REPORT_CALL_ERROR("E19999", "allocate for AlignedPtr failed");
+    REPORT_CALL_ERROR("E18888", "allocate for AlignedPtr failed");
     GELOGE(FAILED, "[Call][AllocFunc] allocate for AlignedPtr failed");
     return nullptr;
   }
@@ -88,13 +88,13 @@ std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::All
 
 std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromData(uint8_t * const data, const AlignedPtr::Deleter &delete_func) {
   if ((data == nullptr) || (delete_func == nullptr)) {
-    REPORT_INNER_ERROR("E19999", "data is nullptr or delete_func is nullptr");
+    REPORT_INNER_ERROR("E18888", "data is nullptr or delete_func is nullptr");
     GELOGE(FAILED, "[Check][Param] data/delete_func is null");
     return nullptr;
   }
   const auto aligned_ptr = MakeShared<AlignedPtr>();
   if (aligned_ptr == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create AlignedPtr failed.");
+    REPORT_CALL_ERROR("E18888", "create AlignedPtr failed.");
     GELOGE(INTERNAL_ERROR, "[Create][AlignedPtr] make shared for AlignedPtr failed");
     return nullptr;
   }

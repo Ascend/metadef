@@ -24,7 +24,7 @@
 namespace ge {
 std::string RealPath(const char_t *path) {
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path == nullptr,
-                                 REPORT_INNER_ERROR("E19999", "path is nullptr, check invalid");
+                                 REPORT_INNER_ERROR("E18888", "path is nullptr, check invalid");
                                      return "", "[Check][Param] path pointer is NULL.");
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strnlen(path,
                                          static_cast<size_t>(MMPA_MAX_PATH)) >= static_cast<size_t>(MMPA_MAX_PATH),
@@ -56,7 +56,7 @@ std::string RealPath(const char_t *path) {
  */
 int32_t CreateDirectory(const std::string &directory_path) {
   GE_CHK_BOOL_EXEC(!directory_path.empty(),
-                   REPORT_INNER_ERROR("E19999", "directory path is empty, check invalid");
+                   REPORT_INNER_ERROR("E18888", "directory path is empty, check invalid");
                        return -1, "[Check][Param] directory path is empty.");
   const auto dir_path_len = directory_path.length();
   if (dir_path_len >= static_cast<size_t>(MMPA_MAX_PATH)) {
@@ -76,7 +76,7 @@ int32_t CreateDirectory(const std::string &directory_path) {
         const int32_t ret = mmMkdir(&(tmp_dir_path[0U]), mkdir_mode);  // 700
         if (ret != 0) {
           if (errno != EEXIST) {
-                REPORT_CALL_ERROR("E19999",
+                REPORT_CALL_ERROR("E18888",
                                   "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
                                   directory_path.c_str(), strerror(errno));
             GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",
@@ -90,7 +90,7 @@ int32_t CreateDirectory(const std::string &directory_path) {
   const int32_t ret = mmMkdir(static_cast<const char_t *>(directory_path.c_str()), mkdir_mode);  // 700
   if (ret != 0) {
     if (errno != EEXIST) {
-      REPORT_CALL_ERROR("E19999",
+      REPORT_CALL_ERROR("E18888",
                         "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
                         directory_path.c_str(), strerror(errno));
       GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",

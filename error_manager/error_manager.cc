@@ -30,6 +30,7 @@
 
 #define GE_MODULE_NAME static_cast<int32_t>(GE)
 namespace {
+const std::string kParamCheckErrorSuffix = "8888";
 class GeLog {
  public:
   static uint64_t GetTid() {
@@ -353,9 +354,23 @@ std::string ErrorManager::GetErrorMessage() {
     }
   }
   if (IsInnerErrorCode(first_code)) {
-    err_stream << first_code << ": Inner Error!" << std::endl;
+    std::string current_code_print = first_code;
+    bool IsErrorId = IsParamCheckErrorId(first_code);
     for (auto &item : error_messages) {
-      err_stream << "        " << item.error_message << std::endl;
+      if (!IsParamCheckErrorId(item.error_id)) {
+        current_code_print = item.error_id;
+        break;
+      }
+    }
+    err_stream << current_code_print << ": Inner Error!" << std::endl;
+    // Display the first non 8888 error code
+    for (auto &item : error_messages) {
+      if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
+        err_stream << "        " << item.error_message << std::endl;
+        continue;
+      }
+      err_stream << current_code_print << "  " << item.error_message << std::endl;
+      current_code_print = "      ";
     }
   } else {
     for (auto &item : error_messages) {
@@ -717,8 +732,10 @@ bool ErrorManager::IsInnerErrorCode(const std::string &error_code) const {
   if (!IsValidErrorCode(error_code)) {
     return false;
   } else {
-    return error_code.substr(2U, 4U) == kInterErrorCodePrefix;
+    return (error_code.substr(2U, 4U) == kInterErrorCodePrefix) || IsParamCheckErrorId(error_code);
   }
 }
 
-
+bool ErrorManager::IsParamCheckErrorId(const std::string &error_code) const {
+  return (error_code.substr(2U, 4U) == kParamCheckErrorSuffix);
+}

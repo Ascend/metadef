@@ -46,7 +46,7 @@ bool SameCurrentAndOrigin(const GeTensorDescPtr &tensor_desc) {
 }
 bool NodeShapeTransUtils::Init() {
   if (op_desc_ == nullptr) {
-    REPORT_INNER_ERROR("E19999", "op_desc_ is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "op_desc_ is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] input op_desc_ is nullptr!");
     return false;
   }
@@ -143,7 +143,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     const bool is_success = transformer::ExpandDimension(op_desc_->GetType(), ori_format, curr_format, i,
                                                          infer_reshape_type, ori_shape);
     if (!is_success) {
-      REPORT_CALL_ERROR("E19999", "ExpandDimension failed, op type:%s", op_desc_->GetType().c_str());
+      REPORT_CALL_ERROR("E18888", "ExpandDimension failed, op type:%s", op_desc_->GetType().c_str());
       GELOGE(GRAPH_FAILED, "[Call][ExpandDimension] failed, op type:%s", op_desc_->GetType().c_str());
       return false;
     }
@@ -168,7 +168,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     auto &ori_shape = tensor_desc_output->MutableShape();
     const auto curr_format = tensor_desc_output->GetFormat();
     if (curr_format != map_ori_format_out_[i]) {
-      REPORT_INNER_ERROR("E19999", "Node is %s, out tensor idx is %zu. format: %s, "
+      REPORT_INNER_ERROR("E18888", "Node is %s, out tensor idx is %zu. format: %s, "
                          "recorded origin format: %s is not same", op_desc_->GetName().c_str(), i,
                          TypeUtils::FormatToSerialString(curr_format).c_str(),
                          TypeUtils::FormatToSerialString(map_ori_format_out_[i]).c_str());
@@ -195,7 +195,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
     const bool is_success = transformer::ExpandDimension(op_desc_->GetType(), curr_format, saved_format, i,
                                                          infer_reshape_type, ori_shape);
     if (!is_success) {
-      REPORT_CALL_ERROR("E19999", "ExpandDimension failed, op type:%s.", op_desc_->GetType().c_str());
+      REPORT_CALL_ERROR("E18888", "ExpandDimension failed, op type:%s.", op_desc_->GetType().c_str());
       GELOGE(GRAPH_FAILED, "[Call][ExpandDimension] failed, op type:%s.", op_desc_->GetType().c_str());
       return false;
     }

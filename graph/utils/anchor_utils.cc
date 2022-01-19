@@ -23,7 +23,7 @@ namespace ge {
 // Get anchor status
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorStatus AnchorUtils::GetStatus(const DataAnchorPtr &data_anchor) {
   if (data_anchor == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param data_anchor is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param data_anchor is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The input data anchor is invalid.");
     return ANCHOR_RESERVED;
   }
@@ -34,7 +34,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AnchorStatus AnchorUtils::GetStat
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus AnchorUtils::SetStatus(const DataAnchorPtr &data_anchor,
                                                                                   const AnchorStatus anchor_status) {
   if ((data_anchor == nullptr) || (anchor_status == ANCHOR_RESERVED)) {
-    REPORT_INNER_ERROR("E19999", "The input data anchor or input data format is invalid.");
+    REPORT_INNER_ERROR("E18888", "The input data anchor or input data format is invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The input data anchor or input data format is invalid.");
     return GRAPH_FAILED;
   }

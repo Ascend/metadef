@@ -161,7 +161,7 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
     std::unordered_set<RefCell, RefCellHash> reflection;
     auto ret_status = reflection_builder.LookUpRefRelations(key, reflection);
     if (ret_status != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "LookUpRefRelations failed! Node is [%s], the %d input edge",
+      REPORT_CALL_ERROR("E18888", "LookUpRefRelations failed! Node is [%s], the %d input edge",
                         (peer_in_data_node->GetName()).c_str(), idx);
       GELOGE(GRAPH_FAILED, "[Call][LookUpRefRelations] failed! Node is [%s], the %d input edge",
              (peer_in_data_node->GetName()).c_str(), idx);
@@ -217,7 +217,7 @@ graphStatus FormatRefiner::RefreshConstantOutProcess(const ComputeGraphPtr &com_
   if ((op_desc->GetType() == CONSTANTOP) && (!IsGraphInferred(com_graph))) {
     ConstGeTensorPtr tensor_value;
     if (!AttrUtils::GetTensor(op_desc, "value", tensor_value)) {
-      REPORT_CALL_ERROR("E19999", "GetTensor failed, node name:%s.", op_desc->GetName().c_str());
+      REPORT_CALL_ERROR("E18888", "GetTensor failed, node name:%s.", op_desc->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Get][Tensor] failed, node name:%s.", op_desc->GetName().c_str());
       return GRAPH_FAILED;
     }
@@ -231,7 +231,7 @@ graphStatus FormatRefiner::GetAnchorPoints(const ge::ComputeGraphPtr &com_graph,
                                            std::vector<ge::NodePtr> &anchor_points,
                                            std::vector<ge::NodePtr> &anchor_data_nodes) {
   if (com_graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param graph is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param graph is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] input graph is nullptr");
     return GRAPH_FAILED;
   }
@@ -239,13 +239,13 @@ graphStatus FormatRefiner::GetAnchorPoints(const ge::ComputeGraphPtr &com_graph,
   // Get all anchor point nodes and switch nodes
   for (auto &one_node_ptr : com_graph->GetAllNodes()) {
     if (one_node_ptr == nullptr) {
-      REPORT_INNER_ERROR("E19999", "node ptr in graph(%s) should not be null", com_graph->GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "node ptr in graph(%s) should not be null", com_graph->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] node ptr in graph(%s) should not be null", com_graph->GetName().c_str());
       return GRAPH_FAILED;
     }
     const auto one_op_desc = one_node_ptr->GetOpDesc();
     if (one_op_desc == nullptr) {
-      REPORT_INNER_ERROR("E19999", "node's opdesc is nullptr，graph:%s", com_graph->GetName().c_str());
+      REPORT_INNER_ERROR("E18888", "node's opdesc is nullptr，graph:%s", com_graph->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] node's opdesc is nullptr，graph:%s", com_graph->GetName().c_str());
       return GRAPH_FAILED;
     }
@@ -280,7 +280,7 @@ graphStatus FormatRefiner::GetAnchorPoints(const ge::ComputeGraphPtr &com_graph,
 
 graphStatus FormatRefiner::AnchorProcess(const ge::NodePtr &anchor_node) {
   if (anchor_node == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param anchor node is nullptr, check invalid.");
+    REPORT_INNER_ERROR("E18888", "param anchor node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] anchor node is nullptr!");
     return GRAPH_FAILED;
   }
@@ -478,7 +478,7 @@ graphStatus FormatRefiner::InferOrigineFormat(const ge::ComputeGraphPtr &graph) 
   std::vector<ge::NodePtr> anchor_data_nodes;
 
   if (graph == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param graph is nullptr, check invalid");
+    REPORT_INNER_ERROR("E18888", "param graph is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] input graph is nullptr");
     return GRAPH_FAILED;
   }

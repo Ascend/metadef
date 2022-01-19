@@ -67,7 +67,7 @@ graphStatus OperatorFactoryImpl::GetOpsTypeList(std::vector<std::string> &all_op
         operator_creators_->begin(), operator_creators_->end(), all_ops.begin(),
         [](const std::pair<std::string, OpCreator> &operator_creator) { return operator_creator.first; });
   } else {
-    REPORT_INNER_ERROR("E19999", "no operator creators found");
+    REPORT_INNER_ERROR("E18888", "no operator creators found");
     GELOGE(GRAPH_FAILED, "[Check][Param] no operator creators found");
     return GRAPH_FAILED;
   }
