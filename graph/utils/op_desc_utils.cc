@@ -73,7 +73,7 @@ bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearInputDesc(const OpDescPtr op_desc,
                                                                                 const uint32_t index) {
-  GE_CHK_BOOL_EXEC(op_desc != nullptr && op_desc->impl_ != nullptr,
+  GE_CHK_BOOL_EXEC((op_desc != nullptr) && (op_desc->impl_ != nullptr),
                    REPORT_INNER_ERROR("E18888", "op_desc is nullptr, check invalid");
                    return false, "[Check][Param] op_desc is nullptr");
   GE_CHK_BOOL_EXEC(index < op_desc->impl_->inputs_desc_.size(),
@@ -128,7 +128,7 @@ bool OpDescUtils::ClearOutputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearOutputDesc(const OpDescPtr &op_desc,
                                                                                  const uint32_t index) {
-  GE_CHK_BOOL_EXEC(op_desc != nullptr && op_desc->impl_ != nullptr,
+  GE_CHK_BOOL_EXEC((op_desc != nullptr) && (op_desc->impl_ != nullptr),
                    REPORT_INNER_ERROR("E18888", "param op_desc is nullptr, check invalid");
                    return false, "[Check][Param] op_desc is nullptr");
   GE_CHK_BOOL_EXEC(index < op_desc->impl_->outputs_desc_.size(),
@@ -477,7 +477,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::NodePtr> OpDescUt
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::GeTensorDesc> OpDescUtils::GetNonConstTensorDesc(
     const ge::ConstNodePtr &node) {
-  if (node == nullptr || node->GetOpDesc() == nullptr) {
+  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     return std::vector<ge::GeTensorDesc>();
   }
   std::vector<ge::GeTensorDesc> ret;
@@ -490,7 +490,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::GeTensorDesc> OpD
   } else {
     for (const auto &in_anchor : node->GetAllInDataAnchors()) {
       const auto out_anchor = in_anchor->GetPeerOutAnchor();
-      if (out_anchor == nullptr || out_anchor->GetOwnerNode()->GetOpDesc() == nullptr) {
+      if ((out_anchor == nullptr) || (out_anchor->GetOwnerNode()->GetOpDesc() == nullptr)) {
         continue;
       }
       if (out_anchor->GetOwnerNode()->GetOpDesc()->GetType() != CONSTANT) {
@@ -518,7 +518,7 @@ std::vector<ge::NodePtr> OpDescUtils::GetConstInputs(const ge::Node &node, const
     const auto in_node = out_anchor->GetOwnerNode();
     if (in_node->GetType() == CONSTANT) {
       ret.push_back(in_node);
-    } else if (in_node->GetType() == SWITCH && node.GetType() == MATMUL) {
+    } else if ((in_node->GetType() == SWITCH) && (node.GetType() == MATMUL)) {
       // const --> switch --> matmul
       auto switch_input = GetConstInputs(*in_node, depth - 1U);
       if (switch_input.size() > 0U) {
@@ -649,7 +649,7 @@ std::vector<GeTensorPtr> OpDescUtils::MutableWeights(const ge::Node &node) {
     (void) AttrUtils::GetStr(op_desc, "parentOpType", parent_op);
     // This if judgment is necessary because the current subgraph optimization is multithreaded
     // and the parent node of the PLD operation should be a stable type, such as const
-    if (parent_op == CONSTANT || parent_op == CONSTANTOP) {
+    if ((parent_op == CONSTANT) || (parent_op == CONSTANTOP)) {
       NodePtr parent_node = nullptr;
       parent_node = op_desc->TryGetExtAttr("parentNode", parent_node);
       if (parent_node != nullptr) {
@@ -738,7 +738,7 @@ OpDescUtils::SetWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &we
     return GRAPH_PARAM_INVALID;
   }
   // 2. node is not const
-  auto ret = SetNoneConstNodeWeights(node, weights_map);
+  auto const ret = SetNoneConstNodeWeights(node, weights_map);
   if (ret != GRAPH_SUCCESS) {
     return ret;
   }
