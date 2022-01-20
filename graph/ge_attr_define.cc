@@ -1301,4 +1301,8 @@ const std::string ATTR_NAME_IS_INSERTED_BY_GE = "_is_inserted_by_ge";
 const std::string ATTR_NAME_MEMORY_REUSE_INFO = "_mem_reuse_info";
 const std::string ATTR_NAME_OP_READ_WRITE_INDEX = "_op_read_write_index";
 const std::string ATTR_NAME_MEM_RELEASE_FIRST_REUSE_FIRST = "_mem_release_first_reuse_first";
+
+// for support overflow detection
+const std::string GLOBLEWORKSPACE_STATUS = "_globleworkspace_status";
+const std::string GLOBLEWORKSPACE_STATUS_BYTES = "_globleworkspace_status_bytes";
 }  // namespace ge
