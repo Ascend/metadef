@@ -33,7 +33,7 @@ class BlockingQueue {
   ~BlockingQueue() {}
 
   bool Pop(T &item) {
-    const std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     while (queue_.empty() && (!is_stoped_)) {
       empty_cond_.wait(lock);
@@ -52,7 +52,7 @@ class BlockingQueue {
   }
 
   bool Push(const T &item, const bool is_wait = true) {
-    const std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     while ((queue_.size() >= max_size_) && (!is_stoped_)) {
       if (!is_wait) {
@@ -73,7 +73,7 @@ class BlockingQueue {
   }
 
   bool Push(T &&item, const bool is_wait = true) {
-    const std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     while ((queue_.size() >= max_size_) && (!is_stoped_)) {
       if (!is_wait) {
