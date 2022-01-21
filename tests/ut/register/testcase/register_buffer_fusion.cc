@@ -38,16 +38,40 @@
 #include "graph/debug/ge_log.h"
 #include "register/graph_optimizer/graph_fusion/connection_matrix.h"
 #include "register/graph_optimizer/fusion_common/op_slice_info.h"
-
+#include "runtime/kernel.h"
 #undef protected
 #undef private
 using namespace std;
 using namespace domi;
 using namespace fe;
 using namespace ge;
+
 static const string STREAM_LABEL = "_stream_label";
 const std::string FE_IMPLY_TYPE = "_fe_imply_type";
+namespace fe{
+static const uint32_t L2_MAXDATANUM = 8;
+using L2FusionData_t = struct tag_l2_fusion_data {
+  uint32_t l2Index;
+  uint64_t l2Addr;
+  uint64_t l2PageNum;
+};
+using L2FusionDataMap_t = std::map<uint64_t, L2FusionData_t>;
 
+using fe_sm_desc_t = struct tag_fe_sm_desc {
+  rtL2Ctrl_t l2ctrl;
+  std::string node_name[L2_MAXDATANUM];
+  uint8_t output_index[L2_MAXDATANUM];
+};
+
+using TaskL2FusionInfo_t = struct TagTaskL2FusionInfo {
+  std::string node_name;
+  fe_sm_desc_t l2_info;
+  L2FusionDataMap_t input;
+  L2FusionDataMap_t output;
+  uint32_t is_used;
+};
+using L2FusionInfoPtr = std::shared_ptr<TaskL2FusionInfo_t>;
+}
 
 class TbeCommonRules2FusionPass : public BufferFusionPassBase {
  public:
@@ -861,14 +885,14 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv, ge::ATTR_NAME_SESSION_GRAPH_ID, "_0_1_2_3");
     std::vector<int64_t> params = {0, 0, 0, 0, 0, 1, 0, 1};
     AttrUtils::SetListInt(conv, "ub_atomic_params", params);
     AttrUtils::SetBool(conv, "Aipp_Conv_Flag", true);
     conv->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -929,13 +953,13 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
     std::vector<int64_t> params = {0, 0, 0, 0, 0, 1, 0, 1};
     AttrUtils::SetListInt(conv, "ub_atomic_params", params);
     AttrUtils::SetBool(conv, "Aipp_Conv_Flag", true);
     conv->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1073,14 +1097,14 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddInputDesc(out_desc);
     relu->AddOutputDesc(out_desc);
 
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
     std::vector<int64_t> params = {0, 0, 0, 0, 0, 1, 0, 1};
     AttrUtils::SetListInt(conv, "ub_atomic_params", params);
     AttrUtils::SetBool(conv, "Aipp_Conv_Flag", true);
     conv->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(elemwise1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(elemwise1, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1177,10 +1201,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
     netout_op->AddInputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1252,10 +1276,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv, STREAM_LABEL, "stream1");
     ge::AttrUtils::SetStr(conv1, STREAM_LABEL, "stream1");
     ge::AttrUtils::SetStr(elemwise, STREAM_LABEL, "stream1");
@@ -1329,10 +1353,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv, STREAM_LABEL, "stream1");
     ge::AttrUtils::SetStr(conv1, STREAM_LABEL, "stream1");
     ge::AttrUtils::SetStr(elemwise, STREAM_LABEL, "stream2");
@@ -1405,10 +1429,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(relu, STREAM_LABEL, "stream1");
 
     NodePtr data_node = graph->AddNode(data);
@@ -1478,10 +1502,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv, STREAM_LABEL, "stream1");
 
     NodePtr data_node = graph->AddNode(data);
@@ -1542,9 +1566,9 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     quant->AddInputDesc(out_desc);
     quant->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1599,10 +1623,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     quant->AddInputDesc(out_desc);
     quant->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
     AttrUtils::SetFloat(relu, "negative_slope", 0);
-    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1657,10 +1681,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     quant->AddInputDesc(out_desc);
     quant->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
     AttrUtils::SetFloat(relu, "negative_slope", 0.1);
-    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1720,10 +1744,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     quant->AddInputDesc(out_desc);
     quant->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(eltwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(eltwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1786,10 +1810,10 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     quant->AddInputDesc(out_desc);
     quant->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(eltwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(eltwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(quant, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1860,19 +1884,19 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv, ge::ATTR_NAME_SESSION_GRAPH_ID, "_0_1_2_3");
     std::vector<int64_t> params = {0, 0, 0, 0, 0, 1, 0, 1};
     AttrUtils::SetListInt(conv, "ub_atomic_params", params);
     AttrUtils::SetBool(conv, "Aipp_Conv_Flag", true);
     conv->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv1, ge::ATTR_NAME_SESSION_GRAPH_ID, "_0_1_2_3");
     AttrUtils::SetListInt(conv1, "ub_atomic_params", params);
     AttrUtils::SetBool(conv1, "Aipp_Conv_Flag", true);
     conv1->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -1951,19 +1975,19 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     relu->AddOutputDesc(out_desc);
     relu1->AddInputDesc(out_desc);
     relu1->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv, ge::ATTR_NAME_SESSION_GRAPH_ID, "_0_1_2_3");
     std::vector<int64_t> params = {0, 0, 0, 0, 0, 1, 0, 1};
     AttrUtils::SetListInt(conv, "ub_atomic_params", params);
     AttrUtils::SetBool(conv, "Aipp_Conv_Flag", true);
     conv->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv1, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv1, ge::ATTR_NAME_SESSION_GRAPH_ID, "_0_1_2_3");
     AttrUtils::SetListInt(conv1, "ub_atomic_params", params);
     AttrUtils::SetBool(conv1, "Aipp_Conv_Flag", true);
     conv1->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
-    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -2025,13 +2049,13 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     elemwise->AddInputDesc(out_desc);
     elemwise->AddInputDesc(out_desc);
     elemwise->AddOutputDesc(out_desc);
-    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(conv, FE_IMPLY_TYPE, 6);
     ge::AttrUtils::SetStr(conv, ge::ATTR_NAME_SESSION_GRAPH_ID, "_0_1_2_3");
     std::vector<int64_t> params = {0, 0, 0, 0, 0, 1, 0, 1};
     AttrUtils::SetListInt(conv, "ub_atomic_params", params);
     // AttrUtils::SetBool(conv, "Aipp_Conv_Flag", true);
     conv->SetWorkspaceBytes({0});
-    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, fe::EN_IMPL_HW_TBE);
+    AttrUtils::SetInt(elemwise, FE_IMPLY_TYPE, 6);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
