@@ -20,15 +20,11 @@
 #include <vector>
 #include <string>
 #include <memory>
-#ifndef ONLY_COMPILE_OPEN_SRC
-#include "graph/op_desc.h"
-#include "aicore_util_types.h"
-#endif
+
 namespace fe {
-#ifdef ONLY_COMPILE_OPEN_SRC
 enum OpReduceType { REDUCE_MEAN = 0, REDUCE_ADD, REDUCE_MAX, REDUCE_MIN };
 enum OpL1FusionType { L1FUSION_DISABLE = 0, L1FUSION_BASIC, L1FUSION_INPUT_CTR };
-#endif
+
 class InputSplitInfoImpl;
 using InputSplitInfoImplPtr = std::shared_ptr<InputSplitInfoImpl>;
 class InputSplitInfo;
