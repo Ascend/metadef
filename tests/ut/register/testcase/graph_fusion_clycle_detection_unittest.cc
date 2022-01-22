@@ -35,7 +35,7 @@ class UtestCycleDetection : public testing::Test {
   void TearDown() {}
 };
 
-class FusionTestPass : fe::PatternFusionBasePass {
+class FusionTestPass : public fe::PatternFusionBasePass {
  public:
   FusionTestPass() {};
   ~FusionTestPass() override {};
@@ -426,3 +426,9 @@ TEST_F(UtestCycleDetection, Coverage_04) {
   connectivity->Update(*graph, fusion_nodes);
 }
 
+TEST_F(UtestCycleDetection, Coverage_05) {
+  FusionTestPass pass;
+  std::unique_ptr<fe::ConnectionMatrix> connection_matrix;
+  pass.GetConnectionMatrix(connection_matrix);
+  pass.SetConnectionMatrix(connection_matrix);
+}
