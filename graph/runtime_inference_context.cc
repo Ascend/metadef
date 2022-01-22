@@ -57,17 +57,14 @@ graphStatus RuntimeInferenceContext::GetTensor(int64_t node_id, int32_t output_i
 
   auto &output_tensors = iter->second;
   if (static_cast<uint32_t>(output_id) >= output_tensors.size()) {
-    REPORT_INNER_ERROR("E18888", "Node output is not registered. node_id = %ld, output index = %d",
-                       node_id, output_id);
-    GELOGE(GRAPH_FAILED, "[Check][Param] Node output is not registered. node_id = %ld, output index = %d",
-           node_id, output_id);
+    GELOGW("The %d th output tensor for node id [%ld] has not been registered.", output_id, node_id);
     return GRAPH_FAILED;
   }
 
   GELOGD("Get ge tensor for node_id = %ld, output_id = %d", node_id, output_id);
   tensor = output_tensors[static_cast<size_t>(output_id)];
   if (tensor == nullptr) {
-    GELOGW("Node output is not registered. node_id = %ld, output index = %d", node_id, output_id);
+    GELOGW("The %d th output tensor registered for node id [%ld] is nullptr.", output_id, node_id);
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
