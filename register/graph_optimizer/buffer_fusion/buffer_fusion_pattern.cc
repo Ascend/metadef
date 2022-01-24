@@ -25,11 +25,7 @@ using std::map;
 using std::string;
 using std::vector;
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-inline bool IsAddOverflow(int64_t a, int64_t b) {
-#else
 inline bool IsAddOverflow(const int64_t &a, const int64_t &b) {
-#endif
   return ((b > 0) && (a > (static_cast<int64_t>(INT64_MAX) - b))) || \
       ((b < 0) && (a < (static_cast<int64_t>(INT64_MIN) - b)));
 }
@@ -266,11 +262,7 @@ BufferFusionPattern &BufferFusionPattern::SetHead(const std::vector<string> &hea
   return *this;
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void BufferFusionPattern::UpdateSkipStatus(BufferFusionOpDesc *op_desc) const {
-#else
 void BufferFusionPattern::UpdateSkipStatus(const BufferFusionOpDesc *op_desc) const {
-#endif
   if (op_desc->out_branch_type == TBE_OUTPUT_BRANCH_MULTI) {
     for (auto &input_desc : op_desc->inputs) {
       if (input_desc->types.size() != op_desc->types.size()) {

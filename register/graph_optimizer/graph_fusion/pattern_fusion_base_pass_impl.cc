@@ -31,15 +31,10 @@ PatternFusionBasePassImpl::~PatternFusionBasePassImpl() {
 }
 
 void PatternFusionBasePassImpl::GetPatterns(std::vector<FusionPattern *> &patterns) { patterns = patterns_; }
-#ifdef ONLY_COMPILE_OPEN_SRC
-void PatternFusionBasePassImpl::SetPatterns(std::vector<FusionPattern *> &patterns) { patterns_ = patterns; }
 
-void PatternFusionBasePassImpl::SetOpsKernelInfoStore(OpsKernelInfoStorePtr ops_kernel_info_store_ptr) {
-#else
 void PatternFusionBasePassImpl::SetPatterns(const std::vector<FusionPattern *> &patterns) { patterns_ = patterns; }
 
 void PatternFusionBasePassImpl::SetOpsKernelInfoStore(const OpsKernelInfoStorePtr ops_kernel_info_store_ptr) {
-#endif
   ops_kernel_info_store_ptr_ = ops_kernel_info_store_ptr;
 }
 
@@ -65,21 +60,12 @@ bool PatternFusionBasePassImpl::CheckOpSupported(const ge::NodePtr &node) const 
   return ops_kernel_info_store_ptr_->CheckSupported(node, un_supported_reason);
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool PatternFusionBasePassImpl::IsNodesExist(ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes) {
-#else
 bool PatternFusionBasePassImpl::IsNodesExist(const ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes) {
-#endif
   return find(nodes.begin(), nodes.end(), current_node) != nodes.end();
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool PatternFusionBasePassImpl::IsMatched(std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node,
-                                          const Mapping &mapping) {
-#else
 bool PatternFusionBasePassImpl::IsMatched(const std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node,
                                           const Mapping &mapping) {
-#endif
   if ((op_desc == nullptr) || (node == nullptr)) {
     GELOGD("opDesc or node could not be null");
     return false;
@@ -91,11 +77,7 @@ bool PatternFusionBasePassImpl::IsMatched(const std::shared_ptr<OpDesc> op_desc,
   return (iter != mapping.end()) && (find(iter->second.begin(), iter->second.end(), node) != iter->second.end());
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void PatternFusionBasePassImpl::DumpMappings(const FusionPattern &pattern, const Mappings &mappings) {
-#else
 void PatternFusionBasePassImpl::DumpMappings(const FusionPattern &pattern, const Mappings &mappings) const {
-#endif
   std::ostringstream oss;
   oss << std::endl << "Mappings of pattern ";
   oss << pattern.GetName() << ":" << std::endl;
@@ -117,13 +99,8 @@ bool PatternFusionBasePassImpl::IsOpTypeExist(const std::string &type, const std
   return find(types.begin(), types.end(), type) != types.end();
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool PatternFusionBasePassImpl::MatchFromOutput(ge::NodePtr output_node, std::shared_ptr<OpDesc> output_op_desc,
-                                                Mapping &mapping) {
-#else
 bool PatternFusionBasePassImpl::MatchFromOutput(const ge::NodePtr output_node,
                                                 const std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping) {
-#endif
   if ((output_node == nullptr) || (output_op_desc == nullptr)) {
     GELOGW("[Match][Output] output node/op_desc is null, pattern matching failed");
     return false;

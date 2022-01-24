@@ -110,11 +110,8 @@ static bool CheckStreamLabel(std::vector<ge::NodePtr> &fused_nodes) {
   }
   return true;
 }
-#ifdef ONLY_COMPILE_OPEN_SRC
-static bool SetStreamLabelToFusedNodes(std::vector<ge::NodePtr> &fused_nodes, ge::NodePtr first_node) {
-#else
+
 static bool SetStreamLabelToFusedNodes(std::vector<ge::NodePtr> &fused_nodes, const ge::NodePtr first_node) {
-#endif
   std::string stream_label = "";
   if (ge::AttrUtils::GetStr(first_node->GetOpDesc(), STREAM_LABEL, stream_label)) {
     for (ge::NodePtr &node : fused_nodes) {
@@ -126,11 +123,8 @@ static bool SetStreamLabelToFusedNodes(std::vector<ge::NodePtr> &fused_nodes, co
   }
   return true;
 }
-#ifdef ONLY_COMPILE_OPEN_SRC
-void InheritAttrFromOriNode(std::vector<ge::NodePtr> &original_nodes, const ge::NodePtr &fusion_node) {
-#else
+
 void InheritAttrFromOriNode(const std::vector<ge::NodePtr> &original_nodes, const ge::NodePtr &fusion_node) {
-#endif
   for (const auto &origin_node : original_nodes) {
     int64_t keep_dtype_ = static_cast<int64_t>(false);
     if (ge::AttrUtils::GetInt(origin_node->GetOpDesc(), "_keep_dtype", keep_dtype_) && (keep_dtype_ != 0)) {
@@ -140,11 +134,7 @@ void InheritAttrFromOriNode(const std::vector<ge::NodePtr> &original_nodes, cons
   }
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapping &mapping) {
-#else
 void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapping &mapping) const {
-#endif
   std::ostringstream oss;
   oss << std::endl << "Mapping of pattern ";
   oss << pattern.GetName() << ":" << std::endl;
@@ -327,15 +317,9 @@ void PrintAllNodes(const std::vector<ge::NodePtr> &scope_nodes) {
   }
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
-                                             const std::unordered_set<ge::NodePtr> &scope_nodes_set,
-                                             const std::vector<ge::NodePtr> &scope_nodes) {
-#else
 bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
                                              const std::unordered_set<ge::NodePtr> &scope_nodes_set,
                                              const std::vector<ge::NodePtr> &scope_nodes) const {
-#endif
   for (const auto &peer_out : node->GetOutAllNodes()) {
     if (scope_nodes_set.count(peer_out)) {
       continue;
@@ -470,11 +454,7 @@ bool PatternFusionBasePass::MatchAll(const ge::ComputeGraph &graph, const Fusion
  * @param [in] mapping: fusion node group
  * @return std::vector<ge::NodePtr>: all fusion nodes list
  */
-#ifdef ONLY_COMPILE_OPEN_SRC
-vector<ge::NodePtr> PatternFusionBasePass::GetNodesFromMapping(const Mapping &mapping) {
-#else
 std::vector<ge::NodePtr> PatternFusionBasePass::GetNodesFromMapping(const Mapping &mapping) const {
-#endif
   std::vector<ge::NodePtr> nodes;
   for (auto &item : mapping) {
     for (const auto &node : item.second) {
@@ -488,11 +468,7 @@ std::vector<ge::NodePtr> PatternFusionBasePass::GetNodesFromMapping(const Mappin
  * @ingroup fe
  * @brief get an op from mapping according to ID
  */
-#ifdef ONLY_COMPILE_OPEN_SRC
-ge::NodePtr PatternFusionBasePass::GetNodeFromMapping(const string &id, const Mapping &mapping) {
-#else
 ge::NodePtr PatternFusionBasePass::GetNodeFromMapping(const std::string &id, const Mapping &mapping) const {
-#endif
   for (auto &item : mapping) {
     const std::shared_ptr<OpDesc> op_desc = item.first;
     if ((op_desc != nullptr) && (op_desc->id == id)) {

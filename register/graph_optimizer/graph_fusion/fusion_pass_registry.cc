@@ -25,13 +25,8 @@
 namespace fe {
 class FusionPassRegistry::FusionPassRegistryImpl {
  public:
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
-                    FusionPassRegistry::CreateFn create_fn) {
-#else
   void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
                     const FusionPassRegistry::CreateFn create_fn) {
-#endif
     const std::lock_guard<std::mutex> my_lock(mu_);
 
     const auto iter = create_fns_.find(pass_type);
@@ -56,7 +51,7 @@ class FusionPassRegistry::FusionPassRegistryImpl {
     return iter->second;
   }
 
- private:
+private:
   std::mutex mu_;
   std::map<GraphFusionPassType, map<std::string, FusionPassRegistry::CreateFn>> create_fns_;
 };
