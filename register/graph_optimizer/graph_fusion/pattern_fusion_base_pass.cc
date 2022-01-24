@@ -357,6 +357,14 @@ bool PatternFusionBasePass::DetectOneScope(const std::vector<ge::NodePtr> &scope
   return false;
 }
 
+void PatternFusionBasePass::GetConnectionMatrix(std::unique_ptr<ConnectionMatrix> &connection_matrix) {
+  connection_matrix = std::move(connectivity_);
+}
+
+void PatternFusionBasePass::SetConnectionMatrix(std::unique_ptr<ConnectionMatrix> &connection_matrix) {
+  connectivity_ = std::move(connection_matrix);
+}
+
 bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
                                            const std::vector<std::vector<ge::NodePtr>> &fusion_nodes) {
   if (connectivity_ == nullptr) {

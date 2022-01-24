@@ -97,6 +97,9 @@ class PatternFusionBasePass : public GraphPass {
   bool CycleDetection(const ge::ComputeGraph &graph,
                       const std::vector<std::vector<ge::NodePtr>> &fusion_nodes);
 
+  void GetConnectionMatrix(std::unique_ptr<ConnectionMatrix> &connection_matrix);
+
+  void SetConnectionMatrix(std::unique_ptr<ConnectionMatrix> &connection_matrix);
  protected:
   virtual std::vector<FusionPattern *> DefinePatterns() = 0;
   virtual Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, std::vector<ge::NodePtr> &new_nodes) = 0;
