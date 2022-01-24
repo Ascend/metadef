@@ -3187,7 +3187,7 @@
       "errClass": "Argument Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EJ9002",
-      "ErrMessage": "Add hccp to cgroup failed.",
+      "ErrMessage": "Failed to parse the argument.",
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "An incorrect argument is passed when the HCCP process is started.",
@@ -3220,7 +3220,7 @@
        "errClass": "Process Errors",
        "errTitle": "HCCP Process Initialization Failure",
        "ErrCode": "EJ0005",
-       "ErrMessage": "Some HCCP process on the device does not exit, please restart the environment or log in to the device and kill the hccp preocess.",
+       "ErrMessage": "Some HCCP process on the device, please restart the environment or log in to the device and kill the hccp preocess.",
        "Arglist": "",
        "suggestion": {
          "Possible Cause": "The HCCP process is not destroyed by the TSD.",
