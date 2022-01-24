@@ -397,8 +397,8 @@ OpDescPtr OperatorImpl::GetOpDescImpl() const {
 }
 
 void OperatorImpl::UpdateLinkMapImpl(const std::string &src_name, const OpIO &op_dst) {
-  const auto it_find = output_links_.find(src_name);
-  if (it_find == output_links_.end()) {
+  const std::map<std::string, std::vector<ge::OpIO>>::const_iterator it_find = output_links_.find(src_name);
+  if (it_find == output_links_.cend()) {
     std::vector<OpIO> dsts{op_dst};
     (void)output_links_.insert(std::make_pair(src_name, dsts));
   } else {
@@ -459,8 +459,8 @@ void OperatorImpl::SetSubgraphBuilder(const std::string &ir_name, const uint32_t
     key_name += std::to_string(index);
   }
 
-  const auto it = subgraph_names_to_builders_.find(key_name);
-  if (it == subgraph_names_to_builders_.end()) {
+  const std::map<std::string, ge::SubgraphBuilder>::const_iterator it = subgraph_names_to_builders_.find(key_name);
+  if (it == subgraph_names_to_builders_.cend()) {
     REPORT_INNER_ERROR("E18888", "Failed to set subgraph builder for name %s index %u.", ir_name.c_str(), index);
     GELOGE(PARAM_INVALID, "[Check][Param] Failed to set subgraph builder for name %s index %u.", ir_name.c_str(),
            index);

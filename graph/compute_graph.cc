@@ -468,7 +468,7 @@ graphStatus ComputeGraphImpl::RemoveNode(const NodePtr &node) {
   // if the node save as input node, delete it
   (void)RemoveOutputNode(node);
 
-  if (GRAPH_SUCCESS != IsolateNode(node)) {
+  if (IsolateNode(node) != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "[Isolate][Node] failed, node name: %s, graph:%s.", node->GetName().c_str(),
            name_.c_str());
     return GRAPH_FAILED;
@@ -595,8 +595,8 @@ graphStatus ComputeGraphImpl::AddSubgraph(const std::string &name,
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraphImpl::RemoveSubgraph(const std::string &name) {
-  const auto iter = names_to_subgraph_.find(name);
-  if (iter == names_to_subgraph_.end()) {
+  const std::map<std::string, ge::ComputeGraphPtr>::const_iterator iter = names_to_subgraph_.find(name);
+  if (iter == names_to_subgraph_.cend()) {
     return;
   }
   auto vec_iter = sub_graph_.begin();
@@ -720,21 +720,21 @@ graphStatus ComputeGraphImpl::ReorderEventNodes(const ConstComputeGraphPtr &comp
   std::list<NodePtr> &node_list = nodes_;
   for (const auto &node : GetDirectNode(compute_graph)) {
     if (node->GetType() == RECV) {
-      const auto iter = find(node_list.begin(), node_list.end(), node);
-      if (iter != node_list.end()) {
+      const auto iter = find(node_list.cbegin(), node_list.cend(), node);
+      if (iter != node_list.cend()) {
         (void)node_list.erase(iter);
       }
 
-      const auto dst_iter = find(node_list.begin(), node_list.end(), node->GetOutControlNodes().at(0UL));
+      const auto dst_iter = find(node_list.cbegin(), node_list.cend(), node->GetOutControlNodes().at(0UL));
       (void)node_list.insert(dst_iter, node);
     }
     if (node->GetType() == SEND) {
-      const auto iter = find(node_list.begin(), node_list.end(), node);
-      if (iter != node_list.end()) {
+      const auto iter = find(node_list.cbegin(), node_list.cend(), node);
+      if (iter != node_list.cend()) {
         (void)node_list.erase(iter);
       }
 
-      auto src_iter = find(node_list.begin(), node_list.end(), node->GetInControlNodes().at(0UL));
+      auto src_iter = find(node_list.cbegin(), node_list.cend(), node->GetInControlNodes().at(0UL));
       (void)node_list.insert(++src_iter, node);
     }
   }
@@ -1376,7 +1376,7 @@ graphStatus ComputeGraphImpl::InferShapeInNeed(const ComputeGraphPtr &const_grap
                        return GRAPH_FAILED, "[Call][Verify] Verifying %s failed.", node_ptr->GetName().c_str());
 
       const graphStatus status = node_ptr->InferShapeAndType();
-      GE_CHK_BOOL_EXEC_INFO((node_ptr->GetType() == DATA) || (GRAPH_PARAM_INVALID != status), break,
+      GE_CHK_BOOL_EXEC_INFO((node_ptr->GetType() == DATA) || (status != GRAPH_PARAM_INVALID), break,
                             "Op %s does not have the IMPLEMT_INFERFUNC definition,"
                             " and subsequent operators no longer perform shape inference.",
                             node_ptr->GetName().c_str());

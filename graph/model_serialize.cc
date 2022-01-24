@@ -467,8 +467,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
   }
   // Graph input
   for (auto &item : graph_input_node_names_) {
-    const auto node_it = node_map_.find(item.node_name);
-    if (node_it == node_map_.end()) {
+    const std::map<std::string, ge::NodePtr>::const_iterator node_it = node_map_.find(item.node_name);
+    if (node_it == node_map_.cend()) {
       REPORT_INNER_ERROR("E18888", "cannot find graph input node %s", item.node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph input node %s", item.node_name.c_str());
       return false;
@@ -481,8 +481,8 @@ bool ModelSerializeImp::HandleNodeNameRef() {
   }
   // Graph output
   for (auto &item : graph_output_node_names_) {
-    const auto node_it = node_map_.find(item.node_name);
-    if (node_it == node_map_.end()) {
+    const std::map<std::string, ge::NodePtr>::const_iterator node_it = node_map_.find(item.node_name);
+    if (node_it == node_map_.cend()) {
       REPORT_INNER_ERROR("E18888", "cannot find graph output node %s", item.node_name.c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph output node %s", item.node_name.c_str());
       return false;

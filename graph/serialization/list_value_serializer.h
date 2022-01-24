@@ -28,8 +28,8 @@ namespace ge {
 class ListValueSerializer : public GeIrAttrSerializer {
  public:
   ListValueSerializer() = default;
-  graphStatus Serialize(const AnyValue &av, proto::AttrDef &def);
-  graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av);
+  graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
+  graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 
  private:
   static graphStatus SerializeListInt(const AnyValue &av, proto::AttrDef &def);

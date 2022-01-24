@@ -603,7 +603,7 @@ static Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const 
             GELOGE(FAILED, "[Get][Outnodes] of %s by index failed.", peer_out_data_node->GetName().c_str());
             return FAILED;
           }
-          out_nodes.insert(tmp_nodes.begin(), tmp_nodes.end());
+          out_nodes.insert(tmp_nodes.cbegin(), tmp_nodes.cend());
         } else {
           (void)out_nodes.emplace(peer_out_data_node, peer_out_data_anchor->GetIdx());
         }

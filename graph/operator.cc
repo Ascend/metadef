@@ -758,7 +758,7 @@ graphStatus Operator::VerifyAllAttr(bool disable_common_verifier) {
   if ((!disable_common_verifier) && (static_cast<graphStatus>(Operator::VerifyAll()) == GRAPH_FAILED)) {
     return GRAPH_FAILED;
   } else {
-    return (graphStatus)operator_impl_->GetOpDescImpl()->OpVerify();
+    return static_cast<graphStatus>(operator_impl_->GetOpDescImpl()->OpVerify());
   }
 }
 
@@ -2471,8 +2471,9 @@ private:
                          return GRAPH_FAILED, "[Get][OutDataAnchor] failed, index:%d.", src_idx);
 
         for (const auto &dst_opio : out.second) {
-          const auto dst_node_info = all_nodes_info_.find(dst_opio.GetOwner());
-          GE_CHK_BOOL_EXEC(dst_node_info != all_nodes_info_.end(),
+          const std::map<ge::OperatorImplPtr, ge::NodePtr>::const_iterator
+              dst_node_info = all_nodes_info_.find(dst_opio.GetOwner());
+          GE_CHK_BOOL_EXEC(dst_node_info != all_nodes_info_.cend(),
                            REPORT_INNER_ERROR("E18888", "Find Dst node failed, op:%s.", op_desc->GetName().c_str());
                            return GRAPH_FAILED, "[Check][Param] Find Dst node failed.");
 
@@ -2496,8 +2497,9 @@ private:
       }
       const auto out_control_anchor = src_node_ptr->GetOutControlAnchor();
       for (const auto &control_out : src_op_impl_ptr->control_output_link_) {
-        const auto dst_node_info = all_nodes_info_.find(control_out.lock());
-        if (dst_node_info == all_nodes_info_.end()) {
+        const std::map<ge::OperatorImplPtr, ge::NodePtr>::const_iterator
+            dst_node_info = all_nodes_info_.find(control_out.lock());
+        if (dst_node_info == all_nodes_info_.cend()) {
           REPORT_INNER_ERROR("E18888", "Find Dst node failed.");
           GELOGE(GRAPH_FAILED, "[Check][Param] Find Dst node failed.");
           return GRAPH_FAILED;

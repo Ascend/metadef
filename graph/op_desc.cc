@@ -83,39 +83,39 @@ void OpDescImpl::DeSerializeOpDefToMetaData(const proto::OpDef &op_def) {
   meta_data_.id_ = op_def.id();
   meta_data_.stream_id_ = op_def.stream_id();
   meta_data_.inputs_.clear();
-  (void)meta_data_.inputs_.insert(meta_data_.inputs_.end(), op_def.input().cbegin(), op_def.input().cend());
+  (void)meta_data_.inputs_.insert(meta_data_.inputs_.cend(), op_def.input().cbegin(), op_def.input().cend());
   meta_data_.input_names_.clear();
-  (void)meta_data_.input_names_.insert(meta_data_.input_names_.end(),
+  (void)meta_data_.input_names_.insert(meta_data_.input_names_.cend(),
                                        op_def.input_name().cbegin(), op_def.input_name().cend());
   meta_data_.src_names_.clear();
-  (void)meta_data_.src_names_.insert(meta_data_.src_names_.end(),
+  (void)meta_data_.src_names_.insert(meta_data_.src_names_.cend(),
                                      op_def.src_name().cbegin(), op_def.src_name().cend());
   meta_data_.src_indexes_.clear();
-  (void)meta_data_.src_indexes_.insert(meta_data_.src_indexes_.end(),
+  (void)meta_data_.src_indexes_.insert(meta_data_.src_indexes_.cend(),
                                        op_def.src_index().cbegin(), op_def.src_index().cend());
   meta_data_.dst_names_.clear();
-  (void)meta_data_.dst_names_.insert(meta_data_.dst_names_.end(),
+  (void)meta_data_.dst_names_.insert(meta_data_.dst_names_.cend(),
                                      op_def.dst_name().cbegin(), op_def.dst_name().cend());
   meta_data_.dst_indexes_.clear();
-  (void)meta_data_.dst_indexes_.insert(meta_data_.dst_indexes_.end(),
+  (void)meta_data_.dst_indexes_.insert(meta_data_.dst_indexes_.cend(),
                                        op_def.dst_index().cbegin(), op_def.dst_index().cend());
   meta_data_.input_offsets_.clear();
-  (void)meta_data_.input_offsets_.insert(meta_data_.input_offsets_.end(),
+  (void)meta_data_.input_offsets_.insert(meta_data_.input_offsets_.cend(),
                                          op_def.input_i().cbegin(), op_def.input_i().cend());
   meta_data_.output_offsets_.clear();
-  (void)meta_data_.output_offsets_.insert(meta_data_.output_offsets_.end(),
+  (void)meta_data_.output_offsets_.insert(meta_data_.output_offsets_.cend(),
                                           op_def.output_i().cbegin(), op_def.output_i().cend());
   meta_data_.workspaces.clear();
-  (void)meta_data_.workspaces.insert(meta_data_.workspaces.end(),
+  (void)meta_data_.workspaces.insert(meta_data_.workspaces.cend(),
                                      op_def.workspace().cbegin(), op_def.workspace().cend());
   meta_data_.workspace_bytes_list_.clear();
-  (void)meta_data_.workspace_bytes_list_.insert(meta_data_.workspace_bytes_list_.end(),
+  (void)meta_data_.workspace_bytes_list_.insert(meta_data_.workspace_bytes_list_.cend(),
                                                 op_def.workspace_bytes().cbegin(), op_def.workspace_bytes().cend());
   meta_data_.is_input_consts_.clear();
-  (void)meta_data_.is_input_consts_.insert(meta_data_.is_input_consts_.end(),
+  (void)meta_data_.is_input_consts_.insert(meta_data_.is_input_consts_.cend(),
                                            op_def.is_input_const().cbegin(), op_def.is_input_const().cend());
   meta_data_.subgraph_names_.clear();
-  (void)meta_data_.subgraph_names_.insert(meta_data_.subgraph_names_.end(),
+  (void)meta_data_.subgraph_names_.insert(meta_data_.subgraph_names_.cend(),
                                           op_def.subgraph_name().cbegin(), op_def.subgraph_name().cend());
 }
 
@@ -308,7 +308,7 @@ graphStatus OpDescImpl::AddInputDescForward(const std::string &name, const uint3
       GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] AddInputDescForward failed, as malloc shared_ptr failed.");
       return GRAPH_FAILED;
     }
-    (void)inputs_desc_.insert(inputs_desc_.begin(), in_desc);
+    (void)inputs_desc_.insert(inputs_desc_.cbegin(), in_desc);
 
     // Update index in input_name_idx
     for (auto it = input_name_idx_.begin(); it != input_name_idx_.end(); ++it) {
@@ -336,7 +336,7 @@ graphStatus OpDescImpl::AddOutputDescForward(const std::string &name, const uint
       return GRAPH_FAILED;
     }
 
-    (void)outputs_desc_.insert(outputs_desc_.begin(), in_desc);
+    (void)outputs_desc_.insert(outputs_desc_.cbegin(), in_desc);
 
     // Update index in output_name_idx
     for (auto it = output_name_idx_.begin(); it != output_name_idx_.end(); ++it) {
@@ -521,8 +521,8 @@ GeTensorDescPtr OpDescImpl::MutableInputDesc(const uint32_t index) const {
 
 GeTensorDescPtr OpDescImpl::MutableInputDesc(const std::string &name) const {
   auto input_name_idx = GetAllInputName();
-  const auto it = input_name_idx.find(name);
-  if (it == input_name_idx.end()) {
+  const std::map<std::string, uint32_t>::const_iterator it = input_name_idx.find(name);
+  if (it == input_name_idx.cend()) {
     GELOGW("[Get][InputDesc] Failed to get [%s] input desc", name.c_str());
     return nullptr;
   }
@@ -1204,8 +1204,8 @@ void OpDescImpl::RemoveSubgraphInstanceName(const std::string &name) {
 
 graphStatus OpDescImpl::AddSubgraphName(const std::string &name) {
   GELOGI("Add subgraph name is %s", name.c_str());
-  const auto iter = subgraph_names_to_index_.find(name);
-  if (iter != subgraph_names_to_index_.end()) {
+  const std::map<std::string, uint32_t>::const_iterator iter = subgraph_names_to_index_.find(name);
+  if (iter != subgraph_names_to_index_.cend()) {
     GELOGW("[Add][Subgraph] Subgraph name %s exists, index %u", name.c_str(), iter->second);
     return GRAPH_FAILED;
   }

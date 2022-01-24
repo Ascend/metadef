@@ -31,8 +31,9 @@ std::shared_ptr<std::map<std::string, InferValueRangePara>> OperatorFactoryImpl:
 
 Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, const std::string &operator_type) {
   if (operator_creators_v2_ != nullptr) {
-    const auto it_v2 = operator_creators_v2_->find(operator_type);
-    if (it_v2 != operator_creators_v2_->end()) {
+    const std::map<std::string, ge::OpCreatorV2>::const_iterator
+        it_v2 = operator_creators_v2_->find(operator_type);
+    if (it_v2 != operator_creators_v2_->cend()) {
       return it_v2->second(operator_name.c_str());
     } else {
       GELOGW("[Create][Operator] No op_proto of [%s] registered by AscendString.", operator_type.c_str());
@@ -41,8 +42,8 @@ Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, c
   if (operator_creators_ == nullptr) {
     return Operator();
   }
-  const auto it = operator_creators_->find(operator_type);
-  if (it == operator_creators_->end()) {
+  const std::map<std::string, ge::OpCreatorV2>::const_iterator it = operator_creators_->find(operator_type);
+  if (it == operator_creators_->cend()) {
     GELOGW("[Create][Operator] No op_proto of [%s] registered by string.", operator_type.c_str());
     return Operator();
   }
@@ -76,8 +77,8 @@ graphStatus OperatorFactoryImpl::GetOpsTypeList(std::vector<std::string> &all_op
 
 bool OperatorFactoryImpl::IsExistOp(const std::string &operator_type) {
   if (operator_creators_v2_ != nullptr) {
-    const auto it_v2 = operator_creators_v2_->find(operator_type);
-    if (it_v2 != operator_creators_v2_->end()) {
+    const std::map<std::string, ge::InferShapeFunc>::const_iterator it_v2 = operator_creators_v2_->find(operator_type);
+    if (it_v2 != operator_creators_v2_->cend()) {
       return true;
     }
   }
@@ -85,8 +86,8 @@ bool OperatorFactoryImpl::IsExistOp(const std::string &operator_type) {
   if (operator_creators_ == nullptr) {
     return false;
   }
-  const auto it = operator_creators_->find(operator_type);
-  if (it == operator_creators_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator it = operator_creators_->find(operator_type);
+  if (it == operator_creators_->cend()) {
     return false;
   }
   return true;
@@ -96,8 +97,9 @@ InferShapeFunc OperatorFactoryImpl::GetInferShapeFunc(const std::string &operato
   if (operator_infershape_funcs_ == nullptr) {
     return nullptr;
   }
-  const auto it = operator_infershape_funcs_->find(operator_type);
-  if (it == operator_infershape_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_infershape_funcs_->find(operator_type);
+  if (it == operator_infershape_funcs_->cend()) {
     return nullptr;
   }
   return it->second;
@@ -108,8 +110,9 @@ InferFormatFunc OperatorFactoryImpl::GetInferFormatFunc(const std::string &opera
     GELOGI("operator_inferformat_funcs_ is null");
     return nullptr;
   }
-  const auto it = operator_inferformat_funcs_->find(operator_type);
-  if (it == operator_inferformat_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_inferformat_funcs_->find(operator_type);
+  if (it == operator_inferformat_funcs_->cend()) {
     return nullptr;
   }
   return it->second;
@@ -121,8 +124,9 @@ InferValueRangePara OperatorFactoryImpl::GetInferValueRangePara(const std::strin
     GELOGI("operator_infervalue_paras_ is null, operator infer value registration is none");
     return ret_para;
   }
-  const auto it = operator_infer_value_range_paras_->find(operator_type);
-  if (it == operator_infer_value_range_paras_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_infer_value_range_paras_->find(operator_type);
+  if (it == operator_infer_value_range_paras_->cend()) {
     GELOGI("optype[%s] has not registered infer value func", operator_type.c_str());
     return ret_para;
   }
@@ -133,8 +137,9 @@ VerifyFunc OperatorFactoryImpl::GetVerifyFunc(const std::string &operator_type) 
   if (operator_verify_funcs_ == nullptr) {
     return nullptr;
   }
-  const auto it = operator_verify_funcs_->find(operator_type);
-  if (it == operator_verify_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_verify_funcs_->find(operator_type);
+  if (it == operator_verify_funcs_->cend()) {
         return nullptr;
     }
     return it->second;
@@ -144,8 +149,9 @@ InferDataSliceFunc OperatorFactoryImpl::GetInferDataSliceFunc(const std::string 
   if (operator_infer_data_slice_funcs_ == nullptr) {
     return nullptr;
   }
-  const auto it = operator_infer_data_slice_funcs_->find(operator_type);
-  if (it == operator_infer_data_slice_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_infer_data_slice_funcs_->find(operator_type);
+  if (it == operator_infer_data_slice_funcs_->cend()) {
     return nullptr;
   }
   return it->second;
@@ -157,8 +163,8 @@ graphStatus OperatorFactoryImpl::RegisterOperatorCreator(const std::string &oper
     operator_creators_ = MakeShared<std::map<std::string, OpCreator>>();
     GE_CHECK_NOTNULL(operator_creators_);
   }
-  const auto it = operator_creators_->find(operator_type);
-  if (it != operator_creators_->end()) {
+  const std::map<std::string, ge::OpCreator>::const_iterator it = operator_creators_->find(operator_type);
+  if (it != operator_creators_->cend()) {
     return GRAPH_FAILED;
   }
   (void)operator_creators_->emplace(operator_type, op_creator);
@@ -171,8 +177,8 @@ graphStatus OperatorFactoryImpl::RegisterOperatorCreator(const std::string &oper
     operator_creators_v2_ = MakeShared<std::map<std::string, OpCreatorV2>>();
     GE_CHECK_NOTNULL(operator_creators_v2_);
   }
-  const auto it = operator_creators_v2_->find(operator_type);
-  if (it != operator_creators_v2_->end()) {
+  const std::map<std::string, ge::OpCreatorV2>::const_iterator it = operator_creators_v2_->find(operator_type);
+  if (it != operator_creators_v2_->cend()) {
     return GRAPH_FAILED;
   }
   (void)operator_creators_v2_->emplace(operator_type, op_creator);
@@ -186,8 +192,9 @@ graphStatus OperatorFactoryImpl::RegisterInferShapeFunc(const std::string &opera
     operator_infershape_funcs_ = MakeShared<std::map<std::string, InferShapeFunc>>();
     GE_CHECK_NOTNULL(operator_infershape_funcs_);
   }
-  const auto it = operator_infershape_funcs_->find(operator_type);
-  if (it != operator_infershape_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_infershape_funcs_->find(operator_type);
+  if (it != operator_infershape_funcs_->cend()) {
     GELOGW("[Register][InferFunc] op [%s] has already registered infer_func", operator_type.c_str());
     return GRAPH_FAILED;
   }
@@ -203,8 +210,9 @@ graphStatus OperatorFactoryImpl::RegisterInferFormatFunc(const std::string &oper
     operator_inferformat_funcs_ = MakeShared<std::map<std::string, InferFormatFunc>>();
     GE_CHECK_NOTNULL(operator_inferformat_funcs_);
   }
-  const auto it = operator_inferformat_funcs_->find(operator_type);
-  if (it != operator_inferformat_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_inferformat_funcs_->find(operator_type);
+  if (it != operator_inferformat_funcs_->cend()) {
     return GRAPH_FAILED;
   }
   (void)operator_inferformat_funcs_->emplace(operator_type, infer_format_func);
@@ -217,8 +225,8 @@ graphStatus OperatorFactoryImpl::RegisterVerifyFunc(const std::string &operator_
     operator_verify_funcs_ = MakeShared<std::map<std::string, VerifyFunc>>();
     GE_CHECK_NOTNULL(operator_verify_funcs_);
   }
-  const auto it = operator_verify_funcs_->find(operator_type);
-  if (it != operator_verify_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator it = operator_verify_funcs_->find(operator_type);
+  if (it != operator_verify_funcs_->cend()) {
     return GRAPH_FAILED;
   }
   (void)operator_verify_funcs_->emplace(operator_type, verify_func);
@@ -232,8 +240,9 @@ graphStatus OperatorFactoryImpl::RegisterInferDataSliceFunc(const std::string &o
     operator_infer_data_slice_funcs_ = MakeShared<std::map<std::string, InferDataSliceFunc>>();
     GE_CHECK_NOTNULL(operator_infer_data_slice_funcs_);
   }
-  const auto it = operator_infer_data_slice_funcs_->find(operator_type);
-  if (it != operator_infer_data_slice_funcs_->end()) {
+  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+      it = operator_infer_data_slice_funcs_->find(operator_type);
+  if (it != operator_infer_data_slice_funcs_->cend()) {
     return GRAPH_FAILED;
   }
   (void)operator_infer_data_slice_funcs_->emplace(operator_type, infer_data_slice_func);
@@ -254,8 +263,9 @@ graphStatus OperatorFactoryImpl::RegisterInferValueRangeFunc(const std::string &
     operator_infer_value_range_paras_ = MakeShared<std::map<std::string, InferValueRangePara>>();
     GE_CHECK_NOTNULL(operator_infer_value_range_paras_);
   }
-  const auto it = operator_infer_value_range_paras_->find(operator_type);
-  if (it != operator_infer_value_range_paras_->end()) {
+  const std::map<std::string, ge::InferValueRangePara>::const_iterator
+      it = operator_infer_value_range_paras_->find(operator_type);
+  if (it != operator_infer_value_range_paras_->cend()) {
     GELOGW("optype[%s] has registered infervalue func, no duplicate registration", operator_type.c_str());
     return GRAPH_FAILED;
   }

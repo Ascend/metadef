@@ -289,8 +289,8 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   }
 
   GELOGI("report error message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
-  const auto it = error_map_.find(error_code);
-  if (it == error_map_.end()) {
+  const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator it = error_map_.find(error_code);
+  if (it == error_map_.cend()) {
     GELOGE("[Report][Error]error_code %s is not registered", error_code.c_str());
     return -1;
   }
@@ -467,8 +467,9 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
       error_info.error_id = error_list_json[i][kErrCode];
       error_info.error_message = error_list_json[i][kErrMessage];
       error_info.arg_list = SplitByDelim(error_list_json[i][kArgList], ',');
-      const auto it = error_map_.find(error_info.error_id);
-      if (it != error_map_.end()) {
+      const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator
+          it = error_map_.find(error_info.error_id);
+      if (it != error_map_.cend()) {
         GELOGW("[Check][Config]There are the same error code %s in %s",
                error_info.error_id.c_str(), path.c_str());
         return -1;
@@ -678,15 +679,17 @@ void ErrorManager::GenWorkStreamIdBySessionGraph(const uint64_t session_id, cons
 }
 
 void ErrorManager::ClearErrorMsgContainerByWorkId(const uint64_t work_stream_id) {
-  const auto err_iter = error_message_per_work_id_.find(work_stream_id);
-  if (err_iter != error_message_per_work_id_.end()) {
+  const std::map<uint64_t, std::vector<ErrorManager::ErrorItem>>::const_iterator
+      err_iter = error_message_per_work_id_.find(work_stream_id);
+  if (err_iter != error_message_per_work_id_.cend()) {
     (void)error_message_per_work_id_.erase(err_iter);
   }
 }
 
 void ErrorManager::ClearWarningMsgContainerByWorkId(const uint64_t work_stream_id) {
-  const auto warn_iter = warning_messages_per_work_id_.find(work_stream_id);
-  if (warn_iter != warning_messages_per_work_id_.end()) {
+  const std::map<uint64_t, std::vector<ErrorManager::ErrorItem>>::const_iterator
+      warn_iter = warning_messages_per_work_id_.find(work_stream_id);
+  if (warn_iter != warning_messages_per_work_id_.cend()) {
     (void)warning_messages_per_work_id_.erase(warn_iter);
   }
 }
