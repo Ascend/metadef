@@ -52,13 +52,8 @@ class GraphPassUtil {
    *
    * @param fusion_node, usually is fusion node
    */
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static void SetOutputDescAttr(uint32_t origin_index, uint32_t fusion_index, ge::NodePtr origin_node,
-                                ge::NodePtr fusion_node) {
-#else
   static void SetOutputDescAttr(const uint32_t &origin_index, const uint32_t &fusion_index,
                                 const ge::NodePtr &origin_node, const ge::NodePtr &fusion_node) {
-#endif
     if (fusion_node->GetOpDesc() == nullptr) {
       return;
     }
@@ -114,11 +109,7 @@ class GraphPassUtil {
    *
    * @return format of this tensor_desc
    */
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static ge::Format GetDataDumpOriginFormat(ge::GeTensorDescPtr tensor_desc) {
-#else
   static ge::Format GetDataDumpOriginFormat(const ge::GeTensorDescPtr &tensor_desc) {
-#endif
     std::string origin_format_str;
     if (!ge::AttrUtils::GetStr(tensor_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_FORMAT, origin_format_str)) {
       // Can not get the certificate and it's not set,return directly
@@ -136,11 +127,7 @@ class GraphPassUtil {
    *
    * @param tensor_desc,usually is output_desc
    */
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static void SetDataDumpOriginFormat(ge::Format origin_format, ge::GeTensorDescPtr tensor_desc) {
-#else
   static void SetDataDumpOriginFormat(const ge::Format &origin_format, const ge::GeTensorDescPtr &tensor_desc) {
-#endif
     std::string origin_format_str = "RESERVED";
     if (origin_format != ge::FORMAT_RESERVED) {
       origin_format_str = ge::TypeUtils::FormatToSerialString(origin_format);
@@ -154,11 +141,7 @@ class GraphPassUtil {
    *
    * @param tensor_desc,usually is output_desc
    */
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static void SetDataDumpOriginDataType(ge::DataType origin_data_type, ge::GeTensorDescPtr tensor_desc) {
-#else
   static void SetDataDumpOriginDataType(const ge::DataType origin_data_type, ge::GeTensorDescPtr tensor_desc) {
-#endif
     std::string origin_data_type_str = "RESERVED";
     if (origin_data_type != ge::DT_UNDEFINED) {
       origin_data_type_str = ge::TypeUtils::DataTypeToSerialString(origin_data_type);
@@ -172,11 +155,7 @@ class GraphPassUtil {
    *
    * @return format of this tensor_desc
    */
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static ge::DataType GetDataDumpOriginDataType(ge::GeTensorDescPtr tensor_desc) {
-#else
   static ge::DataType GetDataDumpOriginDataType(const ge::GeTensorDescPtr &tensor_desc) {
-#endif
     std::string origin_data_type_str;
     if (!ge::AttrUtils::GetStr(tensor_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_DATA_TYPE, origin_data_type_str)) {
       return ge::DT_UNDEFINED;
@@ -187,11 +166,7 @@ class GraphPassUtil {
     return ge::TypeUtils::SerialStringToDataType(origin_data_type_str);
   }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static void AddNodeFromOpTypeMap(NodeMapInfoPtr &node_map_info, ge::NodePtr &node_ptr) {
-#else
   static void AddNodeFromOpTypeMap(const NodeMapInfoPtr &node_map_info, const ge::NodePtr &node_ptr) {
-#endif
     if ((node_map_info == nullptr) || (node_ptr == nullptr)) {
       return;
     }
@@ -214,11 +189,7 @@ class GraphPassUtil {
     return SUCCESS;
   }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static void RecordOriginalNames(std::vector<ge::NodePtr> original_nodes, ge::NodePtr node) {
-#else
   static void RecordOriginalNames(const std::vector<ge::NodePtr> &original_nodes, const ge::NodePtr &node) {
-#endif
     // 1. get the original_names
     std::vector<std::string> original_names;
     for (const ge::NodePtr &original_node : original_nodes) {
@@ -250,12 +221,8 @@ class GraphPassUtil {
     (void)ge::AttrUtils::SetListStr(node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
   }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  static void AddNodeToNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type, ge::NodePtr &node_ptr) {
-#else
   static void AddNodeToNodeTypeMap(const NodeTypeMapPtr &node_type_map, const std::string &op_type,
                                    const ge::NodePtr &node_ptr) {
-#endif
     if ((node_type_map == nullptr) || (node_ptr == nullptr)) {
       return;
     }

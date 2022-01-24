@@ -47,11 +47,7 @@ public:
   Status Generate(const ge::ComputeGraph &graph);
 
   // update reachablity map for fused nodes.
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void Update(const ge::ComputeGraph &graph, std::vector<ge::NodePtr> &fusion_nodes);
-#else
   void Update(const ge::ComputeGraph &graph, const std::vector<ge::NodePtr> &fusion_nodes);
-#endif
 
 private:
   int64_t GetIndex(const ge::NodePtr &node) const;

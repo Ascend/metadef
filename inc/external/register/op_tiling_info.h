@@ -117,19 +117,11 @@ public:
   void AddTilingData(const T &value) {
     AddTilingData(reinterpret_cast<const char *>(&value), sizeof(value));
   }
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void AddTilingData(const char *value, size_t size);
-#else
   void AddTilingData(const char *value, const size_t size);
-#endif
   ByteBuffer &GetAllTilingData();
   const ByteBuffer &GetAllTilingData() const;
   void InternelSetTiling(const ByteBuffer &value);
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void SetClearAtomic(bool clear_atomic);
-#else
   void SetClearAtomic(const bool clear_atomic);
-#endif
   bool GetClearAtomic() const;
 
   void SetTilingKey(const uint64_t &new_tiling_key);

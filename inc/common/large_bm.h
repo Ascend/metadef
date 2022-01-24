@@ -24,11 +24,7 @@
 namespace ge {
 class LargeBitmap {
 public:
-#ifdef ONLY_COMPILE_OPEN_SRC
-  explicit LargeBitmap(size_t size);
-#else
   explicit LargeBitmap(const size_t &size);
-#endif
 
   ~LargeBitmap() = default;
 
@@ -37,15 +33,6 @@ public:
   bool operator!=(const LargeBitmap &another_bm) const;
 
   // set all vector to specific value
-#ifdef ONLY_COMPILE_OPEN_SRC
-  void SetValues(uint64_t value);
-
-  // Get the value on position index
-  bool GetBit(size_t index) const;
-
-  // Set the value on position index to 1
-  void SetBit(size_t index);
-#else
   void SetValues(const uint64_t &value);
 
   // Get the value on position index
@@ -53,7 +40,6 @@ public:
 
   // Set the value on position index to 1
   void SetBit(const size_t &index);
-#endif
 
   // Combine two bitmap with the following rule.
   // If one bit of either one of the two bitmaps is 1,

@@ -68,11 +68,7 @@ BufferFusionPassRegistry &BufferFusionPassRegistry::GetInstance() {
 }
 
 void BufferFusionPassRegistry::RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
-#ifdef ONLY_COMPILE_OPEN_SRC
-                                            CreateFn create_fun) {
-#else
                                             const CreateFn &create_fun) {
-#endif
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]UbFusionPass[type=%d,name=%s]: failed to register the ub fusion pass",
            pass_type, pass_name.c_str());

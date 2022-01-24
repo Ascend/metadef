@@ -155,11 +155,7 @@ void OpRunInfo::InternelSetTiling(const ByteBuffer &value) {
   impl_->SetAllTilingData(value);
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void OpRunInfo::AddTilingData(const char *value, size_t size) {
-#else
 void OpRunInfo::AddTilingData(const ge::char_t *value, const size_t size) {
-#endif
   impl_->AddTilingData(value, size);
 }
 
@@ -171,11 +167,7 @@ const ByteBuffer &OpRunInfo::GetAllTilingData() const {
   return impl_->GetAllTilingData();
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-void OpRunInfo::SetClearAtomic(bool clear_atomic) {
-#else
 void OpRunInfo::SetClearAtomic(const bool clear_atomic) {
-#endif
   impl_->SetClearAtomic(clear_atomic);
 }
 

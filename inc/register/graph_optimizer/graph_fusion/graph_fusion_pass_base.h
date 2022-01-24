@@ -56,11 +56,7 @@ class GraphFusionPassBase : public GraphPass {
   using Mappings = std::vector<Mapping>;
 
   GraphFusionPassBase();
-#ifdef ONLY_COMPILE_OPEN_SRC
-  virtual ~GraphFusionPassBase();
-#else
   virtual ~GraphFusionPassBase() override;
-#endif
 
   /** execute pass
    *
