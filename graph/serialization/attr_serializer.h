@@ -17,7 +17,6 @@
 #ifndef METADEF_CXX_ATTR_SERIALIZER_H
 #define METADEF_CXX_ATTR_SERIALIZER_H
 
-#include <google/protobuf/text_format.h>
 #include "proto/ge_ir.pb.h"
 
 #include "graph/any_value.h"

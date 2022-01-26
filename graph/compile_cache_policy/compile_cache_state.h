@@ -25,7 +25,6 @@
 #include <mutex>
 
 #include "compile_cache_desc.h"
-#include "graph/ge_error_codes.h"
 #include "compile_cache_hasher.h"
 
 namespace ge {

@@ -41,7 +41,7 @@ const uint64_t kOutputPrefixLength = 6U;
 
 namespace ge {
 // Part 1: from IR convert to ONNX Protobuf
-namespace{
+namespace {
 const std::map<ge::DataType, onnx::TensorProto_DataType> kGeDataTypeToOnnxMap = {
     {DT_INT64, onnx::TensorProto_DataType_INT64},   {DT_UINT64, onnx::TensorProto_DataType_UINT64},
     {DT_FLOAT, onnx::TensorProto_DataType_FLOAT},   {DT_INT32, onnx::TensorProto_DataType_INT32},

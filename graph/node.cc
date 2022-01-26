@@ -738,7 +738,7 @@ graphStatus Node::NodeImpl::Verify(const ge::ConstNodePtr &owner_node) const {
       verify_func = OperatorFactoryImpl::GetVerifyFunc(GetType());
     }
     if (verify_func != nullptr) {
-      return (graphStatus)verify_func(op_proxy);
+      return static_cast<graphStatus>(verify_func(op_proxy));
     }
     return GRAPH_SUCCESS;
   } else {

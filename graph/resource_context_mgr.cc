@@ -20,8 +20,9 @@
 namespace ge {
 ResourceContext *ResourceContextMgr::GetResourceContext(const std::string &resource_key) {
   const std::lock_guard<std::mutex> lk(ctx_mu_);
-  const auto iter = resource_keys_to_contexts_.find(resource_key);
-  if (iter == resource_keys_to_contexts_.end()) {
+  const std::map<std::string, std::unique_ptr<ge::ResourceContext>>::const_iterator
+      iter = resource_keys_to_contexts_.find(resource_key);
+  if (iter == resource_keys_to_contexts_.cend()) {
     return nullptr;
   }
   return resource_keys_to_contexts_[resource_key].get();

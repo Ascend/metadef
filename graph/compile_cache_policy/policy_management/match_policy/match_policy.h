@@ -18,7 +18,6 @@
 #define GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_H_
 #include "graph/compile_cache_policy/compile_cache_state.h"
 
-#include <memory>
 namespace ge {
 class MatchPolicy {
  public:

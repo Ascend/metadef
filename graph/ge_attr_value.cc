@@ -167,12 +167,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(c
     GELOGE(GRAPH_FAILED, "[Check][Param] op desc impl is null.");
     return nullptr;
   }
-  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.begin(),
-                                         org_op_desc->impl_->input_name_idx_.end());
-  op_desc->impl_->optional_input_names_.insert(org_op_desc->impl_->optional_input_names_.begin(),
-                                               org_op_desc->impl_->optional_input_names_.end());
-  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.begin(),
-                                          org_op_desc->impl_->output_name_idx_.end());
+  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
+                                         org_op_desc->impl_->input_name_idx_.cend());
+  op_desc->impl_->optional_input_names_.insert(org_op_desc->impl_->optional_input_names_.cbegin(),
+                                               org_op_desc->impl_->optional_input_names_.cend());
+  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
+                                          org_op_desc->impl_->output_name_idx_.cend());
 
   op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
   op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
@@ -377,7 +377,7 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
       return false;
     }
   }
-  (void) value.insert(value.begin(), int64_list.begin(), int64_list.end());
+  (void) value.insert(value.cbegin(), int64_list.cbegin(), int64_list.cend());
   return true;
 }
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
@@ -397,7 +397,7 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
     // 老版本中，只判断了上限，没有判断下限，因此小于0时，这里不会报错
     // 这里维持老版本的做法，在第一次上库做完后，补上小于0的判断
   }
-  (void) value.insert(value.begin(), int64_list.begin(), int64_list.end());
+  (void) value.insert(value.cbegin(), int64_list.cbegin(), int64_list.cend());
   return true;
 }
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY

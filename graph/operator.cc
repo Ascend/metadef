@@ -758,7 +758,7 @@ graphStatus Operator::VerifyAllAttr(bool disable_common_verifier) {
   if ((!disable_common_verifier) && (static_cast<graphStatus>(Operator::VerifyAll()) == GRAPH_FAILED)) {
     return GRAPH_FAILED;
   } else {
-    return (graphStatus)operator_impl_->GetOpDescImpl()->OpVerify();
+    return static_cast<graphStatus>(operator_impl_->GetOpDescImpl()->OpVerify());
   }
 }
 

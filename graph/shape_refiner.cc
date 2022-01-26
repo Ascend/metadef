@@ -39,7 +39,7 @@ namespace {
 const char_t *const kPreOpInputShapeRange = "_pre_op_in_range";
 
 const static std::set<std::string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
-const static std::map<std::string, std::string> kGeLocalOpMapping{
+const static std::map<std::string, std::string> kGeLocalOpMapping {
     { "StreamMerge", "Merge" }, { "MemcpyAsync", "Identity" }
 };
 const int32_t kMaxRecursionDepth = 10;
@@ -603,7 +603,7 @@ static Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const 
             GELOGE(FAILED, "[Get][Outnodes] of %s by index failed.", peer_out_data_node->GetName().c_str());
             return FAILED;
           }
-          out_nodes.insert(tmp_nodes.begin(), tmp_nodes.end());
+          out_nodes.insert(tmp_nodes.cbegin(), tmp_nodes.cend());
         } else {
           (void)out_nodes.emplace(peer_out_data_node, peer_out_data_anchor->GetIdx());
         }

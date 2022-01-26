@@ -32,7 +32,7 @@
 #include "graph/utils/tensor_utils.h"
 
 namespace ge {
-namespace{
+namespace {
 template <typename T>
 class IntegerCheckerFun {
 public:

@@ -156,7 +156,7 @@ void FftsGraphUtils::SplitNodes(const std::set<NodePtr> &calc_nodes,
                                 std::set<NodePtr> &visited_nodes,
                                 std::set<NodePtr> &cur_nodes,
                                 std::set<NodePtr> &next_nodes) {
-  visited_nodes.insert(cur_nodes.begin(), cur_nodes.end());
+  visited_nodes.insert(cur_nodes.cbegin(), cur_nodes.cend());
   std::queue<NodePtr> nodes;
   for (const auto &node : cur_nodes) {
     nodes.push(node);

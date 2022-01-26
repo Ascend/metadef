@@ -17,8 +17,6 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_LIST_VALUE_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_LIST_VALUE_SERIALIZER_H_
 
-#include <map>
-
 #include "attr_serializer.h"
 #include "attr_serializer_registry.h"
 #include "proto/ge_ir.pb.h"
@@ -28,8 +26,8 @@ namespace ge {
 class ListValueSerializer : public GeIrAttrSerializer {
  public:
   ListValueSerializer() = default;
-  graphStatus Serialize(const AnyValue &av, proto::AttrDef &def);
-  graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av);
+  graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
+  graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 
  private:
   static graphStatus SerializeListInt(const AnyValue &av, proto::AttrDef &def);
