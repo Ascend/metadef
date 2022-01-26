@@ -56,7 +56,6 @@ set(REGISTER_UT_FILES
     "testcase/register_graph_fusion.cc"
     "testcase/register_graph_fusion_2.cc"
     "testcase/register_graph_fusion_3.cc"
-    "testcase/register_format_transfer_unittest.cc"
     "testcase/register_buffer_fusion.cc"
 )
 add_executable(ut_register
