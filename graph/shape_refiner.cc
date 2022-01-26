@@ -39,7 +39,7 @@ namespace {
 const char_t *const kPreOpInputShapeRange = "_pre_op_in_range";
 
 const static std::set<std::string> kDummyContextOpTypes{ "Enter", "Switch", "RefSwitch", "StackPush", "StackPop" };
-const static std::map<std::string, std::string> kGeLocalOpMapping{
+const static std::map<std::string, std::string> kGeLocalOpMapping {
     { "StreamMerge", "Merge" }, { "MemcpyAsync", "Identity" }
 };
 const int32_t kMaxRecursionDepth = 10;

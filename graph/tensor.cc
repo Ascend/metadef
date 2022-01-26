@@ -163,7 +163,7 @@ class TensorImpl {
         GELOGE(GRAPH_FAILED, "[New][Buffer] allocate string raw data buff failed");
         return GRAPH_FAILED;
       }
-      StringHead *const string_head = reinterpret_cast<StringHead *>(buff.get());
+      StringHead *const string_head = PtrToPtr<char_t, StringHead>(buff.get());
       // Front 8 bytes store pointer of string
       char_t *const raw_data = PtrToPtr<void, char_t>(
           ValueToPtr(PtrToValue(PtrToPtr<char_t, void>(buff.get())) + sizeof(*string_head)));
@@ -202,7 +202,7 @@ class TensorImpl {
       return GRAPH_FAILED;
     }
     // Front some bytes store head of each string
-    StringHead * const string_head = reinterpret_cast<StringHead *>(buff.get());
+    StringHead * const string_head = PtrToPtr<char_t, StringHead>(buff.get());
     uint64_t raw_data = PtrToValue(static_cast<void *>(buff.get())) + (data.size() * sizeof(*string_head));
     uint64_t ptr_size = data.size() * sizeof(StringHead);
     for (size_t i = 0U; i < data.size(); ++i) {

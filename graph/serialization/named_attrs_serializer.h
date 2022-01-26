@@ -29,8 +29,8 @@ class NamedAttrsSerializer : public GeIrAttrSerializer {
   graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
   graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 
-  graphStatus Serialize(const ge::NamedAttrs &, proto::NamedAttrs *) const;
-  graphStatus Deserialize(const proto::NamedAttrs &, ge::NamedAttrs &) const;
+  graphStatus Serialize(const ge::NamedAttrs &named_attr, proto::NamedAttrs *proto_attr) const;
+  graphStatus Deserialize(const proto::NamedAttrs &proto_attr, ge::NamedAttrs &named_attrs) const;
 };
 }  // namespace ge
 

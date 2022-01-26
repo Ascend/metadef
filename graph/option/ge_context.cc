@@ -56,7 +56,7 @@ std::map<std::string, std::string> &GetMutableGlobalOptions() {
 void GEContext::Init() {
   std::string session_id;
   (void)GetOption("ge.exec.sessionId", session_id);
-  try{
+  try {
     session_id_ = static_cast<uint64_t>(std::stoi(session_id.c_str()));
   } catch (std::invalid_argument &) {
     GELOGW("[Init][GetSessionId] Transform option session_id %s to int failed, as catching invalid_argument exception",
@@ -68,7 +68,7 @@ void GEContext::Init() {
 
   std::string device_id;
   (void)GetOption("ge.exec.deviceId", device_id);
-  try{
+  try {
     device_id_ = static_cast<uint32_t>(std::stoi(device_id.c_str()));
   } catch (std::invalid_argument &) {
     GELOGW("[Init][GetDeviceId] Transform option device_id %s to int failed, as catching invalid_argument exception",
