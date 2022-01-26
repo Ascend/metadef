@@ -16,7 +16,6 @@
 
 #ifndef METADEF_GRAPH_SERIALIZATION_GE_TENSOR_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_GE_TENSOR_SERIALIZER_H_
-#include <memory>
 
 #include "attr_serializer_registry.h"
 #include "graph/ge_tensor.h"

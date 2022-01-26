@@ -20,7 +20,6 @@
 #include <memory>
 #include <mutex>
 #include <map>
-#include <utility>
 
 #include "graph/type_utils.h"
 #include "attr_serializer.h"

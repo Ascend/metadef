@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+#include "graph/operator_factory_impl.h"
+
 #include <algorithm>
 
-#include "graph/operator_factory_impl.h"
 #include "debug/ge_log.h"
 #include "graph/utils/mem_utils.h"
 
@@ -42,7 +43,7 @@ Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, c
   if (operator_creators_ == nullptr) {
     return Operator();
   }
-  const std::map<std::string, ge::OpCreatorV2>::const_iterator it = operator_creators_->find(operator_type);
+  const std::map<std::string, ge::OpCreator>::const_iterator it = operator_creators_->find(operator_type);
   if (it == operator_creators_->cend()) {
     GELOGW("[Create][Operator] No op_proto of [%s] registered by string.", operator_type.c_str());
     return Operator();
@@ -77,7 +78,7 @@ graphStatus OperatorFactoryImpl::GetOpsTypeList(std::vector<std::string> &all_op
 
 bool OperatorFactoryImpl::IsExistOp(const std::string &operator_type) {
   if (operator_creators_v2_ != nullptr) {
-    const std::map<std::string, ge::InferShapeFunc>::const_iterator it_v2 = operator_creators_v2_->find(operator_type);
+    const std::map<std::string, ge::OpCreatorV2>::const_iterator it_v2 = operator_creators_v2_->find(operator_type);
     if (it_v2 != operator_creators_v2_->cend()) {
       return true;
     }
@@ -86,7 +87,7 @@ bool OperatorFactoryImpl::IsExistOp(const std::string &operator_type) {
   if (operator_creators_ == nullptr) {
     return false;
   }
-  const std::map<std::string, ge::InferShapeFunc>::const_iterator it = operator_creators_->find(operator_type);
+  const std::map<std::string, ge::OpCreator>::const_iterator it = operator_creators_->find(operator_type);
   if (it == operator_creators_->cend()) {
     return false;
   }
@@ -124,9 +125,9 @@ InferValueRangePara OperatorFactoryImpl::GetInferValueRangePara(const std::strin
     GELOGI("operator_infervalue_paras_ is null, operator infer value registration is none");
     return ret_para;
   }
-  const std::map<std::string, ge::InferShapeFunc>::const_iterator
+  const std::map<std::string, ge::InferValueRangePara>::const_iterator
       it = operator_infer_value_range_paras_->find(operator_type);
-  if (it == operator_infer_value_range_paras_->cend()) {
+  if (it == operator_infer_value_range_paras_->end()) {
     GELOGI("optype[%s] has not registered infer value func", operator_type.c_str());
     return ret_para;
   }

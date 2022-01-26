@@ -30,7 +30,6 @@
 #include "graph/serialization/tensor_desc_serializer.h"
 #include "graph/serialization/tensor_serializer.h"
 
-#include "graph/ge_error_codes.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 
@@ -83,8 +82,8 @@ void AttrSerializerRegistry::RegisterGeIrAttrSerializer(const GeIrAttrSerializer
 }
 
 GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(const TypeId obj_type) {
-  const std::map<ge::TypeId, ge::GeIrAttrSerializer *>::const_iterator iter = serializer_map_.find(obj_type);
-  if (iter == serializer_map_.cend()) {
+  const auto iter = serializer_map_.find(obj_type);
+  if (iter == serializer_map_.end()) {
     // print type
     REPORT_INNER_ERROR("E18888", "Serializer for type has not been registered");
     GELOGE(FAILED, "Serializer for type has not been registered");
@@ -94,9 +93,8 @@ GeIrAttrSerializer *AttrSerializerRegistry::GetSerializer(const TypeId obj_type)
 }
 
 GeIrAttrSerializer *AttrSerializerRegistry::GetDeserializer(const proto::AttrDef::ValueCase proto_type) {
-  const std::map<<error-type>, ge::GeIrAttrSerializer *>::const_iterator
-      iter = deserializer_map_.find(proto_type);
-  if (iter == deserializer_map_.cend()) {
+  const auto iter = deserializer_map_.find(proto_type);
+  if (iter == deserializer_map_.end()) {
     REPORT_INNER_ERROR("E18888",
                        "Deserializer for type [%d] has not been registered",
                        static_cast<int32_t>(proto_type));

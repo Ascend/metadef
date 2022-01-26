@@ -17,8 +17,6 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_LIST_VALUE_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_LIST_VALUE_SERIALIZER_H_
 
-#include <map>
-
 #include "attr_serializer.h"
 #include "attr_serializer_registry.h"
 #include "proto/ge_ir.pb.h"

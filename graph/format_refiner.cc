@@ -22,7 +22,6 @@
 #include <unordered_set>
 
 #include "graph/ref_relation.h"
-#include "graph/operator.h"
 #include "graph/operator_factory.h"
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
