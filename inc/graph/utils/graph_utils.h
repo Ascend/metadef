@@ -324,6 +324,9 @@ class GraphUtils {
   static ComputeGraphPtr CloneGraph(const ComputeGraphPtr &graph, const std::string &prefix,
                                     std::vector<NodePtr> &input_nodes, std::vector<NodePtr> &output_nodes);
 
+  static void InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph,
+                                  ComputeGraphPtr &dst_compute_graph);
+
   ///
   /// Copy tensor attribute to new node.
   /// @param [in] dst_desc: cloned node.

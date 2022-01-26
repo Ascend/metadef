@@ -342,11 +342,50 @@ TEST_F(UtestTuningUtils, HandleEnd) {
 }
 
 TEST_F(UtestTuningUtils, ConvertFileToGraph) {
-    std::map<int64_t, std::string> options;
-    Graph g;
-    EXPECT_EQ(TuningUtils::ConvertFileToGraph(options, g), SUCCESS);
-    options[1] = "opt1";
-    EXPECT_EQ(TuningUtils::ConvertFileToGraph(options, g), SUCCESS);
+  // build root graph
+  auto root_graph_builder = ut::GraphBuilder("root_graph");
+  const auto &data_0 = root_graph_builder.AddNode("data_0", DATA, 0, 1);
+  AttrUtils::SetInt(data_0->GetOpDesc(), "_parent_node_index", 0);
+  const auto &case_0 = root_graph_builder.AddNode("case_0", "Case", 1, 1);
+  const auto &netoutput_0 = root_graph_builder.AddNode("netoutput_0", NETOUTPUT, 1, 1);
+  root_graph_builder.AddDataEdge(data_0, 0, case_0, 0);
+  root_graph_builder.AddDataEdge(case_0, 0, netoutput_0, 0);
+  case_0->GetOpDesc()->AddSubgraphName("branches");
+  case_0->GetOpDesc()->SetSubgraphInstanceName(0, "case_sub");
+  const auto &root_graph = root_graph_builder.GetGraph();
+  EXPECT_EQ(AttrUtils::SetBool(root_graph, ATTR_NAME_IS_ROOT_GRAPH, true), true);
+  EXPECT_EQ(AttrUtils::SetStr(root_graph, ATTR_NAME_PARENT_GRAPH_NAME, root_graph->GetName()), true);
+  auto ret = GraphUtils::DumpGEGraphByPath(root_graph, "./subgraph_0.txt", 0);
+  ASSERT_EQ(ret, 0);
+
+  // build case sub graph
+  auto case_sub_builder = ut::GraphBuilder("case_sub");
+  const auto &case_data = case_sub_builder.AddNode("case_data", DATA, 0, 1);
+  AttrUtils::SetInt(case_data->GetOpDesc(), "_parent_node_index", 0);
+  const auto &case_squeeze = case_sub_builder.AddNode("case_squeeze", SQUEEZE, 1, 1);
+  const auto &case_netoutput = case_sub_builder.AddNode("case_netoutput", NETOUTPUT, 1, 1);
+  case_sub_builder.AddDataEdge(case_data, 0, case_squeeze, 0);
+  case_sub_builder.AddDataEdge(case_squeeze, 0, case_netoutput, 0);
+  const auto &case_sub_graph = case_sub_builder.GetGraph();
+  case_sub_graph->SetParentNode(case_0);
+  case_sub_graph->SetParentGraph(root_graph);
+  EXPECT_EQ(AttrUtils::SetStr(case_sub_graph, ATTR_NAME_PARENT_GRAPH_NAME, case_sub_graph->GetName()), true);
+  ret = GraphUtils::DumpGEGraphByPath(case_sub_graph, "./subgraph_1.txt", 0);
+  ASSERT_EQ(ret, 0);
+
+  ComputeGraphPtr com_graph0 = std::make_shared<ComputeGraph>("TestGraph0");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
+  ASSERT_EQ(GraphUtils::LoadGEGraph("./subgraph_0.txt", *com_graph0), true);
+  ASSERT_EQ(GraphUtils::LoadGEGraph("./subgraph_1.txt", *com_graph1), true);
+
+  std::map<int64_t, std::string> options;
+  options.emplace(0, "./subgraph_0.txt");
+  options.emplace(1, "./subgraph_1.txt");
+  Graph g;
+  EXPECT_EQ(TuningUtils::ConvertFileToGraph(options, g), SUCCESS);
+
+  options.clear();
+  EXPECT_EQ(TuningUtils::ConvertFileToGraph(options, g), FAILED);
 }
 
 

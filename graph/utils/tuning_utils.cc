@@ -131,7 +131,8 @@ graphStatus TuningUtils::ConvertConstToWeightAttr(const ComputeGraphPtr &exe_gra
     }
     auto op_desc = node->GetOpDesc();
     GE_CHECK_NOTNULL(op_desc);
-    const std::vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
+    std::vector<ge::GeTensorPtr> weight;
+    TryGetWeight(node, weight);
     if (weight.empty()) {
       continue;
     }
@@ -252,13 +253,10 @@ void TuningUtils::DumpGraphToPath(const ComputeGraphPtr &exe_graph, const int64_
   }
 }
 
-graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
-  const auto graph = node->GetOwnerComputeGraph();
-  GE_CHECK_NOTNULL(graph);
-  OpDescPtr data_op_desc;
-  std::vector<ge::GeTensorPtr> weight = OpDescUtils::MutableWeights(node);
-  if (weight.empty()) {
-    GE_CHECK_NOTNULL(node->GetOpDesc());
+void TuningUtils::TryGetWeight(const NodePtr &node, std::vector<ge::GeTensorPtr> &weight) {
+  // The caller guarantees that the node is not null
+  weight = OpDescUtils::MutableWeights(node);
+  if (weight.empty() && node->GetOpDesc() != nullptr) {
     const NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr<NodePtr>(parent_node_attr, nullptr);
     if ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
       NodePtr really_parent_node = nullptr;
@@ -272,6 +270,14 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
       }
     }
   }
+}
+
+graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
+  const auto graph = node->GetOwnerComputeGraph();
+  GE_CHECK_NOTNULL(graph);
+  OpDescPtr data_op_desc;
+  std::vector<ge::GeTensorPtr> weight;
+  TryGetWeight(node, weight);
   GeTensorDesc output_desc;
   if (!weight.empty()) {
     data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), CONSTANT);
@@ -635,7 +641,62 @@ graphStatus TuningUtils::HandleEnd(NodePtr &node) {
 
 // part 2
 graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string> &options, ge::Graph &graph) {
-  const std::function<void()> callback = [&]() {
+  // 1. get all subgraph object
+  std::vector<ComputeGraphPtr> root_graphs;
+  std::map<std::string, std::vector<ComputeGraphPtr>> name_to_subgraphs;
+  if (LoadGraphFromFile(options, root_graphs, name_to_subgraphs) != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Load graph from file according to options failed");
+    return GRAPH_FAILED;
+  }
+
+  // 2. merge root graph
+  ComputeGraphPtr merged_root_graph = ComGraphMakeShared<ComputeGraph>("whole_graph_after_tune");
+  GE_CHECK_NOTNULL(merged_root_graph);
+  if (MergeGraph(root_graphs, merged_root_graph) != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "merge root graph failed");
+    return GRAPH_FAILED;
+  }
+
+  // 3. merge subgraphs
+  std::map<std::string, ComputeGraphPtr> name_to_merged_subgraph;
+  for (const auto &pair : name_to_subgraphs) {
+    ComputeGraphPtr merged_subgraph = ComGraphMakeShared<ComputeGraph>(pair.first);
+    GE_CHECK_NOTNULL(merged_subgraph);
+    if (MergeGraph(pair.second, merged_subgraph) != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "merge root graph failed");
+      return GRAPH_FAILED;
+    }
+    name_to_merged_subgraph[pair.first] = merged_subgraph;
+  }
+
+  // 4. construct relation of root graph and subgraphs
+  for (const auto &node : merged_root_graph->GetDirectNode()) {
+    auto op_desc = node->GetOpDesc();
+    GE_CHECK_NOTNULL(op_desc);
+    for (const auto &subgraph_name : op_desc->GetSubgraphInstanceNames()) {
+      auto iter = name_to_merged_subgraph.find(subgraph_name);
+      if (iter == name_to_merged_subgraph.end()) {
+        REPORT_CALL_ERROR("E18888", "TUU:can not find subgraph with name:%s for op:%s.",
+                          subgraph_name.c_str(), op_desc->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "can not find subgraph with name:%s for op:%s",
+               subgraph_name.c_str(), op_desc->GetName().c_str());
+        return GRAPH_FAILED;
+      }
+      iter->second->SetParentNode(node);
+      iter->second->SetParentGraph(merged_root_graph);
+      merged_root_graph->AddSubGraph(iter->second);
+      GELOGI("add subgraph:%s for node:%s success", subgraph_name.c_str(), op_desc->GetName().c_str());
+    }
+  }
+
+  graph = GraphUtils::CreateGraphFromComputeGraph(merged_root_graph);
+  return SUCCESS;
+}
+
+graphStatus TuningUtils::MergeGraph(const std::vector<ComputeGraphPtr> &subgraphs,
+                                    ComputeGraphPtr &output_merged_compute_graph) {
+  GE_CHECK_NOTNULL(output_merged_compute_graph);
+    const std::function<void()> callback = [&]() {
     data_2_end_.clear();
     data_node_2_end_node_.clear();
     data_node_2_netoutput_node_.clear();
@@ -643,35 +704,56 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
     merged_graph_nodes_.clear();
   };
   GE_MAKE_GUARD(release, callback);
-  // 1. get all subgraph object
-  std::vector<ComputeGraphPtr> graphs;
-  // options format like {index:"subgraph_path"}
+
+  // merge graph
+  if (MergeAllSubGraph(subgraphs, output_merged_compute_graph) != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "[Merge][Graph] failed");
+    return GRAPH_FAILED;
+  }
+  // set owner graph
+  for (const auto &node : output_merged_compute_graph->GetDirectNode()) {
+    GE_CHECK_NOTNULL(node);
+    if (node->SetOwnerComputeGraph(output_merged_compute_graph) != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E18888", "TUU:node %s set owner graph failed", node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Set][Graph] TUU:node %s set owner graph failed", node->GetName().c_str());
+      return GRAPH_FAILED;
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+
+graphStatus TuningUtils::LoadGraphFromFile(const std::map<int64_t, std::string> &options,
+                                           std::vector<ComputeGraphPtr> &root_graphs,
+                                           std::map<std::string, std::vector<ComputeGraphPtr>> &name_to_subgraphs) {
+   // options format like {index:"subgraph_path"}
   for (const auto &pair : options) {
     const ComputeGraphPtr compute_graph = ComGraphMakeShared<ComputeGraph>(std::to_string(pair.first));
     if (!ge::GraphUtils::LoadGEGraph(pair.second.c_str(), *compute_graph)) {
       REPORT_CALL_ERROR("E18888", "LoadGEGraph from file:%s failed", pair.second.c_str());
       GELOGE(FAILED, "[Load][Graph] from file:%s failed", pair.second.c_str());
     }
-    graphs.push_back(compute_graph);
-  }
-  // 2. merge graph
-  ComputeGraphPtr merged_graph = ComGraphMakeShared<ComputeGraph>("whole_graph_after_tune");
-  GE_CHECK_NOTNULL(merged_graph);
-  if (MergeAllSubGraph(graphs, merged_graph) != SUCCESS) {
-    GELOGE(FAILED, "[Merge][Graph] failed");
-    return FAILED;
-  }
-  // 3. set parent graph
-  for (const auto &node : merged_graph->GetDirectNode()) {
-    GE_CHECK_NOTNULL(node);
-    if (node->SetOwnerComputeGraph(merged_graph) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E18888", "TUU:node %s set owner graph failed", node->GetName().c_str());
-      GELOGE(FAILED, "[Set][Graph] TUU:node %s set owner graph failed", node->GetName().c_str());
-      return FAILED;
+    bool is_root_graph = false;
+    if (ge::AttrUtils::GetBool(compute_graph, ATTR_NAME_IS_ROOT_GRAPH, is_root_graph) &&
+        is_root_graph) {
+      root_graphs.emplace_back(compute_graph);
+    } else {
+      std::string parent_graph_name;
+      if (!ge::AttrUtils::GetStr(compute_graph, ATTR_NAME_PARENT_GRAPH_NAME, parent_graph_name)) {
+        REPORT_CALL_ERROR("E18888", "TUU:get attr ATTR_NAME_PARENT_GRAPH_NAME failed for subgraph.");
+        GELOGE(GRAPH_FAILED, "get attr ATTR_NAME_PARENT_GRAPH_NAME failed for subgraph:%s",
+               compute_graph->GetName().c_str());
+        return GRAPH_FAILED;
+      }
+      name_to_subgraphs[parent_graph_name].emplace_back(compute_graph);
     }
   }
-  graph = GraphUtils::CreateGraphFromComputeGraph(merged_graph);
-  return SUCCESS;
+
+  if (root_graphs.empty()) {
+    REPORT_CALL_ERROR("E18888", "TUU:root graph has no subgraphs, can not merge.");
+    GELOGE(GRAPH_FAILED, "root graph has no subgraphs, can not merge");
+    return GRAPH_FAILED;
+  }
+  return GRAPH_SUCCESS;
 }
 
 // +----------------------------------+
@@ -709,7 +791,7 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
 // |     |                            |
 // |  netoutput                       |
 // +----------------------------------+
-graphStatus TuningUtils::MergeAllSubGraph(std::vector<ComputeGraphPtr> &subgraphs,
+graphStatus TuningUtils::MergeAllSubGraph(const std::vector<ComputeGraphPtr> &subgraphs,
                                           ComputeGraphPtr &output_merged_compute_graph) {
   GE_CHECK_NOTNULL(output_merged_compute_graph);
   // 1. handle all subgraphs
