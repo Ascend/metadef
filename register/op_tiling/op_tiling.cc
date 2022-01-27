@@ -28,7 +28,7 @@
 #include "op_tiling/op_tiling_constants.h"
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_compile_info_manager.h"
-#include "common/sgt_type.h"
+#include "common/sgt_slice_type.h"
 
 namespace optiling {
 using Status = domi::Status;
@@ -914,7 +914,7 @@ std::vector<uint32_t> GetIndexVector(const ge::Node &node, const bool is_input)
   return indices;
 }
 
-ge::graphStatus UpDateNodeShapeBySliceInfo(const fe::ThreadSliceMapPtr slice_info_ptr, const ge::OpDescPtr op_desc,
+ge::graphStatus UpDateNodeShapeBySliceInfo(const ffts::ThreadSliceMapPtr slice_info_ptr, const ge::OpDescPtr op_desc,
                                            const uint32_t thread_id, vector<vector<int64_t>> &ori_shape,
                                            const vector<vector<uint32_t>> &in_out_idx)
 {
@@ -998,8 +998,8 @@ extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<O
   const std::string op_type = op_desc->GetType();
   const std::string op_name = op_desc->GetName();
   GELOGD("[OpFftsCalculateV2]Op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
-  fe::ThreadSliceMapPtr slice_info_ptr = nullptr;
-  slice_info_ptr = op_desc->TryGetExtAttr(fe::SGT_STRUCT_INFO, slice_info_ptr);
+  ffts::ThreadSliceMapPtr slice_info_ptr = nullptr;
+  slice_info_ptr = op_desc->TryGetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GE_CHECK_NOTNULL(slice_info_ptr);
   vector<vector<uint32_t>> in_out_idx;
   in_out_idx.emplace_back(GetIndexVector(node, true));
@@ -1012,7 +1012,7 @@ extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<O
   ge::graphStatus rc;
   uint32_t thread_id = 0U;
   optiling::utils::OpRunInfo run_info;
-  for (size_t i = 0U; i < static_cast<size_t>(fe::SGT_TILING_NUM); i++) {
+  for (size_t i = 0U; i < static_cast<size_t>(ffts::kSgtTillingNum); i++) {
     // update node shape by thread slice info
     if (UpDateNodeShapeBySliceInfo(slice_info_ptr, op_desc, thread_id, ori_shape, in_out_idx) == ge::GRAPH_FAILED) {
       REPORT_CALL_ERROR("E19999", "Update shape failed.");

@@ -18,11 +18,11 @@
 #include <iostream>
 #include "register/op_tiling_registry.h"
 #include "op_tiling/op_tiling.cc"
-#include "common/sgt_type.h"
+#include "common/sgt_slice_type.h"
 #include "graph_builder_utils.h"
 using namespace std;
 using namespace ge;
-using namespace fe;
+using namespace ffts;
 namespace optiling {
 using ByteBuffer = std::stringstream;
 class RegisterOpTilingUT : public testing::Test {
@@ -157,7 +157,7 @@ TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_1) {
   slice_info_ptr->input_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
-  (void)node->GetOpDesc()->SetExtAttr(fe::SGT_STRUCT_INFO, slice_info_ptr);
+  (void)node->GetOpDesc()->SetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GeShape shape({4,1,3,4,16});
   GeTensorDesc tensor_desc(shape, ge::FORMAT_NCHW, ge::DT_FLOAT);
   op_desc->AddInputDesc("x", tensor_desc);
@@ -199,7 +199,7 @@ TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_2) {
   slice_info_ptr->input_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
-  (void)node->GetOpDesc()->SetExtAttr(fe::SGT_STRUCT_INFO, slice_info_ptr);
+  (void)node->GetOpDesc()->SetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GeShape shape({4,1,3,4,16});
   GeTensorDesc tensor_desc(shape);
   op_desc->AddInputDesc("x", tensor_desc);
@@ -237,7 +237,7 @@ TEST_F(RegisterOpTilingUT, UpDateNodeShapeBySliceInfo1) {
   slice_info_ptr->input_tensor_slice.push_back(vec_2);
   slice_info_ptr->input_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_3);
-  (void)node->GetOpDesc()->SetExtAttr(fe::SGT_STRUCT_INFO, slice_info_ptr);
+  (void)node->GetOpDesc()->SetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GeShape shape({4,1,3,4,16});
   GeTensorDesc tensor_desc(shape);
   op_desc->AddInputDesc("x", tensor_desc);
