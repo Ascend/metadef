@@ -2758,6 +2758,21 @@
       "Arglist" : "message,traceback"
     },
     {
+      "ErrCode": "E90001",
+      "ErrMessage": "Compile operator failed, cause: Parameters check failed, detailed information: %s.",
+      "Arglist": "detailed_cause"
+    },
+    {
+      "ErrCode": "E90002",
+      "ErrMessage": "Compile operator failed, cause: The limitation of instruction, detailed information: %s.",
+      "Arglist": "detailed_cause"
+    },
+    {
+      "ErrCode": "E90003",
+      "ErrMessage": "Compile operator failed, cause: Template constraint, detailed information: %s.",
+      "Arglist": "detailed_cause"
+    },
+    {
       "ErrCode" : "EC0000",
       "ErrMessage" : "AutoTune run Failed,lhisi connected failed. Please ping the lhisi_ip or check the es_ip and es_port in config.json",
       "Arglist" : ""
