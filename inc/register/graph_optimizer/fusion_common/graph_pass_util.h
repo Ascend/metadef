@@ -141,7 +141,11 @@ class GraphPassUtil {
    *
    * @param tensor_desc,usually is output_desc
    */
+#ifdef ONLY_COMPILE_OPEN_SRC
   static void SetDataDumpOriginDataType(const ge::DataType origin_data_type, ge::GeTensorDescPtr tensor_desc) {
+#else
+  static void SetDataDumpOriginDataType(const ge::DataType origin_data_type, const ge::GeTensorDescPtr &tensor_desc) {
+#endif
     std::string origin_data_type_str = "RESERVED";
     if (origin_data_type != ge::DT_UNDEFINED) {
       origin_data_type_str = ge::TypeUtils::DataTypeToSerialString(origin_data_type);
