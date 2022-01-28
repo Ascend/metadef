@@ -196,43 +196,8 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     genhtml coverage.info
 fi
 
-# generate output package in tar form, including ut/st libraries/executables
-generate_package()
-{
-  cd "${BASEPATH}"
-
-  METADEF_LIB_PATH="lib"
-  ACL_PATH="acllib/lib64"
-  FWK_PATH="fwkacllib/lib64"
-  ATC_PATH="atc/lib64"
-
-  COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
-
-  rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
-  rm -rf ${OUTPUT_PATH:?}/${ACL_PATH}/
-  rm -rf ${OUTPUT_PATH:?}/${ATC_PATH}/
-
-  mk_dir "${OUTPUT_PATH}/${FWK_PATH}"
-  mk_dir "${OUTPUT_PATH}/${ATC_PATH}"
-  mk_dir "${OUTPUT_PATH}/${ACL_PATH}"
-
-  find output/ -name metadef_lib.tar -exec rm {} \;
-
-  cd "${OUTPUT_PATH}"
-
-  for lib in "${COMMON_LIB[@]}";
-  do
-    find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH} \;
-    find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
-  done
-
-  find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
-
-  tar -cf metadef_lib.tar fwkacllib atc
-}
-
 # generate output package in tar form, including ut/st libraries/executables for cann
-generate_package_for_cann()
+generate_package()
 {
   cd "${BASEPATH}"
 
@@ -264,10 +229,6 @@ generate_package_for_cann()
 }
 
 if [[ "X$ENABLE_METADEF_UT" = "Xoff" ]]; then
-  if [[ "X$ALL_IN_ONE_ENABLE" = "X1" ]]; then
-    generate_package_for_cann
-  else
-    generate_package
-  fi
+  generate_package
 fi
 echo "---------------- Metadef package archive generated ----------------"
