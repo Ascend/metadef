@@ -25,6 +25,15 @@ using std::map;
 using std::string;
 using std::vector;
 
+const int64_t TBE_FUSION_OP_NUM_MAX = 5L;
+const int64_t TBE_PATTERN_NUM_MAX = 5L;
+const int64_t TBE_PATTERN_NUM_NONE = 0L;
+const int64_t TBE_PATTERN_NUM_DEFAULT = 1L;
+const int64_t TBE_OUTPUT_BRANCH_DEFAULT = 0L;
+const int64_t TBE_OUTPUT_BRANCH_SINGLE = 1L;
+const int64_t TBE_OUTPUT_BRANCH_MULTI = 2L;
+const int64_t TBE_PATTERN_GROUPID_INVALID = -1L;
+
 inline bool IsAddOverflow(const int64_t &a, const int64_t &b) {
   return ((b > 0) && (a > (static_cast<int64_t>(INT64_MAX) - b))) || \
       ((b < 0) && (a < (static_cast<int64_t>(INT64_MIN) - b)));

@@ -45,7 +45,7 @@ void LargeBitmap::SetBit(const size_t &index) {
 
 bool LargeBitmap::GetBit(const size_t &index) const {
   if (index < size_) {
-    return bits_[index / kBitsEachValue] & (1UL << (index % kBitsEachValue));
+    return static_cast<bool>(bits_[index / kBitsEachValue] & (1UL << (index % kBitsEachValue)));
   } else {
     GE_LOGE("index %zu is not valid. Total size is %zu", index, size_);
     return false;

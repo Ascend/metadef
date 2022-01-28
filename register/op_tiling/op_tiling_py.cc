@@ -654,10 +654,13 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
   ge::OpDescPtr op_desc_ptr = std::make_shared<ge::OpDesc>("", op_type_str);
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
-
-  ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_param, const_values);
-  CheckAndSetAttr(attrs, operator_param);
-
+  try {
+    ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_param, const_values);
+    CheckAndSetAttr(attrs, operator_param);
+  } catch (...) {
+    REPORT_CALL_ERROR("E19999", "Failed to parse json during tiling v4. %s, %s, %s", compile_info, inputs, outputs);
+    return 0;
+  }
   if (compile_info_hash == nullptr) {
     return 0;
   }

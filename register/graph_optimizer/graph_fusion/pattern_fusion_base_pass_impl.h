@@ -66,8 +66,6 @@ class PatternFusionBasePassImpl {
 
   bool MatchFromOutput(const ge::NodePtr output_node, const std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping);
 
-  std::string GetNodeType(ge::NodePtr node);
-
   bool GetMatchOutputNodes(const ge::ComputeGraph &graph, const FusionPattern &pattern,
                            std::vector<ge::NodePtr> &matched_output_nodes);
 

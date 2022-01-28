@@ -321,7 +321,7 @@ bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
                                              const std::unordered_set<ge::NodePtr> &scope_nodes_set,
                                              const std::vector<ge::NodePtr> &scope_nodes) const {
   for (const auto &peer_out : node->GetOutAllNodes()) {
-    if (scope_nodes_set.count(peer_out)) {
+    if (scope_nodes_set.count(peer_out) > 0) {
       continue;
     }
     for (const auto &node_temp :scope_nodes) {

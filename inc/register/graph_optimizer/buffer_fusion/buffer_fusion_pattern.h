@@ -24,14 +24,14 @@
 #include "graph/utils/graph_utils.h"
 
 namespace fe {
-const int64_t TBE_FUSION_OP_NUM_MAX = 5L;
-const int64_t TBE_PATTERN_NUM_MAX = 5L;
-const int64_t TBE_PATTERN_NUM_NONE = 0L;
-const int64_t TBE_PATTERN_NUM_DEFAULT = 1L;
-const int64_t TBE_OUTPUT_BRANCH_DEFAULT = 0L;
-const int64_t TBE_OUTPUT_BRANCH_SINGLE = 1L;
-const int64_t TBE_OUTPUT_BRANCH_MULTI = 2L;
-const int64_t TBE_PATTERN_GROUPID_INVALID = -1L;
+extern const int64_t TBE_FUSION_OP_NUM_MAX;
+extern const int64_t TBE_PATTERN_NUM_MAX;
+extern const int64_t TBE_PATTERN_NUM_NONE;
+extern const int64_t TBE_PATTERN_NUM_DEFAULT;
+extern const int64_t TBE_OUTPUT_BRANCH_DEFAULT;
+extern const int64_t TBE_OUTPUT_BRANCH_SINGLE;
+extern const int64_t TBE_OUTPUT_BRANCH_MULTI;
+extern const int64_t TBE_PATTERN_GROUPID_INVALID;
 
 enum SkipStatus { DISABLED = 0, AVAILABLE = 1, SKIPPED = 2 };
 
