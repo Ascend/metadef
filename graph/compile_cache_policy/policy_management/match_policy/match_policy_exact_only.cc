@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "match_policy_exact_only.h"
+#include "graph/compile_cache_policy/match_policy_exact_only.h"
 #include "graph/compile_cache_policy/compile_cache_hasher.h"
 namespace ge {
 CacheItem MatchPolicyExactOnly::GetCacheItem(const CCStatType &cc_state, const CompileCacheDesc &desc) const {

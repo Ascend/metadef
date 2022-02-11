@@ -29,7 +29,7 @@
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
 #include "graph/def_types.h"
-#include "hash_utils.h"
+#include "graph/hash_utils.h"
 
 namespace ge {
 using ShapeType = std::vector<int64_t>;
