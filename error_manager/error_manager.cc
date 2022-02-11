@@ -238,7 +238,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
   const std::unique_lock<std::mutex> lck(mutex_);
   if (error_context_.work_stream_id == 0UL) {
     if (error_message_per_work_id_.size() > kMaxWorkSize) {
-      GELOGE("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
+      GELOGW("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
              error_code.c_str(), kMaxWorkSize);
       return -1;
     }
@@ -251,7 +251,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.size() > kMaxWorkSize) {
-    GELOGE("[Report][Error]error_code %s, error work_stream_id:%u item size exceed %lu, skip record",
+    GELOGW("[Report][Error]error_code %s, error work_stream_id:%u item size exceed %lu, skip record",
             error_code.c_str(), error_context_.work_stream_id, kMaxWorkSize);
     return -1;
   }
