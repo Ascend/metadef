@@ -121,8 +121,8 @@ bool PatternFusionBasePassImpl::MatchFromOutput(const ge::NodePtr output_node,
     }
 
     // current op is matched successfully, thus remove it from candidate list
-    (void)candidate_nodes.erase(candidate_nodes.begin());
-    (void)candidate_op_descs.erase(candidate_op_descs.begin());
+    (void)candidate_nodes.erase(candidate_nodes.cbegin());
+    (void)candidate_op_descs.erase(candidate_op_descs.cbegin());
 
     // the sizes of candidate_nodes and candidate_op_descs should always keep the same
     if (candidate_nodes.size() != candidate_op_descs.size()) {
@@ -138,7 +138,7 @@ bool PatternFusionBasePassImpl::MatchFromOutput(const ge::NodePtr output_node,
 
 bool PatternFusionBasePassImpl::MatchFromOutput(std::vector<ge::NodePtr> &candidate_nodes,
                                                 std::vector<std::shared_ptr<OpDesc>> &candidate_op_descs,
-                                                Mapping &mapping) {
+                                                Mapping &mapping) const {
   if (candidate_nodes.empty() || candidate_op_descs.empty()) {
     GELOGW("[Match][Output] candidate_nodes or candidate_op_descs is empty, pattern matching failed.");
     return false;
@@ -234,7 +234,7 @@ void PatternFusionBasePassImpl::GetInDataAnchors(const ge::NodePtr &node,
 }
 
 bool PatternFusionBasePassImpl::GetMatchOutputNodes(const ge::ComputeGraph &graph, const FusionPattern &pattern,
-                                                    std::vector<ge::NodePtr> &matched_output_nodes) {
+                                                    std::vector<ge::NodePtr> &matched_output_nodes) const {
   const std::shared_ptr<FusionPattern::OpDesc> output_op_desc = pattern.GetOutput();
   if (output_op_desc == nullptr) {
     GELOGW("[Get][Output] output op_desc is null, pattern matching failed");
@@ -247,7 +247,7 @@ bool PatternFusionBasePassImpl::GetMatchOutputNodes(const ge::ComputeGraph &grap
     for (auto &OutOpType : output_op_desc->types) {
       const auto iter = node_map_info->node_type_map->find(OutOpType);
       if (iter != node_map_info->node_type_map->end()) {
-        for (auto iter_node = iter->second.begin(); iter_node != iter->second.end(); iter_node++) {
+        for (auto iter_node = iter->second.cbegin(); iter_node != iter->second.cend(); iter_node++) {
           const ge::NodePtr node_ptr = iter_node->second;
 
           if (node_ptr->GetInDataNodes().empty() && node_ptr->GetOutAllNodes().empty()) {

@@ -155,7 +155,7 @@ class PatternFusionBasePass : public GraphPass {
    *           ABC--->D
    * There obviously a cycle in the fused graph.
    *             */
-  bool DetectOneScope(const std::vector<ge::NodePtr> &scope_nodes);
+  bool DetectOneScope(const std::vector<ge::NodePtr> &scope_nodes) const;
 
   bool CheckEachPeerOut(const ge::NodePtr &node,
                         const std::unordered_set<ge::NodePtr> &scope_nodes_set,

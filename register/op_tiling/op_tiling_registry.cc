@@ -60,8 +60,11 @@ OpTilingRegistryInterf_V2::OpTilingRegistryInterf_V2(const std::string &op_type,
 }
 
 OpTilingFuncInfo::OpTilingFuncInfo(const std::string &op_type)
-  : op_type_(op_type), tiling_func_(nullptr), tiling_func_v2_(nullptr), tiling_func_v3_(nullptr),
-    parse_func_v3_(nullptr) {}
+    : op_type_(op_type),
+      tiling_func_(nullptr),
+      tiling_func_v2_(nullptr),
+      tiling_func_v3_(nullptr),
+      parse_func_v3_(nullptr) {}
 
 bool OpTilingFuncInfo::IsFunctionV4() {
   return this->tiling_func_v4_ != nullptr && this->parse_func_v4_ != nullptr;

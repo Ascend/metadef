@@ -111,12 +111,12 @@ void FusionStatisticRecorder::ClearFusionInfo(const std::string& session_graph_i
 
 void FusionStatisticRecorder::GetAllSessionAndGraphIdList(std::vector<std::string> &session_graph_id_vec) {
   if (!graph_fusion_info_map_.empty()) {
-    for (auto iter = graph_fusion_info_map_.begin(); iter != graph_fusion_info_map_.end(); iter++) {
+    for (auto iter = graph_fusion_info_map_.cbegin(); iter != graph_fusion_info_map_.cend(); iter++) {
       session_graph_id_vec.push_back(iter->first);
     }
   }
   if (!buffer_fusion_info_map_.empty()) {
-    for (auto iter = buffer_fusion_info_map_.begin(); iter != buffer_fusion_info_map_.end(); iter++) {
+    for (auto iter = buffer_fusion_info_map_.cbegin(); iter != buffer_fusion_info_map_.cend(); iter++) {
       if (std::find(session_graph_id_vec.begin(), session_graph_id_vec.end(), iter->first)
               == session_graph_id_vec.end()) {
         session_graph_id_vec.push_back(iter->first);
@@ -128,8 +128,8 @@ void FusionStatisticRecorder::GetAllSessionAndGraphIdList(std::vector<std::strin
 FusionInfo::FusionInfo(const uint64_t session_id, const std::string graph_id, const std::string pass_name,
                        const int32_t match_times, const int32_t effect_times)
     : session_id_(session_id),
-      graph_id_(std::move(graph_id)),
-      pass_name_(std::move(pass_name)),
+      graph_id_(graph_id),
+      pass_name_(pass_name),
       match_times_(match_times),
       effect_times_(effect_times) {}
 FusionInfo::~FusionInfo() {}
