@@ -27,6 +27,7 @@
 
 #include "mmpa/mmpa_api.h"
 #include "toolchain/slog.h"
+#include "graph/def_types.h"
 
 #define GE_MODULE_NAME static_cast<int32_t>(GE)
 namespace {
@@ -498,7 +499,7 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
     GELOGW("[Read][JsonFile]path %s is not valid", file_path.c_str());
     return -1;
   }
-  nlohmann::json *const json_file = reinterpret_cast<nlohmann::json *const>(handle);
+  nlohmann::json *const json_file = ge::PtrToPtr<void, nlohmann::json>(handle);
   if (json_file == nullptr) {
     GELOGW("[Check][Param]JsonFile is nullptr");
     return -1;
@@ -708,7 +709,7 @@ error_message::Context &ErrorManager::GetErrorManagerContext() {
   return error_context_;
 }
 
-void ErrorManager::SetErrorContext(const error_message::Context error_context) {
+void ErrorManager::SetErrorContext(error_message::Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);

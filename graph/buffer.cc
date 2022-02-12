@@ -20,6 +20,7 @@
 #include "graph/buffer_impl.h"
 #include "graph/debug/ge_util.h"
 #include "graph/utils/mem_utils.h"
+#include "graph/def_types.h"
 
 namespace ge {
 BufferImpl::BufferImpl() {
@@ -88,7 +89,7 @@ BufferImpl &BufferImpl::operator=(const BufferImpl &other) {
 
 const std::uint8_t *BufferImpl::GetData() const {
   if (buffer_ != nullptr) {
-    return reinterpret_cast<const uint8_t*>(buffer_->data());
+    return PtrToPtr<char_t, uint8_t>(buffer_->data());
   }
   return nullptr;
 }
@@ -97,7 +98,7 @@ std::uint8_t *BufferImpl::GetData() {
   if ((buffer_ != nullptr) && (!buffer_->empty())) {
     // Avoid copy on write
     (void)(*buffer_)[0UL];
-    return reinterpret_cast<uint8_t *>(const_cast<char_t *>(buffer_->data()));
+    return PtrToPtr<char_t, uint8_t>(const_cast<char_t *>(buffer_->data()));
   }
   return nullptr;
 }
