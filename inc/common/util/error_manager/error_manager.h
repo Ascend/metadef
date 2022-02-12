@@ -202,7 +202,7 @@ class ErrorManager {
 
   error_message::Context &GetErrorManagerContext();
 
-  void SetErrorContext(const error_message::Context error_context);
+  void SetErrorContext(error_message::Context error_context);
 
   void SetStage(const std::string &first_stage, const std::string &second_stage);
 

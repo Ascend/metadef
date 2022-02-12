@@ -53,7 +53,7 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
   graphStatus UpdateOutputDesc(const std::string &name, const GeTensorDesc &tensor_desc);
   size_t GetInputsSize() const;
   size_t GetOutputsSize() const;
-  graphStatus SetAttr(const std::string &name, const AnyValue &&attr_value);
+  graphStatus SetAttr(const std::string &name, AnyValue &&attr_value);
   graphStatus GetAttr(const std::string &name, AnyValue &attr_value) const;
   OpDescPtr GetOpDescImpl() const;
   void UpdateLinkMapImpl(const std::string &src_name, const OpIO &op_dst);

@@ -38,7 +38,7 @@ OperatorImpl::OperatorImpl(const std::string &name, const std::string &type)
 
 OperatorImpl::OperatorImpl(const OpDescPtr &op_desc) : enable_shared_from_this(), op_desc_(op_desc) {}
 
-OperatorImpl::OperatorImpl(const ConstNodePtr node) : enable_shared_from_this(), node_(std::move(node)) {
+OperatorImpl::OperatorImpl(const ConstNodePtr node) : enable_shared_from_this(), node_(node) {
   if ((node_ != nullptr) && (node_->GetOpDesc() != nullptr)) {
     op_desc_ = node_->GetOpDesc();
   }
@@ -382,7 +382,7 @@ size_t OperatorImpl::GetOutputsSize() const {
   return op_desc_->GetOutputsSize();
 }
 
-graphStatus OperatorImpl::SetAttr(const std::string &name, const AnyValue &&attr_value) {
+graphStatus OperatorImpl::SetAttr(const std::string &name, AnyValue &&attr_value) {
   GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
   return op_desc_->SetAttr(name, std::move(attr_value));
 }
