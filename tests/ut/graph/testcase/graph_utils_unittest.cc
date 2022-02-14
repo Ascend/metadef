@@ -1890,41 +1890,4 @@ TEST_F(UtestGraphUtils, ComputeGraphBuilderBuildNodesTest) {
   EXPECT_EQ(msg, "op_desc is NULL.");
 }
 
-TEST_F(UtestGraphUtils, DumpGEGraph) {
-  auto ge_tensor = std::make_shared<GeTensor>();
-  uint8_t data_buf[4096] = {0};
-  data_buf[0] = 7;
-  data_buf[10] = 8;
-  ge_tensor->SetData(data_buf, 4096);
-
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data_node = builder.AddNode("Data", "Data", 0, 1);
-  auto const_node = builder.AddNode("Const", "Const", 0, 1);
-  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
-  auto add_node = builder.AddNode("Add", "Add", 2, 1);
-  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
-  builder.AddDataEdge(data_node, 0, add_node, 0);
-  builder.AddDataEdge(const_node, 0, add_node, 0);
-  builder.AddDataEdge(add_node, 0, netoutput, 0);
-  auto graph = builder.GetGraph();
- 
-  GraphUtils::DumpGEGraph(graph, "", true, "./test_graph_1.txt");
-  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
-  bool state = GraphUtils::LoadGEGraph("./test_graph_1.txt", *com_graph1);
-  ASSERT_EQ(state, true);
-  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
-
-  GraphUtils::DumpGEGraph(graph, "", true, "test_graph_0.txt");
-  ComputeGraphPtr com_graph0 = std::make_shared<ComputeGraph>("TestGraph0");
-  state = GraphUtils::LoadGEGraph("./test_graph_0.txt", *com_graph0);
-  ASSERT_EQ(state, true);
-  ASSERT_EQ(com_graph0->GetAllNodesSize(), 4);
-
-  // test invalid path
-  GraphUtils::DumpGEGraph(graph, "", true, "./test/test_graph_2.txt");
-  ComputeGraphPtr com_graph2 = std::make_shared<ComputeGraph>("TestGraph0");
-  state = GraphUtils::LoadGEGraph("./test/test_graph_2.txt", *com_graph2);
-  ASSERT_EQ(state, false);
-}
-
 }  // namespace ge
