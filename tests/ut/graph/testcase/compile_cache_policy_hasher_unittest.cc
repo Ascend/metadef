@@ -25,79 +25,100 @@ class UtestCompileCachePolicyHasher : public testing::Test {
 };
 
 TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderOnly) {
-  uint8_t data1[9] = {0U,1U,2U,3U,4U,5U,6U,7U,8U};
-  uint8_t data2[9] = {0U,1U,2U,3U,4U,5U,7U,9U,11U};
+  uint8_t data1[8] = {0U,1U,2U,3U,4U,5U,6U,7U};
+  uint8_t data2[8] = {0U,1U,2U,3U,4U,5U,6U,7U};
   uint8_t data3[9] = {0U,1U,2U,3U,4U,5U,7U,9U,11U};
+  uint8_t data4[8] = {1U,1U,2U,3U,4U,5U,6U,7U};
 
   BinaryHolder holder1 = BinaryHolder();
-  holder1.SharedFrom(data1, 1);
+  holder1.SharedFrom(data1, sizeof(data1));
 
   const uint8_t *dataPtr = holder1.GetDataPtr();
   ASSERT_NE(dataPtr, nullptr);
   size_t size1 = holder1.GetDataLen();
-  ASSERT_EQ(size1, 1UL);
+  ASSERT_EQ(size1, sizeof(data1));
 
+  // same
   BinaryHolder holder2(holder1);
+  ASSERT_EQ((holder1 != holder2), false);
   BinaryHolder holder3 = BinaryHolder();
-  holder3.SharedFrom(data2, 9);
+  holder3 = holder1;
+  ASSERT_EQ((holder1 != holder3), false);
   BinaryHolder holder4 = BinaryHolder();
-  holder4.SharedFrom(data3, 9);
+  holder4.SharedFrom(data2, sizeof(data2));
+  ASSERT_EQ((holder1 != holder4), false);
+
+  // not equal
   BinaryHolder holder5 = BinaryHolder();
-  holder5.SharedFrom(nullptr, 0);
+  holder5.SharedFrom(nullptr, sizeof(data1));
+  ASSERT_EQ((holder1 != holder5), true);
   BinaryHolder holder6 = BinaryHolder();
-  holder6.SharedFrom(data1, 9);
+  holder6.SharedFrom(data3, sizeof(data3));
+  ASSERT_EQ((holder1 != holder6), true);
+  BinaryHolder holder7 = BinaryHolder();
+  holder7.SharedFrom(data4, sizeof(data4));
+  ASSERT_EQ((holder1 != holder7), true);
 
-  bool b1 = (holder1 != holder5);
-  ASSERT_EQ(b1, false);
-  bool b2 = (holder1 != holder2);
-  ASSERT_EQ(b2, false);
-  bool b3 = (holder3 != holder4);
-  ASSERT_EQ(b3, false);
-  bool b4 = (holder3 != holder6);
-  ASSERT_EQ(b4, true);
-  bool b5 = (holder4 != holder5);
-  ASSERT_EQ(b5, false);
+  // same nullptr
+  BinaryHolder holder8 = BinaryHolder();
+  BinaryHolder holder9 = BinaryHolder();
+  ASSERT_EQ((holder8 != holder9), false);
 }
 
-TEST_F(UtestCompileCachePolicyHasher, GetCacheDescHashWithoutShape) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
-  BinaryHolder holder = BinaryHolder();
-  holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
-  auto seed = CompileCacheHasher::GetCacheDescHashWithoutShape(ccd);
-  ASSERT_EQ(seed, 34605809643570136);
+TEST_F(UtestCompileCachePolicyHasher, TestSameacheFail) {
+  CompileCacheDesc cache_desc1;
+  CompileCacheDesc cache_desc2;
+  cache_desc1.SetOpType("test1");
+  cache_desc2.SetOpType("test2");
+  bool is_same = CompileCacheDesc::IsSameCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
+  is_same = CompileCacheDesc::IsMatchedCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
+  cache_desc2.SetOpType("test1");
 
-  delete data;
-  data = nullptr;
-}
+  uint8_t val1 = 0;
+  BinaryHolder holder1 = BinaryHolder();
+  holder1.SharedFrom(&val1, sizeof(val1));
+  cache_desc1.other_desc_.emplace_back(holder1);
+  is_same = CompileCacheDesc::CheckWithoutTensorInfo(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
 
-TEST_F(UtestCompileCachePolicyHasher, GetCacheDescShapeHash) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
-  BinaryHolder holder = BinaryHolder();
-  holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
-  auto seed = CompileCacheHasher::GetCacheDescShapeHash(ccd);
-  ASSERT_EQ(seed, 8487203673785339670);
+  uint8_t val2 = 2;
+  BinaryHolder holder2 = BinaryHolder();
+  holder2.SharedFrom(&val2, sizeof(val2));
+  cache_desc2.other_desc_.emplace_back(holder2);
+  is_same = CompileCacheDesc::CheckWithoutTensorInfo(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
+  cache_desc2.other_desc_.clear();
+  cache_desc2.other_desc_.emplace_back(holder1);
 
-  delete data;
-  data = nullptr;
+  TensorInfoArgs tensor_info1(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
+  cache_desc1.AddTensorInfo(tensor_info1);
+  TensorInfoArgs tensor_info2(ge::FORMAT_NCHW, ge::FORMAT_ND, ge::DT_FLOAT16);
+  cache_desc2.AddTensorInfo(tensor_info2);
+  is_same = CompileCacheDesc::IsMatchedCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
+  cache_desc2.tensor_info_args_vec_[0].format_ = FORMAT_ND;
+
+  cache_desc1.tensor_info_args_vec_[0].shape_.emplace_back(-1);
+  std::pair<int64_t, int64_t> ranges{10,100};
+  cache_desc1.tensor_info_args_vec_[0].shape_range_.emplace_back(ranges);
+  cache_desc2.tensor_info_args_vec_[0].shape_.emplace_back(5);
+  is_same = CompileCacheDesc::IsMatchedCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
+  cache_desc2.tensor_info_args_vec_[0].shape_[0] = 101;
+  is_same = CompileCacheDesc::IsMatchedCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
+
+  cache_desc1.tensor_info_args_vec_[0].shape_[0] = 1;
+  is_same = CompileCacheDesc::IsMatchedCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
+
+  cache_desc1.tensor_info_args_vec_[0].shape_[0] = -2;
+  is_same = CompileCacheDesc::IsMatchedCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, true);
+
+  is_same = CompileCacheDesc::IsSameCompileDesc(cache_desc1, cache_desc2);
+  ASSERT_EQ(is_same, false);
 }
 }

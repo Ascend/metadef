@@ -52,140 +52,83 @@ TEST_F(UtestCompileCachePolicy, CreateCCPFailed_2) {
   ASSERT_EQ(ccp, nullptr);
 }
 
-TEST_F(UtestCompileCachePolicy, AddCacheSuccess_1) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
+TEST_F(UtestCompileCachePolicy, CacheAddDelTest) {
+  CompileCacheDesc cache_desc;
+  cache_desc.SetOpType("test_op");
+  TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
+  std::vector<int64_t> shape{-1,-1}; 
+  tensor_info.SetShape(shape);
+  tensor_info.SetOriginShape(shape);
+  std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
+  tensor_info.SetShapeRange(ranges);
+  cache_desc.AddTensorInfo(tensor_info);
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
+  cache_desc.AddBinary(holder);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
+      ge::AgingPolicyType::AGING_POLICY_LRU);
+  CacheItemId cache_id = ccp->AddCache(cache_desc);
+  ASSERT_NE(cache_id, -1);
 
-  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
-  CacheItem cache_item = ccp->AddCache(ccd);
-  ASSERT_NE(cache_item, -1);
+  CacheItemId cache_id_same = ccp->AddCache(cache_desc);
+  ASSERT_EQ(cache_id_same, cache_id);
+
+  cache_desc.SetOpType("another_op");
+  CacheItemId cache_id_another = ccp->AddCache(cache_desc);
+  ASSERT_NE(cache_id_another, -1);
+  ASSERT_NE(cache_id_another, cache_id);
+
+  std::vector<CacheItemId> delete_item{cache_id, cache_id_another};
+  std::vector<CacheItemId> delete_item_ret = ccp->DeleteCache(delete_item);
+  ASSERT_EQ(delete_item_ret.size(), 2);
 }
 
-TEST_F(UtestCompileCachePolicy, AddCacheSuccess_2) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
-  uint8_t value = 9;
-  uint8_t *data = &value;
-  BinaryHolder holder = BinaryHolder();
-  holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  CompileCacheDesc ccd1 = CompileCacheDesc(uid, tensor_info_args);
+TEST_F(UtestCompileCachePolicy, CacheFindTest) {
+  CompileCacheDesc cache_desc;
+  cache_desc.SetOpType("test_op");
+  CompileCacheDesc cache_desc_match = cache_desc;
+  TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
+  std::vector<int64_t> shape{-1,-1}; 
+  tensor_info.SetShape(shape);
+  tensor_info.SetOriginShape(shape);
+  std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
+  tensor_info.SetShapeRange(ranges);
+  cache_desc.AddTensorInfo(tensor_info);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
+      ge::AgingPolicyType::AGING_POLICY_LRU);
+  CacheItemId cache_id = ccp->AddCache(cache_desc);
+  ASSERT_NE(cache_id, -1);
 
-  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
-  CacheItem cache_item = ccp->AddCache(ccd1);
-  ASSERT_NE(cache_item, -1);
-
-  uid++;
-  CompileCacheDesc ccd2 = CompileCacheDesc(uid, tensor_info_args);
-  cache_item = ccp->AddCache(ccd2);
-  ASSERT_NE(cache_item, -1);
-
-  bool is_same = CompileCacheDesc::IsSameCompileDesc(ccd1, ccd2);
-  ASSERT_NE(is_same, true);
-}
-
-TEST_F(UtestCompileCachePolicy, CacheHashKey_1) {
-  CacheHashKey seed = 234;
-  SmallVector<CacheHashKey, 3> values = {{2,3,4}};
-
-  CacheHashKey result = HashUtils::HashCombine(seed, values);
-
-  // Hash result of HashUtils::HashCombine
-  // Same with another UT GetCacheDescShapeHash
-  ASSERT_EQ(result, 11093890198896ULL);
-}
-
-TEST_F(UtestCompileCachePolicy, FindCacheSuccess_1) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
-  uint8_t value = 9;
-  uint8_t *data = &value;
-  BinaryHolder holder = BinaryHolder();
-  holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
-  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
-  CacheItem cache_item = ccp->AddCache(ccd);
-
-  CacheItem cache_item_find = ccp->FindCache(ccd);
-  ASSERT_EQ(cache_item, cache_item_find);
-}
-
-TEST_F(UtestCompileCachePolicy, DeleteCacheSuccess_1) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
-  uint8_t value = 9;
-  uint8_t *data = &value;
-  BinaryHolder holder = BinaryHolder();
-  holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
-
-  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
-  CacheItem cache_item = ccp->AddCache(ccd);
-
-  auto lamb = [&](CacheInfo info) -> bool {
-    if (info.GetItem() > 0) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-  std::vector<CacheItem> del_item = ccp->DeleteCache(lamb);
-  ASSERT_EQ(cache_item, del_item[0]);
+  std::vector<int64_t> shape_match{5,5}; 
+  tensor_info.SetShape(shape_match);
+  cache_desc_match.AddTensorInfo(tensor_info);
+  CacheItemId cache_id_find = ccp->FindCache(cache_desc_match);
+  ASSERT_EQ(cache_id, cache_id_find);
+  ge::CompileCachePolicy ccp1;
+  ASSERT_EQ(ccp1.FindCache(cache_desc_match), KInvalidCacheItemId);
 }
 
 TEST_F(UtestCompileCachePolicy, AgingCacheSuccess_1) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
+  CompileCacheDesc cache_desc;
+  cache_desc.SetOpType("test_op");
+  TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
+  cache_desc.AddTensorInfo(tensor_info);
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder = BinaryHolder();
   holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
+  BinaryHolder holder_new;
+  holder_new = holder;
+  ASSERT_NE(holder_new.GetDataPtr(), nullptr);
+  cache_desc.AddBinary(holder_new);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
+      ge::AgingPolicyType::AGING_POLICY_LRU);
+  CacheItemId cache_id = ccp->AddCache(cache_desc);
+  ASSERT_NE(cache_id, -1);
 
-  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY, ge::AgingPolicyType::AGING_POLICY_LRU);
-  CacheItem cache_item = ccp->AddCache(ccd);
-
-  std::vector<CacheItem> del_item = ccp->DoAging();
-  ASSERT_EQ(cache_item, del_item[0]);
+  std::vector<CacheItemId> del_item = ccp->DoAging();
+  ASSERT_EQ(cache_id, del_item[0]);
 }
-
 }

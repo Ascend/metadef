@@ -23,7 +23,7 @@ class MatchPolicy {
  public:
   MatchPolicy() = default;
   virtual ~MatchPolicy() = default;
-  virtual CacheItem GetCacheItem(const CCStatType &cc_state, const CompileCacheDesc &desc) const = 0;
+  virtual CacheItemId GetCacheItemId(const CCStatType &cc_state, const CompileCacheDesc &desc) const = 0;
  private:
   MatchPolicy &operator=(const MatchPolicy &match_polocy) = delete;
   MatchPolicy(const MatchPolicy &match_polocy) = delete;

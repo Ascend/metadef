@@ -19,148 +19,88 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
-
-#include <securec.h>
-
+#include "graph/ge_error_codes.h"
 #include "graph/small_vector.h"
 #include "graph/ascend_limits.h"
 #include "graph/types.h"
-#include "graph/debug/ge_log.h"
-#include "graph/debug/ge_util.h"
 #include "graph/def_types.h"
 #include "graph/hash_utils.h"
+#include "framework/common/debug/ge_log.h"
+#include "framework/common/debug/log.h"
 
 namespace ge {
-using ShapeType = std::vector<int64_t>;
-using ShapeRangeType = std::vector<std::pair<int64_t, int64_t>>;
-
 class BinaryHolder {
  public:
   BinaryHolder() = default;
 
-  BinaryHolder(const BinaryHolder &other) {
-    if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
-      data_len_ = other.GetDataLen();
-      holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
-      const auto mem_ret = memcpy_s(holder_.get(), data_len_,
-                                    ge::PtrToPtr<const uint8_t, const void>(other.GetDataPtr()), data_len_);
-      if (mem_ret != EOK) {
-        GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] Memcpy Falied.");
-      }
-    }
-  }
-  BinaryHolder &operator=(const BinaryHolder &other) {
-    if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
-      data_len_ = other.GetDataLen();
-      holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
-      const auto mem_ret = memcpy_s(holder_.get(), data_len_,
-                                    ge::PtrToPtr<const uint8_t, const void>(other.GetDataPtr()), data_len_);
-      if (mem_ret != EOK) {
-        GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] Memcpy Falied.");
-      }
-    }
-    return *this;
-  }
+  BinaryHolder(const BinaryHolder &other);
+
+  BinaryHolder &operator=(const BinaryHolder &other);
 
   ~BinaryHolder() = default;
 
-  void SharedFrom(uint8_t *const data, const size_t data_len) {
-    data_ptr_ = data;
-    data_len_ = data_len;
-  }
+  void SharedFrom(uint8_t *const data, const size_t data_len);
 
-  const uint8_t *GetDataPtr() const noexcept {
-    if (holder_.get() != nullptr) {
-      return holder_.get();
-    }
-    return data_ptr_;
-  }
+  const uint8_t *GetDataPtr() const noexcept;
 
-  const size_t &GetDataLen() const noexcept {
-    return data_len_;
-  }
+  const size_t &GetDataLen() const noexcept;
 
-  bool operator!=(const BinaryHolder &second) const {
-    if (this->GetDataLen() != second.GetDataLen()) {
-      return false;
-    }
-    const auto this_data = this->GetDataPtr();
-    const auto second_data = second.GetDataPtr();
-    if (((this_data == nullptr) && (second_data != nullptr)) ||
-        ((this_data != nullptr) && (second_data == nullptr))) {
-      return true;
-    }
-    if ((this_data == nullptr) && (second_data == nullptr)) {
-      return false;
-    }
-    if (memcmp(this_data, second_data, this->GetDataLen()) != 0) {
-      return true;
-    }
-    return false;
-  }
+  bool operator!=(const BinaryHolder &second) const;
+
  private:
   std::unique_ptr<uint8_t[]> holder_ = nullptr;
   uint8_t *data_ptr_ = nullptr;
   size_t data_len_ = 0UL;
 };
 
+class TensorInfoArgs {
+ public:
+  TensorInfoArgs(Format format, Format origin_format, DataType data_type)
+    : format_(format),
+      origin_format_(origin_format),
+      data_type_(data_type) {}
+
+  ~TensorInfoArgs() = default;
+
+  bool IsUnknownShape() const;
+  bool IsShapeMatch(const TensorInfoArgs &other) const;
+  bool IsTensorInfoMatch(const TensorInfoArgs &other) const;
+  Format GetFormat() const;
+  Format GetOriginFormat() const;
+  DataType GetDataType() const;
+  void SetShape(const std::vector<int64_t> &shape);
+  void SetOriginShape(const std::vector<int64_t> &origin_shape);
+  void SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &ranges);
+  bool operator!=(const TensorInfoArgs &second) const;
+
+ private:
+  Format format_;
+  Format origin_format_;
+  DataType data_type_;
+  SmallVector<int64_t, kDefaultMaxInputNum> shape_;
+  SmallVector<int64_t, kDefaultMaxInputNum> origin_shape_;
+  SmallVector<std::pair<int64_t, int64_t>, kDefaultMaxInputNum> shape_range_;
+};
+
 class CompileCacheDesc {
   friend class CompileCacheHasher;
  public:
-  struct TensorInfoArgs {
-    friend class CompileCacheDesc;
-   private:
-    SmallVector<ShapeType, kDefaultMaxInputNum> shapes;
-    SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes;
-    SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges;
-    SmallVector<Format, kDefaultMaxInputNum> formats;
-    SmallVector<Format, kDefaultMaxInputNum> origin_formats;
-    SmallVector<DataType, kDefaultMaxInputNum> data_types;
-    SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc;
-  };
-
-  CompileCacheDesc() = delete;
-
-  CompileCacheDesc(const int64_t unique_id, const TensorInfoArgs &tensor_info_args) : unique_id_(unique_id),
-                   shapes_(tensor_info_args.shapes),
-                   origin_shapes_(tensor_info_args.origin_shapes),
-                   shape_ranges_(tensor_info_args.shape_ranges),
-                   formats_(tensor_info_args.formats),
-                   origin_formats_(tensor_info_args.origin_formats),
-                   data_types_(tensor_info_args.data_types),
-                   other_desc_(tensor_info_args.other_desc) {}
-
+  CompileCacheDesc() = default;
   ~CompileCacheDesc() = default;
-  static bool IsSameCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second) {
-    if ((first.unique_id_ != second.unique_id_) ||
-        (first.origin_shapes_ != second.origin_shapes_) ||
-        (first.formats_ != second.formats_) ||
-        (first.origin_formats_ != second.origin_formats_) ||
-        (first.data_types_ != second.data_types_) ||
-        (first.other_desc_.size() != second.other_desc_.size())) {
-      return false;
-    }
-
-    for (size_t idx = 0UL; idx < first.other_desc_.size(); idx++) {
-      if (first.other_desc_[idx] != second.other_desc_[idx]) {
-        return false;
-      }
-    }
-    return true;
-  }
+  static bool IsSameCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second);
+  static bool IsMatchedCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second);
+  void SetOpType(const std::string &op_type);
+  void AddBinary(BinaryHolder &holder);
+  void AddTensorInfo(const TensorInfoArgs &tensor_info);
 
  private:
-  int64_t unique_id_ = 0L;
-  SmallVector<ShapeType, kDefaultMaxInputNum> shapes_;
-  SmallVector<ShapeType, kDefaultMaxInputNum> origin_shapes_;
-  SmallVector<ShapeRangeType, kDefaultMaxInputNum> shape_ranges_;
-  SmallVector<Format, kDefaultMaxInputNum> formats_;
-  SmallVector<Format, kDefaultMaxInputNum> origin_formats_;
-  SmallVector<DataType, kDefaultMaxInputNum> data_types_;
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc_;
+  static bool CheckWithoutTensorInfo(const CompileCacheDesc &first, const CompileCacheDesc &second);
+  std::string op_type_; // op name
+  SmallVector<TensorInfoArgs, kDefaultMaxInputNum> tensor_info_args_vec_; // input tensordescs
+  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc_; // attrs float float size
 };
 }  // namespace ge
+
 namespace std {
 template<>
 struct hash<ge::BinaryHolder> {

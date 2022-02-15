@@ -41,13 +41,15 @@ public:
 
   graphStatus SetAgingPolicy(const AgingPolicyPtr ap);
 
-  CacheItem AddCache(const CompileCacheDesc &compile_cache_desc);
+  CacheItemId AddCache(const CompileCacheDesc &compile_cache_desc);
 
-  CacheItem FindCache(const CompileCacheDesc &compile_cache_desc) const;
+  CacheItemId FindCache(const CompileCacheDesc &compile_cache_desc) const;
 
-  std::vector<CacheItem> DeleteCache(const DelCacheFunc &func);
+  std::vector<CacheItemId> DeleteCache(const DelCacheFunc &func);
 
-  std::vector<CacheItem> DoAging();
+  std::vector<CacheItemId> DeleteCache(const std::vector<CacheItemId> &delete_item);
+
+  std::vector<CacheItemId> DoAging();
 
   CompileCachePolicy() = default;
 
