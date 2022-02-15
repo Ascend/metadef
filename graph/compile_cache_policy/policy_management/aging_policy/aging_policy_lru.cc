@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "aging_policy_lru.h"
+#include "graph/compile_cache_policy/aging_policy_lru.h"
 namespace ge {
 std::vector<CacheItem> AgingPolicyLru::DoAging(const CCStatType &cc_state) const {
   const int64_t delete_limit =

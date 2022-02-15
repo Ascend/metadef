@@ -19,7 +19,7 @@
 
 #include "compile_cache_desc.h"
 #include "compile_cache_state.h"
-#include "graph/compile_cache_policy/policy_management/policy_register.h"
+#include "policy_register.h"
 #include "graph/ge_error_codes.h"
 
 #include <vector>

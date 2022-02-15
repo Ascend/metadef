@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "compile_cache_policy.h"
-#include "graph/compile_cache_policy/policy_management/match_policy/match_policy_exact_only.h"
-#include "graph/compile_cache_policy/policy_management/aging_policy/aging_policy_lru.h"
+#include "graph/compile_cache_policy/compile_cache_policy.h"
+#include "graph/compile_cache_policy/match_policy_exact_only.h"
+#include "graph/compile_cache_policy/aging_policy_lru.h"
 #include "debug/ge_util.h"
 
 #include "graph/debug/ge_util.h"

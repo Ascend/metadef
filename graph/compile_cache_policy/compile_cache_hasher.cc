@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "compile_cache_hasher.h"
+#include "graph/compile_cache_policy/compile_cache_hasher.h"
 
 namespace ge {
 CacheHashKey CompileCacheHasher::GetCacheDescHashWithoutShape(const CompileCacheDesc &cache_desc) {

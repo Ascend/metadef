@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "compile_cache_state.h"
+#include "graph/compile_cache_policy/compile_cache_state.h"
 #include "framework/common/debug/ge_log.h"
 namespace ge {
 CacheItem CompileCacheState::GetNextCacheItem() {

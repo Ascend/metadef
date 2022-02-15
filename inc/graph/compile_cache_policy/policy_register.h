@@ -18,8 +18,8 @@
 #define GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_POLICY_REGISTER_H_
 #include <map>
 #include <mutex>
-#include "match_policy/match_policy.h"
-#include "aging_policy/aging_policy.h"
+#include "match_policy.h"
+#include "aging_policy.h"
 namespace ge {
 using MatchPolicyPtr = std::shared_ptr<MatchPolicy>;
 using AgingPolicyPtr = std::shared_ptr<AgingPolicy>;
