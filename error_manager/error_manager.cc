@@ -27,6 +27,7 @@
 
 #include "mmpa/mmpa_api.h"
 #include "toolchain/slog.h"
+#include "graph/def_types.h"
 
 #define GE_MODULE_NAME static_cast<int32_t>(GE)
 namespace {
@@ -238,7 +239,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
   const std::unique_lock<std::mutex> lck(mutex_);
   if (error_context_.work_stream_id == 0UL) {
     if (error_message_per_work_id_.size() > kMaxWorkSize) {
-      GELOGE("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
+      GELOGW("[Report][Error]error_code %s, error work_stream total size exceed %lu, skip record",
              error_code.c_str(), kMaxWorkSize);
       return -1;
     }
@@ -251,7 +252,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.size() > kMaxWorkSize) {
-    GELOGE("[Report][Error]error_code %s, error work_stream_id:%u item size exceed %lu, skip record",
+    GELOGW("[Report][Error]error_code %s, error work_stream_id:%u item size exceed %lu, skip record",
             error_code.c_str(), error_context_.work_stream_id, kMaxWorkSize);
     return -1;
   }
@@ -498,7 +499,7 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
     GELOGW("[Read][JsonFile]path %s is not valid", file_path.c_str());
     return -1;
   }
-  nlohmann::json *const json_file = reinterpret_cast<nlohmann::json *const>(handle);
+  nlohmann::json *const json_file = ge::PtrToPtr<void, nlohmann::json>(handle);
   if (json_file == nullptr) {
     GELOGW("[Check][Param]JsonFile is nullptr");
     return -1;
@@ -708,7 +709,7 @@ error_message::Context &ErrorManager::GetErrorManagerContext() {
   return error_context_;
 }
 
-void ErrorManager::SetErrorContext(const error_message::Context error_context) {
+void ErrorManager::SetErrorContext(error_message::Context error_context) {
   error_context_.work_stream_id = error_context.work_stream_id;
   error_context_.first_stage = move(error_context.first_stage);
   error_context_.second_stage = move(error_context.second_stage);

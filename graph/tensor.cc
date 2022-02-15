@@ -118,7 +118,7 @@ class TensorDescImpl {
   TensorDescImpl() = default;
   ~TensorDescImpl() = default;
   TensorDescImpl(const Shape &shape, const Format format, const DataType dt)
-    : shape_(shape), format_(format), data_type_(dt) {}
+      : shape_(shape), format_(format), data_type_(dt) {}
 
  private:
   Shape shape_;
@@ -175,7 +175,7 @@ class TensorImpl {
         GELOGE(GRAPH_FAILED, "[Copy][Data] failed, ret:%d", memcpy_ret);
         return GRAPH_FAILED;
       }
-      (void)ge_tensor.SetData(reinterpret_cast<const uint8_t *>(buff.get()), total_size);
+      (void)ge_tensor.SetData(PtrToPtr<char_t, const uint8_t>(buff.get()), total_size);
       return GRAPH_SUCCESS;
     }
     return GRAPH_FAILED;
@@ -221,7 +221,7 @@ class TensorImpl {
       ptr_size += (data[i].size() + 1U);
     }
 
-    (void)ge_tensor.SetData(reinterpret_cast<const uint8_t *>(buff.get()), total_size);
+    (void)ge_tensor.SetData(PtrToPtr<char_t, const uint8_t>(buff.get()), total_size);
     return GRAPH_SUCCESS;
   }
 
