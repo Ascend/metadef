@@ -42,7 +42,6 @@ using std::vector;
 
 /*lint -e148*/
 namespace ge {
-class Operator;
 class TensorDesc;
 class Tensor;
 class TBEPluginManager;
@@ -98,7 +97,7 @@ class FrameworkRegistryImpl;
 
 using ParseParamFunc = std::function<domi::Status(const google::protobuf::Message *, ge::Operator &)>;
 using ParseParamByOpFunc = std::function<domi::Status(const ge::Operator &, ge::Operator &)>;
-using FusionParseParamFunc = std::function<domi::Status(const std::vector<const google::protobuf::Message *>, 
+using FusionParseParamFunc = std::function<domi::Status(const std::vector<const google::protobuf::Message *>,
                                                         ge::Operator &)>;
 using FusionParseParamByOpFunc = std::function<domi::Status(const std::vector<ge::Operator> &, ge::Operator &)>;
 using ParseSubgraphFunc = std::function<Status(const std::string &subgraph_name, const ge::Graph &graph)>;
