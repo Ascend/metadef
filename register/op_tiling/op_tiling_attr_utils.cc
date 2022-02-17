@@ -139,7 +139,7 @@ private:
   AttrDataManager() {}
   ~AttrDataManager() {}
   template<typename T, bool IsList = false, typename std::enable_if<!IsList, bool>::type = true>
-  AttrDataPtr GetAttrValue(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetAttrValue(const ge::Operator &op, const char *attr_name) const {
     T attr_value;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
@@ -153,7 +153,7 @@ private:
   }
 
   template<typename T, bool IsList = false, typename std::enable_if<IsList, bool>::type = true>
-  AttrDataPtr GetAttrValue(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetAttrValue(const ge::Operator &op, const char *attr_name) const {
     std::vector<T> attr_vec;
     if (op.GetAttr(attr_name, attr_vec) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
@@ -168,7 +168,7 @@ private:
     return attr_data_ptr;
   }
 
-  AttrDataPtr GetBoolAttrValue(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetBoolAttrValue(const ge::Operator &op, const char *attr_name) const {
     bool attr_value = false;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
@@ -183,7 +183,7 @@ private:
     return attr_data_ptr;
   }
 
-  AttrDataPtr GetStrAttrValue(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetStrAttrValue(const ge::Operator &op, const char *attr_name) const {
     std::string attr_value;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
@@ -200,7 +200,7 @@ private:
     return attr_data_ptr;
   }
 
-  AttrDataPtr GetIntAttrValueAndToUint(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetIntAttrValueAndToUint(const ge::Operator &op, const char *attr_name) const {
     int32_t attr_value = 0;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
@@ -215,7 +215,7 @@ private:
     return attr_data_ptr;
   }
 
-  AttrDataPtr GetListIntAttrValueAndToListUint(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetListIntAttrValueAndToListUint(const ge::Operator &op, const char *attr_name) const {
     std::vector<int32_t> attr_value;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
@@ -237,7 +237,7 @@ private:
     return attr_data_ptr;
   }
 
-  AttrDataPtr GetFloatAttrValueAndToFp16(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetFloatAttrValueAndToFp16(const ge::Operator &op, const char *attr_name) const {
     float attr_value = 0;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
@@ -252,7 +252,7 @@ private:
     return attr_data_ptr;
   }
 
-  AttrDataPtr GetListFloatAttrValueAndToListFp16(const ge::Operator &op, const char *attr_name) {
+  AttrDataPtr GetListFloatAttrValueAndToListFp16(const ge::Operator &op, const char *attr_name) const {
     std::vector<float> attr_value;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);

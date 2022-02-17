@@ -67,7 +67,7 @@ class PatternFusionBasePassImpl {
   bool MatchFromOutput(const ge::NodePtr output_node, const std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping);
 
   bool GetMatchOutputNodes(const ge::ComputeGraph &graph, const FusionPattern &pattern,
-                           std::vector<ge::NodePtr> &matched_output_nodes);
+                           std::vector<ge::NodePtr> &matched_output_nodes) const;
 
  private:
   std::vector<FusionPattern *> patterns_;
@@ -75,7 +75,7 @@ class PatternFusionBasePassImpl {
   OpsKernelInfoStorePtr ops_kernel_info_store_ptr_;
 
   bool MatchFromOutput(std::vector<ge::NodePtr> &candidate_nodes,
-                       std::vector<std::shared_ptr<OpDesc>> &candidate_op_descs, Mapping &mapping);
+                       std::vector<std::shared_ptr<OpDesc>> &candidate_op_descs, Mapping &mapping) const;
 
   static bool MatchAllEdges(const size_t &input_size, const std::unique_ptr<bool[]> &usage_flags);
 

@@ -342,7 +342,7 @@ bool PatternFusionBasePass::CheckEachPeerOut(const ge::NodePtr &node,
   return false;
 }
 
-bool PatternFusionBasePass::DetectOneScope(const std::vector<ge::NodePtr> &scope_nodes) {
+bool PatternFusionBasePass::DetectOneScope(const std::vector<ge::NodePtr> &scope_nodes) const {
   /* Create a set for accelerating the searching. */
   const std::unordered_set<ge::NodePtr> scope_nodes_set(scope_nodes.begin(), scope_nodes.end());
 
