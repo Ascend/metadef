@@ -329,7 +329,7 @@ TensorDesc::TensorDesc(Shape shape, Format format, DataType dt) {
 TensorDesc::TensorDesc(const TensorDesc &desc) {
   // Copy
   impl = ComGraphMakeShared<TensorDescImpl>();
-  if (desc.impl != nullptr && impl != nullptr) {
+  if ((desc.impl != nullptr) && (impl != nullptr)) {
     *impl = *desc.impl;
   }
 }
@@ -343,7 +343,7 @@ TensorDesc &TensorDesc::operator=(const TensorDesc &desc) {
   // Copy
   if (&desc != this) {
     impl = ComGraphMakeShared<TensorDescImpl>();
-    if (desc.impl != nullptr && impl != nullptr) {
+    if ((desc.impl != nullptr) && (impl != nullptr)) {
       *impl = *desc.impl;
     }
   }
@@ -756,7 +756,7 @@ graphStatus Tensor::IsValid() {
 
 Tensor Tensor::Clone() const {
   const Tensor tensor;
-  if (impl != nullptr && tensor.impl != nullptr) {
+  if ((impl != nullptr) && (tensor.impl != nullptr)) {
     tensor.impl->ge_tensor = impl->ge_tensor.Clone();
   }
   return tensor;
@@ -830,7 +830,7 @@ TensorDesc TensorAdapter::GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_
 
 Tensor TensorAdapter::GeTensor2Tensor(const ConstGeTensorPtr &ge_tensor) {
   const Tensor tensor;
-  if (ge_tensor != nullptr && tensor.impl != nullptr) {
+  if ((ge_tensor != nullptr) && (tensor.impl != nullptr)) {
     tensor.impl->ge_tensor = ge_tensor->Clone();
   }
   return tensor;

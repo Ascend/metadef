@@ -324,7 +324,7 @@ void OnnxUtils::AddAttrProtoForOpInDesc(onnx::NodeProto *const node_proto, const
   if (size_in > 0U) {
     for (uint32_t i = 0U; i < size_in; i++) {
       const auto input_desc = op_desc->GetInputDescPtrDfault(i);
-      if (input_desc == nullptr || input_desc->impl_ == nullptr) {
+      if ((input_desc == nullptr) || (input_desc->impl_ == nullptr)) {
         GELOGW("[Add][InAttr] Input desc of input %u is nullptr", i);
         continue;
       }
@@ -375,7 +375,7 @@ void OnnxUtils::AddAttrProtoForOpOutDesc(onnx::NodeProto *const node_proto, cons
   if (size_out > 0) {
     for (uint32_t i = 0U; i < static_cast<uint32_t>(size_out); i++) {
       const auto output_desc = op_desc->GetOutputDescPtr(i);
-      if (output_desc == nullptr || output_desc->impl_ == nullptr) {
+      if ((output_desc == nullptr) || (output_desc->impl_ == nullptr)) {
         GELOGW("[Add][OutAttr] Output desc of output %u is nullptr", i);
         continue;
       }
@@ -547,7 +547,7 @@ void OnnxUtils::AddAttrProtoFromNodeMembers(const NodePtr &node, onnx::NodeProto
     AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_INTS, "recv_event_id_list", &recv_list);
   }
   const auto op_desc = node->impl_->op_;
-  if (op_desc != nullptr && op_desc->impl_ != nullptr) {
+  if ((op_desc != nullptr) && (op_desc->impl_ != nullptr)) {
     // for input_name_idx_ in opdesc
     const auto input_name_2_indexs = op_desc->GetAllInputName();
     ::google::protobuf::RepeatedPtrField<::std::string> input_names;
@@ -945,7 +945,7 @@ void OnnxUtils::DecodeNodeAttributeForOpInDesc(const onnx::AttributeProto &attr_
                                                const int32_t idx,
                                                const OpDescPtr &op_desc) {
   const auto tensor_desc = op_desc->MutableInputDesc(static_cast<uint32_t>(idx));
-  if (tensor_desc == nullptr || tensor_desc->impl_ == nullptr) {
+  if ((tensor_desc == nullptr) || (tensor_desc->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "MutableInputDesc index:%d return nullptr, op:%s, attr:%s",
                        idx, op_desc->GetName().c_str(), attr_name_for_input_desc.c_str());
     GELOGE(GRAPH_FAILED, "[Invoke][MutableInputDesc] index:%d return nullptr, op name %s, attr name %s",
@@ -988,7 +988,7 @@ void OnnxUtils::DecodeNodeAttributeForOpOutDesc(const onnx::AttributeProto &attr
                                                 const std::string &attr_name_for_output_desc,
                                                 const int32_t index, const OpDescPtr &op_desc) {
   const auto tensor_desc = op_desc->MutableOutputDesc(static_cast<uint32_t>(index));
-  if (tensor_desc == nullptr || tensor_desc->impl_ == nullptr) {
+  if ((tensor_desc == nullptr) || (tensor_desc->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "MutableOutputDesc index:%d return nullptr, op:%s, attr:%s",
                        index, op_desc->GetName().c_str(), attr_name_for_output_desc.c_str());
     GELOGE(GRAPH_FAILED, "[Invoke][MutableOutputDesc] index:%d return nullptr, op name %s, attr name %s",
@@ -1046,7 +1046,7 @@ void OnnxUtils::DecodeNodeAttributeForOpInAndOutDesc(const onnx::AttributeProto 
 }
 
 void OnnxUtils::DecodeNodeAttributeForOpDesc(const onnx::AttributeProto &attr_proto, OpDescPtr &op_desc) {
-  if (op_desc == nullptr || op_desc->impl_ == nullptr) {
+  if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param op_desc is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] DecodeNodeAttributeForOpDesc: op_desc is nullptr");
     return;

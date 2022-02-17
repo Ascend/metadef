@@ -105,8 +105,8 @@ graphStatus Model::SaveToFile(const std::string &file_name) const {
     return GRAPH_FAILED;
   }
   // Write file
-  ge::proto::ModelDef ge_proto;
   if (buffer.GetData() != nullptr) {
+    ge::proto::ModelDef ge_proto;
     const std::string str(PtrToPtr<uint8_t, char_t>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
       return GRAPH_FAILED;

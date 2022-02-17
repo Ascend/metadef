@@ -86,7 +86,7 @@ graphStatus Node::NodeImpl::Init(const NodePtr &node) {
   }
   in_control_anchor_ = ComGraphMakeShared<InControlAnchor>(node, -1);
   out_control_anchor_ = ComGraphMakeShared<OutControlAnchor>(node, -1);
-  if (in_control_anchor_ == nullptr || out_control_anchor_ == nullptr) {
+  if ((in_control_anchor_ == nullptr) || (out_control_anchor_ == nullptr)) {
     REPORT_CALL_ERROR("E18888", "Current in_control_anchor or out_control_anchor is null, malloc shared_ptr failed.");
     GELOGE(GRAPH_FAILED, "[Create][ControlAnchor] Current in_control_anchor or out_control_anchor is null, "
            "malloc shared_ptr failed.");
@@ -164,7 +164,7 @@ bool Node::NodeImpl::NodeAnchorIsEqual(const AnchorPtr &left_anchor,
   for (size_t j = 0UL; j < anchor_peer_size; j++) {
     const auto &peer_node = left_anchor->GetPeerAnchors().at(j)->GetOwnerNode();
     const auto &r_peer_node = right_anchor->GetPeerAnchors().at(j)->GetOwnerNode();
-    if (peer_node == nullptr || r_peer_node == nullptr) {
+    if ((peer_node == nullptr) || (r_peer_node == nullptr)) {
       REPORT_CALL_ERROR("E18888", "anchor's peer node is null, node name: %s index[%zu] peer node index[%zu].",
                         this->GetName().c_str(), i, j);
       GELOGE(GRAPH_FAILED, "[Get][OwnerNode] anchor's peer node is null, node name: %s index[%zu] "

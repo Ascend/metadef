@@ -1195,7 +1195,7 @@ const std::vector<std::string> &OpDescImpl::GetSubgraphInstanceNames() const {
 
 void OpDescImpl::RemoveSubgraphInstanceName(const std::string &name) {
   for (auto iter = subgraph_instance_names_.begin(); iter != subgraph_instance_names_.end(); ++iter) {
-    if (*iter == name) {
+    if ((*iter) == name) {
       *iter = "";
       return;
     }

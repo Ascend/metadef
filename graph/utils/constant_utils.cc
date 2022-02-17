@@ -22,7 +22,7 @@
 
 namespace ge {
 bool ConstantUtils::IsConstant(const Operator &op) {
-  if (op.GetOpType() == CONSTANT || op.GetOpType() == CONSTANTOP) {
+  if ((op.GetOpType() == CONSTANT) || (op.GetOpType() == CONSTANTOP)) {
     return true;
   }
   return IsPotentialConst(OpDescUtils::GetOpDescFromOperator(op));
@@ -33,7 +33,7 @@ bool ConstantUtils::IsConstant(const NodePtr &node) {
 }
 
 bool ConstantUtils::IsConstant(const OpDescPtr &op_desc) {
-  if (op_desc->GetType() == CONSTANT || op_desc->GetType() == CONSTANTOP) {
+  if ((op_desc->GetType() == CONSTANT) || (op_desc->GetType() == CONSTANTOP)) {
     return true;
   }
   return IsPotentialConst(op_desc);
@@ -46,7 +46,7 @@ bool ConstantUtils::IsPotentialConst(const OpDescPtr &op_desc) {
 }
 
 bool ConstantUtils::IsRealConst(const OpDescPtr &op_desc) {
-  return (op_desc->GetType() == CONSTANT || op_desc->GetType() == CONSTANTOP);
+  return ((op_desc->GetType() == CONSTANT) || (op_desc->GetType() == CONSTANTOP));
 }
 
 bool ConstantUtils::GetWeight(const OpDescPtr &op_desc, const uint32_t index, ConstGeTensorPtr &weight) {
