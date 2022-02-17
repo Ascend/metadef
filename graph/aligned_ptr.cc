@@ -31,11 +31,7 @@ AlignedPtr::AlignedPtr(const size_t buffer_size, const size_t alignment) {
     return;
   }
 
-  base_ =
-    std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(new (std::nothrow) uint8_t[alloc_size], [](const uint8_t *ptr) {
-    delete[] ptr;
-    ptr = nullptr;
-  });
+  base_ = ComGraphMakeUnique<uint8_t[]>(alloc_size);
   if (base_ == nullptr) {
     GELOGW("[Allocate][Buffer] Allocate buffer failed, size=%zu", alloc_size);
     return;
