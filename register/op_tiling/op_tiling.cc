@@ -461,6 +461,35 @@ ge::graphStatus TurnToOpParaCalculateV4(const ge::Operator &op_param, OpRunInfoV
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
+ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_info)
+{
+  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  GE_CHECK_NOTNULL(op_desc);
+  std::string mix_l2_attr = "_alias_engine_name";
+  if (!op_desc->HasAttr(mix_l2_attr)) {
+    return ge::GRAPH_SUCCESS;
+  }
+  const std::vector<int64_t> all_workspaces = op_desc->GetWorkspaceBytes();
+  std::vector<int64_t> op_workspaces;
+  run_info.GetAllWorkspaces(op_workspaces);
+  size_t op_work_size = op_workspaces.size();
+  GELOGD("Op name:%s post proc, op work num:%zu, all work num:%zu.", op_desc->GetName().c_str(), op_work_size,
+         all_workspaces.size());
+  if (op_work_size > all_workspaces.size()) {
+    REPORT_CALL_ERROR("E19999", "[register][op_tiling.cc][PostProcCalculateV2]Workspace size error.");
+    return ge::GRAPH_FAILED;
+  }
+  // mixl2--pass will add additional works after op_workspaces
+  for (size_t i = op_work_size; i < all_workspaces.size(); ++i) {
+    op_workspaces.emplace_back(all_workspaces[i]);
+  }
+  for (size_t i = 0; i < op_workspaces.size(); ++i) {
+    GELOGD("Op's workspace:%zu, value:%d.", i, op_workspaces[i]);
+  }
+  run_info.SetWorkspaces(op_workspaces);
+  return ge::GRAPH_SUCCESS;
+}
+
 extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_info) {
   ge::AscendString op_type;
   (void)op.GetOpType(op_type);
@@ -494,7 +523,9 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2
   } else {
     GE_LOGE("Optiling func of op type[%s] is all empty.", op_type.GetString());
   }
-
+  if (ret == ge::GRAPH_SUCCESS) {
+    return PostProcCalculateV2(op, run_info);
+  }
   return ret;
 }
 
