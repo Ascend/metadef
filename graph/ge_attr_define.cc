@@ -1060,6 +1060,8 @@ const std::string EXT_ATTR_ATOMIC_TBE_KERNEL = "_atomic_tbe_kernel";
 // Source/dst format for Op FormatTransfer
 const std::string FORMAT_TRANSFER_SRC_FORMAT = "src_format";
 const std::string FORMAT_TRANSFER_DST_FORMAT = "dst_format";
+const std::string FORMAT_TRANSFER_SRC_SUBFORMAT = "src_subformat";
+const std::string FORMAT_TRANSFER_DST_SUBFORMAT = "dst_subformat";
 
 // For compile op by ge call
 const std::string ATTR_NEED_COMPILE = "_node_need_compile";

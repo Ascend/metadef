@@ -25,11 +25,7 @@
 #include "external/graph/ge_error_codes.h"
 #include "graph/def_types.h"
 namespace ge {
-class Buffer;
-class GeTensor;
-class GeTensorDesc;
 class ComputeGraph;
-class NamedAttrs;
 using GeTensorPtr = std::shared_ptr<GeTensor>;
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
 class AnyValue {

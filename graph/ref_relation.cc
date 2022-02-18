@@ -262,8 +262,8 @@ graphStatus RefRelations::Impl::BuildRefRelationsForWhile(
     const size_t ref_desc = static_cast<size_t>(ref_d);
     const size_t ref_in = static_cast<size_t>(ref_n);
 
-    (void)node_refs[ref_desc].insert(node_refs[ref_desc].end(), node_refs[ref_in].begin(), node_refs[ref_in].end());
-    (void)node_refs[ref_in].insert(node_refs[ref_in].end(), node_refs[ref_desc].begin(), node_refs[ref_desc].end());
+    (void)node_refs[ref_desc].insert(node_refs[ref_desc].cend(), node_refs[ref_in].cbegin(), node_refs[ref_in].cend());
+    (void)node_refs[ref_in].insert(node_refs[ref_in].cend(), node_refs[ref_desc].cbegin(), node_refs[ref_desc].cend());
   }
 
   return GRAPH_SUCCESS;
