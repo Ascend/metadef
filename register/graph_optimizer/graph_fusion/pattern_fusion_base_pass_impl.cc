@@ -100,7 +100,7 @@ bool PatternFusionBasePassImpl::IsOpTypeExist(const std::string &type, const std
 }
 
 bool PatternFusionBasePassImpl::MatchFromOutput(const ge::NodePtr output_node,
-                                                const std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping) {
+    const std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping) const {
   if ((output_node == nullptr) || (output_op_desc == nullptr)) {
     GELOGW("[Match][Output] output node/op_desc is null, pattern matching failed");
     return false;
