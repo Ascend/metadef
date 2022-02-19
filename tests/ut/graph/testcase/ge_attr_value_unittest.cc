@@ -163,4 +163,15 @@ TEST_F(UtestGeAttrValue, SetGetAttr_GeTensor) {
   }
   tensor = nullptr;
 }
+
+TEST_F(UtestGeAttrValue, GetStr) {
+  OpDescPtr op_desc = std::make_shared<OpDesc>("Add", "Add");
+  EXPECT_TRUE(op_desc);
+
+  std::string add_info = "add_info";
+  AttrUtils::SetStr(op_desc, "compile_info_key", add_info);
+  const std::string *s2 = AttrUtils::GetStr(op_desc, "compile_info_key");
+  EXPECT_NE(s2, nullptr);
+  EXPECT_EQ(*s2, add_info);
+}
 }

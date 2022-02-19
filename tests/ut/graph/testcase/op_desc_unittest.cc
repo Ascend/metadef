@@ -27,6 +27,7 @@
 #include "graph/utils/transformer_utils.h"
 #include "graph/common_error_codes.h"
 #include "graph/operator_factory_impl.h"
+#include "register/op_tiling_registry.h"
 
 namespace ge {
 class UtestOpDesc : public testing::Test {
@@ -611,5 +612,18 @@ TEST_F(UtestOpDesc, GetSubgraphNameByInstanceName_success) {
   op_desc1->SetSubgraphInstanceName(0, "sub");
   EXPECT_EQ(op_desc1->GetSubgraphNameByInstanceName("sub", subname), GRAPH_SUCCESS);
   EXPECT_EQ(subname, "subgraph1");
+}
+
+TEST_F(UtestOpDesc, GetTilingInfo) {
+  auto op_desc = std::make_shared<OpDesc>();
+  EXPECT_NE(op_desc, nullptr);
+  EXPECT_EQ(op_desc->GetTilingFuncInfo(), nullptr);
+  EXPECT_EQ(op_desc->GetAtomicTilingFuncInfo(), nullptr);
+
+  ::optiling::OpTilingFuncInfo tiling_info, atomic_tiling_info;
+  op_desc->SetTilingFuncInfo(&tiling_info);
+  op_desc->SetAtomicTilingFuncInfo(&atomic_tiling_info);
+  EXPECT_EQ(op_desc->GetTilingFuncInfo(), &tiling_info);
+  EXPECT_EQ(op_desc->GetAtomicTilingFuncInfo(), &atomic_tiling_info);
 }
 }

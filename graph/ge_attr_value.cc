@@ -251,6 +251,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool AttrUtils::GetStr(ConstAttrH
   return GetAttrValue(obj->GetAttrMap(), name, value);
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::string *AttrUtils::GetStr(ConstAttrHolderAdapter &&obj,
+                                                                                    const std::string &name) {
+  return GetAttrValue<std::string>(obj->GetAttrMap(), name);
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 bool AttrUtils::SetListStr(AttrHolderAdapter &&obj, const std::string &name, const std::vector<std::string> &value) {
   return SetAttrValue(obj->MutableAttrMap(), name, value);

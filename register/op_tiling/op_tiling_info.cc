@@ -15,6 +15,10 @@
  */
 
 #include "register/op_tiling_info.h"
+#include <securec.h>
+#include "graph/debug/ge_log.h"
+#include "common/util/error_manager/error_manager.h"
+#include "graph/def_types.h"
 
 namespace optiling {
 using std::make_shared;
@@ -26,7 +30,12 @@ public:
   ~OpRunInfoImpl() = default;
 
   OpRunInfoImpl(const uint32_t &block_dim, const bool &clear_atomic, const uint64_t &tiling_key)
-          : block_dim_(block_dim), clear_atomic_(clear_atomic), tiling_key_(tiling_key) {}
+          : block_dim_(block_dim),
+            clear_atomic_(clear_atomic),
+            tiling_key_(tiling_key),
+            addr_base_(nullptr),
+            max_size_(0),
+            offset_(0) {}
 
   void SetBlockDim(const uint32_t &block_dim) { block_dim_ = block_dim; }
 
@@ -51,8 +60,20 @@ public:
   void SetWorkspaces(const std::vector<int64_t> &workspaces) { workspaces_ = workspaces; }
 
   void AddTilingData(const char *value, const size_t size) {
-    (void)tiling_data_.write(value, static_cast<std::streamsize>(size));
-    (void)tiling_data_.flush();
+    if (addr_base_ == nullptr) {
+      (void)tiling_data_.write(value, static_cast<std::streamsize>(size));
+      (void)tiling_data_.flush();
+    } else {
+      auto addr = ::ge::ValueToPtr(::ge::PtrToValue(addr_base_) + offset_);
+      if (memcpy_s(addr, static_cast<size_t>(max_size_ - offset_), value, size) != EOK) {
+        GELOGE(ACL_ERROR_GE_MEMORY_OPERATE_FAILED, "[Add][TilingData] Memcpy tiling data failed, "
+               "dst size = %zu, src size = %zu.", static_cast<size_t>(max_size_ - offset_), size);
+        REPORT_INNER_ERROR("E19999", "[Add][TilingData] Memcpy tiling data failed, dst size = %zu, src size = %zu.",
+                           static_cast<size_t>(max_size_ - offset_), size);
+        return;
+      }
+      offset_ += size;
+    }
   }
 
   const ByteBuffer &GetAllTilingData() const { return tiling_data_; }
@@ -61,8 +82,8 @@ public:
 
   void SetAllTilingData(const ByteBuffer &value) {
     tiling_data_.clear();
-    const std::string temp = value.str();
-    tiling_data_ << temp;
+    offset_ = 0;
+    AddTilingData(value.str().c_str(), value.str().size());
   }
 
   void SetClearAtomic(const bool clear_atomic) { clear_atomic_ = clear_atomic; }
@@ -73,12 +94,25 @@ public:
 
   uint64_t GetTilingKey() const { return tiling_key_; }
 
+  void ResetWorkspace() {
+    workspaces_.clear();
+  }
+
+  void ResetAddrBase(void *const addr_base, const uint64_t max_size) {
+    addr_base_ = addr_base;
+    max_size_ = max_size;
+    offset_ = 0;
+  }
+
 private:
   uint32_t block_dim_;
   bool clear_atomic_;
   uint64_t tiling_key_;
   ByteBuffer tiling_data_;
   std::vector<int64_t> workspaces_;
+  void *addr_base_;
+  uint64_t max_size_;
+  uint64_t offset_;
 };
 
 OpRunInfo::OpRunInfo() {
@@ -181,6 +215,14 @@ void OpRunInfo::SetTilingKey(const uint64_t &new_tiling_key) {
 
 uint64_t OpRunInfo::GetTilingKey() const {
   return impl_->GetTilingKey();
+}
+
+void OpRunInfo::ResetWorkspace() {
+  impl_->ResetWorkspace();
+}
+
+void OpRunInfo::ResetAddrBase(void *const addr_base, const uint64_t max_size) {
+  impl_->ResetAddrBase(addr_base, max_size);
 }
 
 class OpCompileInfoImpl {
