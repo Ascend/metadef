@@ -20,6 +20,7 @@
 #include <vector>
 #include "graph/ge_tensor.h"
 #include "graph/def_types.h"
+#include "framework/common/debug/ge_log.h"
 #include "external/register/register_error_codes.h"
 #include "proto/tensorflow/tensor.pb.h"
 
@@ -80,27 +81,46 @@ class TensorAssign {
 
   template <typename T>
   static Status GetVal(const int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector,
-                       const int32_t count, GeTensorPtr &weight) {
+                       const int32_t count, GeTensorPtr &weight, const bool is_complex = false) {
+    if ((is_complex && (val_size % 2)) != 0) {  // val_size must be even.
+      GELOGE(FAILED, "complex value should be an integer multiple of 2.");
+      return FAILED;
+    }
     const std::unique_ptr<T[]> addr(new (std::nothrow) T[count]());
     GE_CHECK_NOTNULL(addr);
-    const bool zerosLike = ((count != val_size) && (val_size == 1));
+    // Complex numbers are made up of real and imaginary numbers
+    const bool zerosLike = ((count != val_size) && (val_size == 1 || (is_complex && val_size == 2)));
     if (!zerosLike) {
-      const int32_t minCount = (count > val_size) ? val_size : count;
-      const size_t minSize = static_cast<size_t>(minCount);
-      for (size_t i = 0UL; i < minSize; i++) {
+      for (size_t i = 0UL; i < static_cast<size_t>(val_size); i++) {
         addr[i] = val_vector.Get(static_cast<int32_t>(i));
       }
-      for (size_t i = minSize; i < static_cast<size_t>(count); i++) {
-        addr[i] = val_vector.Get(minCount - 1);
+      if (is_complex) {
+        // val_vector format is real value, complex value..., here is getting the corresponding value.
+        for (int32_t i = val_size; i < count; i = i + 2) {
+          addr[static_cast<size_t>(i)] = val_vector.Get(val_size - 2);
+          addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(val_size - 1);
+        }
+      } else {
+        for (int32_t i = val_size; i < count; i++) {
+          addr[static_cast<size_t>(i)] = val_vector.Get(val_size - 1);
+        }
       }
     } else {
-      for (size_t i = 0UL; i < static_cast<size_t>(count); i++) {
-        addr[i] = val_vector.Get(0);
+      if (is_complex) {
+        for (int32_t i = 0; i < count; i = i + 2) {
+          addr[static_cast<size_t>(i)] = val_vector.Get(0);
+          addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(1);
+        }
+      } else {
+        for (int32_t i = 0; i < count; i++) {
+          addr[static_cast<size_t>(i)] = val_vector.Get(0);
+        }
       }
     }
     (void)weight->SetData(ge::PtrToPtr<T, uint8_t>(addr.get()), static_cast<size_t>(count) * sizeof(T));
     return SUCCESS;
   }
+
 };
 }  // namespace domi
 #endif  // TENSOR_ASSIGN_H_
