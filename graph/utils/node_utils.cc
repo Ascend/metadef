@@ -271,7 +271,7 @@ void NodeUtils::UnlinkAll(const Node &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num) {
-  if (node == nullptr || node->impl_ == nullptr) {
+  if ((node == nullptr) || (node->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -302,7 +302,7 @@ graphStatus NodeUtils::AppendInputAnchor(const NodePtr &node, const uint32_t num
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, const uint32_t num) {
-  if (node == nullptr || node->impl_ == nullptr) {
+  if ((node == nullptr) || (node->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -330,7 +330,7 @@ graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node, const uint32_t num
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, const uint32_t num) {
-  if (node == nullptr || node->impl_ == nullptr) {
+  if ((node == nullptr) || (node->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "Input node is null, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -361,7 +361,7 @@ graphStatus NodeUtils::AppendOutputAnchor(const NodePtr &node, const uint32_t nu
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus NodeUtils::RemoveOutputAnchor(const NodePtr &node, const uint32_t num) {
-  if (node == nullptr || node->impl_ == nullptr) {
+  if ((node == nullptr) || (node->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "Input node is null, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node is null");
     return GRAPH_FAILED;
@@ -450,11 +450,11 @@ std::string NodeUtils::GetNodeType(const Node &node) {
 }
 
 std::string NodeUtils::GetNodeType(const NodePtr &node) {
-  return node == nullptr ? "" : GetNodeType(*node);
+  return (node == nullptr) ? "" : GetNodeType(*node);
 }
 
 graphStatus NodeUtils::GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs) {
-  if (node == nullptr || node->GetOpDesc() == nullptr) {
+  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     REPORT_INNER_ERROR("E18888", "node or op_desc is null");
     GELOGE(GRAPH_FAILED, "[Check][Param] node or op_desc is null");
     return GRAPH_FAILED;
@@ -613,7 +613,7 @@ NodePtr NodeUtils::GetParentInput(const Node &node) {
 }
 
 NodePtr NodeUtils::GetParentInput(const NodePtr &node) {
-  return node == nullptr ? node : GetParentInput(*node);
+  return (node == nullptr) ? node : GetParentInput(*node);
 }
 NodeToOutAnchor NodeUtils::GetParentInputAndAnchor(const NodePtr &node) {
   uint32_t parent_index = 0U;
@@ -662,7 +662,7 @@ bool NodeUtils::IsDynamicShape(const Node &node) {
 }
 
 bool NodeUtils::IsDynamicShape(const NodePtr &node) {
-  return node == nullptr ? false : IsDynamicShape(*node);
+  return (node == nullptr) ? false : IsDynamicShape(*node);
 }
 
 ///

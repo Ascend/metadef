@@ -262,7 +262,7 @@ GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
     const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
     for (auto name_iter = subgraph_names.rbegin(); name_iter != subgraph_names.rend(); ++name_iter) {
       auto subgraph = root_graph->GetSubgraph(*name_iter);
-      if (subgraph != nullptr && subgraph->impl_ != nullptr) {
+      if ((subgraph != nullptr) && (subgraph->impl_ != nullptr)) {
         subgraphs.emplace_back(subgraph);
         (void)candidates.insert(candidates.begin(), subgraph->impl_->nodes_.begin(), subgraph->impl_->nodes_.end());
       }
@@ -440,9 +440,9 @@ graphStatus GraphUtils::InsertNodeBefore(const InDataAnchorPtr &dst,
     if ((RemoveEdge(peer_out_ctrl_anchor, in_ctrl_anchor) != GRAPH_SUCCESS) ||
         (AddEdge(peer_out_ctrl_anchor, insert_node_in_ctrl_anchor) != GRAPH_SUCCESS)) {
       GELOGE(GRAPH_FAILED, "[INSERT][NODE] replace control edge from %s->%s to %s->%s failed.",
-             peer_node != nullptr ? peer_node->GetName().c_str() : "NULL",
+             (peer_node != nullptr) ? peer_node->GetName().c_str() : "NULL",
              dst_node->GetName().c_str(),
-             peer_node != nullptr ? peer_node->GetName().c_str() : "NULL",
+             (peer_node != nullptr) ? peer_node->GetName().c_str() : "NULL",
              insert_node->GetName().c_str());
       return GRAPH_FAILED;
     }
@@ -641,8 +641,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   (void)model.Save(buffer, (dump_level != ge::OnnxUtils::DUMP_ALL) && (!is_always_dump));
 
   // Write file
-  ge::proto::ModelDef ge_proto;
   if (buffer.GetData() != nullptr) {
+    ge::proto::ModelDef ge_proto;
     const std::string str(reinterpret_cast<const char_t *>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
       GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
@@ -693,8 +693,8 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
   (void)model.Save(buffer, dump_level != ge::OnnxUtils::DUMP_ALL);
 
   // Write file
-  ge::proto::ModelDef ge_proto;
   if (buffer.GetData() != nullptr) {
+    ge::proto::ModelDef ge_proto;
     const std::string str(reinterpret_cast<const char_t *>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
       GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
@@ -1014,12 +1014,12 @@ inline std::string GetNodeNameByAnchor(const Anchor *const anchor) {
     return "Null";
   }
   const auto node = anchor->GetOwnerNode();
-  return node == nullptr ? "Null" : node->GetName();
+  return (node == nullptr) ? "Null" : node->GetName();
 }
 
 graphStatus ReplaceOutDataAnchor(const OutDataAnchorPtr &new_anchor, const OutDataAnchorPtr &old_anchor,
                                  InNodesToOut *const in_nodes_to_out = nullptr) {
-  if (new_anchor == nullptr || old_anchor == nullptr) {
+  if ((new_anchor == nullptr) || (old_anchor == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param new_anchor or old_anchor is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] new_anchor or old_anchor is nullptr");
     return GRAPH_PARAM_INVALID;
@@ -1442,7 +1442,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 GraphUtils::ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
                                    const std::vector<int32_t> &inputs_map,
                                    const std::vector<int32_t> &outputs_map) {
-  if (new_node == nullptr || old_node == nullptr) {
+  if ((new_node == nullptr) || (old_node == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param new_node or old_node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
     return GRAPH_PARAM_INVALID;
@@ -1504,7 +1504,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyInCtr
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::MoveInCtrlEdges(const NodePtr &src_node,
                                                                                        const NodePtr &dst_node) {
-  if (src_node == nullptr || dst_node == nullptr) {
+  if ((src_node == nullptr) || (dst_node == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param src_node or dst_node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
     return GRAPH_FAILED;
@@ -1522,7 +1522,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::MoveInCtr
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOutCtrlEdges(const NodePtr &src_node,
                                                                                         const NodePtr &dst_node) {
-  if (src_node == nullptr || dst_node == nullptr) {
+  if ((src_node == nullptr) || (dst_node == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param src_node or dst_node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
     return GRAPH_FAILED;
@@ -1559,7 +1559,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOutCt
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::MoveOutCtrlEdges(NodePtr &src_node,
                                                                                         NodePtr &dst_node) {
-  if (src_node == nullptr || dst_node == nullptr) {
+  if ((src_node == nullptr) || (dst_node == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param src_node or dst_node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
     return GRAPH_FAILED;
@@ -1676,7 +1676,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
   GE_CHECK_NOTNULL(src_root_compute_graph);
   for (const auto &n : src_compute_graph->GetDirectNode()) {
     const OpDescPtr op_desc = AttrUtils::CopyOpDesc(n->GetOpDesc());
-    if (op_desc == nullptr || op_desc->impl_ == nullptr) {
+    if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
       REPORT_CALL_ERROR("E18888", "CopyOpDesc failed from node:%s", n->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Copy][OpDesc] from node:%s failed", n->GetName().c_str());
       return GRAPH_FAILED;
@@ -1686,7 +1686,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
       return GRAPH_FAILED;
     }
 
-    if (n->GetType() == CONSTANT || n->GetType() == CONSTANTOP) {
+    if ((n->GetType() == CONSTANT) || (n->GetType() == CONSTANTOP)) {
       GeTensorPtr weight = nullptr;
       if (AttrUtils::MutableTensor(n->GetOpDesc(), ATTR_NAME_WEIGHTS, weight)) {
         const GeTensor copy_weight = weight->Clone();
@@ -1800,12 +1800,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
                                     ComputeGraphPtr &dst_compute_graph,
                                     const std::unordered_map<std::string, NodePtr> &all_new_nodes) {
-  if (src_compute_graph == nullptr || src_compute_graph->impl_ == nullptr) {
+  if ((src_compute_graph == nullptr) || (src_compute_graph->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "Param src_compute_graph is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Src compute graph is nullptr.");
     return GRAPH_FAILED;
   }
-  if (dst_compute_graph == nullptr || dst_compute_graph->impl_ == nullptr) {
+  if ((dst_compute_graph == nullptr) || (dst_compute_graph->impl_ == nullptr)) {
     REPORT_INNER_ERROR("E18888", "Param dst_compute_graph is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Dst compute graph is nullptr.");
     return GRAPH_FAILED;
@@ -1966,7 +1966,7 @@ graphStatus GraphUtils::CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr
     GELOGE(GRAPH_FAILED, "[Check][Param] Input param dst node not valid");
     return GRAPH_FAILED;
   }
-  if (src_node == nullptr || src_node->GetOpDesc() == nullptr) {
+  if ((src_node == nullptr) || (src_node->GetOpDesc() == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param src_node is nullptr or it's opdesc is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input param src node not valid");
     return GRAPH_FAILED;
@@ -2006,7 +2006,7 @@ graphStatus GraphUtils::CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr
 ///
 graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string &prefix,
                                          const std::unordered_map<std::string, NodePtr> &all_nodes) {
-  if (node == nullptr || node->GetOpDesc() == nullptr) {
+  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param node is nullptr or it's opdesc is nullptr. check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Input node not valid");
     return GRAPH_FAILED;
@@ -2679,8 +2679,8 @@ ComputeGraphPtr GraphUtils::BuildSubgraphWithNodes(ComputeGraph &graph, const st
   for (const auto &node : nodes) {
     // op_desc of node should not be null
     const auto subgraph_names = node->GetOpDesc()->GetSubgraphInstanceNames();
-    for (const auto &subgraph_name : subgraph_names) {
-      node->GetOpDesc()->RemoveSubgraphInstanceName(subgraph_name);
+    for (const auto &subgraph_name_inner : subgraph_names) {
+      node->GetOpDesc()->RemoveSubgraphInstanceName(subgraph_name_inner);
     }
     if (RemoveNodeWithoutRelink(node->GetOwnerComputeGraph(), node) != GRAPH_SUCCESS) {
       GELOGW("Remove node %s failed.", node->GetName().c_str());
@@ -2943,7 +2943,7 @@ graphStatus GraphUtils::UnfoldSubgraph(const ComputeGraphPtr &graph,
   GELOGD("[%s] Merging graph inputs and outputs successfully", graph->GetName().c_str());
 
   for (auto &node : graph->GetDirectNode()) {
-    if (node->GetType() == DATA || node->GetType() == NETOUTPUT) {
+    if ((node->GetType() == DATA) || (node->GetType() == NETOUTPUT)) {
       continue;
     }
 
@@ -3007,7 +3007,7 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
     const auto parent_node_in_anchor = parent_node->GetInDataAnchor(static_cast<int32_t>(parent_index));
     GE_CHECK_NOTNULL(parent_node_in_anchor);
     const auto src_out_anchor = parent_node_in_anchor->GetPeerOutAnchor();
-    if (src_out_anchor == nullptr || src_out_anchor->GetOwnerNode() == nullptr) {
+    if ((src_out_anchor == nullptr) || (src_out_anchor->GetOwnerNode() == nullptr)) {
       continue;
     }
     parent_node_in_anchor->UnlinkAll();
