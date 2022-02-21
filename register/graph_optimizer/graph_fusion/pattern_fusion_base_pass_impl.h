@@ -64,7 +64,8 @@ class PatternFusionBasePassImpl {
 
   static bool IsOpTypeExist(const std::string &type, const std::vector<std::string> &types);
 
-  bool MatchFromOutput(const ge::NodePtr output_node, const std::shared_ptr<OpDesc> output_op_desc, Mapping &mapping);
+  bool MatchFromOutput(const ge::NodePtr output_node, const std::shared_ptr<OpDesc> output_op_desc,
+                       Mapping &mapping) const;
 
   bool GetMatchOutputNodes(const ge::ComputeGraph &graph, const FusionPattern &pattern,
                            std::vector<ge::NodePtr> &matched_output_nodes) const;
