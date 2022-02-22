@@ -29,7 +29,7 @@ namespace ge {
 /// @param [in] path of input file
 /// @param [out] Absolute path of a file. If the absolute path cannot be obtained, an empty string is returned
 ///
-std::string RealPath(const char_t *path);
+std::string RealPath(const char_t *const path);
 
 ///
 /// @ingroup domi_common
