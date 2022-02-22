@@ -279,7 +279,7 @@ Status PatternFusionBasePass::SetDataDumpAttr(std::vector<ge::NodePtr> &original
           }
           const uint32_t origin_index = static_cast<uint32_t>(origin_node_out_anchor->GetIdx());
           const uint32_t fusion_index = static_cast<uint32_t>(fusion_node_out_data_anchor->GetIdx());
-          (void)GraphPassUtil::SetOutputDescAttr(origin_index, fusion_index, origin_node, fusion_node);
+          GraphPassUtil::SetOutputDescAttr(origin_index, fusion_index, origin_node, fusion_node);
         }
       }
     }

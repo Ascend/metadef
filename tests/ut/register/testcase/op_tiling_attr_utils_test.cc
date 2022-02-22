@@ -329,4 +329,64 @@ TEST_F(OpTilingAttrUtilsTest, get_list_float_attr_to_float16_success_2) {
   cout << Uint16ToFloat(*(data+1)) << endl;
 }
 
+TEST_F(OpTilingAttrUtilsTest, get_float_attr_to_int32_success_1) {
+  Operator op("relu", "Relu");
+  float attr = 3.56;
+  op.SetAttr("attr_float", attr);
+  AttrDataPtr attr_data_ptr = nullptr;
+  graphStatus ret = GetOperatorAttrValue(op, "attr_float", "float", attr_data_ptr, "int32");
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(attr_data_ptr->GetSize(), 4);
+  const int32_t *data = (const int32_t *)attr_data_ptr->GetData();
+  EXPECT_EQ(*data, 3);
+}
+
+TEST_F(OpTilingAttrUtilsTest, get_float_attr_to_int32_success_2) {
+  Operator op("relu", "Relu");
+  float attr = -3.56;
+  op.SetAttr("attr_float", attr);
+  AttrDataPtr attr_data_ptr = nullptr;
+  graphStatus ret = GetOperatorAttrValue(op, "attr_float", "float", attr_data_ptr, "int");
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(attr_data_ptr->GetSize(), 4);
+  const int32_t *data = (const int32_t *)attr_data_ptr->GetData();
+  EXPECT_EQ(*data, -3);
+}
+
+TEST_F(OpTilingAttrUtilsTest, get_float_attr_to_int32_fail_1) {
+  Operator op("relu", "Relu");
+  AttrDataPtr attr_data_ptr = nullptr;
+  graphStatus ret = GetOperatorAttrValue(op, "attr_float", "float", attr_data_ptr, "int");
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(OpTilingAttrUtilsTest, get_list_float_attr_to_int32_success_1) {
+  Operator op("relu", "Relu");
+  vector<float> attr = {1.63, -2.34};
+  op.SetAttr("attr_list_float", attr);
+  AttrDataPtr attr_data_ptr = nullptr;
+  graphStatus ret = GetOperatorAttrValue(op, "attr_list_float", "list_float32", attr_data_ptr, "list_int");
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(attr_data_ptr->GetSize(), 8);
+  const int32_t *data = (const int32_t *)attr_data_ptr->GetData();
+  EXPECT_EQ(*data, 1);
+  EXPECT_EQ(*(data+1), -2);
+}
+
+TEST_F(OpTilingAttrUtilsTest, get_list_float_attr_to_int32_fail_1) {
+  Operator op("relu", "Relu");
+  AttrDataPtr attr_data_ptr = nullptr;
+  graphStatus ret = GetOperatorAttrValue(op, "attr_list_float", "list_float32", attr_data_ptr, "list_int");
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(OpTilingAttrUtilsTest, get_list_float_attr_to_int32_fail_2) {
+  Operator op("relu", "Relu");
+  vector<float> attr;
+  op.SetAttr("attr_list_float", attr);
+  AttrDataPtr attr_data_ptr = nullptr;
+  graphStatus ret = GetOperatorAttrValue(op, "attr_list_float", "list_float32", attr_data_ptr, "list_int");
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
 }
