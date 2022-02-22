@@ -55,7 +55,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Anchor : public std::enable
   // Whether the two anchor is equal
   virtual bool Equal(const AnchorPtr anchor) const = 0;
   virtual bool IsTypeOf(const TYPE type) const;
-  virtual TYPE GetSelfType() const;
 
  public:
   // Get all peer anchors connected to current anchor
@@ -74,12 +73,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Anchor : public std::enable
   // Remove link with the given anchor
   graphStatus Unlink(const AnchorPtr &peer);
 
-  // insert node
-  // this--old_peer ---> this--first_peer   second_peer--old_peer
-  graphStatus Insert(const AnchorPtr &old_peer, const AnchorPtr &first_peer, const AnchorPtr &second_peer);
-
-  // Replace peer with new peer
-  graphStatus ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &new_peer);
+  // Replace peer with new peers
+  graphStatus ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &first_peer, const AnchorPtr &second_peer);
 
   // Judge if the anchor is linked with the given anchor
   bool IsLinkedWith(const AnchorPtr &peer) const;
@@ -129,7 +124,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY DataAnchor : public Anchor 
 
  protected:
   bool IsTypeOf(const TYPE type) const override;
-  TYPE GetSelfType() const override;
 
  private:
   Format format_{FORMAT_ND};
@@ -155,7 +149,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InDataAnchor : public DataA
  protected:
   bool Equal(const AnchorPtr anchor) const override;
   bool IsTypeOf(const TYPE type) const override;
-  Anchor::TYPE GetSelfType() const override;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutDataAnchor : public DataAnchor {
@@ -186,7 +179,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutDataAnchor : public Data
  protected:
   bool Equal(const AnchorPtr anchor) const override;
   bool IsTypeOf(const TYPE type) const override;
-  Anchor::TYPE GetSelfType() const override;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ControlAnchor : public Anchor {
@@ -198,7 +190,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ControlAnchor : public Anch
 
  protected:
   bool IsTypeOf(const TYPE type) const override;
-  Anchor::TYPE GetSelfType() const override;
   ControlAnchor(const ControlAnchor &) = delete;
   ControlAnchor &operator=(const ControlAnchor &) = delete;
   ControlAnchor(ControlAnchor &&) = delete;
@@ -230,7 +221,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InControlAnchor : public Co
  protected:
   bool Equal(const AnchorPtr anchor) const override;
   bool IsTypeOf(const TYPE type) const override;
-  Anchor::TYPE GetSelfType() const override;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutControlAnchor : public ControlAnchor {
@@ -259,7 +249,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OutControlAnchor : public C
  protected:
   bool Equal(const AnchorPtr anchor) const override;
   bool IsTypeOf(const TYPE type) const override;
-  Anchor::TYPE GetSelfType() const override;
 };
 }  // namespace ge
 #endif  // INC_GRAPH_ANCHOR_H_

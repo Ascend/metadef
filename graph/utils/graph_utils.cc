@@ -218,7 +218,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::InsertNod
   const OutDataAnchorPtr node_out_anchor = new_node->GetOutDataAnchor(0);
   GE_CHK_BOOL_RET_STATUS(node_out_anchor != nullptr, GRAPH_FAILED,
                          "[Invoke][GetOutDataAnchor] this node has not outDataAnchor");
-  GE_CHK_STATUS_RET(src->Insert(dst, node_in_anchor, node_out_anchor), "[Replace][Peer] Failed");
+  GE_CHK_STATUS_RET(src->ReplacePeer(dst, node_in_anchor, node_out_anchor), "[Replace][Peer] Failed");
   return GRAPH_SUCCESS;
 }
 
