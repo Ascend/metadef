@@ -29,7 +29,7 @@ namespace ge {
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY RuntimeInferenceContext {
  public:
   graphStatus SetTensor(int64_t node_id, int32_t output_id, GeTensorPtr tensor);
-  graphStatus GetTensor(const int64_t node_id, int32_t output_id, GeTensorPtr &tensor) const;
+  graphStatus GetTensor(const int64_t node_id, const int32_t output_id, GeTensorPtr &tensor) const;
   void Release();
 
  private:

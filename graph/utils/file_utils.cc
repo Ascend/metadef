@@ -22,7 +22,7 @@
 #include "mmpa/mmpa_api.h"
 
 namespace ge {
-std::string RealPath(const char_t *path) {
+std::string RealPath(const char_t *const path) {
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path == nullptr,
                                  REPORT_INNER_ERROR("E18888", "path is nullptr, check invalid");
                                      return "", "[Check][Param] path pointer is NULL.");
