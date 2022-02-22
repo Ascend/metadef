@@ -78,13 +78,15 @@ TEST_F(ConvertTensorUtest, ConvertTensorDouble) {
   tensor_.clear_double_val();
 }
 TEST_F(ConvertTensorUtest, ConvertTensorSComplex) {
-  tensor_.add_scomplex_val(DOUBLE_TEST_NUM);
+  tensor_.add_scomplex_val(FLOAT_TEST_NUM);
+  tensor_.add_scomplex_val(FLOAT_TEST_NUM);
   tensor_.set_dtype(domi::tensorflow::DT_COMPLEX64);
   ret_ = ge::AutoMappingUtil::ConvertTensor(tensor_, weight_);
   EXPECT_EQ(ret_, domi::SUCCESS);
   tensor_.clear_scomplex_val();
 }
 TEST_F(ConvertTensorUtest, ConvertTensorDComplex) {
+  tensor_.add_dcomplex_val(DOUBLE_TEST_NUM);
   tensor_.add_dcomplex_val(DOUBLE_TEST_NUM);
   tensor_.set_dtype(domi::tensorflow::DT_COMPLEX128);
   ret_ = ge::AutoMappingUtil::ConvertTensor(tensor_, weight_);

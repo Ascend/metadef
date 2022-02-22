@@ -285,7 +285,7 @@ OpDescUtils::CopyOperatorLinks(const std::map<std::string, ge::Operator> &src_op
 }
 
 Operator::Operator(const std::string &type) {
-  static uint32_t index = 0U;
+  static std::atomic<uint32_t> index = {0U};
   std::string name = type + "_" + std::to_string(index++);
   operator_impl_ = ComGraphMakeShared<OperatorImpl>(name, type);
   if (operator_impl_ == nullptr) {
@@ -297,7 +297,7 @@ Operator::Operator(const std::string &type) {
 Operator::Operator(const char_t *type) {
   if (type != nullptr) {
     std::string op_type = type;
-    static uint32_t index = 0U;
+    static std::atomic<uint32_t> index = {0U};
     std::string name = op_type + "_" + std::to_string(index++);
     operator_impl_ = ComGraphMakeShared<OperatorImpl>(name, op_type);
     if (operator_impl_ == nullptr) {

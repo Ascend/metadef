@@ -14,11 +14,11 @@
  * limitations under the License.
 */
 
+#include <complex>
 #include <limits>
 #include <map>
 #include <memory>
 #include "securec.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
 #include "graph/utils/op_desc_utils.h"
@@ -263,10 +263,11 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
 void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int32_t val_size,
                                          const int32_t count, GeTensorPtr &weight) {
   const tensorflow::DataType data_type = tensor.dtype();
+  const int32_t kNumElementOfComplex = 2;
   if (CheckFloatVal(data_type)) {
     (void)GetVal(val_size, tensor.float_val(), count, weight);
   } else if (CheckComplex64Val(data_type)) {
-    (void)GetVal(val_size, tensor.scomplex_val(), count, weight);
+    (void)GetVal(val_size, tensor.scomplex_val(), count * kNumElementOfComplex, weight, true);
   } else if (CheckSignedFourByte(data_type)) {
     (void)GetVal(val_size, tensor.int_val(), count, weight);
   } else if (CheckUnsignedFourByte(data_type)) {
@@ -288,7 +289,7 @@ void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int32_
   } else if (CheckDoubleVal(data_type)) {
     (void)GetVal(val_size, tensor.double_val(), count, weight);
   } else if (CheckComplex128Val(data_type)) {
-    (void)GetVal(val_size, tensor.dcomplex_val(), count, weight);
+    (void)GetVal(val_size, tensor.dcomplex_val(), count * kNumElementOfComplex, weight, true);
   } else {
     GELOGI("data_type:%s.", DataType_Name(data_type).c_str());
   }
@@ -303,24 +304,33 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
   GELOGD("Set data from tensor_content, count = %d, data_type = %s.",
          count, DataType_Name(data_type).c_str());
   const auto tensor_content_data = tensor_content.data();
+  const bool is_four_byte = CheckSignedFourByte(data_type) || CheckUnsignedFourByte(data_type);
+  const bool is_double_byte = CheckHalfVal(data_type) || CheckDoubleByte(data_type);
+  const bool is_eight_byte = CheckSignedEightByte(data_type) || CheckUnsignedEightByte(data_type);
   if (CheckByte(data_type)) {
     (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(uint8_t));
   } else if (CheckBoolVal(data_type)) {
     (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(bool));
-  } else if (CheckHalfVal(data_type) || CheckDoubleByte(data_type)) {
+  } else if (is_double_byte) {
     (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(uint16_t));
-  } else if (CheckSignedFourByte(data_type) || CheckUnsignedFourByte(data_type)) {
+  } else if (is_four_byte) {
     (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(uint32_t));
-  } else if (CheckSignedEightByte(data_type) || CheckUnsignedEightByte(data_type)) {
+  } else if (is_eight_byte) {
    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                          static_cast<size_t>(count) * sizeof(uint64_t));
-  } else if (CheckDoubleVal(data_type) || CheckComplex128Val(data_type)) {
+  } else if (CheckDoubleVal(data_type)) {
     (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(double));
+  } else if (CheckComplex128Val(data_type)) {
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                          static_cast<size_t>(count) * sizeof(std::complex<double>));
+  } else if (CheckComplex64Val(data_type)) {
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                          static_cast<size_t>(count) * sizeof(std::complex<float>));
   } else if (CheckStringVal(data_type)) {
     std::string weight_content;
     if (tensor_content.size() > 1U) {
