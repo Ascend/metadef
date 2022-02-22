@@ -465,8 +465,7 @@ ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_inf
 {
   ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
   GE_CHECK_NOTNULL(op_desc);
-  std::string mix_l2_attr = "_alias_engine_name";
-  if (!op_desc->HasAttr(mix_l2_attr)) {
+  if (!op_desc->HasAttr(ge::ATTR_NAME_ALIAS_ENGINE_NAME)) {
     return ge::GRAPH_SUCCESS;
   }
   const std::vector<int64_t> all_workspaces = op_desc->GetWorkspaceBytes();
@@ -484,7 +483,7 @@ ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_inf
     op_workspaces.emplace_back(all_workspaces[i]);
   }
   for (size_t i = 0; i < op_workspaces.size(); ++i) {
-    GELOGD("Op's workspace:%zu, value:%d.", i, op_workspaces[i]);
+    GELOGD("Op's workspace:%zu, value:%ld.", i, op_workspaces[i]);
   }
   run_info.SetWorkspaces(op_workspaces);
   return ge::GRAPH_SUCCESS;
@@ -1026,9 +1025,7 @@ extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<O
 {
   ge::OpDescPtr op_desc = node.GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
-  const std::string op_type = op_desc->GetType();
-  const std::string op_name = op_desc->GetName();
-  GELOGD("[OpFftsCalculateV2]Op_type:%s, op_name:%s", op_type.c_str(), op_name.c_str());
+  GELOGD("[OpFftsCalculateV2]Op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   ffts::ThreadSliceMapPtr slice_info_ptr = nullptr;
   slice_info_ptr = op_desc->TryGetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GE_CHECK_NOTNULL(slice_info_ptr);
@@ -1053,8 +1050,8 @@ extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<O
     const auto op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
     rc = OpParaCalculateV2(op, run_info);
     if (rc != ge::GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "OpParaCalculateV2 failed, op_type:%s, op_name:%s", op_type.c_str(),
-                        op_name.c_str());
+      REPORT_CALL_ERROR("E19999", "OpParaCalculateV2 failed, op_type:%s, op_name:%s", op_desc->GetType().c_str(),
+                        op_desc->GetName().c_str());
       return rc;
     }
     op_run_info.emplace_back(run_info);
