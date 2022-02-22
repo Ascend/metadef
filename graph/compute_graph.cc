@@ -1096,7 +1096,7 @@ void ComputeGraphImpl::Dump(const ConstComputeGraphPtr &graph) const {
                                peer_in_anchor->GetOwnerNode()->GetName().c_str()));
       }
       for (const auto &peer_in_anchor : anchor->GetPeerInControlAnchors()) {
-        GE_IF_BOOL_EXEC(peer_in_anchor != nullptr && peer_in_anchor->GetOwnerNode() != nullptr,
+        GE_IF_BOOL_EXEC((peer_in_anchor != nullptr) && (peer_in_anchor->GetOwnerNode() != nullptr),
                         GELOGI("node name = %s, out control node name = %s.", node->GetName().c_str(),
                                peer_in_anchor->GetOwnerNode()->GetName().c_str()));
       }

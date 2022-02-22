@@ -356,7 +356,7 @@ std::string ErrorManager::GetErrorMessage() {
   }
   if (IsInnerErrorCode(first_code)) {
     std::string current_code_print = first_code;
-    bool IsErrorId = IsParamCheckErrorId(first_code);
+    const bool IsErrorId = IsParamCheckErrorId(first_code);
     for (auto &item : error_messages) {
       if (!IsParamCheckErrorId(item.error_id)) {
         current_code_print = item.error_id;

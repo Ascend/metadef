@@ -88,7 +88,7 @@ std::string TuningUtils::GetNodeNameByAnchor(const Anchor * const anchor) {
     return "Null";
   }
   const auto node = anchor->GetOwnerNode();
-  return node == nullptr ? "Null" : node->GetName();
+  return (node == nullptr) ? "Null" : node->GetName();
 }
 
 // part 1
@@ -256,7 +256,7 @@ void TuningUtils::DumpGraphToPath(const ComputeGraphPtr &exe_graph, const int64_
 void TuningUtils::TryGetWeight(const NodePtr &node, std::vector<ge::GeTensorPtr> &weight) {
   // The caller guarantees that the node is not null
   weight = OpDescUtils::MutableWeights(node);
-  if (weight.empty() && node->GetOpDesc() != nullptr) {
+  if (weight.empty() && (node->GetOpDesc() != nullptr)) {
     const NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr<NodePtr>(parent_node_attr, nullptr);
     if ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
       NodePtr really_parent_node = nullptr;
@@ -593,7 +593,7 @@ graphStatus TuningUtils::ChangeEnd2NetOutput(NodePtr &end_node, NodePtr &out_nod
   GE_CHECK_NOTNULL(out_node);
   const auto type_end = end_node->GetType();
   const auto type_out = out_node->GetType();
-  if (type_end != END || type_out != NETOUTPUT) {
+  if ((type_end != END) || (type_out != NETOUTPUT)) {
     REPORT_INNER_ERROR("E18888", "TUU:Failed to change end_node %s from type %s to type %s",
                        end_node->GetName().c_str(), type_end.c_str(), type_out.c_str());
     GELOGE(FAILED, "[Check][Param] TUU:Failed to change end_node %s from type %s to type %s",
@@ -671,10 +671,10 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
 
   // 4. construct relation of root graph and subgraphs
   for (const auto &node : merged_root_graph->GetDirectNode()) {
-    auto op_desc = node->GetOpDesc();
+    const auto op_desc = node->GetOpDesc();
     GE_CHECK_NOTNULL(op_desc);
     for (const auto &subgraph_name : op_desc->GetSubgraphInstanceNames()) {
-      auto iter = name_to_merged_subgraph.find(subgraph_name);
+      const auto iter = name_to_merged_subgraph.find(subgraph_name);
       if (iter == name_to_merged_subgraph.end()) {
         REPORT_CALL_ERROR("E18888", "TUU:can not find subgraph with name:%s for op:%s.",
                           subgraph_name.c_str(), op_desc->GetName().c_str());
@@ -684,7 +684,7 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
       }
       iter->second->SetParentNode(node);
       iter->second->SetParentGraph(merged_root_graph);
-      merged_root_graph->AddSubGraph(iter->second);
+      (void)merged_root_graph->AddSubGraph(iter->second);
       GELOGI("add subgraph:%s for node:%s success", subgraph_name.c_str(), op_desc->GetName().c_str());
     }
   }
@@ -848,7 +848,7 @@ graphStatus TuningUtils::MergeSubGraph(const ComputeGraphPtr &subgraph) {
       return FAILED;
     }
     // handle data converted from pld node
-    if (node->GetType() == DATA || node->GetType() == CONSTANT) {
+    if ((node->GetType() == DATA) || (node->GetType() == CONSTANT)) {
       const auto op_desc = node->GetOpDesc();
       GE_CHECK_NOTNULL(op_desc);
       std::string peer_out_name;
@@ -930,7 +930,7 @@ graphStatus TuningUtils::RemoveDataNetoutputEdge(ComputeGraphPtr &graph) {
       for (const auto &out_ctrl : net_output_in_anchor->GetPeerAnchors()) {
         const auto noop_node = out_ctrl->GetOwnerNode();
         GE_CHECK_NOTNULL(noop_node);
-        if (noop_node->GetType() == NOOP && noop_node->GetName() == end_name + NOOP) {
+        if ((noop_node->GetType() == NOOP) && (noop_node->GetName() == (end_name + NOOP))) {
           src_out_anchor = noop_node->GetInControlAnchor()->GetFirstPeerAnchor();
           // remove noop node
           NodeUtils::UnlinkAll(*noop_node);

@@ -1120,7 +1120,7 @@ void ScopeGraph::ScopeGraphImpl::BuildScopeGraph(domi::tensorflow::GraphDef *gra
     (void)op->GetName(name);
     (void)nodes_map_.emplace(std::string(name.GetString()), op);
     AscendString type;
-    op->GetOpType(type);
+    (void)op->GetOpType(type);
     if ((type.GetString() != kTfIdentityType) || (type.GetString() != kTfConstType)) {
       auto &impl = scope_tree_->impl_;
       impl->AddNodeToScope(op);
@@ -1208,7 +1208,7 @@ bool ScopeGraph::ScopeGraphImpl::IsFusionOp(const domi::tensorflow::NodeDef *con
     const FusionScopesResult *const fusion_node = fusion_result.second;
     auto &impl = fusion_node->impl_;
     AscendString name;
-    fusion_node->Name(name);
+    (void)fusion_node->Name(name);
     if ((impl->Type() == node_def->op()) && (name.GetString() == node_def->name())) {
       return true;
     }
