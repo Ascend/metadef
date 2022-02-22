@@ -31,6 +31,7 @@
 #include "graph/model.h"
 #include "graph/node.h"
 #include "graph/utils/anchor_utils.h"
+#include "cycle_detector.h"
 
 #define GE_DUMP(compute_graph, name)                                                                               \
   do {                                                                                                             \
@@ -386,6 +387,7 @@ class GraphUtils {
 
   static graphStatus UnfoldSubgraph(const ComputeGraphPtr &graph,
                                     const std::function<bool(const ComputeGraphPtr &)> &filter);
+  static CycleDetectorPtr CreateCycleDetector(const ComputeGraphPtr &graph);
 
  private:
   class GraphInfo {

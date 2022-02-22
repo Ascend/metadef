@@ -93,6 +93,7 @@ set(UT_FILES
     "testcase/attributes_holder_unittest.cc"
     "testcase/graph_debug_unittest.cc"
     "testcase/tuning_utils_unittest.cc"
+    "testcase/cycle_detector_unittest.cc"
 )
 
 add_executable(ut_graph ${UT_FILES})

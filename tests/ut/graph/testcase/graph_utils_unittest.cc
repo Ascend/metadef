@@ -1889,5 +1889,4 @@ TEST_F(UtestGraphUtils, ComputeGraphBuilderBuildNodesTest) {
   EXPECT_EQ(err, GRAPH_FAILED);
   EXPECT_EQ(msg, "op_desc is NULL.");
 }
-
 }  // namespace ge
