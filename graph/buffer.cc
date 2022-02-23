@@ -20,7 +20,6 @@
 #include "graph/buffer_impl.h"
 #include "graph/debug/ge_util.h"
 #include "graph/utils/mem_utils.h"
-#include "graph/def_types.h"
 
 namespace ge {
 BufferImpl::BufferImpl() {
