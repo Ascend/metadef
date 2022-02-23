@@ -252,6 +252,21 @@ private:
     return attr_data_ptr;
   }
 
+  AttrDataPtr GetFloatAttrValueAndToInt(const ge::Operator &op, const char *attr_name) const {
+    float attr_value = 0;
+    if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
+      GELOGW("Fail to get attr[%s] from operator.", attr_name);
+      return nullptr;
+    }
+
+    std::vector<int32_t> attr_vec;
+    attr_vec.push_back(static_cast<int32_t>(attr_value));
+
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<int32_t>>(attr_vec), return nullptr);
+    return attr_data_ptr;
+  }
+
   AttrDataPtr GetListFloatAttrValueAndToListFp16(const ge::Operator &op, const char *attr_name) const {
     std::vector<float> attr_value;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
@@ -274,6 +289,28 @@ private:
     return attr_data_ptr;
   }
 
+  AttrDataPtr GetListFloatAttrValueAndToListInt(const ge::Operator &op, const char *attr_name) const {
+    std::vector<float> attr_value;
+    if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
+      GELOGW("Fail to get attr[%s] from operator.", attr_name);
+      return nullptr;
+    }
+
+    if (attr_value.empty()) {
+      GELOGW("Vector value of attr[%s] is empty.", attr_name);
+      return nullptr;
+    }
+
+    std::vector<int32_t> attr_vec;
+    for (const float &fp_value : attr_value) {
+      attr_vec.push_back(static_cast<int32_t>(fp_value));
+    }
+
+    AttrDataPtr attr_data_ptr = nullptr;
+    OP_TILING_MAKE_SHARED(attr_data_ptr = std::make_shared<AttrDataImpl<int32_t>>(attr_vec), return nullptr);
+    return attr_data_ptr;
+  }
+
   static const std::map<uint32_t, GetOpAttrValueFunc> attr_func_;
 };
 
@@ -291,7 +328,11 @@ const std::map<uint32_t, GetOpAttrValueFunc> AttrDataManager::attr_func_ = {
     {GenerateAttrFuncKey(AttrDataType::FLOAT32, AttrDataType::FLOAT16),
      &AttrDataManager::GetFloatAttrValueAndToFp16},
     {GenerateAttrFuncKey(AttrDataType::LIST_FLOAT32, AttrDataType::LIST_FLOAT16),
-     &AttrDataManager::GetListFloatAttrValueAndToListFp16}
+     &AttrDataManager::GetListFloatAttrValueAndToListFp16},
+    {GenerateAttrFuncKey(AttrDataType::FLOAT32, AttrDataType::INT32),
+     &AttrDataManager::GetFloatAttrValueAndToInt},
+    {GenerateAttrFuncKey(AttrDataType::LIST_FLOAT32, AttrDataType::LIST_INT32),
+     &AttrDataManager::GetListFloatAttrValueAndToListInt}
 };
 
 ge::graphStatus GetOperatorAttrValue(const ge::Operator &op, const char *attr_name, const char *attr_dtype,
