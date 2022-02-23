@@ -759,6 +759,16 @@ TEST_F(UtestRegister, optiling_py_interface) {
           ]
       },
       {
+          "name": "test_0",
+          "dtype": "list_list_int64",
+          "value": [
+            [1, 2],
+            [1, 2],
+            [1, 2],
+            [1, 2]
+          ]
+      },
+      {
           "name": "test_3",
           "dtype": "test",
           "value": "1"
