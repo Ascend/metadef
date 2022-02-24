@@ -18,6 +18,16 @@
 namespace ge {
 namespace profiling {
 namespace {
+
+std::string RandomStr(const int len) {
+  std::string res(len,' ');
+  for(int i = 0; i < len; ++i) {
+    res[i] = 'A' + rand() % 26;
+  }
+  return res;
+}
+
+
 std::string FindNext(const std::string &s, size_t &pos) {
   std::stringstream ss;
   for (; pos < s.size(); ++pos) {
@@ -265,10 +275,12 @@ TEST_F(ProfilerUt, GetStringHashes) {
 
 TEST_F(ProfilerUt, RegisterTooLongString) {
   auto p = Profiler::Create();
-  p->RegisterString(0, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz");
+  std::string input = RandomStr(300);
+  std::string gt_res = input.substr(0,255);
+  p->RegisterString(0, input);
   p->RegisterString(2, "InferShape");
   auto s = p->GetStringHashes();
-  EXPECT_EQ(strcmp(s[0].str, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijk"), 0);
+  EXPECT_EQ(strcmp(s[0].str, gt_res.c_str()), 0);
   EXPECT_EQ(strcmp(s[2].str, "InferShape"), 0);
 }
 
@@ -278,7 +290,7 @@ TEST_F(ProfilerUt, ModifyStrings) {
   p->RegisterString(2, "InferShape");
   auto s = p->GetStringHashes();
   strcpy(s[2].str, "Tiling");
-  EXPECT_EQ(strcmp(s[0].str, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijk"), 0);
+  EXPECT_EQ(strcmp(s[0].str, "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz"), 0);
   EXPECT_EQ(strcmp(p->GetStringHashes()[2].str, "Tiling"), 0);
 }
 
