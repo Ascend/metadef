@@ -22,6 +22,7 @@
 #include "graph/anchor.h"
 #include "graph/node.h"
 #include "graph_builder_utils.h"
+#include "utils/graph_utils.h"
 #define protected public
 #define private public
 
@@ -187,10 +188,10 @@ TEST_F(AnchorUt, SubInDataAnchor) {
   EXPECT_NE(in_anch->GetFirstPeerAnchor(),nullptr);
   EXPECT_NE(in_anch->GetOwnerNode(),nullptr);
   auto node3 = builder.AddNode("Data", "Data", 3, 3);
-  SubInDataAnchorPtr first = std::make_shared<SubInDataAnchor>(node3, 33);
   auto node4 = builder.AddNode("Data", "Data", 4, 4);
-  OutDataAnchorPtr second = std::make_shared<OutDataAnchor>(node4, 44);
-  EXPECT_EQ(in_anch->ReplacePeer(peer,first,second),GRAPH_SUCCESS);
+  OutDataAnchorPtr first = std::make_shared<OutDataAnchor>(node4, 44);
+  SubInDataAnchorPtr second = std::make_shared<SubInDataAnchor>(node3, 33);
+  EXPECT_EQ(in_anch->Insert(peer,first,second),GRAPH_SUCCESS);
 
   auto node5 = builder.AddNode("Data", "Data", 5, 5);
   OutDataAnchorPtr oa5 = std::make_shared<OutDataAnchor>(node5, 55);
@@ -278,10 +279,10 @@ TEST_F(AnchorUt, SubInControlAnchor) {
   EXPECT_NE(inc_anch->GetFirstPeerAnchor(),nullptr);
   EXPECT_NE(inc_anch->GetOwnerNode(),nullptr);
   auto node3 = builder.AddNode("Data", "Data", 3, 3);
-  SubInControlAnchorPtr first = std::make_shared<SubInControlAnchor>(node3, 33);
+  SubInControlAnchorPtr second = std::make_shared<SubInControlAnchor>(node3, 33);
   auto node4 = builder.AddNode("Data", "Data", 4, 4);
-  OutControlAnchorPtr second = std::make_shared<OutControlAnchor>(node4, 44);
-  EXPECT_EQ(inc_anch->ReplacePeer(peer,first,second),GRAPH_SUCCESS);
+  OutControlAnchorPtr first = std::make_shared<OutControlAnchor>(node4, 44);
+  EXPECT_EQ(inc_anch->Insert(peer,first,second),GRAPH_SUCCESS);
   EXPECT_EQ(inc_anch->Unlink(nullptr),GRAPH_FAILED);
   EXPECT_EQ(inc_anch->EncaEq(nullptr),false);
   EXPECT_EQ(inc_anch->EncaIsTypeOf("nnn"),false);
@@ -341,5 +342,177 @@ TEST_F(AnchorUt, SubOutControlAnchor) {
   EXPECT_EQ(outc_anch->LinkTo(peerctr4), GRAPH_FAILED);
 }
 
+//   node1 is replaced by node3
+//    node0           node0
+//    /   \    -->    /   \
+// node1  node2    node3  node2
+TEST_F(AnchorUt, CheckReplacePeerOrder) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+  auto node3 = builder.AddNode("Data", "Data", 1, 1);
 
+  graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node1->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node2->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  ret = node0->GetOutDataAnchor(0U)->ReplacePeer(node1->GetInDataAnchor(0),
+                                                 node3->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  bool check_same = node0->GetOutDataAnchor(0)->GetFirstPeerAnchor()->Equal(node3->GetInDataAnchor(0));
+  EXPECT_TRUE(check_same);
+  EXPECT_TRUE(node1->GetInDataAnchor(0U)->GetPeerAnchors().empty());
+}
+
+//   node1 is replaced by node4
+//      node0                  node0
+//    /   |   \       -->    /  |   \
+// node1 node2 node3    node4 node2 node3
+TEST_F(AnchorUt, ControlAnchorReplacePeer) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+  auto node3 = builder.AddNode("Data", "Data", 1, 1);
+  auto node4 = builder.AddNode("Data", "Data", 1, 1);
+  (void)ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node1->GetInControlAnchor());
+  (void)ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node2->GetInControlAnchor());
+  (void)ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node3->GetInControlAnchor());
+  graphStatus ret = node0->GetOutControlAnchor()->ReplacePeer(node1->GetInControlAnchor(),
+                                                              node4->GetInControlAnchor());
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  bool check_same = node0->GetOutControlAnchor()->GetFirstPeerAnchor()->Equal(node4->GetInControlAnchor());
+  EXPECT_TRUE(check_same);
+  EXPECT_TRUE(node1->GetInControlAnchor()->GetPeerAnchors().empty());
+}
+
+TEST_F(AnchorUt, ReplacePeerDifferentTypeFailed) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+
+  graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node1->GetInControlAnchor());
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = node0->GetOutControlAnchor()->ReplacePeer(node1->GetInControlAnchor(),
+                                                  node2->GetInDataAnchor(0U));
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  ret = node0->GetOutControlAnchor()->ReplacePeer(node1->GetInDataAnchor(0U),
+                                                  node2->GetInDataAnchor(0U));
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+//   node0 is replaced by node2
+//    node0           node2
+//    /       -->    /
+// node1         node1
+TEST_F(AnchorUt, ReplacePeerOfOutDataAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+
+  graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node1->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = node1->GetInDataAnchor(0U)->ReplacePeer(node0->GetOutAnchor(0U),
+                                                node2->GetOutAnchor(0U));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  bool check_same = node1->GetInDataAnchor(0U)->GetFirstPeerAnchor()->Equal(node2->GetOutAnchor(0U));
+  EXPECT_TRUE(check_same);
+}
+
+TEST_F(AnchorUt, CheckReplaceNewAnchorPeerNotEmpty) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+  auto node3 = builder.AddNode("Data", "Data", 1, 1);
+
+  graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node1->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = ge::GraphUtils::AddEdge(node2->GetOutDataAnchor(0U), node3->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  ret = node0->GetOutDataAnchor(0U)->ReplacePeer(node1->GetInDataAnchor(0),
+                                                 node3->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(AnchorUt, InsertNotEmptyNodeFailed) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+  auto node3 = builder.AddNode("Data", "Data", 1, 1);
+  auto node4 = builder.AddNode("Data", "Data", 1, 1);
+
+  graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node2->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = ge::GraphUtils::AddEdge(node2->GetOutDataAnchor(0U), node1->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = ge::GraphUtils::AddEdge(node1->GetOutDataAnchor(0U), node4->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  ret = node0->GetOutDataAnchor(0U)->Insert(node2->GetInDataAnchor(0),
+                                            node1->GetInDataAnchor(0),
+                                            node1->GetOutDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(AnchorUt, InsertDifferentAnchorFailed) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+
+  graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node2->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  ret = node0->GetOutDataAnchor(0U)->Insert(node2->GetInDataAnchor(0),
+                                            node1->GetInControlAnchor(),
+                                            node1->GetOutDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  ret = node0->GetOutDataAnchor(0U)->Insert(node2->GetInControlAnchor(),
+                                            node1->GetInDataAnchor(0),
+                                            node1->GetOutDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+//    node0 -- node2
+//       插入新节点
+// node0--node1-- node2
+TEST_F(AnchorUt, InsertSuccess) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node0 = builder.AddNode("Data", "Data", 1, 1);
+  auto node1 = builder.AddNode("Data", "Data", 1, 1);
+  auto node2 = builder.AddNode("Data", "Data", 1, 1);
+
+  graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node2->GetInDataAnchor(0U));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  ret = node0->GetOutDataAnchor(0U)->Insert(node2->GetInDataAnchor(0U),
+                                            node1->GetInDataAnchor(0U),
+                                            node1->GetOutDataAnchor(0U));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  bool the_same = node0->GetOutDataAnchor(0U)->GetFirstPeerAnchor()->Equal(node1->GetInDataAnchor(0U));
+  EXPECT_TRUE(the_same);
+  the_same = node2->GetInDataAnchor(0U)->GetFirstPeerAnchor()->Equal(node1->GetOutDataAnchor(0U));
+  EXPECT_TRUE(the_same);
+
+  auto node00 = builder.AddNode("Data", "Data", 1, 1);
+  auto node11 = builder.AddNode("Data", "Data", 1, 1);
+  auto node22 = builder.AddNode("Data", "Data", 1, 1);
+  ret = ge::GraphUtils::AddEdge(node00->GetOutDataAnchor(0U), node22->GetInDataAnchor(0U));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = node22->GetInDataAnchor(0U)->Insert(node00->GetOutDataAnchor(0U),
+                                            node11->GetOutDataAnchor(0),
+                                            node11->GetInDataAnchor(0));
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  the_same = node00->GetOutDataAnchor(0U)->GetFirstPeerAnchor()->Equal(node11->GetInDataAnchor(0U));
+  EXPECT_TRUE(the_same);
+  the_same = node22->GetInDataAnchor(0U)->GetFirstPeerAnchor()->Equal(node11->GetOutDataAnchor(0U));
+  EXPECT_TRUE(the_same);
+}
 }  // namespace ge
