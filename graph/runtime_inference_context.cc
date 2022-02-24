@@ -41,8 +41,7 @@ graphStatus RuntimeInferenceContext::SetTensor(int64_t node_id, int32_t output_i
   return GRAPH_SUCCESS;
 }
 
-graphStatus RuntimeInferenceContext::GetTensor(const int64_t node_id,
-                                               const int32_t output_id, GeTensorPtr &tensor) const {
+graphStatus RuntimeInferenceContext::GetTensor(const int64_t node_id, int32_t output_id, GeTensorPtr &tensor) const {
   if (output_id < 0) {
     REPORT_INNER_ERROR("E18888", "Invalid output index: %d", output_id);
     GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Invalid output index: %d", output_id);
