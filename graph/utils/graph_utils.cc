@@ -1559,7 +1559,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOutCt
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::MoveOutCtrlEdges(NodePtr &src_node,
-                                                                                        const NodePtr &dst_node) {
+                                                                                        NodePtr &dst_node) {
   if ((src_node == nullptr) || (dst_node == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param src_node or dst_node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
