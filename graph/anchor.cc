@@ -253,7 +253,7 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &new_
   if (!IsSameType(old_peer->GetSelfType(), new_peer->GetSelfType())) {
     REPORT_INNER_ERROR("E18888", "the type of old_peer[%s] and new_peer[%s] is not the same.",
                        old_peer->GetSelfType(), new_peer->GetSelfType());
-    GELOGE(GRAPH_FAILED, "[Check][Param] the type of old_peer[%s] and new_peer[] is not the same.",
+    GELOGE(GRAPH_FAILED, "[Check][Param] the type of old_peer[%s] and new_peer[%s] is not the same.",
            old_peer->GetSelfType(), new_peer->GetSelfType());
     return GRAPH_FAILED;
   }
