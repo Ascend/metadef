@@ -972,14 +972,14 @@ void ScopeTree::ScopeTreeImpl::AddNodeToScope(ge::OperatorPtr &node_def) {
   Scope *super_scope = root_;
 
   const std::vector<std::string> scopes = SplitNodeName(node_name, '/');
-  for (uint32_t i = 0U; i < scopes.size(); ++i) {
+  for (size_t i = 0U; i < scopes.size(); ++i) {
     auto &impl = super_scope->impl_;
     impl->OpsNumInc(node_def->GetOpType());
 
     if (i == (scopes.size() - 1U)) {
       impl->AddNode(node_def);
     } else {
-      Scope *sub_scope = impl->GetSubScope(scopes[static_cast<uint64_t>(i)]);
+      Scope *sub_scope = impl->GetSubScope(scopes[i]);
       if (sub_scope == nullptr) {
         sub_scope = new (std::nothrow) Scope();
         if (sub_scope == nullptr) {

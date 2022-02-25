@@ -312,7 +312,7 @@ class GraphUtils {
   /// @param dst_node
   /// @return success: GRAPH_SUCESS
   ///
-  static graphStatus MoveOutCtrlEdges(NodePtr &src_node, NodePtr &dst_node);
+  static graphStatus MoveOutCtrlEdges(NodePtr &src_node, const NodePtr &dst_node);
 
   static ComputeGraphPtr FindRootGraph(ComputeGraphPtr graph);
 
