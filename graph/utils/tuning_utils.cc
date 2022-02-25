@@ -383,7 +383,7 @@ graphStatus TuningUtils::ChangePld2Data(const NodePtr &node, const NodePtr &data
   }
   const auto graph = node->GetOwnerComputeGraph();
   GE_CHECK_NOTNULL(graph);
-  std::vector<int32_t> output_map(node->GetAllOutDataAnchorsSize());
+  std::vector<int32_t> output_map(static_cast<size_t>(node->GetAllOutDataAnchorsSize()));
   for (size_t i = 0UL; i < node->GetAllOutDataAnchorsSize(); ++i) {
     output_map[i] = static_cast<int32_t>(i);
   }
