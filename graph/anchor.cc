@@ -21,6 +21,26 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/node.h"
 
+namespace {
+constexpr size_t kAnchorTypeMaxLen = 1024U;
+bool CanAddPeer(const ge::AnchorPtr &anchor) {
+  if (anchor->IsTypeOf<ge::InDataAnchor>() && anchor->GetPeerAnchorsSize() != 0U) {
+    REPORT_INNER_ERROR("E18888", "anchor is type of InDataAnchor, it's peer is not empty.");
+    GELOGE(ge::GRAPH_FAILED, "[Check][Param] anchor is type of InDataAnchor, it's peer is not empty.");
+    return false;
+  }
+  return true;
+}
+
+bool IsSameType(const ge::Anchor::TYPE &lh, const ge::Anchor::TYPE &rh) {
+  if (lh == rh) {
+    return true;
+  }
+
+  return (strncmp(lh, rh, kAnchorTypeMaxLen) == 0);
+}
+};
+
 namespace ge {
 class AnchorImpl {
  public:
@@ -85,6 +105,10 @@ Anchor::Anchor(const NodePtr &owner_node, const int32_t idx)
 Anchor::~Anchor() = default;
 
 bool Anchor::IsTypeOf(const TYPE type) const { return std::string(Anchor::TypeOf<Anchor>()) == std::string(type); }
+
+Anchor::TYPE Anchor::GetSelfType() const {
+  return TypeOf<Anchor>();
+}
 
 size_t Anchor::GetPeerAnchorsSize() const {
   if (impl_ == nullptr) {
@@ -165,11 +189,36 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
   return GRAPH_SUCCESS;
 }
 
-graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &first_peer, const AnchorPtr &second_peer) {
-  GE_CHK_BOOL_RET_STATUS(old_peer != nullptr, GRAPH_FAILED, "[Check][Param] this old peer anchor is nullptr");
-  GE_CHK_BOOL_RET_STATUS(first_peer != nullptr, GRAPH_FAILED, "[Check][Param] this first peer anchor is nullptr");
-  GE_CHK_BOOL_RET_STATUS(second_peer != nullptr, GRAPH_FAILED, "[Check][Param] this second peer anchor is nullptr");
-  GE_CHK_BOOL_RET_STATUS(impl_ != nullptr, GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr");
+graphStatus Anchor::Insert(const AnchorPtr &old_peer, const AnchorPtr &first_peer, const AnchorPtr &second_peer) {
+  GE_CHECK_NOTNULL(old_peer);
+  GE_CHECK_NOTNULL(first_peer);
+  GE_CHECK_NOTNULL(second_peer);
+  GE_CHECK_NOTNULL(impl_);
+
+  if (!IsSameType(old_peer->GetSelfType(), first_peer->GetSelfType())) {
+    REPORT_INNER_ERROR("E18888", "the type of old_peer[%s] and first_peer[%s] is not the same.",
+                       old_peer->GetSelfType(), first_peer->GetSelfType());
+    GELOGE(GRAPH_FAILED, "[Check][Param] the type of old_peer[%s] and first_peer[%s] is not the same.",
+           old_peer->GetSelfType(), first_peer->GetSelfType());
+    return GRAPH_FAILED;
+  }
+
+  if (!IsSameType(second_peer->GetSelfType(), this->GetSelfType())) {
+    REPORT_INNER_ERROR("E18888", "the type of second_peer[%s] and current anchor[%s] is not the same.",
+                       second_peer->GetSelfType(), this->GetSelfType());
+    GELOGE(GRAPH_FAILED, "[Check][Param] the type of second_peer[%s] and current anchor[%s] is not the same.",
+           second_peer->GetSelfType(), this->GetSelfType());
+    return GRAPH_FAILED;
+  }
+
+  if ((!CanAddPeer(first_peer)) || (!CanAddPeer(second_peer))) {
+    REPORT_INNER_ERROR("E18888", "first_peer[%s] or second_peer[%s] check failed",
+                       first_peer->GetSelfType(), second_peer->GetSelfType());
+    GELOGE(GRAPH_FAILED, "[Check][Param] first_peer[%s] or second_peer[%s] check failed",
+           first_peer->GetSelfType(), second_peer->GetSelfType());
+    return GRAPH_FAILED;
+  }
+
   const auto this_it = std::find_if(impl_->peer_anchors_.begin(), impl_->peer_anchors_.end(),
       [old_peer](const std::weak_ptr<Anchor> &an) {
     const auto anchor = an.lock();
@@ -194,6 +243,47 @@ graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &firs
   first_peer->impl_->peer_anchors_.push_back(shared_from_this());
   *old_it = second_peer;
   second_peer->impl_->peer_anchors_.push_back(old_peer);
+  return GRAPH_SUCCESS;
+}
+
+graphStatus Anchor::ReplacePeer(const AnchorPtr &old_peer, const AnchorPtr &new_peer) {
+  GE_CHECK_NOTNULL(old_peer);
+  GE_CHECK_NOTNULL(new_peer);
+  GE_CHECK_NOTNULL(impl_);
+  if (!IsSameType(old_peer->GetSelfType(), new_peer->GetSelfType())) {
+    REPORT_INNER_ERROR("E18888", "the type of old_peer[%s] and new_peer[%s] is not the same.",
+                       old_peer->GetSelfType(), new_peer->GetSelfType());
+    GELOGE(GRAPH_FAILED, "[Check][Param] the type of old_peer[%s] and new_peer[] is not the same.",
+           old_peer->GetSelfType(), new_peer->GetSelfType());
+    return GRAPH_FAILED;
+  }
+
+  if (!CanAddPeer(new_peer)) {
+    REPORT_INNER_ERROR("E18888", "new_peer[%s] check failed.", new_peer->GetSelfType());
+    GELOGE(GRAPH_FAILED, "[Check][Param] new_peer[%s] check failed.", new_peer->GetSelfType());
+    return GRAPH_FAILED;
+  }
+
+  const auto this_it = std::find_if(this->impl_->peer_anchors_.begin(), this->impl_->peer_anchors_.end(),
+                                    [old_peer](const std::weak_ptr<Anchor> &an) {
+                                      const auto anchor = an.lock();
+                                      return old_peer->Equal(anchor);
+                                    });
+  if (this_it == this->impl_->peer_anchors_.end()) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] this anchor(%s, %d) is not connected to old_peer(%s, %d)",
+           this->GetOwnerNode()->GetName().c_str(), this->GetIdx(),
+           old_peer->GetOwnerNode()->GetName().c_str(), old_peer->GetIdx());
+    return GRAPH_FAILED;
+  }
+
+  const auto old_it = std::find_if(old_peer->impl_->peer_anchors_.begin(), old_peer->impl_->peer_anchors_.end(),
+                                   [this](const std::weak_ptr<Anchor> &an) {
+                                     const auto anchor = an.lock();
+                                     return this->Equal(anchor);
+                                   });
+  *this_it = new_peer;
+  (void)old_peer->impl_->peer_anchors_.erase(old_it);
+  new_peer->impl_->peer_anchors_.push_back(shared_from_this());
   return GRAPH_SUCCESS;
 }
 
@@ -239,6 +329,10 @@ bool DataAnchor::IsTypeOf(const TYPE type) const {
   return Anchor::IsTypeOf(type);
 }
 
+Anchor::TYPE DataAnchor::GetSelfType() const {
+  return Anchor::TypeOf<DataAnchor>();
+}
+
 InDataAnchor::InDataAnchor(const NodePtr &owner_node, const int32_t idx) : DataAnchor(owner_node, idx) {}
 
 OutDataAnchorPtr InDataAnchor::GetPeerOutAnchor() const {
@@ -277,6 +371,10 @@ bool InDataAnchor::IsTypeOf(const TYPE type) const {
     return true;
   }
   return DataAnchor::IsTypeOf(type);
+}
+
+Anchor::TYPE InDataAnchor::GetSelfType() const {
+  return Anchor::TypeOf<InDataAnchor>();
 }
 
 OutDataAnchor::OutDataAnchor(const NodePtr &owner_node, const int32_t idx) : DataAnchor(owner_node, idx) {}
@@ -386,6 +484,10 @@ bool OutDataAnchor::IsTypeOf(const TYPE type) const {
   return DataAnchor::IsTypeOf(type);
 }
 
+Anchor::TYPE OutDataAnchor::GetSelfType() const {
+  return Anchor::TypeOf<OutDataAnchor>();
+}
+
 ControlAnchor::ControlAnchor(const NodePtr &owner_node) : Anchor(owner_node, -1) {}
 
 ControlAnchor::ControlAnchor(const NodePtr &owner_node, const int32_t idx) : Anchor(owner_node, idx) {}
@@ -395,6 +497,10 @@ bool ControlAnchor::IsTypeOf(const TYPE type) const {
     return true;
   }
   return Anchor::IsTypeOf(type);
+}
+
+Anchor::TYPE ControlAnchor::GetSelfType() const {
+  return Anchor::TypeOf<ControlAnchor>();
 }
 
 InControlAnchor::InControlAnchor(const NodePtr &owner_node) : ControlAnchor(owner_node) {}
@@ -469,6 +575,10 @@ bool InControlAnchor::IsTypeOf(const TYPE type) const {
   return ControlAnchor::IsTypeOf(type);
 }
 
+Anchor::TYPE InControlAnchor::GetSelfType() const {
+  return Anchor::TypeOf<InControlAnchor>();
+}
+
 OutControlAnchor::OutControlAnchor(const NodePtr &owner_node) : ControlAnchor(owner_node) {}
 
 OutControlAnchor::OutControlAnchor(const NodePtr &owner_node, const int32_t idx) : ControlAnchor(owner_node, idx) {}
@@ -530,5 +640,9 @@ bool OutControlAnchor::IsTypeOf(const TYPE type) const {
     return true;
   }
   return ControlAnchor::IsTypeOf(type);
+}
+
+Anchor::TYPE OutControlAnchor::GetSelfType() const {
+  return Anchor::TypeOf<OutControlAnchor>();
 }
 }  // namespace ge

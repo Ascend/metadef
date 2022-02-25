@@ -115,6 +115,12 @@ class OpsKernelInfoStore {
     (void)task;
     return SUCCESS;
   }
+
+  // fuzz compile interface
+  virtual Status FuzzCompileOp(std::vector<ge::NodePtr> &node_vec) {
+    (void) node_vec;
+    return SUCCESS;
+  }
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_STORE_H_
