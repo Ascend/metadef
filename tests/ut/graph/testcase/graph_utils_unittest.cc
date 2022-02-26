@@ -495,11 +495,12 @@ TEST_F(UtestGraphUtils, InsertNodeAfter) {
 }
 
 TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
-  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "2"}};
+  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "3"}};
   GetThreadLocalContext().SetSessionOption(session_option);
   auto graph_builder0 = ut::GraphBuilder("test_graph0");
   const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
   const auto &graph0 = graph_builder0.GetGraph();
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
@@ -1889,4 +1890,43 @@ TEST_F(UtestGraphUtils, ComputeGraphBuilderBuildNodesTest) {
   EXPECT_EQ(err, GRAPH_FAILED);
   EXPECT_EQ(msg, "op_desc is NULL.");
 }
+
+TEST_F(UtestGraphUtils, DumpGEGraph) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 0);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  // test existed dir
+  GraphUtils::DumpGEGraph(graph, "", true, "./ge_test_graph_0001.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_0001.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
+
+  // test not existed dir
+  GraphUtils::DumpGEGraph(graph, "", true, "./test/ge_test_graph_0002.txt");
+  ComputeGraphPtr com_graph2 = std::make_shared<ComputeGraph>("GeTestGraph2");
+  state = GraphUtils::LoadGEGraph("./test/ge_test_graph_0002.txt", *com_graph2);
+  ASSERT_EQ(state, true);
+
+  // test input para user_graph_name, without path
+  GraphUtils::DumpGEGraph(graph, "", true, "ge_test_graph_0003.txt");
+  ComputeGraphPtr com_graph3 = std::make_shared<ComputeGraph>("GeTestGraph3");
+  state = GraphUtils::LoadGEGraph("./ge_test_graph_0003.txt", *com_graph3);
+  ASSERT_EQ(state, true);
+}
+ 
 }  // namespace ge
