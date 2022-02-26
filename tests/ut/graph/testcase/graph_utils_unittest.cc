@@ -1908,8 +1908,6 @@ TEST_F(UtestGraphUtils, DumpGEGraph) {
   builder.AddDataEdge(const_node, 0, add_node, 0);
   builder.AddDataEdge(add_node, 0, netoutput, 0);
   auto graph = builder.GetGraph();
-  
-  GraphUtils::DumpGEGraph(graph, "test123");
 
   // test existed dir
   GraphUtils::DumpGEGraph(graph, "", true, "./ge_test_graph_0001.txt");
@@ -1928,7 +1926,7 @@ TEST_F(UtestGraphUtils, DumpGEGraph) {
   GraphUtils::DumpGEGraph(graph, "", true, "ge_test_graph_0003.txt");
   ComputeGraphPtr com_graph3 = std::make_shared<ComputeGraph>("GeTestGraph3");
   state = GraphUtils::LoadGEGraph("./ge_test_graph_0003.txt", *com_graph3);
-  ASSERT_EQ(state, false);;
+  ASSERT_EQ(state, true);
 }
  
 }  // namespace ge

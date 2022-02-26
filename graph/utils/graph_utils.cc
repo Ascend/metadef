@@ -597,31 +597,29 @@ graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
   } else {
     const auto sep = user_graph_name.rfind(MMPA_PATH_SEPARATOR_STR);
     if (sep == std::string::npos) {
-      GELOGW("[CheckParam] Separator is not found in user_graph_name:%s", user_graph_name.c_str());
-      return GRAPH_PARAM_INVALID;
-    }
+      relative_path.append("./");
+      relative_path.append(user_graph_name);
+    } else {
+      const std::string file_name = user_graph_name.substr(sep + 1UL, user_graph_name.length());
+      std::string path_dir = user_graph_name.substr(0UL, sep + 1UL);
+      if ((file_name.length() == 0UL) || (path_dir.length() == 0UL)) {
+        GELOGW("[Invalid]path or name invalid.user_graph_name:%s", user_graph_name.c_str());
+        return GRAPH_PARAM_INVALID;
+      }
 
-    const std::string file_name = user_graph_name.substr(sep + 1UL, user_graph_name.length());
-    std::string path_dir = user_graph_name.substr(0UL, sep + 1UL);
-    if ((file_name.length() == 0UL) || (path_dir.length() == 0UL)) {
-      GELOGW("[Invalid]path or name invalid.user_graph_name:%s", user_graph_name.c_str());
-      return GRAPH_PARAM_INVALID;
-    }
-
-    if (mmAccess2(path_dir.c_str(), M_F_OK) != EN_OK) {
-      if (CreateDirectory(path_dir) != 0) {
+      if ((mmAccess2(path_dir.c_str(), M_F_OK) != EN_OK) && (CreateDirectory(path_dir) != 0)) {
         GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", path_dir.c_str());
         path_dir = "./";
       }
+      relative_path.append(path_dir);
+      relative_path.append(file_name);
     }
-    const std::string graph_path_name = path_dir + file_name;
-    relative_path = graph_path_name;
   }
 
   char_t real_path[MMPA_MAX_PATH] = {};
   auto const ret = mmRealPath(relative_path.c_str(), &(real_path[0]), MMPA_MAX_PATH);
   if (ret != EN_OK) {
-    GELOGW("[Get][RealPath]file does not exist, it will be create. ret:%d", ret);
+    GELOGD("[Get][RealPath]file does not exist, it will be create. ret:%d", ret);
   }
 
   real_path_name = real_path;
@@ -690,11 +688,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
     ge::proto::ModelDef ge_proto;
     const std::string str(reinterpret_cast<const char_t *>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
-      GELOGW("[Invoke][Parse] parse from std::string failed.");
+      GELOGW("[Invoke][Parse] parse from model failed.");
       return;
     }
     GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
-    GELOGD("End to dump om txt: %ld", file_index);
   }
 #else
   (void)is_always_dump;
