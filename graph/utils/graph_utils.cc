@@ -53,7 +53,7 @@ enum class DumpGraphLevel {
   kDumpLevelOther,
 };
 
-namespace{
+namespace {
 const int32_t kBaseOfIntegerValue = 10;
 #ifdef FMK_SUPPORT_DUMP
 const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";

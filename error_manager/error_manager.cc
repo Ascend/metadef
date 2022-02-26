@@ -290,12 +290,12 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   }
 
   GELOGI("report error message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
-  const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator it = error_map_.find(error_code);
-  if (it == error_map_.cend()) {
+  const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator iter = error_map_.find(error_code);
+  if (iter == error_map_.cend()) {
     GELOGE("[Report][Error]error_code %s is not registered", error_code.c_str());
     return -1;
   }
-  const ErrorInfoConfig &error_info = it->second;
+  const ErrorInfoConfig &error_info = iter->second;
   std::string error_message = error_info.error_message;
   for (const std::string &arg : error_info.arg_list) {
     if (arg.empty()) {

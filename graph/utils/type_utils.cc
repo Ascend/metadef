@@ -21,7 +21,7 @@
 #include "external/graph/types.h"
 
 namespace ge {
-namespace{
+namespace {
 const std::map<Format, std::string> kFormatToStringMap = {
     {FORMAT_NCHW, "NCHW"},
     {FORMAT_NHWC, "NHWC"},
