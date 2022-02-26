@@ -165,7 +165,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   }
 
  protected:
-  AttrHolder & operator= (AttrHolder const &rhs) = default;
+  AttrHolder & operator=(AttrHolder const &rhs) = default;
   graphStatus AddRequiredAttr(const std::string &name);
   const std::set<std::string> GetAllAttrNames() const;
   const std::map<std::string, AnyValue> GetAllAttrs() const;
