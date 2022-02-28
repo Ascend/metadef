@@ -129,7 +129,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY DataAnchor : public Anchor 
 
  protected:
   bool IsTypeOf(const TYPE type) const override;
-  TYPE GetSelfType() const override;
+  Anchor::TYPE GetSelfType() const override;
 
  private:
   Format format_{FORMAT_ND};
