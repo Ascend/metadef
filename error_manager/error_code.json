@@ -3241,6 +3241,28 @@
          "Possible Cause": "The HCCP process is not destroyed by the TSD.",
          "Solution": "Destroy the existing HCCP process and start a new HCCP process."
         }
+      },
+      {
+        "errClass": "System Errors",
+        "errTitle": "attach group add Failure",
+        "ErrCode": "EM0001",
+        "ErrMessage": "Add queue_schedule to attach group failed.",
+        "Arglist": "",
+        "suggestion": {
+          "Possible Cause": "attach group config wrong.",
+          "Solution": "Check queue_schedule attach group info from device log."
+        }
+      },
+      {
+        "errClass": "System Errors",
+        "errTitle": "QueueSchedule init failed",
+        "ErrCode": "EM0002",
+        "ErrMessage": "Failed to init queue_schedule.",
+        "Arglist": "",
+        "suggestion": {
+          "Possible Cause": "Something wrong with queue_schedule",
+          "Solution": "Check init info from device log"
+        }
       }
   ]
 }
