@@ -82,14 +82,14 @@ class TensorAssign {
   template <typename T>
   static Status GetVal(const int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector,
                        const int32_t count, GeTensorPtr &weight, const bool is_complex = false) {
-    if ((is_complex && (val_size % 2)) != 0) {  // val_size must be even.
+    if (is_complex && ((val_size % 2) != 0)) {  // val_size must be even.
       GELOGE(FAILED, "complex value should be an integer multiple of 2.");
       return FAILED;
     }
     const std::unique_ptr<T[]> addr(new (std::nothrow) T[count]());
     GE_CHECK_NOTNULL(addr);
     // Complex numbers are made up of real and imaginary numbers
-    const bool zerosLike = ((count != val_size) && (val_size == 1 || (is_complex && val_size == 2)));
+    const bool zerosLike = ((count != val_size) && ((val_size == 1) || (is_complex && (val_size == 2))));
     if (!zerosLike) {
       for (size_t i = 0UL; i < static_cast<size_t>(val_size); i++) {
         addr[i] = val_vector.Get(static_cast<int32_t>(i));

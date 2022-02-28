@@ -3149,17 +3149,17 @@ void GraphUtils::InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph,
 }
 
 CycleDetectorPtr GraphUtils::CreateCycleDetector(const ComputeGraphPtr &graph) {
-  CycleDetectorPtr detector = std::unique_ptr<CycleDetector>(new (std::nothrow) CycleDetector());
-  if (detector == nullptr) {
+  CycleDetectorPtr detector_inner = std::unique_ptr<CycleDetector>(new (std::nothrow) CycleDetector());
+  if (detector_inner == nullptr) {
     GELOGW("Fail to create cycle detector. Return null.");
     return nullptr;
   }
-  auto ret = detector->Init(graph);
+  const auto ret = detector_inner->Init(graph);
   if (ret != SUCCESS) {
     GELOGW("Fail to init cycle detector. Return null.");
     return nullptr;
   }
-  return detector;
+  return detector_inner;
 }
 
 ///
