@@ -3154,7 +3154,7 @@ CycleDetectorPtr GraphUtils::CreateCycleDetector(const ComputeGraphPtr &graph) {
     GELOGW("Fail to create cycle detector. Return null.");
     return nullptr;
   }
-  auto ret = detector->Init(graph);
+  const auto ret = detector->Init(graph);
   if (ret != SUCCESS) {
     GELOGW("Fail to init cycle detector. Return null.");
     return nullptr;
