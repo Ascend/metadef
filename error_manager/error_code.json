@@ -3244,13 +3244,13 @@
       },
       {
         "errClass": "System Errors",
-        "errTitle": "Cgroup add Failure",
+        "errTitle": "attach group add Failure",
         "ErrCode": "EM0001",
-        "ErrMessage": "Add queue_schedule to cgroup failed.",
+        "ErrMessage": "Add queue_schedule to attach group failed.",
         "Arglist": "",
         "suggestion": {
-          "Possible Cause": "Cgroup config wrong.",
-          "Solution": "Check queue_schedule cgroup info from device log."
+          "Possible Cause": "attach group config wrong.",
+          "Solution": "Check queue_schedule attach group info from device log."
         }
       },
       {
