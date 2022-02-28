@@ -61,12 +61,6 @@ TEST_F(UtestFileUtils, CreateDirectorySuccess) {
   EXPECT_EQ(delete_ret, 0);
 }
 
-TEST_F(UtestFileUtils, CreateDirectoryFail) {
-  std::string directory_path = "D:/123/456";
-  int32_t ret = ge::CreateDirectory(directory_path);
-  EXPECT_EQ(ret, -1);
-}
-
 TEST_F(UtestFileUtils, CreateDirectoryPathIsGreaterThanMaxPath) {
   std::string directory_path;
   for (int i = 0; i < 4000; i++)
@@ -85,7 +79,7 @@ TEST_F(UtestFileUtils, RealPath) {
 }
 
 TEST_F(UtestFileUtils, CreateDirectory) {
-  ASSERT_EQ(ge::CreateDirectory("~/test"), -1); 
+  ASSERT_EQ(ge::CreateDirectory("~/test"), 0); 
   ASSERT_EQ(ge::CreateDirectory(UtestFileUtils::str3), -1);
 }
 } // namespace ge
