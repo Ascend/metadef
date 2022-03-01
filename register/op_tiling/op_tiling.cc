@@ -463,7 +463,7 @@ ge::graphStatus TurnToOpParaCalculateV4(const ge::Operator &op_param, OpRunInfoV
 
 ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_info)
 {
-  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
   GE_CHECK_NOTNULL(op_desc);
   if (!op_desc->HasAttr(ge::ATTR_NAME_ALIAS_ENGINE_NAME)) {
     return ge::GRAPH_SUCCESS;
@@ -1023,7 +1023,7 @@ ge::graphStatus UpDateNodeShapeBack(const ge::OpDescPtr op_desc, vector<vector<i
 // For FFTS+ dynamic shape
 extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<OpRunInfoV2> &op_run_info)
 {
-  ge::OpDescPtr op_desc = node.GetOpDesc();
+  const ge::OpDescPtr op_desc = node.GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
   GELOGD("[OpFftsCalculateV2]Op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   ffts::ThreadSliceMapPtr slice_info_ptr = nullptr;

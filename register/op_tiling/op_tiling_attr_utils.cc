@@ -238,7 +238,7 @@ private:
   }
 
   AttrDataPtr GetFloatAttrValueAndToFp16(const ge::Operator &op, const char *attr_name) const {
-    float attr_value = 0;
+    float attr_value = 0.0f;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
       return nullptr;
@@ -253,7 +253,7 @@ private:
   }
 
   AttrDataPtr GetFloatAttrValueAndToInt(const ge::Operator &op, const char *attr_name) const {
-    float attr_value = 0;
+    float attr_value = 0.0f;
     if (op.GetAttr(attr_name, attr_value) != ge::GRAPH_SUCCESS) {
       GELOGW("Fail to get attr[%s] from operator.", attr_name);
       return nullptr;
