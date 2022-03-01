@@ -2820,7 +2820,7 @@
     "errClass": "Environment Errors",
     "errTitle": "AutoTune run Failed",
     "ErrCode" : "EC0003",
-    "ErrMessage" : "AutoTune run failed, file not found error.",
+    "ErrMessage" : "AutoTune run failed, file not found.",
     "Arglist" : "",
     "suggestion": {
       "Possible Cause": "The config.json or tss/bin/kernel_perf_comm doesn't exist.",
@@ -2864,11 +2864,11 @@
     "errClass": "File Errors",
     "errTitle": "Invalid Directory",
     "ErrCode" : "EF0000",
-    "ErrMessage" : "Failed to open the directory where the repository file [%s] is located with read, write and execute permissions, please check its dir's existence and permission.",
+    "ErrMessage" : "Failed to open the directory where the repository file [%s] is located with read, write and execute permissions, please check the existence and permissions of its directory.",
     "Arglist" : "filepath",
     "suggestion": {
       "Possible Cause": "The path does not exist or the current user has no read, write or execute permissions.",
-      "Solution": "Create the path with read, write and execute permissions."
+      "Solution": "Please check the existence and permissions of its directory. Create the path with read, write and execute permissions."
     }
   },
   {
@@ -2879,7 +2879,7 @@
     "Arglist" : "version,lxtype,version_str",
     "suggestion": {
       "Possible Cause": "This fusion optimization is not supported for the chip or chosen incorrectly by the module called Fusion Engine.",
-      "Solution": "Check the --buffer_optimize and --soc_version in the command parameters when --buffer_optimize=l1_optimize. Save debug-level log and Contact Huawei technical support for help when --buffer_optimize not found."
+      "Solution": "Check the --buffer_optimize and --soc_version in the command parameters. Save debug-level log and Contact Huawei technical support for help when --buffer_optimize not found."
     }
   },
   {
@@ -2890,7 +2890,7 @@
     "Arglist" : "filepath",
     "suggestion": {
       "Possible Cause": "File does not exist or failed to read the file.",
-      "Solution": "Check if the file exists according to the printed file path string. Check whether the user has read permission."
+      "Solution": "Check if the file exists according to the printed file path. Check whether the user has read permission."
     }
   },
   {
@@ -2900,8 +2900,8 @@
     "ErrMessage" : "Config file [%s] format error, it should be json format.",
     "Arglist" : "filepath",
     "suggestion": {
-      "Possible Cause": "File's format is wrong.",
-      "Solution": "The file format is json."
+      "Possible Cause": "File is not in json format.",
+      "Solution": "Please ensure that the config file is in json format."
     }
   },
   {
