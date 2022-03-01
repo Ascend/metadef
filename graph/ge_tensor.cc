@@ -346,8 +346,6 @@ void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDes
   }
 }
 
-const static size_t kDefaultDimsNum = 8U;
-
 class GeShapeImpl {
   using DimsType = SmallVector<int64_t, kDefaultDimsNum>;
  public:
@@ -364,6 +362,7 @@ class GeShapeImpl {
   int64_t GetDim(const size_t idx) const;
   graphStatus SetDim(const size_t idx, const int64_t value);
   std::vector<int64_t> ShapeImplGetDims() const;
+  const DimsType &ShapeImplGetMutableDims() const;
   std::string ShapeImplToString() const;
   int64_t GetShapeSize() const;
   bool IsUnknownShape() const;
@@ -429,6 +428,10 @@ std::vector<int64_t> GeShapeImpl::ShapeImplGetDims() const {
   (void)std::copy(dims_.begin(), dims_.end(), dims.begin());
 
   return dims;
+}
+
+const SmallVector<int64_t, kDefaultDimsNum> &GeShapeImpl::ShapeImplGetMutableDims() const {
+  return dims_;
 }
 
 std::string GeShapeImpl::ShapeImplToString() const {
@@ -527,6 +530,10 @@ graphStatus GeShape::SetDim(const size_t idx, const int64_t value) {
 
 std::vector<int64_t> GeShape::GetDims() const {
   return impl_->ShapeImplGetDims();
+}
+
+const SmallVector<int64_t, kDefaultDimsNum> &GeShape::GetMutableDims() const {
+  return impl_->ShapeImplGetMutableDims();
 }
 
 std::string GeShape::ToString() const {

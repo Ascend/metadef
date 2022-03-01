@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,18 @@ BinaryHolder::BinaryHolder(const BinaryHolder &other) {
   }
 }
 
+BinaryHolder::BinaryHolder(const uint8_t *const data, const size_t data_len) {
+  if ((data != nullptr) && (data_len != 0UL)) {
+    data_len_ = data_len;
+    holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
+    const auto mem_ret = memcpy_s(holder_.get(), data_len_,
+                                  ge::PtrToPtr<const uint8_t, const void>(data), data_len_);
+    if (mem_ret != EOK) {
+      GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] memcpy failed.");
+    }
+  }
+}
+
 BinaryHolder &BinaryHolder::operator=(const BinaryHolder &other) {
   if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
     data_len_ = other.GetDataLen();
@@ -44,16 +56,33 @@ BinaryHolder &BinaryHolder::operator=(const BinaryHolder &other) {
   return *this;
 }
 
-void BinaryHolder::SharedFrom(uint8_t *const data, const size_t data_len) {
-  data_ptr_ = data;
-  data_len_ = data_len;
+BinaryHolder::BinaryHolder(BinaryHolder &&other) {
+  data_len_ = other.data_len_;
+  holder_ = std::move(other.holder_);
+  other.data_len_ = 0;
+}
+
+BinaryHolder &BinaryHolder::operator=(BinaryHolder &&other) {
+  data_len_ = other.data_len_;
+  holder_ = std::move(other.holder_);
+  other.data_len_ = 0;
+  return *this;
+}
+
+std::unique_ptr<BinaryHolder> BinaryHolder::createFrom(std::unique_ptr<uint8_t[]> &&ptr, size_t length) {
+  auto holder = ComGraphMakeUnique<BinaryHolder>();
+  if ((ptr != nullptr) && (length != 0UL)) {
+    holder->data_len_ = length;
+    holder->holder_ = std::move(ptr);
+  }
+  return holder;
 }
 
 const uint8_t *BinaryHolder::GetDataPtr() const noexcept {
   if (holder_.get() != nullptr) {
     return holder_.get();
   }
-  return data_ptr_;
+  return nullptr;
 }
 
 const size_t &BinaryHolder::GetDataLen() const noexcept {
@@ -113,7 +142,7 @@ void TensorInfoArgs::SetShapeRange(const std::vector<std::pair<int64_t, int64_t>
 
 bool TensorInfoArgs::IsUnknownShape() const {
   return std::any_of(shape_.begin(), shape_.end(), [&](const int64_t &dim) {
-      return (dim == UNKNOWN_DIM) || (dim == UNKNOWN_DIM_NUM) || (dim < 0);
+      return (dim == UNKNOWN_DIM) || (dim == UNKNOWN_DIM_NUM);
       });
 }
 
@@ -131,10 +160,10 @@ bool TensorInfoArgs::IsTensorInfoMatch(const TensorInfoArgs &other) const {
     GELOGD("format or origin format or datatype is not matched");
     return false;
   }
-  return IsShapeMatch(other);
+  return IsShapeInRange(other);
 }
 
-bool TensorInfoArgs::IsShapeMatch(const TensorInfoArgs &other) const {
+bool TensorInfoArgs::IsShapeInRange(const TensorInfoArgs &other) const {
   if ((this->shape_.size() == 1U) && (this->shape_[0] == -2)) {
     // -2 is all shape, need to judge first
     GELOGD("current shape is -2");
@@ -153,7 +182,7 @@ bool TensorInfoArgs::IsShapeMatch(const TensorInfoArgs &other) const {
       GELOGD("shape size %zu is not match shape rang size %zu", this->shape_.size(), this->shape_range_.size());
       return false;
     }
-    for (size_t i = 0; i < this->shape_range_.size(); ++i) {
+    for (size_t i = 0U; i < this->shape_range_.size(); ++i) {
       if (this->shape_range_[i].first > other.shape_[i]) {
         GELOGD("shape range is not match, first is %ld, other is %ld, index is %zu",
             this->shape_range_[i].first, other.shape_[i], i);
@@ -172,15 +201,19 @@ bool TensorInfoArgs::IsShapeMatch(const TensorInfoArgs &other) const {
     }
   } else {
     GELOGD("this is exact shape");
-    if (this->shape_ != other.shape_) {
-      GELOGD("exact shape is not matched");
+    if ((this->shape_ != other.shape_) || (this->origin_shape_ != other.origin_shape_)) {
+      GELOGD("exact shape or origin shape is not matched");
       return false;
     }
   }
   return true;
 }
 
-void CompileCacheDesc::AddBinary(BinaryHolder &holder) {
+void CompileCacheDesc::AddBinary(const BinaryHolder &holder) {
+  other_desc_.emplace_back(BinaryHolder(holder));
+}
+
+void CompileCacheDesc::AddBinary(BinaryHolder &&holder) {
   other_desc_.emplace_back(BinaryHolder(holder));
 }
 
@@ -227,7 +260,7 @@ bool CompileCacheDesc::IsMatchedCompileDesc(const CompileCacheDesc &first, const
   if (!CheckWithoutTensorInfo(first, second)) {
     return false;
   }
-  for (size_t i = 0; i < first.tensor_info_args_vec_.size(); ++i) {
+  for (size_t i = 0U; i < first.tensor_info_args_vec_.size(); ++i) {
     const auto &first_args = first.tensor_info_args_vec_[i];
     const auto &second_args = second.tensor_info_args_vec_[i];
     if (!first_args.IsTensorInfoMatch(second_args)) {
@@ -242,7 +275,7 @@ bool CompileCacheDesc::IsSameCompileDesc(const CompileCacheDesc &first, const Co
   if (!CheckWithoutTensorInfo(first, second)) {
     return false;
   }
-  for (size_t i = 0; i < first.tensor_info_args_vec_.size(); ++i) {
+  for (size_t i = 0U; i < first.tensor_info_args_vec_.size(); ++i) {
     const auto &first_args = first.tensor_info_args_vec_[i];
     const auto &second_args = second.tensor_info_args_vec_[i];
     if (first_args != second_args) {

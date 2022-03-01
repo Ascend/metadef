@@ -26,6 +26,7 @@
 #include "graph/aligned_ptr.h"
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
+#include "graph/small_vector.h"
 
 namespace ge {
 class GeShapeImpl;
@@ -42,6 +43,8 @@ using GeTensorImplPtr = std::shared_ptr<GeTensorImpl>;
 
 class GeTensorSerializeUtils;
 
+const static size_t kDefaultDimsNum = 8U;
+
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
  public:
   GeShape();
@@ -57,6 +60,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   int64_t GetDim(const size_t idx) const;
   graphStatus SetDim(const size_t idx, const int64_t value);
   std::vector<int64_t> GetDims() const;
+  const SmallVector<int64_t, kDefaultDimsNum> &GetMutableDims() const;
 
   int64_t GetShapeSize() const;
   std::string ToString() const;

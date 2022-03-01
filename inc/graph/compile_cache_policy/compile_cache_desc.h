@@ -33,13 +33,16 @@ class BinaryHolder {
  public:
   BinaryHolder() = default;
 
-  BinaryHolder(const BinaryHolder &other);
-
-  BinaryHolder &operator=(const BinaryHolder &other);
-
   ~BinaryHolder() = default;
 
-  void SharedFrom(uint8_t *const data, const size_t data_len);
+  BinaryHolder(const BinaryHolder &other);
+  BinaryHolder(BinaryHolder &&other);
+  BinaryHolder &operator=(const BinaryHolder &other);
+  BinaryHolder &operator=(BinaryHolder &&other);
+
+  BinaryHolder(const uint8_t *const data, const size_t data_len);
+
+  static std::unique_ptr<BinaryHolder> createFrom(std::unique_ptr<uint8_t[]> &&ptr, size_t length);
 
   const uint8_t *GetDataPtr() const noexcept;
 
@@ -49,7 +52,6 @@ class BinaryHolder {
 
  private:
   std::unique_ptr<uint8_t[]> holder_ = nullptr;
-  uint8_t *data_ptr_ = nullptr;
   size_t data_len_ = 0UL;
 };
 
@@ -63,7 +65,7 @@ class TensorInfoArgs {
   ~TensorInfoArgs() = default;
 
   bool IsUnknownShape() const;
-  bool IsShapeMatch(const TensorInfoArgs &other) const;
+  bool IsShapeInRange(const TensorInfoArgs &other) const;
   bool IsTensorInfoMatch(const TensorInfoArgs &other) const;
   Format GetFormat() const;
   Format GetOriginFormat() const;
@@ -90,7 +92,8 @@ class CompileCacheDesc {
   static bool IsSameCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second);
   static bool IsMatchedCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second);
   void SetOpType(const std::string &op_type);
-  void AddBinary(BinaryHolder &holder);
+  void AddBinary(const BinaryHolder &holder);
+  void AddBinary(BinaryHolder &&holder);
   void AddTensorInfo(const TensorInfoArgs &tensor_info);
 
  private:
