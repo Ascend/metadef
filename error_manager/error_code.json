@@ -2774,90 +2774,90 @@
     },
     {
       "errClass": "Environment Errors",
-      "errTitle": "Lhisi connected failed",
+      "errTitle": "Remote device connected failed",
       "ErrCode": "EC0000",
-      "ErrMessage": "AutoTune run Failed, lhisi connected failed.",
+      "ErrMessage": "AutoTune run failed, remote device connected failed.",
       "Arglist": "",
       "suggestion": {
-        "Possible Cause": "es_ip or es_port error.",
-        "Solution": "Please ping the lhisi_ip or check the es_ip and es_port in config.json."
+        "Possible Cause": "The ip or port in config.json is wrong.",
+        "Solution": "Please ping the ip or check the es_ip and es_port in config.json."
       }
     },
     {
       "errClass": "Configuration Errors",
-      "errTitle": "AutoTune run Failed.",
+      "errTitle": "AutoTune run failed.",
       "ErrCode": "EC0001",
-      "ErrMessage": "AutoTune run Failed, lhisi connected failed.",
+      "ErrMessage": "AutoTune run failed, remote device connected failed.",
       "Arglist": "",
       "suggestion": {
-        "Possible Cause": "Invalid es_user or es_password.",
-        "Solution": "Please check the es_user and es_password in config.json."
+        "Possible Cause": "Invalid configurations of user or password.",
+        "Solution": "Please check the user name and password in config.json."
       }
     },
    {
     "errClass": "Invalid Path Name",
-    "errTitle": "AutoTune run Failed",
+    "errTitle": "AutoTune run failed",
     "ErrCode" : "EC0002",
-    "ErrMessage" : "AutoTune run Failed, LHISI mounted path don't exits",
+    "ErrMessage" : "AutoTune run failed, the remote mount path doesn't exist",
     "Arglist" : "",
     "suggestion": {
-      "Possible Cause": "LHISI mounted path don't exits.",
-      "Solution": "Please check nfs mount path or check the es_password exits in config.json."
+      "Possible Cause": "The remote mount path doesn't exist.",
+      "Solution": "Please check nfs mount path or check the password exits in config.json."
     }
   },
   {
-    "errClass": "Operator Compilation Errors",
-    "errTitle": "AutoTune run Failed",
+    "errClass": "Environment Errors",
+    "errTitle": "AutoTune run failed",
     "ErrCode" : "EC0004",
-    "ErrMessage" : "AutoTune run Failed, Permission denied.",
+    "ErrMessage" : "AutoTune run failed, Permission denied.",
     "Arglist" : "",
     "suggestion": {
-      "Possible Cause": "The permission of ./tss/bin is wrong.",
-      "Solution": "Please check ./tss/bin permission rwx in current user or if host isn't root user, please set the export file like ${host_share_path} *(rw,sync,root_squash,anonuid=id*,anongid=gid*)."
+      "Possible Cause": "The permission of ./tss/bin is insufficient.",
+      "Solution": "Please check the permission of./tss/bin is rwx in current user, check whether host is root user, please set the export file like ${host_share_path} *(rw,sync,root_squash,anonuid=id*,anongid=gid*)."
     }
   },
   {
-    "errClass": "File Errors",
+    "errClass": "Environment Errors",
     "errTitle": "AutoTune run Failed",
     "ErrCode" : "EC0003",
-    "ErrMessage" : "AutoTune run Failed, FileNotFoundError.",
+    "ErrMessage" : "AutoTune run failed, file not found error.",
     "Arglist" : "",
     "suggestion": {
-      "Possible Cause": "The config.json or tss/bin/kernel_perf_comm doesn't exists.",
-      "Solution": "Please check the config.json or tss/bin/kernel_perf_comm exists."
+      "Possible Cause": "The config.json or tss/bin/kernel_perf_comm doesn't exist.",
+      "Solution": "Please check whether the config.json or tss/bin/kernel_perf_comm exist."
     }
   },
   {
-    "errClass": "Operator Compilation Errors",
-    "errTitle": "GATune run Failed",
+    "errClass": "Command Line Errors",
+    "errTitle": "Invalid --soc_version Argument",
     "ErrCode" : "EC0005",
-    "ErrMessage" : "GATune run Failed. Run .o failed, because soc_version doesn't match the device.",
+    "ErrMessage" : "GATune run failed. Run .o failed, because --soc_version doesn't match the device.",
     "Arglist" : "",
     "suggestion": {
-      "Possible Cause": "Soc_version doesn't match the device.",
-      "Solution": "Please check the soc_version."
+      "Possible Cause": "--soc_version doesn't match the device.",
+      "Solution": "Please check the --soc_version in the command parameters."
     }
   },
   {
     "errClass": "Operator Compilation Errors",
-    "errTitle": "RLTune run Failed",
+    "errTitle": "RLTune run failed",
     "ErrCode" : "ED0000",
-    "ErrMessage" : "RLTune run Failed. Specify evb_conf for remote devices.",
+    "ErrMessage" : "RLTune run failed. Specify evb_conf for remote devices.",
     "Arglist" : "",
     "suggestion": {
       "Possible Cause": "Can't get evb_conf for remote devices.",
-      "Solution": "Please Specify evb_conf for remote devices."
+      "Solution": "Please specify evb_conf for remote devices."
     }
   },
   {
-    "errClass": "Operator Compilation Errors",
-    "errTitle": "RLTune run Failed",
+    "errClass": "Command Line Errors",
+    "errTitle": "Invalid --soc_version Argument",
     "ErrCode" : "ED0001",
-    "ErrMessage" : "RLTune run Failed. Run .o failed, because soc_version doesn't match the device.",
+    "ErrMessage" : "RLTune run failed. Run .o failed, because the soc_version doesn't match the device.",
     "Arglist" : "",
     "suggestion": {
-      "Possible Cause": "Soc_version doesn't match the device.",
-      "Solution": "Please check the soc_version."
+      "Possible Cause": "The soc_version doesn't match the device.",
+      "Solution": "Please check the --soc_version in the command parameters."
     }
   },
   {
