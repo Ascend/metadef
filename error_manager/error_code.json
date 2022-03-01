@@ -2773,63 +2773,136 @@
       "Arglist": "detailed_cause"
     },
     {
-      "ErrCode" : "EC0000",
-      "ErrMessage" : "AutoTune run Failed,lhisi connected failed. Please ping the lhisi_ip or check the es_ip and es_port in config.json",
-      "Arglist" : ""
+      "errClass": "Environment Errors",
+      "errTitle": "Lhisi connected failed",
+      "ErrCode": "EC0000",
+      "ErrMessage": "AutoTune run Failed, lhisi connected failed.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "es_ip or es_port error.",
+        "Solution": "Please ping the lhisi_ip or check the es_ip and es_port in config.json."
+      }
     },
-    {  "ErrCode" : "EC0001",
-    "ErrMessage" : "AutoTune run Failed,lhisi connected failed. Please check the es_user and es_password in config.json",
-    "Arglist" : ""
-   },
+    {
+      "errClass": "Configuration Errors",
+      "errTitle": "AutoTune run Failed.",
+      "ErrCode": "EC0001",
+      "ErrMessage": "AutoTune run Failed, lhisi connected failed.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Invalid es_user or es_password.",
+        "Solution": "Please check the es_user and es_password in config.json."
+      }
+    },
    {
+    "errClass": "Invalid Path Name",
+    "errTitle": "AutoTune run Failed",
     "ErrCode" : "EC0002",
-    "ErrMessage" : "AutoTune run Failed, LHISI mounted path don't exits, Please check nfs mount path or check the es_password exits in config.json",
-    "Arglist" : ""
+    "ErrMessage" : "AutoTune run Failed, LHISI mounted path don't exits",
+    "Arglist" : "",
+    "suggestion": {
+      "Possible Cause": "LHISI mounted path don't exits.",
+      "Solution": "Please check nfs mount path or check the es_password exits in config.json."
+    }
   },
   {
+    "errClass": "Operator Compilation Errors",
+    "errTitle": "AutoTune run Failed",
     "ErrCode" : "EC0004",
-    "ErrMessage" : "AutoTune run Failed, Permission denied. Please check ./tss/bin permission rwx in current user or if host isn't root user, please set the export file like ${host_share_path} *(rw,sync,root_squash,anonuid=id*,anongid=gid*)",
-    "Arglist" : ""
+    "ErrMessage" : "AutoTune run Failed, Permission denied.",
+    "Arglist" : "",
+    "suggestion": {
+      "Possible Cause": "The permission of ./tss/bin is wrong.",
+      "Solution": "Please check ./tss/bin permission rwx in current user or if host isn't root user, please set the export file like ${host_share_path} *(rw,sync,root_squash,anonuid=id*,anongid=gid*)."
+    }
   },
   {
+    "errClass": "File Errors",
+    "errTitle": "AutoTune run Failed",
     "ErrCode" : "EC0003",
-    "ErrMessage" : "AutoTune run Failed,FileNotFoundError. Please check the config.json or tss/bin/kernel_perf_comm exists",
-    "Arglist" : ""
+    "ErrMessage" : "AutoTune run Failed, FileNotFoundError.",
+    "Arglist" : "",
+    "suggestion": {
+      "Possible Cause": "The config.json or tss/bin/kernel_perf_comm doesn't exists.",
+      "Solution": "Please check the config.json or tss/bin/kernel_perf_comm exists."
+    }
   },
   {
+    "errClass": "Operator Compilation Errors",
+    "errTitle": "GATune run Failed",
     "ErrCode" : "EC0005",
     "ErrMessage" : "GATune run Failed. Run .o failed, because soc_version doesn't match the device.",
-    "Arglist" : ""
+    "Arglist" : "",
+    "suggestion": {
+      "Possible Cause": "Soc_version doesn't match the device.",
+      "Solution": "Please check the soc_version."
+    }
   },
   {
+    "errClass": "Operator Compilation Errors",
+    "errTitle": "RLTune run Failed",
     "ErrCode" : "ED0000",
     "ErrMessage" : "RLTune run Failed. Specify evb_conf for remote devices.",
-    "Arglist" : ""
+    "Arglist" : "",
+    "suggestion": {
+      "Possible Cause": "Can't get evb_conf for remote devices.",
+      "Solution": "Please Specify evb_conf for remote devices."
+    }
   },
   {
+    "errClass": "Operator Compilation Errors",
+    "errTitle": "RLTune run Failed",
     "ErrCode" : "ED0001",
     "ErrMessage" : "RLTune run Failed. Run .o failed, because soc_version doesn't match the device.",
-    "Arglist" : ""
+    "Arglist" : "",
+    "suggestion": {
+      "Possible Cause": "Soc_version doesn't match the device.",
+      "Solution": "Please check the soc_version."
+    }
   },
   {
+    "errClass": "File Errors",
+    "errTitle": "Invalid Directory",
     "ErrCode" : "EF0000",
-    "ErrMessage" : "Failed to read or write repository files [%s], please check its dir's existence and permission.",
-    "Arglist" : "filepath"
+    "ErrMessage" : "Failed to open the directory where the repository file [%s] is located with read, write and execute permissions, please check its dir's existence and permission.",
+    "Arglist" : "filepath",
+    "suggestion": {
+      "Possible Cause": "The path does not exist or the current user has no read, write or execute permissions.",
+      "Solution": "Create the path with read, write and execute permissions."
+    }
   },
   {
+    "errClass": "Command Line Errors",
+    "errTitle": "Invalid --soc_version Argument",
     "ErrCode" : "EF0001",
     "ErrMessage" : "Invalid soc_version: [%s], [%s] Fusion only support [%s], please check.",
-    "Arglist" : "version,lxtype,version_str"
+    "Arglist" : "version,lxtype,version_str",
+    "suggestion": {
+      "Possible Cause": "This fusion optimization is not supported for the chip or chosen incorrectly by the module called Fusion Engine.",
+      "Solution": "Check the --buffer_optimize and --soc_version in the command parameters when --buffer_optimize=l1_optimize. Save debug-level log and Contact Huawei technical support for help when --buffer_optimize not found."
+    }
   },
   {
+    "errClass": "File Errors",
+    "errTitle": "Failure to Read File",
     "ErrCode" : "WF0000",
     "ErrMessage" : "Open config file [%s] failed, please check its existence, permission and etc.",
-    "Arglist" : "filepath"
+    "Arglist" : "filepath",
+    "suggestion": {
+      "Possible Cause": "File does not exist or failed to read the file.",
+      "Solution": "Check if the file exists according to the printed file path string. Check whether the user has read permission."
+    }
   },
   {
+    "errClass": "File Errors",
+    "errTitle": "File format Error",
     "ErrCode" : "WF0001",
     "ErrMessage" : "Config file [%s] format error, it should be json format.",
-    "Arglist" : "filepath"
+    "Arglist" : "filepath",
+    "suggestion": {
+      "Possible Cause": "File's format is wrong.",
+      "Solution": "The file format is json."
+    }
   },
   {
     "ErrCode": "E68000",
