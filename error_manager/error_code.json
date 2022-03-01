@@ -2785,7 +2785,7 @@
     },
     {
       "errClass": "Configuration Errors",
-      "errTitle": "AutoTune run failed.",
+      "errTitle": "AutoTune run failed",
       "ErrCode": "EC0001",
       "ErrMessage": "AutoTune run failed, remote device connected failed.",
       "Arglist": "",
@@ -2802,23 +2802,23 @@
     "Arglist" : "",
     "suggestion": {
       "Possible Cause": "The remote mount path doesn't exist.",
-      "Solution": "Please check nfs mount path or check the password exits in config.json."
+      "Solution": "Please check the existence of the nfs mount path, or check the password in config.json."
     }
   },
   {
     "errClass": "Environment Errors",
     "errTitle": "AutoTune run failed",
     "ErrCode" : "EC0004",
-    "ErrMessage" : "AutoTune run failed, Permission denied.",
+    "ErrMessage" : "AutoTune run failed, permission denied.",
     "Arglist" : "",
     "suggestion": {
-      "Possible Cause": "The permission of ./tss/bin is insufficient.",
-      "Solution": "Please check the permission of./tss/bin is rwx in current user, check whether host is root user, please set the export file like ${host_share_path} *(rw,sync,root_squash,anonuid=id*,anongid=gid*)."
+      "Possible Cause": "The permission of ./tss/bin is limited.",
+      "Solution": "Please check the permission of./tss/bin is rwx in current user, or check whether host is root user, or set the export file like ${host_share_path} *(rw,sync,root_squash,anonuid=id*,anongid=gid*)."
     }
   },
   {
     "errClass": "Environment Errors",
-    "errTitle": "AutoTune run Failed",
+    "errTitle": "AutoTune run failed",
     "ErrCode" : "EC0003",
     "ErrMessage" : "AutoTune run failed, file not found.",
     "Arglist" : "",
