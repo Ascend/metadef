@@ -62,7 +62,7 @@ class GraphPassUtil {
       return;
     }
 
-    ge::OpDescPtr origin_op_desc = origin_node->GetOpDesc();
+    const ge::OpDescPtr origin_op_desc = origin_node->GetOpDesc();
     if (origin_op_desc == nullptr) {
       return;
     }
