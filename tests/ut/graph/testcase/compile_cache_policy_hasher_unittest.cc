@@ -45,7 +45,9 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderCopyConstrut) {
 
   BinaryHolder holder2 = holder1;
   ASSERT_EQ((holder1 != holder2), false);
+  ASSERT_NE(holder1.GetDataPtr(), holder2.GetDataPtr());
   BinaryHolder holder3(holder1);
+  ASSERT_NE(holder1.GetDataPtr(), holder3.GetDataPtr());
   ASSERT_EQ((holder1 != holder3), false);
 }
 
@@ -59,6 +61,13 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderMoveConstrut) {
   ASSERT_EQ(holder1.GetDataLen(), 0);
   ASSERT_EQ(holder2.GetDataLen(), sizeof(data1));
 
+  const uint8_t *dataPtr = holder2.GetDataPtr();
+  ASSERT_NE(dataPtr, nullptr);
+  size_t size2 = holder2.GetDataLen();
+  ASSERT_EQ(size2, sizeof(data1));
+  ASSERT_EQ(dataPtr[0], 0);
+  ASSERT_EQ(dataPtr[1], 1);
+
   BinaryHolder holder3(std::move(holder2));
   ASSERT_EQ(holder2.GetDataPtr(), nullptr);
   ASSERT_NE(holder3.GetDataPtr(), nullptr);
@@ -69,8 +78,10 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderMoveConstrut) {
 TEST_F(UtestCompileCachePolicyHasher, TestBinaryHoldercreateFromUniquePtr) {
   auto data_ptr = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[10]);
   ASSERT_NE(data_ptr, nullptr);
+  const uint8_t *data_ptr_real = data_ptr.get();
   auto holder2 = BinaryHolder::createFrom(std::move(data_ptr), 10);
   ASSERT_NE(holder2->GetDataPtr(), nullptr);
+  ASSERT_EQ(holder2->GetDataPtr(), data_ptr_real);
   ASSERT_EQ(holder2->GetDataLen(), 10);
   ASSERT_EQ(data_ptr, nullptr);
 }

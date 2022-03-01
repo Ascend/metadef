@@ -29,8 +29,8 @@
 
 namespace ge {
 class CacheInfo;
-using CacheItemId = int64_t;
-constexpr CacheItemId KInvalidCacheItemId = -1;
+using CacheItemId = uint64_t;
+constexpr CacheItemId KInvalidCacheItemId = std::numeric_limits<uint64_t>::max();
 
 using DelCacheFunc = std::function<bool(CacheInfo &)>;
 using CCStatType = std::unordered_map<uint64_t, std::vector<CacheInfo>>;
@@ -60,7 +60,7 @@ public:
     return time_stamp_;
   }
 
-  const CacheItemId &GetItemId() const noexcept {
+  CacheItemId GetItemId() const noexcept {
     return item_id_;
   }
 

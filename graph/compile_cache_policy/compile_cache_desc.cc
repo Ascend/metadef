@@ -210,11 +210,11 @@ bool TensorInfoArgs::IsShapeInRange(const TensorInfoArgs &other) const {
 }
 
 void CompileCacheDesc::AddBinary(const BinaryHolder &holder) {
-  other_desc_.emplace_back(BinaryHolder(holder));
+  other_desc_.emplace_back(holder);
 }
 
 void CompileCacheDesc::AddBinary(BinaryHolder &&holder) {
-  other_desc_.emplace_back(BinaryHolder(holder));
+  other_desc_.emplace_back(holder);
 }
 
 void CompileCacheDesc::SetOpType(const std::string &op_type) {

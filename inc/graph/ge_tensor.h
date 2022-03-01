@@ -27,6 +27,7 @@
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
 #include "graph/small_vector.h"
+#include "graph/ascend_limits.h"
 
 namespace ge {
 class GeShapeImpl;
@@ -42,8 +43,6 @@ class GeTensorImpl;
 using GeTensorImplPtr = std::shared_ptr<GeTensorImpl>;
 
 class GeTensorSerializeUtils;
-
-const static size_t kDefaultDimsNum = 8U;
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
  public:
