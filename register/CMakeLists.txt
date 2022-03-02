@@ -22,6 +22,7 @@ set(SRC_LIST
     "host_cpu_context.cc"
     "tensor_assign.cpp"
     "infer_data_slice_registry.cc"
+    "infer_axis_slice_registry.cc"
     "scope/scope_graph.cc"
     "scope/scope_pass.cc"
     "scope/scope_pattern.cc"

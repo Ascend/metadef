@@ -9,6 +9,7 @@ set(GRAPH_SOURCE_LIST
     "aligned_ptr.cc"
     "compute_graph.cc"
     "ascend_string.cc"
+    "axis_type_info.cc"
     "gnode.cc"
     "graph.cc"
     "inference_context.cc"
