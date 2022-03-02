@@ -23,9 +23,12 @@ BinaryHolder::BinaryHolder(const BinaryHolder &other) {
   if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
     data_len_ = other.GetDataLen();
     holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
+    GE_CHECK_NOTNULL_JUST_RETURN(holder_);
     const auto mem_ret = memcpy_s(holder_.get(), data_len_,
                                   ge::PtrToPtr<const uint8_t, const void>(other.GetDataPtr()), data_len_);
     if (mem_ret != EOK) {
+      data_len_ = 0U;
+      holder_ = nullptr;
       GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] memcpy failed.");
     }
   }
@@ -35,9 +38,12 @@ BinaryHolder::BinaryHolder(const uint8_t *const data, const size_t data_len) {
   if ((data != nullptr) && (data_len != 0UL)) {
     data_len_ = data_len;
     holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
+    GE_CHECK_NOTNULL_JUST_RETURN(holder_);
     const auto mem_ret = memcpy_s(holder_.get(), data_len_,
                                   ge::PtrToPtr<const uint8_t, const void>(data), data_len_);
     if (mem_ret != EOK) {
+      data_len_ = 0U;
+      holder_ = nullptr;
       GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] memcpy failed.");
     }
   }
@@ -47,9 +53,15 @@ BinaryHolder &BinaryHolder::operator=(const BinaryHolder &other) {
   if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
     data_len_ = other.GetDataLen();
     holder_ = ComGraphMakeUnique<uint8_t[]>(data_len_);
+    if (holder_ == nullptr) {
+      GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] make unique failed.");
+      return *this;
+    }
     const auto mem_ret = memcpy_s(holder_.get(), data_len_,
                                   ge::PtrToPtr<const uint8_t, const void>(other.GetDataPtr()), data_len_);
     if (mem_ret != EOK) {
+      data_len_ = 0U;
+      holder_ = nullptr;
       GELOGE(ge::GRAPH_FAILED, "[BinaryHolder] memcpy failed.");
     }
   }
