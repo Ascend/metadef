@@ -896,6 +896,7 @@ const std::string LOG_TIME_STAMP_NOTIFY = "notify";
 const std::string SHAPEN_ATTR_N = "N";
 const std::string SHAPEN_ATTR_IN_TYPE = "in_type";
 const std::string SHAPEN_ATTR_OUT_TYPE = "dtype";
+const std::string ATTR_NAME_SPLIT_SHAPEN_ORIGIN_NAME = "_split_shapen_origin_name";
 
 //  GatherV2 attr def
 const std::string GATHERV2_ATTR_NAME_TAXIS = "Taxis";
