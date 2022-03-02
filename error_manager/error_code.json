@@ -2878,7 +2878,7 @@
     "ErrMessage" : "Invalid soc_version: [%s], [%s] Fusion only support [%s], please check.",
     "Arglist" : "version,lxtype,version_str",
     "suggestion": {
-      "Possible Cause": "This fusion optimization is not supported for the chip or chosen incorrectly by the module called Fusion Engine.",
+      "Possible Cause": "This fusion optimization is not supported for the chip or chosen incorrectly by the module called AOE.",
       "Solution": "Check the --buffer_optimize and --soc_version in the command parameters. Save debug-level log and Contact Huawei technical support for help when --buffer_optimize not found."
     }
   },
