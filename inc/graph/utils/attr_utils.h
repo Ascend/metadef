@@ -77,6 +77,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool GetBool(ConstAttrHolderAdapter &&obj, const std::string &name, bool &value);
   static bool GetListBool(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<bool> &value);
   static bool GetStr(ConstAttrHolderAdapter &&obj, const std::string &name, std::string &value);
+  static const std::string *GetStr(ConstAttrHolderAdapter &&obj, const std::string &name);
   static bool GetListStr(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<std::string> &value);
   static bool GetTensorDesc(ConstAttrHolderAdapter &&obj, const std::string &name, GeTensorDesc &value);
   static bool GetListTensorDesc(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<GeTensorDesc> &value);

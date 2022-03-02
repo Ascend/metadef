@@ -223,6 +223,11 @@ class OpDescImpl {
   graphStatus GetSubgraphNameByInstanceName(const std::string &instance_name, std::string &subgraph_name) const;
   graphStatus InferDataSlice(const OpDescPtr &op_desc);
 
+  void *GetTilingFuncInfo() const;
+  void SetTilingFuncInfo(void *tiling_func_info);
+  void *GetAtomicTilingFuncInfo() const;
+  void SetAtomicTilingFuncInfo(void *atomic_tiling_func_info);
+
  private:
   void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
   void SerializeMetaDataToOpDef(proto::OpDef * const op_def);
@@ -265,6 +270,8 @@ class OpDescImpl {
   std::string engine_name_;
   MetaDataStore meta_data_;
   AttrStore attrs_;
+  void *tiling_func_info_ = nullptr;
+  void *atomic_tiling_func_info_ = nullptr;
 };
 }  // namespace ge
 #endif  // GRAPH_OP_DESC_IMPL_H_

@@ -878,6 +878,22 @@ bool OpDescImpl::UpdateOutputName(std::map<std::string, uint32_t> output_name_id
 
 std::function<graphStatus(Operator &)> OpDescImpl::GetInferFunc() const { return infer_func_; }
 
+void *OpDescImpl::GetTilingFuncInfo() const {
+  return tiling_func_info_;
+}
+
+void OpDescImpl::SetTilingFuncInfo(void *tiling_func_info) {
+  tiling_func_info_ = tiling_func_info;
+}
+
+void *OpDescImpl::GetAtomicTilingFuncInfo() const {
+  return atomic_tiling_func_info_;
+}
+
+void OpDescImpl::SetAtomicTilingFuncInfo(void *atomic_tiling_func_info) {
+  atomic_tiling_func_info_ = atomic_tiling_func_info;
+}
+
 std::function<graphStatus(Operator &)> OpDescImpl::GetVerifyFunc() const { return verifier_func_; }
 
 void OpDescImpl::AddInferFunc(const std::function<graphStatus(Operator &)> &func) { infer_func_ = func; }
@@ -1589,6 +1605,22 @@ bool OpDesc::UpdateOutputName(const std::map<std::string, uint32_t> output_name_
 
 std::function<graphStatus(Operator &)> OpDesc::GetInferFunc() const {
   return impl_->GetInferFunc();
+}
+
+void *OpDesc::GetTilingFuncInfo() const {
+  return impl_->GetTilingFuncInfo();
+}
+
+void OpDesc::SetTilingFuncInfo(void *tiling_func_info) {
+  impl_->SetTilingFuncInfo(tiling_func_info);
+}
+
+void *OpDesc::GetAtomicTilingFuncInfo() const {
+  return impl_->GetAtomicTilingFuncInfo();
+}
+
+void OpDesc::SetAtomicTilingFuncInfo(void *atomic_tiling_func_info) {
+  impl_->SetAtomicTilingFuncInfo(atomic_tiling_func_info);
 }
 
 std::function<graphStatus(Operator &)> OpDesc::GetVerifyFunc() const {

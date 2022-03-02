@@ -60,6 +60,11 @@ bool GetAttrValue(const AttrStore &attrs, const std::string &name, T &value) {
   return true;
 }
 
+template<typename T>
+const T *GetAttrValue(const AttrStore &attrs, const std::string &name) {
+  return attrs.GetByName<T>(name);
+}
+
 template<typename T, typename RT = typename std::decay<T>::type>
 RT *SetAndGetAttrValue(AttrStore &attrs, const std::string &name, T &&value) {
   if (!attrs.SetByName(name, std::forward<T>(value))) {
