@@ -29,8 +29,8 @@
 
 namespace ge {
 class CacheInfo;
-using CacheItem = int64_t;
-constexpr CacheItem KInvalidCacheItem = -1;
+using CacheItemId = uint64_t;
+constexpr CacheItemId KInvalidCacheItemId = std::numeric_limits<uint64_t>::max();
 
 using DelCacheFunc = std::function<bool(CacheInfo &)>;
 using CCStatType = std::unordered_map<uint64_t, std::vector<CacheInfo>>;
@@ -38,15 +38,14 @@ using CCStatType = std::unordered_map<uint64_t, std::vector<CacheInfo>>;
 class CacheInfo {
 friend class CompileCacheState;
 public:
-  CacheInfo(const time_t time_stamp, const CacheHashKey shape_hash, const CacheItem item, const CompileCacheDesc &desc):
-            time_stamp_(time_stamp), shape_hash_(shape_hash), item_(item), desc_(desc) {}
+  CacheInfo(const time_t time_stamp, const CacheItemId item_id, const CompileCacheDesc &desc):
+            time_stamp_(time_stamp), item_id_(item_id), desc_(desc) {}
   CacheInfo(const CacheInfo &other) :
-            time_stamp_(other.time_stamp_), shape_hash_(other.shape_hash_),
-            item_(other.item_), desc_(other.desc_) {}
+            time_stamp_(other.time_stamp_),
+            item_id_(other.item_id_), desc_(other.desc_) {}
   CacheInfo &operator=(const CacheInfo &other) {
     time_stamp_ = other.time_stamp_;
-    shape_hash_ = other.shape_hash_;
-    item_ = other.item_;
+    item_id_ = other.item_id_;
     desc_ = other.desc_;
     return *this;
   }
@@ -61,12 +60,8 @@ public:
     return time_stamp_;
   }
 
-  const CacheHashKey &GetShapeHash() const noexcept {
-    return shape_hash_;
-  }
-
-  const CacheItem &GetItem() const noexcept {
-    return item_;
+  CacheItemId GetItemId() const noexcept {
+    return item_id_;
   }
 
   const CompileCacheDesc &GetCompileCacheDesc() const noexcept {
@@ -75,9 +70,7 @@ public:
 
 private:
   time_t time_stamp_;
-  // hash combine result of shapes and origing shapes
-  CacheHashKey shape_hash_;
-  CacheItem item_;
+  CacheItemId item_id_;
   CompileCacheDesc desc_;
 };
 
@@ -86,19 +79,19 @@ public:
   CompileCacheState() = default;
   ~CompileCacheState() = default;
 
-  CacheItem AddCache(const CompileCacheDesc &compile_cache_desc);
+  CacheItemId AddCache(const CompileCacheDesc &compile_cache_desc);
 
-  std::vector<CacheItem> DelCache(const DelCacheFunc &func);
+  std::vector<CacheItemId> DelCache(const DelCacheFunc &func);
 
-  std::vector<CacheItem> DelCache(const std::vector<CacheItem> &delete_item);
+  std::vector<CacheItemId> DelCache(const std::vector<CacheItemId> &delete_item);
 
   const CCStatType &GetState() const {
     return cc_state_;
   }
 
 private:
-  CacheItem GetNextCacheItem();
-  void RecoveryCacheItem(const std::vector<CacheItem> &cache_items);
+  CacheItemId GetNextCacheItemId();
+  void RecoveryCacheItemId(const std::vector<CacheItemId> &cache_items);
 
   std::mutex cc_state_mu_;
   std::mutex cache_item_mu_;

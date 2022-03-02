@@ -18,7 +18,6 @@
 #include "graph/compile_cache_policy/match_policy_exact_only.h"
 #include "graph/compile_cache_policy/aging_policy_lru.h"
 #include "debug/ge_util.h"
-
 #include "graph/debug/ge_util.h"
 
 namespace ge {
@@ -77,29 +76,36 @@ graphStatus CompileCachePolicy::SetAgingPolicy(const AgingPolicyPtr ap) {
   return GRAPH_SUCCESS;
 }
 
-CacheItem CompileCachePolicy::AddCache(const CompileCacheDesc &compile_cache_desc) {
+CacheItemId CompileCachePolicy::AddCache(const CompileCacheDesc &compile_cache_desc) {
   const auto cache_item = compile_cache_state_.AddCache(compile_cache_desc);
-  if (cache_item == KInvalidCacheItem) {
+  if (cache_item == KInvalidCacheItemId) {
     GELOGE(GRAPH_FAILED, "[Check][Param] AddCache failed: please check the compile cache description.");
-    return KInvalidCacheItem;
+    return KInvalidCacheItemId;
   }
   return cache_item;
 }
 
-CacheItem CompileCachePolicy::FindCache(const CompileCacheDesc &compile_cache_desc) const {
+CacheItemId CompileCachePolicy::FindCache(const CompileCacheDesc &compile_cache_desc) const {
   if (mp_ == nullptr) {
-    return 12345;
+    GELOGW("match policy is nullptr");
+    return KInvalidCacheItemId;
   }
-  return mp_->GetCacheItem(compile_cache_state_.GetState(), compile_cache_desc);
+  return mp_->GetCacheItemId(compile_cache_state_.GetState(), compile_cache_desc);
 }
 
-std::vector<CacheItem> CompileCachePolicy::DeleteCache(const DelCacheFunc &func) {
+std::vector<CacheItemId> CompileCachePolicy::DeleteCache(const DelCacheFunc &func) {
   const auto delete_items = compile_cache_state_.DelCache(func);
   GELOGI("[CompileCachePolicy] [DeleteCache] Delete %zu CompileCacheInfo", delete_items.size());
   return delete_items;
 }
 
-std::vector<CacheItem> CompileCachePolicy::DoAging() {
+std::vector<CacheItemId> CompileCachePolicy::DeleteCache(const std::vector<CacheItemId> &delete_item) {
+  const auto delete_items = compile_cache_state_.DelCache(delete_item);
+  GELOGI("[CompileCachePolicy] [DeleteCache] Delete %zu CompileCacheInfo", delete_items.size());
+  return delete_items;
+}
+
+std::vector<CacheItemId> CompileCachePolicy::DoAging() {
   const auto delete_item = ap_->DoAging(compile_cache_state_.GetState());
   (void)compile_cache_state_.DelCache(delete_item);
   return delete_item;

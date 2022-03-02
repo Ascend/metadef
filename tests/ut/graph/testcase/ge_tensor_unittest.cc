@@ -88,6 +88,12 @@ TEST_F(UtestGeTensor, shape) {
   EXPECT_EQ(c.GetDim(2), vec1[2]);
   EXPECT_EQ(c.GetDim(3), vec1[3]);
 
+  SmallVector<int64_t, kDefaultDimsNum> vec2 = c.GetMutableDims();
+  EXPECT_EQ(c.GetDim(0), vec2[0]);
+  EXPECT_EQ(c.GetDim(1), vec2[1]);
+  EXPECT_EQ(c.GetDim(2), vec2[2]);
+  EXPECT_EQ(c.GetDim(3), vec2[3]);
+
   EXPECT_EQ(c.GetShapeSize(), 16);
 }
 

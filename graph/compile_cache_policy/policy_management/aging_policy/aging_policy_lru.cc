@@ -15,15 +15,15 @@
  */
 #include "graph/compile_cache_policy/aging_policy_lru.h"
 namespace ge {
-std::vector<CacheItem> AgingPolicyLru::DoAging(const CCStatType &cc_state) const {
+std::vector<CacheItemId> AgingPolicyLru::DoAging(const CCStatType &cc_state) const {
   const int64_t delete_limit =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) - delete_interval_;
-  std::vector<CacheItem> delete_item;
+  std::vector<CacheItemId> delete_item;
   for (const auto &cache_item : cc_state) {
     const std::vector<CacheInfo> &cache_vec = cache_item.second;
     for (auto iter = cache_vec.begin(); iter != cache_vec.end(); iter++) {
       if ((*iter).GetTimeStamp() <= delete_limit) {
-          delete_item.emplace_back((*iter).GetItem());
+          delete_item.emplace_back((*iter).GetItemId());
       }
     }
   }

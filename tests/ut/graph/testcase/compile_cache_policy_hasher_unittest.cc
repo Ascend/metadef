@@ -24,80 +24,101 @@ class UtestCompileCachePolicyHasher : public testing::Test {
   void TearDown() {}
 };
 
-TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderOnly) {
-  uint8_t data1[9] = {0U,1U,2U,3U,4U,5U,6U,7U,8U};
-  uint8_t data2[9] = {0U,1U,2U,3U,4U,5U,7U,9U,11U};
-  uint8_t data3[9] = {0U,1U,2U,3U,4U,5U,7U,9U,11U};
-
-  BinaryHolder holder1 = BinaryHolder();
-  holder1.SharedFrom(data1, 1);
-
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderConstrutFromPtr) {
+  uint8_t data1[2] = {0U,1U};
+  BinaryHolder holder1(data1, sizeof(data1));
   const uint8_t *dataPtr = holder1.GetDataPtr();
   ASSERT_NE(dataPtr, nullptr);
   size_t size1 = holder1.GetDataLen();
-  ASSERT_EQ(size1, 1UL);
-
-  BinaryHolder holder2(holder1);
-  BinaryHolder holder3 = BinaryHolder();
-  holder3.SharedFrom(data2, 9);
-  BinaryHolder holder4 = BinaryHolder();
-  holder4.SharedFrom(data3, 9);
-  BinaryHolder holder5 = BinaryHolder();
-  holder5.SharedFrom(nullptr, 0);
-  BinaryHolder holder6 = BinaryHolder();
-  holder6.SharedFrom(data1, 9);
-
-  bool b1 = (holder1 != holder5);
-  ASSERT_EQ(b1, false);
-  bool b2 = (holder1 != holder2);
-  ASSERT_EQ(b2, false);
-  bool b3 = (holder3 != holder4);
-  ASSERT_EQ(b3, false);
-  bool b4 = (holder3 != holder6);
-  ASSERT_EQ(b4, true);
-  bool b5 = (holder4 != holder5);
-  ASSERT_EQ(b5, false);
+  ASSERT_EQ(size1, sizeof(data1));
+  ASSERT_EQ(dataPtr[0], 0);
+  ASSERT_EQ(dataPtr[1], 1);
 }
 
-TEST_F(UtestCompileCachePolicyHasher, GetCacheDescHashWithoutShape) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
-  BinaryHolder holder = BinaryHolder();
-  holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
-  auto seed = CompileCacheHasher::GetCacheDescHashWithoutShape(ccd);
-  ASSERT_EQ(seed, 34605809643570136);
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderCopyConstrut) {
+  uint8_t data1[2] = {0U,1U};
+  BinaryHolder holder1(data1, sizeof(data1));
+  const uint8_t *dataPtr = holder1.GetDataPtr();
+  ASSERT_NE(dataPtr, nullptr);
+  size_t size1 = holder1.GetDataLen();
+  ASSERT_EQ(size1, sizeof(data1));
 
-  delete data;
-  data = nullptr;
+  BinaryHolder holder2 = holder1;
+  ASSERT_EQ((holder1 != holder2), false);
+  ASSERT_NE(holder1.GetDataPtr(), holder2.GetDataPtr());
+  BinaryHolder holder3(holder1);
+  ASSERT_NE(holder1.GetDataPtr(), holder3.GetDataPtr());
+  ASSERT_EQ((holder1 != holder3), false);
 }
 
-TEST_F(UtestCompileCachePolicyHasher, GetCacheDescShapeHash) {
-  int64_t uid = 100UL;
-  CompileCacheDesc::TensorInfoArgs tensor_info_args;
-  tensor_info_args.shapes = {{2,3,4}};
-  tensor_info_args.origin_shapes = {{2,3,4}};
-  tensor_info_args.shape_ranges = {};
-  tensor_info_args.formats = {FORMAT_ND};
-  tensor_info_args.origin_formats = {FORMAT_ND};
-  tensor_info_args.data_types = {DT_FLOAT};
-  uint8_t *data = new uint8_t(9);
-  BinaryHolder holder = BinaryHolder();
-  holder.SharedFrom(data, 1);
-  SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc = {holder};
-  auto ccd = CompileCacheDesc(uid, tensor_info_args);
-  auto seed = CompileCacheHasher::GetCacheDescShapeHash(ccd);
-  ASSERT_EQ(seed, 8487203673785339670);
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderMoveConstrut) {
+  uint8_t data1[2] = {0U,1U};
+  BinaryHolder holder1(data1, sizeof(data1));
 
-  delete data;
-  data = nullptr;
+  BinaryHolder holder2 = std::move(holder1);
+  ASSERT_EQ(holder1.GetDataPtr(), nullptr);
+  ASSERT_NE(holder2.GetDataPtr(), nullptr);
+  ASSERT_EQ(holder1.GetDataLen(), 0);
+  ASSERT_EQ(holder2.GetDataLen(), sizeof(data1));
+
+  const uint8_t *dataPtr = holder2.GetDataPtr();
+  ASSERT_NE(dataPtr, nullptr);
+  size_t size2 = holder2.GetDataLen();
+  ASSERT_EQ(size2, sizeof(data1));
+  ASSERT_EQ(dataPtr[0], 0);
+  ASSERT_EQ(dataPtr[1], 1);
+
+  BinaryHolder holder3(std::move(holder2));
+  ASSERT_EQ(holder2.GetDataPtr(), nullptr);
+  ASSERT_NE(holder3.GetDataPtr(), nullptr);
+  ASSERT_EQ(holder2.GetDataLen(), 0);
+  ASSERT_EQ(holder3.GetDataLen(), sizeof(data1));
+}
+
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHoldercreateFromUniquePtr) {
+  auto data_ptr = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[10]);
+  ASSERT_NE(data_ptr, nullptr);
+  const uint8_t *data_ptr_real = data_ptr.get();
+  auto holder2 = BinaryHolder::createFrom(std::move(data_ptr), 10);
+  ASSERT_NE(holder2->GetDataPtr(), nullptr);
+  ASSERT_EQ(holder2->GetDataPtr(), data_ptr_real);
+  ASSERT_EQ(holder2->GetDataLen(), 10);
+  ASSERT_EQ(data_ptr, nullptr);
+}
+
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderEqual) {
+  uint8_t data1[8] = {0U,1U,2U,3U,4U,5U,6U,7U};
+  uint8_t data2[8] = {0U,1U,2U,3U,4U,5U,6U,7U};
+
+  BinaryHolder holder1(data1, sizeof(data1));
+  const uint8_t *dataPtr = holder1.GetDataPtr();
+  ASSERT_NE(dataPtr, nullptr);
+  size_t size1 = holder1.GetDataLen();
+  ASSERT_EQ(size1, sizeof(data1));
+
+  BinaryHolder holder2(data2, sizeof(data2));
+  ASSERT_EQ((holder1 != holder2), false);
+}
+
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderDiffBecauseLength) {
+  uint8_t data1[8] = {0U,1U,2U,3U,4U,5U,6U,7U};
+  uint8_t data2[9] = {0U,1U,2U,3U,4U,5U,7U,9U,11U};
+
+  BinaryHolder holder1(data1, sizeof(data1));
+  ASSERT_EQ(holder1.GetDataLen(), sizeof(data1));
+  BinaryHolder holder2(data2, sizeof(data2));
+  ASSERT_EQ(holder2.GetDataLen(), sizeof(data2));
+  ASSERT_EQ((holder1 != holder2), true);
+}
+
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderDiffBecauseVaule) {
+  uint8_t data1[8] = {0U,1U,2U,3U,4U,5U,6U,7U};
+  uint8_t data2[8] = {1U,1U,2U,3U,4U,5U,6U,7U};
+
+  BinaryHolder holder1(data1, sizeof(data1));
+  ASSERT_EQ(holder1.GetDataLen(), sizeof(data1));
+  BinaryHolder holder2(data2, sizeof(data2));
+  ASSERT_EQ(holder2.GetDataLen(), sizeof(data2));
+  ASSERT_EQ((holder1 != holder2), true);
 }
 }

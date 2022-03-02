@@ -17,14 +17,11 @@
 
 namespace ge {
 CacheHashKey CompileCacheHasher::GetCacheDescHashWithoutShape(const CompileCacheDesc &cache_desc) {
-  CacheHashKey hash_key = HashUtils::MultiHash(cache_desc.unique_id_);
-  hash_key = HashUtils::MultiHash(hash_key, cache_desc.formats_, cache_desc.origin_formats_,
-                                  cache_desc.data_types_, cache_desc.other_desc_);
-  return hash_key;
-}
-CacheHashKey CompileCacheHasher::GetCacheDescShapeHash(const CompileCacheDesc &cache_desc) {
-  CacheHashKey hash_key = HashUtils::MultiHash();
-  hash_key = HashUtils::MultiHash(hash_key, cache_desc.shapes_, cache_desc.origin_shapes_);
+  CacheHashKey hash_key;
+  for (const auto &arg : cache_desc.tensor_info_args_vec_) {
+    hash_key = HashUtils::MultiHash(arg.GetFormat(), arg.GetOriginFormat(), arg.GetDataType());
+  }
+  hash_key = HashUtils::MultiHash(cache_desc.op_type_, hash_key);
   return hash_key;
 }
 }
