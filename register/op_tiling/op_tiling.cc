@@ -29,6 +29,7 @@
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_compile_info_manager.h"
 #include "common/sgt_slice_type.h"
+#include "graph/def_types.h"
 
 namespace optiling {
 using Status = domi::Status;
@@ -348,17 +349,17 @@ ge::graphStatus TurnToOpParaCalculateV2(const ge::Operator &op_param, OpRunInfoV
                                         const OpTilingFuncV2 &tiling_func) {
   ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
-  std::string op_compile_info_key;
-  if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY, op_compile_info_key)) {
+  const std::string *op_compile_info_key = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY);
+  if (op_compile_info_key == nullptr) {
     GE_LOGE("Op[%s] does not have attr[%s].", op_desc->GetName().c_str(), COMPILE_INFO_KEY.c_str());
     return ge::GRAPH_FAILED;
   }
-  std::string op_compile_info_json;
-  if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON, op_compile_info_json)) {
+  const std::string *op_compile_info_json = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON);
+  if (op_compile_info_json == nullptr) {
     GE_LOGE("Op[%s] does not have attr[%s].", op_desc->GetName().c_str(), COMPILE_INFO_JSON.c_str());
     return ge::GRAPH_FAILED;
   }
-  const OpCompileInfoV2 op_compile_info(op_compile_info_key, op_compile_info_json);
+  const OpCompileInfoV2 op_compile_info(*op_compile_info_key, *op_compile_info_json);
 
   std::vector<int32_t> indexes;
   ReplaceEmptyShapeOfTensorDesc(op_desc, indexes);
@@ -379,28 +380,28 @@ ge::graphStatus TurnToOpParaCalculateV3(const ge::Operator &op_param, OpRunInfoV
                                         const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func) {
   ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
-  std::string op_compile_info_key;
-  if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY, op_compile_info_key)) {
+  const std::string *op_compile_info_key = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY);
+  if (op_compile_info_key == nullptr) {
     GE_LOGE("Op[%s] does not have attr[%s].", op_desc->GetName().c_str(), COMPILE_INFO_KEY.c_str());
     return ge::GRAPH_FAILED;
   }
-  void* op_compile_json_ptr = CompileInfoCache::Instance().GetCompileInfo(op_compile_info_key);
+  void* op_compile_json_ptr = CompileInfoCache::Instance().GetCompileInfo(*op_compile_info_key);
   if (op_compile_json_ptr == nullptr) {
-    std::string op_compile_info_json;
-    if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON, op_compile_info_json)) {
+    const std::string *op_compile_info_json = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON);
+    if (op_compile_info_json == nullptr) {
       GE_LOGE("Op[%s] does not have attr[%s].", op_desc->GetName().c_str(), COMPILE_INFO_JSON.c_str());
       return ge::GRAPH_FAILED;
     }
-    const ge::AscendString compile_info_json_str = op_compile_info_json.c_str();
+    const ge::AscendString compile_info_json_str = op_compile_info_json->c_str();
     op_compile_json_ptr = (parse_func)(op_param, compile_info_json_str);
     if (op_compile_json_ptr == nullptr) {
-      REPORT_CALL_ERROR("E19999", "Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json.c_str(),
+      REPORT_CALL_ERROR("E19999", "Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json->c_str(),
                         op_desc->GetName().c_str(), op_desc->GetType().c_str());
-      GE_LOGE("Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json.c_str(),
+      GE_LOGE("Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json->c_str(),
               op_desc->GetName().c_str(), op_desc->GetType().c_str());
       return ge::GRAPH_FAILED;
     }
-    CompileInfoCache::Instance().SetCompileInfo(op_compile_info_key, op_compile_json_ptr);
+    CompileInfoCache::Instance().SetCompileInfo(*op_compile_info_key, op_compile_json_ptr);
   }
 
   std::vector<int32_t> indexes;
@@ -422,28 +423,28 @@ ge::graphStatus TurnToOpParaCalculateV4(const ge::Operator &op_param, OpRunInfoV
                                         const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func) {
   ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
-  std::string op_compile_info_key;
-  if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY, op_compile_info_key)) {
+  const std::string *op_compile_info_key = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY);
+  if (op_compile_info_key == nullptr) {
     GE_LOGE("Op[%s] does not have attr[%s].", op_desc->GetName().c_str(), COMPILE_INFO_KEY.c_str());
     return ge::GRAPH_FAILED;
   }
-  CompileInfoPtr op_compile_info_ptr = CompileInfoManager::Instance().GetCompileInfo(op_compile_info_key);
+  CompileInfoPtr op_compile_info_ptr = CompileInfoManager::Instance().GetCompileInfo(*op_compile_info_key);
   if (op_compile_info_ptr == nullptr) {
-    std::string op_compile_info_json;
-    if (!ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON, op_compile_info_json)) {
+    const std::string *op_compile_info_json = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_JSON);
+    if (op_compile_info_json == nullptr) {
       GE_LOGE("Op[%s] does not have attr[%s].", op_desc->GetName().c_str(), COMPILE_INFO_JSON.c_str());
       return ge::GRAPH_FAILED;
     }
-    const ge::AscendString compile_info_json_str = op_compile_info_json.c_str();
+    const ge::AscendString compile_info_json_str = op_compile_info_json->c_str();
     op_compile_info_ptr = (parse_func)(op_param, compile_info_json_str);
     if (op_compile_info_ptr == nullptr) {
-      REPORT_CALL_ERROR("E19999", "Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json.c_str(),
+      REPORT_CALL_ERROR("E19999", "Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json->c_str(),
                         op_desc->GetName().c_str(), op_desc->GetType().c_str());
-      GE_LOGE("Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json.c_str(),
+      GE_LOGE("Failed to parse compile json[%s] for op[%s, %s].", op_compile_info_json->c_str(),
               op_desc->GetName().c_str(), op_desc->GetType().c_str());
       return ge::GRAPH_FAILED;
     }
-    CompileInfoManager::Instance().SetCompileInfo(op_compile_info_key, op_compile_info_ptr);
+    CompileInfoManager::Instance().SetCompileInfo(*op_compile_info_key, op_compile_info_ptr);
   }
 
   std::vector<int32_t> indexes;
@@ -489,38 +490,56 @@ ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_inf
   return ge::GRAPH_SUCCESS;
 }
 
-extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_info) {
-  ge::AscendString op_type;
-  (void)op.GetOpType(op_type);
-  auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
-  auto iter = op_func_map.find(op_type.GetString());
-  if (iter == op_func_map.end()) {
-    GELOGI("Do optiling function is not found by op type[%s].", op_type.GetString());
-    iter = op_func_map.find(OP_TYPE_AUTO_TILING);
-    if (iter == op_func_map.end()) {
-      GELOGI("Optiling function of op type[%s] is not found by Autotiling.", op_type.GetString());
-      REPORT_CALL_ERROR("EZ9999", "Optiling function is not found. op_type[%s].", op_type.GetString());
-      return ge::GRAPH_FAILED;
-    }
+OpTilingFuncInfo *GetOpTilingInfo(const ge::OpDescPtr &op_desc) {
+  if (op_desc == nullptr) {
+    GE_LOGE("[Get][OpTilingInfo] failed, op_desc is nullptr.");
+    REPORT_CALL_ERROR("EZ9999", "[Get][OpTilingInfo] failed, op_desc is nullptr.");
+    return nullptr;
   }
-  OpTilingFuncInfo &op_func_info = iter->second;
+  if (op_desc->GetTilingFuncInfo() == nullptr) {
+    std::string op_type = op_desc->GetType();
+    auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+    auto iter = op_func_map.find(op_type);
+    if (iter == op_func_map.end()) {
+      GELOGI("Do optiling function is not found by op type[%s].", op_type.c_str());
+      iter = op_func_map.find(OP_TYPE_AUTO_TILING);
+      if (iter == op_func_map.end()) {
+        GE_LOGE("Optiling function of op type[%s] is not found by Autotiling.", op_type.c_str());
+        REPORT_CALL_ERROR("EZ9999", "Optiling function is not found. op_type[%s].", op_type.c_str());
+        return nullptr;
+      }
+    }
+    op_desc->SetTilingFuncInfo(::ge::PtrToPtr<OpTilingFuncInfo, void>(&(iter->second)));
+    return &(iter->second);
+  }
+  return ::ge::PtrToPtr<void, OpTilingFuncInfo>(op_desc->GetTilingFuncInfo());
+}
+
+extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_info) {
+  const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  OpTilingFuncInfo *op_func_info = GetOpTilingInfo(op_desc);
+  if (op_func_info == nullptr) {
+    GE_LOGE("Optiling function is not found.");
+    REPORT_CALL_ERROR("EZ9999", "Optiling function is not found.");
+    return ge::GRAPH_FAILED;
+  }
   ge::graphStatus ret = ge::GRAPH_FAILED;
-  if (op_func_info.IsFunctionV4()) {
-    const OpTilingFuncV4 &tiling_func = op_func_info.GetOpTilingFuncV4();
-    const OpParseFuncV4 &parse_func = op_func_info.GetOpParseFuncV4();
+  if (op_func_info->IsFunctionV4()) {
+    const OpTilingFuncV4 &tiling_func = op_func_info->GetOpTilingFuncV4();
+    const OpParseFuncV4 &parse_func = op_func_info->GetOpParseFuncV4();
     ret = TurnToOpParaCalculateV4(op, run_info, tiling_func, parse_func);
-  } else if (op_func_info.IsFunctionV3()) {
-    const OpTilingFuncV3 &tiling_func = op_func_info.GetOpTilingFuncV3();
-    const OpParseFuncV3 &parse_func = op_func_info.GetOpParseFuncV3();
+  } else if (op_func_info->IsFunctionV3()) {
+    const OpTilingFuncV3 &tiling_func = op_func_info->GetOpTilingFuncV3();
+    const OpParseFuncV3 &parse_func = op_func_info->GetOpParseFuncV3();
     ret = TurnToOpParaCalculateV3(op, run_info, tiling_func, parse_func);
-  } else if (op_func_info.IsFunctionV2()) {
-    const OpTilingFuncV2  &tiling_func = op_func_info.GetOpTilingFuncV2();
+  } else if (op_func_info->IsFunctionV2()) {
+    const OpTilingFuncV2  &tiling_func = op_func_info->GetOpTilingFuncV2();
     ret = TurnToOpParaCalculateV2(op, run_info, tiling_func);
-  } else if (op_func_info.IsFunctionV1()) {
-    const OpTilingFunc  &tiling_func = op_func_info.GetOpTilingFunc();
+  } else if (op_func_info->IsFunctionV1()) {
+    const OpTilingFunc  &tiling_func = op_func_info->GetOpTilingFunc();
     ret = TurnToOpParaCalculateV1(op, run_info, tiling_func);
   } else {
-    GE_LOGE("Optiling func of op type[%s] is all empty.", op_type.GetString());
+    GE_LOGE("Optiling func of op type[%s] is all empty.", op_desc->GetType().c_str());
   }
   if (ret == ge::GRAPH_SUCCESS) {
     return PostProcCalculateV2(op, run_info);
@@ -879,30 +898,42 @@ ge::graphStatus TurnToOpAtomicCalculateV4(const ge::OpDescPtr &op_desc_ptr, OpRu
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
+OpTilingFuncInfo *GetOpAtomicTilingInfo(const ge::OpDescPtr &op_desc) {
+  if (op_desc == nullptr) {
+    return nullptr;
+  }
+  if (op_desc->GetAtomicTilingFuncInfo() == nullptr) {
+    auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+    const auto iter = op_func_map.find(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+    if (iter == op_func_map.end()) {
+      GE_LOGE("Atomic optiling func not found of op[%s, %s].",
+              op_desc->GetName().c_str(), op_desc->GetType().c_str());
+      return nullptr;
+    }
+    op_desc->SetAtomicTilingFuncInfo(::ge::PtrToPtr<OpTilingFuncInfo, void>(&(iter->second)));
+    return &(iter->second);
+  }
+  return ::ge::PtrToPtr<void, OpTilingFuncInfo>(op_desc->GetAtomicTilingFuncInfo());
+}
+
 extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, OpRunInfoV2 &run_info) {
   const ge::OpDescPtr op_desc_ptr = node.GetOpDesc();
-  auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
-  const auto iter = op_func_map.find(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
-  if (iter == op_func_map.end()) {
-    GE_LOGE("Atomic optiling func not found of op[%s, %s].",
-            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
-    return ge::GRAPH_FAILED;
-  }
-  OpTilingFuncInfo &op_func_info = iter->second;
+  OpTilingFuncInfo *op_func_info = GetOpAtomicTilingInfo(op_desc_ptr);
+  GE_CHECK_NOTNULL(op_func_info);
   ge::graphStatus status = ge::GRAPH_FAILED;
-  if (op_func_info.IsFunctionV4()) {
-    const OpTilingFuncV4 &tiling_func = op_func_info.GetOpTilingFuncV4();
-    const OpParseFuncV4 &parse_func = op_func_info.GetOpParseFuncV4();
+  if (op_func_info->IsFunctionV4()) {
+    const OpTilingFuncV4 &tiling_func = op_func_info->GetOpTilingFuncV4();
+    const OpParseFuncV4 &parse_func = op_func_info->GetOpParseFuncV4();
     status = TurnToOpAtomicCalculateV4(op_desc_ptr, run_info, tiling_func, parse_func);
-  } else if (op_func_info.IsFunctionV3()) {
-    const OpTilingFuncV3 &tiling_func = op_func_info.GetOpTilingFuncV3();
-    const OpParseFuncV3 &parse_func = op_func_info.GetOpParseFuncV3();
+  } else if (op_func_info->IsFunctionV3()) {
+    const OpTilingFuncV3 &tiling_func = op_func_info->GetOpTilingFuncV3();
+    const OpParseFuncV3 &parse_func = op_func_info->GetOpParseFuncV3();
     status = TurnToOpAtomicCalculateV3(op_desc_ptr, run_info, tiling_func, parse_func);
-  } else if (op_func_info.IsFunctionV2()) {
-    const OpTilingFuncV2 &tiling_func = op_func_info.GetOpTilingFuncV2();
+  } else if (op_func_info->IsFunctionV2()) {
+    const OpTilingFuncV2 &tiling_func = op_func_info->GetOpTilingFuncV2();
     status = TurnToOpAtomicCalculateV2(op_desc_ptr, run_info, tiling_func);
-  } else if (op_func_info.IsFunctionV1()) {
-    const OpTilingFunc &tiling_func = op_func_info.GetOpTilingFunc();
+  } else if (op_func_info->IsFunctionV1()) {
+    const OpTilingFunc &tiling_func = op_func_info->GetOpTilingFunc();
     status = TurnToOpAtomicCalculateV1(op_desc_ptr, run_info, tiling_func);
   } else {
     GE_LOGE("Optiling func of op type[%s] is all empty.", op_desc_ptr->GetType().c_str());

@@ -27,6 +27,32 @@ bool op_tiling_stub_v1(const TeOpParas &op_paras, const OpCompileInfo &compile_i
   return true;
 }
 
+static string parse_int(const std::stringstream& tiling_data) {
+  auto data = tiling_data.str();
+  string result;
+  int32_t tmp = 0;
+  for (size_t i = 0; i < data.length(); i += sizeof(int32_t)) {
+    memcpy(&tmp, data.c_str() + i, sizeof(tmp));
+    result += std::to_string(tmp);
+    result += " ";
+  }
+
+  return result;
+}
+
+static string parse_int(void *const addr_base, const uint64_t size) {
+  char *data = reinterpret_cast<char *>(addr_base);
+  string result;
+  int32_t tmp = 0;
+  for (size_t i = 0; i < size; i += sizeof(int32_t)) {
+    memcpy(&tmp, data + i, sizeof(tmp));
+    result += std::to_string(tmp);
+    result += " ";
+  }
+
+  return result;
+}
+
 REGISTER_OP_TILING(ReluV1, op_tiling_stub_v1);
 //REGISTER_OP_TILING(DynamicAtomicAddrClean, op_tiling_stub_v1);
 
@@ -44,10 +70,17 @@ TEST_F(RegisterOpTilingV1UT, op_para_calculate_v1_1) {
 
   ComputeGraphPtr graph = make_shared<ComputeGraph>("test");
   NodePtr node = graph->AddNode(op_desc);
+  EXPECT_EQ(op_desc->GetTilingFuncInfo(), nullptr);
   auto op = OpDescUtils::CreateOperatorFromNode(node);
   utils::OpRunInfo run_info;
   graphStatus ret = OpParaCalculateV2(op, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
+  auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  auto iter = op_func_map.find("ReluV1");
+  EXPECT_NE(iter, op_func_map.end());
+  EXPECT_NE(&(iter->second), nullptr);
+  EXPECT_EQ(op_desc->GetTilingFuncInfo(), reinterpret_cast<void *>(&(iter->second)));
+  EXPECT_EQ(OpParaCalculateV2(op, run_info), GRAPH_SUCCESS);
 }
 
 TEST_F(RegisterOpTilingV1UT, op_para_calculate_v1_2) {
@@ -73,8 +106,14 @@ TEST_F(RegisterOpTilingV1UT, op_para_calculate_v1_2) {
   op_func_info.tiling_func_ = op_tiling_stub_v1;
   std::unordered_map<std::string, OpTilingFuncInfo> &tiling_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   tiling_func_map.emplace(OP_TYPE_AUTO_TILING, op_func_info);
+  EXPECT_EQ(op_desc->GetTilingFuncInfo(), nullptr);
   ret = OpParaCalculateV2(op, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
+  auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  auto iter = op_func_map.find(OP_TYPE_AUTO_TILING);
+  EXPECT_NE(iter, op_func_map.end());
+  EXPECT_NE(&(iter->second), nullptr);
+  EXPECT_EQ(op_desc->GetTilingFuncInfo(), reinterpret_cast<void *>(&(iter->second)));
   tiling_func_map.erase(OP_TYPE_AUTO_TILING);
 }
 
@@ -144,8 +183,14 @@ TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_1) {
   op_func_info.tiling_func_ = op_tiling_stub_v1;
   tiling_func_map.emplace(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN, op_func_info);
   utils::OpRunInfo run_info;
+  EXPECT_EQ(op_desc->GetAtomicTilingFuncInfo(), nullptr);
   graphStatus ret = OpAtomicCalculateV2(*node, run_info);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
+  auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
+  auto iter = op_func_map.find(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
+  EXPECT_NE(iter, op_func_map.end());
+  EXPECT_NE(&(iter->second), nullptr);
+  EXPECT_EQ(op_desc->GetAtomicTilingFuncInfo(), reinterpret_cast<void *>(&(iter->second)));
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
@@ -201,4 +246,50 @@ TEST_F(RegisterOpTilingV1UT, op_atomic_calculate_v1_3) {
   tiling_func_map.erase(OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN);
 }
 
+TEST_F(RegisterOpTilingV1UT, add_tiling_data) {
+  utils::OpRunInfo run_info;
+
+  int32_t data1 = 123;
+  int32_t data2 = 456;
+  run_info.AddTilingData(data1);
+  run_info.AddTilingData(data2);
+  run_info.SetClearAtomic(false);
+  run_info.SetTilingKey(100);
+  std::vector<int64_t> workspace{1, 2, 3};
+  run_info.SetWorkspaces(workspace);
+  std::string get_data = parse_int(run_info.GetAllTilingData());
+  EXPECT_EQ(get_data, "123 456 ");
+  EXPECT_EQ(run_info.GetClearAtomic(), false);
+  EXPECT_EQ(run_info.GetTilingKey(), 100);
+  EXPECT_EQ(run_info.GetWorkspaceNum(), 3);
+  EXPECT_EQ(run_info.GetAllWorkspaces(), workspace);
+
+  run_info.GetAllTilingData().str("");
+  run_info.AddTilingData(reinterpret_cast<const char *>(&data2), sizeof(int));
+  get_data = parse_int(run_info.GetAllTilingData());
+  EXPECT_EQ(get_data, "456 ");
+
+  char arg_base[20] = {0};
+  run_info.ResetWorkspace();
+  run_info.ResetAddrBase(arg_base, sizeof(arg_base));
+  data1 = 78;
+  data2 = 90;
+  run_info.AddTilingData(data1);
+  run_info.AddTilingData(data2);
+  run_info.AddWorkspace(4);
+  run_info.AddWorkspace(5);
+  get_data = parse_int(arg_base, sizeof(int) * 2);
+  EXPECT_EQ(get_data, "78 90 ");
+  workspace = std::vector<int64_t>{4, 5};
+  EXPECT_EQ(run_info.GetAllWorkspaces(), workspace);
+
+  run_info.ResetWorkspace();
+  run_info.ResetAddrBase(arg_base, sizeof(arg_base));
+  run_info.AddTilingData(reinterpret_cast<const char *>(&data2), sizeof(int));
+  run_info.AddWorkspace(6);
+  get_data = parse_int(arg_base, sizeof(int));
+  EXPECT_EQ(get_data, "90 ");
+  workspace = std::vector<int64_t>{6};
+  EXPECT_EQ(run_info.GetAllWorkspaces(), workspace);
+}
 }

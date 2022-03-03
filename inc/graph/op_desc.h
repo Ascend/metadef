@@ -176,6 +176,14 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   std::function<graphStatus(Operator &)> GetInferFunc() const;
 
+  void *GetTilingFuncInfo() const;
+
+  void SetTilingFuncInfo(void *tiling_func_info);
+
+  void *GetAtomicTilingFuncInfo() const;
+
+  void SetAtomicTilingFuncInfo(void *atomic_tiling_func_info);
+
   graphStatus InferShapeAndType();
 
   void AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func);
