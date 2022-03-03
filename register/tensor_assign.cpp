@@ -160,6 +160,10 @@ Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::prot
   GE_CHECK_NOTNULL(weight);
   const bool zerosLike = ((count != val_size) && (val_size == 1));
   std::vector<uint16_t> addr(static_cast<uint64_t>(count));
+  if (val_size == 0) {  // addr has been zero initialized
+    (void)weight->SetData(ge::PtrToPtr<uint16_t, uint8_t>(addr.data()), static_cast<size_t>(count) * sizeof(uint16_t));
+    return SUCCESS;
+  }
   if (!zerosLike) {
     const int32_t minCount = (count > val_size) ? val_size : count;
     for (int32_t i = 0; i < minCount; i++) {
@@ -182,6 +186,10 @@ Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::
   GE_CHECK_NOTNULL(weight);
   const bool zerosLike = ((count != val_size) && (val_size == 1));
   std::vector<uint8_t> addr(static_cast<uint64_t>(count));
+  if (val_size == 0) {  // addr has been zero initialized
+    (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.data()), static_cast<size_t>(count) * sizeof(uint8_t));
+    return SUCCESS;
+  }
   if (!zerosLike) {
     const int32_t minCount = (count > val_size) ? val_size : count;
     for (int32_t i = 0; i < minCount; i++) {
@@ -439,7 +447,7 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
 
   weight->SetTensorDesc(tmp_desc);
 
-  if (datatype_val_size > 0) {
+  if (datatype_val_size > 0 || ((datatype_val_size == 0) && (count > 0) && tensor.tensor_content().empty())) {
     SetGeTensorWeightData(tensor, datatype_val_size, count, weight);
     const int64_t origin_element_num = static_cast<int64_t>(datatype_val_size);
     GE_CHK_BOOL_EXEC(ge::AttrUtils::SetInt(weight->MutableTensorDesc(), kOriginElementNumAttrName, origin_element_num),

@@ -148,7 +148,11 @@ TEST_F(AutoMappingUtils, ConvertTensor) {
 
   tensor.set_dtype(domi::tensorflow::DT_UINT16_REF);
   ret = ge::AutoMappingUtil::ConvertTensor(tensor, weight);
-  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  tensor.set_dtype(domi::tensorflow::DT_UINT8);
+  ret = ge::AutoMappingUtil::ConvertTensor(tensor, weight);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
 TEST_F(AutoMappingUtils, ConvertTensorList) {
