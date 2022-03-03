@@ -60,28 +60,28 @@ void ParseAndSetAttrListListValue(ge::Operator &op, const nlohmann::json &attr, 
 }
 
 void ParseAndSetAttrListListInt64Value(ge::Operator &op, const nlohmann::json &attr, const std::string &attr_name) {
-  std::vector<std::vector<int64_t>> attr_value_int64 = attr["value"].get<std::vector<std::vector<int64_t>>>();
+  const std::vector<std::vector<int64_t>> attr_value_int64 = attr["value"].get<std::vector<std::vector<int64_t>>>();
   (void)op.SetAttr(attr_name.c_str(), attr_value_int64);
 }
 
 const std::map<std::string, ParseAndSetAttrValuePtr> parse_attr_dtype_map = {
-    {"bool", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<bool>)},
-    {"float", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<float>)},
-    {"float32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<float>)},
-    {"int", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<int32_t>)},
-    {"int32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<int32_t>)},
-    {"int64", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<int64_t>)},
-    {"str", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrValue<std::string>)},
-    {"list_bool", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<bool>)},
-    {"list_float", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<float>)},
-    {"list_float32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<float>)},
-    {"list_int", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<int32_t>)},
-    {"list_int32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<int32_t>)},
-    {"list_int64", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<int64_t>)},
-    {"list_str", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListValue<std::string>)},
-    {"list_list_int", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListListValue)},
-    {"list_list_int32", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListListValue)},
-    {"list_list_int64", std::make_shared<ParseAndSetAttrValueFunc>(ParseAndSetAttrListListInt64Value)}};
+    {"bool", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<bool>)},
+    {"float", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<float>)},
+    {"float32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<float>)},
+    {"int", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int32_t>)},
+    {"int32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int32_t>)},
+    {"int64", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int64_t>)},
+    {"str", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<std::string>)},
+    {"list_bool", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<bool>)},
+    {"list_float", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<float>)},
+    {"list_float32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<float>)},
+    {"list_int", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int32_t>)},
+    {"list_int32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int32_t>)},
+    {"list_int64", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int64_t>)},
+    {"list_str", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<std::string>)},
+    {"list_list_int", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListValue)},
+    {"list_list_int32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListValue)},
+    {"list_list_int64", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListInt64Value)}};
 
 void ParseShapeDesc(const nlohmann::json &shape, std::vector<TeOpTensor> &tensors) {
   TeOpTensor tensor;
