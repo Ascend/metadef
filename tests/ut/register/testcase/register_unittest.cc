@@ -732,8 +732,21 @@ TEST_F(UtestRegister, optiling_py_interface) {
   const nlohmann::json j = R"([
       {
           "name": "test_0",
-          "dtype": "str",
-          "value": "1"
+          "dtype": "int8",
+          "value": 1,
+          "const_value": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "shape": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "format": "ND"
       },
       {
           "name": "test_1",
