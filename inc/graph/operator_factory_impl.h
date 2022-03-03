@@ -23,6 +23,7 @@
 #include <vector>
 #include "graph/operator_factory.h"
 #include "register/infer_data_slice_registry.h"
+#include "register/infer_axis_slice_registry.h"
 
 namespace ge {
 struct InferValueRangePara {
@@ -62,6 +63,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
 
   static InferDataSliceFunc GetInferDataSliceFunc(const std::string &operator_type);
 
+  static InferAxisSliceFunc GetInferAxisSliceFunc(const std::string &operator_type);
+
+  static InferAxisTypeInfoFunc GetInferAxisTypeInfoFunc(const std::string &operator_type);
+
   static graphStatus RegisterOperatorCreator(const std::string &operator_type, OpCreator const &op_creator);
 
   static graphStatus RegisterOperatorCreator(const std::string &operator_type, OpCreatorV2 const &op_creator);
@@ -82,6 +87,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
                                                  const bool use_cpu_kernel,
                                                  const InferValueRangeFunc &infer_value_range_func);
 
+  static graphStatus RegisterInferAxisSliceFunc(const std::string &operator_type,
+                                                const InferAxisSliceFunc &infer_axis_slice_func);
+
+  static graphStatus RegisterInferAxisTypeInfoFunc(const std::string &operator_type,
+                                                   const InferAxisTypeInfoFunc &infer_axis_type_info_func);
+
   static std::shared_ptr<std::map<std::string, OpCreator>> operator_creators_;
   static std::shared_ptr<std::map<std::string, OpCreatorV2>> operator_creators_v2_;
   static std::shared_ptr<std::map<std::string, InferShapeFunc>> operator_infershape_funcs_;
@@ -89,6 +100,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
   static std::shared_ptr<std::map<std::string, VerifyFunc>> operator_verify_funcs_;
   static std::shared_ptr<std::map<std::string, InferDataSliceFunc>> operator_infer_data_slice_funcs_;
   static std::shared_ptr<std::map<std::string, InferValueRangePara>> operator_infer_value_range_paras_;
+  static std::shared_ptr<std::map<std::string, InferAxisSliceFunc>> operator_infer_axis_slice_funcs_;
+  static std::shared_ptr<std::map<std::string, InferAxisTypeInfoFunc>> operator_infer_axis_type_info_funcs_;
 };
 }  // namespace ge
 

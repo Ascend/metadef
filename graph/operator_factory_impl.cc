@@ -29,6 +29,8 @@ std::shared_ptr<std::map<std::string, InferFormatFunc>> OperatorFactoryImpl::ope
 std::shared_ptr<std::map<std::string, VerifyFunc>> OperatorFactoryImpl::operator_verify_funcs_;
 std::shared_ptr<std::map<std::string, InferDataSliceFunc>> OperatorFactoryImpl::operator_infer_data_slice_funcs_;
 std::shared_ptr<std::map<std::string, InferValueRangePara>> OperatorFactoryImpl::operator_infer_value_range_paras_;
+std::shared_ptr<std::map<std::string, InferAxisSliceFunc>> OperatorFactoryImpl::operator_infer_axis_slice_funcs_;
+std::shared_ptr<std::map<std::string, InferAxisTypeInfoFunc>> OperatorFactoryImpl::operator_infer_axis_type_info_funcs_;
 
 Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, const std::string &operator_type) {
   if (operator_creators_v2_ != nullptr) {
@@ -275,6 +277,63 @@ graphStatus OperatorFactoryImpl::RegisterInferValueRangeFunc(const std::string &
 
   GELOGD("Optype[%s] infervalue func registered successfully, when_call = %d, use_cpu_kernel = %d",
          operator_type.c_str(), static_cast<int32_t>(when_call), static_cast<int32_t>(use_cpu_kernel));
+  return GRAPH_SUCCESS;
+}
+
+InferAxisSliceFunc OperatorFactoryImpl::GetInferAxisSliceFunc(const std::string &operator_type) {
+  if (operator_infer_axis_slice_funcs_ == nullptr) {
+    return nullptr;
+  }
+  const std::map<std::string, InferAxisSliceFunc>::const_iterator
+      it = operator_infer_axis_slice_funcs_->find(operator_type);
+  if (it == operator_infer_axis_slice_funcs_->cend()) {
+    return nullptr;
+  }
+  return it->second;
+}
+
+graphStatus OperatorFactoryImpl::RegisterInferAxisSliceFunc(const std::string &operator_type,
+                                                            const InferAxisSliceFunc &infer_axis_slice_func) {
+  if (operator_infer_axis_slice_funcs_ == nullptr) {
+    GELOGI("axis slice derivation funcs init");
+    operator_infer_axis_slice_funcs_ = MakeShared<std::map<std::string, InferAxisSliceFunc>>();
+    GE_CHECK_NOTNULL(operator_infer_axis_slice_funcs_);
+  }
+  const std::map<std::string, InferAxisSliceFunc>::const_iterator
+      it = operator_infer_axis_slice_funcs_->find(operator_type);
+  if (it != operator_infer_axis_slice_funcs_->cend()) {
+    return GRAPH_FAILED;
+  }
+  (void)operator_infer_axis_slice_funcs_->emplace(operator_type, infer_axis_slice_func);
+  return GRAPH_SUCCESS;
+}
+
+InferAxisTypeInfoFunc OperatorFactoryImpl::GetInferAxisTypeInfoFunc(const std::string &operator_type) {
+  if (operator_infer_axis_type_info_funcs_ == nullptr) {
+    return nullptr;
+  }
+  const std::map<std::string, InferAxisTypeInfoFunc>::const_iterator
+      it = operator_infer_axis_type_info_funcs_->find(operator_type);
+  if (it == operator_infer_axis_type_info_funcs_->cend()) {
+    return nullptr;
+  }
+  return it->second;
+}
+
+graphStatus OperatorFactoryImpl::RegisterInferAxisTypeInfoFunc(const std::string &operator_type,
+                                                               const InferAxisTypeInfoFunc &infer_axis_type_info_func) {
+  if (operator_infer_axis_type_info_funcs_ == nullptr) {
+    GELOGI("axis type info derivation funcs init");
+    operator_infer_axis_type_info_funcs_ = MakeShared<std::map<std::string, InferAxisTypeInfoFunc>>();
+    GE_CHECK_NOTNULL(operator_infer_axis_type_info_funcs_);
+  }
+  const std::map<std::string, InferAxisTypeInfoFunc>::const_iterator
+      it = operator_infer_axis_type_info_funcs_->find(operator_type);
+  if (it != operator_infer_axis_type_info_funcs_->cend()) {
+    GELOGW("[Register][InferFunc] optype[%s] has registered axis type info func", operator_type.c_str());
+    return GRAPH_FAILED;
+  }
+  (void)operator_infer_axis_type_info_funcs_->emplace(operator_type, infer_axis_type_info_func);
   return GRAPH_SUCCESS;
 }
 }  // namespace ge
