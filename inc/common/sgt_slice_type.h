@@ -27,7 +27,7 @@
 namespace ffts {
 const std::string kAttrSgtJsonInfo = "_sgt_json_info";
 const std::string kAttrSgtStructInfo = "_sgt_struct_info";
-const char kSgtTillingNum = 2;
+const size_t kSgtTillingNum = 2;
 
 struct OpCut {
     int16_t split_cut_idx = -1;
@@ -69,8 +69,8 @@ struct ThreadSliceMap {
     is_first_node_in_topo_order = false;
     is_input_node_of_thread_scope = false;
     is_output_node_of_thread_scope = false;
-    thread_mode = 0;
-    thread_id = 0;
+    thread_mode = 0U;
+    thread_id = 0U;
   }
 };
 
