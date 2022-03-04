@@ -1071,7 +1071,7 @@ extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<O
   ge::graphStatus rc;
   uint32_t thread_id = 0U;
   optiling::utils::OpRunInfo run_info;
-  for (size_t i = 0U; i < static_cast<size_t>(ffts::kSgtTillingNum); i++) {
+  for (size_t i = 0U; i < ffts::kSgtTillingNum; i++) {
     // update node shape by thread slice info
     if (UpDateNodeShapeBySliceInfo(slice_info_ptr, op_desc, thread_id, ori_shape, in_out_idx) == ge::GRAPH_FAILED) {
       REPORT_CALL_ERROR("E19999", "Update shape failed.");
