@@ -1314,6 +1314,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 // for support overflow detection
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string GLOBLEWORKSPACE_STATUS;
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string GLOBLEWORKSPACE_STATUS_BYTES;
+
+// for value depend
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_VALUE_DEPEND;
 }  // namespace ge
 
 /*lint +e618*/
