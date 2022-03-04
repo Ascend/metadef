@@ -82,7 +82,7 @@ int64_t ConnectionMatrix::GetIndex(const ge::NodePtr &node) const {
   if (iter != name_to_index_.end()) {
     return iter->second;
   } else {
-    GE_LOGE("node %s is not found in name_to_index_", node->GetName().c_str());
+    GELOGW("node %s is not found in name_to_index_", node->GetName().c_str());
     return 0;
   }
 }

@@ -24,7 +24,8 @@
 #include "graph_builder_utils.h"
 #include "register/graph_optimizer/fusion_common/pattern_fusion_base_pass.h"
 #include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
-
+#include "graph/utils/connection_matrix.h"
+#include "graph/utils/connection_matrix_impl.h"
 #undef private
 
 using namespace ge;
@@ -431,4 +432,23 @@ TEST_F(UtestCycleDetection, Coverage_05) {
   std::unique_ptr<fe::ConnectionMatrix> connection_matrix;
   pass.GetConnectionMatrix(connection_matrix);
   pass.SetConnectionMatrix(connection_matrix);
+}
+
+TEST_F(UtestCycleDetection, Coverage_06) {
+  auto graph = std::make_shared<ge::ComputeGraph>("test");
+  auto connection_matrix = std::shared_ptr<fe::ConnectionMatrix>(new(std::nothrow) fe::ConnectionMatrix(*graph));
+
+  std::vector<ge::NodePtr> fusion_nodes;
+  BuildFusionGraph06(kNoCycleCase2, fusion_nodes);
+  connection_matrix->GetIndex(fusion_nodes[0]);
+}
+
+TEST_F(UtestCycleDetection, Coverage_07) {
+  auto graph = std::make_shared<ge::ComputeGraph>("test");
+  auto connection_matrix = std::shared_ptr<ge::ConnectionMatrixImpl>(new(std::nothrow)
+      ge::ConnectionMatrixImpl(graph));
+
+  std::vector<ge::NodePtr> fusion_nodes;
+  BuildFusionGraph06(kNoCycleCase2, fusion_nodes);
+  connection_matrix->GetIndex(fusion_nodes[0]);
 }
