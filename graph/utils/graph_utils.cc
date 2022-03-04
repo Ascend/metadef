@@ -597,8 +597,8 @@ graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
   } else {
     const auto sep = user_graph_name.rfind(MMPA_PATH_SEPARATOR_STR);
     if (sep == std::string::npos) {
-      relative_path.append("./");
-      relative_path.append(user_graph_name);
+      (void)relative_path.append("./");
+      (void)relative_path.append(user_graph_name);
     } else {
       const std::string file_name = user_graph_name.substr(sep + 1UL, user_graph_name.length());
       std::string path_dir = user_graph_name.substr(0UL, sep + 1UL);
@@ -611,8 +611,8 @@ graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
         GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", path_dir.c_str());
         path_dir = "./";
       }
-      relative_path.append(path_dir);
-      relative_path.append(file_name);
+      (void)relative_path.append(path_dir);
+      (void)relative_path.append(file_name);
     }
   }
 
@@ -686,7 +686,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   // Write file
   if (buffer.GetData() != nullptr) {
     ge::proto::ModelDef ge_proto;
-    const std::string str(reinterpret_cast<char_t *>(buffer.GetData()), buffer.GetSize());
+    const std::string str(PtrToPtr<uint8_t, char_t>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
       GELOGW("[Invoke][Parse] parse from model failed.");
       return;
@@ -731,7 +731,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
   // Write file
   if (buffer.GetData() != nullptr) {
     ge::proto::ModelDef ge_proto;
-    const std::string str(reinterpret_cast<char_t *>(buffer.GetData()), buffer.GetSize());
+    const std::string str(PtrToPtr<uint8_t, char_t>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
       GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
       return GRAPH_FAILED;
@@ -834,7 +834,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
 #ifdef FMK_SUPPORT_DUMP
   const MODE FILE_AUTHORITY = 384U; // 0600U in octal
   const int32_t fd = mmOpen2(real_path,
-      static_cast<int32_t>(M_WRONLY) | static_cast<int32_t>(M_CREAT) | static_cast<int32_t>(O_TRUNC), FILE_AUTHORITY);
+      static_cast<int32_t>(
+          static_cast<uint32_t>(M_WRONLY) | static_cast<uint32_t>(M_CREAT) | static_cast<uint32_t>(O_TRUNC)),
+      FILE_AUTHORITY);
   if (fd < 0) {
     REPORT_CALL_ERROR("E18888", "open file:%s failed, errormessage:%s", real_path, strerror(errno));
     GELOGE(GRAPH_FAILED, "[Open][File] failed for %s, reason:%s", real_path, strerror(errno));
