@@ -17,14 +17,7 @@
 #ifndef INC_GRAPH_OP_DESC_H_
 #define INC_GRAPH_OP_DESC_H_
 
-#include <functional>
-#include <algorithm>
-#include <map>
-#include <memory>
-#include <string>
-#include <set>
 #include <unordered_set>
-#include <vector>
 #include "detail/attributes_holder.h"
 #include "graph/range_vistor.h"
 #include "graph/ge_tensor.h"

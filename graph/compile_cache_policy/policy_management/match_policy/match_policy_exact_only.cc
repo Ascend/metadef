@@ -27,7 +27,6 @@ CacheItemId MatchPolicyExactOnly::GetCacheItemId(const CCStatType &cc_state, con
   const auto cached_info = std::find_if(info_vec.begin(), info_vec.end(), [&desc] (const CacheInfo &cached) {
       return (CompileCacheDesc::IsMatchedCompileDesc(cached.GetCompileCacheDesc(), desc));
   });
-
   if (cached_info != info_vec.end()) {
     return cached_info->GetItemId();
   } else {
