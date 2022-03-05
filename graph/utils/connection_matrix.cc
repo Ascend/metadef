@@ -88,7 +88,7 @@ void ConnectionMatrixImpl::Update(const ComputeGraphPtr &graph, const vector<Nod
   }
   LargeBitmap new_bit_vector(graph->GetDirectNode().size());
   new_bit_vector.SetValues(0U);
-  for (size_t i = 0; i < fusion_nodes.size(); i++) {
+  for (size_t i = 0U; i < fusion_nodes.size(); i++) {
     new_bit_vector.Or(GetBitMap(fusion_nodes[i]));
   }
   for (auto &node : graph->GetDirectNode()) {
@@ -108,7 +108,7 @@ void ConnectionMatrixImpl::Update(const ComputeGraphPtr &graph, const vector<Nod
 void ConnectionMatrixImpl::SetConnectivity(const Node::Vistor<NodePtr> &inputs, const NodePtr &node) {
   LargeBitmap &bitmap = GetBitMap(node);
   if (std::find(inputs.begin(), inputs.end(), node) == inputs.end()) {
-    bitmap.SetValues(0);
+    bitmap.SetValues(0U);
   }
 
   bitmap.SetBit(static_cast<size_t>(GetIndex(node)));
