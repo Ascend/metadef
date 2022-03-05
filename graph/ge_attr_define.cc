@@ -1309,4 +1309,7 @@ const std::string ATTR_NAME_MEM_RELEASE_FIRST_REUSE_FIRST = "_mem_release_first_
 // for support overflow detection
 const std::string GLOBLEWORKSPACE_STATUS = "_globleworkspace_status";
 const std::string GLOBLEWORKSPACE_STATUS_BYTES = "_globleworkspace_status_bytes";
+
+// for value depend
+const std::string ATTR_NAME_VALUE_DEPEND = "_is_value_depend";
 }  // namespace ge
