@@ -182,9 +182,12 @@ TEST_F(UtestCompileCachePolicy, CacheFindFailBecauseRangeFirst) {
   cache_desc.SetOpType("test_op");
   CompileCacheDesc cache_desc_match = cache_desc;
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  SmallVector<int64_t, kDefaultDimsNum> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
+  ASSERT_EQ(tensor_info.shape_.size(), 2);
+  ASSERT_EQ(tensor_info.shape_[0], -1);
+  ASSERT_EQ(tensor_info.shape_[1], -1);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
   tensor_info.SetShapeRange(ranges);
   cache_desc.AddTensorInfo(tensor_info);
