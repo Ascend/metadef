@@ -46,7 +46,6 @@ typedef struct tag_so_c_info {
   L2Type l2_type;
   uint64_t l2_size;
   uint32_t l2PageNum;
-  std::string core_type_list;
 } SoCInfo;
 
 typedef struct tag_ai_core_spec {
@@ -138,7 +137,6 @@ typedef struct tag_optional_info {
   std::string core_type;
   uint32_t ai_core_num;
   std::string l1_fusion_flag;
-  std::string core_type_list;
 } OptionalInfo;
 }  // namespace fe
 #endif

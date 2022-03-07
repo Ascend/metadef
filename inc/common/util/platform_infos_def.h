@@ -52,13 +52,11 @@ class OptionalInfos {
   uint32_t GetAICoreNum();
   std::string GetL1FusionFlag();
   std::map<std::string, std::vector<std::string>> GetFixPipeDtypeMap();
-  std::string GetCoreTypeList();
   void SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map);
   void SetSocVersion(std::string soc_version);
   void SetCoreType(std::string core_type);
   void SetAICoreNum(uint32_t ai_core_num);
   void SetL1FusionFlag(std::string l1_fusion_flag);
-  void SetCoreTypeList(std::string core_type_list);
  private:
   OptionalInfosImplPtr optional_infos_impl_{nullptr};
 };
