@@ -16,7 +16,6 @@
 #ifndef GRAPH_CONNECTION_MATRIX_H_
 #define GRAPH_CONNECTION_MATRIX_H_
 
-#include "graph/debug/ge_attr_define.h"
 #include "graph/node.h"
 #include "graph/graph.h"
 #include "graph/compute_graph.h"
