@@ -705,9 +705,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
   const auto sep = file_path.rfind(MMPA_PATH_SEPARATOR_STR);
   if (sep == std::string::npos) {
     REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
-                       std::vector<std::string>({
-                       file_path.c_str(),
-                       "Separator is not found in file_path."}));
+                       std::vector<std::string>({file_path.c_str(), "Separator is not found in file_path."}));
     GELOGE(GRAPH_FAILED, "[CheckParam] Separator is not found in file_path.file_path:%s", file_path.c_str());
     return GRAPH_FAILED;
   }
@@ -715,9 +713,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
   const std::string path_dir = file_path.substr(0UL, sep + 1UL);
   if ((file_name.length() == 0UL) || (path_dir.length() == 0UL)) {
     REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
-                       std::vector<std::string>({
-                       file_path.c_str(),
-                       "Path or filename is not set."}));
+                       std::vector<std::string>({file_path.c_str(), "Path or filename is not set."}));
     GELOGE(GRAPH_FAILED, "[Invalid]path or name invalid.file_path:%s", file_path.c_str());
     return GRAPH_FAILED;
   }
@@ -739,9 +735,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
     char_t real_path[MMPA_MAX_PATH] = {};
     if (mmRealPath(path_dir.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK) {
       REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
-                         std::vector<std::string>({
-                         path_dir.c_str(),
-                         "Directory does not exist."}));
+                         std::vector<std::string>({path_dir.c_str(), "Directory does not exist."}));
       GELOGE(GRAPH_FAILED, "[Get][RealPath]Directory %s does not exist.", path_dir.c_str());
       return GRAPH_FAILED;
     }
