@@ -71,7 +71,9 @@ class TensorInfoArgs {
   Format GetOriginFormat() const;
   DataType GetDataType() const;
   void SetShape(const std::vector<int64_t> &shape);
+  void SetShape(const SmallVector<int64_t, kDefaultDimsNum> &shape);
   void SetOriginShape(const std::vector<int64_t> &origin_shape);
+  void SetOriginShape(const SmallVector<int64_t, kDefaultDimsNum> &origin_shape);
   void SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &ranges);
   bool operator!=(const TensorInfoArgs &second) const;
 

@@ -139,12 +139,23 @@ void TensorInfoArgs::SetShape(const std::vector<int64_t> &shape) {
   }
 }
 
+void TensorInfoArgs::SetShape(const SmallVector<int64_t, kDefaultDimsNum> &shape) {
+  shape_.clear();
+  shape_ = shape;
+}
+
 void TensorInfoArgs::SetOriginShape(const std::vector<int64_t> &origin_shape) {
   origin_shape_.clear();
   for (const auto dim : origin_shape) {
     origin_shape_.emplace_back(dim);
   }
 }
+
+void TensorInfoArgs::SetOriginShape(const SmallVector<int64_t, kDefaultDimsNum> &origin_shape) {
+  origin_shape_.clear();
+  origin_shape_ = origin_shape;
+}
+
 void TensorInfoArgs::SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &ranges) {
   shape_range_.clear();
   for (const auto range : ranges) {
