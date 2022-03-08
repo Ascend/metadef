@@ -475,7 +475,7 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
                error_info.error_id.c_str(), path.c_str());
         return -1;
       }
-      GELOGI("add error code %s success", error_info.error_id.c_str());
+      GELOGI("add error_code %s success", error_info.error_id.c_str());
       (void)error_map_.emplace(error_info.error_id, error_info);
     }
   } catch (const nlohmann::json::exception &e) {
