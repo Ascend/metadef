@@ -355,11 +355,17 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   }
 
   ge::GeShape ge_shape(shape);
-  std::transform(dtype_str.begin(), dtype_str.end(), dtype_str.begin(), ::toupper);
-  dtype_str = "DT_" + dtype_str;
-  ge::DataType ge_dtype = ge::TypeUtils::SerialStringToDataType(dtype_str);
-  std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
-  ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
+  ge::DataType ge_dtype = ge::DT_UNDEFINED;
+  if (!dtype_str.empty()) {
+    std::transform(dtype_str.begin(), dtype_str.end(), dtype_str.begin(), ::toupper);
+    dtype_str = "DT_" + dtype_str;
+    ge_dtype = ge::TypeUtils::SerialStringToDataType(dtype_str);
+  }
+  ge::Format ge_format = ge::FORMAT_RESERVED;
+  if (!format_str.empty()) {
+    std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
+    ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
+  }
   ge::GeTensorDesc ge_tensor(ge_shape, ge_format, ge_dtype);
   ge_tensor.SetName(name);
   ge::GeTensor const_tensor(ge_tensor, res.first->second);
