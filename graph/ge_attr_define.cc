@@ -1312,4 +1312,7 @@ const std::string GLOBLEWORKSPACE_STATUS_BYTES = "_globleworkspace_status_bytes"
 
 // for value depend
 const std::string ATTR_NAME_VALUE_DEPEND = "_is_value_depend";
+
+// for process node engine
+const std::string ATTR_NAME_PROCESS_NODE_ENGINE_ID = "_process_node_engine_id";
 }  // namespace ge
