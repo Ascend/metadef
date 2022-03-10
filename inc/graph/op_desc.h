@@ -203,6 +203,9 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   std::vector<std::string> GetRegisterOutputName() const;
 
+  void AppendIrAttrName(const std::string &name);
+  const std::vector<std::string> &GetIrAttrNames() const;
+
   using AttrHolder::AddRequiredAttr;
   using AttrHolder::DelAttr;
   using AttrHolder::GetAllAttrNames;
