@@ -1298,6 +1298,12 @@ graphStatus OpDescImpl::InferDataSlice(const OpDescPtr &op_desc) {
   op_proxy.BreakConnect();
   return ret;
 }
+void OpDescImpl::AppendIrAttrName(std::string name) {
+  ir_attr_names_.emplace_back(std::move(name));
+}
+const std::vector<std::string> &OpDescImpl::GetIrAttrNames() const {
+  return ir_attr_names_;
+}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc()
     : enable_shared_from_this(), AttrHolder(), impl_(ComGraphMakeShared<OpDescImpl>()) {
@@ -1878,5 +1884,11 @@ graphStatus OpDesc::GetSubgraphNameByInstanceName(const std::string &instance_na
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::InferDataSlice() {
   return impl_->InferDataSlice(shared_from_this());
+}
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::AppendIrAttrName(const std::string &name) {
+  return impl_->AppendIrAttrName(name);
+}
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::vector<std::string> &OpDesc::GetIrAttrNames() const {
+  return impl_->GetIrAttrNames();
 }
 }  // namespace ge

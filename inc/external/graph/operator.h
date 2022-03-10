@@ -85,6 +85,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   using OpListFloat = std::vector<float32_t>;
   using OpListString = std::vector<std::string>;
   using OpListAcendString = std::vector<AscendString>;
+  using OpListAscendString = OpListAcendString;
   using OpListBool = std::vector<bool>;
   using OpListTensor = std::vector<Tensor>;
   using OpBytes = std::vector<uint8_t>;
