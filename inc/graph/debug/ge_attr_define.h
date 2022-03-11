@@ -1317,6 +1317,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string GLOBLEWO
 
 // for value depend
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_VALUE_DEPEND;
+
+// for process node engine
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_PROCESS_NODE_ENGINE_ID;
 }  // namespace ge
 
 /*lint +e618*/
