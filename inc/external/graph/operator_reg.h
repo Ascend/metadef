@@ -131,7 +131,7 @@ using std::vector;
 #define REQUIRED_ATTR_AscendString(x)                                       \
   graphStatus get_attr_##x(AscendString &ret) const {                       \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
-      return GRAPH_FAILED                                                   \
+      return GRAPH_FAILED;                                                  \
     }                                                                       \
     return GRAPH_SUCCESS;                                                   \
   }
