@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <set>
 
 #include "graph/compiler_options.h"
 
@@ -34,7 +35,8 @@ class TypeID {
 
   ~TypeID() = default;
 
-  bool operator==(const TypeID &__arg) const { return type_ == __arg.type_; }
+  bool operator==(const TypeID &other) const { return type_ == other.type_; }
+  bool operator!=(const TypeID &other) const { return type_ != other.type_; }
 
  private:
   explicit TypeID(const std::string &type) : type_(type) {}
@@ -48,16 +50,19 @@ class AnyMap {
   bool Set(const std::string &name, const DT &val);
 
   template <class T>
-  bool Get(const std::string &name, T &retValue) const;
+  bool Get(const std::string &name, T &ret_value) const;
 
-  bool Has(const std::string &name) const { return anyValues_.find(name) != anyValues_.end(); }
+  template<class T>
+  const T *Get(const std::string &name) const;
+
+  bool Has(const std::string &name) const { return any_values_.find(name) != any_values_.end(); }
 
   void Swap(AnyMap &other) {
-    anyValues_.swap(other.anyValues_);
+    any_values_.swap(other.any_values_);
   }
 
   void Names(std::set<std::string> &names) const {
-    for (const auto &item : anyValues_) {
+    for (const auto &item : any_values_) {
       (void)names.emplace(item.first);
     }
   }
@@ -92,12 +97,12 @@ class AnyMap {
     const VT value_;
   };
 
-  std::map<std::string, std::shared_ptr<Placeholder>> anyValues_;
+  std::map<std::string, std::shared_ptr<Placeholder>> any_values_;
 };
 
 template <class DT>
 bool AnyMap::Set(const std::string &name, const DT &val) {
-  const auto it = anyValues_.find(name);
+  const auto it = any_values_.find(name);
 
   std::shared_ptr<Holder<DT>> tmp;
   try {
@@ -106,8 +111,8 @@ bool AnyMap::Set(const std::string &name, const DT &val) {
     tmp = nullptr;
   }
 
-  if (it == anyValues_.end()) {
-    (void)anyValues_.emplace(name, tmp);
+  if (it == any_values_.end()) {
+    (void) any_values_.emplace(name, tmp);
   } else {
     if (it->second && (it->second->GetTypeInfo() == TypeID::Of<DT>())) {
       it->second = tmp;
@@ -119,14 +124,26 @@ bool AnyMap::Set(const std::string &name, const DT &val) {
 }
 
 template <class T>
-bool AnyMap::Get(const std::string &name, T &retValue) const {
-  const auto it = anyValues_.find(name);
-  if ((it != anyValues_.end()) && it->second && (it->second->GetTypeInfo() == TypeID::Of<T>())) {
-    const auto retPtr = std::static_pointer_cast<Holder<T>>(it->second);
-    retValue = retPtr->value_;
-    return true;
+bool AnyMap::Get(const std::string &name, T &ret_value) const {
+  auto tp = Get<T>(name);
+  if (tp == nullptr) {
+    return false;
   }
-  return false;
+  ret_value = *tp;
+  return true;
+}
+
+template <class T>
+const T *AnyMap::Get(const std::string &name) const {
+  const auto iter = any_values_.find(name);
+  if (iter == any_values_.end()) {
+    return nullptr;
+  }
+  if (iter->second->GetTypeInfo() != TypeID::Of<T>()) {
+    return nullptr;
+  }
+  const auto holder = static_cast<Holder<T>*>(iter->second.get());
+  return &holder->value_;
 }
 }  // namespace ge
 #endif  // INC_GRAPH_DETAIL_ANY_MAP_H_

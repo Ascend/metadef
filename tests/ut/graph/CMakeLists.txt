@@ -94,6 +94,7 @@ set(UT_FILES
     "testcase/graph_debug_unittest.cc"
     "testcase/tuning_utils_unittest.cc"
     "testcase/cycle_detector_unittest.cc"
+    "testcase/amy_map_unittest.cc"
 )
 
 add_executable(ut_graph ${UT_FILES})
