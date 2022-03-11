@@ -347,7 +347,7 @@ ge::graphStatus TurnToOpParaCalculateV1(const ge::Operator &op, OpRunInfoV2 &run
 
 ge::graphStatus TurnToOpParaCalculateV2(const ge::Operator &op_param, OpRunInfoV2 &run_info,
                                         const OpTilingFuncV2 &tiling_func) {
-  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
+  const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   const std::string *op_compile_info_key = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY);
   if (op_compile_info_key == nullptr) {
@@ -378,7 +378,7 @@ ge::graphStatus TurnToOpParaCalculateV2(const ge::Operator &op_param, OpRunInfoV
 
 ge::graphStatus TurnToOpParaCalculateV3(const ge::Operator &op_param, OpRunInfoV2 &run_info,
                                         const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func) {
-  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
+  const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   const std::string *op_compile_info_key = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY);
   if (op_compile_info_key == nullptr) {
@@ -421,7 +421,7 @@ ge::graphStatus TurnToOpParaCalculateV3(const ge::Operator &op_param, OpRunInfoV
 
 ge::graphStatus TurnToOpParaCalculateV4(const ge::Operator &op_param, OpRunInfoV2 &run_info,
                                         const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func) {
-  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
+  const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_param);
   GELOGI("Do optiling, op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   const std::string *op_compile_info_key = ge::AttrUtils::GetStr(op_desc, COMPILE_INFO_KEY);
   if (op_compile_info_key == nullptr) {
@@ -497,7 +497,7 @@ OpTilingFuncInfo *GetOpTilingInfo(const ge::OpDescPtr &op_desc) {
     return nullptr;
   }
   if (op_desc->GetTilingFuncInfo() == nullptr) {
-    std::string op_type = op_desc->GetType();
+    const std::string op_type = op_desc->GetType();
     auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
     auto iter = op_func_map.find(op_type);
     if (iter == op_func_map.end()) {

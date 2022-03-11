@@ -354,7 +354,7 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
     return;  // CodeDEX complains 'CHECK_CONTAINER_EMPTY'
   }
 
-  ge::GeShape ge_shape(shape);
+  const ge::GeShape ge_shape(shape);
   ge::DataType ge_dtype = ge::DT_UNDEFINED;
   if (!dtype_str.empty()) {
     std::transform(dtype_str.begin(), dtype_str.end(), dtype_str.begin(), ::toupper);
