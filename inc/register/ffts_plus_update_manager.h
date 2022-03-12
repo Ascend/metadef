@@ -28,10 +28,15 @@
 namespace ge {
 using FftsCtxUpdatePtr = std::shared_ptr<FFTSPlusTaskUpdate>;
 using FftsCtxUpdateCreatorFun = std::function<FftsCtxUpdatePtr()>;
+class PluginSoManager;
 
 class FftsPlusUpdateManager {
  public:
   static FftsPlusUpdateManager &Instance();
+  /**
+   * For load so to register FFTSPlusTaskUpdate subclass constructor.
+   */
+  Status Initialize();
 
   /**
    * Get FFTS Plus context by core type.
@@ -50,7 +55,7 @@ class FftsPlusUpdateManager {
 
  private:
   FftsPlusUpdateManager() = default;
-  ~FftsPlusUpdateManager() = default;
+  ~FftsPlusUpdateManager();
 
   /**
    * Register FFTS Plus context update executor.
@@ -61,6 +66,9 @@ class FftsPlusUpdateManager {
 
   std::mutex mutex_;
   std::map<std::string, FftsCtxUpdateCreatorFun> creators_;
+  std::mutex init_mutex_;
+  std::unique_ptr<PluginSoManager> plugin_manager_;
+  bool is_init_{false};
 };
 } // namespace ge
 

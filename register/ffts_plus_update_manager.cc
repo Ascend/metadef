@@ -15,9 +15,26 @@
  */
 
 #include "register/ffts_plus_update_manager.h"
-#include "framework/common/debug/ge_log.h"
+#include "graph/debug/ge_util.h"
+#include "common/plugin_so_manager.h"
 
 namespace ge {
+namespace {
+const std::vector<std::string> kBasicFftsDependsEngineLibs = {"libfe_executor.so"};
+
+void GetLibPaths(std::string &lib_paths) {
+  const std::string base_path = GetModelPath();
+  GELOGI("base path is %s", base_path.c_str());
+  for (const auto &lib_name : kBasicFftsDependsEngineLibs) {
+    (void) lib_paths.append(base_path);
+    (void) lib_paths.append("/");
+    (void) lib_paths.append(lib_name);
+    (void) lib_paths.append(":");
+  }
+  GELOGI("Get lib paths for load. paths = %s", lib_paths.c_str());
+}
+}  // namespace
+
 FftsPlusUpdateManager &FftsPlusUpdateManager::Instance() {
   static FftsPlusUpdateManager instance;
   return instance;
@@ -49,4 +66,23 @@ void FftsPlusUpdateManager::RegisterCreator(const std::string &core_type, const 
   GELOGI("Register creator for core type: %s", core_type.c_str());
   creators_[core_type] = creator;
 }
-} // namespace ge
+
+Status FftsPlusUpdateManager::Initialize() {
+  const std::unique_lock<std::mutex> lk(init_mutex_);
+  if (is_init_) {
+    return SUCCESS;
+  }
+  std::string lib_paths;
+  GetLibPaths(lib_paths);
+  plugin_manager_ = ComGraphMakeUnique<PluginSoManager>();
+  GE_CHECK_NOTNULL(plugin_manager_);
+  GE_CHK_STATUS_RET(plugin_manager_->LoadSo(lib_paths), "[Load][Libs]Failed, lib_paths=%s.", lib_paths.c_str());
+  is_init_ = true;
+  return SUCCESS;
+}
+
+FftsPlusUpdateManager::~FftsPlusUpdateManager() {
+  creators_.clear();  // clear must be called before `plugin_manager_.reset` which would close so
+  plugin_manager_.reset();
+}
+}  // namespace ge

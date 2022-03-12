@@ -98,6 +98,7 @@ target_link_libraries(register PRIVATE
     c_sec
     slog
     graph
+    static_mmpa
     -Wl,--as-needed
     json
 )

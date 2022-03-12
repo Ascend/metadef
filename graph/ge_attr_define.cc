@@ -1254,6 +1254,8 @@ const std::string ATTR_NAME_DEPLOY_DEVICE_TYPE = "_device_type";
 const std::string ATTR_NAME_DEPLOY_DEVICE_ID = "_device_id";
 const std::string ATTR_NAME_DEPLOY_GRAPH_INPUTS = "_graph_inputs";
 const std::string ATTR_NAME_DEPLOY_NEED_RETURN_RESULT = "_need_return_result";
+const std::string ATTR_NAME_FORCE_ATTACH_STREAM = "_force_attach_stream";
+const std::string ATTR_NAME_RT_MEMCPY_KIND = "_rt_memcpy_kind";
 
 // for qos
 const std::string ATTR_NAME_QOS_SERVICE_LABEL = "_qos_service_label";

@@ -26,6 +26,7 @@ set(GRAPH_SOURCE_LIST
     "ge_attr_define.cc"
     "ge_tensor.cc"
     "common/large_bm.cc"
+    "common/plugin_so_manager.cc"
     "detail/attributes_holder.cc"
     "utils/anchor_utils.cc"
     "utils/tuning_utils.cc"
