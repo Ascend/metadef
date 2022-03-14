@@ -54,7 +54,11 @@ namespace {
         std::make_shared<GetNewShapeByAxisValueAndFormat>(
             ShapeTransferAccordingToFormat::GetFz3DTransposeShapeByAxisValue)},
     {ge::FORMAT_FRACTAL_ZN_LSTM, std::make_shared<GetNewShapeByAxisValueAndFormat>(
-        ShapeTransferAccordingToFormat::GetFzLstmShapeByAxisValue)}};
+        ShapeTransferAccordingToFormat::GetFzLstmShapeByAxisValue)},
+    {ge::FORMAT_FRACTAL_ZN_RNN, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetFznRNNShapeByAxisValue)},
+    {ge::FORMAT_ND_RNN_BIAS, std::make_shared<GetNewShapeByAxisValueAndFormat>(
+        ShapeTransferAccordingToFormat::GetNDRNNShapeByAxisValue)}};
 
     static std::map<ge::DataType, uint32_t> mapOfDtypeAndC0 = {
     {ge::DT_FLOAT16, SHAPE_NUMBER_16}, {ge::DT_FLOAT, SHAPE_NUMBER_16},  {ge::DT_INT8, SHAPE_NUMBER_32},
@@ -209,6 +213,67 @@ bool ShapeTransferAccordingToFormat::GetNzShapeByAxisValue(ge::GeShape &shape, c
   return true;
 }
 
+bool ShapeTransferAccordingToFormat::GetFznRNNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
+  CHECK(axis_value.empty() || axis_value.size() <= AXIS_STATE_SIZE,
+        GELOGD("AxisValue is empty or its size %zu <= AXIS_STATE_SIZE[%u]", axis_value.size(), AXIS_STATE_SIZE),
+        return true);
+  uint32_t origin_shape_size = static_cast<uint32_t>(shape.GetDimNum());
+  CHECK(origin_shape_size < MINIMUM_ND_TO_RNN_SHAPE_NUM, GELOGW("ndValue's dim num is less than 2!"), return true);
+
+  /* check nd shape value */
+  int64_t k_num;
+  int64_t n_num;
+  int64_t k_value = shape.GetDim(origin_shape_size - MINUS_VALUE_TWO);
+  int64_t hidden_or_state_size = axis_value[AXIS_HIDEEN_SIZE];
+  if (axis_value[AXIS_STATE_SIZE] != RNN_STATE_SIZE_DEFAULT_VALUE) {
+    hidden_or_state_size = axis_value[AXIS_STATE_SIZE];
+  }
+  if (k_value == hidden_or_state_size + axis_value[AXIS_INPUT_SIZE]) {
+    k_num = 2; // use input size and hidden size
+  } else if (k_value == hidden_or_state_size || k_value == axis_value[AXIS_INPUT_SIZE]) {
+    k_num = 1; // only use hidden size or input size
+  } else {
+    return true;
+  }
+  INT64_ZEROCHECK(axis_value[AXIS_HIDEEN_SIZE]);
+  int64_t n_value = shape.GetDim(origin_shape_size - MINUS_VALUE_ONE);
+  n_num = n_value / axis_value[AXIS_HIDEEN_SIZE];
+  /* axis_value is initialized as a size 6 vector. */
+  if (k_num == 1) {
+    shape.SetDim(origin_shape_size - MINUS_VALUE_TWO,
+                 DivisionCeiling(k_value, static_cast<int64_t>(SHAPE_NUMBER_16)));
+  } else {
+    shape.SetDim(origin_shape_size - MINUS_VALUE_TWO,
+                 DivisionCeiling(axis_value[AXIS_INPUT_SIZE], static_cast<int64_t>(SHAPE_NUMBER_16)) +
+                 DivisionCeiling(hidden_or_state_size, static_cast<int64_t>(SHAPE_NUMBER_16)));
+  }
+  INT64_MULCHECK(n_num, DivisionCeiling(axis_value[AXIS_HIDEEN_SIZE], axis_value[AXIS_C0]));
+  shape.SetDim(origin_shape_size - MINUS_VALUE_ONE,
+               n_num * DivisionCeiling(axis_value[AXIS_HIDEEN_SIZE], axis_value[AXIS_C0]));
+  shape.AppendDim(SHAPE_NUMBER_16);
+  shape.AppendDim(axis_value[AXIS_C0]);
+  return true;
+}
+
+bool ShapeTransferAccordingToFormat::GetNDRNNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value) {
+  CHECK(axis_value.empty() || axis_value.size() <= AXIS_HIDEEN_SIZE,
+        GELOGD("AxisValue is empty or its size %zu <= AXIS_HIDEEN_SIZE[%u]", axis_value.size(), AXIS_HIDEEN_SIZE),
+        return true);
+  CHECK(axis_value[AXIS_HIDEEN_SIZE] == 0, GELOGD("hidden_size is zero"), return true);
+  uint32_t size_of_original_vec = static_cast<uint32_t>(shape.GetDimNum());
+
+  /* check nd shape value */
+  int64_t n_value = shape.GetDim(size_of_original_vec - MINUS_VALUE_ONE);
+  int64_t n_num = n_value / axis_value[AXIS_HIDEEN_SIZE];
+
+  INT64_MULCHECK(n_num, DivisionCeiling(axis_value[AXIS_HIDEEN_SIZE], axis_value[AXIS_C0]));
+  INT64_MULCHECK(n_num * DivisionCeiling(axis_value[AXIS_HIDEEN_SIZE], axis_value[AXIS_C0]), axis_value[AXIS_C0]);
+  /* axis_value is initialized as a size 6 vector. */
+  shape.SetDim(size_of_original_vec - MINUS_VALUE_ONE,
+               n_num * DivisionCeiling(axis_value[AXIS_HIDEEN_SIZE], axis_value[AXIS_C0]) * axis_value[AXIS_C0]);
+  return true;
+}
+
 bool CheckInputParam(const ShapeAndFormat& shapeAndFormatInfo, ge::Format primary_new_format) {
   bool invalid_format =
       (shapeAndFormatInfo.oldFormat == ge::FORMAT_RESERVED || shapeAndFormatInfo.oldFormat >= ge::FORMAT_END) ||
@@ -228,6 +293,20 @@ bool CheckInputParam(const ShapeAndFormat& shapeAndFormatInfo, ge::Format primar
     return false;
   }
   return true;
+}
+
+void ShapeTransferAccordingToFormat::SetRNNAttr(const ShapeAndFormat &shape_and_format_info,
+                                                std::vector<int64_t> &axis_value) const {
+  if (shape_and_format_info.newFormat != ge::FORMAT_FRACTAL_ZN_RNN &&
+      shape_and_format_info.newFormat != ge::FORMAT_ND_RNN_BIAS) {
+    return;
+  }
+  if (axis_value.size() < AXIS_BOTTOM) {
+    return;
+  }
+  axis_value[AXIS_INPUT_SIZE] = shape_and_format_info.extra_attr.input_size;
+  axis_value[AXIS_HIDEEN_SIZE] = shape_and_format_info.extra_attr.hidden_size;
+  axis_value[AXIS_STATE_SIZE] = shape_and_format_info.extra_attr.state_size;
 }
 
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& shapeAndFormatInfo, int64_t* c) {
@@ -286,6 +365,7 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& s
     return true;
   }
 
+  SetRNNAttr(shapeAndFormatInfo, axis_value);
   (*getNewShapeFunc)(shapeAndFormatInfo.oldShape, axis_value);
   if (c != nullptr) {
     *c = axis_value[AXIS_C];

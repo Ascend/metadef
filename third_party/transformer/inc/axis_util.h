@@ -32,6 +32,7 @@ const size_t DIM_DEFAULT_SIZE = 4;
 const size_t DIM_SIZE_FIVE = 5;
 const size_t DIM_SIZE_SIX = 6;
 const uint32_t NCHW_DIMENSION_NUM = 4;
+const int64_t RNN_STATE_SIZE_DEFAULT_VALUE = -1;
 
 const int32_t AXIS_NCHW_DIM_N = 0;
 const int32_t AXIS_NCHW_DIM_C = 1;
@@ -147,7 +148,8 @@ enum AxisValueType {
   AXIS_G = 8,
   AXIS_INPUT_SIZE = 9,
   AXIS_HIDEEN_SIZE = 10,
-  AXIS_BOTTOM = 11
+  AXIS_STATE_SIZE = 11,
+  AXIS_BOTTOM = 12
 };
 
 inline int64_t DivisionCeiling(int64_t dividend, int64_t divisor) {
