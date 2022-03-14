@@ -104,7 +104,7 @@ Anchor::Anchor(const NodePtr &owner_node, const int32_t idx)
 
 Anchor::~Anchor() = default;
 
-bool Anchor::IsTypeOf(const TYPE type) const { return std::string(Anchor::TypeOf<Anchor>()) == std::string(type); }
+bool Anchor::IsTypeOf(const TYPE type) const { return strcmp(Anchor::TypeOf<Anchor>(), type) == 0; }
 
 Anchor::TYPE Anchor::GetSelfType() const {
   return TypeOf<Anchor>();
@@ -323,7 +323,7 @@ void Anchor::SetIdx(const int32_t index) {
 DataAnchor::DataAnchor(const NodePtr &owner_node, const int32_t idx) : Anchor(owner_node, idx) {}
 
 bool DataAnchor::IsTypeOf(const TYPE type) const {
-  if (std::string(Anchor::TypeOf<DataAnchor>()) == std::string(type)) {
+  if (strcmp(Anchor::TypeOf<DataAnchor>(), type) == 0) {
     return true;
   }
   return Anchor::IsTypeOf(type);
@@ -367,7 +367,7 @@ bool InDataAnchor::Equal(const AnchorPtr anchor) const {
 }
 
 bool InDataAnchor::IsTypeOf(const TYPE type) const {
-  if (std::string(Anchor::TypeOf<InDataAnchor>()) == std::string(type)) {
+  if (strcmp(Anchor::TypeOf<InDataAnchor>(), type) == 0) {
     return true;
   }
   return DataAnchor::IsTypeOf(type);
@@ -478,7 +478,7 @@ bool OutDataAnchor::Equal(const AnchorPtr anchor) const {
 }
 
 bool OutDataAnchor::IsTypeOf(const TYPE type) const {
-  if (std::string(Anchor::TypeOf<OutDataAnchor>()) == std::string(type)) {
+  if (strcmp(Anchor::TypeOf<OutDataAnchor>(), type) == 0) {
     return true;
   }
   return DataAnchor::IsTypeOf(type);
@@ -493,7 +493,7 @@ ControlAnchor::ControlAnchor(const NodePtr &owner_node) : Anchor(owner_node, -1)
 ControlAnchor::ControlAnchor(const NodePtr &owner_node, const int32_t idx) : Anchor(owner_node, idx) {}
 
 bool ControlAnchor::IsTypeOf(const TYPE type) const {
-  if (std::string(Anchor::TypeOf<ControlAnchor>()) == std::string(type)) {
+  if (strcmp(Anchor::TypeOf<ControlAnchor>(), type) == 0) {
     return true;
   }
   return Anchor::IsTypeOf(type);
@@ -569,7 +569,7 @@ bool InControlAnchor::Equal(const AnchorPtr anchor) const {
 }
 
 bool InControlAnchor::IsTypeOf(const TYPE type) const {
-  if (std::string(Anchor::TypeOf<InControlAnchor>()) == std::string(type)) {
+  if (strcmp(Anchor::TypeOf<InControlAnchor>(), type) == 0) {
     return true;
   }
   return ControlAnchor::IsTypeOf(type);
@@ -636,7 +636,7 @@ bool OutControlAnchor::Equal(const AnchorPtr anchor) const {
 }
 
 bool OutControlAnchor::IsTypeOf(const TYPE type) const {
-  if (std::string(Anchor::TypeOf<OutControlAnchor>()) == std::string(type)) {
+  if (strcmp(Anchor::TypeOf<OutControlAnchor>(), type) == 0) {
     return true;
   }
   return ControlAnchor::IsTypeOf(type);
