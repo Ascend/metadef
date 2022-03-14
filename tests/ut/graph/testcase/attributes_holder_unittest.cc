@@ -106,5 +106,59 @@ TEST_F(AttrHolderUt, Plus) {
   EXPECT_EQ(sub_attr_hodler.AddRequiredAttr("name"), GRAPH_FAILED);
 }
 
+TEST_F(AttrHolderUt, ExtAttrGetSuccess) {
+  SubAttrHolder holder;
+  EXPECT_EQ(holder.GetExtAttr<int32_t>("TestName"), nullptr);
+  holder.SetExtAttr<int32_t>("TestName", static_cast<int32_t>(10));
+  auto pi = holder.GetExtAttr<int32_t>("TestName");
+  ASSERT_NE(pi, nullptr);
+  EXPECT_EQ(*pi, 10);
+}
 
+TEST_F(AttrHolderUt, ExtAttrGetWrongType) {
+  SubAttrHolder holder;
+  EXPECT_EQ(holder.GetExtAttr<int32_t>("TestName"), nullptr);
+  holder.SetExtAttr<int32_t>("TestName", static_cast<int32_t>(10));
+  auto pi = holder.GetExtAttr<int32_t>("TestName");
+  ASSERT_NE(pi, nullptr);
+  auto p_int64 = holder.GetExtAttr<int64_t>("TestName");
+  ASSERT_EQ(p_int64, nullptr);
+}
+TEST_F(AttrHolderUt, ExtAttrGetClassSuccess) {
+  SubAttrHolder holder;
+  std::vector<int64_t> data = {1,2,10,20,100,200,1000,2000};
+  EXPECT_EQ(holder.GetExtAttr<std::vector<int64_t>>("TestName"), nullptr);
+  holder.SetExtAttr<std::vector<int64_t>>("TestName", data);
+  auto pd = holder.GetExtAttr<std::vector<int64_t>>("TestName");
+  ASSERT_NE(pd, nullptr);
+  EXPECT_EQ(*pd, data);
+}
+
+TEST_F(AttrHolderUt, ExtAttrGetSameAddress) {
+  SubAttrHolder holder;
+  std::vector<int64_t> data = {1,2,10,20,100,200,1000,2000};
+  holder.SetExtAttr<std::vector<int64_t>>("TestName", data);
+  auto pd = holder.GetExtAttr<std::vector<int64_t>>("TestName");
+  ASSERT_NE(pd, nullptr);
+
+  auto pd2 = holder.GetExtAttr<std::vector<int64_t>>("TestName");
+  ASSERT_NE(pd2, nullptr);
+
+  EXPECT_EQ(pd, pd2);
+}
+
+
+TEST_F(AttrHolderUt, ExtAttrTryGetSuccess) {
+  SubAttrHolder holder;
+  std::vector<int64_t> data1 = {1,2,10,20,100,200,1000,2000};
+  std::vector<int64_t> data2 = {1,2,10,20,100,200,1000,2000, 10000, 20000};
+
+  std::vector<int64_t> ret_data = holder.TryGetExtAttr("TestName", data1);
+  EXPECT_EQ(ret_data, data1);
+
+  holder.SetExtAttr<std::vector<int64_t>>("TestName", data2);
+  ret_data = holder.TryGetExtAttr("TestName", data1);
+  EXPECT_NE(ret_data, data1);
+  EXPECT_EQ(ret_data, data2);
+}
 }  // namespace ge

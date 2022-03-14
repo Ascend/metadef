@@ -164,6 +164,11 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
     return ret;
   }
 
+  template<class T>
+  const T *GetExtAttr(const std::string &name) const {
+    return extAttrs_.Get<T>(name);
+  }
+
  protected:
   AttrHolder & operator=(AttrHolder const &rhs) = default;
   graphStatus AddRequiredAttr(const std::string &name);
