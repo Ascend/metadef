@@ -17,6 +17,7 @@
 #ifndef METADEF_CXX_ASCEND_LIMITS_H
 #define METADEF_CXX_ASCEND_LIMITS_H
 #include <cstdint>
+#include <cstddef>
 
 namespace ge {
 constexpr uint32_t kDefaultMaxInputNum = 8U;
