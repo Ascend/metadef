@@ -56,7 +56,7 @@ TEST_F(UtestCompileCachePolicy, AddSameCache) {
   CompileCacheDesc cache_desc;
   cache_desc.SetOpType("test_op");
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
@@ -79,7 +79,7 @@ TEST_F(UtestCompileCachePolicy, AddDifferentOptypeCache) {
   CompileCacheDesc cache_desc;
   cache_desc.SetOpType("test_op");
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
@@ -100,11 +100,43 @@ TEST_F(UtestCompileCachePolicy, AddDifferentOptypeCache) {
   ASSERT_NE(cache_id_another, cache_id);
 }
 
+TEST_F(UtestCompileCachePolicy, AddDifferentUniqueIdCache) {
+  CompileCacheDesc cache_desc;
+  cache_desc.SetOpType("test_op");
+  TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
+  std::vector<int64_t> shape{-1,-1};
+  tensor_info.SetShape(shape);
+  tensor_info.SetOriginShape(shape);
+  std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
+  tensor_info.SetShapeRange(ranges);
+  cache_desc.AddTensorInfo(tensor_info);
+  uint8_t value = 9;
+  uint8_t *data = &value;
+  BinaryHolder holder(data, 1);
+  cache_desc.AddBinary(holder);
+  cache_desc.SetScopeId({1, 2});
+  ASSERT_EQ(cache_desc.scope_id_.size(), 2);
+  ASSERT_EQ(cache_desc.scope_id_[0], 1);
+  ASSERT_EQ(cache_desc.scope_id_[1], 2);
+  auto ccp = ge::CompileCachePolicy::Create(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
+      ge::AgingPolicyType::AGING_POLICY_LRU);
+  CacheItemId cache_id = ccp->AddCache(cache_desc);
+  ASSERT_NE(cache_id, -1);
+
+  cache_desc.SetScopeId({1, 3});
+  ASSERT_EQ(cache_desc.scope_id_.size(), 2);
+  ASSERT_EQ(cache_desc.scope_id_[0], 1);
+  ASSERT_EQ(cache_desc.scope_id_[1], 3);
+  CacheItemId cache_id_another = ccp->AddCache(cache_desc);
+  ASSERT_NE(cache_id_another, -1);
+  ASSERT_NE(cache_id_another, cache_id);
+}
+
 TEST_F(UtestCompileCachePolicy, AddDifferentBinarySizeCache) {
   CompileCacheDesc cache_desc;
   cache_desc.SetOpType("test_op");
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
@@ -128,7 +160,7 @@ TEST_F(UtestCompileCachePolicy, AddDifferentBinaryValueCache) {
   CompileCacheDesc cache_desc;
   cache_desc.SetOpType("test_op");
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
@@ -156,7 +188,7 @@ TEST_F(UtestCompileCachePolicy, AddDifferentTensorFormatCache) {
   CompileCacheDesc cache_desc;
   cache_desc.SetOpType("test_op");
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
@@ -208,7 +240,7 @@ TEST_F(UtestCompileCachePolicy, CacheFindFailBecauseRangeSecond) {
   cache_desc.SetOpType("test_op");
   CompileCacheDesc cache_desc_match = cache_desc;
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
@@ -253,7 +285,7 @@ TEST_F(UtestCompileCachePolicy, CacheFindSuccessCommonTest) {
   cache_desc.SetOpType("test_op");
   CompileCacheDesc cache_desc_match = cache_desc;
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};
@@ -277,7 +309,7 @@ TEST_F(UtestCompileCachePolicy, CacheDelTest) {
   CompileCacheDesc cache_desc;
   cache_desc.SetOpType("test_op");
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
-  std::vector<int64_t> shape{-1,-1}; 
+  std::vector<int64_t> shape{-1,-1};
   tensor_info.SetShape(shape);
   tensor_info.SetOriginShape(shape);
   std::vector<std::pair<int64_t, int64_t>> ranges{{1,10}, {1,10}};

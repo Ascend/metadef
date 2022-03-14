@@ -97,10 +97,12 @@ class CompileCacheDesc {
   void AddBinary(const BinaryHolder &holder);
   void AddBinary(BinaryHolder &&holder);
   void AddTensorInfo(const TensorInfoArgs &tensor_info);
+  void SetScopeId(const std::initializer_list<uint64_t> scope_id);
 
  private:
   static bool CheckWithoutTensorInfo(const CompileCacheDesc &first, const CompileCacheDesc &second);
-  std::string op_type_; // op name
+  std::string op_type_; // op type
+  SmallVector<uint64_t, kDefaultMaxInputNum> scope_id_; // graph_id and session_id
   SmallVector<TensorInfoArgs, kDefaultMaxInputNum> tensor_info_args_vec_; // input tensordescs
   SmallVector<BinaryHolder, kDefaultMaxInputNum> other_desc_; // attrs float float size
 };

@@ -250,6 +250,11 @@ void CompileCacheDesc::AddTensorInfo(const TensorInfoArgs &tensor_info) {
   return;
 }
 
+void CompileCacheDesc::SetScopeId(const std::initializer_list<uint64_t> scope_id) {
+  scope_id_= scope_id;
+  return;
+}
+
 bool CompileCacheDesc::CheckWithoutTensorInfo(const CompileCacheDesc &first,
     const CompileCacheDesc &second) {
   if ((first.op_type_ != second.op_type_) ||
@@ -257,6 +262,10 @@ bool CompileCacheDesc::CheckWithoutTensorInfo(const CompileCacheDesc &first,
     GELOGD("op_type_ %s, %s is not match or size %zu %zu is not match",
            first.op_type_.c_str(), second.op_type_.c_str(),
            first.tensor_info_args_vec_.size(), second.tensor_info_args_vec_.size());
+    return false;
+  }
+  if (first.scope_id_ != second.scope_id_) {
+    GELOGD("scope id is not match");
     return false;
   }
   if (first.other_desc_.size() != second.other_desc_.size()) {
