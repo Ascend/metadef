@@ -228,7 +228,7 @@ int32_t ErrorManager::Init() {
 int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const std::string &error_msg) {
   const uint64_t kMaxWorkSize = 1000UL;
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report error message");
+    GELOGI("ErrorManager has not inited, can't report error_message");
     return -1;
   }
   if (!IsInnerErrorCode(error_code)) {
@@ -246,7 +246,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     GenWorkStreamIdDefault();
   }
 
-  GELOGI("report error message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
+  GELOGI("report error_message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
 
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
@@ -281,7 +281,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
 int32_t ErrorManager::ReportErrMessage(const std::string error_code,
                                        const std::map<std::string, std::string> &args_map) {
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report error message");
+    GELOGI("ErrorManager has not inited, can't report error_message");
     return 0;
   }
 
@@ -289,7 +289,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
     GenWorkStreamIdDefault();
   }
 
-  GELOGI("report error message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
+  GELOGI("report error_message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
   const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator iter = error_map_.find(error_code);
   if (iter == error_map_.cend()) {
     GELOGE("[Report][Error]error_code %s is not registered", error_code.c_str());
@@ -538,7 +538,7 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
 void ErrorManager::ATCReportErrMessage(const std::string error_code, const std::vector<std::string> &key,
                                        const std::vector<std::string> &value) {
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report error message");
+    GELOGI("ErrorManager has not inited, can't report error_message");
     return;
   }
   std::map<std::string, std::string> args_map;
