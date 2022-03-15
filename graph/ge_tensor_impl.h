@@ -93,7 +93,7 @@ class GeTensorDescImpl {
       return device_type;
     }
 
-    std::string GetDeviceTypeStr();
+    std::string GetDeviceTypeStr() const;
 
     void SetDeviceType(const DeviceType v) {
       device_type = v;
