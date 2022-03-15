@@ -101,6 +101,7 @@ using GetNewShapeByAxisValueAndFormatPtr = std::shared_ptr<GetNewShapeByAxisValu
 struct CalcShapeExtraAttr {
   int64_t hidden_size;
   int64_t input_size;
+  int64_t state_size;
 };
 
 struct ShapeAndFormatInfo {
@@ -113,7 +114,7 @@ struct ShapeAndFormatInfo {
   ShapeAndFormatInfo(ge::GeShape &old_shape, const ge::Format &old_format, const ge::Format &new_format,
                      const ge::DataType &data_type)
                      : oldShape(old_shape), oldFormat(old_format), newFormat(new_format), currentDataType(data_type),
-                       group_count(1), extra_attr({1, 1}) {}
+                       group_count(1), extra_attr({1, 1, -1}) {}
 };
 
 using ShapeAndFormat = struct ShapeAndFormatInfo;
@@ -165,7 +166,14 @@ class ShapeTransferAccordingToFormat {
 
   static bool GetCHWNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
+  static bool GetFznRNNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value);
+
+  static bool GetNDRNNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value);
+
   static int64_t GetAsisEnlargeValue(const int64_t& cin, const int64_t& cout, const int64_t& c0, const int64_t& group);
+
+private:
+  void SetRNNAttr(const ShapeAndFormat &shape_and_format_info, std::vector<int64_t> &axis_value) const;
 
 };
 } // namespace transformer
