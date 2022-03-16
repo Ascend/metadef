@@ -247,8 +247,8 @@ class GraphPassUtil {
       const ge::OpDescPtr origin_op_desc_ptr = original_node->GetOpDesc();
       std::vector<std::string> names_tmp;
       const bool is_has_attr =
-              ge::AttrUtils::GetListStr(origin_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp)
-              && !names_tmp.empty();
+              ge::AttrUtils::GetListStr(origin_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp) &&
+              !names_tmp.empty();
       if (is_has_attr) {
         for (const auto &node_name : names_tmp) {
           if (!node_name.empty()) {
