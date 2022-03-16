@@ -20,14 +20,12 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
-#include "graph/anchor.h"
-#include "graph/utils/op_desc_utils.h"
+#include <memory>
 
 namespace ffts {
 const std::string kAttrSgtJsonInfo = "_sgt_json_info";
 const std::string kAttrSgtStructInfo = "_sgt_struct_info";
-const size_t kSgtTillingNum = 2;
+const size_t kSgtTillingNum = 2U;
 
 struct OpCut {
     int16_t split_cut_idx = -1;
@@ -74,8 +72,6 @@ struct ThreadSliceMap {
   }
 };
 
-
 using ThreadSliceMapPtr = std::shared_ptr<ThreadSliceMap>;
-
-}
+}  // namespace ffts
 #endif  // INC_COMMON_SGT_SLICE_TYPES_H_
