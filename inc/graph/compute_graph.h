@@ -223,6 +223,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
    *  Move Recv Event nodes before it`s control node
    */
   graphStatus ReorderEventNodes();
+  void ClearNodeList();
 
  protected:
   virtual ProtoAttrMap &MutableAttrMap() override;
@@ -261,8 +262,6 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   void PushBackToNodeList(const NodePtr &node);
 
   void EmplaceBackToNodeList(const NodePtr &node);
-
-  void ClearNodeList();
 
   friend class ModelSerializeImp;
   friend class GraphDebugImp;
