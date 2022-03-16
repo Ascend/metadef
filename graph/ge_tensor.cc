@@ -699,7 +699,7 @@ DataType GeTensorDescImpl::GetDataType() const {
   return dtype_;
 }
 
-std::string GeTensorDescImpl::ExtMeta::GetDeviceTypeStr() {
+std::string GeTensorDescImpl::ExtMeta::GetDeviceTypeStr() const {
   auto const iter = kDeviceToStrMap.find(device_type);
   if (iter != kDeviceToStrMap.end()) {
     return iter->second;
