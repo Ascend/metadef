@@ -242,8 +242,7 @@ graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr
 graphStatus OperatorImpl::GetInputConstDataOut(const uint32_t idx, ConstGeTensorPtr &ge_tensor) const {
   ge::OpIO out_handle("", 0, nullptr);
   if (GetInputImpl(idx, out_handle) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E18888", "index: %u get input impl failed", idx);
-    GELOGE(FAILED, "[Get][InputImpl] failed, input index: %u", idx);
+    GELOGW("[Get][InputImpl] failed, op name: %s, input index: %u", GetName().c_str(), idx);
     return GRAPH_FAILED;
   }
   if ((out_handle.GetOwner() != nullptr) && (out_handle.GetOwner()->GetOpDescImpl() != nullptr)) {
