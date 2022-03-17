@@ -3260,7 +3260,7 @@
         "Solution": "Try again with a valid path."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Invalid Path",
       "ErrCode": "EK0002",
@@ -3271,29 +3271,29 @@
         "Solution": "Try again with a valid path and correct path length."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Value NULL",
       "ErrCode": "EK0003",
-      "ErrMessage": "Param % is nullptr",
+      "ErrMessage": "Param % is nullptr.",
       "Arglist": "config",
       "suggestion": {
         "Possible Cause": "The input param is nulllptr.",
         "Solution": "Set this param to non-nullptr."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Value Not NULL",
       "ErrCode": "EK0004",
-      "ErrMessage": "Param % is not nullptr",
+      "ErrMessage": "Param % is not nullptr.",
       "Arglist": "config",
       "suggestion": {
         "Possible Cause": "The input param is non-nulllptr.",
         "Solution": "Try to set this param with nullptr."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Value Zero",
       "ErrCode": "EK0005",
@@ -3304,7 +3304,7 @@
         "Solution": "Try to enter a valid other than zero."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Value Invalid With Range",
       "ErrCode": "EK0006",
@@ -3315,7 +3315,7 @@
         "Solution": "Try to enter a valid value within the specified range."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Duplicatedly Set",
       "ErrCode": "EK0007",
@@ -3326,18 +3326,18 @@
         "Solution": "Set this config only once."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Switch Not Support",
       "ErrCode": "EK0008",
-      "ErrMessage": "dataTypeConfig: 0x%s, support switch: 0x%s",
+      "ErrMessage": "dataTypeConfig: 0x%s, support switch: 0x%s.",
       "Arglist": "switch_use,switch_support",
       "suggestion": {
         "Possible Cause": "Msprof not support this dataTypeConfig.",
         "Solution": "Try to enter a valid dataTypeConfig."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Switch Different",
       "ErrCode": "EK0009",
@@ -3348,7 +3348,7 @@
         "Solution": "Try to check the start and stop values of dataTypeConfig."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Param Not Loaded",
       "ErrCode": "EK0010",
@@ -3359,7 +3359,7 @@
         "Solution": "Try to enter a valid param that has been loaded."
       }
     },
-	{
+    {
       "errClass": "Configuration Errors",
       "errTitle": "Param Not Subscribed",
       "ErrCode": "EK0011",
@@ -3370,18 +3370,18 @@
         "Solution": "Try to enter a valid param that has been subscribed."
       }
     },
-	{
+    {
       "errClass": "Resource Errors",
-      "errTitle": "new Errors",
+      "errTitle": "Allocate Memory Errors",
       "ErrCode": "EK0201",
-      "ErrMessage": "Failed to allocate memory for dst buf %s",
+      "ErrMessage": "Failed to allocate memory for dst buf %s.",
       "Arglist": "buf_size",
       "suggestion": {
         "Possible Cause": "Too little available memory.",
         "Solution": "Try to close unused application."
       }
     },
-	{
+    {
       "errClass": "Default Error",
       "errTitle": "System Terminated",
       "ErrCode": "EK9999",
