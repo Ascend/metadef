@@ -3260,6 +3260,134 @@
         "Solution": "Try again with a valid path."
       }
     },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Invalid Path",
+      "ErrCode": "EK0002",
+      "ErrMessage": "%s is nullptr or its length does not equal with given length.",
+      "Arglist": "path",
+      "suggestion": {
+        "Possible Cause": "The path does not exist or the path length is incorrect.",
+        "Solution": "Try again with a valid path and correct path length."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Value NULL",
+      "ErrCode": "EK0003",
+      "ErrMessage": "Param % is nullptr",
+      "Arglist": "config",
+      "suggestion": {
+        "Possible Cause": "The input param is nulllptr.",
+        "Solution": "Set this param to non-nullptr."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Value Not NULL",
+      "ErrCode": "EK0004",
+      "ErrMessage": "Param % is not nullptr",
+      "Arglist": "config",
+      "suggestion": {
+        "Possible Cause": "The input param is non-nulllptr.",
+        "Solution": "Try to set this param with nullptr."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Value Zero",
+      "ErrCode": "EK0005",
+      "ErrMessage": "Param % is zero",
+      "Arglist": "config",
+      "suggestion": {
+        "Possible Cause": "The input is zero.",
+        "Solution": "Try to enter a valid other than zero."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Value Invalid With Range",
+      "ErrCode": "EK0006",
+      "ErrMessage": "%s:%s is invalid. It should be in range (%s, %s).",
+      "Arglist": "config,value,min,max",
+      "suggestion": {
+        "Possible Cause": "The entered value is out of range.",
+        "Solution": "Try to enter a valid value within the specified range."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Duplicatedly Set",
+      "ErrCode": "EK0007",
+      "ErrMessage": "%s:%s is duplicatedly set.",
+      "Arglist": "config,value",
+      "suggestion": {
+        "Possible Cause": "Config is duplicatedly set.",
+        "Solution": "Set this config only once."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Switch Not Support",
+      "ErrCode": "EK0008",
+      "ErrMessage": "dataTypeConfig: 0x%s, support switch: 0x%s",
+      "Arglist": "switch_use,switch_support",
+      "suggestion": {
+        "Possible Cause": "Msprof not support this dataTypeConfig.",
+        "Solution": "Try to enter a valid dataTypeConfig."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Switch Different",
+      "ErrCode": "EK0009",
+      "ErrMessage": "dataTypeConfig stop: %s, different from the start: %s.",
+      "Arglist": "switch_start,switch_end",
+      "suggestion": {
+        "Possible Cause": "The dataTypeConfig start value is different from the stop value.",
+        "Solution": "Try to check the start and stop values of dataTypeConfig."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Param Not Loaded",
+      "ErrCode": "EK0010",
+      "ErrMessage": "%s:%s is not loaded.",
+      "Arglist": "param,value",
+      "suggestion": {
+        "Possible Cause": "The param has not been loaded.",
+        "Solution": "Try to enter a valid param that has been loaded."
+      }
+    },
+	{
+      "errClass": "Configuration Errors",
+      "errTitle": "Param Not Subscribed",
+      "ErrCode": "EK0011",
+      "ErrMessage": "%s:%s has not been subscribed.",
+      "Arglist": "param,value",
+      "suggestion": {
+        "Possible Cause": "The param has not been subscribed.",
+        "Solution": "Try to enter a valid param that has been subscribed."
+      }
+    },
+	{
+      "errClass": "Resource Errors",
+      "errTitle": "new Errors",
+      "ErrCode": "EK0201",
+      "ErrMessage": "Failed to allocate memory for dst buf %s",
+      "Arglist": "buf_size",
+      "suggestion": {
+        "Possible Cause": "Too little available memory.",
+        "Solution": "Try to close unused application."
+      }
+    },
+	{
+      "errClass": "Default Error",
+      "errTitle": "System Terminated",
+      "ErrCode": "EK9999",
+      "ErrMessage": "Unknown error occurred. Please check the log.",
+      "Arglist": ""
+    },
     {
       "errClass": "System Errors",
       "errTitle": "System Function Call Failure",
