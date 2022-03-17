@@ -118,6 +118,9 @@ private:
   static graphStatus LoadGraphFromFile(const std::map<int64_t, std::string> &options,
                                        std::vector<ComputeGraphPtr> &root_graphs,
                                        std::map<std::string, std::vector<ComputeGraphPtr>> &name_to_subgraphs);
+  static bool HasContinueInput(const NodePtr &node, std::vector<std::string> &remove_attr_names);
+  static bool HasContinueOutput(const NodePtr &node, std::vector<std::string> &remove_attr_names);
+  static bool RemoveContinueAndNoTaskAttr(const NodePtr &node, const std::vector<std::string> &remove_attr_names);
 
   static NodeNametoNodeNameMap data_2_end_;
   static NodetoNodeNameMap data_node_2_end_node_;
