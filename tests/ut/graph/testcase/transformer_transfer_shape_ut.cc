@@ -99,4 +99,34 @@ TEST_F(TransformerTransferShapeUT, nd_fz) {
   ASSERT_EQ(shape.GetDims(), expect_vec);
 }
 
+TEST_F(TransformerTransferShapeUT, nd_znrnn) {
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test", "test");
+  ge::GeShape shape({65, 128});
+  ge::DataType dtype = DT_FLOAT16;
+  (void)ge::AttrUtils::SetInt(op_desc, "hidden_size", 64);
+  (void)ge::AttrUtils::SetInt(op_desc, "input_size", 1);
+  (void)ge::AttrUtils::SetInt(op_desc, "state_size", -1);
+  ShapeAndFormat shape_and_format_info {shape, ge::FORMAT_ND, ge::FORMAT_FRACTAL_ZN_RNN, dtype};
+  ShapeTransferAccordingToFormat shape_transfer;
+  bool ret = shape_transfer.GetShapeAccordingToFormat(op_desc, shape_and_format_info);
+  ASSERT_EQ(ret, true);
+  std::vector<int64_t> expect_vec = {5, 8, 16, 16};
+  ASSERT_EQ(shape.GetDims(), expect_vec);
+}
+
+TEST_F(TransformerTransferShapeUT, nd_ndrnn) {
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test", "test");
+  ge::GeShape shape({18, 64});
+  ge::DataType dtype = DT_FLOAT16;
+  (void)ge::AttrUtils::SetInt(op_desc, "hidden_size", 64);
+  (void)ge::AttrUtils::SetInt(op_desc, "input_size", 1);
+  (void)ge::AttrUtils::SetInt(op_desc, "state_size", 1);
+  ShapeAndFormat shape_and_format_info {shape, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, dtype};
+  ShapeTransferAccordingToFormat shape_transfer;
+  bool ret = shape_transfer.GetShapeAccordingToFormat(op_desc, shape_and_format_info);
+  ASSERT_EQ(ret, true);
+  std::vector<int64_t> expect_vec = {18, 64};
+  ASSERT_EQ(shape.GetDims(), expect_vec);
+}
+
 }  // namespace ge

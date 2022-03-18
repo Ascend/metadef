@@ -23,6 +23,7 @@
 #include "graph/types.h"
 #include "axis_util.h"
 #include "graph/ge_tensor.h"
+#include "graph/utils/op_desc_utils.h"
 
 namespace transformer {
 using std::vector;
@@ -101,6 +102,7 @@ using GetNewShapeByAxisValueAndFormatPtr = std::shared_ptr<GetNewShapeByAxisValu
 struct CalcShapeExtraAttr {
   int64_t hidden_size;
   int64_t input_size;
+  int64_t state_size;
 };
 
 struct ShapeAndFormatInfo {
@@ -113,7 +115,7 @@ struct ShapeAndFormatInfo {
   ShapeAndFormatInfo(ge::GeShape &old_shape, const ge::Format &old_format, const ge::Format &new_format,
                      const ge::DataType &data_type)
                      : oldShape(old_shape), oldFormat(old_format), newFormat(new_format), currentDataType(data_type),
-                       group_count(1), extra_attr({1, 1}) {}
+                       group_count(1), extra_attr({1, 1, -1}) {}
 };
 
 using ShapeAndFormat = struct ShapeAndFormatInfo;
@@ -134,7 +136,10 @@ class ShapeTransferAccordingToFormat {
 
   ShapeTransferAccordingToFormat &operator=(const ShapeTransferAccordingToFormat&) = delete;
 
-  bool GetShapeAccordingToFormat(ShapeAndFormat &inputAndOutputInfo, int64_t* c = nullptr);
+  bool GetShapeAccordingToFormat(ShapeAndFormat &shapeAndFormatInfo, int64_t* c = nullptr);
+
+  bool GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc, ShapeAndFormat &shapeAndFormatInfo,
+                                 int64_t* c = nullptr);
 
   /* ----------Below is the function of getting new shape---------------------- */
   static bool GetNDC1HWC0ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
@@ -165,7 +170,15 @@ class ShapeTransferAccordingToFormat {
 
   static bool GetCHWNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
 
+  static bool GetFznRNNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value);
+
+  static bool GetNDRNNShapeByAxisValue(ge::GeShape &shape, const vector<int64_t>& axis_value);
+
   static int64_t GetAsisEnlargeValue(const int64_t& cin, const int64_t& cout, const int64_t& c0, const int64_t& group);
+
+private:
+  void GetInfoExtraAttr(const ge::OpDescPtr &op_desc, ShapeAndFormat &shapeAndFormatInfo) const;
+  void SetRNNAttr(const ShapeAndFormat &shape_and_format_info, std::vector<int64_t> &axis_value) const;
 
 };
 } // namespace transformer

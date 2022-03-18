@@ -19,6 +19,35 @@
 
 namespace transformer {
 
+bool RangeTransferAccordingToFormat::GetRangeAccordingToFormat(const ge::OpDescPtr &op_desc,
+                                                               RangeAndFormat &range_and_format_info) {
+  /* The default new range is old range */
+  std::vector<int64_t> range_upper_old;
+  std::vector<int64_t> range_low_old;
+  for (auto &i : range_and_format_info.old_range) {
+    range_low_old.emplace_back(i.first);
+    range_upper_old.emplace_back(i.second);
+  }
+
+  ge::GeShape shape_low(range_low_old);
+  ge::GeShape shape_upper(range_upper_old);
+  transformer::ShapeAndFormat shape_and_format_info_low {shape_low, range_and_format_info.old_format,
+      range_and_format_info.new_format, range_and_format_info.current_data_type};
+  transformer::ShapeAndFormat shape_and_format_info_upper {shape_upper, range_and_format_info.old_format,
+      range_and_format_info.new_format, range_and_format_info.current_data_type};
+  ShapeTransferAccordingToFormat shape_transfer;
+  bool res = (shape_transfer.GetShapeAccordingToFormat(op_desc, shape_and_format_info_low) &&
+      shape_transfer.GetShapeAccordingToFormat(op_desc, shape_and_format_info_upper));
+  if (!res || (shape_low.GetDimNum() != shape_upper.GetDimNum())) {
+    return false;
+  }
+  range_and_format_info.new_range.clear();
+  for (size_t i = 0; i < range_and_format_info.new_range.size(); ++i) {
+    range_and_format_info.new_range.emplace_back(shape_low.GetDim(i), shape_upper.GetDim(i));
+  }
+  return res;
+
+}
 bool RangeTransferAccordingToFormat::GetRangeAccordingToFormat(RangeAndFormat &range_and_format_info) {
   /* The default new range is old range */
   std::vector<int64_t> range_upper_old;
