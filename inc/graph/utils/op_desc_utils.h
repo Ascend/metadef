@@ -21,13 +21,11 @@
 #include <vector>
 #include "graph/def_types.h"
 #include "graph/node.h"
-#include "graph/op_desc.h"
-#include "graph/range_vistor.h"
 #include "graph/runtime_inference_context.h"
+
 /*lint -e148*/
 namespace ge {
-using ConstGeTensorBarePtr = const GeTensor*;
-
+using ConstGeTensorBarePtr = const GeTensor *;
 class OpDescUtils {
  public:
   template <class T>
@@ -82,6 +80,8 @@ class OpDescUtils {
                                    const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                                    const std::map<std::string, ge::Operator> &src_op_list,
                                    std::map<std::string, ge::Operator> &dst_op_list);
+  static OpDescPtr CloneOpDesc(const ConstOpDescPtr &org_op_desc);
+  static OpDescPtr CopyOpDesc(const ConstOpDescPtr &org_op_desc);
   static OpDescPtr CreateConstOp(const GeTensorPtr& tensor_ptr);
 
   static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,

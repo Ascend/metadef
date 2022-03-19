@@ -15,21 +15,19 @@
  */
 
 #include "graph/detail/attributes_holder.h"
-#include <map>
+
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/ge_attr_value.h"
 #include "proto/ge_ir.pb.h"
-
 
 namespace ge {
 void AttrHolder::CopyAttrsFrom(const AttrHolder &holder) {
   MutableAttrMap() = holder.GetAttrMap();
 }
 void AttrHolder::CopyFrom(const AttrHolder &holder) {
-    requiredAttrs_ = holder.requiredAttrs_;
-    extAttrs_ = holder.extAttrs_;
+    required_attrs_ = holder.required_attrs_;
+    ext_attrs_ = holder.ext_attrs_;
 }
 
 graphStatus AttrHolder::SetAttr(const std::string &name, const AnyValue &value) {
@@ -62,7 +60,7 @@ graphStatus AttrHolder::AddRequiredAttr(const std::string &name) {
   if (HasAttr(name)) {
     return GRAPH_FAILED;
   }
-  requiredAttrs_.push_back(name);
+  required_attrs_.push_back(name);
   return GRAPH_SUCCESS;
 }
 
@@ -79,7 +77,7 @@ bool AttrHolder::HasAttr(const std::string &name) const {
   if (GetAttrMap().Exists(name)) {
     return true;
   }
-  return std::find(requiredAttrs_.begin(), requiredAttrs_.end(), name) != requiredAttrs_.end();
+  return std::find(required_attrs_.begin(), required_attrs_.end(), name) != required_attrs_.end();
 }
 
 graphStatus AttrHolder::DelAttr(const std::string &name) {

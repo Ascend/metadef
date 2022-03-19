@@ -149,24 +149,24 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   void CopyFrom(const AttrHolder &holder);
 
   void Swap(AttrHolder &holder) {
-    requiredAttrs_.swap(holder.requiredAttrs_);
-    extAttrs_.Swap(holder.extAttrs_);
+    required_attrs_.swap(holder.required_attrs_);
+    ext_attrs_.Swap(holder.ext_attrs_);
   }
 
   template<class T>
   bool SetExtAttr(const std::string &name, const T &value) {
-    return extAttrs_.Set(name, value);
+    return ext_attrs_.Set(name, value);
   }
   template<class T>
   T TryGetExtAttr(const std::string &name, const T defaultValue) const {
     T ret(defaultValue);
-    (void) extAttrs_.Get(name, ret);
+    (void) ext_attrs_.Get(name, ret);
     return ret;
   }
 
   template<class T>
   const T *GetExtAttr(const std::string &name) const {
-    return extAttrs_.Get<T>(name);
+    return ext_attrs_.Get<T>(name);
   }
 
  protected:
@@ -180,11 +180,11 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
 
   friend class ModelSerializeImp;
   friend class AttrUtils;
-  friend class AttrUtilsHelper;
+  friend class OpDescUtils;
+  std::vector<std::string> required_attrs_;
 
-  std::vector<std::string> requiredAttrs_;
  private:
-  AnyMap extAttrs_;
+  AnyMap ext_attrs_;
 };
 }  // namespace ge
 #endif  // INC_GRAPH_DETAIL_ATTRIBUTES_HOLDER_H_

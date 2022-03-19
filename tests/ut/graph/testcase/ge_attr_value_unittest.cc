@@ -94,6 +94,10 @@ TEST_F(UtestGeAttrValue, TrySetExists) {
   attr_value = 0;
   AttrUtils::GetInt(op_desc, "i", attr_value);
   EXPECT_EQ(attr_value, 100);
+
+  uint64_t uint64_val = 0U;
+  EXPECT_TRUE(AttrUtils::GetInt(op_desc, "i", uint64_val));
+  EXPECT_EQ(uint64_val, 100U);
 }
 
 
