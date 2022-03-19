@@ -86,6 +86,12 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHoldercreateFromUniquePtr) {
   ASSERT_EQ(data_ptr, nullptr);
 }
 
+TEST_F(UtestCompileCachePolicyHasher, TestBinaryHoldercreateFromUniquePtrFail) {
+  auto holder2 = BinaryHolder::createFrom(nullptr, 0);
+  ASSERT_EQ(holder2->GetDataPtr(), nullptr);
+  ASSERT_EQ(holder2->GetDataLen(), 0);
+}
+
 TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderEqual) {
   uint8_t data1[8] = {0U,1U,2U,3U,4U,5U,6U,7U};
   uint8_t data2[8] = {0U,1U,2U,3U,4U,5U,6U,7U};

@@ -83,7 +83,7 @@ BinaryHolder &BinaryHolder::operator=(BinaryHolder &&other) {
 
 std::unique_ptr<BinaryHolder> BinaryHolder::createFrom(std::unique_ptr<uint8_t[]> &&ptr, size_t length) {
   auto holder = ComGraphMakeUnique<BinaryHolder>();
-  if ((ptr != nullptr) && (ptr != nullptr) && (length != 0UL)) {
+  if ((ptr != nullptr) && (holder != nullptr) && (length != 0UL)) {
     holder->data_len_ = length;
     holder->holder_ = std::move(ptr);
   }
