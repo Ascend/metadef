@@ -309,6 +309,26 @@ void ShapeTransferAccordingToFormat::SetRNNAttr(const ShapeAndFormat &shape_and_
   axis_value[AXIS_STATE_SIZE] = shape_and_format_info.extra_attr.state_size;
 }
 
+void ShapeTransferAccordingToFormat::GetInfoExtraAttr(const ge::OpDescPtr &op_desc,
+                                                      ShapeAndFormat &shapeAndFormatInfo) const {
+  int64_t hidden_size = -1;
+  int64_t input_size = 1;
+  int64_t state_size = -1;
+  if (op_desc != nullptr) {
+    (void)ge::AttrUtils::GetInt(op_desc, "hidden_size", hidden_size);
+    (void)ge::AttrUtils::GetInt(op_desc, "input_size", input_size);
+    (void)ge::AttrUtils::GetInt(op_desc, "state_size", state_size);
+  }
+  shapeAndFormatInfo.extra_attr = {hidden_size, input_size, state_size};
+}
+
+bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc,
+                                                               ShapeAndFormat &shapeAndFormatInfo,
+                                                               int64_t* c) {
+  GetInfoExtraAttr(op_desc, shapeAndFormatInfo);
+  return GetShapeAccordingToFormat(shapeAndFormatInfo, c);
+}
+
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat& shapeAndFormatInfo, int64_t* c) {
   if (shapeAndFormatInfo.oldFormat == ge::FORMAT_ND &&
       FE_ORIGIN_FORMAT_VECTOR.count(static_cast<int>(shapeAndFormatInfo.newFormat)) > 0) {

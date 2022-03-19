@@ -58,7 +58,9 @@ class RangeTransferAccordingToFormat {
 
   RangeTransferAccordingToFormat &operator=(const RangeTransferAccordingToFormat &) = delete;
 
-  static bool GetRangeAccordingToFormat(RangeAndFormat &input_and_output_info);
+  static bool GetRangeAccordingToFormat(RangeAndFormat &range_and_format_info);
+
+  static bool GetRangeAccordingToFormat(const ge::OpDescPtr &op_desc, RangeAndFormat &range_and_format_info);
 };
 }  // namespace fe
 
