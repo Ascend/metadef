@@ -479,6 +479,25 @@ TEST_F(UtestTuningUtils, HandleContinuousInputNodeNextData) {
     EXPECT_EQ(TuningUtils::HandleContinuousInputNodeNextData(data_node), SUCCESS);
 }
 
+TEST_F(UtestTuningUtils, HandleContinuousInputNodeNextData_output) {
+    ut::GraphBuilder builder = ut::GraphBuilder("graph");
+    auto data_node = builder.AddNode("Data", "Data", 1, 1);
+    auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
+    auto graph = builder.GetGraph();
+    InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
+    OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 222);
+    auto node3 = builder.AddNode("Data3", "Data", 3, 3);
+    InControlAnchorPtr inc_anch = std::make_shared<InControlAnchor>(node3, 33);
+    EXPECT_EQ(out_anch->LinkTo(inc_anch), GRAPH_SUCCESS);
+    EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
+
+    // continue output
+    AttrUtils::SetBool(attr_node->GetOpDesc(), ATTR_NAME_CONTINUOUS_OUTPUT, true);
+    AttrUtils::SetBool(attr_node->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, true);
+    AttrUtils::SetBool(attr_node->GetOpDesc(), ATTR_NAME_NOTASK, true);
+    EXPECT_EQ(TuningUtils::HandleContinuousInputNodeNextData(data_node), SUCCESS);
+}
+
 TEST_F(UtestTuningUtils, RemoveDataNetoutputEdge) {
     auto builder = ut::GraphBuilder("root");
     const auto &placeholder_0 = builder.AddNode("placeholder_0", PLACEHOLDER, 0, 1);
