@@ -23,6 +23,7 @@
 #include "graph/types.h"
 #include "axis_util.h"
 #include "graph/ge_tensor.h"
+#include "graph/utils/op_desc_utils.h"
 
 namespace transformer {
 using std::vector;
@@ -135,7 +136,10 @@ class ShapeTransferAccordingToFormat {
 
   ShapeTransferAccordingToFormat &operator=(const ShapeTransferAccordingToFormat&) = delete;
 
-  bool GetShapeAccordingToFormat(ShapeAndFormat &inputAndOutputInfo, int64_t* c = nullptr);
+  bool GetShapeAccordingToFormat(ShapeAndFormat &shapeAndFormatInfo, int64_t* c = nullptr);
+
+  bool GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc, ShapeAndFormat &shapeAndFormatInfo,
+                                 int64_t* c = nullptr);
 
   /* ----------Below is the function of getting new shape---------------------- */
   static bool GetNDC1HWC0ShapeByAxisValue(ge::GeShape &shape, const vector<int64_t> &axis_value);
@@ -173,6 +177,7 @@ class ShapeTransferAccordingToFormat {
   static int64_t GetAsisEnlargeValue(const int64_t& cin, const int64_t& cout, const int64_t& c0, const int64_t& group);
 
 private:
+  void GetInfoExtraAttr(const ge::OpDescPtr &op_desc, ShapeAndFormat &shapeAndFormatInfo) const;
   void SetRNNAttr(const ShapeAndFormat &shape_and_format_info, std::vector<int64_t> &axis_value) const;
 
 };
