@@ -993,54 +993,74 @@ graphStatus TuningUtils::RemoveDataNetoutputEdge(ComputeGraphPtr &graph) {
   return SUCCESS;
 }
 
+bool TuningUtils::RemoveContinueAndNoTaskAttr(const NodePtr &node, const std::vector<std::string> &remove_attr_names) {
+  // The caller guarantees that the node is not null
+  for (const auto &remove_attr_name : remove_attr_names) {
+    if (!ge::AttrUtils::SetBool(node->GetOpDesc(), remove_attr_name, false)) {
+      REPORT_CALL_ERROR("E18888", "Remove attr %s for node:%s failed.",
+                        remove_attr_name.c_str(), node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Remove][Attr] %s for node:%s failed.",
+             remove_attr_name.c_str(), node->GetName().c_str());
+      return false;
+    }
+    GELOGD("remove attr:%s success for node:%s", remove_attr_name.c_str(), node->GetName().c_str());
+  }
+    return true;
+}
+
+bool TuningUtils::HasContinueInput(const NodePtr &node, std::vector<std::string> &remove_attr_names) {
+  // The caller guarantees that the node is not null
+  bool is_no_padding_continuous_input = false;
+  bool is_continuous_input = false;
+  (void) ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_CONTINUOUS_INPUT, is_continuous_input);
+  (void) ge::AttrUtils::GetBool(node->GetOpDesc(),
+                                ATTR_NAME_NOPADDING_CONTINUOUS_INPUT,
+                                is_no_padding_continuous_input);
+  if (is_continuous_input) {
+    remove_attr_names.emplace_back(ATTR_NAME_CONTINUOUS_INPUT);
+  }
+  if (is_no_padding_continuous_input) {
+    remove_attr_names.emplace_back(ATTR_NAME_NOPADDING_CONTINUOUS_INPUT);
+  }
+  return (is_continuous_input || is_no_padding_continuous_input);
+}
+
+bool TuningUtils::HasContinueOutput(const NodePtr &node, std::vector<std::string> &remove_attr_names) {
+  // The caller guarantees that the node is not null
+  bool is_no_padding_continuous_output = false;
+  bool is_continuous_output = false;
+  (void) ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_CONTINUOUS_OUTPUT, is_continuous_output);
+  (void) ge::AttrUtils::GetBool(node->GetOpDesc(),
+                                ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT,
+                                is_no_padding_continuous_output);
+  if (is_continuous_output) {
+    remove_attr_names.emplace_back(ATTR_NAME_CONTINUOUS_OUTPUT);
+  }
+  if (is_no_padding_continuous_output) {
+    remove_attr_names.emplace_back(ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT);
+  }
+  return (is_continuous_output || is_no_padding_continuous_output);
+}
+
 graphStatus TuningUtils::HandleContinuousInputNodeNextData(const NodePtr &node) {
   GE_CHECK_NOTNULL(node);
   for (const auto &next_node : node->GetOutAllNodes()) {
+    GE_CHECK_NOTNULL(next_node);
+    GE_CHECK_NOTNULL(next_node->GetOpDesc());
     std::vector<std::string> remove_attr_names;
-    bool is_no_padding_continuous_input = false;
-    bool is_continuous_input = false;
     bool is_no_task = false;
-    (void) ge::AttrUtils::GetBool(next_node->GetOpDesc(), ATTR_NAME_CONTINUOUS_INPUT, is_continuous_input);
-    (void) ge::AttrUtils::GetBool(next_node->GetOpDesc(),
-                                  ATTR_NAME_NOPADDING_CONTINUOUS_INPUT,
-                                  is_no_padding_continuous_input);
     (void) ge::AttrUtils::GetBool(next_node->GetOpDesc(), ATTR_NAME_NOTASK, is_no_task);
-    if (is_continuous_input) {
-      if (!ge::AttrUtils::SetBool(next_node->GetOpDesc(), ATTR_NAME_CONTINUOUS_INPUT, false)) {
-        REPORT_CALL_ERROR("E18888", "Remove attr ATTR_NAME_CONTINUOUS_INPUT for node:%s failed.",
-                          next_node->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Remove][Attr] ATTR_NAME_CONTINUOUS_INPUT for node:%s failed.",
-               next_node->GetName().c_str());
-        return GRAPH_FAILED;
-      }
-      remove_attr_names.emplace_back(ATTR_NAME_CONTINUOUS_INPUT);
-    }
-    if (is_no_padding_continuous_input) {
-      if (!ge::AttrUtils::SetBool(next_node->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, false)) {
-        REPORT_CALL_ERROR("E18888", "Remove attr ATTR_NAME_NOPADDING_CONTINUOUS_INPUT for node:%s failed.",
-                          next_node->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Remove][Attr] ATTR_NAME_NOPADDING_CONTINUOUS_INPUT for node:%s failed.",
-               next_node->GetName().c_str());
-        return GRAPH_FAILED;
-      }
-      remove_attr_names.emplace_back(ATTR_NAME_NOPADDING_CONTINUOUS_INPUT);
-    }
-    if ((is_continuous_input || is_no_padding_continuous_input) && is_no_task) {
-      if (!ge::AttrUtils::SetBool(next_node->GetOpDesc(), ATTR_NAME_NOTASK, false)) {
-        REPORT_CALL_ERROR("E18888", "Remove attr ATTR_NAME_NOTASK for node:%s failed.",
-                          next_node->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Remove][Attr] ATTR_NAME_NOTASK for node:%s failed.", next_node->GetName().c_str());
-        return GRAPH_FAILED;
-      }
+    if ((HasContinueInput(next_node, remove_attr_names) || HasContinueOutput(next_node, remove_attr_names)) &&
+        is_no_task) {
       remove_attr_names.emplace_back(ATTR_NAME_NOTASK);
-    }
-    if (!remove_attr_names.empty()) {
-      if (!ge::AttrUtils::SetListStr(next_node->GetOpDesc(),
-                                     ATTR_NAME_NEED_RECOVER_ATTR,
-                                     remove_attr_names)) {
-        REPORT_CALL_ERROR("E18888", "Set attr ATTR_NAME_NEED_RECOVER_ATTR for node:%s failed.",
+
+      if ((!RemoveContinueAndNoTaskAttr(next_node, remove_attr_names)) ||
+          (!ge::AttrUtils::SetListStr(next_node->GetOpDesc(),
+                                      ATTR_NAME_NEED_RECOVER_ATTR,
+                                      remove_attr_names))) {
+        REPORT_CALL_ERROR("E18888", "Remove attrs or set attr ATTR_NAME_NEED_RECOVER_ATTR failed for node:%s failed.",
                           next_node->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Set][Attr] ATTR_NAME_NEED_RECOVER_ATTR for node:%s failed.",
+        GELOGE(GRAPH_FAILED, "[Handle][Attr]Remove attrs or set attr ATTR_NAME_NEED_RECOVER_ATTR for node:%s failed.",
                next_node->GetName().c_str());
         return GRAPH_FAILED;
       }
