@@ -932,13 +932,15 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   }
   GELOGD("in node:%s index:%d", node->GetName().c_str(), index);
   peer_node = (node->GetType() == DATA) ? node : GetInDataNodeByIndex(*node, static_cast<int32_t>(index));
-  int32_t peer_out_anchor_index = -1;
   if (peer_node == nullptr) {
     // A->B
     // Asuming A and B belongs to different engine, during graph partition, A will be set to B's extra attr as
     // parent node. when FE get parent node A from B, check A's in_anchor peer_out_anchor is null.
     return GRAPH_SUCCESS;
   }
+  // node->GetInDataAnchor(index)->GetPeerOutAnchor() can be sure not nullptr because peer_node is not nullptr
+  int32_t peer_out_anchor_index = (node->GetType() == DATA) ? -1 :
+      node->GetInDataAnchor(index)->GetPeerOutAnchor()->GetIdx();
   while (!IsComputableOp(peer_node)) {
     if (peer_node->GetType() == DATA) {
       const auto parent_node_2_anchor = GetParentInputAndAnchor(peer_node);
