@@ -503,6 +503,14 @@ bool Node::NodeImpl::IsAllInNodesSeen(const std::unordered_set<Node *> &nodes_se
       continue;
     }
     const auto node = out_anchor->GetOwnerNode();
+    if (node == nullptr) {
+      REPORT_CALL_ERROR("E18888", "peer node is null, node name: %s input index[%d] peer node output index[%d].",
+                        GetName().c_str(), in_anchor->GetIdx(), out_anchor->GetIdx());
+      GELOGE(GRAPH_FAILED,
+             "[Get][OwnerNode] peer node is null, node name: %s input index[%d] peer node output index[%d].",
+             GetName().c_str(), in_anchor->GetIdx(), out_anchor->GetIdx());
+      return false;
+    }
     if ((node->GetType() == NEXTITERATION) || (node->GetType() == REFNEXTITERATION)) {
       continue;
     }

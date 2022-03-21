@@ -30,23 +30,10 @@
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/mem_utils.h"
 #include "graph/utils/tensor_utils.h"
+#include "graph/utils/math_util.h"
 
 namespace ge {
 namespace {
-template <typename T>
-class IntegerCheckerFun {
-public:
-  template <typename T1>
-  static bool Compat(T1 const v) {
-    static_assert((sizeof(T) <= sizeof(uint64_t)) && (sizeof(T1) <= sizeof(uint64_t)),
-                  "IntegerChecker can only check integers less than 64 bits");
-    if (v >= static_cast<T1>(0)) {
-      return static_cast<uint64_t>(v) <= static_cast<uint64_t>(std::numeric_limits<T>::max());
-    }
-    return static_cast<int64_t>(v) >= static_cast<int64_t>(std::numeric_limits<T>::min());
-  }
-};
-
 static const size_t PAIR_ELEMENT_SIZE = 2UL;
 static const size_t PAIR_ELEMENT_KEY = 0UL;
 static const size_t PAIR_ELEMENT_VALUE = 1UL;
@@ -279,6 +266,9 @@ void GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto::TensorDescriptor 
 }
 
 void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
+  if (proto == nullptr) {
+    return;
+  }
   shape.SetDimNum(static_cast<size_t>(proto->shape().dim_size()));
   size_t i = 0U;
   for (auto const dim : proto->shape().dim()) {
@@ -287,6 +277,9 @@ void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor
 }
 
 void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
+  if (proto == nullptr) {
+    return;
+  }
   auto &attrs = proto->attr();
   auto const iter = attrs.find(TENSOR_UTILS_ORIGIN_SHAPE);
   if (iter != attrs.end()) {
@@ -299,6 +292,9 @@ void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDesc
 }
 
 void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
+  if (proto == nullptr) {
+    return;
+  }
   dtype = DT_UNDEFINED;
   auto &attrs = proto->attr();
   auto const iter = attrs.find(kKeyDataTypeSelfDefined);
@@ -327,6 +323,9 @@ void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor
 }
 
 void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
+  if (proto == nullptr) {
+    return;
+  }
   auto &attrs = proto->attr();
   auto const iter = attrs.find(TENSOR_UTILS_ORIGIN_DATA_TYPE);
   if (iter != attrs.end()) {
@@ -335,10 +334,16 @@ void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDesc
 }
 
 void GeTensorSerializeUtils::GetFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
+  if (proto == nullptr) {
+    return;
+  }
   format = TypeUtils::SerialStringToFormat(proto->layout());
 }
 
 void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
+  if (proto == nullptr) {
+    return;
+  }
   auto &attrs = proto->attr();
   auto const iter = attrs.find(TENSOR_UTILS_ORIGIN_FORMAT);
   if (iter != attrs.end()) {
@@ -378,7 +383,6 @@ private:
 // Default
 GeShapeImpl::GeShapeImpl(const std::vector<int64_t> &dims) {
   dims_.resize(dims.size());
-
   (void)std::copy(dims.begin(), dims.end(), dims_.begin());
 }
 
@@ -605,10 +609,10 @@ GeTensorDescImpl::GeTensorDescImpl(proto::TensorDescriptor *const proto_msg)
     ext_meta_.SetDeviceType(kStrToDeviceMap.at(proto_msg->device_type()));
   }
   ext_meta_.SetInputTensor(proto_msg->input_tensor());
-  if (IntegerCheckerFun<uint32_t>::Compat(proto_msg->real_dim_cnt())) {
+  if (IntegerChecker<uint32_t>::Compat(proto_msg->real_dim_cnt())) {
     ext_meta_.SetRealDimCnt(static_cast<uint32_t>(proto_msg->real_dim_cnt()));
   }
-  if (IntegerCheckerFun<uint32_t>::Compat(proto_msg->reuse_input_index())) {
+  if (IntegerChecker<uint32_t>::Compat(proto_msg->reuse_input_index())) {
     ext_meta_.SetReuseInputIndex(static_cast<uint32_t>(proto_msg->reuse_input_index()));
   }
   ext_meta_.SetDataOffset(proto_msg->data_offset());
@@ -1503,7 +1507,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(
 
 uint32_t TensorUtils::GetWeightSize(const GeTensorDesc &tensor_desc) {
   if ((tensor_desc.impl_ != nullptr) &&
-      IntegerCheckerFun<uint32_t>::Compat(tensor_desc.impl_->ext_meta_.GetWeightSize())) {
+      IntegerChecker<uint32_t>::Compat(tensor_desc.impl_->ext_meta_.GetWeightSize())) {
     return static_cast<uint32_t>(tensor_desc.impl_->ext_meta_.GetWeightSize());
   }
   return 0U;
