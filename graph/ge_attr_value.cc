@@ -15,7 +15,7 @@
  */
 
 #include "graph/ge_attr_value.h"
-#include <set>
+
 #include <google/protobuf/text_format.h>
 #include "external/graph/graph.h"
 #include "graph/utils/attr_utils.h"
@@ -24,15 +24,13 @@
 #include "graph/ge_tensor_impl.h"
 #include "graph/buffer_impl.h"
 #include "graph/op_desc_impl.h"
-#include "proto/ge_ir.pb.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "graph/debug/ge_attr_define.h"
 #include "debug/ge_log.h"
 #include "debug/ge_util.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/serialization/attr_serializer_registry.h"
-#include "graph/serialization/tensor_desc_serializer.h"
-
+#include "graph/utils/op_desc_utils.h"
 
 namespace ge {
 void NamedAttrs::SetName(const std::string &name) {
@@ -97,88 +95,11 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, ui
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(const ConstOpDescPtr &org_op_desc) {
-  if (org_op_desc == nullptr) {
-    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
-    return nullptr;
-  }
-  std::shared_ptr<proto::OpDef> op_def;
-  op_def = ComGraphMakeShared<proto::OpDef>();
-  if (op_def == nullptr) {
-    REPORT_CALL_ERROR("E18888", "create proto::OpDef failed.");
-    GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
-    return nullptr;
-  }
-  ModelSerializeImp imp;
-  (void) imp.SerializeOpDesc(org_op_desc, op_def.get());
-
-  imp.SetProtobufOwner(op_def);
-  OpDescPtr op_desc = nullptr;
-  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
-                   REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed");
-                   return op_desc, "[Call][UnserializeOpDesc] op_desc unserialize failed");
-  op_desc->extAttrs_ = org_op_desc->extAttrs_;
-
-  // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
-  if (op_desc->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E18888", "op_desc impl is nullptr, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] Op desc impl is nullptr.");
-    return nullptr;
-  }
-  if (!op_desc->impl_->input_name_idx_.empty()) {
-    op_desc->impl_->input_name_idx_.clear();
-  }
-  if (!op_desc->impl_->output_name_idx_.empty()) {
-    op_desc->impl_->output_name_idx_.clear();
-  }
-  if (!op_desc->impl_->optional_input_names_.empty()) {
-    op_desc->impl_->optional_input_names_.clear();
-  }
-
-  return op_desc;
+  return OpDescUtils::CloneOpDesc(org_op_desc);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
-  if ((org_op_desc == nullptr) || (org_op_desc->impl_ == nullptr)) {
-    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
-    return nullptr;
-  }
-  const std::shared_ptr<proto::OpDef> op_def = ComGraphMakeShared<proto::OpDef>();
-  if (op_def == nullptr) {
-    REPORT_CALL_ERROR("E18888", "create proto::OpDef failed");
-    GELOGE(GRAPH_FAILED, "[Create][OpDef] proto::OpDef make shared failed");
-    return nullptr;
-  }
-  ModelSerializeImp imp;
-  (void) imp.SerializeOpDesc(org_op_desc, op_def.get());
-
-  imp.SetProtobufOwner(op_def);
-  OpDescPtr op_desc = nullptr;
-  if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
-    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
-    return nullptr;
-  }
-
-  op_desc->extAttrs_ = org_op_desc->extAttrs_;
-
-  if (op_desc->impl_ == nullptr) {
-    REPORT_INNER_ERROR("E18888", "op desc impl is nullptr, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] op desc impl is null.");
-    return nullptr;
-  }
-  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
-                                         org_op_desc->impl_->input_name_idx_.cend());
-  op_desc->impl_->optional_input_names_.insert(org_op_desc->impl_->optional_input_names_.cbegin(),
-                                               org_op_desc->impl_->optional_input_names_.cend());
-  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
-                                          org_op_desc->impl_->output_name_idx_.cend());
-
-  op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
-  op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
-  op_desc->impl_->verifier_func_ = org_op_desc->impl_->verifier_func_;
-
-  return op_desc;
+  return OpDescUtils::CopyOpDesc(org_op_desc);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
@@ -191,14 +112,24 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
   return GetAttrValue(obj->GetAttrMap(), name, value);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool AttrUtils::SetInt(AttrHolderAdapter &&obj, const std::string &name,
-                                                                      const int64_t &value) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+bool AttrUtils::SetInt(AttrHolderAdapter &&obj, const std::string &name, const int64_t &value) {
   return SetAttrValue(obj->MutableAttrMap(), name, value);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj,
-                                                                      const std::string &name, int64_t &value) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, int64_t &value) {
   return GetAttrValue(obj->GetAttrMap(), name, value);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, uint64_t &value) {
+  int64_t int64_val = 0;
+  const bool ret = GetAttrValue(obj->GetAttrMap(), name, int64_val);
+  if (ret) {
+    value = static_cast<uint64_t>(int64_val);
+  }
+  return ret;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY

@@ -26,8 +26,8 @@
 #include "graph/types.h"
 #include "graph/op_desc.h"
 
+/*lint -e148*/
 namespace ge {
-
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
  public:
   class ConstAttrHolderAdapter;
@@ -67,6 +67,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
 
   // Get
   static bool GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, int64_t &value);
+  static bool GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, uint64_t &value);
   static bool GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, int32_t &value);
   static bool GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, uint32_t &value);
   static bool GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<int64_t> &value);
@@ -122,6 +123,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static std::string GetAllAttrsStr(ConstAttrHolderAdapter &&obj);
   static std::map<std::string, AnyValue> GetAllAttrs(ConstAttrHolderAdapter &&obj);
   static std::string GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const std::set<std::string> &un_compute_attrs);
+
   class AttrHolderAdapter {
    public:
     AttrHolderAdapter(AttrHolder *const obj) : obj_(obj) {}
@@ -154,4 +156,5 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   };
 };
 }  // namespace ge
+/*lint +e148*/
 #endif  // INC_GRAPH_UTILS_ATTR_UTILS_H_
