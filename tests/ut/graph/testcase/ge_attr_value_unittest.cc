@@ -174,4 +174,77 @@ TEST_F(UtestGeAttrValue, GetStr) {
   EXPECT_NE(s2, nullptr);
   EXPECT_EQ(*s2, add_info);
 }
+
+TEST_F(UtestGeAttrValue, SetNullObjectAttr) {
+  OpDescPtr op_desc(nullptr);
+  EXPECT_EQ(AttrUtils::SetStr(op_desc, "key", "value"), false);
+  EXPECT_EQ(AttrUtils::SetInt(op_desc, "key", 0), false);
+  EXPECT_EQ(AttrUtils::SetTensorDesc(op_desc, "key", GeTensorDesc()), false);
+  GeTensorPtr ge_tensor;
+  EXPECT_EQ(AttrUtils::SetTensor(op_desc, "key", ge_tensor), false);
+  ConstGeTensorPtr const_ge_tensor;
+  EXPECT_EQ(AttrUtils::SetTensor(op_desc, "key", const_ge_tensor), false);
+  EXPECT_EQ(AttrUtils::SetBool(op_desc, "key", true), false);
+  EXPECT_EQ(AttrUtils::SetBytes(op_desc, "key", Buffer()), false);
+  EXPECT_EQ(AttrUtils::SetFloat(op_desc, "key", 1.0), false);
+  EXPECT_EQ(AttrUtils::SetGraph(op_desc, "key", nullptr), false);
+  EXPECT_EQ(AttrUtils::SetDataType(op_desc, "key", DT_UINT8), false);
+  EXPECT_EQ(AttrUtils::SetListDataType(op_desc, "key", {DT_UINT8}), false);
+  EXPECT_EQ(AttrUtils::SetListListInt(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListInt(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListTensor(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListBool(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListFloat(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListBytes(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListGraph(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListListFloat(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListTensorDesc(op_desc, "key", {}), false);
+  EXPECT_EQ(AttrUtils::SetListStr(op_desc, "key", {}), false);
+  std::vector<Buffer> buffer;
+  EXPECT_EQ(AttrUtils::SetZeroCopyListBytes(op_desc, "key", buffer), false);
+}
+TEST_F(UtestGeAttrValue, GetNullObjectAttr) {
+  OpDescPtr op_desc(nullptr);
+  std::string value;
+  EXPECT_EQ(AttrUtils::GetStr(op_desc, "key", value), false);
+  int64_t i;
+  EXPECT_EQ(AttrUtils::GetInt(op_desc, "key", i), false);
+  GeTensorDesc ge_tensor_desc;
+  EXPECT_EQ(AttrUtils::GetTensorDesc(op_desc, "key", ge_tensor_desc), false);
+  ConstGeTensorPtr const_ge_tensor;
+  EXPECT_EQ(AttrUtils::GetTensor(op_desc, "key", const_ge_tensor), false);
+  bool flag;
+  EXPECT_EQ(AttrUtils::GetBool(op_desc, "key", flag), false);
+  Buffer buffer;
+  EXPECT_EQ(AttrUtils::GetBytes(op_desc, "key", buffer), false);
+  float j;
+  EXPECT_EQ(AttrUtils::GetFloat(op_desc, "key", j), false);
+  ComputeGraphPtr compute_graph;
+  EXPECT_EQ(AttrUtils::GetGraph(op_desc, "key", compute_graph), false);
+  DataType data_type;
+  EXPECT_EQ(AttrUtils::GetDataType(op_desc, "key", data_type), false);
+  std::vector<DataType> data_types;
+  EXPECT_EQ(AttrUtils::GetListDataType(op_desc, "key", data_types), false);
+  std::vector<std::vector<int64_t>> ints_list;
+  EXPECT_EQ(AttrUtils::GetListListInt(op_desc, "key", ints_list), false);
+  std::vector<int64_t> ints;
+  EXPECT_EQ(AttrUtils::GetListInt(op_desc, "key", ints), false);
+  std::vector<ConstGeTensorPtr> tensors;
+  EXPECT_EQ(AttrUtils::GetListTensor(op_desc, "key", tensors), false);
+  std::vector<bool> flags;
+  EXPECT_EQ(AttrUtils::GetListBool(op_desc, "key", flags), false);
+  std::vector<float> floats;
+  EXPECT_EQ(AttrUtils::GetListFloat(op_desc, "key", floats), false);
+  std::vector<Buffer> buffers;
+  EXPECT_EQ(AttrUtils::GetListBytes(op_desc, "key", buffers), false);
+  std::vector<ComputeGraphPtr> graphs;
+  EXPECT_EQ(AttrUtils::GetListGraph(op_desc, "key", graphs), false);
+  std::vector<std::vector<float>> floats_list;
+  EXPECT_EQ(AttrUtils::GetListListFloat(op_desc, "key", floats_list), false);
+  std::vector<GeTensorDesc> tensor_descs;
+  EXPECT_EQ(AttrUtils::GetListTensorDesc(op_desc, "key", tensor_descs), false);
+  std::vector<std::string> strings;
+  EXPECT_EQ(AttrUtils::GetListStr(op_desc, "key", strings), false);
+  EXPECT_EQ(AttrUtils::GetZeroCopyListBytes(op_desc, "key", buffers), false);
+}
 }
