@@ -15,24 +15,20 @@
  */
 
 #include "graph/utils/op_desc_utils.h"
-#include <algorithm>
-#include <memory>
+
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
-#include "common/util/error_manager/error_manager.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
-#include "graph/ge_attr_value.h"
 #include "graph/op_desc_impl.h"
-#include "graph/operator.h"
 #include "graph/utils/mem_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/constant_utils.h"
 #include "graph/operator_impl.h"
-
+#include "proto/ge_ir.pb.h"
+#include "graph/detail/model_serialize_imp.h"
 
 /*lint -e512 -e737 -e752*/
 namespace ge {
@@ -744,6 +740,72 @@ OpDescUtils::SetWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &we
   }
   NodeUtils::UpdateIsInputConst(node);
   return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescUtils::CloneOpDesc(const ConstOpDescPtr &org_op_desc) {
+  GE_CHECK_NOTNULL_EXEC(org_op_desc, return nullptr);
+  const auto op_def = ComGraphMakeShared<proto::OpDef>();
+  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
+
+  ModelSerializeImp imp;
+  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
+
+  imp.SetProtobufOwner(op_def);
+  OpDescPtr op_desc = nullptr;
+  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
+                   REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed");
+                   return op_desc, "[Call][UnserializeOpDesc] op_desc unserialize failed");
+
+  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
+  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
+
+  // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
+  if (!op_desc->impl_->input_name_idx_.empty()) {
+    op_desc->impl_->input_name_idx_.clear();
+  }
+  if (!op_desc->impl_->output_name_idx_.empty()) {
+    op_desc->impl_->output_name_idx_.clear();
+  }
+  if (!op_desc->impl_->optional_input_names_.empty()) {
+    op_desc->impl_->optional_input_names_.clear();
+  }
+
+  return op_desc;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
+  if ((org_op_desc == nullptr) || (org_op_desc->impl_ == nullptr)) {
+    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
+    return nullptr;
+  }
+  const auto op_def = ComGraphMakeShared<proto::OpDef>();
+  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
+
+  ModelSerializeImp imp;
+  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
+
+  imp.SetProtobufOwner(op_def);
+  OpDescPtr op_desc = nullptr;
+  if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
+    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
+    return nullptr;
+  }
+
+  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
+  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
+  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
+                                         org_op_desc->impl_->input_name_idx_.cend());
+  op_desc->impl_->optional_input_names_.insert(org_op_desc->impl_->optional_input_names_.cbegin(),
+                                               org_op_desc->impl_->optional_input_names_.cend());
+  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
+                                          org_op_desc->impl_->output_name_idx_.cend());
+
+  op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
+  op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
+  op_desc->impl_->verifier_func_ = org_op_desc->impl_->verifier_func_;
+
+  return op_desc;
 }
 
 OpDescPtr OpDescUtils::CreateConstOp(const GeTensorPtr &tensor_ptr) {
