@@ -132,6 +132,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
     AttrHolderAdapter(const std::shared_ptr<T> &obj) : obj_(obj.get()) {}
     AttrHolderAdapter(const AttrHolderAdapter &obj) : obj_(obj.get()) {}
     AttrHolderAdapter(AttrHolder &obj) : obj_(&obj) {}
+    operator bool() const { return obj_ != nullptr; }
     AttrHolder *operator->() const { return obj_; }
     AttrHolder *get() const { return obj_; }
 
