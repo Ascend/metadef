@@ -30,6 +30,70 @@
 #include "inc/graph/debug/ge_attr_define.h"
 #include "graph/utils/transformer_utils.h"
 #include "graph/utils/node_utils.h"
+
+namespace {
+/*
+ *   netoutput1
+ *       |
+ *      add
+ *     /   \
+ * data1   data2
+ */
+ge::ComputeGraphPtr BuildSubGraph(const std::string &name) {
+  ge::ut::GraphBuilder builder(name);
+  auto data1 = builder.AddNode(name + "data1", "Data", 1, 1);
+  auto data2 = builder.AddNode(name + "data2", "Data", 1, 1);
+  auto add = builder.AddNode(name + "sub", "Sub", 2, 1);
+  auto netoutput = builder.AddNode(name + "_netoutput", "NetOutput", 1, 1);
+
+  ge::AttrUtils::SetInt(data1->GetOpDesc(), "_parent_node_index", static_cast<int>(0));
+  ge::AttrUtils::SetInt(data2->GetOpDesc(), "_parent_node_index", static_cast<int>(1));
+  ge::AttrUtils::SetInt(netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", static_cast<int>(0));
+
+  builder.AddDataEdge(data1, 0, add, 0);
+  builder.AddDataEdge(data2, 0, add, 1);
+  builder.AddDataEdge(add, 0, netoutput, 0);
+
+  return builder.GetGraph();
+}
+/*
+ *   netoutput
+ *       |
+ *      if
+ *     /   \
+ * data1   data2
+ */
+ge::ComputeGraphPtr BuildMainGraphWithIf(const std::string &name) {
+  ge::ut::GraphBuilder builder(name);
+  auto data1 = builder.AddNode("data1", "Data", 1, 1);
+  auto data2 = builder.AddNode("data2", "Data", 1, 1);
+  auto if1 = builder.AddNode("if", "If", 2, 1);
+  auto netoutput1 = builder.AddNode("netoutput", "NetOutput", 1, 1);
+
+  builder.AddDataEdge(data1, 0, if1, 0);
+  builder.AddDataEdge(data2, 0, if1, 1);
+  builder.AddDataEdge(if1, 0, netoutput1, 0);
+
+  auto main_graph = builder.GetGraph();
+
+  auto sub1 = BuildSubGraph("sub1");
+  sub1->SetParentGraph(main_graph);
+  sub1->SetParentNode(main_graph->FindNode("if"));
+  main_graph->FindNode("if")->GetOpDesc()->AddSubgraphName("sub1");
+  main_graph->FindNode("if")->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
+  main_graph->AddSubgraph("sub1", sub1);
+
+  auto sub2 = BuildSubGraph("sub2");
+  sub2->SetParentGraph(main_graph);
+  sub2->SetParentNode(main_graph->FindNode("if"));
+  main_graph->FindNode("if")->GetOpDesc()->AddSubgraphName("sub2");
+  main_graph->FindNode("if")->GetOpDesc()->SetSubgraphInstanceName(1, "sub2");
+  main_graph->AddSubgraph("sub2", sub2);
+
+  return main_graph;
+}
+}
+
 namespace ge
 {
   class UtestComputeGraph : public testing::Test {
@@ -399,6 +463,31 @@ TEST_F(UtestComputeGraph, Swap_success) {
   EXPECT_EQ(graph2->GetNodes(false).size(), 1);
   EXPECT_EQ(graph1->GetName(), "graph2");
   EXPECT_EQ(graph2->GetName(), "graph1");
+}
+
+TEST_F(UtestComputeGraph, Swap_with_subgraph_success) {
+  auto graph1 = BuildMainGraphWithIf("root_graph_1");
+  auto graph2 = BuildMainGraphWithIf("root_graph_2");
+
+  graph1->Swap(*(graph2));
+  auto if_node_1 = graph1->FindFirstNodeMatchType("If");
+  ASSERT_NE(if_node_1, nullptr);
+  auto if_node_2 = graph2->FindFirstNodeMatchType("If");
+  ASSERT_NE(if_node_2, nullptr);
+  EXPECT_EQ(graph1->GetName(), "root_graph_2");
+  EXPECT_EQ(graph2->GetName(), "root_graph_1");
+  EXPECT_EQ(if_node_1->GetOwnerComputeGraph()->GetName(), "root_graph_2");
+  EXPECT_EQ(if_node_2->GetOwnerComputeGraph()->GetName(), "root_graph_1");
+
+  const auto if_1_subgraph_name = if_node_1->GetOpDesc()->GetSubgraphInstanceName(0);
+  const auto if_1_subgraph = graph1->GetSubgraph(if_1_subgraph_name);
+  ASSERT_NE(if_1_subgraph, nullptr);
+  EXPECT_EQ(if_1_subgraph->GetParentGraph()->GetName(), graph1->GetName());
+
+  const auto if_2_subgraph_name = if_node_2->GetOpDesc()->GetSubgraphInstanceName(0);
+  const auto if_2_subgraph = graph2->GetSubgraph(if_2_subgraph_name);
+  ASSERT_NE(if_2_subgraph, nullptr);
+  EXPECT_EQ(if_2_subgraph->GetParentGraph()->GetName(), graph2->GetName());
 }
 
 TEST_F(UtestComputeGraph, InsertToNodeList_success) {

@@ -1162,6 +1162,16 @@ void ComputeGraphImpl::SetNodesOwner(const ComputeGraphPtr &compute_graph) {
   }
 }
 
+void ComputeGraphImpl::SetTopParentGraph(const ComputeGraphPtr &compute_graph) {
+  for (const auto &sub_graph : sub_graph_) {
+    if (sub_graph == nullptr || sub_graph->GetParentGraph() == nullptr ||
+        sub_graph->GetParentGraph()->GetParentGraph() != nullptr) {
+      continue;
+    }
+    (void)sub_graph->SetParentGraph(compute_graph);
+  }
+}
+
 graphStatus ComputeGraphImpl::IsolateNode(const NodePtr &node) const {
   GE_CHECK_NOTNULL(node);
   const auto next_nodes = node->GetOutAllNodes();
@@ -1877,10 +1887,18 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Swap(ComputeGr
   // Update Node owner.
   SetNodesOwner();
   graph.SetNodesOwner();
+
+  // Update parent graph of 'TOP subgraph'. 'TOP subgraph' refers to the direct subgraph of the root graph.
+  SetTopParentGraph();
+  graph.SetTopParentGraph();
 }
 
 void ComputeGraph::SetNodesOwner() {
   return impl_->SetNodesOwner(shared_from_this());
+}
+
+void ComputeGraph::SetTopParentGraph() {
+  return impl_->SetTopParentGraph(shared_from_this());
 }
 
 void ComputeGraph::EraseFromNodeList(const std::list<NodePtr>::iterator position) {

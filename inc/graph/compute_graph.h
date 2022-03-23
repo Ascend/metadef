@@ -248,6 +248,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
                                  const std::vector<NodePtr> &right_nodes) const;
 
   void SetNodesOwner();
+  // Update parent graph of the subgraph which is the direct subgraph of the root graph.
+  void SetTopParentGraph();
   /**
    *  To improve preformace of list.size(), we should keep counter on nodes_.size()
    *  Use follow function to add/erase node from nodes_
