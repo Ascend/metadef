@@ -233,6 +233,36 @@ ComputeGraphPtr BuildGraphPartitionCall3() {
   root_graph->AddSubgraph(sub_graph3->GetName(), sub_graph3);
   return root_graph;
 }
+
+/*
+*                                       |          constant         |
+*    data  partitioncall_0--------------|             |           |
+*       \  /                            |          netoutput      |
+*      concat
+*/
+ComputeGraphPtr BuildGraphPartitionCall4() {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &data = root_builder.AddNode("data", DATA, 1, 1);
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 3, 3);
+  const auto &concat = root_builder.AddNode("concat", "Concat", 2, 1);
+  root_builder.AddDataEdge(data, 0, concat, 0);
+  root_builder.AddDataEdge(partitioncall_0, 0, concat, 1);
+  const auto &root_graph = root_builder.GetGraph();
+
+  // 1.build partitioncall_0 sub graph
+  auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+  const auto &partitioncall_0_const = p1_sub_builder.AddNode("partitioncall_0_constant", CONSTANTOP, 0, 1);
+  const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 1, 1);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+  p1_sub_builder.AddDataEdge(partitioncall_0_const, 0, partitioncall_0_netoutput, 0);
+  const auto &sub_graph = p1_sub_builder.GetGraph();
+  sub_graph->SetParentNode(partitioncall_0);
+  sub_graph->SetParentGraph(root_graph);
+  partitioncall_0->GetOpDesc()->AddSubgraphName("f");
+  partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+  root_graph->AddSubgraph(sub_graph->GetName(), sub_graph);
+  return root_graph;
+}
 }
 
 TEST_F(UtestNodeUtils, UpdateOriginShapeAndShape) {
@@ -319,6 +349,22 @@ TEST_F(UtestNodeUtils, GetNodeUnknownShapeStatus_success) {
   case0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
   bool is_known = false;
   ASSERT_EQ(NodeUtils::GetNodeUnknownShapeStatus(*case0, is_known), GRAPH_SUCCESS);
+}
+
+
+TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_cross_one_subgraph) {
+  auto graph = BuildGraphPartitionCall4();
+  NodePtr expect_peer_node;
+  NodePtr concat_node;
+  for (auto &node : graph->GetAllNodes()) {
+    if (node->GetType() == "Concat") {
+      concat_node = node;
+    }
+  }
+  auto ret = NodeUtils::GetInNodeCrossPartionedCallNode(concat_node, 1 , expect_peer_node);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_NE(expect_peer_node, nullptr);
+  ASSERT_EQ(expect_peer_node->GetName(), "partitioncall_0_constant");
 }
 
 TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_subgraph_in_partitioncall) {
