@@ -194,10 +194,6 @@ class NodeUtils {
 
   static graphStatus UpdateInputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
   static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
-
-private:
-  static std::map<NodePtr, std::vector<uint32_t>> map_send_info_;
-  static std::map<NodePtr, std::vector<uint32_t>> map_recv_info_;
 };
 }  // namespace ge
 /*lint +e148*/
