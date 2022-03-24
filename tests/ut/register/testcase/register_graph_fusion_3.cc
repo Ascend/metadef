@@ -43,7 +43,7 @@ using Mapping = std::map<const std::shared_ptr<ge::OpDesc>, std::vector<ge::Node
 class SwapMergeCastFusionTestPass3 : public GraphFusionPassBase {
  protected:
   vector<FusionPattern *> DefinePatterns() override;
-  
+
   Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, vector<ge::NodePtr> &new_nodes) override;
 
  private:
@@ -148,7 +148,7 @@ SwapMergeCastFusionTestPass3::AddCastNodeBeforeMergeNode(const ge::NodePtr &merg
     in_data_desc->SetDataType(cast_out_d_type);
 
     // copy cast op desc and update the shape of input and output
-    ge::OpDescPtr new_cast_op_desc = ge::AttrUtils::CopyOpDesc(cast_op_desc);
+    ge::OpDescPtr new_cast_op_desc = ge::OpDescUtils::CopyOpDesc(cast_op_desc);
     UT_CHECK(new_cast_op_desc == nullptr,
              GE_LOGE("[GraphOpt][SwapMrgCastFus][AddCastNd] Fail to copy op desc for cast node[%s].",
                      cast_op_desc->GetName().c_str()),

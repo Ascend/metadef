@@ -18,7 +18,6 @@
 
 #define protected public
 #define private public
-
 #include "graph/utils/op_desc_utils.h"
 #include "graph_builder_utils.h"
 #include "graph/utils/constant_utils.h"
@@ -28,9 +27,7 @@
 #include "graph/runtime_inference_context.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/anchor_utils.h"
-
-#undef private
-#undef protected
+#include "test_std_structs.h"
 
 namespace ge {
 class UtestOpDescUtils : public testing::Test {
@@ -593,4 +590,118 @@ TEST_F(UtestOpDescUtils, SetWeights) {
   EXPECT_EQ(OpDescUtils::SetWeights(*const1, weights_map), GRAPH_PARAM_INVALID);
 }
 
+TEST_F(UtestOpDescUtils, CopyOpdesc) {
+  GeTensorDesc td;
+  td.SetShape(GeShape(std::vector<int64_t>({1, 1, 224, 224})));
+  td.SetOriginShape(GeShape(std::vector<int64_t>({1, 1, 224, 224})));
+  td.SetFormat(FORMAT_NCHW);
+  td.SetOriginFormat(FORMAT_NCHW);
+  td.SetDataType(DT_FLOAT);
+  td.SetOriginDataType(DT_FLOAT);
+  vector<int64_t> input_size = {12};
+  AttrUtils::SetListInt(td, "input_size", input_size);
+
+  auto op_desc = std::make_shared<OpDesc>();
+  op_desc->AddInputDesc("x1", td);
+  op_desc->AddInputDesc("x2", td);
+  op_desc->AddOutputDesc("y", td);
+  AttrUtils::SetStr(op_desc, "padding", "SAME");
+
+  auto new_desc = OpDescUtils::CopyOpDesc(op_desc);
+
+  std::string padding;
+  EXPECT_TRUE(AttrUtils::GetStr(new_desc, "padding", padding));
+  EXPECT_EQ(padding, "SAME");
+
+  EXPECT_EQ(new_desc->GetInputsSize(), 2);
+  EXPECT_EQ(new_desc->GetOutputsSize(), 1);
+
+  EXPECT_EQ(new_desc->GetInputDescPtr("x1"), new_desc->GetInputDescPtr(0));
+  EXPECT_EQ(new_desc->GetInputDescPtr("x2"), new_desc->GetInputDescPtr(1));
+  EXPECT_EQ(new_desc->MutableOutputDesc("y"), new_desc->MutableOutputDesc(0));
+
+  EXPECT_EQ(new_desc->GetInputDescPtr(0)->GetDataType(), DT_FLOAT);
+  EXPECT_EQ(new_desc->GetInputDescPtr(0)->GetOriginDataType(), DT_FLOAT);
+  EXPECT_EQ(new_desc->GetInputDescPtr(0)->GetFormat(), FORMAT_NCHW);
+  EXPECT_EQ(new_desc->GetInputDescPtr(0)->GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(new_desc->GetInputDescPtr(0)->GetShape().GetDims(), std::vector<int64_t>({1, 1, 224, 224}));
+  EXPECT_EQ(new_desc->GetInputDescPtr(0)->GetOriginShape().GetDims(), std::vector<int64_t>({1, 1, 224, 224}));
+  vector<int64_t> new_input_size;
+  EXPECT_TRUE(AttrUtils::GetListInt(new_desc->GetInputDescPtr(0), "input_size", new_input_size));
+  EXPECT_EQ(new_input_size, std::vector<int64_t>({12}));
+
+  EXPECT_EQ(new_desc->GetInputDescPtr(1)->GetDataType(), DT_FLOAT);
+  EXPECT_EQ(new_desc->GetInputDescPtr(1)->GetOriginDataType(), DT_FLOAT);
+  EXPECT_EQ(new_desc->GetInputDescPtr(1)->GetFormat(), FORMAT_NCHW);
+  EXPECT_EQ(new_desc->GetInputDescPtr(1)->GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(new_desc->GetInputDescPtr(1)->GetShape().GetDims(), std::vector<int64_t>({1, 1, 224, 224}));
+  EXPECT_EQ(new_desc->GetInputDescPtr(1)->GetOriginShape().GetDims(), std::vector<int64_t>({1, 1, 224, 224}));
+  new_input_size.clear();
+  auto new_input_desc = new_desc->GetInputDescPtr(1);
+  EXPECT_TRUE(AttrUtils::GetListInt(new_input_desc, "input_size", new_input_size));
+  EXPECT_EQ(new_input_size, std::vector<int64_t>({12}));
+
+  EXPECT_EQ(new_desc->GetOutputDescPtr(0)->GetDataType(), DT_FLOAT);
+  EXPECT_EQ(new_desc->GetOutputDescPtr(0)->GetOriginDataType(), DT_FLOAT);
+  EXPECT_EQ(new_desc->GetOutputDescPtr(0)->GetFormat(), FORMAT_NCHW);
+  EXPECT_EQ(new_desc->GetOutputDescPtr(0)->GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(new_desc->GetOutputDescPtr(0)->GetShape().GetDims(), std::vector<int64_t>({1, 1, 224, 224}));
+  EXPECT_EQ(new_desc->GetOutputDescPtr(0)->GetOriginShape().GetDims(), std::vector<int64_t>({1, 1, 224, 224}));
+  new_input_size.clear();
+  EXPECT_TRUE(AttrUtils::GetListInt(new_desc->GetInputDescPtr(0), "input_size", new_input_size));
+  EXPECT_EQ(new_input_size, std::vector<int64_t>({12}));
+}
+
+
+TEST_F(UtestOpDescUtils, CopyOpdesc2) {
+  GeTensorDesc td = StandardTd_5d_1_1_224_224();
+
+  auto op_desc = std::make_shared<OpDesc>();
+  op_desc->AddInputDesc("x1", td);
+  op_desc->AddInputDesc("x2", td);
+  op_desc->AddOutputDesc("y", td);
+  AttrUtils::SetStr(op_desc, "padding", "VALID");
+
+  auto new_desc1 = OpDescUtils::CopyOpDesc(op_desc);
+
+  std::string padding;
+  EXPECT_TRUE(AttrUtils::GetStr(new_desc1, "padding", padding));
+  EXPECT_EQ(padding, "VALID");
+
+  AttrUtils::SetStr(new_desc1, "padding", "SAME");
+  padding.clear();
+  EXPECT_TRUE(AttrUtils::GetStr(new_desc1, "padding", padding));
+  EXPECT_EQ(padding, "SAME");
+
+  auto new_desc2 = OpDescUtils::CopyOpDesc(new_desc1);
+  padding.clear();
+  EXPECT_TRUE(AttrUtils::GetStr(new_desc2, "padding", padding));
+  EXPECT_EQ(padding, "SAME");
+}
+
+TEST_F(UtestOpDescUtils, CloneOpdesc) {
+  GeTensorDesc td = StandardTd_5d_1_1_224_224();
+
+  auto op_desc = std::make_shared<OpDesc>();
+  op_desc->AddInputDesc("x1", td);
+  op_desc->AddInputDesc("x2", td);
+  op_desc->AddOutputDesc("y", td);
+  AttrUtils::SetStr(op_desc, "padding", "VALID");
+
+  auto new_desc1 = OpDescUtils::CloneOpDesc(op_desc);
+
+  std::string padding;
+  EXPECT_TRUE(AttrUtils::GetStr(new_desc1, "padding", padding));
+  EXPECT_EQ(padding, "VALID");
+
+  AttrUtils::SetStr(new_desc1, "padding", "SAME");
+  padding.clear();
+  EXPECT_TRUE(AttrUtils::GetStr(new_desc1, "padding", padding));
+  EXPECT_EQ(padding, "SAME");
+
+  auto new_desc2 = OpDescUtils::CloneOpDesc(new_desc1);
+  padding.clear();
+  EXPECT_TRUE(AttrUtils::GetStr(new_desc2, "padding", padding));
+  EXPECT_EQ(padding, "SAME");
+}
 }
