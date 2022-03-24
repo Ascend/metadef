@@ -63,12 +63,8 @@ struct ThreadSliceMap {
   std::vector<std::vector<std::vector<DimRange>>> output_tensor_slice;
   std::vector<std::vector<std::vector<DimRange>>> ori_input_tensor_slice;
   std::vector<std::vector<std::vector<DimRange>>> ori_output_tensor_slice;
-  ThreadSliceMap() {
-    is_first_node_in_topo_order = false;
-    is_input_node_of_thread_scope = false;
-    is_output_node_of_thread_scope = false;
-    thread_mode = 0U;
-    thread_id = 0U;
+  ThreadSliceMap() : is_first_node_in_topo_order(false), thread_mode(0U), is_input_node_of_thread_scope(false),
+                     is_output_node_of_thread_scope(false), thread_id(0U) {
   }
 };
 
