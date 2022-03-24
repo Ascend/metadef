@@ -1708,7 +1708,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
   const auto src_root_compute_graph = FindRootGraph(src_compute_graph);
   GE_CHECK_NOTNULL(src_root_compute_graph);
   for (const auto &n : src_compute_graph->GetDirectNode()) {
-    const OpDescPtr op_desc = AttrUtils::CopyOpDesc(n->GetOpDesc());
+    const OpDescPtr op_desc = OpDescUtils::CopyOpDesc(n->GetOpDesc());
     if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
       REPORT_CALL_ERROR("E18888", "CopyOpDesc failed from node:%s", n->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Copy][OpDesc] from node:%s failed", n->GetName().c_str());
@@ -1906,12 +1906,12 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
 ///
 /// Make a copy of ComputeGraph.
 /// @param graph: original graph.
-/// @param prefix: node name prefix of new graph.
+/// @param suffix: node name suffix of new graph.
 /// @param output_nodes: output nodes of new graph.
 /// @return ComputeGraphPtr
 ///
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::string &prefix,
+ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::string &suffix,
                                        std::vector<NodePtr> &input_nodes, std::vector<NodePtr> &output_nodes) {
   GE_CHK_BOOL_EXEC(graph != nullptr, REPORT_INNER_ERROR("E18888", "param graph is nullptr, check invalid.");
                    return nullptr, "[Check][Param] Original graph is null");
@@ -1922,7 +1922,7 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
 
   std::unordered_map<std::string, NodePtr> all_new_nodes;
   for (const auto &n : graph->GetDirectNode()) {
-    const OpDescPtr op_desc = AttrUtils::CopyOpDesc(n->GetOpDesc());
+    const OpDescPtr op_desc = OpDescUtils::CopyOpDesc(n->GetOpDesc());
     GE_CHK_BOOL_EXEC(op_desc != nullptr,
                      REPORT_CALL_ERROR("E18888", "Create node:%s failed.", n->GetOpDesc()->GetName().c_str());
                      return nullptr, "[Create][Node] %s failed", n->GetOpDesc()->GetName().c_str());
@@ -1947,7 +1947,7 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
       GELOGD("Clone ATTR_NAME_WEIGHTS for node:%s success.", op_desc->GetName().c_str());
     }
 
-    op_desc->SetName(n->GetName() + prefix);
+    op_desc->SetName(n->GetName() + suffix);
     NodePtr node = new_graph->AddNode(op_desc);
     GE_CHK_BOOL_EXEC(node != nullptr,
                      REPORT_CALL_ERROR("E18888", "add node %s to graph:%s failed",
@@ -1966,7 +1966,7 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
   }
 
   for (const auto &n : graph->GetDirectNode()) {
-    if (RelinkGraphEdges(n, prefix, all_new_nodes) != GRAPH_SUCCESS) {
+    if (RelinkGraphEdges(n, suffix, all_new_nodes) != GRAPH_SUCCESS) {
       return nullptr;
     }
   }
@@ -2033,11 +2033,11 @@ graphStatus GraphUtils::CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr
 ///
 /// Relink all edges for cloned ComputeGraph.
 /// @param [in] node: original node.
-/// @param [in] prefix: node name prefix of new node.
+/// @param [in] suffix: node name suffix of new node.
 /// @param [in] all_nodes: all nodes in new graph.
 /// @return success: GRAPH_SUCESS
 ///
-graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string &prefix,
+graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string &suffix,
                                          const std::unordered_map<std::string, NodePtr> &all_nodes) {
   if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param node is nullptr or it's opdesc is nullptr. check invalid");
@@ -2045,7 +2045,7 @@ graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string 
     return GRAPH_FAILED;
   }
 
-  auto it = all_nodes.find(node->GetName() + prefix);
+  auto it = all_nodes.find(node->GetName() + suffix);
   if (it == all_nodes.end()) {
     REPORT_INNER_ERROR("E18888", "all_nodes not contain node:%s.", node->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Check][Param] node[%s] not found", node->GetName().c_str());
@@ -2063,7 +2063,7 @@ graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string 
       GE_CHK_BOOL_EXEC(peer_in_anchor->GetOwnerNode() != nullptr,
                        REPORT_INNER_ERROR("E18888", "Peer in node:%s is null", node->GetName().c_str());
                        return GRAPH_FAILED, "Peer in node:%s is null", node->GetName().c_str());
-      it = all_nodes.find(peer_in_anchor->GetOwnerNode()->GetName() + prefix);
+      it = all_nodes.find(peer_in_anchor->GetOwnerNode()->GetName() + suffix);
       if (it == all_nodes.end()) {
         REPORT_INNER_ERROR("E18888", "all_nodes not contain node[%s]",
                            peer_in_anchor->GetOwnerNode()->GetName().c_str());
@@ -2087,7 +2087,7 @@ graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string 
       GE_CHK_BOOL_EXEC(peer_in_control_anchor->GetOwnerNode() != nullptr,
                        REPORT_INNER_ERROR("E18888", "Peer out node is null");
                        return GRAPH_FAILED, "[Invoke][GetOwnerNode] Peer out node is null");
-      it = all_nodes.find(peer_in_control_anchor->GetOwnerNode()->GetName() + prefix);
+      it = all_nodes.find(peer_in_control_anchor->GetOwnerNode()->GetName() + suffix);
       if (it == all_nodes.end()) {
         REPORT_INNER_ERROR("E18888", "all_nodes not contain node:%s",
                            peer_in_control_anchor->GetOwnerNode()->GetName().c_str());
@@ -2838,7 +2838,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
   // Add node
   for (const auto &node : graph_info.nodes_) {
-    (void)graph_builder.AddNode(AttrUtils::CopyOpDesc(node->GetOpDesc()));
+    (void)graph_builder.AddNode(OpDescUtils::CopyOpDesc(node->GetOpDesc()));
   }
 
   // Set Input

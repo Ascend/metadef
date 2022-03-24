@@ -319,10 +319,10 @@ class GraphUtils {
   ///
   /// Make a copy of ComputeGraph.
   /// @param graph: original graph.
-  /// @param prefix: node name prefix of new graph.
+  /// @param suffix: node name suffix of new graph.
   /// @return ComputeGraphPtr
   ///
-  static ComputeGraphPtr CloneGraph(const ComputeGraphPtr &graph, const std::string &prefix,
+  static ComputeGraphPtr CloneGraph(const ComputeGraphPtr &graph, const std::string &suffix,
                                     std::vector<NodePtr> &input_nodes, std::vector<NodePtr> &output_nodes);
 
   static void InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph,
@@ -462,11 +462,11 @@ class GraphUtils {
   ///
   /// Relink all edges for cloned ComputeGraph.
   /// @param [in] node: original node.
-  /// @param [in] prefix: node name prefix of new node.
+  /// @param [in] suffix: node name suffix of new node.
   /// @param [in] all_nodes: all nodes in new graph.
   /// @return success: GRAPH_SUCESS
   ///
-  static graphStatus RelinkGraphEdges(const NodePtr &node, const std::string &prefix,
+  static graphStatus RelinkGraphEdges(const NodePtr &node, const std::string &suffix,
                                       const std::unordered_map<std::string, NodePtr> &all_nodes);
 
   ///

@@ -198,7 +198,7 @@ OpDescUtils::CopyOperators(const ComputeGraphPtr &dst_compute_graph,
       if (it != op_desc_old_2_new.end()) {
         dst_op_desc = it->second;
       } else {
-        dst_op_desc = AttrUtils::CopyOpDesc(scr_op_impl_ptr->op_desc_);
+        dst_op_desc = OpDescUtils::CopyOpDesc(scr_op_impl_ptr->op_desc_);
         if (dst_op_desc == nullptr) {
           REPORT_CALL_ERROR("E18888", "CopyOpDesc from %s failed", scr_op_impl_ptr->op_desc_->GetName().c_str());
           GELOGE(GRAPH_FAILED, "[Copy][OpDesc] from %s failed", scr_op_impl_ptr->op_desc_->GetName().c_str());
@@ -222,7 +222,7 @@ OpDescUtils::CopyOperators(const ComputeGraphPtr &dst_compute_graph,
       if (it != node_old_2_new.end()) {
         dst_node = it->second;
       } else {
-        dst_op_desc = AttrUtils::CopyOpDesc(scr_op_impl_ptr->op_desc_);
+        dst_op_desc = OpDescUtils::CopyOpDesc(scr_op_impl_ptr->op_desc_);
         if (dst_op_desc == nullptr) {
           REPORT_CALL_ERROR("E18888", "CopyOpDesc from %s failed", scr_op_impl_ptr->op_desc_->GetName().c_str());
           GELOGE(GRAPH_FAILED, "[Copy][OpDesc] from %s failed", scr_op_impl_ptr->op_desc_->GetName().c_str());
