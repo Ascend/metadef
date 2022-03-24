@@ -354,3 +354,12 @@ TEST_F(UtestGeTensor, test_tensor_invalid) {
   Tensor tensor6(tensor_desc6, &data6, 1);
   EXPECT_EQ(tensor6.IsValid(), GRAPH_FAILED);
 }
+
+TEST_F(UtestGeTensor, NullObject) {
+  std::vector<int64_t> ints{1, 2, 3, 4};
+  GeShape shape1(ints);
+  GeTensorSerializeUtils::GetShapeFromDescProto(nullptr, shape1);
+  EXPECT_EQ(shape1.GetDims(), ints);
+  GeTensorSerializeUtils::GetOriginShapeFromDescProto(nullptr, shape1);
+  EXPECT_EQ(shape1.GetDims(), ints);
+}

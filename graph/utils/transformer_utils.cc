@@ -148,7 +148,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       return false;
     }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape, ori_format, curr_format, dtype};
-    (void)shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
+    (void)shape_transfer.GetShapeAccordingToFormat(op_desc_, shape_and_format_info);
     tensor_desc_input->SetFormat(curr_format);
   }
 
@@ -200,7 +200,7 @@ bool NodeShapeTransUtils::UpdateFormatAndShape() {
       return false;
     }
     transformer::ShapeAndFormat shape_and_format_info {ori_shape, curr_format, saved_format, dtype};
-    (void)shape_transfer.GetShapeAccordingToFormat(shape_and_format_info);
+    (void)shape_transfer.GetShapeAccordingToFormat(op_desc_, shape_and_format_info);
     GELOGD("Node is %s, out tensor idx is %zu. Update format and shape success, ori format: %s, format: %s",
         op_desc_->GetName().c_str(), i, TypeUtils::FormatToSerialString(curr_format).c_str(),
         TypeUtils::FormatToSerialString(saved_format).c_str());
