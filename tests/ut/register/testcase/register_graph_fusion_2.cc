@@ -148,7 +148,7 @@ SwapMergeCastFusionTestPass::AddCastNodeBeforeMergeNode(const ge::NodePtr &merge
     in_data_desc->SetDataType(cast_out_d_type);
 
     // copy cast op desc and update the shape of input and output
-    ge::OpDescPtr new_cast_op_desc = ge::AttrUtils::CopyOpDesc(cast_op_desc);
+    ge::OpDescPtr new_cast_op_desc = ge::OpDescUtils::CopyOpDesc(cast_op_desc);
     UT_CHECK(new_cast_op_desc == nullptr,
              GE_LOGE("[GraphOpt][SwapMrgCastFus][AddCastNd] Fail to copy op desc for cast node[%s].",
                              cast_op_desc->GetName().c_str()),
