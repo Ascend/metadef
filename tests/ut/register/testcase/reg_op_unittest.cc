@@ -61,6 +61,15 @@ REG_OP(AttrIrNameRegSuccess1)
     //.ATTR(AttrListNamedAttrs, ListNamedAttrs, {})
     .OP_END_FACTORY_REG(AttrIrNameRegSuccess1);
 
+REG_OP(InputIrNameRegSuccess1)
+    .INPUT(fix_input1, TensorType({DT_INT32, DT_INT64}))
+    .INPUT(fix_input2, TensorType({DT_INT32, DT_INT64}))
+    .OPTIONAL_INPUT(opi1, TensorType({DT_INT32, DT_INT64}))
+    .OPTIONAL_INPUT(opi2, TensorType({DT_INT32, DT_INT64}))
+    .DYNAMIC_INPUT(dyi1, TensorType({DT_INT32, DT_INT64}))
+    .DYNAMIC_INPUT(dyi2, TensorType({DT_INT32, DT_INT64}))
+    .OP_END_FACTORY_REG(InputIrNameRegSuccess1);
+
 TEST_F(RegisterOpUnittest, AttrIrNameRegSuccess) {
   auto op = OperatorFactory::CreateOperator("AttrIrNameRegSuccess1Op", "AttrIrNameRegSuccess1");
   auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
@@ -100,4 +109,26 @@ TEST_F(RegisterOpUnittest, AttrIrNameRegSuccess) {
                                       "ReqAttrBytes",
                                       "ReqAttrListListInt"}));
 }
+
+TEST_F(RegisterOpUnittest, InputIrNameRegSuccess) {
+  auto op = OperatorFactory::CreateOperator("InputIrNameRegSuccess1", "InputIrNameRegSuccess1");
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  const auto &inputs = op_desc->GetIrInputs();
+  std::vector<std::pair<std::string, IrInputType>> expect_inputs({{"fix_input1", kIrInputRequired},
+                                                                  {"fix_input2", kIrInputRequired},
+                                                                  {"opi1", kIrInputOptional},
+                                                                  {"opi2", kIrInputOptional},
+                                                                  {"dyi1", kIrInputDynamic},
+                                                                  {"dyi2", kIrInputDynamic}});
+  EXPECT_EQ(inputs, expect_inputs);
+
+  EXPECT_EQ(op_desc->GetValidInputNameByIndex(0), "fix_input1");
+  EXPECT_EQ(op_desc->GetValidInputNameByIndex(1), "fix_input2");
+  EXPECT_EQ(op_desc->GetValidInputNameByIndex(2), "");
+  EXPECT_EQ(op_desc->GetValidInputNameByIndex(3), "");
+  EXPECT_EQ(op_desc->GetValidInputNameByIndex(4), "");
+  EXPECT_EQ(op_desc->GetValidInputNameByIndex(5), "");
+}
+
 }  // namespace ge
