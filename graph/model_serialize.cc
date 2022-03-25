@@ -654,6 +654,7 @@ static bool ReadProtoFromBinaryFile(const uint8_t *const data, const size_t len,
     GELOGE(GRAPH_FAILED, "[Read][Proto] from BinaryFile failed, len %zu", len);
     return false;
   }
+
   return true;
 }
 
@@ -732,8 +733,17 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) co
   const auto ret = model_def.SerializeToArray(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
   if (!ret) {
     GELOGW("[Serialize][Model] Serialize to array failed");
+    return Buffer();
   }
   return buffer;
+}
+
+Status ModelSerialize::SerializeModel(const Model &model, const bool is_dump, proto::ModelDef &model_def) const {
+  ModelSerializeImp model_imp;
+  if (!model_imp.SerializeModel(model, &model_def, is_dump)) {
+    return FAILED;
+  }
+  return SUCCESS;
 }
 
 bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t len, Model &model) const {

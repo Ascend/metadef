@@ -88,6 +88,10 @@ graphStatus Model::Save(Buffer &buffer, const bool is_dump) const {
   return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
+graphStatus Model::Save(proto::ModelDef &model_def, const bool is_dump) const {
+  return SERIALIZE.SerializeModel(*this, is_dump, model_def);
+}
+
 void Model::SetAttr(const ProtoAttrMap &attrs) { attrs_ = attrs; }
 
 graphStatus Model::Load(const uint8_t *data, size_t len, Model &model) {

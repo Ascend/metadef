@@ -14,6 +14,8 @@
 #define private public
 #define protected public
 #include "graph/ge_attr_value.h"
+#include "graph/debug/ge_op_types.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/model_serialize.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/tensor_utils.h"
@@ -464,28 +466,85 @@ TEST(UTEST_ge_model_serialize, OpDescAsAttrValue)
 
 TEST(UTEST_ge_model_serialize, test_subGraph)
 {
-    Model model("model_name", "custom version3.0");
-    {
-        auto computeGraph = std::make_shared<ComputeGraph>("graph_name");
-        // input
-        auto inputOp = std::make_shared<OpDesc>("test", "TestOp");
-        inputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
-        auto input = CreateNode(inputOp, computeGraph);
-        Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-        model.SetGraph(graph);
+  Model model("model_name", "custom version3.0");
+  {
+    auto computeGraph = std::make_shared<ComputeGraph>("graph_name");
+    // input
+    auto inputOp = std::make_shared<OpDesc>("test", "TestOp");
+    inputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
+    auto input = CreateNode(inputOp, computeGraph);
+    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
+    model.SetGraph(graph);
 
-        auto subComputeGraph = std::make_shared<ComputeGraph>("sub_graph");
-        // input
-        auto subGraphInputOp = std::make_shared<OpDesc>("sub_graph_test", "TestOp2");
-        subGraphInputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
-        auto subGraphInput = CreateNode(subGraphInputOp, subComputeGraph);
+    auto subComputeGraph = std::make_shared<ComputeGraph>("sub_graph");
+    // input
+    auto subGraphInputOp = std::make_shared<OpDesc>("sub_graph_test", "TestOp2");
+    subGraphInputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
+    auto subGraphInput = CreateNode(subGraphInputOp, subComputeGraph);
 
-        AttrUtils::SetGraph(inputOp, "sub_graph", subComputeGraph);
+    AttrUtils::SetGraph(inputOp, "sub_graph", subComputeGraph);
+  }
+
+  ModelSerialize serialize;
+  auto buffer = serialize.SerializeModel(model);
+  ASSERT_GE(buffer.GetSize(), 0);
+}
+
+TEST(UTEST_ge_model_serialize, test_large_model)
+{
+  Model model("model_name", "custom version3.0");
+  {
+    auto computeGraph = std::make_shared<ComputeGraph>("graph_name");
+    // input
+    auto inputOp = std::make_shared<OpDesc>("test", CONSTANT);
+    inputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
+    auto input = CreateNode(inputOp, computeGraph);
+    GeTensor ge_tensor;
+    auto aligned_ptr = std::make_shared<AlignedPtr>(4294967296U);  // 4g
+    auto ptr = aligned_ptr->MutableGet();
+    *ptr = 7;
+    *(ptr + 10) = 8;
+    *(ptr + 4294967294) = 9;
+    ge_tensor.SetData(aligned_ptr, 4294967296U);
+    AttrUtils::SetTensor(inputOp, ATTR_NAME_WEIGHTS, ge_tensor);
+    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
+    model.SetGraph(graph);
+
+    auto subComputeGraph = std::make_shared<ComputeGraph>("sub_graph");
+    auto subGraphInputOp = std::make_shared<OpDesc>("sub_graph_test", "TestOp2");
+    subGraphInputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
+    auto subGraphInput = CreateNode(subGraphInputOp, subComputeGraph);
+
+    AttrUtils::SetGraph(inputOp, "sub_graph", subComputeGraph);
+  }
+
+  ModelSerialize serialize;
+  auto buffer = serialize.SerializeModel(model);
+  ASSERT_EQ(buffer.GetSize(), 0);// failed
+  proto::ModelDef model_def;
+  ASSERT_EQ(serialize.SerializeModel(model, false, model_def), SUCCESS); //success
+  GraphUtils::WriteProtoToTextFile(model_def, "./big_tensor.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
+  auto state = GraphUtils::LoadGEGraph("./big_tensor.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 1);
+  for (auto &node_ptr : com_graph1->GetAllNodes()) {
+    ASSERT_EQ((node_ptr == nullptr), false);
+    if (node_ptr->GetType() == CONSTANT) {
+      auto op_desc = node_ptr->GetOpDesc();
+      ASSERT_EQ((op_desc == nullptr), false);
+      ConstGeTensorPtr ge_tensor_ptr;
+      ASSERT_EQ(AttrUtils::GetTensor(op_desc, ATTR_NAME_WEIGHTS, ge_tensor_ptr), true);
+      ASSERT_EQ((ge_tensor_ptr == nullptr), false);
+      const TensorData tensor_data = ge_tensor_ptr->GetData();
+      const uint8_t *buff = tensor_data.GetData();
+      ASSERT_EQ((buff == nullptr), false);
+      ASSERT_EQ(buff[0], 7);
+      ASSERT_EQ(buff[10], 8);
+      ASSERT_EQ(buff[4294967294], 9); // value is ok for def serialize
     }
-
-    ModelSerialize serialize;
-    auto buffer = serialize.SerializeModel(model);
-    ASSERT_GE(buffer.GetSize(), 0);
+  }
+  system("rm -rf ./big_tensor.txt");
 }
 
 TEST(UTEST_ge_model_serialize, test_listSubGraph)
