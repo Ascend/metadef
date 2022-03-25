@@ -185,8 +185,6 @@ Status PluginSoManager::Load(const std::string &path, const std::vector<std::str
 
   char_t err_buf[kMaxErrorStrLen + 1U]{};
   char_t canonical_path[MMPA_MAX_PATH]{};
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path.length() >= static_cast<ULONG>(MMPA_MAX_PATH), GELOGW("File path is too long!");
-                                 return FAILED, "File path is too long!");
   if (mmRealPath(path.c_str(), &canonical_path[0], MMPA_MAX_PATH) != EN_OK) {
     const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrorStrLen);
     GELOGW("Failed to get realpath of %s, errmsg:%s", path.c_str(), err_msg);
