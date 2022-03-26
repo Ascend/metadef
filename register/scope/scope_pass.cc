@@ -107,7 +107,6 @@ Status ScopeBasePass::ScopeBasePassImpl::AddFusionScopesResultToScopeGraph(
 
     impl_fusion_rlt->AddNodes(impl_scope_rlt->GetNodes());
     impl_fusion_rlt->AddScopes(impl_scope_rlt->GetScopes());
-
     parent_->GenerateFusionResult(impl_scope_rlt->GetScopes(), fusion_rlt.get());
     if (impl_fusion_rlt->Type() == kScopeInvalidType) {
       GELOGE(FAILED, "Failed to set inner node for fusion op %s.", impl_fusion_rlt->Type().c_str());
@@ -150,7 +149,7 @@ Status ScopeBasePass::ScopeBasePassImpl::Run(std::shared_ptr<ScopeGraph> &scope_
     ret = AddFusionScopesResultToScopeGraph(scope_graph, scope_results);
     if (ret != SUCCESS) {
       GELOGE(FAILED, "Scope pass %s add fusion scopes result to scope graph failed.", parent_->PassName().c_str());
-      return FAILED;
+      return domi::SCOPE_NOT_CHANGED;
     }
   } else {
     GELOGI("[scope_fusion] Scope pass %s not match any scope.", parent_->PassName().c_str());
