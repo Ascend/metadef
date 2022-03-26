@@ -25,8 +25,11 @@ class OptimizeUtility {
  public:
   virtual ~OptimizeUtility() {}
 
-  // Graph infershape util
+  // Deprecated: will delete later. Graph infershape util
   virtual Status InferShape(ComputeGraph &compute_graph) = 0;
+
+  // Graph infershape util
+  virtual Status InferShape(const ComputeGraphPtr &compute_graph) = 0;
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPTIMIZER_OPTIMIZE_UTILITY_H_
