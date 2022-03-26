@@ -131,14 +131,14 @@ graphStatus Model::SaveToFile(const std::string &file_name) const {
     if (!ret) {
       REPORT_CALL_ERROR("E18888", "SerializeToFileDescriptor failed, file:%s.", &real_path[0]);
       GELOGE(GRAPH_FAILED, "[Call][SerializeToFileDescriptor] failed, file:%s.", &real_path[0]);
-      if (close(fd) != 0) {
+      if (mmClose(fd) != 0) {
         REPORT_CALL_ERROR("E18888", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
         GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", &real_path[0], GetStrError());
         return GRAPH_FAILED;
       }
       return GRAPH_FAILED;
     }
-    if (close(fd) != 0) {
+    if (mmClose(fd) != 0) {
       REPORT_CALL_ERROR("E18888", "close file:%s fail, error:%s.", &real_path[0], GetStrError());
       GELOGE(GRAPH_FAILED, "[Close][File] %s fail, error:%s.", &real_path[0], GetStrError());
       return GRAPH_FAILED;
