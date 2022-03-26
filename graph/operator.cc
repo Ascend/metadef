@@ -111,6 +111,7 @@
     if (!ge::AttrUtils::Set##AttrUtilsFun(operator_impl_->GetOpDescImpl(), name, attr_value)) {                        \
       GELOGW("[Register][Attr] Reg attr name %s failed", name.c_str());                                                \
     }                                                                                                                  \
+    operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);                                                           \
   }
 namespace ge {
 const int32_t kMaxDepth = 20;
@@ -1074,6 +1075,7 @@ void Operator::RequiredAttrRegister(const std::string &name) {
                    REPORT_INNER_ERROR("E18888", "GetOpDescImpl failed, as return nullptr.");
                    return, "[Get][OpDescImpl] is nullptr.");
   (void)(operator_impl_->GetOpDescImpl()->AddRequiredAttr(name));
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::RequiredAttrRegister(const char_t *name) {
@@ -1373,6 +1375,7 @@ void Operator::AttrRegister(const char_t *name, const AscendString &attr_value) 
   if (!AttrUtils::SetStr(operator_impl_->GetOpDescImpl(), op_name, str_attr_value)) {
     GELOGW("[Register][Attr] Reg attr name %s failed", op_name.c_str());
   }
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::AttrRegister(const std::string &name, const std::vector<AscendString> &attr_value) {
@@ -1393,6 +1396,7 @@ void Operator::AttrRegister(const std::string &name, const std::vector<AscendStr
   if (!AttrUtils::SetListStr(operator_impl_->GetOpDescImpl(), name, str_attr_values)) {
     GELOGW("[Register][Attr] Reg attr name %s failed", name.c_str());
   }
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::AttrRegister(const char_t *name, const std::vector<AscendString> &attr_value) {
@@ -1962,6 +1966,7 @@ void Operator::AttrRegister(const std::string &name, const std::vector<ge::DataT
   if (!AttrUtils::SetListDataType(operator_impl_->GetOpDescImpl(), name, attr_value)) {
     GELOGW("[Set][Attr] Set attr name %s failed", name.c_str());
   }
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::AttrRegister(const char_t *name, const std::vector<ge::DataType> &attr_value) {
@@ -1983,6 +1988,7 @@ void Operator::AttrRegister(const std::string &name, const ge::DataType &attr_va
   if (!AttrUtils::SetDataType(operator_impl_->GetOpDescImpl(), name, attr_value)) {
     GELOGW("[Set][Attr] Set attr name %s failed", name.c_str());
   }
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::AttrRegister(const char_t *name, const ge::DataType &attr_value) {
@@ -2005,6 +2011,7 @@ void Operator::AttrRegister(const std::string &name, const Tensor &attr_value) {
   if (!AttrUtils::SetTensor(operator_impl_->GetOpDescImpl(), name, tensor)) {
     GELOGW("[Register][Attr] Reg attr name %s failed", name.c_str());
   }
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::AttrRegister(const char_t *name, const Tensor &attr_value) {
@@ -2030,6 +2037,7 @@ void Operator::AttrRegister(const std::string &name, const std::vector<Tensor> &
   if (!AttrUtils::SetListTensor(operator_impl_->GetOpDescImpl(), name, val_list)) {
     GELOGW("[Register][Attr] Reg attr name %s failed", name.c_str());
   }
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::AttrRegister(const char_t *name, const vector<Tensor> &attr_value) {
@@ -2052,6 +2060,7 @@ void Operator::AttrRegister(const std::string &name, const OpBytes &attr_value) 
                                    Buffer::CopyFrom(attr_value.data(), attr_value.size()))) {
     GELOGW("[Register][Attr] Reg attr name %s failed", name.c_str());
   }
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
 void Operator::AttrRegister(const char_t *name, const OpBytes &attr_value) {

@@ -228,6 +228,9 @@ class OpDescImpl {
   void *GetAtomicTilingFuncInfo() const;
   void SetAtomicTilingFuncInfo(void *atomic_tiling_func_info);
 
+  void AppendIrAttrName(std::string name);
+  const std::vector<std::string> &GetIrAttrNames() const;
+
  private:
   void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
   void SerializeMetaDataToOpDef(proto::OpDef * const op_def);
@@ -253,6 +256,7 @@ class OpDescImpl {
   // or for a `case` op:
   // branches: dynamic
   std::map<std::string, SubgraphType> subgraph_ir_names_to_type_;
+  std::vector<std::string> ir_attr_names_;
 
   std::vector<GeTensorDescPtr> inputs_desc_{};
   std::map<std::string, uint32_t> input_name_idx_{};
