@@ -127,4 +127,15 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderDiffBecauseVaule) {
   ASSERT_EQ(holder2.GetDataLen(), sizeof(data2));
   ASSERT_EQ((holder1 != holder2), true);
 }
+
+TEST_F(UtestCompileCachePolicyHasher, TestGetCacheDescHashWithoutShape) {
+  CompileCacheDesc cacheDesc;
+  cacheDesc.SetOpType("1111");
+  TensorInfoArgs tensor_info_args(FORMAT_ND, FORMAT_ND, DT_BF16);
+  cacheDesc.AddTensorInfo(tensor_info_args);
+  CacheHashKey id = CompileCacheHasher::GetCacheDescHashWithoutShape(cacheDesc);
+  cacheDesc.SetOpType("2222");
+  CacheHashKey id_another = CompileCacheHasher::GetCacheDescHashWithoutShape(cacheDesc);
+  ASSERT_NE(id, id_another);
+}
 }
