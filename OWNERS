@@ -1,10 +1,8 @@
 approvers:
 - ji_chen 
-- wqtshg
-- ljl0711
-- alexlak
-- xig514
-- liu-jisheng
+- startzgf168
+- andylhy
+- liyihan123
 reviewers:
 - xchu42
 - sheng-nan
@@ -13,3 +11,8 @@ reviewers:
 - tangqunzhang
 - shawn-hu
 - kaermorhen
+- wqtshg
+- ljl0711
+- alexlak
+- xig514
+- liu-jisheng
