@@ -316,6 +316,7 @@ NodePtr ComputeGraphImpl::AddNodeFront(const NodePtr node) {
   } else {
     InsertToNodeList(nodes_.begin(), node);
   }
+  AddInputDataNode(node);
   return node;
 }
 
@@ -344,6 +345,7 @@ NodePtr ComputeGraphImpl::AddNode(const NodePtr node) {
   node->SetHostNode(is_valid_flag_);
   node->GetOpDesc()->SetId(static_cast<int64_t>(GetDirectNodesSize()));
   PushBackToNodeList(node);
+  AddInputDataNode(node);
   return node;
 }
 
@@ -380,7 +382,16 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const int64_t id, const Co
                   GELOGE(GRAPH_FAILED, "[Init][Node] fail."); return nullptr);
   node->SetHostNode(is_valid_flag_);
   PushBackToNodeList(node);
+  AddInputDataNode(node);
   return node;
+}
+
+void ComputeGraphImpl::AddInputDataNode(const NodePtr &node) {
+  if (node->GetType() == DATA) {
+    if (std::find(input_nodes_.begin(), input_nodes_.end(), node) == input_nodes_.end()) {
+      input_nodes_.push_back(node);
+    }
+  }
 }
 
 NodePtr ComputeGraphImpl::AddInputNode(const NodePtr node) {
@@ -1905,18 +1916,6 @@ void ComputeGraph::SetTopParentGraph() {
 
 void ComputeGraph::EraseFromNodeList(const std::list<NodePtr>::iterator position) {
   impl_->EraseFromNodeList(position);
-}
-
-void ComputeGraph::InsertToNodeList(const std::list<NodePtr>::iterator position, const NodePtr &node) {
-  impl_->InsertToNodeList(position, node);
-}
-
-void ComputeGraph::PushBackToNodeList(const NodePtr &node) {
-  impl_->PushBackToNodeList(node);
-}
-
-void ComputeGraph::EmplaceBackToNodeList(const NodePtr &node) {
-  impl_->EmplaceBackToNodeList(node);
 }
 
 void ComputeGraph::ClearNodeList() {

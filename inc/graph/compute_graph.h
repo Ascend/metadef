@@ -257,14 +257,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
    */
   void EraseFromNodeList(const std::list<NodePtr>::iterator position);
 
-  void InsertToNodeList(const std::list<NodePtr>::iterator position, const NodePtr &node);
-
-  void PushBackToNodeList(const NodePtr &node);
-
-  void EmplaceBackToNodeList(const NodePtr &node);
-
   friend class ModelSerializeImp;
-  friend class GraphDebugImp;
   friend class OnnxUtils;
   friend class TuningUtils;
 

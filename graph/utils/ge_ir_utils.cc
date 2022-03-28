@@ -763,6 +763,7 @@ bool OnnxUtils::ConvertGeModelToModelProto(const ge::Model &model, onnx::ModelPr
     GELOGE(GRAPH_FAILED, "[Invoke][EncodeGraph] fail, graph:%s", compute_graph->GetName().c_str());
     return false;
   }
+  graph_proto->clear_input();
 
   // For subgraphs: a subgraph is represented by a node
   for (const auto &sub_compute_graph : compute_graph->GetAllSubgraphs()) {

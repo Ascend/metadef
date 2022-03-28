@@ -496,7 +496,7 @@ TEST_F(UtestComputeGraph, InsertToNodeList_success) {
   const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
   const auto &node3 = builder.AddNode("node3", "node1", 0, 0);
   auto graph = builder.GetGraph();
-  graph->InsertToNodeList(graph->impl_->nodes_.begin(), node3);
+  graph->impl_->InsertToNodeList(graph->impl_->nodes_.begin(), node3);
   EXPECT_EQ(*(graph->impl_->nodes_.begin()), node3);
 }
 
@@ -506,7 +506,7 @@ TEST_F(UtestComputeGraph, PushBackToNodeList_success) {
   const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
   const auto &node3 = builder.AddNode("node3", "node3", 0, 0);
   auto graph = builder.GetGraph();
-  graph->PushBackToNodeList(node1);
+  graph->impl_->PushBackToNodeList(node1);
   auto node_list = graph->GetDirectNode();
   EXPECT_EQ(*(node_list.end() - 1), node1);
 }
@@ -517,7 +517,7 @@ TEST_F(UtestComputeGraph, EmplaceBackToNodeList_success) {
   const auto &node2 = builder.AddNode("node2", "node2", 0, 0);
   const auto &node3 = builder.AddNode("node3", "node1", 0, 0);
   auto graph = builder.GetGraph();
-  graph->EmplaceBackToNodeList(node1);
+  graph->impl_->EmplaceBackToNodeList(node1);
   auto node_list = graph->GetDirectNode();
   EXPECT_EQ(*(node_list.end() - 1) , node1);
 }
