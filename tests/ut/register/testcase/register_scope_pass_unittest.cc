@@ -191,6 +191,45 @@ protected:
   }
 };
 
+class ScopePass4 : public ScopeBasePass {
+public:
+  ScopePattern *scoPattern1;
+  ScopePattern *scoPattern2;
+
+protected:
+  std::vector<ScopeFusionPatterns> DefinePatterns() {
+    std::vector<std::vector<std::vector<ScopePattern *>>> scoPattern;
+    std::vector<std::vector<ScopePattern *>> scoPatternSub;
+    std::vector<ScopePattern *> scoPatternSubSub1;
+    std::vector<ScopePattern *> scoPatternSubSub2;
+
+    scoPattern1 = new ScopePattern();
+    scoPattern2 = new ScopePattern();
+    scoPatternSubSub1.push_back(scoPattern1);
+    scoPatternSubSub2.push_back(scoPattern2);
+
+    scoPatternSub.push_back(scoPatternSubSub1);
+    scoPatternSub.push_back(scoPatternSubSub2);
+
+    scoPattern.push_back(scoPatternSub);
+    return scoPattern;
+  }
+  std::string PassName() {
+    return std::string("passName1");
+  }
+  Status LastMatchScopesAndOPs(std::shared_ptr<ScopeGraph> &scope_graph,
+                               std::vector<ScopesResult> &results) {
+    ScopesResult Scope1;
+    results.push_back(Scope1);
+    return SUCCESS;
+  }
+  void GenerateFusionResult(const std::vector<Scope *> &scopes,
+                            FusionScopesResult *fusion_rlt) {
+    fusion_rlt->impl_->SetType(kScopeInvalidType);
+    return;
+  }
+};
+
 
 void CreateGraph(domi::tensorflow::GraphDef &graph_def) {
   // 1. add node
@@ -275,6 +314,24 @@ TEST_F(UtestScopePass, ScopePassRun1) {
   ScopePass1 scoBasePass;
   retStatus = scoBasePass.impl_->Run(scope_graph);
   EXPECT_EQ(retStatus, SUCCESS);
+}
+
+TEST_F(UtestScopePass, ScopePassRun4) {
+  // no scope match
+  Status retStatus;
+  domi::tensorflow::GraphDef graph_def;
+  CreateGraph(graph_def);
+
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  retStatus = scope_graph->Init();
+  ASSERT_EQ(retStatus, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+
+  ScopePass4 scoBasePass;
+  retStatus = scoBasePass.impl_->Run(scope_graph);
+  EXPECT_EQ(retStatus, domi::SCOPE_NOT_CHANGED);
 }
 
 TEST_F(UtestScopePass, ScopePassRun2) {
