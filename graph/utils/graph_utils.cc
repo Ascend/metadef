@@ -678,21 +678,15 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   ge::Model model("", "");
   model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
   Buffer buffer;
-  const int64_t dump_level =
-      (dump_ge_graph != nullptr) ? std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue)
-                                 : ge::OnnxUtils::NO_DUMP;
-  (void)model.Save(buffer, (dump_level != ge::OnnxUtils::DUMP_ALL) && (!is_always_dump));
-
-  // Write file
-  if (buffer.GetData() != nullptr) {
-    ge::proto::ModelDef ge_proto;
-    const std::string str(PtrToPtr<uint8_t, char_t>(buffer.GetData()), buffer.GetSize());
-    if (!ge_proto.ParseFromString(str)) {
-      GELOGW("[Invoke][Parse] parse from model failed.");
-      return;
-    }
-    GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
+  const int64_t dump_level = (dump_ge_graph != nullptr)
+      ? std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue)
+      : ge::OnnxUtils::NO_DUMP;
+  ge::proto::ModelDef ge_proto;
+  if (model.Save(ge_proto, (dump_level != ge::OnnxUtils::DUMP_ALL) && (!is_always_dump)) != SUCCESS) {
+    return;
   }
+  GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
+
 #else
   (void)is_always_dump;
   GELOGW("[DumpGraph][Check] Need to define FMK_SUPPORT_DUMP for dump graph.");
@@ -718,31 +712,27 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
     return GRAPH_FAILED;
   }
 
-  // Create buffer
+  // Create Model
   ge::Model model("", "");
   model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
-  Buffer buffer;
-  (void)model.Save(buffer, dump_level != ge::OnnxUtils::DUMP_ALL);
 
-  // Write file
-  if (buffer.GetData() != nullptr) {
-    ge::proto::ModelDef ge_proto;
-    const std::string str(PtrToPtr<uint8_t, char_t>(buffer.GetData()), buffer.GetSize());
-    if (!ge_proto.ParseFromString(str)) {
-      GELOGE(GRAPH_FAILED, "[Invoke][Parse] parse from std::string failed.");
-      return GRAPH_FAILED;
-    }
-    char_t real_path[MMPA_MAX_PATH] = {};
-    if (mmRealPath(path_dir.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK) {
-      REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
-                         std::vector<std::string>({path_dir.c_str(), "Directory does not exist."}));
-      GELOGE(GRAPH_FAILED, "[Get][RealPath]Directory %s does not exist.", path_dir.c_str());
-      return GRAPH_FAILED;
-    }
-    const std::string path = real_path;
-    const std::string real_path_name = path + std::string(MMPA_PATH_SEPARATOR_STR) + file_name;
-    GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
+  // SerializeModel to ModelDef
+  ge::proto::ModelDef ge_proto;
+  if (model.Save(ge_proto, dump_level != ge::OnnxUtils::DUMP_ALL) != SUCCESS) {
+    return GRAPH_FAILED;
   }
+  // Write file
+  char_t real_path[MMPA_MAX_PATH] = {};
+  if (mmRealPath(path_dir.c_str(), &(real_path[0U]), MMPA_MAX_PATH) != EN_OK) {
+    REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
+                       std::vector<std::string>({path_dir.c_str(), "Directory does not exist."}));
+    GELOGE(GRAPH_FAILED, "[Get][RealPath]Directory %s does not exist.", path_dir.c_str());
+    return GRAPH_FAILED;
+  }
+  const std::string path = real_path;
+  const std::string real_path_name = path + std::string(MMPA_PATH_SEPARATOR_STR) + file_name;
+  GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
+
   return GRAPH_SUCCESS;
 }
 
