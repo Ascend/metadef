@@ -179,6 +179,7 @@ class ComputeGraphImpl {
   void Swap(ComputeGraphImpl &graph);
 
   void SetNodesOwner(const ComputeGraphPtr &compute_graph);
+  void SetTopParentGraph(const ComputeGraphPtr &compute_graph);
   graphStatus IsolateNode(const NodePtr &node) const;
   graphStatus RemoveExtraOutEdge(const NodePtr &node) const;
   graphStatus Verify(const ConstComputeGraphPtr compute_graph) const;

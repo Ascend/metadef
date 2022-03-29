@@ -43,6 +43,7 @@ class MetaDataStore {
   const vector<bool> &GetIsInputConsts() const {return is_input_consts_;}
   const vector<std::string> &GetSubgraphNames() const {return subgraph_names_;}
   void AddSubGraphName(const string &name) {subgraph_names_.push_back(name);}
+  void ClearSubgraphNames() { subgraph_names_.clear(); }
 
  private:
   friend class OpDescImpl;
