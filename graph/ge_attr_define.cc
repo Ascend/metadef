@@ -1028,6 +1028,7 @@ const std::string ATTR_NAME_TBE_KERNEL_BUFFER = "_tbe_kernel_buffer";
 const std::string ATTR_NAME_DATA_SLICE = "_data_slice";
 const std::string ATTR_NAME_NEED_RECOVER_ATTR = "_need_recover_attr";
 const std::string ATTR_NAME_OFF_SUPERKERNEL_ATTR = "_off_superkernel";
+const std::string ATTR_NAME_SRC_CONST_NAME = "_src_const_name";
 
 // merge subgraph with output anchor map
 const std::string ATTR_NAME_FUSION_ORIGIN_NAME = "_fusion_origin_name";
