@@ -22,11 +22,13 @@
 #include "graph/buffer.h"
 #include "graph/compute_graph.h"
 #include "graph/model.h"
+#include "external/ge/ge_api_types.h"
 
 namespace ge {
 class ModelSerialize {
  public:
   Buffer SerializeModel(const Model &model, const bool is_dump = false) const;
+  Status SerializeModel(const Model &model, const bool is_dump, proto::ModelDef &model_def) const;
 
   bool UnserializeModel(const uint8_t *const data, const size_t len, Model &model) const;
 
