@@ -81,16 +81,9 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
 }
 
 void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_desc) const {
-  const size_t op_def_subgraph_name_size = op_desc->impl_->meta_data_.GetSubgraphNames().size();
-  const size_t op_desc_subgraph_name_size = op_desc->GetSubgraphInstanceNames().size();
-  if (op_def_subgraph_name_size == op_desc_subgraph_name_size) {
-    return;
-  }
-
-  if (op_def_subgraph_name_size == 0UL) {
-    for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
-      op_desc->impl_->meta_data_.AddSubGraphName(name);
-    }
+  op_desc->impl_->meta_data_.ClearSubgraphNames();
+  for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
+    op_desc->impl_->meta_data_.AddSubGraphName(name);
   }
 }
 
