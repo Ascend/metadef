@@ -390,11 +390,19 @@ TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_paritioncall_link_partiti
   auto graph = BuildGraphPartitionCall2();
   NodePtr expect_peer_node = nullptr;
   NodePtr squeeze_node;
+  NodePtr data_in_root;
+  NodePtr data_in_partition0;
   NodePtr data_in_partition1;
   NodePtr partitioncall_0;
   for (auto &node : graph->GetAllNodes()) {
     if (node->GetType() == SQUEEZE) {
       squeeze_node = node;
+    }
+    if (node->GetName() == "data") {
+      data_in_root = node;
+    }
+    if (node->GetName() == "partitioncall_0_data") {
+      data_in_partition0 = node;
     }
     if (node->GetName() == "partitioncall_1_data") {
       data_in_partition1 = node;
@@ -403,6 +411,9 @@ TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_paritioncall_link_partiti
       partitioncall_0 = node;
     }
   }
+  ASSERT_EQ(NodeUtils::GetInNodeCrossSubgraph(data_in_partition0), data_in_root);
+  ASSERT_EQ(NodeUtils::GetInNodeCrossSubgraph(data_in_partition1), partitioncall_0);
+
   // test with src node
   auto ret = NodeUtils::GetInNodeCrossPartionedCallNode(squeeze_node, 0 , expect_peer_node);
   ASSERT_EQ(ret, GRAPH_SUCCESS);

@@ -898,7 +898,7 @@ NodePtr NodeUtils::GetInNodeCrossSubgraph(const NodePtr &node) {
     const auto owner_graph = input_node->GetOwnerComputeGraph();
     const auto parent_node = owner_graph->GetParentNode();
     if ((parent_node == nullptr) || (kWhileOpTypes.count(parent_node->GetType()) > 0UL)) {
-      return node;       // not in subgraph or while subgraph.
+      return input_node;       // not in subgraph or while subgraph.
     }
 
     input_node = GetParentInput(input_node);
