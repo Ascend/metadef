@@ -384,6 +384,119 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   Graph GetDynamicSubgraph(const std::string &name, uint32_t index) const;
   Graph GetDynamicSubgraph(const char_t *name, uint32_t index) const;
 
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const char_t *attr_value);
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const char_t *attr_value);
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const char_t *attr_value);
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const char_t *attr_value);
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const AscendString &attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, AscendString &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const AscendString &attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, AscendString &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const AscendString &attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, AscendString &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const AscendString &attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, AscendString &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, int64_t attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, int64_t &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, int64_t attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, int64_t &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, int64_t attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, int64_t &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, int64_t attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, int64_t &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, int32_t attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, int32_t &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, int32_t attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, int32_t &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, int32_t attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, int32_t &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, int32_t attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, int32_t &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, uint32_t attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, uint32_t &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, uint32_t attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, uint32_t &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, uint32_t attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, uint32_t &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, uint32_t attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, uint32_t &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, bool attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, bool &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, bool attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, bool &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, bool attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, bool &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, bool attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, bool &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, float32_t attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, float32_t &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, float32_t attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, float32_t &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, float32_t attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, float32_t &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, float32_t attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, float32_t &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const std::vector<AscendString> &attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, std::vector<AscendString> &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const std::vector<AscendString> &attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, std::vector<AscendString> &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const std::vector<AscendString> &attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, std::vector<AscendString> &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const std::vector<AscendString> &attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, std::vector<AscendString> &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const std::vector<int64_t> &attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, std::vector<int64_t> &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const std::vector<int64_t> &attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, std::vector<int64_t> &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const std::vector<int64_t> &attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, std::vector<int64_t> &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const std::vector<int64_t> &attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, std::vector<int64_t> &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const std::vector<int32_t> &attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, std::vector<int32_t> &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const std::vector<int32_t> &attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, std::vector<int32_t> &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const std::vector<int32_t> &attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, std::vector<int32_t> &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const std::vector<int32_t> &attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, std::vector<int32_t> &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const std::vector<uint32_t> &attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, std::vector<uint32_t> &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const std::vector<uint32_t> &attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, std::vector<uint32_t> &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const std::vector<uint32_t> &attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, std::vector<uint32_t> &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const std::vector<uint32_t> &attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, std::vector<uint32_t> &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const std::vector<bool> &attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, std::vector<bool> &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const std::vector<bool> &attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, std::vector<bool> &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const std::vector<bool> &attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, std::vector<bool> &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const std::vector<bool> &attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, std::vector<bool> &attr_value) const;
+
+  Operator &SetInputAttr(const int32_t index, const char_t *name, const std::vector<float32_t> &attr_value);
+  graphStatus GetInputAttr(const int32_t index, const char_t *name, std::vector<float32_t> &attr_value) const;
+  Operator &SetOutputAttr(const int32_t index, const char_t *name, const std::vector<float32_t> &attr_value);
+  graphStatus GetOutputAttr(const int32_t index, const char_t *name, std::vector<float32_t> &attr_value) const;
+  Operator &SetInputAttr(const char_t *dst_name, const char_t *name, const std::vector<float32_t> &attr_value);
+  graphStatus GetInputAttr(const char_t *dst_name, const char_t *name, std::vector<float32_t> &attr_value) const;
+  Operator &SetOutputAttr(const char_t *dst_name, const char_t *name, const std::vector<float32_t> &attr_value);
+  graphStatus GetOutputAttr(const char_t *dst_name, const char_t *name, std::vector<float32_t> &attr_value) const;
+
  protected:
   ATTRIBUTED_DEPRECATED(void AttrRegister(const char_t *, float32_t))
   void AttrRegister(const std::string &name, float32_t attr_value);
