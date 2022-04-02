@@ -220,6 +220,17 @@ TEST_F(UtestTuningUtils, CreateDataNode_Weight) {
     NodePtr data_node;
     node->GetOpDesc()->SetExtAttr<NodePtr>("parentNode", node1);
     EXPECT_EQ(TuningUtils::CreateDataNode(node, data_node), GRAPH_SUCCESS);
+
+    auto pld = builder.AddNode("pld", PLACEHOLDER, 0, 1);
+    uint8_t val = 1;
+    auto const_tensor = std::make_shared<GeTensor>(GeTensorDesc(), &val, sizeof(val));
+    ASSERT_NE(pld->GetOpDesc(), nullptr);
+    EXPECT_EQ(ge::AttrUtils::SetTensor(pld->GetOpDesc(), "value", const_tensor), true);
+    EXPECT_EQ(ge::AttrUtils::SetStr(pld->GetOpDesc(), "_parentNodeName", "src_const"), true);
+    EXPECT_EQ(TuningUtils::CreateDataNode(pld, data_node), GRAPH_SUCCESS);
+    std::string parent_node_name;
+    EXPECT_EQ(ge::AttrUtils::GetStr(data_node->GetOpDesc(), ATTR_NAME_SRC_CONST_NAME, parent_node_name), true);
+    EXPECT_EQ(parent_node_name, "src_const");
 }
 
 TEST_F(UtestTuningUtils, AddAttrToDataNodeForMergeGraph) {
