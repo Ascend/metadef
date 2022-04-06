@@ -33,7 +33,7 @@ class PluginSoManager {
 
   ~PluginSoManager();
 
-  void SplitPath(const std::string &mutil_path, std::vector<std::string> &path_vec);
+  void SplitPath(const std::string &mutil_path, std::vector<std::string> &path_vec) const;
 
   Status LoadSo(const std::string &path, const std::vector<std::string> &func_check_list = {});
 
