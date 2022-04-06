@@ -63,6 +63,8 @@ message TaskDef {
     DSATaskDef dsa_task = 43;
     CmoTaskDef cmo_task = 44;
     CmoBarrierTaskDef cmo_barrier_task = 45;
+    NpuGetFloatStatusDef npu_get_float_status = 46;
+    NpuClearFloatStatusDef npu_clear_float_status = 47;
 }
 
 message KernelDef {
@@ -789,4 +791,14 @@ message CmoBarrierTaskDef {
 message CmoBarrierInfoDef {
     uint32 cmo_type = 1;
     uint32 logic_id = 2;
+}
+
+message NpuGetFloatStatusDef {
+    uint64 output_addr = 1;
+    uint32 output_size = 2;
+    uint32 mode = 3;
+}
+
+message NpuClearFloatStatusDef {
+    uint32 mode = 1;
 }
