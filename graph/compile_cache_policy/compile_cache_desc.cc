@@ -232,6 +232,17 @@ bool TensorInfoArgs::IsShapeInRange(const TensorInfoArgs &other) const {
   return true;
 }
 
+size_t CompileCacheDesc::GetTensorInfoSize() {
+  return tensor_info_args_vec_.size();
+}
+
+TensorInfoArgs *CompileCacheDesc::MutableTensorInfo(size_t index) {
+  if (index >= tensor_info_args_vec_.size()) {
+    return nullptr;
+  }
+  return &tensor_info_args_vec_[index];
+}
+
 void CompileCacheDesc::AddBinary(const BinaryHolder &holder) {
   other_desc_.emplace_back(holder);
 }
