@@ -342,6 +342,9 @@ TEST_F(UtestCompileCachePolicy, AgingCacheSuccess_1) {
   cache_desc.SetOpType("test_op");
   TensorInfoArgs tensor_info(ge::FORMAT_ND, ge::FORMAT_ND, ge::DT_FLOAT16);
   cache_desc.AddTensorInfo(tensor_info);
+  ASSERT_EQ(cache_desc.GetTensorInfoSize(), 1);
+  ASSERT_EQ(cache_desc.MutableTensorInfo(1), nullptr);
+  ASSERT_NE(cache_desc.MutableTensorInfo(0), nullptr);
   uint8_t value = 9;
   uint8_t *data = &value;
   BinaryHolder holder(data, 1);
