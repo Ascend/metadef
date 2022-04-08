@@ -894,17 +894,6 @@
     {
       "errClass": "Command Line Errors",
       "errTitle": "TensorFlow Model Data Error",
-      "ErrCode": "E12010",
-      "ErrMessage": "Model has no Placeholder or _Arg node.",
-      "Arglist": "",
-      "suggestion": {
-        "Possible Cause": "No node of type Placeholder or _Arg is found in the model.",
-        "Solution": "Try again with a valid TensorFlow model."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "TensorFlow Model Data Error",
       "ErrCode": "E12013",
       "ErrMessage": "Failed to find a subgraph by the name [%s].",
       "Arglist": "functionname",
