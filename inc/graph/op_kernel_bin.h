@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "graph/types.h"
 #include "graph/def_types.h"
 
 namespace ge {

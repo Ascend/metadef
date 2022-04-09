@@ -98,6 +98,8 @@ class CompileCacheDesc {
   void AddBinary(BinaryHolder &&holder);
   void AddTensorInfo(const TensorInfoArgs &tensor_info);
   void SetScopeId(const std::initializer_list<uint64_t> scope_id);
+  size_t GetTensorInfoSize();
+  TensorInfoArgs *MutableTensorInfo(size_t index);
 
  private:
   static bool CheckWithoutTensorInfo(const CompileCacheDesc &first, const CompileCacheDesc &second);
