@@ -40,7 +40,7 @@ PluginSoManager::~PluginSoManager() {
   ClearHandles();
 }
 
-void PluginSoManager::SplitPath(const std::string &mutil_path, std::vector<std::string> &path_vec) {
+void PluginSoManager::SplitPath(const std::string &mutil_path, std::vector<std::string> &path_vec) const {
   const std::string tmp_string = mutil_path + ":";
   std::string::size_type start_pos = 0U;
   std::string::size_type cur_pos = tmp_string.find(':', 0U);
