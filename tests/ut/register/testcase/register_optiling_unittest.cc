@@ -313,4 +313,19 @@ TEST_F(RegisterOpTilingUT, UpDateNodeShapeBySliceInfo2) {
   EXPECT_EQ(ret, ge::GRAPH_FAILED);
 }
 
+TEST_F(RegisterOpTilingUT, op_run_info_test_new_tiling_interface1) {
+  std::shared_ptr<utils::OpRunInfo> run_info = make_shared<utils::OpRunInfo>(8, true, 64);
+  void * base = run_info->GetAddrBase();
+  run_info->SetAddrBaseOffset(10);
+}
+
+TEST_F(RegisterOpTilingUT, op_run_info_test_new_tiling_interface2) {
+  std::shared_ptr<utils::OpRunInfo> run_info = make_shared<utils::OpRunInfo>(8, true, 64);
+  int v1 = 1;
+  int64_t  v2 = 2;
+  run_info << v1;
+  run_info << v2;
+}
+
+
 }  // namespace ge
