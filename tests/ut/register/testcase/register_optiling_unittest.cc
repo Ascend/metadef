@@ -321,7 +321,7 @@ TEST_F(RegisterOpTilingUT, op_run_info_test_new_tiling_interface1) {
 }
 
 TEST_F(RegisterOpTilingUT, op_run_info_test_new_tiling_interface2) {
-  utils::OpRunInfo> run_info;
+  utils::OpRunInfo run_info;
   int v1 = 1;
   int64_t  v2 = 2;
   run_info << v1;
