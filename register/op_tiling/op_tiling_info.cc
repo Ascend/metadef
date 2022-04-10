@@ -76,6 +76,15 @@ public:
     }
   }
 
+  void* GetAddrBase(int64_t& max_size) {
+    max_size = max_size_;
+    return addr_base_;
+  }
+
+  void SetAddrBaseOffset(int64_t size) {
+    offset_ = size;
+  }
+
   const ByteBuffer &GetAllTilingData() const { return tiling_data_; }
 
   ByteBuffer &GetAllTilingData() { return tiling_data_; }
@@ -191,6 +200,14 @@ void OpRunInfo::InternelSetTiling(const ByteBuffer &value) {
 
 void OpRunInfo::AddTilingData(const ge::char_t *value, const size_t size) {
   impl_->AddTilingData(value, size);
+}
+
+void* OpRunInfo::GetAddrBase(int64_t& max_size) {
+  return impl_->GetAddrBase(max_size);
+}
+
+void OpRunInfo::SetAddrBaseOffset(int64_t size) {
+  impl_->SetAddrBaseOffset(size);
 }
 
 ByteBuffer &OpRunInfo::GetAllTilingData() {
