@@ -118,7 +118,7 @@ public:
     AddTilingData(reinterpret_cast<const char *>(&value), sizeof(value));
   }
   template <typename T>
-  void operator >> (const T &value) {
+  void operator << (const T &value) {
     AddTilingData(reinterpret_cast<const char *>(&value), sizeof(T));
   }
   void AddTilingData(const char *value, const size_t size);
