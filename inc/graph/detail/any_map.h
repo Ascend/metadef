@@ -109,6 +109,7 @@ bool AnyMap::Set(const std::string &name, const DT &val) {
     tmp = std::make_shared<Holder<DT>>(val);
   } catch (...) {
     tmp = nullptr;
+    return false;
   }
 
   if (it == any_values_.end()) {
