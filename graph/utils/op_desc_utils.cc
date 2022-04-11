@@ -89,7 +89,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearInputDesc(
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::HasQuantizeFactorParams(const OpDescPtr &op_desc) {
-  GE_CHK_BOOL_EXEC_INFO(op_desc != nullptr, return false, "op_desc is nullptr");
+  if (op_desc == nullptr) {
+    GELOGI("op_desc is nullptr");
+    return false;
+  }
   return op_desc->HasAttr(OP_DESC_QUANT_PARAMS);
 }
 

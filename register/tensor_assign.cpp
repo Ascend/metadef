@@ -432,9 +432,14 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
         shape_vec.push_back(shape_dim.size());
         const int64_t dim = shape_vec[static_cast<size_t>(i)];
         // tensorflow support weights shape [0],have no weights
-        GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(dim < 0, return FAILED, "Dim size invalid");
-        GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(((count != 0) && (dim >= (std::numeric_limits<int64_t>::max() / count))),
-                                       return FAILED, "Dim size exceeds INT64_MAX");
+        if (dim < 0) {
+          GELOGE(FAILED, "Dim size invalid");
+          return FAILED;
+        }
+        if ((count != 0) && (dim >= (std::numeric_limits<int64_t>::max() / count))) {
+          GELOGE(FAILED, "Dim size exceeds INT64_MAX");
+          return FAILED;
+        }
         count *= dim;
       });
   const GeShape shape(shape_vec);
