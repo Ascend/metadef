@@ -27,6 +27,7 @@ set(GRAPH_SOURCE_LIST
     "ge_tensor.cc"
     "common/large_bm.cc"
     "common/plugin_so_manager.cc"
+    "common/hyper_status.cc"
     "detail/attributes_holder.cc"
     "utils/anchor_utils.cc"
     "utils/tuning_utils.cc"

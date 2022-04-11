@@ -30,40 +30,7 @@ include_directories(${METADEF_DIR}/third_party/graphengine/inc)
 include_directories(${METADEF_DIR}/third_party/graphengine/inc/external)
 include_directories(${METADEF_DIR}/third_party/graphengine/inc/framework)
 
-set(REGISTER_UT_FILES
-    "testcase/register_unittest.cc"
-    "testcase/register_prototype_unittest.cc"
-    "testcase/register_scope_graph_unittest.cc"
-    "testcase/register_scope_pass_unittest.cc"
-    "testcase/register_scope_pass_registry_unittest.cc"
-    "testcase/infer_data_slice_registry_unittest.cc"
-    "testcase/infer_axis_slice_registry_unittest.cc"
-    "testcase/register_op_tiling_v4_ut.cc"
-    "testcase/register_op_tiling_v3_ut.cc"
-    "testcase/register_op_tiling_v2_ut.cc"
-    "testcase/register_op_tiling_v1_ut.cc"
-    "testcase/register_optiling_unittest.cc"
-    "testcase/op_tiling_attr_utils_test.cc"
-    "graph_builder_utils.cc"
-    "testcase/graph_fusion_clycle_detection_unittest.cc"
-    "testcase/auto_mapping_util_unittest.cc"
-    "testcase/tensor_assign_unittest.cc"
-    "testcase/scope_pattern_unittest.cc"
-    "testcase/scope_util_unittest.cc"
-    "testcase/register_pass_unittest.cc"
-    "testcase/ops_kernel_builder_registry_unittest.cc"
-    "testcase/op_kernel_registry_unittest.cc"
-    "testcase/fusion_statistics.cc"
-    "testcase/register_graph_fusion.cc"
-    "testcase/register_graph_fusion_v2_utest.cc"
-    "testcase/register_graph_fusion_2.cc"
-    "testcase/register_graph_fusion_3.cc"
-    "testcase/register_graph_fusion_4.cc"
-    "testcase/register_buffer_fusion.cc"
-    "testcase/register_buffer_fusion_v2_utest.cc"
-    "testcase/graph_pass_util_ut.cc"
-    "testcase/reg_op_unittest.cc"
-)
+file(GLOB_RECURSE REGISTER_UT_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/register/*.cc" )
 add_executable(ut_register
     ${REGISTER_UT_FILES}
 )
