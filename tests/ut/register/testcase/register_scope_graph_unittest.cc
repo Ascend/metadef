@@ -317,6 +317,26 @@ TEST_F(UtestScopeGraph, IsFusionOpTest) {
     EXPECT_EQ(stat, SUCCESS);
 }
 
+TEST_F(UtestScopeGraph, IsFusionOpTest_Fail ) {
+  // AddFusionScopesResult
+  FusionScopesResult *fusionResult = new(std::nothrow) FusionScopesResult();
+  ASSERT_NE(fusionResult, nullptr);
+  std::string name = "name";
+  fusionResult->SetName(name);
+  fusionResult->SetName(name.c_str());
+  fusionResult->SetType(name);
+  fusionResult->SetType(name.c_str());
+  fusionResult->SetDescription(name);
+  fusionResult->SetDescription(name.c_str());
+  EXPECT_EQ(fusionResult->Name(), "");
+  AscendString as;
+  EXPECT_EQ(fusionResult->Name(as), ge::GRAPH_PARAM_INVALID);
+  EXPECT_EQ(fusionResult->Nodes().empty(), true);
+  fusionResult->InsertInputs(name, {});
+  fusionResult->InsertInputs(name.c_str(), {});
+  fusionResult->InsertOutputs(name, {});
+}
+
 TEST_F(UtestScopeGraph, ScopeImplAddNodesTest) {
     Status ret;
     domi::tensorflow::GraphDef graph_def;
