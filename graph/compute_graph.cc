@@ -1164,8 +1164,8 @@ void ComputeGraphImpl::SetNodesOwner(const ComputeGraphPtr &compute_graph) {
 
 void ComputeGraphImpl::SetTopParentGraph(const ComputeGraphPtr &compute_graph) {
   for (const auto &sub_graph : sub_graph_) {
-    if (sub_graph == nullptr || sub_graph->GetParentGraph() == nullptr ||
-        sub_graph->GetParentGraph()->GetParentGraph() != nullptr) {
+    if ((sub_graph == nullptr) || (sub_graph->GetParentGraph() == nullptr) ||
+        (sub_graph->GetParentGraph()->GetParentGraph() != nullptr)) {
       continue;
     }
     (void)sub_graph->SetParentGraph(compute_graph);
