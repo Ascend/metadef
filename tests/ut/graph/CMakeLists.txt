@@ -59,6 +59,7 @@ set(UT_FILES
     "testcase/gnode_unittest.cc"
     "testcase/resource_context_mgr_unittest.cc"
     "testcase/inference_context_unittest.cc"
+    "testcase/math_util_unittest.cc"
     "testcase/constant_utils_unittest.cc"
     "testcase/any_value_ut.cc"
     "testcase/ascend_string_unittest.cc"
