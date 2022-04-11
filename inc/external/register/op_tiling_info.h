@@ -117,7 +117,13 @@ public:
   void AddTilingData(const T &value) {
     AddTilingData(reinterpret_cast<const char *>(&value), sizeof(value));
   }
+  template <typename T>
+  void operator << (const T &value) {
+    AddTilingData(reinterpret_cast<const char *>(&value), sizeof(T));
+  }
   void AddTilingData(const char *value, const size_t size);
+  void* GetAddrBase(int64_t& max_size);
+  void SetAddrBaseOffset(int64_t size);
   ByteBuffer &GetAllTilingData();
   const ByteBuffer &GetAllTilingData() const;
   void InternelSetTiling(const ByteBuffer &value);

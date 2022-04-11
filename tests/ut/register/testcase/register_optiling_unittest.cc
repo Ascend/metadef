@@ -313,4 +313,21 @@ TEST_F(RegisterOpTilingUT, UpDateNodeShapeBySliceInfo2) {
   EXPECT_EQ(ret, ge::GRAPH_FAILED);
 }
 
+TEST_F(RegisterOpTilingUT, op_run_info_test_new_tiling_interface1) {
+  utils::OpRunInfo run_info;
+  int64_t max_size = 0;
+  void * base = run_info.GetAddrBase(max_size);
+  run_info.SetAddrBaseOffset(10);
+  EXPECT_TRUE(base == NULL);
+}
+
+TEST_F(RegisterOpTilingUT, op_run_info_test_new_tiling_interface2) {
+  utils::OpRunInfo run_info;
+  int v1 = 1;
+  int64_t  v2 = 2;
+  run_info << v1;
+  run_info << v2;
+}
+
+
 }  // namespace ge
