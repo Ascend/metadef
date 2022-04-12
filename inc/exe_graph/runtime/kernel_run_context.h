@@ -33,7 +33,7 @@ typedef struct {
   size_t input_size;
   size_t output_size;
   const void *compute_node_info;
-  void *execution_context;
+  const void *kernel_extend_info;
   AsyncAnyValue **output_start;  // todo delete this
   AsyncAnyValue *values[0];
 } KernelRunContext;

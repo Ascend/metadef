@@ -26,11 +26,17 @@
 namespace gert {
 class KernelExtendInfo {
  public:
-  const ComputeNodeInfo &GetComputeNodeInfo() const {
-    return compute_node_info;
+  const char *GetKernelName() const {
+    return kernel_name_;
   }
-  ComputeNodeInfo &MutableComputeNodeInfo() {
-    return compute_node_info;
+  void SetKernelName(const char *kernel_name) {
+    kernel_name_ = kernel_name;
+  }
+  const char *GetKernelType() const {
+    return kernel_type_;
+  }
+  void SetKernelType(const char *kernel_type) {
+    kernel_type_ = kernel_type;
   }
 
   KernelExtendInfo() = delete;
@@ -40,7 +46,8 @@ class KernelExtendInfo {
   KernelExtendInfo &operator=(KernelExtendInfo &&) = delete;
 
  private:
-  ComputeNodeInfo compute_node_info;
+  const char *kernel_name_;
+  const char *kernel_type_;
 };
 static_assert(std::is_standard_layout<KernelExtendInfo>::value, "The class KernelExtendInfo must be a POD");
 

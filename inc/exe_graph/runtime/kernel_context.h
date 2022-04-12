@@ -21,7 +21,7 @@
 namespace gert {
 class Chain {
  public:
-  using Deleter = void (void *);
+  using Deleter = void(void *);
   template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
   const T *GetPointer() const {
     return reinterpret_cast<const T *>(&(any_value_.data));
@@ -119,8 +119,12 @@ class KernelContext {
     return av->GetValue<const char *>();
   }
 
-  const void *GetExtend() const {
+  const void *GetComputeNodeExtend() const {
     return context_.compute_node_info;
+  }
+
+  const void *GetKernelExtend() const {
+    return context_.kernel_extend_info;
   }
 
   template<typename T>

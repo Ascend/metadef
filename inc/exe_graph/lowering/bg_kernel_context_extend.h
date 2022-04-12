@@ -20,9 +20,6 @@
 #include "buffer_pool.h"
 namespace gert {
 namespace bg {
-// todo 这个名字不太合适，改成`CreateComputeNodeInfo`好一点
-std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, BufferPool &buffer_pool);
-std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size);
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool);
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size);
 }

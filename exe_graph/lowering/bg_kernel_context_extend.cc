@@ -118,8 +118,7 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
 }
 
 }  // namespace
-std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, BufferPool &buffer_pool,
-                                                     size_t &total_size) {
+std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
   size_t attr_size;
   auto attr_buf = CreateAttrBuffer(node, attr_size);
   if (attr_buf == nullptr) {
@@ -142,22 +141,21 @@ std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, Bu
 
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());
   auto node_type = buffer_pool.AddStr(node->GetType().c_str());
-  auto compute_node_info = reinterpret_cast<KernelExtendInfo *>(compute_node_info_holder.get());
-  compute_node_info->MutableComputeNodeInfo().Init(ir_input_num, input_num, output_num, total_size,
-                                             reinterpret_cast<const char *>(node_name),
-                                             reinterpret_cast<const char *>(node_type));
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
+  compute_node_info->Init(ir_input_num, input_num, output_num, total_size, reinterpret_cast<const char *>(node_name),
+                          reinterpret_cast<const char *>(node_type));
 
-  auto ret = InitInputInstanceInfo(node, compute_node_info->MutableComputeNodeInfo());
+  auto ret = InitInputInstanceInfo(node, *compute_node_info);
   if (ret != ge::SUCCESS) {
     return nullptr;
   }
 
-  ret = InitCompileTimeTD(node, compute_node_info->MutableComputeNodeInfo());
+  ret = InitCompileTimeTD(node, *compute_node_info);
   if (ret != ge::SUCCESS) {
     return nullptr;
   }
 
-  auto attr = compute_node_info->MutableComputeNodeInfo().MutableAttrs();
+  auto attr = compute_node_info->MutableAttrs();
   auto offset = reinterpret_cast<uint8_t *>(attr) - compute_node_info_holder.get();
   if (offset > total_size) {
     GELOGE(
@@ -174,15 +172,9 @@ std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, Bu
 
   return compute_node_info_holder;
 }
-std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, BufferPool &buffer_pool) {
-  size_t total_size;
-  return CreateKernelContextExtend(node, buffer_pool, total_size);
-}
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool) {
-  return CreateKernelContextExtend(node, buffer_pool);
-}
-std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
-  return CreateKernelContextExtend(node, buffer_pool, total_size);
+  size_t total_size;
+  return CreateComputeNodeInfo(node, buffer_pool, total_size);
 }
 }  // namespace bg
 }  // namespace gert

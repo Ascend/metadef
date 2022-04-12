@@ -33,12 +33,12 @@ struct KernelRunContextHolder {
   T *GetContext() {
     return reinterpret_cast<T*>(context);
   }
-  KernelExtendInfo *MutableExtendInfo() {
-    return reinterpret_cast<KernelExtendInfo *>(extend_info_holder.get());
+  ComputeNodeInfo *MutableComputeNodeInfo() {
+    return reinterpret_cast<ComputeNodeInfo *>(compute_node_extend_holder.get());
   }
   std::unique_ptr<uint8_t[]> context_holder;
   std::vector<AsyncAnyValue> value_holder;
-  std::unique_ptr<uint8_t[]> extend_info_holder;
+  std::unique_ptr<uint8_t[]> compute_node_extend_holder;
   bg::BufferPool buffer_pool;
   KernelRunContext *context;
 };

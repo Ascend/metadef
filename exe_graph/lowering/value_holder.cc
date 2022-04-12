@@ -64,6 +64,23 @@ HyperStatus AddControlEdge(const ge::NodePtr &src, const ge::NodePtr &dst) {
   }
   return HyperStatus::Success();
 }
+std::unique_ptr<uint8_t[]> CreateKernelExtendInfo(const char *name, const char *type, BufferPool &buffer_pool,
+                                                  size_t &total_size) {
+  total_size = sizeof(KernelExtendInfo);
+  auto holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
+  if (holder == nullptr) {
+    return nullptr;
+  }
+
+  auto name_id = buffer_pool.AddStr(name);
+  auto type_id = buffer_pool.AddStr(type);
+
+  auto extend_info = reinterpret_cast<KernelExtendInfo *>(holder.get());
+  extend_info->SetKernelName(reinterpret_cast<const char *>(name_id));
+  extend_info->SetKernelType(reinterpret_cast<const char *>(type_id));
+
+  return holder;
+}
 }  // namespace
 std::atomic<int64_t> ValueHolder::id_generator_{0};
 ValueHolder::~ValueHolder() = default;
@@ -157,10 +174,25 @@ ValueHolder::NodeHolderPtr ValueHolder::AddNode(const GraphHolderPtr &graph, con
   if (node == nullptr) {
     return nullptr;
   }
+
+  auto frame = GetCurrentFrame();
+
+  // add compute node info index
   size_t index;
-  if (GetCurrentFrame()->GetCurrentNodeIndex(index)) {
+  if (frame->GetCurrentNodeIndex(index)) {
     ge::AttrUtils::SetInt(node->GetOpDesc(), kComputeNodeIndex, static_cast<int64_t>(index));
   }
+
+  // add kernel extend info index
+  size_t extend_info_size;
+  auto holder = CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(),
+                                       frame->GetBufferPool(), extend_info_size);
+  if (holder == nullptr) {
+    return nullptr;
+  }
+  auto buf_id = frame->GetKernelExtendInfos().AddBuf(holder.get(), extend_info_size);
+  ge::AttrUtils::SetInt(node->GetOpDesc(), kKernelExtendIndex, static_cast<int64_t>(buf_id));
+
   return node;
 }
 ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs,
@@ -440,6 +472,8 @@ bool ValueHolder::GraphBuilder::AppendGraphLevelData(const GraphFrame *frame) {
     return false;
   }
   size_t buffer_size;
+
+  // buffer pool
   auto buffer = frame->GetBufferPool().Serialize(buffer_size);
   if (buffer == nullptr) {
     return false;
@@ -447,6 +481,8 @@ bool ValueHolder::GraphBuilder::AppendGraphLevelData(const GraphFrame *frame) {
   if (!ge::AttrUtils::SetZeroCopyBytes(graph, kBuffer, ge::Buffer::CopyFrom(buffer.get(), buffer_size))) {
     return false;
   }
+
+  // compute node info
   buffer = frame->GetAllComputeNodeInfos().Serialize(buffer_size);
   if (buffer == nullptr) {
     return false;
@@ -454,6 +490,16 @@ bool ValueHolder::GraphBuilder::AppendGraphLevelData(const GraphFrame *frame) {
   if (!ge::AttrUtils::SetZeroCopyBytes(graph, kComputeNodeInfo, ge::Buffer::CopyFrom(buffer.get(), buffer_size))) {
     return false;
   }
+
+  // kernel extend info
+  buffer = frame->GetKernelExtendInfos().Serialize(buffer_size);
+  if (buffer == nullptr) {
+    return false;
+  }
+  if (!ge::AttrUtils::SetZeroCopyBytes(graph, kKernelExtendInfo, ge::Buffer::CopyFrom(buffer.get(), buffer_size))) {
+    return false;
+  }
+
   return true;
 }
 }  // namespace bg

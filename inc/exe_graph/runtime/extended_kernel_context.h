@@ -74,12 +74,27 @@ class ExtendedKernelContext : protected KernelContext {
     return compute_node_info->GetNodeName();
   }
   const ComputeNodeInfo *GetComputeNodeInfo() const {
-    return reinterpret_cast<const ComputeNodeInfo *>(GetExtend());
+    return reinterpret_cast<const ComputeNodeInfo *>(GetComputeNodeExtend());
   }
 
-  const KernelExtendInfo *GetExtendInfo() const {
-    return reinterpret_cast<const KernelExtendInfo *>(GetExtend());
+  const char *GetKernelName() const {
+    auto extend_info = GetExtendInfo();
+    if (extend_info == nullptr) {
+      return nullptr;
+    }
+    return extend_info->GetKernelName();
   }
+  const char *GetKernelType() const {
+    auto extend_info = GetExtendInfo();
+    if (extend_info == nullptr) {
+      return nullptr;
+    }
+    return extend_info->GetKernelType();
+  }
+  const KernelExtendInfo *GetExtendInfo() const {
+    return reinterpret_cast<const KernelExtendInfo *>(GetKernelExtend());
+  }
+
  protected:
   template<typename T, size_t Offset = 0>
   const T *GetDynamicInputPointer(size_t ir_index, size_t relative_ins_index) {

@@ -17,8 +17,17 @@
 #include "register/kernel_registry_impl.h"
 #include <utility>
 #include "graph/debug/ge_log.h"
-
 namespace gert {
+namespace {
+ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context){
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context){
+  return ge::GRAPH_SUCCESS;
+}
+}
+
 KernelRegistryImpl &KernelRegistryImpl::GetInstance() {
   static KernelRegistryImpl registry;
   return registry;
@@ -34,29 +43,20 @@ const KernelRegistryImpl::KernelFuncs *KernelRegistryImpl::FindKernelFuncs(const
   }
   return &iter->second;
 }
-
-ge::graphStatus NullCreator(KernelContext *context){
-  return ge::GRAPH_SUCCESS;
-}
-
-ge::graphStatus NullDestoryer(KernelContext *context){
-  return ge::GRAPH_SUCCESS;
-}
-
 KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_type) {
-  kernel_funcs_.outputs_create_func = NullCreator;
-  kernel_funcs_.outputs_destroy_func = NullDestoryer;
+  kernel_funcs_.outputs_creator = NullCreator;
+  kernel_funcs_.outputs_initializer = NullDestoryer;
 }
 KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
   kernel_funcs_.run_func = func;
   return *this;
 }
 KernelRegister &KernelRegister::OutputsCreator(KernelRegistryImpl::CreateOutputsFunc func) {
-  kernel_funcs_.outputs_create_func = std::move(func);
+  kernel_funcs_.outputs_creator = std::move(func);
   return *this;
 }
-KernelRegister &KernelRegister::OutputsDestroyer(KernelRegistryImpl::DestroyOutputsFunc func) {
-  kernel_funcs_.outputs_destroy_func = std::move(func);
+KernelRegister &KernelRegister::OutputsInitializer(KernelRegistryImpl::CreateOutputsFunc func) {
+  kernel_funcs_.outputs_initializer = std::move(func);
   return *this;
 }
 KernelRegister::KernelRegister(const KernelRegister &other) {
@@ -65,4 +65,5 @@ KernelRegister::KernelRegister(const KernelRegister &other) {
   }
   KernelRegistryImpl::GetInstance().RegisterKernel(other.kernel_type_, other.kernel_funcs_);
 }
+
 }  // namespace gert

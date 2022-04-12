@@ -39,6 +39,12 @@ constexpr char *kComputeNodeInfo = (char *)"ComputeNodeInfo";
 // 打在exe node上，用来标识本node所对应的计算图上的node的index
 constexpr char *kComputeNodeIndex = (char *)"ComputeNodeIndex";
 
+// 打在exe graph上，保存了本graph涉及的所有的KernelExtendInfo
+constexpr char *kKernelExtendInfo = (char *)"KernelExtendInfo";
+
+// 打在exe node上，用来标识本node所对应的kernel信息的index
+constexpr char *kKernelExtendIndex = (char *)"KernelExtendInfoIndex";
+
 // 打在exe graph上，保存了本graph涉及的所有的二进制buffer（字符串、const值等）
 constexpr char *kBuffer = (char *)"buffer";
 }

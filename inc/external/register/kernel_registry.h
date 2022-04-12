@@ -19,21 +19,20 @@
 #include "graph/ge_error_codes.h"
 #include "exe_graph/runtime/base_type.h"
 #include "exe_graph/runtime/kernel_context.h"
+#include "graph/node.h"
 
 namespace gert {
 struct KernelRegistry {
-  using CreateOutputsFunc = std::function<ge::graphStatus(KernelContext *)>;
-  using DestroyOutputsFunc = std::function<ge::graphStatus(KernelContext *)>;
+  using CreateOutputsFunc = std::function<ge::graphStatus(const ge::Node *, KernelContext *)>;
   typedef UINT32 (*KernelFunc)(KernelContext *context);
   struct KernelFuncs {
     KernelFunc run_func;
-    CreateOutputsFunc outputs_create_func;
-    DestroyOutputsFunc outputs_destroy_func;
+    CreateOutputsFunc outputs_creator;
+    CreateOutputsFunc outputs_initializer;
   };
   virtual ~KernelRegistry() {}
   virtual const KernelFuncs* FindKernelFuncs(const std::string &kernel_type) const = 0;
 };
-
 }
 
 #endif

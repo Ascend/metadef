@@ -61,11 +61,12 @@ class GraphFrame {
     index = iter->second;
     return true;
   }
+
   void AddNodeExtendInfo(const ge::NodePtr &node) {
     auto ret = node_names_to_index_.emplace(node->GetName(), GetAllComputeNodeInfos().GetSize());
     if (ret.second) {
       size_t total_size = 0;
-      auto compute_node_info = CreateComputeNodeInfo(node, GetBufferPool(),  total_size);
+      auto compute_node_info = CreateComputeNodeInfo(node, GetBufferPool(), total_size);
       auto index = GetAllComputeNodeInfos().AddBuf(compute_node_info.get(), total_size);
       ret.first->second = index;
     }
@@ -82,9 +83,15 @@ class GraphFrame {
   BufferPool &GetAllComputeNodeInfos() {
     return root_frame_.compute_node_info_buffer_pool_;
   }
-  const ge::ComputeGraphPtr &GetExeGraph() const {
-    return exe_graph_;
+
+  BufferPool &GetKernelExtendInfos() {
+    return kernel_extend_buffer_pool_;
   }
+
+  const BufferPool &GetKernelExtendInfos() const {
+    return kernel_extend_buffer_pool_;
+  }
+
   const BufferPool &GetBufferPool() const {
     return root_frame_.buffer_pool_;
   }
@@ -94,12 +101,17 @@ class GraphFrame {
   bool IsRootFrame() const {
     return &root_frame_ == this;
   }
+  const ge::ComputeGraphPtr &GetExeGraph() const {
+    return exe_graph_;
+  }
+
  private:
   ge::ComputeGraphPtr exe_graph_;
   ge::NodePtr current_compute_node_;
   GraphFrame &root_frame_;
   std::unordered_map<std::string, size_t> node_names_to_index_;
   BufferPool compute_node_info_buffer_pool_;
+  BufferPool kernel_extend_buffer_pool_;
   BufferPool buffer_pool_;
 };
 }  // namespace bg

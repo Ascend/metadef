@@ -17,24 +17,11 @@
 #include "exe_graph/lowering/tlv.h"
 #include "exe_graph/runtime/context_extend.h"
 #include <gtest/gtest.h>
+#include "exe_graph/lowering/exe_graph_attrs.h"
+#include "checker/bg_test.h"
 namespace gert {
 namespace bg {
-class ValueHolderUt : public testing::Test {
- public:
- protected:
-  void SetUp() override {
-    ValueHolder::PushGraphFrame();
-  }
-  void TearDown() override {
-    ValueHolder::PopGraphFrame();
-  }
-  void ComputeGraphIsValid(const ge::ComputeGraph &graph) {
-    std::set<std::string> node_names;
-    for (const auto &node : graph.GetAllNodes()) {
-      node_names.emplace(node->GetName());
-    }
-    EXPECT_EQ(node_names.size(), graph.GetAllNodesSize());
-  }
+class ValueHolderUt : public BgTest {
 };
 TEST_F(ValueHolderUt, CreateConstOk) {
   ge::Format f1 = ge::FORMAT_NC1HWC0;
@@ -148,7 +135,7 @@ TEST_F(ValueHolderUt, CreateDataOutOk) {
   // check graph is ok
   auto graph = holders[0]->GetGraph();
   ASSERT_EQ(graph->GetAllNodesSize(), 3);
-  ComputeGraphIsValid(*graph);
+  CheckGraphGenerally(*graph);
 
   auto const1_g = graph->FindFirstNodeMatchType("Const");
   auto data1_g = graph->FindFirstNodeMatchType("Data");
@@ -353,7 +340,7 @@ TEST_F(ValueHolderUt, CreateVoidOk) {
   // check graph is ok
   auto graph = holder->GetGraph();
   ASSERT_EQ(graph->GetAllNodesSize(), 3);
-  ComputeGraphIsValid(*graph);
+  CheckGraphGenerally(*graph);
 
   auto const1_g = graph->FindFirstNodeMatchType("Const");
   auto data1_g = graph->FindFirstNodeMatchType("Data");
@@ -365,35 +352,7 @@ TEST_F(ValueHolderUt, CreateVoidOk) {
   EXPECT_EQ(node_g->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode(), data1_g);
   EXPECT_EQ(node_g->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode(), const1_g);
 }
-/*
-TEST_F(ValueHolderUt, CreateDataOutWithAttrOk) {
-  ge::Format f1 = ge::FORMAT_NC1HWC0;
-  auto const1 = ValueHolder::CreateConst(reinterpret_cast<const uint8_t *>(&f1), sizeof(f1));
-  auto data1 = ValueHolder::CreateFeed(0);
-  ASSERT_NE(const1, nullptr);
-  ASSERT_NE(data1, nullptr);
 
-  std::vector<int64_t> attr_value;
-  attr_value.reserve(1024);
-  for (int64_t i = 0; i < 1024; ++i) {
-    attr_value.push_back(i * 10);
-  }
-  auto attr = TLV().AppendBytes(attr_value.data(), 1024 * sizeof(int64_t)).Serialize();
-  auto attr_len = TLV::GetBuffLength(attr.get());
-
-  auto holders = ValueHolder::CreateDataOutput("TestNode", std::move(attr), {data1, const1}, 1);
-  ASSERT_EQ(holders.size(), 1);
-  ge::Buffer buffer;
-  ASSERT_TRUE(ge::AttrUtils::GetZeroCopyBytes(holders[0]->GetNode()->GetOpDesc(), "attr", buffer));
-  ASSERT_EQ(buffer.GetSize(), attr_len);
-  size_t de_attr_len = 0;
-  auto tlv = TLV::DeserializeFrom(buffer.GetData());
-  auto de_data = tlv.GetBytes(0, de_attr_len);
-  ASSERT_NE(de_data, nullptr);
-  ASSERT_EQ(de_attr_len, sizeof(int64_t) * 1024);
-  EXPECT_EQ(memcmp(de_data, attr_value.data(), de_attr_len), 0);
-}
-*/
 TEST_F(ValueHolderUt, AddDependencyOk) {
   auto data1 = ValueHolder::CreateFeed(0);
   auto data2 = ValueHolder::CreateFeed(1);
@@ -498,7 +457,38 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   auto buffer_pool = frame->GetBufferPool();
   EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node");
   EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "node");
+}
+/*
+ *    hello
+ *    /  \
+ * data0 data1
+ */
+TEST_F(ValueHolderUt, CreateExeGraphOk) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
 
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto hello = ValueHolder::CreateSingleDataOutput("hello", {data0, data1});
+
+  auto exe_graph = ValueHolder::GraphBuilder().SetOutputs({hello}).BuildExecuteGraph();
+  ASSERT_NE(graph, nullptr);
+  CheckExeGraphGenerally(*exe_graph);
+  CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
 }
 }  // namespace bg
 }  // namespace gert

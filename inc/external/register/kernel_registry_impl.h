@@ -41,7 +41,7 @@ class KernelRegister {
   KernelRegister &RunFunc(KernelRegistry::KernelFunc func);
 
   KernelRegister &OutputsCreator(KernelRegistryImpl::CreateOutputsFunc func);
-  KernelRegister &OutputsDestroyer(KernelRegistryImpl::DestroyOutputsFunc func);
+  KernelRegister &OutputsInitializer(KernelRegistryImpl::CreateOutputsFunc func);
 
   private:
   std::string kernel_type_;
