@@ -4,8 +4,8 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10001",
-      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
-      "Arglist": "value,parameter,reason",
+      "ErrMessage": "Reason: %s. value for parameter is invalid. [value]/[param]: [%s]/[%s]",
+      "Arglist": "reason,value,parameter",
       "suggestion": {
         "Possible Cause": "Invalid Argument.",
         "Solution": "Try again with a valid argument."
@@ -169,7 +169,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid Argument, Node Not Found",
       "ErrCode": "E10016",
-      "ErrMessage": "Input Op [%s] specified in [--%s] is not found in the model.",
+      "ErrMessage": "Op [%s] specified in [--%s] is not found in the model.",
       "Arglist": "opname,parameter",
       "suggestion": {
         "Possible Cause": "The node specified in the argument does not exist in the model.",
@@ -1060,11 +1060,11 @@
       "errClass": "File Errors",
       "errTitle": "Failure to Parse File",
       "ErrCode": "E19005",
-      "ErrMessage": "Failed to parse file [%s]. Try again with a valid protobuf file or check the version of your protobuf installation.",
+      "ErrMessage": "Failed to parse file. protobuf file corrupted or protobuf's version invalued or \"--framework\" param don't match file: [%s]",
       "Arglist": "file",
       "suggestion": {
         "Possible Cause": "Failed to parse the file.",
-        "Solution": "Check that a matched protobuf version is installed and try again with a valid file."
+        "Solution": "Check that a matched protobuf version is installed and try again with a valid file, view help of \"--framework\"."
       }
     },
     {
