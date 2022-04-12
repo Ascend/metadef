@@ -103,6 +103,9 @@ class UTESTGraphFusionPass : public testing::Test {
 
     op_desc_output->AddInputDesc(tensor_desc_d);
 
+    ge::AttrUtils::SetStr(op_desc_relu, "_op_compile_strategy", "{}");
+    ge::AttrUtils::SetInt(op_desc_relu, "_keep_dtype", 1);
+
     NodePtr node_cast1 = graph->AddNode(op_desc_cast1);
     NodePtr node_relu = graph->AddNode(op_desc_relu);
     NodePtr node_cast2 = graph->AddNode(op_desc_cast2);
@@ -169,6 +172,9 @@ class UTESTGraphFusionPass : public testing::Test {
     op_desc_cast2->AddOutputDesc(tensor_desc_d);
 
     op_desc_output->AddInputDesc(tensor_desc_d);
+
+    ge::AttrUtils::SetStr(op_desc_relu, "_op_compile_strategy", "{}");
+    ge::AttrUtils::SetInt(op_desc_relu, "_keep_dtype", 1);
 
     NodePtr node_cast1 = graph->AddNode(op_desc_cast1);
     NodePtr node_relu = graph->AddNode(op_desc_relu);
@@ -656,6 +662,7 @@ class TestPass : public fe::PatternFusionBasePass {
     }
     relu_desc->MutableInputDesc(0)->SetDataType(cast0_in_d_type);
     relu_desc->MutableOutputDesc(0)->SetDataType(cast1_out_d_type);
+    new_nodes.push_back(relu_Node);
     return SUCCESS;
   }
 };
