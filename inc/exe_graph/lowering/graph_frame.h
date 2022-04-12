@@ -65,7 +65,7 @@ class GraphFrame {
     auto ret = node_names_to_index_.emplace(node->GetName(), GetAllComputeNodeInfos().GetSize());
     if (ret.second) {
       size_t total_size = 0;
-      auto compute_node_info = CreateKernelContextExtend(node, GetBufferPool(),  total_size);
+      auto compute_node_info = CreateComputeNodeInfo(node, GetBufferPool(),  total_size);
       auto index = GetAllComputeNodeInfos().AddBuf(compute_node_info.get(), total_size);
       ret.first->second = index;
     }

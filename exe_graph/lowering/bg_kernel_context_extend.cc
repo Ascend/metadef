@@ -135,30 +135,30 @@ std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, Bu
   if (ge::AddOverflow(total_size, attr_size, total_size)) {
     return nullptr;
   }
-  auto extend_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]());
-  if (extend_holder == nullptr) {
+  auto compute_node_info_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]());
+  if (compute_node_info_holder == nullptr) {
     return nullptr;
   }
 
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());
   auto node_type = buffer_pool.AddStr(node->GetType().c_str());
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(extend_holder.get());
-  extend_info->MutableComputeNodeInfo().Init(ir_input_num, input_num, output_num, total_size,
+  auto compute_node_info = reinterpret_cast<KernelExtendInfo *>(compute_node_info_holder.get());
+  compute_node_info->MutableComputeNodeInfo().Init(ir_input_num, input_num, output_num, total_size,
                                              reinterpret_cast<const char *>(node_name),
                                              reinterpret_cast<const char *>(node_type));
 
-  auto ret = InitInputInstanceInfo(node, extend_info->MutableComputeNodeInfo());
+  auto ret = InitInputInstanceInfo(node, compute_node_info->MutableComputeNodeInfo());
   if (ret != ge::SUCCESS) {
     return nullptr;
   }
 
-  ret = InitCompileTimeTD(node, extend_info->MutableComputeNodeInfo());
+  ret = InitCompileTimeTD(node, compute_node_info->MutableComputeNodeInfo());
   if (ret != ge::SUCCESS) {
     return nullptr;
   }
 
-  auto attr = extend_info->MutableComputeNodeInfo().MutableAttrs();
-  auto offset = reinterpret_cast<uint8_t *>(attr) - extend_holder.get();
+  auto attr = compute_node_info->MutableComputeNodeInfo().MutableAttrs();
+  auto offset = reinterpret_cast<uint8_t *>(attr) - compute_node_info_holder.get();
   if (offset > total_size) {
     GELOGE(
         ge::FAILED,
@@ -172,10 +172,16 @@ std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, Bu
     return nullptr;
   }
 
-  return extend_holder;
+  return compute_node_info_holder;
 }
 std::unique_ptr<uint8_t[]> CreateKernelContextExtend(const ge::NodePtr &node, BufferPool &buffer_pool) {
   size_t total_size;
+  return CreateKernelContextExtend(node, buffer_pool, total_size);
+}
+std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool) {
+  return CreateKernelContextExtend(node, buffer_pool);
+}
+std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
   return CreateKernelContextExtend(node, buffer_pool, total_size);
 }
 }  // namespace bg

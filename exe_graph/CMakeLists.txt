@@ -71,14 +71,63 @@ target_compile_definitions(exe_graph_static PRIVATE
 
 add_library(exe_graph SHARED ${EXE_GRAPH_SRCS})
 
+
 target_include_directories(exe_graph PUBLIC
         ${METADEF_DIR}
         ${METADEF_DIR}/inc
         ${METADEF_DIR}/inc/external
+        ${METADEF_DIR}/third_party/fwkacllib/inc
+        ${METADEF_DIR}/third_party/graphengine/inc
+        )
+
+target_include_directories(exe_graph PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_BINARY_DIR}/proto/metadef_protos
+        ${METADEF_DIR}
+        ${METADEF_DIR}/inc
+        ${METADEF_DIR}/inc/external
+        #### yellow zone ####
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../ops/built-in/op_proto/inc>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../cann/ops/built-in/op_proto/inc>
+        #### temp independent ####
+        ${METADEF_DIR}/../graphengine/inc
+        ${METADEF_DIR}/../graphengine/inc/framework
+        ${METADEF_DIR}/../graphengine/inc/external
+        #### temp in ge ####
+        ${METADEF_DIR}/../inc
+        ${METADEF_DIR}/../inc/framework
+        ${METADEF_DIR}/../inc/external
+        ${METADEF_DIR}/../../ops/built-in/op_proto/inc
+        ${METADEF_DIR}/../../cann/ops/built-in/op_proto/inc
+        #### temp in ge ####
+        ${METADEF_DIR}/../../graphengine/inc
+        ${METADEF_DIR}/../../graphengine/inc/framework
+        ${METADEF_DIR}/../../graphengine/inc/external
+        ${METADEF_DIR}/../../inc
+        #### blue zone ####
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc/ops>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
+        #### blue independent compile #####
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/ge/inc>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc/ops>
+        $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party>
+        ${METADEF_DIR}/third_party/transformer/inc
+        #### blue zone ####
+        ${PROTOBUF_SHARED_PKG_DIR}/include
+        #### yellow zone ####
+        ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
         )
 target_link_libraries(exe_graph PUBLIC
         $<BUILD_INTERFACE:intf_pub>
         graph
+        c_sec
         )
 
 target_compile_definitions(exe_graph_static PRIVATE

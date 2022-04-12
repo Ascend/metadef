@@ -120,7 +120,7 @@ class KernelContext {
   }
 
   const void *GetExtend() const {
-    return context_.extend_info;
+    return context_.compute_node_info;
   }
 
   template<typename T>

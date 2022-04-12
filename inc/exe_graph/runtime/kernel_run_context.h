@@ -32,7 +32,7 @@ typedef struct {
 typedef struct {
   size_t input_size;
   size_t output_size;
-  const void *extend_info;
+  const void *compute_node_info;
   void *execution_context;
   AsyncAnyValue **output_start;  // todo delete this
   AsyncAnyValue *values[0];

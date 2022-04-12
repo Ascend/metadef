@@ -24,59 +24,62 @@ namespace gert {
 class ExtendedKernelContext : protected KernelContext {
  public:
   const CompileTimeTensorDesc *GetInputDesc(size_t index) const {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
-    return extend_info->GetComputeNodeInfo().GetInputTdInfo(index);
+    return compute_node_info->GetInputTdInfo(index);
   }
   const CompileTimeTensorDesc *GetOutputDesc(size_t index) const {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
-    return extend_info->GetComputeNodeInfo().GetOutputTdInfo(index);
-  }
-  const KernelExtendInfo *GetExtendInfo() const {
-    return reinterpret_cast<const KernelExtendInfo *>(GetExtend());
+    return compute_node_info->GetOutputTdInfo(index);
   }
   const AnchorInstanceInfo *GetIrInputInstanceInfo(size_t ir_index) const {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
-    return extend_info->GetComputeNodeInfo().GetInputInstanceInfo(ir_index);
+    return compute_node_info->GetInputInstanceInfo(ir_index);
   }
   size_t GetComputeNodeInputNum() const {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return 0;
     }
-    return extend_info->GetComputeNodeInfo().GetInputsNum();
+    return compute_node_info->GetInputsNum();
   }
   const RuntimeAttrs *GetAttrs() const {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
-    return extend_info->GetComputeNodeInfo().GetAttrs();
+    return compute_node_info->GetAttrs();
   }
 
   const char *GetNodeType() const {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
-    return extend_info->GetComputeNodeInfo().GetNodeType();
+    return compute_node_info->GetNodeType();
   }
   const char *GetNodeName() const {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
-    return extend_info->GetComputeNodeInfo().GetNodeName();
+    return compute_node_info->GetNodeName();
+  }
+  const ComputeNodeInfo *GetComputeNodeInfo() const {
+    return reinterpret_cast<const ComputeNodeInfo *>(GetExtend());
   }
 
+  const KernelExtendInfo *GetExtendInfo() const {
+    return reinterpret_cast<const KernelExtendInfo *>(GetExtend());
+  }
  protected:
   template<typename T, size_t Offset = 0>
   const T *GetDynamicInputPointer(size_t ir_index, size_t relative_ins_index) {

@@ -20,23 +20,7 @@
 
 namespace gert {
 KernelRunContextHolder BuildKernelRunContext(size_t input_num, size_t output_num) {
-  KernelRunContextHolder holder;
-  size_t size = sizeof(KernelRunContext) + sizeof(AsyncAnyValue *) * (input_num + output_num);
-  holder.context_holder = std::unique_ptr<uint8_t[]>(new uint8_t[size]);
-  memset(holder.context_holder.get(), 0xff, size);
-  holder.value_holder.resize(input_num + output_num);
-  holder.extend_info_holder = KernelExtendInfo::Create(input_num, input_num, output_num, "Unknown", "Unknown");
-
-  holder.context = reinterpret_cast<KernelRunContext *>(holder.context_holder.get());
-  holder.context->input_size = input_num;
-  holder.context->output_size = output_num;
-  holder.context->extend_info = holder.extend_info_holder.get();
-  holder.context->output_start = &(holder.context->values[holder.context->input_size]);
-
-  for (size_t i = 0; i < input_num + output_num; ++i) {
-    holder.context->values[i] = &holder.value_holder[i];
-  }
-  return holder;
+  return KernelRunContextFaker().KernelIONum(input_num, output_num).Build();
 }
 KernelRunContextFaker &KernelRunContextFaker::KernelIONum(size_t input_num, size_t output_num) {
   kernel_input_num_ = input_num;
@@ -100,7 +84,7 @@ KernelRunContextHolder KernelRunContextFaker::Build() const {
   memset(holder.context_holder.get(), 0xff, size);
   holder.value_holder.resize(kernel_input_num_ + kernel_output_num_);
   size_t extend_info_size;
-  holder.extend_info_holder = bg::CreateKernelContextExtend(FakeNode(), holder.buffer_pool, extend_info_size);
+  holder.extend_info_holder = bg::CreateComputeNodeInfo(FakeNode(), holder.buffer_pool, extend_info_size);
   auto extend_info = reinterpret_cast<KernelExtendInfo *>(holder.extend_info_holder.get());
   extend_info->MutableComputeNodeInfo().SetNodeName(
       holder.buffer_pool.GetBufById(reinterpret_cast<size_t>(extend_info->GetComputeNodeInfo().GetNodeName())));
@@ -110,7 +94,7 @@ KernelRunContextHolder KernelRunContextFaker::Build() const {
   holder.context = reinterpret_cast<KernelRunContext *>(holder.context_holder.get());
   holder.context->input_size = kernel_input_num_;
   holder.context->output_size = kernel_output_num_;
-  holder.context->extend_info = holder.extend_info_holder.get();
+  holder.context->compute_node_info = holder.extend_info_holder.get();
   holder.context->output_start = &(holder.context->values[holder.context->input_size]);
 
   for (size_t i = 0; i < kernel_input_num_ + kernel_output_num_; ++i) {

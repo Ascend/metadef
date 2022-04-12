@@ -132,6 +132,8 @@ struct ComputeNodeInfo {
   void Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num, size_t total_size, const char *node_name,
             const char *node_type);
 
+  std::unique_ptr<uint8_t[]> Create();
+
   ComputeNodeInfo() = delete;
   ComputeNodeInfo(const ComputeNodeInfo &) = delete;
   ComputeNodeInfo(ComputeNodeInfo &&) = delete;

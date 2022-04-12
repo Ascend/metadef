@@ -33,12 +33,12 @@ class TilingContext : public ExtendedKernelContext {
    * inputs[n+m+1): tiling_func
    */
   const void *GetCompileInfo() {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
 
-    size_t index = extend_info->GetComputeNodeInfo().GetInputsNum() + extend_info->GetComputeNodeInfo().GetOutputsNum();
+    size_t index = compute_node_info->GetInputsNum() + compute_node_info->GetOutputsNum();
     auto av = GetInput(index);
     if (av == nullptr) {
       return nullptr;
@@ -58,12 +58,12 @@ class TilingContext : public ExtendedKernelContext {
     return GetDynamicInputPointer<StorageShape>(ir_index, relative_index);
   }
   const StorageShape *GetOutputShape(size_t index) {
-    auto extend_info = GetExtendInfo();
-    if (extend_info == nullptr) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
       return nullptr;
     }
 
-    size_t offset = extend_info->GetComputeNodeInfo().GetInputsNum();
+    size_t offset = compute_node_info->GetInputsNum();
     return GetInputPointer<StorageShape>(offset + index);
   }
 

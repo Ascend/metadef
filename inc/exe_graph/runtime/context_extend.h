@@ -33,9 +33,6 @@ class KernelExtendInfo {
     return compute_node_info;
   }
 
-  static std::unique_ptr<uint8_t[]> Create(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num,
-                                           const char *node_name, const char *node_type);
-
   KernelExtendInfo() = delete;
   KernelExtendInfo(const KernelExtendInfo &) = delete;
   KernelExtendInfo(KernelExtendInfo &&) = delete;

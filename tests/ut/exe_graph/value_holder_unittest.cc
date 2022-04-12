@@ -491,10 +491,10 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   size_t frame_current_node_index;
   frame->GetCurrentNodeIndex(frame_current_node_index);
   EXPECT_EQ(compute_node_index_shape, frame_current_node_index);
-  auto extend_info = reinterpret_cast<const KernelExtendInfo *>(frame->GetComputeNodeInfo(frame_current_node_index));
-  ASSERT_NE(extend_info, nullptr);
-  auto name_index = extend_info->GetComputeNodeInfo().GetNodeName();
-  auto type_index = extend_info->GetComputeNodeInfo().GetNodeType();
+  auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(frame_current_node_index));
+  ASSERT_NE(compute_node_info, nullptr);
+  auto name_index = compute_node_info->GetNodeName();
+  auto type_index = compute_node_info->GetNodeType();
   auto buffer_pool = frame->GetBufferPool();
   EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node");
   EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "node");

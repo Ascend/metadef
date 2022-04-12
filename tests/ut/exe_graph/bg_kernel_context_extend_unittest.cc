@@ -39,25 +39,25 @@ TEST_F(BgKernelContextExtendUT, BuildRequiredInput) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 0);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 1);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 0);
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildEmptyRequiredInput) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -76,7 +76,7 @@ TEST_F(BgKernelContextExtendUT, BuildEmptyRequiredInput) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   EXPECT_EQ(ret, nullptr);
 }
 TEST_F(BgKernelContextExtendUT, UknownInputFailed) {
@@ -95,7 +95,7 @@ TEST_F(BgKernelContextExtendUT, UknownInputFailed) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   // TODO checkout except kernel context extend
 //  EXPECT_EQ(ret, nullptr);
 }
@@ -115,25 +115,25 @@ TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputs) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 0);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 1);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 0);
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputsNotExists) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -152,28 +152,28 @@ TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputsNotExists) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 0);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 2);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 2);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 0);
-  ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(1);
+  ins_info = compute_node_info->GetInputInstanceInfo(1);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 0);
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildWithMultipleOptionalInputsIns) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -194,32 +194,32 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultipleOptionalInputsIns) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 2);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 0);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 3);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 2);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 3);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
-  ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(1);
+  ins_info = compute_node_info->GetInputInstanceInfo(1);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 1);
-  ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(2);
+  ins_info = compute_node_info->GetInputInstanceInfo(2);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 0);
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildWithDynamicInputs) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -237,25 +237,25 @@ TEST_F(BgKernelContextExtendUT, BuildWithDynamicInputs) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 0);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 1);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 0);
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildWithMultiInstanceDynamicInputs) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -278,29 +278,29 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultiInstanceDynamicInputs) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 5);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 0);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 2);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 5);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 2);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 2);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
-  ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(1);
+  ins_info = compute_node_info->GetInputInstanceInfo(1);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 3);
   EXPECT_EQ(ins_info->GetInstanceStart(), 2);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 0);
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildWithEmptyDynamicInputs) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -320,28 +320,28 @@ TEST_F(BgKernelContextExtendUT, BuildWithEmptyDynamicInputs) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 2);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 0);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 2);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 2);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 2);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 0);
-  ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(1);
+  ins_info = compute_node_info->GetInputInstanceInfo(1);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 2);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 0);
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildWithOneAttr) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -363,26 +363,26 @@ TEST_F(BgKernelContextExtendUT, BuildWithOneAttr) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 1);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 1);
-  ASSERT_NE(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), nullptr);
-  EXPECT_STREQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), "Hello");
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 1);
+  ASSERT_NE(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), "Hello");
 }
 TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -440,34 +440,34 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 1);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 12);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 12);
 
-  EXPECT_STREQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), "World");
-  EXPECT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<int64_t>(1), 1024000);
-  EXPECT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<bool>(2), false);
-  EXPECT_FLOAT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<float>(3), 1024.1);
-  auto list_int = extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<gert::ContinuousVector>(4);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), "World");
+  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<int64_t>(1), 1024000);
+  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<bool>(2), false);
+  EXPECT_FLOAT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<float>(3), 1024.1);
+  auto list_int = compute_node_info->GetAttrs()->GetAttrPointer<gert::ContinuousVector>(4);
   ASSERT_NE(list_int, nullptr);
   ASSERT_EQ(list_int->GetSize(), 4);
   EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,400,3000,8192}).data(), 4 * sizeof(int64_t)), 0);
-  auto gert_tensor = extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<gert::Tensor>(5);
+  auto gert_tensor = compute_node_info->GetAttrs()->GetAttrPointer<gert::Tensor>(5);
   ASSERT_NE(gert_tensor, nullptr);
   EXPECT_EQ(gert_tensor->storage_shape.GetOriginShape(), gert::Shape({8,224,224,3}));
   EXPECT_EQ(gert_tensor->storage_shape.GetStorageShape(), gert::Shape({8,1,224,224,16}));
@@ -476,15 +476,15 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   EXPECT_EQ(gert_tensor->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(memcmp(gert_tensor->GetData<uint16_t>(), fake_data.data(), fake_data.size() * sizeof(uint16_t)), 0);
 
-  EXPECT_STREQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(6), "Hello");
-  EXPECT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<int64_t>(7), 10240);
-  EXPECT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<bool>(8), true);
-  EXPECT_FLOAT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<float>(9), 1024.0021);
-  list_int = extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<gert::ContinuousVector>(10);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(6), "Hello");
+  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<int64_t>(7), 10240);
+  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<bool>(8), true);
+  EXPECT_FLOAT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<float>(9), 1024.0021);
+  list_int = compute_node_info->GetAttrs()->GetAttrPointer<gert::ContinuousVector>(10);
   ASSERT_NE(list_int, nullptr);
   ASSERT_EQ(list_int->GetSize(), 4);
   EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,200,3000,4096}).data(), 4 * sizeof(int64_t)), 0);
-  gert_tensor = extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<gert::Tensor>(11);
+  gert_tensor = compute_node_info->GetAttrs()->GetAttrPointer<gert::Tensor>(11);
   ASSERT_NE(gert_tensor, nullptr);
   EXPECT_EQ(gert_tensor->storage_shape.GetOriginShape(), gert::Shape({8,224,224,3}));
   EXPECT_EQ(gert_tensor->storage_shape.GetStorageShape(), gert::Shape({8,1,224,224,16}));
@@ -524,28 +524,28 @@ TEST_F(BgKernelContextExtendUT, IgnoreNoneIrAttr) {
   auto node = graph->AddNode(op_desc);
 
   bg::BufferPool buffer_pool;
-  auto ret = bg::CreateKernelContextExtend(node, buffer_pool);
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   ASSERT_NE(ret, nullptr);
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(ret.get());
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetInputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetOutputsNum(), 1);
-  ASSERT_EQ(extend_info->MutableComputeNodeInfo().GetIrInputsNum(), 1);
-  auto td = extend_info->MutableComputeNodeInfo().GetInputTdInfo(0);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
-  auto ins_info = extend_info->GetComputeNodeInfo().GetInputInstanceInfo(0);
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrNum(), 4);
-  EXPECT_STREQ(extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<char>(0), "World");
-  EXPECT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<bool>(1), false);
-  EXPECT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<int64_t>(2), 10240);
-  EXPECT_FLOAT_EQ(*extend_info->GetComputeNodeInfo().GetAttrs()->GetAttrPointer<float>(3), 1024.0021);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 4);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), "World");
+  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<bool>(1), false);
+  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<int64_t>(2), 10240);
+  EXPECT_FLOAT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<float>(3), 1024.0021);
 }
 
 // todo lowering时，不需要构造attr
