@@ -28,6 +28,8 @@
 
 namespace fe {
 static const std::string STREAM_LABEL = "_stream_label";
+static const std::string ATTR_OP_COMPILE_STRATEGY = "_op_compile_strategy";
+static const std::string ATTR_KEEP_DTYPE = "_keep_dtype";
 PatternFusionBasePass::PatternFusionBasePass() {
   pattern_fusion_base_pass_impl_ptr_ = std::make_shared<PatternFusionBasePassImpl>();
   EnableNetworkAnalysis();
@@ -126,10 +128,19 @@ static bool SetStreamLabelToFusedNodes(std::vector<ge::NodePtr> &fused_nodes, co
 
 void InheritAttrFromOriNode(const std::vector<ge::NodePtr> &original_nodes, const ge::NodePtr &fusion_node) {
   for (const auto &origin_node : original_nodes) {
-    int64_t keep_dtype_ = static_cast<int64_t>(false);
-    if (ge::AttrUtils::GetInt(origin_node->GetOpDesc(), "_keep_dtype", keep_dtype_) && (keep_dtype_ != 0)) {
-      (void)ge::AttrUtils::SetInt(fusion_node->GetOpDesc(), "_keep_dtype", keep_dtype_);
-      break;
+    int64_t keep_dtype = static_cast<int64_t>(false);
+    if (ge::AttrUtils::GetInt(origin_node->GetOpDesc(), ATTR_KEEP_DTYPE, keep_dtype) && (keep_dtype != 0)) {
+      if (!ge::AttrUtils::HasAttr(fusion_node->GetOpDesc(), ATTR_KEEP_DTYPE)) {
+        (void)ge::AttrUtils::SetInt(fusion_node->GetOpDesc(), ATTR_KEEP_DTYPE, keep_dtype);
+      }
+    }
+
+    std::string op_compile_strategy;
+    if (ge::AttrUtils::GetStr(origin_node->GetOpDesc(), ATTR_OP_COMPILE_STRATEGY, op_compile_strategy) &&
+        !op_compile_strategy.empty()) {
+      if (!ge::AttrUtils::HasAttr(fusion_node->GetOpDesc(), ATTR_OP_COMPILE_STRATEGY)) {
+        (void)ge::AttrUtils::SetStr(fusion_node->GetOpDesc(), ATTR_OP_COMPILE_STRATEGY, op_compile_strategy);
+      }
     }
   }
 }
