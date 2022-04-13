@@ -217,7 +217,10 @@ graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr
   const auto in_data_anchor = node->GetInDataAnchor(static_cast<int32_t>(idx));
   GE_CHECK_NOTNULL(in_data_anchor);
   const auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
-  GE_CHECK_NOTNULL(out_data_anchor);
+  if (out_data_anchor == nullptr) {
+    GELOGW("[Check][op: %s][Param:out_data_anchor] is null, idx : %u.", GetName().c_str(), idx);
+    return ge::PARAM_INVALID;
+  }
   auto peer_node = out_data_anchor->GetOwnerNode();
 
   if (runtime_context_ != nullptr) {
