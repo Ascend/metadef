@@ -432,6 +432,7 @@ graphStatus GraphUtils::InsertNodeBefore(const InDataAnchorPtr &dst,
   GE_CHECK_NOTNULL(in_ctrl_anchor);
   const auto insert_node_in_ctrl_anchor = insert_node->GetInControlAnchor();
   for (const auto &peer_out_ctrl_anchor : in_ctrl_anchor->GetPeerOutControlAnchors()) {
+    GE_CHECK_NOTNULL(peer_out_ctrl_anchor);
     const auto peer_node = peer_out_ctrl_anchor->GetOwnerNode();
     const auto node_type = NodeUtils::GetNodeType(peer_node);
     if (node_type == ATOMICADDRCLEAN) {
@@ -2976,6 +2977,7 @@ graphStatus GraphUtils::UnfoldSubgraph(const ComputeGraphPtr &graph,
   GELOGD("[%s] Merging graph inputs and outputs successfully", graph->GetName().c_str());
 
   for (auto &node : graph->GetDirectNode()) {
+    GE_CHECK_NOTNULL(node);
     if ((node->GetType() == DATA) || (node->GetType() == NETOUTPUT)) {
       continue;
     }
@@ -3022,6 +3024,7 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
 
   std::set<NodePtr> src_nodes;
   for (const auto &node : graph->GetDirectNode()) {
+    GE_CHECK_NOTNULL(node);
     if (node->GetType() != DATA) {
       if (node->GetInDataNodes().empty()) {
         (void)src_nodes.emplace(node);
@@ -3065,6 +3068,7 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
     const auto &in_nodes = src_node->GetInAllNodes();
     const std::set<NodePtr> in_node_set(in_nodes.begin(), in_nodes.end());
     for (const auto &in_control_node : parent_node->GetInControlNodes()) {
+      GE_CHECK_NOTNULL(in_control_node);
       if ((in_node_set.count(in_control_node) == 0UL) && (kMergeInputSkipTypes.count(src_node->GetType()) == 0UL)) {
         GELOGD("[%s] Restore control edge to [%s]", in_control_node->GetName().c_str(), src_node->GetName().c_str());
         (void)AddEdge(in_control_node->GetOutControlAnchor(), src_node->GetInControlAnchor());
@@ -3091,6 +3095,7 @@ graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph) {
   parent_node->GetOutControlAnchor()->UnlinkAll();
 
   for (const auto &in_data_anchor : net_output->GetAllInDataAnchors()) {
+    GE_CHECK_NOTNULL(in_data_anchor);
     const auto index = in_data_anchor->GetIdx();
     uint32_t parent_index = 0U;
     // op_desc of node should not be null
