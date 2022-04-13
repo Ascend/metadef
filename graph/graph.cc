@@ -139,7 +139,10 @@ class GraphImpl {
 
   graphStatus SetOutputs(const std::vector<std::pair<Operator, std::string>> &outputs) {
     GE_CHK_BOOL_RET_STATUS(compute_graph_ != nullptr, GRAPH_FAILED, "[Check][Param] set ComputeGraph faild.");
-    GE_CHK_BOOL_EXEC_INFO(outputs.size() != 0UL, return GRAPH_SUCCESS, "set outputs size is 0.");
+    if (outputs.size() == 0U) {
+      GELOGI("set outputs size is 0.");
+      return GRAPH_SUCCESS;
+    }
 
     // Construct specified output
     std::vector<std::pair<ge::NodePtr, int32_t>> output_nodes;
@@ -193,7 +196,10 @@ class GraphImpl {
 
   graphStatus SetTargets(const std::vector<Operator> &targets) {
     GE_CHK_BOOL_RET_STATUS(compute_graph_ != nullptr, GRAPH_FAILED, "[Check][Param] set ComputeGraph faild.");
-    GE_CHK_BOOL_EXEC_INFO(targets.size() != 0U, return GRAPH_SUCCESS, "set targets size is 0.");
+    if (targets.size() == 0U) {
+      GELOGI("set targets size is 0.");
+      return GRAPH_SUCCESS;
+    }
 
     std::vector<ge::NodePtr> target_nodes;
     for (const auto item : targets) {
@@ -792,7 +798,9 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraphPtr GraphUtils::GetComputeGraph(const ge::Graph &graph) {
-  GE_CHK_BOOL_EXEC_NOLOG(graph.IsValid(), return nullptr);
+  if (!graph.IsValid()) {
+    return nullptr;
+  }
   return graph.impl_->compute_graph_;
 }
 
@@ -872,14 +880,16 @@ graphStatus Graph::CopyFrom(const Graph &src_graph) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Graph
 GraphUtils::CreateGraphFromComputeGraph(const ge::ComputeGraphPtr compute_graph) {
-  GE_CHK_BOOL_EXEC_NOLOG(compute_graph != nullptr, return Graph(""));
+  if (compute_graph == nullptr) {
+    return Graph("");
+  }
 
   const auto name = compute_graph->GetName();
   const auto graph = Graph(name);
-
-  GE_CHK_BOOL_EXEC_NOLOG(graph.impl_ != nullptr, return graph);
+  if (graph.impl_ == nullptr) {
+    return graph;
+  }
   graph.impl_->compute_graph_ = compute_graph;
-
   return graph;
 }
 
@@ -916,15 +926,20 @@ GraphUtils::CopyGraphImpl(const Graph &src_graph, Graph &dst_graph,
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GraphPtr
 GraphUtils::CreateGraphPtrFromComputeGraph(const ge::ComputeGraphPtr compute_graph) {
-  GE_CHK_BOOL_EXEC_NOLOG(compute_graph != nullptr, return nullptr);
+  if (compute_graph == nullptr) {
+    return nullptr;
+  }
 
   auto name = compute_graph->GetName();
   const auto graph = ComGraphMakeShared<Graph>(name);
-  GE_CHK_BOOL_EXEC_NOLOG(graph != nullptr, return nullptr);
-  GE_CHK_BOOL_EXEC_NOLOG(graph->impl_ != nullptr, return nullptr);
+  if (graph == nullptr) {
+    return nullptr;
+  }
+  if (graph->impl_ == nullptr) {
+    return nullptr;
+  }
 
   graph->impl_->compute_graph_ = compute_graph;
-
   return graph;
 }
 

@@ -2343,8 +2343,10 @@ private:
         GE_CHK_BOOL_EXEC(op_impl != nullptr,
                          REPORT_INNER_ERROR("E18888", "op_impl is nullptr, check invalid.");
                          return GRAPH_FAILED, "[Check][Param] Operator Impl is null.");
-        GE_CHK_BOOL_EXEC_INFO(all_nodes_info_.find(op_impl) == all_nodes_info_.cend(), continue,
-                              "This node %s has created.", op_impl->GetName().c_str())
+        if (all_nodes_info_.find(op_impl) != all_nodes_info_.cend()) {
+          GELOGI("This node %s has created.", op_impl->GetName().c_str());
+          continue;
+        }
         auto node_ptr = graph_->AddNode(op_impl->op_desc_);
         GE_CHK_BOOL_EXEC(node_ptr != nullptr,
                          REPORT_CALL_ERROR("E18888", "add node failed.");

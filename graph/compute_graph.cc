@@ -1386,10 +1386,12 @@ graphStatus ComputeGraphImpl::InferShapeInNeed(const ComputeGraphPtr &const_grap
                        return GRAPH_FAILED, "[Call][Verify] Verifying %s failed.", node_ptr->GetName().c_str());
 
       const graphStatus status = node_ptr->InferShapeAndType();
-      GE_CHK_BOOL_EXEC_INFO((node_ptr->GetType() == DATA) || (status != GRAPH_PARAM_INVALID), break,
-                            "Op %s does not have the IMPLEMT_INFERFUNC definition,"
-                            " and subsequent operators no longer perform shape inference.",
-                            node_ptr->GetName().c_str());
+      if ((node_ptr->GetType() != DATA) && (status == GRAPH_PARAM_INVALID)) {
+        GELOGI("Op %s does not have the IMPLEMT_INFERFUNC definition,"
+               " and subsequent operators no longer perform shape inference.",
+               node_ptr->GetName().c_str());
+        break;
+      }
       GE_CHK_BOOL_EXEC(status == GRAPH_SUCCESS,
                        REPORT_CALL_ERROR("E18888", "Inferring %s failed.", node_ptr->GetName().c_str());
                        return GRAPH_FAILED, "[Call][InferShapeAndType] Inferring %s failed.",

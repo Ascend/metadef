@@ -108,10 +108,11 @@ static void FindParserSo(const std::string &path, std::vector<std::string> &file
     GELOGI("realPath is empty");
     return;
   }
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path.size() >= static_cast<size_t>(MMPA_MAX_PATH),
-                                 REPORT_INNER_ERROR("E18888", "param path size:%zu >= max path:%d",
-                                                    path.size(), MMPA_MAX_PATH);
-                                 return, "[Check][Param] path is invalid");
+  if (path.size() >= static_cast<size_t>(MMPA_MAX_PATH)) {
+    REPORT_INNER_ERROR("E18888", "param path size:%zu >= max path:%d", path.size(), MMPA_MAX_PATH);
+    GELOGE(FAILED, "[Check][Param] path is invalid");
+    return;
+  }
 
   char_t resolved_path[MMPA_MAX_PATH] = {};
 

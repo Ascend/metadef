@@ -1666,21 +1666,23 @@ graphStatus OpDesc::CommonVerify() const {
       continue;
     }
     for (const int64_t dim : ishape) {
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(dim < -2,
-          ErrorManager::GetInstance().ATCReportErrMessage("E19014", {"opname", "value", "reason"},
-              {GetName(), "input " + iname + " shape", "contains negative or zero dimension"});
-          return GRAPH_FAILED,
-          "Op[%s]'s input %s shape contains negative or zero dimension.", GetName().c_str(), iname.c_str());
+      if (dim < -2) {
+        ErrorManager::GetInstance().ATCReportErrMessage("E19014", {"opname", "value", "reason"},
+            {GetName(), "input " + iname + " shape", "contains negative or zero dimension"});
+        GELOGE(FAILED, "Op[%s]'s input %s shape contains negative or zero dimension", GetName().c_str(), iname.c_str());
+        return GRAPH_FAILED;
+      }
     }
   }
   // Check all attributes defined
   const auto &all_attributes = GetAllAttrs();
   for (const auto &name : GetAllAttrNames()) {
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(all_attributes.find(name) == all_attributes.end(),
-        ErrorManager::GetInstance().ATCReportErrMessage("E19014", {"opname", "value", "reason"},
-            {GetName(), "attribute " + name, "is empty"});
-            return GRAPH_FAILED,
-            "operator attribute %s is empty.", name.c_str());
+    if (all_attributes.find(name) == all_attributes.end()) {
+      ErrorManager::GetInstance().ATCReportErrMessage("E19014", {"opname", "value", "reason"},
+                                                      {GetName(), "attribute " + name, "is empty"});
+      GELOGE(FAILED, "operator attribute %s is empty.", name.c_str());
+      return GRAPH_FAILED;
+    }
   }
   return GRAPH_SUCCESS;
 }

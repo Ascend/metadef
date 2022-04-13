@@ -23,16 +23,17 @@
 
 namespace ge {
 std::string RealPath(const char_t *path) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(path == nullptr,
-                                 REPORT_INNER_ERROR("E18888", "path is nullptr, check invalid");
-                                     return "", "[Check][Param] path pointer is NULL.");
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strnlen(path,
-                                         static_cast<size_t>(MMPA_MAX_PATH)) >= static_cast<size_t>(MMPA_MAX_PATH),
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E19002", {"filepath", "size"},
-                                                                                 {path, std::to_string(MMPA_MAX_PATH)});
-                                 return "",
-                                 "[Check][Param]Path[%s] len is too long, it must be less than %d",
-                                 path, MMPA_MAX_PATH);
+  if (path == nullptr) {
+    REPORT_INNER_ERROR("E18888", "path is nullptr, check invalid");
+    GELOGE(FAILED, "[Check][Param] path pointer is NULL.");
+    return "";
+  }
+  if (strnlen(path, static_cast<size_t>(MMPA_MAX_PATH)) >= static_cast<size_t>(MMPA_MAX_PATH)) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19002", {"filepath", "size"},
+                                                    {path, std::to_string(MMPA_MAX_PATH)});
+    GELOGE(FAILED, "[Check][Param]Path[%s] len is too long, it must be less than %d", path, MMPA_MAX_PATH);
+    return "";
+  }
 
   // Nullptr is returned when the path does not exist or there is no permission
   // Return absolute path when path is accessible
