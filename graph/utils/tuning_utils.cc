@@ -674,7 +674,26 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
   }
 
   // 4. construct relation of root graph and subgraphs
-  for (const auto &node : merged_root_graph->GetDirectNode()) {
+  const auto ret_link_graph = LinkSubgraph(merged_root_graph, merged_root_graph, name_to_merged_subgraph);
+  if (ret_link_graph != GRAPH_SUCCESS) {
+    return ret_link_graph;
+  }
+
+  // 5. construct relation of root graph and subgraph of subgrah
+  for (const auto subgraph_iter: name_to_merged_subgraph) {
+    const auto ret_link_graph = LinkSubgraph(merged_root_graph, subgraph_iter.second, name_to_merged_subgraph);
+    if (ret_link_graph != GRAPH_SUCCESS) {
+      return ret_link_graph;
+    }
+  }
+
+  graph = GraphUtils::CreateGraphFromComputeGraph(merged_root_graph);
+  return SUCCESS;
+}
+
+graphStatus TuningUtils::LinkSubgraph(ComputeGraphPtr &root_graph, const ComputeGraphPtr &graph,
+                                      const std::map<std::string, ComputeGraphPtr> &name_to_merged_subgraph) {
+  for (const auto &node : graph->GetDirectNode()) {
     const auto op_desc = node->GetOpDesc();
     GE_CHECK_NOTNULL(op_desc);
     for (const auto &subgraph_name : op_desc->GetSubgraphInstanceNames()) {
@@ -686,15 +705,14 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
                subgraph_name.c_str(), op_desc->GetName().c_str());
         return GRAPH_FAILED;
       }
+
       iter->second->SetParentNode(node);
-      iter->second->SetParentGraph(merged_root_graph);
-      (void)merged_root_graph->AddSubGraph(iter->second);
+      iter->second->SetParentGraph(graph);
+      (void)root_graph->AddSubGraph(iter->second);
       GELOGI("add subgraph:%s for node:%s success", subgraph_name.c_str(), op_desc->GetName().c_str());
     }
   }
-
-  graph = GraphUtils::CreateGraphFromComputeGraph(merged_root_graph);
-  return SUCCESS;
+  return GRAPH_SUCCESS;
 }
 
 graphStatus TuningUtils::MergeGraph(const std::vector<ComputeGraphPtr> &subgraphs,
