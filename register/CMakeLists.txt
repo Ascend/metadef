@@ -9,6 +9,7 @@ set(SRC_LIST
     "graph_optimizer/graph_fusion/fusion_pass_registry.cc"
     "graph_optimizer/graph_fusion/fusion_pattern.cc"
     "graph_optimizer/graph_fusion/pattern_fusion_base_pass.cc"
+    "graph_optimizer/graph_fusion/graph_pass_util.cc"
     "graph_optimizer/graph_fusion/pattern_fusion_base_pass_impl.cc"
     "graph_optimizer/graph_fusion/pattern_fusion_base_pass_impl.h"
     "graph_optimizer/buffer_fusion/buffer_fusion_pass_registry.cc"

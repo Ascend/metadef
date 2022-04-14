@@ -185,7 +185,8 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
         break;
       }
     }
-
+    std::vector<std::string> origin_op_names;
+    StoreOriginOpNames(mapping, origin_op_names);
     const Status status = Fusion(graph, mapping, fus_nodes);
 
     const bool isGraphCycle = enable_network_analysis_ && CheckGraphCycle(graph);
@@ -225,6 +226,8 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
       }
       (void)SetDataDumpAttr(original_nodes, fus_nodes);
       for (ge::NodePtr &node : fus_nodes) {
+        GraphPassUtil::RecordOriginalOpNames(original_nodes, node->GetOpDesc(), GetName(), origin_op_names);
+        (void)GraphPassUtil::StoreAndUpdataOriginFusionPassName(node->GetOpDesc(), original_nodes, GetName());
         (void)GraphPassUtil::AddNodeFromOpTypeMap(node_map_info, node);
         /* If one of the original node has attribute like keep_dtype_, the fused node
          * will inherit that attribute. */
@@ -488,6 +491,18 @@ ge::NodePtr PatternFusionBasePass::GetNodeFromMapping(const std::string &id, con
     }
   }
   return nullptr;
+}
+
+void PatternFusionBasePass::StoreOriginOpNames(const Mapping &mapping,
+                                               std::vector<std::string> &origin_op_names) const {
+  for (const auto &item : mapping) {
+    if (item.second.empty()) {
+      continue;
+    }
+    for (const auto &node : item.second) {
+      origin_op_names.push_back(node->GetOpDesc()->GetName());
+    }
+  }
 }
 
 void PatternFusionBasePass::RecordOutputAnchorMap(ge::NodePtr output_node) {
