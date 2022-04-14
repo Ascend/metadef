@@ -144,6 +144,11 @@ NodeOpTypeFeature::NodeOpTypeFeature(NodeOpTypeFeature const &feature) : ScopeBa
 }
 
 NodeOpTypeFeature &NodeOpTypeFeature::operator=(NodeOpTypeFeature const &feature) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "NodeOpTypeFeature is not properly initialized.");
+    return *this;
+  }
+
   if (&feature == this) {
     return *this;
   }
@@ -166,7 +171,7 @@ bool NodeOpTypeFeature::Match(const Scope *scope) {
 }
 
 bool NodeAttrFeature::NodeAttrFeatureImpl::Match(const Scope *scope) {
-  if (scope == nullptr) {
+  if ((scope == nullptr) || (scope->impl_ == nullptr)) {
     GELOGE(ge::PARAM_INVALID, "Input scope is nullptr.");
     return false;
   }
@@ -293,6 +298,10 @@ NodeAttrFeature::NodeAttrFeature(NodeAttrFeature const &feature) : ScopeBaseFeat
 }
 
 NodeAttrFeature &NodeAttrFeature::operator=(NodeAttrFeature const &feature) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "NodeAttrFeature is not properly initialized.");
+    return *this;
+  }
   if (&feature == this) {
     return *this;
   }
@@ -393,6 +402,10 @@ ScopeFeature::ScopeFeature(ScopeFeature const &feature) : ScopeBaseFeature() {
 }
 
 ScopeFeature &ScopeFeature::operator=(ScopeFeature const &feature) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "ScopeFeature is not properly initialized.");
+    return *this;
+  }
   if (&feature == this) {
     return *this;
   }

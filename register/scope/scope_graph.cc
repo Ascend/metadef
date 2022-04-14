@@ -822,10 +822,18 @@ Status FusionScopesResult::Init() {
 FusionScopesResult::~FusionScopesResult() {}
 
 void FusionScopesResult::SetName(const std::string &name) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   impl_->SetName(name);
 }
 
 void FusionScopesResult::SetName(const char_t *name) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   std::string str_name;
   if (name != nullptr) {
     str_name = name;
@@ -834,10 +842,18 @@ void FusionScopesResult::SetName(const char_t *name) {
 }
 
 void FusionScopesResult::SetType(const std::string &type) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   impl_->SetType(type);
 }
 
 void FusionScopesResult::SetType(const char_t *type) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   std::string str_type;
   if (type != nullptr) {
     str_type = type;
@@ -846,10 +862,18 @@ void FusionScopesResult::SetType(const char_t *type) {
 }
 
 void FusionScopesResult::SetDescription(const std::string &description) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   impl_->SetDescription(description);
 }
 
 void FusionScopesResult::SetDescription(const char_t *description) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   std::string str_desc;
   if (description != nullptr) {
     str_desc = description;
@@ -858,23 +882,45 @@ void FusionScopesResult::SetDescription(const char_t *description) {
 }
 
 const std::string &FusionScopesResult::Name() const {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    static std::string name;
+    return name;
+  }
   return impl_->Name();
 }
 
 Status FusionScopesResult::Name(AscendString &name) const {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return ge::GRAPH_PARAM_INVALID;
+  }
   name = AscendString(impl_->Name().c_str());
   return SUCCESS;
 }
 
 const std::vector<ge::OperatorPtr> &FusionScopesResult::Nodes() const {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    static std::vector<ge::OperatorPtr> nodes;
+    return nodes;
+  }
   return impl_->Nodes();
 }
 
 void FusionScopesResult::InsertInputs(const std::string &inner_op_name, const std::vector<int32_t> &index_map) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   impl_->InsertInputs(inner_op_name, index_map);
 }
 
 void FusionScopesResult::InsertInputs(const char_t *inner_op_name, const std::vector<int32_t> &index_map) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   std::string op_name;
   if (inner_op_name != nullptr) {
     op_name = inner_op_name;
@@ -883,6 +929,10 @@ void FusionScopesResult::InsertInputs(const char_t *inner_op_name, const std::ve
 }
 
 void FusionScopesResult::InsertOutputs(const std::string &inner_op_name, const std::vector<int32_t> &index_map) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "FusionScopesResult is not properly initialized.");
+    return;
+  }
   impl_->InsertOutputs(inner_op_name, index_map);
 }
 
