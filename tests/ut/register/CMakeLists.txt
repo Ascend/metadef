@@ -57,6 +57,7 @@ set(REGISTER_UT_FILES
     "testcase/register_graph_fusion.cc"
     "testcase/register_graph_fusion_2.cc"
     "testcase/register_graph_fusion_3.cc"
+    "testcase/register_graph_fusion_4.cc"
     "testcase/register_buffer_fusion.cc"
     "testcase/graph_pass_util_ut.cc"
     "testcase/reg_op_unittest.cc"

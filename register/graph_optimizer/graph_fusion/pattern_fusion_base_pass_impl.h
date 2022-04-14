@@ -78,10 +78,18 @@ class PatternFusionBasePassImpl {
   bool MatchFromOutput(std::vector<ge::NodePtr> &candidate_nodes,
                        std::vector<std::shared_ptr<OpDesc>> &candidate_op_descs, Mapping &mapping) const;
 
+  bool MatchAsInput(std::vector<ge::NodePtr> &candidate_nodes,
+                    std::vector<FusionPattern::OpDescPtr> &candidate_op_descs, Mapping &mapping) const;
+
+  void AddCandidateQueue(const FusionPattern::OpDescPtr &op_desc, const ge::NodePtr &node,
+                         std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
+                         std::vector<ge::NodePtr> &candidate_nodes, Mapping &mapping) const;
+
   static bool MatchAllEdges(const size_t &input_size, const std::unique_ptr<bool[]> &usage_flags);
 
   static void GetInDataAnchors(const ge::NodePtr &node, std::vector<ge::InDataAnchorPtr> &in_anchor_vec);
 
+  static void GetOutDataAnchors(const ge::NodePtr &node, std::vector<ge::OutDataAnchorPtr> &out_anchor_vec);
 };
 
 }  // namespace fe

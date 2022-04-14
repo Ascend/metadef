@@ -32,6 +32,9 @@ class FusionPattern {
  public:
   struct OpDesc;
   using OpDescPtr = std::shared_ptr<OpDesc>;
+  using OutputMapVecStr = std::initializer_list<std::pair<uint32_t, std::initializer_list<const char*>>>;
+  using OutputMapStr = std::initializer_list<std::pair<uint32_t, const char*>>;
+  using OutputMapDesc = std::map<uint32_t, std::vector<FusionPattern::OpDescPtr>>;
   /**
    * @ingroup fe
    * @brief description of Ops
@@ -40,8 +43,11 @@ class FusionPattern {
     std::string id;                       // Identifier
     std::vector<std::string> types;  // the Op types of Ops
     std::vector<OpDescPtr> inputs;   // all input Ops
+    OutputMapDesc outputs; // all output Ops
     bool repeatable;                 // flag to show if match multiple Ops or not
     bool is_output;                  // flag to show if the op is output node
+    bool is_output_fullmatch;        // flag to match all output
+    size_t output_size;              // all output size
   };
 
  public:
@@ -92,6 +98,30 @@ class FusionPattern {
    */
   FusionPattern &SetInputs(const std::string &id, const std::vector<std::string> &input_ids);
 
+  /** set output Ops with unknown number of args
+   *
+   * @param id pattern id
+   *
+   * @param output_map output map
+   *
+   * @param is_fullmatched flag of output full matched
+   *
+   * @return FusionPattern
+   */
+  FusionPattern &SetOutputs(const std::string &id, const OutputMapStr &output_map, bool is_fullmatched = true);
+
+  /** set output Ops with unknown number of args
+   *
+   * @param id pattern id
+   *
+   * @param output_map output map
+   *
+   * @param is_fullmatched flag of output full matched
+   *
+   * @return FusionPattern
+   */
+  FusionPattern &SetOutputs(const std::string &id, const OutputMapVecStr &output_map, bool is_fullmatched = true);
+
   /** set output Op
    *
    * @param id pattern id
@@ -121,6 +151,22 @@ class FusionPattern {
    * @return op_desc's iniput opdesc list
    */
   static const std::vector<std::shared_ptr<OpDesc>> *GetInputs(const std::shared_ptr<FusionPattern::OpDesc> op_desc);
+
+  /** get the OpDesc of output Ops (const)
+   *
+   * @param op_desc op_desc for getting outputs
+   *
+   * @return op_desc's output opdesc map
+   */
+  static const OutputMapDesc &GetOutputs(const OpDescPtr op_desc);
+
+  /** get the OpDesc of output size
+   *
+   * @param op_desc op_desc for getting output size
+   *
+   * @return op_desc's output size
+   */
+  static size_t GetOutputSize(const OpDescPtr op_desc);
 
   /** get the OpDesc of output Op
    *
