@@ -15,7 +15,7 @@
  */
 
 #include "transfer_range_according_to_format.h"
-#include "graph/types.h"
+#include <algorithm>
 
 namespace transformer {
 

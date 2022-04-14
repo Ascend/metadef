@@ -15,9 +15,169 @@
  */
 
 #include "expand_dimension.h"
+#include <unordered_map>
+#include <unordered_set>
+#include <bitset>
+#include "axis_constants.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace transformer {
+namespace {
+  const std::string RESHAPE_TYPE_FORBIDDEN = "FORBIDDEN";
+  const uint32_t kBitsOfByte = 8;
+  const uint32_t kBitSetDisplaySize = 8;
+  const uint32_t kMaxDimSize = 8;
+  const uint32_t kMaxReshapeTypeSize = 56;
+
+  const std::unordered_set<ge::Format> kSupportedTransFormat = {ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ,
+                                                                ge::FORMAT_ND_RNN_BIAS, ge::FORMAT_FRACTAL_ZN_RNN};
+
+  const std::unordered_map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
+          {ge::FORMAT_NCHW,  DIM_DEFAULT_SIZE},
+          {ge::FORMAT_NHWC,  DIM_DEFAULT_SIZE},
+          {ge::FORMAT_HWCN,  DIM_DEFAULT_SIZE},
+          {ge::FORMAT_CHWN,  DIM_DEFAULT_SIZE},
+          {ge::FORMAT_NDHWC, DIM_SIZE_FIVE},
+          {ge::FORMAT_NCDHW, DIM_SIZE_FIVE},
+          {ge::FORMAT_DHWCN, DIM_SIZE_FIVE},
+          {ge::FORMAT_ND,    DIM_DEFAULT_SIZE}
+  };
+
+  inline uint32_t GenerateFormatKey(ge::Format format) {
+    return ((static_cast<uint32_t>(format) & 0xff) << kBitsOfByte);
+  }
+
+  inline uint32_t GenerateReshapeTypeKey(ge::Format format, size_t size) {
+    return ((static_cast<uint32_t>(format) & 0xff) << kBitsOfByte) | (static_cast<uint32_t>(size) & 0xff);
+  }
+
+  inline uint32_t GenerateAxisIndexKey(ge::Format format, char ch) {
+    return ((static_cast<uint32_t>(format) & 0xff) << kBitsOfByte) | (static_cast<uint32_t>(ch) & 0xff);
+  }
+
+  const std::unordered_map<uint32_t, std::string> DEFAULT_RESHAPE_TYPE {
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 0), ""},
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 0), ""},
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 0), ""},
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 0), ""},
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 0), ""},
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 0), ""},
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 0), ""},
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 1), "C"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 1), "C"},
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 1), "C"},
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 1), "C"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 1), "C"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 1), "C"},
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 1), "C"},
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 2), "CH"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 2), "HW"},
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 2), "CN"},
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 2), "WN"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 2), "WC"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 2), "HW"},
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 2), "CN"},
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 3), "CHW"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 3), "HWC"},
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 3), "WCN"},
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 3), "HWN"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 3), "HWC"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 3), "DHW"},
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 3), "WCN"},
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 4), "DHWC"},
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 4), "CDHW"},
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 4), "HWCN"}
+  };
+
+  const std::unordered_map<uint32_t, int64_t> kDefaultReshapeType {
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 0), 0x0f},  // 0000 1111
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 0), 0x0f},  // 0000 1111
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 0), 0x0f},  // 0000 1111
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 0), 0x0f},  // 0000 1111
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 0), 0x1f}, // 0001 1111
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 0), 0x1f}, // 0001 1111
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 0), 0x1f}, // 0001 1111
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 1), 0x0b},  // 0000 1011, C
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 1), 0x0e},  // 0000 1110, C
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 1), 0x0d},  // 0000 1101, C
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 1), 0x07},  // 0000 0111, C
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 1), 0x1e}, // 0001 1110, C
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 1), 0x17}, // 0001 0111, C
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 1), 0x1d}, // 0001 1101, C
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 2), 0x09},  // 0000 1001, CH
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 2), 0x09},  // 0000 1001, HW
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 2), 0x0c},  // 0000 1100, CN
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 2), 0x0c},  // 0000 1100, WN
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 2), 0x1c}, // 0001 1100, WC
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 2), 0x1c}, // 0001 1100, HW
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 2), 0x1c}, // 0001 1100, CN
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NCHW, 3), 0x08},  // 0000 1000, CHW
+          {GenerateReshapeTypeKey(ge::FORMAT_NHWC, 3), 0x08},  // 0000 1000, HWC
+          {GenerateReshapeTypeKey(ge::FORMAT_HWCN, 3), 0x08},  // 0000 1000, WCN
+          {GenerateReshapeTypeKey(ge::FORMAT_CHWN, 3), 0x08},  // 0000 1000, HWN
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 3), 0x18}, // 0001 1000, HWC
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 3), 0x18}, // 0001 1000, DHW
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 3), 0x18}, // 0001 1000, WCN
+
+          {GenerateReshapeTypeKey(ge::FORMAT_NDHWC, 4), 0x10}, // 0001 0000, DHWC
+          {GenerateReshapeTypeKey(ge::FORMAT_NCDHW, 4), 0x10}, // 0001 0000, CDHW
+          {GenerateReshapeTypeKey(ge::FORMAT_DHWCN, 4), 0x10}  // 0001 0000, HWCN
+  };
+
+  const std::unordered_map<uint32_t, int32_t> AXIS_INDEX_OF_FORMAT {
+          {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'N'), AXIS_NCHW_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'C'), AXIS_NCHW_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'H'), AXIS_NCHW_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_NCHW, 'W'), AXIS_NCHW_DIM_W},
+
+          {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'N'), AXIS_HWCN_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'C'), AXIS_HWCN_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'H'), AXIS_HWCN_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_HWCN, 'W'), AXIS_HWCN_DIM_W},
+
+          {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'N'), AXIS_NHWC_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'C'), AXIS_NHWC_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'H'), AXIS_NHWC_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_NHWC, 'W'), AXIS_NHWC_DIM_W},
+
+          {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'N'), AXIS_CHWN_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'C'), AXIS_CHWN_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'H'), AXIS_CHWN_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_CHWN, 'W'), AXIS_CHWN_DIM_W},
+
+          {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'N'), NDHWC_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'C'), NDHWC_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'H'), NDHWC_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'W'), NDHWC_DIM_W},
+          {GenerateAxisIndexKey(ge::FORMAT_NDHWC, 'D'), NDHWC_DIM_D},
+
+          {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'N'), NCDHW_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'C'), NCDHW_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'H'), NCDHW_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'W'), NCDHW_DIM_W},
+          {GenerateAxisIndexKey(ge::FORMAT_NCDHW, 'D'), NCDHW_DIM_D},
+
+          {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'N'), DHWCN_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'C'), DHWCN_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'H'), DHWCN_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'W'), DHWCN_DIM_W},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWCN, 'D'), DHWCN_DIM_D},
+
+          {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'N'), DHWNC_DIM_N},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'C'), DHWNC_DIM_C},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'H'), DHWNC_DIM_H},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'W'), DHWNC_DIM_W},
+          {GenerateAxisIndexKey(ge::FORMAT_DHWNC, 'D'), DHWNC_DIM_D}
+  };
+}
+
 bool GetDefaultReshapeType(const ge::Format &original_format, const size_t &old_dims_size, std::string &reshape_type) {
   int32_t default_key = GenerateReshapeTypeKey(original_format, old_dims_size);
   auto iter = DEFAULT_RESHAPE_TYPE.find(default_key);
@@ -79,44 +239,27 @@ bool IsReshapeTypeValid(const ge::Format &original_format, const size_t &old_dim
 void ExpandByReshapeType(ge::GeShape &shape, const ge::Format &original_format,
                          const size_t &old_dims_size, const size_t &full_size, const std::string &reshape_type) {
   GELOGD("Expand tensor by reshape type %s.", reshape_type.c_str());
-  if (reshape_type == "CN") {
-    /* If the reshape type is CN, we will consider the original format is HWCN. */
-    if (old_dims_size < DIMENSION_NUM_TWO) {
-      GELOGW("old dims size %zu is less than 2. Reshape type is %s.", old_dims_size, reshape_type.c_str());
-      return;
-    }
-    int64_t dim_0 = shape.GetDim(0);
-    int64_t dim_1 = shape.GetDim(1);
-    shape.SetDimNum(4);
-    shape.SetDim(0, 1);
-    shape.SetDim(1, 1);
-    shape.SetDim(2, dim_0);
-    shape.SetDim(3, dim_1);
-    /* In this case the final format must be HWCN, we just return true */
+  /* Build a array with all 1 of full size. Then we will substitute some of the 1 with the original axis value. */
+  for (size_t i = old_dims_size; i < full_size; i++) {
+    shape.AppendDim(1);
+  }
+  if (reshape_type.empty() || old_dims_size == 0) {
     return;
-  } else {
-    /* Build a array with all 1 of full size. Then we will substitute some of the 1 with the original axis value. */
-    for (size_t i = old_dims_size; i < full_size; i++) {
-      shape.AppendDim(1);
-    }
-    if (reshape_type.empty() || old_dims_size == 0) {
-      return;
-    }
+  }
 
-    uint32_t format_key = GenerateFormatKey(original_format);
-    uint32_t axis_key = 0;
-    for (int32_t i = static_cast<int32_t>(old_dims_size) - 1; i >= 0; i--) {
-      axis_key = format_key | (static_cast<uint32_t>(reshape_type.at(i)) & 0xff);
-      auto iter_axis_index = AXIS_INDEX_OF_FORMAT.find(axis_key);
-      if (iter_axis_index == AXIS_INDEX_OF_FORMAT.end()) {
-        continue;
-      }
-      if (iter_axis_index->second == i) {
-        continue;
-      }
-      shape.SetDim(iter_axis_index->second, shape.GetDim(i));
-      shape.SetDim(i, 1);
+  uint32_t format_key = GenerateFormatKey(original_format);
+  uint32_t axis_key = 0;
+  for (int32_t i = static_cast<int32_t>(old_dims_size) - 1; i >= 0; i--) {
+    axis_key = format_key | (static_cast<uint32_t>(reshape_type.at(i)) & 0xff);
+    auto iter_axis_index = AXIS_INDEX_OF_FORMAT.find(axis_key);
+    if (iter_axis_index == AXIS_INDEX_OF_FORMAT.end()) {
+      continue;
     }
+    if (iter_axis_index->second == i) {
+      continue;
+    }
+    shape.SetDim(iter_axis_index->second, shape.GetDim(i));
+    shape.SetDim(i, 1);
   }
 }
 
@@ -174,5 +317,175 @@ bool ExpandRangeDimension(const std::string &op_type, const ge::Format &original
     ranges.emplace_back(std::pair<int64_t, int64_t>(shape_low.GetDim(idx), shape_upper.GetDim(idx)));
   }
   return res;
+}
+
+ExpandDimension::ExpandDimension() {}
+ExpandDimension::~ExpandDimension() {}
+
+int64_t ExpandDimension::GenerateReshapeType(const ge::Format &origin_format, const ge::Format &format,
+                                             const size_t &origin_dim_size, const std::string &reshape_type) {
+  GELOGD("Begin to generate integer reshape type, original format[%d], format[%d], dim size[%zu], reshape type[%s].",
+         origin_format, format, origin_dim_size, reshape_type.c_str());
+  int64_t ret_reshape_type = 0;
+  size_t full_size = 0;
+  if (!GetFormatFullSize(origin_format, full_size)) {
+    return ret_reshape_type;
+  }
+  if (!IsNeedExpand(origin_format, format, origin_dim_size, full_size, reshape_type)) {
+    return ret_reshape_type;
+  }
+
+  if (!IsReshapeTypeValid(origin_format, origin_dim_size, reshape_type)) {
+    ret_reshape_type = GetDefaultReshapeType(origin_format, origin_dim_size);
+    ret_reshape_type = ret_reshape_type | (full_size << kMaxReshapeTypeSize);
+    GELOGD("Reshape type[%s] is invalid, return default integer reshape type[%ld]",
+           reshape_type.c_str(), ret_reshape_type);
+    return ret_reshape_type;
+  }
+
+  if (origin_dim_size > reshape_type.length()) {
+    GELOGW("The length of reshape type[%s] is longer than dim size[%zu]. Can not generate integer reshape type.",
+           reshape_type.c_str(), origin_dim_size);
+    return ret_reshape_type;
+  }
+
+  uint32_t format_key = GenerateFormatKey(origin_format);
+  std::unordered_set<int32_t> dim_pos_set;
+  for (const char &dim : reshape_type.substr(0, origin_dim_size)) {
+    uint32_t axis_key = format_key | (static_cast<uint32_t>(dim) & 0xff);
+    auto iter_axis_index = AXIS_INDEX_OF_FORMAT.find(axis_key);
+    if (iter_axis_index != AXIS_INDEX_OF_FORMAT.end()) {
+      dim_pos_set.emplace(iter_axis_index->second);
+    }
+  }
+  for (size_t i = 0; i < full_size; i++) {
+    ret_reshape_type = ret_reshape_type << 1;
+    if (dim_pos_set.count(i) == 0) {
+      ret_reshape_type = ret_reshape_type | 0x01;
+    }
+  }
+
+  ret_reshape_type = ret_reshape_type | (full_size << kMaxReshapeTypeSize);
+  GELOGD("Integer reshape type[%s] has been generated for original format[%d], dim size[%zu], reshape type[%s].",
+         std::bitset<kBitSetDisplaySize>(ret_reshape_type).to_string().c_str(), origin_format, origin_dim_size,
+         reshape_type.c_str());
+  return ret_reshape_type;
+}
+
+bool ExpandDimension::IsNeedExpand(const ge::Format &origin_format, const ge::Format &format,
+                                   const size_t &origin_dim_size, const size_t &full_size,
+                                   const std::string &reshape_type) {
+  if (origin_dim_size >= full_size) {
+    return false;
+  }
+  if (reshape_type == RESHAPE_TYPE_FORBIDDEN) {
+    return false;
+  }
+  if (kSupportedTransFormat.count(format) != 0) {
+    return false;
+  }
+  if (origin_format == ge::FORMAT_ND && format == ge::FORMAT_FRACTAL_Z) {
+    return false;
+  }
+  return true;
+}
+
+bool ExpandDimension::IsReshapeTypeValid(const ge::Format &origin_format, const size_t &origin_dim_size,
+                                         const std::string &reshape_type) {
+  if (reshape_type.empty()) {
+    return origin_dim_size == 0;
+  }
+  int32_t pos = -1;
+  uint32_t format_key = GenerateFormatKey(origin_format);
+  uint32_t axis_key = 0;
+  for (const char &dim : reshape_type) {
+    axis_key = format_key | (static_cast<uint32_t>(dim) & 0xff);
+    auto iter = AXIS_INDEX_OF_FORMAT.find(axis_key);
+    if (iter == AXIS_INDEX_OF_FORMAT.end()) {
+      return false;
+    }
+    if (iter->second > pos) {
+      pos = iter->second;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+int64_t ExpandDimension::GetDefaultReshapeType(const ge::Format &origin_format, const size_t &origin_dim_size) {
+  int32_t default_key = GenerateReshapeTypeKey(origin_format, origin_dim_size);
+  auto iter = kDefaultReshapeType.find(default_key);
+  if (iter != kDefaultReshapeType.end()) {
+    return iter->second;
+  }
+  return 0;
+}
+
+void ExpandDimension::ExpandDims(const int64_t &reshape_type, ge::GeShape &shape) {
+  GELOGD("Begin to expand dims, reshape type[%ld], shape[%s].", reshape_type, shape.ToString().c_str());
+  if (reshape_type == 0) {
+    return;
+  }
+
+  size_t full_size = static_cast<size_t>(reshape_type >> kMaxReshapeTypeSize);
+  GELOGD("Full size of this shape is [%zu].", full_size);
+  if (full_size > kMaxDimSize) {
+    return;
+  }
+
+  // full_size:4, shape:[A,B], reshape_type:0101
+  // shape:[A,B] + full_size:4 -> [A,B,1,1]
+  size_t dim_size = shape.GetDimNum();
+  for (size_t i = dim_size; i < full_size; i++) {
+    shape.AppendDim(1);
+  }
+
+  // shape:[A,B,1,1] + 0101 -> [A,1,B,1]
+  for (int32_t i = static_cast<int32_t>(full_size - 1); i >= 0; i--) {
+    if ((reshape_type & (1 << (full_size - 1 - i))) == 0) {
+      if (dim_size > 0 && dim_size -1 < static_cast<size_t>(i)) {
+        shape.SetDim(i, shape.GetDim(dim_size - 1));
+        shape.SetDim(dim_size - 1, 1);
+        dim_size--;
+      }
+    }
+  }
+  GELOGD("After expanding dims, shape[%s].", shape.ToString().c_str());
+}
+
+void ExpandDimension::ExpandDims(const int64_t &reshape_type, const ge::GeShape &origin_shape, ge::GeShape &shape) {
+  GELOGD("Begin to expand dims, reshape type[%ld], origin shape[%s].", reshape_type, origin_shape.ToString().c_str());
+  if (reshape_type == 0) {
+    return;
+  }
+
+  size_t full_size = static_cast<size_t>(reshape_type >> kMaxReshapeTypeSize);
+  GELOGD("Full size of this shape is [%zu].", full_size);
+  if (full_size > kMaxDimSize) {
+    return;
+  }
+
+  shape.SetDimNum(0);
+  size_t shape_pos = 0;
+  for (size_t i = 0; i < full_size; i++) {
+    if ((reshape_type & (1 << (full_size - 1 - i))) == 0) {
+      if (shape_pos < origin_shape.GetDimNum()) {
+        shape.AppendDim(origin_shape.GetDim(shape_pos++));
+      }
+    } else {
+      shape.AppendDim(1);
+    }
+  }
+  GELOGD("After expanding dims, shape[%s].", shape.ToString().c_str());
+}
+
+bool ExpandDimension::GetFormatFullSize(const ge::Format &format, size_t &full_size) {
+  auto iter = FULL_SIZE_OF_FORMAT.find(format);
+  if (iter == FULL_SIZE_OF_FORMAT.end()) {
+    return false;
+  }
+  full_size = iter->second;
+  return true;
 }
 } // namespace transformer

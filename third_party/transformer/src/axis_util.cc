@@ -15,242 +15,226 @@
  */
 
 #include "axis_util.h"
-#include "graph/types.h"
+#include "axis_constants.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace transformer {
-using std::vector;
-using namespace ge;
-namespace {
-static std::map<ge::Format, GetAxisValueInfoByFormatPtr> getAxisValueFuncMap = {
-    {FORMAT_NCHW, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNCHW)},
-    {FORMAT_NHWC, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNHWC)},
-    {FORMAT_NC1HWC0, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNC1HWC0)},
-    {FORMAT_HWCN, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByHWCN)},
-    {FORMAT_ND, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByND)},
-    {FORMAT_C1HWNCoC0, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByC1HWNCoC0)},
-    {FORMAT_NDHWC, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNDHWC)},
-    {FORMAT_NCDHW, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByNCDHW)},
-    {FORMAT_DHWCN, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByDHWCN)},
-    {FORMAT_DHWNC, std::make_shared<GetAxisValueInfoByFormat>(AxisUtil::GetAxisValueByDHWNC)}};
-}
+const size_t DIM_DEFAULT_SIZE = 4;
+const size_t DIM_SIZE_FIVE = 5;
+const size_t DIM_SIZE_SIX = 6;
 
+const int32_t AXIS_NCHW_DIM_N = 0;
+const int32_t AXIS_NCHW_DIM_C = 1;
+const int32_t AXIS_NCHW_DIM_H = 2;
+const int32_t AXIS_NCHW_DIM_W = 3;
 
-AxisUtil::AxisUtil() {}
+const int32_t AXIS_NHWC_DIM_N = 0;
+const int32_t AXIS_NHWC_DIM_H = 1;
+const int32_t AXIS_NHWC_DIM_W = 2;
+const int32_t AXIS_NHWC_DIM_C = 3;
 
-bool AxisUtil::GetAxisValueByOriginFormat(const Format &format, const ge::GeShape &shape, const uint32_t &c0,
-                                          vector<int64_t> &axisValue) {
-  auto iterGetAxisFunc = getAxisValueFuncMap.find(format);
-  if (iterGetAxisFunc == getAxisValueFuncMap.end()) {
-    GELOGI("Can not get axis value of old format %u!", format);
-    return false;
-  }
-  GetAxisValueInfoByFormatPtr getAxisFunc = iterGetAxisFunc->second;
-  CHECK_NOTNULL(getAxisFunc);
-  return (*getAxisFunc)(shape, c0, axisValue);
-}
+const int32_t AXIS_HWCN_DIM_H = 0;
+const int32_t AXIS_HWCN_DIM_W = 1;
+const int32_t AXIS_HWCN_DIM_C = 2;
+const int32_t AXIS_HWCN_DIM_N = 3;
 
-bool AxisUtil::HasAxisValueFunc(const Format &format) {
-  auto iterGetAxisFunc = getAxisValueFuncMap.find(format);
-  if (iterGetAxisFunc == getAxisValueFuncMap.end()) {
-    GELOGI("Can not get axis value of format %u!", format);
-    return false;
-  }
-  return true;
-}
+const int32_t AXIS_CHWN_DIM_C = 0;
+const int32_t AXIS_CHWN_DIM_H = 1;
+const int32_t AXIS_CHWN_DIM_W = 2;
+const int32_t AXIS_CHWN_DIM_N = 3;
 
-bool AxisUtil::CheckParams(const ge::GeShape &shape, const uint32_t &c0, vector<int64_t> &axisValue) {
-  if (shape.GetDimNum() < DIM_DEFAULT_SIZE) {
-    /* Before this funcion, we should call function PadDimensionTo4. */
-    GELOGI("Dimension size %zu is invalid.", shape.GetDimNum());
-    return false;
-  }
-  if (c0 == 0) {
-    GELOGE(GRAPH_FAILED, "[ERROR]c0 is zero!");
-    return false;
-  }
+const int32_t NDHWC_DIM_N = 0;
+const int32_t NDHWC_DIM_D = 1;
+const int32_t NDHWC_DIM_H = 2;
+const int32_t NDHWC_DIM_W = 3;
+const int32_t NDHWC_DIM_C = 4;
 
-  return true;
-}
+const int32_t NCDHW_DIM_N = 0;
+const int32_t NCDHW_DIM_C = 1;
+const int32_t NCDHW_DIM_D = 2;
+const int32_t NCDHW_DIM_H = 3;
+const int32_t NCDHW_DIM_W = 4;
 
-bool AxisUtil::GetAxisValueByND(const ge::GeShape &shape, const uint32_t &c0, vector<int64_t> &axisValue) {
-  CHECK(axisValue.empty(), GELOGI("AxisValue is empty!"), return true);
+const int32_t DHWCN_DIM_D = 0;
+const int32_t DHWCN_DIM_H = 1;
+const int32_t DHWCN_DIM_W = 2;
+const int32_t DHWCN_DIM_C = 3;
+const int32_t DHWCN_DIM_N = 4;
+
+const int32_t DHWNC_DIM_D = 0;
+const int32_t DHWNC_DIM_H = 1;
+const int32_t DHWNC_DIM_W = 2;
+const int32_t DHWNC_DIM_N = 3;
+const int32_t DHWNC_DIM_C = 4;
+
+const int32_t AXIS_NC1HWC0_DIM_N = 0;
+const int32_t AXIS_NC1HWC0_DIM_C1 = 1;
+const int32_t AXIS_NC1HWC0_DIM_H = 2;
+const int32_t AXIS_NC1HWC0_DIM_W = 3;
+const int32_t AXIS_NC1HWC0_DIM_C0 = 4;
+
+const int32_t AXIS_C1HWNCoC0_DIM_C1 = 0;
+const int32_t AXIS_C1HWNCoC0_DIM_H = 1;
+const int32_t AXIS_C1HWNCoC0_DIM_W = 2;
+const int32_t AXIS_C1HWNCoC0_DIM_N = 3;
+const int32_t AXIS_C1HWNCoC0_DIM_Co = 4;
+
+bool AxisUtil::GetAxisValueByOriginFormat(const ge::Format &format, const ge::GeShape &shape, AxisValue &axis_value) {
   CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+  switch (format) {
+    case ge::FORMAT_NCHW:
+      return GetAxisValueByNCHW(shape, axis_value);
+    case ge::FORMAT_NHWC:
+      return GetAxisValueByNHWC(shape, axis_value);
+    case ge::FORMAT_HWCN:
+      return GetAxisValueByHWCN(shape, axis_value);
+    case ge::FORMAT_ND:
+      return GetAxisValueByND(shape, axis_value);
+    case ge::FORMAT_NCDHW:
+      return GetAxisValueByNCDHW(shape, axis_value);
+    case ge::FORMAT_NDHWC:
+      return GetAxisValueByNDHWC(shape, axis_value);
+    case ge::FORMAT_DHWCN:
+      return GetAxisValueByDHWCN(shape, axis_value);
+    case ge::FORMAT_DHWNC:
+      return GetAxisValueByDHWNC(shape, axis_value);
+    case ge::FORMAT_NC1HWC0:
+      return GetAxisValueByNC1HWC0(shape, axis_value);
+    case ge::FORMAT_C1HWNCoC0:
+      return GetAxisValueByC1HWNCoC0(shape, axis_value);
+    default:
+      GELOGI("Can not get axis value of old format %d.", format);
+      return false;
+  }
+}
+
+bool AxisUtil::GetAxisValueByND(const ge::GeShape &shape, AxisValue &axis_value) {
   /* To differentiate the input datatype of int8 and others */
-  axisValue[AXIS_C0] = c0;
-  if (shape.GetDimNum() == NCHW_DIMENSION_NUM) {
-    axisValue[AXIS_N] = shape.GetDim(AXIS_NCHW_DIM_N);
-    axisValue[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
-    axisValue[AXIS_H] = shape.GetDim(AXIS_NCHW_DIM_H);
-    axisValue[AXIS_W] = shape.GetDim(AXIS_NCHW_DIM_W);
-    axisValue[AXIS_C1] = DivisionCeiling(shape.GetDim(AXIS_NCHW_DIM_C), (int64_t)c0);
-    axisValue[AXIS_Co] = c0;
+  if (shape.GetDimNum() == DIM_DEFAULT_SIZE) {
+    axis_value[AXIS_N] = shape.GetDim(AXIS_NCHW_DIM_N);
+    axis_value[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
+    axis_value[AXIS_H] = shape.GetDim(AXIS_NCHW_DIM_H);
+    axis_value[AXIS_W] = shape.GetDim(AXIS_NCHW_DIM_W);
+    axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+    axis_value[AXIS_Co] = axis_value[AXIS_C0];
   }
   return true;
 }
 
-bool AxisUtil::GetAxisValueByNCHW(const ge::GeShape &shape, const uint32_t &c0, vector<int64_t> &axisValue) {
-  CHECK(axisValue.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+bool AxisUtil::GetAxisValueByNCHW(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
   /* C0 Must be set for case ND or 2D-NCHW to NZ */
-  axisValue[AXIS_C0] = c0;
-  // TODO: temporarily modified to warning level.If modified normally, it needs complementary dimension for origin shape
-  CHECK(CheckParams(shape, c0, axisValue) != true, GELOGW("[WARNING]Parameter is invalid!"),
-        return false);
-
-  axisValue[AXIS_N] = shape.GetDim(AXIS_NCHW_DIM_N);
-  axisValue[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
-  axisValue[AXIS_H] = shape.GetDim(AXIS_NCHW_DIM_H);
-  axisValue[AXIS_W] = shape.GetDim(AXIS_NCHW_DIM_W);
-  axisValue[AXIS_C1] = DivisionCeiling(shape.GetDim(AXIS_NCHW_DIM_C), (int64_t)c0);
-  axisValue[AXIS_Co] = c0;
+  axis_value[AXIS_N] = shape.GetDim(AXIS_NCHW_DIM_N);
+  axis_value[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
+  axis_value[AXIS_H] = shape.GetDim(AXIS_NCHW_DIM_H);
+  axis_value[AXIS_W] = shape.GetDim(AXIS_NCHW_DIM_W);
+  axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+  axis_value[AXIS_Co] = axis_value[AXIS_C0];
   return true;
 }
 
-bool AxisUtil::GetAxisValueByNHWC(const ge::GeShape &shape, const uint32_t &c0, vector<int64_t> &axisValue) {
-  CHECK(axisValue.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+bool AxisUtil::GetAxisValueByNHWC(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
   /* C0 Must be set for case ND or 2D-NHWC to NZ */
-  axisValue[AXIS_C0] = c0;
-  // TODO: temporarily modified to warning level.If modified normally, it needs complementary dimension for origin shape
-  CHECK(CheckParams(shape, c0, axisValue) != true, GELOGW("[WARNING]Parameter is invalid!"),
-        return false);
-
-  axisValue[AXIS_N] = shape.GetDim(AXIS_NHWC_DIM_N);
-  axisValue[AXIS_C] = shape.GetDim(AXIS_NHWC_DIM_C);
-  axisValue[AXIS_H] = shape.GetDim(AXIS_NHWC_DIM_H);
-  axisValue[AXIS_W] = shape.GetDim(AXIS_NHWC_DIM_W);
-  axisValue[AXIS_C1] = DivisionCeiling(shape.GetDim(AXIS_NHWC_DIM_C), (int64_t)c0);
-  axisValue[AXIS_Co] = c0;
+  axis_value[AXIS_N] = shape.GetDim(AXIS_NHWC_DIM_N);
+  axis_value[AXIS_C] = shape.GetDim(AXIS_NHWC_DIM_C);
+  axis_value[AXIS_H] = shape.GetDim(AXIS_NHWC_DIM_H);
+  axis_value[AXIS_W] = shape.GetDim(AXIS_NHWC_DIM_W);
+  axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+  axis_value[AXIS_Co] = axis_value[AXIS_C0];
   return true;
 }
 
-bool AxisUtil::GetAxisValueByNC1HWC0(const ge::GeShape &shape, const uint32_t &c0, vector<int64_t> &axisValue) {
-  CHECK(axisValue.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
-  CHECK(CheckParams(shape, c0, axisValue) != true, GELOGE(GRAPH_FAILED,"[ERROR]Parameter is invalid!"),
-        return false);
-
+bool AxisUtil::GetAxisValueByNC1HWC0(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
   if (shape.GetDimNum() == DIM_SIZE_FIVE) {
-    axisValue[AXIS_C1] = shape.GetDim(AXIS_NC1HWC0_DIM_C1);
-    axisValue[AXIS_C0] = shape.GetDim(AXIS_NC1HWC0_DIM_C0);
-    axisValue[AXIS_C] = axisValue[AXIS_C1] * axisValue[AXIS_C0];
+    axis_value[AXIS_C0] = shape.GetDim(AXIS_NC1HWC0_DIM_C0);
+    axis_value[AXIS_C1] = shape.GetDim(AXIS_NC1HWC0_DIM_C1);
+    axis_value[AXIS_C] = axis_value[AXIS_C1] * axis_value[AXIS_C0];
   } else {
-    axisValue[AXIS_C1] = DivisionCeiling(shape.GetDim(AXIS_NCHW_DIM_C), (int64_t)c0);
-    axisValue[AXIS_C0] = c0;
-    axisValue[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
+    axis_value[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
+    axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
   }
 
-  axisValue[AXIS_N] = shape.GetDim(AXIS_NCHW_DIM_N);
-  axisValue[AXIS_H] = shape.GetDim(AXIS_NCHW_DIM_H);
-  axisValue[AXIS_W] = shape.GetDim(AXIS_NCHW_DIM_W);
+  axis_value[AXIS_N] = shape.GetDim(AXIS_NC1HWC0_DIM_N);
+  axis_value[AXIS_H] = shape.GetDim(AXIS_NC1HWC0_DIM_H);
+  axis_value[AXIS_W] = shape.GetDim(AXIS_NC1HWC0_DIM_W);
   return true;
 }
 
-bool AxisUtil::GetAxisValueByHWCN(const ge::GeShape &shape, const uint32_t &c0, vector<int64_t> &axisValue) {
-  CHECK(axisValue.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+bool AxisUtil::GetAxisValueByHWCN(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
   /* C0 Must be set for case ND or 2D-NHWC to NZ */
-  axisValue[AXIS_C0] = c0;
-  // TODO: temporarily modified to warning level. If modified normally, it needs complementary dimension for origin shape
-  CHECK(CheckParams(shape, c0, axisValue) != true, GELOGW("[WARNING]Parameter is invalid!"),
-        return false);
-
-  axisValue[AXIS_N] = shape.GetDim(AXIS_HWCN_DIM_N);
-  axisValue[AXIS_C] = shape.GetDim(AXIS_HWCN_DIM_C);
-  axisValue[AXIS_H] = shape.GetDim(AXIS_HWCN_DIM_H);
-  axisValue[AXIS_W] = shape.GetDim(AXIS_HWCN_DIM_W);
-  axisValue[AXIS_C1] = DivisionCeiling(shape.GetDim(AXIS_HWCN_DIM_C), (int64_t)c0);
-  axisValue[AXIS_Co] = c0;
+  axis_value[AXIS_N] = shape.GetDim(AXIS_HWCN_DIM_N);
+  axis_value[AXIS_C] = shape.GetDim(AXIS_HWCN_DIM_C);
+  axis_value[AXIS_H] = shape.GetDim(AXIS_HWCN_DIM_H);
+  axis_value[AXIS_W] = shape.GetDim(AXIS_HWCN_DIM_W);
+  axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+  axis_value[AXIS_Co] = axis_value[AXIS_C0];
   return true;
 }
 
-bool AxisUtil::GetAxisValueByC1HWNCoC0(const ge::GeShape &shape, const uint32_t &c0, vector<int64_t> &axisValue) {
-  CHECK(axisValue.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+bool AxisUtil::GetAxisValueByC1HWNCoC0(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_SIZE_SIX, GELOGI("Dim size is less than 6."), return false);
   /* C0 Must be set for case ND or 2D-NHWC to NZ */
-  axisValue[AXIS_C0] = c0;
-  CHECK(CheckParams(shape, c0, axisValue) != true, GELOGE(GRAPH_FAILED, "[ERROR]Parameter is invalid!"),
-        return false);
-
-  axisValue[AXIS_N] = shape.GetDim(AXIS_C1HWNCoC0_DIM_N);
-  axisValue[AXIS_C] = shape.GetDim(AXIS_C1HWNCoC0_DIM_C1) * c0;
-  axisValue[AXIS_H] = shape.GetDim(AXIS_C1HWNCoC0_DIM_H);
-  axisValue[AXIS_W] = shape.GetDim(AXIS_C1HWNCoC0_DIM_W);
-  axisValue[AXIS_C1] = shape.GetDim(AXIS_C1HWNCoC0_DIM_C1);
-  axisValue[AXIS_Co] = shape.GetDim(AXIS_C1HWNCoC0_DIM_Co);
+  axis_value[AXIS_N] = shape.GetDim(AXIS_C1HWNCoC0_DIM_N);
+  axis_value[AXIS_C] = shape.GetDim(AXIS_C1HWNCoC0_DIM_C1) * axis_value[AXIS_C0];
+  axis_value[AXIS_H] = shape.GetDim(AXIS_C1HWNCoC0_DIM_H);
+  axis_value[AXIS_W] = shape.GetDim(AXIS_C1HWNCoC0_DIM_W);
+  axis_value[AXIS_C1] = shape.GetDim(AXIS_C1HWNCoC0_DIM_C1);
+  axis_value[AXIS_Co] = shape.GetDim(AXIS_C1HWNCoC0_DIM_Co);
   return true;
 }
 
-bool AxisUtil::GetAxisValueByNDHWC(const ge::GeShape &shape, const uint32_t& c0, vector<int64_t>& axis_value) {
-  CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+bool AxisUtil::GetAxisValueByNDHWC(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_SIZE_FIVE, GELOGI("Dim size is less than 5."), return false);
 
-  axis_value[AXIS_C0] = c0;
   axis_value[AXIS_N] = shape.GetDim(NDHWC_DIM_N);
-  int64_t axis_c_val = shape.GetDim(NDHWC_DIM_C);
-
-  axis_value[AXIS_C] = axis_c_val;
+  axis_value[AXIS_C] = shape.GetDim(NDHWC_DIM_C);
   axis_value[AXIS_H] = shape.GetDim(NDHWC_DIM_H);
   axis_value[AXIS_W] = shape.GetDim(NDHWC_DIM_W);
-  axis_value[AXIS_C1] = DivisionCeiling(axis_c_val, c0);
-  axis_value[AXIS_C0] = c0;
-  axis_value[AXIS_Co] = c0;
   axis_value[AXIS_D] = shape.GetDim(NDHWC_DIM_D);
+  axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+  axis_value[AXIS_Co] = axis_value[AXIS_C0];
   return true;
 }
 
-bool AxisUtil::GetAxisValueByNCDHW(const ge::GeShape &shape, const uint32_t& c0, vector<int64_t>& axis_value) {
-  CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+bool AxisUtil::GetAxisValueByNCDHW(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_SIZE_FIVE, GELOGI("Dim size is less than 5."), return false);
 
-  axis_value[AXIS_C0] = c0;
   axis_value[AXIS_N] = shape.GetDim(NCDHW_DIM_N);
-  int64_t axis_c_val = shape.GetDim(NCDHW_DIM_C);
-
-  axis_value[AXIS_C] = axis_c_val;
+  axis_value[AXIS_C] = shape.GetDim(NCDHW_DIM_C);
   axis_value[AXIS_H] = shape.GetDim(NCDHW_DIM_H);
   axis_value[AXIS_W] = shape.GetDim(NCDHW_DIM_W);
-  axis_value[AXIS_C1] = DivisionCeiling(axis_c_val, c0);
-  axis_value[AXIS_C0] = c0;
-  axis_value[AXIS_Co] = c0;
   axis_value[AXIS_D] = shape.GetDim(NCDHW_DIM_D);
+  axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+  axis_value[AXIS_Co] = axis_value[AXIS_C0];
   return true;
 }
 
-bool AxisUtil::GetAxisValueByDHWCN(const ge::GeShape &shape, const uint32_t& c0, vector<int64_t>& axis_value) {
-  CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
+bool AxisUtil::GetAxisValueByDHWCN(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_SIZE_FIVE, GELOGI("Dim size is less than 5."), return false);
 
-  axis_value[AXIS_C0] = c0;
   axis_value[AXIS_N] = shape.GetDim(DHWCN_DIM_N);
-  int64_t axis_c_val = shape.GetDim(DHWCN_DIM_C);
-
-  axis_value[AXIS_C] = axis_c_val;
+  axis_value[AXIS_C] = shape.GetDim(DHWCN_DIM_C);
   axis_value[AXIS_H] = shape.GetDim(DHWCN_DIM_H);
   axis_value[AXIS_W] = shape.GetDim(DHWCN_DIM_W);
-  axis_value[AXIS_C1] = DivisionCeiling(axis_c_val, c0);
-  axis_value[AXIS_C0] = c0;
-  axis_value[AXIS_Co] = c0;
   axis_value[AXIS_D] = shape.GetDim(DHWCN_DIM_D);
+  axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+  axis_value[AXIS_Co] = axis_value[AXIS_C0];
   return true;
 }
 
-bool AxisUtil::GetAxisValueByDHWNC(const ge::GeShape &shape, const uint32_t& c0, vector<int64_t>& axis_value) {
-  CHECK(axis_value.empty(), GELOGI("AxisValue is empty!"), return true);
-  CHECK(shape.IsScalar(), GELOGI("Original dim vector is empty!"), return true);
-
-  axis_value[AXIS_C0] = c0;
+bool AxisUtil::GetAxisValueByDHWNC(const ge::GeShape &shape, AxisValue &axis_value) {
+  CHECK(shape.GetDimNum() < DIM_SIZE_FIVE, GELOGI("Dim size is less than 5."), return false);
   axis_value[AXIS_N] = shape.GetDim(DHWNC_DIM_N);
-  int64_t axis_c_val = shape.GetDim(DHWNC_DIM_C);
-
-  axis_value[AXIS_C] = axis_c_val;
+  axis_value[AXIS_C] = shape.GetDim(DHWNC_DIM_C);
   axis_value[AXIS_H] = shape.GetDim(DHWNC_DIM_H);
   axis_value[AXIS_W] = shape.GetDim(DHWNC_DIM_W);
-  axis_value[AXIS_C1] = DivisionCeiling(axis_c_val, c0);
-  axis_value[AXIS_C0] = c0;
-  axis_value[AXIS_Co] = c0;
   axis_value[AXIS_D] = shape.GetDim(DHWNC_DIM_D);
+  axis_value[AXIS_C1] = DivisionCeiling(axis_value[AXIS_C], axis_value[AXIS_C0]);
+  axis_value[AXIS_Co] = axis_value[AXIS_C0];
+
   return true;
 }
 } // namespace transformer
