@@ -37,7 +37,7 @@ class ObjectPool {
     if (!handlers_.empty()) {
       std::unique_ptr<T> tmp(std::move(handlers_.front()));
       handlers_.pop();
-      return std::move(tmp);
+      return tmp;
     }
     return std::move(std::unique_ptr<T>(new (std::nothrow) T(args...)));
   }
