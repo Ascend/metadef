@@ -70,6 +70,9 @@ class TuningUtils {
   // Recovery `graph` from graph dump files configured in options
   static graphStatus ConvertFileToGraph(const std::map<int64_t, std::string> &options, ge::Graph &graph);
 
+  static graphStatus LinkSubgraph(ComputeGraphPtr &root_graph, const ComputeGraphPtr &graph,
+                                  const std::map<std::string, ComputeGraphPtr> &name_to_merged_subgraph);
+
 private:
   // part 1
   class HelpInfo {
