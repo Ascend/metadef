@@ -17,6 +17,8 @@
 #include <gtest/gtest.h>
 #include "graph/utils/mem_utils.h"
 #include <memory>
+#include <stdio.h>
+#include <malloc.h>
 
 #define private public
 #define protected public
@@ -32,7 +34,7 @@ namespace ge
    void SetUp() {}
    void TearDown() {}
   };
-  
+
   TEST_F(UtestAlignedPtr, Reset_success) {
    auto aligned_ptr = MakeShared<AlignedPtr>(6);
    uint64_t aligned_data = reinterpret_cast<uintptr_t>(aligned_ptr->Get());
@@ -54,4 +56,29 @@ namespace ge
    uint8_t result = *(aligned_ptr->Get());
    ASSERT_EQ(result, 10);
   }
+
+  std::string GetCmdOutOneLine(std::string cmd) {
+    FILE *fp = popen(cmd.c_str(), "r");
+    if (fp == nullptr) {
+      std::cout<<"popen failed"<<std::endl;
+      return "";
+    }
+    char content[1024] = "";
+    fgets(content, sizeof(content), fp);
+    pclose(fp);
+    return std::string(content);
+  }
+
+  TEST_F(UtestAlignedPtr, construct_memory_check) {
+   auto pid = getpid();
+   std::string cmd = "cat /proc/" + std::to_string(pid) + "/status | grep VmRSS";
+   malloc_trim(0);
+   std::string mem_before = GetCmdOutOneLine(cmd);
+   auto obj = new AlignedPtr(102400, 102400);
+   delete obj;
+   malloc_trim(0);
+   std::string mem_after = GetCmdOutOneLine(cmd);
+   ASSERT_EQ(mem_before, mem_after);
+  }
+
 }

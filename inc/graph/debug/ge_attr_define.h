@@ -1323,6 +1323,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 
 // for process node engine
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_PROCESS_NODE_ENGINE_ID;
+
+// for dynamic graph memory discontiguous
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_MEMORY_DISCONTIGUOUS_ALLOCATION;
 }  // namespace ge
 
 /*lint +e618*/

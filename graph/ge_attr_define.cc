@@ -1318,4 +1318,7 @@ const std::string ATTR_NAME_VALUE_DEPEND = "_is_value_depend";
 
 // for process node engine
 const std::string ATTR_NAME_PROCESS_NODE_ENGINE_ID = "_process_node_engine_id";
+
+// for dynamic graph memory discontiguous
+const std::string ATTR_NAME_MEMORY_DISCONTIGUOUS_ALLOCATION = "_memory_discontiguous_allocation";
 }  // namespace ge
