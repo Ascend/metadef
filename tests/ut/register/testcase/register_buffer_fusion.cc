@@ -16,7 +16,7 @@
 
 #include <map>
 #include <memory>
-#include <stdio.h>
+#include <cstdio>
 #include "proto/om.pb.h"
 #include "gtest/gtest.h"
 
