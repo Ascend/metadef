@@ -46,7 +46,9 @@ class GraphFrame {
     return current_compute_node_;
   }
   void SetCurrentComputeNode(const ge::NodePtr &current_node) {
-    AddNodeExtendInfo(current_node);
+    if (current_node != nullptr) {
+      AddNodeExtendInfo(current_node);
+    }
     current_compute_node_ = current_node;
   }
   bool GetCurrentNodeIndex(size_t &index) {
