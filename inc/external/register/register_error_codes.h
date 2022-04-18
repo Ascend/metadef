@@ -21,12 +21,12 @@
 #define MODID_COMMON 0U  // Common module ID
 
 #define DECLARE_ERRORNO(sysid, modid, name, value)                               \
-  constexpr domi::Status (name) =                                                \
+  constexpr domi::Status name =                                                \
       ((static_cast<uint32_t>(0xFFU & (static_cast<uint32_t>(sysid)))) << 24U) | \
       ((static_cast<uint32_t>(0xFFU & (static_cast<uint32_t>(modid)))) << 16U) | \
       (static_cast<uint32_t>((0xFFFFU & (static_cast<uint32_t>(value)))));
 
-#define DECLARE_ERRORNO_COMMON(name, value) DECLARE_ERRORNO(SYSID_FWK, MODID_COMMON, (name), (value))
+#define DECLARE_ERRORNO_COMMON(name, value) DECLARE_ERRORNO(SYSID_FWK, MODID_COMMON, name, value)
 
 namespace domi {
 using Status = uint32_t;
