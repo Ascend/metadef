@@ -490,5 +490,122 @@ TEST_F(ValueHolderUt, CreateExeGraphOk) {
   CheckExeGraphGenerally(*exe_graph);
   CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
 }
+
+/*
+ *                      c
+ * Atomic-LaunchKernel ----> LaunchKernel
+ *          |                 /
+ *    Atomic-tiling      Tiling
+ *        /    \        /    \
+ * TilingParse InferShape   TilingParse
+ *    |         /   \          |
+ *   json1   shape1  shape2   json2
+ */
+TEST_F(ValueHolderUt, ScopedCurrentNodeOk) {
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
+  auto node = graph->AddNode(op_desc);
+
+  auto clean_op_desc = std::make_shared<ge::OpDesc>("node-AtomicClean", "DynamicAtomicAddrClean");
+  clean_op_desc->AddInputDesc("workspace", tensor_desc);
+  clean_op_desc->AddInputDesc("clean1", tensor_desc);
+  clean_op_desc->AddInputDesc("clean2", tensor_desc);
+  clean_op_desc->AppendIrInput("workspace", ge::kIrInputRequired);
+  clean_op_desc->AppendIrInput("clean", ge::kIrInputDynamic);
+  auto clean_node = graph->AddNode(clean_op_desc);
+
+  auto shape1 = ValueHolder::CreateFeed(0);
+  auto shape2 = ValueHolder::CreateFeed(1);
+  auto json1 = ValueHolder::CreateConst("{}", 2);
+  auto json2 = ValueHolder::CreateConst("{}", 3);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto frame = ValueHolder::GetCurrentFrame();
+  ASSERT_NE(frame, nullptr);
+  ASSERT_EQ(frame->GetCurrentComputeNode(), node);
+  auto shape = ValueHolder::CreateSingleDataOutput("InferShape", {shape1, shape2});
+
+  size_t node1_index;
+  ValueHolderPtr compile_info1, tiling_ret1, holder1;
+  {
+    auto guarder = ValueHolder::SetScopedCurrentComputeNode(clean_node);
+    compile_info1 = ValueHolder::CreateSingleDataOutput("TilingParse", {json1});
+    tiling_ret1  = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info1});
+    holder1 = ValueHolder::CreateVoid("AtomicKernelLaunch", {tiling_ret1});
+    EXPECT_TRUE(frame->GetCurrentNodeIndex(node1_index));
+  }
+
+  auto compile_info2 = ValueHolder::CreateSingleDataOutput("TilingParse", {json2});
+  auto tiling_ret2  = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info2});
+  auto holder2 = ValueHolder::CreateVoid("KernelLaunch", {tiling_ret2});
+
+  ValueHolder::AddDependency(holder1, holder2);
+
+  ASSERT_NE(shape1, nullptr);
+  ASSERT_NE(shape2, nullptr);
+  ASSERT_NE(json1, nullptr);
+  ASSERT_NE(shape, nullptr);
+  ASSERT_NE(compile_info1, nullptr);
+  ASSERT_NE(tiling_ret1, nullptr);
+  ASSERT_NE(holder1, nullptr);
+  ASSERT_NE(compile_info2, nullptr);
+  ASSERT_NE(tiling_ret2, nullptr);
+  ASSERT_NE(holder2, nullptr);
+
+  int64_t compute_node_index_none;
+  ASSERT_FALSE(ge::AttrUtils::GetInt(shape1->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_none));
+  ASSERT_FALSE(ge::AttrUtils::GetInt(shape2->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_none));
+  ASSERT_FALSE(ge::AttrUtils::GetInt(json1->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_none));
+
+  int64_t shape_index, compile_info1_index, tiling_ret1_index, holder1_index, compile_info2_index, tiling_ret2_index, holder2_index;
+  ASSERT_TRUE(ge::AttrUtils::GetInt(shape->GetNode()->GetOpDesc(), "ComputeNodeIndex", shape_index));
+
+  ASSERT_TRUE(ge::AttrUtils::GetInt(compile_info1->GetNode()->GetOpDesc(), "ComputeNodeIndex", compile_info1_index));
+  ASSERT_TRUE(ge::AttrUtils::GetInt(tiling_ret1->GetNode()->GetOpDesc(), "ComputeNodeIndex", tiling_ret1_index));
+  ASSERT_TRUE(ge::AttrUtils::GetInt(holder1->GetNode()->GetOpDesc(), "ComputeNodeIndex", holder1_index));
+
+  ASSERT_TRUE(ge::AttrUtils::GetInt(compile_info2->GetNode()->GetOpDesc(), "ComputeNodeIndex", compile_info2_index));
+  ASSERT_TRUE(ge::AttrUtils::GetInt(tiling_ret2->GetNode()->GetOpDesc(), "ComputeNodeIndex", tiling_ret2_index));
+  ASSERT_TRUE(ge::AttrUtils::GetInt(holder2->GetNode()->GetOpDesc(), "ComputeNodeIndex", holder2_index));
+
+  EXPECT_EQ(shape_index, compile_info2_index);
+  EXPECT_EQ(shape_index, tiling_ret2_index);
+  EXPECT_EQ(shape_index, holder2_index);
+
+  EXPECT_NE(shape_index, compile_info1_index);
+  EXPECT_EQ(compile_info1_index, tiling_ret1_index);
+  EXPECT_EQ(compile_info1_index, holder1_index);
+
+  size_t node2_index;
+  EXPECT_TRUE(frame->GetCurrentNodeIndex(node2_index));
+  EXPECT_EQ(shape_index, node2_index);
+  auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(node2_index));
+  ASSERT_NE(compute_node_info, nullptr);
+  auto name_index = compute_node_info->GetNodeName();
+  auto type_index = compute_node_info->GetNodeType();
+  auto buffer_pool = frame->GetBufferPool();
+  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node");
+  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "node");
+
+  EXPECT_NE(node2_index, node1_index);
+  EXPECT_EQ(compile_info1_index, node1_index);
+  compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(node1_index));
+  ASSERT_NE(compute_node_info, nullptr);
+  name_index = compute_node_info->GetNodeName();
+  type_index = compute_node_info->GetNodeType();
+  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node-AtomicClean");
+  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "DynamicAtomicAddrClean");
+}
 }  // namespace bg
 }  // namespace gert

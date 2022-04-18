@@ -185,8 +185,8 @@ ValueHolder::NodeHolderPtr ValueHolder::AddNode(const GraphHolderPtr &graph, con
 
   // add kernel extend info index
   size_t extend_info_size;
-  auto holder = CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(),
-                                       frame->GetBufferPool(), extend_info_size);
+  auto holder = CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(), frame->GetBufferPool(),
+                                       extend_info_size);
   if (holder == nullptr) {
     return nullptr;
   }
@@ -374,6 +374,17 @@ void ValueHolder::SetCurrentComputeNode(const ge::NodePtr &node) {
     return;
   }
   frame->SetCurrentComputeNode(node);
+}
+std::unique_ptr<ValueHolder::CurrentComputeNodeGuarder>
+ValueHolder::SetScopedCurrentComputeNode(const ge::NodePtr &node) {
+  auto frame = GetCurrentFrame();
+  if (frame == nullptr) {
+    return nullptr;
+  }
+  auto guarder = std::unique_ptr<CurrentComputeNodeGuarder>(
+      new (std::nothrow) CurrentComputeNodeGuarder(frame->GetCurrentComputeNode()));
+  frame->SetCurrentComputeNode(node);
+  return guarder;
 }
 ValueHolder::GraphHolder *ValueHolder::GetCurrentGraph() {
   auto frame = GetCurrentFrame();

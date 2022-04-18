@@ -68,6 +68,17 @@ class ValueHolder {
     std::vector<ValueHolderPtr> targets_;
   };
 
+  class CurrentComputeNodeGuarder {
+   public:
+    explicit CurrentComputeNodeGuarder(ge::NodePtr old_node) : old_node_(std::move(old_node)) {}
+    ~CurrentComputeNodeGuarder() {
+      ValueHolder::SetCurrentComputeNode(old_node_);
+    }
+
+   private:
+    ge::NodePtr old_node_;
+  };
+
   ValueHolder(const ValueHolder &other) = delete;
   ValueHolder &operator=(const ValueHolder &other) = delete;
   ~ValueHolder();
@@ -104,15 +115,15 @@ class ValueHolder {
   static GraphFrame *GetCurrentFrame();
   static GraphHolder *GetCurrentGraph();
   static void SetCurrentComputeNode(const ge::NodePtr &node);
+  static std::unique_ptr<CurrentComputeNodeGuarder> SetScopedCurrentComputeNode(const ge::NodePtr &node);
 
  private:
   ValueHolder();
   static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);
   static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t out_count);
-  static NodeHolderPtr AddNode(const GraphHolderPtr &grpah, const char *node_type,
-                               size_t input_count, size_t output_count);
-  static NodeHolderPtr CreateNode(const char *node_type,
-                                  const std::vector<ValueHolderPtr> &inputs, size_t out_count);
+  static NodeHolderPtr AddNode(const GraphHolderPtr &grpah, const char *node_type, size_t input_count,
+                               size_t output_count);
+  static NodeHolderPtr CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs, size_t out_count);
 
   static HyperStatus MergeToOneGraph(const vector<ValueHolderPtr> &value_holders);
 
