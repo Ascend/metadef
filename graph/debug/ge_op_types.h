@@ -20,7 +20,7 @@
 #include "graph/types.h"
 #include "graph/compiler_options.h"
 
-#define GE_REGISTER_OPTYPE(var_name, str_name) static const ge::char_t *(var_name) METADEF_ATTRIBUTE_UNUSED = (str_name)
+#define GE_REGISTER_OPTYPE(var_name, str_name) static const ge::char_t *var_name METADEF_ATTRIBUTE_UNUSED = str_name
 namespace ge {
 GE_REGISTER_OPTYPE(DATA, "Data");
 GE_REGISTER_OPTYPE(AIPPDATA, "AippData");
