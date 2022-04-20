@@ -48,19 +48,40 @@ class Chain {
   }
 
   void Set(void *data, Chain::Deleter deleter) {
+    FreeResource();
     any_value_.data = data;
     any_value_.deleter = deleter;
   }
 
-  template<typename T>
+  template<typename T, typename std::enable_if<(!std::is_array<T>::value), int>::type = 0>
   void SetWithDefaultDeleter(T *data) {
     Set(data, reinterpret_cast<FreeCallback>(DefaultDeleter<T>));
   }
 
+  template<typename T, typename PureT = typename std::remove_extent<T>::type, typename std::enable_if<std::is_array<T>::value, int>::type = 0>
+  void SetWithDefaultDeleter(PureT *data) {
+    Set(data, reinterpret_cast<FreeCallback>(DefaultArrayDeleter<PureT>));
+  }
+
+  bool HasDeleter() const {
+    return any_value_.deleter != nullptr;
+  }
+
  private:
+  template<typename T>
+  static void DefaultArrayDeleter(T *data) {
+    delete[] data;
+  }
+
   template<typename T>
   static void DefaultDeleter(T *data) {
     delete data;
+  }
+
+  void FreeResource() {
+    if (any_value_.deleter != nullptr) {
+      any_value_.deleter(any_value_.data);
+    }
   }
 
  private:

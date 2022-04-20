@@ -48,7 +48,7 @@ class OpImplRegister {
   OpImplRegister &InputsDataDependency(std::initializer_list<int32_t> inputs);
 
  private:
-  template<typename T>
+  template<typename T, typename std::enable_if<(!std::is_array<T>::value), int>::type = 0>
   static void *CreateCompileInfo() {
     return new T();
   }
