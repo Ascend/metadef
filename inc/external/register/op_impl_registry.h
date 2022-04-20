@@ -56,10 +56,6 @@ class OpImplRegister {
   static void DeleteCompileInfo(void *obj) {
     delete reinterpret_cast<T *>(obj);
   }
-  template<size_t Len>
-  static void *CreateFixedTilingData() {
-    return TilingData::CreateFixed(Len).release();
-  }
   template<size_t MaxLen>
   static void *CreateDynamicLenTilingData() {
     return TilingData::CreateCap(MaxLen).release();

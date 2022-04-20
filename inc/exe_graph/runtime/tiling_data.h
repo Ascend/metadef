@@ -55,13 +55,6 @@ struct TilingData {
     return ge::GRAPH_SUCCESS;
   }
 
-  static std::unique_ptr<uint8_t[]> CreateFixed(size_t fix_size) {
-    auto buf = CreateCap(fix_size);
-    if (buf != nullptr) {
-      reinterpret_cast<TilingData *>(buf.get())->data_size_ = fix_size;
-    }
-    return buf;
-  }
   static std::unique_ptr<uint8_t[]> CreateCap(size_t cap_size) {
     size_t total_size;
     if (ge::AddOverflow(sizeof(TilingData), cap_size, total_size)) {
@@ -72,7 +65,7 @@ struct TilingData {
       return nullptr;
     }
     auto td = reinterpret_cast<TilingData *>(td_buf.get());
-    td->Init(cap_size);
+    td->Init(cap_size, td_buf.get() + sizeof(TilingData));
     return td_buf;
   }
   static ge::graphStatus CalcTotalSize(size_t cap_size, size_t &total_size) {
@@ -82,10 +75,10 @@ struct TilingData {
     return ge::GRAPH_SUCCESS;
   }
 
-  void Init(size_t cap_size) {
+  void Init(size_t cap_size, void* data) {
     capacity_ = cap_size;
     data_size_ = 0;
-    data_ = reinterpret_cast<uint8_t *>(this) + sizeof(TilingData);
+    data_ = data;
   }
 
   TilingData(const TilingData &) = delete;
