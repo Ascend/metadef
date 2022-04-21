@@ -39,10 +39,8 @@ struct ExpandDimsType {
    * 1: means expand dims here
    * 0: means use origin dim value here
    */
-  explicit ExpandDimsType(const char *expand_dims_type) {
+  explicit ExpandDimsType(const char *expand_dims_type) : size_(0), mask_(0) {
     if (expand_dims_type == nullptr) {
-      size_ = 0;
-      mask_ = 0;
       return;
     }
     auto size = strlen(expand_dims_type);
@@ -52,7 +50,6 @@ struct ExpandDimsType {
     }
 
     size_ = size;
-    mask_ = 0;
     for (AxisIndex i = 0; i < size; ++i) {
       if (expand_dims_type[i] == '0') {
         SetUseOriginDim(i);
