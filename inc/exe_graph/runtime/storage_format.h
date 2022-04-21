@@ -21,7 +21,6 @@
 #include "graph/types.h"
 #include "expand_dims_type.h"
 namespace gert {
-// todo 删除构造函数
 struct StorageFormat {
  public:
   StorageFormat() = default;
@@ -48,11 +47,19 @@ struct StorageFormat {
   ExpandDimsType &MutableExpandDimsType() {
     return expand_dims_type_;
   }
+  bool operator==(const StorageFormat &other) const {
+    return origin_format_ == other.origin_format_ && storage_format_ == other.storage_format_ &&
+        expand_dims_type_ == other.expand_dims_type_;
+  }
+  bool operator!=(const StorageFormat &other) const {
+    return !(*this == other);
+  }
+
  private:
   ge::Format origin_format_;
   ge::Format storage_format_;
   ExpandDimsType expand_dims_type_;
 };
-static_assert(std::is_standard_layout<StorageFormat>::value);
-}
+static_assert(std::is_standard_layout<StorageFormat>::value, "The class StorageFormat must be a POD");
+}  // namespace gert
 #endif  //AIR_CXX_RUNTIME_V2_KERNEL_STORAGE_FORMAT_H_

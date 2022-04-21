@@ -35,9 +35,9 @@ struct Tensor {
   Tensor() = default;
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, TensorPlacement placement,
          ge::DataType data_type, TensorAddress addr)
-    : storage_shape_(storage_shape), storage_format_(storage_format), placement_(placement),
-      data_type_(data_type), addr_(addr) {}
-  
+      : storage_shape_(storage_shape), storage_format_(storage_format), placement_(placement), data_type_(data_type),
+        addr_(addr) {}
+
   int64_t GetShapeSize() const {
     return storage_shape_.GetStorageShape().GetShapeSize();
   }
@@ -114,6 +114,14 @@ struct Tensor {
     return storage_shape_.MutableOriginShape();
   }
 
+  const StorageShape &GetShape() const {
+    return storage_shape_;
+  }
+
+  StorageShape &GetShape() {
+    return storage_shape_;
+  }
+
   ge::Format GetStorageFormat() const {
     return storage_format_.GetStorageFormat();
   }
@@ -130,8 +138,18 @@ struct Tensor {
     storage_format_.SetOriginFormat(storage_format);
   }
 
+  const StorageFormat &GetFormat() const {
+    return storage_format_;
+  }
+  StorageFormat &MutableFormat() {
+    return storage_format_;
+  }
+
   ExpandDimsType GetExpandDimsType() const {
     return storage_format_.GetExpandDimsType();
+  }
+  void SetExpandDimsType(ExpandDimsType expand_dims_type) {
+    storage_format_.SetExpandDimsType(expand_dims_type);
   }
 
   TensorPlacement GetPlacement() const {
