@@ -48,7 +48,6 @@ struct StorageFormat {
   ExpandDimsType &MutableExpandDimsType() {
     return expand_dims_type_;
   }
-
  private:
   ge::Format origin_format_;
   ge::Format storage_format_;

@@ -48,8 +48,8 @@ TEST_F(BgKernelContextExtendUT, BuildRequiredInput) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -124,8 +124,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputs) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -161,8 +161,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputsNotExists) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -203,8 +203,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultipleOptionalInputsIns) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -246,8 +246,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithDynamicInputs) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -287,8 +287,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultiInstanceDynamicInputs) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -329,8 +329,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithEmptyDynamicInputs) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -372,8 +372,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithOneAttr) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -449,8 +449,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -533,8 +533,8 @@ TEST_F(BgKernelContextExtendUT, IgnoreNoneIrAttr) {
   auto td = compute_node_info->GetInputTdInfo(0);
   ASSERT_NE(td, nullptr);
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
-  EXPECT_EQ(td->GetStorageFormat().GetOriginFormat(), ge::FORMAT_NCHW);
-  EXPECT_EQ(td->GetStorageFormat().GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);

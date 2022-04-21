@@ -43,21 +43,13 @@ ge::graphStatus ComputeNodeInfo::CalcSize(size_t ir_inputs_num, size_t inputs_nu
   }
   return ge::GRAPH_SUCCESS;
 }
-// todo 不需要total_size了，下一步去掉
-void ComputeNodeInfo::Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num, size_t total_size,
+void ComputeNodeInfo::Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num,
                            const char *node_name, const char *node_type) {
   ir_inputs_num_ = ir_inputs_num;
   inputs_num_ = inputs_num;
   outputs_num_ = outputs_num;
   node_name_ = node_name;
   node_type_ = node_type;
-}
-size_t ComputeNodeInfo::GetSelfSize() const {
-  size_t total_size = 0;
-  if (CalcSize(ir_inputs_num_, inputs_num_, outputs_num_, total_size) != ge::GRAPH_SUCCESS) {
-    return 0;
-  }
-  return total_size;
 }
 AnchorInstanceInfo *ComputeNodeInfo::MutableInputInstanceInfo(size_t ir_index) {
   return const_cast<AnchorInstanceInfo *>(GetInputInstanceInfo(ir_index));
@@ -70,14 +62,5 @@ CompileTimeTensorDesc *ComputeNodeInfo::MutableOutputTdInfo(size_t index) {
 }
 RuntimeAttrs *ComputeNodeInfo::MutableAttrs() {
   return const_cast<RuntimeAttrs *>(GetAttrs());
-}
-void ComputeNodeInfo::SetIrInputsNum(size_t ir_inputs_num) {
-  ir_inputs_num_ = ir_inputs_num;
-}
-void ComputeNodeInfo::SetInputsNum(size_t inputs_num) {
-  inputs_num_ = inputs_num;
-}
-void ComputeNodeInfo::SetOutputsNum(size_t outputs_num) {
-  outputs_num_ = outputs_num;
 }
 }  // namespace gert

@@ -52,8 +52,8 @@ ge::NodePtr KernelRunContextFaker::FakeNode() const {
     for (size_t i = 0; i < ir_ins_num; ++i, ++input_index) {
       auto td = ge::GeTensorDesc();
       if (node_input_tds_.size() > input_index) {
-        td.SetOriginFormat(node_input_tds_[input_index].GetStorageFormat().GetOriginFormat());
-        td.SetFormat(node_input_tds_[input_index].GetStorageFormat().GetStorageFormat());
+        td.SetOriginFormat(node_input_tds_[input_index].GetOriginFormat());
+        td.SetFormat(node_input_tds_[input_index].GetStorageFormat());
         td.SetDataType(node_input_tds_[input_index].GetDataType());
         td.SetOriginDataType(node_input_tds_[input_index].GetDataType());
       }
@@ -63,8 +63,8 @@ ge::NodePtr KernelRunContextFaker::FakeNode() const {
   for (size_t i = 0; i < node_output_num_; ++i) {
     auto td = ge::GeTensorDesc();
     if (node_output_tds_.size() > i) {
-      td.SetOriginFormat(node_output_tds_[i].GetStorageFormat().GetOriginFormat());
-      td.SetFormat(node_output_tds_[i].GetStorageFormat().GetStorageFormat());
+      td.SetOriginFormat(node_output_tds_[i].GetOriginFormat());
+      td.SetFormat(node_output_tds_[i].GetStorageFormat());
       td.SetDataType(node_output_tds_[i].GetDataType());
       td.SetOriginDataType(node_output_tds_[i].GetDataType());
     }
@@ -117,15 +117,15 @@ KernelRunContextHolder KernelRunContextFaker::Build() const {
 KernelRunContextFaker &KernelRunContextFaker::NodeInputTd(int32_t index, ge::DataType dt, ge::Format origin_format,
                                                           ge::Format storage_format) {
   node_input_tds_[index].SetDataType(dt);
-  node_input_tds_[index].MutableStorageFormat().SetOriginFormat(origin_format);
-  node_input_tds_[index].MutableStorageFormat().SetStorageFormat(storage_format);
+  node_input_tds_[index].SetOriginFormat(origin_format);
+  node_input_tds_[index].SetStorageFormat(storage_format);
   return *this;
 }
 KernelRunContextFaker &KernelRunContextFaker::NodeOutputTd(int32_t index, ge::DataType dt, ge::Format origin_format,
                                                            ge::Format storage_format) {
   node_output_tds_[index].SetDataType(dt);
-  node_output_tds_[index].MutableStorageFormat().SetOriginFormat(origin_format);
-  node_output_tds_[index].MutableStorageFormat().SetStorageFormat(storage_format);
+  node_output_tds_[index].SetOriginFormat(origin_format);
+  node_output_tds_[index].SetStorageFormat(storage_format);
   return *this;
 }
 KernelRunContextFaker &KernelRunContextFaker::Inputs(std::vector<void *> inputs) {

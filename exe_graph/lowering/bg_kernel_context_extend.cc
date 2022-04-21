@@ -85,10 +85,10 @@ ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &
 
 void SetCompileTimeTd(const ge::ConstGeTensorDescPtr &desc, CompileTimeTensorDesc &td) {
   td.SetDataType(desc->GetDataType());
-  td.MutableStorageFormat().SetOriginFormat(desc->GetOriginFormat());
-  td.MutableStorageFormat().SetStorageFormat(desc->GetFormat());
+  td.SetOriginFormat(desc->GetOriginFormat());
+  td.SetStorageFormat(desc->GetFormat());
   // todo set expand dims type
-  td.MutableStorageFormat().SetExpandDimsType(ExpandDimsType(""));
+  td.SetExpandDimsType(ExpandDimsType(""));
 }
 ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
   for (size_t i = 0; i < node->GetAllInDataAnchorsSize(); ++i) {
@@ -142,7 +142,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());
   auto node_type = buffer_pool.AddStr(node->GetType().c_str());
   auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
-  compute_node_info->Init(ir_input_num, input_num, output_num, total_size, reinterpret_cast<const char *>(node_name),
+  compute_node_info->Init(ir_input_num, input_num, output_num, reinterpret_cast<const char *>(node_name),
                           reinterpret_cast<const char *>(node_type));
 
   auto ret = InitInputInstanceInfo(node, *compute_node_info);

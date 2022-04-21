@@ -23,7 +23,7 @@
 #include "storage_format.h"
 #include "runtime_attrs.h"
 namespace gert {
-struct AnchorInstanceInfo {
+class AnchorInstanceInfo {
  public:
   AnchorInstanceInfo() = default;
   AnchorInstanceInfo(uint32_t instance_start, uint32_t instantiation_num)
@@ -47,18 +47,34 @@ struct AnchorInstanceInfo {
 };
 static_assert(std::is_standard_layout<AnchorInstanceInfo>::value, "The class AnchorInstanceInfo must be a POD");
 
-struct CompileTimeTensorDesc {
+class CompileTimeTensorDesc {
+ public:
   ge::DataType GetDataType() const {
     return data_type_;
   }
-  const StorageFormat &GetStorageFormat() const {
+  const StorageFormat &GetFormat() const {
     return storage_format_;
+  }
+  ge::Format GetOriginFormat() const {
+    return storage_format_.GetOriginFormat();
+  }
+  ge::Format GetStorageFormat() const {
+    return storage_format_.GetStorageFormat();
+  }
+  ExpandDimsType GetExpandDimsType() const {
+    return storage_format_.GetExpandDimsType();
   }
   void SetDataType(ge::DataType data_type) {
     data_type_ = data_type;
   }
-  StorageFormat &MutableStorageFormat() {
-    return storage_format_;
+  void SetStorageFormat(ge::Format format) {
+    storage_format_.SetStorageFormat(format);
+  }
+  void SetOriginFormat(ge::Format format) {
+    storage_format_.SetOriginFormat(format);
+  }
+  void SetExpandDimsType(ExpandDimsType expand_dims_type) {
+    storage_format_.SetExpandDimsType(expand_dims_type);
   }
 
  private:
@@ -67,7 +83,7 @@ struct CompileTimeTensorDesc {
 };
 static_assert(std::is_standard_layout<CompileTimeTensorDesc>::value, "The class CompileTimeTensorDesc must be a POD");
 
-struct ComputeNodeInfo {
+class ComputeNodeInfo {
  public:
   const char *GetNodeType() const {
     return node_type_;
@@ -120,17 +136,12 @@ struct ComputeNodeInfo {
   void SetNodeName(const char *node_name) {
     node_name_ = node_name;
   }
-  void SetIrInputsNum(size_t ir_inputs_num);
-  void SetInputsNum(size_t inputs_num);
-  void SetOutputsNum(size_t outputs_num);
   AnchorInstanceInfo *MutableInputInstanceInfo(size_t ir_index);
   CompileTimeTensorDesc *MutableInputTdInfo(size_t index);
   CompileTimeTensorDesc *MutableOutputTdInfo(size_t index);
   RuntimeAttrs *MutableAttrs();
-  size_t GetSelfSize() const;
   static ge::graphStatus CalcSize(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num, size_t &total_size);
-  void Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num, size_t total_size, const char *node_name,
-            const char *node_type);
+  void Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num, const char *node_name, const char *node_type);
 
   ComputeNodeInfo() = delete;
   ComputeNodeInfo(const ComputeNodeInfo &) = delete;
