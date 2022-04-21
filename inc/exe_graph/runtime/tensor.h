@@ -32,8 +32,14 @@ using TensorAddress = void *;
 using ConstTensorAddress = void *const;
 
 struct Tensor {
+  Tensor() = default;
+  Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, TensorPlacement placement,
+         ge::DataType data_type, TensorAddress addr)
+    : storage_shape_(storage_shape), storage_format_(storage_format), placement_(placement),
+      data_type_(data_type), addr_(addr) {}
+  
   int64_t GetShapeSize() const {
-    return storage_shape.GetStorageShape().GetShapeSize();
+    return storage_shape_.GetStorageShape().GetShapeSize();
   }
 
   template<class T>
@@ -46,24 +52,32 @@ struct Tensor {
     return static_cast<T *>(GetAddr());
   }
 
+  void SetData(TensorAddress addr) {
+    addr_ = addr;
+  }
+
   const void *GetAddr() const {
-    if (placement == kFollowing) {
+    if (placement_ == kFollowing) {
       return reinterpret_cast<const void *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this));
     } else {
-      return addr;
+      return addr_;
     }
   }
 
   void *GetAddr() {
-    if (placement == kFollowing) {
+    if (placement_ == kFollowing) {
       return reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this));
     } else {
-      return addr;
+      return addr_;
     }
   }
 
   ge::DataType GetDataType() const {
-    return data_type;
+    return data_type_;
+  }
+
+  void SetDataType(ge::DataType data_type) {
+    data_type_ = data_type;
   }
 
   static std::unique_ptr<uint8_t[]> CreateFollowing(int64_t shape_size, ge::DataType dt, size_t &total_size) {
@@ -77,42 +91,63 @@ struct Tensor {
     }
 
     auto tensor = reinterpret_cast<Tensor *>(holder.get());
-    tensor->placement = kFollowing;
-    tensor->addr = nullptr;
-    tensor->data_type = dt;
+    tensor->placement_ = kFollowing;
+    tensor->addr_ = nullptr;
+    tensor->data_type_ = dt;
 
     return holder;
   }
 
   const Shape &GetStorageShape() const {
-    return storage_shape.GetStorageShape();
+    return storage_shape_.GetStorageShape();
+  }
+
+  Shape &MutableStorageShape() {
+    return storage_shape_.MutableStorageShape();
   }
 
   const Shape &GetOriginShape() const {
-    return storage_shape.GetOriginShape();
+    return storage_shape_.GetOriginShape();
+  }
+
+  Shape &MutableOriginShape() {
+    return storage_shape_.MutableOriginShape();
   }
 
   ge::Format GetStorageFormat() const {
-    return storage_format.GetStorageFormat();
+    return storage_format_.GetStorageFormat();
+  }
+
+  void SetStorageFormat(ge::Format storage_format) {
+    storage_format_.SetStorageFormat(storage_format);
   }
 
   ge::Format GetOriginFormat() const {
-    return storage_format.GetOriginFormat();
+    return storage_format_.GetOriginFormat();
+  }
+
+  ge::Format SetOriginFormat(ge::Format storage_format) {
+    storage_format_.SetOriginFormat(storage_format);
   }
 
   ExpandDimsType GetExpandDimsType() const {
-    return storage_format.GetExpandDimsType();
+    return storage_format_.GetExpandDimsType();
   }
 
   TensorPlacement GetPlacement() const {
-    return placement;
+    return placement_;
   }
 
-  StorageShape storage_shape;
-  StorageFormat storage_format;
-  TensorPlacement placement;
-  ge::DataType data_type;
-  TensorAddress addr;
+  void SetPlacement(TensorPlacement placement) {
+    placement_ = placement;
+  }
+
+ private:
+  StorageShape storage_shape_;
+  StorageFormat storage_format_;
+  TensorPlacement placement_;
+  ge::DataType data_type_;
+  TensorAddress addr_;
 };
 static_assert(std::is_standard_layout<Tensor>::value, "The class Tensor must be a POD");
 }  // namespace gert

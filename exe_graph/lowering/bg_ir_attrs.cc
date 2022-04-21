@@ -124,10 +124,10 @@ bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &att
         return false;
       }
       auto tensor = reinterpret_cast<Tensor *>(tensor_holder.get());
-      GeShapeToGertShape(tensor_desc.GetShape(), tensor->storage_shape.MutableStorageShape());
-      GeShapeToGertShape(tensor_desc.GetOriginShape(), tensor->storage_shape.MutableOriginShape());
-      tensor->storage_format.SetOriginFormat(tensor_desc.GetOriginFormat());
-      tensor->storage_format.SetStorageFormat(tensor_desc.GetFormat());
+      GeShapeToGertShape(tensor_desc.GetShape(), tensor->MutableStorageShape());
+      GeShapeToGertShape(tensor_desc.GetOriginShape(), tensor->MutableOriginShape());
+      tensor->SetOriginFormat(tensor_desc.GetOriginFormat());
+      tensor->SetStorageFormat(tensor_desc.GetFormat());
       if (memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(Tensor), val->GetData().GetData(),
                    val->GetData().GetSize()) != EOK) {
         return false;
