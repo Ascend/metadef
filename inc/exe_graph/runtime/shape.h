@@ -22,25 +22,42 @@
 #include <cstring>
 #include <type_traits>
 #include "graph/utils/math_util.h"
+#include <limits>
 
 namespace gert {
 struct Shape {
-  // todo 禁用构造函数(防止使用者直接在栈上创建实例，导致ABI不兼容）
-  Shape() = default;
-  Shape(std::initializer_list<int64_t> args) : size_(args.size()) {
-    int i = 0;
-    for (auto it = args.begin(); it != args.end(); ++it) {
-      data_[i++] = (*it);
+ public:
+  static constexpr size_t kMaxDimNum = 8;
+  static constexpr int64_t kInvalidDimValue = std::numeric_limits<int64_t>::min();
+
+ public:
+  /**
+   * 默认构造一个shape，默认构造的shape实例中，dim_num长度为0
+   */
+  Shape() : dim_num_(0), dims_{0} {}
+
+  Shape(std::initializer_list<int64_t> args) : dim_num_(0), dims_{0} {
+    if (args.size() > kMaxDimNum) {
+      return;
+    }
+    dim_num_ = args.size();
+    size_t i = 0;
+    for (auto arg : args) {
+      dims_[i++] = arg;
     }
   }
 
+  /**
+   *
+   * @param 判断与另外一个shape对象是否相等，如果两个shape的dim num并且dim num内每个dim的值都相等，那么认为两个shape相等
+   * @return true/false
+   */
   bool operator==(const Shape &rht) const {
-    if (this->size_ != rht.size_) {
+    if (this->dim_num_ != rht.dim_num_) {
       return false;
     }
-    // TODO use vector cmp;
-    for (size_t i = 0; i < this->size_; i++) {
-      if (this->data_[i] != rht.data_[i]) {
+    for (size_t i = 0; i < this->dim_num_; i++) {
+      if (this->dims_[i] != rht.dims_[i]) {
         return false;
       }
     }
@@ -51,56 +68,96 @@ struct Shape {
     return !(*this == rht);
   }
 
+  /**
+   * 获取shape size，所谓shape size，是指shape中有多少个元素
+   * @return shape-size，在发生溢出时，返回`kInvalidDimValue`
+   */
   int64_t GetShapeSize() const {
     int64_t shape_size = 1;
-    for (size_t i = 0; i < size_; ++i) {
-      if (ge::MulOverflow(shape_size, data_[i], shape_size)) {
-        return -1;
+    for (size_t i = 0; i < dim_num_; ++i) {
+      if (ge::MulOverflow(shape_size, dims_[i], shape_size)) {
+        return kInvalidDimValue;
       }
     }
     return shape_size;
   }
+
+  /**
+   * 判断本shape是否为标量，所谓标量，是指dim_num_为0
+   * @return
+   */
   bool IsScalar() const {
-    return size_ == 0L;
+    return dim_num_ == 0L;
   }
+
+  /**
+   * 获取dim num
+   * @return
+   */
   size_t GetDimNum() const {
-    return size_;
-  }
-  void SetDimNum(size_t size) {
-    this->size_ = size;
+    return dim_num_;
   }
 
+  /**
+   * 设置dim num
+   * @param dim_num
+   */
+  void SetDimNum(size_t dim_num) {
+    this->dim_num_ = dim_num;
+  }
+
+  /**
+   * 获取dim值
+   * @param idx dim的index，调用者需要保证index合法
+   * @return dim值，在idx超出MaxDimNum时，返回`kInvalidDimValue`
+   */
   int64_t GetDim(size_t idx) const {
-    return data_[idx];
+    if (idx >= kMaxDimNum) {
+      return kInvalidDimValue;
+    }
+    return dims_[idx];
   }
 
+  /**
+   * 获取dim值
+   * @param idx dim的index，调用者需要保证index合法
+   * @return dim值，在idx超出MaxDimNum时，返回`kInvalidDimValue`
+   */
   int64_t operator[](size_t idx) const {
     return GetDim(idx);
   }
 
-  int64_t GetDimNotLine(size_t idx) const;
-
-  void SetDim(size_t idx, int64_t value) {
-    if (idx >= 8) {
+  /**
+   * 设置dim值
+   * @param idx dim的index，调用者需要保证index合法
+   * @return
+   */
+  void SetDim(size_t idx, int64_t dim_value) {
+    if (idx >= kMaxDimNum) {
       return;
     }
-    data_[idx] = value;
-    this->size_ = (this->size_ < idx) ? idx : this->size_;
+    dims_[idx] = dim_value;
+    this->dim_num_ = (this->dim_num_ < idx) ? idx : this->dim_num_;
   }
 
+  /**
+   * 向后扩展一个dim值，如果扩展的dim数量超出Shape的最大限制，那么本函数不做任何事情
+   * @param 扩展的dim值
+   * @return this引用
+   */
   Shape& AppendDim(int64_t value) {
-    if (this->size_ >= 8) {
+    if (this->dim_num_ >= kMaxDimNum) {
       return *this;
     }
-    data_[this->size_++] = value;
+    dims_[this->dim_num_++] = value;
     return *this;
   }
 
  private:
-  size_t size_;
-  std::array<int64_t, 8> data_;
+  size_t dim_num_;
+  int64_t dims_[kMaxDimNum];
 };
-static_assert(std::is_standard_layout<Shape>::value, "The class must be a POD");
+static_assert(std::is_standard_layout<Shape>::value, "The class Shape must be a POD");
 }  // namespace gert
 
 #endif
