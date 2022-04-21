@@ -18,10 +18,8 @@
 #define AIR_CXX_RUNTIME_V2_GRAPH_BUILDER_BG_IR_ATTRS_H_
 #include "graph/node.h"
 #include "value_holder.h"
-#include "tlv.h"
 namespace gert {
 namespace bg {
-bool AppendIrAttrs(const ge::NodePtr &node, TLV &tlv);
 std::unique_ptr<uint8_t[]> CreateAttrBuffer(const ge::NodePtr &node, size_t &size);
 }
 }

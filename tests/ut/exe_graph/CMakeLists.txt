@@ -17,6 +17,8 @@ target_compile_definitions(ut_exe_graph PRIVATE
         google=ascend_private
         )
 
+target_compile_options(exe_graph_static PRIVATE  -g --coverage -fprofile-arcs -ftest-coverage)
+
 target_link_libraries(ut_exe_graph
         $<BUILD_INTERFACE:intf_pub>
         graph_static error_manager_static exe_graph_static

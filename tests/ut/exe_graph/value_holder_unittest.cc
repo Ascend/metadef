@@ -490,7 +490,38 @@ TEST_F(ValueHolderUt, CreateExeGraphOk) {
   CheckExeGraphGenerally(*exe_graph);
   CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
 }
+/*
+ *    hello
+ *    /  \
+ * data0 data1
+ */
+TEST_F(ValueHolderUt, CreateExeGraphWithTargetsOk) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
 
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+
+  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph();
+  ASSERT_NE(graph, nullptr);
+  CheckExeGraphGenerally(*exe_graph);
+  CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
+}
 /*
  *                      c
  * Atomic-LaunchKernel ----> LaunchKernel
@@ -606,6 +637,57 @@ TEST_F(ValueHolderUt, ScopedCurrentNodeOk) {
   type_index = compute_node_info->GetNodeType();
   EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node-AtomicClean");
   EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "DynamicAtomicAddrClean");
+}
+
+TEST_F(ValueHolderUt, CreateExeGraphNoOutpus) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+
+  EXPECT_EQ(ValueHolder::GraphBuilder().BuildExecuteGraph(), nullptr);
+}
+
+TEST_F(ValueHolderUt, CreateExeGraphNoFrame) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+
+  EXPECT_NE(ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph(), nullptr);
+  EXPECT_EQ(ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph(), nullptr);
 }
 }  // namespace bg
 }  // namespace gert

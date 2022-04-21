@@ -201,15 +201,6 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
   }
   return attr_holder;
 }
-bool AddToTlv(const std::vector<std::vector<uint8_t>> &attrs, TLV &tlv) {
-  size_t size;
-  auto attr_holder = CreateAttrBuffer(attrs, size);
-  if (attr_holder == nullptr) {
-    return false;
-  }
-  tlv.AppendBytes(attr_holder.get(), size);
-  return true;
-}
 }  // namespace
 std::unique_ptr<uint8_t[]> CreateAttrBuffer(const ge::NodePtr &node, size_t &size) {
   std::vector<std::vector<uint8_t>> runtime_attrs;
@@ -217,13 +208,6 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const ge::NodePtr &node, size_t &siz
     return nullptr;
   }
   return CreateAttrBuffer(runtime_attrs, size);
-}
-bool AppendIrAttrs(const ge::NodePtr &node, TLV &tlv) {
-  std::vector<std::vector<uint8_t>> runtime_attrs;
-  if (!GetAllIrAttrs(node, runtime_attrs)) {
-    return false;
-  }
-  return AddToTlv(runtime_attrs, tlv);
 }
 }  // namespace bg
 }  // namespace gert

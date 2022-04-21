@@ -98,7 +98,6 @@ class ValueHolder {
   static ValueHolderPtr CreateError(const char *fmt, ...);
   static ValueHolderPtr CreateError(const char *fmt, va_list arg);
   static ValueHolderPtr CreateConst(const void *data, size_t size, bool is_string = false);
-  static ValueHolderPtr CreateConstString(const char *str);
   static ValueHolderPtr CreateFeed(int64_t index);
 
   static ValueHolderPtr CreateSingleDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs);
