@@ -702,10 +702,14 @@ TEST_F(UTESTGraphFusionPass, cast_relu_cast_01)
 
 class UtOpsKernel : public OpsKernelInfoStore {
   // initialize opsKernelInfoStore
-  Status Initialize(const std::map<std::string, std::string> &options) override {}
+  Status Initialize(const std::map<std::string, std::string> &options) override {
+    return SUCCESS;
+  }
 
   // close opsKernelInfoStore
-  Status Finalize() override {}
+  Status Finalize() override {
+    return SUCCESS;
+  }
 
   // get all opsKernelInfo
   void GetAllOpsKernelInfo(std::map<std::string, OpInfo> &infos) const override {}

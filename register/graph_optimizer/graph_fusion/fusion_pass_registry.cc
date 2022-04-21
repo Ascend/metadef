@@ -25,6 +25,55 @@
 namespace fe {
 class FusionPassRegistry::FusionPassRegistryImpl {
  public:
+#ifndef ONLY_COMPILE_OPEN_SRC
+  void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
+                    const FusionPassRegistry::CreateFn create_fn, uint64_t attr) {
+    const std::lock_guard<std::mutex> my_lock(mu_);
+
+    const auto iter = pass_descs_.find(pass_type);
+    if (iter != pass_descs_.end()) {
+      pass_descs_[pass_type][pass_name].attr = attr;
+      pass_descs_[pass_type][pass_name].create_fn = create_fn;
+      GELOGD("GraphFusionPass[type=%d, name=%s, attr=%lu]: the pass type already exists.",
+             pass_type, pass_name.c_str(), attr);
+      return;
+    }
+
+    std::map<std::string, PassDesc> pass_desc;
+    pass_desc[pass_name] = {attr, create_fn};
+    pass_descs_[pass_type] = pass_desc;
+    GELOGD("GraphFusionPass[type=%d, name=%s, attr=%lu]: the pass type does not exist.",
+           pass_type, pass_name.c_str(), attr);
+  }
+
+  std::map<std::string, PassDesc> GetPassDesc(const GraphFusionPassType &pass_type) {
+    const std::lock_guard<std::mutex> my_lock(mu_);
+    const auto iter = pass_descs_.find(pass_type);
+    if (iter == pass_descs_.end()) {
+      std::map<std::string, PassDesc> ret;
+      return ret;
+    }
+
+    return iter->second;
+  }
+
+  std::map<std::string, FusionPassRegistry::CreateFn> GetCreateFn(const GraphFusionPassType &pass_type) {
+    const std::lock_guard<std::mutex> my_lock(mu_);
+    const auto iter = pass_descs_.find(pass_type);
+    std::map<std::string, FusionPassRegistry::CreateFn> ret;
+    if (iter == pass_descs_.end()) {
+      return ret;
+    }
+
+    for (const auto &ele : iter->second) {
+      ret.emplace(std::make_pair(ele.first, ele.second.create_fn));
+    }
+    return ret;
+  }
+private:
+  std::mutex mu_;
+  std::map<GraphFusionPassType, map<std::string, PassDesc>> pass_descs_;
+#else
   void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
                     const FusionPassRegistry::CreateFn create_fn) {
     const std::lock_guard<std::mutex> my_lock(mu_);
@@ -54,6 +103,7 @@ class FusionPassRegistry::FusionPassRegistryImpl {
 private:
   std::mutex mu_;
   std::map<GraphFusionPassType, map<std::string, FusionPassRegistry::CreateFn>> create_fns_;
+#endif
 };
 
 FusionPassRegistry::FusionPassRegistry() {
@@ -66,7 +116,29 @@ FusionPassRegistry &FusionPassRegistry::GetInstance() {
   static FusionPassRegistry instance;
   return instance;
 }
+#ifndef ONLY_COMPILE_OPEN_SRC
+void FusionPassRegistry::RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
+                                      CreateFn create_fn, uint64_t attr) const {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]param impl is nullptr, GraphFusionPass[type=%d,name=%s]: "
+           "failed to register the graph fusion pass",
+           pass_type, pass_name.c_str());
+    return;
+  }
+  impl_->RegisterPass(pass_type, pass_name, create_fn, attr);
+}
 
+std::map<std::string, FusionPassRegistry::PassDesc> FusionPassRegistry::GetPassDesc(
+    const GraphFusionPassType &pass_type) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]param impl is nullptr, GraphFusionPass[type=%d]: "
+                                "failed to get pass desc.", pass_type);
+    std::map<std::string, PassDesc> ret;
+    return ret;
+  }
+  return impl_->GetPassDesc(pass_type);
+}
+#else
 void FusionPassRegistry::RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
                                       CreateFn create_fn) const {
   if (impl_ == nullptr) {
@@ -77,6 +149,7 @@ void FusionPassRegistry::RegisterPass(const GraphFusionPassType &pass_type, cons
   }
   impl_->RegisterPass(pass_type, pass_name, create_fn);
 }
+#endif
 
 std::map<std::string, FusionPassRegistry::CreateFn> FusionPassRegistry::GetCreateFnByType(
     const GraphFusionPassType &pass_type) {
@@ -88,6 +161,22 @@ std::map<std::string, FusionPassRegistry::CreateFn> FusionPassRegistry::GetCreat
   return impl_->GetCreateFn(pass_type);
 }
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+FusionPassRegistrar::FusionPassRegistrar(const GraphFusionPassType &pass_type, const std::string &pass_name,
+                                         GraphPass *(*create_fn)(), uint64_t attr) {
+  if ((pass_type < BUILT_IN_GRAPH_PASS) || (pass_type >= GRAPH_FUSION_PASS_TYPE_RESERVED)) {
+    GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_type] value:%d is not supported.", pass_type);
+    return;
+  }
+
+  if (pass_name.empty()) {
+    GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_name]Failed to register the graph fusion pass, "
+           "param pass_name is empty.");
+    return;
+  }
+  FusionPassRegistry::GetInstance().RegisterPass(pass_type, pass_name, create_fn, attr);
+}
+#else
 FusionPassRegistrar::FusionPassRegistrar(const GraphFusionPassType &pass_type, const std::string &pass_name,
                                          GraphPass *(*create_fn)()) {
   if ((pass_type < BUILT_IN_GRAPH_PASS) || (pass_type >= GRAPH_FUSION_PASS_TYPE_RESERVED)) {
@@ -102,5 +191,5 @@ FusionPassRegistrar::FusionPassRegistrar(const GraphFusionPassType &pass_type, c
   }
   FusionPassRegistry::GetInstance().RegisterPass(pass_type, pass_name, create_fn);
 }
-
+#endif
 }  // namespace fe
