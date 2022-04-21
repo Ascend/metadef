@@ -46,6 +46,14 @@ class TilingContext : public ExtendedKernelContext {
     return av->GetValue<void *>();
   }
   const StorageShape *GetInputShape(size_t index) {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
+      return nullptr;
+    }
+
+    if (index >= compute_node_info->GetInputsNum()) {
+      return nullptr;
+    }
     return GetInputPointer<StorageShape>(index);
   }
   const Tensor *GetInputTensor(size_t index) {
@@ -60,6 +68,10 @@ class TilingContext : public ExtendedKernelContext {
   const StorageShape *GetOutputShape(size_t index) {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
+      return nullptr;
+    }
+
+    if (index >= compute_node_info->GetOutputsNum()) {
       return nullptr;
     }
 

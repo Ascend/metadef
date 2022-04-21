@@ -81,4 +81,26 @@ TEST_F(TilingDataUT, AppendDifferentTypes) {
   EXPECT_EQ(memcmp(reinterpret_cast<uint8_t*>(tiling_data->GetData()) + 80, expect_vec2.data(), 12), 0);
   EXPECT_EQ(memcmp(reinterpret_cast<uint8_t*>(tiling_data->GetData()) + 92, &td, sizeof(td)), 0);
 }
+
+TEST_F(TilingDataUT, AppendOutOfBounds) {
+  auto data = TilingData::CreateCap(20);
+  auto tiling_data = reinterpret_cast<TilingData *>(data.get());
+  ASSERT_NE(tiling_data, nullptr);
+  std::vector<int64_t> expect_vec1;
+  for (int64_t i = 0; i < 10; ++i) {
+    tiling_data->Append(i);
+    expect_vec1.push_back(i);
+  }
+
+  std::vector<int64_t> expect_vec2;
+  for (int64_t i = 0; i < 2; ++i) {
+    tiling_data->Append(i);
+    expect_vec2.push_back(i);
+  }
+  EXPECT_NE(tiling_data->Append(static_cast<int64_t>(3)), ge::GRAPH_SUCCESS);
+
+
+  ASSERT_EQ(tiling_data->GetDataSize(), 16);
+  EXPECT_EQ(memcmp(tiling_data->GetData(), expect_vec1.data(), 16), 0);
+}
 }  // namespace gert

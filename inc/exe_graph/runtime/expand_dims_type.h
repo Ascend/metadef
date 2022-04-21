@@ -57,6 +57,10 @@ struct ExpandDimsType {
     }
   }
 
+  bool operator==(const ExpandDimsType &other) const {
+    return size_ == other.size_ && mask_ == other.mask_;
+  }
+
   AxisIndex GetFullSize() const {
     return size_;
   }

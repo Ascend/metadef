@@ -79,6 +79,8 @@ ge::NodePtr KernelRunContextFaker::FakeNode() const {
 }
 KernelRunContextHolder KernelRunContextFaker::Build() const {
   KernelRunContextHolder holder;
+  holder.kernel_input_num = kernel_input_num_;
+  holder.kernel_output_num = kernel_output_num_;
   size_t size = sizeof(KernelRunContext) + sizeof(AsyncAnyValue *) * (kernel_input_num_ + kernel_output_num_);
   holder.context_holder = std::unique_ptr<uint8_t[]>(new uint8_t[size]);
   memset(holder.context_holder.get(), 0xff, size);

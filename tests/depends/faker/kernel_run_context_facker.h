@@ -36,6 +36,8 @@ struct KernelRunContextHolder {
   ComputeNodeInfo *MutableComputeNodeInfo() {
     return reinterpret_cast<ComputeNodeInfo *>(compute_node_extend_holder.get());
   }
+  size_t kernel_input_num;
+  size_t kernel_output_num;
   std::unique_ptr<uint8_t[]> context_holder;
   std::vector<AsyncAnyValue> value_holder;
   std::unique_ptr<uint8_t[]> compute_node_extend_holder;

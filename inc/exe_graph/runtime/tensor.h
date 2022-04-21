@@ -100,6 +100,10 @@ struct Tensor {
     return storage_format.GetOriginFormat();
   }
 
+  ExpandDimsType GetExpandDimsType() const {
+    return storage_format.GetExpandDimsType();
+  }
+
   TensorPlacement GetPlacement() const {
     return placement;
   }

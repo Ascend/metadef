@@ -43,6 +43,10 @@ struct StorageShape {
     return storage_shape_;
   }
 
+  bool operator==(const StorageShape &other) const {
+    return origin_shape_ == other.origin_shape_ && storage_shape_ == other.storage_shape_;
+  }
+
  private:
   Shape origin_shape_;
   Shape storage_shape_;
