@@ -290,8 +290,8 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid --singleop Argument",
       "ErrCode": "E10027",
-      "ErrMessage": "[%s] and [%s] for tensor indexed [%s] of Op [%s] are invalid in the file specified by the [--singleop] argument.",
-      "Arglist": "input,type,index,op_name",
+      "ErrMessage": "The attribute [%s] of [%s] tensor[%s] for Op [%s] is invalid when the argument [--singleop] was specified.",
+      "Arglist": "attr,input_output,index,op_name",
       "suggestion": {
         "Possible Cause": "The file specified by the [--singleop] argument contains invalid tensor attributes.",
         "Solution": "Try again with valid tensor dtype and format."
