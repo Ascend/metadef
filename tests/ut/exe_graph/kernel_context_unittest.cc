@@ -67,6 +67,7 @@ TEST_F(KernelContextUT, ChainSetDeleterOk) {
   ASSERT_NE(av.data, nullptr);
   ASSERT_NE(av.deleter, nullptr);
   av.deleter(av.data);
+  av.deleter = nullptr;
 
   c->SetWithDefaultDeleter(new std::vector<int64_t>());
   ASSERT_NE(av.data, nullptr);
