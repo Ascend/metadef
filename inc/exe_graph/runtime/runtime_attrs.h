@@ -18,8 +18,7 @@
 #define AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTRS_H_
 #include <cstdint>
 #include <type_traits>
-
-#include "runtime_attrs_def.h"
+#include <cstddef>
 
 namespace gert {
 class RuntimeAttrs {

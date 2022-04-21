@@ -22,6 +22,7 @@
 #include "exe_graph/runtime/runtime_attrs.h"
 #include "exe_graph/runtime/continuous_vector.h"
 #include "exe_graph/runtime/tensor.h"
+#include "exe_graph/runtime/runtime_attrs_def.h"
 
 namespace gert {
 namespace bg {

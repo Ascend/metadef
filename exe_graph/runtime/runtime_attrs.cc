@@ -15,6 +15,7 @@
  */
 #include "exe_graph/runtime/runtime_attrs.h"
 #include "framework/common/debug/ge_log.h"
+#include "runtime_attrs_def.h"
 namespace gert {
 const void *RuntimeAttrs::GetPointerByIndex(size_t index) const {
   auto attrs = reinterpret_cast<const RuntimeAttrsDef *>(&placeholder_);

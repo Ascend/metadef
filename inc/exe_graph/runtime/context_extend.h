@@ -21,7 +21,6 @@
 #include <type_traits>
 #include <memory>
 #include "compute_node_info.h"
-#include "kernel_info.h"
 
 namespace gert {
 class KernelExtendInfo {
