@@ -9,6 +9,7 @@ metadef:
       - ops
       - register
       - error_manager
+      - exe_graph
     unrelease:
       - register/graph_optimizer
       - register/op_tiling
