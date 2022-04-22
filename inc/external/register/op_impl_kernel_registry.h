@@ -28,13 +28,13 @@ struct OpImplKernelRegistry {
   typedef UINT32 (*TilingKernelFunc)(TilingContext *);
   struct OpImplFunctions {
     bool IsInputDataDependency(int32_t index) const {
-      if (index < 0 || index >= sizeof(inputs_dependency) * 8) {
+      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * 8) {
         return false;
       }
       return inputs_dependency & static_cast<uint64_t>(1) << index;
     }
     ge::graphStatus SetInputDataDependency(int32_t index) {
-      if (index < 0 || index >= sizeof(inputs_dependency) * 8) {
+      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * 8) {
         return ge::GRAPH_FAILED;
       }
       inputs_dependency |= static_cast<uint64_t>(1) << index;

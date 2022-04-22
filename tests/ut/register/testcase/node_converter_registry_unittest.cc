@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "register/node_converter_registry.h"
+#include <gtest/gtest.h>
 
 class NodeConverterRegistryUnittest : public testing::Test {};
 

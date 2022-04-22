@@ -76,10 +76,6 @@ ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &
     compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(input_index);
     input_index += instance_num;
   }
-  //  // TODO 001： test graph has no irputs stub here
-  //  if (input_index != node->GetAllInDataAnchorsSize()) {
-  //    return ge::GRAPH_FAILED;
-  //  }
   return ge::GRAPH_SUCCESS;
 }
 

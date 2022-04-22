@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "register/kernel_registry_impl.h"
+#include <gtest/gtest.h>
 
 using namespace gert;
 namespace test_gert {
