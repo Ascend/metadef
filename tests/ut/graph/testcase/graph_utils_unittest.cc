@@ -545,8 +545,8 @@ TEST_F(UtestGraphUtils, DumpGraphByPath) {
   auto graph = builder.GetGraph();
 
   // test dump_level 0
-  auto ret = GraphUtils::DumpGEGraphByPath(graph, "./test/test_graph_0.txt", 0);
-  ASSERT_EQ((ret != 0), true);
+  auto ret = GraphUtils::DumpGEGraphByPath(graph, "./not-exists-path/test_graph_0.txt", 0);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
   ret = GraphUtils::DumpGEGraphByPath(graph, "/", 0);
   ASSERT_EQ((ret != 0), true);
   ret = GraphUtils::DumpGEGraphByPath(graph, "test_graph_0.txt", 0);
