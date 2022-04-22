@@ -202,7 +202,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid --input_shape Argument",
       "ErrCode": "E10019",
-      "ErrMessage": "When [--dynamic_image_size] is included, only the height and width axes can be –1 in in [--input_shape].",
+      "ErrMessage": "When [--dynamic_image_size] is included, only the height and width axes can be –1 in [--input_shape].",
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "When [--dynamic_image_size] is included, only the height and width axes can be –1 in the shape.",
