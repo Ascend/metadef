@@ -28,8 +28,9 @@ char *CreateMessage(const char *format, va_list arg) {
 
   va_list arg_copy;
   va_copy(arg_copy, arg);
-
   int len = vsnprintf(nullptr, 0, format, arg_copy);
+  va_end(arg_copy);
+
   if (len < 0) {
     return nullptr;
   }
