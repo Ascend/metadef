@@ -19,6 +19,7 @@
 #include "graph/ge_error_codes.h"
 #include "storage_shape.h"
 #include "storage_format.h"
+#include "tensor_data.h"
 
 namespace gert {
 enum TensorPlacement {
@@ -36,7 +37,7 @@ struct Tensor {
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, TensorPlacement placement,
          ge::DataType data_type, TensorAddress addr)
       : storage_shape_(storage_shape), storage_format_(storage_format), placement_(placement), data_type_(data_type),
-        addr_(addr) {}
+        tensor_data_(addr) {}
 
   int64_t GetShapeSize() const {
     return storage_shape_.GetStorageShape().GetShapeSize();
@@ -52,15 +53,15 @@ struct Tensor {
     return static_cast<T *>(GetAddr());
   }
 
-  void SetData(TensorAddress addr) {
-    addr_ = addr;
+  void SetData(const TensorData& data) {
+    tensor_data_ = data;
   }
 
   const void *GetAddr() const {
     if (placement_ == kFollowing) {
       return reinterpret_cast<const void *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this));
     } else {
-      return addr_;
+      return tensor_data_.GetAddr();
     }
   }
 
@@ -68,7 +69,7 @@ struct Tensor {
     if (placement_ == kFollowing) {
       return reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this));
     } else {
-      return addr_;
+      return tensor_data_.GetAddr();
     }
   }
 
@@ -92,9 +93,8 @@ struct Tensor {
 
     auto tensor = reinterpret_cast<Tensor *>(holder.get());
     tensor->placement_ = kFollowing;
-    tensor->addr_ = nullptr;
     tensor->data_type_ = dt;
-
+    tensor->tensor_data_ = TensorData{};
     return holder;
   }
 
@@ -160,12 +160,16 @@ struct Tensor {
     placement_ = placement;
   }
 
+  const TensorData& GetTensorData() const {
+    return tensor_data_;
+  }
+
  private:
   StorageShape storage_shape_;
   StorageFormat storage_format_;
   TensorPlacement placement_;
   ge::DataType data_type_;
-  TensorAddress addr_;
+  TensorData tensor_data_;
 };
 static_assert(std::is_standard_layout<Tensor>::value, "The class Tensor must be a POD");
 }  // namespace gert
