@@ -24,6 +24,10 @@ class AtomicCleanTilingContext : public TilingContext {
   const ContinuousVector *GetCleanWorkspaceSizes() {
     return GetInputPointer<ContinuousVector>(0);
   }
+
+  uint64_t GetCleanOutputSize(size_t index) {
+    return GetInputValue<uint64_t>(index + 1U);
+  }
 };
 static_assert(std::is_standard_layout<AtomicCleanTilingContext>::value,
               "The class AtomicCleanTilingContext must be a POD");
