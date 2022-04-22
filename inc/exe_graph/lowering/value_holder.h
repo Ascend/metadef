@@ -104,10 +104,7 @@ class ValueHolder {
   static std::vector<ValueHolderPtr> CreateDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs,
                                                       size_t out_count);
   static ValueHolderPtr CreateVoid(const char *node_type, const std::vector<ValueHolderPtr> &inputs);
-  static ValueHolderPtr CreateGraph(const std::vector<ValueHolderPtr> &inputs, const GraphHolderPtr &graph);
-
   static HyperStatus AddDependency(const ValueHolderPtr &src, const ValueHolderPtr &dst);
-  static HyperStatus AddDependency(const std::vector<ValueHolderPtr> &src_holders, const ValueHolderPtr &dst);
 
   static GraphFrame *PushGraphFrame();
   static std::unique_ptr<GraphFrame> PopGraphFrame();

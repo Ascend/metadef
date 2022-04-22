@@ -688,5 +688,144 @@ TEST_F(ValueHolderUt, CreateExeGraphNoFrame) {
   EXPECT_NE(ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph(), nullptr);
   EXPECT_EQ(ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph(), nullptr);
 }
+/*
+ *    hello  world
+ *    /  \   /
+ * data0 data1
+ */
+TEST_F(ValueHolderUt, SetStageOk) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+  auto world = ValueHolder::CreateVoid("world", {data1});
+  world->SetStage(ValueHolder::kExit);
+
+  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph();
+  ASSERT_NE(graph, nullptr);
+  CheckExeGraphGenerally(*exe_graph);
+  CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
+
+  auto world_node = exe_graph->FindFirstNodeMatchType("world");
+  ASSERT_NE(world_node, nullptr);
+  int64_t stage;
+  EXPECT_TRUE(ge::AttrUtils::GetInt(world_node->GetOpDesc(), kStage, stage));
+  EXPECT_EQ(stage, static_cast<int64_t>(bg::ValueHolder::kExit));
+}
+/*
+ *    hello
+ *    /  \
+ * data0 data1
+ */
+TEST_F(ValueHolderUt, GetCurrentGraphOk) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+
+  EXPECT_NE(hello->GetCurrentFrame(), nullptr);
+  EXPECT_NE(hello->GetCurrentGraph(), nullptr);
+
+  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph();
+  ASSERT_NE(exe_graph, nullptr);
+
+  EXPECT_EQ(hello->GetCurrentFrame(), nullptr);
+  EXPECT_EQ(hello->GetCurrentGraph(), nullptr);
+}
+/*
+ *       ref
+ *     +------+
+ *     |      |
+ *   launch   |
+ *     |      |
+ *   tiling   |
+ *     |      |
+ *    alloc----
+ *    /  \
+ * data0 data1
+ */
+TEST_F(ValueHolderUt, RefFromOk) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x1", ge::kIrInputRequired);
+  op_desc->AppendIrInput("x2", ge::kIrInputOptional);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+
+  ValueHolder::SetCurrentComputeNode(node);
+  auto alloc_outs = ValueHolder::CreateDataOutput("alloc", {data0, data1}, 3);
+  auto tiling_outs = ValueHolder::CreateDataOutput("tiling", {data0, data1}, 2);
+  tiling_outs[1]->RefFrom(alloc_outs[1]);
+
+  auto launch = ValueHolder::CreateSingleDataOutput("launch", {tiling_outs[0], tiling_outs[1]});
+  launch->RefFrom(alloc_outs[2]);
+
+  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({launch}).BuildExecuteGraph();
+  ASSERT_NE(exe_graph, nullptr);
+
+  auto launch_node = exe_graph->FindFirstNodeMatchType("launch");
+  auto tiling_node = exe_graph->FindFirstNodeMatchType("tiling");
+  auto alloc_node = exe_graph->FindFirstNodeMatchType("alloc");
+
+  ASSERT_NE(launch_node, nullptr);
+  ASSERT_NE(tiling_node, nullptr);
+  ASSERT_NE(alloc_node, nullptr);
+
+  std::string ref_from_node;
+  int32_t ref_from_index;
+
+  EXPECT_TRUE(ge::AttrUtils::GetStr(tiling_node->GetOpDesc()->GetOutputDescPtr(1), kRefFromNode, ref_from_node));
+  EXPECT_EQ(ref_from_node, alloc_node->GetName());
+  EXPECT_TRUE(ge::AttrUtils::GetInt(tiling_node->GetOpDesc()->GetOutputDescPtr(1), kRefFromIndex, ref_from_index));
+  EXPECT_EQ(ref_from_index, 1);
+
+  EXPECT_TRUE(ge::AttrUtils::GetStr(launch_node->GetOpDesc()->GetOutputDescPtr(0), kRefFromNode, ref_from_node));
+  EXPECT_EQ(ref_from_node, alloc_node->GetName());
+  EXPECT_TRUE(ge::AttrUtils::GetInt(launch_node->GetOpDesc()->GetOutputDescPtr(0), kRefFromIndex, ref_from_index));
+  EXPECT_EQ(ref_from_index, 2);
+}
 }  // namespace bg
 }  // namespace gert

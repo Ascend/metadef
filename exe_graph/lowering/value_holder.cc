@@ -26,14 +26,6 @@ namespace gert {
 namespace bg {
 namespace {
 thread_local std::stack<std::unique_ptr<GraphFrame>> graph_frames;
-HyperStatus MergeGraph(ge::ComputeGraphPtr &src, ge::ComputeGraphPtr &dst) {
-  for (const auto &src_node : src->GetDirectNode()) {
-    dst->AddNode(src_node);
-    src_node->SetOwnerComputeGraph(dst);
-  }
-  src->ClearNodeList();
-  return HyperStatus::Success();
-}
 ge::OpDescPtr CreateOpDesc(int64_t node_index, const char *node_type, size_t in_count, size_t out_count) {
   auto op_desc = std::make_shared<ge::OpDesc>("node" + std::to_string(node_index), node_type);
   if (op_desc == nullptr) {
@@ -104,52 +96,6 @@ int64_t ValueHolder::GetId() const noexcept {
 const ValueHolder::GraphHolder *ValueHolder::GetGraph() const noexcept {
   return graph_.get();
 }
-namespace {
-ge::ComputeGraphPtr SelectLargestGraph(const std::map<ge::ComputeGraphPtr, ValueHolderPtr> &graphs_to_holder) {
-  if (graphs_to_holder.empty()) {
-    return std::make_shared<ge::ComputeGraph>("graph");
-  }
-  ge::ComputeGraphPtr largest_graph = graphs_to_holder.begin()->first;
-  for (const auto &graph_to_node_num : graphs_to_holder) {
-    if (largest_graph->GetAllNodesSize() < graph_to_node_num.first->GetAllNodesSize()) {
-      largest_graph = graph_to_node_num.first;
-    }
-  }
-  return largest_graph;
-}
-}  // namespace
-HyperStatus ValueHolder::MergeToOneGraph(const vector<ValueHolderPtr> &value_holders) {
-  if (value_holders.empty()) {
-    return HyperStatus::Success();
-  }
-  std::map<ge::ComputeGraphPtr, ValueHolderPtr> graphs_to_holder;
-  std::vector<ValueHolderPtr> no_graph_holders;
-  for (const auto &value_holder : value_holders) {
-    if (value_holder->graph_ == nullptr) {
-      no_graph_holders.emplace_back(value_holder);
-    } else {
-      graphs_to_holder[value_holder->graph_] = value_holder;
-    }
-  }
-
-  auto largest_graph = SelectLargestGraph(graphs_to_holder);
-  for (const auto &graph_to_holder : graphs_to_holder) {
-    if (graph_to_holder.first == largest_graph) {
-      continue;
-    }
-    auto ret = MergeGraph(graph_to_holder.second->graph_, largest_graph);
-    if (!ret.IsSuccess()) {
-      return ret;
-    }
-    graph_to_holder.second->graph_ = largest_graph;
-  }
-  for (const auto &holder : no_graph_holders) {
-    largest_graph->AddNode(holder->node_);
-    holder->node_->SetOwnerComputeGraph(largest_graph);
-    holder->graph_ = largest_graph;
-  }
-  return HyperStatus::Success();
-}
 ValueHolderPtr ValueHolder::CreateError(const char *fmt, va_list arg) {
   auto value_holder = std::shared_ptr<ValueHolder>(new (std::nothrow) ValueHolder());
   if (value_holder == nullptr) {
@@ -217,9 +163,6 @@ ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const 
   /*
    * todo 检查是否有子图向父图连接的场景，这种场景需要报错
    *      父图向子图连接的场景，为父图节点创建一个InnerData
-  if (!MergeToOneGraph(inputs).IsSuccess()) {
-    return nullptr;
-  }
    */
 
   for (size_t i = 0; i < inputs.size(); ++i) {
@@ -310,35 +253,11 @@ HyperStatus ValueHolder::AddDependency(const ValueHolderPtr &src, const ValueHol
   if (dst == nullptr || dst->GetNode() == nullptr) {
     return HyperStatus::ErrorStatus((char *) "Failed to add control ege, because the dst does not have a node.");
   }
-  auto ret = MergeToOneGraph({src, dst});
-  if (!ret.IsSuccess()) {
-    return ret;
-  }
+  // todo 检查是否在一张图上
   if (ge::GraphUtils::AddEdge(src->GetNode()->GetOutControlAnchor(), dst->GetNode()->GetInControlAnchor()) !=
       ge::GRAPH_SUCCESS) {
     return HyperStatus::ErrorStatus((char *) "Failed to add control edge from %s to %s",
                                     src->GetNode()->GetName().c_str(), dst->GetNode()->GetName().c_str());
-  }
-  return HyperStatus::Success();
-}
-
-ValueHolderPtr ValueHolder::CreateGraph(const vector<ValueHolderPtr> &inputs, const GraphHolderPtr &graph) {
-  auto node = CreateNode("PartitionedCall", inputs, 0);
-  if (node == nullptr) {
-    return nullptr;
-  }
-  if (!ge::AttrUtils::SetGraph(node->GetOpDesc(), "graph", graph)) {
-    return nullptr;
-  }
-  return CreateFromNode(node, -1, ValueHolderType::kOutput);
-}
-
-HyperStatus ValueHolder::AddDependency(const vector<ValueHolderPtr> &src_holders, const ValueHolderPtr &dst) {
-  for (const auto &src : src_holders) {
-    auto ret = AddDependency(src, dst);
-    if (!ret.IsSuccess()) {
-      return ret;
-    }
   }
   return HyperStatus::Success();
 }
