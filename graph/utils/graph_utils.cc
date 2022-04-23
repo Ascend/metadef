@@ -2152,6 +2152,28 @@ NodePtr GraphUtils::FindNodeFromAllNodes(ComputeGraphPtr &graph, const std::stri
   return nullptr;
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+std::vector<NodePtr> GraphUtils::FindNodesByTypeFromAllNodes(ComputeGraphPtr &graph, const std::string &type) {
+  std::vector<NodePtr> nodes;
+  const auto root_graph = FindRootGraph(graph);
+  if (root_graph == nullptr) {
+    REPORT_INNER_ERROR("E18888", "param graph is nullptr,check invalid.");
+    GE_LOGE("[Check][Param] param graph is nullptr, check invalid");
+    return nodes;
+  }
+
+  for (const auto &node : root_graph->GetAllNodes()) {
+    if (node == nullptr) {
+      continue;
+    }
+    if (node->GetType() == type) {
+      nodes.emplace_back(node);
+    }
+  }
+
+  return nodes;
+}
+
 ///
 /// Get reference-mapping for in_data_anchors of node
 /// @param [in] node

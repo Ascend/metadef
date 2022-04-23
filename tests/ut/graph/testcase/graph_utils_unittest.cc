@@ -1928,5 +1928,17 @@ TEST_F(UtestGraphUtils, DumpGEGraph) {
   state = GraphUtils::LoadGEGraph("./ge_test_graph_0003.txt", *com_graph3);
   ASSERT_EQ(state, true);
 }
- 
+
+TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphs) {
+  auto graph = BuildGraphWithSubGraph();
+  ASSERT_NE(graph, nullptr);
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
+  EXPECT_EQ(nodes.size(), 2);
+}
+
+TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphsNullInput) {
+  ComputeGraphPtr graph = nullptr;
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
+  EXPECT_EQ(nodes.size(), 0);
+}
 }  // namespace ge
