@@ -20,14 +20,35 @@
 using namespace gert;
 namespace test_gert {
 class KernelRegistryTest : public testing::Test {};
+namespace {
+ge::graphStatus TestFuncCreator(const ge::Node *, KernelContext *) {
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus TestFuncInitializer(const ge::Node *, KernelContext *) {
+  return ge::GRAPH_SUCCESS;
+}
 KernelStatus TestFunc1(KernelContext *context) {
   return 0;
 }
+}
 
 TEST_F(KernelRegistryTest, RegisterKernelSuccess) {
-  EXPECT_EQ(gert::KernelRegistryImpl::GetInstance().FindKernelFuncs("KernelRegistryTest1"), nullptr);
   REGISTER_KERNEL(KernelRegistryTest1).RunFunc(TestFunc1);
-  ASSERT_NE(gert::KernelRegistryImpl::GetInstance().FindKernelFuncs("KernelRegistryTest1"), nullptr);
-  EXPECT_EQ(gert::KernelRegistryImpl::GetInstance().FindKernelFuncs("KernelRegistryTest1")->run_func, TestFunc1);
+  auto funcs = gert::KernelRegistryImpl::GetInstance().FindKernelFuncs("KernelRegistryTest1");
+  ASSERT_NE(funcs, nullptr);
+  EXPECT_EQ(funcs->run_func, TestFunc1);
+  EXPECT_NE(funcs->outputs_creator, nullptr);
+  EXPECT_NE(funcs->outputs_initializer, nullptr);
+  EXPECT_EQ(funcs->outputs_creator(nullptr, nullptr), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(funcs->outputs_initializer(nullptr, nullptr), ge::GRAPH_SUCCESS);
+}
+
+TEST_F(KernelRegistryTest, RegisterKernelWithOutputCreator) {
+  REGISTER_KERNEL(KernelRegistryTest2).RunFunc(TestFunc1).OutputsCreator(TestFuncCreator).OutputsInitializer(TestFuncInitializer);
+  auto funcs = gert::KernelRegistryImpl::GetInstance().FindKernelFuncs("KernelRegistryTest2");
+  ASSERT_NE(funcs, nullptr);
+  EXPECT_EQ(funcs->run_func, TestFunc1);
+  EXPECT_NE(funcs->outputs_creator, nullptr);
+  EXPECT_NE(funcs->outputs_initializer, nullptr);
 }
 }
