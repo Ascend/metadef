@@ -116,6 +116,9 @@ class TilingContext : public ExtendedKernelContext {
     if (tiling_data == nullptr) {
       return nullptr;
     }
+    if (tiling_data->GetCapacity() < sizeof(T)) {
+      return nullptr;
+    }
     tiling_data->SetDataSize(sizeof(T));
     return reinterpret_cast<T *>(tiling_data->GetData());
   }

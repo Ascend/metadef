@@ -73,8 +73,7 @@ class ContinuousVector {
  private:
   size_t capacity_;
   size_t size_;
-  uint64_t reserved;
-  uint8_t elements[1];
+  uint8_t elements[8];
 };
 static_assert(std::is_standard_layout<ContinuousVector>::value, "The ContinuousVector must be a POD");
 }  // namespace gert

@@ -72,9 +72,20 @@ struct TilingData {
       return nullptr;
     }
     auto td = reinterpret_cast<TilingData *>(td_buf.get());
-    td->capacity_ = cap_size;
-    td->data_ = td_buf.get() + sizeof(TilingData);
+    td->Init(cap_size);
     return td_buf;
+  }
+  static ge::graphStatus CalcTotalSize(size_t cap_size, size_t &total_size) {
+    if (ge::AddOverflow(sizeof(TilingData), cap_size, total_size)) {
+      return ge::GRAPH_FAILED;
+    }
+    return ge::GRAPH_SUCCESS;
+  }
+
+  void Init(size_t cap_size) {
+    capacity_ = cap_size;
+    data_size_ = 0;
+    data_ = reinterpret_cast<uint8_t *>(this) + sizeof(TilingData);
   }
 
   TilingData(const TilingData &) = delete;
