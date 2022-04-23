@@ -36,7 +36,6 @@ struct LowerResult {
   std::vector<bg::ValueHolderPtr> out_shapes;
   std::vector<bg::ValueHolderPtr> out_addrs;
 };
-LowerResult CreateErrorLowerResult(const char *error_msg, ...);
 class NodeConverterRegistry {
  public:
   using NodeConverter = LowerResult(*)(const ge::NodePtr &node, const LowerInput &lower_input);

@@ -37,12 +37,4 @@ NodeConverterRegister::NodeConverterRegister(const char *lower_func_name,
                                              NodeConverterRegistry::NodeConverter func) noexcept {
   NodeConverterRegistry::GetInstance().RegisterNodeConverter(lower_func_name, func);
 }
-
-LowerResult CreateErrorLowerResult(const char *error_msg, ...) {
-  va_list arg;
-  va_start(arg, error_msg);
-  auto msg = std::unique_ptr<char[]>(CreateMessage(error_msg, arg));
-  va_end(arg);
-  return {HyperStatus::ErrorStatus(std::move(msg)), {}, {}, {}};
-}
 }  // namespace gert
