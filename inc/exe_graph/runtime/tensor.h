@@ -126,7 +126,7 @@ struct Tensor {
     return storage_format_.GetOriginFormat();
   }
 
-  ge::Format SetOriginFormat(ge::Format storage_format) {
+  void SetOriginFormat(ge::Format storage_format) {
     storage_format_.SetOriginFormat(storage_format);
   }
 

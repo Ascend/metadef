@@ -469,10 +469,10 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,400,3000,8192}).data(), 4 * sizeof(int64_t)), 0);
   auto gert_tensor = compute_node_info->GetAttrs()->GetAttrPointer<gert::Tensor>(5);
   ASSERT_NE(gert_tensor, nullptr);
-  EXPECT_EQ(gert_tensor->storage_shape.GetOriginShape(), gert::Shape({8,224,224,3}));
-  EXPECT_EQ(gert_tensor->storage_shape.GetStorageShape(), gert::Shape({8,1,224,224,16}));
-  EXPECT_EQ(gert_tensor->storage_format.GetOriginFormat(), ge::FORMAT_NHWC);
-  EXPECT_EQ(gert_tensor->storage_format.GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8,224,224,3}));
+  EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8,1,224,224,16}));
+  EXPECT_EQ(gert_tensor->GetOriginFormat(), ge::FORMAT_NHWC);
+  EXPECT_EQ(gert_tensor->GetStorageFormat(), ge::FORMAT_NC1HWC0);
   EXPECT_EQ(gert_tensor->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(memcmp(gert_tensor->GetData<uint16_t>(), fake_data.data(), fake_data.size() * sizeof(uint16_t)), 0);
 
@@ -486,10 +486,10 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,200,3000,4096}).data(), 4 * sizeof(int64_t)), 0);
   gert_tensor = compute_node_info->GetAttrs()->GetAttrPointer<gert::Tensor>(11);
   ASSERT_NE(gert_tensor, nullptr);
-  EXPECT_EQ(gert_tensor->storage_shape.GetOriginShape(), gert::Shape({8,224,224,3}));
-  EXPECT_EQ(gert_tensor->storage_shape.GetStorageShape(), gert::Shape({8,1,224,224,16}));
-  EXPECT_EQ(gert_tensor->storage_format.GetOriginFormat(), ge::FORMAT_NHWC);
-  EXPECT_EQ(gert_tensor->storage_format.GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8,224,224,3}));
+  EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8,1,224,224,16}));
+  EXPECT_EQ(gert_tensor->GetOriginFormat(), ge::FORMAT_NHWC);
+  EXPECT_EQ(gert_tensor->GetStorageFormat(), ge::FORMAT_NC1HWC0);
   EXPECT_EQ(gert_tensor->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(memcmp(gert_tensor->GetData<uint16_t>(), fake_data.data(), fake_data.size() * sizeof(uint16_t)), 0);
 }
