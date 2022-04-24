@@ -81,6 +81,8 @@ FusionPattern &FusionPattern::AddOpDesc(const std::string &id, const std::vector
   op->types = types;
   op->repeatable = false;
   op->is_output = false;
+  op->is_output_fullmatch = true;
+  op->output_size = 0;
   ops_.push_back(op);
   op_map_[id] = op;
 
@@ -112,6 +114,58 @@ FusionPattern &FusionPattern::SetInputs(const std::string &id, const std::vector
     op_desc->inputs.push_back(input_op_desc);
   }
 
+  return *this;
+}
+
+/**
+ * @ingroup fe
+ * @brief set output Ops with vector
+ */
+FusionPattern &FusionPattern::SetOutputs(const std::string &id, const FusionPattern::OutputMapVecStr &output_map,
+                                         bool is_fullmatched) {
+  if (id.empty()) {
+    GELOGW("Id cannot be empty.");
+    return *this;
+  }
+  const std::shared_ptr<FusionPattern::OpDesc> op_desc = GetOpDesc(id);
+  FE_PATTERN_ERROR_RETURN_IF(op_desc == nullptr, "Id does not exist. (id:%s)", id.c_str());
+  op_desc->outputs.clear();
+  for (auto &iter : output_map) {
+    for (const std::string &output_id : iter.second) {
+      const std::shared_ptr<FusionPattern::OpDesc> output_op_desc = GetOpDesc(output_id);
+      FE_PATTERN_ERROR_RETURN_IF(output_op_desc == nullptr, "Id does not exist. (id:%s)", output_id.c_str());
+      if (op_desc->outputs.find(iter.first) == op_desc->outputs.end()) {
+        op_desc->outputs[iter.first] = {};
+      }
+      op_desc->outputs[iter.first].emplace_back(output_op_desc);
+      ++op_desc->output_size;
+    }
+  }
+  op_desc->is_output_fullmatch = is_fullmatched;
+  return *this;
+}
+/**
+ * @ingroup fe
+ * @brief set output Ops with vector
+ */
+FusionPattern &FusionPattern::SetOutputs(const std::string &id, const FusionPattern::OutputMapStr &output_map,
+                                         bool is_fullmatched) {
+  if (id.empty()) {
+    GELOGW("Id cannot be empty.");
+    return *this;
+  }
+  const std::shared_ptr<FusionPattern::OpDesc> op_desc = GetOpDesc(id);
+  FE_PATTERN_ERROR_RETURN_IF(op_desc == nullptr, "Id does not exist. (id:%s)", id.c_str());
+
+  op_desc->outputs.clear();
+  for (auto &iter : output_map) {
+    const std::string output_id(iter.second);
+    const std::shared_ptr<FusionPattern::OpDesc> output_op_desc = GetOpDesc(output_id);
+    FE_PATTERN_ERROR_RETURN_IF(output_op_desc == nullptr, "Id does not exist. (id:%s)", output_id.c_str());
+    op_desc->outputs[iter.first].emplace_back(output_op_desc);
+    ++op_desc->output_size;
+  }
+  op_desc->is_output_fullmatch = is_fullmatched;
   return *this;
 }
 
@@ -174,6 +228,14 @@ const std::vector<std::shared_ptr<FusionPattern::OpDesc>> *FusionPattern::GetInp
     return nullptr;
   }
   return &(op_desc->inputs);
+}
+
+const FusionPattern::OutputMapDesc &FusionPattern::GetOutputs(const OpDescPtr op_desc) {
+  return op_desc->outputs;
+}
+
+size_t FusionPattern::GetOutputSize(const OpDescPtr op_desc) {
+  return op_desc->output_size;
 }
 
 /**

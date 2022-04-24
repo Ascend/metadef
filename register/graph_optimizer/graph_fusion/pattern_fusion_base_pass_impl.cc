@@ -115,7 +115,12 @@ bool PatternFusionBasePassImpl::MatchFromOutput(const ge::NodePtr output_node,
   // match candidate node one by one
   while ((!candidate_nodes.empty()) && (!candidate_op_descs.empty())) {
     // get the first candidate node
-    const bool result = MatchFromOutput(candidate_nodes, candidate_op_descs, mapping);
+    bool result = MatchFromOutput(candidate_nodes, candidate_op_descs, mapping);
+    if (!result) {
+      return false;
+    }
+
+    result = MatchAsInput(candidate_nodes, candidate_op_descs, mapping);
     if (!result) {
       return false;
     }
@@ -194,12 +199,7 @@ bool PatternFusionBasePassImpl::MatchFromOutput(std::vector<ge::NodePtr> &candid
       }
       // some nodes might be the input of multiple nodes, we use
       // IsMatched() to avoid repeat
-      if (!IsMatched(input_desc, input_node, mapping)) {
-        candidate_nodes.push_back(input_node);
-        candidate_op_descs.push_back(input_desc);
-        // store the matched node
-        mapping[input_desc].push_back(input_node);
-      }
+      AddCandidateQueue(input_desc, input_node, candidate_op_descs, candidate_nodes, mapping);
       usage_flags[static_cast<size_t>(j)] = true;
       break;
     }
@@ -208,6 +208,75 @@ bool PatternFusionBasePassImpl::MatchFromOutput(std::vector<ge::NodePtr> &candid
   // return false if not all edges are matched
   if (!MatchAllEdges(inputs_desc->size(), usage_flags)) {
     GELOGW("[Match][Output] not all inputs of op %s are matched, pattern matching failed.", op_id.c_str());
+    return false;
+  }
+  return true;
+}
+
+void PatternFusionBasePassImpl::AddCandidateQueue(const FusionPattern::OpDescPtr &op_desc,
+                                                  const ge::NodePtr &node,
+                                                  std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
+                                                  std::vector<ge::NodePtr> &candidate_nodes,
+                                                  Mapping &mapping) const {
+  if (IsMatched(op_desc, node, mapping)) {
+    return;
+  }
+  candidate_nodes.emplace_back(node);
+  candidate_op_descs.emplace_back(op_desc);
+  mapping[op_desc].emplace_back(node);
+}
+
+bool PatternFusionBasePassImpl::MatchAsInput(std::vector<ge::NodePtr> &candidate_nodes,
+                                             std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
+                                             Mapping &mapping) const {
+  const ge::NodePtr node = candidate_nodes.front();
+  FusionPattern::OpDescPtr op_desc = candidate_op_descs.front();
+  const std::string op_id = op_desc->id;
+  const FusionPattern::OutputMapDesc &outputs_desc_map = FusionPattern::GetOutputs(op_desc);
+  if (outputs_desc_map.empty()) {
+    return true;
+  }
+
+  const size_t outputs_desc_size = FusionPattern::GetOutputSize(op_desc);
+  if (op_desc->is_output_fullmatch && node->GetOutDataNodesSize() != outputs_desc_size) {
+    GELOGW("[Match][Input] full match mode, op %s desc size:%zu is not equal out data node size:%zu", op_id.c_str(),
+           outputs_desc_size, node->GetOutDataNodesSize());
+    return false;
+  }
+
+  const std::unique_ptr<bool[]> usage_flags(new (std::nothrow) bool[outputs_desc_size] {});
+  std::vector<ge::OutDataAnchorPtr> out_anchors;
+  GetOutDataAnchors(node, out_anchors);
+
+  size_t out_idx = 0;
+  for (const auto &out_anchor : out_anchors) {
+    if (outputs_desc_map.find(out_anchor->GetIdx()) == outputs_desc_map.end()) {
+      GELOGW("[Match][Input] op %s out anchor idx:%d not config in pattern", op_id.c_str(), out_anchor->GetIdx());
+      continue;
+    }
+    const std::vector<FusionPattern::OpDescPtr> &outputs_desc = outputs_desc_map.at(out_anchor->GetIdx());
+    for (const auto &peer_in_anchor : out_anchor->GetPeerInDataAnchors()) {
+      const ge::NodePtr output_node = peer_in_anchor->GetOwnerNode();
+      if (output_node == nullptr) {
+        continue;
+      }
+      for (size_t i = 0; i < outputs_desc.size(); i++) {
+        const FusionPattern::OpDescPtr output_desc = outputs_desc.at(i);
+        bool is_matched =
+          (IsOpTypeExist(ge::NodeUtils::GetNodeType(*output_node), output_desc->types) || output_desc->types.empty()) &&
+          (!usage_flags[out_idx + i]);
+        if (!is_matched) {
+          continue;
+        }
+        AddCandidateQueue(output_desc, output_node, candidate_op_descs, candidate_nodes, mapping);
+        usage_flags[out_idx + i] = true;
+      }
+    }
+    out_idx += outputs_desc.size();
+  }
+
+  if (!MatchAllEdges(outputs_desc_size, usage_flags)) {
+    GELOGW("[Match][Input] not all outputs of op %s are matched, pattern matching failed", op_id.c_str());
     return false;
   }
   return true;
@@ -230,6 +299,16 @@ void PatternFusionBasePassImpl::GetInDataAnchors(const ge::NodePtr &node,
       continue;
     }
     in_anchor_vec.push_back(in_anchor);
+  }
+}
+
+void PatternFusionBasePassImpl::GetOutDataAnchors(const ge::NodePtr &node,
+                                                  std::vector<ge::OutDataAnchorPtr> &out_anchor_vec) {
+  for (const auto out_anchor : node->GetAllOutDataAnchors()) {
+    if (out_anchor == nullptr || out_anchor->GetPeerInDataNodesSize() == 0) {
+      continue;
+    }
+    out_anchor_vec.emplace_back(out_anchor);
   }
 }
 
