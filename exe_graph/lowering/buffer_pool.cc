@@ -19,6 +19,7 @@
 #include <securec.h>
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
+#include "graph/debug/ge_log.h"
 
 #include "exe_graph/runtime/continuous_buffer.h"
 
@@ -44,9 +45,11 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
   size_t text_offset;
   // 申请了n个，但是使用时会用n+1个，多的一个由ContinuousText自带
   if (ge::MulOverflow(sizeof(size_t), buf_count, offset_size)) {
+    GE_LOGE("Failed to serialize buffer pool, size overflow, buf num %zu", buf_count);
     return nullptr;
   }
   if (ge::AddOverflow(total_size, offset_size, total_size)) {
+    GE_LOGE("Failed to serialize buffer pool, size overflow, buf size %zu", offset_size);
     return nullptr;
   }
   text_offset = total_size;
@@ -59,14 +62,14 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
     ids_to_buf[iter.second] = &iter.first;
 
     if (ge::AddOverflow(total_size, iter.first.size(), total_size)) {
+      GE_LOGE("Failed to serialize buffer pool, size overflow, buf size %zu, id %zu", iter.first.size(), iter.second);
       return nullptr;
     }
   }
 
   auto text_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
-  if (text_holder == nullptr) {
-    return nullptr;
-  }
+  GE_CHECK_NOTNULL_RTNULL(text_holder);
+
   auto text = reinterpret_cast<ContinuousBuffer *>(text_holder.get());
   text->num_ = buf_count;
   size_t i = 0;
@@ -77,6 +80,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
       return nullptr;
     }
     if (memcpy_s(text_holder.get() + text_offset, total_size - text_offset, buf->data(), buf->size()) != EOK) {
+      GE_LOGE("Failed to serialize buff pool, copy failed");
       return nullptr;
     }
     text->offsets_[i] = text_offset;
