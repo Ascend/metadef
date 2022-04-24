@@ -33,6 +33,7 @@ set(GRAPH_SOURCE_LIST
     "utils/graph_utils.cc"
     "utils/ffts_graph_utils.cc"
     "utils/dumper/ge_graph_dumper.cc"
+    "utils/trace/trace_manager.cc"
     "utils/ge_ir_utils.cc"
     "utils/node_utils.cc"
     "utils/op_desc_utils.cc"
