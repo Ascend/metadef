@@ -15,12 +15,13 @@
  */
 
 #include "exe_graph/lowering/value_holder.h"
+#include <stack>
 #include <securec.h>
 #include "graph/utils/graph_utils.h"
 #include "exe_graph/lowering/exe_graph_attrs.h"
 #include "exe_graph/runtime/context_extend.h"
 #include "graph/debug/ge_log.h"
-#include <stack>
+#include "graph/utils/mem_utils.h"
 
 namespace gert {
 namespace bg {
@@ -42,15 +43,15 @@ ge::OpDescPtr CreateOpDesc(int64_t node_index, const char *node_type, size_t in_
 HyperStatus AddDataEdge(const ge::NodePtr &src, int src_index, const ge::NodePtr &dst, int dst_index) {
   auto ret = ge::GraphUtils::AddEdge(src->GetOutDataAnchor(src_index), dst->GetInDataAnchor(dst_index));
   if (ret != ge::GRAPH_SUCCESS) {
-    return HyperStatus::ErrorStatus((char *) "Failed to connect edge from %s:%d to %s:%d, error code %u",
-                                    src->GetName().c_str(), src_index, dst->GetName().c_str(), dst_index, ret);
+    return HyperStatus::ErrorStatus("Failed to connect edge from %s:%d to %s:%d, error code %u", src->GetName().c_str(),
+                                    src_index, dst->GetName().c_str(), dst_index, ret);
   }
   return HyperStatus::Success();
 }
 HyperStatus AddControlEdge(const ge::NodePtr &src, const ge::NodePtr &dst) {
   auto ret = ge::GraphUtils::AddEdge(src->GetOutControlAnchor(), dst->GetInControlAnchor());
   if (ret != ge::GRAPH_SUCCESS) {
-    return HyperStatus::ErrorStatus((char *) "Failed to connect control edge from %s to %s, error code %u",
+    return HyperStatus::ErrorStatus("Failed to connect control edge from %s to %s, error code %u",
                                     src->GetName().c_str(), dst->GetName().c_str(), ret);
   }
   return HyperStatus::Success();
@@ -213,8 +214,12 @@ ValueHolderPtr ValueHolder::CreateVoid(const char *node_type, const vector<Value
   }
   return CreateFromNode(node, -1, kOutput);
 }
-
-//TODO cannot auto generate data by string;
+/**
+ * @param data const数据
+ * @param size const数据的长度
+ * @param is_string 此const是否是个字符串, todo: 当前对string支持的不好
+ * @return
+ */
 ValueHolderPtr ValueHolder::CreateConst(const void *data, size_t size, bool is_string) {
   auto node = ValueHolder::CreateNode("Const", {}, 1);
   if (node == nullptr) {
@@ -248,16 +253,16 @@ ValueHolderPtr ValueHolder::CreateSingleDataOutput(const char *node_type, const 
 }
 HyperStatus ValueHolder::AddDependency(const ValueHolderPtr &src, const ValueHolderPtr &dst) {
   if (src == nullptr || src->GetNode() == nullptr) {
-    return HyperStatus::ErrorStatus((char *) "Failed to add control ege, because the src does not have a node.");
+    return HyperStatus::ErrorStatus("Failed to add control ege, because the src does not have a node.");
   }
   if (dst == nullptr || dst->GetNode() == nullptr) {
-    return HyperStatus::ErrorStatus((char *) "Failed to add control ege, because the dst does not have a node.");
+    return HyperStatus::ErrorStatus("Failed to add control ege, because the dst does not have a node.");
   }
   // todo 检查是否在一张图上
   if (ge::GraphUtils::AddEdge(src->GetNode()->GetOutControlAnchor(), dst->GetNode()->GetInControlAnchor()) !=
       ge::GRAPH_SUCCESS) {
-    return HyperStatus::ErrorStatus((char *) "Failed to add control edge from %s to %s",
-                                    src->GetNode()->GetName().c_str(), dst->GetNode()->GetName().c_str());
+    return HyperStatus::ErrorStatus("Failed to add control edge from %s to %s", src->GetNode()->GetName().c_str(),
+                                    dst->GetNode()->GetName().c_str());
   }
   return HyperStatus::Success();
 }
@@ -265,7 +270,7 @@ void ValueHolder::SetStage(ValueHolder::RunStage stage) {
   ge::AttrUtils::SetInt(node_->GetOpDesc(), kStage, stage);
 }
 GraphFrame *ValueHolder::PushGraphFrame() {
-  auto graph = std::shared_ptr<ge::ComputeGraph>(new (std::nothrow) ge::ComputeGraph(""));
+  auto graph = ge::MakeShared<ge::ComputeGraph>("");
   if (graph == nullptr) {
     return nullptr;
   }
@@ -293,8 +298,8 @@ void ValueHolder::SetCurrentComputeNode(const ge::NodePtr &node) {
   }
   frame->SetCurrentComputeNode(node);
 }
-std::unique_ptr<ValueHolder::CurrentComputeNodeGuarder>
-ValueHolder::SetScopedCurrentComputeNode(const ge::NodePtr &node) {
+std::unique_ptr<ValueHolder::CurrentComputeNodeGuarder> ValueHolder::SetScopedCurrentComputeNode(  //
+    const ge::NodePtr &node) {
   auto frame = GetCurrentFrame();
   if (frame == nullptr) {
     return nullptr;

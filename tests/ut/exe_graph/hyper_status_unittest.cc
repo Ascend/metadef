@@ -26,7 +26,7 @@ TEST_F(HyperStatusUnittest, CreateMessageNullPtr) {
 }
 
 TEST_F(HyperStatusUnittest, CreateErrorStatusOk) {
-  auto status = HyperStatus::ErrorStatus((char *)"This is a error message %s, int %d", "Hello", 10);
+  auto status = HyperStatus::ErrorStatus("This is a error message %s, int %d", "Hello", 10);
   ASSERT_FALSE(status.IsSuccess());
   EXPECT_EQ(strcmp(status.GetErrorMessage(), "This is a error message Hello, int 10"), 0);
 }
@@ -37,7 +37,7 @@ TEST_F(HyperStatusUnittest, CreateSuccessStatusOk) {
 }
 
 TEST_F(HyperStatusUnittest, CopyAssignOk1) {
-  auto error = HyperStatus::ErrorStatus((char *)"This is a error message %s, int %d", "Hello", 10);
+  auto error = HyperStatus::ErrorStatus("This is a error message %s, int %d", "Hello", 10);
   auto success = HyperStatus::Success();
   success = error;
   EXPECT_FALSE(success.IsSuccess());
@@ -47,7 +47,7 @@ TEST_F(HyperStatusUnittest, CopyAssignOk1) {
 }
 
 TEST_F(HyperStatusUnittest, CopyAssginOk2) {
-  auto error = HyperStatus::ErrorStatus((char *)"This is a error message %s, int %d", "Hello", 10);
+  auto error = HyperStatus::ErrorStatus("This is a error message %s, int %d", "Hello", 10);
   auto success = HyperStatus::Success();
   error = success;
   EXPECT_TRUE(success.IsSuccess());
@@ -55,7 +55,7 @@ TEST_F(HyperStatusUnittest, CopyAssginOk2) {
 }
 
 TEST_F(HyperStatusUnittest, CopyConstructOk) {
-  auto error = HyperStatus::ErrorStatus((char *)"This is a error message %s, int %d", "Hello", 10);
+  auto error = HyperStatus::ErrorStatus("This is a error message %s, int %d", "Hello", 10);
   auto success = HyperStatus::Success();
   HyperStatus e1(error);
   HyperStatus s1(success);
@@ -65,7 +65,7 @@ TEST_F(HyperStatusUnittest, CopyConstructOk) {
 }
 
 TEST_F(HyperStatusUnittest, MoveConstructOk) {
-  auto error = HyperStatus::ErrorStatus((char *)"This is a error message %s, int %d", "Hello", 10);
+  auto error = HyperStatus::ErrorStatus("This is a error message %s, int %d", "Hello", 10);
   auto success = HyperStatus::Success();
   HyperStatus e1(std::move(error));
   HyperStatus s1(std::move(success));
@@ -75,14 +75,14 @@ TEST_F(HyperStatusUnittest, MoveConstructOk) {
 }
 
 TEST_F(HyperStatusUnittest, MoveAssginOk1) {
-  auto error = HyperStatus::ErrorStatus((char *)"This is a error message %s, int %d", "Hello", 10);
+  auto error = HyperStatus::ErrorStatus("This is a error message %s, int %d", "Hello", 10);
   auto success = HyperStatus::Success();
   error = std::move(success);
   EXPECT_TRUE(error.IsSuccess());
 }
 
 TEST_F(HyperStatusUnittest, MoveAssginOk2) {
-  auto error = HyperStatus::ErrorStatus((char *)"This is a error message %s, int %d", "Hello", 10);
+  auto error = HyperStatus::ErrorStatus("This is a error message %s, int %d", "Hello", 10);
   auto success = HyperStatus::Success();
   success = std::move(error);
   ASSERT_FALSE(success.IsSuccess());

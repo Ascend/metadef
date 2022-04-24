@@ -17,11 +17,11 @@
 #include "common/hyper_status.h"
 
 #include <cstring>
-#include <securec.h>
 #include <memory>
+#include <securec.h>
 
 namespace gert {
-char *CreateMessage(const char *format, va_list arg) {
+ge::char_t *CreateMessage(const ge::char_t *format, va_list arg) {
   if (format == nullptr) {
     return nullptr;
   }
@@ -35,7 +35,7 @@ char *CreateMessage(const char *format, va_list arg) {
     return nullptr;
   }
 
-  auto msg = std::unique_ptr<char[]>(new char[len + 1]);
+  auto msg = std::unique_ptr<ge::char_t[]>(new (std::nothrow) ge::char_t[len + 1]);
   if (msg == nullptr) {
     return nullptr;
   }
@@ -47,7 +47,6 @@ char *CreateMessage(const char *format, va_list arg) {
 
   return msg.release();
 }
-
 HyperStatus HyperStatus::Success() {
   return {};
 }
@@ -60,7 +59,7 @@ HyperStatus &HyperStatus::operator=(const HyperStatus &other) {
     status_ = nullptr;
   } else {
     size_t status_len = strlen(other.status_) + 1;
-    status_ = new char[status_len];
+    status_ = new (std::nothrow) ge::char_t[status_len];
     if (status_ != nullptr) {
       auto ret = strcpy_s(status_, status_len, other.status_);
       if (ret != EOK) {
@@ -80,7 +79,7 @@ HyperStatus &HyperStatus::operator=(HyperStatus &&other) noexcept {
   other.status_ = nullptr;
   return *this;
 }
-HyperStatus HyperStatus::ErrorStatus(char *message, ...) {
+HyperStatus HyperStatus::ErrorStatus(const ge::char_t *message, ...) {
   HyperStatus status;
   va_list arg;
   va_start(arg, message);
@@ -88,10 +87,9 @@ HyperStatus HyperStatus::ErrorStatus(char *message, ...) {
   va_end(arg);
   return status;
 }
-HyperStatus HyperStatus::ErrorStatus(std::unique_ptr<char[]> message) {
+HyperStatus HyperStatus::ErrorStatus(std::unique_ptr<ge::char_t[]> message) {
   HyperStatus status;
   status.status_ = message.release();
   return status;
 }
-
 }

@@ -15,6 +15,8 @@
  */
 #include "exe_graph/lowering/bg_ir_attrs.h"
 
+#include <type_traits>
+
 #include "securec.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
@@ -33,120 +35,108 @@ void GeShapeToGertShape(const ge::GeShape &ge_shape, gert::Shape &gert_shape) {
     gert_shape.SetDim(i, ge_shape.GetDim(i));
   }
 }
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value, int>::type = 0>
+bool AppendFundAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto val = attr.Get<T>();
+  if (val == nullptr) {
+    return false;
+  }
+  std::vector<uint8_t> runtime_attr(sizeof(*val));
+  if (memcpy_s(runtime_attr.data(), sizeof(*val), val, sizeof(*val)) != EOK) {
+    return false;
+  }
+  attrs.emplace_back(std::move(runtime_attr));
+  return true;
+}
+bool AppendStrAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto str = attr.Get<std::string>();
+  if (str == nullptr) {
+    return false;
+  }
+  std::vector<uint8_t> runtime_attr(str->size() + 1);
+  if (strcpy_s(reinterpret_cast<char *>(runtime_attr.data()), str->size() + 1, str->c_str()) != EOK) {
+    return false;
+  }
+  attrs.emplace_back(std::move(runtime_attr));
+  return true;
+}
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value, int>::type = 0>
+bool AppendVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto val = attr.Get<std::vector<T>>();
+  if (val == nullptr) {
+    return false;
+  }
+  size_t total_size;
+  auto cv_holder = ContinuousVector::Create<T>(val->size(), total_size);
+  if (cv_holder == nullptr) {
+    return false;
+  }
+  auto cv = reinterpret_cast<ContinuousVector *>(cv_holder.get());
+  size_t copy_size = val->size() * sizeof(T);
+  if (memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(T), val->data(), copy_size) != EOK) {
+    return false;
+  }
+  cv->SetSize(val->size());
+
+  // todo 拷贝了两次，后面优化
+  std::vector<uint8_t> buf(total_size);
+  if (memcpy_s(buf.data(), buf.size(), cv_holder.get(), total_size) != EOK) {
+    return false;
+  }
+  attrs.emplace_back(std::move(buf));
+  return true;
+}
+bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto val = attr.Get<ge::GeTensor>();
+  if (val == nullptr) {
+    return false;
+  }
+  auto &tensor_desc = val->GetTensorDesc();
+  auto shape_size = tensor_desc.GetShape().GetShapeSize();
+  if (shape_size < 0) {
+    return false;
+  }
+  size_t total_size;
+  auto tensor_holder = Tensor::CreateFollowing(shape_size, tensor_desc.GetDataType(), total_size);
+  if (tensor_holder == nullptr) {
+    return false;
+  }
+  auto tensor = reinterpret_cast<Tensor *>(tensor_holder.get());
+  GeShapeToGertShape(tensor_desc.GetShape(), tensor->MutableStorageShape());
+  GeShapeToGertShape(tensor_desc.GetOriginShape(), tensor->MutableOriginShape());
+  tensor->SetOriginFormat(tensor_desc.GetOriginFormat());
+  tensor->SetStorageFormat(tensor_desc.GetFormat());
+  if (memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(Tensor), val->GetData().GetData(),
+               val->GetData().GetSize()) != EOK) {
+    return false;
+  }
+
+  std::vector<uint8_t> buf(total_size);
+  if (memcpy_s(buf.data(), total_size, tensor_holder.get(), total_size) != EOK) {
+    return false;
+  }
+  attrs.emplace_back(std::move(buf));
+  return true;
+}
 bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   switch (attr.GetValueType()) {
-    case ge::AnyValue::VT_STRING: {
-      auto str = attr.Get<std::string>();
-      if (str == nullptr) {
-        return false;
-      }
-      std::vector<uint8_t> runtime_attr(str->size() + 1);
-      if (strcpy_s(reinterpret_cast<char *>(runtime_attr.data()), str->size() + 1, str->c_str()) != EOK) {
-        return false;
-      }
-      attrs.emplace_back(std::move(runtime_attr));
-      break;
-    }
-    case ge::AnyValue::VT_FLOAT: {
-      auto val = attr.Get<float>();
-      if (val == nullptr) {
-        return false;
-      }
-      std::vector<uint8_t> runtime_attr(sizeof(*val));
-      if (memcpy_s(runtime_attr.data(), sizeof(*val), val, sizeof(*val)) != EOK) {
-        return false;
-      }
-      attrs.emplace_back(std::move(runtime_attr));
-      break;
-    }
-    case ge::AnyValue::VT_BOOL: {
-      auto b = attr.Get<bool>();
-      if (b == nullptr) {
-        return false;
-      }
-      std::vector<uint8_t> runtime_attr(sizeof(*b));
-      if (memcpy_s(runtime_attr.data(), sizeof(*b), b, sizeof(*b)) != EOK) {
-        return false;
-      }
-      attrs.emplace_back(std::move(runtime_attr));
-      break;
-    }
-    case ge::AnyValue::VT_INT: {
-      auto i = attr.Get<int64_t>();
-      if (i == nullptr) {
-        return false;
-      }
-      std::vector<uint8_t> runtime_attr(sizeof(*i));
-      if (memcpy_s(runtime_attr.data(), sizeof(*i), i, sizeof(*i)) != EOK) {
-        return false;
-      }
-      attrs.emplace_back(std::move(runtime_attr));
-      break;
-    }
-    case ge::AnyValue::VT_LIST_INT: {
-      auto val = attr.Get<std::vector<int64_t>>();
-      if (val == nullptr) {
-        return false;
-      }
-      size_t total_size;
-      auto cv_holder = ContinuousVector::Create<int64_t>(val->size(), total_size);
-      if (cv_holder == nullptr) {
-        return false;
-      }
-      auto cv = reinterpret_cast<ContinuousVector *>(cv_holder.get());
-      size_t copy_size = val->size() * sizeof(int64_t);
-      if (memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(int64_t), val->data(), copy_size) != EOK) {
-        return false;
-      }
-      cv->SetSize(val->size());
-
-      // todo 拷贝了两次，后面优化
-      std::vector<uint8_t> buf(total_size);
-      if (memcpy_s(buf.data(), buf.size(), cv_holder.get(), total_size) != EOK) {
-        return false;
-      }
-      attrs.emplace_back(std::move(buf));
-      break;
-    }
-    case ge::AnyValue::VT_TENSOR: {
-      auto val = attr.Get<ge::GeTensor>();
-      if (val == nullptr) {
-        return false;
-      }
-      auto &tensor_desc = val->GetTensorDesc();
-      auto shape_size = tensor_desc.GetShape().GetShapeSize();
-      if (shape_size < 0) {
-        return false;
-      }
-      size_t total_size;
-      auto tensor_holder = Tensor::CreateFollowing(shape_size, tensor_desc.GetDataType(), total_size);
-      if (tensor_holder == nullptr) {
-        return false;
-      }
-      auto tensor = reinterpret_cast<Tensor *>(tensor_holder.get());
-      GeShapeToGertShape(tensor_desc.GetShape(), tensor->MutableStorageShape());
-      GeShapeToGertShape(tensor_desc.GetOriginShape(), tensor->MutableOriginShape());
-      tensor->SetOriginFormat(tensor_desc.GetOriginFormat());
-      tensor->SetStorageFormat(tensor_desc.GetFormat());
-      if (memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(Tensor), val->GetData().GetData(),
-                   val->GetData().GetSize()) != EOK) {
-        return false;
-      }
-
-      std::vector<uint8_t> buf(total_size);
-      if (memcpy_s(buf.data(), total_size, tensor_holder.get(), total_size) != EOK) {
-        return false;
-      }
-      attrs.emplace_back(std::move(buf));
-      break;
-    }
+    case ge::AnyValue::VT_FLOAT:
+      return AppendFundAttr<float>(attr, attrs);
+    case ge::AnyValue::VT_BOOL:
+      return AppendFundAttr<bool>(attr, attrs);
+    case ge::AnyValue::VT_INT:
+      return AppendFundAttr<int64_t>(attr, attrs);
+    case ge::AnyValue::VT_LIST_INT:
+      return AppendVectorAttr<int64_t>(attr, attrs);
+    case ge::AnyValue::VT_STRING:
+      return AppendStrAttr(attr, attrs);
+    case ge::AnyValue::VT_TENSOR:
+      return AppendTensorAttr(attr, attrs);
       // todo ListListInt
-
     default:
       GELOGE(ge::FAILED, "Does not support the attr type now, attr type %d", attr.GetValueType());
       return false;
   }
-  return true;
 }
 bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &runtime_attrs) {
   // todo 这里可能存在兼容性问题，

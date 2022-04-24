@@ -19,18 +19,18 @@
 #include "graph/debug/ge_log.h"
 namespace gert {
 namespace {
-ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context){
-  node;
-  context;
+ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context) {
+  (void) node;
+  (void) context;
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context){
-  node;
-  context;
+ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context) {
+  (void) node;
+  (void) context;
   return ge::GRAPH_SUCCESS;
 }
-}
+}  // namespace
 
 KernelRegistryImpl &KernelRegistryImpl::GetInstance() {
   static KernelRegistryImpl registry;
@@ -69,5 +69,4 @@ KernelRegister::KernelRegister(const KernelRegister &other) {
   }
   KernelRegistryImpl::GetInstance().RegisterKernel(other.kernel_type_, other.kernel_funcs_);
 }
-
 }  // namespace gert

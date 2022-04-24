@@ -112,7 +112,6 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
   }
   return ge::SUCCESS;
 }
-
 }  // namespace
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
   size_t attr_size;
@@ -153,7 +152,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
 
   auto attr = compute_node_info->MutableAttrs();
   auto offset = reinterpret_cast<uint8_t *>(attr) - compute_node_info_holder.get();
-  if (offset > total_size) {
+  if (static_cast<size_t>(offset) > total_size) {
     GELOGE(
         ge::FAILED,
         "Failed to create kernel context extend info, the offset of attr %zu beyond the total size of ExtendInfo %zu",

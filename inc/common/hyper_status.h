@@ -18,14 +18,15 @@
 #define AIR_CXX_BASE_COMMON_HYPER_STATUS_H_
 #include <securec.h>
 #include <memory>
+#include "graph/types.h"
 namespace gert {
-char *CreateMessage(const char *format, va_list arg);
+ge::char_t *CreateMessage(const ge::char_t *format, va_list arg);
 class HyperStatus {
  public:
   bool IsSuccess() const {
     return status_ == nullptr;
   }
-  const char *GetErrorMessage() const noexcept {
+  const ge::char_t *GetErrorMessage() const noexcept {
     return status_;
   }
   ~HyperStatus() {
@@ -39,11 +40,12 @@ class HyperStatus {
   HyperStatus &operator=(HyperStatus &&other) noexcept;
 
   static HyperStatus Success();
-  static HyperStatus ErrorStatus(char *message, ...);
-  static HyperStatus ErrorStatus(std::unique_ptr<char[]> message);
- private:
-  char *status_;
-};
-}
+  static HyperStatus ErrorStatus(const ge::char_t *message, ...);
+  static HyperStatus ErrorStatus(std::unique_ptr<ge::char_t[]> message);
 
-#endif //AIR_CXX_BASE_COMMON_HYPER_STATUS_H_
+ private:
+  ge::char_t *status_;
+};
+}  // namespace gert
+
+#endif  //AIR_CXX_BASE_COMMON_HYPER_STATUS_H_
