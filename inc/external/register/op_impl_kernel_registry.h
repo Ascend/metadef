@@ -28,13 +28,13 @@ struct OpImplKernelRegistry {
   typedef UINT32 (*TilingKernelFunc)(TilingContext *);
   struct OpImplFunctions {
     bool IsInputDataDependency(int32_t index) const {
-      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * 8) {
+      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {
         return false;
       }
       return inputs_dependency & static_cast<uint64_t>(1) << index;
     }
     ge::graphStatus SetInputDataDependency(int32_t index) {
-      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * 8) {
+      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {
         return ge::GRAPH_FAILED;
       }
       inputs_dependency |= static_cast<uint64_t>(1) << index;
@@ -48,11 +48,11 @@ struct OpImplKernelRegistry {
     void (*compile_info_deleter)(void *);
     size_t max_tiling_data_size;
     uint64_t inputs_dependency;
+    static constexpr size_t kInt64ByteCount = 8;
   };
   virtual ~OpImplKernelRegistry() {}
   virtual const OpImplFunctions *GetOpImpl(const std::string &op_type) const = 0;
 };
-
 }  // namespace gert
 
 #endif

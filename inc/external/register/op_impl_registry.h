@@ -22,7 +22,7 @@
 #include "graph/ge_error_codes.h"
 #include "op_impl_kernel_registry.h"
 namespace gert {
-class OpImplRegistry :public OpImplKernelRegistry {
+class OpImplRegistry : public OpImplKernelRegistry {
  public:
   using OpType = std::string;
   static OpImplRegistry &GetInstance();
@@ -37,9 +37,9 @@ class OpImplRegister {
  public:
   explicit OpImplRegister(const char *op_type);
   OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
-  OpImplRegister &Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func, size_t max_tiling_data_size =2048);
+  OpImplRegister &Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func, size_t max_tiling_data_size = 2048);
   template<typename T>
-  OpImplRegister &TilingParse(KernelRegistry::KernelFunc tiling_parse_func){
+  OpImplRegister &TilingParse(KernelRegistry::KernelFunc tiling_parse_func) {
     functions_.tiling_parse = tiling_parse_func;
     functions_.compile_info_creator = CreateCompileInfo<T>;
     functions_.compile_info_deleter = DeleteCompileInfo<T>;
@@ -65,7 +65,7 @@ class OpImplRegister {
   const char *op_type_;
   OpImplRegistry::OpImplFunctions &functions_;
 };
-}
+}  // namespace gert
 
 #define IMPL_OP(op_type) static gert::OpImplRegister op_impl_register_##op_type = gert::OpImplRegister(#op_type)
 #define IMPL_OP_DEFAULT() IMPL_OP(DefaultImpl)
