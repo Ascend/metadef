@@ -61,7 +61,7 @@ class ValueHolder {
     GraphBuilder &SetOutputs(std::vector<ValueHolderPtr> outputs);
     GraphBuilder &SetTargets(std::vector<ValueHolderPtr> targets);
     ExecuteGraphPtr BuildExecuteGraph();
-    bool AppendGraphLevelData(const GraphFrame *frame);
+    ge::graphStatus AppendGraphLevelData(const GraphFrame *frame);
 
    private:
     std::vector<ValueHolderPtr> outputs_;
@@ -93,7 +93,7 @@ class ValueHolder {
   int32_t GetOutIndex() const noexcept;
   void SetStage(RunStage stage);
   // ref-from other的含义是，本value指向了other（本value没有独立的内存）
-  void RefFrom(const ValueHolderPtr &other);
+  ge::graphStatus RefFrom(const ValueHolderPtr &other);
 
   static ValueHolderPtr CreateError(const char *fmt, ...);
   static ValueHolderPtr CreateError(const char *fmt, va_list arg);

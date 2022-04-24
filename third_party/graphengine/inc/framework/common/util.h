@@ -122,6 +122,15 @@
     }                                                                           \
   } while (false)
 
+#define GE_CHECK_NOTNULL_RTNULL(val)                                            \
+  do {                                                                          \
+    if (val == nullptr) {                                                       \
+      REPORT_INNER_ERROR("E19999", "Param:%s is nullptr, check invalid", #val); \
+      GELOGE(ge::FAILED, "[Check][Param:%s]null is invalid.", #val);            \
+      return nullptr;                                                           \
+    }                                                                           \
+  } while (false)
+
 // Check if the parameter is null. If yes, just return and record the error
 #define GE_CHECK_NOTNULL_JUST_RETURN(val)                      \
   do {                                                         \
