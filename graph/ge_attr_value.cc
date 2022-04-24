@@ -70,8 +70,8 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, in
     return false;
   }
   if (!IntegerChecker<int32_t>::Compat(int64_val)) {
-    REPORT_INNER_ERROR("E18888", "%ld int64_t value cannot cast to int32_t", int64_val);
-    GELOGE(GRAPH_FAILED, "[Check][Param] %ld int64_t value cannot cast to int32_t", int64_val);
+    REPORT_INNER_ERROR("E18888", "Get the value %ld overflow, large than max int32_t!", int64_val);
+    GELOGE(GRAPH_FAILED, "[Check][Param] Get the value %ld overflow, large than max int32_t", int64_val);
     return false;
   }
   value = static_cast<int32_t>(int64_val);
@@ -85,8 +85,8 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, ui
     return false;
   }
   if (!IntegerChecker<uint32_t>::Compat(int64_val)) {
-    REPORT_INNER_ERROR("E18888", "%ld int64_t value cannot cast to uint32_t", int64_val);
-    GELOGE(GRAPH_FAILED, "[Check][Param] %ld int64_t value cannot cast to uint32_t", int64_val);
+    REPORT_INNER_ERROR("E18888", "Get the value %ld overflow, large than max uint32_t", int64_val);
+    GELOGE(GRAPH_FAILED, "[Check][Param] Get the value %ld overflow, large than max uint32_t", int64_val);
     return false;
   }
   value = static_cast<uint32_t>(int64_val);
@@ -418,8 +418,8 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
 
   for (size_t i = 0UL; i < int64_list.size(); ++i) {
     if (!IntegerChecker<int32_t>::Compat(int64_list[i])) {
-      REPORT_INNER_ERROR("E18888", "index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
-      GELOGE(GRAPH_FAILED, "[Check][Param] index %zu %ld int64_t value cannot cast to int32_t", i, int64_list[i]);
+      REPORT_INNER_ERROR("E18888", "list[%zu] = %ld overflow, large than max int32_t", i, int64_list[i]);
+      GELOGE(GRAPH_FAILED, "[Check][Param] list[%zu] = %ld overflow, large than max int32_t", i, int64_list[i]);
       return false;
     }
   }
@@ -436,8 +436,8 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
 
   for (size_t i = 0UL; i < int64_list.size(); ++i) {
     if (!IntegerChecker<uint32_t>::Compat(int64_list[i])) {
-      REPORT_INNER_ERROR("E18888", "index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
-      GELOGE(GRAPH_FAILED, "[Check][Param] index %zu %ld int64_t value cannot cast to uint32_t", i, int64_list[i]);
+      REPORT_INNER_ERROR("E18888", "list[%zu] = %ld overflow, large than max uint32_t", i, int64_list[i]);
+      GELOGE(GRAPH_FAILED, "[Check][Param] list[%zu] = %ld overflow, large than max uint32_t", i, int64_list[i]);
       return false;
     }
   }

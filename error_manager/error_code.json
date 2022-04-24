@@ -4,8 +4,8 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10001",
-      "ErrMessage": "Reason: %s. value for parameter is invalid. [value]/[param]: [%s]/[%s]",
-      "Arglist": "reason,value,parameter",
+      "ErrMessage": "Reason: %s. Value for parameter is invalid. [param]/[value]: [%s]/[%s]",
+      "Arglist": "reason,parameter,value",
       "suggestion": {
         "Possible Cause": "Invalid Argument.",
         "Solution": "Try again with a valid argument."
@@ -1049,7 +1049,7 @@
       "errClass": "File Errors",
       "errTitle": "Failure to Parse File",
       "ErrCode": "E19005",
-      "ErrMessage": "Failed to parse file. protobuf file corrupted or protobuf's version invalued or \"--framework\" param don't match file: [%s]",
+      "ErrMessage": "Failed to parse file, protobuf file corrupted or protobuf's version invalued or \"--framework\" param don't match file: [%s]",
       "Arglist": "file",
       "suggestion": {
         "Possible Cause": "Failed to parse the file.",
