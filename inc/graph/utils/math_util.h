@@ -114,7 +114,7 @@ bool AddOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
       return true;
     }
   } else {
-    if (static_cast<TRet>(lhs) < std::numeric_limits<TRet>::min() - static_cast<TRet>(rhs) ) {
+    if (static_cast<TRet>(lhs) < std::numeric_limits<TRet>::min() - static_cast<TRet>(rhs)) {
       return true;
     }
   }
@@ -158,6 +158,9 @@ T FloorDiv(const T u_value, const T d_value) {
 }
 
 inline uint64_t RoundUp(const uint64_t origin_value, const uint64_t multiple_of) {
+  if (multiple_of == 0) {
+    return 0;
+  }
   return (origin_value + multiple_of - 1) / multiple_of * multiple_of;
 }
 }  // end namespace ge

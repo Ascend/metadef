@@ -34,15 +34,15 @@ ge::OpDescPtr CreateOpDesc(int64_t node_index, const char *node_type, size_t in_
   GE_CHECK_NOTNULL_RTNULL(op_desc);
   for (size_t i = 0; i < in_count; ++i) {
     if (op_desc->AddInputDesc(ge::GeTensorDesc()) != ge::GRAPH_SUCCESS) {
-      GE_LOGE("Failed to create OpDesc for node %s index %ld, io-count %zu/%zu, add input desc %zu failed ",
-              node_type, node_index, in_count, out_count, i);
+      GE_LOGE("Failed to create OpDesc for node %s index %ld, io-count %zu/%zu, add input desc %zu failed ", node_type,
+              node_index, in_count, out_count, i);
       return nullptr;
     }
   }
   for (size_t i = 0; i < out_count; ++i) {
     if (op_desc->AddOutputDesc(ge::GeTensorDesc()) != ge::GRAPH_SUCCESS) {
-      GE_LOGE("Failed to create OpDesc for node %s index %ld, io-count %zu/%zu, add output desc %zu failed ",
-              node_type, node_index, in_count, out_count, i);
+      GE_LOGE("Failed to create OpDesc for node %s index %ld, io-count %zu/%zu, add output desc %zu failed ", node_type,
+              node_index, in_count, out_count, i);
       return nullptr;
     }
   }

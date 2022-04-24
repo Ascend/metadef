@@ -22,17 +22,13 @@ namespace gert {
 using TensorAddress = void *;
 using ConstTensorAddress = void *const;
 
-enum TensorOperateType {
-  kGetTensorAddress,
-  kFreeTensor,
-  kTensorOperateType
-};
+enum TensorOperateType { kGetTensorAddress, kFreeTensor, kTensorOperateType };
 
 using TensorAddrManager = ge::graphStatus (*)(TensorAddress addr, TensorOperateType operate_type, void **out);
 
 struct TensorData {
-  TensorData(TensorAddress addr = nullptr, TensorAddrManager manager = nullptr): addr_(addr), manager_(manager){
-  }
+  explicit TensorData(TensorAddress addr = nullptr, TensorAddrManager manager = nullptr)
+      : addr_(addr), manager_(manager) {}
   TensorAddress GetAddr() const {
     if (manager_ == nullptr || addr_ == nullptr) {
       return addr_;
@@ -60,6 +56,7 @@ struct TensorData {
     addr_ = addr;
     manager_ = manager;
   }
+
  private:
   TensorAddress addr_;
   TensorAddrManager manager_;

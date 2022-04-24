@@ -125,7 +125,9 @@ TEST_F(TensorUT, SetGetAddrOk) {
   Tensor t;
   const Tensor &ct = t;
   void *a = &t;
-  t.SetData(a);
+
+  TensorData td(a, nullptr);
+  t.SetData(td);
   EXPECT_EQ(t.GetAddr(), a);
   EXPECT_EQ(ct.GetAddr(), a);
 
