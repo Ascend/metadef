@@ -15,10 +15,12 @@
  */
 
 #include "exe_graph/lowering/buffer_pool.h"
-#include "exe_graph/runtime/continuous_buffer.h"
-#include "graph/utils/math_util.h"
+
 #include <securec.h>
 #include "framework/common/debug/ge_log.h"
+#include "graph/utils/math_util.h"
+
+#include "exe_graph/runtime/continuous_buffer.h"
 
 namespace gert {
 namespace bg {

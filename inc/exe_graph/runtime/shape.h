@@ -21,8 +21,8 @@
 #include <iostream>
 #include <cstring>
 #include <type_traits>
-#include "graph/utils/math_util.h"
 #include <limits>
+#include "graph/utils/math_util.h"
 
 namespace gert {
 struct Shape {

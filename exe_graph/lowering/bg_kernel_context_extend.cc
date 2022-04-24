@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "framework/common/debug/ge_log.h"
 #include "exe_graph/lowering/bg_kernel_context_extend.h"
+
+#include "framework/common/debug/ge_log.h"
+
 #include "exe_graph/lowering/bg_ir_attrs.h"
 #include "exe_graph/runtime/context_extend.h"
 namespace gert {

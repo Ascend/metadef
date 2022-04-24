@@ -17,7 +17,7 @@
 
 #include <type_traits>
 
-#include "securec.h"
+#include <securec.h>
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
 

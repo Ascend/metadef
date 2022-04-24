@@ -17,8 +17,8 @@
 #ifndef AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_GLOBAL_DATA_H_
 #define AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_GLOBAL_DATA_H_
 #include <map>
-#include "value_holder.h"
 #include "proto/task.pb.h"
+#include "value_holder.h"
 namespace gert {
 class LoweringGlobalData {
  public:

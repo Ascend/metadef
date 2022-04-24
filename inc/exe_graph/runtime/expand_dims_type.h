@@ -18,8 +18,8 @@
 #include <cstdint>
 #include <initializer_list>
 #include <cstddef>
-#include "shape.h"
 #include "graph/ge_error_codes.h"
+#include "shape.h"
 
 namespace gert {
 /**
