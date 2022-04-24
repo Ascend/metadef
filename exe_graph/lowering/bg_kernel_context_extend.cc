@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "framework/common/debug/ge_log.h"
 #include "exe_graph/lowering/bg_kernel_context_extend.h"
 #include "exe_graph/lowering/bg_ir_attrs.h"
 #include "exe_graph/runtime/context_extend.h"
-#include "framework/common/debug/ge_log.h"
 namespace gert {
 namespace bg {
 namespace {
 ge::graphStatus GetInstanceNum(const ge::NodePtr &node, const std::string &ir_name, ge::IrInputType ir_type,
                                size_t start_index, size_t &instance_num) {
-  auto node_indegree = node->GetAllInDataAnchorsSize();
   if (ir_type == ge::kIrInputRequired) {
     auto name = node->GetOpDesc()->GetValidInputNameByIndex(start_index);
     if (name != ir_name) {
@@ -46,6 +45,7 @@ ge::graphStatus GetInstanceNum(const ge::NodePtr &node, const std::string &ir_na
   }
   if (ir_type == ge::kIrInputDynamic) {
     size_t dyn_i = 0;
+    auto node_indegree = node->GetAllInDataAnchorsSize();
     for (size_t i = start_index; i < node_indegree; ++i, ++dyn_i) {
       auto name = node->GetOpDesc()->GetValidInputNameByIndex(i);
       if (name != ir_name + std::to_string(dyn_i)) {
@@ -64,9 +64,7 @@ ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &
   size_t input_index = 0;
   for (size_t i = 0; i < ir_inputs.size(); ++i) {
     auto ins_info = compute_node_info.MutableInputInstanceInfo(i);
-    if (ins_info == nullptr) {
-      return ge::GRAPH_FAILED;
-    }
+    GE_CHECK_NOTNULL(ins_info);
     size_t instance_num = 0;
     auto ret = GetInstanceNum(node, ir_inputs[i].first, ir_inputs[i].second, input_index, instance_num);
     if (ret != ge::SUCCESS) {
@@ -89,25 +87,17 @@ void SetCompileTimeTd(const ge::ConstGeTensorDescPtr &desc, CompileTimeTensorDes
 ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
   for (size_t i = 0; i < node->GetAllInDataAnchorsSize(); ++i) {
     auto desc = node->GetOpDesc()->GetInputDescPtr(i);
-    if (desc == nullptr) {
-      return ge::FAILED;
-    }
+    GE_CHECK_NOTNULL(desc);
     auto td = compute_node_info.MutableInputTdInfo(i);
-    if (td == nullptr) {
-      return ge::FAILED;
-    }
+    GE_CHECK_NOTNULL(td);
     SetCompileTimeTd(desc, *td);
   }
 
   for (size_t i = 0; i < node->GetAllOutDataAnchorsSize(); ++i) {
     auto desc = node->GetOpDesc()->GetOutputDescPtr(i);
-    if (desc == nullptr) {
-      return ge::FAILED;
-    }
+    GE_CHECK_NOTNULL(desc);
     auto td = compute_node_info.MutableOutputTdInfo(i);
-    if (td == nullptr) {
-      return ge::FAILED;
-    }
+    GE_CHECK_NOTNULL(td);
     SetCompileTimeTd(desc, *td);
   }
   return ge::SUCCESS;
@@ -146,7 +136,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
   }
 
   ret = InitCompileTimeTD(node, *compute_node_info);
-  if (ret != ge::SUCCESS) {
+  if (ret != ge::GRAPH_SUCCESS) {
     return nullptr;
   }
 

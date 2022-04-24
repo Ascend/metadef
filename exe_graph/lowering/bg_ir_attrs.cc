@@ -39,10 +39,12 @@ template<typename T, typename std::enable_if<std::is_fundamental<T>::value, int>
 bool AppendFundAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   auto val = attr.Get<T>();
   if (val == nullptr) {
+    GE_LOGE("Failed to append attr, can not get attr value");
     return false;
   }
   std::vector<uint8_t> runtime_attr(sizeof(*val));
   if (memcpy_s(runtime_attr.data(), sizeof(*val), val, sizeof(*val)) != EOK) {
+    GE_LOGE("Failed to append attr, copy to dst buffer failed");
     return false;
   }
   attrs.emplace_back(std::move(runtime_attr));
@@ -51,10 +53,12 @@ bool AppendFundAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> 
 bool AppendStrAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   auto str = attr.Get<std::string>();
   if (str == nullptr) {
+    GE_LOGE("Failed to append string attr, can not get attr value");
     return false;
   }
   std::vector<uint8_t> runtime_attr(str->size() + 1);
   if (strcpy_s(reinterpret_cast<char *>(runtime_attr.data()), str->size() + 1, str->c_str()) != EOK) {
+    GE_LOGE("Failed to append string attr, copy to dst buffer failed");
     return false;
   }
   attrs.emplace_back(std::move(runtime_attr));
@@ -64,16 +68,20 @@ template<typename T, typename std::enable_if<std::is_fundamental<T>::value, int>
 bool AppendVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   auto val = attr.Get<std::vector<T>>();
   if (val == nullptr) {
+    GE_LOGE("Failed to append attr, can not get attr value");
     return false;
   }
   size_t total_size;
   auto cv_holder = ContinuousVector::Create<T>(val->size(), total_size);
   if (cv_holder == nullptr) {
+    GE_LOGE("Failed to append attr, create ContinuousVector failed");
+
     return false;
   }
   auto cv = reinterpret_cast<ContinuousVector *>(cv_holder.get());
   size_t copy_size = val->size() * sizeof(T);
   if (memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(T), val->data(), copy_size) != EOK) {
+    GE_LOGE("Failed to append attr, copy to ContinuousVector failed");
     return false;
   }
   cv->SetSize(val->size());
@@ -81,6 +89,7 @@ bool AppendVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   // todo 拷贝了两次，后面优化
   std::vector<uint8_t> buf(total_size);
   if (memcpy_s(buf.data(), buf.size(), cv_holder.get(), total_size) != EOK) {
+    GE_LOGE("Failed to append attr, copy to dst vector failed");
     return false;
   }
   attrs.emplace_back(std::move(buf));
@@ -89,16 +98,19 @@ bool AppendVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
 bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   auto val = attr.Get<ge::GeTensor>();
   if (val == nullptr) {
+    GE_LOGE("Failed to append attr, can not get attr value");
     return false;
   }
   auto &tensor_desc = val->GetTensorDesc();
   auto shape_size = tensor_desc.GetShape().GetShapeSize();
   if (shape_size < 0) {
+    GE_LOGE("Failed to append tensor attr, shape size less than 0");
     return false;
   }
   size_t total_size;
   auto tensor_holder = Tensor::CreateFollowing(shape_size, tensor_desc.GetDataType(), total_size);
   if (tensor_holder == nullptr) {
+    GE_LOGE("Failed to append tensor attr, create Tensor failed");
     return false;
   }
   auto tensor = reinterpret_cast<Tensor *>(tensor_holder.get());
@@ -108,11 +120,13 @@ bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   tensor->SetStorageFormat(tensor_desc.GetFormat());
   if (memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(Tensor), val->GetData().GetData(),
                val->GetData().GetSize()) != EOK) {
+    GE_LOGE("Failed to append tensor attr, copy data to Tensor failed");
     return false;
   }
 
   std::vector<uint8_t> buf(total_size);
   if (memcpy_s(buf.data(), total_size, tensor_holder.get(), total_size) != EOK) {
+    GE_LOGE("Failed to append tensor attr, copy data to vector failed");
     return false;
   }
   attrs.emplace_back(std::move(buf));
@@ -154,7 +168,8 @@ bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &r
       return false;
     }
     if (!AppendAttr(iter->second, runtime_attrs)) {
-      GELOGE(ge::FAILED, "Failed to convert attr %s from node to kernel", attr_name.c_str());
+      GELOGE(ge::FAILED, "Failed to convert attr %s from node %s to kernel",
+             attr_name.c_str(), node->GetName().c_str());
       return false;
     }
   }
@@ -164,18 +179,24 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
   total_size = sizeof(RuntimeAttrsDef);
   size_t offset_size;
   if (ge::MulOverflow(sizeof(size_t), attrs.size(), offset_size)) {
+    GELOGE(ge::FAILED, "Failed to create attr buffer, total size overflow, attrs size may invalid %zu", attrs.size());
     return nullptr;
   }
   if (ge::AddOverflow(total_size, offset_size, total_size)) {
+    GELOGE(ge::FAILED, "Failed to create attr buffer, total size overflow, attrs offset may invalid %zu", offset_size);
     return nullptr;
   }
   for (const auto &attr : attrs) {
     if (ge::AddOverflow(total_size, attr.size(), total_size)) {
+      GELOGE(ge::FAILED,
+             "Failed to create attr buffer, total size overflow, attr size may invalid %zu, current total size %zu",
+             attr.size(), total_size);
       return nullptr;
     }
   }
   auto attr_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
   if (attr_holder == nullptr) {
+    GELOGE(ge::FAILED, "Failed to create attr buffer, alloc buffer failed, size %zu", total_size);
     return nullptr;
   }
   auto attr_def = reinterpret_cast<RuntimeAttrsDef *>(attr_holder.get());
@@ -185,6 +206,7 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
   for (size_t i = 0; i < attrs.size(); ++i) {
     attr_def->offset[i] = current_offset;
     if (memcpy_s(attr_pos + current_offset, total_size - current_offset, attrs[i].data(), attrs[i].size()) != EOK) {
+      GELOGE(ge::FAILED, "Failed to create attr buffer, copy to dst buffer failed");
       return nullptr;
     }
     current_offset += attrs[i].size();
