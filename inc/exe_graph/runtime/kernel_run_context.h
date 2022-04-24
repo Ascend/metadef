@@ -35,7 +35,7 @@ typedef struct {
   const void *compute_node_info;
   const void *kernel_extend_info;
   AsyncAnyValue **output_start;  // todo delete this
-  AsyncAnyValue *values[0];
+  AsyncAnyValue *values[1];
 } KernelRunContext;
 
 #ifdef __cplusplus
