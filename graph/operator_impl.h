@@ -45,11 +45,15 @@ class OperatorImpl : public std::enable_shared_from_this<OperatorImpl> {
   std::string GetName() const;
   GeTensorDesc GetInputDesc(const std::string &name) const;
   GeTensorDesc GetInputDesc(const uint32_t index) const;
+  GeTensorDescPtr MutableInputDesc(const std::string &name);
+  GeTensorDescPtr MutableInputDesc(const uint32_t index);
   graphStatus UpdateInputDesc(const std::string &name, const GeTensorDesc &tensor_desc);
   OutHandler GetOutput(const std::string &name);
   OutHandler GetOutput(uint32_t index);
   GeTensorDesc GetOutputDesc(const std::string &name) const;
   GeTensorDesc GetOutputDesc(const uint32_t index) const;
+  GeTensorDescPtr MutableOutputDesc(const std::string &name);
+  GeTensorDescPtr MutableOutputDesc(const uint32_t index);
   graphStatus UpdateOutputDesc(const std::string &name, const GeTensorDesc &tensor_desc);
   size_t GetInputsSize() const;
   size_t GetOutputsSize() const;
