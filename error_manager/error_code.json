@@ -4,8 +4,8 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10001",
-      "ErrMessage": "Reason: %s. value for parameter is invalid. [value]/[param]: [%s]/[%s]",
-      "Arglist": "reason,value,parameter",
+      "ErrMessage": "Reason: %s. Value for parameter is invalid. [param]/[value]: [%s]/[%s]",
+      "Arglist": "reason,parameter,value",
       "suggestion": {
         "Possible Cause": "Invalid Argument.",
         "Solution": "Try again with a valid argument."
@@ -202,7 +202,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid --input_shape Argument",
       "ErrCode": "E10019",
-      "ErrMessage": "When [--dynamic_image_size] is included, only the height and width axes can be –1 in in [--input_shape].",
+      "ErrMessage": "When [--dynamic_image_size] is included, only the height and width axes can be –1 in [--input_shape].",
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "When [--dynamic_image_size] is included, only the height and width axes can be –1 in the shape.",
@@ -290,8 +290,8 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid --singleop Argument",
       "ErrCode": "E10027",
-      "ErrMessage": "[%s] and [%s] for tensor indexed [%s] of Op [%s] are invalid in the file specified by the [--singleop] argument.",
-      "Arglist": "input,type,index,op_name",
+      "ErrMessage": "The attribute [%s] of [%s] tensor[%s] for Op [%s] is invalid when the argument [--singleop] was specified.",
+      "Arglist": "attr,input_output,index,op_name",
       "suggestion": {
         "Possible Cause": "The file specified by the [--singleop] argument contains invalid tensor attributes.",
         "Solution": "Try again with valid tensor dtype and format."
@@ -1049,7 +1049,7 @@
       "errClass": "File Errors",
       "errTitle": "Failure to Parse File",
       "ErrCode": "E19005",
-      "ErrMessage": "Failed to parse file. protobuf file corrupted or protobuf's version invalued or \"--framework\" param don't match file: [%s]",
+      "ErrMessage": "Failed to parse file, protobuf file corrupted or protobuf's version invalued or \"--framework\" param don't match file: [%s]",
       "Arglist": "file",
       "suggestion": {
         "Possible Cause": "Failed to parse the file.",

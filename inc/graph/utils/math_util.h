@@ -84,6 +84,85 @@ class IntegerChecker {
     return static_cast<int64_t>(v) >= static_cast<int64_t>(std::numeric_limits<T>::min());
   }
 };
+
+template<typename TLhs, typename TRhs, typename TRet>
+bool MulOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
+#ifdef __GNUC__
+  return __builtin_mul_overflow(lhs, rhs, &ret);
+#else
+  if (!IntegerChecker<TRet>::Compat(lhs) || !IntegerChecker<TRet>::Compat(rhs)) {
+    return true;
+  }
+  if (std::abs(static_cast<TRet>(lhs)) > std::numeric_limits<TRet>::max() / std::abs(static_cast<TRet>(rhs))) {
+    return true;
+  }
+  ret = static_cast<TRet>(lhs) * static_cast<TRet>(rhs);
+  return false;
+#endif
+}
+
+template<typename TLhs, typename TRhs, typename TRet>
+bool AddOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
+#ifdef __GNUC__
+  return __builtin_add_overflow(lhs, rhs, &ret);
+#else
+  if (!IntegerChecker<TRet>::Compat(lhs) || !IntegerChecker<TRet>::Compat(rhs)) {
+    return true;
+  }
+  if (rhs >= 0) {
+    if (static_cast<TRet>(lhs) > std::numeric_limits<TRet>::max() - static_cast<TRet>(rhs)) {
+      return true;
+    }
+  } else {
+    if (static_cast<TRet>(lhs) < std::numeric_limits<TRet>::min() - static_cast<TRet>(rhs)) {
+      return true;
+    }
+  }
+  ret = static_cast<TRet>(lhs) + static_cast<TRet>(rhs);
+  return false;
+#endif
+}
+
+template<typename T>
+T CeilDiv16(const T n) {
+  if (n & 0xF) {
+    return (n >> 4) + 1;
+  } else {
+    return n >> 4;
+  }
+}
+
+template<typename T>
+T CeilDiv32(const T n) {
+  if (n & 31) {
+    return (n >> 5) + 1;
+  } else {
+    return n >> 5;
+  }
+}
+
+template<typename T>
+T CeilDiv(const T n1, const T n2) {
+  if (n1 == 0) {
+    return 0;
+  }
+  return (n2 != 0) ? (((n1 - 1) / n2) + 1) : n1;
+}
+
+template<typename T>
+T FloorDiv(const T u_value, const T d_value) {
+  if (d_value == 0) {
+    return u_value;
+  }
+  return u_value / d_value;
+}
+
+inline uint64_t RoundUp(const uint64_t origin_value, const uint64_t multiple_of) {
+  if (multiple_of == 0) {
+    return 0;
+  }
+  return (origin_value + multiple_of - 1) / multiple_of * multiple_of;
+}
 }  // end namespace ge
 
 #define REQUIRE_COMPAT(T, v)                                                                                           \

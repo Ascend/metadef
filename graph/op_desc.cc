@@ -1304,6 +1304,12 @@ void OpDescImpl::AppendIrAttrName(std::string name) {
 const std::vector<std::string> &OpDescImpl::GetIrAttrNames() const {
   return ir_attr_names_;
 }
+void OpDescImpl::AppendIrInput(std::string name, IrInputType input_type) {
+  ir_inputs_.emplace_back(std::move(name), input_type);
+}
+const std::vector<std::pair<std::string, IrInputType>> &OpDescImpl::GetIrInputs() const {
+  return ir_inputs_;
+}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc()
     : enable_shared_from_this(), AttrHolder(), impl_(ComGraphMakeShared<OpDescImpl>()) {
@@ -1892,5 +1898,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::AppendIrAttrName(con
 }
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::vector<std::string> &OpDesc::GetIrAttrNames() const {
   return impl_->GetIrAttrNames();
+}
+void OpDesc::AppendIrInput(std::string name, IrInputType input_type) {
+  impl_->AppendIrInput(std::move(name), input_type);
+}
+const std::vector<std::pair<std::string, IrInputType>> &OpDesc::GetIrInputs() const {
+  return impl_->GetIrInputs();
 }
 }  // namespace ge

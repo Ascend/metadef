@@ -232,6 +232,9 @@ class OpDescImpl {
   void AppendIrAttrName(std::string name);
   const std::vector<std::string> &GetIrAttrNames() const;
 
+  void AppendIrInput(std::string name, IrInputType input_type);
+  const std::vector<std::pair<std::string, IrInputType>> &GetIrInputs() const;
+
  private:
   void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
   void SerializeMetaDataToOpDef(proto::OpDef * const op_def);
@@ -258,6 +261,7 @@ class OpDescImpl {
   // branches: dynamic
   std::map<std::string, SubgraphType> subgraph_ir_names_to_type_;
   std::vector<std::string> ir_attr_names_;
+  std::vector<std::pair<std::string, IrInputType>> ir_inputs_;
 
   std::vector<GeTensorDescPtr> inputs_desc_{};
   std::map<std::string, uint32_t> input_name_idx_{};

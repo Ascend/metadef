@@ -854,6 +854,7 @@ void Operator::InputRegister(const std::string &name) {
                    REPORT_INNER_ERROR("E18888", "GetOpDescImpl failed, as return nullptr.");
                    return, "[Get][OpDescImpl] is nullptr.");
   (void)operator_impl_->GetOpDescImpl()->AddInputDesc(name, GeTensorDesc());
+  operator_impl_->GetOpDescImpl()->AppendIrInput(name, kIrInputRequired);
 }
 
 void Operator::InputRegister(const char_t *name) {
@@ -875,6 +876,7 @@ void Operator::OptionalInputRegister(const std::string &name) {
   // [No need to verify return value]
   (void)operator_impl_->GetOpDescImpl()->AddOptionalInputDesc(name,
                                                               GeTensorDesc(GeShape(), FORMAT_RESERVED, DT_UNDEFINED));
+  operator_impl_->GetOpDescImpl()->AppendIrInput(name, kIrInputOptional);
 }
 
 void Operator::OptionalInputRegister(const char_t *name) {
@@ -950,6 +952,9 @@ void Operator::DynamicInputRegister(const std::string &name, const uint32_t num,
                    return, "[Set][Int] %s to op:%s failed", name.c_str(),
                    operator_impl_->GetOpDescImpl()->GetName().c_str());
   (void)operator_impl_->GetOpDescImpl()->AddDynamicInputDesc(name, num, is_push_back);
+  if (num == 0) {
+    operator_impl_->GetOpDescImpl()->AppendIrInput(name, kIrInputDynamic);
+  }
 }
 
 void Operator::DynamicInputRegister(const char_t *name, const uint32_t num, bool is_push_back) {

@@ -364,6 +364,7 @@ class GraphUtils {
   static bool IsUnknownShapeGraph(const ComputeGraphPtr &graph);
 
   static NodePtr FindNodeFromAllNodes(ComputeGraphPtr &graph, const std::string &name);
+  static std::vector<NodePtr> FindNodesByTypeFromAllNodes(ComputeGraphPtr &graph, const std::string &type);
 
   ///
   /// Check if out_data_anchor is reference of input

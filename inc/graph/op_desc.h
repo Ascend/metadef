@@ -39,6 +39,13 @@ enum SubgraphType {
   kSubgraphTypeEnd
 };
 
+enum IrInputType {
+  kIrInputRequired,
+  kIrInputOptional,
+  kIrInputDynamic,
+  kIrInputTypeEnd
+};
+
 class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
  public:
   using OpDescPtr = std::shared_ptr<OpDesc>;
@@ -205,6 +212,9 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   void AppendIrAttrName(const std::string &name);
   const std::vector<std::string> &GetIrAttrNames() const;
+
+  void AppendIrInput(std::string name, IrInputType input_type);
+  const std::vector<std::pair<std::string, IrInputType>> &GetIrInputs() const;
 
   using AttrHolder::AddRequiredAttr;
   using AttrHolder::DelAttr;

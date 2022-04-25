@@ -545,8 +545,8 @@ TEST_F(UtestGraphUtils, DumpGraphByPath) {
   auto graph = builder.GetGraph();
 
   // test dump_level 0
-  auto ret = GraphUtils::DumpGEGraphByPath(graph, "./test/test_graph_0.txt", 0);
-  ASSERT_EQ((ret != 0), true);
+  auto ret = GraphUtils::DumpGEGraphByPath(graph, "./not-exists-path/test_graph_0.txt", 0);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
   ret = GraphUtils::DumpGEGraphByPath(graph, "/", 0);
   ASSERT_EQ((ret != 0), true);
   ret = GraphUtils::DumpGEGraphByPath(graph, "test_graph_0.txt", 0);
@@ -1928,5 +1928,17 @@ TEST_F(UtestGraphUtils, DumpGEGraph) {
   state = GraphUtils::LoadGEGraph("./ge_test_graph_0003.txt", *com_graph3);
   ASSERT_EQ(state, true);
 }
- 
+
+TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphs) {
+  auto graph = BuildGraphWithSubGraph();
+  ASSERT_NE(graph, nullptr);
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
+  EXPECT_EQ(nodes.size(), 2);
+}
+
+TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphsNullInput) {
+  ComputeGraphPtr graph = nullptr;
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
+  EXPECT_EQ(nodes.size(), 0);
+}
 }  // namespace ge
