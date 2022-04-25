@@ -21,6 +21,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <iterator>
 
 #include "graph/operator.h"
 #include "graph/operator_factory.h"
@@ -159,6 +161,67 @@ using std::vector;
 #define REQUIRED_ATTR_ListType(x)
 #define REQUIRED_ATTR_ListNamedAttrs(x)
 
+#define SET_VALUE_String(x)                                        \
+  auto value = (x).c_str()
+
+#define SET_VALUE_Int(x)                                           \
+  auto value = (x)
+
+#define SET_VALUE_Float(x)                                         \
+  auto value = (x)
+
+#define SET_VALUE_AscendString(x)                                  \
+  auto value = (x)
+
+#define SET_VALUE_Bool(x)                                          \
+  auto value = (x)
+
+#define SET_VALUE_Tensor(x)                                        \
+  auto value = (x)
+
+#define SET_VALUE_Type(x)                                          \
+  auto value = (x)
+
+#define SET_VALUE_NamedAttrs(x)                                    \
+  auto value = (x)
+
+#define SET_VALUE_ListInt(x)                                       \
+  auto value = (x)
+
+#define SET_VALUE_ListFloat(x)                                     \
+  auto value = (x)
+
+#define SET_VALUE_ListString(x)                                    \
+  auto old_value = (x);                                            \
+  std::vector<AscendString> value;                                 \
+  (void)std::transform(                                            \
+    old_value.begin(), old_value.end(), std::back_inserter(value), \
+    [](const std::string &s) { return s.c_str(); })
+
+#define SET_VALUE_ListAcendString(x)                               \
+  auto value = (x)
+
+#define SET_VALUE_ListAscendString(x)                              \
+  auto value = (x)
+
+#define SET_VALUE_ListBool(x)                                      \
+  auto value = (x)
+
+#define SET_VALUE_ListTensor(x)                                    \
+  auto value = (x)
+
+#define SET_VALUE_Bytes(x)                                         \
+  auto value = (x)
+
+#define SET_VALUE_ListListInt(x)                                   \
+  auto value = (x)
+
+#define SET_VALUE_ListType(x)                                      \
+  auto value = (x)
+
+#define SET_VALUE_ListNamedAttrs(x)                                \
+  auto value = (x)
+
 class OpReg {
  public:
   OpReg &N() { return *this; }
@@ -224,7 +287,8 @@ class OpReg {
                                                                             \
  private:                                                                   \
   void __attr_##x() {                                                       \
-    Operator::AttrRegister(#x, Op##Type(__VA_ARGS__));                      \
+    SET_VALUE_##Type(Op##Type(__VA_ARGS__));                                \
+    Operator::AttrRegister(#x, value);                                      \
     std::string attr_name(#x);                                              \
     (void)OpReg()
 
