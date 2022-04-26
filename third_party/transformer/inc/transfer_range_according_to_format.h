@@ -16,14 +16,9 @@
 
 #ifndef COMMON_UTILS_TRANSFORMER_INC_TRANSFER_RANGE_ACCORDING_TO_FORMAT_H_
 #define COMMON_UTILS_TRANSFORMER_INC_TRANSFER_RANGE_ACCORDING_TO_FORMAT_H_
-#include <functional>
+
 #include <vector>
-#include <algorithm>
-#include "graph/compute_graph.h"
 #include "transfer_shape_according_to_format.h"
-#include "graph/utils/op_desc_utils.h"
-#include "graph/utils/tensor_utils.h"
-#include "graph/utils/type_utils.h"
 
 namespace transformer {
 struct RangeAndFormatInfo {
