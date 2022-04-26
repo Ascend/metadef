@@ -33,6 +33,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/compute_graph_impl.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/utils/node_utils.h"
 #include "inc/external/graph/graph.h"
 
@@ -887,6 +888,483 @@ TEST_F(UtestOperater, SetAttr_vector_AscendString2) {
 
   op2 = op1.SetAttr(nullptr, attr_value);
   EXPECT_EQ(op2.GetAttr(nullptr, value2), GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfChar_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr("x", nullptr, "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr("x", nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfChar_tWithNullOp) {
+  Operator op1;
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfChar_tWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfChar_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr(0, nullptr, "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr(0, nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfChar_tWithNullOp) {
+  Operator op1;
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfChar_tWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfAscendString_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetInputAttr(0, nullptr, policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr(0, nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfAscendString_tWithNullOp) {
+  Operator op1;
+  AscendString policy("FIFO");
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfAscendString_tWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfAscendString_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetInputAttr("x", nullptr, policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr("x", nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfAscendString_tWithNullOp) {
+  Operator op1;
+  AscendString policy("FIFO");
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfAscendString_tWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfChar_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr("y", nullptr, "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr("y", nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfChar_tWithNullOp) {
+  Operator op1;
+  op1.SetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfChar_tWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfChar_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr(0, nullptr, "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr(0, nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfChar_tWithNullOp) {
+  Operator op1;
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfChar_tWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfAscendString_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetOutputAttr(0, nullptr, policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr(0, nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfAscendStringWithNullOp) {
+  Operator op1;
+  AscendString policy("FIFO");
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfAscendStringWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfAscendString_tWithNull) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetOutputAttr("y", nullptr, policy);
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr("y", nullptr, enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfAscendStringWithNullOp) {
+  Operator op1;
+  AscendString policy("FIFO");
+  op1.SetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfAscendStringWithNullTensor) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  AscendString policy("FIFO");
+  op1.SetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  const auto ret = op1.GetOutputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_EQ(enqueue_policy != "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfAscendString) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR.c_str(), true);
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), static_cast<int32_t>(8));
+  AscendString policy("FIFO");
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+
+  bool has_flow_attr = false;
+  op1.GetOutputAttr(0, ATTR_NAME_FLOW_ATTR.c_str(), has_flow_attr);
+  int32_t depth = 0;
+  AscendString enqueue_policy;
+  auto ret = op1.GetOutputAttr(0, ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), depth);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = op1.GetOutputAttr("y", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(has_flow_attr, true);
+  EXPECT_EQ(depth, 8);
+  EXPECT_EQ(enqueue_policy, policy);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfAscendString) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr("y", ATTR_NAME_FLOW_ATTR.c_str(), true);
+  op1.SetOutputAttr("y", ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), static_cast<int32_t>(8));
+  AscendString policy("FIFO");
+  op1.SetOutputAttr("y", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+
+  bool has_flow_attr = false;
+  op1.GetOutputAttr("y", ATTR_NAME_FLOW_ATTR.c_str(), has_flow_attr);
+  int32_t depth = 0;
+  AscendString enqueue_policy;
+  auto ret = op1.GetOutputAttr("y", ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), depth);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = op1.GetOutputAttr("y", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(has_flow_attr, true);
+  EXPECT_EQ(depth, 8);
+  EXPECT_EQ(enqueue_policy, policy);
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfAscendString) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR.c_str(), true);
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), static_cast<int32_t>(8));
+  AscendString policy("FIFO");
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+
+  bool has_flow_attr = false;
+  op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR.c_str(), has_flow_attr);
+  int32_t depth = 0;
+  AscendString enqueue_policy;
+  auto ret = op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), depth);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(enqueue_policy, policy);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfAscendString) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR.c_str(), true);
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), static_cast<int32_t>(8));
+  AscendString policy("FIFO");
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), policy);
+
+  bool has_flow_attr = false;
+  auto ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR.c_str(), has_flow_attr);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  int32_t depth = 0;
+  AscendString enqueue_policy;
+  ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR_DEPTH.c_str(), depth);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(enqueue_policy, policy);
+}
+
+TEST_F(UtestOperater, SetInputAttrByNameOfChar_t) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  auto ret = op1.GetInputAttr("x", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(enqueue_policy, "FIFO");
+}
+
+TEST_F(UtestOperater, SetInputAttrByIndexOfChar_t) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  auto ret = op1.GetInputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(enqueue_policy, "FIFO");
+}
+
+TEST_F(UtestOperater, SetOutputAttrByNameOfChar_t) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr("y", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  auto ret = op1.GetOutputAttr("y", ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(enqueue_policy == "FIFO", true);
+}
+
+TEST_F(UtestOperater, SetOutputAttrByIndexOfChar_t) {
+  Operator op1;
+  std::string optype_str = "optype";
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("op1", optype_str);
+  GeShape shape;
+  GeTensorDesc tensor_desc(shape);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddOutputDesc("y", tensor_desc);
+  op1 = OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  op1.SetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), "FIFO");
+  AscendString enqueue_policy;
+  auto ret = op1.GetOutputAttr(0, ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY.c_str(), enqueue_policy);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(enqueue_policy, "FIFO");
 }
 
 TEST_F(UtestOperater, SetAttr_Tensor) {

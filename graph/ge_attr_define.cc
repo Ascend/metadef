@@ -1322,4 +1322,18 @@ const std::string ATTR_NAME_PROCESS_NODE_ENGINE_ID = "_process_node_engine_id";
 
 // for dynamic graph memory discontiguous
 const std::string ATTR_NAME_MEMORY_DISCONTIGUOUS_ALLOCATION = "_memory_discontiguous_allocation";
+
+// for flow attribute
+const std::string ATTR_NAME_FLOW_ATTR = "_flow_attr";
+const std::string ATTR_NAME_FLOW_ATTR_DEPTH = "_flow_attr_depth";
+const std::string ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY = "_flow_attr_enqueue_policy";
+
+// for aligned attribute
+const std::string ATTR_NAME_ALIGNED_ATTR = "_aligned_attr";
+const std::string ATTR_NAME_ALIGNED_INTERVAL = "_aligned_interval";
+const std::string ATTR_NAME_ALIGNED_OFFSET = "_aligned_offset";
+
+// for heterogeneous queue aligned attribute
+const std::string ATTR_NAME_QUEUE_ALIGNED_INTERVAL = "_queue_aligned_attr_interval";
+const std::string ATTR_NAME_QUEUE_ALIGNED_OFFSET = "_queue_aligned_attr_offset";
 }  // namespace ge

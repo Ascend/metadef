@@ -301,6 +301,18 @@ GeTensorDesc OperatorImpl::GetInputDesc(const uint32_t index) const {
   return op_desc_->GetInputDesc(index);
 }
 
+GeTensorDescPtr OperatorImpl::MutableInputDesc(const std::string &name) {
+  GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E18888", "op_desc_ is nullptr, check invalid.");
+      return nullptr, "[Check][Param] op_desc_ is nullptr.");
+  return op_desc_->MutableInputDesc(name);
+}
+
+GeTensorDescPtr OperatorImpl::MutableInputDesc(const uint32_t index) {
+  GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E18888", "op_desc_ is nullptr, check invalid.");
+      return nullptr, "[Check][Param] op_desc_ is nullptr.");
+  return op_desc_->MutableInputDesc(index);
+}
+
 graphStatus OperatorImpl::UpdateInputDesc(const std::string &name, const GeTensorDesc &tensor_desc) {
   GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E18888", "op_desc_ is nullptr, check invalid.");
                    return GRAPH_FAILED, "[Check][Param] op_desc_ is nullptr.");
@@ -355,6 +367,18 @@ GeTensorDesc OperatorImpl::GetOutputDesc(const uint32_t index) const {
                    return GeTensorDesc(), "[Check][Param] op_desc_ is nullptr.");
 
   return op_desc_->GetOutputDesc(index);
+}
+
+GeTensorDescPtr OperatorImpl::MutableOutputDesc(const std::string &name) {
+  GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E18888", "op_desc_ is nullptr, check invalid.");
+      return nullptr, "[Check][Param] op_desc_ is nullptr.");
+  return op_desc_->MutableOutputDesc(name);
+}
+
+GeTensorDescPtr OperatorImpl::MutableOutputDesc(const uint32_t index) {
+  GE_CHK_BOOL_EXEC(op_desc_ != nullptr, REPORT_INNER_ERROR("E18888", "op_desc_ is nullptr, check invalid.");
+      return nullptr, "[Check][Param] op_desc_ is nullptr.");
+  return op_desc_->MutableOutputDesc(index);
 }
 
 graphStatus OperatorImpl::UpdateOutputDesc(const std::string &name, const GeTensorDesc &tensor_desc) {
