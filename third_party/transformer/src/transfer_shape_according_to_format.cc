@@ -16,6 +16,7 @@
 
 #include "transfer_shape_according_to_format.h"
 #include <algorithm>
+#include <set>
 #include <vector>
 #include "axis_constants.h"
 #include "graph/utils/op_desc_utils.h"
@@ -44,7 +45,7 @@ namespace {
   const std::string kAttrInputSize = "input_size";
   const std::string kAttrStateSize = "state_size";
 
-  const std::unordered_set<ge::Format> kOriginFormatVec = {
+  const std::set<ge::Format> kOriginFormatVec = {
           ge::FORMAT_NCHW,  ge::FORMAT_NHWC,  ge::FORMAT_HWCN,
           ge::FORMAT_CHWN,  ge::FORMAT_NDHWC, ge::FORMAT_NCDHW,
           ge::FORMAT_DHWCN, ge::FORMAT_DHWNC, ge::FORMAT_ND

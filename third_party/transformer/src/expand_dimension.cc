@@ -15,6 +15,8 @@
  */
 
 #include "expand_dimension.h"
+#include <map>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <bitset>
@@ -29,10 +31,10 @@ namespace {
   const uint32_t kMaxDimSize = 8;
   const uint32_t kMaxReshapeTypeSize = 56;
 
-  const std::unordered_set<ge::Format> kSupportedTransFormat = {ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ,
+  const std::set<ge::Format> kSupportedTransFormat = {ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ,
                                                                 ge::FORMAT_ND_RNN_BIAS, ge::FORMAT_FRACTAL_ZN_RNN};
 
-  const std::unordered_map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
+  const std::map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
           {ge::FORMAT_NCHW,  DIM_DEFAULT_SIZE},
           {ge::FORMAT_NHWC,  DIM_DEFAULT_SIZE},
           {ge::FORMAT_HWCN,  DIM_DEFAULT_SIZE},
