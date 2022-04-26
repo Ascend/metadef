@@ -239,7 +239,7 @@ bool PatternFusionBasePassImpl::MatchAsInput(std::vector<ge::NodePtr> &candidate
 
   const size_t outputs_desc_size = FusionPattern::GetOutputSize(op_desc);
   if (op_desc->is_output_fullmatch && node->GetOutDataNodesSize() != outputs_desc_size) {
-    GELOGW("[Match][Input] full match mode, op %s desc size:%zu is not equal out data node size:%zu", op_id.c_str(),
+    GELOGW("[Match][Input] full match mode, op %s desc size:%zu is not equal out data node size:%u", op_id.c_str(),
            outputs_desc_size, node->GetOutDataNodesSize());
     return false;
   }
