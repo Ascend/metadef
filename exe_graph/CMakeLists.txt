@@ -50,10 +50,6 @@ target_include_directories(exe_graph_static PUBLIC
         $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc/ops>
         $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party>
         ${METADEF_DIR}/third_party/transformer/inc
-        #### blue zone ####
-        ${PROTOBUF_SHARED_PKG_DIR}/include
-        #### yellow zone ####
-        ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
         )
 target_link_libraries(exe_graph_static PUBLIC
         $<BUILD_INTERFACE:intf_pub>
@@ -61,6 +57,7 @@ target_link_libraries(exe_graph_static PUBLIC
         $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
         c_sec
         graph_static
+        ascend_protobuf
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
         -ldl
         )
@@ -119,15 +116,12 @@ target_include_directories(exe_graph PUBLIC
         $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc/ops>
         $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party>
         ${METADEF_DIR}/third_party/transformer/inc
-        #### blue zone ####
-        ${PROTOBUF_SHARED_PKG_DIR}/include
-        #### yellow zone ####
-        ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
         )
 target_link_libraries(exe_graph PUBLIC
         $<BUILD_INTERFACE:intf_pub>
         graph
         c_sec
+        ascend_protobuf
         )
 
 target_compile_definitions(exe_graph_static PRIVATE
@@ -135,3 +129,11 @@ target_compile_definitions(exe_graph_static PRIVATE
         )
 
 target_compile_options(exe_graph PRIVATE -O2)
+
+############ install ############
+set(INSTALL_BASE_DIR "")
+set(INSTALL_LIBRARY_DIR lib)
+
+install(TARGETS exe_graph OPTIONAL
+        LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
+)
