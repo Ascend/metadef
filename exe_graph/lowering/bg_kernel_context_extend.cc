@@ -16,6 +16,7 @@
 #include "exe_graph/lowering/bg_kernel_context_extend.h"
 
 #include "framework/common/debug/ge_log.h"
+#include "common/checker.h"
 
 #include "exe_graph/lowering/bg_ir_attrs.h"
 #include "exe_graph/runtime/context_extend.h"
@@ -66,12 +67,11 @@ ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &
   size_t input_index = 0;
   for (size_t i = 0; i < ir_inputs.size(); ++i) {
     auto ins_info = compute_node_info.MutableInputInstanceInfo(i);
-    GE_CHECK_NOTNULL(ins_info);
+    GE_ASSERT_NOTNULL(ins_info);
     size_t instance_num = 0;
     auto ret = GetInstanceNum(node, ir_inputs[i].first, ir_inputs[i].second, input_index, instance_num);
-    if (ret != ge::SUCCESS) {
-      return ret;
-    }
+    GE_ASSERT_SUCCESS(ret);
+
     compute_node_info.MutableInputInstanceInfo(i)->SetInstantiationNum(instance_num);
     compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(input_index);
     input_index += instance_num;
@@ -89,17 +89,17 @@ void SetCompileTimeTd(const ge::ConstGeTensorDescPtr &desc, CompileTimeTensorDes
 ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
   for (size_t i = 0; i < node->GetAllInDataAnchorsSize(); ++i) {
     auto desc = node->GetOpDesc()->GetInputDescPtr(i);
-    GE_CHECK_NOTNULL(desc);
+    GE_ASSERT_NOTNULL(desc);
     auto td = compute_node_info.MutableInputTdInfo(i);
-    GE_CHECK_NOTNULL(td);
+    GE_ASSERT_NOTNULL(td);
     SetCompileTimeTd(desc, *td);
   }
 
   for (size_t i = 0; i < node->GetAllOutDataAnchorsSize(); ++i) {
     auto desc = node->GetOpDesc()->GetOutputDescPtr(i);
-    GE_CHECK_NOTNULL(desc);
+    GE_ASSERT_NOTNULL(desc);
     auto td = compute_node_info.MutableOutputTdInfo(i);
-    GE_CHECK_NOTNULL(td);
+    GE_ASSERT_NOTNULL(td);
     SetCompileTimeTd(desc, *td);
   }
   return ge::SUCCESS;
@@ -108,23 +108,15 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
   size_t attr_size;
   auto attr_buf = CreateAttrBuffer(node, attr_size);
-  if (attr_buf == nullptr) {
-    return nullptr;
-  }
+  GE_ASSERT_NOTNULL(attr_buf);
 
   auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
   auto input_num = node->GetAllInDataAnchorsSize();
   auto output_num = node->GetAllOutDataAnchorsSize();
-  if (ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size) != ge::GRAPH_SUCCESS) {
-    return nullptr;
-  }
-  if (ge::AddOverflow(total_size, attr_size, total_size)) {
-    return nullptr;
-  }
+  GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size));
+  GE_ASSERT_TRUE(!ge::AddOverflow(total_size, attr_size, total_size));
   auto compute_node_info_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]());
-  if (compute_node_info_holder == nullptr) {
-    return nullptr;
-  }
+  GE_ASSERT_NOTNULL(compute_node_info_holder);
 
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());
   auto node_type = buffer_pool.AddStr(node->GetType().c_str());
@@ -133,14 +125,10 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
                           reinterpret_cast<const char *>(node_type));
 
   auto ret = InitInputInstanceInfo(node, *compute_node_info);
-  if (ret != ge::SUCCESS) {
-    return nullptr;
-  }
+  GE_ASSERT_SUCCESS(ret);
 
   ret = InitCompileTimeTD(node, *compute_node_info);
-  if (ret != ge::GRAPH_SUCCESS) {
-    return nullptr;
-  }
+  GE_ASSERT_SUCCESS(ret);
 
   auto attr = compute_node_info->MutableAttrs();
   auto offset = reinterpret_cast<uint8_t *>(attr) - compute_node_info_holder.get();
@@ -151,11 +139,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
         offset, attr_size);
     return nullptr;
   }
-  if (memcpy_s(attr, total_size - offset, attr_buf.get(), attr_size) != EOK) {
-    GELOGE(ge::FAILED, "Failed to create kernel context extend info, the remain size %zu for attr is not enough %zu",
-           total_size - offset, attr_size);
-    return nullptr;
-  }
+  GE_ASSERT_EOK(memcpy_s(attr, total_size - offset, attr_buf.get(), attr_size));
 
   return compute_node_info_holder;
 }

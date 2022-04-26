@@ -20,6 +20,7 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
 #include "graph/debug/ge_log.h"
+#include "common/checker.h"
 
 #include "exe_graph/runtime/continuous_buffer.h"
 
@@ -68,7 +69,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
   }
 
   auto text_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
-  GE_CHECK_NOTNULL_RTNULL(text_holder);
+  GE_ASSERT_NOTNULL(text_holder);
 
   auto text = reinterpret_cast<ContinuousBuffer *>(text_holder.get());
   text->num_ = buf_count;
@@ -79,10 +80,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
       GELOGE(ge::FAILED, "Failed to serialize text pool, miss buf id %zu", i);
       return nullptr;
     }
-    if (memcpy_s(text_holder.get() + text_offset, total_size - text_offset, buf->data(), buf->size()) != EOK) {
-      GE_LOGE("Failed to serialize buff pool, copy failed");
-      return nullptr;
-    }
+    GE_ASSERT_EOK(memcpy_s(text_holder.get() + text_offset, total_size - text_offset, buf->data(), buf->size()));
     text->offsets_[i] = text_offset;
     text_offset += buf->size();
   }
