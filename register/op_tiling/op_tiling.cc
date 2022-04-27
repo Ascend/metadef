@@ -22,6 +22,7 @@
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
 #include "graph/utils/type_utils.h"
+#include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/anchor_utils.h"
@@ -1054,21 +1055,28 @@ ge::graphStatus UpDateNodeShapeBack(const ge::OpDescPtr op_desc, vector<vector<i
 // For FFTS+ dynamic shape
 extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<OpRunInfoV2> &op_run_info)
 {
-  const ge::OpDescPtr op_desc = node.GetOpDesc();
+  return OpFftsPlusCalculate(ge::OpDescUtils::CreateOperatorFromNode(node.shared_from_this()), op_run_info);
+}
+
+extern "C" ge::graphStatus OpFftsPlusCalculate(const ge::Operator &op, std::vector<OpRunInfoV2> &op_run_info)
+{
+  const auto node = ge::NodeUtils::GetNodeFromOperator(op);
+  GE_CHECK_NOTNULL(node);
+  const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
-  GELOGD("[OpFftsCalculateV2]Op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
+  GELOGD("[OpFftsPlusCalculate]Op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   ffts::ThreadSliceMapPtr slice_info_ptr = nullptr;
   slice_info_ptr = op_desc->TryGetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GE_CHECK_NOTNULL(slice_info_ptr);
   vector<vector<uint32_t>> in_out_idx;
-  in_out_idx.emplace_back(GetIndexVector(node, true));
-  in_out_idx.emplace_back(GetIndexVector(node, false));
+  in_out_idx.emplace_back(GetIndexVector(*node, true));
+  in_out_idx.emplace_back(GetIndexVector(*node, false));
   if (in_out_idx[0U].empty() || in_out_idx[1U].empty()) {
     REPORT_CALL_ERROR("E19999", "Get in/out index err");
     return ge::GRAPH_FAILED;
   }
   vector<vector<int64_t>> ori_shape; // save original shape
-  ge::graphStatus rc;
+  ge::graphStatus rc = ge::GRAPH_SUCCESS;
   uint32_t thread_id = 0U;
   optiling::utils::OpRunInfo run_info;
   for (size_t i = 0U; i < ffts::kSgtTillingNum; i++) {
@@ -1078,7 +1086,6 @@ extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<O
       return ge::GRAPH_FAILED;
     }
     // call original interface
-    const auto op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
     rc = OpParaCalculateV2(op, run_info);
     if (rc != ge::GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E19999", "OpParaCalculateV2 failed, op_type:%s, op_name:%s", op_desc->GetType().c_str(),
@@ -1090,6 +1097,6 @@ extern "C" ge::graphStatus OpFftsCalculateV2(const ge::Node &node, std::vector<O
   }
   // node shape write_back
   (void)UpDateNodeShapeBack(op_desc, ori_shape, in_out_idx);
-  return ge::GRAPH_SUCCESS;
+  return rc;
 }
 }  // namespace optiling
