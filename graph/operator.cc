@@ -1764,7 +1764,7 @@ Operator &Operator::SetOutputAttr(const char_t *dst_name, const char_t *name, co
   auto tensor = operator_impl_->MutableOutputDesc(dst_name);
   if (tensor == nullptr) {
     REPORT_INNER_ERROR("E18888", "Get output[%s] of op[%s] failed, check invalid", dst_name, op_name.c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] Get output[%d] of op[%s] failed, check invalid", dst_name, op_name.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] Get output[%s] of op[%s] failed, check invalid", dst_name, op_name.c_str());
     return *this;
   }
   if (!AttrUtils::SetStr(tensor, op_name, op_attr_value)) {
