@@ -40,5 +40,5 @@ CmpStatus CompressWeights(char* input,
                           char* output,
                           size_t& compressedLength);
 
-
+CmpStatus SparseWeightsConv2D(const char *const input, size_t weight_size);
 #endif  // COMPRESS_H
