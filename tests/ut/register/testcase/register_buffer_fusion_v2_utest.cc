@@ -803,7 +803,7 @@ fe::BufferFusionPassBase *BufferFunc3() {
   ret->SetName("3");
   return ret;
 }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
 TEST_F(UTestBufferFusionPassReg, test_case_01) {
   auto pass_desc = BufferFusionPassRegistry::GetInstance().GetPassDesc(CUSTOM_AI_CORE_BUFFER_FUSION_PASS);
   auto init_size = pass_desc.size();
@@ -885,5 +885,4 @@ TEST_F(UTestBufferFusionPassReg, test_case_02) {
   buffer_fusion_pass_base_ptr = std::unique_ptr<BufferFusionPassBase>(create_fn());
   EXPECT_EQ(buffer_fusion_pass_base_ptr->DefinePatterns().size(), 1);
 }
-#endif
 }
