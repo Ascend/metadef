@@ -211,7 +211,6 @@ class TestPass : public fe::PatternFusionBasePass {
   }
 };
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 TEST_F(UTestGraphFusionPassReg, test_case_01) {
   REG_PASS(pass_name_test, GRAPH_FUSION_PASS_TYPE_RESERVED, TestPass, 0);
   REG_PASS("", BUILT_IN_GRAPH_PASS, TestPass, 1);
@@ -231,6 +230,5 @@ TEST_F(UTestGraphFusionPassReg, test_case_01) {
       dynamic_cast<PatternFusionBasePass *>(create_fn1()));
   EXPECT_EQ(pattern_fusion_base_pass_ptr->DefinePatterns().size(), 1);
 }
-#endif
 }
 }

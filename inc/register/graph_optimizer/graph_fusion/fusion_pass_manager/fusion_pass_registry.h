@@ -34,14 +34,12 @@ class FusionPassRegistry {
   ~FusionPassRegistry();
 
   static FusionPassRegistry &GetInstance();
-#ifndef ONLY_COMPILE_OPEN_SRC
+
   void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name, CreateFn create_fn,
                     uint64_t attr) const;
 
   std::map<std::string, PassDesc> GetPassDesc(const GraphFusionPassType &pass_type);
-#else
-  void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name, CreateFn create_fn) const;
-#endif
+
   std::map<std::string, CreateFn> GetCreateFnByType(const GraphFusionPassType &pass_type);
 
  private:
@@ -52,17 +50,12 @@ class FusionPassRegistry {
 
 class FusionPassRegistrar {
  public:
-#ifndef ONLY_COMPILE_OPEN_SRC
   FusionPassRegistrar(const GraphFusionPassType &pass_type, const std::string &pass_name,
                       GraphPass *(*create_fn)(), uint64_t attr);
-#else
-  FusionPassRegistrar(const GraphFusionPassType &pass_type, const std::string &pass_name,
-                      GraphPass *(*create_fn)());
-#endif
+
   ~FusionPassRegistrar() {}
 };
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 #define REGISTER_PASS(pass_name, pass_type, pass_class) \
   REG_PASS(pass_name, pass_type, pass_class, 0)
 
@@ -75,16 +68,5 @@ class FusionPassRegistrar {
 #define REG_PASS_UNIQ(ctr, pass_name, pass_type, pass_class, attr)                                                 \
   static ::fe::FusionPassRegistrar register_fusion_pass##ctr __attribute__((unused)) = ::fe::FusionPassRegistrar( \
       pass_type, pass_name, []() -> ::fe::GraphPass * { return new (std::nothrow) pass_class(); }, attr)
-#else
-#define REGISTER_PASS(pass_name, pass_type, pass_class) \
-  REGISTER_PASS_UNIQ_HELPER(__COUNTER__, pass_name, pass_type, pass_class)
-
-#define REGISTER_PASS_UNIQ_HELPER(ctr, pass_name, pass_type, pass_class) \
-  REGISTER_PASS_UNIQ(ctr, pass_name, pass_type, pass_class)
-
-#define REGISTER_PASS_UNIQ(ctr, pass_name, pass_type, pass_class)                                                 \
-  static ::fe::FusionPassRegistrar register_fusion_pass##ctr __attribute__((unused)) = ::fe::FusionPassRegistrar( \
-      pass_type, pass_name, []() -> ::fe::GraphPass * { return new (std::nothrow) pass_class(); })
-#endif
 }  // namespace fe
 #endif  // INC_REGISTER_GRAPH_OPTIMIZER_GRAPH_FUSION_FUSION_PASS_MANAGER_FUSION_PASS_REGISTRY_H_
