@@ -22,47 +22,10 @@
 
 #include "external/graph/ge_error_codes.h"
 #include "external/graph/types.h"
+#include "graph/utils/math_util.h"
 #include "exe_graph/runtime/shape.h"
 
 namespace transformer {
-inline bool CheckInt64MulOverflow(int64_t m, int64_t n) {
-  if (m > 0) {
-    if (n > 0) {
-      if (m > ((int64_t)INT64_MAX / n)) {
-        return false;
-      }
-    } else {
-      if (n < ((int64_t)INT64_MIN / m)) {
-        return false;
-      }
-    }
-  } else {
-    if (n > 0) {
-      if (m < ((int64_t)INT64_MIN / n)) {
-        return false;
-      }
-    } else {
-      if ((m != 0) && (n < ((int64_t)INT64_MAX / m))) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-#define INT64_MULCHECK(a, b)                                                                      \
-  if (CheckInt64MulOverflow((a), (b)) != true) {                                                  \
-    return false;                                                                                 \
-  }
-
-#define CHECK_NOTNULL(val)                                       \
-  do {                                                           \
-    if ((val) == nullptr) {                                      \
-      GELOGE(GRAPH_FAILED, "[ERROR]Parameter[%s] must not be null.", #val); \
-      return false;                                              \
-    }                                                            \
-  } while (0)
-
 #define CHECK(cond, log_func, return_expr) \
   do {                                     \
     if (cond) {                            \
@@ -71,10 +34,15 @@ inline bool CheckInt64MulOverflow(int64_t m, int64_t n) {
     }                                      \
   } while (0)
 
-#define INT64_ZEROCHECK(a)                                                                            \
-  if (a == 0) {                                                                                       \
-    return false;                                                                                     \
+#define INT64_ZEROCHECK(a)                 \
+  if (a == 0) {                            \
+    return false;                          \
   }
+
+#define MUL_OVERFLOW(x, y, z)             \
+  if (ge::MulOverflow((x), (y), (z))) {   \
+    return false;                         \
+  }                                       \
 
 enum AxisValueType {
   AXIS_N = 0,
@@ -108,7 +76,7 @@ class AxisUtil {
  public:
   AxisUtil() {};
   ~AxisUtil() {};
-  static bool GetAxisValueByOriginFormat(const ge::Format& format, const gert::Shape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByOriginFormat(const ge::Format &format, const gert::Shape &shape, AxisValue &axis_value);
 
 private:
   static bool GetAxisValueByNCHW(const gert::Shape &shape, AxisValue &axis_value);

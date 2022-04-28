@@ -87,7 +87,7 @@ class IntegerChecker {
 
 template<typename TLhs, typename TRhs, typename TRet>
 bool MulOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
-#if __GNUC__ >= 7
+#if __GNUC__ >= 5
   return __builtin_mul_overflow(lhs, rhs, &ret);
 #else
   if (!IntegerChecker<TRet>::Compat(lhs) || !IntegerChecker<TRet>::Compat(rhs)) {
@@ -103,7 +103,7 @@ bool MulOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
 
 template<typename TLhs, typename TRhs, typename TRet>
 bool AddOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
-#if __GNUC__ >= 7
+#if __GNUC__ >= 5
   return __builtin_add_overflow(lhs, rhs, &ret);
 #else
   if (!IntegerChecker<TRet>::Compat(lhs) || !IntegerChecker<TRet>::Compat(rhs)) {
