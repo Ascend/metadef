@@ -135,7 +135,7 @@ SwapMergeCastFusionTestPass::AddCastNodeBeforeMergeNode(const ge::NodePtr &merge
   for (size_t i = 0; i < input_size; i++) {
     ge::InDataAnchorPtr in_data_anchor = merge_node->GetInDataAnchor(i);
     if (in_data_anchor == nullptr || in_data_anchor->GetPeerOutAnchor() == nullptr) {
-      GELOGD("InData Anchor[%u] of merge node[%s] is not linked.", i, merge_node->GetName().c_str());
+      GELOGD("InData Anchor[%zu] of merge node[%s] is not linked.", i, merge_node->GetName().c_str());
       continue;
     }
 

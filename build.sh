@@ -148,7 +148,7 @@ build_metadef()
   fi
 
   if [ "X$ENABLE_METADEF_UT" = "Xon" ]; then
-    make ut_graph ut_register ut_error_manager ut_exe_graph -j${THREAD_NUM}
+    make ut_graph ut_register ut_error_manager ut_exe_graph ${VERBOSE} -j${THREAD_NUM}
   else
     make ${VERBOSE} -j${THREAD_NUM} && make install
   fi
@@ -158,6 +158,16 @@ build_metadef()
     return 1
   fi
   echo "Metadef build success!"
+}
+
+generate_inc_coverage() {
+  echo "Generating inc coverage, please wait..."
+  rm -rf ${BASEPATH}/diff
+  mkdir -p ${BASEPATH}/cov/diff
+
+  git diff --src-prefix=${BASEPATH}/ --dst-prefix=${BASEPATH}/ HEAD^ > ${BASEPATH}/cov/diff/inc_change_diff.txt
+  addlcov --diff ${BASEPATH}/cov/coverage.info ${BASEPATH}/cov/diff/inc_change_diff.txt -o ${BASEPATH}/cov/diff/inc_coverage.info
+  genhtml --prefix ${BASEPATH} -o ${BASEPATH}/cov/diff/html ${BASEPATH}/cov/diff/inc_coverage.info --legend -t CHG --no-branch-coverage --no-function-coverage
 }
 
 g++ -v
@@ -202,6 +212,10 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/*' '*/ops/*' -o cov/coverage.info
     cd ${BASEPATH}/cov
     genhtml coverage.info
+
+    if [[ "X$ENABLE_METADEF_COV" = "Xon" ]]; then
+      generate_inc_coverage
+    fi
 fi
 
 # generate output package in tar form, including ut/st libraries/executables for cann
