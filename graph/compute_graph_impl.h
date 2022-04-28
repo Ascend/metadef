@@ -201,7 +201,10 @@ class ComputeGraphImpl {
 
   void EmplaceBackToNodeList(const NodePtr &node);
   void ClearNodeList();
+
  private:
+  void inline AddInputDataNode(const NodePtr &node);
+
   void inline GetAllNodesFromOpdesc(const OpDescPtr &op_desc, const GraphFilter &graph_filter,
                                     std::deque<NodePtr>& candidates, const NodePtr node) const;
   void inline GetAllNodesFromOpdesc(std::vector<ComputeGraphPtr> &subgraphs, const OpDescPtr &op_desc,
