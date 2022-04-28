@@ -8,6 +8,7 @@ message Shape {
 enum AddressType {
     TRADITIONAL_ADDR = 0;
     NOTILING_ADDR = 1;
+    RAW_ADDR = 2;
 }
 
 message Output {
@@ -22,6 +23,7 @@ message Output {
     uint64 size = 9;
     Shape origin_shape = 10;
     AddressType addr_type = 11;
+    uint64 offset = 12;
 }
 
 message Input {
@@ -32,6 +34,7 @@ message Input {
     uint64 size = 5;
     Shape origin_shape = 6;
     AddressType addr_type = 7;
+    uint64 offset = 8;
 }
 
 enum BufferType {
@@ -49,7 +52,19 @@ message Op {
     string op_type = 2;
 }
 
+message OpAttr {
+    string name = 1;
+    string value = 2;
+}
+
 message Task {
+    enum TaskType {
+        AICORE = 0;
+        AICPU = 1;
+        DEBUG = 2;
+        SDMA = 3;
+        FFTSPLUS = 4;
+    }
     uint32 task_id = 1;
     uint32 stream_id = 2;
     Op op = 3;
@@ -57,6 +72,9 @@ message Task {
     bool end_graph = 5;
     repeated Input input = 6;
     repeated OpBuffer buffer = 7;
+    TaskType task_type = 8;
+    uint32 context_id = 9;
+    repeated OpAttr attr = 10;
 }
 
 message OpMappingInfo {
