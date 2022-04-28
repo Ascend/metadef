@@ -35,7 +35,7 @@ namespace ge
         ErrorManager::GetInstance().warning_messages_per_work_id_.clear();
     }
   };
-  
+
 TEST_F(UtestErrorManager, Init_faild) {
   auto &instance = ErrorManager::GetInstance();
   EXPECT_EQ(instance.Init(""), -1);
@@ -67,9 +67,15 @@ TEST_F(UtestErrorManager, ReportInterErrMessage_WorkStreamId) {
   auto id = instance.error_context_.work_stream_id;
   instance.error_context_.work_stream_id = 0;
   EXPECT_EQ(instance.ReportInterErrMessage("609999", "errmsg"), 0);
+
+  // error_messages.size() > kMaxWorkSize
+  instance.error_message_per_work_id_[instance.error_context_.work_stream_id].resize(1010U);
+  EXPECT_EQ(instance.ReportInterErrMessage("609999", "errmsg"), -1);
+
+  // error_message_per_work_id_.size() > kMaxWorkSize
   instance.error_context_.work_stream_id = id;
   for (int i = 0; i < 1002; i++){
-  	instance.error_message_per_work_id_[i] = std::vector<ErrorManager::ErrorItem>();
+    instance.error_message_per_work_id_[i] = std::vector<ErrorManager::ErrorItem>();
   }
   EXPECT_EQ(instance.ReportInterErrMessage("609999", "errmsg"), -1);
 }
