@@ -46,11 +46,18 @@ class TransformerTransferShapeUT : public testing::Test {
       EXPECT_EQ(shape.GetDims(), expect_dim);
     }
 
-    ge::GeShape new_shape(dims);
+    gert::Shape new_shape;
+    for (const int64_t &d : dims) {
+      new_shape.AppendDim(d);
+    }
     ret = shape_transfer.TransferShape(origin_format, format, dtype, new_shape);
     EXPECT_EQ(ret, expect_ret);
     if (ret) {
-      EXPECT_EQ(new_shape.GetDims(), expect_dim);
+      vector<int64_t> new_dim;
+      for (size_t i = 0; i < new_shape.GetDimNum(); ++i) {
+        new_dim.push_back(new_shape.GetDim(i));
+      }
+      EXPECT_EQ(new_dim, expect_dim);
     }
   }
 
@@ -68,11 +75,18 @@ class TransformerTransferShapeUT : public testing::Test {
       EXPECT_EQ(shape.GetDims(), expect_dim);
     }
 
-    ge::GeShape new_shape(dims);
+    gert::Shape new_shape;
+    for (const int64_t &d : dims) {
+      new_shape.AppendDim(d);
+    }
     ret = shape_transfer.TransferShape(origin_format, format, dtype, new_shape, op_desc);
     EXPECT_EQ(ret, expect_ret);
     if (ret) {
-      EXPECT_EQ(new_shape.GetDims(), expect_dim);
+      vector<int64_t> new_dim;
+      for (size_t i = 0; i < new_shape.GetDimNum(); ++i) {
+        new_dim.push_back(new_shape.GetDim(i));
+      }
+      EXPECT_EQ(new_dim, expect_dim);
     }
   }
 };

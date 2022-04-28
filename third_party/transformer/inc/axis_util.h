@@ -18,12 +18,11 @@
 #define COMMON_UTILS_TRANSFORMER_INC_AXIS_UTIL_H_
 
 #include <memory.h>
-#include <vector>
 #include <array>
 
 #include "external/graph/ge_error_codes.h"
 #include "external/graph/types.h"
-#include "graph/ge_tensor.h"
+#include "exe_graph/runtime/shape.h"
 
 namespace transformer {
 inline bool CheckInt64MulOverflow(int64_t m, int64_t n) {
@@ -109,28 +108,28 @@ class AxisUtil {
  public:
   AxisUtil() {};
   ~AxisUtil() {};
-  static bool GetAxisValueByOriginFormat(const ge::Format& format, const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByOriginFormat(const ge::Format& format, const gert::Shape &shape, AxisValue &axis_value);
 
 private:
-  static bool GetAxisValueByNCHW(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByNCHW(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByNHWC(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByNHWC(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByHWCN(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByHWCN(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByND(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByND(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByNDHWC(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByNDHWC(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByNCDHW(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByNCDHW(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByDHWCN(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByDHWCN(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByDHWNC(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByDHWNC(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByNC1HWC0(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByNC1HWC0(const gert::Shape &shape, AxisValue &axis_value);
 
-  static bool GetAxisValueByC1HWNCoC0(const ge::GeShape &shape, AxisValue &axis_value);
+  static bool GetAxisValueByC1HWNCoC0(const gert::Shape &shape, AxisValue &axis_value);
 };
 } // namespace transformer
 

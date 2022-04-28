@@ -67,51 +67,50 @@ class ShapeTransferAccordingToFormat {
 #endif
 
   static bool TransferShape(const ge::Format &origin_format, const ge::Format &format, const ge::DataType &data_type,
-                            ge::GeShape &shape, const ge::OpDescPtr op_desc = nullptr);
+                            gert::Shape &shape, const ge::OpDescPtr op_desc = nullptr);
 
 private:
   static bool TransferShapeByFormat(const ge::Format &primary_format, const AxisValue &axis_value,
-                                    ge::GeShape &shape);
-  static bool IsNeedTransferShape(const ge::Format &origin_format, const ge::Format &format, const ge::GeShape &shape);
+                                    gert::Shape &shape);
+  static bool IsNeedTransferShape(const ge::Format &origin_format, const ge::Format &format, const gert::Shape &shape);
   static bool CheckInputParam(const ge::Format &origin_format, const ge::Format &primary_format,
                               const ge::DataType &data_type);
   static void FillupRnnAxisValue(const ge::OpDescPtr &op_desc, const ge::Format &format, AxisValue &axis_value);
   static bool IsNeedAxisValue(const ge::Format &format, const size_t &origin_dim_size);
-  static int64_t GetAsisEnlargeValue(const int64_t& cin, const int64_t& cout, const int64_t& c0, const int64_t& group);
-  static uint32_t GetC0Value(const ge::DataType &data_type, const ge::Format &format);
+  static int64_t GetC0Value(const ge::DataType &data_type, const ge::Format &format);
 
   /* ----------Below is the function of getting new shape---------------------- */
-  static bool GetNCHWShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetNCHWShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetNHWCShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetNHWCShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetHWCNShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetHWCNShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetCHWNShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetCHWNShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetNC1HWC0ShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetNC1HWC0ShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetFzShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetFzShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetNDC1HWC0ShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetNDC1HWC0ShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetC1HWNCoC0ShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetC1HWNCoC0ShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetNzShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetNzShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetFz3DShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetFz3DShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetFz3DTransposeShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetFz3DTransposeShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetFzLstmShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetFzLstmShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetFzC04ShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetFzC04ShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetFzGShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetFzGShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetFznRNNShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetFznRNNShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 
-  static bool GetNDRNNShapeByAxisValue(ge::GeShape &shape, const AxisValue &axis_value);
+  static bool GetNDRNNShapeByAxisValue(gert::Shape &shape, const AxisValue &axis_value);
 };
 } // namespace transformer
 

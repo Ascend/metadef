@@ -51,10 +51,21 @@ struct ExpandDimsType {
 
     size_ = size;
     for (AxisIndex i = 0; i < size; ++i) {
-      if (expand_dims_type[i] == '0') {
-        SetUseOriginDim(i);
+      if (expand_dims_type[i] == '1') {
+        SetExpandIndex(i);
       }
     }
+  }
+
+  explicit ExpandDimsType(const int64_t &reshape_type_mask) : size_(0), mask_(0) {
+    if (reshape_type_mask == 0) {
+      return;
+    }
+    size_ = static_cast<size_t>(reshape_type_mask >> kMaxExpandSize);
+    if (size_ > kMaxExpandSize) {
+      return;
+    }
+    mask_ = reshape_type_mask & 0xff;
   }
 
   bool operator==(const ExpandDimsType &other) const {
@@ -65,23 +76,19 @@ struct ExpandDimsType {
     return size_;
   }
 
-  void SetUseOriginDim(AxisIndex index) {
+  void SetExpandIndex(AxisIndex index) {
     mask_ |= (1UL << index);
   }
 
-  bool UseOriginDim(AxisIndex index) const {
-    return (1UL << index) & mask_;
-  }
-
   bool IsExpandIndex(AxisIndex index) const {
-    return !UseOriginDim(index);
+    return (1UL << index) & mask_;
   }
 
   ge::graphStatus Expand(const Shape &shape, Shape &out_shape) const {
     size_t shape_pos = 0;
     out_shape.SetDimNum(0);
     for (size_t out_shape_pos = 0; out_shape_pos < size_; ++out_shape_pos) {
-      if (UseOriginDim(out_shape_pos)) {
+      if (!IsExpandIndex(out_shape_pos)) {
         if (shape_pos >= shape.GetDimNum()) {
           return ge::GRAPH_FAILED;
         }
@@ -93,6 +100,27 @@ struct ExpandDimsType {
 
     for (; shape_pos < shape.GetDimNum(); ++shape_pos) {
       out_shape.AppendDim(shape.GetDim(shape_pos));
+    }
+    return ge::GRAPH_SUCCESS;
+  }
+
+  ge::graphStatus Expand(Shape &shape) const {
+    // full_size:4, shape:[A,B], reshape_type:1010
+    // shape:[A,B] + full_size:4 -> [A,B,1,1]
+    size_t dim_size = shape.GetDimNum();
+    for (size_t i = dim_size; i < size_; i++) {
+      shape.AppendDim(1);
+    }
+
+    // shape:[A,B,1,1] + 1010 -> [A,1,B,1]
+    for (int32_t i = static_cast<int32_t>(size_ - 1); i >= 0; --i) {
+      if (!IsExpandIndex(i)) {
+        if (dim_size > 0 && dim_size -1 < static_cast<size_t>(i)) {
+          shape.SetDim(i, shape.GetDim(dim_size - 1));
+          shape.SetDim(dim_size - 1, 1);
+          dim_size--;
+        }
+      }
     }
     return ge::GRAPH_SUCCESS;
   }
