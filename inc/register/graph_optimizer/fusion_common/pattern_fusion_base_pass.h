@@ -161,6 +161,8 @@ class PatternFusionBasePass : public GraphPass {
                         const std::unordered_set<ge::NodePtr> &scope_nodes_set,
                         const std::vector<ge::NodePtr> &scope_nodes) const;
 
+  void StoreOriginOpNames(const Mapping &mapping, std::vector<std::string> &origin_op_names) const;
+
   /** Internal implement class ptr */
   std::shared_ptr<PatternFusionBasePassImpl> pattern_fusion_base_pass_impl_ptr_;
 
