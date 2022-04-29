@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@
 #include "graph/ge_tensor.h"
 #include "graph/graph.h"
 #include "graph/op_desc.h"
-#include "graph/operator.h"
-#include "graph/range_vistor.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/op_desc_utils.h"
@@ -36,7 +34,7 @@ using Status = domi::Status;
 
 namespace domi {
 using GetGraphCallback = std::function<std::unique_ptr<google::protobuf::Message>(
-  const google::protobuf::Message *root_proto, const std::string &graph)>;
+    const google::protobuf::Message *root_proto, const std::string &graph)>;
 
 using GetGraphCallbackV2 = std::function<std::string(const std::string &subgraph_name)>;
 
@@ -112,7 +110,7 @@ class GE_FUNC_VISIBILITY ModelParser {
   virtual Status ToJson(const char *model_file, const char *json_file) {
     (void)model_file;
     (void)json_file;
-    return domi::SUCCESS;
+    return SUCCESS;
   }
 
   /*
@@ -155,6 +153,17 @@ class GE_FUNC_VISIBILITY ModelParser {
     (void)graph;
     return UNSUPPORTED;
   }
+
+  virtual bool HasError() {
+    return false;
+  }
+
+  virtual Status Save(const std::string &file) {
+    (void)file;
+    return SUCCESS;
+  }
+
+  virtual void Clear() {};
 };
 }  // namespace domi
 
