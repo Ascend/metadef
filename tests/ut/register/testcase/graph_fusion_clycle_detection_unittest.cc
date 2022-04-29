@@ -452,3 +452,4 @@ TEST_F(UtestCycleDetection, Coverage_07) {
   BuildFusionGraph06(kNoCycleCase2, fusion_nodes);
   connection_matrix->GetIndex(fusion_nodes[0]);
 }
+
