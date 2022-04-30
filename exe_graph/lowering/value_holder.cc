@@ -391,6 +391,11 @@ ge::graphStatus ValueHolder::GraphBuilder::AppendGraphLevelData(const GraphFrame
   GE_ASSERT_TRUE(
       ge::AttrUtils::SetZeroCopyBytes(graph, kKernelExtendInfo, ge::Buffer::CopyFrom(buffer.get(), buffer_size)));
 
+  // model_desc
+  buffer = frame->GetKernelModelDesc().Serialize(buffer_size);
+  GE_CHECK_NOTNULL(buffer);
+  GE_ASSERT_TRUE(ge::AttrUtils::SetZeroCopyBytes(graph, kModelDesc, ge::Buffer::CopyFrom(buffer.get(), buffer_size)));
+
   return ge::GRAPH_SUCCESS;
 }
 }  // namespace bg
