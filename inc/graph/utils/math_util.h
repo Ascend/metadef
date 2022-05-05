@@ -93,8 +93,26 @@ bool MulOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
   if (!IntegerChecker<TRet>::Compat(lhs) || !IntegerChecker<TRet>::Compat(rhs)) {
     return true;
   }
-  if (std::abs(static_cast<TRet>(lhs)) > std::numeric_limits<TRet>::max() / std::abs(static_cast<TRet>(rhs))) {
-    return true;
+  if (lhs == 0 || rhs == 0) {
+    ret = 0;
+    return false;
+  }
+  auto reminder = std::numeric_limits<TRet>::max() / static_cast<TRet>(rhs);
+  auto lhs_ret_type = static_cast<TRet>(lhs);
+  if (lhs_ret_type < 0) {
+    if (reminder > 0) {
+      reminder *= static_cast<TRet>(-1);
+    }
+    if (lhs_ret_type < reminder) {
+      return true;
+    }
+  } else {
+    if (reminder < 0) {
+      reminder *= static_cast<TRet>(-1);
+    }
+    if (lhs_ret_type > reminder) {
+      return true;
+    }
   }
   ret = static_cast<TRet>(lhs) * static_cast<TRet>(rhs);
   return false;
