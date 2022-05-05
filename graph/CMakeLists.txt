@@ -158,6 +158,7 @@ target_link_libraries(graph PRIVATE
     c_sec
     slog
     error_manager
+    json
     -Wl,--as-needed
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
     -ldl
@@ -239,6 +240,7 @@ target_link_libraries(graph_static PRIVATE
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     c_sec
+    json
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
     -ldl
 )
@@ -444,6 +446,7 @@ target_link_libraries(graph PRIVATE
         c_sec
         slog
         error_manager
+        json
         -Wl,--as-needed
         -lrt
         -ldl
