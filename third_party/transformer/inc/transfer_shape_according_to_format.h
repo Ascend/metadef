@@ -55,16 +55,9 @@ class ShapeTransferAccordingToFormat {
 
   ShapeTransferAccordingToFormat &operator=(const ShapeTransferAccordingToFormat&) = delete;
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-  bool GetShapeAccordingToFormat(ShapeAndFormat &shapeAndFormatInfo, int64_t* c = nullptr);
-
-  bool GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc, ShapeAndFormat &shapeAndFormatInfo,
-                                 int64_t* c = nullptr);
-#else
   bool GetShapeAccordingToFormat(ShapeAndFormat &shapeAndFormatInfo);
 
   bool GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc, ShapeAndFormat &shapeAndFormatInfo);
-#endif
 
   static bool TransferShape(const ge::Format &origin_format, const ge::Format &format, const ge::DataType &data_type,
                             gert::Shape &shape, const ge::OpDescPtr op_desc = nullptr);
