@@ -410,7 +410,7 @@ class SmallVector {
   }
 
   iterator ExpandCap(const size_type range_begin, const size_type range_len) {
-    const auto new_cap = std::max(capacity_ * 2UL, size_ + range_len);
+    const auto new_cap = std::max(capacity_ * static_cast<size_type>(2), size_ + range_len);
     auto const new_storage = allocator_.allocate(new_cap);
     if (new_storage == nullptr) {
       throw std::bad_alloc();
