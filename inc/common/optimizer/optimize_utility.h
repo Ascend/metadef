@@ -30,6 +30,9 @@ class OptimizeUtility {
 
   // Graph infershape util
   virtual Status InferShape(const ComputeGraphPtr &compute_graph) = 0;
+
+  // Mlti Dims and pre/post process
+  virtual Status MultiDimsProcess(const ComputeGraphPtr &compute_graph) = 0;
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPTIMIZER_OPTIMIZE_UTILITY_H_
