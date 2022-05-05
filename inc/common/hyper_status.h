@@ -48,4 +48,7 @@ class HyperStatus {
 };
 }  // namespace gert
 
+namespace ge {
+using HyperStatus = gert::HyperStatus;
+}  // namespace ge
 #endif  //AIR_CXX_BASE_COMMON_HYPER_STATUS_H_

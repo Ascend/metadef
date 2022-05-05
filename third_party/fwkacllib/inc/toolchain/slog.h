@@ -204,6 +204,7 @@ enum {
   FV,
   MDCMAP,
   TUNE,
+  FFTS,
   INVLID_MOUDLE_ID
 };
 
@@ -383,13 +384,13 @@ DLL_EXPORT void DlogFlush(void);
  * @ingroup slog
  * @brief Internal log interface, other modules are not allowed to call this interface
  */
-void DlogErrorInner(int moduleId, const char *fmt, ...);
-void DlogWarnInner(int moduleId, const char *fmt, ...);
-void DlogInfoInner(int moduleId, const char *fmt, ...);
-void DlogDebugInner(int moduleId, const char *fmt, ...);
-void DlogEventInner(int moduleId, const char *fmt, ...);
-void DlogInner(int moduleId, int level, const char *fmt, ...);
-void DlogWithKVInner(int moduleId, int level, KeyValue *pstKVArray, int kvNum, const char *fmt, ...);
+void DlogErrorInner(int moduleId, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void DlogWarnInner(int moduleId, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void DlogInfoInner(int moduleId, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void DlogDebugInner(int moduleId, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void DlogEventInner(int moduleId, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void DlogInner(int moduleId, int level, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+void DlogWithKVInner(int moduleId, int level, KeyValue *pstKVArray, int kvNum, const char *fmt, ...) __attribute__((format(printf, 5, 6)));
 
 #ifdef __cplusplus
 #ifndef LOG_CPP

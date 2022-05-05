@@ -22,7 +22,6 @@
 #include <type_traits>
 #include "graph/ge_error_codes.h"
 #include "graph/utils/math_util.h"
-#include "graph/debug/ge_log.h"
 namespace gert {
 class ContinuousVector {
  public:
@@ -55,7 +54,7 @@ class ContinuousVector {
   }
   ge::graphStatus SetSize(size_t size) {
     if (size > capacity_) {
-      GE_LOGE("Failed to set size for ContinuousVector, size(%zu) > cap(%zu)", size, capacity_);
+      GELOGE(ge::PARAM_INVALID, "Failed to set size for ContinuousVector, size(%zu) > cap(%zu)", size, capacity_);
       return ge::GRAPH_FAILED;
     }
     size_ = size;

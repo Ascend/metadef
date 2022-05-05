@@ -15,32 +15,23 @@
  */
 
 #include "exe_graph/runtime/compute_node_info.h"
+#include "common/checker.h"
 namespace gert {
 ge::graphStatus ComputeNodeInfo::CalcSize(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num,
                                           size_t &total_size) {
   size_t ir_inputs_size;
   size_t inputs_size;
   size_t outputs_size;
-  if (ge::MulOverflow(sizeof(AnchorInstanceInfo), ir_inputs_num, ir_inputs_size)) {
-    return ge::GRAPH_FAILED;
-  }
-  if (ge::MulOverflow(sizeof(CompileTimeTensorDesc), inputs_num, inputs_size)) {
-    return ge::GRAPH_FAILED;
-  }
-  if (ge::MulOverflow(sizeof(CompileTimeTensorDesc), outputs_num, outputs_size)) {
-    return ge::GRAPH_FAILED;
-  }
+
+  GE_ASSERT_TRUE(!ge::MulOverflow(sizeof(AnchorInstanceInfo), ir_inputs_num, ir_inputs_size));
+  GE_ASSERT_TRUE(!ge::MulOverflow(sizeof(CompileTimeTensorDesc), inputs_num, inputs_size));
+  GE_ASSERT_TRUE(!ge::MulOverflow(sizeof(CompileTimeTensorDesc), outputs_num, outputs_size));
 
   total_size = sizeof(ComputeNodeInfo);
-  if (ge::AddOverflow(total_size, ir_inputs_size, total_size)) {
-    return ge::GRAPH_FAILED;
-  }
-  if (ge::AddOverflow(total_size, inputs_size, total_size)) {
-    return ge::GRAPH_FAILED;
-  }
-  if (ge::AddOverflow(total_size, outputs_size, total_size)) {
-    return ge::GRAPH_FAILED;
-  }
+  GE_ASSERT_TRUE(!ge::AddOverflow(total_size, ir_inputs_size, total_size));
+  GE_ASSERT_TRUE(!ge::AddOverflow(total_size, inputs_size, total_size));
+  GE_ASSERT_TRUE(!ge::AddOverflow(total_size, outputs_size, total_size));
+
   return ge::GRAPH_SUCCESS;
 }
 void ComputeNodeInfo::Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num,

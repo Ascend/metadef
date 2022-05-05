@@ -137,9 +137,10 @@ REGISTER_OP_TILING_V2(ReluV2, op_tiling_stub);
 TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_1) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &node = root_builder.AddNode("relu", "ReluV2", 1, 1);
-  OpDescPtr op_desc = node->GetOpDesc();
-  ThreadSliceMapPtr slice_info_ptr;
-  slice_info_ptr = std::make_shared<ThreadSliceMap>();
+  const auto &op_desc = node->GetOpDesc();
+  const Operator op = OpDescUtils::CreateOperatorFromNode(node);
+
+  ThreadSliceMapPtr slice_info_ptr = std::make_shared<ThreadSliceMap>();
   DimRange dim;
   dim.lower = 0;
   dim.higher = 1;
@@ -157,31 +158,32 @@ TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_1) {
   slice_info_ptr->input_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
-  (void)node->GetOpDesc()->SetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
+
+  (void)op_desc->SetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GeShape shape({4,1,3,4,16});
   GeTensorDesc tensor_desc(shape, ge::FORMAT_NCHW, ge::DT_FLOAT);
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AddOutputDesc("y", tensor_desc);
   std::vector<OpRunInfoV2> op_run_info;
-  ge::graphStatus ret = OpFftsCalculateV2(*node, op_run_info);
-  EXPECT_EQ(ret, ge::GRAPH_FAILED);
+  EXPECT_EQ(OpFftsPlusCalculate(op, op_run_info), ge::GRAPH_FAILED);
+
   string compile_info_key = "compile_info_key";
   string compile_info_json = "compile_info_json";
   (void)ge::AttrUtils::SetStr(op_desc, COMPILE_INFO_KEY, compile_info_key);
   (void)ge::AttrUtils::SetStr(op_desc, COMPILE_INFO_JSON, compile_info_json);
   auto dstAnchor = node->GetInDataAnchor(0);
   ge::AnchorUtils::SetStatus(dstAnchor, ge::ANCHOR_DATA);
-  ret = OpFftsCalculateV2(*node, op_run_info);
-  EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
+  EXPECT_EQ(OpFftsCalculateV2(*node, op_run_info), ge::GRAPH_SUCCESS);
 }
 
 // slice instance over
 TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_2) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &node = root_builder.AddNode("relu", "ReluV2", 1, 1);
-  OpDescPtr op_desc = node->GetOpDesc();
-  ThreadSliceMapPtr slice_info_ptr;
-  slice_info_ptr = std::make_shared<ThreadSliceMap>();
+  const auto &op_desc = node->GetOpDesc();
+  const Operator op = OpDescUtils::CreateOperatorFromNode(node);
+
+  ThreadSliceMapPtr slice_info_ptr = std::make_shared<ThreadSliceMap>();
   DimRange dim;
   dim.lower = 0;
   dim.higher = 1;
@@ -199,7 +201,8 @@ TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_2) {
   slice_info_ptr->input_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
   slice_info_ptr->output_tensor_slice.push_back(vec_2);
-  (void)node->GetOpDesc()->SetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
+
+  (void)op_desc->SetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
   GeShape shape({4,1,3,4,16});
   GeTensorDesc tensor_desc(shape);
   op_desc->AddInputDesc("x", tensor_desc);
@@ -209,8 +212,7 @@ TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_2) {
   (void)ge::AttrUtils::SetStr(op_desc, COMPILE_INFO_KEY, compile_info_key);
   (void)ge::AttrUtils::SetStr(op_desc, COMPILE_INFO_JSON, compile_info_json);
   std::vector<OpRunInfoV2> op_run_info;
-  ge::graphStatus ret = OpFftsCalculateV2(*node, op_run_info);
-  EXPECT_EQ(ret, ge::GRAPH_FAILED);
+  EXPECT_EQ(OpFftsPlusCalculate(op, op_run_info), ge::GRAPH_FAILED);
 }
 
 TEST_F(RegisterOpTilingUT, PostProcCalculateV2_SUCCESS) {

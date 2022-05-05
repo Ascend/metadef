@@ -295,7 +295,7 @@ TEST_F(TensorUtilsUT, ConstData) {
   uint8_t *ret = nullptr;
   size_t len = 0;
   tensor_desc.GetConstData(&ret, len);
-  printf("GetConstData1====0x%x \n", ret);
+  printf("GetConstData1====%p\n", ret);
   ASSERT_NE(ret, nullptr);
   ASSERT_EQ(sizeof(int), len);
 
@@ -306,7 +306,7 @@ TEST_F(TensorUtilsUT, ConstData) {
   uint8_t *ret1 = nullptr;
   size_t len1 = 0;
   tensor_desc1.GetConstData(&ret1, len1);
-  printf("GetConstData2 ====0x%x \n", ret1);
+  printf("GetConstData2 ====%p\n", ret1);
   ASSERT_NE(ret1, nullptr);
   ASSERT_NE(ret1, ret);
   ASSERT_EQ(sizeof(int), len1);
@@ -322,7 +322,7 @@ TEST_F(TensorUtilsUT, ConstData) {
   uint8_t *ret2 = nullptr;
   size_t len2 = 0;
   tensor_desc3.GetConstData(&ret2, len2);
-  printf("GetConstData3 ====0x%x \n", ret2);
+  printf("GetConstData3 ====%p\n", ret2);
   ASSERT_NE(ret2, nullptr);
   ASSERT_NE(ret2, ret);
   ASSERT_EQ(big_size, len2);

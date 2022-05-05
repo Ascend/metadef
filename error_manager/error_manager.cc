@@ -252,8 +252,8 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
   if (error_messages.size() > kMaxWorkSize) {
-    GELOGW("[Report][Error]error_code %s, error work_stream_id:%u item size exceed %lu, skip record",
-            error_code.c_str(), error_context_.work_stream_id, kMaxWorkSize);
+    GELOGW("[Report][Error]error_code %s, error work_stream_id:%lu item size exceed %lu, skip record",
+           error_code.c_str(), error_context_.work_stream_id, kMaxWorkSize);
     return -1;
   }
 

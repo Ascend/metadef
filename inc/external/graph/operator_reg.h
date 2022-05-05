@@ -101,6 +101,26 @@ using std::vector;
 #define ATTR_ListType(x, ...)
 #define ATTR_ListNamedAttrs(x, ...)
 
+#define REGISTER_TYPE_Int(...) OpInt(__VA_ARGS__)
+#define REGISTER_TYPE_Float(...) OpFloat(__VA_ARGS__)
+#define REGISTER_TYPE_AscendString(...) OpAscendString(__VA_ARGS__)
+#define REGISTER_TYPE_String(...) REGISTER_TYPE_AscendString(__VA_ARGS__)
+#define REGISTER_TYPE_Bool(...) OpBool(__VA_ARGS__)
+#define REGISTER_TYPE_Tensor(...) OpTensor(__VA_ARGS__)
+#define REGISTER_TYPE_Type(...) OpType(__VA_ARGS__)
+#define REGISTER_TYPE_NamedAttrs(...) OpNamedAttrs(__VA_ARGS__)
+#define REGISTER_TYPE_ListInt(...) OpListInt(__VA_ARGS__)
+#define REGISTER_TYPE_ListFloat(...) OpListFloat(__VA_ARGS__)
+#define REGISTER_TYPE_ListAcendString(...) OpListAcendString(__VA_ARGS__)
+#define REGISTER_TYPE_ListAscendString(...) OpListAscendString(__VA_ARGS__)
+#define REGISTER_TYPE_ListString(...) REGISTER_TYPE_ListAscendString(__VA_ARGS__)
+#define REGISTER_TYPE_ListBool(...) OpListBool(__VA_ARGS__)
+#define REGISTER_TYPE_ListTensor(...) OpListTensor(__VA_ARGS__)
+#define REGISTER_TYPE_Bytes(...) OpBytes(__VA_ARGS__)
+#define REGISTER_TYPE_ListListInt(...) OpListListInt(__VA_ARGS__)
+#define REGISTER_TYPE_ListType(...) OpListType(__VA_ARGS__)
+#define REGISTER_TYPE_ListNamedAttrs(...) OpListNamedAttrs(__VA_ARGS__)
+
 #define REQUIRED_ATTR_String(x)                                             \
   graphStatus get_attr_##x(AscendString &ret) const {                       \
     if (Operator::GetAttr(#x, ret) == GRAPH_FAILED) {                       \
@@ -224,7 +244,7 @@ class OpReg {
                                                                             \
  private:                                                                   \
   void __attr_##x() {                                                       \
-    Operator::AttrRegister(#x, Op##Type(__VA_ARGS__));                      \
+    Operator::AttrRegister(#x, REGISTER_TYPE_##Type(__VA_ARGS__));          \
     std::string attr_name(#x);                                              \
     (void)OpReg()
 
