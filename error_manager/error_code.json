@@ -15,7 +15,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid --input_shape Argument",
       "ErrCode": "E10002",
-      "ErrMessage": "Value [%s] for [--input_shape] is invalid. Reason: %s. Must be formatted as [%s].",
+      "ErrMessage": "Value \"%s\" for [--input_shape] is invalid. Reason: %s. Must be formatted as \"%s\".",
       "Arglist": "shape,reason,sample",
       "suggestion": {
         "Possible Cause": "The [--input_shape] argument in the atc command line is invalid.",
@@ -466,7 +466,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid --input_shape_range Argument",
       "ErrCode": "E10048",
-      "ErrMessage": "Value [%s] for [--input_shape_range] is invalid. Reason: %s. Must be formatted as [%s].",
+      "ErrMessage": "Value for [--input_shape_range] is invalid. The wrong parameters are as follows: \"%s\", Reason: %s. Must be formatted as: %s.",
       "Arglist": "shape_range,reason,sample",
       "suggestion": {
         "Possible Cause": "Invalid --input_shape_range Argument",
@@ -1049,7 +1049,7 @@
       "errClass": "File Errors",
       "errTitle": "Failure to Parse File",
       "ErrCode": "E19005",
-      "ErrMessage": "Failed to parse file, protobuf file corrupted or protobuf's version invalued or \"--framework\" param don't match file: [%s]",
+      "ErrMessage": "Failed to parse file [%s]. The conditions that may cause errors are as follows: File corrupted; Invalied version of protobuf; the value of \"--framework\" and file format do not match.",
       "Arglist": "file",
       "suggestion": {
         "Possible Cause": "Failed to parse the file.",
