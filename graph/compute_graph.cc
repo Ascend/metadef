@@ -387,7 +387,7 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const int64_t id, const Co
 }
 
 void ComputeGraphImpl::AddInputDataNode(const NodePtr &node) {
-  if (node->GetType() == DATA) {
+  if ((node->GetType() == DATA) || (node->GetType() == AIPPDATA) || (node->GetType() == ANN_DATA)) {
     if (std::find(input_nodes_.begin(), input_nodes_.end(), node) == input_nodes_.end()) {
       input_nodes_.push_back(node);
     }
@@ -400,7 +400,9 @@ NodePtr ComputeGraphImpl::AddInputNode(const NodePtr node) {
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
     return nullptr;
   }
-  input_nodes_.push_back(node);
+  if (std::find(input_nodes_.begin(), input_nodes_.end(), node) == input_nodes_.end()) {
+    input_nodes_.push_back(node);
+  }
   if (std::find(nodes_.begin(), nodes_.end(), node) == nodes_.end()) {
     GE_CHK_BOOL_EXEC(AddNode(node) != nullptr, return nullptr, "[Add][Node] failed");
   }
