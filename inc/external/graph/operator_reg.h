@@ -28,6 +28,42 @@
 #include "graph/types.h"
 #include "graph/graph.h"
 
+namespace {
+template<typename T>
+ge::AscendString ConvertToAscendString(T str);
+
+template<>
+inline ge::AscendString ConvertToAscendString<const char *>(const char *str) {
+  return ge::AscendString(str);
+}
+
+template<>
+inline ge::AscendString ConvertToAscendString<std::string>(std::string str) {
+  return ge::AscendString(str.c_str());
+}
+
+template<>
+inline ge::AscendString ConvertToAscendString<ge::AscendString>(ge::AscendString str) {
+  return std::move(str);
+}
+
+template<typename T>
+std::vector<ge::AscendString> ConvertToListAscendString(T strs);
+
+template<>
+inline std::vector<ge::AscendString> ConvertToListAscendString(std::vector<std::string> strs) {
+  std::vector<ge::AscendString> ascend_strs(strs.size());
+  for (size_t i = 0; i < strs.size(); ++i) {
+    ascend_strs[i] = ge::AscendString(strs[i].c_str());
+  }
+  return ascend_strs;
+}
+
+template<>
+inline std::vector<ge::AscendString> ConvertToListAscendString(std::vector<ge::AscendString> strs) {
+  return std::move(strs);
+}
+}
 namespace ge {
 using std::function;
 using std::string;
@@ -101,25 +137,35 @@ using std::vector;
 #define ATTR_ListType(x, ...)
 #define ATTR_ListNamedAttrs(x, ...)
 
-#define REGISTER_TYPE_Int(...) OpInt(__VA_ARGS__)
-#define REGISTER_TYPE_Float(...) OpFloat(__VA_ARGS__)
-#define REGISTER_TYPE_AscendString(...) OpAscendString(__VA_ARGS__)
-#define REGISTER_TYPE_String(...) REGISTER_TYPE_AscendString(__VA_ARGS__)
-#define REGISTER_TYPE_Bool(...) OpBool(__VA_ARGS__)
-#define REGISTER_TYPE_Tensor(...) OpTensor(__VA_ARGS__)
-#define REGISTER_TYPE_Type(...) OpType(__VA_ARGS__)
-#define REGISTER_TYPE_NamedAttrs(...) OpNamedAttrs(__VA_ARGS__)
-#define REGISTER_TYPE_ListInt(...) OpListInt(__VA_ARGS__)
-#define REGISTER_TYPE_ListFloat(...) OpListFloat(__VA_ARGS__)
-#define REGISTER_TYPE_ListAcendString(...) OpListAcendString(__VA_ARGS__)
-#define REGISTER_TYPE_ListAscendString(...) OpListAscendString(__VA_ARGS__)
-#define REGISTER_TYPE_ListString(...) REGISTER_TYPE_ListAscendString(__VA_ARGS__)
-#define REGISTER_TYPE_ListBool(...) OpListBool(__VA_ARGS__)
-#define REGISTER_TYPE_ListTensor(...) OpListTensor(__VA_ARGS__)
-#define REGISTER_TYPE_Bytes(...) OpBytes(__VA_ARGS__)
-#define REGISTER_TYPE_ListListInt(...) OpListListInt(__VA_ARGS__)
-#define REGISTER_TYPE_ListType(...) OpListType(__VA_ARGS__)
-#define REGISTER_TYPE_ListNamedAttrs(...) OpListNamedAttrs(__VA_ARGS__)
+#define SET_VALUE_String(x) auto value = ConvertToAscendString(x)
+#define SET_VALUE_AscendString(x) auto value = ConvertToAscendString(x)
+
+#define SET_VALUE_ListString(x)                                    \
+  auto input = (x);                                                \
+  std::vector<AscendString> value = ConvertToListAscendString(input)
+
+#define SET_VALUE_ListAcendString(x)                               \
+  auto input = (x);                                                \
+  std::vector<AscendString> value = ConvertToListAscendString(input)
+
+#define SET_VALUE_ListAscendString(x)                              \
+  auto input = (x);                                                \
+  std::vector<AscendString> value = ConvertToListAscendString(input)
+
+#define SET_VALUE_Int(x) auto value = (x)
+#define SET_VALUE_Float(x) auto value = (x)
+#define SET_VALUE_Bool(x) auto value = (x)
+#define SET_VALUE_Tensor(x) auto value = (x)
+#define SET_VALUE_Type(x) auto value = (x)
+#define SET_VALUE_NamedAttrs(x) auto value = (x)
+#define SET_VALUE_ListInt(x) auto value = (x)
+#define SET_VALUE_ListFloat(x) auto value = (x)
+#define SET_VALUE_ListBool(x) auto value = (x)
+#define SET_VALUE_ListTensor(x) auto value = (x)
+#define SET_VALUE_Bytes(x) auto value = (x)
+#define SET_VALUE_ListListInt(x) auto value = (x)
+#define SET_VALUE_ListType(x) auto value = (x)
+#define SET_VALUE_ListNamedAttrs(x) auto value = (x)
 
 #define REQUIRED_ATTR_String(x)                                             \
   graphStatus get_attr_##x(AscendString &ret) const {                       \
@@ -244,7 +290,8 @@ class OpReg {
                                                                             \
  private:                                                                   \
   void __attr_##x() {                                                       \
-    Operator::AttrRegister(#x, REGISTER_TYPE_##Type(__VA_ARGS__));          \
+    SET_VALUE_##Type(Op##Type(__VA_ARGS__));                                \
+    Operator::AttrRegister(#x, value);                                      \
     std::string attr_name(#x);                                              \
     (void)OpReg()
 
