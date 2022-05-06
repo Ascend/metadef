@@ -141,4 +141,43 @@ TEST_F(MathUtilUT, CeilDiv32) {
   EXPECT_EQ(CeilDiv32(64), 2);
   EXPECT_EQ(CeilDiv32(65), 3);
 }
+
+TEST_F(MathUtilUT, MulOverflow_NotOverflow) {
+  int32_t i;
+  EXPECT_FALSE(MulOverflow(10, 20, i));
+  EXPECT_EQ(i, 200);
+
+  EXPECT_FALSE(MulOverflow(-10, -20, i));
+  EXPECT_EQ(i, 200);
+
+  EXPECT_FALSE(MulOverflow(-10, 20, i));
+  EXPECT_EQ(i, -200);
+
+  EXPECT_FALSE(MulOverflow(0, 0, i));
+  EXPECT_EQ(i, 0);
+}
+
+TEST_F(MathUtilUT, MulOverflow_Overflow) {
+  int32_t i;
+  EXPECT_TRUE(MulOverflow(std::numeric_limits<int32_t>::max(), 2, i));
+  EXPECT_TRUE(MulOverflow(std::numeric_limits<int32_t>::min(), 2, i));
+  EXPECT_TRUE(MulOverflow(std::numeric_limits<int32_t>::min(), -1, i));
+  EXPECT_TRUE(MulOverflow(2, std::numeric_limits<int32_t>::max(), i));
+  EXPECT_TRUE(MulOverflow(2, std::numeric_limits<int32_t>::min(), i));
+  EXPECT_TRUE(MulOverflow(-1, std::numeric_limits<int32_t>::min(), i));
+  EXPECT_TRUE(MulOverflow(std::numeric_limits<int32_t>::max() / 2 + 1, std::numeric_limits<int32_t>::max() / 2 + 1, i));
+  EXPECT_TRUE(MulOverflow(std::numeric_limits<int32_t>::min() / 2 - 1, std::numeric_limits<int32_t>::min() / 2 - 1, i));
+}
+
+TEST_F(MathUtilUT, MulOverflow_OverflowUint8) {
+  uint8_t i;
+  EXPECT_TRUE(MulOverflow(static_cast<uint8_t>(255), static_cast<uint8_t>(2), i));
+  EXPECT_TRUE(MulOverflow(static_cast<uint8_t>(2), static_cast<uint8_t>(255), i));
+}
+
+TEST_F(MathUtilUT, MulOverflow_OverflowDiffType) {
+  uint8_t i;
+  EXPECT_TRUE(MulOverflow(300, 1, i));
+  EXPECT_TRUE(MulOverflow(1, 300, i));
+}
 }  // namespace ge

@@ -94,6 +94,14 @@ class GraphFrame {
     return kernel_extend_buffer_pool_;
   }
 
+  BufferPool &GetKernelModelDesc() {
+    return model_desc_buffer_pool_;
+  }
+
+  const BufferPool &GetKernelModelDesc() const {
+    return model_desc_buffer_pool_;
+  }
+
   const BufferPool &GetBufferPool() const {
     return root_frame_.buffer_pool_;
   }
@@ -114,6 +122,7 @@ class GraphFrame {
   std::unordered_map<std::string, size_t> node_names_to_index_;
   BufferPool compute_node_info_buffer_pool_;
   BufferPool kernel_extend_buffer_pool_;
+  BufferPool model_desc_buffer_pool_;
   BufferPool buffer_pool_;
 };
 }  // namespace bg

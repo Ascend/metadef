@@ -47,5 +47,8 @@ constexpr char *kKernelExtendIndex = (char *)"KernelExtendInfoIndex";
 
 // 打在exe graph上，保存了本graph涉及的所有的二进制buffer（字符串、const值等）
 constexpr char *kBuffer = (char *)"buffer";
+
+// 打在exe graph上，保存了本graph涉及的ModelDesc信息
+constexpr char *kModelDesc = (char *)"ModelDesc";
 }
 #endif  //AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_EXE_GRAPH_ATTRS_H_
