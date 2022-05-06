@@ -606,7 +606,16 @@ NodePtr NodeUtils::GetParentInput(const Node &node) {
   const OutDataAnchorPtr &peer_out_anchor = in_anchor->GetPeerOutAnchor();
   GE_CHECK_NOTNULL_EXEC(peer_out_anchor, return nullptr);
 
-  return peer_out_anchor->GetOwnerNode();
+  auto peer_node = peer_out_anchor->GetOwnerNode();
+  if (peer_node->GetType() == DATA) {
+    if (peer_node->GetOpDesc() == nullptr) {
+      return nullptr;
+    }
+    if (peer_node->GetOpDesc()->HasAttr(ATTR_NAME_PARENT_NODE_INDEX)) {
+      return GetParentInput(peer_node);
+    }
+  }
+  return peer_node;
 }
 
 NodePtr NodeUtils::GetParentInput(const NodePtr &node) {

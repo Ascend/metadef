@@ -47,6 +47,12 @@ class GraphOptimizer {
     return SUCCESS;
   }
 
+  // optimize graph after normalization, include multi dims and pre/post process
+  virtual Status OptimizeAfterGraphNormalization(const ComputeGraphPtr& graph) {
+    (void)graph;
+    return SUCCESS;
+  }
+
   // optimize graph before build for RTS
   virtual Status OptimizeGraphBeforeBuild(ComputeGraph& graph) {
     (void)graph;
