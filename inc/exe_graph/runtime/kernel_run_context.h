@@ -25,7 +25,10 @@ extern "C" {
 typedef void (*FreeCallback)(void *);
 
 typedef struct {
-  void *data;
+  union {
+    void *pointer;
+    unsigned char inplace[sizeof(void *)];
+  } data;
   FreeCallback deleter;
 } AsyncAnyValue;
 
