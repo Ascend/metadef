@@ -17,6 +17,7 @@
 #define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_ACCELERATOR_UTILS_H
 #include "graph/utils/op_desc_utils.h"
 #include "graph/debug/ge_log.h"
+#include <array>
 
 #define ACCLRT_NOTNULL(val, ret)                       \
   do {                                                  \
