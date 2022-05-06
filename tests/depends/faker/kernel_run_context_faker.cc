@@ -106,12 +106,12 @@ KernelRunContextHolder KernelRunContextFaker::Build() const {
 
   if (inputs_.size() == kernel_input_num_) {
     for (size_t i = 0; i < inputs_.size(); ++i) {
-      holder.value_holder[i].data = inputs_[i];
+      holder.value_holder[i].data.pointer = inputs_[i];
     }
   }
   if (outputs_.size() == kernel_output_num_) {
     for (size_t i = 0; i < outputs_.size(); ++i) {
-      holder.value_holder[i + kernel_input_num_].data = outputs_[i];
+      holder.value_holder[i + kernel_input_num_].data.pointer = outputs_[i];
     }
   }
   return holder;

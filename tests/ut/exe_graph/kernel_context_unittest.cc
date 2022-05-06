@@ -39,15 +39,15 @@ TEST_F(KernelContextUT, ChainGetAllocOk) {
   Chain *c = reinterpret_cast<Chain *>(&av);
   const Chain *cc = reinterpret_cast<Chain *>(&av);
 
-  EXPECT_EQ(c->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data));
-  EXPECT_EQ(c->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data));
+  EXPECT_EQ(c->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data.pointer));
+  EXPECT_EQ(c->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data.pointer));
 
-  EXPECT_EQ(cc->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data));
-  EXPECT_EQ(cc->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data));
+  EXPECT_EQ(cc->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data.pointer));
+  EXPECT_EQ(cc->GetPointer<TestT>(), reinterpret_cast<TestT *>(av.data.pointer));
 }
 TEST_F(KernelContextUT, ChainGetInnerValueOk) {
   AsyncAnyValue av = {nullptr, nullptr};
-  av.data = reinterpret_cast<void *>(10);
+  av.data.pointer = reinterpret_cast<void *>(10);
 
   Chain *c = reinterpret_cast<Chain *>(&av);
   const Chain *cc = reinterpret_cast<Chain *>(&av);
@@ -56,7 +56,7 @@ TEST_F(KernelContextUT, ChainGetInnerValueOk) {
   EXPECT_EQ(cc->GetValue<int64_t>(), 10);
 
   c->GetValue<int64_t>() = 20;
-  EXPECT_EQ(reinterpret_cast<int64_t>(av.data), 20);
+  EXPECT_EQ(reinterpret_cast<int64_t>(av.data.pointer), 20);
 }
 
 TEST_F(KernelContextUT, ChainSetDeleterOk) {
@@ -64,15 +64,15 @@ TEST_F(KernelContextUT, ChainSetDeleterOk) {
   Chain *c = reinterpret_cast<Chain *>(&av);
 
   c->SetWithDefaultDeleter(new TestT());
-  ASSERT_NE(av.data, nullptr);
+  ASSERT_NE(av.data.pointer, nullptr);
   ASSERT_NE(av.deleter, nullptr);
-  av.deleter(av.data);
+  av.deleter(av.data.pointer);
   av.deleter = nullptr;
 
   c->SetWithDefaultDeleter(new std::vector<int64_t>());
-  ASSERT_NE(av.data, nullptr);
+  ASSERT_NE(av.data.pointer, nullptr);
   ASSERT_NE(av.deleter, nullptr);
-  av.deleter(av.data);
+  av.deleter(av.data.pointer);
 }
 
 TEST_F(KernelContextUT, ChainSetAndUseStructOk) {
@@ -87,7 +87,7 @@ TEST_F(KernelContextUT, ChainSetAndUseStructOk) {
   EXPECT_EQ(c->GetPointer<std::vector<int64_t>>()->size(), 2);
   EXPECT_EQ(*c->GetPointer<std::vector<int64_t>>(), std::vector<int64_t>({10, 20}));
 
-  av.deleter(av.data);
+  av.deleter(av.data.pointer);
 }
 
 TEST_F(KernelContextUT, GetInputNumOk) {
@@ -108,7 +108,7 @@ TEST_F(KernelContextUT, GetInnerInputOk) {
   EXPECT_EQ(context->GetInputPointer<int32_t>(2),
             reinterpret_cast<const int32_t *>(&(context_holder.value_holder[2].data)));
 
-  EXPECT_EQ(context->GetInputValue<int64_t>(4), reinterpret_cast<int64_t>(context_holder.value_holder[4].data));
+  EXPECT_EQ(context->GetInputValue<int64_t>(4), reinterpret_cast<int64_t>(context_holder.value_holder[4].data.pointer));
 
   EXPECT_EQ(context->GetInput(0), reinterpret_cast<const Chain *>(&context_holder.value_holder[0]));
   EXPECT_EQ(context->GetInput(4), reinterpret_cast<const Chain *>(&context_holder.value_holder[4]));
@@ -118,16 +118,16 @@ TEST_F(KernelContextUT, GetAllocInputOk) {
   auto context_holder = KernelRunContextFaker().KernelIONum(5, 6).Build();
   std::vector<TestT> t_holder(11);
   for (size_t i = 0; i < 11; ++i) {
-    context_holder.value_holder[i].data = &t_holder[i];
+    context_holder.value_holder[i].data.pointer = &t_holder[i];
   }
   auto context = context_holder.GetContext<KernelContext>();
 
   EXPECT_EQ(context->GetInputPointer<TestT>(0),
-            reinterpret_cast<const TestT *>((context_holder.value_holder[0].data)));
+            reinterpret_cast<const TestT *>((context_holder.value_holder[0].data.pointer)));
   EXPECT_EQ(context->GetInputPointer<TestT>(1),
-            reinterpret_cast<const TestT *>((context_holder.value_holder[1].data)));
+            reinterpret_cast<const TestT *>((context_holder.value_holder[1].data.pointer)));
   EXPECT_EQ(context->GetInputPointer<TestT>(4),
-            reinterpret_cast<const TestT *>((context_holder.value_holder[4].data)));
+            reinterpret_cast<const TestT *>((context_holder.value_holder[4].data.pointer)));
 
   EXPECT_EQ(context->GetInput(0), reinterpret_cast<const Chain *>(&context_holder.value_holder[0]));
   EXPECT_EQ(context->GetInput(4), reinterpret_cast<const Chain *>(&context_holder.value_holder[4]));
@@ -152,16 +152,16 @@ TEST_F(KernelContextUT, GetAllocOutputOk) {
   auto context_holder = KernelRunContextFaker().KernelIONum(5, 6).Build();
   std::vector<TestT> t_holder(11);
   for (size_t i = 0; i < 11; ++i) {
-    context_holder.value_holder[i].data = &t_holder[i];
+    context_holder.value_holder[i].data.pointer = &t_holder[i];
   }
   auto context = context_holder.GetContext<KernelContext>();
 
   EXPECT_EQ(context->GetOutputPointer<TestT>(0),
-            reinterpret_cast<const TestT *>((context_holder.value_holder[5].data)));
+            reinterpret_cast<const TestT *>((context_holder.value_holder[5].data.pointer)));
   EXPECT_EQ(context->GetOutputPointer<TestT>(1),
-            reinterpret_cast<const TestT *>((context_holder.value_holder[6].data)));
+            reinterpret_cast<const TestT *>((context_holder.value_holder[6].data.pointer)));
   EXPECT_EQ(context->GetOutputPointer<TestT>(4),
-            reinterpret_cast<const TestT *>((context_holder.value_holder[9].data)));
+            reinterpret_cast<const TestT *>((context_holder.value_holder[9].data.pointer)));
 
   EXPECT_EQ(context->GetOutput(0), reinterpret_cast<const Chain *>(&context_holder.value_holder[5]));
   EXPECT_EQ(context->GetOutput(4), reinterpret_cast<const Chain *>(&context_holder.value_holder[9]));
