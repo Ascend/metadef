@@ -18,6 +18,13 @@
 #include <gtest/gtest.h>
 
 #include "graph/utils/op_desc_utils.h"
+namespace {
+const std::string kStr1 = "abc";
+const std::string kStr2 = "abcd";
+const std::vector<std::string> kStrs = {"a", "bc"};
+const std::vector<ge::AscendString> kAscendStrs = {ge::AscendString("a"), ge::AscendString("b")};
+}
+
 namespace ge {
 class RegisterOpUnittest : public testing::Test {};
 
@@ -28,14 +35,21 @@ REG_OP(AttrIrNameRegSuccess1)
     .ATTR(AttrTensor, Tensor, Tensor())
     .ATTR(AttrType, Type, DT_INT32)
     .ATTR(AttrString, String, "")
+    .ATTR(AttrString1, String, kStr1)
+    .ATTR(AttrString2, String, "ab")
     .ATTR(AttrAscendString, AscendString, "")
+    .ATTR(AttrAscendString1, AscendString, AscendString("abc"))
     .ATTR(AttrListInt, ListInt, {})
     .ATTR(AttrListFloat, ListFloat, {})
     .ATTR(AttrListBool, ListBool, {})
     .ATTR(AttrListTensor, ListTensor, {})
     .ATTR(AttrListType, ListType, {})
     .ATTR(AttrListString, ListString, {})
+    .ATTR(AttrListString1, ListString, {"", ""})
+    .ATTR(AttrListString2, ListString, {kStr1, kStr2})
+    .ATTR(AttrListString3, ListString, kStrs)
     .ATTR(AttrListAscendString, ListAscendString, {})
+    .ATTR(AttrListAscendString1, ListAscendString, kAscendStrs)
     .ATTR(AttrBytes, Bytes, {})
     .ATTR(AttrListListInt, ListListInt, {})
 
@@ -82,14 +96,21 @@ TEST_F(RegisterOpUnittest, AttrIrNameRegSuccess) {
                                       "AttrTensor",
                                       "AttrType",
                                       "AttrString",
+                                      "AttrString1",
+                                      "AttrString2",
                                       "AttrAscendString",
+                                      "AttrAscendString1",
                                       "AttrListInt",
                                       "AttrListFloat",
                                       "AttrListBool",
                                       "AttrListTensor",
                                       "AttrListType",
                                       "AttrListString",
+                                      "AttrListString1",
+                                      "AttrListString2",
+                                      "AttrListString3",
                                       "AttrListAscendString",
+                                      "AttrListAscendString1",
                                       "AttrBytes",
                                       "AttrListListInt",
                                       "ReqAttrInt",
