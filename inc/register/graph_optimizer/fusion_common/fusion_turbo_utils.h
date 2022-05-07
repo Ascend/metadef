@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_ACCELERATOR_UTILS_H
-#define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_ACCELERATOR_UTILS_H
+#ifndef INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_UTILS_H
+#define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_UTILS_H
 #include "graph/utils/op_desc_utils.h"
 #include "graph/debug/ge_log.h"
 #include <array>
@@ -76,9 +76,9 @@ struct Relations {
 };
 
 extern const std::array<size_t, static_cast<size_t>(ge::DT_MAX + 1)> data_type_size;
-class AcceleratorUtils {
+class FusionTurboUtils {
  public:
   static ge::NodePtr GetConstInput(const ge::NodePtr &node, int32_t index);
 };
 }
-#endif // INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_ACCELERATOR_UTILS_H
+#endif // INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_UTILS_H

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "register/graph_optimizer/fusion_common/accelerator.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo.h"
 #include "graph/operator_factory.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/node_utils.h"
@@ -101,13 +101,13 @@ WeightInfo::WeightInfo(ge::GeShape &&shape_p, ge::DataType datatype_p,
   CalcTotalDataSize();
 }
 
-Accelerator::Accelerator(const ge::ComputeGraphPtr &graph) : graph_(graph) {}
+FusionTurbo::FusionTurbo(const ge::ComputeGraphPtr &graph) : graph_(graph) {}
 
-Accelerator::Accelerator(ge::ComputeGraph &graph) : graph_(graph.shared_from_this()) {}
+FusionTurbo::FusionTurbo(ge::ComputeGraph &graph) : graph_(graph.shared_from_this()) {}
 
-Accelerator::~Accelerator() {}
+FusionTurbo::~FusionTurbo() {}
 
-Status Accelerator::BreakInput(const ge::NodePtr &node,
+Status FusionTurbo::BreakInput(const ge::NodePtr &node,
                                const vector<int32_t> &input_index) {
   for (auto index : input_index) {
     auto in_anchor = node->GetInDataAnchor(index);
@@ -120,7 +120,7 @@ Status Accelerator::BreakInput(const ge::NodePtr &node,
   return SUCCESS;
 }
 
-Status Accelerator::BreakOutput(const ge::NodePtr &node,
+Status FusionTurbo::BreakOutput(const ge::NodePtr &node,
                                 const vector<int32_t> &output_index) {
   for (auto index : output_index) {
     auto out_anchor = node->GetOutDataAnchor(index);
@@ -136,7 +136,7 @@ Status Accelerator::BreakOutput(const ge::NodePtr &node,
 /* Remove single input and output node, then relink the peer nodes.
  * A->B-->C      ---->    A-->C
  *     \->D    remove B    \->D */
-Status Accelerator::RemoveSingleInOutNode(const ge::NodePtr &node) {
+Status FusionTurbo::RemoveSingleInOutNode(const ge::NodePtr &node) {
   ACCLRT_NOTNULL(node, PARAM_INVALID);
   if (ge::GraphUtils::IsolateNode(node, {}) != ge::GRAPH_SUCCESS) {
     return FAILED;
@@ -150,7 +150,7 @@ Status Accelerator::RemoveSingleInOutNode(const ge::NodePtr &node) {
 }
 
 /* Just remove the node and all its relative data and control anchors. */
-Status Accelerator::RemoveNodeOnly(const ge::NodePtr &node) {
+Status FusionTurbo::RemoveNodeOnly(const ge::NodePtr &node) {
   ACCLRT_NOTNULL(node, PARAM_INVALID);
   ge::NodeUtils::UnlinkAll(*node);
 
@@ -198,7 +198,7 @@ void UpdateTensor(const ge::GeTensorDescPtr &tensor, const WeightInfo &w_info) {
   tensor->SetOriginShape(w_info.ori_shape);
 }
 
-ge::NodePtr Accelerator::AddConstNode(const ge::NodePtr &node, int32_t index,
+ge::NodePtr FusionTurbo::AddConstNode(const ge::NodePtr &node, int32_t index,
                                       const WeightInfo &w_info) {
   auto node_in_tensor = node->GetOpDesc()->MutableInputDesc(index);
   ACCLRT_NOTNULL(node_in_tensor, nullptr);
@@ -231,9 +231,9 @@ ge::NodePtr Accelerator::AddConstNode(const ge::NodePtr &node, int32_t index,
   return const_node;
 }
 
-ge::NodePtr Accelerator::UpdateConst(const ge::NodePtr &node, int32_t index,
+ge::NodePtr FusionTurbo::UpdateConst(const ge::NodePtr &node, int32_t index,
                                      const WeightInfo &w_info) {
-  auto const_node = AcceleratorUtils::GetConstInput(node, index);
+  auto const_node = FusionTurboUtils::GetConstInput(node, index);
   if (const_node == nullptr) {
     return nullptr;
   }
@@ -271,7 +271,7 @@ ge::NodePtr Accelerator::UpdateConst(const ge::NodePtr &node, int32_t index,
   return const_node;
 }
 
-ge::NodePtr Accelerator::AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, int32_t index) {
+ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, int32_t index) {
   ACCLRT_NOTNULL(node, nullptr);
   size_t input_size = node->GetAllInDataAnchorsSize();
   if (static_cast<size_t>(index) >= input_size) {
@@ -291,7 +291,7 @@ ge::NodePtr Accelerator::AddWeight(const ge::NodePtr &node, const WeightInfo &w_
   }
 }
 
-ge::NodePtr Accelerator::AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, const string& tensor_name) {
+ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, const string& tensor_name) {
   ACCLRT_NOTNULL(node, nullptr);
   auto index = node->GetOpDesc()->GetInputIndexByName(tensor_name);
   if (index == -1) {
@@ -300,7 +300,7 @@ ge::NodePtr Accelerator::AddWeight(const ge::NodePtr &node, const WeightInfo &w_
   return AddWeight(node, w_info, index);
 }
 
-ge::NodePtr Accelerator::AddWeight(const ge::NodePtr &node,
+ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node,
                                    const WeightInfo &w_info) {
   ACCLRT_NOTNULL(node, nullptr);
   std::vector<ge::NodePtr> ret;
@@ -324,7 +324,7 @@ ge::NodePtr Accelerator::AddWeight(const ge::NodePtr &node,
   return GetPeerOutNode(node, i);
 }
                                                  
-std::vector<ge::NodePtr> Accelerator::AddWeights(const ge::NodePtr &node,
+std::vector<ge::NodePtr> FusionTurbo::AddWeights(const ge::NodePtr &node,
                                                  const vector<WeightInfo> &w_infos) {
   std::vector<ge::NodePtr> ret;
   ACCLRT_NOTNULL(node, ret);
@@ -355,9 +355,9 @@ std::vector<ge::NodePtr> Accelerator::AddWeights(const ge::NodePtr &node,
   return ret;
 }
 
-ge::GeTensorPtr Accelerator::MutableWeight(const ge::NodePtr &node, int32_t index) {
+ge::GeTensorPtr FusionTurbo::MutableWeight(const ge::NodePtr &node, int32_t index) {
   ACCLRT_NOTNULL(node, nullptr);
-  auto const_node = AcceleratorUtils::GetConstInput(node, index);
+  auto const_node = FusionTurboUtils::GetConstInput(node, index);
   if (const_node == nullptr) {
     return nullptr;
   }
@@ -370,7 +370,7 @@ ge::GeTensorPtr Accelerator::MutableWeight(const ge::NodePtr &node, int32_t inde
   return weights.at(0);
 }
 
-ge::NodePtr Accelerator::AddNodeOnly(const string &op_name, const string &op_type) {
+ge::NodePtr FusionTurbo::AddNodeOnly(const string &op_name, const string &op_type) {
   auto op = ge::OperatorFactory::CreateOperator(op_name.c_str(), op_type.c_str());
   if (op.IsEmpty()) {
     return nullptr;
@@ -380,7 +380,7 @@ ge::NodePtr Accelerator::AddNodeOnly(const string &op_name, const string &op_typ
   return ret_node;
 }
 
-ge::NodePtr Accelerator::InsertNodeBefore(const string &op_name, const string &op_type,
+ge::NodePtr FusionTurbo::InsertNodeBefore(const string &op_name, const string &op_type,
                                           const ge::NodePtr &base_node, int32_t base_input_index,
                                           int32_t input_index, int32_t output_index) {
   ACCLRT_NOTNULL(base_node, nullptr);
@@ -438,7 +438,7 @@ failed_process:
   return nullptr;
 }
 
-ge::NodePtr Accelerator::InsertNodeAfter(const string &op_name, const string &op_type, const ge::NodePtr &base_node,
+ge::NodePtr FusionTurbo::InsertNodeAfter(const string &op_name, const string &op_type, const ge::NodePtr &base_node,
                                          int32_t base_output_index, int32_t input_index, int32_t output_index) {
   ACCLRT_NOTNULL(base_node, nullptr);
   auto base_desc = base_node->GetOpDesc();
@@ -518,7 +518,7 @@ void PreprocessRelation(const ge::NodePtr &node,
   }
 }
 
-Status Accelerator::LinkInput(Relations &input_relations,
+Status FusionTurbo::LinkInput(Relations &input_relations,
                               const ge::NodePtr &dst_node,
                               bool update_tensor) {
   ACCLRT_NOTNULL(dst_node, PARAM_INVALID);
@@ -568,7 +568,7 @@ Status Accelerator::LinkInput(Relations &input_relations,
   return SUCCESS;
 }
 
-Status Accelerator::LinkOutput(Relations &out_relations, const ge::NodePtr &src_node, bool update_tensor) {
+Status FusionTurbo::LinkOutput(Relations &out_relations, const ge::NodePtr &src_node, bool update_tensor) {
   ACCLRT_NOTNULL(src_node, PARAM_INVALID);
   auto dst_op_desc = src_node->GetOpDesc();
   if (out_relations.relations.empty() && out_relations.relations_by_name.empty()) {
@@ -629,7 +629,7 @@ Status Accelerator::LinkOutput(Relations &out_relations, const ge::NodePtr &src_
   return SUCCESS;
 }
 
-Status Accelerator::UpdateInputByPeer(const ge::NodePtr &node, int32_t index,
+Status FusionTurbo::UpdateInputByPeer(const ge::NodePtr &node, int32_t index,
                                       const ge::NodePtr &peer_node, int32_t peer_index) {
   ACCLRT_NOTNULL(node, PARAM_INVALID);
   ACCLRT_NOTNULL(peer_node, PARAM_INVALID);
@@ -645,7 +645,7 @@ Status Accelerator::UpdateInputByPeer(const ge::NodePtr &node, int32_t index,
   return SUCCESS;
 }
 
-Status Accelerator::UpdateOutputByPeer(const ge::NodePtr &node, int32_t index,
+Status FusionTurbo::UpdateOutputByPeer(const ge::NodePtr &node, int32_t index,
                                        const ge::NodePtr &peer_node, int32_t peer_index) {
   ACCLRT_NOTNULL(node, PARAM_INVALID);
   ACCLRT_NOTNULL(peer_node, PARAM_INVALID);
@@ -660,7 +660,7 @@ Status Accelerator::UpdateOutputByPeer(const ge::NodePtr &node, int32_t index,
   return SUCCESS;
 }
 
-bool Accelerator::IsUnknownShape(const ge::NodePtr &node, int32_t index, bool is_input) {
+bool FusionTurbo::IsUnknownShape(const ge::NodePtr &node, int32_t index, bool is_input) {
   ge::GeTensorDescPtr tensor;
   if (is_input) {
     tensor = node->GetOpDesc()->MutableInputDesc(index);
@@ -672,7 +672,7 @@ bool Accelerator::IsUnknownShape(const ge::NodePtr &node, int32_t index, bool is
   return shape.IsUnknownShape();
 }
 
-bool Accelerator::IsUnknownOriShape(const ge::NodePtr &node, int32_t index, bool is_input) {
+bool FusionTurbo::IsUnknownOriShape(const ge::NodePtr &node, int32_t index, bool is_input) {
   ge::GeTensorDescPtr tensor;
   if (is_input) {
     tensor = node->GetOpDesc()->MutableInputDesc(index);
@@ -684,7 +684,7 @@ bool Accelerator::IsUnknownOriShape(const ge::NodePtr &node, int32_t index, bool
   return shape.IsUnknownShape();
 }
 
-Status Accelerator::TransferOutCtrlEdges(const std::vector<ge::NodePtr> &nodes,
+Status FusionTurbo::TransferOutCtrlEdges(const std::vector<ge::NodePtr> &nodes,
                                          const ge::NodePtr &new_node) {
   ACCLRT_NOTNULL(new_node, FAILED);
   for (const auto &node : nodes) {
@@ -703,7 +703,7 @@ Status Accelerator::TransferOutCtrlEdges(const std::vector<ge::NodePtr> &nodes,
   return SUCCESS;
 }
 
-Status Accelerator::TransferInCtrlEdges(const std::vector<ge::NodePtr> &nodes,
+Status FusionTurbo::TransferInCtrlEdges(const std::vector<ge::NodePtr> &nodes,
                                         const ge::NodePtr &new_node) {
   ACCLRT_NOTNULL(new_node, FAILED);
   for (const auto &node : nodes) {
@@ -725,7 +725,7 @@ Status Accelerator::TransferInCtrlEdges(const std::vector<ge::NodePtr> &nodes,
   return SUCCESS;
 }
 
-ge::NodePtr Accelerator::MultiInOne(const string &node_name, const string &node_type,
+ge::NodePtr FusionTurbo::MultiInOne(const string &node_name, const string &node_type,
                                     Relations &input_relations,
                                     Relations &output_relations,
                                     const std::vector<ge::NodePtr> &old_nodes,
@@ -738,7 +738,7 @@ ge::NodePtr Accelerator::MultiInOne(const string &node_name, const string &node_
   return node;
 }
 
-Status Accelerator::MultiInOne(const ge::NodePtr &new_node,
+Status FusionTurbo::MultiInOne(const ge::NodePtr &new_node,
                                Relations &input_relations,
                                Relations &output_relations,
                                const std::vector<ge::NodePtr> &old_nodes,

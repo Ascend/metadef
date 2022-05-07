@@ -24,7 +24,7 @@
 #include "register/graph_optimizer/graph_fusion/fusion_pass_manager/fusion_pass_registry.h"
 #include "register/graph_optimizer/graph_fusion/graph_fusion_pass_base.h"
 #include "register/graph_optimizer/fusion_common/pattern_fusion_base_pass.h"
-#include "register/graph_optimizer/fusion_common/accelerator.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo.h"
 
 #define protected public
 #define private public
@@ -211,7 +211,7 @@ class UTestAccelerator : public testing::Test {
 
     GraphUtils::AddEdge(node_relu2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(1));
 
-    Accelerator acc(graph);
+    FusionTurbo acc(graph);
     auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 1);
     EXPECT_NE(node_add, nullptr);
     Relations rl(0, {node_relu1, 0});
@@ -264,7 +264,7 @@ class UTestAccelerator : public testing::Test {
 
     GraphUtils::AddEdge(node_relu2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(1));
 
-    Accelerator acc(graph);
+    FusionTurbo acc(graph);
     auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 0);
     EXPECT_NE(node_add, nullptr);
     Relations rl(0, {node_relu1, 0});
@@ -309,7 +309,7 @@ class UTestAccelerator : public testing::Test {
 
 TEST_F(UTestAccelerator, test_case_01) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
 
@@ -336,7 +336,7 @@ TEST_F(UTestAccelerator, test_case_01) {
 
 TEST_F(UTestAccelerator, test_case_01_1) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
 
@@ -365,7 +365,7 @@ TEST_F(UTestAccelerator, test_case_01_1) {
 
 TEST_F(UTestAccelerator, test_case_02) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
 
@@ -393,7 +393,7 @@ TEST_F(UTestAccelerator, test_case_02) {
 
 TEST_F(UTestAccelerator, test_case_02_1) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
 
@@ -422,7 +422,7 @@ TEST_F(UTestAccelerator, test_case_02_1) {
 
 TEST_F(UTestAccelerator, test_case_03) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node1 = acc.AddNodeOnly(name, type);
@@ -434,7 +434,7 @@ TEST_F(UTestAccelerator, test_case_03) {
 /* cast2 already has input so Transpose will not have peer out. */
 TEST_F(UTestAccelerator, test_case_04) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -467,7 +467,7 @@ TEST_F(UTestAccelerator, test_case_04) {
 
 TEST_F(UTestAccelerator, test_case_04_1) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -503,7 +503,7 @@ TEST_F(UTestAccelerator, test_case_04_1) {
 
 TEST_F(UTestAccelerator, test_case_04_2) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -539,7 +539,7 @@ TEST_F(UTestAccelerator, test_case_04_2) {
 
 TEST_F(UTestAccelerator, test_case_04_3) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -553,7 +553,7 @@ TEST_F(UTestAccelerator, test_case_04_3) {
   auto output_node = GetNode(graph, "output");
   Relations dst_list = {{cast2,       0},
                         {output_node, 0}};
-  Status ret = Accelerator::LinkOutput(dst_list, node);
+  Status ret = FusionTurbo::LinkOutput(dst_list, node);
   EXPECT_EQ(ret, SUCCESS);
   EXPECT_EQ(node->GetName(), name);
   EXPECT_EQ(node->GetType(), type);
@@ -604,7 +604,7 @@ TEST_F(UTestAccelerator, test_case_04_5) {
 
 TEST_F(UTestAccelerator, test_case_05) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -640,7 +640,7 @@ TEST_F(UTestAccelerator, test_case_05) {
 
 TEST_F(UTestAccelerator, test_case_06) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -663,7 +663,7 @@ TEST_F(UTestAccelerator, test_case_06) {
 
 TEST_F(UTestAccelerator, test_case_07) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -688,7 +688,7 @@ TEST_F(UTestAccelerator, test_case_07) {
 
 TEST_F(UTestAccelerator, test_case_08) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
 
   auto cast2 = GetNode(graph, "cast2");
   acc.BreakOutput(cast2, {0});
@@ -698,7 +698,7 @@ TEST_F(UTestAccelerator, test_case_08) {
 
 TEST_F(UTestAccelerator, test_case_09) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
 
   auto cast2 = GetNode(graph, "cast2");
   auto cast1 = GetNode(graph, "cast1");
@@ -708,7 +708,7 @@ TEST_F(UTestAccelerator, test_case_09) {
 
 TEST_F(UTestAccelerator, test_case_10) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
 
   auto cast2 = GetNode(graph, "cast2");
   cast2->GetOpDesc()->MutableOutputDesc(0)->SetShape(ge::GeShape({-1}));
@@ -724,7 +724,7 @@ TEST_F(UTestAccelerator, test_case_10) {
 
 TEST_F(UTestAccelerator, test_case_11) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -780,7 +780,7 @@ TEST_F(UTestAccelerator, test_case_11) {
 
 TEST_F(UTestAccelerator, test_case_12) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -835,7 +835,7 @@ TEST_F(UTestAccelerator, test_case_12) {
 
 TEST_F(UTestAccelerator, test_case_13) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -872,7 +872,7 @@ TEST_F(UTestAccelerator, test_case_13) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 3);
   EXPECT_EQ(node->GetInDataAnchor(2)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  auto new_weight = Accelerator::MutableWeight(node, 2);
+  auto new_weight = FusionTurbo::MutableWeight(node, 2);
   ASSERT_NE(nullptr, new_weight);
 
   EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
@@ -892,7 +892,7 @@ TEST_F(UTestAccelerator, test_case_13) {
 
 TEST_F(UTestAccelerator, test_case_13_1) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -918,7 +918,7 @@ TEST_F(UTestAccelerator, test_case_13_1) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w, 3));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 3);
   EXPECT_EQ(node->GetInDataAnchor(2)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  auto new_weight = Accelerator::MutableWeight(node, 2);
+  auto new_weight = FusionTurbo::MutableWeight(node, 2);
   ASSERT_NE(nullptr, new_weight);
 
   EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
@@ -937,7 +937,7 @@ TEST_F(UTestAccelerator, test_case_13_1) {
 
 TEST_F(UTestAccelerator, test_case_14) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -962,7 +962,7 @@ TEST_F(UTestAccelerator, test_case_14) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w, 1));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  auto new_weight = Accelerator::MutableWeight(node, 1);
+  auto new_weight = FusionTurbo::MutableWeight(node, 1);
   ASSERT_NE(nullptr, new_weight);
 
   EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
@@ -996,7 +996,7 @@ TEST_F(UTestAccelerator, test_case_14) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w, 1));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  new_weight = Accelerator::MutableWeight(node, 1);
+  new_weight = FusionTurbo::MutableWeight(node, 1);
   ASSERT_NE(nullptr, new_weight);
 
   EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({5, 2, 7, 1}));
@@ -1015,7 +1015,7 @@ TEST_F(UTestAccelerator, test_case_14) {
 
 TEST_F(UTestAccelerator, test_case_14_1) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -1040,7 +1040,7 @@ TEST_F(UTestAccelerator, test_case_14_1) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w, "shape"));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  auto new_weight = Accelerator::MutableWeight(node, 1);
+  auto new_weight = FusionTurbo::MutableWeight(node, 1);
   ASSERT_NE(nullptr, new_weight);
 
   EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
@@ -1074,7 +1074,7 @@ TEST_F(UTestAccelerator, test_case_14_1) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w, "shape"));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  new_weight = Accelerator::MutableWeight(node, 1);
+  new_weight = FusionTurbo::MutableWeight(node, 1);
   ASSERT_NE(nullptr, new_weight);
 
   EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({5, 2, 7, 1}));
@@ -1094,7 +1094,7 @@ TEST_F(UTestAccelerator, test_case_14_1) {
 
 TEST_F(UTestAccelerator, test_case_14_1_1) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -1119,7 +1119,7 @@ TEST_F(UTestAccelerator, test_case_14_1_1) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w, "shape"));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  auto new_weight = Accelerator::MutableWeight(node, 1);
+  auto new_weight = FusionTurbo::MutableWeight(node, 1);
   ASSERT_NE(nullptr, new_weight);
 
   EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
@@ -1155,7 +1155,7 @@ TEST_F(UTestAccelerator, test_case_14_1_1) {
 
 TEST_F(UTestAccelerator, test_case_14_2) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -1176,7 +1176,7 @@ TEST_F(UTestAccelerator, test_case_14_2) {
   EXPECT_EQ(const_out_desc->GetFormat(), ge::FORMAT_ND);
   EXPECT_EQ(const_out_desc->GetOriginFormat(), ge::FORMAT_ND);
 
-  auto weight = Accelerator::MutableWeight(node, 1);
+  auto weight = FusionTurbo::MutableWeight(node, 1);
   ASSERT_NE(nullptr, weight);
   auto &weight_tensor = weight->GetTensorDesc();
   EXPECT_EQ(weight_tensor.GetShape(), ge::GeShape());
@@ -1203,7 +1203,7 @@ TEST_F(UTestAccelerator, test_case_14_2) {
   ASSERT_NE(nullptr, acc.AddWeight(node, w, 1));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
-  auto new_weight = Accelerator::MutableWeight(node, 1);
+  auto new_weight = FusionTurbo::MutableWeight(node, 1);
   ASSERT_NE(nullptr, new_weight);
 
   auto &new_weight_tensor = new_weight->GetTensorDesc();
@@ -1223,7 +1223,7 @@ TEST_F(UTestAccelerator, test_case_14_2) {
 
 TEST_F(UTestAccelerator, test_case_15) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -1258,7 +1258,7 @@ TEST_F(UTestAccelerator, test_case_15) {
   EXPECT_EQ(node->GetInDataAnchor(4)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
 
   for (size_t i = 2; i < 5; i++) {
-    auto new_weight = Accelerator::MutableWeight(node, i);
+    auto new_weight = FusionTurbo::MutableWeight(node, i);
     ASSERT_NE(nullptr, new_weight);
     if (i == 2) {
       EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
@@ -1284,7 +1284,7 @@ TEST_F(UTestAccelerator, test_case_15) {
 
 TEST_F(UTestAccelerator, test_case_15_1) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -1322,7 +1322,7 @@ TEST_F(UTestAccelerator, test_case_15_1) {
   ASSERT_EQ(all_weights.size(), 4);
 
   for (size_t i = 1; i < 5; i++) {
-    auto new_weight = Accelerator::MutableWeight(node, i);
+    auto new_weight = FusionTurbo::MutableWeight(node, i);
     ASSERT_NE(nullptr, new_weight);
     if (i == 1 || i == 2) {
       EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
@@ -1347,7 +1347,7 @@ TEST_F(UTestAccelerator, test_case_15_1) {
 
 TEST_F(UTestAccelerator, test_case_15_3) {
   auto graph = CreateGraphSingleInAndOut();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
   auto node = acc.AddNodeOnly(name, type);
@@ -1396,7 +1396,7 @@ TEST_F(UTestAccelerator, test_case_15_3) {
   ASSERT_EQ(all_weights.size(), 4);
 
   for (size_t i = 1; i < 5; i++) {
-    auto new_weight = Accelerator::MutableWeight(node, i);
+    auto new_weight = FusionTurbo::MutableWeight(node, i);
     ASSERT_NE(nullptr, new_weight);
     if (i == 1 || i == 2) {
       EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
