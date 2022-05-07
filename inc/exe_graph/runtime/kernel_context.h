@@ -24,32 +24,32 @@ class Chain {
   using Deleter = void(void *);
   template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
   const T *GetPointer() const {
-    return reinterpret_cast<const T *>(&(any_value_.data));
+    return reinterpret_cast<const T *>(any_value_.data.inplace);
   }
   template<typename T, typename std::enable_if<(sizeof(T) > sizeof(void *)), int>::type = 0>
   const T *GetPointer() const {
-    return reinterpret_cast<const T *>(any_value_.data);
+    return reinterpret_cast<const T *>(any_value_.data.pointer);
   }
   template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
   T *GetPointer() {
-    return reinterpret_cast<T *>(&(any_value_.data));
+    return reinterpret_cast<T *>(any_value_.data.inplace);
   }
   template<typename T, typename std::enable_if<(sizeof(T) > sizeof(void *)), int>::type = 0>
   T *GetPointer() {
-    return reinterpret_cast<T *>(any_value_.data);
+    return reinterpret_cast<T *>(any_value_.data.pointer);
   }
   template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
   const T &GetValue() const {
-    return *reinterpret_cast<const T *>(&(any_value_.data));
+    return *reinterpret_cast<const T *>(any_value_.data.inplace);
   }
   template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
   T &GetValue() {
-    return *reinterpret_cast<T *>(&(any_value_.data));
+    return *reinterpret_cast<T *>(any_value_.data.inplace);
   }
 
   void Set(void *data, Chain::Deleter deleter) {
     FreeResource();
-    any_value_.data = data;
+    any_value_.data.pointer = data;
     any_value_.deleter = deleter;
   }
 
@@ -80,7 +80,7 @@ class Chain {
 
   void FreeResource() {
     if (any_value_.deleter != nullptr) {
-      any_value_.deleter(any_value_.data);
+      any_value_.deleter(any_value_.data.pointer);
     }
   }
 
