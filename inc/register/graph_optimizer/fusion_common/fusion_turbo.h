@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_ACCELERATOR_H
-#define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_ACCELERATOR_H
+#ifndef INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_H
+#define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_H
 #include <vector>
 #include <map>
 #include "graph/anchor.h"
@@ -24,7 +24,7 @@
 #include "graph/node.h"
 #include "graph/utils/anchor_utils.h"
 #include "register/graph_optimizer/graph_optimize_register_error_codes.h"
-#include "register/graph_optimizer/fusion_common/accelerator_utils.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo_utils.h"
 
 namespace fe {
 struct WeightInfo {
@@ -67,13 +67,13 @@ struct WeightInfo {
              ge::Format format_p, void *data_p);
 };
 
-class Accelerator {
+class FusionTurbo {
  public:
-  Accelerator(const ge::ComputeGraphPtr &graph);
+  FusionTurbo(const ge::ComputeGraphPtr &graph);
 
-  Accelerator(ge::ComputeGraph &graph);
+  FusionTurbo(ge::ComputeGraph &graph);
 
-  ~Accelerator();
+  ~FusionTurbo();
 
   Status BreakInput(const ge::NodePtr &node,
                     const vector<int32_t> &input_index);
@@ -162,4 +162,4 @@ class Accelerator {
   ge::ComputeGraphPtr graph_;
 };
 }
-#endif // INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_ACCELERATOR_H
+#endif // INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_H

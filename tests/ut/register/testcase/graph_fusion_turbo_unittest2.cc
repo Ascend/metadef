@@ -24,7 +24,7 @@
 #include "register/graph_optimizer/graph_fusion/fusion_pass_manager/fusion_pass_registry.h"
 #include "register/graph_optimizer/graph_fusion/graph_fusion_pass_base.h"
 #include "register/graph_optimizer/fusion_common/pattern_fusion_base_pass.h"
-#include "register/graph_optimizer/fusion_common/accelerator.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo.h"
 
 #define protected public
 #define private public
@@ -158,7 +158,7 @@ class UTestAccelerator2 : public testing::Test {
 
     GraphUtils::AddEdge(node_relu2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(1));
 
-    Accelerator acc(graph);
+    FusionTurbo acc(graph);
     auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 1);
     EXPECT_NE(node_add, nullptr);
     Relations rl(0, {node_relu1, 0});
@@ -211,7 +211,7 @@ class UTestAccelerator2 : public testing::Test {
 
     GraphUtils::AddEdge(node_relu2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(1));
 
-    Accelerator acc(graph);
+    FusionTurbo acc(graph);
     auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 0);
     EXPECT_NE(node_add, nullptr);
     Relations rl(0, {node_relu1, 0});
@@ -255,7 +255,7 @@ class UTestAccelerator2 : public testing::Test {
 
 TEST_F(UTestAccelerator2, test_case_01) {
   auto graph = CreateComplexGraph();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "Add";
   auto node = acc.AddNodeOnly(name, type);
@@ -290,7 +290,7 @@ TEST_F(UTestAccelerator2, test_case_01) {
 
 TEST_F(UTestAccelerator2, test_case_01_1) {
   auto graph = CreateComplexGraph();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "Add";
   auto node = acc.AddNodeOnly(name, type);
@@ -333,7 +333,7 @@ TEST_F(UTestAccelerator2, test_case_01_1) {
 
 TEST_F(UTestAccelerator2, test_case_01_2) {
   auto graph = CreateComplexGraph();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "Add";
   auto node = acc.AddNodeOnly(name, type);
@@ -377,7 +377,7 @@ TEST_F(UTestAccelerator2, test_case_01_2) {
 
 TEST_F(UTestAccelerator2, test_case_01_3) {
   auto graph = CreateComplexGraph();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "Add";
   auto node = acc.AddNodeOnly(name, type);
@@ -419,7 +419,7 @@ TEST_F(UTestAccelerator2, test_case_01_3) {
 
 TEST_F(UTestAccelerator2, test_case_01_4) {
   auto graph = CreateComplexGraph();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "Add";
   auto node = acc.AddNodeOnly(name, type);
@@ -461,7 +461,7 @@ TEST_F(UTestAccelerator2, test_case_01_4) {
 
 TEST_F(UTestAccelerator2, test_case_2) {
   auto graph = CreateComplexGraph2();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "Add";
   auto node = acc.AddNodeOnly(name, type);
@@ -503,7 +503,7 @@ TEST_F(UTestAccelerator2, test_case_2) {
 
 TEST_F(UTestAccelerator2, test_case_3) {
   auto graph = CreateComplexGraph2();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "MultiAdd";
   auto node = acc.AddNodeOnly(name, type);
@@ -551,7 +551,7 @@ TEST_F(UTestAccelerator2, test_case_3) {
 
 TEST_F(UTestAccelerator2, test_case_4) {
   auto graph = CreateComplexGraph2();
-  Accelerator acc(graph);
+  FusionTurbo acc(graph);
   string name = "add_new";
   string type = "MultiAdd";
 

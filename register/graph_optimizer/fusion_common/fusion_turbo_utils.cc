@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "register/graph_optimizer/fusion_common/accelerator_utils.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo_utils.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/anchor.h"
 #include "graph/utils/node_utils.h"
@@ -57,7 +57,7 @@ const std::array<size_t, static_cast<size_t>(ge::DT_MAX + 1)> data_type_size = {
     0, // DT_MAX = 33
 };
 
-ge::NodePtr AcceleratorUtils::GetConstInput(const ge::NodePtr &node, int32_t index) {
+ge::NodePtr FusionTurboUtils::GetConstInput(const ge::NodePtr &node, int32_t index) {
   ge::NodePtr ret = nullptr;
 
   auto in_anchor = node->GetInDataAnchor(index);
