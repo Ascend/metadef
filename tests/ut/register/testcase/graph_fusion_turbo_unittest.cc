@@ -219,8 +219,8 @@ class UTestAccelerator : public testing::Test {
 
     std::unique_ptr<int32_t> data(new(std::nothrow) int32_t(30));
     WeightInfo w(tensor_desc_a, data.get());
-    acc.AddWeight(node_relu1, w, 0);
-    acc.AddWeight(node_relu2, w, 0);
+    acc.AddWeight(node_relu1, 0, w);
+    acc.AddWeight(node_relu2, 0, w);
 
     return graph;
   }
@@ -276,8 +276,8 @@ class UTestAccelerator : public testing::Test {
 
     std::unique_ptr<int32_t> data(new(std::nothrow) int32_t(30));
     WeightInfo w(tensor_desc_a, data.get());
-    acc.AddWeight(relu1_front, w, 0);
-    acc.AddWeight(relu2_front, w, 0);
+    acc.AddWeight(relu1_front, 0, w);
+    acc.AddWeight(relu2_front, 0, w);
 
     DumpGraph(graph, "test2");
     return graph;
@@ -693,7 +693,7 @@ TEST_F(UTestAccelerator, test_case_08) {
   auto cast2 = GetNode(graph, "cast2");
   acc.BreakOutput(cast2, {0});
   acc.BreakOutput(cast2, {1});
-  EXPECT_EQ(acc.RemoveSingleInOutNode(cast2), SUCCESS);
+  EXPECT_EQ(acc.RemoveNodeWithRelink(cast2, {0}), SUCCESS);
 }
 
 TEST_F(UTestAccelerator, test_case_09) {
@@ -703,7 +703,7 @@ TEST_F(UTestAccelerator, test_case_09) {
   auto cast2 = GetNode(graph, "cast2");
   auto cast1 = GetNode(graph, "cast1");
   EXPECT_EQ(acc.RemoveNodeOnly(cast2), SUCCESS);
-  EXPECT_EQ(acc.RemoveSingleInOutNode(cast1), SUCCESS);
+  EXPECT_EQ(acc.RemoveNodeWithRelink(cast1, {0}), SUCCESS);
 }
 
 TEST_F(UTestAccelerator, test_case_10) {
@@ -915,7 +915,7 @@ TEST_F(UTestAccelerator, test_case_13_1) {
   }
   WeightInfo w = {ge::GeShape({1, 2, 3, 4}), ge::DT_INT32, ge::FORMAT_NCHW, value.get()};
 
-  ASSERT_NE(nullptr, acc.AddWeight(node, w, 3));
+  ASSERT_NE(nullptr, acc.AddWeight(node, 3, w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 3);
   EXPECT_EQ(node->GetInDataAnchor(2)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   auto new_weight = FusionTurbo::MutableWeight(node, 2);
@@ -959,7 +959,7 @@ TEST_F(UTestAccelerator, test_case_14) {
 
   WeightInfo w(node, 1, value.get());
 
-  ASSERT_NE(nullptr, acc.AddWeight(node, w, 1));
+  ASSERT_NE(nullptr, acc.AddWeight(node, 1, w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   auto new_weight = FusionTurbo::MutableWeight(node, 1);
@@ -993,7 +993,7 @@ TEST_F(UTestAccelerator, test_case_14) {
   }
   w.data = (uint8_t *) value1.get();
   /* Update const value and tensor when const node and weight both exist. */
-  ASSERT_NE(nullptr, acc.AddWeight(node, w, 1));
+  ASSERT_NE(nullptr, acc.AddWeight(node, 1, w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   new_weight = FusionTurbo::MutableWeight(node, 1);
@@ -1037,7 +1037,7 @@ TEST_F(UTestAccelerator, test_case_14_1) {
 
   WeightInfo w(node, 1, value.get());
 
-  ASSERT_NE(nullptr, acc.AddWeight(node, w, "shape"));
+  ASSERT_NE(nullptr, acc.AddWeight(node, "shape", w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   auto new_weight = FusionTurbo::MutableWeight(node, 1);
@@ -1071,7 +1071,7 @@ TEST_F(UTestAccelerator, test_case_14_1) {
   }
   w.data = (uint8_t *) value1.get();
   /* Update const value and tensor when const node and weight both exist. */
-  ASSERT_NE(nullptr, acc.AddWeight(node, w, "shape"));
+  ASSERT_NE(nullptr, acc.AddWeight(node, "shape", w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   new_weight = FusionTurbo::MutableWeight(node, 1);
@@ -1116,7 +1116,7 @@ TEST_F(UTestAccelerator, test_case_14_1_1) {
 
   WeightInfo w(node, 1, value.get());
 
-  ASSERT_NE(nullptr, acc.AddWeight(node, w, "shape"));
+  ASSERT_NE(nullptr, acc.AddWeight(node, "shape", w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   auto new_weight = FusionTurbo::MutableWeight(node, 1);
@@ -1150,7 +1150,7 @@ TEST_F(UTestAccelerator, test_case_14_1_1) {
   }
   w.data = (uint8_t *) value1.get();
   /* Update const value and tensor when const node and weight both exist. */
-  ASSERT_EQ(nullptr, acc.AddWeight(node, w, "xxxx"));
+  ASSERT_EQ(nullptr, acc.AddWeight(node, "xxxx", w));
 }
 
 TEST_F(UTestAccelerator, test_case_14_2) {
@@ -1200,7 +1200,7 @@ TEST_F(UTestAccelerator, test_case_14_2) {
   input1->SetOriginShape(ge::GeShape({1, 3, 4, 2}));
 
   WeightInfo w(node, 1, value.get());
-  ASSERT_NE(nullptr, acc.AddWeight(node, w, 1));
+  ASSERT_NE(nullptr, acc.AddWeight(node, 1, w));
   ASSERT_EQ(node->GetAllInDataAnchorsSize(), 2);
   EXPECT_EQ(node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   auto new_weight = FusionTurbo::MutableWeight(node, 1);
@@ -1308,7 +1308,7 @@ TEST_F(UTestAccelerator, test_case_15_1) {
   WeightInfo w = {ge::GeShape({1, 2, 3, 4}), ge::DT_INT32, ge::FORMAT_NCHW, value.get()};
   WeightInfo w2 = {ge::GeShape({1, 3, 2, 4}), ge::DT_INT32, ge::FORMAT_NCHW, value.get()};
   WeightInfo w3 = {ge::GeShape({4, 1, 3, 2}), ge::DT_INT32, ge::FORMAT_NCHW, value.get()};
-  acc.AddWeight(node, w, 1);
+  acc.AddWeight(node, 1, w);
   std::vector<WeightInfo> weight_all = {std::move(w), std::move(w2), std::move(w3)};
 
   auto const_nodes = acc.AddWeights(node, weight_all);
@@ -1382,7 +1382,7 @@ TEST_F(UTestAccelerator, test_case_15_3) {
   WeightInfo w2 = {ge::GeShape({1, 3, 2, 4}), ge::GeShape({1, 3, 2, 4}),
                    ge::DT_INT32, ge::DT_INT32, ge::FORMAT_NCHW, ge::FORMAT_NCHW, value.get()};
   WeightInfo w3 = {ge::GeShape({4, 1, 3, 2}), ge::DT_INT32, ge::FORMAT_NCHW, value.get()};
-  acc.AddWeight(node, w, 1);
+  acc.AddWeight(node, 1, w);
   std::vector<WeightInfo> weight_all = {std::move(w), std::move(w2), std::move(w3)};
 
   auto const_nodes = acc.AddWeights(node, weight_all);
@@ -1392,6 +1392,88 @@ TEST_F(UTestAccelerator, test_case_15_3) {
   EXPECT_EQ(node->GetInDataAnchor(2)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   EXPECT_EQ(node->GetInDataAnchor(3)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
   EXPECT_EQ(node->GetInDataAnchor(4)->GetPeerOutAnchor()->GetOwnerNode()->GetType(), "Const");
+  auto all_weights = ge::OpDescUtils::MutableWeights(node);
+  ASSERT_EQ(all_weights.size(), 4);
+
+  for (size_t i = 1; i < 5; i++) {
+    auto new_weight = FusionTurbo::MutableWeight(node, i);
+    ASSERT_NE(nullptr, new_weight);
+    if (i == 1 || i == 2) {
+      EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 2, 3, 4}));
+    } else if (i == 3) {
+      EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({1, 3, 2, 4}));
+    } else {
+      EXPECT_EQ(new_weight->GetTensorDesc().GetShape(), ge::GeShape({4, 1, 3, 2}));
+    }
+
+    EXPECT_EQ(new_weight->GetTensorDesc().GetDataType(), ge::DT_INT32);
+    EXPECT_EQ(new_weight->GetTensorDesc().GetOriginDataType(), ge::DT_INT32);
+    EXPECT_EQ(new_weight->GetTensorDesc().GetFormat(), ge::FORMAT_NCHW);
+    EXPECT_EQ(new_weight->GetTensorDesc().GetOriginFormat(), ge::FORMAT_NCHW);
+    const uint8_t *data = new_weight->GetData().GetData();
+    auto data_size = new_weight->GetData().size();
+    EXPECT_EQ(data_size, 96);
+    for (size_t j = 0; j < 96; j++) {
+      EXPECT_EQ(data[j], j);
+    }
+  }
+}
+
+TEST_F(UTestAccelerator, test_case_15_4) {
+  auto graph = CreateGraphSingleInAndOut();
+  FusionTurbo acc(graph);
+  string name = "transpose";
+  string type = "Transpose";
+  auto node = acc.AddNodeOnly(name, type);
+  ASSERT_NE(node, nullptr);
+
+  auto relu = GetNode(graph, "relu");
+  Relations src_list = {{relu, 0}};
+  acc.LinkInput(src_list, node, true);
+
+  auto cast2 = GetNode(graph, "cast2");
+  Relations dst_list = {{cast2, 0}};
+  acc.BreakInput(cast2, {0});
+  Status ret = acc.LinkOutput(dst_list, node, true);
+  EXPECT_EQ(ret, SUCCESS);
+
+  unique_ptr<int32_t[]> value(new(std::nothrow) int32_t[24]);
+  auto data_ptr = (uint8_t *) (value.get());
+  for (size_t i = 0; i < 96; i++) {
+    data_ptr[i] = i;
+  }
+
+  auto node_input_1 = node->GetOpDesc()->MutableInputDesc(1);
+  auto weight_shape = ge::GeShape({1, 2, 3, 4});
+  node_input_1->SetOriginShape(weight_shape);
+  node_input_1->SetShape(weight_shape);
+  node_input_1->SetDataType(ge::DT_INT32);
+  node_input_1->SetOriginDataType(ge::DT_INT32);
+  node_input_1->SetFormat(ge::FORMAT_NCHW);
+  node_input_1->SetOriginFormat(ge::FORMAT_NCHW);
+
+  WeightInfo w = {*node_input_1, value.get()};
+  WeightInfo w2 = {ge::GeShape({1, 3, 2, 4}), ge::GeShape({1, 3, 2, 4}),
+                   ge::DT_INT32, ge::DT_INT32, ge::FORMAT_NCHW, ge::FORMAT_NCHW, value.get()};
+  WeightInfo w3 = {ge::GeShape({4, 1, 3, 2}), ge::DT_INT32, ge::FORMAT_NCHW, value.get()};
+  acc.AddWeight(node, 1, w);
+  std::vector<WeightInfo> weight_all = {std::move(w), std::move(w2), std::move(w3)};
+
+  auto const_nodes = acc.AddWeights(node, weight_all);
+  ASSERT_EQ(const_nodes.size(), 3);
+
+  ASSERT_EQ(node->GetAllInDataAnchorsSize(), 5);
+  auto const_2 = FusionTurbo::GetPeerOutNode(node, 2);
+  auto const_2_peer_in = FusionTurbo::GetPeerInNodes(const_2, 0);
+  ASSERT_EQ(const_2_peer_in.size(), 1);
+  auto node_temp = const_2_peer_in.at(0);
+
+  EXPECT_EQ(node_temp, node);
+  EXPECT_EQ(FusionTurbo::CheckConnected(const_2, node), true);
+  EXPECT_EQ(FusionTurbo::CheckConnected(const_2, node, 0), true);
+  EXPECT_EQ(const_2->GetType(), "Const");
+  EXPECT_EQ(FusionTurbo::GetPeerOutNode(node, 3)->GetType(), "Const");
+  EXPECT_EQ(FusionTurbo::GetPeerOutNode(node, 4)->GetType(), "Const");
   auto all_weights = ge::OpDescUtils::MutableWeights(node);
   ASSERT_EQ(all_weights.size(), 4);
 

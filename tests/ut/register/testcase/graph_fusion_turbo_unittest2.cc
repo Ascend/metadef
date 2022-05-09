@@ -166,9 +166,8 @@ class UTestAccelerator2 : public testing::Test {
 
     unique_ptr<int32_t[]> data(new(std::nothrow) int32_t[4096]);
     WeightInfo w(tensor_desc_a, data.get());
-    acc.AddWeight(node_relu1, w, 0);
-    acc.AddWeight(node_relu2, w, 0);
-
+    acc.AddWeight(node_relu1, 0, w);
+    acc.AddWeight(node_relu2, 0, w);
     return graph;
   }
 
@@ -223,8 +222,8 @@ class UTestAccelerator2 : public testing::Test {
 
     unique_ptr<int32_t[]> data(new(std::nothrow) int32_t[4096]);
     WeightInfo w(tensor_desc_a, data.get());
-    acc.AddWeight(relu1_front, w, 0);
-    acc.AddWeight(relu2_front, w, 0);
+    acc.AddWeight(relu1_front, 0, w);
+    acc.AddWeight(relu2_front, 0, w);
 
     return graph;
   }
