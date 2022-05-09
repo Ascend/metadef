@@ -204,9 +204,6 @@ ErrorManager &ErrorManager::GetInstance() {
 /// @return int 0(success) -1(fail)
 ///
 int32_t ErrorManager::Init(const std::string path) {
-  if (is_init_) {
-    return 0;
-  }
   const std::string file_path = path + kErrorCodePath;
   const int32_t ret = ParseJsonFile(file_path);
   if (ret != 0) {
@@ -228,8 +225,11 @@ int32_t ErrorManager::Init() {
 int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const std::string &error_msg) {
   const uint64_t kMaxWorkSize = 1000UL;
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report error_message");
-    return -1;
+    const int32_t kRetInit = Init();
+    if (kRetInit == -1) {
+      GELOGI("ErrorManager init failed again, can't report error_message.");
+      return -1;
+    }
   }
   if (!IsInnerErrorCode(error_code)) {
     GELOGE("[Report][Error]error_code %s is not internal error code", error_code.c_str());
@@ -281,8 +281,11 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
 int32_t ErrorManager::ReportErrMessage(const std::string error_code,
                                        const std::map<std::string, std::string> &args_map) {
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report error_message");
-    return 0;
+    const int32_t kRetInit = Init();
+    if (kRetInit == -1) {
+      GELOGI("ErrorManager init failed again, can't report error_message.");
+      return 0;
+    }
   }
 
   if (error_context_.work_stream_id == 0UL) {
@@ -538,8 +541,11 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
 void ErrorManager::ATCReportErrMessage(const std::string error_code, const std::vector<std::string> &key,
                                        const std::vector<std::string> &value) {
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report error_message");
-    return;
+    const int32_t kRetInit = Init();
+    if (kRetInit == -1) {
+      GELOGI("ErrorManager init failed again, can't report error_message.");
+      return;
+    }
   }
   std::map<std::string, std::string> args_map;
   if (key.empty()) {
@@ -585,8 +591,11 @@ void ErrorManager::ClassifyCompileFailedMsg(const std::map<std::string, std::str
 int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
                                                    const std::map<std::string, std::string> &msg) {
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report compile message");
-    return 0;
+    const int32_t kRetInit = Init();
+    if (kRetInit == -1) {
+      GELOGI("ErrorManager init failed again, can't report error_message.");
+      return 0;
+    }
   }
   if (msg.empty() || root_graph_name.empty()) {
     GELOGW("Msg or root graph name is empty, msg size is %zu, root graph name is %s",
@@ -616,8 +625,11 @@ int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph
 int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, std::map<std::string,
                                             std::vector<std::string>> &msg_map) {
   if (!is_init_) {
-    GELOGI("ErrorManager has not inited, can't report compile failed message");
-    return 0;
+    const int32_t kRetInit = Init();
+    if (kRetInit == -1) {
+      GELOGI("ErrorManager init failed again, can't report error_message.");
+      return 0;
+    }
   }
   if (!msg_map.empty()) {
     GELOGW("msg_map is not empty, exist msg");
