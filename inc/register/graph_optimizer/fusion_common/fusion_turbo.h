@@ -81,7 +81,9 @@ class FusionTurbo {
   Status BreakOutput(const ge::NodePtr &node,
                      const vector<int32_t> &output_index);
 
-  Status RemoveSingleInOutNode(const ge::NodePtr &node);
+  Status RemoveNodeWithRelink(const ge::NodePtr &node, const std::initializer_list<int32_t> &io_map = {});
+
+  Status RemoveNodeWithRelink(const ge::NodePtr &node, const std::vector<int32_t> &io_map = {});
 
   Status RemoveNodeOnly(const ge::NodePtr &node);
 
@@ -95,9 +97,9 @@ class FusionTurbo {
    *        2.2 If the peer node of this input index is Const, we substitute the data
    *        of current Const and update tensor desc. ---> Call UpdateConst
    *        2.3 If the peer node of this input is other type, we just skip it. */
-  ge::NodePtr AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, int32_t index);
+  ge::NodePtr AddWeight(const ge::NodePtr &node, int32_t index, const WeightInfo &w_info);
 
-  ge::NodePtr AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, const string& tensor_name);
+  ge::NodePtr AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info);
 
   /* Add a weight tensor and node as the last input of node. */
   ge::NodePtr AddWeight(const ge::NodePtr &node, const WeightInfo &w_info);
@@ -116,7 +118,7 @@ class FusionTurbo {
                                     const ge::NodePtr &new_node);
 
   ge::NodePtr InsertNodeBefore(const string &op_name, const string &op_type,
-                               const ge::NodePtr &base_node, int32_t index,
+                               const ge::NodePtr &base_node, int32_t base_input_index,
                                int32_t input_index = 0,
                                int32_t output_index = 0);
 
@@ -131,6 +133,15 @@ class FusionTurbo {
   static Status LinkOutput(Relations &out_relations,
                            const ge::NodePtr &src_node,
                            bool update_tensor = true);
+
+  static ge::NodePtr GetPeerOutNode(const ge::NodePtr &node, int32_t this_node_input_index);
+
+  static std::vector<ge::NodePtr> GetPeerInNodes(const ge::NodePtr &node, int32_t this_node_output_index);
+
+  /* Check whether there is a path from [node1's] output [index1] to [node2].
+   * The default value is -1 and -1 means any output is ok. */
+  static bool CheckConnected(const ge::NodePtr &node1, const ge::NodePtr &node2,
+                             int32_t index1 = -1);
 
   /* Default update input 0 of node. */
   Status UpdateInputByPeer(const ge::NodePtr &node, int32_t index,

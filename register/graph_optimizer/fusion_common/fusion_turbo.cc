@@ -133,12 +133,13 @@ Status FusionTurbo::BreakOutput(const ge::NodePtr &node,
   return SUCCESS;
 }
 
-/* Remove single input and output node, then relink the peer nodes.
- * A->B-->C      ---->    A-->C
- *     \->D    remove B    \->D */
-Status FusionTurbo::RemoveSingleInOutNode(const ge::NodePtr &node) {
+Status FusionTurbo::RemoveNodeWithRelink(const ge::NodePtr &node, const std::initializer_list<int32_t> &io_map) {
+  return RemoveNodeWithRelink(node, std::vector<int32_t>(io_map));
+}
+
+Status FusionTurbo::RemoveNodeWithRelink(const ge::NodePtr &node, const std::vector<int32_t> &io_map) {
   ACCLRT_NOTNULL(node, PARAM_INVALID);
-  if (ge::GraphUtils::IsolateNode(node, {}) != ge::GRAPH_SUCCESS) {
+  if (ge::GraphUtils::IsolateNode(node, io_map) != ge::GRAPH_SUCCESS) {
     return FAILED;
   }
 
@@ -271,7 +272,7 @@ ge::NodePtr FusionTurbo::UpdateConst(const ge::NodePtr &node, int32_t index,
   return const_node;
 }
 
-ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, int32_t index) {
+ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, int32_t index, const WeightInfo &w_info) {
   ACCLRT_NOTNULL(node, nullptr);
   size_t input_size = node->GetAllInDataAnchorsSize();
   if (static_cast<size_t>(index) >= input_size) {
@@ -291,13 +292,13 @@ ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const WeightInfo &w_
   }
 }
 
-ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const WeightInfo &w_info, const string& tensor_name) {
+ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info) {
   ACCLRT_NOTNULL(node, nullptr);
   auto index = node->GetOpDesc()->GetInputIndexByName(tensor_name);
   if (index == -1) {
     return nullptr;
   }
-  return AddWeight(node, w_info, index);
+  return AddWeight(node, index, w_info);
 }
 
 ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node,
@@ -416,9 +417,8 @@ ge::NodePtr FusionTurbo::InsertNodeBefore(const string &op_name, const string &o
     }
 
     /* 4.1. Insert new op into graph and between peer-out and base-in anchors. */
-    if (ge::GraphUtils::InsertNodeAfter(peer_out_anchor, {base_in_anchor}, ret_node,
-                                        static_cast<uint32_t>(input_index), static_cast<uint32_t>(output_index)) !=
-        ge::GRAPH_SUCCESS) {
+    if (ge::GraphUtils::InsertNodeBefore(base_in_anchor, ret_node, static_cast<uint32_t>(input_index),
+                                         static_cast<uint32_t>(output_index)) != ge::GRAPH_SUCCESS) {
       goto failed_process;
     }
   } else {
@@ -627,6 +627,42 @@ Status FusionTurbo::LinkOutput(Relations &out_relations, const ge::NodePtr &src_
     }
   }
   return SUCCESS;
+}
+
+ge::NodePtr FusionTurbo::GetPeerOutNode(const ge::NodePtr &node, int32_t this_node_input_index) {
+  ACCLRT_NOTNULL(node, nullptr);
+  auto input_anchor = node->GetInDataAnchor(this_node_input_index);
+  ACCLRT_NOTNULL(input_anchor, nullptr);
+  auto peer_out_anchor = input_anchor->GetPeerOutAnchor();
+  ACCLRT_NOTNULL(peer_out_anchor, nullptr);
+  return peer_out_anchor->GetOwnerNode();
+}
+
+std::vector<ge::NodePtr> FusionTurbo::GetPeerInNodes(const ge::NodePtr &node, int32_t this_node_output_index) {
+  std::vector<ge::NodePtr> ret;
+  ACCLRT_NOTNULL(node, ret);
+  auto output_anchor = node->GetOutDataAnchor(this_node_output_index);
+  ACCLRT_NOTNULL(output_anchor, ret);
+  auto peer_in_anchors = output_anchor->GetPeerInDataAnchors();
+  for (const auto& ele : peer_in_anchors) {
+    ret.emplace_back(ele->GetOwnerNode());
+  }
+
+  return ret;
+}
+
+bool FusionTurbo::CheckConnected(const ge::NodePtr &node1, const ge::NodePtr &node2, int32_t index1) {
+  ACCLRT_NOTNULL(node1, false);
+  ACCLRT_NOTNULL(node2, false);
+  if (index1 == -1) {
+    auto all_output_of_node1 = node1->GetOutDataNodes();
+    for (const auto &out_node : all_output_of_node1) {
+      return out_node == node2;
+    }
+  } else {
+    auto peer_in_nodes = GetPeerInNodes(node1, index1);
+    return (std::find(peer_in_nodes.begin(), peer_in_nodes.end(), node2) != peer_in_nodes.end());
+  }
 }
 
 Status FusionTurbo::UpdateInputByPeer(const ge::NodePtr &node, int32_t index,
