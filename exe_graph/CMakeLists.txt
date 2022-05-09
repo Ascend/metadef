@@ -124,7 +124,7 @@ target_link_libraries(exe_graph PUBLIC
         ascend_protobuf
         )
 
-target_compile_definitions(exe_graph_static PRIVATE
+target_compile_definitions(exe_graph PRIVATE
         google=ascend_private
         )
 
