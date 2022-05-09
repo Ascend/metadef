@@ -23,6 +23,16 @@
 #include "runtime/rt.h"
 
 namespace ge {
+struct HcclDumpInfo {
+  uint32_t task_id;
+  uint32_t stream_id;
+  uint32_t sub_task_type;
+  void *input_addr;
+  uint64_t input_size;
+  void *output_addr;
+  uint64_t output_size;
+};
+
 // when need to eliminate GETaskKernelHcclInfo, so not need DAVINCI_TRAIN/DAVINCI_CLOUD
 struct GETaskKernelHcclInfo {
   std::string input_name;
@@ -37,6 +47,7 @@ struct GETaskKernelHcclInfo {
   uint64_t workSpaceMemSize;
   std::vector<int64_t> dims;
   std::vector<rtStream_t> hcclStreamList;
+  std::vector<HcclDumpInfo> hccl_dump_info;
 };
 
 struct GETaskInfo {
