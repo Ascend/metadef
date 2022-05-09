@@ -84,19 +84,19 @@ ge::NodePtr FusionTurboUtils::GetConstInput(const ge::NodePtr &node, int32_t ind
 
 Relations::Relations() {}
 
-Relations::Relations(const std::initializer_list<PeerIndex> &peer_indices) {
+Relations::Relations(const std::initializer_list<NodeIndex> &peer_indices) {
   int32_t index = 0;
-  for (const auto &peer_index : peer_indices) {
-    PeerIndices temp = {peer_index};
+  for (const auto &node_index : peer_indices) {
+    NodeIndices temp = {node_index};
     relations.emplace(std::make_pair(index, temp));
   }
 }
 
-Relations::Relations(const std::map<ThisIndex, PeerIndices> &relations_param) {
+Relations::Relations(const std::map<ThisIndex, NodeIndices> &relations_param) {
   relations = relations_param;
 }
 
-Relations::Relations(std::map<ThisIndex, PeerIndices> &&relations_param) {
+Relations::Relations(std::map<ThisIndex, NodeIndices> &&relations_param) {
   relations = std::move(relations_param);
 }
 
@@ -110,40 +110,40 @@ Relations::Relations(Relations &&relations_param) noexcept {
   relations_by_name = std::move(relations_param.relations_by_name);
 }
 
-Relations::Relations(const std::map<std::string, PeerIndices> &relations_param) {
+Relations::Relations(const std::map<std::string, NodeIndices> &relations_param) {
   relations_by_name = relations_param;
 }
 
-Relations::Relations(std::map<std::string, PeerIndices> &&relations_param) {
+Relations::Relations(std::map<std::string, NodeIndices> &&relations_param) {
   relations_by_name = std::move(relations_param);
 }
 
-Relations::Relations(ThisIndex this_index, const PeerIndex &peer_index) {
+Relations::Relations(ThisIndex this_index, const NodeIndex &peer_index) {
   AddPeerIndex(this_index, peer_index);
 }
 
-Relations::Relations(ThisIndex this_index, PeerIndex &&peer_index) {
+Relations::Relations(ThisIndex this_index, NodeIndex &&peer_index) {
   AddPeerIndex(this_index, std::move(peer_index));
 }
 
 Relations::Relations(
-    const std::initializer_list<std::pair<ThisIndex, PeerIndex>> &peer_indices) {
+    const std::initializer_list<std::pair<ThisIndex, NodeIndex>> &peer_indices) {
   for (const auto &index_pair: peer_indices) {
     AddPeerIndex(index_pair.first, index_pair.second);
   }
 }
 
 Relations::Relations(
-    const std::initializer_list<std::pair<ThisIndex, std::initializer_list<PeerIndex>>> &peer_indices_vec) {
+    const std::initializer_list<std::pair<ThisIndex, std::initializer_list<NodeIndex>>> &peer_indices_vec) {
   for (const auto &peer_indices: peer_indices_vec) {
     AddPeerIndex(peer_indices.first, peer_indices.second);
   }
 }
 
-Relations& Relations::AddPeerIndex(ThisIndex this_index, const PeerIndex &peer_index) {
+Relations& Relations::AddPeerIndex(ThisIndex this_index, const NodeIndex &peer_index) {
   const auto iter = relations.find(this_index);
   if (iter == relations.end()) {
-    PeerIndices temp = {peer_index};
+    NodeIndices temp = {peer_index};
     relations.emplace(std::make_pair(this_index, temp));
   } else {
     iter->second.emplace_back(peer_index);
@@ -151,10 +151,10 @@ Relations& Relations::AddPeerIndex(ThisIndex this_index, const PeerIndex &peer_i
   return *this;
 }
 
-Relations& Relations::AddPeerIndex(ThisIndex this_index, PeerIndex &&peer_index) {
+Relations& Relations::AddPeerIndex(ThisIndex this_index, NodeIndex &&peer_index) {
   const auto iter = relations.find(this_index);
   if (iter == relations.end()) {
-    PeerIndices temp = {std::move(peer_index)};
+    NodeIndices temp = {std::move(peer_index)};
     relations.emplace(std::make_pair(this_index, std::move(temp)));
   } else {
     iter->second.emplace_back(std::move(peer_index));
@@ -162,7 +162,7 @@ Relations& Relations::AddPeerIndex(ThisIndex this_index, PeerIndex &&peer_index)
   return *this;
 }
 
-Relations& Relations::AddPeerIndex(ThisIndex this_index, const std::initializer_list<PeerIndex> &peer_indices) {
+Relations& Relations::AddPeerIndex(ThisIndex this_index, const std::initializer_list<NodeIndex> &peer_indices) {
   const auto iter = relations.find(this_index);
   if (iter == relations.end()) {
     relations.emplace(std::make_pair(this_index, peer_indices));
@@ -174,10 +174,10 @@ Relations& Relations::AddPeerIndex(ThisIndex this_index, const std::initializer_
   return *this;
 }
 
-Relations& Relations::AddPeerIndex(const std::string &this_name, const PeerIndex &peer_index) {
+Relations& Relations::AddPeerIndex(const std::string &this_name, const NodeIndex &peer_index) {
   const auto iter = relations_by_name.find(this_name);
   if (iter == relations_by_name.end()) {
-    PeerIndices temp = {peer_index};
+    NodeIndices temp = {peer_index};
     relations_by_name.emplace(std::make_pair(this_name, temp));
   } else {
     iter->second.emplace_back(peer_index);
@@ -185,10 +185,10 @@ Relations& Relations::AddPeerIndex(const std::string &this_name, const PeerIndex
   return *this;
 }
 
-Relations& Relations::AddPeerIndex(const std::string &this_name, PeerIndex &&peer_index) {
+Relations& Relations::AddPeerIndex(const std::string &this_name, NodeIndex &&peer_index) {
   const auto iter = relations_by_name.find(this_name);
   if (iter == relations_by_name.end()) {
-    PeerIndices temp = {std::move(peer_index)};
+    NodeIndices temp = {std::move(peer_index)};
     relations_by_name.emplace(std::make_pair(this_name, std::move(temp)));
   } else {
     iter->second.emplace_back(std::move(peer_index));
@@ -197,7 +197,7 @@ Relations& Relations::AddPeerIndex(const std::string &this_name, PeerIndex &&pee
 }
 
 Relations& Relations::AddPeerIndex(const std::string &this_name,
-                                   const std::initializer_list<PeerIndex> &peer_indices) {
+                                   const std::initializer_list<NodeIndex> &peer_indices) {
   const auto iter = relations_by_name.find(this_name);
   if (iter == relations_by_name.end()) {
     relations_by_name.emplace(std::make_pair(this_name, peer_indices));
