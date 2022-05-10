@@ -68,6 +68,8 @@ const char_t *GetFormatName(Format format) {
       "UNKNOWN", // FORMAT_NULL
       "ND_RNN_BIAS",
       "FRACTAL_ZN_RNN",
+      "YUV",
+      "YUV_A",
   };
   if (format >= FORMAT_END) {
     return "UNKNOWN";
