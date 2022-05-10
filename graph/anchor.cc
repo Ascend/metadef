@@ -17,11 +17,9 @@
 #include "graph/anchor.h"
 #include <algorithm>
 #include <cstring>
-#include <sstream>
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/node.h"
-#include "common/util/trace_manager/trace_manager.h"
 
 namespace {
 constexpr size_t kAnchorTypeMaxLen = 1024U;
@@ -33,6 +31,7 @@ bool CanAddPeer(const ge::AnchorPtr &anchor) {
   }
   return true;
 }
+
 bool IsSameType(const ge::Anchor::TYPE &lh, const ge::Anchor::TYPE &rh) {
   if (lh == rh) {
     return true;
@@ -187,13 +186,6 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
                          "[Check][Param] peer(%s, %d) is not connected to this anchor(%s, %d)",
                          peer->GetOwnerNode()->GetName().c_str(), peer->GetIdx(),
                          this->GetOwnerNode()->GetName().c_str(), this->GetIdx());
-  if ((this->GetOwnerNode() == nullptr) || (peer->GetOwnerNode() == nullptr)) {
-    GELOGW("[Check][Param] unlink:this->GetOwnerNode() or peer->GetOwnerNode() is null.");
-  } else {
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "delete", TraceManager::GetOutGraphName(),
-                     this->GetOwnerNode()->GetName(), "output:" << this->GetIdx(), "", "",
-                     peer->GetOwnerNode()->GetName() << ":input:" << peer->GetIdx());
-  }
   (void)impl_->peer_anchors_.erase(it);
   (void)peer->impl_->peer_anchors_.erase(it_peer);
   return GRAPH_SUCCESS;
@@ -363,14 +355,6 @@ graphStatus InDataAnchor::LinkFrom(const OutDataAnchorPtr &src) {
   }
   impl_->peer_anchors_.push_back(src);
   src->impl_->peer_anchors_.push_back(shared_from_this());
-  // src->impl_->GetOwnerNode() is null:  peer->GetOwnerNode() is null:
-  if ((src->impl_->GetOwnerNode()) == nullptr || (impl_->GetOwnerNode() == nullptr)) {
-    GELOGW("[Check][Param] src->impl_->GetOwnerNode() or impl_->GetOwnerNode() is null.");
-  } else {
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                     src->impl_->GetOwnerNode()->GetName(), "output:" << src->impl_->GetIdx(), "", "",
-                     impl_->GetOwnerNode()->GetName() << ":input:" << impl_->GetIdx());
-  }
   return GRAPH_SUCCESS;
 }
 
@@ -450,10 +434,6 @@ graphStatus OutDataAnchor::LinkTo(const InDataAnchorPtr &dest) {
   }
   impl_->peer_anchors_.push_back(dest);
   dest->impl_->peer_anchors_.push_back(shared_from_this());
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   impl_->GetOwnerNode()->GetName(), "output:" << impl_->GetIdx(), "", "",
-                   dest->impl_->GetOwnerNode()->GetName() << ":input:" << dest->impl_->GetIdx());
   return GRAPH_SUCCESS;
 }
 
@@ -469,10 +449,6 @@ graphStatus OutDataAnchor::LinkTo(const InControlAnchorPtr &dest) {
   }
   impl_->peer_anchors_.push_back(dest);
   dest->impl_->peer_anchors_.push_back(shared_from_this());
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   impl_->GetOwnerNode()->GetName(), "output:" << impl_->GetIdx(), "", "",
-                   dest->impl_->GetOwnerNode()->GetName() << ":input:" << dest->impl_->GetIdx());
   return GRAPH_SUCCESS;
 }
 
@@ -489,10 +465,6 @@ graphStatus OutControlAnchor::LinkTo(const InDataAnchorPtr &dest) {
   }
   impl_->peer_anchors_.push_back(dest);
   dest->impl_->peer_anchors_.push_back(shared_from_this());
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   impl_->GetOwnerNode()->GetName(), "output:" << impl_->GetIdx(), "", "",
-                   dest->impl_->GetOwnerNode()->GetName() << ":input:" << dest->impl_->GetIdx());
   return GRAPH_SUCCESS;
 }
 
@@ -583,10 +555,6 @@ graphStatus InControlAnchor::LinkFrom(const OutControlAnchorPtr &src) {
   }
   impl_->peer_anchors_.push_back(src);
   src->impl_->peer_anchors_.push_back(shared_from_this());
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   src->impl_->GetOwnerNode()->GetName(), "output:" << src->impl_->GetIdx(), "", "",
-                   impl_->GetOwnerNode()->GetName() << ":input:" << impl_->GetIdx());
   return GRAPH_SUCCESS;
 }
 
@@ -656,10 +624,6 @@ graphStatus OutControlAnchor::LinkTo(const InControlAnchorPtr &dest) {
   }
   impl_->peer_anchors_.push_back(dest);
   dest->impl_->peer_anchors_.push_back(shared_from_this());
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   impl_->GetOwnerNode()->GetName(), "output:" << impl_->GetIdx(), "", "",
-                   dest->impl_->GetOwnerNode()->GetName() << ":input:" << dest->impl_->GetIdx());
   return GRAPH_SUCCESS;
 }
 

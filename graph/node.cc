@@ -24,7 +24,7 @@
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
-#include "common/util/trace_manager/trace_manager.h"
+
 
 namespace ge {
 Node::NodeImpl::NodeImpl(const OpDescPtr &op, const ComputeGraphPtr &owner_graph)
@@ -333,17 +333,11 @@ graphStatus Node::NodeImpl::SetOwnerComputeGraph(const ComputeGraphPtr &graph) {
     return GRAPH_PARAM_INVALID;
   }
   owner_graph_ = graph;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "owner_graph", "", "", graph->GetName());
   return GRAPH_SUCCESS;
 }
 
 graphStatus Node::NodeImpl::ClearOwnerGraph(const ComputeGraphPtr &graph) {
   owner_graph_ = graph;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "delete", TraceManager::GetOutGraphName(),
-                   this->GetName(), "owner_graph", "", "", ((graph == nullptr) ? std::string("") : graph->GetName()));
   return GRAPH_SUCCESS;
 }
 
@@ -784,9 +778,6 @@ graphStatus Node::NodeImpl::UpdateOpDesc(const OpDescPtr &op_desc) {
                            return GRAPH_PARAM_INVALID,
                    "[Check][Param] Outputs count expected to be same, original OpDesc %zu, Param OpDesc %zu",
                    op_->GetOutputsSize(), op_desc->GetOutputsSize());
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "op_desc", "", "", op_desc->GetName());
   op_ = op_desc;
   return GRAPH_SUCCESS;
 }

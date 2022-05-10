@@ -108,7 +108,6 @@ target_include_directories(graph PRIVATE
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph/utils
     ${METADEF_DIR}/inc/external
     #### yellow zone ####
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
@@ -201,7 +200,6 @@ target_include_directories(graph_static PRIVATE
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     ${METADEF_DIR}
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
     #### yellow zone ####
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>

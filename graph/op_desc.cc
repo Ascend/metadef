@@ -25,7 +25,7 @@
 #include "graph/utils/transformer_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "register/op_tiling/op_tiling_constants.h"
-#include "common/util/trace_manager/trace_manager.h"
+
 namespace {
 using std::make_pair;
 using std::shared_ptr;
@@ -162,8 +162,6 @@ string OpDescImpl::GetName() const {
 }
 
 void OpDescImpl::SetName(const std::string &name) {
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "name", "", "", name);
   meta_data_.name_ = name;
 }
 
@@ -173,16 +171,10 @@ string OpDescImpl::GetType() const {
 
 void OpDescImpl::SetType(const string &type) {
   meta_data_.type_ = type;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "type", "", "", type);
 }
 
 graphStatus OpDescImpl::AddInputDesc(const ge::GeTensorDesc &input_desc) {
   const int32_t index = static_cast<int32_t>(inputs_desc_.size());
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "input_desc", "", "", index);
   return AddInputDesc("__input" + std::to_string(index), input_desc);
 }
 
@@ -217,8 +209,6 @@ graphStatus OpDescImpl::AddInputDesc(const std::string &name, const ge::GeTensor
       register_input_name_.push_back(name);
     }
 
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                     this->GetName(), "input_desc:" << index, "", "", "input_name:" << name);
     return GRAPH_SUCCESS;
   }
 }
@@ -259,10 +249,8 @@ graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const uint32
     }
 
     (void)input_name_idx_.insert(make_pair(input_name, i + index));
-
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                     this->GetName(), "input_desc:" << (i + index), "", "", "input_name:" << input_name);
   }
+
   return GRAPH_SUCCESS;
 }
 
@@ -301,9 +289,6 @@ graphStatus OpDescImpl::AddOutputDescMiddle(const std::string &name, const uint3
     }
 
     (void)output_name_idx_.insert(make_pair(output_name, i + index));
-
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                     this->GetName(), "output_desc:" << (i + index), "", "", output_name);
   }
 
   return GRAPH_SUCCESS;
@@ -331,9 +316,6 @@ graphStatus OpDescImpl::AddInputDescForward(const std::string &name, const uint3
     }
 
     (void)input_name_idx_.insert(make_pair(input_name, 0));
-
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                     this->GetName(), "input_desc:0", "", "", "input_name:" << input_name);
   }
 
   return GRAPH_SUCCESS;
@@ -361,9 +343,6 @@ graphStatus OpDescImpl::AddOutputDescForward(const std::string &name, const uint
       it->second += 1U;
     }
     (void)output_name_idx_.insert(make_pair(output_name, 0));
-
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                     this->GetName(), "output_desc:0", "", "", "output_name:" << output_name);
   }
 
   return GRAPH_SUCCESS;
@@ -391,8 +370,6 @@ graphStatus OpDescImpl::UpdateInputDesc(const uint32_t index, const ge::GeTensor
     return GRAPH_FAILED;
   }
 
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "input_desc:" << index, "", "", tensor_Desc.GetName());
   return GRAPH_SUCCESS;
 }
 
@@ -493,8 +470,6 @@ graphStatus OpDescImpl::UpdateInputDesc(const std::string &name, const ge::GeTen
     return GRAPH_FAILED;
   }
 
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "input_desc:" << it->second, "", "", tensor_Desc.GetName());
   return GRAPH_SUCCESS;
 }
 
@@ -644,9 +619,6 @@ graphStatus OpDescImpl::AddOutputDesc(const std::string &name, const ge::GeTenso
   if (find(register_output_name_.begin(), register_output_name_.end(), name) == register_output_name_.end()) {
     register_output_name_.push_back(name);
   }
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "output_desc:" << index, "", "",  "output_name:" << name);
   return GRAPH_SUCCESS;
 }
 
@@ -662,9 +634,6 @@ graphStatus OpDescImpl::UpdateOutputDesc(const uint32_t index, const ge::GeTenso
     GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] UpdateOutputDesc failed, as malloc shared_ptr failed.");
     return GRAPH_FAILED;
   }
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "output_desc:" << index, "", "", tensor_Desc.GetName());
   return GRAPH_SUCCESS;
 }
 
@@ -685,9 +654,6 @@ graphStatus OpDescImpl::UpdateOutputDesc(const std::string &name, const ge::GeTe
     GELOGE(GRAPH_FAILED, "[Create][GeTensorDesc] UpdateOutputDesc failed, as malloc shared_ptr failed.");
     return GRAPH_FAILED;
   }
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "output_desc:" << it->second, "", "", tensor_Desc.GetName());
   return GRAPH_SUCCESS;
 }
 
@@ -769,8 +735,6 @@ graphStatus OpDescImpl::AddRegisterInputName(const std::string &name) {
     register_input_name_.push_back(name);
   }
 
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "register_input_name", "", "", name);
   return GRAPH_SUCCESS;
 }
 
@@ -809,8 +773,6 @@ graphStatus OpDescImpl::AddRegisterOutputName(const std::string &name) {
     register_output_name_.push_back(name);
   }
 
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "register_output_name", "", "", name);
   return GRAPH_SUCCESS;
 }
 
@@ -881,9 +843,6 @@ bool OpDescImpl::UpdateInputName(std::map<std::string, uint32_t> input_name_idx)
            "org_input_name_num=%zu, factory_input_name_num=%zu", input_map_size, factory_map_size);
     return false;
   }
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "input_name_idx", "", "", "");
   return true;
 }
 
@@ -902,16 +861,10 @@ bool OpDescImpl::UpdateOutputName(std::map<std::string, uint32_t> output_name_id
     if (output_name_idx.size() == output_map_size) {
       GELOGI("UpdateOutputName");
       output_name_idx_ = output_name_idx;
-
-      TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                       this->GetName(), "output_name_idx", "", "", "");
       return true;
     }
   } else if (output_map_size == factory_map_size) {
     output_name_idx_ = output_name_idx;
-
-    TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                     this->GetName(), "output_name_idx", "", "", "");
     return true;
   } else {
     GELOGW("[Update][OutputName] factory_output_name_num can not be less than org_output_name_num, exactly "
@@ -1085,10 +1038,6 @@ ConstProtoAttrMap &OpDescImpl::GetAttrMap() const {
 
 void OpDescImpl::SetId(const int64_t id) {
   meta_data_.id_ = id;
-  std::stringstream ss;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "id", "", "", id);
 }
 
 int64_t OpDescImpl::GetId() const {
@@ -1097,9 +1046,6 @@ int64_t OpDescImpl::GetId() const {
 
 void OpDescImpl::SetStreamId(const int64_t stream_id) {
   meta_data_.stream_id_ = stream_id;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "stream_id", "", "", stream_id);
 }
 
 int64_t OpDescImpl::GetStreamId() const {
@@ -1108,9 +1054,6 @@ int64_t OpDescImpl::GetStreamId() const {
 
 void OpDescImpl::SetInputName(const vector<string> &input_name) {
   meta_data_.input_names_ = input_name;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "input_name", "", "", "");
 }
 
 vector<string> OpDescImpl::GetInputName() const {
@@ -1119,9 +1062,6 @@ vector<string> OpDescImpl::GetInputName() const {
 
 void OpDescImpl::SetSrcName(const vector<string> &src_name) {
   meta_data_.src_names_ = src_name;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "src_name", "", "", "");
 }
 
 vector<string> OpDescImpl::GetSrcName() const {
@@ -1130,9 +1070,6 @@ vector<string> OpDescImpl::GetSrcName() const {
 
 void OpDescImpl::SetSrcIndex(const vector<int64_t> &src_index) {
   meta_data_.src_indexes_ = src_index;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "src_index", "", "", "");
 }
 
 vector<int64_t> OpDescImpl::GetSrcIndex() const {
@@ -1141,9 +1078,6 @@ vector<int64_t> OpDescImpl::GetSrcIndex() const {
 
 void OpDescImpl::SetInputOffset(const vector<int64_t> &input) {
   meta_data_.input_offsets_ = input;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "input_offset", "", "", "");
 }
 
 vector<int64_t> OpDescImpl::GetInputOffset() const {
@@ -1152,9 +1086,6 @@ vector<int64_t> OpDescImpl::GetInputOffset() const {
 
 void OpDescImpl::SetOutputOffset(const vector<int64_t> &output) {
   meta_data_.output_offsets_ = output;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "out_offset", "", "", "");
 }
 
 vector<int64_t> OpDescImpl::GetOutputOffset() const {
@@ -1163,9 +1094,6 @@ vector<int64_t> OpDescImpl::GetOutputOffset() const {
 
 void OpDescImpl::SetDstName(const vector<string> &dst_name) {
   meta_data_.dst_names_ = dst_name;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "dst_name", "", "", "");
 }
 
 vector<string> OpDescImpl::GetDstName() const {
@@ -1174,9 +1102,6 @@ vector<string> OpDescImpl::GetDstName() const {
 
 void OpDescImpl::SetDstIndex(const vector<int64_t> &dst_index) {
   meta_data_.dst_indexes_ = dst_index;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "dst_index", "", "", "");
 }
 
 void OpDescImpl::SetWorkspace(const vector<int64_t> &workspace) {
@@ -1205,9 +1130,6 @@ vector<int64_t> OpDescImpl::GetWorkspaceBytes() const {
 
 void OpDescImpl::SetIsInputConst(const vector<bool> &is_input_const) {
   meta_data_.is_input_consts_ = is_input_const;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "is_input_const", "", "", "");
 }
 
 vector<bool> OpDescImpl::GetIsInputConst() const {
@@ -1291,9 +1213,6 @@ void OpDescImpl::RemoveSubgraphInstanceName(const std::string &name) {
   for (auto iter = subgraph_instance_names_.begin(); iter != subgraph_instance_names_.end(); ++iter) {
     if ((*iter) == name) {
       *iter = "";
-
-      TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "delete", TraceManager::GetOutGraphName(),
-                       this->GetName(), "subgraph_instance_name", "", "", name);
       return;
     }
   }
@@ -1309,9 +1228,6 @@ graphStatus OpDescImpl::AddSubgraphName(const std::string &name) {
   const auto size = subgraph_names_to_index_.size();
   subgraph_names_to_index_[name] = size;
   subgraph_instance_names_.resize(size + 1U);
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "subgraph_name", "", "", name);
   return GRAPH_SUCCESS;
 }
 
@@ -1329,9 +1245,6 @@ graphStatus OpDescImpl::SetSubgraphInstanceName(const size_t index, const std::s
     return GRAPH_PARAM_INVALID;
   }
   subgraph_instance_names_[index] = name;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "subgraph_instance_index:" << index, "", "", "name:" << name);
   return GRAPH_SUCCESS;
 }
 

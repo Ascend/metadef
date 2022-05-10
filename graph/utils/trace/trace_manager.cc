@@ -28,7 +28,8 @@
 
 namespace ge {
 thread_local char_t TraceManager::trace_header_[TRACE_PART_LEN] = {};
-thread_local std::string TraceManager::graph_name_;
+const std::string TraceManager::kTraceAct[TRACE_ACT_SIZE] = {"", "add", "modify", "delete", "set", "update"};
+const std::string TraceManager::kTraceInOut[TRACE_IN_OUT_SIZE] = {"", "input", "output"};
 const char_t TraceManager::kTraceEnv[TRACE_ENV_LEN] = "NPU_COLLECT_PATH";
 const std::string TraceManager::kTraceRecordPath = "/extra-info/graph_trace/";
 
@@ -36,16 +37,21 @@ TraceManager &TraceManager::GetInstance() {
   static TraceManager instance;
   return instance;
 }
-bool TraceManager::is_trace_enable_ = false;
+
 // Get env and path
 void TraceManager::CheckTraceEnv(char_t *env_path, const uint32_t &length) {
   (void)env_path;
   (void)length;
 }
 
-void TraceManager::AddTrace(std::string &&trace_info) {
-  (void)trace_info;
-  return;
+// get file path and create directory
+void TraceManager::CreateTraceDirectory(const std::string &env_path, std::string &trace_path) {
+  (void)env_path;
+  (void)trace_path;
+}
+
+std::string TraceManager::GetTimeStr() {
+  return std::string("");
 }
 
 // set owner, and update date, start time
@@ -69,6 +75,7 @@ std::string TraceManager::GetSeqString(const uint32_t &seq) {
 std::string TraceManager::GetFileName(const std::string &save_time) {
   return save_time;
 }
+
 Status TraceManager::OpenFile(int32_t &fd, const std::string &file_path) {
   (void)fd;
   (void)file_path;
@@ -79,10 +86,14 @@ void TraceManager::WriteData(const int32_t fd,  const char_t * const data) {
   (void)fd;
   (void)data;
 }
+
 void TraceManager::SaveFileFunc() {
 }
 
 void TraceManager::SaveInDestructor() {
+}
+
+void TraceManager::SaveToFile() {
 }
 
 TraceManager::TraceManager() {
@@ -91,5 +102,19 @@ TraceManager::TraceManager() {
 }
 
 TraceManager::~TraceManager() {
+}
+
+char_t* TraceManager::GetTraceHeader() {
+  return static_cast<char_t *>(nullptr);
+}
+
+void TraceManager::GetTraceItem(uint32_t &index,  char_t * &item) {
+  (void)index;
+  (void)item;
+}
+
+// Judge whether to save
+void TraceManager::AddTrace(const uint32_t index) {
+  (void)index;
 }
 } // End of class TraceManager
