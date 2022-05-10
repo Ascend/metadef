@@ -501,6 +501,62 @@ failed_process:
   return nullptr;
 }
 
+NodeIndex GetPeerOutPair(const ge::NodePtr &node, int32_t index) {
+  NodeIndex ret;
+  auto input_anchor = node->GetInDataAnchor(index);
+  if (input_anchor == nullptr) {
+    return ret;
+  }
+  auto peer_anchor = input_anchor->GetPeerOutAnchor();
+  if (peer_anchor == nullptr) {
+    return ret;
+  }
+
+  auto peer_anchor_index = peer_anchor->GetIdx();
+  auto actual_node = peer_anchor->GetOwnerNode();
+  ret.node = actual_node;
+  ret.index = peer_anchor_index;
+  return ret;
+}
+
+void AppendPeerInAllPairs(NodeIndices &node_indices, const ge::NodePtr &node, int32_t index) {
+  auto output_anchor = node->GetOutDataAnchor(index);
+  if (output_anchor == nullptr) {
+    return;
+  }
+
+  auto peer_anchors = output_anchor->GetPeerInDataAnchors();
+  if (peer_anchors.empty()) {
+    return;
+  }
+
+  for (const auto &ele : peer_anchors) {
+    NodeIndex temp;
+    temp.index = ele->GetIdx();
+    temp.node = ele->GetOwnerNode();
+    node_indices.emplace_back(temp);
+    GELOGD("Append %s and %d.", temp.node->GetName().c_str(), temp.index);
+  }
+}
+
+NodeIndex GetPeerInFirstPair(const ge::NodePtr &node, int32_t index) {
+  NodeIndex ret;
+  auto output_anchor = node->GetOutDataAnchor(index);
+  if (output_anchor == nullptr) {
+    return ret;
+  }
+  auto peer_anchors = output_anchor->GetPeerInDataAnchors();
+  if (peer_anchors.empty()) {
+    return ret;
+  }
+
+  auto peer_anchor_index = peer_anchors.at(0)->GetIdx();
+  auto actual_node = peer_anchors.at(0)->GetOwnerNode();
+  ret.node = actual_node;
+  ret.index = peer_anchor_index;
+  return ret;
+}
+
 /* If relations is empty and relations_by_name is not empty,
  * interpreter the relations_by_name to relations. */
 void PreprocessRelation(const ge::NodePtr &node,
@@ -514,6 +570,32 @@ void PreprocessRelation(const ge::NodePtr &node,
       auto index = is_input ? op_desc->GetInputIndexByName(name) :
                               op_desc->GetOutputIndexByName(name);
       relations.relations.emplace(std::make_pair(index, relation.second));
+    }
+  }
+
+  for (auto &relation : relations.relations) {
+    for (auto &pair : relation.second) {
+      if (pair.direction != PEER && pair.direction != PEER_SINGLE) {
+        continue;
+      }
+      if (pair.node == nullptr) {
+        continue;
+      }
+      if (is_input) {
+        GELOGD("Update %s and %d by:", pair.node->GetName().c_str(), pair.index);
+        pair = GetPeerOutPair(pair.node, pair.index);
+        GELOGD("%s and %d", pair.node->GetName().c_str(), pair.index);
+      } else {
+        if (pair.direction == PEER) {
+          AppendPeerInAllPairs(relation.second, pair.node, pair.index);
+          /* For efficiency, we do not delete pair in vector relation. */
+          pair.index = -1;
+          pair.node = nullptr;
+          pair.direction = CURRENT;
+        } else if (pair.direction == PEER_SINGLE) {
+          pair = GetPeerInFirstPair(pair.node, pair.index);
+        }
+      }
     }
   }
 }
@@ -543,8 +625,8 @@ Status FusionTurbo::LinkInput(Relations &input_relations,
       continue;
     }
 
-    auto src_node = relation.second.at(0).first;
-    auto src_out_index = relation.second.at(0).second;
+    auto src_node = relation.second.at(0).node;
+    auto src_out_index = relation.second.at(0).index;
     ACCLRT_NOTNULL(src_node, PARAM_INVALID);
     auto out_anchor = src_node->GetOutDataAnchor(src_out_index);
     ACCLRT_NOTNULL(out_anchor, PARAM_INVALID);
@@ -566,6 +648,23 @@ Status FusionTurbo::LinkInput(Relations &input_relations,
     }
   }
   return SUCCESS;
+}
+
+void UpdateTensor(const std::pair<int32_t, NodeIndices> &relation,
+                  const ge::OpDescPtr &src_op_desc, int32_t src_out_index) {
+  for (auto &ele : relation.second) {
+    auto dst_node = ele.node;
+    if (dst_node == nullptr) {
+      continue;
+    }
+    auto dst_index = ele.index;
+    auto dst_in_tensor_desc = dst_node->GetOpDesc()->MutableInputDesc(dst_index);
+    if (src_op_desc->UpdateOutputDesc(src_out_index, *dst_in_tensor_desc) != ge::GRAPH_SUCCESS) {
+      GELOGE(FAILED, "[GraphAcclrt][LinkOutput]Failed to update output %d of node %s",
+             src_out_index, src_op_desc->GetName().c_str());
+      return;
+    }
+  }
 }
 
 Status FusionTurbo::LinkOutput(Relations &out_relations, const ge::NodePtr &src_node, bool update_tensor) {
@@ -594,20 +693,13 @@ Status FusionTurbo::LinkOutput(Relations &out_relations, const ge::NodePtr &src_
     /* 1. Update tensor descs. We assume the input desc of first dst node is correct.
      * We only update once, */
     if (update_tensor) {
-      auto first_dst_node = relation.second.at(0).first;
-      auto first_dst_index = relation.second.at(0).second;
-      auto dst_in_tensor_desc = first_dst_node->GetOpDesc()->MutableInputDesc(first_dst_index);
-      if (src_op_desc->UpdateOutputDesc(src_out_index, *dst_in_tensor_desc) != ge::GRAPH_SUCCESS) {
-        GELOGE(FAILED, "[GraphAcclrt][LinkOutput]Failed to update output %d of node %s",
-               src_out_index, src_node->GetName().c_str());
-        return FAILED;
-      }
+      UpdateTensor(relation, src_op_desc, src_out_index);
     }
 
     /* 2. Link all peer in anchors. */
     for (const auto &peer_index: relation.second) {
-      auto dst_node = peer_index.first;
-      auto dst_index = peer_index.second;
+      auto dst_node = peer_index.node;
+      auto dst_index = peer_index.index;
       if (dst_node == nullptr) {
         continue;
       }
@@ -628,6 +720,7 @@ Status FusionTurbo::LinkOutput(Relations &out_relations, const ge::NodePtr &src_
   }
   return SUCCESS;
 }
+
 
 ge::NodePtr FusionTurbo::GetPeerOutNode(const ge::NodePtr &node, int32_t this_node_input_index) {
   ACCLRT_NOTNULL(node, nullptr);
@@ -781,7 +874,6 @@ Status FusionTurbo::MultiInOne(const ge::NodePtr &new_node,
                                bool remove_old) {
   ACCLRT_NOTNULL(new_node, FAILED);
   GELOGD("Merge multiple nodes into %s.", new_node->GetName().c_str());
-  PeerIndices dst_list;
   std::vector<int32_t> output_index;
   /* Check params. */
   if (input_relations.relations.size() > new_node->GetAllInDataAnchorsSize()) {

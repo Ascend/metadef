@@ -474,7 +474,6 @@ TEST_F(UTestAccelerator, test_case_04_1) {
   ASSERT_NE(node, nullptr);
 
   auto relu = GetNode(graph, "relu");
-  PeerIndices peerIdx = {{relu, 0}};
   Relations src_list;
   src_list.AddPeerIndex("x", {relu, 0});
   acc.LinkInput(src_list, node, true);
@@ -576,19 +575,30 @@ TEST_F(UTestAccelerator, test_case_04_3) {
 TEST_F(UTestAccelerator, test_case_04_5) {
   ge::NodePtr relu;
 
-  Relations src_list(0, {relu, 0});
+  Relations src_list0(0, {relu, 0});
+
+  Relations src_list0_peer(0, {relu, 0, PEER});
 
   Relations src_list1({0, {relu, 0}});
+  Relations src_list1_peer({0, {relu, 0, PEER}});
 
   Relations src_list2 = {{0, {relu, 0}},
                          {1, {relu, 0}}};
+  Relations src_list2_peer = {{0, {relu, 0, PEER}},
+                              {1, {relu, 0, PEER}}};
+
+  Relations src_list2_hybrid = {{0, {relu, 0, CURRENT}},
+                                {1, {relu, 0, PEER}}};
 
   Relations src_list3 = {{0, {{relu, 0}, {}}},
                          {1, {{relu, 0}, {relu, 1}}}};
 
+  Relations src_list3_hybrid = {{0, {{relu, 0, PEER}, {}}},
+                                {1, {{relu, 0, PEER}, {relu, 1, CURRENT}}}};
+
   Relations src_list4(src_list1.relations);
 
-  Relations src_list5((std::map<ThisIndex, PeerIndices>()));
+  Relations src_list5((std::map<ThisIndex, NodeIndices>()));
 
   Relations src_list6(src_list1);
 
@@ -598,7 +608,7 @@ TEST_F(UTestAccelerator, test_case_04_5) {
 
   Relations src_list9(std::move(src_list2.relations_by_name));
 
-  PeerIndex pi = {relu, 0};
+  NodeIndex pi = {relu, 0};
   Relations src_list10(0, pi);
 }
 
@@ -788,7 +798,7 @@ TEST_F(UTestAccelerator, test_case_12) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list;
-  PeerIndex pi = {relu, 0};
+  NodeIndex pi = {relu, 0};
   src_list.AddPeerIndex("x", pi);
   src_list.AddPeerIndex("x", pi);
   acc.LinkInput(src_list, node, false);
@@ -849,7 +859,7 @@ TEST_F(UTestAccelerator, test_case_13) {
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list;
-  PeerIndex pi = {cast2, 0};
+  NodeIndex pi = {cast2, 0};
   dst_list.AddPeerIndex(0, pi);
   dst_list.AddPeerIndex(0, pi);
   acc.BreakInput(cast2, {0});

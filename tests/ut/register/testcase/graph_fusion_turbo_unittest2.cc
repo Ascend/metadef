@@ -593,4 +593,135 @@ TEST_F(UTestAccelerator2, test_case_4) {
   EXPECT_EQ(add_new_out_nodes.at(1)->GetName(), "add");
   EXPECT_EQ(graph->GetDirectNodesSize(), 5);
 }
+
+TEST_F(UTestAccelerator2, test_case_4_1) {
+  auto graph = CreateComplexGraph2();
+  FusionTurbo acc(graph);
+  string name = "add_new";
+  string type = "MultiAdd";
+
+  auto relu1 = GetNode(graph, "relu1");
+  auto relu1_front = GetNode(graph, "relu1_front");
+  auto relu2 = GetNode(graph, "relu2");
+  auto relu2_front = GetNode(graph, "relu2_front");
+  auto add = GetNode(graph, "add");
+  auto out = GetNode(graph, "output");
+
+  auto relu1_front_input = relu1_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+  auto relu2_front_input = relu2_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+
+  Relations input_relations = {{0, {relu1, 0, PEER}},
+                               {1, {relu1_front, 0, PEER}},
+                               {2, {relu2, 0, PEER}},
+                               {3, {relu2_front, 0, PEER}}};
+  Relations output_relations = {{0, {add, 1}},
+                                {0, {relu2, 0, PEER}}};
+  auto node = acc.MultiInOne(name, type, input_relations, output_relations,
+                             {relu1, relu1_front, relu2, relu2_front}, true);
+  EXPECT_NE(node, nullptr);
+
+  auto out_nodes1 = relu1_front_input->GetOutDataNodes();
+  auto out_nodes2 = relu2_front_input->GetOutDataNodes();
+  ASSERT_EQ(out_nodes1.size(), 1);
+  ASSERT_EQ(out_nodes2.size(), 1);
+
+  EXPECT_EQ(out_nodes1.at(0)->GetName(), "add_new");
+  EXPECT_EQ(out_nodes2.at(0)->GetName(), "add_new");
+  auto out_in_nodes = out->GetInDataNodes();
+  EXPECT_EQ(out_in_nodes.size(), 1);
+  EXPECT_EQ(out_in_nodes.at(0)->GetName(), "add");
+
+  auto add_new_out_nodes = node->GetOutDataNodes();
+  EXPECT_EQ(add_new_out_nodes.size(), 2);
+  EXPECT_EQ(add_new_out_nodes.at(0)->GetName(), "add");
+  EXPECT_EQ(add_new_out_nodes.at(1)->GetName(), "add");
+  EXPECT_EQ(graph->GetDirectNodesSize(), 5);
+}
+
+
+TEST_F(UTestAccelerator2, test_case_4_2) {
+  auto graph = CreateComplexGraph2();
+  FusionTurbo acc(graph);
+  string name = "add_new";
+  string type = "MultiAdd";
+
+  auto relu1 = GetNode(graph, "relu1");
+  auto relu1_front = GetNode(graph, "relu1_front");
+  auto relu2 = GetNode(graph, "relu2");
+  auto relu2_front = GetNode(graph, "relu2_front");
+  auto add = GetNode(graph, "add");
+  auto out = GetNode(graph, "output");
+
+  auto relu1_front_input = relu1_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+  auto relu2_front_input = relu2_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+  Relations input_relations = {{0, {relu1, 0, PEER_SINGLE}},
+                               {1, {relu1_front, 0, PEER_SINGLE}},
+                               {2, {relu2, 0, PEER_SINGLE}},
+                               {3, {relu2_front, 0, PEER_SINGLE}}};
+  Relations output_relations = {{0, {add, 1, PEER}},
+                                {0, {relu2, 0, PEER}}};
+  auto node = acc.MultiInOne(name, type, input_relations, output_relations,
+                             {relu1, relu1_front, relu2, relu2_front}, true);
+  EXPECT_NE(node, nullptr);
+
+  auto out_nodes1 = relu1_front_input->GetOutDataNodes();
+  auto out_nodes2 = relu2_front_input->GetOutDataNodes();
+  ASSERT_EQ(out_nodes1.size(), 1);
+  ASSERT_EQ(out_nodes2.size(), 1);
+
+  EXPECT_EQ(out_nodes1.at(0)->GetName(), "add_new");
+  EXPECT_EQ(out_nodes2.at(0)->GetName(), "add_new");
+  auto out_in_nodes = out->GetInDataNodes();
+  EXPECT_EQ(out_in_nodes.size(), 1);
+  EXPECT_EQ(out_in_nodes.at(0)->GetName(), "add");
+
+  auto add_new_out_nodes = node->GetOutDataNodes();
+  EXPECT_EQ(add_new_out_nodes.size(), 1);
+  EXPECT_EQ(add_new_out_nodes.at(0)->GetName(), "add");
+  EXPECT_EQ(graph->GetDirectNodesSize(), 5);
+}
+
+
+TEST_F(UTestAccelerator2, test_case_4_3) {
+  auto graph = CreateComplexGraph2();
+  FusionTurbo acc(graph);
+  string name = "add_new";
+  string type = "MultiAdd";
+
+  auto relu1 = GetNode(graph, "relu1");
+  auto relu1_front = GetNode(graph, "relu1_front");
+  auto relu2 = GetNode(graph, "relu2");
+  auto relu2_front = GetNode(graph, "relu2_front");
+  auto add = GetNode(graph, "add");
+  auto out = GetNode(graph, "output");
+
+  auto relu1_front_input = relu1_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+  auto relu2_front_input = relu2_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+  Relations input_relations = {{0, {relu1, 0, PEER_SINGLE}},
+                               {1, {relu1_front, 0, PEER_SINGLE}},
+                               {2, {relu2, 0, PEER_SINGLE}},
+                               {3, {relu2_front, 0, PEER_SINGLE}}};
+  Relations output_relations = {{0, {add, 1, PEER_SINGLE}},
+                                {0, {relu2, 0, PEER_SINGLE}}};
+  auto node = acc.MultiInOne(name, type, input_relations, output_relations,
+                             {relu1, relu1_front, relu2, relu2_front}, true);
+  EXPECT_NE(node, nullptr);
+
+  auto out_nodes1 = relu1_front_input->GetOutDataNodes();
+  auto out_nodes2 = relu2_front_input->GetOutDataNodes();
+  ASSERT_EQ(out_nodes1.size(), 1);
+  ASSERT_EQ(out_nodes2.size(), 1);
+
+  EXPECT_EQ(out_nodes1.at(0)->GetName(), "add_new");
+  EXPECT_EQ(out_nodes2.at(0)->GetName(), "add_new");
+  auto out_in_nodes = out->GetInDataNodes();
+  EXPECT_EQ(out_in_nodes.size(), 1);
+  EXPECT_EQ(out_in_nodes.at(0)->GetName(), "add");
+
+  auto add_new_out_nodes = node->GetOutDataNodes();
+  EXPECT_EQ(add_new_out_nodes.size(), 1);
+  EXPECT_EQ(add_new_out_nodes.at(0)->GetName(), "add");
+  EXPECT_EQ(graph->GetDirectNodesSize(), 5);
+}
+
 }
