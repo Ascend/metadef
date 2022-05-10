@@ -122,6 +122,7 @@ target_link_libraries(exe_graph PUBLIC
         graph
         c_sec
         ascend_protobuf
+        slog
         )
 
 target_compile_definitions(exe_graph PRIVATE
