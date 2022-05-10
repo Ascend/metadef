@@ -134,14 +134,8 @@ namespace {
 
 ShapeTransferAccordingToFormat::ShapeTransferAccordingToFormat() {}
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc,
-                                                               ShapeAndFormat &shapeAndFormatInfo,
-                                                               int64_t* c) {
-#else
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc,
                                                                ShapeAndFormat &shapeAndFormatInfo) {
-#endif
   gert::Shape shape;
   GeShapeToRtShape(shapeAndFormatInfo.oldShape, shape);
   bool ret = TransferShape(shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat,
@@ -150,11 +144,7 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(const ge::OpDescP
   return ret;
 }
 
-#ifdef ONLY_COMPILE_OPEN_SRC
-bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat &shapeAndFormatInfo, int64_t* c) {
-#else
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat &shapeAndFormatInfo) {
-#endif
   gert::Shape shape;
   GeShapeToRtShape(shapeAndFormatInfo.oldShape, shape);
   bool ret = TransferShape(shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat,
