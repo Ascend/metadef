@@ -149,16 +149,6 @@ void *memCpyS(void *dest, const void *src, UINT32 count) {
 
 INT32 mmRmdir(const CHAR *lp_path_name) { return rmdir(lp_path_name); }
 
-INT32 mmGetSystemTime(mmSystemTime_t *sysTime){
-  sysTime->wYear = 2022;
-  sysTime->wMonth = 04;
-  sysTime->wDay = 28;
-  sysTime->wHour = 10;
-  sysTime->wMinute = 15;
-  sysTime->wSecond = 20;
-  return 0;
-}
-
 mmTimespec mmGetTickCount() {
   mmTimespec rts;
   struct timespec ts = {0};
