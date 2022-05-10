@@ -14,107 +14,262 @@
  * limitations under the License.
  */
 #include "common/util/trace_manager/trace_manager.h"
+
+#include <algorithm>
 #include <iostream>
-#include <fstream>
 #include <sstream>
-#include <time.h>
-#include <ctime>
-#include <cstdarg>
+#include <iomanip>
+
 #include "mmpa/mmpa_api.h"
-#include "graph/def_types.h"
+#include "graph/debug/ge_util.h"
 #include "graph/ge_context.h"
 #include "graph/utils/file_utils.h"
-#include "toolchain/slog.h"
 
 namespace ge {
-thread_local char_t TraceManager::trace_header_[TRACE_PART_LEN] = {};
-const std::string TraceManager::kTraceAct[TRACE_ACT_SIZE] = {"", "add", "modify", "delete", "set", "update"};
-const std::string TraceManager::kTraceInOut[TRACE_IN_OUT_SIZE] = {"", "input", "output"};
-const char_t TraceManager::kTraceEnv[TRACE_ENV_LEN] = "NPU_COLLECT_PATH";
-const std::string TraceManager::kTraceRecordPath = "/extra-info/graph_trace/";
+namespace {
+class TraceFileHolder {
+ public:
+  explicit TraceFileHolder(int fd) : fd_(fd) {}
+  TraceFileHolder(TraceFileHolder const &) = delete;
+  TraceFileHolder &operator=(TraceFileHolder const &) = delete;
+  ~TraceFileHolder() {
+    if (fd_ >= 0) {
+      mmClose(fd_);
+      fd_ = -1;
+    }
+  }
+
+  void Write(const char_t *data, const char *separator = "\r\n") {
+    if (fd_ >= 0) {
+      mmSsize_t written_count = mmWrite(fd_, const_cast<char_t *>(data), strlen(data));
+      if ((written_count == EN_INVALID_PARAM) || (written_count == EN_ERROR)) {
+        GELOGE(INTERNAL_ERROR, "[trace] Failed write trace info to file %s", data);
+      }
+      (void) mmWrite(fd_, const_cast<char_t *>(separator), strlen(separator));
+    }
+  }
+
+  bool Valid() const {
+    return fd_ >= 0;
+  }
+
+ private:
+  int fd_;
+};
+
+std::string CurrentTimeInSecondsStr() {
+  mmSystemTime_t sysTime[64];
+  if (mmGetSystemTime(sysTime) != EN_OK) {
+    GELOGE(INTERNAL_ERROR, "Get current time failed");
+    const static std::string kInvalidTimeStr;
+    return kInvalidTimeStr;
+  }
+
+  std::stringstream ss;
+  ss << sysTime->wYear << sysTime->wMonth << sysTime->wDay << sysTime->wHour << sysTime->wMinute << sysTime->wSecond;
+  return ss.str();
+}
+
+constexpr char_t const *kTraceEnv = "NPU_COLLECT_PATH";
+constexpr uint64_t kTraceSaveArraySize = (kTraceSaveTriggerNum << 1U);
+constexpr uint64_t kTraceSaveCountsPerFile = 2000000U;
+}  // namespace
+
+thread_local std::string TraceManager::trace_header_;
+thread_local std::string TraceManager::graph_name_;
 
 TraceManager &TraceManager::GetInstance() {
   static TraceManager instance;
   return instance;
 }
 
-// Get env and path
-void TraceManager::CheckTraceEnv(char_t *env_path, const uint32_t &length) {
-  (void)env_path;
-  (void)length;
-}
-
-// get file path and create directory
-void TraceManager::CreateTraceDirectory(const std::string &env_path, std::string &trace_path) {
-  (void)env_path;
-  (void)trace_path;
-}
-
-std::string TraceManager::GetTimeStr() {
-  return std::string("");
-}
-
-// set owner, and update date, start time
+// Set owner
 void TraceManager::SetTraceOwner(const std::string &owner, const std::string &stage, const std::string &graph_name) {
-  (void)owner;
-  (void)stage;
-  (void)graph_name;
+  if (!enabled_) {
+    return;
+  }
+  trace_header_ = owner + ":" + stage;
+  graph_name_ = graph_name;
 }
 
+// Clear owner
 void TraceManager::ClearTraceOwner() {
+  if (!enabled_) {
+    return;
+  }
+  trace_header_.clear();
+  graph_name_.clear();
 }
 
-void TraceManager::ClearTraceBody() {
+std::string TraceManager::NextFileName() {
+  static uint64_t uuid = 0;
+
+  std::stringstream ss;
+  ss << trace_save_file_path_ << "trace_" << CurrentTimeInSecondsStr() << "_" << std::setw(3) << std::setfill('0')
+     << uuid++ << ".txt";
+
+  return ss.str();
 }
 
-std::string TraceManager::GetSeqString(const uint32_t &seq) {
-  (void)seq;
-  return(std::string(""));
+std::unique_ptr<TraceFileHolder> OpenOrCreateFile(const std::string &file_path) {
+  if (strnlen(file_path.c_str(), MMPA_MAX_PATH) >= MMPA_MAX_PATH) {
+    GELOGE(PATH_INVALID, "[trace] Trace file name %s exceed max length %u", file_path.c_str(),
+           static_cast<uint32_t>(MMPA_MAX_PATH));
+    return nullptr;
+  }
+
+  char_t real_path[MMPA_MAX_PATH] = {};
+  if (mmRealPath(file_path.c_str(), &real_path[0], MMPA_MAX_PATH) != EN_OK) {
+    GELOGI("[trace] Create new trace file %s", file_path.c_str());
+  }
+
+  const static auto kFlag = static_cast<int32_t>(static_cast<uint32_t>(M_WRONLY) | static_cast<uint32_t>(M_CREAT) |
+                                                 static_cast<uint32_t>(M_APPEND));
+  const static auto kMode = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) | static_cast<uint32_t>(M_IWUSR));
+
+  return ComGraphMakeUnique<TraceFileHolder>(mmOpen2(&real_path[0], kFlag, kMode));
 }
 
-std::string TraceManager::GetFileName(const std::string &save_time) {
-  return save_time;
+void TraceManager::SaveTraceBufferToFile(ReadyPart ready_part) {
+  if (ready_part == ReadyPart::None) {
+    return;
+  }
+
+  ScopeGuard guard([this, ready_part]() {
+    // Saved count must update for un-block add tracing thread
+    if (ready_part == ReadyPart::A) {
+      part1_ready_nums_ = 0U;
+    } else {
+      part2_ready_nums_ = 0U;
+    }
+    // Must update save nums after clear part ready nums
+    total_saved_nums_ += kTraceSaveTriggerNum;
+  });
+
+  if (current_saving_file_name_.empty() || (current_file_saved_nums_ >= kTraceSaveCountsPerFile)) {
+    current_saving_file_name_ = NextFileName();
+    current_file_saved_nums_ = 0U;
+  }
+
+  auto fh = OpenOrCreateFile(current_saving_file_name_);
+  if (fh == nullptr || (!fh->Valid())) {
+    GELOGE(INTERNAL_ERROR, "[trace] Failed get file holder for %s", current_saving_file_name_.c_str());
+    return;
+  }
+
+  while ((ready_part == ReadyPart::A && part1_ready_nums_ < kTraceSaveTriggerNum) ||
+         (ready_part == ReadyPart::B && part2_ready_nums_ < kTraceSaveTriggerNum)) {
+  }
+  size_t start = (ready_part == ReadyPart::A) ? 0 : kTraceSaveTriggerNum;
+  for (size_t i = start; i < (start + kTraceSaveTriggerNum); i++) {
+    if (!trace_array_[i].empty()) {
+      current_file_saved_nums_++;
+      fh->Write(trace_array_[i].c_str());
+    }
+  }
 }
 
-Status TraceManager::OpenFile(int32_t &fd, const std::string &file_path) {
-  (void)fd;
-  (void)file_path;
-  return GRAPH_SUCCESS;
+void TraceManager::SaveBufferToFileThreadFunc() {
+  while (true) {
+    std::unique_lock<std::mutex> lock_file(mu_);
+    while ((ready_part_ == ReadyPart::None) && (!stopped_)) {
+      data_ready_var_.wait(lock_file);
+    }
+    if (stopped_ && ready_part_ == ReadyPart::None) {  // Keep save remain trace even request stop
+      break;
+    }
+    auto ready_part = ready_part_;
+    ready_part_ = ReadyPart::None;
+    lock_file.unlock();
+
+    SaveTraceBufferToFile(ready_part);
+  }
 }
 
-void TraceManager::WriteData(const int32_t fd,  const char_t * const data) {
-  (void)fd;
-  (void)data;
+Status TraceManager::Initialize(const char_t *file_save_path) {
+  // init data
+  std::stringstream ss;
+  ss << file_save_path << MMPA_PATH_SEPARATOR_STR << "extra-info" << MMPA_PATH_SEPARATOR_STR << "graph_trace"
+     << MMPA_PATH_SEPARATOR_STR << ge::GetContext().DeviceId() << MMPA_PATH_SEPARATOR_STR;
+  trace_save_file_path_ = ss.str();
+  if (CreateDirectory(trace_save_file_path_) != 0) {
+    GELOGE(INTERNAL_ERROR, "[trace] Trace not enabled as failed create trace file save directory[%s]",
+           trace_save_file_path_.c_str());
+    return FAILED;
+  }
+  try {
+    save_thread_ = std::thread(&TraceManager::SaveBufferToFileThreadFunc, this);
+  } catch (const std::system_error &) {
+    GELOGE(INTERNAL_ERROR, "[trace] Trace not enabled as failed start trace saving thread");
+    return FAILED;
+  }
+  return SUCCESS;
 }
 
-void TraceManager::SaveFileFunc() {
-}
-
-void TraceManager::SaveInDestructor() {
-}
-
-void TraceManager::SaveToFile() {
+void TraceManager::Finalize() {
+  std::thread([this]() {
+    // Trigger save for left trace info, trace added when or after dtor may lose
+    for (size_t i = 1; i < kTraceSaveTriggerNum; i++) {
+      AddTrace("");
+    }
+  }).join();
+  // After join the thread above, remain trace must have trigger save part A or B
+  std::unique_lock<std::mutex> lk(mu_);
+  stopped_ = true;  // stopping record any new trace here
+  data_ready_var_.notify_all();
+  lk.unlock();
+  if (save_thread_.joinable()) {
+    save_thread_.join();
+  }
 }
 
 TraceManager::TraceManager() {
-  be_in_save_ = false;
-  trace_array_[0][0] = 0;
+  char_t trace_env_path[MMPA_MAX_PATH] = {};
+  enabled_ = (mmGetEnv(kTraceEnv, trace_env_path, MMPA_MAX_PATH) == EN_OK) && (trace_env_path[0U] != '\0');
+  if (!enabled_) {
+    GELOGI("[trace] Trace not enabled as env 'NPU_COLLECT_PATH' not set");
+    return;
+  }
+
+  if (Initialize(trace_env_path) != SUCCESS) {
+    enabled_ = false;
+    GELOGE(INTERNAL_ERROR, "[trace] Trace not enabled as initialize failed");
+  }
 }
 
 TraceManager::~TraceManager() {
+  if (!enabled_) {
+    return;
+  }
+  Finalize();
 }
 
-char_t* TraceManager::GetTraceHeader() {
-  return static_cast<char_t *>(nullptr);
+void TraceManager::AddTrace(std::string &&trace_info) {
+  if (!enabled_) {
+    return;
+  }
+  // Assume kTraceSaveArraySize = 2 * kTraceSaveTriggerNum
+  auto current_trace_nums = trace_index_.fetch_add(1);
+  // blocking when almost full to prevent re-trigger save
+  const static uint64_t kLeftNumTriggerBlock = 1U;
+  while (((current_trace_nums - total_saved_nums_) >= (kTraceSaveArraySize - kLeftNumTriggerBlock)) && (!stopped_)) {
+  }
+  if (stopped_) {  // Drop trace after request stopping
+    return;
+  }
+  auto index = current_trace_nums % kTraceSaveArraySize;
+  trace_array_[index] = std::move(trace_info);
+  if (index < kTraceSaveTriggerNum) {
+    part1_ready_nums_++;
+  } else {
+    part2_ready_nums_++;
+  }
+  // assume kTraceSaveTriggerNum is an aliquot part of kTraceSaveArraySize
+  if ((index + 1U) % kTraceSaveTriggerNum == 0) {
+    std::unique_lock<std::mutex> lk(mu_);
+    ready_part_ = (index < kTraceSaveTriggerNum) ? ReadyPart::A : ReadyPart::B;
+    lk.unlock();
+    data_ready_var_.notify_all();
+  }
 }
-
-void TraceManager::GetTraceItem(uint32_t &index,  char_t * &item) {
-  (void)index;
-  (void)item;
-}
-
-// Judge whether to save
-void TraceManager::AddTrace(const uint32_t index) {
-  (void)index;
-}
-} // End of class TraceManager
+}  // namespace ge

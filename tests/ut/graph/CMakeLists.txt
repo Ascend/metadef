@@ -71,6 +71,7 @@ set(UT_FILES
     "testcase/ge_ir_utils_unittest.cc"
     "testcase/func_counter.cc"
     "testcase/test_std_structs.cc"
+    "testcase/trace_manager_unittest.cc"
     "testcase/transformer_expand_dims_ut.cc"
     "testcase/transformer_transfer_shape_ut.cc"
     "testcase/op_imp_unittest.cc"
