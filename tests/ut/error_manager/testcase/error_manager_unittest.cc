@@ -264,7 +264,7 @@ TEST_F(UtestErrorManager, ParseJsonFile) {
   }
   EXPECT_EQ(instance.ParseJsonFile("out3.json"), 0);
   instance.error_map_["1"] = ErrorManager::ErrorInfoConfig();
-  EXPECT_EQ(instance.ParseJsonFile("out3.json"), -1);
+  EXPECT_EQ(instance.ParseJsonFile("out3.json"), 0);
 }
 
 TEST_F(UtestErrorManager, ClearErrorMsgContainerByWorkId) {
