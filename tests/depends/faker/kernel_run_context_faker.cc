@@ -19,7 +19,7 @@
 #include "exe_graph/runtime/tiling_context.h"
 
 namespace gert {
-KernelRunContextHolder BuildKernelRunContext(size_t input_num, size_t output_num) {
+FakeKernelContextHolder BuildKernelRunContext(size_t input_num, size_t output_num) {
   return KernelRunContextFaker().KernelIONum(input_num, output_num).Build();
 }
 KernelRunContextFaker &KernelRunContextFaker::KernelIONum(size_t input_num, size_t output_num) {
@@ -42,7 +42,8 @@ KernelRunContextFaker &KernelRunContextFaker::IrInstanceNum(std::vector<uint32_t
   ir_instance_num_ = std::move(instance_num);
   return *this;
 }
-ge::NodePtr KernelRunContextFaker::FakeNode() const {
+
+ge::OpDescPtr KernelRunContextFaker::FakeOp() const {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
   size_t input_index = 0;
   for (size_t ir_index = 0; ir_index < ir_instance_num_.size(); ++ir_index) {
@@ -74,47 +75,23 @@ ge::NodePtr KernelRunContextFaker::FakeNode() const {
     op_desc->AppendIrAttrName(attr.first);
     op_desc->SetAttr(attr.first, attr.second);
   }
-  auto graph = std::make_shared<ge::ComputeGraph>("tmp");
-  return graph->AddNode(op_desc);
+  return op_desc;
 }
-KernelRunContextHolder KernelRunContextFaker::Build() const {
-  KernelRunContextHolder holder;
-  holder.kernel_input_num = kernel_input_num_;
-  holder.kernel_output_num = kernel_output_num_;
-  size_t size = sizeof(KernelRunContext) + sizeof(AsyncAnyValue *) * (kernel_input_num_ + kernel_output_num_);
-  holder.context_holder = std::unique_ptr<uint8_t[]>(new uint8_t[size]);
-  memset(holder.context_holder.get(), 0xff, size);
-  holder.value_holder.resize(kernel_input_num_ + kernel_output_num_);
-  size_t extend_info_size;
 
-  holder.compute_node_extend_holder = bg::CreateComputeNodeInfo(FakeNode(), holder.buffer_pool, extend_info_size);
-  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder.get());
-  compute_node_info->SetNodeName(
-      holder.buffer_pool.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeName())));
-  compute_node_info->SetNodeType(
-      holder.buffer_pool.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeType())));
-
-  holder.context = reinterpret_cast<KernelRunContext *>(holder.context_holder.get());
-  holder.context->input_size = kernel_input_num_;
-  holder.context->output_size = kernel_output_num_;
-  holder.context->compute_node_info = holder.compute_node_extend_holder.get();
-  holder.context->output_start = &(holder.context->values[holder.context->input_size]);
-
-  for (size_t i = 0; i < kernel_input_num_ + kernel_output_num_; ++i) {
-    holder.context->values[i] = &holder.value_holder[i];
+FakeKernelContextHolder KernelRunContextFaker::Build() const {
+  FakeKernelContextHolder fake_holder;
+  fake_holder.kernel_input_num = kernel_input_num_;
+  fake_holder.kernel_output_num = kernel_output_num_;
+  KernelRunContextBuilder kernel_context_builder;
+  auto op_desc = FakeOp();
+  if (inputs_.size() != kernel_input_num_ || outputs_.size() != kernel_output_num_) {
+    std::vector<void *> inputs(kernel_input_num_, nullptr);
+    std::vector<void *> outputs(kernel_output_num_, nullptr);
+    fake_holder.holder = kernel_context_builder.Inputs(inputs).Outputs(outputs).Build(op_desc);
+    return fake_holder;
   }
-
-  if (inputs_.size() == kernel_input_num_) {
-    for (size_t i = 0; i < inputs_.size(); ++i) {
-      holder.value_holder[i].data.pointer = inputs_[i];
-    }
-  }
-  if (outputs_.size() == kernel_output_num_) {
-    for (size_t i = 0; i < outputs_.size(); ++i) {
-      holder.value_holder[i + kernel_input_num_].data.pointer = outputs_[i];
-    }
-  }
-  return holder;
+  fake_holder.holder = kernel_context_builder.Inputs(inputs_).Outputs(outputs_).Build(op_desc);
+  return fake_holder;
 }
 KernelRunContextFaker &KernelRunContextFaker::NodeInputTd(int32_t index, ge::DataType dt, ge::Format origin_format,
                                                           ge::Format storage_format) {
@@ -158,7 +135,7 @@ InferShapeContextFaker &InferShapeContextFaker::OutputShapes(std::vector<void *>
   base_faker_.Outputs(std::move(output_shapes));
   return *this;
 }
-KernelRunContextHolder InferShapeContextFaker::Build() const {
+FakeKernelContextHolder InferShapeContextFaker::Build() const {
   return base_faker_.Build();
 }
 TilingContextFaker &TilingContextFaker::NodeIoNum(size_t input_num, size_t output_num) {
@@ -191,7 +168,7 @@ TilingContextFaker &TilingContextFaker::Workspace(ContinuousVector *workspace) {
   base_faker_.Outputs(outputs_);
   return *this;
 }
-KernelRunContextHolder TilingContextFaker::Build() const {
+FakeKernelContextHolder TilingContextFaker::Build() const {
   return base_faker_.Build();
 }
 void TilingContextFaker::UpdateInputs() {

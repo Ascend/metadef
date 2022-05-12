@@ -26,7 +26,7 @@ struct TestData {
   int16_t d;
 };
 
-KernelRunContextHolder BuildTestContext() {
+FakeKernelContextHolder BuildTestContext() {
   auto holder = gert::KernelRunContextFaker()
                     .NodeIoNum(1, 1)
                     .IrInputNum(1)

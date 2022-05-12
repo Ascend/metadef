@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <stdlib.h>
 
 #include "framework/common/debug/ge_log.h"
 #include "register/op_registry.h"
@@ -55,6 +56,9 @@
 
 #include "proto/tensorflow/attr_value.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
+#include "exe_graph/runtime/kernel_run_context_builder.h"
+#include "external/register/op_impl_registry.h"
+#include "exe_graph/runtime/continuous_vector.h"
 
 
 using namespace domi;
@@ -68,6 +72,83 @@ public:
 private:
   std::string json_str_;
 };
+
+namespace {
+struct StubCompileInfo : public CompileInfoBase {
+  int64_t stub_ = 2;
+};
+
+void *CreateCompileInfo() {
+  return new StubCompileInfo();
+}
+
+void DeleteCompileInfo(void *compile_info) {
+  delete reinterpret_cast<StubCompileInfo *>(compile_info);
+}
+
+UINT32 OpTilingStubNew(gert::TilingContext *kernel_context) {
+  auto tensor = kernel_context->GetInputTensor(0);
+  EXPECT_EQ(tensor->GetShape().GetStorageShape().GetDimNum(), 4);
+  gert::Shape expect_shape({4,4,4,4});
+  EXPECT_TRUE(tensor->GetShape().GetStorageShape() == expect_shape);
+  EXPECT_EQ(tensor->GetDataType(), DT_INT8);
+  EXPECT_EQ((tensor->GetData<int8_t>())[3], 4);
+  EXPECT_EQ((tensor->GetData<int8_t>())[2], 3);
+  EXPECT_EQ((tensor->GetData<int8_t>())[1], 2);
+  EXPECT_EQ((tensor->GetData<int8_t>())[0], 1);
+  EXPECT_EQ(tensor->GetFormat().GetStorageFormat(), FORMAT_ND);
+  gert::Shape expect_shape2({9,9,9,9});
+  EXPECT_TRUE(kernel_context->GetOutputShape(0)->GetStorageShape() == expect_shape2);
+  auto shape = kernel_context->GetInputShape(1);
+  EXPECT_TRUE(*shape == gert::StorageShape({5, 5, 5, 5}, {5, 5, 5, 5}));
+  auto ci = kernel_context->GetCompileInfo();
+  EXPECT_EQ(reinterpret_cast<const StubCompileInfo *>(ci)->stub_, 1);
+
+  EXPECT_EQ(kernel_context->GetAttrs()->GetAttrNum(), 4);
+  std::vector<int64_t> expect_attr = {1, 2, 3, 4};
+  for (size_t i = 0UL; i < 4UL; ++i) {
+    EXPECT_EQ(reinterpret_cast<const int64_t *>(
+                  kernel_context->GetAttrs()->GetAttrPointer<gert::ContinuousVector>(0)->GetData())[i],
+              expect_attr[i]);
+  }
+  EXPECT_EQ(*kernel_context->GetAttrs()->GetAttrPointer<int8_t>(1), 99);
+  kernel_context->SetBlockDim(2);
+  kernel_context->SetNeedAtomic(true);
+  kernel_context->SetTilingKey(78);
+  *kernel_context->GetWorkspaceSizes(1) = 12;
+  kernel_context->GetRawTilingData()->Append<uint8_t>(6);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(7);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(8);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(9);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(10);
+  return ge::GRAPH_SUCCESS;
+}
+
+UINT32 OpTilingParseStubNew(gert::KernelContext *kernel_context) {
+  auto ci = kernel_context->GetOutputPointer<StubCompileInfo>(0);
+  ci->stub_ = 1;
+  return ge::GRAPH_SUCCESS;
+}
+
+UINT32 OpTilingStubV5(gert::TilingContext *kernel_context) {
+  auto tensor = kernel_context->GetInputTensor(0);
+  std::vector<float> real_data = {1.1, 2.1, 3.1, 4.1};
+  for (size_t i = 0UL; i < 4UL; ++i) {
+    EXPECT_EQ((tensor->GetData<uint16_t>())[i], optiling::FloatToUint16(real_data[i]));
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+UINT32 DefaultOptilingStub(gert::TilingContext *kernel_context) {
+  return ge::GRAPH_SUCCESS;
+}
+
+UINT32 OpTilingParseStubV5(gert::KernelContext *kernel_context) {
+  auto av = kernel_context->GetOutput(0);
+  av->Set(CreateCompileInfo(), DeleteCompileInfo);
+  return ge::GRAPH_SUCCESS;
+}
+}  // namespace
 
 class UtestRegister : public testing::Test {
  protected:
@@ -807,4 +888,165 @@ TEST_F(UtestRegister, optiling_py_interface) {
   TbeOpTilingPyInterfaceEx2(optype, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
   TbeOpTilingPyInterfaceEx2(optype_v3, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
   TbeOpTilingPyInterfaceEx2(optype_v4, cmp_info, attrs, attrs, runinfo, size, cmp_info_hash, elapse);
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_ok) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int32","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
+{ "name": "attr_1","dtype": "int","value": 99},
+{ "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "TestReluV2";
+  const char* cmp_info = "";
+  std::string runinfo(100,'a');
+  size_t size = 100;
+  const char* cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubNew;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubNew;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            1);
+  std::string result = "{\"block_dim\":2,\"clear_atomic\":true,\"tiling_data\":\"060708090A\",\"tiling_key\":78,\"workspaces\":[12]}";
+  EXPECT_EQ(result, runinfo.substr(0, 96));
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
+    gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_const_value) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  // int9999 is invalid data type
+  const nlohmann::json input = R"([
+  {"name": "test_0","dtype": "int9999", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  std::string output_str = " ";
+  std::string attrs_str = " ";
+  std::string op_type = "TestReluV2";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubNew;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubNew;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            0);
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_attr) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  std::string input_str = " ";
+  std::string output_str = " ";
+  // int999 is invalid dtype
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
+{ "name": "attr_1","dtype": "int9999","value": 99}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "TestReluV2";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubNew;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubNew;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            0);
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_fail_without_params) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  EXPECT_EQ(TbeOpTilingPyInterface(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0, nullptr), 0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_ok_with_float_data) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "t0", "dtype": "float16","const_value": [1.1,2.1,3.1,4.1] ,"shape": [4,4,4,4], "ori_shape":[4,4,4,4],"format": "ND"},
+{"dtype": "int8", "shape": [4,4,4,4], "ori_shape":[4,4,4,4],"format": "ND"}
+])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+  std::string op_type = "TestReluV2";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  const nlohmann::json attrs = R"([
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubV5;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubV5;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            1);
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  IMPL_OP_DEFAULT().Tiling(DefaultOptilingStub).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8","shape": [4,4,4,4],"format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+  std::string op_type = "AutoTiling";
+  const char* cmp_info = "";
+  std::string runinfo(100,'a');
+  size_t size = 100;
+  const char* cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  const nlohmann::json attrs = R"([
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            1);
+  unsetenv("ENABLE_RUNTIME_V2");
 }

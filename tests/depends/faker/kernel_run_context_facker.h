@@ -26,25 +26,22 @@
 #include "exe_graph/lowering/buffer_pool.h"
 #include "graph/any_value.h"
 #include "graph/node.h"
+#include "exe_graph/runtime/kernel_run_context_builder.h"
 
 namespace gert {
-struct KernelRunContextHolder {
+struct FakeKernelContextHolder {
   template<typename T>
   T *GetContext() {
-    return reinterpret_cast<T*>(context);
+    return reinterpret_cast<T*>(holder.context);
   }
   ComputeNodeInfo *MutableComputeNodeInfo() {
-    return reinterpret_cast<ComputeNodeInfo *>(compute_node_extend_holder.get());
+    return reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder.get());
   }
   size_t kernel_input_num;
   size_t kernel_output_num;
-  std::unique_ptr<uint8_t[]> context_holder;
-  std::vector<AsyncAnyValue> value_holder;
-  std::unique_ptr<uint8_t[]> compute_node_extend_holder;
-  bg::BufferPool buffer_pool;
-  KernelRunContext *context;
+  KernelContextHolder holder;
 };
-KernelRunContextHolder BuildKernelRunContext(size_t input_num, size_t output_num);
+FakeKernelContextHolder BuildKernelRunContext(size_t input_num, size_t output_num);
 
 class KernelRunContextFaker {
  public:
@@ -61,10 +58,10 @@ class KernelRunContextFaker {
   KernelRunContextFaker &Inputs(std::vector<void *> inputs);
   KernelRunContextFaker &Outputs(std::vector<void *> outputs);
 
-  KernelRunContextHolder Build() const;
+  FakeKernelContextHolder Build() const;
 
  private:
-  ge::NodePtr FakeNode() const;
+  ge::OpDescPtr FakeOp() const;
 
  private:
   size_t kernel_input_num_;
@@ -108,7 +105,7 @@ class InferShapeContextFaker {
   InferShapeContextFaker &InputShapes(std::vector<void *> input_shapes);
   InferShapeContextFaker &OutputShapes(std::vector<void *> output_shapes);
 
-  KernelRunContextHolder Build() const;
+  FakeKernelContextHolder Build() const;
 
  private:
   enum InputsAppend { kInputsInferShapeFunc, kInputsAppendEnd };
@@ -147,7 +144,7 @@ class TilingContextFaker {
   TilingContextFaker &TilingData(void *tiling_data);
   TilingContextFaker &Workspace(ContinuousVector *workspace);
 
-  KernelRunContextHolder Build() const;
+  FakeKernelContextHolder Build() const;
 
  private:
   void UpdateInputs();

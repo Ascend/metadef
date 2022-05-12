@@ -46,7 +46,7 @@ target_compile_definitions(ut_register PRIVATE
 
 target_link_libraries(ut_register
     $<BUILD_INTERFACE:intf_pub>
-    register_static graph_static
+    register_static graph_static exe_graph_static
     gtest
     gtest_main
     slog_stub

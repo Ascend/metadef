@@ -25,8 +25,411 @@
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_tiling_constants.h"
 #include "common/util/tiling_utils.h"
+#include "register/op_impl_registry.h"
+#include "exe_graph/runtime/storage_shape.h"
+#include "exe_graph/runtime/kernel_run_context_builder.h"
+#include "exe_graph/runtime/tiling_context.h"
+#include "common/checker.h"
 
 namespace optiling {
+using ParseAttrFunc = std::function<void(ge::OpDescPtr &, const nlohmann::json &, const std::string &)>;
+using CopyConstDataFunc = std::function<bool(const nlohmann::json &, const size_t, std::unique_ptr<uint8_t[]> &)>;
+
+class FuncTable {
+public:
+  FuncTable() = default;
+  FuncTable &Init() {
+    funcs_.resize(ge::DT_MAX, nullptr);
+    return *this;
+  }
+
+  FuncTable &Insert(ge::DataType index, CopyConstDataFunc func) {
+    funcs_[index] = func;
+    return *this;
+  }
+
+  CopyConstDataFunc Find(ge::DataType index) const {
+    return funcs_[index];
+  }
+
+private:
+  std::vector<CopyConstDataFunc> funcs_;
+};
+
+namespace {
+constexpr uint32_t kRightShiftBits = 4;
+constexpr uint32_t kAndBits = 15;
+constexpr char kHexDigits[] = "0123456789ABCDEF";
+constexpr size_t kSize = 2UL;
+constexpr char const *kMaxTilingSize = "op_para_size";
+constexpr size_t kMaxTilingDataSize = 2048UL;
+constexpr size_t kWorkspaceHolerSize = 8UL;
+
+struct ContextComponent {
+  std::vector<gert::StorageShape> storage_shapes;
+  std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> index_to_tensors;
+  ge::OpDescPtr op_desc {nullptr};
+  std::unique_ptr<uint8_t[]> tiling_data;
+  std::unique_ptr<uint8_t[]> workspace_size;
+  bool atomic_flag = true;
+};
+
+bool EnableGert() {
+  const char *const enable_gert = std::getenv("ENABLE_RUNTIME_V2");
+  if (enable_gert == nullptr) {
+    return false;
+  }
+  return true;
+}
+
+bool FindImplFuncs(const char *op_type, const gert::OpImplRegistry::OpImplFunctions *&funcs) {
+    funcs = gert::OpImplRegistry::GetInstance().GetOpImpl(op_type);
+    if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
+      funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("DefaultImpl");
+      if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
+        GELOGE(ge::GRAPH_FAILED, "funcs/tiling/tiling_parse is null. op type is %s.", op_type);
+        REPORT_CALL_ERROR("E19999", "funcs/tiling/tiling_parse is null. op type is %s.", op_type);
+        return false;
+      }
+    }
+    return true;
+}
+
+template<typename T>
+void ParseAndSetAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  T attr_value = attr["value"].get<T>();
+  op_desc->AppendIrAttrName(attr_name);
+  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<T>(attr_value));
+}
+
+template<typename T>
+void ParseAndSetListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  std::vector<T> attr_value = attr["value"].get<std::vector<T>>();
+  op_desc->AppendIrAttrName(attr_name);
+  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<T>>(attr_value));
+}
+
+void ParseAndSetListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  std::vector<int32_t> attr_value = attr["value"].get<std::vector<int32_t>>();
+  std::vector<int64_t> attr_int64_value;
+  for (auto item : attr_value) {
+    attr_int64_value.emplace_back(static_cast<int64_t>(item));
+  }
+  op_desc->AppendIrAttrName(attr_name);
+  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<int64_t>>(attr_int64_value));
+}
+
+void ParseAndSetListListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  std::vector<std::vector<int32_t>> attr_value_int32 = attr["value"].get<std::vector<std::vector<int32_t>>>();
+  std::vector<std::vector<int64_t>> attr_value_int64;
+  std::vector<int64_t> temp_int64_vec;
+  for (const auto &vec_int32 : attr_value_int32) {
+    for (const auto &item : vec_int32) {
+      int64_t tmp = static_cast<int64_t>(item);
+      temp_int64_vec.emplace_back(tmp);
+    }
+    attr_value_int64.emplace_back(temp_int64_vec);
+    temp_int64_vec.clear();
+  }
+  op_desc->AppendIrAttrName(attr_name);
+  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
+}
+
+void ParseAndSetListListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  const std::vector<std::vector<int64_t>> attr_value_int64 = attr["value"].get<std::vector<std::vector<int64_t>>>();
+  op_desc->AppendIrAttrName(attr_name);
+  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
+}
+
+template<typename T>
+bool GetConstData(const nlohmann::json &json_array, const size_t total_size,
+                  std::unique_ptr<uint8_t[]> &tensor_holder) {
+  std::vector<T> value = json_array.get<std::vector<T>>();
+  auto tensor = reinterpret_cast<gert::Tensor *>(tensor_holder.get());
+  if (memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(gert::Tensor), value.data(), value.size() * sizeof(T)) !=
+      EOK) {
+    GELOGE(ge::FAILED, "Call memcpy failed, total value size is %zu.", value.size() * sizeof(T));
+    return false;
+  }
+  return true;
+}
+
+bool GetConstDataWithFloat16(const nlohmann::json &json_array, const size_t total_size,
+                             std::unique_ptr<uint8_t[]> &tensor_holder) {
+  std::vector<float> const_value = json_array.get<std::vector<float>>();
+  std::vector<uint16_t> const_data_vec;
+  for (size_t i = 0UL; i < const_value.size(); ++i) {
+    uint16_t const_data_uint16 = FloatToUint16(const_value[i]);
+    const_data_vec.emplace_back(const_data_uint16);
+  }
+  auto tensor = reinterpret_cast<gert::Tensor *>(tensor_holder.get());
+  if (memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(gert::Tensor), const_data_vec.data(),
+               const_data_vec.size() * sizeof(uint16_t)) != EOK) {
+    GELOGE(ge::FAILED, "Call memcpy failed, total value size is %zu.", const_data_vec.size() * sizeof(uint16_t));
+    return false;
+  }
+  return true;
+}
+
+const std::unordered_map<std::string, ParseAttrFunc> kDtypeToAttrFunc = {
+    {"bool", ParseAndSetAttr<bool>},
+    {"float", ParseAndSetAttr<float>},
+    {"float32", ParseAndSetAttr<float>},
+    {"int", ParseAndSetAttr<int64_t>},
+    {"int32", ParseAndSetAttr<int64_t>},
+    {"int64", ParseAndSetAttr<int64_t>},
+    {"str", ParseAndSetAttr<std::string>},
+    {"list_bool", ParseAndSetListAttr<bool>},
+    {"list_float", ParseAndSetListAttr<float>},
+    {"list_float32", ParseAndSetListAttr<float>},
+    {"list_int", ParseAndSetListInt64Attr},
+    {"list_int32", ParseAndSetListInt64Attr},
+    {"list_int64", ParseAndSetListAttr<int64_t>},
+    {"list_str", ParseAndSetListAttr<std::string>},
+    {"list_list_int", ParseAndSetListListAttr},
+    {"list_list_int32", ParseAndSetListListAttr},
+    {"list_list_int64", ParseAndSetListListInt64Attr}};
+
+const FuncTable kFuncTable = FuncTable()
+                             .Init()
+                             .Insert(ge::DT_INT8, GetConstData<int8_t>)
+                             .Insert(ge::DT_UINT8, GetConstData<uint8_t>)
+                             .Insert(ge::DT_INT16, GetConstData<int16_t>)
+                             .Insert(ge::DT_UINT16, GetConstData<uint16_t>)
+                             .Insert(ge::DT_INT32, GetConstData<int32_t>)
+                             .Insert(ge::DT_UINT32, GetConstData<uint32_t>)
+                             .Insert(ge::DT_INT64, GetConstData<int64_t>)
+                             .Insert(ge::DT_UINT64, GetConstData<uint64_t>)
+                             .Insert(ge::DT_FLOAT, GetConstData<float>)
+                             .Insert(ge::DT_DOUBLE, GetConstData<double>)
+                             .Insert(ge::DT_FLOAT16, GetConstDataWithFloat16);
+
+void ParseDtype(const nlohmann::json &json, ge::GeTensorDesc &tensor_desc) {
+  if (json.contains("dtype")) {
+    std::string dtype_str = json["dtype"].get<std::string>();
+    std::transform(dtype_str.begin(), dtype_str.end(), dtype_str.begin(), ::toupper);
+    dtype_str = "DT_" + dtype_str;
+    ge::DataType ge_dtype = ge::TypeUtils::SerialStringToDataType(dtype_str);
+    tensor_desc.SetDataType(ge_dtype);
+  }
+}
+
+void ParseStorageShape(const nlohmann::json &json, gert::StorageShape &storage_shape,
+                       std::vector<gert::StorageShape> &storage_shapes) {
+  if (json.contains("shape")) {
+    gert::Shape shape;
+    const auto dims = json["shape"].get<std::vector<int64_t>>();
+    for (auto dim : dims) {
+      shape.AppendDim(dim);
+    }
+    storage_shape.MutableStorageShape() = shape;
+  }
+  if (json.contains("ori_shape")) {
+    gert::Shape shape;
+    const auto dims = json["ori_shape"].get<std::vector<int64_t>>();
+    for (auto dim : dims) {
+      shape.AppendDim(dim);
+    }
+    storage_shape.MutableOriginShape() = shape;
+  }
+  storage_shapes.emplace_back(storage_shape);
+}
+
+void ParseStorageFormat(const nlohmann::json &json, ge::GeTensorDesc &tensor_desc) {
+  if (json.contains("format")) {
+    std::string format_str = json["format"].get<std::string>();
+    std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
+    ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
+    tensor_desc.SetFormat(ge_format);
+  }
+  if (json.contains("ori_format")) {
+    std::string format_str = json["ori_format"].get<std::string>();
+    std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
+    ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
+    tensor_desc.SetOriginFormat(ge_format);
+  }
+}
+
+ge::graphStatus ParseConstValue(const nlohmann::json &input, gert::StorageShape &storage_shape,
+                                ge::GeTensorDesc &tensor_desc, const uint32_t index,
+                                std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> &index_to_tensor) {
+  if (input.contains("const_value")) {
+    if (!input.contains("name")) {
+      GELOGE(ge::GRAPH_FAILED, "Const tensor has no name.");
+      return ge::GRAPH_FAILED;
+    }
+
+    size_t total_size = 0UL;
+    auto tensor_holder = gert::Tensor::CreateFollowing(storage_shape.GetStorageShape().GetShapeSize(),
+                                                       tensor_desc.GetDataType(), total_size);
+    GE_CHECK_NOTNULL(tensor_holder);
+    auto func = kFuncTable.Find(tensor_desc.GetDataType());
+    GE_CHECK_NOTNULL(func);
+    if (!func(input["const_value"], total_size, tensor_holder)) {
+      GELOGE(ge::GRAPH_FAILED, "Make tensor failed.");
+      return ge::GRAPH_FAILED;
+    }
+    auto tensor = reinterpret_cast<gert::Tensor *>(tensor_holder.get());
+    tensor->MutableOriginShape() = storage_shape.GetOriginShape();
+    tensor->MutableStorageShape() = storage_shape.GetStorageShape();
+    tensor->SetDataType(tensor_desc.GetDataType());
+    tensor->SetStorageFormat(tensor_desc.GetFormat());
+    tensor->SetOriginFormat(tensor_desc.GetOriginFormat());
+    index_to_tensor.emplace_back(index, std::move(tensor_holder));
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus ParseInput(const nlohmann::json &input, ge::OpDescPtr &op_desc, const uint32_t index,
+                           std::vector<gert::StorageShape> &storage_shapes,
+                           std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> &index_to_tensor) {
+  ge::GeTensorDesc tensor_desc;
+  gert::StorageShape storage_shape;
+  ParseDtype(input, tensor_desc);
+  ParseStorageShape(input, storage_shape, storage_shapes);
+  ParseStorageFormat(input, tensor_desc);
+  const auto ret = ParseConstValue(input, storage_shape, tensor_desc, index, index_to_tensor);
+  if (ret != ge::GRAPH_SUCCESS) {
+    return ret;
+  }
+
+  if (input.contains("name")) {
+    const std::string name = input["name"];
+    tensor_desc.SetName(name);
+    op_desc->AppendIrInput(name, ge::kIrInputRequired);
+    op_desc->AddInputDesc(name, tensor_desc);
+  } else {
+    op_desc->AppendIrInput(std::to_string(index), ge::kIrInputRequired);
+    op_desc->AddInputDesc(std::to_string(index), tensor_desc);
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus ParseInputs(const char *inputs, ge::OpDescPtr &op_desc, std::vector<gert::StorageShape> &storage_shapes,
+                            std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> &index_to_tensor) {
+  nlohmann::json desc_list;
+  try {
+    desc_list = nlohmann::json::parse(inputs);
+  } catch (const nlohmann::json::exception &e) {
+    GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", inputs);
+    return ge::GRAPH_FAILED;
+  }
+  uint32_t index = 0;
+  for (const auto &desc : desc_list) {
+    if (desc.is_array()) {
+      for (const auto &ele : desc) {
+        if (ParseInput(ele, op_desc, index, storage_shapes, index_to_tensor) != ge::GRAPH_SUCCESS) {
+          return ge::GRAPH_FAILED;
+        }
+        ++index;
+      }
+    } else {
+      if (ParseInput(desc, op_desc, index, storage_shapes, index_to_tensor) != ge::GRAPH_SUCCESS) {
+        return ge::GRAPH_FAILED;
+      }
+      ++index;
+    }
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+void ParseOutput(const nlohmann::json &output, ge::OpDescPtr &op_desc,
+                 std::vector<gert::StorageShape> &storage_shapes) {
+  ge::GeTensorDesc tensor_desc;
+  gert::StorageShape storage_shape;
+  ParseDtype(output, tensor_desc);
+  ParseStorageShape(output, storage_shape, storage_shapes);
+  ParseStorageFormat(output, tensor_desc);
+
+  if (output.contains("name")) {
+    const std::string name = output["name"];
+    tensor_desc.SetName(name);
+    op_desc->AddOutputDesc(name, tensor_desc);
+  } else {
+    op_desc->AddOutputDesc(tensor_desc);
+  }
+}
+
+ge::graphStatus ParseOutputs(const char *outputs, ge::OpDescPtr &op_desc,
+                             std::vector<gert::StorageShape> &storage_shapes) {
+  nlohmann::json desc_list;
+  try {
+    desc_list = nlohmann::json::parse(outputs);
+  } catch (const nlohmann::json::exception &e) {
+    GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", outputs);
+    return ge::GRAPH_FAILED;
+  }
+  for (const auto &desc : desc_list) {
+    if (desc.is_array()) {
+      for (const auto &ele : desc) {
+        ParseOutput(ele, op_desc, storage_shapes);
+      }
+    } else {
+      ParseOutput(desc, op_desc, storage_shapes);
+    }
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus ParseAttrs(const char *attrs, ge::OpDescPtr &op_desc) {
+  if (attrs == nullptr) {
+    GELOGD("Attrs has not been set.");
+  } else {
+    nlohmann::json attrs_json;
+    try {
+      attrs_json = nlohmann::json::parse(attrs);
+    } catch (const nlohmann::json::exception &e) {
+      GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", attrs);
+      return ge::GRAPH_FAILED;
+    }
+    for (const auto &attr : attrs_json) {
+      if (!attr.contains("name") || !attr.contains("dtype") || !attr.contains("value")) {
+        GELOGE(ge::GRAPH_FAILED, "cur attr does not contain name or dtype or value.");
+        return ge::GRAPH_FAILED;
+      }
+      const std::string attr_name = attr["name"].get<std::string>();
+      const std::string dtype = attr["dtype"].get<std::string>();
+      const auto iter = kDtypeToAttrFunc.find(dtype);
+      if (iter == kDtypeToAttrFunc.end()) {
+        GELOGE(ge::GRAPH_FAILED, "Unknown dtype[%s], which is unsupported.", dtype.c_str());
+        return ge::GRAPH_FAILED;
+      }
+      (iter->second)(op_desc, attr, attr_name);
+      GELOGD("Finish to set attr[name: %s] to Operator.", attr_name.c_str());
+    }
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+std::string DumpTilingData(gert::TilingData *tiling_data) {
+  std::string output;
+  output.reserve(tiling_data->GetDataSize() * kSize);
+  char *data = reinterpret_cast<char *>(tiling_data->GetData());
+  for (size_t i = 0UL; i < tiling_data->GetDataSize(); ++i) {
+    unsigned char ch = static_cast<unsigned char>(data[i]);
+    output.push_back(kHexDigits[ch >> kRightShiftBits]);
+    output.push_back(kHexDigits[ch & kAndBits]);
+  }
+  return output;
+}
+
+bool DumpRunInfo(gert::KernelContext *kernel_context, char *run_info_json, const size_t run_info_len) {
+  GE_ASSERT_NOTNULL(run_info_json);
+  nlohmann::json json_obj;
+  auto ws = kernel_context->GetOutputPointer<gert::ContinuousVector>(gert::TilingContext::kOutputWorkspace);
+  std::vector<size_t> workspaces(reinterpret_cast<const size_t *>(ws->GetData()),
+                                 reinterpret_cast<const size_t *>(ws->GetData()) + ws->GetSize());
+  json_obj["block_dim"] = *kernel_context->GetOutputPointer<uint64_t>(gert::TilingContext::kOutputBlockDim);
+  json_obj["workspaces"] = workspaces;
+  json_obj["tiling_data"] =
+      DumpTilingData(kernel_context->GetOutputPointer<gert::TilingData>(gert::TilingContext::kOutputTilingData));
+  json_obj["clear_atomic"] = *kernel_context->GetOutputPointer<bool>(gert::TilingContext::kOutputAtomicCleanFlag);
+  json_obj["tiling_key"] = *kernel_context->GetOutputPointer<uint64_t>(gert::TilingContext::kOutputTilingKey);
+  const std::string str = json_obj.dump();
+  return memcpy_s(run_info_json, run_info_len, str.c_str(), str.size() + 1) == EOK;
+}
+}  // namespace
+
 using ParseAndSetAttrValueFunc = std::function<void(ge::Operator &, const nlohmann::json &, const std::string &)>;
 using ParseAndSetAttrValuePtr = std::shared_ptr<ParseAndSetAttrValueFunc>;
 
@@ -709,9 +1112,142 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
   return 1;
 }
 
-extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_info, const char *compile_info_hash,
-                                      const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
-                                      size_t run_info_len, uint64_t *elapse) {
+ge::graphStatus DoTilingParse(const char *compile_info, const char *op_type,
+                              const gert::OpImplRegistry::OpImplFunctions *funcs, ge::OpDescPtr &op_desc,
+                              gert::KernelContextHolder &tiling_parse_context_holder) {
+  std::vector<void *> tiling_parse_outputs(1, nullptr);
+  if (op_desc->GetType() != OP_TYPE_AUTO_TILING) {
+    tiling_parse_outputs[0] = funcs->compile_info_creator();
+  }
+  tiling_parse_context_holder = gert::KernelRunContextBuilder()
+                                    .Inputs({const_cast<char *>(compile_info), const_cast<char *>(op_type)})
+                                    .Outputs(tiling_parse_outputs)
+                                    .Build(op_desc);
+  GE_CHECK_NOTNULL(tiling_parse_context_holder.context);
+  return (funcs->tiling_parse)(tiling_parse_context_holder.context);
+}
+
+ge::graphStatus DoTilingWithTiming(ContextComponent &context_com, const gert::OpImplRegistry::OpImplFunctions *funcs,
+                                   gert::KernelContext *tiling_parse_context, uint64_t *elapse,
+                                   gert::KernelContextHolder &tiling_context_holder) {
+  std::vector<void *> tiling_context_inputs(context_com.storage_shapes.size() + kSize, nullptr);
+  for (size_t i = 0UL; i < context_com.index_to_tensors.size(); ++i) {
+    tiling_context_inputs[context_com.index_to_tensors[i].first] =
+        reinterpret_cast<gert::Tensor *>(context_com.index_to_tensors[i].second.get());
+  }
+  for (size_t i = 0UL; i < context_com.storage_shapes.size(); ++i) {
+    if (tiling_context_inputs[i] == nullptr) {
+      tiling_context_inputs[i] = &context_com.storage_shapes[i];
+    }
+  }
+  tiling_context_inputs[context_com.storage_shapes.size()] = *tiling_parse_context->GetOutputPointer<void **>(0);
+  tiling_context_holder = gert::KernelRunContextBuilder()
+                              .Inputs(tiling_context_inputs)
+                              .Outputs({nullptr, nullptr, &context_com.atomic_flag, context_com.tiling_data.get(),
+                                        context_com.workspace_size.get()})
+                              .Build(context_com.op_desc);
+  GE_CHECK_NOTNULL(tiling_context_holder.context);
+  // calcu tiling cost time
+  std::chrono::time_point<std::chrono::steady_clock> before_tiling;
+  std::chrono::time_point<std::chrono::steady_clock> after_tiling;
+  if (elapse != nullptr) {
+    before_tiling = std::chrono::steady_clock::now();
+  }
+  const auto ret = (funcs->tiling)(reinterpret_cast<gert::TilingContext *>(tiling_context_holder.context));
+  if (elapse != nullptr) {
+    after_tiling = std::chrono::steady_clock::now();
+  }
+  if (ret != ge::GRAPH_SUCCESS) {
+    return ret;
+  }
+
+  if (elapse != nullptr) {
+    *elapse = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(after_tiling - before_tiling).count());
+    *(elapse + 1) = static_cast<uint64_t>(last_op_tiling_perf);
+    last_op_tiling_perf = -1;
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus ParseJson(const char *inputs, const char *outputs, const char *attrs, ContextComponent &context_com) {
+  if (ParseInputs(inputs, context_com.op_desc, context_com.storage_shapes, context_com.index_to_tensors) !=
+      ge::GRAPH_SUCCESS) {
+    GELOGE(ge::GRAPH_FAILED, "Parse inputs failed.");
+    REPORT_CALL_ERROR("E19999", "Parse inputs failed.");
+    return ge::GRAPH_FAILED;
+  }
+  if (ParseOutputs(outputs, context_com.op_desc, context_com.storage_shapes) != ge::GRAPH_SUCCESS) {
+    GELOGE(ge::GRAPH_FAILED, "Parse outputs failed.");
+    REPORT_CALL_ERROR("E19999", "Parse outputs failed.");
+    return ge::GRAPH_FAILED;
+  }
+  if (ParseAttrs(attrs, context_com.op_desc) != ge::GRAPH_SUCCESS) {
+    GELOGE(ge::GRAPH_FAILED, "Parse attrs failed.");
+    REPORT_CALL_ERROR("E19999", "Parse attrs failed.");
+    return ge::GRAPH_FAILED;
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, const char *inputs, const char *outputs,
+                              char *run_info_json, size_t run_info_len, uint64_t *elapse, const char *attrs) {
+  if ((compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
+    GELOGE(ge::GRAPH_FAILED, "compile_info/inputs/outputs is null.");
+    REPORT_CALL_ERROR("E19999", "compile_info/inputs/outputs is null.");
+    return 0;
+  }
+
+  const gert::OpImplRegistry::OpImplFunctions *funcs;
+  if (!FindImplFuncs(op_type, funcs)) {
+    return 0;
+  }
+  ContextComponent context_com {};
+  context_com.op_desc = std::make_shared<ge::OpDesc>("", op_type);
+  if (context_com.op_desc == nullptr) {
+    return 0;
+  }
+  if (ParseJson(inputs, outputs, attrs, context_com) != ge::GRAPH_SUCCESS) {
+    return 0;
+  }
+  // tiling parse
+  gert::KernelContextHolder tiling_parse_context_holder;
+  if (DoTilingParse(compile_info, op_type, funcs, context_com.op_desc, tiling_parse_context_holder) !=
+      ge::GRAPH_SUCCESS) {
+    GELOGE(ge::GRAPH_FAILED, "Op %s tiling parse failed", op_type);
+    REPORT_CALL_ERROR("E19999", "Op %s tiling parse failed", op_type);
+    return 0;
+  }
+
+  // tiling
+  int64_t max_size = -1;
+  if (!ge::AttrUtils::GetInt(context_com.op_desc, kMaxTilingSize, max_size) || max_size < 0) {
+    GELOGI("No max tiling size in opdesc.");
+    max_size = kMaxTilingDataSize;
+  }
+  auto aligned_max_size = ge::RoundUp(static_cast<uint64_t>(max_size), sizeof(uintptr_t));
+  context_com.tiling_data = gert::TilingData::CreateCap(aligned_max_size);
+  context_com.workspace_size = gert::ContinuousVector::Create<size_t>(kWorkspaceHolerSize);
+  gert::KernelContextHolder tiling_context_holder;
+  if (DoTilingWithTiming(context_com, funcs, tiling_parse_context_holder.context, elapse, tiling_context_holder) !=
+      ge::GRAPH_SUCCESS) {
+    GELOGE(ge::GRAPH_FAILED, "Op %s tiling failed", op_type);
+    REPORT_CALL_ERROR("E19999", "Op %s tiling failed", op_type);
+    return 0;
+  }
+
+  if (!DumpRunInfo(tiling_context_holder.context, run_info_json, run_info_len)) {
+    GELOGE(ge::GRAPH_FAILED, "Dump op %s tiling result failed", op_type);
+    REPORT_CALL_ERROR("E19999", "Dump op %s tiling result failed", op_type);
+    return 0;
+  }
+  GELOGI("Op tiling suceed. op_type:%s", op_type);
+  return 1;
+}
+
+extern "C" int TbeOpTilingPyInterfaceOld(const char *optype, const char *compile_info, const char *compile_info_hash,
+                                         const char *inputs, const char *outputs, const char *attrs,
+                                         char *run_info_json, size_t run_info_len, uint64_t *elapse) {
   auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   auto iter = op_func_map.find(optype);
   if (iter == op_func_map.end()) {
@@ -746,8 +1282,26 @@ extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_in
   } else {
     GE_LOGE("Optiling func of op type[%s] is all empty.", optype);
   }
-
   return ret;
+}
+
+extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_info, const char *compile_info_hash,
+                                      const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
+                                      size_t run_info_len, uint64_t *elapse) {
+  if (optype == nullptr) {
+    GELOGE(ge::GRAPH_FAILED, "op type is null.");
+    REPORT_CALL_ERROR("E19999", "op type is null.");
+    return 0;
+  }
+
+  // compatible some non-switching auto tiling, which will be deleted
+  if (EnableGert()) {
+    GELOGD("New tiling interface based gert");
+    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs);
+  } else {
+    return TbeOpTilingPyInterfaceOld(optype, compile_info, compile_info_hash, inputs, outputs, attrs, run_info_json,
+                                     run_info_len, elapse);
+  }
 }
 
 extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile_info, const char *inputs,
@@ -756,4 +1310,4 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
   return TbeOpTilingPyInterface(optype, compile_info, compile_info_hash, inputs, outputs, nullptr,
                                 run_info_json, run_info_len, elapse);
 }
-}
+}  // namespace optiling

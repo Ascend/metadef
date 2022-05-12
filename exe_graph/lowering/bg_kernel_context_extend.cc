@@ -108,7 +108,8 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
   return ge::SUCCESS;
 }
 }  // namespace
-std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
+
+std::unique_ptr<uint8_t[]> CreateComputeNodeInfoWithoutBuffer(const ge::NodePtr &node, size_t &total_size) {
   size_t attr_size;
   auto attr_buf = CreateAttrBuffer(node, attr_size);
   GE_ASSERT_NOTNULL(attr_buf);
@@ -121,11 +122,8 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
   auto compute_node_info_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]());
   GE_ASSERT_NOTNULL(compute_node_info_holder);
 
-  auto node_name = buffer_pool.AddStr(node->GetName().c_str());
-  auto node_type = buffer_pool.AddStr(node->GetType().c_str());
   auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
-  compute_node_info->Init(ir_input_num, input_num, output_num, reinterpret_cast<const char *>(node_name),
-                          reinterpret_cast<const char *>(node_type));
+  compute_node_info->Init(ir_input_num, input_num, output_num, node->GetName().c_str(), node->GetType().c_str());
 
   auto ret = InitInputInstanceInfo(node, *compute_node_info);
   GE_ASSERT_SUCCESS(ret);
@@ -144,6 +142,17 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
   }
   GE_ASSERT_EOK(memcpy_s(attr, total_size - offset, attr_buf.get(), attr_size));
 
+  return compute_node_info_holder;
+}
+
+std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
+  auto compute_node_info_holder = CreateComputeNodeInfoWithoutBuffer(node, total_size);
+  GE_ASSERT_NOTNULL(compute_node_info_holder);
+  auto node_name = buffer_pool.AddStr(node->GetName().c_str());
+  auto node_type = buffer_pool.AddStr(node->GetType().c_str());
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
+  compute_node_info->SetNodeName(reinterpret_cast<const char *>(node_name));
+  compute_node_info->SetNodeType(reinterpret_cast<const char *>(node_type));
   return compute_node_info_holder;
 }
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool) {
