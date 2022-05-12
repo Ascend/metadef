@@ -457,17 +457,31 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   EXPECT_EQ(ins_info->GetInstanceNum(), 1);
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
-  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 12);
+  auto attrs = compute_node_info->GetAttrs();
+  EXPECT_EQ(attrs->GetAttrNum(), 12);
 
-  EXPECT_STREQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), "World");
-  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<int64_t>(1), 1024000);
-  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<bool>(2), false);
-  EXPECT_FLOAT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<float>(3), 1024.1);
-  auto list_int = compute_node_info->GetAttrs()->GetAttrPointer<gert::ContinuousVector>(4);
+  EXPECT_STREQ(attrs->GetAttrPointer<char>(0), "World");
+  EXPECT_STREQ(attrs->GetStr(0), "World");
+  EXPECT_EQ(*attrs->GetAttrPointer<int64_t>(1), 1024000);
+  EXPECT_EQ(*attrs->GetInt(1), 1024000);
+  EXPECT_EQ(*attrs->GetAttrPointer<bool>(2), false);
+  EXPECT_EQ(*attrs->GetBool(2), false);
+  EXPECT_FLOAT_EQ(*attrs->GetAttrPointer<float>(3), 1024.1);
+  EXPECT_FLOAT_EQ(*attrs->GetFloat(3), 1024.1);
+  auto list_int = attrs->GetAttrPointer<gert::ContinuousVector>(4);
   ASSERT_NE(list_int, nullptr);
   ASSERT_EQ(list_int->GetSize(), 4);
   EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,400,3000,8192}).data(), 4 * sizeof(int64_t)), 0);
-  auto gert_tensor = compute_node_info->GetAttrs()->GetAttrPointer<gert::Tensor>(5);
+  auto typed_list_int = attrs->GetListInt(4);
+  ASSERT_NE(typed_list_int, nullptr);
+  ASSERT_EQ(typed_list_int->GetSize(), 4);
+  EXPECT_EQ(typed_list_int->GetData()[0], 10);
+  EXPECT_EQ(typed_list_int->GetData()[1], 400);
+  EXPECT_EQ(typed_list_int->GetData()[2], 3000);
+  EXPECT_EQ(typed_list_int->GetData()[3], 8192);
+
+  auto gert_tensor = attrs->GetAttrPointer<gert::Tensor>(5);
+  EXPECT_EQ(attrs->GetTensor(5), gert_tensor);
   ASSERT_NE(gert_tensor, nullptr);
   EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8,224,224,3}));
   EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8,1,224,224,16}));
@@ -476,15 +490,15 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   EXPECT_EQ(gert_tensor->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(memcmp(gert_tensor->GetData<uint16_t>(), fake_data.data(), fake_data.size() * sizeof(uint16_t)), 0);
 
-  EXPECT_STREQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(6), "Hello");
-  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<int64_t>(7), 10240);
-  EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<bool>(8), true);
-  EXPECT_FLOAT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<float>(9), 1024.0021);
-  list_int = compute_node_info->GetAttrs()->GetAttrPointer<gert::ContinuousVector>(10);
+  EXPECT_STREQ(attrs->GetAttrPointer<char>(6), "Hello");
+  EXPECT_EQ(*attrs->GetAttrPointer<int64_t>(7), 10240);
+  EXPECT_EQ(*attrs->GetAttrPointer<bool>(8), true);
+  EXPECT_FLOAT_EQ(*attrs->GetAttrPointer<float>(9), 1024.0021);
+  list_int = attrs->GetAttrPointer<gert::ContinuousVector>(10);
   ASSERT_NE(list_int, nullptr);
   ASSERT_EQ(list_int->GetSize(), 4);
   EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,200,3000,4096}).data(), 4 * sizeof(int64_t)), 0);
-  gert_tensor = compute_node_info->GetAttrs()->GetAttrPointer<gert::Tensor>(11);
+  gert_tensor = attrs->GetAttrPointer<gert::Tensor>(11);
   ASSERT_NE(gert_tensor, nullptr);
   EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8,224,224,3}));
   EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8,1,224,224,16}));

@@ -23,12 +23,26 @@ class BufferPool;
 }
 class ContinuousBuffer {
  public:
+  /**
+   * 获取buffer的数量
+   * @return buffer的数量
+   */
   size_t GetNum() const {
     return num_;
   }
+  /**
+   * 获取本实例的总长度
+   * @return 本实例的总长度，单位为字节
+   */
   size_t GetTotalLength() const {
     return offsets_[num_];
   }
+  /**
+   * 获取一个buffer
+   * @tparam T buffer的类型
+   * @param index buffer的index
+   * @return 指向该buffer的指针，若index非法，则返回空指针
+   */
   template<typename T>
   const T *Get(size_t index) const {
     if (index >= num_) {
@@ -36,7 +50,13 @@ class ContinuousBuffer {
     }
     return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(this) + offsets_[index]);
   }
-
+  /**
+   * 获取一个buffer，及其对应的长度
+   * @tparam T buffer的类型
+   * @param index buffer的index
+   * @param len buffer的长度
+   * @return 指向该buffer的指针，若index非法，则返回空指针
+   */
   template<typename T>
   const T *Get(size_t index, size_t &len) const {
     if (index >= num_) {
@@ -45,7 +65,12 @@ class ContinuousBuffer {
     len = offsets_[index + 1] - offsets_[index];
     return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(this) + offsets_[index]);
   }
-
+  /**
+   * 获取一个buffer
+   * @tparam T buffer的类型
+   * @param index buffer的index
+   * @return 指向该buffer的指针，若index非法，则返回空指针
+   */
   template<typename T>
   T *Get(size_t index) {
     if (index >= num_) {

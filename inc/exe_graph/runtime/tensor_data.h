@@ -22,13 +22,30 @@ namespace gert {
 using TensorAddress = void *;
 using ConstTensorAddress = void *const;
 
-enum TensorOperateType { kGetTensorAddress, kFreeTensor, kTensorOperateType };
+enum TensorOperateType {
+  kGetTensorAddress,  ///< 获取Tensor的地址
+  kFreeTensor,        ///< 释放Tensor
+  kTensorOperateType
+};
 
+/**
+ * Tensor的管理函数
+ */
 using TensorAddrManager = ge::graphStatus (*)(TensorAddress addr, TensorOperateType operate_type, void **out);
 
-struct TensorData {
+class TensorData {
+ public:
+  /**
+   * 构造一个TensorData
+   * @param addr tensor的地址
+   * @param manager tensor data的管理函数，若manager为空，则认为addr就是tensor的数据地址，且此数据不需要被释放
+   */
   explicit TensorData(TensorAddress addr = nullptr, TensorAddrManager manager = nullptr)
       : addr_(addr), manager_(manager) {}
+  /**
+   * 获取tensor地址
+   * @return tensor地址
+   */
   TensorAddress GetAddr() const {
     if (manager_ == nullptr || addr_ == nullptr) {
       return addr_;
@@ -40,6 +57,10 @@ struct TensorData {
       return addr;
     }
   }
+  /**
+   * 释放tensor
+   * @return 成功时返回ge::GRAPH_SUCCESS
+   */
   ge::graphStatus Free() {
     if (manager_ == nullptr) {
       return ge::GRAPH_SUCCESS;
@@ -50,7 +71,11 @@ struct TensorData {
     }
     return ret;
   }
-
+  /**
+   * 设置tensor地址
+   * @param addr tensor地址
+   * @param manager tensor的管理函数
+   */
   void SetAddr(TensorAddress addr, TensorAddrManager manager) {
     Free();
     addr_ = addr;

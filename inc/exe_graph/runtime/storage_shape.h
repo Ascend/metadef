@@ -21,32 +21,60 @@
 #include "shape.h"
 
 namespace gert {
-// todo 删除构造函数
 struct StorageShape {
  public:
   StorageShape() = default;
+  /**
+   * 构造一个运行时shape实例
+   * @param origin_shape 原始shape
+   * @param storage_shape 运行时shape
+   */
   StorageShape(std::initializer_list<int64_t> origin_shape, std::initializer_list<int64_t> storage_shape)
       : origin_shape_(origin_shape), storage_shape_(storage_shape) {}
+  /**
+   * 获取原始shape
+   * @return 原始shape
+   */
   const Shape &GetOriginShape() const {
     return origin_shape_;
   }
-
+  /**
+   * 获取运行时shape
+   * @return 运行时shape
+   */
   const Shape &GetStorageShape() const {
     return storage_shape_;
   }
-
+  /**
+   * 获取可写的原始shape
+   * @return 可写的原始shape
+   */
   Shape &MutableOriginShape() {
     return origin_shape_;
   }
-
+  /**
+   * 获取可写的运行时shape
+   * @return 可写的运行时shape
+   */
   Shape &MutableStorageShape() {
     return storage_shape_;
   }
-
+  /**
+   * 判断shape是否相等
+   * @param other 另一个shape
+   * @return true表示相等
+   */
   bool operator==(const StorageShape &other) const {
     return origin_shape_ == other.origin_shape_ && storage_shape_ == other.storage_shape_;
   }
-
+  /**
+   * 判断shape是否不相等
+   * @param other 另一个shape
+   * @return true表示不相等
+   */
+  bool operator!=(const StorageShape &other) const {
+    return !(*this == other);
+  }
  private:
   Shape origin_shape_;
   Shape storage_shape_;

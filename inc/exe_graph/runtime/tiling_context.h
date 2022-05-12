@@ -21,17 +21,11 @@
 #include "extended_kernel_context.h"
 #include "tiling_data.h"
 namespace gert {
+/**
+ * tiling kernel的context
+ */
 class TilingContext : public ExtendedKernelContext {
  public:
-  /*
-   * todo 有一种更高效的排布是把固定个数的放到前面，可以节省计算输入输出个数的时间。但是这么做的缺点是，如果写tiling的人没注意，
-   *   使用`KernelRunContextCpp::GetInputPointer`来获取输入shape，会出错
-   * inputs, tiling的inputs以如下顺序排列：
-   * inputs[0~n): 所有输入的storage-shape
-   * inputs[n~n+m): 所有输出的storage-shape
-   * inputs[n+m]: CompileInfo
-   * inputs[n+m+1): tiling_func
-   */
   const void *GetCompileInfo() {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -45,6 +39,20 @@ class TilingContext : public ExtendedKernelContext {
     }
     return av->GetValue<void *>();
   }
+  /**
+   * 获取CompileInfo
+   * @tparam T CompileInfo的类型
+   * @return CompileInfo的指针
+   */
+  template<typename T>
+  const T *GetCompileInfo() {
+    return reinterpret_cast<const T *>(GetCompileInfo());
+  }
+  /**
+   * 获取输入shape，输入shape中包含了原始shape与运行时shape
+   * @param index 输入index
+   * @return 输入shape指针，index非法时返回空指针
+   */
   const StorageShape *GetInputShape(size_t index) {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -56,15 +64,38 @@ class TilingContext : public ExtendedKernelContext {
     }
     return GetInputPointer<StorageShape>(index);
   }
+  /**
+   * 获取输入tensor
+   *
+   * **注意：只有在`IMPL_OP`实现算子时， 将对应输入设置为数据依赖后，才可以调用此接口获取tensor，否则行为是未定义的。**
+   * @param index 输入index
+   * @return 输入tensor指针，index非法时返回空指针
+   */
   const Tensor *GetInputTensor(size_t index) {
     return GetInputPointer<Tensor>(index);
   }
+  /**
+   * 基于算子IR原型定义，获取`OPTIONAL_INPUT`类型的输入shape指针，shape中包含了原始shape与运行时shape
+   * @param ir_index IR原型定义中的index
+   * @return shape指针，index非法，或该INPUT没有实例化时，返回空指针
+   */
   const StorageShape *GetOptionalInputShape(size_t ir_index) {
     return GetDynamicInputPointer<StorageShape>(ir_index, 0);
   }
+  /**
+   * 基于算子IR原型定义，获取`DYNAMIC_INPUT`类型的输入shape指针，shape中包含了原始shape与运行时shape
+   * @param ir_index IR原型定义中的index
+   * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
+   * @return shape指针，index或relative_index非法时，返回空指针
+   */
   const StorageShape *GetDynamicInputShape(size_t ir_index, size_t relative_index) {
     return GetDynamicInputPointer<StorageShape>(ir_index, relative_index);
   }
+  /**
+   * 根据输出index，获取输出shape指针，shape中包含了原始shape与运行时shape
+   * @param index 输出index
+   * @return 输出shape指针，index非法时，返回空指针
+   */
   const StorageShape *GetOutputShape(size_t index) {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -98,6 +129,11 @@ class TilingContext : public ExtendedKernelContext {
     kOutputNum
   };
 
+  /**
+   * 设置tiling key
+   * @param tiling_key tiling key
+   * @return 成功时返回ge::GRAPH_SUCCESS
+   */
   ge::graphStatus SetTilingKey(uint64_t tiling_key) {
     auto p = GetOutputPointer<uint64_t>(kOutputTilingKey);
     if (p == nullptr) {
@@ -106,6 +142,22 @@ class TilingContext : public ExtendedKernelContext {
     *p = tiling_key;
     return ge::GRAPH_SUCCESS;
   }
+  /**
+   * 获取tiling key
+   * @return tiling key，获取失败时
+   */
+  uint64_t GetTilingKey() const {
+    auto p = GetOutputPointer<uint64_t>(kOutputTilingKey);
+    if (p == nullptr) {
+      return std::numeric_limits<uint64_t>::max();
+    }
+    return *p;
+  }
+  /**
+   * 设置block dim
+   * @param block_dim block dim
+   * @return 成功时返回ge::GRAPH_SUCCESS
+   */
   ge::graphStatus SetBlockDim(uint32_t block_dim) {
     auto p = GetOutputPointer<uint32_t>(kOutputBlockDim);
     if (p == nullptr) {
@@ -114,6 +166,22 @@ class TilingContext : public ExtendedKernelContext {
     *p = block_dim;
     return ge::GRAPH_SUCCESS;
   }
+  /**
+   * 获取block dim
+   * @return block dim
+   */
+  uint32_t GetBlockDim() const {
+    auto p = GetOutputPointer<uint32_t>(kOutputBlockDim);
+    if (p == nullptr) {
+      return std::numeric_limits<uint32_t>::max();
+    }
+    return *p;
+  }
+  /**
+   * 设置是否需要atomic clean
+   * @param atomic true/false代表是否需要做atomic clean
+   * @return 成功时返回ge::GRAPH_SUCCESS
+   */
   ge::graphStatus SetNeedAtomic(bool atomic) {
     auto p = GetOutputPointer<bool>(kOutputAtomicCleanFlag);
     if (p == nullptr) {
@@ -122,6 +190,22 @@ class TilingContext : public ExtendedKernelContext {
     *p = atomic;
     return ge::GRAPH_SUCCESS;
   }
+  /**
+   * 获取是否需要atomic clean
+   * @return true/false
+   */
+  bool NeedAtomic() const {
+    auto p = GetOutputPointer<bool>(kOutputAtomicCleanFlag);
+    if (p == nullptr) {
+      return false;
+    }
+    return *p;
+  }
+  /**
+   * 获取有类型的tiling data指针
+   * @tparam T tiling data类型，sizeof(T)不可以大于编译结果中指定的最大tiling data长度
+   * @return tiling data指针，失败时返回空指针
+   */
   template<typename T>
   T *GetTilingData() {
     auto tiling_data = GetRawTilingData();
@@ -134,10 +218,18 @@ class TilingContext : public ExtendedKernelContext {
     tiling_data->SetDataSize(sizeof(T));
     return reinterpret_cast<T *>(tiling_data->GetData());
   }
-
+  /**
+   * 获取无类型的tiling data码流
+   * @return tiling data指针，失败时返回空指针
+   */
   TilingData *GetRawTilingData() {
     return *GetOutputPointer<TilingData *>(kOutputTilingData);
   }
+  /**
+   * 获取workspace sizes指针
+   * @param workspace_count workspace的个数，传入的workspace个数不可以超过编译时指定的最大workspace个数
+   * @return workspace sizes指针
+   */
   size_t *GetWorkspaceSizes(size_t workspace_count) {
     auto workspace = GetOutputPointer<ContinuousVector>(kOutputWorkspace);
     if (workspace == nullptr) {

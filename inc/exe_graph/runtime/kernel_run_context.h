@@ -24,6 +24,9 @@ extern "C" {
 
 typedef void (*FreeCallback)(void *);
 
+/**
+ * Chain的底层数据结构，不要直接引用和操作此数据结构
+ */
 typedef struct {
   union {
     void *pointer;
@@ -32,6 +35,9 @@ typedef struct {
   FreeCallback deleter;
 } AsyncAnyValue;
 
+/**
+ * KernelContext的底层数据结构，不要直接引用和操作此数据结构
+ */
 typedef struct {
   size_t input_size;
   size_t output_size;

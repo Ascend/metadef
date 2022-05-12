@@ -36,6 +36,10 @@ struct Shape {
    */
   Shape() : dim_num_(0), dims_{0} {}
 
+  /**
+   * 通过dims值构造shape，例如：Shape({8,3,224,224})创建一个Shape实例，有4个维度，每个维度的值分别是8,3,224,224
+   * @param dims shape的所有dim值
+   */
   Shape(std::initializer_list<int64_t> args) : dim_num_(0), dims_{0} {
     if (args.size() > kMaxDimNum) {
       return;
@@ -48,8 +52,8 @@ struct Shape {
   }
 
   /**
-   *
-   * @param 判断与另外一个shape对象是否相等，如果两个shape的dim num并且dim num内每个dim的值都相等，那么认为两个shape相等
+   * 判断与另外一个shape对象是否相等，如果两个shape的dim num并且dim num内每个dim的值都相等，那么认为两个shape相等
+   * @param rht 另一个Shape对象
    * @return true/false
    */
   bool operator==(const Shape &rht) const {
@@ -64,6 +68,11 @@ struct Shape {
     return true;
   }
 
+  /**
+   * 判断与另一个Shape对象是否不等
+   * @param rht 另一个Shape对象
+   * @return true/false
+   */
   bool operator!=(const Shape &rht) const {
     return !(*this == rht);
   }
@@ -83,8 +92,8 @@ struct Shape {
   }
 
   /**
-   * 判断本shape是否为标量，所谓标量，是指dim_num_为0
-   * @return
+   * 判断本shape是否为标量，所谓标量，是指GetDimNum()为0
+   * @return true/false
    */
   bool IsScalar() const {
     return dim_num_ == 0L;

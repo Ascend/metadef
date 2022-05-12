@@ -25,15 +25,31 @@
 namespace gert {
 class KernelExtendInfo {
  public:
+  /**
+   * 获取kernel name
+   * @return kernel name
+   */
   const char *GetKernelName() const {
     return kernel_name_;
   }
+  /**
+   * 设置kernel name
+   * @param kernel_name kernel name
+   */
   void SetKernelName(const char *kernel_name) {
     kernel_name_ = kernel_name;
   }
+  /**
+   * 获取kernel type
+   * @return kernel type
+   */
   const char *GetKernelType() const {
     return kernel_type_;
   }
+  /**
+   * 设置kernel type
+   * @param kernel_type kernel type
+   */
   void SetKernelType(const char *kernel_type) {
     kernel_type_ = kernel_type;
   }

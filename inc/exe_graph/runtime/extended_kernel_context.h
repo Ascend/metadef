@@ -23,6 +23,11 @@
 namespace gert {
 class ExtendedKernelContext : protected KernelContext {
  public:
+  /**
+   * 根据index获取节点输入的Tensor description
+   * @param index 输入index
+   * @return 输入TensorDesc的指针，index非法时，返回空指针
+   */
   const CompileTimeTensorDesc *GetInputDesc(size_t index) const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -30,6 +35,11 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return compute_node_info->GetInputTdInfo(index);
   }
+  /**
+   * 根据index获取节点输出的Tensor description
+   * @param index 输出index
+   * @return 输出TensorDesc的指针，index非法时，返回空指针
+   */
   const CompileTimeTensorDesc *GetOutputDesc(size_t index) const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -37,6 +47,11 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return compute_node_info->GetOutputTdInfo(index);
   }
+  /**
+   * 根据IR原型中的index，获取在节点上的实例化信息
+   * @param ir_index IR原型中定义的index
+   * @return 实例化信息
+   */
   const AnchorInstanceInfo *GetIrInputInstanceInfo(size_t ir_index) const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -44,6 +59,10 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return compute_node_info->GetInputInstanceInfo(ir_index);
   }
+  /**
+   * 获取计算节点的输入数量
+   * @return 计算节点的输入数量
+   */
   size_t GetComputeNodeInputNum() const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -51,6 +70,10 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return compute_node_info->GetInputsNum();
   }
+  /**
+   * 获取计算节点的属性，仅IR原型中定义的属性可被获取到
+   * @return 计算节点的属性
+   */
   const RuntimeAttrs *GetAttrs() const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -58,7 +81,10 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return compute_node_info->GetAttrs();
   }
-
+  /**
+   * 获取计算节点的类型
+   * @return 计算节点的类型
+   */
   const char *GetNodeType() const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -66,6 +92,10 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return compute_node_info->GetNodeType();
   }
+  /**
+   * 获取计算节点的name
+   * @return 计算节点的name
+   */
   const char *GetNodeName() const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
@@ -73,10 +103,17 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return compute_node_info->GetNodeName();
   }
+  /**
+   * 获取本kernel对应的计算节点的信息
+   * @return 计算节点的信息
+   */
   const ComputeNodeInfo *GetComputeNodeInfo() const {
     return reinterpret_cast<const ComputeNodeInfo *>(GetComputeNodeExtend());
   }
-
+  /**
+   * 获取本kernel的name
+   * @return 本kernel的name
+   */
   const char *GetKernelName() const {
     auto extend_info = GetExtendInfo();
     if (extend_info == nullptr) {
@@ -84,6 +121,10 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return extend_info->GetKernelName();
   }
+  /**
+   * 获取本kernel的type
+   * @return 本kernel的type
+   */
   const char *GetKernelType() const {
     auto extend_info = GetExtendInfo();
     if (extend_info == nullptr) {
@@ -91,6 +132,10 @@ class ExtendedKernelContext : protected KernelContext {
     }
     return extend_info->GetKernelType();
   }
+  /**
+   * 获取本kernel的扩展信息
+   * @return 本kernel的扩展信息
+   */
   const KernelExtendInfo *GetExtendInfo() const {
     return reinterpret_cast<const KernelExtendInfo *>(GetKernelExtend());
   }
