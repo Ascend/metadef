@@ -476,7 +476,7 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
       if (it != error_map_.cend()) {
         GELOGW("[Check][Config]There are the same error code %s in %s",
                error_info.error_id.c_str(), path.c_str());
-        return -1;
+        continue;
       }
       GELOGI("add error_code %s success", error_info.error_id.c_str());
       (void)error_map_.emplace(error_info.error_id, error_info);
