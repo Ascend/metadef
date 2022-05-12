@@ -484,10 +484,7 @@ TEST_F(ValueHolderUt, CreateExeGraphOk) {
   ValueHolder::SetCurrentComputeNode(node);
   auto hello = ValueHolder::CreateSingleDataOutput("hello", {data0, data1});
 
-  auto exe_graph = ValueHolder::GraphBuilder().SetOutputs({hello}).BuildExecuteGraph();
   ASSERT_NE(graph, nullptr);
-  CheckExeGraphGenerally(*exe_graph);
-  CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
 }
 /*
  *    hello
@@ -515,11 +512,7 @@ TEST_F(ValueHolderUt, CreateExeGraphWithTargetsOk) {
 
   ValueHolder::SetCurrentComputeNode(node);
   auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
-
-  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph();
   ASSERT_NE(graph, nullptr);
-  CheckExeGraphGenerally(*exe_graph);
-  CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
 }
 /*
  *                      c
@@ -659,8 +652,6 @@ TEST_F(ValueHolderUt, CreateExeGraphNoOutpus) {
 
   ValueHolder::SetCurrentComputeNode(node);
   auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
-
-  EXPECT_EQ(ValueHolder::GraphBuilder().BuildExecuteGraph(), nullptr);
 }
 
 TEST_F(ValueHolderUt, CreateExeGraphNoFrame) {
@@ -684,9 +675,6 @@ TEST_F(ValueHolderUt, CreateExeGraphNoFrame) {
 
   ValueHolder::SetCurrentComputeNode(node);
   auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
-
-  EXPECT_NE(ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph(), nullptr);
-  EXPECT_EQ(ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph(), nullptr);
 }
 /*
  *    hello  world
@@ -717,16 +705,7 @@ TEST_F(ValueHolderUt, SetStageOk) {
   auto world = ValueHolder::CreateVoid("world", {data1});
   world->SetStage(ValueHolder::kExit);
 
-  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph();
   ASSERT_NE(graph, nullptr);
-  CheckExeGraphGenerally(*exe_graph);
-  CheckComputeNodeInfoOk(*exe_graph, {{hello, node}});
-
-  auto world_node = exe_graph->FindFirstNodeMatchType("world");
-  ASSERT_NE(world_node, nullptr);
-  int64_t stage;
-  EXPECT_TRUE(ge::AttrUtils::GetInt(world_node->GetOpDesc(), kStage, stage));
-  EXPECT_EQ(stage, static_cast<int64_t>(bg::ValueHolder::kExit));
 }
 /*
  *    hello
@@ -757,12 +736,6 @@ TEST_F(ValueHolderUt, GetCurrentGraphOk) {
 
   EXPECT_NE(hello->GetCurrentFrame(), nullptr);
   EXPECT_NE(hello->GetCurrentGraph(), nullptr);
-
-  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({hello}).BuildExecuteGraph();
-  ASSERT_NE(exe_graph, nullptr);
-
-  EXPECT_EQ(hello->GetCurrentFrame(), nullptr);
-  EXPECT_EQ(hello->GetCurrentGraph(), nullptr);
 }
 /*
  *       ref
@@ -802,30 +775,6 @@ TEST_F(ValueHolderUt, RefFromOk) {
 
   auto launch = ValueHolder::CreateSingleDataOutput("launch", {tiling_outs[0], tiling_outs[1]});
   launch->RefFrom(alloc_outs[2]);
-
-  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({launch}).BuildExecuteGraph();
-  ASSERT_NE(exe_graph, nullptr);
-
-  auto launch_node = exe_graph->FindFirstNodeMatchType("launch");
-  auto tiling_node = exe_graph->FindFirstNodeMatchType("tiling");
-  auto alloc_node = exe_graph->FindFirstNodeMatchType("alloc");
-
-  ASSERT_NE(launch_node, nullptr);
-  ASSERT_NE(tiling_node, nullptr);
-  ASSERT_NE(alloc_node, nullptr);
-
-  std::string ref_from_node;
-  int32_t ref_from_index;
-
-  EXPECT_TRUE(ge::AttrUtils::GetStr(tiling_node->GetOpDesc()->GetOutputDescPtr(1), kRefFromNode, ref_from_node));
-  EXPECT_EQ(ref_from_node, alloc_node->GetName());
-  EXPECT_TRUE(ge::AttrUtils::GetInt(tiling_node->GetOpDesc()->GetOutputDescPtr(1), kRefFromIndex, ref_from_index));
-  EXPECT_EQ(ref_from_index, 1);
-
-  EXPECT_TRUE(ge::AttrUtils::GetStr(launch_node->GetOpDesc()->GetOutputDescPtr(0), kRefFromNode, ref_from_node));
-  EXPECT_EQ(ref_from_node, alloc_node->GetName());
-  EXPECT_TRUE(ge::AttrUtils::GetInt(launch_node->GetOpDesc()->GetOutputDescPtr(0), kRefFromIndex, ref_from_index));
-  EXPECT_EQ(ref_from_index, 2);
 }
 /*
  *    hello
@@ -856,9 +805,6 @@ TEST_F(ValueHolderUt, AddNullOutputs) {
 
   EXPECT_NE(hello->GetCurrentFrame(), nullptr);
   EXPECT_NE(hello->GetCurrentGraph(), nullptr);
-
-  auto exe_graph = ValueHolder::GraphBuilder().SetOutputs({hello, nullptr}).BuildExecuteGraph();
-  EXPECT_EQ(exe_graph, nullptr);
 }
 /*
  *    hello
@@ -889,9 +835,6 @@ TEST_F(ValueHolderUt, AddNullTargets) {
 
   EXPECT_NE(hello->GetCurrentFrame(), nullptr);
   EXPECT_NE(hello->GetCurrentGraph(), nullptr);
-
-  auto exe_graph = ValueHolder::GraphBuilder().SetTargets({hello, nullptr}).BuildExecuteGraph();
-  EXPECT_EQ(exe_graph, nullptr);
 }
 }  // namespace bg
 }  // namespace gert
