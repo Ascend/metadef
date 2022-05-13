@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef AIR_CXX_RUNTIME_V2_METADEF_RUNTIME_TILING_CONTEXT_H_
-#define AIR_CXX_RUNTIME_V2_METADEF_RUNTIME_TILING_CONTEXT_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_TILING_CONTEXT_H_
+#define METADEF_CXX_INC_EXE_GRAPH_TILING_CONTEXT_H_
 #include "storage_shape.h"
 #include "tensor.h"
 #include "continuous_vector.h"
@@ -244,4 +244,4 @@ class TilingContext : public ExtendedKernelContext {
 };
 static_assert(std::is_standard_layout<TilingContext>::value, "The class TilingContext must be a POD");
 }  // namespace gert
-#endif  //AIR_CXX_RUNTIME_V2_METADEF_RUNTIME_TILING_CONTEXT_H_
+#endif  //METADEF_CXX_INC_EXE_GRAPH_TILING_CONTEXT_H_

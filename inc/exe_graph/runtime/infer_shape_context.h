@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_INFERSHAPECONTEXT_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_INFERSHAPECONTEXT_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_INFER_SHAPE_CONTEXT_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_INFER_SHAPE_CONTEXT_H_
 #include <cstdint>
 #include <type_traits>
 #include "shape.h"
@@ -75,4 +75,4 @@ class InferShapeContext : public ExtendedKernelContext {
 };
 static_assert(std::is_standard_layout<InferShapeContext>::value, "The class InferShapeContext must be a POD");
 }  // namespace gert
-#endif  //AIR_CXX_RUNTIME_V2_KERNEL_INFERSHAPECONTEXT_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_INFER_SHAPE_CONTEXT_H_

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_CONTEXT_EXTEND_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_CONTEXT_EXTEND_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -67,4 +67,4 @@ class KernelExtendInfo {
 static_assert(std::is_standard_layout<KernelExtendInfo>::value, "The class KernelExtendInfo must be a POD");
 
 }  // namespace gert
-#endif  //AIR_CXX_RUNTIME_V2_KERNEL_CONTEXT_EXTEND_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_

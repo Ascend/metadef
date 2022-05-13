@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_42D3114E59BD47AE94C2A91A9F0A6D82_H
-#define INC_42D3114E59BD47AE94C2A91A9F0A6D82_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_STORAGE_SHAPE_H_
+#define METADEF_CXX_INC_EXE_GRAPH_STORAGE_SHAPE_H_
 #include <type_traits>
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
@@ -82,4 +82,4 @@ struct StorageShape {
 static_assert(std::is_standard_layout<StorageShape>::value, "The class must be a POD");
 }  // namespace gert
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_STORAGE_SHAPE_H_

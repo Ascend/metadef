@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_145790231B1246659C38D0701EABDFB1_H
-#define INC_145790231B1246659C38D0701EABDFB1_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_TILING_DATA_H_
+#define METADEF_CXX_INC_EXE_GRAPH_TILING_DATA_H_
 #include <cstdint>
 #include <cstddef>
 #include <type_traits>
@@ -147,4 +147,4 @@ TilingData &operator<<(TilingData &out, const T &data) {
 static_assert(std::is_standard_layout<TilingData>::value, "The class TilingData must be a POD");
 }  // namespace gert
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_TILING_DATA_H_

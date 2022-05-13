@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTRS_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTRS_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATTRS_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATTRS_H_
 #include <cstdint>
 #include <type_traits>
 #include <cstddef>
@@ -91,7 +91,7 @@ class RuntimeAttrs {
 
   RuntimeAttrs() = delete;
   RuntimeAttrs(const RuntimeAttrs &) = delete;
-  RuntimeAttrs(RuntimeAttrs &&) =  delete;
+  RuntimeAttrs(RuntimeAttrs &&) = delete;
   RuntimeAttrs &operator=(const RuntimeAttrs &) = delete;
   RuntimeAttrs &operator=(RuntimeAttrs &&) = delete;
 
@@ -103,4 +103,4 @@ class RuntimeAttrs {
 };
 static_assert(std::is_standard_layout<RuntimeAttrs>::value, "This class must be a POD");
 }  // namespace gert
-#endif  // AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTRS_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATTRS_H_

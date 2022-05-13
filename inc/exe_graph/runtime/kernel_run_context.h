@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_2BD8E92ACD8442A693A5A727250EC78E_H
-#define INC_2BD8E92ACD8442A693A5A727250EC78E_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_KERNEL_RUN_CONTEXT_H_
+#define METADEF_CXX_INC_EXE_GRAPH_KERNEL_RUN_CONTEXT_H_
 
 #include <stdlib.h>
 
@@ -51,4 +51,4 @@ typedef struct {
 }
 #endif
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_KERNEL_RUN_CONTEXT_H_

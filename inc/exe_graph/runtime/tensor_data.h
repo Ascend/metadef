@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_84597B1676BF44EC9AD9CC3343DED27D_H
-#define INC_84597B1676BF44EC9AD9CC3343DED27D_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
+#define METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 
 #include "graph/ge_error_codes.h"
 
@@ -88,4 +88,4 @@ class TensorData {
 };
 }  // namespace gert
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_

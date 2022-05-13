@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_CONTINUOUS_VECTOR_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_CONTINUOUS_VECTOR_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_VECTOR_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_VECTOR_H_
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -107,6 +107,7 @@ class ContinuousVector {
   void *MutableData() {
     return elements;
   }
+
  private:
   size_t capacity_;
   size_t size_;
@@ -118,8 +119,8 @@ template<typename T>
 class TypedContinuousVector : private ContinuousVector {
  public:
   using ContinuousVector::GetCapacity;
-  using ContinuousVector::SetSize;
   using ContinuousVector::GetSize;
+  using ContinuousVector::SetSize;
   /**
    * 获取首个元素的指针地址，[GetData(), GetData() + GetSize()) 中的数据即为当前容器中保存的数据
    * @return 首个元素的指针地址
@@ -136,4 +137,4 @@ class TypedContinuousVector : private ContinuousVector {
   }
 };
 }  // namespace gert
-#endif  //AIR_CXX_RUNTIME_V2_KERNEL_CONTINUOUS_VECTOR_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_VECTOR_H_

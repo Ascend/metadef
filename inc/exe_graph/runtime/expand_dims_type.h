@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef B70061AA26BC43BB8673CA2DC8CBAEF5_H
-#define B70061AA26BC43BB8673CA2DC8CBAEF5_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_EXPAND_DIMS_TYPE_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_EXPAND_DIMS_TYPE_H_
 #include <cstdint>
 #include <initializer_list>
 #include <cstddef>
@@ -172,4 +172,4 @@ class ExpandDimsType {
 };
 }
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_EXPAND_DIMS_TYPE_H_

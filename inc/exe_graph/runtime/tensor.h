@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_1492C31AD0B645108093A808E7C9A85B_H
-#define INC_1492C31AD0B645108093A808E7C9A85B_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_TENSOR_H_
+#define METADEF_CXX_INC_EXE_GRAPH_TENSOR_H_
 
 #include "graph/ge_error_codes.h"
 #include "storage_shape.h"
@@ -260,4 +260,4 @@ class Tensor {
 static_assert(std::is_standard_layout<Tensor>::value, "The class Tensor must be a POD");
 }  // namespace gert
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_TENSOR_H_

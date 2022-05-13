@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_CONTINUOUS_BUFFER_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_CONTINUOUS_BUFFER_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_BUFFER_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_BUFFER_H_
 #include <type_traits>
 namespace gert {
 namespace bg {
@@ -78,11 +78,12 @@ class ContinuousBuffer {
     }
     return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(this) + offsets_[index]);
   }
+
  private:
   friend ::gert::bg::BufferPool;
   size_t num_;
   size_t offsets_[1];
 };
 static_assert(std::is_standard_layout<ContinuousBuffer>::value, "The class ContinuousText must be POD");
-}
-#endif  //AIR_CXX_RUNTIME_V2_KERNEL_CONTINUOUS_BUFFER_H_
+}  // namespace gert
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_BUFFER_H_

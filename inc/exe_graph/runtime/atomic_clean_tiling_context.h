@@ -41,4 +41,4 @@ class AtomicCleanTilingContext : public TilingContext {
 static_assert(std::is_standard_layout<AtomicCleanTilingContext>::value,
               "The class AtomicCleanTilingContext must be a POD");
 }  // namespace gert
-#endif  //METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATOMICCLEANTILINGCONTEXT_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATOMICCLEANTILINGCONTEXT_H_

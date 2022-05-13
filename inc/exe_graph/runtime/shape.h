@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_6C162F64C3674AE1962192667C4E217E_H
-#define INC_6C162F64C3674AE1962192667C4E217E_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_SHAPE_H_
+#define METADEF_CXX_INC_EXE_GRAPH_SHAPE_H_
 
 #include <array>
 #include <vector>
@@ -169,4 +169,4 @@ struct Shape {
 static_assert(std::is_standard_layout<Shape>::value, "The class Shape must be a POD");
 }  // namespace gert
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_SHAPE_H_

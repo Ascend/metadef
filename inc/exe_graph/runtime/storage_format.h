@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_STORAGE_FORMAT_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_STORAGE_FORMAT_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_STORAGE_FORMAT_H_
+#define METADEF_CXX_INC_EXE_GRAPH_STORAGE_FORMAT_H_
 #include <cstdint>
 #include <memory>
 #include "graph/types.h"
@@ -106,4 +106,4 @@ struct StorageFormat {
 };
 static_assert(std::is_standard_layout<StorageFormat>::value, "The class StorageFormat must be a POD");
 }  // namespace gert
-#endif  //AIR_CXX_RUNTIME_V2_KERNEL_STORAGE_FORMAT_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_STORAGE_FORMAT_H_
