@@ -19,6 +19,7 @@
 #include <functional>
 #include "graph/debug/ge_log.h"
 #include "op_tiling/op_tiling_utils.h"
+#include "common/util/tiling_utils.h"
 
 namespace optiling {
 template<typename T>

@@ -83,6 +83,16 @@ class RuntimeAttrs {
   const bool *GetBool(size_t index) const {
     return GetAttrPointer<bool>(index);
   }
+
+  /**
+   * 获取list_float32类型属性
+   * @param index 属性index
+   * @return 指向属性值的指针
+   */
+  const TypedContinuousVector<float> *GetListFloat(size_t index) const {
+    return GetAttrPointer<TypedContinuousVector<float>>(index);
+  }
+
   /**
    * 获取属性数量
    * @return 属性数量
