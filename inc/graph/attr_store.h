@@ -87,7 +87,6 @@ class AttrStore {
   AnyValue *GetOrCreateAnyValue(const AttrId attr_id) const;
   const AnyValue *GetAnyValue(const AttrId attr_id) const noexcept;
 
- private:
   class PreDefinedAttrStore {
   public:
     bool Exists(const AttrSubId index) const noexcept;
@@ -121,7 +120,6 @@ class AttrStore {
     std::unordered_map<std::string, AnyValue> attrs_;
   };
 
- private:
   std::unordered_map<std::string, AttrId> names_to_id_;
   // 更好的办法是定义一个虚基类、派生出两个子类，然后保存两个子类的指针：`std::array<std::unique_ptr<SubAttrStore>, kAttrTypeEnd>`
   // 然后根据不同的SubAttr类型，调用对应子类的函数。但是这么做会导致创建AttrStore时，总会带有两次子类实例堆申请的开销，
