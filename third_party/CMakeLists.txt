@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,17 +13,15 @@
 # limitations under the License.
 # ============================================================================
 
-project(tests CXX C)
+add_library(fwk_mmpa_headers INTERFACE)
+target_include_directories(fwk_mmpa_headers INTERFACE
+    fwkacllib/inc
+)
 
-target_compile_definitions(graph PRIVATE FUNC_VISIBILITY)
-
-add_subdirectory(depends/slog)
-add_subdirectory(depends/mmpa)
-add_subdirectory(depends/profiler)
-stub_module(slog slog_stub)
-stub_module(static_mmpa mmpa_stub)
-
-add_subdirectory(ut)
-add_subdirectory(benchmark)
-
-
+add_library(graphengine_headers INTERFACE)
+target_include_directories(graphengine_headers INTERFACE
+    graphengine/inc
+    graphengine/ge/inc
+    graphengine/inc/framework
+    graphengine/inc/external
+)

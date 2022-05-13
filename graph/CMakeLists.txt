@@ -1,3 +1,5 @@
+include(${METADEF_DIR}/cmake/build_type.cmake)
+
 set(GRAPH_SOURCE_LIST
     "types.cc"
     "anchor.cc"
@@ -76,6 +78,7 @@ set(GRAPH_SOURCE_LIST
     "operator_impl.cc"
     "compile_cache_policy/compile_cache_policy.cc"
     "compile_cache_policy/compile_cache_desc.cc"
+    "compile_cache_policy/policy_register.cc"
     "compile_cache_policy/compile_cache_state.cc"
     "compile_cache_policy/compile_cache_hasher.cc"
     "compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
@@ -83,7 +86,6 @@ set(GRAPH_SOURCE_LIST
     "profiler.cc"
 )
 
-if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
 ######### libgraph.so #############
 add_library(graph SHARED
     ${GRAPH_SOURCE_LIST}
@@ -91,15 +93,17 @@ add_library(graph SHARED
 )
 
 target_compile_options(graph PRIVATE
-    -O2
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
 )
 
 target_compile_definitions(graph PRIVATE
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
     google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
 )
 
 target_include_directories(graph PRIVATE
@@ -107,43 +111,8 @@ target_include_directories(graph PRIVATE
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph/utils
-    ${METADEF_DIR}/inc/external
-    #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../ops/built-in/op_proto/inc>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../cann/ops/built-in/op_proto/inc>
-    #### temp independent ####
-    ${METADEF_DIR}/../graphengine/inc
-    ${METADEF_DIR}/../graphengine/inc/framework
-    ${METADEF_DIR}/../graphengine/inc/external
-    #### temp in ge ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../inc/framework
-    ${METADEF_DIR}/../inc/external
-    ${METADEF_DIR}/../../ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../../cann/ops/built-in/op_proto/inc
-    #### temp in ge ####
-    ${METADEF_DIR}/../../graphengine/inc
-    ${METADEF_DIR}/../../graphengine/inc/framework
-    ${METADEF_DIR}/../../graphengine/inc/external
-    ${METADEF_DIR}/../../inc
-    #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc/ops>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
-    #### blue independent compile #####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/ge/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc/ops>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party>
     ${METADEF_DIR}/third_party/transformer/inc
 )
-
 
 target_link_options(graph PRIVATE
     -Wl,-Bsymbolic
@@ -153,105 +122,32 @@ target_link_libraries(graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
     static_mmpa
     -Wl,--no-as-needed
-    ascend_protobuf
     c_sec
     slog
-    error_manager
     json
     -Wl,--as-needed
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
     -ldl
 )
 
-######### libgraph.a #############
-add_library(graph_static STATIC
-    ${GRAPH_SOURCE_LIST}
-    $<TARGET_OBJECTS:metadef_graph_protos_obj>
-)
+target_clone(graph graph_static STATIC)
 
-target_compile_options(graph_static PRIVATE
-    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
-    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
-    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
-    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
-    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
-)
+target_link_libraries(graph PRIVATE ascend_protobuf error_manager)
+target_link_libraries(graph_static PRIVATE ascend_protobuf_static)
 
-target_compile_definitions(graph_static PRIVATE
-    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
-    google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
-    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
-    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
-    LOG_CPP
-)
+target_compile_options(graph PRIVATE -O2)
+target_compile_options(graph_static PRIVATE $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>)
 
-target_include_directories(graph_static PUBLIC
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-)
-
-target_include_directories(graph_static PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
-    ${METADEF_DIR}/inc/external
-    #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../ops/built-in/op_proto/inc>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../cann/ops/built-in/op_proto/inc>
-    #### temp independent ####
-    ${METADEF_DIR}/../graphengine/inc
-    ${METADEF_DIR}/../graphengine/inc/framework
-    ${METADEF_DIR}/../graphengine/inc/external
-    #### temp in ge ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../inc/framework
-    ${METADEF_DIR}/../inc/external
-    ${METADEF_DIR}/../../ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../../cann/ops/built-in/op_proto/inc
-    #### temp in ge ####
-    ${METADEF_DIR}/../../graphengine/inc
-    ${METADEF_DIR}/../../graphengine/inc/framework
-    ${METADEF_DIR}/../../graphengine/inc/external
-    ${METADEF_DIR}/../../inc
-    #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc/ops>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
-    #### blue independent compile #####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/ge/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc/ops>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party>
-    ${METADEF_DIR}/third_party/transformer/inc
-)
-
-target_link_libraries(graph_static PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-    c_sec
-    json
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
-    -ldl
-)
 
 set_target_properties(graph_static PROPERTIES
     WINDOWS_EXPORT_ALL_SYMBOLS TRUE
     OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,libgraph,graph>
-)
-
+    )
 
 ##############################################################
 add_custom_command(
@@ -289,7 +185,6 @@ add_custom_target(graph_stub
 
 #############################################################
 
-
 ############ stub/libgraph.so ############
 add_library(atc_stub_graph SHARED
     stub_graph.cc
@@ -306,28 +201,6 @@ target_include_directories(atc_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/external
-    #### yellow zone ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../cann/ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../libc_sec/include
-    #### blue zone ####
-    ${ASCEND_DIR}/driver/include
-    ${ASCEND_DIR}/fwkacllib/include
-    #### temp independent ####
-    ${METADEF_DIR}/../graphengine/inc
-    ${METADEF_DIR}/../graphengine/inc/framework
-    ${METADEF_DIR}/../graphengine/inc/external
-    #### temp in ge ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../inc/framework
-    ${METADEF_DIR}/../inc/external
-    ${METADEF_DIR}/../../ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../../cann/ops/built-in/op_proto/inc
-    ${METADEF_DIR}/third_party
-    ${METADEF_DIR}/third_party/transformer/inc
 )
 
 target_compile_options(atc_stub_graph PRIVATE
@@ -336,6 +209,9 @@ target_compile_options(atc_stub_graph PRIVATE
 
 target_link_libraries(atc_stub_graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
 )
 
 set_target_properties(atc_stub_graph PROPERTIES
@@ -365,95 +241,19 @@ target_include_directories(fwk_stub_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/external
-    #### yellow zone ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../cann/ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../libc_sec/include
-    #### blue zone ####
-    ${ASCEND_DIR}/driver/include
-    ${ASCEND_DIR}/fwkacllib/include
-    #### temp independent ####
-    ${METADEF_DIR}/../graphengine/inc
-    ${METADEF_DIR}/../graphengine/inc/framework
-    ${METADEF_DIR}/../graphengine/inc/external
-    #### temp in ge ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../inc/framework
-    ${METADEF_DIR}/../inc/external
-    ${METADEF_DIR}/../../ops/built-in/op_proto/inc
-    ${METADEF_DIR}/../../cann/ops/built-in/op_proto/inc
-    ${METADEF_DIR}/third_party
-    ${METADEF_DIR}/third_party/transformer/inc
 )
 
 target_link_libraries(fwk_stub_graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
 )
 
 set_target_properties(fwk_stub_graph PROPERTIES
     OUTPUT_NAME graph
     LIBRARY_OUTPUT_DIRECTORY fwk_stub
 )
-
-else ()
-######### libgraph.so w/static protobuf #############
-add_library(graph SHARED
-    ${GRAPH_SOURCE_LIST}
-    $<TARGET_OBJECTS:metadef_graph_protos_obj>
-)
-
-target_compile_options(graph PRIVATE
-        -O2
-        $<$<STREQUAL:${PRODUCT_SIDE},host>:-fexceptions>
-        $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
-        )
-
-target_compile_definitions(graph PRIVATE
-        $<$<STREQUAL:${PRODUCT_SIDE},host>:FMK_SUPPORT_DUMP>
-        $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
-        google=ascend_private
-        LOG_CPP
-        )
-
-target_include_directories(graph PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_BINARY_DIR}
-        ${CMAKE_BINARY_DIR}/proto/metadef_protos
-        ${METADEF_DIR}
-        ${METADEF_DIR}/inc
-        ${METADEF_DIR}/inc/external
-        ${METADEF_DIR}/../third_party/fwkacllib/inc/ops
-        ${METADEF_DIR}/../third_party/fwkacllib/inc
-        ${METADEF_DIR}/../inc
-        ${METADEF_DIR}/../inc/framework
-        ${METADEF_DIR}/../inc/external
-        ${METADEF_DIR}/../../ops/built-in/op_proto/inc
-        ${METADEF_DIR}/../../cann/ops/built-in/op_proto/inc
-        ${METADEF_DIR}/third_party
-        ${METADEF_DIR}/third_party/transformer/inc
-        )
-
-target_link_options(graph PRIVATE
-        -Wl,-Bsymbolic
-)
-
-target_link_libraries(graph PRIVATE
-        $<BUILD_INTERFACE:intf_pub>
-        ascend_protobuf_static
-        static_mmpa
-        -Wl,--no-as-needed
-        c_sec
-        slog
-        error_manager
-        json
-        -Wl,--as-needed
-        -lrt
-        -ldl
-        )
-endif ()
 
 ############ install ############
 set(INSTALL_BASE_DIR "")
@@ -462,7 +262,7 @@ set(INSTALL_LIBRARY_DIR lib)
 install(TARGETS graph OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
 )
-if (NOT ENABLE_D AND NOT ENABLE_ACL AND NOT ENABLE_MS_TESTCASES)
+
 install(TARGETS atc_stub_graph OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/stub
 )
@@ -470,4 +270,3 @@ install(TARGETS atc_stub_graph OPTIONAL
 install(TARGETS fwk_stub_graph OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/fwk_stub
 )
-endif ()

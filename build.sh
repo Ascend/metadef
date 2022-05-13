@@ -17,13 +17,14 @@
 set -e
 BASEPATH=$(cd "$(dirname $0)"; pwd)
 OUTPUT_PATH="${BASEPATH}/output"
-export BUILD_PATH="${BASEPATH}/build/"
+BUILD_RELATIVE_PATH="build"
+BUILD_PATH="${BASEPATH}/${BUILD_RELATIVE_PATH}/"
 
 # print usage message
 usage()
 {
   echo "Usage:"
-  echo "sh build.sh [-j[n]] [-h] [-v] [-s] [-t] [-u] [-c] [-S on|off]"
+  echo "sh build.sh [-j[n]] [-h] [-v] [-s] [-b] [-t] [-u] [-c] [-S on|off]"
   echo ""
   echo "Options:"
   echo "    -h Print usage"
@@ -31,6 +32,7 @@ usage()
   echo "    -s Build st"
   echo "    -j[n] Set the number of threads used for building Metadef, default is 8"
   echo "    -t Build and execute ut"
+  echo "    -b Run Benchmark test"
   echo "    -c Build ut with coverage tag"
   echo "    -v Display build command"
   echo "    -S Enable enable download cmake compile dependency from gitee , default off"
@@ -57,10 +59,11 @@ checkopts()
   ENABLE_METADEF_UT="off"
   ENABLE_METADEF_ST="off"
   ENABLE_METADEF_COV="off"
+  ENABLE_BENCHMARK="off"
   GE_ONLY="on"
   ENABLE_GITEE="off"
   # Process the options
-  while getopts 'ustchj:vS:' opt
+  while getopts 'ustcbhj:vS:' opt
   do
     OPTARG=$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')
     case "${opt}" in
@@ -77,6 +80,10 @@ checkopts()
         ;;
       c)
         ENABLE_METADEF_COV="on"
+        GE_ONLY="off"
+        ;;
+      b)
+        ENABLE_BENCHMARK="on"
         GE_ONLY="off"
         ;;
       h)
@@ -113,44 +120,66 @@ mk_dir() {
 # Meatdef build start
 echo "---------------- Metadef build start ----------------"
 
+function get_metadef_lib_dir() {
+  if [ ${D_LINK_PATH} ] ; then
+    local arch=$(uname -m)
+    if [[ "${arch}" == "x86_64" || "${arch}" == "aarch64" ]]; then
+      echo ${D_LINK_PATH}/${arch}
+    else
+      echo "metadef lib dir config error !!"
+      exit 1
+    fi
+  elif [ ${ASCEND_CUSTOM_PATH} ]; then
+    echo ${ASCEND_CUSTOM_PATH}/compiler/lib64
+  fi
+}
+
+function cmake_generate_make() {
+  local build_path=$1;
+  local cmake_args=$2;
+  mk_dir "${build_path}"
+  cd "${build_path}"
+  echo "${cmake_args}"
+  cmake ${cmake_args} ..
+  if [ 0 -ne $? ]
+  then
+    echo "execute command: cmake ${CMAKE_ARGS} .. failed."
+    exit 1
+  fi
+}
+
 # create build path
 build_metadef()
 {
   echo "create build directory and build Metadef";
-  mk_dir "${BUILD_PATH}"
-  cd "${BUILD_PATH}"
-  CMAKE_ARGS="-DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
 
-  if [[ "X$ENABLE_METADEF_COV" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_METADEF_COV=ON"
+  if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
+    BUILD_RELATIVE_PATH="build_gcov"
+    CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=GCOV"
   fi
 
-  if [[ "X$ENABLE_METADEF_UT" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_METADEF_UT=ON"
-  fi
-
-
-  if [[ "X$ENABLE_METADEF_ST" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_METADEF_ST=ON"
+  if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" || "X$ENABLE_BENCHMARK" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS}"
+  else
+    local metadef_lib_dir=$(get_metadef_lib_dir);
+    CMAKE_ARGS="${CMAKE_ARGS} -DMETADEF_LIB_DIR=${metadef_lib_dir}"
   fi
 
   if [[ "X$ENABLE_GITEE" = "Xon" ]]; then
     CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GITEE=ON"
   fi
 
+  BUILD_PATH="${BASEPATH}/${BUILD_RELATIVE_PATH}/"
+  CMAKE_ARGS="${CMAKE_ARGS} -DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
   CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
-  echo "${CMAKE_ARGS}"
-  cmake ${CMAKE_ARGS} ..
-  if [ 0 -ne $? ]
-  then
-    echo "execute command: cmake ${CMAKE_ARGS} .. failed."
-    return 1
-  fi
+  cmake_generate_make "${BUILD_PATH}" "${CMAKE_ARGS}"
 
-  if [ "X$ENABLE_METADEF_UT" = "Xon" ]; then
+  if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     make ut_graph ut_register ut_error_manager ut_exe_graph ${VERBOSE} -j${THREAD_NUM}
+  elif [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
+    make exec_graph_benchmark ${VERBOSE} -j${THREAD_NUM}
   else
-    make ${VERBOSE} -j${THREAD_NUM} && make install
+    make graph graph_static exe_graph register register_static error_manager error_manager_static ${VERBOSE} -j${THREAD_NUM} && make install
   fi
   if [ 0 -ne $? ]
   then
@@ -183,6 +212,10 @@ find ${OUTPUT_PATH} -name "*.so*" -print0 | xargs -0 chmod 500
 
 echo "---------------- Metadef output generated ----------------"
 
+if [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
+  RUN_TEST_CASE= ${BUILD_PATH}/tests/benchmark/exec_graph_benchmark && ${RUN_TEST_CASE}
+fi
+
 if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     cp ${BUILD_PATH}/tests/ut/graph/ut_graph ${OUTPUT_PATH}
     cp ${BUILD_PATH}/tests/ut/register/ut_register ${OUTPUT_PATH}
@@ -203,16 +236,15 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     rm -rf ${BASEPATH}/cov
     mkdir ${BASEPATH}/cov
     lcov -c \
-        -d build/graph/CMakeFiles/graph_static.dir \
-        -d build/register/CMakeFiles/register_static.dir/ \
-        -d build/error_manager/CMakeFiles/error_manager_static.dir/ \
-        -d build/exe_graph/CMakeFiles/exe_graph_static.dir/ \
-        -d build/tests/ut/exe_graph/CMakeFiles/ut_exe_graph.dir \
+        -d ${BUILD_RELATIVE_PATH}/graph/CMakeFiles/graph.dir \
+        -d ${BUILD_RELATIVE_PATH}/register/CMakeFiles/register.dir/ \
+        -d ${BUILD_RELATIVE_PATH}/error_manager/CMakeFiles/error_manager.dir/ \
+        -d ${BUILD_RELATIVE_PATH}/exe_graph/CMakeFiles/exe_graph.dir/ \
+        -d ${BUILD_RELATIVE_PATH}/tests/ut/exe_graph/CMakeFiles/ut_exe_graph.dir \
         -o cov/tmp.info
-    lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/*' '*/ops/*' -o cov/coverage.info
+    lcov -r cov/tmp.info '*/output/*' '*/${BUILD_RELATIVE_PATH}/opensrc/*' '*/${BUILD_RELATIVE_PATH}/proto/*' '*/third_party/*' '*/tests/*' '/usr/*' '*/ops/*' -o cov/coverage.info
     cd ${BASEPATH}/cov
     genhtml coverage.info
-
     if [[ "X$ENABLE_METADEF_COV" = "Xon" ]]; then
       generate_inc_coverage
     fi
@@ -250,7 +282,7 @@ generate_package()
   tar -cf metadef_lib.tar compiler runtime
 }
 
-if [[ "X$ENABLE_METADEF_UT" = "Xoff" ]]; then
+if [[ "X$ENABLE_METADEF_UT" = "Xoff" && "X$ENABLE_BENCHMARK" = "Xoff" ]]; then
   generate_package
 fi
 echo "---------------- Metadef package archive generated ----------------"

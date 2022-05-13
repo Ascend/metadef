@@ -22,12 +22,6 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${METADEF_DIR}/error_manager)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
-include_directories(${METADEF_DIR}/third_party)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc/external)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc/external/ge)
-include_directories(${METADEF_DIR}/third_party/fwkacllib/inc)
-include_directories(${METADEF_DIR}/third_party/transformer/inc)
 include_directories(${METADEF_DIR}/)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
@@ -49,6 +43,8 @@ target_compile_definitions(ut_error_manager PRIVATE
 
 target_link_libraries(ut_error_manager
     $<BUILD_INTERFACE:intf_pub>
-    error_manager_static
-    gtest gtest_main slog_stub ascend_protobuf c_sec mmpa_stub -lrt -ldl -lgcov
+    fwk_mmpa_headers
+    graphengine_headers
+    error_manager
+    gtest gtest_main ascend_protobuf c_sec -lrt -ldl -lgcov
 )

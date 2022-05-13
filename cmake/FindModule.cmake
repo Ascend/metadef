@@ -8,10 +8,10 @@ function(find_module module name path)
         return()
     endif()
     add_library(${module} INTERFACE)
+    unset(${module}_LIBRARY_DIR CACHE)
     find_library(${module}_LIBRARY_DIR NAMES ${name} NAMES_PER_DIR PATHS ${path}
       PATH_SUFFIXES lib
     )
-
     message(STATUS "find ${name} location ${${module}_LIBRARY_DIR}")
     if ("${${module}_LIBRARY_DIR}" STREQUAL "${module}_LIBRARY_DIR-NOTFOUND")
       message(FATAL_ERROR "${name} not found in ${path}")

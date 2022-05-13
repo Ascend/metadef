@@ -1,3 +1,4 @@
+include(${METADEF_DIR}/cmake/build_type.cmake)
 set(SRC_LIST
     "register.cpp"
     "register_pass.cpp"
@@ -48,46 +49,22 @@ add_library(register SHARED
 
 target_compile_options(register PRIVATE
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:/utf-8>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
 )
 
 target_compile_definitions(register PRIVATE
     google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
 )
 
 target_include_directories(register PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/..
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
-    #### temp independent ####
-    ${METADEF_DIR}/../graphengine/inc
-    ${METADEF_DIR}/../graphengine/inc/framework
-    ${METADEF_DIR}/../graphengine/inc/external
-    #### temp in ge ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../inc/framework
-    ${METADEF_DIR}/../inc/external
-    #### temp in parser ####
-    ${METADEF_DIR}/../../graphengine/inc
-    ${METADEF_DIR}/../../graphengine/inc/framework
-    ${METADEF_DIR}/../../graphengine/inc/external
-    ${METADEF_DIR}/../../inc
-    #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
-    #### blue independent compile #####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/ge/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/framework>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
 )
 
 target_link_options(register PRIVATE
@@ -101,14 +78,17 @@ target_link_libraries(register PRIVATE
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:runtime_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
     -Wl,--whole-archive
     op_tiling_o2
     -Wl,--no-whole-archive
     -Wl,--no-as-needed
+    graph
     ascend_protobuf
     c_sec
     slog
-    graph
     static_mmpa
     -Wl,--as-needed
     json
@@ -124,7 +104,8 @@ add_library(register_static STATIC
     "op_tiling/op_tiling_attr_utils.cc"
     "op_tiling/op_compile_info_manager.cc"
     "op_tiling/op_tiling_registry.cc"
-    "op_tiling/op_tiling_py.cc")
+    "op_tiling/op_tiling_py.cc"
+)
 
 target_compile_options(register_static PRIVATE
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
@@ -135,7 +116,6 @@ target_compile_options(register_static PRIVATE
 
 target_compile_definitions(register_static PRIVATE
     google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
     LOG_CPP
@@ -151,35 +131,9 @@ target_include_directories(register_static PUBLIC
 target_include_directories(register_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/external
     ${METADEF_DIR}/..
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
-    #### temp independent ####
-    ${METADEF_DIR}/../graphengine/inc
-    ${METADEF_DIR}/../graphengine/inc/framework
-    ${METADEF_DIR}/../graphengine/inc/external
-    #### temp in ge ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../inc/framework
-    ${METADEF_DIR}/../inc/external
-    #### temp in parser ####
-    ${METADEF_DIR}/../../graphengine/inc
-    ${METADEF_DIR}/../../graphengine/inc/framework
-    ${METADEF_DIR}/../../graphengine/inc/external
-    ${METADEF_DIR}/../../inc
-    #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
-    #### blue independent compile #####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/framework>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
 )
 
 target_link_libraries(register_static PRIVATE
@@ -191,7 +145,14 @@ target_link_libraries(register_static PRIVATE
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:runtime_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
 )
+
+target_link_libraries(register_static PRIVATE
+        ascend_protobuf_static
+        )
 
 set_target_properties(register_static PROPERTIES
     WINDOWS_EXPORT_ALL_SYMBOLS TRUE
@@ -215,44 +176,20 @@ add_dependencies(op_tiling_o2
 target_include_directories(op_tiling_o2 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/register
-    ${METADEF_DIR}/..
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    #### yellow zone ####
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:${METADEF_DIR}/../inc>
-    #### temp independent ####
-    ${METADEF_DIR}/../graphengine/inc
-    ${METADEF_DIR}/../graphengine/inc/framework
-    ${METADEF_DIR}/../graphengine/inc/external
-    #### temp in ge ####
-    ${METADEF_DIR}/../inc
-    ${METADEF_DIR}/../inc/framework
-    ${METADEF_DIR}/../inc/external
-    #### temp in parser ####
-    ${METADEF_DIR}/../../graphengine/inc
-    ${METADEF_DIR}/../../graphengine/inc/framework
-    ${METADEF_DIR}/../../graphengine/inc/external
-    ${METADEF_DIR}/../../inc
-    #### blue zone ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/driver/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${ASCEND_DIR}/fwkacllib/include>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/../third_party/fwkacllib/inc>
-    #### blue independent compile ####
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/graphengine/inc/external>
-    $<$<BOOL:${ENABLE_OPEN_SRC}>:${METADEF_DIR}/third_party/fwkacllib/inc>
 )
 
 target_compile_options(op_tiling_o2 PRIVATE
     -O2
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
 )
 
 target_compile_definitions(op_tiling_o2 PRIVATE
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
     LOG_CPP
 )
 
@@ -260,6 +197,9 @@ target_link_libraries(op_tiling_o2 PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
     ascend_protobuf
     json
     c_sec

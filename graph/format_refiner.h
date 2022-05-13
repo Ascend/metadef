@@ -18,9 +18,17 @@
 #define COMMON_GRAPH_FORMAT_REFINER_H_
 
 #if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define METADEF_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define METADEF_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
 #define METADEF_FUNC_VISIBILITY
 #else
 #define METADEF_FUNC_VISIBILITY __attribute__((visibility("hidden")))
+#endif
 #endif
 
 #include <deque>

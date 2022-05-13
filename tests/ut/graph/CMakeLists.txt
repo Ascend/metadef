@@ -19,17 +19,12 @@ set(CMAKE_CXX_STANDARD 11)
 
 # include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
-include_directories(${METADEF_DIR}/graph)
 include_directories(${METADEF_DIR}/inc/common/util/trace_manager)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
-include_directories(${METADEF_DIR}/third_party)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc/external)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc/external/ge)
-include_directories(${METADEF_DIR}/third_party/fwkacllib/inc)
 include_directories(${METADEF_DIR}/third_party/transformer/inc)
-include_directories(${METADEF_DIR}/)
+include_directories(${METADEF_DIR})
+include_directories(${METADEF_DIR}/graph)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge/proto)
@@ -108,11 +103,14 @@ target_compile_options(ut_graph PRIVATE
 
 target_compile_definitions(ut_graph PRIVATE
     google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    FUNC_VISIBILITY
 )
 
-target_link_libraries(ut_graph
-    $<BUILD_INTERFACE:intf_pub>
-    graph_static error_manager_static
-    gtest gtest_main slog_stub ascend_protobuf c_sec mmpa_stub -lrt -ldl -lgcov
+target_link_libraries(ut_graph PUBLIC
+    $<BUILD_INTERFACE:intf_pub> -lgcov
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
+    graph error_manager
+    gtest gtest_main ascend_protobuf slog_stub c_sec -lrt -ldl
 )

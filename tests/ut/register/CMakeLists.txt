@@ -24,12 +24,6 @@ include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
 include_directories(${METADEF_DIR})
 include_directories(${METADEF_DIR}/register)
 
-
-include_directories(${METADEF_DIR}/third_party/fwkacllib/inc)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc/external)
-include_directories(${METADEF_DIR}/third_party/graphengine/inc/framework)
-
 file(GLOB_RECURSE REGISTER_UT_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/register/*.cc" )
 add_executable(ut_register
     ${REGISTER_UT_FILES}
@@ -41,20 +35,21 @@ target_compile_options(ut_register PRIVATE
 
 target_compile_definitions(ut_register PRIVATE
     google=ascend_private
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_link_libraries(ut_register
     $<BUILD_INTERFACE:intf_pub>
-    register_static graph_static exe_graph_static
+    metadef_headers
+    fwk_mmpa_headers
+    graphengine_headers
+    register graph exe_graph
     gtest
     gtest_main
-    slog_stub
     ascend_protobuf
+    slog_stub
     json
     c_sec
-    error_manager_static
-    mmpa_stub
+    error_manager
     -lrt
     -ldl
     -lgcov

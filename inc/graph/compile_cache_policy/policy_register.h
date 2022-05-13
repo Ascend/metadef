@@ -36,10 +36,7 @@ public:
   ~PolicyManager() = default;
   PolicyManager(const PolicyManager&) = delete;
   PolicyManager &operator=(const PolicyManager &other) = delete;
-  static PolicyManager &GetInstance() {
-    static PolicyManager instance;
-    return instance;
-  }
+  static PolicyManager &GetInstance();
   void RegisterMatchPolicy(const MatchPolicyType match_policy_type, const MatchPolicyPtr ptr) {
     const std::lock_guard<std::mutex> lock(mu_);
     (void)match_policy_registry_.emplace(match_policy_type, ptr);
