@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ED316AE318F6426BB6E80E1F14C22685_H
-#define ED316AE318F6426BB6E80E1F14C22685_H
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_BASE_TYPE_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_BASE_TYPE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,4 +27,4 @@ typedef UINT32 KernelStatus;
 }
 #endif
 
-#endif
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_BASE_TYPE_H_
