@@ -58,14 +58,6 @@ ge::graphStatus AddDataEdge(const ge::NodePtr &src, int src_index, const ge::Nod
   }
   return ret;
 }
-ge::graphStatus AddControlEdge(const ge::NodePtr &src, const ge::NodePtr &dst) {
-  auto ret = ge::GraphUtils::AddEdge(src->GetOutControlAnchor(), dst->GetInControlAnchor());
-  if (ret != ge::GRAPH_SUCCESS) {
-    GELOGE(ret, "Failed to connect control edge from %s to %s, error code %u", src->GetName().c_str(),
-           dst->GetName().c_str(), ret);
-  }
-  return ret;
-}
 std::unique_ptr<uint8_t[]> CreateKernelExtendInfo(const char *name, const char *type, BufferPool &buffer_pool,
                                                   size_t &total_size) {
   total_size = sizeof(KernelExtendInfo);
@@ -118,17 +110,17 @@ ValueHolderPtr ValueHolder::CreateError(const char *fmt, ...) {
   va_end(arg);
   return holder;
 }
-ValueHolder::NodeHolderPtr ValueHolder::AddNode(const GraphHolderPtr &graph, const char *node_type, size_t input_count,
-                                                size_t output_count) {
+ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t input_count,
+                                                size_t output_count, GraphFrame &frame) {
+  auto &graph = frame.GetExeGraph();
+  GE_ASSERT_NOTNULL(graph);
+
   auto node = graph->AddNode(CreateOpDesc(id_generator_++, node_type, input_count, output_count));
   GE_ASSERT_NOTNULL(node);
 
-  auto frame = GetCurrentFrame();
-  GE_ASSERT_NOTNULL(frame);
-
   // add compute node info index
   size_t index;
-  if (frame->GetCurrentNodeIndex(index)) {
+  if (frame.GetCurrentNodeIndex(index)) {
     if (!ge::AttrUtils::SetInt(node->GetOpDesc(), kComputeNodeIndex, static_cast<int64_t>(index))) {
       GE_LOGE("Failed to add node %s, add ComputeNodeIndex failed", node_type);
       return nullptr;
@@ -137,11 +129,11 @@ ValueHolder::NodeHolderPtr ValueHolder::AddNode(const GraphHolderPtr &graph, con
 
   // add kernel extend info index
   size_t extend_info_size;
-  auto holder = CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(), frame->GetBufferPool(),
+  auto holder = CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(), frame.GetBufferPool(),
                                        extend_info_size);
   GE_ASSERT_NOTNULL(holder);
 
-  auto buf_id = frame->GetKernelExtendInfos().AddBuf(holder.get(), extend_info_size);
+  auto buf_id = frame.GetKernelExtendInfos().AddBuf(holder.get(), extend_info_size);
   if (!ge::AttrUtils::SetInt(node->GetOpDesc(), kKernelExtendIndex, static_cast<int64_t>(buf_id))) {
     GE_LOGE("Failed to add node %s, add KernelExtendIndex failed", node_type);
     return nullptr;
@@ -157,11 +149,7 @@ ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const 
             "the function ValueHolder::PushGraphFrame should be called before construct the graph");
     return nullptr;
   }
-  const auto &graph = frame->GetExeGraph();
-  GE_ASSERT_NOTNULL(graph);
-
-  auto node = ValueHolder::AddNode(graph, node_type, inputs.size(), out_count);
-  GE_ASSERT_NOTNULL(node);
+  auto node = ValueHolder::AddNode(node_type, inputs.size(), out_count, *frame);
 
   /*
    * todo 检查是否有子图向父图连接的场景，这种场景需要报错
@@ -313,89 +301,6 @@ ge::graphStatus ValueHolder::RefFrom(const ValueHolderPtr &other) {
 
   GE_ASSERT_TRUE(ge::AttrUtils::SetStr(td, kRefFromNode, other->GetNode()->GetName()));
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(td, kRefFromIndex, other->index_));
-  return ge::GRAPH_SUCCESS;
-}
-
-ValueHolder::GraphBuilder &ValueHolder::GraphBuilder::SetOutputs(vector<ValueHolderPtr> outputs) {
-  outputs_ = std::move(outputs);
-  return *this;
-}
-ValueHolder::GraphBuilder &ValueHolder::GraphBuilder::SetTargets(std::vector<ValueHolderPtr> targets) {
-  targets_ = std::move(targets);
-  return *this;
-}
-ge::NodePtr GetOrCreateNetOutput(const ge::ComputeGraphPtr &graph, size_t output_num) {
-  auto netoutput = graph->FindFirstNodeMatchType("NetOutput");
-  if (netoutput != nullptr) {
-    return netoutput;
-  }
-  auto op_desc = std::make_shared<ge::OpDesc>("NetOutput", "NetOutput");
-  GE_ASSERT_NOTNULL(op_desc);
-
-  for (size_t i = 0; i < output_num; ++i) {
-    GE_ASSERT_SUCCESS(op_desc->AddInputDesc(ge::GeTensorDesc()));
-  }
-  return graph->AddNode(op_desc);
-}
-ValueHolder::ExecuteGraphPtr ValueHolder::GraphBuilder::BuildExecuteGraph() {
-  auto frame = ValueHolder::PopGraphFrame();
-  GE_ASSERT_NOTNULL(frame);
-
-  std::vector<ValueHolderPtr> all_outputs;
-  all_outputs.insert(all_outputs.end(), outputs_.begin(), outputs_.end());
-  all_outputs.insert(all_outputs.end(), targets_.begin(), targets_.end());
-  if (all_outputs.empty()) {
-    GE_LOGE("Failed to build execute graph, no outputs specified");
-    return nullptr;
-  }
-  GE_ASSERT_SUCCESS(AppendGraphLevelData(frame.get()));
-
-  auto &graph = frame->GetExeGraph();
-  auto netoutput = GetOrCreateNetOutput(graph, outputs_.size());
-  GE_ASSERT_NOTNULL(netoutput);
-  for (size_t i = 0; i < outputs_.size(); ++i) {
-    GE_ASSERT_NOTNULL(outputs_[i]);
-    GE_ASSERT_NOTNULL(outputs_[i]->node_);
-    GE_ASSERT_SUCCESS(AddDataEdge(outputs_[i]->node_, outputs_[i]->GetOutIndex(), netoutput, static_cast<int32_t>(i)));
-  }
-  for (const auto &target_node : targets_) {
-    GE_ASSERT_NOTNULL(target_node);
-    GE_ASSERT_NOTNULL(target_node->node_);
-    GE_ASSERT_SUCCESS(AddControlEdge(target_node->node_, netoutput));
-  }
-  return graph;
-}
-ge::graphStatus ValueHolder::GraphBuilder::AppendGraphLevelData(const GraphFrame *frame) {
-  if (!frame->IsRootFrame()) {
-    GELOGE(ge::PARAM_INVALID, "Failed to append graph level data, current exe_graph is not the root graph");
-    return ge::GRAPH_FAILED;
-  }
-  auto &graph = frame->GetExeGraph();
-  GE_ASSERT_NOTNULL(graph);
-  size_t buffer_size;
-
-  // buffer pool
-  auto buffer = frame->GetBufferPool().Serialize(buffer_size);
-  GE_ASSERT_NOTNULL(buffer);
-  GE_ASSERT_TRUE(ge::AttrUtils::SetZeroCopyBytes(graph, kBuffer, ge::Buffer::CopyFrom(buffer.get(), buffer_size)));
-
-  // compute node info
-  buffer = frame->GetAllComputeNodeInfos().Serialize(buffer_size);
-  GE_ASSERT_NOTNULL(buffer);
-  GE_ASSERT_TRUE(
-      ge::AttrUtils::SetZeroCopyBytes(graph, kComputeNodeInfo, ge::Buffer::CopyFrom(buffer.get(), buffer_size)));
-
-  // kernel extend info
-  buffer = frame->GetKernelExtendInfos().Serialize(buffer_size);
-  GE_ASSERT_NOTNULL(buffer);
-  GE_ASSERT_TRUE(
-      ge::AttrUtils::SetZeroCopyBytes(graph, kKernelExtendInfo, ge::Buffer::CopyFrom(buffer.get(), buffer_size)));
-
-  // model_desc
-  buffer = frame->GetKernelModelDesc().Serialize(buffer_size);
-  GE_CHECK_NOTNULL(buffer);
-  GE_ASSERT_TRUE(ge::AttrUtils::SetZeroCopyBytes(graph, kModelDesc, ge::Buffer::CopyFrom(buffer.get(), buffer_size)));
-
   return ge::GRAPH_SUCCESS;
 }
 }  // namespace bg
