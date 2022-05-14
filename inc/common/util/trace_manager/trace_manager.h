@@ -14,67 +14,50 @@
  * limitations under the License.
  */
 
-#ifndef TRACE_MANAGER_H_
-#define TRACE_MANAGER_H_
+#ifndef COMMON_UTIL_TRACE_MANAGER_TRACE_MANAGER_H_
+#define COMMON_UTIL_TRACE_MANAGER_TRACE_MANAGER_H_
 
 #include <string>
+#include <array>
 #include <thread>
 #include <atomic>
-#include <cstring>
-#include <securec.h>
+#include <condition_variable>
 #include "framework/common/util.h"
 #include "graph/ge_error_codes.h"
 
 namespace ge {
+#define TRACE_GEN_RECORD(owner, action, graph_name, node_name, node_data, tensor_index, tensor_data, content)          \
+  do {                                                                                                                 \
+    if (TraceManager::GetInstance().IsTraceEnabled()) {                                                                \
+      std::stringstream ss;                                                                                            \
+      ss << owner << "," << action << "," << graph_name << "," << node_name << "," << node_data << "," << tensor_index \
+         << "," << tensor_data << "," << content;                                                                      \
+      TraceManager::GetInstance().AddTrace(ss.str());                                                                  \
+    }                                                                                                                  \
+  } while (false)
+
 using char_t = char;
 
-constexpr uint8_t TRACE_ITEM_LEN  = 150U;
-constexpr uint8_t TRACE_PART_LEN  = 30U;
-constexpr uint8_t TRACE_TIME0_LEN = 16U;
-constexpr uint8_t TRACE_TIME1_LEN = 16U;
-constexpr uint8_t TRACE_TIME2_LEN = 4U;
-constexpr uint8_t TRACE_ENV_LEN   = 32U;
+constexpr uint64_t kTraceSaveTriggerNum = 5000U;
 
-struct NowDate {
-  char_t tmp0[TRACE_TIME0_LEN];    // year month date
-  char_t tmp1[TRACE_TIME1_LEN];    // hour minute second
-  char_t tmp2[TRACE_TIME2_LEN];    // millisecond
-};
-
-enum ActType {
-  TRACE_ACT_NULL  = 0,
-  TRACE_ADD       = 1,
-  TRACE_MOD       = 2,    // modify
-  TRACE_DEL       = 3,
-  TRACE_SET       = 4,
-  TRACE_UPD       = 5,    // update
-  TRACE_ACT_SIZE,
-};
-
-enum InputOutputType {
-  TRACE_IN_OUT_NULL = 0,
-  TRACE_INPUT       = 1,
-  TRACE_OUTPUT      = 2,
-  TRACE_IN_OUT_SIZE,
-};
+enum class ReadyPart { A, B, None };
 
 class TraceManager {
  public:
-  static const std::string kTraceAct[TRACE_ACT_SIZE];
-  static const std::string kTraceInOut[TRACE_IN_OUT_SIZE];
-
   static TraceManager &GetInstance();
+
+  void AddTrace(std::string &&trace_info);
+
+  bool IsTraceEnabled() const {
+    return enabled_;
+  }
   void SetTraceOwner(const std::string &owner, const std::string &stage, const std::string &graph_name);
   void ClearTraceOwner();
-  void GetTraceItem(uint32_t &index, char_t * &item);
-  char_t* GetTraceHeader();
-  void AddTrace(const uint32_t index);
-
-  inline bool IsTraceEnable() const {
-    return enable_;
+  static inline const std::string &GetTraceHeader() {
+    return trace_header_;
   }
-  inline bool DoesHasOwner() const {
-    return true;                      // to be replaced
+  static inline const std::string &GetOutGraphName() {
+    return graph_name_;
   }
 
  private:
@@ -84,34 +67,31 @@ class TraceManager {
   TraceManager(TraceManager &&) = delete;
   TraceManager &operator=(const TraceManager &) = delete;
   TraceManager &operator=(TraceManager &&) = delete;
+  Status Initialize(const char_t *file_save_path);
+  void Finalize();
 
-  void CheckTraceEnv(char_t *env_path, const uint32_t &length);
-  void CreateTraceDirectory(const std::string &env_path, std::string &trace_path);
-  void SaveFileFunc();
-  void SaveInDestructor();
-  void ClearTraceBody();
-  std::string GetTimeStr();
-  std::string GetSeqString(const uint32_t &seq);
-  std::string GetFileName(const std::string &save_time);
-  void SaveToFile();
-  Status OpenFile(int32_t &fd, const std::string &file_path);
-  void WriteData(const int32_t fd, const char_t * const data);
+  std::string NextFileName();
+  void SaveTraceBufferToFile(ReadyPart ready_part);
+  void SaveBufferToFileThreadFunc();
 
-  static constexpr uint8_t TRACE_THREAD_SLEEP_TIME_SECOND = 3U;
-  static constexpr uint32_t TRACE_SAVE_TRIGGER_NUM = 1000U;
-  static constexpr uint32_t TRACE_SAVE_ARRAY_SIZE = TRACE_SAVE_TRIGGER_NUM << 1;
+  static thread_local std::string trace_header_;
+  static thread_local std::string graph_name_;
 
-  static const char_t kTraceEnv[TRACE_ENV_LEN];
-  static const std::string kTraceRecordPath;
-  static thread_local char_t trace_header_[TRACE_PART_LEN];
-
-  bool enable_ = false;
-  volatile bool be_in_save_ = false;
-  char_t trace_array_[TRACE_SAVE_ARRAY_SIZE][TRACE_ITEM_LEN] = {};
-  std::atomic<uint32_t> trace_index_ {0};
-  std::string start_time_;
-  std::string save_time_last_;
+  std::atomic<bool> enabled_{false};
+  std::array<std::string, (kTraceSaveTriggerNum << 1)> trace_array_ = {};
+  std::atomic<uint64_t> trace_index_{0};
+  std::atomic<uint64_t> total_saved_nums_{0};
+  std::atomic<uint64_t> part1_ready_nums_{0};
+  std::atomic<uint64_t> part2_ready_nums_{0};
   std::string trace_save_file_path_;
+  std::string current_saving_file_name_;
+  uint64_t current_file_saved_nums_ = 0;
+  ReadyPart ready_part_ = ReadyPart::None;
+
+  std::mutex mu_;
+  std::thread save_thread_;
+  std::atomic<bool> stopped_{false};
+  std::condition_variable data_ready_var_;
 };
 
 class TraceOwnerGuard {
@@ -128,10 +108,7 @@ class TraceOwnerGuard {
   TraceOwnerGuard &operator=(TraceOwnerGuard &&) = delete;
 };
 
-#define trace TraceManager::GetInstance()
-
-/* trace info form
-  owner:stage:graph_name, graph_name_in, action, node_name, node_data_name, archor_in_out:index,
-  tensor_in_out:index, tensor_data_name, content_value,  dest_node_name:anchor_in_out:index */
-} // end of namespace ge
-#endif  // TRACE_MANAGER_H_
+#define TRACE TraceManager::GetInstance()
+#define TRACE_HEADER TraceManager::GetTraceHeader()
+}  // namespace ge
+#endif  // COMMON_UTIL_TRACE_MANAGER_TRACE_MANAGER_H_

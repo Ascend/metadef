@@ -40,8 +40,8 @@ TEST_F(UtestErrorManager, Init_faild) {
   auto &instance = ErrorManager::GetInstance();
   EXPECT_EQ(instance.Init(""), -1);
   instance.is_init_ = true;
-  EXPECT_EQ(instance.Init(""), 0);
-  EXPECT_EQ(instance.Init(), 0);
+  EXPECT_EQ(instance.Init(""), -1);
+  EXPECT_EQ(instance.Init(), -1);
 }
 
 TEST_F(UtestErrorManager, FormatErrorMessage) {
@@ -264,7 +264,7 @@ TEST_F(UtestErrorManager, ParseJsonFile) {
   }
   EXPECT_EQ(instance.ParseJsonFile("out3.json"), 0);
   instance.error_map_["1"] = ErrorManager::ErrorInfoConfig();
-  EXPECT_EQ(instance.ParseJsonFile("out3.json"), -1);
+  EXPECT_EQ(instance.ParseJsonFile("out3.json"), 0);
 }
 
 TEST_F(UtestErrorManager, ClearErrorMsgContainerByWorkId) {

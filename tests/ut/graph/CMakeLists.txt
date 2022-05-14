@@ -20,6 +20,7 @@ set(CMAKE_CXX_STANDARD 11)
 # include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${METADEF_DIR}/graph)
+include_directories(${METADEF_DIR}/inc/common/util/trace_manager)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
 include_directories(${METADEF_DIR}/third_party)
@@ -71,6 +72,7 @@ set(UT_FILES
     "testcase/ge_ir_utils_unittest.cc"
     "testcase/func_counter.cc"
     "testcase/test_std_structs.cc"
+    "testcase/trace_manager_unittest.cc"
     "testcase/transformer_expand_dims_ut.cc"
     "testcase/transformer_transfer_shape_ut.cc"
     "testcase/op_imp_unittest.cc"
