@@ -1333,11 +1333,7 @@ const std::string ATTR_NAME_FLOW_ATTR_DEPTH = "_flow_attr_depth";
 const std::string ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY = "_flow_attr_enqueue_policy";
 
 // for aligned attribute
-const std::string ATTR_NAME_ALIGNED_ATTR = "_aligned_attr";
-const std::string ATTR_NAME_ALIGNED_INTERVAL = "_aligned_interval";
-const std::string ATTR_NAME_ALIGNED_OFFSET = "_aligned_offset";
-
-// for heterogeneous queue aligned attribute
-const std::string ATTR_NAME_QUEUE_ALIGNED_INTERVAL = "_queue_aligned_attr_interval";
-const std::string ATTR_NAME_QUEUE_ALIGNED_OFFSET = "_queue_aligned_attr_offset";
+const std::string ATTR_NAME_INPUTS_ALIGN_ATTR = "_inputs_align_attr";
+const std::string ATTR_NAME_INPUTS_ALIGN_INTERVAL = "_inputs_align_interval";
+const std::string ATTR_NAME_INPUTS_ALIGN_OFFSET = "_inputs_align_offset";
 }  // namespace ge

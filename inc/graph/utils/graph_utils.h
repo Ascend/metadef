@@ -35,13 +35,13 @@
 
 #define GE_DUMP(compute_graph, name)                                                                               \
   do {                                                                                                             \
-    GraphUtils::DumpGEGraph((compute_graph), (name));                                                              \
-    GraphUtils::DumpGEGraphToOnnx(*(compute_graph), (name));                                                       \
+    ge::GraphUtils::DumpGEGraph((compute_graph), (name));                                                          \
+    ge::GraphUtils::DumpGEGraphToOnnx(*(compute_graph), (name));                                                   \
     uint64_t i = 0U;                                                                                               \
     for (const auto &sub_graph_func : (compute_graph)->GetAllSubgraphs()) {                                        \
       const auto sub_graph_func_name = std::string(name) + std::string("_sub_graph_") + std::to_string(i++);       \
-      GraphUtils::DumpGEGraph(sub_graph_func, sub_graph_func_name);                                                \
-      GraphUtils::DumpGEGraphToOnnx(*sub_graph_func, sub_graph_func_name);                                         \
+      ge::GraphUtils::DumpGEGraph(sub_graph_func, sub_graph_func_name);                                            \
+      ge::GraphUtils::DumpGEGraphToOnnx(*sub_graph_func, sub_graph_func_name);                                     \
     }                                                                                                              \
   } while (false)
 
