@@ -23,7 +23,6 @@
 #include <limits>
 #include <iostream>
 
-#include "mmpa/mmpa_api.h"
 #include "graph/def_types.h"
 #include "framework/common/ge_inner_error_codes.h"
 #include "framework/common/debug/log.h"
