@@ -21,6 +21,7 @@
 #include <map>
 #include "graph/ge_error_codes.h"
 #include "op_impl_kernel_registry.h"
+#include "exe_graph/runtime/tiling_parse_context.h"
 namespace gert {
 class OpImplRegistry : public OpImplKernelRegistry {
  public:
@@ -35,12 +36,21 @@ class OpImplRegistry : public OpImplKernelRegistry {
 
 class OpImplRegister {
  public:
+  typedef UINT32 (*TilingParseFunc)(TilingParseContext *context);
+
   explicit OpImplRegister(const char *op_type);
   OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
   OpImplRegister &Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func, size_t max_tiling_data_size = 2048);
   template<typename T>
   OpImplRegister &TilingParse(KernelRegistry::KernelFunc tiling_parse_func) {
     functions_.tiling_parse = tiling_parse_func;
+    functions_.compile_info_creator = CreateCompileInfo<T>;
+    functions_.compile_info_deleter = DeleteCompileInfo<T>;
+    return *this;
+  }
+  template<typename T>
+  OpImplRegister &TilingParse(TilingParseFunc tiling_parse_func) {
+    functions_.tiling_parse = reinterpret_cast<KernelRegistry::KernelFunc>(tiling_parse_func);
     functions_.compile_info_creator = CreateCompileInfo<T>;
     functions_.compile_info_deleter = DeleteCompileInfo<T>;
     return *this;

@@ -32,6 +32,7 @@ TEST_F(GeContextUt, All) {
   ge::GEContext cont = GetContext();
   cont.Init();
   EXPECT_EQ(cont.GetHostExecFlag(), false);
+  EXPECT_EQ(cont.IsOverflowDetectionOpen(), false);
   EXPECT_EQ(GetMutableGlobalOptions().size(), 0);
   EXPECT_EQ(cont.SessionId(), 0);
   EXPECT_EQ(cont.DeviceId(), 0);
@@ -46,11 +47,17 @@ TEST_F(GeContextUt, All) {
 TEST_F(GeContextUt, Plus) {
   std::map<std::string, std::string> session_option{{"ge.exec.placement", "ge.exec.placement"}};
   GetThreadLocalContext().SetSessionOption(session_option);
+  
   std::string exec_placement;
   GetThreadLocalContext().GetOption("ge.exec.placement", exec_placement);
   EXPECT_EQ(exec_placement, "ge.exec.placement");
   ge::GEContext cont = GetContext();
   EXPECT_EQ(cont.GetHostExecFlag(), false);
+
+  std::map<std::string, std::string> session_option1{{"ge.exec.overflow", "1"}};
+  GetThreadLocalContext().SetSessionOption(session_option1);
+  EXPECT_EQ(cont.IsOverflowDetectionOpen(), true);
+
   std::map<std::string, std::string> session_option2{{"ge.exec.sessionId", "12345678987654321"}};
   GetThreadLocalContext().SetSessionOption(session_option2);
   cont.Init();

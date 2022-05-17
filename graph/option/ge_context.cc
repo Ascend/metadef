@@ -25,6 +25,7 @@ namespace {
 const uint64_t kMinTrainingTraceJobId = 65536U;
 const int32_t kDecimal = 10;
 const char_t *kHostExecPlacement = "HOST";
+const char_t *kEnabled = "1";
 }
 GEContext &GetContext() {
   static GEContext ge_context{};
@@ -36,6 +37,16 @@ thread_local uint64_t GEContext::context_id_ = 0UL;
 
 graphStatus GEContext::GetOption(const std::string &key, std::string &option) {
   return GetThreadLocalContext().GetOption(key, option);
+}
+
+bool GEContext::IsOverflowDetectionOpen() const {
+  std::string enable_overflow_detection;
+  if (GetThreadLocalContext().GetOption("ge.exec.overflow", enable_overflow_detection) != GRAPH_SUCCESS) {
+    GELOGD("can not get option ge.exec.overflow.");
+    return false;
+  }
+  GELOGD("Option ge.exec.overflow is %s.", enable_overflow_detection.c_str());
+  return (enable_overflow_detection == kEnabled);
 }
 
 bool GEContext::GetHostExecFlag() const {

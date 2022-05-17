@@ -24,6 +24,7 @@ class GEContext {
  public:
   graphStatus GetOption(const std::string &key, std::string &option);
   bool GetHostExecFlag() const;
+  bool IsOverflowDetectionOpen() const;
   uint64_t SessionId() const;
   uint32_t DeviceId() const;
   void Init();

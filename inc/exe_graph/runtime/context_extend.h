@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_CONTEXT_EXTEND_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_CONTEXT_EXTEND_H_
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -25,15 +25,31 @@
 namespace gert {
 class KernelExtendInfo {
  public:
+  /**
+   * 获取kernel name
+   * @return kernel name
+   */
   const char *GetKernelName() const {
     return kernel_name_;
   }
+  /**
+   * 设置kernel name
+   * @param kernel_name kernel name
+   */
   void SetKernelName(const char *kernel_name) {
     kernel_name_ = kernel_name;
   }
+  /**
+   * 获取kernel type
+   * @return kernel type
+   */
   const char *GetKernelType() const {
     return kernel_type_;
   }
+  /**
+   * 设置kernel type
+   * @param kernel_type kernel type
+   */
   void SetKernelType(const char *kernel_type) {
     kernel_type_ = kernel_type;
   }
@@ -51,4 +67,4 @@ class KernelExtendInfo {
 static_assert(std::is_standard_layout<KernelExtendInfo>::value, "The class KernelExtendInfo must be a POD");
 
 }  // namespace gert
-#endif  //AIR_CXX_RUNTIME_V2_KERNEL_CONTEXT_EXTEND_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_

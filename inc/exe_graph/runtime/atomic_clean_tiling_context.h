@@ -21,10 +21,19 @@
 namespace gert {
 class AtomicCleanTilingContext : public TilingContext {
  public:
+  /**
+   * 获取workspace size的列表
+   * @return workspace size列表
+   */
   const ContinuousVector *GetCleanWorkspaceSizes() {
     return GetInputPointer<ContinuousVector>(0);
   }
 
+  /**
+   * 通过节点的输出index，获取需要清理的输出内存的大小
+   * @param index 节点输出index
+   * @return 需要清理的输出内存的大小
+   */
   uint64_t GetCleanOutputSize(size_t index) {
     return GetInputValue<uint64_t>(index + 1U);
   }
@@ -32,4 +41,4 @@ class AtomicCleanTilingContext : public TilingContext {
 static_assert(std::is_standard_layout<AtomicCleanTilingContext>::value,
               "The class AtomicCleanTilingContext must be a POD");
 }  // namespace gert
-#endif  //METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATOMICCLEANTILINGCONTEXT_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATOMICCLEANTILINGCONTEXT_H_

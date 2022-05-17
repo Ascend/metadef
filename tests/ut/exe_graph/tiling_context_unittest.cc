@@ -293,6 +293,7 @@ TEST_F(TilingContextUT, SetTilingKeyOk) {
   auto context = holder.GetContext<TilingContext>();
 
   context->SetTilingKey(20);
+  EXPECT_EQ(context->GetTilingKey(), 20);
   EXPECT_EQ(*reinterpret_cast<uint64_t *>(&(holder.value_holder[holder.kernel_input_num + TilingContext::kOutputTilingKey].data)), 20);
 }
 TEST_F(TilingContextUT, SetBlockDimOk) {
@@ -314,6 +315,7 @@ TEST_F(TilingContextUT, SetBlockDimOk) {
   auto context = holder.GetContext<TilingContext>();
 
   context->SetBlockDim(10);
+  EXPECT_EQ(context->GetBlockDim(), 10);
   EXPECT_EQ(*reinterpret_cast<uint32_t *>(&(holder.value_holder[holder.kernel_input_num + TilingContext::kOutputBlockDim].data)), 10);
 }
 
@@ -336,9 +338,11 @@ TEST_F(TilingContextUT, SetNeedAtomicOk) {
   auto context = holder.GetContext<TilingContext>();
 
   context->SetNeedAtomic(true);
+  EXPECT_TRUE(context->NeedAtomic());
   EXPECT_TRUE(*reinterpret_cast<bool *>(&(holder.value_holder[holder.kernel_input_num + TilingContext::kOutputAtomicCleanFlag].data)));
 
   context->SetNeedAtomic(false);
+  EXPECT_FALSE(context->NeedAtomic());
   EXPECT_FALSE(*reinterpret_cast<bool *>(&(holder.value_holder[holder.kernel_input_num + TilingContext::kOutputAtomicCleanFlag].data)));
 }
 
