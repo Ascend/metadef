@@ -161,6 +161,15 @@ Status FusionTurbo::RemoveNodeOnly(const ge::NodePtr &node) {
   return SUCCESS;
 }
 
+Status FusionTurbo::RemoveMultiNodesOnly(const std::vector<ge::NodePtr> &nodes) {
+  for (const auto &ele : nodes) {
+    if (RemoveNodeOnly(ele) != SUCCESS) {
+      return FAILED;
+    }
+  }
+  return SUCCESS;
+}
+
 ge::GeTensorPtr GenerateWeightTensor(const WeightInfo &w_info) {
   ge::GeTensorDesc new_weight_tensor;
   new_weight_tensor.SetShape(w_info.shape);

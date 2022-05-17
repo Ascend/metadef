@@ -87,6 +87,8 @@ class FusionTurbo {
 
   Status RemoveNodeOnly(const ge::NodePtr &node);
 
+  Status RemoveMultiNodesOnly(const std::vector<ge::NodePtr> &nodes);
+
   ge::NodePtr UpdateConst(const ge::NodePtr &node, int32_t index, const WeightInfo &w_info);
 
   /* 1. If index is larger than or equalt to the input size of node, add a weight
