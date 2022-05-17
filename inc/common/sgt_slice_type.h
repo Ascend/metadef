@@ -25,6 +25,7 @@
 namespace ffts {
 const std::string kAttrSgtJsonInfo = "_sgt_json_info";
 const std::string kAttrSgtStructInfo = "_sgt_struct_info";
+const std::string kAttrSgtStructInfoDy = "_sgt_struct_info_dy";
 const size_t kSgtTillingNum = 2U;
 
 struct OpCut {
@@ -57,6 +58,8 @@ struct ThreadSliceMap {
   std::vector<std::vector<std::pair<std::string, uint32_t>>> dependencies;
   std::vector<uint32_t> core_num;
   std::vector<OpCut> cut_type;
+  std::vector<uint32_t> input_axis;
+  std::vector<uint32_t> output_axis;
   std::vector<uint32_t> input_tensor_indexes;
   std::vector<uint32_t> output_tensor_indexes;
   std::vector<std::vector<std::vector<DimRange>>> input_tensor_slice;
@@ -68,6 +71,17 @@ struct ThreadSliceMap {
       slice_instance_num(1U), parallel_window_size(1U), thread_id(0U) {}
 };
 
+struct ThreadSliceMapDy {
+    uint32_t slice_instance_num;
+    uint32_t parallel_window_size;
+    std::vector<uint32_t> input_tensor_indexes;
+    std::vector<uint32_t> output_tensor_indexes;
+    std::vector<std::vector<std::vector<int64_t>>> input_tensor_slice;
+    std::vector<std::vector<std::vector<int64_t>>> output_tensor_slice;
+    ThreadSliceMapDy() : slice_instance_num(1U), parallel_window_size(1U) {}
+};
+
 using ThreadSliceMapPtr = std::shared_ptr<ThreadSliceMap>;
+using ThreadSliceMapDyPtr = std::shared_ptr<ThreadSliceMapDy>;
 }  // namespace ffts
 #endif  // INC_COMMON_SGT_SLICE_TYPES_H_
