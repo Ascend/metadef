@@ -20,6 +20,8 @@
 #include "exe_graph/runtime/context_extend.h"
 #include "exe_graph/runtime/continuous_vector.h"
 #include "exe_graph/runtime/tensor.h"
+#include "graph/debug/ge_attr_define.h"
+#include "transformer/inc/expand_dimension.h"
 
 namespace gert {
 class BgKernelContextExtendUT : public testing::Test {};
@@ -50,6 +52,12 @@ TEST_F(BgKernelContextExtendUT, BuildRequiredInput) {
   EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
+  auto expand_dims_type = td->GetExpandDimsType();
+  Shape origin_shape({8,3,224,224});
+  Shape storage_shape;
+  expand_dims_type.Expand(origin_shape, storage_shape);
+  EXPECT_EQ(storage_shape, origin_shape);
+  
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -560,6 +568,49 @@ TEST_F(BgKernelContextExtendUT, IgnoreNoneIrAttr) {
   EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<bool>(1), false);
   EXPECT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<int64_t>(2), 10240);
   EXPECT_FLOAT_EQ(*compute_node_info->GetAttrs()->GetAttrPointer<float>(3), 1024.0021);
+}
+
+// 测试构造kernel context的时候从tensor desc上获取ATTR_NAME_RESHAPE_TYPE_MASK并设置到compile time tensor desc 上
+// 同时测试调用Expand是否能够得到正确的扩维shape
+TEST_F(BgKernelContextExtendUT, BuildRequiredInputWithExpandDimsType) {
+  vector<int64_t> origin_shape = {5, 6, 7};
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({5, 6, 7, 1}));
+  tensor_desc.SetOriginShape(ge::GeShape(origin_shape));
+  // get reshape type 此处模拟FE调用transformer中方法获取int类型的reshape type
+  int64_t int_reshape_type = transformer::ExpandDimension::GenerateReshapeType(ge::FORMAT_NCHW, ge::FORMAT_NC1HWC0, origin_shape.size(),
+                                                                    "NCH");
+  (void)ge::AttrUtils::SetInt(tensor_desc, ge::ATTR_NAME_RESHAPE_TYPE_MASK, int_reshape_type);
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AppendIrInput("x", ge::kIrInputRequired);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+
+  bg::BufferPool buffer_pool;
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
+  ASSERT_NE(ret, nullptr);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
+  ASSERT_NE(td, nullptr);
+  EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
+
+  auto expand_dims_type = td->GetExpandDimsType();
+  auto shape = Shape{5, 6, 7};
+  Shape out_shape;
+  expand_dims_type.Expand(shape, out_shape);
+  ASSERT_EQ(4, out_shape.GetDimNum());
+  ASSERT_EQ(out_shape, Shape({5, 6, 7, 1}));
 }
 
 // todo lowering时，不需要构造attr

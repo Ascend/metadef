@@ -20,6 +20,7 @@
 
 #include "exe_graph/lowering/bg_ir_attrs.h"
 #include "exe_graph/runtime/context_extend.h"
+#include "graph/debug/ge_attr_define.h"
 namespace gert {
 namespace bg {
 namespace {
@@ -83,8 +84,10 @@ void SetCompileTimeTd(const ge::ConstGeTensorDescPtr &desc, CompileTimeTensorDes
   td.SetDataType(desc->GetDataType());
   td.SetOriginFormat(desc->GetOriginFormat());
   td.SetStorageFormat(desc->GetFormat());
-  // todo set expand dims type
-  td.SetExpandDimsType(ExpandDimsType(""));
+  int64_t reshape_type_mask = 0;
+  if (ge::AttrUtils::GetInt(desc, ge::ATTR_NAME_RESHAPE_TYPE_MASK, reshape_type_mask)) {
+    td.SetExpandDimsType(ExpandDimsType(reshape_type_mask));
+  }
 }
 ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
   for (size_t i = 0; i < node->GetAllInDataAnchorsSize(); ++i) {
