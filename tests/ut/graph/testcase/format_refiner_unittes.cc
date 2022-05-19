@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <stdlib.h>
 #include "graph_builder_utils.h"
+#include "graph/debug/ge_attr_define.h"
+#include "graph/utils/op_desc_utils.h"
 #define private public
 #define protected public
 #include "graph/format_refiner.h"
@@ -573,6 +575,41 @@ ComputeGraphPtr BuildMainGraphWithIf(string anchor_graph) {
 
   return main_graph;
 }
+
+/*
+ *             netoutput1
+ *                |
+ *              relu1
+ *                |
+ *            Add1(locked)(in ND out FZ)
+ *            /        \
+ *         var1(NCHW)  var2(NCHW)
+ */
+ut::GraphBuilder BuildGraphWithFormatLocked() {
+  auto builder = ut::GraphBuilder("glocked");
+  auto var1 = builder.AddNode("var1", "Variable", 0, 1, FORMAT_NCHW, DT_INT8, {1, 1, 28, 28});
+  auto var2 = builder.AddNode("var2", "Variable", 0, 1, FORMAT_NCHW, DT_INT8, {1, 1, 28, 28});
+  auto add1 = builder.AddNode("add1", "Add", 2, 1, FORMAT_ND, DT_INT8, {1, 1, 28, 28});
+  auto relu1 = builder.AddNode("relu1", "Relu", 1, 1, FORMAT_NCHW, DT_INT8);
+  auto netoutput1 = builder.AddNode("netoutput1", "NetOutput", 1, 0);
+
+  auto add1_op_desc = add1->GetOpDesc()->GetOutputDesc(0);
+  add1_op_desc.SetFormat(FORMAT_FRACTAL_Z);
+  add1_op_desc.SetOriginFormat(FORMAT_FRACTAL_Z);
+  add1_op_desc.SetShape(GeShape(std::vector<int64_t>({1, 1, 28, 28})));
+  auto add1_op = OpDescUtils::CreateOperatorFromNode(add1);
+  add1_op.SetAttr(ATTR_NAME_FORMAT_LOCKED, true);
+  add1->GetOpDesc()->UpdateOutputDesc(0, add1_op_desc);
+
+  builder.AddDataEdge(var1, 0, add1, 0);
+  builder.AddDataEdge(var2, 0, add1, 1);
+  builder.AddDataEdge(add1, 0, relu1, 0);
+  builder.AddDataEdge(relu1, 0, netoutput1, 0);
+  SetFirstInferFlag(builder.GetGraph(), true);
+
+  return builder;
+}
+
 }
 // Test BiasAdd special process
 TEST_F(UTEST_FormatRefiner, biasadd_special_process) {
@@ -873,6 +910,37 @@ TEST_F(UTEST_FormatRefiner, ForwardMultiOutput) {
 
 }
 
+TEST_F(UTEST_FormatRefiner, FormatInferWithLockedNode) {
+  auto builder = BuildGraphWithFormatLocked();
+  auto graph = builder.GetGraph();
+  // before infer format
+  auto add1 = graph->FindNode("add1");
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(0).GetFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(1).GetFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(1).GetOriginFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetOutputDesc(0).GetFormat(), FORMAT_FRACTAL_Z);
+  EXPECT_EQ(add1->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_FRACTAL_Z);
+
+  EXPECT_EQ(FormatRefiner::InferOrigineFormat(graph), GRAPH_SUCCESS);
+  auto var1 = graph->FindNode("var1");
+  EXPECT_EQ(var1->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  auto var2 = graph->FindNode("var2");
+  EXPECT_EQ(var2->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  auto relu1 = graph->FindNode("relu1");
+  EXPECT_EQ(relu1->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(relu1->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  auto netoutput1 = graph->FindNode("netoutput1");
+  EXPECT_EQ(netoutput1->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  // after format infer
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(0).GetFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(1).GetFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetInputDesc(1).GetOriginFormat(), FORMAT_ND);
+  EXPECT_EQ(add1->GetOpDesc()->GetOutputDesc(0).GetFormat(), FORMAT_FRACTAL_Z);
+  EXPECT_EQ(add1->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_FRACTAL_Z);
+}
+
 TEST_F(UTEST_FormatRefiner, GetAnchorPointsFailed) {
   ge::ComputeGraphPtr graph = nullptr;
   std::vector<ge::NodePtr> anchor_points;
@@ -901,5 +969,4 @@ TEST_F(UTEST_FormatRefiner, SaveFormat) {
   EXPECT_EQ(save_format, FORMAT_NHWC);
   graph->SaveDataFormat(FORMAT_ND);
 }
-
 }
