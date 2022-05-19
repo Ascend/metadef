@@ -30,11 +30,17 @@ class LoweringGlobalData {
   };
   const bg::ValueHolderPtr &GetStream() const;
   LoweringGlobalData &SetStream(bg::ValueHolderPtr &&stream);
+
   const NodeCompileResult *FindCompiledResult(const ge::NodePtr &node) const;
   LoweringGlobalData &AddCompiledResult(const ge::NodePtr &node, NodeCompileResult compile_result);
+
+  bg::ValueHolderPtr GetAllocator(int32_t memory_type) const;
+  LoweringGlobalData &SetAllocator(int32_t memory_type, bg::ValueHolderPtr allocator);
+
  private:
   bg::ValueHolderPtr stream_;
   std::map<int64_t, NodeCompileResult> node_ids_to_compile_result_holders_;
+  std::map<int32_t, bg::ValueHolderPtr> memory_types_to_allocator_;
 };
 }
 
