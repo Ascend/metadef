@@ -46,4 +46,13 @@ TEST_F(LoweringGlobalDataUT, SetGetCompileResultOk) {
   ASSERT_NE(gd.FindCompiledResult(node), nullptr);
   EXPECT_TRUE(gd.FindCompiledResult(node)->GetTaskDefs().empty());
 }
+
+TEST_F(LoweringGlobalDataUT, SetGetAllocatorOk) {
+  LoweringGlobalData gd;
+  EXPECT_EQ(gd.GetAllocator(0), nullptr);
+  auto holder = bg::ValueHolder::CreateFeed(0);
+  gd.SetAllocator(0, holder);
+  EXPECT_EQ(gd.GetAllocator(0), holder);
+
+}
 }  // namespace gert

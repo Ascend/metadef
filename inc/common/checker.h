@@ -61,6 +61,16 @@ struct ErrorResult {
     }                                                                                                                  \
   } while (0)
 
+#define GE_ASSERT_HYPER_SUCCESS(expr)                                                                                  \
+  do {                                                                                                                 \
+    auto tmp_expr_ret = (expr);                                                                                        \
+    if (!tmp_expr_ret.IsSuccess()) {                                                                                   \
+      REPORT_INNER_ERROR("E19999", "Expect success, but get error message %s", tmp_expr_ret.GetErrorMessage());        \
+      GELOGE(ge::FAILED, "Expect success, but get error message %s", tmp_expr_ret.GetErrorMessage());                  \
+      return ::ErrorResult();                                                                                          \
+    }                                                                                                                  \
+  } while (0)
+
 #define GE_ASSERT_TRUE(val)                                                                                            \
   do {                                                                                                                 \
     if (!(val)) {                                                                                                      \
