@@ -1661,4 +1661,56 @@ TEST_F(UtestOperater, CopyOperators3) {
                                         op_desc_old_2_new, src_op_list, dst_op_list);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
+
+TEST_F(UtestOperater, TestCallbackToGetConstInputWithRuntimeInferenceContext) {
+  // new a tensor
+  ge::GeTensorPtr tensor = std::make_shared<GeTensor>();
+  std::vector<uint8_t> value{1, 2, 3};
+  std::vector<int64_t> shape{3};
+  tensor->MutableTensorDesc().SetShape(GeShape(shape));
+  tensor->SetData(value);
+  tensor->MutableTensorDesc().SetDataType(DT_UINT8);
+
+  // define callback
+  RuntimeInferenceContext runtime_ctx;
+  OperatorImpl::GetConstInputOnRuntimeFun func_get_input_const =
+      [&runtime_ctx](const ConstNodePtr &node, const size_t index, ge::GeTensorPtr &dst_tensor) {
+        // from runtime context
+        const auto in_data_anchor = node->GetInDataAnchor(static_cast<int32_t>(index));
+        const auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
+        auto peer_node = out_data_anchor->GetOwnerNode();
+        GeTensorPtr tensor_value = nullptr;
+        if (runtime_ctx.GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(), tensor_value) ==
+            GRAPH_SUCCESS) {
+          dst_tensor = tensor_value;
+          return GRAPH_SUCCESS;
+        }
+        return ge::GRAPH_SUCCESS;
+      };
+
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto transdata = builder.AddNode("Transdata", "Transdata", 2, 1);
+  auto op_desc = transdata->GetOpDesc();
+  op_desc->impl_->input_name_idx_["Data"] = 0;
+  op_desc->impl_->input_name_idx_["Enter"] = 1;
+  auto data = builder.AddNode("Data", "Data", 0, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
+  GraphUtils::AddEdge(data->GetOutDataAnchor(0), transdata->GetInDataAnchor(0));
+  GraphUtils::AddEdge(data2->GetOutDataAnchor(0), transdata->GetInDataAnchor(1));
+  Operator op1 = OpDescUtils::CreateOperatorFromNode(transdata);
+  
+  OpDescUtils::SetCallbackGetConstInputFuncToOperator(op1, func_get_input_const);
+
+  int output_id = 0;
+  runtime_ctx.SetTensor(data->GetOpDesc()->GetId(), output_id, std::move(tensor));
+
+  Tensor test_tensor;
+  std::string input_name = "Data";
+  EXPECT_EQ(op1.GetInputConstData(input_name.c_str(), test_tensor), GRAPH_SUCCESS);
+  EXPECT_EQ(test_tensor.GetSize(), value.size()); // 3 item in tensor
+  auto const_data = reinterpret_cast<const uint8_t *>(test_tensor.GetData());
+  for (size_t i = 0; i < 3; ++i) {
+    EXPECT_EQ(const_data[i], value[i]);
+  }
+}
 }  // namespace ge

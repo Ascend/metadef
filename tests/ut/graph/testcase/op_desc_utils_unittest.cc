@@ -227,7 +227,22 @@ TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_01) {
   op_desc->impl_->input_name_idx_["sub_const"] = 1;
   auto op = OpDescUtils::CreateOperatorFromNode(add);
   RuntimeInferenceContext runtime_ctx;
-  OpDescUtils::SetRuntimeContextToOperator(op, &runtime_ctx);
+  // define callback
+  OpDescUtils::GetConstInputOnRuntimeFun func_get_input_const =
+      [&runtime_ctx](const ConstNodePtr &node, const size_t index, ge::GeTensorPtr &dst_tensor) {
+        // from runtime context
+        const auto in_data_anchor = node->GetInDataAnchor(static_cast<int32_t>(index));
+        const auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
+        auto peer_node = out_data_anchor->GetOwnerNode();
+        GeTensorPtr tensor_value = nullptr;
+        if (runtime_ctx.GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(), tensor_value) ==
+            GRAPH_SUCCESS) {
+          dst_tensor = tensor_value;
+          return GRAPH_SUCCESS;
+        }
+        return ge::GRAPH_SUCCESS;
+      };
+  OpDescUtils::SetCallbackGetConstInputFuncToOperator(op, func_get_input_const);
   GeTensorDesc desc;
   GeTensorPtr tensor = std::make_shared<GeTensor>(desc);
   tensor->SetData(data_buf, 4096);

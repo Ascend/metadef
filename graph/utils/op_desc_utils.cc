@@ -1061,5 +1061,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 void OpDescUtils::SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *const context) {
   op.operator_impl_->runtime_context_ = context;
 }
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+void OpDescUtils::SetCallbackGetConstInputFuncToOperator(const Operator &op,
+                                                         GetConstInputOnRuntimeFun get_const_input_func) {
+  op.operator_impl_->get_const_input_runtime_ = get_const_input_func;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+bool OpDescUtils::HasCallbackGetConstInputFunc(const Operator &op) {
+  return (op.operator_impl_->get_const_input_runtime_ != nullptr);
+}
 }  // namespace ge
 /*lint +e512 +e737 +e752*/

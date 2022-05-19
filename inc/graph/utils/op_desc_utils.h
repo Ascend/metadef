@@ -30,6 +30,8 @@ class OpDescUtils {
  public:
   template <class T>
   using Vistor = RangeVistor<T, std::shared_ptr<OpDesc>>;
+  using GetConstInputOnRuntimeFun =
+      std::function<ge::graphStatus(const ConstNodePtr &node, const size_t index, ge::GeTensorPtr &tensor)>;
 
   OpDescUtils() = default;
   ~OpDescUtils() = default;
@@ -87,7 +89,12 @@ class OpDescUtils {
   static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,
       const std::string &subgraph_instance_name, OpDescPtr &op_desc);
   static ConstGeTensorBarePtr GetInputConstData(const Operator &op, const uint32_t idx);
+  // deprecated
   static void SetRuntimeContextToOperator(const Operator &op, RuntimeInferenceContext *const context);
+  static void SetCallbackGetConstInputFuncToOperator(const Operator &op,
+                                                     GetConstInputOnRuntimeFun get_const_input_func);
+  static bool HasCallbackGetConstInputFunc(const Operator &op);
+
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
   static GeTensorPtr MutableWeights(const ge::OpDescPtr op_desc);
