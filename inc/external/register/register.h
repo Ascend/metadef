@@ -33,11 +33,11 @@
 #include "register/register_types.h"
 
 using std::unique_ptr;
-using std::map;
 using std::make_shared;
 using std::to_string;
 using std::string;
 using std::pair;
+using std::map;
 using std::vector;
 
 /*lint -e148*/

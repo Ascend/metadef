@@ -29,9 +29,9 @@
 #include "graph/ge_tensor.h"
 #include "graph/any_value.h"
 
-using std::map;
 using std::string;
 using std::vector;
+using std::map;
 
 namespace ge {
 class GeTensor;

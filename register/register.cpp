@@ -199,7 +199,7 @@ Status GetDynamicTensorNum(const std::shared_ptr<ge::OpDesc> &op_desc, const str
 }
 
 Status GetDynamicAttrNum(const std::shared_ptr<ge::OpDesc> &op_desc,
-    const vector<DynamicInputOutputInfo> &dynamic_name_attrs, map<string, DynamicInfo> &port_dynamic_info) {
+    const vector<DynamicInputOutputInfo> &dynamic_name_attrs, std::map<string, DynamicInfo> &port_dynamic_info) {
   GE_CHECK_NOTNULL(op_desc);
   for (const auto &dynamic_name_attr : dynamic_name_attrs) {
     const std::string attr_name = dynamic_name_attr.attr_name;
@@ -223,7 +223,7 @@ Status GetDynamicAttrNum(const std::shared_ptr<ge::OpDesc> &op_desc,
 }
 
 Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
-    const vector<DynamicInputOutputInfo> &dynamic_name_attrs, map<string, DynamicInfo> &port_dynamic_info) {
+    const vector<DynamicInputOutputInfo> &dynamic_name_attrs, std::map<string, DynamicInfo> &port_dynamic_info) {
   GE_CHECK_NOTNULL(op_desc);
   if (GetDynamicAttrNum(op_desc, dynamic_name_attrs, port_dynamic_info) != SUCCESS) {
     GELOGE(FAILED, "[Get][DynamicAttrNum] fail, op_name:%s", op_desc->GetName().c_str());
@@ -388,7 +388,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
     return FAILED;
   }
   // 3. update dynamic input output index by tensor num;
-  map<string, DynamicInfo> port_dynamic_info;
+  std::map<string, DynamicInfo> port_dynamic_info;
   if (UpdateDynamicInputOutPutIndex(op_desc_dst, dynamic_name_attr_value, port_dynamic_info) != SUCCESS) {
     GELOGE(FAILED, "[Update][DynamicIndex]op_name:%s", op_desc_dst->GetName().c_str());
     return FAILED;
