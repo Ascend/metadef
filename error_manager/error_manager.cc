@@ -227,7 +227,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("ErrorManager init failed again, can't report error_message.");
+      GELOGI("Can not init ErrorManager again, can't report error_message.");
       return -1;
     }
   }
@@ -283,7 +283,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("ErrorManager init failed again, can't report error_message.");
+      GELOGI("Can not init ErrorManager again, can't report error_message.");
       return 0;
     }
   }
@@ -543,7 +543,7 @@ void ErrorManager::ATCReportErrMessage(const std::string error_code, const std::
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("ErrorManager init failed again, can't report error_message.");
+      GELOGI("Can not init ErrorManager again, can't report error_message.");
       return;
     }
   }
@@ -593,7 +593,7 @@ int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("ErrorManager init failed again, can't report error_message.");
+      GELOGI("Can not init ErrorManager again, can't report error_message.");
       return 0;
     }
   }
@@ -627,7 +627,7 @@ int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, s
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("ErrorManager init failed again, can't report error_message.");
+      GELOGI("Can not init ErrorManager again, can't report error_message.");
       return 0;
     }
   }
@@ -645,7 +645,7 @@ int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, s
     msg_map.swap(compile_failed_msg);
     (void)compile_failed_msg_map_.erase(graph_name);
   }
-  GELOGI("get graph:%s compile failed msg success", graph_name.c_str());
+  GELOGI("get graph:%s compile result msg success", graph_name.c_str());
 
   return 0;
 }
