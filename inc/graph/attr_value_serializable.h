@@ -18,7 +18,6 @@
 #define INC_GRAPH_ATTR_VALUE_SERIALIZABLE_H_
 
 #include <string>
-#include <vector>
 #include "graph/ge_attr_value.h"
 #include "graph/compiler_options.h"
 

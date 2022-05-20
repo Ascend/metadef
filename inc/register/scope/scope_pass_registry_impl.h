@@ -17,8 +17,8 @@
 #ifndef REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H_
 #define REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H_
 
-#include "external/register/scope/scope_fusion_pass_register.h"
 #include <mutex>
+#include "external/register/scope/scope_fusion_pass_register.h"
 
 namespace ge {
 struct CreatePassFnPack;
