@@ -37,4 +37,15 @@ LoweringGlobalData &LoweringGlobalData::AddCompiledResult(const ge::NodePtr &nod
   node_ids_to_compile_result_holders_[node->GetOpDesc()->GetId()] = std::move(compile_result);
   return *this;
 }
+bg::ValueHolderPtr LoweringGlobalData::GetAllocator(int32_t memory_type) const {
+  auto iter = memory_types_to_allocator_.find(memory_type);
+  if (iter == memory_types_to_allocator_.end()) {
+    return nullptr;
+  }
+  return iter->second;
+}
+LoweringGlobalData &LoweringGlobalData::SetAllocator(int32_t memory_type, bg::ValueHolderPtr allocator) {
+  memory_types_to_allocator_[memory_type] = std::move(allocator);
+  return *this;
+}
 }  // namespace gert
