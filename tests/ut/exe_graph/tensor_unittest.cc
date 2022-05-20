@@ -135,29 +135,4 @@ TEST_F(TensorUT, SetGetAddrOk) {
   EXPECT_EQ(ct.GetData<Tensor>(), &t);
 }
 
-ge::graphStatus StubAddManger(TensorAddress addr, TensorOperateType operate_type, void **out){
-  if(operate_type == kGetTensorAddress){
-    *out = reinterpret_cast<void*>(8);
-  }
-  return ge::GRAPH_SUCCESS;
-}
-ge::graphStatus StubAddMangerFailed(TensorAddress addr, TensorOperateType operate_type, void **out){
-  return ge::GRAPH_FAILED;
-}
-
-TEST_F(TensorUT, TensorDataWithMangerSuccess) {
-  auto addr = reinterpret_cast<void*>(0x16);
-  TensorData data(addr, StubAddManger);
-  EXPECT_EQ(reinterpret_cast<uint64_t>(data.GetAddr()), 8);
-  EXPECT_EQ(data.Free(), ge::GRAPH_SUCCESS);
-  EXPECT_EQ(data.GetAddr(), nullptr);
-  data.SetAddr(addr, nullptr);
-  EXPECT_EQ(reinterpret_cast<uint64_t>(data.GetAddr()), 0x16);
-  data.SetAddr(addr, StubAddMangerFailed);
-  EXPECT_EQ(data.GetAddr(), nullptr);
-}
-
-
-
-
 }  // namespace gert

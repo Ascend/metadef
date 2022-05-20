@@ -25,6 +25,7 @@ using ConstTensorAddress = void *const;
 enum TensorOperateType {
   kGetTensorAddress,  ///< 获取Tensor的地址
   kFreeTensor,        ///< 释放Tensor
+  kPlusShareCount,    ///< 共享Tensor
   kTensorOperateType
 };
 
@@ -76,10 +77,30 @@ class TensorData {
    * @param addr tensor地址
    * @param manager tensor的管理函数
    */
-  void SetAddr(TensorAddress addr, TensorAddrManager manager) {
-    Free();
+  ge::graphStatus SetAddr(TensorAddress addr, TensorAddrManager manager) {
+    auto ret = Free();
+    if (ret != ge::GRAPH_SUCCESS) {
+      return ret;
+    }
     addr_ = addr;
     manager_ = manager;
+    return ge::GRAPH_SUCCESS;
+  }
+
+  ge::graphStatus ShareFrom(const TensorData &other) {
+    auto ret = Free();
+    if (ret != ge::GRAPH_SUCCESS) {
+      return ret;
+    }
+
+    addr_ = other.addr_;
+    manager_ = other.manager_;
+
+    if (manager_ != nullptr) {
+      return manager_(addr_, kPlusShareCount, nullptr);
+    } else {
+      return ge::GRAPH_SUCCESS;
+    }
   }
 
  private:

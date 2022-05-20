@@ -20,6 +20,7 @@
 #include "graph/ge_error_codes.h"
 #include "framework/common/debug/ge_log.h"
 #include "hyper_status.h"
+#include "runtime/base.h"
 
 struct ErrorResult {
   operator bool() const {
@@ -63,7 +64,7 @@ struct ErrorResult {
 
 #define GE_ASSERT_HYPER_SUCCESS(expr)                                                                                  \
   do {                                                                                                                 \
-    auto tmp_expr_ret = (expr);                                                                                        \
+    const auto &tmp_expr_ret = (expr);                                                                                 \
     if (!tmp_expr_ret.IsSuccess()) {                                                                                   \
       REPORT_INNER_ERROR("E19999", "Expect success, but get error message %s", tmp_expr_ret.GetErrorMessage());        \
       GELOGE(ge::FAILED, "Expect success, but get error message %s", tmp_expr_ret.GetErrorMessage());                  \
@@ -90,4 +91,13 @@ struct ErrorResult {
     }                                                                                                                  \
   } while (0)
 
+#define GE_ASSERT_RT_OK(expr)                                                                                          \
+  do {                                                                                                                 \
+    auto tmp_expr_ret = (expr);                                                                                        \
+    if (tmp_expr_ret != RT_ERROR_NONE) {                                                                               \
+      REPORT_INNER_ERROR("E19999", "Expect RT_ERROR_NONE, but get %d", tmp_expr_ret);                                  \
+      GELOGE(ge::FAILED, "Expect RT_ERROR_NONE, but get %d", tmp_expr_ret);                                            \
+      return ::ErrorResult();                                                                                          \
+    }                                                                                                                  \
+  } while (0)
 #endif  //METADEF_CXX_INC_COMMON_CHECKER_H_

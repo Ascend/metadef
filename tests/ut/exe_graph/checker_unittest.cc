@@ -16,6 +16,44 @@
 #include "common/checker.h"
 #include <gtest/gtest.h>
 namespace {
+template<typename T>
+T JustReturn(T val) {
+  return val;
+}
+
+ge::graphStatus StatusFuncUseStatusFunc(ge::graphStatus val) {
+  GE_ASSERT_SUCCESS(JustReturn(val));
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseBoolFunc(bool val) {
+  GE_ASSERT_TRUE(JustReturn(val));
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUsePointerFunc(void *val) {
+  GE_ASSERT_NOTNULL(JustReturn(val));
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseUniquePtrFunc(std::unique_ptr<uint8_t[]> val) {
+  GE_ASSERT_NOTNULL(JustReturn(std::move(val)));
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseSharedPtrFunc(const std::shared_ptr<uint8_t[]> &val) {
+  GE_ASSERT_NOTNULL(JustReturn(val));
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseEOKFunc(int val) {
+  GE_ASSERT_EOK(JustReturn(val));
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseRtFunc(int32_t val) {
+  GE_ASSERT_RT_OK(JustReturn(val));
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseHyperStatusFunc(gert::HyperStatus val) {
+  GE_ASSERT_HYPER_SUCCESS(JustReturn(std::move(val)));
+  return ge::GRAPH_SUCCESS;
+}
+
 ge::graphStatus StatusFuncUseStatus(ge::graphStatus val) {
   GE_ASSERT_SUCCESS(val);
   return ge::GRAPH_SUCCESS;
@@ -38,6 +76,14 @@ ge::graphStatus StatusFuncUseSharedPtr(const std::shared_ptr<uint8_t[]> &val) {
 }
 ge::graphStatus StatusFuncUseEOK(int val) {
   GE_ASSERT_EOK(val);
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseRt(int32_t val) {
+  GE_ASSERT_RT_OK(val);
+  return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus StatusFuncUseHyperStatus(gert::HyperStatus val) {
+  GE_ASSERT_HYPER_SUCCESS(val);
   return ge::GRAPH_SUCCESS;
 }
 
@@ -63,6 +109,14 @@ bool BoolFuncUseSharedPtr(const std::shared_ptr<uint8_t[]> &val) {
 }
 bool BoolFuncUseEOK(int val) {
   GE_ASSERT_EOK(val);
+  return true;
+}
+bool BoolFuncUseRt(int32_t val) {
+  GE_ASSERT_RT_OK(val);
+  return true;
+}
+bool BoolFuncUseHyperStatus(gert::HyperStatus val) {
+  GE_ASSERT_HYPER_SUCCESS(val);
   return true;
 }
 
@@ -91,6 +145,14 @@ void *PointerFuncUseEOK(int val) {
   GE_ASSERT_EOK(val);
   return (void*)&g_a;
 }
+void *PointerFuncUseRt(int32_t val) {
+  GE_ASSERT_RT_OK(val);
+  return (void*)&g_a;
+}
+void *PointerFuncUseHyperStatus(gert::HyperStatus val) {
+  GE_ASSERT_HYPER_SUCCESS(val);
+  return (void*)&g_a;
+}
 }  // namespace
 class CheckerUT : public testing::Test {};
 TEST_F(CheckerUT, ReturnStatusOk) {
@@ -115,6 +177,12 @@ TEST_F(CheckerUT, ReturnStatusOk) {
 
   ASSERT_NE(StatusFuncUseEOK(EINVAL), ge::GRAPH_SUCCESS);
   ASSERT_EQ(StatusFuncUseEOK(EOK), ge::GRAPH_SUCCESS);
+
+  ASSERT_NE(StatusFuncUseHyperStatus(gert::HyperStatus::ErrorStatus("hello")), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseHyperStatus(gert::HyperStatus::Success()), ge::GRAPH_SUCCESS);
+
+  ASSERT_NE(StatusFuncUseRt(RT_EXCEPTION_DEV_RUNNING_DOWN), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseRt(RT_ERROR_NONE), ge::GRAPH_SUCCESS);
 }
 
 TEST_F(CheckerUT, ReturnBoolOk) {
@@ -139,6 +207,12 @@ TEST_F(CheckerUT, ReturnBoolOk) {
 
   ASSERT_NE(BoolFuncUseEOK(EINVAL), true);
   ASSERT_EQ(BoolFuncUseEOK(EOK), true);
+
+  ASSERT_NE(BoolFuncUseHyperStatus(gert::HyperStatus::ErrorStatus("hello")), true);
+  ASSERT_EQ(BoolFuncUseHyperStatus(gert::HyperStatus::Success()), true);
+
+  ASSERT_NE(BoolFuncUseRt(RT_EXCEPTION_DEV_RUNNING_DOWN), true);
+  ASSERT_EQ(BoolFuncUseRt(RT_ERROR_NONE), true);
 }
 
 TEST_F(CheckerUT, ReturnPointerOk) {
@@ -163,4 +237,40 @@ TEST_F(CheckerUT, ReturnPointerOk) {
 
   ASSERT_EQ(PointerFuncUseEOK(EINVAL), nullptr);
   ASSERT_NE(PointerFuncUseEOK(EOK), nullptr);
+
+  ASSERT_EQ(PointerFuncUseHyperStatus(gert::HyperStatus::ErrorStatus("hello")), nullptr);
+  ASSERT_NE(PointerFuncUseHyperStatus(gert::HyperStatus::Success()), nullptr);
+
+  ASSERT_EQ(PointerFuncUseRt(RT_EXCEPTION_DEV_RUNNING_DOWN), nullptr);
+  ASSERT_NE(PointerFuncUseRt(RT_ERROR_NONE), nullptr);
+}
+
+TEST_F(CheckerUT, ReturnInFunc) {
+  ASSERT_NE(StatusFuncUseStatusFunc(ge::FAILED), ge::GRAPH_SUCCESS);
+  ASSERT_NE(StatusFuncUseStatusFunc(ge::GRAPH_FAILED), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseStatusFunc(ge::GRAPH_SUCCESS), ge::GRAPH_SUCCESS);
+
+  ASSERT_NE(StatusFuncUseBoolFunc(false), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseBoolFunc(true), ge::GRAPH_SUCCESS);
+
+  int64_t a;
+  ASSERT_NE(StatusFuncUsePointerFunc(nullptr), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUsePointerFunc(&a), ge::GRAPH_SUCCESS);
+
+  std::unique_ptr<uint8_t[]> b = std::unique_ptr<uint8_t[]>(new uint8_t[100]);
+  ASSERT_NE(StatusFuncUseUniquePtrFunc(nullptr), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseUniquePtrFunc(std::move(b)), ge::GRAPH_SUCCESS);
+
+  auto c = std::shared_ptr<uint8_t[]>(new uint8_t[100]);
+  ASSERT_NE(StatusFuncUseSharedPtrFunc(nullptr), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseSharedPtrFunc(c), ge::GRAPH_SUCCESS);
+
+  ASSERT_NE(StatusFuncUseEOKFunc(EINVAL), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseEOKFunc(EOK), ge::GRAPH_SUCCESS);
+
+  ASSERT_NE(StatusFuncUseHyperStatusFunc(gert::HyperStatus::ErrorStatus("hello")), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseHyperStatusFunc(gert::HyperStatus::Success()), ge::GRAPH_SUCCESS);
+
+  ASSERT_NE(StatusFuncUseRtFunc(RT_EXCEPTION_DEV_RUNNING_DOWN), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(StatusFuncUseRtFunc(RT_ERROR_NONE), ge::GRAPH_SUCCESS);
 }
