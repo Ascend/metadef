@@ -364,7 +364,7 @@ graphStatus InDataAnchor::LinkFrom(const OutDataAnchorPtr &src) {
   impl_->peer_anchors_.push_back(src);
   src->impl_->peer_anchors_.push_back(shared_from_this());
   // src->impl_->GetOwnerNode() is null:  peer->GetOwnerNode() is null:
-  if ((src->impl_->GetOwnerNode()) == nullptr || (impl_->GetOwnerNode() == nullptr)) {
+  if ((src->impl_->GetOwnerNode() == nullptr) || (impl_->GetOwnerNode() == nullptr)) {
     GELOGW("[Check][Param] src->impl_->GetOwnerNode() or impl_->GetOwnerNode() is null.");
   } else {
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),

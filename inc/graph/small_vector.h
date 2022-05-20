@@ -40,7 +40,6 @@ class SmallVector {
   using ValidInputIt = typename std::enable_if<
       std::is_convertible<typename std::iterator_traits<IT>::iterator_category, std::input_iterator_tag>::value>::type;
 
- public:
   // constructors and destructor
   explicit SmallVector(const allocator_type &alloc = Alloc())
       : size_(0UL), capacity_(N), allocated_storage_(nullptr), allocator_(alloc) {}
@@ -469,7 +468,6 @@ class SmallVector {
     size_ = new_size;
   }
 
- private:
   using InlineT = typename std::aligned_storage<sizeof(T[N])>::type;
   InlineT inline_storage_;
   size_type size_;

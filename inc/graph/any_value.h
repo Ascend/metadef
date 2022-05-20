@@ -86,7 +86,6 @@ class AnyValue {
     VT_LIST_DATA_TYPE = VT_LIST_BASE + VT_DATA_TYPE,
   };
 
- public:
   AnyValue() = default;
   AnyValue(AnyValue &&other) noexcept;
   AnyValue(const AnyValue &other) {
@@ -148,7 +147,6 @@ class AnyValue {
   void InnerSet(T &&value);
   const void *GetAddr() const;
 
- private:
   enum class OperateType { kOpClear, kOpGetAddr, kOpClone, kOpMove, kGetTypeId, kOperateTypeEnd };
 
   template<typename T>
@@ -165,7 +163,6 @@ class AnyValue {
     static void Construct(T &&value, AnyValue *const av);
   };
 
- private:
   using ValueBuf = std::aligned_storage<sizeof(void *)>::type;
   using ValueHolder = union {
     void *pointer;

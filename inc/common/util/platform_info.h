@@ -131,7 +131,6 @@ class PlatformInfoManager {
   uint32_t AssemblePlatformInfoVector(std::map<std::string, std::map<std::string, std::string>> &content_info_map);
   void FillupFixPipeInfo(PlatFormInfos &platform_infos);
 
- private:
   bool init_flag_;
   std::map<std::string, PlatformInfo> platform_info_map_;
 
