@@ -2980,10 +2980,25 @@ graphStatus GraphUtils::UnfoldSubgraph(const ComputeGraphPtr &graph,
     return GRAPH_SUCCESS;
   }
 
-  GE_CHK_STATUS_RET(MergeInputNodes(graph),
-                    "[Invoke][MergeInputNodes] Merge data nodes for graph %s failed",
-                    graph->GetName().c_str());
-  GE_CHK_STATUS_RET(MergeNetOutputNode(graph),
+  return UnfoldGraph(graph, parent_graph, parent_node, filter);
+}
+
+graphStatus GraphUtils::UnfoldGraph(const ComputeGraphPtr &graph, const ComputeGraphPtr &target_graph,
+                                    const NodePtr &target_node, const function<bool(const ComputeGraphPtr &)> &filter,
+                                    int depth) {
+  if (depth >= kCopyGraphMaxRecursionDepth) {
+    REPORT_INNER_ERROR("E18888", "param depth:%d >= %d(allow max subgraphs)", depth, kCopyGraphMaxRecursionDepth);
+    GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%d > %d(allow max subgraphs)", depth,
+           kCopyGraphMaxRecursionDepth);
+    return GRAPH_FAILED;
+  }
+  GE_CHECK_NOTNULL(graph);
+  GE_CHECK_NOTNULL(target_graph);
+  GE_CHECK_NOTNULL(target_node);
+
+  GE_CHK_STATUS_RET(MergeInputNodes(graph, target_node),
+                    "[Invoke][MergeInputNodes] Merge data nodes for graph %s failed", graph->GetName().c_str());
+  GE_CHK_STATUS_RET(MergeNetOutputNode(graph, target_node),
                     "[Invoke][MergeNetOutputNode] Merge net output nodes for graph %s failed",
                     graph->GetName().c_str());
   GELOGD("[%s] Merging graph inputs and outputs successfully", graph->GetName().c_str());
@@ -3000,39 +3015,39 @@ graphStatus GraphUtils::UnfoldSubgraph(const ComputeGraphPtr &graph,
     bool skip_add_node_flag = true;
     for (const auto &subgraph : subgraphs) {
       if ((filter != nullptr) && filter(subgraph)) {
-        GE_CHK_STATUS_RET(UnfoldSubgraph(subgraph, filter),
-                          "[Invoke][UnfoldSubgraph] Failed to merge graph %s", subgraph->GetName().c_str());
+        GE_CHK_STATUS_RET(
+            UnfoldGraph(subgraph, subgraph->GetParentGraph(), subgraph->GetParentNode(), filter, depth + 1),
+            "[Invoke][UnfoldSubgraph] Failed to merge graph %s", subgraph->GetName().c_str());
         skip_add_node_flag = false;
       } else {
-        subgraph->SetParentGraph(parent_graph);
+        subgraph->SetParentGraph(target_graph);
       }
     }
 
     if (skip_add_node_flag) {
-      (void)parent_graph->AddNode(node);
-      GELOGD("[%s::%s] added to parent graph: [%s].", graph->GetName().c_str(), node->GetName().c_str(),
-             parent_graph->GetName().c_str());
-      (void)node->SetOwnerComputeGraph(parent_graph);
+      (void) target_graph->AddNode(node);
+      GELOGD("[%s::%s] added to target graph: [%s].", graph->GetName().c_str(), node->GetName().c_str(),
+             target_graph->GetName().c_str());
+      (void) node->SetOwnerComputeGraph(target_graph);
     }
   }
 
   GELOGD("[%s] Done merging graph. remove it from root graph", graph->GetName().c_str());
 
   const auto &subgraph_name = graph->GetName();
-  const auto &root_graph = GraphUtils::FindRootGraph(parent_graph);
+  const auto &root_graph = GraphUtils::FindRootGraph(target_graph);
   GE_CHECK_NOTNULL(root_graph);
   root_graph->RemoveSubgraph(graph->GetName());
-  parent_node->GetOpDesc()->RemoveSubgraphInstanceName(subgraph_name);
-  if (RemoveNodeWithoutRelink(parent_graph, parent_node) != GRAPH_SUCCESS) {
-    GELOGW("Remove node %s failed, graph:%s.", parent_node->GetName().c_str(), parent_graph->GetName().c_str());
+  target_node->GetOpDesc()->RemoveSubgraphInstanceName(subgraph_name);
+  if (RemoveNodeWithoutRelink(target_graph, target_node) != GRAPH_SUCCESS) {
+    GELOGW("Remove node %s failed, graph:%s.", target_node->GetName().c_str(), target_graph->GetName().c_str());
   }
 
-  return GRAPH_SUCCESS;
+  return SUCCESS;
 }
 
-graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
-  const auto &parent_node = graph->GetParentNode();
-  GE_CHECK_NOTNULL(parent_node);
+graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph, const NodePtr& target_node) {
+  GE_CHECK_NOTNULL(target_node);
 
   std::set<NodePtr> src_nodes;
   for (const auto &node : graph->GetDirectNode()) {
@@ -3052,7 +3067,7 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
       return GRAPH_FAILED;
     }
 
-    const auto parent_node_in_anchor = parent_node->GetInDataAnchor(static_cast<int32_t>(parent_index));
+    const auto parent_node_in_anchor = target_node->GetInDataAnchor(static_cast<int32_t>(parent_index));
     GE_CHECK_NOTNULL(parent_node_in_anchor);
     const auto src_out_anchor = parent_node_in_anchor->GetPeerOutAnchor();
     if ((src_out_anchor == nullptr) || (src_out_anchor->GetOwnerNode() == nullptr)) {
@@ -3079,7 +3094,7 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
   for (const auto &src_node : src_nodes) {
     const auto &in_nodes = src_node->GetInAllNodes();
     const std::set<NodePtr> in_node_set(in_nodes.begin(), in_nodes.end());
-    for (const auto &in_control_node : parent_node->GetInControlNodes()) {
+    for (const auto &in_control_node : target_node->GetInControlNodes()) {
       GE_CHECK_NOTNULL(in_control_node);
       if ((in_node_set.count(in_control_node) == 0UL) && (kMergeInputSkipTypes.count(src_node->GetType()) == 0UL)) {
         GELOGD("[%s] Restore control edge to [%s]", in_control_node->GetName().c_str(), src_node->GetName().c_str());
@@ -3088,13 +3103,12 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph) {
     }
   }
 
-  parent_node->GetInControlAnchor()->UnlinkAll();
+  target_node->GetInControlAnchor()->UnlinkAll();
   return GRAPH_SUCCESS;
 }
 
-graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph) {
-  const auto &parent_node = graph->GetParentNode();
-  GE_CHECK_NOTNULL(parent_node);
+graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph, const NodePtr& target_node) {
+  GE_CHECK_NOTNULL(target_node);
 
   const NodePtr &net_output = graph->FindFirstNodeMatchType(NETOUTPUT);
   if (net_output == nullptr) {
@@ -3102,9 +3116,9 @@ graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph) {
     return SUCCESS;
   }
   auto all_in_nodes = net_output->GetInAllNodes();
-  auto all_out_nodes = parent_node->GetOutAllNodes();
+  auto all_out_nodes = target_node->GetOutAllNodes();
   net_output->GetInControlAnchor()->UnlinkAll();
-  parent_node->GetOutControlAnchor()->UnlinkAll();
+  target_node->GetOutControlAnchor()->UnlinkAll();
 
   for (const auto &in_data_anchor : net_output->GetAllInDataAnchors()) {
     GE_CHECK_NOTNULL(in_data_anchor);
@@ -3125,7 +3139,7 @@ graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph) {
                       src_out_anchor->GetOwnerNode()->GetName().c_str(), src_out_anchor->GetIdx(),
                       net_output->GetName().c_str(), in_data_anchor->GetIdx());
 
-    const OutDataAnchorPtr &parent_out_anchor = parent_node->GetOutDataAnchor(static_cast<int32_t>(parent_index));
+    const OutDataAnchorPtr &parent_out_anchor = target_node->GetOutDataAnchor(static_cast<int32_t>(parent_index));
     GE_CHECK_NOTNULL(parent_out_anchor);
     for (InDataAnchorPtr &dst_in_anchor : parent_out_anchor->GetPeerInDataAnchors()) {
       GE_CHK_STATUS_RET(ReplaceEdgeSrc(parent_out_anchor, dst_in_anchor, src_out_anchor),

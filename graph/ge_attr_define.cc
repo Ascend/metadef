@@ -1250,6 +1250,9 @@ const std::string ATTR_NAME_OP_SPECIFIED_KERNEL_LIB_NAME = "_specified_kernel_li
 const std::string ATTR_NAME_PIPELINE_PARTITIONED = "_pipeline_partitioned";
 const std::string ATTR_NAME_OUTPUT_PIPELINE = "_output_pipeline";
 
+// for partition
+const std::string ATTR_NAME_NO_NEED_PARTITION_AND_MERGE = "_no_need_partition_and_merge";
+
 // model deploy scheduler(mds)
 const std::string ATTR_NAME_GRADIENT_NODE = "_gradient_node";
 const std::string ATTR_NAME_TRAINABLE_VAR = "_trainable_var";

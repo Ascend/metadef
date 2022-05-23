@@ -388,6 +388,11 @@ class GraphUtils {
 
   static graphStatus UnfoldSubgraph(const ComputeGraphPtr &graph,
                                     const std::function<bool(const ComputeGraphPtr &)> &filter);
+
+  static graphStatus UnfoldGraph(const ComputeGraphPtr &graph, const ComputeGraphPtr &target_graph,
+                                 const NodePtr &target_node, const function<bool(const ComputeGraphPtr &)> &filter,
+                                 int depth = 0);
+
   static CycleDetectorPtr CreateCycleDetector(const ComputeGraphPtr &graph);
 
  private:
@@ -511,9 +516,9 @@ class GraphUtils {
 
   static graphStatus RelinkCtrlEdges(const NodePtr &subgraph_node, const GraphInfo &graph_info);
 
-  static graphStatus MergeInputNodes(const ComputeGraphPtr &graph);
+  static graphStatus MergeInputNodes(const ComputeGraphPtr &graph, const NodePtr &target_node);
 
-  static graphStatus MergeNetOutputNode(const ComputeGraphPtr &graph);
+  static graphStatus MergeNetOutputNode(const ComputeGraphPtr &graph, const NodePtr &target_node);
 };
 
 class ComputeGraphBuilder {

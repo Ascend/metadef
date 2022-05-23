@@ -454,6 +454,32 @@ TEST_F(UtestGraphUtils, UnfoldSubgraph) {
   ASSERT_FALSE(graph->GetAllSubgraphs()[0]->GetGraphUnknownFlag());
 }
 
+TEST_F(UtestGraphUtils, UnfoldSubgraph_ForPartition) {
+  ComputeGraphPtr graph;
+  ComputeGraphPtr subgraph;
+  BuildGraphForUnfold(graph, subgraph);
+  ASSERT_NE(graph, nullptr);
+  ASSERT_NE(subgraph, nullptr);
+  std::vector<NodePtr> inputs;
+  std::vector<NodePtr> outputs;
+  const auto &new_graph = GraphUtils::CloneGraph(graph, "", inputs, outputs);
+  const auto &node_size_before_unfold = new_graph->GetDirectNode().size();
+  const auto &filter = [](const ComputeGraphPtr &graph) {
+    const auto &parent_node = graph->GetParentNode();
+    if (parent_node == nullptr || parent_node->GetOpDesc() == nullptr) {
+      return false;
+    }
+    if ((parent_node->GetType() != PARTITIONEDCALL) ||
+        (parent_node->GetOpDesc()->GetSubgraphInstanceNames().size() != 1)) {
+      return false;
+    }
+    return graph->GetGraphUnknownFlag();
+  };
+  ASSERT_EQ(GraphUtils::UnfoldGraph(subgraph, new_graph, new_graph->FindNode(subgraph->GetParentNode()->GetName()),
+                                       filter), GRAPH_SUCCESS);
+  ASSERT_NE(node_size_before_unfold, new_graph->GetDirectNode().size());
+}
+
 TEST_F(UtestGraphUtils, GetIndependentCompileGraphs) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &partitioned_call0 = root_builder.AddNode("PartitionedCall", "PartitionedCall", 0, 0);
@@ -1545,7 +1571,7 @@ TEST_F(UtestGraphUtils, MergeInputNodesFail) {
   auto graph = builder.GetGraph();
   graph->SetParentNode(node1);
   
-  int ret = GraphUtils::MergeInputNodes(graph);
+  int ret = GraphUtils::MergeInputNodes(graph, node1);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
@@ -1555,7 +1581,7 @@ TEST_F(UtestGraphUtils, MergeNetOutputNodeSuccess) {
   auto graph = builder.GetGraph();
   graph->SetParentNode(node1);
   
-  int ret = GraphUtils::MergeNetOutputNode(graph);
+  int ret = GraphUtils::MergeNetOutputNode(graph, node1);
   EXPECT_EQ(ret, SUCCESS);
 }
 
