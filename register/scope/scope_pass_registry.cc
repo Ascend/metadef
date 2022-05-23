@@ -14,10 +14,10 @@
  * limitations under the License.
 */
 
+#include "register/scope/scope_pass_registry_impl.h"
 #include <algorithm>
 #include <map>
 #include <vector>
-#include "register/scope/scope_pass_registry_impl.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
 

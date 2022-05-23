@@ -14,8 +14,8 @@
  * limitations under the License.
 */
 
-#include <stack>
 #include "register/scope/scope_graph_impl.h"
+#include <stack>
 #include "external/register/register.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/common/string_util.h"

@@ -24,7 +24,7 @@ public:
   void SetDeleteInterval(const int64_t &interval) {
     delete_interval_ = interval;
   }
-  std::vector<CacheItemId> DoAging(const CCStatType &cc_state) const override;
+  virtual std::vector<CacheItemId> DoAging(const CCStatType &cc_state) const override;
 
 private:
   int64_t delete_interval_ = 0L;
