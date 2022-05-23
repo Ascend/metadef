@@ -43,6 +43,24 @@ class TensorData {
    */
   explicit TensorData(TensorAddress addr = nullptr, TensorAddrManager manager = nullptr)
       : addr_(addr), manager_(manager) {}
+  TensorData(const TensorData &) = delete;
+  TensorData(TensorData &&other) noexcept : addr_(other.addr_), manager_(other.manager_) {
+    other.addr_ = nullptr;
+    other.manager_ = nullptr;
+  }
+  TensorData &operator=(const TensorData &) = delete;
+  TensorData &operator=(TensorData &&other) noexcept {
+    Free();
+    addr_ = other.addr_;
+    manager_ = other.manager_;
+    other.addr_ = nullptr;
+    other.manager_ = nullptr;
+    return *this;
+  }
+  ~TensorData() {
+    Free();
+  }
+
   /**
    * 获取tensor地址
    * @return tensor地址
@@ -69,6 +87,7 @@ class TensorData {
     auto ret = manager_(addr_, kFreeTensor, nullptr);
     if (ret == ge::GRAPH_SUCCESS) {
       addr_ = nullptr;
+      manager_ = nullptr;
     }
     return ret;
   }

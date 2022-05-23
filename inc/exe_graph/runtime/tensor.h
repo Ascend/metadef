@@ -29,7 +29,7 @@ enum TensorPlacement {
   kTensorPlacementEnd
 };
 
-using TensorAddress = void *;  ///< Tensor地址
+using TensorAddress = void *;            ///< Tensor地址
 using ConstTensorAddress = void *const;  ///< Tensor地址
 
 class Tensor {
@@ -68,8 +68,8 @@ class Tensor {
    * 设置Tensor数据
    * @param data 数据
    */
-  void SetData(const TensorData &data) {
-    tensor_data_ = data;
+  void SetData(TensorData &&data) {
+    tensor_data_ = std::move(data);
   }
   /**
    * 获取Tensor的数据地址
@@ -125,9 +125,8 @@ class Tensor {
     }
 
     auto tensor = reinterpret_cast<Tensor *>(holder.get());
-    tensor->placement_ = kFollowing;
-    tensor->data_type_ = dt;
-    tensor->tensor_data_ = TensorData{};
+    new (holder.get()) Tensor({}, {}, kFollowing, dt, nullptr);
+    tensor->tensor_data_ = TensorData(nullptr, nullptr);
     return holder;
   }
   /**
@@ -247,6 +246,13 @@ class Tensor {
    * @return 只读的tensor data引用
    */
   const TensorData &GetTensorData() const {
+    return tensor_data_;
+  }
+  /**
+   * 获取tensor data
+   * @return 可写的tensor data引用
+   */
+  TensorData &MutableTensorData() {
     return tensor_data_;
   }
 

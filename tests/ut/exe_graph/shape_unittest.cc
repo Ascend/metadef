@@ -67,6 +67,11 @@ TEST_F(ShapeUT, GetScalerShapeSizeOk) {
   EXPECT_EQ(s.GetShapeSize(), 1);
 }
 
+TEST_F(ShapeUT, Get1ShapeSizeOk) {
+  Shape s{1};
+  EXPECT_EQ(s.GetShapeSize(), 1);
+}
+
 TEST_F(ShapeUT, GetShapeOverflow) {
   Shape s{8, 3, 224, std::numeric_limits<int64_t>::max()};
   EXPECT_LT(s.GetShapeSize(), 0);

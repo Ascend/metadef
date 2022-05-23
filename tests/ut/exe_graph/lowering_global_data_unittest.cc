@@ -15,6 +15,7 @@
  */
 #include "exe_graph/lowering/lowering_global_data.h"
 #include <gtest/gtest.h>
+#include "checker/bg_test.h"
 namespace gert {
 namespace {
 ge::NodePtr BuildTestNode() {
@@ -23,7 +24,7 @@ ge::NodePtr BuildTestNode() {
   return graph->AddNode(op_desc);
 }
 }
-class LoweringGlobalDataUT : public testing::Test {};
+class LoweringGlobalDataUT : public BgTest {};
 TEST_F(LoweringGlobalDataUT, SetGetStreamOk) {
   LoweringGlobalData gd;
 
@@ -49,10 +50,17 @@ TEST_F(LoweringGlobalDataUT, SetGetCompileResultOk) {
 
 TEST_F(LoweringGlobalDataUT, SetGetAllocatorOk) {
   LoweringGlobalData gd;
-  EXPECT_EQ(gd.GetAllocator(0), nullptr);
+  EXPECT_EQ(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), nullptr);
   auto holder = bg::ValueHolder::CreateFeed(0);
-  gd.SetAllocator(0, holder);
-  EXPECT_EQ(gd.GetAllocator(0), holder);
+  ASSERT_NE(holder, nullptr);
+  gd.SetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}, holder);
+  EXPECT_EQ(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), holder);
+}
 
+TEST_F(LoweringGlobalDataUT, GetOrCreateAllocatorOk) {
+  LoweringGlobalData gd;
+  auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
+  EXPECT_NE(allocator1, nullptr);
+  EXPECT_EQ(allocator1, gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}));
 }
 }  // namespace gert

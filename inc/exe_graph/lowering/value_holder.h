@@ -109,7 +109,7 @@ class ValueHolder {
   static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);
   static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t out_count);
   static NodeHolderPtr CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs, size_t out_count);
-
+  static std::string GenerateNodeName(const char *node_type, const GraphFrame &frame);
   static HyperStatus MergeToOneGraph(const vector<ValueHolderPtr> &value_holders);
 
  private:

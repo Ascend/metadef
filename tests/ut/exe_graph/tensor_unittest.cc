@@ -127,7 +127,7 @@ TEST_F(TensorUT, SetGetAddrOk) {
   void *a = &t;
 
   TensorData td(a, nullptr);
-  t.SetData(td);
+  t.SetData(std::move(td));
   EXPECT_EQ(t.GetAddr(), a);
   EXPECT_EQ(ct.GetAddr(), a);
 
@@ -135,4 +135,11 @@ TEST_F(TensorUT, SetGetAddrOk) {
   EXPECT_EQ(ct.GetData<Tensor>(), &t);
 }
 
+TEST_F(TensorUT, GetTensorDataOk) {
+  Tensor t;
+  const Tensor &ct = t;
+  auto a = reinterpret_cast<void *>(10);
+  t.MutableTensorData() = TensorData{a, nullptr};
+  EXPECT_EQ(t.GetAddr(), a);
+}
 }  // namespace gert

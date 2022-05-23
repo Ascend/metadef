@@ -50,15 +50,88 @@ size_t ManagerStub<N>::operate_count[kTensorOperateType] = {0};
 class TensorDataUT : public testing::Test {};
 
 TEST_F(TensorDataUT, TensorDataWithMangerSuccess) {
+  ManagerStub<8>::Clear();
+
   auto addr = reinterpret_cast<void *>(0x16);
-  TensorData data(addr, ManagerStub<8>::Success);
-  EXPECT_EQ(reinterpret_cast<uint64_t>(data.GetAddr()), 8);
-  EXPECT_EQ(data.Free(), ge::GRAPH_SUCCESS);
-  EXPECT_EQ(data.GetAddr(), nullptr);
-  data.SetAddr(addr, nullptr);
-  EXPECT_EQ(reinterpret_cast<uint64_t>(data.GetAddr()), 0x16);
-  data.SetAddr(addr, ManagerStub<8>::Failed);
-  EXPECT_EQ(data.GetAddr(), nullptr);
+  {
+    TensorData data(addr, ManagerStub<8>::Success);
+    EXPECT_EQ(reinterpret_cast<uint64_t>(data.GetAddr()), 8);
+    EXPECT_EQ(data.Free(), ge::GRAPH_SUCCESS);
+    EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+
+    EXPECT_EQ(data.GetAddr(), nullptr);
+    data.SetAddr(addr, nullptr);
+    EXPECT_EQ(reinterpret_cast<uint64_t>(data.GetAddr()), 0x16);
+    data.SetAddr(addr, ManagerStub<8>::Failed);
+    EXPECT_EQ(data.GetAddr(), nullptr);
+  }
+  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+}
+
+TEST_F(TensorDataUT, TransferOwner) {
+  ManagerStub<8>::Clear();
+
+  auto addr = reinterpret_cast<void *>(0x16);
+  {
+    TensorData td0(addr, nullptr);
+    TensorData td1(addr, ManagerStub<8>::Success);
+    td0 = std::move(td1);
+  }
+  EXPECT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 0);
+  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+}
+
+TEST_F(TensorDataUT, TransferOnwerFreeOld) {
+  ManagerStub<8>::Clear();
+  ManagerStub<18>::Clear();
+
+  auto addr = reinterpret_cast<void *>(0x16);
+  {
+    TensorData td0(addr, ManagerStub<18>::Success);
+    TensorData td1(addr, ManagerStub<8>::Success);
+    EXPECT_EQ(ManagerStub<18>::operate_count[kFreeTensor], 0);
+    td0 = std::move(td1);
+    EXPECT_EQ(ManagerStub<18>::operate_count[kFreeTensor], 1);
+
+  }
+  EXPECT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 0);
+  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+}
+
+TEST_F(TensorDataUT, ConstructRightValue) {
+  ManagerStub<8>::Clear();
+
+  auto addr = reinterpret_cast<void *>(0x16);
+  {
+    TensorData td0(addr, ManagerStub<8>::Success);
+    TensorData td1(std::move(td0));
+  }
+  EXPECT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 0);
+  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+}
+
+TEST_F(TensorDataUT, FreeByHand) {
+  ManagerStub<8>::Clear();
+
+  auto addr = reinterpret_cast<void *>(0x16);
+  {
+    TensorData td0(addr, ManagerStub<8>::Success);
+    EXPECT_EQ(td0.Free(), ge::GRAPH_SUCCESS);
+    EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+  }
+  EXPECT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 0);
+  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+}
+
+TEST_F(TensorDataUT, TensorDataWithMangerFreeSuccess) {
+  ManagerStub<8>::Clear();
+  {
+    auto addr = reinterpret_cast<void *>(0x16);
+    TensorData data(addr, ManagerStub<8>::Success);
+    EXPECT_EQ(reinterpret_cast<uint64_t>(data.GetAddr()), 8);
+    EXPECT_EQ(data.Free(), ge::GRAPH_SUCCESS);
+  }
+  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
 }
 
 TEST_F(TensorDataUT, ShareTensorDataOk) {
@@ -92,20 +165,24 @@ TEST_F(TensorDataUT, ReleaseBeforeShareTensorData) {
 TEST_F(TensorDataUT, ShareManagedTensorData) {
   ManagerStub<8>::Clear();
 
-  TensorData td;
-  td.SetAddr(reinterpret_cast<TensorAddress>(10), ManagerStub<8>::Success);
+  {
+    TensorData td;
+    td.SetAddr(reinterpret_cast<TensorAddress>(10), ManagerStub<8>::Success);
 
-  TensorData td1;
-  td1.SetAddr(reinterpret_cast<TensorAddress>(11), nullptr);
+    ASSERT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 0);
+    ASSERT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 0);
+    {
+      TensorData td1;
+      td1.SetAddr(reinterpret_cast<TensorAddress>(11), nullptr);
 
-  ASSERT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 0);
-  td1.ShareFrom(td);
-  ASSERT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 1);
-  EXPECT_EQ(td1.GetAddr(), reinterpret_cast<TensorAddress>(8));
-
-  ASSERT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 0);
-  EXPECT_EQ(td1.Free(), ge::GRAPH_SUCCESS);
-  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+      td1.ShareFrom(td);
+      ASSERT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 1);
+      EXPECT_EQ(td1.GetAddr(), reinterpret_cast<TensorAddress>(8));
+    }
+    ASSERT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 1);
+    ASSERT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
+  }
+  ASSERT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 2);
 }
 
 TEST_F(TensorDataUT, ReleaseBeforeShareManagedTensorData) {

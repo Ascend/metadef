@@ -31,20 +31,20 @@ namespace gert {
 namespace bg {
 namespace {
 thread_local std::stack<std::unique_ptr<GraphFrame>> graph_frames;
-ge::OpDescPtr CreateOpDesc(int64_t node_index, const char *node_type, size_t in_count, size_t out_count) {
-  auto op_desc = ge::MakeShared<ge::OpDesc>("node" + std::to_string(node_index), node_type);
+ge::OpDescPtr CreateOpDesc(const std::string &node_name, const char *node_type, size_t in_count, size_t out_count) {
+  auto op_desc = ge::MakeShared<ge::OpDesc>(node_name, node_type);
   GE_ASSERT_NOTNULL(op_desc);
   for (size_t i = 0; i < in_count; ++i) {
     if (op_desc->AddInputDesc(ge::GeTensorDesc()) != ge::GRAPH_SUCCESS) {
-      GE_LOGE("Failed to create OpDesc for node %s index %ld, io-count %zu/%zu, add input desc %zu failed ", node_type,
-              node_index, in_count, out_count, i);
+      GE_LOGE("Failed to create OpDesc for node %s, io-count %zu/%zu, add input desc %zu failed ",
+              node_name.c_str(), in_count, out_count, i);
       return nullptr;
     }
   }
   for (size_t i = 0; i < out_count; ++i) {
     if (op_desc->AddOutputDesc(ge::GeTensorDesc()) != ge::GRAPH_SUCCESS) {
-      GE_LOGE("Failed to create OpDesc for node %s index %ld, io-count %zu/%zu, add output desc %zu failed ", node_type,
-              node_index, in_count, out_count, i);
+      GE_LOGE("Failed to create OpDesc for node %s, io-count %zu/%zu, add output desc %zu failed ",
+              node_name.c_str(), in_count, out_count, i);
       return nullptr;
     }
   }
@@ -110,12 +110,22 @@ ValueHolderPtr ValueHolder::CreateError(const char *fmt, ...) {
   va_end(arg);
   return holder;
 }
+std::string ValueHolder::GenerateNodeName(const char *node_type, const GraphFrame &frame) {
+  std::stringstream node_name;
+  node_name << node_type;
+  const auto &current_compute_node = frame.GetCurrentComputeNode();
+  if (current_compute_node != nullptr) {
+    node_name << '_' << current_compute_node->GetName();
+  }
+  node_name << '_' << id_generator_++;
+  return node_name.str();
+}
 ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t input_count,
                                                 size_t output_count, GraphFrame &frame) {
   auto &graph = frame.GetExeGraph();
   GE_ASSERT_NOTNULL(graph);
 
-  auto node = graph->AddNode(CreateOpDesc(id_generator_++, node_type, input_count, output_count));
+  auto node = graph->AddNode(CreateOpDesc(GenerateNodeName(node_type, frame), node_type, input_count, output_count));
   GE_ASSERT_NOTNULL(node);
 
   // add compute node info index

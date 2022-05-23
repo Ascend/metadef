@@ -19,6 +19,8 @@
 #include <map>
 #include "proto/task.pb.h"
 #include "value_holder.h"
+#include "exe_graph/runtime/tensor.h"
+#include "exe_graph/runtime/allocator.h"
 namespace gert {
 class LoweringGlobalData {
  public:
@@ -34,13 +36,14 @@ class LoweringGlobalData {
   const NodeCompileResult *FindCompiledResult(const ge::NodePtr &node) const;
   LoweringGlobalData &AddCompiledResult(const ge::NodePtr &node, NodeCompileResult compile_result);
 
-  bg::ValueHolderPtr GetAllocator(int32_t memory_type) const;
-  LoweringGlobalData &SetAllocator(int32_t memory_type, bg::ValueHolderPtr allocator);
+  bg::ValueHolderPtr GetAllocator(AllocatorDesc desc) const;
+  LoweringGlobalData &SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator);
+  bg::ValueHolderPtr GetOrCreateAllocator(AllocatorDesc desc);
 
  private:
   bg::ValueHolderPtr stream_;
   std::map<int64_t, NodeCompileResult> node_ids_to_compile_result_holders_;
-  std::map<int32_t, bg::ValueHolderPtr> memory_types_to_allocator_;
+  std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
 };
 }
 
