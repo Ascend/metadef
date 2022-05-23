@@ -33,9 +33,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
     }
     pass_names_.push_back(pass_name);
 
-    const std::map<domi::FrameworkType,
-                   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>>::const_iterator iter =
-        create_fns_.find(fmk_type);
+    const auto iter = create_fns_.find(fmk_type);
     if (iter != create_fns_.end()) {
       create_fns_[fmk_type].push_back(std::make_pair(pass_name, create_fn));
       GELOGD("Register prototype pass, pass name = %s", pass_name.c_str());
@@ -51,9 +49,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> GetCreateFnByType(
     domi::FrameworkType fmk_type) {
     const std::lock_guard<std::mutex> lock(mu_);
-    const std::map<domi::FrameworkType,
-                   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>>::const_iterator iter =
-        create_fns_.find(fmk_type);
+    const auto iter = create_fns_.find(fmk_type);
     if (iter == create_fns_.end()) {
       return std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>{};
     }

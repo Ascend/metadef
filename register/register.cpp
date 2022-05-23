@@ -48,13 +48,9 @@ const std::string kFuncNameKey = "name";
 
 struct DynamicInfo {
   DynamicInfo()
-      : type(kInvalid),
-        inset_index(0U),
-        tensor_num(0U) {}
+      : type(kInvalid), inset_index(0U), tensor_num(0U) {}
   DynamicInfo(const DynamicType dynamic_type, const uint32_t index, const uint32_t num)
-      : type(dynamic_type),
-        inset_index(index),
-        tensor_num(num) {}
+      : type(dynamic_type), inset_index(index), tensor_num(num) {}
 
   DynamicType GetType() const {return type;}
   uint32_t GetInsetIndex() const {return inset_index;}
@@ -234,7 +230,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t input_index = 0U;
   uint32_t input_increment = 0U;
   for (const auto &input_name : register_input_names) {
-    const map<string, DynamicInfo>::const_iterator input_iter = port_dynamic_info.find(input_name);
+    const auto input_iter = port_dynamic_info.find(input_name);
     if (input_iter != port_dynamic_info.end()) {
       port_dynamic_info[input_name].SetInsetIndex(input_index + input_increment);
       const uint32_t tensor_num = port_dynamic_info[input_name].GetTensorNum();
@@ -252,7 +248,7 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t output_index = 0U;
   uint32_t out_increment = 0U;
   for (const auto &output_name : register_output_names) {
-    const map<string, DynamicInfo>::const_iterator output_iter = port_dynamic_info.find(output_name);
+    const auto output_iter = port_dynamic_info.find(output_name);
     if (output_iter != port_dynamic_info.end()) {
       port_dynamic_info[output_name].SetInsetIndex(output_index + out_increment);
       const uint32_t tensor_num = port_dynamic_info[output_name].GetTensorNum();
@@ -669,8 +665,7 @@ void FrameworkRegistryImpl::AddAutoMappingSubgraphIOIndexFunc(
 
 AutoMappingSubgraphIOIndexFunc FrameworkRegistryImpl::GetAutoMappingSubgraphIOIndexFunc(
     const domi::FrameworkType framework) {
-  const std::map<domi::FrameworkType, AutoMappingSubgraphIOIndexFunc>::const_iterator itr =
-      fmk_type_to_auto_mapping_subgraph_index_fun_.find(framework);
+  const auto itr = fmk_type_to_auto_mapping_subgraph_index_fun_.find(framework);
   if (itr != fmk_type_to_auto_mapping_subgraph_index_fun_.end()) {
     return itr->second;
   }
@@ -1082,7 +1077,7 @@ bool OpRegistry::Register(const OpRegistrationData &reg_data) {
 
 domi::ImplyType OpRegistry::GetImplyTypeByOriOpType(const std::string &ori_optype) {
   domi::ImplyType result = domi::ImplyType::BUILDIN;
-  const std::map<std::string, std::string>::const_iterator iter = origin_type_to_om_type_.find(ori_optype);
+  const auto iter = origin_type_to_om_type_.find(ori_optype);
   if (iter != origin_type_to_om_type_.end()) {
     result = GetImplyType(iter->second);
   }
