@@ -14,7 +14,7 @@ class OpKernelRegistry::OpKernelRegistryImpl {
 
   OpKernelRegistry::CreateFn GetCreateFn(const std::string &op_type) {
     const std::lock_guard<std::mutex> lock(mu_);
-    const auto it = create_fns_.find(op_type);
+    const std::map<std::string, OpKernelRegistry::CreateFn>::const_iterator it = create_fns_.find(op_type);
     if (it == create_fns_.end()) {
       return nullptr;
     }
