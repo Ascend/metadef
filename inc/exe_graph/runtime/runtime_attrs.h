@@ -98,7 +98,6 @@ class RuntimeAttrs {
  private:
   const void *GetPointerByIndex(size_t index) const;
 
- private:
   uint64_t placeholder_;
 };
 static_assert(std::is_standard_layout<RuntimeAttrs>::value, "This class must be a POD");
