@@ -23,8 +23,6 @@
 #include <limits>
 #include <iostream>
 
-#include "graph/def_types.h"
-#include "framework/common/ge_inner_error_codes.h"
 #include "framework/common/debug/log.h"
 
 namespace ge {

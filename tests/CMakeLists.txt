@@ -18,6 +18,9 @@ add_subdirectory(depends/slog)
 add_subdirectory(depends/mmpa)
 add_subdirectory(depends/profiler)
 
+add_library(slog INTERFACE)
+target_link_libraries(slog INTERFACE slog_stub)
+
 if (ENABLE_METADEF_COV OR ENABLE_METADEF_UT)
     add_subdirectory(ut)
 endif()
