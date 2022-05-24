@@ -26,14 +26,18 @@
 #include "graph/ge_error_codes.h"
 
 namespace ge {
-#define TRACE_GEN_RECORD(owner, action, graph_name, node_name, node_data, tensor_index, tensor_data, content)          \
-  do {                                                                                                                 \
-    if (TraceManager::GetInstance().IsTraceEnabled()) {                                                                \
-      std::stringstream ss;                                                                                            \
-      ss << owner << "," << action << "," << graph_name << "," << node_name << "," << node_data << "," << tensor_index \
-         << "," << tensor_data << "," << content;                                                                      \
-      TraceManager::GetInstance().AddTrace(ss.str());                                                                  \
-    }                                                                                                                  \
+#define TRACE_GEN_RECORD(owner, action, graph_name, node_name, node_data, tensor_index, tensor_data, content)      \
+  do {                                                                                                             \
+    if (TraceManager::GetInstance().IsTraceEnabled()) {                                                            \
+      if (TraceManager::GetTraceHeader().size() == 0) {                                                            \
+        GELOGW("[Check][Param] owner and stage have not been set");                                                \
+      } else {                                                                                                     \
+        std::stringstream ss;                                                                                      \
+        ss << owner << "," << action << "," << graph_name << "," << node_name << "," << node_data << ","           \
+           << tensor_index << "," << tensor_data << "," << content;                                                \
+        TraceManager::GetInstance().AddTrace(ss.str());                                                            \
+      }                                                                                                            \
+    }                                                                                                              \
   } while (false)
 
 using char_t = char;
