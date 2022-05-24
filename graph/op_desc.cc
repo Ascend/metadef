@@ -23,6 +23,7 @@
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/transformer_utils.h"
+#include "graph/utils/node_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "register/op_tiling/op_tiling_constants.h"
 #include "common/util/trace_manager/trace_manager.h"
@@ -1232,7 +1233,16 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     GELOGE(GRAPH_FAILED, "[Call][CatchFormatAndShape] for transformer failed!");
     return GRAPH_FAILED;
   }
-  const graphStatus graph_status = static_cast<graphStatus>(infer_func_(op));
+  graphStatus graph_status = GRAPH_SUCCESS;
+  {
+    auto node_ptr = ge::NodeUtils::GetNodeFromOperator(op);
+    TraceOwnerGuard guard("OP", GetName() + ":infershape",
+                          (node_ptr == nullptr) ? ""
+                              : (node_ptr->GetOwnerComputeGraph() == nullptr)
+                              ? std::string("")
+                              : node_ptr->GetOwnerComputeGraph()->GetName());
+    graph_status = static_cast<graphStatus>(infer_func_(op));
+  }
   if ((graph_status != GRAPH_SUCCESS) && (graph_status != GRAPH_NODE_NEED_REPASS)) {
     GELOGE(GRAPH_FAILED, "[Call][InferFunc] for %s failed. ret:%u", GetName().c_str(), graph_status);
     return GRAPH_FAILED;
