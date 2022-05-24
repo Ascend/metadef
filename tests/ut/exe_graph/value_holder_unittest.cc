@@ -20,8 +20,7 @@
 #include "checker/bg_test.h"
 namespace gert {
 namespace bg {
-class ValueHolderUt : public BgTest {
-};
+class ValueHolderUt : public BgTest {};
 TEST_F(ValueHolderUt, CreateConstOk) {
   ge::Format f1 = ge::FORMAT_NC1HWC0;
   auto c = ValueHolder::CreateConst(reinterpret_cast<const uint8_t *>(&f1), sizeof(f1));
@@ -219,7 +218,7 @@ TEST_F(ValueHolderUt, MergeIsolateNodeToGraphOk) {
  *     / \         /   \
  * data1 const1  data2 const2
  */
-TEST_F(ValueHolderUt, MergeTwoGraphOk1)  {
+TEST_F(ValueHolderUt, MergeTwoGraphOk1) {
   ge::Format f1 = ge::FORMAT_NC1HWC0;
   auto const1 = ValueHolder::CreateConst(reinterpret_cast<const uint8_t *>(&f1), sizeof(f1));
   auto data1 = ValueHolder::CreateFeed(0);
@@ -264,7 +263,7 @@ TEST_F(ValueHolderUt, MergeTwoGraphOk1)  {
  *     / \         /   \
  * data1 const1  data2 const2
  */
-TEST_F(ValueHolderUt, MergeTwoGraphOk)  {
+TEST_F(ValueHolderUt, MergeTwoGraphOk) {
   ge::Format f1 = ge::FORMAT_NC1HWC0;
   auto const1 = ValueHolder::CreateConst(reinterpret_cast<const uint8_t *>(&f1), sizeof(f1));
   auto data1 = ValueHolder::CreateFeed(0);
@@ -402,8 +401,8 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -421,7 +420,7 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   ASSERT_EQ(frame->GetCurrentComputeNode(), node);
   auto shape = ValueHolder::CreateSingleDataOutput("InferShape", {shape1, shape2});
   auto compile_info = ValueHolder::CreateSingleDataOutput("TilingParse", {json1});
-  auto tiling_ret  = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info});
+  auto tiling_ret = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info});
   auto holder = ValueHolder::CreateVoid("KernelLaunch", {tiling_ret});
 
   ASSERT_NE(shape1, nullptr);
@@ -437,10 +436,13 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   ASSERT_FALSE(ge::AttrUtils::GetInt(shape2->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_none));
   ASSERT_FALSE(ge::AttrUtils::GetInt(json1->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_none));
 
-  int64_t compute_node_index_shape, compute_node_index_compile_ifo, compute_node_index_tiling_ret, compute_node_index_holder;
+  int64_t compute_node_index_shape, compute_node_index_compile_ifo, compute_node_index_tiling_ret,
+      compute_node_index_holder;
   ASSERT_TRUE(ge::AttrUtils::GetInt(shape->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_shape));
-  ASSERT_TRUE(ge::AttrUtils::GetInt(compile_info->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_compile_ifo));
-  ASSERT_TRUE(ge::AttrUtils::GetInt(tiling_ret->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_tiling_ret));
+  ASSERT_TRUE(
+      ge::AttrUtils::GetInt(compile_info->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_compile_ifo));
+  ASSERT_TRUE(
+      ge::AttrUtils::GetInt(tiling_ret->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_tiling_ret));
   ASSERT_TRUE(ge::AttrUtils::GetInt(holder->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_holder));
   EXPECT_EQ(compute_node_index_shape, compute_node_index_compile_ifo);
   EXPECT_EQ(compute_node_index_shape, compute_node_index_tiling_ret);
@@ -449,7 +451,8 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   size_t frame_current_node_index;
   frame->GetCurrentNodeIndex(frame_current_node_index);
   EXPECT_EQ(compute_node_index_shape, frame_current_node_index);
-  auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(frame_current_node_index));
+  auto compute_node_info =
+      reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(frame_current_node_index));
   ASSERT_NE(compute_node_info, nullptr);
   auto name_index = compute_node_info->GetNodeName();
   auto type_index = compute_node_info->GetNodeType();
@@ -469,8 +472,8 @@ TEST_F(ValueHolderUt, CreateExeGraphOk) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -498,8 +501,8 @@ TEST_F(ValueHolderUt, CreateExeGraphWithTargetsOk) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -533,8 +536,8 @@ TEST_F(ValueHolderUt, ScopedCurrentNodeOk) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -564,13 +567,13 @@ TEST_F(ValueHolderUt, ScopedCurrentNodeOk) {
   {
     auto guarder = ValueHolder::SetScopedCurrentComputeNode(clean_node);
     compile_info1 = ValueHolder::CreateSingleDataOutput("TilingParse", {json1});
-    tiling_ret1  = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info1});
+    tiling_ret1 = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info1});
     holder1 = ValueHolder::CreateVoid("AtomicKernelLaunch", {tiling_ret1});
     EXPECT_TRUE(frame->GetCurrentNodeIndex(node1_index));
   }
 
   auto compile_info2 = ValueHolder::CreateSingleDataOutput("TilingParse", {json2});
-  auto tiling_ret2  = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info2});
+  auto tiling_ret2 = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info2});
   auto holder2 = ValueHolder::CreateVoid("KernelLaunch", {tiling_ret2});
 
   ValueHolder::AddDependency(holder1, holder2);
@@ -591,7 +594,8 @@ TEST_F(ValueHolderUt, ScopedCurrentNodeOk) {
   ASSERT_FALSE(ge::AttrUtils::GetInt(shape2->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_none));
   ASSERT_FALSE(ge::AttrUtils::GetInt(json1->GetNode()->GetOpDesc(), "ComputeNodeIndex", compute_node_index_none));
 
-  int64_t shape_index, compile_info1_index, tiling_ret1_index, holder1_index, compile_info2_index, tiling_ret2_index, holder2_index;
+  int64_t shape_index, compile_info1_index, tiling_ret1_index, holder1_index, compile_info2_index, tiling_ret2_index,
+      holder2_index;
   ASSERT_TRUE(ge::AttrUtils::GetInt(shape->GetNode()->GetOpDesc(), "ComputeNodeIndex", shape_index));
 
   ASSERT_TRUE(ge::AttrUtils::GetInt(compile_info1->GetNode()->GetOpDesc(), "ComputeNodeIndex", compile_info1_index));
@@ -638,8 +642,8 @@ TEST_F(ValueHolderUt, CreateExeGraphNoOutpus) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -661,8 +665,8 @@ TEST_F(ValueHolderUt, CreateExeGraphNoFrame) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -688,8 +692,8 @@ TEST_F(ValueHolderUt, SetStageOk) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -719,8 +723,8 @@ TEST_F(ValueHolderUt, GetCurrentGraphOk) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -756,8 +760,8 @@ TEST_F(ValueHolderUt, RefFromOk) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -788,8 +792,8 @@ TEST_F(ValueHolderUt, AddNullOutputs) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -818,8 +822,8 @@ TEST_F(ValueHolderUt, AddNullTargets) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputOptional);
@@ -835,6 +839,38 @@ TEST_F(ValueHolderUt, AddNullTargets) {
 
   EXPECT_NE(hello->GetCurrentFrame(), nullptr);
   EXPECT_NE(hello->GetCurrentGraph(), nullptr);
+}
+TEST_F(ValueHolderUt, GuardNodeFlag) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
+  auto allocator_destroyer = ValueHolder::CreateVoidGuarder("DestroyAllocator", allocator0, {});
+  ASSERT_NE(allocator_destroyer, nullptr);
+  auto graph = ValueHolder::PopGraphFrame()->GetExeGraph();
+
+  auto node = graph->FindFirstNodeMatchType("DestroyAllocator");
+  ASSERT_NE(node, nullptr);
+  int64_t index;
+  EXPECT_TRUE(ge::AttrUtils::GetInt(node->GetOpDesc(), kReleaseResourceIndex, index));
+  EXPECT_EQ(index, 0);
+}
+TEST_F(ValueHolderUt, AddDependencyForGuardAutomately) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
+  auto allocator_destroyer = ValueHolder::CreateVoidGuarder("DestroyAllocator", allocator0, {});
+  ASSERT_NE(allocator_destroyer, nullptr);
+
+  size_t alloc_size = 1024;
+  auto size = ValueHolder::CreateConst(&alloc_size, sizeof(alloc_size));
+  auto alloc_mem0 = ValueHolder::CreateSingleDataOutput("AllocMemory", {allocator0, size});
+  auto alloc_mem1 = ValueHolder::CreateSingleDataOutput("AllocMemory", {allocator0, size});
+  auto graph = ValueHolder::PopGraphFrame()->GetExeGraph();
+
+  CheckGraphGenerally(*graph);
+
+  ASSERT_NE(alloc_mem0, nullptr);
+  ASSERT_NE(alloc_mem1, nullptr);
+  HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
+  HasControlEdge(*graph, *alloc_mem1->GetNode(), *allocator_destroyer->GetNode());
 }
 }  // namespace bg
 }  // namespace gert

@@ -93,6 +93,12 @@ class BgTest : public testing::Test {
     }
   }
 
+  void HasControlEdge(const ge::ComputeGraph &graph, const ge::Node &src_node, const ge::Node &dst_node) {
+    auto src_anchor = src_node.GetOutControlAnchor();
+    auto dst_anchor = dst_node.GetInControlAnchor();
+    EXPECT_TRUE(src_anchor->IsLinkedWith(dst_anchor));
+  }
+
  private:
   void CheckKernelExtendInfoOk(const ge::ComputeGraph &root_graph) {
     ge::Buffer buffer;

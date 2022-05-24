@@ -36,15 +36,15 @@ ge::OpDescPtr CreateOpDesc(const std::string &node_name, const char *node_type, 
   GE_ASSERT_NOTNULL(op_desc);
   for (size_t i = 0; i < in_count; ++i) {
     if (op_desc->AddInputDesc(ge::GeTensorDesc()) != ge::GRAPH_SUCCESS) {
-      GE_LOGE("Failed to create OpDesc for node %s, io-count %zu/%zu, add input desc %zu failed ",
-              node_name.c_str(), in_count, out_count, i);
+      GE_LOGE("Failed to create OpDesc for node %s, io-count %zu/%zu, add input desc %zu failed ", node_name.c_str(),
+              in_count, out_count, i);
       return nullptr;
     }
   }
   for (size_t i = 0; i < out_count; ++i) {
     if (op_desc->AddOutputDesc(ge::GeTensorDesc()) != ge::GRAPH_SUCCESS) {
-      GE_LOGE("Failed to create OpDesc for node %s, io-count %zu/%zu, add output desc %zu failed ",
-              node_name.c_str(), in_count, out_count, i);
+      GE_LOGE("Failed to create OpDesc for node %s, io-count %zu/%zu, add output desc %zu failed ", node_name.c_str(),
+              in_count, out_count, i);
       return nullptr;
     }
   }
@@ -72,6 +72,14 @@ std::unique_ptr<uint8_t[]> CreateKernelExtendInfo(const char *name, const char *
   extend_info->SetKernelType(reinterpret_cast<const char *>(type_id));
 
   return holder;
+}
+HyperStatus AddDependencyBetweenNodes(const ge::Node *src, const ge::Node *dst) {
+  // todo 检查是否在一张图上
+  if (ge::GraphUtils::AddEdge(src->GetOutControlAnchor(), dst->GetInControlAnchor()) != ge::GRAPH_SUCCESS) {
+    return HyperStatus::ErrorStatus("Failed to add control edge from %s to %s", src->GetName().c_str(),
+                                    dst->GetName().c_str());
+  }
+  return HyperStatus::Success();
 }
 }  // namespace
 std::atomic<int64_t> ValueHolder::id_generator_{0};
@@ -120,8 +128,8 @@ std::string ValueHolder::GenerateNodeName(const char *node_type, const GraphFram
   node_name << '_' << id_generator_++;
   return node_name.str();
 }
-ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t input_count,
-                                                size_t output_count, GraphFrame &frame) {
+ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t input_count, size_t output_count,
+                                                GraphFrame &frame) {
   auto &graph = frame.GetExeGraph();
   GE_ASSERT_NOTNULL(graph);
 
@@ -139,8 +147,8 @@ ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t in
 
   // add kernel extend info index
   size_t extend_info_size;
-  auto holder = CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(), frame.GetBufferPool(),
-                                       extend_info_size);
+  auto holder =
+      CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(), frame.GetBufferPool(), extend_info_size);
   GE_ASSERT_NOTNULL(holder);
 
   auto buf_id = frame.GetKernelExtendInfos().AddBuf(holder.get(), extend_info_size);
@@ -169,6 +177,9 @@ ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const 
     GE_ASSERT_NOTNULL(inputs[i]);
     GE_ASSERT_NOTNULL(inputs[i]->node_);
     GE_ASSERT_SUCCESS(AddDataEdge(inputs[i]->node_, inputs[i]->index_, node, static_cast<int32_t>(i)));
+    if (inputs[i]->guarder_ != nullptr) {
+      GE_ASSERT_HYPER_SUCCESS(AddDependencyBetweenNodes(node.get(), inputs[i]->guarder_->GetNode()));
+    }
   }
   return node;
 }
@@ -239,13 +250,7 @@ HyperStatus ValueHolder::AddDependency(const ValueHolderPtr &src, const ValueHol
   if (dst == nullptr || dst->GetNode() == nullptr) {
     return HyperStatus::ErrorStatus("Failed to add control ege, because the dst does not have a node.");
   }
-  // todo 检查是否在一张图上
-  if (ge::GraphUtils::AddEdge(src->GetNode()->GetOutControlAnchor(), dst->GetNode()->GetInControlAnchor()) !=
-      ge::GRAPH_SUCCESS) {
-    return HyperStatus::ErrorStatus("Failed to add control edge from %s to %s", src->GetNode()->GetName().c_str(),
-                                    dst->GetNode()->GetName().c_str());
-  }
-  return HyperStatus::Success();
+  return AddDependencyBetweenNodes(src->GetNode(), dst->GetNode());
 }
 void ValueHolder::SetStage(ValueHolder::RunStage stage) {
   ge::AttrUtils::SetInt(node_->GetOpDesc(), kStage, stage);
@@ -312,6 +317,18 @@ ge::graphStatus ValueHolder::RefFrom(const ValueHolderPtr &other) {
   GE_ASSERT_TRUE(ge::AttrUtils::SetStr(td, kRefFromNode, other->GetNode()->GetName()));
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(td, kRefFromIndex, other->index_));
   return ge::GRAPH_SUCCESS;
+}
+ValueHolderPtr ValueHolder::CreateVoidGuarder(const char *node_type, const ValueHolderPtr &resource,
+                                              const vector<ValueHolderPtr> &args) {
+  std::vector<ValueHolderPtr> inputs;
+  inputs.reserve(args.size() + 1);
+  inputs.emplace_back(resource);
+  inputs.insert(inputs.end(), args.begin(), args.end());
+  auto ret = CreateVoid(node_type, inputs);
+  GE_ASSERT_NOTNULL(ret);
+  GE_ASSERT_TRUE(ge::AttrUtils::SetInt(ret->GetNode()->GetOpDesc(), kReleaseResourceIndex, 0));
+  resource->guarder_ = ret;
+  return ret;
 }
 }  // namespace bg
 }  // namespace gert

@@ -92,6 +92,7 @@ class ValueHolder {
   static std::vector<ValueHolderPtr> CreateDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs,
                                                       size_t out_count);
   static ValueHolderPtr CreateVoid(const char *node_type, const std::vector<ValueHolderPtr> &inputs);
+  static ValueHolderPtr CreateVoidGuarder(const char *node_type, const ValueHolderPtr &resource, const std::vector<ValueHolderPtr> &args);
   static HyperStatus AddDependency(const ValueHolderPtr &src, const ValueHolderPtr &dst);
 
   static GraphFrame *PushGraphFrame();
@@ -110,7 +111,6 @@ class ValueHolder {
   static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t out_count);
   static NodeHolderPtr CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs, size_t out_count);
   static std::string GenerateNodeName(const char *node_type, const GraphFrame &frame);
-  static HyperStatus MergeToOneGraph(const vector<ValueHolderPtr> &value_holders);
 
  private:
   static std::atomic<int64_t> id_generator_;
@@ -120,6 +120,7 @@ class ValueHolder {
   ge::NodePtr node_;
   int32_t index_;
   std::unique_ptr<char[]> error_msg_;
+  ValueHolderPtr guarder_;
 };
 }  // namespace bg
 }  // namespace gert

@@ -50,5 +50,8 @@ constexpr char *kBuffer = (char *)"buffer";
 
 // 打在exe graph上，保存了本graph涉及的ModelDesc信息
 constexpr char *kModelDesc = (char *)"ModelDesc";
+
+// 打在exe node上，类型是int，代表两层含义：1. 本node释放一个资源；2. 本node释放的资源位于本node的第n的输入index；n为属性的值
+constexpr char kReleaseResourceIndex[] = "ReleaseResourceIndex";
 }
 #endif  //AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_EXE_GRAPH_ATTRS_H_
