@@ -32,8 +32,6 @@
 namespace ge {
 class ComputeGraph;
 
-using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
-
 class Anchor;
 
 using AnchorPtr = std::shared_ptr<Anchor>;

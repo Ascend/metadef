@@ -36,11 +36,9 @@ using std::map;
 namespace ge {
 class GeTensor;
 
-using GeTensorPtr = std::shared_ptr<GeTensor>;
 using ConstGeTensorPtr = std::shared_ptr<const GeTensor>;
 
 class ComputeGraph;
-using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
 using ConstComputeGraphPtr = std::shared_ptr<const ComputeGraph>;
 
 class GeTensorDesc;
