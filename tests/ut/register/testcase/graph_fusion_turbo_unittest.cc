@@ -20,6 +20,7 @@
 #include "graph/graph.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/node_utils.h"
 
 #include "register/graph_optimizer/graph_fusion/fusion_pass_manager/fusion_pass_registry.h"
 #include "register/graph_optimizer/graph_fusion/graph_fusion_pass_base.h"
@@ -280,6 +281,142 @@ class UTestAccelerator : public testing::Test {
     acc.AddWeight(relu2_front, 0, w);
 
     DumpGraph(graph, "test2");
+    return graph;
+  }
+
+  ComputeGraphPtr CreateGraphParentAndSub() {
+
+    ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+    OpDescPtr op_desc_cast1 = std::make_shared<OpDesc>("cast1", "Cast");
+    OpDescPtr op_desc_add1 = std::make_shared<OpDesc>("add1", "Add");
+    OpDescPtr op_desc_partcall = std::make_shared<OpDesc>("partioncall", "PartionCall");
+    OpDescPtr op_desc_partout = std::make_shared<OpDesc>("partout", "PartionOut");
+    OpDescPtr op_desc_add2 = std::make_shared<OpDesc>("add2", "Add");
+    OpDescPtr op_desc_output = std::make_shared<OpDesc>("output", "NetOutput");
+    OpDescPtr op_desc_output1 = std::make_shared<OpDesc>("output1", "NetOutput");
+    OpDescPtr op_desc_input = std::make_shared<OpDesc>("other", "Other");
+    OpDescPtr op_desc_input1 = std::make_shared<OpDesc>("other1", "Other");
+
+    //add descriptor
+    vector<int64_t> dim_a = {8, 4, 16, 16};
+    GeShape shape_a(dim_a);
+    GeTensorDesc tensor_desc_a(shape_a);
+    tensor_desc_a.SetFormat(FORMAT_NCHW);
+    tensor_desc_a.SetOriginFormat(FORMAT_NCHW);
+    tensor_desc_a.SetDataType(DT_FLOAT16);
+    tensor_desc_a.SetOriginDataType(DT_FLOAT);
+
+    vector<int64_t> dim_b = {1, 4, 64, 64};
+    GeShape shape_b(dim_b);
+    GeTensorDesc tensor_desc_b(shape_b);
+    tensor_desc_b.SetFormat(FORMAT_NCHW);
+    tensor_desc_b.SetOriginFormat(FORMAT_NCHW);
+    tensor_desc_b.SetDataType(DT_FLOAT);
+    tensor_desc_b.SetOriginDataType(DT_FLOAT);
+
+    vector<int64_t> dim_c = {1, 4, 64, 64};
+    GeShape shape_c(dim_c);
+    GeTensorDesc tensor_desc_c(shape_c);
+    tensor_desc_c.SetFormat(FORMAT_NCHW);
+    tensor_desc_c.SetOriginFormat(FORMAT_NCHW);
+    tensor_desc_c.SetDataType(DT_FLOAT);
+    tensor_desc_c.SetOriginDataType(DT_FLOAT);
+
+    //vector<int64_t> dim_d;
+    GeShape shape_d(dim_a);
+    GeTensorDesc tensor_desc_d(shape_d);
+    tensor_desc_d.SetFormat(FORMAT_NCHW);
+    tensor_desc_d.SetOriginFormat(FORMAT_NCHW);
+    tensor_desc_d.SetDataType(DT_FLOAT16);
+    tensor_desc_d.SetOriginDataType(DT_FLOAT);
+
+    GeShape shape_e(dim_a);
+    GeTensorDesc tensor_desc_e(shape_e);
+    tensor_desc_e.SetFormat(FORMAT_NCHW);
+    tensor_desc_e.SetOriginFormat(FORMAT_NCHW);
+    tensor_desc_e.SetDataType(DT_FLOAT16);
+    tensor_desc_e.SetOriginDataType(DT_FLOAT);
+
+
+    op_desc_input->AddOutputDesc(tensor_desc_a);
+
+    op_desc_cast1->AddInputDesc(tensor_desc_a);
+    op_desc_cast1->AddOutputDesc(tensor_desc_b);
+
+    op_desc_add1->AddInputDesc(tensor_desc_b);
+    op_desc_add1->AddInputDesc(tensor_desc_b);
+    op_desc_add1->AddOutputDesc(tensor_desc_c);
+
+    op_desc_partcall->AddInputDesc(tensor_desc_c);
+    op_desc_partcall->AddOutputDesc(tensor_desc_d);
+    op_desc_partcall->AddOutputDesc(tensor_desc_d);
+    op_desc_partout->AddInputDesc(tensor_desc_d);
+
+    op_desc_add2->AddInputDesc(tensor_desc_d);
+    op_desc_add2->AddInputDesc(tensor_desc_d);
+    op_desc_add2->AddOutputDesc(tensor_desc_e);
+
+    op_desc_input1->AddOutputDesc(tensor_desc_d);
+
+    op_desc_output->AddInputDesc(tensor_desc_e);
+    op_desc_output1->AddInputDesc(tensor_desc_e);
+
+    NodePtr node_cast1 = graph->AddNode(op_desc_cast1);
+    NodePtr node_add1 = graph->AddNode(op_desc_add1);
+    NodePtr node_add2 = graph->AddNode(op_desc_add2);
+    NodePtr node_netoutput = graph->AddNode(op_desc_output);
+    NodePtr node_netoutput1 = graph->AddNode(op_desc_output1);
+    NodePtr node_other = graph->AddNode(op_desc_input);
+    NodePtr node_partcall = graph->AddNode(op_desc_partcall);
+    NodePtr node_partout = graph->AddNode(op_desc_partout);
+    NodePtr node_other1 = graph->AddNode(op_desc_input1);
+
+    GraphUtils::AddEdge(node_other->GetOutDataAnchor(0), node_cast1->GetInDataAnchor(0));
+    GraphUtils::AddEdge(node_cast1->GetOutDataAnchor(0), node_add1->GetInDataAnchor(0));
+    GraphUtils::AddEdge(node_other->GetOutDataAnchor(0), node_add1->GetInDataAnchor(1));
+    GraphUtils::AddEdge(node_add1->GetOutDataAnchor(0), node_partcall->GetInDataAnchor(0));
+    GraphUtils::AddEdge(node_partcall->GetOutDataAnchor(0), node_partout->GetInDataAnchor(0));
+    GraphUtils::AddEdge(node_partcall->GetOutDataAnchor(1), node_add2->GetInDataAnchor(0));
+    GraphUtils::AddEdge(node_other1->GetOutDataAnchor(0), node_add2->GetInDataAnchor(1));
+    GraphUtils::AddEdge(node_add2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(0));
+    GraphUtils::AddEdge(node_add2->GetOutDataAnchor(0), node_netoutput1->GetInDataAnchor(0));
+    
+    // subgraph
+    ComputeGraphPtr subgraph = std::make_shared<ComputeGraph>("subgraph");
+    OpDescPtr op_desc_sub_data1 = std::make_shared<OpDesc>("data1", "Data");
+    OpDescPtr op_desc_sub_input = std::make_shared<OpDesc>("other", "Other");
+    OpDescPtr op_desc_sub_add = std::make_shared<OpDesc>("sub_add", "Add");
+    OpDescPtr op_desc_net_in = std::make_shared<OpDesc>("net_in", "NetOutInput");
+    OpDescPtr op_desc_sub_output = std::make_shared<OpDesc>("output", "NetOutput");
+    
+    op_desc_sub_data1->AddInputDesc(tensor_desc_c);
+    op_desc_sub_data1->AddOutputDesc(tensor_desc_c);
+    op_desc_sub_input->AddOutputDesc(tensor_desc_c);
+
+    op_desc_sub_add->AddInputDesc(tensor_desc_c);
+    op_desc_sub_add->AddInputDesc(tensor_desc_c);
+    op_desc_sub_add->AddOutputDesc(tensor_desc_d);
+
+    op_desc_net_in->AddOutputDesc(tensor_desc_d);
+    op_desc_sub_output->AddInputDesc(tensor_desc_d);
+    op_desc_sub_output->AddInputDesc(tensor_desc_d);
+
+    NodePtr sub_data_node1 = subgraph->AddNode(op_desc_sub_data1);
+    NodePtr sub_input_node = subgraph->AddNode(op_desc_sub_input);
+    NodePtr sub_add_node = subgraph->AddNode(op_desc_sub_add);
+    NodePtr sub_netin_node = subgraph->AddNode(op_desc_net_in);
+    NodePtr sub_sub_output_node = subgraph->AddNode(op_desc_sub_output);
+
+    GraphUtils::AddEdge(sub_data_node1->GetOutDataAnchor(0), sub_add_node->GetInDataAnchor(0));
+    GraphUtils::AddEdge(sub_input_node->GetOutDataAnchor(0), sub_add_node->GetInDataAnchor(1));
+    GraphUtils::AddEdge(sub_add_node->GetOutDataAnchor(0), sub_sub_output_node->GetInDataAnchor(0));
+    GraphUtils::AddEdge(sub_netin_node->GetOutDataAnchor(0), sub_sub_output_node->GetInDataAnchor(1));
+    ge::AttrUtils::SetInt(sub_data_node1->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX, 0);
+    ge::AttrUtils::SetInt(sub_sub_output_node->GetOpDesc()->MutableInputDesc(0), ge::ATTR_NAME_PARENT_NODE_INDEX, 0);
+    ge::AttrUtils::SetInt(sub_sub_output_node->GetOpDesc()->MutableInputDesc(1), ge::ATTR_NAME_PARENT_NODE_INDEX, 1);
+    node_partcall->GetOpDesc()->AddSubgraphName("subgraph1");
+    ge::NodeUtils::SetSubgraph(*node_partcall, 0, subgraph);
+    subgraph->SetParentNode(node_partcall);
     return graph;
   }
 
@@ -1509,5 +1646,73 @@ TEST_F(UTestAccelerator, test_case_15_4) {
       EXPECT_EQ(data[j], j);
     }
   }
+}
+
+TEST_F(UTestAccelerator, test_case_16_1) {
+  /*
+   *  input                                       data    input
+   *    |  \                                         \     /
+   *   cast \                                          add   input1
+   *    |  /                                            |     /
+   *   add1                                          netoutput
+   *    |
+   * partioncall     input2        
+   *    /       \     /
+   * partionout  add2
+   *            /   \
+   *      netout  netout1
+   */
+  auto graph = CreateGraphParentAndSub();
+  FusionTurbo acc(graph);
+  auto movnode = graph->FindNode("add2");
+  acc.GraphNodeUpMigration(movnode, 0);
+  /*
+   *  input                               data   input input1 data1
+   *    |  \                                 \    /     \    /
+   *   cast \                                  add      add2
+   *    |  /                                     \      /
+   *    add1  input2                              \    /
+   *    |     /                                    \  /  
+   *   partioncall                                netouput
+   *    /        \      \
+   * partionout netout netout1
+   */
+  auto aftermovnode = graph->FindNode("add2");
+  EXPECT_EQ(aftermovnode, nullptr);
+} 
+
+TEST_F(UTestAccelerator, test_case_16_2) {
+  /*
+   *  input                                          data    input
+   *    |  \                                            \     /
+   *   cast \                                             add input1
+   *    |  /                                               |  /
+   *   add1                                             netoutput
+   *    |
+   * partioncall   input2        
+   *     /      \   /
+   * partionout  add2
+   *            /   \
+   *      netout  netout1
+   */
+  auto graph = CreateGraphParentAndSub();
+  FusionTurbo acc(graph);
+  auto movnode = graph->FindNode("add1");
+  acc.GraphNodeDownMigration(movnode, 0);
+  /*
+   *  input                                        data    data1
+   *    |  \                                          \     /
+   *   cast \                                           add1  input
+   *    |    \                                             \   /
+   *    |   /                                                add input1
+   *    |  /                                                  |  /
+   * partioncall   input2                                   netout
+   *     /     \    /
+   * partionout add2
+   *           /   \
+   *      netout  netout1
+   */
+  auto aftermovnode = graph->FindNode("add1");
+  EXPECT_EQ(aftermovnode, nullptr);
 }
 }

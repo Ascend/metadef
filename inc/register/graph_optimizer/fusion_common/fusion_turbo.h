@@ -167,6 +167,26 @@ class FusionTurbo {
                     Relations &output_relations,
                     const std::vector<ge::NodePtr> &old_nodes = {},
                     bool remove_old = true);
+  
+  bool HasControl(const ge::NodePtr &node);
+
+  bool HasInControl(const ge::NodePtr &node);
+
+  bool HasOutControl(const ge::NodePtr &node);
+
+  Status MoveDataOutputUp(const ge::NodePtr &node, int32_t index);
+
+  /* move node to pre node if pre node has subgraph
+   * @param node  current need move node
+   * @param index node move input index
+   **/
+  Status GraphNodeUpMigration(const ge::NodePtr &node, const int32_t index);
+
+  /* move node to next node if next node has subgraph
+   * @param node  current need move node
+   * @param index node move output index
+   **/
+  Status GraphNodeDownMigration(const ge::NodePtr &node, const int32_t index);
  private:
   /* AddWeight will do either AddConstNode or UpdateConst. */
   ge::NodePtr AddConstNode(const ge::NodePtr &node, int32_t index,

@@ -18,10 +18,12 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/debug/ge_attr_define.h"
 
 #include <array>
 
 namespace fe {
+const std::string kNetOutput = "NetOutput";
 WeightInfo::WeightInfo(const ge::GeTensorDesc &tensor_desc, void *data_p)
     : data(reinterpret_cast<uint8_t*>(data_p)) {
   shape = tensor_desc.GetShape();
@@ -194,7 +196,7 @@ static inline ge::NodePtr GetPeerOutNode(const ge::NodePtr &node,
   auto in_anchor = node->GetInDataAnchor(index);
   ACCLRT_NOTNULL(in_anchor, nullptr);
   auto peer_anchor = in_anchor->GetPeerOutAnchor();
-  ACCLRT_NOTNULL(in_anchor, nullptr);
+  ACCLRT_NOTNULL(peer_anchor, nullptr);
   auto peer_node = peer_anchor->GetOwnerNode();
   return peer_node;
 }
@@ -629,7 +631,6 @@ Status FusionTurbo::LinkInput(Relations &input_relations,
              dst_in_index, dst_node->GetName().c_str(), dst_input_size);
       continue;
     }
-
     if (relation.second.empty()) {
       continue;
     }
@@ -920,6 +921,275 @@ Status FusionTurbo::MultiInOne(const ge::NodePtr &new_node,
     for (auto &old_node : old_nodes) {
       RemoveNodeOnly(old_node);
     }
+  }
+  return SUCCESS;
+}
+
+bool FusionTurbo::HasInControl(const ge::NodePtr &node) {
+  auto in_control_anchor = node->GetInControlAnchor();
+  for (const auto &peer_out_control_anchor : in_control_anchor->GetPeerOutControlAnchors()) {
+    if (peer_out_control_anchor->GetOwnerNode() != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool FusionTurbo::HasOutControl(const ge::NodePtr &node) {
+  auto out_control_anchor = node->GetOutControlAnchor();
+  for (const auto &peer_in_control_anchor : out_control_anchor->GetPeerInControlAnchors()) {
+    if (peer_in_control_anchor->GetOwnerNode() != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool FusionTurbo::HasControl(const ge::NodePtr &node) {
+  return HasInControl(node) || HasOutControl(node);
+}
+
+Status FusionTurbo::MoveDataOutputUp(const ge::NodePtr &node, int32_t index) {
+  NodeIndex pre_node_index = GetPeerOutPair(node, index);
+  ACCLRT_NOTNULL(pre_node_index.node, FAILED);
+
+  uint32_t subgraph_node_output_size = pre_node_index.node->GetAllOutDataAnchorsSize();
+  auto node_pair_peer_out_anchor = pre_node_index.node->GetOutDataAnchor(pre_node_index.index);
+  ge::OutDataAnchorPtr out_link_anchor = node_pair_peer_out_anchor;
+  for (size_t node_outanchor_index = 0; node_outanchor_index < node->GetAllOutDataAnchorsSize();
+       ++node_outanchor_index) {
+    if (node_outanchor_index != 0) {
+      pre_node_index.node->GetOpDesc()->AddOutputDesc(node->GetOpDesc()->GetOutputDesc(node_outanchor_index));
+      out_link_anchor = pre_node_index.node->GetOutDataAnchor(subgraph_node_output_size);
+      ++subgraph_node_output_size;
+    } else {
+      pre_node_index.node->GetOpDesc()->UpdateOutputDesc(out_link_anchor->GetIdx(),
+                                                         node->GetOpDesc()->GetOutputDesc(node_outanchor_index));
+    }
+    auto node_outanchor = node->GetOutDataAnchor(node_outanchor_index);
+    for (auto &peer_in_anchor : node_outanchor->GetPeerInDataAnchors()) {
+      if (peer_in_anchor->Unlink(node_outanchor) != ge::GRAPH_SUCCESS) {
+        return FAILED;
+      }
+      if (peer_in_anchor->LinkFrom(out_link_anchor) != ge::GRAPH_SUCCESS) {
+        return FAILED;
+      }
+    }
+  }
+  return SUCCESS;
+}
+
+ge::NodePtr AddSubGraphDataWithIndex(const ge::ComputeGraphPtr &graph, int32_t node_input_size,
+                                     const ge::GeTensorDesc &tensor_desc) {
+  const std::string data_name = "Data_" + std::to_string(node_input_size);
+  ge::OpDescBuilder op_desc_builder(data_name, "Data");
+  const ge::OpDescPtr op_desc = op_desc_builder.AddInput("x")
+                                               .AddOutput("y")
+                                               .Build();
+  ge::AttrUtils::SetInt(op_desc, ge::ATTR_NAME_PARENT_NODE_INDEX, node_input_size);
+  op_desc->UpdateInputDesc(0U, tensor_desc);
+  op_desc->UpdateOutputDesc(0U, tensor_desc);
+  ge::NodePtr data_node = graph->AddNode(op_desc);
+  return data_node;
+}
+
+ge::NodePtr FindSubgraphData(const ge::ComputeGraphPtr &graph, int32_t index) {
+  ge::NodePtr pair_data_node = nullptr;
+  for (auto &tmp_node : graph->GetDirectNode()) {
+    int64_t ref_i;
+    if (tmp_node->GetType() == "Data" &&
+        ge::AttrUtils::GetInt(tmp_node->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX, ref_i) &&
+        ref_i == static_cast<int64_t>(index)) {
+      pair_data_node = tmp_node;
+      break;
+    }
+  }
+  return pair_data_node;
+}
+
+int32_t GetNetOutputTensorIndex(const ge::NodePtr &node, int32_t index) {
+  int32_t tensor_index = 0;
+  for (uint32_t input_index = 0; input_index < node->GetOpDesc()->GetAllInputsSize(); ++input_index) {
+    int64_t parent_index = -1;
+    auto input_desc = node->GetOpDesc()->MutableInputDesc(input_index);
+    (void)ge::AttrUtils::GetInt(input_desc, ge::ATTR_NAME_PARENT_NODE_INDEX, parent_index);
+    if (parent_index == index) {
+      tensor_index = input_index;
+      break;
+    }
+  }
+
+  return tensor_index;
+}
+
+Status MoveDataInputUpToSubgraph(const ge::NodePtr &node, const int32_t index, Relations &input_relations) {
+  NodeIndex pre_node_index = GetPeerOutPair(node, index);
+  ACCLRT_NOTNULL(pre_node_index.node, FAILED);
+  auto subgraph = ge::NodeUtils::GetSubgraph(*pre_node_index.node, 0);
+  ACCLRT_NOTNULL(subgraph, FAILED);
+  auto netout_node = subgraph->FindFirstNodeMatchType(kNetOutput);
+  ACCLRT_NOTNULL(netout_node, FAILED);
+
+  auto netout_tensor_index = GetNetOutputTensorIndex(netout_node, pre_node_index.index);
+  uint32_t subgraph_node_input_size = pre_node_index.node->GetAllInDataAnchorsSize();
+  for (uint32_t node_inanchor_index = 0; node_inanchor_index < node->GetAllInDataAnchorsSize(); ++node_inanchor_index) {
+    auto node_inanchor = node->GetInDataAnchor(node_inanchor_index);
+    auto out_data_anchor = node_inanchor->GetPeerOutAnchor();
+    if (out_data_anchor == nullptr) {
+      continue;
+    }
+    out_data_anchor->Unlink(node_inanchor);
+    if (node_inanchor_index == static_cast<uint32_t>(index)) {
+      input_relations.AddPeerIndex(node_inanchor_index, GetPeerOutPair(netout_node, netout_tensor_index));
+      continue;
+    }
+    if (ge::NodeUtils::AppendInputAnchor(pre_node_index.node, subgraph_node_input_size + 1) != ge::GRAPH_SUCCESS) {
+      return FAILED;
+    }
+    if (pre_node_index.node->GetInDataAnchor(subgraph_node_input_size)->LinkFrom(out_data_anchor)
+        != ge::GRAPH_SUCCESS) {
+      return FAILED;
+    }
+
+    ge::NodePtr data_node = AddSubGraphDataWithIndex(subgraph, subgraph_node_input_size,
+                                                     node->GetOpDesc()->GetInputDesc(node_inanchor_index));
+    input_relations.AddPeerIndex(node_inanchor_index, {data_node, 0});
+    ++subgraph_node_input_size;
+  }
+  return SUCCESS;
+}
+
+Status FusionTurbo::GraphNodeUpMigration(const ge::NodePtr &node,
+                                         const int32_t index) {
+  if (HasControl(node)) {
+    GELOGD("[GraphAcclrt][GraphNodeUpMigration] node:%s has control anchors, cannot move", node->GetName().c_str());
+    return NOT_CHANGED;
+  }
+  NodeIndex pre_node_index = GetPeerOutPair(node, index);
+  ACCLRT_NOTNULL(pre_node_index.node, FAILED);
+  auto subgraph = ge::NodeUtils::GetSubgraph(*pre_node_index.node, 0);
+  ACCLRT_NOTNULL(subgraph, FAILED);
+  auto netout_node = subgraph->FindFirstNodeMatchType(kNetOutput);
+  ACCLRT_NOTNULL(netout_node, FAILED);
+  auto netout_tensor_index = GetNetOutputTensorIndex(netout_node, pre_node_index.index);
+
+  /* move all data output up to parent subgraph node, clear current op all output */
+  if (MoveDataOutputUp(node, index) != SUCCESS) {
+    GELOGE(FAILED, "[GraphAcclrt][GraphNodeUpMigration][MoveDataOutputUp] Failed to relink output for node:%s",
+           node->GetName().c_str());
+    return FAILED;
+  }
+
+  /* move all data input up to parent subgraph node, and record the input relationship for node to added in subgraph */
+  Relations input_relations;
+  if (MoveDataInputUpToSubgraph(node, index, input_relations)) {
+    GELOGE(FAILED, "[GraphAcclrt][GraphNodeUpMigration][MoveDataInputUpToSubgraph] Failed to relink output for node:%s",
+           node->GetName().c_str());
+    return FAILED;
+  }
+
+  RemoveNodeOnly(node);
+
+  Relations output_relations;
+  output_relations.AddPeerIndex(0, {netout_node, netout_tensor_index});
+  BreakInput(netout_node, {netout_tensor_index});
+
+  auto node_in_subgraph = subgraph->AddNode(node->GetOpDesc());
+  if (LinkInput(input_relations, node_in_subgraph, false) != SUCCESS) {
+    GELOGE(FAILED, "[GraphAcclrt][GraphNodeUpMigration][LnkIn] Failed to link input for node:%s",
+           node_in_subgraph->GetName().c_str());
+    return FAILED;
+  }
+
+  if (LinkOutput(output_relations, node_in_subgraph, false) != SUCCESS) {
+    GELOGE(FAILED, "[GraphAcclrt][GraphNodeUpMigration][LnkOut] Failed to link input for node:%s",
+           node_in_subgraph->GetName().c_str());
+    return FAILED;
+  }
+  return SUCCESS;
+}
+
+Status MoveDataInputDownToSubgraph(const ge::NodePtr &node, const int32_t index, Relations &input_relations) {
+  NodeIndex out_node_index = GetPeerInFirstPair(node, index);
+  ACCLRT_NOTNULL(out_node_index.node, FAILED);
+  auto subgraph = ge::NodeUtils::GetSubgraph(*out_node_index.node, 0U);
+  ACCLRT_NOTNULL(subgraph, FAILED);
+  ge::NodePtr pair_data_node = FindSubgraphData(subgraph, out_node_index.index);
+  ACCLRT_NOTNULL(pair_data_node, FAILED);
+
+  uint32_t subgraph_node_input_size = out_node_index.node->GetAllInDataAnchorsSize();
+  ge::InDataAnchorPtr linkin_anchor = out_node_index.node->GetInDataAnchor(out_node_index.index);
+  linkin_anchor->UnlinkAll();
+  for (uint32_t node_inanchor_index = 0; node_inanchor_index < node->GetAllInDataAnchorsSize(); ++node_inanchor_index) {
+    auto input_tensor_desc = node->GetOpDesc()->GetInputDesc(node_inanchor_index);
+    if (node_inanchor_index != 0) {
+      if (ge::NodeUtils::AppendInputAnchor(out_node_index.node, subgraph_node_input_size + 1) != ge::GRAPH_SUCCESS) {
+        return FAILED;
+      }
+      linkin_anchor = out_node_index.node->GetInDataAnchor(subgraph_node_input_size);
+      subgraph_node_input_size++;
+    } else {
+      out_node_index.node->GetOpDesc()->UpdateInputDesc(linkin_anchor->GetIdx(), input_tensor_desc);
+    }
+    auto node_inanchor = node->GetInDataAnchor(node_inanchor_index);
+    auto peer_out_anchor = node_inanchor->GetPeerOutAnchor();
+    if (peer_out_anchor->Unlink(node_inanchor) != ge::GRAPH_SUCCESS) {
+      return FAILED;
+    }
+    if (peer_out_anchor->LinkTo(linkin_anchor) != ge::GRAPH_SUCCESS) {
+      return FAILED;
+    }
+    ge::NodePtr data_node = pair_data_node;
+    if (node_inanchor_index != 0) {
+      data_node = AddSubGraphDataWithIndex(subgraph, subgraph_node_input_size - 1, input_tensor_desc);
+    }
+    input_relations.AddPeerIndex(node_inanchor_index, {data_node, 0});
+  }
+  return SUCCESS;
+}
+
+Status FusionTurbo::GraphNodeDownMigration(const ge::NodePtr &node,
+                                           const int32_t index) {
+  if (node->GetOutDataNodesSize() != 1 || HasControl(node)) {
+    GELOGD("[GraphAcclrt][GraphNodeDownMigration] node:%s multi output or has control node, cannot migration",
+           node->GetName().c_str());
+    return NOT_CHANGED;
+  }
+  NodeIndex out_node_index = GetPeerInFirstPair(node, index);
+  ACCLRT_NOTNULL(out_node_index.node, FAILED);
+  auto subgraph = ge::NodeUtils::GetSubgraph(*out_node_index.node, 0U);
+  ACCLRT_NOTNULL(subgraph, FAILED);
+  ge::NodePtr pair_data_node = FindSubgraphData(subgraph, out_node_index.index);
+  ACCLRT_NOTNULL(pair_data_node, FAILED);
+
+  /* move data input down to subgraph node, and record input relationship for node to be added in subgraph */
+  Relations input_relations;
+  if (MoveDataInputDownToSubgraph(node, index, input_relations) != SUCCESS) {
+    GELOGE(FAILED, "[GraphAcclrt][GraphNodeDownMigration][MoveDataInputDownSubgraph] Failed to link input for node:%s",
+           node->GetName().c_str());
+    return FAILED;
+  }
+  BreakOutput(node, {index});
+
+  NodeIndices node_indices;
+  AppendPeerInAllPairs(node_indices, pair_data_node, 0);
+  std::map<ThisIndex, NodeIndices> map_indices;
+  map_indices.emplace(make_pair(0, node_indices));
+  Relations output_relations(map_indices);
+  BreakOutput(pair_data_node, {0});
+
+  RemoveNodeOnly(node);
+
+  auto node_in_subgraph = subgraph->AddNode(node->GetOpDesc());
+  if (LinkInput(input_relations, node_in_subgraph, false) != SUCCESS) {
+    GELOGE(FAILED, "[GraphAcclrt][GraphNodeDownMigration][LnkIn] Failed to link input for node:%s",
+           node_in_subgraph->GetName().c_str());
+    return FAILED;
+  }
+  if (LinkOutput(output_relations, node_in_subgraph, false) != SUCCESS) {
+    GELOGE(FAILED, "[GraphAcclrt][GraphNodeDownMigration][LnkOut] Failed to link input for node:%s",
+           node_in_subgraph->GetName().c_str());
+    return FAILED;
   }
   return SUCCESS;
 }
