@@ -52,6 +52,8 @@ struct AutoThreadParam {
   // AICPU task Params.
   uint32_t args_size{0U}; // size for args_base
   uint32_t extinfo_size{0U}; // size for extinfo_base
+  std::vector<std::vector<std::vector<uint64_t>>> *task_input_shape{nullptr};
+  std::vector<std::vector<std::vector<uint64_t>>> *task_output_shape{nullptr};
 };
 
 class FFTSPlusTaskUpdate {
