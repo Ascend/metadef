@@ -18,7 +18,7 @@
 #define COMMON_UTIL_TRACE_MANAGER_TRACE_MANAGER_H_
 
 #include <string>
-#include <array>
+#include <vector>
 #include <thread>
 #include <atomic>
 #include <condition_variable>
@@ -82,7 +82,7 @@ class TraceManager {
   static thread_local std::string graph_name_;
 
   std::atomic<bool> enabled_{false};
-  std::array<std::string, (kTraceSaveTriggerNum << 1)> trace_array_ = {};
+  std::vector<std::string> trace_array_;
   std::atomic<uint64_t> trace_index_{0};
   std::atomic<uint64_t> total_saved_nums_{0};
   std::atomic<uint64_t> part1_ready_nums_{0};

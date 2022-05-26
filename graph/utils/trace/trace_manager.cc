@@ -197,6 +197,7 @@ Status TraceManager::Initialize(const char_t *file_save_path) {
            trace_save_file_path_.c_str());
     return FAILED;
   }
+  trace_array_.resize(kTraceSaveTriggerNum << 1U);
   try {
     save_thread_ = std::thread(&TraceManager::SaveBufferToFileThreadFunc, this);
   } catch (const std::system_error &) {
