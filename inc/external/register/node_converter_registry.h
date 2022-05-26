@@ -53,8 +53,14 @@ class NodeConverterRegister {
 };
 }
 
+#ifdef __GNUC__
+#define ATTRIBUTE_USED __attribute__((used))
+#else
+#define ATTRIBUTE_USED
+#endif
+
 #define GERT_REGISTER_NODE_CONVERTER_COUNTER2(type, func, counter) \
-    static const gert::NodeConverterRegister g_register_node_converter_##counter __attribute__((used)) = \
+    static const gert::NodeConverterRegister g_register_node_converter_##counter ATTRIBUTE_USED = \
       gert::NodeConverterRegister(type, func)
 #define GERT_REGISTER_NODE_CONVERTER_COUNTER(type, func, counter) GERT_REGISTER_NODE_CONVERTER_COUNTER2(type, func, counter)
 #define REGISTER_NODE_CONVERTER(type, func) GERT_REGISTER_NODE_CONVERTER_COUNTER(type, func, __COUNTER__)

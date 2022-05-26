@@ -18,7 +18,6 @@
 
 #include <map>
 #include <string>
-#include <vector>
 #include "graph/ge_error_codes.h"
 
 namespace ge {

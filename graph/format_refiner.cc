@@ -31,6 +31,8 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/type_utils.h"
 #include "graph/types.h"
+#include "graph/debug/ge_attr_define.h"
+
 namespace ge {
 namespace {
 const size_t kDimSizeOf4D = 4UL;
@@ -166,8 +168,14 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
              (peer_in_data_node->GetName()).c_str(), idx);
       return GRAPH_FAILED;
     }
+
+    bool format_locked = false;
+    (void)AttrUtils::GetBool(peer_in_data_node->GetOpDesc(), ATTR_NAME_FORMAT_LOCKED, format_locked);
+    GELOGD("Get format locked flag:%u (shape can not be changed while value is equal to 1) from peer in node:%s.",
+           static_cast<uint32_t>(format_locked), peer_in_data_node->GetName().c_str());
+
     auto ge_tensor_desc = peer_in_data_node->GetOpDesc()->GetInputDesc(static_cast<uint32_t>(idx));
-    if (ge_tensor_desc.GetOriginFormat() == FORMAT_ND) {
+    if ((ge_tensor_desc.GetOriginFormat() == FORMAT_ND) && (!format_locked)) {
       const auto dim_num = ge_tensor_desc.GetShape().GetDimNum();
       GE_IF_BOOL_EXEC(dim_num == 0UL,
           GELOGI("node name:%s idx:%d in is scalar. stop forward infer!", peer_in_data_node->GetName().c_str(), idx);
@@ -330,7 +338,13 @@ graphStatus FormatRefiner::BackInferProcess(std::deque<ge::NodePtr> &nodes, cons
     // Check format whether have been set
     // op_desc of node should not be null
     auto ge_tensor_desc = peer_out_data_node->GetOpDesc()->GetOutputDesc(static_cast<uint32_t>(idx));
-    if (ge_tensor_desc.GetOriginFormat() == FORMAT_ND) {
+
+    bool format_locked = false;
+    (void)AttrUtils::GetBool(peer_out_data_node->GetOpDesc(), ATTR_NAME_FORMAT_LOCKED, format_locked);
+    GELOGD("Get format locked flag:%u (shape is locked if value is equal to 1) from peer out node:%s.",
+           static_cast<uint32_t>(format_locked), peer_out_data_node->GetName().c_str());
+
+    if ((ge_tensor_desc.GetOriginFormat() == FORMAT_ND) && (!format_locked)) {
       const auto dim_num = ge_tensor_desc.GetShape().GetDimNum();
       GE_IF_BOOL_EXEC(dim_num == 0UL, GELOGD("node name:%s idx:%d out is scalar. stop back infer!",
                                              peer_out_data_node->GetName().c_str(), idx); continue);

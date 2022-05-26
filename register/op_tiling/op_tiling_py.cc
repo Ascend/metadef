@@ -24,6 +24,7 @@
 #include "register/op_tiling_registry.h"
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_tiling_constants.h"
+#include "common/util/tiling_utils.h"
 
 namespace optiling {
 using ParseAndSetAttrValueFunc = std::function<void(ge::Operator &, const nlohmann::json &, const std::string &)>;
@@ -218,7 +219,7 @@ void CopyConstDataWithFloat16(const nlohmann::json &json_array, std::vector<uint
   const size_t size = sizeof(const_value)/sizeof(float);
   for (size_t i = 0; i < size; ++i) {
     float const_data = *(const_data_ptr + i);
-    uint16_t const_data_uint16 = FloatToUint16(const_data);
+    uint16_t const_data_uint16 = optiling::FloatToUint16(const_data);
     const_data_vec.emplace_back(const_data_uint16);
   }
   uint8_t *pv_begin = reinterpret_cast<uint8_t *>(const_data_vec.data());

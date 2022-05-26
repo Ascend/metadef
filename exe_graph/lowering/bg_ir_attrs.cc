@@ -110,6 +110,8 @@ bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &att
       return AppendStrAttr(attr, attrs);
     case ge::AnyValue::VT_TENSOR:
       return AppendTensorAttr(attr, attrs);
+    case ge::AnyValue::VT_LIST_FLOAT:
+      return AppendVectorAttr<float>(attr, attrs);
       // todo ListListInt
     default:
       GELOGE(ge::FAILED, "Does not support the attr type now, attr type %d", attr.GetValueType());
