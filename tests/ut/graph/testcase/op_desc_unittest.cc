@@ -472,6 +472,23 @@ TEST_F(UtestOpDesc, GetInferFunc_success) {
   EXPECT_EQ(func(op), GRAPH_SUCCESS);
 }
 
+TEST_F(UtestOpDesc, CallInferFunc_success) {
+  OpDescImpl op_desc_impl;
+  Operator op;
+  OpDescPtr op_desc;
+  auto status = op_desc_impl.CallInferFunc(op, op_desc);
+  const auto func = [](Operator &op) { return GRAPH_SUCCESS; };
+  op_desc_impl.infer_func_ = func;
+  status = op_desc_impl.CallInferFunc(op, op_desc);
+  const auto infer_data_slice_func = [](Operator &op) {
+    return GRAPH_SUCCESS;
+  };
+  
+  OpDescPtr odp = std::make_shared<OpDesc>("name", "type");
+  op_desc_impl.infer_func_ = infer_data_slice_func;
+  status = op_desc_impl.CallInferFunc(op, odp);
+}
+
 TEST_F(UtestOpDesc, InferDataSlice_success) {
   auto op_desc = std::make_shared<OpDesc>();
   const auto func = [](Operator &op) { return GRAPH_SUCCESS; };
