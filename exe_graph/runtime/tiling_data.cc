@@ -61,7 +61,7 @@ ge::graphStatus AppendConvertedAttr(TilingData *tiling_data, const RuntimeAttrs 
   const T1 *attr = attrs->GetAttrPointer<T1>(attr_index);
   GE_CHECK_NOTNULL(attr);
   if (!ge::IntegerChecker<T2>::Compat(*attr)) {
-    GELOGE(ge::GRAPH_FAILED, "[Check][Param] attr[%zu] = %ld overflow, large than max dst type", attr_index, *attr);
+    GELOGE(ge::GRAPH_FAILED, "[Check][Param] attr[%zu] overflow, large than max dst type", attr_index);
   }
   T2 attr_data = static_cast<T2>(*attr);
   return tiling_data->Append<T2>(attr_data);
