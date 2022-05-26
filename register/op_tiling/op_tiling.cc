@@ -942,113 +942,75 @@ extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, OpRunInfoV2
   return status;
 }
 
-std::vector<uint32_t> GetIndexVector(const ge::Node &node, const bool is_input)
-{
-  vector<uint32_t> indices;
-  ge::GeTensorDescPtr tensor_desc_ptr = nullptr;
-  if (is_input) {
-    for (const auto &input_anchor : node.GetAllInDataAnchors()) {
-      if (ge::AnchorUtils::GetStatus(input_anchor) == ge::ANCHOR_SUSPEND) {
-        GELOGD("Input anchor:%u status is SUSPEND.", input_anchor->GetIdx());
-        continue;
-      }
-      tensor_desc_ptr = node.GetOpDesc()->MutableInputDesc(static_cast<uint32_t>(input_anchor->GetIdx()));
-      if (tensor_desc_ptr == nullptr) {
-        GELOGD("Input tensor ptr is null.");
-        continue;
-      }
-      if (input_anchor->GetIdx() >= 0) {
-        indices.emplace_back(input_anchor->GetIdx());
-      }
-    }
-    return indices;
-  }
-  for (const auto &output_anchor : node.GetAllOutDataAnchors()) {
-    tensor_desc_ptr = node.GetOpDesc()->MutableOutputDesc(static_cast<uint32_t>(output_anchor->GetIdx()));
-    if (tensor_desc_ptr == nullptr) {
-      GELOGD("Output tensor ptr is null.");
-      continue;
-    }
-    if (output_anchor->GetIdx() >= 0) {
-      indices.emplace_back(output_anchor->GetIdx());
-    }
-  }
-  return indices;
-}
-
-ge::graphStatus UpDateNodeShapeBySliceInfo(const ffts::ThreadSliceMapPtr slice_info_ptr, const ge::OpDescPtr op_desc,
-                                           const uint32_t thread_id, vector<vector<int64_t>> &ori_shape,
-                                           const vector<vector<uint32_t>> &in_out_idx)
+ge::graphStatus UpDateNodeShapeBySliceInfo(const ffts::ThreadSliceMapDyPtr slice_info_ptr, const ge::OpDescPtr op_desc,
+                                           const uint32_t thread_id, vector<int64_t> &ori_shape,
+                                           bool &same_shape)
 {
   if ((thread_id >= slice_info_ptr->input_tensor_slice.size())
       || (thread_id >= slice_info_ptr->output_tensor_slice.size())) {
     REPORT_CALL_ERROR("E19999", "Update node shape thread id(%u) err.", thread_id);
     return ge::GRAPH_FAILED;
   }
-  if (in_out_idx[0U].size() > slice_info_ptr->input_tensor_slice[static_cast<size_t>(thread_id)].size()) {
-    REPORT_CALL_ERROR("E19999", "Input size: %zu err.", slice_info_ptr->input_tensor_slice[thread_id].size());
-    return ge::GRAPH_FAILED;
-  }
   ge::GeTensorDescPtr tensor_ptr = nullptr;
-  vector<int64_t> dst_shape;
-  for (size_t i = 0U; i < in_out_idx[0U].size(); ++i) {
-    tensor_ptr = op_desc->MutableInputDesc(in_out_idx[0U][i]);
+  for (auto &index : slice_info_ptr->input_tensor_indexes) {
+    tensor_ptr = op_desc->MutableInputDesc(index);
+    GE_CHECK_NOTNULL(tensor_ptr);
+    ge::GeShape& shape = tensor_ptr->MutableShape();
+    auto &tmp_dim = slice_info_ptr->input_tensor_slice[static_cast<size_t>(thread_id)][index];
+    if (tmp_dim.empty()) {
+      return ge::GRAPH_FAILED;
+    }
+    if (thread_id == 0U) {
+      ori_shape.emplace_back(shape.GetDim(0));
+      auto &tail_dim = slice_info_ptr->input_tensor_slice[slice_info_ptr->slice_instance_num - 1][index];
+      if (tail_dim.empty()) {
+        return ge::GRAPH_FAILED;
+      }
+      if (tail_dim[0] != tmp_dim[0]) {
+        same_shape = false;
+      }
+    }
+    shape.SetDim(0, tmp_dim[0]);
+  }
+  for (auto &index : slice_info_ptr->output_tensor_indexes) {
+    tensor_ptr = op_desc->MutableOutputDesc(index);
     GE_CHECK_NOTNULL(tensor_ptr);
     ge::GeShape& shape = tensor_ptr->MutableShape();
     if (thread_id == 0U) {
-      ori_shape.emplace_back(shape.GetDims());
+      ori_shape.emplace_back(shape.GetDim(0));
     }
-    auto &tmp_dim = slice_info_ptr->input_tensor_slice[static_cast<size_t>(thread_id)][i];
-    dst_shape.clear();
-    for (const auto dim : tmp_dim) {
-      dst_shape.emplace_back(dim.higher - dim.lower);
+    auto &tmp_dim = slice_info_ptr->output_tensor_slice[static_cast<size_t>(thread_id)][index];
+    if (tmp_dim.empty()) {
+      return ge::GRAPH_FAILED;
     }
-    shape = ge::GeShape(dst_shape);
-  }
-  if (in_out_idx[1U].size() > slice_info_ptr->output_tensor_slice[static_cast<size_t>(thread_id)].size()) {
-    REPORT_CALL_ERROR("E19999", "Output size: %zu err.", slice_info_ptr->output_tensor_slice[thread_id].size());
-    return ge::GRAPH_FAILED;
-  }
-  for (size_t i = 0U; i < in_out_idx[1U].size(); ++i) {
-    tensor_ptr = op_desc->MutableOutputDesc(in_out_idx[1][i]);
-    GE_CHECK_NOTNULL(tensor_ptr);
-    ge::GeShape& shape = tensor_ptr->MutableShape();
-    if (thread_id == 0U) {
-      ori_shape.emplace_back(shape.GetDims());
-    }
-    auto &tmp_dim = slice_info_ptr->output_tensor_slice[static_cast<size_t>(thread_id)][i];
-    dst_shape.clear();
-    for (const auto dim : tmp_dim) {
-      dst_shape.emplace_back(dim.higher - dim.lower);
-    }
-    shape = ge::GeShape(dst_shape);
+    shape.SetDim(0, tmp_dim[0]);
+    GELOGD("Output anchor:%u set dim 0 to %ld", index, tmp_dim[0]);
   }
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus UpDateNodeShapeBack(const ge::OpDescPtr op_desc, vector<vector<int64_t>> &ori_shape,
-                                    vector<vector<uint32_t>> &in_out_idx)
+ge::graphStatus UpDateNodeShapeBack(const ge::OpDescPtr op_desc, const ffts::ThreadSliceMapDyPtr slice_info_ptr,
+                                    vector<int64_t> &ori_shape)
 {
-  const size_t input_size = in_out_idx[0U].size();
-  const size_t output_size = in_out_idx[1U].size();
-  if (ori_shape.size() != (input_size + output_size)) {
-    REPORT_CALL_ERROR("E19999", "Update back node shape size err, ori size(%zu), op_size(%zu).", ori_shape.size(),
-                      input_size + output_size);
+  if (ori_shape.size() != (slice_info_ptr->input_tensor_indexes.size() +
+                           slice_info_ptr->output_tensor_indexes.size())) {
+    REPORT_CALL_ERROR("E19999", "Update back node shape size err.");
     return ge::GRAPH_FAILED;
   }
-  ge::GeTensorDescPtr tensor_ptr = nullptr;
-  for (size_t i = 0U; i < input_size; ++ i) {
-    tensor_ptr = op_desc->MutableInputDesc(in_out_idx[0U][i]);
+  size_t idx = 0;
+  for (auto &index : slice_info_ptr->input_tensor_indexes) {
+    ge::GeTensorDescPtr tensor_ptr = op_desc->MutableInputDesc(index);
     GE_CHECK_NOTNULL(tensor_ptr);
     ge::GeShape& shape = tensor_ptr->MutableShape();
-    shape = ge::GeShape(ori_shape[i]);
+    shape.SetDim(0, ori_shape[idx++]);
   }
-  for (size_t i = 0U; i < output_size; ++ i) {
-    tensor_ptr = op_desc->MutableOutputDesc(in_out_idx[1][i]);
+  for (auto &index : slice_info_ptr->output_tensor_indexes) {
+    ge::GeTensorDescPtr tensor_ptr = op_desc->MutableOutputDesc(index);
     GE_CHECK_NOTNULL(tensor_ptr);
     ge::GeShape& shape = tensor_ptr->MutableShape();
-    shape = ge::GeShape(ori_shape[input_size + i]);
+    shape.SetDim(0, ori_shape[idx++]);
   }
+  GELOGD("Update node shape back success.");
   return ge::GRAPH_SUCCESS;
 }
 
@@ -1065,38 +1027,39 @@ extern "C" ge::graphStatus OpFftsPlusCalculate(const ge::Operator &op, std::vect
   const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
   GELOGD("[OpFftsPlusCalculate]Op_type:%s, op_name:%s", op_desc->GetType().c_str(), op_desc->GetName().c_str());
-  ffts::ThreadSliceMapPtr slice_info_ptr = nullptr;
-  slice_info_ptr = op_desc->TryGetExtAttr(ffts::kAttrSgtStructInfo, slice_info_ptr);
+  ffts::ThreadSliceMapDyPtr slice_info_ptr = nullptr;
+  slice_info_ptr = op_desc->TryGetExtAttr(ffts::kAttrSgtStructInfoDy, slice_info_ptr);
   GE_CHECK_NOTNULL(slice_info_ptr);
-  vector<vector<uint32_t>> in_out_idx;
-  in_out_idx.emplace_back(GetIndexVector(*node, true));
-  in_out_idx.emplace_back(GetIndexVector(*node, false));
-  if (in_out_idx[0U].empty() || in_out_idx[1U].empty()) {
-    REPORT_CALL_ERROR("E19999", "Get in/out index err");
+  if (slice_info_ptr->slice_instance_num != slice_info_ptr->input_tensor_slice.size() ||
+      slice_info_ptr->slice_instance_num != slice_info_ptr->output_tensor_slice.size()) {
+    REPORT_CALL_ERROR("E19999", "Slice num not equal.");
     return ge::GRAPH_FAILED;
   }
-  vector<vector<int64_t>> ori_shape; // save original shape
-  ge::graphStatus rc = ge::GRAPH_SUCCESS;
+  vector<int64_t> ori_shape; // save original shape
   uint32_t thread_id = 0U;
-  optiling::utils::OpRunInfo run_info;
-  for (size_t i = 0U; i < ffts::kSgtTillingNum; i++) {
+  op_run_info.resize(ffts::kSgtTillingNum);
+  bool same_shape = true;
+  for (size_t i = 0U; i < static_cast<size_t>(ffts::kSgtTillingNum); i++) {
     // update node shape by thread slice info
-    if (UpDateNodeShapeBySliceInfo(slice_info_ptr, op_desc, thread_id, ori_shape, in_out_idx) == ge::GRAPH_FAILED) {
+    if (UpDateNodeShapeBySliceInfo(slice_info_ptr, op_desc, thread_id, ori_shape, same_shape) == ge::GRAPH_FAILED) {
       REPORT_CALL_ERROR("E19999", "Update shape failed.");
       return ge::GRAPH_FAILED;
     }
     // call original interface
-    rc = OpParaCalculateV2(op, run_info);
+    ge::graphStatus rc = OpParaCalculateV2(op, op_run_info[i]);
     if (rc != ge::GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E19999", "OpParaCalculateV2 failed, op_type:%s, op_name:%s", op_desc->GetType().c_str(),
                         op_desc->GetName().c_str());
       return rc;
     }
-    op_run_info.emplace_back(run_info);
+    if (same_shape) {
+      op_run_info[1] = op_run_info[0];
+      break;
+    }
     thread_id = slice_info_ptr->slice_instance_num - 1U;
   }
   // node shape write_back
-  (void)UpDateNodeShapeBack(op_desc, ori_shape, in_out_idx);
-  return rc;
+  (void)UpDateNodeShapeBack(op_desc, slice_info_ptr, ori_shape);
+  return ge::GRAPH_SUCCESS;
 }
 }  // namespace optiling
