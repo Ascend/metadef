@@ -35,7 +35,8 @@ public:
             tiling_key_(tiling_key),
             addr_base_(nullptr),
             max_size_(0),
-            offset_(0) {}
+            offset_(0),
+            tiling_cond_(-1) {}
 
   void SetBlockDim(const uint32_t &block_dim) { block_dim_ = block_dim; }
 
@@ -113,6 +114,9 @@ public:
     offset_ = 0;
   }
 
+  void SetTilingCond(const int32_t tiling_cond) { tiling_cond_ = tiling_cond; }
+
+  int32_t GetTilingCond() const { return tiling_cond_; }
 private:
   uint32_t block_dim_;
   bool clear_atomic_;
@@ -122,6 +126,7 @@ private:
   void *addr_base_;
   uint64_t max_size_;
   uint64_t offset_;
+  int32_t tiling_cond_;
 };
 
 OpRunInfo::OpRunInfo() {
@@ -240,6 +245,14 @@ void OpRunInfo::ResetWorkspace() {
 
 void OpRunInfo::ResetAddrBase(void *const addr_base, const uint64_t max_size) {
   impl_->ResetAddrBase(addr_base, max_size);
+}
+
+void OpRunInfo::SetTilingCond(const int32_t tiling_cond) {
+  impl_->SetTilingCond(tiling_cond);
+}
+
+int32_t OpRunInfo::GetTilingCond() const {
+  return impl_->GetTilingCond();
 }
 
 class OpCompileInfoImpl {
