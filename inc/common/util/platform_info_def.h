@@ -35,6 +35,7 @@ typedef struct tag_str_info {
   std::string ccec_aic_version;
   std::string ccec_aiv_version;
   std::string is_support_ai_cpu_compiler;
+  std::string short_soc_version;
 } StrInfo;
 
 typedef struct tag_so_c_info {
