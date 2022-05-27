@@ -76,12 +76,12 @@ public:
     }
   }
 
-  void* GetAddrBase(int64_t& max_size) {
+  void* GetAddrBase(uint64_t& max_size) const {
     max_size = max_size_;
     return addr_base_;
   }
 
-  void SetAddrBaseOffset(int64_t size) {
+  void SetAddrBaseOffset(const uint64_t size) {
     offset_ = size;
   }
 
@@ -202,11 +202,11 @@ void OpRunInfo::AddTilingData(const ge::char_t *value, const size_t size) {
   impl_->AddTilingData(value, size);
 }
 
-void* OpRunInfo::GetAddrBase(int64_t& max_size) {
+void* OpRunInfo::GetAddrBase(uint64_t& max_size) const {
   return impl_->GetAddrBase(max_size);
 }
 
-void OpRunInfo::SetAddrBaseOffset(int64_t size) {
+void OpRunInfo::SetAddrBaseOffset(const uint64_t size) {
   impl_->SetAddrBaseOffset(size);
 }
 

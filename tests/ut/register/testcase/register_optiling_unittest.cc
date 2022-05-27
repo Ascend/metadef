@@ -295,7 +295,7 @@ TEST_F(RegisterOpTilingUT, UpDateNodeShapeBySliceInfo2) {
 
 TEST_F(RegisterOpTilingUT, op_run_info_test_new_tiling_interface1) {
   utils::OpRunInfo run_info;
-  int64_t max_size = 0;
+  uint64_t max_size = 0;
   void * base = run_info.GetAddrBase(max_size);
   run_info.SetAddrBaseOffset(10);
   EXPECT_TRUE(base == NULL);

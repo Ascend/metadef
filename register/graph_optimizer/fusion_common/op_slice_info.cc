@@ -46,6 +46,10 @@ InputSplitInfo::InputSplitInfo() {}
 
 InputSplitInfo::~InputSplitInfo() {}
 
+InputSplitInfo::InputSplitInfo(const InputSplitInfo &input_split_info) {
+  this->split_impl_ = input_split_info.split_impl_;
+}
+
 InputSplitInfo &InputSplitInfo::operator = (const InputSplitInfo &input_split_info) {
   this->split_impl_ = input_split_info.split_impl_;
   return *this;
@@ -115,6 +119,10 @@ OutputSplitInfo::OutputSplitInfo() {}
 
 OutputSplitInfo::~OutputSplitInfo() {}
 
+OutputSplitInfo::OutputSplitInfo(const OutputSplitInfo &output_split_info) {
+  this->split_impl_ = output_split_info.split_impl_;
+}
+
 OutputSplitInfo &OutputSplitInfo::operator = (const OutputSplitInfo &output_split_info) {
   this->split_impl_ = output_split_info.split_impl_;
   return *this;
@@ -182,6 +190,10 @@ bool InputReduceInfo::Initialize() {
   return true;
 }
 
+InputReduceInfo::InputReduceInfo(const InputReduceInfo &input_reduce_info) {
+  this->reduce_impl_ = input_reduce_info.reduce_impl_;
+}
+
 InputReduceInfo &InputReduceInfo::operator = (const InputReduceInfo &input_reduce_info) {
   this->reduce_impl_ = input_reduce_info.reduce_impl_;
   return *this;
@@ -220,6 +232,10 @@ private:
 OutputReduceInfo::OutputReduceInfo() {}
 
 OutputReduceInfo::~OutputReduceInfo() {}
+
+OutputReduceInfo::OutputReduceInfo(const OutputReduceInfo &output_reduce_info) {
+  this->reduce_impl_ = output_reduce_info.reduce_impl_;
+}
 
 OutputReduceInfo &OutputReduceInfo::operator = (const OutputReduceInfo &output_reduce_info) {
   this->reduce_impl_ = output_reduce_info.reduce_impl_;
@@ -330,6 +346,10 @@ private:
 AxisSplitMap::AxisSplitMap() {}
 
 AxisSplitMap::~AxisSplitMap() {}
+
+AxisSplitMap::AxisSplitMap(const AxisSplitMap &axis_split_map) {
+  this->aixs_split_impl_ = axis_split_map.aixs_split_impl_;
+}
 
 AxisSplitMap &AxisSplitMap::operator = (const AxisSplitMap &axis_split_map) {
   this->aixs_split_impl_ = axis_split_map.aixs_split_impl_;
@@ -465,6 +485,10 @@ private:
 AxisReduceMap::AxisReduceMap() {}
 
 AxisReduceMap::~AxisReduceMap() {}
+
+AxisReduceMap::AxisReduceMap(const AxisReduceMap &axis_reduce_map) {
+  this->aixs_reduce_impl_ = axis_reduce_map.aixs_reduce_impl_;
+}
 
 AxisReduceMap &AxisReduceMap::operator = (const AxisReduceMap &axis_reduce_map) {
   this->aixs_reduce_impl_ = axis_reduce_map.aixs_reduce_impl_;

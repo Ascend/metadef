@@ -28,8 +28,7 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
   void RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
                     const BufferFusionPassRegistry::CreateFn create_fn, uint64_t attr) {
     const std::lock_guard<std::mutex> lock(mu_);
-    const auto iter = pass_descs_.find(pass_type);
-    if (iter != pass_descs_.end()) {
+    if (pass_descs_.find(pass_type) != pass_descs_.cend()) {
       pass_descs_[pass_type][pass_name].attr = attr;
       pass_descs_[pass_type][pass_name].create_fn = create_fn;
       GELOGI("UbFusionPass[type=%d, name=%s, attr=%lu]: the pass type already exists.",
@@ -47,8 +46,8 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
   std::map<std::string, BufferFusionPassRegistry::CreateFn> GetCreateFn(const BufferFusionPassType &pass_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     std::map<std::string, BufferFusionPassRegistry::CreateFn> ret;
-    const auto iter = pass_descs_.find(pass_type);
-    if (iter == pass_descs_.end()) {
+    std::map<BufferFusionPassType, map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
+    if (iter == pass_descs_.cend()) {
       return ret;
     }
     for (const auto &ele : iter->second) {
@@ -60,8 +59,8 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
   std::map<std::string, PassDesc> GetPassDesc(const BufferFusionPassType &pass_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     std::map<std::string, PassDesc> result;
-    const auto iter = pass_descs_.find(pass_type);
-    if (iter == pass_descs_.end()) {
+    std::map<BufferFusionPassType, map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
+    if (iter == pass_descs_.cend()) {
       return result;
     }
     return iter->second;
@@ -83,13 +82,13 @@ BufferFusionPassRegistry &BufferFusionPassRegistry::GetInstance() {
 }
 
 void BufferFusionPassRegistry::RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
-                                            const CreateFn &create_fun, uint64_t attr) {
+                                            const CreateFn &create_fn, uint64_t attr) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]UbFusionPass[type=%d,name=%s]: failed to register the ub fusion pass",
            pass_type, pass_name.c_str());
     return;
   }
-  impl_->RegisterPass(pass_type, pass_name, create_fun, attr);
+  impl_->RegisterPass(pass_type, pass_name, create_fn, attr);
 }
 
 std::map<std::string, BufferFusionPassRegistry::PassDesc> BufferFusionPassRegistry::GetPassDesc(

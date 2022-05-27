@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "securec.h"
+#include <securec.h>
 #include "graph/ge_tensor.h"
 #include "graph/op_desc.h"
 #include "graph/utils/op_desc_utils.h"

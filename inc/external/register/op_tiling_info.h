@@ -122,8 +122,8 @@ public:
     AddTilingData(reinterpret_cast<const char *>(&value), sizeof(T));
   }
   void AddTilingData(const char *value, const size_t size);
-  void* GetAddrBase(int64_t& max_size);
-  void SetAddrBaseOffset(int64_t size);
+  void* GetAddrBase(uint64_t& max_size) const;
+  void SetAddrBaseOffset(const uint64_t size);
   ByteBuffer &GetAllTilingData();
   const ByteBuffer &GetAllTilingData() const;
   void InternelSetTiling(const ByteBuffer &value);

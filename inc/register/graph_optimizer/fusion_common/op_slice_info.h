@@ -57,6 +57,7 @@ using OpCalcInfoPtr = std::shared_ptr<OpCalcInfo>;
 class InputSplitInfo {
  public:
   InputSplitInfo();
+  InputSplitInfo(const InputSplitInfo &input_split_info);
   InputSplitInfo &operator = (const InputSplitInfo &input_split_info);
   ~InputSplitInfo();
   bool Initialize();
@@ -76,6 +77,7 @@ class InputSplitInfo {
 class OutputSplitInfo {
  public:
   OutputSplitInfo();
+  OutputSplitInfo(const OutputSplitInfo &output_split_info);
   OutputSplitInfo &operator = (const OutputSplitInfo &output_split_info);
   ~OutputSplitInfo();
   bool Initialize();
@@ -91,6 +93,7 @@ class OutputSplitInfo {
 class InputReduceInfo {
  public:
   InputReduceInfo();
+  InputReduceInfo(const InputReduceInfo &input_reduce_info);
   InputReduceInfo &operator = (const InputReduceInfo &input_reduce_info);
   ~InputReduceInfo();
   bool Initialize();
@@ -106,6 +109,7 @@ class InputReduceInfo {
 class OutputReduceInfo {
  public:
   OutputReduceInfo();
+  OutputReduceInfo(const OutputReduceInfo &output_reduce_info);
   OutputReduceInfo &operator = (const OutputReduceInfo &output_reduce_info);
   ~OutputReduceInfo();
   bool Initialize();
@@ -124,6 +128,7 @@ class AxisSplitMap {
  public:
   friend class AxisSplitMapImpl;
   AxisSplitMap();
+  AxisSplitMap(const AxisSplitMap &axis_split_map);
   AxisSplitMap &operator = (const AxisSplitMap &axis_split_map);
   ~AxisSplitMap();
   bool Initialize();
@@ -145,6 +150,7 @@ class AxisSplitMap {
 class AxisReduceMap {
  public:
   AxisReduceMap();
+  AxisReduceMap(const AxisReduceMap &axis_reduce_map);
   AxisReduceMap &operator = (const AxisReduceMap &axis_reduce_map);
   ~AxisReduceMap();
   bool Initialize();

@@ -49,7 +49,7 @@ void GraphPassUtil::SetOutputDescAttr(const uint32_t &origin_index, const uint32
     return;
   }
 
-  auto fusion_node_output_desc = fusion_node->GetOpDesc()->MutableOutputDesc(fusion_index);
+  const ge::GeTensorDescPtr fusion_node_output_desc = fusion_node->GetOpDesc()->MutableOutputDesc(fusion_index);
   if (fusion_node_output_desc == nullptr) {
     return;
   }
@@ -196,7 +196,7 @@ void GraphPassUtil::AddNodeFromOpTypeMap(const NodeMapInfoPtr &node_map_info, co
   if ((node_map_info == nullptr) || (node_ptr == nullptr)) {
     return;
   }
-  NodeTypeMapPtr node_type_map = node_map_info->node_type_map;
+  const NodeTypeMapPtr node_type_map = node_map_info->node_type_map;
   std::string real_op_type = ge::NodeUtils::GetNodeType(*node_ptr);
   const auto iter = node_type_map->find(real_op_type);
   if (iter != node_type_map->end()) {
@@ -240,7 +240,7 @@ Status GraphPassUtil::StoreAndUpdataOriginFusionPassName(const ge::OpDescPtr &op
     if (!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPASS_NAME, pass_names_tmp) || pass_names_tmp.empty()) {
       continue;
     }
-    pass_names.insert(pass_names.cend(), pass_names_tmp.cbegin(), pass_names_tmp.cend());
+    (void)pass_names.insert(pass_names.cend(), pass_names_tmp.cbegin(), pass_names_tmp.cend());
   }
   pass_names.push_back(pass_name);
   if (!ge::AttrUtils::SetListStr(op_desc, kPASS_NAME, pass_names)) {
@@ -284,7 +284,7 @@ void GraphPassUtil::RecordOriginalOpNames(const std::vector<ge::NodePtr> &origin
           GELOGD("Not find pass_name[%s] in ATTR_NAME_ORIGIN_OP_NAMES_MAP", pass_name_tmp.c_str());
           continue;
         }
-        origin_op_names_map->insert(std::pair<std::string, std::vector<std::string>>(pass_name_tmp,
+        (void)origin_op_names_map->insert(std::pair<std::string, std::vector<std::string>>(pass_name_tmp,
             (*op_names_maps_tmp)[pass_name_tmp]));
         // get last item of op_names_maps_tmp and push all origin_op_names into vector
         if (op_names_index == (pass_names.size() - 1)) {
@@ -301,7 +301,7 @@ void GraphPassUtil::RecordOriginalOpNames(const std::vector<ge::NodePtr> &origin
     }
     ++index;
   }
-  origin_op_names_map->insert(std::pair<std::string, std::vector<std::string>>(pass_name, origin_op_names_vec));
+  (void)origin_op_names_map->insert(std::pair<std::string, std::vector<std::string>>(pass_name, origin_op_names_vec));
 
   // 2. set the dump attr
   (void)op_desc->SetExtAttr(ge::ATTR_NAME_ORIGIN_OP_NAMES_MAP, origin_op_names_map);
@@ -336,7 +336,7 @@ void GraphPassUtil::RecordOriginalNames(const std::vector<ge::NodePtr> &original
   if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
     return;
   }
-  ge::OpDescPtr node_op_desc_ptr = node->GetOpDesc();
+  const ge::OpDescPtr node_op_desc_ptr = node->GetOpDesc();
   (void)ge::AttrUtils::SetListStr(node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
 }
 

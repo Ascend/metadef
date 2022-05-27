@@ -49,7 +49,7 @@ class PatternFusionBasePass : public GraphPass {
   using Mappings = std::vector<Mapping>;
 
   PatternFusionBasePass();
-  virtual ~PatternFusionBasePass();
+  ~PatternFusionBasePass() override;
 
 
   /** execute pass

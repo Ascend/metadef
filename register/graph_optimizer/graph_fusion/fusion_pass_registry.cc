@@ -28,9 +28,7 @@ class FusionPassRegistry::FusionPassRegistryImpl {
   void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
                     const FusionPassRegistry::CreateFn create_fn, uint64_t attr) {
     const std::lock_guard<std::mutex> my_lock(mu_);
-
-    const auto iter = pass_descs_.find(pass_type);
-    if (iter != pass_descs_.end()) {
+    if (pass_descs_.find(pass_type) != pass_descs_.end()) {
       pass_descs_[pass_type][pass_name].attr = attr;
       pass_descs_[pass_type][pass_name].create_fn = create_fn;
       GELOGD("GraphFusionPass[type=%d, name=%s, attr=%lu]: the pass type already exists.",
@@ -47,7 +45,7 @@ class FusionPassRegistry::FusionPassRegistryImpl {
 
   std::map<std::string, PassDesc> GetPassDesc(const GraphFusionPassType &pass_type) {
     const std::lock_guard<std::mutex> my_lock(mu_);
-    const auto iter = pass_descs_.find(pass_type);
+    std::map<GraphFusionPassType, map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
     if (iter == pass_descs_.end()) {
       std::map<std::string, PassDesc> ret;
       return ret;

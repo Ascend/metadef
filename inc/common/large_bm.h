@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include <vector>
-#include <memory>
-
 #ifndef INC_COMMON_LARGE_BM_H_
 #define INC_COMMON_LARGE_BM_H_
+
+#include <vector>
+#include <memory>
 
 /* LargeBitmap create a way to generate bitmaps larger than 64bit. */
 namespace ge {
