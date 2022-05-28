@@ -19,7 +19,7 @@
 #include "graph/debug/ge_log.h"
 #include <array>
 
-#define ACCLRT_NOTNULL(val, ret)                       \
+#define FUSION_TURBO_NOTNULL(val, ret)                       \
   do {                                                  \
     if ((val) == nullptr) {                             \
       GELOGD("Parameter[%s] must not be null.", #val); \
@@ -33,8 +33,8 @@ enum Direction {
   /* 当连接输入的场景，PEER模式下会获取<node, index>的对端输出节点和对端index。 */
   /* 当连接输出的场景，PEER模式下会获取<node, index>的所有对端输入节点和所有对端index。 */
   PEER = 1,
-  /* 当连接输入的场景，PEER模式下会获取<node, index>的对端输出节点和对端index。和PEER一致。 */
-  /* 当连接输出的场景，PEER模式下会获取<node, index>的第一个对端输出节点和对端index。 */
+  /* 当连接输入的场景，PEER_SINGLE模式下会获取<node, index>的对端输出节点和对端index。和PEER一致。 */
+  /* 当连接输出的场景，PEER_SINGLE模式下会获取<node, index>的第一个对端输出节点和对端index。 */
   PEER_SINGLE = 2
 };
 
@@ -66,13 +66,8 @@ using NodeIndices = std::vector<NodeIndex>;
 
 using ThisIndex = int32_t;
 
-struct Relations {
-  /* 如果key是输出的index，那么vector里存放的就是对端输入的index；在单输出多引用场景，
-   * 对端输入的index可能有多个。
-   * 如果key是输入的index，那么vector里存放的就是对端输出的index。对端输出只会有一个。 */
-  std::map<ThisIndex, NodeIndices> relations;
-
-  std::map<std::string, NodeIndices> relations_by_name;
+class Relations {
+ public:
   Relations();
 
   Relations(const std::initializer_list<NodeIndex> &peer_indices);
@@ -85,34 +80,67 @@ struct Relations {
 
   Relations(Relations &&relations_param) noexcept;
 
-  explicit Relations(const std::map<std::string, NodeIndices> &relations_param);
-
-  explicit Relations(std::map<std::string, NodeIndices> &&relations_param);
-
   Relations(ThisIndex this_index, const NodeIndex &peer_index);
 
+  Relations(ThisIndex this_index, const NodeIndices &peer_indices);
+
   Relations(ThisIndex this_index, NodeIndex &&peer_index);
+
+  Relations(ThisIndex this_index, NodeIndices &&peer_indices);
 
   Relations(const std::initializer_list<std::pair<ThisIndex, NodeIndex>> &peer_indices);
 
   Relations(const std::initializer_list<std::pair<ThisIndex, std::initializer_list<NodeIndex>>> &peer_indices_vec);
 
-  Relations& AddPeerIndex(ThisIndex this_index, const NodeIndex &peer_index);
+  /****** Interface Add from here. ******/
+  Relations& Add(ThisIndex this_index, const NodeIndex &peer_index);
 
-  Relations& AddPeerIndex(ThisIndex this_index, const std::initializer_list<NodeIndex> &peer_indices);
+  Relations& Add(ThisIndex this_index, const std::initializer_list<NodeIndex> &peer_indices);
 
-  Relations& AddPeerIndex(const std::string &this_name, const NodeIndex &peer_index);
+  Relations& Add(ThisIndex this_index, const NodeIndices &peer_indices);
 
-  Relations& AddPeerIndex(const std::string &this_name, const std::initializer_list<NodeIndex> &peer_indices);
+  Relations& Add(ThisIndex this_index, NodeIndex &&peer_index);
 
-  Relations& AddPeerIndex(ThisIndex this_index, NodeIndex &&peer_index);
+  Relations& Add(ThisIndex this_index, NodeIndices &&peer_indices);
 
-  Relations& AddPeerIndex(const std::string &this_name, NodeIndex &&peer_index);
+  /* 由于NodeIndex当连接输入或输出是完全不一样的，我们需要根据原始relations计算作为
+   * 输入和输出的真正的对端节点，所以要求必须通过接口来修改relations。 */
+  Relations& UpdatePeerIndex(ThisIndex this_index, const NodeIndices &peer_indices);
+
+  Relations& UpdatePeerIndex(ThisIndex this_index, NodeIndices &&peer_indices);
+
+  Relations& UpdatePeerIndex(const std::map<ThisIndex, NodeIndices> &peer_indices);
+
+  Relations& UpdatePeerIndex(std::map<ThisIndex, NodeIndices> &&peer_indices);
+
+  const std::map<ThisIndex, NodeIndices>& GetRelations();
+
+  const std::map<ThisIndex, NodeIndices>& GetInRelations();
+
+  const std::map<ThisIndex, NodeIndices>& GetOutRelations();
+
+ private:
+  NodeIndex GetPeerInFirstPair(ThisIndex relation_index, const ge::NodePtr &node, int32_t index);
+
+  void AppendPeerInAllPairs(ThisIndex relation_index, const ge::NodePtr &node, int32_t index);
+
+  void PreProcess();
+  /* 我们在添加ori_relations的时候就把两个方向的节点都计算好。 */
+  std::map<ThisIndex, NodeIndices> in_relations;
+
+  std::map<ThisIndex, NodeIndices> out_relations;
+
+  /* 如果key是输出的index，那么vector里存放的就是对端输入的index；在单输出多引用场景，
+   * 对端输入的index可能有多个。
+   * 如果key是输入的index，那么vector里存放的就是对端输出的index。对端输出只会有一个。 */
+  std::map<ThisIndex, NodeIndices> ori_relations;
 };
 
 extern const std::array<size_t, static_cast<size_t>(ge::DT_MAX + 1)> data_type_size;
 class FusionTurboUtils {
  public:
+  static NodeIndex GetPeerInFirstPair(const ge::NodePtr &node, int32_t index);
+  static NodeIndex GetPeerOutPair(const ge::NodePtr &node, int32_t index);
   static ge::NodePtr GetConstInput(const ge::NodePtr &node, int32_t index);
 };
 }

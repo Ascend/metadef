@@ -98,7 +98,7 @@ REG_OP(Relu)
                            DT_UINT8, DT_UINT16, DT_QINT8}))
     .OP_END_FACTORY_REG(Relu)
 
-class UTestAccelerator2 : public testing::Test {
+class UTestFusionTurbo2 : public testing::Test {
  public:
 
  protected:
@@ -162,7 +162,7 @@ class UTestAccelerator2 : public testing::Test {
     auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 1);
     EXPECT_NE(node_add, nullptr);
     Relations rl(0, {node_relu1, 0});
-    acc.LinkInput(rl, node_add, true);
+    acc.LinkInput(rl, node_add);
 
     unique_ptr<int32_t[]> data(new(std::nothrow) int32_t[4096]);
     WeightInfo w(tensor_desc_a, data.get());
@@ -213,8 +213,8 @@ class UTestAccelerator2 : public testing::Test {
     FusionTurbo acc(graph);
     auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 0);
     EXPECT_NE(node_add, nullptr);
-    Relations rl(0, {node_relu1, 0});
-    acc.LinkInput(rl, node_add, true);
+    Relations rl(1, {node_relu1, 0});
+    acc.LinkInput(rl, node_add);
 
     auto relu1_front = acc.InsertNodeBefore("relu1_front", "Relu", node_relu1, 0);
 
@@ -224,7 +224,6 @@ class UTestAccelerator2 : public testing::Test {
     WeightInfo w(tensor_desc_a, data.get());
     acc.AddWeight(relu1_front, 0, w);
     acc.AddWeight(relu2_front, 0, w);
-
     return graph;
   }
 
@@ -252,7 +251,7 @@ class UTestAccelerator2 : public testing::Test {
 
 };
 
-TEST_F(UTestAccelerator2, test_case_01) {
+TEST_F(UTestFusionTurbo2, test_case_01) {
   auto graph = CreateComplexGraph();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -287,7 +286,7 @@ TEST_F(UTestAccelerator2, test_case_01) {
   EXPECT_EQ(graph->GetDirectNodesSize(), 4);
 }
 
-TEST_F(UTestAccelerator2, test_case_01_1) {
+TEST_F(UTestFusionTurbo2, test_case_01_1) {
   auto graph = CreateComplexGraph();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -330,7 +329,7 @@ TEST_F(UTestAccelerator2, test_case_01_1) {
   EXPECT_EQ(add_in_nodes.at(1)->GetName(), "relu2");
 }
 
-TEST_F(UTestAccelerator2, test_case_01_2) {
+TEST_F(UTestFusionTurbo2, test_case_01_2) {
   auto graph = CreateComplexGraph();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -374,7 +373,7 @@ TEST_F(UTestAccelerator2, test_case_01_2) {
   EXPECT_EQ(add_in_nodes.at(1)->GetName(), "relu2");
 }
 
-TEST_F(UTestAccelerator2, test_case_01_3) {
+TEST_F(UTestFusionTurbo2, test_case_01_3) {
   auto graph = CreateComplexGraph();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -416,7 +415,7 @@ TEST_F(UTestAccelerator2, test_case_01_3) {
 }
 
 
-TEST_F(UTestAccelerator2, test_case_01_4) {
+TEST_F(UTestFusionTurbo2, test_case_01_4) {
   auto graph = CreateComplexGraph();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -458,7 +457,7 @@ TEST_F(UTestAccelerator2, test_case_01_4) {
   EXPECT_EQ(graph->GetDirectNodesSize(), 7);
 }
 
-TEST_F(UTestAccelerator2, test_case_2) {
+TEST_F(UTestFusionTurbo2, test_case_2) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -500,7 +499,7 @@ TEST_F(UTestAccelerator2, test_case_2) {
 }
 
 
-TEST_F(UTestAccelerator2, test_case_3) {
+TEST_F(UTestFusionTurbo2, test_case_3) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -548,7 +547,7 @@ TEST_F(UTestAccelerator2, test_case_3) {
   EXPECT_EQ(graph->GetDirectNodesSize(), 5);
 }
 
-TEST_F(UTestAccelerator2, test_case_4) {
+TEST_F(UTestFusionTurbo2, test_case_4) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -594,7 +593,7 @@ TEST_F(UTestAccelerator2, test_case_4) {
   EXPECT_EQ(graph->GetDirectNodesSize(), 5);
 }
 
-TEST_F(UTestAccelerator2, test_case_4_1) {
+TEST_F(UTestFusionTurbo2, test_case_4_1) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -639,7 +638,7 @@ TEST_F(UTestAccelerator2, test_case_4_1) {
 }
 
 
-TEST_F(UTestAccelerator2, test_case_4_2) {
+TEST_F(UTestFusionTurbo2, test_case_4_2) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -664,6 +663,9 @@ TEST_F(UTestAccelerator2, test_case_4_2) {
                              {relu1, relu1_front, relu2, relu2_front}, true);
   EXPECT_NE(node, nullptr);
 
+  auto input_nodes = node->GetInDataNodes();
+  ASSERT_EQ(input_nodes.size(), 2);
+
   auto out_nodes1 = relu1_front_input->GetOutDataNodes();
   auto out_nodes2 = relu2_front_input->GetOutDataNodes();
   ASSERT_EQ(out_nodes1.size(), 1);
@@ -682,7 +684,7 @@ TEST_F(UTestAccelerator2, test_case_4_2) {
 }
 
 
-TEST_F(UTestAccelerator2, test_case_4_3) {
+TEST_F(UTestFusionTurbo2, test_case_4_3) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -725,7 +727,7 @@ TEST_F(UTestAccelerator2, test_case_4_3) {
 }
 
 /* Test RemoveMultiNodesOnly. */
-TEST_F(UTestAccelerator2, test_case_4_4) {
+TEST_F(UTestFusionTurbo2, test_case_4_4) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
   string name = "add_new";
@@ -737,7 +739,8 @@ TEST_F(UTestAccelerator2, test_case_4_4) {
   auto relu2_front = GetNode(graph, "relu2_front");
   auto add = GetNode(graph, "add");
   auto out = GetNode(graph, "output");
-
+  FusionTurbo::GetPeerInFirstPair(add, 0);
+  FusionTurbo::GetPeerOutPair(add, 0);
   auto relu1_front_input = relu1_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
   auto relu2_front_input = relu2_front->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
   Relations input_relations = {{0, {relu1, 0, PEER_SINGLE}},

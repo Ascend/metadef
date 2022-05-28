@@ -41,6 +41,13 @@ using namespace ge;
 using namespace fe;
 
 namespace fe {
+REG_OP(Data)
+    .INPUT(x, TensorType::ALL())
+    .OUTPUT(y, TensorType::ALL())
+    .ATTR(index, Int, 0)
+    .OP_END_FACTORY_REG(Data)
+
+
 REG_OP(Const)
     .OUTPUT(y,
             TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8, DT_INT32, DT_INT64, DT_UINT32,
@@ -81,7 +88,7 @@ REG_OP(Relu)
                                DT_UINT8, DT_UINT16, DT_QINT8}))
         .OP_END_FACTORY_REG(Relu)
 
-class UTestAccelerator : public testing::Test {
+class UTestFusionTurbo : public testing::Test {
  public:
 
  protected:
@@ -171,116 +178,6 @@ class UTestAccelerator : public testing::Test {
     GraphUtils::AddEdge(node_relu->GetOutDataAnchor(0), node_cast2->GetInDataAnchor(0));
     GraphUtils::AddEdge(node_cast2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(0));
 
-    return graph;
-  }
-  ComputeGraphPtr CreateComplexGraph() {
-    ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test1");
-
-    OpDescPtr op_desc_relu1 = std::make_shared<OpDesc>("relu1", "Relu");
-    OpDescPtr op_desc_relu2 = std::make_shared<OpDesc>("relu2", "Relu");
-    OpDescPtr op_desc_output = std::make_shared<OpDesc>("output", "NetOutput");
-
-    //add descriptor
-    vector<int64_t> dim_a = {8, 4, 16, 16};
-    GeShape shape_a(dim_a);
-    GeTensorDesc tensor_desc_a(shape_a);
-    tensor_desc_a.SetFormat(FORMAT_NCHW);
-    tensor_desc_a.SetOriginFormat(FORMAT_NCHW);
-    tensor_desc_a.SetDataType(DT_FLOAT16);
-    tensor_desc_a.SetOriginDataType(DT_FLOAT);
-
-    vector<int64_t> dim_b = {1, 4, 64, 64};
-    GeShape shape_b(dim_b);
-    GeTensorDesc tensor_desc_b(shape_b);
-    tensor_desc_b.SetFormat(FORMAT_NCHW);
-    tensor_desc_b.SetOriginFormat(FORMAT_NCHW);
-    tensor_desc_b.SetDataType(DT_FLOAT);
-    tensor_desc_b.SetOriginDataType(DT_FLOAT);
-
-    op_desc_relu1->AddInputDesc(tensor_desc_a);
-    op_desc_relu1->AddOutputDesc(tensor_desc_b);
-
-    op_desc_relu2->AddInputDesc(tensor_desc_a);
-    op_desc_relu2->AddOutputDesc(tensor_desc_b);
-
-    op_desc_output->AddInputDesc(tensor_desc_b);
-    op_desc_output->AddInputDesc(tensor_desc_b);
-
-    NodePtr node_relu1 = graph->AddNode(op_desc_relu1);
-    NodePtr node_relu2 = graph->AddNode(op_desc_relu2);
-    NodePtr node_netoutput = graph->AddNode(op_desc_output);
-
-    GraphUtils::AddEdge(node_relu2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(1));
-
-    FusionTurbo acc(graph);
-    auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 1);
-    EXPECT_NE(node_add, nullptr);
-    Relations rl(0, {node_relu1, 0});
-    acc.LinkInput(rl, node_add, true);
-
-    std::unique_ptr<int32_t> data(new(std::nothrow) int32_t(30));
-    WeightInfo w(tensor_desc_a, data.get());
-    acc.AddWeight(node_relu1, 0, w);
-    acc.AddWeight(node_relu2, 0, w);
-
-    return graph;
-  }
-
-  ComputeGraphPtr CreateComplexGraph2() {
-    ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test2");
-
-    OpDescPtr op_desc_relu1 = std::make_shared<OpDesc>("relu1", "Relu");
-    OpDescPtr op_desc_relu2 = std::make_shared<OpDesc>("relu2", "Relu");
-    OpDescPtr op_desc_output = std::make_shared<OpDesc>("output", "NetOutput");
-
-    //add descriptor
-    vector<int64_t> dim_a = {8, 4, 16, 16};
-    GeShape shape_a(dim_a);
-    GeTensorDesc tensor_desc_a(shape_a);
-    tensor_desc_a.SetFormat(FORMAT_NCHW);
-    tensor_desc_a.SetOriginFormat(FORMAT_NCHW);
-    tensor_desc_a.SetDataType(DT_FLOAT16);
-    tensor_desc_a.SetOriginDataType(DT_FLOAT);
-
-    vector<int64_t> dim_b = {1, 4, 64, 64};
-    GeShape shape_b(dim_b);
-    GeTensorDesc tensor_desc_b(shape_b);
-    tensor_desc_b.SetFormat(FORMAT_NCHW);
-    tensor_desc_b.SetOriginFormat(FORMAT_NCHW);
-    tensor_desc_b.SetDataType(DT_FLOAT);
-    tensor_desc_b.SetOriginDataType(DT_FLOAT);
-
-    op_desc_relu1->AddInputDesc(tensor_desc_a);
-    op_desc_relu1->AddOutputDesc(tensor_desc_b);
-
-    op_desc_relu2->AddInputDesc(tensor_desc_a);
-    op_desc_relu2->AddOutputDesc(tensor_desc_b);
-
-    op_desc_output->AddInputDesc(tensor_desc_b);
-    op_desc_output->AddInputDesc(tensor_desc_b);
-
-    NodePtr node_relu1 = graph->AddNode(op_desc_relu1);
-    NodePtr node_relu2 = graph->AddNode(op_desc_relu2);
-    NodePtr node_netoutput = graph->AddNode(op_desc_output);
-
-    GraphUtils::AddEdge(node_relu2->GetOutDataAnchor(0), node_netoutput->GetInDataAnchor(1));
-
-    FusionTurbo acc(graph);
-    auto node_add = acc.InsertNodeAfter("add", "Add", node_relu2, 0, 0);
-    EXPECT_NE(node_add, nullptr);
-    Relations rl(0, {node_relu1, 0});
-    acc.LinkInput(rl, node_add, true);
-
-    auto relu1_front = acc.InsertNodeBefore("relu1_front", "Relu", node_relu1, 0);
-
-    auto relu2_front = acc.InsertNodeBefore("relu2_front", "Relu", node_relu2, 0);
-
-    std::unique_ptr<int32_t> data(new(std::nothrow) int32_t(30));
-    WeightInfo w(tensor_desc_a, data.get());
-    acc.AddWeight(relu1_front, 0, w);
-    acc.AddWeight(relu2_front, 0, w);
-
-    DumpGraph(graph, "test2");
     return graph;
   }
 
@@ -444,7 +341,7 @@ class UTestAccelerator : public testing::Test {
 
 };
 
-TEST_F(UTestAccelerator, test_case_01) {
+TEST_F(UTestFusionTurbo, test_case_01) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -471,7 +368,7 @@ TEST_F(UTestAccelerator, test_case_01) {
 }
 
 
-TEST_F(UTestAccelerator, test_case_01_1) {
+TEST_F(UTestFusionTurbo, test_case_01_1) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -500,7 +397,7 @@ TEST_F(UTestAccelerator, test_case_01_1) {
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().at(0)->GetOwnerNode()->GetName(), "cast2");
 }
 
-TEST_F(UTestAccelerator, test_case_02) {
+TEST_F(UTestFusionTurbo, test_case_02) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -528,14 +425,14 @@ TEST_F(UTestAccelerator, test_case_02) {
 }
 
 
-TEST_F(UTestAccelerator, test_case_02_1) {
+TEST_F(UTestFusionTurbo, test_case_02_1) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
   string type = "Transpose";
 
   auto relu = GetNode(graph, "relu");
-  acc.BreakOutput(relu, {0});
+  acc.BreakAllOutput(relu);
   auto node = acc.InsertNodeAfter(name, type, relu, 0);
 
   ASSERT_NE(node, nullptr);
@@ -557,7 +454,7 @@ TEST_F(UTestAccelerator, test_case_02_1) {
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 0);
 }
 
-TEST_F(UTestAccelerator, test_case_03) {
+TEST_F(UTestFusionTurbo, test_case_03) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -569,7 +466,7 @@ TEST_F(UTestAccelerator, test_case_03) {
 }
 
 /* cast2 already has input so Transpose will not have peer out. */
-TEST_F(UTestAccelerator, test_case_04) {
+TEST_F(UTestFusionTurbo, test_case_04) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -579,11 +476,11 @@ TEST_F(UTestAccelerator, test_case_04) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, true);
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
   EXPECT_EQ(node->GetName(), name);
   EXPECT_EQ(node->GetType(), type);
@@ -602,7 +499,7 @@ TEST_F(UTestAccelerator, test_case_04) {
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 1);
 }
 
-TEST_F(UTestAccelerator, test_case_04_1) {
+TEST_F(UTestFusionTurbo, test_case_04_1) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -612,13 +509,13 @@ TEST_F(UTestAccelerator, test_case_04_1) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list;
-  src_list.AddPeerIndex("x", {relu, 0});
-  acc.LinkInput(src_list, node, true);
+  src_list.Add(0, {relu, 0});
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
-  dst_list.AddPeerIndex("y", {cast2, 0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  dst_list.Add(0, {cast2, 0});
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
   EXPECT_EQ(node->GetName(), name);
   EXPECT_EQ(node->GetType(), type);
@@ -637,7 +534,7 @@ TEST_F(UTestAccelerator, test_case_04_1) {
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 1);
 }
 
-TEST_F(UTestAccelerator, test_case_04_2) {
+TEST_F(UTestFusionTurbo, test_case_04_2) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -647,12 +544,12 @@ TEST_F(UTestAccelerator, test_case_04_2) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list;
-  src_list.AddPeerIndex("x", {{relu, 0}});
+  src_list.Add(0, {{relu, 0}});
   acc.LinkInput(src_list, node);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list;
-  dst_list.AddPeerIndex("y", {{cast2, 0}});
+  dst_list.Add(0, {{cast2, 0}});
   Status ret = acc.LinkOutput(dst_list, node);
   EXPECT_EQ(ret, SUCCESS);
   EXPECT_EQ(node->GetName(), name);
@@ -673,7 +570,7 @@ TEST_F(UTestAccelerator, test_case_04_2) {
 }
 
 
-TEST_F(UTestAccelerator, test_case_04_3) {
+TEST_F(UTestFusionTurbo, test_case_04_3) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -708,8 +605,68 @@ TEST_F(UTestAccelerator, test_case_04_3) {
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 1);
 }
 
+TEST_F(UTestFusionTurbo, test_case_04_4) {
+  auto graph = CreateGraphSingleInAndOut();
+  FusionTurbo acc(graph);
+  string name = "transpose";
+  string type = "Transpose";
+  auto node = acc.AddNodeOnly(name, type);
+  ASSERT_NE(node, nullptr);
+  auto input = node->GetOpDesc()->MutableInputDesc(0);
+  input->SetFormat(ge::FORMAT_ND);
+  input->SetDataType(ge::DT_UNDEFINED);
+  auto output = node->GetOpDesc()->MutableOutputDesc(0);
+  output->SetFormat(ge::FORMAT_ND);
+  output->SetDataType(ge::DT_UNDEFINED);
+
+  auto relu = GetNode(graph, "relu");
+  Relations src_list = {{relu, 0}};
+  acc.LinkInput(src_list, node, UPDATE_PEER);
+
+  auto cast2 = GetNode(graph, "cast2");
+  Relations dst_list = {{cast2, 0}};
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_PEER);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(node->GetName(), name);
+  EXPECT_EQ(node->GetType(), type);
+  vector<int64_t> dims = {1, 4, 64, 64};
+  vector<int64_t> dims_null = {};
+
+  EXPECT_EQ(input->GetShape().GetDims(), dims_null);
+  EXPECT_EQ(input->GetFormat(), ge::FORMAT_ND);
+  EXPECT_EQ(input->GetDataType(), ge::DT_UNDEFINED);
+
+  EXPECT_EQ(output->GetShape().GetDims(), dims_null);
+  EXPECT_EQ(output->GetFormat(), ge::FORMAT_ND);
+  EXPECT_EQ(output->GetDataType(), ge::DT_UNDEFINED);
+
+  auto relu_input = relu->GetOpDesc()->MutableInputDesc(0);
+  EXPECT_EQ(relu_input->GetShape().GetDims(), dims);
+  EXPECT_EQ(relu_input->GetFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(relu_input->GetDataType(), ge::DT_FLOAT);
+
+  auto relu_output = relu->GetOpDesc()->MutableOutputDesc(0);
+  EXPECT_EQ(relu_output->GetShape().GetDims(), dims_null);
+  EXPECT_EQ(relu_output->GetFormat(), ge::FORMAT_ND);
+  EXPECT_EQ(relu_output->GetDataType(), ge::DT_UNDEFINED);
+
+  auto cast_input = cast2->GetOpDesc()->MutableInputDesc(0);
+  EXPECT_EQ(cast_input->GetShape().GetDims(), dims_null);
+  EXPECT_EQ(cast_input->GetFormat(), ge::FORMAT_ND);
+  EXPECT_EQ(cast_input->GetDataType(), ge::DT_UNDEFINED);
+
+  vector<int64_t> dims_cast = {8, 4, 16, 16};
+  auto cast_output = cast2->GetOpDesc()->MutableOutputDesc(0);
+  EXPECT_EQ(cast_output->GetShape().GetDims(), dims_cast);
+  EXPECT_EQ(cast_output->GetFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(cast_output->GetDataType(), ge::DT_FLOAT16);
+
+  EXPECT_EQ(node->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode()->GetName(), "relu");
+  EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 1);
+}
+
 /* Initialize case */
-TEST_F(UTestAccelerator, test_case_04_5) {
+TEST_F(UTestFusionTurbo, test_case_04_5) {
   ge::NodePtr relu;
 
   Relations src_list0(0, {relu, 0});
@@ -733,23 +690,35 @@ TEST_F(UTestAccelerator, test_case_04_5) {
   Relations src_list3_hybrid = {{0, {{relu, 0, PEER}, {}}},
                                 {1, {{relu, 0, PEER}, {relu, 1, CURRENT}}}};
 
-  Relations src_list4(src_list1.relations);
+  Relations src_list4(src_list1.GetRelations());
 
   Relations src_list5((std::map<ThisIndex, NodeIndices>()));
 
   Relations src_list6(src_list1);
 
   Relations src_list7(std::move(src_list1));
+  NodeIndices test = {{relu, 0}};
+  src_list7.UpdatePeerIndex(0, {{relu, 0}});
+  src_list7.UpdatePeerIndex(0, test);
+  src_list7.UpdatePeerIndex(src_list6.GetRelations());
 
-  Relations src_list8(src_list2.relations_by_name);
+  src_list7.Add(1, {{relu, 0}});
+  src_list7.Add(0, {{relu, 1}});
 
-  Relations src_list9(std::move(src_list2.relations_by_name));
 
-  NodeIndex pi = {relu, 0};
-  Relations src_list10(0, pi);
+  NodeIndex node_index1 = {relu, 0};
+  Relations src_list10(0, node_index1);
+
+  ge::NodePtr relu2;
+  NodeIndex node_index2 = {relu2, 0};
+
+  NodeIndices node_indices;
+  node_indices.emplace_back(node_index1);
+  node_indices.emplace_back(node_index2);
+  Relations relation1(1, node_indices);
 }
 
-TEST_F(UTestAccelerator, test_case_05) {
+TEST_F(UTestFusionTurbo, test_case_05) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -759,12 +728,12 @@ TEST_F(UTestAccelerator, test_case_05) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, true);
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
   acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
 
   EXPECT_EQ(node->GetName(), name);
@@ -785,7 +754,7 @@ TEST_F(UTestAccelerator, test_case_05) {
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().at(0)->GetOwnerNode()->GetName(), "cast2");
 }
 
-TEST_F(UTestAccelerator, test_case_06) {
+TEST_F(UTestFusionTurbo, test_case_06) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -795,7 +764,7 @@ TEST_F(UTestAccelerator, test_case_06) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, false);
+  acc.LinkInput(src_list, node, UPDATE_NONE);
 
   EXPECT_EQ(node->GetName(), name);
   EXPECT_EQ(node->GetType(), type);
@@ -808,7 +777,7 @@ TEST_F(UTestAccelerator, test_case_06) {
   EXPECT_EQ(node->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode()->GetName(), "relu");
 }
 
-TEST_F(UTestAccelerator, test_case_07) {
+TEST_F(UTestFusionTurbo, test_case_07) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -818,8 +787,8 @@ TEST_F(UTestAccelerator, test_case_07) {
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
-  acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, false);
+  acc.BreakAllInput(cast2);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_NONE);
   EXPECT_EQ(ret, SUCCESS);
 
   EXPECT_EQ(node->GetName(), name);
@@ -833,7 +802,7 @@ TEST_F(UTestAccelerator, test_case_07) {
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().at(0)->GetOwnerNode()->GetName(), "cast2");
 }
 
-TEST_F(UTestAccelerator, test_case_08) {
+TEST_F(UTestFusionTurbo, test_case_08) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
 
@@ -843,7 +812,7 @@ TEST_F(UTestAccelerator, test_case_08) {
   EXPECT_EQ(acc.RemoveNodeWithRelink(cast2, {0}), SUCCESS);
 }
 
-TEST_F(UTestAccelerator, test_case_09) {
+TEST_F(UTestFusionTurbo, test_case_09) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
 
@@ -853,7 +822,7 @@ TEST_F(UTestAccelerator, test_case_09) {
   EXPECT_EQ(acc.RemoveNodeWithRelink(cast1, {0}), SUCCESS);
 }
 
-TEST_F(UTestAccelerator, test_case_10) {
+TEST_F(UTestFusionTurbo, test_case_10) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
 
@@ -869,7 +838,7 @@ TEST_F(UTestAccelerator, test_case_10) {
   EXPECT_EQ(false, acc.IsUnknownOriShape(cast2, 0, false));
 }
 
-TEST_F(UTestAccelerator, test_case_11) {
+TEST_F(UTestFusionTurbo, test_case_11) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -879,16 +848,16 @@ TEST_F(UTestAccelerator, test_case_11) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list;
-  src_list.AddPeerIndex("x", {relu, 0});
-  src_list.AddPeerIndex("x", {});
-  EXPECT_EQ(SUCCESS, acc.LinkInput(src_list, node, false));
+  src_list.Add(0, {relu, 0});
+  src_list.Add(0, {});
+  EXPECT_EQ(SUCCESS, acc.LinkInput(src_list, node, UPDATE_NONE));
 
   auto cast2 = GetNode(graph, "cast2");
 
   Relations dst_list;
-  dst_list.AddPeerIndex("y", {cast2, 0});
-  dst_list.AddPeerIndex("y", {});
-  EXPECT_EQ(SUCCESS, acc.LinkOutput(dst_list, node, false));
+  dst_list.Add(0, {cast2, 0});
+  dst_list.Add(0, {});
+  EXPECT_EQ(SUCCESS, acc.LinkOutput(dst_list, node, UPDATE_NONE));
   auto input = node->GetOpDesc()->MutableInputDesc(0);
 
   // Update input desc
@@ -925,7 +894,7 @@ TEST_F(UTestAccelerator, test_case_11) {
   input->SetFormat(ge::FORMAT_ND);
 }
 
-TEST_F(UTestAccelerator, test_case_12) {
+TEST_F(UTestFusionTurbo, test_case_12) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -936,14 +905,14 @@ TEST_F(UTestAccelerator, test_case_12) {
   auto relu = GetNode(graph, "relu");
   Relations src_list;
   NodeIndex pi = {relu, 0};
-  src_list.AddPeerIndex("x", pi);
-  src_list.AddPeerIndex("x", pi);
-  acc.LinkInput(src_list, node, false);
+  src_list.Add(0, pi);
+  src_list.Add(0, pi);
+  acc.LinkInput(src_list, node, UPDATE_NONE);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list;
-  dst_list.AddPeerIndex("y", {{cast2, 0}});
-  acc.LinkOutput(dst_list, node, false);
+  dst_list.Add(0, {{cast2, 0}});
+  acc.LinkOutput(dst_list, node, UPDATE_NONE);
 
   auto output = node->GetOpDesc()->MutableOutputDesc(0);
   auto cast1 = GetNode(graph, "cast1");
@@ -980,7 +949,7 @@ TEST_F(UTestAccelerator, test_case_12) {
   output->SetFormat(ge::FORMAT_ND);
 }
 
-TEST_F(UTestAccelerator, test_case_13) {
+TEST_F(UTestFusionTurbo, test_case_13) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -990,17 +959,17 @@ TEST_F(UTestAccelerator, test_case_13) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list;
-  src_list.AddPeerIndex(0, {relu, 0});
-  src_list.AddPeerIndex(0, {relu, 0});
-  acc.LinkInput(src_list, node, true);
+  src_list.Add(0, {relu, 0});
+  src_list.Add(0, {relu, 0});
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list;
   NodeIndex pi = {cast2, 0};
-  dst_list.AddPeerIndex(0, pi);
-  dst_list.AddPeerIndex(0, pi);
+  dst_list.Add(0, pi);
+  dst_list.Add(0, pi);
   acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
 
   unique_ptr<int32_t[]> value(new(std::nothrow) int32_t[24]);
@@ -1037,7 +1006,7 @@ TEST_F(UTestAccelerator, test_case_13) {
 }
 
 
-TEST_F(UTestAccelerator, test_case_13_1) {
+TEST_F(UTestFusionTurbo, test_case_13_1) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1047,12 +1016,12 @@ TEST_F(UTestAccelerator, test_case_13_1) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, true);
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
   acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
 
   unique_ptr<int32_t[]> value(new(std::nothrow) int32_t[24]);
@@ -1082,7 +1051,7 @@ TEST_F(UTestAccelerator, test_case_13_1) {
   }
 }
 
-TEST_F(UTestAccelerator, test_case_14) {
+TEST_F(UTestFusionTurbo, test_case_14) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1160,7 +1129,7 @@ TEST_F(UTestAccelerator, test_case_14) {
   }
 }
 
-TEST_F(UTestAccelerator, test_case_14_1) {
+TEST_F(UTestFusionTurbo, test_case_14_1) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1239,7 +1208,7 @@ TEST_F(UTestAccelerator, test_case_14_1) {
 }
 
 
-TEST_F(UTestAccelerator, test_case_14_1_1) {
+TEST_F(UTestFusionTurbo, test_case_14_1_1) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1300,7 +1269,7 @@ TEST_F(UTestAccelerator, test_case_14_1_1) {
   ASSERT_EQ(nullptr, acc.AddWeight(node, "xxxx", w));
 }
 
-TEST_F(UTestAccelerator, test_case_14_2) {
+TEST_F(UTestFusionTurbo, test_case_14_2) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1368,7 +1337,7 @@ TEST_F(UTestAccelerator, test_case_14_2) {
   }
 }
 
-TEST_F(UTestAccelerator, test_case_15) {
+TEST_F(UTestFusionTurbo, test_case_15) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1378,12 +1347,12 @@ TEST_F(UTestAccelerator, test_case_15) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, true);
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
   acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
 
   unique_ptr<int32_t[]> value(new(std::nothrow) int32_t[24]);
@@ -1429,7 +1398,7 @@ TEST_F(UTestAccelerator, test_case_15) {
 }
 
 
-TEST_F(UTestAccelerator, test_case_15_1) {
+TEST_F(UTestFusionTurbo, test_case_15_1) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1439,12 +1408,12 @@ TEST_F(UTestAccelerator, test_case_15_1) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, true);
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
   acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
 
   unique_ptr<int32_t[]> value(new(std::nothrow) int32_t[24]);
@@ -1492,7 +1461,7 @@ TEST_F(UTestAccelerator, test_case_15_1) {
   }
 }
 
-TEST_F(UTestAccelerator, test_case_15_3) {
+TEST_F(UTestFusionTurbo, test_case_15_3) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1502,12 +1471,12 @@ TEST_F(UTestAccelerator, test_case_15_3) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, true);
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
   acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
 
   unique_ptr<int32_t[]> value(new(std::nothrow) int32_t[24]);
@@ -1566,7 +1535,7 @@ TEST_F(UTestAccelerator, test_case_15_3) {
   }
 }
 
-TEST_F(UTestAccelerator, test_case_15_4) {
+TEST_F(UTestFusionTurbo, test_case_15_4) {
   auto graph = CreateGraphSingleInAndOut();
   FusionTurbo acc(graph);
   string name = "transpose";
@@ -1576,12 +1545,12 @@ TEST_F(UTestAccelerator, test_case_15_4) {
 
   auto relu = GetNode(graph, "relu");
   Relations src_list = {{relu, 0}};
-  acc.LinkInput(src_list, node, true);
+  acc.LinkInput(src_list, node, UPDATE_THIS);
 
   auto cast2 = GetNode(graph, "cast2");
   Relations dst_list = {{cast2, 0}};
   acc.BreakInput(cast2, {0});
-  Status ret = acc.LinkOutput(dst_list, node, true);
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
   EXPECT_EQ(ret, SUCCESS);
 
   unique_ptr<int32_t[]> value(new(std::nothrow) int32_t[24]);
@@ -1648,7 +1617,7 @@ TEST_F(UTestAccelerator, test_case_15_4) {
   }
 }
 
-TEST_F(UTestAccelerator, test_case_16_1) {
+TEST_F(UTestFusionTurbo, test_case_16_1) {
   /*
    *  input                                       data    input
    *    |  \                                         \     /
@@ -1679,9 +1648,30 @@ TEST_F(UTestAccelerator, test_case_16_1) {
    */
   auto aftermovnode = graph->FindNode("add2");
   EXPECT_EQ(aftermovnode, nullptr);
-} 
 
-TEST_F(UTestAccelerator, test_case_16_2) {
+  auto partioncall_node = graph->FindNode("partioncall");
+  EXPECT_NE(partioncall_node, nullptr);
+  auto sub_graph = ge::NodeUtils::GetSubgraph(*partioncall_node, 0);
+
+  auto add2 = sub_graph->FindNode("add2");
+  EXPECT_NE(add2, nullptr);
+
+  auto in_nodes = add2->GetInDataNodes();
+  ASSERT_EQ(in_nodes.size(), 2);
+  EXPECT_EQ(in_nodes.at(0)->GetType(), "NetOutInput");
+  EXPECT_EQ(in_nodes.at(1)->GetType(), "Data");
+
+  auto out_nodes = add2->GetOutDataNodes();
+  EXPECT_EQ(out_nodes.at(0)->GetType(), "NetOutput");
+
+  auto data1 = in_nodes.at(1);
+  int64_t index;
+  ge::AttrUtils::GetInt(data1->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX, index);
+  EXPECT_EQ(index, 1);
+  EXPECT_EQ(partioncall_node->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode()->GetName(), "other1");
+}
+
+TEST_F(UTestFusionTurbo, test_case_16_2) {
   /*
    *  input                                          data    input
    *    |  \                                            \     /
@@ -1714,5 +1704,89 @@ TEST_F(UTestAccelerator, test_case_16_2) {
    */
   auto aftermovnode = graph->FindNode("add1");
   EXPECT_EQ(aftermovnode, nullptr);
+  auto partioncall_node = graph->FindNode("partioncall");
+  EXPECT_NE(partioncall_node, nullptr);
+  auto sub_graph = ge::NodeUtils::GetSubgraph(*partioncall_node, 0);
+
+  auto add1 = sub_graph->FindNode("add1");
+  EXPECT_NE(add1, nullptr);
+
+  auto in_nodes = add1->GetInDataNodes();
+  EXPECT_EQ(in_nodes.at(0)->GetType(), "Data");
+  EXPECT_EQ(in_nodes.at(1)->GetType(), "Data");
+
+  auto out_nodes = add1->GetOutDataNodes();
+  EXPECT_EQ(out_nodes.at(0)->GetType(), "Add");
+}
+
+TEST_F(UTestFusionTurbo, test_case_17) {
+  auto graph = CreateGraphSingleInAndOut();
+  FusionTurbo acc(graph);
+  string name = "transpose";
+  string type = "Transpose";
+  auto node = acc.AddNodeOnly(name, type);
+  ASSERT_NE(node, nullptr);
+
+  auto relu = GetNode(graph, "relu");
+  auto cast2 = GetNode(graph, "cast2");
+  Relations dst_list = {{relu, 0, PEER}};
+  Relations src_list = {{relu, 0}};
+
+  acc.LinkInput(src_list, node);
+
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(node->GetName(), name);
+  EXPECT_EQ(node->GetType(), type);
+  vector<int64_t> dims = {1, 4, 64, 64};
+  auto input = node->GetOpDesc()->MutableInputDesc(0);
+  EXPECT_EQ(input->GetShape().GetDims(), dims);
+  EXPECT_EQ(input->GetFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(input->GetDataType(), ge::DT_FLOAT);
+
+  auto output = node->GetOpDesc()->MutableOutputDesc(0);
+  EXPECT_EQ(output->GetShape().GetDims(), dims);
+  EXPECT_EQ(output->GetFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(output->GetDataType(), ge::DT_FLOAT);
+
+  EXPECT_EQ(node->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode()->GetName(), "relu");
+  EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 1);
+  EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().at(0)->GetOwnerNode()->GetName(), "cast2");
+}
+
+TEST_F(UTestFusionTurbo, test_case_17_1) {
+  auto graph = CreateGraphSingleInAndOut();
+  FusionTurbo acc(graph);
+  string name = "transpose";
+  string type = "Transpose";
+  auto node = acc.AddNodeOnly(name, type);
+  ASSERT_NE(node, nullptr);
+
+  auto relu = GetNode(graph, "relu");
+  auto cast2 = GetNode(graph, "cast2");
+  Relations dst_list = {{relu, 0, PEER}};
+  Relations src_list = {{relu, 0}};
+
+  Status ret = acc.LinkOutput(dst_list, node, UPDATE_THIS);
+
+  acc.LinkInput(src_list, node);
+
+
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(node->GetName(), name);
+  EXPECT_EQ(node->GetType(), type);
+  vector<int64_t> dims = {1, 4, 64, 64};
+  auto input = node->GetOpDesc()->MutableInputDesc(0);
+  EXPECT_EQ(input->GetShape().GetDims(), dims);
+  EXPECT_EQ(input->GetFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(input->GetDataType(), ge::DT_FLOAT);
+
+  auto output = node->GetOpDesc()->MutableOutputDesc(0);
+  EXPECT_EQ(output->GetShape().GetDims(), dims);
+  EXPECT_EQ(output->GetFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(output->GetDataType(), ge::DT_FLOAT);
+  EXPECT_EQ(node->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode()->GetName(), "relu");
+  EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 1);
+  EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().at(0)->GetOwnerNode()->GetName(), "cast2");
 }
 }

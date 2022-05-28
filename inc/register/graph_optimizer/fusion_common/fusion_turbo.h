@@ -27,6 +27,12 @@
 #include "register/graph_optimizer/fusion_common/fusion_turbo_utils.h"
 
 namespace fe {
+enum TensorUptType {
+  UPDATE_NONE = 0,
+  UPDATE_THIS = 1,
+  UPDATE_PEER,
+};
+
 struct WeightInfo {
   ge::GeShape shape;
   ge::GeShape ori_shape;
@@ -75,11 +81,15 @@ class FusionTurbo {
 
   ~FusionTurbo();
 
-  Status BreakInput(const ge::NodePtr &node,
-                    const vector<int32_t> &input_index);
+  static Status BreakInput(const ge::NodePtr &node,
+                           const vector<int32_t> &input_index);
 
-  Status BreakOutput(const ge::NodePtr &node,
-                     const vector<int32_t> &output_index);
+  static Status BreakOutput(const ge::NodePtr &node,
+                            const vector<int32_t> &output_index);
+
+  static Status BreakAllInput(const ge::NodePtr &node);
+
+  static Status BreakAllOutput(const ge::NodePtr &node);
 
   Status RemoveNodeWithRelink(const ge::NodePtr &node, const std::initializer_list<int32_t> &io_map = {});
 
@@ -113,6 +123,8 @@ class FusionTurbo {
 
   ge::NodePtr AddNodeOnly(const string &op_name, const string &op_type);
 
+  static ge::NodePtr AddNodeOnly(ge::ComputeGraph &graph, const string &op_name, const string &op_type);
+
   static Status TransferOutCtrlEdges(const std::vector<ge::NodePtr> &nodes,
                                      const ge::NodePtr &new_node);
 
@@ -130,11 +142,11 @@ class FusionTurbo {
 
   static Status LinkInput(Relations &input_relations,
                           const ge::NodePtr &dst_node,
-                          bool update_tensor = true);
+                          TensorUptType update_tensor = UPDATE_THIS);
 
-  static Status LinkOutput(Relations &out_relations,
+  static Status LinkOutput(Relations &output_relations,
                            const ge::NodePtr &src_node,
-                           bool update_tensor = true);
+                           TensorUptType update_tensor = UPDATE_THIS);
 
   static ge::NodePtr GetPeerOutNode(const ge::NodePtr &node, int32_t this_node_input_index);
 
@@ -187,6 +199,10 @@ class FusionTurbo {
    * @param index node move output index
    **/
   Status GraphNodeDownMigration(const ge::NodePtr &node, const int32_t index);
+
+  static NodeIndex GetPeerInFirstPair(const ge::NodePtr &node, int32_t index);
+
+  static NodeIndex GetPeerOutPair(const ge::NodePtr &node, int32_t index);
  private:
   /* AddWeight will do either AddConstNode or UpdateConst. */
   ge::NodePtr AddConstNode(const ge::NodePtr &node, int32_t index,
