@@ -20,7 +20,6 @@
 #include "graph/ge_error_codes.h"
 #include "framework/common/debug/ge_log.h"
 #include "hyper_status.h"
-#include "runtime/base.h"
 
 struct ErrorResult {
   operator bool() const {
@@ -94,7 +93,7 @@ struct ErrorResult {
 #define GE_ASSERT_RT_OK(expr)                                                                                          \
   do {                                                                                                                 \
     auto tmp_expr_ret = (expr);                                                                                        \
-    if (tmp_expr_ret != RT_ERROR_NONE) {                                                                               \
+    if (tmp_expr_ret != 0) {                                                                                           \
       REPORT_INNER_ERROR("E19999", "Expect RT_ERROR_NONE, but get %d", tmp_expr_ret);                                  \
       GELOGE(ge::FAILED, "Expect RT_ERROR_NONE, but get %d", tmp_expr_ret);                                            \
       return ::ErrorResult();                                                                                          \

@@ -15,6 +15,7 @@
  */
 #include "common/checker.h"
 #include <gtest/gtest.h>
+#include "runtime/base.h"
 namespace {
 template<typename T>
 T JustReturn(T val) {
