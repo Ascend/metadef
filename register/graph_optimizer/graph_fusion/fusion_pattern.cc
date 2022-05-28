@@ -23,7 +23,7 @@
 #include "graph/debug/ge_log.h"
 
 namespace fe {
-
+const uint32_t kFuzzyOutIndex = 0xffffffff;
 #define FE_PATTERN_ERROR_RETURN_IF(condition, ...) \
   do {                                             \
     if (condition) {                               \

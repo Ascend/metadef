@@ -23,7 +23,7 @@
 #include <vector>
 
 namespace fe {
-
+extern const uint32_t kFuzzyOutIndex;
 /** Fusion pattern
  * @ingroup FUSION_PASS_GROUP
  * Describe Pattern of Ops waiting for fusion(Op type, etc)
