@@ -187,9 +187,7 @@ graphStatus Anchor::Unlink(const AnchorPtr &peer) {
                          "[Check][Param] peer(%s, %d) is not connected to this anchor(%s, %d)",
                          peer->GetOwnerNode()->GetName().c_str(), peer->GetIdx(),
                          this->GetOwnerNode()->GetName().c_str(), this->GetIdx());
-  if ((this->GetOwnerNode() == nullptr) || (peer->GetOwnerNode() == nullptr)) {
-    GELOGW("[Check][Param] unlink:this->GetOwnerNode() or peer->GetOwnerNode() is null.");
-  } else {
+  if ((this->GetOwnerNode() != nullptr) && (peer->GetOwnerNode() != nullptr)) {
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "delete", TraceManager::GetOutGraphName(),
                      this->GetOwnerNode()->GetName(), "output:" << this->GetIdx(), "", "",
                      peer->GetOwnerNode()->GetName() << ":input:" << peer->GetIdx());

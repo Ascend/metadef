@@ -170,6 +170,16 @@ TEST_F(UtestShapeRefiner, infer_shape_and_type_for_running) {
   OperatorFactoryImpl::operator_infershape_funcs_ = infershape_funcs_back;
 }
 
+TEST_F(UtestShapeRefiner, infer_shape_func_null) {
+  const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
+  
+  OperatorFactoryImpl::operator_infershape_funcs_.reset(new (std::nothrow) std::map<string, InferShapeFunc>());
+  auto merge1 = CreateNode(graph, "merge1", "StreamMerge", 2, 2);
+  auto op = OpDescUtils::CreateOperatorFromNode(merge1);
+  merge1->GetOpDesc()->AddInferFunc(nullptr);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndTypeForRunning(merge1, op, true), GRAPH_FAILED);
+}
+
 TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
   auto graph = CreateGraphWithMultiSubgraph();
   graph->SetGraphUnknownFlag(false);

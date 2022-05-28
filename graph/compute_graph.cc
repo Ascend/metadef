@@ -835,7 +835,7 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                                                     std::map<NodePtr, uint32_t> &map_in_edge_num,
                                                     std::deque<NodePtr> &stack,
                                                     const ConstComputeGraphPtr &compute_graph) {
-  GELOGI("Runing_Bfs_Sort: %s", name_.c_str());
+  GELOGD("Runing_Bfs_Sort: %s", name_.c_str());
   std::vector<NodePtr> stack_input;
   std::map<std::string, NodePtr> breadth_node_map;
   // Record the number of non data nodes but no input nodes

@@ -812,7 +812,8 @@ graphStatus ShapeRefiner::DoInferShapeAndTypeForRunning(const ConstNodePtr &node
     const auto infer_func =
         OperatorFactoryImpl::GetInferShapeFunc((it == kGeLocalOpMapping.end()) ? origin_type : it->second);
     if (infer_func == nullptr) {
-      REPORT_INNER_ERROR("E18888", "Failed to Get InferFunc. type is %s", origin_type.c_str());
+      REPORT_INNER_ERROR("E18888", "Failed to Get InferFunc. Reason: ASCEND_OPP_PATH is not set or it's invalid;"
+                         " Or the infer func of %s is not registered.", origin_type.c_str());
       GELOGE(GRAPH_FAILED, "[Get][InferFunc] failed. type is %s", origin_type.c_str());
       return GRAPH_FAILED;
     }
