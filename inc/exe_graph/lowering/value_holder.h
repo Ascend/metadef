@@ -92,7 +92,8 @@ class ValueHolder {
   static std::vector<ValueHolderPtr> CreateDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs,
                                                       size_t out_count);
   static ValueHolderPtr CreateVoid(const char *node_type, const std::vector<ValueHolderPtr> &inputs);
-  static ValueHolderPtr CreateVoidGuarder(const char *node_type, const ValueHolderPtr &resource, const std::vector<ValueHolderPtr> &args);
+  static ValueHolderPtr CreateVoidGuarder(const char *node_type, const ValueHolderPtr &resource,
+                                          const std::vector<ValueHolderPtr> &args);
   static HyperStatus AddDependency(const ValueHolderPtr &src, const ValueHolderPtr &dst);
 
   static GraphFrame *PushGraphFrame();
@@ -102,8 +103,8 @@ class ValueHolder {
   static void SetCurrentComputeNode(const ge::NodePtr &node);
   static std::unique_ptr<CurrentComputeNodeGuarder> SetScopedCurrentComputeNode(const ge::NodePtr &node);
 
-  static NodeHolderPtr AddNode(const char *node_type, size_t input_count,
-                               size_t output_count, GraphFrame &current_frame);
+  static NodeHolderPtr AddNode(const char *node_type, size_t input_count, size_t output_count,
+                               GraphFrame &current_frame);
 
  private:
   ValueHolder();

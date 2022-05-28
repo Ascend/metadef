@@ -71,6 +71,9 @@ class Tensor {
   void SetData(TensorData &&data) {
     tensor_data_ = std::move(data);
   }
+  void SetData(const TensorData &data) {
+    tensor_data_ = data;
+  }
   /**
    * 获取Tensor的数据地址
    * @return 数据地址
