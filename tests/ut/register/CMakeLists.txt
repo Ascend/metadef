@@ -23,6 +23,7 @@ include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
 include_directories(${METADEF_DIR})
 include_directories(${METADEF_DIR}/register)
+include_directories(${METADEF_DIR}/third_party/transformer/inc)
 
 file(GLOB_RECURSE REGISTER_UT_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/register/*.cc" )
 add_executable(ut_register

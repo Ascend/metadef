@@ -26,7 +26,7 @@
 #include "exe_graph/lowering/buffer_pool.h"
 #include "graph/any_value.h"
 #include "graph/node.h"
-#include "exe_graph/runtime/kernel_run_context_builder.h"
+#include "runtime/kernel_run_context_builder.h"
 
 namespace gert {
 struct FakeKernelContextHolder {

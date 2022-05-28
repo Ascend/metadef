@@ -15,7 +15,7 @@
  */
 #include <gtest/gtest.h>
 #define private public
-#include "exe_graph/runtime/kernel_run_context_builder.h"
+#include "runtime/kernel_run_context_builder.h"
 #undef private
 namespace gert {
 class KernelRunContextBuilderUT : public testing::Test {};

@@ -7,6 +7,8 @@ add_executable(ut_exe_graph ${TEST_SRCS} ${FAKER_SRCS})
 
 target_include_directories(ut_exe_graph PUBLIC
         ${METADEF_DIR}/tests/depends
+        ${METADEF_DIR}/third_party/
+        ${METADEF_DIR}/exe_graph
         )
 
 target_compile_options(ut_exe_graph PRIVATE
