@@ -65,7 +65,7 @@ TEST_F(TensorUT, GetCopiedDataAddrFollowingOk) {
                 kFollowing,                                // placement
                 ge::DT_FLOAT16,                              //dt
                 nullptr};
-  Tensor t;
+  Tensor t = {{}, {}, {}, {}, nullptr};
   memcpy(&t, &tensor, sizeof(tensor));
 
   EXPECT_EQ(t.GetOriginShape(), Shape({8, 3, 224, 224}));
@@ -82,7 +82,7 @@ TEST_F(TensorUT, GetCopiedDataAddrFollowingOk) {
 }
 
 TEST_F(TensorUT, SetGetShapeOk) {
-  Tensor t;
+  Tensor t = {{}, {}, {}, {}, nullptr};
   const Tensor &ct = t;
   t.MutableOriginShape() = Shape{8,3,224,224};
   t.MutableStorageShape() = Shape{8,1,224,224,16};
@@ -93,7 +93,7 @@ TEST_F(TensorUT, SetGetShapeOk) {
 }
 
 TEST_F(TensorUT, SetGetFormatOk) {
-  Tensor tensor;
+  Tensor tensor = {{}, {}, {}, {}, nullptr};
   const Tensor &t = tensor;
   tensor.SetOriginFormat(ge::FORMAT_NHWC);
   tensor.SetStorageFormat(ge::FORMAT_NC1HWC0);
@@ -106,7 +106,7 @@ TEST_F(TensorUT, SetGetFormatOk) {
 }
 
 TEST_F(TensorUT, SetGetPlacementOk) {
-  Tensor t;
+  Tensor t = {{}, {}, {}, {}, nullptr};
   const Tensor &ct = t;
   t.SetPlacement(kOnHost);
   EXPECT_EQ(t.GetPlacement(), kOnHost);
@@ -114,7 +114,7 @@ TEST_F(TensorUT, SetGetPlacementOk) {
 }
 
 TEST_F(TensorUT, SetGetDataTypeOk) {
-  Tensor t;
+  Tensor t = {{}, {}, {}, {}, nullptr};
   const Tensor &ct = t;
   t.SetDataType(ge::DT_FLOAT16);
   EXPECT_EQ(t.GetDataType(), ge::DT_FLOAT16);
@@ -122,7 +122,7 @@ TEST_F(TensorUT, SetGetDataTypeOk) {
 }
 
 TEST_F(TensorUT, SetGetAddrOk) {
-  Tensor t;
+  Tensor t = {{}, {}, {}, {}, nullptr};
   const Tensor &ct = t;
   void *a = &t;
 
@@ -136,7 +136,7 @@ TEST_F(TensorUT, SetGetAddrOk) {
 }
 
 TEST_F(TensorUT, GetTensorDataOk) {
-  Tensor t;
+  Tensor t = {{}, {}, {}, {}, nullptr};
   const Tensor &ct = t;
   auto a = reinterpret_cast<void *>(10);
   t.MutableTensorData() = TensorData{a, nullptr};
