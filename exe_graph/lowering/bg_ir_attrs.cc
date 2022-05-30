@@ -119,11 +119,6 @@ bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &att
   }
 }
 bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &runtime_attrs) {
-  // todo 这里可能存在兼容性问题，
-  //    metadef仓在当前版本新增了ir_attr_names能力，这意味着在老版本中，生成的OpDesc中没有保存ir_attr_nams
-  //    考虑反序列化老版本产生的om场景：此时om的opdesc中没有ir_attr_names这个字段，这里也就拿不到ir_attr_names
-  //    兼容的解决方案时，如果反序列化时发现没有这个字段，那么需要从当前IR中构造一遍，强行生成这个属性
-  // todo 序列化、反序列化场景，需要把ir_attr_names保存下来，补充ST验证反序列化场景
   const auto &ir_attr_names = node->GetOpDesc()->GetIrAttrNames();
   auto all_attrs = ge::AttrUtils::GetAllAttrs(node->GetOpDesc());
   for (size_t i = 0; i < ir_attr_names.size(); ++i) {

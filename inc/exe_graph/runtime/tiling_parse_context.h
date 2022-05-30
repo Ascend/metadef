@@ -34,7 +34,11 @@ class TilingParseContext : public ExtendedKernelContext {
    */
   template<typename T>
   T *GetCompiledInfo() {
-    return GetOutputPointer<T>(0);
+    auto av = GetOutput(0);
+    if (av == nullptr) {
+      return nullptr;
+    }
+    return av->GetValue<T *>();
   }
 };
 static_assert(std::is_standard_layout<TilingParseContext>::value, "The class TilingParseContext must be a POD");

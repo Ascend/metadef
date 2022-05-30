@@ -28,6 +28,10 @@
 #include "graph/node.h"
 #include "graph/node_impl.h"
 #include "test_std_structs.h"
+#include "external/graph/operator_factory.h"
+#include "graph/utils/op_desc_utils.h"
+#include "external/graph/operator_reg.h"
+
 #undef private
 #undef protected
 
@@ -488,6 +492,49 @@ TEST(UTEST_ge_model_serialize, test_subGraph)
   ModelSerialize serialize;
   auto buffer = serialize.SerializeModel(model);
   ASSERT_GE(buffer.GetSize(), 0);
+}
+
+REG_OP(MatMul)
+  .INPUT(x1, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+  .INPUT(x2, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+  .OPTIONAL_INPUT(bias, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+  .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+  .ATTR(transpose_x1, Bool, false)
+  .ATTR(transpose_x2, Bool, false)
+  .OP_END_FACTORY_REG(MatMul)
+
+TEST(UTEST_ge_model_serialize, test_ir_definitions)
+{
+  Model model("model_name", "custom version3.0");
+  auto op = ge::OperatorFactory::CreateOperator("MatMul", "MatMul");
+  auto op_desc_origin = ge::OpDescUtils::GetOpDescFromOperator(op);
+  EXPECT_NE(op_desc_origin, nullptr);
+  auto computeGraph = std::make_shared<ComputeGraph>("graph_name");
+  CreateNode(op_desc_origin, computeGraph);
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
+  model.SetGraph(graph);
+  auto node = graph.GetDirectNode();
+
+  ModelSerialize serialize;
+  proto::ModelDef model_def;
+  ASSERT_EQ(serialize.SerializeModel(model, false, model_def), SUCCESS); //success
+  GraphUtils::WriteProtoToTextFile(model_def, "./ir_definitions.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
+  auto state = GraphUtils::LoadGEGraph("./ir_definitions.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 1);
+  for (auto &node_ptr : com_graph1->GetAllNodes()) {
+    ASSERT_EQ((node_ptr == nullptr), false);
+    if (node_ptr->GetType() == "MatMul") {
+      auto op_desc = node_ptr->GetOpDesc();
+      ASSERT_EQ((op_desc == nullptr), false);
+      EXPECT_FALSE(op_desc->GetIrAttrNames().empty());
+      EXPECT_FALSE(op_desc->GetIrInputs().empty());
+      EXPECT_EQ(op_desc->GetIrAttrNames().size(), op_desc_origin->GetIrAttrNames().size());
+      EXPECT_EQ(op_desc->GetIrInputs().size(), op_desc_origin->GetIrInputs().size());
+    }
+  }
+  system("rm -rf ./ir_definitions.txt");
 }
 
 TEST(UTEST_ge_model_serialize, test_large_model)

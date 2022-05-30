@@ -129,6 +129,27 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
   return true;
 }
 
+void ModelSerializeImp::OpDescIrDefToAttrDef(const ConstOpDescPtr &op_desc,
+    google::protobuf::Map<std::string, ge::proto::AttrDef> *op_desc_attr) const {
+  if (!op_desc->impl_->ir_attr_names_.empty()) {
+    proto::AttrDef ir_attr_names;
+    for (const auto &item : op_desc->impl_->ir_attr_names_) {
+      ir_attr_names.mutable_list()->add_s(item);
+    }
+    (*op_desc_attr)["_ir_attr_names"] = ir_attr_names;
+  }
+  if (!op_desc->impl_->ir_inputs_.empty()) {
+    proto::AttrDef key;
+    proto::AttrDef value;
+    for (const auto &input : op_desc->impl_->ir_inputs_) {
+      key.mutable_list()->add_s(input.first);
+      value.mutable_list()->add_i(static_cast<int64_t>(input.second));
+    }
+    (*op_desc_attr)["_ir_inputs_key"] = key;
+    (*op_desc_attr)["_ir_inputs_value"] = value;
+  }
+}
+
 void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
                                         const bool is_dump) const {
   auto const op_desc_attr = op_def_proto->mutable_attr();
@@ -163,6 +184,7 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
     }
     (*op_desc_attr)["_opt_input"] = opt_input;
   }
+  OpDescIrDefToAttrDef(op_desc, op_desc_attr);
 
   if (!SerializeAllAttrsFromAnyMap(op_desc->GetAllAttrs(), op_desc_attr)) {
     GELOGE(GRAPH_FAILED, "OpDesc [%s] attr serialize failed.", op_desc->GetName().c_str());
@@ -307,6 +329,46 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::str
   }
 }
 
+void ModelSerializeImp::AttrDefToOpDescIrDef(OpDescPtr &op_desc, proto::OpDef &op_def_proto) const {
+  if (op_def_proto.attr().count("_ir_attr_names") > 0UL) {
+    const auto &name_list = op_def_proto.attr().at("_ir_attr_names").list();
+    for (const auto &item_s : name_list.s()) {
+      op_desc->impl_->ir_attr_names_.emplace_back(item_s);
+    }
+    (void) op_def_proto.mutable_attr()->erase("_ir_attr_names");
+  }
+
+  std::vector<std::string> keys;
+  if (op_def_proto.attr().count("_ir_inputs_key") > 0UL) {
+    const auto &key_list = op_def_proto.attr().at("_ir_inputs_key").list();
+    for (const auto &key : key_list.s()) {
+        keys.emplace_back(key);
+    }
+    (void) op_def_proto.mutable_attr()->erase("_ir_inputs_key");
+  }
+  std::vector<IrInputType> values;
+  if (op_def_proto.attr().count("_ir_inputs_value") > 0UL) {
+    const auto &value_list = op_def_proto.attr().at("_ir_inputs_value").list();
+    for (const auto &value : value_list.i()) {
+      if (value >= kIrInputTypeEnd) {
+        GELOGW("[ParseAttrDef][CheckParam] ir inputs value[%ld] is invalid, valid range is [%d-%d)",
+               value, kIrInputRequired, kIrInputTypeEnd);
+        return;
+      }
+      values.emplace_back(static_cast<IrInputType>(value));
+    }
+    (void) op_def_proto.mutable_attr()->erase("_ir_inputs_value");
+  }
+  if (keys.size() != values.size()) {
+    GELOGW("[ParseAttrDef][CheckParam] ir inputs key and value vector size is different. key_size=%zu, value_size=%zu.",
+           keys.size(), values.size());
+    return;
+  }
+  for (size_t i = 0U; i < keys.size(); ++i) {
+      op_desc->impl_->ir_inputs_.emplace_back(std::move(keys[i]), values[i]);
+  }
+}
+
 bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_def_proto) const {
   std::vector<std::string> opt_input;
   std::vector<std::string> key_in;
@@ -347,7 +409,7 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   // insert name index by key and value
   AttrDefToOpDescIn(op_desc, key_in, value_in);
   AttrDefToOpDesc(op_desc, key_out, value_out, opt_input);
-
+  AttrDefToOpDescIrDef(op_desc, op_def_proto);
   if (!DeserializeAllAttrsToAttrHolder(op_def_proto.attr(), op_desc.get())) {
     GELOGE(GRAPH_FAILED, "Opdesc [%s] attr deserialize failed", op_def_proto.name().c_str());
     return false;
