@@ -27,8 +27,13 @@ KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
     return holder;
   }
   size_t extend_info_size;
-  holder.compute_node_extend_holder = bg::CreateComputeNodeInfoWithoutBuffer(MakeNode(op_desc), extend_info_size);
+  holder.compute_node_extend_holder =
+      bg::CreateComputeNodeInfo(MakeNode(op_desc), holder.buffer_pool, extend_info_size);
   auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder.get());
+  compute_node_info->SetNodeName(
+      holder.buffer_pool.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeName())));
+  compute_node_info->SetNodeType(
+      holder.buffer_pool.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeType())));
   holder.context = reinterpret_cast<KernelContext *>(holder.context_holder.get());
   auto kernel_run_context = holder.context->GetContext();
   kernel_run_context->input_size = inputs_.size();

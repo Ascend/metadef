@@ -26,6 +26,7 @@ struct KernelContextHolder {
   std::unique_ptr<uint8_t[]> context_holder;
   std::vector<AsyncAnyValue> value_holder;
   std::unique_ptr<uint8_t[]> compute_node_extend_holder;
+  bg::BufferPool buffer_pool;
   KernelContext *context;
 };
 class KernelRunContextBuilder {

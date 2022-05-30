@@ -22,7 +22,6 @@ namespace gert {
 namespace bg {
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool);
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size);
-std::unique_ptr<uint8_t[]> CreateComputeNodeInfoWithoutBuffer(const ge::NodePtr &node, size_t &total_size);
 }
 }
 #endif  //AIR_CXX_RUNTIME_V2_GRAPH_BUILDER_BG_KERNEL_CONTEXT_EXTEND_H_
