@@ -22,7 +22,6 @@ namespace ge {
 class CompileCacheHasher {
 public:
   static CacheHashKey GetCacheDescHashWithoutShape(const CompileCacheDesc &cache_desc);
-  static CacheHashKey GetCacheDescShapeHash(const CompileCacheDesc &cache_desc);
 };
 }  // namespace ge
 #endif

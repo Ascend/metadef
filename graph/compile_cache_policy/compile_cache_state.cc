@@ -43,7 +43,7 @@ CacheItemId CompileCacheState::AddCache(const CompileCacheDesc &compile_cache_de
     const CacheItemId next_item_id = GetNextCacheItemId();
     const CacheInfo cache_info = CacheInfo(
         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), next_item_id, compile_cache_desc);
-    const std::vector<CacheInfo> info = {cache_info};
+    std::vector<CacheInfo> info = {cache_info};
     (void)cc_state_.insert({main_hash_key, std::move(info)});
     return next_item_id;
   }

@@ -39,7 +39,7 @@ class AxisTypeInfo {
 public:
   AxisTypeInfo() = default;
   ~AxisTypeInfo() = default;
-  void SetAxisType(AxisType axis_type) { axis_type_ = axis_type; }
+  void SetAxisType(const AxisType axis_type) { axis_type_ = axis_type; }
   AxisType GetAxisType() const { return axis_type_; }
   void AddInputCutInfo(CutInfo &input_cut_info);
   void AddOutputCutInfo(CutInfo &output_cut_info);

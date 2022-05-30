@@ -946,7 +946,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
   }
   // node->GetInDataAnchor(index)->GetPeerOutAnchor() can be sure not nullptr because peer_node is not nullptr
   int32_t peer_out_anchor_index = (node->GetType() == DATA) ? -1 :
-      node->GetInDataAnchor(index)->GetPeerOutAnchor()->GetIdx();
+      node->GetInDataAnchor(static_cast<int32_t>(index))->GetPeerOutAnchor()->GetIdx();
   while (!IsComputableOp(peer_node)) {
     if (peer_node->GetType() == DATA) {
       const auto parent_node_2_anchor = GetParentInputAndAnchor(peer_node);

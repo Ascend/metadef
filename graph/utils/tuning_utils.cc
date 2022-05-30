@@ -287,7 +287,7 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
     }
     output_desc = weight[0U]->GetTensorDesc();
     std::string parent_node_name;
-    if (AttrUtils::GetStr(node->GetOpDesc(), parent_node_name_attr, parent_node_name) && !parent_node_name.empty()) {
+    if (AttrUtils::GetStr(node->GetOpDesc(), parent_node_name_attr, parent_node_name) && (!parent_node_name.empty())) {
       (void) AttrUtils::SetStr(data_op_desc, ATTR_NAME_SRC_CONST_NAME, parent_node_name);
     }
     GELOGD("Create const node for %s, output_desc shape is:%s",
