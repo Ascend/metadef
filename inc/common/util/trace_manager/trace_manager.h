@@ -30,7 +30,7 @@ namespace ge {
   do {                                                                                                             \
     if (TraceManager::GetInstance().IsTraceEnabled()) {                                                            \
       if (TraceManager::GetTraceHeader().size() == 0) {                                                            \
-        GELOGW("[Check][Param] owner and stage have not been set");                                                \
+        GELOGD("[Check][Param] owner and stage have not been set");                                                \
       } else {                                                                                                     \
         std::stringstream ss;                                                                                      \
         ss << owner << "," << action << "," << graph_name << "," << node_name << "," << node_data << ","           \
