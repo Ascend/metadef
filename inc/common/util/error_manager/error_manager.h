@@ -65,17 +65,18 @@ constexpr size_t const LIMIT_PER_MESSAGE = 512U;
 #define REPORT_ENV_ERROR(error_code, key, value)                                            \
   ErrorManager::GetInstance().ATCReportErrMessage(error_code, key, value)
 
-#define REPORT_INNER_ERROR(error_code, fmt, ...)                                                                     \
-do {                                                                                                                 \
-  std::vector<char> error_string(LIMIT_PER_MESSAGE, '\0');                                                           \
-  if (error_message::FormatErrorMessage(error_string.data(), error_string.size(), fmt, ##__VA_ARGS__) > 0) {         \
-    if (error_message::FormatErrorMessage(error_string.data(), error_string.size(), "%s[FUNC:%s][FILE:%s][LINE:%" PRIdLEAST8 "]", \
-        error_string.data(), &__FUNCTION__[0], error_message::TrimPath(std::string(__FILE__)).c_str(),               \
-        __LINE__) > 0) {                                                                                             \
-      (void)ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_string.data()));         \
-    }                                                                                                                \
-  }                                                                                                                  \
-} while (false)
+#define REPORT_INNER_ERROR(error_code, fmt, ...)                                                                       \
+  do {                                                                                                                 \
+    std::vector<char> error_string(LIMIT_PER_MESSAGE, '\0');                                                           \
+    if (error_message::FormatErrorMessage(error_string.data(), error_string.size(), fmt, ##__VA_ARGS__) > 0) {         \
+      if (error_message::FormatErrorMessage(error_string.data(), error_string.size(),                                  \
+                                            "%s[FUNC:%s][FILE:%s][LINE:%" PRIdLEAST8 "]", error_string.data(),         \
+                                            &__FUNCTION__[0], error_message::TrimPath(std::string(__FILE__)).c_str(),  \
+                                            __LINE__) > 0) {                                                           \
+        (void) ErrorManager::GetInstance().ReportInterErrMessage(error_code, std::string(error_string.data()));        \
+      }                                                                                                                \
+    }                                                                                                                  \
+  } while (false)
 
 #define REPORT_CALL_ERROR REPORT_INNER_ERROR
 
