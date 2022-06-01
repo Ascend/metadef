@@ -185,7 +185,7 @@ TEST_F(ComputeNodeInfoUT, GetAttrsOk) {
   EXPECT_EQ(reinterpret_cast<const int64_t *>(vec->GetData())[2], 30);
 }
 
-TEST_F(ComputeNodeInfoUT, GetAttrsDump) {
+TEST_F(ComputeNodeInfoUT, GetAttrsEmptyAxes) {
 auto context_holder = KernelRunContextFaker()
     .IrInstanceNum({2, 0, 1})
     .NodeIoNum(3, 1)
@@ -202,10 +202,10 @@ ASSERT_NE(compute_node_info, nullptr);
 
 auto attrs = compute_node_info->GetAttrs();
 ASSERT_NE(attrs, nullptr);
-
 EXPECT_EQ(attrs->GetAttrNum(), 2);
+EXPECT_EQ(*attrs->GetAttrPointer<int64_t>(0), 10);
 auto vec = attrs->GetAttrPointer<ContinuousVector>(1);
-EXPECT_EQ(vec, nullptr);
-//EXPECT_EQ(reinterpret_cast<const int64_t *>(vec->GetData())[0], );
+EXPECT_NE(vec, nullptr);
+EXPECT_EQ(vec->GetSize(), 0);
 }
 }  // namespace gert

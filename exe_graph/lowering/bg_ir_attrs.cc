@@ -62,7 +62,9 @@ bool AppendVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   GE_ASSERT_NOTNULL(cv_holder);
   auto cv = reinterpret_cast<ContinuousVector *>(cv_holder.get());
   size_t copy_size = val->size() * sizeof(T);
-  GE_ASSERT_EOK(memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(T), val->data(), copy_size));
+  if (!val->empty()) {
+    GE_ASSERT_EOK(memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(T), val->data(), copy_size));
+  }
   cv->SetSize(val->size());
 
   // todo 拷贝了两次，后面优化
