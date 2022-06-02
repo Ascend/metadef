@@ -117,7 +117,6 @@ class TilingContext : public ExtendedKernelContext {
    * outputs[2]: atomic-clean-flag
    * outputs[3]: tiling-data
    * outputs[4]: workspace sizes
-   * outputs[5]: tiling condition
    */
   enum TilingOutputIndex {
     kOutputTilingKey,
@@ -125,7 +124,7 @@ class TilingContext : public ExtendedKernelContext {
     kOutputAtomicCleanFlag,
     kOutputTilingData,
     kOutputWorkspace,
-    kOutputTilingCond,
+
     // add new output definitions here
     kOutputNum
   };
@@ -175,30 +174,6 @@ class TilingContext : public ExtendedKernelContext {
     auto p = GetOutputPointer<uint32_t>(kOutputBlockDim);
     if (p == nullptr) {
       return std::numeric_limits<uint32_t>::max();
-    }
-    return *p;
-  }
-  /**
-   * 设置tiling cond
-   * @param tiling_cond tiling condition
-   * @return 成功时返回ge::GRAPH_SUCCESS
-   */
-  ge::graphStatus SetTilingCond(int32_t tiling_cond) {
-    auto p = GetOutputPointer<int32_t>(kOutputTilingCond);
-    if (p == nullptr) {
-      return ge::GRAPH_FAILED;
-    }
-    *p = tiling_cond;
-    return ge::GRAPH_SUCCESS;
-  }
-  /**
-   * 获取tiling cond
-   * @return tiling cond:有效的tiling_cond大于等于0，若该值无效返回-1
-   */
-  int32_t GetTilingCond() const {
-    auto p = GetOutputPointer<int32_t>(kOutputTilingCond);
-    if (p == nullptr) {
-      return -1;
     }
     return *p;
   }

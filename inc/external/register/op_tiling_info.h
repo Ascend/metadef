@@ -67,7 +67,6 @@ struct OpRunInfo {
   ByteBuffer tiling_data;
   bool clear_atomic;
   uint64_t tiling_key;
-  int32_t tiling_cond;
 };
 
 using TeOpAttrArgs = std::vector<std::string>;
@@ -136,9 +135,6 @@ public:
 
   void ResetWorkspace();
   void ResetAddrBase(void *const addr_base, const uint64_t max_size);
-
-  void SetTilingCond(const int32_t tiling_cond);
-  int32_t GetTilingCond() const;
 private:
   std::shared_ptr<OpRunInfoImpl> impl_;
 };

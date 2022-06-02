@@ -1344,5 +1344,5 @@ const std::string ATTR_NAME_INPUTS_ALIGN_OFFSET = "_inputs_align_offset";
 const std::string ATTR_NAME_OUT_SHAPE_LOCKED = "_out_shape_locked";
 const std::string ATTR_NAME_FORMAT_LOCKED = "_format_locked";
 const std::string ATTR_NAME_SKIP_GEN_TASK = "_skip_gen_task";
-const std::string ATTR_NAME_OM_BINARY_PATH = "_om_binary_path";
+const std::string ATTR_NAME_OM_PATH = "_om_binary_path";
 }  // namespace ge
