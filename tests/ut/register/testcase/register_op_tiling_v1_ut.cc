@@ -255,7 +255,6 @@ TEST_F(RegisterOpTilingV1UT, add_tiling_data) {
   run_info.AddTilingData(data2);
   run_info.SetClearAtomic(false);
   run_info.SetTilingKey(100);
-  run_info.SetTilingCond(-1);
   std::vector<int64_t> workspace{1, 2, 3};
   run_info.SetWorkspaces(workspace);
   std::string get_data = parse_int(run_info.GetAllTilingData());
@@ -264,7 +263,6 @@ TEST_F(RegisterOpTilingV1UT, add_tiling_data) {
   EXPECT_EQ(run_info.GetTilingKey(), 100);
   EXPECT_EQ(run_info.GetWorkspaceNum(), 3);
   EXPECT_EQ(run_info.GetAllWorkspaces(), workspace);
-  EXPECT_EQ(run_info.GetTilingCond(), -1);
 
   run_info.GetAllTilingData().str("");
   run_info.AddTilingData(reinterpret_cast<const char *>(&data2), sizeof(int));
