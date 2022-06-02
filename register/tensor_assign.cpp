@@ -25,9 +25,9 @@
 #include "graph/utils/type_utils.h"
 #include "graph/utils/attr_utils.h"
 #include "register/register_error_codes.h"
+#include "register/tensor_assign.h"
 #include "graph/types.h"
 #include "graph/def_types.h"
-#include "register/tensor_assign.h"
 
 namespace domi {
 namespace {
@@ -187,7 +187,7 @@ Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::
   const bool zerosLike = ((count != val_size) && (val_size == 1));
   std::vector<uint8_t> addr(static_cast<uint64_t>(count));
   if (val_size == 0) {  // addr has been zero initialized
-    (void)weight->SetData(addr.data(), static_cast<size_t>(count) * sizeof(uint8_t));
+    (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.data()), static_cast<size_t>(count) * sizeof(uint8_t));
     return SUCCESS;
   }
   if (!zerosLike) {
@@ -203,7 +203,7 @@ Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::
       addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(0));
     }
   }
-  (void)weight->SetData(addr.data(), static_cast<size_t>(count) * sizeof(uint8_t));
+  (void)weight->SetData(reinterpret_cast<uint8_t *>(addr.data()), static_cast<size_t>(count) * sizeof(uint8_t));
   return SUCCESS;
 }
 
@@ -316,28 +316,28 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
   const bool is_double_byte = CheckHalfVal(data_type) || CheckDoubleByte(data_type);
   const bool is_eight_byte = CheckSignedEightByte(data_type) || CheckUnsignedEightByte(data_type);
   if (CheckByte(data_type)) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(uint8_t));
   } else if (CheckBoolVal(data_type)) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(bool));
   } else if (is_double_byte) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(uint16_t));
   } else if (is_four_byte) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(uint32_t));
   } else if (is_eight_byte) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
-                          static_cast<size_t>(count) * sizeof(uint64_t));
+   (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
+                         static_cast<size_t>(count) * sizeof(uint64_t));
   } else if (CheckDoubleVal(data_type)) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(double));
   } else if (CheckComplex128Val(data_type)) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(std::complex<double>));
   } else if (CheckComplex64Val(data_type)) {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(std::complex<float>));
   } else if (CheckStringVal(data_type)) {
     std::string weight_content;
@@ -355,7 +355,7 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
         GELOGW("[SetWeight][Copy] memcpy failed"));
     (void)weight->SetData(ge::PtrToPtr<uint8_t, const uint8_t>(addr.data()), total_size);
   } else {
-    (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
+    (void)weight->SetData(reinterpret_cast<const uint8_t *>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(float));
   }
 }
