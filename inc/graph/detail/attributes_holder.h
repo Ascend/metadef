@@ -133,7 +133,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
  public:
   AttrHolder() = default;
   virtual ~AttrHolder() = default;
-
+  AttrHolder & operator=(AttrHolder const &rhs) = default;
+  
   graphStatus SetAttr(const std::string &name, const AnyValue &value);
 
   graphStatus TrySetAttr(const std::string &name, const AnyValue &value);
@@ -170,7 +171,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   }
 
  protected:
-  AttrHolder & operator=(AttrHolder const &rhs) = default;
   graphStatus AddRequiredAttr(const std::string &name);
   const std::set<std::string> GetAllAttrNames() const;
   const std::map<std::string, AnyValue> GetAllAttrs() const;
