@@ -227,7 +227,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("Can not init ErrorManager again, can't report error_message.");
+      GELOGI("ErrorManager has not been initialized, can't report error_message.");
       return -1;
     }
   }
@@ -283,7 +283,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("Can not init ErrorManager again, can't report error_message.");
+      GELOGI("ErrorManager has not been initialized, can't report error_message.");
       return 0;
     }
   }
@@ -543,7 +543,7 @@ void ErrorManager::ATCReportErrMessage(const std::string error_code, const std::
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("Can not init ErrorManager again, can't report error_message.");
+      GELOGI("ErrorManager has not been initialized, can't report error_message.");
       return;
     }
   }
@@ -593,7 +593,7 @@ int32_t ErrorManager::ReportMstuneCompileFailedMsg(const std::string &root_graph
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("Can not init ErrorManager again, can't report error_message.");
+      GELOGI("ErrorManager has not been initialized, can't report error_message.");
       return 0;
     }
   }
@@ -627,7 +627,7 @@ int32_t ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, s
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
-      GELOGI("Can not init ErrorManager again, can't report error_message.");
+      GELOGI("ErrorManager has not been initialized, can't report error_message.");
       return 0;
     }
   }

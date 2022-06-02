@@ -92,7 +92,7 @@
       "errClass": "Command Line Errors",
       "errTitle": "Invalid Dynamic Shape Argument",
       "ErrCode": "E10009",
-      "ErrMessage": "[--dynamic_batch_size], [--dynamic_image_size], and [--dynamic_dims] are mutually exclusive.",
+      "ErrMessage": "[--dynamic_batch_size], [--dynamic_image_size], [--input_shape_range], and [--dynamic_dims] are mutually exclusive.",
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "[--dynamic_batch_size], [--dynamic_image_size], and [--dynamic_dims] are mutually exclusive.",
