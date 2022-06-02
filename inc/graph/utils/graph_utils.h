@@ -524,7 +524,7 @@ class GraphUtils {
 class ComputeGraphBuilder {
  public:
   ComputeGraphBuilder() : owner_graph_(nullptr) {}
-  virtual ~ComputeGraphBuilder() = default;
+  ~ComputeGraphBuilder() = default;
 
   ///
   /// @brief Add node to graph
@@ -623,7 +623,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   CompleteGraphBuilder &operator=(const CompleteGraphBuilder &) = delete;
   CompleteGraphBuilder(const CompleteGraphBuilder &&) = delete;
   CompleteGraphBuilder &operator=(const CompleteGraphBuilder &&) = delete;
-  ~CompleteGraphBuilder() override = default;
+  ~CompleteGraphBuilder() = default;
 
   ///
   /// @brief Add node to graph
@@ -794,7 +794,7 @@ class PartialGraphBuilder : public ComputeGraphBuilder {
   PartialGraphBuilder &operator=(const PartialGraphBuilder &) = delete;
   PartialGraphBuilder(const PartialGraphBuilder &&) = delete;
   PartialGraphBuilder &operator=(const PartialGraphBuilder &&) = delete;
-  ~PartialGraphBuilder() override = default;
+  ~PartialGraphBuilder() = default;
 
   ///
   /// @brief Add node to graph
