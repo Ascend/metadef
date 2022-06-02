@@ -2143,7 +2143,7 @@
     },
     {
         "ErrCode": "E60013",
-        "ErrMessage": "In op[%s], the depth of pad can not be less than shape_filter's, actual are [%s] and [%s]",
+        "ErrMessage": "In op[%s], the depth of pad must be smaller than shape_filter's, actual are [%s] and [%s]",
         "Arglist": "op_name,depth_of_pad,depth_of_filter"
     },
     {
