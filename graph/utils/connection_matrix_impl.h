@@ -56,7 +56,7 @@ private:
 
   LargeBitmap &GetBitMap(const NodePtr &node);
 
-  size_t size_;
+  size_t size_ = 0;
 
   std::vector<LargeBitmap> bit_maps_;
 
