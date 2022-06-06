@@ -215,15 +215,20 @@ class ErrorManager {
   struct ErrorInfoConfig {
     std::string error_id;
     std::string error_message;
+    std::string possible_cause;
+    std::string solution;
     std::vector<std::string> arg_list;
   };
 
   struct ErrorItem {
     std::string error_id;
     std::string error_message;
+    std::string possible_cause;
+    std::string solution;
 
     bool operator==(const ErrorItem &rhs) const {
-      return (error_id == rhs.error_id) && (error_message == rhs.error_message);
+      return (error_id == rhs.error_id) && (error_message == rhs.error_message)
+          && (possible_cause == rhs.possible_cause) && (solution == rhs.solution);
     }
   };
 
@@ -254,6 +259,10 @@ class ErrorManager {
 
   std::vector<ErrorItem> &GetErrorMsgContainerByWorkId(uint64_t work_id);
   std::vector<ErrorItem> &GetWarningMsgContainerByWorkId(uint64_t work_id);
+
+  void AssembleInnerErrorMessage(const std::vector<ErrorItem> &error_messages,
+                                 const std::string &first_code,
+                                 std::stringstream &err_stream);
 
   void ClearErrorMsgContainerByWorkId(const uint64_t work_stream_id);
   void ClearWarningMsgContainerByWorkId(const uint64_t work_stream_id);
