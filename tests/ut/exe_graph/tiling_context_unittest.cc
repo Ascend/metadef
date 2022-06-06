@@ -400,4 +400,25 @@ TEST_F(TilingContextUT, SetWorkspaceSizesOutOfBounds) {
   auto ws = context->GetWorkspaceSizes(9);
   EXPECT_EQ(ws, nullptr);
 }
+
+TEST_F(TilingContextUT, SetTilingCondOk) {
+  gert::StorageShape in_shape = {{1, 16, 256}, {1, 16, 256}};
+  gert::StorageShape out_shape = {{1, 16, 256}, {1, 16, 1, 16, 16}};
+
+  // tiling data
+  auto param = gert::TilingData::CreateCap(2048);
+  auto holder = gert::TilingContextFaker()
+                    .NodeIoNum(1, 1)
+                    .IrInputNum(1)
+                    .NodeInputTd(0, ge::DT_FLOAT16, ge::FORMAT_ND, ge::FORMAT_ND)
+                    .NodeOutputTd(0, ge::DT_FLOAT16, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ)
+                    .InputShapes({&in_shape})
+                    .OutputShapes({&out_shape})
+                    .TilingData(param.get())
+                    .Build();
+
+  auto context = holder.GetContext<TilingContext>();
+  context->SetTilingCond(10);
+  EXPECT_EQ(context->GetTilingCond(), 10);
+}
 }  // namespace gert
