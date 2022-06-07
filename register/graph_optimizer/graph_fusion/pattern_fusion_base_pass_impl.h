@@ -95,9 +95,7 @@ class PatternFusionBasePassImpl {
                          size_t &out_idx, const std::unique_ptr<bool[]> &usage_flags,
                          CandidateAndMapping &cand) const;
 
-  bool MatchOutputs(const ge::NodePtr &node,
-                    const FusionPattern::OpDescPtr &op_desc,
-                    CandidateAndMapping &cand) const;
+  bool MatchOutputs(CandidateAndMapping &cand) const;
 
   void UpdateCandidates(const CandidateAndMapping &temp_cand, CandidateAndMapping &cand) const;
 
@@ -108,7 +106,8 @@ class PatternFusionBasePassImpl {
                           const std::vector<FusionPattern::OpDescPtr> &outputs_desc,
                           size_t &out_idx, const std::unique_ptr<bool[]> &usage_flags,
                           std::vector<ge::NodePtr> &candidate_nodes,
-                          std::vector<FusionPattern::OpDescPtr> &candidate_op_descs) const;
+                          std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
+                          Mapping &mapping) const;
 
   bool MatchFromOutput(std::vector<ge::NodePtr> &candidate_nodes,
                        std::vector<std::shared_ptr<OpDesc>> &candidate_op_descs, Mapping &mapping) const;
@@ -117,10 +116,10 @@ class PatternFusionBasePassImpl {
                          const FusionPattern::OpDescPtr &op_desc,
                          size_t &out_idx, const std::unique_ptr<bool[]> &usage_flags,
                          std::vector<ge::NodePtr> &candidate_nodes,
-                         std::vector<FusionPattern::OpDescPtr> &candidate_op_descs) const;
+                         std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
+                         Mapping &mapping) const;
 
-  bool MatchOutputs(const ge::NodePtr &node, const FusionPattern::OpDescPtr &op_desc,
-                    std::vector<ge::NodePtr> &candidate_nodes,
+  bool MatchOutputs(std::vector<ge::NodePtr> &candidate_nodes,
                     std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
                     Mapping &mapping) const;
 

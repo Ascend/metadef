@@ -93,20 +93,27 @@ class TestSetOutputsPassFuzzy5 : public GraphFusionPassBase {
   Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, vector<ge::NodePtr> &new_nodes) override;
 };
 
+class TestSetOutputsPassFuzzy6 : public GraphFusionPassBase {
+ protected:
+  vector<FusionPattern *> DefinePatterns() override;
+  Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, vector<ge::NodePtr> &new_nodes) override;
+};
+
 static const string TEST_SETOUPT_PASS_NAME = "TestSetOutputsFusionPass";
 static const string OP_A = "A";
 static const string OP_B = "B";
 static const string OP_C = "C";
 static const string OP_D = "D";
 static const string OP_E = "E";
-static const string OP_E2 = "E2";
 static const string OP_F = "F";
+static const string OP_G = "G";
 static const string TYPE_A = "TypeA";
 static const string TYPE_B = "TypeB";
 static const string TYPE_C = "TypeC";
 static const string TYPE_D = "TypeD";
 static const string TYPE_E = "TypeE";
 static const string TYPE_F = "TypeF";
+static const string TYPE_G = "TypeG";
 
 vector<FusionPattern *> TestSetOutputsPass1::DefinePatterns() {
   vector<FusionPattern *> patterns;
@@ -279,6 +286,34 @@ vector<FusionPattern *> TestSetOutputsPassFuzzy5::DefinePatterns() {
 }
 
 Status TestSetOutputsPassFuzzy5::Fusion(ge::ComputeGraph &graph, Mapping &mapping, vector<ge::NodePtr> &new_nodes) {
+  return fe::SUCCESS;
+}
+
+vector<FusionPattern *> TestSetOutputsPassFuzzy6::DefinePatterns() {
+  vector<FusionPattern *> patterns;
+
+  FusionPattern *pattern = new(std::nothrow) FusionPattern("TestSetOutputsFusionPattern");
+
+  pattern->AddOpDesc(OP_A, {TYPE_A})
+      .AddOpDesc(OP_B, {})
+      .AddOpDesc(OP_C, {TYPE_C})
+      .AddOpDesc(OP_F, {TYPE_F})
+      .AddOpDesc(OP_D, {TYPE_D})
+      .AddOpDesc(OP_E, {TYPE_E})
+      .AddOpDesc(OP_G, {TYPE_G})
+      .SetInputs(OP_B, {OP_A})
+      .SetOutputs(OP_B, {{kFuzzyOutIndex, {OP_D.c_str(), OP_E.c_str()}}}, false)
+      .SetOutputs(OP_D, {{kFuzzyOutIndex, OP_F.c_str()}}, false)
+      .SetOutputs(OP_F, {{kFuzzyOutIndex, OP_G.c_str()}}, false)
+      .SetInputs(OP_C, {OP_B})
+      .SetOutput(OP_C);
+
+  patterns.push_back(pattern);
+
+  return patterns;
+}
+
+Status TestSetOutputsPassFuzzy6::Fusion(ge::ComputeGraph &graph, Mapping &mapping, vector<ge::NodePtr> &new_nodes) {
   return fe::SUCCESS;
 }
 
@@ -688,6 +723,73 @@ class UTESTGraphFusionPass4 : public testing::Test {
     return graph;
   }
 
+  static ge::ComputeGraphPtr CreateTestOutputGraph2_7(bool success) {
+    ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("test1");
+    ge::OpDescPtr op_desc_a = std::make_shared<ge::OpDesc>("A", TYPE_A);
+    ge::OpDescPtr op_desc_b = std::make_shared<ge::OpDesc>("B", TYPE_B);
+    ge::OpDescPtr op_desc_c = std::make_shared<ge::OpDesc>("C", TYPE_C);
+    ge::OpDescPtr op_desc_d = std::make_shared<ge::OpDesc>("D", TYPE_D);
+    ge::OpDescPtr op_desc_e = std::make_shared<ge::OpDesc>("E", TYPE_E);
+    ge::OpDescPtr op_desc_f = std::make_shared<ge::OpDesc>("F", TYPE_F);
+    ge::OpDescPtr op_desc_g = std::make_shared<ge::OpDesc>("G", TYPE_G);
+    ge::OpDescPtr op_desc_out = std::make_shared<ge::OpDesc>("NetOut", "NetOut");
+
+    //add descriptor
+    vector<int64_t> dim_a = {8, 4, 16, 16};
+    GeShape shape_a(dim_a);
+    GeTensorDesc tensor_desc_a(shape_a);
+    tensor_desc_a.SetFormat(FORMAT_NCHW);
+    tensor_desc_a.SetOriginFormat(FORMAT_NCHW);
+    tensor_desc_a.SetDataType(DT_FLOAT16);
+    tensor_desc_a.SetOriginDataType(DT_FLOAT);
+
+    op_desc_a->AddOutputDesc(tensor_desc_a);
+
+    op_desc_b->AddInputDesc(tensor_desc_a);
+    op_desc_b->AddOutputDesc(tensor_desc_a);
+    op_desc_b->AddOutputDesc(tensor_desc_a);
+    op_desc_b->AddOutputDesc(tensor_desc_a);
+
+    op_desc_c->AddInputDesc(tensor_desc_a);
+    op_desc_c->AddInputDesc(tensor_desc_a);
+    op_desc_c->AddOutputDesc(tensor_desc_a);
+
+    op_desc_d->AddInputDesc(tensor_desc_a);
+    op_desc_d->AddOutputDesc(tensor_desc_a);
+
+    op_desc_e->AddInputDesc(tensor_desc_a);
+    op_desc_e->AddOutputDesc(tensor_desc_a);
+
+    op_desc_f->AddInputDesc(tensor_desc_a);
+    op_desc_f->AddOutputDesc(tensor_desc_a);
+
+    op_desc_g->AddInputDesc(tensor_desc_a);
+    op_desc_g->AddOutputDesc(tensor_desc_a);
+
+    op_desc_out->AddInputDesc(tensor_desc_a);
+
+    ge::NodePtr node_a = graph->AddNode(op_desc_a);
+    ge::NodePtr node_b = graph->AddNode(op_desc_b);
+    ge::NodePtr node_c = graph->AddNode(op_desc_c);
+    ge::NodePtr node_d = graph->AddNode(op_desc_d);
+    ge::NodePtr node_e = graph->AddNode(op_desc_e);
+    ge::NodePtr node_f = graph->AddNode(op_desc_f);
+    ge::NodePtr node_g = graph->AddNode(op_desc_g);
+    ge::NodePtr node_out = graph->AddNode(op_desc_out);
+
+    ge::GraphUtils::AddEdge(node_a->GetOutDataAnchor(0), node_b->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_b->GetOutDataAnchor(0), node_c->GetInDataAnchor(1));
+    ge::GraphUtils::AddEdge(node_b->GetOutDataAnchor(1), node_d->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_d->GetOutDataAnchor(0), node_f->GetInDataAnchor(0));
+    if (success) {
+      ge::GraphUtils::AddEdge(node_f->GetOutDataAnchor(0), node_g->GetInDataAnchor(0));
+    }
+    ge::GraphUtils::AddEdge(node_b->GetOutDataAnchor(2), node_e->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_c->GetOutDataAnchor(0), node_out->GetInDataAnchor(0));
+
+    return graph;
+  }
+
    static ge::ComputeGraphPtr CreateTestOutputGraph3() {
       ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("test1");
       ge::OpDescPtr op_desc_a = std::make_shared<ge::OpDesc>("A", TYPE_A);
@@ -848,6 +950,26 @@ TEST_F(UTESTGraphFusionPass4, UTESTGraphFusionPassFuzzy_5) {
 TEST_F(UTESTGraphFusionPass4, UTESTGraphFusionPassFuzzy_6) {
   ge::ComputeGraphPtr graph = CreateTestOutputGraph2_6();
   TestSetOutputsPassFuzzy5 pass;
+  Status status = fe::FAILED;
+
+  pass.SetName("test");
+  status = pass.Run(*graph);
+  EXPECT_EQ(status, fe::SUCCESS);
+}
+
+TEST_F(UTESTGraphFusionPass4, UTESTGraphFusionPassFuzzy_7) {
+  ge::ComputeGraphPtr graph = CreateTestOutputGraph2_7(false);
+  TestSetOutputsPassFuzzy6 pass;
+  Status status = fe::FAILED;
+
+  pass.SetName("test");
+  status = pass.Run(*graph);
+  EXPECT_EQ(status, fe::NOT_CHANGED);
+}
+
+TEST_F(UTESTGraphFusionPass4, UTESTGraphFusionPassFuzzy_8) {
+  ge::ComputeGraphPtr graph = CreateTestOutputGraph2_7(true);
+  TestSetOutputsPassFuzzy6 pass;
   Status status = fe::FAILED;
 
   pass.SetName("test");
