@@ -788,6 +788,7 @@ ge::graphStatus TurnToOpAtomicCalculateV2(const ge::OpDescPtr &op_desc_ptr, OpRu
     GELOGW("Fail to call op tiling v2 function of atomic op[%s, %s].",
            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
   }
+  op_param.BreakConnect();
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
@@ -842,6 +843,7 @@ ge::graphStatus TurnToOpAtomicCalculateV3(const ge::OpDescPtr &op_desc_ptr, OpRu
     GELOGW("Fail to call op tiling v3 function of atomic op[%s, %s].",
            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
   }
+  op_param.BreakConnect();
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
@@ -896,6 +898,7 @@ ge::graphStatus TurnToOpAtomicCalculateV4(const ge::OpDescPtr &op_desc_ptr, OpRu
     GELOGW("Fail to call op tiling v4 function of atomic op[%s, %s].",
            op_desc_ptr->GetName().c_str(), op_desc_ptr->GetType().c_str());
   }
+  op_param.BreakConnect();
   return ret ? ge::GRAPH_SUCCESS : ge::GRAPH_FAILED;
 }
 
