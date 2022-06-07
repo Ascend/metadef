@@ -23,7 +23,7 @@
 namespace ge {
 template <typename _Tp, typename... _Args>
 static inline std::shared_ptr<_Tp> MakeShared(_Args &&... __args) {
-  typedef typename std::remove_const<_Tp>::type _Tp_nc;
+  using _Tp_nc = typename std::remove_const<_Tp>::type;
   const std::shared_ptr<_Tp> ret(new (std::nothrow) _Tp_nc(std::forward<_Args>(__args)...));
   return ret;
 }

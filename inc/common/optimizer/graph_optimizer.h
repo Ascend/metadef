@@ -25,9 +25,6 @@
 #include "common/opskernel/ops_kernel_info_types.h"
 #include "graph/compute_graph.h"
 
-using std::map;
-using std::string;
-
 /*lint -e148*/
 namespace ge {
 class GraphOptimizer {

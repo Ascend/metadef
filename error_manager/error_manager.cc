@@ -106,6 +106,9 @@ const error_message::char_t *const kSeparator = "\\";
 const error_message::char_t *const kErrorList = "error_info_list";
 const error_message::char_t *const kErrCode = "ErrCode";
 const error_message::char_t *const kErrMessage = "ErrMessage";
+const error_message::char_t *const kSuggestion = "suggestion";
+const error_message::char_t *const kPossibleCause = "Possible Cause";
+const error_message::char_t *const kSolution = "Solution";
 const error_message::char_t *const kArgList = "Arglist";
 const uint64_t kLength = 2UL;
 
@@ -257,7 +260,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     return -1;
   }
 
-  ErrorManager::ErrorItem item = {error_code, error_msg};
+  ErrorManager::ErrorItem item = {error_code, error_msg, "", ""};
   if (error_code[0UL] == 'W') {
     const auto it = find(warning_messages.begin(), warning_messages.end(), item);
     if (it == warning_messages.end()) {
@@ -295,7 +298,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   GELOGI("report error_message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
   const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator iter = error_map_.find(error_code);
   if (iter == error_map_.cend()) {
-    GELOGE("[Report][Error]error_code %s is not registered", error_code.c_str());
+    GELOGW("[Report][Error]error_code %s is not registered", error_code.c_str());
     return -1;
   }
   const ErrorInfoConfig &error_info = iter->second;
@@ -328,7 +331,8 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   auto &error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto &warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
 
-  ErrorManager::ErrorItem error_item = {error_code, error_message};
+  ErrorManager::ErrorItem error_item = {error_code, error_message,
+      error_info.possible_cause, error_info.solution};
   if (error_code[0UL] == 'W') {
     const auto it = find(warning_messages.begin(), warning_messages.end(), error_item);
     if (it == warning_messages.end()) { warning_messages.emplace_back(error_item); }
@@ -337,6 +341,29 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
     if (it == error_messages.end()) { error_messages.emplace_back(error_item); }
   }
   return 0;
+}
+
+void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error_messages,
+                                             const std::string &first_code,
+                                             std::stringstream &err_stream) {
+  std::string current_code_print = first_code;
+  const bool IsErrorId = IsParamCheckErrorId(first_code);
+  for (auto &item : error_messages) {
+    if (!IsParamCheckErrorId(item.error_id)) {
+      current_code_print = item.error_id;
+      break;
+    }
+  }
+  err_stream << current_code_print << ": Inner Error!" << std::endl;
+  // Display the first non 8888 error code
+  for (auto &item : error_messages) {
+    if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
+      err_stream << "        " << item.error_message << std::endl;
+      continue;
+    }
+    err_stream << current_code_print << "  " << item.error_message << std::endl;
+    current_code_print = "      ";
+  }
 }
 
 std::string ErrorManager::GetErrorMessage() {
@@ -354,28 +381,17 @@ std::string ErrorManager::GetErrorMessage() {
     if (!IsInnerErrorCode(item.error_id)) {
       first_code = item.error_id;
       err_stream << first_code << ": " << item.error_message << std::endl;
+      if (!item.possible_cause.empty() && item.possible_cause != "N/A") {
+        err_stream << "        Possible Cause: " << item.possible_cause << std::endl;
+      }
+      if (!item.solution.empty() && item.solution != "N/A") {
+        err_stream << "        Solution: " << item.solution << std::endl;
+      }
       break;
     }
   }
   if (IsInnerErrorCode(first_code)) {
-    std::string current_code_print = first_code;
-    const bool IsErrorId = IsParamCheckErrorId(first_code);
-    for (auto &item : error_messages) {
-      if (!IsParamCheckErrorId(item.error_id)) {
-        current_code_print = item.error_id;
-        break;
-      }
-    }
-    err_stream << current_code_print << ": Inner Error!" << std::endl;
-    // Display the first non 8888 error code
-    for (auto &item : error_messages) {
-      if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
-        err_stream << "        " << item.error_message << std::endl;
-        continue;
-      }
-      err_stream << current_code_print << "  " << item.error_message << std::endl;
-      current_code_print = "      ";
-    }
+    AssembleInnerErrorMessage(error_messages, first_code, err_stream);
   } else {
     for (auto &item : error_messages) {
       if (first_code == item.error_id) {
@@ -470,6 +486,10 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
       ErrorInfoConfig error_info;
       error_info.error_id = error_list_json[i][kErrCode];
       error_info.error_message = error_list_json[i][kErrMessage];
+      if (error_list_json[i].contains(kSuggestion)) {
+          error_info.possible_cause = error_list_json[i][kSuggestion][kPossibleCause];
+          error_info.solution = error_list_json[i][kSuggestion][kSolution];
+      }
       error_info.arg_list = SplitByDelim(error_list_json[i][kArgList], ',');
       const std::map<std::string, ErrorManager::ErrorInfoConfig>::const_iterator
           it = error_map_.find(error_info.error_id);
@@ -677,9 +697,6 @@ void ErrorManager::GenWorkStreamIdDefault() {
   const uint64_t work_stream_id = static_cast<uint64_t>((static_cast<uint32_t>(pid) * kPidOffset) +
       static_cast<uint32_t>(tid));
   error_context_.work_stream_id = work_stream_id;
-
-  ClearErrorMsgContainerByWorkId(work_stream_id);
-  ClearWarningMsgContainerByWorkId(work_stream_id);
 }
 
 void ErrorManager::GenWorkStreamIdBySessionGraph(const uint64_t session_id, const uint64_t graph_id) {
