@@ -1145,6 +1145,28 @@
       }
     },
     {
+      "errClass": "Default Error",
+      "errTitle": "System Terminated",
+      "ErrCode": "E19999",
+      "ErrMessage": "Unknown error occurred. Please check the log.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "System terminated abnormally without valid error messages.",
+        "Solution": "In this scenario, use SdkInfoCollector to collect the logs generated when the fault occurs and locate the fault based on the logs."
+      }
+    },
+    {
+      "errClass": "Minor Error",
+      "errTitle": "Operator Missing High-Priority Performance",
+      "ErrCode": "W11001",
+      "ErrMessage": "Op [%s] does not hit the high-priority operator information library, which might result in compromised performance.",
+      "Arglist": "opname",
+      "suggestion": {
+        "Possible Cause": "The operator does not hit the high-priority operator information library, which might result in compromised performance.",
+        "Solution": "Submit an issue to request for support at https://gitee.com/ascend."
+      }
+    },
+    {
       "errClass": "Command Line Errors",
       "errTitle": "Invalid GE Initialization Argument",
       "ErrCode": "E20100",
