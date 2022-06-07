@@ -213,6 +213,15 @@ graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr
     return GetInputConstDataOut(idx, ge_tensor);
   }
  
+  // from runtime context
+  if (get_const_input_runtime_ != nullptr) {
+    GeTensorPtr tensor_value = nullptr;
+    GE_CHK_GRAPH_STATUS_RET(get_const_input_runtime_(node, idx, tensor_value),
+                            "Fail to get %d const input of %s from context.", idx, node->GetName().c_str());
+    ge_tensor = tensor_value;
+    return GRAPH_SUCCESS;
+  }
+
   const auto in_data_anchor = node->GetInDataAnchor(static_cast<int32_t>(idx));
   GE_CHECK_NOTNULL(in_data_anchor);
   const auto out_data_anchor = in_data_anchor->GetPeerOutAnchor();
@@ -221,15 +230,7 @@ graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr
     return ge::PARAM_INVALID;
   }
   auto peer_node = out_data_anchor->GetOwnerNode();
-  
-  // from runtime context
-  if (get_const_input_runtime_ != nullptr) {
-    GeTensorPtr tensor_value = nullptr;
-    GE_CHK_GRAPH_STATUS_RET(get_const_input_runtime_(node, idx, tensor_value),
-                            "Fail to get %d const input of %s from context.", idx, node->GetName().c_str());
-    ge_tensor = tensor_value;
-    return GRAPH_SUCCESS;
-  } else if (runtime_context_ != nullptr) {
+  if (runtime_context_ != nullptr) {
     // deprecated, will delete when air support
     GeTensorPtr tensor_value = nullptr;
     if (runtime_context_->GetTensor(peer_node->GetOpDesc()->GetId(), out_data_anchor->GetIdx(), tensor_value) ==
