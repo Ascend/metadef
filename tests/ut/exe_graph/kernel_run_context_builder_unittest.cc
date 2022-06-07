@@ -25,7 +25,7 @@ TEST_F(KernelRunContextBuilderUT, SetBufferPoolOk) {
   KernelRunContextBuilder builder;
   auto holder = builder.Build(op_desc);
   auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(
-      holder.context->GetComputeNodeExtend());
+      holder.context_->GetComputeNodeExtend());
   EXPECT_EQ(std::string(compute_node_info->GetNodeName()), "test0");
   EXPECT_EQ(std::string(compute_node_info->GetNodeType()), "test1");
 }
@@ -36,8 +36,8 @@ TEST_F(KernelRunContextBuilderUT, SetInputsOutputsOk) {
   gert::StorageShape shape1({1,2,3,4}, {1,2,3,4});
   gert::StorageShape shape2({2,2,3,4}, {2,2,3,4});
   gert::StorageShape shape3({3,2,3,4}, {3,2,3,4});
-  auto holder = builder.Inputs({&shape1, &shape2}).Outputs({&shape3}).Build(op_desc);
-  auto context = holder.context;
+  auto holder = builder.Inputs({{&shape1, nullptr}, {&shape2, nullptr}}).Outputs({&shape3}).Build(op_desc);
+  auto context = holder.context_;
   EXPECT_EQ(context->GetInputNum(), 2);
   EXPECT_EQ(context->GetOutputNum(), 1);
   EXPECT_TRUE(context->GetInputPointer<StorageShape>(0) == &shape1);

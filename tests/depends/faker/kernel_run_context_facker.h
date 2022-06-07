@@ -32,10 +32,10 @@ namespace gert {
 struct FakeKernelContextHolder {
   template<typename T>
   T *GetContext() {
-    return reinterpret_cast<T*>(holder.context);
+    return reinterpret_cast<T*>(holder.context_);
   }
   ComputeNodeInfo *MutableComputeNodeInfo() {
-    return reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder.get());
+    return reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder_.get());
   }
   size_t kernel_input_num;
   size_t kernel_output_num;

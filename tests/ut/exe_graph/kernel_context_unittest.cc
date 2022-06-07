@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "exe_graph/runtime/kernel_context.h"
 #include <gtest/gtest.h>
+#define private public
+#include "exe_graph/runtime/kernel_context.h"
 #include "faker/kernel_run_context_facker.h"
+#undef private
+
 namespace gert {
 class KernelContextUT : public testing::Test {};
 namespace {
@@ -101,36 +104,33 @@ TEST_F(KernelContextUT, GetInnerInputOk) {
   auto context_holder = KernelRunContextFaker().KernelIONum(5, 6).Build();
   auto context = context_holder.GetContext<KernelContext>();
 
-  EXPECT_EQ(context->GetInputPointer<int64_t>(0),
-            reinterpret_cast<const int64_t *>(&(context_holder.holder.value_holder[0].data)));
-  EXPECT_EQ(context->GetInputPointer<int64_t>(1),
-            reinterpret_cast<const int64_t *>(&(context_holder.holder.value_holder[1].data)));
-  EXPECT_EQ(context->GetInputPointer<int32_t>(2),
-            reinterpret_cast<const int32_t *>(&(context_holder.holder.value_holder[2].data)));
+  EXPECT_EQ(context->GetInputPointer<int64_t>(0), context_holder.holder.value_holder_[0].GetPointer<int64_t>());
+  EXPECT_EQ(context->GetInputPointer<int64_t>(1), context_holder.holder.value_holder_[1].GetPointer<int64_t>());
+  EXPECT_EQ(context->GetInputPointer<int32_t>(2), context_holder.holder.value_holder_[2].GetPointer<int32_t>());
 
-  EXPECT_EQ(context->GetInputValue<int64_t>(4), reinterpret_cast<int64_t>(context_holder.holder.value_holder[4].data.pointer));
+  EXPECT_EQ(context->GetInputValue<int64_t>(4), context_holder.holder.value_holder_[4].GetValue<int64_t>());
 
-  EXPECT_EQ(context->GetInput(0), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[0]));
-  EXPECT_EQ(context->GetInput(4), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[4]));
+  EXPECT_EQ(context->GetInput(0), &context_holder.holder.value_holder_[0]);
+  EXPECT_EQ(context->GetInput(4), &context_holder.holder.value_holder_[4]);
 }
 
 TEST_F(KernelContextUT, GetAllocInputOk) {
   auto context_holder = KernelRunContextFaker().KernelIONum(5, 6).Build();
   std::vector<TestT> t_holder(11);
   for (size_t i = 0; i < 11; ++i) {
-    context_holder.holder.value_holder[i].data.pointer = &t_holder[i];
+    context_holder.holder.value_holder_[i].any_value_.data.pointer = &t_holder[i];
   }
   auto context = context_holder.GetContext<KernelContext>();
 
   EXPECT_EQ(context->GetInputPointer<TestT>(0),
-            reinterpret_cast<const TestT *>((context_holder.holder.value_holder[0].data.pointer)));
+            reinterpret_cast<const TestT *>((context_holder.holder.value_holder_[0].any_value_.data.pointer)));
   EXPECT_EQ(context->GetInputPointer<TestT>(1),
-            reinterpret_cast<const TestT *>((context_holder.holder.value_holder[1].data.pointer)));
+            reinterpret_cast<const TestT *>((context_holder.holder.value_holder_[1].any_value_.data.pointer)));
   EXPECT_EQ(context->GetInputPointer<TestT>(4),
-            reinterpret_cast<const TestT *>((context_holder.holder.value_holder[4].data.pointer)));
+            reinterpret_cast<const TestT *>((context_holder.holder.value_holder_[4].any_value_.data.pointer)));
 
-  EXPECT_EQ(context->GetInput(0), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[0]));
-  EXPECT_EQ(context->GetInput(4), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[4]));
+  EXPECT_EQ(context->GetInput(0), &context_holder.holder.value_holder_[0]);
+  EXPECT_EQ(context->GetInput(4), &context_holder.holder.value_holder_[4]);
 }
 
 TEST_F(KernelContextUT, GetInnerOutputOk) {
@@ -138,32 +138,32 @@ TEST_F(KernelContextUT, GetInnerOutputOk) {
   auto context = context_holder.GetContext<KernelContext>();
 
   EXPECT_EQ(context->GetOutputPointer<int64_t>(0),
-            reinterpret_cast<const int64_t *>(&(context_holder.holder.value_holder[5].data)));
+            reinterpret_cast<const int64_t *>(&(context_holder.holder.value_holder_[5].any_value_.data)));
   EXPECT_EQ(context->GetOutputPointer<int64_t>(1),
-            reinterpret_cast<const int64_t *>(&(context_holder.holder.value_holder[6].data)));
+            reinterpret_cast<const int64_t *>(&(context_holder.holder.value_holder_[6].any_value_.data)));
   EXPECT_EQ(context->GetOutputPointer<int32_t>(2),
-            reinterpret_cast<const int32_t *>(&(context_holder.holder.value_holder[7].data)));
+            reinterpret_cast<const int32_t *>(&(context_holder.holder.value_holder_[7].any_value_.data)));
 
-  EXPECT_EQ(context->GetOutput(0), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[5]));
-  EXPECT_EQ(context->GetOutput(5), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[10]));
+  EXPECT_EQ(context->GetOutput(0), &context_holder.holder.value_holder_[5]);
+  EXPECT_EQ(context->GetOutput(5), &context_holder.holder.value_holder_[10]);
 }
 
 TEST_F(KernelContextUT, GetAllocOutputOk) {
   auto context_holder = KernelRunContextFaker().KernelIONum(5, 6).Build();
   std::vector<TestT> t_holder(11);
   for (size_t i = 0; i < 11; ++i) {
-    context_holder.holder.value_holder[i].data.pointer = &t_holder[i];
+    context_holder.holder.value_holder_[i].any_value_.data.pointer = &t_holder[i];
   }
   auto context = context_holder.GetContext<KernelContext>();
 
   EXPECT_EQ(context->GetOutputPointer<TestT>(0),
-            reinterpret_cast<const TestT *>((context_holder.holder.value_holder[5].data.pointer)));
+            reinterpret_cast<const TestT *>((context_holder.holder.value_holder_[5].any_value_.data.pointer)));
   EXPECT_EQ(context->GetOutputPointer<TestT>(1),
-            reinterpret_cast<const TestT *>((context_holder.holder.value_holder[6].data.pointer)));
+            reinterpret_cast<const TestT *>((context_holder.holder.value_holder_[6].any_value_.data.pointer)));
   EXPECT_EQ(context->GetOutputPointer<TestT>(4),
-            reinterpret_cast<const TestT *>((context_holder.holder.value_holder[9].data.pointer)));
+            reinterpret_cast<const TestT *>((context_holder.holder.value_holder_[9].any_value_.data.pointer)));
 
-  EXPECT_EQ(context->GetOutput(0), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[5]));
-  EXPECT_EQ(context->GetOutput(4), reinterpret_cast<const Chain *>(&context_holder.holder.value_holder[9]));
+  EXPECT_EQ(context->GetOutput(0), &context_holder.holder.value_holder_[5]);
+  EXPECT_EQ(context->GetOutput(4), &context_holder.holder.value_holder_[9]);
 }
 }  // namespace gert

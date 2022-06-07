@@ -22,32 +22,73 @@
 #include "exe_graph/lowering/buffer_pool.h"
 
 namespace gert {
-struct KernelContextHolder {
-  std::unique_ptr<uint8_t[]> context_holder;
-  std::vector<AsyncAnyValue> value_holder;
-  std::unique_ptr<uint8_t[]> compute_node_extend_holder;
-  bg::BufferPool buffer_pool;
-  KernelContext *context;
+class KernelContextHolder {
+public:
+  KernelContextHolder() = default;
+  KernelContextHolder(KernelContextHolder &&holder) {
+    context_holder_ = std::move(holder.context_holder_);
+    value_holder_ = std::move(holder.value_holder_);
+    compute_node_extend_holder_ = std::move(holder.compute_node_extend_holder_);
+    buffer_pool_ = holder.buffer_pool_;
+    context_ = holder.context_;
+  }
+
+  KernelContextHolder &operator=(KernelContextHolder &&holder) {
+    context_holder_ = std::move(holder.context_holder_);
+    value_holder_ = std::move(holder.value_holder_);
+    compute_node_extend_holder_ = std::move(holder.compute_node_extend_holder_);
+    buffer_pool_ = holder.buffer_pool_;
+    context_ = holder.context_;
+    return *this;
+  }
+
+  ~KernelContextHolder() {
+    for (auto &value : value_holder_) {
+      value.Set(nullptr, nullptr);
+    }
+  }
+
+  std::unique_ptr<uint8_t[]> context_holder_;
+  std::vector<Chain> value_holder_;
+  std::unique_ptr<uint8_t[]> compute_node_extend_holder_;
+  bg::BufferPool buffer_pool_;
+  KernelContext *context_;
 };
 class KernelRunContextBuilder {
 public:
   KernelRunContextBuilder() = default;
-  KernelRunContextBuilder &Inputs(std::vector<void *> inputs) {
+  KernelRunContextBuilder &Inputs(std::vector<std::pair<void *, Chain::Deleter>> inputs) {
     inputs_ = std::move(inputs);
     return *this;
   }
+
+  KernelRunContextBuilder &Inputs(std::vector<void *> inputs) {
+    for (auto &input : inputs) {
+      inputs_.emplace_back(input, nullptr);
+    }
+    return *this;
+  }
+
   KernelRunContextBuilder &Outputs(std::vector<void *> outputs) {
+    for (auto &output : outputs) {
+      outputs_.emplace_back(output, nullptr);
+    }
+    return *this;
+  }
+
+  KernelRunContextBuilder &Outputs(std::vector<std::pair<void *, Chain::Deleter>> outputs) {
     outputs_ = std::move(outputs);
     return *this;
   }
+
   KernelContextHolder Build(ge::OpDescPtr &op_desc);
 
 private:
   ge::NodePtr MakeNode(ge::OpDescPtr &op_desc) const;
 
 private:
-  std::vector<void *> inputs_;
-  std::vector<void *> outputs_;
+  std::vector<std::pair<void *, Chain::Deleter>> inputs_;
+  std::vector<std::pair<void *, Chain::Deleter>> outputs_;
 };
 }  // namespace gert
 #endif
