@@ -15,9 +15,9 @@
  */
 #ifndef INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_UTILS_H
 #define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_TURBO_UTILS_H
+#include <array>
 #include "graph/utils/op_desc_utils.h"
 #include "graph/debug/ge_log.h"
-#include <array>
 
 #define FUSION_TURBO_NOTNULL(val, ret)                       \
   do {                                                  \
