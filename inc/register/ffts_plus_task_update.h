@@ -76,6 +76,12 @@ class FFTSPlusTaskUpdate {
     (void)ffts_plus_task_info;
     return SUCCESS;
   }
+
+  virtual Status UpdateCommonCtx(const ComputeGraphPtr &sgt_graph, rtFftsPlusTaskInfo_t &task_info) {
+    (void)sgt_graph;
+    (void)task_info;
+    return SUCCESS;
+  }
 };
 } // namespace ge
 #endif // INC_REGISTER_FFTS_PLUS_TASK_UPDATE_H_
