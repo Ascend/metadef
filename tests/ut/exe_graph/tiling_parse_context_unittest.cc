@@ -27,6 +27,10 @@ struct CompileDInfo2 {
   uint32_t a;
   uint32_t b;
 };
+struct CompiledInfo3 {
+  int32_t core_num;
+};
+
 TEST_F(TilingParseContextUT, GetIoOk) {
   char *json_str = "{}";
   CompiledInfo1 ci = {10, 20};
@@ -43,5 +47,16 @@ TEST_F(TilingParseContextUT, SetCompiledInfoOk) {
   CompiledInfo1 ci = {10, 20};
   auto context_holder = KernelRunContextFaker().KernelIONum(1, 1).Inputs({json_str}).Outputs({nullptr}).Build();
 
+}
+
+TEST_F(TilingParseContextUT, CompiledInfoLessThan8Bytes) {
+  char *json_str = "{}";
+  CompiledInfo3 ci = {2};
+  auto context_holder = KernelRunContextFaker().KernelIONum(1, 1).Inputs({json_str}).Outputs({&ci}).Build();
+  auto context = context_holder.GetContext<TilingParseContext>();
+  ASSERT_NE(context, nullptr);
+  EXPECT_STREQ(context->GetCompiledJson(), "{}");
+  ASSERT_NE(context->GetCompiledInfo<CompiledInfo3>(), nullptr);
+  EXPECT_EQ(context->GetCompiledInfo<CompiledInfo3>()->core_num, 2);
 }
 }  // namespace gert

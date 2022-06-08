@@ -1112,24 +1112,23 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
   return 1;
 }
 
-ge::graphStatus DoTilingParse(const char *compile_info, const char *op_type,
-                              const gert::OpImplRegistry::OpImplFunctions *funcs, ge::OpDescPtr &op_desc,
-                              gert::KernelContextHolder &tiling_parse_context_holder) {
-  std::vector<void *> tiling_parse_outputs(1, nullptr);
+gert::KernelContextHolder BuildTilingParseContextHolder(ge::OpDescPtr &op_desc, const char *compile_info,
+                                                        const char *op_type,
+                                                        const gert::OpImplRegistry::OpImplFunctions *funcs) {
+  std::vector<std::pair<void *, gert::Chain::Deleter>> tiling_parse_outputs(1, std::make_pair(nullptr, nullptr));
   if (op_desc->GetType() != OP_TYPE_AUTO_TILING) {
-    tiling_parse_outputs[0] = funcs->compile_info_creator();
+    tiling_parse_outputs[0].first = funcs->compile_info_creator();
+    tiling_parse_outputs[0].second = funcs->compile_info_deleter;
   }
-  tiling_parse_context_holder = gert::KernelRunContextBuilder()
-                                    .Inputs({const_cast<char *>(compile_info), const_cast<char *>(op_type)})
-                                    .Outputs(tiling_parse_outputs)
-                                    .Build(op_desc);
-  GE_CHECK_NOTNULL(tiling_parse_context_holder.context);
-  return (funcs->tiling_parse)(tiling_parse_context_holder.context);
+
+  return gert::KernelRunContextBuilder()
+      .Inputs({std::make_pair(const_cast<char *>(compile_info), nullptr),
+               std::make_pair(const_cast<char *>(op_type), nullptr)})
+      .Outputs(tiling_parse_outputs)
+      .Build(op_desc);
 }
 
-ge::graphStatus DoTilingWithTiming(ContextComponent &context_com, const gert::OpImplRegistry::OpImplFunctions *funcs,
-                                   gert::KernelContext *tiling_parse_context, uint64_t *elapse,
-                                   gert::KernelContextHolder &tiling_context_holder) {
+gert::KernelContextHolder BuildTilingContext(ContextComponent &context_com, gert::KernelContext *tiling_parse_context) {
   std::vector<void *> tiling_context_inputs(context_com.storage_shapes.size() + kSize, nullptr);
   for (size_t i = 0UL; i < context_com.index_to_tensors.size(); ++i) {
     tiling_context_inputs[context_com.index_to_tensors[i].first] =
@@ -1141,19 +1140,29 @@ ge::graphStatus DoTilingWithTiming(ContextComponent &context_com, const gert::Op
     }
   }
   tiling_context_inputs[context_com.storage_shapes.size()] = *tiling_parse_context->GetOutputPointer<void **>(0);
-  tiling_context_holder = gert::KernelRunContextBuilder()
-                              .Inputs(tiling_context_inputs)
-                              .Outputs({nullptr, nullptr, &context_com.atomic_flag, context_com.tiling_data.get(),
-                                        context_com.workspace_size.get()})
-                              .Build(context_com.op_desc);
-  GE_CHECK_NOTNULL(tiling_context_holder.context);
+  return gert::KernelRunContextBuilder()
+      .Inputs(tiling_context_inputs)
+      .Outputs(
+      {nullptr, nullptr, &context_com.atomic_flag, context_com.tiling_data.get(), context_com.workspace_size.get()})
+      .Build(context_com.op_desc);
+}
+
+ge::graphStatus DoTilingParse(const gert::OpImplRegistry::OpImplFunctions *funcs,
+                              gert::KernelContextHolder &tiling_parse_context_holder) {
+  GE_CHECK_NOTNULL(tiling_parse_context_holder.context_);
+  return (funcs->tiling_parse)(tiling_parse_context_holder.context_);
+}
+
+ge::graphStatus DoTilingWithTiming(const gert::OpImplRegistry::OpImplFunctions *funcs, uint64_t *elapse,
+                                   gert::KernelContextHolder &tiling_context_holder) {
+  GE_CHECK_NOTNULL(tiling_context_holder.context_);
   // calcu tiling cost time
   std::chrono::time_point<std::chrono::steady_clock> before_tiling;
   std::chrono::time_point<std::chrono::steady_clock> after_tiling;
   if (elapse != nullptr) {
     before_tiling = std::chrono::steady_clock::now();
   }
-  const auto ret = (funcs->tiling)(reinterpret_cast<gert::TilingContext *>(tiling_context_holder.context));
+  const auto ret = (funcs->tiling)(reinterpret_cast<gert::TilingContext *>(tiling_context_holder.context_));
   if (elapse != nullptr) {
     after_tiling = std::chrono::steady_clock::now();
   }
@@ -1211,9 +1220,8 @@ int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, con
     return 0;
   }
   // tiling parse
-  gert::KernelContextHolder tiling_parse_context_holder;
-  if (DoTilingParse(compile_info, op_type, funcs, context_com.op_desc, tiling_parse_context_holder) !=
-      ge::GRAPH_SUCCESS) {
+  auto tiling_parse_context_holder = BuildTilingParseContextHolder(context_com.op_desc, compile_info, op_type, funcs);
+  if (DoTilingParse(funcs, tiling_parse_context_holder) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::GRAPH_FAILED, "Op %s tiling parse failed", op_type);
     REPORT_CALL_ERROR("E19999", "Op %s tiling parse failed", op_type);
     return 0;
@@ -1228,15 +1236,15 @@ int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, con
   auto aligned_max_size = ge::RoundUp(static_cast<uint64_t>(max_size), sizeof(uintptr_t));
   context_com.tiling_data = gert::TilingData::CreateCap(aligned_max_size);
   context_com.workspace_size = gert::ContinuousVector::Create<size_t>(kWorkspaceHolerSize);
-  gert::KernelContextHolder tiling_context_holder;
-  if (DoTilingWithTiming(context_com, funcs, tiling_parse_context_holder.context, elapse, tiling_context_holder) !=
-      ge::GRAPH_SUCCESS) {
+  gert::KernelContextHolder tiling_context_holder =
+      BuildTilingContext(context_com, tiling_parse_context_holder.context_);
+  if (DoTilingWithTiming(funcs, elapse, tiling_context_holder) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::GRAPH_FAILED, "Op %s tiling failed", op_type);
     REPORT_CALL_ERROR("E19999", "Op %s tiling failed", op_type);
     return 0;
   }
 
-  if (!DumpRunInfo(tiling_context_holder.context, run_info_json, run_info_len)) {
+  if (!DumpRunInfo(tiling_context_holder.context_, run_info_json, run_info_len)) {
     GELOGE(ge::GRAPH_FAILED, "Dump op %s tiling result failed", op_type);
     REPORT_CALL_ERROR("E19999", "Dump op %s tiling result failed", op_type);
     return 0;

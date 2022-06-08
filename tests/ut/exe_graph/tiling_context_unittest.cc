@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "exe_graph/runtime/tiling_context.h"
 #include <gtest/gtest.h>
+#define private public
+#include "exe_graph/runtime/tiling_context.h"
 #include "faker/kernel_run_context_facker.h"
+#undef private
 
 namespace gert {
 class TilingContextUT : public testing::Test {};
@@ -294,7 +296,10 @@ TEST_F(TilingContextUT, SetTilingKeyOk) {
 
   context->SetTilingKey(20);
   EXPECT_EQ(context->GetTilingKey(), 20);
-  EXPECT_EQ(*reinterpret_cast<uint64_t *>(&(holder.holder.value_holder[holder.kernel_input_num + TilingContext::kOutputTilingKey].data)), 20);
+  EXPECT_EQ(
+      *reinterpret_cast<uint64_t *>(
+          &(holder.holder.value_holder_[holder.kernel_input_num + TilingContext::kOutputTilingKey].any_value_.data)),
+      20);
 }
 TEST_F(TilingContextUT, SetBlockDimOk) {
   gert::StorageShape in_shape = {{1, 16, 256}, {1, 16, 256}};
@@ -316,7 +321,9 @@ TEST_F(TilingContextUT, SetBlockDimOk) {
 
   context->SetBlockDim(10);
   EXPECT_EQ(context->GetBlockDim(), 10);
-  EXPECT_EQ(*reinterpret_cast<uint32_t *>(&(holder.holder.value_holder[holder.kernel_input_num + TilingContext::kOutputBlockDim].data)), 10);
+  EXPECT_EQ(*reinterpret_cast<uint32_t *>(&(
+                holder.holder.value_holder_[holder.kernel_input_num + TilingContext::kOutputBlockDim].any_value_.data)),
+            10);
 }
 
 TEST_F(TilingContextUT, SetNeedAtomicOk) {
@@ -339,11 +346,13 @@ TEST_F(TilingContextUT, SetNeedAtomicOk) {
 
   context->SetNeedAtomic(true);
   EXPECT_TRUE(context->NeedAtomic());
-  EXPECT_TRUE(*reinterpret_cast<bool *>(&(holder.holder.value_holder[holder.kernel_input_num + TilingContext::kOutputAtomicCleanFlag].data)));
+  EXPECT_TRUE(*reinterpret_cast<bool *>(
+      &(holder.holder.value_holder_[holder.kernel_input_num + TilingContext::kOutputAtomicCleanFlag].any_value_.data)));
 
   context->SetNeedAtomic(false);
   EXPECT_FALSE(context->NeedAtomic());
-  EXPECT_FALSE(*reinterpret_cast<bool *>(&(holder.holder.value_holder[holder.kernel_input_num + TilingContext::kOutputAtomicCleanFlag].data)));
+  EXPECT_FALSE(*reinterpret_cast<bool *>(
+      &(holder.holder.value_holder_[holder.kernel_input_num + TilingContext::kOutputAtomicCleanFlag].any_value_.data)));
 }
 
 TEST_F(TilingContextUT, SetWorkspaceSizesOk) {

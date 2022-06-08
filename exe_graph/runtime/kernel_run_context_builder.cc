@@ -20,35 +20,35 @@
 namespace gert {
 KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
   KernelContextHolder holder;
-  size_t size = sizeof(KernelRunContext) + sizeof(AsyncAnyValue *) * (inputs_.size() + outputs_.size());
-  holder.context_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[size]);
-  if (holder.context_holder == nullptr) {
+  size_t size = sizeof(KernelRunContext) + sizeof(Chain *) * (inputs_.size() + outputs_.size());
+  holder.context_holder_ = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[size]);
+  if (holder.context_holder_ == nullptr) {
     GELOGE(ge::GRAPH_FAILED, "Create context holder failed.");
     return holder;
   }
   size_t extend_info_size;
-  holder.compute_node_extend_holder =
-      bg::CreateComputeNodeInfo(MakeNode(op_desc), holder.buffer_pool, extend_info_size);
-  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder.get());
+  holder.compute_node_extend_holder_ =
+      bg::CreateComputeNodeInfo(MakeNode(op_desc), holder.buffer_pool_, extend_info_size);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder_.get());
   compute_node_info->SetNodeName(
-      holder.buffer_pool.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeName())));
+      holder.buffer_pool_.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeName())));
   compute_node_info->SetNodeType(
-      holder.buffer_pool.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeType())));
-  holder.context = reinterpret_cast<KernelContext *>(holder.context_holder.get());
-  auto kernel_run_context = holder.context->GetContext();
+      holder.buffer_pool_.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeType())));
+  holder.context_ = reinterpret_cast<KernelContext *>(holder.context_holder_.get());
+  auto kernel_run_context = holder.context_->GetContext();
   kernel_run_context->input_size = inputs_.size();
   kernel_run_context->output_size = outputs_.size();
   kernel_run_context->compute_node_info = compute_node_info;
   kernel_run_context->output_start = &(kernel_run_context->values[kernel_run_context->input_size]);
-  holder.value_holder.resize(inputs_.size() + outputs_.size());
-  for (size_t i = 0UL; i < holder.value_holder.size(); ++i) {
-    kernel_run_context->values[i] = &holder.value_holder[i];
+  holder.value_holder_.resize(inputs_.size() + outputs_.size());
+  for (size_t i = 0UL; i < holder.value_holder_.size(); ++i) {
+    kernel_run_context->values[i] = reinterpret_cast<AsyncAnyValue *>(&holder.value_holder_[i]);
   }
   for (size_t i = 0UL; i < inputs_.size(); ++i) {
-    holder.value_holder[i].data.pointer = inputs_[i];
+    holder.value_holder_[i].Set(inputs_[i].first, inputs_[i].second);
   }
   for (size_t i = 0UL; i < outputs_.size(); ++i) {
-    holder.value_holder[inputs_.size() + i].data.pointer = outputs_[i];
+    holder.value_holder_[inputs_.size() + i].Set(outputs_[i].first, outputs_[i].second);
   }
   return holder;
 }

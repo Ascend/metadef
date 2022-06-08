@@ -29,7 +29,7 @@ class TilingParseContext : public ExtendedKernelContext {
   }
   /**
    * 获取`CompiledInfo`实例
-   * @tparam T 实力类型，该类型需要与`IMPL_OP`注册时TilingParse的类型一致
+   * @tparam T 实例类型，该类型需要与`IMPL_OP`注册时TilingParse的类型一致
    * @return 指向`CompiledInfo`实例的指针
    */
   template<typename T>
