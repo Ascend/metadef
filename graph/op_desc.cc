@@ -539,7 +539,7 @@ GeTensorDescPtr OpDescImpl::MutableInputDesc(const uint32_t index) const {
     return nullptr;
   }
   if (inputs_desc_[static_cast<uint64_t>(index)]->IsValid() != GRAPH_SUCCESS) {
-    GELOGW("[Get][InputDesc] Input desc is invalid");
+    GELOGD("[Get][InputDesc] Input desc is invalid");
     return nullptr;
   }
   return inputs_desc_[static_cast<uint64_t>(index)];
@@ -602,7 +602,7 @@ OpDesc::Vistor<GeTensorDescPtr> OpDescImpl::GetAllInputsDescPtr(const ConstOpDes
     if (it->IsValid() == GRAPH_SUCCESS) {
       temp.push_back(it);
     } else {
-      GELOGW("[Get][InputDesc] This input_desc is invalid, it won't be return");
+      GELOGD("[Get][InputDesc] This input_desc is invalid, it won't be return");
       continue;
     }
   }

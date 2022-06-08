@@ -52,7 +52,7 @@ public:
       }
       return GRAPH_SUCCESS;
     }
-    GELOGW("[RefRelations][Check] can not find any relations! key value of dest relation is %s", lookup_key.c_str());
+    GELOGD("[RefRelations][Check] can not find any relations! key value of dest relation is %s", lookup_key.c_str());
     return GRAPH_SUCCESS;
   };
   graphStatus BuildRefRelations(ge::ComputeGraph &graph);

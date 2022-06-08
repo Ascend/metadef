@@ -203,6 +203,11 @@ TEST_F(UtestGeTensor, test_shape_copy_move) {
   EXPECT_EQ(shape4.GetDimNum(), 3);
 }
 
+TEST_F(UtestGeTensor, test_tensor_null_data) {
+  TensorData tensor_data;
+  EXPECT_EQ(tensor_data.SetData(nullptr, 1), GRAPH_SUCCESS);
+}
+
 TEST_F(UtestGeTensor, test_tensor_null_proto) {
   ProtoMsgOwner msg_owner;
   GeTensor tensor(msg_owner, nullptr);
