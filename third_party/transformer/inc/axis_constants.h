@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef COMMON_UTILS_TRANSFORMER_INC_AXIS_CONSTANTS_H_
 #define COMMON_UTILS_TRANSFORMER_INC_AXIS_CONSTANTS_H_
 
 namespace transformer {
-extern const size_t DIM_DEFAULT_SIZE;
+extern const size_t DIM_SIZE_TWO;
+extern const size_t DIM_SIZE_FOUR;
 extern const size_t DIM_SIZE_FIVE;
 extern const size_t DIM_SIZE_SIX;
+
+extern const size_t EXT_INDEX_INPUT_SIZE;
+extern const size_t EXT_INDEX_HIDEEN_SIZE;
+extern const size_t EXT_INDEX_STATE_SIZE;
 
 extern const int32_t AXIS_NCHW_DIM_N;
 extern const int32_t AXIS_NCHW_DIM_C;

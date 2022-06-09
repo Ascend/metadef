@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,21 +29,20 @@ namespace {
   const std::string RESHAPE_TYPE_FORBIDDEN = "FORBIDDEN";
   const uint32_t kBitsOfByte = 8;
   const uint32_t kBitSetDisplaySize = 8;
-  const uint32_t kMaxDimSize = 8;
   const uint32_t kMaxReshapeTypeSize = 56;
 
   const std::set<ge::Format> kSupportedTransFormat = {ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ,
-                                                                ge::FORMAT_ND_RNN_BIAS, ge::FORMAT_FRACTAL_ZN_RNN};
+                                                      ge::FORMAT_ND_RNN_BIAS, ge::FORMAT_FRACTAL_ZN_RNN};
 
   const std::map<ge::Format, size_t> FULL_SIZE_OF_FORMAT {
-          {ge::FORMAT_NCHW,  DIM_DEFAULT_SIZE},
-          {ge::FORMAT_NHWC,  DIM_DEFAULT_SIZE},
-          {ge::FORMAT_HWCN,  DIM_DEFAULT_SIZE},
-          {ge::FORMAT_CHWN,  DIM_DEFAULT_SIZE},
+          {ge::FORMAT_NCHW,  DIM_SIZE_FOUR},
+          {ge::FORMAT_NHWC,  DIM_SIZE_FOUR},
+          {ge::FORMAT_HWCN,  DIM_SIZE_FOUR},
+          {ge::FORMAT_CHWN,  DIM_SIZE_FOUR},
           {ge::FORMAT_NDHWC, DIM_SIZE_FIVE},
           {ge::FORMAT_NCDHW, DIM_SIZE_FIVE},
           {ge::FORMAT_DHWCN, DIM_SIZE_FIVE},
-          {ge::FORMAT_ND,    DIM_DEFAULT_SIZE}
+          {ge::FORMAT_ND,    DIM_SIZE_FOUR}
   };
 
   inline uint32_t GenerateFormatKey(ge::Format format) {

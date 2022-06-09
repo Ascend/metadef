@@ -56,6 +56,7 @@ set(GRAPH_SOURCE_LIST
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
     "${METADEF_DIR}/third_party/transformer/src/transfer_range_according_to_format.cc"
+    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_utils.cc"
     "utils/transformer_utils.cc"
     "utils/file_utils.cc"
     "resource_context_mgr.cc"
@@ -101,6 +102,7 @@ target_compile_options(graph PRIVATE
 
 target_compile_definitions(graph PRIVATE
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
     google=ascend_private
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>

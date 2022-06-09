@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
 #include <algorithm>
 
 namespace transformer {
-
 bool RangeTransferAccordingToFormat::GetRangeAccordingToFormat(const ge::OpDescPtr &op_desc,
                                                                RangeAndFormat &range_and_format_info) {
   /* The default new range is old range */

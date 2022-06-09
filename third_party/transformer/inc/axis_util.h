@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 #include <memory.h>
 #include <array>
 
-#include "external/graph/ge_error_codes.h"
 #include "external/graph/types.h"
 #include "graph/utils/math_util.h"
 #include "exe_graph/runtime/shape.h"
@@ -100,5 +99,4 @@ private:
   static bool GetAxisValueByC1HWNCoC0(const gert::Shape &shape, AxisValue &axis_value);
 };
 } // namespace transformer
-
 #endif // COMMON_UTILS_TRANSFORMER_INC_AXIS_UTIL_H_

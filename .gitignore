@@ -2,6 +2,7 @@
 build/
 output/
 prebuilts/
+build_gcov/
 cov/
 *.ir
 *.out

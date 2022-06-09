@@ -46,24 +46,49 @@ class TransformerTransferShapeUT : public testing::Test {
       EXPECT_EQ(shape.GetDims(), expect_dim);
     }
 
-    gert::Shape new_shape;
+    gert::Shape current_shape;
     for (const int64_t &d : dims) {
-      new_shape.AppendDim(d);
+      current_shape.AppendDim(d);
     }
-    ret = shape_transfer.TransferShape(origin_format, format, dtype, new_shape);
+    gert::Shape ret_shape;
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, current_shape, ret_shape);
+    if (ret && dims != expect_dim) {
+      vector<int64_t> new_dim;
+      for (size_t i = 0; i < ret_shape.GetDimNum(); ++i) {
+        new_dim.push_back(ret_shape.GetDim(i));
+      }
+      EXPECT_EQ(new_dim, expect_dim);
+    }
+
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, current_shape);
     EXPECT_EQ(ret, expect_ret);
     if (ret) {
       vector<int64_t> new_dim;
-      for (size_t i = 0; i < new_shape.GetDimNum(); ++i) {
-        new_dim.push_back(new_shape.GetDim(i));
+      for (size_t i = 0; i < current_shape.GetDimNum(); ++i) {
+        new_dim.push_back(current_shape.GetDim(i));
       }
       EXPECT_EQ(new_dim, expect_dim);
+    }
+
+    ExtAxisValue ext_axis;
+    ge::GeShape src_shape(dims);
+    ge::GeShape dst_shape;
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape, dst_shape);
+    EXPECT_EQ(ret, expect_ret);
+    if (ret && dims != expect_dim) {
+      EXPECT_EQ(dst_shape.GetDims(), expect_dim);
+    }
+
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape);
+    EXPECT_EQ(ret, expect_ret);
+    if (ret) {
+      EXPECT_EQ(src_shape.GetDims(), expect_dim);
     }
   }
 
   void RunTransferShape(const ge::OpDescPtr &op_desc, const ge::Format &origin_format, const ge::Format &format,
-                        const ge::DataType &dtype,
-                        const bool &expect_ret, const vector<int64_t> &dims, const vector<int64_t> &expect_dim) {
+                        const ge::DataType &dtype, const bool &expect_ret, const vector<int64_t> &dims,
+                        const vector<int64_t> &expect_dim) {
     std::cout << "RunTransferShape: origin_format=" << origin_format << ", format=" << format << ", dtype=" << dtype
               << ", dim size=" << dims.size() << std::endl;
     ge::GeShape shape(dims);
@@ -75,18 +100,45 @@ class TransformerTransferShapeUT : public testing::Test {
       EXPECT_EQ(shape.GetDims(), expect_dim);
     }
 
-    gert::Shape new_shape;
+    gert::Shape current_shape;
     for (const int64_t &d : dims) {
-      new_shape.AppendDim(d);
+      current_shape.AppendDim(d);
     }
-    ret = shape_transfer.TransferShape(origin_format, format, dtype, new_shape, op_desc);
+
+    gert::Shape ret_shape;
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, current_shape, ret_shape, op_desc);
+    if (ret && dims != expect_dim) {
+      vector<int64_t> new_dim;
+      for (size_t i = 0; i < ret_shape.GetDimNum(); ++i) {
+        new_dim.push_back(ret_shape.GetDim(i));
+      }
+      EXPECT_EQ(new_dim, expect_dim);
+    }
+
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, current_shape, op_desc);
     EXPECT_EQ(ret, expect_ret);
     if (ret) {
       vector<int64_t> new_dim;
-      for (size_t i = 0; i < new_shape.GetDimNum(); ++i) {
-        new_dim.push_back(new_shape.GetDim(i));
+      for (size_t i = 0; i < current_shape.GetDimNum(); ++i) {
+        new_dim.push_back(current_shape.GetDim(i));
       }
       EXPECT_EQ(new_dim, expect_dim);
+    }
+
+    ExtAxisValue ext_axis;
+    shape_transfer.InitExtAxisValue(op_desc, ext_axis);
+    ge::GeShape src_shape(dims);
+    ge::GeShape dst_shape;
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape, dst_shape);
+    EXPECT_EQ(ret, expect_ret);
+    if (ret && dims != expect_dim) {
+      EXPECT_EQ(dst_shape.GetDims(), expect_dim);
+    }
+
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape);
+    EXPECT_EQ(ret, expect_ret);
+    if (ret) {
+      EXPECT_EQ(src_shape.GetDims(), expect_dim);
     }
   }
 };
@@ -134,18 +186,18 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nchw) {
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_NC1HWC0, DT_INT2, true, {8, 512, 5, 5}, {8, 4, 5, 5, 128});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_NC1HWC0, DT_INT4, true, {8, 512, 5, 5}, {8, 8, 5, 5, 64});
 
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT8, true, {8, 512, 5, 5}, {16, 5, 5, 8, 32, 32});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT8, true, {8, 512, 5, 5}, {16, 5, 5, 8, 32, 32});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT16, true, {8, 512, 5, 5}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT16, true, {8, 512, 5, 5}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT32, true, {8, 512, 5, 5}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT32, true, {8, 512, 5, 5}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_FLOAT, true, {8, 512, 5, 5}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_FLOAT16, true, {8, 512, 5, 5}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT1, true, {8, 512, 5, 5}, {2, 5, 5, 8, 256, 256});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT2, true, {8, 512, 5, 5}, {4, 5, 5, 8, 128, 128});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT2, true, {8, 512, 5, 5}, {4, 5, 5, 8, 128, 128});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT4, true, {8, 512, 5, 5}, {8, 5, 5, 8, 64, 64});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT8, true, {18, 512, 5, 5}, {16, 5, 5, 2, 32, 32});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT8, true, {18, 512, 5, 5}, {16, 5, 5, 2, 32, 32});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT16, true, {18, 512, 5, 5}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT16, true, {18, 512, 5, 5}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT32, true, {18, 512, 5, 5}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT32, true, {18, 512, 5, 5}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_FLOAT, true, {18, 512, 5, 5}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_FLOAT16, true, {18, 512, 5, 5}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT1, true, {18, 512, 5, 5}, {2, 5, 5, 2, 256, 256});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_UINT2, true, {18, 512, 5, 5}, {4, 5, 5, 2, 128, 128});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT2, true, {18, 512, 5, 5}, {4, 5, 5, 2, 128, 128});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_C1HWNCoC0, DT_INT4, true, {18, 512, 5, 5}, {8, 5, 5, 2, 64, 64});
 
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_NC1HWC0_C04, DT_UINT8, true, {8, 512, 5, 5}, {8, 128, 5, 5, 4});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_NC1HWC0_C04, DT_INT8, true, {8, 512, 5, 5}, {8, 128, 5, 5, 4});
@@ -218,18 +270,18 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_hwcn) {
   RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_NC1HWC0, DT_INT2, true, {5, 5, 512, 8}, {8, 4, 5, 5, 128});
   RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_NC1HWC0, DT_INT4, true, {5, 5, 512, 8}, {8, 8, 5, 5, 64});
 
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT8, true, {5, 5, 512, 8}, {16, 5, 5, 8, 32, 32});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT8, true, {5, 5, 512, 8}, {16, 5, 5, 8, 32, 32});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT16, true, {5, 5, 512, 8}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT16, true, {5, 5, 512, 8}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT32, true, {5, 5, 512, 8}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT32, true, {5, 5, 512, 8}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_FLOAT, true, {5, 5, 512, 8}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_FLOAT16, true, {5, 5, 512, 8}, {32, 5, 5, 8, 16, 16});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT1, true, {5, 5, 512, 8}, {2, 5, 5, 8, 256, 256});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT2, true, {5, 5, 512, 8}, {4, 5, 5, 8, 128, 128});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT2, true, {5, 5, 512, 8}, {4, 5, 5, 8, 128, 128});
-  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT4, true, {5, 5, 512, 8}, {8, 5, 5, 8, 64, 64});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT8, true, {5, 5, 512, 18}, {16, 5, 5, 2, 32, 32});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT8, true, {5, 5, 512, 18}, {16, 5, 5, 2, 32, 32});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT16, true, {5, 5, 512, 18}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT16, true, {5, 5, 512, 18}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT32, true, {5, 5, 512, 18}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT32, true, {5, 5, 512, 18}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_FLOAT, true, {5, 5, 512, 18}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_FLOAT16, true, {5, 5, 512, 18}, {32, 5, 5, 2, 16, 16});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT1, true, {5, 5, 512, 18}, {2, 5, 5, 2, 256, 256});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_UINT2, true, {5, 5, 512, 18}, {4, 5, 5, 2, 128, 128});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT2, true, {5, 5, 512, 18}, {4, 5, 5, 2, 128, 128});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_C1HWNCoC0, DT_INT4, true, {5, 5, 512, 18}, {8, 5, 5, 2, 64, 64});
 
   RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_NC1HWC0_C04, DT_UINT8, true, {5, 5, 512, 8}, {8, 128, 5, 5, 4});
   RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_NC1HWC0_C04, DT_INT8, true, {5, 5, 512, 8}, {8, 128, 5, 5, 4});
@@ -336,7 +388,8 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_ncdhw) {
 }
 
 TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nz) {
-  RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34}, {34});
+  RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34}, {1, 3, 16, 16});
+  RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34, 1}, {1, 3, 16, 16});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT, true, {18, 34}, {3, 2, 16, 16});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_UINT8, true, {1, 18, 34}, {1, 2, 2, 16, 32});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT8, true, {1, 18, 34}, {1, 2, 2, 16, 32});
@@ -353,7 +406,6 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nz) {
 }
 
 TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_fz) {
-  RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_Z, DT_FLOAT16, true, {34}, {1, 1, 16, 16});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_Z, DT_UINT8, true, {18, 34}, {1, 3, 16, 32});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_Z, DT_INT8, true, {18, 34}, {1, 3, 16, 32});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_Z, DT_UINT16, true, {18, 34}, {2, 3, 16, 16});
@@ -463,5 +515,4 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nd_rnn_bias) {
   RunTransferShape(op_desc, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, DT_FLOAT16, true, {150}, {150});
   RunTransferShape(op_desc, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, DT_INT8, true, {18, 80}, {18, 80});
 }
-
 }  // namespace ge

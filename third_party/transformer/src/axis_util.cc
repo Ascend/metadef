@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,14 @@
 #include "framework/common/debug/ge_log.h"
 
 namespace transformer {
-const size_t DIM_DEFAULT_SIZE = 4;
+const size_t DIM_SIZE_TWO = 2;
+const size_t DIM_SIZE_FOUR = 4;
 const size_t DIM_SIZE_FIVE = 5;
 const size_t DIM_SIZE_SIX = 6;
+
+const size_t EXT_INDEX_INPUT_SIZE = 0;
+const size_t EXT_INDEX_HIDEEN_SIZE = 1;
+const size_t EXT_INDEX_STATE_SIZE = 2;
 
 const int32_t AXIS_NCHW_DIM_N = 0;
 const int32_t AXIS_NCHW_DIM_C = 1;
@@ -110,7 +115,7 @@ bool AxisUtil::GetAxisValueByOriginFormat(const ge::Format &format, const gert::
 
 bool AxisUtil::GetAxisValueByND(const gert::Shape &shape, AxisValue &axis_value) {
   /* To differentiate the input datatype of int8 and others */
-  if (shape.GetDimNum() == DIM_DEFAULT_SIZE) {
+  if (shape.GetDimNum() == DIM_SIZE_FOUR) {
     axis_value[AXIS_N] = shape.GetDim(AXIS_NCHW_DIM_N);
     axis_value[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
     axis_value[AXIS_H] = shape.GetDim(AXIS_NCHW_DIM_H);
@@ -122,7 +127,7 @@ bool AxisUtil::GetAxisValueByND(const gert::Shape &shape, AxisValue &axis_value)
 }
 
 bool AxisUtil::GetAxisValueByNCHW(const gert::Shape &shape, AxisValue &axis_value) {
-  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
+  CHECK(shape.GetDimNum() < DIM_SIZE_FOUR, GELOGI("Dim size is less than 4."), return false);
   /* C0 Must be set for case ND or 2D-NCHW to NZ */
   axis_value[AXIS_N] = shape.GetDim(AXIS_NCHW_DIM_N);
   axis_value[AXIS_C] = shape.GetDim(AXIS_NCHW_DIM_C);
@@ -134,7 +139,7 @@ bool AxisUtil::GetAxisValueByNCHW(const gert::Shape &shape, AxisValue &axis_valu
 }
 
 bool AxisUtil::GetAxisValueByNHWC(const gert::Shape &shape, AxisValue &axis_value) {
-  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
+  CHECK(shape.GetDimNum() < DIM_SIZE_FOUR, GELOGI("Dim size is less than 4."), return false);
   /* C0 Must be set for case ND or 2D-NHWC to NZ */
   axis_value[AXIS_N] = shape.GetDim(AXIS_NHWC_DIM_N);
   axis_value[AXIS_C] = shape.GetDim(AXIS_NHWC_DIM_C);
@@ -146,7 +151,7 @@ bool AxisUtil::GetAxisValueByNHWC(const gert::Shape &shape, AxisValue &axis_valu
 }
 
 bool AxisUtil::GetAxisValueByNC1HWC0(const gert::Shape &shape, AxisValue &axis_value) {
-  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
+  CHECK(shape.GetDimNum() < DIM_SIZE_FOUR, GELOGI("Dim size is less than 4."), return false);
   if (shape.GetDimNum() == DIM_SIZE_FIVE) {
     axis_value[AXIS_C0] = shape.GetDim(AXIS_NC1HWC0_DIM_C0);
     axis_value[AXIS_C1] = shape.GetDim(AXIS_NC1HWC0_DIM_C1);
@@ -163,7 +168,7 @@ bool AxisUtil::GetAxisValueByNC1HWC0(const gert::Shape &shape, AxisValue &axis_v
 }
 
 bool AxisUtil::GetAxisValueByHWCN(const gert::Shape &shape, AxisValue &axis_value) {
-  CHECK(shape.GetDimNum() < DIM_DEFAULT_SIZE, GELOGI("Dim size is less than 4."), return false);
+  CHECK(shape.GetDimNum() < DIM_SIZE_FOUR, GELOGI("Dim size is less than 4."), return false);
   /* C0 Must be set for case ND or 2D-NHWC to NZ */
   axis_value[AXIS_N] = shape.GetDim(AXIS_HWCN_DIM_N);
   axis_value[AXIS_C] = shape.GetDim(AXIS_HWCN_DIM_C);
