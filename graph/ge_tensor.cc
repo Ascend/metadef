@@ -975,12 +975,12 @@ TensorDataImpl &TensorDataImpl::operator=(const TensorDataImpl &other) {
 
 graphStatus TensorDataImpl::SetData(const uint8_t *const data, const size_t size) {
   if (size == 0UL) {
-    GELOGI("size is 0");
+    GELOGD("size is 0");
     clear();
     return GRAPH_SUCCESS;
   }
   if (data == nullptr) {
-    GELOGI("data addr is empty");
+    GELOGD("data addr is empty");
     return GRAPH_SUCCESS;
   }
 

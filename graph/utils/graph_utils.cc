@@ -2573,7 +2573,7 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
     for (const auto &input_name : op_desc->GetAllInputNames()) {
       if ((!input_name.empty()) && (output_name == input_name)) {
         reuse_in_index = op_desc->GetInputIndexByName(input_name);
-        GELOGI("Reference name[%s] output[%s][%d] ref to input[%s][%d].", op_desc->GetName().c_str(),
+        GELOGD("Reference name[%s] output[%s][%d] ref to input[%s][%d].", op_desc->GetName().c_str(),
                output_name.c_str(), output_index, input_name.c_str(), reuse_in_index);
         return true;
       }

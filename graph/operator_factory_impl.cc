@@ -130,7 +130,7 @@ InferValueRangePara OperatorFactoryImpl::GetInferValueRangePara(const std::strin
   const std::map<std::string, ge::InferValueRangePara>::const_iterator
       it = operator_infer_value_range_paras_->find(operator_type);
   if (it == operator_infer_value_range_paras_->end()) {
-    GELOGI("optype[%s] has not registered infer value func", operator_type.c_str());
+    GELOGD("optype[%s] has not registered infer value func", operator_type.c_str());
     return ret_para;
   }
   return it->second;
