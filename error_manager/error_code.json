@@ -169,7 +169,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid Node Name",
       "ErrCode": "E10016",
-      "ErrMessage": "Op [%s] specified in [--%s] is not found in the model.",
+      "ErrMessage": "Opname [%s] specified in [--%s] is not found in the model, confirm whether this node name exists, or node is not split with the specified delimiter ';'",
       "Arglist": "opname,parameter",
       "suggestion": {
         "Possible Cause": "N/A",
