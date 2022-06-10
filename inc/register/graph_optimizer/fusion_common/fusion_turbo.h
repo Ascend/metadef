@@ -99,7 +99,7 @@ class FusionTurbo {
 
   Status RemoveMultiNodesOnly(const std::vector<ge::NodePtr> &nodes);
 
-  ge::NodePtr UpdateConst(const ge::NodePtr &node, int32_t index, const WeightInfo &w_info) const;
+  ge::NodePtr UpdateConst(const ge::NodePtr &node, const int32_t &index, const WeightInfo &w_info) const;
 
   /* 1. If index is larger than or equalt to the input size of node, add a weight
    * tensor and node as the last input of node.
@@ -109,7 +109,7 @@ class FusionTurbo {
    *        2.2 If the peer node of this input index is Const, we substitute the data
    *        of current Const and update tensor desc. ---> Call UpdateConst
    *        2.3 If the peer node of this input is other type, we just skip it. */
-  ge::NodePtr AddWeight(const ge::NodePtr &node, int32_t index, const WeightInfo &w_info);
+  ge::NodePtr AddWeight(const ge::NodePtr &node, const int32_t &index, const WeightInfo &w_info) const;
 
   ge::NodePtr AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info);
 
@@ -132,7 +132,7 @@ class FusionTurbo {
                                     const ge::NodePtr &new_node);
 
   ge::NodePtr InsertNodeBefore(const string &op_name, const string &op_type,
-                               const ge::NodePtr &base_node, int32_t base_input_index,
+                               const ge::NodePtr &base_node, const int32_t &base_input_index,
                                const int32_t &input_index = 0,
                                const int32_t &output_index = 0) const;
 
@@ -142,11 +142,11 @@ class FusionTurbo {
 
   static Status LinkInput(Relations &input_relations,
                           const ge::NodePtr &dst_node,
-                          TensorUptType update_tensor = UPDATE_THIS);
+                          const TensorUptType &update_tensor = UPDATE_THIS);
 
   static Status LinkOutput(Relations &output_relations,
                            const ge::NodePtr &src_node,
-                           TensorUptType update_tensor = UPDATE_THIS);
+                           const TensorUptType &update_tensor = UPDATE_THIS);
 
   static ge::NodePtr GetPeerOutNode(const ge::NodePtr &node, const int32_t &this_node_input_index);
 
@@ -182,11 +182,11 @@ class FusionTurbo {
   
   bool HasControl(const ge::NodePtr &node);
 
-  bool HasInControl(const ge::NodePtr &node);
+  static bool HasInControl(const ge::NodePtr &node);
 
-  bool HasOutControl(const ge::NodePtr &node);
+  static bool HasOutControl(const ge::NodePtr &node);
 
-  Status MoveDataOutputUp(const ge::NodePtr &node, int32_t index);
+  static Status MoveDataOutputUp(const ge::NodePtr &node, int32_t index);
 
   /* move node to pre node if pre node has subgraph
    * @param node  current need move node
