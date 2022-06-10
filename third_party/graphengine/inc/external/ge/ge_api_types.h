@@ -336,6 +336,17 @@ const std::string MODIFY_MIXLIST = "ge.exec.modify_mixlist";
 
 const std::string OP_PRECISION_MODE = "ge.exec.op_precision_mode";
 
+// For flow attribute
+const std::string ATTR_NAME_FLOW_ATTR_EXT = "_flow_attr";
+const std::string ATTR_NAME_FLOW_ATTR_DEPTH_EXT = "_flow_attr_depth";
+const std::string ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY_EXT = "_flow_attr_enqueue_policy";
+
+// For align attribute
+const std::string ATTR_NAME_INPUTS_ALIGN_ATTR_EXT = "_inputs_align_attr";
+const std::string ATTR_NAME_INPUTS_ALIGN_INTERVAL_EXT = "_inputs_align_interval";
+const std::string ATTR_NAME_INPUTS_ALIGN_OFFSET_EXT = "_inputs_align_offset";
+
+
 // Graph run mode
 enum GraphRunMode { PREDICTION = 0, TRAIN };
 
@@ -417,6 +428,12 @@ static const char *const PERFORMANCE_MODE = ge::PERFORMANCE_MODE.c_str();
 static const char *const SHAPE_GENERALIZED_BUILD_MODE = ge::SHAPE_GENERALIZED_BUILD_MODE.c_str();
 static const char *const MODIFY_MIXLIST = ge::MODIFY_MIXLIST.c_str();
 static const char *const OP_PRECISION_MODE = ge::OP_PRECISION_MODE.c_str();
+static const char *const ATTR_NAME_FLOW_ATTR = ge::ATTR_NAME_FLOW_ATTR_EXT.c_str();
+static const char *const ATTR_NAME_FLOW_ATTR_DEPTH = ge::ATTR_NAME_FLOW_ATTR_DEPTH_EXT.c_str();
+static const char *const ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY = ge::ATTR_NAME_FLOW_ATTR_ENQUEUE_POLICY_EXT.c_str();
+static const char *const ATTR_NAME_INPUTS_ALIGN_ATTR = ge::ATTR_NAME_INPUTS_ALIGN_ATTR_EXT.c_str();
+static const char *const ATTR_NAME_INPUTS_ALIGN_INTERVAL = ge::ATTR_NAME_INPUTS_ALIGN_INTERVAL_EXT.c_str();
+static const char *const ATTR_NAME_INPUTS_ALIGN_OFFSET = ge::ATTR_NAME_INPUTS_ALIGN_OFFSET_EXT.c_str();
 
 // for interface: aclgrphBuildModel
 #ifdef __GNUC__
