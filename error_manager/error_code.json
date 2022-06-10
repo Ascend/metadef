@@ -162,14 +162,14 @@
       "Arglist": "value,parameter",
       "suggestion": {
         "Possible Cause": "Try again with a valid argument.",
-        "Solution": "Try again with a valid argument. For details, see [ATC Instructions]."
+        "Solution": "Run the \"atc -h\" command to view the usage. For details, see [ATC Instructions]."
       }
     },
     {
       "errClass": "GE Errors",
       "errTitle": "Invalid Node Name",
       "ErrCode": "E10016",
-      "ErrMessage": "Op [%s] specified in [--%s] is not found in the model.",
+      "ErrMessage": "Opname [%s] specified in [--%s] is not found in the model, confirm whether this node name exists, or node is not split with the specified delimiter ';'",
       "Arglist": "opname,parameter",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -1355,6 +1355,28 @@
     },
     {
       "errClass": "AI CPU Errors",
+      "errTitle": "NN Process Count Limit Exceeded",
+      "ErrCode": "E30003",
+      "ErrMessage": "The number of started NN processes exceeds the limit.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Something wrong with queue_schedule.",
+        "Solution": "Wait for 10s after the last training process exited and try again."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
+      "errTitle": "NN Process Bin Error",
+      "ErrCode": "E30004",
+      "ErrMessage": "The binary file of the NN process is damaged or the file permissions are incorrect.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "The driver package is incorrectly installed.",
+        "Solution": "Reinstall the driver package."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E39001",
       "ErrMessage": "The argument is invalid.",
@@ -1552,6 +1574,72 @@
       }
     },
     {
+      "errClass": "TEFusion Errors",
+      "errTitle": "Invalid Path",
+      "ErrCode": "W40010",
+      "ErrMessage": "Path [%s] for [%s] is invalid. Result: %s. Reason: %s.",
+      "Arglist": "path,arg,result,reason",
+      "suggestion": {
+        "Possible Cause": "The path is empty or does not exist.",
+        "Solution": "Try again with a valid path."
+      }
+    },
+    {
+      "errClass": "TEFusion Errors",
+      "errTitle": "Failure to Create Disk Cache Directory",
+      "ErrCode": "W40011",
+      "ErrMessage": "Failed to create disk cache directory [%s]. Result: %s. Reason: %s.",
+      "Arglist": "path,result,reason",
+      "suggestion": {
+        "Possible Cause": "You do not have the permission for the directory or the directory name is invalid.",
+        "Solution": "Modify the permission or directory name and try again."
+      }
+    },
+    {
+      "errClass": "TEFusion Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": " W40012",
+      "ErrMessage": "Value [%s] for parameter [%s] is invalid. The value must be in the range of [%s] and defaults to [%s].",
+      "Arglist": "invalid_value,argument,valid_range,default_value",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": " TEFusion Errors",
+      "errTitle": "Failure to Import Python Module",
+      "ErrCode": "E40020",
+      "ErrMessage": "Failed to import Python module [%s].",
+      "Arglist": "result",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Check that all required components are properly installed and the specified Python path matches the Python installation directory. (If the path does not match the directory, run set_env.sh in the installation package.)"
+      }
+    },
+    {
+      "errClass": "TEFusion Errors",
+      "errTitle": "Failure to Compile Op",
+      "ErrCode": "E40021",
+      "ErrMessage": "Failed to compile Op [%s]. (oppath: [%s], optype: [%s])",
+      "Arglist": "op_name,opp_path,op_type",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "See the host log for details, and then check the Python stack where the error log is reported."
+      }
+    },
+    {
+      "errClass": "TEFusion Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "E40022",
+      "ErrMessage": "Value [%s] for parameter [%s] is invalid. The value must be in the range of [%s].",
+      "Arglist": "invalid_value,argument,valid_range ",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "Vector Operator Plugin Errors",
       "errTitle": "ONNX Model Data Error",
       "ErrCode": "E76002",
@@ -1621,10 +1709,10 @@
       "errClass": "Autotune Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EC0005",
-      "ErrMessage": "soc_version doesn't match the device.",
+      "ErrMessage": "Value for parameter [--soc_version]  is invalid or the config.json is not set correctly.",
       "Arglist": "",
       "suggestion": {
-        "Possible Cause": "N/A",
+        "Possible Cause": "The SoC version does not match the device  or the config.json is not set correctly.",
         "Solution": "N/A"
       }
     },
@@ -1643,125 +1731,46 @@
       "errClass": "RLTune Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "ED0001",
-      "ErrMessage": "Value [%s] for parameter [--soc_version] is invalid. Reason: The SoC version does not match device [%].",
+      "ErrMessage": "Value [%s] for parameter [--soc_version] is invalid. Reason: The SoC version does not match device [%s].",
       "Arglist": "user_val, device_val",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
       }
     },
-
     {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid SoC Version",
-      "ErrCode": "EE1000",
-      "ErrMessage": "Value %s is invalid for the SoC version. Valid values are: %s",
-      "Arglist": "version,valid_name",
-      "suggestion": {
-        "Possible Cause": "The SoC version argument is invalid.",
-        "Solution": "Try again with a valid argument."
-      }
-    },
-    {
-      "errClass": "Environment Errors",
-      "errTitle": "Device Error",
-      "ErrCode": "EE2000",
-      "ErrMessage": "Device [%s] is not running properly.",
-      "Arglist": "device_id",
-      "suggestion": {
-        "Possible Cause": "Failed to connect to the device, possibly due to a bus error or device error.",
-        "Solution": "Send the log to Huawei technical support for fault locating."
-      }
-    },
-    {
-      "errClass": "Environment Errors",
-      "errTitle": "Failure to Allocate Memory",
-      "ErrCode": "EE2001",
-      "ErrMessage": "Failed to allocate memory for [%s] due to insufficient memory. The requested allocation is %s.",
-      "Arglist": "target,size",
-      "suggestion": {
-        "Possible Cause": "System memory is insufficient for the network.",
-        "Solution": "[step] Free the system memory and try again. [step] If no more system memory can be freed, reduce the network size and try again."
-      }
-    },
-    {
-      "errClass": "Environment Errors",
-      "errTitle": "Driver return failed",
-      "ErrCode": "EE3001",
-      "ErrMessage": "The process has lost connection between the host and device. This might be caused by execution timeout of particular operators or unstable connection. Check the error message detail and try again.",
-      "Arglist": "",
-      "suggestion": {
-        "Possible Cause": "The execution of a particular operator times out or the host and device connection is unstable.",
-        "Solution": "[step] Fix the timout operator or fix the connection problem between host and device, then restart the app"
-      }
-    },
-    {
-      "errClass": "Task Schedule Execution Errors",
-      "errTitle": "Model Execution Error",
+      "errClass": "RTS Errors",
+      "errTitle": "Model Binding Errors",
       "ErrCode": "EE4001",
-      "ErrMessage": "This stream has been bound to a model. Repeated binding is not allowed. %s",
-      "Arglist": "extend_info",
-      "suggestion": {
-        "Possible Cause": "This stream has been bound to a model. Repeated binding is not allowed.",
-        "Solution": "Remove redundant bindings from your code."
-      }
-    },
-    {
-      "errClass": "Task Schedule Execution Errors",
-      "errTitle": "Model Execution Error",
-      "ErrCode": "EE4002",
       "ErrMessage": "Failed to bind the stream to the model. %s",
       "Arglist": "extend_info",
       "suggestion": {
-        "Possible Cause": "The model ID does not match the input arguments or the specific stream is busy.",
-        "Solution": "See the error message for details and modify the rtModelBindStream arguments."
+        "Possible Cause": "The stream has been bound to another model.",
+        "Solution": "Remove the repeated binding operation on the stream from the code."
       }
     },
     {
-      "errClass": "Task Schedule Execution Errors",
-      "errTitle": "Profiling Execution Error",
-      "ErrCode": "EE4003",
-      "ErrMessage": "Failed to profile the HWTS log, as online profiling is in process. Please stop online profiling first. %s",
+      "errClass": "RTS Errors",
+      "errTitle": "Model Unbinding Errors",
+      "ErrCode": "EE4002",
+      "ErrMessage": "Failed to unbind the stream to the model. %s",
       "Arglist": "extend_info",
       "suggestion": {
-        "Possible Cause": "Failed to profile the HWTS log, as online profiling is in process.",
-        "Solution": "Stop online profiling and try again."
+        "Possible Cause": "1.The stream to be unbound is not bound to the model.   2.The model is running.",
+        "Solution": "1.Check the code to ensure that the stream to be unbound is bound to the model.    2.Ensure that the model is not running."
       }
     },
     {
-      "errClass": "Task Schedule Execution Errors",
-      "errTitle": "Profiling Execution Error",
+      "errClass": "RTS Errors",
+      "errTitle": "Profiling Enable Errors",
       "ErrCode": "EE4004",
-      "ErrMessage": "Failed to enable profiling. %s",
+      "ErrMessage": "Failed to enable profiling.  %s",
       "Arglist": "extend_info",
       "suggestion": {
-        "Possible Cause": "Profiling is enabled. See the error message for details.",
-        "Solution": "Disable profiling and try again."
+        "Possible Cause": "N/A",
+        "Solution": "Do not enable profiling repeatedly."
       }
     },
-    {
-      "errClass": "Task Schedule Execution Errors",
-      "errTitle": "Task Schedule Resource Error",
-      "ErrCode": "EE5001",
-      "ErrMessage": "Insufficient HWTS submit queue(SQ) resource. %s",
-      "Arglist": "extend_info",
-      "suggestion": {
-        "Possible Cause": "The HWTS SQ resource are not sufficient to launch any new tasks.",
-        "Solution": "Wait until sufficient HWTS SQ resource is available."
-      }
-    },
-    {
-      "errClass": "Task Schedule Execution Errors",
-      "errTitle": "Task Schedule Resource Error",
-      "ErrCode": "EE5002",
-      "ErrMessage": "Insufficient task schedule memory. %s",
-      "Arglist": "extend_info",
-      "suggestion": {
-        "Possible Cause": "The task schedule memory are not sufficient to allocate new memory.",
-        "Solution": "Reduce the number of tasks of your model and try again."
-      }
-    },
-
     {
       "errClass": "LxFusion Errors",
       "errTitle": "Invalid Directory",
@@ -1883,94 +1892,94 @@
         "Solution": "N/A"
       }
     },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "Invalid Environment Variable Configuration",
-    "ErrCode": "EI0001",
-    "ErrMessage": "Environment variable [%s] is invalid. Tips: %s.",
-    "Arglist": "env,tips",
-    "suggestion": {
-      "Possible Cause": "The environment variable configuration is invalid.",
-      "Solution": "Try again with valid environment variable configuration."
-    }
-  },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "SO File Not Found",
-    "ErrCode": "EI0002",
-    "ErrMessage": "SO file [%s] is not found.",
-    "Arglist": "so_name",
-    "suggestion": {
-      "Possible Cause": "The file does not exist or is damaged.",
-      "Solution": "Try again with a valid FwkACLlib installation."
-    }
-  },
-  {
-    "errClass": "Invalid Operator Arguments",
-    "errTitle": "Invalid Collective Communication Op Argument",
-    "ErrCode": "EI0003",
-    "ErrMessage": "In [%s], value [%s] of parameter [%s] is invalid. Tips: %s.",
-    "Arglist": "ccl_op,value,parameter,tips",
-    "suggestion": {
-      "Possible Cause": "The collective communication operator has an invalid argument.",
-      "Solution": "Try again with a valid argument."
-    }
-  },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "Invalid Ranktable Configuration",
-    "ErrCode": "EI0004",
-    "ErrMessage": "Invalid ranktable, with rank_id [%s] and local device_id [%s]. Check that ranktable [%s] is valid and the environment setup matches the ranktable.",
-    "Arglist": "rank_id,device_id,ranktable_path",
-    "suggestion": {
-      "Possible Cause": "The cluster configuration in the ranktable file does not match that of the actual operating environment, or the configuration format is invalid",
-      "Solution": "Try again with a valid cluster configuration in the ranktable file. Ensure that the configuration matches the operating environment."
-    }
-  },
-  {
-    "errClass": "Invalid Operator Arguments",
-    "errTitle": "Inconsistent Collective Communication Arguments Between Ranks",
-    "ErrCode": "EI0005",
-    "ErrMessage": "The arguments for collective communication are inconsistent between ranks: tag [%s], parameter [%s], local [%s], remote [%s]",
-    "Arglist": "tag,para_name,local_para,remote_para",
-    "suggestion": {
-      "Possible Cause": "The arguments for collective communication are inconsistent between ranks.",
-      "Solution": "Try again with valid arguments. Ensure that the arguments are consistent between ranks."
-    }
-  },
-  {
-    "errClass": "Invalid Operator Arguments",
-    "errTitle": "Invalid Collective Communication Allocation",
-    "ErrCode": "EI0006",
-    "ErrMessage": "[%s] failed with info [%s]. Please check the passed [%s] resource.",
-    "Arglist": "resource_op,resource_info,resource_type",
-    "suggestion": {
-      "Possible Cause": "The memory or notify allocation passed to collective communication is invalid.",
-      "Solution": "Try again with a valid memory or notify allocation."
-    }
-  },
-  {
-    "errClass": "Environment Errors",
-    "errTitle": "Allocation Failure",
-    "ErrCode": "EI0007",
-    "ErrMessage": "Failed to allocate resource [%s], with info [%s].",
-    "Arglist": "resource_type, resource_info",
-    "suggestion": {
-      "Possible Cause": "Failed to allocate memory or notify due to resource insufficiency.",
-      "Solution": "Clean up unnecessary allocations."
-    }
-  },
-   {
-    "errClass": "Environment Errors",
-    "errTitle": "device number is invalid",
-    "ErrCode": "EI0008",
-    "ErrMessage": "Check the total number of devices[%s] failed，info[%s].",
-    "Arglist": "devNum, reason",
-    "suggestion": {
-      "Possible Cause": "devNum error.",
-      "Solution": "Please make sure that devNum is 2^n."
-    }
-  },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "Invalid Environment Variable Configuration",
+      "ErrCode": "EI0001",
+      "ErrMessage": "Environment variable [%s] is invalid. Tips: %s.",
+      "Arglist": "env,tips",
+      "suggestion": {
+        "Possible Cause": "The environment variable configuration is invalid.",
+        "Solution": "Try again with valid environment variable configuration."
+      }
+    },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "SO File Not Found",
+      "ErrCode": "EI0002",
+      "ErrMessage": "SO file [%s] is not found.",
+      "Arglist": "so_name",
+      "suggestion": {
+        "Possible Cause": "The file does not exist or is damaged.",
+        "Solution": "Try again with a valid FwkACLlib installation."
+      }
+    },
+    {
+      "errClass": "Invalid Operator Arguments",
+      "errTitle": "Invalid Collective Communication Op Argument",
+      "ErrCode": "EI0003",
+      "ErrMessage": "In [%s], value [%s] of parameter [%s] is invalid. Tips: %s.",
+      "Arglist": "ccl_op,value,parameter,tips",
+      "suggestion": {
+        "Possible Cause": "The collective communication operator has an invalid argument.",
+        "Solution": "Try again with a valid argument."
+      }
+    },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "Invalid Ranktable Configuration",
+      "ErrCode": "EI0004",
+      "ErrMessage": "Invalid ranktable, with rank_id [%s] and local device_id [%s]. Check that ranktable [%s] is valid and the environment setup matches the ranktable.",
+      "Arglist": "rank_id,device_id,ranktable_path",
+      "suggestion": {
+        "Possible Cause": "The cluster configuration in the ranktable file does not match that of the actual operating environment, or the configuration format is invalid",
+        "Solution": "Try again with a valid cluster configuration in the ranktable file. Ensure that the configuration matches the operating environment."
+      }
+    },
+    {
+      "errClass": "Invalid Operator Arguments",
+      "errTitle": "Inconsistent Collective Communication Arguments Between Ranks",
+      "ErrCode": "EI0005",
+      "ErrMessage": "The arguments for collective communication are inconsistent between ranks: tag [%s], parameter [%s], local [%s], remote [%s]",
+      "Arglist": "tag,para_name,local_para,remote_para",
+      "suggestion": {
+        "Possible Cause": "The arguments for collective communication are inconsistent between ranks.",
+        "Solution": "Try again with valid arguments. Ensure that the arguments are consistent between ranks."
+      }
+    },
+    {
+      "errClass": "Invalid Operator Arguments",
+      "errTitle": "Invalid Collective Communication Allocation",
+      "ErrCode": "EI0006",
+      "ErrMessage": "[%s] failed with info [%s]. Please check the passed [%s] resource.",
+      "Arglist": "resource_op,resource_info,resource_type",
+      "suggestion": {
+        "Possible Cause": "The memory or notify allocation passed to collective communication is invalid.",
+        "Solution": "Try again with a valid memory or notify allocation."
+      }
+    },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "Allocation Failure",
+      "ErrCode": "EI0007",
+      "ErrMessage": "Failed to allocate resource [%s], with info [%s].",
+      "Arglist": "resource_type, resource_info",
+      "suggestion": {
+        "Possible Cause": "Failed to allocate memory or notify due to resource insufficiency.",
+        "Solution": "Clean up unnecessary allocations."
+      }
+    },
+    {
+      "errClass": "Environment Errors",
+      "errTitle": "device number is invalid",
+      "ErrCode": "EI0008",
+      "ErrMessage": "Check the total number of devices[%s] failed，info[%s].",
+      "Arglist": "devNum, reason",
+      "suggestion": {
+        "Possible Cause": "devNum error.",
+        "Solution": "Please make sure that devNum is 2^n."
+      }
+    },
     {
       "errClass": "System Errors",
       "errTitle": "System Function Call Failure",
@@ -2016,22 +2025,22 @@
       }
     },
     {
-       "errClass": "Process Errors",
-       "errTitle": "HCCP Process Initialization Failure",
-       "ErrCode": "EJ0005",
-       "ErrMessage": "Some HCCP process on the device, please restart the environment or log in to the device and kill the hccp preocess.",
-       "Arglist": "",
-       "suggestion": {
-         "Possible Cause": "The HCCP process is not destroyed by the TSD.",
-         "Solution": "Destroy the existing HCCP process and start a new HCCP process."
-        }
-      },
+      "errClass": "Process Errors",
+      "errTitle": "HCCP Process Initialization Failure",
+      "ErrCode": "EJ0005",
+      "ErrMessage": "Some HCCP process on the device, please restart the environment or log in to the device and kill the hccp preocess.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "The HCCP process is not destroyed by the TSD.",
+        "Solution": "Destroy the existing HCCP process and start a new HCCP process."
+      }
+    },
     {
       "errClass": "Profiling Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EK0001",
       "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
-      "Arglist": "intf,value,reason",
+      "Arglist": "value,param,reason",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
@@ -2081,28 +2090,28 @@
         "Solution": "N/A"
       }
     },
-      {
-        "errClass": "System Errors",
-        "errTitle": "attach group add Failure",
-        "ErrCode": "EM0001",
-        "ErrMessage": "Add queue_schedule to attach group failed.",
-        "Arglist": "",
-        "suggestion": {
-          "Possible Cause": "attach group config wrong.",
-          "Solution": "Check queue_schedule attach group info from device log."
-        }
-      },
-      {
-        "errClass": "System Errors",
-        "errTitle": "QueueSchedule init failed",
-        "ErrCode": "EM0002",
-        "ErrMessage": "Failed to init queue_schedule.",
-        "Arglist": "",
-        "suggestion": {
-          "Possible Cause": "Something wrong with queue_schedule",
-          "Solution": "Check init info from device log"
-        }
-      },
+    {
+      "errClass": "Queue Schedule Errors",
+      "errTitle": "Group Attaching Failure",
+      "ErrCode": "EM9001",
+      "ErrMessage": "Failed to attach the queue_schedule process to the group.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Submit an issue to request for support at https://gitee.com/ascend or contact Huawei technical support."
+      }
+    },
+    {
+      "errClass": "Queue Schedule Errors",
+      "errTitle": "Queue_Schedule Initialization Failure",
+      "ErrCode": "EM9002",
+      "ErrMessage": "Failed to initialize the queue_schedule process.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Submit an issue to request for support at https://gitee.com/ascend or contact Huawei technical support."
+      }
+    },
     {
       "errClass": "Public Operator Errors",
       "errTitle": "Unsupported Operator",
