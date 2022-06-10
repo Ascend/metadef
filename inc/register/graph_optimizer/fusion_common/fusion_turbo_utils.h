@@ -119,10 +119,16 @@ class Relations {
 
   const std::map<ThisIndex, NodeIndices>& GetOutRelations();
 
+  Relations& operator=(const Relations &relations_param);
+
+  Relations& operator=(Relations &&relations_param) noexcept;
  private:
   NodeIndex GetPeerInFirstPair(ThisIndex relation_index, const ge::NodePtr &node, int32_t index);
 
   void AppendPeerInAllPairs(ThisIndex relation_index, const ge::NodePtr &node, int32_t index);
+
+  void PreProcessOneNodeIndex(ThisIndex index, const NodeIndex &node_index);
+  void PreProcessNodeIndices(ThisIndex index, const NodeIndices &node_indices);
 
   void PreProcess();
   /* 我们在添加ori_relations的时候就把两个方向的节点都计算好。 */

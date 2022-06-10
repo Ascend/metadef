@@ -98,6 +98,44 @@ REG_OP(Relu)
                            DT_UINT8, DT_UINT16, DT_QINT8}))
     .OP_END_FACTORY_REG(Relu)
 
+REG_OP(End)
+    .INPUT(x, TensorType::ALL())
+    .OUTPUT(y, TensorType::ALL())
+    .ATTR(peerIndex, Int, 0)
+    .ATTR(parentOpType, String, "")
+    .OP_END_FACTORY_REG(End)
+
+REG_OP(LarsV2Update)
+    .INPUT(w, TensorType(DT_FLOAT))
+    .INPUT(g, TensorType(DT_FLOAT))
+    .INPUT(w_square_sum, TensorType(DT_FLOAT))
+    .INPUT(g_square_sum, TensorType(DT_FLOAT))
+    .INPUT(weight_decay, TensorType(DT_FLOAT))
+    .INPUT(learning_rate, TensorType(DT_FLOAT))
+    .OUTPUT(g_new, TensorType(DT_FLOAT))
+    .ATTR(hyperpara, Float, 0.001)
+    .ATTR(epsilon, Float, 0.00001)
+    .ATTR(use_clip, Bool, false)
+    .OP_END_FACTORY_REG(LarsV2Update)
+
+REG_OP(SquareSumAll)
+    .INPUT(x1, TensorType({DT_FLOAT}))
+    .INPUT(x2, TensorType({DT_FLOAT}))
+    .OUTPUT(y1, TensorType({DT_FLOAT}))
+    .OUTPUT(y2, TensorType({DT_FLOAT}))
+    .OP_END_FACTORY_REG(SquareSumAll)
+
+REG_OP(LarsV2)
+    .INPUT(w, TensorType(DT_FLOAT))
+    .INPUT(g, TensorType(DT_FLOAT))
+    .INPUT(weight_decay, TensorType(DT_FLOAT))
+    .INPUT(learning_rate, TensorType(DT_FLOAT))
+    .OUTPUT(g_new, TensorType(DT_FLOAT))
+    .ATTR(hyperpara, Float, 0.001)
+    .ATTR(epsilon, Float, 0.00001)
+    .ATTR(use_clip, Bool, false)
+    .OP_END_FACTORY_REG(LarsV2)
+
 class UTestFusionTurbo2 : public testing::Test {
  public:
 
@@ -768,5 +806,148 @@ TEST_F(UTestFusionTurbo2, test_case_4_4) {
   EXPECT_EQ(add_new_out_nodes.size(), 1);
   EXPECT_EQ(add_new_out_nodes.at(0)->GetName(), "add");
   EXPECT_EQ(graph->GetDirectNodesSize(), 5);
+}
+
+void LarsV2UpdateFusion(const ComputeGraphPtr &graph) {
+  FusionTurbo ft(graph);
+  NodePtr fused_node = graph->FindFirstNodeMatchType("LarsV2");
+
+  OpDescPtr fused_desc = fused_node->GetOpDesc();
+
+  // new the square_sum_all node
+  NodePtr square_sum_all_node = ft.AddNodeOnly(fused_desc->GetName() + "/SquareSumAll", "SquareSumAll");
+  NodePtr lars_v2_update_node = ft.AddNodeOnly(fused_desc->GetName() + "/LarsUpdate", "LarsV2Update");
+
+  auto square_sum_all_op_desc = square_sum_all_node->GetOpDesc();
+
+  Relations square_sum_input_relation;
+  square_sum_input_relation.Add(0, {fused_node, 0, PEER})
+                           .Add(1, {fused_node, 1, PEER});
+
+  Relations lars_v2_input_relation = {{2, {square_sum_all_node, 0}}, {3, {square_sum_all_node, 1}},
+                                      {0, {fused_node, 0, PEER}}, {1, {fused_node, 1, PEER}},
+                                      {4, {fused_node, 2, PEER}}, {5, {fused_node, 3, PEER}}};
+
+  Relations lars_v2_output_relation = {0, {fused_node, 0, PEER}};
+  FusionTurbo::LinkInput(square_sum_input_relation, square_sum_all_node);
+  FusionTurbo::LinkOutput(lars_v2_output_relation, lars_v2_update_node);
+  FusionTurbo::LinkInput(lars_v2_input_relation, lars_v2_update_node);
+  FusionTurbo::TransferInCtrlEdges({fused_node}, lars_v2_update_node);
+  FusionTurbo::TransferOutCtrlEdges({fused_node}, lars_v2_update_node);
+
+  ft.RemoveNodeOnly(fused_node);
+}
+
+TEST_F(UTestFusionTurbo2, test_case_4_5) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test1");
+  fe::FusionTurbo ft(graph);
+  auto data0 = ft.AddNodeOnly("data0", "Data");
+  auto data0_output = data0->GetOpDesc()->MutableOutputDesc(0);
+  vector<int64_t> data_0_output_shape = {1, 2, 3, 4};
+  data0_output->SetShape(ge::GeShape(data_0_output_shape));
+
+  auto data1 = ft.AddNodeOnly("data1", "Data");
+  auto data1_output = data1->GetOpDesc()->MutableOutputDesc(0);
+  vector<int64_t> data_1_output_shape = {2, 4, 6, 8};
+  data1_output->SetShape(ge::GeShape(data_1_output_shape));
+
+  auto data2 = ft.AddNodeOnly("data2", "Data");
+  auto data2_output = data2->GetOpDesc()->MutableOutputDesc(0);
+  vector<int64_t> data_2_output_shape = {3, 6, 9, 12};
+  data2_output->SetShape(ge::GeShape(data_2_output_shape));
+
+  auto data3 = ft.AddNodeOnly("data3", "Data");
+  auto data3_output = data3->GetOpDesc()->MutableOutputDesc(0);
+  vector<int64_t> data_3_output_shape = {4, 8, 12, 16};
+  data3_output->SetShape(ge::GeShape(data_3_output_shape));
+
+  auto end = ft.AddNodeOnly("end", "End");
+  auto end_input = end->GetOpDesc()->MutableInputDesc(0);
+  vector<int64_t> end_input_shape = {100};
+  end_input->SetShape(ge::GeShape(end_input_shape));
+
+  auto lars_v2 = ft.AddNodeOnly("lars_v2", "LarsV2");
+  fe::Relations input_relation({{0, {data0, 0}}, {1, {data1, 0}},
+                                {2, {data2, 0}}, {3, {data3, 0}}});
+  fe::Relations output_relation;
+  output_relation.Add(0, {end, 0});
+  fe::FusionTurbo::LinkInput(input_relation, lars_v2);
+  fe::FusionTurbo::LinkOutput(output_relation, lars_v2);
+
+  LarsV2UpdateFusion(graph);
+
+  EXPECT_EQ(graph->GetDirectNodesSize(), 7);
+  size_t expected_op = 0;
+  ge::NodePtr square_sum_all;
+  for (const auto &node: graph->GetDirectNode()) {
+    if (node->GetType() == "SquareSumAll") {
+      expected_op++;
+      auto op_desc = node->GetOpDesc();
+      square_sum_all = node;
+      ASSERT_EQ(op_desc->GetInputsSize(), 2);
+      auto input0 = op_desc->MutableInputDesc(0);
+      EXPECT_EQ(input0->GetShape().GetDims(), data_0_output_shape);
+
+      auto input1 = op_desc->MutableInputDesc(1);
+      EXPECT_EQ(input1->GetShape().GetDims(), data_1_output_shape);
+
+      ASSERT_EQ(op_desc->GetOutputsSize(), 2);
+      auto output0 = op_desc->MutableOutputDesc(0);
+      EXPECT_EQ(output0->GetShape(), ge::GeShape());
+
+      auto output1 = op_desc->MutableOutputDesc(1);
+      EXPECT_EQ(output1->GetShape(), ge::GeShape());
+
+      auto input_nodes = node->GetInDataNodes();
+      EXPECT_EQ(input_nodes.size(), 2);
+      EXPECT_EQ(input_nodes.at(0), data0);
+      EXPECT_EQ(input_nodes.at(1), data1);
+    }
+  }
+
+  for (const auto &node: graph->GetDirectNode()) {
+    if (node->GetType() == "LarsV2Update") {
+      expected_op++;
+      auto op_desc = node->GetOpDesc();
+      ASSERT_EQ(op_desc->GetInputsSize(), 6);
+      auto input0 = op_desc->MutableInputDesc(0);
+      EXPECT_EQ(input0->GetShape().GetDims(), data_0_output_shape);
+
+      auto input1 = op_desc->MutableInputDesc(1);
+      EXPECT_EQ(input1->GetShape().GetDims(), data_1_output_shape);
+
+      auto input2 = op_desc->MutableInputDesc(2);
+      EXPECT_EQ(input2->GetShape(), ge::GeShape());
+
+      auto input3 = op_desc->MutableInputDesc(3);
+      EXPECT_EQ(input3->GetShape(), ge::GeShape());
+
+      auto input4 = op_desc->MutableInputDesc(4);
+      EXPECT_EQ(input4->GetShape().GetDims(), data_2_output_shape);
+
+      auto input5 = op_desc->MutableInputDesc(5);
+      EXPECT_EQ(input5->GetShape().GetDims(), data_3_output_shape);
+
+      ASSERT_EQ(op_desc->GetOutputsSize(), 1);
+      auto output = op_desc->MutableOutputDesc(0);
+      EXPECT_EQ(output->GetShape().GetDims(), end_input_shape);
+
+      auto input_nodes = node->GetInDataNodes();
+      EXPECT_EQ(input_nodes.size(), 6);
+      EXPECT_EQ(input_nodes.at(0), data0);
+      EXPECT_EQ(input_nodes.at(1), data1);
+
+      EXPECT_EQ(input_nodes.at(2), square_sum_all);
+      EXPECT_EQ(input_nodes.at(3), square_sum_all);
+
+      EXPECT_EQ(input_nodes.at(4), data2);
+      EXPECT_EQ(input_nodes.at(5), data3);
+
+      auto output_nodes = node->GetOutDataNodes();
+      EXPECT_EQ(output_nodes.size(), 1);
+      EXPECT_EQ(output_nodes.at(0), end);
+    }
+  }
+  EXPECT_EQ(expected_op, 2);
 }
 }
