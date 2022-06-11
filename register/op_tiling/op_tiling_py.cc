@@ -99,14 +99,14 @@ template<typename T>
 void ParseAndSetAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   T attr_value = attr["value"].get<T>();
   op_desc->AppendIrAttrName(attr_name);
-  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<T>(attr_value));
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<T>(attr_value));
 }
 
 template<typename T>
 void ParseAndSetListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   std::vector<T> attr_value = attr["value"].get<std::vector<T>>();
   op_desc->AppendIrAttrName(attr_name);
-  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<T>>(attr_value));
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<T>>(attr_value));
 }
 
 void ParseAndSetListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
@@ -116,7 +116,7 @@ void ParseAndSetListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr
     attr_int64_value.emplace_back(static_cast<int64_t>(item));
   }
   op_desc->AppendIrAttrName(attr_name);
-  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<int64_t>>(attr_int64_value));
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<int64_t>>(attr_int64_value));
 }
 
 void ParseAndSetListListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
@@ -132,13 +132,13 @@ void ParseAndSetListListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr,
     temp_int64_vec.clear();
   }
   op_desc->AppendIrAttrName(attr_name);
-  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
 }
 
 void ParseAndSetListListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   const std::vector<std::vector<int64_t>> attr_value_int64 = attr["value"].get<std::vector<std::vector<int64_t>>>();
   op_desc->AppendIrAttrName(attr_name);
-  op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
 }
 
 template<typename T>
@@ -207,7 +207,7 @@ const FuncTable kFuncTable = FuncTable()
 void ParseDtype(const nlohmann::json &json, ge::GeTensorDesc &tensor_desc) {
   if (json.contains("dtype")) {
     std::string dtype_str = json["dtype"].get<std::string>();
-    std::transform(dtype_str.begin(), dtype_str.end(), dtype_str.begin(), ::toupper);
+    (void)std::transform(dtype_str.begin(), dtype_str.end(), dtype_str.begin(), ::toupper);
     dtype_str = "DT_" + dtype_str;
     ge::DataType ge_dtype = ge::TypeUtils::SerialStringToDataType(dtype_str);
     tensor_desc.SetDataType(ge_dtype);
@@ -220,7 +220,7 @@ void ParseStorageShape(const nlohmann::json &json, gert::StorageShape &storage_s
     gert::Shape shape;
     const auto dims = json["shape"].get<std::vector<int64_t>>();
     for (auto dim : dims) {
-      shape.AppendDim(dim);
+      (void)shape.AppendDim(dim);
     }
     storage_shape.MutableStorageShape() = shape;
   }
@@ -228,7 +228,7 @@ void ParseStorageShape(const nlohmann::json &json, gert::StorageShape &storage_s
     gert::Shape shape;
     const auto dims = json["ori_shape"].get<std::vector<int64_t>>();
     for (auto dim : dims) {
-      shape.AppendDim(dim);
+      (void)shape.AppendDim(dim);
     }
     storage_shape.MutableOriginShape() = shape;
   }
@@ -238,20 +238,20 @@ void ParseStorageShape(const nlohmann::json &json, gert::StorageShape &storage_s
 void ParseStorageFormat(const nlohmann::json &json, ge::GeTensorDesc &tensor_desc) {
   if (json.contains("format")) {
     std::string format_str = json["format"].get<std::string>();
-    std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
+    (void)std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
     ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
     tensor_desc.SetFormat(ge_format);
   }
   if (json.contains("ori_format")) {
     std::string format_str = json["ori_format"].get<std::string>();
-    std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
+    (void)std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
     ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
     tensor_desc.SetOriginFormat(ge_format);
   }
 }
 
-ge::graphStatus ParseConstValue(const nlohmann::json &input, gert::StorageShape &storage_shape,
-                                ge::GeTensorDesc &tensor_desc, const uint32_t index,
+ge::graphStatus ParseConstValue(const nlohmann::json &input, const gert::StorageShape &storage_shape,
+                                const ge::GeTensorDesc &tensor_desc, const uint32_t index,
                                 std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> &index_to_tensor) {
   if (input.contains("const_value")) {
     if (!input.contains("name")) {
@@ -297,10 +297,10 @@ ge::graphStatus ParseInput(const nlohmann::json &input, ge::OpDescPtr &op_desc, 
     const std::string name = input["name"];
     tensor_desc.SetName(name);
     op_desc->AppendIrInput(name, ge::kIrInputRequired);
-    op_desc->AddInputDesc(name, tensor_desc);
+    (void)op_desc->AddInputDesc(name, tensor_desc);
   } else {
     op_desc->AppendIrInput(std::to_string(index), ge::kIrInputRequired);
-    op_desc->AddInputDesc(std::to_string(index), tensor_desc);
+    (void)op_desc->AddInputDesc(std::to_string(index), tensor_desc);
   }
   return ge::GRAPH_SUCCESS;
 }
@@ -344,9 +344,9 @@ void ParseOutput(const nlohmann::json &output, ge::OpDescPtr &op_desc,
   if (output.contains("name")) {
     const std::string name = output["name"];
     tensor_desc.SetName(name);
-    op_desc->AddOutputDesc(name, tensor_desc);
+    (void)op_desc->AddOutputDesc(name, tensor_desc);
   } else {
-    op_desc->AddOutputDesc(tensor_desc);
+    (void)op_desc->AddOutputDesc(tensor_desc);
   }
 }
 
@@ -1231,7 +1231,7 @@ int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, con
   int64_t max_size = -1;
   if (!ge::AttrUtils::GetInt(context_com.op_desc, kMaxTilingSize, max_size) || max_size < 0) {
     GELOGI("No max tiling size in opdesc.");
-    max_size = kMaxTilingDataSize;
+    max_size = static_cast<int64_t>(kMaxTilingDataSize);
   }
   auto aligned_max_size = ge::RoundUp(static_cast<uint64_t>(max_size), sizeof(uintptr_t));
   context_com.tiling_data = gert::TilingData::CreateCap(aligned_max_size);

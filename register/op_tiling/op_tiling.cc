@@ -973,7 +973,7 @@ ge::graphStatus UpDateNodeShapeBySliceInfo(const ffts::ThreadSliceMapDyPtr slice
         same_shape = false;
       }
     }
-    shape.SetDim(0, tmp_dim[0]);
+    (void)shape.SetDim(0, tmp_dim[0]);
   }
   for (auto &index : slice_info_ptr->output_tensor_indexes) {
     tensor_ptr = op_desc->MutableOutputDesc(index);
@@ -986,7 +986,7 @@ ge::graphStatus UpDateNodeShapeBySliceInfo(const ffts::ThreadSliceMapDyPtr slice
     if (tmp_dim.empty()) {
       return ge::GRAPH_FAILED;
     }
-    shape.SetDim(0, tmp_dim[0]);
+    (void)shape.SetDim(0, tmp_dim[0]);
     GELOGD("Output anchor:%u set dim 0 to %ld", index, tmp_dim[0]);
   }
   return ge::GRAPH_SUCCESS;
@@ -1005,13 +1005,13 @@ ge::graphStatus UpDateNodeShapeBack(const ge::OpDescPtr op_desc, const ffts::Thr
     ge::GeTensorDescPtr tensor_ptr = op_desc->MutableInputDesc(index);
     GE_CHECK_NOTNULL(tensor_ptr);
     ge::GeShape& shape = tensor_ptr->MutableShape();
-    shape.SetDim(0, ori_shape[idx++]);
+    (void)shape.SetDim(0, ori_shape[idx++]);
   }
   for (auto &index : slice_info_ptr->output_tensor_indexes) {
     ge::GeTensorDescPtr tensor_ptr = op_desc->MutableOutputDesc(index);
     GE_CHECK_NOTNULL(tensor_ptr);
     ge::GeShape& shape = tensor_ptr->MutableShape();
-    shape.SetDim(0, ori_shape[idx++]);
+    (void)shape.SetDim(0, ori_shape[idx++]);
   }
   GELOGD("Update node shape back success.");
   return ge::GRAPH_SUCCESS;

@@ -18,7 +18,6 @@
 #define REGISTER_OP_TILING_OP_TILING_UTILS_H_
 
 #include <vector>
-#include <sstream>
 #include <nlohmann/json.hpp>
 #include "graph/op_desc.h"
 #include "graph/debug/ge_log.h"
