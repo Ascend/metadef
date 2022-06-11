@@ -111,7 +111,7 @@ class FusionTurbo {
    *        2.3 If the peer node of this input is other type, we just skip it. */
   ge::NodePtr AddWeight(const ge::NodePtr &node, const int32_t &index, const WeightInfo &w_info) const;
 
-  ge::NodePtr AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info);
+  ge::NodePtr AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info) const;
 
   /* Add a weight tensor and node as the last input of node. */
   ge::NodePtr AddWeight(const ge::NodePtr &node, const WeightInfo &w_info) const;
@@ -180,7 +180,7 @@ class FusionTurbo {
                     const std::vector<ge::NodePtr> &old_nodes = {},
                     const bool &remove_old = true);
   
-  bool HasControl(const ge::NodePtr &node);
+  static bool HasControl(const ge::NodePtr &node);
 
   static bool HasInControl(const ge::NodePtr &node);
 

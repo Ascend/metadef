@@ -327,7 +327,7 @@ ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const int32_t &index
   }
 }
 
-ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info) {
+ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info) const {
   FUSION_TURBO_NOTNULL(node, nullptr);
   const auto index = node->GetOpDesc()->GetInputIndexByName(tensor_name);
   if (index == -1) {
@@ -1087,7 +1087,7 @@ Status MoveDataInputDownToSubgraph(const ge::NodePtr &node, const int32_t index,
     }
     ge::NodePtr data_node = pair_data_node;
     if (node_inanchor_index != 0) {
-      data_node = AddSubGraphDataWithIndex(subgraph, static_cast<int32_t>(subgraph_node_input_size - 1),
+      data_node = AddSubGraphDataWithIndex(subgraph, static_cast<int32_t>(subgraph_node_input_size) - 1,
           input_tensor_desc);
     }
     (void)input_relations.Add(static_cast<int32_t>(node_inanchor_index), {data_node, 0});
