@@ -29,8 +29,7 @@ ge::graphStatus GetInstanceNum(const ge::NodePtr &node, const std::string &ir_na
   if (ir_type == ge::kIrInputRequired) {
     auto name = node->GetOpDesc()->GetValidInputNameByIndex(start_index);
     if (name != ir_name) {
-      GELOGE(ge::FAILED,
-             "Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
+      GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
              "current name %s",
              node->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
       return ge::FAILED;
@@ -71,7 +70,9 @@ ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &
     GE_ASSERT_NOTNULL(ins_info);
     size_t instance_num = 0;
     auto ret = GetInstanceNum(node, ir_inputs[i].first, ir_inputs[i].second, input_index, instance_num);
-    GE_ASSERT_SUCCESS(ret);
+    if (ret != ge::GRAPH_SUCCESS) {
+      continue;
+    }
 
     compute_node_info.MutableInputInstanceInfo(i)->SetInstantiationNum(instance_num);
     compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(input_index);
