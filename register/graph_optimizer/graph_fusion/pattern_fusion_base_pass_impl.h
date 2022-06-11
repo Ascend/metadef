@@ -83,7 +83,7 @@ class PatternFusionBasePassImpl {
 
   bool GetSortedInAnchors(const ge::NodePtr &node, const std::string &op_id,
                           std::vector<ge::InDataAnchorPtr> &in_anchors) const;
-#ifndef ONLY_COMPILE_OPEN_SRC
+
   void MatchOneOutputNode(const ge::NodePtr &output_node,
                           const std::vector<FusionPattern::OpDescPtr> &outputs_desc,
                           size_t &out_idx, const std::unique_ptr<bool[]> &usage_flags,
@@ -101,38 +101,7 @@ class PatternFusionBasePassImpl {
 
   void AddCandidateQueue(const FusionPattern::OpDescPtr &op_desc, const ge::NodePtr &node,
                          CandidateAndMapping &cand) const;
-#else
-  void MatchOneOutputNode(const ge::NodePtr &output_node,
-                          const std::vector<FusionPattern::OpDescPtr> &outputs_desc,
-                          size_t &out_idx, const std::unique_ptr<bool[]> &usage_flags,
-                          std::vector<ge::NodePtr> &candidate_nodes,
-                          std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
-                          Mapping &mapping) const;
 
-  bool MatchFromOutput(std::vector<ge::NodePtr> &candidate_nodes,
-                       std::vector<std::shared_ptr<OpDesc>> &candidate_op_descs, Mapping &mapping) const;
-
-  void MatchFuzzyOutputs(const ge::NodePtr &node,
-                         const FusionPattern::OpDescPtr &op_desc,
-                         size_t &out_idx, const std::unique_ptr<bool[]> &usage_flags,
-                         std::vector<ge::NodePtr> &candidate_nodes,
-                         std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
-                         Mapping &mapping) const;
-
-  bool MatchOutputs(std::vector<ge::NodePtr> &candidate_nodes,
-                    std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
-                    Mapping &mapping) const;
-
-  void UpdateCandidates(const std::vector<ge::NodePtr> &temp_candidate_nodes,
-                        const std::vector<FusionPattern::OpDescPtr> &temp_candidate_op_descs,
-                        std::vector<ge::NodePtr> &candidate_nodes,
-                        std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
-                        Mapping &mapping) const;
-
-  void AddCandidateQueue(const FusionPattern::OpDescPtr &op_desc, const ge::NodePtr &node,
-                         std::vector<FusionPattern::OpDescPtr> &candidate_op_descs,
-                         std::vector<ge::NodePtr> &candidate_nodes, Mapping &mapping) const;
-#endif
   bool MatchAsInput(std::vector<ge::NodePtr> &candidate_nodes,
                     std::vector<FusionPattern::OpDescPtr> &candidate_op_descs, Mapping &mapping) const;
 
