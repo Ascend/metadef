@@ -53,7 +53,7 @@ inline std::string GetModelPath() {
     return std::string();
   }
 
-  if (strlen(dl_info.dli_fname) >= MMPA_MAX_PATH) {
+  if (strnlen(dl_info.dli_fname, MMPA_MAX_PATH) >= MMPA_MAX_PATH) {
     GELOGW("The shared library file path is too long!");
     return std::string();
   }

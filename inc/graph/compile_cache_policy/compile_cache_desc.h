@@ -57,7 +57,7 @@ class BinaryHolder {
 
 class TensorInfoArgs {
  public:
-  TensorInfoArgs(Format format, Format origin_format, DataType data_type)
+  TensorInfoArgs(const Format format, const Format origin_format, const DataType data_type)
     : format_(format),
       origin_format_(origin_format),
       data_type_(data_type) {}
