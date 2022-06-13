@@ -85,7 +85,7 @@ TEST_F(BgKernelContextExtendUT, BuildEmptyRequiredInput) {
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
-  EXPECT_EQ(ret, nullptr);
+  EXPECT_NE(ret, nullptr);
 }
 TEST_F(BgKernelContextExtendUT, UknownInputFailed) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");

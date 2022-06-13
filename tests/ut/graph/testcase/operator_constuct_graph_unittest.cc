@@ -355,12 +355,12 @@ TEST_F(OperatorConstructGraphUt, GetOpsTypeList) {
   std::vector<std::string> all_ops;
   auto ret = OperatorFactory::GetOpsTypeList(all_ops);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
-  EXPECT_EQ(all_ops.size(), 12);
+  EXPECT_TRUE(all_ops.size() > 0);
 
   std::vector<AscendString> all_ops2;
   ret = OperatorFactory::GetOpsTypeList(all_ops2);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
-  EXPECT_EQ(all_ops2.size(), 12);
+  EXPECT_EQ(all_ops2.size(), all_ops.size());
 }
 
 static graphStatus stub_func(Operator &op)

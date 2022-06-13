@@ -173,7 +173,24 @@ string OpDescImpl::GetType() const {
 }
 
 void OpDescImpl::SetType(const string &type) {
+  if (meta_data_.type_ == type) {
+    return;
+  }
   meta_data_.type_ = type;
+
+  // If the type changes, IR related variables should be modified accordingly
+  auto op = ge::OperatorFactory::CreateOperator("tmp", type.c_str());
+  op.BreakConnect();
+  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  if (op_desc != nullptr) {
+    ir_attr_names_ = op_desc->GetIrAttrNames();
+    ir_inputs_ = op_desc->GetIrInputs();
+    subgraph_ir_names_to_type_ = op_desc->GetSubgraphIrNames();
+  } else {
+    ir_inputs_.clear();
+    ir_attr_names_.clear();
+    subgraph_ir_names_to_type_.clear();
+  }
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    this->GetName(), "type", "", "", type);

@@ -28,6 +28,9 @@
 #include "graph/common_error_codes.h"
 #include "graph/operator_factory_impl.h"
 #include "register/op_tiling_registry.h"
+#include "external/graph/operator_factory.h"
+#include "graph/utils/op_desc_utils.h"
+#include "external/graph/operator_reg.h"
 
 namespace ge {
 class UtestOpDesc : public testing::Test {
@@ -500,6 +503,61 @@ TEST_F(UtestOpDesc, InferDataSlice_success) {
   op_desc->SetType("test");
   OperatorFactoryImpl::RegisterInferDataSliceFunc("test",infer_data_slice_func);
   EXPECT_EQ(op_desc->InferDataSlice(), GRAPH_SUCCESS);
+}
+
+REG_OP(MatMulUt)
+    .INPUT(x1, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+    .INPUT(x2, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+    .OPTIONAL_INPUT(bias, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+    .ATTR(transpose_x1, Bool, false)
+    .ATTR(transpose_x2, Bool, false)
+    .OP_END_FACTORY_REG(MatMulUt)
+
+REG_OP(AddUt)
+    .INPUT(x1, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+    .INPUT(x2, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+    .OP_END_FACTORY_REG(AddUt)
+
+TEST_F(UtestOpDesc, SetTypeModifyIrAttrName_type_change) {
+  auto op = ge::OperatorFactory::CreateOperator("MatMul", "MatMulUt");
+  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  EXPECT_NE(op_desc, nullptr);
+  EXPECT_FALSE(op_desc->GetIrAttrNames().empty());
+  EXPECT_FALSE(op_desc->GetIrInputs().empty());
+  op_desc->SetType("AddUt");
+
+  auto add_op = ge::OperatorFactory::CreateOperator("add", "AddUt");
+  auto add_op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  EXPECT_TRUE(op_desc->GetIrAttrNames() == add_op_desc->GetIrAttrNames());
+  EXPECT_TRUE(op_desc->GetIrInputs() == add_op_desc->GetIrInputs());
+}
+
+TEST_F(UtestOpDesc, SetTypeModifyIrAttrName_type_not_exist_clear) {
+  auto op = ge::OperatorFactory::CreateOperator("MatMul", "MatMul");
+  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  EXPECT_NE(op_desc, nullptr);
+  EXPECT_FALSE(op_desc->GetIrAttrNames().empty());
+  EXPECT_FALSE(op_desc->GetIrInputs().empty());
+
+  op_desc->SetType("NotExist");
+  EXPECT_TRUE(op_desc->GetIrAttrNames().empty());
+  EXPECT_TRUE(op_desc->GetIrInputs().empty());
+}
+
+TEST_F(UtestOpDesc, SetTypeModifyIrAttrName_type_not_change) {
+  auto op = ge::OperatorFactory::CreateOperator("MatMul", "MatMulUt");
+  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  EXPECT_NE(op_desc, nullptr);
+  auto &check_ir_attr = op_desc->GetIrAttrNames();
+  auto &check_ir_inputs = op_desc->GetIrInputs();
+  EXPECT_FALSE(op_desc->GetIrAttrNames().empty());
+  EXPECT_FALSE(op_desc->GetIrInputs().empty());
+
+  op_desc->SetType("MatMulUt");
+  EXPECT_TRUE(op_desc->GetIrAttrNames() == check_ir_attr);
+  EXPECT_TRUE(op_desc->GetIrInputs() == check_ir_inputs);
 }
 
 TEST_F(UtestOpDesc, InferShapeAndType_success) {
