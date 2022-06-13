@@ -134,7 +134,7 @@ bool op_tiling_stub(const Operator &op, const utils::OpCompileInfo &compile_info
 
 REGISTER_OP_TILING_V2(ReluV2, op_tiling_stub);
 
-TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_1) {
+TEST_F(RegisterOpTilingUT, OpFftsPlusCalculate_1) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &node = root_builder.AddNode("relu", "ReluV2", 1, 1);
   const auto &op_desc = node->GetOpDesc();
@@ -167,11 +167,11 @@ TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_1) {
   (void)ge::AttrUtils::SetStr(op_desc, COMPILE_INFO_JSON, compile_info_json);
   auto dstAnchor = node->GetInDataAnchor(0);
   ge::AnchorUtils::SetStatus(dstAnchor, ge::ANCHOR_DATA);
-  EXPECT_EQ(OpFftsCalculateV2(*node, op_run_info), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(OpFftsPlusCalculate(op, op_run_info), ge::GRAPH_SUCCESS);
 }
 
 // slice instance over
-TEST_F(RegisterOpTilingUT, OpFftsCalculateV2_2) {
+TEST_F(RegisterOpTilingUT, OpFftsPlusCalculate_2) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &node = root_builder.AddNode("relu", "ReluV2", 1, 1);
   const auto &op_desc = node->GetOpDesc();
