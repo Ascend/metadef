@@ -84,6 +84,7 @@ ge::NodePtr FusionTurboUtils::GetConstInput(const ge::NodePtr &node, int32_t ind
 
 NodeIndex FusionTurboUtils::GetPeerOutPair(const ge::NodePtr &node, int32_t index) {
   NodeIndex ret;
+  FUSION_TURBO_NOTNULL(node, ret);
   if (static_cast<uint32_t>(index) >= node->GetAllInDataAnchorsSize()) {
     return ret;
   }

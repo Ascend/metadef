@@ -97,6 +97,12 @@ class FusionTurbo {
 
   Status RemoveNodeOnly(const ge::NodePtr &node);
 
+  /* If the node has no subsequent nodes, remove it.
+   * If the node has subsequent nodes, just return.
+   * Parameter include_control_nodes:
+   * If only_care_data_nodes = true, then we will ignore the control outputs. */
+  Status RemoveDanglingNode(const ge::NodePtr &node, const bool &only_care_data_nodes = false);
+  
   Status RemoveMultiNodesOnly(const std::vector<ge::NodePtr> &nodes);
 
   ge::NodePtr UpdateConst(const ge::NodePtr &node, const int32_t &index, const WeightInfo &w_info) const;
@@ -110,6 +116,17 @@ class FusionTurbo {
    *        of current Const and update tensor desc. ---> Call UpdateConst
    *        2.3 If the peer node of this input is other type, we just skip it. */
   ge::NodePtr AddWeight(const ge::NodePtr &node, const int32_t &index, const WeightInfo &w_info) const;
+
+  /* Add weight after one output of node. For example:
+   *       NodeA----> NodeB
+   *           \----> NodeC
+   * After calling AddWeightAfter(NodeA, 0, w_info), the graph will be like:
+   *       NewWeight----> NodeB
+   *               \----> NodeC
+   *       NodeA(will be dangling)
+   * The rule is adding weight in front of every peer out node of NodeA.
+   */
+  ge::NodePtr AddWeightAfter(const ge::NodePtr &node, const int32_t &index, const WeightInfo &w_info) const;
 
   ge::NodePtr AddWeight(const ge::NodePtr &node, const string& tensor_name, const WeightInfo &w_info) const;
 
@@ -185,6 +202,8 @@ class FusionTurbo {
   static bool HasInControl(const ge::NodePtr &node);
 
   static bool HasOutControl(const ge::NodePtr &node);
+
+  static bool HasOutData(const ge::NodePtr &node);
 
   static Status MoveDataOutputUp(const ge::NodePtr &node, int32_t index);
 

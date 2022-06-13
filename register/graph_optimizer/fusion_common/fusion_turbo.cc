@@ -187,6 +187,24 @@ Status FusionTurbo::RemoveNodeOnly(const ge::NodePtr &node) {
   return SUCCESS;
 }
 
+Status FusionTurbo::RemoveDanglingNode(const ge::NodePtr &node, const bool &only_care_data_nodes) {
+  FUSION_TURBO_NOTNULL(node, PARAM_INVALID);
+  bool able_to_remove = false;
+  if (only_care_data_nodes) {
+    if (!HasOutData(node)) {
+      able_to_remove = true;
+    }
+  } else {
+    if (!HasOutData(node) && !HasOutControl(node)) {
+      able_to_remove = true;
+    }
+  }
+  if (able_to_remove) {
+    return RemoveNodeOnly(node);
+  }
+  return FAILED;
+}
+
 Status FusionTurbo::RemoveMultiNodesOnly(const std::vector<ge::NodePtr> &nodes) {
   for (const auto &ele : nodes) {
     if (RemoveNodeOnly(ele) != SUCCESS) {
@@ -307,10 +325,37 @@ ge::NodePtr FusionTurbo::UpdateConst(const ge::NodePtr &node, const int32_t &ind
   return const_node;
 }
 
+ge::NodePtr FusionTurbo::AddWeightAfter(const ge::NodePtr &node, const int32_t &index,
+                                        const WeightInfo &w_info) const {
+  FUSION_TURBO_NOTNULL(node, nullptr);
+  const auto output_anchor = node->GetOutDataAnchor(index);
+  const auto peer_in_anchors = output_anchor->GetPeerInDataAnchors();
+  if (peer_in_anchors.empty()) {
+    GELOGD("Node %s does not have peer in anchors.", node->GetName().c_str());
+    return nullptr;
+  }
+
+  const auto& first_peer_in_anchor = peer_in_anchors.at(0);
+  const auto first_peer_in_node = first_peer_in_anchor->GetOwnerNode();
+  FUSION_TURBO_NOTNULL(first_peer_in_node, nullptr);
+  Relations output_relation(0, {node, index, PEER});
+
+  output_anchor->UnlinkAll();
+  /* Add weight in front of first peer input of node. */
+  auto const_node = AddWeight(first_peer_in_node, first_peer_in_anchor->GetIdx(), w_info);
+  FUSION_TURBO_NOTNULL(const_node, nullptr);
+
+  if (LinkOutput(output_relation, const_node) != SUCCESS) {
+    return nullptr;
+  }
+  return const_node;
+}
+
 ge::NodePtr FusionTurbo::AddWeight(const ge::NodePtr &node, const int32_t &index, const WeightInfo &w_info) const {
   FUSION_TURBO_NOTNULL(node, nullptr);
   const size_t input_size = node->GetAllInDataAnchorsSize();
   if (static_cast<size_t>(index) >= input_size) {
+    GELOGD("Index %d is larger than input size %zu of %s.", index, input_size, node->GetName().c_str());
     return AddWeight(node, w_info);
   } else {
     const auto in_anchor = node->GetInDataAnchor(index);
@@ -873,6 +918,7 @@ Status FusionTurbo::MultiInOne(const ge::NodePtr &new_node,
 }
 
 bool FusionTurbo::HasInControl(const ge::NodePtr &node) {
+  FUSION_TURBO_NOTNULL(node, false);
   const auto in_control_anchor = node->GetInControlAnchor();
   for (const auto &peer_out_control_anchor : in_control_anchor->GetPeerOutControlAnchors()) {
     if (peer_out_control_anchor->GetOwnerNode() != nullptr) {
@@ -883,10 +929,24 @@ bool FusionTurbo::HasInControl(const ge::NodePtr &node) {
 }
 
 bool FusionTurbo::HasOutControl(const ge::NodePtr &node) {
+  FUSION_TURBO_NOTNULL(node, false);
   const auto out_control_anchor = node->GetOutControlAnchor();
   for (const auto &peer_in_control_anchor : out_control_anchor->GetPeerInControlAnchors()) {
     if (peer_in_control_anchor->GetOwnerNode() != nullptr) {
       return true;
+    }
+  }
+  return false;
+}
+
+bool FusionTurbo::HasOutData(const ge::NodePtr &node) {
+  FUSION_TURBO_NOTNULL(node, false);
+  const auto out_data_anchors = node->GetAllOutDataAnchors();
+  for (const auto &out_anchor : out_data_anchors) {
+    for (const auto &peer_in_data_anchor : out_anchor->GetPeerInDataAnchors()) {
+      if (peer_in_data_anchor->GetOwnerNode() != nullptr) {
+        return true;
+      }
     }
   }
   return false;
