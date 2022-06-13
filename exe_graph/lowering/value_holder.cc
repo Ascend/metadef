@@ -19,10 +19,10 @@
 #include <stack>
 
 #include <securec.h>
+#include <cstdint>
 #include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_log.h"
 #include "graph/utils/mem_utils.h"
-#include "framework/common/util.h"
 #include "common/checker.h"
 
 #include "exe_graph/lowering/exe_graph_attrs.h"
@@ -85,7 +85,8 @@ HyperStatus AddDependencyBetweenNodes(const ge::Node *src, const ge::Node *dst) 
 std::atomic<int64_t> ValueHolder::id_generator_{0};
 ValueHolder::~ValueHolder() = default;
 
-ValueHolder::ValueHolder() : id_(id_generator_++), type_(ValueHolderType::kValueHolderTypeEnd), index_(0) {}
+ValueHolder::ValueHolder()
+    : id_(id_generator_++), type_(ValueHolderType::kValueHolderTypeEnd), index_(0), placement_(0) {}
 
 bool ValueHolder::IsOk() const noexcept {
   return error_msg_ == nullptr;
@@ -329,6 +330,12 @@ ValueHolderPtr ValueHolder::CreateVoidGuarder(const char *node_type, const Value
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(ret->GetNode()->GetOpDesc(), kReleaseResourceIndex, 0));
   resource->guarder_ = ret;
   return ret;
+}
+const int32_t &ValueHolder::GetPlacement() const {
+  return placement_;
+}
+void ValueHolder::SetPlacement(const int32_t &placement) {
+  placement_ = placement;
 }
 }  // namespace bg
 }  // namespace gert

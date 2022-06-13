@@ -27,6 +27,7 @@
 #include "graph/node.h"
 #include "common/hyper_status.h"
 #include "graph_frame.h"
+#include "exe_graph/runtime/tensor.h"
 
 namespace gert {
 namespace bg {
@@ -82,7 +83,8 @@ class ValueHolder {
   void SetStage(RunStage stage);
   // ref-from other的含义是，本value指向了other（本value没有独立的内存）
   ge::graphStatus RefFrom(const ValueHolderPtr &other);
-
+  const int32_t &GetPlacement() const;
+  void SetPlacement(const int32_t &placement);
   static ValueHolderPtr CreateError(const char *fmt, ...);
   static ValueHolderPtr CreateError(const char *fmt, va_list arg);
   static ValueHolderPtr CreateConst(const void *data, size_t size, bool is_string = false);
@@ -120,6 +122,7 @@ class ValueHolder {
   GraphHolderPtr graph_;
   ge::NodePtr node_;
   int32_t index_;
+  int32_t placement_;
   std::unique_ptr<char[]> error_msg_;
   ValueHolderPtr guarder_;
 };
