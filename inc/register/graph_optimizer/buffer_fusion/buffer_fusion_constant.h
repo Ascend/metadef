@@ -34,6 +34,7 @@ const std::string OP_PATTERN_CONV = "Convolution";
 const std::string OP_PATTERN_MATMUL = "Matmul";
 const std::string OP_PATTERN_BNUPDATE = "bn_update";
 const std::string OP_PATTERN_BNREDUCE = "bn_reduce";
+const std::string OP_PATTERN_BNTUPLEREDUCE = "TupleReduce";
 const std::string OP_PATTERN_CONV_BACKPROP_INPUT = "Conv2d_backprop_input";
 const std::string OP_PATTERN_DEPTHWISE_CONV = "DepthwiseConvolution";
 const std::string OP_PATTERN_QUANT = "quant";
@@ -65,6 +66,7 @@ const std::vector<std::string> OP_PATTERN_VEC{OP_PATTERN_ELEMWISE,
                                               OP_PATTERN_MATMUL,
                                               OP_PATTERN_BNUPDATE,
                                               OP_PATTERN_BNREDUCE,
+                                              OP_PATTERN_BNTUPLEREDUCE,
                                               OP_PATTERN_CONV_BACKPROP_INPUT,
                                               OP_PATTERN_DEPTHWISE_CONV,
                                               OP_PATTERN_QUANT,
