@@ -1893,146 +1893,91 @@
       }
     },
     {
-      "errClass": "Environment Errors",
+      "errClass": "HCCL Errors",
       "errTitle": "Invalid Environment Variable Configuration",
       "ErrCode": "EI0001",
-      "ErrMessage": "Environment variable [%s] is invalid. Tips: %s.",
+      "ErrMessage": "Environment variable [%s] is invalid. Resaon: %s.",
       "Arglist": "env,tips",
       "suggestion": {
         "Possible Cause": "The environment variable configuration is invalid.",
         "Solution": "Try again with valid environment variable configuration."
       }
-    },
-    {
-      "errClass": "Environment Errors",
-      "errTitle": "SO File Not Found",
+	},
+	{
+      "errClass": "HCCL Errors",
+      "errTitle": " Communication Operation  Timeout",
       "ErrCode": "EI0002",
-      "ErrMessage": "SO file [%s] is not found.",
-      "Arglist": "so_name",
+      "ErrMessage": "The wait execution of the Notify register times out. Reason: The Notify register has not received the Notify record from remote rank [%].base information: %stask information: %s",
+      "Arglist": "remote_rankid, base_information, task_information",
       "suggestion": {
-        "Possible Cause": "The file does not exist or is damaged.",
-        "Solution": "Try again with a valid FwkACLlib installation."
+        "Possible Cause": "1. An exception occurs during the execution on some NPU or multiple NPUs in the cluster. As a result, collective communication operation fails.2. The execution speed on some NPU in the cluster is too slow to complete a communication operation within the timeout interval [%d seconds]. (You can set the interval by using HCCL_EXEC_TIMEOUT.)3. The number of training samples of each NPU is inconsistent.4. Packet loss or other connectivity problems occur on the communication link.",
+        "Solution": "1. If this error is reported for some ranks, check other ranks to see whether other errors have been reported earlier.2. If this error is reported for all ranks, check whether the error reporting time is consistent (the maximum difference must not exceed 600s). If not, locate the cause or adjust the threshold by using the HCCL_EXEC_TIMEOUT environment variable.3. Check whether the completion queue element (CQE) of the error exists in the plog. If so, check the network connection status. (For details, see the TLS command and HCCN connectivity check examples.)4. Ensure that the number of training samples of each NPU is consistent."
       }
-    },
-    {
-      "errClass": "Invalid Operator Arguments",
+	},
+	{
+      "errClass": "HCCL Errors",
       "errTitle": "Invalid Collective Communication Op Argument",
       "ErrCode": "EI0003",
-      "ErrMessage": "In [%s], value [%s] of parameter [%s] is invalid. Tips: %s.",
-      "Arglist": "ccl_op,value,parameter,tips",
+      "ErrMessage": "In [%s], value [%s] for parameter [%s] is invalid. Reason: The collective communication operator has an invalid argument. Reason[%s]",
+      "Arglist": "ccl_op,value,parameter,value",
       "suggestion": {
-        "Possible Cause": "The collective communication operator has an invalid argument.",
+        "Possible Cause": "N/A",
         "Solution": "Try again with a valid argument."
       }
     },
     {
-      "errClass": "Environment Errors",
+      "errClass": "HCCL Errors",
       "errTitle": "Invalid Ranktable Configuration",
       "ErrCode": "EI0004",
-      "ErrMessage": "Invalid ranktable, with rank_id [%s] and local device_id [%s]. Check that ranktable [%s] is valid and the environment setup matches the ranktable.",
-      "Arglist": "rank_id,device_id,ranktable_path",
+      "ErrMessage": "The ranktable is invalid,Reason:[%s]. Check that ranktable [%s]",
+      "Arglist": "error_reason,ranktable_path",
       "suggestion": {
-        "Possible Cause": "The cluster configuration in the ranktable file does not match that of the actual operating environment, or the configuration format is invalid",
+        "Possible Cause": "N/A",
         "Solution": "Try again with a valid cluster configuration in the ranktable file. Ensure that the configuration matches the operating environment."
       }
     },
     {
-      "errClass": "Invalid Operator Arguments",
+      "errClass": "HCCL Errors ",
       "errTitle": "Inconsistent Collective Communication Arguments Between Ranks",
       "ErrCode": "EI0005",
       "ErrMessage": "The arguments for collective communication are inconsistent between ranks: tag [%s], parameter [%s], local [%s], remote [%s]",
       "Arglist": "tag,para_name,local_para,remote_para",
       "suggestion": {
-        "Possible Cause": "The arguments for collective communication are inconsistent between ranks.",
-        "Solution": "Try again with valid arguments. Ensure that the arguments are consistent between ranks."
+        "Possible Cause": "N/A",
+        "Solution": "Check whether the training script and ranktable of each NPU are consistent."
       }
     },
     {
-      "errClass": "Invalid Operator Arguments",
-      "errTitle": "Invalid Collective Communication Allocation",
+      "errClass": "HCCL Errors",
+      "errTitle": "Get Socket Timeout",
       "ErrCode": "EI0006",
-      "ErrMessage": "[%s] failed with info [%s]. Please check the passed [%s] resource.",
-      "Arglist": "resource_op,resource_info,resource_type",
+      "ErrMessage": "Getting socket times out. Reason: %s",
+      "Arglist": "reason",
       "suggestion": {
-        "Possible Cause": "The memory or notify allocation passed to collective communication is invalid.",
-        "Solution": "Try again with a valid memory or notify allocation."
+        "Possible Cause": "N/A",
+        "Solution": "1. Check the rank service processes with other errors or no errors in the cluster.2. If this error is reported for all NPUs, check whether the time difference between the earliest and latest errors is greater than the connect timeout interval (120s by default). If so, adjust the timeout interval by using the HCCL_CONNECT_TIMEOUT environment variable.3. Check the connectivity of the communication link between nodes. (For details, see the TLS command and HCCN connectivity check examples.)"
       }
     },
     {
-      "errClass": "Environment Errors",
+      "errClass": "HCCL Errors",
       "errTitle": "Allocation Failure",
       "ErrCode": "EI0007",
-      "ErrMessage": "Failed to allocate resource [%s], with info [%s].",
+      "ErrMessage": "Failed to allocate resource[%s] with info [%s]. Reason: Memory resources are exhausted.",
       "Arglist": "resource_type, resource_info",
       "suggestion": {
-        "Possible Cause": "Failed to allocate memory or notify due to resource insufficiency.",
-        "Solution": "Clean up unnecessary allocations."
+        "Possible Cause": "Failed to allocate memory or the Notify register due to resource insufficiency.",
+        "Solution": "N/A"
       }
     },
     {
-      "errClass": "Environment Errors",
-      "errTitle": "device number is invalid",
-      "ErrCode": "EI0008",
-      "ErrMessage": "Check the total number of devices[%s] failed，info[%s].",
-      "Arglist": "devNum, reason",
-      "suggestion": {
-        "Possible Cause": "devNum error.",
-        "Solution": "Please make sure that devNum is 2^n."
-      }
-    },
-    {
-      "errClass": "System Errors",
-      "errTitle": "System Function Call Failure",
-      "ErrCode": "EJ9001",
-      "ErrMessage": "Failed to set the max FD.",
-      "Arglist": "",
-      "suggestion": {
-        "Possible Cause": "The fd runs out.",
-        "Solution": "Set max fd to 65536."
-      }
-    },
-    {
-      "errClass": "Argument Errors",
-      "errTitle": "Invalid Argument",
-      "ErrCode": "EJ9002",
-      "ErrMessage": "Failed to parse the argument.",
-      "Arglist": "",
-      "suggestion": {
-        "Possible Cause": "An incorrect argument is passed when the HCCP process is started.",
-        "Solution": "Pass a correct argument."
-      }
-    },
-    {
-      "errClass": "Log Errors",
-      "errTitle": "Log Attribute Setting Error",
-      "ErrCode": "EJ9003",
-      "ErrMessage": "Failed to set the log level or the attribute for sending logs to the host.",
-      "Arglist": "",
-      "suggestion": {
-        "Possible Cause": "An exception occurred when invoking the log module.",
-        "Solution": "Check the log settings."
-      }
-    },
-    {
-      "errClass": "Environment Errors",
-      "errTitle": "SO File Read Failure",
-      "ErrCode": "EJ9004",
-      "ErrMessage": "The SO file is not found. Check that the existing SO file is correct.",
-      "Arglist": "",
-      "suggestion": {
-        "Possible Cause": "roce_user_so or ibverbs_so does not exist.",
-        "Solution": "Install a correct software package."
-      }
-    },
-    {
-      "errClass": "Process Errors",
+      "errClass": "HCCP Errors",
       "errTitle": "HCCP Process Initialization Failure",
-      "ErrCode": "EJ0005",
-      "ErrMessage": "Some HCCP process on the device, please restart the environment or log in to the device and kill the hccp preocess.",
+      "ErrCode": "EJ0001",
+      "ErrMessage": "Failed to initialize the HCCP process. Reason: The last training process is running.",
       "Arglist": "",
       "suggestion": {
-        "Possible Cause": "The HCCP process is not destroyed by the TSD.",
-        "Solution": "Destroy the existing HCCP process and start a new HCCP process."
+        "Possible Cause": "N/A",
+        "Solution": "Wait for 10s after killing the last training process and try again."
       }
     },
     {
@@ -2070,6 +2015,28 @@
     },
     {
       "errClass": "Profiling Errors",
+      "errTitle": "API Support Error",
+      "ErrCode": "EK0004",
+      "ErrMessage": "[%s] is not supported in %s.",
+      "Arglist": "intf,platform",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Profiling Errors",
+      "errTitle": "Result Path Setting Error",
+      "ErrCode": "EK0005",
+      "ErrMessage": "[%s] is not accessible. Please check the permission of the result path you set.",
+      "Arglist": "path",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Profiling Errors",
       "errTitle": "Memory Allocation Error",
       "ErrCode": "EK0201",
       "ErrMessage": "Failed to allocate host memory for Profiling: %s.",
@@ -2088,6 +2055,156 @@
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Device Absent/Abnormal",
+      "ErrCode": "EL0001",
+      "ErrMessage": "Device not found.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Invalid Device ID",
+      "ErrCode": "EL0002",
+      "ErrMessage": "The device ID is invalid.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "EL0003",
+      "ErrMessage": "The argument is invalid.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Try again with a valid argument."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Memory Allocation Failure",
+      "ErrCode": "EL0004",
+      "ErrMessage": "Failed to allocate memory.",
+      "suggestion": {
+        "Possible Cause": "Available memory is insufficient.",
+        "Solution": "Close applications not in use."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Resource Busy",
+      "ErrCode": "EL0005",
+      "ErrMessage": "The resources are busy.",
+      "suggestion": {
+        "Possible Cause": "1. The resources have been occupied. 2. The device is being reset. 3. Software is not ready.",
+        "Solution": "1. Close applications not in use. 2. Wait for a while and try again."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Insufficient Resources",
+      "ErrCode": "EL0006",
+      "ErrMessage": "The resources are insufficient.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Close applications not in use."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "No Permission",
+      "ErrCode": "EL0007",
+      "ErrMessage": "You have no permission.",
+      "suggestion": {
+        "Possible Cause": "1. The resources have been occupied. 2. You have no permission on this API.",
+        "Solution": "1. Close applications not in use. 2. Check that you have the required permission."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Insufficient Event Resources",
+      "ErrCode": "EL0008",
+      "ErrMessage": "The event resources are insufficient.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Close applications not in use."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Insufficient Stream Resources",
+      "ErrCode": "EL0009",
+      "ErrMessage": "The stream resources are insufficient.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Close applications not in use."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Insufficient Notify Resources",
+      "ErrCode": "EL0010",
+      "ErrMessage": "The Notify resources are insufficient.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Close applications not in use."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Insufficient Model Resources",
+      "ErrCode": "EL0011",
+      "ErrMessage": "The model resources are insufficient.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Close applications not in use."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Full Service Queue",
+      "ErrCode": "EL0012",
+      "ErrMessage": "The service queue is full.",
+      "suggestion": {
+        "Possible Cause": "Available resources are insufficient due to busy services.",
+        "Solution": "Reduce service loads."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Insufficient CDQM Resources",
+      "ErrCode": "EL0013",
+      "ErrMessage": "The CDQM resources are insufficient.",
+      "suggestion": {
+        "Possible Cause": "Available resources are insufficient due to busy services.",
+        "Solution": "Reduce service loads."
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Operation Unsupported",
+      "ErrCode": "EL0014",
+      "ErrMessage": "The operation is unsupported.",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Driver Errors",
+      "errTitle": "Invalid Device Access",
+      "ErrCode": "EL0015",
+      "ErrMessage": "The device access is invalid.",
+      "suggestion": {
+        "Possible Cause": "1. The device has been bound to another container. 2. You have no permission on this device.",
+        "Solution": "1. Check your configurations. 2. Check whether there are residual container processes."
       }
     },
     {
