@@ -46,7 +46,7 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
   std::map<std::string, BufferFusionPassRegistry::CreateFn> GetCreateFn(const BufferFusionPassType &pass_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     std::map<std::string, BufferFusionPassRegistry::CreateFn> ret;
-    std::map<BufferFusionPassType, map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
+    std::map<BufferFusionPassType, std::map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
     if (iter == pass_descs_.cend()) {
       return ret;
     }
@@ -59,7 +59,7 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
   std::map<std::string, PassDesc> GetPassDesc(const BufferFusionPassType &pass_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     std::map<std::string, PassDesc> result;
-    std::map<BufferFusionPassType, map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
+    std::map<BufferFusionPassType, std::map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
     if (iter == pass_descs_.cend()) {
       return result;
     }
