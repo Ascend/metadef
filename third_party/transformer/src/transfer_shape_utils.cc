@@ -458,8 +458,7 @@ bool TransferShapeUtils::GetFzShapeByAxisValue(const AxisValue &axis_value, gert
 
 bool TransferShapeUtils::GetFz3DShapeByAxisValue(const AxisValue &axis_value, gert::Shape &shape) {
   bool has_unknown_shape = axis_value[AXIS_D] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_H] == UNKNOWN_SHAPE_VALUE ||
-                           axis_value[AXIS_W] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_C] == UNKNOWN_SHAPE_VALUE ||
-                           axis_value[AXIS_N] == UNKNOWN_SHAPE_VALUE;
+                           axis_value[AXIS_W] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_C] == UNKNOWN_SHAPE_VALUE;
   int64_t gdhwc1 = UNKNOWN_SHAPE_VALUE;
   int64_t axis_g_val = GROUPS_DEFAULT_VALUE;
   int64_t axis_n_val = axis_value[AXIS_N];
@@ -529,11 +528,15 @@ bool TransferShapeUtils::GetFzLstmShapeByAxisValue(const AxisValue &axis_value, 
 }
 
 bool TransferShapeUtils::GetFzC04ShapeByAxisValue(const AxisValue &axis_value, gert::Shape &shape) {
-  int64_t x = SHAPE_NUMBER_4;
-  MUL_OVERFLOW(x, axis_value[AXIS_H], x);
-  MUL_OVERFLOW(x, axis_value[AXIS_W], x);
   shape.SetDimNum(0);
-  shape.AppendDim(DivisionCeiling(x, X0));
+  if (axis_value[AXIS_H] == UNKNOWN_SHAPE_VALUE || axis_value[AXIS_W] == UNKNOWN_SHAPE_VALUE) {
+    shape.AppendDim(UNKNOWN_SHAPE_VALUE);
+  } else {
+    int64_t x = SHAPE_NUMBER_4;
+    MUL_OVERFLOW(x, axis_value[AXIS_H], x);
+    MUL_OVERFLOW(x, axis_value[AXIS_W], x);
+    shape.AppendDim(DivisionCeiling(x, X0));
+  }
   shape.AppendDim(DivisionCeiling(axis_value[AXIS_N], NI));
   shape.AppendDim(NI);
   shape.AppendDim(X0);
@@ -708,8 +711,8 @@ bool TransferShapeUtils::GetFractalZShape(const FormatIndex& format_index, const
   int64_t axis_h_val = origin_shape.GetDim(format_index[DIM_INDEX_H]);
   int64_t axis_w_val = origin_shape.GetDim(format_index[DIM_INDEX_W]);
   int64_t ghwc1 = UNKNOWN_SHAPE_VALUE;
-  bool is_unknown_shape = axis_n_val == UNKNOWN_SHAPE_VALUE || axis_c_val == UNKNOWN_SHAPE_VALUE ||
-                          axis_h_val == UNKNOWN_SHAPE_VALUE || axis_w_val == UNKNOWN_SHAPE_VALUE;
+  bool is_unknown_shape = axis_c_val == UNKNOWN_SHAPE_VALUE || axis_h_val == UNKNOWN_SHAPE_VALUE ||
+                          axis_w_val == UNKNOWN_SHAPE_VALUE;
   if (!is_unknown_shape) {
     int64_t axis_g_val = GROUPS_DEFAULT_VALUE;
     int64_t axis_c1_val = 0;
@@ -746,9 +749,8 @@ bool TransferShapeUtils::GetFractalZ3DShape(const FormatIndex& format_index, con
   int64_t axis_w_val = origin_shape.GetDim(format_index[DIM_INDEX_W]);
   int64_t axis_d_val = origin_shape.GetDim(format_index[DIM_INDEX_D]);
   int64_t gdhwc1 = UNKNOWN_SHAPE_VALUE;
-  bool is_unknown_shape = axis_n_val == UNKNOWN_SHAPE_VALUE || axis_c_val == UNKNOWN_SHAPE_VALUE ||
-                          axis_h_val == UNKNOWN_SHAPE_VALUE || axis_w_val == UNKNOWN_SHAPE_VALUE ||
-                          axis_d_val == UNKNOWN_SHAPE_VALUE;
+  bool is_unknown_shape = axis_c_val == UNKNOWN_SHAPE_VALUE || axis_d_val == UNKNOWN_SHAPE_VALUE ||
+                          axis_h_val == UNKNOWN_SHAPE_VALUE || axis_w_val == UNKNOWN_SHAPE_VALUE;
   if (!is_unknown_shape) {
     int64_t axis_c1_val = 0;
     int64_t axis_g_val = GROUPS_DEFAULT_VALUE;
@@ -828,11 +830,17 @@ bool TransferShapeUtils::GetFractalZLstmShape(const FormatIndex& format_index, c
 bool TransferShapeUtils::GetFractalZC04Shape(const FormatIndex& format_index, const gert::Shape &origin_shape,
                                              gert::Shape &shape) {
   CHECK(origin_shape.GetDimNum() < DIM_SIZE_FOUR, GELOGD("Dim size is less than 4."), return true);
-  int64_t x = SHAPE_NUMBER_4;
-  MUL_OVERFLOW(x, origin_shape.GetDim(format_index[DIM_INDEX_H]), x);
-  MUL_OVERFLOW(x, origin_shape.GetDim(format_index[DIM_INDEX_W]), x);
+  int64_t axis_h_val = origin_shape.GetDim(format_index[DIM_INDEX_H]);
+  int64_t axis_w_val = origin_shape.GetDim(format_index[DIM_INDEX_W]);
   shape.SetDimNum(0);
-  shape.AppendDim(DivisionCeiling(x, X0));
+  if (axis_h_val == UNKNOWN_SHAPE_VALUE || axis_w_val == UNKNOWN_SHAPE_VALUE) {
+    shape.AppendDim(UNKNOWN_SHAPE_VALUE);
+  } else {
+    int64_t x = SHAPE_NUMBER_4;
+    MUL_OVERFLOW(x, origin_shape.GetDim(format_index[DIM_INDEX_H]), x);
+    MUL_OVERFLOW(x, origin_shape.GetDim(format_index[DIM_INDEX_W]), x);
+    shape.AppendDim(DivisionCeiling(x, X0));
+  }
   shape.AppendDim(DivisionCeiling(origin_shape.GetDim(format_index[DIM_INDEX_N]), NI));
   shape.AppendDim(NI);
   shape.AppendDim(X0);

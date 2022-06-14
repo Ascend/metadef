@@ -64,8 +64,8 @@ using AxisValue = std::array<int64_t, static_cast<size_t>(AXIS_BOTTOM)>;
 inline int64_t DivisionCeiling(int64_t dividend, int64_t divisor) {
   if (divisor == 0) {
     return 0;
-  } else if (dividend <= 0) {
-    return dividend;
+  } else if (dividend < 0) {
+    return -1;
   } else {
     return (dividend + divisor - 1) / divisor;
   }

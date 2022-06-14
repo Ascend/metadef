@@ -432,6 +432,7 @@ void ExpandDimension::ExpandDims(const int64_t &reshape_type, gert::Shape &shape
   gert::ExpandDimsType expand_dims_type(reshape_type);
   expand_dims_type.Expand(shape);
 }
+
 void ExpandDimension::ExpandDims(const int64_t &reshape_type, const gert::Shape &origin_shape, gert::Shape &shape) {
   if (reshape_type == 0) {
     return;

@@ -43,6 +43,8 @@ public:
   static void ExpandDims(const int64_t &reshape_type, const ge::GeShape &origin_shape, ge::GeShape &shape);
   static void ExpandDims(const int64_t &reshape_type, gert::Shape &shape);
   static void ExpandDims(const int64_t &reshape_type, const gert::Shape &origin_shape, gert::Shape &shape);
+  static bool GetDefaultReshapeType(const ge::Format &origin_format, const size_t &origin_dim_size,
+                                    std::string &reshape_type);
 
 private:
   static bool GetFormatFullSize(const ge::Format &format, size_t &full_size);
@@ -50,8 +52,6 @@ private:
                            const size_t &origin_dim_size, const size_t &full_size, const std::string &reshape_type);
   static bool IsReshapeTypeValid(const ge::Format &origin_format, const size_t &origin_dim_size,
                                  const std::string &reshape_type);
-  static bool GetDefaultReshapeType(const ge::Format &origin_format, const size_t &origin_dim_size,
-                                    std::string &reshape_type);
 };
 } // namespace transformer
 #endif //COMMON_UTILS_TRANSFORMER_INC_EXPAND_DIMENSION_H_

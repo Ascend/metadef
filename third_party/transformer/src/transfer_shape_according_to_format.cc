@@ -81,6 +81,7 @@ bool ShapeTransferAccordingToFormat::TransferShape(const ge::Format &origin_form
   gert::Shape rt_origin_shape;
   GeShapeToRtShape(origin_shape, rt_origin_shape);
   gert::Shape rt_shape;
+  GeShapeToRtShape(shape, rt_shape);
   bool ret = TransferShapeUtils::TransferShape(origin_format, format, data_type, ext_axis, rt_origin_shape, rt_shape);
   RtShapeToGeShape(rt_shape, shape);
   return ret;
