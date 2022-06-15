@@ -853,6 +853,20 @@ TEST_F(ValueHolderUt, GuardNodeFlag) {
   EXPECT_TRUE(ge::AttrUtils::GetInt(node->GetOpDesc(), kReleaseResourceIndex, index));
   EXPECT_EQ(index, 0);
 }
+TEST_F(ValueHolderUt, AddChildFrame) {
+  ValueHolder::PopGraphFrame(); // Pop frame added by Setup
+  auto root_frame = ValueHolder::PushGraphFrame();
+  EXPECT_TRUE(root_frame->IsRootFrame());
+  auto child_frame = ValueHolder::PushGraphFrame();
+  EXPECT_FALSE(child_frame->IsRootFrame());
+  EXPECT_EQ(&child_frame->GetAllComputeNodeInfos(), &root_frame->GetAllComputeNodeInfos());
+  EXPECT_EQ(&child_frame->GetBufferPool(), &root_frame->GetBufferPool());
+  EXPECT_EQ(&child_frame->GetKernelExtendInfos(), &root_frame->GetKernelExtendInfos());
+  EXPECT_NE(&child_frame->GetKernelModelDesc(), &root_frame->GetKernelModelDesc());
+  EXPECT_NE(child_frame->GetExeGraph(), root_frame->GetExeGraph());
+  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), child_frame);
+  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), root_frame);
+}
 TEST_F(ValueHolderUt, AddDependencyForGuardAutomately) {
   auto data0 = ValueHolder::CreateFeed(0);
   auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
