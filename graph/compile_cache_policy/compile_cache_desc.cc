@@ -164,7 +164,7 @@ void TensorInfoArgs::SetShapeRange(const std::vector<std::pair<int64_t, int64_t>
 }
 
 bool TensorInfoArgs::IsUnknownShape() const {
-  return std::any_of(shape_.begin(), shape_.end(), [&](const int64_t &dim) {
+  return std::any_of(shape_.begin(), shape_.end(), [](const int64_t &dim) {
       return (dim == UNKNOWN_DIM) || (dim == UNKNOWN_DIM_NUM);
       });
 }

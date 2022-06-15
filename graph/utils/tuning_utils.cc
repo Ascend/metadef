@@ -681,9 +681,9 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
 
   // 5. construct relation of root graph and subgraph of subgrah
   for (const auto subgraph_iter: name_to_merged_subgraph) {
-    const auto ret_link_subgraph = LinkSubgraph(merged_root_graph, subgraph_iter.second, name_to_merged_subgraph);
-    if (ret_link_subgraph != GRAPH_SUCCESS) {
-      return ret_link_subgraph;
+    const auto ret = LinkSubgraph(merged_root_graph, subgraph_iter.second, name_to_merged_subgraph);
+    if (ret != GRAPH_SUCCESS) {
+      return ret;
     }
   }
 

@@ -872,5 +872,16 @@ TEST_F(ValueHolderUt, AddDependencyForGuardAutomately) {
   HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
   HasControlEdge(*graph, *alloc_mem1->GetNode(), *allocator_destroyer->GetNode());
 }
+TEST_F(ValueHolderUt, PlacementDefault0) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  EXPECT_EQ(data0->GetPlacement(), 0);
+}
+TEST_F(ValueHolderUt, SetGetPlacementOk) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  data0->SetPlacement(1);
+  EXPECT_EQ(data0->GetPlacement(), 1);
+  data0->SetPlacement(2);
+  EXPECT_EQ(data0->GetPlacement(), 2);
+}
 }  // namespace bg
 }  // namespace gert

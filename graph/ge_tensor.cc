@@ -472,7 +472,7 @@ int64_t GeShapeImpl::GetShapeSize() const {
 }
 
 bool GeShapeImpl::IsUnknownShape() const {
-  return std::any_of(dims_.begin(), dims_.end(), [&](const int64_t &dim) {
+  return std::any_of(dims_.begin(), dims_.end(), [](const int64_t &dim) {
       return (dim == UNKNOWN_DIM) || (dim == UNKNOWN_DIM_NUM) || (dim < 0);
       });
 }

@@ -38,10 +38,9 @@ struct AutoThreadSubTaskFlush {
   uintptr_t aiv_tail_task_start_pc{0U};
   uint32_t aiv_icache_prefetch_cnt{0U};
 
-  // AICPU task Addrs.
+  // Task I/O Addrs.
   std::vector<uintptr_t> input_addr_base;
   std::vector<uintptr_t> output_addr_base;
-  void *extinfo_base{nullptr};
 };
 
 struct AutoThreadParam {
@@ -49,9 +48,7 @@ struct AutoThreadParam {
   uint32_t input_output_num{0U};  // input + output
   std::vector<uint64_t> task_addr_offset; // input + output + workspace
 
-  // AICPU task Params.
-  uint32_t args_size{0U}; // size for args_base
-  uint32_t extinfo_size{0U}; // size for extinfo_base
+  // Task Thread Dims.
   std::vector<std::vector<std::vector<int64_t>>> *task_input_shape{nullptr}; // thread<input>
   std::vector<std::vector<std::vector<int64_t>>> *task_output_shape{nullptr}; // thread<output>
 };

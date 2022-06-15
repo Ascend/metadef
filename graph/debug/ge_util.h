@@ -35,12 +35,12 @@ static inline std::shared_ptr<T> ComGraphMakeShared(Args &&...args) {
 }
 template <typename T>
 struct ComGraphMakeUniq {
-  typedef std::unique_ptr<T> unique_object;
+  using unique_object = std::unique_ptr<T>;
 };
 
 template <typename T>
 struct ComGraphMakeUniq<T[]> {
-  typedef std::unique_ptr<T[]> unique_array;
+  using unique_array = std::unique_ptr<T[]>;
 };
 
 template <typename T, size_t B>
@@ -50,7 +50,7 @@ struct ComGraphMakeUniq<T[B]> {
 
 template <typename T, typename... Args>
 static inline typename ComGraphMakeUniq<T>::unique_object ComGraphMakeUnique(Args &&... args) {
-  typedef typename std::remove_const<T>::type T_nc;
+  using T_nc = typename std::remove_const<T>::type;
   return std::unique_ptr<T>(new (std::nothrow) T_nc(std::forward<Args>(args)...));
 }
 
