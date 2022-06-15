@@ -1717,6 +1717,17 @@
       }
     },
     {
+      "errClass": "Autotune Errors",
+      "errTitle": "Directory Operation Failure",
+      "ErrCode": "EC0006",
+      "ErrMessage": "Directory operation failed. Reason: %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A" 
+      }
+    },
+    {
       "errClass": "RLTune Errors",
       "errTitle": "Device Check Failure",
       "ErrCode": "ED0000",
