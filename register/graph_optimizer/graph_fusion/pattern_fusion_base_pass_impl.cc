@@ -208,7 +208,7 @@ bool PatternFusionBasePassImpl::MatchFromOutput(CandidateAndMapping &cand) const
 
   // return false if not all edges are matched
   if (!MatchAllEdges(inputs_desc->size(), usage_flags)) {
-    GELOGW("[Match][Output] not all inputs of op %s are matched, pattern matching failed.", op_id.c_str());
+    GELOGD("[Match][Output] not all inputs of op %s are matched, pattern matching failed.", op_id.c_str());
     return false;
   }
 
