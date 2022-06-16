@@ -259,7 +259,12 @@ void ValueHolder::SetStage(ValueHolder::RunStage stage) {
 GraphFrame *ValueHolder::PushGraphFrame() {
   auto graph = ge::MakeShared<ge::ComputeGraph>("");
   GE_ASSERT_NOTNULL(graph);
-  auto frame = new (std::nothrow) GraphFrame(graph);
+  GraphFrame *frame = nullptr;
+  if (graph_frames.empty()) {
+    frame = new (std::nothrow) GraphFrame(graph);
+  } else {
+    frame = new (std::nothrow) GraphFrame(graph, *graph_frames.top());
+  }
   GE_ASSERT_NOTNULL(frame);
   graph_frames.emplace(frame);
   return graph_frames.top().get();

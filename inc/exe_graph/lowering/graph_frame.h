@@ -36,8 +36,8 @@ class GraphFrame {
   GraphFrame operator=(const GraphFrame &) = delete;
   GraphFrame operator=(GraphFrame &&) = delete;
 
-  GraphFrame(ge::ComputeGraphPtr exe_graph, GraphFrame &root_frame)
-      : exe_graph_(std::move(exe_graph)), current_compute_node_(nullptr), root_frame_(root_frame) {}
+  GraphFrame(ge::ComputeGraphPtr exe_graph, GraphFrame &parent_frame)
+      : exe_graph_(std::move(exe_graph)), current_compute_node_(nullptr), root_frame_(parent_frame.root_frame_) {}
 
   explicit GraphFrame(ge::ComputeGraphPtr exe_graph)
       : exe_graph_(std::move(exe_graph)), current_compute_node_(nullptr), root_frame_(*this) {}
@@ -87,11 +87,11 @@ class GraphFrame {
   }
 
   BufferPool &GetKernelExtendInfos() {
-    return kernel_extend_buffer_pool_;
+    return root_frame_.kernel_extend_buffer_pool_;
   }
 
   const BufferPool &GetKernelExtendInfos() const {
-    return kernel_extend_buffer_pool_;
+    return root_frame_.kernel_extend_buffer_pool_;
   }
 
   BufferPool &GetKernelModelDesc() {
