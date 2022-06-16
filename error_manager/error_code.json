@@ -1477,7 +1477,7 @@
     {
       "errClass": "TEFusion Errors",
       "errTitle": "Invalid Argument",
-      "ErrCode": " W40012",
+      "ErrCode": "W40012",
       "ErrMessage": "Value [%s] for parameter [%s] is invalid. The value must be in the range of [%s] and defaults to [%s].",
       "Arglist": "invalid_value,argument,valid_range,default_value",
       "suggestion": {
