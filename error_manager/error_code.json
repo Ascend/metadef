@@ -8,7 +8,7 @@
       "Arglist": "value,parameter,reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Try again with a valid argument."
+        "Solution": "N/A"
       }
     },
     {
@@ -1086,7 +1086,7 @@
       "Arglist": "item,size,maxsize",
       "suggestion": {
         "Possible Cause": "Limited by AI Processors, the total size of the variables(5 GB at most by default) and feature maps (26 GB at most by default) cannot exceed 31GB.",
-        "Solution": "1. Reduce the batch size. 2. If the error persists when the batch size is reduced to 1, modify the model structure to reduce the model size."
+        "Solution": "1. Set variable_memory_max_size and graph_memory_max_size to adjust the memory usage of variables and feature maps. 2. Reduce the batch size. 3. If the error persists when the batch size is reduced to 1, modify the model structure to reduce the model size."
       }
     },
     {
@@ -3325,6 +3325,17 @@
       "ErrCode": "E68089",
       "ErrMessage": "tiling is not found in repository file.",
       "Arglist": ""
+    },
+    {
+      "errClass": "TBE Pass Compilation Tool Errors(Back-End)",
+      "errTitle": "Invalid IR",
+      "ErrCode": "EB0000",
+      "ErrMessage": "Failed to compile the operator. Reason:%s, %s",
+      "Arglist": "message,traceback",
+      "suggestion": {
+        "Possible Cause": "The IR is invalid.",
+        "Solution": "Check that the Compute and Schedule APIs are used correctly. For details, see the TBE Custom Operator Developer Guide. If the error persists, contact Huawei technical support."
+      }
     }
   ]
 }
