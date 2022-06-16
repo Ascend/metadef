@@ -130,10 +130,19 @@ struct Shape {
   /**
    * 获取dim值
    * @param idx dim的index，调用者需要保证index合法
-   * @return dim值，在idx超出MaxDimNum时，返回`kInvalidDimValue`
+   * @return dim值，行为未定义
    */
-  int64_t operator[](size_t idx) const {
-    return GetDim(idx);
+  const int64_t &operator[](size_t idx) const {
+    return dims_[idx];
+  }
+
+  /**
+   * 获取dim值
+   * @param idx dim的index，调用者需要保证index合法
+   * @return dim值，在idx超出MaxDimNum时，行为未定义
+   */
+  int64_t &operator[](size_t idx) {
+    return dims_[idx];
   }
 
   /**

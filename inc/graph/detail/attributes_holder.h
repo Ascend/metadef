@@ -123,7 +123,7 @@ class GeIrProtoHelper {
   friend class ComputerGraphImpl;
   friend class GeTensorSerializeUtils;
 
-private:
+ private:
   // protoMsg_ is part of protoOwner_, they have the same runtime
   ProtoMsgOwner protoOwner_ = nullptr;
   ProtoType *protoMsg_ = nullptr;
@@ -133,8 +133,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
  public:
   AttrHolder() = default;
   virtual ~AttrHolder() = default;
-  AttrHolder & operator=(AttrHolder const &rhs) = default;
-  
+  AttrHolder &operator=(AttrHolder const &rhs) = default;
+
   graphStatus SetAttr(const std::string &name, const AnyValue &value);
 
   graphStatus TrySetAttr(const std::string &name, const AnyValue &value);
@@ -168,6 +168,11 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   template<class T>
   const T *GetExtAttr(const std::string &name) const {
     return ext_attrs_.Get<T>(name);
+  }
+
+  template<class T>
+  T *GetExtAttr(const std::string &name) {
+    return const_cast<T *>(ext_attrs_.Get<T>(name));
   }
 
  protected:
