@@ -326,18 +326,6 @@ class OpReg {
     std::string attr_name(#x);                                              \
     (void)OpReg()
 
-#define INNER_ATTR(x, Type, ...)                                            \
-  N();                                                                      \
-  __inner_attr_##x();                                                       \
-  }                                                                         \
-                                                                            \
- private:                                                                   \
-  void __inner_attr_##x() {                                                 \
-    SET_VALUE_##Type(Op##Type(__VA_ARGS__));                                \
-    Operator::AttrRegister(#x, value);                                      \
-    std::string attr_name(#x);                                              \
-    (void)OpReg()
-
 #define INPUT(x, t)                                                            \
   N();                                                                         \
   __input_##x();                                                               \
