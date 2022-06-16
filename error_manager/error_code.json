@@ -1640,6 +1640,17 @@
       }
     },
     {
+      "errClass": "TEFusion Errors",
+      "errTitle": "Invalid Path",
+      "ErrCode": "E40023",
+      "ErrMessage": "Path [%s] for [%s] is invalid. Result: %s. Reason: %s.",
+      "Arglist": "path,arg,result,reason",
+      "suggestion": {
+        "Possible Cause": "The path is empty or does not exist.",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "Vector Operator Plugin Errors",
       "errTitle": "ONNX Model Data Error",
       "ErrCode": "E76002",
