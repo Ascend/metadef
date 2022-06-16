@@ -173,7 +173,7 @@
       "Arglist": "opname,parameter",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Try again with a valid node name."
+        "Solution": "N/A"
       }
     },
     {
@@ -327,7 +327,7 @@
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "As [--dynamic_batch_size] is included, ensure that at least one of the nodes specified in [--input_shape] has a batch size equaling –1.",
-        "Solution": "[step] In static shape scenarios, remove the [--dynamic_batch_size] option from your command line. [step] In dynamic shape scenarios, set the corresponding axis of the dynamic-shape input in [--input_shape] to –1."
+        "Solution": "1. In static shape scenarios, remove the [--dynamic_batch_size] option from your command line. 2. In dynamic shape scenarios, set the corresponding axis of the dynamic-shape input in [--input_shape] to –1."
       }
     },
     {
@@ -1167,190 +1167,69 @@
       }
     },
     {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid GE Initialization Argument",
-      "ErrCode": "E20100",
-      "ErrMessage": "Value [%s] is invalid for option [ge.opSelectImplmode]. Must be either [high_precision] or [high_performance].",
-      "Arglist": "op_select_impl_mode",
+      "errClass": "FE Errors",
+      "errTitle": "Op Compilation Failure",
+      "ErrCode": "E20001",
+      "ErrMessage": "Failed to compile Op [%s]. (optype: [%s])",
+      "Arglist": "parameter0,parameter1",
       "suggestion": {
-        "Possible Cause": "The operator implementation mode specified for GE initialization is invalid. Must be either [high_precision] or [high_performance].",
-        "Solution": "Try again with a valid [opSelectImplmode] argument, which must match the [--op_select_implmode] argument in the ATC command line. Alternatively, the error is due to a GE translation failure."
+        "Possible Cause": "The operator has an invalid argument.",
+        "Solution": "For a custom operator, check the operator implementation and arguments based on the error log. For a Huawei built-in operator, submit an issue to request for support at https://gitee.com/ascend or contact Huawei technical support."
       }
     },
     {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid GE Initialization Argument",
+      "errClass": "FE Errors",
+      "errTitle": "Fusion Pass Execution Failure",
+      "ErrCode": "E20007",
+      "ErrMessage": "Failed to run graph fusion pass [%s]. The pass type is [%s]",
+      "Arglist": "parameter0,parameter1",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. If the pass code is custom, check the error log and the verification logic.  2. If the pass code is not custom, perform a complete or partial dump by using npucollect.sh and then send the dump to Huawei technical support for fault locating."
+      }
+    },
+    {
+      "errClass": "FE Errors",
+      "errTitle": "Invalid CANN Initialization Argument",
       "ErrCode": "E20101",
-      "ErrMessage": "Value [%s] is invalid for option [%s].",
-      "Arglist": "value,option",
+      "ErrMessage": "Value [%s] for parameter [%s] is invalid. Reason: %s.",
+      "Arglist": "parameter0,parameter1,parameter2",
       "suggestion": {
-        "Possible Cause": "See the error message for details.",
-        "Solution": "Try again with a valid argument."
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
       }
     },
     {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid GE Initialization Argument",
-      "ErrCode": "E20102",
-      "ErrMessage": "Value [%s] is invalid for option [ge.engineType]. Must be either [AiCore] or [VectorCore].",
-      "Arglist": "engine_type",
-      "suggestion": {
-        "Possible Cause": "The engine type argument for GE initialization is invalid. Only [AiCore] or [VectorCore] is supported.",
-        "Solution": "Contact Huawei technical support to check the engine type specified for GE initialization."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
+      "errClass": "FE Errors",
       "errTitle": "Invalid Platform Initialization Argument",
       "ErrCode": "E20103",
-      "ErrMessage": "Value [%s] for option [ge.aicoreNum] is out of range (0, %s].",
-      "Arglist": "value,ai_core_num",
+      "ErrMessage": "Value [%s] for parameter [aicore_num] is invalid. The value must be in the range of (0, %s]",
+      "Arglist": "parameter0,parameter1",
       "suggestion": {
-        "Possible Cause": "The number of AI Cores configured for platform initialization is out of the valid range. This is a Huawei internal parameter and is user-irrelevant.",
-        "Solution": "Contact Huawei technical support to check the value of [aicoreNum] in the [platform.ini] file."
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
       }
     },
     {
-      "errClass": "Operator Compilation Errors",
-      "errTitle": "Failure to Precompile Op",
-      "ErrCode": "E20001",
-      "ErrMessage": "Failed to precompile Op [%s, optype [%s]] of graph_id [%s].",
-      "Arglist": "op_name,op_type,graph_id",
-      "suggestion": {
-        "Possible Cause": "The operator has an invalid argument.",
-        "Solution": "See the error message for details, and then check the Python stack where the error log is reported."
-      }
-    },
-    {
-      "errClass": "Invalid Operator Arguments",
-      "errTitle": "Failure to Precompile Op",
-      "ErrCode": "E20002",
-      "ErrMessage": "Failed to precompile Op [%s, optype [%s]] of graph_id [%s] in thread [%s] of task [%s].",
-      "Arglist": "op_name,op_type,graph_id,thread_id,task_id",
-      "suggestion": {
-        "Possible Cause": "The operator has an invalid argument.",
-        "Solution": "See the error message for details, and then check the Python stack where the error log is reported."
-      }
-    },
-    {
-      "errClass": "Operator Compilation Errors",
-      "errTitle": "Failure to Compile Op",
-      "ErrCode": "E20003",
-      "ErrMessage": "Failed to compile Op [%s, optype [%s]] of graph_id [%s].",
-      "Arglist": "op_name,op_type,graph_id",
-      "suggestion": {
-        "Possible Cause": "The operator has an invalid argument.",
-        "Solution": "See the error message for details, and then check the Python stack where the error log is reported."
-      }
-    },
-    {
-      "errClass": "Operator Compilation Errors",
-      "errTitle": "Failure to Compile Op",
-      "ErrCode": "E20004",
-      "ErrMessage": "Failed to compile Op [%s, optype [%s]] of graph_id [%s] in thread [%s] of task [%s].",
-      "Arglist": "op_name,op_type,graph_id,thread_id,task_id",
-      "suggestion": {
-        "Possible Cause": "The operator has an invalid argument.",
-        "Solution": "See the error message for details, and then check the Python stack where the error log is reported."
-      }
-    },
-    {
-      "errClass": "Task Generation Errors",
-      "errTitle": "Failure to Generate Task",
-      "ErrCode": "E20005",
-      "ErrMessage": "Failed to generate a task for Op [%s, optype [%s]] of graph_id [%s].",
-      "Arglist": "op_name,op_type,graph_id",
-      "suggestion": {
-        "Possible Cause": "A compilation argument is invalid, the operator is not compiled, or the GE memory allocation is invalid.",
-        "Solution": "Check the error message and error log."
-      }
-    },
-    {
-      "errClass": "Invalid Operator Arguments",
-      "errTitle": "Failure to Calculate Data Edge Size",
-      "ErrCode": "E20006",
-      "ErrMessage": "Failed to calculate the tensor size of Op [%s, optype %s].",
-      "Arglist": "op_name,op_type",
-      "suggestion": {
-        "Possible Cause": "Failed to calculate the data edge size, possibly due to an invalid shape or format.",
-        "Solution": "Inspect the error log, perform a partial dump by using SdkInfoCollector or the [export DUMP_GE_GRAPH=2] command, and then send the partial dump to Huawei technical support for fault locating."
-      }
-    },
-    {
-      "errClass": "Fusion Pass Errors",
-      "errTitle": "Failure to Execute Fusion Pass",
-      "ErrCode": "E20007",
-      "ErrMessage": "Failed to run the following graph fusion pass: [%s]. The pass type is [%s].",
-      "Arglist": "pass_name,pass_type",
-      "suggestion": {
-        "Possible Cause": "The fusion pass code has a bug or the source graph does not meet the fusion pass requirements.",
-        "Solution": "[step] If the pass code is user-defined, check the error message and the verification logic. [step] If the pass code is not user-defined, perform a complete or partial dump by using SdkInfoCollector and then send the dump to Huawei technical support for fault locating."
-      }
-    },
-    {
-      "errClass": "Fusion Pass Errors",
-      "errTitle": "Failure to Execute Fusion Pass",
-      "ErrCode": "E20008",
-      "ErrMessage": "Failed to run pass [%s]. Reason: %s.",
-      "Arglist": "pass_name,errmsg",
-      "suggestion": {
-        "Possible Cause": "The fusion pass code has a bug or the source graph does not meet the fusion pass requirements.",
-        "Solution": "Check the pass code."
-      }
-    },
-    {
-      "errClass": "Fusion Pass Errors",
-      "errTitle": "Failure to Execute Fusion Pass",
-      "ErrCode": "E20009",
-      "ErrMessage": "Failed to do topological sorting after graph fusion, graph is cyclic, graph name: %s, pass name: %s.",
-      "Arglist": "graph_name,pass_name",
-      "suggestion": {
-        "Possible Cause": "The fusion pass code has a bug.",
-        "Solution": "Check the pass code."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Empty Path",
-      "ErrCode": "W21000",
-      "ErrMessage": "Path [%s] is empty. Reason: %s.",
-      "Arglist": "path,errmsg",
-      "suggestion": {
-        "Possible Cause": "This error does not terminate the process. The path is not specified or the specified path is empty.",
-        "Solution": "Try again with a valid path."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Open File",
+      "errClass": "FE Errors",
+      "errTitle": "File Opening Failure",
       "ErrCode": "E21001",
-      "ErrMessage": "Failed to open file [%s]. Reason: %s.",
-      "Arglist": "file,errmsg",
+      "ErrMessage": "Failed to open file [%s].",
+      "Arglist": "parameter0",
       "suggestion": {
-        "Possible Cause": "The file does not exist or cannot be opened.",
-        "Solution": "Check the error message and error log."
+        "Possible Cause": "1. The configured file path does not exist. 2. The file permissions are insufficient. 3. An error occurred when installing the system environment.",
+        "Solution": "1. Configure the file path correctly.  2. Configure user permissions correctly. 3. Reinstall the system environment."
       }
     },
     {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Read File",
+      "errClass": "FE Errors",
+      "errTitle": "File Read Failure",
       "ErrCode": "E21002",
       "ErrMessage": "Failed to read file [%s]. Reason: %s.",
-      "Arglist": "file,errmsg",
+      "Arglist": "parameter0,parameter1",
       "suggestion": {
-        "Possible Cause": "The file path is empty or the file does not exist.",
-        "Solution": "Check the error message and error log."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Empty Path",
-      "ErrCode": "E21003",
-      "ErrMessage": "The file path of node [%s] is empty. Reason: %s.",
-      "Arglist": "op_name,errmsg",
-      "suggestion": {
-        "Possible Cause": "The compilation result of this node is empty, possibly due to a compilation failure.",
-        "Solution": "[step] Check the error message to see if a compilation failure has occurred. [step] If no compilation failure has occurred, contact Huawei technical support for fault locating."
+        "Possible Cause": "N/A",
+        "Solution": "Configure the file path correctly."
       }
     },
     {
