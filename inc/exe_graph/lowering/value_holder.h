@@ -83,6 +83,10 @@ class ValueHolder {
   void SetStage(RunStage stage);
   // ref-from other的含义是，本value指向了other（本value没有独立的内存）
   ge::graphStatus RefFrom(const ValueHolderPtr &other);
+
+  // 在other产生后，本holder的生命周期才结束
+  void ReleaseAfter(const ValueHolderPtr &other);
+
   const int32_t &GetPlacement() const;
   void SetPlacement(const int32_t &placement);
   static ValueHolderPtr CreateError(const char *fmt, ...);

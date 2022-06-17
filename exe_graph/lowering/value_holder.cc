@@ -342,5 +342,12 @@ const int32_t &ValueHolder::GetPlacement() const {
 void ValueHolder::SetPlacement(const int32_t &placement) {
   placement_ = placement;
 }
+void ValueHolder::ReleaseAfter(const ValueHolderPtr &other) {
+  if (guarder_ == nullptr) {
+    GELOGW("Current holder from node %s  index %d does not has a guarder", node_->GetName().c_str(), index_);
+    return;
+  }
+  AddDependency(other, guarder_);
+}
 }  // namespace bg
 }  // namespace gert
