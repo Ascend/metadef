@@ -644,10 +644,14 @@ bool TransferShapeUtils::GetNC1HWC0Shape(const FormatIndex& format_index, const 
 
 bool TransferShapeUtils::GetNDC1HWC0Shape(const FormatIndex& format_index, const int64_t &c0,
                                           const gert::Shape &origin_shape, gert::Shape &shape) {
-  CHECK(origin_shape.GetDimNum() < DIM_SIZE_FIVE, GELOGD("Dim size is less than 5."), return true);
+  CHECK(origin_shape.GetDimNum() < DIM_SIZE_FOUR, GELOGD("Dim size is less than 4."), return true);
   shape.SetDimNum(0);
   shape.AppendDim(origin_shape.GetDim(format_index[DIM_INDEX_N]));
-  shape.AppendDim(origin_shape.GetDim(format_index[DIM_INDEX_D]));
+  if (origin_shape.GetDimNum() == DIM_SIZE_FOUR) {
+    shape.AppendDim(1);
+  } else {
+    shape.AppendDim(origin_shape.GetDim(format_index[DIM_INDEX_D]));
+  }
   shape.AppendDim(DivisionCeiling(origin_shape.GetDim(format_index[DIM_INDEX_C]), c0));
   shape.AppendDim(origin_shape.GetDim(format_index[DIM_INDEX_H]));
   shape.AppendDim(origin_shape.GetDim(format_index[DIM_INDEX_W]));

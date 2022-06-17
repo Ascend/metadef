@@ -437,6 +437,12 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_ncdhw) {
   RunTransferShape(ge::FORMAT_NCDHW, target_format, DT_INT4, true, {48, 512, 3, 5, 5}, {9600, 3, 16, 64});
 }
 
+TEST_F(TransformerTransferShapeUT, transfer_shape_from_4d_to_6hd) {
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_NDC1HWC0, DT_FLOAT16, true, {4, 33, 7, 7}, {4, 1, 3, 7, 7, 16});
+  RunTransferShape(ge::FORMAT_NHWC, ge::FORMAT_NDC1HWC0, DT_FLOAT16, true, {4, 7, 7, 33}, {4, 1, 3, 7, 7, 16});
+  RunTransferShape(ge::FORMAT_HWCN, ge::FORMAT_NDC1HWC0, DT_FLOAT16, true, {7, 7, 33, 4}, {4, 1, 3, 7, 7, 16});
+}
+
 TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nz) {
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34}, {1, 3, 16, 16});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34, 1}, {1, 3, 16, 16});
