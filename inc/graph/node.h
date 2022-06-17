@@ -24,9 +24,7 @@
 #include <vector>
 #include <unordered_set>
 
-#include "graph/ge_attr_value.h"
 #include "utils/attr_utils.h"
-#include "graph/op_desc.h"
 #include "graph/range_vistor.h"
 
 namespace ge {
