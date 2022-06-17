@@ -38,7 +38,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferDataSliceFuncRegister 
 #define IMPLEMT_INFER_DATA_SLICE(op_name, func_name) \
   GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY static graphStatus (func_name)(op::op_name &op)
 
-#define INFER_DATA_SLICE_FUNC(op_name, x) [&](Operator &v) { return (x)((op::op_name &)v); }
+#define INFER_DATA_SLICE_FUNC(op_name, x) [](Operator &v) { return (x)((op::op_name &)v); }
 
 #define __INFER_DATA_SLICE_FUNC_REG_IMPL__(op_name, x, n) \
   static const InferDataSliceFuncRegister PASTE(ids_register, n)(#op_name, (x))
