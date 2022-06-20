@@ -21,17 +21,16 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "./ge_task_info.h"
-#include "./ops_kernel_info_types.h"
+#include <climits>
+
+#include "common/opskernel/ge_task_info.h"
+#include "common/opskernel/ops_kernel_info_types.h"
 #include "cce/aicpu_engine_struct.h"
 #include "cce/fwk_adpt_struct.h"
 #include "common/ge_inner_error_codes.h"
 #include "graph/node.h"
-#include "proto/task.pb.h"
 
 namespace ge {
-class OpDesc;
-
 class OpsKernelInfoStore {
  public:
   OpsKernelInfoStore() {}
