@@ -120,6 +120,22 @@ TEST_F(ShapeUT, GetDimOk) {
   EXPECT_EQ(s2[3], 224);
 }
 
+TEST_F(ShapeUT, ModifyDimOk) {
+  Shape s1;
+  Shape s2{8, 3, 224, 224};
+
+  s1[0] = 8;
+  s1[1] = 8;
+  EXPECT_EQ(s1[0], 8);
+  EXPECT_EQ(s1[1], 8);
+
+
+  s1[0] = 16;
+  s1[1] = 16;
+  EXPECT_EQ(s1[0], 16);
+  EXPECT_EQ(s1[1], 16);
+}
+
 TEST_F(ShapeUT, SetGetDimOfOutRange) {
   Shape s1;
   EXPECT_EQ(s1.GetDim(8), std::numeric_limits<int64_t>::min());

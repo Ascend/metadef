@@ -942,5 +942,22 @@ TEST_F(UtestNodeUtils, IsDynamicShape_Null) {
   EXPECT_EQ(NodeUtils::IsDynamicShape(nullptr), false);
 }
 
-
+TEST_F(UtestNodeUtils, GetInDataNodeAndAnchorByIndex_InAnchorOutOfRange) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 1, 1);
+  EXPECT_EQ(NodeUtils::GetInDataNodeAndAnchorByIndex(*node, 1).first, nullptr);
+}
+TEST_F(UtestNodeUtils, GetInDataNodeAndAnchorByIndex_NoPeerOutAnchor) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 1, 1);
+  EXPECT_EQ(NodeUtils::GetInDataNodeAndAnchorByIndex(*node, 0).first, nullptr);
+}
+TEST_F(UtestNodeUtils, GetInDataNodeAndAnchorByIndex_Success) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node1 = builder.AddNode("Node1", "Node1", 1, 1);
+  auto node2 = builder.AddNode("Node2", "Node2", 1, 1);
+  builder.AddDataEdge(node1, 0, node2, 0);
+  EXPECT_EQ(NodeUtils::GetInDataNodeAndAnchorByIndex(*node2, 0).first, node1);
+  EXPECT_EQ(NodeUtils::GetInDataNodeAndAnchorByIndex(*node2, 0).second, node1->GetOutDataAnchor(0));
+}
 }  // namespace ge

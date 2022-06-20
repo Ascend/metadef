@@ -854,7 +854,7 @@ TEST_F(ValueHolderUt, GuardNodeFlag) {
   EXPECT_EQ(index, 0);
 }
 TEST_F(ValueHolderUt, AddChildFrame) {
-  ValueHolder::PopGraphFrame(); // Pop frame added by Setup
+  ValueHolder::PopGraphFrame();  // Pop frame added by Setup
   auto root_frame = ValueHolder::PushGraphFrame();
   EXPECT_TRUE(root_frame->IsRootFrame());
   auto child_frame = ValueHolder::PushGraphFrame();
@@ -885,6 +885,47 @@ TEST_F(ValueHolderUt, AddDependencyForGuardAutomately) {
   ASSERT_NE(alloc_mem1, nullptr);
   HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
   HasControlEdge(*graph, *alloc_mem1->GetNode(), *allocator_destroyer->GetNode());
+}
+TEST_F(ValueHolderUt, AddDependencyForGuard_RleaseBy) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
+  auto allocator_destroyer = ValueHolder::CreateVoidGuarder("DestroyAllocator", allocator0, {});
+  ASSERT_NE(allocator_destroyer, nullptr);
+
+  size_t alloc_size = 1024;
+  auto size = ValueHolder::CreateConst(&alloc_size, sizeof(alloc_size));
+  auto alloc_mem0 = ValueHolder::CreateSingleDataOutput("AllocMemory", {allocator0, size});
+  auto free_mem0 = ValueHolder::CreateVoidGuarder("FreeMemory", {alloc_mem0}, {});
+  auto graph = ValueHolder::PopGraphFrame()->GetExeGraph();
+  CheckGraphGenerally(*graph);
+
+  ASSERT_NE(free_mem0, nullptr);
+  ASSERT_NE(alloc_mem0, nullptr);
+  HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
+
+  allocator0->ReleaseAfter(free_mem0);
+  HasControlEdge(*graph, *free_mem0->GetNode(), *allocator_destroyer->GetNode());
+}
+TEST_F(ValueHolderUt, RleaseBy_NoGuarder) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
+
+  size_t alloc_size = 1024;
+  auto size = ValueHolder::CreateConst(&alloc_size, sizeof(alloc_size));
+  auto alloc_mem0 = ValueHolder::CreateSingleDataOutput("AllocMemory", {allocator0, size});
+  auto graph = ValueHolder::PopGraphFrame()->GetExeGraph();
+
+  CheckGraphGenerally(*graph);
+
+  ASSERT_NE(alloc_mem0, nullptr);
+
+  allocator0->ReleaseAfter(alloc_mem0);
+
+  EXPECT_EQ(allocator0->GetNode()->GetOutAllNodes().size(), 1);
+  EXPECT_EQ(allocator0->GetNode()->GetInAllNodes().size(), 1);
+
+  EXPECT_EQ(alloc_mem0->GetNode()->GetOutAllNodes().size(), 0);
+  EXPECT_EQ(alloc_mem0->GetNode()->GetInAllNodes().size(), 2);
 }
 TEST_F(ValueHolderUt, PlacementDefault0) {
   auto data0 = ValueHolder::CreateFeed(0);

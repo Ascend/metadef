@@ -157,9 +157,10 @@ class NodeUtils {
   static std::vector<NodePtr> GetSubgraphOutputNodes(const Node &node);
 
   static NodePtr GetInDataNodeByIndex(const Node &node, const int32_t index);
+  static std::pair<NodePtr, OutDataAnchorPtr> GetInDataNodeAndAnchorByIndex(const Node &node, const int32_t index);
 
-  static std::vector<std::pair<InDataAnchorPtr, NodePtr>> GetOutDataNodesWithAnchorByIndex(
-      const Node &node, const int32_t index);
+  static std::vector<std::pair<InDataAnchorPtr, NodePtr>> GetOutDataNodesWithAnchorByIndex(const Node &node,
+                                                                                           const int32_t index);
 
   static ge::ConstNodePtr GetNodeFromOperator(const Operator &oprt);
 
