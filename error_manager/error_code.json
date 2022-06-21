@@ -1697,7 +1697,7 @@
     {
       "errClass": "LxFusion Errors",
       "errTitle": "Invalid Config Value",
-      "ErrCode": "EF0002",
+      "ErrCode": "WF0001",
       "ErrMessage": "Value [%s] for key [%s] is invalid. The value must be in the range of [%s]",
       "Arglist": "value,key,value_str",
       "suggestion": {
