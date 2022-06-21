@@ -113,6 +113,10 @@ TEST_F(UtestErrorManager, GetErrorMessage) {
   instance.error_message_per_work_id_[0] = vec;
   instance.error_context_.work_stream_id = 0;
   EXPECT_NE(instance.GetErrorMessage(), "");
+  vec.push_back(ErrorManager::ErrorItem());
+  instance.error_message_per_work_id_[1] = vec;
+  instance.error_context_.work_stream_id = 1;
+  EXPECT_NE(instance.GetErrorMessage(), "");
 }
 
 TEST_F(UtestErrorManager, GetErrorOtherMessage) {

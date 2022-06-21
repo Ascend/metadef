@@ -343,29 +343,6 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
   return 0;
 }
 
-void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error_messages,
-                                             const std::string &first_code,
-                                             std::stringstream &err_stream) {
-  std::string current_code_print = first_code;
-  const bool IsErrorId = IsParamCheckErrorId(first_code);
-  for (auto &item : error_messages) {
-    if (!IsParamCheckErrorId(item.error_id)) {
-      current_code_print = item.error_id;
-      break;
-    }
-  }
-  err_stream << current_code_print << ": Inner Error!" << std::endl;
-  // Display the first non 8888 error code
-  for (auto &item : error_messages) {
-    if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
-      err_stream << "        " << item.error_message << std::endl;
-      continue;
-    }
-    err_stream << current_code_print << "  " << item.error_message << std::endl;
-    current_code_print = "      ";
-  }
-}
-
 std::string ErrorManager::GetErrorMessage() {
   GELOGI("current work_stream_id:%lu", error_context_.work_stream_id);
   const std::unique_lock<std::mutex> lck(mutex_);
@@ -377,27 +354,18 @@ std::string ErrorManager::GetErrorMessage() {
 
   std::stringstream err_stream;
   std::string first_code = error_messages[0UL].error_id;
-  for (auto &item : error_messages) {
-    if (!IsInnerErrorCode(item.error_id)) {
-      first_code = item.error_id;
-      err_stream << first_code << ": " << item.error_message << std::endl;
-      if (!item.possible_cause.empty() && item.possible_cause != "N/A") {
-        err_stream << "        Possible Cause: " << item.possible_cause << std::endl;
-      }
-      if (!item.solution.empty() && item.solution != "N/A") {
-        err_stream << "        Solution: " << item.solution << std::endl;
-      }
-      break;
-    }
-  }
   if (IsInnerErrorCode(first_code)) {
-    AssembleInnerErrorMessage(error_messages, first_code, err_stream);
-  } else {
+    err_stream << first_code << ": Inner Error!" << std::endl;
     for (auto &item : error_messages) {
-      if (first_code == item.error_id) {
-        continue;
-      }
       err_stream << "        " << item.error_message << std::endl;
+    }
+  } else {
+    err_stream << first_code << ": " << error_messages[0].error_message << std::endl;
+    error_messages.erase(error_messages.begin());
+    for (auto &item : error_messages) {
+      if (!IsInnerErrorCode(item.error_id)) {
+        err_stream << "        " << item.error_message << std::endl;
+      }
     }
   }
   ClearErrorMsgContainerByWorkId(error_context_.work_stream_id);

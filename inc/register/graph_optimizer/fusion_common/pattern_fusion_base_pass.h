@@ -22,6 +22,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
+
 #include "common/opskernel/ops_kernel_info_store.h"
 #include "register/graph_optimizer/graph_fusion/fusion_pattern.h"
 #include "register/graph_optimizer/graph_fusion/graph_pass.h"
