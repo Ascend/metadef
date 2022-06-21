@@ -84,9 +84,9 @@ public:
   KernelContextHolder Build(ge::OpDescPtr &op_desc);
 
 private:
-  ge::NodePtr MakeNode(ge::OpDescPtr &op_desc) const;
-
+  ge::NodePtr MakeNode(ge::OpDescPtr &op_desc);
 private:
+  ge::ComputeGraphPtr graph_;
   std::vector<std::pair<void *, Chain::Deleter>> inputs_;
   std::vector<std::pair<void *, Chain::Deleter>> outputs_;
 };
