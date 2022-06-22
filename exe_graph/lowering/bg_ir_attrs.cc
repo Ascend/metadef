@@ -90,8 +90,16 @@ bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   GeShapeToGertShape(tensor_desc.GetOriginShape(), tensor->MutableOriginShape());
   tensor->SetOriginFormat(tensor_desc.GetOriginFormat());
   tensor->SetStorageFormat(tensor_desc.GetFormat());
-  GE_ASSERT_EOK(memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(Tensor), val->GetData().GetData(),
-                         val->GetData().GetSize()));
+  if (total_size < sizeof(Tensor)) {
+    GELOGE(ge::PARAM_INVALID, "total_size[%zu] < size of Tensor[%zu]", total_size, sizeof(Tensor));
+    return false;
+  }
+  const auto copy_len = total_size - sizeof(Tensor);
+  if (copy_len != 0U) {
+    GE_CHECK_GE(val->GetData().size(), total_size - sizeof(Tensor));
+    GE_ASSERT_EOK(memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(Tensor), val->GetData().GetData(),
+                           total_size - sizeof(Tensor)));
+  }
 
   std::vector<uint8_t> buf(total_size);
   GE_ASSERT_EOK(memcpy_s(buf.data(), total_size, tensor_holder.get(), total_size));

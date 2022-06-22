@@ -16,6 +16,8 @@
 #include "exe_graph/runtime/kernel_run_context_builder.h"
 #include "exe_graph/lowering/bg_kernel_context_extend.h"
 #include "graph/compute_graph.h"
+#include "graph/utils/op_desc_utils.h"
+#include "graph/utils/graph_utils.h"
 
 namespace gert {
 KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
@@ -53,8 +55,14 @@ KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
   return holder;
 }
 
-ge::NodePtr KernelRunContextBuilder::MakeNode(ge::OpDescPtr &op_desc) const {
-  auto graph = std::make_shared<ge::ComputeGraph>("tmp");
-  return graph->AddNode(op_desc);
+ge::NodePtr KernelRunContextBuilder::MakeNode(ge::OpDescPtr &op_desc) {
+  graph_ = std::make_shared<ge::ComputeGraph>("tmp");
+  auto fake_node = graph_->AddNode(op_desc);
+  for (size_t i = 0UL; i < op_desc->GetAllInputsSize(); ++i) {
+    auto op_data = ge::OpDescBuilder(std::to_string(i), "Data").AddInput("x").AddOutput("y").Build();
+    auto data_node = graph_->AddNode(op_data);
+    ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), fake_node->GetInDataAnchor(i));
+  }
+  return fake_node;
 }
 }  // namespace gert

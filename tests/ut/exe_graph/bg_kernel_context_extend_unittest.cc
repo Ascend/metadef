@@ -22,6 +22,8 @@
 #include "exe_graph/runtime/tensor.h"
 #include "graph/debug/ge_attr_define.h"
 #include "transformer/inc/expand_dimension.h"
+#include "graph/utils/graph_utils.h"
+#include "runtime/runtime_attrs_def.h"
 
 namespace gert {
 class BgKernelContextExtendUT : public testing::Test {};
@@ -32,13 +34,17 @@ TEST_F(BgKernelContextExtendUT, BuildRequiredInput) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputRequired);
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -53,11 +59,10 @@ TEST_F(BgKernelContextExtendUT, BuildRequiredInput) {
   EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
   EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
   auto expand_dims_type = td->GetExpandDimsType();
-  Shape origin_shape({8,3,224,224});
+  Shape origin_shape({8, 3, 224, 224});
   Shape storage_shape;
   expand_dims_type.Expand(origin_shape, storage_shape);
   EXPECT_EQ(storage_shape, origin_shape);
-  
 
   auto ins_info = compute_node_info->GetInputInstanceInfo(0);
   ASSERT_NE(ins_info, nullptr);
@@ -74,8 +79,8 @@ TEST_F(BgKernelContextExtendUT, BuildEmptyRequiredInput) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputRequired);
   op_desc->AppendIrInput("x2", ge::kIrInputRequired);
@@ -94,8 +99,8 @@ TEST_F(BgKernelContextExtendUT, UknownInputFailed) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x2", tensor_desc);
   op_desc->AppendIrInput("x1", ge::kIrInputOptional);
 
@@ -105,7 +110,7 @@ TEST_F(BgKernelContextExtendUT, UknownInputFailed) {
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
   // TODO checkout except kernel context extend
-//  EXPECT_EQ(ret, nullptr);
+  //  EXPECT_EQ(ret, nullptr);
 }
 TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputs) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
@@ -114,13 +119,17 @@ TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputs) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputOptional);
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -150,14 +159,18 @@ TEST_F(BgKernelContextExtendUT, BuildWithOptionalInputsNotExists) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AppendIrInput("y", ge::kIrInputOptional);
   op_desc->AppendIrInput("x", ge::kIrInputOptional);
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -190,8 +203,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultipleOptionalInputsIns) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AddInputDesc("y", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputOptional);
@@ -200,6 +213,13 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultipleOptionalInputsIns) {
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  data_op_desc->AddOutputDesc("y", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(1), node->GetInDataAnchor(1));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -236,13 +256,17 @@ TEST_F(BgKernelContextExtendUT, BuildWithDynamicInputs) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x0", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputDynamic);
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -272,8 +296,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultiInstanceDynamicInputs) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x0", tensor_desc);
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AddInputDesc("y0", tensor_desc);
@@ -284,6 +308,18 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultiInstanceDynamicInputs) {
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x0", tensor_desc);
+  data_op_desc->AddOutputDesc("x1", tensor_desc);
+  data_op_desc->AddOutputDesc("y0", tensor_desc);
+  data_op_desc->AddOutputDesc("y1", tensor_desc);
+  data_op_desc->AddOutputDesc("y2", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(1), node->GetInDataAnchor(1));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(2), node->GetInDataAnchor(2));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(3), node->GetInDataAnchor(3));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(4), node->GetInDataAnchor(4));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -317,8 +353,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithEmptyDynamicInputs) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x0", tensor_desc);
   op_desc->AddInputDesc("x1", tensor_desc);
   op_desc->AppendIrInput("y", ge::kIrInputDynamic);
@@ -326,6 +362,12 @@ TEST_F(BgKernelContextExtendUT, BuildWithEmptyDynamicInputs) {
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x0", tensor_desc);
+  data_op_desc->AddOutputDesc("x1", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(1), node->GetInDataAnchor(1));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -358,8 +400,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithOneAttr) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputRequired);
   op_desc->AddOutputDesc("y", tensor_desc);
@@ -369,6 +411,10 @@ TEST_F(BgKernelContextExtendUT, BuildWithOneAttr) {
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -399,8 +445,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputRequired);
   op_desc->AddOutputDesc("y", tensor_desc);
@@ -409,10 +455,10 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   ge_td.SetOriginFormat(ge::FORMAT_NHWC);
   ge_td.SetFormat(ge::FORMAT_NC1HWC0);
   ge_td.SetDataType(ge::DT_FLOAT16);
-  ge_td.SetOriginShape(ge::GeShape({8,224,224,3}));
-  ge_td.SetShape(ge::GeShape({8,1,224,224,16}));
+  ge_td.SetOriginShape(ge::GeShape({8, 224, 224, 3}));
+  ge_td.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
   ge::GeTensor ge_tensor(ge_td);
-  std::vector<uint16_t> fake_data(8*224*224*16);
+  std::vector<uint16_t> fake_data(8 * 224 * 224 * 16);
   for (size_t i = 0; i < fake_data.size(); ++i) {
     fake_data[i] = static_cast<uint16_t>(rand() % std::numeric_limits<uint16_t>::max());
   }
@@ -422,13 +468,13 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   ge::AttrUtils::SetInt(op_desc, "a2", 10240);
   ge::AttrUtils::SetBool(op_desc, "a3", true);
   ge::AttrUtils::SetFloat(op_desc, "a4", 1024.0021);
-  ge::AttrUtils::SetListInt(op_desc, "a5", std::vector<int32_t>({10,200,3000,4096}));
+  ge::AttrUtils::SetListInt(op_desc, "a5", std::vector<int32_t>({10, 200, 3000, 4096}));
   ge::AttrUtils::SetTensor(op_desc, "a6", ge_tensor);
   ge::AttrUtils::SetStr(op_desc, "b1", "World");
   ge::AttrUtils::SetInt(op_desc, "b2", 1024000);
   ge::AttrUtils::SetBool(op_desc, "b3", false);
   ge::AttrUtils::SetFloat(op_desc, "b4", 1024.1);
-  ge::AttrUtils::SetListInt(op_desc, "b5", std::vector<int64_t>({10,400,3000,8192}));
+  ge::AttrUtils::SetListInt(op_desc, "b5", std::vector<int64_t>({10, 400, 3000, 8192}));
   ge::AttrUtils::SetTensor(op_desc, "b6", ge_tensor);
 
   op_desc->AppendIrAttrName("b1");
@@ -446,6 +492,10 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -479,7 +529,7 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   auto list_int = attrs->GetAttrPointer<gert::ContinuousVector>(4);
   ASSERT_NE(list_int, nullptr);
   ASSERT_EQ(list_int->GetSize(), 4);
-  EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,400,3000,8192}).data(), 4 * sizeof(int64_t)), 0);
+  EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10, 400, 3000, 8192}).data(), 4 * sizeof(int64_t)), 0);
   auto typed_list_int = attrs->GetListInt(4);
   ASSERT_NE(typed_list_int, nullptr);
   ASSERT_EQ(typed_list_int->GetSize(), 4);
@@ -491,8 +541,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   auto gert_tensor = attrs->GetAttrPointer<gert::Tensor>(5);
   EXPECT_EQ(attrs->GetTensor(5), gert_tensor);
   ASSERT_NE(gert_tensor, nullptr);
-  EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8,224,224,3}));
-  EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8,1,224,224,16}));
+  EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8, 224, 224, 3}));
+  EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8, 1, 224, 224, 16}));
   EXPECT_EQ(gert_tensor->GetOriginFormat(), ge::FORMAT_NHWC);
   EXPECT_EQ(gert_tensor->GetStorageFormat(), ge::FORMAT_NC1HWC0);
   EXPECT_EQ(gert_tensor->GetDataType(), ge::DT_FLOAT16);
@@ -505,11 +555,11 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   list_int = attrs->GetAttrPointer<gert::ContinuousVector>(10);
   ASSERT_NE(list_int, nullptr);
   ASSERT_EQ(list_int->GetSize(), 4);
-  EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10,200,3000,4096}).data(), 4 * sizeof(int64_t)), 0);
+  EXPECT_EQ(memcmp(list_int->GetData(), std::vector<int64_t>({10, 200, 3000, 4096}).data(), 4 * sizeof(int64_t)), 0);
   gert_tensor = attrs->GetAttrPointer<gert::Tensor>(11);
   ASSERT_NE(gert_tensor, nullptr);
-  EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8,224,224,3}));
-  EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8,1,224,224,16}));
+  EXPECT_EQ(gert_tensor->GetOriginShape(), gert::Shape({8, 224, 224, 3}));
+  EXPECT_EQ(gert_tensor->GetStorageShape(), gert::Shape({8, 1, 224, 224, 16}));
   EXPECT_EQ(gert_tensor->GetOriginFormat(), ge::FORMAT_NHWC);
   EXPECT_EQ(gert_tensor->GetStorageFormat(), ge::FORMAT_NC1HWC0);
   EXPECT_EQ(gert_tensor->GetDataType(), ge::DT_FLOAT16);
@@ -522,8 +572,8 @@ TEST_F(BgKernelContextExtendUT, IgnoreNoneIrAttr) {
   tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
-  tensor_desc.SetShape(ge::GeShape({8,1,224,224,16}));
-  tensor_desc.SetOriginShape(ge::GeShape({8,3,224,224}));
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputRequired);
   op_desc->AddOutputDesc("y", tensor_desc);
@@ -544,6 +594,10 @@ TEST_F(BgKernelContextExtendUT, IgnoreNoneIrAttr) {
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -583,14 +637,18 @@ TEST_F(BgKernelContextExtendUT, BuildRequiredInputWithExpandDimsType) {
   tensor_desc.SetShape(ge::GeShape({5, 6, 7, 1}));
   tensor_desc.SetOriginShape(ge::GeShape(origin_shape));
   // get reshape type 此处模拟FE调用transformer中方法获取int类型的reshape type
-  int64_t int_reshape_type = transformer::ExpandDimension::GenerateReshapeType(ge::FORMAT_NCHW, ge::FORMAT_NC1HWC0, origin_shape.size(),
-                                                                    "NCH");
-  (void)ge::AttrUtils::SetInt(tensor_desc, ge::ATTR_NAME_RESHAPE_TYPE_MASK, int_reshape_type);
+  int64_t int_reshape_type = transformer::ExpandDimension::GenerateReshapeType(ge::FORMAT_NCHW, ge::FORMAT_NC1HWC0,
+                                                                               origin_shape.size(), "NCH");
+  (void) ge::AttrUtils::SetInt(tensor_desc, ge::ATTR_NAME_RESHAPE_TYPE_MASK, int_reshape_type);
   op_desc->AddInputDesc("x", tensor_desc);
   op_desc->AppendIrInput("x", ge::kIrInputRequired);
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
 
   bg::BufferPool buffer_pool;
   auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
@@ -611,6 +669,172 @@ TEST_F(BgKernelContextExtendUT, BuildRequiredInputWithExpandDimsType) {
   expand_dims_type.Expand(shape, out_shape);
   ASSERT_EQ(4, out_shape.GetDimNum());
   ASSERT_EQ(out_shape, Shape({5, 6, 7, 1}));
+}
+
+TEST_F(BgKernelContextExtendUT, BuildWithMultiInstanceDynamicInputsWithNoMatchingNameBetweenIrAndNode) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
+  op_desc->AddInputDesc("y0", tensor_desc);
+  op_desc->AddInputDesc("y1", tensor_desc);
+  op_desc->AddInputDesc("x0", tensor_desc);
+  op_desc->AddInputDesc("x1", tensor_desc);
+
+  op_desc->AppendIrInput("x", ge::kIrInputDynamic);
+  op_desc->AppendIrInput("y", ge::kIrInputDynamic);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("y0", tensor_desc);
+  data_op_desc->AddOutputDesc("y1", tensor_desc);
+  data_op_desc->AddOutputDesc("x0", tensor_desc);
+  data_op_desc->AddOutputDesc("x1", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(1), node->GetInDataAnchor(1));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(2), node->GetInDataAnchor(2));
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(3), node->GetInDataAnchor(3));
+
+  bg::BufferPool buffer_pool;
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
+  ASSERT_NE(ret, nullptr);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 4);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 2);
+  auto td = compute_node_info->GetInputTdInfo(0);
+  ASSERT_NE(td, nullptr);
+  EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
+
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
+  ASSERT_NE(ins_info, nullptr);
+  EXPECT_EQ(ins_info->GetInstanceNum(), 0);
+  EXPECT_EQ(ins_info->GetInstanceStart(), 0);
+  ins_info = compute_node_info->GetInputInstanceInfo(1);
+  ASSERT_NE(ins_info, nullptr);
+  EXPECT_EQ(ins_info->GetInstanceNum(), 0);
+  EXPECT_EQ(ins_info->GetInstanceStart(), 0);
+
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 0);
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrPointer<char>(0), nullptr);
+}
+
+TEST_F(BgKernelContextExtendUT, BuildWithRequiredInputWithNoMatchingNameBetweenIrAndNode) {
+  auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
+  ge::GeTensorDesc tensor_desc;
+  tensor_desc.SetOriginFormat(ge::FORMAT_NCHW);
+  tensor_desc.SetFormat(ge::FORMAT_NC1HWC0);
+  tensor_desc.SetDataType(ge::DT_FLOAT16);
+  tensor_desc.SetOriginDataType(ge::DT_FLOAT);
+  tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
+  tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
+
+  op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AppendIrInput("x", ge::kIrInputRequired);
+
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+  auto data_op_desc = std::make_shared<ge::OpDesc>("data", "Data");
+  data_op_desc->AddOutputDesc("x1", tensor_desc);
+  auto data_node = graph->AddNode(data_op_desc);
+  ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), node->GetInDataAnchor(0));
+
+  bg::BufferPool buffer_pool;
+  auto ret = bg::CreateComputeNodeInfo(node, buffer_pool);
+  ASSERT_NE(ret, nullptr);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 1);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 1);
+  auto td = compute_node_info->GetInputTdInfo(0);
+  ASSERT_NE(td, nullptr);
+  EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT16);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NCHW);
+  EXPECT_EQ(td->GetStorageFormat(), ge::FORMAT_NC1HWC0);
+
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
+  ASSERT_NE(ins_info, nullptr);
+  EXPECT_EQ(ins_info->GetInstanceNum(), 1);
+  EXPECT_EQ(ins_info->GetInstanceStart(), 0);
+}
+
+/*
+ *    net_output
+ *       |
+ *     conv
+ *    /  \
+ *  x     w
+ */
+ge::ComputeGraphPtr GetNoPeerOutputAnchorGraph() {
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("default");
+  // add x node
+  ge::OpDescPtr x_op_desc = std::make_shared<ge::OpDesc>("x", "Data");
+  ge::GeTensorDesc x_td(ge::GeShape({1, 256, 256, 3}), ge::FORMAT_NHWC, ge::DT_FLOAT);
+  x_td.SetFormat(ge::FORMAT_NHWC);
+  x_td.SetOriginFormat(ge::FORMAT_NHWC);
+  x_op_desc->AddOutputDesc(x_td);
+  auto x_node = graph->AddNode(x_op_desc);
+  x_node->Init();
+  // add w node
+  ge::OpDescPtr w_op_desc = std::make_shared<ge::OpDesc>("w", "Data");
+  ge::GeTensorDesc w_td(ge::GeShape({1, 1, 1, 1}), ge::FORMAT_HWCN, ge::DT_FLOAT);
+  w_op_desc->AddOutputDesc(w_td);
+  auto w_node = graph->AddNode(w_op_desc);
+  w_node->Init();
+  // add conv node
+  ge::OpDescPtr conv_op_desc = std::make_shared<ge::OpDesc>("conv", "Conv2D");
+  conv_op_desc->AddInputDesc(x_td);
+  conv_op_desc->AddInputDesc(w_td);
+  ge::GeTensorDesc bias_td(ge::GeShape({1}));
+  conv_op_desc->AddInputDesc("bias", bias_td);
+  conv_op_desc->AppendIrInput("x", ge::kIrInputRequired);
+  conv_op_desc->AppendIrInput("w", ge::kIrInputRequired);
+  conv_op_desc->AppendIrInput("bias", ge::kIrInputOptional);
+  auto conv_node = graph->AddNode(conv_op_desc);
+  conv_node->Init();
+  // add edge
+  ge::GraphUtils::AddEdge(x_node->GetOutDataAnchor(0), conv_node->GetInDataAnchor(0));
+  ge::GraphUtils::AddEdge(w_node->GetOutDataAnchor(0), conv_node->GetInDataAnchor(1));
+  return graph;
+}
+
+TEST_F(BgKernelContextExtendUT, BuildOptionalInputWithNoPeerOutputAnchor) {
+  auto graph = GetNoPeerOutputAnchorGraph();
+  auto conv_node = graph->FindNode("conv");
+  bg::BufferPool buffer_pool;
+  size_t total_size = 0;
+  auto ret = bg::CreateComputeNodeInfo(conv_node, buffer_pool, total_size);
+  ASSERT_NE(ret, nullptr);
+  size_t buf_size = sizeof(ComputeNodeInfo) + sizeof(AnchorInstanceInfo) * 3 +
+      sizeof(CompileTimeTensorDesc) * 2 + sizeof(RuntimeAttrsDef);
+  ASSERT_EQ(total_size, buf_size);
+
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(ret.get());
+  ASSERT_EQ(compute_node_info->GetInputsNum(), 2);
+  ASSERT_EQ(compute_node_info->GetOutputsNum(), 0);
+  ASSERT_EQ(compute_node_info->GetIrInputsNum(), 3);
+  auto td = compute_node_info->GetInputTdInfo(0);
+  ASSERT_NE(td, nullptr);
+  EXPECT_EQ(td->GetDataType(), ge::DT_FLOAT);
+  EXPECT_EQ(td->GetOriginFormat(), ge::FORMAT_NHWC);
+
+  auto ins_info = compute_node_info->GetInputInstanceInfo(0);
+  ASSERT_NE(ins_info, nullptr);
+  EXPECT_EQ(ins_info->GetInstanceNum(), 1);
+  EXPECT_EQ(ins_info->GetInstanceStart(), 0);
+  ins_info = compute_node_info->GetInputInstanceInfo(1);
+  ASSERT_NE(ins_info, nullptr);
+  EXPECT_EQ(ins_info->GetInstanceNum(), 1);
+  EXPECT_EQ(ins_info->GetInstanceStart(), 1);
+  ins_info = compute_node_info->GetInputInstanceInfo(2);
 }
 
 // todo lowering时，不需要构造attr

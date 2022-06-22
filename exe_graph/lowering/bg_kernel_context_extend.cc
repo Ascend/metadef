@@ -32,7 +32,6 @@ ge::graphStatus GetInstanceNum(const ge::NodePtr &node, const std::string &ir_na
       GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
              "current name %s",
              node->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
-      return ge::FAILED;
     }
     instance_num = 1;
     return ge::SUCCESS;
@@ -70,13 +69,18 @@ ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &
     GE_ASSERT_NOTNULL(ins_info);
     size_t instance_num = 0;
     auto ret = GetInstanceNum(node, ir_inputs[i].first, ir_inputs[i].second, input_index, instance_num);
-    if (ret != ge::GRAPH_SUCCESS) {
-      continue;
-    }
-
+    GE_ASSERT_SUCCESS(ret);
     compute_node_info.MutableInputInstanceInfo(i)->SetInstantiationNum(instance_num);
     compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(input_index);
     input_index += instance_num;
+  }
+  if (input_index != node->GetOpDesc()->GetInputsSize()) {
+    GELOGW("input does not traverse to the end, clear all input instances, input_index[%zu], inputs_size[%zu]",
+           input_index, node->GetOpDesc()->GetInputsSize());
+    for (size_t i = 0; i < ir_inputs.size(); ++i) {
+      compute_node_info.MutableInputInstanceInfo(i)->SetInstantiationNum(0U);
+      compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(0U);
+    }
   }
   return ge::GRAPH_SUCCESS;
 }
@@ -90,9 +94,33 @@ void SetCompileTimeTd(const ge::ConstGeTensorDescPtr &desc, CompileTimeTensorDes
     td.SetExpandDimsType(ExpandDimsType(reshape_type_mask));
   }
 }
+
+ge::graphStatus GetConnectedEdgeIndexesToAnchorIndexMap(const ge::NodePtr &node,
+    std::map<size_t, size_t> &connected_edge_indexes_to_anchor_index) {
+  size_t compute_node_index = 0U;
+  for (const auto &anchor : node->GetAllInDataAnchors()) {
+    GE_ASSERT_NOTNULL(anchor);
+    if (anchor->GetPeerOutAnchor() == nullptr) {
+      continue;
+    }
+    GE_ASSERT_NOTNULL(anchor->GetPeerOutAnchor()->GetOwnerNode());
+    connected_edge_indexes_to_anchor_index[compute_node_index] = static_cast<size_t>(anchor->GetIdx());
+    ++compute_node_index;
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
 ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
-  for (size_t i = 0; i < node->GetAllInDataAnchorsSize(); ++i) {
-    auto desc = node->GetOpDesc()->GetInputDescPtr(i);
+  std::map<size_t, size_t> connected_edge_indexes_to_anchor_index;
+  auto ret = GetConnectedEdgeIndexesToAnchorIndexMap(node, connected_edge_indexes_to_anchor_index);
+  if (ret != ge::GRAPH_SUCCESS) {
+    GELOGE(ret, "get connected edge indexes to anchor index map failed. node:%s(%s)",
+           node->GetName().c_str(), node->GetType().c_str());
+    return ret;
+  }
+  GE_ASSERT_TRUE(connected_edge_indexes_to_anchor_index.size() == compute_node_info.GetInputsNum());
+  for (size_t i = 0; i < compute_node_info.GetInputsNum(); ++i) {
+    auto desc = node->GetOpDesc()->GetInputDescPtr(connected_edge_indexes_to_anchor_index[i]);
     GE_ASSERT_NOTNULL(desc);
     auto td = compute_node_info.MutableInputTdInfo(i);
     GE_ASSERT_NOTNULL(td);
@@ -115,7 +143,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
   GE_ASSERT_NOTNULL(attr_buf);
 
   auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
-  auto input_num = node->GetAllInDataAnchorsSize();
+  auto input_num = node->GetInDataNodesAndAnchors().size();
   auto output_num = node->GetAllOutDataAnchorsSize();
   GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size));
   GE_ASSERT_TRUE(!ge::AddOverflow(total_size, attr_size, total_size));
