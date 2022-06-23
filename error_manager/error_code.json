@@ -217,7 +217,7 @@
       "Arglist": "dynamic_image_size",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "The value must be formatted as [imagesize1_height,imagesize1_width;imagesize2_height,imagesize2_width]. Make sure that each profile has two dimensions. For details, see ATC Instructions."
+        "Solution": "The value must be formatted as [imagesize1_height,imagesize1_width;imagesize2_height,imagesize2_width]. Make sure that each profile has two dimensions."
       }
     },
     {
@@ -712,7 +712,7 @@
       "Arglist": "opname,outputindex,totlaloutputindex,inputindex,totlalinputindex",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Try again with a valid [--out_node] argument. For details, see ATC Instructions."
+        "Solution": "Try again with a valid [--out_node] argument."
       }
     },
     {
@@ -723,7 +723,7 @@
       "Arglist": "opname",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Try again with a valid [--out_node] argument. For details, see ATC Instructions."
+        "Solution": "Try again with a valid [--out_node] argument."
       }
     },
     {
@@ -1614,7 +1614,18 @@
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "N/A" 
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Autotune Errors",
+      "errTitle": "Invalid Environment Variable",
+      "ErrCode": "EC0007",
+      "ErrMessage": "The environment variable argument is invalid. Value [%s] for environment variable [%s] must be less than [%s].",
+      "Arglist": "value,env,max_val",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
       }
     },
     {
@@ -1634,6 +1645,28 @@
       "ErrCode": "ED0001",
       "ErrMessage": "Value [%s] for parameter [--soc_version] is invalid. Reason: The SoC version does not match device [%s].",
       "Arglist": "user_val, device_val",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "RLTune Errors",
+      "errTitle": "Invalid Environment Variable",
+      "ErrCode": "ED0002",
+      "ErrMessage": "The environment variable argument is invalid. Value [%s] for environment variable [%s] must be less than [%s].",
+      "Arglist": "value,env,max_val",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "RTS Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "EE1001",
+      "ErrMessage": "The argument is invalid.Reason: %s",
+      "Arglist": "extend_info",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
