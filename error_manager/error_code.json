@@ -601,7 +601,7 @@
       "ErrMessage": "IR for Op [%s, optype [%s]], is not registered.",
       "Arglist": "opname,optype",
       "suggestion": {
-        "Possible Cause": "N/A",
+        "Possible Cause": "1. The environment variable ASCEND_OPP_PATH is not configured. 2. IR is not registered",
         "Solution": "N/A"
       }
     },
