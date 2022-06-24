@@ -1930,7 +1930,7 @@
       "errTitle": "Interface Call Sequence Error",
       "ErrCode": "EK0002",
       "ErrMessage": "Failed to call %s before calling %s.",
-      "Arglist": "intf,intf",
+      "Arglist": "intf1,intf2",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
@@ -1938,10 +1938,10 @@
     },
     {
       "errClass": "Profiling Errors",
-      "errTitle": "Storage Limit Setting Error",
+      "errTitle": "Profiling Config Setting Error",
       "ErrCode": "EK0003",
-      "ErrMessage": "Failed to set the storage limit to %s. The value must be in the range of (%s, %s).",
-      "Arglist": "limit,min,max",
+      "ErrMessage": "Failed to set the %s to [%s]. Reason: %s.",
+      "Arglist": "config,value,reason",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
@@ -1953,17 +1953,6 @@
       "ErrCode": "EK0004",
       "ErrMessage": "[%s] is not supported in %s.",
       "Arglist": "intf,platform",
-      "suggestion": {
-        "Possible Cause": "N/A",
-        "Solution": "N/A"
-      }
-    },
-    {
-      "errClass": "Profiling Errors",
-      "errTitle": "Result Path Setting Error",
-      "ErrCode": "EK0005",
-      "ErrMessage": "[%s] is not accessible. Please check the permission of the result path you set.",
-      "Arglist": "path",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
