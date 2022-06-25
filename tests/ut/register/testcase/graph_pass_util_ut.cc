@@ -211,6 +211,7 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case9) {
 }
 
 TEST_F(GraphPassUtilUT, set_output_desc_attr_case10) {
+  putenv("DUMP_GE_GRAPH=2");
   OpDescPtr relu1 = std::make_shared<OpDesc>("relu1", "Relu");
   vector<int64_t> dim = {4, 4, 1, 4};
   GeShape shape(dim);
@@ -237,6 +238,7 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case10) {
 }
 
 TEST_F(GraphPassUtilUT, set_output_desc_attr_case11) {
+  putenv("DUMP_GE_GRAPH=2");
   OpDescPtr relu1 = std::make_shared<OpDesc>("relu1", "Relu");
   OpDescPtr relu2 = std::make_shared<OpDesc>("relu2", "Relu");
   vector<int64_t> dim = {4, 4, 1, 4};

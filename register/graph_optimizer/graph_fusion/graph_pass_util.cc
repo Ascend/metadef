@@ -16,9 +16,12 @@
 
 #include "register/graph_optimizer/fusion_common/graph_pass_util.h"
 #include "graph/debug/ge_log.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo_utils.h"
 
 namespace fe {
-const std::string kPASS_NAME = "pass_name";
+const std::string kPassName = "pass_name";
+const char* kDumpGeGraph = "DUMP_GE_GRAPH";
+
 #define REGISTER_MAKE_SHARED(exec_expr0, exec_expr1) \
   do {                                         \
     try {                                      \
@@ -237,13 +240,13 @@ Status GraphPassUtil::StoreAndUpdataOriginFusionPassName(const ge::OpDescPtr &op
       return FAILED;
     }
     const ge::OpDescPtr origin_op_desc_ptr = original_node->GetOpDesc();
-    if (!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPASS_NAME, pass_names_tmp) || pass_names_tmp.empty()) {
+    if (!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPassName, pass_names_tmp) || pass_names_tmp.empty()) {
       continue;
     }
     (void)pass_names.insert(pass_names.cend(), pass_names_tmp.cbegin(), pass_names_tmp.cend());
   }
   pass_names.push_back(pass_name);
-  if (!ge::AttrUtils::SetListStr(op_desc, kPASS_NAME, pass_names)) {
+  if (!ge::AttrUtils::SetListStr(op_desc, kPassName, pass_names)) {
     return FAILED;
   }
   return SUCCESS;
@@ -252,12 +255,16 @@ Status GraphPassUtil::StoreAndUpdataOriginFusionPassName(const ge::OpDescPtr &op
 void GraphPassUtil::RecordOriginalOpNames(const std::vector<ge::NodePtr> &original_nodes,
                                           const ge::OpDescPtr &op_desc, const string &pass_name,
                                           const std::vector<std::string> &origin_op_names) {
+  const char* dump_ge_graph = std::getenv(kDumpGeGraph);
+  FUSION_TURBO_NOTNULL(dump_ge_graph,);
+
   // 1. get the original_names
   GELOGD("Start to record op[%s] origin op names after pass[%s]", op_desc->GetName().c_str(), pass_name.c_str());
   std::shared_ptr<UnorderedMapping> origin_op_names_map = nullptr;
   REGISTER_MAKE_SHARED(origin_op_names_map = std::make_shared<UnorderedMapping>(), return);
   std::vector<std::string> origin_op_names_vec;
   size_t index = 0;
+
   if (op_desc == nullptr) {
     GELOGD("op_desc is nullptr");
     return;
@@ -276,7 +283,7 @@ void GraphPassUtil::RecordOriginalOpNames(const std::vector<ge::NodePtr> &origin
     if ((op_names_maps_tmp != nullptr) && (!op_names_maps_tmp->empty())) {
       size_t op_names_index = 0;
       std::vector<std::string> pass_names;
-      if (!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPASS_NAME, pass_names) || pass_names.empty()) {
+      if (!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPassName, pass_names) || pass_names.empty()) {
         continue;
       }
       for (const auto &pass_name_tmp : pass_names) {
