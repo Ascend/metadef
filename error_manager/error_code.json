@@ -1179,6 +1179,17 @@
     },
     {
       "errClass": "FE Errors",
+      "errTitle": "Invalid Environment Variable",
+      "ErrCode": "E20002",
+      "ErrMessage": "Value [%s] for environment variable [%s] is invalid when %s.",
+      "Arglist": "value,env,situation",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Reset the environment variable by referring to the installation guide."
+      }
+    },
+    {
+      "errClass": "FE Errors",
       "errTitle": "Fusion Pass Execution Failure",
       "ErrCode": "E20007",
       "ErrMessage": "Failed to run graph fusion pass [%s]. The pass type is [%s]",
