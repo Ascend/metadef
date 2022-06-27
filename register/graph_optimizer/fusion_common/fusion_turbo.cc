@@ -827,6 +827,10 @@ Status FusionTurbo::TransferOutCtrlEdges(const std::vector<ge::NodePtr> &nodes,
     }
 
     for (const auto &in_node : peer_in_ctrl_nodes) {
+      if (new_node == in_node) {
+        GELOGD("Out Ctrl: Avoid same source and dst %s.", new_node->GetName().c_str());
+        continue;
+      }
       (void)ge::GraphUtils::AddEdge(new_node->GetOutControlAnchor(), in_node->GetInControlAnchor());
     }
   }
@@ -846,6 +850,10 @@ Status FusionTurbo::TransferInCtrlEdges(const std::vector<ge::NodePtr> &nodes,
     }
 
     for (const auto &out_node : peer_out_ctrl_nodes) {
+      if (out_node == new_node) {
+        GELOGD("In Ctrl: avoid same source and dst %s.", new_node->GetName().c_str());
+        continue;
+      }
       if (ge::GraphUtils::AddEdge(out_node->GetOutControlAnchor(), new_node->GetInControlAnchor()) !=
           ge::GRAPH_SUCCESS) {
         return FAILED;

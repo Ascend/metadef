@@ -495,6 +495,50 @@ TEST_F(UTestFusionTurbo2, test_case_01_4) {
   EXPECT_EQ(graph->GetDirectNodesSize(), 7);
 }
 
+
+TEST_F(UTestFusionTurbo2, test_case_01_5) {
+  auto graph = CreateComplexGraph();
+  FusionTurbo acc(graph);
+  string name = "add_new";
+  string type = "Add";
+  auto node = acc.AddNodeOnly(name, type);
+  ASSERT_NE(node, nullptr);
+
+  auto relu1 = GetNode(graph, "relu1");
+  auto relu2 = GetNode(graph, "relu2");
+  auto add = GetNode(graph, "add");
+  auto out = GetNode(graph, "output");
+
+  auto relu1_input = relu1->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+  auto relu2_input = relu2->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+
+  Relations input_relations = {{0, {relu1_input, 0}},
+                               {1, {relu2_input, 0}}};
+  Relations output_relations = {0, {out, 0}};
+  ge::GraphUtils::AddEdge(relu1->GetOutControlAnchor(), add->GetInControlAnchor());
+  ge::GraphUtils::AddEdge(node->GetOutControlAnchor(), relu1->GetInControlAnchor());
+  // This is a very special case! node is in old_nodes!!
+  Status ret = acc.MultiInOne(node, input_relations, output_relations, {relu1, relu2, add, node}, false);
+  EXPECT_EQ(ret, SUCCESS);
+
+  auto relu1_out_nodes = relu1_input->GetOutDataNodes();
+  auto relu2_out_nodes = relu2_input->GetOutDataNodes();
+  ASSERT_EQ(relu1_out_nodes.size(), 2);
+  ASSERT_EQ(relu2_out_nodes.size(), 2);
+  EXPECT_EQ(relu1_out_nodes.at(0)->GetName(), "relu1");
+  EXPECT_EQ(relu1_out_nodes.at(1)->GetName(), "add_new");
+
+  EXPECT_EQ(relu1_out_nodes.at(0)->GetOutControlNodes().size(), 3);
+  EXPECT_EQ(relu1_out_nodes.at(1)->GetOutControlNodes().size(), 4);
+
+  EXPECT_EQ(relu2_out_nodes.at(0)->GetName(), "relu2");
+  EXPECT_EQ(relu2_out_nodes.at(1)->GetName(), "add_new");
+  auto out_in_nodes = out->GetInDataNodes();
+  EXPECT_EQ(out_in_nodes.size(), 2);
+  EXPECT_EQ(out_in_nodes.at(0)->GetName(), "add_new");
+  EXPECT_EQ(graph->GetDirectNodesSize(), 7);
+}
+
 TEST_F(UTestFusionTurbo2, test_case_2) {
   auto graph = CreateComplexGraph2();
   FusionTurbo acc(graph);
