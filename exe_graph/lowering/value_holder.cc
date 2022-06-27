@@ -329,7 +329,7 @@ ValueHolderPtr ValueHolder::CreateVoidGuarder(const char *node_type, const Value
   std::vector<ValueHolderPtr> inputs;
   inputs.reserve(args.size() + 1);
   inputs.emplace_back(resource);
-  inputs.insert(inputs.end(), args.begin(), args.end());
+  inputs.insert(inputs.end(), args.cbegin(), args.cend());
   auto ret = CreateVoid(node_type, inputs);
   GE_ASSERT_NOTNULL(ret);
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(ret->GetNode()->GetOpDesc(), kReleaseResourceIndex, 0));
