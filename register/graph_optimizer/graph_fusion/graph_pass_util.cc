@@ -16,6 +16,8 @@
 
 #include "register/graph_optimizer/fusion_common/graph_pass_util.h"
 #include "graph/debug/ge_log.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo_utils.h"
+const char* kDumpGeGraph = "DUMP_GE_GRAPH";
 
 namespace fe {
 const std::string kPASS_NAME = "pass_name";
@@ -252,6 +254,8 @@ Status GraphPassUtil::StoreAndUpdataOriginFusionPassName(const ge::OpDescPtr &op
 void GraphPassUtil::RecordOriginalOpNames(const std::vector<ge::NodePtr> &original_nodes,
                                           const ge::OpDescPtr &op_desc, const string &pass_name,
                                           const std::vector<std::string> &origin_op_names) {
+  const char* dump_ge_graph = std::getenv(kDumpGeGraph);
+  FUSION_TURBO_NOTNULL(dump_ge_graph,);
   // 1. get the original_names
   GELOGD("Start to record op[%s] origin op names after pass[%s]", op_desc->GetName().c_str(), pass_name.c_str());
   std::shared_ptr<UnorderedMapping> origin_op_names_map = nullptr;
