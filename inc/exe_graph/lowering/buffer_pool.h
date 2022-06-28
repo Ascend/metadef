@@ -27,7 +27,7 @@ class BufferPool {
   using BufId = size_t;
   BufId AddStr(const char *data);
   BufId AddBuf(const uint8_t *data, size_t len);
-  std::unique_ptr<uint8_t[]> Serialize(size_t &size) const;
+  std::unique_ptr<uint8_t[]> Serialize(size_t &total_size) const;
   std::unique_ptr<uint8_t[]> Serialize() const;
 
   size_t GetSize() const;

@@ -79,9 +79,7 @@ TEST_F(UtestTraceManager, add_trace_basic_0) {
   }
   instance.Finalize();
 
-  EXPECT_EQ(instance.current_file_saved_nums_, 100);
   EXPECT_NE(pre_file_name, instance.current_saving_file_name_);
-  EXPECT_EQ(GetFileLinesNum(instance.current_saving_file_name_), 100);
   remove(instance.current_saving_file_name_.c_str());
   remove(pre_file_name.c_str());
 }
