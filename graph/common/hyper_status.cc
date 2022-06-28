@@ -18,7 +18,6 @@
 
 #include <cstring>
 #include <memory>
-#include <securec.h>
 
 namespace gert {
 ge::char_t *CreateMessage(const ge::char_t *format, va_list arg) {
