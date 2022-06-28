@@ -57,7 +57,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferAxisSliceFuncRegister 
   GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY static ge::graphStatus (func_name)((op_name) &op, \
       std::vector<AxisTypeInfo> &axis_type)
 
-#define INFER_AXIS_TYPE_INFO_FUNC(op_name, x) [&](ge::Operator &v, std::vector<ge::AxisTypeInfo> &axis_type) \
+#define INFER_AXIS_TYPE_INFO_FUNC(op_name, x) [](ge::Operator &v, std::vector<ge::AxisTypeInfo> &axis_type) \
   { return (x)(v, axis_type); }
 
 #define INFER_AXIS_TYPE_INFO_REG_IMPL(op_name, x, n) \
