@@ -275,3 +275,23 @@ TEST_F(CheckerUT, ReturnInFunc) {
   ASSERT_NE(StatusFuncUseRtFunc(RT_EXCEPTION_DEV_RUNNING_DOWN), ge::GRAPH_SUCCESS);
   ASSERT_EQ(StatusFuncUseRtFunc(RT_ERROR_NONE), ge::GRAPH_SUCCESS);
 }
+
+TEST_F(CheckerUT, MicroTest) { // Keep this the last case!!!
+  std::string error_msg;
+#define GELOGE(v, ...) error_msg = std::string(CreateErrorMsg(__VA_ARGS__).data())
+  [&error_msg]() { GE_ASSERT(false); }();
+  EXPECT_EQ(error_msg, "Assert false failed");
+  [&error_msg]() { GE_ASSERT(false, "Something error"); }();
+  EXPECT_EQ(error_msg, "Something error");
+  [&error_msg]() { GE_ASSERT(false, "%s error", "Many things"); }();
+  EXPECT_EQ(error_msg, "Many things error");
+
+  [&error_msg]() { GE_ASSERT_NOTNULL(nullptr); }();
+  EXPECT_EQ(error_msg, "Assert ((nullptr) != nullptr) failed");
+  [&error_msg]() { GE_ASSERT_NOTNULL(nullptr, "%s error", "Nullptr"); }();
+  EXPECT_EQ(error_msg, "Nullptr error");
+
+  [&error_msg]() { GE_ASSERT_EQ(0, 1); }();
+  EXPECT_EQ(error_msg, "Assert (0 == 1) failed, expect 1 actual 0");
+#undef GELOGE
+}
