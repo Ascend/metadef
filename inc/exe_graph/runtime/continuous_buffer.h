@@ -17,6 +17,7 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_BUFFER_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_BUFFER_H_
 #include <type_traits>
+#include <cstdint>
 namespace gert {
 namespace bg {
 class BufferPool;

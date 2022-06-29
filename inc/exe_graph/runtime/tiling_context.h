@@ -26,7 +26,7 @@ namespace gert {
  */
 class TilingContext : public ExtendedKernelContext {
  public:
-  const void *GetCompileInfo() {
+  const void *GetCompileInfo() const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
@@ -71,7 +71,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入tensor指针，index非法时返回空指针
    */
-  const Tensor *GetInputTensor(size_t index) {
+  const Tensor *GetInputTensor(size_t index) const {
     return GetInputPointer<Tensor>(index);
   }
   /**
@@ -96,7 +96,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param index 输出index
    * @return 输出shape指针，index非法时，返回空指针
    */
-  const StorageShape *GetOutputShape(size_t index) {
+  const StorageShape *GetOutputShape(size_t index) const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;

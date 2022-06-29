@@ -16,7 +16,6 @@
 
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_INFER_SHAPE_CONTEXT_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_INFER_SHAPE_CONTEXT_H_
-#include <cstdint>
 #include <type_traits>
 #include "shape.h"
 #include "tensor.h"
@@ -33,7 +32,7 @@ class InferShapeContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入shape指针，index非法时，返回空指针
    */
-  const Shape *GetInputShape(size_t index) {
+  const Shape *GetInputShape(size_t index) const {
     return GetInputPointer<Shape>(index);
   }
   /**
