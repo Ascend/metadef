@@ -44,4 +44,13 @@ TEST_F(KernelRunContextBuilderUT, SetInputsOutputsOk) {
   EXPECT_TRUE(context->GetInputPointer<StorageShape>(1) == &shape2);
   EXPECT_TRUE(context->GetOutputPointer<StorageShape>(0) == &shape3);
 }
+
+TEST_F(KernelRunContextBuilderUT, BuildContextHolderFailedWhenCreateComputeNodeInfo) {
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "test1");
+  op_desc->AppendIrAttrName("attr1");
+  KernelRunContextBuilder builder;
+  auto holder = builder.Build(op_desc);
+  ASSERT_NE(holder.context_holder_, nullptr);
+  EXPECT_EQ(holder.compute_node_extend_holder_, nullptr);
+}
 }  // namespace gert

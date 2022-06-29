@@ -140,7 +140,7 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
   size_t attr_size;
   auto attr_buf = CreateAttrBuffer(node, attr_size);
-  GE_ASSERT_NOTNULL(attr_buf);
+  GE_ASSERT_NOTNULL(attr_buf, "Create atrr buffer for node: %s failed", node->GetName().c_str());
 
   auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
   auto input_num = node->GetInDataNodesAndAnchors().size();
@@ -148,7 +148,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
   GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size));
   GE_ASSERT_TRUE(!ge::AddOverflow(total_size, attr_size, total_size));
   auto compute_node_info_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]());
-  GE_ASSERT_NOTNULL(compute_node_info_holder);
+  GE_ASSERT_NOTNULL(compute_node_info_holder, "Create compute node info holder failed");
 
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());
   auto node_type = buffer_pool.AddStr(node->GetType().c_str());
@@ -157,10 +157,10 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
                           reinterpret_cast<const char *>(node_type));
   
   auto ret = InitInputInstanceInfo(node, *compute_node_info);
-  GE_ASSERT_SUCCESS(ret);
+  GE_ASSERT_SUCCESS(ret, "Init input instance info for node:%s failed.", node->GetName().c_str());
 
   ret = InitCompileTimeTD(node, *compute_node_info);
-  GE_ASSERT_SUCCESS(ret);
+  GE_ASSERT_SUCCESS(ret, "Init compile time tensor desc for node:%s failed.", node->GetName().c_str());
 
   auto attr = compute_node_info->MutableAttrs();
   auto offset = reinterpret_cast<uint8_t *>(attr) - compute_node_info_holder.get();

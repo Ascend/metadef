@@ -32,6 +32,12 @@ KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
   size_t extend_info_size;
   holder.compute_node_extend_holder_ =
       bg::CreateComputeNodeInfo(MakeNode(op_desc), holder.buffer_pool_, extend_info_size);
+
+  if (holder.compute_node_extend_holder_ == nullptr) {
+    GELOGE(ge::GRAPH_FAILED,
+           "Failed to create compute node info for node %s", op_desc->GetName().c_str());
+    return holder;
+  }
   auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder_.get());
   compute_node_info->SetNodeName(
       holder.buffer_pool_.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeName())));
