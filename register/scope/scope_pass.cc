@@ -87,7 +87,7 @@ ScopeBasePass::ScopeBasePassImpl::~ScopeBasePassImpl() {
 }
 
 Status ScopeBasePass::ScopeBasePassImpl::AddFusionScopesResultToScopeGraph(
-    const std::shared_ptr<ScopeGraph> &scope_graph, std::vector<ScopesResult> &scope_results) {
+    const std::shared_ptr<ScopeGraph> &scope_graph, std::vector<ScopesResult> &scope_results) const {
   for (auto &rlt : scope_results) {
     std::unique_ptr<FusionScopesResult> fusion_rlt = ComGraphMakeUnique<FusionScopesResult>();
     if (fusion_rlt == nullptr) {
@@ -233,7 +233,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchOneBatch(const ScopeTree *const scop
 }
 
 bool ScopeBasePass::ScopeBasePassImpl::MatchOneScope(const ScopePattern *pattern, Scope *scope,
-                                                     std::vector<Scope *> &results) {
+                                                     std::vector<Scope *> &results) const {
   if ((pattern == nullptr) || (scope == nullptr)) {
     GELOGE(PARAM_INVALID, "Input param is nullptr");
     return false;
@@ -271,7 +271,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchOneScope(const ScopePattern *pattern
   return (find > 0) ? true : false;
 }
 
-Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<ScopeGraph> &scope_graph) {
+Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<ScopeGraph> &scope_graph) const {
   if (scope_graph == nullptr) {
     GELOGE(PARAM_INVALID, "Input param scope_graph is nullptr.");
     return PARAM_INVALID;
