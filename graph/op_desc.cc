@@ -1103,7 +1103,6 @@ ConstProtoAttrMap &OpDescImpl::GetAttrMap() const {
 
 void OpDescImpl::SetId(const int64_t id) {
   meta_data_.id_ = id;
-  std::stringstream ss;
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    this->GetName(), "id", "", "", id);
