@@ -17,8 +17,8 @@
 #ifndef AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_DEFINITIONS_H_
 #define AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_DEFINITIONS_H_
 namespace gert {
-constexpr char *kLoweringResult = (char *)"_lowering_result";
-constexpr char *kLoweringTensorResult = (char *)"_lowering_tensor_result";
-constexpr char *kLoweringHostTensorResult = (char *)"_lowering_host_tensor_result";
+constexpr const char *kLoweringResult = "_lowering_result";
+constexpr const char *kLoweringTensorResult = "_lowering_tensor_result";
+constexpr const char *kLoweringHostTensorResult = "_lowering_host_tensor_result";
 }
 #endif //AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_DEFINITIONS_H_

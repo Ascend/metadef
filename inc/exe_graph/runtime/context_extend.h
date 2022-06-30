@@ -16,8 +16,6 @@
 
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_
-#include <cstddef>
-#include <cstdint>
 #include <type_traits>
 #include <memory>
 #include "compute_node_info.h"

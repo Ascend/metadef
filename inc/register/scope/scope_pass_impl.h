@@ -41,7 +41,7 @@ class ScopeBasePass::ScopeBasePassImpl {
 
  private:
   Status AddFusionScopesResultToScopeGraph(const std::shared_ptr<ScopeGraph> &scope_graph,
-                                           std::vector<ScopesResult> &scope_results);
+                                           std::vector<ScopesResult> &scope_results) const;
   // Match rules one by one, support multiple sets of matching rules, and finally output a single scope
   // Note: This function does not have to be rewritten.
   //       In order to match the fusion rules designed by you better,
@@ -50,8 +50,8 @@ class ScopeBasePass::ScopeBasePassImpl {
 
   bool MatchOneBatch(const ScopeTree *const scope_tree, const std::vector<ScopePattern *> &patternlist,
                      std::vector<Scope *> &results);
-  bool MatchOneScope(const ScopePattern *pattern, Scope *scope, std::vector<Scope *> &results);
-  Status PrintFusionScopeInfo(std::shared_ptr<ScopeGraph> &scope_graph);
+  bool MatchOneScope(const ScopePattern *pattern, Scope *scope, std::vector<Scope *> &results) const;
+  Status PrintFusionScopeInfo(std::shared_ptr<ScopeGraph> &scope_graph) const;
 
  private:
   std::vector<ScopeFusionPatterns> patterns_;

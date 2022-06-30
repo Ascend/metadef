@@ -20,6 +20,7 @@
 #include "graph/ge_error_codes.h"
 #include "framework/common/debug/ge_log.h"
 #include "hyper_status.h"
+#include <securec.h>
 
 struct ErrorResult {
   operator bool() const {
@@ -42,61 +43,57 @@ struct ErrorResult {
   }
 };
 
-#define GE_ASSERT_NOTNULL(val)                                                                                         \
-  do {                                                                                                                 \
-    if ((val) == nullptr) {                                                                                            \
-      REPORT_INNER_ERROR("E19999", "Check error, get NULL");                                                           \
-      GELOGE(ge::FAILED, "Check error, get NULL");                                                                     \
-      return ::ErrorResult();                                                                                          \
-    }                                                                                                                  \
-  } while (0)
+inline std::vector<char> CreateErrorMsg(const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  va_list args_copy;
+  va_copy(args_copy, args);
+  int len = vsnprintf(nullptr, 0, format, args_copy);
+  va_end(args_copy);
+  std::vector<char> msg(len + 1, 0);
+  auto ret = vsnprintf_s(msg.data(), len + 1, len, format, args);
+  va_end(args);
+  return (ret > 0) ? msg : std::vector<char>{};
+}
 
-#define GE_ASSERT_SUCCESS(expr)                                                                                        \
-  do {                                                                                                                 \
-    auto tmp_expr_ret = (expr);                                                                                        \
-    if (tmp_expr_ret != ge::GRAPH_SUCCESS) {                                                                           \
-      REPORT_INNER_ERROR("E19999", "Expect success, but get %d", tmp_expr_ret);                                        \
-      GELOGE(ge::FAILED, "Expect success, but get %d", tmp_expr_ret);                                                  \
-      return ::ErrorResult();                                                                                          \
-    }                                                                                                                  \
-  } while (0)
+inline std::vector<char> CreateErrorMsg() {
+  return {};
+}
 
-#define GE_ASSERT_HYPER_SUCCESS(expr)                                                                                  \
+#define GE_ASSERT_EQ(x, y)                                                                                             \
   do {                                                                                                                 \
-    const auto &tmp_expr_ret = (expr);                                                                                 \
-    if (!tmp_expr_ret.IsSuccess()) {                                                                                   \
-      REPORT_INNER_ERROR("E19999", "Expect success, but get error message %s", tmp_expr_ret.GetErrorMessage());        \
-      GELOGE(ge::FAILED, "Expect success, but get error message %s", tmp_expr_ret.GetErrorMessage());                  \
+    const auto &xv = (x);                                                                                              \
+    const auto &yv = (y);                                                                                              \
+    if (xv != yv) {                                                                                                    \
+      std::stringstream ss;                                                                                            \
+      ss << "Assert (" << #x << " == " << #y << ") failed, expect " << yv << " actual " << xv;                         \
+      REPORT_INNER_ERROR("E19999", "%s", ss.str().c_str());                                                            \
+      GELOGE(ge::FAILED, "%s", ss.str().c_str());                                                                      \
       return ::ErrorResult();                                                                                          \
     }                                                                                                                  \
-  } while (0)
+  } while (false)
 
-#define GE_ASSERT_TRUE(val)                                                                                            \
+#define GE_ASSERT(exp, ...)                                                                                            \
   do {                                                                                                                 \
-    if (!(val)) {                                                                                                      \
-      REPORT_INNER_ERROR("E19999", "Check error, get FALSE");                                                          \
-      GELOGE(ge::FAILED, "Check error, get FALSE");                                                                    \
+    if (!(exp)) {                                                                                                      \
+      auto msg = CreateErrorMsg(__VA_ARGS__);                                                                          \
+      if (msg.empty()) {                                                                                               \
+        REPORT_INNER_ERROR("E19999", "Assert %s failed", #exp);                                                        \
+        GELOGE(ge::FAILED, "Assert %s failed", #exp);                                                                  \
+      } else {                                                                                                         \
+        REPORT_INNER_ERROR("E19999", "%s", msg.data());                                                                \
+        GELOGE(ge::FAILED, "%s", msg.data());                                                                          \
+      }                                                                                                                \
       return ::ErrorResult();                                                                                          \
     }                                                                                                                  \
-  } while (0)
+  } while (false)
 
-#define GE_ASSERT_EOK(expr)                                                                                            \
-  do {                                                                                                                 \
-    auto tmp_expr_ret = (expr);                                                                                        \
-    if (tmp_expr_ret != EOK) {                                                                                         \
-      REPORT_INNER_ERROR("E19999", "Expect EOK, but get %d", tmp_expr_ret);                                            \
-      GELOGE(ge::FAILED, "Expect EOK, but get %d", tmp_expr_ret);                                                      \
-      return ::ErrorResult();                                                                                          \
-    }                                                                                                                  \
-  } while (0)
+#define GE_ASSERT_NOTNULL(v, ...) GE_ASSERT(((v) != nullptr), __VA_ARGS__)
+#define GE_ASSERT_SUCCESS(v, ...) GE_ASSERT(((v) == ge::SUCCESS), __VA_ARGS__)
+#define GE_ASSERT_GRAPH_SUCCESS(v, ...) GE_ASSERT(((v) == ge::GRAPH_SUCCESS), __VA_ARGS__)
+#define GE_ASSERT_RT_OK(v, ...) GE_ASSERT(((v) == 0), __VA_ARGS__)
+#define GE_ASSERT_EOK(v, ...) GE_ASSERT(((v) == EOK), __VA_ARGS__)
+#define GE_ASSERT_TRUE(v, ...) GE_ASSERT((v), __VA_ARGS__)
+#define GE_ASSERT_HYPER_SUCCESS(v, ...) GE_ASSERT(((v).IsSuccess()), __VA_ARGS__)
 
-#define GE_ASSERT_RT_OK(expr)                                                                                          \
-  do {                                                                                                                 \
-    auto tmp_expr_ret = (expr);                                                                                        \
-    if (tmp_expr_ret != 0) {                                                                                           \
-      REPORT_INNER_ERROR("E19999", "Expect RT_ERROR_NONE, but get %d", tmp_expr_ret);                                  \
-      GELOGE(ge::FAILED, "Expect RT_ERROR_NONE, but get %d", tmp_expr_ret);                                            \
-      return ::ErrorResult();                                                                                          \
-    }                                                                                                                  \
-  } while (0)
 #endif  //METADEF_CXX_INC_COMMON_CHECKER_H_

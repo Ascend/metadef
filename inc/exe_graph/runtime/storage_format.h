@@ -16,7 +16,6 @@
 
 #ifndef METADEF_CXX_INC_EXE_GRAPH_STORAGE_FORMAT_H_
 #define METADEF_CXX_INC_EXE_GRAPH_STORAGE_FORMAT_H_
-#include <cstdint>
 #include <memory>
 #include "graph/types.h"
 #include "expand_dims_type.h"

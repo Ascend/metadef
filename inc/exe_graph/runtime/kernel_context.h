@@ -21,7 +21,7 @@
 namespace gert {
 class Chain {
  public:
-  typedef void(*Deleter)(void *);
+  using Deleter = void (*)(void *);
   /**
    * 获取Chain中保存的数据的指针
    * @tparam T 数据类型
