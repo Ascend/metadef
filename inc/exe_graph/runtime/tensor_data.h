@@ -21,6 +21,7 @@
 namespace gert {
 using TensorAddress = void *;
 using ConstTensorAddress = void *const;
+using ConstTensorAddressPtr = const void *;
 
 enum TensorOperateType {
   kGetTensorAddress,  ///< 获取Tensor的地址
@@ -102,12 +103,12 @@ class TensorData {
    * @param addr tensor地址
    * @param manager tensor的管理函数
    */
-  ge::graphStatus SetAddr(TensorAddress addr, TensorAddrManager manager) {
+  ge::graphStatus SetAddr(ConstTensorAddressPtr addr, TensorAddrManager manager) {
     auto ret = Free();
     if (ret != ge::GRAPH_SUCCESS) {
       return ret;
     }
-    addr_ = addr;
+    addr_ = const_cast<TensorAddress>(addr);
     manager_ = manager;
     return ge::GRAPH_SUCCESS;
   }
