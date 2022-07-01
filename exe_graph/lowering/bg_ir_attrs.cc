@@ -15,8 +15,6 @@
  */
 #include "exe_graph/lowering/bg_ir_attrs.h"
 
-#include <type_traits>
-
 #include <securec.h>
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"

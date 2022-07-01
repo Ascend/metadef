@@ -142,7 +142,7 @@ class ExtendedKernelContext : protected KernelContext {
 
  protected:
   template<typename T, size_t Offset = 0>
-  const T *GetDynamicInputPointer(size_t ir_index, size_t relative_ins_index) {
+  const T *GetDynamicInputPointer(size_t ir_index, size_t relative_ins_index) const {
     auto ins_info = GetIrInputInstanceInfo(ir_index);
     if (ins_info == nullptr) {
       return nullptr;

@@ -88,7 +88,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
 
   return text_holder;
 }
-const char *BufferPool::GetBufById(BufferPool::BufId id) const {
+const char *BufferPool::GetBufById(BufId id) const {
   for (const auto &buf_and_id : bufs_to_id_) {
     if (buf_and_id.second == id) {
       return buf_and_id.first.c_str();

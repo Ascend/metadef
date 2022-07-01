@@ -19,37 +19,37 @@
 namespace gert {
 // 打在const节点上，表达const的值，
 // todo 后面这个应该慢慢要废弃掉，通过buffer id代替
-constexpr char *kConstValue = (char *)"value";
+constexpr const char *kConstValue = "value";
 
-constexpr char *kGraph = (char *)"graph";
+constexpr const char *kGraph = "graph";
 
 // 打在exe node上，代表本node执行的stage（例如DeInit）
-constexpr char *kStage = (char *)"stage";
+constexpr const char *kStage = "stage";
 
 // 打在feed节点上（Data、InnerData），代表这是第几个输入
-constexpr char *kFeedIndex = (char *)"index";
+constexpr const char *kFeedIndex = "index";
 
 // 打在输出desc上，标识本输出不申请独立的内存，从某个node的某个输出index上引用过来使用
-constexpr char *kRefFromNode = (char *)"RefFromNode";
-constexpr char *kRefFromIndex = (char *)"RefFromIndex";
+constexpr const char *kRefFromNode = "RefFromNode";
+constexpr const char *kRefFromIndex = "RefFromIndex";
 
 // 打在exe graph上，保存了本graph涉及的所有的ComputeNodeInfo
-constexpr char *kComputeNodeInfo = (char *)"ComputeNodeInfo";
+constexpr const char *kComputeNodeInfo = "ComputeNodeInfo";
 
 // 打在exe node上，用来标识本node所对应的计算图上的node的index
-constexpr char *kComputeNodeIndex = (char *)"ComputeNodeIndex";
+constexpr const char *kComputeNodeIndex = "ComputeNodeIndex";
 
 // 打在exe graph上，保存了本graph涉及的所有的KernelExtendInfo
-constexpr char *kKernelExtendInfo = (char *)"KernelExtendInfo";
+constexpr const char *kKernelExtendInfo = "KernelExtendInfo";
 
 // 打在exe node上，用来标识本node所对应的kernel信息的index
-constexpr char *kKernelExtendIndex = (char *)"KernelExtendInfoIndex";
+constexpr const char *kKernelExtendIndex = "KernelExtendInfoIndex";
 
 // 打在exe graph上，保存了本graph涉及的所有的二进制buffer（字符串、const值等）
-constexpr char *kBuffer = (char *)"buffer";
+constexpr const char *kBuffer = "buffer";
 
 // 打在exe graph上，保存了本graph涉及的ModelDesc信息
-constexpr char *kModelDesc = (char *)"ModelDesc";
+constexpr const char *kModelDesc = "ModelDesc";
 
 // 打在exe node上，类型是int，代表两层含义：1. 本node释放一个资源；2. 本node释放的资源位于本node的第n的输入index；n为属性的值
 constexpr char kReleaseResourceIndex[] = "ReleaseResourceIndex";

@@ -21,7 +21,7 @@
 namespace gert {
 class Chain {
  public:
-  typedef void(*Deleter)(void *);
+  using Deleter = void (*)(void *);
   /**
    * 获取Chain中保存的数据的指针
    * @tparam T 数据类型
@@ -162,6 +162,17 @@ class KernelContext {
     }
     return reinterpret_cast<const Chain *>(context_.values[i]);
   }
+    /**
+   * 获取输入的Chain指针
+   * @param i kernel的输入index
+   * @return 输入Chain的指针
+   */
+  Chain *MutableInput(size_t i) const {
+    if (i >= context_.input_size) {
+      return nullptr;
+    }
+    return reinterpret_cast<Chain *>(context_.values[i]);
+  }
   /**
    * 获取输出的Chain指针
    * @param i kernel的输出index
@@ -213,6 +224,20 @@ class KernelContext {
   template<typename T>
   const T *GetInputPointer(size_t i) const {
     auto av = GetInput(i);
+    if (av == nullptr) {
+      return nullptr;
+    }
+    return av->GetPointer<T>();
+  }
+  /**
+   * 获取输入数据的指针，本函数首先获取输入Chain，然后从输入Chain中获取指针
+   * @tparam T 值的类型
+   * @param i kernel的输入index
+   * @return 输入数据的指针
+   */
+  template<typename T>
+  T *MutableInputPointer(size_t i) const {
+    auto av = MutableInput(i);
     if (av == nullptr) {
       return nullptr;
     }

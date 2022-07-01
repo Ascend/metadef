@@ -18,12 +18,13 @@
 #include "graph/compute_graph.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/debug/ge_util.h"
 
 namespace gert {
 KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
   KernelContextHolder holder;
   size_t size = sizeof(KernelRunContext) + sizeof(Chain *) * (inputs_.size() + outputs_.size());
-  holder.context_holder_ = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[size]);
+  holder.context_holder_ = ge::ComGraphMakeUnique<uint8_t[]>(size);
   if (holder.context_holder_ == nullptr) {
     GELOGE(ge::GRAPH_FAILED, "Create context holder failed.");
     return holder;

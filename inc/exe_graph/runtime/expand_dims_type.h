@@ -16,7 +16,6 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_EXPAND_DIMS_TYPE_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_EXPAND_DIMS_TYPE_H_
 #include <cstdint>
-#include <initializer_list>
 #include <cstddef>
 #include "graph/ge_error_codes.h"
 #include "shape.h"
@@ -79,11 +78,11 @@ class ExpandDimsType {
     if (reshape_type_mask == 0) {
       return;
     }
-    size_ = static_cast<size_t>(reshape_type_mask >> kMaxExpandSize);
+    size_ = static_cast<uint64_t>(reshape_type_mask) >> kMaxExpandSize;
     if (size_ > kMaxExpandSize) {
       return;
     }
-    mask_ = reshape_type_mask & 0xff;
+    mask_ = static_cast<uint64_t>(reshape_type_mask) & 0xffULL;
   }
   /**
    * 判断补维规则是否一致

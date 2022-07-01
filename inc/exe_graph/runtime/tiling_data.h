@@ -23,7 +23,6 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/ge_error_codes.h"
 #include "graph/utils/math_util.h"
-#include "graph/types.h"
 #include "common/util/tiling_utils.h"
 
 namespace gert {
