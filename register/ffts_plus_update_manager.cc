@@ -20,9 +20,7 @@
 
 namespace ge {
 namespace {
-const std::vector<std::string> kBasicFftsDependsEngineLibs {
-  "libfe_executor.so", "libffts_executor.so", "libascendcpu_executor.so" // fe_executor will replaced by ffts_executor
-};
+const std::vector<std::string> kBasicFftsDependsEngineLibs { "libffts_executor.so", "libascendcpu_executor.so" };
 
 void GetLibPaths(std::string &lib_paths) {
   const std::string base_path = GetModelPath();
@@ -42,8 +40,8 @@ FftsPlusUpdateManager &FftsPlusUpdateManager::Instance() {
 }
 
 FftsCtxUpdatePtr FftsPlusUpdateManager::GetUpdater(const std::string &core_type) const {
-  const auto it = creators_.find(core_type);
-  if (it == creators_.end()) {
+  const std::map<std::string, FftsCtxUpdateCreatorFun>::const_iterator it = creators_.find(core_type);
+  if (it == creators_.cend()) {
     GELOGW("Cannot find creator for core type: %s.", core_type.c_str());
     return nullptr;
   }
@@ -57,7 +55,6 @@ void FftsPlusUpdateManager::RegisterCreator(const std::string &core_type, const 
     return;
   }
 
-  const std::unique_lock<std::mutex> lk(mutex_);
   const std::map<std::string, FftsCtxUpdateCreatorFun>::const_iterator it = creators_.find(core_type);
   if (it != creators_.cend()) {
     GELOGW("Creator already exist for core type: %s", core_type.c_str());

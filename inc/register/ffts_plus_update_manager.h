@@ -64,7 +64,6 @@ class FftsPlusUpdateManager {
    */
   void RegisterCreator(const std::string &core_type, const FftsCtxUpdateCreatorFun &creator);
 
-  std::mutex mutex_;
   std::map<std::string, FftsCtxUpdateCreatorFun> creators_;
   std::mutex init_mutex_;
   std::unique_ptr<PluginSoManager> plugin_manager_;
