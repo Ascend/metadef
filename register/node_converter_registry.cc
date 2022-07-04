@@ -33,8 +33,8 @@ NodeConverterRegistry::NodeConverter NodeConverterRegistry::FindNodeConverter(co
 void NodeConverterRegistry::RegisterNodeConverter(const std::string &func_name, NodeConverter func) {
   names_to_register_data_[func_name] = {func, -1};
 }
-const NodeConverterRegistry::ConverterRegisterData *
-NodeConverterRegistry::FindRegisterData(const string &func_name) const {
+const NodeConverterRegistry::ConverterRegisterData *NodeConverterRegistry::FindRegisterData(
+    const string &func_name) const {
   auto iter = names_to_register_data_.find(func_name);
   if (iter == names_to_register_data_.end()) {
     return nullptr;
