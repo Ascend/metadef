@@ -27,6 +27,7 @@
 #include "framework/common/debug/log.h"
 #include "framework/common/scope_guard.h"
 #include "framework/common/ge_inner_error_codes.h"
+#include "external/graph/types.h"
 
 #define GE_CHECK_POSITIVE_SIZE_RANGE(size)                             \
   do {                                                                 \
@@ -383,7 +384,7 @@ GE_FUNC_VISIBILITY bool CheckInt64MulOverflow(int64_t a, int64_t b);
 /// @param [in] path of input file
 /// @param [out] Absolute path of a file. If the absolute path cannot be obtained, an empty string is returned
 ///
-GE_FUNC_VISIBILITY std::string RealPath(const char *path);
+GE_FUNC_VISIBILITY std::string RealPath(const char_t *path);
 
 ///
 /// @ingroup domi_common

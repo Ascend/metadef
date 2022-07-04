@@ -105,6 +105,7 @@ std::string TraceManager::NextFileName() {
   static uint64_t uuid = 0;
 
   std::stringstream ss;
+  // need 3 widths to express uuid
   ss << trace_save_file_path_ << "trace_" << CurrentTimeInSecondsStr() << "_" << std::setw(3) << std::setfill('0')
      << uuid++ << ".txt";
 

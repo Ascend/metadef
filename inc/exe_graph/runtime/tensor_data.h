@@ -49,13 +49,7 @@ class TensorData {
     other.addr_ = nullptr;
     other.manager_ = nullptr;
   }
-  // todo delete after air adopted
-  TensorData &operator=(const TensorData &other) {
-    Free();
-    addr_ = other.addr_;
-    manager_ = other.manager_;
-    return *this;
-  }
+  TensorData &operator=(const TensorData &other) = delete;
   TensorData &operator=(TensorData &&other) noexcept {
     Free();
     addr_ = other.addr_;
