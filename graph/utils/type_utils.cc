@@ -352,7 +352,7 @@ bool TypeUtils::IsFormatValid(std::string format) {
 bool TypeUtils::IsInternalFormat(const Format format) {
   const std::string serial_format = FormatToSerialString(static_cast<Format>(GetPrimaryFormat(format)));
   const auto iter = kInternalFormat.find(serial_format);
-  const bool result = (iter == kInternalFormat.end()) ? false : true;
+  const bool result = (iter == kInternalFormat.cend()) ? false : true;
   return result;
 }
 

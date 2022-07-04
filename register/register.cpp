@@ -394,7 +394,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingByOpFnDynamic
     return FAILED;
   }
   // 4. sort map by port name insert index.
-  vector<pair<string, DynamicInfo>> port_dynamic_info_vec(port_dynamic_info.begin(), port_dynamic_info.end());
+  vector<pair<string, DynamicInfo>> port_dynamic_info_vec(port_dynamic_info.cbegin(), port_dynamic_info.cend());
   std::sort(port_dynamic_info_vec.begin(), port_dynamic_info_vec.end(),
             [](const pair<string, DynamicInfo> &p1, const pair<string, DynamicInfo> &p2)
             { return p1.second.GetInsetIndex() < p2.second.GetInsetIndex(); });
