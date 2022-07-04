@@ -519,6 +519,17 @@
     },
     {
       "errClass": "GE Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "E10053",
+      "ErrMessage": "There is an error in the command line. Reason: %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "GE Errors",
       "errTitle": "Invalid Operator Input Count",
       "ErrCode": "E10401",
       "ErrMessage": "The number of operator inputs ([%s]) exceeds the allowed maximum ([%s]).",
