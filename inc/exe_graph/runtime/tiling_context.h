@@ -45,7 +45,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return CompileInfo的指针
    */
   template<typename T>
-  const T *GetCompileInfo() {
+  const T *GetCompileInfo() const {
     return reinterpret_cast<const T *>(GetCompileInfo());
   }
   /**
@@ -53,7 +53,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入shape指针，index非法时返回空指针
    */
-  const StorageShape *GetInputShape(size_t index) {
+  const StorageShape *GetInputShape(size_t index) const {
     auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
@@ -79,7 +79,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param ir_index IR原型定义中的index
    * @return shape指针，index非法，或该INPUT没有实例化时，返回空指针
    */
-  const StorageShape *GetOptionalInputShape(size_t ir_index) {
+  const StorageShape *GetOptionalInputShape(size_t ir_index) const {
     return GetDynamicInputPointer<StorageShape>(ir_index, 0);
   }
   /**
@@ -88,7 +88,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
    * @return shape指针，index或relative_index非法时，返回空指针
    */
-  const StorageShape *GetDynamicInputShape(size_t ir_index, size_t relative_index) {
+  const StorageShape *GetDynamicInputShape(size_t ir_index, size_t relative_index) const {
     return GetDynamicInputPointer<StorageShape>(ir_index, relative_index);
   }
   /**
@@ -256,7 +256,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return workspace sizes指针
    */
   size_t *GetWorkspaceSizes(size_t workspace_count) {
-    auto workspace = GetOutputPointer<ContinuousVector>(kOutputWorkspace);
+    auto workspace = GetOutputPointer<TypedContinuousVector<size_t>>(kOutputWorkspace);
     if (workspace == nullptr) {
       return nullptr;
     }
@@ -264,7 +264,7 @@ class TilingContext : public ExtendedKernelContext {
       return nullptr;
     }
     workspace->SetSize(workspace_count);
-    return reinterpret_cast<size_t *>(workspace->MutableData());
+    return workspace->MutableData();
   }
 };
 static_assert(std::is_standard_layout<TilingContext>::value, "The class TilingContext must be a POD");
