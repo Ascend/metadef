@@ -120,21 +120,23 @@ target_link_options(graph PRIVATE
     -Wl,-Bsymbolic
 )
 
-target_link_libraries(graph PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-    metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
-    static_mmpa
-    -Wl,--no-as-needed
-    c_sec
-    slog
-    json
-    -Wl,--as-needed
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
-    -ldl
+target_link_libraries(graph
+    PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+        fwk_mmpa_headers
+        graphengine_headers
+        static_mmpa
+        -Wl,--no-as-needed
+        c_sec
+        slog
+        json
+        -Wl,--as-needed
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
+        -ldl
+    PUBLIC
+        metadef_headers
 )
 
 target_clone(graph graph_static STATIC)
@@ -258,13 +260,6 @@ set_target_properties(fwk_stub_graph PROPERTIES
 )
 
 ############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-install(TARGETS graph OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-)
-
 install(TARGETS atc_stub_graph OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/stub
 )
