@@ -36,7 +36,7 @@ class GraphFrame {
   GraphFrame operator=(const GraphFrame &) = delete;
   GraphFrame operator=(GraphFrame &&) = delete;
 
-  GraphFrame(ge::ComputeGraphPtr exe_graph, GraphFrame &parent_frame)
+  GraphFrame(ge::ComputeGraphPtr exe_graph, const GraphFrame &parent_frame)
       : exe_graph_(std::move(exe_graph)), current_compute_node_(nullptr), root_frame_(parent_frame.root_frame_) {}
 
   explicit GraphFrame(ge::ComputeGraphPtr exe_graph)

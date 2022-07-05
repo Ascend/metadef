@@ -50,7 +50,7 @@ LoweringGlobalData &LoweringGlobalData::SetAllocator(AllocatorDesc desc, bg::Val
   return *this;
 }
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) {
-  const auto iter = placements_to_allocator_.find(desc);
+  const auto &iter = placements_to_allocator_.find(desc);
   if (iter == placements_to_allocator_.end()) {
     auto memory_type_holder = bg::ValueHolder::CreateConst(&desc, sizeof(desc));
     auto allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {memory_type_holder});

@@ -131,7 +131,7 @@ bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &r
   auto all_attrs = ge::AttrUtils::GetAllAttrs(node->GetOpDesc());
   for (size_t i = 0; i < ir_attr_names.size(); ++i) {
     auto &attr_name = node->GetOpDesc()->GetIrAttrNames()[i];
-    const auto iter = all_attrs.find(attr_name);
+    const auto &iter = all_attrs.find(attr_name);
     if (iter == all_attrs.end()) {
       GELOGE(ge::FAILED, "Can not find the IR attr %s from node %s", attr_name.c_str(), node->GetName().c_str());
       return false;

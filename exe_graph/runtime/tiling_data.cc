@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/runtime/tiling_data.h"
+#include "common/util/tiling_utils.h"
 
 namespace gert {
 namespace {
