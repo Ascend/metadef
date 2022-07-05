@@ -59,6 +59,7 @@
 #include "exe_graph/runtime/kernel_run_context_builder.h"
 #include "external/register/op_impl_registry.h"
 #include "exe_graph/runtime/continuous_vector.h"
+#include "common/util/tiling_utils.h"
 
 
 using namespace domi;

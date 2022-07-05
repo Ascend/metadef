@@ -16,8 +16,6 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_STORAGE_SHAPE_H_
 #define METADEF_CXX_INC_EXE_GRAPH_STORAGE_SHAPE_H_
 #include <type_traits>
-#include "graph/ge_error_codes.h"
-#include "graph/types.h"
 #include "shape.h"
 
 namespace gert {

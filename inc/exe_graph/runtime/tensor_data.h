@@ -51,7 +51,7 @@ class TensorData {
   }
   TensorData &operator=(const TensorData &other) = delete;
   TensorData &operator=(TensorData &&other) noexcept {
-    Free();
+    static_cast<void>(Free());
     addr_ = other.addr_;
     manager_ = other.manager_;
     other.addr_ = nullptr;
@@ -59,7 +59,7 @@ class TensorData {
     return *this;
   }
   ~TensorData() {
-    Free();
+    static_cast<void>(Free());
   }
 
   /**

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/runtime/tiling_data.h"
+#include "common/util/tiling_utils.h"
 #include "faker/kernel_run_context_facker.h"
 #include <gtest/gtest.h>
 namespace gert {
