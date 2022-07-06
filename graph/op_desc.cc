@@ -549,7 +549,7 @@ const GeTensorDesc &OpDescImpl::GetInputDesc(const std::string &name) const {
 
 GeTensorDescPtr OpDescImpl::MutableInputDesc(const uint32_t index) const {
   if (index >= inputs_desc_.size()) {
-    GELOGW("[Get][InputDesc] Failed to get input desc [%u]", index);
+    GELOGI("[Get][InputDesc] Failed to get input desc [%u]", index);
     return nullptr;
   }
   if (inputs_desc_[static_cast<uint64_t>(index)] == nullptr) {
@@ -722,7 +722,7 @@ const GeTensorDesc &OpDescImpl::GetOutputDesc(const std::string &name) const {
 }
 
 GeTensorDescPtr OpDescImpl::MutableOutputDesc(const uint32_t index) const {
-  GE_CHK_BOOL_EXEC(index < outputs_desc_.size(), return nullptr, "Cann't find the output desc %u", index);
+  GE_CHK_BOOL_EXEC_INFO(index < outputs_desc_.size(), return nullptr, "Cann't find the output desc %u", index);
   return outputs_desc_[static_cast<uint64_t>(index)];
 }
 
