@@ -208,7 +208,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchAllBatches(const ScopeTree *scope_tr
 
 bool ScopeBasePass::ScopeBasePassImpl::MatchOneBatch(const ScopeTree *const scope_tree,
                                                      const std::vector<ScopePattern *> &patternlist,
-                                                     std::vector<Scope *> &results) {
+                                                     std::vector<Scope *> &results) const {
   if (scope_tree == nullptr) {
     GELOGE(PARAM_INVALID, "Input param [scope_tree] is nullptr");
     return false;

@@ -15,8 +15,16 @@
 
 add_library(metadef_headers INTERFACE)
 target_include_directories(metadef_headers INTERFACE
-    ./
-    external
-    graph
-    register
+    $<BUILD_INTERFACE:${METADEF_DIR}/inc>
+    $<BUILD_INTERFACE:${METADEF_DIR}/inc/external>
+    $<BUILD_INTERFACE:${METADEF_DIR}/inc/graph>
+    $<BUILD_INTERFACE:${METADEF_DIR}/inc/register>
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/metadef>
+    $<INSTALL_INTERFACE:include/metadef/common>
+    $<INSTALL_INTERFACE:include/metadef/exe_graph>
+    $<INSTALL_INTERFACE:include/metadef/external>
+    $<INSTALL_INTERFACE:include/metadef/graph>
+    $<INSTALL_INTERFACE:include/metadef/register>
+    $<INSTALL_INTERFACE:include/metadef/transformer>
 )

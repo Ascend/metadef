@@ -17,20 +17,22 @@ target_include_directories(error_manager PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
-target_link_libraries(error_manager PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-    metadef_headers
-    fwk_mmpa_headers
-    static_mmpa
-    -Wl,--no-as-needed
-    c_sec
-    slog
-    -Wl,--as-needed
-    json
-    $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
-    -ldl
+target_link_libraries(error_manager
+    PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+        fwk_mmpa_headers
+        static_mmpa
+        -Wl,--no-as-needed
+        c_sec
+        slog
+        -Wl,--as-needed
+        json
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
+        -ldl
+    PUBLIC
+        metadef_headers
 )
 
 set_target_properties(error_manager PROPERTIES
@@ -48,17 +50,8 @@ set_target_properties(error_manager_static PROPERTIES
     OUTPUT_NAME error_manager
 )
 
-############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-if(TARGET_SYSTEM_NAME STREQUAL "Windows")
-install(TARGETS error_manager error_manager_static OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-)
-else()
-install(TARGETS error_manager error_manager_static OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-    ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR}
-)
+if(NOT TARGET_SYSTEM_NAME STREQUAL "Windows")
+    install(TARGETS error_manager_static
+        ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
+    )
 endif()

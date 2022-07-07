@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.14)
 project (MetaDef[CXX])
 
+set(INSTALL_BASE_DIR "")
+set(INSTALL_LIBRARY_DIR lib)
+set(INSTALL_RUNTIME_DIR bin)
+set(INSTALL_INCLUDE_DIR include)
+set(INSTALL_CONFIG_DIR  cmake)
+include(CMakePackageConfigHelpers)
+
 set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
@@ -37,4 +44,35 @@ add_subdirectory(error_manager)
 add_subdirectory(register)
 if (ENABLE_OPEN_SRC)
     add_subdirectory(tests)
+endif()
+
+install(TARGETS error_manager graph register metadef_headers
+    EXPORT metadef-targets
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk
+    ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk
+    RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR} OPTIONAL COMPONENT opensdk
+)
+install(FILES   ${METADEF_DIR}/third_party/transformer/inc/axis_util.h
+                ${METADEF_DIR}/third_party/transformer/inc/expand_dimension.h
+                ${METADEF_DIR}/third_party/transformer/inc/transfer_range_according_to_format.h
+                ${METADEF_DIR}/third_party/transformer/inc/transfer_shape_according_to_format.h
+        DESTINATION ${INSTALL_INCLUDE_DIR}/metadef/transformer COMPONENT opensdk EXCLUDE_FROM_ALL
+)
+install(DIRECTORY ${METADEF_DIR}/inc/ DESTINATION ${INSTALL_INCLUDE_DIR}/metadef
+    COMPONENT opensdk EXCLUDE_FROM_ALL FILES_MATCHING PATTERN "*.h"
+)
+
+if (PACKAGE STREQUAL "opensdk")
+    install(EXPORT metadef-targets DESTINATION ${INSTALL_CONFIG_DIR}
+        FILE metadef-targets.cmake COMPONENT opensdk EXCLUDE_FROM_ALL
+    )
+    configure_package_config_file(${TOP_DIR}/cmake/config/pkg_config_template.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/metadef-config.cmake
+        INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
+        PATH_VARS INSTALL_BASE_DIR INSTALL_INCLUDE_DIR INSTALL_LIBRARY_DIR INSTALL_RUNTIME_DIR INSTALL_CONFIG_DIR
+        INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}
+    )
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/metadef-config.cmake
+        DESTINATION ${INSTALL_CONFIG_DIR} COMPONENT opensdk EXCLUDE_FROM_ALL
+    )
 endif()

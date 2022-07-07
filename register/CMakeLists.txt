@@ -71,27 +71,29 @@ target_link_options(register PRIVATE
     -Wl,-Bsymbolic
 )
 
-target_link_libraries(register PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:runtime_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
-    metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
-    -Wl,--whole-archive
-    op_tiling_o2
-    -Wl,--no-whole-archive
-    -Wl,--no-as-needed
-    graph
-    ascend_protobuf
-    c_sec
-    slog
-    static_mmpa
-    -Wl,--as-needed
-    json
+target_link_libraries(register
+    PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:runtime_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
+        fwk_mmpa_headers
+        graphengine_headers
+        -Wl,--whole-archive
+        op_tiling_o2
+        -Wl,--no-whole-archive
+        -Wl,--no-as-needed
+        ascend_protobuf
+        c_sec
+        slog
+        graph
+        static_mmpa
+        -Wl,--as-needed
+        json
+    PUBLIC
+        metadef_headers
 )
 
 ############ libregister.a ############
@@ -206,10 +208,6 @@ target_link_libraries(op_tiling_o2 PRIVATE
 )
 
 ############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-install(TARGETS register register_static OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-    ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR}
+install(TARGETS register_static
+    ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
 )
