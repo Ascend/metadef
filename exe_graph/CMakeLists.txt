@@ -9,14 +9,14 @@ target_include_directories(exe_graph PRIVATE
     ${METADEF_DIR}
 )
 
-target_include_directories(exe_graph PUBLIC
+target_include_directories(exe_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     ${METADEF_DIR}/third_party/transformer/inc
 )
 
-target_link_libraries(exe_graph PUBLIC
+target_link_libraries(exe_graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
@@ -44,7 +44,7 @@ target_compile_options(exe_graph PRIVATE
 
 target_clone(exe_graph exe_graph_static STATIC)
 
-target_link_libraries(exe_graph PUBLIC ascend_protobuf graph)
+target_link_libraries(exe_graph PRIVATE ascend_protobuf graph)
 target_link_libraries(exe_graph_static PRIVATE
         ascend_protobuf_static graph_static
         )
@@ -52,10 +52,3 @@ target_link_libraries(exe_graph_static PRIVATE
 target_compile_options(exe_graph PRIVATE -O2)
 target_compile_options(exe_graph_static PRIVATE $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>)
 
-############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-install(TARGETS exe_graph OPTIONAL
-        LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-)
