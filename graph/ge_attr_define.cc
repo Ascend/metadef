@@ -1348,4 +1348,10 @@ const std::string ATTR_NAME_SKIP_GEN_TASK = "_skip_gen_task";
 const std::string ATTR_NAME_OM_BINARY_PATH = "_om_binary_path";
 
 const std::string ATTR_NAME_NEED_GENTASK_ATOMIC = "_need_gentask_atomic";
+
+// for pipeline partition attribute
+const std::string ATTR_NAME_PARALLEL_SHARDED = "_parallel_sharded";
+const std::string ATTR_NAME_PIPELINE_STAGE = "_pipeline_stage";
+const std::string ATTR_NAME_LOGIC_DEV_ID = "_logic_device_id";
+const std::string ATTR_NAME_STAGE_ORDER_ID = "_stage_order_id";
 }  // namespace ge

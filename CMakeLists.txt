@@ -46,7 +46,7 @@ if (ENABLE_OPEN_SRC)
     add_subdirectory(tests)
 endif()
 
-install(TARGETS error_manager graph register metadef_headers
+install(TARGETS exe_graph error_manager graph register metadef_headers
     EXPORT metadef-targets
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk
     ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk
@@ -66,12 +66,14 @@ if (PACKAGE STREQUAL "opensdk")
     install(EXPORT metadef-targets DESTINATION ${INSTALL_CONFIG_DIR}
         FILE metadef-targets.cmake COMPONENT opensdk EXCLUDE_FROM_ALL
     )
+    set(PKG_NAME metadef)
     configure_package_config_file(${TOP_DIR}/cmake/config/pkg_config_template.cmake.in
         ${CMAKE_CURRENT_BINARY_DIR}/metadef-config.cmake
         INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
         PATH_VARS INSTALL_BASE_DIR INSTALL_INCLUDE_DIR INSTALL_LIBRARY_DIR INSTALL_RUNTIME_DIR INSTALL_CONFIG_DIR
         INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}
     )
+    unset(PKG_NAME)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/metadef-config.cmake
         DESTINATION ${INSTALL_CONFIG_DIR} COMPONENT opensdk EXCLUDE_FROM_ALL
     )
