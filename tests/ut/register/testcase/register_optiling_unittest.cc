@@ -219,6 +219,31 @@ TEST_F(RegisterOpTilingUT, PostProcCalculateV2_SUCCESS) {
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
 }
 
+TEST_F(RegisterOpTilingUT, PostProcMemoryCheck1) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &node = root_builder.AddNode("relu", "ReluV2", 2, 1);
+  GeShape shape({3,4,2,1});
+  GeTensorDesc tensor_desc(shape);
+  OpDescPtr op_desc = node->GetOpDesc();
+  op_desc->AddInputDesc("x", tensor_desc);
+  op_desc->AddInputDesc("y", tensor_desc);
+  op_desc->AddOutputDesc("z", tensor_desc);
+  Operator op = OpDescUtils::CreateOperatorFromNode(node);
+  std::vector<int64_t> workspaces = { 1, 2, 3};
+  OpRunInfoV2 run_info;
+  run_info.SetWorkspaces(workspaces);
+  (void)ge::AttrUtils::SetBool(op_desc, kMemoryCheck, false);
+  ge::graphStatus ret = PostProcMemoryCheck(op, run_info);
+  ByteBuffer &data = run_info.GetAllTilingData();
+  cout << "TEST" << data.str() << endl;
+  EXPECT_EQ(data.str().empty(), true);
+  (void)ge::AttrUtils::SetBool(op_desc, kMemoryCheck, true);
+  ret = PostProcMemoryCheck(op, run_info);
+  ByteBuffer &data1 = run_info.GetAllTilingData();
+  cout << "TEST1" << data1.str().c_str() << endl;
+  EXPECT_EQ(data1.str().empty(), false);
+}
+
 TEST_F(RegisterOpTilingUT, UpDateNodeShapeBySliceInfo1) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &node = root_builder.AddNode("relu", "ReluV2", 1, 1);

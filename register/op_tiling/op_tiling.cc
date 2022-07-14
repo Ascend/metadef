@@ -477,7 +477,7 @@ ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_inf
   GELOGD("Op name:%s post proc, op work num:%zu, all work num:%zu.", op_desc->GetName().c_str(), op_work_size,
          all_workspaces.size());
   if (op_work_size > all_workspaces.size()) {
-    REPORT_CALL_ERROR("E19999", "[register][op_tiling.cc][PostProcCalculateV2]Workspace size error.");
+    REPORT_CALL_ERROR("E19999", "[register][op_tiling][PostProcCalculateV2]Workspace size error.");
     return ge::GRAPH_FAILED;
   }
   // mixl2--pass will add additional works after op_workspaces
@@ -516,6 +516,53 @@ OpTilingFuncInfo *GetOpTilingInfo(const ge::OpDescPtr &op_desc) {
   return ::ge::PtrToPtr<void, OpTilingFuncInfo>(op_desc->GetTilingFuncInfo());
 }
 
+ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_info)
+{
+  const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  bool value = false;
+  if (!ge::AttrUtils::GetBool(op_desc, kMemoryCheck, value) || value == false) {
+    return ge::GRAPH_SUCCESS;
+  }
+  for (size_t i = 0; i < op_desc->GetOutputsSize(); ++i) {
+    const ge::GeTensorDescPtr tensor = op_desc->MutableOutputDesc(static_cast<uint32_t>(i));
+    if (tensor == nullptr) {
+      continue;
+    }
+    int64_t clean_size = 0;
+    if (ge::TensorUtils::GetSize(*tensor, clean_size) != ge::GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "[register][op_tiling][PostProcMemoryCheck]Get op:%s tensor:%zu size failed.",
+                        op_desc->GetName().c_str(), i);
+      return ge::GRAPH_FAILED;
+    }
+    GELOGD("Op input tensor:%zu size is %ld.", i, clean_size);
+    run_info.AddTilingData(clean_size);
+  }
+  for (size_t j = 0; j < op_desc->GetAllInputsSize(); ++j) {
+    const ge::GeTensorDescPtr tensor = op_desc->MutableInputDesc(static_cast<uint32_t>(j));
+    if (tensor == nullptr) {
+      continue;
+    }
+    int64_t clean_size = 0;
+    if (ge::TensorUtils::GetSize(*tensor, clean_size) != ge::GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "[register][op_tiling][PostProcMemoryCheck]Get op:%s tensor:%zu size failed.",
+                        op_desc->GetName().c_str(), j);
+      return ge::GRAPH_FAILED;
+    }
+    GELOGD("Op output tensor:%zu size is %ld.", j, clean_size);
+    run_info.AddTilingData(clean_size);
+  }
+  for (size_t k = 0; k < run_info.GetWorkspaceNum(); ++k) {
+    int64_t workspace = 0;
+    (void)run_info.GetWorkspace(k, workspace);
+    GELOGD("Op workspace:%zu size is %ld.", k, workspace);
+    run_info.AddTilingData(workspace);
+  }
+  uint64_t max_size = run_info.GetTilingDataMaxSize();
+  GELOGD("Add tiling data max size %lu.", max_size);
+  run_info.AddTilingData(max_size);
+  return ge::GRAPH_SUCCESS;
+}
+
 extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_info) {
   const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
   OpTilingFuncInfo *op_func_info = GetOpTilingInfo(op_desc);
@@ -542,8 +589,12 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2
   } else {
     GE_LOGE("Optiling func of op type[%s] is all empty.", op_desc->GetType().c_str());
   }
+  if (ret != ge::GRAPH_SUCCESS) {
+    return ret;
+  }
+  ret = PostProcCalculateV2(op, run_info);
   if (ret == ge::GRAPH_SUCCESS) {
-    return PostProcCalculateV2(op, run_info);
+    return PostProcMemoryCheck(op, run_info);
   }
   return ret;
 }

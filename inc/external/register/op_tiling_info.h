@@ -133,7 +133,7 @@ public:
 
   void SetTilingKey(const uint64_t &new_tiling_key);
   uint64_t GetTilingKey() const;
-
+  uint64_t GetTilingDataMaxSize() const;
   void ResetWorkspace();
   void ResetAddrBase(void *const addr_base, const uint64_t max_size);
 

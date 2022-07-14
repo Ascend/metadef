@@ -31,7 +31,7 @@ const std::string ATTR_NAME_ATOMIC_CLEAN_WORKSPACE = "_optiling_atomic_add_mem_s
 const std::string ATTR_NAME_OP_INFER_DEPENDS = "_op_infer_depends";
 const std::string OP_TYPE_DYNAMIC_ATOMIC_ADDR_CLEAN = "DynamicAtomicAddrClean";
 const std::string OP_TYPE_AUTO_TILING = "AutoTiling";
-
+constexpr const char* kMemoryCheck = "_memcheck";
 const std::map<ge::DataType, std::string> DATATYPE_STRING_MAP {
     {ge::DT_FLOAT, "float32"},
     {ge::DT_FLOAT16, "float16"},

@@ -90,6 +90,7 @@ public:
 
   ByteBuffer &GetAllTilingData() { return tiling_data_; }
 
+  uint64_t GetTilingDataMaxSize() const { return max_size_; }
   void SetAllTilingData(const ByteBuffer &value) {
     tiling_data_.clear();
     offset_ = 0;
@@ -222,7 +223,9 @@ ByteBuffer &OpRunInfo::GetAllTilingData() {
 const ByteBuffer &OpRunInfo::GetAllTilingData() const {
   return impl_->GetAllTilingData();
 }
-
+uint64_t OpRunInfo::GetTilingDataMaxSize() const {
+  return impl_->GetTilingDataMaxSize();
+}
 void OpRunInfo::SetClearAtomic(const bool clear_atomic) {
   impl_->SetClearAtomic(clear_atomic);
 }
