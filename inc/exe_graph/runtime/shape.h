@@ -100,6 +100,14 @@ struct Shape {
   }
 
   /**
+   * 设置shape为标量
+   * @param none
+   */
+  void SetScalar() {
+    dim_num_ = 0;
+  }
+
+  /**
    * 获取dim num
    * @return
    */

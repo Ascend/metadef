@@ -162,4 +162,11 @@ TEST_F(ShapeUT, AppendDimOutOfBounds) {
   s.AppendDim(10);
   EXPECT_EQ(s, expect_s);
 }
+
+TEST_F(ShapeUT, SetScalar) {
+  Shape s{1, 2, 3, 4};
+  EXPECT_EQ(s.GetDimNum(), 4);
+  s.SetScalar();
+  EXPECT_EQ(s.GetDimNum(), 0);
+}
 }  // namespace gert

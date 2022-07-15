@@ -530,6 +530,17 @@
     },
     {
       "errClass": "GE Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "E10054",
+      "ErrMessage": "The requied parameter [%s] for ATC is empty. Another possible reason is that the value of some parameter is not enclosed by quotation marks (\"\").",
+      "Arglist": "parameter",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "GE Errors",
       "errTitle": "Invalid Operator Input Count",
       "ErrCode": "E10401",
       "ErrMessage": "The number of operator inputs ([%s]) exceeds the allowed maximum ([%s]).",
@@ -1175,6 +1186,17 @@
       "suggestion": {
         "Possible Cause": "The operator does not hit the high-priority operator information library, which might result in compromised performance.",
         "Solution": "Submit an issue to request for support at https://gitee.com/ascend."
+      }
+    },
+    {
+      "errClass": "GE Error",
+      "errTitle": "Invalid Weight Configuration",
+      "ErrCode": "W11002",
+      "ErrMessage": "In the compression weight configuration file [%s], some nodes do not exist in graph: %s.",
+      "Arglist": "filename, opnames",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
       }
     },
     {
