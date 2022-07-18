@@ -15,6 +15,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <climits>
 
 #define protected public
 #define private public
