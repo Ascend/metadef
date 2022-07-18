@@ -24,6 +24,7 @@
 #include "common/ge_inner_error_codes.h"
 #include "common/opskernel/ops_kernel_info_types.h"
 #include "graph/compute_graph.h"
+#include "graph/op_kernel_bin.h"
 
 /*lint -e148*/
 namespace ge {
@@ -96,6 +97,14 @@ class GraphOptimizer {
   // optimize whole graph, using after stage1
   virtual Status OptimizeAfterStage1(ComputeGraph &graph) {
     (void)graph;
+    return SUCCESS;
+  }
+
+  // recover compile result of precompiled op
+  using KernelLookup = std::function<OpKernelBinPtr(const std::string &kernel_name)>;
+  virtual Status OptimizeSubgraphOfPrecompiledOp(ComputeGraph &graph, const KernelLookup &lookup) {
+    static_cast<void>(graph);
+    static_cast<void>(lookup);
     return SUCCESS;
   }
 };
