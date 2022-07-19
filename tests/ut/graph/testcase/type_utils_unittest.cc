@@ -15,6 +15,7 @@
  */
 
 #include "graph/utils/type_utils.h"
+#include <climits>
 #include <gtest/gtest.h>
 #include "graph/debug/ge_util.h"
 

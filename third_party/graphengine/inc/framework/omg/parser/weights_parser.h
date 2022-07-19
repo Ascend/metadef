@@ -77,7 +77,7 @@ class GE_FUNC_VISIBILITY WeightsParser {
     return SUCCESS;
   }
 
-  virtual void Clear() {};
+  virtual void Clear() {}
 };
 }  // namespace domi
 
