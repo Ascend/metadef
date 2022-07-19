@@ -166,28 +166,52 @@ class GraphUtils {
                                    const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                    const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new);
 
-  ///
-  /// @brief Insert node: src->insert_node:input_index, insert_node:output_index->dst
-  /// @param [in] src
-  /// @param [in] dsts
-  /// @param [in] insert_node
-  /// @param [in] input_index
-  /// @param [in] output_index
-  /// @return graphStatus
-  ///
+  /**
+   * 接口行为是在数据`src`锚点所属的`src_node`节点和数据`dsts`锚点所属的`dst_node`节点们之间插入一个`insert_node`节点,
+   * 默认是`insert_node`的`0`号数据输入锚点和`0`号输出数据锚点参与连边，`insert_node`插入之后, `src_node`和`insert_node`
+   * 作为一个整体与原来的`src_node`具备等价的控制和数据关系
+   * @param src 源数据输出锚点
+   * @param dsts 源数据输出锚点连接的目的数据输入锚点，使用vector的原因是存在一个源锚点给到多个目的锚点的情况
+   * @param insert_node 表示要插入的节点
+   * @param input_index 表示插入节点的哪个数据输入锚点要跟src相连，如果不传递，默认取0
+   * @param output_index 表示插入节点的哪个数据输出锚点要跟dsts依次相连，如果不传递，默认取0
+   * @return 如果插入成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static graphStatus InsertNodeAfter(const OutDataAnchorPtr &src,
                                      const std::vector<InDataAnchorPtr> &dsts,
                                      const NodePtr &insert_node,
                                      const uint32_t input_index = 0U,
                                      const uint32_t output_index = 0U);
 
+  /**
+   * 接口行为是在数据`dst`锚点所属的`dst_node`节点和其对端`src_node`节点之间插入一个`insert_node`节点,
+   * 默认是`insert_node`的`0`号数据输入锚点和`0`号数据输出数据锚点参与连边，`insert_node`插入之后,
+   * `dst_node`和`insert_node`作为一个整体与原来的`dst_node`具备等价的控制和数据关系
+   * @param dst 目的数据输入锚点
+   * @param insert_node 表示要插入的节点
+   * @param input_index 表示插入节点的哪个数据输入锚点要跟dst的对端src锚点相连，如果不传递，默认取0
+   * @param output_index 表示插入节点的哪个数据输出锚点要跟dst相连，如果不传递，默认取0
+   * @return 如果插入成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static graphStatus InsertNodeBefore(const InDataAnchorPtr &dst,
                                       const NodePtr &insert_node,
                                       const uint32_t input_index = 0U,
                                       const uint32_t output_index = 0U);
-
+  /**
+   * 从`compute_graph`智能指针管理的图对象的包含的nodes列表中删除`node`节点，仅仅是删除节点，
+   * 不包含对node的断边和重新连边等操作
+   * @param compute_graph
+   * @param node
+   * @return 如果删除成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static graphStatus RemoveJustNode(const ComputeGraphPtr compute_graph, const NodePtr &node);
 
+  /**
+   * 从`compute_graph`图对象的包含的nodes列表中删除`node`节点，仅仅是删除节点，不包含对`node`的断边和重新连边等操作
+   * @param compute_graph
+   * @param node
+   * @return 如果删除成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static graphStatus RemoveJustNode(ComputeGraph &compute_graph, const NodePtr &node);
 
   static void RecordOriginalNames(const std::vector<ge::NodePtr> original_nodes, const ge::NodePtr &node);

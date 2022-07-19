@@ -64,12 +64,22 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   using AttrHolder::SetAttr;
 
   size_t GetAllNodesSize() const;
+  /**
+   * 递归的获取当前图和其子图的节点合集
+   * @return 有序的节点合集，按照如下顺序返回
+   * {node0, node1, {subgraph_node0, {sub_subgraph_node0, ..., sub_subgraph_noden}... ,subgraph_noden}, ... ,noden}
+   */
   Vistor<NodePtr> GetAllNodes() const;
   // is_unknown_shape: false, same with GetAllNodes func
   // is_unknown_shape: true, same with GetDirectNodes func
   Vistor<NodePtr> GetNodes(const bool is_unknown_shape) const;
   Vistor<NodePtr> GetNodes(const bool is_unknown_shape, const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
   size_t GetDirectNodesSize() const;
+  /**
+   * 获取当前图直接包含的节点合集，并不会递归处理当前图的子图节点，注意和GetAllNodes()区分
+   * @return 有序的节点合集，按照如下顺序返回
+   * {node0, node1, ..., noden}
+   */
   Vistor<NodePtr> GetDirectNode() const;
   Vistor<NodePtr> GetInputNodes() const;
   Vistor<NodePtr> GetOutputNodes() const;
