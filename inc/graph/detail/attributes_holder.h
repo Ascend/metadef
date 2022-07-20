@@ -153,11 +153,25 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
     required_attrs_.swap(holder.required_attrs_);
     ext_attrs_.Swap(holder.ext_attrs_);
   }
-
+  /**
+   * 对当前对象设置名称为name, 值为value，类型为T的属性，如果对象已经存在了
+   * 名称name和类型T的属性，那么此接口会刷新属性的值，需要注意的是如果对象已
+   * 经存在了名称name和非类型T的属性，设置行为会失败告终
+   * @param name 属性的名称
+   * @param value 任意类型的属性值
+   * @return true/false 设置成功返回true, 设置失败返回false
+   */
   template<class T>
   bool SetExtAttr(const std::string &name, const T &value) {
     return ext_attrs_.Set(name, value);
   }
+  /**
+   * 对当前对象尝试获取名称name, 类型为T的属性值，如果对象没有name名称的属性，或者
+   * 属性的类型不为T, 查询行为失败
+   * @param name 属性的名称
+   * @param defaultValue 默认值，用于查询失败时返回这个默认值
+   * @return 如果查询成功，返回查询到的属性值，如果查询失败，返回传入的默认值
+   */
   template<class T>
   T TryGetExtAttr(const std::string &name, const T defaultValue) const {
     T ret(defaultValue);
@@ -165,6 +179,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
     return ret;
   }
 
+  /**
+   * 对当前对象尝试获取名称name, 类型为T的属性值，如果对象没有name名称的属性，或者
+   * 属性的类型不为T, 查询行为失败
+   * @param name 属性的名称
+   * @return 如果查询成功，返回查询到的属性值的指针，如果查询失败，返回空指针
+   */
   template<class T>
   const T *GetExtAttr(const std::string &name) const {
     return ext_attrs_.Get<T>(name);
