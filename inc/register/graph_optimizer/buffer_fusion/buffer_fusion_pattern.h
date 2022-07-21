@@ -37,6 +37,12 @@ enum SkipStatus { DISABLED = 0, AVAILABLE = 1, SKIPPED = 2 };
 
 enum ShapeTypeRule { IGNORE_SHAPE_TYPE = 0, ONLY_SUPPORT_STATIC, ONLY_SUPPORT_DYNAMIC };
 
+static const std::map<ShapeTypeRule, const std::string> kShapeTypeRuleToStr {
+  {IGNORE_SHAPE_TYPE, "IGNORE_SHAPE_TYPE"},
+  {ONLY_SUPPORT_STATIC, "ONLY_SUPPORT_STATIC"},
+  {ONLY_SUPPORT_DYNAMIC, "ONLY_SUPPORT_DYNAMIC"}
+};
+
 struct BufferFusionOpDesc {
   std::string desc_name;                       // description name
   std::vector<std::string> types;             // description type
@@ -51,6 +57,9 @@ struct BufferFusionOpDesc {
   int64_t group_id;  // record desc groupid, need one desc matched at least in
                     // the same group
   ShapeTypeRule shape_type_rule;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  std::vector<ShapeTypeRule> shape_type_rules;
+#endif
   bool ignore_input_num;
   bool ignore_output_num;
   // used for two connected op, first opdesc has optional multiple nodes and
@@ -60,6 +69,7 @@ struct BufferFusionOpDesc {
 };
 using BufferFusionMapping = std::map<const BufferFusionOpDesc *, std::vector<ge::NodePtr>>;
 using BufferFusionMappings = std::vector<BufferFusionMapping>;
+using BufferFusionNodeDescMap = std::unordered_map<ge::NodePtr, BufferFusionOpDesc *>;
 
 class BufferFusionPattern {
  public:
@@ -67,12 +77,24 @@ class BufferFusionPattern {
 
   virtual ~BufferFusionPattern();
 
+  /*
+   * types vector use one ShapeTypeRule
+   */
   BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
                                  int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
                                  int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
                                  ShapeTypeRule shape_type_rule = ONLY_SUPPORT_STATIC,
                                  bool not_pattern = false);
+  /*
+   * types vector use ShapeTypeRule vector, and size should be same or ShapeTypeRule size equal 1
+   */
+  BufferFusionPattern &AddOpDescTypeRules(const std::string &desc_name, const std::vector<std::string> &types,
+                                          int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
+                                          int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
+                                          int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
+                                          const std::vector<ShapeTypeRule> &shape_type_rules = {ONLY_SUPPORT_STATIC},
+                                          bool not_pattern = false);
 
   BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &output_ids,
                                   int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
@@ -88,6 +110,8 @@ class BufferFusionPattern {
   bool GetOutputs(BufferFusionOpDesc *op_desc, std::vector<BufferFusionOpDesc *> &outputs, bool ignore_repeat = false);
 
  private:
+  bool IsOpDescValid(const std::string &desc_name, int64_t repeat_min, int64_t repeat_max) const;
+  bool IsShapeRulesSizeValid(const size_t &types_size, const size_t &rules_size) const;
   BufferFusionOpDesc *GetOpDesc(const std::string &desc_name) const;
   void UpdateSkipStatus(const BufferFusionOpDesc *op_desc) const;
 

@@ -41,11 +41,18 @@ class BufferFusionPassBase {
   virtual std::vector<BufferFusionPattern *> DefinePatterns() = 0;
   virtual Status GetFusionNodes(const BufferFusionMapping &mapping, std::vector<ge::NodePtr> &fusion_nodes);
   virtual Status CalcFusionOpSliceInfo(std::vector<ge::NodePtr> &fusion_nodes, OpCalcInfo &op_slice_info);
+  virtual Status CheckNodeCanFusion(const BufferFusionNodeDescMap &fusion_nodes, const ge::NodePtr &next_node);
   static std::vector<ge::NodePtr> GetMatchedNodes(const BufferFusionMapping &mapping);
   static std::vector<ge::NodePtr> GetMatchedNodesByDescName(const std::string &desc_name,
                                                             const BufferFusionMapping &mapping);
   static ge::NodePtr GetMatchedHeadNode(const std::vector<ge::NodePtr> &matched_nodes);
-
+  static bool CheckNodeIsDynamicImpl(const ge::NodePtr &node);
+  static bool CheckTwoNodesImplConsistent(const ge::NodePtr &src_node, const ge::NodePtr &dst_node);
+  static bool CheckNodesImplConsistent(const BufferFusionMapping &mapping);
+  static bool CheckNodesImplConsistent(const std::vector<ge::NodePtr> &fusion_nodes);
+  static bool CheckNodeIsDynamicShape(const ge::NodePtr& node);
+  static bool CheckNodesIncDynamicShape(const BufferFusionMapping &mapping);
+  static bool CheckNodesIncDynamicShape(const std::vector<ge::NodePtr> &fusion_nodes);
   void SetName(const std::string &name) { name_ = name; }
 
   std::string GetName() { return name_; }

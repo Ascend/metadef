@@ -180,7 +180,7 @@ vector<BufferFusionPattern *> TbeCommonRules2FusionPass::DefinePatterns() {
                  TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
       .AddOpDesc(PATTERN_OTHER_INPUT, {TBE_PATTERN_INPUT_NODE}, TBE_PATTERN_NUM_NONE,
                  TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
-      .AddOpDesc(PATTERN_ELEMWISE, {OP_PATTERN_ELEMWISE}, TBE_PATTERN_NUM_NONE,
+      .AddOpDesc(PATTERN_ELEMWISE, {OP_PATTERN_ELEMWISE, OP_PATTERN_BROAD_CAST}, TBE_PATTERN_NUM_NONE,
                  MAX_ELEMWISE_COUNT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
       .AddOpDesc(PATTERN_QUANT, {OP_PATTERN_QUANT}, TBE_PATTERN_NUM_DEFAULT,
                  TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
@@ -527,8 +527,8 @@ vector<BufferFusionPattern *> TbeCommonRules0FusionPass::DefinePatterns() {
                  TBE_PATTERN_NUM_DEFAULT, TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
       .AddOpDesc(PATTERN_DEQUANT, {OP_PATTERN_DEQUANT}, TBE_PATTERN_NUM_NONE, TBE_PATTERN_NUM_DEFAULT,
                  TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
-      .AddOpDesc(PATTERN_ELEMWISE, {OP_PATTERN_ELEMWISE}, TBE_PATTERN_NUM_NONE, TBE_PATTERN_NUM_MAX,
-                 TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
+      .AddOpDescTypeRules(PATTERN_ELEMWISE, {OP_PATTERN_ELEMWISE, OP_PATTERN_BROAD_CAST}, TBE_PATTERN_NUM_NONE, TBE_PATTERN_NUM_MAX,
+                 TBE_PATTERN_GROUPID_INVALID, {IGNORE_SHAPE_TYPE, ONLY_SUPPORT_STATIC})
       .AddOpDesc(PATTERN_QUANT, {OP_PATTERN_QUANT}, TBE_PATTERN_NUM_NONE, TBE_PATTERN_NUM_DEFAULT,
                  TBE_PATTERN_GROUPID_INVALID, IGNORE_SHAPE_TYPE)
       .AddOpDesc(PATTERN_STRIDED_WRITE, {OP_PATTERN_STRIDED_WRITE}, TBE_PATTERN_NUM_NONE,
@@ -1814,6 +1814,8 @@ class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
     AttrUtils::SetInt(eltwise, FE_IMPLY_TYPE, 6);
     AttrUtils::SetInt(relu, FE_IMPLY_TYPE, 6);
     AttrUtils::SetInt(quant, FE_IMPLY_TYPE, 6);
+    AttrUtils::SetBool(quant, "_is_op_dynamic_impl", true);
+    AttrUtils::SetBool(eltwise, "_is_op_dynamic_impl", true);
 
     NodePtr data_node = graph->AddNode(data);
     NodePtr data1_node = graph->AddNode(data1);
@@ -2202,13 +2204,27 @@ TEST_F(UB_FUSION_UT_CONV_ELT_RELU, conv_eltwise_relu_quant_fusion_pass_no_fusion
   RunPass(*graph);
 }
 
-TEST_F(UB_FUSION_UT_CONV_ELT_RELU, converage_01) {
+TEST_F(UB_FUSION_UT_CONV_ELT_RELU, dyn_static_check) {
   std::map<string, BufferFusionPassRegistry::CreateFn> create_fns =
       BufferFusionPassRegistry::GetInstance().GetCreateFnByType(BUILT_IN_AI_CORE_BUFFER_FUSION_PASS);
   ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
   BuildGraphConvEltReluQuant2(graph, 1);
   std::shared_ptr<BufferFusionPassBase> common0 = std::make_shared<TbeCommonRules0FusionPass>();
-  std::vector<BufferFusionPattern *> patterns= common0->DefinePatterns();
+  std::vector<BufferFusionPattern *> patterns = common0->DefinePatterns();
+  BufferFusionMapping mapping;
+  auto pattern = patterns[0];
+  auto conv = pattern->GetOpDesc(PATTERN_CONV);
+  auto eltwise = pattern->GetOpDesc(PATTERN_ELEMWISE);
+  auto quant = pattern->GetOpDesc(PATTERN_QUANT);
+  auto conv_vec = {graph->FindNode("conv")};
+  auto eltwise_vec = {graph->FindNode("eltwise")};
+  auto quant_vec = {graph->FindNode("quant")};
+  mapping.emplace(std::make_pair(conv, conv_vec));
+  mapping.emplace(std::make_pair(eltwise, eltwise_vec));
+  mapping.emplace(std::make_pair(quant, quant_vec));
+  EXPECT_FALSE(BufferFusionPassBase::CheckNodesImplConsistent(mapping));
+  EXPECT_FALSE(BufferFusionPassBase::CheckNodesIncDynamicShape(mapping));
+  EXPECT_TRUE(BufferFusionPassBase::CheckNodeIsDynamicImpl(graph->FindNode("eltwise")));
   for (auto &pattern : patterns) {
     delete pattern;
   }

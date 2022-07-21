@@ -15,11 +15,16 @@
  */
 
 #include "register/graph_optimizer/buffer_fusion/buffer_fusion_pass_base.h"
+#include "register/graph_optimizer/fusion_common/fusion_turbo.h"
 #include <map>
 #include <string>
 #include <vector>
 
 namespace fe {
+namespace {
+  const std::string ATTR_NAME_IS_OP_DYNAMIC_IMPL = "_is_op_dynamic_impl";
+  const uint32_t kNoNeedCompareSize = 2;
+}
 BufferFusionPassBase::BufferFusionPassBase() {}
 
 BufferFusionPassBase::~BufferFusionPassBase() {}
@@ -34,6 +39,11 @@ Status BufferFusionPassBase::CalcFusionOpSliceInfo(vector<ge::NodePtr> &fusion_n
   return SUCCESS;
 }
 
+Status BufferFusionPassBase::CheckNodeCanFusion(const BufferFusionNodeDescMap &fusion_nodes,
+                                                const ge::NodePtr &next_node) {
+  return SUCCESS;
+}
+
 std::vector<ge::NodePtr> BufferFusionPassBase::GetMatchedNodes(const BufferFusionMapping &mapping) {
   std::vector<ge::NodePtr> nodes;
   for (const auto &item : mapping) {
@@ -42,6 +52,74 @@ std::vector<ge::NodePtr> BufferFusionPassBase::GetMatchedNodes(const BufferFusio
     }
   }
   return nodes;
+}
+
+bool BufferFusionPassBase::CheckNodeIsDynamicImpl(const ge::NodePtr &node) {
+  if (node == nullptr) {
+    return false;
+  }
+  bool is_dynamic_impl = false;
+  (void)ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_IS_OP_DYNAMIC_IMPL, is_dynamic_impl);
+  return is_dynamic_impl;
+}
+
+bool BufferFusionPassBase::CheckTwoNodesImplConsistent(const ge::NodePtr &src_node, const ge::NodePtr &dst_node) {
+  if (src_node == nullptr || dst_node == nullptr) {
+    return false;
+  }
+  bool src_dynamic_impl = false;
+  bool dst_dynamic_impl = false;
+  (void)ge::AttrUtils::GetBool(src_node->GetOpDesc(), ATTR_NAME_IS_OP_DYNAMIC_IMPL, src_dynamic_impl);
+  (void)ge::AttrUtils::GetBool(dst_node->GetOpDesc(), ATTR_NAME_IS_OP_DYNAMIC_IMPL, dst_dynamic_impl);
+  return src_dynamic_impl == dst_dynamic_impl;
+}
+
+bool BufferFusionPassBase::CheckNodesImplConsistent(const BufferFusionMapping &mapping) {
+  std::vector<ge::NodePtr> fusion_nodes = GetMatchedNodes(mapping);
+  return CheckNodesImplConsistent(fusion_nodes);
+}
+
+bool BufferFusionPassBase::CheckNodesImplConsistent(const std::vector<ge::NodePtr> &fusion_nodes) {
+  if (fusion_nodes.size() < kNoNeedCompareSize) {
+    return true;
+  }
+  auto first_node = fusion_nodes[0];
+  for (size_t index = 1; index < fusion_nodes.size(); ++index) {
+    if (!CheckTwoNodesImplConsistent(first_node, fusion_nodes[index])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool BufferFusionPassBase::CheckNodeIsDynamicShape(const ge::NodePtr& node) {
+  auto op_desc = node->GetOpDesc();
+  for (size_t index = 0; index < op_desc->GetAllInputsSize(); ++index) {
+    if (FusionTurbo::IsUnknownShape(node, index, true)) {
+      return true;
+    }
+  }
+
+  for (size_t index = 0; index < op_desc->GetAllOutputsDescSize(); ++index) {
+    if (FusionTurbo::IsUnknownShape(node, index, false)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool BufferFusionPassBase::CheckNodesIncDynamicShape(const BufferFusionMapping &mapping) {
+  std::vector<ge::NodePtr> fusion_nodes = GetMatchedNodes(mapping);
+  return CheckNodesIncDynamicShape(fusion_nodes);
+}
+
+bool BufferFusionPassBase::CheckNodesIncDynamicShape(const std::vector<ge::NodePtr> &fusion_nodes) {
+  for (const auto &node : fusion_nodes) {
+    if (CheckNodeIsDynamicShape(node)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 std::vector<ge::NodePtr> BufferFusionPassBase::GetMatchedNodesByDescName(const std::string &desc_name,

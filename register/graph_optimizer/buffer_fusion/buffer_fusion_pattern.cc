@@ -51,6 +51,33 @@ BufferFusionPattern::~BufferFusionPattern() {
   }
 }
 
+bool BufferFusionPattern::IsOpDescValid(const std::string &desc_name, int64_t repeat_min, int64_t repeat_max) const {
+  if (desc_name.empty()) {
+    GELOGW("[IsOpDescValid][Check] Desc_name cannot be empty.");
+    return false;
+  }
+
+  if (repeat_min > repeat_max) {
+    GELOGW("[IsOpDescValid][Check] Check desc %s failed as repeat_min > repeat_max, repeat_min=%ld, repeat_max=%ld",
+           desc_name.c_str(), repeat_min, repeat_max);
+    return false;
+  }
+
+  if (GetOpDesc(desc_name) != nullptr) {
+    GELOGW("[IsOpDescValid][Check] Desc_name repeated. (desc_name:%s)", desc_name.c_str());
+    return false;
+  }
+  return true;
+}
+
+bool BufferFusionPattern::IsShapeRulesSizeValid(const size_t &types_size, const size_t &rules_size) const {
+  if (rules_size == 1 || types_size == rules_size) {
+    return true;
+  }
+  GELOGW("[IsShapeRulesSizeValid][Check] rule size invalid, rules_size:%zu, types_size:%zu", rules_size, types_size);
+  return false;
+}
+
 /*
  * @brief:  add op desc info
  * @param [in] desc_name: node desc name
@@ -67,21 +94,7 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
                                                     const std::vector<std::string> &types,
                                                     int64_t repeat_min, int64_t repeat_max, int64_t group_id,
                                                     ShapeTypeRule shape_type_rule, bool not_pattern) {
-  if (desc_name.empty()) {
-    GELOGW("[AddOpDesc][Check] Desc_name cannot be empty.");
-    error_count_++;
-    return *this;
-  }
-
-  if (repeat_min > repeat_max) {
-    GELOGW("[AddOpDesc][Check] Check desc %s failed as repeat_min > repeat_max, repeat_min=%ld, repeat_max=%ld",
-           desc_name.c_str(), repeat_min, repeat_max);
-    error_count_++;
-    return *this;
-  }
-
-  if (GetOpDesc(desc_name) != nullptr) {
-    GELOGW("[AddOpDesc][Check] Desc_name repeated. (desc_name:%s)", desc_name.c_str());
+  if (!IsOpDescValid(desc_name, repeat_min, repeat_max)) {
     error_count_++;
     return *this;
   }
@@ -100,6 +113,9 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->repeate_curr = 0;
   op->group_id = group_id;
   op->shape_type_rule = shape_type_rule;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  op->shape_type_rules = {shape_type_rule};
+#endif
   op->match_status = false;
   op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
   op->ignore_input_num = false;
@@ -116,6 +132,52 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->outputs.clear();
   return *this;
 }
+
+BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &desc_name,
+    const std::vector<std::string> &types, int64_t repeat_min, int64_t repeat_max, int64_t group_id,
+    const std::vector<ShapeTypeRule> &shape_type_rules, bool not_pattern) {
+  if (!IsOpDescValid(desc_name, repeat_min, repeat_max)) {
+    error_count_++;
+    return *this;
+  }
+  if (!IsShapeRulesSizeValid(types.size(), shape_type_rules.size())) {
+    error_count_++;
+    return *this;
+  }
+
+  BufferFusionOpDesc *op = new (std::nothrow) BufferFusionOpDesc();
+  if (op == nullptr) {
+    GELOGW("[AddOpDesc][Check] New an object failed.");
+    error_count_++;
+    return *this;
+  }
+
+  op->desc_name = desc_name;
+  op->types = types;
+  op->repeate_min = repeat_min;
+  op->repeate_max = repeat_max;
+  op->repeate_curr = 0;
+  op->group_id = group_id;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  op->shape_type_rules = shape_type_rules;
+#endif
+  op->match_status = false;
+  op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
+  op->ignore_input_num = false;
+  op->ignore_output_num = false;
+  op->not_pattern = not_pattern;
+  if (repeat_max > repeat_min) {
+    for (int64_t i = repeat_min; i < repeat_max; i++) {
+      (void)op->multi_output_skip_status.insert(std::pair<int64_t, SkipStatus>(i, SkipStatus::DISABLED));
+    }
+  }
+  ops_.push_back(op);
+  op_map_[desc_name] = op;
+
+  op->outputs.clear();
+  return *this;
+}
+
 
 /*
  * @brief:  set output desc info
