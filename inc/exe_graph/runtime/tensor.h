@@ -22,13 +22,6 @@
 #include "tensor_data.h"
 
 namespace gert {
-enum TensorPlacement {
-  kOnDeviceHbm,  ///< Tensor位于Device上的HBM内存
-  kOnHost,       ///< Tensor位于Host
-  kFollowing,    ///< Tensor位于Host，且数据紧跟在结构体后面
-  kTensorPlacementEnd
-};
-
 using TensorAddress = void *;            ///< Tensor地址
 using ConstTensorAddress = void *const;  ///< Tensor地址
 
@@ -37,8 +30,10 @@ class Tensor {
   Tensor() = default;
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, TensorPlacement placement,
          ge::DataType data_type, TensorAddress addr)
-      : storage_shape_(storage_shape), storage_format_(storage_format), placement_(placement), data_type_(data_type),
-        tensor_data_(addr) {}
+      : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type),
+        tensor_data_(addr, nullptr, ge::GetSizeInBytes(GetShapeSize(), data_type_), placement) {
+      (void) reserved_;
+  }
   /**
    * 获取shape size，所谓shape size是指本shape中包含的element数量
    * @return shape size
@@ -76,7 +71,7 @@ class Tensor {
    * @return 数据地址
    */
   const void *GetAddr() const {
-    if (placement_ == kFollowing) {
+    if (tensor_data_.GetPlacement() == kFollowing) {
       return reinterpret_cast<const void *>(reinterpret_cast<const uint8_t *>(this) + sizeof(*this));
     } else {
       return tensor_data_.GetAddr();
@@ -87,12 +82,28 @@ class Tensor {
    * @return 数据地址
    */
   void *GetAddr() {
-    if (placement_ == kFollowing) {
+    if (tensor_data_.GetPlacement() == kFollowing) {
       return reinterpret_cast<void *>(reinterpret_cast<uint8_t *>(this) + sizeof(*this));
     } else {
       return tensor_data_.GetAddr();
     }
   }
+  /**
+   * 获取Tensor的内存大小
+   * @return 内存大小
+   */
+  size_t GetSize() const {
+    return tensor_data_.GetSize();
+  }
+
+  /**
+   * 设置Tensor的内存大小
+   * @param Tensor的内存大小
+   */
+  void SetSize(size_t size) {
+    tensor_data_.SetSize(size);
+  }
+
   /**
    * 获取Tensor的data type
    * @return data type
@@ -126,7 +137,7 @@ class Tensor {
 
     auto tensor = reinterpret_cast<Tensor *>(holder.get());
     new (holder.get()) Tensor({}, {}, kFollowing, dt, nullptr);
-    tensor->tensor_data_ = TensorData(nullptr, nullptr);
+    tensor->tensor_data_ = TensorData(nullptr, nullptr, total_size, kFollowing);
     return holder;
   }
   /**
@@ -229,17 +240,17 @@ class Tensor {
   }
   /**
    * 获取tensor的placement
-   * @return placement
+   * @return tensor的placement
    */
   TensorPlacement GetPlacement() const {
-    return placement_;
+    return tensor_data_.GetPlacement();
   }
   /**
    * 设置tensor的placement
-   * @param placement placement
+   * @param tensor的placement
    */
   void SetPlacement(TensorPlacement placement) {
-    placement_ = placement;
+    tensor_data_.SetPlacement(placement);
   }
   /**
    * 获取tensor data
@@ -259,7 +270,7 @@ class Tensor {
  private:
   StorageShape storage_shape_;
   StorageFormat storage_format_;
-  TensorPlacement placement_;
+  uint8_t reserved_[4]; // Reserved field, 4-byte aligned
   ge::DataType data_type_;
   TensorData tensor_data_;
 };

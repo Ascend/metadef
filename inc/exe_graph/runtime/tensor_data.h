@@ -16,12 +16,20 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 #define METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 
+#include <cstddef>
 #include "graph/ge_error_codes.h"
 
 namespace gert {
 using TensorAddress = void *;
 using ConstTensorAddress = void *const;
 using ConstTensorAddressPtr = const void *;
+
+enum TensorPlacement {
+    kOnDeviceHbm,  ///< Tensor位于Device上的HBM内存
+    kOnHost,       ///< Tensor位于Host
+    kFollowing,    ///< Tensor位于Host，且数据紧跟在结构体后面
+    kTensorPlacementEnd
+};
 
 enum TensorOperateType {
   kGetTensorAddress,  ///< 获取Tensor的地址
@@ -44,18 +52,27 @@ class TensorData {
    */
   explicit TensorData(TensorAddress addr = nullptr, TensorAddrManager manager = nullptr)
       : addr_(addr), manager_(manager) {}
+  explicit TensorData(TensorAddress addr, TensorAddrManager manager, size_t size, TensorPlacement placement)
+      : addr_(addr), manager_(manager), size_(size), placement_(placement) {}
   TensorData(const TensorData &) = delete;
-  TensorData(TensorData &&other) noexcept : addr_(other.addr_), manager_(other.manager_) {
+  TensorData(TensorData &&other) noexcept : addr_(other.addr_), manager_(other.manager_),
+    size_(other.size_), placement_(other.placement_) {
     other.addr_ = nullptr;
     other.manager_ = nullptr;
+    other.size_ = 0U;
+    other.placement_ = kTensorPlacementEnd;
   }
   TensorData &operator=(const TensorData &other) = delete;
   TensorData &operator=(TensorData &&other) noexcept {
     static_cast<void>(Free());
     addr_ = other.addr_;
     manager_ = other.manager_;
+    size_ = other.size_;
+    placement_ = other.placement_;
     other.addr_ = nullptr;
     other.manager_ = nullptr;
+    other.size_ = 0U;
+    other.placement_ = kTensorPlacementEnd;
     return *this;
   }
   ~TensorData() {
@@ -77,6 +94,36 @@ class TensorData {
       return addr;
     }
   }
+
+  /**
+  * 获取tensor的内存大小
+  * @return tensor所占内存大小
+  */
+  size_t GetSize() const {
+    return size_;
+  }
+  /**
+   * 设置tensor的内存大小
+   * @param tensor的内存大小
+   */
+  void SetSize(size_t size) {
+    size_ = size;
+  }
+
+  /**
+  * 获取tensor的placement
+  * @return tensor的placement
+  */
+  TensorPlacement GetPlacement() const {
+    return placement_;
+  }
+  /**
+   * 设置tensor的placement
+   * @param tensor的placement
+   */
+  void SetPlacement(TensorPlacement placement) {
+    placement_ = placement;
+  }
   /**
    * 释放tensor
    * @return 成功时返回ge::GRAPH_SUCCESS
@@ -97,13 +144,16 @@ class TensorData {
    * @param addr tensor地址
    * @param manager tensor的管理函数
    */
-  ge::graphStatus SetAddr(ConstTensorAddressPtr addr, TensorAddrManager manager) {
+  ge::graphStatus SetAddr(ConstTensorAddressPtr addr, TensorAddrManager manager,
+    size_t size = 0U, TensorPlacement placement = kTensorPlacementEnd) {
     auto ret = Free();
     if (ret != ge::GRAPH_SUCCESS) {
       return ret;
     }
     addr_ = const_cast<TensorAddress>(addr);
     manager_ = manager;
+    size_ = size;
+    placement_ = placement;
     return ge::GRAPH_SUCCESS;
   }
 
@@ -115,7 +165,8 @@ class TensorData {
 
     addr_ = other.addr_;
     manager_ = other.manager_;
-
+    size_ = other.size_;
+    placement_ = other.placement_;
     if (manager_ != nullptr) {
       return manager_(addr_, kPlusShareCount, nullptr);
     } else {
@@ -126,6 +177,8 @@ class TensorData {
  private:
   TensorAddress addr_;
   TensorAddrManager manager_;
+  size_t size_;
+  TensorPlacement placement_;
 };
 }  // namespace gert
 
