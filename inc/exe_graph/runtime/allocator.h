@@ -21,6 +21,7 @@ namespace gert {
 enum class AllocatorUsage {
   kAllocNodeOutput,
   kAllocNodeWorkspace,
+  kAllocNodeShapeBuffer,
   kEnd
 };
 struct AllocatorDesc {
