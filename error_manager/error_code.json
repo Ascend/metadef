@@ -1544,8 +1544,8 @@
       "errClass": "Autotune Errors",
       "errTitle": "Invalid Environment Variable",
       "ErrCode": "EC0008",
-      "ErrMessage": "Environment variable [%s] is not set. Use bash comman [env] to check whether the environment variable is missing, and then use the [export] commend to set it corretly.",
-      "Arglist": "value,env,max_val",
+      "ErrMessage": "Environment variable [%s] is not set. Use bash command [env] to check whether the environment variable is missing, and then use the [export] command to set it correctly.",
+      "Arglist": "env_name",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
