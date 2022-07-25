@@ -142,16 +142,4 @@ TEST_F(TensorUT, GetTensorDataOk) {
   t.MutableTensorData() = TensorData{a, nullptr};
   EXPECT_EQ(t.GetAddr(), a);
 }
-
-TEST_F(TensorUT, GetTensorPlacementOk) {
-  Tensor t = {{}, {}, kOnHost, {}, nullptr};
-  EXPECT_EQ(t.GetPlacement(), kOnHost);
-}
-
-TEST_F(TensorUT, GetTensorSizeOk) {
-  StorageShape sh({1, 2, 3}, {1, 2, 3});
-  Tensor t = {sh, {}, {}, ge::DT_FLOAT, nullptr};
-  EXPECT_EQ(t.GetSize(), 24);
-}
-
 }  // namespace gert
