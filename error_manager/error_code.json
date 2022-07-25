@@ -1343,160 +1343,6 @@
       }
     },
     {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Import te.platform.log_util",
-      "ErrCode": "E40000",
-      "ErrMessage": "Failed to import te.platform.log_util.",
-      "Arglist": "",
-      "suggestion": {
-        "Possible Cause": "A component installation is missing or its installed version does not match. Alternatively, the specified Python path is incorrect.",
-        "Solution": "[step] Check that all required components are properly installed, Python is properly installed, and the specified Python path matches the Python installation directory. [step] Check the configured environment variables such as [PYTHONPATH] and [ASCEND_OPP_PATH]."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Import Python Module",
-      "ErrCode": "E40001",
-      "ErrMessage": "Failed to import the Python module: [%s]",
-      "Arglist": "result",
-      "suggestion": {
-        "Possible Cause": "A component installation is missing or its installed version does not match. Alternatively, the specified Python path is incorrect.",
-        "Solution": "Check that all required components are properly installed and the specified Python path matches the Python installation directory."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Call Python Function",
-      "ErrCode": "E40002",
-      "ErrMessage": "Failed to call function [%s] with arguments [%s].",
-      "Arglist": "func,args",
-      "suggestion": {
-        "Possible Cause": "An invalid argument is passed or the Python function has a bug.",
-        "Solution": "This error is caused by an internal problem. Check the code of the Python function call."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Import Auto Tiling Manager of Python Module",
-      "ErrCode": "E40003",
-      "ErrMessage": "Failed to import Auto Tiling Manager of Python module: [%s]",
-      "Arglist": "auto_tune_path",
-      "suggestion": {
-        "Possible Cause": "A component installation is missing or its installed version does not match. Alternatively, the specified [PYTHONPATH] is invalid.",
-        "Solution": "Check that all required components are properly installed and the specified [PYTHONPATH] matches the Python installation directory."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Import RL Tiling Manager of Python Module",
-      "ErrCode": "E40004",
-      "ErrMessage": "Failed to import RL Tiling Manager of Python module: [%s]",
-      "Arglist": "rl_path",
-      "suggestion": {
-        "Possible Cause": "A component installation is missing or its installed version does not match. Alternatively, the specified [PYTHONPATH] is invalid.",
-        "Solution": "Check that the ATC and FwkACLlib components are properly installed and the specified [PYTHONPATH] matches the Python installation directory."
-      }
-    },
-    {
-      "errClass": "Invalid Operator Arguments",
-      "errTitle": "Failure to Execute Function check_supported",
-      "ErrCode": "E40005",
-      "ErrMessage": "Failed to execute the [check_supported] function of Op [%s, oppath [%s], optype [%s]].",
-      "Arglist": "op_name,op_path,op_type",
-      "suggestion": {
-        "Possible Cause": "An invalid argument is passed or the Python function [check_supported] has a bug. This error is most likely caused by an internal problem.",
-        "Solution": "This error is caused by an internal problem. Contact Huawei technical support to check the Python function call in the code and the implementation of the [check_supported] function."
-      }
-    },
-    {
-      "errClass": "Invalid Operator Arguments",
-      "errTitle": "Failure to Obtain Op Format",
-      "ErrCode": "E40006",
-      "ErrMessage": "Failed to obtain Op [%s]'s format. Reason: %s.",
-      "Arglist": "op_name,fail_reason",
-      "suggestion": {
-        "Possible Cause": "An invalid argument is passed or the Python function has a bug.",
-        "Solution": "This error is caused by an internal problem. Contact Huawei technical support to check the Python function call in the code and the implementation of the [op_select_format] function."
-      }
-    },
-    {
-      "errClass": "Invalid Operator Arguments",
-      "errTitle": "Failure to Precompile Op",
-      "ErrCode": "E40007",
-      "ErrMessage": "Failed to precompile Op [%s, oppath [%s], optype [%s]].",
-      "Arglist": "op_name,op_path,op_type",
-      "suggestion": {
-        "Possible Cause": "See the error message for details.",
-        "Solution": "See the error message for details, and then check the Python stack where the error log is reported."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Import Python Module",
-      "ErrCode": "E40008",
-      "ErrMessage": "Failed to import the Python module from [%s].",
-      "Arglist": "module_path",
-      "suggestion": {
-        "Possible Cause": "A component installation is missing or its installed version does not match. Alternatively, the specified [PYTHONPATH] is invalid. Check that Python is properly installed, and the specified Python path matches the Python installation directory.",
-        "Solution": "Check that the ATC and FwkACLlib components are properly installed and the specified [PYTHONPATH] matches the Python installation directory."
-      }
-    },
-    {
-      "errClass": "Operator Compilation Errors",
-      "errTitle": "Failure to Compile Op",
-      "ErrCode": "E40009",
-      "ErrMessage": "Failed to compile Op [%s, oppath [%s], optype [%s]] of taskID [%s].",
-      "Arglist": "op_name,opp_path,op_type,task_id",
-      "suggestion": {
-        "Possible Cause": "See the error message for details.",
-        "Solution": "See the error message for details, and then check the Python stack where the error log is reported."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid Auto Tune Mode",
-      "ErrCode": "E40010",
-      "ErrMessage": "Auto Tune mode [%s] is invalid.",
-      "Arglist": "auto_tune_mode",
-      "suggestion": {
-        "Possible Cause": "The specified Auto Tune mode is invalid.",
-        "Solution": "Try again with a valid argument."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid Argument",
-      "ErrCode": "E40011",
-      "ErrMessage": "Argument [%s] is invalid. Reason: %s.",
-      "Arglist": "arg,reason",
-      "suggestion": {
-        "Possible Cause": "An invalid argument is passed.",
-        "Solution": "Try again with a valid argument. If the error persists, check the argument verification logic in the code."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Invalid Path",
-      "ErrCode": "W40001",
-      "ErrMessage": "Path [%s] for [%s] is invalid. Reason: %s.",
-      "Arglist": "path,arg,result",
-      "suggestion": {
-        "Possible Cause": "The path is empty or does not exist.",
-        "Solution": "Try again with a valid path."
-      }
-    },
-    {
-      "errClass": "Command Line Errors",
-      "errTitle": "Failure to Create Directory",
-      "ErrCode": "W40002",
-      "ErrMessage": "Failed to create directory [%s]. Reason: %s.",
-      "Arglist": "path,result",
-      "suggestion": {
-        "Possible Cause": "You do not have the permission on the directory or the directory name is invalid.",
-        "Solution": "Modify the permission or directory name and try again."
-      }
-    },
-    {
       "errClass": "TEFusion Errors",
       "errTitle": "Invalid Path",
       "ErrCode": "W40010",
@@ -1524,6 +1370,28 @@
       "ErrCode": "W40012",
       "ErrMessage": "Value [%s] for parameter [%s] is invalid. The value must be in the range of [%s] and defaults to [%s].",
       "Arglist": "invalid_value,argument,valid_range,default_value",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "TE Fusion Errors",
+      "errTitle": "Invalid Environment Variable",
+      "ErrCode": "E40001",
+      "ErrMessage": "Value [%s] for environment variable [%s] is invalid when %s.",
+      "Arglist": "value,env,situation",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Reset the environment variable by referring to the installation guide."
+      }
+    },
+    {
+      "errClass": "TE Fusion Errors",
+      "errTitle": "Invalid Python Version",
+      "ErrCode": "E40002",
+      "ErrMessage": "The current Python version is [%s]. The system supports only [%s] or later.",
+      "Arglist": "currentVersion,supportVersion",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
