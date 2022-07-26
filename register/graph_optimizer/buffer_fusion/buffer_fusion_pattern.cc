@@ -113,9 +113,7 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->repeate_curr = 0;
   op->group_id = group_id;
   op->shape_type_rule = shape_type_rule;
-#ifndef ONLY_COMPILE_OPEN_SRC
   op->shape_type_rules = {shape_type_rule};
-#endif
   op->match_status = false;
   op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
   op->ignore_input_num = false;
@@ -158,9 +156,7 @@ BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &
   op->repeate_max = repeat_max;
   op->repeate_curr = 0;
   op->group_id = group_id;
-#ifndef ONLY_COMPILE_OPEN_SRC
   op->shape_type_rules = shape_type_rules;
-#endif
   op->match_status = false;
   op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
   op->ignore_input_num = false;
