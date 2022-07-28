@@ -104,6 +104,14 @@ bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   attrs.emplace_back(std::move(buf));
   return true;
 }
+bool AppendDataTypeAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto val = attr.Get<ge::DataType>();
+  GE_ASSERT_NOTNULL(val);
+  std::vector<uint8_t> runtime_attr(sizeof(*val));
+  GE_ASSERT_EOK(memcpy_s(runtime_attr.data(), sizeof(*val), val, sizeof(*val)));
+  attrs.emplace_back(std::move(runtime_attr));
+  return true;
+}
 bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   switch (attr.GetValueType()) {
     case ge::AnyValue::VT_FLOAT:
@@ -112,6 +120,8 @@ bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &att
       return AppendFundAttr<bool>(attr, attrs);
     case ge::AnyValue::VT_INT:
       return AppendFundAttr<int64_t>(attr, attrs);
+    case ge::AnyValue::VT_DATA_TYPE:
+      return AppendDataTypeAttr(attr, attrs);
     case ge::AnyValue::VT_LIST_INT:
       return AppendVectorAttr<int64_t>(attr, attrs);
     case ge::AnyValue::VT_STRING:
