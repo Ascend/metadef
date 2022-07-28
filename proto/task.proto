@@ -65,6 +65,7 @@ message TaskDef {
     CmoBarrierTaskDef cmo_barrier_task = 45;
     NpuGetFloatStatusDef npu_get_float_status = 46;
     NpuClearFloatStatusDef npu_clear_float_status = 47;
+    DvppTaskDef dvpp_task = 48;
 }
 
 message KernelDef {
@@ -801,4 +802,8 @@ message NpuGetFloatStatusDef {
 
 message NpuClearFloatStatusDef {
     uint32 mode = 1;
+}
+
+message DvppTaskDef {
+    uint32 op_index = 1;
 }
