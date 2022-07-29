@@ -225,18 +225,18 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nchw) {
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z, DT_INT2, true, {48, 512, 5, 5}, {100, 3, 16, 128});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z, DT_INT4, true, {48, 512, 5, 5}, {200, 3, 16, 64});
 
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT8, true, {48, 3, 5, 5}, {7, 3, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT8, true, {48, 3, 5, 5}, {7, 3, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT8, true, {48, 3, 5, 5}, {4, 3, 16, 32});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT8, true, {48, 3, 5, 5}, {4, 3, 16, 32});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT16, true, {48, 3, 5, 5}, {7, 3, 16, 16});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT16, true, {48, 3, 5, 5}, {7, 3, 16, 16});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT32, true, {48, 3, 5, 5}, {7, 3, 16, 16});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT32, true, {48, 3, 5, 5}, {7, 3, 16, 16});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_FLOAT, true, {48, 3, 5, 5}, {7, 3, 16, 16});
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_FLOAT16, true, {48, 3, 5, 5}, {7, 3, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT1, true, {48, 3, 5, 5}, {7, 3, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT2, true, {48, 3, 5, 5}, {7, 3, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT2, true, {48, 3, 5, 5}, {7, 3, 16, 16});
-  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT4, true, {48, 3, 5, 5}, {7, 3, 16, 16});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT1, true, {48, 3, 5, 5}, {1, 3, 16, 256});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_UINT2, true, {48, 3, 5, 5}, {1, 3, 16, 128});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT2, true, {48, 3, 5, 5}, {1, 3, 16, 128});
+  RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_Z_C04, DT_INT4, true, {48, 3, 5, 5}, {2, 3, 16, 64});
 
   int32_t group = 16;
   ge::Format target_format = static_cast<ge::Format>(GetFormatFromSub(static_cast<int32_t>(ge::FORMAT_FRACTAL_Z), group));

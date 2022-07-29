@@ -27,7 +27,6 @@ namespace {
   const int64_t SHAPE_NUMBER_256 = 256;
   const int64_t SHAPE_NUMBER_4 = 4;
   const int64_t NI = 16;
-  const int64_t X0 = 16;
   const int64_t LSTM_NI = 4;
   const int64_t GROUPS_DEFAULT_VALUE = 1;
   const int64_t UNKNOWN_SHAPE_VALUE = -1;
@@ -341,7 +340,7 @@ bool TransferShapeUtils::TransferShapeByFormatIndex(const ge::Format &origin_for
     case ge::FORMAT_FRACTAL_Z_3D:
       return GetFractalZ3DShape(iter->second, c0, group, origin_shape, shape);
     case ge::FORMAT_FRACTAL_Z_C04:
-      return GetFractalZC04Shape(iter->second, origin_shape, shape);
+      return GetFractalZC04Shape(iter->second, c0, origin_shape, shape);
     case ge::FORMAT_FRACTAL_Z_3D_TRANSPOSE:
       return GetFractalZ3DTransposeShape(iter->second, c0, origin_shape, shape);
     case ge::FORMAT_FRACTAL_ZN_LSTM:
@@ -535,11 +534,11 @@ bool TransferShapeUtils::GetFzC04ShapeByAxisValue(const AxisValue &axis_value, g
     int64_t x = SHAPE_NUMBER_4;
     MUL_OVERFLOW(x, axis_value[AXIS_H], x);
     MUL_OVERFLOW(x, axis_value[AXIS_W], x);
-    shape.AppendDim(DivisionCeiling(x, X0));
+    shape.AppendDim(DivisionCeiling(x, axis_value[AXIS_C0]));
   }
   shape.AppendDim(DivisionCeiling(axis_value[AXIS_N], NI));
   shape.AppendDim(NI);
-  shape.AppendDim(X0);
+  shape.AppendDim(axis_value[AXIS_C0]);
   return true;
 }
 
@@ -831,8 +830,8 @@ bool TransferShapeUtils::GetFractalZLstmShape(const FormatIndex& format_index, c
   return true;
 }
 
-bool TransferShapeUtils::GetFractalZC04Shape(const FormatIndex& format_index, const gert::Shape &origin_shape,
-                                             gert::Shape &shape) {
+bool TransferShapeUtils::GetFractalZC04Shape(const FormatIndex& format_index, const int64_t &c0,
+                                             const gert::Shape &origin_shape, gert::Shape &shape) {
   CHECK(origin_shape.GetDimNum() < DIM_SIZE_FOUR, GELOGD("Dim size is less than 4."), return true);
   int64_t axis_h_val = origin_shape.GetDim(format_index[DIM_INDEX_H]);
   int64_t axis_w_val = origin_shape.GetDim(format_index[DIM_INDEX_W]);
@@ -843,11 +842,11 @@ bool TransferShapeUtils::GetFractalZC04Shape(const FormatIndex& format_index, co
     int64_t x = SHAPE_NUMBER_4;
     MUL_OVERFLOW(x, origin_shape.GetDim(format_index[DIM_INDEX_H]), x);
     MUL_OVERFLOW(x, origin_shape.GetDim(format_index[DIM_INDEX_W]), x);
-    shape.AppendDim(DivisionCeiling(x, X0));
+    shape.AppendDim(DivisionCeiling(x, c0));
   }
   shape.AppendDim(DivisionCeiling(origin_shape.GetDim(format_index[DIM_INDEX_N]), NI));
   shape.AppendDim(NI);
-  shape.AppendDim(X0);
+  shape.AppendDim(c0);
   return true;
 }
 
