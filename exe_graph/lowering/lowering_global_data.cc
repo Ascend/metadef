@@ -27,15 +27,15 @@ LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream) {
   return *this;
 }
 const LoweringGlobalData::NodeCompileResult *LoweringGlobalData::FindCompiledResult(const ge::NodePtr &node) const {
-  auto iter = node_ids_to_compile_result_holders_.find(node->GetOpDesc()->GetId());
-  if (iter == node_ids_to_compile_result_holders_.end()) {
+  auto iter = node_name_to_compile_result_holders_.find(node->GetName());
+  if (iter == node_name_to_compile_result_holders_.end()) {
     return nullptr;
   }
   return &iter->second;
 }
 LoweringGlobalData &LoweringGlobalData::AddCompiledResult(const ge::NodePtr &node,
                                                           LoweringGlobalData::NodeCompileResult compile_result) {
-  node_ids_to_compile_result_holders_[node->GetOpDesc()->GetId()] = std::move(compile_result);
+  node_name_to_compile_result_holders_[node->GetName()] = std::move(compile_result);
   return *this;
 }
 bg::ValueHolderPtr LoweringGlobalData::GetAllocator(AllocatorDesc desc) const {

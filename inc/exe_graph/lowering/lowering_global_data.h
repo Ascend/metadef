@@ -42,7 +42,7 @@ class LoweringGlobalData {
 
  private:
   bg::ValueHolderPtr stream_;
-  std::map<int64_t, NodeCompileResult> node_ids_to_compile_result_holders_;
+  std::unordered_map<std::string, NodeCompileResult> node_name_to_compile_result_holders_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
 };
 }
