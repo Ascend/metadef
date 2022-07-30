@@ -64,16 +64,20 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
   int64_t GetShapeSize() const;
   std::string ToString() const;
 
-  ///
-  /// @brief Check is unknown shape
-  /// @return bool
-  ///
+/**
+ * 根据tensor的shape的各个维度的dim值判断tensor是否是unknown shape
+ * @return
+ * 如果某一维的dim值小于0，那么返回true, 代表是unknown shape
+ * 如果所有维度的dim值都大于等于0，那么返回false, 代表是known shape
+ */
   bool IsUnknownShape() const;
 
-  ///
-  /// @brief Check is a scalar
-  /// @return bool
-  ///
+/**
+ * 根据tensor的shape的dim值的个数返回tensor是否是个标量
+ * @return
+ * 如果dim的维度是0维，则返回true,代表是标量
+ * 其他情况返回false, 代表非标量
+ */
   bool IsScalar() const;
 
   GeShape(const GeShape &other);

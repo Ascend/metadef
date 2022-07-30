@@ -703,7 +703,7 @@ static bool ReadProtoFromBinaryFile(const uint8_t *const data, const size_t len,
 
   google::protobuf::io::CodedInputStream coded_stream(data, static_cast<int32_t>(len));
   // 2048M -1
-  coded_stream.SetTotalBytesLimit(INT32_MAX, -1);
+  coded_stream.SetTotalBytesLimit(INT32_MAX);
   if (!proto->ParseFromCodedStream(&coded_stream)) {
     REPORT_CALL_ERROR("E18888", "Read proto from BinaryFile failed, len %zu", len);
     GELOGE(GRAPH_FAILED, "[Read][Proto] from BinaryFile failed, len %zu", len);

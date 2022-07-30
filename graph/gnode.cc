@@ -18,7 +18,6 @@
 
 #include "debug/ge_util.h"
 #include "graph/anchor.h"
-#include "graph/node.h"
 #include "graph/utils/node_adapter.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/graph_utils.h"
@@ -354,7 +353,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
   const std::string op_type = input_data_node->GetType();
   if ((op_type == CONSTANT) || (op_type == CONSTANTOP)) {
     const Operator const_op = OpDescUtils::CreateOperatorFromNode(input_data_node);
-    if (const_op.GetAttr(ATTR_NAME_WEIGHTS, data) != GRAPH_SUCCESS) {
+    if (const_op.GetAttr(ATTR_NAME_WEIGHTS.c_str(), data) != GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E18888", "Input data node[%s] of node[%s] get data failed.",
                         input_data_node->GetName().c_str(), node_ptr->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Get][Attr] Input data node[%s] of node[%s] get data failed.",
@@ -370,7 +369,7 @@ graphStatus GNode::GetInputConstData(const int32_t index, Tensor &data) const {
     if ((parent_node != nullptr) &&
         ((parent_node->GetType() == CONSTANT) || (parent_node->GetType() == CONSTANTOP))) {
       const Operator const_op =  OpDescUtils::CreateOperatorFromNode(parent_node);
-      if (const_op.GetAttr(ATTR_NAME_WEIGHTS, data) != GRAPH_SUCCESS) {
+      if (const_op.GetAttr(ATTR_NAME_WEIGHTS.c_str(), data) != GRAPH_SUCCESS) {
         REPORT_CALL_ERROR("E18888", "Input data node[%s] of node[%s] get data failed.",
                           parent_node->GetName().c_str(), node_ptr->GetName().c_str());
         GELOGE(GRAPH_FAILED, "[Get][Attr] Input data node[%s] of node[%s] get data failed.",
@@ -711,7 +710,7 @@ graphStatus GNode::SetAttr(const AscendString &name, AttrValue &attr_value) cons
 
   const std::string node_name = ascend_name;
   Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);
-  (void)op.SetAttr(node_name, std::move(attr_value));
+  (void)op.SetAttr(node_name.c_str(), std::move(attr_value));
   return GRAPH_SUCCESS;
 }
 

@@ -40,6 +40,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Shape {
   int64_t GetDim(size_t idx) const;
   graphStatus SetDim(size_t idx, int64_t value);
   std::vector<int64_t> GetDims() const;
+  /**
+   * 获取shape的各个维度的dim值的乘积
+   * @return
+   * 如果dim值包含-1或者-2，那么size直接返回-1, 含义是unknown shape
+   * 如果dim值包含0，那么size直接返回0，含义是空tensor
+   * 如果dim值的个数为0，那么size直接返回0，含义是标量
+   * 如果dim值的乘积产生了int64的溢出，那么size直接返回0，含义是乘积溢出
+   */
   int64_t GetShapeSize() const;
 
  private:
