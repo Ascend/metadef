@@ -1107,7 +1107,7 @@
       "ErrMessage": "Model %s requires [%s] memory, which exceeds system limit [%s].",
       "Arglist": "item,size,maxsize",
       "suggestion": {
-        "Possible Cause": "Limited by AI Processors, the total size of the variables(5 GB at most by default) and feature maps (26 GB at most by default) cannot exceed 31GB.",
+        "Possible Cause": "N/A",
         "Solution": "1. Set variable_memory_max_size and graph_memory_max_size to adjust the memory usage of variables and feature maps. 2. Reduce the batch size. 3. If the error persists when the batch size is reduced to 1, modify the model structure to reduce the model size."
       }
     },
