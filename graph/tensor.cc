@@ -803,7 +803,7 @@ TensorDesc TensorAdapter::GeTensorDesc2TensorDesc(const GeTensorDesc &ge_tensor_
     tensor_desc.SetOriginShape(Shape(ge_tensor_desc.GetOriginShape().GetDims()));
   }
   tensor_desc.SetOriginFormat(ge_tensor_desc.GetOriginFormat());
-  tensor_desc.SetName(ge_tensor_desc.GetName());
+  tensor_desc.SetName(ge_tensor_desc.GetName().c_str());
   tensor_desc.SetPlacement(ge_tensor_desc.GetPlacement());
   std::vector<std::pair<int64_t, int64_t>> shape_range;
   auto status = ge_tensor_desc.GetShapeRange(shape_range);

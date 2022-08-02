@@ -272,38 +272,43 @@ class GraphUtils {
   ///
   static graphStatus IsolateNodeOneIO(const NodePtr &node);
 
-  ///
-  /// The data anchors replacing behavior is the same with
-  /// `ReplaceNodeDataAnchors`. In addition, replace all `old_node` control
-  /// anchors with `new_node`'s.
-  /// Note: input/output control edges of 'old_node' will NOT be deleted
-  /// @param new_node
-  /// @param old_node
-  /// @param inputs_map
-  /// @param outputs_map
-  /// @return
-  ///
+  /**
+   * 此接口对数据关系的处理与`ReplaceNodeDataAnchors`的处理行为一致， 在此基础上，
+   * 复制了`old_node`的所有控制关系到`new_node`上，这也是要注意的一点：
+   * `数据`关系是`移动`操作，`控制`关系是`复制`操作
+   * @param new_node
+   * @param old_node
+   * @param inputs_map 用于指导输入数据锚点的替换，注意元素个数不应该超过`new_node`的输入锚点总个数
+   * @param outputs_map 用于指导输出锚点的替换，注意元素个数不应该超过`new_node`的输出锚点总个数
+   * @return 如果替换成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static graphStatus ReplaceNodeAnchors(const NodePtr &new_node, const NodePtr &old_node,
                                         const std::initializer_list<int32_t> inputs_map,
                                         const std::initializer_list<int32_t> outputs_map);
 
+  /**
+   * `ReplaceNodeAnchors`的重载接口
+   * @param new_node
+   * @param old_node
+   * @param inputs_map
+   * @param outputs_map
+   * @return
+   */
   static graphStatus ReplaceNodeAnchors(const NodePtr &new_node, const NodePtr &old_node,
                                         const std::vector<int32_t> &inputs_map,
                                         const std::vector<int32_t> &outputs_map);
 
-  ///
-  /// Replace `old_node` data anchors with `new_node`'s according to `inputs_map` and `outputs_map`.
-  /// Replace the `i` in/out data anchor on `old_node` with
-  /// `inputs_map[i]`/`outputs_map[i]` data anchor on `new_node`.
-  /// If `inputs_map[i]`/`outputs_map[i]` < 0 or the index not contained in
-  /// `inputs_map[i]`/`outputs_map[i]`, the `i` data anchor will remain
-  /// on `old_node`.
-  /// @param new_node
-  /// @param old_node
-  /// @param inputs_map
-  /// @param outputs_map
-  /// @return
-  ///
+  /**
+   * 接口行为是根据`inputs_map`和`outputs_map`把`old_node`上的数据关系`移动`到`new_node`上；具体操作是
+   * 把`old_node`的第`inputs_map[i]`/`outputs_map[i]`个数据锚点的数据关系替换到`new_node`的第`i`个
+   * 数据锚点上, `i`的取值范围是[0, `inputs_map`/`outputs_map`的元素个数）; 如果`inputs_map[i]`/`outputs_map[i]`
+   * 的值小于0或者不在`old_node`的锚点索引范围之内，那么`new_node`的第`i`个数据锚点的数据关系保持原样
+   * @param new_node
+   * @param old_node
+   * @param inputs_map 用于指导输入数据锚点的替换，注意元素个数不应该超过`new_node`的输入锚点总个数
+   * @param outputs_map 用于指导输出锚点的替换，注意元素个数不应该超过`new_node`的输出锚点总个数
+   * @return
+   */
   static graphStatus ReplaceNodeDataAnchors(const NodePtr &new_node, const NodePtr &old_node,
                                             const std::initializer_list<int32_t> inputs_map,
                                             const std::initializer_list<int32_t> outputs_map);

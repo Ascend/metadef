@@ -245,4 +245,30 @@ TEST_F(TensorDataUT, ReleaseFailedWhenShare) {
   EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 1);
   EXPECT_EQ(td1.GetAddr(), reinterpret_cast<TensorAddress>(8));
 }
+
+TEST_F(TensorDataUT, InitValue) {
+  TensorData td(reinterpret_cast<TensorAddress>(10), nullptr);
+  EXPECT_EQ(td.GetPlacement(), kTensorPlacementEnd);
+  EXPECT_EQ(td.GetSize(), 0U);
+
+  td.SetPlacement(kOnHost);
+  EXPECT_EQ(td.GetPlacement(), kOnHost);
+
+  td.SetSize(10);
+  EXPECT_EQ(td.GetSize(), 10);
+
+  // test move construct
+  TensorData td1(std::move(td));
+  EXPECT_EQ(td1.GetPlacement(), kOnHost);
+  EXPECT_EQ(td1.GetSize(), 10);
+
+  // test operator=
+  TensorData td2 = std::move(td1);
+  EXPECT_EQ(td2.GetPlacement(), kOnHost);
+  EXPECT_EQ(td2.GetSize(), 10);
+
+  EXPECT_EQ(td.GetPlacement(), kTensorPlacementEnd);
+  EXPECT_EQ(td.GetSize(), 0);
+}
+
 }  // namespace gert

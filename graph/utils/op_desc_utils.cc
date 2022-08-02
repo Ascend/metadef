@@ -1053,7 +1053,9 @@ ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, const ui
   if (op.operator_impl_->GetInputConstData(idx, ge_tensor) == GRAPH_SUCCESS) {
     return ge_tensor.get();
   }
-  GELOGW("[Get][ConstInput] Op(%s) %u get input const data failed", op.GetName().c_str(), idx);
+  AscendString name;
+  (void) op.GetName(name);
+  GELOGW("[Get][ConstInput] Op(%s) %u get input const data failed", name.GetString(), idx);
   return nullptr;
 }
 

@@ -1232,7 +1232,7 @@ graphStatus ReplaceOutDataAnchors(const Node::Vistor<OutDataAnchorPtr> &new_outs
       continue;
     }
     const auto old_index = outputs_map.at(i);
-    if (old_index < 0) {
+    if ((old_index < 0) || (static_cast<size_t>(old_index) >= old_outs.size())) {
       continue;
     }
 
@@ -1278,7 +1278,7 @@ graphStatus ReplaceInDataAnchors(const Node::Vistor<InDataAnchorPtr> &new_ins,
       continue;
     }
     const auto old_index = inputs_map.at(i);
-    if (old_index < 0) {
+    if ((old_index < 0) || (static_cast<size_t>(old_index) >= old_ins.size())) {
       continue;
     }
     const InDataAnchorPtr &old_in_anchor = old_ins.at(static_cast<size_t>(old_index));
@@ -1626,13 +1626,14 @@ ComputeGraphPtr GraphUtils::FindRootGraph(ComputeGraphPtr graph) {
   return result;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyGraph(const Graph &src_graph, Graph &dst_graph) {
-  std::string graph_name = dst_graph.GetName();
-  if (graph_name.empty()) {
-    graph_name = src_graph.GetName();
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyGraph(const Graph &src_graph,
+                                                                                 Graph &dst_graph) {
+  AscendString graph_name;
+  dst_graph.GetName(graph_name);
+  if (std::string(graph_name.GetString()).empty()) {
+    (void) src_graph.GetName(graph_name);
   }
-  ComputeGraphPtr new_compute_graph = ComGraphMakeShared<ComputeGraph>(graph_name);
+  ComputeGraphPtr new_compute_graph = ComGraphMakeShared<ComputeGraph>(graph_name.GetString());
   GE_CHECK_NOTNULL(new_compute_graph);
   const ComputeGraphPtr src_compute_graph = GetComputeGraph(src_graph);
   GE_CHECK_NOTNULL(src_compute_graph);

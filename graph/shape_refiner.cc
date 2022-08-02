@@ -666,7 +666,7 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceCo
   GE_CHECK_NOTNULL(inference_context);
   const auto all_in_data_anchors = node->GetAllInDataAnchors();
   std::vector<std::vector<ShapeAndType>> input_shapes_and_types(all_in_data_anchors.size());
-  std::vector<std::string> marks;
+  std::vector<AscendString> marks;
 
   bool has_input_shapes_and_types = false;
   for (const auto &in_anchor : all_in_data_anchors) {
@@ -694,9 +694,11 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceCo
       if (iter != context_map.end()) {
         const auto &src_context = iter->second;
         GE_CHECK_NOTNULL(src_context);
+        std::vector<AscendString> src_marks;
+        src_context->GetMarks(src_marks);
         GELOGD("node:%s get %ld marks from node:%s",
-               node->GetName().c_str(), src_context->GetMarks().size(), in_node->GetName().c_str());
-        for (auto mark : src_context->GetMarks()) {
+               node->GetName().c_str(), src_marks.size(), in_node->GetName().c_str());
+        for (const auto& mark : src_marks) {
           if (marks.empty()) {
             marks.emplace_back(mark);
           }
@@ -745,7 +747,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
   ret = op_desc->CallInferFunc(op);
   if (ret == GRAPH_PARAM_INVALID) {
     // Op ir no infer func, try to get infer func from operator factory
-    const auto node_op = ge::OperatorFactory::CreateOperator("node_op", op_desc->GetType());
+    const auto node_op = ge::OperatorFactory::CreateOperator("node_op", op_desc->GetType().c_str());
     if (node_op.IsEmpty()) {
       GELOGW("[InferShape][Check] Get op from OperatorFactory failed, type: %s", op_type.c_str());
       return ret;
@@ -929,10 +931,12 @@ graphStatus ShapeRefiner::PostProcessAfterInfershape(const NodePtr &node, const 
   if (!is_unknown_graph) {
     auto ctx_after_infer = op.GetInferenceContext();
     if (ctx_after_infer != nullptr) {
-      GELOGD("[%s] after infershape. mark:%zu", node->GetName().c_str(), ctx_after_infer->GetMarks().size());
-      if ((!ctx_after_infer->GetOutputHandleShapesAndTypes().empty()) || (!ctx_after_infer->GetMarks().empty())) {
+      std::vector<AscendString> marks;
+      ctx_after_infer->GetMarks(marks);
+      GELOGD("[%s] after infershape. mark:%zu", node->GetName().c_str(), marks.size());
+      if ((!ctx_after_infer->GetOutputHandleShapesAndTypes().empty()) || (!marks.empty())) {
         GELOGD("[%s] set inference context after. mark:%zu", node->GetName().c_str(),
-               ctx_after_infer->GetMarks().size());
+               marks.size());
         (void)context_map.emplace(node, ctx_after_infer);
       }
     }
@@ -975,7 +979,9 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, const bool befo
       return GRAPH_FAILED;
     }
     GE_CHECK_NOTNULL(inference_context);
-    GELOGD("create context for node:%s, marks %zu", node->GetName().c_str(), inference_context->GetMarks().size());
+    std::vector<AscendString> marks;
+    inference_context->GetMarks(marks);
+    GELOGD("create context for node:%s, marks %zu", node->GetName().c_str(), marks.size());
     op.SetInferenceContext(inference_context);
   }
 
