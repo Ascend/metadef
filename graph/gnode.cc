@@ -50,8 +50,7 @@
     }                                                                                                                  \
     const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr_share);                                           \
     if (op.GetAttr(ascend_name, attr_value) != GRAPH_SUCCESS) {                                                        \
-      REPORT_CALL_ERROR("E18888", "GetAttr of node[%s] failed.", node_ptr_share->GetName().c_str());                   \
-      GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr_share->GetName().c_str());                      \
+      GELOGW("[Get][Attr] of node[%s] failed.", node_ptr_share->GetName().c_str());                                    \
       return GRAPH_FAILED;                                                                                             \
     }                                                                                                                  \
                                                                                                                        \
@@ -817,8 +816,7 @@ graphStatus GNode::GetAttr(const AscendString &name, AscendString &attr_value) c
   const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);
   std::string op_name;
   if (op.GetAttr(node_name, op_name) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E18888", "Get attr of node[%s] failed.", node_ptr->GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] Get attr of node[%s] failed.", node_ptr->GetName().c_str());
+    GELOGW("[Check][Param] Get attr of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
@@ -853,8 +851,7 @@ graphStatus GNode::GetAttr(const AscendString &name, std::vector<AscendString> &
   const Operator op = OpDescUtils::CreateOperatorFromNode(node_ptr);
   std::vector<std::string> attr_names;
   if (op.GetAttr(node_name, attr_names) != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E18888", "Get attr of node[%s] failed.", node_ptr->GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Get][Attr] of node[%s] failed.", node_ptr->GetName().c_str());
+    GELOGW("[Get][Attr] of node[%s] failed.", node_ptr->GetName().c_str());
     return GRAPH_FAILED;
   }
 
@@ -895,9 +892,7 @@ bool GNode::HasAttr(const AscendString &name) {
   }
   const std::string attr_name = ascend_name;
   if (!op_desc->HasAttr(attr_name)) {
-    REPORT_CALL_ERROR("E18888", "Node[%s] has no attr name[%s]", node_ptr->GetName().c_str(), attr_name.c_str());
-    GELOGE(GRAPH_FAILED, "[Call][HasAttr] Node[%s] has no attr name[%s]",
-           node_ptr->GetName().c_str(), attr_name.c_str());
+    GELOGW("[Call][HasAttr] Node[%s] has no attr name[%s]", node_ptr->GetName().c_str(), attr_name.c_str());
     return false;
   }
 

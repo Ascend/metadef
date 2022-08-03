@@ -352,6 +352,7 @@ TEST_F(GNodeTest, GetAttr1_success) {
   gnode.impl_ = nullptr;
   ASSERT_EQ(gnode.GetAttr(name, attr_value), GRAPH_FAILED);
   gnode = NodeAdapter::Node2GNode(node);
+  ASSERT_EQ(gnode.GetAttr("max_size", attr_value), GRAPH_FAILED);
   gnode.SetAttr(name, attr_value);
   ASSERT_EQ(gnode.GetAttr(name, attr_value), GRAPH_SUCCESS);
 }
@@ -368,6 +369,9 @@ TEST_F(GNodeTest, GetAttr2_success) {
   gnode.impl_ = nullptr;
   ASSERT_EQ(gnode.GetAttr(name, attr_value), GRAPH_FAILED);
   gnode = NodeAdapter::Node2GNode(node);
+  ASSERT_EQ(gnode.GetAttr("max_size", attr_value), GRAPH_FAILED);
+  int32_t attr_info = 0;
+  ASSERT_EQ(gnode.GetAttr("max_size", attr_info), GRAPH_FAILED);
   gnode.SetAttr(name, attr_value);
   attr_value.clear();
   ASSERT_EQ(gnode.GetAttr(name, attr_value), GRAPH_SUCCESS);
@@ -385,6 +389,7 @@ TEST_F(GNodeTest, HasAttr_Success) {
   gnode.impl_ = nullptr;
   ASSERT_EQ(gnode.HasAttr(name), false);
   gnode = NodeAdapter::Node2GNode(node);
+  ASSERT_EQ(gnode.HasAttr("max_size"), false);
   gnode.SetAttr(name, attr_value);
   ASSERT_EQ(gnode.HasAttr(name), true);
 }
