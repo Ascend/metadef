@@ -134,9 +134,21 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   AttrHolder() = default;
   virtual ~AttrHolder() = default;
   AttrHolder &operator=(AttrHolder const &rhs) = default;
-
+  /**
+   * 对当前AttrHolder对象设置属性，属性名为`name`,属性值为`value`,
+   * 需要注意的是 如果当前对象已经存在了`name`类型的属性，接口会进行刷新值的操作
+   * @param name
+   * @param value
+   * @return 成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   graphStatus SetAttr(const std::string &name, const AnyValue &value);
-
+  /**
+   * 尝试对当前AttrHolder对象设置属性，属性名为`name`,属性值为`value`,
+   * 需要注意的是 如果当前对象已经存在了`name`类型的属性，接口并不会进行刷新值的操作
+   * @param name
+   * @param value
+   * @return 成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   graphStatus TrySetAttr(const std::string &name, const AnyValue &value);
 
   graphStatus GetAttr(const std::string &name, AnyValue &value) const;

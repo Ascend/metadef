@@ -343,6 +343,11 @@ class GraphUtils {
   ///
   static graphStatus MoveOutCtrlEdges(NodePtr &src_node, NodePtr &dst_node);
 
+  /**
+   * 查找`graph`的根图，如果当前图就是根图或者当前图没有父图，则返回当前图
+   * @param graph
+   * @return
+   */
   static ComputeGraphPtr FindRootGraph(ComputeGraphPtr graph);
 
   ///
@@ -353,16 +358,20 @@ class GraphUtils {
   ///
   static ComputeGraphPtr CloneGraph(const ComputeGraphPtr &graph, const std::string &suffix,
                                     std::vector<NodePtr> &input_nodes, std::vector<NodePtr> &output_nodes);
-
+  /**
+   * 拷贝`src_compute_graph`图上的attr属性到`dst_compute_graph`上，
+   * 需要注意的是 如果`dst_compute_graph`图上已经存在了某些同名属性，则会跳过这些属性的值的拷贝
+   * @param src_compute_graph
+   * @param dst_compute_graph
+   */
   static void InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph,
                                   ComputeGraphPtr &dst_compute_graph);
-
-  ///
-  /// Copy tensor attribute to new node.
-  /// @param [in] dst_desc: cloned node.
-  /// @param [in] src_node: original node.
-  /// @return success: GRAPH_SUCESS
-  ///
+  /**
+   * 拷贝`src_node`节点及其所有有效的输入输出tensor上的attr属性到`dst_desc`上
+   * @param dst_desc 目的OpDesc对象
+   * @param src_node 源Node对象
+   * @return 拷贝成功返回GRAPH_SUCCESS， 拷贝失败返回GRAPH_FAILED
+   */
   static graphStatus CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr &src_node);
 
   ///
@@ -407,17 +416,53 @@ class GraphUtils {
 
   static bool IsNodeInGraphRecursively(const ComputeGraphPtr &graph, const Node &node);
 
+  /**
+   * 获取所有`直接`父图为`graph`和`间接`父图为`graph`的子图对象合集
+   * @param graph
+   * @param subgraphs 子图对象的合集
+   * @return 成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static graphStatus GetSubgraphsRecursively(const ComputeGraphPtr &graph, std::vector<ComputeGraphPtr> &subgraphs);
 
+  /**
+   * 创建以`subgraph_name`拼接命名的子图对象`subgraph`，把`nodes`中的节点从`graph`中抽取出来放在`subgraph`中，
+   * 完成图归属和节点连边关系的重建,`nodes`作为一个整体与`subgraph`父节点等价
+   * @param graph
+   * @param nodes
+   * @param subgraph_name
+   * @return 成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static ComputeGraphPtr BuildSubgraphWithNodes(const ComputeGraphPtr &graph, const std::set<NodePtr> &nodes,
                                                 const std::string &subgraph_name);
-
+  /**
+   * `BuildSubgraphWithNodes`的重载接口
+   * @param graph
+   * @param nodes
+   * @param subgraph_name
+   * @return 成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static ComputeGraphPtr BuildSubgraphWithNodes(ComputeGraph &graph, const std::set<NodePtr> &nodes,
                                                 const std::string &subgraph_name);
-
+  /**
+   * 作为`BuildSubgraphWithNodes`函数的逆向操作，会把`graph`展开其父图上，
+   * 此接口支持子图的递归展开操作
+   * @param graph 要展开的子图
+   * @param filter 子图过滤器，用于过滤子图的子图是否要展开，不传递时不进行递归操作
+   * @return 成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
+   */
   static graphStatus UnfoldSubgraph(const ComputeGraphPtr &graph,
                                     const std::function<bool(const ComputeGraphPtr &)> &filter);
-
+  /**
+   * 作为`UnfoldSubgraph`的高阶版本，支持没有父子关系的图的展开操作，展开`graph`到`target_graph`上，
+   * `graph`作为一个整体，等价替换掉`target_graph`中的`target_node`；
+   * 此接口支持子图的递归展开操作
+   * @param graph 要展开的子图
+   * @param target_graph 展开到的目标图
+   * @param target_node 子图要替换的目标节点
+   * @param filter 图过滤器，用于过滤子图的子图是否要展开，不传递时不进行递归操作
+   * @param depth
+   * @return 成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILE
+   */
   static graphStatus UnfoldGraph(const ComputeGraphPtr &graph, const ComputeGraphPtr &target_graph,
                                  const NodePtr &target_node, const function<bool(const ComputeGraphPtr &)> &filter,
                                  int depth = 0);

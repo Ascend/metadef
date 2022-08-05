@@ -164,18 +164,20 @@ class NodeUtils {
 
   static ge::ConstNodePtr GetNodeFromOperator(const Operator &oprt);
 
-  ///
-  /// @brief Get node type in cross subgragh.
-  /// @param [in] node
-  /// @return type
-  ///
+  /**
+  * 适用于`node`节点作为子图中的Data占位节点时，获取根图中父节点对应的实际输入节点的类型
+  * 其他情况返回`node`本身的节点类型
+  * @param node
+  * @return
+  */
   static std::string GetInConstNodeTypeCrossSubgraph(const ge::NodePtr &node);
 
-  ///
-  /// @brief Get node in cross subgragh.
-  /// @param [in] node
-  /// @return Node
-  ///
+  /**
+* 适用于`node`节点作为子图中的Data占位节点时，获取根图中父节点对应的实际输入节点对象
+* 其他情况返回`node`本身
+* @param node
+* @return
+*/
   static NodePtr GetInNodeCrossSubgraph(const ge::NodePtr &node);
 
   ///
