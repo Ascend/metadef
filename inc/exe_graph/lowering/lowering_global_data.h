@@ -21,6 +21,7 @@
 #include "value_holder.h"
 #include "exe_graph/runtime/tensor.h"
 #include "exe_graph/runtime/allocator.h"
+
 namespace gert {
 class LoweringGlobalData {
  public:
@@ -36,6 +37,9 @@ class LoweringGlobalData {
   const NodeCompileResult *FindCompiledResult(const ge::NodePtr &node) const;
   LoweringGlobalData &AddCompiledResult(const ge::NodePtr &node, NodeCompileResult compile_result);
 
+  void *FindKnownSubgraphModel(const ge::NodePtr &node) const;
+  LoweringGlobalData &AddKnownSubgraphModel(const ge::NodePtr &node, void *const model);
+
   bg::ValueHolderPtr GetAllocator(AllocatorDesc desc) const;
   LoweringGlobalData &SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator);
   bg::ValueHolderPtr GetOrCreateAllocator(AllocatorDesc desc);
@@ -43,6 +47,7 @@ class LoweringGlobalData {
  private:
   bg::ValueHolderPtr stream_;
   std::unordered_map<std::string, NodeCompileResult> node_name_to_compile_result_holders_;
+  std::map<int64_t, void *> node_ids_to_known_subgraph_models_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
 };
 }
