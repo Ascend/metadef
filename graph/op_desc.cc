@@ -722,8 +722,11 @@ const GeTensorDesc &OpDescImpl::GetOutputDesc(const std::string &name) const {
 }
 
 GeTensorDescPtr OpDescImpl::MutableOutputDesc(const uint32_t index) const {
-  GE_CHK_BOOL_EXEC(index < outputs_desc_.size(), return nullptr, "Cann't find the output desc %u", index);
-  return outputs_desc_[static_cast<uint64_t>(index)];
+  if (index < outputs_desc_.size()) {
+    return outputs_desc_[static_cast<uint64_t>(index)];
+  }
+  GELOGW("[Get][OutputDesc] Failed to get output desc [%u], output number [%zu]", index, outputs_desc_.size());
+  return nullptr;
 }
 
 GeTensorDescPtr OpDescImpl::MutableOutputDesc(const std::string &name) const {
