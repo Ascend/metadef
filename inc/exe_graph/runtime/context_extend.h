@@ -52,6 +52,38 @@ class KernelExtendInfo {
     kernel_type_ = kernel_type;
   }
 
+  /**
+   * 设置kernel_type_idx_,用于profiling
+   * @param kernel_type_idx idx of kernel type in profiling
+   */
+  void SetKernelTypeIdx(uint64_t kernel_type_idx) {
+    kernel_type_idx_ = kernel_type_idx;
+  }
+
+  /**
+   * 设置compute_node_name_idx_,用于profiling
+   * @param compute_node_name_idx idx of node name in profiling
+   */
+  void SetNodeNameIdx(uint64_t compute_node_name_idx) {
+    compute_node_name_idx_ = compute_node_name_idx;
+  }
+
+  /**
+   * 获取compute_node_name_idx_,用于profiling
+   * @return compute_node_name_idx_ idx of node name in profiling
+   */
+  uint64_t GetNodeNameIdx() const {
+    return compute_node_name_idx_;
+  }
+
+  /**
+   * 获取kernel_type_idx_,用于profiling
+   * @param kernel_type_idx_ idx of kernel type in profiling
+   */
+  uint64_t GetKernelTypeIdx() const {
+    return kernel_type_idx_;
+  }
+
   KernelExtendInfo() = delete;
   KernelExtendInfo(const KernelExtendInfo &) = delete;
   KernelExtendInfo(KernelExtendInfo &&) = delete;
@@ -61,6 +93,8 @@ class KernelExtendInfo {
  private:
   const char *kernel_name_;
   const char *kernel_type_;
+  uint64_t compute_node_name_idx_;
+  uint64_t kernel_type_idx_;
 };
 static_assert(std::is_standard_layout<KernelExtendInfo>::value, "The class KernelExtendInfo must be a POD");
 
