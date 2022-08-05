@@ -2,6 +2,7 @@
 #define private public
 #include "graph/ge_tensor.h"
 #include "graph/utils/attr_utils.h"
+#include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/op_desc.h"
 #include "graph/compute_graph.h"
@@ -264,9 +265,173 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case11) {
   NodePtr relu2_node = graph->AddNode(relu2);
   std::vector<ge::NodePtr> original_nodes = {relu1_node};
   std::vector<ge::NodePtr> fus_nodes = {relu2_node};
-  std::vector<std::string> origin_op_names = {"relu"};
+
   GraphPassUtil::RecordPassnameAndOriginalNames(original_nodes, fus_nodes, "passA");
   std::vector<std::string> origin_op_names_to_check = {"nodeA", "nodeB", "relu1"};
   CheckOriginName(fus_nodes, "passA", origin_op_names_to_check);
+}
+
+
+void CreateGraph(ComputeGraphPtr &graph, std::vector<ge::NodePtr> &original_nodes,
+                 std::vector<ge::NodePtr> &fus_nodes) {
+  OpDescPtr relu1 = std::make_shared<OpDesc>("relu1", "Relu");
+  OpDescPtr relu2 = std::make_shared<OpDesc>("relu2", "Relu");
+  OpDescPtr relu3 = std::make_shared<OpDesc>("relu3", "Relu");
+  OpDescPtr fusion_op = std::make_shared<OpDesc>("fusion", "Fusion");
+  vector<int64_t> dim = {4, 4, 1, 4};
+  GeShape shape(dim);
+  GeTensorDesc tenosr_desc(shape, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16);
+  tenosr_desc.SetOriginFormat(FORMAT_NCHW);
+  tenosr_desc.SetOriginDataType(DT_FLOAT);
+  relu1->AddInputDesc(tenosr_desc);
+  relu1->AddOutputDesc(tenosr_desc);
+
+
+  relu2->AddInputDesc(tenosr_desc);
+  relu2->AddOutputDesc(tenosr_desc);
+
+  relu3->AddInputDesc(tenosr_desc);
+  relu3->AddOutputDesc(tenosr_desc);
+
+  fusion_op->AddInputDesc(tenosr_desc);
+  fusion_op->AddOutputDesc(tenosr_desc);
+
+
+  NodePtr relu1_node = graph->AddNode(relu1);
+  NodePtr relu2_node = graph->AddNode(relu2);
+  NodePtr relu3_node = graph->AddNode(relu3);
+  NodePtr fusion_node = graph->AddNode(fusion_op);
+  ge::GraphUtils::AddEdge(relu1_node->GetOutDataAnchor(0), relu2_node->GetInDataAnchor(0));
+  ge::GraphUtils::AddEdge(relu2_node->GetOutDataAnchor(0), relu3_node->GetInDataAnchor(0));
+  ge::GraphUtils::AddEdge(relu3_node->GetOutDataAnchor(0), fusion_node->GetInDataAnchor(0));
+
+  original_nodes = {relu2_node, relu3_node};
+  fus_nodes = {fusion_node};
+}
+
+TEST_F(GraphPassUtilUT, test_get_back_ward_attr_01) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  bool backward = false;
+  GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kInheritTrue);
+  EXPECT_EQ(backward, true);
+}
+
+TEST_F(GraphPassUtilUT, test_get_back_ward_attr_02) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  auto ori_node0 = original_nodes[0];
+  auto ori_node1 = original_nodes[1];
+  ge::AttrUtils::SetBool(ori_node0->GetOpDesc(), "_backward", true);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+  bool backward = false;
+  GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kFusedNode);
+  EXPECT_EQ(backward, true);
+}
+
+TEST_F(GraphPassUtilUT, test_get_back_ward_attr_03) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  auto ori_node0 = original_nodes[0];
+  auto ori_node1 = original_nodes[1];
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+  bool backward = false;
+  GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kInsertNode);
+  EXPECT_EQ(backward, true);
+}
+
+TEST_F(GraphPassUtilUT, test_get_back_ward_attr_03_1) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  auto ori_node0 = original_nodes[0];
+  auto ori_node1 = original_nodes[1];
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+  bool backward = false;
+  GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kFusedNode);
+  EXPECT_EQ(backward, false);
+}
+
+TEST_F(GraphPassUtilUT, test_get_back_ward_attr_04) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  auto ori_node0 = original_nodes[0];
+  auto ori_node1 = original_nodes[1];
+  ge::AttrUtils::SetBool(ori_node0->GetOpDesc(), "_backward", true);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+  bool backward = false;
+  GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kDoNotInherit);
+  EXPECT_EQ(backward, false);
+}
+
+TEST_F(GraphPassUtilUT, test_inherit_attrs_01) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  auto ori_node0 = original_nodes[0];
+  auto ori_node1 = original_nodes[1];
+  ge::AttrUtils::SetBool(ori_node0->GetOpDesc(), "_backward", true);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+  ge::AttrUtils::SetInt(ori_node1->GetOpDesc(), "_recompute", 2);
+  ge::AttrUtils::SetInt(ori_node1->GetOpDesc(), "_optimizer", 3);
+  ge::AttrUtils::SetInt(ori_node1->GetOpDesc(), ge::ATTR_NAME_KEEP_DTYPE, 1);
+  ge::AttrUtils::SetStr(ori_node1->GetOpDesc(), ge::ATTR_NAME_OP_COMPILE_STRATEGY, "test");
+
+  GraphPassUtil::InheritAttrFromOriNodes(original_nodes, fus_nodes, BackWardInheritMode::kFusedNode);
+  auto fus_op = fus_nodes.at(0)->GetOpDesc();
+
+  bool backward = false;
+  ge::AttrUtils::GetBool(fus_op, "_backward", backward);
+  EXPECT_EQ(backward, true);
+
+  int64_t recompute = 0;
+  ge::AttrUtils::GetInt(ori_node1->GetOpDesc(), "_recompute", recompute);
+  EXPECT_EQ(recompute, 2);
+
+  int64_t optimizer = 0;
+  ge::AttrUtils::GetInt(ori_node1->GetOpDesc(), "_optimizer", optimizer);
+  EXPECT_EQ(optimizer, 3);
+
+  int64_t keep_dtype = 0;
+  ge::AttrUtils::GetInt(ori_node1->GetOpDesc(), ge::ATTR_NAME_KEEP_DTYPE, keep_dtype);
+  EXPECT_EQ(keep_dtype, 1);
+
+  string strategy = "";
+  ge::AttrUtils::GetStr(ori_node1->GetOpDesc(), ge::ATTR_NAME_OP_COMPILE_STRATEGY, strategy);
+  EXPECT_EQ(strategy, "test");
+}
+
+
+TEST_F(GraphPassUtilUT, test_inherit_attrs_02) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  auto ori_node0 = original_nodes[0];
+  auto ori_node1 = original_nodes[1];
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+
+  GraphPassUtil::InheritAttrFromOriNodes(original_nodes, fus_nodes, BackWardInheritMode::kFusedNode);
+  auto fus_op = fus_nodes.at(0)->GetOpDesc();
+
+  bool backward = false;
+  ge::AttrUtils::GetBool(fus_op, "_backward", backward);
+  EXPECT_EQ(backward, false);
+
+
+  EXPECT_EQ(fus_op->HasAttr("_recompute"), false);
+  EXPECT_EQ(fus_op->HasAttr("_optimizer"), false);
+  EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_KEEP_DTYPE), false);
+  EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_OP_COMPILE_STRATEGY), false);
 }
 }

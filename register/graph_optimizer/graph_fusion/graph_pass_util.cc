@@ -21,6 +21,10 @@
 namespace fe {
 const std::string kPassName = "pass_name";
 const char* kDumpGeGraph = "DUMP_GE_GRAPH";
+const char* kBackWard = "_backward";
+const char* kRecompute = "_recompute";
+const char* kOptimizer = "_optimizer";
+const std::array<string, 2> kIntAttrNeedInherit = {kRecompute, kOptimizer};
 
 #define REGISTER_MAKE_SHARED(exec_expr0, exec_expr1) \
   do {                                         \
@@ -250,6 +254,114 @@ Status GraphPassUtil::StoreAndUpdataOriginFusionPassName(const ge::OpDescPtr &op
     return FAILED;
   }
   return SUCCESS;
+}
+
+void GraphPassUtil::GetBackWardAttr(const std::vector<ge::NodePtr> &original_nodes,
+                                    bool &backward, BackWardInheritMode inherit_mode) {
+  if (inherit_mode == BackWardInheritMode::kInheritTrue) {
+    backward = true;
+    return;
+  }
+
+  if (inherit_mode != BackWardInheritMode::kDoNotInherit) {
+    for (const auto &origin_node : original_nodes) {
+      ge::AttrUtils::GetBool(origin_node->GetOpDesc(), kBackWard, backward);
+      if (!backward) {
+        continue;
+      }
+
+      if (inherit_mode != BackWardInheritMode::kFusedNode) {
+        break;
+      }
+
+      bool has_in_node_backward = false;
+      for (const auto &in_node : origin_node->GetInNodes()) {
+        (void) ge::AttrUtils::GetBool(in_node->GetOpDesc(), kBackWard, has_in_node_backward);
+        if (has_in_node_backward) {
+          break;
+        }
+      }
+
+      if (!has_in_node_backward) {
+        backward = false;
+      }
+    }
+  }
+}
+
+void GraphPassUtil::InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &original_nodes,
+                                            const std::vector<ge::NodePtr> &fusion_nodes,
+                                            BackWardInheritMode inherit_mode) {
+  vector<int64_t> int_attrs(kIntAttrNeedInherit.size(), 0);
+  size_t i = 0;
+  for (const auto &attr : kIntAttrNeedInherit) {
+    for (const auto &origin_node : original_nodes) {
+      int64_t value = 0;
+      (void)ge::AttrUtils::GetInt(origin_node->GetOpDesc(), attr, value);
+      if (value != 0) {
+        int_attrs[i] = value;
+        break;
+      }
+    }
+    ++i;
+  }
+
+  bool backward = false;
+  GetBackWardAttr(original_nodes, backward, inherit_mode);
+
+  for (const auto &fusion_node : fusion_nodes) {
+    auto fusion_op = fusion_node->GetOpDesc();
+    if (backward && !ge::AttrUtils::HasAttr(fusion_op, kBackWard)) {
+      ge::AttrUtils::SetBool(fusion_op, kBackWard, backward);
+    }
+
+    if (int_attrs.size() != kIntAttrNeedInherit.size()) {
+      GELOGW("[Fusion][InheritAttr]Integer attributes size %zu is not correct, should be %zu.",
+             int_attrs.size(), kIntAttrNeedInherit.size());
+      return;
+    }
+
+    i = 0;
+    for (const auto &attr : kIntAttrNeedInherit) {
+      if (int_attrs[i] != 0 && !ge::AttrUtils::HasAttr(fusion_op, attr)) {
+        ge::AttrUtils::SetBool(fusion_op, attr, int_attrs[i]);
+      }
+      ++i;
+    }
+  }
+}
+
+void GraphPassUtil::InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &original_nodes,
+                                            const std::vector<ge::NodePtr> &fusion_nodes,
+                                            BackWardInheritMode inherit_mode) {
+  std::string op_compile_strategy;
+  for (const auto &origin_node : original_nodes) {
+    if (ge::AttrUtils::GetStr(origin_node->GetOpDesc(), ge::ATTR_NAME_OP_COMPILE_STRATEGY, op_compile_strategy) &&
+        !op_compile_strategy.empty()) {
+      break;
+    }
+  }
+
+  int64_t keep_dtype = 0;
+  for (const auto &origin_node : original_nodes) {
+    if (ge::AttrUtils::GetInt(origin_node->GetOpDesc(), ge::ATTR_NAME_KEEP_DTYPE, keep_dtype) &&
+        keep_dtype != 0) {
+      break;
+    }
+  }
+
+  for (const auto &fusion_node : fusion_nodes) {
+    auto fusion_op = fusion_node->GetOpDesc();
+    if (!op_compile_strategy.empty() && !ge::AttrUtils::HasAttr(fusion_op, ge::ATTR_NAME_OP_COMPILE_STRATEGY)) {
+      ge::AttrUtils::SetStr(fusion_op, ge::ATTR_NAME_OP_COMPILE_STRATEGY, op_compile_strategy);
+    }
+
+    if (keep_dtype != 0 && !ge::AttrUtils::HasAttr(fusion_op, ge::ATTR_NAME_KEEP_DTYPE)) {
+      ge::AttrUtils::SetInt(fusion_op, ge::ATTR_NAME_KEEP_DTYPE, keep_dtype);
+    }
+  }
+
+  InheritGraphRelatedAttr(original_nodes, fusion_nodes, inherit_mode);
 }
 
 void GraphPassUtil::RecordOriginalOpNames(const std::vector<ge::NodePtr> &original_nodes,

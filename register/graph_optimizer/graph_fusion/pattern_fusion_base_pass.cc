@@ -113,9 +113,14 @@ static bool CheckStreamLabel(std::vector<ge::NodePtr> &fused_nodes) {
   return true;
 }
 
-static bool SetStreamLabelToFusedNodes(std::vector<ge::NodePtr> &fused_nodes, const ge::NodePtr first_node) {
+static bool SetStreamLabelToFusedNodes(std::vector<ge::NodePtr> &fused_nodes,
+                                       const std::vector<ge::NodePtr> &original_nodes) {
+  if (original_nodes.empty() || original_nodes[0] == nullptr) {
+    return true;
+  }
+
   std::string stream_label = "";
-  if (ge::AttrUtils::GetStr(first_node->GetOpDesc(), STREAM_LABEL, stream_label)) {
+  if (ge::AttrUtils::GetStr(original_nodes[0]->GetOpDesc(), STREAM_LABEL, stream_label)) {
     for (ge::NodePtr &node : fused_nodes) {
       if (!ge::AttrUtils::SetStr(node->GetOpDesc(), STREAM_LABEL, stream_label)) {
         GELOGW("[Set][Attr] node %s set attr _stream_label failed", node->GetName().c_str());
@@ -124,25 +129,6 @@ static bool SetStreamLabelToFusedNodes(std::vector<ge::NodePtr> &fused_nodes, co
     }
   }
   return true;
-}
-
-void InheritAttrFromOriNode(const std::vector<ge::NodePtr> &original_nodes, const ge::NodePtr &fusion_node) {
-  for (const auto &origin_node : original_nodes) {
-    int64_t keep_dtype = static_cast<int64_t>(false);
-    if (ge::AttrUtils::GetInt(origin_node->GetOpDesc(), ATTR_KEEP_DTYPE, keep_dtype) && (keep_dtype != 0)) {
-      if (!ge::AttrUtils::HasAttr(fusion_node->GetOpDesc(), ATTR_KEEP_DTYPE)) {
-        (void)ge::AttrUtils::SetInt(fusion_node->GetOpDesc(), ATTR_KEEP_DTYPE, keep_dtype);
-      }
-    }
-
-    std::string op_compile_strategy;
-    if (ge::AttrUtils::GetStr(origin_node->GetOpDesc(), ATTR_OP_COMPILE_STRATEGY, op_compile_strategy) &&
-        !op_compile_strategy.empty()) {
-      if (!ge::AttrUtils::HasAttr(fusion_node->GetOpDesc(), ATTR_OP_COMPILE_STRATEGY)) {
-        (void)ge::AttrUtils::SetStr(fusion_node->GetOpDesc(), ATTR_OP_COMPILE_STRATEGY, op_compile_strategy);
-      }
-    }
-  }
 }
 
 void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapping &mapping) const {
@@ -158,6 +144,20 @@ void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapp
     }
   }
   GELOGE(FAILED, "%s", oss.str().c_str());
+}
+
+void StoreOriginNodes(const Mapping &mapping,
+                      std::vector<std::string> &origin_op_names,
+                      std::vector<ge::NodePtr> &original_nodes) {
+  for (const auto &item : mapping) {
+    if (item.second.empty()) {
+      continue;
+    }
+    for (const auto &node : item.second) {
+      original_nodes.emplace_back(node);
+      origin_op_names.emplace_back(node->GetName());
+    }
+  }
 }
 
 /**
@@ -189,15 +189,12 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
   // do fusion for each mapping
   for (Mapping &mapping : mappings) {
     std::vector<ge::NodePtr> fus_nodes;
-    ge::NodePtr first_node = nullptr;
-    for (auto &item : mapping) {
-      if (!item.second.empty()) {
-        first_node = item.second[0];
-        break;
-      }
-    }
     std::vector<std::string> origin_op_names;
-    StoreOriginOpNames(mapping, origin_op_names);
+    std::vector<ge::NodePtr> original_nodes;
+    StoreOriginNodes(mapping, origin_op_names, original_nodes);
+    bool backward = false;
+    GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kFusedNode);
+
     const Status status = Fusion(graph, mapping, fus_nodes);
 
     const bool isGraphCycle = enable_network_analysis_ && CheckGraphCycle(graph);
@@ -216,7 +213,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
         return GRAPH_FUSION_CYCLE;
     }
 
-    if (!SetStreamLabelToFusedNodes(fus_nodes, first_node)) {
+    if (!SetStreamLabelToFusedNodes(fus_nodes, original_nodes)) {
       return FAILED;
     }
 
@@ -227,23 +224,16 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
 
     if (status == SUCCESS) {
       effect_times++;
-      std::vector<ge::NodePtr> original_nodes;
-      for (auto &item : mapping) {
-        if (!item.second.empty()) {
-          for (auto &node : item.second) {
-            original_nodes.push_back(node);
-          }
-        }
-      }
       (void)SetDataDumpAttr(original_nodes, fus_nodes);
       for (ge::NodePtr &node : fus_nodes) {
-        GraphPassUtil::RecordOriginalOpNames(original_nodes, node->GetOpDesc(), GetName(), origin_op_names);
-        (void)GraphPassUtil::StoreAndUpdataOriginFusionPassName(node->GetOpDesc(), original_nodes, GetName());
+        auto fusion_op = node->GetOpDesc();
+        GraphPassUtil::RecordOriginalOpNames(original_nodes, fusion_op, GetName(), origin_op_names);
+        (void)GraphPassUtil::StoreAndUpdataOriginFusionPassName(fusion_op, original_nodes, GetName());
         (void)GraphPassUtil::AddNodeFromOpTypeMap(node_map_info, node);
-        /* If one of the original node has attribute like keep_dtype, the fused node
-         * will inherit that attribute. */
-        InheritAttrFromOriNode(original_nodes, node);
       }
+      BackWardInheritMode inherit_mode = backward ? BackWardInheritMode::kInheritTrue :
+          BackWardInheritMode::kDoNotInherit;
+      GraphPassUtil::InheritAttrFromOriNodes(original_nodes, fus_nodes, inherit_mode);
     }
     changed = (changed || (status == SUCCESS));
   }

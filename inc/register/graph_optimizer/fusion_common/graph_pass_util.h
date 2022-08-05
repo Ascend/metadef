@@ -30,6 +30,13 @@
 #include <vector>
 
 namespace fe {
+enum class BackWardInheritMode {
+  kInsertNode = 0,
+  kFusedNode = 1,
+  kInheritTrue = 2,
+  kDoNotInherit = 3
+};
+
 using NodeTypeMap = std::unordered_map<std::string, std::map<std::string, ge::NodePtr>>;
 using NodeTypeMapPtr = std::shared_ptr<NodeTypeMap>;
 struct NodeMapInfo {
@@ -105,6 +112,24 @@ class GraphPassUtil {
   static Status StoreAndUpdataOriginFusionPassName(const ge::OpDescPtr &op_desc,
                                                    const std::vector<ge::NodePtr> &original_nodes,
                                                    const std::string &pass_name);
+
+  static void GetBackWardAttr(const std::vector<ge::NodePtr> &original_nodes,
+                              bool &backward, BackWardInheritMode inherit_mode);
+
+  static void InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &original_nodes,
+                                      const std::vector<ge::NodePtr> &fusion_nodes,
+                                      BackWardInheritMode inherit_mode);
+
+  /* If one of the original node has attribute like keep_dtype, the fused node
+   * will inherit that attribute.
+   * param inherit_mode: if fusion_nodes are newly inserted after original_nodes,
+   * backward attr will only care about its farther nodes(pass farther nodes in
+   * param original_nodes).
+   * And if fusion_nodes are fused by a bunch of original_nodes, the backward attr
+   * will not only care about original_nodes but also the input nodes of original_nodes. */
+  static void InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &original_nodes,
+                                      const std::vector<ge::NodePtr> &fusion_nodes,
+                                      BackWardInheritMode inherit_mode = BackWardInheritMode::kFusedNode);
 
   static void RecordOriginalOpNames(const std::vector<ge::NodePtr> &original_nodes,
                                     const ge::OpDescPtr &op_desc, const string &pass_name,
