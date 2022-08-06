@@ -38,6 +38,21 @@ LoweringGlobalData &LoweringGlobalData::AddCompiledResult(const ge::NodePtr &nod
   node_name_to_compile_result_holders_[node->GetName()] = std::move(compile_result);
   return *this;
 }
+
+void *LoweringGlobalData::FindKnownSubgraphModel(const ge::NodePtr &node) const {
+  const std::map<int64_t, void *>::const_iterator iter
+      = node_ids_to_known_subgraph_models_.find(node->GetOpDesc()->GetId());
+  if (iter == node_ids_to_known_subgraph_models_.cend()) {
+    return nullptr;
+  }
+  return iter->second;
+}
+
+LoweringGlobalData &LoweringGlobalData::AddKnownSubgraphModel(const ge::NodePtr &node, void *const model) {
+  node_ids_to_known_subgraph_models_[node->GetOpDesc()->GetId()] = model;
+  return *this;
+}
+
 bg::ValueHolderPtr LoweringGlobalData::GetAllocator(AllocatorDesc desc) const {
   auto iter = placements_to_allocator_.find(desc);
   if (iter == placements_to_allocator_.end()) {

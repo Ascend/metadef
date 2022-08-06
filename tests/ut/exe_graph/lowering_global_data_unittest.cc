@@ -48,6 +48,18 @@ TEST_F(LoweringGlobalDataUT, SetGetCompileResultOk) {
   EXPECT_TRUE(gd.FindCompiledResult(node)->GetTaskDefs().empty());
 }
 
+TEST_F(LoweringGlobalDataUT, SetGetKnownSubgraphModelOk) {
+  LoweringGlobalData gd;
+
+  auto node = BuildTestNode();
+  ASSERT_NE(node, nullptr);
+
+  EXPECT_EQ(gd.FindKnownSubgraphModel(node), nullptr);
+
+  gd.AddKnownSubgraphModel(node, reinterpret_cast<void *>(0x123));
+  EXPECT_EQ(gd.FindKnownSubgraphModel(node), reinterpret_cast<void *>(0x123));
+}
+
 TEST_F(LoweringGlobalDataUT, SetGetAllocatorOk) {
   LoweringGlobalData gd;
   EXPECT_EQ(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), nullptr);
