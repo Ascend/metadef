@@ -26,9 +26,6 @@
 
 namespace gert {
 namespace bg {
-struct ExtendInfo {
-  std::unique_ptr<uint8_t[]> compute_node_info;
-};
 class GraphFrame {
  public:
   GraphFrame(const GraphFrame &) = delete;
@@ -37,77 +34,36 @@ class GraphFrame {
   GraphFrame operator=(GraphFrame &&) = delete;
 
   GraphFrame(ge::ComputeGraphPtr exe_graph, const GraphFrame &parent_frame)
-      : exe_graph_(std::move(exe_graph)), current_compute_node_(nullptr), root_frame_(parent_frame.root_frame_) {}
+      : exe_graph_(std::move(exe_graph)), current_compute_node_and_index_(), root_frame_(parent_frame.root_frame_),
+        nodes_to_index_(root_frame_.nodes_to_index_), indexes_to_node_(root_frame_.indexes_to_node_) {}
 
   explicit GraphFrame(ge::ComputeGraphPtr exe_graph)
-      : exe_graph_(std::move(exe_graph)), current_compute_node_(nullptr), root_frame_(*this) {}
+      : exe_graph_(std::move(exe_graph)), current_compute_node_and_index_(), root_frame_(*this),
+        nodes_to_index_holder_(), nodes_to_index_(nodes_to_index_holder_), indexes_to_node_holder_(),
+        indexes_to_node_(indexes_to_node_holder_) {}
 
   const ge::NodePtr &GetCurrentComputeNode() const {
-    return current_compute_node_;
+    return current_compute_node_and_index_.first;
   }
   void SetCurrentComputeNode(const ge::NodePtr &current_node) {
-    if (current_node != nullptr) {
-      AddNodeExtendInfo(current_node);
-    }
-    current_compute_node_ = current_node;
-  }
-  bool GetCurrentNodeIndex(size_t &index) {
-    auto current_node = GetCurrentComputeNode();
     if (current_node == nullptr) {
+      current_compute_node_and_index_ = {nullptr, 0};
+      return;
+    }
+    auto result = nodes_to_index_.emplace(current_node, nodes_to_index_.size());
+    current_compute_node_and_index_ = {current_node, result.first->second};
+    if (result.second) {
+      indexes_to_node_.emplace_back(current_node);
+    }
+  }
+  bool GetCurrentNodeIndex(size_t &index) const {
+    if (current_compute_node_and_index_.first == nullptr) {
       return false;
     }
-    auto iter = node_names_to_index_.find(current_node->GetName());
-    if (iter == node_names_to_index_.end()) {
-      return false;
-    }
-    index = iter->second;
+    index = current_compute_node_and_index_.second;
     return true;
   }
 
-  void AddNodeExtendInfo(const ge::NodePtr &node) {
-    auto ret = node_names_to_index_.emplace(node->GetName(), GetAllComputeNodeInfos().GetSize());
-    if (ret.second) {
-      size_t total_size = 0;
-      auto compute_node_info = CreateComputeNodeInfo(node, GetBufferPool(), total_size);
-      auto index = GetAllComputeNodeInfos().AddBuf(compute_node_info.get(), total_size);
-      ret.first->second = index;
-    }
-  }
-  const uint8_t *GetComputeNodeInfo(size_t index) const {
-    if (GetAllComputeNodeInfos().GetSize() <= index) {
-      return nullptr;
-    }
-    return reinterpret_cast<const uint8_t *>(GetAllComputeNodeInfos().GetBufById(index));
-  }
-  const BufferPool &GetAllComputeNodeInfos() const {
-    return root_frame_.compute_node_info_buffer_pool_;
-  }
-  BufferPool &GetAllComputeNodeInfos() {
-    return root_frame_.compute_node_info_buffer_pool_;
-  }
-
-  BufferPool &GetKernelExtendInfos() {
-    return root_frame_.kernel_extend_buffer_pool_;
-  }
-
-  const BufferPool &GetKernelExtendInfos() const {
-    return root_frame_.kernel_extend_buffer_pool_;
-  }
-
-  BufferPool &GetKernelModelDesc() {
-    return model_desc_buffer_pool_;
-  }
-
-  const BufferPool &GetKernelModelDesc() const {
-    return model_desc_buffer_pool_;
-  }
-
-  const BufferPool &GetBufferPool() const {
-    return root_frame_.buffer_pool_;
-  }
-  BufferPool &GetBufferPool() {
-    return root_frame_.buffer_pool_;
-  }
   bool IsRootFrame() const {
     return &root_frame_ == this;
   }
@@ -115,15 +71,22 @@ class GraphFrame {
     return exe_graph_;
   }
 
+  const vector<ge::NodePtr> &GetIndexesToNode() const {
+    return indexes_to_node_;
+  }
+
+  const std::unordered_map<ge::NodePtr, size_t> &GetNodesToIndex() const {
+    return nodes_to_index_;
+  }
+
  private:
   ge::ComputeGraphPtr exe_graph_;
-  ge::NodePtr current_compute_node_;
+  std::pair<ge::NodePtr, size_t> current_compute_node_and_index_;
   GraphFrame &root_frame_;
-  std::unordered_map<std::string, size_t> node_names_to_index_;
-  BufferPool compute_node_info_buffer_pool_;
-  BufferPool kernel_extend_buffer_pool_;
-  BufferPool model_desc_buffer_pool_;
-  BufferPool buffer_pool_;
+  std::unordered_map<ge::NodePtr, size_t> nodes_to_index_holder_;
+  std::unordered_map<ge::NodePtr, size_t> &nodes_to_index_;
+  std::vector<ge::NodePtr> indexes_to_node_holder_;
+  std::vector<ge::NodePtr> &indexes_to_node_;
 };
 }  // namespace bg
 }  // namespace gert
