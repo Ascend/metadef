@@ -24,7 +24,6 @@
 namespace gert {
 namespace bg {
 namespace {
-using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
 ge::graphStatus GetInstanceNum(const ge::NodePtr &node, const std::string &ir_name, ge::IrInputType ir_type,
                                size_t start_index, size_t &instance_num) {
   if (ir_type == ge::kIrInputRequired) {
@@ -137,40 +136,12 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
   }
   return ge::SUCCESS;
 }
-bool GetRuntimeAttrsList(const ge::NodePtr &node, const PrivateAttrList &private_attrs,
-                         std::vector<ge::AnyValue> &runtime_attrs_list) {
-  const auto &ir_attr_names = node->GetOpDesc()->GetIrAttrNames();
-  const auto &all_attrs = node->GetOpDesc()->GetAllAttrs();
-  runtime_attrs_list.reserve(ir_attr_names.size() + private_attrs.size());
-  for (auto &ir_attr_name : ir_attr_names) {
-    auto iter = all_attrs.find(ir_attr_name);
-    if (iter == all_attrs.end()) {
-      GELOGE(ge::FAILED, "Can not find the IR attr %s from node %s", ir_attr_name.c_str(), node->GetName().c_str());
-      return false;
-    }
-    runtime_attrs_list.push_back(iter->second);
-  }
-  for (auto &private_attr : private_attrs) {
-    auto &private_attr_name = private_attr.first;
-    auto iter = all_attrs.find(private_attr_name);
-    if (iter == all_attrs.end()) {
-      if (!private_attr.second.IsEmpty()) {
-        runtime_attrs_list.push_back(private_attr.second);
-        continue;
-      }
-      GELOGE(ge::FAILED, "Can not find the private attr %s from node %s",
-             private_attr_name.c_str(), node->GetName().c_str());
-      return false;
-    }
-    runtime_attrs_list.push_back(iter->second);
-  }
-  return true;
-}
-std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8_t[]> &attr_buf,
-                                                     const size_t attr_size,
-                                                     const ge::NodePtr &node,
-                                                     BufferPool &buffer_pool,
-                                                     size_t &total_size) {
+}  // namespace
+std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
+  size_t attr_size;
+  auto attr_buf = CreateAttrBuffer(node, attr_size);
+  GE_ASSERT_NOTNULL(attr_buf, "Create atrr buffer for node: %s failed", node->GetName().c_str());
+
   auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
   auto input_num = node->GetInDataNodesAndAnchors().size();
   auto output_num = node->GetAllOutDataAnchorsSize();
@@ -184,7 +155,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
   auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
   compute_node_info->Init(ir_input_num, input_num, output_num, reinterpret_cast<const char *>(node_name),
                           reinterpret_cast<const char *>(node_type));
-
+  
   auto ret = InitInputInstanceInfo(node, *compute_node_info);
   GE_ASSERT_SUCCESS(ret, "Init input instance info for node:%s failed.", node->GetName().c_str());
 
@@ -203,25 +174,6 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
   GE_ASSERT_EOK(memcpy_s(attr, total_size - offset, attr_buf.get(), attr_size));
 
   return compute_node_info_holder;
-}
-}  // namespace
-
-std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
-  size_t attr_size;
-  auto attr_buf = CreateAttrBuffer(node, attr_size);
-  GE_ASSERT_NOTNULL(attr_buf, "Create attr buffer for node: %s failed", node->GetName().c_str());
-  return CreateComputeNodeInfoImpl(attr_buf, attr_size, node, buffer_pool, total_size);
-}
-std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node,
-                                                 BufferPool &buffer_pool,
-                                                 size_t &total_size,
-                                                 const PrivateAttrList &private_attrs) {
-  std::vector<ge::AnyValue> runtime_attrs_list;
-  GE_ASSERT_TRUE(GetRuntimeAttrsList(node, private_attrs, runtime_attrs_list));
-  size_t attr_size;
-  auto attr_buf = CreateAttrBuffer(runtime_attrs_list, attr_size);
-  GE_ASSERT_NOTNULL(attr_buf, "Create attr buffer for node: %s failed", node->GetName().c_str());
-  return CreateComputeNodeInfoImpl(attr_buf, attr_size, node, buffer_pool, total_size);
 }
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool) {
   size_t total_size;
