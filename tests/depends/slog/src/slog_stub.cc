@@ -20,9 +20,23 @@
 #include <stdio.h>
 #include <string.h>
 
-void dav_log(int module_id, const char *fmt, ...) {}
+void dav_log(int module_id, const char *fmt, ...) {
 
-void DlogErrorInner(int module_id, const char *fmt, ...) { dav_log(module_id, fmt); }
+}
+#define __DO_PRINT(LEVEL)                            \
+  do {                                               \
+    const int FMT_BUFF_SIZE = 1024;                  \
+    char fmt_buff[FMT_BUFF_SIZE] = {0};              \
+    va_list valist;                                  \
+    va_start(valist, fmt);                           \
+    vsnprintf(fmt_buff, FMT_BUFF_SIZE, fmt, valist); \
+    va_end(valist);                                  \
+    printf(LEVEL"%s \n", fmt_buff);                  \
+  } while (false)
+
+void DlogErrorInner(int module_id, const char *fmt, ...) {
+  __DO_PRINT("[ERROR]");
+}
 
 void DlogWarnInner(int module_id, const char *fmt, ...) { dav_log(module_id, fmt); }
 

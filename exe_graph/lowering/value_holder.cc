@@ -15,22 +15,33 @@
  */
 
 #include "exe_graph/lowering/value_holder.h"
+#include "exe_graph/lowering/frame_selector.h"
 
+#include <deque>
 #include <stack>
 
 #include <securec.h>
 #include <cstdint>
-#include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_log.h"
+#include "graph/utils/graph_utils.h"
 #include "graph/utils/mem_utils.h"
+#include "graph/utils/node_utils.h"
 #include "common/checker.h"
 
 #include "exe_graph/lowering/exe_graph_attrs.h"
 #include "exe_graph/runtime/context_extend.h"
+#include "graph/debug/ge_util.h"
+#include "graph/debug/ge_attr_define.h"
 namespace gert {
 namespace bg {
 namespace {
-thread_local std::stack<std::unique_ptr<GraphFrame>> graph_frames;
+constexpr char const *kNetOutput = "NetOutput";
+constexpr char const *kInnerNetOutput = "InnerNetOutput";
+thread_local std::deque<std::unique_ptr<GraphFrame>> graph_frames;
+thread_local GraphFrame *current_frame;
+bool IsGraphOutType(const char *node_type) {
+  return strcmp(kNetOutput, node_type) == 0 || strcmp(kInnerNetOutput, node_type) == 0;
+}
 ge::OpDescPtr CreateOpDesc(const std::string &node_name, const char *node_type, size_t in_count, size_t out_count) {
   auto op_desc = ge::MakeShared<ge::OpDesc>(node_name, node_type);
   GE_ASSERT_NOTNULL(op_desc);
@@ -50,8 +61,109 @@ ge::OpDescPtr CreateOpDesc(const std::string &node_name, const char *node_type, 
   }
   return op_desc;
 }
-ge::graphStatus AddDataEdge(const ge::NodePtr &src, int src_index, const ge::NodePtr &dst, int dst_index) {
-  auto ret = ge::GraphUtils::AddEdge(src->GetOutDataAnchor(src_index), dst->GetInDataAnchor(dst_index));
+struct ConnectionPathPoint {
+  GraphFrame *frame;
+  ge::NodePtr node;
+};
+ge::InDataAnchorPtr EnsureHasDataEdge(const ge::NodePtr &src, int32_t src_index, const ConnectionPathPoint &point) {
+  auto src_anchor = src->GetOutDataAnchor(src_index);
+  GE_ASSERT_NOTNULL(src_anchor);
+
+  for (const auto &dst_anchor : src_anchor->GetPeerInDataAnchors()) {
+    GE_ASSERT_NOTNULL(dst_anchor);
+    auto dst_node = dst_anchor->GetOwnerNode();
+    GE_ASSERT_NOTNULL(dst_node);
+    if (dst_node == point.node) {
+      return dst_anchor;
+    }
+  }
+
+  auto index = point.node->GetAllInDataAnchorsSize();
+  GE_ASSERT_SUCCESS(ge::NodeUtils::AppendInputAnchor(point.node, index + 1));
+
+  auto dst_anchor = point.node->GetInDataAnchor(static_cast<int32_t>(index));
+  GE_ASSERT_NOTNULL(dst_anchor);
+  src_anchor->LinkTo(dst_anchor);
+
+  return dst_anchor;
+}
+ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index) {
+  for (const auto &node : point.frame->GetExeGraph()->GetDirectNode()) {
+    if (node->GetType() != "InnerData") {
+      continue;
+    }
+    int32_t data_index = -1;
+    GE_ASSERT_TRUE(ge::AttrUtils::GetInt(node->GetOpDesc(), ge::ATTR_NAME_INDEX, data_index));
+    if (data_index == index) {
+      return node;
+    }
+  }
+
+  auto data = ValueHolder::AddNode("InnerData", 0, 1, *point.frame);
+  GE_ASSERT_NOTNULL(data);
+  GE_ASSERT_TRUE(ge::AttrUtils::SetInt(data->GetOpDesc(), ge::ATTR_NAME_INDEX, index));
+  return data;
+}
+ge::OutDataAnchorPtr ConnectFromParents(ge::NodePtr src, int32_t src_index, const ge::NodePtr &dst) {
+  std::stack<ConnectionPathPoint> connect_path;
+  auto frame_iter = graph_frames.rbegin();
+  for (; frame_iter != graph_frames.rend(); ++frame_iter) {
+    if ((*frame_iter)->GetExeGraph() == dst->GetOwnerComputeGraph()) {
+      break;
+    }
+  }
+
+  auto next_graph = dst->GetOwnerComputeGraph();
+  bool full_path = false;
+  for (; frame_iter != graph_frames.rend(); ++frame_iter) {
+    auto graph = (*frame_iter)->GetExeGraph();
+    GE_ASSERT_NOTNULL(graph);
+    if (graph != next_graph) {
+      continue;
+    }
+    if (graph == src->GetOwnerComputeGraph()) {
+      full_path = true;
+      break;
+    }
+    auto parent_node = graph->GetParentNode();
+    if (parent_node == nullptr) {
+      // log out of loop scope
+      break;
+    }
+    next_graph = parent_node->GetOwnerComputeGraph();
+    connect_path.push({frame_iter->get(), std::move(parent_node)});
+  }
+
+  if (!full_path) {
+    GE_LOGE("Failed to connect from %s index %d to node %s, the src node does not on the graph or on its parent graphs",
+            src->GetName().c_str(), src_index, dst->GetName().c_str());
+    return nullptr;
+  }
+
+  while (!connect_path.empty()) {
+    auto point = std::move(connect_path.top());
+    connect_path.pop();
+
+    auto dst_anchor = EnsureHasDataEdge(src, src_index, point);
+    GE_ASSERT_NOTNULL(dst_anchor);
+
+    auto data_node = EnsureHasData(point, dst_anchor->GetIdx());
+    GE_ASSERT_NOTNULL(data_node);
+
+    src = data_node;
+    src_index = 0;
+  }
+
+  return src->GetOutDataAnchor(src_index);
+}
+ge::graphStatus AddDataEdge(const ge::NodePtr &src, int32_t src_index, const ge::NodePtr &dst, int32_t dst_index) {
+  auto src_anchor = ConnectFromParents(src, src_index, dst);
+  if (src_anchor == nullptr) {
+    GE_LOGE("Failed to connect from %s(%d) to %s(%d), connect from parents failed", src->GetName().c_str(), src_index,
+            dst->GetName().c_str(), dst_index);
+    return ge::GRAPH_FAILED;
+  }
+  auto ret = ge::GraphUtils::AddEdge(src_anchor, dst->GetInDataAnchor(dst_index));
   if (ret != ge::GRAPH_SUCCESS) {
     GELOGE(ret, "Failed to connect edge from %s:%d to %s:%d, error code %u", src->GetName().c_str(), src_index,
            dst->GetName().c_str(), dst_index, ret);
@@ -61,7 +173,7 @@ ge::graphStatus AddDataEdge(const ge::NodePtr &src, int src_index, const ge::Nod
 std::unique_ptr<uint8_t[]> CreateKernelExtendInfo(const char *name, const char *type, BufferPool &buffer_pool,
                                                   size_t &total_size) {
   total_size = sizeof(KernelExtendInfo);
-  auto holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
+  auto holder = ge::ComGraphMakeUnique<uint8_t[]>(total_size);
   GE_ASSERT_NOTNULL(holder);
 
   auto name_id = buffer_pool.AddStr(name);
@@ -178,7 +290,7 @@ ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const 
     GE_ASSERT_NOTNULL(inputs[i]);
     GE_ASSERT_NOTNULL(inputs[i]->node_);
     GE_ASSERT_SUCCESS(AddDataEdge(inputs[i]->node_, inputs[i]->index_, node, static_cast<int32_t>(i)));
-    if (inputs[i]->guarder_ != nullptr) {
+    if (inputs[i]->guarder_ != nullptr && !IsGraphOutType(node_type)) {
       GE_ASSERT_HYPER_SUCCESS(AddDependencyBetweenNodes(*node, *(inputs[i]->guarder_->GetNode())));
     }
   }
@@ -195,14 +307,17 @@ ValueHolderPtr ValueHolder::CreateFromNode(ge::NodePtr node, int32_t index, Valu
   return holder;
 }
 std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &node, size_t out_count) {
+  return CreateFromNode(node, 0, out_count);
+}
+std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &node, size_t start_index,
+                                                        size_t out_count) {
   std::vector<ValueHolderPtr> holders;
   for (size_t i = 0; i < out_count; ++i) {
-    holders.emplace_back(CreateFromNode(node, static_cast<int32_t>(i), ValueHolderType::kOutput));
+    holders.emplace_back(CreateFromNode(node, static_cast<int32_t>(i + start_index), ValueHolderType::kOutput));
   }
 
   return holders;
 }
-
 std::vector<ValueHolderPtr> ValueHolder::CreateDataOutput(const char *node_type,
                                                           const std::vector<ValueHolderPtr> &inputs, size_t out_count) {
   auto node = CreateNode(node_type, inputs, out_count);
@@ -211,7 +326,7 @@ std::vector<ValueHolderPtr> ValueHolder::CreateDataOutput(const char *node_type,
   }
   return CreateFromNode(node, out_count);
 }
-ValueHolderPtr ValueHolder::CreateVoid(const char *node_type, const vector<ValueHolderPtr> &inputs) {
+ValueHolderPtr ValueHolder::CreateVoid(const char *node_type, const std::vector<ValueHolderPtr> &inputs) {
   auto node = CreateNode(node_type, inputs, 0);
   GE_ASSERT_NOTNULL(node);
   return CreateFromNode(node, -1, kOutput);
@@ -237,7 +352,7 @@ ValueHolderPtr ValueHolder::CreateFeed(int64_t index) {
   return CreateFromNode(node, 0, kFeed);
 }
 
-ValueHolderPtr ValueHolder::CreateSingleDataOutput(const char *node_type, const vector<ValueHolderPtr> &inputs) {
+ValueHolderPtr ValueHolder::CreateSingleDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs) {
   auto holders = CreateDataOutput(node_type, inputs, 1U);
   if (holders.empty()) {
     return nullptr;
@@ -257,31 +372,57 @@ void ValueHolder::SetStage(ValueHolder::RunStage stage) {
   ge::AttrUtils::SetInt(node_->GetOpDesc(), kStage, stage);
 }
 GraphFrame *ValueHolder::PushGraphFrame() {
-  auto graph = ge::MakeShared<ge::ComputeGraph>("");
-  GE_ASSERT_NOTNULL(graph);
-  GraphFrame *frame = nullptr;
-  if (graph_frames.empty()) {
-    frame = new (std::nothrow) GraphFrame(graph);
-  } else {
-    frame = new (std::nothrow) GraphFrame(graph, *graph_frames.top());
+  if (!graph_frames.empty()) {
+    GELOGE(ge::INTERNAL_ERROR,
+           "Failed to push root graph frame, if you want to push a non-root graph frame, specify which ValueHolder the "
+           "graph frame belongs and the ir name.");
+    return nullptr;
   }
+  auto graph = ge::MakeShared<ge::ComputeGraph>("ROOT");
+  GE_ASSERT_NOTNULL(graph);
+  auto frame = new (std::nothrow) GraphFrame(graph);
   GE_ASSERT_NOTNULL(frame);
-  graph_frames.emplace(frame);
-  return graph_frames.top().get();
+  graph_frames.emplace_back(frame);
+  return graph_frames.back().get();
+}
+GraphFrame *ValueHolder::PushGraphFrame(const ValueHolderPtr &belongs, const char *graph_name) {
+  GE_ASSERT_NOTNULL(belongs);
+  GE_ASSERT_NOTNULL(belongs->GetNode());
+  GE_ASSERT_NOTNULL(graph_name);
+  if (graph_frames.empty()) {
+    GELOGE(ge::INTERNAL_ERROR, "Failed to push a non-root graph frame, there is no root graph frames exists");
+    return nullptr;
+  }
+  auto &parent_frame = *graph_frames.back();
+  auto instance_name = GenerateNodeName(graph_name, parent_frame);
+  auto graph = ge::MakeShared<ge::ComputeGraph>(instance_name);
+  GE_ASSERT_NOTNULL(graph);
+
+  auto frame_holder = ge::ComGraphMakeUnique<GraphFrame>(graph, parent_frame);
+  GE_ASSERT_NOTNULL(frame_holder);
+
+  GE_ASSERT_SUCCESS(ge::NodeUtils::AddSubgraph(*const_cast<ge::Node *>(belongs->GetNode()), graph_name, graph));
+
+  auto frame = frame_holder.release();
+  graph_frames.emplace_back(frame);
+  return graph_frames.back().get();
 }
 std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame() {
   if (graph_frames.empty()) {
     return nullptr;
   }
-  auto ret = std::move(graph_frames.top());
-  graph_frames.pop();
+  auto ret = std::move(graph_frames.back());
+  graph_frames.pop_back();
   return ret;
 }
 GraphFrame *ValueHolder::GetCurrentFrame() {
+  if (current_frame != nullptr) {
+    return current_frame;
+  }
   if (graph_frames.empty()) {
     return nullptr;
   }
-  return graph_frames.top().get();
+  return graph_frames.back().get();
 }
 void ValueHolder::SetCurrentComputeNode(const ge::NodePtr &node) {
   auto frame = GetCurrentFrame();
@@ -296,8 +437,7 @@ std::unique_ptr<ValueHolder::CurrentComputeNodeGuarder> ValueHolder::SetScopedCu
   auto frame = GetCurrentFrame();
   GE_ASSERT_NOTNULL(frame);
 
-  auto guarder = std::unique_ptr<CurrentComputeNodeGuarder>(
-      new (std::nothrow) CurrentComputeNodeGuarder(frame->GetCurrentComputeNode()));
+  auto guarder = ge::ComGraphMakeUnique<CurrentComputeNodeGuarder>(frame->GetCurrentComputeNode());
   GE_ASSERT_NOTNULL(guarder);
   frame->SetCurrentComputeNode(node);
   return guarder;
@@ -325,7 +465,7 @@ ge::graphStatus ValueHolder::RefFrom(const ValueHolderPtr &other) {
   return ge::GRAPH_SUCCESS;
 }
 ValueHolderPtr ValueHolder::CreateVoidGuarder(const char *node_type, const ValueHolderPtr &resource,
-                                              const vector<ValueHolderPtr> &args) {
+                                              const std::vector<ValueHolderPtr> &args) {
   std::vector<ValueHolderPtr> inputs;
   inputs.reserve(args.size() + 1);
   inputs.emplace_back(resource);
@@ -348,6 +488,43 @@ void ValueHolder::ReleaseAfter(const ValueHolderPtr &other) {
     return;
   }
   AddDependency(other, guarder_);
+}
+std::vector<ValueHolderPtr> ValueHolder::AppendOutputs(size_t append_count) {
+  auto node = node_->shared_from_this();
+  auto start_index = node->GetAllOutDataAnchorsSize();
+  auto ret = ge::NodeUtils::AppendOutputAnchor(node, start_index + append_count);
+  if (ret != ge::GRAPH_SUCCESS) {
+    return {};
+  }
+  return CreateFromNode(node, start_index, append_count);
+}
+std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
+                                                       const std::vector<ValueHolderPtr> &targets) {
+  const char *node_type = kNetOutput;
+  if (graph_frames.size() > 1U) {
+    // The NetOutput type means "Network outputs", subgraph use InnerNetOutput as output type
+    node_type = kInnerNetOutput;
+  }
+  auto out_holder = CreateVoid(node_type, outputs);
+  GE_ASSERT_NOTNULL(out_holder);
+  if (graph_frames.size() == 1U) {
+    // the name of NetOutput node must be `NetOutput`
+    out_holder->GetNode()->GetOpDesc()->SetName(node_type);
+  }
+
+  for (const auto &target : targets) {
+    AddDependency(target, out_holder);
+  }
+  return PopGraphFrame();
+}
+std::vector<ValueHolderPtr> FrameSelector::OnRootFrame(const std::function<std::vector<ValueHolderPtr>()> &builder) {
+  if (builder == nullptr || graph_frames.empty()) {
+    return {};
+  }
+  current_frame = graph_frames.front().get();
+  auto holders = builder();
+  current_frame = nullptr;
+  return holders;
 }
 }  // namespace bg
 }  // namespace gert

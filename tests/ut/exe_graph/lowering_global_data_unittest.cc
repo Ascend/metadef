@@ -75,4 +75,20 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocatorOk) {
   EXPECT_NE(allocator1, nullptr);
   EXPECT_EQ(allocator1, gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}));
 }
+TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysCreateOnRootFrame_CallInSubgraph) {
+  LoweringGlobalData gd;
+
+  auto data0 = bg::ValueHolder::CreateFeed(0);
+  auto foo1 = bg::ValueHolder::CreateSingleDataOutput("Foo", {data0});
+
+  bg::ValueHolder::PushGraphFrame(foo1, "FooGraph");
+  auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
+  EXPECT_NE(allocator1, nullptr);
+  ASSERT_NE(bg::ValueHolder::PopGraphFrame(), nullptr);
+
+  auto root_frame = bg::ValueHolder::PopGraphFrame();
+  ASSERT_NE(root_frame, nullptr);
+
+  ASSERT_EQ(allocator1->GetNode()->GetOwnerComputeGraph(), root_frame->GetExeGraph());
+}
 }  // namespace gert

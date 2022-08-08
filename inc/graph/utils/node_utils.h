@@ -83,6 +83,7 @@ class NodeUtils {
   static graphStatus GetDirectSubgraphs(const NodePtr &node, std::vector<ComputeGraphPtr> &subgraphs);
   static ComputeGraphPtr GetSubgraph(const Node &node, const uint32_t index);
   static graphStatus SetSubgraph(Node &node, const uint32_t index, const ComputeGraphPtr &subgraph);
+  static graphStatus AddSubgraph(Node &node, const std::string &subgraph_name, const ComputeGraphPtr &subgraph);
   static NodePtr CreatNodeWithoutGraph(const OpDescPtr op_desc);
   ///
   /// Check if node is input of subgraph
