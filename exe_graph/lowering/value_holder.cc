@@ -58,21 +58,6 @@ ge::graphStatus AddDataEdge(const ge::NodePtr &src, int src_index, const ge::Nod
   }
   return ret;
 }
-std::unique_ptr<uint8_t[]> CreateKernelExtendInfo(const char *name, const char *type, BufferPool &buffer_pool,
-                                                  size_t &total_size) {
-  total_size = sizeof(KernelExtendInfo);
-  auto holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
-  GE_ASSERT_NOTNULL(holder);
-
-  auto name_id = buffer_pool.AddStr(name);
-  auto type_id = buffer_pool.AddStr(type);
-
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(holder.get());
-  extend_info->SetKernelName(reinterpret_cast<const char *>(name_id));
-  extend_info->SetKernelType(reinterpret_cast<const char *>(type_id));
-
-  return holder;
-}
 HyperStatus AddDependencyBetweenNodes(const ge::Node &src, const ge::Node &dst) {
   // todo 检查是否在一张图上
   if (ge::GraphUtils::AddEdge(src.GetOutControlAnchor(), dst.GetInControlAnchor()) != ge::GRAPH_SUCCESS) {
@@ -144,18 +129,6 @@ ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t in
       GE_LOGE("Failed to add node %s, add ComputeNodeIndex failed", node_type);
       return nullptr;
     }
-  }
-
-  // add kernel extend info index
-  size_t extend_info_size;
-  auto holder =
-      CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(), frame.GetBufferPool(), extend_info_size);
-  GE_ASSERT_NOTNULL(holder);
-
-  auto buf_id = frame.GetKernelExtendInfos().AddBuf(holder.get(), extend_info_size);
-  if (!ge::AttrUtils::SetInt(node->GetOpDesc(), kKernelExtendIndex, static_cast<int64_t>(buf_id))) {
-    GE_LOGE("Failed to add node %s, add KernelExtendIndex failed", node_type);
-    return nullptr;
   }
 
   return node;
