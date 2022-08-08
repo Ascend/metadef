@@ -25,10 +25,11 @@
 namespace gert {
 class OpImplRegistry : public OpImplKernelRegistry {
  public:
+  using OpType = std::string;
   static OpImplRegistry &GetInstance();
   OpImplFunctions &CreateOrGetOpImpl(const OpType &op_type);
   const OpImplFunctions *GetOpImpl(const OpType &op_type) const override;
-  const PrivateAttrList &GetPrivateAttrs(const OpType &op_type) const override;
+
  private:
   std::map<OpType, OpImplFunctions> types_to_impl_;
 };
@@ -40,13 +41,6 @@ class OpImplRegister {
   explicit OpImplRegister(const char *op_type);
   OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
   OpImplRegister &Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func, size_t max_tiling_data_size = 2048);
-  OpImplRegister &PrivateAttr(const char *private_attr);
-  OpImplRegister &PrivateAttr(const char *private_attr, int64_t private_attr_val);
-  OpImplRegister &PrivateAttr(const char *private_attr, const std::vector<int64_t> &private_attr_val);
-  OpImplRegister &PrivateAttr(const char *private_attr, const char *private_attr_val);
-  OpImplRegister &PrivateAttr(const char *private_attr, float private_attr_val);
-  OpImplRegister &PrivateAttr(const char *private_attr, bool private_attr_val);
-  OpImplRegister &PrivateAttr(const char *private_attr, const std::vector<float> &private_attr_val);
   template<typename T>
   OpImplRegister &TilingParse(KernelRegistry::KernelFunc tiling_parse_func) {
     functions_.tiling_parse = tiling_parse_func;
@@ -76,7 +70,6 @@ class OpImplRegister {
   static void *CreateDynamicLenTilingData() {
     return TilingData::CreateCap(MaxLen).release();
   }
-  OpImplRegister &PrivateAttrImpl(const char *private_attr, ge::AnyValue private_attr_av);
 
  private:
   const char *op_type_;
