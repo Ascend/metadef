@@ -837,6 +837,80 @@ TEST_F(BgKernelContextExtendUT, BuildOptionalInputWithNoPeerOutputAnchor) {
   ins_info = compute_node_info->GetInputInstanceInfo(2);
 }
 
+TEST_F(BgKernelContextExtendUT, GetPrivateAttrInComputeNodeInfoOK) {
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "Test");
+  const char *attr_name_1 = "private_attr1";
+  const char *attr_name_2 = "private_attr2";
+  constexpr int64_t attr_value_1 = 10;
+  const std::string attr_value_2 = "20";
+  ge::AnyValue av1 = ge::AnyValue::CreateFrom<int64_t>(attr_value_1);
+  ge::AnyValue av2 = ge::AnyValue::CreateFrom<std::string>(attr_value_2);
+  op_desc->AppendIrAttrName("ir_attr_1");
+  (void)op_desc->SetAttr("ir_attr_1", av2);
+  (void)op_desc->SetAttr(attr_name_1, av1);
+  (void)op_desc->SetAttr(attr_name_2, av2);
+  std::vector<std::pair<std::string, ge::AnyValue>> private_attrs;
+  private_attrs.emplace_back(std::make_pair(attr_name_1, av1));
+  private_attrs.emplace_back(std::make_pair(attr_name_2, av2));
+  bg::BufferPool buffer_pool;
+  size_t attr_size;
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, attr_size, private_attrs);
+  ASSERT_NE(compute_node_info_holder, nullptr);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 3);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetStr(0), "20");
+  EXPECT_EQ(*(compute_node_info->GetAttrs()->GetInt(1)), 10);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetStr(2), "20");
+}
+
+TEST_F(BgKernelContextExtendUT, GetPrivateAttrInComputeNodeInfoByDefault) {
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "Test");
+  const char *attr_name_1 = "private_attr1";
+  const char *attr_name_2 = "private_attr2";
+  constexpr int64_t attr_value_1 = 10;
+  const std::string attr_value_2 = "20";
+  ge::AnyValue av1 = ge::AnyValue::CreateFrom<int64_t>(attr_value_1);
+  ge::AnyValue av2 = ge::AnyValue::CreateFrom<std::string>(attr_value_2);
+  op_desc->AppendIrAttrName("ir_attr_1");
+  (void)op_desc->SetAttr("ir_attr_1", av2);
+  std::vector<std::pair<std::string, ge::AnyValue>> private_attrs;
+  private_attrs.emplace_back(std::make_pair(attr_name_1, av1));
+  private_attrs.emplace_back(std::make_pair(attr_name_2, av2));
+  bg::BufferPool buffer_pool;
+  size_t attr_size;
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, attr_size, private_attrs);
+  ASSERT_NE(compute_node_info_holder, nullptr);
+  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
+  EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 3);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetStr(0), "20");
+  EXPECT_EQ(*(compute_node_info->GetAttrs()->GetInt(1)), 10);
+  EXPECT_STREQ(compute_node_info->GetAttrs()->GetStr(2), "20");
+}
+
+TEST_F(BgKernelContextExtendUT, CreateComputeNodeInfoFailedWhenNotRegisteringPrivateAttr) {
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "Test");
+  const char *attr_name_1 = "private_attr1";
+  const char *attr_name_2 = "private_attr2";
+  constexpr int64_t attr_value_1 = 10;
+  const std::string attr_value_2 = "20";
+  ge::AnyValue av1 = ge::AnyValue::CreateFrom<int64_t>(attr_value_1);
+  ge::AnyValue av2 = ge::AnyValue::CreateFrom<std::string>(attr_value_2);
+  op_desc->AppendIrAttrName("ir_attr_1");
+  (void)op_desc->SetAttr("ir_attr_1", av2);
+  std::vector<std::pair<std::string, ge::AnyValue>> private_attrs;
+  private_attrs.emplace_back(std::make_pair(attr_name_1, av1));
+  private_attrs.emplace_back(std::make_pair(attr_name_2, ge::AnyValue()));
+  bg::BufferPool buffer_pool;
+  size_t attr_size;
+  auto graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto node = graph->AddNode(op_desc);
+  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, attr_size, private_attrs);
+  EXPECT_EQ(compute_node_info_holder, nullptr);
+}
 // todo lowering时，不需要构造attr
 // todo infershape、tiling utils重新看一下输入是否正确
 // todo kernel中获取attr的方式变化

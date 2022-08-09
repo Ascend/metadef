@@ -530,14 +530,6 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   size_t frame_current_node_index;
   frame->GetCurrentNodeIndex(frame_current_node_index);
   EXPECT_EQ(compute_node_index_shape, frame_current_node_index);
-  auto compute_node_info =
-      reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(frame_current_node_index));
-  ASSERT_NE(compute_node_info, nullptr);
-  auto name_index = compute_node_info->GetNodeName();
-  auto type_index = compute_node_info->GetNodeType();
-  auto buffer_pool = frame->GetBufferPool();
-  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node");
-  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "node");
 }
 /*
  *    hello
@@ -692,26 +684,6 @@ TEST_F(ValueHolderUt, ScopedCurrentNodeOk) {
   EXPECT_NE(shape_index, compile_info1_index);
   EXPECT_EQ(compile_info1_index, tiling_ret1_index);
   EXPECT_EQ(compile_info1_index, holder1_index);
-
-  size_t node2_index;
-  EXPECT_TRUE(frame->GetCurrentNodeIndex(node2_index));
-  EXPECT_EQ(shape_index, node2_index);
-  auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(node2_index));
-  ASSERT_NE(compute_node_info, nullptr);
-  auto name_index = compute_node_info->GetNodeName();
-  auto type_index = compute_node_info->GetNodeType();
-  auto buffer_pool = frame->GetBufferPool();
-  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node");
-  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "node");
-
-  EXPECT_NE(node2_index, node1_index);
-  EXPECT_EQ(compile_info1_index, node1_index);
-  compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(frame->GetComputeNodeInfo(node1_index));
-  ASSERT_NE(compute_node_info, nullptr);
-  name_index = compute_node_info->GetNodeName();
-  type_index = compute_node_info->GetNodeType();
-  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(name_index)), "node-AtomicClean");
-  EXPECT_STREQ(buffer_pool.GetBufById(reinterpret_cast<size_t>(type_index)), "DynamicAtomicAddrClean");
 }
 
 TEST_F(ValueHolderUt, CreateExeGraphNoOutpus) {
@@ -1017,13 +989,6 @@ TEST_F(ValueHolderUt, AddChildFrame) {
   auto child_frame = ValueHolder::PushGraphFrame(feed0, "subgraph_name0");
   ASSERT_NE(child_frame, nullptr);
   EXPECT_FALSE(child_frame->IsRootFrame());
-  EXPECT_EQ(&child_frame->GetAllComputeNodeInfos(), &root_frame->GetAllComputeNodeInfos());
-  EXPECT_EQ(&child_frame->GetBufferPool(), &root_frame->GetBufferPool());
-  EXPECT_EQ(&child_frame->GetKernelExtendInfos(), &root_frame->GetKernelExtendInfos());
-  EXPECT_NE(&child_frame->GetKernelModelDesc(), &root_frame->GetKernelModelDesc());
-  EXPECT_NE(child_frame->GetExeGraph(), root_frame->GetExeGraph());
-  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), child_frame);
-  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), root_frame);
 }
 TEST_F(ValueHolderUt, PlacementDefault0) {
   auto data0 = ValueHolder::CreateFeed(0);

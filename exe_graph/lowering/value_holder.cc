@@ -258,18 +258,6 @@ ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t in
     }
   }
 
-  // add kernel extend info index
-  size_t extend_info_size;
-  auto holder =
-      CreateKernelExtendInfo(node->GetName().c_str(), node->GetType().c_str(), frame.GetBufferPool(), extend_info_size);
-  GE_ASSERT_NOTNULL(holder);
-
-  auto buf_id = frame.GetKernelExtendInfos().AddBuf(holder.get(), extend_info_size);
-  if (!ge::AttrUtils::SetInt(node->GetOpDesc(), kKernelExtendIndex, static_cast<int64_t>(buf_id))) {
-    GE_LOGE("Failed to add node %s, add KernelExtendIndex failed", node_type);
-    return nullptr;
-  }
-
   return node;
 }
 ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs,

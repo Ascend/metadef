@@ -21,6 +21,7 @@
 namespace gert {
 namespace bg {
 std::unique_ptr<uint8_t[]> CreateAttrBuffer(const ge::NodePtr &node, size_t &size);
+std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<ge::AnyValue> &runtime_attrs_list, size_t &size);
 }
 }
 #endif  // AIR_CXX_RUNTIME_V2_GRAPH_BUILDER_BG_IR_ATTRS_H_
