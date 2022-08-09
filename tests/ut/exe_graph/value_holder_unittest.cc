@@ -16,11 +16,90 @@
 #include "exe_graph/lowering/value_holder.h"
 #include "exe_graph/runtime/context_extend.h"
 #include <gtest/gtest.h>
+#include <cstdint>
 #include "exe_graph/lowering/exe_graph_attrs.h"
 #include "checker/bg_test.h"
+#include "graph/utils/graph_utils.h"
+#include "checker/topo_checker.h"
+#include "checker/summary_checker.h"
+
 namespace gert {
 namespace bg {
-class ValueHolderUt : public BgTest {};
+class ValueHolderUt : public BgTest {
+ public:
+  ge::ComputeGraphPtr FindFirstSubgraphForNodeType(const ge::ComputeGraphPtr &root_graph,
+                                                   const std::string &node_type) {
+    for (const auto &subgraph : root_graph->GetAllSubgraphs()) {
+      auto parent_node = subgraph->GetParentNode();
+      if (parent_node->GetType() == node_type) {
+        return subgraph;
+      }
+    }
+    return nullptr;
+  }
+  ge::NodePtr FindData(const ge::ComputeGraphPtr &graph, int32_t index) {
+    for (const auto &node : graph->GetDirectNode()) {
+      if (node->GetType() != "Data") {
+        continue;
+      }
+      int32_t data_index;
+      if (!ge::AttrUtils::GetInt(node->GetOpDesc(), "index", data_index)) {
+        continue;
+      }
+      if (data_index != index) {
+        continue;
+      }
+      return node;
+    }
+    return nullptr;
+  }
+
+  void ConnectFromInnerData(const ge::NodePtr &node, const std::vector<int32_t> &indexes) {
+    ASSERT_EQ(node->GetInDataNodes().size(), indexes.size());
+    size_t i = 0;
+    for (const auto &in_node : node->GetInDataNodes()) {
+      ASSERT_EQ(in_node->GetType(), "InnerData");
+      int32_t index;
+      ASSERT_TRUE(ge::AttrUtils::GetInt(in_node->GetOpDesc(), "index", index));
+      ASSERT_EQ(index, indexes[i++]);
+    }
+  }
+  void ConnectFromOuter(ge::NodePtr node, int32_t dst_index, const ge::NodePtr &outer, int32_t src_index) {
+    while (true) {
+      auto dst_anchor = node->GetInDataAnchor(dst_index);
+      ASSERT_NE(dst_anchor, nullptr);
+      auto src_anchor = dst_anchor->GetPeerOutAnchor();
+      ASSERT_NE(src_anchor, nullptr);
+      auto src_node = src_anchor->GetOwnerNode();
+      ASSERT_NE(src_node, nullptr);
+      if (src_node == outer) {
+        return;
+      }
+      if (src_node->GetType() == "InnerData" || src_node->GetType() == "Data") {
+        int32_t parent_index;
+        ASSERT_TRUE(ge::AttrUtils::GetInt(src_node->GetOpDesc(), "index", parent_index));
+        auto parent_graph = src_node->GetOwnerComputeGraph();
+        ASSERT_NE(parent_graph, nullptr);
+        auto parent_node = parent_graph->GetParentNode();
+        ASSERT_NE(parent_node, nullptr);
+        node = parent_node;
+        dst_index = parent_index;
+      }
+    }
+  }
+  void StrictSubgraphs(const ge::NodePtr &node, const std::vector<std::string> &names) {
+    const auto &subgraph_names_to_index = node->GetOpDesc()->GetSubgraphNameIndexes();
+
+    ASSERT_EQ(subgraph_names_to_index.size(), names.size());
+    for (const auto &name : names) {
+      auto iter = subgraph_names_to_index.find(name);
+      ASSERT_NE(iter, subgraph_names_to_index.end());
+      auto ins_name = node->GetOpDesc()->GetSubgraphInstanceName(iter->second);
+      auto root_graph = ge::GraphUtils::FindRootGraph(node->GetOwnerComputeGraph());
+      ASSERT_NE(root_graph->GetSubgraph(ins_name), nullptr);
+    }
+  }
+};
 TEST_F(ValueHolderUt, CreateConstOk) {
   ge::Format f1 = ge::FORMAT_NC1HWC0;
   auto c = ValueHolder::CreateConst(reinterpret_cast<const uint8_t *>(&f1), sizeof(f1));
@@ -840,7 +919,7 @@ TEST_F(ValueHolderUt, AddNullTargets) {
   EXPECT_NE(hello->GetCurrentFrame(), nullptr);
   EXPECT_NE(hello->GetCurrentGraph(), nullptr);
 }
-TEST_F(ValueHolderUt, GuardNodeFlag) {
+TEST_F(ValueHolderUt, Guard_AddFlagToNode) {
   auto data0 = ValueHolder::CreateFeed(0);
   auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
   auto allocator_destroyer = ValueHolder::CreateVoidGuarder("DestroyAllocator", allocator0, {});
@@ -853,21 +932,7 @@ TEST_F(ValueHolderUt, GuardNodeFlag) {
   EXPECT_TRUE(ge::AttrUtils::GetInt(node->GetOpDesc(), kReleaseResourceIndex, index));
   EXPECT_EQ(index, 0);
 }
-TEST_F(ValueHolderUt, AddChildFrame) {
-  ValueHolder::PopGraphFrame();  // Pop frame added by Setup
-  auto root_frame = ValueHolder::PushGraphFrame();
-  EXPECT_TRUE(root_frame->IsRootFrame());
-  auto child_frame = ValueHolder::PushGraphFrame();
-  EXPECT_FALSE(child_frame->IsRootFrame());
-  EXPECT_EQ(&child_frame->GetAllComputeNodeInfos(), &root_frame->GetAllComputeNodeInfos());
-  EXPECT_EQ(&child_frame->GetBufferPool(), &root_frame->GetBufferPool());
-  EXPECT_EQ(&child_frame->GetKernelExtendInfos(), &root_frame->GetKernelExtendInfos());
-  EXPECT_NE(&child_frame->GetKernelModelDesc(), &root_frame->GetKernelModelDesc());
-  EXPECT_NE(child_frame->GetExeGraph(), root_frame->GetExeGraph());
-  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), child_frame);
-  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), root_frame);
-}
-TEST_F(ValueHolderUt, AddDependencyForGuardAutomately) {
+TEST_F(ValueHolderUt, Guarder_AddDependencyAutomately_ConnectDataEdgeToResource) {
   auto data0 = ValueHolder::CreateFeed(0);
   auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
   auto allocator_destroyer = ValueHolder::CreateVoidGuarder("DestroyAllocator", allocator0, {});
@@ -885,6 +950,23 @@ TEST_F(ValueHolderUt, AddDependencyForGuardAutomately) {
   ASSERT_NE(alloc_mem1, nullptr);
   HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
   HasControlEdge(*graph, *alloc_mem1->GetNode(), *allocator_destroyer->GetNode());
+}
+TEST_F(ValueHolderUt, Guarder_DoNotAddDependency_ConnectDataEdgeToNetOutput) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto foo0 = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  auto guarder = ValueHolder::CreateVoidGuarder("FooGuarder", foo0, {});
+  ASSERT_NE(guarder, nullptr);
+
+  auto bar0 = ValueHolder::CreateSingleDataOutput("Bar", {foo0});
+
+  auto frame = ValueHolder::PopGraphFrame({foo0}, {});
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+
+  EXPECT_EQ(NodeTopoChecker(foo0).StrictConnectTo(0, {{"NetOutput"}, {"FooGuarder"}, {"Bar"}}), "success");
+  HasControlEdge(*graph, *bar0->GetNode(), *guarder->GetNode());
+  ASSERT_EQ(guarder->GetNode()->GetInControlNodes().size(), 1);
 }
 TEST_F(ValueHolderUt, AddDependencyForGuard_RleaseBy) {
   auto data0 = ValueHolder::CreateFeed(0);
@@ -927,6 +1009,22 @@ TEST_F(ValueHolderUt, RleaseBy_NoGuarder) {
   EXPECT_EQ(alloc_mem0->GetNode()->GetOutAllNodes().size(), 0);
   EXPECT_EQ(alloc_mem0->GetNode()->GetInAllNodes().size(), 2);
 }
+TEST_F(ValueHolderUt, AddChildFrame) {
+  ValueHolder::PopGraphFrame();  // Pop frame added by Setup
+  auto root_frame = ValueHolder::PushGraphFrame();
+  EXPECT_TRUE(root_frame->IsRootFrame());
+  auto feed0 = ValueHolder::CreateFeed(0);
+  auto child_frame = ValueHolder::PushGraphFrame(feed0, "subgraph_name0");
+  ASSERT_NE(child_frame, nullptr);
+  EXPECT_FALSE(child_frame->IsRootFrame());
+  EXPECT_EQ(&child_frame->GetAllComputeNodeInfos(), &root_frame->GetAllComputeNodeInfos());
+  EXPECT_EQ(&child_frame->GetBufferPool(), &root_frame->GetBufferPool());
+  EXPECT_EQ(&child_frame->GetKernelExtendInfos(), &root_frame->GetKernelExtendInfos());
+  EXPECT_NE(&child_frame->GetKernelModelDesc(), &root_frame->GetKernelModelDesc());
+  EXPECT_NE(child_frame->GetExeGraph(), root_frame->GetExeGraph());
+  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), child_frame);
+  EXPECT_EQ(ValueHolder::PopGraphFrame().get(), root_frame);
+}
 TEST_F(ValueHolderUt, PlacementDefault0) {
   auto data0 = ValueHolder::CreateFeed(0);
   EXPECT_EQ(data0->GetPlacement(), 0);
@@ -937,6 +1035,410 @@ TEST_F(ValueHolderUt, SetGetPlacementOk) {
   EXPECT_EQ(data0->GetPlacement(), 1);
   data0->SetPlacement(2);
   EXPECT_EQ(data0->GetPlacement(), 2);
+}
+TEST_F(ValueHolderUt, BuildGraphWithDataOutput) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto foo1 = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1});
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar", {data0, data1});
+  auto frame = ValueHolder::PopGraphFrame({foo1, bar1}, {});
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+
+  CheckGraphGenerally(*graph);
+
+  EXPECT_EQ(graph->GetAllNodesSize(), 5);
+
+  auto nodes = ge::GraphUtils::FindNodesByTypeFromAllNodes(graph, "NetOutput");
+  ASSERT_EQ(nodes.size(), 1);
+  auto netoutput = nodes[0];
+  ASSERT_NE(netoutput, nullptr);
+  EXPECT_EQ(netoutput->GetInNodes().size(), 2);
+  ASSERT_EQ(netoutput->GetInDataNodes().size(), 2);
+  EXPECT_EQ((*netoutput->GetInDataNodes().begin())->GetType(), "Foo");
+  EXPECT_EQ((*(netoutput->GetInDataNodes().begin() + 1))->GetType(), "Bar");
+}
+TEST_F(ValueHolderUt, BuildGraphWithCtrlOutput) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto foo1 = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1});
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar", {data0, data1});
+  auto launch = ValueHolder::CreateVoid("Launch", {foo1, bar1});
+  auto frame = ValueHolder::PopGraphFrame({}, {launch});
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+
+  CheckGraphGenerally(*graph);
+
+  EXPECT_EQ(graph->GetAllNodesSize(), 6);
+
+  auto nodes = ge::GraphUtils::FindNodesByTypeFromAllNodes(graph, "NetOutput");
+  ASSERT_EQ(nodes.size(), 1);
+  auto netoutput = nodes[0];
+  ASSERT_NE(netoutput, nullptr);
+  EXPECT_EQ(netoutput->GetInNodes().size(), 1);
+  ASSERT_EQ(netoutput->GetInControlNodes().size(), 1);
+  EXPECT_EQ((*netoutput->GetInControlNodes().begin())->GetType(), "Launch");
+}
+TEST_F(ValueHolderUt, AppendOutputOk) {
+  auto foo = ValueHolder::CreateVoid("Foo", {});
+  EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 0);
+
+  auto outputs = foo->AppendOutputs(5);
+  EXPECT_EQ(outputs.size(), 5);
+  EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 5);
+
+  auto bar = ValueHolder::CreateSingleDataOutput("Bar", outputs);
+  EXPECT_NE(bar, nullptr);
+  EXPECT_EQ(bar->GetNode()->GetAllInDataAnchorsSize(), 5);
+  for (int i = 0; i < 5; ++i) {
+    EXPECT_NE(bar->GetNode()->GetInDataAnchor(i)->GetPeerOutAnchor(), nullptr);
+    EXPECT_EQ(bar->GetNode()->GetInDataAnchor(i)->GetPeerOutAnchor()->GetIdx(), i);
+    EXPECT_EQ(bar->GetNode()->GetInDataAnchor(i)->GetPeerOutAnchor()->GetOwnerNode(),
+              foo->GetNode()->shared_from_this());
+  }
+}
+TEST_F(ValueHolderUt, AppendOutputToNodeWithOutputs) {
+  auto foo = ValueHolder::CreateDataOutput("Foo", {}, 3)[0];
+  EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 3);
+
+  auto outputs = foo->AppendOutputs(5);
+  ASSERT_EQ(outputs.size(), 5);
+  EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 8);
+
+  auto bar = ValueHolder::CreateSingleDataOutput("Bar", outputs);
+  EXPECT_NE(bar, nullptr);
+  EXPECT_EQ(bar->GetNode()->GetAllInDataAnchorsSize(), 5);
+  for (int i = 0; i < 5; ++i) {
+    EXPECT_NE(bar->GetNode()->GetInDataAnchor(i)->GetPeerOutAnchor(), nullptr);
+    EXPECT_EQ(bar->GetNode()->GetInDataAnchor(i)->GetPeerOutAnchor()->GetIdx(), i + 3);
+    EXPECT_EQ(bar->GetNode()->GetInDataAnchor(i)->GetPeerOutAnchor()->GetOwnerNode(),
+              foo->GetNode()->shared_from_this());
+  }
+}
+TEST_F(ValueHolderUt, ConnectFromAncestor_CreateInnerData_ParentGraph) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto data2 = ValueHolder::CreateFeed(2);
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  ValueHolder::PushGraphFrame(foo, "Foo");
+  auto sub_foo = ValueHolder::CreateSingleDataOutput("SubFoo", {data1, data2});
+  ValueHolder::PopGraphFrame({sub_foo}, {});
+
+  auto frame = ValueHolder::PopGraphFrame();
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+  CheckGraphGenerally(*graph);
+
+  EXPECT_EQ(SummaryChecker(graph).StrictDirectNodeTypes({{"Data", 3}, {"Foo", 1}}), "success");
+  EXPECT_EQ(graph->GetAllSubgraphs().size(), 1);
+
+  auto foo_node = graph->FindFirstNodeMatchType("Foo");
+  ASSERT_NE(foo_node, nullptr);
+  EXPECT_EQ(NodeTopoChecker(foo).StrictConnectFrom({data0, data1, data2}), "success");
+  StrictSubgraphs(foo_node, {"Foo"});
+  auto subgraph_name = foo_node->GetOpDesc()->GetSubgraphInstanceName(0);
+  auto subgraph = graph->GetSubgraph(subgraph_name);
+  ASSERT_NE(subgraph, nullptr);
+  auto ret = gert::SummaryChecker(subgraph).StrictAllNodeTypes({{"InnerData", 2}, {"SubFoo", 1}, {"InnerNetOutput", 1}});
+  EXPECT_EQ(ret, "success") << ret;
+
+  auto sub_foo_node = subgraph->FindFirstNodeMatchType("SubFoo");
+  ASSERT_NE(sub_foo_node, nullptr);
+  ConnectFromInnerData(sub_foo_node, {1, 2});
+  EXPECT_EQ(NodeTopoChecker(sub_foo_node).StrictConnectTo(0, {{"InnerNetOutput"}}), "success");
+}
+
+/*
+ * +-----------------------------+
+ * |Foo                          |
+ * |   +---------------------+   |
+ * |   |SubFoo               |   |
+ * |   |    NetOutput        |   |
+ * |   |        |            |   |
+ * |   |      Sub2Foo3       |   |
+ * |   |       /    \        |   |
+ * |   | Sub2Foo1  Sub2Foo2  |   |
+ * |   |   |       /   |     |   |
+ * |   +---+-----+-----+-----+   |
+ * |       |     |     |         |
+ * +-------+-----+-----+---------+
+ *    /    |     |     |
+ * data0 data1 data2 data3
+ */
+TEST_F(ValueHolderUt, ConnectFromAncestor_CreateInnerDataRecursively_AncestorGraph) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto data2 = ValueHolder::CreateFeed(2);
+  auto data3 = ValueHolder::CreateFeed(3);
+
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  ValueHolder::PushGraphFrame(foo, "Foo");
+
+  auto sub_foo = ValueHolder::CreateSingleDataOutput("SubFoo", {data1});
+  ValueHolder::PushGraphFrame(sub_foo, "Foo");
+
+  auto sub2_foo1 = ValueHolder::CreateSingleDataOutput("Sub2Foo1", {data1});
+  auto sub2_foo2 = ValueHolder::CreateSingleDataOutput("Sub2Foo2", {data3, data2});
+  auto sub2_foo3 = ValueHolder::CreateSingleDataOutput("Sub2Foo3", {sub2_foo1, sub2_foo2});
+
+  ValueHolder::PopGraphFrame({sub2_foo3}, {});
+  ValueHolder::PopGraphFrame({sub_foo}, {});
+  auto frame = ValueHolder::PopGraphFrame();
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+  CheckGraphGenerally(*graph);
+
+  // Check elements on root graph
+  EXPECT_EQ(SummaryChecker(graph).StrictDirectNodeTypes({{"Data", 4}, {"Foo", 1}}), "success");
+  EXPECT_EQ(graph->GetAllSubgraphs().size(), 2);
+  auto foo_node = graph->FindFirstNodeMatchType("Foo");
+  ASSERT_NE(foo_node, nullptr);
+  EXPECT_EQ(NodeTopoChecker(foo_node).StrictConnectFrom({data0, data1, data3, data2}), "success");
+  StrictSubgraphs(foo_node, {"Foo"});
+  ASSERT_EQ(foo_node->GetOpDesc()->GetSubgraphInstanceNames().size(), 1);
+  auto foo_graph = graph->GetSubgraph(foo_node->GetOpDesc()->GetSubgraphInstanceName(0));
+  ASSERT_NE(foo_graph, nullptr);
+
+  // Check elements on foo graph
+  ASSERT_EQ(SummaryChecker(foo_graph).StrictDirectNodeTypes({{"InnerData", 3}, {"SubFoo", 1}, {"InnerNetOutput", 1}}),
+            "success");
+  auto sub_foo_node = foo_graph->FindFirstNodeMatchType("SubFoo");
+  ASSERT_NE(sub_foo_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(sub_foo_node).StrictConnectFrom({{"InnerData"}, {"InnerData"}, {"InnerData"}}), "success");
+  ASSERT_EQ(NodeTopoChecker(sub_foo_node).StrictConnectTo(0, {{"InnerNetOutput"}}), "success");
+  StrictSubgraphs(sub_foo_node, {"Foo"});
+  auto subfoo_graph = graph->GetSubgraph(sub_foo_node->GetOpDesc()->GetSubgraphInstanceName(0));
+  ASSERT_NE(subfoo_graph, nullptr);
+
+  // Check elements on SubFoo graph
+  auto ret = gert::SummaryChecker(subfoo_graph)
+                 .StrictAllNodeTypes(
+                     {{"InnerData", 3}, {"Sub2Foo1", 1}, {"Sub2Foo2", 1}, {"Sub2Foo3", 1}, {"InnerNetOutput", 1}});
+  auto sub2_foo1_node = subfoo_graph->FindFirstNodeMatchType("Sub2Foo1");
+  ASSERT_NE(sub2_foo1_node, nullptr);
+  EXPECT_EQ(NodeTopoChecker(sub2_foo1_node).StrictConnectFrom({{"InnerData"}}), "success");
+  ConnectFromOuter(sub2_foo1_node, 0, FindData(graph, 1), 0);
+
+  auto sub2_foo2_node = subfoo_graph->FindFirstNodeMatchType("Sub2Foo2");
+  ASSERT_NE(sub2_foo2_node, nullptr);
+  EXPECT_EQ(NodeTopoChecker(sub2_foo2_node).StrictConnectFrom({{"InnerData"}, {"InnerData"}}), "success");
+  ConnectFromOuter(sub2_foo2_node, 0, FindData(graph, 3), 0);
+  ConnectFromOuter(sub2_foo2_node, 1, FindData(graph, 2), 0);
+
+  auto sub2_foo3_node = subfoo_graph->FindFirstNodeMatchType("Sub2Foo3");
+  ASSERT_NE(sub2_foo3_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(sub2_foo3_node).StrictConnectFrom({sub2_foo1_node, sub2_foo2_node}), "success");
+}
+
+/*
+ * +---------------------------------------+
+ * |Foo                                    |
+ * |   +-------------------------------+   |
+ * |   |SubFoo                         |   |
+ * |   |         NetOutput             |   |
+ * |   |             |                 |   |
+ * |   |          Sub2Foo3             |   |
+ * |   |       /     |      \          |   |
+ * |   | Sub2Foo1  Sub2Foo2   Sub2Foo4 |   |
+ * |   |   |       /      \ /          |   |
+ * |   +---+-----+---------+-----------+   |
+ * |       |     |         |               |
+ * +-------+-----+---------+---------------+
+ *    /    |     |         |
+ * data0 data1 data2     data3
+ */
+TEST_F(ValueHolderUt, ConnectFromAncestor_DeDuplicate_SameSrc) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto data2 = ValueHolder::CreateFeed(2);
+  auto data3 = ValueHolder::CreateFeed(3);
+
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  ValueHolder::PushGraphFrame(foo, "Foo");
+
+  auto sub_foo = ValueHolder::CreateSingleDataOutput("SubFoo", {data1});
+  ValueHolder::PushGraphFrame(sub_foo, "Foo");
+
+  auto sub2_foo1 = ValueHolder::CreateSingleDataOutput("Sub2Foo1", {data1});
+  auto sub2_foo2 = ValueHolder::CreateSingleDataOutput("Sub2Foo2", {data3, data2});
+  auto sub2_foo4 = ValueHolder::CreateSingleDataOutput("Sub2Foo4", {data3});
+  auto sub2_foo3 = ValueHolder::CreateSingleDataOutput("Sub2Foo3", {sub2_foo1, sub2_foo2, sub2_foo4});
+
+  ValueHolder::PopGraphFrame({sub2_foo3}, {});
+  ValueHolder::PopGraphFrame({sub_foo}, {});
+  auto frame = ValueHolder::PopGraphFrame();
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+  CheckGraphGenerally(*graph);
+
+  auto foo_node = graph->FindFirstNodeMatchType("Foo");
+  ASSERT_NE(foo_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(foo_node).StrictConnectFrom({{"Data"}, {"Data"}, {"Data"}, {"Data"}}), "success");
+
+  auto sub_foo_node = ge::GraphUtils::FindNodesByTypeFromAllNodes(graph, "SubFoo")[0];
+  ASSERT_NE(sub_foo_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(sub_foo_node).StrictConnectFrom({{"InnerData"}, {"InnerData"}, {"InnerData"}}), "success");
+  auto sub_foo_graph = FindFirstSubgraphForNodeType(graph, "SubFoo");
+  ASSERT_NE(sub_foo_graph, nullptr);
+  auto sub2_foo2_node = sub_foo_graph->FindFirstNodeMatchType("Sub2Foo2");
+  ASSERT_NE(sub2_foo2_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(sub2_foo2_node).StrictConnectFrom({{"InnerData"}, {"InnerData"}}), "success");
+  ConnectFromOuter(sub2_foo2_node, 0, FindData(graph, 3), 0);
+  ConnectFromOuter(sub2_foo2_node, 1, FindData(graph, 2), 0);
+
+  auto sub2_foo4_node = sub_foo_graph->FindFirstNodeMatchType("Sub2Foo4");
+  ASSERT_EQ(NodeTopoChecker(sub2_foo4_node).StrictConnectFrom({{"InnerData"}}), "success");
+  ConnectFromOuter(sub2_foo4_node, 0, FindData(graph, 3), 0);
+
+  auto inner_data_from_3 = sub2_foo2_node->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode();
+  ASSERT_EQ(NodeTopoChecker(inner_data_from_3).StrictConnectTo(0, {sub2_foo2_node, sub2_foo4_node}), "success");
+}
+TEST_F(ValueHolderUt, PopFrame_CreateControlEdge_Targets) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1});
+  auto frame = ValueHolder::PopGraphFrame({}, {data0, foo});
+
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+
+  ASSERT_EQ(SummaryChecker(graph).StrictAllNodeTypes({{"Data", 2}, {"Foo", 1}, {"NetOutput", 1}}), "success");
+
+  auto netoutput = graph->FindFirstNodeMatchType("NetOutput");
+  ASSERT_NE(netoutput, nullptr);
+  ASSERT_EQ(NodeTopoChecker(netoutput).StrictConnectFrom({{"Data", -1}, {"Foo", -1}}), "success");
+  EXPECT_EQ(netoutput->GetInDataNodes().size(), 0);
+  EXPECT_EQ(netoutput->GetInControlNodes().size(), 2);
+}
+TEST_F(ValueHolderUt, PopFrame_CreateNetOuptut_PopRootGraph) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1});
+  auto frame = ValueHolder::PopGraphFrame({data0, foo}, {});
+
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+
+  ASSERT_EQ(SummaryChecker(graph).StrictAllNodeTypes({{"Data", 2}, {"Foo", 1}, {"NetOutput", 1}}), "success");
+
+  auto netoutput = graph->FindFirstNodeMatchType("NetOutput");
+  ASSERT_NE(netoutput, nullptr);
+  EXPECT_EQ(netoutput->GetName(), "NetOutput");
+  ASSERT_EQ(NodeTopoChecker(netoutput).StrictConnectFrom({data0, foo}), "success");
+
+  auto foo_node = graph->FindFirstNodeMatchType("Foo");
+  ASSERT_NE(foo_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(foo_node).StrictConnectFrom({data0, data1}), "success");
+  ASSERT_EQ(NodeTopoChecker(foo_node).StrictConnectTo(0, {netoutput}), "success");
+}
+TEST_F(ValueHolderUt, PopFrame_CreateInnerNetOuptut_PopSubgraph) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1});
+  ValueHolder::PushGraphFrame(foo, "Foo");
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar1", {data0});
+  auto bar2 = ValueHolder::CreateSingleDataOutput("Bar2", {data1});
+  auto frame = ValueHolder::PopGraphFrame({bar1}, {bar2});
+
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+  ASSERT_EQ(SummaryChecker(graph).StrictAllNodeTypes({{"InnerData", 2}, {"Bar1", 1}, {"Bar2", 1}, {"InnerNetOutput", 1}}), "success");
+  auto netoutput = graph->FindFirstNodeMatchType("InnerNetOutput");
+  ASSERT_NE(netoutput, nullptr);
+  ASSERT_EQ(NodeTopoChecker(netoutput).StrictConnectFrom({{"Bar1"}, {"Bar2"}}), "success");
+}
+/*
+ * +-----------------------------+
+ * |Foo                          |
+ * |   +---------------------+   |
+ * |   |SubFoo               |   |
+ * |   |    NetOutput        |   |
+ * |   |  /   |      \       |   |
+ * |   | | foo5      |       |   |
+ * |   | |  |        |       |   |
+ * |   +-+--+--------+-------+   |
+ * |     |  |        |           |
+ * |    /  Foo2    Foo3          |
+ * |   |  /       /     \        |
+ * +---+---------+--------+------+
+ *     |         |        |
+ *  data0      data1    data2
+ */
+TEST_F(ValueHolderUt, PopFrame_CraeteInnerData_OutputsUseParentHolder) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto data2 = ValueHolder::CreateFeed(2);
+
+  auto foo1 = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1, data2});
+  ValueHolder::PushGraphFrame(foo1, "Foo");
+
+  auto foo2 = ValueHolder::CreateSingleDataOutput("Foo2", {data0, data1});
+  auto foo3 = ValueHolder::CreateDataOutput("Foo3", {data1, data2}, 3);
+
+  auto foo4 = ValueHolder::CreateSingleDataOutput("Foo4", {foo2, foo3[0]});
+  ValueHolder::PushGraphFrame(foo4, "Foo");
+  auto foo5 = ValueHolder::CreateSingleDataOutput("Foo5", {foo2});
+
+  ValueHolder::PopGraphFrame({data0, foo3[1], foo5}, {});
+  ValueHolder::PopGraphFrame({}, {});
+
+  auto frame = ValueHolder::PopGraphFrame();
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+
+  auto foo3_nodes = ge::GraphUtils::FindNodesByTypeFromAllNodes(const_cast<ge::ComputeGraphPtr &>(graph), "Foo3");
+  ASSERT_EQ(foo3_nodes.size(), 1);
+
+  auto foo4_graph = FindFirstSubgraphForNodeType(graph, "Foo4");
+  ASSERT_NE(foo4_graph, nullptr);
+  ASSERT_EQ(SummaryChecker(foo4_graph).StrictAllNodeTypes({{"InnerData", 3}, {"Foo5", 1}, {"InnerNetOutput", 1}}),
+            "success");
+  auto netoutput = foo4_graph->FindFirstNodeMatchType("InnerNetOutput");
+  ASSERT_EQ(NodeTopoChecker(netoutput).StrictConnectFrom({{"InnerData"}, {"InnerData"}, {"Foo5"}}), "success");
+  ConnectFromOuter(netoutput, 0, FindData(graph, 0), 0);
+  ConnectFromOuter(netoutput, 1, foo3_nodes[0], 1);
+}
+
+/*
+ * +--------------------------------------------------------+
+ * |Foo-Node                                                |
+ * |   +---------------------+    +---------------------+   |
+ * |   |Foo-Subgraph1        |    |Foo-Subgraph2        |   |
+ * |   |   NetOutput         |    |          NetOutput  |   |
+ * |   |      |              |    |     ERROR   |       |   |
+ * |   |     Bar1            |    | Bar1 --->  Bar2     |   |
+ * |   |   /    \            |    |          /    \     |   |
+ * |   +--0------1-----------+    +---------0------1----+   |
+ * +------0------1--------2---------------------------------+
+ *        |      |        |
+ *     data0   data1    data2
+ */
+TEST_F(ValueHolderUt, PopFrame_Failed_OutpusUseGraphNotAncestor) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto data2 = ValueHolder::CreateFeed(2);
+
+  auto foo1 = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1, data2});
+  ValueHolder::PushGraphFrame(foo1, "Foo1");
+  auto bar1 = ValueHolder::CreateDataOutput("Bar1", {data0, data1}, 3);
+  ValueHolder::PopGraphFrame({bar1[0]}, {});
+
+  ValueHolder::PushGraphFrame(foo1, "Foo2");
+  auto bar2 = ValueHolder::CreateSingleDataOutput("Bar2", {bar1[0], data0, data1});
+  ASSERT_EQ(bar2, nullptr);
+  bar2 = ValueHolder::CreateSingleDataOutput("Bar2", {bar1[1], data0, data1});
+  ASSERT_EQ(bar2, nullptr);
+  ValueHolder::PopGraphFrame();
 }
 }  // namespace bg
 }  // namespace gert

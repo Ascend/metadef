@@ -62,7 +62,7 @@ constexpr uint32_t kAndBits = 15;
 constexpr char kHexDigits[] = "0123456789ABCDEF";
 constexpr size_t kSize = 2UL;
 constexpr char const *kMaxTilingSize = "op_para_size";
-constexpr size_t kMaxTilingDataSize = 2048UL;
+constexpr size_t kMaxTilingDataSize = 16UL * 1024UL;
 constexpr size_t kWorkspaceHolerSize = 8UL;
 
 struct ContextComponent {

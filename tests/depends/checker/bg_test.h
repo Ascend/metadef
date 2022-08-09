@@ -30,7 +30,8 @@ class BgTest : public testing::Test {
   }
   void TearDown() override {
     Test::TearDown();
-    bg::ValueHolder::PopGraphFrame();
+    while (bg::ValueHolder::PopGraphFrame())
+      ;
   }
 
  public:
@@ -38,6 +39,7 @@ class BgTest : public testing::Test {
     CheckNamesUniq(graph);
     CheckOwners(graph);
     CheckSubgraphExists(graph);
+    CheckDataIndexOnAllSubgraphs(graph);
   }
 
   void CheckExeGraphGenerally(const ge::ComputeGraph &graph) {
@@ -100,6 +102,25 @@ class BgTest : public testing::Test {
   }
 
  private:
+  void CheckDataIndex(const ge::ComputeGraph &graph) {
+    std::map<int32_t, std::string> indexes_to_name;
+    for (const auto &node : graph.GetDirectNode()) {
+      if (node->GetType() == "Data" || node->GetType() == "InnerData") {
+        int32_t index;
+        ASSERT_TRUE(ge::AttrUtils::GetInt(node->GetOpDesc(), "index", index))
+            << "Can not get index attr on data " << node->GetName();
+        ASSERT_TRUE(indexes_to_name.emplace(index, node->GetName()).second)
+            << "Duplicated index on data " << node->GetName() << " and data " << indexes_to_name[index] << ", on graph "
+            << graph.GetName();
+      }
+    }
+  }
+  void CheckDataIndexOnAllSubgraphs(const ge::ComputeGraph &graph) {
+    CheckDataIndex(graph);
+    for (const auto &subgraph : graph.GetAllSubgraphs()) {
+      CheckDataIndex(*subgraph);
+    }
+  }
   void CheckKernelExtendInfoOk(const ge::ComputeGraph &root_graph) {
     ge::Buffer buffer;
     ASSERT_TRUE(ge::AttrUtils::GetZeroCopyBytes(root_graph.shared_from_this(), kKernelExtendInfo, buffer));

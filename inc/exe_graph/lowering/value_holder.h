@@ -89,6 +89,9 @@ class ValueHolder {
 
   const int32_t &GetPlacement() const;
   void SetPlacement(const int32_t &placement);
+
+  std::vector<ValueHolderPtr> AppendOutputs(size_t append_count);
+
   static ValueHolderPtr CreateError(const char *fmt, ...);
   static ValueHolderPtr CreateError(const char *fmt, va_list arg);
   static ValueHolderPtr CreateConst(const void *data, size_t size, bool is_string = false);
@@ -102,20 +105,33 @@ class ValueHolder {
                                           const std::vector<ValueHolderPtr> &args);
   static HyperStatus AddDependency(const ValueHolderPtr &src, const ValueHolderPtr &dst);
 
+  /**
+   * 压栈一个Root GraphFrame，只有栈底的GraphFrame才被称为ROOT GraphFrame，因此调用此借口前，需要保证栈内不存在GraphFrame，否则会失败
+   * @return 成功后，返回创建好的GraphFrame指针，失败时返回空指针
+   */
   static GraphFrame *PushGraphFrame();
+  /**
+   * 压栈一个非root的GraphFrame
+   * @param belongs 新加入的GraphFrame所归属的ValueHolder，新压栈的GraphFrame会被挂在该ValueHolder所归属的Node上
+   * @param graph_name 挂接GraphFrame到Node时，使用的name
+   * @return 创建且挂接成功后，返回创建好的GraphFrame指针，失败时返回空指针
+   */
+  static GraphFrame *PushGraphFrame(const ValueHolderPtr &belongs, const char *graph_name);
   static std::unique_ptr<GraphFrame> PopGraphFrame();
+  static std::unique_ptr<GraphFrame> PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
+                                                   const std::vector<ValueHolderPtr> &targets);
   static GraphFrame *GetCurrentFrame();
   static GraphHolder *GetCurrentGraph();
   static void SetCurrentComputeNode(const ge::NodePtr &node);
   static std::unique_ptr<CurrentComputeNodeGuarder> SetScopedCurrentComputeNode(const ge::NodePtr &node);
 
-  static NodeHolderPtr AddNode(const char *node_type, size_t input_count, size_t output_count,
-                               GraphFrame &frame);
+  static NodeHolderPtr AddNode(const char *node_type, size_t input_count, size_t output_count, GraphFrame &frame);
 
  private:
   ValueHolder();
   static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);
   static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t out_count);
+  static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t start_index, size_t create_count);
   static NodeHolderPtr CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs, size_t out_count);
   static std::string GenerateNodeName(const char *node_type, const GraphFrame &frame);
 

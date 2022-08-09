@@ -18,6 +18,7 @@
 #include <memory>
 #include "common/checker.h"
 #include "graph/debug/ge_log.h"
+#include "exe_graph/lowering/frame_selector.h"
 namespace gert {
 const bg::ValueHolderPtr &LoweringGlobalData::GetStream() const {
   return stream_;
@@ -67,11 +68,15 @@ LoweringGlobalData &LoweringGlobalData::SetAllocator(AllocatorDesc desc, bg::Val
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) {
   const auto &iter = placements_to_allocator_.find(desc);
   if (iter == placements_to_allocator_.end()) {
-    auto memory_type_holder = bg::ValueHolder::CreateConst(&desc, sizeof(desc));
-    auto allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {memory_type_holder});
-    GE_ASSERT_NOTNULL(allocator);
-    SetAllocator(desc, allocator);
-    return allocator;
+    auto allocator = bg::FrameSelector::OnRootFrame([&]() -> std::vector<bg::ValueHolderPtr> {
+      auto memory_type_holder = bg::ValueHolder::CreateConst(&desc, sizeof(desc));
+      auto allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {memory_type_holder});
+      return {allocator};
+    });
+    GE_ASSERT_EQ(allocator.size(), 1);
+    GE_ASSERT_NOTNULL(allocator[0]);
+    SetAllocator(desc, allocator[0]);
+    return allocator[0];
   }
   return iter->second;
 }

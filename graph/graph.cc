@@ -895,7 +895,7 @@ GraphUtils::CreateGraphFromComputeGraph(const ge::ComputeGraphPtr compute_graph)
   }
 
   const auto name = compute_graph->GetName();
-  const auto graph = Graph(name);
+  const auto graph = Graph(name.c_str());
   if (graph.impl_ == nullptr) {
     return graph;
   }

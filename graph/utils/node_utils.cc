@@ -23,11 +23,11 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/node_impl.h"
 #include "graph/ge_context.h"
-#include "graph/runtime_inference_context.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
 #include "graph/utils/constant_utils.h"
+#include "common/checker.h"
 
 namespace ge {
 const std::set<std::string> kConstOpTypes{"Const", "Constant"};
@@ -515,7 +515,18 @@ graphStatus NodeUtils::SetSubgraph(Node &node, const uint32_t index, const Compu
   subgraph->SetParentGraph(node.GetOwnerComputeGraph());
   return root_graph->AddSubgraph(subgraph);
 }
+graphStatus NodeUtils::AddSubgraph(Node &node, const std::string &subgraph_name, const ComputeGraphPtr &subgraph) {
+  GE_ASSERT_NOTNULL(subgraph);
+  auto op_desc = node.GetOpDesc();
+  GE_ASSERT_NOTNULL(op_desc);
 
+  GE_ASSERT_SUCCESS(op_desc->AddSubgraphName(subgraph_name));
+  auto &subgraph_names_to_index = op_desc->GetSubgraphNameIndexes();
+  auto iter = subgraph_names_to_index.find(subgraph_name);
+  GE_ASSERT_TRUE(iter != subgraph_names_to_index.cend());
+
+  return SetSubgraph(node, iter->second, subgraph);
+}
 ///
 /// Check if node is input of subgraph
 /// @param [in] node
