@@ -19,7 +19,11 @@
 
 namespace gert {
 OpImplRegister::OpImplRegister(const char *op_type)
-    : op_type_(op_type), functions_(OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type)) {}
+    : op_type_(op_type),
+      functions_(OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type)) {
+  functions_.private_attrs.clear();
+  functions_.unique_private_attrs.clear();
+}
 OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func) {
   functions_.infer_shape = infer_shape_func;
   return *this;
@@ -40,6 +44,42 @@ OpImplRegister &OpImplRegister::InputsDataDependency(std::initializer_list<int32
   }
   return *this;
 }
+OpImplRegister &OpImplRegister::PrivateAttrImpl(const char *private_attr, ge::AnyValue private_attr_av) {
+  if (private_attr == nullptr) {
+    GELOGE(ge::FAILED, "Failed to set private attr name using nullptr!");
+  } else if (!strcmp(private_attr, "")) {
+    GELOGE(ge::FAILED, "Failed to set private attr name using empty string("")!");
+  } else {
+    if (functions_.unique_private_attrs.insert(private_attr).second) {
+      functions_.private_attrs.emplace_back(std::make_pair(private_attr, std::move(private_attr_av)));
+    } else {
+      GELOGE(ge::FAILED, "The private attr name: %s has already existed.", private_attr);
+    }
+  }
+  return *this;
+}
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr) {
+  static ge::AnyValue emptyPrivateAttrAV;
+  return PrivateAttrImpl(private_attr, emptyPrivateAttrAV);
+}
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, int64_t private_attr_val) {
+  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<int64_t>(private_attr_val));
+}
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const std::vector<int64_t> &private_attr_val) {
+  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<std::vector<int64_t>>(private_attr_val));
+}
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const char *private_attr_val) {
+  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<std::string>(private_attr_val));
+}
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, float private_attr_val) {
+  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<float>(private_attr_val));
+}
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, bool private_attr_val) {
+  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<bool>(private_attr_val));
+}
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const vector<float> &private_attr_val) {
+  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<std::vector<float>>(private_attr_val));
+}
 OpImplRegistry &OpImplRegistry::GetInstance() {
   static OpImplRegistry instance;
   return instance;
@@ -53,5 +93,13 @@ const OpImplRegistry::OpImplFunctions *OpImplRegistry::GetOpImpl(const OpImplReg
     return nullptr;
   }
   return &iter->second;
+}
+const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const OpImplRegistry::OpType &op_type) const {
+  auto op_impl_ptr = GetOpImpl(op_type);
+  if (op_impl_ptr == nullptr) {
+    static OpImplRegistry::PrivateAttrList emptyPrivateAttr;
+    return emptyPrivateAttr;
+  }
+  return op_impl_ptr->private_attrs;
 }
 }  // namespace gert
