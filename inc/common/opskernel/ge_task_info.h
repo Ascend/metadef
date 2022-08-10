@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include "runtime/rt.h"
+#include "graph/op_desc.h"
 
 namespace ge {
 struct HcclDumpInfo {
@@ -31,6 +32,12 @@ struct HcclDumpInfo {
   uint64_t input_size;
   void *output_addr;
   uint64_t output_size;
+};
+
+struct DvppInfo {
+  OpDescPtr op_desc;
+  std::vector<void *> io_addrs;
+  uint8_t sqe[64];
 };
 
 // when need to eliminate GETaskKernelHcclInfo, so not need DAVINCI_TRAIN/DAVINCI_CLOUD
@@ -62,6 +69,7 @@ struct GETaskInfo {
   void *opsKernelStorePtr;
 
   std::vector<GETaskKernelHcclInfo> kernelHcclInfo;
+  DvppInfo dvpp_info;
 };
 
 struct HcomRemoteAccessAddrInfo
