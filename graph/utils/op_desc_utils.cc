@@ -1045,7 +1045,9 @@ graphStatus OpDescUtils::SetSubgraphInstanceName(const std::string &subgraph_nam
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, const uint32_t idx) {
   if (op.operator_impl_ == nullptr) {
-    GELOGW("[Check][Param] Op(%s) operator_impl_ is nullptr.", op.GetName().c_str());
+    AscendString op_name;
+    op.GetName(op_name);
+    GELOGW("[Check][Param] Op(%s) operator_impl_ is nullptr.", op_name.GetString());
     return nullptr;
   }
 
