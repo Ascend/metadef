@@ -434,4 +434,30 @@ TEST_F(GraphPassUtilUT, test_inherit_attrs_02) {
   EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_KEEP_DTYPE), false);
   EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_OP_COMPILE_STRATEGY), false);
 }
+
+
+TEST_F(GraphPassUtilUT, test_inherit_attrs_03) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  std::vector<ge::NodePtr> original_nodes;
+  std::vector<ge::NodePtr> fus_nodes;
+  CreateGraph(graph, original_nodes, fus_nodes);
+  auto ori_node0 = original_nodes[0];
+  auto ori_node1 = original_nodes[1];
+  ge::AttrUtils::SetBool(ori_node0->GetOpDesc(), "_backward", true);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+
+  auto original_nodes_reverse_order = {ori_node1, ori_node0};
+  GraphPassUtil::InheritAttrFromOriNodes(original_nodes_reverse_order, fus_nodes, BackWardInheritMode::kFusedNode);
+  auto fus_op = fus_nodes.at(0)->GetOpDesc();
+
+  bool backward = false;
+  ge::AttrUtils::GetBool(fus_op, "_backward", backward);
+  EXPECT_EQ(backward, true);
+
+
+  EXPECT_EQ(fus_op->HasAttr("_recompute"), false);
+  EXPECT_EQ(fus_op->HasAttr("_optimizer"), false);
+  EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_KEEP_DTYPE), false);
+  EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_OP_COMPILE_STRATEGY), false);
+}
 }

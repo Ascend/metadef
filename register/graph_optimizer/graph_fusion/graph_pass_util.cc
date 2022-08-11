@@ -278,7 +278,7 @@ void GraphPassUtil::GetBackWardAttr(const std::vector<ge::NodePtr> &original_nod
       for (const auto &in_node : origin_node->GetInNodes()) {
         (void) ge::AttrUtils::GetBool(in_node->GetOpDesc(), kBackWard, has_in_node_backward);
         if (has_in_node_backward) {
-          break;
+          return;
         }
       }
 
