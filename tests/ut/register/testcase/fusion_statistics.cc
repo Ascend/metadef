@@ -66,16 +66,19 @@ TEST_F(UtestFusionStatistics, test_01) {
 TEST_F(UtestFusionStatistics, test_02) {
   auto &fs_instance = fe::FusionStatisticRecorder::Instance();
   fe::FusionInfo fusion_info(0, "", "test_pass");
-
+  fusion_info.SetEffectTimes(2);
+  fusion_info.SetMatchTimes(2);
   fusion_info.AddEffectTimes(1);
   fusion_info.AddMatchTimes(1);
   fusion_info.GetEffectTimes();
-  fusion_info.GetGraphId();
   fusion_info.GetMatchTimes();
+  fusion_info.GetGraphId();
   fusion_info.GetPassName();
   fusion_info.GetSessionId();
-  fusion_info.SetEffectTimes(2);
-  fusion_info.SetMatchTimes(2);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  fusion_info.SetRepoHitTimes(5);
+  fusion_info.GetRepoHitTimes();
+#endif
 
   fs_instance.UpdateGraphFusionMatchTimes(fusion_info);
 
