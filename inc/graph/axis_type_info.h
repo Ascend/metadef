@@ -33,6 +33,7 @@ enum class AxisType {
   REDUCEMEAN,
   TRANSPOSE,
   SLIDINGWINDOW,
+  REDUCEGATHER,
 };
 
 class AxisTypeInfo {
