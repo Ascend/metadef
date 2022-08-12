@@ -28,13 +28,8 @@ namespace fe {
 
 class FusionInfo {
  public:
-#ifndef ONLY_COMPILE_OPEN_SRC
   explicit FusionInfo(const uint64_t session_id = 0, const std::string graph_id = "", const std::string pass_name = "",
                       const int32_t match_times = 0, const int32_t effect_times = 0, const int32_t repo_hit_times = 0);
-#else
-  explicit FusionInfo(const uint64_t session_id = 0, const std::string graph_id = "", const std::string pass_name = "",
-                      const int32_t match_times = 0, const int32_t effect_times = 0);
-#endif
 
   virtual ~FusionInfo();
 
@@ -50,11 +45,9 @@ class FusionInfo {
 
   void SetEffectTimes(const int32_t effect_times);
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   int32_t GetRepoHitTimes() const;
 
   void SetRepoHitTimes(const int32_t repo_hit_times);
-#endif
 
   std::string GetGraphId() const;
 
@@ -68,9 +61,7 @@ class FusionInfo {
   std::string pass_name_;
   int32_t match_times_;
   int32_t effect_times_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   int32_t repo_hit_times_;
-#endif
 };
 
 using FusionStatisticMap = std::map<std::string, std::map<std::string, FusionInfo>>;

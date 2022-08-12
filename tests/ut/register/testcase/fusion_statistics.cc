@@ -75,10 +75,8 @@ TEST_F(UtestFusionStatistics, test_02) {
   fusion_info.GetGraphId();
   fusion_info.GetPassName();
   fusion_info.GetSessionId();
-#ifndef ONLY_COMPILE_OPEN_SRC
   fusion_info.SetRepoHitTimes(5);
   fusion_info.GetRepoHitTimes();
-#endif
 
   fs_instance.UpdateGraphFusionMatchTimes(fusion_info);
 
