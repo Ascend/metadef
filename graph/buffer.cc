@@ -19,7 +19,7 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/buffer_impl.h"
 #include "graph/debug/ge_util.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 
 namespace ge {
 BufferImpl::BufferImpl() {

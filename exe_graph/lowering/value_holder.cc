@@ -24,7 +24,7 @@
 #include <cstdint>
 #include "graph/debug/ge_log.h"
 #include "graph/utils/graph_utils.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 #include "graph/utils/node_utils.h"
 #include "common/checker.h"
 

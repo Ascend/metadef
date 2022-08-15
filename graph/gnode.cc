@@ -25,7 +25,7 @@
 #include "graph/debug/ge_op_types.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 
 #define NODE_ATTR_GET_IMP(ArgType)                                                                                     \
   graphStatus GNode::GetAttr(const AscendString &name, ArgType &attr_value) const {                                    \
