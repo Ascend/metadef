@@ -22,7 +22,7 @@
 
 namespace fe {
 namespace {
-  const std::string ATTR_NAME_IS_OP_DYNAMIC_IMPL = "_is_op_dynamic_impl";
+  constexpr char const *kAttrNameIsOpDynamicImpl = "_is_op_dynamic_impl";
   const uint32_t kNoNeedCompareSize = 2;
 }
 BufferFusionPassBase::BufferFusionPassBase() {}
@@ -59,7 +59,7 @@ bool BufferFusionPassBase::CheckNodeIsDynamicImpl(const ge::NodePtr &node) {
     return false;
   }
   bool is_dynamic_impl = false;
-  (void)ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_IS_OP_DYNAMIC_IMPL, is_dynamic_impl);
+  (void)ge::AttrUtils::GetBool(node->GetOpDesc(), kAttrNameIsOpDynamicImpl, is_dynamic_impl);
   return is_dynamic_impl;
 }
 
@@ -69,8 +69,8 @@ bool BufferFusionPassBase::CheckTwoNodesImplConsistent(const ge::NodePtr &src_no
   }
   bool src_dynamic_impl = false;
   bool dst_dynamic_impl = false;
-  (void)ge::AttrUtils::GetBool(src_node->GetOpDesc(), ATTR_NAME_IS_OP_DYNAMIC_IMPL, src_dynamic_impl);
-  (void)ge::AttrUtils::GetBool(dst_node->GetOpDesc(), ATTR_NAME_IS_OP_DYNAMIC_IMPL, dst_dynamic_impl);
+  (void)ge::AttrUtils::GetBool(src_node->GetOpDesc(), kAttrNameIsOpDynamicImpl, src_dynamic_impl);
+  (void)ge::AttrUtils::GetBool(dst_node->GetOpDesc(), kAttrNameIsOpDynamicImpl, dst_dynamic_impl);
   return src_dynamic_impl == dst_dynamic_impl;
 }
 

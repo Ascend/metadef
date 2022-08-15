@@ -971,6 +971,8 @@ Status FusionTurbo::MoveDataOutputUp(const ge::NodePtr &node, int32_t index) {
   uint32_t subgraph_output_size = subgraph_node.node->GetAllOutDataAnchorsSize();
   const auto node_pair_peer_out_anchor = subgraph_node.node->GetOutDataAnchor(subgraph_node.index);
   ge::OutDataAnchorPtr out_link_anchor = node_pair_peer_out_anchor;
+
+  // for multi outputs, first output move to current node output index, others need add new output anchor
   for (size_t node_outanchor_index = 0; node_outanchor_index < node->GetAllOutDataAnchorsSize();
        ++node_outanchor_index) {
     if (node_outanchor_index != 0) {
@@ -1046,6 +1048,10 @@ Status MoveDataInputUpToSubgraph(const ge::NodePtr &node, const int32_t index, R
 
   const auto netout_tensor_index = GetNetOutputTensorIndex(netout_node, subgraph_node.index);
   uint32_t subgraph_node_input_size = subgraph_node.node->GetAllInDataAnchorsSize();
+
+  /* for current node multi inputs, subgraph at move direction record the netout peer anchor
+  ** other inputs need add new data node and record input
+  */
   for (uint32_t node_inanchor_index = 0; node_inanchor_index < node->GetAllInDataAnchorsSize(); ++node_inanchor_index) {
     const auto node_inanchor = node->GetInDataAnchor(static_cast<int32_t>(node_inanchor_index));
     const auto out_data_anchor = node_inanchor->GetPeerOutAnchor();
@@ -1133,6 +1139,8 @@ Status MoveDataInputDownToSubgraph(const ge::NodePtr &node, const int32_t index,
   uint32_t subgraph_node_input_size = out_node_index.node->GetAllInDataAnchorsSize();
   ge::InDataAnchorPtr linkin_anchor = out_node_index.node->GetInDataAnchor(out_node_index.index);
   linkin_anchor->UnlinkAll();
+
+  // for multi inputs, first input connect to current node data in subgraph, others need create new data node
   for (uint32_t node_inanchor_index = 0; node_inanchor_index < node->GetAllInDataAnchorsSize(); ++node_inanchor_index) {
     const auto input_tensor_desc = node->GetOpDesc()->GetInputDesc(node_inanchor_index);
     if (node_inanchor_index != 0) {
