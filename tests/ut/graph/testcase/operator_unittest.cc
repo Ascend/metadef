@@ -36,16 +36,98 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/node_utils.h"
 #include "inc/external/graph/graph.h"
+#include "external/graph/operator_reg.h"
+#include "checker/summary_checker.h"
+#include "checker/topo_checker.h"
 
 #undef private
 #undef protected
 
 namespace ge {
+namespace {
+REG_OP(Foo01).OUTPUT(y, TensorType::NumberType()).OP_END_FACTORY_REG(Foo01);
+REG_OP(Foo11).INPUT(x, TensorType::NumberType()).OUTPUT(y, TensorType::NumberType()).OP_END_FACTORY_REG(Foo11);
+REG_OP(Foo02).OUTPUT(x, TensorType::NumberType()).OUTPUT(y, TensorType::NumberType()).OP_END_FACTORY_REG(Foo02);
+REG_OP(Foo22)
+    .INPUT(m, TensorType::NumberType())
+    .INPUT(n, TensorType::NumberType())
+    .OUTPUT(x, TensorType::NumberType())
+    .OUTPUT(y, TensorType::NumberType())
+    .OP_END_FACTORY_REG(Foo22);
+REG_OP(DFoo22)
+    .INPUT(m, TensorType::NumberType())
+    .DYNAMIC_INPUT(n, TensorType::NumberType())
+    .OUTPUT(x, TensorType::NumberType())
+    .OUTPUT(y, TensorType::NumberType())
+    .OP_END_FACTORY_REG(DFoo22);
+}  // namespace
 class UtestOperater : public testing::Test {
- protected:
-  void SetUp() {}
+ public:
+  /*
+   * Foo11
+   *   |
+   * Foo01
+   */
+  void CheckTopoGraph1(const Graph &graph) {
+    auto compute_graph = GraphUtils::GetComputeGraph(graph);
+    ASSERT_NE(compute_graph, nullptr);
+    ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 1}, {"Foo11", 1}}), "success");
+    auto foo11_node = compute_graph->FindNode("foo11");
+    ASSERT_NE(foo11_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo11_node).StrictConnectFrom({{"Foo01"}}), "success");
+    auto foo01_node = compute_graph->FindNode("foo01");
+    ASSERT_NE(foo01_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo01_node).StrictConnectTo(0, {{"Foo11"}}), "success");
+  }
 
-  void TearDown() {}
+  /*
+   *     Foo22
+   *     /  |
+   * Foo11  |
+   *     \  |
+   *     Foo02
+   */
+  void CheckTopoGraph2(const Graph &graph) {
+    auto compute_graph = GraphUtils::GetComputeGraph(graph);
+    ASSERT_NE(compute_graph, nullptr);
+    ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo02", 1}, {"Foo11", 1}, {"Foo22", 1}}),
+              "success");
+    auto foo01_node = compute_graph->FindNode("foo02");
+    ASSERT_NE(foo01_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo01_node).StrictConnectTo(0, {{"Foo11"}}), "success");
+    ASSERT_EQ(gert::NodeTopoChecker(foo01_node).StrictConnectTo(1, {{"Foo22"}}), "success");
+    auto foo11_node = compute_graph->FindNode("foo11");
+    ASSERT_NE(foo11_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo11_node).StrictConnectFrom({{"Foo02"}}), "success");
+    ASSERT_EQ(gert::NodeTopoChecker(foo11_node).StrictConnectTo(0, {{"Foo22"}}), "success");
+    auto foo22_node = compute_graph->FindNode("foo22");
+    ASSERT_NE(foo22_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo22_node).StrictConnectFrom({{"Foo11"}, {"Foo02"}}), "success");
+  }
+  /*
+   *       Foo22
+   *     /  |d0 \d1
+   * Foo11  |   |
+   *     \0 |0 /1
+   *      Foo02
+   */
+  void CheckTopoGraph3(const Graph &graph) {
+    auto compute_graph = GraphUtils::GetComputeGraph(graph);
+    ASSERT_NE(compute_graph, nullptr);
+    ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo02", 1}, {"Foo11", 1}, {"DFoo22", 1}}),
+              "success");
+    auto foo02_node = compute_graph->FindNode("foo02");
+    ASSERT_NE(foo02_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo02_node).StrictConnectTo(0, {{"Foo11"}, {"DFoo22"}}), "success");
+    ASSERT_EQ(gert::NodeTopoChecker(foo02_node).StrictConnectTo(1, {{"DFoo22"}}), "success");
+    auto foo11_node = compute_graph->FindNode("foo11");
+    ASSERT_NE(foo11_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo11_node).StrictConnectFrom({{"Foo02"}}), "success");
+    ASSERT_EQ(gert::NodeTopoChecker(foo11_node).StrictConnectTo(0, {{"DFoo22"}}), "success");
+    auto foo22_node = compute_graph->FindNode("foo22");
+    ASSERT_NE(foo22_node, nullptr);
+    ASSERT_EQ(gert::NodeTopoChecker(foo22_node).StrictConnectFrom({{"Foo11"}, {"Foo02"}, {"Foo02"}}), "success");
+  }
 };
 
 TEST_F(UtestOperater, GetInputConstData) {
@@ -132,21 +214,21 @@ TEST_F(UtestOperater, TestOperatorSetInputs) {
   ASSERT_EQ(src_op.GetInputsSize(), 2U);
   ASSERT_EQ(dst_op.GetInputsSize(), 2U);
   // src_index is illegal
-  (void)dst_op.SetInput(0U, src_op, 3U);
+  (void) dst_op.SetInput(0U, src_op, 3U);
   ASSERT_EQ(src_op.GetInputsSize(), 2U);
   // dst_index is illegal
-  (void)dst_op.SetInput(3U, src_op, 0U);
+  (void) dst_op.SetInput(3U, src_op, 0U);
   ASSERT_EQ(src_op.GetInputsSize(), 2U);
 
-  (void)dst_op.SetInput(1U, src_op, 0U);
+  (void) dst_op.SetInput(1U, src_op, 0U);
   ASSERT_EQ(src_op.GetInputsSize(), 2U);
 
   ge::Operator null_op;
-  (void)null_op.SetInput(1U, src_op, 0U);
+  (void) null_op.SetInput(1U, src_op, 0U);
   ASSERT_EQ(null_op.GetInputsSize(), 0U);
 
   std::string dst_name = "x1";
-  (void)dst_op.SetInput(dst_name, src_op, 0U);
+  (void) dst_op.SetInput(dst_name, src_op, 0U);
   ASSERT_EQ(dst_op.GetInputsSize(), 2U);
 }
 
@@ -353,80 +435,22 @@ TEST_F(UtestOperater, AttrRegister_ListAscendString) {
 TEST_F(UtestOperater, AttrRegister_ListString) {
   auto op = Operator("Data");
   std::string attr = "attr";
-  std::vector<std::string> value ;
+  std::vector<std::string> value;
   op.AttrRegister(attr, value);
   std::vector<std::string> ret;
   op.GetAttr(attr, ret);
   ASSERT_EQ(ret.size(), 0);
 }
 
-TEST_F(UtestOperater, InputRegister) {
+TEST_F(UtestOperater, RequiredAttrRegister_Success) {
   auto op = Operator("Data");
-  std::string name = "data";
-  op.InputRegister(name.c_str());
-  op.InputRegister(nullptr);
-}
-
-TEST_F(UtestOperater, OptionalInputRegister) {
-  auto op = Operator("Data");
-  std::string name = "data";
-  op.OptionalInputRegister(name.c_str());
-  op.OptionalInputRegister(nullptr);
-}
-
-TEST_F(UtestOperater, OutputRegister) {
-  auto op = Operator("Data");
-  std::string name = "data";
-  op.OutputRegister(name.c_str());
-  op.OutputRegister(nullptr);
-}
-
-TEST_F(UtestOperater, DynamicInputRegister) {
-  auto op = Operator("Data");
-  std::string name = "data";
-  op.DynamicInputRegister(name.c_str(), 1);
-  op.DynamicInputRegister(nullptr, 1);
-}
-
-TEST_F(UtestOperater, DynamicInputRegisterByIndex) {
-  auto op = Operator("Data");
-  std::string name = "data";
-  op.DynamicInputRegisterByIndex(name.c_str(), 1, 0);
-  op.DynamicInputRegisterByIndex(nullptr, 1, 0);
-}
-
-TEST_F(UtestOperater, DynamicOutputRegister) {
-  auto op = Operator("Data");
-  std::string name = "data";
-  op.DynamicOutputRegister(name.c_str(), 1);
-  op.DynamicOutputRegister(nullptr, 1);
-}
-
-TEST_F(UtestOperater, RequiredAttrRegister) {
-  auto op = Operator("Data");
-  std::string name = "data";
-  op.RequiredAttrRegister(name.c_str());
+  op.RequiredAttrRegister("x");
   op.RequiredAttrRegister(nullptr);
-}
+  op.RequiredAttrRegister(std::string("y"));
 
-TEST_F(UtestOperater, SetInput_WithoutName) {
-  auto op = Operator("Add");
-  std::string dst_name = "data";
-  uint32_t dst_index = 1;
-  auto dst_op = Operator("Data");
-  op.SetInput(dst_name.c_str(), dst_index, dst_op);
-  op.SetInput(nullptr, dst_index, dst_op);
-}
-
-TEST_F(UtestOperater, SetInput_WithName) {
-  std::string name = "add";
-  auto op = Operator("Add");
-  std::string dst_name = "data";
-  uint32_t dst_index = 1;
-  auto dst_op = Operator("Data");
-  op.SetInput(dst_name.c_str(), dst_index, dst_op, name.c_str());
-  op.SetInput(nullptr, dst_index, dst_op, name.c_str());
-  op.SetInput(dst_name.c_str(), dst_index, dst_op, nullptr);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetIrAttrNames(), std::vector<std::string>({"x", "y"}));
 }
 
 TEST_F(UtestOperater, SubgraphRegister) {
@@ -449,7 +473,7 @@ TEST_F(UtestOperater, SetSubgraphBuilder) {
   std::string name = "add";
   auto op = Operator("Add");
   uint32_t index = 1;
-  SubgraphBuilder builder = []() {return Graph();};
+  SubgraphBuilder builder = []() { return Graph(); };
   op.SetSubgraphBuilder(name.c_str(), index, builder);
   op.SetSubgraphBuilder(nullptr, index, builder);
 
@@ -577,7 +601,8 @@ TEST_F(UtestOperater, TryGetInputDesc) {
   auto ret = op.TryGetInputDesc("input_name_1", td);
   EXPECT_EQ(ret, GRAPH_FAILED);
 
-  std:string str = "input_name_2";
+std:
+  string str = "input_name_2";
   ret = op.TryGetInputDesc(str, td);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
@@ -588,7 +613,8 @@ TEST_F(UtestOperater, UpdateInputDesc) {
   op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
 
   TensorDesc td;
-  std:string str = "input_name";
+std:
+  string str = "input_name";
   auto ret = op.UpdateInputDesc(str, td);
   EXPECT_EQ(ret, GRAPH_FAILED);
 
@@ -601,7 +627,8 @@ TEST_F(UtestOperater, GetOutputDesc) {
   OpDescPtr op_desc_1;
   op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
 
-  std:string str = "output_name";
+std:
+  string str = "output_name";
   TensorDesc td = op.GetOutputDesc(str);
   EXPECT_EQ(td.GetName().length(), 0);
 }
@@ -612,7 +639,8 @@ TEST_F(UtestOperater, UpdateOutputDesc) {
   op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
 
   TensorDesc td;
-  std:string str = "output_name";
+std:
+  string str = "output_name";
   auto ret = op.UpdateOutputDesc(str, td);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
@@ -622,7 +650,8 @@ TEST_F(UtestOperater, GetDynamicInputDesc) {
   OpDescPtr op_desc_1;
   op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
 
-  std:string str = "input_name";
+std:
+  string str = "input_name";
   TensorDesc td_1 = op.GetDynamicInputDesc(str, 0);
   TensorDesc td_2 = op.GetDynamicInputDesc("input_name", 0);
   EXPECT_EQ(td_1.GetName().length(), 0);
@@ -635,7 +664,8 @@ TEST_F(UtestOperater, UpdateDynamicInputDesc) {
   op = OpDescUtils::CreateOperatorFromOpDesc(op_desc_1);
 
   TensorDesc td_1;
-  std:string str = "input_name";
+std:
+  string str = "input_name";
   auto ret = op.UpdateDynamicInputDesc(str, 0, td_1);
   EXPECT_EQ(ret, GRAPH_FAILED);
   ret = op.UpdateDynamicInputDesc("input_name", 0, td_1);
@@ -1419,7 +1449,7 @@ TEST_F(UtestOperater, SetAttr_vector_Tensor) {
   std::string name = "data name";
   op2 = op1.SetAttr(name, attr_value);
 
-  std::vector<Tensor>  value2;
+  std::vector<Tensor> value2;
   op2.GetAttr(name, value2);
 
   EXPECT_EQ(value2.size(), attr_value.size());
@@ -1437,7 +1467,7 @@ TEST_F(UtestOperater, SetAttr_vector_Tensor2) {
   char_t *name = "data name";
   op2 = op1.SetAttr(name, attr_value);
 
-  std::vector<Tensor>  value2;
+  std::vector<Tensor> value2;
   op2.GetAttr(nullptr, value2);
   op2.GetAttr(name, value2);
 
@@ -1456,7 +1486,7 @@ TEST_F(UtestOperater, SetAttr_OpBytes) {
   char_t *name = "data name";
   op2 = op1.SetAttr(name, attr_value);
 
-  OpBytes  value2;
+  OpBytes value2;
   op2.GetAttr(nullptr, value2);
   op2.GetAttr(name, value2);
 
@@ -1473,7 +1503,7 @@ TEST_F(UtestOperater, SetAttr_OpBytes2) {
   std::string name = "data name";
   op2 = op1.SetAttr(name, attr_value);
 
-  OpBytes  value2;
+  OpBytes value2;
   op2.GetAttr(name, value2);
   EXPECT_EQ(value2.size(), attr_value.size());
 }
@@ -1650,15 +1680,13 @@ TEST_F(UtestOperater, CopyOperators3) {
   ComputeGraphPtr dst_compute_graph = builder2.GetGraph();
   Graph dst_graph = GraphUtils::CreateGraphFromComputeGraph(dst_compute_graph);
 
-  std::map<std::string, ge::Operator> src_op_list =
-    {{string("op1"), op1}, {string("op2"), op2}, {string("op3"), op3}};
+  std::map<std::string, ge::Operator> src_op_list = {{string("op1"), op1}, {string("op2"), op2}, {string("op3"), op3}};
   std::map<std::string, ge::Operator> dst_op_list;
 
   std::map<ConstNodePtr, NodePtr> node_old_2_new;
   std::map<ConstOpDescPtr, OpDescPtr> op_desc_old_2_new;
 
-  auto ret = OpDescUtils::CopyOperators(dst_compute_graph, node_old_2_new,
-                                        op_desc_old_2_new, src_op_list, dst_op_list);
+  auto ret = OpDescUtils::CopyOperators(dst_compute_graph, node_old_2_new, op_desc_old_2_new, src_op_list, dst_op_list);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
@@ -1698,7 +1726,7 @@ TEST_F(UtestOperater, TestCallbackToGetConstInputWithRuntimeInferenceContext) {
   GraphUtils::AddEdge(data->GetOutDataAnchor(0), transdata->GetInDataAnchor(0));
   GraphUtils::AddEdge(data2->GetOutDataAnchor(0), transdata->GetInDataAnchor(1));
   Operator op1 = OpDescUtils::CreateOperatorFromNode(transdata);
-  
+
   OpDescUtils::SetCallbackGetConstInputFuncToOperator(op1, func_get_input_const);
 
   int output_id = 0;
@@ -1707,10 +1735,324 @@ TEST_F(UtestOperater, TestCallbackToGetConstInputWithRuntimeInferenceContext) {
   Tensor test_tensor;
   std::string input_name = "Data";
   EXPECT_EQ(op1.GetInputConstData(input_name.c_str(), test_tensor), GRAPH_SUCCESS);
-  EXPECT_EQ(test_tensor.GetSize(), value.size()); // 3 item in tensor
+  EXPECT_EQ(test_tensor.GetSize(), value.size());  // 3 item in tensor
   auto const_data = reinterpret_cast<const uint8_t *>(test_tensor.GetData());
   for (size_t i = 0; i < 3; ++i) {
     EXPECT_EQ(const_data[i], value[i]);
   }
+}
+/*
+ * Foo11
+ *   |
+ * Foo01
+ */
+TEST_F(UtestOperater, SetInput_Success_SingleIOByStrName) {
+  auto foo01 = op::Foo01("foo01");
+  auto foo11 = op::Foo11("foo11");
+  foo11.SetInput(std::string("x"), foo01);
+  Graph graph("graph");
+  graph.SetInputs({foo01});
+  CheckTopoGraph1(graph);
+}
+/*
+ * Foo11
+ *   |
+ * Foo01
+ */
+TEST_F(UtestOperater, SetInput_Success_SingleIOByCharName) {
+  auto foo01 = op::Foo01("foo01");
+  auto foo11 = op::Foo11("foo11");
+  foo11.SetInput("x", foo01);
+  Graph graph("graph");
+  graph.SetInputs({foo01});
+  CheckTopoGraph1(graph);
+}
+
+TEST_F(UtestOperater, SetInput_Failed_NullName) {
+  auto foo01 = op::Foo01("foo01");
+  auto foo11 = op::Foo11("foo11");
+  foo11.SetInput(nullptr, foo01);
+  Graph graph("graph");
+  graph.SetInputs({foo01});
+  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  ASSERT_NE(compute_graph, nullptr);
+  ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 1}}), "success");
+}
+
+TEST_F(UtestOperater, GetOutput_Failed_NullName) {
+  auto foo01 = op::Foo01("foo01");
+  auto foo11 = op::Foo11("foo11");
+  foo11.SetInput("", foo01.GetOutput(nullptr));
+  Graph graph("graph");
+  graph.SetInputs({foo01});
+  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  ASSERT_NE(compute_graph, nullptr);
+  ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 1}}), "success");
+}
+/*
+ *     Foo22
+ *     /  |
+ * Foo11  |
+ *     \  |
+ *     Foo02
+ */
+TEST_F(UtestOperater, SetInput_Success_TwoByStrName) {
+  auto foo02 = op::Foo02("foo02");
+  auto foo11 = op::Foo11("foo11").SetInput(std::string("x"), foo02, std::string("x"));
+  auto foo22 = op::Foo22("foo22")
+                   .SetInput(std::string("m"), foo11, std::string("y"))
+                   .SetInput(std::string("n"), foo02, std::string("y"));
+
+  Graph graph("graph");
+  graph.SetInputs({foo02});
+
+  CheckTopoGraph2(graph);
+}
+
+TEST_F(UtestOperater, SetInput_Success_TwoByCharName) {
+  auto foo02 = op::Foo02("foo02");
+  auto foo11 = op::Foo11("foo11").SetInput("x", foo02, "x");
+  auto foo22 = op::Foo22("foo22").SetInput("m", foo11, "y").SetInput("n", foo02, "y");
+
+  Graph graph("graph");
+  graph.SetInputs({foo02});
+
+  CheckTopoGraph2(graph);
+}
+
+TEST_F(UtestOperater, SetInput_Success_TwoByIndex) {
+  auto foo02 = op::Foo02("foo02");
+  auto foo11 = op::Foo11("foo11").SetInput("x", foo02, 0U);
+  auto foo22 = op::Foo22("foo22").SetInput("m", foo11, 0U).SetInput("n", foo02, 1U);
+
+  Graph graph("graph");
+  graph.SetInputs({foo02});
+
+  CheckTopoGraph2(graph);
+}
+
+TEST_F(UtestOperater, SetInput_Success_TwoByStrNameIndexedHandler) {
+  auto foo02 = op::Foo02("foo02");
+  auto foo11 = op::Foo11("foo11").SetInput(std::string("x"), foo02.GetOutput(std::string("x")));
+  auto foo22 = op::Foo22("foo22")
+                   .SetInput(std::string("m"), foo11.GetOutput(std::string("y")))
+                   .SetInput(std::string("n"), foo02.GetOutput(std::string("y")));
+
+  Graph graph("graph");
+  graph.SetInputs({foo02});
+
+  CheckTopoGraph2(graph);
+}
+
+TEST_F(UtestOperater, SetInput_Success_TwoByCharNameIndexedHandler) {
+  auto foo02 = op::Foo02("foo02");
+  auto foo11 = op::Foo11("foo11").SetInput("x", foo02.GetOutput("x"));
+  auto foo22 = op::Foo22("foo22").SetInput("m", foo11.GetOutput("y")).SetInput("n", foo02.GetOutput("y"));
+
+  Graph graph("graph");
+  graph.SetInputs({foo02});
+
+  CheckTopoGraph2(graph);
+}
+
+/*
+ *       Foo22
+ *     /  |d0 \d1
+ * Foo11  |   |
+ *     \0 |0 /1
+ *      Foo02
+ */
+TEST_F(UtestOperater, SetDynamicInput_Success_TwoByStrName) {
+  auto foo02 = op::Foo02("foo02");
+  auto foo11 = op::Foo11("foo11").SetInput(std::string("x"), foo02, std::string("x"));
+  auto foo22 = op::DFoo22("foo22")
+                   .create_dynamic_input_n(2)
+                   .SetInput(std::string("m"), foo11, std::string("y"))
+                   .SetInput(std::string("n"), 0, foo02, std::string("x"))
+                   .SetInput(std::string("n"), 1, foo02, std::string("y"));
+
+  Graph graph("graph");
+  graph.SetInputs({foo02});
+
+  CheckTopoGraph3(graph);
+}
+TEST_F(UtestOperater, SetDynamicInput_Success_TwoByCharName) {
+  auto foo02 = op::Foo02("foo02");
+  auto foo11 = op::Foo11("foo11").SetInput("x", foo02, "x");
+  auto foo22 = op::DFoo22("foo22")
+                   .create_dynamic_input_n(2)
+                   .SetInput("m", foo11, "y")
+                   .SetInput("n", 0, foo02, "x")
+                   .SetInput("n", 1, foo02, "y");
+
+  Graph graph("graph");
+  graph.SetInputs({foo02});
+
+  CheckTopoGraph3(graph);
+}
+/*
+ *       DFoo22
+ *    /    |     \
+ * Foo11  Foo11  Foo11
+ */
+TEST_F(UtestOperater, SetDynamicInput_Success_SingleOutput) {
+  auto foo01_0 = op::Foo01("foo01_0");
+  auto foo01_1 = op::Foo01("foo01_1");
+  auto foo01_2 = op::Foo01("foo01_2");
+  auto foo22 = op::DFoo22("foo22")
+                   .create_dynamic_input_n(2)
+                   .SetInput("m", foo01_0)
+                   .SetInput(std::string("n"), 0, foo01_1)
+                   .SetInput("n", 1, foo01_2);
+
+  Graph graph("graph");
+  graph.SetInputs({foo01_0, foo01_1, foo01_2});
+
+  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  ASSERT_NE(compute_graph, nullptr);
+  ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 3}, {"DFoo22", 1}}), "success");
+  auto foo22_node = compute_graph->FindNode("foo22");
+  ASSERT_NE(foo22_node, nullptr);
+  ASSERT_EQ(gert::NodeTopoChecker(foo22_node).StrictConnectFrom({{"Foo01"}, {"Foo01"}, {"Foo01"}}), "success");
+}
+TEST_F(UtestOperater, InputRegister_Success_ByString) {
+  Operator op("Op", "Op");
+  op.InputRegister(std::string("x"));
+  op.InputRegister(std::string("y"));
+  op.OptionalInputRegister(std::string("o"));
+  op.DynamicInputRegister(std::string("d"), 0, true);
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  std::vector<std::pair<std::string, IrInputType>> expected{{"x", kIrInputRequired},
+                                                            {"y", kIrInputRequired},
+                                                            {"o", kIrInputOptional},
+                                                            {"d", kIrInputDynamic}};
+  ASSERT_EQ(op_desc->GetIrInputs(), expected);
+}
+TEST_F(UtestOperater, InputRegister_Success_ByChar) {
+  Operator op("Op", "Op");
+  op.InputRegister("x");
+  op.InputRegister("y");
+  op.OptionalInputRegister("o");
+  op.DynamicInputRegister("d", 0, true);
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  std::vector<std::pair<std::string, IrInputType>> expected{{"x", kIrInputRequired},
+                                                            {"y", kIrInputRequired},
+                                                            {"o", kIrInputOptional},
+                                                            {"d", kIrInputDynamic}};
+  ASSERT_EQ(op_desc->GetIrInputs(), expected);
+}
+TEST_F(UtestOperater, InputRegister_Failed_NullptrChar) {
+  Operator op("Op", "Op");
+  op.InputRegister(nullptr);
+  op.InputRegister(nullptr);
+  op.OptionalInputRegister(nullptr);
+  op.DynamicInputRegister(nullptr, 0, true);
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_TRUE(op_desc->GetIrInputs().empty());
+}
+TEST_F(UtestOperater, OutputRegister_Success) {
+  Operator op("Op", "Op");
+  op.OutputRegister(std::string("x"));
+  op.OutputRegister("y");
+  op.OutputRegister(std::string("m"));
+  op.OutputRegister("n");
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllOutputsDescSize(), 4);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("x"), 0);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("y"), 1);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("m"), 2);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("n"), 3);
+}
+TEST_F(UtestOperater, DynamicInputRegister_Success_InsertCharDynamicInput) {
+  Operator op("Op", "Op");
+  op.InputRegister("x");
+  op.InputRegister("y");
+  op.InputRegister("z");
+  op.DynamicInputRegisterByIndex("d", 2, 1);
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsDesc().size(), 5);
+  EXPECT_EQ(op_desc->GetInputIndexByName("x"), 0);
+  EXPECT_EQ(op_desc->GetInputIndexByName("d0"), 1);
+  EXPECT_EQ(op_desc->GetInputIndexByName("d1"), 2);
+  EXPECT_EQ(op_desc->GetInputIndexByName("y"), 3);
+  EXPECT_EQ(op_desc->GetInputIndexByName("z"), 4);
+}
+TEST_F(UtestOperater, DynamicInputRegister_Failed_Nullptr) {
+  Operator op("Op", "Op");
+  op.InputRegister("x");
+  op.InputRegister("y");
+  op.InputRegister("z");
+  op.DynamicInputRegisterByIndex(nullptr, 2, 1);
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsDesc().size(), 3);
+  EXPECT_EQ(op_desc->GetInputIndexByName("x"), 0);
+  EXPECT_EQ(op_desc->GetInputIndexByName("y"), 1);
+  EXPECT_EQ(op_desc->GetInputIndexByName("z"), 2);
+}
+TEST_F(UtestOperater, DynamicInputRegister_Success_InsertStrDynamicInput) {
+  Operator op("Op", "Op");
+  op.InputRegister(std::string("x"));
+  op.InputRegister(std::string("y"));
+  op.InputRegister(std::string("z"));
+  op.DynamicInputRegisterByIndex(std::string("d"), 2, 1);
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsDesc().size(), 5);
+  EXPECT_EQ(op_desc->GetInputIndexByName("x"), 0);
+  EXPECT_EQ(op_desc->GetInputIndexByName("d0"), 1);
+  EXPECT_EQ(op_desc->GetInputIndexByName("d1"), 2);
+  EXPECT_EQ(op_desc->GetInputIndexByName("y"), 3);
+  EXPECT_EQ(op_desc->GetInputIndexByName("z"), 4);
+}
+TEST_F(UtestOperater, GetDynamicInputNum_Success) {
+  Operator op("Op", "Op");
+  op.DynamicInputRegister("x", 5);
+  op.DynamicInputRegister("y", 4);
+  EXPECT_EQ(op.GetDynamicInputNum("x"), 5);
+  EXPECT_EQ(op.GetDynamicInputNum("y"), 4);
+  EXPECT_EQ(op.GetDynamicInputNum("z"), 0);
+  EXPECT_EQ(op.GetDynamicInputNum(std::string("x")), 5);
+  EXPECT_EQ(op.GetDynamicInputNum(std::string("y")), 4);
+  EXPECT_EQ(op.GetDynamicInputNum(std::string("z")), 0);
+  EXPECT_EQ(op.GetDynamicInputNum(nullptr), 0);
+}
+TEST_F(UtestOperater, DynamicOutputRegister_Success) {
+  Operator op("Op", "Op");
+  op.DynamicOutputRegister(std::string("x"), 2, true);
+  op.DynamicOutputRegister("y", 3, true);
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllOutputsDescSize(), 5);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("x0"), 0);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("x1"), 1);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("y0"), 2);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("y1"), 3);
+  EXPECT_EQ(op_desc->GetOutputIndexByName("y2"), 4);
+}
+TEST_F(UtestOperater, GetDynamicOutputNum_Success) {
+  Operator op("Op", "Op");
+  op.DynamicOutputRegister("x", 5);
+  op.DynamicOutputRegister("y", 4);
+  EXPECT_EQ(op.GetDynamicOutputNum("x"), 5);
+  EXPECT_EQ(op.GetDynamicOutputNum("y"), 4);
+  EXPECT_EQ(op.GetDynamicOutputNum("z"), 0);
+  EXPECT_EQ(op.GetDynamicOutputNum(std::string("x")), 5);
+  EXPECT_EQ(op.GetDynamicOutputNum(std::string("y")), 4);
+  EXPECT_EQ(op.GetDynamicOutputNum(std::string("z")), 0);
+  EXPECT_EQ(op.GetDynamicOutputNum(nullptr), 0);
 }
 }  // namespace ge

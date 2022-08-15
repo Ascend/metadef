@@ -115,3 +115,5 @@ target_link_libraries(ut_graph PUBLIC
     graph error_manager
     gtest gtest_main ascend_protobuf slog_stub c_sec -lrt -ldl
 )
+
+target_include_directories(ut_graph PRIVATE ${METADEF_DIR}/tests/depends)
