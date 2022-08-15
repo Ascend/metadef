@@ -21,7 +21,7 @@
 
 #include "graph/ref_relation.h"
 #include "graph/compute_graph.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_attr_define.h"

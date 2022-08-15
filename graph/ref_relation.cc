@@ -20,7 +20,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
 #include "debug/ge_util.h"

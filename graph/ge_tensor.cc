@@ -28,7 +28,7 @@
 #include "graph/detail/model_serialize_imp.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/utils/ge_ir_utils.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/math_util.h"
 

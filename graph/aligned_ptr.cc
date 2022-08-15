@@ -15,7 +15,7 @@
  */
 
 #include "graph/aligned_ptr.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_util.h"
 #include "graph/def_types.h"

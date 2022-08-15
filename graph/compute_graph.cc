@@ -35,7 +35,7 @@
 #include "graph/utils/op_desc_utils.h"
 #include "framework/common/string_util.h"
 #include "graph/utils/tensor_utils.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 
 namespace ge {
 namespace {

@@ -15,7 +15,7 @@
  */
 
 #include <gtest/gtest.h>
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 #include <memory>
 #include <stdio.h>
 #include <malloc.h>

@@ -33,7 +33,7 @@
 #include "proto/ge_ir.pb.h"
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
-#include "utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 
 namespace ge {
 bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const {

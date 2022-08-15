@@ -19,7 +19,7 @@
 #include <algorithm>
 
 #include "debug/ge_log.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 
 namespace ge {
 std::shared_ptr<std::map<std::string, OpCreator>> OperatorFactoryImpl::operator_creators_;

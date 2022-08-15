@@ -16,7 +16,7 @@
 
 #include "external/graph/ascend_string.h"
 #include "debug/ge_log.h"
-#include "graph/utils/mem_utils.h"
+#include "common/util/mem_utils.h"
 
 namespace ge {
 AscendString::AscendString(const char_t* const name) {
