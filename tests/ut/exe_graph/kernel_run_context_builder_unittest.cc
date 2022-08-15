@@ -45,6 +45,22 @@ TEST_F(KernelRunContextBuilderUT, SetInputsOutputsOk) {
   EXPECT_TRUE(context->GetOutputPointer<StorageShape>(0) == &shape3);
 }
 
+TEST_F(KernelRunContextBuilderUT, SetInputsOutputsDataTypeOk) {
+ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "test1");
+KernelRunContextBuilder builder;
+
+ge::DataType in_datatype_1 = ge::DT_INT4;
+ge::DataType in_datatype_2 = ge::DT_INT8;
+ge::DataType out_datatype = ge::DT_INT8;
+auto holder = builder.Inputs({{reinterpret_cast<void *>(in_datatype_1), nullptr}, {reinterpret_cast<void *>(in_datatype_2), nullptr}}).Outputs({reinterpret_cast<void *>(out_datatype)}).Build(op_desc);
+auto context = holder.context_;
+EXPECT_EQ(context->GetInputNum(), 2);
+EXPECT_EQ(context->GetOutputNum(), 1);
+EXPECT_TRUE(*context->GetInputPointer<ge::DataType>(0) == in_datatype_1);
+EXPECT_TRUE(*context->GetInputPointer<ge::DataType>(1) == in_datatype_2);
+EXPECT_TRUE(*context->GetOutputPointer<ge::DataType>(0) == out_datatype);
+}
+
 TEST_F(KernelRunContextBuilderUT, BuildContextHolderFailedWhenCreateComputeNodeInfo) {
   ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "test1");
   op_desc->AppendIrAttrName("attr1");

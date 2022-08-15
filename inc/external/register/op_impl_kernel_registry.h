@@ -22,15 +22,18 @@
 #include "kernel_registry.h"
 #include "exe_graph/runtime/infer_shape_context.h"
 #include "exe_graph/runtime/tiling_context.h"
+#include "exe_graph/runtime/infer_datatype_context.h"
 #include "graph/any_value.h"
 
 namespace gert {
 struct OpImplKernelRegistry {
   typedef UINT32 (*InferShapeKernelFunc)(InferShapeContext *);
   typedef UINT32 (*TilingKernelFunc)(TilingContext *);
+  typedef UINT32 (*InferDataTypeKernelFunc)(InferDataTypeContext *);
   using OpType = std::string;
   using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
   using PrivateAttrSet = std::unordered_set<std::string>;
+
   struct OpImplFunctions {
     bool IsInputDataDependency(int32_t index) const {
       if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {
@@ -47,6 +50,7 @@ struct OpImplKernelRegistry {
     }
 
     InferShapeKernelFunc infer_shape;
+    InferDataTypeKernelFunc infer_datatype;
     TilingKernelFunc tiling;
     KernelRegistry::KernelFunc tiling_parse;
     void *(*compile_info_creator)();

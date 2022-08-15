@@ -28,6 +28,10 @@ OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKerne
   functions_.infer_shape = infer_shape_func;
   return *this;
 }
+OpImplRegister &OpImplRegister::InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func) {
+  functions_.infer_datatype = infer_datatype_func;
+  return *this;
+}
 OpImplRegister &OpImplRegister::Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func,
                                        size_t max_tiling_data_size) {
   functions_.tiling = tiling_func;
@@ -44,6 +48,7 @@ OpImplRegister &OpImplRegister::InputsDataDependency(std::initializer_list<int32
   }
   return *this;
 }
+
 OpImplRegister &OpImplRegister::PrivateAttrImpl(const char *private_attr, ge::AnyValue private_attr_av) {
   if (private_attr == nullptr) {
     GELOGE(ge::FAILED, "Failed to set private attr name using nullptr!");
