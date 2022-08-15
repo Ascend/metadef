@@ -37,7 +37,7 @@ struct HcclDumpInfo {
 struct DvppInfo {
   OpDescPtr op_desc;
   std::vector<void *> io_addrs;
-  uint8_t sqe[64];
+  uint32_t sqe[16];
 };
 
 // when need to eliminate GETaskKernelHcclInfo, so not need DAVINCI_TRAIN/DAVINCI_CLOUD
