@@ -42,6 +42,21 @@ namespace {
 const size_t OUTPUT_PARAM_SIZE = 2UL;
 bool IsUseBFS() {
   std::string run_mode;
+  std::string topo_sorting_mode_str;
+  if ((ge::GetContext().GetOption(ge::OPTION_TOPO_SORTING_MODE, topo_sorting_mode_str) == GRAPH_SUCCESS) &&
+      (!topo_sorting_mode_str.empty())) {
+    const int32_t base = 10;
+    const auto topo_sorting_mode =
+        static_cast<TopoSortingMode>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
+    if (topo_sorting_mode == TopoSortingMode::BFS) {
+      return true;
+    } else if (topo_sorting_mode == TopoSortingMode::DFS) {
+      return false;
+    } else {
+      GELOGI("OPTION_TOPO_SORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",
+             topo_sorting_mode_str.c_str());
+    }
+  }
   if ((ge::GetContext().GetOption(ge::OPTION_GRAPH_RUN_MODE, run_mode) == GRAPH_SUCCESS) && (!run_mode.empty())) {
     const int32_t base = 10;
     if (static_cast<GraphRunMode>(std::strtol(run_mode.c_str(), nullptr, base)) >= TRAIN) {
