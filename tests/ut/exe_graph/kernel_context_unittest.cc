@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 #define private public
 #include "exe_graph/runtime/kernel_context.h"
-#include "faker/kernel_run_context_facker.h"
+#include "faker/kernel_run_context_faker.h"
 #undef private
 
 namespace gert {

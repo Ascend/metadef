@@ -61,7 +61,7 @@ inline std::vector<ge::AscendString> ConvertToListAscendString(std::vector<std::
 
 template<>
 inline std::vector<ge::AscendString> ConvertToListAscendString(std::vector<ge::AscendString> strs) {
-  return std::move(strs);
+  return strs;
 }
 }
 namespace ge {

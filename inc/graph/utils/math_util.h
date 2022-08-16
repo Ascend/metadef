@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <functional>
 #include <iostream>
 
 #include "framework/common/debug/log.h"
@@ -38,7 +39,7 @@ template<typename Dtype>
 Status NnSet(const int32_t n, const Dtype alpha, Dtype *const output) {
   GE_CHECK_NOTNULL(output);
 
-  if (alpha == 0) {
+  if (std::equal_to<Dtype>()(alpha, static_cast<Dtype>(0))) {
     if ((sizeof(Dtype) * static_cast<size_t>(n)) < SECUREC_MEM_MAX_LEN) {
       const errno_t err =
           memset_s(output, sizeof(Dtype) * static_cast<size_t>(n), 0, sizeof(Dtype) * static_cast<size_t>(n));

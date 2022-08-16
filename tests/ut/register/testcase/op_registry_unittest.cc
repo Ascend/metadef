@@ -32,6 +32,9 @@ ge::graphStatus TestTilingFunc1(gert::TilingContext *context) {
 ge::graphStatus TestTilingFunc2(gert::TilingContext *context) {
   return ge::GRAPH_SUCCESS;
 }
+ge::graphStatus TestInferDataTypeFunc(gert::InferDataTypeContext *context) {
+  return ge::GRAPH_SUCCESS;
+}
 }
 
 TEST_F(OpImplRegistryUT, RegisterInferShapeOk) {
@@ -272,5 +275,12 @@ TEST_F(OpImplRegistryUT, RegisterMixPrivateAttrOk) {
   EXPECT_EQ(private_attrs[2].first, string("attr3"));
   EXPECT_EQ(private_attrs[2].second.GetValue(listint_attr_val_ret), ge::GRAPH_SUCCESS);
   EXPECT_EQ(listint_attr_val_ret, listint_attr_val);
+}
+
+TEST_F(OpImplRegistryUT, RegisterInferDatatypeOk) {
+  IMPL_OP(TestConv2D).InferShape(TestInferShapeFunc1).InferDataType(TestInferDataTypeFunc);
+
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").infer_shape, TestInferShapeFunc1);
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").infer_datatype, TestInferDataTypeFunc);
 }
 }  // namespace gert_test

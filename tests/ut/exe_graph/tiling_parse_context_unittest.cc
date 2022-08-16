@@ -16,7 +16,7 @@
 #include "exe_graph/runtime/tiling_parse_context.h"
 #include <gtest/gtest.h>
 #include <vector>
-#include "faker/kernel_run_context_facker.h"
+#include "faker/kernel_run_context_faker.h"
 namespace gert {
 class TilingParseContextUT : public testing::Test {};
 struct CompiledInfo1 {

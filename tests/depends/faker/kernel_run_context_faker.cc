@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "kernel_run_context_facker.h"
+#include "kernel_run_context_faker.h"
 #include "graph/compute_graph.h"
 #include "exe_graph/lowering/bg_kernel_context_extend.h"
 #include "exe_graph/runtime/tiling_context.h"
@@ -138,6 +138,34 @@ InferShapeContextFaker &InferShapeContextFaker::OutputShapes(std::vector<void *>
 FakeKernelContextHolder InferShapeContextFaker::Build() const {
   return base_faker_.Build();
 }
+InferDataTypeContextFaker &InferDataTypeContextFaker::NodeIoNum(size_t input_num, size_t output_num) {
+  base_faker_.KernelIONum(input_num + kInputsAppendEnd, output_num);
+  base_faker_.NodeIoNum(input_num, output_num);
+  return *this;
+}
+InferDataTypeContextFaker &InferDataTypeContextFaker::InputDataTypes(std::vector<void *> input_datatypes) {
+  std::vector<void *> inputs(std::move(input_datatypes));
+  inputs_ = inputs;
+  base_faker_.Inputs(std::move(inputs));
+  return *this;
+}
+InferDataTypeContextFaker &InferDataTypeContextFaker::OutputDataTypes(std::vector<void *> output_datatypes) {
+  outputs_ = output_datatypes;
+  base_faker_.Outputs(std::move(output_datatypes));
+  return *this;
+}
+FakeKernelContextHolder InferDataTypeContextFaker::Build() const {
+  auto context_holder =  base_faker_.Build();
+  auto origin_context = context_holder.GetContext<KernelContext>();
+  for (size_t i = 0U; i < inputs_.size(); ++i) {
+    memcpy_s(origin_context->MutableInputPointer<void *>(i), sizeof(void *), inputs_[i], sizeof(ge::DataType));
+  }
+  for (size_t i = 0U; i < outputs_.size(); ++i) {
+    memcpy_s(origin_context->GetOutputPointer<void *>(i), sizeof(void *), outputs_[i], sizeof(ge::DataType));
+  }
+  return context_holder;
+}
+
 TilingContextFaker &TilingContextFaker::NodeIoNum(size_t input_num, size_t output_num) {
   base_faker_.KernelIONum(input_num + output_num + kInputsAppendEnd, gert::TilingContext::kOutputNum);
   base_faker_.NodeIoNum(input_num, output_num);
