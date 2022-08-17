@@ -204,7 +204,12 @@ class FusionPattern {
 
   bool has_error_;
 };
-
+struct CmpKey {
+  bool operator() (const std::shared_ptr<FusionPattern::OpDesc> &key1,
+      const std::shared_ptr<FusionPattern::OpDesc> &key2) const {
+      return (key1->id) < (key2->id);
+  }
+};
 }  // namespace fe
 
 #endif  // INC_REGISTER_GRAPH_OPTIMIZER_FUSION_PATTERN_H_

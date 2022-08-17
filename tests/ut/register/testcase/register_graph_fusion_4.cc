@@ -37,7 +37,11 @@
  *     NetOutput                      
  */
 namespace fe {
+#ifdef ONLY_COMPILE_OPEN_SRC
 using Mapping = std::map<const std::shared_ptr<ge::OpDesc>, std::vector<ge::NodePtr>>;
+#else
+using Mapping = std::map<const std::shared_ptr<ge::OpDesc>, std::vector<ge::NodePtr>, fe::CmpKey>;
+#endif
 using namespace ge;
 class TestSetOutputsPass1 : public GraphFusionPassBase {
  protected:

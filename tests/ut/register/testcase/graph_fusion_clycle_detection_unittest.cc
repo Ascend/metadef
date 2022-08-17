@@ -95,8 +95,11 @@ static ComputeGraphPtr BuildFusionGraph01(std::vector<ge::NodePtr> &fusion_nodes
   fusion_nodes = {a, b, c};
   return graph;
 }
-
+#ifdef ONLY_COMPILE_OPEN_SRC
 using Mapping = std::map<const std::shared_ptr<fe::FusionPattern::OpDesc>, std::vector<ge::NodePtr>>;
+#else
+using Mapping = std::map<const std::shared_ptr<fe::FusionPattern::OpDesc>, std::vector<ge::NodePtr>, fe::CmpKey>;
+#endif
 TEST_F(UtestCycleDetection, cycle_detection_01) {
   std::vector<ge::NodePtr> fusion_nodes;
   auto graph = BuildFusionGraph01(fusion_nodes);
