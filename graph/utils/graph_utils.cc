@@ -3089,6 +3089,11 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph, const Node
                           "[Replace][DataEdge] failed");
       }
     }
+    // when unfold partitonCall, if data have control edges, which will be left in final graph
+    // which cause topo sort failed.
+    auto out_control_anchor = node->GetOutControlAnchor();
+    GE_CHECK_NOTNULL(out_control_anchor);
+    out_control_anchor->UnlinkAll();
   }
 
   // transfer in control edges to all root nodes
