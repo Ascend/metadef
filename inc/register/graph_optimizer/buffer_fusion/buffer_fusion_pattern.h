@@ -56,9 +56,6 @@ struct BufferFusionOpDesc {
   bool not_pattern;
   int64_t group_id;  // record desc groupid, need one desc matched at least in
                     // the same group
-#ifdef ONLY_COMPILE_OPEN_SRC
-  ShapeTypeRule shape_type_rule;
-#endif
   std::vector<ShapeTypeRule> shape_type_rules;
   bool ignore_input_num;
   bool ignore_output_num;
