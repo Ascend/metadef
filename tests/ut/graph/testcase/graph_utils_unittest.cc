@@ -164,6 +164,69 @@ void BuildGraphForUnfold(ComputeGraphPtr &graph, ComputeGraphPtr &subgraph) {
 
   return;
 }
+/*                                   --------------             
+ *                                  |              |
+ *             data1  const1     data2  const2     |
+ *              |  \    /           \    /         |
+ *              |   add1             add2          |
+ *              |    |                 |           |
+ *              |  cast1              cast2        |
+ *              |    |                 |           |
+ *              |    |                 |           |
+ *              |     \               /            |
+ *              \      ------  mul ------------------
+ *               \              |
+ *                \             |
+ *                 \            |
+ *                  ------- netoutput
+ */
+void BuildGraphForUnfoldWithControlEdge(ComputeGraphPtr &graph, ComputeGraphPtr &subgraph) {
+  auto builder = ut::GraphBuilder("root");
+  const auto &input1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &input2 = builder.AddNode("data2", DATA, 1, 1);
+  const auto &func = builder.AddNode("func", PARTITIONEDCALL, 4, 1);
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(input1, 0, func, 0);
+  builder.AddDataEdge(input2, 0, func, 1);
+  builder.AddDataEdge(func, 0, netoutput, 0);
+
+  graph = builder.GetGraph();
+
+  auto sub_builder = ut::GraphBuilder("sub");
+  const auto &data1 = sub_builder.AddNode("data1", DATA, 1, 1);
+  const auto &const1 = sub_builder.AddNode("const1", CONSTANTOP, 0, 1);
+  const auto &add1 = sub_builder.AddNode("add1", "Add", 2, 1);
+  const auto &cast1 = sub_builder.AddNode("cast1", "Cast", 1, 1);
+  const auto &data2 = sub_builder.AddNode("data2", DATA, 1, 1);
+  const auto &const2 = sub_builder.AddNode("const2", CONSTANTOP, 0, 1);
+  const auto &add2 = sub_builder.AddNode("add2", "Add", 2, 1);
+  const auto &cast2 = sub_builder.AddNode("cast2", "Cast", 1, 1);
+  const auto &mul = sub_builder.AddNode("mul", "Mul", 2, 1);
+  const auto &netoutput0 = sub_builder.AddNode("netoutput0", NETOUTPUT, 1, 0);
+  sub_builder.AddDataEdge(data1, 0, add1, 0);
+  sub_builder.AddControlEdge(data1, netoutput0);
+  sub_builder.AddDataEdge(const1, 0, add1, 1);
+  sub_builder.AddDataEdge(add1, 0, cast1, 0);
+  sub_builder.AddDataEdge(cast1, 0, mul, 0);
+  sub_builder.AddControlEdge(data2, mul);
+  sub_builder.AddDataEdge(data2, 0, add2, 0);
+  sub_builder.AddDataEdge(const2, 0, add2, 1);
+  sub_builder.AddDataEdge(add2, 0, cast2, 0);
+  sub_builder.AddDataEdge(cast2, 0, mul, 1);
+  sub_builder.AddDataEdge(mul, 0, netoutput0, 0);
+
+  subgraph = sub_builder.GetGraph();
+  subgraph->SetGraphUnknownFlag(true);
+  AttrUtils::SetInt(data1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  AttrUtils::SetInt(data2->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 1);
+  AttrUtils::SetInt(netoutput0->GetOpDesc()->MutableInputDesc(0), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  func->GetOpDesc()->AddSubgraphName("f");
+  func->GetOpDesc()->SetSubgraphInstanceName(0, subgraph->GetName());
+  graph->AddSubGraph(subgraph);
+  subgraph->SetParentNode(func);
+  subgraph->SetParentGraph(graph);
+  return;
+}
 
 ComputeGraphPtr BuildGraphWithSubGraph() {
   auto root_builder = ut::GraphBuilder("root");
@@ -452,6 +515,29 @@ TEST_F(UtestGraphUtils, UnfoldSubgraph) {
 
   ASSERT_EQ(graph->GetAllSubgraphs().size(), 1);
   ASSERT_FALSE(graph->GetAllSubgraphs()[0]->GetGraphUnknownFlag());
+}
+
+TEST_F(UtestGraphUtils, UnfoldSubgraph_InnerDataHasOutControl) {
+  ComputeGraphPtr graph;
+  ComputeGraphPtr subgraph;
+  BuildGraphForUnfoldWithControlEdge(graph, subgraph);
+  ASSERT_NE(graph, nullptr);
+  ASSERT_NE(subgraph, nullptr);
+
+  const auto &filter = [](const ComputeGraphPtr &graph) {
+    const auto &parent_node = graph->GetParentNode();
+    if (parent_node == nullptr || parent_node->GetOpDesc() == nullptr) {
+      return false;
+    }
+    if (parent_node->GetType() == PARTITIONEDCALL) {
+      return true;
+    }
+    return false;
+  };
+  ASSERT_EQ(GraphUtils::UnfoldSubgraph(subgraph, filter), GRAPH_SUCCESS);
+  ASSERT_EQ(graph->GetAllSubgraphs().size(), 0);
+  ASSERT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+
 }
 
 TEST_F(UtestGraphUtils, UnfoldSubgraph_ForPartition) {

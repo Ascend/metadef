@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#include "graph/ge_local_context.h"
+#include "graph/ge_context.h"
 
 #define protected public
 #define private public
@@ -393,6 +395,72 @@ TEST_F(UtestComputeGraph, TopologicalSorting_success) {
   EXPECT_EQ(node2->GetOpDesc()->GetId(), 0);
 }
 
+/*
+ *          netoutput
+ *         |    \    \
+ *       node4 node5 node6
+ *       |      \
+ *     node2  node3
+ *      \    /
+ *      node1
+ */
+TEST_F(UtestComputeGraph, TopologicalSortingMode_success) {
+  std::map<std::string, std::string> options_map;
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 2);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+  const auto &node4 = builder.AddNode("node4", "node4", 1, 1);
+  const auto &node5 = builder.AddNode("node5", "node5", 1, 1);
+  const auto &node6 = builder.AddNode("node6", "node6", 0, 1);
+  const auto &netoutput = builder.AddNode("netoutput", "netoutput", 3, 1);
+
+  builder.AddDataEdge(node1, 0, node2, 0);
+  builder.AddDataEdge(node1, 1, node3, 0);
+  builder.AddDataEdge(node2, 0, node4, 0);
+  builder.AddDataEdge(node3, 0, node5, 1);
+  builder.AddDataEdge(node4, 0, netoutput, 0);
+  builder.AddDataEdge(node5, 0, netoutput, 1);
+  builder.AddDataEdge(node6, 0, netoutput, 2);
+
+  builder.AddControlEdge(node1, node2);
+  builder.AddControlEdge(node1, node3);
+  builder.AddControlEdge(node2, node4);
+  builder.AddControlEdge(node3, node5);
+  builder.AddControlEdge(node4, netoutput);
+  builder.AddControlEdge(node5, netoutput);
+  builder.AddControlEdge(node6, netoutput);
+
+  auto graph = builder.GetGraph();
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_bfs_names = {"node1", "node2", "node3", "node4", "node5", "node6", "netoutput"};
+  std::vector<std::string> expected_dfs_names = {"node1", "node3", "node5", "node2", "node4", "node6", "netoutput"};
+  std::vector<std::string> bfs_names;
+  std::vector<std::string> dfs_names;
+  options_map.emplace(ge::OPTION_TOPO_SORTING_MODE, "0");
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  const auto &graph_bfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_bfs_topo) {
+    bfs_names.push_back(node->GetName());
+  }
+
+  options_map[ge::OPTION_TOPO_SORTING_MODE] = "1";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+
+  const auto &graph_dfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_dfs_topo) {
+    dfs_names.push_back(node->GetName());
+  }
+  options_map[ge::OPTION_TOPO_SORTING_MODE] = "2";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+
+  EXPECT_EQ(bfs_names, expected_bfs_names);
+  EXPECT_EQ(dfs_names, expected_dfs_names);
+}
+
 TEST_F(UtestComputeGraph, SortNodes_success) {
   auto builder = ut::GraphBuilder("graph");
   const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
@@ -519,7 +587,7 @@ TEST_F(UtestComputeGraph, EmplaceBackToNodeList_success) {
   auto graph = builder.GetGraph();
   graph->impl_->EmplaceBackToNodeList(node1);
   auto node_list = graph->GetDirectNode();
-  EXPECT_EQ(*(node_list.end() - 1) , node1);
+  EXPECT_EQ(*(node_list.end() - 1), node1);
 }
 
 TEST_F(UtestComputeGraph, ClearNodeList_success) {

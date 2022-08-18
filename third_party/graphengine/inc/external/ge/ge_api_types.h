@@ -30,6 +30,8 @@ namespace ge {
 // Option key: graph run mode
 const char_t *const OPTION_GRAPH_RUN_MODE = "ge.graphRunMode";
 const char_t *const OPTION_DEVICE_TYPE = "ge.deviceType";
+// Option key: topo sorting mode
+const char *const OPTION_TOPO_SORTING_MODE = "ge.topoSortingMode";
 
 // Option key: ome init
 const char_t *const OPTION_EXEC_SESSION_ID = "ge.exec.sessionId";
@@ -381,6 +383,8 @@ const char_t *const FILE_CONSTANT_PATH = "ge.exec.value_bins";
 
 // Graph run mode
 enum GraphRunMode { PREDICTION = 0, TRAIN };
+// Topo sorting mode
+enum class TopoSortingMode { BFS = 0, DFS = 1 };
 
 // Input/Output tensor info
 struct InputTensorInfo {
