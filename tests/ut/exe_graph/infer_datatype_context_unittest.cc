@@ -34,22 +34,11 @@ TEST_F(InferDataTypeContextUT, GetInputDataTypeOk) {
   auto context = context_holder.GetContext<InferDataTypeContext>();
   ASSERT_NE(context, nullptr);
 
-  ASSERT_NE(context->GetInputDataType(0), nullptr);
-  EXPECT_EQ(*context->GetInputDataType(0), in_datatype1);
-
-  ASSERT_NE(context->GetInputDataType(1), nullptr);
-  EXPECT_EQ(*context->GetInputDataType(1), in_datatype2);
-
-  // EXPECT_EQ(context->GetInputDataType(2), nullptr);
+  EXPECT_EQ(context->GetInputDataType(0), in_datatype1);
+  EXPECT_EQ(context->GetInputDataType(1), in_datatype2);
 }
 
 TEST_F(InferDataTypeContextUT, GetDynamicInputDataTypeOk) {
-  gert::StorageShape in_shape1 = {{8, 3, 224, 224}, {8, 1, 224, 224, 16}};
-  gert::StorageShape in_shape2 = {{2, 2, 3, 8}, {2, 2, 3, 8}};
-  gert::StorageShape in_shape3 = {{3, 2, 3, 8}, {3, 2, 3, 8}};
-  gert::StorageShape in_shape4 = {{4, 2, 3, 8}, {4, 2, 3, 8}};
-  gert::StorageShape out_shape = {{8, 3, 224, 224}, {8, 1, 224, 224, 16}};
-
   ge::DataType in_datatype1 = ge::DT_INT8;
   ge::DataType in_datatype2 = ge::DT_INT4;
   ge::DataType in_datatype3 = ge::DT_INT8;
@@ -68,19 +57,13 @@ TEST_F(InferDataTypeContextUT, GetDynamicInputDataTypeOk) {
   auto context = context_holder.GetContext<InferDataTypeContext>();
   ASSERT_NE(context, nullptr);
 
-  ASSERT_NE(context->GetOptionalInputDataType(0), nullptr);
-  EXPECT_EQ(*context->GetOptionalInputDataType(0), in_datatype1);
+  EXPECT_EQ(context->GetOptionalInputDataType(0), in_datatype1);
+  EXPECT_EQ(context->GetDynamicInputDataType(1, 0), in_datatype2);
+  EXPECT_EQ(context->GetDynamicInputDataType(1, 1), in_datatype3);
 
-  ASSERT_NE(context->GetDynamicInputDataType(1, 0), nullptr);
-  EXPECT_EQ(*context->GetDynamicInputDataType(1, 0), in_datatype2);
+  EXPECT_EQ(context->GetOptionalInputDataType(2), ge::DataType::DT_UNDEFINED);
 
-  ASSERT_NE(context->GetDynamicInputDataType(1, 1), nullptr);
-  EXPECT_EQ(*context->GetDynamicInputDataType(1, 1), in_datatype3);
-
-  EXPECT_EQ(context->GetOptionalInputDataType(2), nullptr);
-
-  ASSERT_NE(context->GetOptionalInputDataType(3), nullptr);
-  EXPECT_EQ(*context->GetOptionalInputDataType(3), in_datatype4);
+  EXPECT_EQ(context->GetOptionalInputDataType(3), in_datatype4);
 }
 
 TEST_F(InferDataTypeContextUT, GetOutDataTypeOk) {
@@ -98,10 +81,9 @@ TEST_F(InferDataTypeContextUT, GetOutDataTypeOk) {
   auto context = context_holder.GetContext<InferDataTypeContext>();
   ASSERT_NE(context, nullptr);
 
-  ASSERT_NE(context->GetOutputDataType(0), nullptr);
-  EXPECT_EQ(*context->GetOutputDataType(0), out_datatype);
+  EXPECT_EQ(context->GetOutputDataType(0), out_datatype);
 
-  EXPECT_EQ(context->GetOutputDataType(1), nullptr);
+  EXPECT_EQ(context->GetOutputDataType(1), ge::DataType::DT_UNDEFINED);
 }
 
 TEST_F(InferDataTypeContextUT, SetOutputDataTypeOk) {
@@ -119,12 +101,8 @@ TEST_F(InferDataTypeContextUT, SetOutputDataTypeOk) {
   auto context = context_holder.GetContext<InferDataTypeContext>();
   ASSERT_NE(context, nullptr);
 
-  ASSERT_NE(context->GetOutputDataType(0), nullptr);
-  EXPECT_EQ(*context->GetOutputDataType(0), origin_out_datatype);
-  auto output_datatype = context->GetOutputDataType(0);
-  *output_datatype = ge::DT_INT32;
-
-  ASSERT_NE(context->GetOutputDataType(0), nullptr);
-  EXPECT_EQ(*context->GetOutputDataType(0), ge::DT_INT32);
+  EXPECT_EQ(context->GetOutputDataType(0), origin_out_datatype);
+  EXPECT_EQ(context->SetOutputDataType(0, ge::DT_INT32), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(context->GetOutputDataType(0), ge::DT_INT32);
 }
 }  // namespace gert
