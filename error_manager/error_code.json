@@ -2080,6 +2080,61 @@
       }
     },
     {
+      "errClass": "AMCT Errors",
+      "errTitle": "Invalid compression_optimize_conf Value",
+      "ErrCode": "EO0001",
+      "ErrMessage": "The compression configuration value is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "Invalid compression_optimize_conf Path",
+      "ErrCode": "EO0002",
+      "ErrMessage": "The compression configuration path is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "Invalid Model",
+      "ErrCode": "EO0003",
+      "ErrMessage": "The model is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "Command Error",
+      "ErrCode": "EO0004",
+      "ErrMessage": "The command is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "System Terminated",
+      "ErrCode": "EO9999",
+      "ErrMessage": "An unknown error occurred. Please check the log.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "Queue Schedule Errors",
       "errTitle": "Group Attaching Failure",
       "ErrCode": "EM9001",
