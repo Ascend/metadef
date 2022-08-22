@@ -246,6 +246,28 @@ TEST_F(TensorDataUT, ReleaseFailedWhenShare) {
   EXPECT_EQ(td1.GetAddr(), reinterpret_cast<TensorAddress>(8));
 }
 
+TEST_F(TensorDataUT, ShareFromSelf) {
+  ManagerStub<8>::Clear();
+
+  auto addr1 = reinterpret_cast<void *>(0x16);
+  auto addr2 = reinterpret_cast<void *>(0x26);
+  {
+    TensorData td0(addr1, nullptr);
+    TensorData td1(addr2, ManagerStub<8>::Success);
+    EXPECT_FALSE(td0.IsSharedWith(td1));
+    td0.ShareFrom(td1);
+    EXPECT_TRUE(td0.IsSharedWith(td0));
+    EXPECT_EQ(td0.GetAddr(), td1.GetAddr());
+    EXPECT_NE(td0.GetAddr(), nullptr);
+
+    td0.ShareFrom(td0);
+    EXPECT_EQ(td0.GetAddr(), td1.GetAddr());
+    EXPECT_NE(td0.GetAddr(), nullptr);
+  }
+  EXPECT_EQ(ManagerStub<8>::operate_count[kPlusShareCount], 1);
+  EXPECT_EQ(ManagerStub<8>::operate_count[kFreeTensor], 2);
+}
+
 TEST_F(TensorDataUT, InitValue) {
   TensorData td(reinterpret_cast<TensorAddress>(10), nullptr);
   EXPECT_EQ(td.GetPlacement(), kTensorPlacementEnd);
