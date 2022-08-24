@@ -20,6 +20,7 @@
 #include <vector>
 
 namespace fe {
+const std::string MODIFY_GRAPH_IN_UB_FUSION_PASS = "ModifyGraphInUBFusionPass";
 const std::string UB_FUSION_OP_TYPE = "_ub_fusion_op_type";
 // add the op pattern
 const std::string TBE_PATTERN_INPUT_NODE = "InputData";
