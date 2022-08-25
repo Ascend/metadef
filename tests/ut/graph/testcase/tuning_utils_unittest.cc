@@ -366,7 +366,7 @@ TEST_F(UtestTuningUtils, ConvertFileToGraph) {
   const auto &root_graph = root_graph_builder.GetGraph();
   EXPECT_EQ(AttrUtils::SetBool(root_graph, ATTR_NAME_IS_ROOT_GRAPH, true), true);
   EXPECT_EQ(AttrUtils::SetStr(root_graph, ATTR_NAME_PARENT_GRAPH_NAME, root_graph->GetName()), true);
-  auto ret = GraphUtils::DumpGEGraphByPath(root_graph, "./subgraph_0.txt", 0);
+  auto ret = GraphUtils::DumpGEGraphByPath(root_graph, "./subgraph_0.txt", ge::DumpLevel::NO_DUMP);
   ASSERT_EQ(ret, 0);
 
   // build case sub graph
@@ -381,7 +381,7 @@ TEST_F(UtestTuningUtils, ConvertFileToGraph) {
   case_sub_graph->SetParentNode(case_0);
   case_sub_graph->SetParentGraph(root_graph);
   EXPECT_EQ(AttrUtils::SetStr(case_sub_graph, ATTR_NAME_PARENT_GRAPH_NAME, case_sub_graph->GetName()), true);
-  ret = GraphUtils::DumpGEGraphByPath(case_sub_graph, "./subgraph_1.txt", 0);
+  ret = GraphUtils::DumpGEGraphByPath(case_sub_graph, "./subgraph_1.txt", ge::DumpLevel::NO_DUMP);
   ASSERT_EQ(ret, 0);
 
   ComputeGraphPtr com_graph0 = std::make_shared<ComputeGraph>("TestGraph0");

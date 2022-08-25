@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,24 @@ std::string RealPath(const char_t *path) {
   return res;
 }
 
+inline int32_t CheckAndMkdir(const char_t *tmp_dir_path, mmMode_t mode) {
+  if (mmAccess2(tmp_dir_path, M_F_OK) != EN_OK) {
+    const int32_t ret = mmMkdir(tmp_dir_path, mode);  // 700
+    if (ret != 0) {
+      REPORT_CALL_ERROR("E18888",
+                        "Can not create directory %s. Make sure the directory "
+                        "exists and writable. errmsg:%s",
+                        tmp_dir_path, strerror(errno));
+      GELOGW(
+          "[Util][mkdir] Create directory %s failed, reason:%s. Make sure the "
+          "directory exists and writable.",
+          tmp_dir_path, strerror(errno));
+      return ret;
+    }
+  }
+  return 0;
+}
+
 /**
  *  @ingroup domi_common
  *  @brief Create directory, support to create multi-level directory
@@ -73,32 +91,12 @@ int32_t CreateDirectory(const std::string &directory_path) {
   for (size_t i = 0U; i < dir_path_len; i++) {
     tmp_dir_path[i] = directory_path[i];
     if ((tmp_dir_path[i] == '\\') || (tmp_dir_path[i] == '/')) {
-      if (mmAccess2(&(tmp_dir_path[0U]), M_F_OK) != EN_OK) {
-        const int32_t ret = mmMkdir(&(tmp_dir_path[0U]), mkdir_mode);  // 700
-        if (ret != 0) {
-          if (errno != EEXIST) {
-                REPORT_CALL_ERROR("E18888",
-                                  "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-                                  directory_path.c_str(), strerror(errno));
-            GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",
-                   directory_path.c_str(), strerror(errno));
-            return ret;
-          }
-        }
+      const int32_t ret = CheckAndMkdir(&(tmp_dir_path[0U]), mkdir_mode);
+      if (ret != 0) {
+        return ret;
       }
     }
   }
-  const int32_t ret = mmMkdir(static_cast<const char_t *>(directory_path.c_str()), mkdir_mode);  // 700
-  if (ret != 0) {
-    if (errno != EEXIST) {
-      REPORT_CALL_ERROR("E18888",
-                        "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-                        directory_path.c_str(), strerror(errno));
-      GELOGW("[Util][mkdir] Create directory %s failed, reason:%s. Make sure the directory exists and writable.",
-             directory_path.c_str(), strerror(errno));
-      return ret;
-    }
-  }
-  return 0;
+  return CheckAndMkdir(directory_path.c_str(), mkdir_mode);
 }
 }

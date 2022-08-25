@@ -676,11 +676,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   ge::Model model("", "");
   model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
   Buffer buffer;
-  const int64_t dump_level = (dump_ge_graph != nullptr)
-      ? std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue)
-      : ge::OnnxUtils::NO_DUMP;
+  const ge::DumpLevel dump_level = (dump_ge_graph != nullptr)
+      ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue))
+      : ge::DumpLevel::NO_DUMP;
   ge::proto::ModelDef ge_proto;
-  if (model.Save(ge_proto, (dump_level != ge::OnnxUtils::DUMP_ALL) && (!is_always_dump)) != SUCCESS) {
+  if (model.Save(ge_proto, (dump_level != ge::DumpLevel::DUMP_ALL) && (!is_always_dump)) != SUCCESS) {
     return;
   }
   GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
@@ -694,6 +694,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::string &file_path,
                               const int64_t dump_level) {
+  return DumpGEGraphByPath(graph, file_path, static_cast<ge::DumpLevel>(dump_level));
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::string &file_path,
+                              const ge::DumpLevel dump_level) {
   const auto sep = file_path.rfind(MMPA_PATH_SEPARATOR_STR);
   if (sep == std::string::npos) {
     REPORT_INPUT_ERROR("E19026", std::vector<std::string>({"pathname", "reason"}),
@@ -716,7 +722,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
 
   // SerializeModel to ModelDef
   ge::proto::ModelDef ge_proto;
-  if (model.Save(ge_proto, dump_level != ge::OnnxUtils::DUMP_ALL) != SUCCESS) {
+  if (model.Save(ge_proto, dump_level != ge::DumpLevel::DUMP_ALL) != SUCCESS) {
     return GRAPH_FAILED;
   }
   // Write file
@@ -748,7 +754,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
                    << file_index;
   stream_file_name << "_" << suffix << ".txt";
   const std::string proto_file = stream_file_name.str();
-  (void)DumpGEGraphByPath(graph, proto_file, ge::OnnxUtils::NO_DUMP);
+  (void)DumpGEGraphByPath(graph, proto_file, ge::DumpLevel::NO_DUMP);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(const char_t *const file,
@@ -911,9 +917,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
 #ifdef FMK_SUPPORT_DUMP
   char_t dump_ge_graph[MMPA_MAX_PATH] = { '\0' };
   const INT32 res = mmGetEnv(kDumpGeGraph, &(dump_ge_graph[0]), static_cast<uint32_t>(MMPA_MAX_PATH));
-  const int64_t dump_ge_graph_level =
-      (res == EN_OK) ? std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue) : OnnxUtils::NO_DUMP;
-  if ((dump_ge_graph_level == OnnxUtils::NO_DUMP) || (dump_ge_graph_level >= OnnxUtils::DUMP_LEVEL_END)) {
+  const ge::DumpLevel dump_ge_graph_level =
+      (res == EN_OK) ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue))
+                     : DumpLevel::NO_DUMP;
+  if ((dump_ge_graph_level == DumpLevel::NO_DUMP) || (dump_ge_graph_level >= DumpLevel::DUMP_LEVEL_END)) {
     GELOGD("Skip DumpGEGraphToOnnx with dump_ge_graph_level %ld.", dump_ge_graph_level);
     return;
   }

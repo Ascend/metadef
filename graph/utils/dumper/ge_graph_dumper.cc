@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,11 @@
 
 namespace ge {
 namespace {
-struct DefaultDumper : GeGraphDumper {
-  void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix) override {}
+struct DefaultDumper : public GeGraphDumper {
+  void Dump(const ge::ComputeGraphPtr &graph, const std::string &suffix) override {
+    (void)graph;
+    (void)suffix;
+  }
 };
 DefaultDumper default_dumper;
 GeGraphDumper *register_checker = &default_dumper;

@@ -46,6 +46,13 @@
   } while (false)
 
 namespace ge {
+enum class DumpLevel {
+  NO_DUMP = 0,
+  DUMP_ALL = 1,
+  DUMP_WITH_OUT_DATA = 2,
+  DUMP_WITH_OUT_DESC = 3,
+  DUMP_LEVEL_END = 4
+};
 enum class MemType {
   OUTPUT_MEM,
   WORKSPACE_MEM
@@ -326,6 +333,9 @@ class GraphUtils {
    * @param dump_level DUMP_GE_GRAPH环境变量以函数入参的表达
    * @return
    */
+  static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
+                                       const std::string &file_path,
+                                       const ge::DumpLevel dump_level);
   static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
                                        const std::string &file_path,
                                        const int64_t dump_level);
