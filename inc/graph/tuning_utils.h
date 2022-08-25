@@ -40,6 +40,7 @@ extern const std::set<std::string> ir_builder_supported_options_for_lx_fusion;
 constexpr char_t BUILD_MODE_NORMAL[] = "normal";
 constexpr char_t BUILD_MODE_TUNING[] = "tuning";
 constexpr char_t BUILD_MODE_BASELINE[] = "baseline";
+constexpr char_t BUILD_MODE_OPAT_RESULT[] = "opat_result";
 extern const std::set<std::string> build_mode_options;
 
 // Build step
