@@ -39,11 +39,7 @@
  *     NetOutput                       NetOutPut
  */
 namespace fe {
-#ifdef ONLY_COMPILE_OPEN_SRC
-using Mapping = std::map<const std::shared_ptr<ge::OpDesc>, std::vector<ge::NodePtr>>;
-#else
 using Mapping = std::map<const std::shared_ptr<ge::OpDesc>, std::vector<ge::NodePtr>, fe::CmpKey>;
-#endif
 class SwapMergeCastFusionTestPass3 : public GraphFusionPassBase {
  protected:
   vector<FusionPattern *> DefinePatterns() override;

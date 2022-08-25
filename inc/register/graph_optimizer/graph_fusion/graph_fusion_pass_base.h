@@ -55,11 +55,7 @@ using PatternFusionBasePassImplPtr = std::shared_ptr<PatternFusionBasePassImpl>;
 class GraphFusionPassBase : public GraphPass {
  public:
   using OpDesc = FusionPattern::OpDesc;
-#ifdef ONLY_COMPILE_OPEN_SRC
-  using Mapping = std::map<const std::shared_ptr<OpDesc>, std::vector<ge::NodePtr>>;
-#else
   using Mapping = std::map<const std::shared_ptr<OpDesc>, std::vector<ge::NodePtr>, CmpKey>;
-#endif
   using Mappings = std::vector<Mapping>;
 
   GraphFusionPassBase();

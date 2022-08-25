@@ -77,11 +77,7 @@ const char *kPatternRelu = "Relu";
 string pass_name_test = "CastCastFusionPass";
 
 class TestPass : public fe::PatternFusionBasePass {
-#ifdef ONLY_COMPILE_OPEN_SRC
-  using Mapping = std::map<const std::shared_ptr<OpDesc>, std::vector<ge::NodePtr>>;
-#else
   using Mapping = std::map<const std::shared_ptr<OpDesc>, std::vector<ge::NodePtr>, fe::CmpKey>;
-#endif
  protected:
 
   vector<FusionPattern *> DefinePatterns() override {
