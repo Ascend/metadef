@@ -469,6 +469,7 @@ static const char_t *const MODIFY_MIXLIST = ge::MODIFY_MIXLIST.c_str();
 static const char_t *const OP_PRECISION_MODE = ge::OP_PRECISION_MODE.c_str();
 static const char_t *const CUSTOMIZE_DTYPES = "ge.customizeDtypes";
 static const char_t *const COMPRESSION_OPTIMIZE_CONF = "ge.compressionOptimizeConf";
+static const char_t *const INPUT_DATA_NAMES = "input_data_names";
 
 // for interface: aclgrphBuildModel
 #ifdef __GNUC__
@@ -505,7 +506,7 @@ const std::set<std::string> ir_builder_suppported_options = {INPUT_FORMAT,
 // for interface: aclgrphParse
 const std::set<std::string> ir_parser_suppported_options = {
   INPUT_FP16_NODES, IS_INPUT_ADJUST_HW_LAYOUT, IS_OUTPUT_ADJUST_HW_LAYOUT, OUTPUT,
-  OUT_NODES,        ENABLE_SCOPE_FUSION_PASSES};
+  OUT_NODES,        ENABLE_SCOPE_FUSION_PASSES, INPUT_DATA_NAMES};
 
 // for interface: aclgrphBuildInitialize
 const std::set<std::string> global_options = {CORE_TYPE,
