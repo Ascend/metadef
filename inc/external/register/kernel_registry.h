@@ -16,13 +16,19 @@
 #ifndef B369E37D560547C2B8DC137404F9713E_H
 #define B369E37D560547C2B8DC137404F9713E_H
 #include <functional>
+#include <string>
+#include <memory>
 #include "graph/ge_error_codes.h"
 #include "exe_graph/runtime/base_type.h"
 #include "exe_graph/runtime/kernel_context.h"
 #include "graph/node.h"
 
 namespace gert {
-struct KernelRegistry {
+class KernelRegistry {
+ public:
+  static KernelRegistry &GetInstance();
+  static void ReplaceKernelRegistry(std::shared_ptr<KernelRegistry> registry);
+
   using CreateOutputsFunc = std::function<ge::graphStatus(const ge::Node *, KernelContext *)>;
   typedef UINT32 (*KernelFunc)(KernelContext *context);
   struct KernelFuncs {
@@ -30,9 +36,33 @@ struct KernelRegistry {
     CreateOutputsFunc outputs_creator;
     CreateOutputsFunc outputs_initializer;
   };
-  virtual ~KernelRegistry() {}
-  virtual const KernelFuncs* FindKernelFuncs(const std::string &kernel_type) const = 0;
+
+  virtual ~KernelRegistry() = default;
+  virtual const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const = 0;
+  virtual void RegisterKernel(std::string kernel_type, KernelFuncs func) {
+    (void) kernel_type;
+    (void) func;
+  };
 };
-}
+
+class KernelRegister {
+ public:
+  explicit KernelRegister(const char *kernel_type);
+  KernelRegister(const KernelRegister &other);
+
+  KernelRegister &RunFunc(KernelRegistry::KernelFunc func);
+
+  KernelRegister &OutputsCreator(KernelRegistry::CreateOutputsFunc func);
+  KernelRegister &OutputsInitializer(KernelRegistry::CreateOutputsFunc func);
+
+ private:
+  std::string kernel_type_;
+  KernelRegistry::KernelFuncs kernel_funcs_;
+};
+}  // namespace gert
+
+#define REGISTER_KERNEL_COUNTER2(type, counter) static auto g_register_kernel_##counter = gert::KernelRegister(#type)
+#define REGISTER_KERNEL_COUNTER(type, counter) REGISTER_KERNEL_COUNTER2(type, counter)
+#define REGISTER_KERNEL(type) REGISTER_KERNEL_COUNTER(type, __COUNTER__)
 
 #endif
