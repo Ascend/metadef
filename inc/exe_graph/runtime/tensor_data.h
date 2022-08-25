@@ -154,7 +154,15 @@ class TensorData {
     return ge::GRAPH_SUCCESS;
   }
 
+  bool IsSharedWith(const TensorData &other) const {
+    return (addr_ == other.addr_ && manager_ == other.manager_ && size_ == other.size_ &&
+            placement_ == other.placement_);
+  }
+
   ge::graphStatus ShareFrom(const TensorData &other) {
+    if (IsSharedWith(other)) {
+      return ge::GRAPH_SUCCESS;
+    }
     auto ret = Free();
     if (ret != ge::GRAPH_SUCCESS) {
       return ret;

@@ -312,11 +312,11 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid --singleop Argument",
       "ErrCode": "E10030",
-      "ErrMessage": "Attribute name [%s] of Op [%s] is empty in the file specified by [--singleop].",
+      "ErrMessage": "There is an invalid value for attribute name [%s] of Op [%s] in the file specified by [--singleop].",
       "Arglist": "attrname,op_name",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Check that no Op attribute value is empty in the file."
+        "Solution": "Check that no Op attribute value is invalid in the file."
       }
     },
     {
@@ -328,6 +328,17 @@
       "suggestion": {
         "Possible Cause": "As [--dynamic_batch_size] is included, ensure that at least one of the nodes specified in [--input_shape] has a batch size equaling –1.",
         "Solution": "1. In static shape scenarios, remove the [--dynamic_batch_size] option from your command line. 2. In dynamic shape scenarios, set the corresponding axis of the dynamic-shape input in [--input_shape] to –1."
+      }
+    },
+    {
+      "errClass": "GE Errors",
+      "errTitle": "Invalid Json File",
+      "ErrCode": "E10032",
+      "ErrMessage": "Parse json file [%s] failed, reason: %s. %s",
+      "Arglist": "file_name,reason,optional_info",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
       }
     },
     {
@@ -2066,6 +2077,61 @@
       "suggestion": {
         "Possible Cause": "1. The device has been bound to another container. 2. You have no permission on this device.",
         "Solution": "1. Check your configurations. 2. Check whether there are residual container processes."
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "Invalid compression_optimize_conf Value",
+      "ErrCode": "EO0001",
+      "ErrMessage": "The compression configuration value is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "Invalid compression_optimize_conf Path",
+      "ErrCode": "EO0002",
+      "ErrMessage": "The compression configuration path is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "Invalid Model",
+      "ErrCode": "EO0003",
+      "ErrMessage": "The model is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "Command Error",
+      "ErrCode": "EO0004",
+      "ErrMessage": "The command is invalid. Reason %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AMCT Errors",
+      "errTitle": "System Terminated",
+      "ErrCode": "EO9999",
+      "ErrMessage": "An unknown error occurred. Please check the log.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
       }
     },
     {
