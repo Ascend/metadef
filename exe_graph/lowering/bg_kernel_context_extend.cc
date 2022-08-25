@@ -181,9 +181,10 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
 
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());
   auto node_type = buffer_pool.AddStr(node->GetType().c_str());
-  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
-  compute_node_info->Init(ir_input_num, input_num, output_num, reinterpret_cast<const char *>(node_name),
-                          reinterpret_cast<const char *>(node_type));
+  auto compute_node_info = ge::PtrToPtr<uint8_t, ComputeNodeInfo>(compute_node_info_holder.get());
+  compute_node_info->Init(ir_input_num, input_num, output_num,
+                          ge::PtrToPtr<void, ge::char_t>(ge::ValueToPtr(node_name)),
+                          ge::PtrToPtr<void, ge::char_t>(ge::ValueToPtr(node_type)));
 
   auto ret = InitInputInstanceInfo(node, *compute_node_info);
   GE_ASSERT_SUCCESS(ret, "Init input instance info for node:%s failed.", node->GetName().c_str());
@@ -192,7 +193,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
   GE_ASSERT_SUCCESS(ret, "Init compile time tensor desc for node:%s failed.", node->GetName().c_str());
 
   auto attr = compute_node_info->MutableAttrs();
-  auto offset = reinterpret_cast<uint8_t *>(attr) - compute_node_info_holder.get();
+  auto offset = ge::PtrToPtr<RuntimeAttrs, uint8_t>(attr) - compute_node_info_holder.get();
   if (static_cast<size_t>(offset) > total_size) {
     GELOGE(
         ge::FAILED,

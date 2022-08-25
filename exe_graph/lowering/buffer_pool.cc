@@ -20,6 +20,7 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
 #include "graph/debug/ge_log.h"
+#include "graph/def_types.h"
 #include "common/checker.h"
 
 #include "exe_graph/runtime/continuous_buffer.h"
@@ -27,10 +28,10 @@
 namespace gert {
 namespace bg {
 BufferPool::BufId BufferPool::AddBuf(const uint8_t *data, size_t len) {
-  return AddBuf(std::string(reinterpret_cast<const char *>(data), len));
+  return AddBuf(std::string(ge::PtrToPtr<uint8_t, char>(data), len));
 }
 BufferPool::BufId BufferPool::AddStr(const char *data) {
-  return AddBuf(std::string(reinterpret_cast<const char *>(data), strlen(data) + 1));
+  return AddBuf(std::string(data, strlen(data) + 1));
 }
 BufferPool::BufId BufferPool::AddBuf(std::string &&str) {
   return bufs_to_id_.emplace(std::move(str), bufs_to_id_.size()).first->second;
@@ -71,7 +72,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
   auto text_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
   GE_ASSERT_NOTNULL(text_holder);
 
-  auto text = reinterpret_cast<ContinuousBuffer *>(text_holder.get());
+  auto text = ge::PtrToPtr<uint8_t, ContinuousBuffer>(text_holder.get());
   text->num_ = buf_count;
   size_t i = 0;
   for (; i < buf_count; ++i) {
