@@ -45,7 +45,8 @@ const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
 const std::set<std::string> build_mode_options = {
     BUILD_MODE_NORMAL,
     BUILD_MODE_TUNING,
-    BUILD_MODE_BASELINE
+    BUILD_MODE_BASELINE,
+    BUILD_MODE_OPAT_RESULT
 };
 
 const std::set<std::string> build_step_options = {

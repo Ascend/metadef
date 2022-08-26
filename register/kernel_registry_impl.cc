@@ -30,22 +30,37 @@ ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context) {
   (void) context;
   return ge::GRAPH_SUCCESS;
 }
+std::shared_ptr<KernelRegistry> g_user_defined_registry = nullptr;
 }  // namespace
+
+KernelRegistry &KernelRegistry::GetInstance() {
+  if (g_user_defined_registry != nullptr) {
+    return *g_user_defined_registry;
+  } else {
+    return KernelRegistryImpl::GetInstance();
+  }
+}
+void KernelRegistry::ReplaceKernelRegistry(std::shared_ptr<KernelRegistry> registry) {
+  g_user_defined_registry = std::move(registry);
+}
 
 KernelRegistryImpl &KernelRegistryImpl::GetInstance() {
   static KernelRegistryImpl registry;
   return registry;
 }
-void KernelRegistryImpl::RegisterKernel(std::string kernel_type, KernelRegistryImpl::KernelFuncs func) {
+void KernelRegistryImpl::RegisterKernel(std::string kernel_type, KernelRegistry::KernelFuncs func) {
   types_to_func_[std::move(kernel_type)] = std::move(func);
 }
 
-const KernelRegistryImpl::KernelFuncs *KernelRegistryImpl::FindKernelFuncs(const std::string &kernel_type) const {
+const KernelRegistry::KernelFuncs *KernelRegistryImpl::FindKernelFuncs(const std::string &kernel_type) const {
   auto iter = types_to_func_.find(kernel_type);
   if (iter == types_to_func_.end()) {
     return nullptr;
   }
   return &iter->second;
+}
+const std::unordered_map<std::string, KernelRegistry::KernelFuncs> &KernelRegistryImpl::GetAll() const {
+  return types_to_func_;
 }
 KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_type) {
   kernel_funcs_.outputs_creator = NullCreator;
@@ -55,11 +70,11 @@ KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
   kernel_funcs_.run_func = func;
   return *this;
 }
-KernelRegister &KernelRegister::OutputsCreator(KernelRegistryImpl::CreateOutputsFunc func) {
+KernelRegister &KernelRegister::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
   kernel_funcs_.outputs_creator = std::move(func);
   return *this;
 }
-KernelRegister &KernelRegister::OutputsInitializer(KernelRegistryImpl::CreateOutputsFunc func) {
+KernelRegister &KernelRegister::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
   kernel_funcs_.outputs_initializer = std::move(func);
   return *this;
 }
@@ -67,6 +82,6 @@ KernelRegister::KernelRegister(const KernelRegister &other) {
   if (other.kernel_type_.size() > 1 && other.kernel_type_[0] == '"') {
     GELOGW("The kernel type starts with \", that maybe a mistake");
   }
-  KernelRegistryImpl::GetInstance().RegisterKernel(other.kernel_type_, other.kernel_funcs_);
+  KernelRegistry::GetInstance().RegisterKernel(other.kernel_type_, other.kernel_funcs_);
 }
 }  // namespace gert

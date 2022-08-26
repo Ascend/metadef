@@ -43,4 +43,4 @@ class BufferPool {
 };
 }  // namespace bg
 }  // namespace gert
-#endif  //AIR_CXX_RUNTIME_V2_LOWERING_BUFFER_POOL_H_
+#endif  // AIR_CXX_RUNTIME_V2_LOWERING_BUFFER_POOL_H_

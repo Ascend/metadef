@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #include "graph/debug/ge_op_types.h"
 
 namespace {
-static uint32_t kFftsPlusSubgraphNum = 0U;
+static uint32_t g_fftsPlusSubgraphNum = 0U;
 const uint32_t kMaxiumRecursionDepth = 10U;
 }
 
@@ -193,7 +193,7 @@ graphStatus FftsGraphUtils::SplitSubgraph(const ComputeGraphPtr &subgraph,
                                           const std::vector<std::pair<bool, std::set<NodePtr>>> &split_nodes) {
   for (const auto &item : split_nodes) {
     if ((item.first) && (!item.second.empty())) {
-      const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
+      const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(g_fftsPlusSubgraphNum++);
       const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, item.second, subgraph_name);
       if (new_subgraph == nullptr) {
         REPORT_CALL_ERROR("E18888", "Build subgraph %s failed", subgraph_name.c_str());
@@ -216,7 +216,7 @@ graphStatus FftsGraphUtils::BuildFftsPlusSubgraphWithAllNodes(const ComputeGraph
   GE_CHECK_NOTNULL(subgraph);
   std::set<NodePtr> calc_nodes;
   CollectCalcNodeInSubgraph(subgraph, calc_nodes);
-  const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
+  const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(g_fftsPlusSubgraphNum++);
   const auto &new_subgraph = GraphUtils::BuildSubgraphWithNodes(subgraph, calc_nodes, subgraph_name);
   if (new_subgraph == nullptr) {
     REPORT_CALL_ERROR("E18888", "Build subgraph %s failed", subgraph_name.c_str());
@@ -566,7 +566,7 @@ graphStatus FftsGraphUtils::PartitionGraphWithLimit(const ComputeGraphPtr &graph
   }
 
   for (const auto &item : split_nodes) {
-    const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(kFftsPlusSubgraphNum++);
+    const auto &subgraph_name = "FFTS_Plus_Subgraph_" + std::to_string(g_fftsPlusSubgraphNum++);
     const auto &subgraph = GraphUtils::BuildSubgraphWithNodes(graph, item.second, subgraph_name);
     if (subgraph == nullptr) {
       REPORT_CALL_ERROR("E18888", "Build subgraph %s failed", subgraph_name.c_str());

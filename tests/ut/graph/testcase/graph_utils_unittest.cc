@@ -657,13 +657,13 @@ TEST_F(UtestGraphUtils, DumpGraphByPath) {
   auto graph = builder.GetGraph();
 
   // test dump_level 0
-  auto ret = GraphUtils::DumpGEGraphByPath(graph, "./not-exists-path/test_graph_0.txt", 0);
+  auto ret = GraphUtils::DumpGEGraphByPath(graph, "./not-exists-path/test_graph_0.txt", ge::DumpLevel::NO_DUMP);
   EXPECT_NE(ret, ge::GRAPH_SUCCESS);
-  ret = GraphUtils::DumpGEGraphByPath(graph, "/", 0);
+  ret = GraphUtils::DumpGEGraphByPath(graph, "/", ge::DumpLevel::NO_DUMP);
   ASSERT_EQ((ret != 0), true);
-  ret = GraphUtils::DumpGEGraphByPath(graph, "test_graph_0.txt", 0);
+  ret = GraphUtils::DumpGEGraphByPath(graph, "test_graph_0.txt", ge::DumpLevel::NO_DUMP);
   ASSERT_EQ((ret != 0), true);
-  ret = GraphUtils::DumpGEGraphByPath(graph, "./test_graph_0.txt", 0);
+  ret = GraphUtils::DumpGEGraphByPath(graph, "./test_graph_0.txt", ge::DumpLevel::NO_DUMP);
   ASSERT_EQ(ret, 0);
   ComputeGraphPtr com_graph0 = std::make_shared<ComputeGraph>("TestGraph0");
   bool state = GraphUtils::LoadGEGraph("./test_graph_0.txt", *com_graph0);
@@ -680,7 +680,7 @@ TEST_F(UtestGraphUtils, DumpGraphByPath) {
   }
 
   // test dump_level 1
-  ret = GraphUtils::DumpGEGraphByPath(graph, "./test_graph_1.txt", 1);
+  ret = GraphUtils::DumpGEGraphByPath(graph, "./test_graph_1.txt", ge::DumpLevel::DUMP_ALL);
   ASSERT_EQ(ret, 0);
   ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
   state = GraphUtils::LoadGEGraph("./test_graph_1.txt", *com_graph1);

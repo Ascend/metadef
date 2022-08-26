@@ -16,41 +16,23 @@
 
 #ifndef AIR_CXX_RUNTIME_V2_KERNEL_KERNEL_REGISTRY_H_
 #define AIR_CXX_RUNTIME_V2_KERNEL_KERNEL_REGISTRY_H_
-#include <functional>
 #include <unordered_map>
 #include <string>
 
 #include "kernel_registry.h"
 
 namespace gert {
-struct KernelRegistryImpl : KernelRegistry {
+class KernelRegistryImpl : public KernelRegistry {
  public:
   static KernelRegistryImpl &GetInstance();
-  void RegisterKernel(std::string kernel_type, KernelFuncs func);
+  void RegisterKernel(std::string kernel_type, KernelFuncs func) override;
   const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const override;
+
+  const std::unordered_map<std::string, KernelFuncs> &GetAll() const;
 
  private:
   std::unordered_map<std::string, KernelFuncs> types_to_func_;
 };
-
-class KernelRegister {
- public:
-  explicit KernelRegister(const char *kernel_type);
-  KernelRegister(const KernelRegister &other);
-
-  KernelRegister &RunFunc(KernelRegistry::KernelFunc func);
-
-  KernelRegister &OutputsCreator(KernelRegistryImpl::CreateOutputsFunc func);
-  KernelRegister &OutputsInitializer(KernelRegistryImpl::CreateOutputsFunc func);
-
-  private:
-  std::string kernel_type_;
-  KernelRegistryImpl::KernelFuncs kernel_funcs_;
-};
 }
-
-#define REGISTER_KERNEL_COUNTER2(type, counter) static auto g_register_kernel_##counter = gert::KernelRegister(#type)
-#define REGISTER_KERNEL_COUNTER(type, counter) REGISTER_KERNEL_COUNTER2(type, counter)
-#define REGISTER_KERNEL(type) REGISTER_KERNEL_COUNTER(type, __COUNTER__)
 
 #endif //AIR_CXX_RUNTIME_V2_KERNEL_KERNEL_REGISTRY_H_

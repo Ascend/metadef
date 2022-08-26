@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,8 +62,6 @@ bool IsEqual(const T &l_value, const T &r_value, const std::string &log_info_tag
 
 class OnnxUtils {
  public:
-  enum DumpLevel { NO_DUMP = 0, DUMP_ALL = 1, DUMP_WITH_OUT_DATA = 2, DUMP_WITH_OUT_DESC = 3, DUMP_LEVEL_END = 4 };
-
   static bool ConvertGeModelToModelProto(const ge::Model &model, ge::onnx::ModelProto &model_proto);
 
 
@@ -138,7 +136,7 @@ class OnnxUtils {
         src_out_index_(src_out_index),
         dst_node_(std::move(dst_node)),
         dst_in_index_(dst_in_index),
-        dst_node_name_(std::move(dst_name)){}
+        dst_node_name_(std::move(dst_name)) {}
 
     std::string GetSrcNodeName() const { return src_node_name_; };
     int32_t GetSrcOutIndex() const { return src_out_index_; };

@@ -46,6 +46,13 @@
   } while (false)
 
 namespace ge {
+enum class DumpLevel {
+  NO_DUMP = 0,
+  DUMP_ALL = 1,
+  DUMP_WITH_OUT_DATA = 2,
+  DUMP_WITH_OUT_DESC = 3,
+  DUMP_LEVEL_END = 4
+};
 enum class MemType {
   OUTPUT_MEM,
   WORKSPACE_MEM
@@ -328,6 +335,9 @@ class GraphUtils {
    */
   static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
                                        const std::string &file_path,
+                                       const ge::DumpLevel dump_level);
+  static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
+                                       const std::string &file_path,
                                        const int64_t dump_level);
   /**
    * 从`file`文件反序列化得到`compute_graph`的图对象
@@ -500,7 +510,6 @@ class GraphUtils {
                                    std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                    std::map<std::string, std::string> &anchor_to_symbol);
 
-  ///
   /// Determine if the graph is a UNKNOWN_SHAPE graph based on whether the graph and all subgraphs
   /// of the graph have UNKNOWN_SHAPE operators or not.
   /// Note: This function will only look 'down' from the graph, not 'up'. For example, the following
@@ -513,7 +522,6 @@ class GraphUtils {
   ///                     K     K     K
   /// @param [in] graph
   /// @return bool
-  ///
   static bool IsUnknownShapeGraph(const ComputeGraphPtr &graph);
 
   static NodePtr FindNodeFromAllNodes(ComputeGraphPtr &graph, const std::string &name);
@@ -609,72 +617,59 @@ class GraphUtils {
     std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> inner_ctrl_edges_;
     friend class GraphUtils;
   };
-  ///
   /// Get reference-mapping for in_data_anchors of node
   /// @param [in] node
   /// @param [out] symbol_to_anchors
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus HandleInAnchorMapping(const ComputeGraphPtr &graph, const NodePtr &node,
                                            std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                            std::map<std::string, std::string> &anchor_to_symbol);
 
-  ///
   /// Get reference-mapping for out_data_anchors of node
   /// @param [in] node
   /// @param [out] symbol_to_anchors
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus HandleOutAnchorMapping(const NodePtr &node,
                                             std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                             std::map<std::string, std::string> &anchor_to_symbol);
 
-  ///
   /// Handle input of subgraph
   /// @param [in] node
   /// @param [out] symbol_to_anchors
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus HandleSubgraphInput(const NodePtr &node,
                                          std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                          std::map<std::string, std::string> &anchor_to_symbol);
 
-  ///
   /// Handle input of Merge op
   /// @param [in] node
   /// @param [out] symbol_to_anchors
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus HandleMergeInput(const NodePtr &node,
                                       std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                       std::map<std::string, std::string> &anchor_to_symbol);
 
-  ///
   /// Handle output of subgraph
   /// @param [in] node
   /// @param [out] symbol_to_anchors
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus HandleSubgraphOutput(const NodePtr &node,
                                           std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                           std::map<std::string, std::string> &anchor_to_symbol);
 
-  ///
   /// Relink all edges for cloned ComputeGraph.
   /// @param [in] node: original node.
   /// @param [in] suffix: node name suffix of new node.
   /// @param [in] all_nodes: all nodes in new graph.
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus RelinkGraphEdges(const NodePtr &node, const std::string &suffix,
                                       const std::unordered_map<std::string, NodePtr> &all_nodes);
 
-  ///
   /// Union ref-mapping
   /// @param [in] exist_node_info1
   /// @param [in] exist_node_info2
@@ -682,19 +677,16 @@ class GraphUtils {
   /// @param [out] anchor_to_symbol
   /// @param [out] symbol
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus UnionSymbolMapping(const NodeIndexIO &exist_node_info1, const NodeIndexIO &exist_node_info2,
                                         std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                         std::map<std::string, std::string> &anchor_to_symbol, std::string &symbol);
 
-  ///
   /// Update symbol mapping with a new reference pair
   /// @param [in] cur_node_info
   /// @param [in] exist_node_info
   /// @param [out] symbol_to_anchors
   /// @param [out] anchor_to_symbol
   /// @return success: GRAPH_SUCESS
-  ///
   static graphStatus UpdateRefMapping(const NodeIndexIO &cur_node_info, const NodeIndexIO &exist_node_info,
                                       std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
                                       std::map<std::string, std::string> &anchor_to_symbol);
@@ -737,76 +729,60 @@ class GraphUtils {
 class ComputeGraphBuilder {
  public:
   ComputeGraphBuilder() : owner_graph_(nullptr) {}
-  ~ComputeGraphBuilder() = default;
+  virtual ~ComputeGraphBuilder() = default;
 
-  ///
   /// @brief Add node to graph
   /// @param [in] op_desc
   /// @return ComputeGraphBuilder
-  ///
   virtual ComputeGraphBuilder &AddNode(const OpDescPtr &op_desc);
 
-  ///
   /// @brief Add data-link among nodes in graph
   /// @param [in] src_name
   /// @param [in] out_anchor_ind
   /// @param [in] dst_name
   /// @param [in] in_anchor_ind
   /// @return ComputeGraphBuilder
-  ///
   virtual ComputeGraphBuilder &AddDataLink(const std::string &src_name, const uint32_t out_anchor_ind,
                                            const std::string &dst_name, const uint32_t in_anchor_ind);
 
-  ///
   /// @brief Add ctrl-link among nodes in graph
   /// @param [in] src_name
   /// @param [in] dst_name
   /// @return ComputeGraphBuilder
-  ///
   virtual ComputeGraphBuilder &AddControlLink(const std::string &src_name, const std::string &dst_name);
 
-  ///
   /// @brief Build graph
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return ComputeGraphPtr
-  ///
   virtual ComputeGraphPtr Build(graphStatus &error_code, std::string &error_msg) = 0;
 
   /// @brief Get node with name
   /// @param [in] name
   /// @return NodePtr
-  ///
   NodePtr GetNode(const std::string &name);
 
   /// @brief Get all nodes
   /// @return std::vector<NodePtr>
-  ///
   std::vector<NodePtr> GetAllNodes();
 
  protected:
-  ///
   /// @brief Build nodes
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void BuildNodes(graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief Build data-links
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void BuildDataLinks(graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief Build ctrl-links
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void BuildCtrlLinks(graphStatus &error_code, std::string &error_msg);
 
  private:
@@ -838,153 +814,117 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   CompleteGraphBuilder &operator=(const CompleteGraphBuilder &&) = delete;
   ~CompleteGraphBuilder() = default;
 
-  ///
   /// @brief Add node to graph
   /// @param [in] op_desc
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &AddNode(const OpDescPtr &op_desc) override;
 
-  ///
   /// @brief Add data-link among nodes in graph
   /// @param [in] src_name
   /// @param [in] out_anchor_ind
   /// @param [in] dst_name
   /// @param [in] in_anchor_ind
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &AddDataLink(const std::string &src_name, const uint32_t out_anchor_ind,
                                     const std::string &dst_name, const uint32_t in_anchor_ind) override;
 
-  ///
   /// @brief Add ctrl-link among nodes in graph
   /// @param [in] src_name
   /// @param [in] dst_name
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &AddControlLink(const std::string &src_name, const std::string &dst_name) override;
 
-  ///
   /// @brief Set index_th input anchor for graph
   /// @param [in] index
   /// @param [in] node_names
   /// @param [in] anchor_inds
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &SetInput(const uint32_t index, const std::vector<std::string> &node_names,
                                  const std::vector<uint32_t> &anchor_inds);
 
-  ///
   /// @brief Set index_th input of graph as useless
   /// @param [in] index
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &SetUselessInput(const uint32_t index);
 
-  ///
   /// @brief Add output anchor for graph
   /// @param [in] owner_node_name
   /// @param [in] anchor_ind
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &AddOutput(const std::string &owner_node_name, uint32_t anchor_ind);
 
-  ///
   /// @brief Add target for graph
   /// @param [in] target_name
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &AddTarget(const std::string &target_name);
 
-  ///
   /// @brief Set parent-node of graph
   /// @param [in] parent_node
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &SetParentNode(const NodePtr &parent_node);
 
-  ///
   /// @brief Set mapping-relation of parent-node in_anchor_ind & Data-node
   /// @param [in] input_mapping: index_of_graph_input -> in_anchor_index_of_parent_node
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &SetInputMapping(const std::map<uint32_t, uint32_t> &input_mapping);
 
-  ///
   /// @brief Set mapping-relation of parent-node out_anchor_ind & NetOutput-node out_anchor_ind
   /// @param [in] output_mapping: index_of_graph_output -> out_anchor_index_of_parent_node
   /// @return CompleteGraphBuilder
-  ///
   CompleteGraphBuilder &SetOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
 
-  ///
   /// @brief Build graph
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return ComputeGraphPtr
-  ///
   ComputeGraphPtr Build(graphStatus &error_code, std::string &error_msg) override;
 
  private:
-  ///
   /// @brief Add data nodes
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void AddDataNodes(graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief Add data node
   /// @param [in] index
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   NodePtr AddDataNode(const uint32_t index, graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief Add RetVal nodes
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void AddRetValNodes(graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief Build target-nodes for graph
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void BuildGraphTargets(graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief Add NetOutput node
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void AddNetOutputNode(graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief Build NetOutput nodes with data & ctrl edges
   /// @param [in] net_output_desc
   /// @param [in] peer_out_anchors
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void BuildNetOutputNodeWithLink(const OpDescPtr &net_output_desc,
                                   const std::vector<OutDataAnchorPtr> &peer_out_anchors,
                                   graphStatus &error_code, std::string &error_msg);
 
-  ///
   /// @brief process after build
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void PostProcess(graphStatus &error_code, std::string &error_msg);
 
   std::string name_;
@@ -1009,61 +949,47 @@ class PartialGraphBuilder : public ComputeGraphBuilder {
   PartialGraphBuilder &operator=(const PartialGraphBuilder &&) = delete;
   ~PartialGraphBuilder() = default;
 
-  ///
   /// @brief Add node to graph
   /// @param [in] op_desc
   /// @return PartialGraphBuilder
-  ///
   PartialGraphBuilder &AddNode(const OpDescPtr &op_desc) override;
 
-  ///
   /// @brief Add data-link among nodes in graph
   /// @param [in] src_name
   /// @param [in] out_anchor_ind
   /// @param [in] dst_name
   /// @param [in] in_anchor_ind
   /// @return PartialGraphBuilder
-  ///
   PartialGraphBuilder &AddDataLink(const std::string &src_name, const uint32_t out_anchor_ind,
                                    const std::string &dst_name, const uint32_t in_anchor_ind) override;
 
-  ///
   /// @brief Add ctrl-link among nodes in graph
   /// @param [in] src_name
   /// @param [in] dst_name
   /// @return PartialGraphBuilder
-  ///
   PartialGraphBuilder &AddControlLink(const std::string &src_name, const std::string &dst_name) override;
 
-  ///
   /// @brief Set owner graph
   /// @param [in] graph
   /// @return PartialGraphBuilder
-  ///
   PartialGraphBuilder &SetOwnerGraph(const ComputeGraphPtr &graph);
 
-  ///
   /// @brief Add exist node
   /// @param [in] node
   /// @return PartialGraphBuilder
-  ///
   PartialGraphBuilder &AddExistNode(const NodePtr &exist_node);
 
-  ///
   /// @brief Build multi nodes with links
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return ComputeGraphPtr
-  ///
   ComputeGraphPtr Build(graphStatus &error_code, std::string &error_msg) override;
 
  private:
-  ///
   /// @brief Build exist nodes
   /// @param [out] error_code
   /// @param [out] error_msg
   /// @return void
-  ///
   void BuildExistNodes(graphStatus &error_code, std::string &error_msg);
 
   std::vector<NodePtr> exist_nodes_;

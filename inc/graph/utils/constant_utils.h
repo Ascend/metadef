@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,8 @@ class ConstantUtils {
   static bool GetWeight(const Operator &op, const uint32_t index, Tensor &weight);
   static bool MutableWeight(const OpDescPtr &op_desc, const uint32_t index, GeTensorPtr &weight);
   static bool SetWeight(const OpDescPtr &op_desc, const uint32_t index, const GeTensorPtr weight);
-  static bool MarkPotentialConst(const OpDescPtr &op_desc, const std::vector<int> indices, const std::vector<GeTensorPtr> weights);
+  static bool MarkPotentialConst(const OpDescPtr &op_desc, const std::vector<int> indices,
+                                 const std::vector<GeTensorPtr> weights);
   static bool UnMarkPotentialConst(const OpDescPtr &op_desc);
  private:
   static bool GetPotentialWeight(const OpDescPtr &op_desc, std::vector<uint32_t> &weight_indices,

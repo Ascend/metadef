@@ -18,6 +18,8 @@
 #include <securec.h>
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
+#include "graph/def_types.h"
+#include "external/graph/types.h"
 #include "common/checker.h"
 
 #include "exe_graph/runtime/runtime_attrs.h"
@@ -47,7 +49,7 @@ bool AppendStrAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &
   auto str = attr.Get<std::string>();
   GE_ASSERT_NOTNULL(str);
   std::vector<uint8_t> runtime_attr(str->size() + 1);
-  GE_ASSERT_EOK(strcpy_s(reinterpret_cast<char *>(runtime_attr.data()), str->size() + 1, str->c_str()));
+  GE_ASSERT_EOK(strcpy_s(ge::PtrToPtr<uint8_t, ge::char_t>(runtime_attr.data()), str->size() + 1, str->c_str()));
   attrs.emplace_back(std::move(runtime_attr));
   return true;
 }
@@ -58,7 +60,7 @@ bool AppendVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   size_t total_size;
   auto cv_holder = ContinuousVector::Create<T>(val->size(), total_size);
   GE_ASSERT_NOTNULL(cv_holder);
-  auto cv = reinterpret_cast<ContinuousVector *>(cv_holder.get());
+  auto cv = ge::PtrToPtr<uint8_t, ContinuousVector>(cv_holder.get());
   size_t copy_size = val->size() * sizeof(T);
   if (!val->empty()) {
     GE_ASSERT_EOK(memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(T), val->data(), copy_size));
@@ -83,7 +85,7 @@ bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   size_t total_size;
   auto tensor_holder = Tensor::CreateFollowing(shape_size, tensor_desc.GetDataType(), total_size);
   GE_ASSERT_NOTNULL(tensor_holder);
-  auto tensor = reinterpret_cast<Tensor *>(tensor_holder.get());
+  auto tensor = ge::PtrToPtr<uint8_t, Tensor>(tensor_holder.get());
   GeShapeToGertShape(tensor_desc.GetShape(), tensor->MutableStorageShape());
   GeShapeToGertShape(tensor_desc.GetOriginShape(), tensor->MutableOriginShape());
   tensor->SetOriginFormat(tensor_desc.GetOriginFormat());
@@ -140,7 +142,7 @@ bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &r
   auto all_attrs = ge::AttrUtils::GetAllAttrs(node->GetOpDesc());
   const auto &ir_attr_names = node->GetOpDesc()->GetIrAttrNames();
   for (auto &attr_name : ir_attr_names) {
-    const auto &iter = all_attrs.find(attr_name);
+    const std::map<std::string, ge::AnyValue>::const_iterator &iter = all_attrs.find(attr_name);
     if (iter == all_attrs.end()) {
       GELOGE(ge::FAILED, "Can not find the IR attr %s from node %s", attr_name.c_str(), node->GetName().c_str());
       return false;
@@ -170,10 +172,10 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
   }
   auto attr_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
   GE_ASSERT_NOTNULL(attr_holder);
-  auto attr_def = reinterpret_cast<RuntimeAttrsDef *>(attr_holder.get());
+  auto attr_def = ge::PtrToPtr<uint8_t, RuntimeAttrsDef>(attr_holder.get());
   attr_def->attr_num = attrs.size();
   size_t current_offset = sizeof(RuntimeAttrsDef) + sizeof(size_t) * attr_def->attr_num;
-  auto attr_pos = reinterpret_cast<uint8_t *>(attr_holder.get());
+  auto attr_pos = attr_holder.get();
   for (size_t i = 0; i < attrs.size(); ++i) {
     attr_def->offset[i] = current_offset;
     GE_ASSERT_EOK(memcpy_s(attr_pos + current_offset, total_size - current_offset, attrs[i].data(), attrs[i].size()));
