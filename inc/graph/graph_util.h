@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -113,7 +113,7 @@ const char levelStr[8][8] = {"EMERG", "ALERT", "CRIT", "ERROR", "WARNING", "NOTI
     if (!b) {                                      \
       exec_expr;                                   \
     }                                              \
-  };
+  }
 
 #define GRAPH_IF_BOOL_EXEC(expr, exec_expr) \
   {                                         \
