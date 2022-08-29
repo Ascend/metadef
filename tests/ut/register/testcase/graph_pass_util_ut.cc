@@ -382,8 +382,8 @@ TEST_F(GraphPassUtilUT, test_inherit_attrs_01) {
   auto ori_node1 = original_nodes[1];
   ge::AttrUtils::SetBool(ori_node0->GetOpDesc(), "_backward", true);
   ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
-  ge::AttrUtils::SetInt(ori_node1->GetOpDesc(), "_recompute", 2);
-  ge::AttrUtils::SetInt(ori_node1->GetOpDesc(), "_optimizer", 3);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_recompute", true);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_optimizer", true);
   ge::AttrUtils::SetInt(ori_node1->GetOpDesc(), ge::ATTR_NAME_KEEP_DTYPE, 1);
   ge::AttrUtils::SetStr(ori_node1->GetOpDesc(), ge::ATTR_NAME_OP_COMPILE_STRATEGY, "test");
 
@@ -394,20 +394,20 @@ TEST_F(GraphPassUtilUT, test_inherit_attrs_01) {
   ge::AttrUtils::GetBool(fus_op, "_backward", backward);
   EXPECT_EQ(backward, true);
 
-  int64_t recompute = 0;
-  ge::AttrUtils::GetInt(ori_node1->GetOpDesc(), "_recompute", recompute);
-  EXPECT_EQ(recompute, 2);
+  bool recompute = 0;
+  ge::AttrUtils::GetBool(fus_op, "_recompute", recompute);
+  EXPECT_EQ(recompute, true);
 
-  int64_t optimizer = 0;
-  ge::AttrUtils::GetInt(ori_node1->GetOpDesc(), "_optimizer", optimizer);
-  EXPECT_EQ(optimizer, 3);
+  bool optimizer = 0;
+  ge::AttrUtils::GetBool(fus_op, "_optimizer", optimizer);
+  EXPECT_EQ(optimizer, true);
 
   int64_t keep_dtype = 0;
-  ge::AttrUtils::GetInt(ori_node1->GetOpDesc(), ge::ATTR_NAME_KEEP_DTYPE, keep_dtype);
+  ge::AttrUtils::GetInt(fus_op, ge::ATTR_NAME_KEEP_DTYPE, keep_dtype);
   EXPECT_EQ(keep_dtype, 1);
 
   string strategy = "";
-  ge::AttrUtils::GetStr(ori_node1->GetOpDesc(), ge::ATTR_NAME_OP_COMPILE_STRATEGY, strategy);
+  ge::AttrUtils::GetStr(fus_op, ge::ATTR_NAME_OP_COMPILE_STRATEGY, strategy);
   EXPECT_EQ(strategy, "test");
 }
 
@@ -445,6 +445,8 @@ TEST_F(GraphPassUtilUT, test_inherit_attrs_03) {
   auto ori_node1 = original_nodes[1];
   ge::AttrUtils::SetBool(ori_node0->GetOpDesc(), "_backward", true);
   ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_backward", true);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_recompute", true);
+  ge::AttrUtils::SetBool(ori_node1->GetOpDesc(), "_optimizer", true);
 
   auto original_nodes_reverse_order = {ori_node1, ori_node0};
   GraphPassUtil::InheritAttrFromOriNodes(original_nodes_reverse_order, fus_nodes, BackWardInheritMode::kFusedNode);
@@ -453,10 +455,17 @@ TEST_F(GraphPassUtilUT, test_inherit_attrs_03) {
   bool backward = false;
   ge::AttrUtils::GetBool(fus_op, "_backward", backward);
   EXPECT_EQ(backward, true);
+  EXPECT_EQ(fus_op->HasAttr("_recompute"), true);
+  EXPECT_EQ(fus_op->HasAttr("_optimizer"), true);
 
+  bool recompute = false;
+  ge::AttrUtils::GetBool(fus_op, "_recompute", recompute);
+  EXPECT_EQ(recompute, true);
 
-  EXPECT_EQ(fus_op->HasAttr("_recompute"), false);
-  EXPECT_EQ(fus_op->HasAttr("_optimizer"), false);
+  bool optimizer = false;
+  ge::AttrUtils::GetBool(fus_op, "_optimizer", optimizer);
+  EXPECT_EQ(optimizer, true);
+
   EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_KEEP_DTYPE), false);
   EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_OP_COMPILE_STRATEGY), false);
 }

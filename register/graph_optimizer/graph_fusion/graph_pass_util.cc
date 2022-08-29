@@ -24,7 +24,7 @@ const char* kDumpGeGraph = "DUMP_GE_GRAPH";
 const char* kBackWard = "_backward";
 const char* kRecompute = "_recompute";
 const char* kOptimizer = "_optimizer";
-const std::array<string, 2> kIntAttrNeedInherit = {kRecompute, kOptimizer};
+const std::array<string, 2> kBoolAttrNeedInherit = {kRecompute, kOptimizer};
 
 #define REGISTER_MAKE_SHARED(exec_expr0, exec_expr1) \
   do {                                         \
@@ -292,14 +292,14 @@ void GraphPassUtil::GetBackWardAttr(const std::vector<ge::NodePtr> &original_nod
 void GraphPassUtil::InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &original_nodes,
                                             const std::vector<ge::NodePtr> &fusion_nodes,
                                             BackWardInheritMode inherit_mode) {
-  vector<int64_t> int_attrs(kIntAttrNeedInherit.size(), 0);
+  vector<bool> bool_attrs(kBoolAttrNeedInherit.size(), false);
   size_t i = 0;
-  for (const auto &attr : kIntAttrNeedInherit) {
+  for (const auto &attr : kBoolAttrNeedInherit) {
     for (const auto &origin_node : original_nodes) {
-      int64_t value = 0;
-      (void)ge::AttrUtils::GetInt(origin_node->GetOpDesc(), attr, value);
+      bool value = 0;
+      (void)ge::AttrUtils::GetBool(origin_node->GetOpDesc(), attr, value);
       if (value != 0) {
-        int_attrs[i] = value;
+        bool_attrs[i] = value;
         break;
       }
     }
@@ -315,16 +315,16 @@ void GraphPassUtil::InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &orig
       ge::AttrUtils::SetBool(fusion_op, kBackWard, backward);
     }
 
-    if (int_attrs.size() != kIntAttrNeedInherit.size()) {
+    if (bool_attrs.size() != kBoolAttrNeedInherit.size()) {
       GELOGW("[Fusion][InheritAttr]Integer attributes size %zu is not correct, should be %zu.",
-             int_attrs.size(), kIntAttrNeedInherit.size());
+             bool_attrs.size(), kBoolAttrNeedInherit.size());
       return;
     }
 
     i = 0;
-    for (const auto &attr : kIntAttrNeedInherit) {
-      if (int_attrs[i] != 0 && !ge::AttrUtils::HasAttr(fusion_op, attr)) {
-        ge::AttrUtils::SetBool(fusion_op, attr, int_attrs[i]);
+    for (const auto &attr : kBoolAttrNeedInherit) {
+      if (bool_attrs[i] != 0 && !ge::AttrUtils::HasAttr(fusion_op, attr)) {
+        ge::AttrUtils::SetBool(fusion_op, attr, bool_attrs[i]);
       }
       ++i;
     }
