@@ -45,7 +45,11 @@ public:
   static void ExpandDims(const int64_t &reshape_type, const gert::Shape &origin_shape, gert::Shape &shape);
   static bool GetDefaultReshapeType(const ge::Format &origin_format, const size_t &origin_dim_size,
                                     std::string &reshape_type);
-
+  static int32_t GetAxisIndexByName(char ch, const ge::Format &format);
+  static int64_t GetReshapeAxicValue(const int64_t &reshape_type_mask,
+                                     const ge::GeShape &shape, int32_t axis_index);
+  static int64_t GetReshapeAxicValueByName(const int64_t &reshape_type_mask, char ch,
+                                           const ge::GeShape &shape, const ge::Format &format);
 private:
   static bool GetFormatFullSize(const ge::Format &format, size_t &full_size);
   static bool IsNeedExpand(const ge::Format &origin_format, const ge::Format &format,

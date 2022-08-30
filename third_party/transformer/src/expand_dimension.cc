@@ -449,4 +449,32 @@ bool ExpandDimension::GetFormatFullSize(const ge::Format &format, size_t &full_s
   full_size = iter->second;
   return true;
 }
+
+int32_t ExpandDimension::GetAxisIndexByName(char ch, const ge::Format &format) {
+  uint32_t format_key = GenerateFormatKey(format);
+  uint32_t axis_key = 0;
+  axis_key = format_key | (static_cast<uint32_t>(ch) & 0xff);
+  auto iter = AXIS_INDEX_OF_FORMAT.find(axis_key);
+  if (iter == AXIS_INDEX_OF_FORMAT.end()) {
+    return -1;
+  }
+  return iter->second;
+}
+int64_t ExpandDimension::GetReshapeAxicValue(const int64_t &reshape_type_mask,
+                                             const ge::GeShape &shape, int32_t axis_index) {
+  GELOGD("axis_index = %d.", axis_index);
+  if (axis_index == -1) {
+    return -1;
+  }
+  gert::ExpandDimsType expand_dims_type(reshape_type_mask);
+  if (!expand_dims_type.IsExpandIndex(axis_index)) {
+    GELOGD("axis_index isorigindim idx = %d.", axis_index);
+  }
+  return shape.GetDim(static_cast<size_t>(axis_index));
+}
+int64_t ExpandDimension::GetReshapeAxicValueByName(const int64_t &reshape_type_mask, char ch,
+                                                   const ge::GeShape &shape, const ge::Format &format) {
+  auto idx = GetAxisIndexByName(ch, format);
+  return GetReshapeAxicValue(reshape_type_mask, shape, idx);
+}
 } // namespace transformer
