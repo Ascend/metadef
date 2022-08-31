@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,14 +62,6 @@ class TensorUtils {
   static void SetRC(GeTensorDesc &tensor_desc, const uint32_t rc);
   static bool IsOriginShapeInited(const GeTensorDesc &tensor_desc);
 
-  ///
-  /// calculate tensor mem size.
-  /// @param shape tensor shape
-  /// @param format tensor format
-  /// @param data_type tensor data type
-  /// @param mem_size -1 means unknown shape,other means mem size
-  /// @return GRAPH_SUCCESS:success, other:failed
-  ///
   static ge::graphStatus CalcTensorMemSize(const GeShape &shape, const Format format,
                                            const DataType data_type, int64_t &mem_size);
   static ge::graphStatus CalcTensorMemSizeForNoTiling(const GeTensorDesc &tensor,
