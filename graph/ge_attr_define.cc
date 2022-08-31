@@ -1354,4 +1354,9 @@ const std::string ATTR_NAME_PARALLEL_SHARDED = "_parallel_sharded";
 const std::string ATTR_NAME_PIPELINE_STAGE = "_pipeline_stage";
 const std::string ATTR_NAME_LOGIC_DEV_ID = "_logic_device_id";
 const std::string ATTR_NAME_STAGE_ORDER_ID = "_stage_order_id";
+
+// for graph memory optimize
+const std::string ATTR_NAME_RECOMPUTE = "_recompute";
+const std::string ATTR_NAME_BACKWARD = "_backward";
+const std::string ATTR_NAME_OPTIMIZER = "_optimizer";
 }  // namespace ge
