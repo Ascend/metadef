@@ -27,7 +27,7 @@
 
 
 namespace {
-const uint32_t kSubgraphIndexOfPartitionedCall = 0U;
+const uint32_t g_kSubgraphIndexOfPartitionedCall = 0U;
 }  // namespace
 
 namespace ge {
@@ -961,7 +961,7 @@ graphStatus GraphUtils::GetIndependentCompileGraphs(const ComputeGraphPtr &compu
   if (is_pipeline_partitioned) {
     for (const auto &node : compute_graph->GetDirectNode()) {
       if (node->GetType() == PARTITIONEDCALL) {
-        auto sub_graph = NodeUtils::GetSubgraph(*node, kSubgraphIndexOfPartitionedCall);
+        auto sub_graph = NodeUtils::GetSubgraph(*node, g_kSubgraphIndexOfPartitionedCall);
         GE_CHECK_NOTNULL(sub_graph);
         independent_compile_subgraphs.emplace_back(sub_graph);
       }
