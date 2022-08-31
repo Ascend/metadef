@@ -27,6 +27,7 @@
 #include "common/opskernel/ops_kernel_info_types.h"
 #include "common/ge_inner_error_codes.h"
 #include "graph/node.h"
+#include "external/graph/operator.h"
 
 namespace ge {
 class OpsKernelInfoStore {
@@ -117,6 +118,13 @@ class OpsKernelInfoStore {
   virtual Status FuzzCompileOp(std::vector<ge::NodePtr> &node_vec) {
     (void) node_vec;
     return SUCCESS;
+  }
+
+  // Query information such as foramt/dtype/impl supported by operators (extensible)
+  virtual bool GetNodeSupportInfo(const OperatorPtr &op, std::string &support_info) {
+    (void)op;
+    (void)support_info;
+    return false;
   }
 };
 }  // namespace ge
