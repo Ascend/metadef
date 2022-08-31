@@ -276,6 +276,14 @@ ge::graphStatus ParseConstValue(const nlohmann::json &input, const gert::Storage
     tensor->SetStorageFormat(tensor_desc.GetFormat());
     tensor->SetOriginFormat(tensor_desc.GetOriginFormat());
     index_to_tensor.emplace_back(index, std::move(tensor_holder));
+  } else {
+    auto tensor_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[sizeof(gert::Tensor)]);
+    GE_ASSERT_NOTNULL(tensor_holder);
+    new (tensor_holder.get()) gert::Tensor({{}, {}}, {tensor_desc.GetOriginFormat(), tensor_desc.GetFormat(), {}},
+                                           gert::kOnHost, tensor_desc.GetDataType(), nullptr);
+    reinterpret_cast<gert::Tensor *>(tensor_holder.get())->MutableStorageShape() = storage_shape.GetStorageShape();
+    reinterpret_cast<gert::Tensor *>(tensor_holder.get())->MutableOriginShape() = storage_shape.GetOriginShape();
+    index_to_tensor.emplace_back(index, std::move(tensor_holder));
   }
   return ge::GRAPH_SUCCESS;
 }
