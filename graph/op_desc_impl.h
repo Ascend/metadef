@@ -20,50 +20,20 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <set>
+#include "graph/types.h"
 #include "graph/op_desc.h"
 #include "graph/small_vector.h"
 #include "graph/ascend_limits.h"
+#include "graph/tensor_type_impl.h"
+#include "graph/ir_meta.h"
 
 namespace ge {
-class MetaDataStore {
- public:
-  using SmallIntVector = SmallVector<int64_t, static_cast<size_t>(kDefaultMaxInputNum)>;
-  MetaDataStore() = default;
-  ~MetaDataStore() = default;
-  MetaDataStore(std::string name, std::string type) : name_(std::move(name)), type_(std::move(type)) {}
-  int64_t GetId() const {return id_;}
-  int64_t GetStreamId() const {return stream_id_;}
-  const vector<std::string> &GetInputNames() const {return input_names_;}
-  const vector<std::string> &GetSrcNames() const {return src_names_;}
-  const vector<int64_t> &GetSrcIndexes() const {return src_indexes_;}
-  const vector<std::string> &GetDstNames() const {return dst_names_;}
-  const vector<int64_t> &GetDstIndexes() const {return dst_indexes_;}
-  const vector<int64_t> &GetInputOffsets() const {return input_offsets_;}
-  const vector<int64_t> &GetOutputOffsets() const {return output_offsets_;}
-  const vector<bool> &GetIsInputConsts() const {return is_input_consts_;}
-  const vector<std::string> &GetSubgraphNames() const {return subgraph_names_;}
-  void AddSubGraphName(const string &name) {subgraph_names_.push_back(name);}
-  void ClearSubgraphNames() { subgraph_names_.clear(); }
-
- private:
-  friend class OpDescImpl;
-  std::string name_;
-  std::string type_;
-  std::vector<std::string> inputs_;
-  bool has_out_attr_{false};
-  int64_t id_{0};
-  int64_t stream_id_{0};
-  std::vector<std::string> input_names_;
-  std::vector<std::string> src_names_;
-  std::vector<int64_t> src_indexes_;
-  std::vector<std::string> dst_names_;
-  std::vector<int64_t> dst_indexes_;
-  std::vector<int64_t> input_offsets_;
-  std::vector<int64_t> output_offsets_;
-  SmallIntVector workspaces;
-  SmallIntVector workspace_bytes_list_;
-  std::vector<bool> is_input_consts_;
-  std::vector<std::string> subgraph_names_;
+enum class DataTypeInferStrategy {
+  kInferFromAttr,
+  kInferFromInput,
+  kInferFromOutput,
+  kInvalidStrategy
 };
 
 class OpDescImpl {
@@ -76,8 +46,9 @@ class OpDescImpl {
 
   std::string GetName() const;
   void SetName(const std::string &name);
+
   std::string GetType() const;
-  void SetType(const std::string &type);
+  void SetType(const std::string &type, OpDescImplPtr &impl_of_target_type);
 
   graphStatus AddInputDesc(const ge::GeTensorDesc &input_desc);
   graphStatus AddInputDesc(const uint32_t index, const ge::GeTensorDesc &input_desc);
@@ -133,17 +104,10 @@ class OpDescImpl {
   ConstGeTensorDescPtr GetInputDescPtrDfault(const uint32_t index) const;
   ConstGeTensorDescPtr GetInputDescPtr(const std::string &name) const;
 
-  graphStatus AddRegisterInputName(const std::string &name);
-  std::vector<std::string> GetRegisterInputName() const;
-
   graphStatus AddDynamicInputDesc(const std::string &name, const uint32_t num, const bool is_push_back);
   graphStatus AddDynamicInputDescByIndex(const std::string &name, const uint32_t num, const size_t index);
 
-  graphStatus AddRegisterOutputName(const std::string &name);
-  std::vector<std::string> GetRegisterOutputName() const;
-
   graphStatus AddDynamicOutputDesc(const std::string &name, const uint32_t num, const bool is_push_back);
-  bool IsOptionalInput(const std::string &name) const;
   bool IsOptionalInput(const uint32_t index) const;
   std::map<std::string, uint32_t> GetAllInputName() const;
   std::map<std::string, uint32_t> GetAllOutputName();
@@ -159,6 +123,8 @@ class OpDescImpl {
   void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
 
   graphStatus InferShapeAndType(const OpDescPtr &op_desc);
+  graphStatus VerifyIR() const;
+  graphStatus DefaultInferDataType(const OpDescPtr &op_desc);
   graphStatus DefaultInferFormat(const ConstOpDescPtr &op_desc) const;
   graphStatus OpVerify(const OpDescPtr &op_desc);
 
@@ -171,6 +137,9 @@ class OpDescImpl {
 
   ProtoAttrMap &MutableAttrMap();
   ConstProtoAttrMap &GetAttrMap() const;
+
+  IRMetaData &MutableIRMeta();
+  const IRMetaData &GetIRMeta() const;
 
   void SetId(const int64_t id);
   int64_t GetId() const;
@@ -218,9 +187,6 @@ class OpDescImpl {
   const std::map<std::string, uint32_t> &GetSubgraphNameIndexes() const;
   graphStatus SetSubgraphInstanceName(const size_t index, const std::string &name);
 
-  void RegisterSubgraphIrName(const std::string &name, const SubgraphType type);
-  const std::map<std::string, SubgraphType> &GetSubgraphIrNames() const;
-  SubgraphType GetSubgraphTypeByIrName(const std::string &name) const;
   graphStatus GetSubgraphNameByInstanceName(const std::string &instance_name, std::string &subgraph_name) const;
   graphStatus InferDataSlice(const OpDescPtr &op_desc);
 
@@ -229,15 +195,26 @@ class OpDescImpl {
   void *GetAtomicTilingFuncInfo() const;
   void SetAtomicTilingFuncInfo(void *atomic_tiling_func_info);
 
-  void AppendIrAttrName(std::string name);
-  const std::vector<std::string> &GetIrAttrNames() const;
-
-  void AppendIrInput(std::string name, IrInputType input_type);
-  const std::vector<std::pair<std::string, IrInputType>> &GetIrInputs() const;
-
  private:
   void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
   void SerializeMetaDataToOpDef(proto::OpDef * const op_def);
+  // infer datatype
+  graphStatus VerifyInputDataType();
+  graphStatus CollectInputDataTypeBySymbol(std::unordered_map<std::string, DataType> &symbol_2_input_dtype) const;
+  graphStatus VerifyInputDataTypeConsistent(const std::unordered_map<std::string,
+                                                                     DataType> &symbol_2_input_dtype) const;
+  graphStatus VerifyInputDataTypeInRange(const std::unordered_map<std::string, DataType> &symbol_2_input_dtype) const;
+  DataTypeInferStrategy GetDataTypeInferStrategy(const string &datatype_symbol) const;
+  graphStatus InferDataTypeForOutput(const std::string &ir_output, std::vector<DataType> &dst_types);
+  graphStatus InferDataTypeForOutputs(const OpDescPtr &op_desc);
+  graphStatus TryInferDataTypeFromAttr(const string &datatype_symbol, DataType &dst_type);
+  graphStatus TryInferDataTypeFromInput(const string &datatype_symbol, std::vector<DataType> &dst_types);
+  graphStatus TryInferDataTypeFromRequiredInput(const std::string &ir_input_name, const string &datatype_symbol,
+                                                DataType &dst_type);
+  graphStatus TryInferDataTypeFromDynamicInput(const std::string &ir_input_name, const string &datatype_symbol,
+                                               std::vector<DataType> &dst_types);
+  graphStatus TryInferDataTypeFromOutput(const string &datatype_symbol, DataType &dst_type);
+
   friend class AttrUtils;
   friend class OpDescUtils;
   friend class ModelSerializeImp;
@@ -253,23 +230,10 @@ class OpDescImpl {
   // branches1: 1
   // branches2: 2
   std::map<std::string, uint32_t> subgraph_names_to_index_;
-
-  // subgraph ir names to type, for a `if` operator:
-  // then_branch: static
-  // else_branch: static
-  // or for a `case` op:
-  // branches: dynamic
-  std::map<std::string, SubgraphType> subgraph_ir_names_to_type_;
-  std::vector<std::string> ir_attr_names_;
-  std::vector<std::pair<std::string, IrInputType>> ir_inputs_;
-
   std::vector<GeTensorDescPtr> inputs_desc_{};
   std::map<std::string, uint32_t> input_name_idx_{};
-  std::vector<std::string> register_input_name_{};
-  std::set<std::string> optional_input_names_{};
   std::vector<GeTensorDescPtr> outputs_desc_{};
   std::map<std::string, uint32_t> output_name_idx_{};
-  std::vector<std::string> register_output_name_{};
   std::function<graphStatus(Operator &)> infer_func_ = nullptr;
   std::function<graphStatus(Operator &)> infer_format_func_ = nullptr;
   std::function<graphStatus(Operator &)> infer_value_range_func_ = nullptr;
@@ -277,7 +241,7 @@ class OpDescImpl {
   std::function<graphStatus(Operator &)> infer_data_slice_func_ = nullptr;
   std::string op_kernel_lib_name_;
   std::string engine_name_;
-  MetaDataStore meta_data_;
+  OpMetadata meta_data_;
   AttrStore attrs_;
   void *tiling_func_info_ = nullptr;
   void *atomic_tiling_func_info_ = nullptr;

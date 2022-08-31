@@ -34,6 +34,7 @@
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/constant_utils.h"
+#include "common/checker.h"
 #include "tensor_type_impl.h"
 #include "op_io.h"
 #include "operator_impl.h"
@@ -286,14 +287,14 @@ const int32_t kMaxDepth = 20;
 TensorType::TensorType(DataType dt) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
   if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->GetMutableDateTypeVec().push_back(dt);
+    tensor_type_impl_->GetMutableDateTypeSet().emplace(dt);
   }
 }
 
 TensorType::TensorType(const std::initializer_list<DataType> &initial_types) {
   tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
   if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->GetMutableDateTypeVec() = initial_types;
+    tensor_type_impl_->GetMutableDateTypeSet() = initial_types;
   }
 }
 
@@ -1015,6 +1016,15 @@ void Operator::InputRegister(const char_t *name) {
   operator_impl_->GetOpDescImpl()->AppendIrInput(name, kIrInputRequired);
 }
 
+void Operator::InputRegister(const char_t *name, const char_t *datatype_symbol) {
+  GE_RETURN_IF_NULL(name, "[Check][Param] Operator name is nullptr.");
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  InputRegister(name);
+  operator_impl_->GetOpDescImpl()->RegisterIrInputDataTypeSymbol(name, datatype_symbol);
+}
+
 void Operator::OptionalInputRegister(const std::string &name) {
   OptionalInputRegister(name.c_str());
 }
@@ -1034,6 +1044,15 @@ void Operator::OptionalInputRegister(const char_t *name) {
   (void)operator_impl_->GetOpDescImpl()->AddOptionalInputDesc(name,
                                                               GeTensorDesc(GeShape(), FORMAT_RESERVED, DT_UNDEFINED));
   operator_impl_->GetOpDescImpl()->AppendIrInput(name, kIrInputOptional);
+}
+
+void Operator::OptionalInputRegister(const char_t *name, const char_t *datatype_symbol) {
+  GE_RETURN_IF_NULL(name, "[Check][Param] Operator name is nullptr.");
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  OptionalInputRegister(name);
+  operator_impl_->GetOpDescImpl()->RegisterIrInputDataTypeSymbol(name, datatype_symbol);
 }
 
 void Operator::InferFuncRegister(const std::function<graphStatus(Operator &)> &func) {
@@ -1083,6 +1102,16 @@ void Operator::OutputRegister(const char_t *name) {
                    return, "[Get][OpDescImpl] is nullptr.");
   // [No need to verify return value]
   (void)operator_impl_->GetOpDescImpl()->AddOutputDesc(name, GeTensorDesc());
+  operator_impl_->GetOpDescImpl()->AppendIrOutput(name, kIrOutputRequired);
+}
+
+void Operator::OutputRegister(const char_t *name, const char_t *datatype_symbol) {
+  GE_RETURN_IF_NULL(name, "[Check][Param] Operator name is nullptr.");
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  OutputRegister(name);
+  operator_impl_->GetOpDescImpl()->RegisterIrOutputDataTypeSymbol(name, datatype_symbol);
 }
 
 void Operator::DynamicInputRegister(const std::string &name, const uint32_t num, bool is_push_back) {
@@ -1107,7 +1136,7 @@ void Operator::DynamicInputRegister(const char_t *name, const uint32_t num, bool
                    return, "[Set][Int] %s to op:%s failed", name,
                          operator_impl_->GetOpDescImpl()->GetName().c_str());
   (void)operator_impl_->GetOpDescImpl()->AddDynamicInputDesc(name, num, is_push_back);
-  if (num == 0) {
+  if (num == 0U) {
     operator_impl_->GetOpDescImpl()->AppendIrInput(name, kIrInputDynamic);
   }
 }
@@ -1173,6 +1202,9 @@ void Operator::DynamicOutputRegister(const char_t *name, const uint32_t num, boo
                    return, "[Set][Int] %s to op:%s failed", name,
                          operator_impl_->GetOpDescImpl()->GetName().c_str());
   (void)operator_impl_->GetOpDescImpl()->AddDynamicOutputDesc(name, num, is_push_back);
+  if (num == 0U) {
+    operator_impl_->GetOpDescImpl()->AppendIrOutput(name, kIrOutputDynamic);
+  }
 }
 
 int32_t Operator::GetDynamicOutputNum(const std::string &name) const {
@@ -1213,6 +1245,20 @@ void Operator::RequiredAttrRegister(const char_t *name) {
                    return, "[Get][OpDescImpl] is nullptr.");
   (void)(operator_impl_->GetOpDescImpl()->AddRequiredAttr(name));
   operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
+}
+
+void Operator::DataTypeRegister(const char_t *datatype_symbol, const TensorType &type_range) {
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  operator_impl_->GetOpDescImpl()->RegisterDataTypeSymbol(datatype_symbol, type_range);
+}
+
+void Operator::DataTypeRegister(const char_t *datatype_symbol, const ListTensorType &list_type_range) {
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  operator_impl_->GetOpDescImpl()->RegisterDataTypeSymbol(datatype_symbol, list_type_range);
 }
 
 graphStatus Operator::VerifyAll() {
@@ -2988,6 +3034,30 @@ private:
   ComputeGraphPtr graph_ = nullptr;
   std::map<OperatorImplPtr, NodePtr> all_nodes_info_{};
 };
+
+void Operator::DynamicInputRegister(const char_t *name,
+                                    const uint32_t num,
+                                    const char_t *datatype_symbol,
+                                    bool is_push_back) {
+  GE_RETURN_IF_NULL(name, "[Check][Param] Operator name is nullptr.");
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  DynamicInputRegister(name, num, is_push_back);
+  operator_impl_->GetOpDescImpl()->RegisterIrInputDataTypeSymbol(name, datatype_symbol);
+}
+
+void Operator::DynamicOutputRegister(const char_t *name,
+                                     const uint32_t num,
+                                     const char_t *datatype_symbol,
+                                     bool is_push_back) {
+  GE_RETURN_IF_NULL(name, "[Check][Param] Operator name is nullptr.");
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  DynamicOutputRegister(name, num, is_push_back);
+  operator_impl_->GetOpDescImpl()->RegisterIrOutputDataTypeSymbol(name, datatype_symbol);
+}
 
 static inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {
   for (const auto &graph : compute_graph->GetAllSubgraphs()) {

@@ -326,6 +326,17 @@ class OpReg {
     std::string attr_name(#x);                                              \
     (void)OpReg()
 
+#define DATATYPE(x, t)                                                      \
+  N();                                                                      \
+  __datatype_##x();                                                         \
+  }                                                                         \
+                                                                            \
+ private:                                                                   \
+  void __datatype_##x() {                                                   \
+    auto type_range = t;                                                    \
+    Operator::DataTypeRegister(#x, type_range);                             \
+    (void)OpReg()
+
 #define INPUT(x, t)                                                            \
   N();                                                                         \
   __input_##x();                                                               \
@@ -361,7 +372,7 @@ class OpReg {
                                                                                \
  private:                                                                      \
   void __input_##x() {                                                         \
-    Operator::InputRegister(#x);                                               \
+    Operator::InputRegister(#x, #t);                                           \
     (void)OpReg()
 
 #define OPTIONAL_INPUT(x, t)                                                   \
@@ -399,7 +410,7 @@ class OpReg {
                                                                                \
  private:                                                                      \
   void __optional_input_##x() {                                                \
-    Operator::OptionalInputRegister(#x);                                       \
+    Operator::OptionalInputRegister(#x, #t);                                   \
     (void)OpReg()
 
 #define OUTPUT(x, t)                                                             \
@@ -420,7 +431,7 @@ class OpReg {
                                                                                  \
  private:                                                                        \
   void __out_##x() {                                                             \
-    Operator::OutputRegister(#x);                                                \
+    Operator::OutputRegister(#x, #t);                                            \
     (void)OpReg()
 
 #define DYNAMIC_INPUT(x, t)                                                                   \
@@ -430,7 +441,7 @@ class OpReg {
                                                                                               \
  public:                                                                                      \
   _THIS_TYPE &create_dynamic_input_##x(uint32_t num, bool isPushBack = true) {                \
-    Operator::DynamicInputRegister(#x, num, isPushBack);                                      \
+    Operator::DynamicInputRegister(#x, num, #t, isPushBack);                                  \
     return *this;                                                                             \
   }                                                                                           \
   _THIS_TYPE &create_dynamic_input_byindex_##x(uint32_t num, size_t index) {                  \
@@ -459,7 +470,7 @@ class OpReg {
                                                                                               \
  private:                                                                                     \
   void __dy_input_##x() {                                                                     \
-  Operator::DynamicInputRegister(#x, 0, true);                                                \
+  Operator::DynamicInputRegister(#x, 0, #t, true);                                            \
   (void)OpReg()
 
 #define DYNAMIC_OUTPUT(x, t)                                                                  \
@@ -469,7 +480,7 @@ class OpReg {
                                                                                               \
  public:                                                                                      \
   _THIS_TYPE &create_dynamic_output_##x(uint32_t num, bool isPushBack = true) {               \
-    Operator::DynamicOutputRegister(#x, num, isPushBack);                                     \
+    Operator::DynamicOutputRegister(#x, num, #t, isPushBack);                                 \
     return *this;                                                                             \
   }                                                                                           \
   TensorDesc get_dynamic_output_desc_##x(uint32_t index) const {                              \
@@ -481,7 +492,7 @@ class OpReg {
                                                                                               \
  private:                                                                                     \
   void __dy_output_##x() {                                                                    \
-  Operator::DynamicOutputRegister(#x, 0, true);                                               \
+  Operator::DynamicOutputRegister(#x, 0, #t, true);                                           \
   (void)OpReg()
 
 #define GRAPH(x)                                                                              \

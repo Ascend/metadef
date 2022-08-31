@@ -26,6 +26,7 @@ REG_OP(Const)
             TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8, DT_INT32, DT_INT64, DT_UINT32,
                         DT_UINT64, DT_BOOL, DT_DOUBLE}))
     .ATTR(value, Tensor, Tensor())
+
     .OP_END_FACTORY_REG(Const);
 
 REG_OP(OCG2)
@@ -55,7 +56,7 @@ REG_OP(OCG4)
     .OP_END_FACTORY_REG(OCG4);
 
 REG_OP(OCG5)
-    .INPUT(branch_index, DT_INT32)
+    .INPUT(branch_index, TensorType({DT_INT32}))
     .DYNAMIC_INPUT(input, TensorType::ALL())
     .DYNAMIC_OUTPUT(output, TensorType::ALL())
     .DYNAMIC_GRAPH(branches)

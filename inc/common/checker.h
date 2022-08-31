@@ -95,4 +95,27 @@ inline std::vector<char> CreateErrorMsg() {
 #define GE_ASSERT_TRUE(v, ...) GE_ASSERT((v), __VA_ARGS__)
 #define GE_ASSERT_HYPER_SUCCESS(v, ...) GE_ASSERT(((v).IsSuccess()), __VA_ARGS__)
 
+
+#define GE_RETURN_IF(exp, ...)                                                                                         \
+  do {                                                                                                                 \
+    if (exp) {                                                                                                         \
+      auto msg = CreateErrorMsg(__VA_ARGS__);                                                                          \
+      if (msg.empty()) {                                                                                               \
+        REPORT_INNER_ERROR("E19999", "Assert %s failed", #exp);                                                        \
+        GELOGE(ge::FAILED, "Assert %s failed", #exp);                                                                  \
+      } else {                                                                                                         \
+        REPORT_INNER_ERROR("E19999", "%s", msg.data());                                                                \
+        GELOGE(ge::FAILED, "%s", msg.data());                                                                          \
+      }                                                                                                                \
+      return;                                                                                                          \
+    }                                                                                                                  \
+  } while (false)
+
+#define GE_RETURN_IF_NULL(v, ...) GE_RETURN_IF(((v) == nullptr), __VA_ARGS__)
+#define GE_RETURN_IF_SUCCESS(v, ...) GE_RETURN_IF(((v) == ge::SUCCESS), __VA_ARGS__)
+#define GE_RETURN_IF_GRAPH_SUCCESS(v, ...) GE_RETURN_IF(((v) == ge::GRAPH_SUCCESS), __VA_ARGS__)
+#define GE_RETURN_IF_RT_OK(v, ...) GE_RETURN_IF(((v) == 0), __VA_ARGS__)
+#define GE_RETURN_IF_EOK(v, ...) GE_RETURN_IF(((v) == EOK), __VA_ARGS__)
+#define GE_RETURN_IF_TRUE(v, ...) GE_RETURN_IF((v), __VA_ARGS__)
+#define GE_RETURN_IF_HYPER_SUCCESS(v, ...) GE_RETURN_IF(((v).IsSuccess()), __VA_ARGS__)
 #endif  //METADEF_CXX_INC_COMMON_CHECKER_H_

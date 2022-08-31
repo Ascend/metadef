@@ -31,6 +31,7 @@ using std::vector;
 
 class Operator;
 class OpDescImpl;
+class IRMetaData;
 using OpDescImplPtr = std::shared_ptr<OpDescImpl>;
 
 enum SubgraphType {
@@ -44,6 +45,12 @@ enum IrInputType {
   kIrInputOptional,
   kIrInputDynamic,
   kIrInputTypeEnd
+};
+
+enum IrOutputType {
+  kIrOutputRequired,
+  kIrOutputDynamic,
+  kIrOutputTypeEnd
 };
 
 class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
@@ -186,6 +193,10 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus InferShapeAndType();
 
+  graphStatus VerifyIR();
+
+  graphStatus DefaultInferDataType();
+
   void AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func);
 
   graphStatus DefaultInferFormat();
@@ -215,6 +226,14 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   void AppendIrInput(std::string name, IrInputType input_type);
   const std::vector<std::pair<std::string, IrInputType>> &GetIrInputs() const;
+
+  void AppendIrOutput(std::string name, IrOutputType output_type);
+  const std::vector<std::pair<std::string, IrOutputType>> &GetIrOutputs() const;
+
+  void RegisterDataTypeSymbol(const std::string &datatype_symbol, const TensorType &type_range);
+  void RegisterDataTypeSymbol(const std::string &datatype_symbol, const ListTensorType &type_range);
+  void RegisterIrInputDataTypeSymbol(const std::string &input_name, const std::string &datatype_symbol);
+  void RegisterIrOutputDataTypeSymbol(const std::string &output_name, const std::string &datatype_symbol);
 
   using AttrHolder::AddRequiredAttr;
   using AttrHolder::DelAttr;
