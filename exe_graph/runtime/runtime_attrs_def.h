@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,4 +28,4 @@ typedef struct {
 }
 #endif
 
-#endif  //AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
+#endif  // AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
