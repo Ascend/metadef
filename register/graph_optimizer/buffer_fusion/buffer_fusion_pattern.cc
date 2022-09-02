@@ -34,6 +34,12 @@ const int64_t TBE_OUTPUT_BRANCH_SINGLE = 1L;
 const int64_t TBE_OUTPUT_BRANCH_MULTI = 2L;
 const int64_t TBE_PATTERN_GROUPID_INVALID = -1L;
 
+const std::map<ShapeTypeRule, const std::string> kShapeTypeRuleToStr {
+        {IGNORE_SHAPE_TYPE, "IGNORE_SHAPE_TYPE"},
+        {ONLY_SUPPORT_STATIC, "ONLY_SUPPORT_STATIC"},
+        {ONLY_SUPPORT_DYNAMIC, "ONLY_SUPPORT_DYNAMIC"}
+};
+
 inline bool IsAddOverflow(const int64_t &a, const int64_t &b) {
   return ((b > 0) && (a > (static_cast<int64_t>(INT64_MAX) - b))) || \
       ((b < 0) && (a < (static_cast<int64_t>(INT64_MIN) - b)));

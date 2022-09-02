@@ -58,9 +58,9 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
 
   std::map<std::string, PassDesc> GetPassDesc(const BufferFusionPassType &pass_type) {
     const std::lock_guard<std::mutex> lock(mu_);
-    std::map<std::string, PassDesc> result;
     std::map<BufferFusionPassType, std::map<std::string, PassDesc>>::const_iterator iter = pass_descs_.find(pass_type);
     if (iter == pass_descs_.cend()) {
+      std::map<std::string, PassDesc> result;
       return result;
     }
     return iter->second;

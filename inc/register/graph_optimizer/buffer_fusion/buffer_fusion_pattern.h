@@ -37,11 +37,7 @@ enum SkipStatus { DISABLED = 0, AVAILABLE = 1, SKIPPED = 2 };
 
 enum ShapeTypeRule { IGNORE_SHAPE_TYPE = 0, ONLY_SUPPORT_STATIC, ONLY_SUPPORT_DYNAMIC };
 
-static const std::map<ShapeTypeRule, const std::string> kShapeTypeRuleToStr {
-  {IGNORE_SHAPE_TYPE, "IGNORE_SHAPE_TYPE"},
-  {ONLY_SUPPORT_STATIC, "ONLY_SUPPORT_STATIC"},
-  {ONLY_SUPPORT_DYNAMIC, "ONLY_SUPPORT_DYNAMIC"}
-};
+extern const std::map<ShapeTypeRule, const std::string> kShapeTypeRuleToStr;
 
 struct BufferFusionOpDesc {
   std::string desc_name;                       // description name
@@ -65,7 +61,6 @@ struct BufferFusionOpDesc {
   std::map<int64_t, SkipStatus> multi_output_skip_status;
 };
 using BufferFusionMapping = std::map<const BufferFusionOpDesc *, std::vector<ge::NodePtr>>;
-using BufferFusionMappings = std::vector<BufferFusionMapping>;
 using BufferFusionNodeDescMap = std::unordered_map<ge::NodePtr, BufferFusionOpDesc *>;
 
 class BufferFusionPattern {

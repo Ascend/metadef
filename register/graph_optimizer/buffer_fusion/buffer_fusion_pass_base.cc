@@ -15,10 +15,10 @@
  */
 
 #include "register/graph_optimizer/buffer_fusion/buffer_fusion_pass_base.h"
-#include "register/graph_optimizer/fusion_common/fusion_turbo.h"
 #include <map>
 #include <string>
 #include <vector>
+#include "register/graph_optimizer/fusion_common/fusion_turbo.h"
 
 namespace fe {
 namespace {
@@ -75,7 +75,7 @@ bool BufferFusionPassBase::CheckTwoNodesImplConsistent(const ge::NodePtr &src_no
 }
 
 bool BufferFusionPassBase::CheckNodesImplConsistent(const BufferFusionMapping &mapping) {
-  std::vector<ge::NodePtr> fusion_nodes = GetMatchedNodes(mapping);
+  const std::vector<ge::NodePtr> fusion_nodes = GetMatchedNodes(mapping);
   return CheckNodesImplConsistent(fusion_nodes);
 }
 
@@ -83,7 +83,7 @@ bool BufferFusionPassBase::CheckNodesImplConsistent(const std::vector<ge::NodePt
   if (fusion_nodes.size() < kNoNeedCompareSize) {
     return true;
   }
-  auto first_node = fusion_nodes[0];
+  const ge::NodePtr first_node = fusion_nodes[0];
   for (size_t index = 1; index < fusion_nodes.size(); ++index) {
     if (!CheckTwoNodesImplConsistent(first_node, fusion_nodes[index])) {
       return false;
@@ -93,15 +93,15 @@ bool BufferFusionPassBase::CheckNodesImplConsistent(const std::vector<ge::NodePt
 }
 
 bool BufferFusionPassBase::CheckNodeIsDynamicShape(const ge::NodePtr& node) {
-  auto op_desc = node->GetOpDesc();
+  const ge::OpDescPtr op_desc = node->GetOpDesc();
   for (size_t index = 0; index < op_desc->GetAllInputsSize(); ++index) {
-    if (FusionTurbo::IsUnknownShape(node, index, true)) {
+    if (FusionTurbo::IsUnknownShape(node, static_cast<int32_t>(index), true)) {
       return true;
     }
   }
 
   for (size_t index = 0; index < op_desc->GetAllOutputsDescSize(); ++index) {
-    if (FusionTurbo::IsUnknownShape(node, index, false)) {
+    if (FusionTurbo::IsUnknownShape(node, static_cast<int32_t>(index), false)) {
       return true;
     }
   }
@@ -109,7 +109,7 @@ bool BufferFusionPassBase::CheckNodeIsDynamicShape(const ge::NodePtr& node) {
 }
 
 bool BufferFusionPassBase::CheckNodesIncDynamicShape(const BufferFusionMapping &mapping) {
-  std::vector<ge::NodePtr> fusion_nodes = GetMatchedNodes(mapping);
+  const std::vector<ge::NodePtr> fusion_nodes = GetMatchedNodes(mapping);
   return CheckNodesIncDynamicShape(fusion_nodes);
 }
 

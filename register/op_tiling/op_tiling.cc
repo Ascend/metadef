@@ -520,7 +520,7 @@ ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_inf
 {
   const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
   bool value = false;
-  if (!ge::AttrUtils::GetBool(op_desc, kMemoryCheck, value) || value == false) {
+  if (!ge::AttrUtils::GetBool(op_desc, kMemoryCheck, value) || !value) {
     return ge::GRAPH_SUCCESS;
   }
   for (size_t i = 0; i < op_desc->GetOutputsSize(); ++i) {
@@ -557,7 +557,7 @@ ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_inf
     GELOGD("Op workspace:%zu size is %ld.", k, workspace);
     run_info.AddTilingData(workspace);
   }
-  uint64_t max_size = run_info.GetTilingDataMaxSize();
+  const uint64_t max_size = run_info.GetTilingDataMaxSize();
   GELOGD("Add tiling data max size %lu.", max_size);
   run_info.AddTilingData(max_size);
   return ge::GRAPH_SUCCESS;

@@ -226,12 +226,12 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
       effect_times++;
       (void)SetDataDumpAttr(original_nodes, fus_nodes);
       for (ge::NodePtr &node : fus_nodes) {
-        auto fusion_op = node->GetOpDesc();
+        const ge::OpDescPtr fusion_op = node->GetOpDesc();
         GraphPassUtil::RecordOriginalOpNames(original_nodes, fusion_op, GetName(), origin_op_names);
         (void)GraphPassUtil::StoreAndUpdataOriginFusionPassName(fusion_op, original_nodes, GetName());
         (void)GraphPassUtil::AddNodeFromOpTypeMap(node_map_info, node);
       }
-      BackWardInheritMode inherit_mode = backward ? BackWardInheritMode::kInheritTrue :
+      const BackWardInheritMode inherit_mode = backward ? BackWardInheritMode::kInheritTrue :
           BackWardInheritMode::kDoNotInherit;
       GraphPassUtil::InheritAttrFromOriNodes(original_nodes, fus_nodes, inherit_mode);
     }

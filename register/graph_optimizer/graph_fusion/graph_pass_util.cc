@@ -18,23 +18,25 @@
 #include "graph/debug/ge_log.h"
 #include "register/graph_optimizer/fusion_common/fusion_turbo_utils.h"
 
+#define REGISTER_MAKE_SHARED(exec_expr0, exec_expr1) \
+  do {                                               \
+    try {                                            \
+      exec_expr0;                                    \
+    } catch (...) {                                  \
+      GELOGW("Make shared failed");                  \
+      exec_expr1;                                    \
+    }                                                \
+  } while (0)
+
 namespace fe {
+namespace {
 const std::string kPassName = "pass_name";
 const char* kDumpGeGraph = "DUMP_GE_GRAPH";
 const char* kBackWard = "_backward";
 const char* kRecompute = "_recompute";
 const char* kOptimizer = "_optimizer";
 const std::array<string, 2> kBoolAttrNeedInherit = {kRecompute, kOptimizer};
-
-#define REGISTER_MAKE_SHARED(exec_expr0, exec_expr1) \
-  do {                                         \
-    try {                                      \
-      exec_expr0;                              \
-    } catch (...) {                            \
-      GELOGW("Make shared failed");            \
-      exec_expr1;                              \
-    }                                          \
-  } while (0)
+}
 
 void GraphPassUtil::SetOutputDescAttr(const uint32_t &origin_index, const uint32_t &fusion_index,
                                       const ge::NodePtr &origin_node, const ge::NodePtr &fusion_node) {
@@ -265,7 +267,7 @@ void GraphPassUtil::GetBackWardAttr(const std::vector<ge::NodePtr> &original_nod
 
   if (inherit_mode != BackWardInheritMode::kDoNotInherit) {
     for (const auto &origin_node : original_nodes) {
-      ge::AttrUtils::GetBool(origin_node->GetOpDesc(), kBackWard, backward);
+      (void) ge::AttrUtils::GetBool(origin_node->GetOpDesc(), kBackWard, backward);
       if (!backward) {
         continue;
       }
@@ -296,9 +298,9 @@ void GraphPassUtil::InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &orig
   size_t i = 0;
   for (const auto &attr : kBoolAttrNeedInherit) {
     for (const auto &origin_node : original_nodes) {
-      bool value = 0;
+      bool value = false;
       (void)ge::AttrUtils::GetBool(origin_node->GetOpDesc(), attr, value);
-      if (value != 0) {
+      if (value) {
         bool_attrs[i] = value;
         break;
       }
@@ -310,9 +312,9 @@ void GraphPassUtil::InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &orig
   GetBackWardAttr(original_nodes, backward, inherit_mode);
 
   for (const auto &fusion_node : fusion_nodes) {
-    auto fusion_op = fusion_node->GetOpDesc();
+    const ge::OpDescPtr fusion_op = fusion_node->GetOpDesc();
     if (backward && !ge::AttrUtils::HasAttr(fusion_op, kBackWard)) {
-      ge::AttrUtils::SetBool(fusion_op, kBackWard, backward);
+      (void) ge::AttrUtils::SetBool(fusion_op, kBackWard, backward);
     }
 
     if (bool_attrs.size() != kBoolAttrNeedInherit.size()) {
@@ -324,7 +326,7 @@ void GraphPassUtil::InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &orig
     i = 0;
     for (const auto &attr : kBoolAttrNeedInherit) {
       if (bool_attrs[i] != 0 && !ge::AttrUtils::HasAttr(fusion_op, attr)) {
-        ge::AttrUtils::SetBool(fusion_op, attr, bool_attrs[i]);
+        (void) ge::AttrUtils::SetBool(fusion_op, attr, bool_attrs[i]);
       }
       ++i;
     }
@@ -351,13 +353,13 @@ void GraphPassUtil::InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &orig
   }
 
   for (const auto &fusion_node : fusion_nodes) {
-    auto fusion_op = fusion_node->GetOpDesc();
+    const ge::OpDescPtr fusion_op = fusion_node->GetOpDesc();
     if (!op_compile_strategy.empty() && !ge::AttrUtils::HasAttr(fusion_op, ge::ATTR_NAME_OP_COMPILE_STRATEGY)) {
-      ge::AttrUtils::SetStr(fusion_op, ge::ATTR_NAME_OP_COMPILE_STRATEGY, op_compile_strategy);
+      (void) ge::AttrUtils::SetStr(fusion_op, ge::ATTR_NAME_OP_COMPILE_STRATEGY, op_compile_strategy);
     }
 
     if (keep_dtype != 0 && !ge::AttrUtils::HasAttr(fusion_op, ge::ATTR_NAME_KEEP_DTYPE)) {
-      ge::AttrUtils::SetInt(fusion_op, ge::ATTR_NAME_KEEP_DTYPE, keep_dtype);
+      (void) ge::AttrUtils::SetInt(fusion_op, ge::ATTR_NAME_KEEP_DTYPE, keep_dtype);
     }
   }
 
