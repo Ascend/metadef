@@ -30,6 +30,89 @@
 namespace {
 using std::make_pair;
 using std::shared_ptr;
+
+ge::graphStatus GetInputInstanceNum(const ge::OpDescImpl *op_desc, const std::string &ir_name,
+                                    const ge::IrInputType ir_type, const size_t start_index, size_t &instance_num) {
+  if (ir_type == ge::kIrInputRequired) {
+    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    if (name != ir_name) {
+      GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
+             "current name %s", op_desc->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
+    }
+    instance_num = 1U;
+    return ge::SUCCESS;
+  }
+  if (ir_type == ge::kIrInputOptional) {
+    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    if (name == ir_name) {
+      instance_num = 1U;
+    } else {
+      instance_num = 0U;
+    }
+    return ge::SUCCESS;
+  }
+  if (ir_type == ge::kIrInputDynamic) {
+    size_t dyn_i = 0U;
+    auto node_indegree = op_desc->GetAllInputsSize();
+    for (size_t i = start_index; i < node_indegree; ++i, ++dyn_i) {
+      auto name = op_desc->GetValidInputNameByIndex(i);
+      if (name != ir_name + std::to_string(dyn_i)) {
+        break;
+      }
+    }
+    instance_num = dyn_i;
+    return ge::SUCCESS;
+  }
+  GELOGE(ge::FAILED, "Failed to get instance num for node %s, unknown ir input type %d, ir name %s",
+         op_desc->GetName().c_str(), ir_type, ir_name.c_str());
+  return ge::FAILED;
+}
+
+ge::graphStatus GetInputInstanceNumByIrInput(const ge::OpDescImpl *op_desc, const std::string &ir_input_name,
+                                             size_t &instance_num) {
+  size_t start_index = 0U;
+  for (const auto &ir_input_2_type : op_desc->GetIRMeta().GetIrInputs()) {
+    size_t ins_num = 0U;
+    GE_CHK_STATUS_RET_NOLOG(GetInputInstanceNum(op_desc, ir_input_2_type.first, ir_input_2_type.second,
+                                                start_index, ins_num));
+    if (ir_input_2_type.first == ir_input_name) {
+      instance_num = ins_num;
+      break;
+    }
+    start_index += ins_num;
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus GetOutputInstanceNum(ge::OpDescImpl *op_desc, const std::string &ir_name, ge::IrOutputType ir_type,
+                                     size_t start_index, size_t &instance_num) {
+  if (ir_type == ge::kIrOutputRequired) {
+    auto name = op_desc->GetOutputNameByIndex(start_index);
+    if (name != ir_name) {
+      GELOGW("Failed to get instance num for node %s, can not find the output for ir name %s, current index %zu, "
+             "current name %s",
+             op_desc->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
+    }
+    instance_num = 1U;
+    return ge::SUCCESS;
+  }
+
+  if (ir_type == ge::kIrOutputDynamic) {
+    size_t dyn_i = 0U;
+    auto node_outdegree = op_desc->GetOutputsSize();
+    for (size_t i = start_index; i < node_outdegree; ++i, ++dyn_i) {
+      auto name = op_desc->GetOutputNameByIndex(i);
+      if (name != ir_name + std::to_string(dyn_i)) {
+        break;
+      }
+    }
+    instance_num = dyn_i;
+    return ge::SUCCESS;
+  }
+  GELOGE(ge::FAILED, "Failed to get instance num for node %s, unknown ir output type %d, ir name %s",
+         op_desc->GetName().c_str(), ir_type, ir_name.c_str());
+  return ge::FAILED;
+}
 }
 
 namespace ge {
@@ -37,7 +120,6 @@ static const GeTensorDesc& InvalidGeTensorDesc() {
   const static GeTensorDesc kGlobalInvalidGeTensorDesc;
   return kGlobalInvalidGeTensorDesc;
 }
-
 const std::string ATTR_NAME_ID = "id";
 
 const std::string ATTR_NAME_STREAM_ID = "stream_id";
@@ -165,31 +247,23 @@ string OpDescImpl::GetName() const {
 void OpDescImpl::SetName(const std::string &name) {
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    this->GetName(), "name", "", "", name);
-  meta_data_.name_ = name;
+  meta_data_.SetOpName(name);
 }
 
 string OpDescImpl::GetType() const {
   return meta_data_.type_;
 }
 
-void OpDescImpl::SetType(const string &type) {
+void OpDescImpl::SetType(const std::string &type, OpDescImplPtr &impl_of_target_type) {
   if (meta_data_.type_ == type) {
     return;
   }
   meta_data_.type_ = type;
 
-  // If the type changes, IR related variables should be modified accordingly
-  auto op = ge::OperatorFactory::CreateOperator("tmp", type.c_str());
-  op.BreakConnect();
-  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
-  if (op_desc != nullptr) {
-    ir_attr_names_ = op_desc->GetIrAttrNames();
-    ir_inputs_ = op_desc->GetIrInputs();
-    subgraph_ir_names_to_type_ = op_desc->GetSubgraphIrNames();
+  if (impl_of_target_type != nullptr) {
+    this->meta_data_.ir_meta_ = impl_of_target_type->meta_data_.ir_meta_;
   } else {
-    ir_inputs_.clear();
-    ir_attr_names_.clear();
-    subgraph_ir_names_to_type_.clear();
+    this->meta_data_.ir_meta_ = IRMetaData("");
   }
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
@@ -231,9 +305,7 @@ graphStatus OpDescImpl::AddInputDesc(const std::string &name, const ge::GeTensor
     }
     inputs_desc_.push_back(in_desc);
     (void)input_name_idx_.insert(make_pair(name, index));
-    if (find(register_input_name_.begin(), register_input_name_.end(), name) == register_input_name_.end()) {
-      register_input_name_.push_back(name);
-    }
+    (void)meta_data_.ir_meta_.AddRegisterInputName(name);
 
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                      this->GetName(), "input_desc:" << index, "", "", "input_name:" << name);
@@ -392,7 +464,7 @@ graphStatus OpDescImpl::AddOptionalInputDesc(const std::string &name,
   if (OpDescImpl::AddInputDesc(name, input_desc) == GRAPH_FAILED) {
     return GRAPH_FAILED;
   }
-  (void)optional_input_names_.insert(name);
+  (void)meta_data_.ir_meta_.AddRegisterOptionalInputName(name);
   return GRAPH_SUCCESS;
 }
 
@@ -410,14 +482,15 @@ graphStatus OpDescImpl::UpdateInputDesc(const uint32_t index, const ge::GeTensor
   }
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
-                   this->GetName(), "input_desc:" << index, "", "", tensor_Desc.GetName());
+                   this->GetName(), "input_desc:" << index, "", "",
+                   tensor_Desc.GetName());
   return GRAPH_SUCCESS;
 }
 
 bool OpDescImpl::OpDescMembersAreEqual(const OpDescImpl &r_op_desc) const {
   return (IsEqual(this->input_name_idx_, r_op_desc.input_name_idx_, "OpDesc.input_name_idx_") &&
           IsEqual(this->output_name_idx_, r_op_desc.output_name_idx_, "OpDesc.output_name_idx_") &&
-          IsEqual(this->optional_input_names_, r_op_desc.optional_input_names_, "OpDesc.optional_input_names_") &&
+          IsEqual(this->meta_data_.ir_meta_, r_op_desc.meta_data_.ir_meta_, "OpDesc.ir_mata_") &&
           IsEqual(this->engine_name_, r_op_desc.engine_name_, "OpDesc.engine_name_") &&
           IsEqual(this->op_kernel_lib_name_, r_op_desc.op_kernel_lib_name_, "OpDesc.op_kernel_lib_name_"));
 }
@@ -659,9 +732,7 @@ graphStatus OpDescImpl::AddOutputDesc(const std::string &name, const ge::GeTenso
   }
   outputs_desc_.push_back(tensor);
   (void)output_name_idx_.insert(make_pair(name, index));
-  if (find(register_output_name_.begin(), register_output_name_.end(), name) == register_output_name_.end()) {
-    register_output_name_.push_back(name);
-  }
+  (void)meta_data_.ir_meta_.AddRegisterOutputName(name);
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                    this->GetName(), "output_desc:" << index, "", "",  "output_name:" << name);
@@ -785,20 +856,6 @@ ConstGeTensorDescPtr OpDescImpl::GetInputDescPtr(const std::string &name) const 
   return inputs_desc_[static_cast<uint64_t>(it->second)];
 }
 
-graphStatus OpDescImpl::AddRegisterInputName(const std::string &name) {
-  if (find(register_input_name_.begin(), register_input_name_.end(), name) == register_input_name_.end()) {
-    register_input_name_.push_back(name);
-  }
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "register_input_name", "", "", name);
-  return GRAPH_SUCCESS;
-}
-
-vector<std::string> OpDescImpl::GetRegisterInputName() const {
-  return register_input_name_;
-}
-
 graphStatus OpDescImpl::AddDynamicInputDesc(const std::string &name, const uint32_t num, const bool is_push_back) {
   if (is_push_back) {
     for (uint32_t i = 0U; i < num; i++) {
@@ -811,7 +868,7 @@ graphStatus OpDescImpl::AddDynamicInputDesc(const std::string &name, const uint3
       return GRAPH_FAILED;
     }
   }
-  if (AddRegisterInputName(name) != GRAPH_SUCCESS) {
+  if (meta_data_.ir_meta_.AddRegisterInputName(name) != GRAPH_SUCCESS) {
     return GRAPH_FAILED;
   }
 
@@ -823,20 +880,6 @@ graphStatus OpDescImpl::AddDynamicInputDescByIndex(const std::string &name, cons
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
-}
-
-graphStatus OpDescImpl::AddRegisterOutputName(const std::string &name) {
-  if (find(register_output_name_.begin(), register_output_name_.end(), name) == register_output_name_.end()) {
-    register_output_name_.push_back(name);
-  }
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "register_output_name", "", "", name);
-  return GRAPH_SUCCESS;
-}
-
-vector<std::string> OpDescImpl::GetRegisterOutputName() const {
-  return register_output_name_;
 }
 
 graphStatus OpDescImpl::AddDynamicOutputDesc(const std::string &name, const uint32_t num, const bool is_push_back) {
@@ -852,17 +895,15 @@ graphStatus OpDescImpl::AddDynamicOutputDesc(const std::string &name, const uint
     }
   }
 
-  if (AddRegisterOutputName(name) != GRAPH_SUCCESS) {
+  if (meta_data_.ir_meta_.AddRegisterOutputName(name) != GRAPH_SUCCESS) {
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
 }
 
-bool OpDescImpl::IsOptionalInput(const std::string &name) const {
-  return optional_input_names_.find(name) != optional_input_names_.end();
+bool OpDescImpl::IsOptionalInput(const uint32_t index) const {
+  return meta_data_.ir_meta_.IsOptionalInput(GetInputNameByIndex(index));
 }
-
-bool OpDescImpl::IsOptionalInput(const uint32_t index) const { return IsOptionalInput(GetInputNameByIndex(index)); }
 
 std::map<std::string, uint32_t> OpDescImpl::GetAllInputName() const { return input_name_idx_; }
 
@@ -1359,27 +1400,10 @@ graphStatus OpDescImpl::SetSubgraphInstanceName(const size_t index, const std::s
   }
   subgraph_instance_names_[index] = name;
 
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
-                   this->GetName(), "subgraph_instance_index:" << index, "", "", "name:" << name);
+  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(), this->GetName(),
+                   "subgraph_instance_index:" << index, "", "", "name:" << name);
   return GRAPH_SUCCESS;
 }
-
-void OpDescImpl::RegisterSubgraphIrName(const std::string &name, const SubgraphType type) {
-  subgraph_ir_names_to_type_[name] = type;
-}
-
-const std::map<std::string, SubgraphType> &OpDescImpl::GetSubgraphIrNames() const {
-  return subgraph_ir_names_to_type_;
-}
-
-SubgraphType OpDescImpl::GetSubgraphTypeByIrName(const std::string &name) const {
-  const auto iter = subgraph_ir_names_to_type_.find(name);
-  if (iter == subgraph_ir_names_to_type_.end()) {
-    return kSubgraphTypeEnd;
-  }
-  return iter->second;
-}
-
 
 graphStatus OpDescImpl::GetSubgraphNameByInstanceName(const std::string &instance_name,
                                                       std::string &subgraph_name) const {
@@ -1414,17 +1438,410 @@ graphStatus OpDescImpl::InferDataSlice(const OpDescPtr &op_desc) {
   op_proxy.BreakConnect();
   return ret;
 }
-void OpDescImpl::AppendIrAttrName(std::string name) {
-  ir_attr_names_.emplace_back(std::move(name));
+IRMetaData &OpDescImpl::MutableIRMeta() {
+  return meta_data_.ir_meta_;
 }
-const std::vector<std::string> &OpDescImpl::GetIrAttrNames() const {
-  return ir_attr_names_;
+const IRMetaData &OpDescImpl::GetIRMeta() const {
+  return meta_data_.ir_meta_;
 }
-void OpDescImpl::AppendIrInput(std::string name, IrInputType input_type) {
-  ir_inputs_.emplace_back(std::move(name), input_type);
+graphStatus OpDescImpl::DefaultInferDataType(const OpDescPtr &op_desc) {
+  auto ret = VerifyIR();
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(ret, "Op %s verify IR failed.", op_desc->GetName().c_str());
+    return ret;
+  }
+
+  ret = VerifyInputDataType();
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(ret, "Op %s verify input data type failed.", op_desc->GetName().c_str());
+    return ret;
+  }
+
+  ret = InferDataTypeForOutputs(op_desc);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(ret, "Fail to infer outputs datatype for op %s .", op_desc->GetName().c_str());
+    return ret;
+  }
+  return GRAPH_SUCCESS;
 }
-const std::vector<std::pair<std::string, IrInputType>> &OpDescImpl::GetIrInputs() const {
-  return ir_inputs_;
+
+graphStatus OpDescImpl::TryInferDataTypeFromInput(const string &datatype_symbol, std::vector<DataType> &dst_types) {
+  const auto &ir_input_name =
+      meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetInputNameFromDataTypeSymbol(datatype_symbol);
+  if (ir_input_name.empty()) {
+    return GRAPH_SUCCESS;
+  }
+  auto ir_input_type = meta_data_.ir_meta_.GetIrInputType(ir_input_name);
+  switch (ir_input_type) {
+    case kIrInputRequired: {
+      DataType fix_dst_type = DT_MAX;
+      GE_CHK_STATUS_RET_NOLOG(TryInferDataTypeFromRequiredInput(ir_input_name, datatype_symbol, fix_dst_type));
+      dst_types.emplace_back(fix_dst_type);
+      break;
+    }
+    case kIrInputDynamic: {
+      GE_CHK_STATUS_RET_NOLOG(TryInferDataTypeFromDynamicInput(ir_input_name, datatype_symbol, dst_types));
+      break;
+    }
+    case kIrInputOptional:
+    default: {
+      GELOGE(GRAPH_PARAM_INVALID, "Failed to infer datatype.Please check IR define.");
+      return GRAPH_PARAM_INVALID;
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+graphStatus OpDescImpl::TryInferDataTypeFromAttr(const string &datatype_symbol, DataType &dst_type) {
+  const auto &ir_attr_names = meta_data_.ir_meta_.GetIrAttrNames();
+  const auto iter = std::find(ir_attr_names.begin(), ir_attr_names.end(), datatype_symbol);
+  if (iter == ir_attr_names.end()) {
+    return GRAPH_SUCCESS;
+  }
+  const auto &attr_name = *iter;
+  if (attr_name.empty()) {
+    return GRAPH_SUCCESS;
+  }
+  if (!this->GetAttrMap().Exists(attr_name)) {
+    GELOGE(GRAPH_PARAM_INVALID, "Attr %s is not exsit.", attr_name.c_str());
+    return GRAPH_PARAM_INVALID;
+  }
+  const auto d = *(this->GetAttrMap().GetByName<int64_t>(attr_name));
+  dst_type = static_cast<DataType>(d); // todo 保护
+  // check dst_data_type is in range if need
+  const auto &type_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
+  if (!type_symbol.IsDataTypeInRange(dst_type)) {
+    GELOGE(GRAPH_PARAM_INVALID, "Attr %s defined data type %s is out of range on IR.", attr_name.c_str(),
+           TypeUtils::DataTypeToSerialString(dst_type).c_str());
+    return GRAPH_PARAM_INVALID;
+  }
+  return GRAPH_SUCCESS;
+}
+
+graphStatus OpDescImpl::VerifyIR() const {
+  const auto ret = meta_data_.ir_meta_.VerifyIR();
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(ret, "Op %s verify IR failed.", this->GetName().c_str());
+    return ret;
+  }
+  return ret;
+}
+graphStatus OpDescImpl::VerifyInputDataType() {
+  std::unordered_map<std::string, DataType> symbol_2_input_dtype;
+  GE_CHK_STATUS_RET_NOLOG(CollectInputDataTypeBySymbol(symbol_2_input_dtype));
+
+  // 1. check inputs datatype are same when they share one datatype symbol
+  GE_CHK_STATUS_RET_NOLOG(VerifyInputDataTypeConsistent(symbol_2_input_dtype));
+
+  // 2. check input datatype in range
+  GE_CHK_STATUS_RET_NOLOG(VerifyInputDataTypeInRange(symbol_2_input_dtype));
+  return GRAPH_SUCCESS;
+}
+
+graphStatus OpDescImpl::TryInferDataTypeFromRequiredInput(const std::string &ir_input_name,
+                                                          const string &datatype_symbol,
+                                                          DataType &dst_type) {
+  auto input_desc = this->GetInputDescPtr(ir_input_name);
+  GE_CHECK_NOTNULL(input_desc);
+  auto input_data_type = input_desc->GetDataType();
+  // check input data type is in range
+  auto dtype_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
+  if (!dtype_symbol.symbol.empty()) {
+    if (!dtype_symbol.IsDataTypeInRange(input_data_type)) {
+      GELOGE(GRAPH_PARAM_INVALID,
+             "Op %s input %s data type %s is out of range on IR by symbol %s.",
+             GetName().c_str(), ir_input_name.c_str(),
+             TypeUtils::DataTypeToSerialString(input_data_type).c_str(), datatype_symbol.c_str());
+      return GRAPH_PARAM_INVALID;
+    }
+  }
+  dst_type = input_data_type;
+  return GRAPH_SUCCESS;
+}
+graphStatus OpDescImpl::TryInferDataTypeFromDynamicInput(const string &ir_input_name,
+                                                         const string &datatype_symbol,
+                                                         std::vector<DataType> &dst_types) {
+  dst_types.clear();
+  size_t start_index = 0U;
+  for (const auto &input_name_2_type : meta_data_.ir_meta_.GetIrInputs()) {
+    const auto &ir_input = input_name_2_type.first;
+    const auto &input_type = input_name_2_type.second;
+
+    size_t instance_num = 0U;
+    GE_CHK_STATUS_RET_NOLOG(GetInputInstanceNum(this, ir_input, input_type, start_index, instance_num));
+    if (ir_input_name != ir_input) {
+      start_index += instance_num;
+      continue;
+    }
+
+    const auto dtype_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
+    if (dtype_symbol.symbol_type == DataTypeSymbolType::kListTensorType) {
+      for (size_t i = 0U; i < instance_num; ++i) {
+        auto input_desc = GetInputDescPtr(start_index + i);
+        GE_CHECK_NOTNULL(input_desc);
+        dst_types.emplace_back(input_desc->GetDataType());
+      }
+    } else {
+      auto input_desc = GetInputDescPtr(start_index);
+      GE_CHECK_NOTNULL(input_desc);
+      dst_types.insert(dst_types.end(), instance_num, input_desc->GetDataType());
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+
+graphStatus OpDescImpl::TryInferDataTypeFromOutput(const string &datatype_symbol, DataType &dst_type) {
+  const auto &out_datatype_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
+  if (out_datatype_symbol.symbol_type == DataTypeSymbolType::kInvalidTensorType) {
+    return GRAPH_PARAM_INVALID;
+  }
+  if (out_datatype_symbol.type_range.tensor_type_impl_->GetMutableDateTypeSet().size() != 1U) {
+    return GRAPH_PARAM_INVALID;
+  }
+  dst_type = *(out_datatype_symbol.type_range.tensor_type_impl_->GetMutableDateTypeSet().cbegin());
+  return GRAPH_SUCCESS;
+}
+
+DataTypeInferStrategy OpDescImpl::GetDataTypeInferStrategy(const string &datatype_symbol) const {
+  // try find src symbol from attr
+  const auto &ir_attr_names = this->GetIRMeta().GetIrAttrNames();
+  const auto iter = std::find(ir_attr_names.begin(), ir_attr_names.end(), datatype_symbol);
+  if (iter != ir_attr_names.end()) {
+    return DataTypeInferStrategy::kInferFromAttr;
+  }
+
+  const auto &ir_input_name =
+      meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetInputNameFromDataTypeSymbol(datatype_symbol);
+  if (!ir_input_name.empty()) {
+    return DataTypeInferStrategy::kInferFromInput;
+  }
+
+  const auto &out_datatype_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
+  if (out_datatype_symbol.type_range.tensor_type_impl_->GetMutableDateTypeSet().size() == 1) {
+    return DataTypeInferStrategy::kInferFromOutput;
+  }
+  return DataTypeInferStrategy::kInvalidStrategy;
+}
+graphStatus OpDescImpl::InferDataTypeForOutput(const std::string &ir_output, std::vector<DataType> &dst_types) {
+  auto output_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetOutputDataTypeSymbol(ir_output);
+  if (output_symbol.empty()) {
+    GELOGE(GRAPH_PARAM_INVALID, "Op %s output %s has no dtype symbol. Please check IR.", this->GetName().c_str(),
+           ir_output.c_str());
+    return GRAPH_PARAM_INVALID;
+  }
+  dst_types.emplace_back(DT_MAX);
+
+  auto infer_strategy = GetDataTypeInferStrategy(output_symbol);
+  switch (infer_strategy) {
+    case DataTypeInferStrategy::kInferFromAttr:
+      GE_CHK_STATUS_RET_NOLOG(TryInferDataTypeFromAttr(output_symbol, dst_types[0]));
+      break;
+    case DataTypeInferStrategy::kInferFromInput: {
+      dst_types.clear();
+      GE_CHK_STATUS_RET_NOLOG(TryInferDataTypeFromInput(output_symbol, dst_types));
+      break;
+    }
+    case DataTypeInferStrategy::kInferFromOutput:
+      GE_CHK_STATUS_RET_NOLOG(TryInferDataTypeFromOutput(output_symbol, dst_types[0]));
+      break;
+    default:
+      GELOGE(GRAPH_PARAM_INVALID, "Op %s output %s has no valid infer strategy. Please check IR.",
+             this->GetName().c_str(), ir_output.c_str());
+      return GRAPH_PARAM_INVALID;
+  }
+  return GRAPH_SUCCESS;
+}
+graphStatus OpDescImpl::CollectInputDataTypeBySymbol(std::unordered_map<std::string,
+                                                                        DataType> &symbol_2_input_dtype) const {
+  const auto &dtype_symbol_2_inputs =
+      meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetAllInputNamesShareDataTypeSymbol();
+  for (const auto &dtype_2_inputs : dtype_symbol_2_inputs) {
+    const auto &dtype_symbol = dtype_2_inputs.first;
+    const auto &input_names = dtype_2_inputs.second;
+    for (const auto &ir_input : input_names) {
+      const auto ir_input_type = this->GetIRMeta().GetIrInputType(ir_input);
+      ConstGeTensorDescPtr input_desc = nullptr;
+      switch (ir_input_type) {
+        case kIrInputRequired: {
+          input_desc = this->GetInputDescPtr(ir_input);
+          GE_CHECK_NOTNULL(input_desc);
+          symbol_2_input_dtype.emplace(dtype_symbol, input_desc->GetDataType());
+          break;
+        }
+        case kIrInputOptional: {
+          auto input_desc = this->GetInputDescPtr(ir_input);
+          if ((input_desc == nullptr) || (input_desc->IsValid() != GRAPH_SUCCESS)) {
+            break;
+          }
+          symbol_2_input_dtype.emplace(dtype_symbol, input_desc->GetDataType());
+          break;
+        }
+        case kIrInputDynamic: {
+          size_t instance_num = 0U;
+          GE_CHK_STATUS_RET_NOLOG(GetInputInstanceNumByIrInput(this, ir_input, instance_num));
+          if (instance_num < 1U) {
+            GELOGD("Op %s dynamic ir_input %s no input.", this->GetName().c_str(), ir_input.c_str());
+            break;
+          }
+          // if dtype symbol ListTensorType, ignore collect
+          auto dynamic_dtype_symbol = this->GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
+          if (dynamic_dtype_symbol.symbol_type == DataTypeSymbolType::kListTensorType) {
+            break;
+          }
+          input_desc = this->GetInputDescPtr(ir_input + "0");
+          GE_CHECK_NOTNULL(input_desc);
+          symbol_2_input_dtype.emplace(dtype_symbol, input_desc->GetDataType());
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+graphStatus OpDescImpl::VerifyInputDataTypeConsistent(const std::unordered_map<std::string,
+                                                                               DataType> &symbol_2_input_dtype) const {
+  const auto &dtype_symbol_2_inputs =
+      meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetAllInputNamesShareDataTypeSymbol();
+  for (const auto &dtype_2_inputs : dtype_symbol_2_inputs) {
+    const auto &dtype_symbol = dtype_2_inputs.first;
+    const auto &input_names = dtype_2_inputs.second;
+    const auto iter = symbol_2_input_dtype.find(dtype_symbol);
+    if (iter == symbol_2_input_dtype.end()) {
+      continue;
+    }
+    DataType expect_data_type = iter->second;
+    for (const auto &ir_input : input_names) {
+      const auto ir_input_type = this->GetIRMeta().GetIrInputType(ir_input);
+      switch (ir_input_type) {
+        case kIrInputRequired: {
+          auto input_desc = this->GetInputDescPtr(ir_input);
+          GE_CHECK_NOTNULL(input_desc);
+          if (input_desc->GetDataType() != expect_data_type) {
+            GELOGE(GRAPH_PARAM_INVALID, "Node %s input desc %s datatype is %s, not fit with IR.",
+                   this->GetName().c_str(), ir_input.c_str(),
+                   TypeUtils::DataTypeToSerialString(input_desc->GetDataType()).c_str());
+            return GRAPH_PARAM_INVALID;
+          }
+          break;
+        }
+        case kIrInputOptional: {
+          auto input_desc = this->GetInputDescPtr(ir_input);
+          if ((input_desc == nullptr) || (input_desc->IsValid() != GRAPH_SUCCESS)) {
+            break;
+          }
+          if (input_desc->GetDataType() != expect_data_type) {
+            GELOGE(GRAPH_PARAM_INVALID, "Node %s input desc %s datatype is %s, not fit with IR.",
+                   this->GetName().c_str(), ir_input.c_str(),
+                   TypeUtils::DataTypeToSerialString(input_desc->GetDataType()).c_str());
+            return GRAPH_PARAM_INVALID;
+          }
+          break;
+        }
+        case kIrInputDynamic: {
+          size_t instance_num = 0U;
+          GE_CHK_STATUS_RET_NOLOG(GetInputInstanceNumByIrInput(this, ir_input, instance_num));
+          if (instance_num < 1U) {
+            GELOGD("Op %s dynamic ir_input %s no input.", this->GetName().c_str(), ir_input.c_str());
+            break;
+          }
+          // check dtype symbol should not as ListTensorType
+          auto dynamic_dtype_symbol = this->GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
+          if (dynamic_dtype_symbol.symbol_type == DataTypeSymbolType::kListTensorType) {
+            GELOGE(GRAPH_PARAM_INVALID,
+                   "Op %s dynamic ir_input %s is ListTensor, but share same datatype symbol %s with other input. "
+                   "Not a valid IR.",
+                   this->GetName().c_str(), ir_input.c_str(), dtype_symbol.c_str());
+            return GRAPH_PARAM_INVALID;
+          }
+
+          for (size_t i = 0U; i < instance_num; ++i) {
+            const auto input_idx = this->GetInputIndexByName(ir_input + std::to_string(i));
+            if (input_idx < 0) {
+              GELOGE(GRAPH_PARAM_INVALID, "Input name %s is not exist.", ir_input.c_str());
+              return GRAPH_PARAM_INVALID;
+            }
+            const auto input_desc = this->GetInputDescPtr(input_idx);
+            GE_CHECK_NOTNULL(input_desc);
+            if (input_desc->GetDataType() != expect_data_type) {
+              GELOGE(GRAPH_PARAM_INVALID, "Node %s input desc %s datatype is %s, not fit with IR.",
+                     this->GetName().c_str(), ir_input.c_str(),
+                     TypeUtils::DataTypeToSerialString(input_desc->GetDataType()).c_str());
+              return GRAPH_PARAM_INVALID;
+            }
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+graphStatus OpDescImpl::VerifyInputDataTypeInRange(const std::unordered_map<std::string,
+                                                                            DataType> &symbol_2_input_dtype) const {
+  for (const auto &symbol_2_dtype : symbol_2_input_dtype) {
+    const auto &dtype_symbol = symbol_2_dtype.first;
+    const auto data_type = symbol_2_dtype.second;
+    auto dtype_symbol_validator = this->GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
+    if (dtype_symbol_validator.symbol_type == DataTypeSymbolType::kInvalidTensorType) {
+      continue;
+    }
+    if (!dtype_symbol_validator.IsDataTypeInRange(data_type)) {
+      GELOGE(GRAPH_PARAM_INVALID, "Op %s data_type %s of inputs with Datatype Symbol %s is output range.",
+             this->GetName().c_str(), TypeUtils::DataTypeToSerialString(data_type).c_str(), dtype_symbol.c_str());
+      return GRAPH_PARAM_INVALID;
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+graphStatus OpDescImpl::InferDataTypeForOutputs(const OpDescPtr &op_desc) {
+  size_t output_index = 0U;
+  for (const auto &name_2_type : op_desc->GetIrOutputs()) {
+    const auto &ir_output_name = name_2_type.first;
+    const auto ir_output_type = name_2_type.second;
+    size_t instance_num = 0U;
+    GE_CHK_STATUS_RET_NOLOG(GetOutputInstanceNum(this, ir_output_name, ir_output_type, output_index, instance_num));
+    // infer dst type
+    std::vector<DataType> dst_types;
+    GE_CHK_STATUS_RET_NOLOG(InferDataTypeForOutput(ir_output_name, dst_types));
+
+    // set output_desc type
+    switch (ir_output_type) {
+      case kIrOutputRequired: {
+        // dst_types may more than 1. like concatv2
+        if ((dst_types.size() < 1) || dst_types[0] == DT_MAX) {
+          GELOGE(GRAPH_FAILED, "Fail to infer datatype");
+          return GRAPH_FAILED;
+        }
+        auto output_desc = MutableOutputDesc(output_index);
+        GE_CHECK_NOTNULL(output_desc);
+        output_desc->SetDataType(dst_types[0]);
+        break;
+      }
+      case kIrOutputDynamic: {
+        if (dst_types.size() != instance_num) {
+          GELOGE(GRAPH_FAILED, "Dst types size %zu, is not equal with instance_num %zu.", dst_types.size(),
+                 instance_num);
+          return GRAPH_FAILED;
+        }
+        for (size_t i = 0U; i < instance_num; ++i) {
+          auto output_desc = MutableOutputDesc(output_index + i);
+          GE_CHECK_NOTNULL(output_desc);
+          output_desc->SetDataType(dst_types[i]);
+        }
+        break;
+      }
+      default: {
+        GELOGE(GRAPH_FAILED, "Ir output name %s has invalid output type.", ir_output_name.c_str());
+        return GRAPH_FAILED;
+      }
+    }
+    output_index += instance_num;
+  }
+  return GRAPH_SUCCESS;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc()
@@ -1460,7 +1877,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetType() con
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetType(const std::string &type) {
-  return impl_->SetType(type);
+  // If the type changes, IR related variables should be modified accordingly
+  auto op = ge::OperatorFactory::CreateOperator("tmp", type.c_str());
+  op.BreakConnect();
+  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  auto target_impl = (op_desc == nullptr) ? nullptr : op_desc->impl_;
+  return impl_->SetType(type, target_impl);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::AddInputDesc(const ge::GeTensorDesc &input_desc) {
@@ -1658,11 +2080,11 @@ ConstGeTensorDescPtr OpDesc::GetInputDescPtr(const std::string &name) const {
 }
 
 graphStatus OpDesc::AddRegisterInputName(const std::string &name) {
-  return impl_->AddRegisterInputName(name);
+  return impl_->MutableIRMeta().AddRegisterInputName(name);
 }
 
 vector<std::string> OpDesc::GetRegisterInputName() const {
-  return impl_->GetRegisterInputName();
+  return impl_->MutableIRMeta().GetRegisterInputName();
 }
 
 graphStatus OpDesc::AddDynamicInputDesc(const std::string &name, const uint32_t num, const bool is_push_back) {
@@ -1677,11 +2099,11 @@ graphStatus OpDesc::AddDynamicInputDescByIndex(const std::string &name, const ui
 }
 
 graphStatus OpDesc::AddRegisterOutputName(const std::string &name) {
-  return impl_->AddRegisterOutputName(name);
+  return impl_->MutableIRMeta().AddRegisterOutputName(name);
 }
 
 vector<std::string> OpDesc::GetRegisterOutputName() const {
-  return impl_->GetRegisterOutputName();
+  return impl_->MutableIRMeta().GetRegisterOutputName();
 }
 
 graphStatus OpDesc::AddDynamicOutputDesc(const std::string &name, const uint32_t num, const bool is_push_back) {
@@ -1704,7 +2126,7 @@ graphStatus OpDesc::AddDynamicOutputDesc(const std::string &name, const uint32_t
 }
 
 bool OpDesc::IsOptionalInput(const std::string &name) const {
-  return impl_->IsOptionalInput(name);
+  return impl_->GetIRMeta().IsOptionalInput(name);
 }
 
 std::map<std::string, uint32_t> OpDesc::GetAllInputName() const {
@@ -1988,17 +2410,17 @@ graphStatus OpDesc::SetSubgraphInstanceName(const uint32_t index, const std::str
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 void OpDesc::RegisterSubgraphIrName(const std::string &name, const SubgraphType type) {
-  impl_->RegisterSubgraphIrName(name, type);
+  impl_->MutableIRMeta().RegisterSubgraphIrName(name, type);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 const std::map<std::string, SubgraphType> &OpDesc::GetSubgraphIrNames() const {
-  return impl_->GetSubgraphIrNames();
+  return impl_->GetIRMeta().GetSubgraphIrNames();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 SubgraphType OpDesc::GetSubgraphTypeByIrName(const std::string &name) const {
-  return impl_->GetSubgraphTypeByIrName(name);
+  return impl_->GetIRMeta().GetSubgraphTypeByIrName(name);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
@@ -2010,15 +2432,42 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::InferDataSlic
   return impl_->InferDataSlice(shared_from_this());
 }
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::AppendIrAttrName(const std::string &name) {
-  return impl_->AppendIrAttrName(name);
+  return impl_->MutableIRMeta().AppendIrAttrName(name);
 }
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const std::vector<std::string> &OpDesc::GetIrAttrNames() const {
-  return impl_->GetIrAttrNames();
+  return impl_->GetIRMeta().GetIrAttrNames();
 }
 void OpDesc::AppendIrInput(std::string name, IrInputType input_type) {
-  impl_->AppendIrInput(std::move(name), input_type);
+  impl_->MutableIRMeta().AppendIrInput(std::move(name), input_type);
 }
 const std::vector<std::pair<std::string, IrInputType>> &OpDesc::GetIrInputs() const {
-  return impl_->GetIrInputs();
+  return impl_->GetIRMeta().GetIrInputs();
+}
+
+void OpDesc::RegisterDataTypeSymbol(const string &datatype_symbol, const TensorType &type_range) {
+  (void)impl_->MutableIRMeta().MutableIRDataTypeSymbolStore().RegisterDataTypeSymbol(datatype_symbol, type_range);
+}
+graphStatus OpDesc::DefaultInferDataType() {
+  return impl_->DefaultInferDataType(shared_from_this());
+}
+graphStatus OpDesc::VerifyIR() {
+  return impl_->VerifyIR();
+}
+
+void OpDesc::RegisterDataTypeSymbol(const string &datatype_symbol, const ListTensorType &type_range) {
+  (void)impl_->MutableIRMeta().MutableIRDataTypeSymbolStore().RegisterDataTypeSymbol(datatype_symbol, type_range);
+}
+void OpDesc::RegisterIrInputDataTypeSymbol(const string &input_name, const string &datatype_symbol) {
+  (void)impl_->MutableIRMeta().MutableIRDataTypeSymbolStore().AddInputName2DataTypeSymbol(input_name, datatype_symbol);
+}
+void OpDesc::RegisterIrOutputDataTypeSymbol(const string &output_name, const string &datatype_symbol) {
+  (void) impl_->MutableIRMeta().MutableIRDataTypeSymbolStore().AddOutputName2DataTypeSymbol(output_name,
+                                                                                            datatype_symbol);
+}
+void OpDesc::AppendIrOutput(std::string name, IrOutputType output_type) {
+  impl_->MutableIRMeta().AppendIrOutput(name, output_type);
+}
+const std::vector<std::pair<std::string, IrOutputType>> &OpDesc::GetIrOutputs() const {
+  return impl_->GetIRMeta().GetIrOutputs();
 }
 }  // namespace ge

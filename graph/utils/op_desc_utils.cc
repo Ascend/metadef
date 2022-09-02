@@ -769,9 +769,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescUtils::CloneOpDes
   if (!op_desc->impl_->output_name_idx_.empty()) {
     op_desc->impl_->output_name_idx_.clear();
   }
-  if (!op_desc->impl_->optional_input_names_.empty()) {
-    op_desc->impl_->optional_input_names_.clear();
-  }
+  op_desc->impl_->MutableIRMeta() = IRMetaData(op_desc->GetName());
 
   return op_desc;
 }
@@ -799,8 +797,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescUtils::CopyOpDesc
   op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
   op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
                                          org_op_desc->impl_->input_name_idx_.cend());
-  op_desc->impl_->optional_input_names_.insert(org_op_desc->impl_->optional_input_names_.cbegin(),
-                                               org_op_desc->impl_->optional_input_names_.cend());
+  op_desc->impl_->MutableIRMeta() = org_op_desc->impl_->GetIRMeta();
   op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
                                           org_op_desc->impl_->output_name_idx_.cend());
 

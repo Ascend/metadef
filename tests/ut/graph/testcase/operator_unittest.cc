@@ -538,11 +538,11 @@ TEST_F(UtestOperater, GetInputConstDataOut) {
 TEST_F(UtestOperater, testTensorType) {
   DataType dt(DT_INT16);
   TensorType tt1(dt);
-  EXPECT_EQ(tt1.tensor_type_impl_->dt_vec_[0], DT_INT16);
+  EXPECT_EQ(*(tt1.tensor_type_impl_->dt_set_.cbegin()), DT_INT16);
 
   const std::initializer_list<DataType> types = {DT_INT8, DT_UINT8, DT_INT16};
   TensorType tt2(types);
-  EXPECT_EQ(tt2.tensor_type_impl_->dt_vec_.size(), 3);
+  EXPECT_EQ(tt2.tensor_type_impl_->dt_set_.size(), 3);
 }
 
 TEST_F(UtestOperater, CreateOperator) {

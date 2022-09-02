@@ -311,6 +311,11 @@ struct TensorType {
 
   std::shared_ptr<TensorTypeImpl> tensor_type_impl_;
 };
+
+struct ListTensorType {
+  explicit ListTensorType(const TensorType &tensor_type) : tensor_type(tensor_type) {};
+  TensorType tensor_type;
+};
 }  // namespace ge
 
 namespace domi {

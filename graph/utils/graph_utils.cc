@@ -1761,7 +1761,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
       }
       (void)dst_root_compute_graph->AddSubGraph(dst_subgraph);
       dst_subgraph->SetParentNode(node);
-      op_desc->impl_->subgraph_ir_names_to_type_ = n->GetOpDesc()->impl_->subgraph_ir_names_to_type_;
+      op_desc->impl_->MutableIRMeta() = n->GetOpDesc()->impl_->GetIRMeta();
       op_desc->impl_->subgraph_names_to_index_ = n->GetOpDesc()->impl_->subgraph_names_to_index_;
       op_desc->impl_->subgraph_instance_names_ = n->GetOpDesc()->impl_->subgraph_instance_names_;
     }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,13 +65,6 @@ const char_t *const kShapeRangeInvalid = "format of shape range is invalid";
 const char_t *const kShapeRangeSample = "\"[1~20,3,3~6,-1]\"";
 }  // namespace
 
-///
-/// Check if a * b overflow.
-/// @param a multiplier
-/// @param b Multiplicand
-/// @return true: overflow
-///         false: not overflow
-///
 static bool CheckMultiplyOverflowInt64(const int64_t &a, const int64_t &b) {
   if (a > 0) {
     if (b > 0) {

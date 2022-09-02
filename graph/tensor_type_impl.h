@@ -16,7 +16,7 @@
 
 #ifndef METADEF_CXX_TENSOR_TYPE_IMPL_H
 #define METADEF_CXX_TENSOR_TYPE_IMPL_H
-#include <vector>
+#include <set>
 #include "graph/types.h"
 namespace ge {
 class TensorTypeImpl {
@@ -24,11 +24,14 @@ class TensorTypeImpl {
   TensorTypeImpl() = default;
   ~TensorTypeImpl() = default;
 
-  std::vector<DataType> &GetMutableDateTypeVec() {
-      return dt_vec_;
+  std::set<DataType> &GetMutableDateTypeSet() {
+      return dt_set_;
+  }
+  bool IsDataTypeInRange(const DataType data_type) const {
+    return (dt_set_.count(data_type) > 0);
   }
  private:
-  std::vector<DataType> dt_vec_;
+  std::set<DataType> dt_set_;
 };
 }  // namespace ge
 

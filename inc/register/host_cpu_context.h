@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,4 +31,4 @@ class HostCpuContext {
 };
 } // namespace ge
 
-#endif //INC_REGISTER_HOST_CPU_CONTEXT_H_
+#endif // INC_REGISTER_HOST_CPU_CONTEXT_H_

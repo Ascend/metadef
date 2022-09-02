@@ -556,10 +556,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   ATTRIBUTED_DEPRECATED(void InputRegister(const char_t *))
   void InputRegister(const std::string &name);
   void InputRegister(const char_t *name);
+  void InputRegister(const char_t *name, const char_t *datatype_symbol);
 
   ATTRIBUTED_DEPRECATED(void OptionalInputRegister(const char_t *))
   void OptionalInputRegister(const std::string &name);
   void OptionalInputRegister(const char_t *name);
+  void OptionalInputRegister(const char_t *name, const char_t *datatype_symbol);
 
   void InferFuncRegister(const std::function<graphStatus(Operator &)> &func);
 
@@ -571,9 +573,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   void OutputRegister(const std::string &name);
   void OutputRegister(const char_t *name);
 
+  void OutputRegister(const char_t *name, const char_t *datatype_symbol);
+
   ATTRIBUTED_DEPRECATED(void DynamicInputRegister(const char_t *, const uint32_t, bool))
   void DynamicInputRegister(const std::string &name, const uint32_t num, bool is_push_back = true);
   void DynamicInputRegister(const char_t *name, const uint32_t num, bool is_push_back = true);
+
+  void DynamicInputRegister(const char_t *name, const uint32_t num, const char_t *datatype_symbol,
+                            bool is_push_back = true);
 
   ATTRIBUTED_DEPRECATED(void DynamicInputRegisterByIndex(const char_t *, const uint32_t, size_t))
   void DynamicInputRegisterByIndex(const std::string &name, const uint32_t num, size_t index);
@@ -583,9 +590,15 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   void DynamicOutputRegister(const std::string &name, const uint32_t num, bool is_push_back = true);
   void DynamicOutputRegister(const char_t *name, const uint32_t num, bool is_push_back = true);
 
+  void DynamicOutputRegister(const char_t *name, const uint32_t num, const char_t *datatype_symbol,
+                             bool is_push_back = true);
+
   ATTRIBUTED_DEPRECATED(void RequiredAttrRegister(const char_t *))
   void RequiredAttrRegister(const std::string &name);
   void RequiredAttrRegister(const char_t *name);
+
+  void DataTypeRegister(const char_t *datatype_symbol, const TensorType &type_range);
+  void DataTypeRegister(const char_t *datatype_symbol, const ListTensorType &list_type_range);
 
   graphStatus VerifyAll();
 

@@ -88,10 +88,14 @@ void DeleteCompileInfo(void *compile_info) {
 }
 
 UINT32 OpTilingStubNew(gert::TilingContext *kernel_context) {
+  auto tensor_without_data = kernel_context->GetInputTensor(1);
+  EXPECT_EQ(tensor_without_data->GetAddr(), nullptr);
+  EXPECT_EQ(tensor_without_data->GetStorageShape(), gert::Shape({5, 5, 5, 5}));
+  EXPECT_EQ(tensor_without_data->GetOriginShape(), gert::Shape({5, 5, 5, 5}));
   auto tensor = kernel_context->GetInputTensor(0);
   EXPECT_EQ(tensor->GetShape().GetStorageShape().GetDimNum(), 4);
   gert::Shape expect_shape({4,4,4,4});
-  EXPECT_TRUE(tensor->GetShape().GetStorageShape() == expect_shape);
+  EXPECT_EQ(tensor->GetShape().GetStorageShape(), expect_shape);
   EXPECT_EQ(tensor->GetDataType(), DT_INT8);
   EXPECT_EQ((tensor->GetData<int8_t>())[3], 4);
   EXPECT_EQ((tensor->GetData<int8_t>())[2], 3);

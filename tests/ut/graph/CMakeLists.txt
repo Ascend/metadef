@@ -46,6 +46,8 @@ set(UT_FILES
     "testcase/buffer_unittest.cc"
     "testcase/ge_attr_value_unittest.cc"
     "testcase/shape_refiner_unittest.cc"
+    "testcase/infer_datatype_unittest.cc"
+    "testcase/infer_datatype_unittest.cc"
     "testcase/graph_utils_unittest.cc"
     "testcase/file_utils_unittest.cc"
     "testcase/ffts_graph_utils_unittest.cc"

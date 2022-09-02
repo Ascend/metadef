@@ -131,17 +131,17 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
 
 void ModelSerializeImp::OpDescIrDefToAttrDef(const ConstOpDescPtr &op_desc,
     google::protobuf::Map<std::string, ge::proto::AttrDef> *op_desc_attr) const {
-  if (!op_desc->impl_->ir_attr_names_.empty()) {
+  if (!op_desc->impl_->GetIRMeta().GetIrAttrNames().empty()) {
     proto::AttrDef ir_attr_names;
-    for (const auto &item : op_desc->impl_->ir_attr_names_) {
+    for (const auto &item : op_desc->impl_->GetIRMeta().GetIrAttrNames()) {
       ir_attr_names.mutable_list()->add_s(item);
     }
     (*op_desc_attr)["_ir_attr_names"] = ir_attr_names;
   }
-  if (!op_desc->impl_->ir_inputs_.empty()) {
+  if (!op_desc->impl_->GetIRMeta().GetIrInputs().empty()) {
     proto::AttrDef key;
     proto::AttrDef value;
-    for (const auto &input : op_desc->impl_->ir_inputs_) {
+    for (const auto &input : op_desc->impl_->GetIRMeta().GetIrInputs()) {
       key.mutable_list()->add_s(input.first);
       value.mutable_list()->add_i(static_cast<int64_t>(input.second));
     }
@@ -177,9 +177,9 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
     (void) op_desc_attr->insert({"_output_name_key", key_out});
     (void) op_desc_attr->insert({"_output_name_value", value_out});
   }
-  if (!op_desc->impl_->optional_input_names_.empty()) {
+  if (!op_desc->impl_->GetIRMeta().GetOptionalInputName().empty()) {
     proto::AttrDef opt_input;
-    for (auto &item : op_desc->impl_->optional_input_names_) {
+    for (auto &item : op_desc->impl_->GetIRMeta().GetOptionalInputName()) {
       opt_input.mutable_list()->add_s(item);
     }
     (*op_desc_attr)["_opt_input"] = opt_input;
@@ -324,7 +324,7 @@ void ModelSerializeImp::AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::str
   }
   if (!opt_input.empty()) {
     for (const auto &i : opt_input) {
-      (void) op_desc->impl_->optional_input_names_.insert(i);
+      (void) op_desc->impl_->MutableIRMeta().AddRegisterOptionalInputName(i);
     }
   }
 }
@@ -333,7 +333,7 @@ void ModelSerializeImp::AttrDefToOpDescIrDef(OpDescPtr &op_desc, proto::OpDef &o
   if (op_def_proto.attr().count("_ir_attr_names") > 0UL) {
     const auto &name_list = op_def_proto.attr().at("_ir_attr_names").list();
     for (const auto &item_s : name_list.s()) {
-      op_desc->impl_->ir_attr_names_.emplace_back(item_s);
+      op_desc->impl_->MutableIRMeta().AppendIrAttrName(item_s);
     }
     (void) op_def_proto.mutable_attr()->erase("_ir_attr_names");
   }
@@ -365,7 +365,7 @@ void ModelSerializeImp::AttrDefToOpDescIrDef(OpDescPtr &op_desc, proto::OpDef &o
     return;
   }
   for (size_t i = 0U; i < keys.size(); ++i) {
-      op_desc->impl_->ir_inputs_.emplace_back(std::move(keys[i]), values[i]);
+      op_desc->impl_->MutableIRMeta().AppendIrInput(std::move(keys[i]), values[i]);
   }
 }
 
