@@ -23,13 +23,14 @@
 #include <securec.h>
 #include <cstdint>
 #include "graph/debug/ge_log.h"
+#include "graph/debug/ge_op_types.h"
 #include "graph/utils/graph_utils.h"
 #include "common/util/mem_utils.h"
 #include "graph/utils/node_utils.h"
 #include "common/checker.h"
 
 #include "exe_graph/lowering/exe_graph_attrs.h"
-#include "exe_graph/runtime/context_extend.h"
+#include "exe_graph/runtime/execute_graph_types.h"
 #include "graph/debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
 namespace gert {
@@ -169,21 +170,6 @@ ge::graphStatus AddDataEdge(const ge::NodePtr &src, int32_t src_index, const ge:
            dst->GetName().c_str(), dst_index, ret);
   }
   return ret;
-}
-std::unique_ptr<uint8_t[]> CreateKernelExtendInfo(const char *name, const char *type, BufferPool &buffer_pool,
-                                                  size_t &total_size) {
-  total_size = sizeof(KernelExtendInfo);
-  auto holder = ge::ComGraphMakeUnique<uint8_t[]>(total_size);
-  GE_ASSERT_NOTNULL(holder);
-
-  auto name_id = buffer_pool.AddStr(name);
-  auto type_id = buffer_pool.AddStr(type);
-
-  auto extend_info = reinterpret_cast<KernelExtendInfo *>(holder.get());
-  extend_info->SetKernelName(reinterpret_cast<const char *>(name_id));
-  extend_info->SetKernelType(reinterpret_cast<const char *>(type_id));
-
-  return holder;
 }
 HyperStatus AddDependencyBetweenNodes(const ge::Node &src, const ge::Node &dst) {
   // todo 检查是否在一张图上
@@ -356,9 +342,6 @@ HyperStatus ValueHolder::AddDependency(const ValueHolderPtr &src, const ValueHol
   }
   return AddDependencyBetweenNodes(*(src->GetNode()), *(dst->GetNode()));
 }
-void ValueHolder::SetStage(ValueHolder::RunStage stage) {
-  ge::AttrUtils::SetInt(node_->GetOpDesc(), kStage, stage);
-}
 GraphFrame *ValueHolder::PushGraphFrame() {
   if (!graph_frames.empty()) {
     GELOGE(ge::INTERNAL_ERROR,
@@ -493,9 +476,15 @@ std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHo
     // The NetOutput type means "Network outputs", subgraph use InnerNetOutput as output type
     node_type = kInnerNetOutput;
   }
+  return PopGraphFrame(outputs, targets, node_type);
+}
+std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
+                                                       const std::vector<ValueHolderPtr> &targets,
+                                                       const char *node_type) {
+  GE_ASSERT_NOTNULL(node_type);
   auto out_holder = CreateVoid(node_type, outputs);
   GE_ASSERT_NOTNULL(out_holder);
-  if (graph_frames.size() == 1U) {
+  if (strcmp(ge::NETOUTPUT, node_type) == 0) {
     // the name of NetOutput node must be `NetOutput`
     out_holder->GetNode()->GetOpDesc()->SetName(node_type);
   }
@@ -505,14 +494,43 @@ std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHo
   }
   return PopGraphFrame();
 }
-std::vector<ValueHolderPtr> FrameSelector::OnRootFrame(const std::function<std::vector<ValueHolderPtr>()> &builder) {
+
+std::vector<ValueHolderPtr> FrameSelector::OnMainRoot(const std::function<std::vector<ValueHolderPtr>()> &builder) {
   if (builder == nullptr || graph_frames.empty()) {
     return {};
   }
-  current_frame = graph_frames.front().get();
-  auto holders = builder();
+  std::vector<ValueHolderPtr> outputs;
+  if (OnMainRoot(builder, outputs) != ge::GRAPH_SUCCESS) {
+    GELOGW("Compatible mode, the air code is not the newest.");
+    current_frame = graph_frames.front().get();
+    outputs = builder();
+    current_frame = nullptr;
+  }
+  return outputs;
+}
+ge::graphStatus FrameSelector::OnMainRoot(const std::function<std::vector<ValueHolderPtr>()> &builder,
+                                          std::vector<ValueHolderPtr> &outputs) {
+  GE_ASSERT_NOTNULL(builder, "Failed to do frame selection, the builder is nullptr");
+  // 栈底是root-frame，向上是main-frame，因此栈中至少有两个元素
+  GE_ASSERT_TRUE(graph_frames.size() > 1U, "Failed to do frame selection, there is no main-frame exists");
+
+  auto root_frame = graph_frames.begin()->get();
+  GE_ASSERT_NOTNULL(root_frame, "Failed to find the root frame");
+  auto main_frame = (graph_frames.begin() + 1)->get();
+  GE_ASSERT_NOTNULL(main_frame, "Failed to find the main frame");
+
+  // check if the main_frame is correct
+  auto root_graph = root_frame->GetExeGraph();
+  GE_ASSERT_NOTNULL(root_graph, "Failed to find the root graph");
+  auto main_node = root_graph->FindFirstNodeMatchType(GetExecuteGraphTypeStr(ExecuteGraphType::kMain));
+  GE_ASSERT_NOTNULL(main_node, "Failed to find the main node");
+  auto main_graph = ge::NodeUtils::GetSubgraph(*main_node, 0U);
+  GE_ASSERT_TRUE(main_graph == main_frame->GetExeGraph(), "Failed to find the main frame");
+
+  current_frame = main_frame;
+  outputs = builder();
   current_frame = nullptr;
-  return holders;
+  return ge::GRAPH_SUCCESS;
 }
 }  // namespace bg
 }  // namespace gert

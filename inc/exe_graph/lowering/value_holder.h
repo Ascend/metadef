@@ -43,14 +43,6 @@ class ValueHolder {
     kValueHolderTypeEnd
   };
 
-  enum RunStage {
-    kInit,
-    kMain,
-    kExit,
-
-    kRunStageEnd
-  };
-
   using NodeHolder = ge::Node;
   using NodeHolderPtr = ge::NodePtr;
   using GraphHolder = ge::ComputeGraph;
@@ -80,7 +72,6 @@ class ValueHolder {
   const GraphHolder *GetGraph() const noexcept;
 
   int32_t GetOutIndex() const noexcept;
-  void SetStage(RunStage stage);
   // ref-from other的含义是，本value指向了other（本value没有独立的内存）
   ge::graphStatus RefFrom(const ValueHolderPtr &other);
 
@@ -120,6 +111,9 @@ class ValueHolder {
   static std::unique_ptr<GraphFrame> PopGraphFrame();
   static std::unique_ptr<GraphFrame> PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
                                                    const std::vector<ValueHolderPtr> &targets);
+  static std::unique_ptr<GraphFrame> PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
+                                                   const std::vector<ValueHolderPtr> &targets,
+                                                   const char *out_node_type);
   static GraphFrame *GetCurrentFrame();
   static GraphHolder *GetCurrentGraph();
   static void SetCurrentComputeNode(const ge::NodePtr &node);
