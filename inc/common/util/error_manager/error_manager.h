@@ -47,7 +47,7 @@ inline std::string TrimPath(const std::string &str) {
 #endif
 }
 
-constexpr size_t const LIMIT_PER_MESSAGE = 512U;
+constexpr size_t const LIMIT_PER_MESSAGE = 1024U;
 
 ///
 /// @brief Report error message

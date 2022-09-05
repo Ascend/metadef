@@ -41,8 +41,8 @@ LoweringGlobalData &LoweringGlobalData::AddCompiledResult(const ge::NodePtr &nod
 }
 
 void *LoweringGlobalData::FindKnownSubgraphModel(const ge::NodePtr &node) const {
-  const std::map<int64_t, void *>::const_iterator iter
-      = node_ids_to_known_subgraph_models_.find(node->GetOpDesc()->GetId());
+  const std::map<int64_t, void *>::const_iterator iter =
+      node_ids_to_known_subgraph_models_.find(node->GetOpDesc()->GetId());
   if (iter == node_ids_to_known_subgraph_models_.cend()) {
     return nullptr;
   }
@@ -68,12 +68,12 @@ LoweringGlobalData &LoweringGlobalData::SetAllocator(AllocatorDesc desc, bg::Val
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) {
   const auto &iter = placements_to_allocator_.find(desc);
   if (iter == placements_to_allocator_.end()) {
-    auto allocator = bg::FrameSelector::OnRootFrame([&]() -> std::vector<bg::ValueHolderPtr> {
+    auto allocator = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
       auto memory_type_holder = bg::ValueHolder::CreateConst(&desc, sizeof(desc));
       auto allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {memory_type_holder});
       return {allocator};
     });
-    GE_ASSERT_EQ(allocator.size(), 1);
+    GE_ASSERT_EQ(allocator.size(), 1U);
     GE_ASSERT_NOTNULL(allocator[0]);
     SetAllocator(desc, allocator[0]);
     return allocator[0];

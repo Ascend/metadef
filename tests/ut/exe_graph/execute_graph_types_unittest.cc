@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
-#include <stdlib.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
-typedef struct {
-  size_t attr_num;
-  size_t offset[0];
-} RuntimeAttrsDef;
-#ifdef __cplusplus
+#include "exe_graph/runtime/execute_graph_types.h"
+#include <gtest/gtest.h>
+namespace gert {
+class ExecuteGraphTypesUT : public testing::Test {};
+TEST_F(ExecuteGraphTypesUT, GetStr_Ok) {
+  EXPECT_STREQ(GetExecuteGraphTypeStr(ExecuteGraphType::kInit), "Init");
+  EXPECT_STREQ(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), "Main");
+  EXPECT_STREQ(GetExecuteGraphTypeStr(ExecuteGraphType::kDeInit), "DeInit");
 }
-#endif
-
-#endif  // AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
+TEST_F(ExecuteGraphTypesUT, GetStr_Nullptr_OutOfRange) {
+  EXPECT_EQ(GetExecuteGraphTypeStr(ExecuteGraphType::kNum), nullptr);
+}
+}  // namespace gert
