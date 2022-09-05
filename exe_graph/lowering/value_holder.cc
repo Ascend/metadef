@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@
 #include "exe_graph/runtime/execute_graph_types.h"
 #include "graph/debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/def_types.h"
 namespace gert {
 namespace bg {
 namespace {
@@ -171,6 +172,7 @@ ge::graphStatus AddDataEdge(const ge::NodePtr &src, int32_t src_index, const ge:
   }
   return ret;
 }
+
 HyperStatus AddDependencyBetweenNodes(const ge::Node &src, const ge::Node &dst) {
   // todo 检查是否在一张图上
   if (ge::GraphUtils::AddEdge(src.GetOutControlAnchor(), dst.GetInControlAnchor()) != ge::GRAPH_SUCCESS) {
@@ -303,7 +305,7 @@ std::vector<ValueHolderPtr> ValueHolder::CreateDataOutput(const char *node_type,
 ValueHolderPtr ValueHolder::CreateVoid(const char *node_type, const std::vector<ValueHolderPtr> &inputs) {
   auto node = CreateNode(node_type, inputs, 0);
   GE_ASSERT_NOTNULL(node);
-  return CreateFromNode(node, -1, kOutput);
+  return CreateFromNode(node, -1, ValueHolderType::kOutput);
 }
 /**
  * @param data const数据
@@ -316,14 +318,14 @@ ValueHolderPtr ValueHolder::CreateConst(const void *data, size_t size, bool is_s
   GE_ASSERT_NOTNULL(node);
   GE_ASSERT_SUCCESS(node->GetOpDesc()->SetAttr("is_string", ge::AnyValue::CreateFrom(is_string)));
   GE_ASSERT_TRUE(ge::AttrUtils::SetZeroCopyBytes(node->GetOpDesc(), kConstValue,
-                                                 ge::Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(data), size)));
-  return CreateFromNode(node, 0, kConst);
+                                                 ge::Buffer::CopyFrom(ge::PtrToPtr<void, uint8_t>(data), size)));
+  return CreateFromNode(node, 0, ValueHolderType::kConst);
 }
 ValueHolderPtr ValueHolder::CreateFeed(int64_t index) {
   auto node = ValueHolder::CreateNode("Data", {}, 1U);
   GE_ASSERT_NOTNULL(node);
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(node->GetOpDesc(), kFeedIndex, index));
-  return CreateFromNode(node, 0, kFeed);
+  return CreateFromNode(node, 0, ValueHolderType::kFeed);
 }
 
 ValueHolderPtr ValueHolder::CreateSingleDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs) {
@@ -342,6 +344,7 @@ HyperStatus ValueHolder::AddDependency(const ValueHolderPtr &src, const ValueHol
   }
   return AddDependencyBetweenNodes(*(src->GetNode()), *(dst->GetNode()));
 }
+
 GraphFrame *ValueHolder::PushGraphFrame() {
   if (!graph_frames.empty()) {
     GELOGE(ge::INTERNAL_ERROR,

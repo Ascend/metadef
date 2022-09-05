@@ -15,14 +15,16 @@
  */
 
 #include "toolchain/slog.h"
+#include "toolchain/plog.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-void dav_log(int module_id, const char *fmt, ...) {
+void dav_log(int module_id, const char *fmt, ...) {}
 
-}
+static int log_level = DLOG_ERROR;
+
 #define __DO_PRINT(LEVEL)                            \
   do {                                               \
     const int FMT_BUFF_SIZE = 1024;                  \
@@ -35,14 +37,32 @@ void dav_log(int module_id, const char *fmt, ...) {
   } while (false)
 
 void DlogErrorInner(int module_id, const char *fmt, ...) {
+  if (log_level > DLOG_ERROR) {
+    return;
+  }
   __DO_PRINT("[ERROR]");
 }
 
-void DlogWarnInner(int module_id, const char *fmt, ...) { dav_log(module_id, fmt); }
+void DlogWarnInner(int module_id, const char *fmt, ...) {
+  if (log_level > DLOG_WARN) {
+    return;
+  }
+  __DO_PRINT("[WARN]");
+}
 
-void DlogInfoInner(int module_id, const char *fmt, ...) { dav_log(module_id, fmt); }
+void DlogInfoInner(int module_id, const char *fmt, ...) {
+  if (log_level > DLOG_INFO) {
+    return;
+  }
+  __DO_PRINT("[INFO]");
+}
 
-void DlogDebugInner(int module_id, const char *fmt, ...) { dav_log(module_id, fmt); }
+void DlogDebugInner(int module_id, const char *fmt, ...) {
+  if (log_level > DLOG_DEBUG) {
+    return;
+  }
+  __DO_PRINT("[DEBUG]");
+}
 
 void DlogEventInner(int module_id, const char *fmt, ...) { dav_log(module_id, fmt); }
 
@@ -52,11 +72,25 @@ void DlogWithKVInner(int module_id, int level, KeyValue *pst_kv_array, int kv_nu
   dav_log(module_id, fmt);
 }
 
-int dlog_setlevel(int module_id, int level, int enable_event) { return DLOG_DEBUG; }
-
-int dlog_getlevel(int module_id, int *enable_event) { return DLOG_DEBUG; }
-
-int CheckLogLevel(int moduleId, int logLevel)
-{
-  return 1;
+int dlog_setlevel(int module_id, int level, int enable_event) {
+  log_level = level;
+  return 0;
 }
+
+int dlog_getlevel(int module_id, int *enable_event) { return log_level; }
+
+int CheckLogLevel(int moduleId, int log_level_check) { return log_level_check >= log_level; }
+
+/**
+ * @ingroup plog
+ * @brief DlogReportInitialize: init log in service process before all device setting.
+ * @return: 0: SUCCEED, others: FAILED
+ */
+int DlogReportInitialize() { return 0; }
+
+/**
+ * @ingroup plog
+ * @brief DlogReportFinalize: release log resource in service process after all device reset.
+ * @return: 0: SUCCEED, others: FAILED
+ */
+int DlogReportFinalize() { return 0; }
