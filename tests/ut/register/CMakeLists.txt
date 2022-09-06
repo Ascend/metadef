@@ -40,7 +40,7 @@ target_compile_definitions(ut_register PRIVATE
 )
 
 target_link_libraries(ut_register
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
     metadef_headers
     fwk_mmpa_headers
     graphengine_headers

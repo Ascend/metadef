@@ -248,7 +248,7 @@ TEST_F(UtestGraph, SetOutputs_ops) {
   Graph graph;
   graph.SetOutputs(outputs);
   EXPECT_EQ(graph.GetAllNodes().size(), 0);
-  // EXPECT_TRUE(graph.impl_->output_name_.empty()); // implç¼ºå°‘å¤´æ–‡ä»¶ï¼Œæ‰¾ä¸åˆ°å£°æ˜Ž
+  // EXPECT_TRUE(graph.impl_->output_name_.empty()); // implÈ±ÉÙÍ·ÎÄ¼þ£¬ÕÒ²»µ½ÉùÃ÷
 }
 
 TEST_F(UtestGraph, SetOutputs_string) {
@@ -537,11 +537,11 @@ TEST_F(UtestGraph, SaveLoadFile) {
 
   Graph graph3;
   ret = graph3.LoadFromFile("./ut_graph1.txt");
-  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_NE(ret, GRAPH_FAILED);
 
   Graph graph4;
   ret = graph4.LoadFromFile(std::string("./ut_graph2.txt"));
-  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_NE(ret, GRAPH_FAILED);
 }
 
 TEST_F(UtestGraph, GetName) {

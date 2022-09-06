@@ -58,7 +58,7 @@ target_include_directories(metadef_graph_protos_obj PRIVATE
 target_compile_definitions(metadef_graph_protos_obj PRIVATE
         google=ascend_private
         )
-target_link_libraries(metadef_graph_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(metadef_graph_protos_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(metadef_graph_protos_obj PRIVATE
         $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
         $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
@@ -78,7 +78,7 @@ target_include_directories(metadef_tensorflow_protos_obj PRIVATE
 target_compile_definitions(metadef_tensorflow_protos_obj PRIVATE
         google=ascend_private
         )
-target_link_libraries(metadef_tensorflow_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(metadef_tensorflow_protos_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(metadef_tensorflow_protos_obj PRIVATE
         $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
         $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
