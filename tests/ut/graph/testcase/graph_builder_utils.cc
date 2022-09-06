@@ -40,6 +40,7 @@ NodePtr GraphBuilder::AddNode(const std::string &name, const std::string &type, 
 
   return graph_->AddNode(op_desc);
 }
+
 void GraphBuilder::AddDataEdge(const NodePtr &src_node, int src_idx, const NodePtr &dst_node, int dst_idx) {
   GraphUtils::AddEdge(src_node->GetOutDataAnchor(src_idx), dst_node->GetInDataAnchor(dst_idx));
 }

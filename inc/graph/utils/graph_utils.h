@@ -214,6 +214,16 @@ class GraphUtils {
    * @return 成功返回GRAPH_SUCCESS, 失败返回GRAPH_FAILED
    */
   static graphStatus RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph, const NodePtr &remove_node);
+
+  /**
+   * 从`compute_graph`中删除算子类型为`node_type`的所有关系，包括子图关系，从属关系，作为`compute_graph`的输入，输出的关系；
+   * 仅删除，不进行断边连边，不保证删除后节点前后的控制关系传递
+   * @param compute_graph
+   * @param node_type
+   * @return 成功返回GRAPH_SUCCESS, 失败返回GRAPH_FAILED
+   */
+  static graphStatus RemoveNodesByTypeWithoutRelink(const ComputeGraphPtr &compute_graph, const std::string &node_type);
+
   /**
    * 从`compute_graph`中删除`node`对象的所有关系，包括子图关系，从属关系，作为`compute_graph`的输入，输出的关系；
    * 仅删除，不进行断边连边，不保证删除后节点前后的控制关系传递

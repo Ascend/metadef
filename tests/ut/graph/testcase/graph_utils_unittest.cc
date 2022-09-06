@@ -228,6 +228,27 @@ void BuildGraphForUnfoldWithControlEdge(ComputeGraphPtr &graph, ComputeGraphPtr 
   return;
 }
 
+void BuildGraphWithPlaceholderAndEnd(ComputeGraphPtr &graph) {
+  auto builder = ut::GraphBuilder("root");
+  const auto &input1 = builder.AddNode("pld1", PLACEHOLDER, 1, 1);
+  const auto &input2 = builder.AddNode("pld2", PLACEHOLDER, 1, 1);
+  const auto &data1 = builder.AddNode("data1", DATA, 1, 1);
+  const auto &data2 = builder.AddNode("data2", DATA, 1, 1);
+  const auto &end = builder.AddNode("end", END, 1, 1);
+  const auto &add1 = builder.AddNode("add1", "Add", 2, 1);
+  const auto &add2 = builder.AddNode("add2", "Add", 2, 1);
+  const auto &add3 = builder.AddNode("add3", "Add", 2, 1);
+  builder.AddDataEdge(input1, 0, add1, 0);
+  builder.AddDataEdge(input2, 0, add1, 1);
+  builder.AddDataEdge(data1, 0, add2, 0);
+  builder.AddDataEdge(data2, 0, add2, 1);
+  builder.AddDataEdge(add1, 0, add3, 0);
+  builder.AddDataEdge(add2, 0, add3, 1);
+  builder.AddDataEdge(add3, 0, end, 0);
+  graph = builder.GetGraph();
+  graph->AddOutputNode(end);
+}
+
 ComputeGraphPtr BuildGraphWithSubGraph() {
   auto root_builder = ut::GraphBuilder("root");
   const auto &case0 = root_builder.AddNode("case0", "Case", 0, 0);
@@ -2046,6 +2067,46 @@ TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphs) {
   ASSERT_NE(graph, nullptr);
   auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
   EXPECT_EQ(nodes.size(), 2);
+}
+
+TEST_F(UtestGraphUtils, RemoveNodesByTypeWithoutRelinkPlaceholder) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test_placeholder");
+  BuildGraphWithPlaceholderAndEnd(graph);
+  ASSERT_NE(graph, nullptr);
+  auto ret = GraphUtils::RemoveNodesByTypeWithoutRelink(graph, "PlaceHolder");
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "PlaceHolder");
+  EXPECT_EQ(nodes.size(), 0);
+}
+
+TEST_F(UtestGraphUtils, RemoveNodesByTypeWithoutRelinkEnd) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test_end"); 
+  BuildGraphWithPlaceholderAndEnd(graph);
+  ASSERT_NE(graph, nullptr);
+  auto ret = GraphUtils::RemoveNodesByTypeWithoutRelink(graph, "End");
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "End");
+  EXPECT_EQ(nodes.size(), 0);
+}
+
+TEST_F(UtestGraphUtils, RemoveNodesByTypeWithoutRelinkAdd) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test_end"); 
+  BuildGraphWithPlaceholderAndEnd(graph);
+  ASSERT_NE(graph, nullptr);
+  auto ret = GraphUtils::RemoveNodesByTypeWithoutRelink(graph, "Add");
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Add");
+  EXPECT_EQ(nodes.size(), 0);
+}
+
+TEST_F(UtestGraphUtils, RemoveNodesByTypeWithoutRelinkData) {
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test_end"); 
+  BuildGraphWithPlaceholderAndEnd(graph);
+  ASSERT_NE(graph, nullptr);
+  auto ret = GraphUtils::RemoveNodesByTypeWithoutRelink(graph, DATA);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, DATA);
+  EXPECT_EQ(nodes.size(), 0);
 }
 
 TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphsNullInput) {
