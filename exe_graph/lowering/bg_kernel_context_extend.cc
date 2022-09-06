@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 #include "exe_graph/lowering/bg_ir_attrs.h"
 #include "exe_graph/runtime/context_extend.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/debug/ge_util.h"
+
 namespace gert {
 namespace bg {
 namespace {
@@ -176,7 +178,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
   auto output_num = node->GetAllOutDataAnchorsSize();
   GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size));
   GE_ASSERT_TRUE(!ge::AddOverflow(total_size, attr_size, total_size));
-  auto compute_node_info_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]());
+  auto compute_node_info_holder = ge::ComGraphMakeUnique<uint8_t[]>(total_size);
   GE_ASSERT_NOTNULL(compute_node_info_holder, "Create compute node info holder failed");
 
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());

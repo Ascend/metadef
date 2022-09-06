@@ -106,7 +106,7 @@ TEST_F(ValueHolderUt, CreateConstOk) {
   EXPECT_NE(c, nullptr);
   ASSERT_TRUE(c->IsOk());
   ASSERT_NE(c->GetNode(), nullptr);
-  EXPECT_EQ(c->GetType(), ValueHolder::kConst);
+  EXPECT_EQ(c->GetType(), ValueHolder::ValueHolderType::kConst);
   EXPECT_EQ(c->GetOutIndex(), 0);
   auto node = c->GetNode();
   EXPECT_EQ(node->GetType(), "Const");
@@ -123,7 +123,7 @@ TEST_F(ValueHolderUt, CreateVectorConstOk) {
   EXPECT_NE(c, nullptr);
   ASSERT_TRUE(c->IsOk());
   ASSERT_NE(c->GetNode(), nullptr);
-  EXPECT_EQ(c->GetType(), ValueHolder::kConst);
+  EXPECT_EQ(c->GetType(), ValueHolder::ValueHolderType::kConst);
   EXPECT_EQ(c->GetOutIndex(), 0);
   auto node = c->GetNode();
   EXPECT_EQ(node->GetType(), "Const");
@@ -137,7 +137,7 @@ TEST_F(ValueHolderUt, CreateFeedOk) {
   EXPECT_NE(c, nullptr);
   ASSERT_TRUE(c->IsOk());
   ASSERT_NE(c->GetNode(), nullptr);
-  EXPECT_EQ(c->GetType(), ValueHolder::kFeed);
+  EXPECT_EQ(c->GetType(), ValueHolder::ValueHolderType::kFeed);
   EXPECT_EQ(c->GetOutIndex(), 0);
   auto node = c->GetNode();
   EXPECT_EQ(node->GetType(), "Data");
@@ -166,9 +166,9 @@ TEST_F(ValueHolderUt, CreateDataOutOk) {
   ASSERT_TRUE(holders[0]->IsOk());
   ASSERT_TRUE(holders[1]->IsOk());
   ASSERT_TRUE(holders[2]->IsOk());
-  EXPECT_EQ(holders[0]->GetType(), ValueHolder::kOutput);
-  EXPECT_EQ(holders[1]->GetType(), ValueHolder::kOutput);
-  EXPECT_EQ(holders[2]->GetType(), ValueHolder::kOutput);
+  EXPECT_EQ(holders[0]->GetType(), ValueHolder::ValueHolderType::kOutput);
+  EXPECT_EQ(holders[1]->GetType(), ValueHolder::ValueHolderType::kOutput);
+  EXPECT_EQ(holders[2]->GetType(), ValueHolder::ValueHolderType::kOutput);
 
   ASSERT_NE(const1->GetGraph(), nullptr);
   ASSERT_NE(const1->GetNode()->GetOwnerComputeGraph(), nullptr);

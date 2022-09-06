@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ class ValueHolder;
 using ValueHolderPtr = std::shared_ptr<ValueHolder>;
 class ValueHolder {
  public:
-  enum ValueHolderType {
+  enum class ValueHolderType {
     kConst,   // 常量，执行时不变
     kFeed,    // 执行时外部指定
     kOutput,  // 由node产生，包含数据输出与控制输出

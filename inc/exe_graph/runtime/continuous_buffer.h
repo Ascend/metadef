@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_BUFFER_H_
 #include <type_traits>
 #include <cstdint>
+#include "graph/def_types.h"
 namespace gert {
 namespace bg {
 class BufferPool;
@@ -49,7 +50,7 @@ class ContinuousBuffer {
     if (index >= num_) {
       return nullptr;
     }
-    return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(this) + offsets_[index]);
+    return ge::PtrToPtr<uint8_t, T>(ge::PtrToPtr<ContinuousBuffer, uint8_t>(this) + offsets_[index]);
   }
   /**
    * 获取一个buffer，及其对应的长度
@@ -64,7 +65,7 @@ class ContinuousBuffer {
       return nullptr;
     }
     len = offsets_[index + 1] - offsets_[index];
-    return reinterpret_cast<const T *>(reinterpret_cast<const uint8_t *>(this) + offsets_[index]);
+    return ge::PtrToPtr<uint8_t, T>(ge::PtrToPtr<ContinuousBuffer, uint8_t>(this) + offsets_[index]);
   }
   /**
    * 获取一个buffer
@@ -77,7 +78,7 @@ class ContinuousBuffer {
     if (index >= num_) {
       return nullptr;
     }
-    return reinterpret_cast<T *>(reinterpret_cast<uint8_t *>(this) + offsets_[index]);
+    return ge::PtrToPtr<uint8_t, T>(ge::PtrToPtr<ContinuousBuffer, uint8_t>(this) + offsets_[index]);
   }
 
  private:

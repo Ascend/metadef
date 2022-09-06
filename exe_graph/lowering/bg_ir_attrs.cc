@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "graph/def_types.h"
 #include "external/graph/types.h"
 #include "common/checker.h"
+#include "graph/debug/ge_util.h"
 
 #include "exe_graph/runtime/runtime_attrs.h"
 #include "exe_graph/runtime/continuous_vector.h"
@@ -170,7 +171,7 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
       return nullptr;
     }
   }
-  auto attr_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
+  auto attr_holder = ge::ComGraphMakeUnique<uint8_t[]>(total_size);
   GE_ASSERT_NOTNULL(attr_holder);
   auto attr_def = ge::PtrToPtr<uint8_t, RuntimeAttrsDef>(attr_holder.get());
   attr_def->attr_num = attrs.size();

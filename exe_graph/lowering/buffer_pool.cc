@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "graph/utils/math_util.h"
 #include "graph/debug/ge_log.h"
 #include "graph/def_types.h"
+#include "graph/debug/ge_util.h"
 #include "common/checker.h"
 
 #include "exe_graph/runtime/continuous_buffer.h"
@@ -69,7 +70,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
     }
   }
 
-  auto text_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
+  auto text_holder = ge::ComGraphMakeUnique<uint8_t[]>(total_size);
   GE_ASSERT_NOTNULL(text_holder);
 
   auto text = ge::PtrToPtr<uint8_t, ContinuousBuffer>(text_holder.get());
