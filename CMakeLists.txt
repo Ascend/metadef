@@ -84,6 +84,9 @@ install(FILES   ${METADEF_DIR}/third_party/transformer/inc/axis_util.h
 install(DIRECTORY ${METADEF_DIR}/inc/ DESTINATION ${INSTALL_INCLUDE_DIR}/metadef
     COMPONENT opensdk EXCLUDE_FROM_ALL FILES_MATCHING PATTERN "*.h"
 )
+install(DIRECTORY ${METADEF_DIR}/proto/ DESTINATION proto
+    COMPONENT opensdk EXCLUDE_FROM_ALL FILES_MATCHING PATTERN "*.proto"
+)
 
 if (PACKAGE STREQUAL "opensdk")
     install(EXPORT metadef-targets DESTINATION ${INSTALL_CONFIG_DIR}
