@@ -34,6 +34,7 @@ static const std::vector<int64_t> DUMMY_SHAPE = {-3};
 // When data type unit is bit, this offset need to be added.
 static const int kDataTypeSizeBitOffset = 1000;
 static const int kBitNumOfOneByte = 8;
+static const int kBitThreeBytes = 24;
 
 #if(defined(HOST_VISIBILITY)) && (defined(__GNUC__))
 #define GE_FUNC_HOST_VISIBILITY __attribute__((visibility("default")))
@@ -193,18 +194,30 @@ enum Format {
 ///
 /// Get format from primary and sub-format,
 /// in bits field:
-/// ----------------------------------
-/// |  1 byte  |   2 bytes  | 1 byte |
-/// |----------|------------|--------|
-/// | reserved | sub-format | format |
-/// ----------------------------------
+/// ---------------------------------------------
+/// |   4bits  |   4bits   |   2 bytes  | 1 byte |
+/// |----------|-----------|------------|--------|
+/// | reserved | c0_format | sub-format | format |
+/// ---------------------------------------------
 /// @param primary_format
 /// @param sub_format
+/// @param c0_format
 /// @return
 ///
 inline int32_t GetFormatFromSub(int32_t primary_format, int32_t sub_format) {
   return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xff) |
                               ((static_cast<uint32_t>(sub_format) & 0xffff) << 8));
+}
+
+inline int32_t GetFormatFromC0(int32_t format, int32_t c0_format) {
+  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffffff) |
+                              ((static_cast<uint32_t>(c0_format) & 0xf) << kBitThreeBytes));
+}
+
+inline int32_t GetFormatFromSubAndC0(int32_t primary_format, int32_t sub_format, int32_t c0_format) {
+  return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xff) |
+                              ((static_cast<uint32_t>(sub_format) & 0xffff) << kBitNumOfOneByte) |
+                              ((static_cast<uint32_t>(c0_format) & 0xf) << kBitThreeBytes));
 }
 
 inline int32_t GetPrimaryFormat(int32_t format) {
@@ -217,6 +230,15 @@ inline int32_t GetSubFormat(int32_t format) {
 
 inline bool HasSubFormat(int32_t format) {
   return GetSubFormat(format) > 0;
+}
+
+inline int64_t GetC0Value(int32_t format) {
+  return static_cast<int64_t>(1 <<
+      (static_cast<int32_t>((static_cast<uint32_t>(format) & 0xf000000) >> kBitThreeBytes) - 1));
+}
+
+inline bool HasC0Format(int32_t format) {
+  return ((static_cast<uint32_t>(format) & 0xf000000) >> kBitThreeBytes) > 0;
 }
 
 // for unknown shape op type

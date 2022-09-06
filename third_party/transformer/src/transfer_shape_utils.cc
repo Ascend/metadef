@@ -149,7 +149,7 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
     axis_value[AXIS_G] = group;
   }
 
-  axis_value[AXIS_C0] = GetC0Value(data_type, primary_format);
+  axis_value[AXIS_C0] = GetC0Value(data_type, format);
   if (primary_format == ge::FORMAT_FRACTAL_ZN_RNN || primary_format == ge::FORMAT_ND_RNN_BIAS) {
     axis_value[AXIS_INPUT_SIZE] = ext_axis[EXT_INDEX_INPUT_SIZE];
     axis_value[AXIS_HIDEEN_SIZE] = ext_axis[EXT_INDEX_HIDEEN_SIZE];
@@ -180,7 +180,7 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
     return false;
   }
 
-  int64_t c0 = GetC0Value(data_type, primary_format);
+  int64_t c0 = GetC0Value(data_type, format);
   if (!IsNeedAxisValue(primary_format, origin_shape.GetDimNum())) {
     return TransferShapeByOriginShape(primary_format, c0, ext_axis, origin_shape, shape);
   } else {
@@ -221,8 +221,13 @@ bool TransferShapeUtils::CheckInputParam(const ge::Format &origin_format, const 
 
 int64_t TransferShapeUtils::GetC0Value(const ge::DataType &data_type, const ge::Format &format) {
   // The value of C0 should be 4 while format is 5HD-4 or FRAZ-4
-  if (format == ge::FORMAT_NC1HWC0_C04) {
+  ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
+  if (primary_format == ge::FORMAT_NC1HWC0_C04) {
     return SHAPE_NUMBER_4;
+  }
+
+  if (ge::HasC0Format(format)) {
+    return ge::GetC0Value(format);
   }
 
   if (static_cast<size_t>(data_type) < kDataTypeAndC0Vec.size()) {
