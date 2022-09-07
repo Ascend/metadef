@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -413,8 +413,9 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
   const tensorflow::DataType data_type = tensor.dtype();
   int32_t datatype_val_size = 0;
 
-  const auto iter = datatype_val_size_map.find(data_type);
-  if (iter != datatype_val_size_map.end()) {
+  const std::map<tensorflow::DataType, int32_t>::const_iterator
+      iter = datatype_val_size_map.find(data_type);
+  if (iter != datatype_val_size_map.cend()) {
     datatype_val_size = iter->second;
   } else {
     GE_CHECK_GE(data_type, 0);

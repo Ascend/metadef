@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_REGISTER_OP_TILING_H_
-#define INC_REGISTER_OP_TILING_H_
+#ifndef INC_REGISTER_OP_TILING_H
+#define INC_REGISTER_OP_TILING_H
 
 #include "graph/debug/ge_attr_define.h"
 #include "graph/node.h"
@@ -26,4 +26,4 @@ extern "C" ge::graphStatus OpParaCalculateV2(const ge::Operator &op, OpRunInfoV2
 extern "C" ge::graphStatus OpAtomicCalculateV2(const ge::Node &node, OpRunInfoV2 &run_info);
 extern "C" ge::graphStatus OpFftsPlusCalculate(const ge::Operator &op, std::vector<OpRunInfoV2> &op_run_info);
 }  // namespace optiling
-#endif  // INC_REGISTER_OP_TILING_H_
+#endif  // INC_REGISTER_OP_TILING_H

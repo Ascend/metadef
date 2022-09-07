@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -705,7 +705,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::GetOutputs(
 }
 
 void FusionScopesResult::FusionScopesResultImpl::AddNodes(std::vector<ge::OperatorPtr> nodes) {
-  (void)nodes_.insert(nodes_.end(), nodes.begin(), nodes.end());
+  (void)nodes_.insert(nodes_.cend(), nodes.cbegin(), nodes.cend());
 }
 
 void FusionScopesResult::FusionScopesResultImpl::InsertInputs(const std::string &inner_op_name,
@@ -1241,7 +1241,7 @@ std::vector<int32_t> ScopeGraph::ScopeGraphImpl::GetFusionResultInputOrOutput(co
                          ? info.node_name.substr(info.node_name.length() - input_name.length())
                          : info.node_name;
     if (input_name == op_name) {
-      (void)indexs.insert(indexs.end(), iter.second.begin(), iter.second.end());
+      (void)indexs.insert(indexs.cend(), iter.second.cbegin(), iter.second.cend());
       break;
     }
   }

@@ -683,7 +683,7 @@ ConstProtoAttrMap &GeTensorDescImpl::GetAttrMap() const {
   return attrs_;
 }
 
-void GeTensorDescImpl::SetShape(const GeShape &shape) const {
+void GeTensorDescImpl::SetShape(GeShape &shape) const {
   ShapeReference() = std::move(shape);
 }
 

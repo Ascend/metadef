@@ -39,7 +39,7 @@ class GeTensorDescImpl {
 
   ProtoAttrMap &MutableAttrMap();
   ConstProtoAttrMap &GetAttrMap() const;
-  void SetShape(const GeShape &shape) const;
+  void SetShape(GeShape &shape) const;
 
   void SetDataType(const DataType dtype);
   DataType GetDataType() const;

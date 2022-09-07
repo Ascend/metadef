@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef REGISTER_REGISTER_UTILS_H_
-#define REGISTER_REGISTER_UTILS_H_
+#ifndef REGISTER_REGISTER_UTILS_H
+#define REGISTER_REGISTER_UTILS_H
 
 #include <google/protobuf/message.h>
 #include "external/register/register_types.h"
@@ -26,4 +26,4 @@
 namespace domi {
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status OperatorAutoMapping(const Message *op_src, ge::Operator &op);
 }  // namespace domi
-#endif  // REGISTER_REGISTER_UTILS_H_
+#endif  // REGISTER_REGISTER_UTILS_H
