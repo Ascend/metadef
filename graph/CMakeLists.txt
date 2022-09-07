@@ -123,9 +123,9 @@ target_link_options(graph PRIVATE
 
 target_link_libraries(graph
     PRIVATE
-        $<BUILD_INTERFACE:intf_pub>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+        intf_pub
+        slog_headers
+        mmpa_headers
         fwk_mmpa_headers
         graphengine_headers
         static_mmpa
@@ -213,7 +213,7 @@ target_compile_options(atc_stub_graph PRIVATE
 )
 
 target_link_libraries(atc_stub_graph PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
     metadef_headers
     fwk_mmpa_headers
     graphengine_headers
@@ -249,7 +249,7 @@ target_include_directories(fwk_stub_graph PRIVATE
 )
 
 target_link_libraries(fwk_stub_graph PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
     metadef_headers
     fwk_mmpa_headers
     graphengine_headers

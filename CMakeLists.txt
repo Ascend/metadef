@@ -12,24 +12,47 @@ set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
 
+if (DEFINED ENV{ASCEND_CUSTOM_PATH})
+    set(ASCEND_DIR $ENV{ASCEND_CUSTOM_PATH})
+    set(ASCEND_OPENSDK_DIR ${ASCEND_DIR}/opensdk/opensdk)
+    set(CMAKE_PREFIX_PATH
+            ${ASCEND_OPENSDK_DIR}/cmake
+            ${ASCEND_OPENSDK_DIR}/c_sec
+            ${ASCEND_OPENSDK_DIR}/json
+            ${ASCEND_OPENSDK_DIR}/openssl
+            ${ASCEND_OPENSDK_DIR}/zlib
+            ${ASCEND_OPENSDK_DIR}/protoc
+            ${ASCEND_OPENSDK_DIR}/grpc
+            ${ASCEND_OPENSDK_DIR}/protobuf_static
+            ${ASCEND_OPENSDK_DIR}/ascend_protobuf
+            ${ASCEND_OPENSDK_DIR}/ascend_protobuf_static
+            ${ASCEND_OPENSDK_DIR}/gtest)
+    set(CMAKE_MODULE_PATH ${ASCEND_OPENSDK_DIR}/cmake/modules)
+endif()
+
 if (ENABLE_OPEN_SRC)
     if (DEFINED ENV{D_PKG_SERVER})
         set(METADEF_PB_PKG $ENV{D_PKG_SERVER})
     endif()
     set(HI_PYTHON python3)
-    include(cmake/external_libs/protobuf_shared.cmake)
-    include(cmake/external_libs/protobuf_static.cmake)
     include(cmake/external_libs/protoc.cmake)
-    include(cmake/external_libs/securec.cmake)
-    include(cmake/external_libs/json.cmake)
-    include(cmake/FindModule.cmake)
+    find_package(msprof REQUIRED CONFIG)
+    find_package(slog REQUIRED CONFIG)
+    find_package(mmpa REQUIRED CONFIG)
+    find_package(securec MODULE)
+    find_package(json MODULE)
+    find_package(protoc MODULE)
+    find_package(protobuf_grpc MODULE)
+    find_package(protobuf_static MODULE)
+    find_package(ascend_protobuf_shared MODULE)
+    find_package(ascend_protobuf_static MODULE)
     include(cmake/intf_pub_linux.cmake)
     include(cmake/external_libs/gtest.cmake)
     include(cmake/external_libs/gbenchmark.cmake)
     include(cmake/test_funcs.cmake)
     if(METADEF_LIB_DIR)
-        find_module(slog libalog.so ${METADEF_LIB_DIR})
-        find_module(static_mmpa libmmpa.a ${METADEF_LIB_DIR})
+        find_package(slog REQUIRED CONFIG)
+        find_package(mmpa REQUIRED CONFIG)
         unset(METADEF_LIB_DIR CACHE)
     endif()
 endif()
@@ -60,6 +83,9 @@ install(FILES   ${METADEF_DIR}/third_party/transformer/inc/axis_util.h
 )
 install(DIRECTORY ${METADEF_DIR}/inc/ DESTINATION ${INSTALL_INCLUDE_DIR}/metadef
     COMPONENT opensdk EXCLUDE_FROM_ALL FILES_MATCHING PATTERN "*.h"
+)
+install(DIRECTORY ${METADEF_DIR}/proto/ DESTINATION proto
+    COMPONENT opensdk EXCLUDE_FROM_ALL FILES_MATCHING PATTERN "*.proto"
 )
 
 if (PACKAGE STREQUAL "opensdk")

@@ -221,6 +221,13 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
       }
     }
   }
+  graphStatus ret_pld = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(PLACEHOLDER));
+  graphStatus ret_end = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(END));
+  if ((ret_pld != SUCCESS) || (ret_end != SUCCESS)) {
+    REPORT_CALL_ERROR("E18888", "Graph[%s] delete placehold or end failed.", exe_graph->GetName().c_str());
+    GELOGE(FAILED, "[Sort][Graph] Graph[%s] delete placehold or end failed.", exe_graph->GetName().c_str());
+    return FAILED;
+  }
   ret = exe_graph->TopologicalSortingGraph(true);
   if (ret != SUCCESS) {
     REPORT_CALL_ERROR("E18888", "Graph[%s] topological sort failed, ret:%d.", exe_graph->GetName().c_str(), ret);
@@ -403,14 +410,6 @@ graphStatus TuningUtils::ChangePld2Data(const NodePtr &node, const NodePtr &data
   }
 
   NodeUtils::UnlinkAll(*node);
-
-  ret = GraphUtils::RemoveNodeWithoutRelink(graph, node);
-  if (ret != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E18888", "TUU:Failed to remove node %s from graph:%s",
-                      node->GetName().c_str(), graph->GetName().c_str());
-    GELOGE(FAILED, "[Remove][Node] %s from graph:%s failed.", node->GetName().c_str(), graph->GetName().c_str());
-    return FAILED;
-  }
 
   GELOGD("TUU:Remove node %s(%s) by the ChangePld2Data process, replace it with node %s(%s)",
          node->GetName().c_str(), node->GetType().c_str(), data_node->GetName().c_str(), data_node->GetType().c_str());
@@ -612,13 +611,6 @@ graphStatus TuningUtils::ChangeEnd2NetOutput(NodePtr &end_node, NodePtr &out_nod
   }
   // remove `end node`
   NodeUtils::UnlinkAll(*end_node);
-  const auto graph = end_node->GetOwnerComputeGraph();
-  GE_CHECK_NOTNULL(graph);
-  if (GraphUtils::RemoveNodeWithoutRelink(graph, end_node) != SUCCESS) {
-    REPORT_CALL_ERROR("E18888", "TUU:end node [%s] RemoveNodeWithoutRelink failed.", end_node->GetName().c_str());
-    GELOGE(FAILED, "[Remove][Node]TUU:end node [%s] RemoveNodeWithoutRelink failed.", end_node->GetName().c_str());
-    return FAILED;
-  }
   return SUCCESS;
 }
 

@@ -281,6 +281,46 @@ GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtils::RemoveNodesByTypeWithoutRelink(const ComputeGraphPtr &compute_graph, const std::string &node_type) {
+  GELOGI("Start remove %s from graph %s.", node_type.c_str(), compute_graph->GetName().c_str());
+  for (auto iter = compute_graph->impl_->input_nodes_.begin();
+      iter != compute_graph->impl_->input_nodes_.end();) {
+    if ((*iter)->GetType() == node_type) {
+      iter = compute_graph->impl_->input_nodes_.erase(iter);
+    } else {
+      iter++;
+    }
+  }
+
+  for (auto iter = compute_graph->impl_->output_nodes_info_.begin();
+      iter != compute_graph->impl_->output_nodes_info_.end();) {
+    if (iter->first->GetType() == node_type) {
+      iter = compute_graph->impl_->output_nodes_info_.erase(iter);
+    } else {
+      iter++;
+    }
+  }
+
+  for (auto iter = compute_graph->impl_->nodes_.begin();
+      iter != compute_graph->impl_->nodes_.end();) {
+    if ((*iter)->GetType() == node_type) {
+      if ((node_type != PLACEHOLDER) && (node_type != END)) {
+        const auto ret = RemoveSubgraphRecursively(compute_graph, (*iter));
+        if (ret != GRAPH_SUCCESS) {
+          return GRAPH_FAILED;
+        }
+      }
+      iter = compute_graph->impl_->nodes_.erase(iter);
+      compute_graph->impl_->direct_nodes_size_--;
+    } else {
+      iter++;
+    }
+  }
+  GELOGI("End remove %s from graph %s.", node_type.c_str(), compute_graph->GetName().c_str());
+  return GRAPH_SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 GraphUtils::RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const NodePtr &node) {
   GE_CHECK_NOTNULL(compute_graph);
   GE_CHECK_NOTNULL(compute_graph->impl_);
