@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,7 +84,7 @@ std::set<std::string> GetSubgraphAttrNames(const ge::Operator &op) {
 ///     }
 ///   }
 /// }
-///
+
 /// case 2(subgraph of a `case` node) dynamic subgraph:
 /// attr {
 ///   key: "branches"
@@ -1035,8 +1035,8 @@ Status OpRegistrationData::GetParseSubgraphPostFn(ParseSubgraphFuncV2 &func) con
 }
 
 OpRegistry *OpRegistry::Instance() {
-  static OpRegistry instance;
-  return &instance;
+  static OpRegistry g_instance;
+  return &g_instance;
 }
 
 namespace {

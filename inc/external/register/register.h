@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_EXTERNAL_REGISTER_REGISTER_H_
-#define INC_EXTERNAL_REGISTER_REGISTER_H_
+#ifndef INC_EXTERNAL_REGISTER_REGISTER_H
+#define INC_EXTERNAL_REGISTER_REGISTER_H
 
 #include <functional>
 #include <initializer_list>
@@ -31,6 +31,9 @@
 #include "register/register_error_codes.h"
 #include "register/register_fmk_types.h"
 #include "register/register_types.h"
+#include "graph/ascend_string.h"
+#include "graph/types.h"
+
 
 using std::unique_ptr;
 using std::make_shared;
@@ -204,7 +207,6 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpReceiver {
   OpReceiver(OpRegistrationData &reg_data);
   ~OpReceiver() = default;
 };
-
 }  // namespace domi
 namespace ge {
 using OpRegistrationData = domi::OpRegistrationData;
@@ -223,4 +225,4 @@ using OpReceiver = domi::OpReceiver;
     auto_mapping_subgraph_fun_##framework(framework, (fun));
 
 /*lint +e148*/
-#endif  // INC_EXTERNAL_REGISTER_REGISTER_H_
+#endif  // INC_EXTERNAL_REGISTER_REGISTER_H

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,4 +56,4 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY HostCpuOpRegistrar {
             return new (std::nothrow) (op)();                         \
           })
 
-#endif //INC_REGISTER_REGISTRY_H_
+#endif // INC_REGISTER_REGISTRY_H_

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H_
-#define REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H_
+#ifndef REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H
+#define REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H
 
 #include <stdexcept>
 #include <limits>
@@ -128,4 +128,4 @@ class ScopePattern::ScopePatternImpl {
   std::vector<ScopeFeature> scopes_features_;
 };
 }  // namespace ge
-#endif  // REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H_
+#endif  // REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H

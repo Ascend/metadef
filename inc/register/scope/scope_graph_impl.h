@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H_
-#define REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H_
+#ifndef REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H
+#define REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H
 
 #include "external/register/scope/scope_fusion_pass_register.h"
 #include "external/graph/types.h"
@@ -83,7 +83,9 @@ class FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl {
   ge::graphStatus SetInputFormat(const std::string &input_name, const std::string &format) ;
   ge::graphStatus SetOutputFormat(const std::string &output_name, const std::string &format);
   ge::graphStatus SetDynamicInputFormat(const std::string &input_name, const uint32_t index, const std::string &format);
-  ge::graphStatus SetDynamicOutputFormat(const std::string &output_name, const uint32_t index, const std::string &format);
+  ge::graphStatus SetDynamicOutputFormat(const std::string &output_name,
+                                         const uint32_t index,
+                                         const std::string &format);
   std::string GetName() const { return name_; }
   std::string GetType() const { return type_; }
   std::vector<std::pair<std::string, int32_t>> GetInputs() const { return inner_node_inputs_; }
@@ -112,7 +114,7 @@ class FusionScopesResult::FusionScopesResultImpl {
   void AddNodes(std::vector<ge::OperatorPtr> nodes);
   const std::vector<ge::OperatorPtr> &Nodes() const { return nodes_; }
   void AddScopes(const std::vector<Scope *> &scopes) {
-    (void)scopes_.insert(scopes_.end(), scopes.begin(), scopes.end());
+    (void)scopes_.insert(scopes_.cend(), scopes.cbegin(), scopes.cend());
   }
   const std::vector<Scope *> &Scopes() const { return scopes_; }
   const std::map<std::string, std::vector<int32_t>> &GetInputs() const { return inputs_; }
@@ -196,4 +198,4 @@ class ScopeGraph::ScopeGraphImpl {
   ScopeTree *scope_tree_;
 };
 }  // namespace ge
-#endif  // REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H_
+#endif  // REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H

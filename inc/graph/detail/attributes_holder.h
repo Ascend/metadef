@@ -133,7 +133,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
  public:
   AttrHolder() = default;
   virtual ~AttrHolder() = default;
-  AttrHolder &operator=(AttrHolder const &rhs) = default;
+  AttrHolder &operator=(const AttrHolder &rhs) = default;
   /**
    * 对当前AttrHolder对象设置属性，属性名为`name`,属性值为`value`,
    * 需要注意的是 如果当前对象已经存在了`name`类型的属性，接口会进行刷新值的操作

@@ -80,4 +80,12 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) 
   }
   return iter->second;
 }
+
+uint64_t LoweringGlobalData::GetSessionId() {
+  static std::atomic<uint64_t> global_session_id(0U);
+  if (session_id_ == std::numeric_limits<uint64_t>::max()) {
+    session_id_ = global_session_id++;
+  }
+  return session_id_;
+}
 }  // namespace gert

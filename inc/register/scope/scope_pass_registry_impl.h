@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H_
-#define REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H_
+#ifndef REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H
+#define REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H
 
 #include <mutex>
 #include "external/register/scope/scope_fusion_pass_register.h"
@@ -37,4 +37,4 @@ class ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl {
   std::map<std::string, CreatePassFnPack> create_fn_packs_;
 };
 }  // namespace ge
-#endif  // REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H_
+#endif  // REGISTER_SCOPE_SCOPE_PASS_REGISTRY_IMPL_H

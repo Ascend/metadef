@@ -53,5 +53,11 @@ constexpr const char *kModelDesc = "ModelDesc";
 
 // 打在exe node上，类型是int，代表两层含义：1. 本node释放一个资源；2. 本node释放的资源位于本node的第n的输入index；n为属性的值
 constexpr char kReleaseResourceIndex[] = "ReleaseResourceIndex";
+
+// 作为扩展属性打在exe graph上，类型是ge::ComputeGraphPtr，保存的是原来的计算图，未来会删除，因为无法做序列化，执行图序列化反序列化后会丢失该属性
+constexpr const char *kComputeGraph = "_compute_graph";
+
+// 作为扩展属性打在exe node上，类型是PassChangedKernels，记录执行图经过pass后的新旧exe nodes输出的对应关系
+constexpr const char *kPassChangedInfo = "_pass_changed_info";
 }
 #endif  // AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_EXE_GRAPH_ATTRS_H_

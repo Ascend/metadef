@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_REGISTER_OPS_KERNEL_BUILDER_REGISTRY_H_
-#define INC_REGISTER_OPS_KERNEL_BUILDER_REGISTRY_H_
+#ifndef INC_REGISTER_OPS_KERNEL_BUILDER_REGISTRY_H
+#define INC_REGISTER_OPS_KERNEL_BUILDER_REGISTRY_H
 
 #include <memory>
 #include "register/register_types.h"
@@ -66,4 +66,4 @@ private:
             return new (std::nothrow) (builder)();                                              \
           })
 
-#endif // INC_REGISTER_OPS_KERNEL_BUILDER_REGISTRY_H_
+#endif // INC_REGISTER_OPS_KERNEL_BUILDER_REGISTRY_H

@@ -44,11 +44,14 @@ class LoweringGlobalData {
   LoweringGlobalData &SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator);
   bg::ValueHolderPtr GetOrCreateAllocator(AllocatorDesc desc);
 
+  uint64_t GetSessionId();
+
  private:
   bg::ValueHolderPtr stream_;
   std::unordered_map<std::string, NodeCompileResult> node_name_to_compile_result_holders_;
   std::map<int64_t, void *> node_ids_to_known_subgraph_models_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
+  uint64_t session_id_ = std::numeric_limits<uint64_t>::max();
 };
 }
 

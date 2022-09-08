@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -182,9 +182,9 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchAllBatches(const ScopeTree *scope_tr
         break;
       }
       if (batch_num == scope_patterns.size()) {
-        (void)last_results.insert(last_results.end(), one_results.begin(), one_results.end());
+        (void)last_results.insert(last_results.cend(), one_results.cbegin(), one_results.cend());
       } else {
-        (void)tmp_results.insert(tmp_results.end(), one_results.begin(), one_results.end());
+        (void)tmp_results.insert(tmp_results.cend(), one_results.cbegin(), one_results.cend());
       }
     }
     for (auto &tmp : tmp_results) {
@@ -200,7 +200,7 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchAllBatches(const ScopeTree *scope_tr
         impl->SetSubType("");
       }
     }
-    (void)results.insert(results.end(), last_results.begin(), last_results.end());
+    (void)results.insert(results.cend(), last_results.cbegin(), last_results.cend());
   }
 
   return !(results.empty());

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef TENSOR_ASSIGN_H_
-#define TENSOR_ASSIGN_H_
+#ifndef TENSOR_ASSIGN_H
+#define TENSOR_ASSIGN_H
 
 #include <vector>
 #include "graph/ge_tensor.h"
@@ -82,7 +82,8 @@ class TensorAssign {
   template <typename T>
   static Status GetVal(const int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector,
                        const int32_t count, GeTensorPtr &weight, const bool is_complex = false) {
-    if (is_complex && ((val_size % 2) != 0)) {  // val_size must be even.
+    // val_size must be even, and complex value should be an integer multiple of 2
+    if (is_complex && ((val_size % 2) != 0)) {
       GELOGE(FAILED, "complex value should be an integer multiple of 2.");
       return FAILED;
     }
@@ -100,6 +101,7 @@ class TensorAssign {
       }
       if (is_complex) {
         // val_vector format is real value, complex value..., here is getting the corresponding value.
+        // real value and complex value are stored spaced apart, so use 2 and 1 to store in the correct addr.
         for (int32_t i = val_size; i < count; i = i + 2) {
           addr[static_cast<size_t>(i)] = val_vector.Get(val_size - 2);
           addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(val_size - 1);
@@ -124,7 +126,6 @@ class TensorAssign {
     (void)weight->SetData(ge::PtrToPtr<T, uint8_t>(addr.get()), static_cast<size_t>(count) * sizeof(T));
     return SUCCESS;
   }
-
 };
 }  // namespace domi
-#endif  // TENSOR_ASSIGN_H_
+#endif  // TENSOR_ASSIGN_H
