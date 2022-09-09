@@ -174,12 +174,39 @@ ge::graphStatus AddDataEdge(const ge::NodePtr &src, int32_t src_index, const ge:
 }
 
 HyperStatus AddDependencyBetweenNodes(const ge::Node &src, const ge::Node &dst) {
-  // todo 检查是否在一张图上
+  if (src.GetOwnerComputeGraph() != dst.GetOwnerComputeGraph()) {
+    return HyperStatus::ErrorStatus("The source node %s(%s) and dst node %s(%s) does not on the same graph",
+                                    src.GetName().c_str(), src.GetType().c_str(), dst.GetName().c_str(),
+                                    dst.GetType().c_str());
+  }
   if (ge::GraphUtils::AddEdge(src.GetOutControlAnchor(), dst.GetInControlAnchor()) != ge::GRAPH_SUCCESS) {
     return HyperStatus::ErrorStatus("Failed to add control edge from %s to %s", src.GetName().c_str(),
                                     dst.GetName().c_str());
   }
   return HyperStatus::Success();
+}
+ge::graphStatus AddDependencyToGuarder(const ge::Node &src, const ge::Node &guarder) {
+  auto guarder_graph = guarder.GetOwnerComputeGraph();
+  GE_ASSERT_NOTNULL(guarder_graph);
+  const ge::Node *current_node = &src;
+  while (current_node->GetOwnerComputeGraph() != guarder_graph) {
+    auto owner_graph = current_node->GetOwnerComputeGraph();
+    GE_ASSERT_NOTNULL(owner_graph);
+    auto parent_node = owner_graph->GetParentNode();
+    GE_ASSERT_NOTNULL(parent_node,
+                      "Failed to add dependency from node %s(%s) to guarder %s(%s), the guarder node does not on the "
+                      "same graph or the parent graphs of the source node",
+                      src.GetName().c_str(), src.GetType().c_str(), guarder.GetName().c_str(),
+                      guarder.GetType().c_str());
+    current_node = parent_node.get();
+  }
+  GE_ASSERT_HYPER_SUCCESS(AddDependencyBetweenNodes(*current_node, guarder));
+  return ge::GRAPH_SUCCESS;
+}
+ge::NodePtr GetComputeNodeByIndex(const GraphFrame *frame, size_t index) {
+  auto &indexes_to_node = frame->GetIndexesToNode();
+  GE_ASSERT_TRUE(indexes_to_node.size() > index, "The current compute node index %zu out of range", index);
+  return indexes_to_node[index];
 }
 }  // namespace
 std::atomic<int64_t> ValueHolder::id_generator_{0};
@@ -267,7 +294,7 @@ ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const 
     GE_ASSERT_NOTNULL(inputs[i]->node_);
     GE_ASSERT_SUCCESS(AddDataEdge(inputs[i]->node_, inputs[i]->index_, node, static_cast<int32_t>(i)));
     if (inputs[i]->guarder_ != nullptr && !IsGraphOutType(node_type)) {
-      GE_ASSERT_HYPER_SUCCESS(AddDependencyBetweenNodes(*node, *(inputs[i]->guarder_->GetNode())));
+      GE_ASSERT_SUCCESS(AddDependencyToGuarder(*node, *(inputs[i]->guarder_->GetNode())));
     }
   }
   return node;
@@ -374,6 +401,14 @@ GraphFrame *ValueHolder::PushGraphFrame(const ValueHolderPtr &belongs, const cha
 
   auto frame_holder = ge::ComGraphMakeUnique<GraphFrame>(graph, parent_frame);
   GE_ASSERT_NOTNULL(frame_holder);
+
+  int64_t compute_node_index;
+  if (ge::AttrUtils::GetInt(belongs->GetNode()->GetOpDesc(), kComputeNodeIndex, compute_node_index)) {
+    auto compute_node = GetComputeNodeByIndex(frame_holder.get(), static_cast<size_t>(compute_node_index));
+    if (compute_node != nullptr) {
+      frame_holder->SetCurrentComputeNode(compute_node);
+    }
+  }
 
   GE_ASSERT_SUCCESS(ge::NodeUtils::AddSubgraph(*const_cast<ge::Node *>(belongs->GetNode()), graph_name, graph));
 

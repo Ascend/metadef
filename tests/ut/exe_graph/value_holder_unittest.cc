@@ -17,6 +17,7 @@
 #include "exe_graph/runtime/context_extend.h"
 #include <gtest/gtest.h>
 #include <cstdint>
+#include <numeric>
 #include "exe_graph/lowering/exe_graph_attrs.h"
 #include "checker/bg_test.h"
 #include "graph/utils/graph_utils.h"
@@ -25,6 +26,21 @@
 
 namespace gert {
 namespace bg {
+namespace {
+ge::NodePtr FakeNode() {
+  static size_t counter = 0;
+  static ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("graph");
+  auto op_desc = std::make_shared<ge::OpDesc>("FakeNode_" + std::to_string(counter++), "FakeNode");
+  return graph->AddNode(op_desc);
+}
+size_t GetComputeNodeIndex(const ge::Node *node) {
+  int64_t index;
+  if (!ge::AttrUtils::GetInt(node->GetOpDesc(), kComputeNodeIndex, index)) {
+    return std::numeric_limits<size_t>::max();
+  }
+  return static_cast<size_t>(index);
+}
+}
 class ValueHolderUt : public BgTest {
  public:
   ge::ComputeGraphPtr FindFirstSubgraphForNodeType(const ge::ComputeGraphPtr &root_graph,
@@ -891,6 +907,34 @@ TEST_F(ValueHolderUt, Guarder_AddDependencyAutomately_ConnectDataEdgeToResource)
   ASSERT_NE(alloc_mem1, nullptr);
   HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
   HasControlEdge(*graph, *alloc_mem1->GetNode(), *allocator_destroyer->GetNode());
+}/*
+*     NetOutput
+*        |
+*      Bar -c-> foo0_guarder
+*      / \    /
+* data1   foo0
+*          |
+*        data0
+*/
+TEST_F(ValueHolderUt, Guarder_AddDependencyFromTheSameLevelNode_ConnectFromSrcToSubgraphNodes) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto foo0 = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  auto guarder = ValueHolder::CreateVoidGuarder("FooGuarder", foo0, {});
+  ASSERT_NE(guarder, nullptr);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar", {data1});
+
+  ValueHolder::PushGraphFrame(bar1, "BarGraph");
+  auto foo1 = ValueHolder::CreateSingleDataOutput("Foo", {foo0, data1});
+  auto bar_frame = ValueHolder::PopGraphFrame({foo1}, {});
+
+  auto frame = ValueHolder::PopGraphFrame({bar1}, {});
+  ASSERT_NE(frame, nullptr);
+  ASSERT_NE(frame->GetExeGraph(), nullptr);
+
+  EXPECT_EQ(frame->GetExeGraph()->TopologicalSorting(), ge::GRAPH_SUCCESS);
+  EXPECT_TRUE(NodeTopoChecker(bar1).OutChecker().CtrlToByType("FooGuarder").IsOk());
+  EXPECT_EQ(NodeTopoChecker(bar1).StrictConnectFrom({{"Data"}, {"Foo"}}), "success");
 }
 TEST_F(ValueHolderUt, Guarder_DoNotAddDependency_ConnectDataEdgeToNetOutput) {
   auto data0 = ValueHolder::CreateFeed(0);
@@ -950,8 +994,8 @@ TEST_F(ValueHolderUt, RleaseBy_NoGuarder) {
   EXPECT_EQ(alloc_mem0->GetNode()->GetOutAllNodes().size(), 0);
   EXPECT_EQ(alloc_mem0->GetNode()->GetInAllNodes().size(), 2);
 }
-TEST_F(ValueHolderUt, AddChildFrame) {
-  ValueHolder::PopGraphFrame();  // Pop frame added by Setup
+TEST_F(ValueHolderUt, PushFrame_ChildFrameIsNotRoot) {
+  ValueHolder::PopGraphFrame();
   auto root_frame = ValueHolder::PushGraphFrame();
   EXPECT_TRUE(root_frame->IsRootFrame());
   auto feed0 = ValueHolder::CreateFeed(0);
@@ -959,6 +1003,31 @@ TEST_F(ValueHolderUt, AddChildFrame) {
   ASSERT_NE(child_frame, nullptr);
   EXPECT_FALSE(child_frame->IsRootFrame());
 }
+TEST_F(ValueHolderUt, PushFrame_ComputeNodeIndexTheSame) {
+  auto compute_node1 = FakeNode();
+  auto compute_node2 = FakeNode();
+  auto compute_node3 = FakeNode();
+
+  ValueHolder::PopGraphFrame();
+  auto root_frame = ValueHolder::PushGraphFrame();
+  EXPECT_TRUE(root_frame->IsRootFrame());
+  ValueHolder::SetCurrentComputeNode(compute_node1);
+  auto feed0 = ValueHolder::CreateFeed(0);
+  auto feed1 = ValueHolder::CreateFeed(1);
+  auto foo0 = ValueHolder::CreateSingleDataOutput("Foo", {feed0, feed1});
+
+  ValueHolder::SetCurrentComputeNode(compute_node2);
+  auto bar0 = ValueHolder::CreateSingleDataOutput("Bar", {foo0});
+
+  ValueHolder::PushGraphFrame(foo0, "subgraph_name0");
+  auto sub_bar1 = ValueHolder::CreateSingleDataOutput("Bar", {feed0});
+  ValueHolder::PopGraphFrame();
+  ValueHolder::PopGraphFrame();
+
+  EXPECT_EQ(GetComputeNodeIndex(sub_bar1->GetNode()), GetComputeNodeIndex(foo0->GetNode()));
+  EXPECT_NE(GetComputeNodeIndex(bar0->GetNode()), GetComputeNodeIndex(foo0->GetNode()));
+}
+
 TEST_F(ValueHolderUt, PlacementDefault0) {
   auto data0 = ValueHolder::CreateFeed(0);
   EXPECT_EQ(data0->GetPlacement(), 0);

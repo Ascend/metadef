@@ -30,6 +30,13 @@ enum TensorPlacement {
     kFollowing,    ///< Tensor位于Host，且数据紧跟在结构体后面
     kTensorPlacementEnd
 };
+inline const char *GetPlacementStr(TensorPlacement placement) {
+  static const char *placement_str[kTensorPlacementEnd + 1] = {"DeviceHbm", "HostDDR", "HostDDR", "Unknown"};
+  if (placement >= kTensorPlacementEnd) {
+    return placement_str[kTensorPlacementEnd];
+  }
+  return placement_str[placement];
+}
 
 enum TensorOperateType {
   kGetTensorAddress,  ///< 获取Tensor的地址

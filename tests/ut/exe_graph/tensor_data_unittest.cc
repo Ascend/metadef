@@ -293,4 +293,10 @@ TEST_F(TensorDataUT, InitValue) {
   EXPECT_EQ(td.GetSize(), 0);
 }
 
+TEST_F(TensorDataUT, GetPlacementStr_Success) {
+  EXPECT_STREQ(GetPlacementStr(kOnHost), "HostDDR");
+  EXPECT_STREQ(GetPlacementStr(kOnDeviceHbm), "DeviceHbm");
+  EXPECT_STREQ(GetPlacementStr(kFollowing), "HostDDR");
+  EXPECT_STREQ(GetPlacementStr(kTensorPlacementEnd), "Unknown");
+}
 }  // namespace gert
