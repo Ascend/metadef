@@ -61,12 +61,12 @@ EXPECT_TRUE(*context->GetInputPointer<ge::DataType>(1) == in_datatype_2);
 EXPECT_TRUE(*context->GetOutputPointer<ge::DataType>(0) == out_datatype);
 }
 
-TEST_F(KernelRunContextBuilderUT, BuildContextHolderFailedWhenCreateComputeNodeInfo) {
+TEST_F(KernelRunContextBuilderUT, BuildContextHolderSuccessWhenOpLossAttrs) {
   ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "test1");
   op_desc->AppendIrAttrName("attr1");
   KernelRunContextBuilder builder;
   auto holder = builder.Build(op_desc);
   ASSERT_NE(holder.context_holder_, nullptr);
-  EXPECT_EQ(holder.compute_node_extend_holder_, nullptr);
+  EXPECT_NE(holder.compute_node_extend_holder_, nullptr);
 }
 }  // namespace gert

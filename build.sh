@@ -171,13 +171,7 @@ build_metadef()
 
   BUILD_PATH="${BASEPATH}/${BUILD_RELATIVE_PATH}/"
   CMAKE_ARGS="${CMAKE_ARGS} -DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
-  CMAKE_ARGS="${CMAKE_ARGS} -D ENABLE_OPEN_SRC=True \
-                            -D CMAKE_INSTALL_PREFIX=${OUTPUT_PATH} \
-                            -D ASCEND_OPENSDK_DIR=${ASCEND_CUSTOM_PATH}/opensdk/opensdk \
-                            -D protoc_ROOT=${ASCEND_OPENSDK_DIR}/protoc \
-                            -D protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/protobuf_static \
-                            -D ascend_protobuf_shared_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf \
-                            -D ascend_protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf_static"
+  CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
   cmake_generate_make "${BUILD_PATH}" "${CMAKE_ARGS}"
 
   if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then

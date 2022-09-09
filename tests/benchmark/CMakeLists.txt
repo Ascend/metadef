@@ -4,7 +4,7 @@ file(GLOB_RECURSE EXE_GRAPH_SRCS CONFIGURE_DEPENDS "*.cc")
 
 add_executable(exec_graph_benchmark ${EXE_GRAPH_SRCS})
 
-target_link_libraries(exec_graph_benchmark PRIVATE intf_pub)
+target_link_libraries(exec_graph_benchmark PRIVATE $<BUILD_INTERFACE:intf_pub>)
 
 target_include_directories(exec_graph_benchmark PRIVATE
         ${AIR_CODE_DIR}/tests/ut/ge/runtime/v2

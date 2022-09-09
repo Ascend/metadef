@@ -24,5 +24,5 @@ include_directories(${METADEF_DIR}/third_party/fwkacllib/inc)
 add_library(profiler_stub SHARED ${SRC_FILES})
 
 target_link_libraries(profiler_stub PRIVATE
-    intf_pub
+    $<BUILD_INTERFACE:intf_pub>
 )

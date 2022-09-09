@@ -17,9 +17,9 @@ target_include_directories(exe_graph PRIVATE
 )
 
 target_link_libraries(exe_graph PRIVATE
-    intf_pub
-    slog_headers
-    mmpa_headers
+    $<BUILD_INTERFACE:intf_pub>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     metadef_headers
     fwk_mmpa_headers
     graphengine_headers

@@ -856,7 +856,7 @@ TEST_F(BgKernelContextExtendUT, GetPrivateAttrInComputeNodeInfoOK) {
   size_t attr_size;
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
-  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, attr_size, private_attrs);
+  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, private_attrs, attr_size);
   ASSERT_NE(compute_node_info_holder, nullptr);
   auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
   EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 3);
@@ -882,7 +882,7 @@ TEST_F(BgKernelContextExtendUT, GetPrivateAttrInComputeNodeInfoByDefault) {
   size_t attr_size;
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
-  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, attr_size, private_attrs);
+  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, private_attrs, attr_size);
   ASSERT_NE(compute_node_info_holder, nullptr);
   auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(compute_node_info_holder.get());
   EXPECT_EQ(compute_node_info->GetAttrs()->GetAttrNum(), 3);
@@ -908,7 +908,7 @@ TEST_F(BgKernelContextExtendUT, CreateComputeNodeInfoFailedWhenNotRegisteringPri
   size_t attr_size;
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
-  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, attr_size, private_attrs);
+  auto compute_node_info_holder = bg::CreateComputeNodeInfo(node, buffer_pool, private_attrs, attr_size);
   EXPECT_EQ(compute_node_info_holder, nullptr);
 }
 // todo lowering时，不需要构造attr

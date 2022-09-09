@@ -22,5 +22,5 @@ file(GLOB_RECURSE SRC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 include_directories(${METADEF_DIR}/third_party/fwkacllib/inc)
 add_library(slog_stub SHARED ${SRC_FILES})
 target_link_libraries(slog_stub PRIVATE
-    intf_pub
+    $<BUILD_INTERFACE:intf_pub>
 )

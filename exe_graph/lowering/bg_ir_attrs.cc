@@ -145,8 +145,10 @@ bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &r
   for (auto &attr_name : ir_attr_names) {
     const std::map<std::string, ge::AnyValue>::const_iterator &iter = all_attrs.find(attr_name);
     if (iter == all_attrs.end()) {
-      GELOGE(ge::FAILED, "Can not find the IR attr %s from node %s", attr_name.c_str(), node->GetName().c_str());
-      return false;
+      runtime_attrs.clear();
+      GELOGI("Can not find the IR attr %s from node %s(%s), clear all attrs",
+             attr_name.c_str(), node->GetName().c_str(), node->GetType().c_str());
+      return true;
     }
     GE_ASSERT_TRUE(AppendAttr(iter->second, runtime_attrs));
   }
@@ -186,12 +188,14 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
 }
 }  // namespace
 std::unique_ptr<uint8_t[]> CreateAttrBuffer(const ge::NodePtr &node, size_t &size) {
+  return CreateAttrBuffer(node, {}, size);
+}
+
+std::unique_ptr<uint8_t[]> CreateAttrBuffer(const ge::NodePtr &node,
+                                            const std::vector<ge::AnyValue> &runtime_attrs_list,
+                                            size_t &size) {
   std::vector<std::vector<uint8_t>> runtime_attrs;
   GE_ASSERT_TRUE(GetAllIrAttrs(node, runtime_attrs));
-  return CreateAttrBuffer(runtime_attrs, size);
-}
-std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<ge::AnyValue> &runtime_attrs_list, size_t &size) {
-  std::vector<std::vector<uint8_t>> runtime_attrs;
   for (auto &runtime_attr : runtime_attrs_list) {
     AppendAttr(runtime_attr, runtime_attrs);
   }

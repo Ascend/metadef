@@ -42,9 +42,7 @@ target_compile_definitions(ut_error_manager PRIVATE
 )
 
 target_link_libraries(ut_error_manager
-    intf_pub
-    slog_headers
-    mmpa_headers
+    $<BUILD_INTERFACE:intf_pub>
     fwk_mmpa_headers
     graphengine_headers
     error_manager

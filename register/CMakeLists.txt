@@ -74,11 +74,11 @@ target_link_options(register PRIVATE
 
 target_link_libraries(register
     PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
+        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
         $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
-        intf_pub
-        slog_headers
-        msprof_headers
-        mmpa_headers
         fwk_mmpa_headers
         graphengine_headers
         -Wl,--whole-archive
@@ -142,11 +142,11 @@ target_include_directories(register_static PRIVATE
 target_link_libraries(register_static PRIVATE
     c_sec
     json
+    $<BUILD_INTERFACE:intf_pub>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
+    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
     $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
-    intf_pub
-    slog_headers
-    msprof_headers
-    mmpa_headers
     metadef_headers
     fwk_mmpa_headers
     graphengine_headers

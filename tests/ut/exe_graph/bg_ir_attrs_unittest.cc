@@ -84,4 +84,19 @@ TEST_F(BgIrAttrsUT, CreateDataTypeAttrBuffer) {
   EXPECT_EQ(base[1], 2 * sizeof(size_t));
   EXPECT_EQ(*reinterpret_cast<ge::DataType*>(&base[2]), ge::DT_INT32);
 }
+
+TEST_F(BgIrAttrsUT, CreateAttrBufferSuccessOpLossAttr) {
+  auto op_desc = std::make_shared<ge::OpDesc>("foo", "Foo");
+  op_desc->AppendIrAttrName("dtype");
+  EXPECT_EQ(op_desc->GetIrAttrNames().size(), 1U);
+  EXPECT_EQ(op_desc->GetIrAttrNames().at(0), "dtype");
+  // ge::AttrUtils::SetDataType(op_desc, "dtype", ge::DT_INT32);
+  auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
+  size_t attr_size;
+  auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+  EXPECT_EQ(attr_size, 8);
+  auto base = reinterpret_cast<size_t*>(attr_buffer.get());
+  EXPECT_EQ(base[0], 0U);
+  EXPECT_EQ(base[1], 0U);
+}
 }  // namespace gert

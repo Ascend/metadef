@@ -313,7 +313,20 @@ graphStatus OpDescImpl::AddInputDesc(const std::string &name, const ge::GeTensor
   }
 }
 
+void AddDynamicNameIndex(const std::map<std::string, uint32_t> &dynamic_names_indexes,
+                         size_t insert_index,
+                         std::map<std::string, uint32_t> &names_indexes) {
+  // Update index in input_name_idx
+  for (auto it = names_indexes.begin(); it != names_indexes.end(); ++it) {
+    if (it->second >= (insert_index)) {
+      it->second += dynamic_names_indexes.size();
+    }
+  }
+  names_indexes.insert(dynamic_names_indexes.cbegin(), dynamic_names_indexes.cend());
+}
+
 graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const uint32_t num, const size_t index) {
+  std::map<std::string, uint32_t> dynamic_names_indexes;
   for (uint32_t i = 0U; i < num; i++) {
     std::string input_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((input_name_idx_.find(input_name) == input_name_idx_.end()),
@@ -341,22 +354,16 @@ graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const uint32
     std::advance(pos, index + i);
     (void)inputs_desc_.insert(pos, in_desc);
 
-    // Update index in input_name_idx
-    for (auto it = input_name_idx_.begin(); it != input_name_idx_.end(); ++it) {
-      if (it->second >= (index + i)) {
-        it->second += 1U;
-      }
-    }
-
-    (void)input_name_idx_.insert(make_pair(input_name, i + index));
-
+    dynamic_names_indexes.insert(make_pair(input_name, i + index));
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                      this->GetName(), "input_desc:" << (i + index), "", "", "input_name:" << input_name);
   }
+  AddDynamicNameIndex(dynamic_names_indexes, index, input_name_idx_);
   return GRAPH_SUCCESS;
 }
 
 graphStatus OpDescImpl::AddOutputDescMiddle(const std::string &name, const uint32_t num, const size_t index) {
+  std::map<std::string, uint32_t> dynamic_names_indexes;
   for (uint32_t i = 0U; i < num; i++) {
     std::string output_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
@@ -382,24 +389,16 @@ graphStatus OpDescImpl::AddOutputDescMiddle(const std::string &name, const uint3
     auto pos = outputs_desc_.begin();
     std::advance(pos, index + i);
     (void)outputs_desc_.insert(pos, out_desc);
-
-    // Update index in input_name_idx
-    for (auto it = output_name_idx_.begin(); it != output_name_idx_.end(); ++it) {
-      if (it->second >= (index + i)) {
-        it->second += 1U;
-      }
-    }
-
-    (void)output_name_idx_.insert(make_pair(output_name, i + index));
-
+    dynamic_names_indexes.insert(make_pair(output_name, i + index));
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                      this->GetName(), "output_desc:" << (i + index), "", "", output_name);
   }
-
+  AddDynamicNameIndex(dynamic_names_indexes, index, output_name_idx_);
   return GRAPH_SUCCESS;
 }
 
 graphStatus OpDescImpl::AddInputDescForward(const std::string &name, const uint32_t num) {
+  std::map<std::string, uint32_t> dynamic_input_name_indexes;
   for (uint32_t i = 0U; i < num; i++) {
     std::string input_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((input_name_idx_.find(input_name) == input_name_idx_.end()),
@@ -415,21 +414,16 @@ graphStatus OpDescImpl::AddInputDescForward(const std::string &name, const uint3
     }
     (void)inputs_desc_.insert(inputs_desc_.cbegin(), in_desc);
 
-    // Update index in input_name_idx
-    for (auto it = input_name_idx_.begin(); it != input_name_idx_.end(); ++it) {
-      it->second += 1U;
-    }
-
-    (void)input_name_idx_.insert(make_pair(input_name, 0));
-
+    dynamic_input_name_indexes.insert(make_pair(input_name, i));
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                      this->GetName(), "input_desc:0", "", "", "input_name:" << input_name);
   }
-
+  AddDynamicNameIndex(dynamic_input_name_indexes, 0U, input_name_idx_);
   return GRAPH_SUCCESS;
 }
 
 graphStatus OpDescImpl::AddOutputDescForward(const std::string &name, const uint32_t num) {
+  std::map<std::string, uint32_t> output_name_indexes;
   for (uint32_t i = 0U; i < num; i++) {
     std::string output_name = name + std::to_string(i);
     GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
@@ -445,17 +439,11 @@ graphStatus OpDescImpl::AddOutputDescForward(const std::string &name, const uint
     }
 
     (void)outputs_desc_.insert(outputs_desc_.cbegin(), in_desc);
-
-    // Update index in output_name_idx
-    for (auto it = output_name_idx_.begin(); it != output_name_idx_.end(); ++it) {
-      it->second += 1U;
-    }
-    (void)output_name_idx_.insert(make_pair(output_name, 0));
-
+    output_name_indexes.insert(make_pair(output_name, i));
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                      this->GetName(), "output_desc:0", "", "", "output_name:" << output_name);
   }
-
+  AddDynamicNameIndex(output_name_indexes, 0U, output_name_idx_);
   return GRAPH_SUCCESS;
 }
 

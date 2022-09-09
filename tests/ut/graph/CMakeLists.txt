@@ -110,7 +110,7 @@ target_compile_definitions(ut_graph PRIVATE
 )
 
 target_link_libraries(ut_graph PUBLIC
-    intf_pub -lgcov
+    $<BUILD_INTERFACE:intf_pub> -lgcov
     metadef_headers
     fwk_mmpa_headers
     graphengine_headers

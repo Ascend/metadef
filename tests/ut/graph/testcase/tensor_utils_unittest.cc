@@ -341,7 +341,7 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSize_C1HWNCoC0_SUCCESS) {
 
 TEST_F(ge_test_tensor_utils, CalcTensorMemSize_CCE_FractalZ_shape_error) {
   setenv("PARSER_PRIORITY", "cce", 0);
-  vector<int64_t> dims({2, 3, 4, 5});
+  vector<int64_t> dims({2, 3, 4, 5, 6, 7});
   GeShape ge_shape(dims);
   Format format = FORMAT_FRACTAL_Z;
   DataType data_type = DT_UINT8;

@@ -228,8 +228,12 @@ TEST_F(UtestOpDesc, AddInputDescMiddle_success) {
   op_desc->AddInputDesc("input_desc1", tensor_desc->Clone());
   op_desc->AddInputDesc("input_desc2", tensor_desc->Clone());
 
-  EXPECT_EQ(op_desc->AddInputDescMiddle("input_desc3", 1, 1), GRAPH_SUCCESS);
-  EXPECT_EQ(op_desc->AddInputDescMiddle("input_desc4", 1, 4), GRAPH_FAILED);
+  EXPECT_EQ(op_desc->AddInputDescMiddle("x", 2, 1), GRAPH_SUCCESS);
+  auto name_idx = op_desc->GetAllInputName();
+  ASSERT_EQ(name_idx.size(), 4U);
+  EXPECT_EQ(name_idx["x0"], 1);
+  EXPECT_EQ(name_idx["x1"], 2);
+  EXPECT_EQ(name_idx["input_desc2"], 3);
 }
 
 TEST_F(UtestOpDesc, AddOutputDescMiddle_success) {
@@ -241,8 +245,13 @@ TEST_F(UtestOpDesc, AddOutputDescMiddle_success) {
   op_desc->AddOutputDesc("output_desc1", tensor_desc->Clone());
   op_desc->AddOutputDesc("output_desc2", tensor_desc->Clone());
 
-  EXPECT_EQ(op_desc->AddOutputDescMiddle("output_desc3", 1, 1), GRAPH_SUCCESS);
-  EXPECT_EQ(op_desc->AddOutputDescMiddle("output_desc4", 1, 4), GRAPH_FAILED);
+  EXPECT_EQ(op_desc->AddOutputDescMiddle("y", 2, 1), GRAPH_SUCCESS);
+  EXPECT_EQ(op_desc->AddOutputDescMiddle("output_desc4", 1, 5), GRAPH_FAILED);
+  auto name_idx = op_desc->GetAllOutputName();
+  ASSERT_EQ(name_idx.size(), 4U);
+  EXPECT_EQ(name_idx["y0"], 1);
+  EXPECT_EQ(name_idx["y1"], 2);
+  EXPECT_EQ(name_idx["output_desc2"], 3);
 }
 
 TEST_F(UtestOpDesc, UpdateInputDesc_success) {
@@ -258,6 +267,21 @@ TEST_F(UtestOpDesc, UpdateInputDesc_success) {
   EXPECT_EQ(op_desc->UpdateInputDesc(4, tensor_desc->Clone()), GRAPH_FAILED);
 }
 
+TEST_F(UtestOpDesc, UpdateInputDescForward_success) {
+  auto op_desc = std::make_shared<OpDesc>();
+  auto tensor_desc = std::make_shared<GeTensorDesc>();
+  tensor_desc->SetShape(GeShape({1}));
+  tensor_desc->SetFormat(FORMAT_NCHW);
+  tensor_desc->SetDataType(DT_FLOAT);
+  op_desc->AddInputDesc("input1", tensor_desc->Clone());
+  EXPECT_EQ(op_desc->AddDynamicInputDesc("x", 2, false), GRAPH_SUCCESS);
+  auto input_name_idx = op_desc->GetAllInputName();
+  ASSERT_EQ(input_name_idx.size(), 3U);
+  EXPECT_EQ(input_name_idx["x0"], 0);
+  EXPECT_EQ(input_name_idx["x1"], 1);
+  EXPECT_EQ(input_name_idx["input1"], 2);
+}
+
 TEST_F(UtestOpDesc, AddOutputDescForward_success) {
   auto tensor_desc = std::make_shared<GeTensorDesc>();
   tensor_desc->SetShape(GeShape({1}));
@@ -265,8 +289,13 @@ TEST_F(UtestOpDesc, AddOutputDescForward_success) {
   tensor_desc->SetDataType(DT_FLOAT);
   auto op_desc = std::make_shared<OpDesc>();
   op_desc->AddOutputDesc(tensor_desc->Clone());
-  op_desc->AddOutputDesc(tensor_desc->Clone());
-  EXPECT_EQ(op_desc->AddOutputDescForward("test", 1), GRAPH_SUCCESS);
+  EXPECT_EQ(op_desc->AddOutputDescForward("y", 2), GRAPH_SUCCESS);
+
+  auto output_name_idx = op_desc->GetAllOutputName();
+  ASSERT_EQ(output_name_idx.size(), 3U);
+  EXPECT_EQ(output_name_idx["y0"], 0);
+  EXPECT_EQ(output_name_idx["y1"], 1);
+  EXPECT_EQ(output_name_idx["__output0"], 2);
 }
 
 TEST_F(UtestOpDesc, AddOptionalInputDesc_success) {
