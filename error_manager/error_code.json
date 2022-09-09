@@ -1695,6 +1695,105 @@
       }
     },
     {
+      "errClass": "DVPP Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "EN0001",
+      "ErrMessage": "Value [%s] for [%s] is invalid. Reason: %s.",
+      "Arglist": "value,param,reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Some Argument Invalid",
+      "ErrCode": "EN0002",
+      "ErrMessage": "Some argument is invalid. See the %s API description in AscendCL API Reference.",
+      "Arglist": "functionname",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Null Pointer",
+      "ErrCode": "EN0003",
+      "ErrMessage": "Argument [%s] is null.",
+      "Arglist": "param",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Try again with a correct pointer argument."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Unsupported Feature",
+      "ErrCode": "EN0004",
+      "ErrMessage": "The operation is not supported. Reason: %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Channel Resource Error",
+      "ErrCode": "EN0005",
+      "ErrMessage": "An error occurred on channel resource %s. Reason: %s.",
+      "Arglist": "channel,reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Check the input channel ID."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Memory Address Error",
+      "ErrCode": "EN0006",
+      "ErrMessage": "The passed memory address is incorrect.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Use the hi_mpi_dvpp_malloc API to allocate memory."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Operation Timeout",
+      "ErrCode": "EN0007",
+      "ErrMessage": "%s times out. Reason: %s.",
+      "Arglist": "operation,reason",
+      "suggestion": {
+        "Possible Cause": "1. The input timeout interval is improper; 2. The buffer is full; 3. An internal error occurred.",
+        "Solution": "Set the timeout interval to a proper value."
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Unsupported JPEG File",
+      "ErrCode": "EN0008",
+      "ErrMessage": "The input JPEG image is not supported. Reason: %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "DVPP Errors",
+      "errTitle": "Unsupported PNG File",
+      "ErrCode": "EN0009",
+      "ErrMessage": "The input PNG image is not supported. Reason: %s.",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "ACL Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EH0001",
