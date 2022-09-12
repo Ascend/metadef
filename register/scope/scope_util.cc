@@ -15,10 +15,6 @@
 */
 
 #include "external/register/scope/scope_fusion_pass_register.h"
-
-#include <stdexcept>
-
-#include "framework/common/debug/ge_log.h"
 #include "framework/common/string_util.h"
 
 namespace ge {

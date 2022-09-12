@@ -18,7 +18,6 @@
 #define REGISTER_SCOPE_SCOPE_PATTERN_IMPL_H
 
 #include <stdexcept>
-#include <limits>
 #include <cmath>
 #include "external/register/scope/scope_fusion_pass_register.h"
 #include "external/graph/types.h"

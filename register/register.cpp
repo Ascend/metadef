@@ -337,12 +337,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
       GELOGW("[AutoMappingFn][GetAttr] Dynamic attr %s in node %s not exist.", attr_name.c_str(), node->name().c_str());
     }
 
-    if (attr_num.has_list()) {
-      dynamic_tensor_num = attr_num.list().type_size();
-    } else {
-      dynamic_tensor_num = static_cast<int32_t>(attr_num.i());
-    }
-
+    dynamic_tensor_num = (attr_num.has_list()) ? attr_num.list().type_size() : static_cast<int32_t>(attr_num.i());
     if (dynamic_tensor_num <= 0) {
       GELOGW("[AutoMappingFn][Check] Dynamic num %d in node %s is less than 0.", dynamic_tensor_num,
              node->name().c_str());
