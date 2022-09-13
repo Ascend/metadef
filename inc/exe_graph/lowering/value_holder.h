@@ -121,6 +121,8 @@ class ValueHolder {
 
   static NodeHolderPtr AddNode(const char *node_type, size_t input_count, size_t output_count, GraphFrame &frame);
 
+  static std::vector<ValueHolderPtr> GetLastExecNodes();
+
  private:
   ValueHolder();
   static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);

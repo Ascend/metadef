@@ -570,5 +570,30 @@ ge::graphStatus FrameSelector::OnMainRoot(const std::function<std::vector<ValueH
   current_frame = nullptr;
   return ge::GRAPH_SUCCESS;
 }
+
+std::vector<ValueHolderPtr> ValueHolder::GetLastExecNodes() {
+  if (graph_frames.empty()) {
+    return {};
+  }
+  auto frame = graph_frames.begin()->get();
+  if (graph_frames.size() > 1U) {
+    frame = (graph_frames.begin() + 1)->get();
+  }
+  return frame->GetLastExecNodes();
+}
+
+ValueHolderPtr FrameSelector::OnMainRootLast(const std::function<bg::ValueHolderPtr()> &builder) {
+  if (builder == nullptr || graph_frames.empty()) {
+    return nullptr;
+  }
+  current_frame = graph_frames.begin()->get();
+  if (graph_frames.size() > 1U) {
+    current_frame = (graph_frames.begin() + 1)->get();
+  }
+  auto output = builder();
+  current_frame->SetLastExecNode(output);
+  current_frame = nullptr;
+  return output;
+}
 }  // namespace bg
 }  // namespace gert
