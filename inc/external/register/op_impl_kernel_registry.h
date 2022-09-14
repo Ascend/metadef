@@ -21,6 +21,7 @@
 #include "graph/ge_error_codes.h"
 #include "kernel_registry.h"
 #include "exe_graph/runtime/infer_shape_context.h"
+#include "exe_graph/runtime/infer_shape_range_context.h"
 #include "exe_graph/runtime/tiling_context.h"
 #include "exe_graph/runtime/infer_datatype_context.h"
 #include "graph/any_value.h"
@@ -28,6 +29,7 @@
 namespace gert {
 struct OpImplKernelRegistry {
   typedef UINT32 (*InferShapeKernelFunc)(InferShapeContext *);
+  typedef UINT32 (*InferShapeRangeKernelFunc)(InferShapeRangeContext *);
   typedef UINT32 (*TilingKernelFunc)(TilingContext *);
   typedef UINT32 (*InferDataTypeKernelFunc)(InferDataTypeContext *);
   using OpType = std::string;
@@ -50,6 +52,7 @@ struct OpImplKernelRegistry {
     }
 
     InferShapeKernelFunc infer_shape;
+    InferShapeRangeKernelFunc infer_shape_range;
     InferDataTypeKernelFunc infer_datatype;
     TilingKernelFunc tiling;
     KernelRegistry::KernelFunc tiling_parse;
