@@ -75,23 +75,6 @@ class TilingContext : public ExtendedKernelContext {
     return GetInputPointer<Tensor>(index);
   }
   /**
-   * 基于算子IR原型定义，获取`OPTIONAL_INPUT`类型的输入tensor指针
-   * @param ir_index IR原型定义中的index
-   * @return tensor指针，index非法，或该INPUT没有实例化时，返回空指针
-   */
-  const Tensor *GetOptionalInputTensor(size_t ir_index) const {
-    return GetDynamicInputPointer<Tensor>(ir_index, 0);
-  }
-  /**
-   * 基于算子IR原型定义，获取`DYNAMIC_INPUT`类型的输入Tensor指针
-   * @param ir_index IR原型定义中的index
-   * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
-   * @return Tensor指针，index或relative_index非法时，返回空指针
-   */
-  const Tensor *GetDynamicInputTensor(size_t ir_index, size_t relative_index) const {
-    return GetDynamicInputPointer<Tensor>(ir_index, relative_index);
-  }
-  /**
    * 基于算子IR原型定义，获取`OPTIONAL_INPUT`类型的输入shape指针，shape中包含了原始shape与运行时shape
    * @param ir_index IR原型定义中的index
    * @return shape指针，index非法，或该INPUT没有实例化时，返回空指针

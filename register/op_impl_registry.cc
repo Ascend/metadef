@@ -28,11 +28,6 @@ OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKerne
   functions_.infer_shape = infer_shape_func;
   return *this;
 }
-OpImplRegister &OpImplRegister::InferShapeRange(
-    OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func) {
-  functions_.infer_shape_range = infer_shape_range_func;
-  return *this;
-}
 OpImplRegister &OpImplRegister::InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func) {
   functions_.infer_datatype = infer_datatype_func;
   return *this;

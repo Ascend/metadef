@@ -25,8 +25,6 @@
 #include "framework/common/debug/ge_log.h"
 #include "external/ge/ge_api_error_codes.h"
 
-#define ONLY_COMPILE_SHAPE_RANGE_OPEN_SRC
-
 #if !defined(__ANDROID__) && !defined(ANDROID)
 #define DOMI_LOGE(fmt, ...) GE_LOG_ERROR(GE_MODULE_NAME, (ge::FAILED), fmt, ##__VA_ARGS__)
 #else

@@ -114,44 +114,6 @@ class InferShapeContextFaker {
   KernelRunContextFaker base_faker_;
 };
 
-class InferShapeRangeContextFaker {
- public:
-  InferShapeRangeContextFaker &NodeIoNum(size_t input_num, size_t output_num);
-  InferShapeRangeContextFaker &IrInputNum(size_t input_num) {
-    base_faker_.IrInputNum(input_num);
-    return *this;
-  }
-  InferShapeRangeContextFaker &IrInstanceNum(std::vector<uint32_t> instance_num) {
-    base_faker_.IrInstanceNum(std::move(instance_num));
-    return *this;
-  }
-  InferShapeRangeContextFaker &NodeInputTd(int32_t index, ge::DataType dt, ge::Format origin_format,
-                                      ge::Format storage_format) {
-    base_faker_.NodeInputTd(index, dt, origin_format, storage_format);
-    return *this;
-  }
-  InferShapeRangeContextFaker &NodeOutputTd(int32_t index, ge::DataType dt, ge::Format origin_format,
-                                       ge::Format storage_format) {
-    base_faker_.NodeOutputTd(index, dt, origin_format, storage_format);
-    return *this;
-  }
-  InferShapeRangeContextFaker &NodeAttrs(std::vector<std::pair<std::string, ge::AnyValue>> keys_to_value) {
-    base_faker_.NodeAttrs(std::move(keys_to_value));
-    return *this;
-  }
-
-  InferShapeRangeContextFaker &InputShapeRanges(std::vector<void *> input_shape_ranges);
-  InferShapeRangeContextFaker &OutputShapeRanges(std::vector<void *> output_shape_ranges);
-
-  FakeKernelContextHolder Build() const;
-
- private:
-  enum InputsAppend { kInputsInferShapeRangeFunc, kInputsAppendEnd };
-
- private:
-  KernelRunContextFaker base_faker_;
-};
-
 class InferDataTypeContextFaker {
  public:
   InferDataTypeContextFaker &NodeIoNum(size_t input_num, size_t output_num);

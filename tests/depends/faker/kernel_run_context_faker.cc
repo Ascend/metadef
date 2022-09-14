@@ -138,24 +138,6 @@ InferShapeContextFaker &InferShapeContextFaker::OutputShapes(std::vector<void *>
 FakeKernelContextHolder InferShapeContextFaker::Build() const {
   return base_faker_.Build();
 }
-InferShapeRangeContextFaker &InferShapeRangeContextFaker::NodeIoNum(size_t input_num, size_t output_num) {
-  base_faker_.KernelIONum(input_num + kInputsAppendEnd, output_num);
-  base_faker_.NodeIoNum(input_num, output_num);
-  return *this;
-}
-InferShapeRangeContextFaker &InferShapeRangeContextFaker::InputShapeRanges(std::vector<void *> input_shape_ranges) {
-  std::vector<void *> inputs(std::move(input_shape_ranges));
-  inputs.push_back(nullptr);  // infershaperange func
-  base_faker_.Inputs(std::move(inputs));
-  return *this;
-}
-InferShapeRangeContextFaker &InferShapeRangeContextFaker::OutputShapeRanges(std::vector<void *> output_shape_ranges) {
-  base_faker_.Outputs(std::move(output_shape_ranges));
-  return *this;
-}
-FakeKernelContextHolder InferShapeRangeContextFaker::Build() const {
-    return base_faker_.Build();
-}
 InferDataTypeContextFaker &InferDataTypeContextFaker::NodeIoNum(size_t input_num, size_t output_num) {
   base_faker_.KernelIONum(input_num + kInputsAppendEnd, output_num);
   base_faker_.NodeIoNum(input_num, output_num);
