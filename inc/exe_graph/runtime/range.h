@@ -76,7 +76,7 @@ class Range {
   void SetMax(T *max) {
     max_ = max;
   }
-
+#ifndef ONLY_COMPILE_SHAPE_RANGE_OPEN_SRC
   /**
    * 获取最小的T对象指针
    * @return
@@ -108,6 +108,23 @@ class Range {
   T *GetMax() {
     return max_;
   }
+#else
+  const T &GetMin() const {
+    return *min_;
+  }
+
+  const T &GetMax() const {
+    return *max_;
+  }
+
+  T &GetMin() {
+    return *min_;
+  }
+
+  T &GetMax() {
+    return *max_;
+  }
+#endif
  private:
   T *min_;
   T *max_;

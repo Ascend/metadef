@@ -18,6 +18,102 @@
 namespace gert {
 using ShapeRange = Range<Shape>;
 class ShapeRangeUT : public testing::Test {};
+#ifdef ONLY_COMPILE_SHAPE_RANGE_OPEN_SRC
+TEST_F(ShapeRangeUT, ConstructFromListOk) {
+  Shape min{8, 3, 224, 224};
+  Shape max{-1, 10, 2240, 2240};
+  ShapeRange sr(&min, &max);
+  auto s = sr.GetMin();
+  EXPECT_EQ(s.GetDimNum(), 4);
+  EXPECT_EQ(s.GetDim(0), 8);
+  EXPECT_EQ(s.GetDim(1), 3);
+  EXPECT_EQ(s.GetDim(2), 224);
+  EXPECT_EQ(s.GetDim(3), 224);
+  s = sr.GetMax();
+  EXPECT_EQ(s.GetDimNum(), 4);
+  EXPECT_EQ(s.GetDim(0), -1);
+  EXPECT_EQ(s.GetDim(1), 10);
+  EXPECT_EQ(s.GetDim(2), 2240);
+  EXPECT_EQ(s.GetDim(3), 2240);
+}
+
+TEST_F(ShapeRangeUT, ConstructFromShapesOk) {
+  Shape s1{8, 3, 224, 224};
+  Shape s2{-1, 10, 2240, 2240};
+  ShapeRange sr(&s1, &s2);
+  auto s = sr.GetMin();
+  EXPECT_EQ(s.GetDimNum(), 4);
+  EXPECT_EQ(s.GetDim(0), 8);
+  EXPECT_EQ(s.GetDim(1), 3);
+  EXPECT_EQ(s.GetDim(2), 224);
+  EXPECT_EQ(s.GetDim(3), 224);
+  s = sr.GetMax();
+  EXPECT_EQ(s.GetDimNum(), 4);
+  EXPECT_EQ(s.GetDim(0), -1);
+  EXPECT_EQ(s.GetDim(1), 10);
+  EXPECT_EQ(s.GetDim(2), 2240);
+  EXPECT_EQ(s.GetDim(3), 2240);
+}
+
+TEST_F(ShapeRangeUT, ConstructFromSameShapeOk) {
+  Shape s{8, 3, 224, 224};
+  ShapeRange sr(&s);
+  auto min = sr.GetMin();
+  EXPECT_EQ(s.GetDimNum(), 4);
+  EXPECT_EQ(s.GetDim(0), 8);
+  EXPECT_EQ(s.GetDim(1), 3);
+  EXPECT_EQ(s.GetDim(2), 224);
+  EXPECT_EQ(s.GetDim(3), 224);
+  auto max = sr.GetMax();
+  EXPECT_EQ(min, max);
+}
+
+TEST_F(ShapeRangeUT, EqualOk) {
+  Shape s1{8, 3, 224, 224};
+  Shape s2{8, 3, 224, 224};
+  ShapeRange sr1(&s1, &s2);
+  ShapeRange sr2(&s1, &s2);
+  EXPECT_TRUE(sr1 == sr2);
+}
+
+TEST_F(ShapeRangeUT, SetMaxOk) {
+  ShapeRange sr;
+  Shape max{7, 3, 224, 224};
+  sr.SetMax(&max);
+  EXPECT_EQ(sr.GetMax(), max);
+}
+
+TEST_F(ShapeRangeUT, SetMinOk) {
+  ShapeRange sr;
+  Shape min{7, 4, -1, -1};
+  sr.SetMin(&min);
+  EXPECT_EQ(sr.GetMin(), min);
+}
+
+TEST_F(ShapeRangeUT, ModifyMaxOk) {
+  Shape max{7, 4, -1, -1};
+  ShapeRange sr;
+  sr.SetMax(&max);
+
+  auto &max_pr = sr.GetMax();
+  (max_pr)[0] = 8;
+  (max_pr)[1] = -1;
+  EXPECT_EQ(sr.GetMax().GetDim(0), 8);
+  EXPECT_EQ(sr.GetMax().GetDim(1), -1);
+}
+
+TEST_F(ShapeRangeUT, ModifyMinOk) {
+  Shape min{3, 4, 255, 6};
+  ShapeRange sr;
+  sr.SetMin(&min);
+
+  auto &min_pr = sr.GetMin();
+  (min_pr)[0] = 1;
+  (min_pr)[1] = 2;
+  EXPECT_EQ(sr.GetMin().GetDim(0), 1);
+  EXPECT_EQ(sr.GetMin().GetDim(1), 2);
+}
+#else
 TEST_F(ShapeRangeUT, DefaultConstructOk) {
   ShapeRange sr;
   EXPECT_EQ(sr.GetMax(), nullptr);
@@ -118,4 +214,5 @@ TEST_F(ShapeRangeUT, ModifyMinOk) {
   EXPECT_EQ(sr.GetMin()->GetDim(0), 1);
   EXPECT_EQ(sr.GetMin()->GetDim(1), 2);
 }
+#endif
 }  // namespace gert
