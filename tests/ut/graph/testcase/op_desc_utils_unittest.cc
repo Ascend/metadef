@@ -28,6 +28,7 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/anchor_utils.h"
 #include "test_std_structs.h"
+#include "external/graph/operator_reg.h"
 
 namespace ge {
 class UtestOpDescUtils : public testing::Test {
@@ -110,6 +111,48 @@ ComputeGraphPtr BuildGraph3() {
   builder.AddDataEdge(const1, 0, mul, 1);
   builder.AddDataEdge(enter, 0, cast, 0);
   return builder.GetGraph();
+}
+
+///     x0   a   bias  b
+///      \    \   /  /
+///        DynamicOpUt
+///
+ComputeGraphPtr BuildGraph4(size_t dynamic_input_num, bool has_optional_input) {
+  size_t optional_input_num = has_optional_input ? 1u : 0U;
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+
+  auto data2 = builder.AddNode("a", "Data", 1, 1);
+  auto data4 = builder.AddNode("b", "Data", 1, 1);
+  auto dynamic_op_ut = builder.AddNode("dynamic_op_ut", "DynamicOpUt",
+                                       2 + dynamic_input_num + optional_input_num, 1);
+
+  size_t dst_index = 0;
+  // dynamic input
+  for (size_t i = 0U; i < dynamic_input_num; ++i) {
+    auto data1 = builder.AddNode("x", "Data", 1, 1);
+    builder.AddDataEdge(data1, 0, dynamic_op_ut, dst_index++);
+  }
+
+  // required input
+  builder.AddDataEdge(data2, 0, dynamic_op_ut, dst_index++);
+
+  // optional input
+  for (size_t i = 0U; i < optional_input_num; ++i) {
+    auto data3 = builder.AddNode("bias", "Data", 1, 1);
+    builder.AddDataEdge(data3, 0, dynamic_op_ut, dst_index++);
+  }
+
+  // required input
+  builder.AddDataEdge(data4, 0, dynamic_op_ut, dst_index++);
+
+  auto graph = builder.GetGraph();
+  auto dynamic_op_ut_node = graph->FindNode("dynamic_op_ut");
+  auto op_desc = dynamic_op_ut_node->GetOpDesc();
+  op_desc->AppendIrInput("x", kIrInputDynamic);
+  op_desc->AppendIrInput("a", kIrInputRequired);
+  op_desc->AppendIrInput("bias", kIrInputOptional);
+  op_desc->AppendIrInput("b", kIrInputRequired);
+  return graph;
 }
 }
 TEST_F(UtestOpDescUtils, SetWeight) {
@@ -718,5 +761,154 @@ TEST_F(UtestOpDescUtils, CloneOpdesc) {
   padding.clear();
   EXPECT_TRUE(AttrUtils::GetStr(new_desc2, "padding", padding));
   EXPECT_EQ(padding, "SAME");
+}
+
+REG_OP(DynamicOpUt)
+    .DYNAMIC_INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+        .INPUT(a, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+        .OPTIONAL_INPUT(bias, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+        .INPUT(b, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+        .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT32}))
+        .ATTR(transpose_x1, Bool, false)
+        .ATTR(transpose_x2, Bool, false)
+        .OP_END_FACTORY_REG(DynamicOpUt)
+
+TEST_F(UtestOpDescUtils, GetInputIrIndexes2InstanceIndexesPairMap_NullOpDescFailed) {
+  auto ir_index_to_instance_index_pair_map = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(nullptr);
+  ASSERT_TRUE(ir_index_to_instance_index_pair_map.empty());
+}
+
+void IrIndexAndInstanceIndexCheck(size_t dynamic_input_num, bool has_optional_input) {
+  size_t optional_input_num = has_optional_input ? 1U : 0U;
+  auto graph = BuildGraph4(dynamic_input_num, has_optional_input);
+  auto dynamic_op_ut_node = graph->FindNode("dynamic_op_ut");
+  auto op_desc = dynamic_op_ut_node->GetOpDesc();
+
+  size_t index = 0;
+  auto &name_index = op_desc->MutableAllInputName();
+  name_index.clear();
+  for (size_t i = 0U; i < dynamic_input_num; ++i) {
+    name_index["x" + std::to_string(i)] = index++;
+  }
+  name_index["a"] = index++;
+  if (optional_input_num == 1) {
+    name_index["bias"] = index++;
+  }
+  name_index["b"] = index++;
+
+  auto ir_index_to_instance_index_pair_map = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(op_desc);
+  ASSERT_FALSE(ir_index_to_instance_index_pair_map.empty());
+
+  std::map<size_t, std::pair<size_t, size_t>> expect_map;
+  expect_map[0] = std::pair<size_t, size_t>(0, dynamic_input_num);
+  expect_map[1] = std::pair<size_t, size_t>(dynamic_input_num, 1);
+  expect_map[2] = std::pair<size_t, size_t>(dynamic_input_num + 1, optional_input_num);
+  expect_map[3] = std::pair<size_t, size_t>(dynamic_input_num + 1 + optional_input_num, 1);
+  EXPECT_EQ(ir_index_to_instance_index_pair_map, expect_map);
+}
+
+TEST_F(UtestOpDescUtils, GetInputIrIndexes2InstanceIndexesPairMap_Success) {
+  IrIndexAndInstanceIndexCheck(0, true);
+  IrIndexAndInstanceIndexCheck(0, false);
+  IrIndexAndInstanceIndexCheck(1, true);
+  IrIndexAndInstanceIndexCheck(1, false);
+  IrIndexAndInstanceIndexCheck(3, true);
+  IrIndexAndInstanceIndexCheck(3, false);
+}
+
+TEST_F(UtestOpDescUtils, GetInputIrIndexes2InstanceIndexesPairMap_DynamicInputNameNotMatch_Failed) {
+  size_t dynamic_input_num = 1;
+  size_t has_optional_input = true;
+  size_t optional_input_num = has_optional_input ? 1U : 0U;
+  auto graph = BuildGraph4(dynamic_input_num, has_optional_input);
+  auto dynamic_op_ut_node = graph->FindNode("dynamic_op_ut");
+  auto op_desc = dynamic_op_ut_node->GetOpDesc();
+
+  size_t index = 0;
+  auto &name_index = op_desc->MutableAllInputName();
+  name_index.clear();
+
+  name_index["x0"] = index++;
+  name_index["x2"] = index++; // error name
+
+  name_index["a"] = index++;
+  if (optional_input_num == 1) {
+    name_index["bias"] = index++;
+  }
+  name_index["b"] = index++;
+
+  auto ir_index_to_instance_index_pair_map = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(op_desc);
+  ASSERT_TRUE(ir_index_to_instance_index_pair_map.empty());
+}
+
+void GetIrIndexCheck(size_t dynamic_input_num, bool has_optional_input) {
+  size_t optional_input_num = has_optional_input ? 1U : 0U;
+  auto graph = BuildGraph4(dynamic_input_num, has_optional_input);
+  auto dynamic_op_ut_node = graph->FindNode("dynamic_op_ut");
+  auto op_desc = dynamic_op_ut_node->GetOpDesc();
+
+  size_t index = 0;
+  auto &name_index = op_desc->MutableAllInputName();
+  name_index.clear();
+  for (size_t i = 0U; i < dynamic_input_num; ++i) {
+    name_index["x" + std::to_string(i)] = index++;
+  }
+  name_index["a"] = index++;
+  if (optional_input_num == 1) {
+    name_index["bias"] = index++;
+  }
+  name_index["b"] = index++;
+
+  index = 0U;
+  std::map<size_t, size_t> expect_instance_index_to_ir_index_map;
+  for (size_t i = 0U; i < dynamic_input_num; ++i) {
+    expect_instance_index_to_ir_index_map[index++] = 0;
+  }
+  expect_instance_index_to_ir_index_map[index++] = 1;
+  if (has_optional_input) {
+    expect_instance_index_to_ir_index_map[index++] = 2;
+  }
+  expect_instance_index_to_ir_index_map[index++] = 3;
+  for (auto &instance_index_to_ir_index : expect_instance_index_to_ir_index_map) {
+    auto input_index = instance_index_to_ir_index.first;
+    size_t ir_index;
+    auto ret = OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, input_index, ir_index);
+    ASSERT_EQ(ret, GRAPH_SUCCESS);
+    ASSERT_EQ(ir_index, instance_index_to_ir_index.second);
+  }
+}
+
+TEST_F(UtestOpDescUtils, GetInputIrIndexeByInstanceIndexe_Success) {
+  GetIrIndexCheck(0, true);
+  GetIrIndexCheck(0, false);
+  GetIrIndexCheck(1, true);
+  GetIrIndexCheck(1, false);
+  GetIrIndexCheck(3, true);
+  GetIrIndexCheck(3, false);
+}
+
+TEST_F(UtestOpDescUtils, GetInputIrIndexeByInstanceIndexe_DynamicNameNotmatch_Failed) {
+  size_t dynamic_input_num = 1;
+  size_t has_optional_input = true;
+  size_t optional_input_num = has_optional_input ? 1U : 0U;
+  auto graph = BuildGraph4(dynamic_input_num, has_optional_input);
+  auto dynamic_op_ut_node = graph->FindNode("dynamic_op_ut");
+  auto op_desc = dynamic_op_ut_node->GetOpDesc();
+
+  size_t index = 0;
+  auto &name_index = op_desc->MutableAllInputName();
+  name_index.clear();
+
+  name_index["x0"] = index++;
+  name_index["x2"] = index++; // error name
+
+  name_index["a"] = index++;
+  if (optional_input_num == 1) {
+    name_index["bias"] = index++;
+  }
+  name_index["b"] = index++;
+  size_t ir_index;
+  auto ret = OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, 2, ir_index);
+  ASSERT_NE(ret, GRAPH_SUCCESS);
 }
 }

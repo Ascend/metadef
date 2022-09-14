@@ -36,6 +36,34 @@ class ExtendedKernelContext : protected KernelContext {
     return compute_node_info->GetInputTdInfo(index);
   }
   /**
+   * 基于算子IR原型定义，获取`OPTIONAL_INPUT`类型的输入CompileTimeTensorDesc指针
+   * @param ir_index IR原型定义中的index
+   * @return CompileTimeTensorDesc指针，index非法，或该INPUT没有实例化时，返回空指针
+   */
+  const CompileTimeTensorDesc *GetOptionalInputDesc(size_t ir_index) const {
+    return GetDynamicInputDesc(ir_index, 0);
+  }
+  /**
+   * 基于算子IR原型定义，获取`DYNAMIC_INPUT`类型的输入CompileTimeTensorDesc指针
+   * @param ir_index IR原型定义中的index
+   * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
+   * @return CompileTimeTensorDesc指针，index或relative_index非法时，返回空指针
+   */
+  const CompileTimeTensorDesc *GetDynamicInputDesc(size_t ir_index, size_t relative_index) const {
+    auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
+      return nullptr;
+    }
+    auto ins_info = GetIrInputInstanceInfo(ir_index);
+    if (ins_info == nullptr) {
+      return nullptr;
+    }
+    if (ins_info->GetInstanceNum() <= relative_index) {
+      return nullptr;
+    }
+    return compute_node_info->GetInputTdInfo(ins_info->GetInstanceStart() + relative_index);
+  }
+  /**
    * 根据index获取节点输出的Tensor description
    * @param index 输出index
    * @return 输出TensorDesc的指针，index非法时，返回空指针

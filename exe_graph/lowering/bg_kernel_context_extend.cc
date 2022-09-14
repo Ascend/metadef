@@ -22,68 +22,29 @@
 #include "exe_graph/runtime/context_extend.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_util.h"
+#include "graph/utils/op_desc_utils.h"
 
 namespace gert {
 namespace bg {
 namespace {
 using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
-ge::graphStatus GetInstanceNum(const ge::NodePtr &node, const std::string &ir_name, ge::IrInputType ir_type,
-                               size_t start_index, size_t &instance_num) {
-  if (ir_type == ge::kIrInputRequired) {
-    auto name = node->GetOpDesc()->GetValidInputNameByIndex(start_index);
-    if (name != ir_name) {
-      GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
-             "current name %s",
-             node->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
-    }
-    instance_num = 1;
-    return ge::SUCCESS;
-  }
-  if (ir_type == ge::kIrInputOptional) {
-    auto name = node->GetOpDesc()->GetValidInputNameByIndex(start_index);
-    if (name == ir_name) {
-      instance_num = 1;
-    } else {
-      instance_num = 0;
-    }
-    return ge::SUCCESS;
-  }
-  if (ir_type == ge::kIrInputDynamic) {
-    size_t dyn_i = 0;
-    auto node_indegree = node->GetAllInDataAnchorsSize();
-    for (size_t i = start_index; i < node_indegree; ++i, ++dyn_i) {
-      auto name = node->GetOpDesc()->GetValidInputNameByIndex(i);
-      if (name != ir_name + std::to_string(dyn_i)) {
-        break;
-      }
-    }
-    instance_num = dyn_i;
-    return ge::SUCCESS;
-  }
-  GELOGE(ge::FAILED, "Failed to get instance num for node %s, unknown ir input type %d, ir name %s",
-         node->GetName().c_str(), ir_type, ir_name.c_str());
-  return ge::FAILED;
-}
 ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
+  auto ir_index_to_instance_index_pair_map
+    = ge::OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(node->GetOpDesc());
+  if (ir_index_to_instance_index_pair_map.empty()) {
+    GELOGI("node [%s(%s)] ir_index_to_instance_index_pair_map is empty",
+           node->GetName().c_str(), node->GetType().c_str());
+    return ge::GRAPH_SUCCESS;
+  }
   const auto &ir_inputs = node->GetOpDesc()->GetIrInputs();
   size_t input_index = 0;
   for (size_t i = 0; i < ir_inputs.size(); ++i) {
     auto ins_info = compute_node_info.MutableInputInstanceInfo(i);
     GE_ASSERT_NOTNULL(ins_info);
-    size_t instance_num = 0;
-    auto ret = GetInstanceNum(node, ir_inputs[i].first, ir_inputs[i].second, input_index, instance_num);
-    GE_ASSERT_SUCCESS(ret);
+    size_t instance_num = ir_index_to_instance_index_pair_map[i].second;
     compute_node_info.MutableInputInstanceInfo(i)->SetInstantiationNum(instance_num);
     compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(input_index);
     input_index += instance_num;
-  }
-  if (input_index != node->GetOpDesc()->GetInputsSize()) {
-    GELOGW("input does not traverse to the end, clear all input instances, input_index[%zu], inputs_size[%zu]",
-           input_index, node->GetOpDesc()->GetInputsSize());
-    for (size_t i = 0; i < ir_inputs.size(); ++i) {
-      compute_node_info.MutableInputInstanceInfo(i)->SetInstantiationNum(0U);
-      compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(0U);
-    }
   }
   return ge::GRAPH_SUCCESS;
 }

@@ -37,6 +37,12 @@ struct OpImplKernelRegistry {
   using PrivateAttrSet = std::unordered_set<std::string>;
 
   struct OpImplFunctions {
+    bool HasDataDependency() const {
+      return (inputs_dependency != 0U);
+    }
+    /*
+     * param index: must be ir index
+     */
     bool IsInputDataDependency(int32_t index) const {
       if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {
         return false;
