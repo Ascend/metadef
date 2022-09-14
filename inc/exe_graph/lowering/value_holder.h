@@ -117,6 +117,7 @@ class ValueHolder {
   static GraphFrame *GetCurrentFrame();
   static GraphHolder *GetCurrentGraph();
   static void SetCurrentComputeNode(const ge::NodePtr &node);
+  static void AddRelevantInputNode(const ge::NodePtr &node);
   static std::unique_ptr<CurrentComputeNodeGuarder> SetScopedCurrentComputeNode(const ge::NodePtr &node);
 
   static NodeHolderPtr AddNode(const char *node_type, size_t input_count, size_t output_count, GraphFrame &frame);

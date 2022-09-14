@@ -574,6 +574,7 @@ TEST_F(ValueHolderUt, CreateExeGraphOk) {
   ValueHolder::SetCurrentComputeNode(node);
   auto hello = ValueHolder::CreateSingleDataOutput("hello", {data0, data1});
 
+  ValueHolder::AddRelevantInputNode(node);
   ASSERT_NE(graph, nullptr);
 }
 /*

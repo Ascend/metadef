@@ -58,6 +58,9 @@ class GraphFrame {
       indexes_to_node_.emplace_back(current_node);
     }
   }
+  void AddRelevantInputNode(const ge::NodePtr &current_node) {
+    relevant_input_node_.emplace_back(current_node);
+  }
   bool GetCurrentNodeIndex(size_t &index) const {
     if (current_compute_node_and_index_.first == nullptr) {
       return false;
@@ -99,6 +102,7 @@ class GraphFrame {
   std::vector<ge::NodePtr> indexes_to_node_holder_;
   std::vector<ge::NodePtr> &indexes_to_node_;
   std::vector<ValueHolderPtr> last_exec_nodes_;
+  std::vector<ge::NodePtr> relevant_input_node_;
 };
 }  // namespace bg
 }  // namespace gert
