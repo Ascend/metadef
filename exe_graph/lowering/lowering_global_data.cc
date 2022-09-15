@@ -88,4 +88,14 @@ uint64_t LoweringGlobalData::GetSessionId() {
   }
   return session_id_;
 }
+
+bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(const std::string &name,
+    const std::function<bg::ValueHolderPtr()> &builder) {
+  const auto &iter = names_to_unique_value_holder_.find(name);
+  if (iter == names_to_unique_value_holder_.end()) {
+    auto holder = builder();
+    return names_to_unique_value_holder_.emplace(name, holder).first->second;
+  }
+  return iter->second;
+}
 }  // namespace gert

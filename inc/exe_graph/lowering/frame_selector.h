@@ -40,6 +40,14 @@ class FrameSelector {
   static std::vector<ValueHolderPtr> OnMainRoot(const std::function<std::vector<ValueHolderPtr>()> &builder);
   static ge::graphStatus OnMainRoot(const std::function<std::vector<ValueHolderPtr>()> &builder,
                                     std::vector<ValueHolderPtr> &outputs);
+  
+  /**
+   * 选择Main图，将builder中的逻辑生成到Main图上, 并且保证builder生成的节点在main图最后执行
+   *
+   * @param builder 执行图构建函数
+   * @return 成功时，将builder返回的ValueHolderPtr作为本函数的返回值；失败时，本函数返回nullptr
+   */
+  static ValueHolderPtr OnMainRootLast(const std::function<bg::ValueHolderPtr()> &builder);
 };
 }  // namespace bg
 }  // namespace gert

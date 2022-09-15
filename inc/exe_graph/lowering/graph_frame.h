@@ -26,6 +26,8 @@
 
 namespace gert {
 namespace bg {
+class ValueHolder;
+using ValueHolderPtr = std::shared_ptr<ValueHolder>;
 class GraphFrame {
  public:
   GraphFrame(const GraphFrame &) = delete;
@@ -56,6 +58,9 @@ class GraphFrame {
       indexes_to_node_.emplace_back(current_node);
     }
   }
+  void AddRelevantInputNode(const ge::NodePtr &current_node) {
+    relevant_input_node_.emplace_back(current_node);
+  }
   bool GetCurrentNodeIndex(size_t &index) const {
     if (current_compute_node_and_index_.first == nullptr) {
       return false;
@@ -79,6 +84,15 @@ class GraphFrame {
     return nodes_to_index_;
   }
 
+  const std::vector<ValueHolderPtr> &GetLastExecNodes() const {
+    return last_exec_nodes_;
+  }
+  void SetLastExecNode(const ValueHolderPtr last_exec_node) {
+    if (last_exec_node != nullptr) {
+      last_exec_nodes_.emplace_back(last_exec_node);
+    }
+  }
+
  private:
   ge::ComputeGraphPtr exe_graph_;
   std::pair<ge::NodePtr, size_t> current_compute_node_and_index_;
@@ -87,6 +101,8 @@ class GraphFrame {
   std::unordered_map<ge::NodePtr, size_t> &nodes_to_index_;
   std::vector<ge::NodePtr> indexes_to_node_holder_;
   std::vector<ge::NodePtr> &indexes_to_node_;
+  std::vector<ValueHolderPtr> last_exec_nodes_;
+  std::vector<ge::NodePtr> relevant_input_node_;
 };
 }  // namespace bg
 }  // namespace gert

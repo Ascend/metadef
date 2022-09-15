@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/lowering/lowering_global_data.h"
+#include "exe_graph/lowering/frame_selector.h"
 #include <gtest/gtest.h>
 #include "checker/bg_test.h"
 namespace gert {
@@ -110,5 +111,76 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysCreateOnRootFrame_CallIn
   ASSERT_NE(root_frame, nullptr);
 
   ASSERT_EQ(allocator1->GetNode()->GetOwnerComputeGraph(), root_frame->GetExeGraph());
+}
+
+TEST_F(LoweringGlobalDataUT, GetOrCreateUniqueValueHolderOk) {
+  LoweringGlobalData gd;
+  auto builder = [&]() -> bg::ValueHolderPtr {
+    auto resource_holder = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+      std::string name = "aicpu_resource";
+      auto name_holder = bg::ValueHolder::CreateConst(name.c_str(), name.size(), true);
+      auto create_container_holder = bg::ValueHolder::CreateSingleDataOutput("CreateStepContainer", {name_holder});
+      bg::ValueHolder::CreateVoidGuarder("DestroyStepContainer", create_container_holder, {});
+      return {create_container_holder};
+    });
+    return resource_holder[0];
+  };
+  auto holder_0 = gd.GetOrCreateUniqueValueHolder("aicpu_container_0", builder);
+  EXPECT_NE(holder_0, nullptr);
+
+  auto clear_builder = [&]() -> bg::ValueHolderPtr {
+    return bg::ValueHolder::CreateVoid("ClearStepContainer", {holder_0});
+  };
+  auto clear_holder = bg::FrameSelector::OnMainRootLast(clear_builder);
+  EXPECT_NE(clear_holder, nullptr);
+  std::string create_resource_name = holder_0->GetNode()->GetOpDesc()->GetName();
+  EXPECT_EQ(create_resource_name.find("CreateStepContainer"), 0);
+
+  auto last_exec_nodes = bg::ValueHolder::GetLastExecNodes();
+  EXPECT_EQ(last_exec_nodes.size(), 1);
+  EXPECT_NE(last_exec_nodes[0], nullptr);
+  std::string clear_resource_name = last_exec_nodes[0]->GetNode()->GetOpDesc()->GetName();
+  EXPECT_EQ(clear_resource_name.find("ClearStepContainer"), 0);
+
+  // use same key: aicpu_container_0, check unique
+  auto holder_1 = gd.GetOrCreateUniqueValueHolder("aicpu_container_0", builder);
+  EXPECT_EQ(last_exec_nodes.size(), 1);
+  last_exec_nodes.clear();
+}
+
+TEST_F(LoweringGlobalDataUT, OnMainRootLastOk) {
+  LoweringGlobalData gd; 
+  uint64_t global_container_id = 0;
+  auto builder = [&]() -> bg::ValueHolderPtr {
+    uint64_t container_id = global_container_id++;
+    auto container_id_holder = bg::ValueHolder::CreateConst(&container_id, sizeof(uint64_t));
+    uint64_t session_id = gd.GetSessionId();
+    auto session_id_holder = bg::ValueHolder::CreateConst(&session_id, sizeof(uint64_t));
+    auto resource_holder = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+      auto create_session_holder = bg::ValueHolder::CreateSingleDataOutput(
+        "CreateSession", {session_id_holder});
+      bg::ValueHolder::CreateVoidGuarder("DestroySession", create_session_holder, {});
+      auto clear_builder = [&]() -> bg::ValueHolderPtr {
+        return bg::ValueHolder::CreateVoid("ClearStepContainer", {session_id_holder, container_id_holder});
+      };
+      auto clear_holder = bg::FrameSelector::OnMainRootLast(clear_builder);
+      EXPECT_NE(clear_holder, nullptr);
+      return {container_id_holder};
+    });
+    return resource_holder[0];
+  };
+  auto holder_0 = gd.GetOrCreateUniqueValueHolder("aicpu_container_0", builder);
+  EXPECT_NE(holder_0, nullptr);
+
+  auto last_exec_nodes = bg::ValueHolder::GetLastExecNodes();
+  EXPECT_EQ(last_exec_nodes.size(), 1);
+  EXPECT_NE(last_exec_nodes[0], nullptr);
+  std::string clear_resource_name = last_exec_nodes[0]->GetNode()->GetOpDesc()->GetName();
+  EXPECT_EQ(clear_resource_name.find("ClearStepContainer"), 0);
+
+  // use same key: aicpu_container_0, check unique
+  auto holder_1 = gd.GetOrCreateUniqueValueHolder("aicpu_container_0", builder);
+  EXPECT_EQ(last_exec_nodes.size(), 1);
+  last_exec_nodes.clear();
 }
 }  // namespace gert
