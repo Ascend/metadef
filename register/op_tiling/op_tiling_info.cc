@@ -77,6 +77,10 @@ public:
     }
   }
 
+  void AlignOffsetWith64() {
+    uint64_t offset = (offset_ + sizeof(uint64_t) - 1) / sizeof(uint64_t);
+    offset_ = offset * sizeof(uint64_t);
+  }
   void* GetAddrBase(uint64_t& max_size) const {
     max_size = max_size_;
     return addr_base_;
@@ -90,7 +94,7 @@ public:
 
   ByteBuffer &GetAllTilingData() { return tiling_data_; }
 
-  uint64_t GetTilingDataMaxSize() const { return max_size_; }
+  uint64_t GetTilingDataSize() const { return offset_; }
   void SetAllTilingData(const ByteBuffer &value) {
     tiling_data_.clear();
     offset_ = 0;
@@ -208,6 +212,10 @@ void OpRunInfo::AddTilingData(const ge::char_t *value, const size_t size) {
   impl_->AddTilingData(value, size);
 }
 
+void OpRunInfo::AlignOffsetWith64() {
+  return impl_->AlignOffsetWith64();
+}
+
 void* OpRunInfo::GetAddrBase(uint64_t& max_size) const {
   return impl_->GetAddrBase(max_size);
 }
@@ -223,8 +231,8 @@ ByteBuffer &OpRunInfo::GetAllTilingData() {
 const ByteBuffer &OpRunInfo::GetAllTilingData() const {
   return impl_->GetAllTilingData();
 }
-uint64_t OpRunInfo::GetTilingDataMaxSize() const {
-  return impl_->GetTilingDataMaxSize();
+uint64_t OpRunInfo::GetTilingDataSize() const {
+  return impl_->GetTilingDataSize();
 }
 void OpRunInfo::SetClearAtomic(const bool clear_atomic) {
   impl_->SetClearAtomic(clear_atomic);
