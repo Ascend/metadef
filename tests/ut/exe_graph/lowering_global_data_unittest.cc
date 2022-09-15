@@ -61,6 +61,18 @@ TEST_F(LoweringGlobalDataUT, SetGetKnownSubgraphModelOk) {
   EXPECT_EQ(gd.FindKnownSubgraphModel(node), reinterpret_cast<void *>(0x123));
 }
 
+TEST_F(LoweringGlobalDataUT, SetGetKnownSubgraphModel) {
+  LoweringGlobalData gd;
+
+  std::string graph_name = "graph";
+
+  EXPECT_EQ(gd.GetGraphStaticCompiledModel(graph_name), nullptr);
+
+  gd.AddStaticCompiledGraphModel(graph_name, reinterpret_cast<void *>(0x123));
+  EXPECT_EQ(gd.GetGraphStaticCompiledModel(graph_name), reinterpret_cast<void *>(0x123));
+}
+
+
 TEST_F(LoweringGlobalDataUT, SetGetAllocatorOk) {
   LoweringGlobalData gd;
   EXPECT_EQ(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), nullptr);
