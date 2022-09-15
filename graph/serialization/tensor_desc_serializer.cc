@@ -23,7 +23,7 @@
 #include "graph/ge_tensor.h"
 
 namespace ge {
-graphStatus GeTensorDescSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
+graphStatus TensorDescSerializer::Serialize(const AnyValue &av, proto::AttrDef &def) {
   GeTensorDesc tensor_desc;
   const graphStatus ret = av.GetValue(tensor_desc);
   if (ret != GRAPH_SUCCESS) {
@@ -34,12 +34,12 @@ graphStatus GeTensorDescSerializer::Serialize(const AnyValue &av, proto::AttrDef
   return GRAPH_SUCCESS;
 }
 
-graphStatus GeTensorDescSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av) {
+graphStatus TensorDescSerializer::Deserialize(const proto::AttrDef &def, AnyValue &av) {
   GeTensorDesc tensor_desc;
   const proto::TensorDescriptor &descriptor = def.td();
   GeTensorSerializeUtils::AssembleGeTensorDescFromProto(&descriptor, tensor_desc);
   return av.SetValue(std::move(tensor_desc));
 }
 
-REG_GEIR_SERIALIZER(tensor_desc_serialzier, GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+REG_GEIR_SERIALIZER(tensor_desc_serialzier, TensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
 }  // namespace ge

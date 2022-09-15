@@ -39,7 +39,7 @@ class TraceFileHolder {
     }
   }
 
-  void Write(const char_t *data, const char *separator = "\r\n") {
+  void Write(const char_t *data, const char *separator = "\r\n") const {
     if (fd_ >= 0) {
       mmSsize_t written_count = mmWrite(fd_, const_cast<char_t *>(data), strlen(data));
       if ((written_count == EN_INVALID_PARAM) || (written_count == EN_ERROR)) {

@@ -27,7 +27,7 @@
 #include "register/register.h"
 
 namespace domi {
-enum RemoveInputType {
+enum class RemoveInputType {
   OMG_MOVE_TYPE_DTYPE = 0,
   OMG_MOVE_TYPE_VALUE = 1,
   OMG_MOVE_TYPE_SHAPE = 2,

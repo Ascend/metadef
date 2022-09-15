@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,4 +35,4 @@ class TensorTypeImpl {
 };
 }  // namespace ge
 
-#endif  //METADEF_CXX_TENSOR_TYPE_IMPL_H
+#endif  // METADEF_CXX_TENSOR_TYPE_IMPL_H

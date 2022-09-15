@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,4 +30,4 @@ class SerializationUtil {
 };
 }  // namespace ge
 
-#endif //METADEF_GRAPH_SERIALIZATION_UTILS_SERIALIZATION_UTIL_H_
+#endif // METADEF_GRAPH_SERIALIZATION_UTILS_SERIALIZATION_UTIL_H_

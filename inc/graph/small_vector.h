@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -522,4 +522,4 @@ void swap(ge::SmallVector<T, N, Alloc> &sv1, ge::SmallVector<T, N, Alloc> &sv2) 
 }
 }  // namespace std
 
-#endif  //METADEF_CXX_SMALL_VECTOR_H
+#endif  // METADEF_CXX_SMALL_VECTOR_H

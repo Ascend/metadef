@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,9 +23,9 @@
 #include "graph/ge_tensor.h"
 
 namespace ge {
-class GeTensorDescSerializer : public GeIrAttrSerializer {
+class TensorDescSerializer : public GeIrAttrSerializer {
  public:
-  GeTensorDescSerializer() = default;
+  TensorDescSerializer() = default;
   graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
   graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 };

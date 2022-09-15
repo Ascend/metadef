@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -439,11 +439,9 @@ void SerialShapeRange(const GeTensorDescPtr &desc, std::string &desc_str) {
 }
 
 graphStatus UpdateOpInputDesc(const ConstNodePtr &node_ptr) {
-  GE_IF_BOOL_EXEC(node_ptr == nullptr, REPORT_INNER_ERROR("E18888", "param node_ptr is nullptr, check invalid.");
-                  GELOGE(GRAPH_FAILED, "[Check][Param] node is null."); return GRAPH_FAILED);
-  GE_IF_BOOL_EXEC(node_ptr->GetOpDesc() == nullptr,
-                  REPORT_INNER_ERROR("E18888", "GetOpDesc failed, param node_ptr has no opdesc.");
-                  GELOGE(GRAPH_FAILED, "[Get][OpDesc] op_desc is null."); return GRAPH_FAILED);
+  GE_CHECK_NOTNULL(node_ptr);
+  GE_CHECK_NOTNULL(node_ptr->GetOpDesc());
+                  
   for (const auto &in_anchor : node_ptr->GetAllInDataAnchors()) {
     const auto in_idx = in_anchor->GetIdx();
     const auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
@@ -506,8 +504,7 @@ void ShapeRefiner::PrintInOutTensorShape(const ge::NodePtr &node, const std::str
     return;
   }
   const ge::OpDescPtr op_desc = node->GetOpDesc();
-  GE_IF_BOOL_EXEC(op_desc == nullptr, REPORT_INNER_ERROR("E18888", "node has no opdesc, check invalid");
-                  GELOGE(GRAPH_FAILED, "[Get][OpDesc] op_desc is null."); return);
+  GE_CHECK_NOTNULL_JUST_RETURN(op_desc);
   std::stringstream ss;
   ss << "{";
   int32_t in_idx = 0;
@@ -854,8 +851,7 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, Opera
   if ((status == GRAPH_PARAM_INVALID) || (status == GRAPH_SUCCESS)) {
     // ensure the dtype is not changed after infershape in running
     const auto after_opdesc = node->GetOpDesc();
-    GE_IF_BOOL_EXEC(after_opdesc == nullptr, REPORT_INNER_ERROR("E18888", "param node has no opdesc, check invalid.");
-                    GELOGE(GRAPH_FAILED, "[Get][OpDesc]  after_opdesc is null."); return GRAPH_FAILED);
+    GE_CHECK_NOTNULL(after_opdesc);
     auto all_output_tensor = after_opdesc->GetAllOutputsDescPtr();
     for (size_t i = 0UL; i < all_output_tensor.size(); ++i) {
       if (all_output_tensor.at(i)->GetDataType() != temp_dtype[i]) {

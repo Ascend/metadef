@@ -60,8 +60,8 @@ REG_GEIR_SERIALIZER(attr_list_data_type, ListValueSerializer,
                     GetTypeId<std::vector<ge::DataType>>(), proto::AttrDef::kList);
 REG_GEIR_SERIALIZER(attr_named_attrs, NamedAttrsSerializer, GetTypeId<ge::NamedAttrs>(), proto::AttrDef::kFunc);
 REG_GEIR_SERIALIZER(attr_str, StringSerializer, GetTypeId<std::string>(), proto::AttrDef::kS);
-REG_GEIR_SERIALIZER(attr_tensor_desc, GeTensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
-REG_GEIR_SERIALIZER(attr_tensor, GeTensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
+REG_GEIR_SERIALIZER(attr_tensor_desc, TensorDescSerializer, GetTypeId<GeTensorDesc>(), proto::AttrDef::kTd);
+REG_GEIR_SERIALIZER(attr_tensor, TensorSerializer, GetTypeId<GeTensor>(), proto::AttrDef::kT);
 
 AttrSerializerRegistry &AttrSerializerRegistry::GetInstance() {
   static AttrSerializerRegistry instance;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,13 +84,6 @@ static int64_t CeilDiv(const int64_t n1, const int64_t n2) {
   return (n2 != 0) ? (((n1 - 1) / n2) + 1) : 0;
 }
 
-///
-/// @ingroup math_util
-/// @brief check whether int64 int32 multiplication can result in overflow
-/// @param [in] a  multiplicator
-/// @param [in] b  multiplicator
-/// @return Status
-///
 static Status CheckInt64MulOverflow(const int64_t a, const int64_t b) {
   if (a > 0) {
     if (b > 0) {
