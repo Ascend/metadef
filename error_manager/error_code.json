@@ -1940,7 +1940,7 @@
       "errClass": "HCCP Errors",
       "errTitle": "HCCP Process Initialization Failure",
       "ErrCode": "EJ0001",
-      "ErrMessage": "Failed to initialize the HCCP process. Reason: The last training process is running.",
+      "ErrMessage": "Failed to initialize the HCCP process. Reason: Maybe the last training process is running.",
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "N/A",
