@@ -23,6 +23,7 @@
 
 namespace ge {
 constexpr uint32_t kDefaultMaxQueueSize = 2048U;
+constexpr int32_t kDefaultWaitTimeoutInSec = 600;
 
 template <typename T>
 class BlockingQueue {
@@ -31,11 +32,13 @@ class BlockingQueue {
 
   ~BlockingQueue() {}
 
-  bool Pop(T &item) {
+  bool Pop(T &item, const int32_t time_out = INT32_MAX) {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    while (queue_.empty() && (!is_stoped_)) {
-      empty_cond_.wait(lock);
+    while (!empty_cond_.wait_for(lock, std::chrono::seconds(time_out),
+                                 [&]() { return (!queue_.empty()) || (is_stoped_); })) {
+      is_stuck_ = true;
+      return false;
     }
 
     if (is_stoped_) {
@@ -48,6 +51,12 @@ class BlockingQueue {
     full_cond_.notify_one();
 
     return true;
+  }
+
+  bool Pop(T &item, bool &is_stuck) {
+    const auto ret = Pop(item, kDefaultWaitTimeoutInSec);
+    is_stuck = is_stuck_;
+    return ret;
   }
 
   bool Push(const T &item, const bool is_wait = true) {
@@ -150,6 +159,7 @@ class BlockingQueue {
   uint32_t max_size_;
 
   bool is_stoped_;
+  bool is_stuck_ = false;
 };
 }  // namespace ge
 
