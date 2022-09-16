@@ -26,6 +26,9 @@ ge::graphStatus TestFunc1(gert::KernelContext *context) {
 ge::graphStatus TestInferShapeFunc1(gert::InferShapeContext *context) {
   return ge::GRAPH_SUCCESS;
 }
+ge::graphStatus TestInferShapeRangeFunc1(gert::InferShapeRangeContext *context) {
+  return ge::GRAPH_SUCCESS;
+}
 ge::graphStatus TestTilingFunc1(gert::TilingContext *context) {
   return ge::GRAPH_SUCCESS;
 }
@@ -38,24 +41,44 @@ ge::graphStatus TestInferDataTypeFunc(gert::InferDataTypeContext *context) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterInferShapeOk) {
-  IMPL_OP(TestConv2D).InferShape(TestInferShapeFunc1);
-
+  IMPL_OP(TestConv2D);
+  op_impl_register_TestConv2D.InferShape(TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").tiling, nullptr);
   EXPECT_FALSE(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").inputs_dependency);
 }
 
 TEST_F(OpImplRegistryUT, RegisterInferShapeAndTilingOk) {
-  IMPL_OP(TestAdd).InferShape(TestInferShapeFunc1).Tiling(TestTilingFunc1);
-
+  IMPL_OP(TestAdd);
+  op_impl_register_TestAdd.InferShape(TestInferShapeFunc1).Tiling(TestTilingFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").tiling, TestTilingFunc1);
   EXPECT_FALSE(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").inputs_dependency);
 }
 
-TEST_F(OpImplRegistryUT, InputsDependencyOk) {
-  IMPL_OP(TestReshape).InferShape(TestInferShapeFunc1).InputsDataDependency({1});
+TEST_F(OpImplRegistryUT, RegisterInferShapeRangeOk) {
+  IMPL_OP(TestConv2D2);
+  op_impl_register_TestConv2D2.InferShapeRange(TestInferShapeRangeFunc1);
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D2").infer_shape_range,
+            TestInferShapeRangeFunc1);
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D2").infer_shape, nullptr);
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D2").tiling, nullptr);
+  EXPECT_FALSE(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D2").inputs_dependency);
+}
 
+TEST_F(OpImplRegistryUT, RegisterInferShapeAndInferShapeAndTilingOk) {
+  IMPL_OP(TestAdd);
+  op_impl_register_TestAdd.InferShape(TestInferShapeFunc1).InferShapeRange(TestInferShapeRangeFunc1).Tiling(TestTilingFunc1);
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").infer_shape, TestInferShapeFunc1);
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").infer_shape_range,
+            TestInferShapeRangeFunc1);
+  EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").tiling, TestTilingFunc1);
+  EXPECT_FALSE(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").inputs_dependency);
+}
+
+TEST_F(OpImplRegistryUT, InputsDependencyOk) {
+  IMPL_OP(TestReshape);
+  op_impl_register_TestReshape.InferShape(TestInferShapeFunc1).InputsDataDependency({1});
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestReshape").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestReshape").tiling, nullptr);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestReshape").inputs_dependency, 2);
