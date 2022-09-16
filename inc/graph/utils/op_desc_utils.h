@@ -94,6 +94,12 @@ class OpDescUtils {
   static void SetCallbackGetConstInputFuncToOperator(const Operator &op,
                                                      GetConstInputOnRuntimeFun get_const_input_func);
   static bool HasCallbackGetConstInputFunc(const Operator &op);
+  static std::map<size_t, std::pair<size_t, size_t>> GetInputIrIndexes2InstanceIndexesPairMap(
+      const OpDescPtr &op_desc);
+  static ge::graphStatus GetInputIrIndexByInstanceIndex(const OpDescPtr &op_desc,
+                                                        size_t instance_index, size_t &ir_index);
+  static ge::graphStatus GetInstanceNum(const OpDescPtr &op_desc, size_t ir_index,
+                                        size_t start_index, size_t &instance_num);
 
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);

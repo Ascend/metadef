@@ -1073,5 +1073,99 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 bool OpDescUtils::HasCallbackGetConstInputFunc(const Operator &op) {
   return (op.operator_impl_->get_const_input_runtime_ != nullptr);
 }
+
+ge::graphStatus OpDescUtils::GetInstanceNum(const OpDescPtr &op_desc, size_t ir_index,
+                                            size_t start_index, size_t &instance_num) {
+  GE_CHECK_NOTNULL(op_desc);
+  const auto &ir_inputs = op_desc->GetIrInputs();
+  const auto ir_type = ir_inputs[ir_index].second;
+  const auto ir_name = ir_inputs[ir_index].first;
+  if (ir_type == ge::kIrInputRequired) {
+    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    if (name != ir_name) {
+      GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
+             "current name %s",
+             op_desc->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
+    }
+    instance_num = 1;
+    return ge::SUCCESS;
+  }
+  if (ir_type == ge::kIrInputOptional) {
+    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    if (name == ir_name) {
+      instance_num = 1;
+    } else {
+      instance_num = 0;
+    }
+    return ge::SUCCESS;
+  }
+  if (ir_type == ge::kIrInputDynamic) {
+    size_t dyn_i = 0;
+    auto node_indegree = op_desc->GetAllInputName().size();
+    for (size_t i = start_index; i < node_indegree; ++i, ++dyn_i) {
+      auto name = op_desc->GetValidInputNameByIndex(i);
+      if (name != ir_name + std::to_string(dyn_i)) {
+        break;
+      }
+    }
+    instance_num = dyn_i;
+    return ge::SUCCESS;
+  }
+  GELOGE(ge::FAILED, "Failed to get instance num for node %s, unknown ir input type %d, ir name %s",
+         op_desc->GetName().c_str(), ir_type, ir_name.c_str());
+  return ge::FAILED;
+}
+
+std::map<size_t, std::pair<size_t, size_t>> OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(
+    const OpDescPtr &op_desc) {
+  if (op_desc == nullptr) {
+    GELOGE(GRAPH_FAILED, "op_desc is null");
+    return {};
+  }
+  std::map<size_t, std::pair<size_t, size_t>> ir_index_to_instance_index_pair_map;
+  size_t input_index = 0;
+  for (size_t i = 0; i < op_desc->GetIrInputs().size(); ++i) {
+    size_t instance_num = 0;
+    auto ret = GetInstanceNum(op_desc, i, input_index, instance_num);
+    if (ret != GRAPH_SUCCESS) {
+      GELOGE(ret, "node [%s(%s)] get instance num failed", op_desc->GetName().c_str(), op_desc->GetType().c_str());
+      return {};
+    }
+    ir_index_to_instance_index_pair_map[i] = std::pair<size_t, size_t>(input_index, instance_num);
+    input_index += instance_num;
+  }
+  if (input_index != op_desc->GetInputsSize()) {
+    GELOGI("node [%s(%s)] input does not traverse to the end, input_index[%zu], inputs_size[%zu]",
+           op_desc->GetName().c_str(), op_desc->GetType().c_str(), input_index, op_desc->GetInputsSize());
+    return {};
+  }
+  return ir_index_to_instance_index_pair_map;
+}
+
+ge::graphStatus OpDescUtils::GetInputIrIndexByInstanceIndex(const OpDescPtr &op_desc,
+                                                            size_t instance_index, size_t &ir_index) {
+  GE_CHECK_NOTNULL(op_desc);
+  auto ir_index_to_instance_index_pair_map = GetInputIrIndexes2InstanceIndexesPairMap(op_desc);
+  if (ir_index_to_instance_index_pair_map.empty()) {
+    GELOGE(ge::GRAPH_FAILED, "node [%s(%s)] get ir indexes to instance indexes list failed, instance_index[%zu]",
+           op_desc->GetName().c_str(), op_desc->GetType().c_str(), instance_index);
+    return ge::GRAPH_FAILED;
+  }
+  size_t input_index = 0;
+  for (size_t i = 0; i < op_desc->GetIrInputs().size(); ++i) {
+    size_t instance_num = ir_index_to_instance_index_pair_map[i].second;
+    if (instance_num == 0) {
+      continue;
+    }
+    if (instance_index < input_index + instance_num) {
+      ir_index = i;
+      return GRAPH_SUCCESS;
+    }
+    input_index += instance_num;
+  }
+  GELOGE(ge::GRAPH_FAILED, "node [%s(%s)] failed to get ir index by instance index[%zu], input_index[%zi]",
+         op_desc->GetName().c_str(), op_desc->GetType().c_str(), instance_index, input_index);
+  return GRAPH_FAILED;
+}
 }  // namespace ge
 /*lint +e512 +e737 +e752*/
