@@ -63,7 +63,7 @@ bool IsUseBFS() {
       return true;
     }
   } else {
-    GELOGI("OPTION_GRAPH_RUN_MODE not set, use BFSTopologicalSorting by default.");
+    GELOGI("OPTION_GRAPH_RUN_MODE not set, use DFSTopologicalSorting by default.");
   }
   return false;
 }
@@ -932,7 +932,7 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
   if (ret != GRAPH_SUCCESS) {
     GE_DUMP(const_graph_ptr, "black_box" + name_);
     REPORT_CALL_ERROR("E18888", "Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
-    GELOGE(ret, "[Sort][Graph] Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
+    GELOGW("[Sort][Graph] Graph [%s] topological sort failed, saved to file black_box", name_.c_str());
     return ret;
   }
 
@@ -947,7 +947,7 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
       GE_DUMP(sub_graph, "black_box" + sub_graph->GetName());
       REPORT_CALL_ERROR("E18888", "Sub graph[%s] topological sort failed, saved to file black_box",
                         sub_graph->GetName().c_str());
-      GELOGE(ret, "[Sort][Graph] Sub graph[%s] topological sort failed, saved to file black_box",
+      GELOGW("[Sort][Graph] Sub graph[%s] topological sort failed, saved to file black_box",
              sub_graph->GetName().c_str());
       return ret;
     }
@@ -993,11 +993,11 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
     }
     REPORT_INNER_ERROR("E18888", "Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph:%s",
                        GetDirectNodesSize(), node_vec.size(), name_.c_str());
-    GE_LOGE("[Check][Param] Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.",
-            GetDirectNodesSize(), node_vec.size());
+    GELOGW("[Check][Param] Failed to do topo sorting total %zu, itered %zu, exist closed loop in graph.",
+           GetDirectNodesSize(), node_vec.size());
     for (auto &node : nodes_) {
       if (itered_nodes_set.count(node.get()) == 0UL) {
-        GE_LOGE("[Check][Param] The node %s does not itered when topological sorting", node->GetName().c_str());
+        GELOGW("[Check][Param] The node %s does not itered when topological sorting", node->GetName().c_str());
       }
     }
     return GRAPH_FAILED;

@@ -40,10 +40,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY InferDataSliceFuncRegister 
 
 #define INFER_DATA_SLICE_FUNC(op_name, x) [](Operator &v) { return (x)((op::op_name &)v); }
 
-#define __INFER_DATA_SLICE_FUNC_REG_IMPL__(op_name, x, n) \
+#define INFER_DATA_SLICE_FUNC_REG_IMPL(op_name, x, n) \
   static const InferDataSliceFuncRegister PASTE(ids_register, n)(#op_name, (x))
 
 #define INFER_DATA_SLICE_FUNC_REG(op_name, x) \
-  __INFER_DATA_SLICE_FUNC_REG_IMPL__(op_name, INFER_DATA_SLICE_FUNC(op_name, x), __COUNTER__)
+  INFER_DATA_SLICE_FUNC_REG_IMPL(op_name, INFER_DATA_SLICE_FUNC(op_name, x), __COUNTER__)
 
 #endif  // INC_REGISTER_INFER_DATA_SLICE_REGISTRY_H_

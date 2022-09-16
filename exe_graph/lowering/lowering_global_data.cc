@@ -49,8 +49,21 @@ void *LoweringGlobalData::FindKnownSubgraphModel(const ge::NodePtr &node) const 
   return iter->second;
 }
 
+void *LoweringGlobalData::GetGraphStaticCompiledModel(const std::string &graph_name) const {
+  auto iter = graph_to_static_models_.find(graph_name);
+  if (iter == graph_to_static_models_.cend()) {
+    return nullptr;
+  }
+  return iter->second;
+}
+
 LoweringGlobalData &LoweringGlobalData::AddKnownSubgraphModel(const ge::NodePtr &node, void *const model) {
   node_ids_to_known_subgraph_models_[node->GetOpDesc()->GetId()] = model;
+  return *this;
+}
+
+LoweringGlobalData &LoweringGlobalData::AddStaticCompiledGraphModel(const std::string &graph_name, void *const model) {
+  graph_to_static_models_[graph_name] = model;
   return *this;
 }
 

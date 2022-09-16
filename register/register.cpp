@@ -926,7 +926,7 @@ OpRegistrationData &OpRegistrationData::DelInputWithCond(int32_t inputIdx, const
     struct RemoveInputConfigure registerStu;
     registerStu.inputIdx = inputIdx;
     registerStu.attrName = attrName;
-    registerStu.moveType = OMG_REMOVE_TYPE_WITH_COND;
+    registerStu.moveType = RemoveInputType::OMG_REMOVE_TYPE_WITH_COND;
     registerStu.attrValue = attrValue;
     impl_->remove_input_configure_vec_.push_back(registerStu);
   }
@@ -942,7 +942,7 @@ OpRegistrationData &OpRegistrationData::DelInputWithCond(int32_t input_idx, cons
     struct RemoveInputConfigure registerStu;
     registerStu.inputIdx = input_idx;
     registerStu.attrName = tmp_attr_name;
-    registerStu.moveType = OMG_REMOVE_TYPE_WITH_COND;
+    registerStu.moveType = RemoveInputType::OMG_REMOVE_TYPE_WITH_COND;
     registerStu.attrValue = attr_value;
     impl_->remove_input_configure_vec_.push_back(registerStu);
   }
@@ -954,7 +954,7 @@ OpRegistrationData &OpRegistrationData::InputReorderVector(const vector<int32_t>
     struct RemoveInputConfigure register_input;
     register_input.inputIdx = 0;
     register_input.input_order = input_order;
-    register_input.moveType = OMG_INPUT_REORDER;
+    register_input.moveType = RemoveInputType::OMG_INPUT_REORDER;
     impl_->remove_input_configure_vec_.push_back(register_input);
   }
   return *this;
@@ -965,7 +965,7 @@ OpRegistrationData &OpRegistrationData::DelInputWithOriginalType(int32_t input_i
     struct RemoveInputConfigure register_input;
     register_input.inputIdx = input_idx;
     register_input.originalType = ori_type;
-    register_input.moveType = OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE;
+    register_input.moveType = RemoveInputType::OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE;
     impl_->remove_input_configure_vec_.push_back(register_input);
   }
   return *this;
@@ -980,7 +980,7 @@ OpRegistrationData &OpRegistrationData::DelInputWithOriginalType(int32_t input_i
     struct RemoveInputConfigure register_input;
     register_input.inputIdx = input_idx;
     register_input.originalType = tmp_ori_type;
-    register_input.moveType = OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE;
+    register_input.moveType = RemoveInputType::OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE;
     impl_->remove_input_configure_vec_.push_back(register_input);
   }
   return *this;

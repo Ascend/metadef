@@ -39,6 +39,8 @@ class LoweringGlobalData {
 
   void *FindKnownSubgraphModel(const ge::NodePtr &node) const;
   LoweringGlobalData &AddKnownSubgraphModel(const ge::NodePtr &node, void *const model);
+  void *GetGraphStaticCompiledModel(const std::string &graph_name) const;
+  LoweringGlobalData &AddStaticCompiledGraphModel(const std::string &graph_name, void *const model);
 
   bg::ValueHolderPtr GetAllocator(AllocatorDesc desc) const;
   LoweringGlobalData &SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator);
@@ -52,6 +54,7 @@ class LoweringGlobalData {
   bg::ValueHolderPtr stream_;
   std::unordered_map<std::string, NodeCompileResult> node_name_to_compile_result_holders_;
   std::map<int64_t, void *> node_ids_to_known_subgraph_models_;
+  std::map<std::string, void *> graph_to_static_models_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
   uint64_t session_id_ = std::numeric_limits<uint64_t>::max();
   std::map<std::string, bg::ValueHolderPtr> names_to_unique_value_holder_;
