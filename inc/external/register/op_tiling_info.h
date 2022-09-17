@@ -133,10 +133,10 @@ public:
 
   void SetTilingKey(const uint64_t &new_tiling_key);
   uint64_t GetTilingKey() const;
-  uint64_t GetTilingDataMaxSize() const;
+  uint64_t GetTilingDataSize() const;
   void ResetWorkspace();
   void ResetAddrBase(void *const addr_base, const uint64_t max_size);
-
+  void AlignOffsetWith64();
   void SetTilingCond(const int32_t tiling_cond);
   int32_t GetTilingCond() const;
 private:

@@ -516,6 +516,24 @@ OpTilingFuncInfo *GetOpTilingInfo(const ge::OpDescPtr &op_desc) {
   return ::ge::PtrToPtr<void, OpTilingFuncInfo>(op_desc->GetTilingFuncInfo());
 }
 
+void parse_tiling_data(void* base, size_t max_size) {
+  std::stringstream result;
+  int32_t tmp = 0;
+  const char* base_addr = static_cast<char*>(base);
+  for (size_t i = 0; i < max_size; i += sizeof(int32_t)) {
+    if ((max_size - i) < sizeof(tmp)) {
+      return;
+    }
+    if (memcpy_s(&tmp, sizeof(tmp), base_addr + i, sizeof(tmp)) != EOK) {
+      return;
+    }
+    result << std::to_string(tmp);
+    result << " ";
+  }
+  GELOGD("Parse tiling data %s.", result.str().c_str());
+  return;
+}
+
 ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_info)
 {
   const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
@@ -523,8 +541,9 @@ ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_inf
   if (!ge::AttrUtils::GetBool(op_desc, kMemoryCheck, value) || !value) {
     return ge::GRAPH_SUCCESS;
   }
-  for (size_t i = 0; i < op_desc->GetOutputsSize(); ++i) {
-    const ge::GeTensorDescPtr tensor = op_desc->MutableOutputDesc(static_cast<uint32_t>(i));
+  run_info.AlignOffsetWith64();
+  for (size_t i = 0; i < op_desc->GetAllInputsSize(); ++i) {
+    const ge::GeTensorDescPtr tensor = op_desc->MutableInputDesc(static_cast<uint32_t>(i));
     if (tensor == nullptr) {
       continue;
     }
@@ -537,8 +556,8 @@ ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_inf
     GELOGD("Op input tensor:%zu size is %ld.", i, clean_size);
     run_info.AddTilingData(clean_size);
   }
-  for (size_t j = 0; j < op_desc->GetAllInputsSize(); ++j) {
-    const ge::GeTensorDescPtr tensor = op_desc->MutableInputDesc(static_cast<uint32_t>(j));
+  for (size_t j = 0; j < op_desc->GetOutputsSize(); ++j) {
+    const ge::GeTensorDescPtr tensor = op_desc->MutableOutputDesc(static_cast<uint32_t>(j));
     if (tensor == nullptr) {
       continue;
     }
@@ -557,9 +576,13 @@ ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_inf
     GELOGD("Op workspace:%zu size is %ld.", k, workspace);
     run_info.AddTilingData(workspace);
   }
-  const uint64_t max_size = run_info.GetTilingDataMaxSize();
-  GELOGD("Add tiling data max size %lu.", max_size);
-  run_info.AddTilingData(max_size);
+  const uint64_t cur_size = run_info.GetTilingDataSize();
+  GELOGD("Add tiling data current size %lu.", cur_size);
+  run_info.AddTilingData(cur_size);
+
+  uint64_t max_size = 0;
+  void* base = run_info.GetAddrBase(max_size);
+  parse_tiling_data(base, static_cast<size_t>(max_size));
   return ge::GRAPH_SUCCESS;
 }
 
