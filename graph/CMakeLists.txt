@@ -87,6 +87,7 @@ set(GRAPH_SOURCE_LIST
     "compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
     "compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
     "profiler.cc"
+    "parallelism/tensor_parallel_attrs.cc"
 )
 
 ######### libgraph.so #############
