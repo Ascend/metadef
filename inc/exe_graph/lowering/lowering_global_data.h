@@ -45,6 +45,8 @@ class LoweringGlobalData {
   bg::ValueHolderPtr GetOrCreateAllocator(AllocatorDesc desc);
 
   uint64_t GetSessionId();
+  bg::ValueHolderPtr GetOrCreateUniqueValueHolder(const std::string &name,
+                                                  const std::function<bg::ValueHolderPtr()> &builder);
 
  private:
   bg::ValueHolderPtr stream_;
@@ -52,6 +54,7 @@ class LoweringGlobalData {
   std::map<int64_t, void *> node_ids_to_known_subgraph_models_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
   uint64_t session_id_ = std::numeric_limits<uint64_t>::max();
+  std::map<std::string, bg::ValueHolderPtr> names_to_unique_value_holder_;
 };
 }
 
