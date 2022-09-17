@@ -364,6 +364,7 @@ void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error
     err_stream << current_code_print << "  " << item.error_message << std::endl;
     current_code_print = "      ";
   }
+  err_stream << "        Solution: Please contact support engineer." << std::endl;
 }
 
 std::string ErrorManager::GetErrorMessage() {
@@ -393,6 +394,7 @@ std::string ErrorManager::GetErrorMessage() {
   if (IsInnerErrorCode(first_code)) {
     AssembleInnerErrorMessage(error_messages, first_code, err_stream);
   } else {
+    err_stream << "        TraceBack (most recent call last):" << std::endl;
     for (auto &item : error_messages) {
       if (first_code == item.error_id && error_messages[0].error_message == item.error_message) {
         continue;
