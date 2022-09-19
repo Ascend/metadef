@@ -1360,6 +1360,10 @@ const std::string ATTR_NAME_RECOMPUTE = "_recompute";
 const std::string ATTR_NAME_BACKWARD = "_backward";
 const std::string ATTR_NAME_OPTIMIZER = "_optimizer";
 
+// for model eshced priority
+const std::string ATTR_NAME_ESCHED_PROCESS_PRIORITY = "_eschedProcessPriority";
+const std::string ATTR_NAME_ESCHED_EVENT_PRIORITY = "_eschedEventPriority";
+
 // for graph deployment
 const std::string ATTR_NAME_DEVICE_INDEX = "_device_index";
 const std::string ATTR_NAME_NODE_DEPLOYMENT = "_node_deployment";
