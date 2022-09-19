@@ -95,6 +95,7 @@ set(UT_FILES
     "testcase/tuning_utils_unittest.cc"
     "testcase/cycle_detector_unittest.cc"
     "testcase/amy_map_unittest.cc"
+    "testcase/tensor_parallel_attrs_unittest.cc"
 )
 
 add_executable(ut_graph ${UT_FILES})
@@ -115,7 +116,7 @@ target_link_libraries(ut_graph PUBLIC
     fwk_mmpa_headers
     graphengine_headers
     graph error_manager
-    gtest gtest_main ascend_protobuf slog_stub c_sec -lrt -ldl
+    gtest gtest_main ascend_protobuf slog_stub c_sec json -lrt -ldl
 )
 
 target_include_directories(ut_graph PRIVATE ${METADEF_DIR}/tests/depends)

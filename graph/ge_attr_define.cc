@@ -1359,4 +1359,12 @@ const std::string ATTR_NAME_STAGE_ORDER_ID = "_stage_order_id";
 const std::string ATTR_NAME_RECOMPUTE = "_recompute";
 const std::string ATTR_NAME_BACKWARD = "_backward";
 const std::string ATTR_NAME_OPTIMIZER = "_optimizer";
+
+// for graph deployment
+const std::string ATTR_NAME_DEVICE_INDEX = "_device_index";
+const std::string ATTR_NAME_NODE_DEPLOYMENT = "_node_deployment";
+const std::string ATTR_NAME_TENSOR_DEPLOYMENT = "_tensor_deployment";
+
+// for tensor parallelism
+const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";
 }  // namespace ge

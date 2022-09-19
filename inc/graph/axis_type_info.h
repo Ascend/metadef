@@ -34,6 +34,8 @@ enum class AxisType {
   TRANSPOSE,
   SLIDINGWINDOW,
   REDUCEGATHER,
+  SLIDINGWINDOWGRAD,
+  ELEMENTWITHSHAPEVALUE,
 };
 
 class AxisTypeInfo {
@@ -48,11 +50,20 @@ public:
   graphStatus GetOutputCutInfo(const size_t index, CutInfo &output_cut_info) const;
   const std::vector<CutInfo> &GetRelateInputs() const { return relate_inputs_; }
   const std::vector<CutInfo> &GetRelateOutputs() const { return relate_outputs_; }
+  void SetAxisTypes(const std::vector<AxisType> &axis_types) { axis_types_ = axis_types; }
+  const std::vector<AxisType> &GetAxisTypes() const { return axis_types_; }
+  void SetRelateInputs(const std::vector<CutInfo> &relate_inputs) { relate_inputs_ = relate_inputs; }
+  const std::vector<CutInfo> &GetRelateInputValues() const { return relate_input_values_; }
+  void SetRelateOutputs(const std::vector<CutInfo> &relate_outputs) { relate_outputs_ = relate_outputs; }
+  const std::vector<CutInfo> &GetRelateOutputValues() const { return relate_output_values_; }
 
 private:
   AxisType axis_type_;
   std::vector<CutInfo> relate_inputs_;
   std::vector<CutInfo> relate_outputs_;
+  std::vector<AxisType> axis_types_;
+  std::vector<CutInfo> relate_input_values_;
+  std::vector<CutInfo> relate_output_values_;
 };
 }
 
