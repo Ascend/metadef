@@ -77,6 +77,11 @@ message Task {
     repeated OpAttr attr = 10;
 }
 
+enum DumpData {
+    TENSOR_DUMP_DATA = 0;
+    STATS_DUMP_DATA = 1;
+}
+
 message OpMappingInfo {
     string dump_path = 1;
     oneof model_name_param {
@@ -97,4 +102,5 @@ message OpMappingInfo {
     uint32 flag = 7; // 0x01 load, 0x00 unload
     repeated Task task = 8;
     string dump_step = 9;
+    DumpData dump_data = 10;
 }
