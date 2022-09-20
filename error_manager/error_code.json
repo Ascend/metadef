@@ -1863,7 +1863,7 @@
       "errClass": "HCCL Errors",
       "errTitle": "Invalid Environment Variable Configuration",
       "ErrCode": "EI0001",
-      "ErrMessage": "Environment variable [%s] is invalid. Resaon: %s.",
+      "ErrMessage": "Environment variable [%s] is invalid. Reason: %s.",
       "Arglist": "env,tips",
       "suggestion": {
         "Possible Cause": "The environment variable configuration is invalid.",
@@ -1940,7 +1940,7 @@
       "errClass": "HCCP Errors",
       "errTitle": "HCCP Process Initialization Failure",
       "ErrCode": "EJ0001",
-      "ErrMessage": "Failed to initialize the HCCP process. Reason: The last training process is running.",
+      "ErrMessage": "Failed to initialize the HCCP process. Reason: Maybe the last training process is running.",
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "N/A",
