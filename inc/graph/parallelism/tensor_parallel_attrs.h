@@ -172,10 +172,12 @@ class TensorParallelAttrs {
   static Status FromJson(const std::string &json_str, CommTask &comm_task);
   static Status FromJson(const std::string &json_str, CommStep &comm_step);
   static Status FromJson(const std::string &json_str, OutputReshardRes &tensor_shard_info);
-  static Status FromJson(const std::string &json_str, ReshardAttr &outputs_reshard_info);
+  static Status FromJson(const std::string &json_str, ReshardAttr &reshard_attr);
 
   static std::string ToJson(const NodeDeployment &node_deployment);
   static std::string ToJson(const DeviceIndex &device_index);
+  static std::string ToJson(const TensorDeployment &tensor_deployment);
+  static std::string ToJson(const ReshardAttr &reshard_attr);
 };
 }  // namespace tp
 }  // namespace ge
