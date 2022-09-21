@@ -119,6 +119,21 @@ TEST_F(UtestErrorManager, GetErrorMessage) {
   EXPECT_NE(instance.GetErrorMessage(), "");
 }
 
+TEST_F(UtestErrorManager, GetErrorMessageOk) {
+  auto &instance = ErrorManager::GetInstance();
+  EXPECT_EQ(instance.GetErrorMessage(), "");
+  std::vector<ErrorManager::ErrorItem> vec;
+  vec.push_back(ErrorManager::ErrorItem());
+  vec[0].error_id = "E10001";
+  vec[0].error_message = "Device id was not set";
+  vec.push_back(ErrorManager::ErrorItem());
+  vec[1].error_id = "E10002";
+  vec[1].error_message = "Device id was not set";
+  instance.error_message_per_work_id_[0] = vec;
+  instance.error_context_.work_stream_id = 0;
+  EXPECT_NE(instance.GetErrorMessage(), "");
+}
+
 TEST_F(UtestErrorManager, GetErrorOtherMessage) {
   auto &instance = ErrorManager::GetInstance();
   std::vector<ErrorManager::ErrorItem> vec;

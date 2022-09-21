@@ -394,10 +394,14 @@ std::string ErrorManager::GetErrorMessage() {
   if (IsInnerErrorCode(first_code)) {
     AssembleInnerErrorMessage(error_messages, first_code, err_stream);
   } else {
-    err_stream << "        TraceBack (most recent call last):" << std::endl;
+    bool print_traceback_once = false;
     for (auto &item : error_messages) {
       if (first_code == item.error_id && error_messages[0].error_message == item.error_message) {
         continue;
+      }
+      if (!print_traceback_once) {
+        err_stream << "        TraceBack (most recent call last):" << std::endl;
+        print_traceback_once = true;
       }
       err_stream << "        " << item.error_message << std::endl;
     }
