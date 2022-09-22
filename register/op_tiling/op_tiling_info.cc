@@ -78,7 +78,7 @@ public:
   }
 
   void AlignOffsetWith64() {
-    uint64_t offset = (offset_ + sizeof(uint64_t) - 1) / sizeof(uint64_t);
+    const uint64_t offset = (offset_ + sizeof(uint64_t) - 1U) / sizeof(uint64_t);
     offset_ = offset * sizeof(uint64_t);
   }
   void* GetAddrBase(uint64_t& max_size) const {
