@@ -441,6 +441,14 @@ void ValueHolder::SetCurrentComputeNode(const ge::NodePtr &node) {
   }
   frame->SetCurrentComputeNode(node);
 }
+void ValueHolder::AddRelevantInputNode(const ge::NodePtr &node) {
+  auto frame = GetCurrentFrame();
+  if (frame == nullptr) {
+    GELOGW("Ignore to add relevant input node, the current frame is nullptr");
+  } else {
+    frame->AddRelevantInputNode(node);
+  }
+}
 std::unique_ptr<ValueHolder::CurrentComputeNodeGuarder> ValueHolder::SetScopedCurrentComputeNode(  //
     const ge::NodePtr &node) {
   auto frame = GetCurrentFrame();
