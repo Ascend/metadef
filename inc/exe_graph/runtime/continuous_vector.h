@@ -136,5 +136,70 @@ class TypedContinuousVector : private ContinuousVector {
     return reinterpret_cast<const T *>(ContinuousVector::GetData());
   }
 };
+
+/*
+ * memory layout: |size_|offset1|offset2|...|ContinuousVector1|ContinuousVector1|...|
+ * size_ : number of ContinuousVector
+ * offset1 : offset of ContinuousVector1u
+ */
+class ContinuousVectorVector {
+ public:
+  void Init(size_t capacity) {
+    capacity_ = capacity;
+    if (capacity_ == 0U) {
+      return;
+    }
+    SetOffset(0U, GetOverHeadLength(capacity_));
+  }
+
+  template<typename T>
+  ContinuousVector *Add(size_t inner_vector_capacity) {
+    if (size_ >= capacity_) {
+      return nullptr;
+    }
+    auto inner_vector = reinterpret_cast<ContinuousVector *>(reinterpret_cast<uint8_t *>(this) + GetOffset(size_));
+    inner_vector->Init(inner_vector_capacity);
+    inner_vector->SetSize(inner_vector_capacity);
+    size_t inner_vector_length = 0U;
+    if (ge::MulOverflow(inner_vector_capacity, sizeof(T), inner_vector_length)) {
+      return nullptr;
+    }
+    if (ge::AddOverflow(inner_vector_length, sizeof(ContinuousVector), inner_vector_length)) {
+      return nullptr;
+    }
+    ++size_;
+    if (size_ < capacity_) {
+      SetOffset(size_, GetOffset(size_ - 1U) + inner_vector_length);
+    }
+    return inner_vector;
+  }
+
+  const ContinuousVector *Get(size_t index) const {
+    return reinterpret_cast<const ContinuousVector *>(reinterpret_cast<const uint8_t *>(this) + GetOffset(index));
+  }
+
+  size_t GetSize() const {
+    return size_;
+  }
+
+  static size_t GetOverHeadLength(size_t capacity) {
+    return sizeof(capacity_) + sizeof(size_) + sizeof(size_t) * capacity;
+  }
+ private:
+  void SetOffset(size_t index, size_t offset) {
+    size_t *const offset_ptr = &offset_[0U];
+    offset_ptr[index] = offset;
+  }
+
+  size_t GetOffset(size_t index) const {
+    const size_t *const offset_ptr = &offset_[0U];
+    return offset_ptr[index];
+  }
+ private:
+  size_t capacity_ = 0U;
+  size_t size_ = 0U;
+  size_t offset_[1U];
+};
+static_assert(std::is_standard_layout<ContinuousVectorVector>::value, "The ContinuousVectorVector must be a POD");
 }  // namespace gert
 #endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTINUOUS_VECTOR_H_

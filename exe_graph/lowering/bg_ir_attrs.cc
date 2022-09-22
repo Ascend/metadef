@@ -59,18 +59,59 @@ bool AppendVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
   auto val = attr.Get<std::vector<T>>();
   GE_ASSERT_NOTNULL(val);
   size_t total_size;
-  auto cv_holder = ContinuousVector::Create<T>(val->size(), total_size);
-  GE_ASSERT_NOTNULL(cv_holder);
-  auto cv = ge::PtrToPtr<uint8_t, ContinuousVector>(cv_holder.get());
+  if (ge::MulOverflow(val->size(), sizeof(T), total_size)) {
+    return false;
+  }
+  if (ge::AddOverflow(total_size, sizeof(ContinuousVector), total_size)) {
+    return false;
+  }
+
+  std::vector<uint8_t> buf(total_size);
+  auto cv = new (buf.data()) ContinuousVector();
+  GE_ASSERT_NOTNULL(cv);
+  cv->Init(val->size());
+  cv->SetSize(val->size());
+
   size_t copy_size = val->size() * sizeof(T);
   if (!val->empty()) {
     GE_ASSERT_EOK(memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(T), val->data(), copy_size));
   }
-  cv->SetSize(val->size());
+  attrs.emplace_back(std::move(buf));
+  return true;
+}
 
-  // todo 拷贝了两次，后面优化
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value, int>::type = 0>
+bool AppendVectorVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto vector_vector_list = attr.Get<std::vector<std::vector<T>>>();
+  GE_ASSERT_NOTNULL(vector_vector_list);
+
+  size_t total_size = ContinuousVectorVector::GetOverHeadLength(vector_vector_list->size());
+  for (const auto &inner_vec : *vector_vector_list) {
+    size_t inner_vec_length = 0U;
+    if (ge::MulOverflow(inner_vec.size(), sizeof(T), inner_vec_length)) {
+      return false;
+    }
+    if (ge::AddOverflow(inner_vec_length, sizeof(ContinuousVector), inner_vec_length)) {
+      return false;
+    }
+    if (ge::AddOverflow(total_size, inner_vec_length, total_size)) {
+      return false;
+    }
+  }
   std::vector<uint8_t> buf(total_size);
-  GE_ASSERT_EOK(memcpy_s(buf.data(), buf.size(), cv_holder.get(), total_size));
+  auto cvv = new (buf.data()) ContinuousVectorVector();
+  GE_ASSERT_NOTNULL(cvv);
+  cvv->Init(vector_vector_list->size());
+
+  for (const auto &inner_list : *vector_vector_list) {
+    auto cv = cvv->Add<T>(inner_list.size());
+    GE_ASSERT_NOTNULL(cv);
+    if (!inner_list.empty()) {
+      const size_t copy_size = inner_list.size() * sizeof(T);
+      GE_ASSERT_EOK(memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(T), inner_list.data(), copy_size));
+    }
+  }
+
   attrs.emplace_back(std::move(buf));
   return true;
 }
@@ -133,7 +174,10 @@ bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &att
       return AppendTensorAttr(attr, attrs);
     case ge::AnyValue::VT_LIST_FLOAT:
       return AppendVectorAttr<float>(attr, attrs);
-      // todo ListListInt
+    case ge::AnyValue::VT_LIST_LIST_FLOAT:
+      return AppendVectorVectorAttr<float>(attr, attrs);
+    case ge::AnyValue::VT_LIST_LIST_INT:
+      return AppendVectorVectorAttr<int64_t>(attr, attrs);
     default:
       GELOGE(ge::FAILED, "Does not support the attr type now, attr type %d", attr.GetValueType());
       return false;
