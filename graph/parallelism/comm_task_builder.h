@@ -30,12 +30,19 @@ class CommTaskBuilder {
   }
 
   void BuildCommTask(const nlohmann::json &j, CommTask &comm_task);
+  Status ConvertToJson(const CommTask &comm_task, nlohmann::json &j);
 
  private:
   CommTaskBuilder();
   ~CommTaskBuilder() = default;
 
+  void InitCommTaskBuilders();
+  void InitJsonConverters();
+  template<typename T>
+  static Status ConvertToJson(const T *reshard_task, nlohmann::json &j);
+
   std::map<std::string, std::function<void(const nlohmann::json &, CommTask &)>> builders_;
+  std::map<std::string, std::function<Status(const CommTask &, nlohmann::json &)>> json_converters_;
 };
 }  // namespace tp
 }  // namespace ge

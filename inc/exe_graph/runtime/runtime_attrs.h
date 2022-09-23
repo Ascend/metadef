@@ -52,6 +52,14 @@ class RuntimeAttrs {
     return GetAttrPointer<TypedContinuousVector<int64_t>>(index);
   }
   /**
+   * 获取list int类型属性
+   * @param index 属性index
+   * @return 指向属性值的指针
+   */
+  const ContinuousVectorVector *GetListListInt(size_t index) const {
+    return GetAttrPointer<ContinuousVectorVector>(index);
+  }
+  /**
    * 获取string类型属性
    * @param index 属性index
    * @return 指向属性值的指针
@@ -91,6 +99,15 @@ class RuntimeAttrs {
    */
   const TypedContinuousVector<float> *GetListFloat(size_t index) const {
     return GetAttrPointer<TypedContinuousVector<float>>(index);
+  }
+
+  /**
+   * 获取list_float32类型属性
+   * @param index 属性index
+   * @return 指向属性值的指针
+   */
+  const ContinuousVectorVector *GetListListFloat(size_t index) const {
+    return GetAttrPointer<ContinuousVectorVector>(index);
   }
 
   /**

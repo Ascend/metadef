@@ -29,6 +29,22 @@ namespace tp {
 using Json = nlohmann::json;
 
 class TensorParallelAttrsTest : public testing::Test {
+ protected:
+  void TestToAndFromJson(const CommTask &comm_task, CommTask &out_comm_task) {
+    ReshardAttr reshard_attr;
+    OutputReshardRes output_reshard_res;
+    CommStep comm_step;
+    comm_step.id = 0;
+    comm_step.comm_task = comm_task;
+    output_reshard_res.comm_steps.emplace_back(comm_step);
+    reshard_attr.reshard_infos.emplace_back(std::vector<OutputReshardRes>{output_reshard_res});
+    const auto &json_str = TensorParallelAttrs::ToJson(reshard_attr);
+    ASSERT_TRUE(!json_str.empty());
+
+    ReshardAttr reshard_attr_from_json;
+    ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, reshard_attr_from_json), SUCCESS);
+    out_comm_task = reshard_attr_from_json.reshard_infos[0][0].comm_steps[0].comm_task;
+  }
 };
 
 TEST_F(TensorParallelAttrsTest, ParseFailed_InvalidJsonStr) {
@@ -108,6 +124,9 @@ TEST_F(TensorParallelAttrsTest, ParseSendRecvTaskInfo) {
   ASSERT_EQ(comm_task.send_recv_reshard_task->comm_pairs.size(), 1U);
   EXPECT_EQ(comm_task.send_recv_reshard_task->comm_pairs[0].src_device_index.indices, (std::vector<int32_t>{0, 0, 1}));
   EXPECT_EQ(comm_task.send_recv_reshard_task->comm_pairs[0].dst_device_index.indices, (std::vector<int32_t>{0, 0, 2}));
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseAllGatherCommTask) {
@@ -137,8 +156,11 @@ TEST_F(TensorParallelAttrsTest, ParseAllGatherCommTask) {
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
-  ASSERT_TRUE(comm_task.all_gather_reshard_task != nullptr);
-  EXPECT_EQ(comm_task.all_gather_reshard_task->comm_groups.size(), 4);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.all_gather_reshard_task != nullptr);
+  EXPECT_EQ(out_comm_task.all_gather_reshard_task->comm_groups.size(), 4);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseAllReduceCommTask) {
@@ -170,8 +192,11 @@ TEST_F(TensorParallelAttrsTest, ParseAllReduceCommTask) {
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
   ASSERT_TRUE(comm_task.all_reduce_reshard_task != nullptr);
-  EXPECT_EQ(comm_task.all_reduce_reshard_task->reduction, "sum");
-  EXPECT_EQ(comm_task.all_reduce_reshard_task->comm_groups.size(), 4);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  EXPECT_EQ(out_comm_task.all_reduce_reshard_task->reduction, "sum");
+  EXPECT_EQ(out_comm_task.all_reduce_reshard_task->comm_groups.size(), 4);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseReduceScatterCommTask) {
@@ -195,8 +220,11 @@ TEST_F(TensorParallelAttrsTest, ParseReduceScatterCommTask) {
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
   ASSERT_TRUE(comm_task.reduce_scatter_reshard_task != nullptr);
-  EXPECT_EQ(comm_task.reduce_scatter_reshard_task->reduction, "sum");
-  EXPECT_EQ(comm_task.reduce_scatter_reshard_task->comm_groups.size(), 2);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  EXPECT_EQ(out_comm_task.reduce_scatter_reshard_task->reduction, "sum");
+  EXPECT_EQ(out_comm_task.reduce_scatter_reshard_task->comm_groups.size(), 2);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseAllToAllCommTask) {
@@ -218,8 +246,11 @@ TEST_F(TensorParallelAttrsTest, ParseAllToAllCommTask) {
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
-  ASSERT_TRUE(comm_task.all_to_all_reshard_task != nullptr);
-  EXPECT_EQ(comm_task.all_to_all_reshard_task->comm_groups.size(), 2);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.all_to_all_reshard_task != nullptr);
+  EXPECT_EQ(out_comm_task.all_to_all_reshard_task->comm_groups.size(), 2);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseSliceCommTask) {
@@ -233,25 +264,31 @@ TEST_F(TensorParallelAttrsTest, ParseSliceCommTask) {
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
-  ASSERT_TRUE(comm_task.slice_reshard_task != nullptr);
-  ASSERT_EQ(comm_task.slice_reshard_task->offsets, (std::vector<int64_t>{2, 4}));
-  ASSERT_EQ(comm_task.slice_reshard_task->sizes, (std::vector<int64_t>{4, 8}));
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.slice_reshard_task != nullptr);
+  ASSERT_EQ(out_comm_task.slice_reshard_task->offsets, (std::vector<int64_t>{2, 4}));
+  ASSERT_EQ(out_comm_task.slice_reshard_task->sizes, (std::vector<int64_t>{4, 8}));
 }
 
 TEST_F(TensorParallelAttrsTest, ParseSplitCommTask) {
   const std::string &json_str =
       R"(
 {
-  "task_type": "SplitVD",
+  "task_type": "SplitV",
   "size_splits": [2, 4],
   "split_dim": 1
 }
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
-  ASSERT_TRUE(comm_task.split_reshard_task != nullptr);
-  ASSERT_EQ(comm_task.split_reshard_task->split_axis, 1);
-  ASSERT_EQ(comm_task.split_reshard_task->size_splits, (std::vector<int64_t>{2, 4}));
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.split_reshard_task != nullptr);
+  ASSERT_EQ(out_comm_task.split_reshard_task->split_axis, 1);
+  ASSERT_EQ(out_comm_task.split_reshard_task->size_splits, (std::vector<int64_t>{2, 4}));
 }
 
 TEST_F(TensorParallelAttrsTest, ParseConcatCommTask) {
@@ -264,8 +301,11 @@ TEST_F(TensorParallelAttrsTest, ParseConcatCommTask) {
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
-  ASSERT_TRUE(comm_task.concat_reshard_task != nullptr);
-  ASSERT_EQ(comm_task.concat_reshard_task->concat_dim, 1);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.concat_reshard_task != nullptr);
+  ASSERT_EQ(out_comm_task.concat_reshard_task->concat_dim, 1);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseTransposeTaskInfo) {
@@ -278,8 +318,11 @@ TEST_F(TensorParallelAttrsTest, ParseTransposeTaskInfo) {
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
-  ASSERT_TRUE(comm_task.transpose_reshard_task != nullptr);
-  ASSERT_EQ(comm_task.transpose_reshard_task->perm, (std::vector<int32_t>{1, 0, 2, 3}));
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.transpose_reshard_task != nullptr);
+  ASSERT_EQ(out_comm_task.transpose_reshard_task->perm, (std::vector<int32_t>{1, 0, 2, 3}));
 }
 
 TEST_F(TensorParallelAttrsTest, ParseModifyValueCommTask) {
@@ -292,9 +335,12 @@ TEST_F(TensorParallelAttrsTest, ParseModifyValueCommTask) {
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
-  ASSERT_TRUE(comm_task.modify_value_reshard_task != nullptr);
-  ASSERT_EQ(comm_task.modify_value_reshard_task->op_type, "Mul");
-  ASSERT_EQ(comm_task.modify_value_reshard_task->value, (std::vector<int64_t>{1, 2}));
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.modify_value_reshard_task != nullptr);
+  ASSERT_EQ(out_comm_task.modify_value_reshard_task->op_type, "Mul");
+  ASSERT_EQ(out_comm_task.modify_value_reshard_task->value, (std::vector<int64_t>{1, 2}));
 }
 
 TEST_F(TensorParallelAttrsTest, ParseBroadcastCommTask) {
@@ -330,14 +376,17 @@ TEST_F(TensorParallelAttrsTest, ParseBroadcastCommTask) {
 )";
   CommTask comm_task;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
   ASSERT_TRUE(comm_task.broadcast_reshard_task != nullptr);
   std::vector<DeviceIndex> root_device_index;
   root_device_index.emplace_back(DeviceIndex{"NPU", {0, 0, 0}});
   root_device_index.emplace_back(DeviceIndex{"NPU", {0, 0, 2}});
   root_device_index.emplace_back(DeviceIndex{"NPU", {0, 0, 4}});
   root_device_index.emplace_back(DeviceIndex{"NPU", {0, 0, 6}});
-  EXPECT_EQ(comm_task.broadcast_reshard_task->root_device_indices, root_device_index);
-  EXPECT_EQ(comm_task.broadcast_reshard_task->comm_groups.size(), 4);
+  EXPECT_EQ(out_comm_task.broadcast_reshard_task->root_device_indices, root_device_index);
+  EXPECT_EQ(out_comm_task.broadcast_reshard_task->comm_groups.size(), 4);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseParseCommStep) {
@@ -347,7 +396,7 @@ TEST_F(TensorParallelAttrsTest, ParseParseCommStep) {
   "id": 2,
   "input_ids": [[0, 0], [1, 0]],
   "comm_task": {
-    "task_type": "SplitVD",
+    "task_type": "SplitV",
     "size_splits": [2, 4],
     "split_dim": 1
   }
@@ -408,7 +457,7 @@ TEST_F(TensorParallelAttrsTest, ParseTensorReshardInfo) {
   EXPECT_EQ(tensor_reshard_info.peer_inputs[1].input_index, 1);
 }
 
-TEST_F(TensorParallelAttrsTest, ParseOutputsReshardInfo) {
+TEST_F(TensorParallelAttrsTest, ReshardAttrToAndFromJson) {
   const std::string &json_str =
       R"(
 [
@@ -425,7 +474,7 @@ TEST_F(TensorParallelAttrsTest, ParseOutputsReshardInfo) {
           "id": 1,
           "input_ids": [],
           "comm_task": {
-            "task_type": "SplitVD",
+            "task_type": "SplitV",
             "size_splits": [2, 4],
             "split_dim": 1
           }
@@ -434,7 +483,7 @@ TEST_F(TensorParallelAttrsTest, ParseOutputsReshardInfo) {
           "id": 2,
           "input_ids": [[1, 0]],
           "comm_task": {
-            "task_type": "SplitVD",
+            "task_type": "SplitV",
             "size_splits": [2, 4],
             "split_dim": 1
           }
@@ -451,9 +500,11 @@ TEST_F(TensorParallelAttrsTest, ParseOutputsReshardInfo) {
   ReshardAttr reshard_attr;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, reshard_attr), SUCCESS);
   ASSERT_EQ(reshard_attr.reshard_infos.size(), 1);
+  auto str = TensorParallelAttrs::ToJson(reshard_attr);
+  ASSERT_EQ(TensorParallelAttrs::FromJson(str, reshard_attr), SUCCESS);
 }
 
-TEST_F(TensorParallelAttrsTest, ParseTensorSliceDeployment) {
+TEST_F(TensorParallelAttrsTest, TensorDeploymentToAndFromJson) {
   const std::string &json_str =
       R"(
 {
@@ -473,7 +524,11 @@ TEST_F(TensorParallelAttrsTest, ParseTensorSliceDeployment) {
 )";
   TensorDeployment tensor_deployment;
   ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, tensor_deployment), SUCCESS);
-  const auto &tensor_slice_deployment = tensor_deployment.shard_deployment;
+  const auto str = TensorParallelAttrs::ToJson(tensor_deployment);
+
+  TensorDeployment tensor_deployment_from_json;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(str, tensor_deployment_from_json), SUCCESS);
+  const auto &tensor_slice_deployment = tensor_deployment_from_json.shard_deployment;
   EXPECT_EQ(tensor_slice_deployment.device_indices_each_slice.size(), 4);
   EXPECT_EQ(tensor_slice_deployment.axis_slices.size(), 2);
 }
