@@ -65,13 +65,26 @@ LoweringGlobalData &LoweringGlobalData::SetAllocator(AllocatorDesc desc, bg::Val
   placements_to_allocator_[desc] = std::move(allocator);
   return *this;
 }
+LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr &&allocator) {
+  external_allocator_ = std::move(allocator);
+  return *this;
+}
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) {
   const auto &iter = placements_to_allocator_.find(desc);
   if (iter == placements_to_allocator_.end()) {
     auto allocator = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
-      auto memory_type_holder = bg::ValueHolder::CreateConst(&desc, sizeof(desc));
-      auto allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {memory_type_holder});
-      return {allocator};
+      auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
+      auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
+      auto created_allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator",
+                                                                       {placement_holder, memory_type_holder});
+      auto selected_allocator = created_allocator;
+      if (external_allocator_ != nullptr) {
+        selected_allocator = bg::ValueHolder::CreateSingleDataOutput("SelectAllocator",
+                                                                     {placement_holder, memory_type_holder,
+                                                                      external_allocator_,
+                                                                      created_allocator});
+      }
+      return {selected_allocator};
     });
     GE_ASSERT_EQ(allocator.size(), 1U);
     GE_ASSERT_NOTNULL(allocator[0]);
