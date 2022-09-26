@@ -25,7 +25,6 @@
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "common/util/error_manager/error_manager.h"
-#include "ge/ge_api_types.h"
 #include "graph/shape_refiner.h"
 #include "graph/compute_graph_impl.h"
 #include "proto/ge_ir.pb.h"
@@ -34,12 +33,15 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "framework/common/string_util.h"
+#include "framework/common/ge_types.h"
 #include "graph/utils/tensor_utils.h"
 #include "common/util/mem_utils.h"
 
 namespace ge {
 namespace {
 const size_t OUTPUT_PARAM_SIZE = 2UL;
+constexpr int32_t kTopoSortingBfs = 0;
+constexpr int32_t kTopoSortingDfs = 1;
 bool IsUseBFS() {
   std::string run_mode;
   std::string topo_sorting_mode_str;
@@ -47,10 +49,10 @@ bool IsUseBFS() {
       (!topo_sorting_mode_str.empty())) {
     const int32_t base = 10;
     const auto topo_sorting_mode =
-        static_cast<TopoSortingMode>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
-    if (topo_sorting_mode == TopoSortingMode::BFS) {
+        static_cast<int32_t>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
+    if (topo_sorting_mode == kTopoSortingBfs) {
       return true;
-    } else if (topo_sorting_mode == TopoSortingMode::DFS) {
+    } else if (topo_sorting_mode == kTopoSortingDfs) {
       return false;
     } else {
       GELOGI("OPTION_TOPO_SORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",

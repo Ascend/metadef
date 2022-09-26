@@ -26,6 +26,7 @@
 #include "graph/ge_tensor.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph_builder_utils.h"
+#include "framework/common/ge_types.h"
 #undef private
 #undef protected
 #include "debug/ge_op_types.h"
