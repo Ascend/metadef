@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,4 +118,4 @@ inline std::vector<char> CreateErrorMsg() {
 #define GE_RETURN_IF_EOK(v, ...) GE_RETURN_IF(((v) == EOK), __VA_ARGS__)
 #define GE_RETURN_IF_TRUE(v, ...) GE_RETURN_IF((v), __VA_ARGS__)
 #define GE_RETURN_IF_HYPER_SUCCESS(v, ...) GE_RETURN_IF(((v).IsSuccess()), __VA_ARGS__)
-#endif  //METADEF_CXX_INC_COMMON_CHECKER_H_
+#endif  // METADEF_CXX_INC_COMMON_CHECKER_H_

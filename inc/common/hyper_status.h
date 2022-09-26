@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,4 +51,4 @@ class HyperStatus {
 namespace ge {
 using HyperStatus = gert::HyperStatus;
 }  // namespace ge
-#endif  //AIR_CXX_BASE_COMMON_HYPER_STATUS_H_
+#endif  // AIR_CXX_BASE_COMMON_HYPER_STATUS_H_
