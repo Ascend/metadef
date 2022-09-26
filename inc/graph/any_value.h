@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,16 +74,16 @@ class AnyValue {
     VT_LIST_LIST_FLOAT = 12,
 
     VT_LIST_BASE = 1000,
-    VT_LIST_STRING = VT_LIST_BASE + VT_STRING,
-    VT_LIST_FLOAT = VT_LIST_BASE + VT_FLOAT,
-    VT_LIST_BOOL = VT_LIST_BASE + VT_BOOL,
-    VT_LIST_INT = VT_LIST_BASE + VT_INT,
-    VT_LIST_TENSOR_DESC = VT_LIST_BASE + VT_TENSOR_DESC,
-    VT_LIST_TENSOR = VT_LIST_BASE + VT_TENSOR,
-    VT_LIST_BYTES = VT_LIST_BASE + VT_BYTES,
-    VT_LIST_GRAPH = VT_LIST_BASE + VT_GRAPH,
-    VT_LIST_NAMED_ATTRS = VT_LIST_BASE + VT_NAMED_ATTRS,
-    VT_LIST_DATA_TYPE = VT_LIST_BASE + VT_DATA_TYPE,
+    VT_LIST_STRING = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_STRING),
+    VT_LIST_FLOAT = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_FLOAT),
+    VT_LIST_BOOL = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_BOOL),
+    VT_LIST_INT = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_INT),
+    VT_LIST_TENSOR_DESC = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_TENSOR_DESC),
+    VT_LIST_TENSOR = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_TENSOR),
+    VT_LIST_BYTES = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_BYTES),
+    VT_LIST_GRAPH = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_GRAPH),
+    VT_LIST_NAMED_ATTRS = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_NAMED_ATTRS),
+    VT_LIST_DATA_TYPE = static_cast<int32_t>(VT_LIST_BASE) + static_cast<int32_t>(VT_DATA_TYPE),
   };
 
   AnyValue() = default;
@@ -95,7 +95,7 @@ class AnyValue {
   }
   AnyValue &operator=(AnyValue &&other) noexcept;
   AnyValue &operator=(const AnyValue &other);
-  ~AnyValue() {
+  ~AnyValue() noexcept {
     Clear();
   }
 
@@ -165,7 +165,7 @@ class AnyValue {
 
   using ValueBuf = std::aligned_storage<sizeof(void *)>::type;
   using ValueHolder = union {
-    void *pointer;
+    void *pointer = nullptr;
     std::aligned_storage<sizeof(void *)>::type inline_buf;
   };
   ValueHolder holder_{};
@@ -294,8 +294,6 @@ graphStatus AnyValue::SetValue(const T &value) {
   InnerSet(value);
   return GRAPH_SUCCESS;
 }
-
-// TODO 补充UT
 template<typename T>
 graphStatus AnyValue::SetValue(std::initializer_list<T> values) {
   Clear();
@@ -344,4 +342,4 @@ bool AnyValue::SameType() const noexcept {
 }
 }  // namespace ge
 
-#endif  //EXECUTE_GRAPH_ANY_VALUE_H
+#endif  // EXECUTE_GRAPH_ANY_VALUE_H
