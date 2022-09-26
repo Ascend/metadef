@@ -2198,7 +2198,7 @@ graphStatus OpDesc::CommonVerify() const {
       continue;
     }
     for (const int64_t dim : ishape) {
-      if (dim < -2) {
+      if (dim < -2) { // -2 is all shape
         ErrorManager::GetInstance().ATCReportErrMessage("E19014", {"opname", "value", "reason"},
             {GetName(), "input " + iname + " shape", "contains negative or zero dimension"});
         GELOGE(FAILED, "Op[%s]'s input %s shape contains negative or zero dimension", GetName().c_str(), iname.c_str());

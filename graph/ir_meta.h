@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ class OpMetadata {
   const std::vector<std::string> &GetSubgraphNames() const {return subgraph_names_;}
   void AddSubGraphName(const std::string &name) {subgraph_names_.push_back(name);}
   void ClearSubgraphNames() { subgraph_names_.clear(); }
-  void SetOpName(const std::string &name) {
+  void SetOpName(std::string name) {
     name_ = std::move(name);
     ir_meta_.SetOpName(name);
   }
