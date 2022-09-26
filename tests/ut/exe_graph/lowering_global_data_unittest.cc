@@ -89,6 +89,15 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocatorOk) {
   EXPECT_EQ(allocator1, gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}));
 }
 
+TEST_F(LoweringGlobalDataUT, GetOrCreateAllocatorFromExternalAllocatorOk) {
+  LoweringGlobalData gd;
+  auto holder = bg::ValueHolder::CreateFeed(0);
+  auto holder1 = holder;
+  gd.SetExternalAllocator(std::move(holder1));
+  auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
+  EXPECT_NE(allocator1, nullptr);
+}
+
 TEST_F(LoweringGlobalDataUT, GetSessionIdSameWithOneGlobalData) {
   LoweringGlobalData gd;
 

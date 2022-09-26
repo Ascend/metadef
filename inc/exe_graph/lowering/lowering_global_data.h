@@ -44,6 +44,7 @@ class LoweringGlobalData {
 
   bg::ValueHolderPtr GetAllocator(AllocatorDesc desc) const;
   LoweringGlobalData &SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator);
+  LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator);
   bg::ValueHolderPtr GetOrCreateAllocator(AllocatorDesc desc);
 
   uint64_t GetSessionId();
@@ -51,7 +52,8 @@ class LoweringGlobalData {
                                                   const std::function<bg::ValueHolderPtr()> &builder);
 
  private:
-  bg::ValueHolderPtr stream_;
+  bg::ValueHolderPtr stream_ = nullptr;
+  bg::ValueHolderPtr external_allocator_ = nullptr;
   std::unordered_map<std::string, NodeCompileResult> node_name_to_compile_result_holders_;
   std::map<int64_t, void *> node_ids_to_known_subgraph_models_;
   std::map<std::string, void *> graph_to_static_models_;
