@@ -27,6 +27,8 @@
 #include "framework/common/debug/log.h"
 
 namespace ge {
+constexpr uint32_t kDiv16RightShiftBits = 4U;
+constexpr uint32_t kDiv32RightShiftBits = 5U;
 /**
  * @ingroup domi_calibration
  * @brief  Initializes an input array to a specified value
@@ -142,18 +144,18 @@ bool AddOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
 template<typename T>
 T CeilDiv16(const T n) {
   if (n & 0xF) {
-    return (n >> 4) + 1;
+    return (n >> kDiv16RightShiftBits) + 1;
   } else {
-    return n >> 4;
+    return n >> kDiv16RightShiftBits;
   }
 }
 
 template<typename T>
 T CeilDiv32(const T n) {
-  if (n & 31) {
-    return (n >> 5) + 1;
+  if (n & 0x1F) {
+    return (n >> kDiv32RightShiftBits) + 1;
   } else {
-    return n >> 5;
+    return n >> kDiv32RightShiftBits;
   }
 }
 
