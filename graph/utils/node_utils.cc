@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2019. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,11 +219,9 @@ void NodeUtils::UpdateIsInputConst(const NodePtr &node_ptr) {
   UpdateIsInputConst(*node_ptr);
 }
 
-///
 /// update is_input_const
 /// @param node
 /// @return void
-///
 void NodeUtils::UpdateIsInputConst(Node &node) {
   std::vector<bool> is_input_const;
   const size_t anchor_num = node.GetAllInDataAnchors().size();
@@ -527,11 +525,9 @@ graphStatus NodeUtils::AddSubgraph(Node &node, const std::string &subgraph_name,
 
   return SetSubgraph(node, iter->second, subgraph);
 }
-///
 /// Check if node is input of subgraph
 /// @param [in] node
 /// @return bool
-///
 bool NodeUtils::IsSubgraphInput(const NodePtr &node) {
   if ((node == nullptr) || (node->GetOpDesc() == nullptr) ||
       (node->GetOwnerComputeGraph()->GetParentNode() == nullptr)) {
@@ -558,11 +554,9 @@ bool NodeUtils::IsSubgraphInput(const NodePtr &node) {
   return node->GetOpDesc()->HasAttr(ATTR_NAME_PARENT_NODE_INDEX);
 }
 
-///
 /// Check if node is output of subgraph
 /// @param [in] node
 /// @return bool
-///
 bool NodeUtils::IsSubgraphOutput(const NodePtr &node) {
   if ((node == nullptr) || (node->GetOpDesc() == nullptr) ||
       (node->GetOwnerComputeGraph()->GetParentNode() == nullptr) || (node->GetType() != NETOUTPUT)) {
@@ -593,11 +587,9 @@ bool NodeUtils::IsSubgraphOutput(const NodePtr &node) {
   return false;
 }
 
-///
 /// @brief Get subgraph original input node.
 /// @param [in] node
 /// @return Node
-///
 NodePtr NodeUtils::GetParentInput(const Node &node) {
   uint32_t parent_index = 0U;
   if (!AttrUtils::GetInt(node.GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, parent_index)) {
@@ -662,11 +654,9 @@ NodeToOutAnchor NodeUtils::GetParentInputAndAnchor(const NodePtr &node) {
   return std::make_pair(peer_out_anchor->GetOwnerNode(), peer_out_anchor);
 }
 
-///
 /// @brief Get is dynamic shape graph from node.
 /// @param [in] node
 /// @return bool
-///
 bool NodeUtils::IsDynamicShape(const Node &node) {
   const auto graph = GraphUtils::FindRootGraph(node.GetOwnerComputeGraph());
   if (graph == nullptr) {
@@ -682,11 +672,9 @@ bool NodeUtils::IsDynamicShape(const NodePtr &node) {
   return (node == nullptr) ? false : IsDynamicShape(*node);
 }
 
-///
 /// @brief Check is varying_input for while node
 /// @param [in] node: Data node for subgraph
 /// @return bool
-///
 bool NodeUtils::IsWhileVaryingInput(const ge::NodePtr &node) {
   if (node == nullptr) {
     return false;
@@ -730,12 +718,10 @@ bool NodeUtils::IsWhileVaryingInput(const ge::NodePtr &node) {
   return varying_flag;
 }
 
-///
 /// @brief Get subgraph input is constant.
 /// @param [in] node
 /// @param [out] string
 /// @return bool
-///
 bool NodeUtils::GetConstOpType(const NodePtr &node, std::string &type) {
   if (node == nullptr) {
     return false;
@@ -755,11 +741,9 @@ bool NodeUtils::GetConstOpType(const NodePtr &node, std::string &type) {
   return GetConstOpType(parent, type);
 }
 
-///
 /// @brief Remove node-related subgraphs, including subgraphs of nodes in the subgraph.
 /// @param [in] node
 /// @return return GRAPH_SUCCESS if remove successfully, other for failed.
-///
 graphStatus NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
   GE_CHECK_NOTNULL(node);
   const auto op_desc = node->GetOpDesc();
@@ -808,11 +792,9 @@ graphStatus NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
 
   return GRAPH_SUCCESS;
 }
-///
 /// @brief Get subgraph input data node by index.
 /// @param [in] node
 /// @return Node
-///
 std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, const int32_t index) {
   std::vector<NodePtr> in_data_node_vec;
   const auto op_desc = node.GetOpDesc();
@@ -836,11 +818,9 @@ std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, co
   }
   return in_data_node_vec;
 }
-///
 /// @brief Get subgraph input data node by index.
 /// @param [in] node
 /// @return Node
-///
 std::vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
   std::vector<NodePtr> out_data_node_vec;
   const auto op_desc = node.GetOpDesc();

@@ -60,7 +60,7 @@ public:
 private:
   static graphStatus DoGetCutInfo(const std::vector<CutInfo> &cut_infos, const size_t index, CutInfo &cut_info);
 
-  AxisType axis_type_;
+  AxisType axis_type_ = AxisType::UNSPLIT;
   std::vector<CutInfo> relate_inputs_;
   std::vector<CutInfo> relate_outputs_;
   std::vector<AxisType> axis_types_;

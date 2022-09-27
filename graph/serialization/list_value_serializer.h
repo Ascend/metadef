@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,6 @@ class ListValueSerializer : public GeIrAttrSerializer {
   static graphStatus DeserializeListGraphDef(const proto::AttrDef &def, AnyValue &av);
   static graphStatus DeserializeListNamedAttrs(const proto::AttrDef &def, AnyValue &av);
   static graphStatus DeserializeListDataType(const proto::AttrDef &def, AnyValue &av);
-
 };
 }  // namespace ge
 

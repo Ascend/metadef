@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,4 +25,4 @@ constexpr uint32_t kDefaultMaxOutputNum = 8U;
 constexpr size_t kDefaultDimsNum = 8U;
 constexpr size_t kMaxNameLen = 1024UL;
 }
-#endif  //METADEF_CXX_ASCEND_LIMITS_H
+#endif  // METADEF_CXX_ASCEND_LIMITS_H

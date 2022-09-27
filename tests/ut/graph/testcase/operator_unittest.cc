@@ -2055,4 +2055,25 @@ TEST_F(UtestOperater, GetDynamicOutputNum_Success) {
   EXPECT_EQ(op.GetDynamicOutputNum(std::string("z")), 0);
   EXPECT_EQ(op.GetDynamicOutputNum(nullptr), 0);
 }
+
+/*
+ * Foo11
+ *   |
+ * Foo01
+ */
+TEST_F(UtestOperater, SetInput_Success_DoNotPassTensorAttrs) {
+  auto foo01 = op::Foo01("foo01");
+  auto foo11 = op::Foo11("foo11");
+  foo01.SetOutputAttr(0, "foo01_output_attr", 1);
+  foo11.SetInputAttr(0, "foo11_input_attr", 1);
+  foo11.SetInput("x", foo01);
+  Graph graph("graph");
+  graph.SetInputs({foo01});
+  CheckTopoGraph1(graph);
+  int64_t value = 0;
+  EXPECT_EQ(foo11.GetInputAttr(0, "foo01_output_attr", value), GRAPH_SUCCESS);
+  EXPECT_EQ(value, 0);
+  EXPECT_EQ(foo11.GetInputAttr(0, "foo11_input_attr", value), GRAPH_SUCCESS);
+  EXPECT_EQ(value, 1);
+}
 }  // namespace ge

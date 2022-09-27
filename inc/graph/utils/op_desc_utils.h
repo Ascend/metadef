@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ class OpDescUtils {
   static std::vector<ge::NodePtr> GetConstInputNode(const ge::Node& node);
   static std::vector<NodeToOutAnchor> GetConstInputNodeAndAnchor(const ge::Node &node);
   static std::vector<ConstGeTensorPtr> GetInputData(const std::vector<ge::NodePtr>& input_nodes);
-  static std::vector<ConstGeTensorPtr> GetWeightsFromNodes(const std::vector<NodeToOutAnchor>& input_nodes_2_out_anchors);
+  static std::vector<ConstGeTensorPtr> GetWeightsFromNodes(
+      const std::vector<NodeToOutAnchor>& input_nodes_2_out_anchors);
 
   static std::vector<ConstGeTensorPtr> GetWeights(const ge::Node& node);
   static std::vector<ConstGeTensorPtr> GetWeights(const ge::ConstNodePtr& node);
@@ -117,74 +118,56 @@ class OpDescBuilder {
   OpDescBuilder &operator=(const OpDescBuilder &&) = delete;
   ~OpDescBuilder() = default;
 
-  ///
   /// @brief Add input
   /// @param [in] name
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddInput(const std::string &name);
 
-  ///
   /// @brief Add input
   /// @param [in] name
   /// @param [in] tensor
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddInput(const std::string &name, const GeTensorDesc &tensor);
 
-  ///
   /// @brief Add dynamic input
   /// @param [in] name
   /// @param [in] num
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddDynamicInput(const std::string &name, const uint32_t num);
 
-  ///
   /// @brief Add dynamic input
   /// @param [in] name
   /// @param [in] num
   /// @param [in] tensor
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddDynamicInput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor);
 
-  ///
   /// @brief Add output
   /// @param [in] name
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddOutput(const std::string &name);
 
-  ///
   /// @brief Add output
   /// @param [in] name
   /// @param [in] tensor
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddOutput(const std::string &name, const GeTensorDesc &tensor);
 
-  ///
   /// @brief Add dynamic output
   /// @param [in] name
   /// @param [in] num
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddDynamicOutput(const std::string &name, const uint32_t num);
 
-  ///
   /// @brief Add dynamic output
   /// @param [in] name
   /// @param [in] num
   /// @param [in] tensor
   /// @return OpDescBuilder
-  ///
   OpDescBuilder& AddDynamicOutput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor);
 
-  ///
   /// @brief Build op_desc
   /// @return OpDescPtr
-  ///
   OpDescPtr Build();
 
  private:

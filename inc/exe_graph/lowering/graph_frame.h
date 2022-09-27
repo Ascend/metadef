@@ -110,4 +110,4 @@ class GraphFrame {
 }  // namespace bg
 }  // namespace gert
 
-#endif  //AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_GRAPH_FRAME_H_
+#endif  // AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_GRAPH_FRAME_H_

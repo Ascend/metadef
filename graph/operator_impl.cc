@@ -107,6 +107,15 @@ void OperatorImpl::SetInputImpl(const std::string &dst_name, const ge::OutHandle
     src_output_desc.SetFormat(dst_input_desc.GetFormat());
     src_output_desc.SetOriginFormat(dst_input_desc.GetOriginFormat());
   }
+  // clear src tensor attr
+  for (const auto &attr : src_output_desc.GetAllAttrs()) {
+    (void) src_output_desc.DelAttr(attr.first);
+  }
+  // add dst tensor attr
+  for (const auto &attr : dst_input_desc.GetAllAttrs()) {
+    (void) src_output_desc.SetAttr(attr.first, attr.second);
+  }
+
   GE_CHK_BOOL_EXEC(op_desc_->UpdateInputDesc(dst_name, src_output_desc) == GRAPH_SUCCESS,
                    REPORT_CALL_ERROR("E18888", "UpdateInputDesc failed, dst name is %s, src name is %s",
                                      dst_name.c_str(), src_name.c_str());

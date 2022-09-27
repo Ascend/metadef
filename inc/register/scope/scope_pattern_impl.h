@@ -1,5 +1,5 @@
-/*
- * Copyright 2020 Huawei Technologies Co., Ltd
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "graph/compute_graph.h"
 
 namespace ge {
+constexpr float32_t kCompareRatio = 2.0F;
 class ScopeAttrValue::ScopeAttrValueImpl {
  public:
   ScopeAttrValueImpl() : int_value_(0), float_value_(0.0F), string_value_(""), bool_value_(false) {}
@@ -78,7 +79,7 @@ class NodeAttrFeature::NodeAttrFeatureImpl : ScopeBaseFeature {
     // It is used for floating point comparisons.
     // It mainly uses relative precision to judge whether floating-point numbers are equal.
     // the 2 is ULPs
-    return (std::fabs(x - y) <= (std::numeric_limits<T>::epsilon() * std::fabs(x + y) * 2.0)) ||
+    return (std::fabs(x - y) <= (std::numeric_limits<T>::epsilon() * std::fabs(x + y) * kCompareRatio)) ||
            (std::fabs(x - y) < std::numeric_limits<T>::min());
   }
 
