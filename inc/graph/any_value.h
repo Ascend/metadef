@@ -165,7 +165,7 @@ class AnyValue {
 
   using ValueBuf = std::aligned_storage<sizeof(void *)>::type;
   using ValueHolder = union {
-    void *pointer = nullptr;
+    void *pointer;
     std::aligned_storage<sizeof(void *)>::type inline_buf;
   };
   ValueHolder holder_{};
