@@ -90,7 +90,6 @@ TEST_F(BgIrAttrsUT, CreateAttrBufferSuccessOpLossAttr) {
   op_desc->AppendIrAttrName("dtype");
   EXPECT_EQ(op_desc->GetIrAttrNames().size(), 1U);
   EXPECT_EQ(op_desc->GetIrAttrNames().at(0), "dtype");
-  // ge::AttrUtils::SetDataType(op_desc, "dtype", ge::DT_INT32);
   auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
   size_t attr_size;
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
@@ -98,5 +97,63 @@ TEST_F(BgIrAttrsUT, CreateAttrBufferSuccessOpLossAttr) {
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 0U);
   EXPECT_EQ(base[1], 0U);
+}
+
+TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Int64Ok) {
+  auto op_desc = std::make_shared<ge::OpDesc>("foo", "Foo");
+  op_desc->AppendIrAttrName("axes");
+  EXPECT_EQ(op_desc->GetIrAttrNames().size(), 1U);
+  EXPECT_EQ(op_desc->GetIrAttrNames().at(0), "axes");
+  std::vector<std::vector<int64_t>> value{{}, {1}, {1, 2}, {1, 2, 3}};
+  ge::AttrUtils::SetListListInt(op_desc, "axes", value);
+  auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
+  size_t attr_size;
+  auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+  auto base = reinterpret_cast<size_t*>(attr_buffer.get());
+  EXPECT_EQ(base[0], 1U);
+  EXPECT_EQ(base[1], 2 * sizeof(size_t));
+
+  auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[2]);
+  ASSERT_NE(cvv, nullptr);
+  ASSERT_EQ(cvv->GetSize(), value.size());
+  for (size_t i = 0U; i < value.size(); ++i) {
+    auto cv = cvv->Get(i);
+    ASSERT_NE(cv, nullptr);
+    ASSERT_EQ(cv->GetSize(), value[i].size());
+    ASSERT_EQ(cv->GetSize(), cv->GetCapacity());
+    auto data = reinterpret_cast<const int64_t *>(cv->GetData());
+    for (size_t j = 0U; j < value[i].size(); ++j) {
+      EXPECT_EQ(data[j], value[i][j]);
+    }
+  }
+}
+
+TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Float64) {
+  auto op_desc = std::make_shared<ge::OpDesc>("foo", "Foo");
+  op_desc->AppendIrAttrName("axes");
+  EXPECT_EQ(op_desc->GetIrAttrNames().size(), 1U);
+  EXPECT_EQ(op_desc->GetIrAttrNames().at(0), "axes");
+  std::vector<std::vector<float_t>> value{{}, {1}, {1, 2}, {1, 2, 3}};
+  ge::AttrUtils::SetListListFloat(op_desc, "axes", value);
+  auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
+  size_t attr_size;
+  auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+  auto base = reinterpret_cast<size_t*>(attr_buffer.get());
+  EXPECT_EQ(base[0], 1U);
+  EXPECT_EQ(base[1], 2 * sizeof(size_t));
+
+  auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[2]);
+  ASSERT_NE(cvv, nullptr);
+  ASSERT_EQ(cvv->GetSize(), value.size());
+  for (size_t i = 0U; i < value.size(); ++i) {
+    auto cv = cvv->Get(i);
+    ASSERT_NE(cv, nullptr);
+    ASSERT_EQ(cv->GetSize(), value[i].size());
+    ASSERT_EQ(cv->GetSize(), cv->GetCapacity());
+    auto data = reinterpret_cast<const float_t *>(cv->GetData());
+    for (size_t j = 0U; j < value[i].size(); ++j) {
+      EXPECT_EQ(data[j], value[i][j]);
+    }
+  }
 }
 }  // namespace gert
