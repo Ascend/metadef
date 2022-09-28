@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -286,4 +286,4 @@ class TilingContext : public ExtendedKernelContext {
 };
 static_assert(std::is_standard_layout<TilingContext>::value, "The class TilingContext must be a POD");
 }  // namespace gert
-#endif  //METADEF_CXX_INC_EXE_GRAPH_TILING_CONTEXT_H_
+#endif  // METADEF_CXX_INC_EXE_GRAPH_TILING_CONTEXT_H_
