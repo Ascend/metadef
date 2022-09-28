@@ -146,4 +146,4 @@ class ValueHolder {
 }  // namespace bg
 }  // namespace gert
 
-#endif  //AIR_CXX_RUNTIME_V2_GRAPH_BUILDER_VALUE_HOLDER_H_
+#endif  // AIR_CXX_RUNTIME_V2_GRAPH_BUILDER_VALUE_HOLDER_H_

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,8 +92,8 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
                                 const std::function<int32_t(int32_t data_index)> &input,
                                 const std::function<int32_t(int32_t netoutput_index)> &output);
 Status AutoMappingSubgraphIndex(const ge::Graph &graph,
-                                const std::function<Status(int32_t data_index, int32_t &parent_input_index)> &input,
-                                const std::function<Status(int32_t netoutput_index, int32_t &parent_output_index)> &output);
+    const std::function<Status(int32_t data_index, int32_t &parent_input_index)> &input,
+    const std::function<Status(int32_t netoutput_index, int32_t &parent_output_index)> &output);
 using google::protobuf::Message;
 class OpRegistrationDataImpl;
 class FrameworkRegistryImpl;

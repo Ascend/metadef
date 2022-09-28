@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_GRAPH_GE_GLOBAL_OPTIONS_H_
-#define INC_GRAPH_GE_GLOBAL_OPTIONS_H_
+#include "exe_graph/runtime/shape_utils.h"
 
-#include <map>
-#include <string>
-
-namespace ge {
-std::map<std::string, std::string> &GetMutableGlobalOptions();
-}
-#endif  // INC_GRAPH_GE_GLOBAL_OPTIONS_H_
+namespace gert {
+const Shape g_vec_1_shape = {1};
+}  // namespace gert

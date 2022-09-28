@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ struct OpImplKernelRegistry {
       if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {
         return false;
       }
-      return inputs_dependency & static_cast<uint64_t>(1) << index;
+      return static_cast<bool>(inputs_dependency & static_cast<uint64_t>(1) << static_cast<uint32_t>(index));
     }
     ge::graphStatus SetInputDataDependency(int32_t index) {
       if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {

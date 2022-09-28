@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef INC_EXTERNAL_GRAPH_RESOURCE_CONTEXT_H_
-#define INC_EXTERNAL_GRAPH_RESOURCE_CONTEXT_H_
-
-namespace ge {
-// For resource op infershape, indicate content stored in resources, shape/dtype etc.
-// Op can inherit from this struct and extend more content
-struct ResourceContext {
-  virtual ~ResourceContext() {}
-}; // struct ResourceContext
-}  // namespace ge
-#endif  // INC_EXTERNAL_GRAPH_RESOURCE_CONTEXT_H_
+#include "exe_graph/runtime/shape_utils.h"
+#include <gtest/gtest.h>
+namespace gert {
+class ShapeUtilsUT : public testing::Test {};
+TEST_F(ShapeUtilsUT, EnsureNotScalar_ReturnInput_NotScalarShape) {
+  Shape s1{1,2,3};
+  Shape s2{1};
+  Shape s3{0,1};
+  ASSERT_EQ(&EnsureNotScalar(s1), &s1);
+  ASSERT_EQ(&EnsureNotScalar(s2), &s2);
+  ASSERT_EQ(&EnsureNotScalar(s3), &s3);
+}
+TEST_F(ShapeUtilsUT, EnsureNotScalar_ReturnVec1_ScalarShape) {
+  Shape s1{};
+  auto &s = EnsureNotScalar(s1);
+  ASSERT_FALSE(s.IsScalar());
+  ASSERT_EQ(s.GetDimNum(), 1);
+  ASSERT_EQ(s.GetDim(0), 1);
+}
+}  // namespace gert

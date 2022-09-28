@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   // is_unknown_shape: false, same with GetAllNodes func
   // is_unknown_shape: true, same with GetDirectNodes func
   Vistor<NodePtr> GetNodes(const bool is_unknown_shape) const;
-  Vistor<NodePtr> GetNodes(const bool is_unknown_shape, const NodeFilter &node_filter, const GraphFilter &graph_filter) const;
+  Vistor<NodePtr> GetNodes(const bool is_unknown_shape, const NodeFilter &node_filter,
+                           const GraphFilter &graph_filter) const;
   size_t GetDirectNodesSize() const;
   /**
    * 获取当前图直接包含的节点合集，并不会递归处理当前图的子图节点，注意和GetAllNodes()区分
@@ -122,18 +123,14 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   // obsolete
   graphStatus RemoveSubGraph(const std::shared_ptr<ComputeGraph> &sub_graph);
 
-  ///
   /// @brief Update input-mapping
   /// @param [in] input_mapping : index_of_cur_graph_node_input -> index_of_new_graph_node_input
   /// @return graphStatus
-  ///
   graphStatus UpdateInputMapping(const std::map<uint32_t, uint32_t> &input_mapping);
 
-  ///
   /// @brief Update output-mapping
   /// @param [in] output_mapping : index_of_cur_graph_node_output -> index_of_new_graph_node_output
   /// @return graphStatus
-  ///
   graphStatus UpdateOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
 
   void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);
@@ -180,22 +177,18 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   bool GetGraphUnknownFlag() const;
   void SetGraphUnknownFlag(const bool flag);
 
-  ///
   /// Set is need train iteration.
   /// If set true, it means this graph need to be run iteration some
   /// times(according variant "npu_runconfig/iterations_per_loop").
   /// @param need_iteration is need iteration
-  ///
   void SetNeedIteration(const bool need_iteration);
 
   void SetUserDefOutput(const std::string &output_name);
 
   const std::string GetOutput();
 
-  ///
   /// Get is need train iteration.
   /// @return is need iteration
-  ///
   bool GetNeedIteration() const;
 
   void SetGraphOpName(const std::map<uint32_t, std::string> &op_name_map);

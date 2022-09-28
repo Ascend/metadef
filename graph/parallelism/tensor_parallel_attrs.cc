@@ -25,11 +25,12 @@
 namespace ge {
 namespace tp {
 namespace {
+using Json = nlohmann::json;
+
 constexpr size_t kValidDimSliceItemNum = 2U;
 constexpr size_t kIndexStepId = 0U;
 constexpr size_t kIndexOutputIndex = 1U;
 
-using Json = nlohmann::json;
 Status StringToJson(const std::string &json_str, Json &json) {
   std::stringstream ss;
   ss << json_str;
@@ -62,6 +63,22 @@ Status ParseFromJson(const std::string &type, const std::string &json_str, T &va
 template<typename T>
 std::shared_ptr<T> CreateReshardTaskInfo(const Json &j) {
   return ComGraphMakeShared<T>(j.get<T>());
+}
+
+template<typename T>
+std::string ToJsonString(const T &obj) {
+  try {
+    Json j = obj;
+    return j.dump();
+  } catch (const nlohmann::json::exception &e) {
+    GELOGE(FAILED, "Failed to dump object, err = %s", e.what());
+    return "";
+  }
+}
+
+template<typename T>
+void GetValue(const Json &j, const std::string &key, T &value) {
+  value = j.at(key).template get<T>();
 }
 }  // namespace
 
@@ -112,8 +129,8 @@ USED_BY_JSON void to_json(Json &j, const DeviceIndex &device_index) {
 }
 
 USED_BY_JSON void from_json(const Json &j, DeviceIndex &device_index) {
-  device_index.engine_type = j.at("engine_type").get<std::string>();
-  device_index.indices = j.at("index").get<std::vector<int32_t>>();
+  GetValue(j, "engine_type", device_index.engine_type);
+  GetValue(j, "index", device_index.indices);
 }
 
 USED_BY_JSON void to_json(Json &j, const TensorSliceDeployment &tensor_slice_deployment) {
@@ -123,9 +140,8 @@ USED_BY_JSON void to_json(Json &j, const TensorSliceDeployment &tensor_slice_dep
 }
 
 USED_BY_JSON void from_json(const Json &j, TensorSliceDeployment &tensor_slice_deployment) {
-  tensor_slice_deployment.device_indices_each_slice =
-      j.at("device_indices_each_slice").get<std::vector<std::vector<DeviceIndex>>>();
-  tensor_slice_deployment.axis_slices = j.at("axis_slices").get<std::vector<std::vector<DimSlice>>>();
+  GetValue(j, "device_indices_each_slice", tensor_slice_deployment.device_indices_each_slice);
+  GetValue(j, "axis_slices", tensor_slice_deployment.axis_slices);
 }
 
 USED_BY_JSON void to_json(Json &j, const TensorDeployment &tensor_deployment) {
@@ -134,7 +150,7 @@ USED_BY_JSON void to_json(Json &j, const TensorDeployment &tensor_deployment) {
 }
 
 USED_BY_JSON void from_json(const Json &j, TensorDeployment &tensor_deployment) {
-  tensor_deployment.shard_deployment = j.at("shard_deployment").get<TensorSliceDeployment>();
+  GetValue(j, "shard_deployment", tensor_deployment.shard_deployment);
 }
 
 USED_BY_JSON void to_json(Json &j, const NodeDeployment &node_deployment) {
@@ -143,7 +159,7 @@ USED_BY_JSON void to_json(Json &j, const NodeDeployment &node_deployment) {
 }
 
 USED_BY_JSON void from_json(const Json &j, NodeDeployment &node_deployment) {
-  node_deployment.devices = j.at("devices").get<std::vector<DeviceIndex>>();
+  GetValue(j, "devices", node_deployment.devices);
 }
 
 USED_BY_JSON void to_json(Json &j, const CommPair &comm_pair) {
@@ -153,8 +169,8 @@ USED_BY_JSON void to_json(Json &j, const CommPair &comm_pair) {
 }
 
 USED_BY_JSON void from_json(const Json &j, CommPair &comm_pair) {
-  comm_pair.src_device_index = j.at("src_device_index").get<DeviceIndex>();
-  comm_pair.dst_device_index = j.at("dst_device_index").get<DeviceIndex>();
+  GetValue(j, "src_device_index", comm_pair.src_device_index);
+  GetValue(j, "dst_device_index", comm_pair.dst_device_index);
 }
 
 USED_BY_JSON void to_json(Json &j, const CommGroup &comm_group) {
@@ -167,124 +183,150 @@ USED_BY_JSON void from_json(const Json &j, CommGroup &comm_group) {
 
 USED_BY_JSON void to_json(Json &j, const SendRecvReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "SendReceive";
+  j["task_type"] = kCommTaskTypeSendReceive;
   j["comm_pairs"] = task_info.comm_pairs;
 }
 
 USED_BY_JSON void from_json(const Json &j, SendRecvReshardTask &task_info) {
-  task_info.comm_pairs = j.at("comm_pairs").get<std::vector<CommPair>>();
+  GetValue(j, "comm_pairs", task_info.comm_pairs);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllGatherReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "HcomAllGather";
+  j["task_type"] = kCommTaskTypeHcomAllGather;
+  j["axis"] = task_info.axis;
   j["comm_groups"] = task_info.comm_groups;
 }
 
 USED_BY_JSON void from_json(const Json &j, AllGatherReshardTask &all_gather_task_info) {
-  all_gather_task_info.comm_groups = j.at("comm_groups").get<std::vector<CommGroup>>();
+  GetValue(j, "comm_groups", all_gather_task_info.comm_groups);
+  GetValue(j, "axis", all_gather_task_info.axis);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllToAllReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "HcomAllToAll";
+  j["task_type"] = kCommTaskTypeHcomAllToAll;
   j["comm_groups"] = task_info.comm_groups;
 }
 
 USED_BY_JSON void from_json(const Json &j, AllToAllReshardTask &all_to_all_task_info) {
-  all_to_all_task_info.comm_groups = j.at("comm_groups").get<std::vector<CommGroup>>();
+  GetValue(j, "comm_groups", all_to_all_task_info.comm_groups);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllReduceReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "HcomAllReduce";
+  j["task_type"] = kCommTaskTypeHcomAllReduce;
   j["comm_groups"] = task_info.comm_groups;
   j["reduction"] = task_info.reduction;
 }
 
 USED_BY_JSON void from_json(const Json &j, AllReduceReshardTask &all_reduce_task_info) {
-  all_reduce_task_info.reduction = j.at("reduction").get<std::string>();
-  all_reduce_task_info.comm_groups = j.at("comm_groups").get<std::vector<CommGroup>>();
+  GetValue(j, "reduction", all_reduce_task_info.reduction);
+  GetValue(j, "comm_groups", all_reduce_task_info.comm_groups);
+}
+
+USED_BY_JSON void to_json(Json &j, const AllReduceMeanReshardTask &task_info) {
+  j = Json();
+  j["task_type"] = kCommTaskTypeHcomAllReduceMean;
+  j["comm_groups"] = task_info.comm_groups;
+  j["axis"] = task_info.axis;
+  j["value"] = task_info.value;
+}
+
+USED_BY_JSON void from_json(const Json &j, AllReduceMeanReshardTask &task_info) {
+  GetValue(j, "comm_groups", task_info.comm_groups);
+  GetValue(j, "axis", task_info.axis);
+  GetValue(j, "value", task_info.value);
 }
 
 USED_BY_JSON void to_json(Json &j, const ReduceScatterReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "HcomReduceScatter";
+  j["task_type"] = kCommTaskTypeHcomReduceScatter;
   j["comm_groups"] = task_info.comm_groups;
   j["reduction"] = task_info.reduction;
 }
 
 USED_BY_JSON void from_json(const Json &j, ReduceScatterReshardTask &reduce_scatter_task_info) {
-  reduce_scatter_task_info.reduction = j.at("reduction").get<std::string>();
-  reduce_scatter_task_info.comm_groups = j.at("comm_groups").get<std::vector<CommGroup>>();
+  GetValue(j, "reduction", reduce_scatter_task_info.reduction);
+  GetValue(j, "comm_groups", reduce_scatter_task_info.comm_groups);
 }
 
 USED_BY_JSON void to_json(Json &j, const BroadcastReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "HcomBroadcast";
+  j["task_type"] = kCommTaskTypeHcomBroadcast;
   j["comm_groups"] = task_info.comm_groups;
   j["roots"] = task_info.root_device_indices;
 }
 
 USED_BY_JSON void from_json(const Json &j, BroadcastReshardTask &broadcast_task_info) {
-  broadcast_task_info.root_device_indices = j.at("roots").get<std::vector<DeviceIndex>>();
-  broadcast_task_info.comm_groups = j.at("comm_groups").get<std::vector<CommGroup>>();
+  GetValue(j, "roots", broadcast_task_info.root_device_indices);
+  GetValue(j, "comm_groups", broadcast_task_info.comm_groups);
 }
 
 USED_BY_JSON void to_json(Json &j, const SliceReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "Slice";
+  j["task_type"] = kCommTaskTypeSlice;
   j["offsets"] = task_info.offsets;
   j["size"] = task_info.sizes;
 }
 
 USED_BY_JSON void from_json(const Json &j, SliceReshardTask &task_info) {
-  task_info.offsets = j.at("offsets").get<std::vector<int64_t>>();
-  task_info.sizes = j.at("size").get<std::vector<int64_t>>();
+  GetValue(j, "offsets", task_info.offsets);
+  GetValue(j, "size", task_info.sizes);
+}
+
+USED_BY_JSON void to_json(Json &j, const SliceByAxisReshardTask &task_info) {
+  j = Json();
+  j["task_type"] = kCommTaskTypeSliceByAxis;
+  j["axis_to_slice_deployments"] = task_info.axis_to_slice_deployments;
+}
+
+USED_BY_JSON void from_json(const Json &j, SliceByAxisReshardTask &task_info) {
+  GetValue(j, "axis_to_slice_deployments", task_info.axis_to_slice_deployments);
 }
 
 USED_BY_JSON void to_json(Json &j, const ConcatReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "Concat";
+  j["task_type"] = kCommTaskTypeConcat;
   j["concat_dim"] = task_info.concat_dim;
 }
 
 USED_BY_JSON void from_json(const Json &j, ConcatReshardTask &task_info) {
-  task_info.concat_dim = j.at("concat_dim").get<int32_t>();
+  GetValue(j, "concat_dim", task_info.concat_dim);
 }
 
 USED_BY_JSON void to_json(Json &j, const SplitReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "SplitV";
-  j["size_splits"] = task_info.size_splits;
-  j["split_dim"] = task_info.split_axis;
+  j["task_type"] = kCommTaskTypeSplit;
+  j["num_split"] = task_info.num_split;
+  j["split_dim"] = task_info.split_dim;
 }
 
 USED_BY_JSON void from_json(const Json &j, SplitReshardTask &task_info) {
-  task_info.size_splits = j.at("size_splits").get<std::vector<int64_t>>();
-  task_info.split_axis = j.at("split_dim").get<int32_t>();
+  GetValue(j, "num_split", task_info.num_split);
+  GetValue(j, "split_dim", task_info.split_dim);
 }
 
 USED_BY_JSON void to_json(Json &j, const TransposeReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "Transpose";
+  j["task_type"] = kCommTaskTypeTranspose;
   j["perm"] = task_info.perm;
 }
 
 USED_BY_JSON void from_json(const Json &j, TransposeReshardTask &task_info) {
-  task_info.perm = j.at("perm").get<std::vector<int32_t>>();
+  GetValue(j, "perm", task_info.perm);
 }
 
 USED_BY_JSON void to_json(Json &j, const ModifyValueReshardTask &task_info) {
   j = Json();
-  j["task_type"] = "ModifyValue";
+  j["task_type"] = kCommTaskTypeModifyValue;
   j["op_type"] = task_info.op_type;
   j["value"] = task_info.value;
 }
 
 USED_BY_JSON void from_json(const Json &j, ModifyValueReshardTask &task_info) {
-  task_info.op_type = j.at("op_type").get<std::string>();
-  task_info.value = j.at("value").get<std::vector<int64_t>>();
+  GetValue(j, "op_type", task_info.op_type);
+  GetValue(j, "value", task_info.value);
 }
 
 USED_BY_JSON void to_json(Json &j, const CommTask &comm_task) {
@@ -335,22 +377,22 @@ USED_BY_JSON void to_json(Json &j, const PeerInput &peer_input) {
 }
 
 USED_BY_JSON void from_json(const Json &j, PeerInput &peer_input) {
-  peer_input.step_id = j.at("step_id").get<int32_t>();
-  peer_input.node_name = j.at("node_name").get<std::string>();
-  peer_input.input_index = j.at("input_index").get<uint32_t>();
+  GetValue(j, "step_id", peer_input.step_id);
+  GetValue(j, "node_name", peer_input.node_name);
+  GetValue(j, "input_index", peer_input.input_index);
 }
 
 USED_BY_JSON void to_json(Json &j, const OutputReshardRes &reshard_res) {
   j = Json();
   j["comm_steps"] = reshard_res.comm_steps;
-  j["outputs"] = reshard_res.peer_inputs;
+  j["peer_inputs"] = reshard_res.peer_inputs;
   j["device_list"] = reshard_res.device_indices;
 }
 
 USED_BY_JSON void from_json(const Json &j, OutputReshardRes &reshard_res) {
-  reshard_res.comm_steps = j.at("comm_steps").get<std::vector<CommStep>>();
-  reshard_res.peer_inputs = j.at("outputs").get<std::vector<PeerInput>>();
-  reshard_res.device_indices = j.at("device_list").get<std::vector<DeviceIndex>>();
+  GetValue(j, "comm_steps", reshard_res.comm_steps);
+  GetValue(j, "peer_inputs", reshard_res.peer_inputs);
+  GetValue(j, "device_list", reshard_res.device_indices);
 }
 
 USED_BY_JSON void to_json(Json &j, const ReshardAttr &reshard_attr) {
@@ -393,23 +435,19 @@ Status TensorParallelAttrs::FromJson(const std::string &json_str, NodeDeployment
 }
 
 std::string TensorParallelAttrs::ToJson(const DeviceIndex &device_index) {
-  Json j = device_index;
-  return j.dump();
+  return ToJsonString(device_index);
 }
 
 std::string TensorParallelAttrs::ToJson(const NodeDeployment &node_deployment) {
-  Json j = node_deployment;
-  return j.dump();
+  return ToJsonString(node_deployment);
 }
 
 std::string TensorParallelAttrs::ToJson(const TensorDeployment &tensor_deployment) {
-  Json j = tensor_deployment;
-  return j.dump();
+  return ToJsonString(tensor_deployment);
 }
 
 std::string TensorParallelAttrs::ToJson(const ReshardAttr &reshard_attr) {
-  Json j = reshard_attr;
-  return j.dump();
+  return ToJsonString(reshard_attr);
 }
 
 CommTaskBuilder::CommTaskBuilder() {
@@ -418,37 +456,43 @@ CommTaskBuilder::CommTaskBuilder() {
 }
 
 void CommTaskBuilder::InitCommTaskBuilders() {
-  builders_["Slice"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeSlice] = [](const Json &j, CommTask &comm_task) {
     comm_task.slice_reshard_task = CreateReshardTaskInfo<SliceReshardTask>(j);
   };
-  builders_["SplitV"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeSliceByAxis] = [](const Json &j, CommTask &comm_task) {
+    comm_task.slice_by_axis_reshard_task = CreateReshardTaskInfo<SliceByAxisReshardTask>(j);
+  };
+  builders_[kCommTaskTypeSplit] = [](const Json &j, CommTask &comm_task) {
     comm_task.split_reshard_task = CreateReshardTaskInfo<SplitReshardTask>(j);
   };
-  builders_["Concat"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeConcat] = [](const Json &j, CommTask &comm_task) {
     comm_task.concat_reshard_task = CreateReshardTaskInfo<ConcatReshardTask>(j);
   };
-  builders_["Transpose"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeTranspose] = [](const Json &j, CommTask &comm_task) {
     comm_task.transpose_reshard_task = CreateReshardTaskInfo<TransposeReshardTask>(j);
   };
-  builders_["HcomAllGather"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeHcomAllGather] = [](const Json &j, CommTask &comm_task) {
     comm_task.all_gather_reshard_task = CreateReshardTaskInfo<AllGatherReshardTask>(j);
   };
-  builders_["HcomAllReduce"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeHcomAllReduce] = [](const Json &j, CommTask &comm_task) {
     comm_task.all_reduce_reshard_task = CreateReshardTaskInfo<AllReduceReshardTask>(j);
   };
-  builders_["HcomReduceScatter"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeHcomAllReduceMean] = [](const Json &j, CommTask &comm_task) {
+    comm_task.all_reduce_mean_reshard_task = CreateReshardTaskInfo<AllReduceMeanReshardTask>(j);
+  };
+  builders_[kCommTaskTypeHcomReduceScatter] = [](const Json &j, CommTask &comm_task) {
     comm_task.reduce_scatter_reshard_task = CreateReshardTaskInfo<ReduceScatterReshardTask>(j);
   };
-  builders_["HcomBroadcast"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeHcomBroadcast] = [](const Json &j, CommTask &comm_task) {
     comm_task.broadcast_reshard_task = CreateReshardTaskInfo<BroadcastReshardTask>(j);
   };
-  builders_["HcomAllToAll"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeHcomAllToAll] = [](const Json &j, CommTask &comm_task) {
     comm_task.all_to_all_reshard_task = CreateReshardTaskInfo<AllToAllReshardTask>(j);
   };
-  builders_["SendReceive"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeSendReceive] = [](const Json &j, CommTask &comm_task) {
     comm_task.send_recv_reshard_task = CreateReshardTaskInfo<SendRecvReshardTask>(j);
   };
-  builders_["ModifyValue"] = [](const Json &j, CommTask &comm_task) {
+  builders_[kCommTaskTypeModifyValue] = [](const Json &j, CommTask &comm_task) {
     comm_task.modify_value_reshard_task = CreateReshardTaskInfo<ModifyValueReshardTask>(j);
   };
 }
@@ -461,37 +505,43 @@ Status CommTaskBuilder::ConvertToJson(const T *reshard_task, nlohmann::json &j) 
 }
 
 void CommTaskBuilder::InitJsonConverters() {
-  json_converters_["Slice"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeSlice] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.slice_reshard_task.get(), j);
   };
-  json_converters_["SplitV"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeSliceByAxis] = [](const CommTask &comm_task, nlohmann::json &j) {
+    return ConvertToJson(comm_task.slice_by_axis_reshard_task.get(), j);
+  };
+  json_converters_[kCommTaskTypeSplit] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.split_reshard_task.get(), j);
   };
-  json_converters_["Concat"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeConcat] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.concat_reshard_task.get(), j);
   };
-  json_converters_["Transpose"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeTranspose] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.transpose_reshard_task.get(), j);
   };
-  json_converters_["HcomAllGather"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeHcomAllGather] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.all_gather_reshard_task.get(), j);
   };
-  json_converters_["HcomAllReduce"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeHcomAllReduce] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.all_reduce_reshard_task.get(), j);
   };
-  json_converters_["HcomReduceScatter"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeHcomAllReduceMean] = [](const CommTask &comm_task, nlohmann::json &j) {
+    return ConvertToJson(comm_task.all_reduce_mean_reshard_task.get(), j);
+  };
+  json_converters_[kCommTaskTypeHcomReduceScatter] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.reduce_scatter_reshard_task.get(), j);
   };
-  json_converters_["HcomBroadcast"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeHcomBroadcast] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.broadcast_reshard_task.get(), j);
   };
-  json_converters_["HcomAllToAll"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeHcomAllToAll] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.all_to_all_reshard_task.get(), j);
   };
-  json_converters_["SendReceive"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeSendReceive] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.send_recv_reshard_task.get(), j);
   };
-  json_converters_["ModifyValue"] = [](const CommTask &comm_task, nlohmann::json &j) {
+  json_converters_[kCommTaskTypeModifyValue] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.modify_value_reshard_task.get(), j);
   };
 }

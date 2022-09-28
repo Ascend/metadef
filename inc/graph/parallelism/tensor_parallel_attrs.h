@@ -26,6 +26,20 @@
 
 namespace ge {
 namespace tp {
+constexpr const char_t *kCommTaskTypeConcat = "Concat";
+constexpr const char_t *kCommTaskTypeModifyValue = "ModifyValue";
+constexpr const char_t *kCommTaskTypeSlice = "Slice";
+constexpr const char_t *kCommTaskTypeSliceByAxis = "SliceByAxis";
+constexpr const char_t *kCommTaskTypeSplit = "Split";
+constexpr const char_t *kCommTaskTypeTranspose = "Transpose";
+constexpr const char_t *kCommTaskTypeHcomAllGather = "HcomAllGather";
+constexpr const char_t *kCommTaskTypeHcomAllReduce = "HcomAllReduce";
+constexpr const char_t *kCommTaskTypeHcomAllReduceMean = "HcomAllReduceMean";
+constexpr const char_t *kCommTaskTypeHcomReduceScatter = "HcomReduceScatter";
+constexpr const char_t *kCommTaskTypeHcomBroadcast = "HcomBroadcast";
+constexpr const char_t *kCommTaskTypeHcomAllToAll = "HcomAllToAll";
+constexpr const char_t *kCommTaskTypeSendReceive = "SendReceive";
+
 // tensor deployment attrs
 struct DimSlice {
   int64_t begin;
@@ -77,11 +91,18 @@ struct AllToAllReshardTask {
 
 struct AllGatherReshardTask {
   std::vector<CommGroup> comm_groups;
+  int32_t axis; // axis to concat
 };
 
 struct AllReduceReshardTask {
   std::string reduction;
   std::vector<CommGroup> comm_groups;
+};
+
+struct AllReduceMeanReshardTask {
+  std::vector<CommGroup> comm_groups;
+  int32_t axis;
+  int32_t value;
 };
 
 struct ReduceScatterReshardTask {
@@ -100,9 +121,16 @@ struct SliceReshardTask {
   std::vector<int64_t> sizes;
 };
 
+struct SliceByAxisReshardTask {
+  // key: axis to split
+  // value: index: slice index
+  //        element: devices to deploy
+  std::map<int32_t, std::vector<std::vector<DeviceIndex>>> axis_to_slice_deployments;
+};
+
 struct SplitReshardTask {
-  std::vector<int64_t> size_splits;
-  int32_t split_axis = 0;
+  int32_t split_dim = 0;
+  int32_t num_split = 0;
 };
 
 struct ConcatReshardTask {
@@ -124,11 +152,13 @@ struct CommTask {
   std::shared_ptr<AllGatherReshardTask> all_gather_reshard_task;
   std::shared_ptr<AllToAllReshardTask> all_to_all_reshard_task;
   std::shared_ptr<AllReduceReshardTask> all_reduce_reshard_task;
+  std::shared_ptr<AllReduceMeanReshardTask> all_reduce_mean_reshard_task;
   std::shared_ptr<ReduceScatterReshardTask> reduce_scatter_reshard_task;
   std::shared_ptr<BroadcastReshardTask> broadcast_reshard_task;
   std::shared_ptr<SplitReshardTask> split_reshard_task;
   std::shared_ptr<ConcatReshardTask> concat_reshard_task;
   std::shared_ptr<SliceReshardTask> slice_reshard_task;
+  std::shared_ptr<SliceByAxisReshardTask> slice_by_axis_reshard_task;
   std::shared_ptr<TransposeReshardTask> transpose_reshard_task;
   std::shared_ptr<ModifyValueReshardTask> modify_value_reshard_task;
 };

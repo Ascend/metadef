@@ -16,8 +16,8 @@
 
 #include "graph/compile_cache_policy/policy_register.h"
 namespace ge {
-PolicyManager &PolicyManager::GetInstance() {
-  static PolicyManager instance;
+PolicyRegister &PolicyRegister::GetInstance() {
+  static PolicyRegister instance;
   return instance;
 }
 }  // namespace ge

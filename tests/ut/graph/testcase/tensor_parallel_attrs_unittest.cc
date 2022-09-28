@@ -30,7 +30,7 @@ using Json = nlohmann::json;
 
 class TensorParallelAttrsTest : public testing::Test {
  protected:
-  void TestToAndFromJson(const CommTask &comm_task, CommTask &out_comm_task) {
+  static void TestToAndFromJson(const CommTask &comm_task, CommTask &out_comm_task) {
     ReshardAttr reshard_attr;
     OutputReshardRes output_reshard_res;
     CommStep comm_step;
@@ -40,7 +40,7 @@ class TensorParallelAttrsTest : public testing::Test {
     reshard_attr.reshard_infos.emplace_back(std::vector<OutputReshardRes>{output_reshard_res});
     const auto &json_str = TensorParallelAttrs::ToJson(reshard_attr);
     ASSERT_TRUE(!json_str.empty());
-
+    std::cout << json_str << std::endl;
     ReshardAttr reshard_attr_from_json;
     ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, reshard_attr_from_json), SUCCESS);
     out_comm_task = reshard_attr_from_json.reshard_infos[0][0].comm_steps[0].comm_task;
@@ -151,7 +151,8 @@ TEST_F(TensorParallelAttrsTest, ParseAllGatherCommTask) {
       {"engine_type": "NPU", "index": [0, 0, 6]},
       {"engine_type": "NPU", "index": [0, 0, 7]}
     ]
-  ]
+  ],
+  "axis": 0
 }
 )";
   CommTask comm_task;
@@ -197,6 +198,42 @@ TEST_F(TensorParallelAttrsTest, ParseAllReduceCommTask) {
   TestToAndFromJson(comm_task, out_comm_task);
   EXPECT_EQ(out_comm_task.all_reduce_reshard_task->reduction, "sum");
   EXPECT_EQ(out_comm_task.all_reduce_reshard_task->comm_groups.size(), 4);
+}
+
+TEST_F(TensorParallelAttrsTest, ParseAllReduceMeanCommTask) {
+  const std::string &json_str =
+      R"(
+{
+  "task_type": "HcomAllReduceMean",
+  "comm_groups": [
+    [
+      {"engine_type": "NPU", "index": [0, 0, 0]},
+      {"engine_type": "NPU", "index": [0, 0, 1]}
+    ],
+    [
+      {"engine_type": "NPU", "index": [0, 0, 2]},
+      {"engine_type": "NPU", "index": [0, 0, 3]}
+    ],
+    [
+      {"engine_type": "NPU", "index": [0, 0, 4]},
+      {"engine_type": "NPU", "index": [0, 0, 5]}
+    ],
+    [
+      {"engine_type": "NPU", "index": [0, 0, 6]},
+      {"engine_type": "NPU", "index": [0, 0, 7]}
+    ]
+  ],
+  "axis": 0,
+  "value": 2
+}
+)";
+  CommTask comm_task;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
+  ASSERT_TRUE(comm_task.all_reduce_mean_reshard_task != nullptr);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  EXPECT_EQ(out_comm_task.all_reduce_mean_reshard_task->comm_groups.size(), 4);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseReduceScatterCommTask) {
@@ -272,13 +309,34 @@ TEST_F(TensorParallelAttrsTest, ParseSliceCommTask) {
   ASSERT_EQ(out_comm_task.slice_reshard_task->sizes, (std::vector<int64_t>{4, 8}));
 }
 
+TEST_F(TensorParallelAttrsTest, ParseSliceByAxisCommTask) {
+  CommTask comm_task;
+  comm_task.task_type = "SliceByAxis";
+//  ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
+  comm_task.slice_by_axis_reshard_task = std::make_shared<SliceByAxisReshardTask>();
+  auto &axis_to_slice_deployments = comm_task.slice_by_axis_reshard_task->axis_to_slice_deployments;
+  std::vector<DeviceIndex> dim_0_slice_0_deployments{DeviceIndex{"NPU", {0, 0, 0}}, DeviceIndex{"NPU", {0, 0, 1}}};
+  std::vector<DeviceIndex> dim_0_slice_1_deployments{DeviceIndex{"NPU", {0, 0, 2}}, DeviceIndex{"NPU", {0, 0, 3}}};
+  std::vector<DeviceIndex> dim_1_slice_0_deployments{DeviceIndex{"NPU", {0, 1, 0}}, DeviceIndex{"NPU", {0, 1, 1}}};
+  std::vector<DeviceIndex> dim_1_slice_1_deployments{DeviceIndex{"NPU", {0, 1, 2}}, DeviceIndex{"NPU", {0, 1, 3}}};
+
+  axis_to_slice_deployments[0].emplace_back(dim_0_slice_0_deployments);
+  axis_to_slice_deployments[0].emplace_back(dim_0_slice_1_deployments);
+  axis_to_slice_deployments[1].emplace_back(dim_1_slice_0_deployments);
+  axis_to_slice_deployments[2].emplace_back(dim_1_slice_1_deployments);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.slice_by_axis_reshard_task != nullptr);
+}
+
 TEST_F(TensorParallelAttrsTest, ParseSplitCommTask) {
   const std::string &json_str =
       R"(
 {
-  "task_type": "SplitV",
-  "size_splits": [2, 4],
-  "split_dim": 1
+  "task_type": "Split",
+  "split_dim": 1,
+  "num_split": 2
 }
 )";
   CommTask comm_task;
@@ -287,8 +345,8 @@ TEST_F(TensorParallelAttrsTest, ParseSplitCommTask) {
   CommTask out_comm_task;
   TestToAndFromJson(comm_task, out_comm_task);
   ASSERT_TRUE(out_comm_task.split_reshard_task != nullptr);
-  ASSERT_EQ(out_comm_task.split_reshard_task->split_axis, 1);
-  ASSERT_EQ(out_comm_task.split_reshard_task->size_splits, (std::vector<int64_t>{2, 4}));
+  ASSERT_EQ(out_comm_task.split_reshard_task->split_dim, 1);
+  ASSERT_EQ(out_comm_task.split_reshard_task->num_split, 2);
 }
 
 TEST_F(TensorParallelAttrsTest, ParseConcatCommTask) {
@@ -396,8 +454,8 @@ TEST_F(TensorParallelAttrsTest, ParseParseCommStep) {
   "id": 2,
   "input_ids": [[0, 0], [1, 0]],
   "comm_task": {
-    "task_type": "SplitV",
-    "size_splits": [2, 4],
+    "task_type": "Split",
+    "num_split": 2,
     "split_dim": 1
   }
 }
@@ -439,7 +497,7 @@ TEST_F(TensorParallelAttrsTest, ParseTensorReshardInfo) {
       }
     }
   ],
-  "outputs": [
+  "peer_inputs": [
     {"step_id": 1, "node_name": "dst_node", "input_index": 0},
     {"step_id": 1, "node_name": "dst_node_1", "input_index": 1}
   ]
@@ -474,8 +532,8 @@ TEST_F(TensorParallelAttrsTest, ReshardAttrToAndFromJson) {
           "id": 1,
           "input_ids": [],
           "comm_task": {
-            "task_type": "SplitV",
-            "size_splits": [2, 4],
+            "task_type": "Split",
+            "num_split": 3,
             "split_dim": 1
           }
         },
@@ -483,13 +541,13 @@ TEST_F(TensorParallelAttrsTest, ReshardAttrToAndFromJson) {
           "id": 2,
           "input_ids": [[1, 0]],
           "comm_task": {
-            "task_type": "SplitV",
-            "size_splits": [2, 4],
+            "task_type": "Split",
+            "num_split": 4,
             "split_dim": 1
           }
         }
       ],
-      "outputs": [
+      "peer_inputs": [
         {"step_id": 1, "node_name": "dst_node", "input_index": 0},
         {"step_id": 1, "node_name": "dst_node_1", "input_index": 1}
       ]
