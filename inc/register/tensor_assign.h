@@ -1,5 +1,5 @@
-/*
- * Copyright 2020 Huawei Technologies Co., Ltd
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@
 namespace domi {
 using GeTensorPtr = std::shared_ptr<ge::GeTensor>;
 using Status = uint32_t;
+constexpr int32_t kComplexWidth = 2;
 
 class TensorAssign {
  public:
@@ -83,7 +84,7 @@ class TensorAssign {
   static Status GetVal(const int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector,
                        const int32_t count, GeTensorPtr &weight, const bool is_complex = false) {
     // val_size must be even, and complex value should be an integer multiple of 2
-    if (is_complex && ((val_size % 2) != 0)) {
+    if (is_complex && ((val_size % kComplexWidth) != 0)) {
       GELOGE(FAILED, "complex value should be an integer multiple of 2.");
       return FAILED;
     }
@@ -102,8 +103,8 @@ class TensorAssign {
       if (is_complex) {
         // val_vector format is real value, complex value..., here is getting the corresponding value.
         // real value and complex value are stored spaced apart, so use 2 and 1 to store in the correct addr.
-        for (int32_t i = val_size; i < count; i = i + 2) {
-          addr[static_cast<size_t>(i)] = val_vector.Get(val_size - 2);
+        for (int32_t i = val_size; i < count; i = i + kComplexWidth) {
+          addr[static_cast<size_t>(i)] = val_vector.Get(val_size - kComplexWidth);
           addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(val_size - 1);
         }
       } else {
@@ -113,7 +114,7 @@ class TensorAssign {
       }
     } else {
       if (is_complex) {
-        for (int32_t i = 0; i < count; i = i + 2) {
+        for (int32_t i = 0; i < count; i = i + kComplexWidth) {
           addr[static_cast<size_t>(i)] = val_vector.Get(0);
           addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(1);
         }

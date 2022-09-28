@@ -1,5 +1,5 @@
-/*
- * Copyright 2020 Huawei Technologies Co., Ltd
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include "external/register/register.h"
 #include "external/ge/ge_api_error_codes.h"
+#include "graph/ge_error_codes.h"
 
 namespace ge {
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY HostCpuOp {
