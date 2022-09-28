@@ -83,9 +83,9 @@ LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr 
   return *this;
 }
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) {
-  const auto &iter = placements_to_allocator_.find(desc);
-  if (iter == placements_to_allocator_.end()) {
-    auto allocator = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+  const std::map<AllocatorDesc, bg::ValueHolderPtr>::const_iterator iter = placements_to_allocator_.find(desc);
+  if (iter == placements_to_allocator_.cend()) {
+    auto allocator = bg::FrameSelector::OnMainRoot([&desc, this]() -> std::vector<bg::ValueHolderPtr> {
       auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
       auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
       auto created_allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator",
@@ -117,8 +117,8 @@ uint64_t LoweringGlobalData::GetSessionId() {
 
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(const std::string &name,
     const std::function<bg::ValueHolderPtr()> &builder) {
-  const auto &iter = names_to_unique_value_holder_.find(name);
-  if (iter == names_to_unique_value_holder_.end()) {
+  const std::map<std::string, bg::ValueHolderPtr>::const_iterator iter = names_to_unique_value_holder_.find(name);
+  if (iter == names_to_unique_value_holder_.cend()) {
     auto holder = builder();
     return names_to_unique_value_holder_.emplace(name, holder).first->second;
   }

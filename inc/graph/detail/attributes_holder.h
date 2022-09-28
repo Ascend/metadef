@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,8 +83,10 @@ class GeIrProtoHelper {
   }
 
   GeIrProtoHelper &operator=(const GeIrProtoHelper<ProtoType> &other) {
-    protoOwner_ = other.protoOwner_;
-    protoMsg_ = other.protoMsg_;
+    if (this != &other) {
+      protoOwner_ = other.protoOwner_;
+      protoMsg_ = other.protoMsg_;
+    }
     return *this;
   }
   void InitDefault();

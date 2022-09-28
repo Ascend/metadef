@@ -243,24 +243,24 @@ class ComputeNodeInfo {
    * @param ir_index IR原型定义中的输入index
    * @return 输入的实例化信息
    */
-  AnchorInstanceInfo *MutableInputInstanceInfo(size_t ir_index);
+  AnchorInstanceInfo *MutableInputInstanceInfo(size_t ir_index) const;
   /**
    * 获取计算节点输入的Tensor描述，注意，编译时无法确定的shape信息不在Tensor描述中
    * @param index 计算节点的输入index
    * @return Tensor描述
    */
-  CompileTimeTensorDesc *MutableInputTdInfo(size_t index);
+  CompileTimeTensorDesc *MutableInputTdInfo(size_t index) const;
   /**
    * 获取计算节点输出的Tensor描述，注意，编译时无法确定的shape信息不在Tensor描述中
    * @param index 计算节点的输出index
    * @return Tensor描述
    */
-  CompileTimeTensorDesc *MutableOutputTdInfo(size_t index);
+  CompileTimeTensorDesc *MutableOutputTdInfo(size_t index) const;
   /**
    * 获取计算节点上的属性值，仅IR定义的属性值会被返回，其他属性值被丢弃
    * @return 所有IR原型定义过的属性值，属性值按照IR原型定义的顺序依次保存
    */
-  RuntimeAttrs *MutableAttrs();
+  RuntimeAttrs *MutableAttrs() const;
   static ge::graphStatus CalcSize(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num, size_t &total_size);
   void Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num, const char *node_name, const char *node_type);
 

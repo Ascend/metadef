@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 #include "exe_graph/runtime/tiling_data.h"
 #include "common/util/tiling_utils.h"
+#include "graph/def_types.h"
 
 namespace gert {
 namespace {
@@ -114,9 +115,9 @@ ge::graphStatus AppendConvertedListFpAttr(TilingData *tiling_data, const Runtime
   }
 
   auto data_size = tiling_data->GetDataSize();
-  const float *attr_data = reinterpret_cast<const float *>(attr->GetData());
+  const float *attr_data = ge::PtrToPtr<const void, const float>(attr->GetData());
   for (size_t i = 0UL; i < attr->GetSize(); ++i) {
-    *reinterpret_cast<uint16_t *>(reinterpret_cast<uint8_t *>(tiling_data->GetData()) + data_size) =
+    *ge::PtrToPtr<uint8_t, uint16_t>(ge::PtrToPtr<void, uint8_t>(tiling_data->GetData()) + data_size) =
         optiling::FloatToUint16(attr_data[i]);
     data_size += sizeof(uint16_t);
   }
