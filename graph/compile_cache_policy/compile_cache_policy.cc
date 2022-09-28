@@ -24,10 +24,10 @@ namespace ge {
 void CompileCachePolicy::PolicyInit() {
   static bool policy_init_flag = false;
   if (!policy_init_flag) {
-    PolicyManager::GetInstance().RegisterMatchPolicy(MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
-                                                     std::make_shared<MatchPolicyExactOnly>());
-    PolicyManager::GetInstance().RegisterAgingPolicy(AgingPolicyType::AGING_POLICY_LRU,
-                                                     std::make_shared<AgingPolicyLru>());
+    PolicyRegister::GetInstance().RegisterMatchPolicy(MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
+                                                      std::make_shared<MatchPolicyExactOnly>());
+    PolicyRegister::GetInstance().RegisterAgingPolicy(AgingPolicyType::AGING_POLICY_LRU,
+                                                      std::make_shared<AgingPolicyLru>());
     policy_init_flag = true;
   }
   return;
@@ -54,8 +54,8 @@ std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicy
 std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicyType mp_type,
                                                                const AgingPolicyType ap_type) {
   CompileCachePolicy::PolicyInit();
-  const auto mp = PolicyManager::GetInstance().GetMatchPolicy(mp_type);
-  const auto ap = PolicyManager::GetInstance().GetAgingPolicy(ap_type);
+  const auto mp = PolicyRegister::GetInstance().GetMatchPolicy(mp_type);
+  const auto ap = PolicyRegister::GetInstance().GetAgingPolicy(ap_type);
   auto ccp = ComGraphMakeUnique<CompileCachePolicy>();
   (void)ccp->SetAgingPolicy(ap);
   (void)ccp->SetMatchPolicy(mp);

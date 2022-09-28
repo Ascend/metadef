@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,12 +31,12 @@ enum class AgingPolicyType {
   AGING_POLICY_LRU = 0
 };
 
-class PolicyManager {
+class PolicyRegister {
 public:
-  ~PolicyManager() = default;
-  PolicyManager(const PolicyManager&) = delete;
-  PolicyManager &operator=(const PolicyManager &other) = delete;
-  static PolicyManager &GetInstance();
+  ~PolicyRegister() = default;
+  PolicyRegister(const PolicyRegister&) = delete;
+  PolicyRegister &operator=(const PolicyRegister &other) = delete;
+  static PolicyRegister &GetInstance();
   void RegisterMatchPolicy(const MatchPolicyType match_policy_type, const MatchPolicyPtr ptr) {
     const std::lock_guard<std::mutex> lock(mu_);
     (void)match_policy_registry_.emplace(match_policy_type, ptr);
@@ -85,7 +85,7 @@ public:
     return nullptr;
   }
 private:
-  PolicyManager() = default;
+  PolicyRegister() = default;
   std::mutex mu_;
   std::map<MatchPolicyType, MatchPolicyPtr> match_policy_registry_;
   std::map<AgingPolicyType, AgingPolicyPtr> aging_policy_registry_;
