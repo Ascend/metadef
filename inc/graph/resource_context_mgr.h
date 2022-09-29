@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,4 +68,4 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ResourceContextMgr {
   std::map<std::string, std::unordered_set<NodePtr>> resource_keys_to_read_nodes_;
 };
 }  // namespace ge
-#endif  //  INC_GRAPH_RESOURCE_CONTEXT_MGR_H_
+#endif  // INC_GRAPH_RESOURCE_CONTEXT_MGR_H_
