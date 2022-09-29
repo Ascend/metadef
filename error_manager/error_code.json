@@ -1937,6 +1937,17 @@
       }
     },
     {
+      "errClass": "HCCL Errors",
+      "errTitle": "Inconsistent CANN Versions",
+      "ErrCode": "EI0008",
+      "ErrMessage": "The CANN versions are inconsistent: tag [%s], local_version [%s], remote_version [%s]",
+      "Arglist": "tag,local_version,remote_version",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Install the same CANN version."
+      }
+    },
+    {
       "errClass": "HCCP Errors",
       "errTitle": "HCCP Process Initialization Failure",
       "ErrCode": "EJ0001",
