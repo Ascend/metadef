@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,7 +110,9 @@ class ComputeGraphImpl {
   }
 
   void SetInputsOrder(const std::vector<std::string> &inputs_order) { inputs_order_ = inputs_order; }
-  void SetGraphOutNodes(const std::map<std::string, std::vector<int32_t>> &out_nodes_map) { out_nodes_map_ = out_nodes_map; }
+  void SetGraphOutNodes(const std::map<std::string, std::vector<int32_t>> &out_nodes_map) {
+    out_nodes_map_ = out_nodes_map;
+  }
   void AppendGraphOutNodes(const std::map<std::string, std::vector<int32_t>> out_nodes_map) {
     for (auto &item : out_nodes_map) {
       (void)out_nodes_map_.emplace(item.first, item.second);

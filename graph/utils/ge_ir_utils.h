@@ -64,7 +64,6 @@ class OnnxUtils {
  public:
   static bool ConvertGeModelToModelProto(const ge::Model &model, ge::onnx::ModelProto &model_proto);
 
-
  private:
   // Part 1: from IR convert to ONNX Protobuf
   static void AddAttrProto(ge::onnx::NodeProto *const node_proto, const ge::onnx::AttributeProto_AttributeType type,
