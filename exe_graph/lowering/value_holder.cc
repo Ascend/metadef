@@ -15,7 +15,7 @@
  */
 
 #include "exe_graph/lowering/value_holder.h"
-#include "exe_graph/lowering/frame_selector.h"
+#include "value_holder_inner.h"
 
 #include <deque>
 #include <stack>
@@ -30,15 +30,12 @@
 #include "common/checker.h"
 
 #include "exe_graph/lowering/exe_graph_attrs.h"
-#include "exe_graph/runtime/execute_graph_types.h"
 #include "graph/debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/def_types.h"
 namespace gert {
 namespace bg {
 namespace {
-constexpr char const *kNetOutput = "NetOutput";
-constexpr char const *kInnerNetOutput = "InnerNetOutput";
 thread_local std::deque<std::unique_ptr<GraphFrame>> graph_frames;
 thread_local GraphFrame *current_frame;
 bool IsGraphOutType(const char *node_type) {
@@ -91,7 +88,7 @@ ge::InDataAnchorPtr EnsureHasDataEdge(const ge::NodePtr &src, int32_t src_index,
 }
 ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index) {
   for (const auto &node : point.frame->GetExeGraph()->GetDirectNode()) {
-    if (node->GetType() != "InnerData") {
+    if (!IsTypeInnerData(node->GetType().c_str())) {
       continue;
     }
     int32_t data_index = -1;
@@ -101,61 +98,63 @@ ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index) {
     }
   }
 
-  auto data = ValueHolder::AddNode("InnerData", 0, 1, *point.frame);
+  auto data = ValueHolder::AddNode(kInnerData, 0, 1, *point.frame);
   GE_ASSERT_NOTNULL(data);
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(data->GetOpDesc(), ge::ATTR_NAME_INDEX, index));
   return data;
 }
 ge::OutDataAnchorPtr ConnectFromParents(ge::NodePtr src, int32_t src_index, const ge::NodePtr &dst) {
-  std::stack<ConnectionPathPoint> connect_path;
-  auto frame_iter = graph_frames.rbegin();
-  for (; frame_iter != graph_frames.rend(); ++frame_iter) {
-    if ((*frame_iter)->GetExeGraph() == dst->GetOwnerComputeGraph()) {
-      break;
+  if (src->GetOwnerComputeGraph() != dst->GetOwnerComputeGraph()) {
+    std::stack<ConnectionPathPoint> connect_path;
+    auto frame_iter = graph_frames.rbegin();
+    for (; frame_iter != graph_frames.rend(); ++frame_iter) {
+      if ((*frame_iter)->GetExeGraph() == dst->GetOwnerComputeGraph()) {
+        break;
+      }
+    }
+
+    auto next_graph = dst->GetOwnerComputeGraph();
+    bool full_path = false;
+    for (; frame_iter != graph_frames.rend(); ++frame_iter) {
+      auto graph = (*frame_iter)->GetExeGraph();
+      GE_ASSERT_NOTNULL(graph);
+      if (graph != next_graph) {
+        continue;
+      }
+      if (graph == src->GetOwnerComputeGraph()) {
+        full_path = true;
+        break;
+      }
+      auto parent_node = graph->GetParentNode();
+      if (parent_node == nullptr) {
+        // log out of loop scope
+        break;
+      }
+      next_graph = parent_node->GetOwnerComputeGraph();
+      connect_path.push({frame_iter->get(), std::move(parent_node)});
+    }
+
+    if (!full_path) {
+      GE_LOGE(
+          "Failed to connect from %s index %d to node %s, the src node does not on the graph or on its parent graphs",
+          src->GetName().c_str(), src_index, dst->GetName().c_str());
+      return nullptr;
+    }
+
+    while (!connect_path.empty()) {
+      auto point = std::move(connect_path.top());
+      connect_path.pop();
+
+      auto dst_anchor = EnsureHasDataEdge(src, src_index, point);
+      GE_ASSERT_NOTNULL(dst_anchor);
+
+      auto data_node = EnsureHasData(point, dst_anchor->GetIdx());
+      GE_ASSERT_NOTNULL(data_node);
+
+      src = data_node;
+      src_index = 0;
     }
   }
-
-  auto next_graph = dst->GetOwnerComputeGraph();
-  bool full_path = false;
-  for (; frame_iter != graph_frames.rend(); ++frame_iter) {
-    auto graph = (*frame_iter)->GetExeGraph();
-    GE_ASSERT_NOTNULL(graph);
-    if (graph != next_graph) {
-      continue;
-    }
-    if (graph == src->GetOwnerComputeGraph()) {
-      full_path = true;
-      break;
-    }
-    auto parent_node = graph->GetParentNode();
-    if (parent_node == nullptr) {
-      // log out of loop scope
-      break;
-    }
-    next_graph = parent_node->GetOwnerComputeGraph();
-    connect_path.push({frame_iter->get(), std::move(parent_node)});
-  }
-
-  if (!full_path) {
-    GE_LOGE("Failed to connect from %s index %d to node %s, the src node does not on the graph or on its parent graphs",
-            src->GetName().c_str(), src_index, dst->GetName().c_str());
-    return nullptr;
-  }
-
-  while (!connect_path.empty()) {
-    auto point = std::move(connect_path.top());
-    connect_path.pop();
-
-    auto dst_anchor = EnsureHasDataEdge(src, src_index, point);
-    GE_ASSERT_NOTNULL(dst_anchor);
-
-    auto data_node = EnsureHasData(point, dst_anchor->GetIdx());
-    GE_ASSERT_NOTNULL(data_node);
-
-    src = data_node;
-    src_index = 0;
-  }
-
   return src->GetOutDataAnchor(src_index);
 }
 ge::graphStatus AddDataEdge(const ge::NodePtr &src, int32_t src_index, const ge::NodePtr &dst, int32_t dst_index) {
@@ -231,7 +230,7 @@ int64_t ValueHolder::GetId() const noexcept {
   return id_;
 }
 const ValueHolder::GraphHolder *ValueHolder::GetGraph() const noexcept {
-  return graph_.get();
+  return node_->GetOwnerComputeGraph().get();
 }
 ValueHolderPtr ValueHolder::CreateError(const char *fmt, va_list arg) {
   auto value_holder = std::shared_ptr<ValueHolder>(new (std::nothrow) ValueHolder());
@@ -304,7 +303,6 @@ ValueHolderPtr ValueHolder::CreateFromNode(ge::NodePtr node, int32_t index, Valu
   GE_ASSERT_NOTNULL(holder);
 
   holder->type_ = type;
-  holder->graph_ = node->GetOwnerComputeGraph();
   holder->node_ = std::move(node);
   holder->index_ = index;
   return holder;
@@ -314,6 +312,9 @@ std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &nod
 }
 std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &node, size_t start_index,
                                                         size_t out_count) {
+  if (node == nullptr) {
+    return {out_count, nullptr};
+  }
   std::vector<ValueHolderPtr> holders;
   for (size_t i = 0; i < out_count; ++i) {
     holders.emplace_back(CreateFromNode(node, static_cast<int32_t>(i + start_index), ValueHolderType::kOutput));
@@ -341,7 +342,7 @@ ValueHolderPtr ValueHolder::CreateVoid(const char *node_type, const std::vector<
  * @return
  */
 ValueHolderPtr ValueHolder::CreateConst(const void *data, size_t size, bool is_string) {
-  auto node = ValueHolder::CreateNode("Const", {}, 1);
+  auto node = ValueHolder::CreateNode(kConst, {}, 1);
   GE_ASSERT_NOTNULL(node);
   GE_ASSERT_SUCCESS(node->GetOpDesc()->SetAttr("is_string", ge::AnyValue::CreateFrom(is_string)));
   GE_ASSERT_TRUE(ge::AttrUtils::SetZeroCopyBytes(node->GetOpDesc(), kConstValue,
@@ -349,7 +350,7 @@ ValueHolderPtr ValueHolder::CreateConst(const void *data, size_t size, bool is_s
   return CreateFromNode(node, 0, ValueHolderType::kConst);
 }
 ValueHolderPtr ValueHolder::CreateFeed(int64_t index) {
-  auto node = ValueHolder::CreateNode("Data", {}, 1U);
+  auto node = ValueHolder::CreateNode(kData, {}, 1U);
   GE_ASSERT_NOTNULL(node);
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(node->GetOpDesc(), kFeedIndex, index));
   return CreateFromNode(node, 0, ValueHolderType::kFeed);
@@ -540,68 +541,17 @@ std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHo
   }
   return PopGraphFrame();
 }
-
-std::vector<ValueHolderPtr> FrameSelector::OnMainRoot(const std::function<std::vector<ValueHolderPtr>()> &builder) {
-  if (builder == nullptr || graph_frames.empty()) {
-    return {};
-  }
-  std::vector<ValueHolderPtr> outputs;
-  if (OnMainRoot(builder, outputs) != ge::GRAPH_SUCCESS) {
-    GELOGW("Compatible mode, the air code is not the newest.");
-    current_frame = graph_frames.front().get();
-    outputs = builder();
-    current_frame = nullptr;
-  }
-  return outputs;
+ValueHolderPtr ValueHolder::GetGuarder() const noexcept {
+  return guarder_;
 }
-ge::graphStatus FrameSelector::OnMainRoot(const std::function<std::vector<ValueHolderPtr>()> &builder,
-                                          std::vector<ValueHolderPtr> &outputs) {
-  GE_ASSERT_NOTNULL(builder, "Failed to do frame selection, the builder is nullptr");
-  // 栈底是root-frame，向上是main-frame，因此栈中至少有两个元素
-  GE_ASSERT_TRUE(graph_frames.size() > 1U, "Failed to do frame selection, there is no main-frame exists");
-
-  auto root_frame = graph_frames.begin()->get();
-  GE_ASSERT_NOTNULL(root_frame, "Failed to find the root frame");
-  auto main_frame = (graph_frames.begin() + 1)->get();
-  GE_ASSERT_NOTNULL(main_frame, "Failed to find the main frame");
-
-  // check if the main_frame is correct
-  auto root_graph = root_frame->GetExeGraph();
-  GE_ASSERT_NOTNULL(root_graph, "Failed to find the root graph");
-  auto main_node = root_graph->FindFirstNodeMatchType(GetExecuteGraphTypeStr(ExecuteGraphType::kMain));
-  GE_ASSERT_NOTNULL(main_node, "Failed to find the main node");
-  auto main_graph = ge::NodeUtils::GetSubgraph(*main_node, 0U);
-  GE_ASSERT_TRUE(main_graph == main_frame->GetExeGraph(), "Failed to find the main frame");
-
-  current_frame = main_frame;
-  outputs = builder();
-  current_frame = nullptr;
-  return ge::GRAPH_SUCCESS;
+void SetCurrentFrame(GraphFrame *frame) {
+  current_frame = frame;
 }
-
-std::vector<ValueHolderPtr> ValueHolder::GetLastExecNodes() {
-  if (graph_frames.empty()) {
-    return {};
-  }
-  auto frame = graph_frames.begin()->get();
-  if (graph_frames.size() > 1U) {
-    frame = (graph_frames.begin() + 1)->get();
-  }
-  return frame->GetLastExecNodes();
+GraphFrame *GetCurrentFrame() {
+  return current_frame;
 }
-
-ValueHolderPtr FrameSelector::OnMainRootLast(const std::function<bg::ValueHolderPtr()> &builder) {
-  if (builder == nullptr || graph_frames.empty()) {
-    return nullptr;
-  }
-  current_frame = graph_frames.begin()->get();
-  if (graph_frames.size() > 1U) {
-    current_frame = (graph_frames.begin() + 1)->get();
-  }
-  auto output = builder();
-  current_frame->SetLastExecNode(output);
-  current_frame = nullptr;
-  return output;
+std::deque<std::unique_ptr<GraphFrame>> &GetGraphFrames() {
+  return graph_frames;
 }
 }  // namespace bg
 }  // namespace gert
