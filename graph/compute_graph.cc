@@ -810,14 +810,12 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
   GE_CHK_BOOL_EXEC(SortNodes(stack, map_in_edge_num, compute_graph) == GRAPH_SUCCESS,
                    return GRAPH_FAILED, "sort nodes failed");
   std::vector<NodePtr> out_nodes;
-  const auto stack_push = [&reverse, &stack](std::vector<NodePtr> &tmp_out_nodes) {
-    std::sort(tmp_out_nodes.begin(), tmp_out_nodes.end(),
-              [](const NodePtr &a, const NodePtr &b) { return a->GetName() < b->GetName(); });
-    if (reverse) {
-      std::reverse(tmp_out_nodes.begin(), tmp_out_nodes.end());
-    }
-    stack.insert(stack.end(), tmp_out_nodes.begin(), tmp_out_nodes.end());
-    tmp_out_nodes.clear();
+  const auto stack_push = [&reverse, &stack](std::vector<NodePtr>& tmp_out_nodes) {
+      if (reverse) {
+        std::reverse(tmp_out_nodes.begin(), tmp_out_nodes.end());
+      }
+      stack.insert(stack.end(), tmp_out_nodes.begin(), tmp_out_nodes.end());
+      tmp_out_nodes.clear();
   };
   // Only data nodes here
   while (!stack.empty()) {
