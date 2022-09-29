@@ -72,4 +72,4 @@ inline std::string GetModelPath() {
   return so_path;
 }
 }  // namespace ge
-#endif  //METADEF_CXX_GRAPH_COMMON_PLUGIN_SO_MANAGER_H_
+#endif  // METADEF_CXX_GRAPH_COMMON_PLUGIN_SO_MANAGER_H_

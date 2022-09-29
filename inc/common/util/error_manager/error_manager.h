@@ -118,76 +118,58 @@ namespace error_message {
 
 class ErrorManager {
  public:
-  ///
   /// @brief Obtain  ErrorManager instance
   /// @return ErrorManager instance
-  ///
   static ErrorManager &GetInstance();
 
-  ///
   /// @brief init
   /// @return int 0(success) -1(fail)
-  ///
   int32_t Init();
 
-  ///
   /// @brief init
   /// @param [in] path: current so path
   /// @return int 0(success) -1(fail)
-  ///
   int32_t Init(const std::string path);
 
   int32_t ReportInterErrMessage(const std::string error_code, const std::string &error_msg);
 
-  ///
   /// @brief Report error message
   /// @param [in] error_code: error code
   /// @param [in] args_map: parameter map
   /// @return int 0(success) -1(fail)
-  ///
   int32_t ReportErrMessage(const std::string error_code, const std::map<std::string, std::string> &args_map);
 
-  ///
   /// @brief output error message
   /// @param [in] handle: print handle
   /// @return int 0(success) -1(fail)
-  ///
   int32_t OutputErrMessage(int32_t handle);
 
-  ///
   /// @brief output  message
   /// @param [in] handle: print handle
   /// @return int 0(success) -1(fail)
-  ///
   int32_t OutputMessage(int32_t handle);
 
   std::string GetErrorMessage();
 
   std::string GetWarningMessage();
 
-  ///
   /// @brief Report error message
   /// @param [in] key: vector parameter key
   /// @param [in] value: vector parameter value
-  ///
   void ATCReportErrMessage(const std::string error_code, const std::vector<std::string> &key = {},
                            const std::vector<std::string> &value = {});
 
-  ///
   /// @brief report graph compile failed message such as error code and op_name in mstune case
   /// @param [in] graph_name: root graph name
   /// @param [in] msg: failed message map, key is error code, value is op_name
   /// @return int 0(success) -1(fail)
-  ///
   int32_t ReportMstuneCompileFailedMsg(const std::string &root_graph_name,
                                        const std::map<std::string, std::string> &msg);
 
-  ///
   /// @brief get graph compile failed message in mstune case
   /// @param [in] graph_name: graph name
   /// @param [out] msg_map: failed message map, key is error code, value is op_name list
   /// @return int 0(success) -1(fail)
-  ///
   int32_t GetMstuneCompileFailedMsg(const std::string &graph_name,
                                 std::map<std::string,
                                 std::vector<std::string>> &msg_map);

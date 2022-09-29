@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,12 +126,10 @@ inline int GetSizeByDataType(DataType data_type) {
   return data_type_size[data_type];
 }
 
-///
 /// @brief Calculates the length in bytes based on the DataType and the number of elements.
 /// @param element_count
 /// @param data_type
 /// @return
-///
 int64_t GetSizeInBytes(int64_t element_count, DataType data_type);
 
 enum Format {
@@ -191,7 +189,6 @@ enum Format {
   FORMAT_MAX = 0xff
 };
 
-///
 /// Get format from primary and sub-format,
 /// in bits field:
 /// ---------------------------------------------
@@ -203,10 +200,9 @@ enum Format {
 /// @param sub_format
 /// @param c0_format
 /// @return
-///
 inline int32_t GetFormatFromSub(int32_t primary_format, int32_t sub_format) {
   return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xff) |
-                              ((static_cast<uint32_t>(sub_format) & 0xffff) << 8));
+                              ((static_cast<uint32_t>(sub_format) & 0xffff) << kBitNumOfOneByte));
 }
 
 inline int32_t GetFormatFromC0(int32_t format, int32_t c0_format) {
@@ -225,7 +221,7 @@ inline int32_t GetPrimaryFormat(int32_t format) {
 }
 
 inline int32_t GetSubFormat(int32_t format) {
-  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffff00) >> 8);
+  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffff00) >> kBitNumOfOneByte);
 }
 
 inline bool HasSubFormat(int32_t format) {
