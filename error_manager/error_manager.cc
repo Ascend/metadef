@@ -345,7 +345,7 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
 
 void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error_messages,
                                              const std::string &first_code,
-                                             std::stringstream &err_stream) {
+                                             std::stringstream &err_stream) const {
   std::string current_code_print = first_code;
   const bool IsErrorId = IsParamCheckErrorId(first_code);
   for (auto &item : error_messages) {
