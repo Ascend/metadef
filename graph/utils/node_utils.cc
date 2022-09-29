@@ -1064,4 +1064,18 @@ std::pair<NodePtr, OutDataAnchorPtr> NodeUtils::GetInDataNodeAndAnchorByIndex(co
   }
   return {src_node, src_anchor};
 }
+
+bool NodeUtils::IsDtResourceNode(const NodePtr &node) {
+  for (const auto &in_desc : node->GetOpDesc()->GetAllInputsDescPtr()) {
+    if (in_desc->GetDataType() == DT_RESOURCE) {
+      return true;
+    }
+  }
+  for (const auto &out_desc : node->GetOpDesc()->GetAllOutputsDescPtr()) {
+    if (out_desc->GetDataType() == DT_RESOURCE) {
+      return true;
+    }
+  }
+  return false;
+}
 }  // namespace ge
