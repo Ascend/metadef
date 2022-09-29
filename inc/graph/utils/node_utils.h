@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2019. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,76 +85,56 @@ class NodeUtils {
   static graphStatus SetSubgraph(Node &node, const uint32_t index, const ComputeGraphPtr &subgraph);
   static graphStatus AddSubgraph(Node &node, const std::string &subgraph_name, const ComputeGraphPtr &subgraph);
   static NodePtr CreatNodeWithoutGraph(const OpDescPtr op_desc);
-  ///
   /// Check if node is input of subgraph
   /// @param [in] node
   /// @return bool
-  ///
   static bool IsSubgraphInput(const NodePtr &node);
 
-  ///
   /// Check if node is output of subgraph
   /// @param [in] node
   /// @return bool
-  ///
   static bool IsSubgraphOutput(const NodePtr &node);
 
-  ///
   /// @brief Get subgraph original input node.
   /// @param [in] node
   /// @return Node
-  ///
   static NodePtr GetParentInput(const Node &node);
   static NodePtr GetParentInput(const NodePtr &node);
-  ///
   /// @brief Get subgraph original input node and corresponding out_anchor.
   /// @param [in] node
   /// @return NodeToOutAnchor  node and out_anchor which linked to in_param node
-  ///
   static NodeToOutAnchor GetParentInputAndAnchor(const NodePtr &node);
 
-  ///
   /// @brief Get is dynamic shape graph from node.
   /// @param [in] node
   /// @return bool
-  ///
   static bool IsDynamicShape(const Node &node);
   static bool IsDynamicShape(const NodePtr &node);
 
-  ///
   /// @brief Check is varying_input for while node
   /// @param [in] node: Data node for subgraph
   /// @return bool
-  ///
   static bool IsWhileVaryingInput(const ge::NodePtr &node);
 
-  ///
   /// @brief Get subgraph input is constant.
   /// @param [in] node
   /// @param [out] string
   /// @return bool
-  ///
   static bool GetConstOpType(const NodePtr &node, std::string &type);
 
-  ///
   /// @brief Remove node-related subgraphs, including subgraphs of nodes in the subgraph.
   /// @param [in] node
   /// @return return GRAPH_SUCCESS if remove successfully, other for failed.
-  ///
   static graphStatus RemoveSubgraphsOnNode(const NodePtr &node);
 
-  ///
   /// @brief Get subgraph input data node by index.
   /// @param [in] node
   /// @return Node
-  ///
   static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, const int32_t index);
 
-  ///
   /// @brief Get subgraph input data node by index.
   /// @param [in] node
   /// @return Node
-  ///
   static std::vector<NodePtr> GetSubgraphOutputNodes(const Node &node);
 
   static NodePtr GetInDataNodeByIndex(const Node &node, const int32_t index);
@@ -181,7 +161,6 @@ class NodeUtils {
 */
   static NodePtr GetInNodeCrossSubgraph(const ge::NodePtr &node);
 
-  ///
   /// @brief Get peer input node, supported get cross PartitionedCall .
   /// @param [in] node, current node
   /// @param [in] index, current node the index'th input, if it is PartionedCall's subgraph Data, please assign 0
@@ -191,7 +170,6 @@ class NodeUtils {
   ///          PartionedCall_1's subgraph: Data1->B->Netoutput
   ///          If it is called like GetInNodeCrossPartionCallNode(B,0,peer_node)or(Data1,0,peer_node), peer_node is A
   /// @return [graphStatus] running result of this function
-  ///
   static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
 
   static graphStatus SetNodeParallelGroup(Node &node, const char_t *const group_name);
