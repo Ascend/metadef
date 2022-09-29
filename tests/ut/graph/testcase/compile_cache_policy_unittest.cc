@@ -32,14 +32,14 @@ TEST_F(UtestCompileCachePolicy, CreateCCPSuccess_1) {
 }
 
 TEST_F(UtestCompileCachePolicy, CreateCCPSuccess_2) {
-  auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY);
-  auto ap_ptr = PolicyManager::GetInstance().GetAgingPolicy(ge::AgingPolicyType::AGING_POLICY_LRU);
+  auto mp_ptr = PolicyRegister::GetInstance().GetMatchPolicy(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY);
+  auto ap_ptr = PolicyRegister::GetInstance().GetAgingPolicy(ge::AgingPolicyType::AGING_POLICY_LRU);
   auto ccp = ge::CompileCachePolicy::Create(mp_ptr, ap_ptr);
   ASSERT_NE(ccp, nullptr);
 }
 
 TEST_F(UtestCompileCachePolicy, CreateCCPFailed_1) {
-  auto mp_ptr = PolicyManager::GetInstance().GetMatchPolicy(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY);
+  auto mp_ptr = PolicyRegister::GetInstance().GetMatchPolicy(ge::MatchPolicyType::MATCH_POLICY_EXACT_ONLY);
   auto ap_ptr = nullptr;
   auto ccp = ge::CompileCachePolicy::Create(mp_ptr, ap_ptr);
   ASSERT_EQ(ccp, nullptr);
