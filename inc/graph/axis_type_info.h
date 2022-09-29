@@ -50,7 +50,7 @@ public:
   const std::vector<CutInfo> &GetRelateOutputs() const { return relate_outputs_; }
 
 private:
-  AxisType axis_type_;
+  AxisType axis_type_ = AxisType::UNSPLIT;
   std::vector<CutInfo> relate_inputs_;
   std::vector<CutInfo> relate_outputs_;
 };

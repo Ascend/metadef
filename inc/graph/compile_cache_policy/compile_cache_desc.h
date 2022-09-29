@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 
 #include <string>
 #include <vector>
-#include "graph/ge_error_codes.h"
 #include "graph/small_vector.h"
 #include "graph/ascend_limits.h"
 #include "graph/types.h"
