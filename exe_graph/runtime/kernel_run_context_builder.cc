@@ -38,12 +38,12 @@ KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
            "Failed to create compute node info for node %s", op_desc->GetName().c_str());
     return holder;
   }
-  auto compute_node_info = reinterpret_cast<ComputeNodeInfo *>(holder.compute_node_extend_holder_.get());
+  auto compute_node_info = ge::PtrToPtr<uint8_t, ComputeNodeInfo>(holder.compute_node_extend_holder_.get());
   compute_node_info->SetNodeName(
       holder.buffer_pool_.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeName())));
   compute_node_info->SetNodeType(
       holder.buffer_pool_.GetBufById(reinterpret_cast<size_t>(compute_node_info->GetNodeType())));
-  holder.context_ = reinterpret_cast<KernelContext *>(holder.context_holder_.get());
+  holder.context_ = ge::PtrToPtr<uint8_t, KernelContext>(holder.context_holder_.get());
   auto kernel_run_context = holder.context_->GetContext();
   kernel_run_context->input_size = inputs_.size();
   kernel_run_context->output_size = outputs_.size();
@@ -51,7 +51,7 @@ KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
   kernel_run_context->output_start = &(kernel_run_context->values[kernel_run_context->input_size]);
   holder.value_holder_.resize(inputs_.size() + outputs_.size());
   for (size_t i = 0UL; i < holder.value_holder_.size(); ++i) {
-    kernel_run_context->values[i] = reinterpret_cast<AsyncAnyValue *>(&holder.value_holder_[i]);
+    kernel_run_context->values[i] = ge::PtrToPtr<Chain, AsyncAnyValue>(&holder.value_holder_[i]);
   }
   for (size_t i = 0UL; i < inputs_.size(); ++i) {
     holder.value_holder_[i].Set(inputs_[i].first, inputs_[i].second);

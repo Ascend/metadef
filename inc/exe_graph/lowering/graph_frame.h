@@ -35,12 +35,12 @@ class GraphFrame {
   GraphFrame operator=(const GraphFrame &) = delete;
   GraphFrame operator=(GraphFrame &&) = delete;
 
-  GraphFrame(ge::ComputeGraphPtr exe_graph, const GraphFrame &parent_frame)
+  GraphFrame(ge::ComputeGraphPtr exe_graph, const GraphFrame &parent_frame) noexcept
       : exe_graph_(std::move(exe_graph)), current_compute_node_and_index_(), root_frame_(parent_frame.root_frame_),
         nodes_to_index_(root_frame_.nodes_to_index_), indexes_to_node_(root_frame_.indexes_to_node_),
         relevant_input_node_(root_frame_.relevant_input_node_) {}
 
-  explicit GraphFrame(ge::ComputeGraphPtr exe_graph)
+  explicit GraphFrame(ge::ComputeGraphPtr exe_graph) noexcept
       : exe_graph_(std::move(exe_graph)), current_compute_node_and_index_(), root_frame_(*this),
         nodes_to_index_holder_(), nodes_to_index_(nodes_to_index_holder_), indexes_to_node_holder_(),
         indexes_to_node_(indexes_to_node_holder_), relevant_input_node_holder_(),

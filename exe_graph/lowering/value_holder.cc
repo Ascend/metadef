@@ -202,8 +202,8 @@ ge::graphStatus AddDependencyToGuarder(const ge::Node &src, const ge::Node &guar
   GE_ASSERT_HYPER_SUCCESS(AddDependencyBetweenNodes(*current_node, guarder));
   return ge::GRAPH_SUCCESS;
 }
-ge::NodePtr GetComputeNodeByIndex(const GraphFrame *frame, size_t index) {
-  auto &indexes_to_node = frame->GetIndexesToNode();
+ge::NodePtr GetComputeNodeByIndex(const GraphFrame &frame, size_t index) {
+  auto &indexes_to_node = frame.GetIndexesToNode();
   GE_ASSERT_TRUE(indexes_to_node.size() > index, "The current compute node index %zu out of range", index);
   return indexes_to_node[index];
 }
@@ -311,12 +311,12 @@ std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &nod
   return CreateFromNode(node, 0, out_count);
 }
 std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &node, size_t start_index,
-                                                        size_t out_count) {
+                                                        size_t create_count) {
   if (node == nullptr) {
-    return {out_count, nullptr};
+    return {create_count, nullptr};
   }
   std::vector<ValueHolderPtr> holders;
-  for (size_t i = 0; i < out_count; ++i) {
+  for (size_t i = 0; i < create_count; ++i) {
     holders.emplace_back(CreateFromNode(node, static_cast<int32_t>(i + start_index), ValueHolderType::kOutput));
   }
 
@@ -405,7 +405,7 @@ GraphFrame *ValueHolder::PushGraphFrame(const ValueHolderPtr &belongs, const cha
 
   int64_t compute_node_index;
   if (ge::AttrUtils::GetInt(belongs->GetNode()->GetOpDesc(), kComputeNodeIndex, compute_node_index)) {
-    auto compute_node = GetComputeNodeByIndex(frame_holder.get(), static_cast<size_t>(compute_node_index));
+    auto compute_node = GetComputeNodeByIndex(*frame_holder.get(), static_cast<size_t>(compute_node_index));
     if (compute_node != nullptr) {
       frame_holder->SetCurrentComputeNode(compute_node);
     }
@@ -527,13 +527,13 @@ std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHo
 }
 std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
                                                        const std::vector<ValueHolderPtr> &targets,
-                                                       const char *node_type) {
-  GE_ASSERT_NOTNULL(node_type);
-  auto out_holder = CreateVoid(node_type, outputs);
+                                                       const char *out_node_type) {
+  GE_ASSERT_NOTNULL(out_node_type);
+  auto out_holder = CreateVoid(out_node_type, outputs);
   GE_ASSERT_NOTNULL(out_holder);
-  if (strcmp(ge::NETOUTPUT, node_type) == 0) {
+  if (strcmp(ge::NETOUTPUT, out_node_type) == 0) {
     // the name of NetOutput node must be `NetOutput`
-    out_holder->GetNode()->GetOpDesc()->SetName(node_type);
+    out_holder->GetNode()->GetOpDesc()->SetName(out_node_type);
   }
 
   for (const auto &target : targets) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,16 +42,16 @@ void ComputeNodeInfo::Init(size_t ir_inputs_num, size_t inputs_num, size_t outpu
   node_name_ = node_name;
   node_type_ = node_type;
 }
-AnchorInstanceInfo *ComputeNodeInfo::MutableInputInstanceInfo(size_t ir_index) {
+AnchorInstanceInfo *ComputeNodeInfo::MutableInputInstanceInfo(size_t ir_index) const {
   return const_cast<AnchorInstanceInfo *>(GetInputInstanceInfo(ir_index));
 }
-CompileTimeTensorDesc *ComputeNodeInfo::MutableInputTdInfo(size_t index) {
+CompileTimeTensorDesc *ComputeNodeInfo::MutableInputTdInfo(size_t index) const {
   return const_cast<CompileTimeTensorDesc *>(GetInputTdInfo(index));
 }
-CompileTimeTensorDesc *ComputeNodeInfo::MutableOutputTdInfo(size_t index) {
+CompileTimeTensorDesc *ComputeNodeInfo::MutableOutputTdInfo(size_t index) const {
   return const_cast<CompileTimeTensorDesc *>(GetOutputTdInfo(index));
 }
-RuntimeAttrs *ComputeNodeInfo::MutableAttrs() {
+RuntimeAttrs *ComputeNodeInfo::MutableAttrs() const {
   return const_cast<RuntimeAttrs *>(GetAttrs());
 }
 }  // namespace gert

@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 #include "exe_graph/runtime/runtime_attrs.h"
 #include "framework/common/debug/ge_log.h"
 #include "runtime_attrs_def.h"
+#include "graph/def_types.h"
 namespace gert {
 const void *RuntimeAttrs::GetPointerByIndex(size_t index) const {
   auto attrs = reinterpret_cast<const RuntimeAttrsDef *>(&placeholder_);
@@ -23,9 +24,9 @@ const void *RuntimeAttrs::GetPointerByIndex(size_t index) const {
     GELOGE(ge::FAILED, "Failed to get attr, the index %zu out of range %zu", index, attrs->attr_num);
     return nullptr;
   }
-  return reinterpret_cast<const uint8_t *>(attrs) + attrs->offset[index];
+  return ge::PtrToPtr<const RuntimeAttrsDef, const uint8_t>(attrs) + attrs->offset[index];
 }
 size_t RuntimeAttrs::GetAttrNum() const {
-  return reinterpret_cast<const RuntimeAttrsDef *>(&placeholder_)->attr_num;
+  return ge::PtrToPtr<uint64_t, const RuntimeAttrsDef>(&placeholder_)->attr_num;
 }
 }  // namespace gert

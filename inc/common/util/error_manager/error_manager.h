@@ -243,7 +243,7 @@ class ErrorManager {
   std::vector<ErrorItem> &GetWarningMsgContainerByWorkId(uint64_t work_id);
 
   void AssembleInnerErrorMessage(const std::vector<ErrorItem> &error_messages, const std::string &first_code,
-                                 std::stringstream &err_stream);
+                                 std::stringstream &err_stream) const;
                                  
   void ClearErrorMsgContainerByWorkId(const uint64_t work_stream_id);
   void ClearWarningMsgContainerByWorkId(const uint64_t work_stream_id);

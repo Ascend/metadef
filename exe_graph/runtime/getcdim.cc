@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,14 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <bitset>
+#include <iostream>
 #include "graph/types.h"
-#include "exe_graph/runtime/getcdim.h"
+#include "graph/def_types.h"
 #include "axis_constants.h"
 #include "exe_graph/runtime/tiling_context.h"
 #include "exe_graph/runtime/extended_kernel_context.h"
 #include "exe_graph/runtime/shape.h"
-#include <iostream>
+#include "exe_graph/runtime/getcdim.h"
 namespace gert {
   const std::map<ge::Format, const int32_t> CDIM_INDEX_OF_FORMAT {
     {ge::FORMAT_NCHW, transformer::AXIS_NCHW_DIM_C},
@@ -41,12 +42,12 @@ namespace gert {
     if (context == nullptr) {
       return -1;
     }
-    auto extend_context = reinterpret_cast<ExtendedKernelContext *>(context);
+    auto extend_context = ge::PtrToPtr<TilingContext, ExtendedKernelContext>(context);
     auto compute_node_info = extend_context->GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return -1;
     }
-    auto kernel_context = reinterpret_cast<KernelContext *>(context);
+    auto kernel_context = ge::PtrToPtr<TilingContext, KernelContext>(context);
     const CompileTimeTensorDesc *td = nullptr;
     StorageShape *storage_shape = nullptr;
     if (is_input) {
@@ -79,10 +80,10 @@ namespace gert {
     }
   }
 
-  int64_t GetInputCDim(TilingContext *context, const size_t index) {
-    return GetCDim(context, index, true);
+  int64_t GetInputCDim(TilingContext *kernel_context, const size_t index) {
+    return GetCDim(kernel_context, index, true);
   }
-  int64_t GetOutputCDim(TilingContext *context, const size_t index) {
-    return GetCDim(context, index, false);
+  int64_t GetOutputCDim(TilingContext *kernel_context, const size_t index) {
+    return GetCDim(kernel_context, index, false);
   }
 }  // namespace gert
