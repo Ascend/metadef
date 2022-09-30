@@ -35,4 +35,4 @@ class TensorTypeImpl {
 };
 }  // namespace ge
 
-#endif  //METADEF_CXX_TENSOR_TYPE_IMPL_H
+#endif  // METADEF_CXX_TENSOR_TYPE_IMPL_H

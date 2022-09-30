@@ -1676,7 +1676,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRC(co
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetRC(GeTensorDesc &tensor_desc, const uint32_t rc) {
-  (void)AttrUtils::SetInt(&tensor_desc, TENSOR_UTILS_RC, static_cast<const int64_t>(rc));
+  (void)AttrUtils::SetInt(&tensor_desc, TENSOR_UTILS_RC, static_cast<int64_t>(rc));
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY  bool TensorUtils::IsOriginShapeInited(const GeTensorDesc &tensor_desc) {
