@@ -84,8 +84,8 @@ ge::graphStatus GetInputInstanceNumByIrInput(const ge::OpDescImpl *op_desc, cons
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus GetOutputInstanceNum(ge::OpDescImpl *op_desc, const std::string &ir_name, ge::IrOutputType ir_type,
-                                     size_t start_index, size_t &instance_num) {
+ge::graphStatus GetOutputInstanceNum(const ge::OpDescImpl *op_desc, const std::string &ir_name,
+                                     ge::IrOutputType ir_type, size_t start_index, size_t &instance_num) {
   if (ir_type == ge::kIrOutputRequired) {
     auto name = op_desc->GetOutputNameByIndex(start_index);
     if (name != ir_name) {
@@ -1513,7 +1513,7 @@ graphStatus OpDescImpl::VerifyIR() const {
   }
   return ret;
 }
-graphStatus OpDescImpl::VerifyInputDataType() {
+graphStatus OpDescImpl::VerifyInputDataType() const {
   std::unordered_map<std::string, DataType> symbol_2_input_dtype;
   GE_CHK_STATUS_RET_NOLOG(CollectInputDataTypeBySymbol(symbol_2_input_dtype));
 
@@ -1571,7 +1571,7 @@ graphStatus OpDescImpl::TryInferDataTypeFromDynamicInput(const string &ir_input_
     } else {
       auto input_desc = GetInputDescPtr(start_index);
       GE_CHECK_NOTNULL(input_desc);
-      dst_types.insert(dst_types.end(), instance_num, input_desc->GetDataType());
+      dst_types.insert(dst_types.cend(), instance_num, input_desc->GetDataType());
     }
   }
   return GRAPH_SUCCESS;
@@ -1656,11 +1656,11 @@ graphStatus OpDescImpl::CollectInputDataTypeBySymbol(std::unordered_map<std::str
           break;
         }
         case kIrInputOptional: {
-          auto input_desc = this->GetInputDescPtr(ir_input);
-          if ((input_desc == nullptr) || (input_desc->IsValid() != GRAPH_SUCCESS)) {
+          auto sub_input_desc = this->GetInputDescPtr(ir_input);
+          if ((sub_input_desc == nullptr) || (sub_input_desc->IsValid() != GRAPH_SUCCESS)) {
             break;
           }
-          symbol_2_input_dtype.emplace(dtype_symbol, input_desc->GetDataType());
+          symbol_2_input_dtype.emplace(dtype_symbol, sub_input_desc->GetDataType());
           break;
         }
         case kIrInputDynamic: {
