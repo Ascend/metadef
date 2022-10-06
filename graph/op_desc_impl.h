@@ -199,7 +199,7 @@ class OpDescImpl {
   void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
   void SerializeMetaDataToOpDef(proto::OpDef * const op_def);
   // infer datatype
-  graphStatus VerifyInputDataType();
+  graphStatus VerifyInputDataType() const;
   graphStatus CollectInputDataTypeBySymbol(std::unordered_map<std::string, DataType> &symbol_2_input_dtype) const;
   graphStatus VerifyInputDataTypeConsistent(const std::unordered_map<std::string,
                                                                      DataType> &symbol_2_input_dtype) const;
