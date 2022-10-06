@@ -2225,6 +2225,7 @@ TEST_F(UB_FUSION_UT_CONV_ELT_RELU, dyn_static_check) {
   EXPECT_FALSE(BufferFusionPassBase::CheckNodesImplConsistent(mapping));
   EXPECT_FALSE(BufferFusionPassBase::CheckNodesIncDynamicShape(mapping));
   EXPECT_TRUE(BufferFusionPassBase::CheckNodeIsDynamicImpl(graph->FindNode("eltwise")));
+  EXPECT_EQ(common0->PostFusion(nullptr), fe::SUCCESS);
   for (auto &pattern : patterns) {
     delete pattern;
   }

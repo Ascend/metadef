@@ -35,6 +35,10 @@ Status BufferFusionPassBase::GetFusionNodes(const BufferFusionMapping &mapping,
   return SUCCESS;
 }
 
+Status BufferFusionPassBase::PostFusion(const ge::NodePtr &fused_node) {
+  return SUCCESS;
+}
+
 Status BufferFusionPassBase::CalcFusionOpSliceInfo(vector<ge::NodePtr> &fusion_nodes, OpCalcInfo &op_slice_info) {
   return SUCCESS;
 }

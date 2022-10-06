@@ -107,6 +107,11 @@ class TbeCommonRules2FusionPass : public BufferFusionPassBase {
    */
   Status GetFusionNodes(const BufferFusionMapping &mapping, vector<ge::NodePtr> &fusion_nodes) override;
 
+
+  Status PostFusion(const ge::NodePtr &fused_node) override {
+    return FAILED;
+  }
+
  private:
 
   static int CountOtherOutput(vector<ge::NodePtr> dequant_nodes, vector<ge::NodePtr> elem_wise_nodes);
@@ -884,5 +889,10 @@ TEST_F(UTestBufferFusionPassReg, test_case_02) {
   create_fn = pass_desc["MetadefBufferFusionPassTest1"].create_fn;
   buffer_fusion_pass_base_ptr = std::unique_ptr<BufferFusionPassBase>(create_fn());
   EXPECT_EQ(buffer_fusion_pass_base_ptr->DefinePatterns().size(), 1);
+}
+
+TEST_F(UTestBufferFusionPassReg, test_post_fusion) {
+  std::shared_ptr<BufferFusionPassBase> common2 = std::make_shared<TbeCommonRules2FusionPass>();
+  EXPECT_EQ(common2->PostFusion(nullptr), FAILED);
 }
 }

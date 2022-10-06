@@ -40,6 +40,7 @@ class BufferFusionPassBase {
   virtual ~BufferFusionPassBase();
   virtual std::vector<BufferFusionPattern *> DefinePatterns() = 0;
   virtual Status GetFusionNodes(const BufferFusionMapping &mapping, std::vector<ge::NodePtr> &fusion_nodes);
+  virtual Status PostFusion(const ge::NodePtr &fused_node);
   virtual Status CalcFusionOpSliceInfo(std::vector<ge::NodePtr> &fusion_nodes, OpCalcInfo &op_slice_info);
   virtual Status CheckNodeCanFusion(const BufferFusionNodeDescMap &fusion_nodes, const ge::NodePtr &next_node);
   static std::vector<ge::NodePtr> GetMatchedNodes(const BufferFusionMapping &mapping);
