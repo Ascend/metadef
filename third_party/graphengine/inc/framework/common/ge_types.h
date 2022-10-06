@@ -381,13 +381,12 @@ struct ModelQueueParam {
   std::vector<uint32_t> input_queues;
   std::vector<uint32_t> output_queues;
 };
-
 // internal options
 // 1: Graph resource evaluation does not limit model memory size.
 const char_t *const EVALUATE_GRAPH_RESOURCE_MODE = "ge.evaluateGraphResourceMode";
 // 2: topo sorting mode
-const char_t *const OPTION_TOPO_SORTING_MODE = "ge.topoSortingMode";
-const std::set<std::string> ir_builder_suppported_options_inner = { EVALUATE_GRAPH_RESOURCE_MODE,
-                                                                    OPTION_TOPO_SORTING_MODE};
+const char_t *const OPTION_TOPOSORTING_MODE = "ge.topoSortingMode";
+const std::set<std::string> ir_builder_suppported_options_inner = {EVALUATE_GRAPH_RESOURCE_MODE,
+                                                                   OPTION_TOPOSORTING_MODE};
 }  // namespace ge
 #endif  // INC_FRAMEWORK_COMMON_GE_TYPES_H_

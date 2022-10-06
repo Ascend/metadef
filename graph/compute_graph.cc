@@ -45,7 +45,7 @@ constexpr int32_t kTopoSortingDfs = 1;
 bool IsUseBFS() {
   std::string run_mode;
   std::string topo_sorting_mode_str;
-  if ((ge::GetContext().GetOption(ge::OPTION_TOPO_SORTING_MODE, topo_sorting_mode_str) == GRAPH_SUCCESS) &&
+  if ((ge::GetContext().GetOption(ge::OPTION_TOPOSORTING_MODE, topo_sorting_mode_str) == GRAPH_SUCCESS) &&
       (!topo_sorting_mode_str.empty())) {
     const int32_t base = 10;
     const auto topo_sorting_mode =
@@ -55,7 +55,7 @@ bool IsUseBFS() {
     } else if (topo_sorting_mode == kTopoSortingDfs) {
       return false;
     } else {
-      GELOGI("OPTION_TOPO_SORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",
+      GELOGI("OPTION_TOPOSORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",
              topo_sorting_mode_str.c_str());
     }
   }
