@@ -48,12 +48,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static bool SetStr(AttrHolderAdapter &&obj, const std::string &name, const std::string &value);
   static bool SetListStr(AttrHolderAdapter &&obj, const std::string &name, const std::vector<std::string> &value);
   static bool SetTensorDesc(AttrHolderAdapter &&obj, const std::string &name, const GeTensorDesc &value);
-  static bool SetListTensorDesc(AttrHolderAdapter &&obj, const std::string &name, const std::vector<GeTensorDesc> &value);
+  static bool SetListTensorDesc(AttrHolderAdapter &&obj, const std::string &name,
+                                const std::vector<GeTensorDesc> &value);
   static bool SetTensor(AttrHolderAdapter &&obj, const std::string &name, const GeTensorPtr &value);
   static bool SetTensor(AttrHolderAdapter &&obj, const std::string &name, const ConstGeTensorPtr &value);
   static bool SetTensor(AttrHolderAdapter &&obj, const std::string &name, const GeTensor &value);
   static bool SetListTensor(AttrHolderAdapter &&obj, const std::string &name, const std::vector<GeTensorPtr> &value);
-  static bool SetListTensor(AttrHolderAdapter &&obj, const std::string &name, const std::vector<ConstGeTensorPtr> &value);
+  static bool SetListTensor(AttrHolderAdapter &&obj, const std::string &name,
+                            const std::vector<ConstGeTensorPtr> &value);
   static bool SetListTensor(AttrHolderAdapter &&obj, const std::string &name,
                             std::initializer_list<ConstGeTensorPtr> &&value);
   static bool SetListTensor(AttrHolderAdapter &&obj, const std::string &name, const std::vector<GeTensor> &value);
@@ -81,10 +83,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static const std::string *GetStr(ConstAttrHolderAdapter &&obj, const std::string &name);
   static bool GetListStr(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<std::string> &value);
   static bool GetTensorDesc(ConstAttrHolderAdapter &&obj, const std::string &name, GeTensorDesc &value);
-  static bool GetListTensorDesc(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<GeTensorDesc> &value);
+  static bool GetListTensorDesc(ConstAttrHolderAdapter &&obj, const std::string &name,
+                                std::vector<GeTensorDesc> &value);
   static bool GetTensor(ConstAttrHolderAdapter &&obj, const std::string &name, ConstGeTensorPtr &value);
   static bool MutableTensor(AttrHolderAdapter &&obj, const std::string &name, GeTensorPtr &value);
-  static bool GetListTensor(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<ConstGeTensorPtr> &value);
+  static bool GetListTensor(ConstAttrHolderAdapter &&obj, const std::string &name,
+                            std::vector<ConstGeTensorPtr> &value);
   static bool MutableListTensor(AttrHolderAdapter &&obj, const std::string &name, std::vector<GeTensorPtr> &value);
   static bool GetGraph(ConstAttrHolderAdapter &&obj, const std::string &name, ComputeGraphPtr &value);
   static bool GetListGraph(ConstAttrHolderAdapter &&obj, const std::string &name, std::vector<ComputeGraphPtr> &value);
