@@ -1,5 +1,5 @@
-/*
- * Copyright 2022 Huawei Technologies Co., Ltd
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ OpImplRegister &OpImplRegister::InputsDataDependency(std::initializer_list<int32
 OpImplRegister &OpImplRegister::PrivateAttrImpl(const char *private_attr, ge::AnyValue private_attr_av) {
   if (private_attr == nullptr) {
     GELOGE(ge::FAILED, "Failed to set private attr name using nullptr!");
-  } else if (!strcmp(private_attr, "")) {
+  } else if (strncmp(private_attr, "", 1U) == 0) {
     GELOGE(ge::FAILED, "Failed to set private attr name using empty string("")!");
   } else {
     if (functions_.unique_private_attrs.insert(private_attr).second) {

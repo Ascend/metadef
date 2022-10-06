@@ -960,4 +960,15 @@ TEST_F(UtestNodeUtils, GetInDataNodeAndAnchorByIndex_Success) {
   EXPECT_EQ(NodeUtils::GetInDataNodeAndAnchorByIndex(*node2, 0).first, node1);
   EXPECT_EQ(NodeUtils::GetInDataNodeAndAnchorByIndex(*node2, 0).second, node1->GetOutDataAnchor(0));
 }
+TEST_F(UtestNodeUtils, IsDtResourceNode_Success) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node1 = builder.AddNode("Node1", "Node1", 1, 1);
+  auto in_desc1 = node1->GetOpDesc()->MutableInputDesc(0);
+  in_desc1->SetDataType(DT_RESOURCE);
+  EXPECT_EQ(NodeUtils::IsDtResourceNode(node1), true);
+  auto node2 = builder.AddNode("Node2", "Node2", 1, 1);
+  auto out_desc2 = node2->GetOpDesc()->MutableOutputDesc(0);
+  out_desc2->SetDataType(DT_RESOURCE);
+  EXPECT_EQ(NodeUtils::IsDtResourceNode(node2), true);
+}
 }  // namespace ge

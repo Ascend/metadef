@@ -1,5 +1,5 @@
-/*
- * Copyright 2021 Huawei Technologies Co., Ltd
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
     const std::map<domi::FrameworkType,
                    std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>>::const_iterator iter =
         create_fns_.find(fmk_type);
-    if (iter != create_fns_.end()) {
+    if (iter != create_fns_.cend()) {
       create_fns_[fmk_type].push_back(std::make_pair(pass_name, create_fn));
       GELOGD("Register prototype pass, pass name = %s", pass_name.c_str());
       return;
@@ -54,7 +54,7 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
     const std::map<domi::FrameworkType,
                    std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>>::const_iterator iter =
         create_fns_.find(fmk_type);
-    if (iter == create_fns_.end()) {
+    if (iter == create_fns_.cend()) {
       return std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>{};
     }
     return iter->second;

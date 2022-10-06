@@ -1,5 +1,5 @@
-/*
- * Copyright 2022 Huawei Technologies Co., Ltd
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ class OpKernelRegistry::OpKernelRegistryImpl {
   OpKernelRegistry::CreateFn GetCreateFn(const std::string &op_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     const std::map<std::string, OpKernelRegistry::CreateFn>::const_iterator it = create_fns_.find(op_type);
-    if (it == create_fns_.end()) {
+    if (it == create_fns_.cend()) {
       return nullptr;
     }
 
