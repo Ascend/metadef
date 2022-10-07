@@ -38,7 +38,7 @@ namespace gert {
     {ge::FORMAT_DHWCN, transformer::DHWCN_DIM_C},
     {ge::FORMAT_DHWNC, transformer::DHWNC_DIM_C}
   };
-  int64_t GetCDim(TilingContext *context, const size_t index, const bool is_input) {
+  int64_t GetCDim(TilingContext * const context, const size_t index, const bool is_input) {
     if (context == nullptr) {
       return -1;
     }
