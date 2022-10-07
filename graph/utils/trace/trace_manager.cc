@@ -58,15 +58,15 @@ class TraceFileHolder {
 };
 
 std::string CurrentTimeInSecondsStr() {
-  mmSystemTime_t sysTime[64];
-  if (mmGetSystemTime(sysTime) != EN_OK) {
+  mmSystemTime_t sysTime;
+  if (mmGetSystemTime(&sysTime) != EN_OK) {
     GELOGE(INTERNAL_ERROR, "Get current time failed");
     const static std::string kInvalidTimeStr;
     return kInvalidTimeStr;
   }
 
   std::stringstream ss;
-  ss << sysTime->wYear << sysTime->wMonth << sysTime->wDay << sysTime->wHour << sysTime->wMinute << sysTime->wSecond;
+  ss << sysTime.wYear << sysTime.wMonth << sysTime.wDay << sysTime.wHour << sysTime.wMinute << sysTime.wSecond;
   return ss.str();
 }
 
