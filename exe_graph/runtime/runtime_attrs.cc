@@ -19,7 +19,7 @@
 #include "graph/def_types.h"
 namespace gert {
 const void *RuntimeAttrs::GetPointerByIndex(size_t index) const {
-  auto attrs = reinterpret_cast<const RuntimeAttrsDef *>(&placeholder_);
+  auto attrs = ge::PtrToPtr<uint64_t, const RuntimeAttrsDef>(&placeholder_);
   if (index >= attrs->attr_num) {
     GELOGE(ge::FAILED, "Failed to get attr, the index %zu out of range %zu", index, attrs->attr_num);
     return nullptr;
