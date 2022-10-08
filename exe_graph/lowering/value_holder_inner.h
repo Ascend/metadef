@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
-#define METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
-#include "tensor.h"
+#ifndef METADEF_CXX_EXE_GRAPH_LOWERING_VALUE_HOLDER_INNER_H_
+#define METADEF_CXX_EXE_GRAPH_LOWERING_VALUE_HOLDER_INNER_H_
+#include "exe_graph/lowering/builtin_node_types.h"
 namespace gert {
-enum class AllocatorUsage {
-  kAllocNodeOutput,
-  kAllocNodeWorkspace,
-  kAllocNodeShapeBuffer,
-  kEnd
-};
-struct AllocatorDesc {
-  TensorPlacement placement;
-  AllocatorUsage usage;
-  bool operator<(const AllocatorDesc &other) const {
-    return std::tie(placement, usage) < std::tie(other.placement, other.usage);
-  }
-  std::string GetKey() const {
-    return "Allocator-" + std::to_string(placement) + "-" + std::to_string(static_cast<int32_t>(usage));
-  }
-};
-}
-#endif  // METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
+namespace bg {
+void SetCurrentFrame(GraphFrame *frame);
+GraphFrame *GetCurrentFrame();
+std::deque<std::unique_ptr<GraphFrame>> &GetGraphFrames();
+int64_t GenerateNodeId();
+}  // namespace bg
+}  // namespace gert
+#endif  // METADEF_CXX_EXE_GRAPH_LOWERING_VALUE_HOLDER_INNER_H_

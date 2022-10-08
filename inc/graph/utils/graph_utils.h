@@ -33,30 +33,21 @@
 #include "graph/utils/anchor_utils.h"
 #include "cycle_detector.h"
 
-#define GE_DUMP(compute_graph, name)                                                                               \
-  do {                                                                                                             \
-    ge::GraphUtils::DumpGEGraph((compute_graph), (name));                                                          \
-    ge::GraphUtils::DumpGEGraphToOnnx(*(compute_graph), (name));                                                   \
-    uint64_t i = 0U;                                                                                               \
-    for (const auto &sub_graph_func : (compute_graph)->GetAllSubgraphs()) {                                        \
-      const auto sub_graph_func_name = std::string(name) + std::string("_sub_graph_") + std::to_string(i++);       \
-      ge::GraphUtils::DumpGEGraph(sub_graph_func, sub_graph_func_name);                                            \
-      ge::GraphUtils::DumpGEGraphToOnnx(*sub_graph_func, sub_graph_func_name);                                     \
-    }                                                                                                              \
+#define GE_DUMP(compute_graph, name)                                                                                   \
+  do {                                                                                                                 \
+    ge::GraphUtils::DumpGEGraph((compute_graph), (name));                                                              \
+    ge::GraphUtils::DumpGEGraphToOnnx(*(compute_graph), (name));                                                       \
+    uint64_t i = 0U;                                                                                                   \
+    for (const auto &sub_graph_func : (compute_graph)->GetAllSubgraphs()) {                                            \
+      const auto sub_graph_func_name = std::string(name) + std::string("_sub_graph_") + std::to_string(i++);           \
+      ge::GraphUtils::DumpGEGraph(sub_graph_func, sub_graph_func_name);                                                \
+      ge::GraphUtils::DumpGEGraphToOnnx(*sub_graph_func, sub_graph_func_name);                                         \
+    }                                                                                                                  \
   } while (false)
 
 namespace ge {
-enum class DumpLevel {
-  NO_DUMP = 0,
-  DUMP_ALL = 1,
-  DUMP_WITH_OUT_DATA = 2,
-  DUMP_WITH_OUT_DESC = 3,
-  DUMP_LEVEL_END = 4
-};
-enum class MemType {
-  OUTPUT_MEM,
-  WORKSPACE_MEM
-};
+enum class DumpLevel { NO_DUMP = 0, DUMP_ALL = 1, DUMP_WITH_OUT_DATA = 2, DUMP_WITH_OUT_DESC = 3, DUMP_LEVEL_END = 4 };
+enum class MemType { OUTPUT_MEM, WORKSPACE_MEM };
 
 struct MemReuseInfo {
   NodePtr node;
@@ -88,7 +79,9 @@ class NodeIndexIO {
   }
   ~NodeIndexIO() {}
 
-  const std::string &ToString() const { return value_; }
+  const std::string &ToString() const {
+    return value_;
+  }
 
   NodePtr node_ = nullptr;
   uint32_t index_ = 0U;
@@ -123,7 +116,7 @@ class GraphUtils {
    * @return 成功返回GRAPH_SUCCESS, 失败返回GRAPH_FAILED
    */
   static graphStatus GetIndependentCompileGraphs(const ComputeGraphPtr &compute_graph,
-		                                 std::vector<ComputeGraphPtr> &independent_compile_subgraphs);
+                                                 std::vector<ComputeGraphPtr> &independent_compile_subgraphs);
 
   static graphStatus RecoverGraphOperators(const Graph &graph);
   /**
@@ -270,10 +263,8 @@ class GraphUtils {
    * @param output_index 表示插入节点的哪个数据输出锚点要跟dsts依次相连，如果不传递，默认取0
    * @return 如果插入成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
    */
-  static graphStatus InsertNodeAfter(const OutDataAnchorPtr &src,
-                                     const std::vector<InDataAnchorPtr> &dsts,
-                                     const NodePtr &insert_node,
-                                     const uint32_t input_index = 0U,
+  static graphStatus InsertNodeAfter(const OutDataAnchorPtr &src, const std::vector<InDataAnchorPtr> &dsts,
+                                     const NodePtr &insert_node, const uint32_t input_index = 0U,
                                      const uint32_t output_index = 0U);
 
   /**
@@ -286,10 +277,8 @@ class GraphUtils {
    * @param output_index 表示插入节点的哪个数据输出锚点要跟dst相连，如果不传递，默认取0
    * @return 如果插入成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
    */
-  static graphStatus InsertNodeBefore(const InDataAnchorPtr &dst,
-                                      const NodePtr &insert_node,
-                                      const uint32_t input_index = 0U,
-                                      const uint32_t output_index = 0U);
+  static graphStatus InsertNodeBefore(const InDataAnchorPtr &dst, const NodePtr &insert_node,
+                                      const uint32_t input_index = 0U, const uint32_t output_index = 0U);
   /**
    * 从`compute_graph`智能指针管理的图对象的包含的nodes列表中删除`node`节点，仅仅是删除节点，
    * 不包含对node的断边和重新连边等操作
@@ -325,10 +314,8 @@ class GraphUtils {
    * @param is_always_dump 如果值为true，则接口行为不受环境变量约束
    * @param user_graph_name 用于指定落盘的文件名和文件路径
    */
-  static void DumpGEGraph(const ge::ComputeGraphPtr &graph,
-                          const std::string &suffix,
-                          const bool is_always_dump = false,
-                          const std::string &user_graph_name = "");
+  static void DumpGEGraph(const ge::ComputeGraphPtr &graph, const std::string &suffix,
+                          const bool is_always_dump = false, const std::string &user_graph_name = "");
   /**
     * 图dump接口，用于把`graph`对象序列化到文件，落盘到`path`指定的路径
     * @param graph
@@ -343,11 +330,9 @@ class GraphUtils {
    * @param dump_level DUMP_GE_GRAPH环境变量以函数入参的表达
    * @return
    */
-  static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
-                                       const std::string &file_path,
+  static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::string &file_path,
                                        const ge::DumpLevel dump_level);
-  static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph,
-                                       const std::string &file_path,
+  static graphStatus DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::string &file_path,
                                        const int64_t dump_level);
   /**
    * 从`file`文件反序列化得到`compute_graph`的图对象
@@ -377,8 +362,7 @@ class GraphUtils {
    * @param path 路径名
    * @param suffix 拼接的文件名
    */
-  static void DumpGrphToOnnx(const ge::ComputeGraph &compute_graph,
-                             const std::string &path, const std::string &suffix);
+  static void DumpGrphToOnnx(const ge::ComputeGraph &compute_graph, const std::string &path, const std::string &suffix);
 
   static bool ReadProtoFromTextFile(const char_t *const file, google::protobuf::Message *const proto);
 
@@ -499,8 +483,7 @@ class GraphUtils {
    * @param src_compute_graph
    * @param dst_compute_graph
    */
-  static void InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph,
-                                  ComputeGraphPtr &dst_compute_graph);
+  static void InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph);
   /**
    * 拷贝`src_node`节点及其所有有效的输入输出tensor上的attr属性到`dst_desc`上
    * @param dst_desc 目的OpDesc对象
@@ -612,12 +595,21 @@ class GraphUtils {
 
   static CycleDetectorPtr CreateCycleDetector(const ComputeGraphPtr &graph);
 
+  /**
+     * 将node所有的输入、输出边断开，并移动到dst_graph
+     * @param dst_graph 目的Graph，
+     * @param node 需要移动的Node
+     * @return 成功时，返回ge::GRAPH_SUCCESS
+     */
+  static graphStatus MoveNodeToGraph(const NodePtr &node, ComputeGraph &dst_graph);
+
  private:
   class GraphInfo {
-  public:
+   public:
     GraphInfo() = default;
     ~GraphInfo() = default;
-  private:
+
+   private:
     std::set<ge::NodePtr> nodes_;
     std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_inputs_;
     std::map<uint32_t, std::pair<ge::OutDataAnchorPtr, std::list<ge::InDataAnchorPtr>>> data_outputs_;
@@ -704,11 +696,9 @@ class GraphUtils {
   static void BuildGraphInfoFromNodes(const std::set<NodePtr> &nodes, GraphInfo &graph_info);
 
   static void BuildInDataEdgesFromNode(const NodePtr &node, const std::set<NodePtr> &nodes,
-                                       std::map<OutDataAnchorPtr, size_t> &data_input_index_map,
-                                       GraphInfo &graph_info);
+                                       std::map<OutDataAnchorPtr, size_t> &data_input_index_map, GraphInfo &graph_info);
 
-  static NodePtr BuildSubgraphNode(ComputeGraph &graph, const std::string &graph_name,
-                                   const GraphInfo &graph_info);
+  static NodePtr BuildSubgraphNode(ComputeGraph &graph, const std::string &graph_name, const GraphInfo &graph_info);
 
   static ComputeGraphPtr BuildSubgraph(const NodePtr &subgraph_node, const GraphInfo &graph_info,
                                        const std::string &subgraph_name);
@@ -928,8 +918,8 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [out] error_msg
   /// @return void
   void BuildNetOutputNodeWithLink(const OpDescPtr &net_output_desc,
-                                  const std::vector<OutDataAnchorPtr> &peer_out_anchors,
-                                  graphStatus &error_code, std::string &error_msg);
+                                  const std::vector<OutDataAnchorPtr> &peer_out_anchors, graphStatus &error_code,
+                                  std::string &error_msg);
 
   /// @brief process after build
   /// @param [out] error_code

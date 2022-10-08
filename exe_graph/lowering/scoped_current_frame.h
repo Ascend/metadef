@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
-#define METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
-#include "tensor.h"
+#ifndef METADEF_CXX_EXE_GRAPH_LOWERING_SCOPED_CURRENT_FRAME_H_
+#define METADEF_CXX_EXE_GRAPH_LOWERING_SCOPED_CURRENT_FRAME_H_
+#include "exe_graph/lowering/graph_frame.h"
+#include "value_holder_inner.h"
 namespace gert {
-enum class AllocatorUsage {
-  kAllocNodeOutput,
-  kAllocNodeWorkspace,
-  kAllocNodeShapeBuffer,
-  kEnd
-};
-struct AllocatorDesc {
-  TensorPlacement placement;
-  AllocatorUsage usage;
-  bool operator<(const AllocatorDesc &other) const {
-    return std::tie(placement, usage) < std::tie(other.placement, other.usage);
+namespace bg {
+class ScopedCurrentFrame {
+ public:
+  explicit ScopedCurrentFrame(GraphFrame *frame) {
+    backup_graph_frame_ = GetCurrentFrame();
+    SetCurrentFrame(frame);
   }
-  std::string GetKey() const {
-    return "Allocator-" + std::to_string(placement) + "-" + std::to_string(static_cast<int32_t>(usage));
+  ~ScopedCurrentFrame() {
+    SetCurrentFrame(backup_graph_frame_);
   }
+
+ private:
+  GraphFrame *backup_graph_frame_;
 };
-}
-#endif  // METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
+}  // namespace bg
+}  // namespace gert
+#endif  // METADEF_CXX_EXE_GRAPH_LOWERING_SCOPED_CURRENT_FRAME_H_
