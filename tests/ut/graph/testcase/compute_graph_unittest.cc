@@ -437,7 +437,7 @@ TEST_F(UtestComputeGraph, TopologicalSortingMode_success) {
   std::vector<std::string> expected_dfs_names = {"node1", "node3", "node5", "node2", "node4", "node6", "netoutput"};
   std::vector<std::string> bfs_names;
   std::vector<std::string> dfs_names;
-  options_map.emplace(ge::OPTION_TOPO_SORTING_MODE, "0");
+  options_map.emplace("ge.topoSortingMode", "0");
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
   const auto &graph_bfs_topo = graph->GetAllNodes();
@@ -445,7 +445,7 @@ TEST_F(UtestComputeGraph, TopologicalSortingMode_success) {
     bfs_names.push_back(node->GetName());
   }
 
-  options_map[ge::OPTION_TOPO_SORTING_MODE] = "1";
+  options_map["ge.topoSortingMode"] = "1";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
 
@@ -453,7 +453,7 @@ TEST_F(UtestComputeGraph, TopologicalSortingMode_success) {
   for (auto &node : graph_dfs_topo) {
     dfs_names.push_back(node->GetName());
   }
-  options_map[ge::OPTION_TOPO_SORTING_MODE] = "2";
+  options_map["ge.topoSortingMode"] = "2";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
 

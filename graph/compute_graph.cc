@@ -40,20 +40,23 @@
 namespace ge {
 namespace {
 const size_t OUTPUT_PARAM_SIZE = 2UL;
+constexpr int32_t kTopoSortingBfs = 0;
+constexpr int32_t kTopoSortingDfs = 1;
+const char_t *const OPTION_TOPOSORTING_MODE = "ge.topoSortingMode";
 bool IsUseBFS() {
   std::string run_mode;
   std::string topo_sorting_mode_str;
-  if ((ge::GetContext().GetOption(ge::OPTION_TOPO_SORTING_MODE, topo_sorting_mode_str) == GRAPH_SUCCESS) &&
+  if ((ge::GetContext().GetOption(OPTION_TOPOSORTING_MODE, topo_sorting_mode_str) == GRAPH_SUCCESS) &&
       (!topo_sorting_mode_str.empty())) {
     const int32_t base = 10;
     const auto topo_sorting_mode =
-        static_cast<TopoSortingMode>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
-    if (topo_sorting_mode == TopoSortingMode::BFS) {
+        static_cast<int32_t>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
+    if (topo_sorting_mode == kTopoSortingBfs) {
       return true;
-    } else if (topo_sorting_mode == TopoSortingMode::DFS) {
+    } else if (topo_sorting_mode == kTopoSortingDfs) {
       return false;
     } else {
-      GELOGI("OPTION_TOPO_SORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",
+      GELOGI("OPTION_TOPOSORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",
              topo_sorting_mode_str.c_str());
     }
   }
