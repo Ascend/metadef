@@ -70,7 +70,6 @@ class ValueHolder {
   ValueHolderType GetType() const noexcept;
   const NodeHolder *GetNode() const noexcept;
   const GraphHolder *GetGraph() const noexcept;
-  ValueHolderPtr GetGuarder() const noexcept;
 
   int32_t GetOutIndex() const noexcept;
   // ref-from other的含义是，本value指向了other（本value没有独立的内存）
@@ -122,22 +121,22 @@ class ValueHolder {
   static std::unique_ptr<CurrentComputeNodeGuarder> SetScopedCurrentComputeNode(const ge::NodePtr &node);
 
   static NodeHolderPtr AddNode(const char *node_type, size_t input_count, size_t output_count, GraphFrame &frame);
-  static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t start_index, size_t create_count);
-  static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);
-  static std::string GenerateNodeName(const char *node_type, const GraphFrame &frame);
 
   static std::vector<ValueHolderPtr> GetLastExecNodes();
 
  private:
   ValueHolder();
+  static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);
   static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t out_count);
+  static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t start_index, size_t create_count);
   static NodeHolderPtr CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs, size_t out_count);
+  static std::string GenerateNodeName(const char *node_type, const GraphFrame &frame);
 
  private:
   static std::atomic<int64_t> id_generator_;
   int64_t id_;
   ValueHolder::ValueHolderType type_;
-  GraphHolderPtr graph_;  // no use, to be deleted
+  GraphHolderPtr graph_;
   ge::NodePtr node_;
   int32_t index_;
   int32_t placement_;

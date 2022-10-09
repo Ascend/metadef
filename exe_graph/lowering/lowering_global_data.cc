@@ -20,37 +20,11 @@
 #include "graph/debug/ge_log.h"
 #include "exe_graph/lowering/frame_selector.h"
 namespace gert {
-namespace {
-bool CurrentOnInitGraph() {
-  ge::NodePtr subgraph_node = nullptr;
-  auto current_graph = bg::ValueHolder::GetCurrentGraph();
-  while (current_graph != nullptr && current_graph->GetParentNode() != nullptr) {
-    subgraph_node = current_graph->GetParentNode();
-    current_graph = subgraph_node->GetOwnerComputeGraph().get();
-  }
-
-  if (subgraph_node != nullptr) {
-    return strcmp(subgraph_node->GetType().c_str(), GetExecuteGraphTypeStr(ExecuteGraphType::kInit)) == 0;
-  } else {
-    return false;
-  }
-}
-}  // namespace
 const bg::ValueHolderPtr &LoweringGlobalData::GetStream() const {
-  ExecuteGraphType graph_type = ExecuteGraphType::kMain;
-  if (CurrentOnInitGraph()) {
-    graph_type = ExecuteGraphType::kInit;
-  }
-  return streams_.holders[static_cast<size_t>(graph_type)];
+  return stream_;
 }
 LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream) {
-  return SetStream(std::move(stream), ExecuteGraphType::kMain);
-}
-LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream, ExecuteGraphType graph_type) {
-  if (graph_type >= ExecuteGraphType::kNum) {
-    return *this;
-  }
-  streams_.holders[static_cast<size_t>(graph_type)] = std::move(stream);
+  stream_ = std::move(stream);
   return *this;
 }
 const LoweringGlobalData::NodeCompileResult *LoweringGlobalData::FindCompiledResult(const ge::NodePtr &node) const {
@@ -94,105 +68,43 @@ LoweringGlobalData &LoweringGlobalData::AddStaticCompiledGraphModel(const std::s
 }
 
 bg::ValueHolderPtr LoweringGlobalData::GetAllocator(AllocatorDesc desc) const {
-  if (CurrentOnInitGraph()) {
-    return GetUniqueValueHolder(desc.GetKey() + "-Init");
-  } else {
-    return GetUniqueValueHolder(desc.GetKey());
+  auto iter = placements_to_allocator_.find(desc);
+  if (iter == placements_to_allocator_.end()) {
+    return nullptr;
   }
+  return iter->second;
 }
 LoweringGlobalData &LoweringGlobalData::SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator) {
-  throw std::invalid_argument("No longer support SetAllocator, use GetOrCreateAllocator instead");
+  placements_to_allocator_[desc] = std::move(allocator);
   return *this;
 }
 LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr &&allocator) {
-  return SetExternalAllocator(std::move(allocator), ExecuteGraphType::kMain);
-}
-LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr &&allocator,
-                                                             ExecuteGraphType graph_type) {
-  if (graph_type >= ExecuteGraphType::kNum) {
-    return *this;
-  }
-  external_allocators_.holders[static_cast<size_t>(graph_type)] = std::move(allocator);
+  external_allocator_ = std::move(allocator);
   return *this;
 }
-/*
- * +------------------------------------------------------------------+
- * |Main Graph                                                        |
- * |                 (allocator)                                      |
- * |                     |                                            |
- * |     +------>  SelectAllocator  <-----+                           |
- * |     |           /       \            |                           |
- * | InnerData  InnerData   InnerData   Data(-2)                      |
- * +------------------------------------------------------------------+
- * +------------------------------------------------------------------+
- * |Init Graph                                                        |
- * |                                                                  |
- * |   +------+--->  InnerNetOutput    (allocator)                    |
- * |   |      |              ^            |                           |
- * |   |      |              |     SelectAllocator                    |
- * |   |      |              |    /         ^     \                   |
- * |   |      |     CreateAllocator         |   Data(Allocator)(-2)   |
- * |   |      |          /  \               |                         |
- * |   |  Const(placement)  Const(usage)    |                         |
- * |   |                         |          |                         |
- * |   +-------------------------+----------+                         |
- * +------------------------------------------------------------------+
- */
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) {
-  auto key = desc.GetKey();
-  auto from_init = CurrentOnInitGraph();
-
-  bg::ValueHolderPtr allocator_holder;
-  if (from_init) {
-    auto init_key = key + "-Init";
-    allocator_holder = GetUniqueValueHolder(init_key);
-  } else {
-    allocator_holder = GetUniqueValueHolder(key);
-  }
-
-  if (allocator_holder != nullptr) {
-    return allocator_holder;
-  }
-
-  bg::ValueHolderPtr init_selected_allocator = nullptr;
-  auto init_out = bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
-    auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
-    auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
-    auto created_allocator =
-        bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {placement_holder, memory_type_holder});
-    if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)] != nullptr) {
-      init_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
-          "SelectAllocator",
-          {placement_holder, memory_type_holder,
-           external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)], created_allocator});
-    } else {
-      init_selected_allocator = created_allocator;
-    }
-
-    return {created_allocator, placement_holder, memory_type_holder};
-  });
-  GE_ASSERT_EQ(init_out.size(), 3U);
-
-  auto allocator = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
-    auto main_selected_allocator = init_out[0];
-    if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)] != nullptr) {
-      main_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
-          "SelectAllocator",
-          {init_out[1], init_out[2], external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)],
-           init_out[0]});
-    }
-    return {main_selected_allocator};
-  });
-  GE_ASSERT_EQ(allocator.size(), 1U);
-
-  SetUniqueValueHolder(key + "-Init", init_selected_allocator);
-  SetUniqueValueHolder(key, allocator[0]);
-
-  if (from_init) {
-    return init_selected_allocator;
-  } else {
+  const std::map<AllocatorDesc, bg::ValueHolderPtr>::const_iterator iter = placements_to_allocator_.find(desc);
+  if (iter == placements_to_allocator_.cend()) {
+    auto allocator = bg::FrameSelector::OnMainRoot([&desc, this]() -> std::vector<bg::ValueHolderPtr> {
+      auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
+      auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
+      auto created_allocator = bg::ValueHolder::CreateSingleDataOutput("CreateAllocator",
+                                                                       {placement_holder, memory_type_holder});
+      auto selected_allocator = created_allocator;
+      if (external_allocator_ != nullptr) {
+        selected_allocator = bg::ValueHolder::CreateSingleDataOutput("SelectAllocator",
+                                                                     {placement_holder, memory_type_holder,
+                                                                      external_allocator_,
+                                                                      created_allocator});
+      }
+      return {selected_allocator};
+    });
+    GE_ASSERT_EQ(allocator.size(), 1U);
+    GE_ASSERT_NOTNULL(allocator[0]);
+    SetAllocator(desc, allocator[0]);
     return allocator[0];
   }
+  return iter->second;
 }
 
 uint64_t LoweringGlobalData::GetSessionId() {
@@ -203,23 +115,12 @@ uint64_t LoweringGlobalData::GetSessionId() {
   return session_id_;
 }
 
-bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(
-    const std::string &name, const std::function<bg::ValueHolderPtr()> &builder) {
+bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(const std::string &name,
+    const std::function<bg::ValueHolderPtr()> &builder) {
   const std::map<std::string, bg::ValueHolderPtr>::const_iterator iter = names_to_unique_value_holder_.find(name);
   if (iter == names_to_unique_value_holder_.cend()) {
     auto holder = builder();
-    SetUniqueValueHolder(name, holder);
-    return holder;
-  }
-  return iter->second;
-}
-void LoweringGlobalData::SetUniqueValueHolder(const string &name, const bg::ValueHolderPtr &holder) {
-  names_to_unique_value_holder_.emplace(name, holder);
-}
-bg::ValueHolderPtr LoweringGlobalData::GetUniqueValueHolder(const string &name) const {
-  const auto &iter = names_to_unique_value_holder_.find(name);
-  if (iter == names_to_unique_value_holder_.end()) {
-    return nullptr;
+    return names_to_unique_value_holder_.emplace(name, holder).first->second;
   }
   return iter->second;
 }

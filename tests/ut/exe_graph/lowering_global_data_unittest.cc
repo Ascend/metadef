@@ -17,10 +17,6 @@
 #include "exe_graph/lowering/frame_selector.h"
 #include <gtest/gtest.h>
 #include "checker/bg_test.h"
-#include "exe_graph/lowering/value_holder.h"
-#include "exe_graph/runtime/execute_graph_types.h"
-#include "checker/summary_checker.h"
-#include "checker/topo_checker.h"
 namespace gert {
 namespace {
 ge::NodePtr BuildTestNode() {
@@ -28,45 +24,8 @@ ge::NodePtr BuildTestNode() {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
   return graph->AddNode(op_desc);
 }
-}  // namespace
-class LoweringGlobalDataUT : public BgTest {
- protected:
-  void SetUp() override {
-    BgTest::SetUp();
-  }
-
-  void InitTestFrames() {
-    root_frame = bg::ValueHolder::GetCurrentFrame();
-    auto init_node = bg::ValueHolder::CreateVoid("Init", {});
-    bg::ValueHolder::PushGraphFrame(init_node, "Init");
-    init_frame = bg::ValueHolder::PopGraphFrame();
-
-    auto de_init_node = bg::ValueHolder::CreateVoid("DeInit", {});
-    bg::ValueHolder::PushGraphFrame(de_init_node, "DeInit");
-    de_init_frame = bg::ValueHolder::PopGraphFrame();
-
-    auto main_node = bg::ValueHolder::CreateVoid(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
-    bg::ValueHolder::PushGraphFrame(main_node, "Main");
-  }
-  void InitTestFramesWithStream(LoweringGlobalData &global_data) {
-    root_frame = bg::ValueHolder::GetCurrentFrame();
-    auto init_node = bg::ValueHolder::CreateVoid("Init", {});
-    bg::ValueHolder::PushGraphFrame(init_node, "Init");
-    global_data.SetStream(bg::ValueHolder::CreateFeed(-1), ExecuteGraphType::kInit);
-    init_frame = bg::ValueHolder::PopGraphFrame();
-
-    auto de_init_node = bg::ValueHolder::CreateVoid("DeInit", {});
-    bg::ValueHolder::PushGraphFrame(de_init_node, "DeInit");
-    de_init_frame = bg::ValueHolder::PopGraphFrame();
-
-    auto main_node = bg::ValueHolder::CreateVoid(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
-    bg::ValueHolder::PushGraphFrame(main_node, "Main");
-    global_data.SetStream(bg::ValueHolder::CreateFeed(-1), ExecuteGraphType::kMain);
-  }
-  bg::GraphFrame *root_frame;
-  std::unique_ptr<bg::GraphFrame> init_frame;
-  std::unique_ptr<bg::GraphFrame> de_init_frame;
-};
+}
+class LoweringGlobalDataUT : public BgTest {};
 TEST_F(LoweringGlobalDataUT, SetGetStreamOk) {
   LoweringGlobalData gd;
 
@@ -76,20 +35,6 @@ TEST_F(LoweringGlobalDataUT, SetGetStreamOk) {
   auto holder1 = holder;
   gd.SetStream(std::move(holder1));
   EXPECT_EQ(gd.GetStream(), holder);
-}
-TEST_F(LoweringGlobalDataUT, GetStream_HolderOnInit_GetOnInit) {
-  LoweringGlobalData gd;
-  EXPECT_EQ(gd.GetStream(), nullptr);
-
-  InitTestFramesWithStream(gd);
-  std::vector<bg::ValueHolderPtr> graph_out;
-  std::vector<bg::ValueHolderPtr> node_out;
-  auto ret = bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> { return {gd.GetStream()}; },
-                                           graph_out, node_out);
-
-  ASSERT_EQ(ret, ge::GRAPH_SUCCESS);
-  ASSERT_NE(graph_out[0], nullptr);
-  ASSERT_EQ(graph_out[0]->GetNode()->GetOwnerComputeGraph()->GetParentNode()->GetType(), "Init");
 }
 TEST_F(LoweringGlobalDataUT, SetGetCompileResultOk) {
   LoweringGlobalData gd;
@@ -127,101 +72,30 @@ TEST_F(LoweringGlobalDataUT, SetGetKnownSubgraphModel) {
   EXPECT_EQ(gd.GetGraphStaticCompiledModel(graph_name), reinterpret_cast<void *>(0x123));
 }
 
+
+TEST_F(LoweringGlobalDataUT, SetGetAllocatorOk) {
+  LoweringGlobalData gd;
+  EXPECT_EQ(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), nullptr);
+  auto holder = bg::ValueHolder::CreateFeed(0);
+  ASSERT_NE(holder, nullptr);
+  gd.SetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}, holder);
+  EXPECT_EQ(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), holder);
+}
+
 TEST_F(LoweringGlobalDataUT, GetOrCreateAllocatorOk) {
-  InitTestFrames();
   LoweringGlobalData gd;
   auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-  ASSERT_NE(allocator1, nullptr);
+  EXPECT_NE(allocator1, nullptr);
   EXPECT_EQ(allocator1, gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}));
 }
 
-TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_InitRootCreateSync1) {
-  InitTestFrames();
+TEST_F(LoweringGlobalDataUT, GetOrCreateAllocatorFromExternalAllocatorOk) {
   LoweringGlobalData gd;
-  auto holder = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-  ASSERT_NE(holder, nullptr);
-
-  ASSERT_EQ(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), holder);
-
-  std::vector<bg::ValueHolderPtr> on_init;
-  std::vector<bg::ValueHolderPtr> on_root;
-  auto ret = bg::FrameSelector::OnInitRoot(
-      [&]() -> std::vector<bg::ValueHolderPtr> {
-        auto allocator = gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-        return {allocator};
-      },
-      on_init, on_root);
-  ASSERT_EQ(ret, ge::GRAPH_SUCCESS);
-  ASSERT_EQ(on_init.size(), 1U);
-  ASSERT_EQ(on_root.size(), 1U);
-  ASSERT_NE(on_init[0], nullptr);
-  ASSERT_NE(on_root[0], nullptr);
-}
-TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_InitRootCreateSync2) {
-  InitTestFrames();
-  LoweringGlobalData gd;
-  std::vector<bg::ValueHolderPtr> on_init;
-  std::vector<bg::ValueHolderPtr> on_root;
-  auto ret = bg::FrameSelector::OnInitRoot(
-      [&]() -> std::vector<bg::ValueHolderPtr> {
-        return {gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput})};
-      },
-      on_init, on_root);
-  ASSERT_EQ(ret, ge::GRAPH_SUCCESS);
-  ASSERT_NE(on_init[0], nullptr);
-
-  ASSERT_NE(gd.GetAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput}), nullptr);
-}
-TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_MainExternalAllocatorSet) {
-  InitTestFrames();
-  LoweringGlobalData gd;
-  gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2));
-
+  auto holder = bg::ValueHolder::CreateFeed(0);
+  auto holder1 = holder;
+  gd.SetExternalAllocator(std::move(holder1));
   auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-  ASSERT_NE(allocator1, nullptr);
-  EXPECT_EQ(allocator1->GetNode()->GetType(), "SelectAllocator");
-  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom({{"InnerData"}, {"InnerData"}, {"Data"}, {"InnerData"}}),
-            "success");
-  auto create_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("CreateAllocator");
-  ASSERT_NE(create_allocator_node, nullptr);
-  ConnectFromInitToMain(create_allocator_node.get(), 0, allocator1->GetNode(), 3);
-
-  bg::ValueHolderPtr init_allocator = nullptr;
-  bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
-    init_allocator = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-    return {};
-  });
-  ASSERT_NE(init_allocator, nullptr);
-  EXPECT_EQ(init_allocator->GetNode()->GetType(), "CreateAllocator");
-  EXPECT_EQ(NodeTopoChecker(init_allocator).StrictConnectFrom({{"Const"}, {"Const"}}), "success");
-}
-TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_ExternalAllocatorSet) {
-  InitTestFrames();
-  LoweringGlobalData gd;
-  gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2));
-  bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
-    gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2), ExecuteGraphType::kInit);
-    return {};
-  });
-
-  auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-  ASSERT_NE(allocator1, nullptr);
-  EXPECT_EQ(allocator1->GetNode()->GetType(), "SelectAllocator");
-  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom({{"InnerData"}, {"InnerData"}, {"Data"}, {"InnerData"}}),
-            "success");
-  auto create_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("CreateAllocator");
-  ASSERT_NE(create_allocator_node, nullptr);
-  ConnectFromInitToMain(create_allocator_node.get(), 0, allocator1->GetNode(), 3);
-
-  bg::ValueHolderPtr init_allocator = nullptr;
-  bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
-    init_allocator = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-    return {};
-  });
-  ASSERT_NE(init_allocator, nullptr);
-  EXPECT_EQ(init_allocator->GetNode()->GetType(), "SelectAllocator");
-  EXPECT_EQ(NodeTopoChecker(init_allocator).StrictConnectFrom({{"Const"}, {"Const"}, {"Data"}, {"CreateAllocator"}}),
-            "success");
+  EXPECT_NE(allocator1, nullptr);
 }
 
 TEST_F(LoweringGlobalDataUT, GetSessionIdSameWithOneGlobalData) {
@@ -243,8 +117,7 @@ TEST_F(LoweringGlobalDataUT, GetSessionIdDifferentWithDiffGlobalData) {
   EXPECT_EQ(session_id2, session_id1 + 1U);
 }
 
-TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysReturnOnRootFrame_CallInSubgraph) {
-  InitTestFrames();
+TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysCreateOnRootFrame_CallInSubgraph) {
   LoweringGlobalData gd;
 
   auto data0 = bg::ValueHolder::CreateFeed(0);
@@ -252,54 +125,15 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysReturnOnRootFrame_CallIn
 
   bg::ValueHolder::PushGraphFrame(foo1, "FooGraph");
   auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-  ASSERT_NE(allocator1, nullptr);
+  EXPECT_NE(allocator1, nullptr);
   ASSERT_NE(bg::ValueHolder::PopGraphFrame(), nullptr);
+
+  auto root_frame = bg::ValueHolder::PopGraphFrame();
+  ASSERT_NE(root_frame, nullptr);
 
   ASSERT_EQ(allocator1->GetNode()->GetOwnerComputeGraph(), root_frame->GetExeGraph());
 }
 
-TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysCreateOnInitFrame_CallInSubgraph) {
-  InitTestFrames();
-  LoweringGlobalData gd;
-
-  auto data0 = bg::ValueHolder::CreateFeed(0);
-  auto foo1 = bg::ValueHolder::CreateSingleDataOutput("Foo", {data0});
-
-  bg::ValueHolder::PushGraphFrame(foo1, "FooGraph");
-  auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-  ASSERT_NE(allocator1, nullptr);
-
-  ASSERT_NE(bg::ValueHolder::PopGraphFrame(), nullptr);
-
-  ASSERT_EQ(SummaryChecker(init_frame->GetExeGraph())
-                .StrictAllNodeTypes({{"CreateAllocator", 1}, {"Const", 2}, {"InnerNetOutput", 1}}),
-            "success");
-}
-TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_ReturnOnInit_WhenGetOnInit) {
-  InitTestFrames();
-  LoweringGlobalData gd;
-
-  auto data0 = bg::ValueHolder::CreateFeed(0);
-  auto foo1 = bg::ValueHolder::CreateSingleDataOutput("Foo", {data0});
-
-  bg::ValueHolder::PushGraphFrame(foo1, "FooGraph");
-  auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
-  ASSERT_NE(allocator1, nullptr);
-  ASSERT_EQ(allocator1->GetNode()->GetType(), "Init");
-
-  std::vector<bg::ValueHolderPtr> graph_out;
-  std::vector<bg::ValueHolderPtr> node_out;
-  auto ret = bg::FrameSelector::OnInitRoot(
-      [&]() -> std::vector<bg::ValueHolderPtr> {
-        return {gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput})};
-      },
-      graph_out, node_out);
-  ASSERT_EQ(ret, ge::GRAPH_SUCCESS);
-  ASSERT_EQ(graph_out.size(), 1);
-  auto init_node = graph_out[0]->GetNode()->GetOwnerComputeGraph()->GetParentNode();
-  ASSERT_NE(init_node, nullptr);
-  ASSERT_EQ(init_node->GetType(), "Init");
-}
 TEST_F(LoweringGlobalDataUT, GetOrCreateUniqueValueHolderOk) {
   LoweringGlobalData gd;
   auto builder = [&]() -> bg::ValueHolderPtr {
@@ -336,7 +170,7 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateUniqueValueHolderOk) {
 }
 
 TEST_F(LoweringGlobalDataUT, OnMainRootLastOk) {
-  LoweringGlobalData gd;
+  LoweringGlobalData gd; 
   uint64_t global_container_id = 0;
   auto builder = [&]() -> bg::ValueHolderPtr {
     uint64_t container_id = global_container_id++;
@@ -344,7 +178,8 @@ TEST_F(LoweringGlobalDataUT, OnMainRootLastOk) {
     uint64_t session_id = gd.GetSessionId();
     auto session_id_holder = bg::ValueHolder::CreateConst(&session_id, sizeof(uint64_t));
     auto resource_holder = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
-      auto create_session_holder = bg::ValueHolder::CreateSingleDataOutput("CreateSession", {session_id_holder});
+      auto create_session_holder = bg::ValueHolder::CreateSingleDataOutput(
+        "CreateSession", {session_id_holder});
       bg::ValueHolder::CreateVoidGuarder("DestroySession", create_session_holder, {});
       auto clear_builder = [&]() -> bg::ValueHolderPtr {
         return bg::ValueHolder::CreateVoid("ClearStepContainer", {session_id_holder, container_id_holder});

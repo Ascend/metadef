@@ -43,7 +43,6 @@
 #include "graph/compute_graph_impl.h"
 #include "graph/op_desc_impl.h"
 #include "mmpa/mmpa_api.h"
-#include "common/checker.h"
 
 namespace ge {
 enum class DumpGraphLevel {
@@ -3995,11 +3994,5 @@ void PartialGraphBuilder::BuildExistNodes(graphStatus &error_code, std::string &
 
   GELOGD("Build exist nodes succ.");
 }
-graphStatus GraphUtils::MoveNodeToGraph(const NodePtr &node, ComputeGraph &dst_graph) {
-  GE_ASSERT_SUCCESS(IsolateNode(node, {}));
-  GE_ASSERT_SUCCESS(RemoveNodeWithoutRelink(node->GetOwnerComputeGraph(), node));
-  GE_ASSERT_NOTNULL(dst_graph.AddNode(node));
-  GE_ASSERT_SUCCESS(node->SetOwnerComputeGraph(dst_graph.shared_from_this()));
-  return GRAPH_SUCCESS;
-}
+
 }  // namespace ge
