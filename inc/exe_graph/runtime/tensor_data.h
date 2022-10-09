@@ -82,9 +82,6 @@ class TensorData {
     other.placement_ = kTensorPlacementEnd;
     return *this;
   }
-  ~TensorData() noexcept {
-    static_cast<void>(Free());
-  }
 
   /**
    * 获取tensor地址
