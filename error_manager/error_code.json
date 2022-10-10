@@ -1695,6 +1695,17 @@
       }
     },
     {
+      "errClass": "LxFusion Errors",
+      "errTitle": "Repository Match Failure",
+      "ErrCode": "WF0002",
+      "ErrMessage": "Failed to match the repository because UB fusion has changed. Please re-tune this model with AOE SGAT.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "DVPP Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EN0001",
