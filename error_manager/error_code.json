@@ -1696,13 +1696,13 @@
     },
     {
       "errClass": "LxFusion Errors",
-      "errTitle": "Repository Match Failure",
+      "errTitle": "Model Performance Not Optimal",
       "ErrCode": "WF0002",
-      "ErrMessage": "Failed to match the repository because UB fusion has changed. Please re-tune this model with AOE SGAT.",
+      "ErrMessage": "Model performance may not be optimal due to changes in UB fusion.",
       "Arglist": "",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "N/A"
+        "Solution": "Re-tune the subgraphs with AOE SGAT."
       }
     },
     {
