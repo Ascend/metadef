@@ -66,8 +66,8 @@ TEST_F(UtestTypes, GetFormatName) {
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_Z_G), "FRACTAL_Z_G"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_ND_RNN_BIAS), "ND_RNN_BIAS"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_FRACTAL_ZN_RNN), "FRACTAL_ZN_RNN"), 0);
-  ASSERT_EQ(strcmp(GetFormatName(FORMAT_YUV), "YUV"), 0);
-  ASSERT_EQ(strcmp(GetFormatName(FORMAT_YUV_A), "YUV_A"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NYUV), "NYUV"), 0);
+  ASSERT_EQ(strcmp(GetFormatName(FORMAT_NYUV_A), "NYUV_A"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_RESERVED), "UNKNOWN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_ALL), "UNKNOWN"), 0);
   ASSERT_EQ(strcmp(GetFormatName(FORMAT_NULL), "UNKNOWN"), 0);
