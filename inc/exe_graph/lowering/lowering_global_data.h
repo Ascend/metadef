@@ -50,6 +50,8 @@ class LoweringGlobalData {
   uint64_t GetSessionId();
   bg::ValueHolderPtr GetOrCreateUniqueValueHolder(const std::string &name,
                                                   const std::function<bg::ValueHolderPtr()> &builder);
+  std::vector<bg::ValueHolderPtr> GetOrCreateUniqueValueHolder(const std::string &name,
+      const std::function<std::vector<bg::ValueHolderPtr>()> &builder);
 
  private:
   bg::ValueHolderPtr stream_ = nullptr;
@@ -59,7 +61,7 @@ class LoweringGlobalData {
   std::map<std::string, void *> graph_to_static_models_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
   uint64_t session_id_ = std::numeric_limits<uint64_t>::max();
-  std::map<std::string, bg::ValueHolderPtr> names_to_unique_value_holder_;
+  std::map<std::string, std::vector<bg::ValueHolderPtr>> names_to_unique_value_holder_;
 };
 }
 
