@@ -827,7 +827,7 @@ OpDescPtr OpDescUtils::CreateConstOp(const GeTensorPtr &tensor_ptr) {
   GELOGI("add const op: %s", const_opdesc->GetName().c_str());
   ++const_count;
 
-  (void)const_opdesc->AddOutputDesc(tensor_ptr->GetTensorDesc());
+  (void)const_opdesc->AddOutputDesc("y", tensor_ptr->GetTensorDesc());
 
   GELOGI("after add const op: %s", const_opdesc->GetName().c_str());
 

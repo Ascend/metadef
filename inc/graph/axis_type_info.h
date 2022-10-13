@@ -56,6 +56,8 @@ public:
   void AddOutputValueCutInfo(const CutInfo &cut_info);
   graphStatus GetInputValueCutInfo(const size_t index, CutInfo &cut_info) const;
   graphStatus GetOutputValueCutInfo(const size_t index, CutInfo &cut_info) const;
+  const std::vector<CutInfo> &GetRelateInputValues() const { return relate_input_values_; }
+  const std::vector<CutInfo> &GetRelateOutputValues() const { return relate_output_values_; }
 
 private:
   static graphStatus DoGetCutInfo(const std::vector<CutInfo> &cut_infos, const size_t index, CutInfo &cut_info);
