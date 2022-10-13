@@ -4,6 +4,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_log.h"
+#include "graph/yuv_subformat.h"
 #include <iostream>
 using namespace std;
 
@@ -623,6 +624,31 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSizeDataTypeIsDtStringRef) {
   int64_t mem_size;
   graphStatus ret =
       TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeNYUV) {
+  vector<int64_t> dims({2, 3, 4, 5});
+  GeShape ge_shape(dims);
+  Format format = FORMAT_NYUV;
+  DataType data_type = DT_FLOAT;
+  int64_t mem_size = 0;
+  graphStatus ret = TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  int format_sub = (format | YVU420_SP << 8);
+  ret = TensorUtils::CalcTensorMemSize(ge_shape, static_cast<Format>(format_sub), data_type, mem_size);
+  EXPECT_EQ(mem_size, 2 * 3 * 4 * 5 * 4);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  format_sub = (format | YUV422_SP << 8);
+  ret = TensorUtils::CalcTensorMemSize(ge_shape, static_cast<Format>(format_sub), data_type, mem_size);
+  EXPECT_EQ(mem_size, 2 * 3 * 4 * 5 * 4);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  format_sub = (format | YUV400 << 8);
+  ret = TensorUtils::CalcTensorMemSize(ge_shape, static_cast<Format>(format_sub), data_type, mem_size);
+  EXPECT_EQ(mem_size, 2 * 3 * 4 * 5 * 4);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 }
