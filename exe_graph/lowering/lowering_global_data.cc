@@ -203,13 +203,13 @@ uint64_t LoweringGlobalData::GetSessionId() {
   return session_id_;
 }
 
-bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(const std::string &name,
-                                                                    const std::function<bg::ValueHolderPtr()> &builder) {
+bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(
+    const std::string &name, const std::function<bg::ValueHolderPtr()> &builder) {
   return GetOrCreateUniqueValueHolder(name, [&]() -> std::vector<bg::ValueHolderPtr> { return {builder()}; })[0];
 }
 
-std::vector<bg::ValueHolderPtr> LoweringGlobalData::GetOrCreateUniqueValueHolder(const std::string &name,
-                                                                                 const std::function<std::vector<bg::ValueHolderPtr>()> &builder) {
+std::vector<bg::ValueHolderPtr> LoweringGlobalData::GetOrCreateUniqueValueHolder(
+    const std::string &name, const std::function<std::vector<bg::ValueHolderPtr>()> &builder) {
   const decltype(names_to_unique_value_holder_)::const_iterator &iter = names_to_unique_value_holder_.find(name);
   if (iter == names_to_unique_value_holder_.end()) {
     auto holder = builder();
