@@ -25,6 +25,7 @@ AllowShortLoopsOnASingleLine: true
 # 总是在返回类型后换行: None, All, TopLevel(顶级函数，不包括在类中的函数),
 # AllDefinitions(所有的定义，不包括声明), TopLevelDefinitions(所有的顶级函数的定义)
 AlwaysBreakAfterReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 120
 # 总是在template声明后换行
 AlwaysBreakTemplateDeclarations: Yes
 # 在大括号前换行: Attach(始终将大括号附加到周围的上下文), Linux(除函数、命名空间和类定义，与Attach类似),

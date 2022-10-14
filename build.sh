@@ -258,7 +258,7 @@ generate_package()
   METADEF_LIB_PATH="lib"
   COMPILER_PATH="compiler/lib64"
   RUNTIME_PATH="runtime/lib64"
-  COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
+  COMMON_LIB=("libgraph.so" "libexe_graph.so" "libregister.so" "liberror_manager.so")
 
   rm -rf ${OUTPUT_PATH:?}/${COMPILER_PATH}/
   rm -rf ${OUTPUT_PATH:?}/${RUNTIME_PATH}/

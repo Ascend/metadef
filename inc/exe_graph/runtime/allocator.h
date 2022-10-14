@@ -30,6 +30,9 @@ struct AllocatorDesc {
   bool operator<(const AllocatorDesc &other) const {
     return std::tie(placement, usage) < std::tie(other.placement, other.usage);
   }
+  std::string GetKey() const {
+    return "Allocator-" + std::to_string(placement) + "-" + std::to_string(static_cast<int32_t>(usage));
+  }
 };
 }
 #endif  // METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
