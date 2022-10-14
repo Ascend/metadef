@@ -79,6 +79,22 @@ inline bool IsLogEnable(const int32_t module_name, const int32_t log_level) {
   } while (false)
 
 namespace error_message {
+#ifdef __GNUC__
+std::string TrimPath(const std::string &str) {
+  if (str.find_last_of('/') != std::string::npos) {
+    return str.substr(str.find_last_of('/') + 1U);
+  }
+  return str;
+}
+#else
+std::string TrimPath(const std::string &str) {
+  if (str.find_last_of('\\') != std::string::npos) {
+    return str.substr(str.find_last_of('\\') + 1U);
+  }
+  return str;
+}
+#endif
+
 int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...) {
   int32_t ret;
   va_list arg_list;
@@ -249,7 +265,7 @@ int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const 
     GenWorkStreamIdDefault();
   }
 
-  GELOGI("report error_message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
+  GELOGI("Report error_message, error_code:%s, work_stream_id:%lu", error_code.c_str(), error_context_.work_stream_id);
 
   auto& error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto& warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);

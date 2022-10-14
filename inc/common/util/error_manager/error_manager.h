@@ -27,23 +27,12 @@
 
 namespace error_message {
 using char_t = char;
+std::string TrimPath(const std::string &str);
 #ifdef __GNUC__
 int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max,
                            const char_t *format, ...)__attribute__((format(printf, 3, 4)));
-inline std::string TrimPath(const std::string &str) {
-  if (str.find_last_of('/') != std::string::npos) {
-    return str.substr(str.find_last_of('/') + 1U);
-  }
-  return str;
-}
 #else
 int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format, ...);
-inline std::string TrimPath(const std::string &str) {
-  if (str.find_last_of('\\') != std::string::npos) {
-    return str.substr(str.find_last_of('\\') + 1U);
-  }
-  return str;
-}
 #endif
 }
 
