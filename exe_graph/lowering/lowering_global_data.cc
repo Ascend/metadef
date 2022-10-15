@@ -164,7 +164,8 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) 
       init_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
           "SelectAllocator",
           {placement_holder, memory_type_holder,
-           external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)], created_allocator});
+           external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)],
+           created_allocator, GetStream()});
     } else {
       init_selected_allocator = created_allocator;
     }
@@ -179,7 +180,7 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) 
       main_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
           "SelectAllocator",
           {init_out[1], init_out[2], external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)],
-           init_out[0]});
+           init_out[0], GetStream()});
     }
     return {main_selected_allocator};
   });
