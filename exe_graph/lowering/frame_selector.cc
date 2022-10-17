@@ -251,7 +251,6 @@ ValueHolderPtr HolderOnInit(const ValueHolderPtr &holder) {
   if (strcmp(parent_node->GetType().c_str(), GetExecuteGraphTypeStr(ExecuteGraphType::kInit)) == 0) {
     return holder;
   }
-  GE_LOGE("The node %s is not on the Init graph", holder_node->GetName().c_str());
   return nullptr;
 }
 }  // namespace bg
