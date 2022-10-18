@@ -175,12 +175,14 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_InitRootCreateSync2) {
 TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_MainExternalAllocatorSet) {
   InitTestFrames();
   LoweringGlobalData gd;
+  gd.SetStream(bg::ValueHolder::CreateFeed(-1));
   gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2));
 
   auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
   ASSERT_NE(allocator1, nullptr);
   EXPECT_EQ(allocator1->GetNode()->GetType(), "SelectAllocator");
-  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom({{"InnerData"}, {"InnerData"}, {"Data"}, {"InnerData"}}),
+  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom(
+              {{"InnerData"}, {"InnerData"}, {"Data"}, {"InnerData"}, {"Data"}}),
             "success");
   auto create_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("CreateAllocator");
   ASSERT_NE(create_allocator_node, nullptr);
@@ -198,8 +200,10 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_MainExte
 TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_ExternalAllocatorSet) {
   InitTestFrames();
   LoweringGlobalData gd;
+  gd.SetStream(bg::ValueHolder::CreateFeed(-1));
   gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2));
   bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+    gd.SetStream(bg::ValueHolder::CreateFeed(-1), ExecuteGraphType::kInit);
     gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2), ExecuteGraphType::kInit);
     return {};
   });
@@ -207,7 +211,8 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_External
   auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
   ASSERT_NE(allocator1, nullptr);
   EXPECT_EQ(allocator1->GetNode()->GetType(), "SelectAllocator");
-  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom({{"InnerData"}, {"InnerData"}, {"Data"}, {"InnerData"}}),
+  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom(
+              {{"InnerData"}, {"InnerData"}, {"Data"}, {"InnerData"}, {"Data"}}),
             "success");
   auto create_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("CreateAllocator");
   ASSERT_NE(create_allocator_node, nullptr);
@@ -220,7 +225,8 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_External
   });
   ASSERT_NE(init_allocator, nullptr);
   EXPECT_EQ(init_allocator->GetNode()->GetType(), "SelectAllocator");
-  EXPECT_EQ(NodeTopoChecker(init_allocator).StrictConnectFrom({{"Const"}, {"Const"}, {"Data"}, {"CreateAllocator"}}),
+  EXPECT_EQ(NodeTopoChecker(init_allocator).StrictConnectFrom(
+              {{"Const"}, {"Const"}, {"Data"}, {"CreateAllocator"}, {"Data"}}),
             "success");
 }
 
