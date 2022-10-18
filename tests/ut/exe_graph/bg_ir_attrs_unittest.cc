@@ -81,8 +81,9 @@ TEST_F(BgIrAttrsUT, CreateDataTypeAttrBuffer) {
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 1U);
-  EXPECT_EQ(base[1], 2 * sizeof(size_t));
-  EXPECT_EQ(*reinterpret_cast<ge::DataType*>(&base[2]), ge::DT_INT32);
+  EXPECT_EQ(base[1], 0U);
+  EXPECT_EQ(base[2], 3 * sizeof(size_t));
+  EXPECT_EQ(*reinterpret_cast<ge::DataType*>(&base[3]), ge::DT_INT32);
 }
 
 TEST_F(BgIrAttrsUT, CreateAttrBufferSuccessOpLossAttr) {
@@ -93,10 +94,10 @@ TEST_F(BgIrAttrsUT, CreateAttrBufferSuccessOpLossAttr) {
   auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
   size_t attr_size;
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
-  EXPECT_EQ(attr_size, 8);
+  EXPECT_EQ(attr_size, 16);
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 0U);
-  EXPECT_EQ(base[1], 0U);
+  EXPECT_EQ(base[1], 0U); // todo 原始用例，没加预留字段之前，base[1]为啥能取到值
 }
 
 TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Int64Ok) {
@@ -111,9 +112,10 @@ TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Int64Ok) {
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 1U);
-  EXPECT_EQ(base[1], 2 * sizeof(size_t));
+  EXPECT_EQ(base[1], 0U);
+  EXPECT_EQ(base[2], 3 * sizeof(size_t));
 
-  auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[2]);
+  auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[3]);
   ASSERT_NE(cvv, nullptr);
   ASSERT_EQ(cvv->GetSize(), value.size());
   for (size_t i = 0U; i < value.size(); ++i) {
@@ -140,9 +142,10 @@ TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Float64) {
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 1U);
-  EXPECT_EQ(base[1], 2 * sizeof(size_t));
+  EXPECT_EQ(base[1], 0U);
+  EXPECT_EQ(base[2], 3 * sizeof(size_t));
 
-  auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[2]);
+  auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[3]);
   ASSERT_NE(cvv, nullptr);
   ASSERT_EQ(cvv->GetSize(), value.size());
   for (size_t i = 0U; i < value.size(); ++i) {

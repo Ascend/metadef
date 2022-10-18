@@ -27,7 +27,9 @@ class AnchorInstanceInfo {
  public:
   AnchorInstanceInfo() = default;
   AnchorInstanceInfo(uint32_t instance_start, uint32_t instantiation_num)
-      : instance_start_(instance_start), instantiation_num_(instantiation_num) {}
+      : instance_start_(instance_start), instantiation_num_(instantiation_num) {
+    (void)reserved_;
+  }
 
   /**
    * 获取本输入/输出实例化的个数
@@ -64,11 +66,15 @@ class AnchorInstanceInfo {
  private:
   uint32_t instance_start_;
   uint32_t instantiation_num_;
+  int64_t reserved_ = 0; // Reserved field, 8-byte aligned
 };
 static_assert(std::is_standard_layout<AnchorInstanceInfo>::value, "The class AnchorInstanceInfo must be a POD");
 
 class CompileTimeTensorDesc {
  public:
+  CompileTimeTensorDesc() {
+    (void)reserved_;
+  }
   /**
    * 获取DataType
    * @return DataType
@@ -136,6 +142,7 @@ class CompileTimeTensorDesc {
  private:
   ge::DataType data_type_;
   StorageFormat storage_format_;
+  int64_t reserved_ = 0; // Reserved field, 8-byte aligned
 };
 static_assert(std::is_standard_layout<CompileTimeTensorDesc>::value, "The class CompileTimeTensorDesc must be a POD");
 
@@ -276,7 +283,7 @@ class ComputeNodeInfo {
   size_t ir_inputs_num_;
   size_t inputs_num_;
   size_t outputs_num_;
-
+  int64_t reserved_; // Reserved field, 8-byte aligned
   // following by AnchorInstanceInfo, inputs-outputs-CompileTimeTensorDesc, RuntimeAttrs
   uint64_t place_holder;
 };

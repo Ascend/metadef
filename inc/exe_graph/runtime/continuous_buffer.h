@@ -84,6 +84,7 @@ class ContinuousBuffer {
  private:
   friend ::gert::bg::BufferPool;
   size_t num_;
+  int64_t reserved_; // Reserved field, 8-byte aligned
   size_t offsets_[1];
 };
 static_assert(std::is_standard_layout<ContinuousBuffer>::value, "The class ContinuousText must be POD");

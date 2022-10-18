@@ -27,14 +27,16 @@
 namespace gert {
 struct Shape {
  public:
-  static constexpr size_t kMaxDimNum = 8;
+  static constexpr size_t kMaxDimNum = 25;
   static constexpr int64_t kInvalidDimValue = std::numeric_limits<int64_t>::min();
 
  public:
   /**
    * 默认构造一个shape，默认构造的shape实例中，dim_num长度为0
    */
-  Shape() : dim_num_(0), dims_{0} {}
+  Shape() : dim_num_(0), dims_{0} {
+    (void)reserved_;
+  }
 
   /**
    * 通过dims值构造shape，例如：Shape({8,3,224,224})创建一个Shape实例，有4个维度，每个维度的值分别是8,3,224,224
@@ -49,6 +51,34 @@ struct Shape {
     for (auto arg : args) {
       dims_[i++] = arg;
     }
+  }
+
+  /**
+   * 拷贝构造
+   * @param other 源对象
+   * 为了提升性能，dims_超过dim_num_的空间没有拷贝，可能有脏数据
+   */
+  Shape(const Shape &other) {
+    dim_num_ = other.dim_num_;
+    for (size_t i = 0U; i < dim_num_; ++i) {
+      dims_[i] = other.dims_[i];
+    }
+  }
+
+  /**
+   * 拷贝赋值
+   * @param other
+   * @return
+   * 为了提升性能，dims_超过dim_num_的空间没有拷贝，可能有脏数据
+   */
+  Shape &operator=(const Shape &other) {
+    if (&other != this) {
+      dim_num_ = other.dim_num_;
+      for (size_t i = 0U; i < dim_num_; ++i) {
+        dims_[i] = other.dims_[i];
+      }
+    }
+    return *this;
   }
 
   /**
@@ -182,6 +212,7 @@ struct Shape {
  private:
   size_t dim_num_;
   int64_t dims_[kMaxDimNum];
+  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
 };
 static_assert(std::is_standard_layout<Shape>::value, "The class Shape must be a POD");
 }  // namespace gert

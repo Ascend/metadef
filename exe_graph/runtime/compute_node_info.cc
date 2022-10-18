@@ -41,6 +41,7 @@ void ComputeNodeInfo::Init(size_t ir_inputs_num, size_t inputs_num, size_t outpu
   outputs_num_ = outputs_num;
   node_name_ = node_name;
   node_type_ = node_type;
+  reserved_ = 0;
 }
 AnchorInstanceInfo *ComputeNodeInfo::MutableInputInstanceInfo(size_t ir_index) const {
   return const_cast<AnchorInstanceInfo *>(GetInputInstanceInfo(ir_index));

@@ -65,6 +65,7 @@ class ContinuousVector {
   void Init(size_t capacity) {
     capacity_ = capacity;
     size_ = 0;
+    reserved_ = 0;
   }
   /**
    * 获取当前保存的元素个数
@@ -111,6 +112,7 @@ class ContinuousVector {
  private:
   size_t capacity_;
   size_t size_;
+  int64_t reserved_; // Reserved field, 8-byte aligned
   uint8_t elements[8];
 };
 static_assert(std::is_standard_layout<ContinuousVector>::value, "The ContinuousVector must be a POD");

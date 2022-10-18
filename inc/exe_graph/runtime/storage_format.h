@@ -30,7 +30,9 @@ struct StorageFormat {
    * @param expand_dims_type 补维规则
    */
   StorageFormat(ge::Format origin_format, ge::Format storage_format, const ExpandDimsType &expand_dims_type)
-      : origin_format_(origin_format), storage_format_(storage_format), expand_dims_type_(expand_dims_type) {}
+      : origin_format_(origin_format), storage_format_(storage_format), expand_dims_type_(expand_dims_type) {
+    (void)reserved_;
+  }
   /**
    * 获取原始format
    * @return 原始format
@@ -102,6 +104,7 @@ struct StorageFormat {
   ge::Format origin_format_;
   ge::Format storage_format_;
   ExpandDimsType expand_dims_type_;
+  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
 };
 static_assert(std::is_standard_layout<StorageFormat>::value, "The class StorageFormat must be a POD");
 }  // namespace gert

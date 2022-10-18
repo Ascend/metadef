@@ -75,6 +75,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
 
   auto text = ge::PtrToPtr<uint8_t, ContinuousBuffer>(text_holder.get());
   text->num_ = buf_count;
+  text->reserved_ = 0;
   size_t i = 0;
   for (; i < buf_count; ++i) {
     auto buf = ids_to_buf[i];

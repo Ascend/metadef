@@ -57,6 +57,7 @@ class KernelExtendInfo {
    * @param kernel_type_idx idx of kernel type in profiling
    */
   void SetKernelTypeIdx(uint64_t kernel_type_idx) {
+    (void)reserved_;
     kernel_type_idx_ = kernel_type_idx;
   }
 
@@ -95,6 +96,7 @@ class KernelExtendInfo {
   const char *kernel_type_;
   uint64_t compute_node_name_idx_;
   uint64_t kernel_type_idx_;
+  int64_t reserved_; // Reserved field, 8-byte aligned
 };
 static_assert(std::is_standard_layout<KernelExtendInfo>::value, "The class KernelExtendInfo must be a POD");
 

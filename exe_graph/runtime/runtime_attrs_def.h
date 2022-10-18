@@ -22,6 +22,7 @@ extern "C" {
 #endif
 typedef struct {
   size_t attr_num;
+  int64_t reserved_; // Reserved field, 8-byte aligned
   size_t offset[0];
 } RuntimeAttrsDef;
 #ifdef __cplusplus

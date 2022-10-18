@@ -162,6 +162,7 @@ class TilingData {
     capacity_ = cap_size;
     data_size_ = 0;
     data_ = data;
+    reserved_ = 0;
   }
 
   ge::graphStatus AppendConvertedAttrVal(const RuntimeAttrs *attrs, const size_t attr_index,
@@ -176,6 +177,7 @@ class TilingData {
   size_t capacity_;
   size_t data_size_;
   void *data_;
+  int64_t reserved_; // Reserved field, 8-byte aligned
 };
 
 /**

@@ -28,7 +28,9 @@ struct StorageShape {
    * @param storage_shape 运行时shape
    */
   StorageShape(std::initializer_list<int64_t> origin_shape, std::initializer_list<int64_t> storage_shape)
-      : origin_shape_(origin_shape), storage_shape_(storage_shape) {}
+      : origin_shape_(origin_shape), storage_shape_(storage_shape) {
+    (void)reserved_;
+  }
   /**
    * 获取原始shape
    * @return 原始shape
@@ -76,6 +78,7 @@ struct StorageShape {
  private:
   Shape origin_shape_;
   Shape storage_shape_;
+  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
 };
 static_assert(std::is_standard_layout<StorageShape>::value, "The class must be a POD");
 }  // namespace gert
