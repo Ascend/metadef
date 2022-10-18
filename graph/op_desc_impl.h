@@ -175,7 +175,7 @@ class OpDescImpl {
 
   void SetIsInputConst(const std::vector<bool> &is_input_const);
   std::vector<bool> GetIsInputConst() const;
-
+  graphStatus CallInferFuncV1(Operator &op, const OpDescPtr &op_desc);
   graphStatus CallInferFunc(Operator &op, const OpDescPtr &op_desc);
   graphStatus CallInferFormatFunc(Operator &op, const ConstOpDescPtr &op_desc);
   graphStatus CallInferValueRangeFunc(Operator &op, const ConstOpDescPtr &op_desc);

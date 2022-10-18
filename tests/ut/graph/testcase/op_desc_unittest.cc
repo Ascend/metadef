@@ -31,6 +31,7 @@
 #include "external/graph/operator_factory.h"
 #include "graph/utils/op_desc_utils.h"
 #include "external/graph/operator_reg.h"
+#include "external/register/op_impl_registry.h"
 
 namespace ge {
 class UtestOpDesc : public testing::Test {
@@ -502,6 +503,66 @@ TEST_F(UtestOpDesc, GetInferFunc_success) {
   auto func = op_desc->GetInferFunc();
   EXPECT_EQ(func == nullptr, false);
   EXPECT_EQ(func(op), GRAPH_SUCCESS);
+}
+
+// infer from output
+REG_OP(FixIOOp_OutputIsFix)
+    .INPUT(fix_input1, "T")
+        .INPUT(fix_input2, "T")
+        .OUTPUT(fix_output, "T2")
+        .DATATYPE(T2, TensorType({DT_BOOL}))
+        .OP_END_FACTORY_REG(FixIOOp_OutputIsFix);
+TEST_F(UtestOpDesc, CallInferV2Func_success) {
+  auto op = OperatorFactory::CreateOperator("test1", "FixIOOp_OutputIsFix");
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  GeShape shape({1,1,1,1});
+  GeTensorDesc tensor_desc(shape, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc.SetOriginShape(shape);
+  tensor_desc.SetOriginDataType(DT_FLOAT16);
+  std::vector<std::pair<int64_t, int64_t>> range = {{0, 10000}};
+  tensor_desc.SetOriginShapeRange(range);
+  op_desc->UpdateInputDesc(0, tensor_desc);
+  op_desc->UpdateInputDesc(1, tensor_desc);
+  op_desc->impl_->infer_func_ = nullptr;
+  auto infer_shape_func = [](const ge::Operator &op, const OpDescPtr &op_desc) -> uint32_t {
+    const ge::GeTensorDesc &input_desc = op_desc->GetInputDesc(0UL);
+    return op_desc->UpdateOutputDesc(0UL, input_desc);
+  };
+  auto infer_shape_range_func = [](const OpDescPtr &op) -> uint32_t {
+    return GRAPH_SUCCESS;
+  };
+  auto infer_data_type_func = [](const OpDescPtr &op) -> uint32_t {
+    return GRAPH_SUCCESS;
+  };
+  (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(infer_shape_func);
+  (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(infer_shape_range_func);
+  (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(infer_data_type_func);
+  auto status = op_desc->CallInferFunc(op);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetDataType(), DT_FLOAT16);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 4);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDim(0), 1);
+  ge::OperatorFactoryImpl::operator_infer_shape_v2_func_ = nullptr;
+  ge::OperatorFactoryImpl::operator_infer_datatype_func_ = nullptr;
+  ge::OperatorFactoryImpl::operator_infer_shape_range_func_ = nullptr;
+}
+
+TEST_F(UtestOpDesc, CallInferV2Func_failed) {
+  auto op = OperatorFactory::CreateOperator("test1", "FixIOOp_OutputIsFix");
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  GeShape shape({1,1,1,1});
+  GeTensorDesc tensor_desc(shape, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc.SetOriginShape(shape);
+  tensor_desc.SetOriginDataType(DT_FLOAT16);
+  std::vector<std::pair<int64_t, int64_t>> range = {{0, 10000}};
+  tensor_desc.SetOriginShapeRange(range);
+  op_desc->UpdateInputDesc(0, tensor_desc);
+  op_desc->UpdateInputDesc(1, tensor_desc);
+  op_desc->impl_->infer_func_ = nullptr;
+  auto status = op_desc->CallInferFunc(op);
+  ASSERT_EQ(status, GRAPH_PARAM_INVALID);
 }
 
 TEST_F(UtestOpDesc, CallInferFunc_success) {

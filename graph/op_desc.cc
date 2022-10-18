@@ -113,6 +113,30 @@ ge::graphStatus GetOutputInstanceNum(const ge::OpDescImpl *op_desc, const std::s
          op_desc->GetName().c_str(), ir_type, ir_name.c_str());
   return ge::FAILED;
 }
+
+ge::graphStatus CallInferFuncV2Inner(ge::Operator &op, const ge::OpDescPtr &op_desc) {
+  GE_ASSERT_NOTNULL(op_desc, "[Check][Input] invalid, op_desc is null.");
+  const auto call_infer_data_type = ge::OperatorFactoryImpl::GetInferDataTypeFunc();
+  const auto call_infer_shape_v2 = ge::OperatorFactoryImpl::GetInferShapeV2Func();
+  if ((call_infer_data_type == nullptr) ||
+      (call_infer_shape_v2 == nullptr)) {
+    GELOGW("infer func v2 has not been initialized");
+    return ge::GRAPH_PARAM_INVALID;
+  }
+  GE_CHK_STATUS_RET_NOLOG(call_infer_data_type(op_desc));
+  GE_CHK_STATUS_RET_NOLOG(call_infer_shape_v2(op, op_desc));
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus CallInferFuncV2(ge::Operator &op, const ge::OpDescPtr &op_desc) {
+  ge::graphStatus ret_v2 = CallInferFuncV2Inner(op, op_desc);
+  if (ret_v2 != ge::GRAPH_SUCCESS) {
+    GELOGW("[Call][InferFuncV2] failed, ret_v2[%u]", ret_v2);
+    // compatible with V1 processing by upper layer
+    return ge::GRAPH_PARAM_INVALID;
+  }
+  return ge::GRAPH_SUCCESS;
+}
 }
 
 namespace ge {
@@ -1263,14 +1287,7 @@ vector<bool> OpDescImpl::GetIsInputConst() const {
   return meta_data_.is_input_consts_;
 }
 
-graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
-  if (infer_func_ == nullptr) {
-    infer_func_ = OperatorFactoryImpl::GetInferShapeFunc(GetType());
-    if (infer_func_ == nullptr) {
-      GELOGW("[InferShape][Check] %s does not have infer_func.", GetName().c_str());
-      return GRAPH_PARAM_INVALID;
-    }
-  }
+graphStatus OpDescImpl::CallInferFuncV1(Operator &op, const OpDescPtr &op_desc) {
   NodeShapeTransUtils transformer(op_desc);
   const auto is_init_success = transformer.Init();
   if (!is_init_success) {
@@ -1283,15 +1300,15 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
   }
   graphStatus graph_status = GRAPH_SUCCESS;
   {
-    auto node_ptr = ge::NodeUtils::GetNodeFromOperator(op);
-    TraceOwnerGuard guard("OP", GetName() + ":infershape",
-                          (node_ptr == nullptr) ? ""
-                              : (node_ptr->GetOwnerComputeGraph() == nullptr)
-                              ? std::string("")
-                              : node_ptr->GetOwnerComputeGraph()->GetName());
-    graph_status = static_cast<graphStatus>(infer_func_(op));
+    const auto &node_ptr = ge::NodeUtils::GetNodeFromOperator(op);
+    const bool empty_name = (node_ptr == nullptr) || (node_ptr->GetOwnerComputeGraph() == nullptr);
+    const auto &graph_name = empty_name ? std::string("")
+                                        : node_ptr->GetOwnerComputeGraph()->GetName();
+    TraceOwnerGuard guard("OP", GetName() + ":infershape", graph_name);
+    graph_status = infer_func_(op);
   }
-  if ((graph_status != GRAPH_SUCCESS) && (graph_status != GRAPH_NODE_NEED_REPASS)) {
+  if ((graph_status != GRAPH_SUCCESS) &&
+      (graph_status != GRAPH_NODE_NEED_REPASS)) {
     GELOGE(GRAPH_FAILED, "[Call][InferFunc] for %s failed. ret:%u", GetName().c_str(), graph_status);
     return GRAPH_FAILED;
   }
@@ -1300,6 +1317,19 @@ graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
     return GRAPH_FAILED;
   }
   return graph_status;
+}
+
+graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
+  if (infer_func_ == nullptr) {
+    infer_func_ = OperatorFactoryImpl::GetInferShapeFunc(GetType());
+  }
+  // priority of use infer func v1
+  // when v2 func is ready, remove v1 func, it will automatically follow the V2 process
+  if (infer_func_ != nullptr) {
+    return CallInferFuncV1(op, op_desc);
+  } else {
+    return CallInferFuncV2(op, op_desc);
+  }
 }
 
 graphStatus OpDescImpl::CallInferFormatFunc(Operator &op, const ConstOpDescPtr &op_desc) {

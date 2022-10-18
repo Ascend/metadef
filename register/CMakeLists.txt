@@ -34,6 +34,7 @@ set(SRC_LIST
     "scope/scope_pattern.cc"
     "scope/scope_util.cc"
     "scope/scope_pass_registry.cc"
+    "shape_inference.cc"
     "${METADEF_DIR}/exe_graph/runtime/kernel_run_context_builder.cc"
     "${METADEF_DIR}/exe_graph/lowering/bg_kernel_context_extend.cc"
     "${METADEF_DIR}/exe_graph/lowering/buffer_pool.cc"

@@ -23,7 +23,6 @@
 #include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
-#include "graph/operator_factory_impl.h"
 #include "graph/compute_graph_impl.h"
 #include "external/register/register.h"
 #undef private
@@ -539,6 +538,7 @@ domi::Status AutoMappingSubgraphIOIndexFuncCB(const ge::Graph &graph,
     case 1:
       return output(0, test_idx);
   }
+  return domi::SUCCESS;
 }
 
 TEST_F(UtestRegister, FrameworkRegistryTest) {

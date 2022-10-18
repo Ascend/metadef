@@ -84,6 +84,11 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
   }
   GE_ASSERT_TRUE(connected_edge_indexes_to_anchor_index.size() == compute_node_info.GetInputsNum());
   for (size_t i = 0; i < compute_node_info.GetInputsNum(); ++i) {
+    GE_ASSERT_TRUE(i < node->GetOpDesc()->GetAllInputsSize());
+    const auto &desc_need_check = node->GetOpDesc()->GetInputDesc(connected_edge_indexes_to_anchor_index[i]);
+    if (desc_need_check.IsValid() != ge::GRAPH_SUCCESS) {
+      continue;
+    }
     auto desc = node->GetOpDesc()->GetInputDescPtr(connected_edge_indexes_to_anchor_index[i]);
     GE_ASSERT_NOTNULL(desc);
     auto td = compute_node_info.MutableInputTdInfo(i);

@@ -628,11 +628,12 @@ TEST_F(UtestGraphUtils, InsertNodeAfter) {
 }
 
 TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
-  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "3"}};
+  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "4"}};
   GetThreadLocalContext().SetSessionOption(session_option);
   auto graph_builder0 = ut::GraphBuilder("test_graph0");
   const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
   const auto &graph0 = graph_builder0.GetGraph();
+  GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
   GraphUtils::DumpGEGrph(graph0, "./", "1");
@@ -2038,7 +2039,7 @@ TEST_F(UtestGraphUtils, DumpGEGraph) {
   auto add_node = builder.AddNode("Add", "Add", 2, 1);
   auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
   builder.AddDataEdge(data_node, 0, add_node, 0);
-  builder.AddDataEdge(const_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 1);
   builder.AddDataEdge(add_node, 0, netoutput, 0);
   auto graph = builder.GetGraph();
 
