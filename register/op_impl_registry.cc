@@ -16,6 +16,8 @@
 
 #include "register/op_impl_registry.h"
 #include "framework/common/debug/ge_log.h"
+#include "graph/operator_factory_impl.h"
+#include "register/shape_inference.h"
 
 namespace gert {
 OpImplRegister::OpImplRegister(const char *op_type)
@@ -26,13 +28,19 @@ OpImplRegister::OpImplRegister(const char *op_type)
 }
 OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func) {
   functions_.infer_shape = infer_shape_func;
+  // only infer shape is necessary, as register all infer func in infer shape
+  (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(gert::InferShapeOnCompile);
+  (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(gert::InferShapeRangeOnCompile);
+  (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(gert::InferDataTypeOnCompile);
   return *this;
 }
+
 OpImplRegister &OpImplRegister::InferShapeRange(
     OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func) {
   functions_.infer_shape_range = infer_shape_range_func;
   return *this;
 }
+
 OpImplRegister &OpImplRegister::InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func) {
   functions_.infer_datatype = infer_datatype_func;
   return *this;

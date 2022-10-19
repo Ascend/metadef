@@ -58,7 +58,9 @@ class TensorData {
    * @param manager tensor data的管理函数，若manager为空，则认为addr就是tensor的数据地址，且此数据不需要被释放
    */
   explicit TensorData(TensorAddress addr = nullptr, TensorAddrManager manager = nullptr)
-      : addr_(addr), manager_(manager) {}
+      : addr_(addr), manager_(manager) {
+    (void)reserved_;
+  }
   explicit TensorData(TensorAddress addr, TensorAddrManager manager, size_t size, TensorPlacement placement)
       : addr_(addr), manager_(manager), size_(size), placement_(placement) {}
   TensorData(const TensorData &) = delete;
@@ -191,6 +193,7 @@ class TensorData {
   TensorAddrManager manager_;
   size_t size_ = 0U;
   TensorPlacement placement_ = kTensorPlacementEnd;
+  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
 };
 }  // namespace gert
 

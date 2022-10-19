@@ -32,7 +32,8 @@ TEST_F(ShapeUT, ConstructFromListOk) {
 }
 
 TEST_F(ShapeUT, ConstructFromListOverMaxNum) {
-  Shape s{1, 2, 3, 4, 5, 6, 7, 8, 9};
+  Shape s{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
   EXPECT_EQ(s.GetDimNum(), 0);
 }
 
@@ -138,8 +139,8 @@ TEST_F(ShapeUT, ModifyDimOk) {
 
 TEST_F(ShapeUT, SetGetDimOfOutRange) {
   Shape s1;
-  EXPECT_EQ(s1.GetDim(8), std::numeric_limits<int64_t>::min());
-  s1.SetDim(8, 10);
+  EXPECT_EQ(s1.GetDim(25), std::numeric_limits<int64_t>::min());
+  s1.SetDim(25, 10);
 }
 
 TEST_F(ShapeUT, SetGetDimOk) {
@@ -157,8 +158,10 @@ TEST_F(ShapeUT, AppendDimOk) {
 }
 
 TEST_F(ShapeUT, AppendDimOutOfBounds) {
-  Shape s{1,2,3,4,5,6,7,8};
-  Shape expect_s{1,2,3,4,5,6,7,8};
+  Shape s{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+           16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+  Shape expect_s{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
   s.AppendDim(10);
   EXPECT_EQ(s, expect_s);
 }
@@ -168,5 +171,28 @@ TEST_F(ShapeUT, SetScalar) {
   EXPECT_EQ(s.GetDimNum(), 4);
   s.SetScalar();
   EXPECT_EQ(s.GetDimNum(), 0);
+}
+
+TEST_F(ShapeUT, CopyConstruct) {
+  Shape s{1, 2, 3, 4, 5};
+  Shape s_copy(s);
+  EXPECT_EQ(s_copy.GetDimNum(), 5);
+}
+
+
+TEST_F(ShapeUT, CopyAssign) {
+  Shape s{4,3,2,1};
+  Shape s_copy{1, 2, 3, 4, 5};
+  EXPECT_EQ(s_copy.GetDimNum(), 5);
+  s_copy = s;
+  EXPECT_EQ(s_copy.GetDimNum(), 4);
+  EXPECT_EQ(s_copy.GetDim(4), 5);
+
+  Shape a{4,3,2,1};
+  Shape a_copy{1, 2, 3, 4, 5};
+  EXPECT_EQ(a.GetDimNum(), 4);
+  a = a_copy;
+  EXPECT_EQ(a.GetDimNum(), 5);
+  EXPECT_EQ(a.GetDim(4), 5);
 }
 }  // namespace gert

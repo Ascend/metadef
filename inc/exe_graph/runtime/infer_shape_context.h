@@ -21,7 +21,16 @@
 #include "tensor.h"
 #include "runtime_attrs.h"
 #include "extended_kernel_context.h"
+#include "graph/inference_context.h"
+#include "register/kernel_registry.h"
 namespace gert {
+/**
+ * 在节点输入后的扩展输入的索引，若需要扩展，请新增枚举类型
+ */
+enum class InputExternLayout {
+  kInferShapeFunc = 1,   // only exe runtime need infer shape func, compile stage need set to null
+  kInferenceContext = 2, // only resource op in compile stage need inference context, exe runtime need set to null
+};
 /**
  * InferShape kernel的context
  */
@@ -70,6 +79,40 @@ class InferShapeContext : public ExtendedKernelContext {
    */
   Shape *GetOutputShape(size_t index) {
     return GetOutputPointer<Shape>(index);
+  }
+
+  /**
+   * 获取InferShapeFunc
+   * @param NA
+   * @return 输出InferShapeFunc指针, 指针在节点输入地址后，仅执行态使用，编译态设置为null
+   */
+  KernelRegistry::KernelFunc GetInferShapeFunc() const {
+    const auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(GetContext()->compute_node_info);
+    if (compute_node_info == nullptr) {
+      return nullptr;
+    }
+    const auto offset = compute_node_info->GetInputsNum() + static_cast<size_t>(InputExternLayout::kInferShapeFunc);
+    if (GetContext()->input_size < offset) {
+      return nullptr;
+    }
+    return GetInputValue<KernelRegistry::KernelFunc>(offset - 1UL);
+  }
+
+  /**
+   * 获取InferenceContext指针
+   * @param NA
+   * @return 输出InferenceContext指针 指针在节点输入地址后，仅编译态使用
+   */
+  const ge::InferenceContext *GetInferenceContextPtr() const {
+    const auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(GetContext()->compute_node_info);
+    if (compute_node_info == nullptr) {
+      return nullptr;
+    }
+    const auto offset = compute_node_info->GetInputsNum() + static_cast<size_t>(InputExternLayout::kInferenceContext);
+    if (GetContext()->input_size < offset) {
+      return nullptr;
+    }
+    return GetInputPointer<ge::InferenceContext>(offset - 1UL);
   }
 };
 static_assert(std::is_standard_layout<InferShapeContext>::value, "The class InferShapeContext must be a POD");

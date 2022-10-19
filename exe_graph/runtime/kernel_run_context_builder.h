@@ -81,10 +81,10 @@ public:
     return *this;
   }
 
-  KernelContextHolder Build(ge::OpDescPtr &op_desc);
+  KernelContextHolder Build(const ge::OpDescPtr &op_desc);
 
 private:
-  ge::NodePtr MakeNode(ge::OpDescPtr &op_desc);
+  ge::NodePtr MakeNode(const ge::OpDescPtr &op_desc);
 private:
   ge::ComputeGraphPtr graph_;
   std::vector<std::pair<void *, Chain::Deleter>> inputs_;

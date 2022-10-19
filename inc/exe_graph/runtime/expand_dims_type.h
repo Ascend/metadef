@@ -47,6 +47,7 @@ class ExpandDimsType {
    * @param expand_dims_type 字符串描述的补维规则
    */
   explicit ExpandDimsType(const char *expand_dims_type) : size_(0), mask_(0) {
+    (void)reserved_;
     if (expand_dims_type == nullptr) {
       return;
     }
@@ -168,6 +169,7 @@ class ExpandDimsType {
  private:
   uint64_t size_ : 8;
   uint64_t mask_ : kMaxExpandSize;
+  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
 };
 }
 

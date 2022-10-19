@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/runtime/infer_shape_context.h"
+#include "graph/ge_error_codes.h"
 #include <gtest/gtest.h>
 #include "faker/kernel_run_context_faker.h"
 #include "exe_graph/runtime/storage_shape.h"
@@ -96,5 +97,33 @@ TEST_F(InferShapeContextUT, GetOutShapeOk) {
   EXPECT_EQ(*context->GetOutputShape(0), out_shape.GetOriginShape());
 
   EXPECT_EQ(context->GetOutputShape(1), nullptr);
+}
+
+TEST_F(InferShapeContextUT, GetInferenceContextPtrOK) {
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("test0", "test1");
+  const ge::GeTensorDesc tensor1(ge::GeShape({1,2,3,4}));
+  const ge::GeTensorDesc tensor2(ge::GeShape({2,2,3,4}));
+  const ge::GeTensorDesc tensor3(ge::GeShape({3,2,3,4}));
+  ASSERT_EQ(op_desc->AddInputDesc(tensor1), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->AddInputDesc(tensor2), ge::GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->AddOutputDesc(tensor3), ge::GRAPH_SUCCESS);
+  KernelRunContextBuilder builder;
+  gert::StorageShape shape1({1,2,3,4}, {1,2,3,4});
+  gert::StorageShape shape2({2,2,3,4}, {2,2,3,4});
+  gert::StorageShape shape3({3,2,3,4}, {3,2,3,4});
+  auto inference_ctx = std::shared_ptr<ge::InferenceContext>(ge::InferenceContext::Create());
+  KernelRegistry::KernelFunc kernel_func = [](KernelContext *context)->ge::graphStatus {
+    return ge::GRAPH_SUCCESS;
+  };
+  auto holder = builder.Inputs({{&shape1, nullptr},
+                                {&shape2, nullptr},
+                                {reinterpret_cast<void *>(kernel_func), nullptr},
+                                {inference_ctx.get(), nullptr}})
+                    .Outputs({&shape3})
+                    .Build(op_desc);
+  auto infer_shape_ctx = reinterpret_cast<gert::InferShapeContext *>(holder.context_);
+  ASSERT_NE(infer_shape_ctx, nullptr);
+  EXPECT_EQ(reinterpret_cast<const void *>(infer_shape_ctx->GetInferShapeFunc()), kernel_func);
+  EXPECT_EQ(infer_shape_ctx->GetInferenceContextPtr(), inference_ctx.get());
 }
 }  // namespace gert

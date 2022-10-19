@@ -22,7 +22,7 @@
 #include "graph/def_types.h"
 
 namespace gert {
-KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
+KernelContextHolder KernelRunContextBuilder::Build(const ge::OpDescPtr &op_desc) {
   KernelContextHolder holder;
   size_t size = sizeof(KernelRunContext) + sizeof(Chain *) * (inputs_.size() + outputs_.size());
   holder.context_holder_ = ge::ComGraphMakeUnique<uint8_t[]>(size);
@@ -63,7 +63,7 @@ KernelContextHolder KernelRunContextBuilder::Build(ge::OpDescPtr &op_desc) {
   return holder;
 }
 
-ge::NodePtr KernelRunContextBuilder::MakeNode(ge::OpDescPtr &op_desc) {
+ge::NodePtr KernelRunContextBuilder::MakeNode(const ge::OpDescPtr &op_desc) {
   graph_ = std::make_shared<ge::ComputeGraph>("tmp");
   auto fake_node = graph_->AddNode(op_desc);
   for (size_t i = 0UL; i < op_desc->GetAllInputsSize(); ++i) {

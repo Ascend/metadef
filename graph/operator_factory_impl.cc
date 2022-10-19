@@ -31,7 +31,9 @@ std::shared_ptr<std::map<std::string, InferDataSliceFunc>> OperatorFactoryImpl::
 std::shared_ptr<std::map<std::string, InferValueRangePara>> OperatorFactoryImpl::operator_infer_value_range_paras_;
 std::shared_ptr<std::map<std::string, InferAxisSliceFunc>> OperatorFactoryImpl::operator_infer_axis_slice_funcs_;
 std::shared_ptr<std::map<std::string, InferAxisTypeInfoFunc>> OperatorFactoryImpl::operator_infer_axis_type_info_funcs_;
-
+InferShapeV2Func OperatorFactoryImpl::operator_infer_shape_v2_func_ = nullptr;
+InferDataTypeFunc OperatorFactoryImpl::operator_infer_datatype_func_ = nullptr;
+InferShapeRangeFunc OperatorFactoryImpl::operator_infer_shape_range_func_ = nullptr;
 Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, const std::string &operator_type) {
   if (operator_creators_v2_ != nullptr) {
     const std::map<std::string, ge::OpCreatorV2>::const_iterator
@@ -106,6 +108,18 @@ InferShapeFunc OperatorFactoryImpl::GetInferShapeFunc(const std::string &operato
     return nullptr;
   }
   return it->second;
+}
+
+InferShapeV2Func OperatorFactoryImpl::GetInferShapeV2Func() {
+  return operator_infer_shape_v2_func_;
+}
+
+InferDataTypeFunc OperatorFactoryImpl::GetInferDataTypeFunc() {
+  return operator_infer_datatype_func_;
+}
+
+InferShapeRangeFunc OperatorFactoryImpl::GetInferShapeRangeFunc() {
+  return operator_infer_shape_range_func_;
 }
 
 InferFormatFunc OperatorFactoryImpl::GetInferFormatFunc(const std::string &operator_type) {
@@ -204,6 +218,27 @@ graphStatus OperatorFactoryImpl::RegisterInferShapeFunc(const std::string &opera
   GELOGD("Register infershape function of type: %s.", operator_type.c_str());
   (void)operator_infershape_funcs_->emplace(operator_type, infer_shape_func);
   return GRAPH_SUCCESS;
+}
+
+void OperatorFactoryImpl::RegisterInferShapeV2Func(InferShapeV2Func const infer_shape_func) {
+  if (operator_infer_shape_v2_func_ == nullptr) {
+    GELOGI("operator infer shape v2 funcs init");
+    operator_infer_shape_v2_func_ = infer_shape_func;
+  }
+}
+
+void OperatorFactoryImpl::RegisterInferDataTypeFunc(InferDataTypeFunc const infer_data_type_func) {
+  if (operator_infer_datatype_func_ == nullptr) {
+    GELOGI("operator infer data type funcs init");
+    operator_infer_datatype_func_ = infer_data_type_func;
+  }
+}
+
+void OperatorFactoryImpl::RegisterInferShapeRangeFunc(InferShapeRangeFunc const infer_shape_range_func) {
+  if (operator_infer_shape_range_func_ == nullptr) {
+    GELOGI("operator infer shape range funcs init");
+    operator_infer_shape_range_func_ = infer_shape_range_func;
+  }
 }
 
 graphStatus OperatorFactoryImpl::RegisterInferFormatFunc(const std::string &operator_type,

@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
-#include <stdlib.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
-typedef struct {
-  size_t attr_num;
-  int64_t reserved_; // Reserved field, 8-byte aligned
-  size_t offset[0];
-} RuntimeAttrsDef;
-#ifdef __cplusplus
-}
-#endif
+#ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_SHAPE_INFERENCE_H_
+#define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_SHAPE_INFERENCE_H_
 
-#endif  // AIR_CXX_RUNTIME_V2_KERNEL_RUNTIME_ATTR_CDEF_H_
+#include "graph/op_desc.h"
+namespace gert {
+extern ge::graphStatus InferDataTypeOnCompile(const ge::OpDescPtr &op_desc);
+extern ge::graphStatus InferShapeRangeOnCompile(const ge::OpDescPtr &op_desc);
+extern ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc);
+}  // namespace gert
+#endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_SHAPE_INFERENCE_H_

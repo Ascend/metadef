@@ -24,8 +24,12 @@
 #include "graph/operator_factory.h"
 #include "register/infer_data_slice_registry.h"
 #include "register/infer_axis_slice_registry.h"
+#include "register/op_impl_kernel_registry.h"
 
 namespace ge {
+using InferShapeV2Func = uint32_t (*)(const ge::Operator &op, const OpDescPtr &);
+using InferDataTypeFunc = uint32_t (*)(const OpDescPtr &);
+using InferShapeRangeFunc = uint32_t (*)(const OpDescPtr &);
 struct InferValueRangePara {
  public:
   InferValueRangePara() = default;
@@ -55,6 +59,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
 
   static InferShapeFunc GetInferShapeFunc(const std::string &operator_type);
 
+  static InferShapeV2Func GetInferShapeV2Func();
+
+  static InferDataTypeFunc GetInferDataTypeFunc();
+
+  static InferShapeRangeFunc GetInferShapeRangeFunc();
+
   static InferFormatFunc GetInferFormatFunc(const std::string &operator_type);
 
   static InferValueRangePara GetInferValueRangePara(const std::string &operator_type);
@@ -72,6 +82,12 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
   static graphStatus RegisterOperatorCreator(const std::string &operator_type, OpCreatorV2 const &op_creator);
 
   static graphStatus RegisterInferShapeFunc(const std::string &operator_type, InferShapeFunc const infer_shape_func);
+
+  static void RegisterInferShapeV2Func(InferShapeV2Func const infer_shape_func);
+
+  static void RegisterInferDataTypeFunc(InferDataTypeFunc const infer_data_type_func);
+
+  static void RegisterInferShapeRangeFunc(InferShapeRangeFunc const infer_shape_range_func);
 
   static graphStatus RegisterInferFormatFunc(const std::string &operator_type, InferFormatFunc const infer_format_func);
 
@@ -102,6 +118,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OperatorFactoryImpl {
   static std::shared_ptr<std::map<std::string, InferValueRangePara>> operator_infer_value_range_paras_;
   static std::shared_ptr<std::map<std::string, InferAxisSliceFunc>> operator_infer_axis_slice_funcs_;
   static std::shared_ptr<std::map<std::string, InferAxisTypeInfoFunc>> operator_infer_axis_type_info_funcs_;
+  static InferShapeV2Func operator_infer_shape_v2_func_;
+  static InferDataTypeFunc operator_infer_datatype_func_;
+  static InferShapeRangeFunc operator_infer_shape_range_func_;
 };
 }  // namespace ge
 

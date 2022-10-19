@@ -111,6 +111,7 @@ class Range {
  private:
   T *min_;
   T *max_;
+  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
 };
 }  // namespace gert
 
