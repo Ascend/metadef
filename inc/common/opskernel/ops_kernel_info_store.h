@@ -126,6 +126,21 @@ class OpsKernelInfoStore {
     (void)support_info;
     return false;
   }
+
+  // allow engine return specific not support flag
+  virtual bool CheckSupported(const OpDescPtr &opDescPtr, std::string &un_supported_reason,
+                              CheckSupportFlag &flag) const {
+    (void)flag;
+    return CheckSupported(opDescPtr, un_supported_reason);
+  }
+
+  virtual bool CheckSupported(const ge::NodePtr &node, std::string &un_supported_reason,
+                              CheckSupportFlag &flag) const {
+    if (node == nullptr) {
+      return false;
+    }
+    return CheckSupported(node->GetOpDesc(), un_supported_reason, flag);
+  }
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_STORE_H_
