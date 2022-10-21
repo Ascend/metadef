@@ -60,6 +60,11 @@ struct OpInfo {
   std::string opFileName;   // op file name
   std::string opFuncName;   // op function name
 };
+
+enum class CheckSupportFlag {
+  kDefault = 0,
+  kNotSupportDynamicShape
+};
 }  // namespace ge
 
 #endif  // INC_COMMON_OPSKERNEL_OPS_KERNEL_INFO_TYPES_H_
