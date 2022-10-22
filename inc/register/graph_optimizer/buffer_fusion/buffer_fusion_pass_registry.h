@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "register/graph_optimizer/fusion_common/fusion_pass_desc.h"
 #include "register/graph_optimizer/buffer_fusion/buffer_fusion_pass_base.h"
 
 namespace fe {
@@ -27,7 +28,7 @@ class BufferFusionPassRegistry {
  public:
   using CreateFn = BufferFusionPassBase *(*)();
   struct PassDesc {
-    uint64_t attr;
+    PassAttr attr;
     CreateFn create_fn;
   };
   ~BufferFusionPassRegistry();
@@ -35,7 +36,7 @@ class BufferFusionPassRegistry {
   static BufferFusionPassRegistry &GetInstance();
 
   void RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
-                    const CreateFn &create_fn, uint64_t attr);
+                    const CreateFn &create_fn, PassAttr attr);
 
   std::map<std::string, PassDesc> GetPassDesc(const BufferFusionPassType &pass_type);
 
@@ -50,7 +51,7 @@ class BufferFusionPassRegistry {
 class BufferFusionPassRegistrar {
  public:
   BufferFusionPassRegistrar(const BufferFusionPassType &pass_type, const std::string &pass_name,
-                            BufferFusionPassBase *(*create_fun)(), uint64_t attr);
+                            BufferFusionPassBase *(*create_fun)(), PassAttr attr);
 
   ~BufferFusionPassRegistrar() {}
 };

@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "register/graph_optimizer/fusion_common/fusion_pass_desc.h"
 #include "register/graph_optimizer/graph_fusion/graph_fusion_pass_base.h"
 
 namespace fe {
@@ -28,7 +29,7 @@ class FusionPassRegistry {
  public:
   using CreateFn = GraphPass *(*)();
   struct PassDesc {
-    uint64_t attr;
+    PassAttr attr;
     CreateFn create_fn;
   };
   ~FusionPassRegistry();
@@ -36,7 +37,7 @@ class FusionPassRegistry {
   static FusionPassRegistry &GetInstance();
 
   void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name, CreateFn create_fn,
-                    uint64_t attr) const;
+                    PassAttr attr) const;
 
   std::map<std::string, PassDesc> GetPassDesc(const GraphFusionPassType &pass_type);
 
@@ -51,7 +52,7 @@ class FusionPassRegistry {
 class FusionPassRegistrar {
  public:
   FusionPassRegistrar(const GraphFusionPassType &pass_type, const std::string &pass_name,
-                      GraphPass *(*create_fn)(), uint64_t attr);
+                      GraphPass *(*create_fn)(), PassAttr attr);
 
   ~FusionPassRegistrar() {}
 };
