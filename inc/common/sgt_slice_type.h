@@ -42,6 +42,14 @@ struct DimRange {
   }
 };
 
+enum class AtomicType {
+  None = 0,
+  ADD = 1,
+  SUB,
+  MUL,
+  DIV
+};
+
 struct ThreadSliceMap {
   uint32_t thread_scope_id;
   bool is_first_node_in_topo_order;
@@ -58,6 +66,8 @@ struct ThreadSliceMap {
   std::vector<std::vector<std::pair<std::string, uint32_t>>> dependencies;
   std::vector<uint32_t> core_num;
   std::vector<OpCut> cut_type;
+  std::vector<AtomicType> atomic_types;
+  std::vector<std::string> same_atomic_clean_nodes;
   std::vector<uint32_t> input_axis;
   std::vector<uint32_t> output_axis;
   std::vector<uint32_t> input_tensor_indexes;
