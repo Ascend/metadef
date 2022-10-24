@@ -31,10 +31,14 @@ class KernelRegistry {
 
   using CreateOutputsFunc = std::function<ge::graphStatus(const ge::Node *, KernelContext *)>;
   typedef UINT32 (*KernelFunc)(KernelContext *context);
+  using TraceFunc = std::function<std::vector<std::string>(const KernelContext *)>;
   struct KernelFuncs {
     KernelFunc run_func;
     CreateOutputsFunc outputs_creator;
     CreateOutputsFunc outputs_initializer;
+#ifndef ONLY_COMPILE_OPEN_SRC
+    TraceFunc trace_func;
+#endif
   };
 
   virtual ~KernelRegistry() = default;
