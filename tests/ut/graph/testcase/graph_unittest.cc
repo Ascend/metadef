@@ -537,11 +537,11 @@ TEST_F(UtestGraph, SaveLoadFile) {
 
   Graph graph3;
   ret = graph3.LoadFromFile("./ut_graph1.txt");
-  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_NE(ret, GRAPH_FAILED);
 
   Graph graph4;
   ret = graph4.LoadFromFile(std::string("./ut_graph2.txt"));
-  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_NE(ret, GRAPH_FAILED);
 }
 
 TEST_F(UtestGraph, GetName) {

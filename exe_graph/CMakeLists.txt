@@ -1,5 +1,3 @@
-project(ExeGraph)
-
 include(${METADEF_DIR}/cmake/build_type.cmake)
 file(GLOB_RECURSE EXE_GRAPH_SRCS CONFIGURE_DEPENDS "${METADEF_DIR}/exe_graph/*.cc")
 
@@ -13,16 +11,13 @@ target_include_directories(exe_graph PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
-    ${METADEF_DIR}/third_party/transformer/inc
 )
 
 target_link_libraries(exe_graph PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+    intf_pub
+    mmpa_headers
     metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
+    air_headers
     c_sec
     slog
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>

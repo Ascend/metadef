@@ -23,7 +23,7 @@
 #include "exe_graph/runtime/tensor.h"
 #include "exe_graph/lowering/bg_ir_attrs.h"
 #include "graph/debug/ge_attr_define.h"
-#include "transformer/inc/expand_dimension.h"
+#include "expand_dimension.h"
 
 namespace gert {
 class BgIrAttrsUT : public testing::Test {};

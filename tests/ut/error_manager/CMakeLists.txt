@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-project(ut_error_manager)
-
 set(CMAKE_CXX_STANDARD 11)
 
 # include directories
@@ -42,9 +39,7 @@ target_compile_definitions(ut_error_manager PRIVATE
 )
 
 target_link_libraries(ut_error_manager
-    $<BUILD_INTERFACE:intf_pub>
-    fwk_mmpa_headers
-    graphengine_headers
+    intf_pub
     error_manager
-    gtest gtest_main ascend_protobuf c_sec -lrt -ldl -lgcov
+    GTest::gtest GTest::gtest_main ascend_protobuf c_sec -lrt -ldl -lgcov
 )

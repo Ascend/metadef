@@ -19,10 +19,7 @@ target_include_directories(error_manager PRIVATE
 
 target_link_libraries(error_manager
     PRIVATE
-        $<BUILD_INTERFACE:intf_pub>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-        fwk_mmpa_headers
+        intf_pub
         static_mmpa
         -Wl,--no-as-needed
         c_sec

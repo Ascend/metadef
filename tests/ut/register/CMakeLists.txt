@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-project(ut_register)
-
 set(CMAKE_CXX_STANDARD 11)
 # include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
@@ -23,7 +20,6 @@ include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
 include_directories(${METADEF_DIR})
 include_directories(${METADEF_DIR}/register)
-include_directories(${METADEF_DIR}/third_party/transformer/inc)
 
 file(GLOB_RECURSE REGISTER_UT_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/register/*.cc" )
 add_executable(ut_register
@@ -40,13 +36,15 @@ target_compile_definitions(ut_register PRIVATE
 )
 
 target_link_libraries(ut_register
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
     metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
+    air_headers
+    runtime_headers
+    slog_headers
+    msprof_headers
     register graph exe_graph
-    gtest
-    gtest_main
+    GTest::gtest
+    GTest::gtest_main
     ascend_protobuf
     slog_stub
     json

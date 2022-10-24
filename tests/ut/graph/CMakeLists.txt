@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-project(ut_graph)
-
 set(CMAKE_CXX_STANDARD 11)
 
 # include directories
@@ -22,7 +19,6 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${METADEF_DIR}/inc/common/util/trace_manager)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
-include_directories(${METADEF_DIR}/third_party/transformer/inc)
 include_directories(${METADEF_DIR})
 include_directories(${METADEF_DIR}/graph)
 include_directories(${CMAKE_BINARY_DIR})
@@ -42,13 +38,13 @@ target_compile_definitions(ut_graph PRIVATE
     FUNC_VISIBILITY
 )
 
-target_link_libraries(ut_graph PUBLIC
-    $<BUILD_INTERFACE:intf_pub> -lgcov
+target_link_libraries(ut_graph PRIVATE
+    intf_pub -lgcov
+    slog_headers
     metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
+    air_headers
     graph error_manager
-    gtest gtest_main ascend_protobuf slog_stub c_sec json -lrt -ldl
+    GTest::gtest GTest::gtest_main ascend_protobuf slog_stub c_sec json -lrt -ldl
 )
 
 target_include_directories(ut_graph PRIVATE ${METADEF_DIR}/tests/depends)
