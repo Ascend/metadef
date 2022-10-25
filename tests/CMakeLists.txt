@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-project(tests CXX C)
-
 target_compile_definitions(graph PRIVATE FUNC_VISIBILITY)
 
 add_subdirectory(depends/slog)

@@ -75,13 +75,11 @@ target_link_options(register PRIVATE
 
 target_link_libraries(register
     PRIVATE
-        $<BUILD_INTERFACE:intf_pub>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
-        fwk_mmpa_headers
-        graphengine_headers
+        intf_pub
+        msprof_headers
+        cce_headers
+        runtime_headers
+        air_headers
         -Wl,--whole-archive
         op_tiling_o2
         -Wl,--no-whole-archive
@@ -143,14 +141,14 @@ target_include_directories(register_static PRIVATE
 target_link_libraries(register_static PRIVATE
     c_sec
     json
-    $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:msprof_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:cce_headers>>
+    intf_pub
+    slog_headers
+    msprof_headers
+    mmpa_headers
+    cce_headers
+    air_headers
+    runtime_headers
     metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
 )
 
 target_link_libraries(register_static PRIVATE
@@ -197,12 +195,11 @@ target_compile_definitions(op_tiling_o2 PRIVATE
 )
 
 target_link_libraries(op_tiling_o2 PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-    $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
+    intf_pub
+    slog_headers
+    mmpa_headers
     metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
+    air_headers
     ascend_protobuf
     json
     c_sec

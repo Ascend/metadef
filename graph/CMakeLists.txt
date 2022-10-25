@@ -115,7 +115,6 @@ target_include_directories(graph PRIVATE
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
     ${METADEF_DIR}
-    ${METADEF_DIR}/third_party/transformer/inc
 )
 
 target_link_options(graph PRIVATE
@@ -124,11 +123,8 @@ target_link_options(graph PRIVATE
 
 target_link_libraries(graph
     PRIVATE
-        $<BUILD_INTERFACE:intf_pub>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:slog_headers>>
-        $<$<NOT:$<BOOL:${ENABLE_OPEN_SRC}>>:$<BUILD_INTERFACE:mmpa_headers>>
-        fwk_mmpa_headers
-        graphengine_headers
+        intf_pub
+        air_headers
         static_mmpa
         -Wl,--no-as-needed
         c_sec
@@ -214,10 +210,8 @@ target_compile_options(atc_stub_graph PRIVATE
 )
 
 target_link_libraries(atc_stub_graph PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
     metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
 )
 
 set_target_properties(atc_stub_graph PROPERTIES
@@ -250,10 +244,8 @@ target_include_directories(fwk_stub_graph PRIVATE
 )
 
 target_link_libraries(fwk_stub_graph PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
     metadef_headers
-    fwk_mmpa_headers
-    graphengine_headers
 )
 
 set_target_properties(fwk_stub_graph PROPERTIES

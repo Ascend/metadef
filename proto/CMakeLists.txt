@@ -49,16 +49,10 @@ set(METADEF_TENSORFLOW_PROTO_SRCS
 
 add_library(metadef_graph_protos_obj OBJECT ${METADEF_GRAPH_PROTO_SRCS})
 add_dependencies(metadef_graph_protos_obj metadef_protos)
-target_include_directories(metadef_graph_protos_obj PRIVATE
-        #### blue zone ####
-        ${PROTOBUF_SHARED_PKG_DIR}/include
-        #### yellow zone ####
-        ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
-        )
 target_compile_definitions(metadef_graph_protos_obj PRIVATE
         google=ascend_private
         )
-target_link_libraries(metadef_graph_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(metadef_graph_protos_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(metadef_graph_protos_obj PRIVATE
         $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
         $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
@@ -69,16 +63,10 @@ target_compile_options(metadef_graph_protos_obj PRIVATE
 
 add_library(metadef_tensorflow_protos_obj OBJECT ${METADEF_TENSORFLOW_PROTO_SRCS})
 add_dependencies(metadef_tensorflow_protos_obj metadef_protos)
-target_include_directories(metadef_tensorflow_protos_obj PRIVATE
-        #### blue zone ####
-        ${PROTOBUF_SHARED_PKG_DIR}/include
-        #### yellow zone ####
-        ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
-        )
 target_compile_definitions(metadef_tensorflow_protos_obj PRIVATE
         google=ascend_private
         )
-target_link_libraries(metadef_tensorflow_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(metadef_tensorflow_protos_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(metadef_tensorflow_protos_obj PRIVATE
         $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
         $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>

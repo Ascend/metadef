@@ -22,7 +22,7 @@
 #include "exe_graph/runtime/continuous_vector.h"
 #include "exe_graph/runtime/tensor.h"
 #include "graph/debug/ge_attr_define.h"
-#include "transformer/inc/expand_dimension.h"
+#include "expand_dimension.h"
 #include "graph/utils/graph_utils.h"
 #include "runtime/runtime_attrs_def.h"
 #include "graph/compute_graph.h"

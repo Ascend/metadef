@@ -15,10 +15,25 @@
 # ============================================================================
 
 set -e
+echo "ASCEND_CUSTOM_PATH=${ASCEND_CUSTOM_PATH}"
 BASEPATH=$(cd "$(dirname $0)"; pwd)
 OUTPUT_PATH="${BASEPATH}/output"
 BUILD_RELATIVE_PATH="build"
 BUILD_PATH="${BASEPATH}/${BUILD_RELATIVE_PATH}/"
+ASCEND_OPENSDK_DIR=${ASCEND_CUSTOM_PATH}/opensdk/opensdk
+PREFIX_PATH="${ASCEND_OPENSDK_DIR}/cmake;\
+${ASCEND_OPENSDK_DIR}/c_sec;\
+${ASCEND_OPENSDK_DIR}/json;\
+${ASCEND_OPENSDK_DIR}/openssl;\
+${ASCEND_OPENSDK_DIR}/zlib;\
+${ASCEND_OPENSDK_DIR}/protoc;\
+${ASCEND_OPENSDK_DIR}/protoc_grpc;\
+${ASCEND_OPENSDK_DIR}/grpc;\
+${ASCEND_OPENSDK_DIR}/protobuf_static;\
+${ASCEND_OPENSDK_DIR}/ascend_protobuf;\
+${ASCEND_OPENSDK_DIR}/ascend_protobuf_static;\
+${ASCEND_OPENSDK_DIR}/gtest_shared/lib/cmake/GTest;\
+${ASCEND_OPENSDK_DIR}/gtest_shared/lib64/cmake/GTest"
 
 # print usage message
 usage()
@@ -55,13 +70,13 @@ checkopts()
 {
   VERBOSE=""
   THREAD_NUM=8
-  # ENABLE_METADEF_UT_ONLY_COMPILE="off"
   ENABLE_METADEF_UT="off"
   ENABLE_METADEF_ST="off"
   ENABLE_METADEF_COV="off"
   ENABLE_BENCHMARK="off"
   GE_ONLY="on"
   ENABLE_GITEE="off"
+  CMAKE_BUILD_TYPE="Release"
   # Process the options
   while getopts 'ustcbhj:vS:' opt
   do
@@ -119,21 +134,6 @@ mk_dir() {
 
 # Meatdef build start
 echo "---------------- Metadef build start ----------------"
-
-function get_metadef_lib_dir() {
-  if [ ${D_LINK_PATH} ] ; then
-    local arch=$(uname -m)
-    if [[ "${arch}" == "x86_64" || "${arch}" == "aarch64" ]]; then
-      echo ${D_LINK_PATH}/${arch}
-    else
-      echo "metadef lib dir config error !!"
-      exit 1
-    fi
-  elif [ ${ASCEND_CUSTOM_PATH} ]; then
-    echo ${ASCEND_CUSTOM_PATH}/compiler/lib64
-  fi
-}
-
 function cmake_generate_make() {
   local build_path=$1;
   local cmake_args=$2;
@@ -155,23 +155,28 @@ build_metadef()
 
   if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     BUILD_RELATIVE_PATH="build_gcov"
-    CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=GCOV"
-  fi
-
-  if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" || "X$ENABLE_BENCHMARK" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS}"
-  else
-    local metadef_lib_dir=$(get_metadef_lib_dir);
-    CMAKE_ARGS="${CMAKE_ARGS} -DMETADEF_LIB_DIR=${metadef_lib_dir}"
-  fi
-
-  if [[ "X$ENABLE_GITEE" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GITEE=ON"
+    CMAKE_BUILD_TYPE="GCOV"
   fi
 
   BUILD_PATH="${BASEPATH}/${BUILD_RELATIVE_PATH}/"
-  CMAKE_ARGS="${CMAKE_ARGS} -DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
-  CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
+  CMAKE_ARGS="-D GE_ONLY=$GE_ONLY \
+              -D ENABLE_OPEN_SRC=True \
+              -D ENABLE_GITEE=${ENABLE_GITEE} \
+              -D ENABLE_METADEF_UT=${ENABLE_METADEF_UT} \
+              -D ENABLE_METADEF_ST=${ENABLE_METADEF_ST} \
+              -D ENABLE_METADEF_COV=${ENABLE_METADEF_COV} \
+              -D ENABLE_BENCHMARK=${ENABLE_BENCHMARK} \
+              -D BUILD_WITHOUT_AIR=True \
+              -D ASCEND_OPENSDK_DIR=${ASCEND_OPENSDK_DIR} \
+              -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+              -D CMAKE_INSTALL_PREFIX=${OUTPUT_PATH} \
+              -D CMAKE_MODULE_PATH=${ASCEND_OPENSDK_DIR}/cmake/modules \
+              -D CMAKE_PREFIX_PATH=${PREFIX_PATH} \
+              -D protoc_ROOT=${ASCEND_OPENSDK_DIR}/protoc \
+              -D protobuf_grpc_ROOT=${ASCEND_OPENSDK_DIR}/grpc \
+              -D protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/protobuf_static \
+              -D ascend_protobuf_shared_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf \
+              -D ascend_protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf_static "
   cmake_generate_make "${BUILD_PATH}" "${CMAKE_ARGS}"
 
   if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
@@ -203,14 +208,6 @@ g++ -v
 mk_dir ${OUTPUT_PATH}
 build_metadef || { echo "Metadef build failed."; return; }
 echo "---------------- Metadef build finished ----------------"
-rm -f ${OUTPUT_PATH}/libgmock*.so
-rm -f ${OUTPUT_PATH}/libgtest*.so
-rm -f ${OUTPUT_PATH}/lib*_stub.so
-
-chmod -R 750 ${OUTPUT_PATH}
-find ${OUTPUT_PATH} -name "*.so*" -print0 | xargs -0 chmod 500
-
-echo "---------------- Metadef output generated ----------------"
 
 if [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
   RUN_TEST_CASE= ${BUILD_PATH}/tests/benchmark/exec_graph_benchmark && ${RUN_TEST_CASE}
