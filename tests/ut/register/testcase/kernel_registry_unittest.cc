@@ -59,36 +59,42 @@ TEST_F(KernelRegistryTest, RegisterKernelWithOutputCreator) {
   REGISTER_KERNEL(KernelRegistryTest2)
       .RunFunc(TestFunc1)
       .OutputsCreator(TestFuncCreator)
-      .OutputsInitializer(TestFuncInitializer);
+      .OutputsInitializer(TestFuncInitializer)
+      .OutputsCreatorFunc(TestFuncCreator);
   auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest2");
   ASSERT_NE(funcs, nullptr);
   EXPECT_EQ(funcs->run_func, &TestFunc1);
   EXPECT_NE(funcs->outputs_creator, nullptr);
   EXPECT_NE(funcs->outputs_initializer, nullptr);
+  EXPECT_NE(funcs->outputs_creator_func, nullptr);
 }
 TEST_F(KernelRegistryTest, SelfDefinedRegistry_RegisterOk) {
-  REGISTER_KERNEL(KernelRegistryTest1).RunFunc(TestFunc1).OutputsCreator(TestFuncCreator);
+  REGISTER_KERNEL(KernelRegistryTest1).RunFunc(TestFunc1).OutputsCreator(TestFuncCreator).OutputsCreatorFunc(TestFuncCreator);
   auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
   ASSERT_NE(funcs, nullptr);
   EXPECT_EQ(funcs->run_func, &TestFunc1);
   EXPECT_NE(funcs->outputs_creator, nullptr);
+  EXPECT_NE(funcs->outputs_creator_func, nullptr);
   gert::KernelRegistry::ReplaceKernelRegistry(std::shared_ptr<KernelRegistry>(new FakeRegistry));
   funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
   ASSERT_NE(funcs, nullptr);
   EXPECT_EQ(funcs->run_func, nullptr);
   EXPECT_EQ(funcs->outputs_creator, nullptr);
+  EXPECT_EQ(funcs->outputs_creator_func, nullptr);
 }
 TEST_F(KernelRegistryTest, SelfDefinedRegistry_RecoveryOk) {
-  REGISTER_KERNEL(KernelRegistryTest1).RunFunc(TestFunc1).OutputsCreator(TestFuncCreator);
+  REGISTER_KERNEL(KernelRegistryTest1).RunFunc(TestFunc1).OutputsCreator(TestFuncCreator).OutputsCreatorFunc(TestFuncCreator);
   auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
   ASSERT_NE(funcs, nullptr);
   EXPECT_EQ(funcs->run_func, &TestFunc1);
   EXPECT_NE(funcs->outputs_creator, nullptr);
+  EXPECT_NE(funcs->outputs_creator_func, nullptr);
   gert::KernelRegistry::ReplaceKernelRegistry(std::shared_ptr<KernelRegistry>(new FakeRegistry));
   gert::KernelRegistry::ReplaceKernelRegistry(nullptr);  // recovery to the origin
   funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
   ASSERT_NE(funcs, nullptr);
   EXPECT_EQ(funcs->run_func, &TestFunc1);
   EXPECT_NE(funcs->outputs_creator, nullptr);
+  EXPECT_NE(funcs->outputs_creator_func, nullptr);
 }
 }  // namespace test_gert
