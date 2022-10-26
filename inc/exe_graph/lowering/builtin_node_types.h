@@ -36,6 +36,11 @@ constexpr ge::char_t const *kData = "Data";
 // 常量节点有一个属性"value"代表该常量节点的值，value是一段二进制，常量节点本身不关注其内容的格式
 constexpr ge::char_t const *kConst = "Const";
 
+// 常量输入节点，该节点没有输入，有一个输出，
+// 其值在lowering阶段不可获得，加载时由外部传入，且在执行过程中不会被改变
+// ConstData具有一个key为type的属性，该属性类型是int32，由此代表ConstData的类型，也代表顺序
+// 详见air仓ConstDataType枚举
+constexpr ge::char_t const *kConstData = "ConstData";
 
 inline bool IsTypeData(const ge::char_t *const node_type) {
   return strcmp(kData, node_type) == 0;

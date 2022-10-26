@@ -356,6 +356,13 @@ ValueHolderPtr ValueHolder::CreateFeed(int64_t index) {
   return CreateFromNode(node, 0, ValueHolderType::kFeed);
 }
 
+ValueHolderPtr ValueHolder::CreateConstData(int64_t index) {
+  auto node = ValueHolder::CreateNode(kConstData, {}, 1U);
+  GE_ASSERT_NOTNULL(node);
+  GE_ASSERT_TRUE(ge::AttrUtils::SetInt(node->GetOpDesc(), kFeedIndex, index));
+  return CreateFromNode(node, 0, ValueHolderType::kConstData);
+}
+
 ValueHolderPtr ValueHolder::CreateSingleDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs) {
   auto holders = CreateDataOutput(node_type, inputs, 1U);
   if (holders.empty()) {
