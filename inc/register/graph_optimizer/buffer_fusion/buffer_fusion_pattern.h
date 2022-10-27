@@ -60,7 +60,17 @@ struct BufferFusionOpDesc {
   // out_branch_type is TBE_OUTPUT_BRANCH_MULTI
   std::map<int64_t, SkipStatus> multi_output_skip_status;
 };
+
+struct MappingCmpKey {
+  bool operator() (const BufferFusionOpDesc *key1, const BufferFusionOpDesc *key2) const {
+    return (key1->desc_name) < (key2->desc_name);
+  }
+};
+#ifdef ONLY_COMPILE_OPEN_SRC
 using BufferFusionMapping = std::map<const BufferFusionOpDesc *, std::vector<ge::NodePtr>>;
+#else
+using BufferFusionMapping = std::map<const BufferFusionOpDesc *, std::vector<ge::NodePtr>, MappingCmpKey>;
+#endif
 using BufferFusionNodeDescMap = std::unordered_map<ge::NodePtr, BufferFusionOpDesc *>;
 
 class BufferFusionPattern {
