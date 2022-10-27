@@ -54,7 +54,7 @@ public:
    * @return 输入tensor指针，index非法时返回空指针
    */
   const Tensor *GetInputTensor(size_t index) const {
-    return GetInputPointer<Tensor>(index);
+    return GetInputPointer<Tensor>(index + 1U);
   }
 
   /**
