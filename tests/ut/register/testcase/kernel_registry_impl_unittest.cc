@@ -30,19 +30,21 @@ KernelStatus TestFunc(KernelContext *context) {
 class KernelRegistryImplUT : public testing::Test {};
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_AllFuncRegistered) {
   KernelRegistryImpl registry;
-  registry.RegisterKernel("Foo", {TestFunc, TestFuncCreator, TestFuncInitializer});
+  registry.RegisterKernel("Foo", {TestFunc, TestFuncCreator, TestFuncInitializer, TestFuncCreator});
   ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
   ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
   ASSERT_NE(registry.FindKernelFuncs("Foo")->outputs_creator, nullptr);
   ASSERT_NE(registry.FindKernelFuncs("Foo")->outputs_initializer, nullptr);
+  ASSERT_NE(registry.FindKernelFuncs("Foo")->outputs_creator_func, nullptr);
 }
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_OnlyRegisterRunFunc) {
   KernelRegistryImpl registry;
-  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr});
+  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr});
   ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
   ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
   ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator, nullptr);
   ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_initializer, nullptr);
+  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, nullptr);
 }
 TEST_F(KernelRegistryImplUT, FailedToFindWhenNotRegister) {
   KernelRegistryImpl registry;
@@ -50,13 +52,13 @@ TEST_F(KernelRegistryImplUT, FailedToFindWhenNotRegister) {
 }
 TEST_F(KernelRegistryImplUT, GetAll_Ok) {
   KernelRegistryImpl registry;
-  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr});
+  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr});
   std::unordered_map<std::string, KernelRegistry::KernelFuncs> expect = {
       {"Foo", {TestFunc, nullptr, nullptr}},
       {"Bar", {TestFunc, TestFuncCreator, TestFuncInitializer}}
   };
-  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr});
-  registry.RegisterKernel("Bar", {TestFunc, TestFuncCreator, TestFuncInitializer});
+  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr});
+  registry.RegisterKernel("Bar", {TestFunc, TestFuncCreator, TestFuncInitializer, TestFuncCreator});
   ASSERT_EQ(registry.GetAll().size(), expect.size());
   for (const auto &key_to_funcs : registry.GetAll()) {
     ASSERT_TRUE(expect.count(key_to_funcs.first) > 0);

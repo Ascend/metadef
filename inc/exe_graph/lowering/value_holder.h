@@ -39,6 +39,7 @@ class ValueHolder {
     kConst,   // 常量，执行时不变
     kFeed,    // 执行时外部指定
     kOutput,  // 由node产生，包含数据输出与控制输出
+    kConstData, // 常量Const，执行时由外部指定，执行时不变
     // Add new type definitions here
     kValueHolderTypeEnd
   };
@@ -88,6 +89,7 @@ class ValueHolder {
   static ValueHolderPtr CreateError(const char *fmt, va_list arg);
   static ValueHolderPtr CreateConst(const void *data, size_t size, bool is_string = false);
   static ValueHolderPtr CreateFeed(int64_t index);
+  static ValueHolderPtr CreateConstData(int64_t index);
 
   static ValueHolderPtr CreateSingleDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs);
   static std::vector<ValueHolderPtr> CreateDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs,

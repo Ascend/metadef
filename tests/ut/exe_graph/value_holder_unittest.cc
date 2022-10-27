@@ -1444,5 +1444,41 @@ TEST_F(ValueHolderUt, PopFrame_Failed_OutpusUseGraphNotAncestor) {
   ASSERT_EQ(bar2, nullptr);
   ValueHolder::PopGraphFrame();
 }
+
+TEST_F(ValueHolderUt, CreateConstDataOk) {
+  ge::Format f1 = ge::FORMAT_NC1HWC0;
+  auto const_data1 = ValueHolder::CreateConstData(0);
+  auto data1 = ValueHolder::CreateFeed(0);
+  ASSERT_NE(const_data1, nullptr);
+  ASSERT_NE(data1, nullptr);
+
+  std::vector<ValueHolderPtr> inputs = {data1, const_data1};
+  auto holder = ValueHolder::CreateVoid("TestNode", inputs);
+
+  ASSERT_NE(holder, nullptr);
+
+  ASSERT_NE(const_data1->GetGraph(), nullptr);
+  ASSERT_NE(const_data1->GetNode()->GetOwnerComputeGraph(), nullptr);
+  ASSERT_NE(data1->GetGraph(), nullptr);
+  ASSERT_NE(data1->GetNode()->GetOwnerComputeGraph(), nullptr);
+  ASSERT_NE(holder->GetNode(), nullptr);
+  ASSERT_NE(holder->GetGraph(), nullptr);
+  ASSERT_NE(holder->GetNode()->GetOwnerComputeGraph(), nullptr);
+
+  // check graph is ok
+  auto graph = holder->GetGraph();
+  ASSERT_EQ(graph->GetAllNodesSize(), 3);
+  CheckGraphGenerally(*graph);
+
+  auto const1_g = graph->FindFirstNodeMatchType("ConstData");
+  auto data1_g = graph->FindFirstNodeMatchType("Data");
+  auto node_g = graph->FindFirstNodeMatchType("TestNode");
+  ASSERT_NE(const1_g, nullptr);
+  ASSERT_NE(data1_g, nullptr);
+  ASSERT_NE(node_g, nullptr);
+
+  EXPECT_EQ(node_g->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode(), data1_g);
+  EXPECT_EQ(node_g->GetInDataAnchor(1)->GetPeerOutAnchor()->GetOwnerNode(), const1_g);
+}
 }  // namespace bg
 }  // namespace gert

@@ -31,11 +31,13 @@ class KernelRegistry {
 
   using CreateOutputsFunc = std::function<ge::graphStatus(const ge::Node *, KernelContext *)>;
   typedef UINT32 (*KernelFunc)(KernelContext *context);
+  typedef UINT32 (*OutputsCreatorFunc)(const ge::Node *, KernelContext *);
   using TraceFunc = std::function<std::vector<std::string>(const KernelContext *)>;
   struct KernelFuncs {
     KernelFunc run_func;
-    CreateOutputsFunc outputs_creator;
-    CreateOutputsFunc outputs_initializer;
+    CreateOutputsFunc outputs_creator; // to be deleted
+    CreateOutputsFunc outputs_initializer; // to be deleted
+    OutputsCreatorFunc outputs_creator_func;
 #ifndef ONLY_COMPILE_OPEN_SRC
     TraceFunc trace_func;
 #endif
@@ -56,8 +58,9 @@ class KernelRegister {
 
   KernelRegister &RunFunc(KernelRegistry::KernelFunc func);
 
-  KernelRegister &OutputsCreator(KernelRegistry::CreateOutputsFunc func);
-  KernelRegister &OutputsInitializer(KernelRegistry::CreateOutputsFunc func);
+  KernelRegister &OutputsCreator(KernelRegistry::CreateOutputsFunc func); // to be deleted
+  KernelRegister &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func);
+  KernelRegister &OutputsInitializer(KernelRegistry::CreateOutputsFunc func); // to be deleted
 
  private:
   std::string kernel_type_;

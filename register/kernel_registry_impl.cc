@@ -64,6 +64,7 @@ const std::unordered_map<std::string, KernelRegistry::KernelFuncs> &KernelRegist
 }
 KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_type) {
   kernel_funcs_.outputs_creator = NullCreator;
+  kernel_funcs_.outputs_creator_func = NullCreator;
   kernel_funcs_.outputs_initializer = NullDestoryer;
 }
 KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
@@ -72,6 +73,10 @@ KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
 }
 KernelRegister &KernelRegister::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
   kernel_funcs_.outputs_creator = std::move(func);
+  return *this;
+}
+KernelRegister &KernelRegister::OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func) {
+  kernel_funcs_.outputs_creator_func = func;
   return *this;
 }
 KernelRegister &KernelRegister::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
