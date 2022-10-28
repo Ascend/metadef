@@ -1093,6 +1093,8 @@ const std::string ATTR_NAME_DATA_DUMP_ORIGIN_FORMAT = "_datadump_origin_format";
 const std::string ATTR_NAME_DATA_DUMP_ORIGIN_DATA_TYPE = "_datadump_origin_data_type";
 const std::string ATTR_NAME_ORIGIN_OP_NAMES_IN_FUSION_PROCESS = "_original_op_names_in_fusion_process";
 const std::string ATTR_NAME_ORIGIN_OP_NAMES_MAP = "_original_op_names_map";
+const std::string ATTR_NAME_ORIGIN_OP_ATTRS_IN_FUSION_PROCESS = "_original_op_attrs_in_fusion_process";
+const std::string ATTR_NAME_ORIGIN_OP_ATTRS_MAP = "_original_op_attrs_map";
 
 // functional ops attr
 const std::string ATTR_NAME_IF_THEN_BRANCH = "then_branch";

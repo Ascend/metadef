@@ -48,7 +48,9 @@ using NodeMapInfoPtr = std::shared_ptr<NodeMapInfo>;
 * 2. record op names before fusion */
 class GraphPassUtil {
  public:
- using UnorderedMapping = std::unordered_map<std::string, std::vector<std::string>>;
+ using OriginOpAttrsVec = std::vector<std::vector<std::string>>;
+ using UnorderedMapping = std::unordered_map<std::string, OriginOpAttrsVec>;
+ using UnorderedMappingOld = std::unordered_map<std::string, std::vector<std::string>>;
   /** set outputdesc attr for data dump
    *
    * @param origin_index,usually is origin node output index
@@ -109,6 +111,10 @@ class GraphPassUtil {
                                              std::vector<ge::NodePtr> &fus_nodes, const string &pass_name,
                                              const std::vector<std::string> &origin_op_names = std::vector<string>());
 
+  static void RecordPassnameAndOriginalAttrs(const std::vector<ge::NodePtr> &original_nodes,
+                                             std::vector<ge::NodePtr> &fus_nodes, const string &pass_name,
+                                             const OriginOpAttrsVec &origin_op_attrs = OriginOpAttrsVec());
+
   static Status StoreAndUpdataOriginFusionPassName(const ge::OpDescPtr &op_desc,
                                                    const std::vector<ge::NodePtr> &original_nodes,
                                                    const std::string &pass_name);
@@ -134,6 +140,10 @@ class GraphPassUtil {
   static void RecordOriginalOpNames(const std::vector<ge::NodePtr> &original_nodes,
                                     const ge::OpDescPtr &op_desc, const string &pass_name,
                                     const std::vector<std::string> &origin_op_names = std::vector<string>());
+
+  static void RecordOriginalOpAttrs(const std::vector<ge::NodePtr> &original_nodes,
+                                    const ge::OpDescPtr &op_desc, const string &pass_name,
+                                    const OriginOpAttrsVec &origin_op_attrs = OriginOpAttrsVec());
 
   static void RecordOriginalNames(const std::vector<ge::NodePtr> &original_nodes, const ge::NodePtr &node);
 

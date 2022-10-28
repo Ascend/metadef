@@ -19,21 +19,29 @@ protected:
   void TearDown() {}
 };
 
-bool CheckOriginName(const std::vector<ge::NodePtr> &nodes, std::string pass_name, std::vector<std::string> origin_names) {
+bool CheckOriginAttr(const std::vector<ge::NodePtr> &nodes, std::string pass_name,  
+                     GraphPassUtil::OriginOpAttrsVec origin_attrs) {
   for (auto node : nodes) {
     auto op_desc = node->GetOpDesc();
-    std::shared_ptr<std::unordered_map<std::string, std::vector<std::string>>> op_names_maps_tmp =
-        std::make_shared<std::unordered_map<std::string, std::vector<std::string>>>();
-    op_names_maps_tmp = op_desc->TryGetExtAttr(ge::ATTR_NAME_ORIGIN_OP_NAMES_MAP, op_names_maps_tmp);
-    if (op_names_maps_tmp->find(pass_name) == op_names_maps_tmp->cend()) {
+    std::shared_ptr<GraphPassUtil::UnorderedMapping> op_attrs_maps_tmp =
+        std::make_shared<GraphPassUtil::UnorderedMapping>();
+    op_attrs_maps_tmp = op_desc->TryGetExtAttr(ge::ATTR_NAME_ORIGIN_OP_ATTRS_MAP, op_attrs_maps_tmp);
+    if (op_attrs_maps_tmp->find(pass_name) == op_attrs_maps_tmp->cend()) {
       return false;
     }
-    auto names_in_vec = (*op_names_maps_tmp)[pass_name];
-    if (names_in_vec.size() != origin_names.size()) {
+    auto attrs_in_vec = (*op_attrs_maps_tmp)[pass_name];
+    if (attrs_in_vec.size() != origin_attrs.size()) {
       return false;
     }
-    for (const auto &origin_name : origin_names) {
-      if (std::find(names_in_vec.cbegin(), names_in_vec.cend(), origin_name) == names_in_vec.cend()) {
+    for (const auto &origin_attr : origin_attrs) {
+      bool is_in_vec = false;
+      for (const auto &attr_in_vec : attrs_in_vec) {
+        if (origin_attr == attr_in_vec) {
+          is_in_vec = true;
+          break;
+        }
+      }
+      if (is_in_vec == false) {
         return false;
       }
     }
@@ -214,6 +222,7 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case9) {
 TEST_F(GraphPassUtilUT, set_output_desc_attr_case10) {
   putenv("DUMP_GE_GRAPH=2");
   OpDescPtr relu1 = std::make_shared<OpDesc>("relu1", "Relu");
+  OpDescPtr relu2 = std::make_shared<OpDesc>("relu2", "Relu");
   vector<int64_t> dim = {4, 4, 1, 4};
   GeShape shape(dim);
   GeTensorDesc tenosr_desc(shape, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16);
@@ -222,20 +231,20 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case10) {
   relu1->AddInputDesc(tenosr_desc);
   relu1->AddOutputDesc(tenosr_desc);
   vector<string> names = {"ori_rule1"};
-  std::shared_ptr<std::unordered_map<std::string, std::vector<std::string>>> op_names_maps_tmp =
-      std::make_shared<GraphPassUtil::UnorderedMapping>();
-  std::vector<std::string> origin_op_names_vec = {"nodeA, nodeB"};
-  op_names_maps_tmp->insert(std::pair<std::string, std::vector<std::string>>("pass_test", origin_op_names_vec));
-  (void)relu1->SetExtAttr(ge::ATTR_NAME_ORIGIN_OP_NAMES_MAP, op_names_maps_tmp);
 
+  relu2->AddInputDesc(tenosr_desc);
+  relu2->AddOutputDesc(tenosr_desc);
   ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
   NodePtr relu1_node = graph->AddNode(relu1);
+  NodePtr relu2_node = graph->AddNode(relu2);
   std::vector<ge::NodePtr> original_nodes = {relu1_node};
-  std::vector<ge::NodePtr> fus_nodes = {relu1_node};
-  std::vector<std::string> origin_op_names = {"relu"};
-  GraphPassUtil::RecordPassnameAndOriginalNames(original_nodes, fus_nodes, "passA");
-  std::vector<std::string> origin_op_names_to_check = {"nodeA", "nodeB"};
-  CheckOriginName(fus_nodes, "passA", origin_op_names_to_check);
+  std::vector<ge::NodePtr> fus_nodes = {relu2_node};
+
+  GraphPassUtil::RecordPassnameAndOriginalAttrs(original_nodes, fus_nodes, "passA");
+  GraphPassUtil::OriginOpAttrsVec origin_op_attrs_to_check = {{"relu1", "Relu"}};
+  bool oringin_attr_check = false;
+  oringin_attr_check = CheckOriginAttr(fus_nodes, "passA", origin_op_attrs_to_check);
+  EXPECT_EQ(oringin_attr_check, true);
 }
 
 TEST_F(GraphPassUtilUT, set_output_desc_attr_case11) {
@@ -250,11 +259,12 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case11) {
   relu1->AddInputDesc(tenosr_desc);
   relu1->AddOutputDesc(tenosr_desc);
   vector<string> names = {"ori_rule1"};
-  std::shared_ptr<std::unordered_map<std::string, std::vector<std::string>>> op_names_maps_tmp =
+  std::shared_ptr<GraphPassUtil::UnorderedMapping> op_attrs_maps_tmp =
       std::make_shared<GraphPassUtil::UnorderedMapping>();
-  std::vector<std::string> origin_op_names_vec = {"nodeA", "nodeB"};
-  op_names_maps_tmp->insert(std::pair<std::string, std::vector<std::string>>("pass_test", origin_op_names_vec));
-  (void)relu1->SetExtAttr(ge::ATTR_NAME_ORIGIN_OP_NAMES_MAP, op_names_maps_tmp);
+  GraphPassUtil::OriginOpAttrsVec origin_op_attrs_vec = {{"nodeA", "typeA"}, {"nodeB", "typeB"}};
+  op_attrs_maps_tmp->insert(std::pair<std::string, 
+                            GraphPassUtil::OriginOpAttrsVec>("pass_test", origin_op_attrs_vec));
+  (void)relu1->SetExtAttr(ge::ATTR_NAME_ORIGIN_OP_ATTRS_MAP, op_attrs_maps_tmp);
   vector<std::string> pass_names = {"pass_test"};
   (void)AttrUtils::SetListStr(relu1, "pass_name", pass_names);
 
@@ -266,9 +276,11 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case11) {
   std::vector<ge::NodePtr> original_nodes = {relu1_node};
   std::vector<ge::NodePtr> fus_nodes = {relu2_node};
 
-  GraphPassUtil::RecordPassnameAndOriginalNames(original_nodes, fus_nodes, "passA");
-  std::vector<std::string> origin_op_names_to_check = {"nodeA", "nodeB", "relu1"};
-  CheckOriginName(fus_nodes, "passA", origin_op_names_to_check);
+  GraphPassUtil::RecordPassnameAndOriginalAttrs(original_nodes, fus_nodes, "passA");
+  GraphPassUtil::OriginOpAttrsVec origin_op_attrs_to_check = {{"nodeA", "typeA"}, {"nodeB", "typeB"}};
+  bool oringin_attr_check = false;
+  oringin_attr_check = CheckOriginAttr(fus_nodes, "passA", origin_op_attrs_to_check);
+  EXPECT_EQ(oringin_attr_check, true);
 }
 
 

@@ -147,7 +147,7 @@ void PatternFusionBasePass::DumpMapping(const FusionPattern &pattern, const Mapp
 }
 
 void StoreOriginNodes(const Mapping &mapping,
-                      std::vector<std::string> &origin_op_names,
+                      GraphPassUtil::OriginOpAttrsVec &origin_op_attrs,
                       std::vector<ge::NodePtr> &original_nodes) {
   for (const auto &item : mapping) {
     if (item.second.empty()) {
@@ -155,7 +155,10 @@ void StoreOriginNodes(const Mapping &mapping,
     }
     for (const auto &node : item.second) {
       original_nodes.emplace_back(node);
-      origin_op_names.emplace_back(node->GetName());
+      std::vector<std::string> origin_op_attrs_vec;
+      origin_op_attrs_vec.push_back(node->GetName());
+      origin_op_attrs_vec.push_back(node->GetType());
+      origin_op_attrs.emplace_back(origin_op_attrs_vec);
     }
   }
 }
@@ -189,9 +192,9 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
   // do fusion for each mapping
   for (Mapping &mapping : mappings) {
     std::vector<ge::NodePtr> fus_nodes;
-    std::vector<std::string> origin_op_names;
+    GraphPassUtil::OriginOpAttrsVec origin_op_attrs;
     std::vector<ge::NodePtr> original_nodes;
-    StoreOriginNodes(mapping, origin_op_names, original_nodes);
+    StoreOriginNodes(mapping, origin_op_attrs, original_nodes);
     bool backward = false;
     GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kFusedNode);
 
@@ -227,7 +230,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
       (void)SetDataDumpAttr(original_nodes, fus_nodes);
       for (ge::NodePtr &node : fus_nodes) {
         const ge::OpDescPtr fusion_op = node->GetOpDesc();
-        GraphPassUtil::RecordOriginalOpNames(original_nodes, fusion_op, GetName(), origin_op_names);
+        GraphPassUtil::RecordOriginalOpAttrs(original_nodes, fusion_op, GetName(), origin_op_attrs);
         (void)GraphPassUtil::StoreAndUpdataOriginFusionPassName(fusion_op, original_nodes, GetName());
         (void)GraphPassUtil::AddNodeFromOpTypeMap(node_map_info, node);
       }
