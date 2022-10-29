@@ -26,7 +26,6 @@
 /*lint -e148*/
 namespace ge {
 using ConstGeTensorBarePtr = const GeTensor *;
-using IsConstantFunc = bool (*)(const ge::NodePtr &);
 class OpDescUtils {
  public:
   template <class T>
@@ -38,11 +37,8 @@ class OpDescUtils {
   ~OpDescUtils() = default;
   static bool HasQuantizeFactorParams(const OpDescPtr& op_desc);
   static bool HasQuantizeFactorParams(const OpDesc& op_desc);
-  static std::vector<NodeToOutAnchor> GetConstInputNodeAndAnchor(const ge::Node &node, IsConstantFunc is_constant_func);
   static std::vector<ge::NodePtr> GetConstInputNode(const ge::Node& node);
-  static std::vector<ge::NodePtr> GetFileConstantInputNode(const ge::Node& node);
   static std::vector<NodeToOutAnchor> GetConstInputNodeAndAnchor(const ge::Node &node);
-  static std::vector<NodeToOutAnchor> GetFileConstInputNodeAndAnchor(const ge::Node &node);
   static std::vector<ConstGeTensorPtr> GetInputData(const std::vector<ge::NodePtr>& input_nodes);
   static std::vector<ConstGeTensorPtr> GetWeightsFromNodes(
       const std::vector<NodeToOutAnchor>& input_nodes_2_out_anchors);
@@ -90,7 +86,6 @@ class OpDescUtils {
   static OpDescPtr CloneOpDesc(const ConstOpDescPtr &org_op_desc);
   static OpDescPtr CopyOpDesc(const ConstOpDescPtr &org_op_desc);
   static OpDescPtr CreateConstOp(const GeTensorPtr& tensor_ptr);
-  static OpDescPtr CreateFileConstOp(const GeTensorPtr& tensor_ptr, const std::string &graph_name);
 
   static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,
       const std::string &subgraph_instance_name, OpDescPtr &op_desc);

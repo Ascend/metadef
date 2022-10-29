@@ -25,7 +25,6 @@
 #include "common/util/mem_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
-#include "graph/utils/file_utils.h"
 #include "graph/utils/constant_utils.h"
 #include "graph/operator_impl.h"
 #include "proto/ge_ir.pb.h"
@@ -37,11 +36,6 @@ const char_t OP_DESC_QUANT_PARAMS[] = "quantize_factor";
 
 namespace {
 const uint32_t CONST_OP_NORMAL_WEIGHT_SIZE = 1U;
-const char_t *kAttrNameFileConstantPath = "file_constant_path";
-const char_t *kAttrNameLocation = "location";
-const char_t *kAttrNameOffset = "offset";
-const char_t *kAttrNameLength = "length";
-const char_t *kTmpFileConstWeightDir = "/tmp/weight/";
 }
 
 bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
@@ -199,10 +193,53 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ConstGeTensorPtr> OpD
   return GetWeights(*node);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(
-    const ge::Node &node, IsConstantFunc is_constant_func) {
-  std::vector<NodeToOutAnchor> ret;
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::NodePtr> OpDescUtils::GetConstInputNode(
+    const ge::Node &node) {
+  std::vector<ge::NodePtr> ret;
+  const auto in_anchors = node.GetAllInDataAnchors();
+  for (const auto &in_anchor : in_anchors) {
+    const auto out_anchor = in_anchor->GetPeerOutAnchor();
+    if (out_anchor == nullptr) {
+      // normally out_anchor could be null, this is ok
+      GELOGD("node %s' peer_out_anchor is null", node.GetName().c_str());
+      continue;
+    }
+    auto in_node = out_anchor->GetOwnerNode();
+    while (true) {
+      if (in_node == nullptr) {
+        break;
+      }
+      if (ConstantUtils::IsConstant(in_node)) {
+        ret.push_back(in_node);
+        break;
+      } else if (in_node->GetType() == DATA) {
+        if (NodeUtils::IsWhileVaryingInput(in_node)) {
+          break;
+        }
+        in_node = NodeUtils::GetParentInput(in_node);
+      } else if ((in_node->GetType() == ENTER) || (in_node->GetType() == REFENTER)) {
+        bool is_constant = false;
+        (void)AttrUtils::GetBool(in_node->GetOpDesc(), ENTER_ATTR_CONSTANT_FLAG, is_constant);
+        if (!is_constant) {
+          break;
+        }
+        // Enter node has and only has one input
+        if (in_node->GetInDataNodes().size() != 1U) {
+          GELOGW("[Get][ConstInput] Check number of input_nodes for Enter node %s failed, input_node_num=%zu.",
+                 in_node->GetName().c_str(), in_node->GetInDataNodes().size());
+          break;
+        }
+        in_node = in_node->GetInDataNodes().at(0UL);
+      } else {
+        break;
+      }
+    }
+  }
+  return ret;
+}
+
+std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(const ge::Node &node) {
+  std::vector<std::pair<NodePtr, OutDataAnchorPtr>> ret;
   const auto in_nodes_and_anchors = node.GetInDataNodesAndAnchors();
   for (const auto &in_node_2_anchor : in_nodes_and_anchors) {
     auto in_node = in_node_2_anchor.first;
@@ -211,8 +248,8 @@ std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(
       if (in_node == nullptr) {
         break;
       }
-      if (is_constant_func(in_node)) {
-        ret.emplace_back(in_node_2_out_anchor);
+      if (ConstantUtils::IsConstant(in_node)) {
+        ret.push_back(in_node_2_out_anchor);
         break;
       } else if (in_node->GetType() == DATA) {
         if (NodeUtils::IsWhileVaryingInput(in_node)) {
@@ -240,50 +277,6 @@ std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(
       }
     }
   }
-  return ret;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<ge::NodePtr> OpDescUtils::GetConstInputNode(
-    const ge::Node &node) {
-  std::vector<NodeToOutAnchor> nodes_2_out_anchors;
-  IsConstantFunc is_constant_func = ConstantUtils::IsConstant;
-  nodes_2_out_anchors = GetConstInputNodeAndAnchor(node, is_constant_func);
-  std::vector<ge::NodePtr> ret;
-  for (const auto &node_2_out_anchor : nodes_2_out_anchors) {
-    ret.emplace_back(node_2_out_anchor.first);
-  }
-  return ret;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-std::vector<ge::NodePtr> OpDescUtils::GetFileConstantInputNode(const ge::Node& node) {
-  std::vector<NodeToOutAnchor> nodes_2_out_anchors;
-  IsConstantFunc is_constant_func = [](const ge::NodePtr &node) {
-    return (node->GetType() == FILECONSTANT);
-  };
-  nodes_2_out_anchors = GetConstInputNodeAndAnchor(node, is_constant_func);
-  std::vector<ge::NodePtr> ret;
-  for (const auto &node_2_out_anchor : nodes_2_out_anchors) {
-    ret.emplace_back(node_2_out_anchor.first);
-  }
-  return ret;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-std::vector<NodeToOutAnchor> OpDescUtils::GetConstInputNodeAndAnchor(const ge::Node &node) {
-  std::vector<NodeToOutAnchor> ret;
-  IsConstantFunc is_constant_func = ConstantUtils::IsConstant;
-  ret = GetConstInputNodeAndAnchor(node, is_constant_func);
-  return ret;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-std::vector<NodeToOutAnchor> OpDescUtils::GetFileConstInputNodeAndAnchor(const ge::Node &node) {
-  std::vector<NodeToOutAnchor> ret;
-  IsConstantFunc is_constant_func = [](const ge::NodePtr &node) {
-    return (ConstantUtils::IsRealConst(node->GetOpDesc()) || node->GetType() == FILECONSTANT);
-  };
-  ret = GetConstInputNodeAndAnchor(node, is_constant_func);
   return ret;
 }
 
@@ -837,49 +830,6 @@ OpDescPtr OpDescUtils::CreateConstOp(const GeTensorPtr &tensor_ptr) {
   (void)const_opdesc->AddOutputDesc("y", tensor_ptr->GetTensorDesc());
 
   GELOGI("after add const op: %s", const_opdesc->GetName().c_str());
-
-  return const_opdesc;
-}
-
-OpDescPtr OpDescUtils::CreateFileConstOp(const GeTensorPtr &tensor_ptr, const std::string &graph_name) {
-  if (tensor_ptr == nullptr) {
-    REPORT_INNER_ERROR("E19999", "tensor_ptr is nullptr, check invalid.");
-    GELOGE(GRAPH_FAILED, "[Check][Param] tensor_ptr is nullptr!");
-    return nullptr;
-  }
-  const shared_ptr<OpDesc> const_opdesc = ComGraphMakeShared<OpDesc>();
-  if (const_opdesc == nullptr) {
-    REPORT_CALL_ERROR("E19999", "create OpDesc failed.");
-    GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed to make_shared ");
-    return nullptr;
-  }
-
-  const_opdesc->SetType(FILECONSTANT);
-
-  thread_local int64_t const_count = 0;
-  const_opdesc->SetName("dynamic_file_const_" + std::to_string(GeLog::GetTid()) + "_" + std::to_string(const_count));
-  GELOGI("add file_const op: %s", const_opdesc->GetName().c_str());
-  ++const_count;
-
-  (void)const_opdesc->AddOutputDesc(tensor_ptr->GetTensorDesc());
-
-  // Save file constant weight to file
-  std::string file_name = const_opdesc->GetName() + ".weight";
-  std::string file_path = kTmpFileConstWeightDir + graph_name + "/" + file_name;
-  if (SaveDataToFile(file_path, tensor_ptr->GetData().GetData(), tensor_ptr->GetData().GetSize()) != 0) {
-    REPORT_CALL_ERROR("E19999", "Failed to save data to file:%s", file_path.c_str());
-    GELOGE(GRAPH_FAILED, "Failed to save data to file:%s", file_path.c_str());
-    return nullptr;
-  }
-  NamedAttrs attrs;
-  int64_t offset = 0U;
-  int64_t length = static_cast<int64_t>(tensor_ptr->GetData().GetSize());
-  (void)AttrUtils::SetInt(attrs, kAttrNameOffset, offset);
-  (void)AttrUtils::SetInt(attrs, kAttrNameLength, length);
-  (void)AttrUtils::SetStr(attrs, kAttrNameLocation, file_path);
-  (void)AttrUtils::SetNamedAttrs(const_opdesc, kAttrNameFileConstantPath, attrs);
-
-  GELOGI("Success to add file const op: %s", const_opdesc->GetName().c_str());
 
   return const_opdesc;
 }

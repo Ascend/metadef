@@ -82,49 +82,4 @@ TEST_F(UtestFileUtils, CreateDirectory) {
   ASSERT_EQ(ge::CreateDirectory("~/test"), 0); 
   ASSERT_EQ(ge::CreateDirectory(UtestFileUtils::str3), -1);
 }
-
-TEST_F(UtestFileUtils, SaveDataToFile_SUCCESS) {
-  std::string file_name = "file_constant_weight_1.bin";
-  size_t file_const_size = 3;
-  std::unique_ptr<uint8_t[]> uint8_buf_1(new uint8_t[file_const_size / sizeof(uint8_t)]);
-  for (auto i = 0; i < 3; i++) {
-    uint8_buf_1[i] = i;
-  }
-  ASSERT_EQ(ge::SaveDataToFile(file_name, uint8_buf_1.get(), file_const_size), 0);
-  (void)remove("file_constant_weight_1.bin");
-}
-
-TEST_F(UtestFileUtils, SaveDataToFile_Null_Data) {
-  std::string file_name = "file_constant_weight_1.bin";
-  size_t file_const_size = 3;
-  ASSERT_EQ(ge::SaveDataToFile(file_name, nullptr, file_const_size), -1);
-}
-
-TEST_F(UtestFileUtils, SaveDataToFile_Empty_Path) {
-  std::string file_name = "";
-  size_t file_const_size = 3;
-  std::unique_ptr<uint8_t[]> uint8_buf_1(new uint8_t[file_const_size / sizeof(uint8_t)]);
-  for (auto i = 0; i < 3; i++) {
-    uint8_buf_1[i] = i;
-  }
-  ASSERT_EQ(ge::SaveDataToFile(file_name, uint8_buf_1.get(), file_const_size), -1);
-}
-
-TEST_F(UtestFileUtils, SaveDataToFile_Invalid_Path) {
-  std::string file_name = "/................/weight";
-  size_t file_const_size = 3;
-  std::unique_ptr<uint8_t[]> uint8_buf_1(new uint8_t[file_const_size / sizeof(uint8_t)]);
-  for (auto i = 0; i < 3; i++) {
-    uint8_buf_1[i] = i;
-  }
-  ASSERT_EQ(ge::SaveDataToFile(file_name, uint8_buf_1.get(), file_const_size), -1);
-}
-
-TEST_F(UtestFileUtils, SaveDataToFile_Large_Data_SUCCESS) {
-  std::string file_name = "file_constant_weight_1.bin";
-  size_t file_const_size = 2147483649U; //  2147483648U (2G) + 1 Byte
-  std::unique_ptr<uint8_t[]> uint8_buf_1(new uint8_t[file_const_size / sizeof(uint8_t)]);
-  ASSERT_EQ(ge::SaveDataToFile(file_name, uint8_buf_1.get(), file_const_size), 0);
-  (void)remove("file_constant_weight_1.bin");
-}
 } // namespace ge
