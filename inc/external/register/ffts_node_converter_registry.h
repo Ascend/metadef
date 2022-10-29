@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ namespace gert {
 using ThreadFunc = std::vector<bg::ValueHolderPtr> (*)(const ge::NodePtr &node,
     const std::vector<bg::ValueHolderPtr> &input_shapes,
     const std::vector<bg::ValueHolderPtr> &output_shapes, const bg::ValueHolderPtr thread_dim);
+using PreThreadFunc = std::vector<bg::ValueHolderPtr> (*)(const ge::ComputeGraphPtr sub_graph,
+    const std::vector<bg::ValueHolderPtr> &input_shapes);
 struct FFTSLowerInput {
   std::vector<bg::ValueHolderPtr> input_shapes;
   std::vector<bg::ValueHolderPtr> input_addrs;

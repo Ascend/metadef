@@ -22,6 +22,7 @@ set(SRC_LIST
     "op_kernel_registry.cpp"
     "auto_mapping_util.cpp"
     "ffts_plus_update_manager.cc"
+    "ffts_node_converter_registry.cc"
     "host_cpu_context.cc"
     "tensor_assign.cpp"
     "infer_data_slice_registry.cc"
