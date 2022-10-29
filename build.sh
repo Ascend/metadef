@@ -21,19 +21,6 @@ OUTPUT_PATH="${BASEPATH}/output"
 BUILD_RELATIVE_PATH="build"
 BUILD_PATH="${BASEPATH}/${BUILD_RELATIVE_PATH}/"
 ASCEND_OPENSDK_DIR=${ASCEND_CUSTOM_PATH}/opensdk/opensdk
-PREFIX_PATH="${ASCEND_OPENSDK_DIR}/cmake;\
-${ASCEND_OPENSDK_DIR}/c_sec;\
-${ASCEND_OPENSDK_DIR}/json;\
-${ASCEND_OPENSDK_DIR}/openssl;\
-${ASCEND_OPENSDK_DIR}/zlib;\
-${ASCEND_OPENSDK_DIR}/protoc;\
-${ASCEND_OPENSDK_DIR}/protoc_grpc;\
-${ASCEND_OPENSDK_DIR}/grpc;\
-${ASCEND_OPENSDK_DIR}/protobuf_static;\
-${ASCEND_OPENSDK_DIR}/ascend_protobuf;\
-${ASCEND_OPENSDK_DIR}/ascend_protobuf_static;\
-${ASCEND_OPENSDK_DIR}/gtest_shared/lib/cmake/GTest;\
-${ASCEND_OPENSDK_DIR}/gtest_shared/lib64/cmake/GTest"
 
 # print usage message
 usage()
@@ -169,14 +156,7 @@ build_metadef()
               -D BUILD_WITHOUT_AIR=True \
               -D ASCEND_OPENSDK_DIR=${ASCEND_OPENSDK_DIR} \
               -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
-              -D CMAKE_INSTALL_PREFIX=${OUTPUT_PATH} \
-              -D CMAKE_MODULE_PATH=${ASCEND_OPENSDK_DIR}/cmake/modules \
-              -D CMAKE_PREFIX_PATH=${PREFIX_PATH} \
-              -D protoc_ROOT=${ASCEND_OPENSDK_DIR}/protoc \
-              -D protobuf_grpc_ROOT=${ASCEND_OPENSDK_DIR}/grpc \
-              -D protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/protobuf_static \
-              -D ascend_protobuf_shared_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf \
-              -D ascend_protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf_static "
+              -D CMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
   cmake_generate_make "${BUILD_PATH}" "${CMAKE_ARGS}"
 
   if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
@@ -210,7 +190,7 @@ build_metadef || { echo "Metadef build failed."; return; }
 echo "---------------- Metadef build finished ----------------"
 
 if [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
-  RUN_TEST_CASE= ${BUILD_PATH}/tests/benchmark/exec_graph_benchmark && ${RUN_TEST_CASE}
+  RUN_TEST_CASE=${BUILD_PATH}/tests/benchmark/exec_graph_benchmark && ${RUN_TEST_CASE}
 fi
 
 if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then

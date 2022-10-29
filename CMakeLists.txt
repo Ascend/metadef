@@ -1,6 +1,46 @@
 cmake_minimum_required(VERSION 3.14)
 project (MetaDef[CXX])
 
+if (NOT DEFINED CMAKE_MODULE_PATH)
+    set(CMAKE_MODULE_PATH ${ASCEND_OPENSDK_DIR}/cmake/modules)
+endif()
+
+if (NOT DEFINED CMAKE_PREFIX_PATH)
+    set(CMAKE_PREFIX_PATH ${ASCEND_OPENSDK_DIR}/cmake;
+            ${ASCEND_OPENSDK_DIR}/c_sec;
+            ${ASCEND_OPENSDK_DIR}/json;
+            ${ASCEND_OPENSDK_DIR}/openssl;
+            ${ASCEND_OPENSDK_DIR}/zlib;
+            ${ASCEND_OPENSDK_DIR}/protoc;
+            ${ASCEND_OPENSDK_DIR}/protoc_grpc;
+            ${ASCEND_OPENSDK_DIR}/grpc;
+            ${ASCEND_OPENSDK_DIR}/protobuf_static;
+            ${ASCEND_OPENSDK_DIR}/ascend_protobuf;
+            ${ASCEND_OPENSDK_DIR}/ascend_protobuf_static;
+            ${ASCEND_OPENSDK_DIR}/gtest_shared/lib/cmake/GTest;
+            ${ASCEND_OPENSDK_DIR}/gtest_shared/lib64/cmake/GTest)
+endif()
+
+if (NOT DEFINED protoc_ROOT)
+    set(protoc_ROOT ${ASCEND_OPENSDK_DIR}/protoc)
+endif()
+
+if (NOT DEFINED protobuf_grpc_ROOT)
+    set(protobuf_grpc_ROOT ${ASCEND_OPENSDK_DIR}/grpc)
+endif()
+
+if (NOT DEFINED protobuf_static_ROOT)
+    set(protobuf_static_ROOT ${ASCEND_OPENSDK_DIR}/protobuf_static)
+endif()
+
+if (NOT DEFINED ascend_protobuf_shared_ROOT)
+    set(ascend_protobuf_shared_ROOT ${ASCEND_OPENSDK_DIR}/ascend_protobuf)
+endif()
+
+if (NOT DEFINED ascend_protobuf_static_ROOT)
+    set(ascend_protobuf_static_ROOT ${ASCEND_OPENSDK_DIR}/ascend_protobuf_static)
+endif()
+
 include(CMakePrintHelpers)
 message(STATUS "Variables in metadef project :")
 cmake_print_variables(ASCEND_OPENSDK_DIR)
