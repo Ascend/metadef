@@ -20,7 +20,7 @@
 #include "nlohmann/json.hpp"
 #include "parallelism/comm_task_builder.h"
 
-#define USED_BY_JSON __attribute__((unused))
+#define USED_BY_JSON __attribute__((unused)) static
 
 namespace ge {
 namespace tp {
@@ -68,7 +68,7 @@ std::shared_ptr<T> CreateReshardTaskInfo(const Json &j) {
 template<typename T>
 std::string ToJsonString(const T &obj) {
   try {
-    Json j = obj;
+    const Json j = obj;
     return j.dump();
   } catch (const nlohmann::json::exception &e) {
     GELOGE(FAILED, "Failed to dump object, err = %s", e.what());
@@ -343,7 +343,7 @@ USED_BY_JSON void to_json(Json &j, const CommStepInput &step_input) {
 
 USED_BY_JSON void from_json(const Json &j, CommStepInput &step_input) {
   const auto step_id_and_out_index = j.get<std::vector<int32_t>>();
-  size_t num_items = step_id_and_out_index.size();
+  const size_t num_items = step_id_and_out_index.size();
   if (num_items > kIndexStepId) {
     step_input.step_id = step_id_and_out_index[kIndexStepId];
   }
