@@ -29,6 +29,7 @@
 #include "graph/utils/anchor_utils.h"
 #include "test_std_structs.h"
 #include "external/graph/operator_reg.h"
+#include "mmpa/mmpa_api.h"
 
 namespace ge {
 class UtestOpDescUtils : public testing::Test {
@@ -40,23 +41,27 @@ class UtestOpDescUtils : public testing::Test {
 
 
 namespace {
-///     Data    const1
-///        \  /
-///        addn
+///     Data    const1  file_const_1
+///        \    /     /
+///           addn
 ///
 ComputeGraphPtr BuildGraph1() {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 1, 1);
   auto const1 = builder.AddNode("const1", "Const", 1, 1);
-  auto addn = builder.AddNode("addn", "AddN", 2, 1);
+  auto file_const_1 = builder.AddNode("file_const_1", "FileConstant", 1, 1);
+  auto addn = builder.AddNode("addn", "AddN", 3, 1);
 
   int32_t weight[1] = {1};
   GeTensorDesc weight_desc(GeShape({1}), FORMAT_NHWC, DT_INT32);
   GeTensorPtr tensor0 = std::make_shared<GeTensor>(weight_desc, (uint8_t *)weight, sizeof(weight));
+  GeTensorPtr tensor1 = std::make_shared<GeTensor>(weight_desc, (uint8_t *)weight, sizeof(weight));
   OpDescUtils::SetWeights(const1, {tensor0});
+  OpDescUtils::SetWeights(file_const_1, {tensor1});
 
   builder.AddDataEdge(data, 0, addn, 0);
   builder.AddDataEdge(const1, 0, addn, 1);
+  builder.AddDataEdge(file_const_1, 0, addn, 2);
   return builder.GetGraph();
 }
 ///   (p_const)addn    const1
@@ -179,7 +184,7 @@ TEST_F(UtestOpDescUtils, SetWeight) {
   auto const_tensor = OpDescUtils::MutableWeights(const_node);
   EXPECT_EQ(const_tensor[0]->MutableData().size(), 3);
   auto in_nodes = addn_node->GetInAllNodes();
-  EXPECT_EQ(in_nodes.size(), 2);
+  EXPECT_EQ(in_nodes.size(), 3);
 
   map<int, ge::GeTensorPtr> weight2;
   weight2[2] = tensor;
@@ -196,6 +201,16 @@ TEST_F(UtestOpDescUtils, GetRealConstInputNodeAndAnchor) {
   EXPECT_EQ(nodes_2_out_anchor.size(), 1);
   EXPECT_EQ(nodes_2_out_anchor[0].first->GetName(), "const1");
   EXPECT_EQ(nodes_2_out_anchor[0].second->GetIdx(), 0);
+}
+TEST_F(UtestOpDescUtils, GetRealConstAndFileConstInputNodeAndAnchor) {
+  auto graph = BuildGraph1();
+  auto add_node = graph->FindNode("addn");
+  auto nodes_2_out_anchor = OpDescUtils::GetFileConstInputNodeAndAnchor(*add_node);
+  EXPECT_EQ(nodes_2_out_anchor.size(), 2);
+  EXPECT_EQ(nodes_2_out_anchor[0].first->GetName(), "const1");
+  EXPECT_EQ(nodes_2_out_anchor[0].second->GetIdx(), 0);
+  EXPECT_EQ(nodes_2_out_anchor[1].first->GetName(), "file_const_1");
+  EXPECT_EQ(nodes_2_out_anchor[1].second->GetIdx(), 0);
 }
 TEST_F(UtestOpDescUtils, GetMixConstInputNodeAndAnchor) {
   auto graph = BuildGraph2();
@@ -498,6 +513,19 @@ TEST_F(UtestOpDescUtils, GetConstInputNode_Const_Enter_Other) {
   auto other2 = builder.AddNode("other2", "other", 1, 1);
   EXPECT_EQ(other1->AddLinkFrom(other2), GRAPH_SUCCESS);
   EXPECT_EQ(OpDescUtils::GetConstInputNode(*other1).size(), 0);
+}
+
+TEST_F(UtestOpDescUtils, GetConstInputNode_File_Const) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto const1 = builder.AddNode("const1", "Const", 1, 1);
+  auto const2 = builder.AddNode("const2", "Const", 1, 1);
+  EXPECT_EQ(const1->AddLinkFrom(const2), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtils::GetFileConstantInputNode(*const1).size(), 0);
+
+  auto const3 = builder.AddNode("const3", "Const", 1, 1);
+  auto file_const1 = builder.AddNode("file_const1", "FileConstant", 1, 1);
+  EXPECT_EQ(const3->AddLinkFrom(file_const1), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtils::GetFileConstantInputNode(*const3).size(), 1);
 }
 
 TEST_F(UtestOpDescUtils, GetInputData_Weight) {
@@ -910,5 +938,26 @@ TEST_F(UtestOpDescUtils, GetInputIrIndexeByInstanceIndexe_DynamicNameNotmatch_Fa
   size_t ir_index;
   auto ret = OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, 2, ir_index);
   ASSERT_NE(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestOpDescUtils, CreateFileConstOp_Success) {
+  auto graph = BuildGraph1();
+  auto const1 = graph->FindNode("const1");
+  auto weight = OpDescUtils::MutableWeights(const1);
+  std::string graph_name = graph->GetName();
+  auto file_const_op_desc = OpDescUtils::CreateFileConstOp(weight[0], graph_name);
+  EXPECT_NE(file_const_op_desc, nullptr);
+  EXPECT_EQ(file_const_op_desc->GetType(), "FileConstant");
+  auto ret = file_const_op_desc->GetName().find("dynamic_file_const_");
+  EXPECT_NE(ret, std::string::npos);
+  (void)mmRmdir("/tmp/weight");
+}
+
+TEST_F(UtestOpDescUtils, CreateFileConstOp_Null_GeTensorPtr) {
+  auto graph = BuildGraph1();
+  GeTensorPtr weight = nullptr;
+  std::string graph_name = graph->GetName();
+  auto file_const_op_desc = OpDescUtils::CreateFileConstOp(weight, graph_name);
+  EXPECT_EQ(file_const_op_desc, nullptr);
 }
 }

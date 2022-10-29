@@ -26,7 +26,8 @@ include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge/proto)
 
 file(GLOB_RECURSE UT_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/graph/testcase/*.cc")
-add_executable(ut_graph ${UT_FILES})
+file(GLOB_RECURSE DEPEND_SRCS CONFIGURE_DEPENDS "${METADEF_DIR}/tests/depends/mmpa/*.cc")
+add_executable(ut_graph ${UT_FILES} ${DEPEND_SRCS})
 
 target_compile_options(ut_graph PRIVATE
     -g --coverage -fprofile-arcs -ftest-coverage

@@ -18,10 +18,108 @@
 
 #include <cerrno>
 #include "graph/types.h"
+#include "graph/def_types.h"
 #include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
 
 namespace ge {
+namespace {
+const size_t kMaxErrStrLen = 128U;
+
+int32_t CheckPathValid(const std::string &file_path) {
+  if (file_path.size() >= static_cast<size_t>(MMPA_MAX_PATH)) {
+    GELOGE(FAILED, "[Check][FilePath]Failed, file path's length:%zu >= mmpa_max_path:%d",
+           file_path.size(), MMPA_MAX_PATH);
+    REPORT_INNER_ERROR("E19999", "Check file path failed, file path's length:%zu >= "
+                                 "mmpa_max_path:%d", file_path.size(), MMPA_MAX_PATH);
+    return -1;
+  }
+  int32_t path_split_pos = static_cast<int32_t>(file_path.size() - 1U);
+  for (; path_split_pos >= 0; path_split_pos--) {
+    if ((file_path[static_cast<size_t>(path_split_pos)] == '\\') ||
+        (file_path[static_cast<size_t>(path_split_pos)] == '/')) {
+      break;
+    }
+  }
+  if (path_split_pos == 0) {
+    return 0;
+  }
+  // If there is a path before the file name, create the path
+  if (path_split_pos != -1) {
+    if (CreateDirectory(std::string(file_path).substr(0U, static_cast<size_t>(path_split_pos))) != 0) {
+      GELOGE(FAILED, "[Create][Directory]Failed, file path:%s.", file_path.c_str());
+      return -1;
+    }
+  }
+  return 0;
+}
+
+int32_t OpenFile(int32_t &fd, const std::string &file_path) {
+  if (CheckPathValid(file_path) != 0) {
+    GELOGE(FAILED, "[Check][FilePath]Check output file failed, file_path:%s.", file_path.c_str());
+    REPORT_CALL_ERROR("E19999", "Check output file failed, file_path:%s.", file_path.c_str());
+    return -1;
+  }
+  char_t real_path[MMPA_MAX_PATH] = {};
+  if (mmRealPath(file_path.c_str(), &real_path[0], MMPA_MAX_PATH) != EN_OK) {
+    GELOGI("File %s is not exist, it will be created.", file_path.c_str());
+  }
+  const mmMode_t mode = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) | static_cast<uint32_t>(M_IWUSR));
+  const int32_t open_flag = static_cast<int32_t>(static_cast<uint32_t>(M_RDWR) |
+      static_cast<uint32_t>(M_CREAT) |
+      static_cast<uint32_t>(O_TRUNC));
+  fd = mmOpen2(&real_path[0], open_flag, mode);
+  if ((fd == EN_INVALID_PARAM) || (fd == EN_ERROR)) {
+    // -1: Failed to open file; - 2: Illegal parameter
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    GELOGE(FAILED, "[Open][File]Failed. errno:%d, errmsg:%s", fd, err_msg);
+    REPORT_INNER_ERROR("E19999", "Open file failed, errno:%d, errmsg:%s.", fd, err_msg);
+    return -1;
+  }
+  return 0;
+}
+
+int32_t WriteData(const void * const data, uint64_t size, const int32_t fd) {
+  if ((size == 0U) || (data == nullptr)) {
+    return -1;
+  }
+  int64_t write_count;
+  const uint32_t size_2g = 2147483648U;  // 0x1 << 31
+  // Write data
+  if (size > size_2g) {
+    const uint32_t size_1g = 1073741824U;  // 0x1 << 30
+    auto seek = PtrToPtr<void, uint8_t>(const_cast<void *>(data));
+    while (size > size_1g) {
+      write_count = mmWrite(fd, reinterpret_cast<void *>(seek), size_1g);
+      if ((write_count == EN_INVALID_PARAM) || (write_count == EN_ERROR)) {
+        char_t err_buf[kMaxErrStrLen + 1U] = {};
+        const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+        GELOGE(FAILED, "[Write][Data]Failed, errno:%ld, errmsg:%s", write_count, err_msg);
+        REPORT_INNER_ERROR("E19999", "Write data failed, errno:%" PRId64 ", errmsg:%s.", write_count, err_msg);
+        return -1;
+      }
+      seek = PtrAdd<uint8_t>(seek, static_cast<size_t>(size), size_1g);
+      size -= size_1g;
+    }
+    write_count = mmWrite(fd, reinterpret_cast<void *>(seek), static_cast<uint32_t>(size));
+  } else {
+    write_count = mmWrite(fd, const_cast<void *>(data), static_cast<uint32_t>(size));
+  }
+
+  // -1: Failed to write to file; - 2: Illegal parameter
+  if ((write_count == EN_INVALID_PARAM) || (write_count == EN_ERROR)) {
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    GELOGE(FAILED, "[Write][Data]Failed. mmpa_errorno = %ld, error:%s", write_count, err_msg);
+    REPORT_INNER_ERROR("E19999", "Write data failed, mmpa_errorno = %" PRId64 ", error:%s.", write_count, err_msg);
+    return -1;
+  }
+
+  return 0;
+}
+}  // namespace
+
 std::string RealPath(const char_t *path) {
   if (path == nullptr) {
     REPORT_INNER_ERROR("E18888", "path is nullptr, check invalid");
@@ -98,5 +196,31 @@ int32_t CreateDirectory(const std::string &directory_path) {
     }
   }
   return CheckAndMkdir(directory_path.c_str(), mkdir_mode);
+}
+
+int32_t SaveDataToFile(const std::string &file_path, const void * const data, const uint64_t len) {
+  if ((data == nullptr) || (len <= 0)) {
+    GELOGE(FAILED, "[Check][Param]Failed, model_data is null or the length[%lu] is less than 1.", len);
+    REPORT_INNER_ERROR("E19999", "Save file failed, the model_data is null or "
+                                 "its length:%" PRIu64 " is less than 1.", len);
+    return -1;
+  }
+  int32_t fd = 0;
+  if (OpenFile(fd, file_path) != 0) {
+    GELOGE(FAILED, "OpenFile FAILED");
+    return -1;
+  }
+  if (WriteData(data, len, fd) != 0) {
+    GELOGE(FAILED, "WriteData FAILED");
+    return -1;
+  }
+  if (mmClose(fd) != 0) {
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    GELOGE(FAILED, "[Close][File]Failed, errmsg:%s", err_msg);
+    REPORT_CALL_ERROR("E19999", "Close file failed, errmsg:%s", err_msg);
+    return -1;
+  }
+  return 0;
 }
 }

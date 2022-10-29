@@ -42,6 +42,7 @@ std::string RealPath(const char_t *path);
  */
 int32_t CreateDirectory(const std::string &directory_path);
 
+int32_t SaveDataToFile(const std::string &file_path, const void * const data, const uint64_t len);
 }
 
 #endif // end COMMON_GRAPH_UTILS_FILE_UTILS_H_

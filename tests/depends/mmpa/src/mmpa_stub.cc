@@ -147,7 +147,66 @@ void *memCpyS(void *dest, const void *src, UINT32 count) {
   return dest;
 }
 
-INT32 mmRmdir(const CHAR *lp_path_name) { return rmdir(lp_path_name); }
+INT32 mmRmdir(const CHAR *lp_path_name) {
+  INT32 ret;
+  DIR *childDir = NULL;
+
+  if (lp_path_name == NULL) {
+    return EN_INVALID_PARAM;
+  }
+  DIR *dir = opendir(lp_path_name);
+  if (dir == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  const struct dirent *entry = NULL;
+  size_t bufSize = strlen(lp_path_name) + (size_t)(PATH_SIZE + 2); // make sure the length is large enough
+  while ((entry = readdir(dir)) != NULL) {
+    if ((strcmp(".", entry->d_name) == MMPA_ZERO) || (strcmp("..", entry->d_name) == MMPA_ZERO)) {
+      continue;
+    }
+    CHAR *buf = (CHAR *)malloc(bufSize);
+    if (buf == NULL) {
+      break;
+    }
+    ret = memset_s(buf, bufSize, 0, bufSize);
+    if (ret == EN_ERROR) {
+      free(buf);
+      buf = NULL;
+      break;
+    }
+    ret = snprintf_s(buf, bufSize, bufSize - 1U, "%s/%s", lp_path_name, entry->d_name);
+    if (ret == EN_ERROR) {
+      free(buf);
+      buf = NULL;
+      break;
+    }
+
+    childDir = opendir(buf);
+    if (childDir != NULL) {
+      (VOID)closedir(childDir);
+      (VOID)mmRmdir(buf);
+      free(buf);
+      buf = NULL;
+      continue;
+    } else {
+      ret = unlink(buf);
+      if (ret == EN_OK) {
+        free(buf);
+        continue;
+      }
+    }
+    free(buf);
+    buf = NULL;
+  }
+  (VOID)closedir(dir);
+
+  ret = rmdir(lp_path_name);
+  if (ret == EN_ERROR) {
+    return EN_ERROR;
+  }
+  return EN_OK;
+}
 
 INT32 mmGetSystemTime(mmSystemTime_t *sysTime) {
   // Beijing olympics
