@@ -342,6 +342,7 @@ ValueHolderPtr ValueHolder::CreateVoid(const char *node_type, const std::vector<
  * @return
  */
 ValueHolderPtr ValueHolder::CreateConst(const void *data, size_t size, bool is_string) {
+  GE_ASSERT_NOTNULL(data);
   auto node = ValueHolder::CreateNode(kConst, {}, 1);
   GE_ASSERT_NOTNULL(node);
   GE_ASSERT_SUCCESS(node->GetOpDesc()->SetAttr("is_string", ge::AnyValue::CreateFrom(is_string)));

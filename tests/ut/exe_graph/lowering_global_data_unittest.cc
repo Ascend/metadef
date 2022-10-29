@@ -375,4 +375,15 @@ TEST_F(LoweringGlobalDataUT, OnMainRootLastOk) {
   EXPECT_EQ(last_exec_nodes.size(), 1);
   last_exec_nodes.clear();
 }
+
+TEST_F(LoweringGlobalDataUT, SinkWeightInfoTest) {
+  LoweringGlobalData gd;
+  LoweringGlobalData::SinkWeightInfo weight_info = {nullptr, 1U, 1U};
+  gd.SetSinkWeightInfo(weight_info);
+  auto result = gd.GetSinkWeightInfo();
+  EXPECT_EQ(result.given_addr, weight_info.given_addr);
+  EXPECT_EQ(result.given_size, weight_info.given_size);
+  EXPECT_EQ(result.require_size, weight_info.require_size);
+}
+
 }  // namespace gert

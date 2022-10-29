@@ -1372,4 +1372,7 @@ const std::string ATTR_NAME_TENSOR_DEPLOYMENT = "_tensor_deployment";
 
 // for tensor parallelism
 const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";
+
+// for lowering
+const std::string ATTR_NAME_GRAPH_FLATTEN_OFFSET = "graph_flatten_offset";
 }  // namespace ge
