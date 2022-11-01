@@ -307,12 +307,12 @@ class GeTensorSerializeUtils {
   // This function needs to prioritize and determine the final metadata information used.
   // After standardization, the direct member field on TensorDescriptor is always valid
   static void NormalizeGeTensorDescProto(proto::TensorDescriptor *proto);
-  static void GetShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape);
-  static void GetOriginShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape);
-  static void GetDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype);
-  static void GetOriginDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype);
-  static void GetFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format);
-  static void GetOriginFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format);
+  static void GetShapeFromDescProto(const proto::TensorDescriptor *const proto, GeShape &shape);
+  static void GetOriginShapeFromDescProto(const proto::TensorDescriptor *const proto, GeShape &shape);
+  static void GetDtypeFromDescProto(const proto::TensorDescriptor *const proto, DataType &dtype);
+  static void GetOriginDtypeFromDescProto(const proto::TensorDescriptor *const proto, DataType &dtype);
+  static void GetFormatFromDescProto(const proto::TensorDescriptor *const proto, Format &format);
+  static void GetOriginFormatFromDescProto(const proto::TensorDescriptor *const proto, Format &format);
 };
 using GeTensorDescPtr = std::shared_ptr<GeTensorDesc>;
 using ConstGeTensorDescPtr = std::shared_ptr<const GeTensorDesc>;
