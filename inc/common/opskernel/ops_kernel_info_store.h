@@ -127,19 +127,10 @@ class OpsKernelInfoStore {
     return false;
   }
 
-  // allow engine return specific not support flag
-  virtual bool CheckSupported(const OpDescPtr &opDescPtr, std::string &un_supported_reason,
-                              CheckSupportFlag &flag) const {
-    (void)flag;
-    return CheckSupported(opDescPtr, un_supported_reason);
-  }
-
   virtual bool CheckSupported(const ge::NodePtr &node, std::string &un_supported_reason,
                               CheckSupportFlag &flag) const {
-    if (node == nullptr) {
-      return false;
-    }
-    return CheckSupported(node->GetOpDesc(), un_supported_reason, flag);
+    (void)flag;
+    return CheckSupported(node, un_supported_reason);
   }
 };
 }  // namespace ge
