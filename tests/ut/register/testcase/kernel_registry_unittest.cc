@@ -32,6 +32,9 @@ ge::graphStatus TestFuncCreator(const ge::Node *, KernelContext *) {
 ge::graphStatus TestFuncInitializer(const ge::Node *, KernelContext *) {
   return ge::GRAPH_SUCCESS;
 }
+std::vector<std::string> TestTraceFunc(const KernelContext *) {
+  return {""};
+}
 KernelStatus TestFunc1(KernelContext *context) {
   return 0;
 }
@@ -96,5 +99,17 @@ TEST_F(KernelRegistryTest, SelfDefinedRegistry_RecoveryOk) {
   EXPECT_EQ(funcs->run_func, &TestFunc1);
   EXPECT_NE(funcs->outputs_creator, nullptr);
   EXPECT_NE(funcs->outputs_creator_func, nullptr);
+}
+TEST_F(KernelRegistryTest, RegisterTraceFuncSuccess) {
+  REGISTER_KERNEL(KernelRegistryTest1).TracePrinter(TestTraceFunc);
+  auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
+  ASSERT_NE(funcs, nullptr);
+  EXPECT_NE(funcs->trace_printer, nullptr);
+}
+TEST_F(KernelRegistryTest, NotRegisterTraceFunc_CheckNullPtr) {
+  REGISTER_KERNEL(KernelRegistryTest1).RunFunc(TestFunc1);
+  auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
+  ASSERT_NE(funcs, nullptr);
+  EXPECT_EQ(funcs->trace_printer, nullptr);
 }
 }  // namespace test_gert

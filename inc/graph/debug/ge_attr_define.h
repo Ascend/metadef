@@ -1375,6 +1375,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAM
 
 // for tensor parallelism
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_TP_RESHARD_ATTR;
+
+// for lowering
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_GRAPH_FLATTEN_OFFSET;
 }  // namespace ge
 
 /*lint +e618*/

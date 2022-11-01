@@ -66,6 +66,7 @@ KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_ty
   kernel_funcs_.outputs_creator = NullCreator;
   kernel_funcs_.outputs_creator_func = NullCreator;
   kernel_funcs_.outputs_initializer = NullDestoryer;
+  kernel_funcs_.trace_printer = nullptr;
 }
 KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
   kernel_funcs_.run_func = func;
@@ -81,6 +82,10 @@ KernelRegister &KernelRegister::OutputsCreatorFunc(KernelRegistry::OutputsCreato
 }
 KernelRegister &KernelRegister::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
   kernel_funcs_.outputs_initializer = std::move(func);
+  return *this;
+}
+KernelRegister &KernelRegister::TracePrinter(KernelRegistry::TracePrinter func) {
+  kernel_funcs_.trace_printer = std::move(func);
   return *this;
 }
 KernelRegister::KernelRegister(const KernelRegister &other) {

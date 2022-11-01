@@ -26,6 +26,11 @@
 namespace gert {
 class LoweringGlobalData {
  public:
+  struct SinkWeightInfo {
+    const void *given_addr;
+    size_t given_size;
+    size_t require_size;
+  };
   struct NodeCompileResult {
     const std::vector<domi::TaskDef> &GetTaskDefs() const {
       return task_defs;
@@ -58,6 +63,9 @@ class LoweringGlobalData {
   bg::ValueHolderPtr GetUniqueValueHolder(const std::string &name) const;
   void SetUniqueValueHolder(const std::string &name, const bg::ValueHolderPtr &holder);
 
+  void SetSinkWeightInfo(SinkWeightInfo &sink_weight_info);
+  const SinkWeightInfo GetSinkWeightInfo() const;
+
  private:
   struct HoldersByGraph {
     bg::ValueHolderPtr holders[static_cast<size_t>(ExecuteGraphType::kNum)];
@@ -73,6 +81,8 @@ class LoweringGlobalData {
   std::map<std::string, std::vector<bg::ValueHolderPtr>> names_to_unique_value_holder_;
   HoldersByGraph streams_;
   HoldersByGraph external_allocators_;
+  // todo need delete and change to const_data after const_data is ready
+  SinkWeightInfo sink_weight_info_;
 };
 }  // namespace gert
 #endif  // AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_GLOBAL_DATA_H_

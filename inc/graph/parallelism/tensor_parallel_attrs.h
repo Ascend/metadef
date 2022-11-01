@@ -201,7 +201,7 @@ class TensorParallelAttrs {
   static Status FromJson(const std::string &json_str, TensorDeployment &tensor_deployment);
   static Status FromJson(const std::string &json_str, CommTask &comm_task);
   static Status FromJson(const std::string &json_str, CommStep &comm_step);
-  static Status FromJson(const std::string &json_str, OutputReshardRes &tensor_shard_info);
+  static Status FromJson(const std::string &json_str, OutputReshardRes &output_reshard_res);
   static Status FromJson(const std::string &json_str, ReshardAttr &reshard_attr);
 
   static std::string ToJson(const NodeDeployment &node_deployment);
