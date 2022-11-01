@@ -1640,7 +1640,7 @@ ComputeGraph& ComputeGraph::operator=(ge::ComputeGraph &compute_graph) {
   if (&compute_graph == this) {
     return *this;
   }
-  AttrHolder::Swap(compute_graph);
+  AttrHolder::SwapBase(compute_graph);
   *impl_ = *(compute_graph.impl_);
   return *this;
 }
@@ -1912,7 +1912,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Dump() const {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Swap(ComputeGraph &graph) {
-  this->AttrHolder::Swap(graph);
+  this->AttrHolder::SwapBase(graph);
   impl_->Swap(*(graph.impl_));
 
   // Update Node owner.
