@@ -19,6 +19,7 @@
 #include <type_traits>
 #include "kernel_context.h"
 #include "context_extend.h"
+#include "graph/def_types.h"
 
 namespace gert {
 class ExtendedKernelContext : protected KernelContext {
@@ -28,8 +29,8 @@ class ExtendedKernelContext : protected KernelContext {
    * @param index 输入index
    * @return 输入TensorDesc的指针，index非法时，返回空指针
    */
-  const CompileTimeTensorDesc *GetInputDesc(size_t index) const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const CompileTimeTensorDesc *GetInputDesc(const size_t index) const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -40,7 +41,7 @@ class ExtendedKernelContext : protected KernelContext {
    * @param ir_index IR原型定义中的index
    * @return CompileTimeTensorDesc指针，index非法，或该INPUT没有实例化时，返回空指针
    */
-  const CompileTimeTensorDesc *GetOptionalInputDesc(size_t ir_index) const {
+  const CompileTimeTensorDesc *GetOptionalInputDesc(const size_t ir_index) const {
     return GetDynamicInputDesc(ir_index, 0);
   }
   /**
@@ -49,12 +50,12 @@ class ExtendedKernelContext : protected KernelContext {
    * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
    * @return CompileTimeTensorDesc指针，index或relative_index非法时，返回空指针
    */
-  const CompileTimeTensorDesc *GetDynamicInputDesc(size_t ir_index, size_t relative_index) const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const CompileTimeTensorDesc *GetDynamicInputDesc(const size_t ir_index, const size_t relative_index) const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
-    auto ins_info = GetIrInputInstanceInfo(ir_index);
+    const auto ins_info = GetIrInputInstanceInfo(ir_index);
     if (ins_info == nullptr) {
       return nullptr;
     }
@@ -68,8 +69,8 @@ class ExtendedKernelContext : protected KernelContext {
    * @param index 输出index
    * @return 输出TensorDesc的指针，index非法时，返回空指针
    */
-  const CompileTimeTensorDesc *GetOutputDesc(size_t index) const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const CompileTimeTensorDesc *GetOutputDesc(const size_t index) const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -80,8 +81,8 @@ class ExtendedKernelContext : protected KernelContext {
    * @param ir_index IR原型中定义的index
    * @return 实例化信息
    */
-  const AnchorInstanceInfo *GetIrInputInstanceInfo(size_t ir_index) const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const AnchorInstanceInfo *GetIrInputInstanceInfo(const size_t ir_index) const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -92,7 +93,7 @@ class ExtendedKernelContext : protected KernelContext {
    * @return 计算节点的输入数量
    */
   size_t GetComputeNodeInputNum() const {
-    auto compute_node_info = GetComputeNodeInfo();
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return 0;
     }
@@ -103,7 +104,7 @@ class ExtendedKernelContext : protected KernelContext {
    * @return 计算节点的属性
    */
   const RuntimeAttrs *GetAttrs() const {
-    auto compute_node_info = GetComputeNodeInfo();
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -113,8 +114,8 @@ class ExtendedKernelContext : protected KernelContext {
    * 获取计算节点的类型
    * @return 计算节点的类型
    */
-  const char *GetNodeType() const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const ge::char_t *GetNodeType() const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -124,8 +125,8 @@ class ExtendedKernelContext : protected KernelContext {
    * 获取计算节点的name
    * @return 计算节点的name
    */
-  const char *GetNodeName() const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const ge::char_t *GetNodeName() const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -136,14 +137,14 @@ class ExtendedKernelContext : protected KernelContext {
    * @return 计算节点的信息
    */
   const ComputeNodeInfo *GetComputeNodeInfo() const {
-    return reinterpret_cast<const ComputeNodeInfo *>(GetComputeNodeExtend());
+    return ge::PtrToPtr<const void, const ComputeNodeInfo>(GetComputeNodeExtend());
   }
   /**
    * 获取本kernel的name
    * @return 本kernel的name
    */
-  const char *GetKernelName() const {
-    auto extend_info = GetExtendInfo();
+  const ge::char_t *GetKernelName() const {
+    const auto extend_info = GetExtendInfo();
     if (extend_info == nullptr) {
       return nullptr;
     }
@@ -153,8 +154,8 @@ class ExtendedKernelContext : protected KernelContext {
    * 获取本kernel的type
    * @return 本kernel的type
    */
-  const char *GetKernelType() const {
-    auto extend_info = GetExtendInfo();
+  const ge::char_t *GetKernelType() const {
+    const auto extend_info = GetExtendInfo();
     if (extend_info == nullptr) {
       return nullptr;
     }
@@ -165,13 +166,13 @@ class ExtendedKernelContext : protected KernelContext {
    * @return 本kernel的扩展信息
    */
   const KernelExtendInfo *GetExtendInfo() const {
-    return reinterpret_cast<const KernelExtendInfo *>(GetKernelExtend());
+    return ge::PtrToPtr<const void, const KernelExtendInfo>(GetKernelExtend());
   }
 
  protected:
   template<typename T, size_t Offset = 0>
   const T *GetDynamicInputPointer(size_t ir_index, size_t relative_ins_index) const {
-    auto ins_info = GetIrInputInstanceInfo(ir_index);
+    const auto ins_info = GetIrInputInstanceInfo(ir_index);
     if (ins_info == nullptr) {
       return nullptr;
     }

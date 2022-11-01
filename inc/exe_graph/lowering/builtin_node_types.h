@@ -17,6 +17,8 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_LOWERING_BUILTIN_NODE_TYPES_H_
 #define METADEF_CXX_INC_EXE_GRAPH_LOWERING_BUILTIN_NODE_TYPES_H_
 #include "graph/types.h"
+#include <cstring>
+
 namespace gert {
 // 子图的输出，InnerNetOutput有多个输入，没有输出，每个InnerNetOutput的输入，对应相同Index的parent node的输出
 constexpr ge::char_t const *kInnerNetOutput = "InnerNetOutput";
@@ -26,7 +28,7 @@ constexpr ge::char_t const *kInnerNetOutput = "InnerNetOutput";
 constexpr ge::char_t const *kInnerData = "InnerData";
 
 // 图的输出，NetOutput出现在Main图上，表达执行完成后，图的输出。NetOutput有多个输入，没有输出，每个输入对应相同Index的图输出
-constexpr char const *kNetOutput = "NetOutput";
+constexpr ge::char_t const *kNetOutput = "NetOutput";
 
 // 图的输入，Data没有输入，有一个个输出，代表图的输入。
 // Data具有一个key为index的属性，该属性类型是int32，代表图的输入的Index

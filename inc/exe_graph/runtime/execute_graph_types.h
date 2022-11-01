@@ -33,7 +33,7 @@ enum class ExecuteGraphType {
  * @param type 执行图类型枚举
  * @return
  */
-inline const char *GetExecuteGraphTypeStr(ExecuteGraphType type) {
+inline const char *GetExecuteGraphTypeStr(const ExecuteGraphType type) {
   if (type >= ExecuteGraphType::kNum) {
     return nullptr;
   }

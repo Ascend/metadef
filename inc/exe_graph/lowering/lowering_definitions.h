@@ -16,9 +16,11 @@
 
 #ifndef AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_DEFINITIONS_H_
 #define AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_DEFINITIONS_H_
+#include "graph/types.h"
+
 namespace gert {
-constexpr const char *kLoweringResult = "_lowering_result";
-constexpr const char *kLoweringTensorResult = "_lowering_tensor_result";
-constexpr const char *kLoweringHostTensorResult = "_lowering_host_tensor_result";
+constexpr const ge::char_t *kLoweringResult = "_lowering_result";
+constexpr const ge::char_t *kLoweringTensorResult = "_lowering_tensor_result";
+constexpr const ge::char_t *kLoweringHostTensorResult = "_lowering_host_tensor_result";
 }
 #endif  // AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_DEFINITIONS_H_
