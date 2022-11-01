@@ -66,11 +66,7 @@ struct MappingCmpKey {
     return (key1->desc_name) < (key2->desc_name);
   }
 };
-#ifdef ONLY_COMPILE_OPEN_SRC
-using BufferFusionMapping = std::map<const BufferFusionOpDesc *, std::vector<ge::NodePtr>>;
-#else
 using BufferFusionMapping = std::map<const BufferFusionOpDesc *, std::vector<ge::NodePtr>, MappingCmpKey>;
-#endif
 using BufferFusionNodeDescMap = std::unordered_map<ge::NodePtr, BufferFusionOpDesc *>;
 
 class BufferFusionPattern {
