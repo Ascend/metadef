@@ -36,7 +36,8 @@
 #include "common/util/mem_utils.h"
 
 namespace ge {
-bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const {
+bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index,
+                                       std::string &node_name, int32_t &index) const {
   const auto sep = node_index.rfind(":");
   if (sep == std::string::npos) {
     GELOGW("[Parse][CheckParam] Separator \":\" is not found in node_index.");
@@ -277,6 +278,19 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *cons
     return false;
   }
 
+  const auto root_graph = GraphUtils::FindRootGraph(compute_graph);
+  GE_RT_FALSE_CHECK_NOTNULL(root_graph);
+  std::vector<std::shared_ptr<ComputeGraph>> subgraphs;
+  if (compute_graph == root_graph) {
+    subgraphs = compute_graph->GetAllSubgraphs();
+  } else {
+    GELOGD("[Serialize][Subgraph] compute_graph[%s] is not root graph[%s], get all subgraphs recursively",
+           compute_graph->GetName().c_str(), root_graph->GetName().c_str());
+    if (ge::GraphUtils::GetSubgraphsRecursively(compute_graph, subgraphs) != SUCCESS) {
+      GELOGE(GRAPH_FAILED, "[Serialize][Subgraph] failed");
+      return false;
+    }
+  }
   for (const auto subgraph : compute_graph->GetAllSubgraphs()) {
     if (!SerializeGraph(subgraph, model_proto->add_graph(), is_dump)) {
       GELOGE(GRAPH_FAILED, "[Serialize][Subgraph] failed");

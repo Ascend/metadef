@@ -34,7 +34,7 @@
 
 #undef private
 #undef protected
-
+#include "graph/utils/node_utils.h"
 #include "proto/ge_ir.pb.h"
 
 using namespace ge;
@@ -42,7 +42,69 @@ using namespace std;
 
 using std::vector;
 using std::string;
+namespace {
+static ComputeGraphPtr BuildSubSubComputeGraph() {
+    ut::GraphBuilder builder = ut::GraphBuilder("subsubgraph");
+    auto data = builder.AddNode("sub_sub_Data", "sub_sub_Data", 0, 1);
+    auto netoutput = builder.AddNode("sub_sub_Netoutput", "sub_sub_NetOutput", 1, 0);
+    builder.AddDataEdge(data, 0, netoutput, 0);
+    auto graph = builder.GetGraph();
+    return graph;
+}
 
+static ComputeGraphPtr BuildSubComputeGraph() {
+    ut::GraphBuilder builder = ut::GraphBuilder("subgraph");
+    auto data = builder.AddNode("sub_Data", "sub_Data", 0, 1);
+    auto partitioned_call = builder.AddNode("PartitionedCall", "PartitionedCall", 1, 1);
+    partitioned_call->GetOpDesc()->AddSubgraphName("subsubgraph");
+    partitioned_call->GetOpDesc()->SetSubgraphInstanceName(0, "subsubgraph");
+    auto netoutput = builder.AddNode("sub_Netoutput", "sub_NetOutput", 1, 0);
+    builder.AddDataEdge(data, 0, partitioned_call, 0);
+    builder.AddDataEdge(partitioned_call, 0, netoutput, 0);
+    auto subgraph = builder.GetGraph();
+    partitioned_call->SetOwnerComputeGraph(subgraph);
+    ComputeGraphPtr subsubgraph = BuildSubSubComputeGraph();
+    subsubgraph->SetParentGraph(subgraph);
+    subsubgraph->SetParentNode(partitioned_call);
+    return subgraph;
+}
+// construct graph which contains subgraph
+static ComputeGraphPtr BuildComputeGraph() {
+    ut::GraphBuilder builder = ut::GraphBuilder("graph");
+    auto data = builder.AddNode("Data", "Data", 0, 1);
+    auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
+    transdata->GetOpDesc()->AddSubgraphName("subgraph");
+    transdata->GetOpDesc()->SetSubgraphInstanceName(0, "subgraph");
+    auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+    builder.AddDataEdge(data, 0, transdata, 0);
+    builder.AddDataEdge(transdata, 0, netoutput, 0);
+    auto graph = builder.GetGraph();
+    // add subgraph
+    transdata->SetOwnerComputeGraph(graph);
+    ComputeGraphPtr subgraph = BuildSubComputeGraph();
+    subgraph->SetParentGraph(graph);
+    subgraph->SetParentNode(transdata);
+
+    auto partitioned_call = subgraph->FindNode("PartitionedCall");
+    auto sub_sub_graph = ge::NodeUtils::GetSubgraph(*partitioned_call, 0U);
+
+    graph->AddSubgraph("subgraph", subgraph);
+    graph->AddSubgraph("partitioned_call", sub_sub_graph);
+    return graph;
+}
+
+TEST(UTEST_ge_model_serialize, GetAllSubGraphsRecursivelySuccess)
+{
+    Model model("model_name", "custom version3.0");
+    ComputeGraphPtr cgp = BuildComputeGraph();
+    Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
+    model.SetGraph(graph);
+
+    ModelSerialize serialize;
+    auto buffer = serialize.SerializeModel(model);
+    ASSERT_NE(buffer.GetSize(), 0);
+}
+}
 bool LinkEdge(NodePtr srcNode, int32_t srcIndex, NodePtr dstNode, int32_t dstIndex)
 {
     if (srcIndex >= 0) {
@@ -625,7 +687,6 @@ TEST(UTEST_ge_model_serialize, test_listSubGraph)
     auto buffer = serialize.SerializeModel(model);
     ASSERT_GE(buffer.GetSize(), 0);
 }
-
 
 TEST(UTEST_ge_model_serialize, test_Format)
 {

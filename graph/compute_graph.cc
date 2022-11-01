@@ -823,7 +823,6 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
     stack.pop_back();
     node_vec.push_back(node);
     GE_CHECK_NOTNULL(node->GetOpDesc());
-    GELOGD("node_vec.push_back %s", node->GetOpDesc()->GetName().c_str());
     for (const auto &anchor : node->GetAllOutDataAnchors()) {
       GE_CHECK_NOTNULL(anchor);
       for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
