@@ -33,7 +33,7 @@ class InferShapeRangeContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入shape range指针，index非法时，返回空指针
    */
-  const Range<Shape> *GetInputShapeRange(size_t index) const {
+  const Range<Shape> *GetInputShapeRange(const size_t index) const {
     return GetInputPointer<Range<Shape>>(index);
   }
   /**
@@ -43,7 +43,7 @@ class InferShapeRangeContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入tensor指针，index非法时，返回空指针
    */
-  const TensorRange *GetInputTensorRange(size_t index) const {
+  const TensorRange *GetInputTensorRange(const size_t index) const {
     return GetInputPointer<TensorRange>(index);
   }
   /**
@@ -51,7 +51,7 @@ class InferShapeRangeContext : public ExtendedKernelContext {
    * @param ir_index IR原型定义中的index
    * @return tensor range指针，index非法，或该INPUT没有实例化时，返回空指针
    */
-  const TensorRange *GetOptionalInputTensorRange(size_t ir_index) const {
+  const TensorRange *GetOptionalInputTensorRange(const size_t ir_index) const {
     return GetDynamicInputPointer<TensorRange>(ir_index, 0);
   }
   /**
@@ -60,7 +60,7 @@ class InferShapeRangeContext : public ExtendedKernelContext {
    * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
    * @return tensor range指针，index或relative_index非法时，返回空指针
    */
-  const TensorRange *GetDynamicInputTensorRange(size_t ir_index, size_t relative_index) const {
+  const TensorRange *GetDynamicInputTensorRange(const size_t ir_index, const size_t relative_index) const {
     return GetDynamicInputPointer<TensorRange>(ir_index, relative_index);
   }
   /**
@@ -68,7 +68,7 @@ class InferShapeRangeContext : public ExtendedKernelContext {
    * @param ir_index IR原型定义中的index
    * @return shape range指针，index非法，或该INPUT没有实例化时，返回空指针
    */
-  const Range<Shape> *GetOptionalInputShapeRange(size_t ir_index) const {
+  const Range<Shape> *GetOptionalInputShapeRange(const size_t ir_index) const {
     return GetDynamicInputPointer<Range<Shape>>(ir_index, 0);
   }
   /**
@@ -77,7 +77,7 @@ class InferShapeRangeContext : public ExtendedKernelContext {
    * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
    * @return shape range指针，index或relative_index非法时，返回空指针
    */
-  const Range<Shape> *GetDynamicInputShapeRange(size_t ir_index, size_t relative_index) const {
+  const Range<Shape> *GetDynamicInputShapeRange(const size_t ir_index, const size_t relative_index) const {
     return GetDynamicInputPointer<Range<Shape>>(ir_index, relative_index);
   }
 
@@ -86,7 +86,7 @@ class InferShapeRangeContext : public ExtendedKernelContext {
    * @param index 输出index
    * @return 输出shape range指针，index非法时，返回空指针
    */
-  Range<Shape> *GetOutputShapeRange(size_t index) {
+  Range<Shape> *GetOutputShapeRange(const size_t index) {
     return GetOutputPointer<Range<Shape>>(index);
   }
 };

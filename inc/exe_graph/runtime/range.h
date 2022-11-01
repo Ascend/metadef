@@ -17,11 +17,7 @@
 #define METADEF_CXX_INC_EXE_GRAPH_RANGE_H_
 
 #include <array>
-#include <vector>
 #include <iostream>
-#include <cstring>
-#include <type_traits>
-#include <limits>
 #include "graph/utils/math_util.h"
 #include "shape.h"
 
