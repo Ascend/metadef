@@ -23,7 +23,6 @@
 #include <atomic>
 #include <condition_variable>
 #include "framework/common/util.h"
-#include "graph/ge_error_codes.h"
 
 namespace ge {
 #define TRACE_GEN_RECORD(owner, action, graph_name, node_name, node_data, tensor_index, tensor_data, content)      \
@@ -75,7 +74,7 @@ class TraceManager {
   void Finalize();
 
   std::string NextFileName();
-  void SaveTraceBufferToFile(ReadyPart ready_part);
+  void SaveTraceBufferToFile(const ReadyPart ready_part);
   void SaveBufferToFileThreadFunc();
 
   static thread_local std::string trace_header_;

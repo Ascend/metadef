@@ -475,7 +475,7 @@ void OnnxUtils::AddListAttrProto(const std::string &attr_name,
                                  const ::ge::proto::AttrDef &attr_def, const std::string &prefix,
                                  const std::string &suffix, onnx::NodeProto *node_proto) {
   const auto &list_value = attr_def.list();
-  auto list_value_type = list_value.val_type();
+  const auto &list_value_type = list_value.val_type();
   if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_STRING) {
     if (kDumpLevel == DumpLevel::DUMP_ALL) {
       const auto &strings = list_value.s();

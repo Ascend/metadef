@@ -221,8 +221,8 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
       }
     }
   }
-  graphStatus ret_pld = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(PLACEHOLDER));
-  graphStatus ret_end = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(END));
+  const graphStatus ret_pld = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(PLACEHOLDER));
+  const graphStatus ret_end = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(END));
   if ((ret_pld != SUCCESS) || (ret_end != SUCCESS)) {
     REPORT_CALL_ERROR("E18888", "Graph[%s] delete placehold or end failed.", exe_graph->GetName().c_str());
     GELOGE(FAILED, "[Sort][Graph] Graph[%s] delete placehold or end failed.", exe_graph->GetName().c_str());
@@ -400,7 +400,7 @@ graphStatus TuningUtils::ChangePld2Data(const NodePtr &node, const NodePtr &data
     output_map[i] = static_cast<int32_t>(i);
   }
 
-  auto ret = GraphUtils::ReplaceNodeAnchors(data_node, node, {}, output_map);
+  const auto ret = GraphUtils::ReplaceNodeAnchors(data_node, node, {}, output_map);
   if (ret != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E18888", "TUU:Failed to replace node %s by node %s, ret:%u",
                       node->GetName().c_str(), data_node->GetName().c_str(), ret);

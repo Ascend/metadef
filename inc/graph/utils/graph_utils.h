@@ -591,7 +591,7 @@ class GraphUtils {
    */
   static graphStatus UnfoldGraph(const ComputeGraphPtr &graph, const ComputeGraphPtr &target_graph,
                                  const NodePtr &target_node, const function<bool(const ComputeGraphPtr &)> &filter,
-                                 int depth = 0);
+                                 int32_t depth = 0);
 
   static CycleDetectorPtr CreateCycleDetector(const ComputeGraphPtr &graph);
 

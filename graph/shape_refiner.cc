@@ -1,5 +1,5 @@
-/*
- * Copyright 2020 Huawei Technologies Co., Ltd
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -854,12 +854,13 @@ graphStatus ShapeRefiner::InferShapeAndTypeForRunning(const NodePtr &node, Opera
     GE_CHECK_NOTNULL(after_opdesc);
     auto all_output_tensor = after_opdesc->GetAllOutputsDescPtr();
     for (size_t i = 0UL; i < all_output_tensor.size(); ++i) {
-      if (all_output_tensor.at(i)->GetDataType() != temp_dtype[i]) {
+      auto &output_tensor = all_output_tensor.at(i);
+      if (output_tensor->GetDataType() != temp_dtype[i]) {
         GELOGD("Op %s output %zu need reset dtype,original dtype is %s, new dtype is %s",
                node->GetName().c_str(), i,
-               TypeUtils::DataTypeToSerialString(all_output_tensor.at(i)->GetDataType()).c_str(),
+               TypeUtils::DataTypeToSerialString(output_tensor->GetDataType()).c_str(),
                TypeUtils::DataTypeToSerialString(temp_dtype[i]).c_str());
-        all_output_tensor.at(i)->SetDataType(temp_dtype[i]);
+        output_tensor->SetDataType(temp_dtype[i]);
       }
     }
     PrintInOutTensorShape(node, "after_infershape when running");
