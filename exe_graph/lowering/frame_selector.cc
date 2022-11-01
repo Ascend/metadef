@@ -46,10 +46,10 @@ ge::NodePtr GetOrCreateInnerNetOutput(GraphFrame &frame) {
   }
   return ValueHolder::AddNode(kInnerNetOutput, 0U, 0U, frame);
 }
-ge::graphStatus MoveGuardersToDeInit(const ge::NodePtr &init_node, GraphFrame *root_frame,
+ge::graphStatus MoveGuardersToDeInit(const ge::NodePtr &init_node, GraphFrame &root_frame,
                                      const std::vector<std::pair<ValueHolderPtr, size_t>> &guarders_and_out_index) {
   auto de_init_node =
-      root_frame->GetExeGraph()->FindFirstNodeMatchType(GetExecuteGraphTypeStr(ExecuteGraphType::kDeInit));
+      root_frame.GetExeGraph()->FindFirstNodeMatchType(GetExecuteGraphTypeStr(ExecuteGraphType::kDeInit));
   GE_ASSERT_NOTNULL(de_init_node);
   auto de_init_graph = ge::NodeUtils::GetSubgraph(*de_init_node, 0U);
   GE_ASSERT_NOTNULL(de_init_graph);
@@ -65,7 +65,7 @@ ge::graphStatus MoveGuardersToDeInit(const ge::NodePtr &init_node, GraphFrame *r
     GE_ASSERT_SUCCESS(
         ge::GraphUtils::AddEdge(init_node->GetOutDataAnchor(static_cast<int32_t>(guarders_and_out_index[i].second)),
                                 de_init_node->GetInDataAnchor(static_cast<int32_t>(index + i))));
-    GE_ASSERT_SUCCESS(ge::GraphUtils::AddEdge(CreateInnerData(de_init_graph, *root_frame, index + i),
+    GE_ASSERT_SUCCESS(ge::GraphUtils::AddEdge(CreateInnerData(de_init_graph, root_frame, index + i),
                                               guarders_and_out_index[i].first->GetNode()->GetInDataAnchor(0)));
   }
 
@@ -129,7 +129,7 @@ ge::graphStatus ConnectOut(const ge::NodePtr &init_node,
   }
 
   GE_ASSERT_SUCCESS(ge::NodeUtils::AppendOutputAnchor(init_node, index + new_out_num));
-  GE_ASSERT_SUCCESS(MoveGuardersToDeInit(init_node, root_frame, guarders_and_out_index));
+  GE_ASSERT_SUCCESS(MoveGuardersToDeInit(init_node, *root_frame, guarders_and_out_index));
 
   for (size_t i = 0U; i < init_graph_outputs.size(); ++i) {
     init_node_outputs[i]->SetPlacement(init_graph_outputs[i]->GetPlacement());

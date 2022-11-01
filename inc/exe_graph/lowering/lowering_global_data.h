@@ -50,7 +50,6 @@ class LoweringGlobalData {
   LoweringGlobalData &AddStaticCompiledGraphModel(const std::string &graph_name, void *const model);
 
   bg::ValueHolderPtr GetAllocator(AllocatorDesc desc) const;
-  LoweringGlobalData &SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator);
   LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator);
   LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator, ExecuteGraphType graph_type);
   bg::ValueHolderPtr GetOrCreateAllocator(AllocatorDesc desc);

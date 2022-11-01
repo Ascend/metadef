@@ -31,7 +31,7 @@ class ScopedCurrentFrame {
   }
 
  private:
-  GraphFrame *backup_graph_frame_;
+  GraphFrame *backup_graph_frame_ = nullptr;
 };
 }  // namespace bg
 }  // namespace gert
