@@ -34,6 +34,10 @@ class Tensor {
         tensor_data_(addr, nullptr, ge::GetSizeInBytes(GetShapeSize(), data_type_), placement) {
       (void) reserved_;
   }
+  Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, ge::DataType data_type)
+      : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type) {
+    (void) reserved_;
+  }
   /**
    * 获取shape size，所谓shape size是指本shape中包含的element数量
    * @return shape size
