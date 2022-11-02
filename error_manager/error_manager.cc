@@ -323,10 +323,6 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
     (void)error_message.replace(index, kLength, arg_value);
   }
 
-  if (error_context_.work_stream_id == 0UL) {
-    GELOGW("work_id in this work stream is zero, work_id set action maybe forgeted in some externel api.");
-  }
-
   const std::unique_lock<std::mutex> lock(mutex_);
   auto &error_messages = GetErrorMsgContainerByWorkId(error_context_.work_stream_id);
   auto &warning_messages = GetWarningMsgContainerByWorkId(error_context_.work_stream_id);
