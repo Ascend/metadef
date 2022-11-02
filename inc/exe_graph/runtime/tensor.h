@@ -28,10 +28,10 @@ using ConstTensorAddress = void *const;  ///< Tensor地址
 class Tensor {
  public:
   Tensor() = default;
-  Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, TensorPlacement placement,
-         ge::DataType data_type, TensorAddress addr)
+  Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, const TensorPlacement placement,
+         const ge::DataType data_type, TensorAddress addr)
       : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type),
-        tensor_data_(addr, nullptr, ge::GetSizeInBytes(GetShapeSize(), data_type_), placement) {
+        tensor_data_(addr, nullptr, static_cast<size_t>(ge::GetSizeInBytes(GetShapeSize(), data_type_)), placement) {
       (void) reserved_;
   }
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, ge::DataType data_type)
@@ -104,7 +104,7 @@ class Tensor {
    * 设置Tensor的内存大小
    * @param Tensor的内存大小
    */
-  void SetSize(size_t size) {
+  void SetSize(const size_t size) {
     tensor_data_.SetSize(size);
   }
 
@@ -119,7 +119,7 @@ class Tensor {
    * 设置Tensor的data type
    * @param data_type data type
    */
-  void SetDataType(ge::DataType data_type) {
+  void SetDataType(const ge::DataType data_type) {
     data_type_ = data_type;
   }
   /**
@@ -129,8 +129,9 @@ class Tensor {
    * @param total_size 创建出的Tensor在内存中的长度
    * @return 创建出的Tensor指针
    */
-  static std::unique_ptr<uint8_t[]> CreateFollowing(int64_t shape_size, ge::DataType dt, size_t &total_size) {
-    total_size = ge::GetSizeInBytes(shape_size, dt);
+  static std::unique_ptr<uint8_t[]> CreateFollowing(const int64_t shape_size, const ge::DataType dt,
+                                                    size_t &total_size) {
+    total_size = static_cast<size_t>(ge::GetSizeInBytes(shape_size, dt));
     if (ge::AddOverflow(total_size, sizeof(Tensor), total_size)) {
       return nullptr;
     }
@@ -197,7 +198,7 @@ class Tensor {
    * 设置运行时format
    * @param storage_format 运行时format
    */
-  void SetStorageFormat(ge::Format storage_format) {
+  void SetStorageFormat(const ge::Format storage_format) {
     storage_format_.SetStorageFormat(storage_format);
   }
   /**
@@ -211,7 +212,7 @@ class Tensor {
    * 设置原始format
    * @param origin_format 原始format
    */
-  void SetOriginFormat(ge::Format origin_format) {
+  void SetOriginFormat(const ge::Format origin_format) {
     storage_format_.SetOriginFormat(origin_format);
   }
   /**
@@ -239,7 +240,7 @@ class Tensor {
    * 设置补维规则
    * @param expand_dims_type 补维规则
    */
-  void SetExpandDimsType(ExpandDimsType expand_dims_type) {
+  void SetExpandDimsType(const ExpandDimsType expand_dims_type) {
     storage_format_.SetExpandDimsType(expand_dims_type);
   }
   /**
@@ -253,7 +254,7 @@ class Tensor {
    * 设置tensor的placement
    * @param tensor的placement
    */
-  void SetPlacement(TensorPlacement placement) {
+  void SetPlacement(const TensorPlacement placement) {
     tensor_data_.SetPlacement(placement);
   }
   /**

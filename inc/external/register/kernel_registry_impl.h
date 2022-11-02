@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AIR_CXX_RUNTIME_V2_KERNEL_KERNEL_REGISTRY_H_
-#define AIR_CXX_RUNTIME_V2_KERNEL_KERNEL_REGISTRY_H_
+#ifndef INC_EXTERNAL_REGISTER_KERNEL_REGISTER_IMPL_H_
+#define INC_EXTERNAL_REGISTER_KERNEL_REGISTER_IMPL_H_
 #include <unordered_map>
 #include <string>
 
@@ -35,4 +35,4 @@ class KernelRegistryImpl : public KernelRegistry {
 };
 }
 
-#endif // AIR_CXX_RUNTIME_V2_KERNEL_KERNEL_REGISTRY_H_
+#endif // INC_EXTERNAL_REGISTER_KERNEL_REGISTER_IMPL_H_
