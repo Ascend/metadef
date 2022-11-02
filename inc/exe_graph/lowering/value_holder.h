@@ -36,10 +36,10 @@ using ValueHolderPtr = std::shared_ptr<ValueHolder>;
 class ValueHolder {
  public:
   enum class ValueHolderType {
-    kConst,   // 常量，执行时不变
-    kFeed,    // 执行时外部指定
-    kOutput,  // 由node产生，包含数据输出与控制输出
-    kConstData, // 常量Const，执行时由外部指定，执行时不变
+    kConst,      // 常量，执行时不变
+    kFeed,       // 执行时外部指定
+    kOutput,     // 由node产生，包含数据输出与控制输出
+    kConstData,  // 常量Const，执行时由外部指定，执行时不变
     // Add new type definitions here
     kValueHolderTypeEnd
   };
@@ -85,17 +85,17 @@ class ValueHolder {
 
   std::vector<ValueHolderPtr> AppendOutputs(size_t append_count);
 
-  static ValueHolderPtr CreateError(const char *fmt, ...);
-  static ValueHolderPtr CreateError(const char *fmt, va_list arg);
+  static ValueHolderPtr CreateError(const ge::char_t *fmt, ...);
+  static ValueHolderPtr CreateError(const ge::char_t *fmt, va_list arg);
   static ValueHolderPtr CreateConst(const void *data, size_t size, bool is_string = false);
   static ValueHolderPtr CreateFeed(int64_t index);
   static ValueHolderPtr CreateConstData(int64_t index);
 
-  static ValueHolderPtr CreateSingleDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs);
-  static std::vector<ValueHolderPtr> CreateDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs,
-                                                      size_t out_count);
-  static ValueHolderPtr CreateVoid(const char *node_type, const std::vector<ValueHolderPtr> &inputs);
-  static ValueHolderPtr CreateVoidGuarder(const char *node_type, const ValueHolderPtr &resource,
+  static ValueHolderPtr CreateSingleDataOutput(const ge::char_t *node_type, const std::vector<ValueHolderPtr> &inputs);
+  static std::vector<ValueHolderPtr> CreateDataOutput(const ge::char_t *node_type,
+                                                      const std::vector<ValueHolderPtr> &inputs, size_t out_count);
+  static ValueHolderPtr CreateVoid(const ge::char_t *node_type, const std::vector<ValueHolderPtr> &inputs);
+  static ValueHolderPtr CreateVoidGuarder(const ge::char_t *node_type, const ValueHolderPtr &resource,
                                           const std::vector<ValueHolderPtr> &args);
   static HyperStatus AddDependency(const ValueHolderPtr &src, const ValueHolderPtr &dst);
 
@@ -110,30 +110,31 @@ class ValueHolder {
    * @param graph_name 挂接GraphFrame到Node时，使用的name
    * @return 创建且挂接成功后，返回创建好的GraphFrame指针，失败时返回空指针
    */
-  static GraphFrame *PushGraphFrame(const ValueHolderPtr &belongs, const char *graph_name);
+  static GraphFrame *PushGraphFrame(const ValueHolderPtr &belongs, const ge::char_t *graph_name);
   static std::unique_ptr<GraphFrame> PopGraphFrame();
   static std::unique_ptr<GraphFrame> PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
                                                    const std::vector<ValueHolderPtr> &targets);
   static std::unique_ptr<GraphFrame> PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
                                                    const std::vector<ValueHolderPtr> &targets,
-                                                   const char *out_node_type);
+                                                   const ge::char_t *out_node_type);
   static GraphFrame *GetCurrentFrame();
   static GraphHolder *GetCurrentGraph();
   static void SetCurrentComputeNode(const ge::NodePtr &node);
   static void AddRelevantInputNode(const ge::NodePtr &node);
   static std::unique_ptr<CurrentComputeNodeGuarder> SetScopedCurrentComputeNode(const ge::NodePtr &node);
 
-  static NodeHolderPtr AddNode(const char *node_type, size_t input_count, size_t output_count, GraphFrame &frame);
+  static NodeHolderPtr AddNode(const ge::char_t *node_type, size_t input_count, size_t output_count, GraphFrame &frame);
   static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t start_index, size_t create_count);
   static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);
-  static std::string GenerateNodeName(const char *node_type, const GraphFrame &frame);
+  static std::string GenerateNodeName(const ge::char_t *node_type, const GraphFrame &frame);
 
   static std::vector<ValueHolderPtr> GetLastExecNodes();
 
  private:
   ValueHolder();
   static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t out_count);
-  static NodeHolderPtr CreateNode(const char *node_type, const std::vector<ValueHolderPtr> &inputs, size_t out_count);
+  static NodeHolderPtr CreateNode(const ge::char_t *node_type, const std::vector<ValueHolderPtr> &inputs,
+                                  size_t out_count);
 
  private:
   static std::atomic<int64_t> id_generator_;

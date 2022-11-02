@@ -1043,7 +1043,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 ConstGeTensorBarePtr OpDescUtils::GetInputConstData(const Operator &op, const uint32_t idx) {
   if (op.operator_impl_ == nullptr) {
     AscendString op_name;
-    op.GetName(op_name);
+    (void)op.GetName(op_name);
     GELOGW("[Check][Param] Op(%s) operator_impl_ is nullptr.", op_name.GetString());
     return nullptr;
   }
@@ -1081,29 +1081,29 @@ ge::graphStatus OpDescUtils::GetInstanceNum(const OpDescPtr &op_desc, size_t ir_
   const auto ir_type = ir_inputs[ir_index].second;
   const auto ir_name = ir_inputs[ir_index].first;
   if (ir_type == ge::kIrInputRequired) {
-    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    const auto name = op_desc->GetValidInputNameByIndex(start_index);
     if (name != ir_name) {
       GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
              "current name %s",
              op_desc->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
     }
-    instance_num = 1;
+    instance_num = 1U;
     return ge::SUCCESS;
   }
   if (ir_type == ge::kIrInputOptional) {
-    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    const auto name = op_desc->GetValidInputNameByIndex(start_index);
     if (name == ir_name) {
-      instance_num = 1;
+      instance_num = 1U;
     } else {
-      instance_num = 0;
+      instance_num = 0U;
     }
     return ge::SUCCESS;
   }
   if (ir_type == ge::kIrInputDynamic) {
     size_t dyn_i = 0;
-    auto node_indegree = op_desc->GetAllInputName().size();
+    const auto node_indegree = op_desc->GetAllInputName().size();
     for (size_t i = start_index; i < node_indegree; ++i, ++dyn_i) {
-      auto name = op_desc->GetValidInputNameByIndex(i);
+      const auto name = op_desc->GetValidInputNameByIndex(i);
       if (name != ir_name + std::to_string(dyn_i)) {
         break;
       }
@@ -1126,7 +1126,7 @@ std::map<size_t, std::pair<size_t, size_t>> OpDescUtils::GetInputIrIndexes2Insta
   size_t input_index = 0;
   for (size_t i = 0; i < op_desc->GetIrInputs().size(); ++i) {
     size_t instance_num = 0;
-    auto ret = GetInstanceNum(op_desc, i, input_index, instance_num);
+    const auto ret = GetInstanceNum(op_desc, i, input_index, instance_num);
     if (ret != GRAPH_SUCCESS) {
       GELOGE(ret, "node [%s(%s)] get instance num failed", op_desc->GetName().c_str(), op_desc->GetType().c_str());
       return {};
@@ -1153,7 +1153,7 @@ ge::graphStatus OpDescUtils::GetInputIrIndexByInstanceIndex(const OpDescPtr &op_
   }
   size_t input_index = 0;
   for (size_t i = 0; i < op_desc->GetIrInputs().size(); ++i) {
-    size_t instance_num = ir_index_to_instance_index_pair_map[i].second;
+    const size_t instance_num = ir_index_to_instance_index_pair_map[i].second;
     if (instance_num == 0) {
       continue;
     }

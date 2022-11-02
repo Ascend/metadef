@@ -601,7 +601,7 @@ bool AttrUtils::SetGraph(AttrUtils::AttrHolderAdapter &&obj, const std::string &
   if (!obj) {
     return false;
   }
-  proto::GraphDef *graph_def = SetAndGetAttrValue(obj->MutableAttrMap(), name, proto::GraphDef());
+  proto::GraphDef *const graph_def = SetAndGetAttrValue(obj->MutableAttrMap(), name, proto::GraphDef());
   if (graph_def == nullptr) {
     return false;
   }

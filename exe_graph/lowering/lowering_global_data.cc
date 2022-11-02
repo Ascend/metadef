@@ -100,10 +100,6 @@ bg::ValueHolderPtr LoweringGlobalData::GetAllocator(AllocatorDesc desc) const {
     return GetUniqueValueHolder(desc.GetKey());
   }
 }
-LoweringGlobalData &LoweringGlobalData::SetAllocator(AllocatorDesc desc, bg::ValueHolderPtr allocator) {
-  throw std::invalid_argument("No longer support SetAllocator, use GetOrCreateAllocator instead");
-  return *this;
-}
 LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr &&allocator) {
   return SetExternalAllocator(std::move(allocator), ExecuteGraphType::kMain);
 }
@@ -206,7 +202,7 @@ uint64_t LoweringGlobalData::GetSessionId() {
 
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(
     const std::string &name, const std::function<bg::ValueHolderPtr()> &builder) {
-  return GetOrCreateUniqueValueHolder(name, [&]() -> std::vector<bg::ValueHolderPtr> { return {builder()}; })[0];
+  return GetOrCreateUniqueValueHolder(name, [&builder]() -> std::vector<bg::ValueHolderPtr> { return {builder()}; })[0];
 }
 
 std::vector<bg::ValueHolderPtr> LoweringGlobalData::GetOrCreateUniqueValueHolder(

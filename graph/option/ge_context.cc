@@ -28,7 +28,7 @@ const char_t *kHostExecPlacement = "HOST";
 const char_t *kEnabled = "1";
 }
 GEContext &GetContext() {
-  static GEContext ge_context{};
+  static GEContext ge_context {};
   return ge_context;
 }
 
@@ -57,6 +57,18 @@ bool GEContext::GetHostExecFlag() const {
   }
   GELOGD("Option ge.exec.placement is %s.", exec_placement.c_str());
   return exec_placement == kHostExecPlacement;
+}
+
+bool GEContext::GetTrainGraphFlag() const {
+  std::string run_mode;
+  if ((GetThreadLocalContext().GetOption(ge::OPTION_GRAPH_RUN_MODE, run_mode) == ge::GRAPH_SUCCESS) &&
+      (!run_mode.empty())) {
+    const int32_t base = 10;
+    if (static_cast<ge::GraphRunMode>(std::strtol(run_mode.c_str(), nullptr, base)) >= ge::TRAIN) {
+      return true;
+    }
+  }
+  return false;
 }
 
 std::map<std::string, std::string> &GetMutableGlobalOptions() {

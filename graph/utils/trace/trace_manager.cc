@@ -29,19 +29,19 @@ namespace ge {
 namespace {
 class TraceFileHolder {
  public:
-  explicit TraceFileHolder(int fd) : fd_(fd) {}
+  explicit TraceFileHolder(int32_t fd) : fd_(fd) {}
   TraceFileHolder(TraceFileHolder const &) = delete;
   TraceFileHolder &operator=(TraceFileHolder const &) = delete;
   ~TraceFileHolder() {
     if (fd_ >= 0) {
-      mmClose(fd_);
+      (void)mmClose(fd_);
       fd_ = -1;
     }
   }
 
   void Write(const char_t *data, const char *separator = "\r\n") const {
     if (fd_ >= 0) {
-      mmSsize_t written_count = mmWrite(fd_, const_cast<char_t *>(data), strlen(data));
+      const mmSsize_t written_count = mmWrite(fd_, const_cast<char_t *>(data), strlen(data));
       if ((written_count == EN_INVALID_PARAM) || (written_count == EN_ERROR)) {
         GELOGE(INTERNAL_ERROR, "[trace] Failed write trace info to file %s", data);
       }
@@ -54,7 +54,7 @@ class TraceFileHolder {
   }
 
  private:
-  int fd_;
+  int32_t fd_;
 };
 
 std::string CurrentTimeInSecondsStr() {
@@ -131,7 +131,7 @@ std::unique_ptr<TraceFileHolder> OpenOrCreateFile(const std::string &file_path) 
   return ComGraphMakeUnique<TraceFileHolder>(mmOpen2(&real_path[0], kFlag, kMode));
 }
 
-void TraceManager::SaveTraceBufferToFile(ReadyPart ready_part) {
+void TraceManager::SaveTraceBufferToFile(const ReadyPart ready_part) {
   if (ready_part == ReadyPart::None) {
     return;
   }
@@ -158,10 +158,10 @@ void TraceManager::SaveTraceBufferToFile(ReadyPart ready_part) {
     return;
   }
 
-  while ((ready_part == ReadyPart::A && part1_ready_nums_ < kTraceSaveTriggerNum) ||
-         (ready_part == ReadyPart::B && part2_ready_nums_ < kTraceSaveTriggerNum)) {
+  while (((ready_part == ReadyPart::A) && (part1_ready_nums_ < kTraceSaveTriggerNum)) ||
+         ((ready_part == ReadyPart::B) && (part2_ready_nums_ < kTraceSaveTriggerNum))) {
   }
-  size_t start = (ready_part == ReadyPart::A) ? 0 : kTraceSaveTriggerNum;
+  const size_t start = (ready_part == ReadyPart::A) ? 0U : kTraceSaveTriggerNum;
   for (size_t i = start; i < (start + kTraceSaveTriggerNum); i++) {
     if (!trace_array_[i].empty()) {
       current_file_saved_nums_++;
@@ -176,10 +176,10 @@ void TraceManager::SaveBufferToFileThreadFunc() {
     while ((ready_part_ == ReadyPart::None) && (!stopped_)) {
       data_ready_var_.wait(lock_file);
     }
-    if (stopped_ && ready_part_ == ReadyPart::None) {  // Keep save remain trace even request stop
+    if (stopped_ && (ready_part_ == ReadyPart::None)) {  // Keep save remain trace even request stop
       break;
     }
-    auto ready_part = ready_part_;
+    const auto ready_part = ready_part_;
     ready_part_ = ReadyPart::None;
     lock_file.unlock();
 
@@ -251,7 +251,7 @@ void TraceManager::AddTrace(std::string &&trace_info) {
     return;
   }
   // Assume kTraceSaveArraySize = 2 * kTraceSaveTriggerNum
-  auto current_trace_nums = trace_index_.fetch_add(1);
+  const auto current_trace_nums = trace_index_.fetch_add(1);
   // blocking when almost full to prevent re-trigger save
   const static uint64_t kLeftNumTriggerBlock = 1U;
   while (((current_trace_nums - total_saved_nums_) >= (kTraceSaveArraySize - kLeftNumTriggerBlock)) && (!stopped_)) {
@@ -259,7 +259,7 @@ void TraceManager::AddTrace(std::string &&trace_info) {
   if (stopped_) {  // Drop trace after request stopping
     return;
   }
-  auto index = current_trace_nums % kTraceSaveArraySize;
+  const auto index = current_trace_nums % kTraceSaveArraySize;
   trace_array_[index] = std::move(trace_info);
   if (index < kTraceSaveTriggerNum) {
     part1_ready_nums_++;

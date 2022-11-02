@@ -520,7 +520,7 @@ graphStatus NodeUtils::AddSubgraph(Node &node, const std::string &subgraph_name,
 
   GE_ASSERT_SUCCESS(op_desc->AddSubgraphName(subgraph_name));
   auto &subgraph_names_to_index = op_desc->GetSubgraphNameIndexes();
-  auto iter = subgraph_names_to_index.find(subgraph_name);
+  const auto &iter = subgraph_names_to_index.find(subgraph_name);
   GE_ASSERT_TRUE(iter != subgraph_names_to_index.cend());
 
   return SetSubgraph(node, iter->second, subgraph);
@@ -1047,7 +1047,7 @@ graphStatus NodeUtils::UpdateOutputOriginalShapeAndShape(const Node &node, const
   return GRAPH_SUCCESS;
 }
 std::pair<NodePtr, OutDataAnchorPtr> NodeUtils::GetInDataNodeAndAnchorByIndex(const Node &node, const int32_t index) {
-  auto dst_anchor = node.GetInDataAnchor(index);
+  const auto dst_anchor = node.GetInDataAnchor(index);
   if (dst_anchor == nullptr) {
     GE_LOGE("Failed to get in data anchor from index %d for node %s", index, node.GetName().c_str());
     return {nullptr, nullptr};

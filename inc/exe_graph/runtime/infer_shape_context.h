@@ -41,7 +41,7 @@ class InferShapeContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入shape指针，index非法时，返回空指针
    */
-  const Shape *GetInputShape(size_t index) const {
+  const Shape *GetInputShape(const size_t index) const {
     return GetInputPointer<Shape>(index);
   }
   /**
@@ -51,7 +51,7 @@ class InferShapeContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入tensor指针，index非法时，返回空指针
    */
-  const Tensor *GetInputTensor(size_t index) const {
+  const Tensor *GetInputTensor(const size_t index) const {
     return GetInputPointer<Tensor>(index);
   }
   /**
@@ -59,7 +59,7 @@ class InferShapeContext : public ExtendedKernelContext {
    * @param ir_index IR原型定义中的index
    * @return shape指针，index非法，或该INPUT没有实例化时，返回空指针
    */
-  const Shape *GetOptionalInputShape(size_t ir_index) const {
+  const Shape *GetOptionalInputShape(const size_t ir_index) const {
     return GetDynamicInputPointer<Shape>(ir_index, 0);
   }
   /**
@@ -68,7 +68,7 @@ class InferShapeContext : public ExtendedKernelContext {
    * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
    * @return shape指针，index或relative_index非法时，返回空指针
    */
-  const Shape *GetDynamicInputShape(size_t ir_index, size_t relative_index) const {
+  const Shape *GetDynamicInputShape(const size_t ir_index, const size_t relative_index) const {
     return GetDynamicInputPointer<Shape>(ir_index, relative_index);
   }
 
@@ -77,7 +77,7 @@ class InferShapeContext : public ExtendedKernelContext {
    * @param index 输出index
    * @return 输出shape指针，index非法时，返回空指针
    */
-  Shape *GetOutputShape(size_t index) {
+  Shape *GetOutputShape(const size_t index) {
     return GetOutputPointer<Shape>(index);
   }
 

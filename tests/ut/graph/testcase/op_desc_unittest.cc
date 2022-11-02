@@ -529,7 +529,7 @@ TEST_F(UtestOpDesc, CallInferV2Func_success) {
     const ge::GeTensorDesc &input_desc = op_desc->GetInputDesc(0UL);
     return op_desc->UpdateOutputDesc(0UL, input_desc);
   };
-  auto infer_shape_range_func = [](const OpDescPtr &op) -> uint32_t {
+  auto infer_shape_range_func = [](const ge::Operator &op, const OpDescPtr &op_desc) -> uint32_t {
     return GRAPH_SUCCESS;
   };
   auto infer_data_type_func = [](const OpDescPtr &op) -> uint32_t {

@@ -38,7 +38,7 @@ inline uint16_t FloatToUint16(const float &value) {
   Fp32 temp;
   uint16_t out;
   temp.f = value;
-  uint32_t sign = temp.u & sign_mask;
+  const uint32_t sign = temp.u & sign_mask;
   temp.u ^= sign;
 
   if (temp.u >= f32infty.u) {

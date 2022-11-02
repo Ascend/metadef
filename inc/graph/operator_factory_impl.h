@@ -29,7 +29,7 @@
 namespace ge {
 using InferShapeV2Func = uint32_t (*)(const ge::Operator &op, const OpDescPtr &);
 using InferDataTypeFunc = uint32_t (*)(const OpDescPtr &);
-using InferShapeRangeFunc = uint32_t (*)(const OpDescPtr &);
+using InferShapeRangeFunc = uint32_t (*)(const ge::Operator &op, const OpDescPtr &);
 struct InferValueRangePara {
  public:
   InferValueRangePara() = default;

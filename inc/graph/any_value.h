@@ -168,7 +168,7 @@ class AnyValue {
     void *pointer;
     std::aligned_storage<sizeof(void *)>::type inline_buf;
   };
-  ValueHolder holder_{};
+  ValueHolder holder_ = {nullptr};
 
   void (*operate_)(OperateType ot, const AnyValue *av, void *out){nullptr};
 };

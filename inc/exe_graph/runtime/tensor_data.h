@@ -17,6 +17,7 @@
 #define METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 
 #include <cstddef>
+#include <stdint.h>
 #include "graph/ge_error_codes.h"
 
 namespace gert {
@@ -31,7 +32,9 @@ enum TensorPlacement {
     kTensorPlacementEnd
 };
 inline const char *GetPlacementStr(TensorPlacement placement) {
-  static const char *placement_str[kTensorPlacementEnd + 1] = {"DeviceHbm", "HostDDR", "HostDDR", "Unknown"};
+  static const char
+      *placement_str[static_cast<int32_t>(kTensorPlacementEnd) + 1] = {
+          "DeviceHbm", "HostDDR", "HostDDR", "Unknown"};
   if (placement >= kTensorPlacementEnd) {
     return placement_str[kTensorPlacementEnd];
   }

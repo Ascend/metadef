@@ -54,7 +54,7 @@ class GraphFrame {
       current_compute_node_and_index_ = {nullptr, 0};
       return;
     }
-    auto result = nodes_to_index_.emplace(current_node, nodes_to_index_.size());
+    const auto result = nodes_to_index_.emplace(current_node, nodes_to_index_.size());
     current_compute_node_and_index_ = {current_node, result.first->second};
     if (result.second) {
       indexes_to_node_.emplace_back(current_node);

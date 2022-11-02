@@ -46,12 +46,12 @@ class ExpandDimsType {
    * 通过字符串创建一个补维规则
    * @param expand_dims_type 字符串描述的补维规则
    */
-  explicit ExpandDimsType(const char *expand_dims_type) : size_(0), mask_(0) {
-    (void)reserved_;
+  explicit ExpandDimsType(const ge::char_t *const expand_dims_type) : size_(0), mask_(0) {
+    (void) reserved_;
     if (expand_dims_type == nullptr) {
       return;
     }
-    auto size = strlen(expand_dims_type);
+    const auto size = strlen(expand_dims_type);
     if (size > kMaxExpandSize) {
       // log error
       return;
@@ -79,11 +79,11 @@ class ExpandDimsType {
     if (reshape_type_mask == 0) {
       return;
     }
-    size_ = static_cast<uint64_t>(reshape_type_mask) >> kMaxExpandSize;
+    size_ = static_cast<uint64_t>(static_cast<uint64_t>(reshape_type_mask) >> kMaxExpandSize);
     if (size_ > kMaxExpandSize) {
       return;
     }
-    mask_ = static_cast<uint64_t>(reshape_type_mask) & 0xffULL;
+    mask_ = static_cast<uint64_t>(static_cast<uint64_t>(reshape_type_mask) & 0xffULL);
   }
   /**
    * 判断补维规则是否一致
@@ -91,7 +91,7 @@ class ExpandDimsType {
    * @return true/false
    */
   bool operator==(const ExpandDimsType &other) const {
-    return size_ == other.size_ && mask_ == other.mask_;
+    return (size_ == other.size_) && (mask_ == other.mask_);
   }
   /**
    * 获取补维后的dim数
@@ -104,7 +104,7 @@ class ExpandDimsType {
    * 设置补维轴
    * @param index 第index根轴为补维轴
    */
-  void SetExpandIndex(AxisIndex index) {
+  void SetExpandIndex(const AxisIndex index) {
     mask_ |= (1UL << index);
   }
   /**
@@ -112,8 +112,8 @@ class ExpandDimsType {
    * @param index 第index根轴
    * @return true含义为补维轴，false含义为原shape的轴
    */
-  bool IsExpandIndex(AxisIndex index) const {
-    return (1UL << index) & mask_;
+  bool IsExpandIndex(const AxisIndex index) const {
+    return static_cast<bool>((1UL << index) & mask_);
   }
   /**
    * 对shape做补维，并将结果写入到out_shape
@@ -129,14 +129,14 @@ class ExpandDimsType {
         if (shape_pos >= shape.GetDimNum()) {
           return ge::GRAPH_FAILED;
         }
-        out_shape.AppendDim(shape.GetDim(shape_pos++));
+        (void) out_shape.AppendDim(shape.GetDim(shape_pos++));
       } else {
-        out_shape.AppendDim(1);
+        (void) out_shape.AppendDim(1);
       }
     }
 
     for (; shape_pos < shape.GetDimNum(); ++shape_pos) {
-      out_shape.AppendDim(shape.GetDim(shape_pos));
+      (void) out_shape.AppendDim(shape.GetDim(shape_pos));
     }
     return ge::GRAPH_SUCCESS;
   }
@@ -150,15 +150,15 @@ class ExpandDimsType {
     // shape:[A,B] + full_size:4 -> [A,B,1,1]
     size_t dim_size = shape.GetDimNum();
     for (size_t i = dim_size; i < size_; i++) {
-      shape.AppendDim(1);
+      (void) shape.AppendDim(1);
     }
 
     // shape:[A,B,1,1] + 1010 -> [A,1,B,1]
-    for (auto i = static_cast<int32_t>(size_ - 1); i >= 0; --i) {
-      if (!IsExpandIndex(i)) {
-        if (dim_size > 0 && dim_size -1 < static_cast<size_t>(i)) {
-          shape.SetDim(i, shape.GetDim(dim_size - 1));
-          shape.SetDim(dim_size - 1, 1);
+    for (int32_t i = static_cast<int32_t>(size_ - 1UL); i >= 0; --i) {
+      if (!IsExpandIndex(static_cast<AxisIndex>(i))) {
+        if ((dim_size > 0) && (dim_size - 1UL < static_cast<size_t>(i))) {
+          shape.SetDim(static_cast<size_t>(i), shape.GetDim(dim_size - 1));
+          shape.SetDim(dim_size - 1UL, 1);
           dim_size--;
         }
       }
@@ -169,8 +169,8 @@ class ExpandDimsType {
  private:
   uint64_t size_ : 8;
   uint64_t mask_ : kMaxExpandSize;
-  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
+  uint8_t reserved_[8] = {0U};  // Reserved field, 8-byte aligned
 };
-}
+}  // namespace gert
 
 #endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_EXPAND_DIMS_TYPE_H_

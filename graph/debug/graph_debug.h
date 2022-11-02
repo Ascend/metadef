@@ -34,7 +34,7 @@ enum class DotFileFlag : uint32_t {
   DOT_FLAG_DEFAULT = 0U,
   DOT_NOT_SHOW_EDGE_LABEL = 1U,
 };
-class GraphDebugPrinter {
+class GraphDebug {
 public:
   static graphStatus DumpGraphDotFile(const Graph &graph, const std::string &output_dot_file_name,
                                       const uint32_t flag = static_cast<uint32_t>(DotFileFlag::DOT_FLAG_DEFAULT));

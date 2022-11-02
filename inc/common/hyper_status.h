@@ -16,7 +16,6 @@
 
 #ifndef AIR_CXX_BASE_COMMON_HYPER_STATUS_H_
 #define AIR_CXX_BASE_COMMON_HYPER_STATUS_H_
-#include <securec.h>
 #include <memory>
 #include "graph/types.h"
 namespace gert {

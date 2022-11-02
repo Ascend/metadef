@@ -462,14 +462,14 @@ Graph &Graph::SetOutputs(const std::vector<std::pair<Operator, std::vector<size_
 
 Graph &Graph::SetOutputs(const std::vector<std::pair<Operator, std::string>> &outputs) {
   GE_CHK_BOOL_EXEC(impl_ != nullptr, REPORT_INNER_ERROR("E18888", "graph can not be used, impl is nullptr.");
-                   return *this, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.")
+                   return *this, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.");
   (void)impl_->SetOutputs(outputs);
   return *this;
 }
 
 Graph &Graph::SetOutputs(const std::vector<std::pair<ge::Operator, AscendString>> &outputs) {
   GE_CHK_BOOL_EXEC(impl_ != nullptr, REPORT_INNER_ERROR("E18888", "graph can not be used, impl is nullptr.");
-                   return *this, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.")
+                   return *this, "[Check][Param] SetOutputs failed: graph can not be used, impl is nullptr.");
   std::vector<std::pair<ge::Operator, std::string>> graph_outputs;
   for (auto &item : outputs) {
     const char_t * const name = item.second.GetString();

@@ -40,7 +40,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const int64_t *GetInt(size_t index) const {
+  const int64_t *GetInt(const size_t index) const {
     return GetAttrPointer<int64_t>(index);
   }
   /**
@@ -48,7 +48,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const TypedContinuousVector<int64_t> *GetListInt(size_t index) const {
+  const TypedContinuousVector<int64_t> *GetListInt(const size_t index) const {
     return GetAttrPointer<TypedContinuousVector<int64_t>>(index);
   }
   /**
@@ -56,7 +56,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const ContinuousVectorVector *GetListListInt(size_t index) const {
+  const ContinuousVectorVector *GetListListInt(const size_t index) const {
     return GetAttrPointer<ContinuousVectorVector>(index);
   }
   /**
@@ -64,7 +64,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const char *GetStr(size_t index) const {
+  const char *GetStr(const size_t index) const {
     return GetAttrPointer<char>(index);
   }
   /**
@@ -72,7 +72,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const Tensor *GetTensor(size_t index) const {
+  const Tensor *GetTensor(const size_t index) const {
     return GetAttrPointer<Tensor>(index);
   }
   /**
@@ -80,7 +80,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const float *GetFloat(size_t index) const {
+  const float *GetFloat(const size_t index) const {
     return GetAttrPointer<float>(index);
   }
   /**
@@ -88,7 +88,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const bool *GetBool(size_t index) const {
+  const bool *GetBool(const size_t index) const {
     return GetAttrPointer<bool>(index);
   }
 
@@ -97,7 +97,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const TypedContinuousVector<float> *GetListFloat(size_t index) const {
+  const TypedContinuousVector<float> *GetListFloat(const size_t index) const {
     return GetAttrPointer<TypedContinuousVector<float>>(index);
   }
 
@@ -106,7 +106,7 @@ class RuntimeAttrs {
    * @param index 属性index
    * @return 指向属性值的指针
    */
-  const ContinuousVectorVector *GetListListFloat(size_t index) const {
+  const ContinuousVectorVector *GetListListFloat(const size_t index) const {
     return GetAttrPointer<ContinuousVectorVector>(index);
   }
 

@@ -713,10 +713,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
     return;
   }
 
-  // Create buffer
+  // Create model
   ge::Model model("", "");
   model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
-  Buffer buffer;
   const ge::DumpLevel dump_level = (dump_ge_graph != nullptr)
       ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue))
       : ge::DumpLevel::NO_DUMP;
@@ -1674,7 +1673,7 @@ ComputeGraphPtr GraphUtils::FindRootGraph(ComputeGraphPtr graph) {
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyGraph(const Graph &src_graph,
                                                                                  Graph &dst_graph) {
   AscendString graph_name;
-  dst_graph.GetName(graph_name);
+  (void)dst_graph.GetName(graph_name);
   if (std::string(graph_name.GetString()).empty()) {
     (void) src_graph.GetName(graph_name);
   }
@@ -3005,7 +3004,7 @@ graphStatus GraphUtils::UnfoldSubgraph(const ComputeGraphPtr &graph,
 
 graphStatus GraphUtils::UnfoldGraph(const ComputeGraphPtr &graph, const ComputeGraphPtr &target_graph,
                                     const NodePtr &target_node, const function<bool(const ComputeGraphPtr &)> &filter,
-                                    int depth) {
+                                    int32_t depth) {
   if (depth >= kCopyGraphMaxRecursionDepth) {
     REPORT_INNER_ERROR("E18888", "param depth:%d >= %d(allow max subgraphs)", depth, kCopyGraphMaxRecursionDepth);
     GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%d > %d(allow max subgraphs)", depth,

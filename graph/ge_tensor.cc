@@ -265,7 +265,7 @@ void GeTensorSerializeUtils::NormalizeGeTensorDescProto(proto::TensorDescriptor 
   }
 }
 
-void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
+void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor *const proto, GeShape &shape) {
   if (proto == nullptr) {
     return;
   }
@@ -276,7 +276,7 @@ void GeTensorSerializeUtils::GetShapeFromDescProto(const proto::TensorDescriptor
   }
 }
 
-void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDescriptor *proto, GeShape &shape) {
+void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDescriptor *const proto, GeShape &shape) {
   if (proto == nullptr) {
     return;
   }
@@ -291,7 +291,7 @@ void GeTensorSerializeUtils::GetOriginShapeFromDescProto(const proto::TensorDesc
   }
 }
 
-void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
+void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor *const proto, DataType &dtype) {
   if (proto == nullptr) {
     return;
   }
@@ -322,7 +322,7 @@ void GeTensorSerializeUtils::GetDtypeFromDescProto(const proto::TensorDescriptor
   }
 }
 
-void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDescriptor *proto, DataType &dtype) {
+void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDescriptor *const proto, DataType &dtype) {
   if (proto == nullptr) {
     return;
   }
@@ -333,14 +333,14 @@ void GeTensorSerializeUtils::GetOriginDtypeFromDescProto(const proto::TensorDesc
   }
 }
 
-void GeTensorSerializeUtils::GetFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
+void GeTensorSerializeUtils::GetFormatFromDescProto(const proto::TensorDescriptor *const proto, Format &format) {
   if (proto == nullptr) {
     return;
   }
   format = TypeUtils::SerialStringToFormat(proto->layout());
 }
 
-void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDescriptor *proto, Format &format) {
+void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDescriptor *const proto, Format &format) {
   if (proto == nullptr) {
     return;
   }
@@ -1676,7 +1676,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::GetRC(co
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetRC(GeTensorDesc &tensor_desc, const uint32_t rc) {
-  (void)AttrUtils::SetInt(&tensor_desc, TENSOR_UTILS_RC, static_cast<const int64_t>(rc));
+  (void)AttrUtils::SetInt(&tensor_desc, TENSOR_UTILS_RC, static_cast<int64_t>(rc));
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY  bool TensorUtils::IsOriginShapeInited(const GeTensorDesc &tensor_desc) {

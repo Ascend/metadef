@@ -19,6 +19,7 @@
 #include "graph/common_error_codes.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/op_desc_impl.h"
+#include "graph/ge_context.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/op_desc_utils.h"
@@ -118,13 +119,16 @@ ge::graphStatus CallInferFuncV2Inner(ge::Operator &op, const ge::OpDescPtr &op_d
   GE_ASSERT_NOTNULL(op_desc, "[Check][Input] invalid, op_desc is null.");
   const auto call_infer_data_type = ge::OperatorFactoryImpl::GetInferDataTypeFunc();
   const auto call_infer_shape_v2 = ge::OperatorFactoryImpl::GetInferShapeV2Func();
-  if ((call_infer_data_type == nullptr) ||
-      (call_infer_shape_v2 == nullptr)) {
+  const auto call_infer_shape_range = ge::OperatorFactoryImpl::GetInferShapeRangeFunc();
+  if ((call_infer_data_type == nullptr) || (call_infer_shape_v2 == nullptr) || (call_infer_shape_range == nullptr)) {
     GELOGW("infer func v2 has not been initialized");
     return ge::GRAPH_PARAM_INVALID;
   }
   GE_CHK_STATUS_RET_NOLOG(call_infer_data_type(op_desc));
   GE_CHK_STATUS_RET_NOLOG(call_infer_shape_v2(op, op_desc));
+  if (!ge::GetContext().GetTrainGraphFlag()) {
+    GE_CHK_STATUS_RET_NOLOG(call_infer_shape_range(op, op_desc));
+  }
   return ge::GRAPH_SUCCESS;
 }
 
@@ -607,7 +611,8 @@ bool OpDescImpl::InputIsSet(const std::string &name) const {
     GE_IF_BOOL_EXEC(it->second >= inputs_desc_.size(),
                     REPORT_INNER_ERROR("E18888", "input name(%s) id(%u) is out of range(0, %zu), check invalid",
                                        name.c_str(), it->second, inputs_desc_.size());
-                    GELOGE(GRAPH_FAILED, "[Check][Param] it->second is invalid."); return false);
+                    GELOGE(GRAPH_FAILED, "[Check][Param] it->second is invalid.");
+                    return false);
     const auto tensor_desc = inputs_desc_[static_cast<uint64_t>(it->second)];
     GE_IF_BOOL_EXEC(tensor_desc == nullptr,
                     REPORT_INNER_ERROR("E18888", "tensor_desc(index:%u) is null.", it->second);
@@ -1112,7 +1117,7 @@ int32_t OpDescImpl::GetInputIndexByName(const std::string &name) const {
 }
 
 std::string OpDescImpl::GetValidInputNameByIndex(const uint32_t index) const {
-  std::map<std::string, uint32_t> valid_input_name_idx{};
+  std::map<std::string, uint32_t> valid_input_name_idx {};
   uint32_t j = 0U;
   for (size_t i = 0U; i < GetAllInputsSize(); i++) {
     if (MutableInputDesc(static_cast<uint32_t>(i)) != nullptr) {

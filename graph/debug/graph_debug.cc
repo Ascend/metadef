@@ -70,10 +70,10 @@ inline string InputAnchorPort(const std::string &name) {
 inline string OutputAnchorPort(const std::string &name) {
   return "__output__" + name;
 }
-}
+}  // namespace
 
 namespace ge {
-void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &out_) {
+void GraphDebug::DumpNodeToDot(const NodePtr node, std::ostringstream &out_) {
   if (node == nullptr) {
     GELOGI("Some nodes are null.");
     return;
@@ -108,13 +108,13 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   for (const auto &anchor : input_anchors) {
     const std::string anchor_text = op_desc->GetInputNameByIndex(static_cast<uint32_t>(anchor->GetIdx()));
 
-    out_ << "<td port = " << StrFmt(InputAnchorPort(anchor_text)) << " colspan='" << output_cnt << "'>"
-         << anchor_text << "</td>";
+    out_ << "<td port = " << StrFmt(InputAnchorPort(anchor_text)) << " colspan='" << output_cnt << "'>" << anchor_text
+         << "</td>";
   }
   if (in_control) {
     const std::string anchor_text = "ctrl";
-    out_ << "<td port = " << StrFmt(InputAnchorPort(anchor_text)) << " colspan='" << output_cnt << "'>"
-         << anchor_text << "</td>";
+    out_ << "<td port = " << StrFmt(InputAnchorPort(anchor_text)) << " colspan='" << output_cnt << "'>" << anchor_text
+         << "</td>";
   }
   if (!input_anchors.empty()) {
     out_ << "</tr>\n";
@@ -130,8 +130,8 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   for (const auto &anchor : output_anchors) {
     const std::string anchor_text = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(anchor->GetIdx()));
 
-    out_ << "<td port = " << StrFmt(OutputAnchorPort(anchor_text)) << " colspan='" << input_cnt << "'>"
-         << anchor_text << "</td>";
+    out_ << "<td port = " << StrFmt(OutputAnchorPort(anchor_text)) << " colspan='" << input_cnt << "'>" << anchor_text
+         << "</td>";
   }
 
   if (!output_anchors.empty()) {
@@ -140,7 +140,7 @@ void GraphDebugPrinter::DumpNodeToDot(const NodePtr node, std::ostringstream &ou
   out_ << TAB << TAB << "</table>\n" << TAB << ">];\n";
 }
 
-void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &out_, const uint32_t flag) {
+void GraphDebug::DumpEdgeToDot(const NodePtr node, std::ostringstream &out_, const uint32_t flag) {
   if (node == nullptr) {
     GELOGI("Some nodes are null.");
     return;
@@ -190,8 +190,8 @@ void GraphDebugPrinter::DumpEdgeToDot(const NodePtr node, std::ostringstream &ou
   }
 }
 
-graphStatus GraphDebugPrinter::DumpGraphDotFile(const Graph &graph, const std::string &output_dot_file_name,
-                                                const uint32_t flag) {
+graphStatus GraphDebug::DumpGraphDotFile(const Graph &graph, const std::string &output_dot_file_name,
+                                         const uint32_t flag) {
   const auto compute_graph = GraphUtils::GetComputeGraph(graph);
   if (compute_graph == nullptr) {
     GELOGI("Compute graph is NULL .");
@@ -200,8 +200,8 @@ graphStatus GraphDebugPrinter::DumpGraphDotFile(const Graph &graph, const std::s
   return DumpGraphDotFile(compute_graph, output_dot_file_name, flag);
 }
 
-graphStatus GraphDebugPrinter::DumpGraphDotFile(const ComputeGraphPtr graph, const std::string &output_dot_file_name,
-                                                const uint32_t flag) {
+graphStatus GraphDebug::DumpGraphDotFile(const ComputeGraphPtr graph, const std::string &output_dot_file_name,
+                                         const uint32_t flag) {
   if (graph == nullptr) {
     GELOGI("graph is null.");
     return GRAPH_SUCCESS;
@@ -217,7 +217,7 @@ graphStatus GraphDebugPrinter::DumpGraphDotFile(const ComputeGraphPtr graph, con
       for (const auto &peer : temp->GetPeerAnchors()) {
         const auto temp_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(peer);
         if (temp_control_anchor) {
-          (void)control_anchor.insert(peer->GetOwnerNode()->GetName());
+          (void) control_anchor.insert(peer->GetOwnerNode()->GetName());
         }
       }
     }
@@ -238,7 +238,7 @@ graphStatus GraphDebugPrinter::DumpGraphDotFile(const ComputeGraphPtr graph, con
   return GRAPH_SUCCESS;
 }
 
-std::string GraphDebugPrinter::GetSrcOpStr(const OpDescPtr &src_ops, const OutDataAnchorPtr &src_anchor) {
+std::string GraphDebug::GetSrcOpStr(const OpDescPtr &src_ops, const OutDataAnchorPtr &src_anchor) {
   std::string label;
   const auto src_shape = src_ops->GetOutputDesc(static_cast<uint32_t>(src_anchor->GetIdx())).GetShape();
   const auto dim = src_shape.GetDims();

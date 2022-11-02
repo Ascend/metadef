@@ -68,9 +68,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_success) {
     EXPECT_EQ(context->SetOutputDataType(0, date_type), SUCCESS);
     return GRAPH_SUCCESS;
   };
+  const auto infer_shape_range_func = [](gert::InferShapeRangeContext *context) -> graphStatus {
+    auto input_shape_range = context->GetInputShapeRange(0U);
+    auto output_shape_range = context->GetOutputShapeRange(0U);
+    output_shape_range->SetMin(const_cast<gert::Shape *>(input_shape_range->GetMin()));
+    output_shape_range->SetMax(const_cast<gert::Shape *>(input_shape_range->GetMax()));
+    return GRAPH_SUCCESS;
+  };
   op_impl_register_FixIOOp_OutputIsFix.InferShape(infer_shape_func)
       .InferDataType(infer_data_type_func)
-      .InferShapeRange(nullptr);
+      .InferShapeRange(infer_shape_range_func);
   const auto call_infer_data_type = OperatorFactoryImpl::GetInferDataTypeFunc();
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
@@ -81,7 +88,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_success) {
   ASSERT_EQ(status, GRAPH_SUCCESS);
   status = call_infer_shape_v2(op, op_desc);
   ASSERT_EQ(status, GRAPH_SUCCESS);
-  status = call_infer_shape_range(op_desc);
+  status = call_infer_shape_range(op, op_desc);
   ASSERT_EQ(status, GRAPH_SUCCESS);
   ASSERT_EQ(op_desc->GetOutputDesc(0U).GetDataType(), DT_FLOAT16);
   ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 4);
@@ -133,9 +140,12 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_OptionalInputWithOutInstance) {
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
-  const auto status = call_infer_shape_v2(op, op_desc);
+  auto status = call_infer_shape_v2(op, op_desc);
   ASSERT_EQ(status, GRAPH_SUCCESS);
   ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 3);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(op, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
 }
 
 // 实例化的optional input测试
@@ -201,6 +211,30 @@ REG_OP(DynamicInput3Input3Output3)
         .OUTPUT(output3, "T2")
         .DATATYPE(T2, TensorType({DT_BOOL}))
         .OP_END_FACTORY_REG(DynamicInput3Input3Output3);
+const auto INFER_SHAPE_FUNC = [](gert::InferShapeContext *context) -> graphStatus {
+  // update input3 input to output0
+  const auto input_shape = context->GetInputShape(1U);
+  auto output = context->GetOutputShape(0);
+  for (size_t dim = 0UL; dim < input_shape->GetDimNum(); dim++) {
+    output->AppendDim(input_shape->GetDim(dim));
+  }
+  output->SetDimNum(input_shape->GetDimNum());
+  // update dyn_input_0 to output1, dyn_input_1 to output2
+  const auto input_shape2 = context->GetInputShape(2U);
+  auto output2 = context->GetOutputShape(1);
+  for (size_t dim = 0UL; dim < input_shape2->GetDimNum(); dim++) {
+    output2->AppendDim(input_shape2->GetDim(dim));
+  }
+  output2->SetDimNum(input_shape2->GetDimNum());
+
+  const auto input_shape3 = context->GetInputShape(3U);
+  auto output3 = context->GetOutputShape(2);
+  for (size_t dim = 0UL; dim < input_shape3->GetDimNum(); dim++) {
+    output3->AppendDim(input_shape3->GetDim(dim));
+  }
+  output3->SetDimNum(input_shape3->GetDimNum());
+  return GRAPH_SUCCESS;
+};
 TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput) {
   auto operator_dynamic = op::DynamicInput3Input3Output3("test4");
   operator_dynamic.create_dynamic_input_byindex_dyn_input(2, true);
@@ -227,40 +261,201 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput) {
   op_desc->UpdateInputDesc(2, tensor_desc3);
   op_desc->UpdateInputDesc(3, tensor_desc1);
   IMPL_OP(DynamicInput3Input3Output3);
-  const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
-    // update input3 input to output0
-    const auto input_shape = context->GetInputShape(1U);
-    auto output = context->GetOutputShape(0);
-    for (size_t dim = 0UL; dim < input_shape->GetDimNum(); dim++) {
-      output->AppendDim(input_shape->GetDim(dim));
-    }
-    output->SetDimNum(input_shape->GetDimNum());
-    // update dyn_input_0 to output1, dyn_input_1 to output2
-    const auto input_shape2 = context->GetInputShape(2U);
-    auto output2 = context->GetOutputShape(1);
-    for (size_t dim = 0UL; dim < input_shape2->GetDimNum(); dim++) {
-      output2->AppendDim(input_shape2->GetDim(dim));
-    }
-    output2->SetDimNum(input_shape2->GetDimNum());
-
-    const auto input_shape3 = context->GetInputShape(3U);
-    auto output3 = context->GetOutputShape(2);
-    for (size_t dim = 0UL; dim < input_shape3->GetDimNum(); dim++) {
-      output3->AppendDim(input_shape3->GetDim(dim));
-    }
-    output3->SetDimNum(input_shape3->GetDimNum());
-    return GRAPH_SUCCESS;
-  };
-  op_impl_register_DynamicInput3Input3Output3.InferShape(infer_shape_func)
+  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
-  const auto status = call_infer_shape_v2(operator_dynamic, op_desc);
+  auto status = call_infer_shape_v2(operator_dynamic, op_desc);
   ASSERT_EQ(status, GRAPH_SUCCESS);
   ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 3);
   ASSERT_EQ(op_desc->GetOutputDesc(1U).GetShape().GetDimNum(), 2);
   ASSERT_EQ(op_desc->GetOutputDesc(2U).GetShape().GetDimNum(), 4);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+}
+
+// 动态输入的input测试 动态轴-2
+TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_2) {
+  auto operator_dynamic = op::DynamicInput3Input3Output3("test4");
+  operator_dynamic.create_dynamic_input_byindex_dyn_input(2, true);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(operator_dynamic);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsSize(), 4);
+  // input1
+  GeShape shape1({-2});
+  GeTensorDesc tensor_desc1(shape1, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc1.SetOriginShape(shape1);
+  tensor_desc1.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(0, tensor_desc1);
+  // input3
+  GeShape shape2({4, 3, 2});
+  GeTensorDesc tensor_desc2(shape2, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc2.SetOriginShape(shape2);
+  tensor_desc2.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(1, tensor_desc2);
+  // dynamic input
+  GeShape shape3({4, 3});
+  GeTensorDesc tensor_desc3(shape3, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc3.SetOriginShape(shape3);
+  tensor_desc3.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(2, tensor_desc3);
+  op_desc->UpdateInputDesc(3, tensor_desc1);
+  IMPL_OP(DynamicInput3Input3Output3);
+  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+    .InferDataType(nullptr)
+    .InferShapeRange(nullptr);
+  const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
+  ASSERT_NE(call_infer_shape_v2, nullptr);
+  auto status = call_infer_shape_v2(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 3);
+  ASSERT_EQ(op_desc->GetOutputDesc(1U).GetShape().GetDimNum(), 2);
+  ASSERT_EQ(op_desc->GetOutputDesc(2U).GetShape().GetDimNum(), 0);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+}
+
+// 动态输入的input测试 动态轴-1, shape range 不设值
+TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_no_shaperange) {
+  auto operator_dynamic = op::DynamicInput3Input3Output3("test4");
+  operator_dynamic.create_dynamic_input_byindex_dyn_input(2, true);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(operator_dynamic);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsSize(), 4);
+  // input1
+  GeShape shape1({1, 2, 3, -1});
+  GeTensorDesc tensor_desc1(shape1, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc1.SetOriginShape(shape1);
+  tensor_desc1.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(0, tensor_desc1);
+  // input3
+  GeShape shape2({4, 3, 2});
+  GeTensorDesc tensor_desc2(shape2, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc2.SetOriginShape(shape2);
+  tensor_desc2.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(1, tensor_desc2);
+  // dynamic input
+  GeShape shape3({4, 3});
+  GeTensorDesc tensor_desc3(shape3, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc3.SetOriginShape(shape3);
+  tensor_desc3.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(2, tensor_desc3);
+  op_desc->UpdateInputDesc(3, tensor_desc1);
+  IMPL_OP(DynamicInput3Input3Output3);
+  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+      .InferDataType(nullptr)
+      .InferShapeRange(nullptr);
+  const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
+  ASSERT_NE(call_infer_shape_v2, nullptr);
+  auto status = call_infer_shape_v2(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 3);
+  ASSERT_EQ(op_desc->GetOutputDesc(1U).GetShape().GetDimNum(), 2);
+  ASSERT_EQ(op_desc->GetOutputDesc(2U).GetShape().GetDimNum(), 4);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+}
+
+// 动态输入的input测试 动态轴-1, shape range 设值
+TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange) {
+  auto operator_dynamic = op::DynamicInput3Input3Output3("test4");
+  operator_dynamic.create_dynamic_input_byindex_dyn_input(2, true);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(operator_dynamic);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsSize(), 4);
+  // input1
+  GeShape shape1({1, 2, 3, -1});
+  GeTensorDesc tensor_desc1(shape1, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc1.SetOriginShape(shape1);
+  tensor_desc1.SetOriginDataType(DT_FLOAT16);
+  std::vector<std::pair<int64_t, int64_t>> range = {{1, 1}, {2, 2}, {3, 3}, {22, 999}};
+  tensor_desc1.SetShapeRange(range);
+  op_desc->UpdateInputDesc(0, tensor_desc1);
+  // input3
+  GeShape shape2({4, 3, 2});
+  GeTensorDesc tensor_desc2(shape2, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc2.SetOriginShape(shape2);
+  tensor_desc2.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(1, tensor_desc2);
+  // dynamic input
+  GeShape shape3({4, 3});
+  GeTensorDesc tensor_desc3(shape3, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc3.SetOriginShape(shape3);
+  tensor_desc3.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(2, tensor_desc3);
+  op_desc->UpdateInputDesc(3, tensor_desc1);
+  IMPL_OP(DynamicInput3Input3Output3);
+  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+      .InferDataType(nullptr)
+      .InferShapeRange(nullptr);
+  const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
+  ASSERT_NE(call_infer_shape_v2, nullptr);
+  auto status = call_infer_shape_v2(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 3);
+  ASSERT_EQ(op_desc->GetOutputDesc(1U).GetShape().GetDimNum(), 2);
+  ASSERT_EQ(op_desc->GetOutputDesc(2U).GetShape().GetDimNum(), 4);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  (void)op_desc->GetOutputDesc(2U).GetShapeRange(shape_range);
+  ASSERT_EQ(shape_range.size(), 4U);
+  for (size_t i = 0UL; i < shape_range.size(); ++i) {
+    ASSERT_EQ(shape_range[i].first, range[i].first);
+    ASSERT_EQ(shape_range[i].second, range[i].second);
+  }
+}
+
+// 动态输入的input测试 动态轴-1, shape range 设值,min大于max异常场景
+TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange_min_bigger_max) {
+  auto operator_dynamic = op::DynamicInput3Input3Output3("test4");
+  operator_dynamic.create_dynamic_input_byindex_dyn_input(2, true);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(operator_dynamic);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsSize(), 4);
+  // input1
+  GeShape shape1({1, 2, 3, -1});
+  GeTensorDesc tensor_desc1(shape1, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc1.SetOriginShape(shape1);
+  tensor_desc1.SetOriginDataType(DT_FLOAT16);
+  std::vector<std::pair<int64_t, int64_t>> range = {{1, 1}, {2, 2}, {3, 3}, {999, 22}};
+  tensor_desc1.SetShapeRange(range);
+  op_desc->UpdateInputDesc(0, tensor_desc1);
+  // input3
+  GeShape shape2({4, 3, 2});
+  GeTensorDesc tensor_desc2(shape2, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc2.SetOriginShape(shape2);
+  tensor_desc2.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(1, tensor_desc2);
+  // dynamic input
+  GeShape shape3({4, 3});
+  GeTensorDesc tensor_desc3(shape3, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc3.SetOriginShape(shape3);
+  tensor_desc3.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(2, tensor_desc3);
+  op_desc->UpdateInputDesc(3, tensor_desc1);
+  IMPL_OP(DynamicInput3Input3Output3);
+  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+    .InferDataType(nullptr)
+    .InferShapeRange(nullptr);
+  const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
+  ASSERT_NE(call_infer_shape_v2, nullptr);
+  auto status = call_infer_shape_v2(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 3);
+  ASSERT_EQ(op_desc->GetOutputDesc(1U).GetShape().GetDimNum(), 2);
+  ASSERT_EQ(op_desc->GetOutputDesc(2U).GetShape().GetDimNum(), 4);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  (void)op_desc->GetOutputDesc(2U).GetShapeRange(shape_range);
+  ASSERT_EQ(shape_range.size(), 0U);
 }
 
 // 二类算子值依赖测试
@@ -323,6 +518,93 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend) {
   ASSERT_EQ(shape.GetDim(1U), 86);
   ASSERT_EQ(shape.GetDim(2U), 87);
   ASSERT_EQ(shape.GetDim(3U), 88);
+}
+
+// 二类算子值依赖测试,带shape range
+REG_OP(Type2_3Input_2Output)
+  .INPUT(input1, "T")
+  .OPTIONAL_INPUT(input2, "T")
+  .INPUT(input3, "T")
+  .OUTPUT(output1, "T2")
+  .OUTPUT(output2, "T2")
+  .DATATYPE(T2, TensorType({DT_BOOL}))
+  .OP_END_FACTORY_REG(Type2_3Input_2Output);
+TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend_unknow_shaperange) {
+  // construct const input
+  auto const_input = ge::op::Const("const_input");
+  ge::TensorDesc td{ge::Shape(std::vector<int64_t>({1, 2, 3, 4})), FORMAT_NCHW, DT_UINT8};
+  ge::Tensor tensor(td);
+  std::vector<uint8_t> val{0x55, 0x56, 0x57, 0x58, 0x58, 0x58,
+                           0x55, 0x56, 0x57, 0x58, 0x58, 0x58,
+                           0x55, 0x56, 0x57, 0x58, 0x58, 0x58,
+                           0x55, 0x56, 0x57, 0x58, 0x58, 0x58,
+                           0x55, 0x56, 0x57, 0x58, 0x58, 0x58};
+  tensor.SetData(val);
+  const_input.set_attr_value(tensor);
+  // const input link to op
+  auto op = op::Type2_3Input_2Output("test5");
+  op.set_input_input1(const_input);
+  op.set_input_input3(const_input);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsSize(), 3);
+  // input1
+  GeShape shape1({1, 2, 3, -1});
+  GeTensorDesc tensor_desc1(shape1, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc1.SetOriginShape(shape1);
+  tensor_desc1.SetOriginDataType(DT_FLOAT16);
+  std::vector<std::pair<int64_t, int64_t>> range = {{1, 1}, {2, 2}, {3, 3}, {22, 999}};
+  tensor_desc1.SetShapeRange(range);
+  op_desc->UpdateInputDesc(0, tensor_desc1);
+  // input3
+  ge::GeShape shape3({1, 2, 3, 5});
+  ge::GeTensorDesc tensor_desc3(shape3, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc3.SetOriginShape(shape3);
+  tensor_desc3.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(2, tensor_desc3);
+  IMPL_OP(Type2_3Input_2Output);
+  const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
+    // update input3(因为option输入未实例化，所以是第二个) value to output0
+    const auto data = context->GetInputTensor(1U)->GetData<uint8_t>();
+    std::vector<int64_t> dims = {data[0], data[1], data[2], data[3]};
+    ge::Shape input_shape(dims);
+    auto output = context->GetOutputShape(0);
+    for (size_t dim = 0UL; dim < input_shape.GetDimNum(); dim++) {
+      output->AppendDim(input_shape.GetDim(dim));
+    }
+    output->SetDimNum(input_shape.GetDimNum());
+
+    const auto input_shape1 = context->GetInputShape(0U);
+    auto output1 = context->GetOutputShape(1);
+    for (size_t dim = 0UL; dim < input_shape1->GetDimNum(); dim++) {
+      output1->AppendDim(input_shape1->GetDim(dim));
+    }
+    output1->SetDimNum(input_shape1->GetDimNum());
+    return GRAPH_SUCCESS;
+  };
+  op_impl_register_Type2_3Input_2Output.InferShape(infer_shape_func).InputsDataDependency({2})
+    .InferDataType(nullptr)
+    .InferShapeRange(nullptr);
+  const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
+  ASSERT_NE(call_infer_shape_v2, nullptr);
+  auto status = call_infer_shape_v2(op, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  const auto &shape = op_desc->GetOutputDesc(0U).GetShape();
+  ASSERT_EQ(shape.GetDimNum(), 4);
+  ASSERT_EQ(shape.GetDim(0U), 85);
+  ASSERT_EQ(shape.GetDim(1U), 86);
+  ASSERT_EQ(shape.GetDim(2U), 87);
+  ASSERT_EQ(shape.GetDim(3U), 88);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(op, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  std::vector<std::pair<int64_t, int64_t>> shape_range;
+  (void)op_desc->GetOutputDesc(1U).GetShapeRange(shape_range);
+  ASSERT_EQ(shape_range.size(), 4U);
+  for (size_t i = 0UL; i < shape_range.size(); ++i) {
+    ASSERT_EQ(shape_range[i].first, range[i].first);
+    ASSERT_EQ(shape_range[i].second, range[i].second);
+  }
 }
 
 // 资源类算子测试

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <memory>
 #include <type_traits>
+#include "graph/def_types.h"
 #include "graph/ge_error_codes.h"
 #include "graph/utils/math_util.h"
 namespace gert {
@@ -44,7 +45,7 @@ class ContinuousVector {
     if (holder == nullptr) {
       return nullptr;
     }
-    reinterpret_cast<ContinuousVector *>(holder.get())->Init(capacity);
+    ge::PtrToPtr<uint8_t, ContinuousVector>(holder.get())->Init(capacity);
     return holder;
   }
   /**
@@ -54,7 +55,7 @@ class ContinuousVector {
    * @return 指向本实例的指针
    */
   template<typename T>
-  static std::unique_ptr<uint8_t[]> Create(size_t capacity) {
+  static std::unique_ptr<uint8_t[]> Create(const size_t capacity) {
     size_t total_size;
     return Create<T>(capacity, total_size);
   }
@@ -62,9 +63,9 @@ class ContinuousVector {
    * 使用最大容量初始化本实例
    * @param capacity 最大容量
    */
-  void Init(size_t capacity) {
+  void Init(const size_t capacity) {
     capacity_ = capacity;
-    size_ = 0;
+    size_ = 0U;
     reserved_ = 0;
   }
   /**
@@ -79,7 +80,7 @@ class ContinuousVector {
    * @param size 当前保存的元素个数
    * @return 成功时返回ge::GRAPH_SUCCESS
    */
-  ge::graphStatus SetSize(size_t size) {
+  ge::graphStatus SetSize(const size_t size) {
     if (size > capacity_) {
       GELOGE(ge::PARAM_INVALID, "Failed to set size for ContinuousVector, size(%zu) > cap(%zu)", size, capacity_);
       return ge::GRAPH_FAILED;
@@ -112,7 +113,7 @@ class ContinuousVector {
  private:
   size_t capacity_;
   size_t size_;
-  int64_t reserved_; // Reserved field, 8-byte aligned
+  int64_t reserved_;  // Reserved field, 8-byte aligned
   uint8_t elements[8];
 };
 static_assert(std::is_standard_layout<ContinuousVector>::value, "The ContinuousVector must be a POD");
@@ -128,14 +129,14 @@ class TypedContinuousVector : private ContinuousVector {
    * @return 首个元素的指针地址
    */
   T *MutableData() {
-    return reinterpret_cast<T *>(ContinuousVector::MutableData());
+    return ge::PtrToPtr<void, T>(ContinuousVector::MutableData());
   }
   /**
    * 获取首个元素的指针地址，[GetData(), GetData() + GetSize()) 中的数据即为当前容器中保存的数据
    * @return 首个元素的指针地址
    */
   const T *GetData() const {
-    return reinterpret_cast<const T *>(ContinuousVector::GetData());
+    return ge::PtrToPtr<const void, const T>(ContinuousVector::GetData());
   }
 };
 
@@ -146,7 +147,7 @@ class TypedContinuousVector : private ContinuousVector {
  */
 class ContinuousVectorVector {
  public:
-  void Init(size_t capacity) {
+  void Init(const size_t capacity) {
     capacity_ = capacity;
     if (capacity_ == 0U) {
       return;
@@ -159,9 +160,10 @@ class ContinuousVectorVector {
     if (size_ >= capacity_) {
       return nullptr;
     }
-    auto inner_vector = reinterpret_cast<ContinuousVector *>(reinterpret_cast<uint8_t *>(this) + GetOffset(size_));
+    const auto inner_vector =
+        ge::PtrToPtr<uint8_t, ContinuousVector>(ge::PtrToPtr<ContinuousVectorVector, uint8_t>(this) + GetOffset(size_));
     inner_vector->Init(inner_vector_capacity);
-    inner_vector->SetSize(inner_vector_capacity);
+    (void) inner_vector->SetSize(inner_vector_capacity);
     size_t inner_vector_length = 0U;
     if (ge::MulOverflow(inner_vector_capacity, sizeof(T), inner_vector_length)) {
       return nullptr;
@@ -176,27 +178,30 @@ class ContinuousVectorVector {
     return inner_vector;
   }
 
-  const ContinuousVector *Get(size_t index) const {
-    return reinterpret_cast<const ContinuousVector *>(reinterpret_cast<const uint8_t *>(this) + GetOffset(index));
+  const ContinuousVector *Get(const size_t index) const {
+    return ge::PtrToPtr<const uint8_t, const ContinuousVector>(
+        ge::PtrToPtr<const ContinuousVectorVector, const uint8_t>(this) + GetOffset(index));
   }
 
   size_t GetSize() const {
     return size_;
   }
 
-  static size_t GetOverHeadLength(size_t capacity) {
+  static size_t GetOverHeadLength(const size_t capacity) {
     return sizeof(capacity_) + sizeof(size_) + sizeof(size_t) * capacity;
   }
+
  private:
-  void SetOffset(size_t index, size_t offset) {
+  void SetOffset(const size_t index, const size_t offset) {
     size_t *const offset_ptr = &offset_[0U];
     offset_ptr[index] = offset;
   }
 
-  size_t GetOffset(size_t index) const {
+  size_t GetOffset(const size_t index) const {
     const size_t *const offset_ptr = &offset_[0U];
     return offset_ptr[index];
   }
+
  private:
   size_t capacity_ = 0U;
   size_t size_ = 0U;

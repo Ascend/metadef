@@ -81,7 +81,7 @@ class Chain {
    * @param data 指向数据的指针
    * @param deleter 释放数据的接口，空指针的含义为不需要释放
    */
-  void Set(void *data, Chain::Deleter deleter) {
+  void Set(void * const data, const Chain::Deleter deleter) {
     FreeResource();
     any_value_.data.pointer = data;
     any_value_.deleter = deleter;
@@ -130,7 +130,6 @@ class Chain {
     }
   }
 
- private:
   AsyncAnyValue any_value_;
 };
 static_assert(std::is_standard_layout<Chain>::value, "The class Chain must be a POD");
@@ -156,7 +155,7 @@ class KernelContext {
    * @param i kernel的输入index
    * @return 输入Chain的指针
    */
-  const Chain *GetInput(size_t i) const {
+  const Chain *GetInput(const size_t i) const {
     if (i >= context_.input_size) {
       return nullptr;
     }
@@ -167,7 +166,7 @@ class KernelContext {
    * @param i kernel的输入index
    * @return 输入Chain的指针
    */
-  Chain *MutableInput(size_t i) const {
+  Chain *MutableInput(const size_t i) const {
     if (i >= context_.input_size) {
       return nullptr;
     }
@@ -178,7 +177,7 @@ class KernelContext {
    * @param i kernel的输出index
    * @return 输出Chain的指针
    */
-  Chain *GetOutput(size_t i) {
+  Chain *GetOutput(const size_t i) {
     if (i >= context_.output_size) {
       return nullptr;
     }
@@ -189,13 +188,13 @@ class KernelContext {
    * @param i kernel的输出index
    * @return 输出Chain的指针
    */
-  const Chain *GetOutput(size_t i) const {
+  const Chain *GetOutput(const size_t i) const {
     if (i >= context_.output_size) {
       return nullptr;
     }
     return reinterpret_cast<const Chain *>(context_.values[context_.input_size + i]);
   }
-  Chain *GetOutput2(size_t i) {
+  Chain *GetOutput2(const size_t i) {
     if (i >= context_.output_size) {
       return nullptr;
     }
@@ -209,7 +208,7 @@ class KernelContext {
    */
   template<typename T>
   const T GetInputValue(size_t i) const {
-    auto av = GetInput(i);
+    const auto av = GetInput(i);
     if (av == nullptr) {
       return {};
     }
@@ -223,7 +222,7 @@ class KernelContext {
    */
   template<typename T>
   const T *GetInputPointer(size_t i) const {
-    auto av = GetInput(i);
+    const auto av = GetInput(i);
     if (av == nullptr) {
       return nullptr;
     }
@@ -237,7 +236,7 @@ class KernelContext {
    */
   template<typename T>
   T *MutableInputPointer(size_t i) const {
-    auto av = MutableInput(i);
+    const auto av = MutableInput(i);
     if (av == nullptr) {
       return nullptr;
     }
@@ -250,8 +249,8 @@ class KernelContext {
    * @param i kernel的输入index
    * @return 字符串的指针
    */
-  const char *GetInputStrPointer(size_t i) const {
-    auto av = GetInput(i);
+  const char *GetInputStrPointer(const size_t i) const {
+    const auto av = GetInput(i);
     if (av == nullptr) {
       return nullptr;
     }
@@ -279,7 +278,7 @@ class KernelContext {
    */
   template<typename T>
   T *GetOutputPointer(size_t i) {
-    auto av = GetOutput(i);
+    const auto av = GetOutput(i);
     if (av == nullptr) {
       return nullptr;
     }
@@ -293,7 +292,7 @@ class KernelContext {
    */
   template<typename T>
   const T *GetOutputPointer(size_t i) const {
-    auto av = GetOutput(i);
+    const auto av = GetOutput(i);
     if (av == nullptr) {
       return nullptr;
     }
@@ -318,7 +317,7 @@ class KernelContext {
    * @param size 数据的长度
    * @return true代表会被inline存储
    */
-  static bool IsInlineSize(size_t size) {
+  static bool IsInlineSize(const size_t size) {
     return size <= sizeof(void *);
   }
 

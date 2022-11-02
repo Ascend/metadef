@@ -59,11 +59,8 @@ bool IsUseBFS() {
              topo_sorting_mode_str.c_str());
     }
   }
-  if ((ge::GetContext().GetOption(ge::OPTION_GRAPH_RUN_MODE, run_mode) == GRAPH_SUCCESS) && (!run_mode.empty())) {
-    const int32_t base = 10;
-    if (static_cast<GraphRunMode>(std::strtol(run_mode.c_str(), nullptr, base)) >= TRAIN) {
-      return true;
-    }
+  if (ge::GetContext().GetTrainGraphFlag()) {
+    return true;
   } else {
     GELOGI("OPTION_GRAPH_RUN_MODE not set, use DFSTopologicalSorting by default.");
   }
@@ -349,7 +346,8 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
   GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS,
                   REPORT_CALL_ERROR("E18888", "node %s init failed.", op->GetName().c_str());
-                  GELOGE(GRAPH_FAILED, "node init fail."); return nullptr);
+                  GELOGE(GRAPH_FAILED, "node init fail.");
+                  return nullptr);
   return AddNodeFront(node_ptr);
 }
 
@@ -379,7 +377,8 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const ComputeGraphPtr &com
                   GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS,
                   REPORT_CALL_ERROR("E18888", "node:%s init failed.", op->GetName().c_str());
-                  GELOGE(GRAPH_FAILED, "[Init][Node] %s fail.", op->GetName().c_str()); return nullptr);
+                  GELOGE(GRAPH_FAILED, "[Init][Node] %s fail.", op->GetName().c_str());
+                  return nullptr);
   return AddNode(node_ptr);
 }
 
@@ -396,7 +395,8 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const int64_t id, const Co
                   GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
   GE_IF_BOOL_EXEC(node->Init() != GRAPH_SUCCESS,
                   REPORT_CALL_ERROR("E18888", "node init failed.");
-                  GELOGE(GRAPH_FAILED, "[Init][Node] fail."); return nullptr);
+                  GELOGE(GRAPH_FAILED, "[Init][Node] fail.");
+                  return nullptr);
   node->SetHostNode(is_valid_flag_);
   PushBackToNodeList(node);
   AddInputDataNode(node);
@@ -823,7 +823,6 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
     stack.pop_back();
     node_vec.push_back(node);
     GE_CHECK_NOTNULL(node->GetOpDesc());
-    GELOGD("node_vec.push_back %s", node->GetOpDesc()->GetName().c_str());
     for (const auto &anchor : node->GetAllOutDataAnchors()) {
       GE_CHECK_NOTNULL(anchor);
       for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
@@ -1641,7 +1640,7 @@ ComputeGraph& ComputeGraph::operator=(ge::ComputeGraph &compute_graph) {
   if (&compute_graph == this) {
     return *this;
   }
-  AttrHolder::Swap(compute_graph);
+  AttrHolder::SwapBase(compute_graph);
   *impl_ = *(compute_graph.impl_);
   return *this;
 }
@@ -1913,7 +1912,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Dump() const {
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::Swap(ComputeGraph &graph) {
-  this->AttrHolder::Swap(graph);
+  this->AttrHolder::SwapBase(graph);
   impl_->Swap(*(graph.impl_));
 
   // Update Node owner.

@@ -20,7 +20,7 @@
 #include "graph/op_desc.h"
 namespace gert {
 extern ge::graphStatus InferDataTypeOnCompile(const ge::OpDescPtr &op_desc);
-extern ge::graphStatus InferShapeRangeOnCompile(const ge::OpDescPtr &op_desc);
+extern ge::graphStatus InferShapeRangeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc);
 extern ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc);
 }  // namespace gert
 #endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_SHAPE_INFERENCE_H_

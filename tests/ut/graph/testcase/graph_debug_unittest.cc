@@ -26,13 +26,12 @@
 #include "graph/debug/ge_op_types.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/compute_graph_impl.h"
-#include "graph/anchor.h"
 #undef private
 #undef protected
 
 namespace ge {
 
-class UtestGraphDebugPrinter : public testing::Test {
+class UtestGraphDebug : public testing::Test {
  protected:
   void SetUp() {
   }
@@ -106,20 +105,18 @@ ComputeGraphPtr BuildGraphPartitionCall() {
   return root_graph;
 }
 
-TEST_F(UtestGraphDebugPrinter, Normal) {
-    auto graph = BuildGraphPartitionCall();
-    EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(graph, "./p.graph"), GRAPH_SUCCESS);
+TEST_F(UtestGraphDebug, Normal) {
+  auto graph = BuildGraphPartitionCall();
+  EXPECT_EQ(GraphDebug::DumpGraphDotFile(graph, "./p.graph"), GRAPH_SUCCESS);
 }
 
-
-TEST_F(UtestGraphDebugPrinter, Abnormal) {
-    std::ostringstream out;
-    GraphDebugPrinter::DumpNodeToDot(nullptr, out);
-    GraphDebugPrinter::DumpEdgeToDot(nullptr, out, 1);
-    EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(nullptr, "p2.graph", 1), GRAPH_SUCCESS);
-    GraphPtr gp = std::make_shared<Graph>("graph");
-    EXPECT_EQ(GraphDebugPrinter::DumpGraphDotFile(*gp, "p1.graph"), GRAPH_SUCCESS);
+TEST_F(UtestGraphDebug, Abnormal) {
+  std::ostringstream out;
+  GraphDebug::DumpNodeToDot(nullptr, out);
+  GraphDebug::DumpEdgeToDot(nullptr, out, 1);
+  EXPECT_EQ(GraphDebug::DumpGraphDotFile(nullptr, "p2.graph", 1), GRAPH_SUCCESS);
+  GraphPtr gp = std::make_shared<Graph>("graph");
+  EXPECT_EQ(GraphDebug::DumpGraphDotFile(*gp, "p1.graph"), GRAPH_SUCCESS);
 }
-
 
 } // namespace ge
