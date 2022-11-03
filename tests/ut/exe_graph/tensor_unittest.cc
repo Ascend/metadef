@@ -154,4 +154,11 @@ TEST_F(TensorUT, GetTensorSizeOk) {
   EXPECT_EQ(t.GetSize(), 24);
 }
 
+TEST_F(TensorUT, CreateFollowingCheckTotalSize) {
+  size_t total_size;
+  auto ptr = Tensor::CreateFollowing(32, ge::DataType::DT_INT8, total_size);
+  EXPECT_NE(ptr, nullptr);
+  auto tensor = reinterpret_cast<Tensor *>(ptr.get());
+  EXPECT_EQ(tensor->GetSize(), 32);
+}
 }  // namespace gert
