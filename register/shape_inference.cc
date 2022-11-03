@@ -66,6 +66,11 @@ ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op
                                  std::vector<std::unique_ptr<ge::Tensor>> &ge_tensors_holder) {
   const auto &functions = OpImplRegistry::GetInstance().GetOpImpl(op_desc->GetType());
   size_t instance_index = input_index - invalid_index_num;
+  // check valid map
+  const auto valid_op_ir_map = ge::OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(op_desc);
+  if (valid_op_ir_map.empty()) {
+    return ge::GRAPH_PARAM_INVALID;
+  }
   size_t ir_index;
   GE_ASSERT_GRAPH_SUCCESS(ge::OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, instance_index, ir_index),
                           "[Get][InputIrIndexByInstanceIndex] failed, op[%s], instance index[%zu], input_index[%zu]",
@@ -417,13 +422,13 @@ ge::graphStatus InferShapeRangeAutomaticly(const ge::Operator &op, const ge::OpD
       .Inputs(GetInputs(op, min_inputs_holder)).Outputs(GetOutputs(min_outputs_holder)).Build(op_desc);
   auto min_infer_shape_ctx = reinterpret_cast<gert::InferShapeContext *>(min_kernel_context_holder.context_);
   auto ret = infer_shape(min_infer_shape_ctx);
-  GE_CHK_STATUS_RET(ret, "[Call][InferShapeV2Func] failed, ret[%d]", ret);
+  GE_CHK_STATUS_RET(ret, "[InferV2][MinShape] failed, op_desc[%s], ret[%d]", op_desc->GetName().c_str(), ret);
   // max output
   const auto max_kernel_context_holder = gert::KernelRunContextBuilder()
       .Inputs(GetInputs(op, max_inputs_holder)).Outputs(GetOutputs(max_outputs_holder)).Build(op_desc);
   auto max_infer_shape_ctx = reinterpret_cast<gert::InferShapeContext *>(max_kernel_context_holder.context_);
   ret = infer_shape(max_infer_shape_ctx);
-  GE_CHK_STATUS_RET(ret, "[Call][InferShapeV2Func] failed, ret[%d]", ret);
+  GE_CHK_STATUS_RET(ret, "[InferV2][MaxShape] failed, op_desc[%s], ret[%d]", op_desc->GetName().c_str(), ret);
   UpdateOpDescOutShapeRange(op_desc, min_infer_shape_ctx, max_infer_shape_ctx);
   return ge::GRAPH_SUCCESS;
 }
@@ -451,15 +456,18 @@ ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr 
   std::vector<std::unique_ptr<uint8_t[]>> outputs_holder;
   std::vector<std::unique_ptr<ge::Tensor>> ge_tensors_holder;
   ge_tensors_holder.resize(op_desc->GetAllInputsSize());
-  GE_ASSERT_GRAPH_SUCCESS(ConstructInferShapeContextInputs(op, op_desc, inputs_holder, ge_tensors_holder),
-                          "[Construct][InferShapeContextInputs] failed, op_desc[%s]", op_desc->GetName().c_str());
+  auto ret = ConstructInferShapeContextInputs(op, op_desc, inputs_holder, ge_tensors_holder);
+  if (ret == ge::GRAPH_PARAM_INVALID) {
+    return ret;
+  }
+  GE_ASSERT_GRAPH_SUCCESS(ret, "[Construct][InferShapeContextInputs] failed, op_desc[%s]", op_desc->GetName().c_str());
   GE_ASSERT_GRAPH_SUCCESS(ConstructInferShapeContextOutputs(op_desc, outputs_holder),
                           "[Construct][InferShapeContextOutputs] failed, op_desc[%s]", op_desc->GetName().c_str());
   const auto kernel_context_holder = gert::KernelRunContextBuilder()
       .Inputs(GetInputs(op, inputs_holder)).Outputs(GetOutputs(outputs_holder)).Build(op_desc);
   auto infer_shape_ctx = reinterpret_cast<gert::InferShapeContext *>(kernel_context_holder.context_);
-  const auto ret = functions->infer_shape(infer_shape_ctx);
-  GE_CHK_STATUS_RET(ret, "[Call][InferShapeV2Func] failed, ret[%d]", ret);
+  ret = functions->infer_shape(infer_shape_ctx);
+  GE_CHK_STATUS_RET(ret, "[Call][InferShapeV2Func] failed, op_desc[%s], ret[%d]", op_desc->GetName().c_str(), ret);
   UpdateOpDescOutShape(op_desc, infer_shape_ctx);
   return ge::GRAPH_SUCCESS;
 }
@@ -477,7 +485,7 @@ ge::graphStatus InferDataTypeOnCompile(const ge::OpDescPtr &op_desc) {
   const auto kernel_context_holder = gert::KernelRunContextBuilder().Inputs(inputs).Outputs(outputs).Build(op_desc);
   const auto kernel_context = reinterpret_cast<gert::InferDataTypeContext *>(kernel_context_holder.context_);
   const auto ret = functions->infer_datatype(kernel_context);
-  GE_CHK_STATUS_RET(ret, "[Check][InferDataType] result failed, ret[%d]", ret);
+  GE_CHK_STATUS_RET(ret, "[Check][InferDataType] result failed, op_desc[%s], ret[%d]", op_desc->GetName().c_str(), ret);
   for (size_t i = 0UL; i < op_desc->GetOutputsSize(); i++) {
     const auto &out_desc = op_desc->MutableOutputDesc(i);
     out_desc->SetDataType(kernel_context->GetOutputDataType(i));
