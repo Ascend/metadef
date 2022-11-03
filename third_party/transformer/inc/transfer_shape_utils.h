@@ -124,6 +124,8 @@ private:
 
   static bool GetNdRnnBiasShape(const ExtAxisValue &ext_axis, const int64_t &c0, const gert::Shape &origin_shape,
                                 gert::Shape &shape);
+
+  static bool GetNYUVShape(gert::Shape &shape);
 };
 }
 #endif  // TRANSFORMER_INC_TRANSFER_SHAPE_UTILS_H_

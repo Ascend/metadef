@@ -138,7 +138,9 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
   }
 
   ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
-  if (!CheckInputParam(origin_format, primary_format, data_type)) {
+  ge::Format origin_primary_format =
+      static_cast<ge::Format>(GetPrimaryFormat(origin_format));
+  if (!CheckInputParam(origin_primary_format, primary_format, data_type)) {
     return false;
   }
 
@@ -237,7 +239,8 @@ int64_t TransferShapeUtils::GetC0Value(const ge::DataType &data_type, const ge::
 }
 
 bool TransferShapeUtils::IsNeedAxisValue(const ge::Format &format, const size_t &origin_dim_size) {
-  if (format == ge::FORMAT_FRACTAL_NZ || format == ge::FORMAT_FRACTAL_ZN_RNN || format == ge::FORMAT_ND_RNN_BIAS) {
+  if (format == ge::FORMAT_FRACTAL_NZ || format == ge::FORMAT_FRACTAL_ZN_RNN ||
+      format == ge::FORMAT_ND_RNN_BIAS || format == ge::FORMAT_NYUV_A) {
     return false;
   }
   if (format == ge::FORMAT_FRACTAL_Z && origin_dim_size == DIM_SIZE_TWO) {
@@ -257,6 +260,8 @@ bool TransferShapeUtils::TransferShapeByFormat(const ge::Format &primary_format,
       return GetFznRNNShapeByAxisValue(axis_value, shape); // need c0, input, hidden, state
     case ge::FORMAT_ND_RNN_BIAS:
       return GetNDRNNShapeByAxisValue(axis_value, shape); // need c0, input, hidden, state
+    case ge::FORMAT_NYUV_A:
+      return GetNYUVShape(shape);
     default:
       GELOGD("Can not get new shape by new format %d.", primary_format);
       return true;
@@ -903,6 +908,25 @@ bool TransferShapeUtils::GetNdRnnBiasShape(const ExtAxisValue &ext_axis, const i
   MUL_OVERFLOW(n_num, DivisionCeiling(ext_axis[EXT_INDEX_HIDEEN_SIZE], c0), n_num);
   MUL_OVERFLOW(n_num, c0, n_num);
   shape.AppendDim(n_num);
+  return true;
+}
+
+bool TransferShapeUtils::GetNYUVShape(gert::Shape &shape) {
+  const size_t kSize4 = 4U;
+  const size_t kSize3 = 3U;
+  size_t shape_size = shape.GetDimNum();
+  CHECK(((shape_size != kSize3) && (shape_size != kSize4)),
+        GELOGD("Dim size is not 3 or 4."), return false);
+  const size_t kWdimOffset = 2U;
+  const size_t kHdimOffset = 3U;
+  const int64_t kAlaign64 = 64;
+  const int64_t kAlaign16 = 16;
+  auto width  = shape.GetDim(shape_size - kWdimOffset);
+  auto height = shape.GetDim(shape_size - kHdimOffset);
+  width  = (width + kAlaign64 - 1) / kAlaign64 * kAlaign64;
+  height = (height + kAlaign16 - 1) / kAlaign16 * kAlaign16;
+  shape.SetDim(shape_size - kWdimOffset, width);
+  shape.SetDim(shape_size - kHdimOffset, height);
   return true;
 }
 }

@@ -572,4 +572,22 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nd_rnn_bias) {
   RunTransferShape(op_desc, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, DT_FLOAT16, true, {150}, {150});
   RunTransferShape(op_desc, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, DT_INT8, true, {18, 80}, {18, 80});
 }
-}  // namespace ge
+TEST_F(TransformerTransferShapeUT, transfer_shape_from_nyuva) {
+    ShapeTransferAccordingToFormat shape_transfer;
+    gert::Shape current_shape;
+    vector<int64_t> dims = {42, 63, 3};
+    vector<int64_t> expect_dim = {48, 64, 3};
+    for (const int64_t &d : dims) {
+      current_shape.AppendDim(d);
+    }
+    bool ret = shape_transfer.TransferShape(ge::FORMAT_NYUV, ge::FORMAT_NYUV_A, DT_INT8, current_shape);
+    EXPECT_EQ(ret, true);
+    if (ret) {
+      vector<int64_t> new_dim;
+      for (size_t i = 0; i < current_shape.GetDimNum(); ++i) {
+        new_dim.push_back(current_shape.GetDim(i));
+      }
+      EXPECT_EQ(new_dim, expect_dim);
+    }
+}
+}  // namespace ges
