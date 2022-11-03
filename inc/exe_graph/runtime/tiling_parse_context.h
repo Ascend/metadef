@@ -17,6 +17,7 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_TILING_PARSE_CONTEXT_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_TILING_PARSE_CONTEXT_H_
 #include "extended_kernel_context.h"
+#include "external/graph/types.h"
 namespace gert {
 class TilingParseContext : public ExtendedKernelContext {
  public:
@@ -24,7 +25,7 @@ class TilingParseContext : public ExtendedKernelContext {
    * 获取算子编译产生的json字符串
    * @return json字符串
    */
-  const char *GetCompiledJson() const {
+  const ge::char_t *GetCompiledJson() const {
     return GetInputValue<const char *>(0);
   }
   /**

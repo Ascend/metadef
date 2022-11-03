@@ -27,13 +27,13 @@ namespace gert {
 class TilingContext : public ExtendedKernelContext {
  public:
   const void *GetCompileInfo() const {
-    auto compute_node_info = GetComputeNodeInfo();
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
 
-    size_t index = compute_node_info->GetInputsNum() + compute_node_info->GetOutputsNum();
-    auto av = GetInput(index);
+    const size_t index = compute_node_info->GetInputsNum() + compute_node_info->GetOutputsNum();
+    const auto av = GetInput(index);
     if (av == nullptr) {
       return nullptr;
     }
@@ -53,8 +53,8 @@ class TilingContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入shape指针，index非法时返回空指针
    */
-  const StorageShape *GetInputShape(size_t index) const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const StorageShape *GetInputShape(const size_t index) const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -71,7 +71,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param index 输入index
    * @return 输入tensor指针，index非法时返回空指针
    */
-  const Tensor *GetInputTensor(size_t index) const {
+  const Tensor *GetInputTensor(const size_t index) const {
     return GetInputPointer<Tensor>(index);
   }
   /**
@@ -79,7 +79,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param ir_index IR原型定义中的index
    * @return tensor指针，index非法，或该INPUT没有实例化时，返回空指针
    */
-  const Tensor *GetOptionalInputTensor(size_t ir_index) const {
+  const Tensor *GetOptionalInputTensor(const size_t ir_index) const {
     return GetDynamicInputPointer<Tensor>(ir_index, 0);
   }
   /**
@@ -88,7 +88,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
    * @return Tensor指针，index或relative_index非法时，返回空指针
    */
-  const Tensor *GetDynamicInputTensor(size_t ir_index, size_t relative_index) const {
+  const Tensor *GetDynamicInputTensor(const size_t ir_index, const size_t relative_index) const {
     return GetDynamicInputPointer<Tensor>(ir_index, relative_index);
   }
   /**
@@ -96,7 +96,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param ir_index IR原型定义中的index
    * @return shape指针，index非法，或该INPUT没有实例化时，返回空指针
    */
-  const StorageShape *GetOptionalInputShape(size_t ir_index) const {
+  const StorageShape *GetOptionalInputShape(const size_t ir_index) const {
     return GetDynamicInputPointer<StorageShape>(ir_index, 0);
   }
   /**
@@ -105,7 +105,7 @@ class TilingContext : public ExtendedKernelContext {
    * @param relative_index 该输入实例化后的相对index，例如某个DYNAMIC_INPUT实例化了3个输入，那么relative_index的有效范围是[0,2]
    * @return shape指针，index或relative_index非法时，返回空指针
    */
-  const StorageShape *GetDynamicInputShape(size_t ir_index, size_t relative_index) const {
+  const StorageShape *GetDynamicInputShape(const size_t ir_index, const size_t relative_index) const {
     return GetDynamicInputPointer<StorageShape>(ir_index, relative_index);
   }
   /**
@@ -113,8 +113,8 @@ class TilingContext : public ExtendedKernelContext {
    * @param index 输出index
    * @return 输出shape指针，index非法时，返回空指针
    */
-  const StorageShape *GetOutputShape(size_t index) const {
-    auto compute_node_info = GetComputeNodeInfo();
+  const StorageShape *GetOutputShape(const size_t index) const {
+    const auto compute_node_info = GetComputeNodeInfo();
     if (compute_node_info == nullptr) {
       return nullptr;
     }
@@ -123,7 +123,7 @@ class TilingContext : public ExtendedKernelContext {
       return nullptr;
     }
 
-    size_t offset = compute_node_info->GetInputsNum();
+    const size_t offset = compute_node_info->GetInputsNum();
     return GetInputPointer<StorageShape>(offset + index);
   }
 
@@ -152,8 +152,8 @@ class TilingContext : public ExtendedKernelContext {
    * @param tiling_key tiling key
    * @return 成功时返回ge::GRAPH_SUCCESS
    */
-  ge::graphStatus SetTilingKey(uint64_t tiling_key) {
-    auto p = GetOutputPointer<uint64_t>(kOutputTilingKey);
+  ge::graphStatus SetTilingKey(const uint64_t tiling_key) {
+    const auto p = GetOutputPointer<uint64_t>(kOutputTilingKey);
     if (p == nullptr) {
       return ge::GRAPH_FAILED;
     }
@@ -165,7 +165,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return tiling key，获取失败时
    */
   uint64_t GetTilingKey() const {
-    auto p = GetOutputPointer<uint64_t>(kOutputTilingKey);
+    const auto p = GetOutputPointer<uint64_t>(kOutputTilingKey);
     if (p == nullptr) {
       return std::numeric_limits<uint64_t>::max();
     }
@@ -176,8 +176,8 @@ class TilingContext : public ExtendedKernelContext {
    * @param block_dim block dim
    * @return 成功时返回ge::GRAPH_SUCCESS
    */
-  ge::graphStatus SetBlockDim(uint32_t block_dim) {
-    auto p = GetOutputPointer<uint32_t>(kOutputBlockDim);
+  ge::graphStatus SetBlockDim(const uint32_t block_dim) {
+    const auto p = GetOutputPointer<uint32_t>(kOutputBlockDim);
     if (p == nullptr) {
       return ge::GRAPH_FAILED;
     }
@@ -189,7 +189,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return block dim
    */
   uint32_t GetBlockDim() const {
-    auto p = GetOutputPointer<uint32_t>(kOutputBlockDim);
+    const auto p = GetOutputPointer<uint32_t>(kOutputBlockDim);
     if (p == nullptr) {
       return std::numeric_limits<uint32_t>::max();
     }
@@ -201,7 +201,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return 成功时返回ge::GRAPH_SUCCESS
    */
   ge::graphStatus SetTilingCond(int32_t tiling_cond) {
-    auto p = GetOutputPointer<int32_t>(kOutputTilingCond);
+    const auto p = GetOutputPointer<int32_t>(kOutputTilingCond);
     if (p == nullptr) {
       return ge::GRAPH_FAILED;
     }
@@ -213,7 +213,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return tiling cond:有效的tiling_cond大于等于0，若该值无效返回-1
    */
   int32_t GetTilingCond() const {
-    auto p = GetOutputPointer<int32_t>(kOutputTilingCond);
+    const auto p = GetOutputPointer<int32_t>(kOutputTilingCond);
     if (p == nullptr) {
       return -1;
     }
@@ -224,8 +224,8 @@ class TilingContext : public ExtendedKernelContext {
    * @param atomic true/false代表是否需要做atomic clean
    * @return 成功时返回ge::GRAPH_SUCCESS
    */
-  ge::graphStatus SetNeedAtomic(bool atomic) {
-    auto p = GetOutputPointer<bool>(kOutputAtomicCleanFlag);
+  ge::graphStatus SetNeedAtomic(const bool atomic) {
+    const auto p = GetOutputPointer<bool>(kOutputAtomicCleanFlag);
     if (p == nullptr) {
       return ge::GRAPH_FAILED;
     }
@@ -237,7 +237,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return true/false
    */
   bool NeedAtomic() const {
-    auto p = GetOutputPointer<bool>(kOutputAtomicCleanFlag);
+    const auto p = GetOutputPointer<bool>(kOutputAtomicCleanFlag);
     if (p == nullptr) {
       return false;
     }
@@ -272,15 +272,14 @@ class TilingContext : public ExtendedKernelContext {
    * @param workspace_count workspace的个数，传入的workspace个数不可以超过编译时指定的最大workspace个数
    * @return workspace sizes指针
    */
-  size_t *GetWorkspaceSizes(size_t workspace_count) {
-    auto workspace = GetOutputPointer<TypedContinuousVector<size_t>>(kOutputWorkspace);
+  size_t *GetWorkspaceSizes(const size_t workspace_count) {
+    const auto workspace = GetOutputPointer<TypedContinuousVector<size_t>>(kOutputWorkspace);
     if (workspace == nullptr) {
       return nullptr;
     }
-    if (workspace_count > workspace->GetCapacity()) {
+    if (workspace->SetSize(workspace_count) != ge::SUCCESS) {
       return nullptr;
     }
-    workspace->SetSize(workspace_count);
     return workspace->MutableData();
   }
 };

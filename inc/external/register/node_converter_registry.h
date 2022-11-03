@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "graph/node.h"
+#include "external/graph/types.h"
 #include "exe_graph/lowering/value_holder.h"
 #include "exe_graph/lowering/lowering_global_data.h"
 
@@ -55,8 +56,8 @@ class NodeConverterRegistry {
 
 class NodeConverterRegister {
  public:
-  NodeConverterRegister(const char *lower_func_name, NodeConverterRegistry::NodeConverter func) noexcept;
-  NodeConverterRegister(const char *lower_func_name, int32_t require_placement,
+  NodeConverterRegister(const ge::char_t *lower_func_name, NodeConverterRegistry::NodeConverter func) noexcept;
+  NodeConverterRegister(const ge::char_t *lower_func_name, int32_t require_placement,
                         NodeConverterRegistry::NodeConverter func) noexcept;
 };
 }  // namespace gert

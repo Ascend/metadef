@@ -64,7 +64,7 @@ class TilingData {
    * 设置tiling data长度
    * @param size tiling data长度
    */
-  void SetDataSize(size_t size) {
+  void SetDataSize(const size_t size) {
     data_size_ = size;
   }
   /**
@@ -128,7 +128,7 @@ class TilingData {
    * @param cap_size 最大容量，单位为字节
    * @return 实例指针
    */
-  static std::unique_ptr<uint8_t[]> CreateCap(size_t cap_size) {
+  static std::unique_ptr<uint8_t[]> CreateCap(const size_t cap_size) {
     size_t total_size;
     if (ge::AddOverflow(sizeof(TilingData), cap_size, total_size)) {
       return nullptr;
@@ -137,7 +137,7 @@ class TilingData {
     if (td_buf == nullptr) {
       return nullptr;
     }
-    auto td = reinterpret_cast<TilingData *>(td_buf.get());
+    const auto td = reinterpret_cast<TilingData *>(td_buf.get());
     td->Init(cap_size, td_buf.get() + sizeof(TilingData));
     return td_buf;
   }
@@ -147,7 +147,7 @@ class TilingData {
    * @param total_size 内存空间，单位为字节
    * @return 成功返回ge::GRAPH_SUCCESS
    */
-  static ge::graphStatus CalcTotalSize(size_t cap_size, size_t &total_size) {
+  static ge::graphStatus CalcTotalSize(const size_t cap_size, size_t &total_size) {
     if (ge::AddOverflow(sizeof(TilingData), cap_size, total_size)) {
       return ge::GRAPH_FAILED;
     }
@@ -158,9 +158,9 @@ class TilingData {
    * @param cap_size 最大容量
    * @param data tiling data的地址
    */
-  void Init(size_t cap_size, void* data) {
+  void Init(const size_t cap_size, void *const data) {
     capacity_ = cap_size;
-    data_size_ = 0;
+    data_size_ = 0UL;
     data_ = data;
     reserved_ = 0;
   }

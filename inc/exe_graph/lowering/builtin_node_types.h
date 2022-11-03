@@ -16,8 +16,8 @@
 
 #ifndef METADEF_CXX_INC_EXE_GRAPH_LOWERING_BUILTIN_NODE_TYPES_H_
 #define METADEF_CXX_INC_EXE_GRAPH_LOWERING_BUILTIN_NODE_TYPES_H_
-#include "graph/types.h"
 #include <cstring>
+#include "graph/types.h"
 
 namespace gert {
 // 子图的输出，InnerNetOutput有多个输入，没有输出，每个InnerNetOutput的输入，对应相同Index的parent node的输出

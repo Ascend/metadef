@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_EXTERNAL_GRAPH_NODE_H_
-#define INC_EXTERNAL_GRAPH_NODE_H_
+#ifndef INC_EXTERNAL_GRAPH_GNODE_H_
+#define INC_EXTERNAL_GRAPH_GNODE_H_
 
 #include <vector>
 #include <cstdint>
@@ -126,4 +126,4 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GNode {
 };
 }  // namespace ge
 
-#endif  // INC_EXTERNAL_GRAPH_NODE_H_
+#endif  // INC_EXTERNAL_GRAPH_GNODE_H_

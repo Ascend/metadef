@@ -151,7 +151,8 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) 
   }
 
   bg::ValueHolderPtr init_selected_allocator = nullptr;
-  auto init_out = bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+  auto init_out = bg::FrameSelector::OnInitRoot([&desc, &init_selected_allocator,
+                                                 this]() -> std::vector<bg::ValueHolderPtr> {
     auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
     auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
     auto created_allocator =
@@ -170,7 +171,7 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) 
   });
   GE_ASSERT_EQ(init_out.size(), 3U);
 
-  auto allocator = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+  auto allocator = bg::FrameSelector::OnMainRoot([&init_out, this]() -> std::vector<bg::ValueHolderPtr> {
     auto main_selected_allocator = init_out[0];
     if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)] != nullptr) {
       main_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(

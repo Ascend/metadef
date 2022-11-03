@@ -28,10 +28,10 @@
 
 namespace gert {
 struct OpImplKernelRegistry {
-  typedef UINT32 (*InferShapeKernelFunc)(InferShapeContext *);
-  typedef UINT32 (*InferShapeRangeKernelFunc)(InferShapeRangeContext *);
-  typedef UINT32 (*TilingKernelFunc)(TilingContext *);
-  typedef UINT32 (*InferDataTypeKernelFunc)(InferDataTypeContext *);
+  using InferShapeKernelFunc = UINT32 (*)(InferShapeContext *);
+  using InferShapeRangeKernelFunc = UINT32 (*)(InferShapeRangeContext *);
+  using TilingKernelFunc = UINT32 (*)(TilingContext *);
+  using InferDataTypeKernelFunc = UINT32 (*)(InferDataTypeContext *);
   using OpType = std::string;
   using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
   using PrivateAttrSet = std::unordered_set<std::string>;
@@ -43,17 +43,17 @@ struct OpImplKernelRegistry {
     /*
      * param index: must be ir index
      */
-    bool IsInputDataDependency(int32_t index) const {
-      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {
+    bool IsInputDataDependency(const int32_t index) const {
+      if ((index < 0) || (static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount)) {
         return false;
       }
       return static_cast<bool>(inputs_dependency & static_cast<uint64_t>(1) << static_cast<uint32_t>(index));
     }
-    ge::graphStatus SetInputDataDependency(int32_t index) {
-      if (index < 0 || static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount) {
+    ge::graphStatus SetInputDataDependency(const int32_t index) {
+      if ((index < 0) || (static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount)) {
         return ge::GRAPH_FAILED;
       }
-      inputs_dependency |= static_cast<uint64_t>(1) << index;
+      inputs_dependency |= 1UL << static_cast<uint64_t>(index);
       return ge::GRAPH_SUCCESS;
     }
 

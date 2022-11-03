@@ -32,9 +32,9 @@ static const std::vector<int64_t> UNKNOWN_SHAPE = {-1};
 static const std::vector<int64_t> UNKNOWN_RANK = {-2};
 static const std::vector<int64_t> DUMMY_SHAPE = {-3};
 // When data type unit is bit, this offset need to be added.
-static const int kDataTypeSizeBitOffset = 1000;
-static const int kBitNumOfOneByte = 8;
-static const int kBitThreeBytes = 24;
+static constexpr int32_t kDataTypeSizeBitOffset = 1000;
+static constexpr uint32_t kBitNumOfOneByte = 8U;
+static constexpr uint32_t kBitThreeBytes = 24U;
 
 #if(defined(HOST_VISIBILITY)) && (defined(__GNUC__))
 #define GE_FUNC_HOST_VISIBILITY __attribute__((visibility("default")))
@@ -201,27 +201,27 @@ enum Format {
 /// @param c0_format
 /// @return
 inline int32_t GetFormatFromSub(int32_t primary_format, int32_t sub_format) {
-  return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xff) |
-                              ((static_cast<uint32_t>(sub_format) & 0xffff) << kBitNumOfOneByte));
+  return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xffU) |
+                              ((static_cast<uint32_t>(sub_format) & 0xffffU) << kBitNumOfOneByte));
 }
 
 inline int32_t GetFormatFromC0(int32_t format, int32_t c0_format) {
-  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffffff) |
-                              ((static_cast<uint32_t>(c0_format) & 0xf) << kBitThreeBytes));
+  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffffffU) |
+                              ((static_cast<uint32_t>(c0_format) & 0xfU) << kBitThreeBytes));
 }
 
 inline int32_t GetFormatFromSubAndC0(int32_t primary_format, int32_t sub_format, int32_t c0_format) {
-  return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xff) |
-                              ((static_cast<uint32_t>(sub_format) & 0xffff) << kBitNumOfOneByte) |
-                              ((static_cast<uint32_t>(c0_format) & 0xf) << kBitThreeBytes));
+  return static_cast<int32_t>((static_cast<uint32_t>(primary_format) & 0xffU) |
+                              ((static_cast<uint32_t>(sub_format) & 0xffffU) << kBitNumOfOneByte) |
+                              ((static_cast<uint32_t>(c0_format) & 0xfU) << kBitThreeBytes));
 }
 
 inline int32_t GetPrimaryFormat(int32_t format) {
-  return static_cast<int32_t>(static_cast<uint32_t>(format) & 0xff);
+  return static_cast<int32_t>(static_cast<uint32_t>(format) & 0xffU);
 }
 
 inline int32_t GetSubFormat(int32_t format) {
-  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffff00) >> kBitNumOfOneByte);
+  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xffff00U) >> kBitNumOfOneByte);
 }
 
 inline bool HasSubFormat(int32_t format) {
@@ -230,11 +230,11 @@ inline bool HasSubFormat(int32_t format) {
 
 inline int64_t GetC0Value(int32_t format) {
   return static_cast<int64_t>(1 <<
-      (static_cast<int32_t>((static_cast<uint32_t>(format) & 0xf000000) >> kBitThreeBytes) - 1));
+      (static_cast<int32_t>((static_cast<uint32_t>(format) & 0xf000000U) >> kBitThreeBytes) - 1));
 }
 
 inline bool HasC0Format(int32_t format) {
-  return ((static_cast<uint32_t>(format) & 0xf000000) >> kBitThreeBytes) > 0;
+  return ((static_cast<uint32_t>(format) & 0xf000000U) >> kBitThreeBytes) > 0;
 }
 
 // for unknown shape op type
@@ -331,7 +331,7 @@ struct TensorType {
 };
 
 struct ListTensorType {
-  explicit ListTensorType(const TensorType &tensor_type) : tensor_type(tensor_type) {};
+  explicit ListTensorType(const TensorType &type) : tensor_type(type) {};
   TensorType tensor_type;
 };
 }  // namespace ge
