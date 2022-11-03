@@ -151,7 +151,8 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) 
   }
 
   bg::ValueHolderPtr init_selected_allocator = nullptr;
-  auto init_out = bg::FrameSelector::OnInitRoot([&desc, &init_selected_allocator, this]() -> std::vector<bg::ValueHolderPtr> {
+  auto init_out = bg::FrameSelector::OnInitRoot([&desc, &init_selected_allocator,
+                                                 this]() -> std::vector<bg::ValueHolderPtr> {
     auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
     auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
     auto created_allocator =
