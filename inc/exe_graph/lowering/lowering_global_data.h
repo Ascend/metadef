@@ -58,7 +58,7 @@ class LoweringGlobalData {
   void SetUniqueValueHolder(const std::string &name, const bg::ValueHolderPtr &holder);
 
   void SetModelWeightSize(const size_t require_weight_size);
-  const size_t GetModelWeightSize() const;
+  size_t GetModelWeightSize() const;
 
  private:
   struct HoldersByGraph {

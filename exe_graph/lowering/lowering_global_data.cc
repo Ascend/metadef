@@ -229,7 +229,7 @@ bg::ValueHolderPtr LoweringGlobalData::GetUniqueValueHolder(const string &name) 
 void LoweringGlobalData::SetModelWeightSize(const size_t require_weight_size) {
   model_weight_size_ = require_weight_size;
 }
-const size_t LoweringGlobalData::GetModelWeightSize() const {
+size_t LoweringGlobalData::GetModelWeightSize() const {
   return model_weight_size_;
 }
 }  // namespace gert
