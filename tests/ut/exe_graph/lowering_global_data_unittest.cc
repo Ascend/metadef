@@ -378,12 +378,9 @@ TEST_F(LoweringGlobalDataUT, OnMainRootLastOk) {
 
 TEST_F(LoweringGlobalDataUT, SinkWeightInfoTest) {
   LoweringGlobalData gd;
-  LoweringGlobalData::SinkWeightInfo weight_info = {nullptr, 1U, 1U};
-  gd.SetSinkWeightInfo(weight_info);
-  auto result = gd.GetSinkWeightInfo();
-  EXPECT_EQ(result.given_addr, weight_info.given_addr);
-  EXPECT_EQ(result.given_size, weight_info.given_size);
-  EXPECT_EQ(result.require_size, weight_info.require_size);
-}
+  size_t weight_info = 1;
+  gd.SetModelWeightSize(weight_info);
+  auto result = gd.GetModelWeightSize();
+  EXPECT_EQ(result, weight_info);
 
 }  // namespace gert
