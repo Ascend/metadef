@@ -142,7 +142,7 @@ class Tensor {
 
     auto tensor = reinterpret_cast<Tensor *>(holder.get());
     new (holder.get()) Tensor({}, {}, kFollowing, dt, nullptr);
-    tensor->tensor_data_ = TensorData(nullptr, nullptr, total_size, kFollowing);
+    tensor->tensor_data_ = TensorData(nullptr, nullptr, total_size - sizeof(Tensor), kFollowing);
     return holder;
   }
   /**

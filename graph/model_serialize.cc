@@ -291,7 +291,7 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *cons
       return false;
     }
   }
-  for (const auto subgraph : compute_graph->GetAllSubgraphs()) {
+  for (const auto subgraph : subgraphs) {
     if (!SerializeGraph(subgraph, model_proto->add_graph(), is_dump)) {
       GELOGE(GRAPH_FAILED, "[Serialize][Subgraph] failed");
       return false;
