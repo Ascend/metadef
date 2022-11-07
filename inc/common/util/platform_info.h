@@ -50,6 +50,10 @@ class PlatformInfoManager {
 
   void SetOptionalCompilationInfo(OptionalInfos &opti_compilation_info);
 
+  uint32_t UpdatePlatformInfos(PlatFormInfos &platform_infos);
+
+  uint32_t GetPlatformInstanceByDevice(const uint32_t &device_id, PlatFormInfos &platform_infos);
+
  private:
   PlatformInfoManager();
   ~PlatformInfoManager();
@@ -139,6 +143,8 @@ class PlatformInfoManager {
   std::map<std::string, PlatFormInfos> platform_infos_map_;
 
   OptionalInfos opti_compilation_infos_;
+
+  std::map<uint32_t, PlatFormInfos> device_platform_infos_map_;
 };
 }  // namespace fe
 #endif
