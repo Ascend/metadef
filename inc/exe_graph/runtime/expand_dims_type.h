@@ -122,6 +122,10 @@ class ExpandDimsType {
    * @return 补维成功返回ge::GRAPH_SUCCESS
    */
   ge::graphStatus Expand(const Shape &shape, Shape &out_shape) const {
+    if (shape.GetDimNum() == size_) {
+      out_shape = shape;
+      return ge::GRAPH_SUCCESS;
+    }
     size_t shape_pos = 0;
     out_shape.SetDimNum(0);
     for (size_t out_shape_pos = 0; out_shape_pos < size_; ++out_shape_pos) {
@@ -148,6 +152,9 @@ class ExpandDimsType {
   ge::graphStatus Expand(Shape &shape) const {
     // full_size:4, shape:[A,B], reshape_type:1010
     // shape:[A,B] + full_size:4 -> [A,B,1,1]
+    if (shape.GetDimNum() == size_) {
+      return ge::GRAPH_SUCCESS;
+    }
     size_t dim_size = shape.GetDimNum();
     for (size_t i = dim_size; i < size_; i++) {
       (void) shape.AppendDim(1);
