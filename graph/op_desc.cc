@@ -32,10 +32,10 @@ namespace {
 using std::make_pair;
 using std::shared_ptr;
 
-ge::graphStatus GetInputInstanceNum(const ge::OpDescImpl *op_desc, const std::string &ir_name,
+ge::graphStatus GetInputInstanceNum(const ge::OpDescImpl *const op_desc, const std::string &ir_name,
                                     const ge::IrInputType ir_type, const size_t start_index, size_t &instance_num) {
   if (ir_type == ge::kIrInputRequired) {
-    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    const auto name = op_desc->GetValidInputNameByIndex(static_cast<uint32_t>(start_index));
     if (name != ir_name) {
       GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
              "current name %s", op_desc->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
@@ -44,7 +44,7 @@ ge::graphStatus GetInputInstanceNum(const ge::OpDescImpl *op_desc, const std::st
     return ge::SUCCESS;
   }
   if (ir_type == ge::kIrInputOptional) {
-    auto name = op_desc->GetValidInputNameByIndex(start_index);
+    const auto name = op_desc->GetValidInputNameByIndex(static_cast<uint32_t>(start_index));
     if (name == ir_name) {
       instance_num = 1U;
     } else {
@@ -54,12 +54,13 @@ ge::graphStatus GetInputInstanceNum(const ge::OpDescImpl *op_desc, const std::st
   }
   if (ir_type == ge::kIrInputDynamic) {
     size_t dyn_i = 0U;
-    auto node_indegree = op_desc->GetAllInputsSize();
-    for (size_t i = start_index; i < node_indegree; ++i, ++dyn_i) {
-      auto name = op_desc->GetValidInputNameByIndex(i);
+    const auto node_indegree = op_desc->GetAllInputsSize();
+    for (size_t i = start_index; i < node_indegree; ++i) {
+      const auto name = op_desc->GetValidInputNameByIndex(static_cast<uint32_t>(i));
       if (name != ir_name + std::to_string(dyn_i)) {
         break;
       }
+      ++dyn_i;
     }
     instance_num = dyn_i;
     return ge::SUCCESS;
@@ -85,8 +86,8 @@ ge::graphStatus GetInputInstanceNumByIrInput(const ge::OpDescImpl *op_desc, cons
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus GetOutputInstanceNum(const ge::OpDescImpl *op_desc, const std::string &ir_name,
-                                     ge::IrOutputType ir_type, size_t start_index, size_t &instance_num) {
+ge::graphStatus GetOutputInstanceNum(const ge::OpDescImpl *const op_desc, const std::string &ir_name,
+                                     const ge::IrOutputType ir_type, const size_t start_index, size_t &instance_num) {
   if (ir_type == ge::kIrOutputRequired) {
     auto name = op_desc->GetOutputNameByIndex(start_index);
     if (name != ir_name) {
@@ -100,9 +101,9 @@ ge::graphStatus GetOutputInstanceNum(const ge::OpDescImpl *op_desc, const std::s
 
   if (ir_type == ge::kIrOutputDynamic) {
     size_t dyn_i = 0U;
-    auto node_outdegree = op_desc->GetOutputsSize();
+    const auto node_outdegree = op_desc->GetOutputsSize();
     for (size_t i = start_index; i < node_outdegree; ++i, ++dyn_i) {
-      auto name = op_desc->GetOutputNameByIndex(i);
+      const auto name = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(i));
       if (name != ir_name + std::to_string(dyn_i)) {
         break;
       }
@@ -133,13 +134,24 @@ ge::graphStatus CallInferFuncV2Inner(ge::Operator &op, const ge::OpDescPtr &op_d
 }
 
 ge::graphStatus CallInferFuncV2(ge::Operator &op, const ge::OpDescPtr &op_desc) {
-  ge::graphStatus ret_v2 = CallInferFuncV2Inner(op, op_desc);
+  const ge::graphStatus ret_v2 = CallInferFuncV2Inner(op, op_desc);
   if (ret_v2 != ge::GRAPH_SUCCESS) {
     GELOGW("[Call][InferFuncV2] failed, ret_v2[%u]", ret_v2);
     // compatible with V1 processing by upper layer
     return ge::GRAPH_PARAM_INVALID;
   }
   return ge::GRAPH_SUCCESS;
+}
+
+void AddDynamicNameIndex(const std::map<std::string, uint32_t> &dynamic_names_indexes, size_t insert_index,
+                         std::map<std::string, uint32_t> &name_indexes) {
+  // Update index in input_name_idx
+  for (auto &name_index : name_indexes) {
+    if (name_index.second >= (insert_index)) {
+      name_index.second += dynamic_names_indexes.size();
+    }
+  }
+  name_indexes.insert(dynamic_names_indexes.cbegin(), dynamic_names_indexes.cend());
 }
 }
 
@@ -341,18 +353,6 @@ graphStatus OpDescImpl::AddInputDesc(const std::string &name, const ge::GeTensor
   }
 }
 
-void AddDynamicNameIndex(const std::map<std::string, uint32_t> &dynamic_names_indexes,
-                         size_t insert_index,
-                         std::map<std::string, uint32_t> &names_indexes) {
-  // Update index in input_name_idx
-  for (auto it = names_indexes.begin(); it != names_indexes.end(); ++it) {
-    if (it->second >= (insert_index)) {
-      it->second += dynamic_names_indexes.size();
-    }
-  }
-  names_indexes.insert(dynamic_names_indexes.cbegin(), dynamic_names_indexes.cend());
-}
-
 graphStatus OpDescImpl::AddInputDescMiddle(const std::string &name, const uint32_t num, const size_t index) {
   std::map<std::string, uint32_t> dynamic_names_indexes;
   for (uint32_t i = 0U; i < num; i++) {
@@ -416,8 +416,8 @@ graphStatus OpDescImpl::AddOutputDescMiddle(const std::string &name, const uint3
 
     auto pos = outputs_desc_.begin();
     std::advance(pos, index + i);
-    (void)outputs_desc_.insert(pos, out_desc);
-    dynamic_names_indexes.insert(make_pair(output_name, i + index));
+    (void) outputs_desc_.insert(pos, out_desc);
+    (void) dynamic_names_indexes.insert(make_pair(output_name, i + index));
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                      this->GetName(), "output_desc:" << (i + index), "", "", output_name);
   }
@@ -453,7 +453,8 @@ graphStatus OpDescImpl::AddInputDescForward(const std::string &name, const uint3
 graphStatus OpDescImpl::AddOutputDescForward(const std::string &name, const uint32_t num) {
   std::map<std::string, uint32_t> output_name_indexes;
   for (uint32_t i = 0U; i < num; i++) {
-    std::string output_name = name + std::to_string(i);
+    const auto index = i;
+    std::string output_name = name + std::to_string(index);
     GE_CHK_BOOL_EXEC((output_name_idx_.find(output_name) == output_name_idx_.end()),
                      REPORT_INNER_ERROR("E18888", "Add output tensor_desc is existed. name[%s]", output_name.c_str());
                      return GRAPH_FAILED,
@@ -467,7 +468,7 @@ graphStatus OpDescImpl::AddOutputDescForward(const std::string &name, const uint
     }
 
     (void)outputs_desc_.insert(outputs_desc_.cbegin(), in_desc);
-    output_name_indexes.insert(make_pair(output_name, i));
+    output_name_indexes.insert(make_pair(output_name, index));
     TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                      this->GetName(), "output_desc:0", "", "", "output_name:" << output_name);
   }
@@ -1563,11 +1564,11 @@ graphStatus OpDescImpl::VerifyInputDataType() const {
 graphStatus OpDescImpl::TryInferDataTypeFromRequiredInput(const std::string &ir_input_name,
                                                           const string &datatype_symbol,
                                                           DataType &dst_type) {
-  auto input_desc = this->GetInputDescPtr(ir_input_name);
+  const auto input_desc = this->GetInputDescPtr(ir_input_name);
   GE_CHECK_NOTNULL(input_desc);
-  auto input_data_type = input_desc->GetDataType();
+  const auto input_data_type = input_desc->GetDataType();
   // check input data type is in range
-  auto dtype_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
+  const auto dtype_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
   if (!dtype_symbol.symbol.empty()) {
     if (!dtype_symbol.IsDataTypeInRange(input_data_type)) {
       GELOGE(GRAPH_PARAM_INVALID,
@@ -1599,14 +1600,14 @@ graphStatus OpDescImpl::TryInferDataTypeFromDynamicInput(const string &ir_input_
     const auto dtype_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
     if (dtype_symbol.symbol_type == DataTypeSymbolType::kListTensorType) {
       for (size_t i = 0U; i < instance_num; ++i) {
-        auto input_desc = GetInputDescPtr(start_index + i);
+        const auto input_desc = GetInputDescPtr(static_cast<uint32_t>(start_index + i));
         GE_CHECK_NOTNULL(input_desc);
         dst_types.emplace_back(input_desc->GetDataType());
       }
     } else {
-      auto input_desc = GetInputDescPtr(start_index);
+      const auto input_desc = GetInputDescPtr(static_cast<uint32_t>(start_index));
       GE_CHECK_NOTNULL(input_desc);
-      dst_types.insert(dst_types.cend(), instance_num, input_desc->GetDataType());
+      (void) dst_types.insert(dst_types.cend(), instance_num, input_desc->GetDataType());
     }
   }
   return GRAPH_SUCCESS;
@@ -1645,7 +1646,7 @@ DataTypeInferStrategy OpDescImpl::GetDataTypeInferStrategy(const string &datatyp
   return DataTypeInferStrategy::kInvalidStrategy;
 }
 graphStatus OpDescImpl::InferDataTypeForOutput(const std::string &ir_output, std::vector<DataType> &dst_types) {
-  auto output_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetOutputDataTypeSymbol(ir_output);
+  const auto output_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetOutputDataTypeSymbol(ir_output);
   if (output_symbol.empty()) {
     GELOGE(GRAPH_PARAM_INVALID, "Op %s output %s has no dtype symbol. Please check IR.", this->GetName().c_str(),
            ir_output.c_str());
@@ -1706,13 +1707,13 @@ graphStatus OpDescImpl::CollectInputDataTypeBySymbol(std::unordered_map<std::str
             break;
           }
           // if dtype symbol ListTensorType, ignore collect
-          auto dynamic_dtype_symbol = this->GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
+          const auto dynamic_dtype_symbol = GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
           if (dynamic_dtype_symbol.symbol_type == DataTypeSymbolType::kListTensorType) {
             break;
           }
           input_desc = this->GetInputDescPtr(ir_input + "0");
           GE_CHECK_NOTNULL(input_desc);
-          symbol_2_input_dtype.emplace(dtype_symbol, input_desc->GetDataType());
+          (void) symbol_2_input_dtype.emplace(dtype_symbol, input_desc->GetDataType());
           break;
         }
         default: {
@@ -1739,7 +1740,7 @@ graphStatus OpDescImpl::VerifyInputDataTypeConsistent(const std::unordered_map<s
       const auto ir_input_type = this->GetIRMeta().GetIrInputType(ir_input);
       switch (ir_input_type) {
         case kIrInputRequired: {
-          auto input_desc = this->GetInputDescPtr(ir_input);
+          const auto input_desc = this->GetInputDescPtr(ir_input);
           GE_CHECK_NOTNULL(input_desc);
           if (input_desc->GetDataType() != expect_data_type) {
             GELOGE(GRAPH_PARAM_INVALID, "Node %s input desc %s datatype is %s, not fit with IR.",
@@ -1770,7 +1771,7 @@ graphStatus OpDescImpl::VerifyInputDataTypeConsistent(const std::unordered_map<s
             break;
           }
           // check dtype symbol should not as ListTensorType
-          auto dynamic_dtype_symbol = this->GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
+          const auto dynamic_dtype_symbol = GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
           if (dynamic_dtype_symbol.symbol_type == DataTypeSymbolType::kListTensorType) {
             GELOGE(GRAPH_PARAM_INVALID,
                    "Op %s dynamic ir_input %s is ListTensor, but share same datatype symbol %s with other input. "
@@ -1785,7 +1786,7 @@ graphStatus OpDescImpl::VerifyInputDataTypeConsistent(const std::unordered_map<s
               GELOGE(GRAPH_PARAM_INVALID, "Input name %s is not exist.", ir_input.c_str());
               return GRAPH_PARAM_INVALID;
             }
-            const auto input_desc = this->GetInputDescPtr(input_idx);
+            const auto input_desc = this->GetInputDescPtr(static_cast<uint32_t>(input_idx));
             GE_CHECK_NOTNULL(input_desc);
             if (input_desc->GetDataType() != expect_data_type) {
               GELOGE(GRAPH_PARAM_INVALID, "Node %s input desc %s datatype is %s, not fit with IR.",
@@ -1808,7 +1809,7 @@ graphStatus OpDescImpl::VerifyInputDataTypeInRange(const std::unordered_map<std:
   for (const auto &symbol_2_dtype : symbol_2_input_dtype) {
     const auto &dtype_symbol = symbol_2_dtype.first;
     const auto data_type = symbol_2_dtype.second;
-    auto dtype_symbol_validator = this->GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
+    const auto dtype_symbol_validator = this->GetIRMeta().GetIRDataTypeSymbolStore().GetSymbolValidator(dtype_symbol);
     if (dtype_symbol_validator.symbol_type == DataTypeSymbolType::kInvalidTensorType) {
       continue;
     }
@@ -1839,7 +1840,7 @@ graphStatus OpDescImpl::InferDataTypeForOutputs(const OpDescPtr &op_desc) {
           GELOGE(GRAPH_FAILED, "Fail to infer datatype");
           return GRAPH_FAILED;
         }
-        auto output_desc = MutableOutputDesc(output_index);
+        auto output_desc = MutableOutputDesc(static_cast<uint32_t>(output_index));
         GE_CHECK_NOTNULL(output_desc);
         output_desc->SetDataType(dst_types[0]);
         break;
