@@ -809,6 +809,7 @@ Status Run(ge::ComputeGraph &graph, std::shared_ptr<BufferFusionPassBase> &pass)
 
     std::vector<ge::NodePtr> fusion_nodes;
     EXPECT_EQ(fe::SUCCESS, pass->GetFusionNodes(mapping, fusion_nodes));
+    EXPECT_EQ(fe::NOT_CHANGED, pass->GetMixl2FusionNodes(mapping, fusion_nodes));
 
 //    OpCalcInfo op_slice_info;
 //    pass->CalcFusionOpSliceInfo(fusion_nodes, op_slice_info);

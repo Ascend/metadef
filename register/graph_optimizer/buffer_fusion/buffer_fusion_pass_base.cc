@@ -35,6 +35,11 @@ Status BufferFusionPassBase::GetFusionNodes(const BufferFusionMapping &mapping,
   return SUCCESS;
 }
 
+Status BufferFusionPassBase::GetMixl2FusionNodes(const BufferFusionMapping &mapping,
+                                                 std::vector<ge::NodePtr> &fusion_nodes) {
+  return NOT_CHANGED;
+}
+
 Status BufferFusionPassBase::PostFusion(const ge::NodePtr &fused_node) {
   return SUCCESS;
 }
