@@ -382,5 +382,5 @@ TEST_F(LoweringGlobalDataUT, SinkWeightInfoTest) {
   gd.SetModelWeightSize(weight_info);
   auto result = gd.GetModelWeightSize();
   EXPECT_EQ(result, weight_info);
-
+}
 }  // namespace gert
