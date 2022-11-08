@@ -226,10 +226,10 @@ bg::ValueHolderPtr LoweringGlobalData::GetUniqueValueHolder(const string &name) 
   return iter->second[0];
 }
 
-void LoweringGlobalData::SetSinkWeightInfo(SinkWeightInfo &sink_weight_info) {
-  sink_weight_info_ = sink_weight_info;
+void LoweringGlobalData::SetModelWeightSize(const size_t require_weight_size) {
+  model_weight_size_ = require_weight_size;
 }
-const LoweringGlobalData::SinkWeightInfo LoweringGlobalData::GetSinkWeightInfo() const {
-  return sink_weight_info_;
+size_t LoweringGlobalData::GetModelWeightSize() const {
+  return model_weight_size_;
 }
 }  // namespace gert
