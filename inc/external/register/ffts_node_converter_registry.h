@@ -25,11 +25,11 @@
 #include "exe_graph/lowering/lowering_global_data.h"
 
 namespace gert {
-using ThreadFunc = std::vector<bg::ValueHolderPtr> (*)(const ge::NodePtr &node,
+using PreThreadFunc = std::function<std::vector<bg::ValueHolderPtr>(const ge::ComputeGraphPtr sub_graph,
+    const std::vector<bg::ValueHolderPtr> &input_shapes)>;
+  using ThreadFunc = std::function<std::vector<bg::ValueHolderPtr>(const ge::NodePtr &node,
     const std::vector<bg::ValueHolderPtr> &input_shapes,
-    const std::vector<bg::ValueHolderPtr> &output_shapes, const bg::ValueHolderPtr thread_dim);
-using PreThreadFunc = std::vector<bg::ValueHolderPtr> (*)(const ge::ComputeGraphPtr sub_graph,
-    const std::vector<bg::ValueHolderPtr> &input_shapes);
+    const std::vector<bg::ValueHolderPtr> &output_shapes, const bg::ValueHolderPtr thread_dim)>;
 struct FFTSLowerInput {
   std::vector<bg::ValueHolderPtr> input_shapes;
   std::vector<bg::ValueHolderPtr> input_addrs;
