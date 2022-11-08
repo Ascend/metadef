@@ -395,7 +395,7 @@ TEST_F(ge_test_tensor_utils, GetTensorMemorySizeInBytes_SUCCESS) {
 TEST_F(ge_test_tensor_utils, GetTensorMemorySizeInBytes_FAILED) {
   vector<int64_t> dims({2, 3, 4, 5});
   GeShape ge_shape(dims);
-  Format format;
+  Format format = FORMAT_RESERVED;
   DataType data_type;
   GeTensorDesc tensorDesc(ge_shape, format, data_type);
   int64_t size;
