@@ -61,6 +61,7 @@ class KernelRegister {
  public:
   explicit KernelRegister(const char *kernel_type);
   KernelRegister(const KernelRegister &other);
+  ~KernelRegister();
   KernelRegister &operator=(const KernelRegister &other) = default;
 
   KernelRegister &RunFunc(KernelRegistry::KernelFunc func);
