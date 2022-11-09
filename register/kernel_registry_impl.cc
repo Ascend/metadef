@@ -68,6 +68,7 @@ KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_ty
   kernel_funcs_.outputs_initializer = NullDestoryer;
   kernel_funcs_.trace_printer = nullptr;
 }
+KernelRegister::~KernelRegister() {}
 KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
   kernel_funcs_.run_func = func;
   return *this;
