@@ -441,6 +441,8 @@ message FftsPlusAicAivCtxDef {
     repeated string kernel_name = 24;
 
     repeated uint32 src_slot = 25;  // len = 4, context ID for source data which is out of subgraph
+    uint32 policy_pri = 26;
+    uint32 thread_window_size = 27;
 }
 
 // mix aic/aiv context
@@ -481,6 +483,8 @@ message FftsPlusMixAicAivCtxDef {
     uint32 input_output_count = 26;
     uint32 save_task_addr = 27;
     repeated uint32 src_slot = 28;  // len = 4, context ID for source data which is out of subgraph
+    uint32 policy_pri = 29;
+    uint32 thread_window_size = 30;
 }
 
 // sdma context
