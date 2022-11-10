@@ -34,19 +34,17 @@ class LoweringGlobalData {
   };
   const bg::ValueHolderPtr &GetStream() const;
   LoweringGlobalData &SetStream(bg::ValueHolderPtr &&stream);
-  LoweringGlobalData &SetStream(bg::ValueHolderPtr &&stream, ExecuteGraphType graph_type);
+  LoweringGlobalData &SetStream(bg::ValueHolderPtr &&stream, const ExecuteGraphType graph_type);
 
   const NodeCompileResult *FindCompiledResult(const ge::NodePtr &node) const;
   LoweringGlobalData &AddCompiledResult(const ge::NodePtr &node, NodeCompileResult compile_result);
 
-  void *FindKnownSubgraphModel(const ge::NodePtr &node) const;
-  LoweringGlobalData &AddKnownSubgraphModel(const ge::NodePtr &node, void *const model);
   void *GetGraphStaticCompiledModel(const std::string &graph_name) const;
   LoweringGlobalData &AddStaticCompiledGraphModel(const std::string &graph_name, void *const model);
 
-  bg::ValueHolderPtr GetAllocator(AllocatorDesc desc) const;
+  bg::ValueHolderPtr GetAllocator(const AllocatorDesc &desc) const;
   LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator);
-  LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator, ExecuteGraphType graph_type);
+  LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator, const ExecuteGraphType graph_type);
   bg::ValueHolderPtr GetOrCreateAllocator(AllocatorDesc desc);
 
   uint64_t GetSessionId();

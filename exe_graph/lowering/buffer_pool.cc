@@ -28,7 +28,7 @@
 
 namespace gert {
 namespace bg {
-BufferPool::BufId BufferPool::AddBuf(const uint8_t *data, size_t len) {
+BufferPool::BufId BufferPool::AddBuf(const uint8_t *data, const size_t len) {
   return AddBuf(std::string(ge::PtrToPtr<uint8_t, char>(data), len));
 }
 BufferPool::BufId BufferPool::AddStr(const char *data) {
@@ -43,7 +43,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize() const {
 }
 std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
   total_size = sizeof(ContinuousBuffer);
-  size_t buf_count = bufs_to_id_.size();
+  const size_t buf_count = bufs_to_id_.size();
   size_t offset_size;
   size_t text_offset;
   // 申请了n个，但是使用时会用n+1个，多的一个由ContinuousText自带
@@ -78,7 +78,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
   text->reserved_ = 0;
   size_t i = 0;
   for (; i < buf_count; ++i) {
-    auto buf = ids_to_buf[i];
+    const auto buf = ids_to_buf[i];
     if (buf == nullptr) {
       GELOGE(ge::FAILED, "Failed to serialize text pool, miss buf id %zu", i);
       return nullptr;
@@ -91,16 +91,13 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
 
   return text_holder;
 }
-const char *BufferPool::GetBufById(BufId id) const {
+const char *BufferPool::GetBufById(const BufId id) const {
   for (const auto &buf_and_id : bufs_to_id_) {
     if (buf_and_id.second == id) {
       return buf_and_id.first.c_str();
     }
   }
   return nullptr;
-}
-size_t BufferPool::GetSize() const {
-  return bufs_to_id_.size();
 }
 }  // namespace bg
 }  // namespace gert

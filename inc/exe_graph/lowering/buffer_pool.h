@@ -26,14 +26,12 @@ class BufferPool {
  public:
   using BufId = size_t;
   BufId AddStr(const char *data);
-  BufId AddBuf(const uint8_t *data, size_t len);
+  BufId AddBuf(const uint8_t *data, const size_t len);
   std::unique_ptr<uint8_t[]> Serialize(size_t &total_size) const;
   std::unique_ptr<uint8_t[]> Serialize() const;
 
-  size_t GetSize() const;
-
   // very slow, only use in UT
-  const char *GetBufById(BufId id) const;
+  const char *GetBufById(const BufId id) const;
 
  private:
   BufId AddBuf(std::string &&str);

@@ -76,7 +76,7 @@ ge::graphStatus GetConnectedEdgeIndexesToAnchorIndexMap(const ge::NodePtr &node,
 
 ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
   std::map<size_t, size_t> connected_edge_indexes_to_anchor_index;
-  auto ret = GetConnectedEdgeIndexesToAnchorIndexMap(node, connected_edge_indexes_to_anchor_index);
+  const auto ret = GetConnectedEdgeIndexesToAnchorIndexMap(node, connected_edge_indexes_to_anchor_index);
   if (ret != ge::GRAPH_SUCCESS) {
     GELOGE(ret, "get connected edge indexes to anchor index map failed. node:%s(%s)",
            node->GetName().c_str(), node->GetType().c_str());
@@ -89,7 +89,7 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
     if (desc_need_check.IsValid() != ge::GRAPH_SUCCESS) {
       continue;
     }
-    auto desc = node->GetOpDesc()->GetInputDescPtr(connected_edge_indexes_to_anchor_index[i]);
+    const auto desc = node->GetOpDesc()->GetInputDescPtr(connected_edge_indexes_to_anchor_index[i]);
     GE_ASSERT_NOTNULL(desc);
     auto td = compute_node_info.MutableInputTdInfo(i);
     GE_ASSERT_NOTNULL(td);
@@ -129,9 +129,9 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
                                                      const ge::NodePtr &node,
                                                      BufferPool &buffer_pool,
                                                      size_t &total_size) {
-  auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
-  auto input_num = node->GetInDataNodesAndAnchors().size();
-  auto output_num = node->GetAllOutDataAnchorsSize();
+  const auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
+  const auto input_num = node->GetInDataNodesAndAnchors().size();
+  const auto output_num = node->GetAllOutDataAnchorsSize();
   GELOGD("node: %s(%s), ir_input_num:%zu, input_num:%zu, output_num:%u",
          node->GetName().c_str(), node->GetType().c_str(), ir_input_num, input_num, output_num);
   GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size));
@@ -153,7 +153,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
   GE_ASSERT_SUCCESS(ret, "Init compile time tensor desc for node:%s failed.", node->GetName().c_str());
 
   auto attr = compute_node_info->MutableAttrs();
-  auto offset = ge::PtrToPtr<RuntimeAttrs, uint8_t>(attr) - compute_node_info_holder.get();
+  const auto offset = ge::PtrToPtr<RuntimeAttrs, uint8_t>(attr) - compute_node_info_holder.get();
   if (static_cast<size_t>(offset) > total_size) {
     GELOGE(
         ge::FAILED,
@@ -169,7 +169,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
 
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool, size_t &total_size) {
   size_t attr_size;
-  auto attr_buf = CreateAttrBuffer(node, attr_size);
+  const auto attr_buf = CreateAttrBuffer(node, attr_size);
   GE_ASSERT_NOTNULL(attr_buf, "Create attr buffer for node: %s failed", node->GetName().c_str());
   return CreateComputeNodeInfoImpl(attr_buf, attr_size, node, buffer_pool, total_size);
 }
@@ -181,7 +181,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node,
   std::vector<ge::AnyValue> runtime_attrs_list;
   GE_ASSERT_TRUE(GetPrivateAttrsList(node, private_attrs, runtime_attrs_list));
   size_t attr_size;
-  auto attr_buf = CreateAttrBuffer(node, runtime_attrs_list, attr_size);
+  const auto attr_buf = CreateAttrBuffer(node, runtime_attrs_list, attr_size);
   GE_ASSERT_NOTNULL(attr_buf, "Create attr buffer for node: %s failed", node->GetName().c_str());
   return CreateComputeNodeInfoImpl(attr_buf, attr_size, node, buffer_pool, total_size);
 }

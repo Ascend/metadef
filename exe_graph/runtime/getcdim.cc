@@ -58,16 +58,16 @@ namespace gert {
       td = compute_node_info->GetOutputTdInfo(index);
       storage_shape = kernel_context->GetOutputPointer<StorageShape>(index);
     }
-    if (td == nullptr || storage_shape == nullptr) {
+    if ((td == nullptr) || (storage_shape == nullptr)) {
       return -1;
     }
-    auto original_format = td->GetOriginFormat();
-    auto iter = CDIM_INDEX_OF_FORMAT.find(original_format);
-    if (iter == CDIM_INDEX_OF_FORMAT.end()) {
+    const auto original_format = td->GetOriginFormat();
+    const auto iter = CDIM_INDEX_OF_FORMAT.find(original_format);
+    if (iter == CDIM_INDEX_OF_FORMAT.cend()) {
       return -1;
     }
     Shape &origin_shape = storage_shape->MutableOriginShape();
-    auto expend_dims = td->GetExpandDimsType();
+    const auto expend_dims = td->GetExpandDimsType();
     Shape expand_shape;
     (void)expend_dims.Expand(origin_shape, expand_shape);
 

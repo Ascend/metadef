@@ -123,8 +123,10 @@ class ValueHolder {
   static void AddRelevantInputNode(const ge::NodePtr &node);
   static std::unique_ptr<CurrentComputeNodeGuarder> SetScopedCurrentComputeNode(const ge::NodePtr &node);
 
-  static NodeHolderPtr AddNode(const ge::char_t *node_type, size_t input_count, size_t output_count, GraphFrame &frame);
-  static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node, size_t start_index, size_t create_count);
+  static NodeHolderPtr AddNode(const ge::char_t *node_type, size_t input_count,
+    size_t output_count, const GraphFrame &frame);
+  static std::vector<ValueHolderPtr> CreateFromNode(const NodeHolderPtr &node,
+    size_t start_index, size_t create_count);
   static ValueHolderPtr CreateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type);
   static std::string GenerateNodeName(const ge::char_t *node_type, const GraphFrame &frame);
 
