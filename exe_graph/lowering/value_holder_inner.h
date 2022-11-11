@@ -25,7 +25,6 @@ namespace bg {
 void SetCurrentFrame(GraphFrame *frame);
 GraphFrame *GetCurrentFrame();
 std::deque<std::unique_ptr<GraphFrame>> &GetGraphFrames();
-int64_t GenerateNodeId();
 }  // namespace bg
 }  // namespace gert
 #endif  // METADEF_CXX_EXE_GRAPH_LOWERING_VALUE_HOLDER_INNER_H_

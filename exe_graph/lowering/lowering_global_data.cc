@@ -24,7 +24,7 @@ namespace {
 bool CurrentOnInitGraph() {
   ge::NodePtr subgraph_node = nullptr;
   auto current_graph = bg::ValueHolder::GetCurrentGraph();
-  while (current_graph != nullptr && current_graph->GetParentNode() != nullptr) {
+  while ((current_graph != nullptr) && (current_graph->GetParentNode() != nullptr)) {
     subgraph_node = current_graph->GetParentNode();
     current_graph = subgraph_node->GetOwnerComputeGraph().get();
   }
@@ -46,7 +46,7 @@ const bg::ValueHolderPtr &LoweringGlobalData::GetStream() const {
 LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream) {
   return SetStream(std::move(stream), ExecuteGraphType::kMain);
 }
-LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream, ExecuteGraphType graph_type) {
+LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream, const ExecuteGraphType graph_type) {
   if (graph_type >= ExecuteGraphType::kNum) {
     return *this;
   }
@@ -54,7 +54,7 @@ LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream, E
   return *this;
 }
 const LoweringGlobalData::NodeCompileResult *LoweringGlobalData::FindCompiledResult(const ge::NodePtr &node) const {
-  auto iter = node_name_to_compile_result_holders_.find(node->GetName());
+  const auto iter = node_name_to_compile_result_holders_.find(node->GetName());
   if (iter == node_name_to_compile_result_holders_.end()) {
     return nullptr;
   }
@@ -66,26 +66,12 @@ LoweringGlobalData &LoweringGlobalData::AddCompiledResult(const ge::NodePtr &nod
   return *this;
 }
 
-void *LoweringGlobalData::FindKnownSubgraphModel(const ge::NodePtr &node) const {
-  const std::map<int64_t, void *>::const_iterator iter =
-      node_ids_to_known_subgraph_models_.find(node->GetOpDesc()->GetId());
-  if (iter == node_ids_to_known_subgraph_models_.cend()) {
-    return nullptr;
-  }
-  return iter->second;
-}
-
 void *LoweringGlobalData::GetGraphStaticCompiledModel(const std::string &graph_name) const {
-  auto iter = graph_to_static_models_.find(graph_name);
+  const auto iter = graph_to_static_models_.find(graph_name);
   if (iter == graph_to_static_models_.cend()) {
     return nullptr;
   }
   return iter->second;
-}
-
-LoweringGlobalData &LoweringGlobalData::AddKnownSubgraphModel(const ge::NodePtr &node, void *const model) {
-  node_ids_to_known_subgraph_models_[node->GetOpDesc()->GetId()] = model;
-  return *this;
 }
 
 LoweringGlobalData &LoweringGlobalData::AddStaticCompiledGraphModel(const std::string &graph_name, void *const model) {
@@ -93,7 +79,7 @@ LoweringGlobalData &LoweringGlobalData::AddStaticCompiledGraphModel(const std::s
   return *this;
 }
 
-bg::ValueHolderPtr LoweringGlobalData::GetAllocator(AllocatorDesc desc) const {
+bg::ValueHolderPtr LoweringGlobalData::GetAllocator(const AllocatorDesc &desc) const {
   if (CurrentOnInitGraph()) {
     return GetUniqueValueHolder(desc.GetKey() + "-Init");
   } else {
@@ -104,7 +90,7 @@ LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr 
   return SetExternalAllocator(std::move(allocator), ExecuteGraphType::kMain);
 }
 LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr &&allocator,
-                                                             ExecuteGraphType graph_type) {
+                                                             const ExecuteGraphType graph_type) {
   if (graph_type >= ExecuteGraphType::kNum) {
     return *this;
   }
@@ -134,13 +120,13 @@ LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr 
  * |   +-------------------------+----------+                         |
  * +------------------------------------------------------------------+
  */
-bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) {
-  auto key = desc.GetKey();
-  auto from_init = CurrentOnInitGraph();
+bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(const AllocatorDesc desc) {
+  const auto key = desc.GetKey();
+  const auto from_init = CurrentOnInitGraph();
 
   bg::ValueHolderPtr allocator_holder;
   if (from_init) {
-    auto init_key = key + "-Init";
+    const auto init_key = key + "-Init";
     allocator_holder = GetUniqueValueHolder(init_key);
   } else {
     allocator_holder = GetUniqueValueHolder(key);
@@ -194,8 +180,8 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(AllocatorDesc desc) 
 }
 
 uint64_t LoweringGlobalData::GetSessionId() {
-  static std::atomic<uint64_t> global_session_id(0U);
   if (session_id_ == std::numeric_limits<uint64_t>::max()) {
+    static std::atomic<uint64_t> global_session_id(0U);
     session_id_ = global_session_id++;
   }
   return session_id_;

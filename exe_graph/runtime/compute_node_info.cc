@@ -17,8 +17,8 @@
 #include "exe_graph/runtime/compute_node_info.h"
 #include "common/checker.h"
 namespace gert {
-ge::graphStatus ComputeNodeInfo::CalcSize(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num,
-                                          size_t &total_size) {
+ge::graphStatus ComputeNodeInfo::CalcSize(const size_t ir_inputs_num, const size_t inputs_num,
+                                          const size_t outputs_num, size_t &total_size) {
   size_t ir_inputs_size;
   size_t inputs_size;
   size_t outputs_size;
@@ -34,7 +34,7 @@ ge::graphStatus ComputeNodeInfo::CalcSize(size_t ir_inputs_num, size_t inputs_nu
 
   return ge::GRAPH_SUCCESS;
 }
-void ComputeNodeInfo::Init(size_t ir_inputs_num, size_t inputs_num, size_t outputs_num,
+void ComputeNodeInfo::Init(const size_t ir_inputs_num, const size_t inputs_num, const size_t outputs_num,
                            const char *node_name, const char *node_type) {
   ir_inputs_num_ = ir_inputs_num;
   inputs_num_ = inputs_num;
@@ -43,13 +43,13 @@ void ComputeNodeInfo::Init(size_t ir_inputs_num, size_t inputs_num, size_t outpu
   node_type_ = node_type;
   reserved_ = 0;
 }
-AnchorInstanceInfo *ComputeNodeInfo::MutableInputInstanceInfo(size_t ir_index) const {
+AnchorInstanceInfo *ComputeNodeInfo::MutableInputInstanceInfo(const size_t ir_index) const {
   return const_cast<AnchorInstanceInfo *>(GetInputInstanceInfo(ir_index));
 }
-CompileTimeTensorDesc *ComputeNodeInfo::MutableInputTdInfo(size_t index) const {
+CompileTimeTensorDesc *ComputeNodeInfo::MutableInputTdInfo(const size_t index) const {
   return const_cast<CompileTimeTensorDesc *>(GetInputTdInfo(index));
 }
-CompileTimeTensorDesc *ComputeNodeInfo::MutableOutputTdInfo(size_t index) const {
+CompileTimeTensorDesc *ComputeNodeInfo::MutableOutputTdInfo(const size_t index) const {
   return const_cast<CompileTimeTensorDesc *>(GetOutputTdInfo(index));
 }
 RuntimeAttrs *ComputeNodeInfo::MutableAttrs() const {

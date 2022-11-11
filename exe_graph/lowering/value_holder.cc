@@ -256,7 +256,7 @@ std::string ValueHolder::GenerateNodeName(const char *node_type, const GraphFram
   return node_name.str();
 }
 ValueHolder::NodeHolderPtr ValueHolder::AddNode(const char *node_type, size_t input_count, size_t output_count,
-                                                GraphFrame &frame) {
+                                                const GraphFrame &frame) {
   auto &graph = frame.GetExeGraph();
   GE_ASSERT_NOTNULL(graph);
 
