@@ -351,8 +351,7 @@ void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error
     }
   }
   err_stream << current_code_print << ": Inner Error!" << std::endl;
-  // Display the first non 8888 error code
-  for (auto &item : error_messages) {
+  for (auto &item : error_messages) {  // Display the first non 8888 error code
     if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
       err_stream << "        " << item.error_message << std::endl;
       continue;

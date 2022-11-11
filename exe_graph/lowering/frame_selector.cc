@@ -95,11 +95,11 @@ ge::graphStatus GetNewOutIndexes(const std::vector<ValueHolderPtr> &init_graph_o
   return ge::GRAPH_SUCCESS;
 }
 ge::graphStatus ConnectOut(const ge::NodePtr &init_node,
-                           GraphFrame *root_frame,
-                           GraphFrame *init_frame,
+                           GraphFrame &root_frame,
+                           GraphFrame &init_frame,
                            const std::vector<ValueHolderPtr> &init_graph_outputs,
                            std::vector<ValueHolderPtr> &init_node_outputs) {
-  auto netoutput = GetOrCreateInnerNetOutput(*init_frame);
+  auto netoutput = GetOrCreateInnerNetOutput(init_frame);
   GE_ASSERT_NOTNULL(netoutput);
   auto index = netoutput->GetAllInDataAnchorsSize();
 
@@ -129,7 +129,7 @@ ge::graphStatus ConnectOut(const ge::NodePtr &init_node,
   }
 
   GE_ASSERT_SUCCESS(ge::NodeUtils::AppendOutputAnchor(init_node, index + new_out_num));
-  GE_ASSERT_SUCCESS(MoveGuardersToDeInit(init_node, *root_frame, guarders_and_out_index));
+  GE_ASSERT_SUCCESS(MoveGuardersToDeInit(init_node, root_frame, guarders_and_out_index));
 
   for (size_t i = 0U; i < init_graph_outputs.size(); ++i) {
     init_node_outputs[i]->SetPlacement(init_graph_outputs[i]->GetPlacement());
@@ -219,7 +219,7 @@ ge::graphStatus FrameSelector::OnInitRoot(const std::function<std::vector<ValueH
   ScopedCurrentFrame frame_guarder(tmp_init_frame.get());
   init_graph_outputs = builder();
   if (!init_graph_outputs.empty()) {
-    return ConnectOut(init_node, root_frame, tmp_init_frame.get(), init_graph_outputs, init_node_outputs);
+    return ConnectOut(init_node, *root_frame, *tmp_init_frame, init_graph_outputs, init_node_outputs);
   }
   return ge::GRAPH_SUCCESS;
 }
