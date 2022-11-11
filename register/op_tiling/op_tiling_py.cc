@@ -74,14 +74,6 @@ struct ContextComponent {
   bool atomic_flag = true;
 };
 
-bool EnableGert() {
-  const char *const enable_gert = std::getenv("ENABLE_RUNTIME_V2");
-  if (enable_gert == nullptr) {
-    return false;
-  }
-  return true;
-}
-
 bool FindImplFuncs(const char *op_type, const gert::OpImplRegistry::OpImplFunctions *&funcs) {
     funcs = gert::OpImplRegistry::GetInstance().GetOpImpl(op_type);
     if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
@@ -1268,12 +1260,7 @@ extern "C" int TbeOpTilingPyInterfaceOld(const char *optype, const char *compile
   auto iter = op_func_map.find(optype);
   if (iter == op_func_map.end()) {
     GELOGI("Op tiling function is not found by op type[%s].", optype);
-    iter = op_func_map.find(OP_TYPE_AUTO_TILING);
-    if (iter == op_func_map.end()) {
-      GELOGI("Optiling func of op type[%s] is not found by Autotiling.", optype);
-      REPORT_CALL_ERROR("E19999", "Optiling func is not found. op_type:%s", optype);
-      return static_cast<int32_t>(ge::GRAPH_FAILED);
-    }
+    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs);
   }
   OpTilingFuncInfo &op_func_info = iter->second;
   int ret = 0;
@@ -1310,14 +1297,8 @@ extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_in
     return 0;
   }
 
-  // compatible some non-switching auto tiling, which will be deleted
-  if (EnableGert()) {
-    GELOGD("New tiling interface based gert");
-    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs);
-  } else {
-    return TbeOpTilingPyInterfaceOld(optype, compile_info, compile_info_hash, inputs, outputs, attrs, run_info_json,
-                                     run_info_len, elapse);
-  }
+  return TbeOpTilingPyInterfaceOld(optype, compile_info, compile_info_hash, inputs, outputs, attrs, run_info_json,
+                                   run_info_len, elapse);
 }
 
 extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile_info, const char *inputs,
