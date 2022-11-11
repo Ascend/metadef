@@ -1073,7 +1073,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
 }
 
 namespace {
-using InNodesToOut = std::unordered_map<NodePtr, std::unordered_set<NodePtr>>;
+using InNodesToOut = std::map<NodePtr, std::vector<NodePtr>, NodeCompareKey>;
 
 inline std::string GetNodeNameByAnchor(const Anchor *const anchor) {
   if (anchor == nullptr) {
@@ -1116,7 +1116,7 @@ graphStatus ReplaceOutDataAnchor(const OutDataAnchorPtr &new_anchor, const OutDa
     }
 
     if (in_nodes_to_out != nullptr) {
-      (void)(*in_nodes_to_out)[new_node].insert(peer_in_anchor->GetOwnerNode());
+      (void)(*in_nodes_to_out)[new_node].emplace_back(peer_in_anchor->GetOwnerNode());
     }
   }
   return GRAPH_SUCCESS;
@@ -1205,10 +1205,10 @@ InNodesToOut GetFullConnectIONodes(const NodePtr &node) {
   }
   const auto in_nodes_list = node->GetInNodes();
   auto out_nodes_list = node->GetOutNodes();
-  auto out_nodes = std::unordered_set<NodePtr>(out_nodes_list.begin(), out_nodes_list.end());
+  auto out_nodes = std::vector<NodePtr>(out_nodes_list.begin(), out_nodes_list.end());
 
   for (const auto &in_node : in_nodes_list) {
-    (void)in_nodes_to_out.insert(std::make_pair(in_node, out_nodes));
+    (void)in_nodes_to_out.emplace(in_node, out_nodes);
   }
   return in_nodes_to_out;
 }
@@ -1222,7 +1222,7 @@ graphStatus RelinkControlNodeIfNeed(const NodePtr &node, const InNodesToOut &in_
     auto &connected_data_out = connected_data_in_to_out[in_node];
     for (const auto &out_node : in_node_to_out.second) {
       GE_CHECK_NOTNULL(out_node);
-      if (connected_data_out.count(out_node) == 0UL) {
+      if (std::find(connected_data_out.begin(), connected_data_out.end(), out_node) == connected_data_out.end()) {
         GE_CHECK_NOTNULL(in_node->GetOutControlAnchor());
         if (in_node->GetOutControlAnchor()->IsLinkedWith(out_node->GetInControlAnchor())) {
           continue;

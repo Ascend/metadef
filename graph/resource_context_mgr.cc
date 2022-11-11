@@ -40,7 +40,7 @@ graphStatus ResourceContextMgr::RegisterNodeReliedOnResource(const std::string &
   return GRAPH_SUCCESS;
 }
 
-std::unordered_set<NodePtr> &ResourceContextMgr::MutableNodesReliedOnResource(const std::string &resource_key) {
+OrderedNodeSet &ResourceContextMgr::MutableNodesReliedOnResource(const std::string &resource_key) {
   const std::lock_guard<std::mutex> lk(ctx_mu_);
   return resource_keys_to_read_nodes_[resource_key];
 }
