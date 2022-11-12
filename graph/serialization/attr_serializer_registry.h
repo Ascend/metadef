@@ -22,7 +22,7 @@
 #include <map>
 
 #include "graph/type_utils.h"
-#include "attr_serializer.h"
+#include "ge_ir_attr_serializer.h"
 
 #define REG_GEIR_SERIALIZER(serializer_name, cls, obj_type, bin_type)                              \
     REG_GEIR_SERIALIZER_BUILDER_UNIQ_HELPER(serializer_name, __COUNTER__, cls, obj_type, bin_type)
@@ -75,7 +75,7 @@ class AttrSerializerRegistrar {
  public:
   AttrSerializerRegistrar(const GeIrAttrSerializerBuilder builder,
                           const TypeId obj_type,
-                          const proto::AttrDef::ValueCase proto_type);
+                          const proto::AttrDef::ValueCase proto_type) noexcept;
   ~AttrSerializerRegistrar() = default;
 };
 }  // namespace ge

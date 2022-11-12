@@ -17,7 +17,7 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_GE_TENSOR_DESC_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_GE_TENSOR_DESC_SERIALIZER_H_
 
-#include "attr_serializer.h"
+#include "ge_ir_attr_serializer.h"
 #include "attr_serializer_registry.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/ge_tensor.h"
@@ -25,7 +25,7 @@
 namespace ge {
 class TensorDescSerializer : public GeIrAttrSerializer {
  public:
-  TensorDescSerializer() = default;
+  TensorDescSerializer() noexcept = default;
   graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
   graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 };

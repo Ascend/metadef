@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "attr_serializer.h"
+#include "ge_ir_attr_serializer.h"
 
 namespace ge {
 }

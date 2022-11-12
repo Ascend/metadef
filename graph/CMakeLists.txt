@@ -62,7 +62,7 @@ set(GRAPH_SOURCE_LIST
     "utils/transformer_utils.cc"
     "utils/file_utils.cc"
     "resource_context_mgr.cc"
-    "serialization/attr_serializer.cc"
+    "serialization/ge_ir_attr_serializer.cc"
     "serialization/string_serializer.cc"
     "serialization/data_type_serializer.cc"
     "serialization/named_attrs_serializer.cc"

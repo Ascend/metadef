@@ -17,7 +17,7 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_LIST_LIST_FLOAT_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_LIST_LIST_FLOAT_SERIALIZER_H_
 
-#include "attr_serializer.h"
+#include "ge_ir_attr_serializer.h"
 #include "attr_serializer_registry.h"
 namespace ge {
 class ListListFloatSerializer : public GeIrAttrSerializer {

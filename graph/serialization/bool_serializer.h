@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_BOOL_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_BOOL_SERIALIZER_H_
 
-#include "attr_serializer.h"
+#include "ge_ir_attr_serializer.h"
 #include "attr_serializer_registry.h"
 namespace ge {
 class BoolSerializer : public GeIrAttrSerializer {

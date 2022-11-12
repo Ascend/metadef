@@ -19,12 +19,12 @@
 
 #include "attr_serializer_registry.h"
 #include "graph/ge_tensor.h"
-#include "attr_serializer.h"
+#include "ge_ir_attr_serializer.h"
 
 namespace ge {
 class TensorSerializer : public GeIrAttrSerializer {
  public:
-  TensorSerializer() = default;
+  TensorSerializer() noexcept = default;
   graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
   graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 };
