@@ -16,6 +16,8 @@
 
 #include "graph/model_serialize.h"
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #include <queue>
 #include <iostream>
@@ -799,9 +801,11 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) co
 #endif
   GE_CHK_BOOL_ONLY_LOG(buffer.GetSize() != 0UL, "get size failed");
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  const auto ret = model_def.SerializeToArray(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
-  if (!ret) {
-    GELOGW("[Serialize][Model] Serialize to array failed");
+  google::protobuf::io::ArrayOutputStream array_stream(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
+  google::protobuf::io::CodedOutputStream output_stream(&array_stream);
+  output_stream.SetSerializationDeterministic(true);
+  if (!model_def.SerializeToCodedStream(&output_stream)) {
+    GELOGW("[Serialize][Model] Serialize to binary failed");
     return Buffer();
   }
   return buffer;
