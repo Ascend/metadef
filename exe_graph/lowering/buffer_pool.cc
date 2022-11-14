@@ -99,5 +99,8 @@ const char *BufferPool::GetBufById(const BufId id) const {
   }
   return nullptr;
 }
+size_t BufferPool::GetSize() const {
+  return bufs_to_id_.size();
+}
 }  // namespace bg
 }  // namespace gert
