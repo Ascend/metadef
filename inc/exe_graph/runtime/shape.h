@@ -42,13 +42,13 @@ struct Shape {
    * 通过dims值构造shape，例如：Shape({8,3,224,224})创建一个Shape实例，有4个维度，每个维度的值分别是8,3,224,224
    * @param dims shape的所有dim值
    */
-  Shape(std::initializer_list<int64_t> args) : dim_num_(0), dims_{0} {
+  Shape(const std::initializer_list<int64_t> args) : dim_num_(0), dims_{0} {
     if (args.size() > kMaxDimNum) {
       return;
     }
     dim_num_ = args.size();
     size_t i = 0;
-    for (auto arg : args) {
+    for (const auto arg : args) {
       dims_[i++] = arg;
     }
   }
@@ -149,7 +149,7 @@ struct Shape {
    * 设置dim num
    * @param dim_num
    */
-  void SetDimNum(size_t dim_num) {
+  void SetDimNum(const size_t dim_num) {
     this->dim_num_ = dim_num;
   }
 
@@ -158,7 +158,7 @@ struct Shape {
    * @param idx dim的index，调用者需要保证index合法
    * @return dim值，在idx超出MaxDimNum时，返回`kInvalidDimValue`
    */
-  int64_t GetDim(size_t idx) const {
+  int64_t GetDim(const size_t idx) const {
     if (idx >= kMaxDimNum) {
       return kInvalidDimValue;
     }
@@ -170,7 +170,7 @@ struct Shape {
    * @param idx dim的index，调用者需要保证index合法
    * @return dim值，行为未定义
    */
-  const int64_t &operator[](size_t idx) const {
+  const int64_t &operator[](const size_t idx) const {
     return dims_[idx];
   }
 
@@ -179,7 +179,7 @@ struct Shape {
    * @param idx dim的index，调用者需要保证index合法
    * @return dim值，在idx超出MaxDimNum时，行为未定义
    */
-  int64_t &operator[](size_t idx) {
+  int64_t &operator[](const size_t idx) {
     return dims_[idx];
   }
 
@@ -188,7 +188,7 @@ struct Shape {
    * @param idx dim的index，调用者需要保证index合法
    * @return
    */
-  void SetDim(size_t idx, int64_t dim_value) {
+  void SetDim(size_t idx, const int64_t dim_value) {
     if (idx >= kMaxDimNum) {
       return;
     }
@@ -201,7 +201,7 @@ struct Shape {
    * @param 扩展的dim值
    * @return this引用
    */
-  Shape& AppendDim(int64_t value) {
+  Shape& AppendDim(const int64_t value) {
     if (this->dim_num_ >= kMaxDimNum) {
       return *this;
     }
