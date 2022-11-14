@@ -19,7 +19,7 @@
 
 #include "attr_serializer_registry.h"
 #include "graph/ge_tensor.h"
-#include "ge_ir_attr_serializer.h"
+#include "attr_serializer.h"
 
 namespace ge {
 class TensorSerializer : public GeIrAttrSerializer {

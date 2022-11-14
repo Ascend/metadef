@@ -17,7 +17,7 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_BOOL_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_BOOL_SERIALIZER_H_
 
-#include "ge_ir_attr_serializer.h"
+#include "attr_serializer.h"
 #include "attr_serializer_registry.h"
 namespace ge {
 class BoolSerializer : public GeIrAttrSerializer {

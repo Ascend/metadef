@@ -17,7 +17,7 @@
 #ifndef METADEF_GRAPH_SERIALIZATION_NAMED_ATTRS_SERIALIZER_H_
 #define METADEF_GRAPH_SERIALIZATION_NAMED_ATTRS_SERIALIZER_H_
 
-#include "ge_ir_attr_serializer.h"
+#include "attr_serializer.h"
 #include "attr_serializer_registry.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/ge_attr_value.h"
