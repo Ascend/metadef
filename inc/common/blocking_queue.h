@@ -36,7 +36,7 @@ class BlockingQueue {
     std::unique_lock<std::mutex> lock(mutex_);
 
     while (!empty_cond_.wait_for(lock, std::chrono::seconds(time_out),
-                                 [&]() { return (!queue_.empty()) || (is_stoped_); })) {
+                                 [this]() { return (!queue_.empty()) || (is_stoped_); })) {
       is_stuck_ = true;
       return false;
     }

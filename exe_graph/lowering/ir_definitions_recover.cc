@@ -170,7 +170,7 @@ ge::graphStatus RecoverIrDefinitions(const ge::ComputeGraphPtr &graph) {
   for (const auto &node : graph->GetAllNodes()) {
     std::string op_type = ge::NodeUtils::GetNodeType(node);
     auto &ir_def = op_type_to_ir_def[op_type];
-    if (RecoverNodeIrDefinitions(node, op_type, ir_def)) {
+    if (RecoverNodeIrDefinitions(node, op_type, ir_def)  != ge::GRAPH_SUCCESS) {
       GELOGE(ge::FAILED, "[Recover][NodeIrDefinitions] failed, node[%s], type[%s]",
              node->GetName().c_str(), node->GetType().c_str());
       return ge::FAILED;
