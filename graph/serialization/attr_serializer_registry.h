@@ -75,7 +75,7 @@ class AttrSerializerRegistrar {
  public:
   AttrSerializerRegistrar(const GeIrAttrSerializerBuilder builder,
                           const TypeId obj_type,
-                          const proto::AttrDef::ValueCase proto_type);
+                          const proto::AttrDef::ValueCase proto_type) noexcept;
   ~AttrSerializerRegistrar() = default;
 };
 }  // namespace ge

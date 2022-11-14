@@ -107,7 +107,7 @@ GeIrAttrSerializer *AttrSerializerRegistry::GetDeserializer(const proto::AttrDef
 
 AttrSerializerRegistrar::AttrSerializerRegistrar(const GeIrAttrSerializerBuilder builder,
                                                  const TypeId obj_type,
-                                                 const proto::AttrDef::ValueCase proto_type) {
+                                                 const proto::AttrDef::ValueCase proto_type) noexcept {
   if (builder == nullptr) {
     GELOGE(FAILED, "SerializerBuilder is nullptr.");
     return;
