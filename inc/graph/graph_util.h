@@ -107,20 +107,22 @@ const char levelStr[8][8] = {"EMERG", "ALERT", "CRIT", "ERROR", "WARNING", "NOTI
     }                                                 \
   } while (0)
 
+// Do not add do...while(0), otherwise it wll introduce security issues
 #define GRAPH_CHK_BOOL_EXEC_NOLOG(expr, exec_expr) \
-  do {                                             \
+  {                                                \
     bool b = (expr);                               \
     if (!b) {                                      \
       exec_expr;                                   \
     }                                              \
-  } while (0)
+  }
 
+// Do not add do...while(0), otherwise it wll introduce security issues
 #define GRAPH_IF_BOOL_EXEC(expr, exec_expr) \
-  do {                                      \
+  {                                      \
     if (expr) {                             \
       exec_expr;                            \
     }                                       \
-  } while (0)
+  }
 
 #define GRAPH_RETURN_WITH_LOG_IF_ERROR(expr, ...) \
   do {                                            \
