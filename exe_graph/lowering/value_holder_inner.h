@@ -17,7 +17,6 @@
 #ifndef METADEF_CXX_EXE_GRAPH_LOWERING_VALUE_HOLDER_INNER_H_
 #define METADEF_CXX_EXE_GRAPH_LOWERING_VALUE_HOLDER_INNER_H_
 #include <deque>
-#include <cstdint>
 #include "exe_graph/lowering/builtin_node_types.h"
 #include "exe_graph/lowering/graph_frame.h"
 namespace gert {

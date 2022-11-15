@@ -73,6 +73,7 @@ TEST_F(BufferPoolUT, NonString) {
 TEST_F(BufferPoolUT, CorrectLength) {
   BufferPool tp;
   char buf[] = "Hello\0World\0Zero";
+  EXPECT_EQ(tp.GetSize(), 0);
   EXPECT_EQ(tp.AddBuf(reinterpret_cast<const uint8_t *>(buf), 16), 0);
   EXPECT_EQ(tp.AddStr("World"), 1);
   EXPECT_EQ(tp.AddStr("Hello"), 2);

@@ -29,7 +29,7 @@ struct StorageFormat {
    * @param storage_format 运行时格式
    * @param expand_dims_type 补维规则
    */
-  StorageFormat(ge::Format origin_format, ge::Format storage_format, const ExpandDimsType &expand_dims_type)
+  StorageFormat(ge::Format origin_format, const ge::Format storage_format, const ExpandDimsType &expand_dims_type)
       : origin_format_(origin_format), storage_format_(storage_format), expand_dims_type_(expand_dims_type) {
     (void)reserved_;
   }
@@ -44,7 +44,7 @@ struct StorageFormat {
    * 设置原始format
    * @param origin_format 原始format
    */
-  void SetOriginFormat(ge::Format origin_format) {
+  void SetOriginFormat(const ge::Format origin_format) {
     origin_format_ = origin_format;
   }
   /**
@@ -58,7 +58,7 @@ struct StorageFormat {
    * 设置运行时format
    * @param storage_format 运行时format
    */
-  void SetStorageFormat(ge::Format storage_format) {
+  void SetStorageFormat(const ge::Format storage_format) {
     storage_format_ = storage_format;
   }
   /**
@@ -72,7 +72,7 @@ struct StorageFormat {
    * 设置补维规则
    * @param expand_dims_type 补维规则
    */
-  void SetExpandDimsType(ExpandDimsType expand_dims_type) {
+  void SetExpandDimsType(const ExpandDimsType expand_dims_type) {
     expand_dims_type_ = expand_dims_type;
   }
   /**

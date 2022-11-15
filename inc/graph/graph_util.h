@@ -107,6 +107,7 @@ const char levelStr[8][8] = {"EMERG", "ALERT", "CRIT", "ERROR", "WARNING", "NOTI
     }                                                 \
   } while (0)
 
+// Do not add do...while(0), otherwise it wll introduce security issues
 #define GRAPH_CHK_BOOL_EXEC_NOLOG(expr, exec_expr) \
   {                                                \
     bool b = (expr);                               \
@@ -115,8 +116,9 @@ const char levelStr[8][8] = {"EMERG", "ALERT", "CRIT", "ERROR", "WARNING", "NOTI
     }                                              \
   }
 
+// Do not add do...while(0), otherwise it wll introduce security issues
 #define GRAPH_IF_BOOL_EXEC(expr, exec_expr) \
-  {                                         \
+  {                                      \
     if (expr) {                             \
       exec_expr;                            \
     }                                       \

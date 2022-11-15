@@ -418,8 +418,7 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
   const tensorflow::DataType data_type = tensor.dtype();
   int32_t datatype_val_size = 0;
 
-  const std::map<tensorflow::DataType, int32_t>::const_iterator
-      iter = datatype_val_size_map.find(data_type);
+  const auto iter = datatype_val_size_map.find(data_type);
   if (iter != datatype_val_size_map.cend()) {
     datatype_val_size = iter->second;
   } else {

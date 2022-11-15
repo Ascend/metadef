@@ -20,12 +20,13 @@
 
 namespace ge {
 namespace {
-const std::vector<std::string> kBasicFftsDependsEngineLibs { "libffts_executor.so", "libascendcpu_executor.so" };
-
 void GetLibPaths(std::string &lib_paths) {
   const std::string base_path = GetModelPath();
   GELOGI("base path is %s", base_path.c_str());
-  for (const auto &lib_name : kBasicFftsDependsEngineLibs) {
+  std::vector<std::string> ffts_depend_libs;
+  ffts_depend_libs.push_back("libffts_executor.so");
+  ffts_depend_libs.push_back("libascendcpu_executor.so");
+  for (const auto &lib_name : ffts_depend_libs) {
     (void)lib_paths.append(base_path);
     (void)lib_paths.append(lib_name);
     (void)lib_paths.append(":");

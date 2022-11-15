@@ -43,7 +43,7 @@ class KernelRegistry {
 
   virtual ~KernelRegistry() = default;
   virtual const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const = 0;
-  virtual void RegisterKernel(std::string kernel_type, KernelFuncs func) {
+  virtual void RegisterKernel(const std::string kernel_type, KernelFuncs func) {
     (void) kernel_type;
     (void) func;
   };
@@ -51,7 +51,7 @@ class KernelRegistry {
 
 class KernelRegister {
  public:
-  explicit KernelRegister(const char *kernel_type);
+  explicit KernelRegister(const ge::char_t *kernel_type);
   KernelRegister(const KernelRegister &other);
   ~KernelRegister();
   KernelRegister &operator=(const KernelRegister &other) = default;

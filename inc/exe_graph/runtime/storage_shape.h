@@ -27,7 +27,7 @@ struct StorageShape {
    * @param origin_shape 原始shape
    * @param storage_shape 运行时shape
    */
-  StorageShape(std::initializer_list<int64_t> origin_shape, std::initializer_list<int64_t> storage_shape)
+  StorageShape(const std::initializer_list<int64_t> origin_shape, const std::initializer_list<int64_t> storage_shape)
       : origin_shape_(origin_shape), storage_shape_(storage_shape) {
     (void)reserved_;
   }

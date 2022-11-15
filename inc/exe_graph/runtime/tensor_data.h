@@ -17,12 +17,11 @@
 #define METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 
 #include <cstddef>
-#include <stdint.h>
+#include <cstdint>
 #include "graph/ge_error_codes.h"
 
 namespace gert {
 using TensorAddress = void *;
-using ConstTensorAddress = void *const;
 using ConstTensorAddressPtr = const void *;
 
 enum TensorPlacement {
@@ -31,7 +30,7 @@ enum TensorPlacement {
     kFollowing,    ///< Tensor位于Host，且数据紧跟在结构体后面
     kTensorPlacementEnd
 };
-inline const char *GetPlacementStr(TensorPlacement placement) {
+inline const char *GetPlacementStr(const TensorPlacement placement) {
   static const char
       *placement_str[static_cast<int32_t>(kTensorPlacementEnd) + 1] = {
           "DeviceHbm", "HostDDR", "HostDDR", "Unknown"};
@@ -60,7 +59,7 @@ class TensorData {
    * @param addr tensor的地址
    * @param manager tensor data的管理函数，若manager为空，则认为addr就是tensor的数据地址，且此数据不需要被释放
    */
-  explicit TensorData(TensorAddress addr = nullptr, TensorAddrManager manager = nullptr)
+  explicit TensorData(TensorAddress addr = nullptr, const TensorAddrManager manager = nullptr)
       : addr_(addr), manager_(manager) {
     (void)reserved_;
   }
@@ -118,7 +117,7 @@ class TensorData {
    * 设置tensor的内存大小
    * @param tensor的内存大小
    */
-  void SetSize(size_t size) {
+  void SetSize(const size_t size) {
     size_ = size;
   }
 
@@ -133,7 +132,7 @@ class TensorData {
    * 设置tensor的placement
    * @param tensor的placement
    */
-  void SetPlacement(TensorPlacement placement) {
+  void SetPlacement(const TensorPlacement placement) {
     placement_ = placement;
   }
   /**
@@ -144,7 +143,7 @@ class TensorData {
     if (manager_ == nullptr) {
       return ge::GRAPH_SUCCESS;
     }
-    auto ret = manager_(addr_, kFreeTensor, nullptr);
+    const auto ret = manager_(addr_, kFreeTensor, nullptr);
     if (ret == ge::GRAPH_SUCCESS) {
       addr_ = nullptr;
       manager_ = nullptr;
@@ -156,8 +155,8 @@ class TensorData {
    * @param addr tensor地址
    * @param manager tensor的管理函数
    */
-  ge::graphStatus SetAddr(ConstTensorAddressPtr addr, TensorAddrManager manager) {
-    auto ret = Free();
+  ge::graphStatus SetAddr(const ConstTensorAddressPtr addr, TensorAddrManager manager) {
+    const auto ret = Free();
     if (ret != ge::GRAPH_SUCCESS) {
       return ret;
     }
@@ -175,7 +174,7 @@ class TensorData {
     if (IsSharedWith(other)) {
       return ge::GRAPH_SUCCESS;
     }
-    auto ret = Free();
+    const auto ret = Free();
     if (ret != ge::GRAPH_SUCCESS) {
       return ret;
     }
