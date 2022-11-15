@@ -35,6 +35,14 @@ inline void *ValueToPtr(const uint64_t value) {
   return reinterpret_cast<void *>(static_cast<uintptr_t>(value));
 }
 
+inline std::vector<uint64_t> VPtrToValue(const std::vector<void *> v_ptr) {
+  std::vector<uint64_t> v_value;
+  for (const auto &ptr : v_ptr) {
+    v_value.emplace_back(PtrToValue(ptr));
+  }
+  return v_value;
+}
+
 template<typename TI, typename TO>
 inline TO *PtrToPtr(TI *const ptr) {
   return reinterpret_cast<TO *>(ptr);
