@@ -25,7 +25,7 @@
 namespace ge {
 class TensorDescSerializer : public GeIrAttrSerializer {
  public:
-  TensorDescSerializer() = default;
+  TensorDescSerializer() noexcept = default;
   graphStatus Serialize(const AnyValue &av, proto::AttrDef &def) override;
   graphStatus Deserialize(const proto::AttrDef &def, AnyValue &av) override;
 };
