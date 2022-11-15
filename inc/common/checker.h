@@ -40,6 +40,10 @@ struct ErrorResult {
   operator T *() const {
     return nullptr;
   }
+  template<typename T>
+  operator std::vector<std::shared_ptr<T>>() const {
+    return {};
+  }
 };
 
 inline std::vector<char> CreateErrorMsg(const char *format, ...) {
