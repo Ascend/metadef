@@ -50,7 +50,7 @@ class RepeatedIterator {
     return ret;
   }
 
-  friend bool operator==(const RepeatedIterator &lhs, const RepeatedIterator &rhs){
+  friend bool operator==(const RepeatedIterator &lhs, const RepeatedIterator &rhs) {
       return (lhs.index_ == rhs.index_) && (&lhs.value_ == &rhs.value_);
   }
   friend bool operator!=(const RepeatedIterator &lhs, const RepeatedIterator &rhs) {

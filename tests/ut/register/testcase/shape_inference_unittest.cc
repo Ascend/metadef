@@ -452,7 +452,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange_min_bigg
   ASSERT_EQ(op_desc->GetOutputDesc(2U).GetShape().GetDimNum(), 4);
   const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
   status = call_infer_shape_range(operator_dynamic, op_desc);
-  ASSERT_EQ(status, GRAPH_SUCCESS);
+  ASSERT_EQ(status, ge::PARAM_INVALID);
   std::vector<std::pair<int64_t, int64_t>> shape_range;
   (void)op_desc->GetOutputDesc(2U).GetShapeRange(shape_range);
   ASSERT_EQ(shape_range.size(), 0U);

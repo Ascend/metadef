@@ -272,8 +272,8 @@ void UpdateOpDescOutShape(const ge::OpDescPtr &op_desc, gert::InferShapeContext 
   }
 }
 
-void UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc, gert::InferShapeContext *min_ctx,
-                               gert::InferShapeContext *max_ctx) {
+ge::graphStatus UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc, gert::InferShapeContext *min_ctx,
+                                          gert::InferShapeContext *max_ctx) {
   for (size_t index = 0UL; index < op_desc->GetOutputsSize(); index++) {
     auto output_desc = op_desc->MutableOutputDesc(index);
     auto ge_shape = output_desc->GetShape();
@@ -281,26 +281,17 @@ void UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc, gert::InferShapeCon
       std::vector<std::pair<int64_t, int64_t>> shape_range;
       const auto *min_shape = min_ctx->GetOutputShape(index);
       const auto *max_shape = max_ctx->GetOutputShape(index);
-      if ((min_shape->GetDimNum()) != (max_shape->GetDimNum())) {
-        REPORT_CALL_ERROR("E19999", "min dim num not equal to max dim num, min:%zu, max:%zu",
-                          min_shape->GetDimNum(), max_shape->GetDimNum());
-        GELOGE(ACL_ERROR_GE_PARAM_INVALID, "min dim num not equal to max dim num, min:%zu, max:%zu",
-               min_shape->GetDimNum(), max_shape->GetDimNum());
-        return;
-      }
+      GELOGD("min dim num:%zu, max dim num:%zu", min_shape->GetDimNum(), max_shape->GetDimNum());
+      GE_RETURN_WITH_LOG_IF_TRUE((min_shape->GetDimNum()) != (max_shape->GetDimNum()));
       for (size_t i = 0UL; i < min_shape->GetDimNum(); ++i) {
-        if ((min_shape->GetDim(i)) > (max_shape->GetDim(i))) {
-          REPORT_CALL_ERROR("E19999", "min dim more than the max dim, min dim:%lu, max dim:%lu",
-                            min_shape->GetDim(i), max_shape->GetDim(i));
-          GELOGE(ACL_ERROR_GE_PARAM_INVALID, "min dim more than the max dim, min dim:%lu, max dim:%lu",
-                 min_shape->GetDim(i), max_shape->GetDim(i));
-          return;
-        }
+        GELOGD("min dim:%lu, max dim:%lu", min_shape->GetDim(i), max_shape->GetDim(i));
+        GE_CHECK_LE(min_shape->GetDim(i), max_shape->GetDim(i));
         shape_range.emplace_back(std::make_pair(min_shape->GetDim(i), max_shape->GetDim(i)));
       }
       output_desc->SetShapeRange(shape_range);
     }
   }
+  return ge::GRAPH_SUCCESS;
 }
 
 ge::graphStatus UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc,
@@ -429,8 +420,8 @@ ge::graphStatus InferShapeRangeAutomaticly(const ge::Operator &op, const ge::OpD
   auto max_infer_shape_ctx = reinterpret_cast<gert::InferShapeContext *>(max_kernel_context_holder.context_);
   ret = infer_shape(max_infer_shape_ctx);
   GE_CHK_STATUS_RET(ret, "[InferV2][MaxShape] failed, op_desc[%s], ret[%d]", op_desc->GetName().c_str(), ret);
-  UpdateOpDescOutShapeRange(op_desc, min_infer_shape_ctx, max_infer_shape_ctx);
-  return ge::GRAPH_SUCCESS;
+  ret = UpdateOpDescOutShapeRange(op_desc, min_infer_shape_ctx, max_infer_shape_ctx);
+  return ret;
 }
 }
 
