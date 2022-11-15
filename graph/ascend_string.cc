@@ -29,12 +29,30 @@ AscendString::AscendString(const char_t* const name) {
   }
 }
 
+AscendString::AscendString(const char_t* const name, size_t length) {
+  if (name != nullptr) {
+    name_ = MakeShared<std::string>(name, length);
+    if (name_ == nullptr) {
+      REPORT_CALL_ERROR("E18888", "new string with length failed.");
+      GELOGE(FAILED, "[New][String]AscendString make shared failed, length=%zu.", length);
+    }
+  }
+}
+
 const char_t* AscendString::GetString() const {
   if (name_ == nullptr) {
     return nullptr;
   }
 
   return (*name_).c_str();
+}
+
+size_t AscendString::GetLength() const {
+  if (name_ == nullptr) {
+    return 0UL;
+  }
+
+  return (*name_).length();
 }
 
 size_t AscendString::Hash() const {

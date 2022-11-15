@@ -101,4 +101,30 @@ namespace ge
    ASSERT_EQ(strcmp4 != strcmp3, true);
   }
 
+  TEST_F(UtestAscendString, with_length) {
+    size_t trunk_size = strlen("strcmp");
+    AscendString strcmp1("strcmp1", trunk_size);
+    AscendString strcmp2("strcmp2", trunk_size);
+    AscendString strcmp3("strcmp1");
+    ASSERT_EQ(strcmp1.GetLength(), trunk_size);
+    ASSERT_EQ(strcmp2.GetLength(), trunk_size);
+    ASSERT_GT(strcmp3.GetLength(), trunk_size);
+    ASSERT_TRUE(strcmp1 == strcmp2);
+    ASSERT_FALSE(strcmp1 == strcmp3);
+  }
+
+  TEST_F(UtestAscendString, null_size) {
+    AscendString strcmp1(nullptr, 1);
+    ASSERT_EQ(strcmp1.GetLength(), 0);
+  }
+
+  TEST_F(UtestAscendString, with_terminal) {
+    std::string with_terminal_str("abc\0def", 7);
+    AscendString with_terminal("abc\0def", 7);
+    AscendString without_terminal("abc\0def");
+    ASSERT_EQ(with_terminal.GetLength(), with_terminal_str.length());
+    ASSERT_GT(with_terminal.GetLength(), without_terminal.GetLength());
+    std::string re_build_str(with_terminal.GetString(), with_terminal.GetLength());
+    ASSERT_EQ(re_build_str, with_terminal_str);
+  }
 }
