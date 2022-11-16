@@ -31,7 +31,11 @@ class AscendString {
 
   AscendString(const char_t* const name);
 
+  AscendString(const char_t* const name, size_t length);
+
   const char_t* GetString() const;
+
+  size_t GetLength() const;
 
   size_t Hash() const;
 

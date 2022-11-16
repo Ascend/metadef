@@ -767,8 +767,6 @@ const std::string ATTR_MODEL_OPP_VERSION = "opp_version";
 
 const std::string ATTR_MODEL_SESSION_SCOPE_MEMORY_SIZE = "session_scope_memory_size";
 
-const std::string ATTR_NAME_FILE_CONSTANT_ID = "file_id";
-
 // Public attribute
 const std::string ATTR_NAME_IMPLY_TYPE = "imply_type";
 
@@ -1377,4 +1375,12 @@ const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";
 
 // for lowering
 const std::string ATTR_NAME_GRAPH_FLATTEN_OFFSET = "graph_flatten_offset";
+
+// for fileconstant
+const std::string ATTR_NAME_FILE_CONSTANT_ID = "file_id";
+const std::string ATTR_NAME_FILE_PATH = "file_path";
+const std::string ATTR_NAME_FILE_CONSTANT_PATH = "_file_constant_path";
+const std::string ATTR_NAME_LOCATION = "location";
+const std::string ATTR_NAME_OFFSET = "offset";
+const std::string ATTR_NAME_LENGTH = "length";
 }  // namespace ge

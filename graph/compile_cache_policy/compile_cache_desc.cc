@@ -19,6 +19,8 @@
 #include "debug/ge_util.h"
 
 namespace ge {
+constexpr int32_t kAllShape = -2;
+
 BinaryHolder::BinaryHolder(const BinaryHolder &other) {
   if ((other.GetDataPtr() != nullptr) && (other.GetDataLen() != 0UL)) {
     data_len_ = other.GetDataLen();
@@ -187,7 +189,7 @@ bool TensorInfoArgs::IsTensorInfoMatch(const TensorInfoArgs &other) const {
 }
 
 bool TensorInfoArgs::IsShapeInRange(const TensorInfoArgs &other) const {
-  if ((this->shape_.size() == 1U) && (this->shape_[0] == -2)) {
+  if ((this->shape_.size() == 1U) && (this->shape_[0] == kAllShape)) {
     // -2 is all shape, need to judge first
     GELOGD("current shape is -2");
     return true;
