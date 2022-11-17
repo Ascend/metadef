@@ -27,9 +27,16 @@
 namespace gert {
 using PreThreadFunc = std::function<std::vector<bg::ValueHolderPtr>(const ge::ComputeGraphPtr sub_graph,
     const std::vector<bg::ValueHolderPtr> &input_shapes)>;
-  using ThreadFunc = std::function<std::vector<bg::ValueHolderPtr>(const ge::NodePtr &node,
+using ThreadFunc = std::function<std::vector<bg::ValueHolderPtr>(const ge::NodePtr &node,
     const std::vector<bg::ValueHolderPtr> &input_shapes,
     const std::vector<bg::ValueHolderPtr> &output_shapes, const bg::ValueHolderPtr thread_dim)>;
+
+using FFTSPreThreadFunc = std::function<ge::graphStatus(const ge::ComputeGraphPtr sub_graph,
+    const std::vector<bg::ValueHolderPtr> &input_shapes, std::vector<bg::ValueHolderPtr> &output)>;
+using FFTSThreadFunc = std::function<ge::graphStatus(const ge::NodePtr &node,
+    const std::vector<bg::ValueHolderPtr> &input_shapes,
+    const std::vector<bg::ValueHolderPtr> &output_shapes, const bg::ValueHolderPtr thread_dim,
+    std::vector<bg::ValueHolderPtr> &output)>;
 struct FFTSLowerInput {
   std::vector<bg::ValueHolderPtr> input_shapes;
   std::vector<bg::ValueHolderPtr> input_addrs;
@@ -38,6 +45,7 @@ struct FFTSLowerInput {
   bg::ValueHolderPtr thread_dim;
   bg::ValueHolderPtr window_size;
   ThreadFunc thread_func;
+  FFTSThreadFunc ffts_thread_fun;
 };
 class FFTSNodeConverterRegistry {
  public:
