@@ -1216,6 +1216,8 @@ const std::string ATTR_NAME_CUBE_VECTOR_CORE_TYPE = "_cube_vector_core_type";
 const std::string ATTR_NAME_CACHE_PERSIST = "_cache_persist";
 const std::string ATTR_NAME_ALIAS_ENGINE_NAME = "_alias_engine_name";
 const std::string ATTR_NAME_KERNEL_NAMES_PREFIX = "_kernel_names_prefix";
+const std::string ATTR_NAME_FFTS_SUB_TASK_TENSOR_SIZE = "_ffts_sub_task_tensor_size";
+const std::string ATTR_NAME_FFTS_SUB_TASK_TENSOR_OFFSETS = "_ffts_sub_task_tensor_offsets";
 
 // mark fuzz build scene
 const std::string ATTR_NAME_FUZZ_BUILD = "_fuzz_build";
