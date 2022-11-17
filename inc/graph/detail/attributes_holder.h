@@ -219,6 +219,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
   friend class ModelSerializeImp;
   friend class AttrUtils;
   friend class OpDescUtils;
+  friend class GraphUtils;
   std::vector<std::string> required_attrs_;
 
  private:

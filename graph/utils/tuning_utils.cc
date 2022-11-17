@@ -20,6 +20,7 @@
 #include "graph/debug/ge_op_types.h"
 #include "framework/common/scope_guard.h"
 #include "graph/node_impl.h"
+#include "graph/utils/graph_utils_ex.h"
 
 namespace ge {
 namespace {
@@ -680,7 +681,7 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
     }
   }
 
-  graph = GraphUtils::CreateGraphFromComputeGraph(merged_root_graph);
+  graph = GraphUtilsEx::CreateGraphFromComputeGraph(merged_root_graph);
   return SUCCESS;
 }
 

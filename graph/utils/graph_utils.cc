@@ -40,6 +40,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
+#include "graph/detail/model_serialize_imp.h"
 #include "graph/compute_graph_impl.h"
 #include "graph/op_desc_impl.h"
 #include "mmpa/mmpa_api.h"
@@ -71,8 +72,28 @@ const char_t *const kDumpStrAicpu = "Aicpu";
 const size_t kNameMax = 255U;
 const int32_t kCopyGraphMaxRecursionDepth = 10;
 const int32_t kNameWidth = 5;
+const uint32_t kSubgraphIndexOfPartitionedCall = 0U;
 const std::set<std::string> kMergeInputSkipTypes{ STREAMACTIVE, STREAMSWITCH, CONSTANT, CONSTANTOP };
-};
+} // namespace
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtils::GetIndependentCompileGraphs(const ComputeGraphPtr &compute_graph,
+                                                    std::vector<ComputeGraphPtr> &independent_compile_subgraphs) {
+  bool is_pipeline_partitioned = false;
+  (void)AttrUtils::GetBool(*compute_graph, ATTR_NAME_PIPELINE_PARTITIONED, is_pipeline_partitioned);
+  if (is_pipeline_partitioned) {
+    for (const auto &node : compute_graph->GetDirectNode()) {
+      if (node->GetType() == PARTITIONEDCALL) {
+        auto sub_graph = NodeUtils::GetSubgraph(*node, kSubgraphIndexOfPartitionedCall);
+        GE_CHECK_NOTNULL(sub_graph);
+        independent_compile_subgraphs.emplace_back(sub_graph);
+      }
+    }
+    return GRAPH_SUCCESS;
+  }
+  independent_compile_subgraphs.emplace_back(compute_graph);
+  return GRAPH_SUCCESS;
+}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::AddEdge(const OutDataAnchorPtr &src,
                                                                                const InDataAnchorPtr &dst) {
@@ -1730,6 +1751,68 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
   return GRAPH_SUCCESS;
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CloneOpDesc(const ConstOpDescPtr &org_op_desc) {
+  GE_CHECK_NOTNULL_EXEC(org_op_desc, return nullptr);
+  const auto op_def = ComGraphMakeShared<proto::OpDef>();
+  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
+
+  ModelSerializeImp imp;
+  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
+
+  imp.SetProtobufOwner(op_def);
+  OpDescPtr op_desc = nullptr;
+  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
+                   REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed");
+                   return op_desc, "[Call][UnserializeOpDesc] op_desc unserialize failed");
+
+  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
+  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
+
+  // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
+  if (!op_desc->impl_->input_name_idx_.empty()) {
+    op_desc->impl_->input_name_idx_.clear();
+  }
+  if (!op_desc->impl_->output_name_idx_.empty()) {
+    op_desc->impl_->output_name_idx_.clear();
+  }
+  op_desc->impl_->MutableIRMeta() = IRMetaData(op_desc->GetName());
+  return op_desc;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
+  if ((org_op_desc == nullptr) || (org_op_desc->impl_ == nullptr)) {
+    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
+    return nullptr;
+  }
+  const auto op_def = ComGraphMakeShared<proto::OpDef>();
+  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
+
+  ModelSerializeImp imp;
+  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
+
+  imp.SetProtobufOwner(op_def);
+  OpDescPtr op_desc = nullptr;
+  if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
+    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
+    return nullptr;
+  }
+
+  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
+  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
+  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
+                                         org_op_desc->impl_->input_name_idx_.cend());
+  op_desc->impl_->MutableIRMeta() = org_op_desc->impl_->GetIRMeta();
+  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
+                                          org_op_desc->impl_->output_name_idx_.cend());
+
+  op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
+  op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
+  op_desc->impl_->verifier_func_ = org_op_desc->impl_->verifier_func_;
+
+  return op_desc;
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph,
                                           ComputeGraphPtr &dst_compute_graph,
@@ -1744,7 +1827,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
   const auto src_root_compute_graph = FindRootGraph(src_compute_graph);
   GE_CHECK_NOTNULL(src_root_compute_graph);
   for (const auto &n : src_compute_graph->GetDirectNode()) {
-    const OpDescPtr op_desc = OpDescUtils::CopyOpDesc(n->GetOpDesc());
+    const OpDescPtr op_desc = GraphUtils::CopyOpDesc(n->GetOpDesc());
     if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
       REPORT_CALL_ERROR("E18888", "CopyOpDesc failed from node:%s", n->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Copy][OpDesc] from node:%s failed", n->GetName().c_str());
@@ -1956,7 +2039,7 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
 
   std::unordered_map<std::string, NodePtr> all_new_nodes;
   for (const auto &n : graph->GetDirectNode()) {
-    const OpDescPtr op_desc = OpDescUtils::CopyOpDesc(n->GetOpDesc());
+    const OpDescPtr op_desc = GraphUtils::CopyOpDesc(n->GetOpDesc());
     GE_CHK_BOOL_EXEC(op_desc != nullptr,
                      REPORT_CALL_ERROR("E18888", "Create node:%s failed.", n->GetOpDesc()->GetName().c_str());
                      return nullptr, "[Create][Node] %s failed", n->GetOpDesc()->GetName().c_str());
@@ -2870,7 +2953,7 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
   // Add node
   for (const auto &node : graph_info.nodes_) {
-    (void)graph_builder.AddNode(OpDescUtils::CopyOpDesc(node->GetOpDesc()));
+    (void)graph_builder.AddNode(GraphUtils::CopyOpDesc(node->GetOpDesc()));
   }
 
   // Set Input

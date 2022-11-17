@@ -65,6 +65,9 @@ class NodeUtils {
   static bool IsConst(const Node &node);
   static void UnlinkAll(const Node &node);
 
+  static bool ClearInputDesc(const OpDescPtr &op_desc, const uint32_t index);
+  static bool ClearOutputDesc(const OpDescPtr &op_desc, const uint32_t index);
+
   static graphStatus AppendInputAnchor(const NodePtr &node, const uint32_t num);
   static graphStatus RemoveInputAnchor(const NodePtr &node, const uint32_t num);
 

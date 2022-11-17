@@ -33,6 +33,8 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/type_utils.h"
+#include "graph/utils/op_desc_utils_ex.h"
+#include "graph/utils/node_utils_ex.h"
 
 namespace ge {
 namespace {
@@ -741,7 +743,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
     }
   }
   // Get infer func and execute
-  ret = op_desc->CallInferFunc(op);
+  ret = OpDescUtilsEx::CallInferFunc(op_desc, op);
   if (ret == GRAPH_PARAM_INVALID) {
     // Op ir no infer func, try to get infer func from operator factory
     const auto node_op = ge::OperatorFactory::CreateOperator("node_op", op_desc->GetType().c_str());
@@ -771,7 +773,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const ConstNodePtr &node, Operator &
       GELOGW("[InferShape][UpdateOutputName] Update output name failed");
     }
     op_desc->AddInferFunc(temp_op_desc->GetInferFunc());
-    ret = op_desc->CallInferFunc(op);
+    ret = OpDescUtilsEx::CallInferFunc(op_desc, op);
     GELOGI("op CallInferFunc second. ret: %u", ret);
   }
   if (ret != GRAPH_SUCCESS) {
@@ -804,7 +806,7 @@ graphStatus ShapeRefiner::DoInferShapeAndTypeForRunning(const ConstNodePtr &node
   }
 
   // Get infer func and execute
-  ret = op_desc->CallInferFunc(op);
+  ret = OpDescUtilsEx::CallInferFunc(op_desc, op);
   if (ret == GRAPH_PARAM_INVALID) {
     GELOGD("NodeUtils::GetNodeType return value is: [%s]", origin_type.c_str());
     const auto it = kGeLocalOpMapping.find(origin_type);
@@ -817,7 +819,7 @@ graphStatus ShapeRefiner::DoInferShapeAndTypeForRunning(const ConstNodePtr &node
       return GRAPH_FAILED;
     }
     op_desc->AddInferFunc(infer_func);
-    ret = op_desc->CallInferFunc(op);
+    ret = OpDescUtilsEx::CallInferFunc(op_desc, op);
     GELOGI("op CallInferFunc second. ret: %u", ret);
   }
   if (ret != GRAPH_SUCCESS) {
@@ -960,7 +962,7 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, const bool befo
     }
   }
 
-  if (node->Verify() != GRAPH_SUCCESS) {
+  if (NodeUtilsEx::Verify(node) != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("EZ8888", "Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
     GELOGE(GRAPH_FAILED, "[Call][Verify] Verifying %s(%s) failed.", node->GetName().c_str(), node->GetType().c_str());
     return GRAPH_FAILED;

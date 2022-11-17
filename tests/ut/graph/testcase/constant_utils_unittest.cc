@@ -37,8 +37,7 @@ TEST_F(UtestConstantUtils, TestIsConstant) {
 
   // check operator is constant
   const auto &const2 = builder.AddNode("const1", "Const", 0, 1);
-  auto const_op2 = OpDescUtils::CreateOperatorFromNode(const2);
-  ASSERT_EQ(ConstantUtils::IsConstant(const_op2), true);
+  ASSERT_EQ(ConstantUtils::IsConstant(const2), true);
 
   // check normal op is not constant
   const auto &cast = builder.AddNode("cast", "Cast", 1, 1);
@@ -131,9 +130,9 @@ TEST_F(UtestConstantUtils, TestGetWeightFromOperator) {
   shape_op.SetAttr(ATTR_NAME_POTENTIAL_WEIGHT, weights);
 
   // get weight from potential const
-  ASSERT_TRUE(ConstantUtils::IsConstant(shape_op));
+  ASSERT_TRUE(ConstantUtils::IsConstant(shape_node));
   Tensor potential_weight;
-  ASSERT_TRUE(ConstantUtils::GetWeight(shape_op, 0, potential_weight));
+  ASSERT_TRUE(ConstantUtils::GetWeight(shape_node->GetOpDesc(), 0, potential_weight));
   ASSERT_EQ(potential_weight.GetTensorDesc().GetDataType(), DT_UINT8);
   ASSERT_EQ(potential_weight.GetTensorDesc().GetShape().GetDims(), shape);
 
@@ -142,12 +141,12 @@ TEST_F(UtestConstantUtils, TestGetWeightFromOperator) {
   const auto &shape_node_2 = builder.AddNode("shape_node_2", "Shape", 1, 1);
   auto shape_op_2 = OpDescUtils::CreateOperatorFromNode(shape_node_2);
   shape_op_2.SetAttr(ATTR_NAME_POTENTIAL_CONST, true);
-  ASSERT_FALSE(ConstantUtils::GetWeight(shape_op_2, 0, potential_weight));
+  ASSERT_FALSE(ConstantUtils::GetWeight(shape_node_2->GetOpDesc(), 0, potential_weight));
   shape_op_2.SetAttr(ATTR_NAME_POTENTIAL_WEIGHT_INDICES, {0});
-  ASSERT_FALSE(ConstantUtils::GetWeight(shape_op_2, 0, potential_weight));
+  ASSERT_FALSE(ConstantUtils::GetWeight(shape_node_2->GetOpDesc(), 0, potential_weight));
   shape_op_2.SetAttr(ATTR_NAME_POTENTIAL_WEIGHT_INDICES, {0,1});
   shape_op_2.SetAttr(ATTR_NAME_POTENTIAL_WEIGHT, weights);
-  ASSERT_FALSE(ConstantUtils::GetWeight(shape_op_2, 0, potential_weight));
+  ASSERT_FALSE(ConstantUtils::GetWeight(shape_node_2->GetOpDesc(), 0, potential_weight));
 }
 
 TEST_F(UtestConstantUtils, TestSetWeight) {
