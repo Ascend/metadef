@@ -16,6 +16,7 @@
 
 #ifndef INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_PASS_DESC_H_
 #define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_PASS_DESC_H_
+#include <stdint.h>
 
 namespace fe {
 using PassAttr = uint64_t;

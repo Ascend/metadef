@@ -82,7 +82,7 @@ BufferFusionPassRegistry &BufferFusionPassRegistry::GetInstance() {
 }
 
 void BufferFusionPassRegistry::RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
-                                            const CreateFn &create_fn, uint64_t attr) {
+                                            const CreateFn &create_fn, PassAttr attr) {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]UbFusionPass[type=%d,name=%s]: failed to register the ub fusion pass",
            pass_type, pass_name.c_str());
@@ -113,7 +113,7 @@ std::map<std::string, BufferFusionPassRegistry::CreateFn> BufferFusionPassRegist
 BufferFusionPassRegistrar::BufferFusionPassRegistrar(const BufferFusionPassType &pass_type,
                                                      const std::string &pass_name,
                                                      BufferFusionPassBase *(*create_fun)(),
-                                                     uint64_t attr) {
+                                                     PassAttr attr) {
   if ((pass_type < BUILT_IN_AI_CORE_BUFFER_FUSION_PASS) || (pass_type >= BUFFER_FUSION_PASS_TYPE_RESERVED)) {
     GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_type] value %d is not supported.", pass_type);
     return;
