@@ -204,6 +204,11 @@ TilingContextFaker &TilingContextFaker::CompileInfo(void *compile_info) {
   UpdateInputs();
   return *this;
 }
+TilingContextFaker &TilingContextFaker::PlatformInfo(void *platform_info) {
+  platform_info_ = platform_info;
+  UpdateInputs();
+  return *this;
+}
 TilingContextFaker &TilingContextFaker::TilingData(void *tiling_data) {
   outputs_[TilingContext::kOutputTilingData] = tiling_data;
   base_faker_.Outputs(outputs_);
@@ -226,6 +231,7 @@ void TilingContextFaker::UpdateInputs() {
     inputs.push_back(output_shape);
   }
   inputs.push_back(compile_info_);  // kInputsCompileInfo
+  inputs.push_back(platform_info_);
   inputs.push_back(nullptr);        // kInputsTilingFunc
   base_faker_.Inputs(std::move(inputs));
 }

@@ -47,6 +47,7 @@ target_link_libraries(ut_register
     GTest::gtest_main
     ascend_protobuf
     slog_stub
+    platform_stub
     json
     c_sec
     error_manager
