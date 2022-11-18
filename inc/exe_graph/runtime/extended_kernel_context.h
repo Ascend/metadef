@@ -100,6 +100,17 @@ class ExtendedKernelContext : protected KernelContext {
     return compute_node_info->GetInputsNum();
   }
   /**
+   * 获取计算节点的输出数量
+   * @return 计算节点的输出数量
+   */
+  size_t GetComputeNodeOutputNum() const {
+    const auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
+      return 0;
+    }
+    return compute_node_info->GetOutputsNum();
+  }
+  /**
    * 获取计算节点的属性，仅IR原型中定义的属性可被获取到
    * @return 计算节点的属性
    */
