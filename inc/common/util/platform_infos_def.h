@@ -24,6 +24,16 @@
 #include "platform_info_def.h"
 
 namespace fe {
+enum class LocalMemType {
+  L0_A = 0,
+  L0_B = 1,
+  L0_C = 2,
+  L1 = 3,
+  L2 = 4,
+  UB = 5,
+  HBM = 6,
+  RESERVED
+};
 class PlatFormInfosImpl;
 using PlatFormInfosImplPtr = std::shared_ptr<PlatFormInfosImpl>;
 class PlatFormInfos {
@@ -32,6 +42,10 @@ class PlatFormInfos {
   std::map<std::string, std::vector<std::string>> GetAICoreIntrinsicDtype();
   std::map<std::string, std::vector<std::string>> GetVectorCoreIntrinsicDtype();
   bool GetPlatformRes(const std::string &label, const std::string &key, std::string &val);
+  bool GetPlatformRes(const std::string &label, std::map<std::string, std::string> &res);
+  uint32_t GetCoreNum() const;
+  void GetLocalMemSize(const LocalMemType &mem_type, uint64_t &size);
+  void GetLocalMemBw(const LocalMemType &mem_type, uint64_t &bw_size);
 
   std::map<std::string, std::vector<std::string>> GetAICoreIntrinsicDtype() const;
   std::map<std::string, std::vector<std::string>> GetVectorCoreIntrinsicDtype() const;
@@ -42,7 +56,9 @@ class PlatFormInfos {
   void SetPlatformRes(const std::string &label, std::map<std::string, std::string> &res);
   std::map<std::string, std::vector<std::string>> GetFixPipeDtypeMap();
   void SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map);
+  void SetCoreNumByCoreType(const std::string &core_type);
  private:
+  uint32_t core_num_{0};
   PlatFormInfosImplPtr platform_infos_impl_{nullptr};
 };
 
