@@ -17,7 +17,7 @@
 #define METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 
 #include <cstddef>
-#include <stdint.h>
+#include <cstdint>
 #include "graph/ge_error_codes.h"
 
 namespace gert {
