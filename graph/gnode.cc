@@ -923,7 +923,7 @@ graphStatus GNode::GetSubgraph(uint32_t index, GraphPtr &graph) const {
     return GRAPH_FAILED;
   }
 
-  graph = GraphUtilsEx::CreateGraphPtrFromComputeGraph(compute_graph_ptr);
+  graph = GraphUtils::CreateGraphPtrFromComputeGraph(compute_graph_ptr);
   if (graph == nullptr) {
     REPORT_INNER_ERROR("E18888", "create compute graph failed from %s.", node_ptr->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Create][Graph] failed from %s.", node_ptr->GetName().c_str());
@@ -966,7 +966,7 @@ graphStatus GNode::GetALLSubgraphs(std::vector<GraphPtr> &graph_list) const {
       GELOGE(GRAPH_FAILED, "[Get][SubGraph] failed from node[%s].", node_ptr->GetName().c_str());
       return GRAPH_FAILED;
     }
-    GraphPtr graph = GraphUtilsEx::CreateGraphPtrFromComputeGraph(sub_graph);
+    GraphPtr graph = GraphUtils::CreateGraphPtrFromComputeGraph(sub_graph);
     if (graph == nullptr) {
       REPORT_CALL_ERROR("E18888", "create compute graph failed from node[%s].", node_ptr->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Create][ComputeGraph] failed from node[%s].", node_ptr->GetName().c_str());

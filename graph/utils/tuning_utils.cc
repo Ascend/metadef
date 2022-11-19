@@ -681,7 +681,7 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
     }
   }
 
-  graph = GraphUtilsEx::CreateGraphFromComputeGraph(merged_root_graph);
+  graph = GraphUtils::CreateGraphFromComputeGraph(merged_root_graph);
   return SUCCESS;
 }
 

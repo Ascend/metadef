@@ -1095,7 +1095,7 @@ ge::graphStatus UpDateNodeShapeBack(const ge::OpDescPtr op_desc, const ffts::Thr
 // For FFTS+ dynamic shape
 extern "C" ge::graphStatus OpFftsPlusCalculate(const ge::Operator &op, std::vector<OpRunInfoV2> &op_run_info)
 {
-  const auto node = ge::NodeUtilsEx::GetNodeFromOperator(op);
+  const auto node = ge::NodeUtils::GetNodeFromOperator(op);
   GE_CHECK_NOTNULL(node);
   const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);

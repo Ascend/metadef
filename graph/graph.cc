@@ -43,7 +43,7 @@ class GraphImpl {
   ~GraphImpl() {
     if (IsValid()) {
       if (compute_graph_ != nullptr) {
-        GraphUtilsEx::BreakConnect(compute_graph_->GetAllNodesInfo());
+        GraphUtils::BreakConnect(compute_graph_->GetAllNodesInfo());
       }
     }
     for (const auto &it : op_list_) {
@@ -53,7 +53,7 @@ class GraphImpl {
   }
 
   graphStatus SetInputs(const std::vector<Operator> &inputs) {
-    compute_graph_ = GraphUtilsEx::CreateGraphFromOperator(name_, inputs);
+    compute_graph_ = GraphUtils::CreateGraphFromOperator(name_, inputs);
     GE_CHK_BOOL_RET_STATUS(compute_graph_ != nullptr, GRAPH_FAILED, "[Build][Graph] failed.");
     GE_CHK_BOOL_RET_STATUS(inputs.size() != 0U, GRAPH_FAILED, "[Check][Param] set input NULL.");
     compute_graph_->SetInputSize(static_cast<uint32_t>(inputs.size()));
@@ -790,7 +790,7 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
   }
 
   const std::string graph_name = ascend_name;
-  const ComputeGraphPtr compute_graph = GraphUtilsEx::CreateGraphFromOperator(graph_name, inputs);
+  const ComputeGraphPtr compute_graph = GraphUtils::CreateGraphFromOperator(graph_name, inputs);
   if (compute_graph == nullptr) {
     REPORT_CALL_ERROR("E18888", "create compute graph from op failed, name:%s", graph_name.c_str());
     GELOGE(GRAPH_FAILED, "[Create][ComputeGraph] failed, name:%s.", graph_name.c_str());
@@ -798,7 +798,7 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
   }
 
   compute_graph->SetInputSize(static_cast<uint32_t>(inputs.size()));
-  const GraphPtr graph_ptr = GraphUtilsEx::CreateGraphPtrFromComputeGraph(compute_graph);
+  const GraphPtr graph_ptr = GraphUtils::CreateGraphPtrFromComputeGraph(compute_graph);
   if (graph_ptr == nullptr) {
     REPORT_CALL_ERROR("E18888", "create graph from compute graph:%s failed.", compute_graph->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Create][Graph] from compute graph:%s failed.", compute_graph->GetName().c_str());
@@ -878,7 +878,7 @@ graphStatus Graph::GetName(AscendString &name) const {
 }
 
 graphStatus Graph::CopyFrom(const Graph &src_graph) {
-  const auto res = GraphUtilsEx::CopyGraph(src_graph, *this);
+  const auto res = GraphUtils::CopyGraph(src_graph, *this);
   if (res != GRAPH_SUCCESS) {
     AscendString name;
     (void)src_graph.GetName(name);

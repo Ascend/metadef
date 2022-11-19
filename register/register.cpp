@@ -614,7 +614,7 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
                                                            int32_t &parent_output_index)> &output) {
   GE_CHECK_NOTNULL(input);
   GE_CHECK_NOTNULL(output);
-  const auto compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
+  const auto compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
   auto ret = AutoMappingSubgraphIndexByDataNode(compute_graph, input);
