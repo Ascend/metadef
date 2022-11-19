@@ -1216,6 +1216,8 @@ const std::string ATTR_NAME_CUBE_VECTOR_CORE_TYPE = "_cube_vector_core_type";
 const std::string ATTR_NAME_CACHE_PERSIST = "_cache_persist";
 const std::string ATTR_NAME_ALIAS_ENGINE_NAME = "_alias_engine_name";
 const std::string ATTR_NAME_KERNEL_NAMES_PREFIX = "_kernel_names_prefix";
+const std::string ATTR_NAME_FFTS_SUB_TASK_TENSOR_SIZE = "_ffts_sub_task_tensor_size";
+const std::string ATTR_NAME_FFTS_SUB_TASK_TENSOR_OFFSETS = "_ffts_sub_task_tensor_offsets";
 
 // mark fuzz build scene
 const std::string ATTR_NAME_FUZZ_BUILD = "_fuzz_build";
@@ -1294,6 +1296,11 @@ const std::string ATTR_NAME_TENSOR_MAX_SHAPE = "_tensor_max_shape";
 const std::string ATTR_NAME_OP_NO_TILING = "_op_no_tiling";
 const std::string ATTR_NAME_TENSOR_DESC_MEM_OFFSET = "_tensor_desc_mem_offset";
 const std::string ATTR_NAME_TENSOR_NO_TILING_MEM_TYPE = "_tensor_no_tiling_mem_type";
+
+// for soft sync op
+const std::string ATTR_NAME_STATIC_TO_DYNAMIC_SOFT_SYNC_OP = "_static_to_dynamic_softsync_op";
+const std::string ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE = "_sgt_cube_vector_core_type";
+const std::string ATTR_NAME_MAX_TILING_SIZE = "op_para_size";
 
 // for subgraph multi dims
 const std::string ATTR_NAME_SUBGRAPH_MULTI_DIMS_INDEX = "_subgraph_multi_dims_index";

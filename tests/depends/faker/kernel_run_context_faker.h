@@ -219,6 +219,7 @@ class TilingContextFaker {
   TilingContextFaker &InputShapes(std::vector<gert::StorageShape *> input_shapes);
   TilingContextFaker &OutputShapes(std::vector<gert::StorageShape *> output_shapes);
   TilingContextFaker &CompileInfo(void *compile_info);
+  TilingContextFaker &PlatformInfo(void *platform_info);
   TilingContextFaker &TilingData(void *tiling_data);
   TilingContextFaker &Workspace(ContinuousVector *workspace);
 
@@ -228,7 +229,7 @@ class TilingContextFaker {
   void UpdateInputs();
 
  private:
-  enum InputsAppend { kInputsCompileInfo, kInputsTilingFunc, kInputsAppendEnd };
+  enum InputsAppend { kInputsCompileInfo, kInputsPlatformInfo, kInputsTilingFunc, kInputsAppendEnd };
 
   KernelRunContextFaker base_faker_;
   std::vector<gert::StorageShape *> input_shapes_;
@@ -236,6 +237,7 @@ class TilingContextFaker {
   std::vector<void *> outputs_ {TilingContext::kOutputNum};
 
   void *compile_info_;
+  void *platform_info_;
 };
 }  // namespace gert
 #endif  //AIR_CXX_TESTS_UT_GE_RUNTIME_V2_FAKER_KERNEL_RUN_CONTEXT_FACKER_H_

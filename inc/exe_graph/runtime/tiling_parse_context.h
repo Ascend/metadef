@@ -18,6 +18,7 @@
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_TILING_PARSE_CONTEXT_H_
 #include "extended_kernel_context.h"
 #include "external/graph/types.h"
+#include "common/util/platform_infos_def.h"
 namespace gert {
 class TilingParseContext : public ExtendedKernelContext {
  public:
@@ -40,6 +41,13 @@ class TilingParseContext : public ExtendedKernelContext {
       return nullptr;
     }
     return av->GetValue<T *>();
+  }
+  /**
+   * 获取 fe::PlatFormInfos 指针
+   * @return fe::PlatFormInfos 指针
+   */
+  fe::PlatFormInfos *GetPlatformInfo() const {
+    return GetInputValue<fe::PlatFormInfos *>(1);
   }
 };
 static_assert(std::is_standard_layout<TilingParseContext>::value, "The class TilingParseContext must be a POD");

@@ -37,6 +37,7 @@ TEST_F(TilingContextUT, GetCompileInfoOk) {
 
   // tiling data
   TestCompileInfo compile_info_holder = {10, 200, {10, 20, 30}};
+  fe::PlatFormInfos platform_info;
   auto param = gert::TilingData::CreateCap(2048);
   auto holder = gert::TilingContextFaker()
                     .NodeIoNum(1, 1)
@@ -46,6 +47,7 @@ TEST_F(TilingContextUT, GetCompileInfoOk) {
                     .InputShapes({&in_shape})
                     .OutputShapes({&out_shape})
                     .CompileInfo(&compile_info_holder)
+                    .PlatformInfo(reinterpret_cast<char *>(&platform_info))
                     .TilingData(param.get())
                     .Build();
 
@@ -56,6 +58,7 @@ TEST_F(TilingContextUT, GetCompileInfoOk) {
   EXPECT_EQ(compile_info->a, 10);
   EXPECT_EQ(compile_info->b, 200);
   EXPECT_EQ(compile_info->c, compile_info_holder.c);
+  EXPECT_EQ(context->GetPlatformInfo()->GetCoreNum(), 8);
 }
 
 TEST_F(TilingContextUT, GetInputShapeOk) {

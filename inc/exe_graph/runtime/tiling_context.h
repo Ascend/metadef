@@ -20,6 +20,7 @@
 #include "continuous_vector.h"
 #include "extended_kernel_context.h"
 #include "tiling_data.h"
+#include "common/util/platform_infos_def.h"
 namespace gert {
 /**
  * tiling kernel的context
@@ -281,6 +282,23 @@ class TilingContext : public ExtendedKernelContext {
       return nullptr;
     }
     return workspace->MutableData();
+  }
+  /**
+   * 获取 fe::PlatFormInfos 指针
+   * @return fe::PlatFormInfos 指针
+   */
+  fe::PlatFormInfos *GetPlatformInfo() const {
+    const auto compute_node_info = GetComputeNodeInfo();
+    if (compute_node_info == nullptr) {
+      return nullptr;
+    }
+
+    const size_t index = compute_node_info->GetInputsNum() + compute_node_info->GetOutputsNum();
+    const auto av = GetInput(index + 1U);
+    if (av == nullptr) {
+      return nullptr;
+    }
+    return av->GetValue<fe::PlatFormInfos *>();
   }
 };
 static_assert(std::is_standard_layout<TilingContext>::value, "The class TilingContext must be a POD");

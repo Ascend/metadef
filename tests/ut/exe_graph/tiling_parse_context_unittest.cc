@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include "faker/kernel_run_context_faker.h"
+#include "inc/common/util/platform_info.h"
 namespace gert {
 class TilingParseContextUT : public testing::Test {};
 struct CompiledInfo1 {
@@ -45,8 +46,12 @@ TEST_F(TilingParseContextUT, GetIoOk) {
 TEST_F(TilingParseContextUT, SetCompiledInfoOk) {
   char *json_str = "{}";
   CompiledInfo1 ci = {10, 20};
-  auto context_holder = KernelRunContextFaker().KernelIONum(1, 1).Inputs({json_str}).Outputs({nullptr}).Build();
-
+  fe::PlatFormInfos platform_info;
+  auto context_holder = KernelRunContextFaker().KernelIONum(1, 1)
+          .Inputs({json_str, reinterpret_cast<char *>(&platform_info)})
+          .Outputs({nullptr}).Build();
+  auto context = context_holder.GetContext<TilingParseContext>();
+  EXPECT_EQ(context->GetPlatformInfo()->GetCoreNum(), 8);
 }
 
 TEST_F(TilingParseContextUT, CompiledInfoLessThan8Bytes) {
