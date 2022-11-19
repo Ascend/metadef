@@ -34,6 +34,11 @@ constexpr ge::char_t const *kNetOutput = "NetOutput";
 // Data具有一个key为index的属性，该属性类型是int32，代表图的输入的Index
 constexpr ge::char_t const *kData = "Data";
 
+// 图的输出，未来NetOutput的会被OutputData所代替
+// OutputData只在Main图上出现，执行完成后，图的输出会被写入到OutputData
+// OutputData没有输入，有多个输出，每个输出对应相同Index的图输出
+constexpr ge::char_t const *kOutputData = "OutputData";
+
 // 常量节点，该节点没有输入，有一个输出，代表常量的值
 // 常量节点有一个属性"value"代表该常量节点的值，value是一段二进制，常量节点本身不关注其内容的格式
 constexpr ge::char_t const *kConst = "Const";
@@ -58,6 +63,9 @@ inline bool IsTypeNetOutput(const ge::char_t *const node_type) {
 }
 inline bool IsTypeConst(const ge::char_t *const node_type) {
   return strcmp(kConst, node_type) == 0;
+}
+inline bool IsTypeOutputData(const ge::char_t *const node_type) {
+  return strcmp(kOutputData, node_type) == 0;
 }
 }  // namespace gert
 #endif  // METADEF_CXX_INC_EXE_GRAPH_LOWERING_BUILTIN_NODE_TYPES_H_
