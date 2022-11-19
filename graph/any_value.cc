@@ -186,6 +186,9 @@ AnyValue::AnyValue(AnyValue &&other) noexcept {
   }
 }
 AnyValue &AnyValue::operator=(AnyValue &&other) noexcept {
+  if (&other == this) {
+    return *this;
+  }
   Clear();
   if (!other.IsEmpty()) {
     other.operate_(OperateType::kOpMove, &other, this);
@@ -193,6 +196,9 @@ AnyValue &AnyValue::operator=(AnyValue &&other) noexcept {
   return *this;
 }
 AnyValue &AnyValue::operator=(const AnyValue &other) {
+  if (&other == this) {
+    return *this;
+  }
   Clear();
   if (!other.IsEmpty()) {
     other.operate_(OperateType::kOpClone, &other, this);
