@@ -20,7 +20,6 @@
 #include "graph/debug/ge_op_types.h"
 #include "framework/common/scope_guard.h"
 #include "graph/node_impl.h"
-#include "graph/utils/graph_utils_ex.h"
 
 namespace ge {
 namespace {

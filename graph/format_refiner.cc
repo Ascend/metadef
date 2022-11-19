@@ -32,7 +32,6 @@
 #include "graph/utils/type_utils.h"
 #include "graph/types.h"
 #include "graph/debug/ge_attr_define.h"
-#include "graph/utils/node_utils_ex.h"
 
 namespace ge {
 namespace {

@@ -34,7 +34,6 @@
 #include "graph/debug/ge_util.h"
 #include "graph/ascend_limits.h"
 #include "graph/def_types.h"
-#include "graph/utils/graph_utils_ex.h"
 
 namespace domi {
 /*lint -e1073*/

@@ -19,7 +19,6 @@
 #include "register/scope/scope_graph_impl.h"
 #include "external/graph/operator.h"
 #include "graph/utils/node_utils.h"
-#include "graph/utils/graph_utils_ex.h"
 #include "graph/node_impl.h"
 #include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
@@ -343,7 +342,7 @@ TEST_F(UtestRegister, AutoMappingSubgraphIndex) {
   builder.AddDataEdge(func_node, 0, output, 0);
 
   auto computeGraph = builder.GetGraph();
-  Graph graph = GraphUtilsEx::CreateGraphFromComputeGraph(computeGraph);
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
   stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput, AutoMappingSubgraphIndexOutput);
   EXPECT_EQ(stat, domi::FAILED);
 }
@@ -356,7 +355,7 @@ TEST_F(UtestRegister, AutoMappingSubgraphIndexByDataNode) {
   builder.AddDataEdge(func_node, 0, output, 0);
 
   auto computeGraph = builder.GetGraph();
-  Graph graph = GraphUtilsEx::CreateGraphFromComputeGraph(computeGraph);
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
   stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
   EXPECT_EQ(stat, domi::SUCCESS);
 
@@ -380,7 +379,7 @@ TEST_F(UtestRegister, AutoMappingSubgraphIndexByDataNode2) {
   builder.AddDataEdge(func_node, 0, output, 0);
 
   auto computeGraph = builder.GetGraph();
-  Graph graph = GraphUtilsEx::CreateGraphFromComputeGraph(computeGraph);
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
   stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2);
   EXPECT_EQ(stat, domi::SUCCESS);
 }
@@ -398,7 +397,7 @@ TEST_F(UtestRegister, AutoMappingSubgraphOutputFail) {
   builder.AddDataEdge(func_node, 0, output, 0);
 
   auto computeGraph = builder.GetGraph();
-  Graph graph = GraphUtilsEx::CreateGraphFromComputeGraph(computeGraph);
+  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
 
   stat = AutoMappingSubgraphIndex(graph, AutoMappingSubgraphIndexInput2, AutoMappingSubgraphIndexOutput2Failed);
   EXPECT_EQ(stat, domi::FAILED);

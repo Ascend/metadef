@@ -39,8 +39,6 @@
 #include "op_io.h"
 #include "operator_impl.h"
 #include "external/graph/operator.h"
-#include "graph/utils/graph_utils_ex.h"
-#include "graph/utils/node_utils_ex.h"
 
 #define OP_ATTR_SET_IMP(ArgType, AttrUtilsFun)                                                                         \
   Operator &ge::Operator::SetAttr(const std::string &name, ArgType attr_value) {                                       \
@@ -495,10 +493,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator OpDescUtils::CreateOpera
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescUtils::GetOpDescFromOperator(const Operator &oprt) {
   return OperatorImpl::GetOpDesc(oprt);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ConstNodePtr NodeUtilsEx::GetNodeFromOperator(const Operator &op) {
-  return op.GetNode();
 }
 
 GE_FUNC_HOST_VISIBILITY Operator::Operator(const std::string &name, const std::string &type) {
@@ -3111,36 +3105,6 @@ ComputeGraphPtr GraphUtils::CreateGraphFromOperator(const std::string &name, con
 }
 
 void GraphUtils::BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_nodes_infos) {
-  for (const auto &it : all_nodes_infos) {
-    const OperatorImplPtr op_impl = it.first;
-    if (op_impl == nullptr) {
-      GELOGW("[BreakConnect][Check] Operator impl is null");
-      continue;
-    }
-    op_impl->ClearOutputLinks();
-    op_impl->ClearInputLinks();
-    OperatorKeeper::GetInstance().CheckOutOperator(op_impl);
-  }
-}
-
-ComputeGraphPtr GraphUtilsEx::CreateGraphFromOperator(const std::string &name,
-                                                      const std::vector<ge::Operator> &inputs) {
-  auto graph_builder_impl = GraphBuilderImpl(name);
-  ComputeGraphPtr compute_graph = graph_builder_impl.BuildGraph(inputs);
-  GE_CHK_BOOL_EXEC(compute_graph != nullptr,
-                   REPORT_INNER_ERROR("E18888", "BuildGraph failed, as return nullptr.");
-                   return compute_graph, "[Build][Graph] Computer graph is nullptr");
-  compute_graph->SetAllNodesInfo(graph_builder_impl.GetAllNodesInfo());
-  if (HasSameNameNode(compute_graph)) {
-    GELOGW("[CreateGraph][Check] Nodes with same name exist in one compute graph is not allowed, graph_name: %s",
-           name.c_str());
-    compute_graph = nullptr;
-  }
-
-  return compute_graph;
-}
-
-void GraphUtilsEx::BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_nodes_infos) {
   for (const auto &it : all_nodes_infos) {
     const OperatorImplPtr op_impl = it.first;
     if (op_impl == nullptr) {

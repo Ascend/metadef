@@ -20,7 +20,6 @@
 #include "graph/anchor.h"
 #include "graph/utils/node_adapter.h"
 #include "graph/utils/tensor_adapter.h"
-#include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"

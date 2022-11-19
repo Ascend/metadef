@@ -41,7 +41,6 @@ struct InferValueRangePara {
   }
   friend class OpDescImpl;
   friend class InferValueRangePass;
-  friend class OpDescUtilsEx;
   ~InferValueRangePara() = default;
 private:
   bool is_initialized = false;

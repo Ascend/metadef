@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 #include "graph/operator_reg.h"
 #include "graph/utils/graph_utils.h"
-#include "graph/utils/graph_utils_ex.h"
 #include "graph/attr_value.h"
 #include "external/graph/operator_factory.h"
 #include "graph/operator_factory_impl.h"
@@ -125,7 +124,7 @@ Graph BuildGraph1ByIndex() {
 }
 
 void CheckGraph1(Graph &g) {
-  auto cg = GraphUtilsEx::GetComputeGraph(g);
+  auto cg = GraphUtils::GetComputeGraph(g);
   EXPECT_NE(cg, nullptr);
 
   EXPECT_EQ(cg->GetAllNodesSize(), 6);

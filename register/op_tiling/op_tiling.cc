@@ -31,7 +31,6 @@
 #include "op_tiling/op_compile_info_manager.h"
 #include "common/sgt_slice_type.h"
 #include "graph/def_types.h"
-#include "graph/utils/node_utils_ex.h"
 
 namespace optiling {
 using Status = domi::Status;

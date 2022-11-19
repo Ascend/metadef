@@ -62,7 +62,7 @@ GE_FUNC_VISIBILITY extern const uint32_t FOR_DATA_INPUT;
 
 GE_FUNC_VISIBILITY extern const int32_t NORMAL_TENSOR_SIZE;
 /*lint -e148*/
-class GE_FUNC_VISIBILITY OpDescUtilsEx {
+class GE_FUNC_VISIBILITY OpUtils {
  public:
   ///
   /// @brief Extract AIPP parameters from AttrDefMap and splice them

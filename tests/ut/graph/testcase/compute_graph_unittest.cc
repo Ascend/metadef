@@ -33,7 +33,6 @@
 #include "inc/graph/debug/ge_attr_define.h"
 #include "graph/utils/transformer_utils.h"
 #include "graph/utils/node_utils.h"
-#include "graph/utils/graph_utils_ex.h"
 
 namespace {
 /*
@@ -102,8 +101,8 @@ namespace ge
 {
   class UtestComputeGraph : public testing::Test {
     protected:
-    void SetUp() override {}
-    void TearDown() override {}
+    void SetUp() {}
+    void TearDown() {}
   };
 
 TEST_F(UtestComputeGraph, GetAllNodes_success) {
@@ -632,7 +631,7 @@ TEST_F(UtestComputeGraph, Verify_success) {
   auto builder = ut::GraphBuilder("graph");
   const auto &node1 = builder.AddNode("node1", "node1", 0, 0);
   auto graph = builder.GetGraph();
-  EXPECT_EQ(GraphUtilsEx::Verify(graph), GRAPH_SUCCESS);
+  EXPECT_EQ(graph->Verify(), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestComputeGraph, InferOriginFormat_success) {
@@ -641,7 +640,7 @@ TEST_F(UtestComputeGraph, InferOriginFormat_success) {
   const auto &node2 = builder.AddNode("node2", "node2", 0, 1);
   builder.AddDataEdge(node1, 0, node2, 0);
   auto graph = builder.GetGraph();
-  EXPECT_EQ(GraphUtilsEx::InferOriginFormat(graph), GRAPH_SUCCESS);
+  EXPECT_EQ(graph->InferOriginFormat(), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestComputeGraph, InferShapeInNeed_success) {
@@ -650,7 +649,7 @@ TEST_F(UtestComputeGraph, InferShapeInNeed_success) {
   const auto &node2 = builder.AddNode("node2", "node2", 0, 1);
   builder.AddDataEdge(node1, 0, node2, 0);
   auto graph = builder.GetGraph();
-  EXPECT_EQ(GraphUtilsEx::InferShapeInNeed(graph), GRAPH_SUCCESS);
+  EXPECT_EQ(graph->InferShapeInNeed(), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestComputeGraph, SetSessionID_success) {

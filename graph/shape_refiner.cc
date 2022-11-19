@@ -33,8 +33,6 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/type_utils.h"
-#include "graph/utils/op_desc_utils_ex.h"
-#include "graph/utils/node_utils_ex.h"
 
 namespace ge {
 namespace {

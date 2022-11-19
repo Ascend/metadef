@@ -22,7 +22,6 @@
 #include "graph/debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/node_impl.h"
-#include "graph/op_desc_impl.h"
 #include "graph/ge_context.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
@@ -296,47 +295,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::AppendInpu
   return GRAPH_SUCCESS;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool NodeUtils::ClearInputDesc(const OpDescPtr &op_desc,
-                                                                              const uint32_t index) {
-  GE_CHK_BOOL_EXEC((op_desc != nullptr) && (op_desc->impl_ != nullptr),
-                   REPORT_INNER_ERROR("E18888", "op_desc is nullptr, check invalid");
-                   return false, "[Check][Param] op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->impl_->inputs_desc_.size(),
-                   REPORT_INNER_ERROR("E18888", "index %u is invalid, out of range(0, %zu).",
-                                      index, op_desc->impl_->inputs_desc_.size());
-                   return false,
-                   "[Check][Param] index %u is invalid, out of range(0, %zu).",
-                   index, op_desc->impl_->inputs_desc_.size());
-
-  const auto iter = op_desc->impl_->inputs_desc_.begin() + static_cast<int64_t>(index);
-  if (iter < op_desc->impl_->inputs_desc_.end()) {
-    (void)op_desc->impl_->inputs_desc_.erase(iter);
-  } else {
-    GELOGW("[Clear][InputDesc] inputs_desc_ iterator out of range.");
-  }
-  return true;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool NodeUtils::ClearOutputDesc(const OpDescPtr &op_desc,
-                                                                               const uint32_t index) {
-  GE_CHK_BOOL_EXEC((op_desc != nullptr) && (op_desc->impl_ != nullptr),
-                   REPORT_INNER_ERROR("E18888", "param op_desc is nullptr, check invalid");
-                   return false, "[Check][Param] op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->impl_->outputs_desc_.size(),
-                   REPORT_INNER_ERROR("E18888", "index %u is invalid. out of range(0, %zu)",
-                                      index, op_desc->impl_->outputs_desc_.size());
-                   return false,
-                   "[Check][Param] index %u is invalid. out of range(0, %zu)",
-                   index, op_desc->impl_->outputs_desc_.size());
-  const auto iter = op_desc->impl_->outputs_desc_.begin() + static_cast<int64_t>(index);
-  if (iter < op_desc->impl_->outputs_desc_.end()) {
-    (void)op_desc->impl_->outputs_desc_.erase(iter);
-  } else {
-    GELOGW("[Clear][OutputDesc] outputs_desc_ iterator out of range.");
-  }
-  return true;
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::RemoveInputAnchor(const NodePtr &node,
                                                                                         const uint32_t num) {
   if ((node == nullptr) || (node->impl_ == nullptr)) {
@@ -347,7 +305,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::RemoveInpu
 
   const auto &op_desc = node->GetOpDesc();
   while (op_desc->GetInputsSize() > num) {
-    if (!NodeUtils::ClearInputDesc(op_desc, num)) {
+    if (!OpDescUtils::ClearInputDesc(op_desc, num)) {
       return GRAPH_FAILED;
     }
   }
@@ -407,7 +365,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::RemoveOutp
   const auto &op_desc = node->GetOpDesc();
   const auto output_names = op_desc->GetAllOutputName();
   while (op_desc->GetOutputsSize() > num) {
-    if (!NodeUtils::ClearOutputDesc(op_desc, num)) {
+    if (!OpDescUtils::ClearOutputDesc(op_desc, num)) {
       return GRAPH_FAILED;
     }
   }

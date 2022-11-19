@@ -252,9 +252,6 @@ class GraphUtils {
   static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph,
                                       std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                       std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth);
-
-  static OpDescPtr CloneOpDesc(const ConstOpDescPtr &org_op_desc);
-  static OpDescPtr CopyOpDesc(const ConstOpDescPtr &org_op_desc);
   /**
    * 接口行为是在数据`src`锚点所属的`src_node`节点和数据`dsts`锚点所属的`dst_node`节点们之间插入一个`insert_node`节点,
    * 默认是`insert_node`的`0`号数据输入锚点和`0`号输出数据锚点参与连边，`insert_node`插入之后, `src_node`和`insert_node`

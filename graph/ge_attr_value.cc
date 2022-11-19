@@ -30,7 +30,7 @@
 #include "debug/ge_util.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/serialization/attr_serializer_registry.h"
-#include "graph/utils/graph_utils.h"
+#include "graph/utils/op_desc_utils.h"
 #include "graph/utils/math_util.h"
 
 namespace ge {
@@ -94,11 +94,11 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, ui
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(const ConstOpDescPtr &org_op_desc) {
-  return GraphUtils::CloneOpDesc(org_op_desc);
+  return OpDescUtils::CloneOpDesc(org_op_desc);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
-  return GraphUtils::CopyOpDesc(org_op_desc);
+  return OpDescUtils::CopyOpDesc(org_op_desc);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
