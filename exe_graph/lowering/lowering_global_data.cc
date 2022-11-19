@@ -55,7 +55,7 @@ LoweringGlobalData &LoweringGlobalData::SetStream(bg::ValueHolderPtr &&stream, c
 }
 const LoweringGlobalData::NodeCompileResult *LoweringGlobalData::FindCompiledResult(const ge::NodePtr &node) const {
   const auto iter = node_name_to_compile_result_holders_.find(node->GetName());
-  if (iter == node_name_to_compile_result_holders_.end()) {
+  if (iter == node_name_to_compile_result_holders_.cend()) {
     return nullptr;
   }
   return &iter->second;
@@ -194,22 +194,34 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(
 
 std::vector<bg::ValueHolderPtr> LoweringGlobalData::GetOrCreateUniqueValueHolder(
     const std::string &name, const std::function<std::vector<bg::ValueHolderPtr>()> &builder) {
-  const decltype(names_to_unique_value_holder_)::const_iterator &iter = names_to_unique_value_holder_.find(name);
-  if (iter == names_to_unique_value_holder_.end()) {
+  const decltype(unique_name_to_value_holders_)::const_iterator &iter = unique_name_to_value_holders_.find(name);
+  if (iter == unique_name_to_value_holders_.cend()) {
     auto holder = builder();
-    return names_to_unique_value_holder_.emplace(name, holder).first->second;
+    return unique_name_to_value_holders_.emplace(name, holder).first->second;
   }
   return iter->second;
 }
 void LoweringGlobalData::SetUniqueValueHolder(const string &name, const bg::ValueHolderPtr &holder) {
-  names_to_unique_value_holder_.emplace(name, std::vector<bg::ValueHolderPtr>{holder});
+  unique_name_to_value_holders_.emplace(name, std::vector<bg::ValueHolderPtr>{holder});
 }
 bg::ValueHolderPtr LoweringGlobalData::GetUniqueValueHolder(const string &name) const {
-  const auto &iter = names_to_unique_value_holder_.find(name);
-  if (iter == names_to_unique_value_holder_.end()) {
+  const auto &iter = unique_name_to_value_holders_.find(name);
+  if (iter == unique_name_to_value_holders_.cend()) {
     return nullptr;
   }
   return iter->second[0];
+}
+
+void LoweringGlobalData::SetValueHolders(const string &name, const bg::ValueHolderPtr &holder) {
+  unique_name_to_value_holders_[name].emplace_back(holder);
+}
+
+size_t LoweringGlobalData::GetValueHoldersSize(const string &name) {
+  const auto &iter = unique_name_to_value_holders_.find(name);
+  if (iter == unique_name_to_value_holders_.cend()) {
+    return 0U;
+  }
+  return iter->second.size();
 }
 
 void LoweringGlobalData::SetModelWeightSize(const size_t require_weight_size) {

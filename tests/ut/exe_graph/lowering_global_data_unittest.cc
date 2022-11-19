@@ -371,4 +371,18 @@ TEST_F(LoweringGlobalDataUT, SinkWeightInfoTest) {
   auto result = gd.GetModelWeightSize();
   EXPECT_EQ(result, weight_info);
 }
+
+TEST_F(LoweringGlobalDataUT, GetValueHolersSizeTest) {
+  LoweringGlobalData gd;
+  gd.SetValueHolders("test1", nullptr);
+  EXPECT_EQ(gd.GetValueHoldersSize("test1"), 1);
+  EXPECT_EQ(gd.GetValueHoldersSize("test2"), 0);
+  gd.SetValueHolders("test1", nullptr);
+  EXPECT_EQ(gd.GetValueHoldersSize("test1"), 2);
+
+  gd.SetUniqueValueHolder("test3", nullptr);
+  EXPECT_EQ(gd.GetValueHoldersSize("test3"), 1);
+  gd.SetUniqueValueHolder("test3", nullptr);
+  EXPECT_EQ(gd.GetValueHoldersSize("test3"), 1);
+}
 }  // namespace gert
