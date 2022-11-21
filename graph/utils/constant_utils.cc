@@ -19,17 +19,9 @@
 #include "graph/debug/ge_attr_define.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/tensor_adapter.h"
 
 namespace ge {
-bool ConstantUtils::IsConstant(const Operator &op) {
-  AscendString op_type;
-  (void) op.GetOpType(op_type);
-  if ((op_type == CONSTANT) || (op_type == CONSTANTOP)) {
-    return true;
-  }
-  return IsPotentialConst(OpDescUtils::GetOpDescFromOperator(op));
-}
-
 bool ConstantUtils::IsConstant(const NodePtr &node) {
   return IsConstant(node->GetOpDesc());
 }
@@ -72,36 +64,12 @@ bool ConstantUtils::GetWeight(const OpDescPtr &op_desc, const uint32_t index, Co
   }
   return false;
 }
-bool ConstantUtils::GetWeight(const Operator &op, const uint32_t index, Tensor &weight) {
-  if (op.GetAttr(ATTR_NAME_WEIGHTS.c_str(), weight) == GRAPH_SUCCESS) {
-    return true;
-  }
-  if (!IsPotentialConst(OpDescUtils::GetOpDescFromOperator(op))) {
-    return false;
-  }
-  // check potential const attrs
-  AscendString name;
-  (void) op.GetName(name);
-  std::vector<uint32_t> weight_indices;
-  if (op.GetAttr(ATTR_NAME_POTENTIAL_WEIGHT_INDICES.c_str(), weight_indices) != GRAPH_SUCCESS) {
-    GELOGW("Missing ATTR_NAME_POTENTIAL_WEIGHT_INDICES attr on potential const %s.", name.GetString());
-    return false;
-  }
-  std::vector<Tensor> weights;
-  if (op.GetAttr(ATTR_NAME_POTENTIAL_WEIGHT.c_str(), weights) != GRAPH_SUCCESS) {
-    GELOGW("Missing ATTR_NAME_POTENTIAL_WEIGHT attr on potential const %s.",  name.GetString());
-    return false;
-  }
-  if (weight_indices.size() != weights.size()) {
-    GELOGW("Weight indices not match with weight size on potential const %s.",  name.GetString());
-    return false;
-  }
 
-  for (size_t i = 0U; i < weight_indices.size(); ++i) {
-    if (weight_indices[i] == index) {
-      weight = weights[i];
-      return true;
-    }
+bool ConstantUtils::GetWeight(const OpDescPtr &op_desc, const uint32_t index, Tensor &weight) {
+  ConstGeTensorPtr value;
+  if (GetWeight(op_desc, index, value)) {
+    weight = TensorAdapter::GeTensor2Tensor(value);
+    return true;
   }
   return false;
 }

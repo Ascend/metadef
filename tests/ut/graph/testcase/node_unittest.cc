@@ -28,6 +28,7 @@
 #include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 #include "graph/operator_factory_impl.h"
+#include "graph/utils/node_utils_ex.h"
 
 #undef private
 #undef protected
@@ -296,7 +297,7 @@ TEST_F(UtestNode, Verify) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data_node = builder.AddNode("Data", "Data", 1, 1);
   data_node->impl_->in_data_anchors_.push_back(nullptr);
-  EXPECT_EQ(data_node->Verify(), GRAPH_SUCCESS);
+  EXPECT_EQ(NodeUtilsEx::Verify(data_node), GRAPH_SUCCESS);
   auto node_op = ge::OperatorFactoryImpl::CreateOperator("node_op", data_node->impl_->op_->GetType());
   EXPECT_NE(OperatorFactoryImpl::operator_creators_v2_, nullptr);
   std::map<std::string, OpCreatorV2> mapv2;
@@ -308,6 +309,12 @@ TEST_F(UtestNode, Verify) {
   EXPECT_EQ(node_op2.IsEmpty(), true);
 }
 
+TEST_F(UtestNode, InferShapeAndType_failed) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 1, 1);
+  data_node->impl_->in_data_anchors_.push_back(nullptr);
+  EXPECT_EQ(NodeUtilsEx::InferShapeAndType(data_node), GRAPH_PARAM_INVALID);
+}
 
 TEST_F(UtestNode, GetOutControlNodes) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
@@ -316,5 +323,4 @@ TEST_F(UtestNode, GetOutControlNodes) {
   EXPECT_EQ(data_node1->GetOutDataAnchor(0)->LinkTo(data_node2->GetInControlAnchor()), GRAPH_SUCCESS);
   EXPECT_EQ(data_node1->GetOutControlNodes().size(), 1);
 }
-
 }

@@ -32,6 +32,8 @@
 #include "inc/external/graph/graph.h"
 #include "inc/graph/operator_factory_impl.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/graph_utils_ex.h"
+#include "graph/utils/op_desc_utils_ex.h"
 #include "graph_builder_utils.h"
 #include "graph/ge_attr_value.h"
 #undef private
@@ -101,7 +103,7 @@ TEST_F(UtestGraph, copy_graph_02) {
   if_op->AddDynamicOutputDesc("output", 1);
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto if_node = compute_graph->AddNode(if_op);
-  auto graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  auto graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   ge::Graph copy_graph("copy_graph");
 
   if_op->AddSubgraphName("then_branch");
@@ -129,7 +131,7 @@ TEST_F(UtestGraph, copy_graph_02) {
 
   ASSERT_EQ(copy_graph.CopyFrom(graph), ge::GRAPH_SUCCESS);
 
-  auto cp_compute_graph = ge::GraphUtils::GetComputeGraph(copy_graph);
+  auto cp_compute_graph = ge::GraphUtilsEx::GetComputeGraph(copy_graph);
   ASSERT_NE(cp_compute_graph, nullptr);
   ASSERT_NE(cp_compute_graph, compute_graph);
   ASSERT_EQ(cp_compute_graph->GetDirectNodesSize(), 1);
@@ -216,7 +218,7 @@ TEST_F(UtestGraph, test_value_range_infer_and_set_get) {
   shape_op_desc->AddOutputDesc(out_tensor_desc);
   auto shape_node = graph->AddNode(shape_op_desc);
   Operator op = OpDescUtils::CreateOperatorFromNode(shape_node);
-  auto ret = shape_node->GetOpDesc()->CallInferValueRangeFunc(op);
+  auto ret = OpDescUtilsEx::CallInferValueRangeFunc(shape_node->GetOpDesc(), op);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
 
   auto output_0_desc = shape_node->GetOpDesc()->GetOutputDesc(0);
@@ -258,7 +260,7 @@ TEST_F(UtestGraph, SetOutputs_string) {
   add_op->AddDynamicOutputDesc("output", 1);
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   Operator op1 = Operator("add");
   Operator op2 = Operator("op2");
@@ -280,7 +282,7 @@ TEST_F(UtestGraph, SetOutputs_AscendString) {
   add_op->AddDynamicOutputDesc("output", 1);
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   Operator op1 = Operator("add");
   Operator op2 = Operator("op2");
@@ -302,7 +304,7 @@ TEST_F(UtestGraph, SetOutputs_Index) {
   add_op->AddDynamicOutputDesc("output", 1);
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   Graph graph2;
 
   Operator op1 = Operator("add");
@@ -325,7 +327,7 @@ TEST_F(UtestGraph, SetTargets) {
   add_op->AddDynamicOutputDesc("output", 1);
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   Graph graph2;
 
   Operator op1 = Operator("add");
@@ -346,7 +348,7 @@ TEST_F(UtestGraph, SetNeedIteration) {
   ge::OpDescPtr add_op(new ge::OpDesc("add_0", "add"));
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   Graph graph2;
 
   graph2.SetNeedIteration(true);
@@ -358,11 +360,11 @@ TEST_F(UtestGraph, GetDirectNode) {
   ge::OpDescPtr add_op(new ge::OpDesc("add_0", "add"));
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   ge::OpDescPtr add_op2(new ge::OpDesc("add_1", "add"));
   std::shared_ptr<ge::ComputeGraph> compute_graph2 = nullptr;
-  Graph graph2 = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph2);
+  Graph graph2 = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph2);
 
   Graph graph3;
 
@@ -379,7 +381,7 @@ TEST_F(UtestGraph, RemoveNode) {
   auto v_nodes = cgp->GetAllNodes();
   EXPECT_EQ(v_nodes.size(), 5);
 
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(cgp);
 
   auto nodes = graph.GetAllNodes();
   graph.RemoveNode(nodes[4]);
@@ -421,7 +423,7 @@ TEST_F(UtestGraph, AddRemoveEdge2) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data = builder.AddNode("Data", "Data", 0, 1);
   ComputeGraphPtr cgp = builder.GetGraph();
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(cgp);
 
   auto nodes = graph.GetAllNodes();
   EXPECT_EQ(nodes.size(), 1);
@@ -443,7 +445,7 @@ TEST_F(UtestGraph, AddRemoveEdge3) {
   auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
   auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
   ComputeGraphPtr cgp = builder.GetGraph();
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(cgp);
 
   auto nodes = graph.GetAllNodes();
   EXPECT_EQ(nodes.size(), 3);
@@ -520,7 +522,7 @@ TEST_F(UtestGraph, SaveLoadFile) {
   system("rm -rf ./ut_graph2.txt");
 
   ComputeGraphPtr cgp = BuildComputeGraph();
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(cgp);
 
   auto ret = graph.SaveToFile(nullptr);
   EXPECT_EQ(ret, GRAPH_FAILED);
@@ -560,7 +562,7 @@ TEST_F(UtestGraph, RecoverGraphOperators) {
 
 TEST_F(UtestGraph, GetOpName) {
   ComputeGraphPtr cgp = BuildComputeGraph();
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(cgp);
 
   Operator op1("add");
   auto ret = graph.AddOp(op1);

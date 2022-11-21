@@ -32,6 +32,7 @@
 #include "graph/utils/type_utils.h"
 #include "graph/types.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/utils/node_utils_ex.h"
 
 namespace ge {
 namespace {
@@ -202,7 +203,7 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
 
         // Call operator infer format api (forward) to get out format
         GELOGD("call infer format func[Back]!Node is [%s] ", (peer_in_data_node->GetName()).c_str());
-        ret_status = peer_in_data_node->InferOriginFormat();
+        ret_status = NodeUtilsEx::InferOriginFormat(peer_in_data_node);
         GE_IF_BOOL_EXEC(ret_status != GRAPH_SUCCESS,
                         GELOGE(GRAPH_FAILED, "[Infer][Format] failed, node:%s", (peer_in_data_node->GetName()).c_str());
         return GRAPH_FAILED);
@@ -367,7 +368,7 @@ graphStatus FormatRefiner::BackInferProcess(std::deque<ge::NodePtr> &nodes, cons
 
         // Call operator infer format api (forward) to get out format
         GELOGD("call infer format func[Back]!Node is [%s] ", (peer_out_data_node->GetName()).c_str());
-        status = peer_out_data_node->InferOriginFormat();
+        status = NodeUtilsEx::InferOriginFormat(peer_out_data_node);
         GE_IF_BOOL_EXEC(status != GRAPH_SUCCESS, GELOGE(GRAPH_FAILED, "[Infer][Format] failed, Node:%s",
                                                         (peer_out_data_node->GetName()).c_str()); return GRAPH_FAILED);
         nodes.push_back(peer_out_data_node);

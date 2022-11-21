@@ -24,7 +24,7 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/node_adapter.h"
 #include "graph/utils/node_utils.h"
-
+#include "graph/utils/graph_utils_ex.h"
 
 namespace {
 const uint32_t g_kSubgraphIndexOfPartitionedCall = 0U;
@@ -34,6 +34,7 @@ namespace ge {
 class GraphImpl {
  public:
   friend class GraphUtils;
+  friend class GraphUtilsEx;
   GraphImpl(const GraphImpl &) = delete;
   GraphImpl &operator=(const GraphImpl &) = delete;
 
@@ -42,7 +43,7 @@ class GraphImpl {
   ~GraphImpl() {
     if (IsValid()) {
       if (compute_graph_ != nullptr) {
-        GraphUtils::BreakConnect(compute_graph_->GetAllNodesInfo());
+        GraphUtilsEx::BreakConnect(compute_graph_->GetAllNodesInfo());
       }
     }
     for (const auto &it : op_list_) {
@@ -52,7 +53,7 @@ class GraphImpl {
   }
 
   graphStatus SetInputs(const std::vector<Operator> &inputs) {
-    compute_graph_ = GraphUtils::CreateGraphFromOperator(name_, inputs);
+    compute_graph_ = GraphUtilsEx::CreateGraphFromOperator(name_, inputs);
     GE_CHK_BOOL_RET_STATUS(compute_graph_ != nullptr, GRAPH_FAILED, "[Build][Graph] failed.");
     GE_CHK_BOOL_RET_STATUS(inputs.size() != 0U, GRAPH_FAILED, "[Check][Param] set input NULL.");
     compute_graph_->SetInputSize(static_cast<uint32_t>(inputs.size()));
@@ -789,7 +790,7 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
   }
 
   const std::string graph_name = ascend_name;
-  const ComputeGraphPtr compute_graph = GraphUtils::CreateGraphFromOperator(graph_name, inputs);
+  const ComputeGraphPtr compute_graph = GraphUtilsEx::CreateGraphFromOperator(graph_name, inputs);
   if (compute_graph == nullptr) {
     REPORT_CALL_ERROR("E18888", "create compute graph from op failed, name:%s", graph_name.c_str());
     GELOGE(GRAPH_FAILED, "[Create][ComputeGraph] failed, name:%s.", graph_name.c_str());
@@ -797,7 +798,7 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
   }
 
   compute_graph->SetInputSize(static_cast<uint32_t>(inputs.size()));
-  const GraphPtr graph_ptr = GraphUtils::CreateGraphPtrFromComputeGraph(compute_graph);
+  const GraphPtr graph_ptr = GraphUtilsEx::CreateGraphPtrFromComputeGraph(compute_graph);
   if (graph_ptr == nullptr) {
     REPORT_CALL_ERROR("E18888", "create graph from compute graph:%s failed.", compute_graph->GetName().c_str());
     GELOGE(GRAPH_FAILED, "[Create][Graph] from compute graph:%s failed.", compute_graph->GetName().c_str());
@@ -877,7 +878,7 @@ graphStatus Graph::GetName(AscendString &name) const {
 }
 
 graphStatus Graph::CopyFrom(const Graph &src_graph) {
-  const auto res = GraphUtils::CopyGraph(src_graph, *this);
+  const auto res = GraphUtilsEx::CopyGraph(src_graph, *this);
   if (res != GRAPH_SUCCESS) {
     AscendString name;
     (void)src_graph.GetName(name);
@@ -954,25 +955,6 @@ GraphUtils::CreateGraphPtrFromComputeGraph(const ge::ComputeGraphPtr compute_gra
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::GetIndependentCompileGraphs(const ComputeGraphPtr &compute_graph,
-                                                    std::vector<ComputeGraphPtr> &independent_compile_subgraphs) {
-  bool is_pipeline_partitioned = false;
-  (void)AttrUtils::GetBool(*compute_graph, ATTR_NAME_PIPELINE_PARTITIONED, is_pipeline_partitioned);
-  if (is_pipeline_partitioned) {
-    for (const auto &node : compute_graph->GetDirectNode()) {
-      if (node->GetType() == PARTITIONEDCALL) {
-        auto sub_graph = NodeUtils::GetSubgraph(*node, g_kSubgraphIndexOfPartitionedCall);
-        GE_CHECK_NOTNULL(sub_graph);
-        independent_compile_subgraphs.emplace_back(sub_graph);
-      }
-    }
-    return GRAPH_SUCCESS;
-  }
-  independent_compile_subgraphs.emplace_back(compute_graph);
-  return GRAPH_SUCCESS;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 graphStatus GraphUtils::RecoverGraphOperators(const Graph &graph) {
   GE_CHECK_NOTNULL(graph.impl_);
   GE_CHECK_NOTNULL(graph.impl_->compute_graph_);
@@ -982,5 +964,89 @@ graphStatus GraphUtils::RecoverGraphOperators(const Graph &graph) {
     graph.impl_->op_list_[node->GetName()] = OpDescUtils::CreateOperatorFromNode(node);
   }
   return SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraphPtr GraphUtilsEx::GetComputeGraph(const ge::Graph &graph) {
+  if (!graph.IsValid()) {
+    return nullptr;
+  }
+  return graph.impl_->compute_graph_;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Graph
+GraphUtilsEx::CreateGraphFromComputeGraph(const ge::ComputeGraphPtr compute_graph) {
+  if (compute_graph == nullptr) {
+    return Graph("");
+  }
+
+  const auto name = compute_graph->GetName();
+  const auto graph = Graph(name.c_str());
+  if (graph.impl_ == nullptr) {
+    return graph;
+  }
+  graph.impl_->compute_graph_ = compute_graph;
+  return graph;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GraphPtr
+GraphUtilsEx::CreateGraphPtrFromComputeGraph(const ge::ComputeGraphPtr compute_graph) {
+  if (compute_graph == nullptr) {
+    return nullptr;
+  }
+
+  auto name = compute_graph->GetName();
+  const auto graph = ComGraphMakeShared<Graph>(name);
+  if (graph == nullptr) {
+    return nullptr;
+  }
+  if (graph->impl_ == nullptr) {
+    return nullptr;
+  }
+
+  graph->impl_->compute_graph_ = compute_graph;
+  return graph;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+graphStatus GraphUtilsEx::RecoverGraphOperators(const Graph &graph) {
+  GE_CHECK_NOTNULL(graph.impl_);
+  GE_CHECK_NOTNULL(graph.impl_->compute_graph_);
+
+  graph.impl_->op_list_.clear();
+  for (const auto &node : graph.impl_->compute_graph_->GetDirectNode()) {
+    graph.impl_->op_list_[node->GetName()] = OpDescUtils::CreateOperatorFromNode(node);
+  }
+  return SUCCESS;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtilsEx::CopyGraphImpl(const Graph &src_graph, Graph &dst_graph,
+                            const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                            const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new) {
+  GE_CHECK_NOTNULL(dst_graph.impl_);
+  GE_CHECK_NOTNULL(src_graph.impl_);
+
+  std::map<std::string, ge::Operator> &dst_op_list = dst_graph.impl_->op_list_;
+  const std::map<std::string, ge::Operator> &src_op_list = src_graph.impl_->op_list_;
+  auto &dst_compute_graph = dst_graph.impl_->compute_graph_;
+
+  dst_graph.impl_->output_name_ = src_graph.impl_->output_name_;
+
+  auto ret = OpDescUtils::CopyOperators(dst_compute_graph,
+                                        node_old_2_new, op_desc_old_2_new,
+                                        src_op_list, dst_op_list);
+  if (ret != GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E18888", "copy operators to graph:%s failed.", dst_compute_graph->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Copy][Operators] to graph:%s failed.", dst_compute_graph->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+
+  ret = OpDescUtils::CopyOperatorLinks(src_op_list, dst_op_list);
+  if (ret != GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E18888", "copy operator links failed, ret:%d.", ret);
+    GELOGE(GRAPH_FAILED, "[Copy][OperatorLinks] failed, ret:%d.", ret);
+    return GRAPH_FAILED;
+  }
+  return GRAPH_SUCCESS;
 }
 }  // namespace ge

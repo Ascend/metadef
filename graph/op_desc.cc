@@ -25,6 +25,7 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/transformer_utils.h"
 #include "graph/utils/node_utils.h"
+#include "common/util/mem_utils.h"
 #include "graph/debug/ge_attr_define.h"
 #include "register/op_tiling/op_tiling_constants.h"
 #include "common/util/trace_manager/trace_manager.h"
@@ -308,6 +309,14 @@ void OpDescImpl::SetType(const std::string &type, OpDescImplPtr &impl_of_target_
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    this->GetName(), "type", "", "", type);
+}
+
+void OpDescImpl::SetIrRelated(const OpDescImpl *r_op_desc) {
+  if (r_op_desc != nullptr) {
+    this->meta_data_.ir_meta_ = r_op_desc->meta_data_.ir_meta_;
+  } else {
+    this->meta_data_.ir_meta_ = IRMetaData("");
+  }
 }
 
 graphStatus OpDescImpl::AddInputDesc(const ge::GeTensorDesc &input_desc) {
@@ -1003,8 +1012,6 @@ bool OpDescImpl::UpdateOutputName(std::map<std::string, uint32_t> output_name_id
   return false;
 }
 
-std::function<graphStatus(Operator &)> OpDescImpl::GetInferFunc() const { return infer_func_; }
-
 void *OpDescImpl::GetTilingFuncInfo() const {
   return tiling_func_info_;
 }
@@ -1021,13 +1028,29 @@ void OpDescImpl::SetAtomicTilingFuncInfo(void *atomic_tiling_func_info) {
   atomic_tiling_func_info_ = atomic_tiling_func_info;
 }
 
+std::function<graphStatus(Operator &)> OpDescImpl::GetInferFunc() const { return infer_func_; }
+
 std::function<graphStatus(Operator &)> OpDescImpl::GetVerifyFunc() const { return verifier_func_; }
+
+std::function<graphStatus(Operator &)> OpDescImpl::GetInferFormatFunc() const { return infer_format_func_; }
+
+std::function<graphStatus(Operator &)> OpDescImpl::GetInferValueRangeFunc() const { return infer_value_range_func_; }
+
+std::function<graphStatus(Operator &)> OpDescImpl::GetInferDataSliceFunc() const { return infer_data_slice_func_; }
 
 void OpDescImpl::AddInferFunc(const std::function<graphStatus(Operator &)> &func) { infer_func_ = func; }
 
 void OpDescImpl::AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func) { infer_format_func_ = func; }
 
 void OpDescImpl::AddVerifierFunc(const std::function<graphStatus(Operator &)> &func) { verifier_func_ = func; }
+
+void OpDescImpl::AddInferValueRangeFunc(const std::function<graphStatus(Operator &)> &func) {
+  infer_value_range_func_ = func;
+}
+
+void OpDescImpl::AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> &func) {
+  infer_data_slice_func_ = func;
+}
 
 graphStatus OpDescImpl::InferShapeAndType(const OpDescPtr &op_desc) {
   if (infer_func_ == nullptr) {
@@ -1909,6 +1932,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetType(const std::s
   return impl_->SetType(type, target_impl);
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIrRelated(const OpDescPtr &op_desc) {
+  impl_->SetIrRelated(op_desc != nullptr ? op_desc->impl_.get() : nullptr);
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::AddInputDesc(const ge::GeTensorDesc &input_desc) {
   return impl_->AddInputDesc(input_desc);
 }
@@ -2201,6 +2228,18 @@ std::function<graphStatus(Operator &)> OpDesc::GetVerifyFunc() const {
   return impl_->GetVerifyFunc();
 }
 
+std::function<graphStatus(Operator &)> OpDesc::GetInferFormatFunc() const {
+  return impl_->GetInferFormatFunc();
+}
+
+std::function<graphStatus(Operator &)> OpDesc::GetInferDataSliceFunc() const {
+  return impl_->GetInferDataSliceFunc();
+}
+
+std::function<graphStatus(Operator &)> OpDesc::GetInferValueRangeFunc() const {
+  return impl_->GetInferValueRangeFunc();
+}
+
 void OpDesc::AddInferFunc(const std::function<graphStatus(Operator &)> &func) {
   impl_->AddInferFunc(func);
 }
@@ -2211,6 +2250,14 @@ void OpDesc::AddInferFormatFunc(const std::function<graphStatus(Operator &)> &fu
 
 void OpDesc::AddVerifierFunc(const std::function<graphStatus(Operator &)> &func) {
   impl_->AddVerifierFunc(func);
+}
+
+void OpDesc::AddInferValueRangeFunc(const std::function<graphStatus(Operator &)> &func) {
+  impl_->AddInferValueRangeFunc(func);
+}
+
+void OpDesc::AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> &func) {
+  impl_->AddInferDataSliceFunc(func);
 }
 
 graphStatus OpDesc::InferShapeAndType() {
@@ -2493,5 +2540,84 @@ void OpDesc::AppendIrOutput(std::string name, IrOutputType output_type) {
 }
 const std::vector<std::pair<std::string, IrOutputType>> &OpDesc::GetIrOutputs() const {
   return impl_->GetIRMeta().GetIrOutputs();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddInput(const std::string &name) {
+  inputs_.emplace_back(std::make_pair(name, GeTensorDesc()));
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+OpDescBuilder& OpDescBuilder::AddInput(const std::string &name, const GeTensorDesc &tensor) {
+  inputs_.emplace_back(std::make_pair(name, tensor));
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddDynamicInput(const std::string &name,
+                                                                                             const uint32_t num) {
+  for (uint32_t i = 0U; i < num; i++) {
+    inputs_.emplace_back(std::make_pair(name + std::to_string(i), GeTensorDesc()));
+  }
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+OpDescBuilder& OpDescBuilder::AddDynamicInput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor) {
+  for (uint32_t i = 0U; i < num; i++) {
+    inputs_.emplace_back(std::make_pair(name + std::to_string(i), tensor));
+  }
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddOutput(const std::string &name) {
+  outputs_.emplace_back(std::make_pair(name, GeTensorDesc()));
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+OpDescBuilder& OpDescBuilder::AddOutput(const std::string &name, const GeTensorDesc &tensor) {
+  outputs_.emplace_back(std::make_pair(name, tensor));
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name,
+                                                                                              const uint32_t num) {
+  for (uint32_t i = 0U; i < num; i++) {
+    outputs_.emplace_back(std::make_pair(name + std::to_string(i), GeTensorDesc()));
+  }
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name, const uint32_t num,
+                                               const GeTensorDesc &tensor) {
+  for (uint32_t i = 0U; i < num; i++) {
+    outputs_.emplace_back(std::make_pair(name + std::to_string(i), tensor));
+  }
+  return *this;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescBuilder::Build() {
+  const OpDescPtr op_desc = MakeShared<OpDesc>(name_, type_);
+  if (op_desc == nullptr) {
+    REPORT_CALL_ERROR("E18888", "create opdesc failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
+    GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
+    return nullptr;
+  }
+  for (auto &input : inputs_) {
+    if (op_desc->AddInputDesc(input.first, input.second) != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E18888", "AddInputDesc failed, op:%s.", name_.c_str());
+      GELOGE(GRAPH_FAILED, "[Add][InputDesc] failed, op:%s.", name_.c_str());
+      return nullptr;
+    }
+  }
+  for (auto &output : outputs_) {
+    if (op_desc->AddOutputDesc(output.first, output.second) != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E18888", "AddOutputDesc failed, op:%s", name_.c_str());
+      GELOGE(GRAPH_FAILED, "[Add][OutputDesc] failed, op:%s.", name_.c_str());
+      return nullptr;
+    }
+  }
+  return op_desc;
 }
 }  // namespace ge

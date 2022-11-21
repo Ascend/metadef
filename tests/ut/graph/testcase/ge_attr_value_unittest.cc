@@ -100,6 +100,17 @@ TEST_F(UtestGeAttrValue, TrySetExists) {
   EXPECT_EQ(uint64_val, 100U);
 }
 
+TEST_F(UtestGeAttrValue, CloneOpDesc_check_null) {
+  OpDescPtr op_desc = nullptr;
+  auto ret = AttrUtils::CloneOpDesc(op_desc);
+  EXPECT_EQ(ret == nullptr, true);
+}
+
+TEST_F(UtestGeAttrValue, CopyOpDesc_check_null) {
+  OpDescPtr op_desc = nullptr;
+  auto ret = AttrUtils::CopyOpDesc(op_desc);
+  EXPECT_EQ(ret == nullptr, true);
+}
 
 TEST_F(UtestGeAttrValue, SetGetListInt) {
   OpDescPtr op_desc = std::make_shared<OpDesc>("const1", "Identity");

@@ -87,6 +87,8 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   void SetType(const std::string &type);
 
+  void SetIrRelated(const OpDescPtr &op_desc);
+
   graphStatus AddInputDesc(const GeTensorDesc &input_desc);
 
   graphStatus AddInputDesc(const std::string &name, const GeTensorDesc &input_desc);
@@ -179,10 +181,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   bool UpdateOutputName(const std::map<std::string, uint32_t> output_name_idx);
 
-  void AddInferFunc(const std::function<graphStatus(Operator &)> &func);
-
-  std::function<graphStatus(Operator &)> GetInferFunc() const;
-
   void *GetTilingFuncInfo() const;
 
   void SetTilingFuncInfo(void *tiling_func_info);
@@ -197,13 +195,19 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus DefaultInferDataType();
 
+  void AddInferFunc(const std::function<graphStatus(Operator &)> &func);
   void AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func);
+  void AddInferValueRangeFunc(const std::function<graphStatus(Operator &)> &func);
+  void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
+  void AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> &func);
 
   graphStatus DefaultInferFormat();
 
+  std::function<graphStatus(Operator &)> GetInferFunc() const;
   std::function<graphStatus(Operator &)> GetVerifyFunc() const;
-
-  void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
+  std::function<graphStatus(Operator &)> GetInferFormatFunc() const;
+  std::function<graphStatus(Operator &)> GetInferDataSliceFunc() const;
+  std::function<graphStatus(Operator &)> GetInferValueRangeFunc() const;
 
   graphStatus CallInferFormatFunc(Operator &op);
 
@@ -327,10 +331,97 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   friend class GeAttrValueImp;
   friend class OnnxUtils;
   friend class GraphUtils;
+  friend class NodeUtils;
 };
 
 using OpDescPtr = OpDesc::OpDescPtr;
 using ConstOpDescPtr = OpDesc::ConstOpDescPtr;
 using ConstOpDesc = const OpDesc;
+
+class OpDescBuilder {
+ public:
+  OpDescBuilder(std::string name, std::string type) : name_(std::move(name)), type_(std::move(type)) {}
+  OpDescBuilder(const OpDescBuilder &) = delete;
+  OpDescBuilder &operator=(const OpDescBuilder &) = delete;
+  OpDescBuilder(const OpDescBuilder &&) = delete;
+  OpDescBuilder &operator=(const OpDescBuilder &&) = delete;
+  ~OpDescBuilder() = default;
+
+  /**
+   * @brief Add input
+   * @param [in] name
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddInput(const std::string &name);
+
+  /**
+   * @brief Add input
+   * @param [in] name
+   * @param [in] tensor
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddInput(const std::string &name, const GeTensorDesc &tensor);
+
+  /**
+   * @brief Add dynamic input
+   * @param [in] name
+   * @param [in] num
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddDynamicInput(const std::string &name, const uint32_t num);
+
+  /**
+   * @brief Add dynamic input
+   * @param [in] name
+   * @param [in] num
+   * @param [in] tensor
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddDynamicInput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor);
+
+  /**
+   * @brief Add output
+   * @param [in] name
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddOutput(const std::string &name);
+
+  /**
+   * @brief Add output
+   * @param [in] name
+   * @param [in] tensor
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddOutput(const std::string &name, const GeTensorDesc &tensor);
+
+  /**
+   * @brief Add dynamic output
+   * @param [in] name
+   * @param [in] num
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddDynamicOutput(const std::string &name, const uint32_t num);
+
+  /**
+   * @brief Add dynamic output
+   * @param [in] name
+   * @param [in] num
+   * @param [in] tensor
+   * @return OpDescBuilder
+   */
+  OpDescBuilder &AddDynamicOutput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor);
+
+  /**
+   * @brief Build op_desc
+   * @return OpDescPtr
+   */
+  OpDescPtr Build();
+
+ private:
+  std::string name_;
+  std::string type_;
+  std::vector<std::pair<std::string, GeTensorDesc>> inputs_;
+  std::vector<std::pair<std::string, GeTensorDesc>> outputs_;
+};
 }  // namespace ge
 #endif  // INC_GRAPH_OP_DESC_H_

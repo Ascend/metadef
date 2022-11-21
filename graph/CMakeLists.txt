@@ -1,6 +1,7 @@
 include(${METADEF_DIR}/cmake/build_type.cmake)
 
-set(GRAPH_SOURCE_LIST
+######### for base #############
+set(GRAPH_BASE_SOURCE_LIST
     "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
@@ -11,22 +12,12 @@ set(GRAPH_SOURCE_LIST
     "aligned_ptr.cc"
     "compute_graph.cc"
     "ascend_string.cc"
-    "axis_type_info.cc"
-    "gnode.cc"
-    "graph.cc"
-    "inference_context.cc"
-    "shape_refiner.cc"
-    "format_refiner.cc"
-    "ref_relation.cc"
     "model.cc"
     "model_serialize.cc"
     "node.cc"
     "op_desc.cc"
     "ir_meta.cc"
     "ir_data_type_symbol_store.cc"
-    "operator.cc"
-    "operator_factory.cc"
-    "operator_factory_impl.cc"
     "ge_attr_define.cc"
     "ge_tensor.cc"
     "common/large_bm.cc"
@@ -34,34 +25,20 @@ set(GRAPH_SOURCE_LIST
     "common/hyper_status.cc"
     "detail/attributes_holder.cc"
     "utils/anchor_utils.cc"
-    "utils/tuning_utils.cc"
     "utils/graph_utils.cc"
-    "utils/ffts_graph_utils.cc"
     "utils/dumper/ge_graph_dumper.cc"
     "utils/trace/trace_manager.cc"
     "utils/ge_ir_utils.cc"
     "utils/node_utils.cc"
-    "utils/op_desc_utils.cc"
     "utils/type_utils.cc"
     "utils/tensor_utils.cc"
     "utils/constant_utils.cc"
     "utils/connection_matrix.cc"
     "utils/cycle_detector.cc"
     "tensor.cc"
-    "debug/graph_debug.cc"
-    "opsproto/opsproto_manager.cc"
-    "${METADEF_DIR}/ops/op_imp.cpp"
     "option/ge_context.cc"
     "option/ge_local_context.cc"
-    "runtime_inference_context.cc"
-    "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
-    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
-    "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
-    "${METADEF_DIR}/third_party/transformer/src/transfer_range_according_to_format.cc"
-    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_utils.cc"
-    "utils/transformer_utils.cc"
     "utils/file_utils.cc"
-    "resource_context_mgr.cc"
     "serialization/attr_serializer.cc"
     "serialization/string_serializer.cc"
     "serialization/data_type_serializer.cc"
@@ -78,7 +55,6 @@ set(GRAPH_SOURCE_LIST
     "serialization/list_list_float_serializer.cc"
     "serialization/attr_serializer_registry.cc"
     "small_vector.cc"
-    "operator_impl.cc"
     "compile_cache_policy/compile_cache_policy.cc"
     "compile_cache_policy/compile_cache_desc.cc"
     "compile_cache_policy/policy_register.cc"
@@ -87,11 +63,94 @@ set(GRAPH_SOURCE_LIST
     "compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
     "compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
     "profiler.cc"
-    "parallelism/tensor_parallel_attrs.cc"
 )
+
+SET(GRAPH_SOURCE_LIST
+    "axis_type_info.cc"
+    "operator.cc"
+    "operator_factory.cc"
+    "operator_factory_impl.cc"
+    "operator_impl.cc"
+    "graph.cc"
+    "gnode.cc"
+    "format_refiner.cc"
+    "inference_context.cc"
+    "ref_relation.cc"
+    "resource_context_mgr.cc"
+    "runtime_inference_context.cc"
+    "shape_refiner.cc"
+    "debug/graph_debug.cc"
+    "opsproto/opsproto_manager.cc"
+    "utils/op_desc_utils.cc"
+    "utils/tuning_utils.cc"
+    "utils/ffts_graph_utils.cc"
+    "utils/transformer_utils.cc"
+    "utils/graph_utils_ex.cc"
+    "utils/node_utils_ex.cc"
+    "utils/op_desc_utils_ex.cc"
+    "parallelism/tensor_parallel_attrs.cc"
+    "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
+    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
+    "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
+    "${METADEF_DIR}/third_party/transformer/src/transfer_range_according_to_format.cc"
+    "${METADEF_DIR}/third_party/transformer/src/transfer_shape_utils.cc"
+    "${METADEF_DIR}/ops/op_imp.cpp"
+)
+
+######### libgraph_base.so #############
+add_library(graph_base SHARED
+    ${GRAPH_BASE_SOURCE_LIST}
+    ${GRAPH_SOURCE_LIST}
+    $<TARGET_OBJECTS:metadef_graph_protos_obj>
+)
+
+target_compile_options(graph_base PRIVATE
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>)
+
+target_compile_definitions(graph_base PRIVATE
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    google=ascend_private
+    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
+)
+
+target_include_directories(graph_base PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/proto/metadef_protos
+    ${METADEF_DIR}
+)
+
+target_link_options(graph_base PRIVATE
+    -Wl,-Bsymbolic
+)
+
+target_link_libraries(graph_base
+    PRIVATE
+        intf_pub
+        air_headers
+        static_mmpa
+        -Wl,--no-as-needed
+        c_sec
+        slog
+        json
+        -Wl,--as-needed
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
+        -ldl
+    PUBLIC
+        metadef_headers
+)
+
+target_link_libraries(graph_base PRIVATE ascend_protobuf error_manager)
+target_compile_options(graph_base PRIVATE -O2)
 
 ######### libgraph.so #############
 add_library(graph SHARED
+    ${GRAPH_BASE_SOURCE_LIST}
     ${GRAPH_SOURCE_LIST}
     $<TARGET_OBJECTS:metadef_graph_protos_obj>
 )
@@ -144,7 +203,6 @@ target_link_libraries(graph_static PRIVATE ascend_protobuf_static)
 
 target_compile_options(graph PRIVATE -O2)
 target_compile_options(graph_static PRIVATE $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>)
-
 
 set_target_properties(graph_static PROPERTIES
     WINDOWS_EXPORT_ALL_SYMBOLS TRUE

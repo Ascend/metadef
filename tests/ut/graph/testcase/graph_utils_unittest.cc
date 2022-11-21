@@ -28,6 +28,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_util.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 
 #undef private
 #undef protected
@@ -1208,7 +1209,7 @@ TEST_F(UtestGraphUtils, AppendInputNodeSuccess) {
 TEST_F(UtestGraphUtils, CopyGraphDstrGraphIsNull) {
   Graph src_graph("test0");
   Graph dst_graph("");
-  int ret = GraphUtils::CopyGraph(src_graph, dst_graph);
+  int ret = GraphUtilsEx::CopyGraph(src_graph, dst_graph);
   EXPECT_EQ(ret, ge::PARAM_INVALID);
 }
 

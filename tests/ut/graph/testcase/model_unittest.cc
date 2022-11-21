@@ -25,7 +25,7 @@
 #include "graph/node.h"
 #include "graph_builder_utils.h"
 #include "graph/utils/graph_utils.h"
-
+#include "graph/utils/graph_utils_ex.h"
 
 namespace ge {
 namespace {
@@ -53,7 +53,7 @@ static Graph BuildGraph() {
   add_op->AddDynamicOutputDesc("output", 1);
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  auto graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  auto graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   return graph;
 }
 
