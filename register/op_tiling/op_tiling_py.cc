@@ -20,11 +20,13 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/type_utils.h"
 #include "graph/debug/ge_log.h"
+#include "graph/debug/ge_attr_define.h"
 #include "register/op_tiling_info.h"
 #include "register/op_tiling_registry.h"
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_tiling_constants.h"
 #include "common/util/tiling_utils.h"
+#include "common/util/platform_info.h"
 #include "register/op_impl_registry.h"
 #include "exe_graph/runtime/storage_shape.h"
 #include "exe_graph/runtime/kernel_run_context_builder.h"
@@ -60,7 +62,7 @@ namespace {
 constexpr uint32_t kRightShiftBits = 4;
 constexpr uint32_t kAndBits = 15;
 constexpr char kHexDigits[] = "0123456789ABCDEF";
-constexpr size_t kSize = 2UL;
+constexpr size_t kSize = 3UL;
 constexpr char const *kMaxTilingSize = "op_para_size";
 constexpr size_t kMaxTilingDataSize = 16UL * 1024UL;
 constexpr size_t kWorkspaceHolerSize = 8UL;
@@ -1121,7 +1123,7 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
 }
 
 gert::KernelContextHolder BuildTilingParseContextHolder(ge::OpDescPtr &op_desc, const char *compile_info,
-                                                        const char *op_type,
+                                                        const char *op_type, fe::PlatFormInfos &platform_info,
                                                         const gert::OpImplRegistry::OpImplFunctions *funcs) {
   std::vector<std::pair<void *, gert::Chain::Deleter>> tiling_parse_outputs(1, std::make_pair(nullptr, nullptr));
   if (op_desc->GetType() != OP_TYPE_AUTO_TILING) {
@@ -1131,12 +1133,14 @@ gert::KernelContextHolder BuildTilingParseContextHolder(ge::OpDescPtr &op_desc, 
 
   return gert::KernelRunContextBuilder()
       .Inputs({std::make_pair(const_cast<char *>(compile_info), nullptr),
+               std::make_pair(reinterpret_cast<void *>(&platform_info), nullptr),
                std::make_pair(const_cast<char *>(op_type), nullptr)})
       .Outputs(tiling_parse_outputs)
       .Build(op_desc);
 }
 
-gert::KernelContextHolder BuildTilingContext(ContextComponent &context_com, gert::KernelContext *tiling_parse_context) {
+gert::KernelContextHolder BuildTilingContext(ContextComponent &context_com, gert::KernelContext *tiling_parse_context,
+                                             fe::PlatFormInfos &platform_info) {
   std::vector<void *> tiling_context_inputs(context_com.storage_shapes.size() + kSize, nullptr);
   for (size_t i = 0UL; i < context_com.index_to_tensors.size(); ++i) {
     tiling_context_inputs[context_com.index_to_tensors[i].first] =
@@ -1148,6 +1152,7 @@ gert::KernelContextHolder BuildTilingContext(ContextComponent &context_com, gert
     }
   }
   tiling_context_inputs[context_com.storage_shapes.size()] = *tiling_parse_context->GetOutputPointer<void **>(0);
+  tiling_context_inputs[context_com.storage_shapes.size() + 1] = reinterpret_cast<void *>(&platform_info);
   return gert::KernelRunContextBuilder()
       .Inputs(tiling_context_inputs)
       .Outputs(
@@ -1207,6 +1212,57 @@ ge::graphStatus ParseJson(const char *inputs, const char *outputs, const char *a
   return ge::GRAPH_SUCCESS;
 }
 
+int32_t ParseDeviceIdAndCoreType(const char *compile_info, uint32_t &device_id, std::string &core_type) {
+  const std::string compile_str = compile_info;
+  if (compile_str.empty()) {
+    GELOGD("compile info is empty.");
+    return 1;
+  }
+  nlohmann::json info_list;
+  try {
+    info_list = nlohmann::json::parse(compile_info);
+  } catch (const nlohmann::json::exception &e) {
+    GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", compile_info);
+    return 0;
+  }
+
+  for (const auto &info : info_list) {
+    if (info.contains("device_id")) {
+      device_id = info["device_id"].get<uint32_t>();
+      GELOGI("Parse device id: %u from %s.", device_id, compile_info);
+    }
+    if (info.contains(ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE.c_str())) {
+      core_type = info[ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE.c_str()].get<std::string>();
+      GELOGI("Parse core type: %s from %s.", core_type.c_str(), compile_info);
+    }
+  }
+  return 1;
+}
+
+int32_t GetPlatformInfo(const char *compile_info, fe::PlatFormInfos &platform_info) {
+  uint32_t device_id = 0U;
+  std::string core_type;
+  if (ParseDeviceIdAndCoreType(compile_info, device_id, core_type) == 0) {
+    return 0;
+  }
+
+  if (fe::PlatformInfoManager::Instance().InitializePlatformInfo() != 0U) {
+    GELOGE(ge::GRAPH_FAILED, "InitializePlatformInfo failed.");
+    REPORT_CALL_ERROR("E19999", "InitializePlatformInfo failed.");
+    return 0;
+  }
+
+  if (fe::PlatformInfoManager::Instance().GetPlatformInstanceByDevice(device_id, platform_info) != 0) {
+    GELOGE(ge::GRAPH_FAILED, "GetPlatformInstanceByDevice failed.");
+    REPORT_CALL_ERROR("E19999", "GetPlatformInstanceByDevice failed.");
+    return 0;
+  }
+  platform_info.SetCoreNumByCoreType(core_type);
+  GELOGD("device id: %u, core type: %s, core num: %u.", device_id, core_type.c_str(), platform_info.GetCoreNum());
+
+  return 1;
+}
+
 int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, const char *inputs, const char *outputs,
                               char *run_info_json, size_t run_info_len, uint64_t *elapse, const char *attrs) {
   if ((compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
@@ -1221,14 +1277,18 @@ int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, con
   }
   ContextComponent context_com {};
   context_com.op_desc = std::make_shared<ge::OpDesc>("", op_type);
-  if (context_com.op_desc == nullptr) {
+  if ((context_com.op_desc == nullptr) || (ParseJson(inputs, outputs, attrs, context_com) != ge::GRAPH_SUCCESS)) {
     return 0;
   }
-  if (ParseJson(inputs, outputs, attrs, context_com) != ge::GRAPH_SUCCESS) {
+
+  fe::PlatFormInfos platform_info;
+  if (GetPlatformInfo(compile_info, platform_info) == 0) {
     return 0;
   }
+
   // tiling parse
-  auto tiling_parse_context_holder = BuildTilingParseContextHolder(context_com.op_desc, compile_info, op_type, funcs);
+  auto tiling_parse_context_holder = BuildTilingParseContextHolder(context_com.op_desc, compile_info, op_type,
+                                                                   platform_info, funcs);
   if (DoTilingParse(funcs, tiling_parse_context_holder) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::GRAPH_FAILED, "Op %s tiling parse failed", op_type);
     REPORT_CALL_ERROR("E19999", "Op %s tiling parse failed", op_type);
@@ -1245,7 +1305,7 @@ int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, con
   context_com.tiling_data = gert::TilingData::CreateCap(aligned_max_size);
   context_com.workspace_size = gert::ContinuousVector::Create<size_t>(kWorkspaceHolerSize);
   gert::KernelContextHolder tiling_context_holder =
-      BuildTilingContext(context_com, tiling_parse_context_holder.context_);
+      BuildTilingContext(context_com, tiling_parse_context_holder.context_, platform_info);
   if (DoTilingWithTiming(funcs, elapse, tiling_context_holder) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::GRAPH_FAILED, "Op %s tiling failed", op_type);
     REPORT_CALL_ERROR("E19999", "Op %s tiling failed", op_type);

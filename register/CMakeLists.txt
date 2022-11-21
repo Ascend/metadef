@@ -88,6 +88,7 @@ target_link_libraries(register
         ascend_protobuf
         c_sec
         slog
+        platform
         graph
         static_mmpa
         -Wl,--as-needed

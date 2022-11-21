@@ -23,6 +23,7 @@ target_link_libraries(ut_exe_graph PRIVATE
         intf_pub
         air_headers
         slog_headers
+        platform_stub
         msprof_headers
         runtime_headers
         exe_graph error_manager
