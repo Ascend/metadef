@@ -1040,6 +1040,7 @@ const std::string ATTR_NAME_INPUT_MEM_TYPE_LIST = "_input_memory_type";
 const std::string ATTR_NAME_OUTPUT_MEM_TYPE_LIST = "_output_memory_type";
 const std::string ATTR_NAME_WORKSPACE_TYPE_LIST = "_workspace_type";
 const std::string ATTR_NAME_TENSOR_MEM_TYPE = "_tensor_memory_type";
+const std::string ATTR_NAME_SUB_STREAM_ID = "_sub_stream_id";
 
 // Op debug attrs
 const std::string ATTR_OP_DEBUG_FLAG = "_op_debug_flag";
