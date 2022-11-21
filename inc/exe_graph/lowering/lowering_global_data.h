@@ -54,6 +54,8 @@ class LoweringGlobalData {
       const std::function<std::vector<bg::ValueHolderPtr>()> &builder);
   bg::ValueHolderPtr GetUniqueValueHolder(const std::string &name) const;
   void SetUniqueValueHolder(const std::string &name, const bg::ValueHolderPtr &holder);
+  void SetValueHolders(const string &name, const bg::ValueHolderPtr &holder);
+  size_t GetValueHoldersSize(const string &name);
 
   void SetModelWeightSize(const size_t require_weight_size);
   size_t GetModelWeightSize() const;
@@ -70,7 +72,7 @@ class LoweringGlobalData {
   std::map<std::string, void *> graph_to_static_models_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
   uint64_t session_id_ = std::numeric_limits<uint64_t>::max();
-  std::map<std::string, std::vector<bg::ValueHolderPtr>> names_to_unique_value_holder_;
+  std::map<std::string, std::vector<bg::ValueHolderPtr>> unique_name_to_value_holders_;
   HoldersByGraph streams_;
   HoldersByGraph external_allocators_;
   // todo need delete and change to const_data after const_data is ready

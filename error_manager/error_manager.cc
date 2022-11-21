@@ -350,16 +350,20 @@ void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error
       break;
     }
   }
-  err_stream << current_code_print << ": Inner Error!" << std::endl;
-  for (auto &item : error_messages) {  // Display the first non 8888 error code
+  err_stream << current_code_print << ": Inner Error, Please contact support engineer!" << std::endl;
+  bool print_traceback_once = false;
+  for (auto &item : error_messages) { // Display the first non 8888 error code
     if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
       err_stream << "        " << item.error_message << std::endl;
       continue;
     }
     err_stream << current_code_print << "  " << item.error_message << std::endl;
     current_code_print = "      ";
+    if (!print_traceback_once) {
+      err_stream << "        TraceBack (most recent call last):" << std::endl;
+      print_traceback_once = true;
+    }
   }
-  err_stream << "        Solution: Please contact support engineer." << std::endl;
 }
 
 std::string ErrorManager::GetErrorMessage() {
