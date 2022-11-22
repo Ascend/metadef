@@ -49,6 +49,7 @@ class OpDescImpl {
 
   std::string GetType() const;
   void SetType(const std::string &type, OpDescImplPtr &impl_of_target_type);
+  void SetIrRelated(const OpDescImpl *r_op_desc);
 
   graphStatus AddInputDesc(const ge::GeTensorDesc &input_desc);
   graphStatus AddInputDesc(const uint32_t index, const ge::GeTensorDesc &input_desc);
@@ -118,9 +119,15 @@ class OpDescImpl {
 
   std::function<graphStatus(Operator &)> GetInferFunc() const;
   std::function<graphStatus(Operator &)> GetVerifyFunc() const;
+  std::function<graphStatus(Operator &)> GetInferFormatFunc() const;
+  std::function<graphStatus(Operator &)> GetInferValueRangeFunc() const;
+  std::function<graphStatus(Operator &)> GetInferDataSliceFunc() const;
+
   void AddInferFunc(const std::function<graphStatus(Operator &)> &func);
   void AddInferFormatFunc(const std::function<graphStatus(Operator &)> &func);
+  void AddInferValueRangeFunc(const std::function<graphStatus(Operator &)> &func);
   void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
+  void AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> &func);
 
   graphStatus InferShapeAndType(const OpDescPtr &op_desc);
   graphStatus VerifyIR() const;
@@ -220,6 +227,7 @@ class OpDescImpl {
   friend class ModelSerializeImp;
   friend class OnnxUtils;
   friend class GraphUtils;
+  friend class NodeUtils;
   std::vector<std::string> subgraph_instance_names_;
 
   // subgraph names to index, for a `if` operator:

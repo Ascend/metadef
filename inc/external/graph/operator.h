@@ -72,6 +72,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   friend class NodeUtils;
   friend class OpDescUtils;
   friend class GraphUtils;
+  friend class NodeUtilsEx;
+  friend class GraphUtilsEx;
 
   using OpInt = int64_t;
   using OpFloat = float32_t;

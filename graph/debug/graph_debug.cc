@@ -21,6 +21,7 @@
 #include "ge_util.h"
 #include "graph/types.h"
 #include "graph/debug/graph_debug.h"
+#include "graph/utils/graph_utils_ex.h"
 
 namespace {
 const std::string TAB = "    ";
@@ -192,7 +193,7 @@ void GraphDebug::DumpEdgeToDot(const NodePtr node, std::ostringstream &out_, con
 
 graphStatus GraphDebug::DumpGraphDotFile(const Graph &graph, const std::string &output_dot_file_name,
                                          const uint32_t flag) {
-  const auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  const auto compute_graph = GraphUtilsEx::GetComputeGraph(graph);
   if (compute_graph == nullptr) {
     GELOGI("Compute graph is NULL .");
     return GRAPH_SUCCESS;

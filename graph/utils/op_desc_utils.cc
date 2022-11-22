@@ -84,23 +84,7 @@ bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearInputDesc(const OpDescPtr op_desc,
                                                                                 const uint32_t index) {
-  GE_CHK_BOOL_EXEC((op_desc != nullptr) && (op_desc->impl_ != nullptr),
-                   REPORT_INNER_ERROR("E18888", "op_desc is nullptr, check invalid");
-                   return false, "[Check][Param] op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->impl_->inputs_desc_.size(),
-                   REPORT_INNER_ERROR("E18888", "index %u is invalid, out of range(0, %zu).",
-                                      index, op_desc->impl_->inputs_desc_.size());
-                   return false,
-                   "[Check][Param] index %u is invalid, out of range(0, %zu).",
-                   index, op_desc->impl_->inputs_desc_.size());
-
-  const auto iter = op_desc->impl_->inputs_desc_.begin() + static_cast<int64_t>(index);
-  if (iter < op_desc->impl_->inputs_desc_.end()) {
-    (void)op_desc->impl_->inputs_desc_.erase(iter);
-  } else {
-    GELOGW("[Clear][InputDesc] inputs_desc_ iterator out of range.");
-  }
-  return true;
+  return NodeUtils::ClearInputDesc(op_desc, index);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::HasQuantizeFactorParams(const OpDescPtr &op_desc) {
@@ -142,22 +126,7 @@ bool OpDescUtils::ClearOutputDesc(const NodePtr &node) {
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDescUtils::ClearOutputDesc(const OpDescPtr &op_desc,
                                                                                  const uint32_t index) {
-  GE_CHK_BOOL_EXEC((op_desc != nullptr) && (op_desc->impl_ != nullptr),
-                   REPORT_INNER_ERROR("E18888", "param op_desc is nullptr, check invalid");
-                   return false, "[Check][Param] op_desc is nullptr");
-  GE_CHK_BOOL_EXEC(index < op_desc->impl_->outputs_desc_.size(),
-                   REPORT_INNER_ERROR("E18888", "index %u is invalid. out of range(0, %zu)",
-                                      index, op_desc->impl_->outputs_desc_.size());
-                   return false,
-                   "[Check][Param] index %u is invalid. out of range(0, %zu)",
-                   index, op_desc->impl_->outputs_desc_.size());
-  const auto iter = op_desc->impl_->outputs_desc_.begin() + static_cast<int64_t>(index);
-  if (iter < op_desc->impl_->outputs_desc_.end()) {
-    (void)op_desc->impl_->outputs_desc_.erase(iter);
-  } else {
-    GELOGW("[Clear][OutputDesc] outputs_desc_ iterator out of range.");
-  }
-  return true;
+  return NodeUtils::ClearOutputDesc(op_desc, index);
 }
 
 bool OpDescUtils::HasQuantizeFactorParams(const OpDesc &op_desc) { return op_desc.HasAttr(OP_DESC_QUANT_PARAMS); }
@@ -761,66 +730,11 @@ OpDescUtils::SetWeights(ge::Node &node, const std::map<int, ge::GeTensorPtr> &we
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescUtils::CloneOpDesc(const ConstOpDescPtr &org_op_desc) {
-  GE_CHECK_NOTNULL_EXEC(org_op_desc, return nullptr);
-  const auto op_def = ComGraphMakeShared<proto::OpDef>();
-  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
-
-  ModelSerializeImp imp;
-  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
-
-  imp.SetProtobufOwner(op_def);
-  OpDescPtr op_desc = nullptr;
-  GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
-                   REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed");
-                   return op_desc, "[Call][UnserializeOpDesc] op_desc unserialize failed");
-
-  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
-  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
-
-  // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
-  if (!op_desc->impl_->input_name_idx_.empty()) {
-    op_desc->impl_->input_name_idx_.clear();
-  }
-  if (!op_desc->impl_->output_name_idx_.empty()) {
-    op_desc->impl_->output_name_idx_.clear();
-  }
-  op_desc->impl_->MutableIRMeta() = IRMetaData(op_desc->GetName());
-
-  return op_desc;
+  return GraphUtils::CloneOpDesc(org_op_desc);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
-  if ((org_op_desc == nullptr) || (org_op_desc->impl_ == nullptr)) {
-    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
-    return nullptr;
-  }
-  const auto op_def = ComGraphMakeShared<proto::OpDef>();
-  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
-
-  ModelSerializeImp imp;
-  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
-
-  imp.SetProtobufOwner(op_def);
-  OpDescPtr op_desc = nullptr;
-  if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
-    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
-    return nullptr;
-  }
-
-  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
-  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
-  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
-                                         org_op_desc->impl_->input_name_idx_.cend());
-  op_desc->impl_->MutableIRMeta() = org_op_desc->impl_->GetIRMeta();
-  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
-                                          org_op_desc->impl_->output_name_idx_.cend());
-
-  op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
-  op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
-  op_desc->impl_->verifier_func_ = org_op_desc->impl_->verifier_func_;
-
-  return op_desc;
+  return GraphUtils::CopyOpDesc(org_op_desc);
 }
 
 OpDescPtr OpDescUtils::CreateConstOp(const GeTensorPtr &tensor_ptr) {
@@ -898,140 +812,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDescUtils::ClearWei
                       const_op->GetType().c_str());
   }
   return GRAPH_SUCCESS;
-}
-
-///
-/// @brief Add input
-/// @param [in] name
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddInput(const std::string &name) {
-  inputs_.emplace_back(std::make_pair(name, GeTensorDesc()));
-  return *this;
-}
-
-///
-/// @brief Add input
-/// @param [in] name
-/// @param [in] tensor
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-OpDescBuilder& OpDescBuilder::AddInput(const std::string &name, const GeTensorDesc &tensor) {
-  inputs_.emplace_back(std::make_pair(name, tensor));
-  return *this;
-}
-
-///
-/// @brief Add dynamic input
-/// @param [in] name
-/// @param [in] num
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddDynamicInput(const std::string &name,
-                                                                                             const uint32_t num) {
-  for (uint32_t i = 0U; i < num; i++) {
-    inputs_.emplace_back(std::make_pair(name + std::to_string(i), GeTensorDesc()));
-  }
-  return *this;
-}
-
-///
-/// @brief Add dynamic input
-/// @param [in] name
-/// @param [in] num
-/// @param [in] tensor
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-OpDescBuilder& OpDescBuilder::AddDynamicInput(const std::string &name, const uint32_t num, const GeTensorDesc &tensor) {
-  for (uint32_t i = 0U; i < num; i++) {
-    inputs_.emplace_back(std::make_pair(name + std::to_string(i), tensor));
-  }
-  return *this;
-}
-
-///
-/// @brief Add output
-/// @param [in] name
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddOutput(const std::string &name) {
-  outputs_.emplace_back(std::make_pair(name, GeTensorDesc()));
-  return *this;
-}
-
-///
-/// @brief Add output
-/// @param [in] name
-/// @param [in] tensor
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-OpDescBuilder& OpDescBuilder::AddOutput(const std::string &name, const GeTensorDesc &tensor) {
-  outputs_.emplace_back(std::make_pair(name, tensor));
-  return *this;
-}
-
-///
-/// @brief Add dynamic output
-/// @param [in] name
-/// @param [in] num
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name,
-                                                                                              const uint32_t num) {
-  for (uint32_t i = 0U; i < num; i++) {
-    outputs_.emplace_back(std::make_pair(name + std::to_string(i), GeTensorDesc()));
-  }
-  return *this;
-}
-
-///
-/// @brief Add dynamic output
-/// @param [in] name
-/// @param [in] num
-/// @param [in] tensor
-/// @return OpDescBuilder
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-OpDescBuilder& OpDescBuilder::AddDynamicOutput(const std::string &name, const uint32_t num,
-                                               const GeTensorDesc &tensor) {
-  for (uint32_t i = 0U; i < num; i++) {
-    outputs_.emplace_back(std::make_pair(name + std::to_string(i), tensor));
-  }
-  return *this;
-}
-
-///
-/// @brief Build op_desc
-/// @return OpDescPtr
-///
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr OpDescBuilder::Build() {
-  const OpDescPtr op_desc = MakeShared<OpDesc>(name_, type_);
-  if (op_desc == nullptr) {
-    REPORT_CALL_ERROR("E18888", "create opdesc failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
-    GELOGE(GRAPH_FAILED, "[Create][OpDesc] failed, name:%s, type:%s.", name_.c_str(), type_.c_str());
-    return nullptr;
-  }
-
-  for (auto &input : inputs_) {
-    if (op_desc->AddInputDesc(input.first, input.second) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E18888", "AddInputDesc failed, op:%s.", name_.c_str());
-      GELOGE(GRAPH_FAILED, "[Add][InputDesc] failed, op:%s.", name_.c_str());
-      return nullptr;
-    }
-  }
-
-  for (auto &output : outputs_) {
-    if (op_desc->AddOutputDesc(output.first, output.second) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E18888", "AddOutputDesc failed, op:%s", name_.c_str());
-      GELOGE(GRAPH_FAILED, "[Add][OutputDesc] failed, op:%s.", name_.c_str());
-      return nullptr;
-    }
-  }
-
-  return op_desc;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY

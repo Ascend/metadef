@@ -31,6 +31,7 @@
 #include "op_tiling/op_compile_info_manager.h"
 #include "common/sgt_slice_type.h"
 #include "graph/def_types.h"
+#include "graph/utils/node_utils_ex.h"
 
 namespace optiling {
 using Status = domi::Status;
@@ -1094,7 +1095,7 @@ ge::graphStatus UpDateNodeShapeBack(const ge::OpDescPtr op_desc, const ffts::Thr
 // For FFTS+ dynamic shape
 extern "C" ge::graphStatus OpFftsPlusCalculate(const ge::Operator &op, std::vector<OpRunInfoV2> &op_run_info)
 {
-  const auto node = ge::NodeUtils::GetNodeFromOperator(op);
+  const auto node = ge::NodeUtilsEx::GetNodeFromOperator(op);
   GE_CHECK_NOTNULL(node);
   const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);

@@ -35,6 +35,7 @@ using GraphPtr = std::shared_ptr<Graph>;
 /*lint -e148*/
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Graph {
   friend class GraphUtils;
+  friend class GraphUtilsEx;
 
  public:
   ATTRIBUTED_DEPRECATED(Graph(const char_t *))
