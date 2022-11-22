@@ -50,7 +50,6 @@ class GraphPassUtil {
  public:
  using OriginOpAttrsVec = std::vector<std::vector<std::string>>;
  using UnorderedMapping = std::unordered_map<std::string, OriginOpAttrsVec>;
- using UnorderedMappingOld = std::unordered_map<std::string, std::vector<std::string>>;
   /** set outputdesc attr for data dump
    *
    * @param origin_index,usually is origin node output index
@@ -107,10 +106,6 @@ class GraphPassUtil {
 
   static Status GetOpTypeMapToGraph(NodeMapInfoPtr &node_map_info, const ge::ComputeGraph &graph);
 
-  static void RecordPassnameAndOriginalNames(const std::vector<ge::NodePtr> &original_nodes,
-                                             std::vector<ge::NodePtr> &fus_nodes, const string &pass_name,
-                                             const std::vector<std::string> &origin_op_names = std::vector<string>());
-
   static void RecordPassnameAndOriginalAttrs(const std::vector<ge::NodePtr> &original_nodes,
                                              std::vector<ge::NodePtr> &fus_nodes, const string &pass_name,
                                              const OriginOpAttrsVec &origin_op_attrs = OriginOpAttrsVec());
@@ -136,10 +131,6 @@ class GraphPassUtil {
   static void InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &original_nodes,
                                       const std::vector<ge::NodePtr> &fusion_nodes,
                                       BackWardInheritMode inherit_mode = BackWardInheritMode::kFusedNode);
-
-  static void RecordOriginalOpNames(const std::vector<ge::NodePtr> &original_nodes,
-                                    const ge::OpDescPtr &op_desc, const string &pass_name,
-                                    const std::vector<std::string> &origin_op_names = std::vector<string>());
 
   static void RecordOriginalOpAttrs(const std::vector<ge::NodePtr> &original_nodes,
                                     const ge::OpDescPtr &op_desc, const string &pass_name,
