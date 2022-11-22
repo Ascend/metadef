@@ -369,7 +369,7 @@ void GraphPassUtil::InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &orig
 void GraphPassUtil::RecordOriginalOpAttrs(const std::vector<ge::NodePtr> &original_nodes,
                                           const ge::OpDescPtr &op_desc, const string &pass_name,
                                           const OriginOpAttrsVec &origin_op_attrs) {
-  const char* dump_ge_graph = std::getenv(kDumpGeGraph);
+  const ge::char_t *dump_ge_graph = std::getenv(kDumpGeGraph);
   FUSION_TURBO_NOTNULL(dump_ge_graph,);
 
   // 1. get the original_names
@@ -397,7 +397,7 @@ void GraphPassUtil::RecordOriginalOpAttrs(const std::vector<ge::NodePtr> &origin
     if ((op_attrs_maps_tmp != nullptr) && (!op_attrs_maps_tmp->empty())) {
       size_t op_attrs_index = 0;
       std::vector<std::string> pass_names;
-      if (!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPassName, pass_names) || pass_names.empty()) {
+      if ((!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPassName, pass_names)) || pass_names.empty()) {
         continue;
       }
       for (const auto &pass_name_tmp : pass_names) {
@@ -408,7 +408,7 @@ void GraphPassUtil::RecordOriginalOpAttrs(const std::vector<ge::NodePtr> &origin
         (void)origin_op_attrs_map->insert(std::pair<std::string, OriginOpAttrsVec>(pass_name_tmp,
             (*op_attrs_maps_tmp)[pass_name_tmp]));
         // get last item of op_attrs_maps_tmp and push all origin_op_attrs into vector
-        if (op_attrs_index == (pass_names.size() - 1)) {
+        if (op_attrs_index == (pass_names.size() - 1UL)) {
           for (const auto &origin_op_attrs_tmp : (*op_attrs_maps_tmp)[pass_name_tmp]) {
             origin_op_attrs_vec.push_back(origin_op_attrs_tmp);
           }

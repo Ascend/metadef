@@ -84,7 +84,7 @@ FusionPassRegistry &FusionPassRegistry::GetInstance() {
 }
 
 void FusionPassRegistry::RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
-                                      CreateFn create_fn, uint64_t attr) const {
+                                      CreateFn create_fn, PassAttr attr) const {
   if (impl_ == nullptr) {
     GELOGE(ge::MEMALLOC_FAILED, "[Check][Param]param impl is nullptr, GraphFusionPass[type=%d,name=%s]: "
            "failed to register the graph fusion pass",
@@ -116,7 +116,7 @@ std::map<std::string, FusionPassRegistry::CreateFn> FusionPassRegistry::GetCreat
 }
 
 FusionPassRegistrar::FusionPassRegistrar(const GraphFusionPassType &pass_type, const std::string &pass_name,
-                                         GraphPass *(*create_fn)(), uint64_t attr) {
+                                         GraphPass *(*create_fn)(), PassAttr attr) {
   if ((pass_type < BUILT_IN_GRAPH_PASS) || (pass_type >= GRAPH_FUSION_PASS_TYPE_RESERVED)) {
     GELOGE(ge::PARAM_INVALID, "[Check][Param:pass_type] value:%d is not supported.", pass_type);
     return;

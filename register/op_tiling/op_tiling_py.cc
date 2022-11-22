@@ -76,7 +76,7 @@ struct ContextComponent {
   bool atomic_flag = true;
 };
 
-bool FindImplFuncs(const char *op_type, const gert::OpImplRegistry::OpImplFunctions *&funcs) {
+bool FindImplFuncs(const ge::char_t *op_type, const gert::OpImplRegistry::OpImplFunctions *&funcs) {
     funcs = gert::OpImplRegistry::GetInstance().GetOpImpl(op_type);
     if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
       funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("DefaultImpl");

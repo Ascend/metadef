@@ -16,10 +16,10 @@
 
 #ifndef INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_PASS_DESC_H_
 #define INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_PASS_DESC_H_
-
+#include <stdint.h>
 namespace fe {
 using PassAttr = uint64_t;
-const PassAttr FORBIDDEN_CLOSE = 0x01;  // forbidden close, can not be closed by fusion switch
-const PassAttr SINGLE_SCENE_OPEN = 0x04;  // open for single op scene, can be close by fusion switch
+const PassAttr FORBIDDEN_CLOSE = 0x01U;  // forbidden close, can not be closed by fusion switch
+const PassAttr SINGLE_SCENE_OPEN = 0x04U;  // open for single op scene, can be close by fusion switch
 }  // namespace fe
 #endif  // INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_PASS_DESC_H_
