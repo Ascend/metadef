@@ -18,9 +18,9 @@
 namespace gert {
 class ShapeUtilsUT : public testing::Test {};
 TEST_F(ShapeUtilsUT, EnsureNotScalar_ReturnInput_NotScalarShape) {
-  Shape s1{1,2,3};
+  Shape s1{1, 2, 3};
   Shape s2{1};
-  Shape s3{0,1};
+  Shape s3{0, 1};
   ASSERT_EQ(&EnsureNotScalar(s1), &s1);
   ASSERT_EQ(&EnsureNotScalar(s2), &s2);
   ASSERT_EQ(&EnsureNotScalar(s3), &s3);
@@ -31,5 +31,25 @@ TEST_F(ShapeUtilsUT, EnsureNotScalar_ReturnVec1_ScalarShape) {
   ASSERT_FALSE(s.IsScalar());
   ASSERT_EQ(s.GetDimNum(), 1);
   ASSERT_EQ(s.GetDim(0), 1);
+}
+TEST_F(ShapeUtilsUT, ShapeToString_Empty_Scalar) {
+  Shape s;
+  EXPECT_TRUE(ShapeToString(s).empty());
+}
+TEST_F(ShapeUtilsUT, ShapeToString_NoComman_OneDim) {
+  Shape s{1};
+  EXPECT_EQ(ShapeToString(s), "1");
+}
+TEST_F(ShapeUtilsUT, ShapeToString_DefaulJoinStr) {
+  Shape s{1, 2, 3};
+  EXPECT_EQ(ShapeToString(s), "1,2,3");
+}
+TEST_F(ShapeUtilsUT, ShapeToString_SelfDefinedStr) {
+  Shape s{1, 2, 3};
+  EXPECT_EQ(ShapeToString(s, ", "), "1, 2, 3");
+}
+TEST_F(ShapeUtilsUT, ShapeToString_UseComman_NullJoinStr) {
+  Shape s{1, 2, 3};
+  EXPECT_EQ(ShapeToString(s, nullptr), "1,2,3");
 }
 }  // namespace gert
