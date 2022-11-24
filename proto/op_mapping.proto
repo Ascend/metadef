@@ -64,6 +64,7 @@ message Task {
         DEBUG = 2;
         SDMA = 3;
         FFTSPLUS = 4;
+        DSA = 5;
     }
     uint32 task_id = 1;
     uint32 stream_id = 2;
