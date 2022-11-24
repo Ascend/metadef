@@ -56,6 +56,7 @@ struct GETaskKernelHcclInfo {
   std::vector<rtStream_t> hcclStreamList;
   std::vector<HcclDumpInfo> hccl_dump_info;
   std::vector<void *> global_workspace_addr;
+  uint32_t hcclQosCfg;
 };
 
 struct GETaskInfo {
