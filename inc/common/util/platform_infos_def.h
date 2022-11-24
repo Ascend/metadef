@@ -42,8 +42,11 @@ class PlatFormInfos {
   std::map<std::string, std::vector<std::string>> GetAICoreIntrinsicDtype();
   std::map<std::string, std::vector<std::string>> GetVectorCoreIntrinsicDtype();
   bool GetPlatformRes(const std::string &label, const std::string &key, std::string &val);
+  bool GetPlatformResWithLock(const std::string &label, const std::string &key, std::string &val);
   bool GetPlatformRes(const std::string &label, std::map<std::string, std::string> &res);
+  bool GetPlatformResWithLock(const std::string &label, std::map<std::string, std::string> &res);
   uint32_t GetCoreNum() const;
+  uint32_t GetCoreNumWithLock() const;
   void GetLocalMemSize(const LocalMemType &mem_type, uint64_t &size);
   void GetLocalMemBw(const LocalMemType &mem_type, uint64_t &bw_size);
 
@@ -54,6 +57,7 @@ class PlatFormInfos {
   void SetAICoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes);
   void SetVectorCoreIntrinsicDtype(std::map<std::string, std::vector<std::string>> &intrinsic_dtypes);
   void SetPlatformRes(const std::string &label, std::map<std::string, std::string> &res);
+  void SetPlatformResWithLock(const std::string &label, std::map<std::string, std::string> &res);
   std::map<std::string, std::vector<std::string>> GetFixPipeDtypeMap();
   void SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map);
   void SetCoreNumByCoreType(const std::string &core_type);
