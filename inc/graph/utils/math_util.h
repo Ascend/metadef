@@ -141,6 +141,22 @@ bool AddOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
 #endif
 }
 
+template<typename T, typename TR>
+bool RoundUpOverflow(T value, T multiple_of, TR &ret) {
+  if (multiple_of == 0) {
+    ret = 0;
+    return true;
+  }
+  auto remainder = value % multiple_of;
+  if (remainder == 0) {
+    if (!IntegerChecker<TR>::Compat(value)) {
+      return true;
+    }
+    ret = static_cast<TR>(value);
+    return false;
+  }
+  return AddOverflow(value - remainder, multiple_of, ret);
+}
 template<typename T>
 T CeilDiv16(const T n) {
   if (n & 0xF) {
