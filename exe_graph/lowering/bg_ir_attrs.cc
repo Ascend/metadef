@@ -115,6 +115,17 @@ bool AppendVectorVectorAttr(const ge::AnyValue &attr, std::vector<std::vector<ui
   attrs.emplace_back(std::move(buf));
   return true;
 }
+size_t GetGeTensorSize(const ge::GeTensor &tensor) {
+  auto dt = tensor.GetTensorDesc().GetDataType();
+  if (dt == ge::DT_STRING) {
+    return tensor.GetData().GetSize();
+  }
+  auto shape_size = tensor.GetTensorDesc().GetShape().GetShapeSize();
+  if (tensor.GetTensorDesc().GetShape().IsScalar()) {
+    shape_size = 1;
+  }
+  return static_cast<size_t>(ge::GetSizeInBytes(shape_size, dt));
+}
 bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   auto val = attr.Get<ge::GeTensor>();
   GE_ASSERT_NOTNULL(val);
@@ -125,7 +136,8 @@ bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>
     return false;
   }
   size_t total_size;
-  auto tensor_holder = Tensor::CreateFollowing(shape_size, tensor_desc.GetDataType(), total_size);
+  size_t tensor_size = GetGeTensorSize(*val);
+  auto tensor_holder = Tensor::CreateFollowing(val->GetTensorDesc().GetDataType(), tensor_size, total_size);
   GE_ASSERT_NOTNULL(tensor_holder);
   auto tensor = ge::PtrToPtr<uint8_t, Tensor>(tensor_holder.get());
   GeShapeToGertShape(tensor_desc.GetShape(), tensor->MutableStorageShape());

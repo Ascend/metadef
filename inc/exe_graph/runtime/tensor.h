@@ -20,6 +20,7 @@
 #include "storage_shape.h"
 #include "storage_format.h"
 #include "tensor_data.h"
+#include "graph/utils/tensor_utils.h"
 
 namespace gert {
 using TensorAddress = void *;            ///< Tensor地址
@@ -132,6 +133,18 @@ class Tensor {
   static std::unique_ptr<uint8_t[]> CreateFollowing(const int64_t shape_size, const ge::DataType dt,
                                                     size_t &total_size) {
     total_size = static_cast<size_t>(ge::GetSizeInBytes(shape_size, dt));
+    return NewFollowingTensor(dt, total_size);
+  }
+  /**
+   * 创建一个Tensor，tensor数据在Tensor对象后面连续排布
+   * @param tensor_size tensor长度
+   * @param dt 数据类型
+   * @param total_size 创建出的Tensor在内存中的长度
+   * @return 创建出的Tensor指针
+   */
+  static std::unique_ptr<uint8_t[]> CreateFollowing(const ge::DataType dt, const size_t tensor_size,
+                                                    size_t &total_size) {
+    total_size = tensor_size;
     if (ge::AddOverflow(total_size, sizeof(Tensor), total_size)) {
       return nullptr;
     }
@@ -139,9 +152,9 @@ class Tensor {
     if (holder == nullptr) {
       return nullptr;
     }
-
     auto tensor = reinterpret_cast<Tensor *>(holder.get());
-    new (holder.get()) Tensor({}, {}, kFollowing, dt, nullptr);
+    new (holder.get()) Tensor({}, {},  dt);
+    tensor->SetPlacement(kFollowing);
     tensor->tensor_data_ = TensorData(nullptr, nullptr, total_size - sizeof(Tensor), kFollowing);
     return holder;
   }
@@ -271,7 +284,21 @@ class Tensor {
   TensorData &MutableTensorData() {
     return tensor_data_;
   }
-
+ private:
+  static std::unique_ptr<uint8_t[]> NewFollowingTensor(const ge::DataType dt, size_t &total_size) {
+    if (ge::AddOverflow(total_size, sizeof(Tensor), total_size)) {
+      return nullptr;
+    }
+    auto holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
+    if (holder == nullptr) {
+      return nullptr;
+    }
+    auto tensor = reinterpret_cast<Tensor *>(holder.get());
+    new (holder.get()) Tensor({}, {},  dt);
+    tensor->SetPlacement(kFollowing);
+    tensor->tensor_data_ = TensorData(nullptr, nullptr, total_size - sizeof(Tensor), kFollowing);
+    return holder;
+  }
  private:
   StorageShape storage_shape_;
   StorageFormat storage_format_;
