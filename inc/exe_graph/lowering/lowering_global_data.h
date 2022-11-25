@@ -47,7 +47,6 @@ class LoweringGlobalData {
   LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator, const ExecuteGraphType graph_type);
   bg::ValueHolderPtr GetOrCreateAllocator(const AllocatorDesc desc);
 
-  uint64_t GetSessionId();
   bg::ValueHolderPtr GetOrCreateUniqueValueHolder(const std::string &name,
                                                   const std::function<bg::ValueHolderPtr()> &builder);
   std::vector<bg::ValueHolderPtr> GetOrCreateUniqueValueHolder(const std::string &name,
@@ -71,7 +70,6 @@ class LoweringGlobalData {
   std::map<int64_t, void *> node_ids_to_known_subgraph_models_;
   std::map<std::string, void *> graph_to_static_models_;
   std::map<AllocatorDesc, bg::ValueHolderPtr> placements_to_allocator_;
-  uint64_t session_id_ = std::numeric_limits<uint64_t>::max();
   std::map<std::string, std::vector<bg::ValueHolderPtr>> unique_name_to_value_holders_;
   HoldersByGraph streams_;
   HoldersByGraph external_allocators_;

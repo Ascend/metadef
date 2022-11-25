@@ -179,14 +179,6 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(const AllocatorDesc 
   }
 }
 
-uint64_t LoweringGlobalData::GetSessionId() {
-  if (session_id_ == std::numeric_limits<uint64_t>::max()) {
-    static std::atomic<uint64_t> global_session_id(0U);
-    session_id_ = global_session_id++;
-  }
-  return session_id_;
-}
-
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateUniqueValueHolder(
     const std::string &name, const std::function<bg::ValueHolderPtr()> &builder) {
   return GetOrCreateUniqueValueHolder(name, [&builder]() -> std::vector<bg::ValueHolderPtr> { return {builder()}; })[0];

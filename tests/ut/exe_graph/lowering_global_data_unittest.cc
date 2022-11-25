@@ -218,25 +218,6 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_External
             "success");
 }
 
-TEST_F(LoweringGlobalDataUT, GetSessionIdSameWithOneGlobalData) {
-  LoweringGlobalData gd;
-
-  auto session_id1 = gd.GetSessionId();
-  EXPECT_NE(session_id1, std::numeric_limits<uint64_t>::max());
-  auto session_id2 = gd.GetSessionId();
-  EXPECT_EQ(session_id1, session_id2);
-}
-
-TEST_F(LoweringGlobalDataUT, GetSessionIdDifferentWithDiffGlobalData) {
-  LoweringGlobalData gd1;
-
-  auto session_id1 = gd1.GetSessionId();
-  EXPECT_NE(session_id1, std::numeric_limits<uint64_t>::max());
-  LoweringGlobalData gd2;
-  auto session_id2 = gd2.GetSessionId();
-  EXPECT_EQ(session_id2, session_id1 + 1U);
-}
-
 TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysReturnOnRootFrame_CallInSubgraph) {
   InitTestFrames();
   LoweringGlobalData gd;
@@ -335,7 +316,7 @@ TEST_F(LoweringGlobalDataUT, OnMainRootLastOk) {
   auto builder = [&]() -> bg::ValueHolderPtr {
     uint64_t container_id = global_container_id++;
     auto container_id_holder = bg::ValueHolder::CreateConst(&container_id, sizeof(uint64_t));
-    uint64_t session_id = gd.GetSessionId();
+    uint64_t session_id = 0;
     auto session_id_holder = bg::ValueHolder::CreateConst(&session_id, sizeof(uint64_t));
     auto resource_holder = bg::FrameSelector::OnMainRoot([&]() -> std::vector<bg::ValueHolderPtr> {
       auto create_session_holder = bg::ValueHolder::CreateSingleDataOutput("CreateSession", {session_id_holder});
