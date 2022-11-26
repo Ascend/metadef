@@ -29,6 +29,7 @@ class PlatformInfoManager {
   PlatformInfoManager &operator=(const PlatformInfoManager &) = delete;
 
   static PlatformInfoManager &Instance();
+  static PlatformInfoManager &GeInstance();
   uint32_t InitializePlatformInfo();
   uint32_t Finalize();
 
