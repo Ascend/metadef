@@ -224,15 +224,6 @@ Status GraphPassUtil::GetOpTypeMapToGraph(NodeMapInfoPtr &node_map_info, const g
   return SUCCESS;
 }
 
-void GraphPassUtil::RecordPassnameAndOriginalNames(const std::vector<ge::NodePtr> &original_nodes,
-                                                   std::vector<ge::NodePtr> &fus_nodes, const string &pass_name,
-                                                   const std::vector<std::string> &origin_op_names) {
-  for (auto &node : fus_nodes) {
-    (void)StoreAndUpdataOriginFusionPassName(node->GetOpDesc(), original_nodes, pass_name);
-    RecordOriginalOpNames(original_nodes, node->GetOpDesc(), pass_name, origin_op_names);
-  }
-}
-
 void GraphPassUtil::RecordPassnameAndOriginalAttrs(const std::vector<ge::NodePtr> &original_nodes,
                                                    std::vector<ge::NodePtr> &fus_nodes, const string &pass_name,
                                                    const OriginOpAttrsVec &origin_op_attrs) {
@@ -373,68 +364,6 @@ void GraphPassUtil::InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &orig
   }
 
   InheritGraphRelatedAttr(original_nodes, fusion_nodes, inherit_mode);
-}
-
-void GraphPassUtil::RecordOriginalOpNames(const std::vector<ge::NodePtr> &original_nodes,
-                                          const ge::OpDescPtr &op_desc, const string &pass_name,
-                                          const std::vector<std::string> &origin_op_names) {
-  const char* dump_ge_graph = std::getenv(kDumpGeGraph);
-  FUSION_TURBO_NOTNULL(dump_ge_graph,);
-
-  // 1. get the original_names
-  GELOGD("Start to record op[%s] origin op names after pass[%s]", op_desc->GetName().c_str(), pass_name.c_str());
-  std::shared_ptr<UnorderedMappingOld> origin_op_names_map = nullptr;
-  REGISTER_MAKE_SHARED(origin_op_names_map = std::make_shared<UnorderedMappingOld>(), return);
-  std::vector<std::string> origin_op_names_vec;
-  size_t index = 0;
-
-  if (op_desc == nullptr) {
-    GELOGD("op_desc is nullptr");
-    return;
-  }
-  for (const ge::NodePtr &original_node : original_nodes) {
-    if (original_node == nullptr) {
-      return;
-    }
-    const ge::OpDescPtr origin_op_desc_ptr = original_node->GetOpDesc();
-    if (origin_op_desc_ptr == nullptr) {
-      return;
-    }
-    std::shared_ptr<UnorderedMappingOld> op_names_maps_tmp = nullptr;
-    REGISTER_MAKE_SHARED(op_names_maps_tmp = std::make_shared<UnorderedMappingOld>(), return);
-    op_names_maps_tmp = origin_op_desc_ptr->TryGetExtAttr(ge::ATTR_NAME_ORIGIN_OP_NAMES_MAP, op_names_maps_tmp);
-    if ((op_names_maps_tmp != nullptr) && (!op_names_maps_tmp->empty())) {
-      size_t op_names_index = 0;
-      std::vector<std::string> pass_names;
-      if (!ge::AttrUtils::GetListStr(origin_op_desc_ptr, kPassName, pass_names) || pass_names.empty()) {
-        continue;
-      }
-      for (const auto &pass_name_tmp : pass_names) {
-        if (op_names_maps_tmp->find(pass_name_tmp) == op_names_maps_tmp->cend()) {
-          GELOGD("Not find pass_name[%s] in ATTR_NAME_ORIGIN_OP_NAMES_MAP", pass_name_tmp.c_str());
-          continue;
-        }
-        (void)origin_op_names_map->insert(std::pair<std::string, std::vector<std::string>>(pass_name_tmp,
-            (*op_names_maps_tmp)[pass_name_tmp]));
-        // get last item of op_names_maps_tmp and push all origin_op_names into vector
-        if (op_names_index == (pass_names.size() - 1)) {
-          for (const auto &origin_op_names_tmp : (*op_names_maps_tmp)[pass_name_tmp]) {
-            origin_op_names_vec.push_back(origin_op_names_tmp);
-          }
-        }
-        ++op_names_index;
-      }
-    } else if (origin_op_names.empty()) {
-      origin_op_names_vec.push_back(origin_op_desc_ptr->GetName().c_str());
-    } else if (index < origin_op_names.size()) {
-      origin_op_names_vec.push_back(origin_op_names.at(index));
-    }
-    ++index;
-  }
-  (void)origin_op_names_map->insert(std::pair<std::string, std::vector<std::string>>(pass_name, origin_op_names_vec));
-
-  // 2. set the dump attr
-  (void)op_desc->SetExtAttr(ge::ATTR_NAME_ORIGIN_OP_NAMES_MAP, origin_op_names_map);
 }
 
 void GraphPassUtil::RecordOriginalOpAttrs(const std::vector<ge::NodePtr> &original_nodes,
