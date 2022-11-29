@@ -121,9 +121,6 @@ size_t GetGeTensorSize(const ge::GeTensor &tensor) {
     return tensor.GetData().GetSize();
   }
   auto shape_size = tensor.GetTensorDesc().GetShape().GetShapeSize();
-  if (tensor.GetTensorDesc().GetShape().IsScalar()) {
-    shape_size = 1;
-  }
   return static_cast<size_t>(ge::GetSizeInBytes(shape_size, dt));
 }
 bool AppendTensorAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
