@@ -1000,10 +1000,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   stream_file_name << "ge_onnx_" << std::setw(kDumpGraphIndexWidth) << std::setfill('0') << file_index;
   stream_file_name << "_graph_" << compute_graph.GetGraphID();
   stream_file_name << "_" << suffix << ".pbtxt";
-  const std::string proto_file = stream_file_name.str();
+  std::string proto_file = stream_file_name.str();
   if ((proto_file.length()) >= kNameMax) {
-    GELOGE(GRAPH_FAILED, "[Check][Param] File name is too longer!, file:%s", proto_file.c_str());
-    return;
+    proto_file = proto_file.substr(0U, kNameMax - 7U);
+    proto_file = proto_file + ".pbtxt";
+    GELOGW("[Check][Param] File name is too longer!, file:%s", proto_file.c_str());
   }
   const auto real_path = ComGraphMakeUnique<char_t[]>(static_cast<size_t>(MMPA_MAX_PATH));
   GE_CHECK_NOTNULL_EXEC(real_path, return);

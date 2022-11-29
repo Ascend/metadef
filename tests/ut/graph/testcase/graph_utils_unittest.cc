@@ -949,6 +949,16 @@ TEST_F(UtestGraphUtils, ReadProtoFromTextFileFileIsNull) {
   EXPECT_EQ(ret, false);
 }
 
+TEST_F(UtestGraphUtils, DumpGEGraphToOnnxForLongName) {
+  setenv("DUMP_GE_GRAPH", "1", 1);
+  ComputeGraph compute_graph("test_graph0");
+  const std::string suffit = "ge_proto_00000001_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.pbtxt";
+  ge::GraphUtils::DumpGEGraphToOnnx(compute_graph, suffit);
+  unsetenv("DUMP_GE_GRAPH");
+}
+
 TEST_F(UtestGraphUtils, IsolateNodeNodeIsNull) {
   NodePtr node;
   std::vector<int> io_map = {1, 2, 3};
