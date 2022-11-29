@@ -56,13 +56,13 @@ TEST_F(ExpandDimsTypeUT, ExpandAtHead) {
   ASSERT_EQ(out_shape, Shape({1, 1, 2, 16, 16}));
 }
 TEST_F(ExpandDimsTypeUT, ExpandAtHeadSpecifyPart) {
-  auto shape = Shape{2, 16, 16};
+  auto shape = Shape{2, 16};
   ExpandDimsType edt("110");
   Shape out_shape;
   edt.Expand(shape, out_shape);
 
-  ASSERT_EQ(5, out_shape.GetDimNum());
-  ASSERT_EQ(out_shape, Shape({1, 1, 2, 16, 16}));
+  ASSERT_EQ(4, out_shape.GetDimNum());
+  ASSERT_EQ(out_shape, Shape({1, 1, 2, 16}));
 }
 TEST_F(ExpandDimsTypeUT, ExpandAtHeadSpecifyNone) {
   auto shape = Shape{2, 16, 16};
@@ -119,13 +119,13 @@ TEST_F(ExpandDimsTypeUT, ExpandMiddle) {
   ASSERT_EQ(out_shape, Shape({2, 1, 16, 1, 16}));
 }
 TEST_F(ExpandDimsTypeUT, ExpandMiddleSpecifyPart) {
-  auto shape = Shape{2, 16, 16};
+  auto shape = Shape{2, 16};
   ExpandDimsType edt("011");
   Shape out_shape;
   edt.Expand(shape, out_shape);
 
-  ASSERT_EQ(5, out_shape.GetDimNum());
-  ASSERT_EQ(out_shape, Shape({2, 1, 1, 16, 16}));
+  ASSERT_EQ(4, out_shape.GetDimNum());
+  ASSERT_EQ(out_shape, Shape({2, 1, 1, 16}));
 }
 TEST_F(ExpandDimsTypeUT, ExpandDimsMoreThanShape) {
   auto shape = Shape{2, 16};
@@ -151,6 +151,15 @@ TEST_F(ExpandDimsTypeUT, Over56Limits) {
   Shape out_shape;
   edt.Expand(shape, out_shape);
 
+  ASSERT_EQ(out_shape, Shape({2, 16, 16}));
+}
+TEST_F(ExpandDimsTypeUT, ExpandSpecifyPart) {
+  auto shape = Shape{2, 16, 16};
+  ExpandDimsType edt("100");
+  Shape out_shape;
+  edt.Expand(shape, out_shape);
+
+  ASSERT_EQ(3, out_shape.GetDimNum());
   ASSERT_EQ(out_shape, Shape({2, 16, 16}));
 }
 }  // namespace gert
