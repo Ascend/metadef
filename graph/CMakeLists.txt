@@ -66,6 +66,13 @@ set(GRAPH_BASE_SOURCE_LIST
     "profiler.cc"
 )
 
+set(DATA_FLOW_GRAPH_SOURCE_LIST
+    "flow_graph/flow_attr_util.cc"
+    "flow_graph/flow_graph.cc"
+    "flow_graph/process_point.cc"
+    "flow_graph/data_flow_attr_define.cc"
+)
+
 SET(GRAPH_SOURCE_LIST
     "axis_type_info.cc"
     "operator.cc"
@@ -102,6 +109,7 @@ SET(GRAPH_SOURCE_LIST
 add_library(graph_base SHARED
     ${GRAPH_BASE_SOURCE_LIST}
     ${GRAPH_SOURCE_LIST}
+    ${DATA_FLOW_GRAPH_SOURCE_LIST}
     $<TARGET_OBJECTS:metadef_graph_protos_obj>
 )
 
@@ -152,6 +160,7 @@ target_compile_options(graph_base PRIVATE -O2)
 ######### libgraph.so #############
 add_library(graph SHARED
     ${GRAPH_BASE_SOURCE_LIST}
+    ${DATA_FLOW_GRAPH_SOURCE_LIST}
     ${GRAPH_SOURCE_LIST}
     $<TARGET_OBJECTS:metadef_graph_protos_obj>
 )
