@@ -20,6 +20,7 @@
 #include "graph/utils/node_utils.h"
 #include "exe_graph/runtime/context_extend.h"
 #include "exe_graph/runtime/continuous_vector.h"
+#include "runtime/runtime_attrs_def.h"
 #include "exe_graph/runtime/tensor.h"
 #include "exe_graph/lowering/bg_ir_attrs.h"
 #include "graph/debug/ge_attr_define.h"
@@ -158,5 +159,46 @@ TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Float64) {
       EXPECT_EQ(data[j], value[i][j]);
     }
   }
+}
+TEST_F(BgIrAttrsUT, CreateStringAttrBuffer) {
+  auto op_desc = std::make_shared<ge::OpDesc>("foo", "Foo");
+  op_desc->AppendIrAttrName("demo_str");
+  EXPECT_EQ(op_desc->GetIrAttrNames().size(), 1U);
+  EXPECT_EQ(op_desc->GetIrAttrNames().at(0), "demo_str");
+  std::string str_attr = "hello";
+  ge::AttrUtils::SetStr(op_desc, "demo_str", str_attr);
+  auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
+  size_t attr_size;
+  auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+
+  auto base = reinterpret_cast<char *>(reinterpret_cast<RuntimeAttrsDef *>(attr_buffer.get())->offset + 1);
+  EXPECT_STREQ(base, "hello");
+}
+
+TEST_F(BgIrAttrsUT, CreateListStringAttrBuffer) {
+  auto op_desc = std::make_shared<ge::OpDesc>("foo", "Foo");
+  op_desc->AppendIrAttrName("demo_str");
+  EXPECT_EQ(op_desc->GetIrAttrNames().size(), 1U);
+  EXPECT_EQ(op_desc->GetIrAttrNames().at(0), "demo_str");
+  std::string str_attr1 = "hello";
+  std::string str_attr2 = "world";
+  std::string str_attr3 = "good";
+  std::string str_attr4 = "job";
+  std::vector<std::string> str_atts = {str_attr1, str_attr2, str_attr3, str_attr4};
+  ge::AttrUtils::SetListStr(op_desc, "demo_str", str_atts);
+  auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
+  size_t attr_size;
+  auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+  auto attr_def = reinterpret_cast<RuntimeAttrsDef *>(attr_buffer.get());
+  auto base =
+    reinterpret_cast<const gert::ContinuousVector *>(ge::PtrToPtr<const RuntimeAttrsDef, const uint8_t>(attr_def)
+        + attr_def->offset[0]);
+  ASSERT_NE(base, nullptr);
+  EXPECT_EQ(attr_size, 77);
+  ASSERT_EQ(base->GetSize(), 4);
+  EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData()), "hello");
+  EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData() + 6), "world");
+  EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData() + 12), "good");
+  EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData() + 17), "job");
 }
 }  // namespace gert

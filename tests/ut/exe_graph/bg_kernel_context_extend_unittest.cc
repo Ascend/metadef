@@ -476,6 +476,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   ge::AttrUtils::SetFloat(op_desc, "b4", 1024.1);
   ge::AttrUtils::SetListInt(op_desc, "b5", std::vector<int64_t>({10, 400, 3000, 8192}));
   ge::AttrUtils::SetTensor(op_desc, "b6", ge_tensor);
+  ge::AttrUtils::SetListStr(op_desc, "c1", std::vector<std::string>({"hello", "world", "world1", "hello1"}));
+  ge::AttrUtils::SetListDataType(op_desc, "c2", std::vector<ge::DataType>({ge::DT_FLOAT, ge::DT_STRING, ge::DT_UINT16, ge::DT_BOOL}));
 
   op_desc->AppendIrAttrName("b1");
   op_desc->AppendIrAttrName("b2");
@@ -489,6 +491,8 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   op_desc->AppendIrAttrName("a4");
   op_desc->AppendIrAttrName("a5");
   op_desc->AppendIrAttrName("a6");
+  op_desc->AppendIrAttrName("c1");
+  op_desc->AppendIrAttrName("c2");
 
   auto graph = std::make_shared<ge::ComputeGraph>("graph");
   auto node = graph->AddNode(op_desc);
@@ -516,7 +520,7 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   EXPECT_EQ(ins_info->GetInstanceStart(), 0);
 
   auto attrs = compute_node_info->GetAttrs();
-  EXPECT_EQ(attrs->GetAttrNum(), 12);
+  EXPECT_EQ(attrs->GetAttrNum(), 14);
 
   EXPECT_STREQ(attrs->GetAttrPointer<char>(0), "World");
   EXPECT_STREQ(attrs->GetStr(0), "World");
@@ -564,6 +568,27 @@ TEST_F(BgKernelContextExtendUT, BuildWithAttrs) {
   EXPECT_EQ(gert_tensor->GetStorageFormat(), ge::FORMAT_NC1HWC0);
   EXPECT_EQ(gert_tensor->GetDataType(), ge::DT_FLOAT16);
   EXPECT_EQ(memcmp(gert_tensor->GetData<uint16_t>(), fake_data.data(), fake_data.size() * sizeof(uint16_t)), 0);
+
+  auto list_str = attrs->GetAttrPointer<gert::ContinuousVector>(12);
+  ASSERT_NE(list_str, nullptr);
+  ASSERT_EQ(list_str->GetSize(), 4);
+  EXPECT_STREQ(reinterpret_cast<const char *>(list_str->GetData()), "hello");
+  EXPECT_STREQ(reinterpret_cast<const char *>(list_str->GetData() + 6), "world");
+  EXPECT_STREQ(reinterpret_cast<const char *>(list_str->GetData() + 12), "world1");
+  EXPECT_STREQ(reinterpret_cast<const char *>(list_str->GetData() + 19), "hello1");
+
+  auto list_datatype = attrs->GetAttrPointer<gert::ContinuousVector>(13);
+  ASSERT_NE(list_datatype, nullptr);
+  ASSERT_EQ(list_datatype->GetSize(), 4);
+  EXPECT_EQ(memcmp(list_datatype->GetData(), std::vector<ge::DataType>({ge::DT_FLOAT, ge::DT_STRING, ge::DT_UINT16, ge::DT_BOOL}).data(), 4 * sizeof(ge::DataType)), 0);
+  auto typed_list_datatype = attrs->GetAttrPointer<TypedContinuousVector<ge::DataType>>(13);
+  ASSERT_NE(typed_list_datatype, nullptr);
+  ASSERT_EQ(typed_list_datatype->GetSize(), 4);
+  EXPECT_EQ((ge::DataType)(typed_list_datatype->GetData()[0]), ge::DT_FLOAT);
+  EXPECT_EQ((ge::DataType)typed_list_datatype->GetData()[1], ge::DT_STRING);
+  EXPECT_EQ((ge::DataType)typed_list_datatype->GetData()[2], ge::DT_UINT16);
+  EXPECT_EQ((ge::DataType)typed_list_datatype->GetData()[3], ge::DT_BOOL);
+
 }
 TEST_F(BgKernelContextExtendUT, IgnoreNoneIrAttr) {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");

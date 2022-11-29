@@ -168,6 +168,67 @@ bool AppendDataTypeAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_
   attrs.emplace_back(std::move(runtime_attr));
   return true;
 }
+bool AppendVectorDataTypeAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto val = attr.Get<std::vector<ge::DataType>>();
+  GE_ASSERT_NOTNULL(val);
+  size_t total_size = 0U;
+  GE_ASSERT_TRUE(!ge::MulOverflow(val->size(), sizeof(ge::DataType), total_size),
+                 "Mul overflow vec size %zu, elem size %zu.",
+                 val->size(),
+                 sizeof(ge::DataType));
+  GE_ASSERT_TRUE(!ge::AddOverflow(total_size, sizeof(ContinuousVector), total_size),
+                 "Add overflow total size %zu, size of vec %zu.",
+                 total_size,
+                 sizeof(ContinuousVector));
+
+  std::vector<uint8_t> buf(total_size);
+  auto cv = new (buf.data()) ContinuousVector();
+  GE_ASSERT_NOTNULL(cv);
+  cv->Init(val->size());
+  cv->SetSize(val->size());
+
+  size_t copy_size = val->size() * sizeof(ge::DataType);
+  if (!val->empty()) {
+    GE_ASSERT_EOK(memcpy_s(cv->MutableData(), cv->GetCapacity() * sizeof(ge::DataType), val->data(), copy_size));
+  }
+  attrs.emplace_back(std::move(buf));
+  return true;
+}
+bool AppendVectorStrAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
+  auto val = attr.Get<std::vector<std::string>>();
+  GE_ASSERT_NOTNULL(val);
+
+  size_t total_str_size = 0U;
+  for (auto i = 0U; i < (*val).size(); ++i) {
+    const auto ele_str_size = (*val)[i].size() + 1;
+    if (ge::AddOverflow(total_str_size, ele_str_size, total_str_size)) {
+      GELOGW("Add over flow ele str size %zu, total_str_size %zu.", ele_str_size, total_str_size);
+      return false;
+    }
+  }
+  size_t total_size = 0U;
+  if (ge::AddOverflow(total_str_size, sizeof(ContinuousVector), total_size)) {
+    GELOGW("Add over flow ContinuousVector size %zu, total_str_size %zu.", sizeof(ContinuousVector), total_str_size);
+    return false;
+  }
+
+  std::vector<uint8_t> buf(total_size);
+  auto cv = new (buf.data()) ContinuousVector();
+  GE_ASSERT_NOTNULL(cv);
+  cv->Init(val->size());
+  cv->SetSize(val->size());
+  size_t offset = 0U;
+  for (auto i = 0U; i < val->size(); ++i) {
+    const auto ele_str_size = (*val)[i].size() + 1U;
+    GE_ASSERT_EOK(strcpy_s(ge::PtrToPtr<uint8_t, char>(ge::PtrToPtr<void, uint8_t>(cv->MutableData()) + offset),
+                           total_str_size,
+                           (*val)[i].c_str()));
+    offset += ele_str_size;
+  }
+  attrs.emplace_back(std::move(buf));
+  return true;
+}
+
 bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &attrs) {
   switch (attr.GetValueType()) {
     case ge::AnyValue::VT_FLOAT:
@@ -178,14 +239,18 @@ bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &att
       return AppendFundAttr<int64_t>(attr, attrs);
     case ge::AnyValue::VT_DATA_TYPE:
       return AppendDataTypeAttr(attr, attrs);
-    case ge::AnyValue::VT_LIST_INT:
-      return AppendVectorAttr<int64_t>(attr, attrs);
     case ge::AnyValue::VT_STRING:
       return AppendStrAttr(attr, attrs);
     case ge::AnyValue::VT_TENSOR:
       return AppendTensorAttr(attr, attrs);
     case ge::AnyValue::VT_LIST_FLOAT:
       return AppendVectorAttr<float>(attr, attrs);
+    case ge::AnyValue::VT_LIST_INT:
+      return AppendVectorAttr<int64_t>(attr, attrs);
+    case ge::AnyValue::VT_LIST_DATA_TYPE:
+      return AppendVectorDataTypeAttr(attr, attrs);
+    case ge::AnyValue::VT_LIST_STRING:
+      return AppendVectorStrAttr(attr, attrs);
     case ge::AnyValue::VT_LIST_LIST_FLOAT:
       return AppendVectorVectorAttr<float>(attr, attrs);
     case ge::AnyValue::VT_LIST_LIST_INT:
@@ -198,7 +263,7 @@ bool AppendAttr(const ge::AnyValue &attr, std::vector<std::vector<uint8_t>> &att
 bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &runtime_attrs) {
   auto all_attrs = ge::AttrUtils::GetAllAttrs(node->GetOpDesc());
   const auto &ir_attr_names = node->GetOpDesc()->GetIrAttrNames();
-  for (auto &attr_name : ir_attr_names) {
+  for (const auto &attr_name : ir_attr_names) {
     const std::map<std::string, ge::AnyValue>::const_iterator &iter = all_attrs.find(attr_name);
     if (iter == all_attrs.cend()) {
       runtime_attrs.clear();
@@ -212,7 +277,7 @@ bool GetAllIrAttrs(const ge::NodePtr &node, std::vector<std::vector<uint8_t>> &r
 }
 std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_t>> &attrs, size_t &total_size) {
   total_size = sizeof(RuntimeAttrsDef);
-  size_t offset_size;
+  size_t offset_size = 0U;
   if (ge::MulOverflow(sizeof(size_t), attrs.size(), offset_size)) {
     GELOGE(ge::FAILED, "Failed to create attr buffer, total size overflow, attrs size may invalid %zu", attrs.size());
     return nullptr;
