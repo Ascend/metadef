@@ -34,7 +34,6 @@ Node::NodeImpl::NodeImpl(const OpDescPtr &op, const ComputeGraphPtr &owner_graph
       out_data_anchors_(),
       in_control_anchor_(nullptr),
       out_control_anchor_(nullptr),
-      attrs_(),
       has_init_(false),
       host_node_(false),
       anchor_status_updated_(false) {}
@@ -106,30 +105,6 @@ std::string Node::NodeImpl::GetType() const {
   GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E18888", "original OpDesc is nullptr");
                    return std::string(), "[Check][Param] original OpDesc is nullptr");
   return op_->GetType();
-}
-
-bool Node::NodeImpl::NodeAttrsAreEqual(const NodeImpl &r_node) const {
-  const auto &attr_map = this->attrs_;
-  const auto &r_attr_map = r_node.attrs_;
-  // 1.Verify node's std::map<std::string, AttrValue> size
-  if (attr_map.size() != r_attr_map.size()) {
-    REPORT_INNER_ERROR("E18888", "param node attr map size:%zu not equal to this attr map size:%zu, "
-                       "verify failed, node name: %s.", r_attr_map.size(), attr_map.size(), this->GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] Size of node's attr map verify failed, node name: %s.",
-           this->GetName().c_str());
-    return false;
-  }
-  // 2.Verify node's std::map<std::string, AttrValue> key, verify values is temporarily not implemented
-  for (const auto &it : attr_map) {
-    if (r_attr_map.count(it.first) == 0U) {
-      REPORT_INNER_ERROR("E18888", "Key of node's attr map verify failed, node name: %s key name: %s.",
-                         this->GetName().c_str(), it.first.c_str());
-      GELOGE(GRAPH_FAILED, "[Check][Param] Key of node's attr map verify failed, node name: %s key name: %s.",
-             this->GetName().c_str(), it.first.c_str());
-      return false;
-    }
-  }
-  return true;
 }
 
 bool Node::NodeImpl::NodeMembersAreEqual(const NodeImpl &r_node) const {
@@ -857,10 +832,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string Node::GetType() const
   return impl_->GetType();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool Node::NodeAttrsAreEqual(const Node &r_node) const {
-  return impl_->NodeAttrsAreEqual(*(r_node.impl_));
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool Node::NodeMembersAreEqual(const Node &r_node) const {
   return impl_->NodeMembersAreEqual(*(r_node.impl_));
 }
@@ -975,8 +946,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool Node::NodeOutConnectsAreEqua
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool Node::operator==(const Node &r_node) const {
-  return (NodeMembersAreEqual(r_node) && NodeAttrsAreEqual(r_node) && NodeInConnectsAreEqual(r_node) &&
-          NodeOutConnectsAreEqual(r_node));
+  return (NodeMembersAreEqual(r_node) && NodeInConnectsAreEqual(r_node) && NodeOutConnectsAreEqual(r_node));
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::AddLinkFrom(const NodePtr &input_node) {

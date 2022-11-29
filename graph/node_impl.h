@@ -28,7 +28,6 @@ class Node::NodeImpl {
   graphStatus Init(const NodePtr &node);
   std::string GetName() const;
   std::string GetType() const;
-  bool NodeAttrsAreEqual(const NodeImpl &r_node) const;
   bool NodeMembersAreEqual(const NodeImpl &r_node) const;
   bool NodeAnchorIsEqual(const AnchorPtr &left_anchor,
                          const AnchorPtr &right_anchor,
@@ -114,7 +113,6 @@ class Node::NodeImpl {
   std::vector<OutDataAnchorPtr> out_data_anchors_;
   InControlAnchorPtr in_control_anchor_;
   OutControlAnchorPtr out_control_anchor_;
-  std::map<std::string, GeAttrValue> attrs_;
   bool has_init_{false};
   bool host_node_{false};
   bool anchor_status_updated_{false};

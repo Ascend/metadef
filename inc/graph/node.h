@@ -172,7 +172,6 @@ class Node : public std::enable_shared_from_this<Node> {
 
  private:
   bool NodeMembersAreEqual(const Node &r_node) const;
-  bool NodeAttrsAreEqual(const Node &r_node) const;
   bool NodeInConnectsAreEqual(const Node &r_node) const;
   bool NodeOutConnectsAreEqual(const Node &r_node) const;
   bool NodeAnchorIsEqual(const AnchorPtr &left_anchor, const AnchorPtr &right_anchor, const size_t i) const;
