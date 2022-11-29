@@ -705,10 +705,10 @@ TEST_F(BgKernelContextExtendUT, BuildWithMultiInstanceDynamicInputsWithNoMatchin
   tensor_desc.SetOriginDataType(ge::DT_FLOAT);
   tensor_desc.SetShape(ge::GeShape({8, 1, 224, 224, 16}));
   tensor_desc.SetOriginShape(ge::GeShape({8, 3, 224, 224}));
-  op_desc->AddInputDesc("y0", tensor_desc);
   op_desc->AddInputDesc("y1", tensor_desc);
-  op_desc->AddInputDesc("x0", tensor_desc);
+  op_desc->AddInputDesc("y2", tensor_desc);
   op_desc->AddInputDesc("x1", tensor_desc);
+  op_desc->AddInputDesc("x2", tensor_desc);
 
   op_desc->AppendIrInput("x", ge::kIrInputDynamic);
   op_desc->AppendIrInput("y", ge::kIrInputDynamic);
