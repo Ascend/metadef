@@ -29,6 +29,7 @@
 #include "graph/utils/anchor_utils.h"
 #include "test_std_structs.h"
 #include "external/graph/operator_reg.h"
+#include "common/debug/ge_log.h"
 
 namespace ge {
 class UtestOpDescUtils : public testing::Test {
@@ -909,6 +910,38 @@ TEST_F(UtestOpDescUtils, GetInputIrIndexeByInstanceIndexe_DynamicNameNotmatch_Fa
   name_index["b"] = index++;
   size_t ir_index;
   auto ret = OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, 2, ir_index);
-  ASSERT_NE(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOpDescUtils, GetInputIrIndexeByInstanceIndexe_ActualInputsIsMoreThanIrInputsNum_Success) {
+  size_t dynamic_input_num = 1;
+  size_t has_optional_input = true;
+  size_t optional_input_num = has_optional_input ? 1U : 0U;
+  auto graph = BuildGraph4(dynamic_input_num, has_optional_input);
+  auto dynamic_op_ut_node = graph->FindNode("dynamic_op_ut");
+  auto op_desc = dynamic_op_ut_node->GetOpDesc();
+
+  size_t index = 0;
+  auto &name_index = op_desc->MutableAllInputName();
+  name_index.clear();
+
+  name_index["x0"] = index++;
+  name_index["x1"] = index++; // error name
+
+  name_index["a"] = index++;
+  if (optional_input_num == 1) {
+    name_index["bias"] = index++;
+  }
+  name_index["b"] = index++;
+  name_index["assist_matrix"] = index++;
+  size_t ir_index;
+
+  int32_t event_level;
+  int32_t old_level = dlog_getlevel(GE_MODULE_NAME, &event_level);
+  dlog_setlevel(GE_MODULE_NAME, DLOG_INFO, event_level);
+  auto ret = OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, 5, ir_index);
+  dlog_setlevel(GE_MODULE_NAME, old_level, event_level);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ir_index, std::numeric_limits<size_t>::max());
 }
 }
