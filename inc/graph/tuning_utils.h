@@ -65,8 +65,8 @@ constexpr char_t BUILD_STEP_AFTER_UB_MATCH[] = "after_ub_match";
 constexpr char_t BUILD_STEP_AFTER_BUILDER[] = "after_builder";
 constexpr char_t BUILD_STEP_AFTER_BUILDER_SUB[] = "after_builder_sub";
 constexpr char_t BUILD_STEP_AFTER_MERGE[] = "after_merge";
-constexpr char_t BUILD_STEP_BEFORE_GENERATE_TASK[] = "before_generate_task";
-constexpr char_t BUILD_STEP_AFTER_GENERATE_TASK[] = "after_generate_task";
+constexpr char_t BUILD_STEP_BEFORE_BUILD[] = "before_build";
+constexpr char_t BUILD_STEP_AFTER_BUILD[] = "after_build";
 extern const std::set<std::string> build_step_options;
 
 using SubgraphCreateOutNode = std::unordered_map<ComputeGraphPtr, NodePtr>;
