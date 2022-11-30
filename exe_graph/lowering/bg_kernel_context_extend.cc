@@ -132,7 +132,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
   auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
   auto input_num = node->GetInDataNodesAndAnchors().size();
   auto output_num = node->GetAllOutDataAnchorsSize();
-  GELOGD("node: %s(%s), ir_input_num:%zu, input_num:%zu, output_num:%u",
+  GELOGD("node: %s(%s), ir_input_num:%zu, input_num:%zu, output_num:%u.",
          node->GetName().c_str(), node->GetType().c_str(), ir_input_num, input_num, output_num);
   GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size));
   GE_ASSERT_TRUE(!ge::AddOverflow(total_size, attr_size, total_size));
