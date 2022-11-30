@@ -578,15 +578,10 @@ bool OnnxUtils::EncodeNodeDesc(const NodePtr &node, onnx::NodeProto *const node_
     GELOGE(GRAPH_FAILED, "[Check][Param] EncodeOpDesc: Input Para Node Invalid");
     return false;
   }
-
-  // 2.Encode std::map<std::string, GeAttrValue> attrs_ to AttributeProto
-  for (auto &node_attr : node->impl_->attrs_) {
-    AddAttrProtoFromAttribute(node_attr, node_proto);
-  }
-  // 3.Encode ge::Node members to AttributeProto
+  // Encode ge::Node members to AttributeProto
   AddAttrProtoFromNodeMembers(node, node_proto);
 
-  // 4. Sort node attributes by name.
+  // Sort node attributes by name.
   std::sort(node_proto->mutable_attribute()->begin(), node_proto->mutable_attribute()->end(), AttrNameComp());
   return true;
 }

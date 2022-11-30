@@ -230,8 +230,6 @@ static ComputeGraphPtr CreateGraph_1_1_224_224(float *tensor_data) {
   tensor.SetData(reinterpret_cast<uint8_t *>(tensor_data), sizeof(float) * 224 * 224);
   AttrUtils::SetTensor(const1->GetOpDesc(), "value", tensor);
   auto add1 = builder.AddNode("add1", "Add", {"x1", "x2"}, {"y"});
-  add1->impl_->attrs_["test_attr1"] = GeAttrValue::CreateFrom<int64_t>(100);
-  add1->impl_->attrs_["test_attr2"] = GeAttrValue::CreateFrom<string>("test");
   auto netoutput1 = builder.AddNode("NetOutputNode", "NetOutput", {"x"}, {});
   ge::AttrUtils::SetListListInt(add1->GetOpDesc()->MutableOutputDesc(0), "list_list_i", {{1, 0, 0, 0}});
   ge::AttrUtils::SetListInt(add1->GetOpDesc(), "list_i", {1});

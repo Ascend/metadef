@@ -96,11 +96,6 @@ TEST_F(UtestNode, EqualCase) {
   EXPECT_EQ(data_node->ClearOwnerGraph(graph), GRAPH_SUCCESS);
   EXPECT_EQ(data_node->GetAllInDataAnchors().size(), 1);
   EXPECT_EQ(data_node->GetAllOutDataAnchors().size(), 1);
-  EXPECT_EQ(data_node->NodeAttrsAreEqual(*data_node), true);
-  attr_node->impl_->attrs_["ex"] = AnyValue::CreateFrom<int>(100);
-  EXPECT_EQ(data_node->NodeAttrsAreEqual(*attr_node), false);
-  data_node->impl_->attrs_["ex2"] = AnyValue::CreateFrom<int>(1000);
-  EXPECT_EQ(data_node->NodeAttrsAreEqual(*attr_node), false);
   EXPECT_EQ(data_node->NodeMembersAreEqual(*data_node), true);
   EXPECT_EQ(data_node->AddLinkFromForParse(attr_node), GRAPH_PARAM_INVALID);
   EXPECT_EQ(data_node->AddLinkFrom(attr_node), GRAPH_PARAM_INVALID);
