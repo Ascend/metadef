@@ -37,6 +37,8 @@ class AscendString {
 
   size_t GetLength() const;
 
+  size_t Find(const AscendString &ascend_string) const;
+
   size_t Hash() const;
 
   bool operator<(const AscendString& d) const;

@@ -190,7 +190,11 @@ bool ScopeBasePass::ScopeBasePassImpl::MatchAllBatches(const ScopeTree *scope_tr
     for (auto &tmp : tmp_results) {
       bool rollback = true;
       for (auto &result : last_results) {
-        if ((result->Name().length() <= tmp->Name().length()) && (tmp->Name().find(result->Name()) == 0U)) {
+        AscendString result_name;
+        AscendString tmp_name;
+        (void) result->Name(result_name);
+        (void) tmp->Name(tmp_name);
+        if ((result_name.GetLength() <= tmp_name.GetLength()) && (tmp_name.Find(result_name) == 0U)) {
           rollback = false;
           break;
         }
@@ -283,7 +287,9 @@ Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<Sc
        GELOGE(PARAM_INVALID, "Fusion scope is nullptr.");
        return PARAM_INVALID;
     }
-    GELOGI("FusionScope:%s", result.second->Name().c_str());
+    AscendString name;
+    (void) result.second->Name(name);
+    GELOGI("FusionScope:%s", name.GetString());
     auto &impl = result.second->impl_;
     const std::map<std::string, std::vector<int32_t>> &inputs = impl->GetInputs();
     for (auto &input : inputs) {
@@ -306,7 +312,9 @@ Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<Sc
         GELOGE(PARAM_INVALID, "Scope in fusion scope is nullptr.");
         return PARAM_INVALID;
       }
-      GELOGI("FusionScope GetScope:%s", scope->Name().c_str());
+      AscendString scope_name;
+      (void) scope->Name(scope_name);
+      GELOGI("FusionScope GetScope:%s", scope_name.GetString());
     }
 
     for (auto &node : result.second->Nodes()) {
@@ -314,7 +322,9 @@ Status ScopeBasePass::ScopeBasePassImpl::PrintFusionScopeInfo(std::shared_ptr<Sc
         GELOGE(PARAM_INVALID, "Node in scope is nullptr.");
         return PARAM_INVALID;
       }
-      GELOGI("FusionScope Node:%s", node->GetName().c_str());
+      AscendString node_name;
+      (void) node->GetName(node_name);
+      GELOGI("FusionScope Node:%s", node_name.GetString());
     }
   }
   return SUCCESS;

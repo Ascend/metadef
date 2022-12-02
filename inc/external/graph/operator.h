@@ -508,7 +508,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   void AttrRegister(const std::string &name, int64_t attr_value);
   ATTRIBUTED_DEPRECATED(void AttrRegister(const char_t *, const std::vector<int64_t> &))
   void AttrRegister(const std::string &name, const std::vector<int64_t> &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char_t *, const AscendString &))
   void AttrRegister(const std::string &name, const std::string &attr_value);
+  ATTRIBUTED_DEPRECATED(void AttrRegister(const char_t *, const std::vector<AscendString> &))
   void AttrRegister(const std::string &name, const std::vector<std::string> &attr_value);
   ATTRIBUTED_DEPRECATED(void AttrRegister(const char_t *, bool))
   void AttrRegister(const std::string &name, bool attr_value);
