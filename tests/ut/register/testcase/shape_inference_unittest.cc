@@ -53,7 +53,6 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_success) {
   tensor_desc.SetOriginShapeRange(range);
   op_desc->UpdateInputDesc(0, tensor_desc);
   op_desc->UpdateInputDesc(1, tensor_desc);
-  IMPL_OP(FixIOOp_OutputIsFix);
   const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
     const auto input_shape = context->GetInputShape(0U);
     auto output = context->GetOutputShape(0);
@@ -75,7 +74,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_success) {
     output_shape_range->SetMax(const_cast<gert::Shape *>(input_shape_range->GetMax()));
     return GRAPH_SUCCESS;
   };
-  op_impl_register_FixIOOp_OutputIsFix.InferShape(infer_shape_func)
+  IMPL_OP(FixIOOp_OutputIsFix).InferShape(infer_shape_func)
       .InferDataType(infer_data_type_func)
       .InferShapeRange(infer_shape_range_func);
   const auto call_infer_data_type = OperatorFactoryImpl::GetInferDataTypeFunc();
@@ -121,7 +120,6 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_OptionalInputWithOutInstance) {
   tensor_desc2.SetOriginShape(shape2);
   tensor_desc2.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc2);
-  IMPL_OP(OptionalInput3Input3Output);
   const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
     const auto option_input_shape = context->GetOptionalInputShape(1U);
     if (option_input_shape != nullptr) {
@@ -135,7 +133,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_OptionalInputWithOutInstance) {
     output->SetDimNum(input_shape->GetDimNum());
     return GRAPH_SUCCESS;
   };
-  op_impl_register_OptionalInput3Input3Output.InferShape(infer_shape_func)
+  IMPL_OP(OptionalInput3Input3Output).InferShape(infer_shape_func)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -171,7 +169,6 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_OptionalInputWithInstance) {
   tensor_desc3.SetOriginShape(shape3);
   tensor_desc3.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc3);
-  IMPL_OP(OptionalInput3Input3Output);
   const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
     // update option input to output0
     const auto input_shape = context->GetOptionalInputShape(1U);
@@ -189,7 +186,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_OptionalInputWithInstance) {
     output2->SetDimNum(input_shape2->GetDimNum());
     return GRAPH_SUCCESS;
   };
-  op_impl_register_OptionalInput3Input3Output.InferShape(infer_shape_func)
+  IMPL_OP(OptionalInput3Input3Output).InferShape(infer_shape_func)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -260,8 +257,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput) {
   tensor_desc3.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc3);
   op_desc->UpdateInputDesc(3, tensor_desc1);
-  IMPL_OP(DynamicInput3Input3Output3);
-  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+  IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -302,8 +298,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_2) {
   tensor_desc3.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc3);
   op_desc->UpdateInputDesc(3, tensor_desc1);
-  IMPL_OP(DynamicInput3Input3Output3);
-  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+  IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
     .InferDataType(nullptr)
     .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -344,8 +339,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_no_shaperange) {
   tensor_desc3.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc3);
   op_desc->UpdateInputDesc(3, tensor_desc1);
-  IMPL_OP(DynamicInput3Input3Output3);
-  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+  IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -388,8 +382,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange) {
   tensor_desc3.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc3);
   op_desc->UpdateInputDesc(3, tensor_desc1);
-  IMPL_OP(DynamicInput3Input3Output3);
-  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+  IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -439,8 +432,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange_min_bigg
   tensor_desc3.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc3);
   op_desc->UpdateInputDesc(3, tensor_desc1);
-  IMPL_OP(DynamicInput3Input3Output3);
-  op_impl_register_DynamicInput3Input3Output3.InferShape(INFER_SHAPE_FUNC)
+  IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
     .InferDataType(nullptr)
     .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -492,7 +484,6 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend) {
   tensor_desc1.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(0, tensor_desc1);
   op_desc->UpdateInputDesc(2, tensor_desc1);
-  IMPL_OP(Type2_1Input_1Output);
   const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
     // update input3(因为option输入未实例化，所以是第二个) value to output0
     const auto data = context->GetInputTensor(1U)->GetData<uint8_t>();
@@ -505,7 +496,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend) {
     output->SetDimNum(input_shape.GetDimNum());
     return GRAPH_SUCCESS;
   };
-  op_impl_register_Type2_1Input_1Output.InferShape(infer_shape_func).InputsDataDependency({2})
+  IMPL_OP(Type2_1Input_1Output).InferShape(infer_shape_func).InputsDataDependency({2})
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -562,7 +553,6 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend_unknow_shaperange) {
   tensor_desc3.SetOriginShape(shape3);
   tensor_desc3.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(2, tensor_desc3);
-  IMPL_OP(Type2_3Input_2Output);
   const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
     // update input3(因为option输入未实例化，所以是第二个) value to output0
     const auto data = context->GetInputTensor(1U)->GetData<uint8_t>();
@@ -582,7 +572,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend_unknow_shaperange) {
     output1->SetDimNum(input_shape1->GetDimNum());
     return GRAPH_SUCCESS;
   };
-  op_impl_register_Type2_3Input_2Output.InferShape(infer_shape_func).InputsDataDependency({2})
+  IMPL_OP(Type2_3Input_2Output).InferShape(infer_shape_func).InputsDataDependency({2})
     .InferDataType(nullptr)
     .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -628,7 +618,6 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_RegisterAndGetReiledOnResource) {
   tensor_desc1.SetOriginShape(shape1);
   tensor_desc1.SetOriginDataType(DT_FLOAT16);
   op_desc->UpdateInputDesc(0, tensor_desc1);
-  IMPL_OP(RegisterAndGetReiledOnResource);
   const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
     const auto &read_inference_context = context->GetInferenceContextPtr();
     const auto &reiled_keys = read_inference_context->GetReliedOnResourceKeys();
@@ -645,7 +634,8 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_RegisterAndGetReiledOnResource) {
     out_shape->SetDim(0UL, std::strtol(resource_key_, nullptr, 10));
     return GRAPH_SUCCESS;
   };
-  op_impl_register_RegisterAndGetReiledOnResource.InferShape(infer_shape_func)
+  IMPL_OP(RegisterAndGetReiledOnResource)
+      .InferShape(infer_shape_func)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
@@ -675,8 +665,8 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_TestDefaultInferShape) {
   const auto infer_shape_func = [](gert::InferShapeContext *context) -> graphStatus {
     return GRAPH_SUCCESS;
   };
-  IMPL_OP(TestDefaultInferDataType);
-  op_impl_register_TestDefaultInferDataType.InferShape(infer_shape_func)
+  IMPL_OP(TestDefaultInferDataType)
+      .InferShape(infer_shape_func)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
   const auto call_infer_data_type = OperatorFactoryImpl::GetInferDataTypeFunc();
