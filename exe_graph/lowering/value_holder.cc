@@ -30,12 +30,14 @@
 #include "common/checker.h"
 
 #include "exe_graph/lowering/exe_graph_attrs.h"
+#include "exe_graph/lowering/extend_exe_graph.h"
 #include "graph/debug/ge_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/def_types.h"
 namespace gert {
 namespace bg {
 namespace {
+constexpr const ge::char_t *kInnerDataNodes = "_inner_data_nodes";
 thread_local std::deque<std::unique_ptr<GraphFrame>> graph_frames;
 thread_local GraphFrame *current_frame;
 bool IsGraphOutType(const char *node_type) {
@@ -87,20 +89,13 @@ ge::InDataAnchorPtr EnsureHasDataEdge(const ge::NodePtr &src, int32_t src_index,
   return dst_anchor;
 }
 ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index) {
-  for (const auto &node : point.frame->GetExeGraph()->GetDirectNode()) {
-    if (!IsTypeInnerData(node->GetType().c_str())) {
-      continue;
-    }
-    int32_t data_index = -1;
-    GE_ASSERT_TRUE(ge::AttrUtils::GetInt(node->GetOpDesc(), ge::ATTR_NAME_INDEX, data_index));
-    if (data_index == index) {
-      return node;
-    }
+  ge::NodePtr data;
+  if (!FindValFromMapExtAttr<int32_t, ge::NodePtr>(point.frame->GetExeGraph(), kInnerDataNodes, index, data)) {
+    data = ValueHolder::AddNode(kInnerData, 0, 1, *point.frame);
+    GE_ASSERT_NOTNULL(data);
+    GE_ASSERT_TRUE(ge::AttrUtils::SetInt(data->GetOpDesc(), ge::ATTR_NAME_INDEX, index));
+    AddKVToMapExtAttr<int32_t, ge::NodePtr>(point.frame->GetExeGraph(), kInnerDataNodes, index, data);
   }
-
-  auto data = ValueHolder::AddNode(kInnerData, 0, 1, *point.frame);
-  GE_ASSERT_NOTNULL(data);
-  GE_ASSERT_TRUE(ge::AttrUtils::SetInt(data->GetOpDesc(), ge::ATTR_NAME_INDEX, index));
   return data;
 }
 ge::OutDataAnchorPtr ConnectFromParents(ge::NodePtr src, int32_t src_index, const ge::NodePtr &dst) {
