@@ -510,6 +510,14 @@ graphStatus TensorDesc::GetName(AscendString &name) {
   return GRAPH_FAILED;
 }
 
+graphStatus TensorDesc::GetName(AscendString &name) const {
+  if (impl != nullptr) {
+    name = AscendString(impl->name_.c_str());
+    return GRAPH_SUCCESS;
+  }
+  return GRAPH_FAILED;
+}
+
 void TensorDesc::SetName(const char_t *name) {
   if ((impl != nullptr) && (name != nullptr)) {
     impl->name_ = name;
@@ -772,7 +780,9 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
     ge_tensor_desc.SetOriginShape(GeShape(tensor_desc.GetOriginShape().GetDims()));
   }
   ge_tensor_desc.SetOriginFormat(tensor_desc.GetOriginFormat());
-  ge_tensor_desc.SetName(tensor_desc.GetName());
+  AscendString name("");
+  (void) tensor_desc.GetName(name);
+  ge_tensor_desc.SetName(name.GetString());
   ge_tensor_desc.SetPlacement(tensor_desc.GetPlacement());
   std::vector<std::pair<int64_t, int64_t>> shape_range;
   auto status = tensor_desc.GetShapeRange(shape_range);

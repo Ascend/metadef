@@ -310,7 +310,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status AutoMappingFnDynamic(
   const std::shared_ptr<ge::OpDesc> op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
   GE_CHECK_NOTNULL(op_desc);
   GE_CHECK_NOTNULL(op_src);
-  const Status ret = AutoMappingFn(op_src, op);
+  const Status ret = OperatorAutoMapping(op_src, op);
   if (ret != SUCCESS) {
     GE_LOGE("Op: %s call auto mapping function failed.", op_desc->GetName().c_str());
     return FAILED;

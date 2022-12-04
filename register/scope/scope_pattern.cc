@@ -106,17 +106,18 @@ bool NodeOpTypeFeature::NodeOpTypeFeatureImpl::Match(const Scope *const scope) {
     return false;
   }
   auto &impl = scope->impl_;
-
+  AscendString scope_name;
+  (void) scope->Name(scope_name);
   if (step_ == 0) {
     if (impl->GetOpTypeNum(node_type_) == num_) {
-      GELOGI("NodeOpTypeFeature, node type:%s, num:%ld, match scope:%s",
-             node_type_.c_str(), num_, scope->Name().c_str());
+      GELOGI("NodeOpTypeFeature, node type:%s, num:%ld, match scope:%s", node_type_.c_str(), num_,
+             scope_name.GetString());
       return true;
     }
   } else {
     if ((impl->GetOpTypeNum(node_type_) != -1) && ((impl->GetOpTypeNum(node_type_) % step_) == num_)) {
-      GELOGI("NodeOpTypeFeature, node type:%s, num:%ld, match scope:%s",
-             node_type_.c_str(), num_, scope->Name().c_str());
+      GELOGI("NodeOpTypeFeature, node type:%s, num:%ld, match scope:%s", node_type_.c_str(), num_,
+             scope_name.GetString());
       return true;
     }
   }
@@ -220,7 +221,9 @@ Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const bool
     return PARAM_INVALID;
   }
   if (attr_value_.impl_->GetBoolValue() == value) {
-    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    AscendString scope_name;
+    (void) scope->Name(scope_name);
+    GELOGI("NodeAttrFeature, match scope:%s", scope_name.GetString());
     return SUCCESS;
   }
   return FAILED;
@@ -235,7 +238,9 @@ Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const std:
     return PARAM_INVALID;
   }
   if (attr_value_.impl_->GetStrValue() == value) {
-    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    AscendString scope_name;
+    (void) scope->Name(scope_name);
+    GELOGI("NodeAttrFeature, match scope:%s", scope_name.GetString());
     return SUCCESS;
   }
   return FAILED;
@@ -250,7 +255,9 @@ Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const int6
     return PARAM_INVALID;
   }
   if (attr_value_.impl_->GetIntValue() == value) {
-    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    AscendString scope_name;
+    (void) scope->Name(scope_name);
+    GELOGI("NodeAttrFeature, match scope:%s", scope_name.GetString());
     return SUCCESS;
   }
   return FAILED;
@@ -266,7 +273,9 @@ Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const floa
   }
 
   if (FloatIsEqual(attr_value_.impl_->GetFloatValue(), value)) {
-    GELOGI("NodeAttrFeature, match scope:%s", scope->Name().c_str());
+    AscendString scope_name;
+    (void) scope->Name(scope_name);
+    GELOGI("NodeAttrFeature, match scope:%s", scope_name.GetString());
     return SUCCESS;
   }
   return FAILED;
@@ -327,16 +336,19 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
   int32_t count = 0;
   bool sub_scope_name_matched = false;
   for (auto &scp : scopes) {
-    if ((sub_type_.length() > 0UL) && (sub_type_ == scp->SubType())) {
+    AscendString scp_sub_type;
+    (void) scp->SubType(scp_sub_type);
+    if ((sub_type_.length() > 0UL) && (sub_type_ == scp_sub_type.GetString())) {
       ++count;
     }
     if (sub_scope_name_matched) {
       continue;
     }
     auto &sub_impl = scp->impl_;
-    sub_scope_name_matched = (sub_scope_mask_.length() > 0UL) &&
-                             (sub_scope_mask_.length() < scp->Name().length()) &&
-                             (sub_impl->LastName().find(sub_scope_mask_) != std::string::npos);
+    AscendString name;
+    (void) scp->Name(name);
+    sub_scope_name_matched = (sub_scope_mask_.length() > 0UL) && (sub_scope_mask_.length() < name.GetLength()) &&
+        (sub_impl->LastName().find(sub_scope_mask_) != std::string::npos);
   }
 
   if ((sub_type_.length() > 0UL) && (step_ == 0) && (count != num_)) {
@@ -351,8 +363,10 @@ bool ScopeFeature::ScopeFeatureImpl::SubScopesMatch(const std::vector<Scope *> &
 
 bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *const scope) {
   auto &impl = scope->impl_;
-  const std::string scope_name = scope->Name();
-  if (suffix_.length() > scope_name.length()) {
+  AscendString scope_name;
+  (void) scope->Name(scope_name);
+  GELOGI("NodeAttrFeature, match scope:%s", scope_name.GetString());
+  if (suffix_.length() > scope_name.GetLength()) {
     return false;
   }
   if (suffix_.length() > 0UL) {
@@ -364,7 +378,7 @@ bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *const scope) {
 
   const std::vector<Scope *> &scopes = impl->GetAllSubScopes();
   if (SubScopesMatch(scopes)) {
-    GELOGI("ScopeFeature, match scope:%s", scope->Name().c_str());
+    GELOGI("ScopeFeature, match scope:%s", scope_name.GetString());
     return true;
   }
 

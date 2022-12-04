@@ -288,7 +288,7 @@ graphStatus OperatorImpl::GetInputConstDataOut(const std::string &dst_name, Tens
     const Operator const_op(out_handle.GetOwner());
     const auto &op_desc_impl_type = out_handle.GetOwner()->GetOpDescImpl()->GetType();
     if ((op_desc_impl_type == CONSTANTOP) || (op_desc_impl_type == CONSTANT)) {
-      return const_op.GetAttr(ATTR_NAME_WEIGHTS, data);
+      return const_op.GetAttr(ATTR_NAME_WEIGHTS.c_str(), data);
     }
   }
   return GRAPH_FAILED;

@@ -131,4 +131,11 @@ bool AscendString::operator!=(const AscendString& d) const {
     return (*name_) != (*(d.name_));
   }
 }
+
+size_t AscendString::Find(const AscendString &ascend_string) const {
+  if ((name_ == nullptr) || (ascend_string.name_ == nullptr)) {
+    return std::string::npos;
+  }
+  return name_->find(*(ascend_string.name_));
+}
 }  // namespace ge

@@ -93,6 +93,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorDesc {
   ATTRIBUTED_DEPRECATED(graphStatus GetName(AscendString &))
   std::string GetName() const;
   graphStatus GetName(AscendString &name);
+  graphStatus GetName(AscendString &name) const;
 
   ATTRIBUTED_DEPRECATED(void SetName(const char_t *))
   void SetName(const std::string &name);

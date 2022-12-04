@@ -236,7 +236,7 @@ TEST_F(UtestOperater, AttrRegister_Float) {
   auto op = Operator("Data");
   std::string attr = "attr";
   float value = 1.0;
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   float ret = 0;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_FLOAT_EQ(value, ret);
@@ -247,7 +247,7 @@ TEST_F(UtestOperater, AttrRegister_ListFloat) {
   auto op = Operator("Data");
   std::string attr = "attr";
   std::vector<float> value = {1.0, 2.0};
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   std::vector<float> ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_FLOAT_EQ(value[0], ret[0]);
@@ -259,7 +259,7 @@ TEST_F(UtestOperater, AttrRegister_Int) {
   auto op = Operator("Data");
   std::string attr = "attr";
   int64_t value = 1;
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   int64_t ret = 0;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value, ret);
@@ -270,7 +270,7 @@ TEST_F(UtestOperater, AttrRegister_ListInt) {
   auto op = Operator("Data");
   std::string attr = "attr";
   std::vector<int64_t> value = {1, 2};
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   std::vector<int64_t> ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value[0], ret[0]);
@@ -284,7 +284,7 @@ TEST_F(UtestOperater, AttrRegister_String) {
   std::string value = "on";
   op.AttrRegister(attr.c_str(), value.c_str());
   std::string ret;
-  op.GetAttr(attr.c_str(), ret);
+  op.GetAttr(attr, ret);
   ASSERT_EQ(value, ret);
   op.AttrRegister(nullptr, value.c_str());
 }
@@ -293,7 +293,7 @@ TEST_F(UtestOperater, AttrRegister_Bool) {
   auto op = Operator("Data");
   std::string attr = "attr";
   bool value = true;
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   bool ret = false;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value, ret);
@@ -304,7 +304,7 @@ TEST_F(UtestOperater, AttrRegister_ListBool) {
   auto op = Operator("Data");
   std::string attr = "attr";
   std::vector<bool> value = {false, true};
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   std::vector<bool> ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value[0], ret[0]);
@@ -315,7 +315,8 @@ TEST_F(UtestOperater, AttrRegister_ListBool) {
 TEST_F(UtestOperater, AttrRegister_Tensor) {
   auto op = Operator("Data");
   auto value = Tensor();
-  op.AttrRegister("attr", value);
+  std::string attr = "attr";
+  op.AttrRegister(attr, value);
   op.AttrRegister(nullptr, value);
 }
 
@@ -330,7 +331,7 @@ TEST_F(UtestOperater, AttrRegister_OpBytes) {
   auto op = Operator("Data");
   std::string attr = "attr";
   auto value = OpBytes{1, 2, 3};
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   OpBytes ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value[0], ret[0]);
@@ -343,7 +344,7 @@ TEST_F(UtestOperater, AttrRegister_ListListInt) {
   auto op = Operator("Data");
   std::string attr = "attr";
   std::vector<std::vector<int64_t>> value = {{1, 2}, {3}};
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   std::vector<std::vector<int64_t>> ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value[0][0], ret[0][0]);
@@ -356,7 +357,7 @@ TEST_F(UtestOperater, AttrRegister_ListDataType) {
   auto op = Operator("Data");
   std::string attr = "attr";
   std::vector<DataType> value = {DataType::DT_FLOAT, DataType::DT_INT64};
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   std::vector<DataType> ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value[0], ret[0]);
@@ -368,7 +369,7 @@ TEST_F(UtestOperater, AttrRegister_DataType) {
   auto op = Operator("Data");
   std::string attr = "attr";
   auto value = DataType::DT_FLOAT;
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   DataType ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value, ret);
@@ -380,7 +381,7 @@ TEST_F(UtestOperater, AttrRegister_NamedAttrs) {
   std::string attr = "attr";
   auto value = NamedAttrs();
   value.SetName("name");
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   NamedAttrs ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value.GetName(), ret.GetName());
@@ -392,7 +393,7 @@ TEST_F(UtestOperater, AttrRegister_ListNamedAttrs) {
   std::string attr = "attr";
   std::vector<NamedAttrs> value = {NamedAttrs()};
   value[0].SetName("name");
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   std::vector<NamedAttrs> ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(value[0].GetName(), ret[0].GetName());
@@ -403,7 +404,7 @@ TEST_F(UtestOperater, AttrRegister_AscendString) {
   auto op = Operator("Data");
   std::string attr = "attr";
   auto value = AscendString("1");
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   AscendString ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(std::string(value.GetString()), std::string(ret.GetString()));
@@ -425,11 +426,15 @@ TEST_F(UtestOperater, AttrRegister_ListAscendString) {
   auto op = Operator("Data");
   std::string attr = "attr";
   std::vector<AscendString> value = {AscendString("1")};
-  op.AttrRegister(attr.c_str(), value);
+  op.AttrRegister(attr, value);
   std::vector<AscendString> ret;
   op.GetAttr(attr.c_str(), ret);
   ASSERT_EQ(std::string(value[0].GetString()), std::string(ret[0].GetString()));
   op.AttrRegister(nullptr, value);
+  op.operator_impl_ = nullptr;
+  op.AttrRegister(attr, value);
+  value[0].name_ = nullptr;
+  op.AttrRegister(attr, value);
 }
 
 TEST_F(UtestOperater, AttrRegister_ListString) {
@@ -457,7 +462,7 @@ TEST_F(UtestOperater, SubgraphRegister) {
   std::string name = "add";
   auto op = Operator("Add");
   bool dynamic = true;
-  op.SubgraphRegister(name.c_str(), dynamic);
+  op.SubgraphRegister(name, dynamic);
   op.SubgraphRegister(nullptr, dynamic);
 }
 
@@ -465,7 +470,7 @@ TEST_F(UtestOperater, SubgraphCountRegister) {
   std::string name = "add";
   auto op = Operator("Add");
   uint32_t count = 1;
-  op.SubgraphCountRegister(name.c_str(), count);
+  op.SubgraphCountRegister(name, count);
   op.SubgraphCountRegister(nullptr, count);
 }
 
@@ -474,7 +479,7 @@ TEST_F(UtestOperater, SetSubgraphBuilder) {
   auto op = Operator("Add");
   uint32_t index = 1;
   SubgraphBuilder builder = []() { return Graph(); };
-  op.SetSubgraphBuilder(name.c_str(), index, builder);
+  op.SetSubgraphBuilder(name, index, builder);
   op.SetSubgraphBuilder(nullptr, index, builder);
 
   SubgraphBuilder builder2;
@@ -506,7 +511,7 @@ TEST_F(UtestOperater, SetSubgraphBuilder) {
 TEST_F(UtestOperater, GetSubgraphImpl) {
   std::string name = "add";
   auto op = Operator("Add");
-  op.GetSubgraphImpl(name.c_str());
+  op.GetSubgraphImpl(name);
   op.GetSubgraphImpl(nullptr);
 }
 

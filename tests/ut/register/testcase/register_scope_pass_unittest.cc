@@ -461,7 +461,6 @@ TEST_F(UtestScopePass, MatchOneScope) {
 }
 
 TEST_F(UtestScopePass, PrintFusionScopeInfo) {
-  bool retBool;
   Status retStatus;
   domi::tensorflow::GraphDef graph_def;
   CreateGraph(graph_def);
@@ -492,15 +491,17 @@ TEST_F(UtestScopePass, PrintFusionScopeInfo) {
   std::vector<int32_t> index_map = {1, 2};
   fusionResult->InsertInputs("Sub", index_map);
   fusionResult->InsertOutputs("Mul", index_map);
-  // add scopes(null)
-  std::vector<Scope *> scopes = {nullptr, nullptr};
+  // add scopes
+  Scope scope0;
+  scope0.Init("scope0", "type0");
+  Scope scope1;
+  scope1.Init("scope1", "type1");
+  std::vector<Scope *> scopes = {&scope0, &scope1};
   fusionResult->impl_->AddScopes(scopes);
 
   impl->AddFusionScopesResult(fusionResult);
 
   ScopePass1 scoBasePass;
-  retBool = scoBasePass.impl_->PrintFusionScopeInfo(scope_graph);
-  EXPECT_EQ(retBool, true);
+  retStatus = scoBasePass.impl_->PrintFusionScopeInfo(scope_graph);
+  EXPECT_EQ(retStatus, SUCCESS);
 }
-
-

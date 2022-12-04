@@ -172,6 +172,69 @@ TEST_F(ScopePatternUt, CheckNodeAttrFeatureData) {
   EXPECT_FALSE(naf.Match(scope));
 }
 
+TEST_F(ScopePatternUt, CheckNodeAttrFeatureDataSuccess) {
+  {
+    ScopeAttrValue scope_attr_value;
+    bool init_value = true;
+    scope_attr_value.SetBoolValue(init_value);
+    string attr_name("attr_name");
+    NodeAttrFeature naf("node_type", attr_name, DT_INT8, scope_attr_value);
+
+    ge::OpDescPtr op_desc(new ge::OpDesc("add1", "Add"));
+    ge::AttrUtils::SetBool(op_desc, attr_name, init_value);
+    Scope *scope = new Scope;
+    scope->Init("name", "sub_type", nullptr);
+
+    auto ret = naf.impl_->CheckNodeAttrFeatureData(init_value, op_desc, scope);
+    EXPECT_EQ(ret, SUCCESS);
+  }
+  {
+    ScopeAttrValue scope_attr_value;
+    string init_value = "true";
+    scope_attr_value.SetStringValue(init_value.c_str());
+    string attr_name("attr_name");
+    NodeAttrFeature naf("node_type", attr_name, DT_INT8, scope_attr_value);
+
+    ge::OpDescPtr op_desc(new ge::OpDesc("add1", "Add"));
+    ge::AttrUtils::SetStr(op_desc, attr_name, init_value);
+    Scope *scope = new Scope;
+    scope->Init("name", "sub_type", nullptr);
+
+    auto ret = naf.impl_->CheckNodeAttrFeatureData(init_value, op_desc, scope);
+    EXPECT_EQ(ret, SUCCESS);
+  }
+  {
+    ScopeAttrValue scope_attr_value;
+    float32_t init_value = 0.0f;
+    scope_attr_value.SetFloatValue(init_value);
+    string attr_name("attr_name");
+    NodeAttrFeature naf("node_type", attr_name, DT_INT8, scope_attr_value);
+
+    ge::OpDescPtr op_desc(new ge::OpDesc("add1", "Add"));
+    ge::AttrUtils::SetFloat(op_desc, attr_name, init_value);
+    Scope *scope = new Scope;
+    scope->Init("name", "sub_type", nullptr);
+
+    auto ret = naf.impl_->CheckNodeAttrFeatureData(init_value, op_desc, scope);
+    EXPECT_EQ(ret, SUCCESS);
+  }
+  {
+    ScopeAttrValue scope_attr_value;
+    int64_t init_value = 0;
+    scope_attr_value.SetIntValue(init_value);
+    string attr_name("attr_name");
+    NodeAttrFeature naf("node_type", attr_name, DT_INT8, scope_attr_value);
+
+    ge::OpDescPtr op_desc(new ge::OpDesc("add1", "Add"));
+    ge::AttrUtils::SetInt(op_desc, attr_name, init_value);
+    Scope *scope = new Scope;
+    scope->Init("name", "sub_type", nullptr);
+
+    auto ret = naf.impl_->CheckNodeAttrFeatureData(init_value, op_desc, scope);
+    EXPECT_EQ(ret, SUCCESS);
+  }
+}
+
 TEST_F(ScopePatternUt, ScopeFeature) {
   // construct
   string sub_type = "sub_type";
