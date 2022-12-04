@@ -32,10 +32,9 @@ const std::vector<std::pair<std::string, IrInputType>> &IRMetaData::GetIrInputs(
   return ir_inputs_;
 }
 graphStatus IRMetaData::AddRegisterInputName(const std::string &name) {
-  if (find(register_input_name_.begin(), register_input_name_.end(), name) == register_input_name_.end()) {
-    register_input_name_.push_back(name);
+  if (register_unique_name_.insert(name).second) {
+    register_input_name_.emplace_back(name);
   }
-
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
                    op_name_, "register_input_name", "", "", name);
   return GRAPH_SUCCESS;
@@ -50,8 +49,8 @@ bool IRMetaData::IsOptionalInput(const std::string &name) const {
 }
 
 graphStatus IRMetaData::AddRegisterOutputName(const std::string &name) {
-  if (find(register_output_name_.begin(), register_output_name_.end(), name) == register_output_name_.end()) {
-    register_output_name_.push_back(name);
+  if (register_unique_name_.insert(name).second) {
+    register_output_name_.emplace_back(name);
   }
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "add", TraceManager::GetOutGraphName(),
