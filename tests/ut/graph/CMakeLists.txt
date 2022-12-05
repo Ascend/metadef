@@ -43,7 +43,7 @@ target_link_libraries(ut_graph PRIVATE
     slog_headers
     metadef_headers
     air_headers
-    graph graph_base error_manager
+    graph graph_base flow_graph error_manager
     GTest::gtest GTest::gtest_main ascend_protobuf slog_stub c_sec json -lrt -ldl
 )
 
