@@ -742,8 +742,7 @@ bool OnnxUtils::ConvertGeModelToModelProto(const ge::Model &model, onnx::ModelPr
   model_proto.set_model_version(static_cast<int64_t>(model.GetVersion()));
   model_proto.set_ir_version(onnx::IR_VERSION);
   model_proto.set_producer_name(model.GetName());
-  auto &graph = model.graph_;
-  const auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  const auto compute_graph = model.graph_;
   if (compute_graph == nullptr) {
     REPORT_INNER_ERROR("E18888", "GetComputeGraph for model return nullptr.");
     GELOGE(GRAPH_FAILED, "[Invoke][GetComputeGraph] return nullptr");

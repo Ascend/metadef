@@ -130,8 +130,7 @@ TEST_F(UtestNode, GetCase) {
   EXPECT_EQ(data_node->GetInNodes().size(), 0);
   EXPECT_EQ(attr_node->GetOutNodes().size(), 0);
   EXPECT_EQ(attr_node->GetOutDataNodes().size(), 0);
-  EXPECT_EQ(attr_node->InferShapeAndType(), GRAPH_PARAM_INVALID);
-  EXPECT_EQ(attr_node->impl_->InferShapeAndType(attr_node), GRAPH_PARAM_INVALID);
+  EXPECT_EQ(NodeUtilsEx::InferShapeAndType(attr_node), GRAPH_PARAM_INVALID);
   EXPECT_EQ(attr_node->GetOutDataNodesAndAnchors().size(), 0);
   EXPECT_EQ(data_node->NodeInConnectsAreEqual(*attr_node), false);
   EXPECT_EQ(data_node->NodeOutConnectsAreEqual(*attr_node), false);

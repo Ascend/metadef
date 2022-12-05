@@ -79,9 +79,9 @@ uint32_t Model::GetVersion() const { return version_; }
 
 std::string Model::GetPlatformVersion() const { return platform_version_; }
 
-void Model::SetGraph(const ge::Graph &graph) { graph_ = graph; }
+void Model::SetGraph(const ComputeGraphPtr &graph) { graph_ = graph; }
 
-Graph Model::GetGraph() const { return graph_; }
+const ComputeGraphPtr Model::GetGraph() const { return graph_; }
 
 graphStatus Model::Save(Buffer &buffer, const bool is_dump) const {
   buffer = SERIALIZE.SerializeModel(*this, is_dump);
@@ -156,7 +156,7 @@ graphStatus Model::SaveToFile(const std::string &file_name) const {
   return GRAPH_SUCCESS;
 }
 
-bool Model::IsValid() const { return graph_.IsValid(); }
+bool Model::IsValid() const { return graph_ != nullptr; }
 
 graphStatus Model::LoadFromFile(const std::string &file_name) {
   char_t real_path[MMPA_MAX_PATH] = {};

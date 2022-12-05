@@ -19,6 +19,7 @@
 #define private public
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/attr_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/op_desc.h"
 #include "graph/compute_graph.h"
 #include "graph_builder_utils.h"
@@ -68,7 +69,7 @@ TEST_F(GeIrUtilsUt, ModelSerialize) {
   ComputeGraphPtr compute_graph = CreateGraph_1_1_224_224(tensor_data);
   compute_graph->AddInputNode(data_node);
   compute_graph->AddOutputNode(add_node);
-  model1.SetGraph(GraphUtils::CreateGraphFromComputeGraph(compute_graph));
+  model1.SetGraph(compute_graph);
   onnx::ModelProto model_proto;
   EXPECT_TRUE(OnnxUtils::ConvertGeModelToModelProto(model1, model_proto));
   ge::Model model2;
@@ -89,7 +90,7 @@ TEST_F(GeIrUtilsUt, ModelSerializeSetSubgraphs) {
   subgraphs.push_back(sub_graph_1);
 
   graph->SetAllSubgraphs(subgraphs);
-  model1.SetGraph(GraphUtils::CreateGraphFromComputeGraph(graph));
+  model1.SetGraph(graph);
   onnx::ModelProto model_proto;
   bool ret = OnnxUtils::ConvertGeModelToModelProto(model1, model_proto);
   EXPECT_EQ(ret, true);
@@ -139,7 +140,7 @@ TEST_F(GeIrUtilsUt, ConvertGeModelToModelProtoFail) {
 TEST_F(GeIrUtilsUt, ConvertGeModelToModelProtoGraphProtoIsNull) {
   ge::Model model("model", "");
   ComputeGraphPtr compute_graph;
-  model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(compute_graph));
+  model.SetGraph(compute_graph);
   onnx::ModelProto model_proto;
   bool ret = OnnxUtils::ConvertGeModelToModelProto(model, model_proto);
   EXPECT_EQ(ret, false);

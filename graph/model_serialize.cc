@@ -268,8 +268,7 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *cons
     return false;
   }
 
-  auto &graph = model.graph_;
-  const auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  const auto compute_graph = model.graph_;
   if (compute_graph == nullptr) {
     REPORT_CALL_ERROR("E18888", "get compute graph from graph failed as graph is invalid.");
     GELOGE(GRAPH_FAILED, "[Get][ComputeGraph] return nullptr");
@@ -623,7 +622,7 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
     auto &graph_proto = graphs_proto[0];
     ComputeGraphPtr compute_graph_ptr;
     if (UnserializeGraphWithoutEdge(compute_graph_ptr, graph_proto)) {
-      model.graph_ = GraphUtils::CreateGraphFromComputeGraph(compute_graph_ptr);
+      model.graph_ = compute_graph_ptr;
     }
 
     // 0 is main graph, following is subgraph.

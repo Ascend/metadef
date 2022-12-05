@@ -117,33 +117,6 @@ ge::graphStatus GetOutputInstanceNum(const ge::OpDescImpl *const op_desc, const 
   return ge::FAILED;
 }
 
-ge::graphStatus CallInferFuncV2Inner(ge::Operator &op, const ge::OpDescPtr &op_desc) {
-  GE_ASSERT_NOTNULL(op_desc, "[Check][Input] invalid, op_desc is null.");
-  const auto call_infer_data_type = ge::OperatorFactoryImpl::GetInferDataTypeFunc();
-  const auto call_infer_shape_v2 = ge::OperatorFactoryImpl::GetInferShapeV2Func();
-  const auto call_infer_shape_range = ge::OperatorFactoryImpl::GetInferShapeRangeFunc();
-  if ((call_infer_data_type == nullptr) || (call_infer_shape_v2 == nullptr) || (call_infer_shape_range == nullptr)) {
-    GELOGW("infer func v2 has not been initialized");
-    return ge::GRAPH_PARAM_INVALID;
-  }
-  GE_CHK_STATUS_RET_NOLOG(call_infer_data_type(op_desc));
-  GE_CHK_STATUS_RET_NOLOG(call_infer_shape_v2(op, op_desc));
-  if (!ge::GetContext().GetTrainGraphFlag()) {
-    GE_CHK_STATUS_RET_NOLOG(call_infer_shape_range(op, op_desc));
-  }
-  return ge::GRAPH_SUCCESS;
-}
-
-ge::graphStatus CallInferFuncV2(ge::Operator &op, const ge::OpDescPtr &op_desc) {
-  const ge::graphStatus ret_v2 = CallInferFuncV2Inner(op, op_desc);
-  if (ret_v2 != ge::GRAPH_SUCCESS) {
-    GELOGW("[Call][InferFuncV2] failed, ret_v2[%u]", ret_v2);
-    // compatible with V1 processing by upper layer
-    return ge::GRAPH_PARAM_INVALID;
-  }
-  return ge::GRAPH_SUCCESS;
-}
-
 void AddDynamicNameIndex(const std::map<std::string, uint32_t> &dynamic_names_indexes, size_t insert_index,
                          std::map<std::string, uint32_t> &name_indexes) {
   // Update index in input_name_idx
@@ -1052,23 +1025,6 @@ void OpDescImpl::AddInferDataSliceFunc(const std::function<graphStatus(Operator 
   infer_data_slice_func_ = func;
 }
 
-graphStatus OpDescImpl::InferShapeAndType(const OpDescPtr &op_desc) {
-  if (infer_func_ == nullptr) {
-    infer_func_ = OperatorFactoryImpl::GetInferShapeFunc(GetType());
-    if (infer_func_ == nullptr) {
-      GELOGW("[InferShape][Check] %s does not have infer_func.", GetName().c_str());
-      /// The infer_func has not been added for each operator in the current operator information library.
-      /// No infer_func added operator skips the call
-      /// and directly uses the shape information passed down by the upper framework
-      return GRAPH_SUCCESS;
-    }
-  }
-  Operator op_proxy = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-  const graphStatus ret = static_cast<graphStatus>(infer_func_(op_proxy));
-  op_proxy.BreakConnect();
-  return ret;
-}
-
 graphStatus OpDescImpl::DefaultInferFormat(const ConstOpDescPtr &op_desc) const {
   ge::Format first_none_nd_format = FORMAT_ND;
   const auto input_descs = GetAllInputsDescPtr(op_desc);
@@ -1106,19 +1062,6 @@ graphStatus OpDescImpl::DefaultInferFormat(const ConstOpDescPtr &op_desc) const 
       output_desc->SetOriginFormat(first_none_nd_format);
       output_desc->SetFormat(first_none_nd_format);
     }
-  }
-  return GRAPH_SUCCESS;
-}
-
-graphStatus OpDescImpl::OpVerify(const OpDescPtr &op_desc) {
-  if (verifier_func_ == nullptr) {
-    verifier_func_ = OperatorFactoryImpl::GetVerifyFunc(GetType());
-  }
-  if (verifier_func_ != nullptr) {
-    Operator op_proxy = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-    const graphStatus ret = static_cast<graphStatus>(verifier_func_(op_proxy));
-    op_proxy.BreakConnect();
-    return ret;
   }
   return GRAPH_SUCCESS;
 }
@@ -1316,83 +1259,6 @@ vector<bool> OpDescImpl::GetIsInputConst() const {
   return meta_data_.is_input_consts_;
 }
 
-graphStatus OpDescImpl::CallInferFuncV1(Operator &op, const OpDescPtr &op_desc) {
-  NodeShapeTransUtils transformer(op_desc);
-  const auto is_init_success = transformer.Init();
-  if (!is_init_success) {
-    GELOGE(GRAPH_FAILED, "[Call][Init] for transformer failed");
-    return GRAPH_FAILED;
-  }
-  if (!transformer.CatchFormatAndShape()) {
-    GELOGE(GRAPH_FAILED, "[Call][CatchFormatAndShape] for transformer failed!");
-    return GRAPH_FAILED;
-  }
-  graphStatus graph_status = GRAPH_SUCCESS;
-  {
-    const auto &node_ptr = ge::NodeUtils::GetNodeFromOperator(op);
-    const bool empty_name = (node_ptr == nullptr) || (node_ptr->GetOwnerComputeGraph() == nullptr);
-    const auto &graph_name = empty_name ? std::string("")
-                                        : node_ptr->GetOwnerComputeGraph()->GetName();
-    TraceOwnerGuard guard("OP", GetName() + ":infershape", graph_name);
-    graph_status = infer_func_(op);
-  }
-  if ((graph_status != GRAPH_SUCCESS) &&
-      (graph_status != GRAPH_NODE_NEED_REPASS)) {
-    GELOGE(GRAPH_FAILED, "[Call][InferFunc] for %s failed. ret:%u", GetName().c_str(), graph_status);
-    return GRAPH_FAILED;
-  }
-  if (!transformer.UpdateFormatAndShape()) {
-    GELOGE(GRAPH_FAILED, "[Call][UpdateFormatAndShape] for transformer failed!");
-    return GRAPH_FAILED;
-  }
-  return graph_status;
-}
-
-graphStatus OpDescImpl::CallInferFunc(Operator &op, const OpDescPtr &op_desc) {
-  if (infer_func_ == nullptr) {
-    infer_func_ = OperatorFactoryImpl::GetInferShapeFunc(GetType());
-  }
-  // priority of use infer func v1
-  // when v2 func is ready, remove v1 func, it will automatically follow the V2 process
-  if (infer_func_ != nullptr) {
-    return CallInferFuncV1(op, op_desc);
-  } else {
-    return CallInferFuncV2(op, op_desc);
-  }
-}
-
-graphStatus OpDescImpl::CallInferFormatFunc(Operator &op, const ConstOpDescPtr &op_desc) {
-  if (infer_format_func_ == nullptr) {
-    infer_format_func_ = OperatorFactoryImpl::GetInferFormatFunc(GetType());
-    if (infer_format_func_ == nullptr) {
-      return DefaultInferFormat(op_desc);
-    }
-  }
-  return static_cast<graphStatus>(infer_format_func_(op));
-}
-
-graphStatus OpDescImpl::CallInferValueRangeFunc(Operator &op, const ConstOpDescPtr &op_desc) {
-  (void)op_desc;
-  if (infer_value_range_func_ == nullptr) {
-    const auto infer_value_range_param = OperatorFactoryImpl::GetInferValueRangePara(GetType());
-    if (!infer_value_range_param.is_initialized) {
-      REPORT_CALL_ERROR("E18888", "Node %s does not register func to infer value range.", GetName().c_str());
-      GELOGE(GRAPH_PARAM_INVALID, "Node %s does not register func to infer value range.", GetName().c_str());
-      return GRAPH_PARAM_INVALID;
-    }
-
-    infer_value_range_func_ = infer_value_range_param.infer_value_func;
-    if (infer_value_range_func_ == nullptr) {
-      REPORT_CALL_ERROR("E18888", "Value range infer func of node %s has been registered, but infer func is nullptr.",
-                        GetName().c_str());
-      GELOGE(GRAPH_PARAM_INVALID, "Value range infer func of node %s has been registered, but infer func is nullptr.",
-             GetName().c_str());
-      return GRAPH_PARAM_INVALID;
-    }
-  }
-  return static_cast<graphStatus>(infer_value_range_func_(op));
-}
-
 std::string OpDescImpl::GetSubgraphInstanceName(const size_t index) const {
   if (index >= subgraph_instance_names_.size()) {
     return "";
@@ -1472,19 +1338,6 @@ graphStatus OpDescImpl::GetSubgraphNameByInstanceName(const std::string &instanc
   return GRAPH_PARAM_INVALID;
 }
 
-graphStatus OpDescImpl::InferDataSlice(const OpDescPtr &op_desc) {
-  if (infer_data_slice_func_ == nullptr) {
-    infer_data_slice_func_ = OperatorFactoryImpl::GetInferDataSliceFunc(GetType());
-    if (infer_data_slice_func_ == nullptr) {
-      GELOGW("[InferDataSlice][Check] %s does not have infer data slice func.", GetName().c_str());
-      return NO_DEPENDENCE_FUNC;
-    }
-  }
-  Operator op_proxy = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-  const graphStatus ret = static_cast<graphStatus>(infer_data_slice_func_(op_proxy));
-  op_proxy.BreakConnect();
-  return ret;
-}
 IRMetaData &OpDescImpl::MutableIRMeta() {
   return meta_data_.ir_meta_;
 }
@@ -2260,17 +2113,8 @@ void OpDesc::AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> 
   impl_->AddInferDataSliceFunc(func);
 }
 
-graphStatus OpDesc::InferShapeAndType() {
-  return impl_->InferShapeAndType(shared_from_this());
-}
-
 graphStatus OpDesc::DefaultInferFormat() {
   return impl_->DefaultInferFormat(shared_from_this());
-}
-
-graphStatus OpDesc::OpVerify() {
-  return impl_->OpVerify(shared_from_this());
-
 }
 
 graphStatus OpDesc::CommonVerify() const {
@@ -2442,16 +2286,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<bool> OpDesc::GetIsIn
   return impl_->GetIsInputConst();
 }
 
-graphStatus OpDesc::CallInferFunc(Operator &op) {
-  return impl_->CallInferFunc(op, shared_from_this());
-}
-graphStatus OpDesc::CallInferFormatFunc(Operator &op) {
-  return impl_->CallInferFormatFunc(op, shared_from_this());
-}
-graphStatus OpDesc::CallInferValueRangeFunc(Operator &op) {
-  return impl_->CallInferValueRangeFunc(op, shared_from_this());
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetSubgraphInstanceName(const uint32_t index) const {
   return impl_->GetSubgraphInstanceName(static_cast<size_t>(index));
 }
@@ -2499,9 +2333,6 @@ graphStatus OpDesc::GetSubgraphNameByInstanceName(const std::string &instance_na
   return impl_->GetSubgraphNameByInstanceName(instance_name, subgraph_name);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus OpDesc::InferDataSlice() {
-  return impl_->InferDataSlice(shared_from_this());
-}
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::AppendIrAttrName(const std::string &name) {
   return impl_->MutableIRMeta().AppendIrAttrName(name);
 }

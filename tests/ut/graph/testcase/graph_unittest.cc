@@ -82,13 +82,13 @@ TEST_F(UtestGraph, copy_graph_01) {
   add_op->AddDynamicOutputDesc("output", 1);
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  auto graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  auto graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   ge::Graph copy_graph("copy_graph");
   ASSERT_EQ(copy_graph.CopyFrom(graph), ge::GRAPH_SUCCESS);
   Graph graph2("graph2");
   ASSERT_EQ(copy_graph.CopyFrom(graph2), GRAPH_FAILED);
 
-  auto cp_compute_graph = ge::GraphUtils::GetComputeGraph(copy_graph);
+  auto cp_compute_graph = ge::GraphUtilsEx::GetComputeGraph(copy_graph);
   ASSERT_NE(cp_compute_graph, nullptr);
   ASSERT_NE(cp_compute_graph, compute_graph);
   ASSERT_EQ(cp_compute_graph->GetDirectNodesSize(), 1);
@@ -555,8 +555,8 @@ TEST_F(UtestGraph, GetName) {
 
 TEST_F(UtestGraph, RecoverGraphOperators) {
   ComputeGraphPtr cgp = BuildComputeGraph();
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
-  auto ret = GraphUtils::RecoverGraphOperators(graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(cgp);
+  auto ret = GraphUtilsEx::RecoverGraphOperators(graph);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 

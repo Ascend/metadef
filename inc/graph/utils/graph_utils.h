@@ -92,24 +92,6 @@ class NodeIndexIO {
 class GraphUtils {
  public:
   /**
-   * Graph对象转换为ComputeGraph对象
-   * @param graph: Graph对象
-   * @return 管理ComputeGraph的智能指针对象
-   */
-  static ComputeGraphPtr GetComputeGraph(const Graph &graph);
-  /**
-   * ComputeGraph对象转换为Graph对象
-   * @param compute_graph: ComputeGraph对象
-   * @return Graph对象
-   */
-  static Graph CreateGraphFromComputeGraph(const ComputeGraphPtr compute_graph);
-  /**
-   * ComputeGraph对象转换为Graph对象
-   * @param compute_graph: ComputeGraph对象
-   * @return 管理Graph的智能指针对象
-   */
-  static GraphPtr CreateGraphPtrFromComputeGraph(const ComputeGraphPtr compute_graph);
-  /**
    * pipline拆分场景获取`compute_graph`的`PARTITIONEDCALL`子图
    * @param compute_graph
    * @param independent_compile_subgraphs:出参，pipline拆分场景返回子图对象，非拆分场景返回`compute_graph`本身
@@ -118,14 +100,6 @@ class GraphUtils {
   static graphStatus GetIndependentCompileGraphs(const ComputeGraphPtr &compute_graph,
                                                  std::vector<ComputeGraphPtr> &independent_compile_subgraphs);
 
-  static graphStatus RecoverGraphOperators(const Graph &graph);
-  /**
-   * 从`inputs`包含的Operator对象为起点，根据连边关系创建图对象
-   * @param name 图对象的名称
-   * @param inputs 遍历的起点合集
-   * @return 创建好的图对象
-   */
-  static ComputeGraphPtr CreateGraphFromOperator(const std::string &name, const std::vector<Operator> &inputs);
   /**
    * `src`和`dst`进行连边，`dst`作为InDataAnchorPtr, 最多允许一个对端OutDataAnchorPtr
    * @param src
@@ -225,13 +199,6 @@ class GraphUtils {
    * @return 成功返回GRAPH_SUCCESS, 失败返回GRAPH_FAILED
    */
   static graphStatus RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const NodePtr &node);
-  /**
-   * Graph图对象的深拷贝接口
-   * @param src_graph
-   * @param dst_graph
-   * @return 成功返回GRAPH_SUCCESS, 失败返回GRAPH_FAILED
-   */
-  static graphStatus CopyGraph(const Graph &src_graph, Graph &dst_graph);
 
   /**
    * ComputeGraph图对象的深拷贝接口
@@ -352,7 +319,6 @@ class GraphUtils {
    */
   static bool LoadGEGraph(const char_t *const file, ge::ComputeGraphPtr &compute_graph);
 
-  static void BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_nodes_infos);
   /**
    * 图dump接口，用于把`graph`对象按照onnx的格式序列化到文件，默认落盘到当前路径
    * @param compute_graph

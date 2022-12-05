@@ -17,7 +17,7 @@
 #include "flow_graph/process_point.h"
 #include "common/checker.h"
 #include "debug/ge_util.h"
-#include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/serialization/attr_serializer_registry.h"
 #include "proto/dflow.pb.h"
 
@@ -105,7 +105,7 @@ public:
     auto pp_name = pp_name_;
     GraphBuilder GraphBuild = [builder, pp_name]() {
       auto graph = builder();
-      auto compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+      auto compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
       if (compute_graph == nullptr) {
         GELOGE(ge::FAILED, "graph is invalid.");
         return graph;

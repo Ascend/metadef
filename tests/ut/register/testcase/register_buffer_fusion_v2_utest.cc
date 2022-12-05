@@ -17,7 +17,6 @@
 #include <map>
 #include <memory>
 #include <cstdio>
-#include "proto/om.pb.h"
 #include "gtest/gtest.h"
 
 #define protected public

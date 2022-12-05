@@ -30,4 +30,5 @@ target_link_libraries(ut_exe_graph PRIVATE
         GTest::gtest GTest::gtest_main slog_stub ascend_protobuf c_sec mmpa_stub -lrt -ldl -lgcov
         metadef_headers
         graph
+        graph_base
         )

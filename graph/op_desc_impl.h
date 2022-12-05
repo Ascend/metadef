@@ -129,11 +129,9 @@ class OpDescImpl {
   void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
   void AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> &func);
 
-  graphStatus InferShapeAndType(const OpDescPtr &op_desc);
   graphStatus VerifyIR() const;
   graphStatus DefaultInferDataType(const OpDescPtr &op_desc);
   graphStatus DefaultInferFormat(const ConstOpDescPtr &op_desc) const;
-  graphStatus OpVerify(const OpDescPtr &op_desc);
 
   std::string GetInputNameByIndex(const uint32_t index) const;
   int32_t GetInputIndexByName(const std::string &name) const;
@@ -182,10 +180,6 @@ class OpDescImpl {
 
   void SetIsInputConst(const std::vector<bool> &is_input_const);
   std::vector<bool> GetIsInputConst() const;
-  graphStatus CallInferFuncV1(Operator &op, const OpDescPtr &op_desc);
-  graphStatus CallInferFunc(Operator &op, const OpDescPtr &op_desc);
-  graphStatus CallInferFormatFunc(Operator &op, const ConstOpDescPtr &op_desc);
-  graphStatus CallInferValueRangeFunc(Operator &op, const ConstOpDescPtr &op_desc);
 
   std::string GetSubgraphInstanceName(const size_t index) const;
   const std::vector<std::string> &GetSubgraphInstanceNames() const;
@@ -195,7 +189,6 @@ class OpDescImpl {
   graphStatus SetSubgraphInstanceName(const size_t index, const std::string &name);
 
   graphStatus GetSubgraphNameByInstanceName(const std::string &instance_name, std::string &subgraph_name) const;
-  graphStatus InferDataSlice(const OpDescPtr &op_desc);
 
   void *GetTilingFuncInfo() const;
   void SetTilingFuncInfo(void *tiling_func_info);

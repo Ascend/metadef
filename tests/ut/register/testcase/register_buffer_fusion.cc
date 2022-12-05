@@ -17,7 +17,6 @@
 #include <map>
 #include <memory>
 #include <cstdio>
-#include "proto/om.pb.h"
 #include "gtest/gtest.h"
 
 #define protected public
@@ -833,8 +832,6 @@ Status RunPass(ge::ComputeGraph &graph) {
 }
 
 class UB_FUSION_UT_CONV_ELT_RELU : public testing::Test {
- public:
-  using AttrDefMap = ::google::protobuf::Map<::std::string, AttrDef>;
 
  protected:
   static void SetUpTestCase() { std::cout << "UB fusion SetUp" << std::endl; }

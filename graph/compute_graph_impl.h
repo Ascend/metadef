@@ -184,10 +184,6 @@ class ComputeGraphImpl {
   void SetTopParentGraph(const ComputeGraphPtr &compute_graph);
   graphStatus IsolateNode(const NodePtr &node) const;
   graphStatus RemoveExtraOutEdge(const NodePtr &node) const;
-  graphStatus Verify(const ConstComputeGraphPtr compute_graph) const;
-
-  graphStatus InferShapeInNeed(const ComputeGraphPtr &const_graph_ptr,
-                               const ConstComputeGraphPtr &const_compute_graph);
 
   ProtoAttrMap &MutableAttrMap();
   ConstProtoAttrMap &GetAttrMap() const;

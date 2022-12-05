@@ -20,7 +20,6 @@
 #include <google/protobuf/text_format.h>
 #include "framework/omg/parser/parser_types.h"
 #include "framework/omg/omg_inner_types.h"
-#include "proto/om.pb.h"
 #include "graph/utils/op_desc_utils.h"
 
 using google::protobuf::Message;

@@ -808,16 +808,9 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
   return graph_ptr;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraphPtr GraphUtils::GetComputeGraph(const ge::Graph &graph) {
-  if (!graph.IsValid()) {
-    return nullptr;
-  }
-  return graph.impl_->compute_graph_;
-}
-
 graphStatus Graph::SaveToFile(const std::string &file_name) const {
   Model model = Model();
-  model.SetGraph(*this);
+  model.SetGraph(GraphUtilsEx::GetComputeGraph(*this));
   return model.SaveToFile(file_name);
 }
 
@@ -829,9 +822,9 @@ graphStatus Graph::SaveToFile(const char_t *file_name) const {
   }
 
   Model model = Model();
-  model.SetGraph(*this);
-  const std::string file = file_name;
-  return model.SaveToFile(file);
+  model.SetGraph(GraphUtilsEx::GetComputeGraph(*this));
+  const std::string name = file_name;
+  return model.SaveToFile(name);
 }
 
 graphStatus Graph::LoadFromFile(const std::string &file_name) {
@@ -840,7 +833,7 @@ graphStatus Graph::LoadFromFile(const std::string &file_name) {
   if (ret != GRAPH_SUCCESS) {
     return ret;
   }
-  *this = model.GetGraph();
+  *this = GraphUtilsEx::CreateGraphFromComputeGraph(model.GetGraph());
   return GRAPH_SUCCESS;
 }
 
@@ -857,7 +850,7 @@ graphStatus Graph::LoadFromFile(const char_t *file_name) {
   if (ret != GRAPH_SUCCESS) {
     return ret;
   }
-  *this = model.GetGraph();
+  *this = GraphUtilsEx::CreateGraphFromComputeGraph(model.GetGraph());
   return GRAPH_SUCCESS;
 }
 
@@ -889,21 +882,6 @@ graphStatus Graph::CopyFrom(const Graph &src_graph) {
   return GRAPH_SUCCESS;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Graph
-GraphUtils::CreateGraphFromComputeGraph(const ge::ComputeGraphPtr compute_graph) {
-  if (compute_graph == nullptr) {
-    return Graph("");
-  }
-
-  const auto name = compute_graph->GetName();
-  const auto graph = Graph(name.c_str());
-  if (graph.impl_ == nullptr) {
-    return graph;
-  }
-  graph.impl_->compute_graph_ = compute_graph;
-  return graph;
-}
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 GraphUtils::CopyGraphImpl(const Graph &src_graph, Graph &dst_graph,
                           const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
@@ -933,37 +911,6 @@ GraphUtils::CopyGraphImpl(const Graph &src_graph, Graph &dst_graph,
     return GRAPH_FAILED;
   }
   return GRAPH_SUCCESS;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GraphPtr
-GraphUtils::CreateGraphPtrFromComputeGraph(const ge::ComputeGraphPtr compute_graph) {
-  if (compute_graph == nullptr) {
-    return nullptr;
-  }
-
-  auto name = compute_graph->GetName();
-  const auto graph = ComGraphMakeShared<Graph>(name);
-  if (graph == nullptr) {
-    return nullptr;
-  }
-  if (graph->impl_ == nullptr) {
-    return nullptr;
-  }
-
-  graph->impl_->compute_graph_ = compute_graph;
-  return graph;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::RecoverGraphOperators(const Graph &graph) {
-  GE_CHECK_NOTNULL(graph.impl_);
-  GE_CHECK_NOTNULL(graph.impl_->compute_graph_);
-
-  graph.impl_->op_list_.clear();
-  for (const auto &node : graph.impl_->compute_graph_->GetDirectNode()) {
-    graph.impl_->op_list_[node->GetName()] = OpDescUtils::CreateOperatorFromNode(node);
-  }
-  return SUCCESS;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraphPtr GraphUtilsEx::GetComputeGraph(const ge::Graph &graph) {

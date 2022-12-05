@@ -41,6 +41,7 @@
 #include "external/graph/operator.h"
 #include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_utils_ex.h"
+#include "graph/utils/op_desc_utils_ex.h"
 
 #define OP_ATTR_SET_IMP(ArgType, AttrUtilsFun)                                                                         \
   Operator &ge::Operator::SetAttr(const std::string &name, ArgType attr_value) {                                       \
@@ -903,7 +904,7 @@ graphStatus Operator::InferShapeAndType() {
                    REPORT_INNER_ERROR("E18888", "GetOpDescImpl failed, as return nullptr.");
                    return GRAPH_FAILED, "[Get][OpDescImpl] is nullptr.");
 
-  return operator_impl_->GetOpDescImpl()->CallInferFunc(*this);
+  return OpDescUtilsEx::CallInferFunc(operator_impl_->GetOpDescImpl(), *this);
 }
 
 graphStatus Operator::VerifyAllAttr(bool disable_common_verifier) {
@@ -916,7 +917,7 @@ graphStatus Operator::VerifyAllAttr(bool disable_common_verifier) {
   if ((!disable_common_verifier) && (static_cast<graphStatus>(Operator::VerifyAll()) == GRAPH_FAILED)) {
     return GRAPH_FAILED;
   } else {
-    return static_cast<graphStatus>(operator_impl_->GetOpDescImpl()->OpVerify());
+    return OpDescUtilsEx::OpVerify(operator_impl_->GetOpDescImpl());
   }
 }
 
@@ -2596,7 +2597,7 @@ Graph Operator::GetSubgraphImpl(const char_t *name) const {
             iter->second, subgraph_instance_name.c_str());
     return Graph("");
   }
-  return GraphUtils::CreateGraphFromComputeGraph(subgraph);
+  return GraphUtilsEx::CreateGraphFromComputeGraph(subgraph);
 }
 
 Graph Operator::GetSubgraph(const std::string &name) const {
@@ -2755,7 +2756,7 @@ private:
       }
 
       const Graph graph = builder();  // Build subgraph from user define builder.
-      const ComputeGraphPtr &subgraph = GraphUtils::GetComputeGraph(graph);
+      const ComputeGraphPtr &subgraph = GraphUtilsEx::GetComputeGraph(graph);
       GE_CHK_BOOL_EXEC(subgraph != nullptr,
                        REPORT_CALL_ERROR("E18888", "Node: %s, Build graph failed.", name.c_str());
                        return GRAPH_FAILED, "[Get][Graph] Node: %s, Build graph failed.", name.c_str());
@@ -2945,35 +2946,6 @@ static inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {
     }
   }
   return false;
-}
-
-ComputeGraphPtr GraphUtils::CreateGraphFromOperator(const std::string &name, const std::vector<ge::Operator> &inputs) {
-  auto graph_builder_impl = GraphBuilderImpl(name);
-  ComputeGraphPtr compute_graph = graph_builder_impl.BuildGraph(inputs);
-  GE_CHK_BOOL_EXEC(compute_graph != nullptr,
-                   REPORT_INNER_ERROR("E18888", "BuildGraph failed, as return nullptr.");
-                   return compute_graph, "[Build][Graph] Computer graph is nullptr");
-  compute_graph->SetAllNodesInfo(graph_builder_impl.GetAllNodesInfo());
-  if (HasSameNameNode(compute_graph)) {
-    GELOGW("[CreateGraph][Check] Nodes with same name exist in one compute graph is not allowed, graph_name: %s",
-           name.c_str());
-    compute_graph = nullptr;
-  }
-
-  return compute_graph;
-}
-
-void GraphUtils::BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_nodes_infos) {
-  for (const auto &it : all_nodes_infos) {
-    const OperatorImplPtr op_impl = it.first;
-    if (op_impl == nullptr) {
-      GELOGW("[BreakConnect][Check] Operator impl is null");
-      continue;
-    }
-    op_impl->ClearOutputLinks();
-    op_impl->ClearInputLinks();
-    OperatorKeeper::GetInstance().CheckOutOperator(op_impl);
-  }
 }
 
 ComputeGraphPtr GraphUtilsEx::CreateGraphFromOperator(const std::string &name,

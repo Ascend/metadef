@@ -917,10 +917,6 @@ std::vector<std::pair<InDataAnchorPtr, NodePtr>> NodeUtils::GetOutDataNodesWithA
   return out_data_nodes;
 }
 
-ConstNodePtr NodeUtils::GetNodeFromOperator(const Operator &oprt) {
-  return oprt.GetNode();
-}
-
 std::string NodeUtils::GetInConstNodeTypeCrossSubgraph(const NodePtr &node) {
   const NodePtr input_node = GetInNodeCrossSubgraph(node);
   if (input_node == nullptr) {

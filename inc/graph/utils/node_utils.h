@@ -146,8 +146,6 @@ class NodeUtils {
   static std::vector<std::pair<InDataAnchorPtr, NodePtr>> GetOutDataNodesWithAnchorByIndex(const Node &node,
                                                                                            const int32_t index);
 
-  static ge::ConstNodePtr GetNodeFromOperator(const Operator &oprt);
-
   /**
   * 适用于`node`节点作为子图中的Data占位节点时，获取根图中父节点对应的实际输入节点的类型
   * 其他情况返回`node`本身的节点类型

@@ -74,7 +74,7 @@ TEST_F(ModelUt, SetGet) {
 
   auto graph = BuildGraph();
   EXPECT_EQ(graph.IsValid(),true);
-  md2.SetGraph(graph);
+  md2.SetGraph(GraphUtilsEx::GetComputeGraph(graph));
   auto g = md2.GetGraph();
   EXPECT_NE(&g, nullptr);
   Buffer buf = Buffer(1024);
@@ -93,7 +93,7 @@ TEST_F(ModelUt, SetGet) {
 TEST_F(ModelUt, Load) {
   auto md = SubModel("md2", "test");
   auto graph = BuildGraph();
-  md.SetGraph(graph);
+  md.SetGraph(GraphUtilsEx::GetComputeGraph(graph));
   uint8_t b[5];
   memset(b,1,5);
   EXPECT_EQ(md.Load((const uint8_t*)b, 5, md),GRAPH_FAILED);
@@ -110,7 +110,7 @@ TEST_F(ModelUt, Load) {
 TEST_F(ModelUt, Save) {
   auto md = SubModel("md2", "test");
   auto graph = BuildGraph();
-  md.SetGraph(graph);
+  md.SetGraph(GraphUtilsEx::GetComputeGraph(graph));
   std::time_t tt = std::time(0);
   std::stringstream ss;
   ss << "/tmp/" << tt << ".proto";
@@ -120,7 +120,7 @@ TEST_F(ModelUt, Save) {
 TEST_F(ModelUt, Save_Failure) {
   auto md = SubModel("md2", "test");
   auto graph = BuildGraph();
-  md.SetGraph(graph);
+  md.SetGraph(GraphUtilsEx::GetComputeGraph(graph));
   std::stringstream fn;
   fn << "/tmp/";
   for (int i = 0; i < 4096; i++){
