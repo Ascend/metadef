@@ -217,10 +217,11 @@ typedef struct rtFreeHostSharedMemoryIn {
  * @param [in|out] devPtr   memory pointer
  * @param [in] size   memory size
  * @param [in] type   memory type
+ * @param [in] moduleId   alloc memory module id
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type);
+RTS_API rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type, const uint16_t moduleId);
 
 /**
  * @ingroup dvrt_mem
@@ -236,10 +237,11 @@ RTS_API rtError_t rtFree(void *devPtr);
  * @brief alloc device memory for dvpp
  * @param [in|out] devPtr   memory pointer
  * @param [in] size   memory size
+ * @param [in] moduleId   alloc memory module id
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtDvppMalloc(void **devPtr, uint64_t size);
+RTS_API rtError_t rtDvppMalloc(void **devPtr, uint64_t size, uint16_t moduleId);
 
 /**
  * @ingroup dvrt_mem
@@ -255,10 +257,11 @@ RTS_API rtError_t rtDvppFree(void *devPtr);
  * @brief alloc host memory
  * @param [in|out] hostPtr   memory pointer
  * @param [in] size   memory size
+ * @param [in] moduleId   alloc memory module id
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMallocHost(void **hostPtr, uint64_t size);
+RTS_API rtError_t rtMallocHost(void **hostPtr, uint64_t size, uint16_t moduleId);
 
 /**
  * @ingroup dvrt_mem
@@ -297,10 +300,11 @@ RTS_API rtError_t rtFreeHostSharedMemory(rtFreeHostSharedMemoryIn *in);
  * @param [in|out] ptr   memory pointer
  * @param [in] size   memory size
  * @param [in] flag   reserved, set to 0.
+ * @param [in] moduleId   alloc memory module id
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
-RTS_API rtError_t rtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag);
+RTS_API rtError_t rtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag, uint16_t moduleId);
 
 /**
  * @ingroup dvrt_mem
@@ -324,12 +328,13 @@ RTS_API rtError_t rtMemAdvise(void *devPtr, uint64_t count, uint32_t advise);
 /**
  * @ingroup dvrt_mem
  * @brief alloc cached device memory
- * @param [in| devPtr   memory pointer
+ * @param [in|out] devPtr   memory pointer
  * @param [in] size     memory size
  * @param [in] type     memory type
+ * @param [in] moduleId   alloc memory module id
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtMallocCached(void **devPtr, uint64_t size, rtMemType_t type);
+RTS_API rtError_t rtMallocCached(void **devPtr, uint64_t size, rtMemType_t type, uint16_t moduleId);
 
 /**
  * @ingroup dvrt_mem

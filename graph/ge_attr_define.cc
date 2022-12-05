@@ -1397,4 +1397,7 @@ const std::string ATTR_NAME_MAX_KEY_NUM = "_max_key_num";
 const std::string ATTR_NAME_EMBEDDING_DIM = "_embedding_dim";
 const std::string ATTR_NAME_IS_PS_GRAPH = "_is_ps_engine_graph";
 const std::string ATTR_NAME_TAG_ID = "_tag_id";
+
+const std::string ATTR_MODEL_HOST_ENV_OS = "host_env_os";
+const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";
 }  // namespace ge

@@ -41,24 +41,21 @@ ge::graphStatus TestInferDataTypeFunc(gert::InferDataTypeContext *context) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterInferShapeOk) {
-  IMPL_OP(TestConv2D);
-  op_impl_register_TestConv2D.InferShape(TestInferShapeFunc1);
+  IMPL_OP(TestConv2D).InferShape(TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").tiling, nullptr);
   EXPECT_FALSE(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").inputs_dependency);
 }
 
 TEST_F(OpImplRegistryUT, RegisterInferShapeAndTilingOk) {
-  IMPL_OP(TestAdd);
-  op_impl_register_TestAdd.InferShape(TestInferShapeFunc1).Tiling(TestTilingFunc1);
+  IMPL_OP(TestAdd).InferShape(TestInferShapeFunc1).Tiling(TestTilingFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").tiling, TestTilingFunc1);
   EXPECT_FALSE(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").inputs_dependency);
 }
 
 TEST_F(OpImplRegistryUT, RegisterInferShapeRangeOk) {
-  IMPL_OP(TestConv2D2);
-  op_impl_register_TestConv2D2.InferShapeRange(TestInferShapeRangeFunc1);
+  IMPL_OP(TestConv2D2).InferShapeRange(TestInferShapeRangeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D2").infer_shape_range,
             TestInferShapeRangeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D2").infer_shape, nullptr);
@@ -67,8 +64,7 @@ TEST_F(OpImplRegistryUT, RegisterInferShapeRangeOk) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterInferShapeAndInferShapeAndTilingOk) {
-  IMPL_OP(TestAdd);
-  op_impl_register_TestAdd.InferShape(TestInferShapeFunc1).InferShapeRange(TestInferShapeRangeFunc1).Tiling(TestTilingFunc1);
+  IMPL_OP(TestAdd).InferShape(TestInferShapeFunc1).InferShapeRange(TestInferShapeRangeFunc1).Tiling(TestTilingFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestAdd").infer_shape_range,
             TestInferShapeRangeFunc1);
@@ -77,8 +73,7 @@ TEST_F(OpImplRegistryUT, RegisterInferShapeAndInferShapeAndTilingOk) {
 }
 
 TEST_F(OpImplRegistryUT, InputsDependencyOk) {
-  IMPL_OP(TestReshape);
-  op_impl_register_TestReshape.InferShape(TestInferShapeFunc1).InputsDataDependency({1});
+  IMPL_OP(TestReshape).InferShape(TestInferShapeFunc1).InputsDataDependency({1});
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestReshape").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestReshape").tiling, nullptr);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestReshape").inputs_dependency, 2);
@@ -95,8 +90,7 @@ TEST_F(OpImplRegistryUT, DefaultImpl) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterPrivateAttrOk) {
-  IMPL_OP(TestPrivateConv2D);
-  op_impl_register_TestPrivateConv2D.InferShape(TestInferShapeFunc1).PrivateAttr("attr1");
+  IMPL_OP(TestPrivateConv2D).InferShape(TestInferShapeFunc1).PrivateAttr("attr1");
 
   const char *op_type = "TestPrivateConv2D";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
@@ -111,8 +105,7 @@ TEST_F(OpImplRegistryUT, RegisterPrivateAttrOk) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterPrivateAttrDuplicatedUsingSameOpType) {
-  IMPL_OP(TestPrivateConv2D);
-  op_impl_register_TestPrivateConv2D.PrivateAttr("attr2");
+  IMPL_OP(TestPrivateConv2D).PrivateAttr("attr2");
 
   const char *op_type = "TestPrivateConv2D";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
@@ -138,8 +131,7 @@ TEST_F(OpImplRegistryUT, UsePrivateAttrAlreadyRegistered) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterMultiPrivateAttrs) {
-  IMPL_OP(TestPrivateAdd);
-  op_impl_register_TestPrivateAdd.PrivateAttr("attr1").PrivateAttr("attr2").PrivateAttr("attr3");
+  IMPL_OP(TestPrivateAdd).PrivateAttr("attr1").PrivateAttr("attr2").PrivateAttr("attr3");
 
   const char *op_type = "TestPrivateAdd";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
@@ -152,8 +144,7 @@ TEST_F(OpImplRegistryUT, RegisterMultiPrivateAttrs) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterSamePrivateAttrs) {
-  IMPL_OP(TestPrivateSub);
-  op_impl_register_TestPrivateSub
+  IMPL_OP(TestPrivateSub)
       .PrivateAttr("attr1")
       .PrivateAttr("attr1")
       .PrivateAttr("attr2")
@@ -169,8 +160,7 @@ TEST_F(OpImplRegistryUT, RegisterSamePrivateAttrs) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterPrivateAttrsUsingNullptr) {
-  IMPL_OP(TestPrivateMul);
-  op_impl_register_TestPrivateMul.PrivateAttr(nullptr);
+  IMPL_OP(TestPrivateMul).PrivateAttr(nullptr);
 
   const char *op_type = "TestPrivateMul";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
@@ -178,8 +168,7 @@ TEST_F(OpImplRegistryUT, RegisterPrivateAttrsUsingNullptr) {
 }
 
 TEST_F(OpImplRegistryUT, RegisterPrivateAttrsUsingEmptyName) {
-  IMPL_OP(TestPrivateDiv);
-  op_impl_register_TestPrivateDiv.PrivateAttr("");
+  IMPL_OP(TestPrivateDiv).PrivateAttr("");
 
   const char *op_type = "TestPrivateDiv";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
@@ -187,8 +176,7 @@ TEST_F(OpImplRegistryUT, RegisterPrivateAttrsUsingEmptyName) {
 }
 
 TEST_F(OpImplRegistryUT, GetPrivateAttrFailedWhenTypeMismatchName) {
-  IMPL_OP(TestPrivateDiv);
-  op_impl_register_TestPrivateDiv.PrivateAttr("TestOpType");
+  IMPL_OP(TestPrivateDiv).PrivateAttr("TestOpType");
 
   const char *op_type = "TestOptype";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
@@ -197,8 +185,7 @@ TEST_F(OpImplRegistryUT, GetPrivateAttrFailedWhenTypeMismatchName) {
 
 TEST_F(OpImplRegistryUT, RegisterIntPrivateAttrOk) {
   constexpr int64_t private_attr_val = 10;
-  IMPL_OP(TestIntOpdesc);
-  op_impl_register_TestIntOpdesc.PrivateAttr("attr1", private_attr_val);
+  IMPL_OP(TestIntOpdesc).PrivateAttr("attr1", private_attr_val);
   const char *op_type = "TestIntOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
@@ -211,8 +198,7 @@ TEST_F(OpImplRegistryUT, RegisterIntPrivateAttrOk) {
 
 TEST_F(OpImplRegistryUT, RegisterListIntPrivateAttrOk) {
   std::vector<int64_t> private_attr_val = {10, 20, 30};
-  IMPL_OP(TestListIntOpdesc);
-  op_impl_register_TestListIntOpdesc.PrivateAttr("attr1", private_attr_val);
+  IMPL_OP(TestListIntOpdesc).PrivateAttr("attr1", private_attr_val);
   const char *op_type = "TestListIntOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
@@ -225,8 +211,7 @@ TEST_F(OpImplRegistryUT, RegisterListIntPrivateAttrOk) {
 
 TEST_F(OpImplRegistryUT, RegisterStringPrivateAttrOk) {
   const char *private_attr_val = "10";
-  IMPL_OP(TestStringOpdesc);
-  op_impl_register_TestStringOpdesc.PrivateAttr("attr1", private_attr_val);
+  IMPL_OP(TestStringOpdesc).PrivateAttr("attr1", private_attr_val);
   const char *op_type = "TestStringOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
@@ -239,8 +224,7 @@ TEST_F(OpImplRegistryUT, RegisterStringPrivateAttrOk) {
 
 TEST_F(OpImplRegistryUT, RegisterFloatPrivateAttrOk) {
   float private_attr_val = 10.0;
-  IMPL_OP(TestFloatOpdesc);
-  op_impl_register_TestFloatOpdesc.PrivateAttr("attr1", private_attr_val);
+  IMPL_OP(TestFloatOpdesc).PrivateAttr("attr1", private_attr_val);
   const char *op_type = "TestFloatOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
@@ -253,8 +237,7 @@ TEST_F(OpImplRegistryUT, RegisterFloatPrivateAttrOk) {
 
 TEST_F(OpImplRegistryUT, RegisterListFloatPrivateAttrOk) {
   std::vector<float> private_attr_val = {10.0, 20.0, 30.0};
-  IMPL_OP(TestListFloatOpdesc);
-  op_impl_register_TestListFloatOpdesc.PrivateAttr("attr1", private_attr_val);
+  IMPL_OP(TestListFloatOpdesc).PrivateAttr("attr1", private_attr_val);
   const char *op_type = "TestListFloatOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
@@ -267,8 +250,7 @@ TEST_F(OpImplRegistryUT, RegisterListFloatPrivateAttrOk) {
 
 TEST_F(OpImplRegistryUT, RegisterBoolPrivateAttrOk) {
   bool private_attr_val = false;
-  IMPL_OP(TestBoolOpdesc);
-  op_impl_register_TestBoolOpdesc.PrivateAttr("attr1", private_attr_val);
+  IMPL_OP(TestBoolOpdesc).PrivateAttr("attr1", private_attr_val);
   const char *op_type = "TestBoolOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
@@ -282,8 +264,7 @@ TEST_F(OpImplRegistryUT, RegisterBoolPrivateAttrOk) {
 TEST_F(OpImplRegistryUT, RegisterMixPrivateAttrOk) {
   const char *str_attr_val= "Test";
   std::vector<int64_t> listint_attr_val = {10, 20, 30};
-  IMPL_OP(TestMixOpdesc);
-  op_impl_register_TestMixOpdesc.PrivateAttr("attr1").PrivateAttr("attr2", str_attr_val).PrivateAttr("attr3", listint_attr_val);
+  IMPL_OP(TestMixOpdesc).PrivateAttr("attr1").PrivateAttr("attr2", str_attr_val).PrivateAttr("attr3", listint_attr_val);
   const char *op_type = "TestMixOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   constexpr size_t private_attr_size = 3UL;
