@@ -21,6 +21,7 @@
 #include "graph/debug/ge_util.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
+#include "graph/ge_context.h"
 #include "graph/op_desc_impl.h"
 #include "common/util/mem_utils.h"
 #include "graph/utils/graph_utils.h"
@@ -29,6 +30,7 @@
 #include "graph/operator_impl.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/detail/model_serialize_imp.h"
+#include "mmpa/mmpa_api.h"
 
 /*lint -e512 -e737 -e752*/
 namespace ge {
@@ -36,6 +38,19 @@ const char_t OP_DESC_QUANT_PARAMS[] = "quantize_factor";
 
 namespace {
 const uint32_t CONST_OP_NORMAL_WEIGHT_SIZE = 1U;
+const char* const kMultiThreadCompile = "MULTI_THREAD_COMPILE";
+const char* const kDisEnableFlag = "0";
+void GetConstantOpName(std::string &op_name) {
+  thread_local int64_t const_count = 0;
+  std::string compile_thread;
+  if ((ge::GetContext().GetOption(kMultiThreadCompile, compile_thread) == GRAPH_SUCCESS)
+      && (compile_thread.compare(kDisEnableFlag) == 0)) {
+    op_name = "dynamic_const_" + std::to_string(const_count);
+  } else {
+    op_name = "dynamic_const_" + std::to_string(GeLog::GetTid()) + "_" + std::to_string(const_count);
+  }
+  ++const_count;
+}
 }
 
 bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
@@ -822,10 +837,10 @@ OpDescPtr OpDescUtils::CreateConstOp(const GeTensorPtr &tensor_ptr) {
 
   const_opdesc->SetType(CONSTANT);
 
-  thread_local int64_t const_count = 0;
-  const_opdesc->SetName("dynamic_const_" + std::to_string(GeLog::GetTid()) + "_" + std::to_string(const_count));
+  std::string op_name;
+  GetConstantOpName(op_name);
+  const_opdesc->SetName(op_name);
   GELOGI("add const op: %s", const_opdesc->GetName().c_str());
-  ++const_count;
 
   (void)const_opdesc->AddOutputDesc("y", tensor_ptr->GetTensorDesc());
 

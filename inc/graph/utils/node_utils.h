@@ -178,6 +178,16 @@ class NodeUtils {
   static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
   static bool IsDtResourceNode(const NodePtr &node);
 };
+
+struct NodeCompareKey {
+  bool operator()(const NodePtr &n0, const NodePtr &n1) const {
+    if ((n0 == nullptr) || (n1 == nullptr)) {
+      return false;
+    }
+    return (n0->GetName() < n1->GetName());
+  }
+};
+using OrderedNodeSet = std::set<NodePtr, NodeCompareKey>;
 }  // namespace ge
 /*lint +e148*/
 #endif  // INC_GRAPH_UTILS_NODE_UTILS_H_

@@ -23,6 +23,7 @@
 #include "external/graph/resource_context.h"
 #include "graph/ge_error_codes.h"
 #include "graph/node.h"
+#include "graph/utils/node_utils.h"
 
 namespace ge {
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ResourceContextMgr {
@@ -55,7 +56,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ResourceContextMgr {
    * @param read_nodes
    * @return status
    */
-  std::unordered_set<NodePtr> &MutableNodesReliedOnResource(const std::string &resource_key);
+  OrderedNodeSet &MutableNodesReliedOnResource(const std::string &resource_key);
   /**
    * Resource context need to be cleared when session finalize
    * @return status
@@ -65,7 +66,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ResourceContextMgr {
  private:
   std::mutex ctx_mu_;
   std::map<std::string, std::unique_ptr<ResourceContext>> resource_keys_to_contexts_;
-  std::map<std::string, std::unordered_set<NodePtr>> resource_keys_to_read_nodes_;
+  std::map<std::string, OrderedNodeSet> resource_keys_to_read_nodes_;
 };
 }  // namespace ge
 #endif  //  INC_GRAPH_RESOURCE_CONTEXT_MGR_H_
