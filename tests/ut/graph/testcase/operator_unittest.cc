@@ -33,6 +33,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/compute_graph_impl.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/node_utils.h"
 #include "inc/external/graph/graph.h"
@@ -69,7 +70,7 @@ class UtestOperater : public testing::Test {
    * Foo01
    */
   void CheckTopoGraph1(const Graph &graph) {
-    auto compute_graph = GraphUtils::GetComputeGraph(graph);
+    auto compute_graph = GraphUtilsEx::GetComputeGraph(graph);
     ASSERT_NE(compute_graph, nullptr);
     ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 1}, {"Foo11", 1}}), "success");
     auto foo11_node = compute_graph->FindNode("foo11");
@@ -88,7 +89,7 @@ class UtestOperater : public testing::Test {
    *     Foo02
    */
   void CheckTopoGraph2(const Graph &graph) {
-    auto compute_graph = GraphUtils::GetComputeGraph(graph);
+    auto compute_graph = GraphUtilsEx::GetComputeGraph(graph);
     ASSERT_NE(compute_graph, nullptr);
     ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo02", 1}, {"Foo11", 1}, {"Foo22", 1}}),
               "success");
@@ -112,7 +113,7 @@ class UtestOperater : public testing::Test {
    *      Foo02
    */
   void CheckTopoGraph3(const Graph &graph) {
-    auto compute_graph = GraphUtils::GetComputeGraph(graph);
+    auto compute_graph = GraphUtilsEx::GetComputeGraph(graph);
     ASSERT_NE(compute_graph, nullptr);
     ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo02", 1}, {"Foo11", 1}, {"DFoo22", 1}}),
               "success");
@@ -711,6 +712,14 @@ TEST_F(UtestOperater, InferShapeAndType) {
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
+TEST_F(UtestOperater, InferShapeAndType_param_invalid) {
+  Operator op;
+  op.operator_impl_ = std::make_shared<OperatorImpl>("name", "type");
+
+  auto ret = op.InferShapeAndType();
+  EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
 TEST_F(UtestOperater, VerifyAllAttr) {
   Operator op;
   OpDescPtr op_desc_1;
@@ -721,6 +730,14 @@ TEST_F(UtestOperater, VerifyAllAttr) {
 
   ret = op.VerifyAllAttr(false);
   EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestOperater, VerifyAllAttr_success) {
+  Operator op;
+  op.operator_impl_ = std::make_shared<OperatorImpl>("name", "type");
+
+  auto ret = op.VerifyAllAttr(true);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
 TEST_F(UtestOperater, GetAllAttrNamesAndTypes) {
@@ -1615,12 +1632,12 @@ TEST_F(UtestOperater, CopyOperators1) {
   ge::OpDescPtr add_op(new ge::OpDesc("add_0", "add"));
   std::shared_ptr<ge::ComputeGraph> compute_graph(new ge::ComputeGraph("test_graph"));
   auto add_node = compute_graph->AddNode(add_op);
-  Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   ge::OpDescPtr add_op_2(new ge::OpDesc("add_2", "add"));
   std::shared_ptr<ge::ComputeGraph> compute_graph_2(new ge::ComputeGraph("test_graph_2"));
   auto add_node_2 = compute_graph->AddNode(add_op_2);
-  Graph graph2 = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph_2);
+  Graph graph2 = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph_2);
 
   Operator op1("op1");
   Operator op2("op2");
@@ -1629,7 +1646,7 @@ TEST_F(UtestOperater, CopyOperators1) {
   graph.AddOp(op2);
   graph.AddOp(op3);
 
-  auto ret = GraphUtils::CopyGraph(graph, graph2);
+  auto ret = GraphUtilsEx::CopyGraph(graph, graph2);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
@@ -1647,7 +1664,7 @@ TEST_F(UtestOperater, CopyOperators2) {
   Operator op3 = OpDescUtils::CreateOperatorFromNode(data2);
 
   ComputeGraphPtr compt_graph = builder.GetGraph();
-  Graph graph = GraphUtils::CreateGraphFromComputeGraph(compt_graph);
+  Graph graph = GraphUtilsEx::CreateGraphFromComputeGraph(compt_graph);
   graph.AddOp(op1);
   graph.AddOp(op2);
   graph.AddOp(op3);
@@ -1655,9 +1672,9 @@ TEST_F(UtestOperater, CopyOperators2) {
   ut::GraphBuilder builder2 = ut::GraphBuilder("graph2");
   auto data3 = builder2.AddNode("Data3", "Data", 0, 1);
   ComputeGraphPtr compt_graph2 = builder2.GetGraph();
-  Graph graph2 = GraphUtils::CreateGraphFromComputeGraph(compt_graph2);
+  Graph graph2 = GraphUtilsEx::CreateGraphFromComputeGraph(compt_graph2);
 
-  auto ret = GraphUtils::CopyGraph(graph, graph2);
+  auto ret = GraphUtilsEx::CopyGraph(graph, graph2);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
@@ -1675,7 +1692,7 @@ TEST_F(UtestOperater, CopyOperators3) {
   Operator op3 = OpDescUtils::CreateOperatorFromNode(data2);
 
   ComputeGraphPtr compt_graph = builder.GetGraph();
-  Graph src_graph = GraphUtils::CreateGraphFromComputeGraph(compt_graph);
+  Graph src_graph = GraphUtilsEx::CreateGraphFromComputeGraph(compt_graph);
   src_graph.AddOp(op1);
   src_graph.AddOp(op2);
   src_graph.AddOp(op3);
@@ -1683,7 +1700,7 @@ TEST_F(UtestOperater, CopyOperators3) {
   ut::GraphBuilder builder2 = ut::GraphBuilder("graph2");
   auto data3 = builder2.AddNode("Data3", "Data", 0, 1);
   ComputeGraphPtr dst_compute_graph = builder2.GetGraph();
-  Graph dst_graph = GraphUtils::CreateGraphFromComputeGraph(dst_compute_graph);
+  Graph dst_graph = GraphUtilsEx::CreateGraphFromComputeGraph(dst_compute_graph);
 
   std::map<std::string, ge::Operator> src_op_list = {{string("op1"), op1}, {string("op2"), op2}, {string("op3"), op3}};
   std::map<std::string, ge::Operator> dst_op_list;
@@ -1779,7 +1796,7 @@ TEST_F(UtestOperater, SetInput_Failed_NullName) {
   foo11.SetInput(nullptr, foo01);
   Graph graph("graph");
   graph.SetInputs({foo01});
-  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  auto compute_graph = GraphUtilsEx::GetComputeGraph(graph);
   ASSERT_NE(compute_graph, nullptr);
   ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 1}}), "success");
 }
@@ -1790,7 +1807,7 @@ TEST_F(UtestOperater, GetOutput_Failed_NullName) {
   foo11.SetInput("", foo01.GetOutput(nullptr));
   Graph graph("graph");
   graph.SetInputs({foo01});
-  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  auto compute_graph = GraphUtilsEx::GetComputeGraph(graph);
   ASSERT_NE(compute_graph, nullptr);
   ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 1}}), "success");
 }
@@ -1913,7 +1930,7 @@ TEST_F(UtestOperater, SetDynamicInput_Success_SingleOutput) {
   Graph graph("graph");
   graph.SetInputs({foo01_0, foo01_1, foo01_2});
 
-  auto compute_graph = GraphUtils::GetComputeGraph(graph);
+  auto compute_graph = GraphUtilsEx::GetComputeGraph(graph);
   ASSERT_NE(compute_graph, nullptr);
   ASSERT_EQ(gert::SummaryChecker(compute_graph).StrictAllNodeTypes({{"Foo01", 3}, {"DFoo22", 1}}), "success");
   auto foo22_node = compute_graph->FindNode("foo22");

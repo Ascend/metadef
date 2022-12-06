@@ -189,8 +189,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   void SetAtomicTilingFuncInfo(void *atomic_tiling_func_info);
 
-  graphStatus InferShapeAndType();
-
   graphStatus VerifyIR();
 
   graphStatus DefaultInferDataType();
@@ -208,12 +206,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   std::function<graphStatus(Operator &)> GetInferFormatFunc() const;
   std::function<graphStatus(Operator &)> GetInferDataSliceFunc() const;
   std::function<graphStatus(Operator &)> GetInferValueRangeFunc() const;
-
-  graphStatus CallInferFormatFunc(Operator &op);
-
-  graphStatus CallInferValueRangeFunc(Operator &op);
-
-  graphStatus OpVerify();
 
   graphStatus CommonVerify() const;
 
@@ -282,8 +274,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   int32_t GetOutputIndexByName(const std::string &name) const;
 
-  graphStatus CallInferFunc(Operator &op);
-
   void SetOpKernelLibName(const std::string &name);
 
   std::string GetOpKernelLibName() const;
@@ -312,8 +302,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   void RemoveSubgraphInstanceName(const std::string &name);
 
   graphStatus GetSubgraphNameByInstanceName(const std::string &instance_name, std::string &subgraph_name) const;
-
-  graphStatus InferDataSlice();
 
  protected:
   ProtoAttrMap &MutableAttrMap() override;

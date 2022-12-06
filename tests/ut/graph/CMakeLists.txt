@@ -19,6 +19,8 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${METADEF_DIR}/inc/common/util/trace_manager)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos)
 include_directories(${CMAKE_BINARY_DIR}/proto/metadef_protos/proto)
+include_directories(${CMAKE_BINARY_DIR}/proto/metadef_data_flow_protos)
+include_directories(${CMAKE_BINARY_DIR}/proto/metadef_data_flow_protos/proto)
 include_directories(${METADEF_DIR})
 include_directories(${METADEF_DIR}/graph)
 include_directories(${CMAKE_BINARY_DIR})
@@ -43,7 +45,7 @@ target_link_libraries(ut_graph PRIVATE
     slog_headers
     metadef_headers
     air_headers
-    graph error_manager
+    graph graph_base flow_graph error_manager
     GTest::gtest GTest::gtest_main ascend_protobuf slog_stub c_sec json -lrt -ldl
 )
 

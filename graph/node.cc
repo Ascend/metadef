@@ -651,92 +651,6 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetOutAllNodes(const ge::ConstNodePtr &own
   return Node::Vistor<NodePtr>(owner_node, vec);
 }
 
-graphStatus Node::NodeImpl::InferShapeAndType(const ge::ConstNodePtr &owner_node) const {
-  Operator op = ge::OpDescUtils::CreateOperatorFromNode(owner_node);
-  return ShapeRefiner::InferShapeAndType(owner_node, op);
-}
-
-graphStatus Node::NodeImpl::InferOriginFormat(const ge::ConstNodePtr &owner_node) const {
-  Operator op = ge::OpDescUtils::CreateOperatorFromNode(owner_node);
-  // Get infer func and execute
-  GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E18888", "original OpDesc is nullptr, check invalid.");
-                   return GRAPH_FAILED, "[Check][Param] original OpDesc is nullptr");
-  return op_->CallInferFormatFunc(op);
-}
-
-graphStatus Node::NodeImpl::Verify(const ge::ConstNodePtr &owner_node) const {
-  const std::string data_type = "Data";
-  const std::string aipp_data_type = "AippData";
-  const std::string const_type = "Const";
-  const std::string const_type_train = "Constant";
-  const std::string variable_type = "Variable";
-  const bool is_unknown_graph = GetOwnerComputeGraph()->GetGraphUnknownFlag();
-  GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E18888", "original OpDesc is nullptr, check invalid.");
-                   return GRAPH_FAILED, "[Check][Param] original OpDesc is nullptr");
-
-  if (!is_unknown_graph) {
-    for (const auto &in_anchor_ptr : GetAllInDataAnchors(owner_node)) {
-      if (in_anchor_ptr == nullptr) {
-        GELOGW("[Verify][CheckParam] In data anchor is null");
-        continue;
-      }
-      const bool valid_anchor = (op_->GetType() == data_type) || (op_->GetType() == aipp_data_type) ||
-                                (op_->GetType() == const_type) || (op_->GetType() == variable_type) ||
-                                (op_->GetType() == const_type_train) ||
-                                (op_->MutableInputDesc(static_cast<uint32_t>(in_anchor_ptr->GetIdx())) == nullptr) ||
-                                (in_anchor_ptr->GetPeerAnchors().size() > 0UL);
-      if (!valid_anchor) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E11019", {"opname", "index"},
-                                                        {GetName(), std::to_string(in_anchor_ptr->GetIdx())});
-        GELOGE(GRAPH_FAILED, "[Check][Param] operator %s's input %d is not linked.",
-               GetName().c_str(), in_anchor_ptr->GetIdx());
-        return GRAPH_FAILED;
-      }
-    }
-  }
-
-  const std::string frameworkop_type = "FrameworkOp";
-  const bool need_update_name = (op_->GetType() != frameworkop_type) && (!is_unknown_graph);
-  if (need_update_name) {
-    const auto node_op = ge::OperatorFactoryImpl::CreateOperator("node_op", op_->GetType());
-    if (node_op.IsEmpty()) {
-      GELOGW("[Verify][CheckParam] Get op from OperatorFactory failed, type: %s", op_->GetType().c_str());
-    } else {
-      GELOGD("get op from OperatorFactory success. opType: %s", op_->GetType().c_str());
-      const auto temp_op_desc = ge::OpDescUtils::GetOpDescFromOperator(node_op);
-      if (temp_op_desc == nullptr) {
-        REPORT_INNER_ERROR("E18888", "GetOpDescFromOperator failed, as return nullptr, type:%s",
-                           op_->GetType().c_str());
-        GELOGE(GRAPH_FAILED, "[Get][OpDesc] temp op desc is null, type:%s", op_->GetType().c_str());
-        return GRAPH_FAILED;
-      }
-      if (!op_->UpdateInputName(temp_op_desc->GetAllInputName())) {
-        GELOGW("[Verify][Update] Update input name failed");
-      }
-      if (!op_->UpdateOutputName(temp_op_desc->GetAllOutputName())) {
-        GELOGW("[Verify][Update] Update output name failed");
-      }
-    }
-    node_op.BreakConnect();
-  }
-  GE_IF_BOOL_EXEC(is_unknown_graph, return GRAPH_SUCCESS;);
-  if (op_->CommonVerify() == GRAPH_SUCCESS) {
-    Operator op_proxy = ge::OpDescUtils::CreateOperatorFromNode(owner_node);
-    auto verify_func = op_->GetVerifyFunc();
-    if (verify_func == nullptr) {
-      verify_func = OperatorFactoryImpl::GetVerifyFunc(GetType());
-    }
-    if (verify_func != nullptr) {
-      return static_cast<graphStatus>(verify_func(op_proxy));
-    }
-    return GRAPH_SUCCESS;
-  } else {
-    REPORT_CALL_ERROR("E18888", "%s(%s) Verify failed.", op_->GetName().c_str(), op_->GetType().c_str());
-    GELOGE(GRAPH_FAILED, "[Call][CommonVerify] %s(%s) Verify failed.", op_->GetName().c_str(), op_->GetType().c_str());
-    return GRAPH_FAILED;
-  }
-}
-
 OpDescPtr Node::NodeImpl::GetOpDesc() const { return op_; }
 
 graphStatus Node::NodeImpl::UpdateOpDesc(const OpDescPtr &op_desc) {
@@ -1066,19 +980,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<NodePtr> Node::GetOu
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<NodePtr> Node::GetOutAllNodes() const {
   return impl_->GetOutAllNodes(shared_from_this());
-}
-
-graphStatus Node::InferShapeAndType() const {
-  Operator op = ge::OpDescUtils::CreateOperatorFromNode(shared_from_this());
-  return ShapeRefiner::InferShapeAndType(shared_from_this(), op);
-}
-
-graphStatus Node::InferOriginFormat() const {
-  return impl_->InferOriginFormat(shared_from_this());
-}
-
-graphStatus Node::Verify() const {
-  return impl_->Verify(shared_from_this());
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr Node::GetOpDesc() const {

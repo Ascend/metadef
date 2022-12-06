@@ -164,7 +164,7 @@ build_metadef()
   elif [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
     make exec_graph_benchmark ${VERBOSE} -j${THREAD_NUM}
   else
-    make graph graph_static exe_graph register register_static error_manager error_manager_static ${VERBOSE} -j${THREAD_NUM} && make install
+    make graph graph_base graph_static exe_graph register register_static error_manager error_manager_static ${VERBOSE} -j${THREAD_NUM} && make install
   fi
   if [ 0 -ne $? ]
   then
@@ -235,7 +235,7 @@ generate_package()
   METADEF_LIB_PATH="lib"
   COMPILER_PATH="compiler/lib64"
   RUNTIME_PATH="runtime/lib64"
-  COMMON_LIB=("libgraph.so" "libexe_graph.so" "libregister.so" "liberror_manager.so")
+  COMMON_LIB=("libgraph.so" "libgraph_base.so" "libexe_graph.so" "libregister.so" "liberror_manager.so")
 
   rm -rf ${OUTPUT_PATH:?}/${COMPILER_PATH}/
   rm -rf ${OUTPUT_PATH:?}/${RUNTIME_PATH}/

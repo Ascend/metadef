@@ -19,8 +19,6 @@
 
 #include <string>
 
-#include "proto/om.pb.h"
-
 namespace ge {
 using AttrDefMap = ::google::protobuf::Map<::std::string, ::domi::AttrDef>;
 bool HasOpAttr(const OpDef *opdef, std::string attr_name);

@@ -19,7 +19,7 @@
 #include "debug/ge_util.h"
 #include "graph/flow_graph/data_flow_attr_define.h"
 #include "graph/flow_graph/flow_attr_util.h"
-#include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/op_desc_utils.h"
 #include "proto/dflow.pb.h"
 
@@ -328,7 +328,7 @@ public:
     }
 
     (void)graph_.SetInputs(op_inputs);
-    const auto compute_graph = ge::GraphUtils::GetComputeGraph(graph_);
+    const auto compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph_);
     AttrUtils::SetBool(compute_graph, ATTR_NAME_IS_DATA_FLOW_GRAPH, true);
     return;
   }

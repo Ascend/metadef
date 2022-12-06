@@ -30,6 +30,7 @@
 #include "register/op_tiling_registry.h"
 #include "external/graph/operator_factory.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/op_desc_utils_ex.h"
 #include "external/graph/operator_reg.h"
 #include "external/register/op_impl_registry.h"
 
@@ -538,7 +539,7 @@ TEST_F(UtestOpDesc, CallInferV2Func_success) {
   (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(infer_shape_func);
   (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(infer_shape_range_func);
   (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(infer_data_type_func);
-  auto status = op_desc->CallInferFunc(op);
+  auto status = OpDescUtilsEx::CallInferFunc(op_desc, op);
   ASSERT_EQ(status, GRAPH_SUCCESS);
   ASSERT_EQ(op_desc->GetOutputDesc(0U).GetDataType(), DT_FLOAT16);
   ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 4);
@@ -561,7 +562,7 @@ TEST_F(UtestOpDesc, CallInferV2Func_failed) {
   op_desc->UpdateInputDesc(0, tensor_desc);
   op_desc->UpdateInputDesc(1, tensor_desc);
   op_desc->impl_->infer_func_ = nullptr;
-  auto status = op_desc->CallInferFunc(op);
+  auto status = OpDescUtilsEx::CallInferFunc(op_desc, op);
   ASSERT_EQ(status, GRAPH_PARAM_INVALID);
 }
 
@@ -569,30 +570,30 @@ TEST_F(UtestOpDesc, CallInferFunc_success) {
   OpDescImpl op_desc_impl;
   Operator op;
   OpDescPtr op_desc;
-  auto status = op_desc_impl.CallInferFunc(op, op_desc);
+  auto status = OpDescUtilsEx::CallInferFunc(op_desc, op);
   const auto func = [](Operator &op) { return GRAPH_SUCCESS; };
   op_desc_impl.infer_func_ = func;
-  status = op_desc_impl.CallInferFunc(op, op_desc);
+  status = OpDescUtilsEx::CallInferFunc(op_desc, op);
   const auto infer_data_slice_func = [](Operator &op) {
     return GRAPH_SUCCESS;
   };
-  
+
   OpDescPtr odp = std::make_shared<OpDesc>("name", "type");
   op_desc_impl.infer_func_ = infer_data_slice_func;
-  status = op_desc_impl.CallInferFunc(op, odp);
+  status = OpDescUtilsEx::CallInferFunc(odp, op);
 }
 
 TEST_F(UtestOpDesc, InferDataSlice_success) {
   auto op_desc = std::make_shared<OpDesc>();
   const auto func = [](Operator &op) { return GRAPH_SUCCESS; };
-  EXPECT_EQ(op_desc->InferDataSlice(), NO_DEPENDENCE_FUNC);
+  EXPECT_EQ(OpDescUtilsEx::InferDataSlice(op_desc), NO_DEPENDENCE_FUNC);
   const auto infer_data_slice_func = [](Operator &op) {
     return GRAPH_SUCCESS;
   };
   auto op = std::make_shared<Operator>();
   op_desc->SetType("test");
   OperatorFactoryImpl::RegisterInferDataSliceFunc("test",infer_data_slice_func);
-  EXPECT_EQ(op_desc->InferDataSlice(), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtilsEx::InferDataSlice(op_desc), GRAPH_SUCCESS);
 }
 
 REG_OP(MatMulUt)
@@ -652,22 +653,22 @@ TEST_F(UtestOpDesc, SetTypeModifyIrAttrName_type_not_change) {
 
 TEST_F(UtestOpDesc, InferShapeAndType_success) {
   auto op_desc = std::make_shared<OpDesc>();
-  EXPECT_EQ(op_desc->InferShapeAndType(), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtilsEx::InferShapeAndType(op_desc), GRAPH_SUCCESS);
   const auto add_func = [](Operator &op) {
     return GRAPH_SUCCESS;
   };
   op_desc->AddInferFunc(add_func);
-  EXPECT_EQ(op_desc->InferShapeAndType(), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtilsEx::InferShapeAndType(op_desc), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestOpDesc, OpVerify_success) {
   auto op_desc = std::make_shared<OpDesc>();
-  EXPECT_EQ(op_desc->OpVerify(), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtilsEx::OpVerify(op_desc), GRAPH_SUCCESS);
   const auto verify_func = [](Operator &op) {
     return GRAPH_SUCCESS;
   };
   op_desc->AddVerifierFunc(verify_func);
-  EXPECT_EQ(op_desc->OpVerify(), GRAPH_SUCCESS);
+  EXPECT_EQ(OpDescUtilsEx::OpVerify(op_desc), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestOpDesc, GetValidInputNameByIndex_success) {

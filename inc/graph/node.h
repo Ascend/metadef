@@ -127,11 +127,6 @@ class Node : public std::enable_shared_from_this<Node> {
   // Get all out data nodes and its in-anchor
   Vistor<std::pair<NodePtr, InDataAnchorPtr>> GetOutDataNodesAndAnchors() const;
 
-  graphStatus InferShapeAndType() const;
-  graphStatus Verify() const;
-
-  graphStatus InferOriginFormat() const;
-
   OpDescPtr GetOpDesc() const;
 
   graphStatus UpdateOpDesc(const OpDescPtr &op_desc);

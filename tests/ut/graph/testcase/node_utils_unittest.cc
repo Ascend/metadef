@@ -20,6 +20,7 @@
 #define private public
 
 #include "graph/utils/node_utils.h"
+#include "graph/utils/node_utils_ex.h"
 #include "graph/node_impl.h"
 #include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
@@ -801,7 +802,7 @@ TEST_F(UtestNodeUtils, GetNodeFromOperator) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto node = builder.AddNode("Node", "Node", 11, 22);
   Operator op = OperatorFactoryImpl::CreateOperator("opname", "optp");
-  EXPECT_EQ(NodeUtils::GetNodeFromOperator(op), nullptr);
+  EXPECT_EQ(NodeUtilsEx::GetNodeFromOperator(op), nullptr);
 }
 
 TEST_F(UtestNodeUtils, GetInConstNodeTypeCrossSubgraph) {

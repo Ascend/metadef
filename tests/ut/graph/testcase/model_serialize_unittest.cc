@@ -18,6 +18,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/model_serialize.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "graph/utils/ge_ir_utils.h"
@@ -97,8 +98,7 @@ TEST(UTEST_ge_model_serialize, GetAllSubGraphsRecursivelySuccess)
 {
     Model model("model_name", "custom version3.0");
     ComputeGraphPtr cgp = BuildComputeGraph();
-    Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(cgp);
-    model.SetGraph(graph);
+    model.SetGraph(cgp);
 
     ModelSerialize serialize;
     auto buffer = serialize.SerializeModel(model);
@@ -329,8 +329,7 @@ TEST(UTEST_ge_model_serialize, simple)
     LinkEdge(input, 0, node1, 0);
     LinkEdge(w1, 0, node1, 1);
 
-    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-    model.SetGraph(graph);
+    model.SetGraph(computeGraph);
 
     Buffer buffer;
     ASSERT_EQ(model.Save(buffer), GRAPH_SUCCESS);
@@ -371,8 +370,7 @@ TEST(UTEST_ge_model_serialize, simple)
     AttrUtils::GetListBool(&model2, "model_key8", modelVal8);
     CompareList(modelVal8, {true, false});
 
-    auto graph2 = model2.GetGraph();
-    const auto& s_graph = GraphUtils::GetComputeGraph(graph2);
+    const auto& s_graph = model2.GetGraph();
     ASSERT_TRUE(s_graph != nullptr);
     auto s_nodes = s_graph->GetDirectNode();
     ASSERT_EQ(3, s_nodes.size());
@@ -537,8 +535,7 @@ TEST(UTEST_ge_model_serialize, test_subGraph)
     auto inputOp = std::make_shared<OpDesc>("test", "TestOp");
     inputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
     auto input = CreateNode(inputOp, computeGraph);
-    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-    model.SetGraph(graph);
+    model.SetGraph(computeGraph);
 
     auto subComputeGraph = std::make_shared<ComputeGraph>("sub_graph");
     // input
@@ -571,8 +568,8 @@ TEST(UTEST_ge_model_serialize, test_ir_definitions)
   EXPECT_NE(op_desc_origin, nullptr);
   auto computeGraph = std::make_shared<ComputeGraph>("graph_name");
   CreateNode(op_desc_origin, computeGraph);
-  Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-  model.SetGraph(graph);
+  model.SetGraph(computeGraph);
+  auto graph = GraphUtilsEx::CreateGraphFromComputeGraph(computeGraph);
   auto node = graph.GetDirectNode();
 
   ModelSerialize serialize;
@@ -614,8 +611,7 @@ TEST(UTEST_ge_model_serialize, test_large_model)
     *(ptr + 4294967294) = 9;
     ge_tensor.SetData(aligned_ptr, 4294967296U);
     AttrUtils::SetTensor(inputOp, ATTR_NAME_WEIGHTS, ge_tensor);
-    Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-    model.SetGraph(graph);
+    model.SetGraph(computeGraph);
 
     auto subComputeGraph = std::make_shared<ComputeGraph>("sub_graph");
     auto subGraphInputOp = std::make_shared<OpDesc>("sub_graph_test", "TestOp2");
@@ -663,8 +659,7 @@ TEST(UTEST_ge_model_serialize, test_listSubGraph)
         auto inputOp = std::make_shared<OpDesc>("test", "TestOp");
         inputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
         auto input = CreateNode(inputOp, computeGraph);
-        Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-        model.SetGraph(graph);
+        model.SetGraph(computeGraph);
 
         auto subComputeGraph1 = std::make_shared<ComputeGraph>("sub_graph1");
         // input
@@ -707,7 +702,7 @@ TEST(UTEST_ge_model_serialize, test_Format)
         inputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_FILTER_HWCK, DT_FLOAT));
         inputOp->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_FRACTAL_Z_C04, DT_FLOAT));
         auto input = CreateNode(inputOp, computeGraph);
-        model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(computeGraph));
+        model.SetGraph(computeGraph);
     }
     ModelSerialize serialize;
     auto buffer = serialize.SerializeModel(model);
@@ -742,8 +737,7 @@ TEST(UTEST_ge_model_serialize, test_ControlEdge)
         computeGraph->AddInputNode(sink2);
         computeGraph->AddOutputNode(dest);
 
-        Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-        model.SetGraph(graph);
+        model.SetGraph(computeGraph);
     }
     ModelSerialize serialize;
     auto buffer = serialize.SerializeModel(model);
@@ -777,8 +771,7 @@ TEST(UTEST_ge_model_serialize, test_invalid_Attrs)
         AttrUtils::SetNamedAttrs(inputOp, "key", namedAttrs);
 
         auto input = CreateNode(inputOp, computeGraph);
-        Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-        model.SetGraph(graph);
+        model.SetGraph(computeGraph);
 
         ModelSerialize serialize;
         auto buffer = serialize.SerializeModel(model);
@@ -808,8 +801,7 @@ TEST(UTEST_ge_model_serialize, test_invalid_Attrs)
         AttrUtils::SetNamedAttrs(inputOp, "key", namedAttrs);
 
         auto input = CreateNode(inputOp, computeGraph);
-        Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-        model.SetGraph(graph);
+        model.SetGraph(computeGraph);
 
         ModelSerialize serialize;
         auto buffer = serialize.SerializeModel(model);
@@ -828,8 +820,7 @@ TEST(UTEST_ge_model_serialize, test_invalid_Attrs)
         AttrUtils::SetNamedAttrs(inputOp, "key", namedAttrs);
 
         auto input = CreateNode(inputOp, computeGraph);
-        Graph graph = GraphUtils::CreateGraphFromComputeGraph(computeGraph);
-        model.SetGraph(graph);
+        model.SetGraph(computeGraph);
 
         ModelSerialize serialize;
         auto buffer = serialize.SerializeModel(model);
@@ -876,7 +867,7 @@ TEST(UTEST_ge_model_serialize, test_ModelSerializeImp_Invalid_Param)
     node->GetOpDesc() = nullptr;
     proto::ModelDef modelDef;
     Model model;
-    model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(graph));
+    model.SetGraph(graph);
     EXPECT_TRUE(imp.SerializeModel(model, &modelDef));
 }
 
@@ -905,7 +896,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);
@@ -932,7 +923,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);
@@ -959,7 +950,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);
@@ -985,7 +976,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);
@@ -1011,7 +1002,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);
@@ -1037,7 +1028,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);
@@ -1063,7 +1054,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);
@@ -1089,7 +1080,7 @@ TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
         ModelSerializeImp imp;
         Model model;
         EXPECT_TRUE(imp.UnserializeModel(model, modeDeff));
-        auto graph = GraphUtils::GetComputeGraph(model.GetGraph());
+        auto graph = model.GetGraph();
         ASSERT_TRUE(graph != nullptr);
         auto nodes = graph->GetAllNodes();
         ASSERT_EQ(nodes.size(), 1);

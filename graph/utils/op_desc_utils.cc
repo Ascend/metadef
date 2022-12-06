@@ -28,7 +28,6 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/constant_utils.h"
 #include "graph/operator_impl.h"
-#include "proto/ge_ir.pb.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "mmpa/mmpa_api.h"
 

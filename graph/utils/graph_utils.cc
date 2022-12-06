@@ -736,7 +736,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
 
   // Create model
   ge::Model model("", "");
-  model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
+  model.SetGraph(graph);
   const ge::DumpLevel dump_level = (dump_ge_graph != nullptr)
       ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue))
       : ge::DumpLevel::NO_DUMP;
@@ -779,7 +779,7 @@ GraphUtils::DumpGEGraphByPath(const ge::ComputeGraphPtr &graph, const std::strin
 
   // Create Model
   ge::Model model("", "");
-  model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(graph)));
+  model.SetGraph(graph);
 
   // SerializeModel to ModelDef
   ge::proto::ModelDef ge_proto;
@@ -829,10 +829,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(cons
   ge::Model model;
   // Get Model object from ModelDef by deserialize ModelDef
   if (model.Load(model_def) == GRAPH_SUCCESS) {
-    GE_CHK_BOOL_EXEC(GraphUtils::GetComputeGraph(model.GetGraph()) != nullptr,
+    GE_CHK_BOOL_EXEC(model.GetGraph() != nullptr,
                      REPORT_INNER_ERROR("E18888", "Get computer graph is nullptr, model file:%s.", file);
                      return false, "[Get][ComputerGraph] is nullptr");
-    compute_graph = *(GraphUtils::GetComputeGraph(model.GetGraph()));
+    compute_graph = *model.GetGraph();
     return true;
   } else {
     REPORT_CALL_ERROR("E18888", "Get Model failed from ModelDef:%s.", file);
@@ -852,10 +852,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(cons
   ge::Model model;
   // Get Model object from ModelDef by deserialize ModelDef
   if (model.Load(model_def) == GRAPH_SUCCESS) {
-    GE_CHK_BOOL_EXEC(GraphUtils::GetComputeGraph(model.GetGraph()) != nullptr,
+    GE_CHK_BOOL_EXEC(model.GetGraph() != nullptr,
                      REPORT_INNER_ERROR("E18888", "Get computer graph is nullptr, model file:%s.", file);
                      return false, "[Get][ComputerGraph] is nullptr");
-    compute_graph = GraphUtils::GetComputeGraph(model.GetGraph());
+    compute_graph = model.GetGraph();
     for (const auto &node : compute_graph->GetDirectNode()) {
       if (node == nullptr) {
         REPORT_INNER_ERROR("E18888", "ModeDef %s has nullptr node.", file);
@@ -993,8 +993,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
 
   // 1.Get ge::onnx::ModelProto from ge::Model
   ge::Model model("GE", "");
-  const std::shared_ptr<ge::ComputeGraph> compute_graph_ptr = ComGraphMakeShared<ge::ComputeGraph>(compute_graph);
-  model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(compute_graph_ptr)));
+  const auto compute_graph_ptr = ComGraphMakeShared<ge::ComputeGraph>(compute_graph);
+  model.SetGraph(compute_graph_ptr);
   onnx::ModelProto model_proto;
   if (!OnnxUtils::ConvertGeModelToModelProto(model, model_proto)) {
     GELOGE(GRAPH_FAILED, "[Convert][GeModel] DumpGEGraphToOnnx failed.");
@@ -1052,8 +1052,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
                                                                                const std::string &suffix) {
   // 1.Get ge::onnx::ModelProto from ge::Model
   ge::Model model("GE", "");
-  const std::shared_ptr<ge::ComputeGraph> compute_graph_ptr = ComGraphMakeShared<ge::ComputeGraph>(compute_graph);
-  model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(std::const_pointer_cast<ComputeGraph>(compute_graph_ptr)));
+  const auto compute_graph_ptr = ComGraphMakeShared<ge::ComputeGraph>(compute_graph);
+  model.SetGraph(compute_graph_ptr);
   onnx::ModelProto model_proto;
   if (!OnnxUtils::ConvertGeModelToModelProto(model, model_proto)) {
     GELOGE(GRAPH_FAILED, "[Convert][GeModel] DumpGEGraphToOnnx failed.");
@@ -1690,43 +1690,6 @@ ComputeGraphPtr GraphUtils::FindRootGraph(ComputeGraphPtr graph) {
     graph = result->GetParentGraph();
   }
   return result;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyGraph(const Graph &src_graph,
-                                                                                 Graph &dst_graph) {
-  AscendString graph_name;
-  (void)dst_graph.GetName(graph_name);
-  if (std::string(graph_name.GetString()).empty()) {
-    (void) src_graph.GetName(graph_name);
-  }
-  ComputeGraphPtr new_compute_graph = ComGraphMakeShared<ComputeGraph>(graph_name.GetString());
-  GE_CHECK_NOTNULL(new_compute_graph);
-  const ComputeGraphPtr src_compute_graph = GetComputeGraph(src_graph);
-  GE_CHECK_NOTNULL(src_compute_graph);
-  if (src_compute_graph->GetParentGraph() != nullptr) {
-    GELOGE(GRAPH_FAILED, "[Check][RootGraph] Only support copy root graph, current graph name:%s, "
-                         "parent graph name:%s.", src_compute_graph->GetName().c_str(),
-           src_compute_graph->GetParentGraph()->GetName().c_str());
-    return GRAPH_FAILED;
-  }
-  const int32_t depth = 0;
-  std::map<ConstNodePtr, NodePtr> node_old_2_new;
-  std::map<ConstOpDescPtr, OpDescPtr> op_desc_old_2_new;
-  graphStatus ret = CopyComputeGraph(src_compute_graph, new_compute_graph,
-                                     node_old_2_new, op_desc_old_2_new, depth);
-  if (ret != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "[Copy][Graph] failed, ret:%d.", ret);
-    return GRAPH_FAILED;
-  }
-  Graph tmp_graph = CreateGraphFromComputeGraph(new_compute_graph);
-  ret = CopyGraphImpl(src_graph, tmp_graph,
-                      node_old_2_new, op_desc_old_2_new);
-  if (ret != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "[Copy][GraphImpl] failed, ret:%d.", ret);
-    return GRAPH_FAILED;
-  }
-  std::swap(dst_graph, tmp_graph);
-  return GRAPH_SUCCESS;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
@@ -3819,8 +3782,9 @@ void CompleteGraphBuilder::AddNetOutputNode(graphStatus &error_code, std::string
   if (graph_outputs_.empty() && graph_targets_.empty()) {
     return;
   }
-  const std::string log_msg = "AddNetOutputNode name:" + std::string(NODE_NAME_NET_OUTPUT) + ", type:" + NETOUTPUT;
-  const OpDescPtr net_output_desc = ComGraphMakeShared<OpDesc>(NODE_NAME_NET_OUTPUT, NETOUTPUT);
+  const std::string node_name = "Node_Output";
+  const std::string log_msg = "AddNetOutputNode name:" + node_name + ", type:" + NETOUTPUT;
+  const OpDescPtr net_output_desc = ComGraphMakeShared<OpDesc>(node_name, NETOUTPUT);
   if (net_output_desc == nullptr) {
     error_code = GRAPH_FAILED;
     error_msg = log_msg + " failed: op_desc is NULL.";

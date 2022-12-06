@@ -21,7 +21,7 @@
 #include <string>
 #include "detail/attributes_holder.h"
 #include "graph/ge_attr_value.h"
-#include "graph/graph.h"
+#include "graph/compute_graph.h"
 
 namespace ge {
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
@@ -43,9 +43,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
 
   void SetPlatformVersion(const std::string version) { platform_version_ = version; }
 
-  Graph GetGraph() const;
+  const ComputeGraphPtr GetGraph() const;
 
-  void SetGraph(const Graph &graph);
+  void SetGraph(const ComputeGraphPtr &graph);
 
   void SetAttr(const ProtoAttrMap &attrs);
 
@@ -81,7 +81,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
   std::string name_;
   uint32_t version_;
   std::string platform_version_{""};
-  Graph graph_;
+  ComputeGraphPtr graph_;
 };
 using ModelPtr = std::shared_ptr<ge::Model>;
 }  // namespace ge

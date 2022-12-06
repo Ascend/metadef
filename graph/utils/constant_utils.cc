@@ -65,15 +65,6 @@ bool ConstantUtils::GetWeight(const OpDescPtr &op_desc, const uint32_t index, Co
   return false;
 }
 
-bool ConstantUtils::GetWeight(const OpDescPtr &op_desc, const uint32_t index, Tensor &weight) {
-  ConstGeTensorPtr value;
-  if (GetWeight(op_desc, index, value)) {
-    weight = TensorAdapter::GeTensor2Tensor(value);
-    return true;
-  }
-  return false;
-}
-
 bool ConstantUtils::MutableWeight(const OpDescPtr &op_desc, const uint32_t index, GeTensorPtr &weight) {
   if (AttrUtils::MutableTensor(op_desc, ATTR_NAME_WEIGHTS, weight)) {
     return true;

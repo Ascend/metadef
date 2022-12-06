@@ -26,7 +26,6 @@
 #include "framework/omg/omg_inner_types.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "proto/ge_ir.pb.h"
-#include "proto/om.pb.h"
 
 #include "graph/compute_graph.h"
 #include "graph/graph.h"

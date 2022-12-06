@@ -17,9 +17,7 @@
 #ifndef COMMON_GRAPH_UTILS_CONSTANT_UTILS_H_
 #define COMMON_GRAPH_UTILS_CONSTANT_UTILS_H_
 #include "graph/node.h"
-#include "graph/operator.h"
 #include "graph/op_desc.h"
-#include "graph/tensor.h"
 
 namespace ge {
 class ConstantUtils {
@@ -31,7 +29,6 @@ class ConstantUtils {
   static bool IsRealConst(const OpDescPtr &op_desc);
   // get/set  weight
   static bool GetWeight(const OpDescPtr &op_desc, const uint32_t index, ConstGeTensorPtr &weight);
-  static bool GetWeight(const OpDescPtr &op_desc, const uint32_t index, Tensor &weight);
   static bool MutableWeight(const OpDescPtr &op_desc, const uint32_t index, GeTensorPtr &weight);
   static bool SetWeight(const OpDescPtr &op_desc, const uint32_t index, const GeTensorPtr weight);
   static bool MarkPotentialConst(const OpDescPtr &op_desc, const std::vector<int> indices,

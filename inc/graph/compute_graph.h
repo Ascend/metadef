@@ -142,9 +142,6 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   void Swap(ComputeGraph &graph);
 
   graphStatus IsolateNode(const NodePtr &node);
-  graphStatus Verify();
-  graphStatus InferOriginFormat();
-  graphStatus InferShapeInNeed();
   graphStatus InsertGraphEvents();
   bool operator==(const ComputeGraph &r_compute_graph) const;
   ComputeGraph& operator=(ge::ComputeGraph &compute_graph);

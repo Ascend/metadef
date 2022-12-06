@@ -1388,61 +1388,6 @@ graphStatus ComputeGraphImpl::RemoveExtraOutEdge(const NodePtr &node) const {
   return GRAPH_SUCCESS;
 }
 
-graphStatus ComputeGraphImpl::Verify(const ConstComputeGraphPtr compute_graph) const {
-  const bool is_unknown_graph = GetGraphUnknownFlag();
-  for (const auto &node_ptr : GetAllNodes(compute_graph)) {
-    GE_CHECK_NOTNULL(node_ptr);
-    GE_CHECK_NOTNULL(node_ptr->GetOpDesc());
-    GE_IF_BOOL_EXEC(is_unknown_graph, continue);
-    GE_CHK_BOOL_EXEC(node_ptr->GetOpDesc()->CommonVerify() == GRAPH_SUCCESS,
-                     REPORT_CALL_ERROR("E18888", "Verifying %s failed.", node_ptr->GetName().c_str());
-                     return GRAPH_FAILED, "[Call][CommonVerify] Verifying %s failed.", node_ptr->GetName().c_str());
-  }
-  return GRAPH_SUCCESS;
-}
-
-graphStatus ComputeGraphImpl::InferShapeInNeed(const ComputeGraphPtr &const_graph_ptr,
-                                               const ConstComputeGraphPtr &const_compute_graph) {
-  GE_CHK_BOOL_ONLY_LOG(TopologicalSorting(const_graph_ptr, const_compute_graph) == GRAPH_SUCCESS, "Verifying failed.");
-  for (const auto &node_ptr : GetAllNodes(const_compute_graph)) {
-    GE_CHECK_NOTNULL(node_ptr);
-    const auto op_desc = node_ptr->GetOpDesc();
-    bool is_need_infer = false;
-    (void)ge::AttrUtils::GetBool(op_desc, NEED_INFER, is_need_infer);
-    if (is_need_infer) {
-      GE_CHK_BOOL_EXEC(node_ptr->Verify() == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E18888", "Verifying %s failed.", node_ptr->GetName().c_str());
-                       return GRAPH_FAILED, "[Call][Verify] Verifying %s failed.", node_ptr->GetName().c_str());
-
-      const graphStatus status = node_ptr->InferShapeAndType();
-      if ((node_ptr->GetType() != DATA) && (status == GRAPH_PARAM_INVALID)) {
-        GELOGI("Op %s does not have the IMPLEMT_INFERFUNC definition,"
-               " and subsequent operators no longer perform shape inference.",
-               node_ptr->GetName().c_str());
-        break;
-      }
-      GE_CHK_BOOL_EXEC(status == GRAPH_SUCCESS,
-                       REPORT_CALL_ERROR("E18888", "Inferring %s failed.", node_ptr->GetName().c_str());
-                       return GRAPH_FAILED, "[Call][InferShapeAndType] Inferring %s failed.",
-                       node_ptr->GetName().c_str());
-
-      for (const auto &out_anchor : node_ptr->GetAllOutDataAnchors()) {
-        GE_CHECK_NOTNULL(out_anchor->GetOwnerNode()->GetOpDesc());
-        auto output_tensor = out_anchor->GetOwnerNode()->GetOpDesc()->GetOutputDesc(
-            static_cast<uint32_t>(out_anchor->GetIdx()));
-        ge::TensorUtils::SetRealDimCnt(output_tensor, static_cast<uint32_t>(output_tensor.GetShape().GetDims().size()));
-        (void)out_anchor->GetOwnerNode()->GetOpDesc()->UpdateOutputDesc(static_cast<uint32_t>(out_anchor->GetIdx()),
-                                                                        output_tensor);
-        for (const auto &peer_anchor : out_anchor->GetPeerInDataAnchors()) {
-          (void)peer_anchor->GetOwnerNode()->GetOpDesc()->UpdateInputDesc(static_cast<uint32_t>(peer_anchor->GetIdx()),
-                                                                          output_tensor);
-        }
-      }
-    }
-  }
-  return GRAPH_SUCCESS;
-}
-
 ProtoAttrMap &ComputeGraphImpl::MutableAttrMap() {
   return attrs_;
 }
@@ -1946,18 +1891,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::Isolate
 
 graphStatus ComputeGraph::RemoveExtraOutEdge(const NodePtr &node) const {
   return impl_->RemoveExtraOutEdge(node);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::Verify() {
-  return impl_->Verify(shared_from_this());
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InferOriginFormat() {
-  return ge::FormatRefiner::InferOrigineFormat(shared_from_this());
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InferShapeInNeed() {
-  return impl_->InferShapeInNeed(shared_from_this(), shared_from_this());
 }
 
 ProtoAttrMap &ComputeGraph::MutableAttrMap() {

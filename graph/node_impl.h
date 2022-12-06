@@ -68,9 +68,6 @@ class Node::NodeImpl {
   Node::Vistor<NodePtr> GetOutControlNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetOutAllNodes(const ConstNodePtr &owner_node) const;
 
-  graphStatus InferShapeAndType(const ConstNodePtr &owner_node) const;
-  graphStatus InferOriginFormat(const ConstNodePtr &owner_node) const;
-  graphStatus Verify(const ConstNodePtr &owner_node) const;
   OpDescPtr GetOpDesc() const;
   graphStatus UpdateOpDesc(const OpDescPtr &op_desc);
   Node::Vistor<std::pair<NodePtr, OutDataAnchorPtr>>

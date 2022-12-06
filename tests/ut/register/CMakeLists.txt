@@ -42,7 +42,7 @@ target_link_libraries(ut_register
     runtime_headers
     slog_headers
     msprof_headers
-    register graph exe_graph
+    register graph graph_base exe_graph
     GTest::gtest
     GTest::gtest_main
     ascend_protobuf
