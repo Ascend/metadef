@@ -243,6 +243,7 @@ void PatternFusionBasePassImpl::MatchOneOutputNode(const ge::NodePtr &output_nod
     }
     AddCandidateQueue(output_desc, output_node, cand);
     usage_flags[out_idx + i] = true;
+    break;
   }
 }
 
