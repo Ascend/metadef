@@ -19,12 +19,11 @@
 
 #include "runtime/rt_ffts_plus_define.h"
 #include "graph/utils/node_utils.h"
-namespace fe {
+namespace ffts {
 
 bool UpdateAicAivCtxQos(rtFftsPlusAicAivCtx_t *ctx, int label, int device_id);
 bool UpdateMixAicAivCtxQos(rtFftsPlusMixAicAivCtx_t *ctx, int label, int device_id);
 bool UpdateDataCtxQos(rtFftsPlusDataCtx_t *ctx, int device_id);
 
 }
-
 #endif
