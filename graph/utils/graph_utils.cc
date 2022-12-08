@@ -257,10 +257,7 @@ GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
   // Check if this node is belong to this compute graph, maybe a little slow
   const auto &all_nodes_in_graph = compute_graph->GetDirectNode();
   if (std::find(all_nodes_in_graph.begin(), all_nodes_in_graph.end(), remove_node) == all_nodes_in_graph.end()) {
-    REPORT_INNER_ERROR("E18888", "Can not find node %s in graph %s.",
-                       remove_node->GetName().c_str(), compute_graph->GetName().c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] Can not find node %s in graph %s.",
-           remove_node->GetName().c_str(), compute_graph->GetName().c_str());
+    GELOGW("Can not find node %s in graph %s.", remove_node->GetName().c_str(), compute_graph->GetName().c_str());
     return GRAPH_FAILED;
   }
   // Find all subgraph of this node
@@ -361,7 +358,6 @@ GraphUtils::RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const 
   // If the node has sub-graphs, delete them
   const auto ret = RemoveSubgraphRecursively(compute_graph, node);
   if (ret != GRAPH_SUCCESS) {
-    GELOGE(GRAPH_FAILED, "[Remove][SubGraph] recursively failed.");
     return GRAPH_FAILED;
   }
 
