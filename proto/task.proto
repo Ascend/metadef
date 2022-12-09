@@ -403,24 +403,29 @@ message StarsSqeHeaderDef {
 
 // ffts plus context
 message FftsPlusCtxDef {
+    enum OpType {
+        NORMAL = 0;
+        ATOMIC = 1;
+    }
     uint32 op_index = 1;
     uint32 context_type = 2;
     uint32 context_id = 3;
+    OpType op_type = 4;
 
-    FftsPlusAicAivCtxDef aic_aiv_ctx = 4;
-    FftsPlusMixAicAivCtxDef mix_aic_aiv_ctx = 5;
-    FftsPlusSdmaCtxDef sdma_ctx = 6;
-    FftsPlusNotifyCtxDef notify_ctx = 7;
-    FftsPlusWriteValueCtxDef write_value_ctx = 8;
-    FftsPlusAicpuCtxDef aicpu_ctx = 9;
-    FftsPlusDataCtxDef data_ctx = 10;
-    FftsPlusAtStartCtxDef at_start_ctx = 11;
-    FftsPlusAtEndCtxDef at_end_ctx = 12;
-    FftsPlusLabelCtxDef label_ctx = 13;
-    FftsPlusCaseSwitchCtxDef case_switch_ctx = 14;
-    FftsPlusCaseDefaultCtxDef case_default_ctx = 15;
-    FftsPlusCondSwitchCtxDef cond_switch_ctx = 16;
-    FftsPlusCachePersistCtxDef cache_persist_ctx = 17;
+    FftsPlusAicAivCtxDef aic_aiv_ctx = 5;
+    FftsPlusMixAicAivCtxDef mix_aic_aiv_ctx = 6;
+    FftsPlusSdmaCtxDef sdma_ctx = 7;
+    FftsPlusNotifyCtxDef notify_ctx = 8;
+    FftsPlusWriteValueCtxDef write_value_ctx = 9;
+    FftsPlusAicpuCtxDef aicpu_ctx = 10;
+    FftsPlusDataCtxDef data_ctx = 11;
+    FftsPlusAtStartCtxDef at_start_ctx = 12;
+    FftsPlusAtEndCtxDef at_end_ctx = 13;
+    FftsPlusLabelCtxDef label_ctx = 14;
+    FftsPlusCaseSwitchCtxDef case_switch_ctx = 15;
+    FftsPlusCaseDefaultCtxDef case_default_ctx = 16;
+    FftsPlusCondSwitchCtxDef cond_switch_ctx = 17;
+    FftsPlusCachePersistCtxDef cache_persist_ctx = 18;
 }
 
 // aic/aiv context
