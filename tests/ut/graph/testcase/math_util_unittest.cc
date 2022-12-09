@@ -180,4 +180,75 @@ TEST_F(MathUtilUT, MulOverflow_OverflowDiffType) {
   EXPECT_TRUE(MulOverflow(300, 1, i));
   EXPECT_TRUE(MulOverflow(1, 300, i));
 }
+
+TEST_F(MathUtilUT, RoundUpOverflow_Overflow_Int8) {
+  int8_t value = 127;
+  int8_t v1;
+  EXPECT_TRUE(RoundUpOverflow(value, static_cast<int8_t>(4), v1));
+}
+TEST_F(MathUtilUT, RoundUpOverflow_Overflow_Int64) {
+  int64_t value = std::numeric_limits<int64_t>::max() - 2;
+  int64_t v1;
+  EXPECT_TRUE(RoundUpOverflow(value, static_cast<int64_t>(4), v1));
+}
+TEST_F(MathUtilUT, RoundUpOverflow_Overflow_RetValueSmall) {
+  int32_t value = 1024;
+  int8_t v1;
+  EXPECT_TRUE(RoundUpOverflow(value, static_cast<int32_t>(4), v1));
+}
+TEST_F(MathUtilUT, RoundUpOverflow_Overflow_MaxUint32) {
+  for (uint32_t i = 0U; i < 7; ++i) {
+    uint32_t value = std::numeric_limits<uint32_t>::max() - i;
+    uint32_t v1;
+    EXPECT_TRUE(RoundUpOverflow(value, static_cast<uint32_t>(8), v1));
+  }
+}
+TEST_F(MathUtilUT, RoundUpOverflow_Overflow_Inplace) {
+  int64_t value = std::numeric_limits<int64_t>::max() - 2;
+  EXPECT_TRUE(RoundUpOverflow(value, static_cast<int64_t>(4), value));
+}
+TEST_F(MathUtilUT, RoundUpOverflow_NotOverflow_MaxUint32) {
+  uint32_t value = std::numeric_limits<uint32_t>::max() - 7U;
+  uint32_t v1;
+  EXPECT_FALSE(RoundUpOverflow(value, static_cast<uint32_t>(8), v1));
+  EXPECT_EQ(v1, std::numeric_limits<uint32_t>::max() - 7U);
+}
+TEST_F(MathUtilUT, RoundUpOverflow_NotOverflow_EvenlyDivInt8) {
+  int8_t value = 64;
+  int8_t v1;
+  EXPECT_FALSE(RoundUpOverflow(value, static_cast<int8_t>(4), v1));
+  EXPECT_EQ(v1, 64);
+}
+TEST_F(MathUtilUT, RoundUpOverflow_NotOverflow_EvenlyDivInt32) {
+  int32_t value = 2048;
+  int32_t v1;
+  EXPECT_FALSE(RoundUpOverflow(value, static_cast<int32_t>(32), v1));
+  EXPECT_EQ(v1, 2048);
+}
+TEST_F(MathUtilUT, RoundUpOverflow_NotOverflow_NotEvenlyDivInt32) {
+  for (int32_t i = 0; i < 4; ++i) {
+    int32_t value = 2047 - i;
+    int32_t v1;
+    EXPECT_FALSE(RoundUpOverflow(value, static_cast<int32_t>(32), v1));
+    EXPECT_EQ(v1, 2048);
+  }
+}
+TEST_F(MathUtilUT, RoundUpOverflow_NotOverflow_Inplace) {
+  int32_t value = 2048;
+  EXPECT_FALSE(RoundUpOverflow(value, static_cast<int32_t>(32), value));
+  EXPECT_EQ(value, 2048);
+
+  value = 2040;
+  EXPECT_FALSE(RoundUpOverflow(value, static_cast<int32_t>(32), value));
+  EXPECT_EQ(value, 2048);
+
+  value = 32;
+  EXPECT_FALSE(RoundUpOverflow(value,value, value));
+  EXPECT_EQ(value, 32);
+}
+TEST_F(MathUtilUT, RoundUpOverflow_Failed_MultipleOfZero) {
+  int8_t value = 10;
+  int8_t v1;
+  EXPECT_TRUE(RoundUpOverflow(value, static_cast<int8_t>(0), v1));
+}
 }  // namespace ge
