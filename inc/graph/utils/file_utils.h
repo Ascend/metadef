@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <string>
 #include "external/graph/types.h"
+#include "graph/ge_error_codes.h"
 
 namespace ge {
 
@@ -42,6 +43,8 @@ std::string RealPath(const char_t *path);
  */
 int32_t CreateDirectory(const std::string &directory_path);
 
+std::unique_ptr<char[]> GetBinFromFile(std::string &path, uint32_t &data_len);
+graphStatus WriteBinToFile(std::string &path, char_t *data, uint32_t &data_len);
 }
 
 #endif // end COMMON_GRAPH_UTILS_FILE_UTILS_H_

@@ -20,6 +20,8 @@
 #include "graph/types.h"
 #include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
+#include <fstream>
+#include "common/checker.h"
 
 namespace ge {
 std::string RealPath(const char_t *path) {
@@ -98,5 +100,41 @@ int32_t CreateDirectory(const std::string &directory_path) {
     }
   }
   return CheckAndMkdir(directory_path.c_str(), mkdir_mode);
+}
+
+std::unique_ptr<char_t[]> GetBinFromFile(std::string &path, uint32_t &data_len) {
+  GE_ASSERT_TRUE(!path.empty());
+
+  std::ifstream ifs(path, std::ifstream::binary);
+  if (!ifs.is_open()) {
+    GELOGW("path:%s not open", path.c_str());
+    return nullptr;
+  }
+
+  (void)ifs.seekg(0, std::ifstream::end);
+  const uint32_t len = static_cast<uint32_t>(ifs.tellg());
+  (void)ifs.seekg(0, std::ifstream::beg);
+  auto bin_data = std::unique_ptr<char_t[]>(new(std::nothrow) char_t[len]);
+  if (bin_data == nullptr) {
+    GELOGE(FAILED, "[Allocate][Mem]Allocate mem failed");
+    ifs.close();
+    return nullptr;
+  }
+
+  (void)ifs.read(reinterpret_cast<char_t*>(bin_data.get()), static_cast<std::streamsize>(len));
+  data_len = len;
+  ifs.close();
+
+  return bin_data;
+}
+
+graphStatus WriteBinToFile(std::string &path, char_t *data, uint32_t &data_len) {
+  GE_ASSERT_TRUE(!path.empty());
+  std::ofstream ofs(path, std::ios::out | std::ifstream::binary);
+  GE_ASSERT_TRUE(ofs.is_open(), "path:%s open failed", path.c_str());
+  (void)ofs.write(data, static_cast<std::streamsize>(data_len));
+  ofs.close();
+
+  return GRAPH_SUCCESS;
 }
 }
