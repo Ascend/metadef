@@ -365,7 +365,7 @@ bool ScopeFeature::ScopeFeatureImpl::Match(const Scope *const scope) {
   auto &impl = scope->impl_;
   AscendString scope_name;
   (void) scope->Name(scope_name);
-  GELOGI("NodeAttrFeature, match scope:%s", scope_name.GetString());
+  GELOGD("NodeAttrFeature, match scope:%s", scope_name.GetString());
   if (suffix_.length() > scope_name.GetLength()) {
     return false;
   }
