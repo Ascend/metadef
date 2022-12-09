@@ -41,5 +41,12 @@ const char *const ATTR_NAME_TIME_BATCH_BATCH_DIM = "_time_batch_dim";
 const char *const ATTR_NAME_TIME_BATCH_FLAG = "_time_batch_flag";
 const char *const ATTR_NAME_TIME_BATCH_PADDING = "_time_batch_padding";
 const char *const ATTR_NAME_TIME_BATCH_DROP_REMAINDER = "_time_batch_drop_remainder";
+
+// FlowFunc
+const char *const ATTR_NAME_FLOW_FUNC_BIN_PATH = "_flow_func_bin_path";
+const char *const ATTR_NAME_FLOW_FUNC_FUNC_LIST = "_flow_func_func_list";
+const char *const ATTR_NAME_FLOW_FUNC_FUNC_INPUTS_INDEX = "_flow_func_func_inputs_index";
+const char *const ATTR_NAME_FLOW_FUNC_FUNC_OUTPUTS_INDEX = "_flow_func_func_outputs_index";
+const char *const ATTR_NAME_FLOW_FUNC_INVOKE_KEYS = "_flow_func_invoke_keys";
 }  // namespace dflow
 }  // namespace ge

@@ -39,7 +39,8 @@ FlowData::~FlowData() = default;
 
 class FlowNodeImpl {
 public:
-  explicit FlowNodeImpl(FlowNode *flow_node) : flow_node_(flow_node) {}
+  explicit FlowNodeImpl(OpDescPtr op_desc, uint32_t input_num, uint32_t output_num)
+      : op_desc_(op_desc), input_num_(input_num), output_num_(output_num) {}
   ~FlowNodeImpl() = default;
   void MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
                 const std::vector<DataFlowInputAttr> &attr = {});
@@ -48,7 +49,9 @@ public:
 private:
   graphStatus AddInEdges(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index);
   graphStatus AddOutEdges(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
-  FlowNode *flow_node_;
+  OpDescPtr op_desc_;
+  uint32_t input_num_;
+  uint32_t output_num_;
   // key1 : pp_name, key2: pp_input_index; value : node_input_index;
   std::map<std::string, std::map<uint32_t, uint32_t>> in_edges_;
   // key1 : pp_name, key2: pp_output_index; value : node_output_index;
@@ -58,10 +61,8 @@ private:
 
 graphStatus FlowNodeImpl::AddInEdges(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index) {
   std::vector<std::string> pps;
-  ge::AscendString flow_node_name;
-  (void)flow_node_->GetName(flow_node_name);
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(*flow_node_);
-  GE_ASSERT_TRUE(ge::AttrUtils::GetListStr(op_desc, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
+  auto flow_node_name = op_desc_->GetName();
+  GE_ASSERT_TRUE(ge::AttrUtils::GetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
 
   dataflow::ProcessPoint process_point;
   for (std::string &pp_str : pps) {
@@ -81,10 +82,10 @@ graphStatus FlowNodeImpl::AddInEdges(uint32_t node_input_index, const ProcessPoi
     process_point.add_in_edges();
     if (static_cast<int32_t>(pp_input_index) < process_point.in_edges_size()) {
       auto in_edge = process_point.mutable_in_edges(pp_input_index);
-      in_edge->set_node_name(flow_node_name.GetString());
+      in_edge->set_node_name(flow_node_name.c_str());
       in_edge->set_index(node_input_index);
       GELOGI("add pp(%s) input index(%d) map node(%s) index(%d).", pp.GetProcessPointName(), pp_input_index,
-             flow_node_name.GetString(), node_input_index);
+             flow_node_name.c_str(), node_input_index);
     } else {
       in_edges_[pp.GetProcessPointName()][pp_input_index] = node_input_index;
     }
@@ -92,10 +93,10 @@ graphStatus FlowNodeImpl::AddInEdges(uint32_t node_input_index, const ProcessPoi
     for (auto it = in_edges_[pp.GetProcessPointName()].begin(); it != in_edges_[pp.GetProcessPointName()].end();) {
       if (static_cast<int32_t>(it->first) < process_point.in_edges_size()) {
         auto in_edge = process_point.mutable_in_edges(it->first);
-        in_edge->set_node_name(flow_node_name.GetString());
+        in_edge->set_node_name(flow_node_name.c_str());
         in_edge->set_index(it->second);
         GELOGI("add pp(%s) input index(%d) map node(%s) index(%d).", pp.GetProcessPointName(), it->first,
-               flow_node_name.GetString(), it->second);
+               flow_node_name.c_str(), it->second);
         in_edges_[pp.GetProcessPointName()].erase(it++);
       } else {
         it++;
@@ -104,16 +105,14 @@ graphStatus FlowNodeImpl::AddInEdges(uint32_t node_input_index, const ProcessPoi
     process_point.SerializeToString(&pp_str);
   }
 
-  GE_ASSERT_TRUE(ge::AttrUtils::SetListStr(op_desc, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
+  GE_ASSERT_TRUE(ge::AttrUtils::SetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
   return ge::GRAPH_SUCCESS;
 }
 
 graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index) {
   std::vector<std::string> pps;
-  ge::AscendString name;
-  (void)flow_node_->GetName(name);
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(*flow_node_);
-  GE_ASSERT_TRUE(ge::AttrUtils::GetListStr(op_desc, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
+  auto name = op_desc_->GetName();
+  GE_ASSERT_TRUE(ge::AttrUtils::GetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
 
   dataflow::ProcessPoint process_point;
   for (std::string &pp_str : pps) {
@@ -133,10 +132,10 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
     process_point.add_out_edges();
     if (static_cast<int32_t>(pp_output_index) < process_point.out_edges_size()) {
       auto out_edge = process_point.mutable_out_edges(pp_output_index);
-      out_edge->set_node_name(name.GetString());
+      out_edge->set_node_name(name.c_str());
       out_edge->set_index(node_output_index);
       GELOGI("add pp(%s) output index(%d) map node(%s) index(%d)", pp.GetProcessPointName(), pp_output_index,
-             name.GetString(), node_output_index);
+             name.c_str(), node_output_index);
     } else {
       out_edges_[pp.GetProcessPointName()][pp_output_index] = node_output_index;
     }
@@ -144,10 +143,10 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
     for (auto it = out_edges_[pp.GetProcessPointName()].begin(); it != out_edges_[pp.GetProcessPointName()].end();) {
       if (static_cast<int32_t>(it->first) < process_point.out_edges_size()) {
         auto out_edge = process_point.mutable_out_edges(it->first);
-        out_edge->set_node_name(name.GetString());
+        out_edge->set_node_name(name.c_str());
         out_edge->set_index(it->second);
         GELOGI("add pp(%s) output index(%d) map node(%s) index(%d)", pp.GetProcessPointName(), it->first,
-               name.GetString(), it->second);
+               name.c_str(), it->second);
         out_edges_[pp.GetProcessPointName()].erase(it++);
       } else {
         it++;
@@ -156,43 +155,40 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
     process_point.SerializeToString(&pp_str);
   }
 
-  GE_ASSERT_TRUE(ge::AttrUtils::SetListStr(op_desc, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
+  GE_ASSERT_TRUE(ge::AttrUtils::SetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pps));
   return ge::GRAPH_SUCCESS;
 }
 
 void FlowNodeImpl::MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
                             const std::vector<DataFlowInputAttr> &attrs) {
-  ge::AscendString flow_node_name;
-  (void)flow_node_->GetName(flow_node_name);
-  if (node_input_index >= static_cast<uint32_t>(flow_node_->GetDynamicInputNum(ATTR_NAME_DATA_FLOW_INPUT))) {
-    GELOGE(ge::FAILED, "invalid node(%s) input index[%u]. valid range is [0, %d)", flow_node_name.GetString(),
-           node_input_index, flow_node_->GetDynamicInputNum(ATTR_NAME_DATA_FLOW_INPUT));
+  auto flow_node_name = op_desc_->GetName();
+  if (node_input_index >= input_num_) {
+    GELOGE(ge::FAILED, "invalid node(%s) input index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
+           node_input_index, input_num_);
     return;
   }
 
   GE_RETURN_IF_TRUE(!added_pps_[pp.GetProcessPointName()], "Please exec addPp in node(%s) first.",
-                    flow_node_name.GetString());
+                    flow_node_name.c_str());
 
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(*flow_node_);
-  auto input_tensor_desc = op_desc->MutableInputDesc(node_input_index);
+  auto input_tensor_desc = op_desc_->MutableInputDesc(node_input_index);
   GE_RETURN_IF_NULL(input_tensor_desc, "[Check][Param] Node(%s)'s input(%u) tensor desc is nullptr.",
-                    flow_node_name.GetString(), node_input_index);
+                    flow_node_name.c_str(), node_input_index);
   (void)FlowAttrUtil::SetAttrsToTensorDesc(attrs, input_tensor_desc);
   (void)AddInEdges(node_input_index, pp, pp_input_index);
   return;
 }
 
 void FlowNodeImpl::MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index) {
-  ge::AscendString flow_node_name;
-  (void)flow_node_->GetName(flow_node_name);
-  if (node_output_index >= static_cast<uint32_t>(flow_node_->GetDynamicOutputNum(ATTR_NAME_DATA_FLOW_OUTPUT))) {
-    GELOGE(ge::FAILED, "invalid node(%s) output index[%u]. valid range is [0, %d)", flow_node_name.GetString(),
-           node_output_index, flow_node_->GetDynamicOutputNum(ATTR_NAME_DATA_FLOW_OUTPUT));
+  auto flow_node_name = op_desc_->GetName();
+  if (node_output_index >= output_num_) {
+    GELOGE(ge::FAILED, "invalid node(%s) output index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
+           node_output_index, output_num_);
     return;
   }
 
   GE_RETURN_IF_TRUE(!added_pps_[pp.GetProcessPointName()], "Please exec addPp in node(%s) first.",
-                    flow_node_name.GetString());
+                    flow_node_name.c_str());
 
   (void)AddOutEdges(node_output_index, pp, pp_output_index);
   return;
@@ -209,25 +205,28 @@ void FlowNodeImpl::AddPp(const ProcessPoint &pp) {
     return;
   }
 
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(*flow_node_);
   std::vector<std::string> pp_attrs;
-  (void)ge::AttrUtils::GetListStr(op_desc, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pp_attrs);
+  (void)ge::AttrUtils::GetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pp_attrs);
   ge::AscendString target_str;
   pp.Serialize(target_str);
   pp_attrs.emplace_back(target_str.GetString(), target_str.GetLength());
-  GE_RETURN_IF_TRUE(!ge::AttrUtils::SetListStr(op_desc, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pp_attrs),
+  GE_RETURN_IF_TRUE(!ge::AttrUtils::SetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pp_attrs),
                     "Set attr name %s failed.", ATTR_NAME_DATA_FLOW_PROCESS_POINTS);
   added_pps_[pp.GetProcessPointName()] = true;
   return;
 }
 
 FlowNode::FlowNode(const char *name, uint32_t input_num, uint32_t output_num) : FlowOperator(name, "FlowNode") {
-  impl_ = std::make_shared<FlowNodeImpl>(this);
-  if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "FlowNode make shared failed.");
+  ge::Operator::DynamicInputRegister(ATTR_NAME_DATA_FLOW_INPUT, input_num);
+  ge::Operator::DynamicOutputRegister(ATTR_NAME_DATA_FLOW_OUTPUT, output_num);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(*this);
+  if (op_desc == nullptr) {
+    GELOGE(ge::FAILED, "get flow node op desc failed, name=%s.", (name == nullptr) ? "nullptr" : name);
   } else {
-    ge::Operator::DynamicInputRegister(ATTR_NAME_DATA_FLOW_INPUT, input_num);
-    ge::Operator::DynamicOutputRegister(ATTR_NAME_DATA_FLOW_OUTPUT, output_num);
+    impl_ = std::make_shared<FlowNodeImpl>(op_desc, input_num, output_num);
+    if (impl_ == nullptr) {
+      GELOGE(ge::FAILED, "FlowNode make shared failed.");
+    }
   }
 }
 
