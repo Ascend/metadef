@@ -66,6 +66,7 @@ class AnyMap {
       (void)names.emplace(item.first);
     }
   }
+  bool Erase(const std::string &name) { return (any_values_.erase(name) > 0);}
 
  private:
   class Placeholder {

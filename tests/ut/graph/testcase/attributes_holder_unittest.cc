@@ -161,4 +161,20 @@ TEST_F(AttrHolderUt, ExtAttrTryGetSuccess) {
   EXPECT_NE(ret_data, data1);
   EXPECT_EQ(ret_data, data2);
 }
+
+TEST_F(AttrHolderUt, ExtAttrEraseSuccess) {
+  SubAttrHolder holder;
+  holder.SetExtAttr<int32_t>("TestName", static_cast<int32_t>(10));
+  auto pi = holder.GetExtAttr<int32_t>("TestName");
+  ASSERT_NE(pi, nullptr);
+  EXPECT_EQ(*pi, 10);
+  EXPECT_TRUE(holder.DelExtAttr("TestName"));
+  pi = holder.GetExtAttr<int32_t>("TestName");
+  EXPECT_EQ(pi, nullptr);
+}
+
+TEST_F(AttrHolderUt, ExtAttrEraseFailedWhenAttrNotExsit) {
+  SubAttrHolder holder;
+  EXPECT_FALSE(holder.DelExtAttr("TestName"));
+}
 }  // namespace ge
