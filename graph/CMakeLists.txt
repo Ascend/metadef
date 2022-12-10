@@ -67,6 +67,7 @@ set(DATA_FLOW_GRAPH_SOURCE_LIST
     "flow_graph/flow_graph.cc"
     "flow_graph/process_point.cc"
     "flow_graph/data_flow_attr_define.cc"
+    "flow_graph/data_flow_utils.cc"
 )
 
 SET(GRAPH_SOURCE_LIST
