@@ -57,6 +57,15 @@ message OpAttr {
     string value = 2;
 }
 
+message Workspace {
+    enum SpaceType {
+        LOG = 0;
+    }
+    SpaceType type = 1;
+    uint64 data_addr = 2;
+    uint64 size = 3;
+}
+
 message Task {
     enum TaskType {
         AICORE = 0;
@@ -76,6 +85,7 @@ message Task {
     TaskType task_type = 8;
     uint32 context_id = 9;
     repeated OpAttr attr = 10;
+    repeated Workspace space = 11;
 }
 
 enum DumpData {
