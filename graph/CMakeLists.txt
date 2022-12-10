@@ -255,66 +255,69 @@ target_link_libraries(flow_graph
 target_link_libraries(flow_graph PRIVATE ascend_protobuf error_manager)
 target_compile_options(flow_graph PRIVATE -O2)
 
-######### libgraph.a #############
-add_library(graph_share SHARED
-        ${GRAPH_BASE_SOURCE_LIST}
-        ${GRAPH_SOURCE_LIST}
-        $<TARGET_OBJECTS:metadef_graph_protos_obj>
-        )
+if (${ENABLE_OPEN_SRC} STREQUAL "True")
+else()
+    ######### libgraph.a #############
+    add_library(graph_share SHARED
+            ${GRAPH_BASE_SOURCE_LIST}
+            ${GRAPH_SOURCE_LIST}
+            $<TARGET_OBJECTS:metadef_graph_protos_obj>
+            )
 
-target_compile_options(graph_share PRIVATE
-        $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
-        $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
-        $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
-        $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>)
+    target_compile_options(graph_share PRIVATE
+            $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
+            $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
+            $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+            $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>)
 
-target_compile_definitions(graph_share PRIVATE
-        $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
-        $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
-        google=ascend_private
-        $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
-        $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
-        )
+    target_compile_definitions(graph_share PRIVATE
+            $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
+            $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+            google=ascend_private
+            $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
+            $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
+            )
 
-target_include_directories(graph_share PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_BINARY_DIR}
-        ${CMAKE_BINARY_DIR}/proto/metadef_protos
-        ${METADEF_DIR}
-        )
+    target_include_directories(graph_share PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}
+            ${CMAKE_BINARY_DIR}
+            ${CMAKE_BINARY_DIR}/proto/metadef_protos
+            ${METADEF_DIR}
+            )
 
-target_link_options(graph_share PRIVATE
-        -Wl,-Bsymbolic
-        )
+    target_link_options(graph_share PRIVATE
+            -Wl,-Bsymbolic
+            )
 
-target_link_libraries(graph_share
-        PRIVATE
-        intf_pub
-        air_headers
-        static_mmpa
-        -Wl,--no-as-needed
-        c_sec
-        slog
-        json
-        -Wl,--as-needed
-        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
-        -ldl
-        PUBLIC
-        metadef_headers
-        )
+    target_link_libraries(graph_share
+            PRIVATE
+            intf_pub
+            air_headers
+            static_mmpa
+            -Wl,--no-as-needed
+            c_sec
+            slog
+            json
+            -Wl,--as-needed
+            $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
+            -ldl
+            PUBLIC
+            metadef_headers
+            )
 
-target_clone(graph_share graph_static STATIC)
+    target_clone(graph_share graph_static STATIC)
 
-target_link_libraries(graph_share PRIVATE ascend_protobuf error_manager)
-target_link_libraries(graph_static PRIVATE ascend_protobuf_static)
+    target_link_libraries(graph_share PRIVATE ascend_protobuf error_manager)
+    target_link_libraries(graph_static PRIVATE ascend_protobuf_static)
 
-target_compile_options(graph_share PRIVATE -O2)
-target_compile_options(graph_static PRIVATE $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>)
+    target_compile_options(graph_share PRIVATE -O2)
+    target_compile_options(graph_static PRIVATE $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>)
 
-set_target_properties(graph_static PROPERTIES
-        WINDOWS_EXPORT_ALL_SYMBOLS TRUE
-        OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,libgraph_share,graph_share>
-        )
+    set_target_properties(graph_static PROPERTIES
+            WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+            OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,libgraph_share,graph_share>
+            )
+endif()
 
 ##############################################################
 add_custom_command(
