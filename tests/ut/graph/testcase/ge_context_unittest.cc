@@ -54,6 +54,10 @@ TEST_F(GeContextUt, Plus) {
   ge::GEContext cont = GetContext();
   EXPECT_EQ(cont.GetHostExecFlag(), false);
 
+  std::map<std::string, std::string> session_option0{{"ge.graphLevelSat", "1"}};
+  GetThreadLocalContext().SetSessionOption(session_option0);
+  EXPECT_EQ(cont.IsGraphLevelSat(), true);
+
   std::map<std::string, std::string> session_option1{{"ge.exec.overflow", "1"}};
   GetThreadLocalContext().SetSessionOption(session_option1);
   EXPECT_EQ(cont.IsOverflowDetectionOpen(), true);

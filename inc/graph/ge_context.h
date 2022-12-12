@@ -26,6 +26,7 @@ class GEContext {
   bool GetHostExecFlag() const;
   bool GetTrainGraphFlag() const;
   bool IsOverflowDetectionOpen() const;
+  bool IsGraphLevelSat() const;
   uint64_t SessionId() const;
   uint32_t DeviceId() const;
   void Init();
