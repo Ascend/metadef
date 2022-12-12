@@ -84,6 +84,7 @@ class OptionalInfos {
   std::map<std::string, std::vector<std::string>> GetFixPipeDtypeMap() const;
   void SetFixPipeDtypeMap(const std::map<std::string, std::vector<std::string>> &fixpipe_dtype_map);
   void SetSocVersion(std::string soc_version);
+  void SetSocVersionWithLock(std::string soc_version);
   void SetCoreType(std::string core_type);
   void SetAICoreNum(uint32_t ai_core_num);
   void SetL1FusionFlag(std::string l1_fusion_flag);

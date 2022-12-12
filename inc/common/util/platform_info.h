@@ -53,6 +53,8 @@ class PlatformInfoManager {
 
   uint32_t UpdatePlatformInfos(PlatFormInfos &platform_infos);
 
+  uint32_t UpdatePlatformInfos(const string &soc_version, PlatFormInfos &platform_infos);
+
   uint32_t GetPlatformInstanceByDevice(const uint32_t &device_id, PlatFormInfos &platform_infos);
 
  private:
