@@ -78,6 +78,7 @@ struct CommPair {
 
 struct SendRecvReshardTask {
   std::vector<CommPair> comm_pairs;
+  std::string parallel_group;
 };
 
 // group communications
@@ -87,32 +88,39 @@ struct CommGroup {
 
 struct AllToAllReshardTask {
   std::vector<CommGroup> comm_groups;
+  std::string parallel_group;
 };
 
 struct AllGatherReshardTask {
   std::vector<CommGroup> comm_groups;
   int32_t axis; // axis to concat
+  std::string parallel_group;
+  std::string output_allocator;
 };
 
 struct AllReduceReshardTask {
   std::string reduction;
   std::vector<CommGroup> comm_groups;
+  std::string parallel_group;
 };
 
 struct AllReduceMeanReshardTask {
   std::vector<CommGroup> comm_groups;
   int32_t axis;
   int32_t value;
+  std::string parallel_group;
 };
 
 struct ReduceScatterReshardTask {
   std::string reduction;
   std::vector<CommGroup> comm_groups;
+  std::string parallel_group;
 };
 
 struct BroadcastReshardTask {
   std::vector<DeviceIndex> root_device_indices;  // size == num_groups
   std::vector<CommGroup> comm_groups;
+  std::string parallel_group;
 };
 
 // local reshardings

@@ -134,6 +134,8 @@ TEST_F(TensorParallelAttrsTest, ParseAllGatherCommTask) {
       R"(
 {
   "task_type": "HcomAllGather",
+  "parallel_group": "-1",
+  "output_allocator": "BufferPool",
   "comm_groups": [
     [
       {"engine_type": "NPU", "index": [0, 0, 0]},
@@ -162,6 +164,8 @@ TEST_F(TensorParallelAttrsTest, ParseAllGatherCommTask) {
   TestToAndFromJson(comm_task, out_comm_task);
   ASSERT_TRUE(out_comm_task.all_gather_reshard_task != nullptr);
   EXPECT_EQ(out_comm_task.all_gather_reshard_task->comm_groups.size(), 4);
+  EXPECT_EQ(out_comm_task.all_gather_reshard_task->parallel_group, "-1");
+  EXPECT_EQ(out_comm_task.all_gather_reshard_task->output_allocator, "BufferPool");
 }
 
 TEST_F(TensorParallelAttrsTest, ParseAllReduceCommTask) {

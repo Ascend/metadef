@@ -80,6 +80,12 @@ template<typename T>
 void GetValue(const Json &j, const std::string &key, T &value) {
   value = j.at(key).template get<T>();
 }
+template<typename T>
+void TryGetValue(const Json &j, const std::string &key, T &value) {
+  if (j.contains(key)) {
+    value = j.at(key).template get<T>();
+  }
+}
 }  // namespace
 
 void CommTaskBuilder::BuildCommTask(const Json &j, CommTask &comm_task) {
@@ -185,10 +191,12 @@ USED_BY_JSON void to_json(Json &j, const SendRecvReshardTask &task_info) {
   j = Json();
   j["task_type"] = kCommTaskTypeSendReceive;
   j["comm_pairs"] = task_info.comm_pairs;
+  j["parallel_group"] = task_info.parallel_group;
 }
 
 USED_BY_JSON void from_json(const Json &j, SendRecvReshardTask &task_info) {
   GetValue(j, "comm_pairs", task_info.comm_pairs);
+  TryGetValue(j, "parallel_group", task_info.parallel_group);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllGatherReshardTask &task_info) {
@@ -196,21 +204,27 @@ USED_BY_JSON void to_json(Json &j, const AllGatherReshardTask &task_info) {
   j["task_type"] = kCommTaskTypeHcomAllGather;
   j["axis"] = task_info.axis;
   j["comm_groups"] = task_info.comm_groups;
+  j["parallel_group"] = task_info.parallel_group;
+  j["output_allocator"] = task_info.output_allocator;
 }
 
 USED_BY_JSON void from_json(const Json &j, AllGatherReshardTask &all_gather_task_info) {
   GetValue(j, "comm_groups", all_gather_task_info.comm_groups);
   GetValue(j, "axis", all_gather_task_info.axis);
+  TryGetValue(j, "parallel_group", all_gather_task_info.parallel_group);
+  TryGetValue(j, "output_allocator", all_gather_task_info.output_allocator);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllToAllReshardTask &task_info) {
   j = Json();
   j["task_type"] = kCommTaskTypeHcomAllToAll;
   j["comm_groups"] = task_info.comm_groups;
+  j["parallel_group"] = task_info.parallel_group;
 }
 
 USED_BY_JSON void from_json(const Json &j, AllToAllReshardTask &all_to_all_task_info) {
   GetValue(j, "comm_groups", all_to_all_task_info.comm_groups);
+  TryGetValue(j, "parallel_group", all_to_all_task_info.parallel_group);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllReduceReshardTask &task_info) {
@@ -218,11 +232,13 @@ USED_BY_JSON void to_json(Json &j, const AllReduceReshardTask &task_info) {
   j["task_type"] = kCommTaskTypeHcomAllReduce;
   j["comm_groups"] = task_info.comm_groups;
   j["reduction"] = task_info.reduction;
+  j["parallel_group"] = task_info.parallel_group;
 }
 
 USED_BY_JSON void from_json(const Json &j, AllReduceReshardTask &all_reduce_task_info) {
   GetValue(j, "reduction", all_reduce_task_info.reduction);
   GetValue(j, "comm_groups", all_reduce_task_info.comm_groups);
+  TryGetValue(j, "parallel_group", all_reduce_task_info.parallel_group);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllReduceMeanReshardTask &task_info) {
@@ -231,12 +247,14 @@ USED_BY_JSON void to_json(Json &j, const AllReduceMeanReshardTask &task_info) {
   j["comm_groups"] = task_info.comm_groups;
   j["axis"] = task_info.axis;
   j["value"] = task_info.value;
+  j["parallel_group"] = task_info.parallel_group;
 }
 
 USED_BY_JSON void from_json(const Json &j, AllReduceMeanReshardTask &task_info) {
   GetValue(j, "comm_groups", task_info.comm_groups);
   GetValue(j, "axis", task_info.axis);
   GetValue(j, "value", task_info.value);
+  TryGetValue(j, "parallel_group", task_info.parallel_group);
 }
 
 USED_BY_JSON void to_json(Json &j, const ReduceScatterReshardTask &task_info) {
@@ -244,11 +262,13 @@ USED_BY_JSON void to_json(Json &j, const ReduceScatterReshardTask &task_info) {
   j["task_type"] = kCommTaskTypeHcomReduceScatter;
   j["comm_groups"] = task_info.comm_groups;
   j["reduction"] = task_info.reduction;
+  j["parallel_group"] = task_info.parallel_group;
 }
 
 USED_BY_JSON void from_json(const Json &j, ReduceScatterReshardTask &reduce_scatter_task_info) {
   GetValue(j, "reduction", reduce_scatter_task_info.reduction);
   GetValue(j, "comm_groups", reduce_scatter_task_info.comm_groups);
+  TryGetValue(j, "parallel_group", reduce_scatter_task_info.parallel_group);
 }
 
 USED_BY_JSON void to_json(Json &j, const BroadcastReshardTask &task_info) {
@@ -256,11 +276,13 @@ USED_BY_JSON void to_json(Json &j, const BroadcastReshardTask &task_info) {
   j["task_type"] = kCommTaskTypeHcomBroadcast;
   j["comm_groups"] = task_info.comm_groups;
   j["roots"] = task_info.root_device_indices;
+  j["parallel_group"] = task_info.parallel_group;
 }
 
 USED_BY_JSON void from_json(const Json &j, BroadcastReshardTask &broadcast_task_info) {
   GetValue(j, "roots", broadcast_task_info.root_device_indices);
   GetValue(j, "comm_groups", broadcast_task_info.comm_groups);
+  TryGetValue(j, "parallel_group", broadcast_task_info.parallel_group);
 }
 
 USED_BY_JSON void to_json(Json &j, const SliceReshardTask &task_info) {
