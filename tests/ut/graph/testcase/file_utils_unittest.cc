@@ -82,4 +82,48 @@ TEST_F(UtestFileUtils, CreateDirectory) {
   ASSERT_EQ(ge::CreateDirectory("~/test"), 0); 
   ASSERT_EQ(ge::CreateDirectory(UtestFileUtils::str3), -1);
 }
+
+TEST_F(UtestFileUtils, GetBinFileFromFileSuccess) {
+  std::string so_bin = "./opsptoro.so";
+  system(("touch " + so_bin).c_str());
+  system(("echo '123' > " + so_bin).c_str());
+  uint32_t data_len;
+  std::unique_ptr<char_t[]> so_data = GetBinFromFile(so_bin, data_len);
+  ASSERT_NE(so_data, nullptr);
+  ASSERT_EQ(data_len, 4);
+  ASSERT_EQ(so_data.get()[0], '1');
+  ASSERT_EQ(so_data.get()[1], '2');
+  ASSERT_EQ(so_data.get()[2], '3');
+
+  system(("rm -f " + so_bin).c_str());
+}
+
+TEST_F(UtestFileUtils, GetBinFilePathNullFail) {
+  std::string so_bin = "";
+  uint32_t data_len;
+  std::unique_ptr<char_t[]> so_data = GetBinFromFile(so_bin, data_len);
+  ASSERT_EQ(so_data, nullptr);
+}
+
+TEST_F(UtestFileUtils, GetBinFileOpenPathFail) {
+  std::string so_bin = "./opsptoro.so";
+  uint32_t data_len;
+  ASSERT_EQ(GetBinFromFile(so_bin, data_len), nullptr);
+}
+
+TEST_F(UtestFileUtils, WriteBinToFileSuccess) {
+  std::string so_bin = "./opsptoro.so";
+  uint32_t data_len = 4;
+  char so_data[4] = {'1', '2', '3'};
+  ASSERT_EQ(WriteBinToFile(so_bin, so_data, data_len), GRAPH_SUCCESS);
+
+  system(("rm -f " + so_bin).c_str());
+}
+
+TEST_F(UtestFileUtils, WriteBinToFilePathNullFail) {
+  std::string so_bin = "";
+  uint32_t data_len = 4;
+  char so_data[4] = {'1', '2', '3'};
+  ASSERT_EQ(WriteBinToFile(so_bin, so_data, data_len), PARAM_INVALID);
+}
 } // namespace ge

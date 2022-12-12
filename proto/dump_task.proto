@@ -103,6 +103,15 @@ message OpBuffer {
     uint64 size = 3;
 }
 
+message Workspace {
+    enum SpaceType {
+        LOG = 0;
+    }
+    SpaceType type = 1;
+    bytes data_addr = 2;
+    uint64 size = 3;
+}
+
 message DumpData{
     string version = 1;
     uint64 dump_time = 2;
@@ -110,4 +119,5 @@ message DumpData{
     repeated OpInput input = 4;
     repeated OpBuffer buffer = 5;
     string op_name = 6;
+    repeated Workspace space = 7;
 }

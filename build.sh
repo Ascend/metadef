@@ -164,7 +164,7 @@ build_metadef()
   elif [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
     make exec_graph_benchmark ${VERBOSE} -j${THREAD_NUM}
   else
-    make graph graph_base graph_static exe_graph register register_static error_manager error_manager_static ${VERBOSE} -j${THREAD_NUM} && make install
+    make graph graph_base exe_graph register register_static error_manager error_manager_static ${VERBOSE} -j${THREAD_NUM} && make install
   fi
   if [ 0 -ne $? ]
   then

@@ -18,6 +18,7 @@
 #include "common/checker.h"
 #include "debug/ge_util.h"
 #include "graph/flow_graph/data_flow_attr_define.h"
+#include "graph/flow_graph/data_flow_utils.h"
 #include "graph/flow_graph/flow_attr_util.h"
 #include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/op_desc_utils.h"
@@ -285,7 +286,13 @@ FlowNode &FlowNode::AddPp(const ProcessPoint &pp) {
         GELOGE(ge::FAILED, "GraphPp(%s)'s graph builder is nullptr.", iter->second.GetProcessPointName());
         return *this;
       }
-      this->SetSubgraphBuilder(pp.GetProcessPointName(), i++, builder);
+      const auto &graph_pp = iter->second;
+      auto flow_graph_builder = [graph_pp]() {
+        Graph graph;
+        DataFlowUtils::BuildInvokedGraphFromGraphPp(graph_pp, graph);
+        return graph;
+      };
+      this->SetSubgraphBuilder(pp.GetProcessPointName(), i++, flow_graph_builder);
     }
   } else if (pp.GetProcessPointType() == ProcessPointType::GRAPH) {
     const GraphPp *graph_pp = dynamic_cast<const GraphPp *>(&pp);

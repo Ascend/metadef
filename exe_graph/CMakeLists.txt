@@ -37,13 +37,17 @@ target_compile_options(exe_graph PRIVATE
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
 )
 
-target_clone(exe_graph exe_graph_static STATIC)
+if (${ENABLE_OPEN_SRC} STREQUAL "True")
+    target_link_libraries(exe_graph PRIVATE ascend_protobuf graph)
+    target_compile_options(exe_graph PRIVATE -O2)
+else()
+    target_clone(exe_graph exe_graph_static STATIC)
 
-target_link_libraries(exe_graph PRIVATE ascend_protobuf graph)
-target_link_libraries(exe_graph_static PRIVATE
-        ascend_protobuf_static graph_static
-        )
+    target_link_libraries(exe_graph PRIVATE ascend_protobuf graph)
+    target_link_libraries(exe_graph_static PRIVATE
+            ascend_protobuf_static graph_static
+            )
 
-target_compile_options(exe_graph PRIVATE -O2)
-target_compile_options(exe_graph_static PRIVATE $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>)
-
+    target_compile_options(exe_graph PRIVATE -O2)
+    target_compile_options(exe_graph_static PRIVATE $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>)
+endif()

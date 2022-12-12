@@ -208,6 +208,10 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrHolder {
     return const_cast<T *>(ext_attrs_.Get<T>(name));
   }
 
+  bool DelExtAttr(const std::string &name) {
+    return ext_attrs_.Erase(name);
+  }
+
  protected:
   graphStatus AddRequiredAttr(const std::string &name);
   const std::set<std::string> GetAllAttrNames() const;
