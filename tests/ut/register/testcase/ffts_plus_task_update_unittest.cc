@@ -19,7 +19,7 @@
 #define private public
 #define protected public
 #include "register/ffts_plus_update_manager.h"
-#include "common/plugin_so_manager.h"
+#include "common/plugin/plugin_manager.h"
 
 namespace ge {
 class FFTSPlusTaskUpdateStub : public FFTSPlusTaskUpdate {

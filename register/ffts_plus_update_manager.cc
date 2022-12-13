@@ -16,7 +16,7 @@
 
 #include "register/ffts_plus_update_manager.h"
 #include "graph/debug/ge_util.h"
-#include "common/plugin_so_manager.h"
+#include "common/plugin/plugin_manager.h"
 
 namespace ge {
 namespace {
@@ -73,7 +73,7 @@ Status FftsPlusUpdateManager::Initialize() {
   }
   std::string lib_paths;
   GetLibPaths(lib_paths);
-  plugin_manager_ = ComGraphMakeUnique<PluginSoManager>();
+  plugin_manager_ = ComGraphMakeUnique<PluginManager>();
   GE_CHECK_NOTNULL(plugin_manager_);
   GE_CHK_STATUS_RET(plugin_manager_->LoadSo(lib_paths), "[Load][Libs]Failed, lib_paths=%s.", lib_paths.c_str());
   is_init_ = true;

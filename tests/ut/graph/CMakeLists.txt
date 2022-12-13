@@ -46,7 +46,7 @@ target_link_libraries(ut_graph PRIVATE
     metadef_headers
     air_headers
     graph graph_base flow_graph error_manager
-    GTest::gtest GTest::gtest_main ascend_protobuf slog_stub c_sec json -lrt -ldl
+    GTest::gtest GTest::gtest_main ascend_protobuf slog_stub c_sec json mmpa_stub -lrt -ldl
 )
 
 target_include_directories(ut_graph PRIVATE ${METADEF_DIR}/tests/depends)

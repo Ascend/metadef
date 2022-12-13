@@ -316,3 +316,9 @@ CHAR *mmGetErrorFormatMessage(mmErrorMSg errnum, CHAR *buf, mmSize size)
   return strerror_r(errnum, buf, size);
 }
 
+INT32 mmSetEnv(const CHAR *name, const CHAR *value, INT32 overwrite) {
+  if ((name == nullptr) || (value == nullptr)) {
+    return EN_INVALID_PARAM;
+  }
+  return setenv(name, value, overwrite);
+}
