@@ -49,6 +49,16 @@ bool GEContext::IsOverflowDetectionOpen() const {
   return (enable_overflow_detection == kEnabled);
 }
 
+bool GEContext::IsGraphLevelSat() const {
+  std::string graph_level_sat;
+  if (GetThreadLocalContext().GetOption("ge.graphLevelSat", graph_level_sat) != GRAPH_SUCCESS) {
+    GELOGD("can not get option ge.graphLevelSat.");
+    return false;
+  }
+  GELOGD("Option ge.graphLevelSat is %s.", graph_level_sat.c_str());
+  return (graph_level_sat == kEnabled);
+}
+
 bool GEContext::GetHostExecFlag() const {
   std::string exec_placement;
   if (GetThreadLocalContext().GetOption("ge.exec.placement", exec_placement) != GRAPH_SUCCESS) {

@@ -288,19 +288,6 @@
   EDGE_ATTR_GET_BY_NAME_IMP(ArgType, AttrUtilsFunc)
 namespace ge {
 const int32_t kMaxDepth = 20;
-TensorType::TensorType(DataType dt) {
-  tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
-  if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->GetMutableDateTypeSet().emplace(dt);
-  }
-}
-
-TensorType::TensorType(const std::initializer_list<DataType> &initial_types) {
-  tensor_type_impl_ = ComGraphMakeShared<TensorTypeImpl>();
-  if (tensor_type_impl_ != nullptr) {
-    tensor_type_impl_->GetMutableDateTypeSet() = initial_types;
-  }
-}
 
 // Used to manage OperatorImpl instances created by ge api.
 class OperatorKeeper {
