@@ -32,15 +32,9 @@
 
 #define REGISTER_OP_TILING_UNIQ_HELPER(optype, opfunc, counter) REGISTER_OP_TILING_UNIQ(optype, (opfunc), counter)
 
-#define REGISTER_OP_TILING_UNIQ(optype, opfunc, counter)                                                               \
-  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV1##counter(#optype, (opfunc))
-
 #define REGISTER_OP_TILING_V2(optype, opfunc) REGISTER_OP_TILING_UNIQ_HELPER_V2(optype, (opfunc), __COUNTER__)
 
 #define REGISTER_OP_TILING_UNIQ_HELPER_V2(optype, opfunc, counter) REGISTER_OP_TILING_UNIQ_V2(optype, (opfunc), counter)
-
-#define REGISTER_OP_TILING_UNIQ_V2(optype, opfunc, counter)                                                            \
-  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV2##counter(#optype, (opfunc))
 
 #define REGISTER_OP_TILING_V3(optype, tilingfunc, parsefunc)                                                           \
   REGISTER_OP_TILING_UNIQ_HELPER_V3(optype, (tilingfunc), (parsefunc), __COUNTER__)
@@ -48,17 +42,30 @@
 #define REGISTER_OP_TILING_UNIQ_HELPER_V3(optype, tilingfunc, parsefunc, counter)                                      \
   REGISTER_OP_TILING_UNIQ_V3(optype, (tilingfunc), (parsefunc), counter)
 
-#define REGISTER_OP_TILING_UNIQ_V3(optype, tilingfunc, parsefunc, counter)                                             \
-  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV3##counter(#optype, (tilingfunc), (parsefunc))
-
 #define REGISTER_OP_TILING_V4(optype, tilingfunc, parsefunc)                                                           \
   REGISTER_OP_TILING_UNIQ_HELPER_V4(optype, (tilingfunc), (parsefunc), __COUNTER__)
 
 #define REGISTER_OP_TILING_UNIQ_HELPER_V4(optype, tilingfunc, parsefunc, counter)                                      \
   REGISTER_OP_TILING_UNIQ_V4(optype, (tilingfunc), (parsefunc), counter)
 
+#ifdef DISABLE_COMPILE_V1
+#define REGISTER_OP_TILING_UNIQ(optype, opfunc, counter)
+#define REGISTER_OP_TILING_UNIQ_V2(optype, opfunc, counter)
+#define REGISTER_OP_TILING_UNIQ_V3(optype, tilingfunc, parsefunc, counter)
+#define REGISTER_OP_TILING_UNIQ_V4(optype, tilingfunc, parsefunc, counter)
+#else
+#define REGISTER_OP_TILING_UNIQ(optype, opfunc, counter)                                                               \
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV1##counter(#optype, (opfunc))
+
+#define REGISTER_OP_TILING_UNIQ_V2(optype, opfunc, counter)                                                            \
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV2##counter(#optype, (opfunc))
+
+#define REGISTER_OP_TILING_UNIQ_V3(optype, tilingfunc, parsefunc, counter)                                             \
+  static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV3##counter(#optype, (tilingfunc), (parsefunc))
+
 #define REGISTER_OP_TILING_UNIQ_V4(optype, tilingfunc, parsefunc, counter)                                             \
   static optiling::OpTilingFuncRegistry g_##optype##TilingRegistryInterfV4##counter(#optype, (tilingfunc), (parsefunc))
+#endif
 
 
 using Status = domi::Status;
