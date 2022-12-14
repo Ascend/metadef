@@ -189,6 +189,19 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
     return ConstantUtils::GetWeight(peer_op_desc, static_cast<uint32_t>(peer_node_2_out_anchor.second->GetIdx()),
                                     ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
   }
+  // Place holder operator, try to get the weight from `parentNode`;
+  // `parentNode` is the real node of the placeholder node in engine partition graph
+  if (peer_op_type == PLACEHOLDER) {
+    NodePtr parent_node = nullptr;
+    parent_node = peer_op_desc->TryGetExtAttr("parentNode", parent_node);
+    if (parent_node != nullptr) {
+      const auto parent_op_desc = parent_node->GetOpDesc();
+      GE_CHECK_NOTNULL(parent_op_desc);
+      if (ConstantUtils::IsConstant(parent_op_desc)) {
+        return ConstantUtils::GetWeight(parent_op_desc, 0U, ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
+      }
+    }
+  }
   if (peer_op_type == DATA) {
     auto parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(peer_node);
     while ((parent_node_2_out_anchor.first != nullptr) && (parent_node_2_out_anchor.first->GetType() == DATA)) {
