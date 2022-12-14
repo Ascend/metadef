@@ -41,7 +41,7 @@ class OpImplRegister {
 
   explicit OpImplRegister(const ge::char_t *op_type);
   OpImplRegister(const OpImplRegister &other);
-  OpImplRegister &operator=(const OpImplRegister &other) = default;
+  OpImplRegister &operator=(const OpImplRegister &other);
   OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
   OpImplRegister &InferShapeRange(OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func);
   OpImplRegister &InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func);
