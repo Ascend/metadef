@@ -28,7 +28,7 @@
 namespace ge {
 using FftsCtxUpdatePtr = std::shared_ptr<FFTSPlusTaskUpdate>;
 using FftsCtxUpdateCreatorFun = std::function<FftsCtxUpdatePtr()>;
-class PluginSoManager;
+class PluginManager;
 
 class FftsPlusUpdateManager {
  public:
@@ -66,7 +66,7 @@ class FftsPlusUpdateManager {
 
   std::map<std::string, FftsCtxUpdateCreatorFun> creators_;
   std::mutex init_mutex_;
-  std::unique_ptr<PluginSoManager> plugin_manager_;
+  std::unique_ptr<PluginManager> plugin_manager_;
   bool is_init_{false};
 };
 } // namespace ge
