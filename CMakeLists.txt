@@ -80,7 +80,16 @@ if (ENABLE_OPEN_SRC)
     # 自研软件包
     find_package(securec MODULE REQUIRED)
     find_package(slog CONFIG REQUIRED)
-    find_package(mmpa CONFIG REQUIRED)
+    if (ENABLE_METADEF_UT OR ENABLE_METADEF_ST)
+        add_library(mmpa_headers INTERFACE)
+        target_include_directories(mmpa_headers INTERFACE
+                ${ASCEND_OPENSDK_DIR}/include
+                ${ASCEND_OPENSDK_DIR}/include/mmpa
+                ${ASCEND_OPENSDK_DIR}/include/sub_inc
+                )
+    else()
+        find_package(mmpa CONFIG REQUIRED)
+    endif()
     find_package(cce CONFIG REQUIRED)
     find_package(msprof CONFIG REQUIRED)
     find_package(runtime CONFIG REQUIRED)

@@ -21,11 +21,10 @@ include_directories(${METADEF_DIR}/inc/external)
 include_directories(${METADEF_DIR}/metadef/inc)
 include_directories(${METADEF_DIR}/inc/framework)
 include_directories(${METADEF_DIR}/metadef/inc/external)
-
 add_library(mmpa_stub SHARED ${SRCS})
 target_link_libraries(mmpa_stub
     PRIVATE
-        intf_pub        
+        intf_pub
         -Wl,--no-as-needed
         ascend_protobuf
         -Wl,--as-needed
