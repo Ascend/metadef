@@ -15,6 +15,8 @@
  */
 
 #include "mmpa/mmpa_api.h"
+#include <iostream>
+#include <string>
 
 typedef int mmErrorMSg;
 
@@ -149,6 +151,10 @@ void *memCpyS(void *dest, const void *src, UINT32 count) {
 
 INT32 mmRmdir(const CHAR *lp_path_name) { return rmdir(lp_path_name); }
 
+INT32 mmUnlink(const CHAR *filename) {
+    return unlink(filename);
+}
+
 INT32 mmGetSystemTime(mmSystemTime_t *sysTime) {
   // Beijing olympics
   sysTime->wYear = 2008;
@@ -266,9 +272,39 @@ INT32 mmIsDir(const CHAR *fileName)
   return 0;
 }
 
+INT32 mmSetEnv(const CHAR *name, const CHAR *value, INT32 overwrite)
+{
+  return setenv(name, value, overwrite);
+}
+
 INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
 {
-  return 0;
+  INT32 ret;
+  UINT32 envLen = 0;
+  if (name == NULL || value == NULL || len == MMPA_ZERO) {
+    return EN_INVALID_PARAM;
+  }
+
+  CHAR *envPtr = getenv(name);
+  if (envPtr == NULL || strlen(envPtr)) {
+    return EN_ERROR;
+  }
+
+  UINT32 lenOfRet = (UINT32)strlen(envPtr);
+  if (lenOfRet < (MMPA_MEM_MAX_LEN - 1)) {
+    envLen = lenOfRet + 1;
+  }
+
+  if (envLen != MMPA_ZERO && len < envLen) {
+    return EN_INVALID_PARAM;
+  } else {
+    ret = memcpy_s(value, len, envPtr, envLen);
+    if (ret != EN_OK) {
+      return EN_ERROR;
+    }
+  }
+
+  return EN_OK;
 }
 
 INT32 mmDlclose(VOID *handle)
@@ -314,11 +350,4 @@ CHAR *mmGetErrorFormatMessage(mmErrorMSg errnum, CHAR *buf, mmSize size)
     return NULL;
   }
   return strerror_r(errnum, buf, size);
-}
-
-INT32 mmSetEnv(const CHAR *name, const CHAR *value, INT32 overwrite) {
-  if ((name == nullptr) || (value == nullptr)) {
-    return EN_INVALID_PARAM;
-  }
-  return setenv(name, value, overwrite);
 }

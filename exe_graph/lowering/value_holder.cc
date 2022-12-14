@@ -242,11 +242,12 @@ ValueHolderPtr ValueHolder::CreateError(const char *fmt, ...) {
 }
 std::string ValueHolder::GenerateNodeName(const char *node_type, const GraphFrame &frame) {
   std::stringstream node_name;
-  node_name << node_type;
   const auto &current_compute_node = frame.GetCurrentComputeNode();
+  //set this with tensorboard scope format as "nodename/nodetype_id"
   if (current_compute_node != nullptr) {
-    node_name << '_' << current_compute_node->GetName();
+    node_name << current_compute_node->GetName() << '/';
   }
+  node_name << node_type;
   node_name << '_' << id_generator_++;
   return node_name.str();
 }

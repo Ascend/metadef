@@ -30,6 +30,7 @@ set(GRAPH_BASE_SOURCE_LIST
     "utils/node_utils.cc"
     "utils/type_utils.cc"
     "utils/tensor_utils.cc"
+    "utils/tensorboard_graph_dump_utils.cc"
     "utils/constant_utils.cc"
     "utils/connection_matrix.cc"
     "utils/cycle_detector.cc"
@@ -158,6 +159,7 @@ target_compile_options(graph_base PRIVATE -O2)
 ######### libgraph.so #############
 add_library(graph SHARED
     ${GRAPH_SOURCE_LIST}
+    $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
 )
 
 target_compile_options(graph PRIVATE
@@ -263,6 +265,7 @@ else()
             ${GRAPH_BASE_SOURCE_LIST}
             ${GRAPH_SOURCE_LIST}
             $<TARGET_OBJECTS:metadef_graph_protos_obj>
+            $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
             )
 
     target_compile_options(graph_share PRIVATE

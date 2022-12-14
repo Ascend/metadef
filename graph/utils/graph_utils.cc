@@ -15,6 +15,7 @@
  */
 
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_inner.h"
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
@@ -55,15 +56,6 @@ enum class DumpGraphLevel {
 };
 
 namespace {
-const int32_t kBaseOfIntegerValue = 10;
-#ifdef FMK_SUPPORT_DUMP
-const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
-const int32_t kDumpGraphIndexWidth = 8;
-#endif
-
-const char_t *const kNpuCollectPath = "NPU_COLLECT_PATH";
-const char_t *const kDumpGraphPath = "DUMP_GRAPH_PATH";
-const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
 const char_t *const kDumpStrBuild = "Build";
 const char_t *const kDumpStrPartition = "partition";
 const char_t *const kDumpStrOptimizeSubgraph = "OptimizeSubGraph";
@@ -603,7 +595,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(con
   return false;
 }
 
-namespace {
 void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   static std::string path_prefix;
   if (path_prefix.empty()) {
@@ -628,6 +619,7 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   }
 }
 
+namespace {
 #ifdef FMK_SUPPORT_DUMP
 graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
                             const std::string &user_graph_name, std::string &real_path_name) {
