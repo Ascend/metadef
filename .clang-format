@@ -112,4 +112,4 @@ TabWidth: 4
 # 使用tab字符: Never, ForIndentation, ForContinuationAndIndentation, Always
 UseTab: Never
 # 不使用头文件排序功能，默认行为与我司规范不一致
-SortIncludes: false
+SortIncludes: Never

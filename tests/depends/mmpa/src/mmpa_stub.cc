@@ -16,8 +16,6 @@
 
 #include "mmpa_stub.h"
 #include "mmpa/mmpa_api.h"
-#include <iostream>
-#include <string>
 
 typedef int mmErrorMSg;
 
@@ -154,7 +152,6 @@ void *memCpyS(void *dest, const void *src, UINT32 count) {
 INT32 mmUnlink(const CHAR *filename) {
   return unlink(filename);
 }
-//INT32 mmRmdir(const CHAR *lp_path_name) { return rmdir(lp_path_name); }
 INT32 mmRmdir(const CHAR *lp_path_name) {
   INT32 ret;
   DIR *childDir = NULL;
@@ -342,11 +339,6 @@ INT32 mmIsDir(const CHAR *fileName)
   return EN_ERR;
 }
 
-INT32 mmSetEnv(const CHAR *name, const CHAR *value, INT32 overwrite)
-{
-  return setenv(name, value, overwrite);
-}
-
 INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
 {
   INT32 ret;
@@ -425,4 +417,11 @@ CHAR *mmGetErrorFormatMessage(mmErrorMSg errnum, CHAR *buf, mmSize size)
     return NULL;
   }
   return strerror_r(errnum, buf, size);
+}
+
+INT32 mmSetEnv(const CHAR *name, const CHAR *value, INT32 overwrite) {
+  if ((name == nullptr) || (value == nullptr)) {
+    return EN_INVALID_PARAM;
+  }
+  return setenv(name, value, overwrite);
 }
