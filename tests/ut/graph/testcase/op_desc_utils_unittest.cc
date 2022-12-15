@@ -24,6 +24,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/op_desc_impl.h"
 #include "graph/node_impl.h"
+#include "graph/debug/ge_op_types.h"
 #include "graph/runtime_inference_context.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/anchor_utils.h"
@@ -342,6 +343,46 @@ TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_02) {
   ASSERT_EQ(res_buf[10], 32);
 }
 
+// for partiton graph get const
+TEST_F(UtestOpDescUtils, GetInputConstDataByIndex_03) {
+  ut::GraphBuilder builder = ut::GraphBuilder("partiton_graph0");
+  auto pld = builder.AddNode(PLACEHOLDER, PLACEHOLDER, 0, 1);
+  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
+  auto netoutput = builder.AddNode(NETOUTPUT, NETOUTPUT, 1, 0);
+  builder.AddDataEdge(pld, 0, transdata, 0);
+  builder.AddDataEdge(transdata, 0, netoutput, 0);
+  auto op_desc = transdata->GetOpDesc();
+
+  ut::GraphBuilder builder1 = ut::GraphBuilder("partiton_graph1");
+  auto const_node = builder1.AddNode(CONSTANT, CONSTANT, 0, 1);
+  auto end = builder1.AddNode(END, END, 1, 0);
+  builder.AddDataEdge(const_node, 0, end, 0);
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096U] = {0};
+  data_buf[0] = 23U;
+  data_buf[10] = 32U;
+  ge_tensor->SetData(data_buf, 4096U);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ATTR_NAME_WEIGHTS, ge_tensor);
+
+  pld->GetOpDesc()->SetExtAttr("parentNode", const_node);
+  auto op = OpDescUtils::CreateOperatorFromNode(transdata);
+  ConstGeTensorBarePtr ge_tensor_res = nullptr;
+  // case 0
+  ge_tensor_res = OpDescUtils::GetInputConstData(op, 0U);
+  ASSERT_TRUE(ge_tensor_res != nullptr);
+  const TensorData tmp(ge_tensor_res->GetData());
+  const uint8_t *res_buf = tmp.GetData();
+  ASSERT_EQ(res_buf[0], 23U);
+  ASSERT_EQ(res_buf[10], 32U);
+
+  // case 1
+  op_desc->impl_->input_name_idx_[PLACEHOLDER] = 0U;
+  Tensor tensor;
+  ASSERT_EQ(op.GetInputConstData(PLACEHOLDER, tensor), GRAPH_SUCCESS);
+  const uint8_t *buf = tensor.GetData();
+  ASSERT_EQ(buf[0], 23U);
+  ASSERT_EQ(buf[10], 32U);
+}
 
 TEST_F(UtestOpDescUtils, DefaultInferFormat) {
   auto tensor_desc = std::make_shared<GeTensorDesc>();

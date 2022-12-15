@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "mmpa_stub.h"
 #include "mmpa/mmpa_api.h"
 
 typedef int mmErrorMSg;
@@ -25,7 +26,8 @@ INT32 mmOpen(const CHAR *path_name, INT32 flags) {
     syslog(LOG_ERR, "The path name pointer is null.\r\n");
     return EN_INVALID_PARAM;
   }
-  if (0 == (flags & (O_RDONLY | O_WRONLY | O_RDWR | O_CREAT))) {
+  UINT32 tmp = (UINT32)flags;
+  if ((0 == (tmp & (O_RDONLY | O_WRONLY | O_RDWR | O_CREAT))) && (flags != O_RDONLY)) {
     syslog(LOG_ERR, "The file open mode is error.\r\n");
     return EN_INVALID_PARAM;
   }
@@ -147,7 +149,69 @@ void *memCpyS(void *dest, const void *src, UINT32 count) {
   return dest;
 }
 
-INT32 mmRmdir(const CHAR *lp_path_name) { return rmdir(lp_path_name); }
+INT32 mmUnlink(const CHAR *filename) {
+  return unlink(filename);
+}
+INT32 mmRmdir(const CHAR *lp_path_name) {
+  INT32 ret;
+  DIR *childDir = NULL;
+
+  if (lp_path_name == NULL) {
+    return EN_INVALID_PARAM;
+  }
+  DIR *dir = opendir(lp_path_name);
+  if (dir == NULL) {
+    return EN_INVALID_PARAM;
+  }
+
+  const struct dirent *entry = NULL;
+  size_t bufSize = strlen(lp_path_name) + (size_t)(PATH_SIZE + 2); // make sure the length is large enough
+  while ((entry = readdir(dir)) != NULL) {
+    if ((strcmp(".", entry->d_name) == MMPA_ZERO) || (strcmp("..", entry->d_name) == MMPA_ZERO)) {
+      continue;
+    }
+    CHAR *buf = (CHAR *)malloc(bufSize);
+    if (buf == NULL) {
+      break;
+    }
+    ret = memset_s(buf, bufSize, 0, bufSize);
+    if (ret == EN_ERROR) {
+      free(buf);
+      buf = NULL;
+      break;
+    }
+    ret = snprintf_s(buf, bufSize, bufSize - 1U, "%s/%s", lp_path_name, entry->d_name);
+    if (ret == EN_ERROR) {
+      free(buf);
+      buf = NULL;
+      break;
+    }
+
+    childDir = opendir(buf);
+    if (childDir != NULL) {
+      (VOID)closedir(childDir);
+      (VOID)mmRmdir(buf);
+      free(buf);
+      buf = NULL;
+      continue;
+    } else {
+      ret = unlink(buf);
+      if (ret == EN_OK) {
+        free(buf);
+        continue;
+      }
+    }
+    free(buf);
+    buf = NULL;
+  }
+  (VOID)closedir(dir);
+
+  ret = rmdir(lp_path_name);
+  if (ret == EN_ERROR) {
+    return EN_ERROR;
+  }
+  return EN_OK;
+}
 
 INT32 mmGetSystemTime(mmSystemTime_t *sysTime) {
   // Beijing olympics
@@ -258,22 +322,59 @@ INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
 
 //INT32 mmGetErrorCode()
 //{
-  //return 0;
+//  return 0;
 //}
 
 INT32 mmIsDir(const CHAR *fileName)
 {
-  return 0;
+  if (fileName == nullptr) {
+    return EN_ERR;
+  }
+
+  DIR *pDir = opendir (fileName);
+  if (pDir != nullptr) {
+    (void) closedir (pDir);
+    return EN_OK;
+  }
+  return EN_ERR;
 }
 
 INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
 {
-  return 0;
+  INT32 ret;
+  UINT32 envLen = 0;
+  if (name == NULL || value == NULL || len == MMPA_ZERO) {
+    return EN_INVALID_PARAM;
+  }
+
+  CHAR *envPtr = getenv(name);
+  if (envPtr == NULL) {
+    return EN_ERROR;
+  }
+
+  UINT32 lenOfRet = (UINT32)strlen(envPtr);
+  if (lenOfRet < (MMPA_MEM_MAX_LEN - 1)) {
+    envLen = lenOfRet + 1;
+  }
+
+  if (envLen != MMPA_ZERO && len < envLen) {
+    return EN_INVALID_PARAM;
+  } else {
+    ret = memcpy_s(value, len, envPtr, envLen);
+    if (ret != EN_OK) {
+      return EN_ERROR;
+    }
+  }
+
+  return EN_OK;
 }
 
 INT32 mmDlclose(VOID *handle)
 {
-  return 0;
+  if (handle == nullptr) {
+    return 1;
+  }
+  return ge::MmpaStub::GetInstance().GetImpl()->DlClose(handle);
 }
 
 CHAR *mmDlerror()
@@ -289,12 +390,14 @@ INT32 mmDladdr(VOID *addr, mmDlInfo *info)
 
 VOID *mmDlopen(const CHAR *fileName, INT32 mode)
 {
-  return NULL;
+  return ge::MmpaStub::GetInstance().GetImpl()->DlOpen(fileName, mode);
 }
 
-VOID *mmDlsym(VOID *handle, const CHAR *funcName)
-{
-  return NULL;
+VOID *mmDlsym(VOID *handle, const CHAR *funcName) {
+ if (reinterpret_cast<uintptr_t>(handle) < 0x8000) {
+   return nullptr;
+ }
+  return ge::MmpaStub::GetInstance().GetImpl()->DlSym(handle, funcName);
 }
 
 INT32 mmGetPid()

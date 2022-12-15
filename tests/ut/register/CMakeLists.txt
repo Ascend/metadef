@@ -22,6 +22,7 @@ include_directories(${METADEF_DIR})
 include_directories(${METADEF_DIR}/register)
 
 file(GLOB_RECURSE REGISTER_UT_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/register/*.cc" )
+
 add_executable(ut_register
     ${REGISTER_UT_FILES}
 )
@@ -51,6 +52,7 @@ target_link_libraries(ut_register
     json
     c_sec
     error_manager
+    mmpa_stub
     -lrt
     -ldl
     -lgcov

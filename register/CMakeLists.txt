@@ -30,6 +30,8 @@ set(SRC_LIST
     "kernel_registry_impl.cc"
     "node_converter_registry.cc"
     "op_impl_registry.cc"
+    "op_impl_space_registry.cc"
+    "op_impl_registry_holder_manager.cc"
     "scope/scope_graph.cc"
     "scope/scope_pass.cc"
     "scope/scope_pattern.cc"
