@@ -2932,6 +2932,11 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
                                   static_cast<uint32_t>(item.second.first->GetIdx()));
   }
 
+  // Add targets
+  for (const auto &item : graph_info.ctrl_outputs_) {
+    (void)graph_builder.AddTarget(item.first->GetOwnerNode()->GetName());
+  }
+
   // Add Data Edges
   for (const auto &data_edge : graph_info.inner_data_edges_) {
     (void)graph_builder.AddDataLink(data_edge.first->GetOwnerNode()->GetName(),

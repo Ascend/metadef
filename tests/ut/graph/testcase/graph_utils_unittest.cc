@@ -515,6 +515,29 @@ TEST_F(UtestGraphUtils, BuildSubgraphWithNodes) {
   ASSERT_EQ(GraphUtils::BuildSubgraphWithNodes(graph, {cast1}, "subgraph1"), nullptr);
 }
 
+TEST_F(UtestGraphUtils, BuildSubgraphWithOnlyControlNodes) {
+  auto builder = ut::GraphBuilder("root");
+  auto data1 = builder.AddNode("data1", DATA, 0, 1);
+  auto data2 = builder.AddNode("data2", DATA, 0, 1);
+  auto op1 = builder.AddNode("square1", "Square", 1, 1);
+  auto op2 = builder.AddNode("square2", "Square", 1, 1);
+  auto output = builder.AddNode("output", NETOUTPUT, 1, 0);
+
+  builder.AddDataEdge(data1, 0, op1, 0);
+  builder.AddDataEdge(data2, 0, op2, 0);
+  builder.AddDataEdge(op2, 0, output, 0);
+  builder.AddControlEdge(op1, op2);
+  auto origin_graph = builder.GetGraph();
+  ASSERT_TRUE(AttrUtils::SetStr(origin_graph, "_session_graph_id", "graph_id"));
+
+  auto subgraph = GraphUtils::BuildSubgraphWithNodes(origin_graph, {op1}, "subgraph");
+  ASSERT_NE(subgraph, nullptr);
+  auto subgraph_output = subgraph->FindFirstNodeMatchType(NETOUTPUT);
+  ASSERT_NE(subgraph_output, nullptr);
+  ASSERT_FALSE(subgraph_output->GetInControlNodes().empty());
+  ASSERT_EQ((*subgraph_output->GetInControlNodes().begin())->GetType(), "Square");
+}
+
 TEST_F(UtestGraphUtils, UnfoldSubgraph) {
   ComputeGraphPtr graph;
   ComputeGraphPtr subgraph;
