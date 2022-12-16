@@ -426,6 +426,7 @@ message FftsPlusCtxDef {
     FftsPlusCaseDefaultCtxDef case_default_ctx = 16;
     FftsPlusCondSwitchCtxDef cond_switch_ctx = 17;
     FftsPlusCachePersistCtxDef cache_persist_ctx = 18;
+    FftsPlusDsaCtxDef dsa_ctx = 19;
 }
 
 // aic/aiv context
@@ -792,6 +793,31 @@ message FftsPlusCachePersistCtxDef {
     uint32 persistent_size = 7;
     uint32 persistent_en = 8;
     uint32 persistent_id = 9;
+}
+
+//ffts dsa context
+message FftsPlusDsaCtxDef {
+    uint32 successor_num = 1;
+    uint32 aten = 2;
+    uint32 pred_cnt_init = 3;
+    uint32 pred_cnt = 4;
+    repeated uint32 successor_list = 5; // 16 bits, len = 26
+    uint32 atm = 6;
+    uint32 address_offset = 7;
+    uint32 thread_id = 8;
+    uint32 thread_dim = 9;
+
+    uint32 start = 10; // start
+    uint32 distribution_type = 11;
+    uint32 data_type = 12;
+    uint32 alg_type = 13;
+    uint32 input_vld = 14;
+    uint32 input_value_addr_flag = 15;
+    uint32 input1_value_or_ptr = 16;
+    uint32 input2_value_or_ptr = 17;
+    uint32 seed_value_or_ptr = 18;
+    uint32 random_count_value_or_ptr = 19;
+    DSATaskArgsDef args = 20;
 }
 
 message CmoTaskDef {
