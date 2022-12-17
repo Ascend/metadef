@@ -29,7 +29,7 @@ class OpDescUtilsEx {
   static graphStatus OpVerify(const OpDescPtr &op_desc);
   static graphStatus InferShapeAndType(const OpDescPtr &op_desc);
   static graphStatus InferDataSlice(const OpDescPtr &op_desc);
-  static void ResetType(OpDescPtr &op_desc, const std::string &type);
+  static void SetType(OpDescPtr &op_desc, const std::string &type);
  private:
   static graphStatus CallInferFuncV1(const OpDescPtr &op_desc, Operator &op);
   static graphStatus CallInferFuncV2(const OpDescPtr &op_desc, Operator &op);

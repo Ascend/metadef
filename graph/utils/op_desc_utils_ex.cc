@@ -204,7 +204,7 @@ graphStatus OpDescUtilsEx::InferDataSlice(const OpDescPtr &op_desc) {
   return ret;
 }
 
-void OpDescUtilsEx::ResetType(OpDescPtr &op_desc, const std::string &type) {
+void OpDescUtilsEx::SetType(OpDescPtr &op_desc, const std::string &type) {
   // If the type changes, IR related variables should be modified accordingly
   auto op = OperatorFactory::CreateOperator("tmp", type.c_str());
   op.BreakConnect();
