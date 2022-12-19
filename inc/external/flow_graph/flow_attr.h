@@ -36,7 +36,7 @@ struct TimeBatch {
   int64_t time_window = 0L;
   int64_t time_interval = 0L;
   int64_t timeout = 0L;
-  int64_t batch_dim = 0L;
+  int64_t batch_dim = -1;
   int32_t flag = 0; // eg: eos/seg
   bool padding = false;
   bool drop_remainder = false;

@@ -91,4 +91,32 @@ TEST_F(FlowAttrUtilUTest, SetAttrsToTensorDescTest) {
   ge::AttrUtils::GetInt(input_tensor_desc2, ATTR_NAME_TIME_BATCH_TIME_WINDOW, time_window);
   ASSERT_EQ(time_window, 0);
 }
+
+TEST_F(FlowAttrUtilUTest, SetAttrsToTensorDescTest_Failed) {
+  FlowAttrUtil flow_attr_util;
+  CountBatch invalid_batch_size;
+  invalid_batch_size.batch_size = 0;
+  DataFlowInputAttr invalid_batch_size_attr{DataFlowAttrType::COUNT_BATCH, (void *) &invalid_batch_size};
+  std::vector<DataFlowInputAttr> vec_input_attrs0;
+  vec_input_attrs0.emplace_back(invalid_batch_size_attr);
+  auto node0 = FlowNode("node0", 3, 2);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node0);
+  auto input_tensor_desc0 = op_desc->MutableInputDesc(0);
+  ASSERT_NE(flow_attr_util.SetAttrsToTensorDesc(vec_input_attrs0, input_tensor_desc0), ge::GRAPH_SUCCESS);
+
+  CountBatch invalid_slide_stride;
+  invalid_slide_stride.batch_size = 10;
+  invalid_slide_stride.slide_stride = 20;
+  DataFlowInputAttr invalid_slide_stride_attr{DataFlowAttrType::COUNT_BATCH, (void *) &invalid_slide_stride};
+  std::vector<DataFlowInputAttr> vec_input_attrs1;
+  vec_input_attrs1.emplace_back(invalid_slide_stride_attr);
+  ASSERT_NE(flow_attr_util.SetAttrsToTensorDesc(vec_input_attrs1, input_tensor_desc0), ge::GRAPH_SUCCESS);
+
+  TimeBatch invalid_batch_dim;
+  invalid_batch_dim.batch_dim = -2;
+  DataFlowInputAttr invalid_batch_dim_attr{DataFlowAttrType::TIME_BATCH, (void *) &invalid_batch_dim};
+  std::vector<DataFlowInputAttr> vec_input_attrs2;
+  vec_input_attrs2.emplace_back(invalid_batch_dim_attr);
+  ASSERT_NE(flow_attr_util.SetAttrsToTensorDesc(vec_input_attrs2, input_tensor_desc0), ge::GRAPH_SUCCESS);
+}
 } // namespace ge

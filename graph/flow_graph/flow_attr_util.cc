@@ -61,6 +61,17 @@ bool FlowAttrUtil::CheckAttrsIsSupport(const std::vector<DataFlowInputAttr> &att
 graphStatus FlowAttrUtil::SetCountBatchAttr(const void *attr_value, GeTensorDescPtr &tensor_desc) {
   GE_ASSERT_NOTNULL(attr_value);
   const CountBatch *count_batch = static_cast<const CountBatch *>(attr_value);
+  if (count_batch->batch_size <= 0) {
+    GELOGE(FAILED, "CountBatch.batch_size should be larger than zero, but got %lld", count_batch->batch_size);
+    return ge::GRAPH_FAILED;
+  }
+
+  if ((count_batch->slide_stride < 0) || (count_batch->slide_stride > count_batch->batch_size)) {
+    GELOGE(FAILED, "CountBatch.slide_stride should in [0, %lld], but got %lld", count_batch->batch_size,
+           count_batch->slide_stride);
+    return ge::GRAPH_FAILED;
+  }
+
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(tensor_desc, ATTR_NAME_COUNT_BATCH_BATCH_SIZE, count_batch->batch_size));
 
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(tensor_desc, ATTR_NAME_COUNT_BATCH_SLIDE_STRIDE, count_batch->slide_stride));
@@ -86,6 +97,11 @@ graphStatus FlowAttrUtil::SetCountBatchAttr(const void *attr_value, GeTensorDesc
 graphStatus FlowAttrUtil::SetTimeBatchAttr(const void *attr_value, GeTensorDescPtr &tensor_desc) {
   GE_ASSERT_NOTNULL(attr_value);
   const TimeBatch *time_batch = static_cast<const TimeBatch *>(attr_value);
+  if (time_batch->batch_dim < -1) {
+    GELOGE(FAILED, "TimeBatch.batch_dim should be larger than -1, but got %lld", time_batch->batch_dim);
+    return ge::GRAPH_FAILED;
+  }
+
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(tensor_desc, ATTR_NAME_TIME_BATCH_TIME_WINDOW, time_batch->time_window));
 
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(tensor_desc, ATTR_NAME_TIME_BATCH_TIME_INTERVAL, time_batch->time_interval));
