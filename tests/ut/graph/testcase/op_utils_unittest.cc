@@ -92,10 +92,10 @@ TEST_F(UtestOpDescUtilsEx, CallInferFormatFunc_success) {
   EXPECT_EQ(OpDescUtilsEx::CallInferFormatFunc(op_desc, op), GRAPH_SUCCESS);
 }
 
-TEST_F(UtestOpDescUtilsEx, ResetType_success) {
+TEST_F(UtestOpDescUtilsEx, SetType_success) {
   auto op_desc = std::make_shared<OpDesc>();
   string type = "tmp";
-  OpDescUtilsEx::ResetType(op_desc, type);
+  OpDescUtilsEx::SetType(op_desc, type);
   EXPECT_EQ(op_desc->GetType(), type);
 }
 }
