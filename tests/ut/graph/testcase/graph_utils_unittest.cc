@@ -20,7 +20,6 @@
 #define private public
 
 #include "graph/utils/graph_utils.h"
-#include "graph/utils/graph_utils_inner.h"
 #include "graph/utils/node_utils.h"
 #include "graph/op_desc_impl.h"
 #include "graph/ge_local_context.h"
@@ -975,17 +974,13 @@ TEST_F(UtestGraphUtils, ReadProtoFromTextFileFileIsNull) {
 }
 
 TEST_F(UtestGraphUtils, DumpGEGraphToOnnxForLongName) {
-  const char_t *const kDumpPath = "./graph_dump";
   setenv("DUMP_GE_GRAPH", "1", 1);
-  //keep same dump path with other test case, because static var "static std::string path_prefix"  in GetDumpGraphPrefix
-  setenv(kDumpGraphPath, kDumpPath, 1);
   ComputeGraph compute_graph("test_graph0");
   const std::string suffit = "ge_proto_00000001_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.pbtxt";
   ge::GraphUtils::DumpGEGraphToOnnx(compute_graph, suffit);
-  unsetenv("DUMP_GE_GRAPH");
-  unsetenv(kDumpGraphPath);
+  setenv("DUMP_GE_GRAPH", "1", 1);
 }
 
 TEST_F(UtestGraphUtils, IsolateNodeNodeIsNull) {
