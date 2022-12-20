@@ -79,6 +79,16 @@ class FFTSPlusTaskUpdate {
     (void)task_info;
     return SUCCESS;
   }
+
+  virtual Status UpdateStaticDataCtx(size_t ctx_num, std::vector<uintptr_t> &io_addrs, size_t align_offset,
+                                     size_t host_io_base, std::map<size_t, std::vector<uint32_t>> &ctx_ids_map) {
+    (void)ctx_num;
+    (void)io_addrs;
+    (void)align_offset;
+    (void)host_io_base;
+    (void)ctx_ids_map;
+    return SUCCESS;
+  }
 };
 } // namespace ge
 #endif // INC_REGISTER_FFTS_PLUS_TASK_UPDATE_H_
