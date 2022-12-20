@@ -201,7 +201,7 @@ target_link_libraries(graph
         metadef_headers
 )
 
-target_link_libraries(graph PRIVATE graph_base error_manager ascend_protobuf)
+target_link_libraries(graph PRIVATE graph_base error_manager)
 target_compile_options(graph PRIVATE -O2)
 
 ######### libflow_graph.so #############
