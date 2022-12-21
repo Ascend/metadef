@@ -230,25 +230,6 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_External
             "success");
 }
 
-TEST_F(LoweringGlobalDataUT, GetSessionIdSameWithOneGlobalData) {
-  LoweringGlobalData gd;
-
-  auto session_id1 = gd.GetSessionId();
-  EXPECT_NE(session_id1, std::numeric_limits<uint64_t>::max());
-  auto session_id2 = gd.GetSessionId();
-  EXPECT_EQ(session_id1, session_id2);
-}
-
-TEST_F(LoweringGlobalDataUT, GetSessionIdDifferentWithDiffGlobalData) {
-  LoweringGlobalData gd1;
-
-  auto session_id1 = gd1.GetSessionId();
-  EXPECT_NE(session_id1, std::numeric_limits<uint64_t>::max());
-  LoweringGlobalData gd2;
-  auto session_id2 = gd2.GetSessionId();
-  EXPECT_EQ(session_id2, session_id1 + 1U);
-}
-
 TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_AlwaysReturnOnRootFrame_CallInSubgraph) {
   InitTestFrames();
   LoweringGlobalData gd;
