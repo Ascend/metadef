@@ -25,9 +25,6 @@
 
 namespace ge {
 namespace {
-// When nc1hwc0 dim size = 5, calc element count directly.
-const uint32_t kNc1hwc0CalcByDimsSize = 5U;
-
 // Unknown shape element num
 const int64_t kElementCntUnknownShape = -1;
 
@@ -39,24 +36,6 @@ const uint32_t kDimSize4d = 4U;
 
 // C1HWNCoC0 dim size must be 6
 const uint32_t kDimSizeC1hwncoc0 = 6U;
-
-// Cube size is 16
-const uint32_t kTheCubeSize = 16U;
-
-// Default c0 size equals cube size.
-const uint32_t kC0SizeDefault = kTheCubeSize;
-
-// Size equals int8 cube size is 32
-const uint32_t kC0SizeInt8 = 32U;
-
-// NCHW dim N index
-const uint32_t kNchwDimIndexN = 0U;
-// NCHW dim C index
-const uint32_t kNchwDimIndexC = 1U;
-// NCHW dim H index
-const uint32_t kNchwDimIndexH = 2U;
-// NCHW dim W index
-const uint32_t kNchwDimIndexW = 3U;
 
 const int64_t kDataMemAlignSize = 32;
 const int64_t kNum2 = 2;
@@ -126,117 +105,6 @@ static graphStatus CalcElementCntOfFixedDims(const std::vector<int64_t> &dims, c
            format, TypeUtils::FormatToSerialString(format).c_str(), fixed_dim_size, dims.size());
   }
   return CalcElementCntByDims(dims, element_cnt);
-}
-
-///
-/// Get dim c0 size by type
-/// @param data_type data type
-/// @return c0 size
-///
-static uint32_t GetDimC0(DataType &data_type) {
-  const bool is_int8_size = (data_type == DT_INT8) || (data_type == DT_UINT8) || (data_type == DT_DUAL_SUB_UINT8) ||
-                            (data_type == DT_DUAL_SUB_INT8) || (data_type == DT_BOOL) || (data_type == DT_QINT8);
-  return is_int8_size ? kC0SizeInt8 : kC0SizeDefault;
-}
-
-///
-/// Calculate nc1hwc0 element num.
-/// @param dims dim info
-/// @param data_type data type
-/// @param element_cnt element count
-/// @return GRAPH_SUCCESS:success
-///         other:failed
-///
-static graphStatus CalcElementCntOfNc1hwc0(const std::vector<int64_t> &dims, DataType data_type, int64_t &element_cnt) {
-  // When nc1hwc0 dims size = 5, no need split dim c
-  if (dims.size() == kNc1hwc0CalcByDimsSize) {
-    return CalcElementCntByDims(dims, element_cnt);
-  } else if (dims.size() != kDimSize4d) {
-    REPORT_INNER_ERROR("E18888", "CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.",
-                       dims.size(), kDimSize4d, kNc1hwc0CalcByDimsSize);
-    GELOGE(GRAPH_FAILED, "[Check][Param] CalcElementCntOfNc1hwc0 failed as dims.size=%zu is not %u or %u.",
-           dims.size(), kDimSize4d, kNc1hwc0CalcByDimsSize);
-    return GRAPH_FAILED;
-  } else {
-    // else branch
-  }
-
-  const auto c0 = static_cast<int64_t>(GetDimC0(data_type));
-  // Nc1hwc0 dims is according to nchw, dim c index is 1.
-  const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIndexC]) * 1.0 /
-                  static_cast<float64_t>(c0)));
-  // Store dims is split c to c1 and c0.
-  const std::vector<int64_t> store_dims = {dims[kNchwDimIndexN], c1,
-                                           dims[kNchwDimIndexH], dims[kNchwDimIndexW], c0};
-  return CalcElementCntByDims(store_dims, element_cnt);
-}
-
-///
-/// Calculate FractalZ element num.
-/// @param dims dim info
-/// @param data_type data type
-/// @param element_cnt element count
-/// @return GRAPH_SUCCESS:success
-///         other:failed
-///
-static graphStatus CalcElementCntOfFractalZ(const std::vector<int64_t> &dims, DataType data_type,
-                                            int64_t &element_cnt) {
-  static char_t parser_priority[MMPA_MAX_PATH]{};
-  const INT32 res = mmGetEnv("PARSER_PRIORITY", &parser_priority[0], static_cast<uint32_t>(MMPA_MAX_PATH));
-  if ((res == EN_OK) && (std::string(parser_priority) == "cce")) {
-    if (dims.size() != kDimSize4d) {
-      REPORT_INNER_ERROR("E18888", "CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
-                         dims.size(), kDimSize4d);
-      GELOGE(GRAPH_FAILED, "[Check][Param] CalcElementCntOfFractalZ failed as dims.size=%zu is not %u.",
-             dims.size(), kDimSize4d);
-      return GRAPH_FAILED;
-    }
-    const auto c0 = static_cast<int64_t>(GetDimC0(data_type));
-    // FractalZ dims is according to nchw, dim c index is 1.
-    const auto c1 = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIndexC]) * 1.0 /
-                    static_cast<float64_t>(c0)));
-
-    // Spread NC1HWC0 as a two dimension array, n as column dimension,
-    // C1HWC0 as row dimension
-    const std::vector<int64_t> r_count_vec = {c1, dims[kNchwDimIndexH],
-                                              dims[kNchwDimIndexW], c0};
-
-    int64_t r_count = 1;
-    const graphStatus graph_status = CalcElementCntByDims(r_count_vec, r_count);
-    if (graph_status != GRAPH_SUCCESS) {
-      GELOGE(graph_status, "[Get][Cnt] Calc [%ld, %ld, %ld, %ld] element count failed.",
-             c1, dims[kNchwDimIndexH], dims[kNchwDimIndexW], c0);
-      return graph_status;
-    }
-
-    // Cube count in n
-    const auto nc_cnt = static_cast<int64_t>(std::ceil(static_cast<float64_t>(dims[kNchwDimIndexN]) * 1.0 /
-                        static_cast<float64_t>(kTheCubeSize)));
-
-    // Cube count in vertical direction(C1HWC0)
-    const int64_t vc_cnt = r_count / c0;
-    // Element count in each cube
-    const int64_t cube_elem_cnt = c0 * static_cast<int64_t>(kTheCubeSize);
-
-    if (CheckMultiplyOverflowInt64(nc_cnt, vc_cnt)) {
-      REPORT_INNER_ERROR("E18888", "The multiplication of %ld and %ld will overflow.", nc_cnt, vc_cnt);
-      GELOGE(GRAPH_FAILED, "[Check][Overflow] The multiplication of %ld and %ld is overflow.", nc_cnt, vc_cnt);
-      return GRAPH_FAILED;
-    }
-    // Read data times needed by cube
-    const int64_t c_cnt = nc_cnt * vc_cnt;
-
-    if (CheckMultiplyOverflowInt64(c_cnt, cube_elem_cnt)) {
-      REPORT_INNER_ERROR("E18888", "The multiplication of %ld and %ld will overflow.", c_cnt, cube_elem_cnt);
-      GELOGE(GRAPH_FAILED, "[Check][Overflow] The multiplication of %ld and %ld is overflow.", c_cnt, cube_elem_cnt);
-      return GRAPH_FAILED;
-    }
-    // Element count after fractal arrangement
-    element_cnt = c_cnt * cube_elem_cnt;
-    return GRAPH_SUCCESS;
-  } else {
-    return CalcElementCntByDims(dims, element_cnt);
-  }
 }
 
 static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_desc,
@@ -319,11 +187,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, const 
       graph_status = CalcElementCntOfFixedDims(dims, format, kDimSizeC1hwncoc0, element_cnt);
       break;
     case FORMAT_NC1HWC0:
-      graph_status = CalcElementCntOfNc1hwc0(dims, data_type, element_cnt);
-      break;
     case FORMAT_FRACTAL_Z:
-      graph_status = CalcElementCntOfFractalZ(dims, data_type, element_cnt);
-      break;
     case FORMAT_FILTER_HWCK:
     case FORMAT_FRACTAL_NZ:
     case FORMAT_FRACTAL_ZZ:

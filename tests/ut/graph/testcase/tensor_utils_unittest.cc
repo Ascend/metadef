@@ -227,28 +227,6 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSize_MD_SUCCESS) {
   EXPECT_EQ(mem_size, expect_mem_size);
 }
 
-TEST_F(ge_test_tensor_utils, CalcTensorMemSize_NC1HWC0_shape_error_less) {
-  vector<int64_t> dims({2, 3, 4});
-  GeShape ge_shape(dims);
-  Format format = FORMAT_NC1HWC0;
-  DataType data_type = DT_INT8;
-  int64_t mem_size = 0;
-  graphStatus ret =
-      TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
-  EXPECT_NE(ret, GRAPH_SUCCESS);
-}
-
-TEST_F(ge_test_tensor_utils, CalcTensorMemSize_NC1HWC0_shape_error_more) {
-  vector<int64_t> dims({2, 3, 4, 5, 6, 7});
-  GeShape ge_shape(dims);
-  Format format = FORMAT_NC1HWC0;
-  DataType data_type = DT_UINT8;
-  int64_t mem_size = 0;
-  graphStatus ret =
-      TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
-  EXPECT_NE(ret, GRAPH_SUCCESS);
-}
-
 TEST_F(ge_test_tensor_utils, CalcTensorMemSize_NC1HWC0_SUCCESS_NONEEDPAD) {
   vector<int64_t> dims({10, 32, 3, 5});
   GeShape ge_shape(dims);
@@ -256,23 +234,6 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSize_NC1HWC0_SUCCESS_NONEEDPAD) {
   DataType data_type = DT_FLOAT16;
   int64_t expect_mem_size = sizeof(uint16_t);
   for (int64_t dim:dims) {
-    expect_mem_size *= dim;
-  }
-  int64_t mem_size = 0;
-  graphStatus ret =
-      TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
-  EXPECT_EQ(mem_size, expect_mem_size);
-}
-
-TEST_F(ge_test_tensor_utils, CalcTensorMemSize_NC1HWC0_SUCCESS_NEEDPAD) {
-  vector<int64_t> dims({10, 20, 3, 5});
-  vector<int64_t> pad_dims({10, 32, 3, 5});
-  GeShape ge_shape(dims);
-  Format format = FORMAT_NC1HWC0;
-  DataType data_type = DT_FLOAT16;
-  int64_t expect_mem_size = sizeof(uint16_t);
-  for (int64_t dim:pad_dims) {
     expect_mem_size *= dim;
   }
   int64_t mem_size = 0;
