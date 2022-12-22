@@ -148,15 +148,15 @@ class Tensor {
     if (ge::AddOverflow(total_size, sizeof(Tensor), total_size)) {
       return nullptr;
     }
-    auto holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
-    if (holder == nullptr) {
+    auto tensor_holder = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[total_size]);
+    if (tensor_holder == nullptr) {
       return nullptr;
     }
-    auto tensor = reinterpret_cast<Tensor *>(holder.get());
-    new (holder.get()) Tensor({}, {},  dt);
+    auto tensor = reinterpret_cast<Tensor *>(tensor_holder.get());
+    new (tensor_holder.get()) Tensor({}, {},  dt);
     tensor->SetPlacement(kFollowing);
     tensor->tensor_data_ = TensorData(nullptr, nullptr, total_size - sizeof(Tensor), kFollowing);
-    return holder;
+    return tensor_holder;
   }
   /**
    * 获取运行shape
