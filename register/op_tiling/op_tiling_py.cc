@@ -254,8 +254,9 @@ ge::graphStatus ParseConstValue(const nlohmann::json &input, const gert::Storage
     }
 
     size_t total_size = 0UL;
-    auto tensor_holder = gert::Tensor::CreateFollowing(storage_shape.GetStorageShape().GetShapeSize(),
-                                                       tensor_desc.GetDataType(), total_size);
+    size_t tensor_size = static_cast<size_t>(ge::GetSizeInBytes(storage_shape.GetStorageShape().GetShapeSize(),
+                                                                tensor_desc.GetDataType()));
+    auto tensor_holder = gert::Tensor::CreateFollowing(tensor_desc.GetDataType(), tensor_size, total_size);
     GE_CHECK_NOTNULL(tensor_holder);
     auto func = kFuncTable.Find(tensor_desc.GetDataType());
     GE_CHECK_NOTNULL(func);

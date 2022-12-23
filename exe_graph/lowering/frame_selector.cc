@@ -29,8 +29,8 @@
 namespace gert {
 namespace bg {
 namespace {
-ge::OutDataAnchorPtr CreateInnerData(const ge::ComputeGraphPtr &graph, const GraphFrame &graph_frame, size_t index) {
-  ValueHolder::GenerateNodeName(kInnerData, graph_frame);
+ge::OutDataAnchorPtr CreateInnerData(const ge::ComputeGraphPtr &graph, const GraphFrame &graph_frame,
+                                     const size_t index) {
   auto op_desc = ge::ComGraphMakeShared<ge::OpDesc>(ValueHolder::GenerateNodeName(kInnerData, graph_frame), kInnerData);
   GE_ASSERT_NOTNULL(op_desc);
   GE_ASSERT_SUCCESS(op_desc->AddOutputDesc(ge::GeTensorDesc()));

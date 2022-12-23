@@ -928,12 +928,10 @@ void GeTensorDesc::SetPlacement(const Placement placement) {
 }
 
 graphStatus GeTensorDesc::IsValid() const {
-  auto const data_type = this->GetDataType();
-  auto const format  = this->GetFormat();
-  if ((data_type == DT_UNDEFINED) && (format == FORMAT_RESERVED)) {
-    return GRAPH_PARAM_INVALID;
+  if ((this->GetDataType() != DT_UNDEFINED) || (this->GetFormat() != FORMAT_RESERVED)) {
+    return GRAPH_SUCCESS;
   }
-  return GRAPH_SUCCESS;
+  return GRAPH_PARAM_INVALID;
 }
 
 GeTensorDesc GeTensorDesc::Clone() const { return *this; }

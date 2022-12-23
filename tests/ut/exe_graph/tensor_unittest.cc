@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/runtime/tensor.h"
+#include "graph/ge_tensor.h"
 #include <gtest/gtest.h>
 namespace gert {
 class TensorUT : public testing::Test {};
@@ -160,5 +161,21 @@ TEST_F(TensorUT, CreateFollowingCheckTotalSize) {
   EXPECT_NE(ptr, nullptr);
   auto tensor = reinterpret_cast<Tensor *>(ptr.get());
   EXPECT_EQ(tensor->GetSize(), 32);
+}
+
+TEST_F(TensorUT, CreateFollowingWithTensorCheckTotalSize) {
+  size_t total_size;
+  auto ptr = Tensor::CreateFollowing(ge::DT_FLOAT, 8U, total_size);
+  EXPECT_NE(ptr, nullptr);
+  auto tensor = reinterpret_cast<Tensor *>(ptr.get());
+  EXPECT_EQ(tensor->GetSize(), 8);
+}
+
+TEST_F(TensorUT, CreateFollowingWithTensorUseStringTypeCheckTotalSize) {
+  size_t total_size;
+  auto ptr = Tensor::CreateFollowing(ge::DT_STRING, 160U, total_size);
+  EXPECT_NE(ptr, nullptr);
+  auto tensor = reinterpret_cast<Tensor *>(ptr.get());
+  EXPECT_EQ(tensor->GetSize(), 160);
 }
 }  // namespace gert

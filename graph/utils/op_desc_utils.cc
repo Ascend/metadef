@@ -51,6 +51,34 @@ void GetConstantOpName(std::string &op_name) {
   }
   ++const_count;
 }
+
+bool FindSubsequentMatches(const OpDescPtr &op_desc, size_t start_index, const std::string &ir_name) {
+  for (size_t i = start_index; i < op_desc->GetInputsSize(); ++i) {
+    const auto name = op_desc->GetValidInputNameByIndex(i);
+    if (name == ir_name) {
+      GELOGI("ir_name:%s, node input index:%zu", ir_name.c_str(), i);
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string InputsNamesStr(const OpDescPtr &op_desc) {
+  std::stringstream ss;
+  ss << "node: " << op_desc->GetName() << "(" << op_desc->GetType() << ") ir inputs names: [";
+  for (const auto &ir_input : op_desc->GetIrInputs()) {
+    ss << ir_input.first << ", ";
+  }
+  ss << "], actual inputs names: [";
+  for (size_t i = 0U; i < op_desc->GetAllInputsSize(); i++) {
+    if (op_desc->MutableInputDesc(static_cast<uint32_t>(i)) != nullptr) {
+      const auto valid_name = op_desc->GetInputNameByIndex(static_cast<uint32_t>(i));
+      ss << valid_name << ", ";
+    }
+  }
+  ss << "]";
+  return ss.str();
+}
 }
 
 bool OpDescUtils::ClearInputDesc(const NodePtr &node) {
@@ -1101,6 +1129,11 @@ ge::graphStatus OpDescUtils::GetInstanceNum(const OpDescPtr &op_desc, size_t ir_
       GELOGW("Failed to get instance num for node %s, can not find the input for ir name %s, current index %zu, "
              "current name %s",
              op_desc->GetName().c_str(), ir_name.c_str(), start_index, name.c_str());
+      if (FindSubsequentMatches(op_desc, start_index + 1U, ir_name)) {
+        GELOGE(ge::FAILED, "Find another input name that match ir name. ir_index:%zu, ir_name:%s, inputs names:%s",
+               ir_index, ir_name.c_str(), InputsNamesStr(op_desc).c_str());
+        return FAILED;
+      }
     }
     instance_num = 1U;
     return ge::SUCCESS;
@@ -1150,9 +1183,9 @@ std::map<size_t, std::pair<size_t, size_t>> OpDescUtils::GetInputIrIndexes2Insta
     input_index += instance_num;
   }
   if (input_index != op_desc->GetInputsSize()) {
-    GELOGI("node [%s(%s)] input does not traverse to the end, input_index[%zu], inputs_size[%zu]",
-           op_desc->GetName().c_str(), op_desc->GetType().c_str(), input_index, op_desc->GetInputsSize());
-    return {};
+    GELOGI("node [%s(%s)] input does not traverse to the end, input_index[%zu], inputs_size[%zu], inputs names:%s",
+           op_desc->GetName().c_str(), op_desc->GetType().c_str(), input_index,
+           op_desc->GetInputsSize(), InputsNamesStr(op_desc).c_str());
   }
   return ir_index_to_instance_index_pair_map;
 }
@@ -1178,9 +1211,10 @@ ge::graphStatus OpDescUtils::GetInputIrIndexByInstanceIndex(const OpDescPtr &op_
     }
     input_index += instance_num;
   }
-  GELOGE(ge::GRAPH_FAILED, "node [%s(%s)] failed to get ir index by instance index[%zu], input_index[%zi]",
-         op_desc->GetName().c_str(), op_desc->GetType().c_str(), instance_index, input_index);
-  return GRAPH_FAILED;
+  ir_index = std::numeric_limits<size_t>::max();
+  GELOGW("node [%s(%s)] failed to get ir index by instance index[%zu], input_index[%zi], set ir_index to %zu",
+         op_desc->GetName().c_str(), op_desc->GetType().c_str(), instance_index, input_index, ir_index);
+  return GRAPH_SUCCESS;
 }
 }  // namespace ge
 /*lint +e512 +e737 +e752*/

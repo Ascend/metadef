@@ -43,17 +43,17 @@ struct OpImplKernelRegistry {
     /*
      * param index: must be ir index
      */
-    bool IsInputDataDependency(const int32_t index) const {
-      if ((index < 0) || (static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount)) {
+    bool IsInputDataDependency(const size_t index) const {
+      if (index >= sizeof(inputs_dependency) * kInt64ByteCount) {
         return false;
       }
-      return static_cast<bool>(inputs_dependency & static_cast<uint64_t>(1) << static_cast<uint32_t>(index));
+      return static_cast<bool>(inputs_dependency & static_cast<uint64_t>(1) << index);
     }
-    ge::graphStatus SetInputDataDependency(const int32_t index) {
-      if ((index < 0) || (static_cast<size_t>(index) >= sizeof(inputs_dependency) * kInt64ByteCount)) {
+    ge::graphStatus SetInputDataDependency(const size_t index) {
+      if (index >= sizeof(inputs_dependency) * kInt64ByteCount) {
         return ge::GRAPH_FAILED;
       }
-      inputs_dependency |= 1UL << static_cast<uint64_t>(index);
+      inputs_dependency |= 1UL << index;
       return ge::GRAPH_SUCCESS;
     }
 

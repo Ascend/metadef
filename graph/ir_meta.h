@@ -85,6 +85,7 @@ class IRMetaData {
   // branches: dynamic
   std::map<std::string, SubgraphType> subgraph_ir_names_to_type_;
   IRDataTypeSymbolStore dtype_symbol_store_;
+  std::set<std::string> register_unique_name_;
 };
 
 class OpMetadata {
