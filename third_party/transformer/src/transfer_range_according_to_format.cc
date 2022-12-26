@@ -41,7 +41,7 @@ bool RangeTransferAccordingToFormat::GetRangeAccordingToFormat(const ge::OpDescP
     return false;
   }
   range_and_format_info.new_range.clear();
-  for (size_t i = 0; i < range_and_format_info.new_range.size(); ++i) {
+  for (size_t i = 0; i < shape_low.GetDimNum(); ++i) {
     range_and_format_info.new_range.emplace_back(shape_low.GetDim(i), shape_upper.GetDim(i));
   }
   return res;
@@ -69,7 +69,7 @@ bool RangeTransferAccordingToFormat::GetRangeAccordingToFormat(RangeAndFormat &r
     return false;
   }
   range_and_format_info.new_range.clear();
-  for (size_t i = 0; i < range_and_format_info.new_range.size(); ++i) {
+  for (size_t i = 0; i < shape_low.GetDimNum(); ++i) {
     range_and_format_info.new_range.emplace_back(shape_low.GetDim(i), shape_upper.GetDim(i));
   }
   return res;
