@@ -153,10 +153,12 @@ USED_BY_JSON void from_json(const Json &j, TensorSliceDeployment &tensor_slice_d
 USED_BY_JSON void to_json(Json &j, const TensorDeployment &tensor_deployment) {
   j = Json();
   j["shard_deployment"] = tensor_deployment.shard_deployment;
+  j["verbose"] = tensor_deployment.verbose;
 }
 
 USED_BY_JSON void from_json(const Json &j, TensorDeployment &tensor_deployment) {
   GetValue(j, "shard_deployment", tensor_deployment.shard_deployment);
+  GetValue(j, "verbose", tensor_deployment.verbose);
 }
 
 USED_BY_JSON void to_json(Json &j, const NodeDeployment &node_deployment) {
