@@ -487,8 +487,7 @@ graphStatus GraphUtils::InsertNodeBefore(const InDataAnchorPtr &dst,
   for (const auto &peer_out_ctrl_anchor : in_ctrl_anchor->GetPeerOutControlAnchors()) {
     GE_CHECK_NOTNULL(peer_out_ctrl_anchor);
     const auto peer_node = peer_out_ctrl_anchor->GetOwnerNode();
-    const auto node_type = NodeUtils::GetNodeType(peer_node);
-    if (node_type == ATOMICADDRCLEAN) {
+    if (NodeUtils::IsLikeAtomicClean(peer_node)) {
       continue;
     }
     if ((RemoveEdge(peer_out_ctrl_anchor, in_ctrl_anchor) != GRAPH_SUCCESS) ||

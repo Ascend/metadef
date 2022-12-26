@@ -1115,4 +1115,9 @@ bool NodeUtils::IsDtResourceNode(const NodePtr &node) {
   }
   return false;
 }
+
+bool NodeUtils::IsLikeAtomicClean(const NodePtr &node) {
+  const auto node_type = NodeUtils::GetNodeType(node);
+  return (node_type == ATOMICADDRCLEAN) || (node_type == ATOMIC_MEMSET);
+}
 }  // namespace ge
