@@ -153,7 +153,7 @@ target_link_libraries(graph_base
 )
 
 target_link_libraries(graph_base PRIVATE ascend_protobuf error_manager)
-target_compile_options(graph_base PRIVATE -O2)
+target_compile_options(graph_base PRIVATE -O2 -Werror)
 
 ######### libgraph.so #############
 add_library(graph SHARED

@@ -17,7 +17,6 @@
 #include "graph/aligned_ptr.h"
 #include "common/util/mem_utils.h"
 #include "graph/debug/ge_log.h"
-#include "graph/debug/ge_util.h"
 #include "graph/def_types.h"
 
 namespace ge {
@@ -58,9 +57,8 @@ std::unique_ptr<uint8_t[], AlignedPtr::Deleter> AlignedPtr::Reset() {
   } else {
     const auto base_addr = base_.release();
     return
-      std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(aligned_addr_, [deleter_func, base_addr](const uint8_t *ptr) {
+      std::unique_ptr<uint8_t[], AlignedPtr::Deleter>(aligned_addr_, [deleter_func, base_addr](const uint8_t *) {
       deleter_func(base_addr);
-      ptr = nullptr;
     });
   }
 }

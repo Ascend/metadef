@@ -27,7 +27,6 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
-#include "graph/utils/constant_utils.h"
 #include "common/checker.h"
 
 namespace ge {
@@ -423,7 +422,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus NodeUtils::RemoveOutp
 GeTensorDesc NodeUtils::GetOutputDesc(const Node &node, const uint32_t index) {
   const auto desc = node.GetOpDesc();
   if (desc == nullptr) {
-    return GeTensorDesc();
+    return {};
   }
   return desc->GetOutputDesc(index);
 }
@@ -905,14 +904,14 @@ std::vector<std::pair<InDataAnchorPtr, NodePtr>> NodeUtils::GetOutDataNodesWithA
     return out_data_nodes;
   }
 
-  for (const auto peer_in_anchor : out_data_anchor->GetPeerInDataAnchors()) {
+  for (const auto &peer_in_anchor : out_data_anchor->GetPeerInDataAnchors()) {
     if (peer_in_anchor == nullptr) {
       continue;
     }
     if (peer_in_anchor->GetOwnerNode() == nullptr) {
       continue;
     }
-    out_data_nodes.emplace_back(std::make_pair(peer_in_anchor, peer_in_anchor->GetOwnerNode()));
+    out_data_nodes.emplace_back(peer_in_anchor, peer_in_anchor->GetOwnerNode());
   }
   return out_data_nodes;
 }
@@ -951,7 +950,7 @@ NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
     GELOGE(GRAPH_FAILED, "[Check][Param] The OpDesc ptr should not be null.");
     return nullptr;
   }
-  const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
+  auto node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op_desc, nullptr));
   if (node_ptr == nullptr) {
     REPORT_CALL_ERROR("E18888", "create node failed.");
     GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!");

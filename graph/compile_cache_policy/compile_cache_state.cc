@@ -50,7 +50,7 @@ CacheItemId CompileCacheState::AddCache(const CompileCacheDesc &compile_cache_de
   auto &cached_item = iter->second;
   for (size_t idx = 0UL; idx < cached_item.size(); idx++) {
     if (CompileCacheDesc::IsSameCompileDesc(cached_item[idx].desc_, compile_cache_desc)) {
-      GELOGW("[AddCache] Same CompileCacheDesc has already been added, whose cache_item is %ld",
+      GELOGW("[AddCache] Same CompileCacheDesc has already been added, whose cache_item is %" PRIu64,
              cached_item[idx].item_id_);
       return cached_item[idx].item_id_;
     }

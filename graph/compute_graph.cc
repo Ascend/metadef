@@ -17,7 +17,6 @@
 #include "graph/compute_graph.h"
 
 #include <deque>
-#include "graph/format_refiner.h"
 #include "graph/ge_context.h"
 #include "graph/debug/ge_attr_define.h"
 #include "debug/ge_log.h"
@@ -25,9 +24,7 @@
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "common/util/error_manager/error_manager.h"
-#include "graph/shape_refiner.h"
 #include "graph/compute_graph_impl.h"
-#include "proto/ge_ir.pb.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
@@ -781,7 +778,7 @@ graphStatus ComputeGraphImpl::InsertGraphEvents(const ConstComputeGraphPtr &comp
   }
 
   // Partition subgraph
-  for (const auto graph : sub_graph_) {
+  for (const auto &graph : sub_graph_) {
     status = graph->ReorderEventNodes();
     if (status != GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E18888", "ReorderEventNodes failed for SubGraph:%s, status:%d",
@@ -906,7 +903,7 @@ graphStatus ComputeGraphImpl::CollectBreadthOutNode(const NodePtr &node, std::ma
     }
   }
   if (node->GetOutControlAnchor() != nullptr) {
-    for (const AnchorPtr peer_in_anchor : node->GetOutControlAnchor()->GetPeerAnchors()) {
+    for (const AnchorPtr &peer_in_anchor : node->GetOutControlAnchor()->GetPeerAnchors()) {
       const auto iter = map_in_edge_num.find(peer_in_anchor->GetOwnerNode());
       if (iter != map_in_edge_num.end()) {
         --iter->second;
@@ -1404,7 +1401,7 @@ void ComputeGraphImpl::SetUserDefOutput(const std::string &output_name) {
   }
 
   const std::vector<std::string> nodes = StringUtils::Split(output_name, ';');
-  for (const std::string node : nodes) {
+  for (const std::string &node : nodes) {
     std::vector<std::string> item = StringUtils::Split(node, ':');
     if (item.size() != OUTPUT_PARAM_SIZE) {
       REPORT_INNER_ERROR("W18888", "Check output param size failed, output_name:%s", output_name.c_str());

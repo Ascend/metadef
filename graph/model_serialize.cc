@@ -32,7 +32,6 @@
 #include "graph/ge_tensor_impl.h"
 #include "graph/compute_graph_impl.h"
 #include "graph/serialization/attr_serializer_registry.h"
-#include "proto/ge_ir.pb.h"
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
 #include "common/util/mem_utils.h"
@@ -292,7 +291,7 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *cons
       return false;
     }
   }
-  for (const auto subgraph : subgraphs) {
+  for (const auto &subgraph : subgraphs) {
     if (!SerializeGraph(subgraph, model_proto->add_graph(), is_dump)) {
       GELOGE(GRAPH_FAILED, "[Serialize][Subgraph] failed");
       return false;
@@ -366,7 +365,7 @@ void ModelSerializeImp::AttrDefToOpDescIrDef(OpDescPtr &op_desc, proto::OpDef &o
     const auto &value_list = op_def_proto.attr().at("_ir_inputs_value").list();
     for (const auto &value : value_list.i()) {
       if (value >= kIrInputTypeEnd) {
-        GELOGW("[ParseAttrDef][CheckParam] ir inputs value[%ld] is invalid, valid range is [%d-%d)",
+        GELOGW("[ParseAttrDef][CheckParam] ir inputs value[%" PRId64 "] is invalid, valid range is [%d-%d)",
                value, kIrInputRequired, kIrInputTypeEnd);
         return;
       }

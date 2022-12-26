@@ -16,11 +16,9 @@
 
 #include "graph/utils/graph_utils.h"
 
-#include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
-#include <sys/types.h>
 #include <algorithm>
 #include <cstring>
 #include <fstream>
@@ -59,10 +57,10 @@ const int32_t kBaseOfIntegerValue = 10;
 #ifdef FMK_SUPPORT_DUMP
 const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
 const int32_t kDumpGraphIndexWidth = 8;
-#endif
-
 const char_t *const kNpuCollectPath = "NPU_COLLECT_PATH";
 const char_t *const kDumpGraphPath = "DUMP_GRAPH_PATH";
+#endif
+
 const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
 const char_t *const kDumpStrBuild = "Build";
 const char_t *const kDumpStrPartition = "partition";
@@ -604,6 +602,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(con
 }
 
 namespace {
+#ifdef FMK_SUPPORT_DUMP
 void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   static std::string path_prefix;
   if (path_prefix.empty()) {
@@ -628,7 +627,6 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   }
 }
 
-#ifdef FMK_SUPPORT_DUMP
 graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
                             const std::string &user_graph_name, std::string &real_path_name) {
   std::string relative_path;
@@ -692,7 +690,8 @@ inline graphStatus CheckDumpGraphNum(const int64_t file_index) {
     max_dump_file_num = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
   }
   if ((max_dump_file_num != 0) && (file_index > max_dump_file_num)) {
-    GELOGW("[DumpGraph][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
+    GELOGW("[DumpGraph][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%" PRId64
+           ", max_dump_file_num=%" PRId64,
            file_index, max_dump_file_num);
     return GRAPH_PARAM_INVALID;
   }
@@ -721,7 +720,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   // file name
   static std::atomic<int64_t> atomic_file_index(0);
   const auto file_index = atomic_file_index.fetch_add(1);
-  GELOGD("Start to dump om txt: %ld", file_index);
+  GELOGD("Start to dump om txt: %" PRId64, file_index);
   if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) { return; }
   std::string real_path_name;
   auto const ret = GetDumpRealPath(file_index, suffix, user_graph_name, real_path_name);
@@ -733,9 +732,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   // Create model
   ge::Model model("", "");
   model.SetGraph(graph);
-  const ge::DumpLevel dump_level = (dump_ge_graph != nullptr)
-      ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue))
-      : ge::DumpLevel::NO_DUMP;
+  const ge::DumpLevel dump_level =
+      static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue));
   ge::proto::ModelDef ge_proto;
   if (model.Save(ge_proto, (dump_level != ge::DumpLevel::DUMP_ALL) && (!is_always_dump)) != SUCCESS) {
     return;
@@ -743,7 +741,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
 
 #else
+  (void)graph;
+  (void)suffix;
   (void)is_always_dump;
+  (void)user_graph_name;
   GELOGW("[DumpGraph][Check] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
 }
@@ -803,7 +804,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
   // file name
   static std::atomic<int64_t> atomic_file_index(0);
   const auto file_index = atomic_file_index.fetch_add(1);
-  GELOGD("Start to dump om txt: %ld", file_index);
+  GELOGD("Start to dump om txt: %" PRId64, file_index);
   if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) { return; }
 
   std::stringstream stream_file_name;
@@ -927,8 +928,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::WriteProtoToText
       max_dump_file_size = std::strtol(opt.c_str(), nullptr, kBaseOfIntegerValue);
     }
     if ((max_dump_file_size != 0) && (fileSize != -1) && (fileSize > max_dump_file_size)) {
-      GELOGW("[WriteProto][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%ld, max_dump_file_num=%ld",
-             fileSize, max_dump_file_size);
+      GELOGW("[WriteProto][Check] dump_graph_num exceeds max_dump_file_num, dump_graph_num=%" PRId64 ","
+             " max_dump_file_num=%" PRId64, fileSize, max_dump_file_size);
       GE_IF_BOOL_EXEC(remove(real_path) != 0, GELOGW("[WriteProto][RemovePath] Remove path %s failed", real_path));
       GE_CHK_BOOL_EXEC(fclose(file) == 0,
                        REPORT_CALL_ERROR("E18888", "close file:%s failed, error:%s", real_path, strerror(errno));
@@ -978,7 +979,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
       (res == EN_OK) ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue))
                      : DumpLevel::NO_DUMP;
   if ((dump_ge_graph_level == DumpLevel::NO_DUMP) || (dump_ge_graph_level >= DumpLevel::DUMP_LEVEL_END)) {
-    GELOGD("Skip DumpGEGraphToOnnx with dump_ge_graph_level %ld.", dump_ge_graph_level);
+    GELOGD("Skip DumpGEGraphToOnnx with dump_ge_graph_level %" PRId32 ".", dump_ge_graph_level);
     return;
   }
 
@@ -1000,7 +1001,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   // 2.Set file name
   static std::atomic<int64_t> atomic_file_index(0);
   const auto file_index = atomic_file_index.fetch_add(1);
-  GELOGD("Start to dump ge onnx file: %ld", file_index);
+  GELOGD("Start to dump ge onnx file: %" PRId64, file_index);
   if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) { return; }
 
   std::stringstream stream_file_name;
@@ -1039,6 +1040,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   // 3. Serialize to file in current path
   GraphUtils::WriteProtoToTextFile(model_proto, real_path.get());
 #else
+  (void)compute_graph;
+  (void)suffix;
   GELOGW("[DumpGraph][Check] Need to define FMK_SUPPORT_DUMP for dump graph.");
 #endif
 }
@@ -1059,7 +1062,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGrphToOnnx(c
   // 2.Set file name
   static std::atomic<int64_t> atomic_file_index(0);
   const auto file_index = atomic_file_index.fetch_add(1);
-  GELOGD("Start to dump ge onnx file: %ld", file_index);
+  GELOGD("Start to dump ge onnx file: %" PRId64, file_index);
   if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) { return; }
 
   std::stringstream stream_file_name;
@@ -2997,7 +3000,7 @@ graphStatus GraphUtils::RelinkDataEdges(const NodePtr &subgraph_node, const Grap
   }
   // out data nodes
   for (const auto &item : graph_info.data_outputs_) {
-    const auto &out_data_anchor = subgraph_node->GetOutDataAnchor(static_cast<const int32_t>(item.first));
+    const auto &out_data_anchor = subgraph_node->GetOutDataAnchor(static_cast<int32_t>(item.first));
     GE_CHECK_NOTNULL(out_data_anchor);
     for (const auto &peer_in_anchor : item.second.second) {
       GE_CHK_STATUS_RET(item.second.first->Unlink(peer_in_anchor), "[Remove][DataEdge] %s:%d->%s:%d failed.",
