@@ -20,24 +20,14 @@
 #include "register/shape_inference.h"
 
 namespace gert {
-OpImplRegister::OpImplRegister(const char *op_type) : op_type_(op_type) {
-  functions_.infer_shape = nullptr;
-  functions_.infer_shape_range = nullptr;
-  functions_.infer_datatype = nullptr;
-  functions_.tiling = nullptr;
-  functions_.tiling_parse = nullptr;
-  functions_.compile_info_creator = nullptr;
-  functions_.compile_info_deleter = nullptr;
-  functions_.max_tiling_data_size = 0;
-  functions_.inputs_dependency = 0;
-  functions_.is_register = false;
-}
-OpImplRegister::OpImplRegister(const OpImplRegister &other) {
-  OpImplRegistry::GetInstance().RegisterOpImpl(other.op_type_, other.functions_);
+OpImplRegister::OpImplRegister(const char *op_type)
+    : op_type_(op_type),
+      functions_(OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type)) {
+  functions_.private_attrs.clear();
+  functions_.unique_private_attrs.clear();
 }
 
 OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func) {
-  functions_.is_register = true;
   functions_.infer_shape = infer_shape_func;
   // only infer shape is necessary, as register all infer func in infer shape
   (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(gert::InferShapeOnCompile);
@@ -48,19 +38,16 @@ OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKerne
 
 OpImplRegister &OpImplRegister::InferShapeRange(
     OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func) {
-  functions_.is_register = true;
   functions_.infer_shape_range = infer_shape_range_func;
   return *this;
 }
 
 OpImplRegister &OpImplRegister::InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func) {
-  functions_.is_register = true;
   functions_.infer_datatype = infer_datatype_func;
   return *this;
 }
 OpImplRegister &OpImplRegister::Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func,
                                        size_t max_tiling_data_size) {
-  functions_.is_register = true;
   functions_.tiling = tiling_func;
   functions_.max_tiling_data_size = max_tiling_data_size;
   return *this;
@@ -73,7 +60,6 @@ OpImplRegister &OpImplRegister::InputsDataDependency(std::initializer_list<int32
       return *this;
     }
   }
-  functions_.is_register = true;
   return *this;
 }
 
@@ -84,7 +70,6 @@ OpImplRegister &OpImplRegister::PrivateAttrImpl(const char *private_attr, ge::An
     GELOGE(ge::FAILED, "Failed to set private attr name using empty string("")!");
   } else {
     if (functions_.unique_private_attrs.insert(private_attr).second) {
-      functions_.is_register = true;
       functions_.private_attrs.emplace_back(std::make_pair(private_attr, std::move(private_attr_av)));
     } else {
       GELOGE(ge::FAILED, "The private attr name: %s has already existed.", private_attr);
@@ -136,45 +121,5 @@ const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const OpI
     return emptyPrivateAttr;
   }
   return op_impl_ptr->private_attrs;
-}
-void OpImplRegistry::RegisterOpImpl(const OpType &op_type, OpImplRegistry::OpImplFunctions func) {
-  if (!func.is_register) {
-      types_to_impl_[op_type] = func;
-      return;
-  }
-  types_to_impl_[op_type].is_register = func.is_register;
-  if (func.infer_shape != nullptr) {
-    types_to_impl_[op_type].infer_shape= std::move(func.infer_shape);
-  }
-  if (func.infer_shape_range != nullptr) {
-    types_to_impl_[op_type].infer_shape_range= std::move(func.infer_shape_range);
-  }
-  if (func.infer_datatype != nullptr) {
-    types_to_impl_[op_type].infer_datatype= std::move(func.infer_datatype);
-  }
-  if (func.tiling != nullptr) {
-    types_to_impl_[op_type].tiling= std::move(func.tiling);
-  }
-  if (func.tiling_parse != nullptr) {
-    types_to_impl_[op_type].tiling_parse= std::move(func.tiling_parse);
-  }
-  if (func.compile_info_creator != nullptr) {
-    types_to_impl_[op_type].compile_info_creator= std::move(func.compile_info_creator);
-  }
-  if (func.compile_info_deleter != nullptr) {
-    types_to_impl_[op_type].compile_info_deleter= std::move(func.compile_info_deleter);
-  }
-  if (func.max_tiling_data_size != 0) {
-    types_to_impl_[op_type].max_tiling_data_size= std::move(func.max_tiling_data_size);
-  }
-  if (func.inputs_dependency != 0) {
-    types_to_impl_[op_type].inputs_dependency= std::move(func.inputs_dependency);
-  }
-  if (!func.private_attrs.empty()) {
-    types_to_impl_[op_type].private_attrs= std::move(func.private_attrs);
-  }
-  if (!func.unique_private_attrs.empty()) {
-    types_to_impl_[op_type].unique_private_attrs= std::move(func.unique_private_attrs);
-  }
 }
 }  // namespace gert

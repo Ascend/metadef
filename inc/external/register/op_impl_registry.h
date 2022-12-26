@@ -30,7 +30,6 @@ class OpImplRegistry : public OpImplKernelRegistry {
   OpImplFunctions &CreateOrGetOpImpl(const OpType &op_type);
   const OpImplFunctions *GetOpImpl(const OpType &op_type) const override;
   const PrivateAttrList &GetPrivateAttrs(const OpType &op_type) const override;
-  void RegisterOpImpl(const OpType &op_type, OpImplFunctions func);
  private:
   std::map<OpType, OpImplFunctions> types_to_impl_;
 };
@@ -40,8 +39,6 @@ class OpImplRegister {
   using TilingParseFunc = UINT32 (*)(TilingParseContext *context);
 
   explicit OpImplRegister(const ge::char_t *op_type);
-  OpImplRegister(const OpImplRegister &other);
-  OpImplRegister &operator=(const OpImplRegister &other);
   OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
   OpImplRegister &InferShapeRange(OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func);
   OpImplRegister &InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func);
@@ -86,7 +83,7 @@ class OpImplRegister {
 
  private:
   const ge::char_t *op_type_;
-  OpImplRegistry::OpImplFunctions functions_;
+  OpImplRegistry::OpImplFunctions &functions_;
 };
 }  // namespace gert
 

@@ -69,7 +69,6 @@ struct OpImplKernelRegistry {
     static constexpr size_t kInt64ByteCount = 8;
     PrivateAttrList private_attrs;
     PrivateAttrSet unique_private_attrs;
-    bool is_register = false;
   };
   virtual ~OpImplKernelRegistry() {}
   virtual const OpImplFunctions *GetOpImpl(const std::string &op_type) const = 0;
