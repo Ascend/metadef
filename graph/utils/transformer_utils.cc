@@ -16,7 +16,6 @@
 
 #include "transformer_utils.h"
 
-#include "external/ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/type_utils.h"
 #include "graph/utils/attr_utils.h"

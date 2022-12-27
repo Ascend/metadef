@@ -209,8 +209,8 @@ class TensorImpl {
       PtrAdd<StringHead>(string_head, data.size(), i)->addr = static_cast<int64_t>(ptr_size);
       PtrAdd<StringHead>(string_head, data.size(), i)->len = static_cast<int64_t>(data[i].size());
       if (total_size < ptr_size) {
-        REPORT_INNER_ERROR("E18888", "Subtraction invalid, total_size:%zu, ptr_size:%lu", total_size, ptr_size);
-        GELOGE(GRAPH_FAILED, "[Check][Param] Subtraction invalid, total_size: %zu, ptr_size: %lu",
+        REPORT_INNER_ERROR("E18888", "Subtraction invalid, total_size:%zu, ptr_size:%" PRIu64, total_size, ptr_size);
+        GELOGE(GRAPH_FAILED, "[Check][Param] Subtraction invalid, total_size: %zu, ptr_size: %" PRIu64,
                total_size, ptr_size);
         return GRAPH_FAILED;
       }
@@ -305,8 +305,8 @@ int64_t Shape::GetShapeSize() const {
       }
 
       if (!Int64MulNotOverflow(size, i)) {
-        REPORT_CALL_ERROR("E18888", "mul overflow: %ld, %ld", size, i);
-        GELOGE(GRAPH_FAILED, "[Check][Overflow] mul overflow: %ld, %ld", size, i);
+        REPORT_CALL_ERROR("E18888", "mul overflow: %" PRId64 ", %" PRId64, size, i);
+        GELOGE(GRAPH_FAILED, "[Check][Overflow] mul overflow: %" PRId64 ", %" PRId64, size, i);
         size = 0;
         return size;
       }
@@ -569,10 +569,11 @@ static void CheckTensorParam(const uint64_t shape_size, const DataType data_type
 
   if (ret && ((shape_size != 0U) || (data_size != type_length))) {
     if ((type_length != 0U) && ((UINT64_MAX / type_length) < shape_size)) {
-      GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
+      GELOGW("[Create][Tensor] Calculate size failed, as mul overflow: %" PRIu64 " * %" PRIu32,
+             shape_size, type_length);
     } else {
       if ((shape_size * type_length) != data_size) {
-        GELOGW("[Create][Tensor] Tensor length not equal: shape_byte_size=%lu, dt_type=%s, data_size=%zu.",
+        GELOGW("[Create][Tensor] Tensor length not equal: shape_byte_size=%" PRIu64 ", dt_type=%s, data_size=%zu.",
                shape_size * type_length, TypeUtils::DataTypeToSerialString(data_type).c_str(), data_size);
       }
     }
@@ -749,10 +750,10 @@ graphStatus Tensor::IsValid() {
 
   if ((shape_size != 0U) || (data_size != type_length)) {
     if ((type_length != 0U) && ((UINT64_MAX / type_length) < shape_size)) {
-      GELOGW("[Check][Tensor] Calculate size failed, as mul overflow: %lu * %u", shape_size, type_length);
+      GELOGW("[Check][Tensor] Calculate size failed, as mul overflow: %" PRIu64 " * %" PRIu32, shape_size, type_length);
     } else {
       if ((shape_size * type_length) != data_size) {
-        GELOGW("[Check][Tensor] Tensor length not equal: shape_byte_size=%lu, dt_type=%s, data_size=%zu.",
+        GELOGW("[Check][Tensor] Tensor length not equal: shape_byte_size=%" PRIu64 ", dt_type=%s, data_size=%zu.",
                shape_size * type_length, TypeUtils::DataTypeToSerialString(data_type).c_str(), data_size);
         return GRAPH_FAILED;
       }

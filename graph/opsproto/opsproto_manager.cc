@@ -16,11 +16,7 @@
 
 #include "graph/opsproto_manager.h"
 #include <cstdlib>
-#include <algorithm>
 #include <functional>
-#include <iostream>
-#include <sstream>
-#include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/types.h"
@@ -188,7 +184,7 @@ void OpsProtoManager::LoadOpsProtoPluginSo(const std::string &path) {
          "trusted.");
 
   // Load .so file
-  for (const auto elem : file_list) {
+  for (const auto &elem : file_list) {
     void *const handle = mmDlopen(elem.c_str(), static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
         static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
     if (handle == nullptr) {

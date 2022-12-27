@@ -22,7 +22,6 @@
 #include "debug/ge_op_types.h"
 #include "graph/compute_graph.h"
 #include "graph/ge_context.h"
-#include "graph/runtime_inference_context.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/constant_utils.h"
@@ -416,7 +415,7 @@ graphStatus OperatorImpl::UpdateOutputDesc(const std::string &name, const GeTens
 
   const auto res = op_desc_->UpdateOutputDesc(name, tensor_desc);
   if (res == GRAPH_SUCCESS) {
-    for (const auto ol : output_links_[name]) {
+    for (const auto &ol : output_links_[name]) {
       if (ol.GetOwner() == nullptr) {
         GELOGW("[Update][Check] %s get owner is nullptr", ol.GetName().c_str());
         continue;

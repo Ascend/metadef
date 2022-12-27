@@ -26,10 +26,6 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/graph_utils_ex.h"
 
-namespace {
-const uint32_t g_kSubgraphIndexOfPartitionedCall = 0U;
-}  // namespace
-
 namespace ge {
 class GraphImpl {
  public:

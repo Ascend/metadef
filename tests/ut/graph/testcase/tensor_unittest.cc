@@ -328,4 +328,23 @@ TEST_F(TensorUtilsUT, ConstData) {
   ASSERT_EQ(big_size, len2);
   ASSERT_EQ(tensor_desc3.GetFormat(), FORMAT_NCHW);
 }
+TEST_F(TensorUtilsUT, GetShapeSize_Ok_VectorMax) {
+  Shape shape({std::numeric_limits<int64_t>::max()});
+  EXPECT_EQ(shape.GetShapeSize(), std::numeric_limits<int64_t>::max());
+}
+TEST_F(TensorUtilsUT, GetShapeSize_ReturnZero_Overflow) {
+  Shape shape({2, std::numeric_limits<int64_t>::max() - 1});
+  EXPECT_EQ(shape.GetShapeSize(), 0);
+}
+TEST_F(TensorUtilsUT, TensorConstruct_IsValid_Overflow) {
+  Shape shape({std::numeric_limits<int64_t>::max()});
+  TensorDesc td;
+  td.SetDataType(DT_FLOAT);
+  td.SetShape(shape);
+  td.SetOriginShape(shape);
+  Tensor tensor(td, {});
+
+  // todo 这个行为挺奇怪的，即使发生了overflow，仍然返回success，不过历史实现一直是这样，不敢修改这个行为
+  ASSERT_EQ(tensor.IsValid(), ge::GRAPH_SUCCESS);
+}
 }  // namespace ge

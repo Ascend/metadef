@@ -635,7 +635,7 @@ graphStatus OpDescUtils::SetNoneConstNodeWeights(ge::Node &node, const std::map<
         return GRAPH_PARAM_INVALID;
       }
       const auto const_node = owner_graph->AddNodeFront(const_opdesc);
-      if (node.AddLinkFrom(static_cast<const uint32_t>(pair.first), const_node) != GRAPH_SUCCESS) {
+      if (node.AddLinkFrom(static_cast<uint32_t>(pair.first), const_node) != GRAPH_SUCCESS) {
         REPORT_CALL_ERROR("E18888", "op %s add const to input index[%d] failed", node.GetName().c_str(), pair.first);
         GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] op %s add const to input index[%d] failed",
                node.GetName().c_str(), pair.first);
