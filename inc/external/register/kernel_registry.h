@@ -35,6 +35,7 @@ class KernelRegistry {
   typedef std::vector<std::string> (*TracePrinter)(const KernelContext *);
   struct KernelFuncs {
     KernelFunc run_func;
+    // todo delete after the next synchronization from yellow to blue
     CreateOutputsFunc outputs_creator; // to be deleted
     CreateOutputsFunc outputs_initializer; // to be deleted
     OutputsCreatorFunc outputs_creator_func;
@@ -81,8 +82,10 @@ class KernelRegisterV2 {
 
   KernelRegisterV2 &RunFunc(KernelRegistry::KernelFunc func);
 
+  ATTRIBUTED_DEPRECATED(KernelRegisterV2 &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func))
   KernelRegisterV2 &OutputsCreator(KernelRegistry::CreateOutputsFunc func); // to be deleted
   KernelRegisterV2 &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func);
+  ATTRIBUTED_NOT_SUPPORT()
   KernelRegisterV2 &OutputsInitializer(KernelRegistry::CreateOutputsFunc func); // to be deleted
   KernelRegisterV2 &TracePrinter(KernelRegistry::TracePrinter func);
 

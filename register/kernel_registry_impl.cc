@@ -106,10 +106,8 @@ KernelRegisterV2 &KernelRegisterV2::RunFunc(KernelRegistry::KernelFunc func) {
   }
   return *this;
 }
-KernelRegisterV2 &KernelRegisterV2::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
-  if (register_data_ != nullptr) {
-    register_data_->GetFuncs().outputs_creator = std::move(func);
-  }
+KernelRegisterV2 &KernelRegisterV2::OutputsCreator(KernelRegistry::CreateOutputsFunc) {
+  GELOGW("The OutputsCreator is no longer supported, use OutputsCreatorFunc instead");
   return *this;
 }
 KernelRegisterV2 &KernelRegisterV2::OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func) {
@@ -118,10 +116,8 @@ KernelRegisterV2 &KernelRegisterV2::OutputsCreatorFunc(KernelRegistry::OutputsCr
   }
   return *this;
 }
-KernelRegisterV2 &KernelRegisterV2::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
-  if (register_data_ != nullptr) {
-    register_data_->GetFuncs().outputs_initializer = std::move(func);
-  }
+KernelRegisterV2 &KernelRegisterV2::OutputsInitializer(KernelRegistry::CreateOutputsFunc) {
+  GELOGW("The OutputsInitializer is no longer supported");
   return *this;
 }
 KernelRegisterV2 &KernelRegisterV2::TracePrinter(KernelRegistry::TracePrinter func) {
