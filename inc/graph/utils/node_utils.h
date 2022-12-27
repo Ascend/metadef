@@ -178,6 +178,7 @@ class NodeUtils {
   static graphStatus UpdateInputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
   static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
   static bool IsDtResourceNode(const NodePtr &node);
+  static bool IsLikeAtomicClean(const NodePtr &node);
 };
 
 struct NodeCompareKey {

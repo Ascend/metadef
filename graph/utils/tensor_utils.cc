@@ -80,8 +80,10 @@ static graphStatus CalcElementCntByDims(const std::vector<int64_t> &dims, int64_
   element_cnt = 1;
   for (const int64_t dim : dims) {
     if (CheckMultiplyOverflowInt64(element_cnt, dim)) {
-      REPORT_INNER_ERROR("E18888", "result will overflow when multiplying %ld and %ld.", element_cnt, dim);
-      GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcElementCntByDims failed, when multiplying %ld and %ld.",
+      REPORT_INNER_ERROR("E18888", "result will overflow when multiplying %" PRId64 " and %" PRId64 ".", element_cnt,
+                         dim);
+      GELOGE(GRAPH_FAILED,
+             "[Check][Overflow] CalcElementCntByDims failed, when multiplying %" PRId64 " and %" PRId64 ".",
              element_cnt, dim);
       return GRAPH_FAILED;
     }
@@ -159,11 +161,13 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, const 
   for (size_t i = 0U; i < dims.size(); ++i) {
     const int64_t dim = dims[i];
     if (dim < 0) {
-      GELOGI("It's unknown shape, as dims[%zu]=%ld negative, format=%d(%s).", i, dim, format, format_str.c_str());
+      GELOGI("It's unknown shape, as dims[%zu]=%" PRId64 " negative, format=%d(%s).", i, dim, format,
+             format_str.c_str());
       element_cnt = kElementCntUnknownShape;
       return GRAPH_SUCCESS;
     } else if (dim == 0) {
-      GELOGI("No need calc element count, as dims[%zu]=%ld, format=%d(%s).", i, dim, format, format_str.c_str());
+      GELOGI("No need calc element count, as dims[%zu]=%" PRId64 ", format=%d(%s).", i, dim, format,
+             format_str.c_str());
       element_cnt = 0;
       return GRAPH_SUCCESS;
     } else {
@@ -217,8 +221,7 @@ static graphStatus CalcTensorElementCnt(const std::vector<int64_t> &dims, const 
   const std::string type_str = TypeUtils::DataTypeToSerialString(data_type);
   if (graph_status == GRAPH_SUCCESS) {
     GELOGD(
-        "CalcTensorElementCnt end, format=%d(%s),"
-        " data_type=%d(%s), element_cnt=%ld.",
+        "CalcTensorElementCnt end, format=%d(%s), data_type=%d(%s), element_cnt=%" PRId64 ".",
         format, format_str.c_str(), data_type, type_str.c_str(), element_cnt);
   } else {
     REPORT_INNER_ERROR("E18888", "CalcTensorElementCnt failed, format=%d(%s), data_type=%d(%s).",
@@ -257,7 +260,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
     mem_size = kUnknownShapeMemSize;
     GELOGD(
         "element_cnt is unknown. "
-        "format=%d(%s), data_type=%d(%s), mem_size=%ld",
+        "format=%d(%s), data_type=%d(%s), mem_size=%" PRId64,
         format, format_str.c_str(), data_type, type_str.c_str(), mem_size);
     return GRAPH_SUCCESS;
   }
@@ -276,7 +279,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
           "E19013", {"function", "var1", "var2"},
           {"CheckMultiplyOverflowInt64", std::to_string(element_cnt), std::to_string(type_size_int64)});
       GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcTensorMemSize overflow, "
-             "when multiplying %ld and %ld, format=%d(%s), data_type=%d(%s).",
+                           "when multiplying %" PRId64 " and %" PRId64 ", format=%d(%s), data_type=%d(%s).",
              element_cnt, type_size_int64, format, format_str.c_str(), data_type, type_str.c_str());
       return GRAPH_FAILED;
     }
@@ -287,7 +290,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
 
   GELOGD(
       "CalcTensorMemSize end, "
-      "format=%d(%s), data_type=%d(%s), mem_size=%ld",
+      "format=%d(%s), data_type=%d(%s), mem_size=%" PRId64,
       format, format_str.c_str(), data_type, type_str.c_str(), mem_size);
   return GRAPH_SUCCESS;
 }
@@ -301,7 +304,7 @@ TensorUtils::GetTensorMemorySizeInBytes(const GeTensorDesc &desc_temp, int64_t &
 
   // 64-byte alignment, if size is 0, align to 32 bytes
   if (size_temp > (std::numeric_limits<int64_t>::max() - (kNum2 * kDataMemAlignSize))) {
-    GELOGW("[Util][CalcBytesSize] Mem size %ld after alignment is bigger than INT64_MAX", size_temp);
+    GELOGW("[Util][CalcBytesSize] Mem size %" PRId64 " after alignment is bigger than INT64_MAX", size_temp);
   } else {
     size_temp = ((size_temp + (kNum2 * kDataMemAlignSize) - 1) / kDataMemAlignSize) * kDataMemAlignSize;
   }
@@ -342,10 +345,12 @@ TensorUtils::GetTensorSizeInBytes(const GeTensorDesc &desc_temp, int64_t &size_t
 
   if (output_mem_size < 0) {
     REPORT_INNER_ERROR("E18888",
-                       "After calc concat tensor memory size, output_mem_size = %ld, out of data range [0, %ld]",
+                       "After calc concat tensor memory size, output_mem_size = %" PRId64 ","
+                       " out of data range [0, %" PRId64 "]",
                        output_mem_size, std::numeric_limits<int64_t>::max());
     GELOGE(GRAPH_FAILED, "[Check][Param] After calc concat tensor memory size, "
-           "output_mem_size = %ld, out of data range [0, %ld]", output_mem_size, std::numeric_limits<int64_t>::max());
+                         "output_mem_size = %" PRId64 ", out of data range [0, %" PRId64 "]",
+           output_mem_size, std::numeric_limits<int64_t>::max());
     return GRAPH_FAILED;
   }
 
@@ -370,7 +375,7 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
   for (size_t idx = 0U; idx < shape.GetDimNum(); idx++) {
     const auto cur_dim = shape.GetDim(idx);
     if (cur_dim == UNKNOWN_DIM) {
-      GELOGD("[Check][InputShape]cur shape dim [%ld] is dynamic, no need to check.", cur_dim);
+      GELOGD("[Check][InputShape]cur shape dim [%" PRId64 "] is dynamic, no need to check.", cur_dim);
       continue;
     }
     const auto left_range = shape_range[idx].first;
@@ -388,7 +393,8 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
       ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim", "shape_range_left", "shape_range_right"},
                                                       {std::to_string(cur_dim), std::to_string(left_range),
                                                        std::to_string(right_range)});
-      GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
+      GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%" PRId64 "] is out of "
+                            "shape range [%" PRId64 "~%" PRId64 "]. Please check.",
              cur_dim, left_range, right_range);
       return PARAM_INVALID;
     }
@@ -407,7 +413,8 @@ TensorUtils::CheckShapeByShapeRange(const GeShape &shape, const std::vector<std:
         ErrorManager::GetInstance().ATCReportErrMessage("E10050", {"cur_dim", "shape_range_left", "shape_range_right"},
                                                         {std::to_string(cur_dim), std::to_string(left_range),
                                                          std::to_string(right_range)});
-        GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%ld] is out of shape range [%ld~%ld]. Please check.",
+        GELOGE(PARAM_INVALID, "[Check][Param] Current dim shape [%" PRId64 "] is out of "
+                              "shape range [%" PRId64 "~%" PRId64 "]. Please check.",
                cur_dim, left_range, right_range);
         return PARAM_INVALID;
       }

@@ -160,7 +160,7 @@ void TensorInfoArgs::SetOriginShape(const SmallVector<int64_t, kDefaultDimsNum> 
 
 void TensorInfoArgs::SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &ranges) {
   shape_range_.clear();
-  for (const auto range : ranges) {
+  for (const auto &range : ranges) {
     shape_range_.emplace_back(range);
   }
 }
@@ -209,7 +209,7 @@ bool TensorInfoArgs::IsShapeInRange(const TensorInfoArgs &other) const {
     }
     for (size_t i = 0U; i < this->shape_range_.size(); ++i) {
       if (this->shape_range_[i].first > other.shape_[i]) {
-        GELOGD("shape range is not match, first is %ld, other is %ld, index is %zu",
+        GELOGD("shape range is not match, first is %" PRId64 ", other is %" PRId64 ", index is %zu",
             this->shape_range_[i].first, other.shape_[i], i);
         return false;
       }
@@ -219,7 +219,7 @@ bool TensorInfoArgs::IsShapeInRange(const TensorInfoArgs &other) const {
         continue;
       }
       if (this->shape_range_[i].second < other.shape_[i]) {
-        GELOGD("shape range is not match, second is %ld, other is %ld, index is %zu",
+        GELOGD("shape range is not match, second is %" PRId64 ", other is %" PRId64 ", index is %zu",
             this->shape_range_[i].second, other.shape_[i], i);
         return false;
       }

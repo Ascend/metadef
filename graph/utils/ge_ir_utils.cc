@@ -157,37 +157,37 @@ void OnnxUtils::AddAttrProto(onnx::NodeProto *const node_proto, const onnx::Attr
   attr->set_name(name);
   switch (type) {
     case onnx::AttributeProto_AttributeType_FLOAT:
-      attr->set_f((*(static_cast<const float32_t *const>(data))));
+      attr->set_f((*(static_cast<const float32_t *>(data))));
       attr->set_type(onnx::AttributeProto_AttributeType_FLOAT);
       break;
 
     case onnx::AttributeProto_AttributeType_FLOATS:
       attr->set_type(onnx::AttributeProto_AttributeType_FLOATS);
-      for (auto &v : (*(static_cast<const std::vector<float> *const>(data)))) {
+      for (auto &v : (*(static_cast<const std::vector<float> *>(data)))) {
         attr->add_floats(v);
       }
       break;
 
     case onnx::AttributeProto_AttributeType_INT:
       attr->set_type(onnx::AttributeProto_AttributeType_INT);
-      attr->set_i((*(static_cast<const int64_t *const>(data))));
+      attr->set_i((*(static_cast<const int64_t *>(data))));
       break;
 
     case onnx::AttributeProto_AttributeType_INTS:
       attr->set_type(onnx::AttributeProto_AttributeType_INTS);
-      for (auto &v : *(static_cast<const std::vector<int64_t> *const>(data))) {
+      for (auto &v : *(static_cast<const std::vector<int64_t> *>(data))) {
         attr->add_ints(v);
       }
       break;
 
     case onnx::AttributeProto_AttributeType_STRING:
       attr->set_type(onnx::AttributeProto_AttributeType_STRING);
-      attr->set_s((*(static_cast<const std::string *const>(data))));
+      attr->set_s((*(static_cast<const std::string *>(data))));
       break;
 
     case onnx::AttributeProto_AttributeType_STRINGS:
       attr->set_type(onnx::AttributeProto_AttributeType_STRINGS);
-      for (auto &v : *(static_cast<const std::vector<std::string> *const>(data))) {
+      for (auto &v : *(static_cast<const std::vector<std::string> *>(data))) {
         attr->add_strings(v);
       }
       break;
