@@ -581,8 +581,7 @@ TEST_F(TensorParallelAttrsTest, TensorDeploymentToAndFromJson) {
       [[0, 2], [2, 4]],
       [[0, 4], [4, 8]]
     ]
-  },
-  "verbose" : "verbose_val"
+  }
 }
 )";
   TensorDeployment tensor_deployment;

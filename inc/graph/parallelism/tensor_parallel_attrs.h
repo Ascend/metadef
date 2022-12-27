@@ -64,7 +64,6 @@ struct TensorSliceDeployment {
 
 struct TensorDeployment {
   TensorSliceDeployment shard_deployment;
-  std::string verbose;
 };
 
 struct NodeDeployment {
