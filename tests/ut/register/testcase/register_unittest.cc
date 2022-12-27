@@ -42,6 +42,8 @@
 #include "op_tiling/op_tiling_constants.h"
 #include "register/op_compile_info_base.h"
 #include "op_tiling.h"
+#include "register/op_check.h"
+#include "register/tilingdata_base.h"
 
 #include "graph/graph.h"
 #include "graph/utils/attr_utils.h"
@@ -61,16 +63,16 @@
 #include "exe_graph/runtime/continuous_vector.h"
 #include "common/util/tiling_utils.h"
 
-
 using namespace domi;
 using namespace ge;
 using namespace optiling;
 
 class CompileInfoJson : public CompileInfoBase {
-public:
+ public:
   CompileInfoJson(const std::string &json) : json_str_(json) {}
   ~CompileInfoJson() {}
-private:
+
+ private:
   std::string json_str_;
 };
 
@@ -94,7 +96,7 @@ UINT32 OpTilingStubNew(gert::TilingContext *kernel_context) {
   EXPECT_EQ(tensor_without_data->GetOriginShape(), gert::Shape({5, 5, 5, 5}));
   auto tensor = kernel_context->GetInputTensor(0);
   EXPECT_EQ(tensor->GetShape().GetStorageShape().GetDimNum(), 4);
-  gert::Shape expect_shape({4,4,4,4});
+  gert::Shape expect_shape({4, 4, 4, 4});
   EXPECT_EQ(tensor->GetShape().GetStorageShape(), expect_shape);
   EXPECT_EQ(tensor->GetDataType(), DT_INT8);
   EXPECT_EQ((tensor->GetData<int8_t>())[3], 4);
@@ -102,7 +104,7 @@ UINT32 OpTilingStubNew(gert::TilingContext *kernel_context) {
   EXPECT_EQ((tensor->GetData<int8_t>())[1], 2);
   EXPECT_EQ((tensor->GetData<int8_t>())[0], 1);
   EXPECT_EQ(tensor->GetFormat().GetStorageFormat(), FORMAT_ND);
-  gert::Shape expect_shape2({9,9,9,9});
+  gert::Shape expect_shape2({9, 9, 9, 9});
   EXPECT_TRUE(kernel_context->GetOutputShape(0)->GetStorageShape() == expect_shape2);
   auto shape = kernel_context->GetInputShape(1);
   EXPECT_TRUE(*shape == gert::StorageShape({5, 5, 5, 5}, {5, 5, 5, 5}));
@@ -174,12 +176,12 @@ bool op_tiling_stub_v2(const Operator &op, const utils::OpCompileInfo &compile_i
   return true;
 }
 
-bool op_tiling_stub_v3(const Operator &op, const void* value, OpRunInfoV2 &run_info) {
+bool op_tiling_stub_v3(const Operator &op, const void *value, OpRunInfoV2 &run_info) {
   return true;
 }
 
-void* op_parse_stub_v3(const Operator &op, const ge::AscendString &compile_info_json) {
-//  static void *p = new int(3);
+void *op_parse_stub_v3(const Operator &op, const ge::AscendString &compile_info_json) {
+  //  static void *p = new int(3);
   static int x = 1024;
   void *p = &x;
   return p;
@@ -190,7 +192,7 @@ bool op_tiling_stub_v4(const Operator &op, const CompileInfoPtr value, OpRunInfo
 }
 
 CompileInfoPtr op_parse_stub_v4(const Operator &op, const ge::AscendString &compile_info_json) {
-//  static void *p = new int(3);
+  //  static void *p = new int(3);
   CompileInfoPtr info = std::make_shared<CompileInfoJson>("qwer");
   return info;
 }
@@ -201,11 +203,11 @@ REGISTER_OP_TILING_V4(ReluV4, op_tiling_stub_v4, op_parse_stub_v4);
 
 TEST_F(UtestRegister, test_register_dynamic_outputs_op_only_has_partial_output) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto node_src = builder.AddNode("ParseSingleExample", "ParseSingleExample", 
-                    {"serialized", "dense_defaults_0", "dense_defaults_1", "dense_defaults_2"}, 
-                    {"dense_values_0", "dense_values_1", "dense_values_2"});
+  auto node_src = builder.AddNode("ParseSingleExample", "ParseSingleExample",
+                                  {"serialized", "dense_defaults_0", "dense_defaults_1", "dense_defaults_2"},
+                                  {"dense_values_0", "dense_values_1", "dense_values_2"});
   // build op_src attrs
-  vector<string> dense_keys = {"image/class/lable","image/encode", "image/format"};
+  vector<string> dense_keys = {"image/class/lable", "image/encode", "image/format"};
   vector<DataType> t_dense = {DT_INT64, DT_STRING, DT_STRING};
   AttrUtils::SetListStr(node_src->GetOpDesc(), "dense_keys", dense_keys);
   AttrUtils::SetListStr(node_src->GetOpDesc(), "dense_shapes", {});
@@ -252,7 +254,7 @@ TEST_F(UtestRegister, test_register_dynamic_outputs_op_only_has_partial_output) 
   ge::Operator op_src_fail(nullptr);
   ret = AutoMappingByOpFnDynamic(op_src_fail, op_dst, value);
   EXPECT_EQ(ret, domi::FAILED);
-  
+
   std::vector<DynamicInputOutputInfo> value_fail;
   ret = AutoMappingByOpFnDynamic(op_src, op_dst, value_fail);
   DynamicInputOutputInfo input_fail(kInput, "", 0, "", 0);
@@ -312,7 +314,6 @@ void GraphInit(domi::tensorflow::GraphDef &graph_def) {
   retval0->add_input("add2:0");
   retval1->add_input("add1:0");
 }
-
 
 int32_t AutoMappingSubgraphIndexInput(int32_t data_index) {
   return 0;
@@ -385,7 +386,6 @@ TEST_F(UtestRegister, AutoMappingSubgraphIndexByDataNode2) {
   EXPECT_EQ(stat, domi::SUCCESS);
 }
 
-
 TEST_F(UtestRegister, AutoMappingSubgraphOutputFail) {
   Status stat;
   auto builder = ut::GraphBuilder("root");
@@ -416,7 +416,7 @@ TEST_F(UtestRegister, AutoMappingFnDynamicInputTest) {
   const domi::tensorflow::NodeDef *node;
 
   int32_t node_size = graph_def.node_size();
-  for(int i=0; i<node_size; i++) {
+  for (int i = 0; i < node_size; i++) {
     node = graph_def.mutable_node(i);
     stat = AutoMappingFnDynamic(node, op_dst, name_attr_value, 1, 1);
     EXPECT_EQ(stat, domi::SUCCESS);
@@ -505,31 +505,29 @@ TEST_F(UtestRegister, AutoMappingFunctionkList) {
   domi::tensorflow::NameAttrList *nameAttrList = new domi::tensorflow::NameAttrList();
   nameAttrList->set_name("nameAttrList");
   attrValListVal->add_func();
- 
+
   node->mutable_attr()->insert({"subVal", attrValue});
   name_attrs.insert(make_pair(std::string("out"), make_pair(std::string("outName1"), std::string("subVal"))));
   retStat = AutoMappingFnDynamic(node, op_dst, name_attrs, 1, 1);
   EXPECT_EQ(retStat, domi::SUCCESS);
 }
 
-
 domi::Status inputFunc(int32_t data_index, int32_t &parent_input_index) {
   parent_input_index++;
-  return (parent_input_index<0) ? domi::FAILED : domi::SUCCESS;
+  return (parent_input_index < 0) ? domi::FAILED : domi::SUCCESS;
 }
 
 domi::Status outputFunc(int32_t netoutput_index, int32_t &parent_output_index) {
   parent_output_index++;
-  return (parent_output_index<2) ? domi::FAILED : domi::SUCCESS;
+  return (parent_output_index < 2) ? domi::FAILED : domi::SUCCESS;
 }
 
-domi::Status AutoMappingSubgraphIOIndexFuncCB(const ge::Graph &graph,
-  const std::function<Status(int32_t data_index, int32_t &parent_input_index)> &input,
-  const std::function<Status(int32_t netoutput_index, int32_t &parent_output_index)> &output) {
+domi::Status AutoMappingSubgraphIOIndexFuncCB(
+    const ge::Graph &graph, const std::function<Status(int32_t data_index, int32_t &parent_input_index)> &input,
+    const std::function<Status(int32_t netoutput_index, int32_t &parent_output_index)> &output) {
   static int test_idx = -2;
 
-  switch(test_idx)
-  {
+  switch (test_idx) {
     case -2:
       return input(0, test_idx);
     case -1:
@@ -559,8 +557,8 @@ TEST_F(UtestRegister, FrameworkRegistryTest) {
 TEST_F(UtestRegister, OpRegistrationDataWithNoImpl) {
   OpRegistrationData opRegData(std::string("OmOptype"));
   opRegData.impl_.reset();
-  
-  EXPECT_EQ(opRegData.GetOmOptype()=="", true);
+
+  EXPECT_EQ(opRegData.GetOmOptype() == "", true);
   EXPECT_EQ(opRegData.GetFrameworkType(), domi::FRAMEWORK_RESERVED);
   EXPECT_EQ(opRegData.GetOriginOpTypeSet().empty(), true);
   EXPECT_EQ(opRegData.GetParseParamFn(), nullptr);
@@ -689,17 +687,17 @@ TEST_F(UtestRegister, GetOmTypeByOriOpTypeTest) {
 domi::Status FusionParseParamsFnCB(const std::vector<const google::protobuf::Message *> Msg, ge::Operator &Op) {
   return domi::SUCCESS;
 }
-domi::Status FusionParseParamsFnCB2(const std::vector<ge::Operator> &VecOp, ge::Operator &Op) { 
-  return domi::FAILED; 
+domi::Status FusionParseParamsFnCB2(const std::vector<ge::Operator> &VecOp, ge::Operator &Op) {
+  return domi::FAILED;
 }
-domi::Status ParseSubgraphPostFnCB(const std::string &subgraph_name, const ge::Graph &graph) { 
-  return domi::SUCCESS; 
+domi::Status ParseSubgraphPostFnCB(const std::string &subgraph_name, const ge::Graph &graph) {
+  return domi::SUCCESS;
 }
-domi::Status ParseSubgraphPostFnCB2(const ge::AscendString &subgraph_name, const ge::Graph &graph) { 
-  return domi::SUCCESS; 
+domi::Status ParseSubgraphPostFnCB2(const ge::AscendString &subgraph_name, const ge::Graph &graph) {
+  return domi::SUCCESS;
 }
-domi::Status ParseOpToGraphFnCB(const ge::Operator &Op, ge::Graph &Graph) { 
-  return domi::SUCCESS; 
+domi::Status ParseOpToGraphFnCB(const ge::Operator &Op, ge::Graph &Graph) {
+  return domi::SUCCESS;
 }
 
 TEST_F(UtestRegister, ParseParamFuncTest) {
@@ -877,15 +875,15 @@ TEST_F(UtestRegister, optiling_py_interface) {
 
   std::string json_str = j.dump();
   ge::Operator op("NULL");
-  const char* optype = "ReluV2";
-  const char* optype_v3 = "ReluV3";
-  const char* optype_v4 = "ReluV4";
-  const char* cmp_info = "";
-  const char* inputs = "";
-  const char* outputs = "";
-  char* runinfo = "";
+  const char *optype = "ReluV2";
+  const char *optype_v3 = "ReluV3";
+  const char *optype_v4 = "ReluV4";
+  const char *cmp_info = "";
+  const char *inputs = "";
+  const char *outputs = "";
+  char *runinfo = "";
   size_t size = 3;
-  const char* cmp_info_hash = "";
+  const char *cmp_info_hash = "";
   uint64_t *elapse = nullptr;
   const char *attrs = json_str.c_str();
   TbeOpTilingPyInterface(optype, cmp_info, cmp_info_hash, attrs, attrs, attrs, runinfo, size, elapse);
@@ -914,10 +912,10 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok) {
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
   std::string op_type = "TestReluV2";
-  const char* cmp_info = "";
-  std::string runinfo(100,'a');
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
   size_t size = 100;
-  const char* cmp_info_hash = "";
+  const char *cmp_info_hash = "";
   uint64_t *elapse = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubNew;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubNew;
@@ -927,11 +925,12 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok) {
   EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
-  std::string result = "{\"block_dim\":2,\"clear_atomic\":true,\"tiling_data\":\"060708090A\",\"tiling_key\":78,\"workspaces\":[12]}";
+  std::string result =
+      "{\"block_dim\":2,\"clear_atomic\":true,\"tiling_data\":\"060708090A\",\"tiling_key\":78,\"workspaces\":[12]}";
   EXPECT_EQ(result, runinfo.substr(0, 96));
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
-    gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
+  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
   unsetenv("ENABLE_RUNTIME_V2");
 }
@@ -1044,15 +1043,270 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
 {"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
   std::string output_str = output.dump();
   std::string op_type = "AutoTiling";
-  const char* cmp_info = "";
-  std::string runinfo(100,'a');
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
   size_t size = 100;
-  const char* cmp_info_hash = "";
+  const char *cmp_info_hash = "";
   uint64_t *elapse = nullptr;
   const nlohmann::json attrs = R"([
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
   EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
+                                      const char *outputs, const char *attrs, char *result_info,
+                                      size_t result_info_len);
+
+extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
+                                          const char *attrs, const char *generalize_config, char *result_info,
+                                          size_t result_info_len);
+
+extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len);
+
+int check_supported_stub(const ge::Operator &op, ge::AscendString &result) {
+  const nlohmann::json res_json = R"(
+{"ret_code": "1","reason": "check_supported_stub"})"_json;
+  std::string res_json_str = res_json.dump();
+  result = AscendString(res_json_str.c_str());
+  return 1;
+}
+
+int op_select_format_stub(const ge::Operator &op, ge::AscendString &result) {
+  const nlohmann::json res_json = R"({"op_info": "op_select_format_stub"})"_json;
+  std::string res_json_str = res_json.dump();
+  result = AscendString(res_json_str.c_str());
+  return 1;
+}
+
+int get_op_support_info_stub(const ge::Operator &op, ge::AscendString &result) {
+  const nlohmann::json res_json = R"({"op_info": "get_op_support_info_stub"})"_json;
+  std::string res_json_str = res_json.dump();
+  result = AscendString(res_json_str.c_str());
+  return 1;
+}
+
+int get_op_specific_info_stub(const ge::Operator &op, ge::AscendString &result) {
+  const nlohmann::json res_json = R"({"op_info": "get_op_specific_info_stub"})"_json;
+  std::string res_json_str = res_json.dump();
+  result = AscendString(res_json_str.c_str());
+  return 1;
+}
+
+TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int32","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
+{ "name": "attr_1","dtype": "int","value": 99},
+{ "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "tik2_py_interface_check_cap_ok";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // check_supported
+  REG_CHECK_SUPPORT(tik2_py_interface_check_cap_ok, check_supported_stub);
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED.GetString(), op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            1);
+  std::string check_supported_result = "{\"reason\":\"check_supported_stub\",\"ret_code\":\"1\"}";
+  EXPECT_EQ(check_supported_result, res_info.substr(0, check_supported_result.size()));
+
+  // op_select_format
+  REG_OP_SELECT_FORMAT(tik2_py_interface_check_cap_ok, op_select_format_stub);
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT.GetString(), op_type.c_str(), input_str.c_str(),
+                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            1);
+  std::string op_select_format_result = "{\"op_info\":\"op_select_format_stub\"}";
+  EXPECT_EQ(op_select_format_result, res_info.substr(0, op_select_format_result.size()));
+
+  // get_op_support_info
+  REG_OP_SUPPORT_INFO(tik2_py_interface_check_cap_ok, get_op_support_info_stub);
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO.GetString(), op_type.c_str(), input_str.c_str(),
+                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            1);
+  std::string get_op_support_info_result = "{\"op_info\":\"get_op_support_info_stub\"}";
+  EXPECT_EQ(get_op_support_info_result, res_info.substr(0, get_op_support_info_result.size()));
+
+  // get_op_specific_info
+  REG_OP_SPEC_INFO(tik2_py_interface_check_cap_ok, get_op_specific_info_stub);
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO.GetString(), op_type.c_str(), input_str.c_str(),
+                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            1);
+  std::string get_op_specific_info_result = "{\"op_info\":\"get_op_specific_info_stub\"}";
+  EXPECT_EQ(get_op_specific_info_result, res_info.substr(0, get_op_specific_info_result.size()));
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_callback) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int32","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
+{ "name": "attr_1","dtype": "int","value": 99},
+{ "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "tik2_py_interface_check_cap_fail_without_callback";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // check_supported
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED.GetString(), op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+
+  // op_select_format
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT.GetString(), op_type.c_str(), input_str.c_str(),
+                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+
+  // get_op_support_info
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO.GetString(), op_type.c_str(), input_str.c_str(),
+                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+
+  // get_op_specific_info
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO.GetString(), op_type.c_str(), input_str.c_str(),
+                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_params) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+int generalize_stub(const ge::Operator &op, const ge::AscendString &generalize_config, ge::AscendString &result) {
+  const nlohmann::json res_json = R"({"op_info": "generalize_stub"})"_json;
+  std::string res_json_str = res_json.dump();
+  result = AscendString(res_json_str.c_str());
+  return 1;
+}
+
+TEST_F(UtestRegister, tik2_py_interface_generalize_ok) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "float16", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "float32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int64","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "uint32","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_list_int64","value": [[1, 2], [3, 4]]},
+{ "name": "attr_1","dtype": "uint32","value": 99},
+{ "name": "attr_2","dtype": "list_list_int32","value": [[1, 2], [3, 4]]},
+{ "name": "op_para_size", "dtype": "uint16", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "tik2_py_interface_generalize_ok";
+  std::string generalize_config = "keep_rank";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // shape generalize
+  REG_OP_PARAM_GENERALIZE(tik2_py_interface_generalize_ok, generalize_stub);
+  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+                                       generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
+            1);
+  std::string result = "{\"op_info\":\"generalize_stub\"}";
+  EXPECT_EQ(result, res_info.substr(0, result.size()));
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_callback) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int32","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
+{ "name": "attr_1","dtype": "int","value": 99},
+{ "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "TestReluV2";
+  std::string generalize_config = "keep_rank";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // shape generalize
+  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+                                       generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_params) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  EXPECT_EQ(Tik2PyInterfaceGeneralized(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+BEGIN_TILING_DATA_DEF(TestMaxPoolTilingData)
+// format: TILING_DATA_FIELD_DEF(data_type, field_name);
+TILING_DATA_FIELD_DEF(int32_t, dim_0);
+TILING_DATA_FIELD_DEF(uint16_t, var_1);
+TILING_DATA_FIELD_DEF(int64_t, factor_1);
+END_TILING_DATA_DEF
+
+// register class
+REGISTER_TILING_DATA_CLASS(TestMaxPool, TestMaxPoolTilingData)
+
+TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_ok) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  std::string op_type = "TestMaxPool";
+  std::string res_info(1024, 'a');
+  size_t size = 1024;
+  EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
+  std::string result =
+      "{\"class_name\":\"TestMaxPoolTilingData\",\"fields\":[{\"dtype\":\"int32_t\",\"name\":\"dim_0\"},{\"dtype\":"
+      "\"uint16_t\",\"name\":\"var_1\"},{\"dtype\":\"int64_t\",\"name\":\"factor_1\"}]}";
+  EXPECT_EQ(result, res_info.substr(0, result.size()));
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_without_callback) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  std::string op_type = "TestMaxPoolNotExist";
+  std::string res_info(1024, 'a');
+  size_t size = 1024;
+  // check_supported
+  EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_fail_without_params) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(nullptr, nullptr, 0), 0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
