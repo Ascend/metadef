@@ -1257,6 +1257,7 @@ const std::string ATTR_NAME_OUTPUT_PIPELINE = "_output_pipeline";
 
 // for partition
 const std::string ATTR_NAME_NO_NEED_PARTITION_AND_MERGE = "_no_need_partition_and_merge";
+const std::string ATTR_NAME_NO_NEED_DYNAMIC_SHAPE_PARTITION = "_no_need_dynamic_shape_partition";
 
 // model deploy scheduler(mds)
 const std::string ATTR_NAME_GRADIENT_NODE = "_gradient_node";
@@ -1400,6 +1401,7 @@ const std::string ATTR_NAME_MAX_KEY_NUM = "_max_key_num";
 const std::string ATTR_NAME_EMBEDDING_DIM = "_embedding_dim";
 const std::string ATTR_NAME_IS_PS_GRAPH = "_is_ps_engine_graph";
 const std::string ATTR_NAME_TAG_ID = "_tag_id";
+const std::string ATTR_NAME_OPTIMIZER_GRAPH_FLAG = "_optimizer_graph_flag";
 
 const std::string ATTR_MODEL_HOST_ENV_OS = "host_env_os";
 const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";
