@@ -49,12 +49,15 @@ class KernelRegistry {
   };
 };
 
+class KernelRegisterData;
 class KernelRegister {
  public:
   explicit KernelRegister(const ge::char_t *kernel_type);
   KernelRegister(const KernelRegister &other);
   ~KernelRegister();
-  KernelRegister &operator=(const KernelRegister &other) = default;
+  KernelRegister &operator=(const KernelRegister &other) = delete;
+  KernelRegister &operator=(KernelRegister &&other) = delete;
+  KernelRegister(KernelRegister &&other) = delete;
 
   KernelRegister &RunFunc(KernelRegistry::KernelFunc func);
 
@@ -64,8 +67,7 @@ class KernelRegister {
   KernelRegister &TracePrinter(KernelRegistry::TracePrinter func);
 
  private:
-  std::string kernel_type_;
-  KernelRegistry::KernelFuncs kernel_funcs_;
+  KernelRegisterData *register_data_;
 };
 }  // namespace gert
 

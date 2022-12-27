@@ -17,19 +17,9 @@
 #include "register/kernel_registry_impl.h"
 #include <utility>
 #include "graph/debug/ge_log.h"
+#include "kernel_register_data.h"
 namespace gert {
 namespace {
-ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context) {
-  (void) node;
-  (void) context;
-  return ge::GRAPH_SUCCESS;
-}
-
-ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context) {
-  (void) node;
-  (void) context;
-  return ge::GRAPH_SUCCESS;
-}
 std::shared_ptr<KernelRegistry> g_user_defined_registry = nullptr;
 }  // namespace
 
@@ -62,37 +52,48 @@ const KernelRegistry::KernelFuncs *KernelRegistryImpl::FindKernelFuncs(const std
 const std::unordered_map<std::string, KernelRegistry::KernelFuncs> &KernelRegistryImpl::GetAll() const {
   return types_to_func_;
 }
-KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_type) {
-  kernel_funcs_.outputs_creator = NullCreator;
-  kernel_funcs_.outputs_creator_func = NullCreator;
-  kernel_funcs_.outputs_initializer = NullDestoryer;
-  kernel_funcs_.trace_printer = nullptr;
+KernelRegister::KernelRegister(const char *kernel_type)
+    : register_data_(new(std::nothrow) KernelRegisterData(kernel_type)) {}
+KernelRegister::~KernelRegister() {
+  delete register_data_;
 }
-KernelRegister::~KernelRegister() {}
 KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
-  kernel_funcs_.run_func = func;
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().run_func = func;
+  }
   return *this;
 }
 KernelRegister &KernelRegister::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
-  kernel_funcs_.outputs_creator = std::move(func);
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().outputs_creator = std::move(func);
+  }
   return *this;
 }
 KernelRegister &KernelRegister::OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func) {
-  kernel_funcs_.outputs_creator_func = func;
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().outputs_creator_func = func;
+  }
   return *this;
 }
 KernelRegister &KernelRegister::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
-  kernel_funcs_.outputs_initializer = std::move(func);
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().outputs_initializer = std::move(func);
+  }
   return *this;
 }
 KernelRegister &KernelRegister::TracePrinter(KernelRegistry::TracePrinter func) {
-  kernel_funcs_.trace_printer = std::move(func);
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().trace_printer = func;
+  }
   return *this;
 }
-KernelRegister::KernelRegister(const KernelRegister &other) {
-  if (other.kernel_type_.size() > 1 && other.kernel_type_[0] == '"') {
-    GELOGW("The kernel type starts with \", that maybe a mistake");
+KernelRegister::KernelRegister(const KernelRegister &other) : register_data_(nullptr) {
+  auto register_data = other.register_data_;
+  if (register_data == nullptr) {
+    GE_LOGE("The register_data_ in register object is nullptr, failed to register funcs");
+    return;
   }
-  KernelRegistry::GetInstance().RegisterKernel(other.kernel_type_, other.kernel_funcs_);
+  GELOGD("GERT kernel type %s registered", register_data->GetKernelType().c_str());
+  KernelRegistry::GetInstance().RegisterKernel(register_data->GetKernelType(), register_data->GetFuncs());
 }
 }  // namespace gert
