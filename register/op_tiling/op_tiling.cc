@@ -468,9 +468,6 @@ ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_inf
 {
   const ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
   GE_CHECK_NOTNULL(op_desc);
-  if (!op_desc->HasAttr(ge::ATTR_NAME_ALIAS_ENGINE_NAME)) {
-    return ge::GRAPH_SUCCESS;
-  }
   const std::vector<int64_t> all_workspaces = op_desc->GetWorkspaceBytes();
   std::vector<int64_t> op_workspaces;
   run_info.GetAllWorkspaces(op_workspaces);
