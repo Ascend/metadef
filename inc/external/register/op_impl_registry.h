@@ -31,6 +31,9 @@ class OpImplRegistry : public OpImplKernelRegistry {
   const OpImplFunctions *GetOpImpl(const OpType &op_type) const override;
   const PrivateAttrList &GetPrivateAttrs(const OpType &op_type) const override;
   void RegisterOpImpl(const OpType &op_type, OpImplFunctions func);
+  const std::map<OpType, OpImplFunctions> &GetTyepsToImpl() const {
+    return types_to_impl_;
+  }
  private:
   std::map<OpType, OpImplFunctions> types_to_impl_;
 };
