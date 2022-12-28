@@ -15,7 +15,6 @@
  */
 
 #include "graph/resource_context_mgr.h"
-#include "graph/debug/ge_log.h"
 
 namespace ge {
 ResourceContext *ResourceContextMgr::GetResourceContext(const std::string &resource_key) {

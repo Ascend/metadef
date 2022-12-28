@@ -339,12 +339,12 @@ int64_t ExpandDimension::GenerateReshapeType(const ge::Format &origin_format, co
   }
 
   for (size_t i = 0; i < full_size; i++) {
-    if (dim_pos_set.count(i) == 0) {
+    if (dim_pos_set.count(static_cast<int32_t>(i)) == 0) {
       ret_reshape_type = ret_reshape_type | (1 << i);
     }
   }
 
-  ret_reshape_type = ret_reshape_type | (full_size << kMaxReshapeTypeSize);
+  ret_reshape_type = ret_reshape_type | (static_cast<uint64_t>(full_size) << kMaxReshapeTypeSize);
   GELOGD("Integer reshape type[%s] has been generated for original format[%d], dim size[%zu], reshape type[%s].",
          std::bitset<kBitSetDisplaySize>(ret_reshape_type).to_string().c_str(), origin_format, origin_dim_size,
          valid_shape_type.c_str());
@@ -406,7 +406,7 @@ bool ExpandDimension::GetDefaultReshapeType(const ge::Format &origin_format, con
 }
 
 void ExpandDimension::ExpandDims(const int64_t &reshape_type, ge::GeShape &shape) {
-  GELOGD("Begin to expand dims, reshape type[%ld], shape[%s].", reshape_type, shape.ToString().c_str());
+  GELOGD("Begin to expand dims, reshape type[%" PRId64 "], shape[%s].", reshape_type, shape.ToString().c_str());
   gert::Shape inner_shape;
   GeShapeToRtShape(shape, inner_shape);
   ExpandDims(reshape_type, inner_shape);
@@ -415,7 +415,8 @@ void ExpandDimension::ExpandDims(const int64_t &reshape_type, ge::GeShape &shape
 }
 
 void ExpandDimension::ExpandDims(const int64_t &reshape_type, const ge::GeShape &origin_shape, ge::GeShape &shape) {
-  GELOGD("Begin to expand dims, reshape type[%ld], origin shape[%s].", reshape_type, origin_shape.ToString().c_str());
+  GELOGD("Begin to expand dims, reshape type[%" PRId64 "], origin shape[%s].", reshape_type,
+         origin_shape.ToString().c_str());
   gert::Shape inner_ori_shape;
   GeShapeToRtShape(origin_shape, inner_ori_shape);
   gert::Shape inner_shape;

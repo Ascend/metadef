@@ -57,6 +57,10 @@ struct GETaskKernelHcclInfo {
   std::vector<HcclDumpInfo> hccl_dump_info;
   std::vector<void *> global_workspace_addr;
   uint32_t hcclQosCfg;
+  std::vector<void *> inputDataAddrs;
+  std::vector<void *> outputDataAddrs;
+  std::vector<void *> workSpaceAddrs;
+  std::vector<uint64_t> workSpaceMemSizes;
 };
 
 struct GETaskInfo {

@@ -23,8 +23,6 @@
 #include "common/util/mem_utils.h"
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
-#include "debug/ge_util.h"
-#include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/def_types.h"
 

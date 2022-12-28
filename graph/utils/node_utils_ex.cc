@@ -29,7 +29,6 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
-#include "graph/utils/transformer_utils.h"
 #include "common/util/mem_utils.h"
 
 namespace ge {

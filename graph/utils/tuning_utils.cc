@@ -198,7 +198,8 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
       return FAILED;
     }
     DumpGraphToPath(exe_graph, help_info.index_, help_info.is_tuning_graph_, help_info.path_);
-    GELOGI("TUU:just return, dump original sub_graph[%s]index[%ld]", exe_graph->GetName().c_str(), help_info.index_);
+    GELOGI("TUU:just return, dump original sub_graph[%s]index[%" PRId64 "]", exe_graph->GetName().c_str(),
+           help_info.index_);
     return SUCCESS;
   }
   // modify sub graph
@@ -676,7 +677,7 @@ graphStatus TuningUtils::ConvertFileToGraph(const std::map<int64_t, std::string>
   }
 
   // 5. construct relation of root graph and subgraph of subgrah
-  for (const auto subgraph_iter: name_to_merged_subgraph) {
+  for (const auto &subgraph_iter: name_to_merged_subgraph) {
     const auto ret = LinkSubgraph(merged_root_graph, subgraph_iter.second, name_to_merged_subgraph);
     if (ret != GRAPH_SUCCESS) {
       return ret;
@@ -931,7 +932,7 @@ graphStatus TuningUtils::RemoveDataNetoutputEdge(ComputeGraphPtr &graph) {
     const auto end_name = pair.second;
     int64_t index = 0;
     auto netoutput_node = FindNode(end_name, index);
-    GELOGD("TUU:start to find info[%s][%s][%ld] ", data_node->GetName().c_str(), end_name.c_str(), index);
+    GELOGD("TUU:start to find info[%s][%s][%" PRId64 "] ", data_node->GetName().c_str(), end_name.c_str(), index);
     GE_CHECK_NOTNULL(netoutput_node);
     (void)data_node_2_netoutput_node_.emplace(data_node, netoutput_node);
     // 2. get `data out anchor` and `net output in anchor` and `net output in node's out anchor`
@@ -963,7 +964,7 @@ graphStatus TuningUtils::RemoveDataNetoutputEdge(ComputeGraphPtr &graph) {
         }
       }
     }
-    GELOGD("TUU:get out node:%s 's in anchor(%d) peer_src_node:%s 's out anchor(%d)  match info[%s][%s][%ld]",
+    GELOGD("TUU:get out node:%s 's in anchor(%d) peer_src_node:%s 's out anchor(%d)  match info[%s][%s][%" PRId64 "]",
            netoutput_node->GetName().c_str(), net_output_in_anchor->GetIdx(),
            src_out_anchor->GetOwnerNode()->GetName().c_str(), src_out_anchor->GetIdx(), data_node->GetName().c_str(),
            end_name.c_str(), index);

@@ -26,7 +26,6 @@
 
 #include "debug/ge_log.h"
 #include "debug/ge_op_types.h"
-#include "debug/ge_util.h"
 #include "external/graph/operator_factory.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/utils/node_utils.h"
@@ -123,14 +122,14 @@ graphStatus UpdateParentNodeForBranch(const ConstNodePtr &node,
       }
       const auto shape = tensor.MutableShape();
       if (shape.GetDims().size() != ref_out_tensor_shape.GetDims().size()) {
-        GELOGD("node is %s, i : %zu, shape size: %lu, ref_out_tensor_shape size: %lu",
+        GELOGD("node is %s, i : %zu, shape size: %" PRId64 ", ref_out_tensor_shape size: %" PRId64,
                node->GetName().c_str(), i, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
         ref_out_tensor_shape = GeShape(UNKNOWN_RANK);
         break;
       }
       for (size_t j = 0UL; j < ref_out_tensor_shape.GetDims().size(); j++) {
         if (ref_out_tensor_shape.GetDim(j) != shape.GetDim(j)) {
-          GELOGD("node is %s, i : %zu, j: %zu ,shape size: %lu, ref_out_tensor_shape size: %lu",
+          GELOGD("node is %s, i : %zu, j: %zu ,shape size: %" PRId64 ", ref_out_tensor_shape size: %" PRId64,
                  node->GetName().c_str(), i, j, shape.GetShapeSize(), ref_out_tensor_shape.GetShapeSize());
           (void) ref_out_tensor_shape.SetDim(j, UNKNOWN_DIM);
         }
@@ -695,7 +694,7 @@ graphStatus ShapeRefiner::CreateInferenceContext(const NodePtr &node, ResourceCo
         GE_CHECK_NOTNULL(src_context);
         std::vector<AscendString> src_marks;
         src_context->GetMarks(src_marks);
-        GELOGD("node:%s get %ld marks from node:%s",
+        GELOGD("node:%s get %zu marks from node:%s",
                node->GetName().c_str(), src_marks.size(), in_node->GetName().c_str());
         for (const auto& mark : src_marks) {
           if (marks.empty()) {
@@ -894,7 +893,7 @@ graphStatus ShapeRefiner::UpdateInputOutputDesc(const NodePtr &node) {
     std::vector<std::pair<int64_t, int64_t>> range;
     (void)output_tensor->GetShapeRange(range);
     (void)output_tensor->SetOriginShapeRange(range);
-    GELOGD("node name is %s, origin shape is %ld, origin format is %s, origin data type is %s",
+    GELOGD("node name is %s, origin shape is %" PRId64 ", origin format is %s, origin data type is %s",
            node->GetName().c_str(), output_tensor->GetOriginShape().GetShapeSize(),
            TypeUtils::FormatToSerialString(output_tensor->GetOriginFormat()).c_str(),
            TypeUtils::DataTypeToSerialString(output_tensor->GetOriginDataType()).c_str());

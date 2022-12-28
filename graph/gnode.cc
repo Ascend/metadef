@@ -779,7 +779,7 @@ graphStatus GNode::SetAttr(const AscendString &name, std::vector<AscendString> &
     return GRAPH_FAILED;
   }
   std::vector<std::string> node_attr_vals;
-  for (const auto attr_val : attr_values) {
+  for (const auto &attr_val : attr_values) {
     if (attr_val.GetString() != nullptr) {
       std::string node_attr_val = attr_val.GetString();
       node_attr_vals.emplace_back(node_attr_val);

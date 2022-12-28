@@ -202,7 +202,7 @@ target_link_libraries(graph
 )
 
 target_link_libraries(graph PRIVATE graph_base error_manager)
-target_compile_options(graph PRIVATE -O2)
+target_compile_options(graph PRIVATE -O2 -Werror)
 
 ######### libflow_graph.so #############
 add_library(flow_graph SHARED
