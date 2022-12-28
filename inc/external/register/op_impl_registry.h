@@ -36,6 +36,9 @@ class OpImplRegistry : public OpImplKernelRegistry {
   }
  private:
   std::map<OpType, OpImplFunctions> types_to_impl_;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
+#endif
 };
 
 class OpImplRegister {
@@ -90,6 +93,9 @@ class OpImplRegister {
  private:
   const ge::char_t *op_type_;
   OpImplRegistry::OpImplFunctions functions_;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40] = {0U}; // Reserved field, 32+8, do not directly use when only 8-byte left
+#endif
 };
 }  // namespace gert
 

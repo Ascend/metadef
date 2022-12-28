@@ -21,7 +21,9 @@
 namespace gert {
 struct StorageShape {
  public:
-  StorageShape() = default;
+  StorageShape() {
+    memset(reserved_, 0, sizeof(reserved_));
+  };
   /**
    * 构造一个运行时shape实例
    * @param origin_shape 原始shape
@@ -29,7 +31,7 @@ struct StorageShape {
    */
   StorageShape(const std::initializer_list<int64_t> origin_shape, const std::initializer_list<int64_t> storage_shape)
       : origin_shape_(origin_shape), storage_shape_(storage_shape) {
-    (void)reserved_;
+    memset(reserved_, 0, sizeof(reserved_));
   }
   /**
    * 获取原始shape
@@ -78,7 +80,11 @@ struct StorageShape {
  private:
   Shape origin_shape_;
   Shape storage_shape_;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
   uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
+#endif
 };
 static_assert(std::is_standard_layout<StorageShape>::value, "The class must be a POD");
 }  // namespace gert

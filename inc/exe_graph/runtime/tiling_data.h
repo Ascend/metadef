@@ -162,7 +162,7 @@ class TilingData {
     capacity_ = cap_size;
     data_size_ = 0UL;
     data_ = data;
-    reserved_ = 0;
+    memset(reserved_, 0, sizeof(reserved_));
   }
 
   ge::graphStatus AppendConvertedAttrVal(const RuntimeAttrs *attrs, const size_t attr_index,
@@ -177,7 +177,11 @@ class TilingData {
   size_t capacity_;
   size_t data_size_;
   void *data_;
-  int64_t reserved_; // Reserved field, 8-byte aligned
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
+  uint8_t reserved_[8]; // Reserved field, 8-byte aligned
+#endif
 };
 
 /**

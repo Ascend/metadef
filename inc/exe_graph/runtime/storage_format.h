@@ -22,7 +22,9 @@
 namespace gert {
 struct StorageFormat {
  public:
-  StorageFormat() = default;
+  StorageFormat() {
+    memset(reserved_, 0, sizeof(reserved_));
+  };
   /**
    * 构造一个格式，格式包括原始格式、运行时格式、补维规则
    * @param origin_format 原始格式
@@ -31,7 +33,7 @@ struct StorageFormat {
    */
   StorageFormat(ge::Format origin_format, const ge::Format storage_format, const ExpandDimsType &expand_dims_type)
       : origin_format_(origin_format), storage_format_(storage_format), expand_dims_type_(expand_dims_type) {
-    (void)reserved_;
+    memset(reserved_, 0, sizeof(reserved_));
   }
   /**
    * 获取原始format
@@ -104,7 +106,11 @@ struct StorageFormat {
   ge::Format origin_format_;
   ge::Format storage_format_;
   ExpandDimsType expand_dims_type_;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
   uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
+#endif
 };
 static_assert(std::is_standard_layout<StorageFormat>::value, "The class StorageFormat must be a POD");
 }  // namespace gert

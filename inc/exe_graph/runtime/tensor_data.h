@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include "graph/ge_error_codes.h"
 
 namespace gert {
@@ -61,10 +62,20 @@ class TensorData {
    */
   explicit TensorData(TensorAddress addr = nullptr, const TensorAddrManager manager = nullptr)
       : addr_(addr), manager_(manager) {
+#ifndef ONLY_COMPILE_OPEN_SRC
+    reserved_0_ = 0U;
+    memset(reserved_1_, 0, sizeof(reserved_1_));
+#else
     (void)reserved_;
+#endif
   }
   explicit TensorData(TensorAddress addr, TensorAddrManager manager, size_t size, TensorPlacement placement)
-      : addr_(addr), manager_(manager), size_(size), placement_(placement) {}
+      : addr_(addr), manager_(manager), size_(size), placement_(placement) {
+#ifndef ONLY_COMPILE_OPEN_SRC
+    reserved_0_ = 0U;
+    memset(reserved_1_, 0, sizeof(reserved_1_));
+#endif
+  }
   TensorData(const TensorData &) = delete;
   TensorData(TensorData &&other) noexcept : addr_(other.addr_), manager_(other.manager_),
     size_(other.size_), placement_(other.placement_) {
@@ -72,6 +83,10 @@ class TensorData {
     other.manager_ = nullptr;
     other.size_ = 0U;
     other.placement_ = kTensorPlacementEnd;
+#ifndef ONLY_COMPILE_OPEN_SRC
+    reserved_0_ = 0U;
+    memset(reserved_1_, 0, sizeof(reserved_1_));
+#endif
   }
   TensorData &operator=(const TensorData &other) = delete;
   TensorData &operator=(TensorData &&other) noexcept {
@@ -84,6 +99,10 @@ class TensorData {
     other.manager_ = nullptr;
     other.size_ = 0U;
     other.placement_ = kTensorPlacementEnd;
+#ifndef ONLY_COMPILE_OPEN_SRC
+    reserved_0_ = 0U;
+    memset(reserved_1_, 0, sizeof(reserved_1_));
+#endif
     return *this;
   }
   ~TensorData() noexcept {
@@ -195,7 +214,12 @@ class TensorData {
   TensorAddrManager manager_;
   size_t size_ = 0U;
   TensorPlacement placement_ = kTensorPlacementEnd;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint32_t reserved_0_;  // Reserved field, 8-byte aligned for TensorPlacement
+  uint8_t reserved_1_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
   uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
+#endif
 };
 }  // namespace gert
 

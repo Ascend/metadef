@@ -32,6 +32,9 @@ OpImplRegister::OpImplRegister(const char *op_type) : op_type_(op_type) {
   functions_.max_tiling_data_size = 0;
   functions_.inputs_dependency = 0;
   functions_.is_register = false;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  memset(reserved_, 0, sizeof(reserved_));
+#endif
 }
 OpImplRegister::OpImplRegister(const OpImplRegister &other) {
   OpImplRegistry::GetInstance().RegisterOpImpl(other.op_type_, other.functions_);
@@ -140,6 +143,9 @@ const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const OpI
 }
 
 void OpImplRegistry::RegisterOpImpl(const OpType &op_type, OpImplRegistry::OpImplFunctions func) {
+#ifndef ONLY_COMPILE_OPEN_SRC
+  (void) reserved_;
+#endif
   if (!func.is_register) {
       types_to_impl_[op_type] = func;
       return;
