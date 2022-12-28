@@ -9,6 +9,12 @@ message VarAddrMgrInfo {
   uint64 memory_type = 4;
 }
 
+message VarDevAddrMgr {
+  ge.proto.TensorDescriptor desc = 1;
+  uint64 address = 2;
+  uint64 dev_addr = 3;
+}
+
 message SingleTransNodeInfo {
   string node_type = 1;
   ge.proto.TensorDescriptor input = 2;
@@ -41,6 +47,7 @@ message VarResourceInfo {
   map<string, uint32> var_names_to_changed_graph_id = 5;
   map<string, uint32> var_names_to_allocated_graph_id = 6;
   map<uint32, BroadcastMultiInfo> var_broad_cast_info = 7;
+  map<uint64, VarDevAddrMgr> var_dev_addr_mgr_map = 8;
 }
 
 message MemResourceInfo {
@@ -59,6 +66,7 @@ message VarManagerInfo {
   uint64 use_max_mem_size = 8;
   VarResourceInfo var_resource = 9;
   map<uint32, MemResourceInfo> mem_resource_map = 10;
+  bool var_mem_auto_malloc = 11;
 }
 
 message MultiVarManagerInfo {
