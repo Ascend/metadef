@@ -28,20 +28,26 @@ class Range {
   /**
    * 默认构造一个range
    */
-  Range() : min_(nullptr), max_(nullptr) {}
+  Range() : min_(nullptr), max_(nullptr) {
+    memset(reserved_, 0, sizeof(reserved_));
+  }
 
   /**
    * 通过最小和最大T对象指针构造range
    * @param min range最小值指针
    * @param max range最大值指针
    */
-  Range(T *min, T* max) : min_(min), max_(max) {}
+  Range(T *min, T* max) : min_(min), max_(max) {
+    memset(reserved_, 0, sizeof(reserved_));
+  }
 
   /**
    * 通过一个T指针构造range，表示最大最小值相同
    * @param same_ele T指针
    */
-  explicit Range(T *same_ele) : min_(same_ele), max_(same_ele) {}
+  explicit Range(T *same_ele) : min_(same_ele), max_(same_ele) {
+    memset(reserved_, 0, sizeof(reserved_));
+  }
 
   /**
    * 判断与另外一个range对象是否相等，如果两个range的最小和最大元素指针分别相等，那么认为两个range相等，
@@ -107,7 +113,11 @@ class Range {
  private:
   T *min_;
   T *max_;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
   uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
+#endif
 };
 }  // namespace gert
 

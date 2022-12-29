@@ -80,11 +80,23 @@ TEST_F(BgIrAttrsUT, CreateDataTypeAttrBuffer) {
   auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
   size_t attr_size;
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  auto rt_attr_def = reinterpret_cast<RuntimeAttrsDef *>(attr_buffer.get());
+  ASSERT_NE(rt_attr_def, nullptr);
+  EXPECT_EQ(rt_attr_def->attr_num, 1U);
+  for (size_t i = 0U; i < 40U; ++i) {
+    EXPECT_EQ(rt_attr_def->reserved_[i], 0);
+  }
+  EXPECT_EQ(rt_attr_def->offset[0], 2 * sizeof(size_t) + sizeof(rt_attr_def->reserved_));
+  auto base = reinterpret_cast<uint8_t *>(attr_buffer.get());
+  EXPECT_EQ(*reinterpret_cast<ge::DataType *>(base + rt_attr_def->offset[0]), ge::DT_INT32);
+#else
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 1U);
   EXPECT_EQ(base[1], 0U);
   EXPECT_EQ(base[2], 3 * sizeof(size_t));
   EXPECT_EQ(*reinterpret_cast<ge::DataType*>(&base[3]), ge::DT_INT32);
+#endif
 }
 
 TEST_F(BgIrAttrsUT, CreateAttrBufferSuccessOpLossAttr) {
@@ -95,7 +107,12 @@ TEST_F(BgIrAttrsUT, CreateAttrBufferSuccessOpLossAttr) {
   auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
   size_t attr_size;
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  size_t gt_attr_size = sizeof(RuntimeAttrsDef);
+  EXPECT_EQ(attr_size, gt_attr_size);
+#else
   EXPECT_EQ(attr_size, 16);
+#endif
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 0U);
   EXPECT_EQ(base[1], 0U); // todo 原始用例，没加预留字段之前，base[1]为啥能取到值
@@ -111,12 +128,25 @@ TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Int64Ok) {
   auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
   size_t attr_size;
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  auto rt_attr_def = reinterpret_cast<RuntimeAttrsDef *>(attr_buffer.get());
+  ASSERT_NE(rt_attr_def, nullptr);
+  EXPECT_EQ(rt_attr_def->attr_num, 1U);
+  for (size_t i = 0U; i < 40U; ++i) {
+    EXPECT_EQ(rt_attr_def->reserved_[i], 0);
+  }
+  EXPECT_EQ(rt_attr_def->offset[0], 2 * sizeof(size_t) + sizeof(rt_attr_def->reserved_));
+
+  auto base = reinterpret_cast<uint8_t *>(attr_buffer.get());
+  auto cvv = reinterpret_cast<ContinuousVectorVector *>(base + rt_attr_def->offset[0]);
+#else
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 1U);
   EXPECT_EQ(base[1], 0U);
   EXPECT_EQ(base[2], 3 * sizeof(size_t));
 
   auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[3]);
+#endif
   ASSERT_NE(cvv, nullptr);
   ASSERT_EQ(cvv->GetSize(), value.size());
   for (size_t i = 0U; i < value.size(); ++i) {
@@ -141,12 +171,25 @@ TEST_F(BgIrAttrsUT, CreateListListIntAttrBuffer_Float64) {
   auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
   size_t attr_size;
   auto attr_buffer = bg::CreateAttrBuffer(node, attr_size);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  auto rt_attr_def = reinterpret_cast<RuntimeAttrsDef *>(attr_buffer.get());
+  ASSERT_NE(rt_attr_def, nullptr);
+  EXPECT_EQ(rt_attr_def->attr_num, 1U);
+  for (size_t i = 0U; i < 40U; ++i) {
+    EXPECT_EQ(rt_attr_def->reserved_[i], 0);
+  }
+  EXPECT_EQ(rt_attr_def->offset[0], 2 * sizeof(size_t) + sizeof(rt_attr_def->reserved_));
+
+  auto base = reinterpret_cast<uint8_t *>(attr_buffer.get());
+  auto cvv = reinterpret_cast<ContinuousVectorVector *>(base + rt_attr_def->offset[0]);
+#else
   auto base = reinterpret_cast<size_t*>(attr_buffer.get());
   EXPECT_EQ(base[0], 1U);
   EXPECT_EQ(base[1], 0U);
   EXPECT_EQ(base[2], 3 * sizeof(size_t));
 
   auto cvv = reinterpret_cast<ContinuousVectorVector *>(&base[3]);
+#endif
   ASSERT_NE(cvv, nullptr);
   ASSERT_EQ(cvv->GetSize(), value.size());
   for (size_t i = 0U; i < value.size(); ++i) {
@@ -194,7 +237,16 @@ TEST_F(BgIrAttrsUT, CreateListStringAttrBuffer) {
     reinterpret_cast<const gert::ContinuousVector *>(ge::PtrToPtr<const RuntimeAttrsDef, const uint8_t>(attr_def)
         + attr_def->offset[0]);
   ASSERT_NE(base, nullptr);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  size_t str_attrs_len = 0U;
+  for (const auto &str_attr : str_atts) {
+    str_attrs_len += strlen(str_attr.c_str()) + 1U;
+  }
+  size_t gt_attr_size = sizeof(ContinuousVector) + sizeof(RuntimeAttrsDef) + 1 * sizeof(size_t) + +str_attrs_len;
+  EXPECT_EQ(attr_size, gt_attr_size);
+#else
   EXPECT_EQ(attr_size, 77);
+#endif
   ASSERT_EQ(base->GetSize(), 4);
   EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData()), "hello");
   EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData() + 6), "world");

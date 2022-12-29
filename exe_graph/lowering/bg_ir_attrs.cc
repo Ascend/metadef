@@ -15,6 +15,7 @@
  */
 #include "exe_graph/lowering/bg_ir_attrs.h"
 
+#include <cstring>
 #include <securec.h>
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
@@ -295,7 +296,7 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
   GE_ASSERT_NOTNULL(attr_holder);
   auto attr_def = ge::PtrToPtr<uint8_t, RuntimeAttrsDef>(attr_holder.get());
   attr_def->attr_num = attrs.size();
-  attr_def->reserved_ = 0;
+  memset(attr_def->reserved_, 0, sizeof(attr_def->reserved_));
   size_t current_offset = sizeof(RuntimeAttrsDef) + sizeof(size_t) * attr_def->attr_num;
   auto attr_pos = attr_holder.get();
   for (size_t i = 0; i < attrs.size(); ++i) {

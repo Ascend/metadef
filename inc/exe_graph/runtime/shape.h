@@ -35,7 +35,7 @@ struct Shape {
    * 默认构造一个shape，默认构造的shape实例中，dim_num长度为0
    */
   Shape() : dim_num_(0), dims_{0} {
-    (void)reserved_;
+    memset(reserved_, 0, sizeof(reserved_));
   }
 
   /**
@@ -51,6 +51,7 @@ struct Shape {
     for (const auto arg : args) {
       dims_[i++] = arg;
     }
+    memset(reserved_, 0, sizeof(reserved_));
   }
 
   /**
@@ -63,6 +64,7 @@ struct Shape {
     for (size_t i = 0U; i < dim_num_; ++i) {
       dims_[i] = other.dims_[i];
     }
+    memset(reserved_, 0, sizeof(reserved_));
   }
 
   /**
@@ -78,6 +80,7 @@ struct Shape {
         dims_[i] = other.dims_[i];
       }
     }
+    memset(reserved_, 0, sizeof(reserved_));
     return *this;
   }
 
@@ -212,7 +215,11 @@ struct Shape {
  private:
   size_t dim_num_;
   int64_t dims_[kMaxDimNum];
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
   uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
+#endif
 };
 static_assert(std::is_standard_layout<Shape>::value, "The class Shape must be a POD");
 }  // namespace gert

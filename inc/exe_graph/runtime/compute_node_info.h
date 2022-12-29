@@ -26,10 +26,12 @@
 namespace gert {
 class AnchorInstanceInfo {
  public:
-  AnchorInstanceInfo() = default;
+  AnchorInstanceInfo() {
+    memset(reserved_, 0, sizeof(reserved_));
+  };
   AnchorInstanceInfo(const uint32_t instance_start, const uint32_t instantiation_num)
       : instance_start_(instance_start), instantiation_num_(instantiation_num) {
-    (void) reserved_;
+    memset(reserved_, 0, sizeof(reserved_));
   }
 
   /**
@@ -67,14 +69,18 @@ class AnchorInstanceInfo {
  private:
   uint32_t instance_start_;
   uint32_t instantiation_num_;
-  int64_t reserved_ = 0;  // Reserved field, 8-byte aligned
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
+  uint8_t reserved_[8];  // Reserved field, 8-byte aligned
+#endif
 };
 static_assert(std::is_standard_layout<AnchorInstanceInfo>::value, "The class AnchorInstanceInfo must be a POD");
 
 class CompileTimeTensorDesc {
  public:
   CompileTimeTensorDesc() {
-    (void) reserved_;
+    memset(reserved_, 0, sizeof(reserved_));
   }
   /**
    * 获取DataType
@@ -143,7 +149,11 @@ class CompileTimeTensorDesc {
  private:
   ge::DataType data_type_;
   StorageFormat storage_format_;
-  int64_t reserved_ = 0;  // Reserved field, 8-byte aligned
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
+  uint8_t reserved_[8];  // Reserved field, 8-byte aligned
+#endif
 };
 static_assert(std::is_standard_layout<CompileTimeTensorDesc>::value, "The class CompileTimeTensorDesc must be a POD");
 
@@ -286,7 +296,11 @@ class ComputeNodeInfo {
   size_t ir_inputs_num_;
   size_t inputs_num_;
   size_t outputs_num_;
-  int64_t reserved_;  // Reserved field, 8-byte aligned
+#ifndef ONLY_COMPILE_OPEN_SRC
+  uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
+#else
+  uint8_t reserved_[8];  // Reserved field, 8-byte aligned
+#endif
   // following by AnchorInstanceInfo, inputs-outputs-CompileTimeTensorDesc, RuntimeAttrs
   uint64_t place_holder;
 };
