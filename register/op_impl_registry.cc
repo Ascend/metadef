@@ -52,10 +52,6 @@ OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKerne
   functions_.is_register = true;
 #endif
   functions_.infer_shape = infer_shape_func;
-  // only infer shape is necessary, as register all infer func in infer shape
-  (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(gert::InferShapeOnCompile);
-  (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(gert::InferShapeRangeOnCompile);
-  (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(gert::InferDataTypeOnCompile);
   return *this;
 }
 
