@@ -42,7 +42,9 @@ class OpImplRegister {
   using TilingParseFunc = UINT32 (*)(TilingParseContext *context);
 
   explicit OpImplRegister(const ge::char_t *op_type);
+#if !defined ONLY_COMPILE_OPEN_SRC && !defined OP_IMPL_REGISTRY_ENABLE
   OpImplRegister(const OpImplRegister &other);
+#endif
   OpImplRegister &operator=(const OpImplRegister &other);
   OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
   OpImplRegister &InferShapeRange(OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func);
@@ -88,7 +90,11 @@ class OpImplRegister {
 
  private:
   const ge::char_t *op_type_;
+#if defined ONLY_COMPILE_OPEN_SRC || defined OP_IMPL_REGISTRY_ENABLE
+  OpImplRegistry::OpImplFunctions &functions_;
+#else
   OpImplRegistry::OpImplFunctions functions_;
+#endif
   uint8_t reserved_[40] = {0U}; // Reserved field, 32+8, do not directly use when only 8-byte left
 };
 }  // namespace gert
