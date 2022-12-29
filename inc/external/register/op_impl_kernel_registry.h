@@ -35,6 +35,8 @@ struct OpImplKernelRegistry {
   using OpType = std::string;
   using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
   using PrivateAttrSet = std::unordered_set<std::string>;
+  using CompileInfoCreatorFunc = void *(*)();
+  using CompileInfoDeleterFunc = void (*)(void *);
 
   struct OpImplFunctions {
     bool HasDataDependency() const {
@@ -62,12 +64,13 @@ struct OpImplKernelRegistry {
     InferDataTypeKernelFunc infer_datatype;
     TilingKernelFunc tiling;
     KernelRegistry::KernelFunc tiling_parse;
-    void *(*compile_info_creator)();
-    void (*compile_info_deleter)(void *);
+    CompileInfoCreatorFunc compile_info_creator;
+    CompileInfoDeleterFunc compile_info_deleter;
     size_t max_tiling_data_size = 0;
     uint64_t inputs_dependency = 0;
     static constexpr size_t kInt64ByteCount = 8;
     PrivateAttrList private_attrs;
+    // todo 去重和registry没关系，下一步从这里删除，移动到register中实现
     PrivateAttrSet unique_private_attrs;
 #if defined ONLY_COMPILE_OPEN_SRC || defined OP_IMPL_REGISTRY_ENABLE
     bool is_register = false;
