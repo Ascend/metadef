@@ -81,9 +81,6 @@ class PluginManager {
 
   static bool GetVersionFromPath(const std::string &file_path, std::string &version);
 
-  static void GetFileListWithSuffix(const std::string &path, const std::string &so_suff,
-                                    std::vector<std::string> &file_list);
-
   template <typename R, typename... Types>
   Status GetAllFunctions(const std::string &func_name, std::map<std::string, std::function<R(Types... args)>> &funcs) {
     for (const auto &handle : handles_) {

@@ -22,7 +22,6 @@
 #include "exe_graph/runtime/tensor.h"
 #include "exe_graph/runtime/allocator.h"
 #include "exe_graph/runtime/execute_graph_types.h"
-#include "register/op_impl_space_registry.h"
 
 namespace gert {
 class LoweringGlobalData {
@@ -59,12 +58,6 @@ class LoweringGlobalData {
 
   void SetModelWeightSize(const size_t require_weight_size);
   size_t GetModelWeightSize() const;
-  const gert::OpImplSpaceRegistryPtr &GetSpaceRegistry() const {
-    return space_registry_;
-  };
-  void SetSpaceRegistry(gert::OpImplSpaceRegistryPtr space_registry) {
-    space_registry_ = space_registry;
-  };
 
  private:
   struct HoldersByGraph {
@@ -82,7 +75,6 @@ class LoweringGlobalData {
   HoldersByGraph external_allocators_;
   // todo need delete and change to const_data after const_data is ready
   int64_t model_weight_size_;
-  OpImplSpaceRegistryPtr space_registry_;
 };
 }  // namespace gert
 #endif  // AIR_CXX_RUNTIME_V2_LOWERING_LOWERING_GLOBAL_DATA_H_
