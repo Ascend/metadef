@@ -61,5 +61,8 @@ constexpr const ge::char_t *kComputeGraph = "_compute_graph";
 
 // 作为扩展属性打在exe node上，类型是PassChangedKernels，记录执行图经过pass后的新旧exe nodes输出的对应关系
 constexpr const ge::char_t *kPassChangedInfo = "_pass_changed_info";
+
+// 打在exe graph上，保存space_registry的智能指针
+constexpr const ge::char_t *kSpaceRegistry = "SpaceRegistry";
 }  // namespace gert
 #endif  // AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_EXE_GRAPH_ATTRS_H_

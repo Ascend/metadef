@@ -15,6 +15,7 @@
  */
 
 #include "register/op_impl_registry.h"
+#include "register/op_impl_registry_api.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/operator_factory_impl.h"
 #include "register/shape_inference.h"
@@ -138,6 +139,7 @@ const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const OpI
   }
   return op_impl_ptr->private_attrs;
 }
+
 void OpImplRegistry::RegisterOpImpl(const OpType &op_type, OpImplRegistry::OpImplFunctions func) {
   (void) reserved_;
   if (!func.is_register) {
@@ -179,4 +181,36 @@ void OpImplRegistry::RegisterOpImpl(const OpType &op_type, OpImplRegistry::OpImp
     types_to_impl_[op_type].unique_private_attrs= std::move(func.unique_private_attrs);
   }
 }
+
+const std::map<OpImplRegistry::OpType, OpImplRegistry::OpImplFunctions> &OpImplRegistry::GetAllTypesToImpl() const {
+  return types_to_impl_;
+}
 }  // namespace gert
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+size_t GetRegisteredOpNum(void) {
+  return gert::OpImplRegistry::GetInstance().GetAllTypesToImpl().size();
+}
+int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num) {
+  auto types_to_impl = gert::OpImplRegistry::GetInstance().GetAllTypesToImpl();
+  if (impl_num != types_to_impl.size()) {
+    GELOGE(ge::FAILED, "Get types_to_impl_ failed, impl_num[%u] and map size[%u] not match",
+           impl_num, types_to_impl.size());
+    return ge::GRAPH_FAILED;
+  }
+  size_t cnt = 0U;
+  for (auto &it : types_to_impl) {
+    impl[cnt].op_type = it.first.c_str();
+    impl[cnt].funcs = it.second;
+    cnt++;
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
+#ifdef __cplusplus
+}
+#endif
+

@@ -213,7 +213,46 @@ target_link_libraries(op_tiling_o2 PRIVATE
     c_sec
 )
 
+############ librt2_registry.a ############
+add_library(rt2_registry_static STATIC
+    "op_impl_registry.cc"
+)
+
+target_compile_options(rt2_registry_static PRIVATE
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -O2 -Werror -Wextra -Wfloat-equal>
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:/utf-8>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
+)
+
+target_compile_definitions(rt2_registry_static PRIVATE
+    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+)
+
+target_include_directories(rt2_registry_static PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
+)
+
+set_target_properties(rt2_registry_static PROPERTIES
+    WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+    OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,librt2_registry,rt2_registry>
+)
+
+target_link_libraries(rt2_registry_static
+    PRIVATE
+    c_sec
+    PUBLIC
+    metadef_headers
+)
+
 ############ install ############
-install(TARGETS register_static
+install(TARGETS register_static rt2_registry_static
     ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
 )

@@ -447,4 +447,60 @@ TEST_F(UtestPluginManager, GetCurEnvPackageOsAndCpuType) {
   ASSERT_EQ(cur_env_os.empty(), true);
   ASSERT_EQ(cur_env_cpu.empty(), true);
 }
+
+int super_system(const char *cmd, char *retmsg, int msg_len) {
+  FILE *fp;
+  int res = -1;
+  if (cmd == NULL || retmsg == NULL || msg_len < 0) {
+    GELOGD("Err: Func:%s sys param invalid!", __func__);
+    return 1;
+  }
+  if ((fp = popen(cmd, "r")) == NULL) {
+    perror("popen");
+    GELOGD("Err: Func:%s popen error:%s!", __func__, strerror(errno));
+    return 2;
+  } else {
+    memset(retmsg, 0, msg_len);
+    while (fgets(retmsg, msg_len, fp)) {
+      GELOGD("Func:%s fgets buf is %s!", __func__, retmsg);
+    }
+    if ((res == pclose(fp)) == -1) {
+      GELOGD("Func:%s close popen file pointer fp error!", __func__);
+      return 3;
+    }
+    retmsg[strlen(retmsg) - 1] = '\0';
+    return 0;
+  }
+}
+
+TEST_F(UtestPluginManager, GetFileListWithSuffix_Success) {
+  std::string path = "./test";
+  system(("mkdir -p " + path).c_str());
+  std::string file_path = path + "/a.so";
+  system(("touch " + file_path).c_str());
+  file_path = path + "/b.txt";
+  system(("touch " + file_path).c_str());
+  file_path = path + "/cc.so";
+  system(("touch " + file_path).c_str());
+  std::string command = "pwd";
+  char retmsg[1024];
+  int ret = super_system(command.c_str(), retmsg, sizeof(retmsg));
+  path = retmsg;
+  path += "/test";
+
+  std::vector<std::string> file_list;
+  PluginManager::GetFileListWithSuffix(path, ".so", file_list);
+  ASSERT_EQ(file_list.size(), 2);
+
+  file_list.clear();
+  PluginManager::GetFileListWithSuffix(path, "c.so", file_list);
+  ASSERT_EQ(file_list.size(), 1);
+
+  file_list.clear();
+  PluginManager::GetFileListWithSuffix(path, ".o", file_list);
+  ASSERT_EQ(file_list.size(), 0);
+
+  system(("rm -f " + path).c_str());
+}
+
 }  // namespace ge

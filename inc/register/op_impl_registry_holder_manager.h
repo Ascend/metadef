@@ -47,6 +47,8 @@ class OpImplRegistryHolder {
 
   void SetHandle(void *handle) { handle_ = handle; }
 
+  std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle, const string &so_path, size_t &impl_num);
+
  protected:
   std::map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions> types_to_impl_;
   void *handle_ = nullptr;
@@ -67,8 +69,6 @@ class OmOpImplRegistryHolder : public OpImplRegistryHolder {
   ge::graphStatus RmOmOppDir(const std::string &opp_dir);
 
   ge::graphStatus SaveToFile(const std::shared_ptr<ge::OpSoBin> &so_bin, const std::string &opp_path);
-
-  std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle, const string &so_path, size_t &impl_num);
 
  private:
   std::string so_dir_;

@@ -31,6 +31,7 @@ class OpImplRegistry : public OpImplKernelRegistry {
   const OpImplFunctions *GetOpImpl(const OpType &op_type) const override;
   const PrivateAttrList &GetPrivateAttrs(const OpType &op_type) const override;
   void RegisterOpImpl(const OpType &op_type, OpImplFunctions func);
+  const std::map<OpType, OpImplFunctions> &GetAllTypesToImpl() const;
  private:
   std::map<OpType, OpImplFunctions> types_to_impl_;
   uint8_t reserved_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
