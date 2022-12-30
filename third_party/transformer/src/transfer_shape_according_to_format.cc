@@ -44,6 +44,9 @@ ShapeTransferAccordingToFormat::ShapeTransferAccordingToFormat() {}
 
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(const ge::OpDescPtr &op_desc,
                                                                ShapeAndFormat &shapeAndFormatInfo) {
+  if (shapeAndFormatInfo.oldShape.IsUnknownDimNum()) {
+    return true;
+  }
   gert::Shape shape;
   GeShapeToRtShape(shapeAndFormatInfo.oldShape, shape);
   ExtAxisValue ext_axis;
@@ -55,6 +58,9 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(const ge::OpDescP
 }
 
 bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat &shapeAndFormatInfo) {
+  if (shapeAndFormatInfo.oldShape.IsUnknownDimNum()) {
+    return true;
+  }
   gert::Shape shape;
   GeShapeToRtShape(shapeAndFormatInfo.oldShape, shape);
   ExtAxisValue ext_axis = {shapeAndFormatInfo.extra_attr.input_size, shapeAndFormatInfo.extra_attr.hidden_size,
