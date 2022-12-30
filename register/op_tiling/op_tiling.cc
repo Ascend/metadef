@@ -472,12 +472,19 @@ ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_inf
   std::vector<int64_t> op_workspaces;
   run_info.GetAllWorkspaces(op_workspaces);
   size_t op_work_size = op_workspaces.size();
+  if (op_work_size > all_workspaces.size()) {
+    GELOGW("Op name:%s tiling return workspace number(%zu) large than all workspace num(%zu).",
+           op_desc->GetName().c_str(), op_work_size, all_workspaces.size());
+    return ge::GRAPH_SUCCESS;
+  }
+
+  if (op_work_size == all_workspaces.size()) {
+    return ge::GRAPH_SUCCESS;
+  }
+
   GELOGD("Op name:%s post proc, op work num:%zu, all work num:%zu.", op_desc->GetName().c_str(), op_work_size,
          all_workspaces.size());
-  if (op_work_size > all_workspaces.size()) {
-    REPORT_CALL_ERROR("E19999", "[register][op_tiling][PostProcCalculateV2]Workspace size error.");
-    return ge::GRAPH_FAILED;
-  }
+
   // mixl2--pass will add additional works after op_workspaces
   for (size_t i = op_work_size; i < all_workspaces.size(); ++i) {
     op_workspaces.emplace_back(all_workspaces[i]);
