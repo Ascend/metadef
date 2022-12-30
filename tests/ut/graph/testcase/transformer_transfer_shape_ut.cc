@@ -34,7 +34,8 @@ class TransformerTransferShapeUT : public testing::Test {
   void TearDown() {}
 
   void RunTransferShape(const ge::Format &origin_format, const ge::Format &format, const ge::DataType &dtype,
-                        const bool &expect_ret, const vector<int64_t> &dims, const vector<int64_t> &expect_dim) {
+                        const bool &expect_ret, const vector<int64_t> &dims, const vector<int64_t> &expect_dim,
+                        bool only_test_first_interface = false) {
     std::cout << "RunTransferShape: origin_format=" << origin_format << ", format=" << format << ", dtype=" << dtype
               << ", dim size=" << dims.size() << std::endl;
     ge::GeShape shape(dims);
@@ -45,7 +46,9 @@ class TransformerTransferShapeUT : public testing::Test {
     if (ret) {
       EXPECT_EQ(shape.GetDims(), expect_dim);
     }
-
+    if (only_test_first_interface) {
+      return;
+    }
     gert::Shape current_shape;
     for (const int64_t &d : dims) {
       current_shape.AppendDim(d);
@@ -88,7 +91,7 @@ class TransformerTransferShapeUT : public testing::Test {
 
   void RunTransferShape(const ge::OpDescPtr &op_desc, const ge::Format &origin_format, const ge::Format &format,
                         const ge::DataType &dtype, const bool &expect_ret, const vector<int64_t> &dims,
-                        const vector<int64_t> &expect_dim) {
+                        const vector<int64_t> &expect_dim, bool only_test_first_interface = false) {
     std::cout << "RunTransferShape: origin_format=" << origin_format << ", format=" << format << ", dtype=" << dtype
               << ", dim size=" << dims.size() << std::endl;
     ge::GeShape shape(dims);
@@ -98,6 +101,9 @@ class TransformerTransferShapeUT : public testing::Test {
     EXPECT_EQ(ret, expect_ret);
     if (ret) {
       EXPECT_EQ(shape.GetDims(), expect_dim);
+    }
+    if (only_test_first_interface) {
+      return;
     }
 
     gert::Shape current_shape;
@@ -459,6 +465,7 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nz) {
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_UINT2, true, {1, 18, 134}, {1, 2, 2, 16, 128});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT2, true, {1, 18, 134}, {1, 2, 2, 16, 128});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT4, true, {1, 18, 134}, {1, 3, 2, 16, 64});
+  RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {-2}, {-2}, true);
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {8, 1000}, {63, 1, 16, 16});
 }
 
@@ -571,6 +578,7 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nd_rnn_bias) {
   (void)ge::AttrUtils::SetInt(op_desc, "hidden_size", 0);
   RunTransferShape(op_desc, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, DT_FLOAT16, true, {150}, {150});
   RunTransferShape(op_desc, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, DT_INT8, true, {18, 80}, {18, 80});
+  RunTransferShape(op_desc, ge::FORMAT_ND, ge::FORMAT_ND_RNN_BIAS, DT_FLOAT16, true, {-2}, {-2}, true);
 }
 TEST_F(TransformerTransferShapeUT, transfer_shape_from_nyuva) {
     ShapeTransferAccordingToFormat shape_transfer;
