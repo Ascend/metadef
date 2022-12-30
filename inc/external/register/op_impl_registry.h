@@ -42,7 +42,7 @@ class OpImplRegister {
   using TilingParseFunc = UINT32 (*)(TilingParseContext *context);
 
   explicit OpImplRegister(const ge::char_t *op_type);
-#if !defined ONLY_COMPILE_OPEN_SRC && !defined OP_IMPL_REGISTRY_ENABLE
+#if defined ONLY_COMPILE_OPEN_SRC || defined OP_IMPL_REGISTRY_ENABLE
   OpImplRegister(const OpImplRegister &other);
 #endif
   OpImplRegister &operator=(const OpImplRegister &other);
@@ -90,7 +90,7 @@ class OpImplRegister {
 
  private:
   const ge::char_t *op_type_;
-#if defined ONLY_COMPILE_OPEN_SRC || defined OP_IMPL_REGISTRY_ENABLE
+#if !defined ONLY_COMPILE_OPEN_SRC && !defined OP_IMPL_REGISTRY_ENABLE
   OpImplRegistry::OpImplFunctions &functions_;
 #else
   OpImplRegistry::OpImplFunctions functions_;
