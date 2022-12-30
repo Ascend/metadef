@@ -215,11 +215,7 @@ struct Shape {
  private:
   size_t dim_num_;
   int64_t dims_[kMaxDimNum];
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
-#endif
 };
 static_assert(std::is_standard_layout<Shape>::value, "The class Shape must be a POD");
 }  // namespace gert

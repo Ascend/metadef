@@ -94,15 +94,9 @@ TEST_F(ContinuousVectorUT, TypedOk) {
 }
 
 TEST_F(ContinuousVectorUT, GetOverHeadLengthOk) {
-#ifndef ONLY_COMPILE_OPEN_SRC
   EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(0), 56U);
   EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(1), 64U);
   EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(3), 80U);
-#else
-  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(0), 16U);
-  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(1), 24U);
-  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(3), 40U);
-#endif
 }
 
 TEST_F(ContinuousVectorUT, AddOk) {
@@ -154,11 +148,7 @@ TEST_F(ContinuousVectorUT, AddFailed_WithoutInit) {
 }
 
 TEST_F(ContinuousVectorUT, AddFailed_OutBounds) {
-#ifndef ONLY_COMPILE_OPEN_SRC
   vector<uint8_t> buf(500);
-#else
-  vector<uint8_t> buf(100);
-#endif
   auto cvv = new (buf.data()) ContinuousVectorVector();
   ASSERT_NE(cvv, nullptr);
   cvv->Init(2);

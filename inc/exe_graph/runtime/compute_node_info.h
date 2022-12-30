@@ -69,11 +69,7 @@ class AnchorInstanceInfo {
  private:
   uint32_t instance_start_;
   uint32_t instantiation_num_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8];  // Reserved field, 8-byte aligned
-#endif
 };
 static_assert(std::is_standard_layout<AnchorInstanceInfo>::value, "The class AnchorInstanceInfo must be a POD");
 
@@ -149,11 +145,7 @@ class CompileTimeTensorDesc {
  private:
   ge::DataType data_type_;
   StorageFormat storage_format_;
-#ifndef ONLY_COMPILE_OPEN_SRC
-  uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8];  // Reserved field, 8-byte aligned
-#endif
+  uint8_t reserved_[40]; // Reservd field, 32+8, do not directly use when only 8-byte left
 };
 static_assert(std::is_standard_layout<CompileTimeTensorDesc>::value, "The class CompileTimeTensorDesc must be a POD");
 
@@ -296,11 +288,7 @@ class ComputeNodeInfo {
   size_t ir_inputs_num_;
   size_t inputs_num_;
   size_t outputs_num_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8];  // Reserved field, 8-byte aligned
-#endif
   // following by AnchorInstanceInfo, inputs-outputs-CompileTimeTensorDesc, RuntimeAttrs
   uint64_t place_holder;
 };

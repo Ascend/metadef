@@ -176,11 +176,7 @@ class ExpandDimsType {
  private:
   uint64_t size_ : 8;
   uint64_t mask_ : kMaxExpandSize;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8] = {0U};  // Reserved field, 8-byte aligned
-#endif
 };
 }  // namespace gert
 

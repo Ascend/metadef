@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ONLY_COMPILE_OPEN_SRC
 #include <gtest/gtest.h>
 #define protected public
 #define private public
@@ -90,4 +89,3 @@ TEST_F(AbiCompatibilityForRegisterUT, OpImplRegister_CheckMemLayoutNotChanged) {
   EXPECT_EQ(sizeof(r.reserved_), kReservedFieldSize);
 }
 }  // namespace gert
-#endif

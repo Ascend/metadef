@@ -106,11 +106,7 @@ struct StorageFormat {
   ge::Format origin_format_;
   ge::Format storage_format_;
   ExpandDimsType expand_dims_type_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8] = {0U}; // Reserved field, 8-byte aligned
-#endif
 };
 static_assert(std::is_standard_layout<StorageFormat>::value, "The class StorageFormat must be a POD");
 }  // namespace gert

@@ -28,28 +28,20 @@ using ConstTensorAddress = void *const;  ///< Tensor地址
 
 class Tensor {
  public:
-#ifndef ONLY_COMPILE_OPEN_SRC
   Tensor() {
     memset(reserved_field_, 0, sizeof(reserved_field_));
   }
-#else
-  Tensor() = default;
-#endif
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, const TensorPlacement placement,
          const ge::DataType data_type, TensorAddress addr)
       : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type),
         tensor_data_(addr, nullptr, static_cast<size_t>(ge::GetSizeInBytes(GetShapeSize(), data_type_)), placement) {
     (void) reserved_;
-#ifndef ONLY_COMPILE_OPEN_SRC
     memset(reserved_field_, 0, sizeof(reserved_field_));
-#endif
   }
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, ge::DataType data_type)
       : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type) {
     (void) reserved_;
-#ifndef ONLY_COMPILE_OPEN_SRC
     memset(reserved_field_, 0, sizeof(reserved_field_));
-#endif
   }
   /**
    * 获取shape size，所谓shape size是指本shape中包含的element数量
@@ -317,9 +309,7 @@ class Tensor {
   uint8_t reserved_[4] = {0U}; // Reserved field, 4-byte aligned
   ge::DataType data_type_;
   TensorData tensor_data_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_field_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
-#endif
 };
 static_assert(std::is_standard_layout<Tensor>::value, "The class Tensor must be a POD");
 }  // namespace gert

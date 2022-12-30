@@ -177,11 +177,7 @@ class TilingData {
   size_t capacity_;
   size_t data_size_;
   void *data_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8]; // Reserved field, 8-byte aligned
-#endif
 };
 
 /**

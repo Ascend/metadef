@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ONLY_COMPILE_OPEN_SRC
 #include <gtest/gtest.h>
 #define protected public
 #define private public
@@ -345,4 +344,3 @@ TEST_F(AbiCompatibilityForExeGraphUT, TilingData_CheckMemLayoutNotChanged) {
   free(holder);
 }
 }  // namespace gert
-#endif

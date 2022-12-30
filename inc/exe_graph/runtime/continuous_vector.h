@@ -113,11 +113,7 @@ class ContinuousVector {
  private:
   size_t capacity_;
   size_t size_;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
-#else
-  uint8_t reserved_[8];  // Reserved field, 8-byte aligned
-#endif
   uint8_t elements[8];
 };
 static_assert(std::is_standard_layout<ContinuousVector>::value, "The ContinuousVector must be a POD");
@@ -157,9 +153,7 @@ class ContinuousVectorVector {
       return;
     }
     SetOffset(0U, GetOverHeadLength(capacity_));
-#ifndef ONLY_COMPILE_OPEN_SRC
     memset(reserved_, 0, sizeof(reserved_));
-#endif
   }
 
   template<typename T>
@@ -195,11 +189,7 @@ class ContinuousVectorVector {
   }
 
   static size_t GetOverHeadLength(const size_t capacity) {
-#ifndef ONLY_COMPILE_OPEN_SRC
     return sizeof(capacity_) + sizeof(size_) + sizeof(reserved_) + sizeof(size_t) * capacity;
-#else
-    return sizeof(capacity_) + sizeof(size_) + sizeof(size_t) * capacity;
-#endif
   }
 
  private:
@@ -216,9 +206,7 @@ class ContinuousVectorVector {
  private:
   size_t capacity_ = 0U;
   size_t size_ = 0U;
-#ifndef ONLY_COMPILE_OPEN_SRC
   uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
-#endif
   size_t offset_[1U];
 };
 static_assert(std::is_standard_layout<ContinuousVectorVector>::value, "The ContinuousVectorVector must be a POD");
