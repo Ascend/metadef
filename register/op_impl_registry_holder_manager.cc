@@ -119,9 +119,9 @@ ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpS
   return ge::GRAPH_SUCCESS;
 }
 
-std::unique_ptr<TypesToImpl[]> OmOpImplRegistryHolder::GetOpImplFunctionsByHandle(void *handle,
-                                                                                  const string &so_path,
-                                                                                  size_t &impl_num) {
+std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(void *handle,
+                                                                                const string &so_path,
+                                                                                size_t &impl_num) {
   if (handle == nullptr) {
     GELOGE(ge::FAILED, "handle is nullptr");
     return nullptr;

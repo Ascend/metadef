@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "register/op_impl_registry.h"
+#include "register/op_impl_registry_api.h"
 #include <gtest/gtest.h>
 #include "exe_graph/runtime/kernel_context.h"
 #include "graph/any_value.h"
@@ -286,5 +287,24 @@ TEST_F(OpImplRegistryUT, RegisterInferDatatypeOk) {
 
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").infer_shape, TestInferShapeFunc1);
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl("TestConv2D").infer_datatype, TestInferDataTypeFunc);
+}
+
+TEST_F(OpImplRegistryUT, GetOpImplFunctionsOk) {
+  IMPL_OP(TestConv2D).InferShape(TestInferShapeFunc1).InferDataType(TestInferDataTypeFunc);
+
+  auto impl_num = GetRegisteredOpNum();
+  auto impl_funcs = std::unique_ptr<TypesToImpl[]>(new(std::nothrow) TypesToImpl[impl_num]);
+  auto ret = GetOpImplFunctions(reinterpret_cast<TypesToImpl *>(impl_funcs.get()), impl_num);
+  EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
+  bool check = false;
+  for (uint32_t i = 0; i < impl_num; i++) {
+    std::string op_type = impl_funcs[i].op_type;
+    if (op_type == "TestConv2D") {
+      check = true;
+      EXPECT_EQ(impl_funcs[i].funcs.infer_shape, TestInferShapeFunc1);
+      EXPECT_EQ(impl_funcs[i].funcs.infer_datatype, TestInferDataTypeFunc);
+    }
+  }
+  EXPECT_EQ(check, true);
 }
 }  // namespace gert_test
