@@ -49,6 +49,7 @@ class KernelRegistry {
   };
 };
 
+// todo delete this class after the next synchronization from yellow to blue
 class KernelRegister {
  public:
   explicit KernelRegister(const ge::char_t *kernel_type);
@@ -67,9 +68,30 @@ class KernelRegister {
   std::string kernel_type_;
   KernelRegistry::KernelFuncs kernel_funcs_;
 };
+
+class KernelRegisterData;
+class KernelRegisterV2 {
+ public:
+  explicit KernelRegisterV2(const ge::char_t *kernel_type);
+  KernelRegisterV2(const KernelRegisterV2 &other);
+  ~KernelRegisterV2();
+  KernelRegisterV2 &operator=(const KernelRegisterV2 &other) = delete;
+  KernelRegisterV2 &operator=(KernelRegisterV2 &&other) = delete;
+  KernelRegisterV2(KernelRegisterV2 &&other) = delete;
+
+  KernelRegisterV2 &RunFunc(KernelRegistry::KernelFunc func);
+
+  KernelRegisterV2 &OutputsCreator(KernelRegistry::CreateOutputsFunc func); // to be deleted
+  KernelRegisterV2 &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func);
+  KernelRegisterV2 &OutputsInitializer(KernelRegistry::CreateOutputsFunc func); // to be deleted
+  KernelRegisterV2 &TracePrinter(KernelRegistry::TracePrinter func);
+
+ private:
+  std::unique_ptr<KernelRegisterData> register_data_;
+};
 }  // namespace gert
 
-#define REGISTER_KERNEL_COUNTER2(type, counter) static auto g_register_kernel_##counter = gert::KernelRegister(#type)
+#define REGISTER_KERNEL_COUNTER2(type, counter) static auto g_register_kernel_##counter = gert::KernelRegisterV2(#type)
 #define REGISTER_KERNEL_COUNTER(type, counter) REGISTER_KERNEL_COUNTER2(type, counter)
 #define REGISTER_KERNEL(type) REGISTER_KERNEL_COUNTER(type, __COUNTER__)
 

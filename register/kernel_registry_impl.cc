@@ -17,6 +17,7 @@
 #include "register/kernel_registry_impl.h"
 #include <utility>
 #include "graph/debug/ge_log.h"
+#include "kernel_register_data.h"
 namespace gert {
 namespace {
 ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context) {
@@ -94,5 +95,48 @@ KernelRegister::KernelRegister(const KernelRegister &other) {
     GELOGW("The kernel type starts with \", that maybe a mistake");
   }
   KernelRegistry::GetInstance().RegisterKernel(other.kernel_type_, other.kernel_funcs_);
+}
+
+KernelRegisterV2::KernelRegisterV2(const char *kernel_type)
+    : register_data_(new(std::nothrow) KernelRegisterData(kernel_type)) {}
+KernelRegisterV2::~KernelRegisterV2() = default;
+KernelRegisterV2 &KernelRegisterV2::RunFunc(KernelRegistry::KernelFunc func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().run_func = func;
+  }
+  return *this;
+}
+KernelRegisterV2 &KernelRegisterV2::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().outputs_creator = std::move(func);
+  }
+  return *this;
+}
+KernelRegisterV2 &KernelRegisterV2::OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().outputs_creator_func = func;
+  }
+  return *this;
+}
+KernelRegisterV2 &KernelRegisterV2::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().outputs_initializer = std::move(func);
+  }
+  return *this;
+}
+KernelRegisterV2 &KernelRegisterV2::TracePrinter(KernelRegistry::TracePrinter func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().trace_printer = func;
+  }
+  return *this;
+}
+KernelRegisterV2::KernelRegisterV2(const KernelRegisterV2 &other) : register_data_(nullptr) {
+  auto register_data = other.register_data_.get();
+  if (register_data == nullptr) {
+    GE_LOGE("The register_data_ in register object is nullptr, failed to register funcs");
+    return;
+  }
+  GELOGD("GERT kernel type %s registered", register_data->GetKernelType().c_str());
+  KernelRegistry::GetInstance().RegisterKernel(register_data->GetKernelType(), register_data->GetFuncs());
 }
 }  // namespace gert
