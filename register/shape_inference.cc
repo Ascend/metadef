@@ -16,6 +16,8 @@
 #include "register/shape_inference.h"
 #include "exe_graph/runtime/kernel_run_context_builder.h"
 #include "graph/debug/ge_util.h"
+#include "graph/operator_factory_impl.h"
+#include "graph/compiler_def.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "register/op_impl_registry.h"
@@ -485,4 +487,15 @@ ge::graphStatus InferDataTypeOnCompile(const ge::OpDescPtr &op_desc) {
   }
   return ge::GRAPH_SUCCESS;
 }
+
+class CompileAdaptFunctionsRegister {
+ public:
+  CompileAdaptFunctionsRegister() {
+    // only infer shape is necessary, as register all infer func in infer shape
+    (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(gert::InferShapeOnCompile);
+    (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(gert::InferShapeRangeOnCompile);
+    (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(gert::InferDataTypeOnCompile);
+  }
+};
+static CompileAdaptFunctionsRegister VAR_UNUSED g_register_adapt_funcs;
 }  // namespace gert
