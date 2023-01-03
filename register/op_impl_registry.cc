@@ -18,8 +18,43 @@
 #include "framework/common/debug/ge_log.h"
 #include "graph/operator_factory_impl.h"
 #include "register/shape_inference.h"
+#include "op_impl_register_v2_impl.h"
 
 namespace gert {
+namespace {
+void RegisterOpImplToRegistry(const OpImplRegisterV2Impl *rd) {
+  if (rd == nullptr) {
+    GELOGW("The register data is invalid, the impl is nullptr");
+    return;
+  }
+  auto &funcs = OpImplRegistry::GetInstance().CreateOrGetOpImpl(rd->op_type);
+  if (rd->functions.infer_shape != nullptr) {
+    funcs.infer_shape = rd->functions.infer_shape;
+  }
+  if (rd->functions.infer_shape_range != nullptr) {
+    funcs.infer_shape_range = rd->functions.infer_shape_range;
+  }
+  if (rd->functions.infer_datatype != nullptr) {
+    funcs.infer_datatype = rd->functions.infer_datatype;
+  }
+  if (rd->functions.tiling != nullptr) {
+    funcs.tiling = rd->functions.tiling;
+    funcs.max_tiling_data_size = rd->functions.max_tiling_data_size;
+  }
+  if (rd->functions.inputs_dependency != 0U) {
+    funcs.inputs_dependency = rd->functions.inputs_dependency;
+  }
+  if (rd->functions.tiling_parse != nullptr) {
+    funcs.tiling_parse = rd->functions.tiling_parse;
+    funcs.compile_info_creator = rd->functions.compile_info_creator;
+    funcs.compile_info_deleter = rd->functions.compile_info_deleter;
+  }
+  if (rd->is_private_attr_registered) {
+    funcs.private_attrs = rd->functions.private_attrs;
+    funcs.unique_private_attrs = rd->functions.unique_private_attrs;
+  }
+}
+}
 OpImplRegister::OpImplRegister(const char *op_type)
     : op_type_(op_type),
       functions_(OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type)) {
@@ -29,10 +64,6 @@ OpImplRegister::OpImplRegister(const char *op_type)
 
 OpImplRegister &OpImplRegister::InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func) {
   functions_.infer_shape = infer_shape_func;
-  // only infer shape is necessary, as register all infer func in infer shape
-  (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(gert::InferShapeOnCompile);
-  (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(gert::InferShapeRangeOnCompile);
-  (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(gert::InferDataTypeOnCompile);
   return *this;
 }
 
@@ -67,7 +98,7 @@ OpImplRegister &OpImplRegister::PrivateAttrImpl(const char *private_attr, ge::An
   if (private_attr == nullptr) {
     GELOGE(ge::FAILED, "Failed to set private attr name using nullptr!");
   } else if (strncmp(private_attr, "", 1U) == 0) {
-    GELOGE(ge::FAILED, "Failed to set private attr name using empty string("")!");
+    GELOGE(ge::FAILED, "Failed to set private attr name using empty string!");
   } else {
     if (functions_.unique_private_attrs.insert(private_attr).second) {
       functions_.private_attrs.emplace_back(std::make_pair(private_attr, std::move(private_attr_av)));
@@ -121,5 +152,132 @@ const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const OpI
     return emptyPrivateAttr;
   }
   return op_impl_ptr->private_attrs;
+}
+const map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions> &OpImplRegistry::GetAll() const {
+  return types_to_impl_;
+}
+map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions> &OpImplRegistry::GetAll() {
+  return types_to_impl_;
+}
+OpImplRegisterV2::OpImplRegisterV2(const ge::char_t *op_type) : impl_(new(std::nothrow) OpImplRegisterV2Impl) {
+  if (impl_ != nullptr) {
+    impl_->op_type = op_type;
+    impl_->functions.infer_shape = nullptr;
+    impl_->functions.infer_shape_range = nullptr;
+    impl_->functions.infer_datatype = nullptr;
+    impl_->functions.inputs_dependency = 0U;
+
+    // two fields controlled by tiling func
+    impl_->functions.tiling = nullptr;
+    impl_->functions.max_tiling_data_size = std::numeric_limits<size_t>::max();
+
+    // 3 fields controlled by tiling_parse func
+    impl_->functions.tiling_parse = nullptr;
+    impl_->functions.compile_info_creator = nullptr;
+    impl_->functions.compile_info_deleter = nullptr;
+
+    // private attr controlled by is_private_attr_registered
+
+    OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type);
+  }
+}
+OpImplRegisterV2::~OpImplRegisterV2() = default;
+OpImplRegisterV2::OpImplRegisterV2(const OpImplRegisterV2 &register_data) {
+  RegisterOpImplToRegistry(register_data.impl_.get());
+}
+OpImplRegisterV2::OpImplRegisterV2(OpImplRegisterV2 &&register_data) noexcept {
+  RegisterOpImplToRegistry(register_data.impl_.get());
+}
+OpImplRegisterV2 &OpImplRegisterV2::TilingParse(KernelRegistry::KernelFunc tiling_parse_func,
+                                                OpImplKernelRegistry::CompileInfoCreatorFunc creator_func,
+                                                OpImplKernelRegistry::CompileInfoDeleterFunc deleter_func) {
+  if (impl_ != nullptr) {
+    impl_->functions.tiling_parse = tiling_parse_func;
+    impl_->functions.compile_info_creator = creator_func;
+    impl_->functions.compile_info_deleter = deleter_func;
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func) {
+  if (impl_ != nullptr) {
+    impl_->functions.infer_shape = infer_shape_func;
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::InferShapeRange(
+    OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func) {
+  if (impl_ != nullptr) {
+    impl_->functions.infer_shape_range = infer_shape_range_func;
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func) {
+  if (impl_ != nullptr) {
+    impl_->functions.infer_datatype = infer_datatype_func;
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func,
+                                           size_t max_tiling_data_size) {
+  if (impl_ != nullptr) {
+    impl_->functions.tiling = tiling_func;
+    impl_->functions.max_tiling_data_size = max_tiling_data_size;
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::InputsDataDependency(std::initializer_list<int32_t> inputs) {
+  if (impl_ != nullptr) {
+    impl_->functions.inputs_dependency = 0;
+    for (const auto index : inputs) {
+      if (impl_->functions.SetInputDataDependency(index) != ge::GRAPH_SUCCESS) {
+        GELOGE(ge::FAILED, "Failed to set data dependency for node %s, the input index %d", impl_->op_type.c_str(),
+               index);
+        return *this;
+      }
+    }
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, ge::AnyValue private_attr_av) {
+  if (private_attr == nullptr) {
+    GELOGW("Failed to set private attr name using nullptr!");
+    return *this;
+  }
+  if (strncmp(private_attr, "", 1U) == 0) {
+    GELOGW("Failed to set private attr name using empty string!");
+    return *this;
+  }
+  if (impl_ != nullptr) {
+    impl_->is_private_attr_registered = true;
+    if (impl_->functions.unique_private_attrs.insert(private_attr).second) {
+      impl_->functions.private_attrs.emplace_back(std::make_pair(private_attr, std::move(private_attr_av)));
+    } else {
+      GELOGW("The private attr name: %s has already existed.", private_attr);
+    }
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr) {
+  static ge::AnyValue empty;
+  return PrivateAttr(private_attr, empty);
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, int64_t private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<int64_t>(private_attr_val));
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr,
+                                                const vector<int64_t> &private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::vector<int64_t>>(private_attr_val));
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, const ge::char_t *private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::string>(private_attr_val));
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, float private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<float>(private_attr_val));
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, bool private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<bool>(private_attr_val));
+}
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, const vector<float> &private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::vector<float>>(private_attr_val));
 }
 }  // namespace gert

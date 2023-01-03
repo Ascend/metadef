@@ -675,4 +675,9 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_TestDefaultInferShape) {
   const auto &data_type = op_desc->GetOutputDesc(0U).GetDataType();
   ASSERT_EQ(data_type, DT_BOOL);
 }
+TEST_F(ShapeInferenceUT, AdaptFuncRegisterOk) {
+  ASSERT_NE(OperatorFactoryImpl::GetInferShapeV2Func(), nullptr);
+  ASSERT_NE(OperatorFactoryImpl::GetInferShapeRangeFunc(), nullptr);
+  ASSERT_NE(OperatorFactoryImpl::GetInferDataTypeFunc(), nullptr);
+}
 }  // namespace gert
