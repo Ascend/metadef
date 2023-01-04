@@ -29,6 +29,7 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/tensor_utils.h"
 #include "framework/common/string_util.h"
 #include "framework/common/ge_types.h"
 #include "graph/utils/tensor_utils.h"
@@ -39,6 +40,7 @@ namespace {
 const size_t OUTPUT_PARAM_SIZE = 2UL;
 constexpr int32_t kTopoSortingBfs = 0;
 constexpr int32_t kTopoSortingDfs = 1;
+const std::string kMemoryPriority = "MemoryPriority";
 bool IsUseBFS() {
   std::string run_mode;
   std::string topo_sorting_mode_str;
@@ -62,6 +64,35 @@ bool IsUseBFS() {
     GELOGI("OPTION_GRAPH_RUN_MODE not set, use DFSTopologicalSorting by default.");
   }
   return false;
+}
+
+int64_t GetNodeOutputSize(NodePtr node) {
+  int64_t total_size = 0;
+  if (node == nullptr) {
+    return total_size;
+  }
+  for (const auto &out_desc : node->GetOpDesc()->GetAllOutputsDesc()) {
+    int64_t output_size = 0;
+    (void) ge::TensorUtils::GetSize(out_desc, output_size);
+    total_size += output_size;
+  }
+  return total_size;
+}
+
+void SortNodesInStack(std::vector<NodePtr> &stack) {
+  std::string memory_optimization_policy;
+  ge::GetContext().GetOption(MEMORY_OPTIMIZATION_POLICY, memory_optimization_policy);
+  if (memory_optimization_policy == kMemoryPriority) {
+    std::sort(stack.begin(), stack.end(), [](NodePtr a, NodePtr b) {
+      if (a->GetOutDataNodesSize() == b->GetOutDataNodesSize()) {
+        if (GetNodeOutputSize(a) == GetNodeOutputSize(b)) {
+          return a->GetName() > b->GetName();
+        }
+        return GetNodeOutputSize(a) > GetNodeOutputSize(b);
+      }
+      return a->GetOutDataNodesSize() > b->GetOutDataNodesSize();
+    });
+  }
 }
 }  // namespace
 
@@ -340,7 +371,8 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
   }
   op->SetId(static_cast<int64_t>(GetDirectNodesSize()));
   const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
-  GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
+  GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!");
+                  return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS,
                   REPORT_CALL_ERROR("E18888", "node %s init failed.", op->GetName().c_str());
                   GELOGE(GRAPH_FAILED, "node init fail.");
@@ -812,6 +844,7 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
         std::reverse(tmp_out_nodes.begin(), tmp_out_nodes.end());
       }
       stack.insert(stack.end(), tmp_out_nodes.begin(), tmp_out_nodes.end());
+      SortNodesInStack(stack);
       tmp_out_nodes.clear();
   };
   // Only data nodes here
@@ -849,6 +882,8 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                                                     std::deque<NodePtr> &stack,
                                                     const ConstComputeGraphPtr &compute_graph) {
   GELOGD("Runing_Bfs_Sort: %s", name_.c_str());
+  (void) stack;
+  std::vector<NodePtr> res_stack;
   std::vector<NodePtr> stack_input;
   std::map<std::string, NodePtr> breadth_node_map;
   // Record the number of non data nodes but no input nodes
@@ -856,11 +891,11 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                    return GRAPH_FAILED, "sort nodes failed");
 
   // Only data nodes here
-  while ((!stack_input.empty()) || (!stack.empty())) {
+  while ((!stack_input.empty()) || (!res_stack.empty())) {
     NodePtr node = nullptr;
-    if (!stack.empty()) {
-      node = stack.back();
-      stack.pop_back();
+    if (!res_stack.empty()) {
+      node = res_stack.back();
+      res_stack.pop_back();
     } else {
       node = stack_input.back();
       stack_input.pop_back();
@@ -872,8 +907,9 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
     (void)CollectBreadthOutNode(node, map_in_edge_num, breadth_node_map);
 
     for (const auto &name_node : breadth_node_map) {
-      (void)stack.push_front(name_node.second);
+      (void) res_stack.insert(res_stack.begin(), name_node.second);
     }
+    SortNodesInStack(res_stack);
     breadth_node_map.clear();
   }
   return GRAPH_SUCCESS;
