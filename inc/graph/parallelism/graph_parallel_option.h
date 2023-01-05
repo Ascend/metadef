@@ -38,6 +38,7 @@ struct TensorParallelOption {
 
 struct DataParallelOption {
   bool is_enabled = false;
+  bool is_auto = false;
   bool optimizer_state_sharding = false;
   bool gradient_sharding = false;
   bool model_weight_sharding = false;
