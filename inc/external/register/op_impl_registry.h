@@ -92,8 +92,8 @@ class OpImplRegisterV2Impl;
 class OpImplRegisterV2 {
  public:
   explicit OpImplRegisterV2(const ge::char_t *op_type);
-  OpImplRegisterV2(OpImplRegisterV2 &&) noexcept;
-  OpImplRegisterV2(const OpImplRegisterV2 &);
+  OpImplRegisterV2(OpImplRegisterV2 &&register_data) noexcept;
+  OpImplRegisterV2(const OpImplRegisterV2 &register_data);
   OpImplRegisterV2 &operator=(const OpImplRegisterV2 &) = delete;
   OpImplRegisterV2 &operator=(OpImplRegisterV2 &&) = delete;
   ~OpImplRegisterV2();
