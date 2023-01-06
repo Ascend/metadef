@@ -88,6 +88,9 @@ const DataTypeSymbol& IRDataTypeSymbolStore::GetSymbolValidator(const std::strin
 
 std::string IRDataTypeSymbolStore::GetInputDataTypeSymbol(const std::string &input_name) const {
   auto iter = ir_inputs_2_symbol_.find(input_name);
+  if (iter == ir_inputs_2_symbol_.end()) {
+    return "";
+  }
   return iter->second;
 }
 std::string IRDataTypeSymbolStore::GetOutputDataTypeSymbol(const std::string &output_name) const {
