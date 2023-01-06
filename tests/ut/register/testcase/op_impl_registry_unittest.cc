@@ -602,4 +602,13 @@ TEST_F(OpImplRegistryUT, GetOpImplFunctionsOk) {
   }
   EXPECT_EQ(check, true);
 }
+
+TEST_F(OpImplRegistryUT, GetOpImplFunctionsERR) {
+  IMPL_OP(TestConv2D).InferShape(TestInferShapeFunc1).InferDataType(TestInferDataTypeFunc);
+
+  auto impl_num = GetRegisteredOpNum();
+  auto impl_funcs = std::unique_ptr<TypesToImpl[]>(new(std::nothrow) TypesToImpl[impl_num]);
+  auto ret = GetOpImplFunctions(reinterpret_cast<TypesToImpl *>(impl_funcs.get()), 10);
+  EXPECT_EQ(ret, ge::GRAPH_FAILED);
+}
 }  // namespace gert_test
