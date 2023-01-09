@@ -283,6 +283,17 @@ class TilingContext : public ExtendedKernelContext {
     }
     return workspace->MutableData();
   }
+   /**
+   * 获取 workspace 个数
+   * @return workspace 个数
+   */
+  size_t GetWorkspaceNum() const {
+    const auto workspace = GetOutputPointer<TypedContinuousVector<size_t>>(kOutputWorkspace);
+    if (workspace == nullptr) {
+      return 0U;
+    }
+    return workspace->GetSize();
+  }
   /**
    * 获取 fe::PlatFormInfos 指针
    * @return fe::PlatFormInfos 指针
