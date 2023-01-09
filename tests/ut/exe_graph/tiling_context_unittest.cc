@@ -497,6 +497,7 @@ TEST_F(TilingContextUT, SetWorkspaceSizesOk) {
   ASSERT_NE(ws, nullptr);
   ws[0] = 10240;
   EXPECT_EQ(ws_size->GetSize(), 1);
+  EXPECT_EQ(context->GetWorkspaceNum(), 1U);
   EXPECT_EQ(reinterpret_cast<const size_t *>(ws_size->GetData())[0], 10240);
 }
 
