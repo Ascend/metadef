@@ -67,6 +67,11 @@ ge::NodePtr KernelRunContextBuilder::MakeNode(const ge::OpDescPtr &op_desc) {
   graph_ = std::make_shared<ge::ComputeGraph>("tmp");
   auto fake_node = graph_->AddNode(op_desc);
   for (size_t i = 0UL; i < op_desc->GetAllInputsSize(); ++i) {
+    const auto input_desc = op_desc->GetInputDesc(i);
+    if (input_desc.IsValid() != ge::GRAPH_SUCCESS) {
+      GELOGD("Node: %s, input: %zu, is invalid, skip add edge.", op_desc->GetName().c_str(), i);
+      continue;
+    }
     auto op_data = ge::OpDescBuilder(std::to_string(i), "Data").AddInput("x").AddOutput("y").Build();
     auto data_node = graph_->AddNode(op_data);
     ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), fake_node->GetInDataAnchor(i));
