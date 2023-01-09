@@ -632,7 +632,7 @@ TEST_F(UtestOpDesc, SetTypeModifyIrAttrName_type_not_exist_clear) {
   EXPECT_FALSE(op_desc->GetIrAttrNames().empty());
   EXPECT_FALSE(op_desc->GetIrInputs().empty());
 
-  op_desc->SetType("NotExist");
+  OpDescUtilsEx::SetType(op_desc, "NotExist");
   EXPECT_TRUE(op_desc->GetIrAttrNames().empty());
   EXPECT_TRUE(op_desc->GetIrInputs().empty());
 }
