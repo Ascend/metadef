@@ -282,17 +282,11 @@ string OpDescImpl::GetType() const {
   return meta_data_.type_;
 }
 
-void OpDescImpl::SetType(const std::string &type, OpDescImplPtr &impl_of_target_type) {
+void OpDescImpl::SetType(const std::string &type) {
   if (meta_data_.type_ == type) {
     return;
   }
   meta_data_.type_ = type;
-
-  if (impl_of_target_type != nullptr) {
-    this->meta_data_.ir_meta_ = impl_of_target_type->meta_data_.ir_meta_;
-  } else {
-    this->meta_data_.ir_meta_ = IRMetaData("");
-  }
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    this->GetName(), "type", "", "", type);
@@ -1791,12 +1785,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetType() con
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetType(const std::string &type) {
-  // If the type changes, IR related variables should be modified accordingly
-  auto op = ge::OperatorFactory::CreateOperator("tmp", type.c_str());
-  op.BreakConnect();
-  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
-  auto target_impl = (op_desc == nullptr) ? nullptr : op_desc->impl_;
-  return impl_->SetType(type, target_impl);
+  return impl_->SetType(type);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetIrRelated(const OpDescPtr &op_desc) {

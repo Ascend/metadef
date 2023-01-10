@@ -184,7 +184,7 @@ TEST_F(ProfilerUt, Reset) {
   std::stringstream ss;
   p->Dump(ss);
   auto lines = SplitLines(ss.str());
-  EXPECT_EQ(lines.size(), 2);
+  EXPECT_EQ(lines.size(), 0);
 }
 
 TEST_F(ProfilerUt, ResetRemainsRegisteredString) {
@@ -196,7 +196,7 @@ TEST_F(ProfilerUt, ResetRemainsRegisteredString) {
   std::stringstream ss;
   p->Dump(ss);
   auto lines = SplitLines(ss.str());
-  EXPECT_EQ(lines.size(), 2);
+  EXPECT_EQ(lines.size(), 0);
 
 
   p->Record(0, 1, 2, EventType::kEventStart, std::chrono::system_clock::now());

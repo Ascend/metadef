@@ -101,6 +101,9 @@ void Profiler::Record(const int64_t element, const int64_t thread, const int64_t
   records_[current_index] = ProfilingRecord({element, thread, event, et, time_point});
 }
 void Profiler::Dump(std::ostream &out_stream) const {
+  if (record_size_ == 0UL) {
+    return;
+  }
   size_t print_size = record_size_;
   out_stream << "Profiler version: " << &kVersion[0]
              << ", dump start, records num: " << print_size << std::endl;

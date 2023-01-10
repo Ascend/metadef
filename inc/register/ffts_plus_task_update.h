@@ -80,7 +80,7 @@ class FFTSPlusTaskUpdate {
     return SUCCESS;
   }
 
-  virtual Status UpdateStaticDataCtx(size_t ctx_num, std::vector<uintptr_t> &io_addrs, size_t align_offset,
+  virtual Status UpdateStaticDataCtx(size_t ctx_num, std::vector<uint64_t> &io_addrs, size_t align_offset,
                                      size_t host_io_base, std::map<size_t, std::vector<uint32_t>> &ctx_ids_map) {
     (void)ctx_num;
     (void)io_addrs;
