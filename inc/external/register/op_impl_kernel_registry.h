@@ -72,10 +72,7 @@ struct OpImplKernelRegistry {
     PrivateAttrList private_attrs;
     // todo 去重和registry没关系，下一步从这里删除，移动到register中实现
     PrivateAttrSet unique_private_attrs;
-#if defined ONLY_COMPILE_OPEN_SRC || defined OP_IMPL_REGISTRY_ENABLE
-    bool is_register = false;
-#endif
-    uint8_t reserved_0_[7] = {0U};   // Reserved field, 8-byte aligned for is_register
+    uint8_t reserved_0_[7] = {0U};   // Reserved field, 8-byte aligned for unique_private_attrs
     uint8_t reserved_1_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
   };
   virtual ~OpImplKernelRegistry() {}
