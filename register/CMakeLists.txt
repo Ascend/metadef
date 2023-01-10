@@ -231,7 +231,7 @@ target_compile_definitions(rt2_registry_static PRIVATE
     $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
-target_include_directories(rt2_registry_static PUBLIC
+target_include_directories(rt2_registry_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
