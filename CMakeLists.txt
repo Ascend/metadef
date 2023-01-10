@@ -113,7 +113,7 @@ if (ENABLE_METADEF_UT OR ENABLE_METADEF_ST)
     add_subdirectory(tests)
 endif()
 
-install(TARGETS exe_graph error_manager graph graph_base flow_graph register metadef_headers
+install(TARGETS exe_graph error_manager graph graph_base flow_graph register rt2_registry_static metadef_headers
     EXPORT metadef-targets
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk
     ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk

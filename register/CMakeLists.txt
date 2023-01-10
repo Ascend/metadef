@@ -254,6 +254,6 @@ target_link_libraries(rt2_registry_static
 )
 
 ############ install ############
-install(TARGETS register_static rt2_registry_static
+install(TARGETS register_static
     ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
 )
