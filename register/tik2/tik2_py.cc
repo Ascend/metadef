@@ -30,6 +30,7 @@
 #include "exe_graph/runtime/kernel_run_context_builder.h"
 #include "exe_graph/runtime/tiling_context.h"
 #include "common/checker.h"
+#include "common/util/mem_utils.h"
 #include "register/op_check.h"
 #include "register/tilingdata_base.h"
 
@@ -155,7 +156,7 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   ge::GeTensorDesc ge_tensor(ge_shape, ge_format, ge_dtype);
   ge_tensor.SetName(name);
   ge::GeTensor const_tensor(ge_tensor, res.first->second);
-  ge::GeTensorPtr const_tensor_ptr = std::make_shared<ge::GeTensor>(const_tensor);
+  ge::GeTensorPtr const_tensor_ptr = ge::MakeShared<ge::GeTensor>(const_tensor);
   ge::OpDescPtr const_op_desc = ge::OpDescUtils::CreateConstOp(const_tensor_ptr);
   ge::Operator const_op = ge::OpDescUtils::CreateOperatorFromOpDesc(const_op_desc);
   (void) op_para.SetInput(name.c_str(), const_op);
@@ -259,23 +260,23 @@ using ParseAndSetAttrValueFunc = std::function<void(ge::Operator &, const nlohma
 using ParseAndSetAttrValuePtr = std::shared_ptr<ParseAndSetAttrValueFunc>;
 
 const std::map<std::string, ParseAndSetAttrValuePtr> parse_attr_dtype_map = {
-    {"bool", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<bool>)},
-    {"float", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<float>)},
-    {"float32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<float>)},
-    {"int", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int32_t>)},
-    {"int32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int32_t>)},
-    {"int64", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int64_t>)},
-    {"str", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<std::string>)},
-    {"list_bool", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<bool>)},
-    {"list_float", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<float>)},
-    {"list_float32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<float>)},
-    {"list_int", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int32_t>)},
-    {"list_int32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int32_t>)},
-    {"list_int64", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int64_t>)},
-    {"list_str", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<std::string>)},
-    {"list_list_int", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListValue)},
-    {"list_list_int32", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListValue)},
-    {"list_list_int64", std::make_shared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListInt64Value)}};
+    {"bool", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<bool>)},
+    {"float", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<float>)},
+    {"float32", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<float>)},
+    {"int", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int32_t>)},
+    {"int32", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int32_t>)},
+    {"int64", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<int64_t>)},
+    {"str", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrValue<std::string>)},
+    {"list_bool", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<bool>)},
+    {"list_float", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<float>)},
+    {"list_float32", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<float>)},
+    {"list_int", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int32_t>)},
+    {"list_int32", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int32_t>)},
+    {"list_int64", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<int64_t>)},
+    {"list_str", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListValue<std::string>)},
+    {"list_list_int", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListValue)},
+    {"list_list_int32", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListValue)},
+    {"list_list_int64", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListInt64Value)}};
 
 void ParseAndSetAttr(const nlohmann::json &attr, ge::Operator &op) {
   if (!attr.contains("name") || !attr.contains("dtype") || !attr.contains("value")) {
@@ -335,8 +336,10 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
                                       size_t result_info_len) {
   if ((check_type == nullptr) || (optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) ||
       (attrs == nullptr) || (result_info == nullptr)) {
-    REPORT_CALL_ERROR("E19999", "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
-                      check_type, optype, inputs, outputs, attrs, result_info);
+    GELOGE(ge::GRAPH_FAILED, "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
+           check_type, optype, inputs, outputs, attrs, result_info);
+    REPORT_INNER_ERROR("E19999", "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
+                       check_type, optype, inputs, outputs, attrs, result_info);
     return 0;
   }
   ge::AscendString check_type_str = check_type;
@@ -347,7 +350,7 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
     return 0;
   }
 
-  ge::OpDescPtr op_desc_ptr = std::make_shared<ge::OpDesc>("", op_type_str.GetString());
+  ge::OpDescPtr op_desc_ptr = ge::MakeShared<ge::OpDesc>("", op_type_str.GetString());
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_param;
   try {
@@ -379,9 +382,12 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
                                           size_t result_info_len) {
   if ((optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) || (attrs == nullptr) ||
       (generalize_config == nullptr) || (result_info == nullptr)) {
-    REPORT_CALL_ERROR("E19999",
-                      "optype/inputs/outputs/attrs/generalize_config/result_info is null, %s, %s, %s, %s, %s, %s",
-                      optype, inputs, outputs, attrs, generalize_config, result_info);
+    GELOGE(ge::GRAPH_FAILED,
+           "optype/inputs/outputs/attrs/generalize_config/result_info is null, %s, %s, %s, %s, %s, %s", optype, inputs,
+           outputs, attrs, generalize_config, result_info);
+    REPORT_INNER_ERROR("E19999",
+                       "optype/inputs/outputs/attrs/generalize_config/result_info is null, %s, %s, %s, %s, %s, %s",
+                       optype, inputs, outputs, attrs, generalize_config, result_info);
     return 0;
   }
   ge::AscendString op_type_str = optype;
@@ -391,7 +397,7 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
     return 0;
   }
 
-  ge::OpDescPtr op_desc_ptr = std::make_shared<ge::OpDesc>("", op_type_str.GetString());
+  ge::OpDescPtr op_desc_ptr = ge::MakeShared<ge::OpDesc>("", op_type_str.GetString());
   std::map<std::string, std::vector<uint8_t>> const_values;
   ge::Operator operator_params;
   try {
@@ -421,7 +427,8 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
 
 extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len) {
   if ((optype == nullptr) || (result_info == nullptr)) {
-    REPORT_CALL_ERROR("E19999", "optype/result_info is null, %s, %s", optype, result_info);
+    GELOGE(ge::GRAPH_FAILED, "optype/result_info is null, %s, %s", optype, result_info);
+    REPORT_INNER_ERROR("E19999", "optype/result_info is null, %s, %s", optype, result_info);
     return 0;
   }
   ge::AscendString op_type_str = optype;
@@ -454,4 +461,151 @@ extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_
     return 0;
   }
   return 1;
+}
+
+extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int block_dim,
+                                       const char *block_factor, const char *tiling_data, const char *kernel_name,
+                                       const char *entry_file, const char *output_kernel_file) {
+  if ((optype == nullptr) || (soc_version == nullptr) || (block_factor == nullptr) || (tiling_data == nullptr) ||
+      (kernel_name == nullptr) || (entry_file == nullptr) || (output_kernel_file == nullptr)) {
+    GELOGE(ge::GRAPH_FAILED,
+           "optype/soc_version/block_factor/tiling_data/kernel_name/entry_file/output_kernel_file is null, "
+           "%s, %s, %s, %s, %s, %s, %s",
+           optype, soc_version, block_factor, tiling_data, kernel_name, entry_file, output_kernel_file);
+    REPORT_INNER_ERROR("E19999",
+                       "optype/soc_version/block_factor/tiling_data/kernel_name/entry_file/output_kernel_file is null, "
+                       "%s, %s, %s, %s, %s, %s, %s",
+                       optype, soc_version, block_factor, tiling_data, kernel_name, entry_file, output_kernel_file);
+    return 0;
+  }
+  ge::AscendString op_type_str = optype;
+  ge::AscendString soc_version_str = soc_version;
+  auto replay_func = OpCheckFuncRegistry::GetReplay(op_type_str, soc_version_str);
+  if (replay_func == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Failed to GetReplay. optype = %s, soc_version = %s", optype, soc_version);
+    return 0;
+  }
+  try {
+    const nlohmann::json block_factor_json = nlohmann::json::parse(block_factor);
+    const size_t block_factor_cnt = block_factor_json.size();
+    uint64_t block_factor_data[block_factor_cnt];
+    for (size_t i = 0; i < block_factor_json.size(); ++i) {
+      block_factor_data[i] = block_factor_json[i];
+    }
+    const int rc = (replay_func)(block_dim, block_factor_data, block_factor_cnt, tiling_data, kernel_name, entry_file,
+                                 output_kernel_file);
+    return rc;
+  } catch (...) {
+    REPORT_CALL_ERROR("E19999", "Failed to parse block_factor json. %s", block_factor);
+    return 0;
+  }
+}
+
+static int DefaultBlockFactor(int block_dim, const ge::Operator &op, ge::AscendString &result) {
+  if (block_dim == 0) {
+    GELOGE(ge::GRAPH_FAILED, "DefaultBlockFactor block_dim is invalid, %d", block_dim);
+    REPORT_INNER_ERROR("E19999", "DefaultBlockFactor block_dim is invalid, %d", block_dim);
+    return 0;
+  }
+  nlohmann::json block_dim_factor_arr;
+  for (size_t input_pos = 0; input_pos < op.GetInputsSize(); ++input_pos) {
+    const auto &input = op.GetInputDesc(input_pos);
+    int64_t data_len = GetSizeByDataType(input.GetDataType());
+    int64_t shape_size = input.GetShape().GetShapeSize();
+    if (ge::MulOverflow(data_len, shape_size, data_len)) {
+      GELOGE(ge::GRAPH_FAILED, "MulOverflow data_len=%ld, input shape=%ld", data_len, shape_size);
+      REPORT_INNER_ERROR("E19999", "MulOverflow data_len=%ld, input shape=%ld", data_len, shape_size);
+      return 0;
+    }
+    block_dim_factor_arr.push_back(data_len / block_dim);
+  }
+  for (size_t output_pos = 0; output_pos < op.GetOutputsSize(); ++output_pos) {
+    const auto &output = op.GetInputDesc(output_pos);
+    int64_t data_len = GetSizeByDataType(output.GetDataType());
+    int64_t shape_size = output.GetShape().GetShapeSize();
+    if (ge::MulOverflow(data_len, shape_size, data_len)) {
+      GELOGE(ge::GRAPH_FAILED, "MulOverflow data_len=%ld, output shape=%ld", data_len, shape_size);
+      REPORT_INNER_ERROR("E19999", "MulOverflow data_len=%ld, output shape=%ld", data_len, shape_size);
+      return 0;
+    }
+    block_dim_factor_arr.push_back(data_len / block_dim);
+  }
+
+  const std::string std_str = block_dim_factor_arr.dump();
+  result = ge::AscendString(std_str.c_str());
+  return 1;
+}
+
+extern "C" int Tik2PyInterfaceGetBlockFactor(const char *optype, const char *inputs, const char *outputs, int block_dim,
+                                             char *result_info, size_t result_info_len) {
+  if ((optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) || (result_info == nullptr)) {
+    GELOGE(ge::GRAPH_FAILED, "optype/inputs/outputs/result_info is null, %s, %s, %s, %s", optype, inputs, outputs,
+           result_info);
+    REPORT_INNER_ERROR("E19999", "optype/inputs/outputs/result_info is null, %s, %s, %s, %s", optype, inputs, outputs,
+                       result_info);
+    return 0;
+  }
+  ge::AscendString op_type_str = optype;
+  ge::OpDescPtr op_desc_ptr = ge::MakeShared<ge::OpDesc>("", op_type_str.GetString());
+  std::map<std::string, std::vector<uint8_t>> const_values;
+  ge::Operator operator_params;
+  try {
+    ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_params, const_values);
+  } catch (...) {
+    REPORT_CALL_ERROR("E19999", "Failed to parse json in Tik2PyInterfaceGetBlockFactor. %s, %s", inputs, outputs);
+    return 0;
+  }
+
+  auto block_factor_func = OpCheckFuncRegistry::GetReplayBlockFactor(op_type_str);
+  ge::AscendString result;
+  if (block_factor_func == nullptr) {
+    const int rc = DefaultBlockFactor(block_dim, operator_params, result);
+    if (rc == 0) {
+      return 0;
+    }
+  } else {
+    const int rc = (block_factor_func)(block_dim, operator_params, result);
+    if (rc == 0) {
+      REPORT_CALL_ERROR("E19999", "block_factor_func failed. optype = %s, inputs = %s, outputs = %s, block_dim = %d.",
+                        optype, inputs, outputs, block_dim);
+      return 0;
+    }
+  }
+  std::string std_str = result.GetString();
+  bool dump_res = DumpResultInfo(std_str, result_info, result_info_len);
+  if (!dump_res) {
+    REPORT_CALL_ERROR("E19999", "DumpResultInfo failed. result = %s", std_str.c_str());
+    return 0;
+  }
+  return 1;
+}
+
+extern "C" int Tik2PyInterfaceGetReplayConfig(const char *optype, char *result_info, size_t result_info_len) {
+  if ((optype == nullptr) || (result_info == nullptr)) {
+    GELOGE(ge::GRAPH_FAILED, "optype/result_info is null, %s, %s", optype, result_info);
+    REPORT_INNER_ERROR("E19999", "optype/result_info is null, %s, %s", optype, result_info);
+    return 0;
+  }
+  ge::AscendString op_type_str = optype;
+  auto replay_config_func = OpCheckFuncRegistry::GetReplayConfig(op_type_str);
+  if (replay_config_func == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Failed to GetReplayConfig. optype = %s", optype);
+    return 0;
+  }
+  int mode = 0;
+  int max_block_dim = 0;
+  int max_shape_size = 0;
+  const int rc = (replay_config_func)(&mode, &max_block_dim, &max_shape_size);
+  nlohmann::json json_obj;
+  json_obj["mode"] = mode;
+  json_obj["max_block_dim"] = max_block_dim;
+  json_obj["max_shape_size"] = max_shape_size;
+
+  const std::string std_str = json_obj.dump();
+  bool dump_res = DumpResultInfo(std_str, result_info, result_info_len);
+  if (!dump_res) {
+    REPORT_CALL_ERROR("E19999", "DumpResultInfo failed. result = %s", std_str.c_str());
+    return 0;
+  }
+  return rc;
 }

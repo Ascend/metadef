@@ -33,9 +33,15 @@ typedef int (*OP_CHECK_FUNC)(const ge::Operator &op, ge::AscendString &result);
 typedef int (*PARAM_GENERALIZE_FUNC)(const ge::Operator &op, const ge::AscendString &generalize_config,
                                      ge::AscendString &generalized_op_params);
 
+typedef int (*REPLAY_FUNC)(int block_dim, uint64_t block_factor[], int block_factor_cnt, const char *tiling_data,
+                           const char *kernel_name, const char *entry_file, const char *output_kernel_file);
+typedef int (*REPLAY_BLOCK_FACTOR_FUNC)(int block_dim, const ge::Operator &op, ge::AscendString &result);
+typedef int (*REPLAY_CONFIG_FUNC)(int *mode, int *max_block_dim, int *max_shape_size);
+
 class OpCheckFuncRegistry {
 public:
-  static void RegisterOpCapability(const ge::AscendString &check_type, const ge::AscendString &op_type, OP_CHECK_FUNC func);
+  static void RegisterOpCapability(const ge::AscendString &check_type, const ge::AscendString &op_type,
+                                   OP_CHECK_FUNC func);
 
   static OP_CHECK_FUNC GetOpCapability(const ge::AscendString &check_type, const ge::AscendString &op_type);
 
@@ -43,9 +49,19 @@ public:
 
   static void RegisterParamGeneralize(const ge::AscendString &op_type, PARAM_GENERALIZE_FUNC func);
 
+  static void RegisterReplay(const ge::AscendString &op_type, const ge::AscendString &soc_version, REPLAY_FUNC func);
+  static REPLAY_FUNC GetReplay(const ge::AscendString &op_type, const ge::AscendString &soc_version);
+  static void RegisterReplayBlockFactor(const ge::AscendString &op_type, REPLAY_BLOCK_FACTOR_FUNC func);
+  static REPLAY_BLOCK_FACTOR_FUNC GetReplayBlockFactor(const ge::AscendString &op_type);
+  static void RegisterReplayConfig(const ge::AscendString &op_type, REPLAY_CONFIG_FUNC func);
+  static REPLAY_CONFIG_FUNC GetReplayConfig(const ge::AscendString &op_type);
+
 private:
   static std::map<ge::AscendString, std::map<ge::AscendString, OP_CHECK_FUNC>> check_op_capability_instance_;
   static std::map<ge::AscendString, PARAM_GENERALIZE_FUNC> param_generalize_instance_;
+  static std::map<ge::AscendString, std::map<ge::AscendString, REPLAY_FUNC>> replay_instance_;
+  static std::map<ge::AscendString, REPLAY_BLOCK_FACTOR_FUNC> replay_block_factor_instance_;
+  static std::map<ge::AscendString, REPLAY_CONFIG_FUNC> replay_config_instance_;
 };
 
 class OpCheckFuncHelper {
@@ -53,6 +69,16 @@ public:
   OpCheckFuncHelper(const ge::AscendString &check_type, const ge::AscendString &op_type, OP_CHECK_FUNC func);
 
   OpCheckFuncHelper(const ge::AscendString &op_type, PARAM_GENERALIZE_FUNC func);
+};
+
+class ReplayFuncHelper {
+public:
+  ReplayFuncHelper(const ge::AscendString &op_type, const ge::AscendString &soc_version, REPLAY_FUNC func);
+  ReplayFuncHelper(const ge::AscendString &op_type, REPLAY_CONFIG_FUNC func);
+};
+class ReplayBlockFactorHelper {
+public:
+  ReplayBlockFactorHelper(const ge::AscendString &op_type, REPLAY_BLOCK_FACTOR_FUNC func);
 };
 
 #define REG_CHECK_SUPPORT(op_type, func)                                                                               \
@@ -66,5 +92,11 @@ public:
 
 #define REG_OP_PARAM_GENERALIZE(op_type, generalize_func)                                                              \
   static OpCheckFuncHelper op_check_generalize_registry_##op_type(#op_type, generalize_func)
-} // end of namespace optiling
+
+#define REG_REPLAY_FUNC(op_type, soc_version, func)                                                                    \
+  static ReplayFuncHelper op_replay_registry_##op_type_##soc_version(#op_type, #soc_version, func)
+#define REG_REPLAY_CONFIG(op_type, func) static ReplayFuncHelper op_replay_config_registry_##op_type(#op_type, func)
+#define REG_REPLAY_BLKFACT(op_type, func)                                                                              \
+  static ReplayBlockFactorHelper op_replay_block_factor_registry_##op_type(#op_type, func)
+}  // end of namespace optiling
 #endif  // INC_REGISTER_TIK2_OP_CHECK_H_
