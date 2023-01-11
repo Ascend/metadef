@@ -429,7 +429,7 @@ ge::graphStatus InferShapeRangeAutomaticly(const ge::Operator &op, const ge::OpD
 
 ge::graphStatus InferShapeRangeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc) {
   const auto &functions = OpImplRegistry::GetInstance().GetOpImpl(op_desc->GetType());
-  if (functions->infer_shape_range == nullptr) {
+  if ((functions == nullptr) || (functions->infer_shape_range == nullptr)) {
     GELOGI("Can not get infer shape range func op[%s], type[%s], will use an automatic derivation strategy.",
            op_desc->GetName().c_str(), op_desc->GetType().c_str());
     return InferShapeRangeAutomaticly(op, op_desc, functions->infer_shape);
