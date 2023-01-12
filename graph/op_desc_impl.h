@@ -48,7 +48,7 @@ class OpDescImpl {
   void SetName(const std::string &name);
 
   std::string GetType() const;
-  void SetType(const std::string &type, OpDescImplPtr &impl_of_target_type);
+  void SetType(const std::string &type);
   void SetIrRelated(const OpDescImpl *r_op_desc);
 
   graphStatus AddInputDesc(const ge::GeTensorDesc &input_desc);
