@@ -15,7 +15,7 @@
  */
 
 #include "graph/utils/graph_utils.h"
-
+#include "graph/ge_local_context.h"
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
@@ -49,6 +49,7 @@ enum class DumpGraphLevel {
   kDumpLevel1 = 1,
   kDumpLevel2,
   kDumpLevel3,
+  kDumpLevel4,
   kDumpLevelOther,
 };
 
@@ -63,6 +64,7 @@ const char_t *const kDumpGraphPath = "DUMP_GRAPH_PATH";
 
 const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
 const char_t *const kDumpStrBuild = "Build";
+const char_t *const kDumpStrPreRunBegin = "PreRunBegin";
 const char_t *const kDumpStrPartition = "partition";
 const char_t *const kDumpStrOptimizeSubgraph = "OptimizeSubGraph";
 const char_t *const kDumpStrSubgraphFunc = "sub_graph";
@@ -597,6 +599,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(con
     return true;
   }
 
+  if (dump_graph_level == static_cast<int64_t>(DumpGraphLevel::kDumpLevel4)
+      && suffix.compare(kDumpStrPreRunBegin) != 0) {
+    return true;
+  }
+
   return false;
 }
 
@@ -626,6 +633,49 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
   }
 }
 
+bool SetOptions2GraphInner(const std::map<std::string, std::string>& option,
+                           const std::string& attr_name, const ge::ComputeGraphPtr &graph) {
+  // set graph options
+  ge::NamedAttrs attr;
+  attr.SetName(attr_name);
+  for (auto itr_graph = option.begin(); itr_graph != option.end(); itr_graph++) {
+    auto const ret = attr.SetAttr(itr_graph->first, GeAttrValue::CreateFrom<std::string>(itr_graph->second));
+    if (ret != GRAPH_SUCCESS) {
+      GELOGE(GRAPH_FAILED, "set [%s:] [%s]=[%s] to graph fail.",
+             attr.GetName().c_str(), itr_graph->first.c_str(), itr_graph->second.c_str());
+      return false;
+    }
+  }
+  auto ret = ge::AttrUtils::SetNamedAttrs(graph, attr_name, attr);
+  if (!ret) {
+    GELOGE(GRAPH_FAILED, "set [%s] to graph fail.", attr_name.c_str());
+    return false;
+  }
+  return true;
+}
+bool SetOptions2Graph(const int64_t dump_level, const ge::ComputeGraphPtr &graph) {
+  if (graph == nullptr) {
+    GELOGE(GRAPH_FAILED, "graph is nullptr");
+    return false;
+  }
+  if (dump_level == static_cast<int64_t>(ge::DumpLevel::DUMP_ALL)
+      || dump_level == static_cast<int64_t>(ge::DumpLevel::DUMP_WITH_OUT_DATA)) {
+    GEThreadLocalContext &context = GetThreadLocalContext();
+    const std::map<std::string, std::string>& tmp_graph_options = context.GetAllGraphOptions();
+    const std::map<std::string, std::string>& tmp_session_options = context.GetAllSessionOptions();
+    const std::map<std::string, std::string>& tmp_global_options = context.GetAllGlobalOptions();
+    if (!SetOptions2GraphInner(tmp_graph_options, "GraphOptions", graph)) {
+      return false;
+    }
+    if (!SetOptions2GraphInner(tmp_global_options, "GlobalOptions", graph)) {
+      return false;
+    }
+    if (!SetOptions2GraphInner(tmp_session_options, "SessionOptions", graph)) {
+      return false;
+    }
+  }
+  return true;
+}
 graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
                             const std::string &user_graph_name, std::string &real_path_name) {
   std::string relative_path;
@@ -720,7 +770,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   static std::atomic<int64_t> atomic_file_index(0);
   const auto file_index = atomic_file_index.fetch_add(1);
   GELOGD("Start to dump om txt: %" PRId64, file_index);
-  if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) { return; }
+  if (CheckDumpGraphNum(file_index) != GRAPH_SUCCESS) {
+    return;
+  }
   std::string real_path_name;
   auto const ret = GetDumpRealPath(file_index, suffix, user_graph_name, real_path_name);
   if (ret != GRAPH_SUCCESS) {
@@ -730,15 +782,20 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
 
   // Create model
   ge::Model model("", "");
+  const int64_t dump_level = (dump_ge_graph[0U] != '\0')
+      ? std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue)
+      : static_cast<int64_t>(ge::DumpLevel::NO_DUMP);
+  if (!SetOptions2Graph(dump_level, graph) && (!is_always_dump)) {
+      return;
+    }
+
   model.SetGraph(graph);
-  const ge::DumpLevel dump_level =
-      static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue));
   ge::proto::ModelDef ge_proto;
-  if (model.Save(ge_proto, (dump_level != ge::DumpLevel::DUMP_ALL) && (!is_always_dump)) != SUCCESS) {
+  if (model.Save(ge_proto, (dump_level != static_cast<int64_t>(ge::DumpLevel::DUMP_ALL))
+                 && (!is_always_dump)) != SUCCESS) {
     return;
   }
   GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
-
 #else
   (void)graph;
   (void)suffix;
