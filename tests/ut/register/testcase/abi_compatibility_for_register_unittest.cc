@@ -30,7 +30,7 @@ constexpr const size_t kReservedFieldSize = 40U;
 
 constexpr const size_t kOpImplFunctionsSize = 200U;
 constexpr const size_t kOpImplRegistrySize = 88U + kVirtualTableSize;
-constexpr const size_t kOpImplRegisterSize = 248U;
+constexpr const size_t kOpImplRegisterSize = 56U;
 }  // namespace
 
 constexpr size_t OpImplKernelRegistry::OpImplFunctions::kInt64ByteCount;
@@ -59,9 +59,8 @@ TEST_F(AbiCompatibilityForRegisterUT, OpImplFunctions_CheckMemLayoutNotChanged) 
             sizeof(uint64_t));
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.unique_private_attrs) - reinterpret_cast<uintptr_t>(&f.private_attrs),
             kVectorSize);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.is_register) - reinterpret_cast<uintptr_t>(&f.unique_private_attrs),
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_0_) - reinterpret_cast<uintptr_t>(&f.unique_private_attrs),
             kUnorderedSetSize);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_0_) - reinterpret_cast<uintptr_t>(&f.is_register), 1);
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_1_) - reinterpret_cast<uintptr_t>(&f.reserved_0_), 7);
 
   EXPECT_EQ(sizeof(f.reserved_1_), kReservedFieldSize);
@@ -74,18 +73,6 @@ TEST_F(AbiCompatibilityForRegisterUT, OpImplRegistry_CheckMemLayoutNotChanged) {
 
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&r.reserved_) - reinterpret_cast<uintptr_t>(&r.types_to_impl_),
             kMapSize);
-  EXPECT_EQ(sizeof(r.reserved_), kReservedFieldSize);
-}
-
-TEST_F(AbiCompatibilityForRegisterUT, OpImplRegister_CheckMemLayoutNotChanged) {
-  OpImplRegister r("test");
-  ASSERT_EQ(sizeof(r), kOpImplRegisterSize);
-  ASSERT_EQ(static_cast<void *>(&r), static_cast<void *>(&r.op_type_));
-
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&r.functions_) - reinterpret_cast<uintptr_t>(&r.op_type_),
-            kPointerSize);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&r.reserved_) - reinterpret_cast<uintptr_t>(&r.functions_),
-            kOpImplFunctionsSize);
   EXPECT_EQ(sizeof(r.reserved_), kReservedFieldSize);
 }
 }  // namespace gert
