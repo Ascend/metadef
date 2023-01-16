@@ -393,6 +393,8 @@ message FftsPlusSqeDef {
     uint32 aic_prefetch_upper = 10;
     uint32 aiv_prefetch_lower = 11;
     uint32 aiv_prefetch_upper = 12;
+
+    uint32 data_split_unit = 13;
 }
 
 message StarsSqeHeaderDef {
