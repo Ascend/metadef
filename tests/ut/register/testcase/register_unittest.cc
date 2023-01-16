@@ -1095,6 +1095,11 @@ int get_op_specific_info_stub(const ge::Operator &op, ge::AscendString &result) 
   return 1;
 }
 
+int check_supported_stub_throw(const ge::Operator &op, ge::AscendString &result) {
+  throw "bad callback";
+  return 1;
+}
+
 TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
@@ -1191,6 +1196,34 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_callback) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
+TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_throw) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int32","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
+{ "name": "attr_1","dtype": "int","value": 99},
+{ "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "tik2_py_interface_check_cap_fail_throw";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // check_supported
+  REG_CHECK_SUPPORT(tik2_py_interface_check_cap_fail_throw, check_supported_stub_throw);
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED.GetString(), op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
 TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   EXPECT_EQ(Tik2PyInterfaceCheckOp(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
@@ -1201,6 +1234,14 @@ int generalize_stub(const ge::Operator &op, const ge::AscendString &generalize_c
   const nlohmann::json res_json = R"({"op_info": "generalize_stub"})"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
+  return 1;
+}
+
+int generalize_stub_throw(const ge::Operator &op, const ge::AscendString &generalize_config, ge::AscendString &result) {
+  const nlohmann::json res_json = R"({"op_info": "generalize_stub"})"_json;
+  std::string res_json_str = res_json.dump();
+  result = AscendString(res_json_str.c_str());
+  throw "bad callback";
   return 1;
 }
 
@@ -1265,6 +1306,36 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_callback) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
+TEST_F(UtestRegister, tik2_py_interface_generalize_fail_throw) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "float16", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "float32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int64","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "uint32","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_list_int64","value": [[1, 2], [3, 4]]},
+{ "name": "attr_1","dtype": "uint32","value": 99},
+{ "name": "attr_2","dtype": "list_list_int32","value": [[1, 2], [3, 4]]},
+{ "name": "op_para_size", "dtype": "uint16", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "tik2_py_interface_generalize_fail_throw";
+  std::string generalize_config = "keep_rank";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // shape generalize
+  REG_OP_PARAM_GENERALIZE(tik2_py_interface_generalize_fail_throw, generalize_stub_throw);
+  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+                                       generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+  
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
 TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   EXPECT_EQ(Tik2PyInterfaceGeneralized(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
@@ -1323,6 +1394,12 @@ int replay_stub(int blkdim, uint64_t blkfact[], int blkfact_cnt, const char *til
   return 1;
 }
 
+int replay_stub_throw(int blkdim, uint64_t blkfact[], int blkfact_cnt, const char *tilingdata_file,
+                           const char *kernelname, const char *entry_file, const char *output_kernel_file) {
+  throw "bad callback";
+  return 1;
+}
+
 TEST_F(UtestRegister, tik2_py_interface_op_replay_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0); 
   std::string op_type = "tik2_py_interface_op_replay_ok";
@@ -1360,6 +1437,46 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_callback) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
+TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_throw) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  std::string op_type = "tik2_py_interface_op_replay_fail_throw";
+  std::string soc_version = "ascend710";
+  int blkdim = 32;
+  const nlohmann::json block_factor_json = R"([7,8,9,10])"_json;
+  std::string block_factor = block_factor_json.dump();
+  std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
+  std::string kernel_name = "tik2_py_interface_op_replay_fail_throw";
+  std::string entry_file = "tik2_py_interface_op_replay_fail_throw_entry_file.h";
+  std::string output_kernel_file = "tik2_py_interface_op_replay_fail_throw_kernel_file.cce";
+  REG_REPLAY_FUNC(tik2_py_interface_op_replay_fail_throw, ascend710, replay_stub_throw);
+  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, block_factor.c_str(),
+                                tilingdata.c_str(),kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str()),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_bad_fator) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  std::string op_type = "tik2_py_interface_op_replay_fail_bad_fator";
+  std::string soc_version = "ascend710";
+  int blkdim = 32;
+  const nlohmann::json block_factor_json = R"([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
+,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
+49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66])"_json;
+  std::string block_factor = block_factor_json.dump();
+  std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
+  std::string kernel_name = "tik2_py_interface_op_replay_fail_bad_fator";
+  std::string entry_file = "tik2_py_interface_op_replay_fail_bad_fator_entry_file.h";
+  std::string output_kernel_file = "tik2_py_interface_op_replay_fail_bad_fator_kernel_file.cce";
+  REG_REPLAY_FUNC(tik2_py_interface_op_replay_fail_bad_fator, ascend710, replay_stub);
+  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, block_factor.c_str(),
+                                tilingdata.c_str(),kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str()),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
 TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(nullptr, nullptr, 0, nullptr, nullptr, nullptr, nullptr, nullptr), 0);
@@ -1370,6 +1487,14 @@ int replay_block_factor_stub(int blkdim, const ge::Operator &op, ge::AscendStrin
   const nlohmann::json res_json = R"([7,8,9,10])"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
+  return 1;
+}
+
+int replay_block_factor_stub_throw(int blkdim, const ge::Operator &op, ge::AscendString &result) {
+  const nlohmann::json res_json = R"([7,8,9,10])"_json;
+  std::string res_json_str = res_json.dump();
+  result = AscendString(res_json_str.c_str());
+  throw "bad callback";
   return 1;
 }
 
@@ -1422,6 +1547,29 @@ TEST_F(UtestRegister, tik2_py_interface_get_block_factor_ok_with_default_callbac
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
+TEST_F(UtestRegister, tik2_py_interface_get_block_factor_fail_throw) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  std::string op_type = "tik2_py_interface_get_block_factor_fail_throw";
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int32","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+  int blkdim = 32;
+
+  std::string res_info(1024, 'a');
+  size_t size = 1024;
+  REG_REPLAY_BLKFACT(tik2_py_interface_get_block_factor_fail_throw, replay_block_factor_stub_throw);
+  EXPECT_EQ(Tik2PyInterfaceGetBlockFactor(op_type.c_str(), input_str.c_str(), output_str.c_str(), blkdim,
+                                          const_cast<char *>(res_info.c_str()), size),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
 TEST_F(UtestRegister, tik2_py_interface_get_block_factor_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   EXPECT_EQ(Tik2PyInterfaceGetBlockFactor(nullptr, nullptr, nullptr, 0, nullptr, 0), 0);
@@ -1432,6 +1580,14 @@ int replay_config_stub(int *mode, int *max_block_dim, int *max_shape_size) {
   *mode = 1;
   *max_block_dim = 2;
   *max_shape_size = 3;
+  return 1;
+}
+
+int replay_config_stub_throw(int *mode, int *max_block_dim, int *max_shape_size) {
+  *mode = 1;
+  *max_block_dim = 2;
+  *max_shape_size = 3;
+  throw "bad callabck";
   return 1;
 }
 
@@ -1458,6 +1614,20 @@ TEST_F(UtestRegister, tik2_py_interface_get_replay_config_fail_without_callback)
   std::string soc_version = "ascend710";
   std::string res_info(1024, 'a');
   size_t size = 1024;
+  EXPECT_EQ(Tik2PyInterfaceGetReplayConfig(op_type.c_str(), soc_version.c_str(),
+            const_cast<char *>(res_info.c_str()), size),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_get_replay_config_fail_throw) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  std::string op_type = "tik2_py_interface_get_replay_config_fail_throw";
+  std::string soc_version = "ascend710";
+  std::string res_info(1024, 'a');
+  size_t size = 1024;
+  REG_REPLAY_CONFIG(tik2_py_interface_get_replay_config_fail_throw, ascend710, replay_config_stub_throw);
   EXPECT_EQ(Tik2PyInterfaceGetReplayConfig(op_type.c_str(), soc_version.c_str(),
             const_cast<char *>(res_info.c_str()), size),
             0);

@@ -338,8 +338,6 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
       (attrs == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
            check_type, optype, inputs, outputs, attrs, result_info);
-    REPORT_INNER_ERROR("E19999", "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
-                       check_type, optype, inputs, outputs, attrs, result_info);
     return 0;
   }
   ge::AscendString check_type_str = check_type;
@@ -363,9 +361,11 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
   }
 
   ge::AscendString result;
-  const int rc = (check_func)(operator_param, result);
-  if (rc == 0) {
-    REPORT_CALL_ERROR("E19999", "check_func failed. check_type = %s, optype = %s", check_type, optype);
+  try {
+    const int rc = (check_func)(operator_param, result);
+    GELOGI("check_func return rc = %d, check_type = %s, optype = %s.", rc, check_type, optype);
+  } catch (...) {
+    GELOGE(ge::GRAPH_FAILED, "check_func failed. check_type = %s, optype = %s", check_type, optype);
     return 0;
   }
   std::string std_str = result.GetString();
@@ -385,9 +385,6 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
     GELOGE(ge::GRAPH_FAILED,
            "optype/inputs/outputs/attrs/generalize_config/result_info is null, %s, %s, %s, %s, %s, %s", optype, inputs,
            outputs, attrs, generalize_config, result_info);
-    REPORT_INNER_ERROR("E19999",
-                       "optype/inputs/outputs/attrs/generalize_config/result_info is null, %s, %s, %s, %s, %s, %s",
-                       optype, inputs, outputs, attrs, generalize_config, result_info);
     return 0;
   }
   ge::AscendString op_type_str = optype;
@@ -404,16 +401,17 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
     ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_params, const_values);
     CheckAndSetAttr(attrs, operator_params);
   } catch (...) {
-    REPORT_CALL_ERROR("E19999", "Failed to parse json in Tik2PyInterfaceGeneralized. %s, %s, %s", inputs, outputs,
-                      attrs);
+    GELOGE(ge::GRAPH_FAILED, "Failed to parse json in Tik2PyInterfaceGeneralized. %s, %s, %s", inputs, outputs, attrs);
     return 0;
   }
   ge::AscendString generalize_config_str(generalize_config);
   ge::AscendString result;
-  const int rc = (generalize_func)(operator_params, generalize_config_str, result);
-  if (rc == 0) {
-    REPORT_CALL_ERROR("E19999", "call generalize_func failed. optype = %s, generalize_config = %s", optype,
-                      generalize_config);
+  try {
+    const int rc = (generalize_func)(operator_params, generalize_config_str, result);
+    GELOGI("generalize_func return rc = %d, optype = %s, generalize_config = %s", rc, optype, generalize_config);
+  } catch (...) {
+    GELOGE(ge::GRAPH_FAILED, "call generalize_func failed. optype = %s, generalize_config = %s", optype,
+           generalize_config);
     return 0;
   }
   std::string result_str = result.GetString();
@@ -428,13 +426,12 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
 extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len) {
   if ((optype == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "optype/result_info is null, %s, %s", optype, result_info);
-    REPORT_INNER_ERROR("E19999", "optype/result_info is null, %s, %s", optype, result_info);
     return 0;
   }
   ge::AscendString op_type_str = optype;
   auto tiling_def = CTilingDataClassFactory::CreateTilingDataInstance(op_type_str);
   if (tiling_def == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to CreateTilingDataInstance. optype = %s", optype);
+    GELOGE(ge::GRAPH_FAILED, "Failed to CreateTilingDataInstance. optype = %s", optype);
     return 0;
   }
 
@@ -450,14 +447,9 @@ extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_
   }
   json_obj["fields"] = json_field_list;
   const std::string json_str = json_obj.dump();
-  if (json_str.size() >= result_info_len) {
-    REPORT_CALL_ERROR("E19999", "Tik2PyInterfaceGetTilingDefInfo json_str too large. %zu/%zu", json_str.size(),
-                      result_info_len);
-    return 0;
-  }
   bool dump_res = DumpResultInfo(json_str, result_info, result_info_len);
   if (!dump_res) {
-    REPORT_CALL_ERROR("E19999", "Tik2PyInterfaceGetTilingDefInfo DumpResultInfo failed. result = %s", json_str.c_str());
+    GELOGE(ge::GRAPH_FAILED, "Tik2PyInterfaceGetTilingDefInfo DumpResultInfo failed. result = %s", json_str.c_str());
     return 0;
   }
   return 1;
@@ -472,10 +464,6 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
            "optype/soc_version/block_factor/tiling_data/kernel_name/entry_file/output_kernel_file is null, "
            "%s, %s, %s, %s, %s, %s, %s",
            optype, soc_version, block_factor, tiling_data, kernel_name, entry_file, output_kernel_file);
-    REPORT_INNER_ERROR("E19999",
-                       "optype/soc_version/block_factor/tiling_data/kernel_name/entry_file/output_kernel_file is null, "
-                       "%s, %s, %s, %s, %s, %s, %s",
-                       optype, soc_version, block_factor, tiling_data, kernel_name, entry_file, output_kernel_file);
     return 0;
   }
   ge::AscendString op_type_str = optype;
@@ -485,27 +473,39 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
     REPORT_CALL_ERROR("E19999", "Failed to GetReplay. optype = %s, soc_version = %s", optype, soc_version);
     return 0;
   }
+  const size_t MAX_ARG_CNT = 64;
+  uint64_t block_factor_data[MAX_ARG_CNT] = {0};
+  size_t block_factor_cnt = MAX_ARG_CNT;
   try {
     const nlohmann::json block_factor_json = nlohmann::json::parse(block_factor);
-    const size_t MAX_ARG_CNT = 64;
-    const size_t block_factor_cnt = std::min(block_factor_json.size(), MAX_ARG_CNT);
-    uint64_t block_factor_data[MAX_ARG_CNT];
+    if (block_factor_json.size() > MAX_ARG_CNT) {
+      GELOGE(ge::GRAPH_FAILED, "block_factor_json.size() = %zu should less than %zu.", block_factor_json.size(),
+             MAX_ARG_CNT);
+      return 0;
+    } else {
+      block_factor_cnt = block_factor_json.size();
+    }
     for (size_t i = 0; i < block_factor_cnt; ++i) {
       block_factor_data[i] = block_factor_json[i];
     }
-    const int rc = (replay_func)(block_dim, block_factor_data, block_factor_cnt, tiling_data, kernel_name, entry_file,
-                                 output_kernel_file);
-    return rc;
   } catch (...) {
-    REPORT_CALL_ERROR("E19999", "Failed to parse block_factor json. %s", block_factor);
+    GELOGE(ge::GRAPH_FAILED, "Failed to parse block_factor json. %s", block_factor);
     return 0;
   }
+  try {
+    const int rc = (replay_func)(block_dim, block_factor_data, block_factor_cnt, tiling_data, kernel_name, entry_file,
+                                 output_kernel_file);
+    GELOGI("replay_func return rc = %d,  optype = %s, soc_version = %s.", rc, optype, soc_version);
+  } catch (...) {
+    GELOGE(ge::GRAPH_FAILED, "call replay_func segment fault. optype = %s, soc_version = %s", optype, soc_version);
+    return 0;
+  }
+  return 1;
 }
 
 static int DefaultBlockFactor(int block_dim, const ge::Operator &op, ge::AscendString &result) {
   if (block_dim == 0) {
     GELOGE(ge::GRAPH_FAILED, "DefaultBlockFactor block_dim is invalid, %d", block_dim);
-    REPORT_INNER_ERROR("E19999", "DefaultBlockFactor block_dim is invalid, %d", block_dim);
     return 0;
   }
   nlohmann::json block_dim_factor_arr;
@@ -515,7 +515,6 @@ static int DefaultBlockFactor(int block_dim, const ge::Operator &op, ge::AscendS
     int64_t shape_size = input.GetShape().GetShapeSize();
     if (ge::MulOverflow(data_len, shape_size, data_len)) {
       GELOGE(ge::GRAPH_FAILED, "MulOverflow data_len=%ld, input shape=%ld", data_len, shape_size);
-      REPORT_INNER_ERROR("E19999", "MulOverflow data_len=%ld, input shape=%ld", data_len, shape_size);
       return 0;
     }
     block_dim_factor_arr.push_back(data_len / block_dim);
@@ -526,7 +525,6 @@ static int DefaultBlockFactor(int block_dim, const ge::Operator &op, ge::AscendS
     int64_t shape_size = output.GetShape().GetShapeSize();
     if (ge::MulOverflow(data_len, shape_size, data_len)) {
       GELOGE(ge::GRAPH_FAILED, "MulOverflow data_len=%ld, output shape=%ld", data_len, shape_size);
-      REPORT_INNER_ERROR("E19999", "MulOverflow data_len=%ld, output shape=%ld", data_len, shape_size);
       return 0;
     }
     block_dim_factor_arr.push_back(data_len / block_dim);
@@ -542,8 +540,6 @@ extern "C" int Tik2PyInterfaceGetBlockFactor(const char *optype, const char *inp
   if ((optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "optype/inputs/outputs/result_info is null, %s, %s, %s, %s", optype, inputs, outputs,
            result_info);
-    REPORT_INNER_ERROR("E19999", "optype/inputs/outputs/result_info is null, %s, %s, %s, %s", optype, inputs, outputs,
-                       result_info);
     return 0;
   }
   ge::AscendString op_type_str = optype;
@@ -553,7 +549,7 @@ extern "C" int Tik2PyInterfaceGetBlockFactor(const char *optype, const char *inp
   try {
     ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_params, const_values);
   } catch (...) {
-    REPORT_CALL_ERROR("E19999", "Failed to parse json in Tik2PyInterfaceGetBlockFactor. %s, %s", inputs, outputs);
+    GELOGE(ge::GRAPH_FAILED, "Failed to parse json in Tik2PyInterfaceGetBlockFactor. %s, %s", inputs, outputs);
     return 0;
   }
 
@@ -565,10 +561,13 @@ extern "C" int Tik2PyInterfaceGetBlockFactor(const char *optype, const char *inp
       return 0;
     }
   } else {
-    const int rc = (block_factor_func)(block_dim, operator_params, result);
-    if (rc == 0) {
-      REPORT_CALL_ERROR("E19999", "block_factor_func failed. optype = %s, inputs = %s, outputs = %s, block_dim = %d.",
-                        optype, inputs, outputs, block_dim);
+    try {
+      const int rc = (block_factor_func)(block_dim, operator_params, result);
+      GELOGI("block_factor_func return rc = %d, optype = %s.", rc, optype);
+    } catch (...) {
+      GELOGE(ge::GRAPH_FAILED,
+             "call block_factor_func segment fault. optype = %s, inputs = %s, outputs = %s, block_dim = %d.", optype,
+             inputs, outputs, block_dim);
       return 0;
     }
   }
@@ -585,8 +584,6 @@ extern "C" int Tik2PyInterfaceGetReplayConfig(const char *optype, const char *so
                                               size_t result_info_len) {
   if ((optype == nullptr) || (soc_version == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "optype/soc_version/result_info is null, %s, %s, %s", optype, soc_version, result_info);
-    REPORT_INNER_ERROR("E19999", "optype/soc_version/result_info is null, %s, %s, %s", optype, soc_version,
-                       result_info);
     return 0;
   }
   ge::AscendString op_type_str = optype;
@@ -599,7 +596,14 @@ extern "C" int Tik2PyInterfaceGetReplayConfig(const char *optype, const char *so
   int mode = 0;
   int max_block_dim = 0;
   int max_shape_size = 0;
-  const int rc = (replay_config_func)(&mode, &max_block_dim, &max_shape_size);
+  try {
+    const int rc = (replay_config_func)(&mode, &max_block_dim, &max_shape_size);
+    GELOGI("replay_config_func return rc = %d, optype = %s, soc_version = %s.", rc, optype, soc_version);
+  } catch (...) {
+    GELOGE(ge::GRAPH_FAILED, "call replay_config_func segment fault. optype = %s, soc_version = %s", optype,
+           soc_version);
+    return 0;
+  }
   nlohmann::json json_obj;
   json_obj["mode"] = mode;
   json_obj["max_block_dim"] = max_block_dim;
@@ -608,8 +612,8 @@ extern "C" int Tik2PyInterfaceGetReplayConfig(const char *optype, const char *so
   const std::string std_str = json_obj.dump();
   bool dump_res = DumpResultInfo(std_str, result_info, result_info_len);
   if (!dump_res) {
-    REPORT_CALL_ERROR("E19999", "DumpResultInfo failed. result = %s", std_str.c_str());
+    GELOGE(ge::GRAPH_FAILED, "DumpResultInfo failed. result = %s", std_str.c_str());
     return 0;
   }
-  return rc;
+  return 1;
 }
