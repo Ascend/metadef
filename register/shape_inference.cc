@@ -20,7 +20,8 @@
 #include "graph/compiler_def.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
-#include "register/op_impl_registry.h"
+#include "register/op_impl_space_registry.h"
+#include "common/checker.h"
 
 namespace gert {
 namespace {
@@ -66,7 +67,10 @@ void GetMinMaxStorageShape(const ge::GeTensorDesc &input_desc, gert::StorageShap
 ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op_desc, const size_t input_index,
                                  const size_t invalid_index_num, TensorAddress &address,
                                  std::vector<std::unique_ptr<ge::Tensor>> &ge_tensors_holder) {
-  const auto &functions = OpImplRegistry::GetInstance().GetOpImpl(op_desc->GetType());
+  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  GE_ASSERT_NOTNULL(space_registry);
+
+  const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
   size_t instance_index = input_index - invalid_index_num;
   // check valid map
   const auto valid_op_ir_map = ge::OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(op_desc);
@@ -90,7 +94,10 @@ ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op
 
 bool IsTensorDependencyValid(const ge::Operator &op, const ge::OpDescPtr &op_desc,
                              const size_t input_index, const size_t invalid_index_num) {
-  const auto &functions = OpImplRegistry::GetInstance().GetOpImpl(op_desc->GetType());
+  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  GE_ASSERT_NOTNULL(space_registry);
+
+  const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
   size_t instance_index = input_index - invalid_index_num;
   size_t ir_index;
   GE_ASSERT_GRAPH_SUCCESS(ge::OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, instance_index, ir_index),
@@ -429,7 +436,10 @@ ge::graphStatus InferShapeRangeAutomaticly(const ge::Operator &op, const ge::OpD
 }
 
 ge::graphStatus InferShapeRangeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc) {
-  const auto &functions = OpImplRegistry::GetInstance().GetOpImpl(op_desc->GetType());
+  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  GE_ASSERT_NOTNULL(space_registry);
+
+  const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
   if ((functions == nullptr) || (functions->infer_shape_range == nullptr)) {
     GELOGD("Can not get infer shape range func op[%s], type[%s], will use an automatic derivation strategy.",
            op_desc->GetName().c_str(), op_desc->GetType().c_str());
@@ -441,7 +451,10 @@ ge::graphStatus InferShapeRangeOnCompile(const ge::Operator &op, const ge::OpDes
 }
 
 ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc) {
-  const auto &functions = OpImplRegistry::GetInstance().GetOpImpl(op_desc->GetType());
+  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  GE_ASSERT_NOTNULL(space_registry);
+
+  const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
   if ((functions == nullptr) || (functions->infer_shape == nullptr)) {
     GELOGW("Can not get infer shape func v2, op[%s], type[%s]",
            op_desc->GetName().c_str(), op_desc->GetType().c_str());
@@ -468,7 +481,12 @@ ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr 
 }
 
 ge::graphStatus InferDataTypeOnCompile(const ge::OpDescPtr &op_desc) {
-  const auto &functions = OpImplRegistry::GetInstance().GetOpImpl(op_desc->GetType());
+  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  if (space_registry == nullptr) {
+    GELOGW("Default space registry has not been initialized!");
+    return op_desc->DefaultInferDataType();
+  }
+  const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
   if ((functions == nullptr) ||
       (functions->infer_datatype == nullptr)) {
     return op_desc->DefaultInferDataType();

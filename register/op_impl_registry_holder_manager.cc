@@ -163,6 +163,11 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
   return impl_funcs;
 }
 
+void OpImplRegistryHolder::AddTypesToImpl(gert::OpImplKernelRegistry::OpType op_type,
+                                          gert::OpImplKernelRegistry::OpImplFunctions funcs) {
+  types_to_impl_[op_type] = funcs;
+}
+
 ge::graphStatus OmOpImplRegistryHolder::LoadSo(const std::shared_ptr<ge::OpSoBin> &so_bin) {
   if (so_bin->GetBinDataSize() > kGByteSize) {
     GELOGE(ge::FAILED, "The size of so bin is %zu, more than %zu", so_bin->GetBinDataSize(), kGByteSize);

@@ -19,22 +19,11 @@
 
 #include "graph/op_so_bin.h"
 #include "external/register/op_impl_kernel_registry.h"
+#include "register/op_impl_registry_api.h"
 #include <string>
 #include <map>
 
 namespace gert {
-#ifdef __cplusplus
-extern "C" {
-#endif
-// Todo 依赖接口，调测使用，后面删除
-typedef struct {
-  char *op_type;
-  gert::OpImplKernelRegistry::OpImplFunctions funcs;
-} TypesToImpl;
-#ifdef __cplusplus
-}
-#endif
-
 class OpImplRegistryHolder {
  public:
   OpImplRegistryHolder() = default;
@@ -49,6 +38,7 @@ class OpImplRegistryHolder {
 
   std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle, const string &so_path, size_t &impl_num);
 
+  void AddTypesToImpl(gert::OpImplKernelRegistry::OpType op_type, gert::OpImplKernelRegistry::OpImplFunctions funcs);
  protected:
   std::map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions> types_to_impl_;
   void *handle_ = nullptr;

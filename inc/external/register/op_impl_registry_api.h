@@ -29,8 +29,8 @@ typedef struct {
 extern "C" {
 #endif
 
-size_t GetRegisteredOpNum(void);
-int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num);
+__attribute__((visibility("default"))) size_t GetRegisteredOpNum(void);
+__attribute__((visibility("default"))) int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num);
 
 #ifdef __cplusplus
 }
