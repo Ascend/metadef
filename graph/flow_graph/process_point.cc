@@ -279,6 +279,25 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const ge::AscendStri
   return *this;
 }
 
+FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const char *value) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    return *this;
+  }
+
+  if (value == nullptr) {
+    GELOGE(ge::FAILED, "[Check][Param] Set init param value is nullptr, check failed.");
+    return *this;
+  }
+
+  std::string str_value(value);
+  if (!impl_->SetAttrValue(attr_name, str_value)) {
+    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+  }
+
+  return *this;
+}
+
 FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<ge::AscendString> &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");

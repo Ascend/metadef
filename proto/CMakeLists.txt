@@ -18,6 +18,7 @@ set(METADEF_PROTO_LIST
         "${METADEF_DIR}/proto/tensorflow/types.proto"
         "${METADEF_DIR}/proto/tensorflow/versions.proto"
         "${METADEF_DIR}/proto/var_manager.proto"
+        "${METADEF_DIR}/proto/flow_model.proto"
         )
 
 set(METADEF_DATA_FLOW_PROTO_LIST
@@ -38,6 +39,7 @@ set(METADEF_GRAPH_PROTO_SRCS
         "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/op_mapping.pb.cc"
         "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/onnx/ge_onnx.pb.cc"
         "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/var_manager.pb.cc"
+        "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/flow_model.pb.cc"
         )
 
 set(METADEF_TENSORFLOW_PROTO_SRCS

@@ -74,18 +74,21 @@ TEST_F(ProcessPointUTest, FunctionPpNormalTest) {
   list_str_value.emplace_back(str_value);
   list_str_value.emplace_back(str_value);
 
-  auto pp1 = FunctionPp("pp1").SetCompileConfig("./pp1.json")
-                              .SetInitParam("_batchsize", batch_value)
-                              .SetInitParam("_list_int", list_int)
-                              .SetInitParam("_list_list_int", list_list_int)
-                              .SetInitParam("_bool_attr", bool_attr)
-                              .SetInitParam("_list_bool", list_bool)
-                              .SetInitParam("_float_attr", float_attr)
-                              .SetInitParam("_list_float", list_float)
-                              .SetInitParam("_data_type_attr", dt)
-                              .SetInitParam("_list_dt", list_dt)
-                              .SetInitParam("_str_value", str_value)
-                              .SetInitParam("_list_str_value", list_str_value);
+  auto pp1 = FunctionPp("pp1")
+                 .SetCompileConfig("./pp1.json")
+                 .SetInitParam("_batchsize", batch_value)
+                 .SetInitParam("_list_int", list_int)
+                 .SetInitParam("_list_list_int", list_list_int)
+                 .SetInitParam("_bool_attr", bool_attr)
+                 .SetInitParam("_list_bool", list_bool)
+                 .SetInitParam("_float_attr", float_attr)
+                 .SetInitParam("_list_float", list_float)
+                 .SetInitParam("_data_type_attr", dt)
+                 .SetInitParam("_list_dt", list_dt)
+                 .SetInitParam("_c_str_value", "c_str_value")
+                 .SetInitParam("_c_str_null_value", nullptr)
+                 .SetInitParam("_str_value", str_value)
+                 .SetInitParam("_list_str_value", list_str_value);
 
   ge::AscendString str;
   pp1.Serialize(str);
@@ -166,6 +169,22 @@ TEST_F(ProcessPointUTest, FunctionPpNormalTest) {
   std::vector<ge::DataType> get_list_dt_value;
   value.GetValue(get_list_dt_value);
   ASSERT_EQ(get_list_dt_value, list_dt);
+  value.Clear();
+  // c-string check
+  auto *c_str_deserializer = AttrSerializerRegistry::GetInstance().GetDeserializer(proto::AttrDef::kS);
+  ASSERT_NE(c_str_deserializer, nullptr);
+  c_str_deserializer->Deserialize(int_attr["_c_str_value"], value);
+  std::string get_c_str_value;
+  value.GetValue(get_c_str_value);
+  ASSERT_EQ(get_c_str_value, "c_str_value");
+  value.Clear();
+  // c-string null check
+  auto *c_str_null_deserializer = AttrSerializerRegistry::GetInstance().GetDeserializer(proto::AttrDef::kS);
+  ASSERT_NE(c_str_null_deserializer, nullptr);
+  c_str_null_deserializer->Deserialize(int_attr["_c_str_null_value"], value);
+  std::string get_c_str_null_value;
+  value.GetValue(get_c_str_null_value);
+  ASSERT_EQ(get_c_str_null_value, "");
   value.Clear();
   // string check
   auto *str_deserializer = AttrSerializerRegistry::GetInstance().GetDeserializer(proto::AttrDef::kS);

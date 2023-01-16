@@ -67,6 +67,7 @@ public:
   ~FunctionPp() override;
   FunctionPp &SetCompileConfig(const char *json_file_path);
   FunctionPp &SetInitParam(const char *attr_name, const ge::AscendString &value);
+  FunctionPp &SetInitParam(const char *attr_name, const char *value);
   FunctionPp &SetInitParam(const char *attr_name, const std::vector<ge::AscendString> &value);
   FunctionPp &SetInitParam(const char *attr_name, const int64_t &value);
   FunctionPp &SetInitParam(const char *attr_name, const std::vector<int64_t> &value);

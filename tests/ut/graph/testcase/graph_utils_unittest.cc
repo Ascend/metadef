@@ -313,7 +313,8 @@ class UtestGraphUtils : public testing::Test {
  protected:
   void SetUp() {}
 
-  void TearDown() {}
+  void TearDown() {
+  }
 };
 
 /*
@@ -650,6 +651,370 @@ TEST_F(UtestGraphUtils, InsertNodeAfter) {
   std::vector<ComputeGraphPtr> independent_compile_subgraphs;
   ASSERT_EQ(GraphUtils::InsertNodeAfter(node0->GetOutDataAnchor(0), {}, node1, 0, 0), GRAPH_FAILED);
 }
+  TEST_F(UtestGraphUtils, MatchDumpStrIsFalse) {
+    std::string suffix;
+    bool ret = GraphUtils::MatchDumpStr(suffix);
+    EXPECT_EQ(ret, false);
+  }
+
+  TEST_F(UtestGraphUtils, MatchDumpStrLevel4True) {
+    std::string suffix="test";
+    const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
+    (void)setenv(kDumpGraphLevel, "4", 1);
+    bool ret = GraphUtils::MatchDumpStr(suffix);
+    EXPECT_EQ(ret, true);
+  }
+
+  TEST_F(UtestGraphUtils, MatchDumpStrLevel4False) {
+    const char_t *const kDumpStrPreRunBegin = "PreRunBegin";
+    std::string suffix=kDumpStrPreRunBegin;
+    const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
+    (void)setenv(kDumpGraphLevel, "4", 1);
+    bool ret = GraphUtils::MatchDumpStr(suffix);
+    EXPECT_EQ(ret, false);
+  }
+
+
+TEST_F(UtestGraphUtils, DumpGEGraph) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 1);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  // test existed dir
+  GraphUtils::DumpGEGraph(graph, "", true, "./ge_test_graph_0001.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_0001.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
+
+  // test not existed dir
+  GraphUtils::DumpGEGraph(graph, "", true, "./test/ge_test_graph_0002.txt");
+  ComputeGraphPtr com_graph2 = std::make_shared<ComputeGraph>("GeTestGraph2");
+  state = GraphUtils::LoadGEGraph("./test/ge_test_graph_0002.txt", *com_graph2);
+  ASSERT_EQ(state, true);
+
+  // test input para user_graph_name, without path
+  GraphUtils::DumpGEGraph(graph, "", true, "ge_test_graph_0003.txt");
+  ComputeGraphPtr com_graph3 = std::make_shared<ComputeGraph>("GeTestGraph3");
+  state = GraphUtils::LoadGEGraph("./ge_test_graph_0003.txt", *com_graph3);
+  ASSERT_EQ(state, true);
+}
+TEST_F(UtestGraphUtils, DumpGEGraphNoOptionsSucc) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 1);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  GEThreadLocalContext &context = GetThreadLocalContext();
+  std::map<std::string, std::string> graph_maps;
+  std::string key1 = "pk1";
+  std::string value1 = "pv1";
+  std::string key2 = "pk2";
+  std::string value2 = "pv2";
+  graph_maps.insert(std::make_pair(key1, value1));
+  graph_maps.insert(std::make_pair(key2, value2));
+  context.SetGraphOption(graph_maps);
+
+  std::map<std::string, std::string> session_maps;
+  key1 = "sk1";
+  value1 = "sv1";
+  key2 = "sk2";
+  value2 = "sv2";
+  session_maps.insert(std::make_pair(key1, value1));
+  session_maps.insert(std::make_pair(key2, value2));
+  context.SetSessionOption(session_maps);
+
+  std::map<std::string, std::string> global_maps;
+  key1 = "gk1";
+  value1 = "gv1";
+  key2 = "gk2";
+  value2 = "gv2";
+  global_maps.insert(std::make_pair(key1, value1));
+  global_maps.insert(std::make_pair(key2, value2));
+  context.SetGlobalOption(global_maps);
+
+  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
+  (void)setenv(kDumpGraphLevel, "4", 1);
+  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
+  (void)setenv(kDumpGeGraph, "3", 1);
+  // test existed dir
+  system("rm -f ./ge_test_graph_options_wt_0001.txt");
+  GraphUtils::DumpGEGraph(graph, "PreRunBegin", false, "./ge_test_graph_options_wt_0001.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_options_wt_0001.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
+  //check graph option
+  ge::NamedAttrs graphOptions;
+  EXPECT_EQ(AttrUtils::GetNamedAttrs(com_graph1, "GraphOptions", graphOptions),false);
+  ge::NamedAttrs sessionOptions;
+  EXPECT_EQ(AttrUtils::GetNamedAttrs(com_graph1, "SessionOptions", sessionOptions),false);
+  ge::NamedAttrs globalOptions;
+  EXPECT_EQ(AttrUtils::GetNamedAttrs(com_graph1, "GlobalOptions", globalOptions),false);
+
+}
+
+TEST_F(UtestGraphUtils, DumpGEGraphOptionsSucc) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 1);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  GEThreadLocalContext &context = GetThreadLocalContext();
+  std::map<std::string, std::string> graph_maps;
+  std::string key1 = "pk1";
+  std::string value1 = "pv1";
+  std::string key2 = "pk2";
+  std::string value2 = "pv2";
+  graph_maps.insert(std::make_pair(key1, value1));
+  graph_maps.insert(std::make_pair(key2, value2));
+  context.SetGraphOption(graph_maps);
+
+  std::map<std::string, std::string> session_maps;
+  key1 = "sk1";
+  value1 = "sv1";
+  key2 = "sk2";
+  value2 = "sv2";
+  session_maps.insert(std::make_pair(key1, value1));
+  session_maps.insert(std::make_pair(key2, value2));
+  context.SetSessionOption(session_maps);
+
+  std::map<std::string, std::string> global_maps;
+  key1 = "gk1";
+  value1 = "gv1";
+  key2 = "gk2";
+  value2 = "gv2";
+  global_maps.insert(std::make_pair(key1, value1));
+  global_maps.insert(std::make_pair(key2, value2));
+  context.SetGlobalOption(global_maps);
+
+  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
+  (void)setenv(kDumpGraphLevel, "4", 1);
+  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
+  (void)setenv(kDumpGeGraph, "1", 1);
+  // test existed dir
+  system("rm -f ./ge_test_graph_options_wt_0002.txt");
+  GraphUtils::DumpGEGraph(graph, "PreRunBegin", false, "./ge_test_graph_options_wt_0002.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_options_wt_0002.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
+  //check graph option
+  ge::NamedAttrs graphOptions;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(com_graph1, "GraphOptions", graphOptions));
+  EXPECT_EQ(graphOptions.GetName(), "GraphOptions");
+  AnyValue av;
+  EXPECT_EQ(graphOptions.GetAttr("pk1", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "pv1");
+  EXPECT_EQ(graphOptions.GetAttr("pk2", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "pv2");
+  //check session option
+  ge::NamedAttrs sessionOptions;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(com_graph1, "SessionOptions", sessionOptions));
+  EXPECT_EQ(sessionOptions.GetName(), "SessionOptions");
+  EXPECT_EQ(sessionOptions.GetAttr("sk1", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "sv1");
+
+  EXPECT_EQ(sessionOptions.GetAttr("sk2", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "sv2");
+  //check global option
+  ge::NamedAttrs globalOptions;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(com_graph1, "GlobalOptions", globalOptions));
+  EXPECT_EQ(globalOptions.GetName(), "GlobalOptions");
+  EXPECT_EQ(globalOptions.GetAttr("gk1", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "gv1");
+
+  EXPECT_EQ(globalOptions.GetAttr("gk2", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "gv2");
+}
+TEST_F(UtestGraphUtils, DumpGEGraphOptionsLevelNot4) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 1);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  GEThreadLocalContext &context = GetThreadLocalContext();
+  std::map<std::string, std::string> graph_maps;
+  std::string key1 = "pk1";
+  std::string value1 = "pv1";
+  std::string key2 = "pk2";
+  std::string value2 = "pv2";
+  graph_maps.insert(std::make_pair(key1, value1));
+  graph_maps.insert(std::make_pair(key2, value2));
+  context.SetGraphOption(graph_maps);
+
+  std::map<std::string, std::string> session_maps;
+  key1 = "sk1";
+  value1 = "sv1";
+  key2 = "sk2";
+  value2 = "sv2";
+  session_maps.insert(std::make_pair(key1, value1));
+  session_maps.insert(std::make_pair(key2, value2));
+  context.SetSessionOption(session_maps);
+
+  std::map<std::string, std::string> global_maps;
+  key1 = "gk1";
+  value1 = "gv1";
+  key2 = "gk2";
+  value2 = "gv2";
+  global_maps.insert(std::make_pair(key1, value1));
+  global_maps.insert(std::make_pair(key2, value2));
+  context.SetGlobalOption(global_maps);
+
+  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
+  (void)setenv(kDumpGraphLevel, "1", 1);
+  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
+  (void)setenv(kDumpGeGraph, "1", 1);
+  // test existed dir
+  system("rm -f ./ge_test_graph_options_wt_0004.txt");
+  GraphUtils::DumpGEGraph(graph, "test", false, "./ge_test_graph_options_wt_0004.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_options_wt_0004.txt", *com_graph1);
+  ASSERT_EQ(state, true);
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
+  //check graph option
+  ge::NamedAttrs graphOptions;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(com_graph1, "GraphOptions", graphOptions));
+  EXPECT_EQ(graphOptions.GetName(), "GraphOptions");
+  AnyValue av;
+  EXPECT_EQ(graphOptions.GetAttr("pk1", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "pv1");
+  EXPECT_EQ(graphOptions.GetAttr("pk2", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "pv2");
+  //check session option
+  ge::NamedAttrs sessionOptions;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(com_graph1, "SessionOptions", sessionOptions));
+  EXPECT_EQ(sessionOptions.GetName(), "SessionOptions");
+  EXPECT_EQ(sessionOptions.GetAttr("sk1", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "sv1");
+
+  EXPECT_EQ(sessionOptions.GetAttr("sk2", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "sv2");
+  //check global option
+  ge::NamedAttrs globalOptions;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(com_graph1, "GlobalOptions", globalOptions));
+  EXPECT_EQ(globalOptions.GetName(), "GlobalOptions");
+  EXPECT_EQ(globalOptions.GetAttr("gk1", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "gv1");
+
+  EXPECT_EQ(globalOptions.GetAttr("gk2", av), GRAPH_SUCCESS);
+  EXPECT_NE(av.Get<std::string>(), nullptr);
+  EXPECT_EQ(*av.Get<std::string>(), "gv2");
+}
+
+TEST_F(UtestGraphUtils, DumpGEGraphOptionsNotPreRunBeginNoDump) {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 1);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  GEThreadLocalContext &context = GetThreadLocalContext();
+  std::map<std::string, std::string> graph_maps;
+  std::string key1 = "pk1";
+  std::string value1 = "pv1";
+  std::string key2 = "pk2";
+  std::string value2 = "pv2";
+  graph_maps.insert(std::make_pair(key1, value1));
+  graph_maps.insert(std::make_pair(key2, value2));
+  context.SetGraphOption(graph_maps);
+
+  std::map<std::string, std::string> session_maps;
+  key1 = "sk1";
+  value1 = "sv1";
+  key2 = "sk2";
+  value2 = "sv2";
+  session_maps.insert(std::make_pair(key1, value1));
+  session_maps.insert(std::make_pair(key2, value2));
+  context.SetSessionOption(session_maps);
+
+  std::map<std::string, std::string> global_maps;
+  key1 = "gk1";
+  value1 = "gv1";
+  key2 = "gk2";
+  value2 = "gv2";
+  global_maps.insert(std::make_pair(key1, value1));
+  global_maps.insert(std::make_pair(key2, value2));
+  context.SetGlobalOption(global_maps);
+
+  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
+  (void)setenv(kDumpGraphLevel, "4", 1);
+  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
+  (void)setenv(kDumpGeGraph, "1", 1);
+  // test existed dir
+  system("rm -f ./ge_test_graph_options_wt_0003.txt");
+  GraphUtils::DumpGEGraph(graph, "test", false, "./ge_test_graph_options_wt_0003.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_options_wt_0003.txt", *com_graph1);
+  ASSERT_EQ(state, false);
+}
 
 TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
   std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "4"}};
@@ -940,11 +1305,6 @@ TEST_F(UtestGraphUtils, RemoveJustNodeFail) {
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
-TEST_F(UtestGraphUtils, MatchDumpStrIsFalse) {
-  std::string suffix;
-  bool ret = GraphUtils::MatchDumpStr(suffix);
-  EXPECT_EQ(ret, false);
-}
 
 TEST_F(UtestGraphUtils, LoadGEGraphComputeGraphIsNull) {
   char_t *file = nullptr;
@@ -2059,43 +2419,6 @@ TEST_F(UtestGraphUtils, ComputeGraphBuilderBuildNodesTest) {
   EXPECT_EQ(msg, "op_desc is NULL.");
 }
 
-TEST_F(UtestGraphUtils, DumpGEGraph) {
-  auto ge_tensor = std::make_shared<GeTensor>();
-  uint8_t data_buf[4096] = {0};
-  data_buf[0] = 7;
-  data_buf[10] = 8;
-  ge_tensor->SetData(data_buf, 4096);
-
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data_node = builder.AddNode("Data", "Data", 0, 1);
-  auto const_node = builder.AddNode("Const", "Const", 0, 1);
-  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
-  auto add_node = builder.AddNode("Add", "Add", 2, 1);
-  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
-  builder.AddDataEdge(data_node, 0, add_node, 0);
-  builder.AddDataEdge(const_node, 0, add_node, 1);
-  builder.AddDataEdge(add_node, 0, netoutput, 0);
-  auto graph = builder.GetGraph();
-
-  // test existed dir
-  GraphUtils::DumpGEGraph(graph, "", true, "./ge_test_graph_0001.txt");
-  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
-  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_0001.txt", *com_graph1);
-  ASSERT_EQ(state, true);
-  ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
-
-  // test not existed dir
-  GraphUtils::DumpGEGraph(graph, "", true, "./test/ge_test_graph_0002.txt");
-  ComputeGraphPtr com_graph2 = std::make_shared<ComputeGraph>("GeTestGraph2");
-  state = GraphUtils::LoadGEGraph("./test/ge_test_graph_0002.txt", *com_graph2);
-  ASSERT_EQ(state, true);
-
-  // test input para user_graph_name, without path
-  GraphUtils::DumpGEGraph(graph, "", true, "ge_test_graph_0003.txt");
-  ComputeGraphPtr com_graph3 = std::make_shared<ComputeGraph>("GeTestGraph3");
-  state = GraphUtils::LoadGEGraph("./ge_test_graph_0003.txt", *com_graph3);
-  ASSERT_EQ(state, true);
-}
 
 TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphs) {
   auto graph = BuildGraphWithSubGraph();
