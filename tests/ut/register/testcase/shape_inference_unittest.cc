@@ -22,6 +22,9 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/attr_value.h"
 #include "external/graph/operator_factory.h"
+#include "register/op_impl_space_registry.h"
+#include "register/op_impl_registry_holder_manager.h"
+
 namespace ge{
 REG_OP(Const)
     .OUTPUT(y,
@@ -77,8 +80,20 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_success) {
   IMPL_OP(FixIOOp_OutputIsFix).InferShape(infer_shape_func)
       .InferDataType(infer_data_type_func)
       .InferShapeRange(infer_shape_range_func);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = infer_shape_func;
+  op_impl_func.infer_datatype = infer_data_type_func;
+  op_impl_func.infer_shape_range = infer_shape_range_func;
+  registry_holder->AddTypesToImpl("FixIOOp_OutputIsFix", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_data_type = OperatorFactoryImpl::GetInferDataTypeFunc();
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
+
   const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
   ASSERT_NE(call_infer_data_type, nullptr);
   ASSERT_NE(call_infer_shape_v2, nullptr);
@@ -136,6 +151,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_OptionalInputWithOutInstance) {
   IMPL_OP(OptionalInput3Input3Output).InferShape(infer_shape_func)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = infer_shape_func;
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("OptionalInput3Input3Output", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   auto status = call_infer_shape_v2(op, op_desc);
@@ -189,6 +214,15 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_OptionalInputWithInstance) {
   IMPL_OP(OptionalInput3Input3Output).InferShape(infer_shape_func)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = infer_shape_func;
+  registry_holder->AddTypesToImpl("OptionalInput3Input3Output", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   const auto status = call_infer_shape_v2(op, op_desc);
@@ -260,6 +294,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput) {
   IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = INFER_SHAPE_FUNC;
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("DynamicInput3Input3Output3", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   auto status = call_infer_shape_v2(operator_dynamic, op_desc);
@@ -301,6 +345,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_2) {
   IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
     .InferDataType(nullptr)
     .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = INFER_SHAPE_FUNC;
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("DynamicInput3Input3Output3", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   auto status = call_infer_shape_v2(operator_dynamic, op_desc);
@@ -342,6 +396,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_no_shaperange) {
   IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = INFER_SHAPE_FUNC;
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("DynamicInput3Input3Output3", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   auto status = call_infer_shape_v2(operator_dynamic, op_desc);
@@ -385,6 +449,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange) {
   IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = INFER_SHAPE_FUNC;
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("DynamicInput3Input3Output3", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   auto status = call_infer_shape_v2(operator_dynamic, op_desc);
@@ -435,6 +509,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange_min_bigg
   IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
     .InferDataType(nullptr)
     .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = INFER_SHAPE_FUNC;
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("DynamicInput3Input3Output3", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   auto status = call_infer_shape_v2(operator_dynamic, op_desc);
@@ -499,6 +583,16 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend) {
   IMPL_OP(Type2_1Input_1Output).InferShape(infer_shape_func).InputsDataDependency({2})
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = infer_shape_func;
+  op_impl_func.SetInputDataDependency(2);
+  registry_holder->AddTypesToImpl("Type2_1Input_1Output", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   const auto status = call_infer_shape_v2(op, op_desc);
@@ -575,6 +669,17 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_Type2ValueDepend_unknow_shaperange) {
   IMPL_OP(Type2_3Input_2Output).InferShape(infer_shape_func).InputsDataDependency({2})
     .InferDataType(nullptr)
     .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = infer_shape_func;
+  op_impl_func.SetInputDataDependency(2);
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("Type2_3Input_2Output", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   auto status = call_infer_shape_v2(op, op_desc);
@@ -638,6 +743,15 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_RegisterAndGetReiledOnResource) {
       .InferShape(infer_shape_func)
       .InferDataType(nullptr)
       .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = infer_shape_func;
+  registry_holder->AddTypesToImpl("RegisterAndGetReiledOnResource", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   ASSERT_NE(call_infer_shape_v2, nullptr);
   const auto status = call_infer_shape_v2(op, op_desc);

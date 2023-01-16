@@ -72,7 +72,7 @@ int super_system(const char *cmd, char *retmsg, int msg_len) {
 size_t g_impl_num = 3;
 char *type[] = {"Add_0", "Add_1", "Add_2"};
 size_t GetRegisteredOpNum() { return g_impl_num; }
-uint32_t GetOpImplFunctions(gert::TypesToImpl *impl, size_t g_impl_num) {
+uint32_t GetOpImplFunctions(TypesToImpl *impl, size_t g_impl_num) {
   gert::OpImplKernelRegistry::OpImplFunctions funcs;
   for (int i = 0; i < g_impl_num; ++i) {
     funcs.tiling = (gert::OpImplKernelRegistry::TilingKernelFunc) (0x10 + i);

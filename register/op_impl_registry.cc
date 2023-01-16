@@ -17,7 +17,6 @@
 #include "register/op_impl_registry.h"
 #include "register/op_impl_registry_api.h"
 #include "framework/common/debug/ge_log.h"
-#include "graph/operator_factory_impl.h"
 #include "register/shape_inference.h"
 #include "op_impl_register_v2_impl.h"
 
