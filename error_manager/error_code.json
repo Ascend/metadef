@@ -1654,8 +1654,8 @@
       "errClass": "LxFusion Errors",
       "errTitle": "Invalid SoC Version",
       "ErrCode": "EF0001",
-      "ErrMessage": "soc_version [%s] is invalid. [%s] Fusion supports only [%s].",
-      "Arglist": "version,lxtype,version_str",
+      "ErrMessage": "soc_version [%s] is invalid. AOE SGAT is not supported on current platform.",
+      "Arglist": "version",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
