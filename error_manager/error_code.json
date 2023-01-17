@@ -1907,7 +1907,7 @@
       "errClass": "HCCL Errors",
       "errTitle": "Invalid Ranktable Configuration",
       "ErrCode": "EI0004",
-      "ErrMessage": "The ranktable is invalid,Reason:[%s]. Please check the configured ranktable. [%s]",
+      "ErrMessage": "The ranktable or rank is invalid,Reason:[%s]. Please check the configured ranktable. [%s]",
       "Arglist": "error_reason,ranktable_path",
       "suggestion": {
         "Possible Cause": "N/A",
