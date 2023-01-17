@@ -878,7 +878,10 @@ TEST_F(UtestRegister, optiling_py_interface) {
   const char *optype = "ReluV2";
   const char *optype_v3 = "ReluV3";
   const char *optype_v4 = "ReluV4";
-  const char *cmp_info = "";
+  const char *cmp_info = "{\"_common_info\":[0,16,48,1,1,0,0],\"_is_ori_last_transpose\":0,\"_pattern\":\"Transdata\","
+                         "\"_permute\":[0,2,1,3],\"_sgt_cube_vector_core_type\":\"VectorCore\",\"_src_fuse\":[0,1,3],"
+                         "\"_src_pad_mode\":[0,0,2],\"_src_pad_var\":[1,1,16],\"_ub_info"
+                         "\":[[48512,24192],[-1],[-1],[-1]],\"device_id\":\"0\"}";
   const char *inputs = "";
   const char *outputs = "";
   char *runinfo = "";

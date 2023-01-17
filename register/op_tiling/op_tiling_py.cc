@@ -1218,17 +1218,25 @@ int32_t ParseDeviceIdAndCoreType(const char *compile_info, uint32_t &device_id, 
     GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", compile_info);
     return 0;
   }
+  GELOGD("Parse compile info: %s.", info_list.dump().c_str());
 
-  for (const auto &info : info_list) {
-    if (info.contains("device_id")) {
-      device_id = info["device_id"].get<uint32_t>();
-      GELOGI("Parse device id: %u from %s.", device_id, compile_info);
-    }
-    if (info.contains(ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE.c_str())) {
-      core_type = info[ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE.c_str()].get<std::string>();
-      GELOGI("Parse core type: %s from %s.", core_type.c_str(), compile_info);
+  if (info_list.contains("device_id")) {
+    if (info_list["device_id"].is_null()) {
+      GELOGD("device_id is null.");
+    } else {
+      device_id = std::atoi(info_list["device_id"].get<std::string>().c_str());
+      GELOGI("Parse device id: %u.", device_id);
     }
   }
+  if (info_list.contains(ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE)) {
+    if (info_list[ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE].is_null()) {
+      GELOGD("Attr %s is null.", ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE.c_str());
+    } else {
+      core_type = info_list[ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE].get<std::string>();
+      GELOGI("Parse core type: %s.", core_type.c_str());
+    }
+  }
+
   return 1;
 }
 
