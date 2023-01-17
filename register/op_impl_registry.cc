@@ -58,6 +58,7 @@ void RegisterOpImplToRegistry(const OpImplRegisterV2Impl *rd) {
 OpImplRegister::OpImplRegister(const char *op_type)
     : op_type_(op_type),
       functions_(OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type)) {
+  (void)reserved_;
   functions_.private_attrs.clear();
   functions_.unique_private_attrs.clear();
 }
@@ -136,6 +137,7 @@ OpImplRegistry &OpImplRegistry::GetInstance() {
 }
 
 OpImplRegistry::OpImplFunctions &OpImplRegistry::CreateOrGetOpImpl(const OpImplRegistry::OpType &op_type) {
+  (void)reserved_;
   return types_to_impl_[op_type];
 }
 const OpImplRegistry::OpImplFunctions *OpImplRegistry::GetOpImpl(const OpImplRegistry::OpType &op_type) const {

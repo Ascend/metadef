@@ -247,6 +247,7 @@ set_target_properties(rt2_registry_static PROPERTIES
 
 target_link_libraries(rt2_registry_static
     PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
     c_sec
     slog
     PUBLIC
