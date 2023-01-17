@@ -18,6 +18,7 @@
 #include "graph/debug/ge_log.h"
 #include "graph/utils/file_utils.h"
 #include "mmpa/mmpa_api.h"
+#include "inc/graph/operator_factory_impl.h"
 #include <fstream>
 
 namespace gert {
@@ -30,6 +31,7 @@ using GetImplFunctions = ge::graphStatus (*)(TypesToImpl *imp, size_t impl_num);
 
 void CloseHandle(void *&handle) {
   if (handle != nullptr) {
+    GELOGD("start close handle, handle[%p].", handle);
     if (mmDlclose(handle) != 0) {
       const char *error = mmDlerror();
       error = (error == nullptr) ? "" : error;
@@ -39,15 +41,24 @@ void CloseHandle(void *&handle) {
   }
   handle = nullptr;
 }
+void ReleaseOperatorFactoryBeforeCloseHandle() {
+  ge::OperatorFactoryImpl::operator_infer_axis_type_info_funcs_ = nullptr;
+  ge::OperatorFactoryImpl::operator_infer_axis_slice_funcs_ = nullptr;
+  ge::OperatorFactoryImpl::operator_infer_value_range_paras_ = nullptr;
+  ge::OperatorFactoryImpl::operator_infer_data_slice_funcs_ = nullptr;
+  ge::OperatorFactoryImpl::operator_verify_funcs_ = nullptr;
+  ge::OperatorFactoryImpl::operator_inferformat_funcs_ = nullptr;
+  ge::OperatorFactoryImpl::operator_infershape_funcs_ = nullptr;
+  ge::OperatorFactoryImpl::operator_creators_v2_ = nullptr;
+  ge::OperatorFactoryImpl::operator_creators_ = nullptr;
+}
 }
 
 OpImplRegistryHolder::~OpImplRegistryHolder() {
+  types_to_impl_.clear();
   CloseHandle(handle_);
 }
 
-OmOpImplRegistryHolder::~OmOpImplRegistryHolder() {
-  RmOmOppDir(so_dir_);
-}
 ge::graphStatus OmOpImplRegistryHolder::CreateOmOppDir(std::string &opp_dir) {
   char path_env[MMPA_MAX_PATH] = {0};
   int32_t ret = mmGetEnv(kHomeEnvName, path_env, MMPA_MAX_PATH);
@@ -202,12 +213,14 @@ ge::graphStatus OmOpImplRegistryHolder::LoadSo(const std::shared_ptr<ge::OpSoBin
     return ge::GRAPH_FAILED;
   }
 
-  for (size_t i = 0U; i < impl_num; ++i) {
+  RmOmOppDir(opp_dir);
+
+ for (size_t i = 0U; i < impl_num; ++i) {
     types_to_impl_[impl_funcs[i].op_type] = impl_funcs[i].funcs;
   }
 
   handle_ = handle;
-  so_dir_ = opp_dir;
+
   return ge::GRAPH_SUCCESS;
 }
 
@@ -218,6 +231,8 @@ OpImplRegistryHolderManager &OpImplRegistryHolderManager::GetInstance() {
 
 void OpImplRegistryHolderManager::AddRegistry(std::string &so_data,
                                               const std::shared_ptr<OpImplRegistryHolder> &registry_holder) {
+  // AddRegistry 前先刷新OpImplRegistryManager
+  UpdateOpImplRegistries();
   const std::lock_guard<std::mutex> lock(map_mutex_);
   const auto iter = op_impl_registries_.find(so_data);
   if (iter == op_impl_registries_.cend()) {
@@ -225,11 +240,10 @@ void OpImplRegistryHolderManager::AddRegistry(std::string &so_data,
   }
 }
 
-// unload 的时候刷新OpImplRegistryManager
 void OpImplRegistryHolderManager::UpdateOpImplRegistries() {
   const std::lock_guard<std::mutex> lock(map_mutex_);
   for (auto iter = op_impl_registries_.begin(); iter != op_impl_registries_.end();) {
-    if (iter->second.lock() == nullptr) {
+    if (iter->second == nullptr) {
       op_impl_registries_.erase(iter++);
     } else {
       iter++;
@@ -243,7 +257,7 @@ const std::shared_ptr<OpImplRegistryHolder> OpImplRegistryHolderManager::GetOpIm
   if (iter == op_impl_registries_.cend()) {
     return nullptr;
   }
-  return iter->second.lock();
+  return iter->second;
 }
 
 OpImplRegistryHolderPtr OpImplRegistryHolderManager::GetOrCreateOpImplRegistryHolder(
@@ -254,7 +268,7 @@ OpImplRegistryHolderPtr OpImplRegistryHolderManager::GetOrCreateOpImplRegistryHo
   const std::lock_guard<std::mutex> lock(map_mutex_);
   const auto iter = op_impl_registries_.find(so_data);
   if (iter != op_impl_registries_.cend()) {
-    auto holder = iter->second.lock();
+    auto holder = iter->second;
     if (holder != nullptr) {
       GEEVENT("so has been loaded, so name: %s, version:%s, cpu:%s, os:%s",
               so_name.c_str(),
@@ -275,5 +289,13 @@ OpImplRegistryHolderPtr OpImplRegistryHolderManager::GetOrCreateOpImplRegistryHo
   }
   op_impl_registries_[so_data] = registry_holder;
   return registry_holder;
+}
+OpImplRegistryHolderManager::~OpImplRegistryHolderManager() {
+  /**
+   * todo 此处是临时规避方案，后续需要梳理算子的自注册机制，修改成space_registry注册机制
+   * 此处临时地显示地指定这些自注册机制的static变量的析构时机(operator_infer_axis_type_info_funcs等static变量，默认在进程退出前析构)，
+   * 显示地指定其在so句柄关闭之前进行析构。
+   * */
+  ReleaseOperatorFactoryBeforeCloseHandle();
 }
 }  // namespace gert
