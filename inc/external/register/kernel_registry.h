@@ -30,9 +30,10 @@ class KernelRegistry {
   static void ReplaceKernelRegistry(std::shared_ptr<KernelRegistry> registry);
 
   using CreateOutputsFunc = std::function<ge::graphStatus(const ge::Node *, KernelContext *)>;
-  typedef UINT32 (*KernelFunc)(KernelContext *context);
-  typedef UINT32 (*OutputsCreatorFunc)(const ge::Node *, KernelContext *);
-  typedef std::vector<std::string> (*TracePrinter)(const KernelContext *);
+  using KernelFunc = UINT32 (*)(KernelContext *context);
+  using OutputsCreatorFunc = UINT32 (*)(const ge::Node *, KernelContext *);
+  using TracePrinter = std::vector<std::string> (*)(const KernelContext *);
+
   struct KernelFuncs {
     KernelFunc run_func;
     CreateOutputsFunc outputs_creator; // to be deleted

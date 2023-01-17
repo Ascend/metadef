@@ -23,7 +23,7 @@ namespace gert {
 struct StorageFormat {
  public:
   StorageFormat() {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset(reserved_, 0, sizeof(reserved_));
   };
   /**
    * 构造一个格式，格式包括原始格式、运行时格式、补维规则
@@ -31,9 +31,9 @@ struct StorageFormat {
    * @param storage_format 运行时格式
    * @param expand_dims_type 补维规则
    */
-  StorageFormat(ge::Format origin_format, const ge::Format storage_format, const ExpandDimsType &expand_dims_type)
+  StorageFormat(const ge::Format origin_format, const ge::Format storage_format, const ExpandDimsType &expand_dims_type)
       : origin_format_(origin_format), storage_format_(storage_format), expand_dims_type_(expand_dims_type) {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset(reserved_, 0, sizeof(reserved_));
   }
   /**
    * 获取原始format

@@ -61,14 +61,12 @@ class TensorData {
    * @param manager tensor data的管理函数，若manager为空，则认为addr就是tensor的数据地址，且此数据不需要被释放
    */
   explicit TensorData(TensorAddress addr = nullptr, const TensorAddrManager manager = nullptr)
-      : addr_(addr), manager_(manager) {
-    reserved_0_ = 0U;
-    memset(reserved_1_, 0, sizeof(reserved_1_));
+      : addr_(addr), manager_(manager), reserved_0_(0U) {
+    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
   }
-  explicit TensorData(TensorAddress addr, TensorAddrManager manager, size_t size, TensorPlacement placement)
-      : addr_(addr), manager_(manager), size_(size), placement_(placement) {
-    reserved_0_ = 0U;
-    memset(reserved_1_, 0, sizeof(reserved_1_));
+  explicit TensorData(TensorAddress addr, const TensorAddrManager manager, size_t size, TensorPlacement placement)
+      : addr_(addr), manager_(manager), size_(size), placement_(placement), reserved_0_(0U) {
+    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
   }
   TensorData(const TensorData &) = delete;
   TensorData(TensorData &&other) noexcept : addr_(other.addr_), manager_(other.manager_),
@@ -78,7 +76,7 @@ class TensorData {
     other.size_ = 0U;
     other.placement_ = kTensorPlacementEnd;
     reserved_0_ = 0U;
-    memset(reserved_1_, 0, sizeof(reserved_1_));
+    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
   }
   TensorData &operator=(const TensorData &other) = delete;
   TensorData &operator=(TensorData &&other) noexcept {
@@ -92,7 +90,7 @@ class TensorData {
     other.size_ = 0U;
     other.placement_ = kTensorPlacementEnd;
     reserved_0_ = 0U;
-    memset(reserved_1_, 0, sizeof(reserved_1_));
+    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
     return *this;
   }
   ~TensorData() noexcept {

@@ -35,7 +35,7 @@ struct Shape {
    * 默认构造一个shape，默认构造的shape实例中，dim_num长度为0
    */
   Shape() : dim_num_(0), dims_{0} {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset(reserved_, 0, sizeof(reserved_));
   }
 
   /**
@@ -51,7 +51,7 @@ struct Shape {
     for (const auto arg : args) {
       dims_[i++] = arg;
     }
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset(reserved_, 0, sizeof(reserved_));
   }
 
   /**
@@ -64,7 +64,7 @@ struct Shape {
     for (size_t i = 0U; i < dim_num_; ++i) {
       dims_[i] = other.dims_[i];
     }
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset(reserved_, 0, sizeof(reserved_));
   }
 
   /**
@@ -80,7 +80,7 @@ struct Shape {
         dims_[i] = other.dims_[i];
       }
     }
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset(reserved_, 0, sizeof(reserved_));
     return *this;
   }
 
