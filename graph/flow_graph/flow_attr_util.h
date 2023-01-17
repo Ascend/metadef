@@ -31,8 +31,8 @@ public:
 
 private:
   static bool CheckAttrsIsSupport(const std::vector<DataFlowInputAttr> &attrs);
-  static graphStatus SetCountBatchAttr(const void *attr_value, GeTensorDescPtr &input_tensor_desc);
-  static graphStatus SetTimeBatchAttr(const void *attr_value, GeTensorDescPtr &input_tensor_desc);
+  static graphStatus SetCountBatchAttr(const void *attr_value, GeTensorDescPtr &tensor_desc);
+  static graphStatus SetTimeBatchAttr(const void *attr_value, GeTensorDescPtr &tensor_desc);
   using SetAttrFunc = graphStatus (*)(const void *attr_value, GeTensorDescPtr &input_tensor_desc);
   static const std::map<DataFlowAttrType, SetAttrFunc> set_attr_funcs_;
 };

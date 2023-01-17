@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include "graph/graph.h"
 #include "graph/types.h"
 

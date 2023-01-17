@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public:
       : op_desc_(op_desc), input_num_(input_num), output_num_(output_num) {}
   ~FlowNodeImpl() = default;
   void MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
-                const std::vector<DataFlowInputAttr> &attr = {});
+                const std::vector<DataFlowInputAttr> &attrs = {});
   void MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
   void AddPp(const ProcessPoint &pp);
 private:
