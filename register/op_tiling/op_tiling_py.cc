@@ -1366,6 +1366,11 @@ extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_in
     return 0;
   }
 
+  if (strcmp(optype, OP_TYPE_AUTO_TILING.c_str()) == 0) {
+    GELOGI("Op tiling function is auto tiling on rt2.");
+    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs);
+  }
+
   return TbeOpTilingPyInterfaceOld(optype, compile_info, compile_info_hash, inputs, outputs, attrs, run_info_json,
                                    run_info_len, elapse);
 }
