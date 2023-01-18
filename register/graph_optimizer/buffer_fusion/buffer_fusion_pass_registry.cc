@@ -26,22 +26,21 @@ namespace fe {
 class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
  public:
   void RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
-                    const BufferFusionPassRegistry::CreateFn create_fn, PassAttr attr) {
+                    const BufferFusionPassRegistry::CreateFn create_fn, uint64_t attr) {
     const std::lock_guard<std::mutex> lock(mu_);
-    std::string pass_module = IsPassAttrOn(attr, FE_PASS_FLAG) ? "FE" : "TBE";
     if (pass_descs_.find(pass_type) != pass_descs_.cend()) {
       pass_descs_[pass_type][pass_name].attr = attr;
       pass_descs_[pass_type][pass_name].create_fn = create_fn;
-      GELOGI("UbFusionPass[type=%d, name=%s, attr=%lu, module=%s]: the pass type already exists.",
-             pass_type, pass_name.c_str(), attr, pass_module.c_str());
+      GELOGI("UbFusionPass[type=%d, name=%s, attr=%lu]: the pass type already exists.",
+             pass_type, pass_name.c_str(), attr);
       return;
     }
 
     std::map<std::string, PassDesc> pass_desc;
     pass_desc[pass_name] = {attr, create_fn};
     pass_descs_[pass_type] = pass_desc;
-    GELOGI("UbFusionPass[type=%d, name=%s, attr=%lu, module=%s]: the pass type does not exists.",
-           pass_type, pass_name.c_str(), attr, pass_module.c_str());
+    GELOGI("UbFusionPass[type=%d, name=%s, attr=%lu]: the pass type does not exists.",
+           pass_type, pass_name.c_str(), attr);
   }
 
   std::map<std::string, BufferFusionPassRegistry::CreateFn> GetCreateFn(const BufferFusionPassType &pass_type) {

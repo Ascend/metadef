@@ -5,7 +5,6 @@ set(SRC_LIST
     "prototype_pass_registry.cc"
     "ops_kernel_builder_registry.cc"
     "graph_optimizer/fusion_common/op_slice_info.cc"
-    "graph_optimizer/fusion_common/fusion_pass_desc.cc"
     "graph_optimizer/fusion_common/fusion_turbo_utils.cc"
     "graph_optimizer/fusion_common/fusion_turbo.cc"
     "graph_optimizer/graph_fusion/graph_fusion_pass_base.cc"
