@@ -49,7 +49,7 @@ class OmOpImplRegistryHolder : public OpImplRegistryHolder {
  public:
   OmOpImplRegistryHolder() = default;
 
-  ~OmOpImplRegistryHolder();
+  ~OmOpImplRegistryHolder() = default;
 
   ge::graphStatus LoadSo(const std::shared_ptr<ge::OpSoBin> &so_bin);
 
@@ -59,16 +59,13 @@ class OmOpImplRegistryHolder : public OpImplRegistryHolder {
   ge::graphStatus RmOmOppDir(const std::string &opp_dir);
 
   ge::graphStatus SaveToFile(const std::shared_ptr<ge::OpSoBin> &so_bin, const std::string &opp_path);
-
- private:
-  std::string so_dir_;
 };
 
 class OpImplRegistryHolderManager {
  public:
   OpImplRegistryHolderManager() = default;
 
-  ~OpImplRegistryHolderManager() = default;
+  ~OpImplRegistryHolderManager();
 
   static OpImplRegistryHolderManager &GetInstance();
 
@@ -84,8 +81,19 @@ class OpImplRegistryHolderManager {
                                                           std::function<OpImplRegistryHolderPtr()> create_func);
 
   size_t GetOpImplRegistrySize() { return op_impl_registries_.size(); }
+  void ClearOpImplRegistries() {
+    op_impl_registries_.clear();
+  }
+
  private:
-  std::unordered_map<std::string, std::weak_ptr<OpImplRegistryHolder>> op_impl_registries_;
+  /**
+   * 背景：当前加载的so里边包含了算子原型等自注册(如OperatorFactoryImpl::operator_infer_axis_type_info_funcs等static变量，在进程退出前析构)。
+   * 原方案使用weak_ptr管理OpImplRegistryHolder，不影响生命周期，引用计数一旦减为0，将触发析构，并关闭so的句柄；
+   * 如果OpImplRegistryHolder在比较早的时机析构，那么进程退出时，operator_infer_axis_type_info_funcs这些static变量将无法正常析构。
+   * 此处临时改为shared_ptr，使OpImplRegistryHolder与本类单例的生命周期一致，从而能够确保在进程退出前才触发析构，规避上述问题。
+   * todo 此处是规避方案，后续将继续使用weak_ptr来管理OpImplRegistryHolder，后续将梳理上述自注册机制，修改成space_registry注册机制
+   * */
+  std::unordered_map<std::string, std::shared_ptr<OpImplRegistryHolder>> op_impl_registries_;
   std::mutex map_mutex_;
 };
 }  // namespace gert

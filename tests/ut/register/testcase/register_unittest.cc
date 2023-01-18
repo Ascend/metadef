@@ -155,6 +155,11 @@ UINT32 OpTilingParseStubV5(gert::KernelContext *kernel_context) {
   av->Set(CreateCompileInfo(), DeleteCompileInfo);
   return ge::GRAPH_SUCCESS;
 }
+
+bool op_tiling_stub_failed(const Operator &op, const utils::OpCompileInfo &compile_info, utils::OpRunInfo &run_info) {
+  EXPECT_EQ(true, false);
+  return true;
+}
 }  // namespace
 
 class UtestRegister : public testing::Test {
@@ -898,7 +903,6 @@ TEST_F(UtestRegister, optiling_py_interface) {
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_ok) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
 {"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
@@ -935,11 +939,9 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
-  unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_const_value) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0);
   // int9999 is invalid data type
   const nlohmann::json input = R"([
   {"name": "test_0","dtype": "int9999", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"}])"_json;
@@ -964,11 +966,9 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_const_value) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
-  unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_attr) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string input_str = " ";
   std::string output_str = " ";
   // int999 is invalid dtype
@@ -994,17 +994,13 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_attr) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
-  unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_fail_without_params) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0);
   EXPECT_EQ(TbeOpTilingPyInterface(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0, nullptr), 0);
-  unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_ok_with_float_data) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "t0", "dtype": "float16","const_value": [1.1,2.1,3.1,4.1] ,"shape": [4,4,4,4], "ori_shape":[4,4,4,4],"format": "ND"},
 {"dtype": "int8", "shape": [4,4,4,4], "ori_shape":[4,4,4,4],"format": "ND"}
@@ -1033,12 +1029,12 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_with_float_data) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
-  unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0);
   IMPL_OP_DEFAULT().Tiling(DefaultOptilingStub).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  // expect rt1 tiling not to work
+  REGISTER_OP_TILING_V2(AutoTiling, op_tiling_stub_failed);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8","shape": [4,4,4,4],"format": "ND"}])"_json;
   std::string input_str = input.dump();
@@ -1056,7 +1052,6 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
   EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
-  unsetenv("ENABLE_RUNTIME_V2");
 }
 
 extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,

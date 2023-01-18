@@ -77,14 +77,16 @@ class OpImplSpaceRegistryUT : public testing::Test {
  protected:
   void SetUp() {}
 
-  void TearDown() { gert::OpImplRegistryHolderManager::GetInstance().UpdateOpImplRegistries(); }
+  void TearDown() {
+    gert::OpImplRegistryHolderManager::GetInstance().ClearOpImplRegistries();
+    ge::MmpaStub::GetInstance().Reset();
+  }
 };
 
 ge::graphStatus TestInferShapeFunc(gert::InferShapeContext *) {
   return ge::GRAPH_SUCCESS;
 }
 TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_1so_Succeed) {
-  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 0);
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0xffffffff;
   g_impl_num = 1;
@@ -114,7 +116,6 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_1so_Succee
 }
 
 TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_2so_Succeed) {
-  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 0);
   g_impl_num = 2;
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0xffffffff;
@@ -150,7 +151,6 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_2so_Succee
   EXPECT_NE(registry_holder1, nullptr);
 }
 TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_3so_Succeed) {
-  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 0);
   g_impl_num = 2;
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0xffffffff;
@@ -195,7 +195,6 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_3so_Succee
 }
 
 TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_AddRegistry_Succeed) {
-  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 0);
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0xffffffff;
   g_impl_num = 3;

@@ -35,11 +35,13 @@ using FFTSThreadFunc = std::function<ge::graphStatus(const ge::NodePtr &node,
 struct FFTSLowerInput {
   std::vector<bg::ValueHolderPtr> input_shapes;
   std::vector<bg::ValueHolderPtr> input_addrs;
+  std::vector<int> mem_pool_types;
   LoweringGlobalData *global_data;
   bg::ValueHolderPtr task_info;
   bg::ValueHolderPtr thread_dim;
   bg::ValueHolderPtr window_size;
   bg::ValueHolderPtr args_para;
+  bg::ValueHolderPtr ffts_mem_allocator;
   FFTSThreadFunc ffts_thread_fun;
 };
 class FFTSNodeConverterRegistry {

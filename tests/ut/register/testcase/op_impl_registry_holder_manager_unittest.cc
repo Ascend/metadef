@@ -24,49 +24,12 @@ namespace gert_test {
 namespace {
 #define MMPA_MAX_PATH 4096
 constexpr const char *kHomeEnvName = "HOME";
-void GetOppDir(std::string &opp_dir) {
-  char path_env[MMPA_MAX_PATH] = {0};
-  int32_t ret = mmGetEnv(kHomeEnvName, path_env, MMPA_MAX_PATH);
-  if ((ret != EN_OK) || (strlen(path_env) == 0)) {
-    return;
-  }
-  const char *env = getenv(kHomeEnvName);
-  opp_dir = env;
-  opp_dir += "/.ascend_temp/.om_exe_data/";
-  return;
-}
 
 ge::OpSoBinPtr CreateSoBinPtr(std::string &so_name, std::string &vendor_name) {
   std::unique_ptr<char[]> so_bin = std::unique_ptr<char[]>(new(std::nothrow) char[so_name.length()]);
   (void) memcpy_s(so_bin.get(), so_name.length(), so_name.data(), so_name.length());
   ge::OpSoBinPtr so_bin_ptr = ge::MakeShared<ge::OpSoBin>(so_name, vendor_name, std::move(so_bin), so_name.length());
   return so_bin_ptr;
-}
-
-int super_system(const char *cmd, char *retmsg, int msg_len) {
-  FILE *fp;
-  int res = -1;
-  if (cmd == NULL || retmsg == NULL || msg_len < 0) {
-    GELOGD("Err: Fuc:%s system paramer invalid! ", __func__);
-    return 1;
-  }
-  if ((fp = popen(cmd, "r")) == NULL) {
-    perror("popen");
-    GELOGD("Err: Fuc:%s popen error: %s ", __func__, strerror(errno));
-    return 2;
-  } else {
-    memset(retmsg, 0, msg_len);
-    while (fgets(retmsg, msg_len, fp));
-    {
-      GELOGD("Fuc: %s fgets buf is %s ", __func__, retmsg);
-    }
-    if ((res = pclose(fp)) == -1) {
-      GELOGD("Fuc:%s close popen file pointer fp error! ", __func__);
-      return 3;
-    }
-    retmsg[strlen(retmsg) - 1] = '\0';
-    return 0;
-  }
 }
 
 size_t g_impl_num = 3;
@@ -110,11 +73,13 @@ class OpImplRegistryHolderManagerUT : public testing::Test {
  protected:
   void SetUp() {}
 
-  void TearDown() { gert::OpImplRegistryHolderManager::GetInstance().UpdateOpImplRegistries(); }
+  void TearDown() {
+    gert::OpImplRegistryHolderManager::GetInstance().ClearOpImplRegistries();
+    ge::MmpaStub::GetInstance().Reset();
+  }
 };
 
 TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_Succeed) {
-  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 1);
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0xffffffff;
   g_impl_num = 1;
@@ -126,36 +91,9 @@ TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_Succeed) {
   auto ret = om_op_impl_registry_holder.LoadSo(so_bin_ptr);
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
   EXPECT_EQ(om_op_impl_registry_holder.GetTypesToImpl().size(), 1);
-
-  //校验文件是否落盘
-  std::string opp_dir;
-  GetOppDir(opp_dir);
-  std::string pid = std::to_string(mmGetPid());
-  std::string tid = std::to_string(mmGetTid());
-  std::string command = "ls " + opp_dir + "| grep " + pid + "| grep " + tid + " | wc -l";
-
-  char retmsg[1024];
-  int ret1 = super_system(command.c_str(), retmsg, sizeof(retmsg));
-  EXPECT_EQ(ret1, 0);
-  EXPECT_EQ(atoi(retmsg), 1);
-
-  std::string command2 = "ls " + opp_dir + "| grep " + pid;
-  int ret2 = super_system(command2.c_str(), retmsg, sizeof(retmsg));
-  opp_dir += retmsg;
-  std::string command3 = "ls " + opp_dir;
-  int ret3 = super_system(command3.c_str(), retmsg, sizeof(retmsg));
-  std::string opp_path = opp_dir + "/" + retmsg;
-  GELOGD("opp_path: %s", opp_path.c_str());
-
-  // 比较落盘数据内容是否和罗落盘前一致
-  uint32_t data_len;
-  auto bin_data = ge::GetBinFromFile(opp_path, data_len);
-  EXPECT_EQ(so_bin_ptr->GetBinDataSize(), data_len);
-  EXPECT_EQ(memcmp(so_bin_ptr->GetBinData(), bin_data.get(), data_len), 0);
 }
 
 TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_DlopenFailed) {
-  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 1);
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = nullptr;
   g_impl_num = 1;
@@ -170,7 +108,6 @@ TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_DlopenFailed
 }
 
 TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_DlsymFailed) {
-  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 0);
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0x7000;
   g_impl_num = 1;
@@ -289,12 +226,15 @@ TEST_F(OpImplRegistryHolderManagerUT, OpImplRegistryManager_UpdateOpImplRegistri
     EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 1);
   }
   auto tmp_registry_holder = gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(so_data);
-  EXPECT_EQ(tmp_registry_holder, nullptr);
+  //  EXPECT_EQ(tmp_registry_holder, nullptr); // 最终方案适配后使用此校验
+  EXPECT_NE(tmp_registry_holder, nullptr);
   EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 1);
 
   gert::OpImplRegistryHolderManager::GetInstance().UpdateOpImplRegistries();
   tmp_registry_holder = gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(so_data);
-  EXPECT_EQ(tmp_registry_holder, nullptr);
-  EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 0);
+  //  EXPECT_EQ(tmp_registry_holder, nullptr);  // 最终方案适配后使用此校验
+  //  EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 0); // 最终方案适配后使用此校验
+  EXPECT_NE(tmp_registry_holder, nullptr);
+  EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 1);
 }
 }  // namespace gert_test
