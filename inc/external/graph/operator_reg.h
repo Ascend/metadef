@@ -590,13 +590,8 @@ class OpReg {
 
 #define INFER_FORMAT_FUNC(op_name, x) [](Operator &v) { return x((op::op_name &)v); }
 
-#ifdef DISABLE_COMPILE_V1
-#define __INFER_FUNC_REG_IMPL__(op_name, x, n)
-#define __VERIFY_FUNC_REG_IMPL__(op_name, x, n)
-#else
 #define __INFER_FUNC_REG_IMPL__(op_name, x, n) static const InferShapeFuncRegister PASTE(if_register, n)(#op_name, x)
 #define __VERIFY_FUNC_REG_IMPL__(op_name, x, n) static const VerifyFuncRegister PASTE(vf_register, n)(#op_name, x)
-#endif
 
 // Infer format func register
 #define __INFER_FORMAT_FUNC_REG_IMPL__(op_name, x, n) \
