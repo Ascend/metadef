@@ -26,21 +26,22 @@ namespace fe {
 class FusionPassRegistry::FusionPassRegistryImpl {
  public:
   void RegisterPass(const GraphFusionPassType &pass_type, const std::string &pass_name,
-                    const FusionPassRegistry::CreateFn create_fn, uint64_t attr) {
+                    const FusionPassRegistry::CreateFn create_fn, PassAttr attr) {
     const std::lock_guard<std::mutex> my_lock(mu_);
+    std::string pass_module = IsPassAttrTypeOn(attr, PassAttrType::FE_PASS_FLAG) ? "FE" : "TBE";
     if (pass_descs_.find(pass_type) != pass_descs_.end()) {
       pass_descs_[pass_type][pass_name].attr = attr;
       pass_descs_[pass_type][pass_name].create_fn = create_fn;
-      GELOGD("GraphFusionPass[type=%d, name=%s, attr=%lu]: the pass type already exists.",
-             pass_type, pass_name.c_str(), attr);
+      GELOGD("GraphFusionPass[type=%d, name=%s, attr=%lu, module=%s]: the pass type already exists.",
+             pass_type, pass_name.c_str(), attr, pass_module.c_str());
       return;
     }
 
     std::map<std::string, PassDesc> pass_desc;
     pass_desc[pass_name] = {attr, create_fn};
     pass_descs_[pass_type] = pass_desc;
-    GELOGD("GraphFusionPass[type=%d, name=%s, attr=%lu]: the pass type does not exist.",
-           pass_type, pass_name.c_str(), attr);
+    GELOGD("GraphFusionPass[type=%d, name=%s, attr=%lu, module=%s]: the pass type does not exist.",
+           pass_type, pass_name.c_str(), attr, pass_module.c_str());
   }
 
   std::map<std::string, PassDesc> GetPassDesc(const GraphFusionPassType &pass_type) {

@@ -19,7 +19,19 @@
 #include <stdint.h>
 namespace fe {
 using PassAttr = uint64_t;
-const PassAttr FORBIDDEN_CLOSE = 0x01U;  // forbidden close, can not be closed by fusion switch
-const PassAttr SINGLE_SCENE_OPEN = 0x04U;  // open for single op scene, can be close by fusion switch
+const PassAttr FORBIDDEN_CLOSE = 0x01UL;  // forbidden close, can not be closed by fusion switch
+const PassAttr NEED_SORT = 0x02UL;  // need topological sorting before executing
+const PassAttr SINGLE_SCENE_OPEN = 0x04UL;  // open for single op scene, can be close by fusion switch
+const PassAttr FE_PASS = 0x08UL;  // graph passes and ub passes in air project
+const PassAttr PASS_BIT_MASK = 0x1UL;  // check if the loweset bit of pass is 1
+
+enum class PassAttrType {
+  FRBDN_CLOSE = 0, // Mark those passes that cannot be turned off in graph mode
+  NEED_TOPO_SORT = 1, // Mark those graph fusion passes that need topological sorting before executing
+  SINGLE_OP_SCENE_MUST_ON = 2, // Mark those passes that must be turned on in single-op mode or jit_compile=false
+  FE_PASS_FLAG = 3,  // Mark those passes that belong to FE
+};
+
+bool IsPassAttrTypeOn(PassAttr pass_attr, PassAttrType attr_type);
 }  // namespace fe
 #endif  // INC_REGISTER_GRAPH_OPTIMIZER_FUSION_COMMON_FUSION_PASS_DESC_H_
