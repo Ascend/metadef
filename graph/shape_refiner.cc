@@ -21,6 +21,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <stack>
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
 
@@ -43,7 +44,6 @@ const static std::set<std::string> kDummyContextOpTypes{ "Enter", "Switch", "Ref
 const static std::map<std::string, std::string> kGeLocalOpMapping {
     { "StreamMerge", "Merge" }, { "MemcpyAsync", "Identity" }
 };
-const int32_t kMaxRecursionDepth = 10;
 
 bool IsOpWithSubgraph(const NodePtr &node) {
   const auto op_desc = node->GetOpDesc();
@@ -568,45 +568,39 @@ void ShapeRefiner::PushToContextMap(const NodePtr &node, const InferenceContextP
 }
 
 static Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const int32_t out_idx,
-                                              std::map<NodePtr, int32_t> &out_nodes, const int32_t depth) {
-  if (depth > kMaxRecursionDepth) {
-    REPORT_CALL_ERROR("E18888", "Exceed max recursion depth: %d.", kMaxRecursionDepth);
-    GELOGE(FAILED, "[Validate][Depth] Exceed max recursion depth: %d.", kMaxRecursionDepth);
-    return FAILED;
-  }
+                                              std::map<NodePtr, int32_t> &out_nodes) {
   out_nodes.clear();
   if (!IsOpWithSubgraph(parent_node)) {
     return SUCCESS;
   }
-  GELOGD("Node: %s, out index: %d.", parent_node->GetName().c_str(), out_idx);
-  const auto subgraph_output_nodes = NodeUtils::GetSubgraphOutputNodes(*parent_node);
-  for (const auto &netoutput : subgraph_output_nodes) {
-    GE_CHECK_NOTNULL(netoutput);
-    const auto output_desc = netoutput->GetOpDesc();
-    GE_CHECK_NOTNULL(output_desc);
-    for (const auto &in_data_anchor : netoutput->GetAllInDataAnchors()) {
-      GE_CHECK_NOTNULL(in_data_anchor);
-      const auto in_desc = output_desc->MutableInputDesc(static_cast<uint32_t>(in_data_anchor->GetIdx()));
-      GE_CHECK_NOTNULL(in_desc);
-      int32_t ref = 0;
-      if (AttrUtils::GetInt(in_desc, ATTR_NAME_PARENT_NODE_INDEX, ref) && (ref == out_idx)) {
-        const auto peer_out_data_anchor = in_data_anchor->GetPeerOutAnchor();
-        GE_CHECK_NOTNULL(peer_out_data_anchor);
-        auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
-        if (IsOpWithSubgraph(peer_out_data_node)) {
-          std::map<NodePtr, int32_t> tmp_nodes;
-          if (GetOutNodesByParentNodeOutIndex(peer_out_data_node, peer_out_data_anchor->GetIdx(), tmp_nodes,
-                                              depth + 1) != SUCCESS) {
-            REPORT_CALL_ERROR("E18888", "Get out nodes of %s by index failed.", peer_out_data_node->GetName().c_str());
-            GELOGE(FAILED, "[Get][Outnodes] of %s by index failed.", peer_out_data_node->GetName().c_str());
-            return FAILED;
+  std::stack<std::pair<NodePtr, int32_t>> node_to_indx_stack;
+  node_to_indx_stack.push(std::make_pair(parent_node, out_idx));
+  while (!node_to_indx_stack.empty()) {
+    std::pair<NodePtr, int32_t> node_to_idx = node_to_indx_stack.top();
+    node_to_indx_stack.pop();
+    GELOGD("Node: %s, out index: %d.", node_to_idx.first->GetName().c_str(), node_to_idx.second);
+    const auto subgraph_output_nodes = NodeUtils::GetSubgraphOutputNodes(*(node_to_idx.first));
+    for (const auto &netoutput : subgraph_output_nodes) {
+      GE_CHECK_NOTNULL(netoutput);
+      const auto output_desc = netoutput->GetOpDesc();
+      GE_CHECK_NOTNULL(output_desc);
+      for (const auto &in_data_anchor : netoutput->GetAllInDataAnchors()) {
+        GE_CHECK_NOTNULL(in_data_anchor);
+        const auto in_desc = output_desc->MutableInputDesc(static_cast<uint32_t>(in_data_anchor->GetIdx()));
+        GE_CHECK_NOTNULL(in_desc);
+        int32_t ref = 0;
+        if (AttrUtils::GetInt(in_desc, ATTR_NAME_PARENT_NODE_INDEX, ref) && (ref == node_to_idx.second)) {
+          const auto peer_out_data_anchor = in_data_anchor->GetPeerOutAnchor();
+          GE_CHECK_NOTNULL(peer_out_data_anchor);
+          auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
+          if (IsOpWithSubgraph(peer_out_data_node)) {
+            node_to_indx_stack.push(std::make_pair(peer_out_data_node, peer_out_data_anchor->GetIdx()));
+          } else {
+            (void)out_nodes.emplace(peer_out_data_node, peer_out_data_anchor->GetIdx());
           }
-          out_nodes.insert(tmp_nodes.cbegin(), tmp_nodes.cend());
-        } else {
-          (void)out_nodes.emplace(peer_out_data_node, peer_out_data_anchor->GetIdx());
+          GELOGI("Peer node: %s, out index: %d, ref: %d.", peer_out_data_node->GetName().c_str(),
+                 peer_out_data_anchor->GetIdx(), ref);
         }
-        GELOGI("Peer node: %s, out index: %d, ref: %d.", peer_out_data_node->GetName().c_str(),
-               peer_out_data_anchor->GetIdx(), ref);
       }
     }
   }
@@ -637,7 +631,7 @@ graphStatus ShapeRefiner::GetRealInNodesAndIndex(NodePtr &input_node, int32_t &o
   }
 
   if (IsOpWithSubgraph(input_node)) {
-    if (GetOutNodesByParentNodeOutIndex(input_node, output_idx, nodes_idx, 0) != SUCCESS) {
+    if (GetOutNodesByParentNodeOutIndex(input_node, output_idx, nodes_idx) != SUCCESS) {
       REPORT_CALL_ERROR("E18888", "Get outnodes of %s by parent node out index failed.", input_node->GetName().c_str());
       GELOGE(FAILED, "[Get][Outnodes] of %s by parent node out index failed.", input_node->GetName().c_str());
       return FAILED;
