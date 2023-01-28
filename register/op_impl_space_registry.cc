@@ -15,11 +15,11 @@
 */
 
 #include "register/op_impl_space_registry.h"
+#include <fstream>
 #include "register/op_impl_registry_holder_manager.h"
 #include "graph/debug/ge_log.h"
 #include "graph/utils/file_utils.h"
 #include "register/op_impl_registry.h"
-#include <fstream>
 
 namespace gert {
 ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::OpSoBinPtr> &bins,
@@ -39,7 +39,7 @@ ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::O
       }
       return om_registry_holder;
     };
-    auto registry_holder =
+    const auto registry_holder =
         OpImplRegistryHolderManager::GetInstance().GetOrCreateOpImplRegistryHolder(so_data,
                                                                                    so_bin->GetSoName(),
                                                                                    so_info,
@@ -58,7 +58,8 @@ ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::O
   }
 
 void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &merged_funcs,
-                                         OpImplKernelRegistry::OpImplFunctions &src_funcs, std::string &op_type) {
+                                         const OpImplKernelRegistry::OpImplFunctions &src_funcs,
+                                         const std::string &op_type) const {
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), infer_shape)
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), infer_shape_range)
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), infer_datatype)
@@ -67,9 +68,9 @@ void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), compile_info_deleter)
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), tiling)
 
-  if (merged_funcs.max_tiling_data_size == 0) {
+  if (merged_funcs.max_tiling_data_size == 0U) {
     merged_funcs.max_tiling_data_size = src_funcs.max_tiling_data_size;
-  } else if (src_funcs.max_tiling_data_size != 0) {
+  } else if (src_funcs.max_tiling_data_size != 0U) {
     GELOGW("op type %s max_tiling_data_size has been registered", op_type.c_str());
   }
 
@@ -85,12 +86,12 @@ void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &
   }
   if (merged_funcs.unique_private_attrs.size() == 0U) {
     merged_funcs.unique_private_attrs = src_funcs.unique_private_attrs;
-  } else if (src_funcs.unique_private_attrs.size() != 0) {
+  } else if (src_funcs.unique_private_attrs.size() != 0U) {
     GELOGW("op type %s unique_private_attrs has been registered", op_type.c_str());
   }
 }
 
-void OpImplSpaceRegistry::MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl) {
+void OpImplSpaceRegistry::MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl) const {
   for (auto iter = src_impl.cbegin(); iter != src_impl.cend(); ++iter) {
     auto op_type = iter->first;
     GELOGD("Merge types to impl, op type %s", op_type.c_str());

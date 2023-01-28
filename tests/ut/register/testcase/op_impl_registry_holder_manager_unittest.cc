@@ -237,4 +237,18 @@ TEST_F(OpImplRegistryHolderManagerUT, OpImplRegistryManager_UpdateOpImplRegistri
   EXPECT_NE(tmp_registry_holder, nullptr);
   EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 1);
 }
+
+TEST_F(OpImplRegistryHolderManagerUT, OpImplRegistryManager_UpdateOpImplRegistries_Succeed2) {
+  std::string so_data("libopmaster.so");
+
+  gert::OpImplRegistryHolderManager::GetInstance().AddRegistry(so_data, nullptr);
+  auto tmp_registry_holder = gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(so_data);
+  EXPECT_EQ(tmp_registry_holder, nullptr);
+  EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 1);
+
+  gert::OpImplRegistryHolderManager::GetInstance().UpdateOpImplRegistries();
+  tmp_registry_holder = gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(so_data);
+  EXPECT_EQ(tmp_registry_holder, nullptr);
+  EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 0);
+}
 }  // namespace gert_test
