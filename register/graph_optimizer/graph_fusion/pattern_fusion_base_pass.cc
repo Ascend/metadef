@@ -314,6 +314,10 @@ bool PatternFusionBasePass::CheckOpSupported(const ge::NodePtr &node) const {
   return pattern_fusion_base_pass_impl_ptr_->CheckOpSupported(node);
 }
 
+bool PatternFusionBasePass::CheckAccuracySupported(const ge::NodePtr &node) const {
+  return pattern_fusion_base_pass_impl_ptr_->CheckAccuracySupported(node);
+}
+
 void PrintAllNodes(const std::vector<ge::NodePtr> &scope_nodes) {
   for (const auto &node : scope_nodes) {
     if (node == nullptr) {

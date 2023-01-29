@@ -106,6 +106,7 @@ class TestPass : public fe::PatternFusionBasePass {
     ge::NodePtr cast_Node0 = GetNodeFromMapping(kPatternCast0, mapping);
     CheckOpSupported(cast_Node0);
     CheckOpSupported(cast_Node0->GetOpDesc());
+    CheckAccuracySupported(cast_Node0);
 
     UT_CHECK(cast_Node0 == nullptr, GELOGD("cast_Node0 is null,fusion failed."),
              return NOT_CHANGED);

@@ -117,6 +117,9 @@ class PatternFusionBasePass : public GraphPass {
   bool CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) const;
 
   bool CheckOpSupported(const ge::NodePtr &node) const;
+
+  bool CheckAccuracySupported(const ge::NodePtr &node) const;
+
   /** check whether the input graph is Cyclic
   *
   *  @param graph need to be checked

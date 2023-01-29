@@ -59,6 +59,22 @@ bool PatternFusionBasePassImpl::CheckOpSupported(const ge::NodePtr &node) const 
   return ops_kernel_info_store_ptr_->CheckSupported(node, un_supported_reason);
 }
 
+bool PatternFusionBasePassImpl::CheckAccuracySupported(const ge::NodePtr &node) const {
+  if (node == nullptr) {
+    GELOGD("Node is null.");
+    return false;
+  }
+  if (ops_kernel_info_store_ptr_ == nullptr) {
+    GELOGD("Ops kernel info store is null.");
+    return false;
+  }
+  std::string un_supported_reason;
+  bool ret = ops_kernel_info_store_ptr_->CheckAccuracySupported(node, un_supported_reason, true);
+  GELOGD("Check result for op[%s, %s] is [%d], reason is [%s].",
+         node->GetName().c_str(), node->GetType().c_str(), ret, un_supported_reason.c_str());
+  return ret;
+}
+
 bool PatternFusionBasePassImpl::IsNodesExist(const ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes) {
   return find(nodes.begin(), nodes.end(), current_node) != nodes.end();
 }
