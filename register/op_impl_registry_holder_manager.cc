@@ -15,15 +15,15 @@
 */
 
 #include "register/op_impl_registry_holder_manager.h"
+#include <fstream>
 #include "graph/debug/ge_log.h"
 #include "graph/utils/file_utils.h"
 #include "mmpa/mmpa_api.h"
 #include "inc/graph/operator_factory_impl.h"
-#include <fstream>
 
 namespace gert {
 namespace {
-constexpr const char *kHomeEnvName = "HOME";
+constexpr const ge::char_t *kHomeEnvName = "HOME";
 constexpr size_t kGByteSize = 1073741824U; // 1024 * 1024 * 1024
 static thread_local uint32_t load_so_count = 0;
 using GetImplNum = size_t (*)();
@@ -33,7 +33,7 @@ void CloseHandle(void *&handle) {
   if (handle != nullptr) {
     GELOGD("start close handle, handle[%p].", handle);
     if (mmDlclose(handle) != 0) {
-      const char *error = mmDlerror();
+      const ge::char_t *error = mmDlerror();
       error = (error == nullptr) ? "" : error;
       GELOGE(ge::FAILED, "[Close][Handle] failed, reason:%s", error);
       return;
@@ -59,15 +59,15 @@ OpImplRegistryHolder::~OpImplRegistryHolder() {
   CloseHandle(handle_);
 }
 
-ge::graphStatus OmOpImplRegistryHolder::CreateOmOppDir(std::string &opp_dir) {
-  char path_env[MMPA_MAX_PATH] = {0};
-  int32_t ret = mmGetEnv(kHomeEnvName, path_env, MMPA_MAX_PATH);
+ge::graphStatus OmOpImplRegistryHolder::CreateOmOppDir(std::string &opp_dir) const {
+  char path_env[MMPA_MAX_PATH] = {'\0'};
+  const int32_t ret = mmGetEnv(kHomeEnvName, path_env, MMPA_MAX_PATH);
   if ((ret != EN_OK) || (strlen(path_env) == 0)) {
     GELOGE(ge::FAILED, "Get %s path failed.", kHomeEnvName);
     return ge::GRAPH_FAILED;
   }
 
-  std::string file_path = ge::RealPath(path_env);
+  const std::string file_path = ge::RealPath(path_env);
   if (file_path.empty()) {
     GELOGE(ge::FAILED, "[Call][RealPath] File path %s is invalid.", opp_dir.c_str());
     return ge::GRAPH_FAILED;
@@ -89,14 +89,14 @@ ge::graphStatus OmOpImplRegistryHolder::CreateOmOppDir(std::string &opp_dir) {
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus OmOpImplRegistryHolder::RmOmOppDir(const std::string &opp_dir) {
+ge::graphStatus OmOpImplRegistryHolder::RmOmOppDir(const std::string &opp_dir) const {
   if (opp_dir.empty()) {
     GELOGD("opp dir is empty, no need remove");
     return ge::GRAPH_SUCCESS;
   }
 
   if (mmRmdir(opp_dir.c_str()) != 0) {
-    const char *error = mmDlerror();
+    const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
     GELOGE(ge::FAILED, "Failed to rm dir %s, errmsg: %s", opp_dir.c_str(), error);
     return ge::GRAPH_FAILED;
@@ -106,7 +106,7 @@ ge::graphStatus OmOpImplRegistryHolder::RmOmOppDir(const std::string &opp_dir) {
 }
 
 ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpSoBin> &so_bin,
-                                                   const std::string &opp_path) {
+                                                   const std::string &opp_path) const {
   const mmMode_t kAccess = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) |
       static_cast<uint32_t>(M_IWUSR) |
       static_cast<uint32_t>(M_UMASK_USREXEC));
@@ -119,8 +119,8 @@ ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpS
     GELOGE(ge::FAILED, "Failed to open file, path = %s", opp_path.c_str());
     return ge::GRAPH_FAILED;
   }
-  int32_t write_count = mmWrite(fd, reinterpret_cast<void *>(const_cast<uint8_t *>(so_bin->GetBinData())),
-                                static_cast<uint32_t>(so_bin->GetBinDataSize()));
+  const int32_t write_count = mmWrite(fd, reinterpret_cast<void *>(const_cast<uint8_t *>(so_bin->GetBinData())),
+                                      static_cast<uint32_t>(so_bin->GetBinDataSize()));
   if ((write_count == EN_INVALID_PARAM) || (write_count == EN_ERROR)) {
     GELOGE(ge::FAILED, "Write data failed. mmpa error no is %d", write_count);
     GE_ASSERT_TRUE(mmClose(fd) == EN_OK);
@@ -129,10 +129,15 @@ ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpS
   GE_ASSERT_TRUE(mmClose(fd) == EN_OK);
   return ge::GRAPH_SUCCESS;
 }
-
+#ifndef ONLY_COMPILE_OPEN_SRC
+std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(void *handle,
+                                                                                const string &so_path,
+                                                                                size_t &impl_num) const {
+#else
 std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(void *handle,
                                                                                 const string &so_path,
                                                                                 size_t &impl_num) {
+#endif
   if (handle == nullptr) {
     GELOGE(ge::FAILED, "handle is nullptr");
     return nullptr;
@@ -140,7 +145,7 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
 
   const auto get_impl_num = reinterpret_cast<GetImplNum>(mmDlsym(handle, "GetRegisteredOpNum"));
   if (get_impl_num == nullptr) {
-    const char *error = mmDlerror();
+    const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
     GELOGE(ge::FAILED, "Get registered op num functions failed", so_path.c_str(), error);
     return nullptr;
@@ -150,7 +155,7 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
 
   const auto get_impl_funcs = reinterpret_cast<GetImplFunctions>(mmDlsym(handle, "GetOpImplFunctions"));
   if (get_impl_funcs == nullptr) {
-    const char *error = mmDlerror();
+    const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
     GELOGE(ge::FAILED, "Get op impl functions failed", so_path.c_str(), error);
     return nullptr;
@@ -188,7 +193,7 @@ ge::graphStatus OmOpImplRegistryHolder::LoadSo(const std::shared_ptr<ge::OpSoBin
   std::string opp_dir;
   GE_ASSERT_SUCCESS(CreateOmOppDir(opp_dir));
 
-  std::string so_path = opp_dir + so_bin->GetSoName();
+  const std::string so_path = opp_dir + so_bin->GetSoName();
   if (SaveToFile(so_bin, so_path) != ge::GRAPH_SUCCESS) {
     GE_ASSERT_SUCCESS(RmOmOppDir(opp_dir));
     return ge::GRAPH_FAILED;
@@ -198,7 +203,7 @@ ge::graphStatus OmOpImplRegistryHolder::LoadSo(const std::shared_ptr<ge::OpSoBin
                           static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
                               static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
   if (handle == nullptr) {
-    const char *error = mmDlerror();
+    const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
     GELOGE(ge::FAILED, "Failed to dlopen %s, errmsg: %s", so_path.c_str(), error);
     GE_ASSERT_SUCCESS(RmOmOppDir(opp_dir));
@@ -206,14 +211,14 @@ ge::graphStatus OmOpImplRegistryHolder::LoadSo(const std::shared_ptr<ge::OpSoBin
   }
 
   size_t impl_num = 0;
-  auto impl_funcs = GetOpImplFunctionsByHandle(handle, so_path, impl_num);
+  const auto impl_funcs = GetOpImplFunctionsByHandle(handle, so_path, impl_num);
   if (impl_funcs == nullptr) {
     CloseHandle(handle);
     GE_ASSERT_SUCCESS(RmOmOppDir(opp_dir));
     return ge::GRAPH_FAILED;
   }
 
-  RmOmOppDir(opp_dir);
+  GE_ASSERT_SUCCESS(RmOmOppDir(opp_dir));
 
  for (size_t i = 0U; i < impl_num; ++i) {
     types_to_impl_[impl_funcs[i].op_type] = impl_funcs[i].funcs;
@@ -244,7 +249,7 @@ void OpImplRegistryHolderManager::UpdateOpImplRegistries() {
   const std::lock_guard<std::mutex> lock(map_mutex_);
   for (auto iter = op_impl_registries_.begin(); iter != op_impl_registries_.end();) {
     if (iter->second == nullptr) {
-      op_impl_registries_.erase(iter++);
+      (void)op_impl_registries_.erase(iter++);
     } else {
       iter++;
     }
@@ -260,11 +265,19 @@ const std::shared_ptr<OpImplRegistryHolder> OpImplRegistryHolderManager::GetOpIm
   return iter->second;
 }
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+OpImplRegistryHolderPtr OpImplRegistryHolderManager::GetOrCreateOpImplRegistryHolder(
+    std::string &so_data,
+    const std::string &so_name,
+    const ge::SoInOmInfo &so_info,
+    const std::function<OpImplRegistryHolderPtr()> create_func) {
+#else
 OpImplRegistryHolderPtr OpImplRegistryHolderManager::GetOrCreateOpImplRegistryHolder(
     std::string &so_data,
     const std::string &so_name,
     const ge::SoInOmInfo &so_info,
     std::function<OpImplRegistryHolderPtr()> create_func) {
+#endif
   const std::lock_guard<std::mutex> lock(map_mutex_);
   const auto iter = op_impl_registries_.find(so_data);
   if (iter != op_impl_registries_.cend()) {

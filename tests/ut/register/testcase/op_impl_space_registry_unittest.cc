@@ -230,6 +230,19 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_AddRegistry_Succeed) {
 #endif
 }
 
+TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_AddRegistry_WithSameOptype_Succeed) {
+  gert::OpImplSpaceRegistry space_registry;
+  auto registry_holder = std::make_shared<gert::OmOpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions funcs;
+  funcs.max_tiling_data_size = 100;
+  funcs.unique_private_attrs.insert("test");
+  registry_holder->AddTypesToImpl("Add_test", funcs);
+  auto ret = space_registry.AddRegistry(registry_holder);
+  EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
+  ret = space_registry.AddRegistry(registry_holder);
+  EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
+}
+
 TEST_F(OpImplSpaceRegistryUT, DefaultOpImplSpaceRegistry_SetSpaceRegistry_Succeed) {
   auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
   gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);

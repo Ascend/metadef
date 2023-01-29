@@ -36,10 +36,10 @@ class OpImplSpaceRegistry : public std::enable_shared_from_this<OpImplSpaceRegis
   const OpImplKernelRegistry::PrivateAttrList &GetPrivateAttrs(const OpImplKernelRegistry::OpType &op_type) const;
 
  private:
-  void MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl);
+  void MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl) const;
 
   void MergeFunctions(OpImplKernelRegistry::OpImplFunctions &merged_funcs,
-                      OpImplKernelRegistry::OpImplFunctions &src_funcs, std::string &op_type);
+                      const OpImplKernelRegistry::OpImplFunctions &src_funcs, const std::string &op_type) const;
  private:
   std::vector<std::shared_ptr<OpImplRegistryHolder>> op_impl_registries_;
   OpTypesToImplMap merged_types_to_impl_;
