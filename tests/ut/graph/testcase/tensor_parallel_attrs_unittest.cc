@@ -88,6 +88,13 @@ TEST_F(TensorParallelAttrsTest, DeviceIndex_operators) {
   ASSERT_EQ(device_index, device_index);
 }
 
+TEST_F(TensorParallelAttrsTest, DeviceIndex_DeviceIdToString) {
+  DeviceIndex device_index;
+  device_index.indices = {0, 1, 2};
+  device_index.engine_type = "MyEngine";
+  ASSERT_EQ(device_index.DeviceIdToString(), "0:1:2");
+}
+
 TEST_F(TensorParallelAttrsTest, NodeDeployment_ToAndFromJsonStr) {
   DeviceIndex device_index_0;
   device_index_0.indices = {0, 0, 1};

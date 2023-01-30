@@ -112,6 +112,17 @@ std::string DeviceIndex::DebugString() const {
   return engine_type + ToString(indices);
 }
 
+std::string DeviceIndex::DeviceIdToString() const {
+  if (indices.empty()) {
+    return "";
+  }
+  auto device_id = std::to_string(indices[0U]);
+  for (size_t i = 1U; i < indices.size(); ++i) {
+    device_id += (":" + std::to_string(indices[i]));
+  }
+  return device_id;
+}
+
 USED_BY_JSON void to_json(Json &j, const DimSlice &dim_slice) {
   j = std::vector<int64_t>{dim_slice.begin, dim_slice.end};
 }

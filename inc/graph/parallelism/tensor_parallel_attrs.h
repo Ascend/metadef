@@ -50,6 +50,7 @@ struct DeviceIndex {
   std::string engine_type;
   std::vector<int32_t> indices;
   std::string DebugString() const;
+  std::string DeviceIdToString() const;
 };
 
 bool operator==(const DeviceIndex &lhs, const DeviceIndex &rhs);

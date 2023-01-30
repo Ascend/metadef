@@ -48,6 +48,12 @@ struct DataParallelOption {
   uint32_t model_weight_prefetch_buffer_size = 0U;
 };
 
+struct OptimizerOffloadGraphOption {
+  bool is_enabled = false;
+  std::string offload; // cpu or NVME, NVME is reserved
+  std::string offload_path; // NVME path, reserved
+};
+
 struct GraphParallelOption {
   int32_t graph_id = -1;
   int32_t version = -1;
@@ -56,6 +62,7 @@ struct GraphParallelOption {
   DataParallelOption data_parallel_option;
   TensorParallelOption tensor_parallel_option;
   PipelineParallelOption pipeline_parallel_option;
+  OptimizerOffloadGraphOption optimizer_offload_option;
 };
 }  // namespace ge
 
