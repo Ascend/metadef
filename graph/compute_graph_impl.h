@@ -160,7 +160,7 @@ class ComputeGraphImpl {
                                     const ConstComputeGraphPtr &compute_graph);
   graphStatus BFSTopologicalSorting(std::vector<NodePtr> &node_vec,
                                     std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    std::deque<NodePtr> &stack,
+                                    const std::deque<NodePtr> &stack,
                                     const ConstComputeGraphPtr &compute_graph);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::map<std::string, NodePtr> &breadth_node_map) const;

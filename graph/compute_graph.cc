@@ -42,13 +42,11 @@ constexpr int32_t kTopoSortingBfs = 0;
 constexpr int32_t kTopoSortingDfs = 1;
 const std::string kMemoryPriority = "MemoryPriority";
 bool IsUseBFS() {
-  std::string run_mode;
   std::string topo_sorting_mode_str;
   if ((ge::GetContext().GetOption(ge::OPTION_TOPOSORTING_MODE, topo_sorting_mode_str) == GRAPH_SUCCESS) &&
       (!topo_sorting_mode_str.empty())) {
     const int32_t base = 10;
-    const auto topo_sorting_mode =
-        static_cast<int32_t>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
+    const auto topo_sorting_mode = static_cast<int32_t>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
     if (topo_sorting_mode == kTopoSortingBfs) {
       return true;
     } else if (topo_sorting_mode == kTopoSortingDfs) {
@@ -66,7 +64,7 @@ bool IsUseBFS() {
   return false;
 }
 
-int64_t GetNodeOutputSize(NodePtr node) {
+int64_t GetNodeOutputSize(const NodePtr& node) {
   int64_t total_size = 0;
   if (node == nullptr) {
     return total_size;
@@ -81,9 +79,9 @@ int64_t GetNodeOutputSize(NodePtr node) {
 
 void SortNodesInStack(std::vector<NodePtr> &stack) {
   std::string memory_optimization_policy;
-  ge::GetContext().GetOption(MEMORY_OPTIMIZATION_POLICY, memory_optimization_policy);
+  (void) ge::GetContext().GetOption(MEMORY_OPTIMIZATION_POLICY, memory_optimization_policy);
   if (memory_optimization_policy == kMemoryPriority) {
-    std::sort(stack.begin(), stack.end(), [](NodePtr a, NodePtr b) {
+    std::sort(stack.begin(), stack.end(), [](const NodePtr &a, const NodePtr &b) {
       if (a->GetOutDataNodesSize() == b->GetOutDataNodesSize()) {
         if (GetNodeOutputSize(a) == GetNodeOutputSize(b)) {
           return a->GetName() > b->GetName();
@@ -879,7 +877,7 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
 
 graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_vec,
                                                     std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                    std::deque<NodePtr> &stack,
+                                                    const std::deque<NodePtr> &stack,
                                                     const ConstComputeGraphPtr &compute_graph) {
   GELOGD("Runing_Bfs_Sort: %s", name_.c_str());
   (void) stack;
