@@ -36,15 +36,9 @@ class OpImplRegistryHolder {
 
   void SetHandle(void *handle) { handle_ = handle; }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle,
                                                             const string &so_path,
                                                             size_t &impl_num) const;
-#else
-  std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle,
-                                                            const string &so_path,
-                                                            size_t &impl_num);
-#endif
 
   void AddTypesToImpl(gert::OpImplKernelRegistry::OpType op_type, gert::OpImplKernelRegistry::OpImplFunctions funcs);
  protected:
@@ -83,23 +77,13 @@ class OpImplRegistryHolderManager {
 
   const OpImplRegistryHolderPtr GetOpImplRegistryHolder (std::string &so_data);
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   OpImplRegistryHolderPtr GetOrCreateOpImplRegistryHolder(std::string &so_data,
                                                           const std::string &so_name,
                                                           const ge::SoInOmInfo &so_info,
                                                           const std::function<OpImplRegistryHolderPtr()> create_func);
-#else
-  OpImplRegistryHolderPtr GetOrCreateOpImplRegistryHolder(std::string &so_data,
-                                                          const std::string &so_name,
-                                                          const ge::SoInOmInfo &so_info,
-                                                          std::function<OpImplRegistryHolderPtr()> create_func);
-#endif
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   size_t GetOpImplRegistrySize() const { return op_impl_registries_.size(); }
-#else
-  size_t GetOpImplRegistrySize() { return op_impl_registries_.size(); }
-#endif
+
   void ClearOpImplRegistries() {
     op_impl_registries_.clear();
   }
