@@ -129,15 +129,10 @@ ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpS
   GE_ASSERT_TRUE(mmClose(fd) == EN_OK);
   return ge::GRAPH_SUCCESS;
 }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
 std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(void *handle,
                                                                                 const string &so_path,
                                                                                 size_t &impl_num) const {
-#else
-std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(void *handle,
-                                                                                const string &so_path,
-                                                                                size_t &impl_num) {
-#endif
   if (handle == nullptr) {
     GELOGE(ge::FAILED, "handle is nullptr");
     return nullptr;
@@ -265,19 +260,11 @@ const std::shared_ptr<OpImplRegistryHolder> OpImplRegistryHolderManager::GetOpIm
   return iter->second;
 }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 OpImplRegistryHolderPtr OpImplRegistryHolderManager::GetOrCreateOpImplRegistryHolder(
     std::string &so_data,
     const std::string &so_name,
     const ge::SoInOmInfo &so_info,
     const std::function<OpImplRegistryHolderPtr()> create_func) {
-#else
-OpImplRegistryHolderPtr OpImplRegistryHolderManager::GetOrCreateOpImplRegistryHolder(
-    std::string &so_data,
-    const std::string &so_name,
-    const ge::SoInOmInfo &so_info,
-    std::function<OpImplRegistryHolderPtr()> create_func) {
-#endif
   const std::lock_guard<std::mutex> lock(map_mutex_);
   const auto iter = op_impl_registries_.find(so_data);
   if (iter != op_impl_registries_.cend()) {
