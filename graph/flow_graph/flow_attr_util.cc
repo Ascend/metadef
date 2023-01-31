@@ -58,7 +58,7 @@ bool FlowAttrUtil::CheckAttrsIsSupport(const std::vector<DataFlowInputAttr> &att
   return true;
 }
 
-graphStatus FlowAttrUtil::SetCountBatchAttr(const void *attr_value, GeTensorDescPtr &tensor_desc) {
+graphStatus FlowAttrUtil::SetCountBatchAttr(const void *const attr_value, GeTensorDescPtr &tensor_desc) {
   GE_ASSERT_NOTNULL(attr_value);
   const CountBatch *const count_batch = static_cast<const CountBatch *>(attr_value);
   if (count_batch->batch_size <= 0) {
@@ -94,7 +94,7 @@ graphStatus FlowAttrUtil::SetCountBatchAttr(const void *attr_value, GeTensorDesc
   return ge::GRAPH_SUCCESS;
 }
 
-graphStatus FlowAttrUtil::SetTimeBatchAttr(const void *attr_value, GeTensorDescPtr &tensor_desc) {
+graphStatus FlowAttrUtil::SetTimeBatchAttr(const void *const attr_value, GeTensorDescPtr &tensor_desc) {
   GE_ASSERT_NOTNULL(attr_value);
   const TimeBatch *const time_batch = static_cast<const TimeBatch *>(attr_value);
   if (time_batch->batch_dim < -1) {

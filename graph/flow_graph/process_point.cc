@@ -25,23 +25,23 @@ namespace ge {
 namespace dflow {
 class ProcessPointImpl {
 public:
-  ProcessPointImpl(const char *pp_name, ProcessPointType pp_type) : pp_name_(pp_name), pp_type_(pp_type),
-                   json_file_path_() {}
+  ProcessPointImpl(const char_t *pp_name, ProcessPointType pp_type)
+      : pp_name_(pp_name), pp_type_(pp_type), json_file_path_() {}
   ~ProcessPointImpl() = default;
 
   ProcessPointType GetProcessPointType() const {
     return pp_type_;
   }
 
-  const char *GetProcessPointName() const {
+  const char_t *GetProcessPointName() const {
     return pp_name_.c_str();
   }
 
-  void SetCompileConfig(const char *json_file_path) {
+  void SetCompileConfig(const char_t *json_file_path) {
     json_file_path_ = json_file_path;
   }
 
-  const char *GetCompileConfig() const {
+  const char_t *GetCompileConfig() const {
     return json_file_path_.c_str();
   }
 
@@ -51,7 +51,7 @@ private:
   std::string json_file_path_;
 };
 
-ProcessPoint::ProcessPoint(const char *pp_name, ProcessPointType pp_type) {
+ProcessPoint::ProcessPoint(const char_t *pp_name, ProcessPointType pp_type) {
   if (pp_name == nullptr) {
     impl_ = nullptr;
     GELOGE(ge::FAILED, "ProcessPoint name is nullptr.");
@@ -72,7 +72,7 @@ ProcessPointType ProcessPoint::GetProcessPointType() const {
   return impl_->GetProcessPointType();
 }
 
-const char *ProcessPoint::GetProcessPointName() const {
+const char_t *ProcessPoint::GetProcessPointName() const {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
     return nullptr;
@@ -80,14 +80,14 @@ const char *ProcessPoint::GetProcessPointName() const {
   return impl_->GetProcessPointName();
 }
 
-void ProcessPoint::SetCompileConfig(const char *json_file_path) {
+void ProcessPoint::SetCompileConfig(const char_t *json_file_path) {
   GE_RETURN_IF_NULL(impl_, "[Check][Param] ProcessPointImpl is nullptr, check failed");
   GE_RETURN_IF_NULL(json_file_path, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
                     this->GetProcessPointName());
   return impl_->SetCompileConfig(json_file_path);
 }
 
-const char *ProcessPoint::GetCompileConfig() const {
+const char_t *ProcessPoint::GetCompileConfig() const {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
     return nullptr;
@@ -97,7 +97,7 @@ const char *ProcessPoint::GetCompileConfig() const {
 
 class GraphPpImpl {
 public:
-  GraphPpImpl(const char *pp_name, const GraphBuilder &builder) : pp_name_(pp_name), builder_(builder) {}
+  GraphPpImpl(const char_t *pp_name, const GraphBuilder &builder) : pp_name_(pp_name), builder_(builder) {}
   ~GraphPpImpl() = default;
 
   GraphBuilder GetGraphBuilder() const {
@@ -120,7 +120,7 @@ private:
   GraphBuilder builder_;
 };
 
-GraphPp::GraphPp(const char *pp_name, const GraphBuilder &builder) : ProcessPoint(pp_name, ProcessPointType::GRAPH) {
+GraphPp::GraphPp(const char_t *pp_name, const GraphBuilder &builder) : ProcessPoint(pp_name, ProcessPointType::GRAPH) {
   if (builder == nullptr) {
     GELOGE(ge::FAILED, "GraphPp(%s) graph builder is null.", this->GetProcessPointName());
     impl_ = nullptr;
@@ -133,7 +133,7 @@ GraphPp::GraphPp(const char *pp_name, const GraphBuilder &builder) : ProcessPoin
 }
 GraphPp::~GraphPp() = default;
 
-GraphPp &GraphPp::SetCompileConfig(const char *json_file_path) {
+GraphPp &GraphPp::SetCompileConfig(const char_t *json_file_path) {
   if (json_file_path == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
            this->GetProcessPointName());
@@ -170,7 +170,7 @@ public:
   FunctionPpImpl() = default;
   ~FunctionPpImpl() = default;
 
-  void AddInvokedClosure(const char *name, const GraphPp graph_pp) {
+  void AddInvokedClosure(const char_t *name, const GraphPp graph_pp) {
     GE_RETURN_IF_NULL(name, "[Check][Param] AddInvokedClosure failed for name is nullptr.");
     GE_RETURN_IF_TRUE(invoked_closures_.find(name) != invoked_closures_.end(),
                       "AddInvokedClosure failed for duplicate name(%s).", name);
@@ -185,7 +185,7 @@ public:
   }
 
   template<typename T>
-  bool SetAttrValue(const char *name, T &&value) {
+  bool SetAttrValue(const char_t *name, T &&value) {
     return attrs_.SetByName(name, std::forward<T>(value));
   }
 
@@ -245,7 +245,7 @@ void FunctionPpImpl::AddFunctionPpInitPara(dataflow::ProcessPoint &process_point
   return;
 }
 
-FunctionPp::FunctionPp(const char *pp_name) : ProcessPoint(pp_name, ProcessPointType::FUNCTION) {
+FunctionPp::FunctionPp(const char_t *pp_name) : ProcessPoint(pp_name, ProcessPointType::FUNCTION) {
   impl_ = std::make_shared<FunctionPpImpl>();
   if (impl_ == nullptr) {
     GELOGW("FunctionPpImpl make shared failed.");
@@ -253,7 +253,7 @@ FunctionPp::FunctionPp(const char *pp_name) : ProcessPoint(pp_name, ProcessPoint
 }
 FunctionPp::~FunctionPp() = default;
 
-FunctionPp &FunctionPp::SetCompileConfig(const char *json_file_path) {
+FunctionPp &FunctionPp::SetCompileConfig(const char_t *json_file_path) {
   if (json_file_path == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
            this->GetProcessPointName());
@@ -265,7 +265,7 @@ FunctionPp &FunctionPp::SetCompileConfig(const char *json_file_path) {
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const ge::AscendString &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const ge::AscendString &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -279,7 +279,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const ge::AscendStri
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const char *value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const char_t *value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -298,7 +298,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const char *value) {
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<ge::AscendString> &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<ge::AscendString> &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -315,7 +315,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<ge
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const int64_t &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const int64_t &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -328,7 +328,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const int64_t &value
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<int64_t> &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<int64_t> &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -341,7 +341,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<in
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<std::vector<int64_t>> &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<std::vector<int64_t>> &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -354,7 +354,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<st
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const float &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const float &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -367,7 +367,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const float &value) 
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<float> &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<float> &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -380,7 +380,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<fl
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const bool &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const bool &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -393,7 +393,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const bool &value) {
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<bool> &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<bool> &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -406,7 +406,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<bo
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const ge::DataType &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const ge::DataType &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -419,7 +419,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const ge::DataType &
   return *this;
 }
 
-FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<ge::DataType> &value) {
+FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<ge::DataType> &value) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;
@@ -432,7 +432,7 @@ FunctionPp &FunctionPp::SetInitParam(const char *attr_name, const std::vector<ge
   return *this;
 }
 
-FunctionPp &FunctionPp::AddInvokedClosure(const char *name, const GraphPp &graph_pp) {
+FunctionPp &FunctionPp::AddInvokedClosure(const char_t *name, const GraphPp &graph_pp) {
   if (impl_ == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
     return *this;

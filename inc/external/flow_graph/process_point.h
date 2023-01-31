@@ -37,13 +37,13 @@ class ProcessPoint {
 public:
   virtual ~ProcessPoint();
   ProcessPointType GetProcessPointType() const;
-  const char *GetProcessPointName() const;
-  const char *GetCompileConfig() const;
+  const char_t *GetProcessPointName() const;
+  const char_t *GetCompileConfig() const;
   virtual void Serialize(ge::AscendString &str) const = 0;
 
 protected:
-  ProcessPoint(const char *pp_name, ProcessPointType pp_type);
-  void SetCompileConfig(const char *json_file_path);
+  ProcessPoint(const char_t *pp_name, ProcessPointType pp_type);
+  void SetCompileConfig(const char_t *json_file_path);
 
 private:
   std::shared_ptr<ProcessPointImpl> impl_;
@@ -52,9 +52,9 @@ private:
 class GraphPpImpl;
 class GraphPp : public ProcessPoint {
 public:
-  GraphPp(const char *pp_name, const GraphBuilder &builder);
+  GraphPp(const char_t *pp_name, const GraphBuilder &builder);
   ~GraphPp() override;
-  GraphPp &SetCompileConfig(const char *json_file_path);
+  GraphPp &SetCompileConfig(const char_t *json_file_path);
   GraphBuilder GetGraphBuilder() const;
   void Serialize(ge::AscendString &str) const override;
 private:
@@ -64,22 +64,22 @@ private:
 class FunctionPpImpl;
 class FunctionPp : public ProcessPoint {
 public:
-  explicit FunctionPp(const char *pp_name);
+  explicit FunctionPp(const char_t *pp_name);
   ~FunctionPp() override;
-  FunctionPp &SetCompileConfig(const char *json_file_path);
-  FunctionPp &SetInitParam(const char *attr_name, const ge::AscendString &value);
-  FunctionPp &SetInitParam(const char *attr_name, const char *value);
-  FunctionPp &SetInitParam(const char *attr_name, const std::vector<ge::AscendString> &value);
-  FunctionPp &SetInitParam(const char *attr_name, const int64_t &value);
-  FunctionPp &SetInitParam(const char *attr_name, const std::vector<int64_t> &value);
-  FunctionPp &SetInitParam(const char *attr_name, const std::vector<std::vector<int64_t>> &value);
-  FunctionPp &SetInitParam(const char *attr_name, const float &value);
-  FunctionPp &SetInitParam(const char *attr_name, const std::vector<float> &value);
-  FunctionPp &SetInitParam(const char *attr_name, const bool &value);
-  FunctionPp &SetInitParam(const char *attr_name, const std::vector<bool> &value);
-  FunctionPp &SetInitParam(const char *attr_name, const ge::DataType &value);
-  FunctionPp &SetInitParam(const char *attr_name, const std::vector<ge::DataType> &value);
-  FunctionPp &AddInvokedClosure(const char *name, const GraphPp &graph_pp);
+  FunctionPp &SetCompileConfig(const char_t *json_file_path);
+  FunctionPp &SetInitParam(const char_t *attr_name, const ge::AscendString &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const char_t *value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const std::vector<ge::AscendString> &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const int64_t &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const std::vector<int64_t> &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const std::vector<std::vector<int64_t>> &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const float &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const std::vector<float> &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const bool &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const std::vector<bool> &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const ge::DataType &value);
+  FunctionPp &SetInitParam(const char_t *attr_name, const std::vector<ge::DataType> &value);
+  FunctionPp &AddInvokedClosure(const char_t *name, const GraphPp &graph_pp);
   const std::map<const std::string, const GraphPp> &GetInvokedClosures() const;
   void Serialize(ge::AscendString &str) const override;
 private:
