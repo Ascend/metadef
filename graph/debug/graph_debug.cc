@@ -19,9 +19,8 @@
 #include <vector>
 
 #include "ge_util.h"
-#include "graph/types.h"
-#include "graph/debug/graph_debug.h"
 #include "graph/utils/graph_utils_ex.h"
+#include "graph/debug/graph_debug.h"
 
 namespace {
 const std::string TAB = "    ";

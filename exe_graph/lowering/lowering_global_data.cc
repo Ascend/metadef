@@ -19,6 +19,7 @@
 #include "common/checker.h"
 #include "graph/debug/ge_log.h"
 #include "exe_graph/lowering/frame_selector.h"
+
 namespace gert {
 namespace {
 bool CurrentOnInitGraph() {
@@ -97,6 +98,15 @@ LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr 
   external_allocators_.holders[static_cast<size_t>(graph_type)] = std::move(allocator);
   return *this;
 }
+
+bg::ValueHolderPtr LoweringGlobalData::GetExternalAllocator(const AllocatorDesc &desc,
+                                                            const ExecuteGraphType &graph_type) const {
+  auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
+  auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
+  return bg::ValueHolder::CreateSingleDataOutput(
+      "GetAllocator",
+      {placement_holder, memory_type_holder, external_allocators_.holders[static_cast<size_t>(graph_type)]});
+}
 /*
  * +------------------------------------------------------------------+
  * |Main Graph                                                        |
@@ -122,11 +132,11 @@ LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr 
  */
 bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(const AllocatorDesc desc) {
   const auto key = desc.GetKey();
+  const auto init_key = key + "-Init";
   const auto from_init = CurrentOnInitGraph();
 
   bg::ValueHolderPtr allocator_holder;
   if (from_init) {
-    const auto init_key = key + "-Init";
     allocator_holder = GetUniqueValueHolder(init_key);
   } else {
     allocator_holder = GetUniqueValueHolder(key);
@@ -134,6 +144,21 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(const AllocatorDesc 
 
   if (allocator_holder != nullptr) {
     return allocator_holder;
+  }
+  // 用户设置了的always_external_allocator情况下，校验外置allocator不为空，
+  // 同时将外置的allocator设置为UniqueValueHolder便于后续直接获取
+  if (lowering_option_.always_external_allocator) {
+    bg::ValueHolderPtr ext_allocator_holder;
+    if (from_init) {
+      GE_ASSERT_NOTNULL(external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)]);
+      ext_allocator_holder = GetExternalAllocator(desc, ExecuteGraphType::kInit);
+      SetUniqueValueHolder(init_key, ext_allocator_holder);
+    } else {
+      GE_ASSERT_NOTNULL(external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)]);
+      ext_allocator_holder = GetExternalAllocator(desc, ExecuteGraphType::kMain);
+      SetUniqueValueHolder(key, ext_allocator_holder);
+    }
+    return ext_allocator_holder;
   }
 
   bg::ValueHolderPtr init_selected_allocator = nullptr;
@@ -221,5 +246,12 @@ void LoweringGlobalData::SetModelWeightSize(const size_t require_weight_size) {
 }
 size_t LoweringGlobalData::GetModelWeightSize() const {
   return model_weight_size_;
+}
+
+const LoweringOption &LoweringGlobalData::GetLoweringOption() const {
+  return lowering_option_;
+}
+void LoweringGlobalData::SetLoweringOption(const LoweringOption &lowering_option) {
+  lowering_option_ = lowering_option;
 }
 }  // namespace gert

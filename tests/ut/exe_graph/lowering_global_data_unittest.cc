@@ -21,6 +21,8 @@
 #include "exe_graph/runtime/execute_graph_types.h"
 #include "checker/summary_checker.h"
 #include "checker/topo_checker.h"
+#include "exe_graph/lowering/lowering_opt.h"
+
 namespace gert {
 namespace {
 ge::NodePtr BuildTestNode() {
@@ -215,6 +217,42 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_CreateSelectAllocator_External
   EXPECT_EQ(init_allocator->GetNode()->GetType(), "SelectAllocator");
   EXPECT_EQ(NodeTopoChecker(init_allocator).StrictConnectFrom(
               {{"Const"}, {"Const"}, {"Data"}, {"CreateAllocator"}, {"Data"}}),
+            "success");
+}
+
+TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_ExternalAllocatorSet_UseAlwaysExternalAllocatorOption) {
+  InitTestFrames();
+  LoweringGlobalData gd;
+  gd.SetStream(bg::ValueHolder::CreateFeed(-1));
+  gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2));
+  LoweringOption opt;
+  opt.always_external_allocator = true;
+  gd.SetLoweringOption(opt);
+  bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+    gd.SetStream(bg::ValueHolder::CreateFeed(-1), ExecuteGraphType::kInit);
+    gd.SetExternalAllocator(bg::ValueHolder::CreateFeed(-2), ExecuteGraphType::kInit);
+    return {};
+  });
+
+  auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
+  ASSERT_NE(allocator1, nullptr);
+  EXPECT_EQ(allocator1->GetNode()->GetType(), "GetAllocator");
+  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom(
+            {{"Const"}, {"Const"}, {"Data"}}),
+            "success");
+  auto create_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("CreateAllocator");
+  // 外置allocator后，图中就不存在CreateAllocator节点了
+  ASSERT_EQ(create_allocator_node, nullptr);
+
+  bg::ValueHolderPtr init_allocator = nullptr;
+  bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
+    init_allocator = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
+    return {};
+  });
+  ASSERT_NE(init_allocator, nullptr);
+  EXPECT_EQ(init_allocator->GetNode()->GetType(), "GetAllocator");
+  EXPECT_EQ(NodeTopoChecker(init_allocator).StrictConnectFrom(
+            {{"Const"}, {"Const"}, {"Data"}}),
             "success");
 }
 

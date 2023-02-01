@@ -2977,19 +2977,29 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
 
   // Set Input
   uint32_t index = 0U;
+  std::map<uint32_t, uint32_t> input_mapping;
   for (const auto &item : graph_info.data_inputs_) {
     for (const auto &in_data_anchor : item.second.second) {
       (void)graph_builder.SetInput(index, { in_data_anchor->GetOwnerNode()->GetName() },
                                    { static_cast<uint32_t>(in_data_anchor->GetIdx()) });
+      input_mapping[index] = index;
       index++;
     }
   }
+  // Add Input-Mapping
+  (void)graph_builder.SetInputMapping(input_mapping);
 
   // Add Outputs
+  index = 0U;
+  std::map<uint32_t, uint32_t> output_mapping;
   for (const auto &item : graph_info.data_outputs_) {
     (void)graph_builder.AddOutput(item.second.first->GetOwnerNode()->GetName(),
                                   static_cast<uint32_t>(item.second.first->GetIdx()));
+    output_mapping[index] = index;
+    index++;
   }
+  // Add outputMapping
+  (void)graph_builder.SetOutputMapping(output_mapping);
 
   // Add targets
   for (const auto &item : graph_info.ctrl_outputs_) {
@@ -3008,24 +3018,6 @@ ComputeGraphPtr GraphUtils::BuildSubgraph(const NodePtr &subgraph_node, const Gr
     (void)graph_builder.AddControlLink(ctrl_edge.first->GetOwnerNode()->GetName(),
                                        ctrl_edge.second->GetOwnerNode()->GetName());
   }
-
-  // Add Input-Mapping
-  std::map<uint32_t, uint32_t> input_mapping;
-  size_t j = 0U;
-  for (const auto &item : graph_info.data_inputs_) {
-    while (j < item.second.second.size()) {
-      input_mapping[j] = j;
-      j++;
-    }
-  }
-  (void)graph_builder.SetInputMapping(input_mapping);
-
-  // Add outputMapping
-  std::map<uint32_t, uint32_t> output_mapping;
-  for (size_t i = 0U; i < graph_info.data_inputs_.size(); i++) {
-    output_mapping[i] = i;
-  }
-  (void)graph_builder.SetOutputMapping(output_mapping);
 
   graphStatus error_code = GRAPH_SUCCESS;
   std::string error_msg;

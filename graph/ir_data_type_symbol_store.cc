@@ -78,8 +78,8 @@ graphStatus IRDataTypeSymbolStore::AddOutputName2DataTypeSymbol(const std::strin
   return GRAPH_SUCCESS;
 }
 
-const DataTypeSymbol& IRDataTypeSymbolStore::GetSymbolValidator(const std::string &symbol) const {
-  auto iter = symbols_to_validator.find(symbol);
+const DataTypeSymbol &IRDataTypeSymbolStore::GetSymbolValidator(const std::string &symbol) const {
+  const auto &iter = symbols_to_validator.find(symbol);
   if (iter == symbols_to_validator.end()) {
     return InvalidDataTypeSymbol();
   }
@@ -87,14 +87,14 @@ const DataTypeSymbol& IRDataTypeSymbolStore::GetSymbolValidator(const std::strin
 }
 
 std::string IRDataTypeSymbolStore::GetInputDataTypeSymbol(const std::string &input_name) const {
-  auto iter = ir_inputs_2_symbol_.find(input_name);
+  const auto &iter = ir_inputs_2_symbol_.find(input_name);
   if (iter == ir_inputs_2_symbol_.end()) {
     return "";
   }
   return iter->second;
 }
 std::string IRDataTypeSymbolStore::GetOutputDataTypeSymbol(const std::string &output_name) const {
-  auto iter = ir_outputs_2_symbol_.find(output_name);
+  const auto &iter = ir_outputs_2_symbol_.find(output_name);
   if (iter == ir_outputs_2_symbol_.end()) {
     return "";
   }
@@ -102,7 +102,7 @@ std::string IRDataTypeSymbolStore::GetOutputDataTypeSymbol(const std::string &ou
 }
 
 std::string IRDataTypeSymbolStore::GetInputNameFromDataTypeSymbol(const std::string &symbol) const {
-  auto iter = symbols_2_inputs_.find(symbol);
+  const auto &iter = symbols_2_inputs_.find(symbol);
   if (iter == symbols_2_inputs_.end() || iter->second.empty()) {
     return std::string();
   }
