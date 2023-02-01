@@ -16,6 +16,7 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 #define METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_H_
 
+#include <securec.h>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -62,11 +63,11 @@ class TensorData {
    */
   explicit TensorData(TensorAddress addr = nullptr, const TensorAddrManager manager = nullptr)
       : addr_(addr), manager_(manager), reserved_0_(0U) {
-    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
+    (void)memset_s(reserved_1_, sizeof(reserved_1_), 0, sizeof(reserved_1_));
   }
   explicit TensorData(TensorAddress addr, const TensorAddrManager manager, size_t size, TensorPlacement placement)
       : addr_(addr), manager_(manager), size_(size), placement_(placement), reserved_0_(0U) {
-    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
+    (void)memset_s(reserved_1_, sizeof(reserved_1_), 0, sizeof(reserved_1_));
   }
   TensorData(const TensorData &) = delete;
   TensorData(TensorData &&other) noexcept : addr_(other.addr_), manager_(other.manager_),
@@ -76,21 +77,23 @@ class TensorData {
     other.size_ = 0U;
     other.placement_ = kTensorPlacementEnd;
     reserved_0_ = 0U;
-    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
+    (void)memset_s(reserved_1_, sizeof(reserved_1_), 0, sizeof(reserved_1_));
   }
   TensorData &operator=(const TensorData &other) = delete;
   TensorData &operator=(TensorData &&other) noexcept {
-    static_cast<void>(Free());
-    addr_ = other.addr_;
-    manager_ = other.manager_;
-    size_ = other.size_;
-    placement_ = other.placement_;
-    other.addr_ = nullptr;
-    other.manager_ = nullptr;
-    other.size_ = 0U;
-    other.placement_ = kTensorPlacementEnd;
-    reserved_0_ = 0U;
-    (void)memset(reserved_1_, 0, sizeof(reserved_1_));
+    if (this != &other) {
+      static_cast<void>(Free());
+      addr_ = other.addr_;
+      manager_ = other.manager_;
+      size_ = other.size_;
+      placement_ = other.placement_;
+      other.addr_ = nullptr;
+      other.manager_ = nullptr;
+      other.size_ = 0U;
+      other.placement_ = kTensorPlacementEnd;
+      reserved_0_ = 0U;
+      (void)memset_s(reserved_1_, sizeof(reserved_1_), 0, sizeof(reserved_1_));
+    }
     return *this;
   }
   ~TensorData() noexcept {
