@@ -431,7 +431,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetInputFo
 
 ge::graphStatus FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::SetOutputFormat(const std::string &output_name,
                                                                                       const std::string &format) {
-  ge::TensorDesc output_tesor_desc = operator_.GetInputDescByName(output_name.c_str());
+  ge::TensorDesc output_tesor_desc = operator_.GetOutputDescByName(output_name.c_str());
   const auto ge_format = ge::TypeUtils::SerialStringToFormat(format);
   output_tesor_desc.SetOriginFormat(ge_format);
   output_tesor_desc.SetFormat(ge_format);
