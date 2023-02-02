@@ -619,7 +619,7 @@ bool NodeUtils::IsSubgraphOutput(const NodePtr &node) {
     }
   }
 
-  for (GeTensorDesc &tensor : node->GetOpDesc()->GetAllInputsDesc()) {
+  for (const auto &tensor : node->GetOpDesc()->GetAllInputsDescPtr()) {
     if (AttrUtils::HasAttr(tensor, ATTR_NAME_PARENT_NODE_INDEX)) {
       return true;
     }
