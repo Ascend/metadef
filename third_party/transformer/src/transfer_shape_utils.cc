@@ -173,11 +173,11 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
                                        const ge::DataType &data_type, const ExtAxisValue &ext_axis,
                                        const gert::Shape &origin_shape, gert::Shape &shape) {
   GELOGD("Tranfer shape from original format[%d] to format [%d].", origin_format, format);
-  if (!IsNeedTransferShape(origin_format, format, origin_shape)) {
+  ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
+  if (!IsNeedTransferShape(origin_format, primary_format, origin_shape)) {
     return true;
   }
 
-  ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
   if (!CheckInputParam(origin_format, primary_format, data_type)) {
     return false;
   }

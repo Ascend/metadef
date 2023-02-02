@@ -22,6 +22,7 @@
 #include <bitset>
 #include "axis_constants.h"
 #include "exe_graph/runtime/expand_dims_type.h"
+#include "external/graph/types.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace transformer {
@@ -246,7 +247,8 @@ bool ExpandDimension(const std::string &op_type, const ge::Format &original_form
   /* 1. Check expanding necessary. */
   size_t full_size = 0;
   size_t old_dims_size = shape.GetDimNum();
-  if (!IsExpandNecessary(old_dims_size, original_format, final_format, reshape_type, full_size)) {
+  auto primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(final_format));
+  if (!IsExpandNecessary(old_dims_size, original_format, primary_format, reshape_type, full_size)) {
     return true;
   }
 
@@ -285,8 +287,9 @@ bool ExpandRangeDimension(const std::string &op_type, const ge::Format &original
 
   ge::GeShape shape_low(range_low);
   ge::GeShape shape_upper(range_upper);
-  bool res = ExpandDimension(op_type, original_format, final_format, tensor_index, reshape_type, shape_low) &&
-      ExpandDimension(op_type, original_format, final_format, tensor_index, reshape_type, shape_upper);
+  auto primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(final_format));
+  bool res = ExpandDimension(op_type, original_format, primary_format, tensor_index, reshape_type, shape_low) &&
+      ExpandDimension(op_type, original_format, primary_format, tensor_index, reshape_type, shape_upper);
   if (!res || (shape_low.GetDimNum() != shape_upper.GetDimNum())) {
     return false;
   }
@@ -302,14 +305,15 @@ ExpandDimension::~ExpandDimension() {}
 
 int64_t ExpandDimension::GenerateReshapeType(const ge::Format &origin_format, const ge::Format &format,
                                              const size_t &origin_dim_size, const std::string &reshape_type) {
+  auto primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(format));
   GELOGD("Begin to generate integer reshape type, original format[%d], format[%d], dim size[%zu], reshape type[%s].",
-         origin_format, format, origin_dim_size, reshape_type.c_str());
+         origin_format, primary_format, origin_dim_size, reshape_type.c_str());
   int64_t ret_reshape_type = 0;
   size_t full_size = 0;
   if (!GetFormatFullSize(origin_format, full_size)) {
     return ret_reshape_type;
   }
-  if (!IsNeedExpand(origin_format, format, origin_dim_size, full_size, reshape_type)) {
+  if (!IsNeedExpand(origin_format, primary_format, origin_dim_size, full_size, reshape_type)) {
     return ret_reshape_type;
   }
 
