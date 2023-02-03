@@ -179,7 +179,9 @@ bool NodeAttrFeature::NodeAttrFeatureImpl::Match(const Scope *scope) {
   auto &impl = scope->impl_;
   const std::vector<ge::OperatorPtr> &nodes = impl->Nodes();
   for (auto &node_op : nodes) {
-    if (node_type_ != node_op->GetOpType()) {
+    ge::AscendString op_type;
+    (void) node_op->GetOpType(op_type);
+    if (op_type.GetString() != node_type_) {
       continue;
     }
     const auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(*node_op);

@@ -71,8 +71,13 @@ std::set<std::string> GetSubgraphAttrNames(const ge::Operator &op) {
   if (op.GetSubgraphNamesCount() == 0U) {
     return std::set<std::string>();
   }
-  auto subgraph_names = op.GetSubgraphNames();
-  return std::set<std::string>(subgraph_names.begin(), subgraph_names.end());
+  std::vector<ge::AscendString> subgraph_names;
+  (void) op.GetSubgraphNames(subgraph_names);
+  std::vector<std::string> subgraph_name_strings;
+  for (const auto &subgraph_name : subgraph_names) {
+    subgraph_name_strings.emplace_back(subgraph_name.GetString());
+  }
+  return std::set<std::string>(subgraph_name_strings.begin(), subgraph_name_strings.end());
 }
 
 /// there are two forms to represent functions in TF:
@@ -616,10 +621,11 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
   GE_CHECK_NOTNULL(output);
   const auto compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
-
+  ge::AscendString graph_name;
+  (void) graph.GetName(graph_name);
   auto ret = AutoMappingSubgraphIndexByDataNode(compute_graph, input);
   if (ret != SUCCESS) {
-    GELOGE(ret, "[Mapping][Index] auto mapping graph:%s input index failed,", graph.GetName().c_str());
+    GELOGE(ret, "[Mapping][Index] auto mapping graph:%s input index failed,", graph_name.GetString());
     return ret;
   }
 
@@ -643,7 +649,7 @@ Status AutoMappingSubgraphIndex(const ge::Graph &graph,
       return FAILED;
     }
     GELOGI("Generate subgraph output map for subgraph %s, retval index %ld, parent node index %d",
-           graph.GetName().c_str(), index, parent_index);
+           graph_name.GetString(), index, parent_index);
   }
 
   return nodes.empty() ? AutoMappingSubgraphOutput(compute_graph, output) : SUCCESS;

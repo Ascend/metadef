@@ -619,7 +619,7 @@ bool NodeUtils::IsSubgraphOutput(const NodePtr &node) {
     }
   }
 
-  for (GeTensorDesc &tensor : node->GetOpDesc()->GetAllInputsDesc()) {
+  for (const auto &tensor : node->GetOpDesc()->GetAllInputsDescPtr()) {
     if (AttrUtils::HasAttr(tensor, ATTR_NAME_PARENT_NODE_INDEX)) {
       return true;
     }
@@ -1004,7 +1004,10 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     }
     // if peer node is PartionedCall, return owner graph's correspond node
     const auto sub_graph = GetSubgraph(*peer_node, 0U);
-    GE_CHECK_NOTNULL(sub_graph);
+    if (sub_graph == nullptr) {
+      GELOGW("SubGraph of node %s index 0 is null. Null is invalid.", peer_node->GetName().c_str());
+      return ge::PARAM_INVALID;
+    }
     const auto sub_graph_netoutput = sub_graph->FindFirstNodeMatchType(NETOUTPUT);
     GE_CHECK_NOTNULL(sub_graph_netoutput);
 

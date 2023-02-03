@@ -16,6 +16,7 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_SHAPE_H_
 #define METADEF_CXX_INC_EXE_GRAPH_SHAPE_H_
 
+#include <securec.h>
 #include <array>
 #include <vector>
 #include <iostream>
@@ -35,7 +36,7 @@ struct Shape {
    * 默认构造一个shape，默认构造的shape实例中，dim_num长度为0
    */
   Shape() : dim_num_(0), dims_{0} {
-    (void)memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
@@ -51,7 +52,7 @@ struct Shape {
     for (const auto arg : args) {
       dims_[i++] = arg;
     }
-    (void)memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
@@ -64,7 +65,7 @@ struct Shape {
     for (size_t i = 0U; i < dim_num_; ++i) {
       dims_[i] = other.dims_[i];
     }
-    (void)memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
@@ -80,7 +81,7 @@ struct Shape {
         dims_[i] = other.dims_[i];
       }
     }
-    (void)memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
     return *this;
   }
 

@@ -48,7 +48,6 @@ class UtestScopeGraph : public testing::Test {
 ///                         |     |
 ///                    retval0 retval1
 
-
 void CreateGraphDef(domi::tensorflow::GraphDef &graph_def) {
   // 1. add node
   auto placeholder0 = graph_def.add_node();
@@ -109,7 +108,6 @@ void CreateGraphDef(domi::tensorflow::GraphDef &graph_def) {
   retval0->add_input("add2:0");
   retval1->add_input("add1:0");
 }
-
 
 TEST_F(UtestScopeGraph, test_build_scope_graph_succ) {
   domi::tensorflow::GraphDef graph_def;
@@ -229,97 +227,97 @@ TEST_F(UtestScopeGraph, test_build_scope_graph_failed) {
 }
 
 TEST_F(UtestScopeGraph, IsFusionOpTest) {
-    bool retBool;
-    Status stat;
-    FusionScopesResult *retFusnScopRst;
+  bool retBool;
+  Status stat;
+  FusionScopesResult *retFusnScopRst;
 
-    domi::tensorflow::GraphDef graph_def;
-    std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
-    ASSERT_NE(scope_graph, nullptr);
-    Status ret = scope_graph->Init();
-    ASSERT_EQ(ret, SUCCESS);
-    auto &impl = scope_graph->impl_;
-    impl->BuildScopeGraph(&graph_def);
+  domi::tensorflow::GraphDef graph_def;
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  Status ret = scope_graph->Init();
+  ASSERT_EQ(ret, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
 
-    // AddFusionScopesResult
-    FusionScopesResult *fusionResult = new (std::nothrow) FusionScopesResult();
-    ASSERT_NE(fusionResult, nullptr);
-    stat = fusionResult->Init();
-    EXPECT_EQ(stat, SUCCESS);
-    impl->AddFusionScopesResult(nullptr);
-    impl->AddFusionScopesResult(fusionResult);
+  // AddFusionScopesResult
+  FusionScopesResult *fusionResult = new (std::nothrow) FusionScopesResult();
+  ASSERT_NE(fusionResult, nullptr);
+  stat = fusionResult->Init();
+  EXPECT_EQ(stat, SUCCESS);
+  impl->AddFusionScopesResult(nullptr);
+  impl->AddFusionScopesResult(fusionResult);
 
-    // add nodes for check FusionOp
-    std::vector<OperatorPtr> fusionRstNodes;
-    OperatorPtr op1(new (std::nothrow) ge::Operator("addTest", "Add"));
-    fusionRstNodes.push_back(op1);
-    OperatorPtr op2(new (std::nothrow) ge::Operator("Sub", "Sub"));
-    fusionRstNodes.push_back(op2);
-    OperatorPtr op3(new (std::nothrow) ge::Operator("Mul", "Mul"));
-    fusionRstNodes.push_back(op3);
-    fusionResult->impl_->AddNodes(fusionRstNodes);
+  // add nodes for check FusionOp
+  std::vector<OperatorPtr> fusionRstNodes;
+  OperatorPtr op1(new (std::nothrow) ge::Operator("addTest", "Add"));
+  fusionRstNodes.push_back(op1);
+  OperatorPtr op2(new (std::nothrow) ge::Operator("Sub", "Sub"));
+  fusionRstNodes.push_back(op2);
+  OperatorPtr op3(new (std::nothrow) ge::Operator("Mul", "Mul"));
+  fusionRstNodes.push_back(op3);
+  fusionResult->impl_->AddNodes(fusionRstNodes);
 
-    // IsFusionOp
-    domi::tensorflow::NodeDef *emptyNode = nullptr;
-    retBool = impl->IsFusionOp(emptyNode);
-    EXPECT_EQ(retBool, false);
-    retFusnScopRst = impl->GetFusionScopesResults(emptyNode);
-    EXPECT_EQ(retFusnScopRst, nullptr);
+  // IsFusionOp
+  domi::tensorflow::NodeDef *emptyNode = nullptr;
+  retBool = impl->IsFusionOp(emptyNode);
+  EXPECT_EQ(retBool, false);
+  retFusnScopRst = impl->GetFusionScopesResults(emptyNode);
+  EXPECT_EQ(retFusnScopRst, nullptr);
 
-    domi::tensorflow::NodeDef *tmpNode = graph_def.add_node();
-    tmpNode->set_name("div");
-    tmpNode->set_op("Div");
-    tmpNode->add_input("placeholder0");
-    tmpNode->add_input("placeholder1");
-    retBool = impl->IsFusionOp(tmpNode);
-    EXPECT_EQ(retBool, false);
-    retFusnScopRst = impl->GetFusionScopesResults(tmpNode);
-    EXPECT_EQ(retFusnScopRst, nullptr);
-    retFusnScopRst = impl->GetFusionScopesResults(std::string("div"));
-    EXPECT_EQ(retFusnScopRst, nullptr);
+  domi::tensorflow::NodeDef *tmpNode = graph_def.add_node();
+  tmpNode->set_name("div");
+  tmpNode->set_op("Div");
+  tmpNode->add_input("placeholder0");
+  tmpNode->add_input("placeholder1");
+  retBool = impl->IsFusionOp(tmpNode);
+  EXPECT_EQ(retBool, false);
+  retFusnScopRst = impl->GetFusionScopesResults(tmpNode);
+  EXPECT_EQ(retFusnScopRst, nullptr);
+  retFusnScopRst = impl->GetFusionScopesResults(std::string("div"));
+  EXPECT_EQ(retFusnScopRst, nullptr);
 
-    // IsFusionOpChild
-    std::vector<ScopeFusionOpInfo> info_list;
-    retBool = impl->IsFusionOpChild(std::string("nodeName"), info_list);
-    EXPECT_EQ(retBool, false);
-    retBool = impl->IsFusionOpChild(std::string("addTest"), info_list);
-    EXPECT_EQ(retBool, true);
-    retBool = impl->IsFusionOpChild(std::string("Sub"), info_list);
-    EXPECT_EQ(retBool, true);
-    retBool = impl->IsFusionOpChild(std::string("Mul"), info_list);
-    EXPECT_EQ(retBool, true);
+  // IsFusionOpChild
+  std::vector<ScopeFusionOpInfo> info_list;
+  retBool = impl->IsFusionOpChild(std::string("nodeName"), info_list);
+  EXPECT_EQ(retBool, false);
+  retBool = impl->IsFusionOpChild(std::string("addTest"), info_list);
+  EXPECT_EQ(retBool, true);
+  retBool = impl->IsFusionOpChild(std::string("Sub"), info_list);
+  EXPECT_EQ(retBool, true);
+  retBool = impl->IsFusionOpChild(std::string("Mul"), info_list);
+  EXPECT_EQ(retBool, true);
 
-    // FusionOpChildIgnore
-    retBool = impl->FusionOpChildIgnore(info_list.front());
-    EXPECT_EQ(retBool, true);
+  // FusionOpChildIgnore
+  retBool = impl->FusionOpChildIgnore(info_list.front());
+  EXPECT_EQ(retBool, true);
 
-    std::vector<int32_t> index_map = {1, 2};
-    fusionResult->InsertInputs("Sub", index_map);
-    fusionResult->InsertOutputs("Mul", index_map);
-    retBool = impl->FusionOpChildIgnore(info_list.back());
-    EXPECT_EQ(retBool, false);
+  std::vector<int32_t> index_map = {1, 2};
+  fusionResult->InsertInputs("Sub", index_map);
+  fusionResult->InsertOutputs("Mul", index_map);
+  retBool = impl->FusionOpChildIgnore(info_list.back());
+  EXPECT_EQ(retBool, false);
 
-    // GetInputOrOutputIndex
-    int32_t old_index = -1;
-    int32_t new_index = 2;
-    stat = impl->GetInputOrOutputIndex(info_list.front(), old_index, true, new_index);
-    EXPECT_EQ(new_index, -1);
-    EXPECT_EQ(stat, SUCCESS);
+  // GetInputOrOutputIndex
+  int32_t old_index = -1;
+  int32_t new_index = 2;
+  stat = impl->GetInputOrOutputIndex(info_list.front(), old_index, true, new_index);
+  EXPECT_EQ(new_index, -1);
+  EXPECT_EQ(stat, SUCCESS);
 
-    old_index = 666;
-    stat = impl->GetInputOrOutputIndex(info_list.front(), old_index, true, new_index);
-    EXPECT_EQ(new_index, kFusionDisableIndex);
-    EXPECT_EQ(stat, SUCCESS);
+  old_index = 666;
+  stat = impl->GetInputOrOutputIndex(info_list.front(), old_index, true, new_index);
+  EXPECT_EQ(new_index, kFusionDisableIndex);
+  EXPECT_EQ(stat, SUCCESS);
 
-    old_index = 1;
-    stat = impl->GetInputOrOutputIndex(info_list.back(), old_index, true, new_index);
-    EXPECT_EQ(new_index, kFusionDisableIndex);
-    EXPECT_EQ(stat, SUCCESS);
+  old_index = 1;
+  stat = impl->GetInputOrOutputIndex(info_list.back(), old_index, true, new_index);
+  EXPECT_EQ(new_index, kFusionDisableIndex);
+  EXPECT_EQ(stat, SUCCESS);
 }
 
-TEST_F(UtestScopeGraph, IsFusionOpTest_Fail ) {
+TEST_F(UtestScopeGraph, IsFusionOpTest_Fail) {
   // AddFusionScopesResult
-  FusionScopesResult *fusionResult = new(std::nothrow) FusionScopesResult();
+  FusionScopesResult *fusionResult = new (std::nothrow) FusionScopesResult();
   ASSERT_NE(fusionResult, nullptr);
   std::string name = "name";
   fusionResult->SetName(name);
@@ -338,156 +336,156 @@ TEST_F(UtestScopeGraph, IsFusionOpTest_Fail ) {
 }
 
 TEST_F(UtestScopeGraph, ScopeImplAddNodesTest) {
-    Status ret;
-    domi::tensorflow::GraphDef graph_def;
-    std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
-    ASSERT_NE(scope_graph, nullptr);
-    ret = scope_graph->Init();
-    ASSERT_EQ(ret, SUCCESS);
-    auto &impl = scope_graph->impl_;
-    impl->BuildScopeGraph(&graph_def);
-    const ScopeTree *scopeTree = scope_graph->GetScopeTree();
+  Status ret;
+  domi::tensorflow::GraphDef graph_def;
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  ret = scope_graph->Init();
+  ASSERT_EQ(ret, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+  const ScopeTree *scopeTree = scope_graph->GetScopeTree();
 
-    OperatorPtr nodeDef1 = nullptr;
-    scopeTree->GetAllScopes().front()->impl_->AddNode(nodeDef1);
-    scopeTree->impl_->AddNodeToScope(nodeDef1);
+  OperatorPtr nodeDef1 = nullptr;
+  scopeTree->GetAllScopes().front()->impl_->AddNode(nodeDef1);
+  scopeTree->impl_->AddNodeToScope(nodeDef1);
 
-    OperatorPtr nodeDef2(new (std::nothrow) ge::Operator("add0/sub0", "Add"));
-    scopeTree->GetAllScopes().front()->impl_->AddNode(nodeDef2);
-    scopeTree->impl_->AddNodeToScope(nodeDef2);
-    EXPECT_EQ(scopeTree->GetAllScopes().empty(), false);
+  OperatorPtr nodeDef2(new (std::nothrow) ge::Operator("add0/sub0", "Add"));
+  scopeTree->GetAllScopes().front()->impl_->AddNode(nodeDef2);
+  scopeTree->impl_->AddNodeToScope(nodeDef2);
+  EXPECT_EQ(scopeTree->GetAllScopes().empty(), false);
 
-    std::unordered_map<AscendString, ge::OperatorPtr> node_map;
-    scopeTree->GetAllScopes().front()->AllNodesMap();
-    ret = scopeTree->GetAllScopes().front()->AllNodesMap(node_map);
-    EXPECT_EQ(ret, ge::SUCCESS); 
+  std::unordered_map<AscendString, ge::OperatorPtr> node_map;
+  scopeTree->GetAllScopes().front()->AllNodesMap();
+  ret = scopeTree->GetAllScopes().front()->AllNodesMap(node_map);
+  EXPECT_EQ(ret, ge::SUCCESS);
 
-    std::vector<Scope *> scopes = scopeTree->GetAllScopes().front()->impl_->GetAllSubScopes();
-    EXPECT_EQ(scopes.empty(), false);
+  std::vector<Scope *> scopes = scopeTree->GetAllScopes().front()->impl_->GetAllSubScopes();
+  EXPECT_EQ(scopes.empty(), false);
 }
 
 TEST_F(UtestScopeGraph, GetScopeLastName) {
-    Status ret;
-    domi::tensorflow::GraphDef graph_def;
-    std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
-    ASSERT_NE(scope_graph, nullptr);
-    ret = scope_graph->Init();
-    ASSERT_EQ(ret, SUCCESS);
-    auto &impl = scope_graph->impl_;
-    impl->BuildScopeGraph(&graph_def);
-    const ScopeTree *scopeTree = scope_graph->GetScopeTree();
-    scopeTree->GetAllScopes().front()->LastName();
-    AscendString name;
-    ret = scopeTree->GetAllScopes().front()->LastName(name);
-    EXPECT_EQ(ret, ge::SUCCESS);
+  Status ret;
+  domi::tensorflow::GraphDef graph_def;
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  ret = scope_graph->Init();
+  ASSERT_EQ(ret, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+  const ScopeTree *scopeTree = scope_graph->GetScopeTree();
+  scopeTree->GetAllScopes().front()->LastName();
+  AscendString name;
+  ret = scopeTree->GetAllScopes().front()->LastName(name);
+  EXPECT_EQ(ret, ge::SUCCESS);
 }
 
 TEST_F(UtestScopeGraph, TrimScopeIndex) {
-    domi::tensorflow::GraphDef graph_def;
-    std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
-    ASSERT_NE(scope_graph, nullptr);
-    Status ret = scope_graph->Init();
-    ASSERT_EQ(ret, SUCCESS);
-    auto &impl = scope_graph->impl_;
-    impl->BuildScopeGraph(&graph_def);
-    const ScopeTree *scopeTree = scope_graph->GetScopeTree();
+  domi::tensorflow::GraphDef graph_def;
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  Status ret = scope_graph->Init();
+  ASSERT_EQ(ret, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+  const ScopeTree *scopeTree = scope_graph->GetScopeTree();
 
-    std::string scope_str = "scope_str_2";
-    std::string retStr1 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
-    EXPECT_EQ(retStr1 == scope_str, false);
-    
-    scope_str = "scope_str_9223372036854775807";
-    std::string retStr2 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
-    EXPECT_EQ(retStr2 == scope_str, true);
-    
-    scope_str = "scope_str_";
-    std::string retStr3 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
-    EXPECT_EQ(retStr3 == scope_str, true);
+  std::string scope_str = "scope_str_2";
+  std::string retStr1 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
+  EXPECT_EQ(retStr1 == scope_str, false);
 
-    scope_str = "scope_66666";
-    std::string retStr4 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
-    EXPECT_EQ(retStr4 == scope_str, false);
+  scope_str = "scope_str_9223372036854775807";
+  std::string retStr2 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
+  EXPECT_EQ(retStr2 == scope_str, true);
+
+  scope_str = "scope_str_";
+  std::string retStr3 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
+  EXPECT_EQ(retStr3 == scope_str, true);
+
+  scope_str = "scope_66666";
+  std::string retStr4 = scopeTree->GetAllScopes().front()->impl_->TrimScopeIndex(scope_str);
+  EXPECT_EQ(retStr4 == scope_str, false);
 }
 
 TEST_F(UtestScopeGraph, ScopeImplOpTypeTest) {
-    int retInt;
-    domi::tensorflow::GraphDef graph_def;
-    std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
-    ASSERT_NE(scope_graph, nullptr);
-    Status ret = scope_graph->Init();
-    ASSERT_EQ(ret, SUCCESS);
-    auto &impl = scope_graph->impl_;
-    impl->BuildScopeGraph(&graph_def);
-    const ScopeTree *scopeTree = scope_graph->GetScopeTree();
+  int retInt;
+  domi::tensorflow::GraphDef graph_def;
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  Status ret = scope_graph->Init();
+  ASSERT_EQ(ret, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+  const ScopeTree *scopeTree = scope_graph->GetScopeTree();
 
-    const std::string op_type1 = "Add";
-    const std::string op_type2 = "Mul666";
-    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type1);
-    EXPECT_EQ(retInt, -1);
-    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(std::string("type1"));
-    EXPECT_EQ(retInt, -1);
+  const std::string op_type1 = "Add";
+  const std::string op_type2 = "Mul666";
+  retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type1);
+  EXPECT_EQ(retInt, -1);
+  retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(std::string("type1"));
+  EXPECT_EQ(retInt, -1);
 
-    scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type1);
-    scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type1);
-    scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type2);
-    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type1);
-    EXPECT_EQ(retInt, 2);
-    retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type2);
-    EXPECT_EQ(retInt, 1);
+  scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type1);
+  scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type1);
+  scopeTree->GetAllScopes().front()->impl_->OpsNumInc(op_type2);
+  retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type1);
+  EXPECT_EQ(retInt, 2);
+  retInt = scopeTree->GetAllScopes().front()->impl_->GetOpTypeNum(op_type2);
+  EXPECT_EQ(retInt, 1);
 
-    scopeTree->GetAllScopes().front()->impl_->ClearTypeAndSubType();
-    const std::vector<Scope *> &sub_scopes = scopeTree->GetAllScopes().front()->impl_->GetAllSubScopes();
-    for (auto &sub_scope : sub_scopes) {
-        std::string type = sub_scope->SubType();
-        EXPECT_EQ(type == "", true);
-    }
+  scopeTree->GetAllScopes().front()->impl_->ClearTypeAndSubType();
+  const std::vector<Scope *> &sub_scopes = scopeTree->GetAllScopes().front()->impl_->GetAllSubScopes();
+  for (auto &sub_scope : sub_scopes) {
+    std::string type = sub_scope->SubType();
+    EXPECT_EQ(type == "", true);
+  }
 }
 
 TEST_F(UtestScopeGraph, scopeGraphInit) {
-    Status ret;
-    domi::tensorflow::GraphDef graph_def;
-    std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
-    ASSERT_NE(scope_graph, nullptr);
-    ret = scope_graph->Init();
-    ASSERT_EQ(ret, SUCCESS);
-    auto &impl = scope_graph->impl_;
-    impl->BuildScopeGraph(&graph_def);
-    const ScopeTree *scopeTree = scope_graph->GetScopeTree();
+  Status ret;
+  domi::tensorflow::GraphDef graph_def;
+  std::shared_ptr<ScopeGraph> scope_graph = std::make_shared<ScopeGraph>();
+  ASSERT_NE(scope_graph, nullptr);
+  ret = scope_graph->Init();
+  ASSERT_EQ(ret, SUCCESS);
+  auto &impl = scope_graph->impl_;
+  impl->BuildScopeGraph(&graph_def);
+  const ScopeTree *scopeTree = scope_graph->GetScopeTree();
 
-    // init
-    const char_t *name = "init_name";
-    const char_t *sub_type = "sub_type";
-    scopeTree->GetAllScopes().front()->Init(name, sub_type, nullptr);
+  // init
+  const char_t *name = "init_name";
+  const char_t *sub_type = "sub_type";
+  scopeTree->GetAllScopes().front()->Init(name, sub_type, nullptr);
 
-    // Name
-    AscendString a_name;
-    ret = scopeTree->GetAllScopes().front()->Name(a_name);
-    EXPECT_EQ(ret, ge::SUCCESS);
+  // Name
+  AscendString a_name;
+  ret = scopeTree->GetAllScopes().front()->Name(a_name);
+  EXPECT_EQ(ret, ge::SUCCESS);
 
-    // SubType
-    scopeTree->GetAllScopes().front()->SubType();
-    AscendString type;
-    ret = scopeTree->GetAllScopes().front()->SubType(type);
-    EXPECT_EQ(ret, ge::SUCCESS);
+  // SubType
+  scopeTree->GetAllScopes().front()->SubType();
+  AscendString type;
+  ret = scopeTree->GetAllScopes().front()->SubType(type);
+  EXPECT_EQ(ret, ge::SUCCESS);
 
-    // GetScope
-    const Scope *scope1 = scopeTree->GetAllScopes().front()->GetSubScope(std::string("Add"));
-    EXPECT_EQ(scope1, nullptr);
-    // Used to test function overloading
-    const Scope *scope2 = scopeTree->GetAllScopes().front()->GetSubScope("Add");
-    EXPECT_EQ(scope2, nullptr);
+  // GetScope
+  const Scope *scope1 = scopeTree->GetAllScopes().front()->GetSubScope(std::string("Add"));
+  EXPECT_EQ(scope1, nullptr);
+  // Used to test function overloading
+  const Scope *scope2 = scopeTree->GetAllScopes().front()->GetSubScope("Add");
+  EXPECT_EQ(scope2, nullptr);
 
-    const Scope *scope3 = scopeTree->GetAllScopes().front()->GetFatherScope();
-    EXPECT_EQ(scope3, nullptr);
+  const Scope *scope3 = scopeTree->GetAllScopes().front()->GetFatherScope();
+  EXPECT_EQ(scope3, nullptr);
 
-    std::vector<Scope *> scopes = scopeTree->GetAllScopes().front()->GetAllSubScopes();
-    EXPECT_EQ(scopes.empty(), true);
+  std::vector<Scope *> scopes = scopeTree->GetAllScopes().front()->GetAllSubScopes();
+  EXPECT_EQ(scopes.empty(), true);
 
-    // GetNodesMap
-    std::unordered_map<AscendString, ge::OperatorPtr> nodes_map;
-    scope_graph->GetNodesMap();
-    ret = scope_graph->GetNodesMap(nodes_map);
-    EXPECT_EQ(ret, ge::SUCCESS);
+  // GetNodesMap
+  std::unordered_map<AscendString, ge::OperatorPtr> nodes_map;
+  scope_graph->GetNodesMap();
+  ret = scope_graph->GetNodesMap(nodes_map);
+  EXPECT_EQ(ret, ge::SUCCESS);
 }
 
 class UtestFusionScope : public testing::Test {
@@ -496,7 +494,7 @@ class UtestFusionScope : public testing::Test {
   std::shared_ptr<ScopeGraph> scope_graph;
   FusionScopesResult *fusion_rlt0;
   FusionScopesResult *fusion_rlt;
- 
+
  protected:
   void SetUp() {
     Status ret;
@@ -520,134 +518,167 @@ class UtestFusionScope : public testing::Test {
 };
 
 TEST_F(UtestFusionScope, FusionScopesResultSetInfo) {
-    fusion_rlt->SetName(std::string("fusionRstName1"));
-    EXPECT_EQ(fusion_rlt->Name() == "fusionRstName1", true);
+  fusion_rlt->SetName(std::string("fusionRstName1"));
+  EXPECT_EQ(fusion_rlt->Name() == "fusionRstName1", true);
 
-    fusion_rlt->SetName("fusionRstName2");
-    const std::string fsnName1 = fusion_rlt->Name();
-    AscendString fsnName2;
-    fusion_rlt->Name(fsnName2);
-    EXPECT_EQ(strncmp(fsnName2.GetString(), "fusionRstName2", strlen("fusionRstName2")), false);
+  fusion_rlt->SetName("fusionRstName2");
+  const std::string fsnName1 = fusion_rlt->Name();
+  AscendString fsnName2;
+  fusion_rlt->Name(fsnName2);
+  EXPECT_EQ(strncmp(fsnName2.GetString(), "fusionRstName2", strlen("fusionRstName2")), false);
 
-    fusion_rlt->SetType(std::string("fusionRstype1"));
-    fusion_rlt->SetType("fusionRstype2");
+  fusion_rlt->SetType(std::string("fusionRstype1"));
+  fusion_rlt->SetType("fusionRstype2");
 
-    fusion_rlt->SetDescription(std::string("fusionRstDesc1"));
-    fusion_rlt->SetDescription("fusionRstDesc2");
-    EXPECT_EQ(fusion_rlt->impl_->Description() == "fusionRstDesc2", true);
+  fusion_rlt->SetDescription(std::string("fusionRstDesc1"));
+  fusion_rlt->SetDescription("fusionRstDesc2");
+  EXPECT_EQ(fusion_rlt->impl_->Description() == "fusionRstDesc2", true);
 }
 
 TEST_F(UtestFusionScope, FusionScopesResultInnerNodeInfo) {
-    fusion_rlt->SetName("fusionRstName");
-    fusion_rlt->SetType("fusionRstype");
-    fusion_rlt->SetDescription("fusionRstDesc");
-    
-    std::vector<int32_t> index_map(6);
-    index_map.push_back(1);
-    index_map.push_back(2);
-    index_map.push_back(5);
-    index_map.push_back(6);
+  fusion_rlt->SetName("fusionRstName");
+  fusion_rlt->SetType("fusionRstype");
+  fusion_rlt->SetDescription("fusionRstDesc");
 
-    fusion_rlt->InsertInputs(std::string("innerIOpName1"), index_map);
-    fusion_rlt->InsertInputs("innerIOpName2", index_map);
+  std::vector<int32_t> index_map(6);
+  index_map.push_back(1);
+  index_map.push_back(2);
+  index_map.push_back(5);
+  index_map.push_back(6);
 
-    fusion_rlt->InsertOutputs(std::string("innerOOpName1"), index_map);
-    fusion_rlt->InsertOutputs("innerOOpName2", index_map);
+  fusion_rlt->InsertInputs(std::string("innerIOpName1"), index_map);
+  fusion_rlt->InsertInputs("innerIOpName2", index_map);
 
-    FusionScopesResult::InnerNodeInfo *InnerNode1;
-    fusion_rlt0->AddInnerNode(std::string("InnerNodeName1"), std::string("InnerNodeType1"));
-    InnerNode1 = fusion_rlt->AddInnerNode("InnerNodeName1", "InnerNodeType1");
-    FusionScopesResult::InnerNodeInfo *InnerNode2;
-    fusion_rlt0->AddInnerNode(std::string("InnerNodeName2"), std::string("InnerNodeType2"));
-    InnerNode2 = fusion_rlt->AddInnerNode("InnerNodeName2", "InnerNodeType2");
+  fusion_rlt->InsertOutputs(std::string("innerOOpName1"), index_map);
+  fusion_rlt->InsertOutputs("innerOOpName2", index_map);
 
-    FusionScopesResult::InnerNodeInfo *retInnerNodeInfo;
-    retInnerNodeInfo = fusion_rlt0->MutableRecentInnerNode();
-    EXPECT_EQ(retInnerNodeInfo, nullptr);
-    retInnerNodeInfo = fusion_rlt->MutableRecentInnerNode();
-    EXPECT_NE(retInnerNodeInfo, nullptr);
+  FusionScopesResult::InnerNodeInfo *InnerNode1;
+  fusion_rlt0->AddInnerNode(std::string("InnerNodeName1"), std::string("InnerNodeType1"));
+  InnerNode1 = fusion_rlt->AddInnerNode("InnerNodeName1", "InnerNodeType1");
+  FusionScopesResult::InnerNodeInfo *InnerNode2;
+  fusion_rlt0->AddInnerNode(std::string("InnerNodeName2"), std::string("InnerNodeType2"));
+  InnerNode2 = fusion_rlt->AddInnerNode("InnerNodeName2", "InnerNodeType2");
+  InnerNode2->InsertOutput(kOutputToFusionScope, 0);
+  FusionScopesResult::InnerNodeInfo *retInnerNodeInfo;
+  retInnerNodeInfo = fusion_rlt0->MutableRecentInnerNode();
+  EXPECT_EQ(retInnerNodeInfo, nullptr);
+  retInnerNodeInfo = fusion_rlt->MutableRecentInnerNode();
+  EXPECT_NE(retInnerNodeInfo, nullptr);
 
-    retInnerNodeInfo = fusion_rlt0->MutableInnerNode(1);
-    EXPECT_EQ(retInnerNodeInfo, nullptr);
-    retInnerNodeInfo = fusion_rlt->MutableInnerNode(1);
-    EXPECT_NE(retInnerNodeInfo, nullptr);
+  retInnerNodeInfo = fusion_rlt0->MutableInnerNode(1);
+  EXPECT_EQ(retInnerNodeInfo, nullptr);
+  retInnerNodeInfo = fusion_rlt->MutableInnerNode(1);
+  EXPECT_NE(retInnerNodeInfo, nullptr);
+  ge::graphStatus retGraphStat;
+  retGraphStat = fusion_rlt0->CheckInnerNodesInfo();
+  EXPECT_EQ(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat = fusion_rlt->CheckInnerNodesInfo();
+  EXPECT_EQ(retGraphStat, ge::GRAPH_PARAM_INVALID);
 
-    ge::graphStatus retGraphStat;
-    retGraphStat = fusion_rlt0->CheckInnerNodesInfo();
-    EXPECT_EQ(retGraphStat, ge::GRAPH_PARAM_INVALID);
-    retGraphStat = fusion_rlt->CheckInnerNodesInfo();
-    EXPECT_EQ(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  FusionInnerNodesInfo nodes_info = fusion_rlt->impl_->GetInnerNodesInfo();
+  EXPECT_EQ(nodes_info.empty(), false);
+}
 
-    FusionInnerNodesInfo nodes_info = fusion_rlt->impl_->GetInnerNodesInfo();
-    EXPECT_EQ(nodes_info.empty(), false);
+TEST_F(UtestFusionScope, FusionScopesResultCheckInnerNodesInfo) {
+  fusion_rlt->SetName("CheckInnerNodesInfo");
+  fusion_rlt->SetType("CheckInnerNodesInfo");
+  fusion_rlt->SetDescription("CheckInnerNodesInfo");
+
+  std::vector<int32_t> index_map{0};
+  const std::string input_name("inputop");
+  const std::string output_name("outputop");
+  fusion_rlt->InsertInputs(input_name, index_map);
+  fusion_rlt->InsertOutputs(output_name, index_map);
+  auto InnerNode = fusion_rlt->AddInnerNode("InnerNodeName", "InnerNodeType");
+  InnerNode->InsertInput(kInputFromFusionScope, 0);
+  InnerNode->InsertOutput(kOutputToFusionScope, 0);
+  // check
+  EXPECT_EQ(fusion_rlt->CheckInnerNodesInfo(), ge::GRAPH_SUCCESS);
+
+  FusionInnerNodesInfo nodes_info = fusion_rlt->impl_->GetInnerNodesInfo();
+  //check
+  EXPECT_EQ(nodes_info.size(), 1U);
+  const auto [name, type, inputs, outputs, op] = nodes_info[0U];
+  EXPECT_EQ(name, "CheckInnerNodesInfo/InnerNodeName");
+  EXPECT_EQ(type, "InnerNodeType");
+  EXPECT_EQ(inputs.size(), 1U);
+  EXPECT_EQ(inputs[0U].first, kInputFromFusionScope);
+  EXPECT_EQ(inputs[0U].second, 0);
+  EXPECT_EQ(outputs.size(), 1U);
+  EXPECT_EQ(outputs[0U].first, kOutputToFusionScope);
+  EXPECT_EQ(outputs[0U].second, 0);
+  EXPECT_NE(op, nullptr);
 }
 
 TEST_F(UtestFusionScope, InnerNodeInit) {
-    FusionScopesResult::InnerNodeInfo InnerNode1(std::string("FusionNode1"));
-    InnerNode1.SetName(std::string("InnerAdd"));
-    InnerNode1.SetType(std::string("Add"));
-    InnerNode1.InsertInput(std::string("Input1"), 1);
-    InnerNode1.InsertOutput(std::string("Output1"), 11);
+  FusionScopesResult::InnerNodeInfo InnerNode1(std::string("FusionNode1"));
+  InnerNode1.SetName(std::string("InnerAdd"));
+  InnerNode1.SetType(std::string("Add"));
+  InnerNode1.InsertInput(std::string("Input1"), 1);
+  InnerNode1.InsertOutput(std::string("Output1"), 11);
 
-    FusionScopesResult::InnerNodeInfo InnerNode2("FusionNode2");
-    InnerNode2.SetName("InnerSub");
-    InnerNode2.SetType("Sub");
-    InnerNode2.InsertInput("Input2", 2);
-    InnerNode2.InsertOutput("Output2", 22);
+  FusionScopesResult::InnerNodeInfo InnerNode2("FusionNode2");
+  InnerNode2.SetName("InnerSub");
+  InnerNode2.SetType("Sub");
+  InnerNode2.InsertInput("Input2", 2);
+  InnerNode2.InsertOutput("Output2", 22);
 
-    FusionScopesResult::InnerNodeInfo InnerNode3("FusionNodeName3", "NodeName3", "NodeType3");
+  FusionScopesResult::InnerNodeInfo InnerNode3("FusionNodeName3", "NodeName3", "NodeType3");
 
-    EXPECT_NE(InnerNode1.BuildInnerNode(), ge::GRAPH_PARAM_INVALID);
-    EXPECT_NE(InnerNode1.MutableOperator(), nullptr);
+  EXPECT_NE(InnerNode1.BuildInnerNode(), ge::GRAPH_PARAM_INVALID);
+  EXPECT_NE(InnerNode1.MutableOperator(), nullptr);
 
-    std::string InnerNodeInfoStr;
-    AscendString InnerNodeInfoAscendStr;
-    //name
-    InnerNode1.GetName();
-    graphStatus status = InnerNode1.GetName(InnerNodeInfoAscendStr);
-    ASSERT_EQ(status, GRAPH_SUCCESS);
-    // type
-    InnerNode1.GetType();
-    status = InnerNode1.GetType(InnerNodeInfoAscendStr);
-    ASSERT_EQ(status, GRAPH_SUCCESS);
+  std::string InnerNodeInfoStr;
+  AscendString InnerNodeInfoAscendStr;
+  //name
+  InnerNode1.GetName();
+  graphStatus status = InnerNode1.GetName(InnerNodeInfoAscendStr);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  // type
+  InnerNode1.GetType();
+  status = InnerNode1.GetType(InnerNodeInfoAscendStr);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
 
-    std::vector<std::pair<std::string, int32_t>> pairList;
-    std::vector<std::pair<AscendString, int32_t>> pairAscendList;
-    pairList = InnerNode1.GetInputs();
-    status = InnerNode1.GetInputs(pairAscendList);
-    ASSERT_EQ(status, GRAPH_SUCCESS);
+  std::vector<std::pair<std::string, int32_t>> pairList;
+  std::vector<std::pair<AscendString, int32_t>> pairAscendList;
+  pairList = InnerNode1.GetInputs();
+  status = InnerNode1.GetInputs(pairAscendList);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
 
-    pairList = InnerNode1.GetOutputs();
-    status = InnerNode1.GetOutputs(pairAscendList);
-    ASSERT_EQ(status, GRAPH_SUCCESS);
+  pairList = InnerNode1.GetOutputs();
+  status = InnerNode1.GetOutputs(pairAscendList);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
 }
 
 TEST_F(UtestFusionScope, InnerNodeSetIOFormat) {
-    graphStatus retGraphStat;
+  graphStatus retGraphStat;
 
-    FusionScopesResult::InnerNodeInfo InnerNode(std::string("FusionNode"));
-    InnerNode.SetName(std::string("InnerAdd"));
-    InnerNode.SetType(std::string("Add"));
-    InnerNode.InsertInput(std::string("Input"), 1);
+  FusionScopesResult::InnerNodeInfo InnerNode(std::string("FusionNode"));
+  InnerNode.SetName(std::string("InnerAdd"));
+  InnerNode.SetType(std::string("Add"));
+  InnerNode.InsertInput(std::string("Input"), 1);
+  EXPECT_NE(InnerNode.BuildInnerNode(), ge::GRAPH_PARAM_INVALID);
+  EXPECT_NE(InnerNode.MutableOperator(), nullptr);
+  // Used to test function overloading
+  retGraphStat = InnerNode.SetInputFormat(std::string("InputName1"), std::string("InputFormat1"));
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat = InnerNode.SetInputFormat("InputName2", "InputFormat2");
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
 
-    // Used to test function overloading
-    retGraphStat = InnerNode.SetInputFormat(std::string("InputName1"), std::string("InputFormat1"));
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
-    retGraphStat = InnerNode.SetInputFormat("InputName2", "InputFormat2");
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat = InnerNode.SetOutputFormat(std::string("OutputName1"), std::string("OutputFormat1"));
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat = InnerNode.SetOutputFormat("OutputName2", "OutputFormat2");
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
 
-    retGraphStat = InnerNode.SetOutputFormat(std::string("OutputName1"), std::string("OutputFormat1"));
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
-    retGraphStat = InnerNode.SetOutputFormat("OutputName2", "OutputFormat2");
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat =
+      InnerNode.SetDynamicInputFormat(std::string("DynamicInputName1"), 0, std::string("DynamicInputFormat1"));
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat = InnerNode.SetDynamicInputFormat("DynamicInputName2", 1, "DynamicInputFormat2");
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
 
-    retGraphStat = InnerNode.SetDynamicInputFormat(std::string("DynamicInputName1"), 0, std::string("DynamicInputFormat1"));
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
-    retGraphStat = InnerNode.SetDynamicInputFormat("DynamicInputName2", 1, "DynamicInputFormat2");
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
-
-    retGraphStat = InnerNode.SetDynamicOutputFormat(std::string("DynamicOutputName1"), 0, std::string("DynamicOutputFormat1"));
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
-    retGraphStat = InnerNode.SetDynamicOutputFormat("DynamicOutputName2", 1, "DynamicOutputFormat2");
-    EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat =
+      InnerNode.SetDynamicOutputFormat(std::string("DynamicOutputName1"), 0, std::string("DynamicOutputFormat1"));
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
+  retGraphStat = InnerNode.SetDynamicOutputFormat("DynamicOutputName2", 1, "DynamicOutputFormat2");
+  EXPECT_NE(retGraphStat, ge::GRAPH_PARAM_INVALID);
 }

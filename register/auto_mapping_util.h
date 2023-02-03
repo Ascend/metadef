@@ -52,7 +52,7 @@ class AutoMappingUtil {
     const domi::tensorflow::AttrValue_ListValue &list = value.list();
     if (list.s_size() > 0) {
       std::vector<std::string> vec;
-      for (const auto e : list.s()) {
+      for (const auto &e : list.s()) {
         vec.push_back(e);
       }
       (void) ge::AttrUtils::SetListStr(obj, key, vec);

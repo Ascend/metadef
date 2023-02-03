@@ -29,11 +29,11 @@ class AscendString {
 
   ~AscendString() = default;
 
-  AscendString(const char_t* const name);
+  AscendString(const char_t *const name);
 
-  AscendString(const char_t* const name, size_t length);
+  AscendString(const char_t *const name, size_t length);
 
-  const char_t* GetString() const;
+  const char_t *GetString() const;
 
   size_t GetLength() const;
 
@@ -41,17 +41,17 @@ class AscendString {
 
   size_t Hash() const;
 
-  bool operator<(const AscendString& d) const;
+  bool operator<(const AscendString &d) const;
 
-  bool operator>(const AscendString& d) const;
+  bool operator>(const AscendString &d) const;
 
-  bool operator<=(const AscendString& d) const;
+  bool operator<=(const AscendString &d) const;
 
-  bool operator>=(const AscendString& d) const;
+  bool operator>=(const AscendString &d) const;
 
-  bool operator==(const AscendString& d) const;
+  bool operator==(const AscendString &d) const;
 
-  bool operator!=(const AscendString& d) const;
+  bool operator!=(const AscendString &d) const;
 
  private:
   std::shared_ptr<std::string> name_;
@@ -59,11 +59,11 @@ class AscendString {
 }  // namespace ge
 
 namespace std {
-template <>
+template<>
 struct hash<ge::AscendString> {
   size_t operator()(const ge::AscendString &name) const {
     return name.Hash();
   }
 };
-}
+}  // namespace std
 #endif  // INC_EXTERNAL_GRAPH_ASCEND_STRING_H_

@@ -851,10 +851,12 @@ message NpuGetFloatStatusDef {
     uint64 output_addr = 1;
     uint32 output_size = 2;
     uint32 mode = 3;
+    uint32 op_index = 4;
 }
 
 message NpuClearFloatStatusDef {
     uint32 mode = 1;
+    uint32 op_index = 2;
 }
 
 message DvppTaskDef {

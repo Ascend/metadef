@@ -22,7 +22,7 @@ namespace gert {
 struct StorageShape {
  public:
   StorageShape() {
-    (void)memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   };
   /**
    * 构造一个运行时shape实例
@@ -31,7 +31,7 @@ struct StorageShape {
    */
   StorageShape(const std::initializer_list<int64_t> origin_shape, const std::initializer_list<int64_t> storage_shape)
       : origin_shape_(origin_shape), storage_shape_(storage_shape) {
-    (void)memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
   /**
    * 获取原始shape

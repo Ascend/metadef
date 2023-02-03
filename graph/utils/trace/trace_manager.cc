@@ -102,7 +102,7 @@ void TraceManager::ClearTraceOwner() {
 }
 
 std::string TraceManager::NextFileName() {
-  static uint64_t uuid = 0;
+  static std::atomic<uint64_t> uuid(0U);
 
   std::stringstream ss;
   // need 3 widths to express uuid
