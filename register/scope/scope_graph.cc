@@ -805,12 +805,14 @@ ge::graphStatus FusionScopesResult::FusionScopesResultImpl::CheckInnerNodesInfo(
     std::vector<std::pair<AscendString, int32_t>> inputs;
     (void) info.GetInputs(inputs);
     for (const auto &input : inputs) {
-      input_from_scope += static_cast<size_t>((input.first.GetString() == kInputFromFusionScope) ? 1UL : 0UL);
+      input_from_scope +=
+          static_cast<size_t>((std::string(input.first.GetString()) == kInputFromFusionScope) ? 1UL : 0UL);
     }
     std::vector<std::pair<AscendString, int32_t>> outputs;
-    (void) info.GetInputs(outputs);
-    for (const auto &input : outputs) {
-      output_to_scope += static_cast<size_t>((input.first.GetString() == kOutputToFusionScope) ? 1UL : 0UL);
+    (void) info.GetOutputs(outputs);
+    for (const auto &output : outputs) {
+      output_to_scope +=
+          static_cast<size_t>((std::string(output.first.GetString()) == kOutputToFusionScope) ? 1UL : 0UL);
     }
   }
   size_t scope_input = 0U;

@@ -558,7 +558,7 @@ TEST_F(UtestFusionScope, FusionScopesResultInnerNodeInfo) {
   FusionScopesResult::InnerNodeInfo *InnerNode2;
   fusion_rlt0->AddInnerNode(std::string("InnerNodeName2"), std::string("InnerNodeType2"));
   InnerNode2 = fusion_rlt->AddInnerNode("InnerNodeName2", "InnerNodeType2");
-
+  InnerNode2->InsertOutput(kOutputToFusionScope, 0);
   FusionScopesResult::InnerNodeInfo *retInnerNodeInfo;
   retInnerNodeInfo = fusion_rlt0->MutableRecentInnerNode();
   EXPECT_EQ(retInnerNodeInfo, nullptr);
@@ -569,7 +569,6 @@ TEST_F(UtestFusionScope, FusionScopesResultInnerNodeInfo) {
   EXPECT_EQ(retInnerNodeInfo, nullptr);
   retInnerNodeInfo = fusion_rlt->MutableInnerNode(1);
   EXPECT_NE(retInnerNodeInfo, nullptr);
-
   ge::graphStatus retGraphStat;
   retGraphStat = fusion_rlt0->CheckInnerNodesInfo();
   EXPECT_EQ(retGraphStat, ge::GRAPH_PARAM_INVALID);
@@ -578,6 +577,37 @@ TEST_F(UtestFusionScope, FusionScopesResultInnerNodeInfo) {
 
   FusionInnerNodesInfo nodes_info = fusion_rlt->impl_->GetInnerNodesInfo();
   EXPECT_EQ(nodes_info.empty(), false);
+}
+
+TEST_F(UtestFusionScope, FusionScopesResultCheckInnerNodesInfo) {
+  fusion_rlt->SetName("CheckInnerNodesInfo");
+  fusion_rlt->SetType("CheckInnerNodesInfo");
+  fusion_rlt->SetDescription("CheckInnerNodesInfo");
+
+  std::vector<int32_t> index_map{0};
+  const std::string input_name("inputop");
+  const std::string output_name("outputop");
+  fusion_rlt->InsertInputs(input_name, index_map);
+  fusion_rlt->InsertOutputs(output_name, index_map);
+  auto InnerNode = fusion_rlt->AddInnerNode("InnerNodeName", "InnerNodeType");
+  InnerNode->InsertInput(kInputFromFusionScope, 0);
+  InnerNode->InsertOutput(kOutputToFusionScope, 0);
+  // check
+  EXPECT_EQ(fusion_rlt->CheckInnerNodesInfo(), ge::GRAPH_SUCCESS);
+
+  FusionInnerNodesInfo nodes_info = fusion_rlt->impl_->GetInnerNodesInfo();
+  //check
+  EXPECT_EQ(nodes_info.size(), 1U);
+  const auto [name, type, inputs, outputs, op] = nodes_info[0U];
+  EXPECT_EQ(name, "CheckInnerNodesInfo/InnerNodeName");
+  EXPECT_EQ(type, "InnerNodeType");
+  EXPECT_EQ(inputs.size(), 1U);
+  EXPECT_EQ(inputs[0U].first, kInputFromFusionScope);
+  EXPECT_EQ(inputs[0U].second, 0);
+  EXPECT_EQ(outputs.size(), 1U);
+  EXPECT_EQ(outputs[0U].first, kOutputToFusionScope);
+  EXPECT_EQ(outputs[0U].second, 0);
+  EXPECT_NE(op, nullptr);
 }
 
 TEST_F(UtestFusionScope, InnerNodeInit) {
