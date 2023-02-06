@@ -709,6 +709,7 @@ void ErrorManager::GenWorkStreamIdBySessionGraph(const uint64_t session_id, cons
   const uint64_t work_stream_id = (session_id * kSessionIdOffset) + graph_id;
   error_context_.work_stream_id = work_stream_id;
 
+  const std::unique_lock<std::mutex> lck(mutex_);
   ClearErrorMsgContainerByWorkId(work_stream_id);
   ClearWarningMsgContainerByWorkId(work_stream_id);
 }
