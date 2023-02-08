@@ -49,40 +49,8 @@ class KernelExtendInfo {
    * @param kernel_type kernel type
    */
   void SetKernelType(const ge::char_t *kernel_type) {
-    kernel_type_ = kernel_type;
-  }
-
-  /**
-   * 设置kernel_type_idx_,用于profiling
-   * @param kernel_type_idx idx of kernel type in profiling
-   */
-  void SetKernelTypeIdx(const uint64_t kernel_type_idx) {
     (void) reserved_;
-    kernel_type_idx_ = kernel_type_idx;
-  }
-
-  /**
-   * 设置compute_node_name_idx_,用于profiling
-   * @param compute_node_name_idx idx of node name in profiling
-   */
-  void SetNodeNameIdx(const uint64_t compute_node_name_idx) {
-    compute_node_name_idx_ = compute_node_name_idx;
-  }
-
-  /**
-   * 获取compute_node_name_idx_,用于profiling
-   * @return compute_node_name_idx_ idx of node name in profiling
-   */
-  uint64_t GetNodeNameIdx() const {
-    return compute_node_name_idx_;
-  }
-
-  /**
-   * 获取kernel_type_idx_,用于profiling
-   * @param kernel_type_idx_ idx of kernel type in profiling
-   */
-  uint64_t GetKernelTypeIdx() const {
-    return kernel_type_idx_;
+    kernel_type_ = kernel_type;
   }
 
   KernelExtendInfo() = delete;
@@ -94,9 +62,7 @@ class KernelExtendInfo {
  private:
   const ge::char_t *kernel_name_;
   const ge::char_t *kernel_type_;
-  uint64_t compute_node_name_idx_;
-  uint64_t kernel_type_idx_;
-  uint8_t reserved_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
+  uint8_t reserved_[56]; // Reserved field, 32+8, do not directly use when only 8-byte left
 };
 static_assert(std::is_standard_layout<KernelExtendInfo>::value, "The class KernelExtendInfo must be a POD");
 

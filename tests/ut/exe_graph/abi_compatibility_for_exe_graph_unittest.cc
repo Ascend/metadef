@@ -30,6 +30,7 @@ namespace gert {
 namespace {
 constexpr const size_t kPointerSize = 8U;
 constexpr const size_t kReservedFieldSize = 40U;
+constexpr const size_t kExtendInfoReservedFieldSize = 56U;
 
 constexpr const size_t kShapeSize = 248U;
 constexpr const size_t kExpandDimsTypeSize = 48U;
@@ -242,17 +243,11 @@ TEST_F(AbiCompatibilityForExeGraphUT, KernelExtendInfo_CheckMemLayoutNotChanged)
   auto k = reinterpret_cast<KernelExtendInfo *>(holder);
 
   ASSERT_EQ(reinterpret_cast<uintptr_t>(&k->reserved_) - reinterpret_cast<uintptr_t>(k),
-            kKernelExtendInfoSize - kReservedFieldSize);
+            kKernelExtendInfoSize - kExtendInfoReservedFieldSize);
   ASSERT_EQ(static_cast<void *>(k), static_cast<void *>(&k->kernel_name_));
 
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&k->kernel_type_) - reinterpret_cast<uintptr_t>(&k->kernel_name_),
             kPointerSize);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&k->compute_node_name_idx_) - reinterpret_cast<uintptr_t>(&k->kernel_type_),
-            kPointerSize);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&k->kernel_type_idx_) - reinterpret_cast<uintptr_t>(&k->compute_node_name_idx_),
-            sizeof(uint64_t));
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&k->reserved_) - reinterpret_cast<uintptr_t>(&k->kernel_type_idx_),
-            sizeof(uint64_t));
   free(holder);
 }
 
