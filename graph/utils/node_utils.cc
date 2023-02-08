@@ -457,7 +457,10 @@ graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unkn
     }
     for (auto &sub_graph_name : sub_graph_names) {
       const auto sub_graph = root_graph->GetSubgraph(sub_graph_name);
-      GE_CHECK_NOTNULL(sub_graph);
+      if (sub_graph == nullptr) {
+        GELOGD("sub graph %s is empty", sub_graph_name.c_str());
+        continue;
+      }
       for (const auto &node_ptr : sub_graph->GetDirectNode()) {
         const auto status = GetNodeUnknownShapeStatus(*node_ptr, is_unknow);
         if (status != GRAPH_SUCCESS) {

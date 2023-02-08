@@ -1258,6 +1258,8 @@ const std::string ATTR_NAME_OUTPUT_PIPELINE = "_output_pipeline";
 
 // for partition
 const std::string ATTR_NAME_NO_NEED_PARTITION_AND_MERGE = "_no_need_partition_and_merge";
+const std::string ATTR_NAME_NO_NEED_PARTITION = "_no_need_partition";
+const std::string ATTR_NAME_NO_NEED_MERGE = "_no_need_merge";
 const std::string ATTR_NAME_NO_NEED_DYNAMIC_SHAPE_PARTITION = "_no_need_dynamic_shape_partition";
 
 // model deploy scheduler(mds)
