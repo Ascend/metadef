@@ -27,6 +27,7 @@ using namespace std;
 namespace ge {
 namespace {
 const char *const kEnvName = "ASCEND_OPP_PATH";
+const char *const kEnvNameCustom = "ASCEND_CUSTOM_OPP_PATH";
 }
 class UtestPluginManager : public testing::Test {
  protected:
@@ -68,7 +69,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_load) {
 
 TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_01) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_vendors = opp_path + "vendors";
@@ -82,11 +83,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_01) {
   EXPECT_EQ(vendors[0], "customize");
   EXPECT_EQ(vendors[1], "mdc");
   EXPECT_EQ(vendors[2], "lhisi");
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_02) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_vendors = opp_path + "vendors";
@@ -97,11 +99,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_02) {
   std::vector<std::string> vendors;
   Status ret = PluginManager::GetOppPluginVendors(path_config, vendors);
   EXPECT_NE(ret, SUCCESS);
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_03) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_vendors = opp_path + "vendors";
@@ -112,11 +115,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_03) {
   std::vector<std::string> vendors;
   Status ret = PluginManager::GetOppPluginVendors(path_config, vendors);
   EXPECT_NE(ret, SUCCESS);
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_04) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_vendors = opp_path + "vendors";
@@ -127,11 +131,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_04) {
   std::vector<std::string> vendors;
   Status ret = PluginManager::GetOppPluginVendors(path_config, vendors);
   EXPECT_NE(ret, SUCCESS);
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_01) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -147,7 +152,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_01) {
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_02) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -166,11 +171,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_02) {
     path_vendors + "/lhisi/op_proto/:" +
     opp_path + "built-in/op_proto/"
   );
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_03) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -187,11 +193,98 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_03) {
     opp_path + "op_proto/custom/:" +
     opp_path + "built-in/op_proto/"
   );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_04) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/op_proto").c_str());
+
+  std::string opsproto_path;
+  Status ret = PluginManager::GetOpsProtoPath(opsproto_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(opsproto_path,
+    custom_opp_path + "/op_proto/:" +
+    path_vendors + "/customize/op_proto/:" +
+    path_vendors + "/mdc/op_proto/:" +
+    path_vendors + "/lhisi/op_proto/:" +
+    opp_path + "built-in/op_proto/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_05) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, "", 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/op_proto").c_str());
+
+  std::string opsproto_path;
+  Status ret = PluginManager::GetOpsProtoPath(opsproto_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(opsproto_path,
+    path_vendors + "/customize/op_proto/:" +
+    path_vendors + "/mdc/op_proto/:" +
+    path_vendors + "/lhisi/op_proto/:" +
+    opp_path + "built-in/op_proto/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_06) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" + custom_opp_path_02).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/op_proto").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/op_proto").c_str());
+
+  std::string opsproto_path;
+  Status ret = PluginManager::GetOpsProtoPath(opsproto_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(opsproto_path,
+    custom_opp_path_01 + "/op_proto/:" +
+    custom_opp_path_02 + "/op_proto/:" +
+    path_vendors + "/customize/op_proto/:" +
+    path_vendors + "/mdc/op_proto/:" +
+    path_vendors + "/lhisi/op_proto/:" +
+    opp_path + "built-in/op_proto/"
+  );
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_01) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -207,7 +300,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_01) {
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_02) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -226,11 +319,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_02) {
     path_vendors + "/mdc/op_impl/ai_core/tbe/:" +
     path_vendors + "/customize/op_impl/ai_core/tbe/"
   );
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_03) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -247,11 +341,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_03) {
     opp_path + "built-in/op_impl/ai_core/tbe/:" +
     opp_path + "op_impl/custom/ai_core/tbe/"
   );
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_01) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -267,7 +362,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_01) {
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_02) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -286,11 +381,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_02) {
     path_vendors + "/lhisi/framework/:" +
     opp_path + "built-in/framework/tensorflow/"
   );
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_03) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -307,11 +403,12 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_03) {
     opp_path + "framework/custom/:" +
     opp_path + "built-in/framework/tensorflow/"
   );
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetConstantFoldingOpsPath_01) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -325,7 +422,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetConstantFoldingOpsPath_01) {
 
 TEST_F(UtestPluginManager, test_plugin_manager_GetConstantFoldingOpsPath_02) {
   std::string opp_path = __FILE__;
-  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
   mmSetEnv(kEnvName, opp_path.c_str(), 1);
 
   std::string path_builtin = opp_path + "built-in";
@@ -335,6 +432,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetConstantFoldingOpsPath_02) {
   Status ret = PluginManager::GetConstantFoldingOpsPath("/tmp", customop_path);
   EXPECT_EQ(ret, SUCCESS);
   EXPECT_EQ(customop_path, opp_path + "/built-in/op_impl/host_cpu");
+  system(("rm -rf " + opp_path).c_str());
 }
 
 TEST_F(UtestPluginManager, GetOppSupportedOsAndCpuType_SUCCESS) {

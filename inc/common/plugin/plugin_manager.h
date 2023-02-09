@@ -50,6 +50,8 @@ class PluginManager {
 
   static Status ReversePathString(std::string &path_str);
 
+  static void GetPluginPathFromCustomOppPath(const std::string &sub_path, std::string &plugin_path);
+
   static Status GetOppPluginPathOld(const std::string &opp_path,
                                     const std::string &path_fmt,
                                     std::string &plugin_path,
