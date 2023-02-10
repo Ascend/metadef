@@ -136,6 +136,32 @@ Status PluginManager::ReversePathString(std::string &path_str) {
   return SUCCESS;
 }
 
+void PluginManager::GetPluginPathFromCustomOppPath(const std::string &sub_path, std::string &plugin_path) {
+  GELOGI("Start to get plugin path from ASCEND_CUSTOM_OPP_PATH schedule.");
+  plugin_path = "";
+  const char *const custom_opp_path_env = std::getenv("ASCEND_CUSTOM_OPP_PATH");
+  if (custom_opp_path_env == nullptr) {
+    GELOGI("env ASCEND_CUSTOM_OPP_PATH is not defined.");
+    return;
+  }
+  const std::string custom_opp_path = custom_opp_path_env;
+  if (custom_opp_path.empty()) {
+    GELOGW("env ASCEND_CUSTOM_OPP_PATH is defined but it's empty.");
+    return;
+  }
+  GELOGI("value of env ASCEND_CUSTOM_OPP_PATH is %s.", custom_opp_path.c_str());
+  std::vector<std::string> custom_paths = StringUtils::Split(custom_opp_path, ':');
+  for (const auto &custom_path : custom_paths) {
+    if ((!custom_path.empty()) && (mmIsDir((custom_path + "/" + sub_path).c_str()) == EN_OK)) {
+      plugin_path += custom_path + "/" + sub_path + ":";
+      GELOGI("custom_path '%s' is valid.", custom_path.c_str());
+    } else {
+      GELOGI("custom_path '%s' is invalid, which is skipped.", custom_path.c_str());
+    }
+  }
+  GELOGI("Run GetPluginPathFromCustomOppPath finished, current plugin_path is %s.", plugin_path.c_str());
+}
+
 Status PluginManager::GetOppPluginPathOld(const std::string &opp_path,
                                           const std::string &path_fmt,
                                           std::string &plugin_path,
@@ -179,6 +205,7 @@ Status PluginManager::GetOpsProtoPath(std::string &opsproto_path) {
     return GetOppPluginPathOld(opp_path, "op_proto/%s/", opsproto_path);
   } else {
     GELOGI("Opp plugin path structure is new version!");
+    GetPluginPathFromCustomOppPath("op_proto/", opsproto_path);
     return GetOppPluginPathNew(opp_path, "%s/op_proto/", opsproto_path, "op_proto/custom/");
   }
 }
@@ -192,6 +219,7 @@ Status PluginManager::GetCustomOpPath(const std::string &fmk_type, std::string &
     return GetOppPluginPathOld(opp_path, "framework/%s/" + fmk_type + "/", customop_path, "framework/%s/");
   } else {
     GELOGI("Opp plugin path structure is new version!");
+    GetPluginPathFromCustomOppPath("framework/", customop_path);
     return GetOppPluginPathNew(opp_path, "%s/framework/" + fmk_type + "/", customop_path, "framework/custom/",
                                "%s/framework/");
   }
@@ -207,6 +235,7 @@ Status PluginManager::GetOpTilingPath(std::string &op_tiling_path) {
         "GetOppPluginPathOld failed!");
   } else {
     GELOGI("Opp plugin path structure is new version!");
+    GetPluginPathFromCustomOppPath("op_impl/ai_core/tbe/", op_tiling_path);
     GE_ASSERT_TRUE(GetOppPluginPathNew(opp_path, "%s/op_impl/ai_core/tbe/", op_tiling_path,
                                        "op_impl/custom/ai_core/tbe/") == SUCCESS,
                    "GetOppPluginPathNew failed!");

@@ -61,6 +61,8 @@ struct GETaskKernelHcclInfo {
   std::vector<void *> outputDataAddrs;
   std::vector<void *> workSpaceAddrs;
   std::vector<uint64_t> workSpaceMemSizes;
+  std::vector<int32_t> inputZeroCopyFlags;
+  std::vector<int32_t> outputZeroCopyFlags;
 };
 
 struct GETaskInfo {
