@@ -130,9 +130,13 @@ class NodeUtils {
   /// @return return GRAPH_SUCCESS if remove successfully, other for failed.
   static graphStatus RemoveSubgraphsOnNode(const NodePtr &node);
 
-  /// @brief Get subgraph input data node by index.
-  /// @param [in] node
-  /// @return Node
+  /**
+   * 获取`node`挂载的所有子图中的索引为`index`的Data节点集合;
+   * 每个子图最多能找到一个跟`index`匹配的Data节点
+   * @param node
+   * @param index
+   * @return
+   */
   static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, const int32_t index);
 
   /// @brief Get subgraph input data node by index.
