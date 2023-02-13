@@ -41,7 +41,8 @@ AscendString::AscendString(const char_t *const name, size_t length) {
 
 const char_t *AscendString::GetString() const {
   if (name_ == nullptr) {
-    return nullptr;
+    const static char *empty_value = "";
+    return empty_value;
   }
 
   return (*name_).c_str();

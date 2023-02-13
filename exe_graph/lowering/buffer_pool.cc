@@ -83,7 +83,9 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
       GELOGE(ge::FAILED, "Failed to serialize text pool, miss buf id %zu", i);
       return nullptr;
     }
-    GE_ASSERT_EOK(memcpy_s(text_holder.get() + text_offset, total_size - text_offset, buf->data(), buf->size()));
+    size_t buffer_size = (total_size - text_offset > SECUREC_MEM_MAX_LEN) ?
+                          SECUREC_MEM_MAX_LEN : (total_size - text_offset);
+    GE_ASSERT_EOK(memcpy_s(text_holder.get() + text_offset, buffer_size, buf->data(), buf->size()));
     text->offsets_[i] = text_offset;
     text_offset += buf->size();
   }

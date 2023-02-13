@@ -144,7 +144,7 @@ ResourceContext *InferenceContext::GetResourceContext(const ge::AscendString &ke
 }
 
 graphStatus InferenceContext::SetResourceContext(const ge::AscendString &key, ResourceContext *resource_context) {
-  if (key.GetString() == nullptr) {
+  if (std::string(key.GetString()).empty()) {
     GELOGE(GRAPH_PARAM_INVALID, "Resource key is null, invalid param.");
     return GRAPH_PARAM_INVALID;
   }
@@ -158,7 +158,7 @@ graphStatus InferenceContext::SetResourceContext(const ge::AscendString &key, Re
 }
 
 graphStatus InferenceContext::AddChangedResourceKey(const ge::AscendString &key) {
-  if (key.GetString() == nullptr) {
+  if (std::string(key.GetString()).empty()) {
     GELOGE(GRAPH_PARAM_INVALID, "Resource key is null, invalid param.");
     return GRAPH_PARAM_INVALID;
   }
@@ -175,7 +175,7 @@ const std::set<ge::AscendString> &InferenceContext::GetChangedResourceKeys() con
 }
 
 graphStatus InferenceContext::RegisterReliedOnResourceKey(const ge::AscendString &key) {
-  if (key.GetString() == nullptr) {
+  if (std::string(key.GetString()).empty()) {
     GELOGE(GRAPH_PARAM_INVALID, "Resource key is null, invalid param.");
     return GRAPH_PARAM_INVALID;
   }

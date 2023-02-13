@@ -516,6 +516,13 @@ TEST_F(AscendStringUT, Hash) {
   EXPECT_EQ(std::hash<std::string>()(""), empty_ascend_string.Hash());
 }
 
+TEST_F(AscendStringUT, EmptyValueCompare) {
+  ge::AscendString ascend_string;
+  EXPECT_NE(ascend_string.GetString(), "");
+  EXPECT_EQ(ascend_string.GetString(), std::string(""));
+  EXPECT_TRUE(std::string(ascend_string.GetString()).empty());
+}
+
 TEST_F(TensorUT, TensorUtils_GetSteExtMeta) {
   GeTensorDesc desc;
 
