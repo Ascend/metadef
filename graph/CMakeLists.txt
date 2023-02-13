@@ -60,6 +60,7 @@ set(GRAPH_BASE_SOURCE_LIST
     "compile_cache_policy/policy_management/match_policy/match_policy_exact_only.cc"
     "compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
     "profiler.cc"
+    "ir_definitions_recover.cc"
 )
 
 set(DATA_FLOW_GRAPH_SOURCE_LIST

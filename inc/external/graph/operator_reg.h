@@ -556,6 +556,18 @@ class OpReg {
 
 
 #define PASTE(g_register, y) g_register##y
+
+#ifdef DISABLE_COMPILE_V1
+#define __OP_END_IMPL__(x, y)                                                                                      \
+  N();                                                                                                             \
+  }                                                                                                                \
+  static_assert(                                                                                                   \
+      std::is_same<x, _THIS_TYPE>::value,                                                                          \
+      "The class name entered into the OP_END_FACTORY_REG needs to be the same as the operator name you define."); \
+  }                                                                                                                \
+  ;                                                                                                                \
+  }
+#else
 #define __OP_END_IMPL__(x, y)                                                                                      \
   N();                                                                                                             \
   }                                                                                                                \
@@ -566,6 +578,7 @@ class OpReg {
   ;                                                                                                                \
   static const OperatorCreatorRegister PASTE(g_register, y)(#x, [](const AscendString &name) { return x(name); }); \
   }
+#endif
 #define OP_END_FACTORY_REG(x) __OP_END_IMPL__(x, __COUNTER__)
 
 // Specialized shape inferencer macro

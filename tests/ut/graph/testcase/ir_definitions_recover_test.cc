@@ -22,7 +22,7 @@
 #undef private
 #undef protected
 
-#include "exe_graph/lowering/ir_definitions_recover.h"
+#include "graph/ir_definitions_recover.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "external/graph/operator_reg.h"
