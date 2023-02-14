@@ -836,9 +836,7 @@ graphStatus NodeUtils::RemoveSubgraphsOnNode(const NodePtr &node) {
 
   return GRAPH_SUCCESS;
 }
-/// @brief Get subgraph input data node by index.
-/// @param [in] node
-/// @return Node
+
 std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, const int32_t index) {
   std::vector<NodePtr> in_data_node_vec;
   const auto op_desc = node.GetOpDesc();
@@ -850,12 +848,16 @@ std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, co
   const auto compute_graph = node.GetOwnerComputeGraph();
   for (const std::string &instance_name : subgraph_names) {
     const auto subgraph = compute_graph->GetSubgraph(instance_name);
+    if (subgraph == nullptr) {
+      continue;
+    }
     for (const auto &node_in_subgraph : subgraph->GetDirectNode()) {
-      if (NodeUtils::IsSubgraphInput(node_in_subgraph)) {
+      if (node_in_subgraph->GetType() == DATA) {
         int32_t parent_index = -1;
         (void) AttrUtils::GetInt(node_in_subgraph->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, parent_index);
         if (parent_index == index) {
           in_data_node_vec.emplace_back(node_in_subgraph);
+          break;
         }
       }
     }

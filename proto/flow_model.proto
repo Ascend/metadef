@@ -53,7 +53,17 @@ message SubmodelDef {
 }
 
 message FlowModelDef {
+  message EschedPriority {
+    map<string, int32> esched_priority = 1;
+  }
+  message RankIds {
+    repeated uint32 rank_id = 1;
+  }
   string model_name = 1;
   ModelRelationDef relation = 2;
   repeated string submodel_name = 3;
+  map<string, EschedPriority> models_esched_priority = 4;
+  map<string, uint32> model_name_to_rank_id = 6;
+  map<string, RankIds> group_name_to_rank_ids = 5;
+  map<string, RankIds> device_to_rank_ids = 7;
 }

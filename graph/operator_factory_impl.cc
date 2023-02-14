@@ -185,6 +185,7 @@ graphStatus OperatorFactoryImpl::RegisterOperatorCreator(const std::string &oper
     return GRAPH_FAILED;
   }
   (void)operator_creators_->emplace(operator_type, op_creator);
+  GELOGD("Register operator creator for %s.", operator_type.c_str());
   return GRAPH_SUCCESS;
 }
 
@@ -199,6 +200,7 @@ graphStatus OperatorFactoryImpl::RegisterOperatorCreator(const std::string &oper
     return GRAPH_FAILED;
   }
   (void)operator_creators_v2_->emplace(operator_type, op_creator);
+  GELOGD("Register operator creator v2 for %s.", operator_type.c_str());
   return GRAPH_SUCCESS;
 }
 
