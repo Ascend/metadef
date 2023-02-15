@@ -105,14 +105,8 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_1so_Succee
   std::string so_data = so_name;
   auto registry_holder = gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(so_data);
   EXPECT_NE(registry_holder, nullptr);
-#ifndef ONLY_COMPILE_OPEN_SRC
   EXPECT_NE(space_registry.GetOpImpl("Add_0"), nullptr);
   EXPECT_EQ(space_registry.GetPrivateAttrs("Add_0").size(), 0);
-#else
-  IMPL_OP(Add_0).InferShape(TestInferShapeFunc).PrivateAttr("attr1");
-  EXPECT_EQ(space_registry.GetOpImpl("Add_0")->infer_shape, TestInferShapeFunc);
-  EXPECT_EQ(space_registry.GetPrivateAttrs("Add_0").size(), 1);
-#endif
 }
 
 TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_2so_Succeed) {
@@ -133,10 +127,8 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_2so_Succee
   EXPECT_EQ(space_registry.GetOrCreateRegistry({so_bin_ptr1}, so_info), ge::GRAPH_SUCCESS);
   auto registry_holder1 = gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(so_name1);
   EXPECT_NE(registry_holder1, nullptr);
-#ifndef ONLY_COMPILE_OPEN_SRC
   EXPECT_NE(space_registry.GetOpImpl("Add_0"), nullptr);
   EXPECT_EQ(space_registry.GetPrivateAttrs("Add_0").size(), 0);
-#endif
 
   std::string so_name2("libopsproto.so");
   std::string vendor_name2("DC");
@@ -168,10 +160,8 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_GetOrCreateRegistry_3so_Succee
   EXPECT_EQ(space_registry.GetOrCreateRegistry({so_bin_ptr1}, so_info), ge::GRAPH_SUCCESS);
   auto registry_holder1 = gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(so_name1);
   EXPECT_NE(registry_holder1, nullptr);
-#ifndef ONLY_COMPILE_OPEN_SRC
   EXPECT_NE(space_registry.GetOpImpl("Add_0"), nullptr);
   EXPECT_EQ(space_registry.GetPrivateAttrs("Add_0").size(), 0);
-#endif
 
   std::string so_name2("libopsproto.so");
   std::string vendor_name2("DC");
@@ -212,7 +202,6 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_AddRegistry_Succeed) {
   ret = space_registry.AddRegistry(registry_holder);
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   auto func = space_registry.GetOpImpl("Add_0");
   EXPECT_EQ(func->tiling, (gert::OpImplKernelRegistry::TilingKernelFunc) 0x10);
   EXPECT_EQ(func->infer_shape, (gert::OpImplKernelRegistry::InferShapeKernelFunc) 0x20);
@@ -227,7 +216,6 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_AddRegistry_Succeed) {
 
   func = space_registry.GetOpImpl("Add_3");
   EXPECT_EQ(func, nullptr);
-#endif
 }
 
 TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_AddRegistry_WithSameOptype_Succeed) {
