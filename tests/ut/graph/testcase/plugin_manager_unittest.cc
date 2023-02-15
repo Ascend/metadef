@@ -282,6 +282,106 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_06) {
   system(("rm -rf " + opp_path).c_str());
 }
 
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_07) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("mkdir -p " + custom_opp_path + "/op_proto").c_str());
+
+  std::string opsproto_path;
+  Status ret = PluginManager::GetOpsProtoPath(opsproto_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(opsproto_path,
+    custom_opp_path + "/op_proto/:" +
+    opp_path + "op_proto/custom/:" +
+    opp_path + "built-in/op_proto/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_08) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_invalid_01 = opp_path + "custom_opp_path_invalid_01";
+  std::string custom_opp_path_empty = "";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  std::string custom_opp_path_invalid_02 = opp_path + "custom_opp_path_invalid_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" +
+                            custom_opp_path_invalid_01 + ":" +
+                            custom_opp_path_empty + ":" +
+                            custom_opp_path_02 + ":" +
+                            custom_opp_path_invalid_02
+                           ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/op_proto").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/op_proto").c_str());
+
+  std::string opsproto_path;
+  Status ret = PluginManager::GetOpsProtoPath(opsproto_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(opsproto_path,
+    custom_opp_path_01 + "/op_proto/:" +
+    custom_opp_path_02 + "/op_proto/:" +
+    path_vendors + "/customize/op_proto/:" +
+    path_vendors + "/mdc/op_proto/:" +
+    path_vendors + "/lhisi/op_proto/:" +
+    opp_path + "built-in/op_proto/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpsProtoPath_09) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" +
+                            custom_opp_path_02 + ":" +
+                            custom_opp_path_01 + ":" +
+                            custom_opp_path_02
+                           ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/op_proto").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/op_proto").c_str());
+
+  std::string opsproto_path;
+  Status ret = PluginManager::GetOpsProtoPath(opsproto_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(opsproto_path,
+    custom_opp_path_01 + "/op_proto/:" +
+    custom_opp_path_02 + "/op_proto/:" +
+    custom_opp_path_01 + "/op_proto/:" +
+    custom_opp_path_02 + "/op_proto/:" +
+    path_vendors + "/customize/op_proto/:" +
+    path_vendors + "/mdc/op_proto/:" +
+    path_vendors + "/lhisi/op_proto/:" +
+    opp_path + "built-in/op_proto/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
 TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_01) {
   std::string opp_path = __FILE__;
   opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
@@ -344,6 +444,192 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_03) {
   system(("rm -rf " + opp_path).c_str());
 }
 
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_04) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/op_impl/ai_core/tbe").c_str());
+
+  std::string op_tiling_path;
+  Status ret = PluginManager::GetOpTilingPath(op_tiling_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(op_tiling_path,
+    opp_path + "built-in/op_impl/ai_core/tbe/:" +
+    path_vendors + "/lhisi/op_impl/ai_core/tbe/:" +
+    path_vendors + "/mdc/op_impl/ai_core/tbe/:" +
+    path_vendors + "/customize/op_impl/ai_core/tbe/:" +
+    custom_opp_path + "/op_impl/ai_core/tbe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_05) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, "", 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/op_impl/ai_core/tbe").c_str());
+
+  std::string op_tiling_path;
+  Status ret = PluginManager::GetOpTilingPath(op_tiling_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(op_tiling_path,
+    opp_path + "built-in/op_impl/ai_core/tbe/:" +
+    path_vendors + "/lhisi/op_impl/ai_core/tbe/:" +
+    path_vendors + "/mdc/op_impl/ai_core/tbe/:" +
+    path_vendors + "/customize/op_impl/ai_core/tbe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_06) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" + custom_opp_path_02).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/op_impl/ai_core/tbe").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/op_impl/ai_core/tbe").c_str());
+
+  std::string op_tiling_path;
+  Status ret = PluginManager::GetOpTilingPath(op_tiling_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(op_tiling_path,
+    opp_path + "built-in/op_impl/ai_core/tbe/:" +
+    path_vendors + "/lhisi/op_impl/ai_core/tbe/:" +
+    path_vendors + "/mdc/op_impl/ai_core/tbe/:" +
+    path_vendors + "/customize/op_impl/ai_core/tbe/:" +
+    custom_opp_path_02 + "/op_impl/ai_core/tbe/:" +
+    custom_opp_path_01 + "/op_impl/ai_core/tbe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_07) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("mkdir -p " + custom_opp_path + "/op_impl/ai_core/tbe").c_str());
+
+  std::string op_tiling_path;
+  Status ret = PluginManager::GetOpTilingPath(op_tiling_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(op_tiling_path,
+    opp_path + "built-in/op_impl/ai_core/tbe/:" +
+    opp_path + "op_impl/custom/ai_core/tbe/:" +
+    custom_opp_path + "/op_impl/ai_core/tbe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_08) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_invalid_01 = opp_path + "custom_opp_path_invalid_01";
+  std::string custom_opp_path_empty = "";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  std::string custom_opp_path_invalid_02 = opp_path + "custom_opp_path_invalid_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" +
+                            custom_opp_path_invalid_01 + ":" +
+                            custom_opp_path_empty + ":" +
+                            custom_opp_path_02 + ":" +
+                            custom_opp_path_invalid_02
+                           ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/op_impl/ai_core/tbe").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/op_impl/ai_core/tbe").c_str());
+
+  std::string op_tiling_path;
+  Status ret = PluginManager::GetOpTilingPath(op_tiling_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(op_tiling_path,
+    opp_path + "built-in/op_impl/ai_core/tbe/:" +
+    path_vendors + "/lhisi/op_impl/ai_core/tbe/:" +
+    path_vendors + "/mdc/op_impl/ai_core/tbe/:" +
+    path_vendors + "/customize/op_impl/ai_core/tbe/:" +
+    custom_opp_path_02 + "/op_impl/ai_core/tbe/:" +
+    custom_opp_path_01 + "/op_impl/ai_core/tbe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetOpTilingPath_09) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" +
+                            custom_opp_path_02 + ":" +
+                            custom_opp_path_01 + ":" +
+                            custom_opp_path_02
+                           ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/op_impl/ai_core/tbe").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/op_impl/ai_core/tbe").c_str());
+
+  std::string op_tiling_path;
+  Status ret = PluginManager::GetOpTilingPath(op_tiling_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(op_tiling_path,
+    opp_path + "built-in/op_impl/ai_core/tbe/:" +
+    path_vendors + "/lhisi/op_impl/ai_core/tbe/:" +
+    path_vendors + "/mdc/op_impl/ai_core/tbe/:" +
+    path_vendors + "/customize/op_impl/ai_core/tbe/:" +
+    custom_opp_path_02 + "/op_impl/ai_core/tbe/:" +
+    custom_opp_path_01 + "/op_impl/ai_core/tbe/:" +
+    custom_opp_path_02 + "/op_impl/ai_core/tbe/:" +
+    custom_opp_path_01 + "/op_impl/ai_core/tbe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
 TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_01) {
   std::string opp_path = __FILE__;
   opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
@@ -401,6 +687,192 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_03) {
   EXPECT_EQ(ret, SUCCESS);
   EXPECT_EQ(customop_path,
     opp_path + "framework/custom/:" +
+    opp_path + "built-in/framework/tensorflow/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_04) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/framework").c_str());
+
+  std::string customop_path;
+  Status ret = PluginManager::GetCustomOpPath("tensorflow", customop_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customop_path,
+    custom_opp_path + "/framework/:" +
+    path_vendors + "/customize/framework/:" +
+    path_vendors + "/mdc/framework/:" +
+    path_vendors + "/lhisi/framework/:" +
+    opp_path + "built-in/framework/tensorflow/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_05) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, "", 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/framework").c_str());
+
+  std::string customop_path;
+  Status ret = PluginManager::GetCustomOpPath("tensorflow", customop_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customop_path,
+    path_vendors + "/customize/framework/:" +
+    path_vendors + "/mdc/framework/:" +
+    path_vendors + "/lhisi/framework/:" +
+    opp_path + "built-in/framework/tensorflow/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_06) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" + custom_opp_path_02).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/framework").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/framework").c_str());
+
+  std::string customop_path;
+  Status ret = PluginManager::GetCustomOpPath("tensorflow", customop_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customop_path,
+    custom_opp_path_01 + "/framework/:" +
+    custom_opp_path_02 + "/framework/:" +
+    path_vendors + "/customize/framework/:" +
+    path_vendors + "/mdc/framework/:" +
+    path_vendors + "/lhisi/framework/:" +
+    opp_path + "built-in/framework/tensorflow/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_07) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("mkdir -p " + custom_opp_path + "/framework").c_str());
+
+  std::string customop_path;
+  Status ret = PluginManager::GetCustomOpPath("tensorflow", customop_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customop_path,
+    custom_opp_path + "/framework/:" +
+    opp_path + "framework/custom/:" +
+    opp_path + "built-in/framework/tensorflow/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_08) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_invalid_01 = opp_path + "custom_opp_path_invalid_01";
+  std::string custom_opp_path_empty = "";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  std::string custom_opp_path_invalid_02 = opp_path + "custom_opp_path_invalid_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" +
+                            custom_opp_path_invalid_01 + ":" +
+                            custom_opp_path_empty + ":" +
+                            custom_opp_path_02 + ":" +
+                            custom_opp_path_invalid_02
+                           ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/framework").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/framework").c_str());
+
+  std::string customop_path;
+  Status ret = PluginManager::GetCustomOpPath("tensorflow", customop_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customop_path,
+    custom_opp_path_01 + "/framework/:" +
+    custom_opp_path_02 + "/framework/:" +
+    path_vendors + "/customize/framework/:" +
+    path_vendors + "/mdc/framework/:" +
+    path_vendors + "/lhisi/framework/:" +
+    opp_path + "built-in/framework/tensorflow/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetCustomOpPath_09) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+  mmSetEnv(kEnvNameCustom, (custom_opp_path_01 + ":" +
+                            custom_opp_path_02 + ":" +
+                            custom_opp_path_01 + ":" +
+                            custom_opp_path_02
+                           ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/framework").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/framework").c_str());
+
+  std::string customop_path;
+  Status ret = PluginManager::GetCustomOpPath("tensorflow", customop_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customop_path,
+    custom_opp_path_01 + "/framework/:" +
+    custom_opp_path_02 + "/framework/:" +
+    custom_opp_path_01 + "/framework/:" +
+    custom_opp_path_02 + "/framework/:" +
+    path_vendors + "/customize/framework/:" +
+    path_vendors + "/mdc/framework/:" +
+    path_vendors + "/lhisi/framework/:" +
     opp_path + "built-in/framework/tensorflow/"
   );
   system(("rm -rf " + opp_path).c_str());
