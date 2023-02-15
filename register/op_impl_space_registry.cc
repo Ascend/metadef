@@ -115,29 +115,21 @@ ge::graphStatus OpImplSpaceRegistry::AddRegistry(const std::shared_ptr<OpImplReg
 
 const OpImplKernelRegistry::OpImplFunctions *OpImplSpaceRegistry::GetOpImpl(
     const OpImplKernelRegistry::OpType &op_type) const {
-#ifndef ONLY_COMPILE_OPEN_SRC
   auto iter = merged_types_to_impl_.find(op_type);
   if (iter == merged_types_to_impl_.end()) {
     return nullptr;
   }
   return &iter->second;
-#else
-  return OpImplRegistry::GetInstance().GetOpImpl(op_type);
-#endif
 }
 
 const OpImplKernelRegistry::PrivateAttrList &OpImplSpaceRegistry::GetPrivateAttrs(
     const OpImplKernelRegistry::OpType &op_type) const {
-#ifndef ONLY_COMPILE_OPEN_SRC
   auto op_impl_ptr = GetOpImpl(op_type);
   if (op_impl_ptr == nullptr) {
     static OpImplKernelRegistry::PrivateAttrList emptyPrivateAttr;
     return emptyPrivateAttr;
   }
   return op_impl_ptr->private_attrs;
-#else
-  return OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
-#endif
 }
 
 DefaultOpImplSpaceRegistry &DefaultOpImplSpaceRegistry::GetInstance() {
