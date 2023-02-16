@@ -23,8 +23,6 @@ std::map<ge::AscendString, std::map<ge::AscendString, OP_CHECK_FUNC>>
     OpCheckFuncRegistry::check_op_capability_instance_;
 std::map<ge::AscendString, PARAM_GENERALIZE_FUNC> OpCheckFuncRegistry::param_generalize_instance_;
 std::map<ge::AscendString, std::map<ge::AscendString, REPLAY_FUNC>> OpCheckFuncRegistry::replay_instance_;
-std::map<ge::AscendString, REPLAY_BLOCK_FACTOR_FUNC> OpCheckFuncRegistry::replay_block_factor_instance_;
-std::map<ge::AscendString, std::map<ge::AscendString, REPLAY_CONFIG_FUNC>> OpCheckFuncRegistry::replay_config_instance_;
 std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
 
 void OpCheckFuncRegistry::RegisterOpCapability(const ge::AscendString &check_type, const ge::AscendString &op_type,
@@ -88,45 +86,6 @@ REPLAY_FUNC OpCheckFuncRegistry::GetReplay(const ge::AscendString &op_type, cons
   return func_it->second;
 }
 
-void OpCheckFuncRegistry::RegisterReplayBlockFactor(const ge::AscendString &op_type, REPLAY_BLOCK_FACTOR_FUNC func) {
-  replay_block_factor_instance_[op_type] = func;
-  GELOGI("RegisterReplayBlockFactor: op_type:%s, funcPointer:%p, registered count:%zu", op_type.GetString(), func,
-         replay_block_factor_instance_.size());
-}
-
-REPLAY_BLOCK_FACTOR_FUNC OpCheckFuncRegistry::GetReplayBlockFactor(const ge::AscendString &op_type) {
-  const auto &func_it = replay_block_factor_instance_.find(op_type);
-  if (func_it == replay_block_factor_instance_.end()) {
-    GELOGW("GetReplayBlockFactor: op_type:%s, cannot find op_type.", op_type.GetString());
-    return nullptr;
-  }
-  return func_it->second;
-}
-
-void OpCheckFuncRegistry::RegisterReplayConfig(const ge::AscendString &op_type, const ge::AscendString &soc_version,
-                                               REPLAY_CONFIG_FUNC func) {
-  replay_config_instance_[op_type][soc_version] = func;
-  GELOGI("RegisterReplayConfig: op_type:%s, soc_version:%s funcPointer:%p, registered count:%zu", op_type.GetString(),
-         soc_version.GetString(), func, replay_config_instance_[op_type].size());
-}
-
-REPLAY_CONFIG_FUNC OpCheckFuncRegistry::GetReplayConfig(const ge::AscendString &op_type,
-                                                        const ge::AscendString &soc_version) {
-  const auto &soc_map_it = replay_config_instance_.find(op_type);
-  if (soc_map_it == replay_config_instance_.end()) {
-    GELOGW("GetReplayConfig: op_type:%s, soc_version:%s, cannot find op_type.", op_type.GetString(),
-           soc_version.GetString());
-    return nullptr;
-  }
-  const auto &func_it = soc_map_it->second.find(soc_version);
-  if (func_it == soc_map_it->second.end()) {
-    GELOGW("GetReplayConfig: op_type:%s, soc_version:%s, cannot find soc_version.", op_type.GetString(),
-           soc_version.GetString());
-    return nullptr;
-  }
-  return func_it->second;
-}
-
 OpCheckFuncHelper::OpCheckFuncHelper(const ge::AscendString &check_type, const ge::AscendString &op_type,
                                      OP_CHECK_FUNC func) {
   OpCheckFuncRegistry::RegisterOpCapability(check_type, op_type, func);
@@ -139,14 +98,5 @@ OpCheckFuncHelper::OpCheckFuncHelper(const ge::AscendString &op_type, PARAM_GENE
 ReplayFuncHelper::ReplayFuncHelper(const ge::AscendString &op_type, const ge::AscendString &soc_version,
                                    REPLAY_FUNC func) {
   OpCheckFuncRegistry::RegisterReplay(op_type, soc_version, func);
-}
-
-ReplayConfigHelper::ReplayConfigHelper(const ge::AscendString &op_type, const ge::AscendString &soc_version,
-                                       REPLAY_CONFIG_FUNC func) {
-  OpCheckFuncRegistry::RegisterReplayConfig(op_type, soc_version, func);
-}
-
-ReplayConfigHelper::ReplayConfigHelper(const ge::AscendString &op_type, REPLAY_BLOCK_FACTOR_FUNC func) {
-  OpCheckFuncRegistry::RegisterReplayBlockFactor(op_type, func);
 }
 }  // end of namespace optiling

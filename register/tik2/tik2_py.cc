@@ -456,14 +456,14 @@ extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_
 }
 
 extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int block_dim,
-                                       const char *block_factor, const char *tiling_data, const char *kernel_name,
-                                       const char *entry_file, const char *output_kernel_file) {
-  if ((optype == nullptr) || (soc_version == nullptr) || (block_factor == nullptr) || (tiling_data == nullptr) ||
-      (kernel_name == nullptr) || (entry_file == nullptr) || (output_kernel_file == nullptr)) {
+                                       const char *tiling_data, const char *kernel_name, const char *entry_file,
+                                       const char *output_kernel_file) {
+  if ((optype == nullptr) || (soc_version == nullptr) || (tiling_data == nullptr) || (kernel_name == nullptr) ||
+      (entry_file == nullptr) || (output_kernel_file == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
-           "optype/soc_version/block_factor/tiling_data/kernel_name/entry_file/output_kernel_file is null, "
-           "%s, %s, %s, %s, %s, %s, %s",
-           optype, soc_version, block_factor, tiling_data, kernel_name, entry_file, output_kernel_file);
+           "optype/soc_version/tiling_data/kernel_name/entry_file/output_kernel_file is null, "
+           "%s, %s, %s, %s, %s, %s",
+           optype, soc_version, tiling_data, kernel_name, entry_file, output_kernel_file);
     return 0;
   }
   ge::AscendString op_type_str = optype;
@@ -473,146 +473,12 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
     REPORT_CALL_ERROR("E19999", "Failed to GetReplay. optype = %s, soc_version = %s", optype, soc_version);
     return 0;
   }
-  const size_t MAX_ARG_CNT = 64;
-  uint64_t block_factor_data[MAX_ARG_CNT] = {0};
-  size_t block_factor_cnt = MAX_ARG_CNT;
+
   try {
-    const nlohmann::json block_factor_json = nlohmann::json::parse(block_factor);
-    if (block_factor_json.size() > MAX_ARG_CNT) {
-      GELOGE(ge::GRAPH_FAILED, "block_factor_json.size() = %zu should less than %zu.", block_factor_json.size(),
-             MAX_ARG_CNT);
-      return 0;
-    } else {
-      block_factor_cnt = block_factor_json.size();
-    }
-    for (size_t i = 0; i < block_factor_cnt; ++i) {
-      block_factor_data[i] = block_factor_json[i];
-    }
-  } catch (...) {
-    GELOGE(ge::GRAPH_FAILED, "Failed to parse block_factor json. %s", block_factor);
-    return 0;
-  }
-  try {
-    const int rc = (replay_func)(block_dim, block_factor_data, block_factor_cnt, tiling_data, kernel_name, entry_file,
-                                 output_kernel_file);
+    const int rc = (replay_func)(block_dim, tiling_data, kernel_name, entry_file, output_kernel_file);
     GELOGI("replay_func return rc = %d,  optype = %s, soc_version = %s.", rc, optype, soc_version);
   } catch (...) {
     GELOGE(ge::GRAPH_FAILED, "call replay_func segment fault. optype = %s, soc_version = %s", optype, soc_version);
-    return 0;
-  }
-  return 1;
-}
-
-static int DefaultBlockFactor(int block_dim, const ge::Operator &op, ge::AscendString &result) {
-  if (block_dim == 0) {
-    GELOGE(ge::GRAPH_FAILED, "DefaultBlockFactor block_dim is invalid, %d", block_dim);
-    return 0;
-  }
-  nlohmann::json block_dim_factor_arr;
-  for (size_t input_pos = 0; input_pos < op.GetInputsSize(); ++input_pos) {
-    const auto &input = op.GetInputDesc(input_pos);
-    int64_t data_len = GetSizeByDataType(input.GetDataType());
-    int64_t shape_size = input.GetShape().GetShapeSize();
-    if (ge::MulOverflow(data_len, shape_size, data_len)) {
-      GELOGE(ge::GRAPH_FAILED, "MulOverflow data_len=%ld, input shape=%ld", data_len, shape_size);
-      return 0;
-    }
-    block_dim_factor_arr.push_back(data_len / block_dim);
-  }
-  for (size_t output_pos = 0; output_pos < op.GetOutputsSize(); ++output_pos) {
-    const auto &output = op.GetInputDesc(output_pos);
-    int64_t data_len = GetSizeByDataType(output.GetDataType());
-    int64_t shape_size = output.GetShape().GetShapeSize();
-    if (ge::MulOverflow(data_len, shape_size, data_len)) {
-      GELOGE(ge::GRAPH_FAILED, "MulOverflow data_len=%ld, output shape=%ld", data_len, shape_size);
-      return 0;
-    }
-    block_dim_factor_arr.push_back(data_len / block_dim);
-  }
-
-  const std::string std_str = block_dim_factor_arr.dump();
-  result = ge::AscendString(std_str.c_str());
-  return 1;
-}
-
-extern "C" int Tik2PyInterfaceGetBlockFactor(const char *optype, const char *inputs, const char *outputs, int block_dim,
-                                             char *result_info, size_t result_info_len) {
-  if ((optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) || (result_info == nullptr)) {
-    GELOGE(ge::GRAPH_FAILED, "optype/inputs/outputs/result_info is null, %s, %s, %s, %s", optype, inputs, outputs,
-           result_info);
-    return 0;
-  }
-  ge::AscendString op_type_str = optype;
-  ge::OpDescPtr op_desc_ptr = ge::MakeShared<ge::OpDesc>("", op_type_str.GetString());
-  std::map<std::string, std::vector<uint8_t>> const_values;
-  ge::Operator operator_params;
-  try {
-    ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_params, const_values);
-  } catch (...) {
-    GELOGE(ge::GRAPH_FAILED, "Failed to parse json in Tik2PyInterfaceGetBlockFactor. %s, %s", inputs, outputs);
-    return 0;
-  }
-
-  auto block_factor_func = OpCheckFuncRegistry::GetReplayBlockFactor(op_type_str);
-  ge::AscendString result;
-  if (block_factor_func == nullptr) {
-    const int rc = DefaultBlockFactor(block_dim, operator_params, result);
-    if (rc == 0) {
-      return 0;
-    }
-  } else {
-    try {
-      const int rc = (block_factor_func)(block_dim, operator_params, result);
-      GELOGI("block_factor_func return rc = %d, optype = %s.", rc, optype);
-    } catch (...) {
-      GELOGE(ge::GRAPH_FAILED,
-             "call block_factor_func segment fault. optype = %s, inputs = %s, outputs = %s, block_dim = %d.", optype,
-             inputs, outputs, block_dim);
-      return 0;
-    }
-  }
-  std::string std_str = result.GetString();
-  bool dump_res = DumpResultInfo(std_str, result_info, result_info_len);
-  if (!dump_res) {
-    REPORT_CALL_ERROR("E19999", "DumpResultInfo failed. result = %s", std_str.c_str());
-    return 0;
-  }
-  return 1;
-}
-
-extern "C" int Tik2PyInterfaceGetReplayConfig(const char *optype, const char *soc_version, char *result_info,
-                                              size_t result_info_len) {
-  if ((optype == nullptr) || (soc_version == nullptr) || (result_info == nullptr)) {
-    GELOGE(ge::GRAPH_FAILED, "optype/soc_version/result_info is null, %s, %s, %s", optype, soc_version, result_info);
-    return 0;
-  }
-  ge::AscendString op_type_str = optype;
-  ge::AscendString soc_version_str = soc_version;
-  auto replay_config_func = OpCheckFuncRegistry::GetReplayConfig(op_type_str, soc_version_str);
-  if (replay_config_func == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to GetReplayConfig. optype = %s, soc_version = %s", optype, soc_version);
-    return 0;
-  }
-  int mode = 0;
-  int max_block_dim = 0;
-  int max_shape_size = 0;
-  try {
-    const int rc = (replay_config_func)(&mode, &max_block_dim, &max_shape_size);
-    GELOGI("replay_config_func return rc = %d, optype = %s, soc_version = %s.", rc, optype, soc_version);
-  } catch (...) {
-    GELOGE(ge::GRAPH_FAILED, "call replay_config_func segment fault. optype = %s, soc_version = %s", optype,
-           soc_version);
-    return 0;
-  }
-  nlohmann::json json_obj;
-  json_obj["mode"] = mode;
-  json_obj["max_block_dim"] = max_block_dim;
-  json_obj["max_shape_size"] = max_shape_size;
-
-  const std::string std_str = json_obj.dump();
-  bool dump_res = DumpResultInfo(std_str, result_info, result_info_len);
-  if (!dump_res) {
-    GELOGE(ge::GRAPH_FAILED, "DumpResultInfo failed. result = %s", std_str.c_str());
     return 0;
   }
   return 1;
