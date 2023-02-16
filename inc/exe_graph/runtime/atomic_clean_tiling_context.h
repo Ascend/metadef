@@ -16,8 +16,8 @@
 
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATOMICCLEANTILINGCONTEXT_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_ATOMICCLEANTILINGCONTEXT_H_
-#include "tiling_context.h"
-#include "continuous_vector.h"
+#include "exe_graph/runtime/tiling_context.h"
+#include "exe_graph/runtime/continuous_vector.h"
 namespace gert {
 class AtomicCleanTilingContext : public TilingContext {
  public:
