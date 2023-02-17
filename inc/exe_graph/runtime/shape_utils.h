@@ -18,7 +18,7 @@
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_SHAPE_UTILS_H_
 #include <string>
 #include <sstream>
-#include "shape.h"
+#include "exe_graph/runtime/shape.h"
 namespace gert {
 extern const Shape g_vec_1_shape;
 /**

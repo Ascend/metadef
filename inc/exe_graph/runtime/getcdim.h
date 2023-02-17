@@ -16,7 +16,7 @@
 
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_GETCDIM_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_GETCDIM_H_
-#include "infer_shape_context.h"
+#include "exe_graph/runtime/infer_shape_context.h"
 #include "exe_graph/runtime/tiling_context.h"
 namespace gert {
   int64_t GetInputCDim(gert::TilingContext *kernel_context, const size_t index);
