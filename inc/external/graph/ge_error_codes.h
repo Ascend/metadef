@@ -32,8 +32,10 @@ namespace ge {
 #endif
 #ifdef __GNUC__
 #define ATTRIBUTED_DEPRECATED(replacement) __attribute__((deprecated("Please use " #replacement " instead.")))
+#define ATTRIBUTED_NOT_SUPPORT() __attribute__((deprecated("The method will not be supported in the future.")))
 #else
 #define ATTRIBUTED_DEPRECATED(replacement) __declspec(deprecated("Please use " #replacement " instead."))
+#define ATTRIBUTED_NOT_SUPPORT() __declspec(deprecated("The method will not be supported in the future."))
 #endif
 
 using graphStatus = uint32_t;

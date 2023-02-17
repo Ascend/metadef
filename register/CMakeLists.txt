@@ -29,6 +29,7 @@ set(SRC_LIST
     "tensor_assign.cpp"
     "infer_data_slice_registry.cc"
     "infer_axis_slice_registry.cc"
+    "kernel_register_data.cc"
     "kernel_registry_impl.cc"
     "node_converter_registry.cc"
     "op_impl_registry.cc"

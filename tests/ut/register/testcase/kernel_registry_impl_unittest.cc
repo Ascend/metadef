@@ -18,51 +18,49 @@
 namespace gert {
 namespace {
 ge::graphStatus TestFuncCreator(const ge::Node *, KernelContext *) {
-  return ge::GRAPH_SUCCESS;
+ return ge::GRAPH_SUCCESS;
 }
-ge::graphStatus TestFuncInitializer(const ge::Node *, KernelContext *) {
-  return ge::GRAPH_SUCCESS;
+KernelStatus TestFunc(KernelContext *) {
+ return 0;
 }
-KernelStatus TestFunc(KernelContext *context) {
-  return 0;
+std::vector<std::string> TestTraceFunc(const gert::KernelContext *) {
+ return {""};
 }
 }
 class KernelRegistryImplUT : public testing::Test {};
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_AllFuncRegistered) {
-  KernelRegistryImpl registry;
-  registry.RegisterKernel("Foo", {TestFunc, TestFuncCreator, TestFuncInitializer, TestFuncCreator});
-  ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
-  ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
-  ASSERT_NE(registry.FindKernelFuncs("Foo")->outputs_creator, nullptr);
-  ASSERT_NE(registry.FindKernelFuncs("Foo")->outputs_initializer, nullptr);
-  ASSERT_NE(registry.FindKernelFuncs("Foo")->outputs_creator_func, nullptr);
+ KernelRegistryImpl registry;
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc});
+ ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
+ ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
+ ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, &TestFuncCreator);
+ ASSERT_EQ(registry.FindKernelFuncs("Foo")->trace_printer, &TestTraceFunc);
 }
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_OnlyRegisterRunFunc) {
-  KernelRegistryImpl registry;
-  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr});
-  ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
-  ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
-  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator, nullptr);
-  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_initializer, nullptr);
-  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, nullptr);
+ KernelRegistryImpl registry;
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr});
+ ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
+ ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
+ ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, nullptr);
+ ASSERT_EQ(registry.FindKernelFuncs("Foo")->trace_printer, nullptr);
 }
 TEST_F(KernelRegistryImplUT, FailedToFindWhenNotRegister) {
-  KernelRegistryImpl registry;
-  ASSERT_EQ(registry.FindKernelFuncs("Foo"), nullptr);
+ KernelRegistryImpl registry;
+ ASSERT_EQ(registry.FindKernelFuncs("Foo"), nullptr);
 }
 TEST_F(KernelRegistryImplUT, GetAll_Ok) {
-  KernelRegistryImpl registry;
-  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr});
-  std::unordered_map<std::string, KernelRegistry::KernelFuncs> expect = {
-      {"Foo", {TestFunc, nullptr, nullptr}},
-      {"Bar", {TestFunc, TestFuncCreator, TestFuncInitializer}}
-  };
-  registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr});
-  registry.RegisterKernel("Bar", {TestFunc, TestFuncCreator, TestFuncInitializer, TestFuncCreator});
-  ASSERT_EQ(registry.GetAll().size(), expect.size());
-  for (const auto &key_to_funcs : registry.GetAll()) {
-    ASSERT_TRUE(expect.count(key_to_funcs.first) > 0);
-    ASSERT_EQ(key_to_funcs.second.run_func, expect[key_to_funcs.first].run_func);
-  }
+ KernelRegistryImpl registry;
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr});
+ std::unordered_map<std::string, KernelRegistry::KernelFuncs> expect = {
+     {"Foo", {TestFunc, nullptr, nullptr, nullptr, nullptr}},
+     {"Bar", {TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}}
+ };
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr, nullptr});
+ registry.RegisterKernel("Bar", {TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc});
+ ASSERT_EQ(registry.GetAll().size(), expect.size());
+ for (const auto &key_to_funcs : registry.GetAll()) {
+   ASSERT_TRUE(expect.count(key_to_funcs.first) > 0);
+   ASSERT_EQ(key_to_funcs.second.run_func, expect[key_to_funcs.first].run_func);
+ }
 }
 }  // namespace gert
