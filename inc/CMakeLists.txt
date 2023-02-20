@@ -20,6 +20,7 @@ target_include_directories(metadef_headers INTERFACE
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/common>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/exe_graph>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/external>
+    $<BUILD_INTERFACE:${METADEF_DIR}/inc/external/exe_graph>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/graph>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/graph/utils>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/register>
