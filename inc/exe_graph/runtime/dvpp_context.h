@@ -41,8 +41,7 @@ public:
       return nullptr;
     }
 
-    size_t offset = 1U;
-    return GetInputPointer<StorageShape>(index + offset);
+    return GetInputPointer<StorageShape>(index);
   }
 
   /**
@@ -54,15 +53,7 @@ public:
    * @return 输入tensor指针，index非法时返回空指针
    */
   const Tensor *GetInputTensor(size_t index) const {
-    return GetInputPointer<Tensor>(index + 1U);
-  }
-
-  /**
-   * 获取计算节点的输入数量
-   * @return 计算节点的输入数量
-   */
-  size_t GetComputeNodeInputsNum() const {
-    return GetComputeNodeInputNum();
+    return GetInputPointer<Tensor>(index);
   }
 
   /**
@@ -80,7 +71,7 @@ public:
       return nullptr;
     }
 
-    size_t offset = compute_node_info->GetInputsNum() + 1U;
+    size_t offset = compute_node_info->GetInputsNum();
     return GetInputPointer<StorageShape>(offset + index);
   }
 };
