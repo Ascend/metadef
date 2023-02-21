@@ -30,6 +30,7 @@
 #include "graph/utils/transformer_utils.h"
 #include "graph/utils/node_utils_ex.h"
 #include "common/util/mem_utils.h"
+#include "common/checker.h"
 
 namespace ge {
 graphStatus OpDescUtilsEx::CallInferFuncV2Inner(const OpDescPtr &op_desc, Operator &op) {

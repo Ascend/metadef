@@ -17,8 +17,12 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_TILING_PARSE_CONTEXT_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_TILING_PARSE_CONTEXT_H_
 #include "extended_kernel_context.h"
-#include "external/graph/types.h"
-#include "common/util/platform_infos_def.h"
+#include "graph/types.h"
+
+namespace fe {
+class PlatFormInfos;
+}  // namespace fe
+
 namespace gert {
 class TilingParseContext : public ExtendedKernelContext {
  public:

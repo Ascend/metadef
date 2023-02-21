@@ -29,6 +29,8 @@
 #include "graph/debug/ge_attr_define.h"
 #include "register/op_tiling/op_tiling_constants.h"
 #include "common/util/trace_manager/trace_manager.h"
+#include "common/checker.h"
+
 namespace {
 using std::make_pair;
 using std::shared_ptr;

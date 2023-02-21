@@ -16,7 +16,9 @@
 
 #ifndef METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
 #define METADEF_INC_EXE_GRAPH_RUNTIME_ALLOCATOR_H_
+#include <string>
 #include "exe_graph/runtime/tensor.h"
+
 namespace gert {
 enum class AllocatorUsage {
   kAllocNodeOutput,

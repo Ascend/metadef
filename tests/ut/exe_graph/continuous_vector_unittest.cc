@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/runtime/continuous_vector.h"
+#include "securec.h"
 #include <gtest/gtest.h>
 namespace gert {
 class ContinuousVectorUT : public testing::Test {};
@@ -100,7 +101,7 @@ TEST_F(ContinuousVectorUT, GetOverHeadLengthOk) {
 }
 
 TEST_F(ContinuousVectorUT, AddOk) {
-  vector<vector<int64_t>> vector_vector_list{{0, 2}, {1, 1}, {2, 4, 3}, {}, {1}};
+  std::vector<std::vector<int64_t>> vector_vector_list{{0, 2}, {1, 1}, {2, 4, 3}, {}, {1}};
 
   size_t inner_vector_num = vector_vector_list.size();
   size_t total_length = ContinuousVectorVector::GetOverHeadLength(inner_vector_num);
@@ -109,7 +110,7 @@ TEST_F(ContinuousVectorUT, AddOk) {
     total_length += inner_vector_length;
   }
 
-  vector<uint8_t> buf(total_length);
+  std::vector<uint8_t> buf(total_length);
   auto cvv = new (buf.data()) ContinuousVectorVector();
   ASSERT_NE(cvv, nullptr);
   cvv->Init(inner_vector_num);
@@ -140,7 +141,7 @@ TEST_F(ContinuousVectorUT, AddOk) {
 }
 
 TEST_F(ContinuousVectorUT, AddFailed_WithoutInit) {
-  vector<uint8_t> buf(100);
+  std::vector<uint8_t> buf(100);
   auto cvv = new (buf.data()) ContinuousVectorVector();
   ASSERT_NE(cvv, nullptr);
   auto cv = cvv->Add<int64_t>(2);
@@ -148,7 +149,7 @@ TEST_F(ContinuousVectorUT, AddFailed_WithoutInit) {
 }
 
 TEST_F(ContinuousVectorUT, AddFailed_OutBounds) {
-  vector<uint8_t> buf(500);
+  std::vector<uint8_t> buf(500);
   auto cvv = new (buf.data()) ContinuousVectorVector();
   ASSERT_NE(cvv, nullptr);
   cvv->Init(2);

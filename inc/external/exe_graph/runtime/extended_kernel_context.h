@@ -19,7 +19,6 @@
 #include <type_traits>
 #include "kernel_context.h"
 #include "context_extend.h"
-#include "graph/def_types.h"
 
 namespace gert {
 class ExtendedKernelContext : protected KernelContext {
@@ -148,7 +147,7 @@ class ExtendedKernelContext : protected KernelContext {
    * @return 计算节点的信息
    */
   const ComputeNodeInfo *GetComputeNodeInfo() const {
-    return ge::PtrToPtr<const void, const ComputeNodeInfo>(GetComputeNodeExtend());
+    return static_cast<const ComputeNodeInfo *>(GetComputeNodeExtend());
   }
   /**
    * 获取本kernel的name
@@ -177,7 +176,7 @@ class ExtendedKernelContext : protected KernelContext {
    * @return 本kernel的扩展信息
    */
   const KernelExtendInfo *GetExtendInfo() const {
-    return ge::PtrToPtr<const void, const KernelExtendInfo>(GetKernelExtend());
+    return static_cast<const KernelExtendInfo *>(GetKernelExtend());
   }
 
  protected:

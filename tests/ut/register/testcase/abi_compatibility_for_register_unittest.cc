@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #define protected public
 #define private public
+#include "graph/any_value.h"
 #include "register/op_impl_registry.h"
 #include "register/kernel_registry_impl.h"
 

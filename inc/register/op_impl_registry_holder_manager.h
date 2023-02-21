@@ -18,7 +18,9 @@
 #define INC_OP_IMPL_REGISTRY_HOLDER_MANAGER_H_
 
 #include <string>
+#include <unordered_map>
 #include <map>
+#include <mutex>
 #include "graph/op_so_bin.h"
 #include "external/register/op_impl_kernel_registry.h"
 #include "register/op_impl_registry_api.h"
@@ -37,7 +39,7 @@ class OpImplRegistryHolder {
   void SetHandle(void *handle) { handle_ = handle; }
 
   std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle,
-                                                            const string &so_path,
+                                                            const std::string &so_path,
                                                             size_t &impl_num) const;
 
   void AddTypesToImpl(gert::OpImplKernelRegistry::OpType op_type, gert::OpImplKernelRegistry::OpImplFunctions funcs);

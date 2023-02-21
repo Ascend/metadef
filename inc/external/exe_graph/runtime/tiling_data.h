@@ -18,11 +18,11 @@
 #include <cstdint>
 #include <cstddef>
 #include <type_traits>
+#include <securec.h>
 #include "exe_graph/runtime/continuous_vector.h"
 #include "exe_graph/runtime/runtime_attrs.h"
-#include "framework/common/debug/ge_log.h"
 #include "graph/ge_error_codes.h"
-#include "graph/utils/math_util.h"
+#include "utils/extern_math_util.h"
 
 namespace gert {
 enum class AttrDataType {
@@ -105,19 +105,16 @@ class TilingData {
   ge::graphStatus Append(const T *data, size_t append_num) {
     size_t append_size;
     if (ge::MulOverflow(sizeof(T), append_num, append_size)) {
-      GELOGE(ge::GRAPH_FAILED, "Mul over flow, append num is %zu, bit width is %zu", append_num, sizeof(T));
-      return ge::GRAPH_FAILED;
+      return ge::GRAPH_MUL_OVERFLOW;
     }
     size_t after_size;
     if (ge::AddOverflow(data_size_, append_size, after_size)) {
-      GELOGE(ge::GRAPH_FAILED, "Add over flow, append size is %zu, data size is %zu", append_size, data_size_);
-      return ge::GRAPH_FAILED;
+      return ge::GRAPH_ADD_OVERFLOW;
     }
     const auto ret =
         memcpy_s(reinterpret_cast<uint8_t *>(data_) + data_size_, capacity_ - data_size_, data, append_size);
     if (ret != EOK) {
-      GELOGE(ge::GRAPH_FAILED, "Call memcpy_s failed.");
-      return ge::GRAPH_FAILED;
+      return ge::GRAPH_MEMCPY_FAILED;
     }
     data_size_ = after_size;
     return ge::GRAPH_SUCCESS;

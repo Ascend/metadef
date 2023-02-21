@@ -24,7 +24,10 @@
 #include "exe_graph/runtime/infer_shape_range_context.h"
 #include "exe_graph/runtime/tiling_context.h"
 #include "exe_graph/runtime/infer_datatype_context.h"
-#include "graph/any_value.h"
+
+namespace ge {
+class AnyValue;
+}  // namespace ge
 
 namespace gert {
 struct OpImplKernelRegistry {

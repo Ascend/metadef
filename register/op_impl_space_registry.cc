@@ -19,7 +19,9 @@
 #include "register/op_impl_registry_holder_manager.h"
 #include "graph/debug/ge_log.h"
 #include "graph/utils/file_utils.h"
+#include "graph/any_value.h"
 #include "register/op_impl_registry.h"
+#include "common/checker.h"
 
 namespace gert {
 ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::OpSoBinPtr> &bins,

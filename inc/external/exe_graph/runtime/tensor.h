@@ -20,7 +20,6 @@
 #include "storage_shape.h"
 #include "storage_format.h"
 #include "tensor_data.h"
-#include "graph/utils/tensor_utils.h"
 
 namespace gert {
 using TensorAddress = void *;            ///< Tensor地址

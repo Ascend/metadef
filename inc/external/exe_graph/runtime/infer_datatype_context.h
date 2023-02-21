@@ -19,9 +19,9 @@
 #include <type_traits>
 #include "tensor.h"
 #include "runtime_attrs.h"
-#include "common/checker.h"
 #include "extended_kernel_context.h"
-#include "external/graph/types.h"
+#include "graph/types.h"
+
 namespace gert {
 /**
  * InferDataType kernel的context
@@ -88,7 +88,9 @@ class InferDataTypeContext : public ExtendedKernelContext {
    */
   ge::graphStatus SetOutputDataType(const size_t index, const ge::DataType datatype) {
     const auto output_dtype = GetOutputPointer<ge::DataType>(index);
-    GE_ASSERT_NOTNULL(output_dtype);
+    if (output_dtype == nullptr) {
+      return ge::DT_UNDEFINED;
+    }
     *output_dtype = datatype;
     return ge::GRAPH_SUCCESS;
   }

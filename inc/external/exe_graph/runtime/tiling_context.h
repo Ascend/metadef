@@ -20,7 +20,12 @@
 #include "continuous_vector.h"
 #include "extended_kernel_context.h"
 #include "tiling_data.h"
-#include "common/util/platform_infos_def.h"
+#include "ge/ge_api_error_codes.h"
+
+namespace fe {
+class PlatFormInfos;
+}  // namespace fe
+
 namespace gert {
 /**
  * tiling kernel的context

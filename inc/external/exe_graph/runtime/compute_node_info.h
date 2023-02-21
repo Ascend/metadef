@@ -19,7 +19,6 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstddef>
-#include "graph/def_types.h"
 #include "graph/types.h"
 #include "storage_format.h"
 #include "runtime_attrs.h"
@@ -195,7 +194,7 @@ class ComputeNodeInfo {
     if (ir_index >= ir_inputs_num_) {
       return nullptr;
     }
-    const auto inputs = ge::PtrToPtr<const uint64_t, const AnchorInstanceInfo>(&place_holder);
+    const auto inputs = reinterpret_cast<const AnchorInstanceInfo *>(&place_holder);
     return inputs + ir_index;
   }
   /**
@@ -207,8 +206,8 @@ class ComputeNodeInfo {
     if (index >= inputs_num_) {
       return nullptr;
     }
-    const auto inputs = ge::PtrToPtr<const uint8_t, const CompileTimeTensorDesc>(
-        ge::PtrToPtr<const uint64_t, const uint8_t>(&place_holder) + sizeof(AnchorInstanceInfo) * ir_inputs_num_);
+    const auto inputs = reinterpret_cast<const CompileTimeTensorDesc *>(
+        reinterpret_cast<const uint8_t *>(&place_holder) + sizeof(AnchorInstanceInfo) * ir_inputs_num_);
     return inputs + index;
   }
   /**
@@ -220,8 +219,8 @@ class ComputeNodeInfo {
     if (index >= outputs_num_) {
       return nullptr;
     }
-    const auto outputs = ge::PtrToPtr<const uint8_t, const CompileTimeTensorDesc>(
-        ge::PtrToPtr<const uint64_t, const uint8_t>(&place_holder) + sizeof(AnchorInstanceInfo) * ir_inputs_num_ +
+    const auto outputs = reinterpret_cast<const CompileTimeTensorDesc *>(
+        reinterpret_cast<const uint8_t *>(&place_holder) + sizeof(AnchorInstanceInfo) * ir_inputs_num_ +
         sizeof(CompileTimeTensorDesc) * inputs_num_);
     return outputs + index;
   }
@@ -230,9 +229,9 @@ class ComputeNodeInfo {
    * @return 所有IR原型定义过的属性值，属性值按照IR原型定义的顺序依次保存
    */
   const RuntimeAttrs *GetAttrs() const {
-    return ge::PtrToPtr<const uint8_t, const RuntimeAttrs>(
-        ge::PtrToPtr<const uint64_t, const uint8_t>(&place_holder) + sizeof(AnchorInstanceInfo) * ir_inputs_num_ +
-        sizeof(CompileTimeTensorDesc) * (inputs_num_ + outputs_num_));
+    return reinterpret_cast<const RuntimeAttrs *>(reinterpret_cast<const uint8_t *>(&place_holder) +
+                                                  sizeof(AnchorInstanceInfo) * ir_inputs_num_ +
+                                                  sizeof(CompileTimeTensorDesc) * (inputs_num_ + outputs_num_));
   }
   /**
    * 设置计算节点的node type

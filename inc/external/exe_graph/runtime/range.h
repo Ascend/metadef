@@ -18,7 +18,7 @@
 
 #include <array>
 #include <iostream>
-#include "graph/utils/math_util.h"
+#include "utils/extern_math_util.h"
 #include "shape.h"
 
 namespace gert {

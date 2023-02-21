@@ -20,9 +20,11 @@
 #include <cstdint>
 #include <memory>
 #include <type_traits>
-#include "graph/def_types.h"
+#include <securec.h>
 #include "graph/ge_error_codes.h"
-#include "graph/utils/math_util.h"
+#include "utils/extern_math_util.h"
+#include "ge/ge_api_error_codes.h"
+
 namespace gert {
 class ContinuousVector {
  public:
@@ -45,7 +47,7 @@ class ContinuousVector {
     if (holder == nullptr) {
       return nullptr;
     }
-    ge::PtrToPtr<uint8_t, ContinuousVector>(holder.get())->Init(capacity);
+    reinterpret_cast<ContinuousVector *>(holder.get())->Init(capacity);
     return holder;
   }
   /**
@@ -82,8 +84,7 @@ class ContinuousVector {
    */
   ge::graphStatus SetSize(const size_t size) {
     if (size > capacity_) {
-      GELOGE(ge::PARAM_INVALID, "Failed to set size for ContinuousVector, size(%zu) > cap(%zu)", size, capacity_);
-      return ge::GRAPH_FAILED;
+      return ge::GRAPH_PARAM_OUT_OF_RANGE;
     }
     size_ = size;
     return ge::GRAPH_SUCCESS;
@@ -129,14 +130,14 @@ class TypedContinuousVector : private ContinuousVector {
    * @return 首个元素的指针地址
    */
   T *MutableData() {
-    return ge::PtrToPtr<void, T>(ContinuousVector::MutableData());
+    return static_cast<T *>(ContinuousVector::MutableData());
   }
   /**
    * 获取首个元素的指针地址，[GetData(), GetData() + GetSize()) 中的数据即为当前容器中保存的数据
    * @return 首个元素的指针地址
    */
   const T *GetData() const {
-    return ge::PtrToPtr<const void, const T>(ContinuousVector::GetData());
+    return static_cast<const T *>(ContinuousVector::GetData());
   }
 };
 
@@ -162,7 +163,7 @@ class ContinuousVectorVector {
       return nullptr;
     }
     const auto inner_vector =
-        ge::PtrToPtr<uint8_t, ContinuousVector>(ge::PtrToPtr<ContinuousVectorVector, uint8_t>(this) + GetOffset(size_));
+        reinterpret_cast<ContinuousVector *>(reinterpret_cast<uint8_t *>(this) + GetOffset(size_));
     inner_vector->Init(inner_vector_capacity);
     (void) inner_vector->SetSize(inner_vector_capacity);
     size_t inner_vector_length = 0U;
@@ -180,8 +181,7 @@ class ContinuousVectorVector {
   }
 
   const ContinuousVector *Get(const size_t index) const {
-    return ge::PtrToPtr<const uint8_t, const ContinuousVector>(
-        ge::PtrToPtr<const ContinuousVectorVector, const uint8_t>(this) + GetOffset(index));
+    return reinterpret_cast<const ContinuousVector *>(reinterpret_cast<const uint8_t *>(this) + GetOffset(index));
   }
 
   size_t GetSize() const {

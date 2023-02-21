@@ -16,6 +16,7 @@
 #include "exe_graph/runtime/tiling_data.h"
 #include "common/util/tiling_utils.h"
 #include "graph/def_types.h"
+#include "framework/common/util.h"
 
 namespace gert {
 namespace {
