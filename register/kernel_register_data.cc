@@ -17,10 +17,14 @@
 
 namespace gert {
 namespace {
-ge::graphStatus NullCreator(const ge::Node *, KernelContext *) {
+ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context) {
+  (void) node;
+  (void) context;
   return ge::GRAPH_SUCCESS;
 }
-ge::graphStatus NullDestoryer(const ge::Node *, KernelContext *) {
+ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context) {
+  (void) node;
+  (void) context;
   return ge::GRAPH_SUCCESS;
 }
 }  // namespace
