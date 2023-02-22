@@ -350,7 +350,7 @@ void ErrorManager::AssembleInnerErrorMessage(const std::vector<ErrorItem> &error
       break;
     }
   }
-  err_stream << current_code_print << ": Inner Error, Please contact support engineer!" << std::endl;
+  err_stream << current_code_print << ": Inner Error!" << std::endl;
   bool print_traceback_once = false;
   for (auto &item : error_messages) { // Display the first non 8888 error code
     if (IsParamCheckErrorId(item.error_id) && IsErrorId) {
