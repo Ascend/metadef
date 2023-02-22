@@ -18,6 +18,7 @@
 #include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph_builder_utils.h"
+#include "graph/op_desc.h"
 #include "proto/dflow.pb.h"
 #include "gtest/gtest.h"
 
@@ -39,7 +40,7 @@ class DataFlowUtilsUTest : public testing::Test {
   static void RegisterOpCreator(const std::string &op_type, const std::vector<std::string> &input_names,
                                 const std::vector<std::string> &output_names) {
     auto op_creator = [op_type, input_names, output_names](const std::string &name) -> Operator {
-      auto op_desc = make_shared<OpDesc>(name, op_type);
+      auto op_desc = std::make_shared<OpDesc>(name, op_type);
       for (const auto &tensor_name : input_names) {
         op_desc->AddInputDesc(tensor_name, {});
       }

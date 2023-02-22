@@ -29,6 +29,8 @@
 #include "graph/debug/ge_attr_define.h"
 #include "register/op_tiling/op_tiling_constants.h"
 #include "common/util/trace_manager/trace_manager.h"
+#include "common/checker.h"
+
 namespace {
 using std::make_pair;
 using std::shared_ptr;
@@ -1413,8 +1415,27 @@ graphStatus OpDescImpl::TryInferDataTypeFromAttr(const string &datatype_symbol, 
     GELOGE(GRAPH_PARAM_INVALID, "Attr %s is not exsit.", attr_name.c_str());
     return GRAPH_PARAM_INVALID;
   }
-  const auto d = *(this->GetAttrMap().GetByName<int64_t>(attr_name));
-  dst_type = static_cast<DataType>(d); // todo 保护
+
+  // 若从属性推导，当前只支持IR上type类属性的类型为int或者Type
+  // .ATTR(dst_type, Type, DT_BOOL) 或者
+  // .ATTR(dst_type, int, DT_BOOL)
+  auto any_value = this->GetAttrMap().GetAnyValue(attr_name);
+  GE_ASSERT_NOTNULL(any_value);
+  auto value_type = any_value->GetValueType();
+  if (value_type == AnyValue::VT_INT) {
+    auto value = this->GetAttrMap().GetByName<int64_t>(attr_name);
+    GE_ASSERT_NOTNULL(value);
+    dst_type = static_cast<DataType>(*value);
+  } else if (value_type == AnyValue::VT_DATA_TYPE) {
+    auto value = this->GetAttrMap().GetByName<ge::DataType>(attr_name);
+    GE_ASSERT_NOTNULL(value);
+    dst_type = *value;
+  } else {
+    GELOGE(GRAPH_INVALID_IR_DEF, "Attr %s type %d is not support. Current only support Int and DataType on type attr.",
+           attr_name.c_str(), value_type);
+    return GRAPH_INVALID_IR_DEF;
+  }
+
   // check dst_data_type is in range if need
   const auto &type_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetSymbolValidator(datatype_symbol);
   if (!type_symbol.IsDataTypeInRange(dst_type)) {

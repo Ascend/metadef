@@ -367,7 +367,7 @@ TEST_F(UTInferDataType, infer_from_dynamic_input_without_list_tensor_type_consis
 }
 
 //================================================================================================
-// infer from attr
+// infer from attr, dst_type属性的类型为Int
 REG_OP(FixIOOpWithAttr)
     .INPUT(fix_input1, "T")
     .REQUIRED_ATTR(dst_type, Int)
@@ -376,7 +376,7 @@ REG_OP(FixIOOpWithAttr)
     .DATATYPE(T, TensorType({DT_INT32, DT_INT64}))
     .OP_END_FACTORY_REG(FixIOOpWithAttr);
 
-TEST_F(UTInferDataType, infer_from_attr_success) {
+TEST_F(UTInferDataType, infer_from_required_attr_success) {
   auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttr");
   auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
   ASSERT_NE(op_desc, nullptr);
@@ -421,6 +421,72 @@ TEST_F(UTInferDataType, infer_from_attr_check_input_out_of_range) {
   ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
   ASSERT_EQ(op_desc->impl_->VerifyInputDataType(), GRAPH_PARAM_INVALID);
   ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+}
+
+// infer from attr, dst_type属性的类型为Type
+REG_OP(FixIOOpWithAttrType)
+    .INPUT(fix_input1, "T")
+    .ATTR(dst_type, Type, DT_BOOL)
+    .OUTPUT(fix_output1, "dst_type")
+    .DATATYPE(dst_type, TensorType({DT_BOOL, DT_INT64}))
+    .DATATYPE(T, TensorType({DT_INT32, DT_INT64}))
+    .OP_END_FACTORY_REG(FixIOOpWithAttrType);
+
+// 从属性值推导
+TEST_F(UTInferDataType, infer_from_attr_type_success) {
+  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttrType");
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
+  AttrUtils::SetDataType(op_desc, "dst_type", DT_INT64);
+  ASSERT_NE(input_fix_1, nullptr);
+  input_fix_1->SetDataType(DT_INT32);
+
+  auto output_fix = op_desc->GetOutputDesc("fix_output1");
+  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
+  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
+  output_fix = op_desc->GetOutputDesc("fix_output1");
+  ASSERT_EQ(output_fix.GetDataType(), DT_INT64);
+}
+
+// 从属性默认值推导
+TEST_F(UTInferDataType, infer_from_attr_type_default_value_success) {
+  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttrType");
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
+  ASSERT_NE(input_fix_1, nullptr);
+  input_fix_1->SetDataType(DT_INT32);
+
+  auto output_fix = op_desc->GetOutputDesc("fix_output1");
+  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
+  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
+  output_fix = op_desc->GetOutputDesc("fix_output1");
+  ASSERT_EQ(output_fix.GetDataType(), DT_BOOL);
+}
+
+// infer from attr, dst_type属性的类型为Tensor，错误的IR应该报错
+REG_OP(FixIOOpWithAttrWrongIr)
+    .INPUT(fix_input1, "T")
+    .ATTR(dst_type, Bool, false)
+    .OUTPUT(fix_output1, "dst_type")
+    .DATATYPE(dst_type, TensorType({DT_BOOL, DT_INT64}))
+    .DATATYPE(T, TensorType({DT_INT32, DT_INT64}))
+    .OP_END_FACTORY_REG(FixIOOpWithAttrWrongIr);
+
+TEST_F(UTInferDataType, infer_from_attr_type_failed_wrong_ir) {
+  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttrWrongIr");
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
+  ASSERT_NE(input_fix_1, nullptr);
+  input_fix_1->SetDataType(DT_INT32);
+
+  auto output_fix = op_desc->GetOutputDesc("fix_output1");
+  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
+  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_INVALID_IR_DEF);
 }
 //================================================================================================
 // infer from output

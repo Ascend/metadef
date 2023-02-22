@@ -16,9 +16,9 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_RUNTIME_DVPP_CONTEXT_H_
 #define METADEF_CXX_INC_EXE_GRAPH_RUNTIME_DVPP_CONTEXT_H_
 #include <type_traits>
-#include "storage_shape.h"
-#include "tensor.h"
-#include "extended_kernel_context.h"
+#include "exe_graph/runtime/storage_shape.h"
+#include "exe_graph/runtime/tensor.h"
+#include "exe_graph/runtime/extended_kernel_context.h"
 
 namespace gert {
 /**

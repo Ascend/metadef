@@ -16,6 +16,7 @@
 #include "exe_graph/lowering/bg_kernel_context_extend.h"
 #include <gtest/gtest.h>
 #include <memory>
+#include <cmath>
 #include "graph/compute_graph.h"
 #include "graph/utils/node_utils.h"
 #include "exe_graph/runtime/context_extend.h"

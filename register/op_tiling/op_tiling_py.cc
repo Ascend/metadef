@@ -32,6 +32,7 @@
 #include "exe_graph/runtime/kernel_run_context_builder.h"
 #include "exe_graph/runtime/tiling_context.h"
 #include "common/checker.h"
+#include "graph/utils/math_util.h"
 
 namespace optiling {
 using ParseAttrFunc = std::function<void(ge::OpDescPtr &, const nlohmann::json &, const std::string &)>;

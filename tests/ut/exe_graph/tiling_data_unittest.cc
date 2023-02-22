@@ -292,7 +292,7 @@ TEST_F(TilingDataUT, AppendListOverCapacity) {
 
   tiling_data->SetDataSize(5);
   std::vector<uint64_t> append_data = {1, 2};
-  EXPECT_EQ(tiling_data->Append<uint64_t>(append_data.data(), append_data.size()), ge::GRAPH_FAILED);
+  EXPECT_NE(tiling_data->Append<uint64_t>(append_data.data(), append_data.size()), ge::GRAPH_SUCCESS);
 }
 
 TEST_F(TilingDataUT, AppendListOk) {

@@ -20,6 +20,7 @@
 #include "graph/utils/file_utils.h"
 #include "mmpa/mmpa_api.h"
 #include "inc/graph/operator_factory_impl.h"
+#include "common/checker.h"
 
 namespace gert {
 namespace {

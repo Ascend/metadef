@@ -17,6 +17,7 @@
 #ifndef METADEF_CXX_INC_COMMON_CHECKER_H_
 #define METADEF_CXX_INC_COMMON_CHECKER_H_
 #include <securec.h>
+#include <sstream>
 #include "graph/ge_error_codes.h"
 #include "framework/common/debug/ge_log.h"
 #include "hyper_status.h"

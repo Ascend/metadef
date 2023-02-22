@@ -18,6 +18,7 @@
 #include "register/op_impl_registry_api.h"
 #include "framework/common/debug/ge_log.h"
 #include "register/shape_inference.h"
+#include "graph/any_value.h"
 #include "op_impl_register_v2_impl.h"
 
 namespace gert {
@@ -128,7 +129,7 @@ OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, float priv
 OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, bool private_attr_val) {
   return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<bool>(private_attr_val));
 }
-OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const vector<float> &private_attr_val) {
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const std::vector<float> &private_attr_val) {
   return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<std::vector<float>>(private_attr_val));
 }
 OpImplRegistry &OpImplRegistry::GetInstance() {
@@ -267,7 +268,7 @@ OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, 
   return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<int64_t>(private_attr_val));
 }
 OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr,
-                                                const vector<int64_t> &private_attr_val) {
+                                                const std::vector<int64_t> &private_attr_val) {
   return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::vector<int64_t>>(private_attr_val));
 }
 OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, const ge::char_t *private_attr_val) {
@@ -279,7 +280,8 @@ OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, 
 OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, bool private_attr_val) {
   return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<bool>(private_attr_val));
 }
-OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, const vector<float> &private_attr_val) {
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr,
+                                                const std::vector<float> &private_attr_val) {
   return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::vector<float>>(private_attr_val));
 }
 }  // namespace gert

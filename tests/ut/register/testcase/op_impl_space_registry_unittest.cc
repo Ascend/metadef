@@ -16,6 +16,7 @@
 #include "register/op_impl_registry.h"
 #include "register/op_impl_space_registry.h"
 #include "register/op_impl_registry_holder_manager.h"
+#include "graph/any_value.h"
 //#include "graph/utils/file_utils.h"
 #include "common/util/mem_utils.h"
 #include "mmpa/mmpa_api.h"

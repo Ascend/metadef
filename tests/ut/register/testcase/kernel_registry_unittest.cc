@@ -40,7 +40,7 @@ KernelStatus TestFunc2(gert::KernelContext *) {
 }
 class FakeRegistry : public gert::KernelRegistry {
 public:
- const KernelFuncs *FindKernelFuncs(const string &kernel_type) const override {
+ const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const override {
    static KernelFuncs funcs{nullptr, nullptr, nullptr};
    return &funcs;
  }

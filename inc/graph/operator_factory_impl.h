@@ -25,6 +25,7 @@
 #include "register/infer_data_slice_registry.h"
 #include "register/infer_axis_slice_registry.h"
 #include "register/op_impl_kernel_registry.h"
+#include "graph/op_desc.h"
 
 namespace ge {
 using InferShapeV2Func = uint32_t (*)(const ge::Operator &op, const OpDescPtr &);

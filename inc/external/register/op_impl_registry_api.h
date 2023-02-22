@@ -29,8 +29,14 @@ typedef struct {
 extern "C" {
 #endif
 
-__attribute__((visibility("default"))) size_t GetRegisteredOpNum(void);
-__attribute__((visibility("default"))) int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num);
+#ifdef __GNUC__
+#define METADEF_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define METADEF_FUNC_VISIBILITY
+#endif
+
+METADEF_FUNC_VISIBILITY size_t GetRegisteredOpNum(void);
+METADEF_FUNC_VISIBILITY int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num);
 
 #ifdef __cplusplus
 }

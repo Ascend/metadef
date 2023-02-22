@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "graph/ge_error_codes.h"
+#include "graph/types.h"
 #include "shape.h"
 
 namespace gert {

@@ -17,7 +17,6 @@
 #ifndef METADEF_CXX_REGISTER_KERNEL_REGISTER_DATA_H_
 #define METADEF_CXX_REGISTER_KERNEL_REGISTER_DATA_H_
 #include <string>
-#include <utility>
 #include "register/kernel_registry.h"
 namespace gert {
 class KernelRegisterData {
@@ -28,7 +27,7 @@ class KernelRegisterData {
     return funcs_;
   }
 
-  std::string &GetKernelType() {
+  const std::string GetKernelType() {
     return kernel_type_;
   }
 

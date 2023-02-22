@@ -65,6 +65,5 @@ class KernelExtendInfo {
   uint8_t reserved_[56]; // Reserved field, 32+8, do not directly use when only 8-byte left
 };
 static_assert(std::is_standard_layout<KernelExtendInfo>::value, "The class KernelExtendInfo must be a POD");
-
 }  // namespace gert
 #endif  // METADEF_CXX_INC_EXE_GRAPH_RUNTIME_CONTEXT_EXTEND_H_

@@ -23,7 +23,7 @@
 #include <cstring>
 #include <type_traits>
 #include <limits>
-#include "graph/utils/math_util.h"
+#include "utils/extern_math_util.h"
 
 namespace gert {
 struct Shape {

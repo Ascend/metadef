@@ -18,10 +18,15 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <vector>
 #include "graph/ge_error_codes.h"
+#include "graph/types.h"
 #include "exe_graph/runtime/base_type.h"
 #include "exe_graph/runtime/kernel_context.h"
-#include "graph/node.h"
+
+namespace ge {
+class Node;
+}  // namespace ge
 
 namespace gert {
 class KernelRegistry {
