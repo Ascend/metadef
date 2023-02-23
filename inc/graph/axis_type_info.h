@@ -18,6 +18,8 @@
 #define INC_GRAPH_AXIS_TYPE_INFO_H_
 
 #include <vector>
+#include <map>
+#include <string>
 
 #include "external/graph/ge_error_codes.h"
 
@@ -65,6 +67,8 @@ public:
   graphStatus GetOutputValueCutInfo(const size_t index, CutInfo &cut_info) const;
   const std::vector<CutInfo> &GetRelateInputValues() const { return relate_input_values_; }
   const std::vector<CutInfo> &GetRelateOutputValues() const { return relate_output_values_; }
+  void SetAdditionInfo(const std::map<std::string, std::string> &addition_info) { addition_info_ = addition_info; }
+  const std::map<std::string, std::string> &GetAdditionInfo() const { return addition_info_; }
 
 private:
   static graphStatus DoGetCutInfo(const std::vector<CutInfo> &cut_infos, const size_t index, CutInfo &cut_info);
@@ -77,6 +81,7 @@ private:
   std::vector<CutInfo> relate_output_values_;
   std::vector<CutInfo> ori_relate_inputs_; // backup relate_inputs_
   std::vector<CutInfo> ori_relate_outputs_; // backup relate_outputs_
+  std::map<std::string, std::string> addition_info_;
 };
 }
 
