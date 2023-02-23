@@ -67,6 +67,8 @@ class PluginManager {
 
   static Status GetCustomOpPath(const std::string &fmk_type, std::string &customop_path);
 
+  static Status GetCustomCaffeProtoPath(std::string &customcaffe_path);
+
   static Status GetOpTilingPath(std::string &op_tiling_path);
 
   static Status GetConstantFoldingOpsPath(const std::string &path_base, std::string &constant_folding_ops_path);
