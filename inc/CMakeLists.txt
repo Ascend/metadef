@@ -40,6 +40,7 @@ target_include_directories(metadef_headers INTERFACE
     $<INSTALL_INTERFACE:include/metadef/common>
     $<INSTALL_INTERFACE:include/metadef/exe_graph>
     $<INSTALL_INTERFACE:include/metadef/external>
+    $<INSTALL_INTERFACE:include/metadef/external/exe_graph>
     $<INSTALL_INTERFACE:include/metadef/graph>
     $<INSTALL_INTERFACE:include/metadef/graph/utils>
     $<INSTALL_INTERFACE:include/metadef/register>
