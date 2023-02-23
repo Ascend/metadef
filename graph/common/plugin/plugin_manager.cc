@@ -116,6 +116,7 @@ Status PluginManager::GetOppPluginVendors(const std::string &vendors_config, std
   GE_ASSERT_TRUE(v_parts.size() == kVendorConfigPartsCount, "Format of file content is invalid!");
   SplitPath(v_parts[1], vendors, ',');
   GE_ASSERT_TRUE(!vendors.empty(), "Format of file content is invalid!");
+  (void) for_each(vendors.begin(), vendors.end(), &StringUtils::Trim);
   return SUCCESS;
 }
 
