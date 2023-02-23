@@ -33,6 +33,7 @@ const int64_t TBE_OUTPUT_BRANCH_DEFAULT = 0L;
 const int64_t TBE_OUTPUT_BRANCH_SINGLE = 1L;
 const int64_t TBE_OUTPUT_BRANCH_MULTI = 2L;
 const int64_t TBE_PATTERN_GROUPID_INVALID = -1L;
+const int32_t TBE_OUTPUT_MAX_NUM_LIMIT = 10;
 
 const std::map<ShapeTypeRule, const std::string> kShapeTypeRuleToStr {
         {IGNORE_SHAPE_TYPE, "IGNORE_SHAPE_TYPE"},
@@ -121,6 +122,7 @@ BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name
   op->shape_type_rules = {shape_type_rule};
   op->match_status = false;
   op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
+  op->output_max_limit = TBE_OUTPUT_MAX_NUM_LIMIT;
   op->ignore_input_num = false;
   op->ignore_output_num = false;
   op->not_pattern = not_pattern;
@@ -164,6 +166,7 @@ BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &
   op->shape_type_rules = shape_type_rules;
   op->match_status = false;
   op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
+  op->output_max_limit = TBE_OUTPUT_MAX_NUM_LIMIT;
   op->ignore_input_num = false;
   op->ignore_output_num = false;
   op->not_pattern = not_pattern;
@@ -187,8 +190,14 @@ BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &
  * @param [in] relation:   output desc relation (1: serial, 2:parallel)
  * @return BufferFusionPattern: pattern object
  */
+#ifndef ONLY_COMPILE_OPEN_SRC
+BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, const std::vector<string> &output_ids,
+                                                     int64_t relation, bool ignore_input_num, bool ignore_output_num,
+                                                     int32_t output_max_limit) {
+#else
 BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, const std::vector<string> &output_ids,
                                                      int64_t relation, bool ignore_input_num, bool ignore_output_num) {
+#endif
   if (desc_name.empty()) {
     GELOGW("[SetOutputs][Check] Desc_name cannot be empty.");
     error_count_++;
@@ -201,7 +210,9 @@ BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, co
     error_count_++;
     return *this;
   }
-
+#ifndef ONLY_COMPILE_OPEN_SRC
+  op_desc->output_max_limit = output_max_limit;
+#endif
   op_desc->ignore_input_num = ignore_input_num;
   op_desc->ignore_output_num = ignore_output_num;
   if (op_desc->out_branch_type == TBE_OUTPUT_BRANCH_DEFAULT) {

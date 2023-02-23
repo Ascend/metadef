@@ -32,6 +32,7 @@ extern const int64_t TBE_OUTPUT_BRANCH_DEFAULT;
 extern const int64_t TBE_OUTPUT_BRANCH_SINGLE;
 extern const int64_t TBE_OUTPUT_BRANCH_MULTI;
 extern const int64_t TBE_PATTERN_GROUPID_INVALID;
+extern const int32_t TBE_OUTPUT_MAX_NUM_LIMIT;
 
 enum SkipStatus { DISABLED = 0, AVAILABLE = 1, SKIPPED = 2 };
 
@@ -55,6 +56,7 @@ struct BufferFusionOpDesc {
   std::vector<ShapeTypeRule> shape_type_rules;
   bool ignore_input_num;
   bool ignore_output_num;
+  int32_t output_max_limit;
   // used for two connected op, first opdesc has optional multiple nodes and
   // ignore_output_num is true, second opdesc is same pattern type and
   // out_branch_type is TBE_OUTPUT_BRANCH_MULTI
@@ -93,11 +95,15 @@ class BufferFusionPattern {
                                           int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
                                           const std::vector<ShapeTypeRule> &shape_type_rules = {ONLY_SUPPORT_STATIC},
                                           bool not_pattern = false);
-
+#ifndef ONLY_COMPILE_OPEN_SRC
+  BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &output_ids,
+                                  int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
+                                  bool ignore_output_num = false, int32_t output_max_limit = TBE_OUTPUT_MAX_NUM_LIMIT);
+#else
   BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &output_ids,
                                   int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
                                   bool ignore_output_num = false);
-
+#endif
   BufferFusionPattern &SetHead(const std::vector<std::string> &head_ids);
 
   std::string GetName() const;
