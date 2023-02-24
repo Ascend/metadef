@@ -23,21 +23,13 @@
 #include "register/op_impl_registry.h"
 #include "common/checker.h"
 
-#define MERGE_FUNCTION(merged_funcs, src_funcs, op_type, func_name)           \
-  if ((merged_funcs).func_name == nullptr) {                                  \
-    (merged_funcs).func_name = (src_funcs).func_name;                         \
-  } else if ((src_funcs).func_name != nullptr) {                              \
-    GELOGW("op type %s %s func has been registered", op_type, #func_name);    \
-  } else {                                                                    \
-  }
-
 namespace gert {
 ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::OpSoBinPtr> &bins,
                                                          const ge::SoInOmInfo &so_info) {
   for (const auto &so_bin : bins) {
     GE_ASSERT_NOTNULL(so_bin, "so bin must not be nullptr");
     std::string so_data(so_bin->GetBinData(), so_bin->GetBinData() + so_bin->GetBinDataSize());
-    const auto create_func = [&so_bin]() -> OpImplRegistryHolderPtr {
+    auto create_func = [&so_bin]() -> OpImplRegistryHolderPtr {
       auto om_registry_holder = std::make_shared<OmOpImplRegistryHolder>();
       if (om_registry_holder == nullptr) {
         GELOGE(ge::FAILED, "make_shared om op impl registry holder failed");
@@ -60,6 +52,13 @@ ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::O
   return ge::GRAPH_SUCCESS;
 }
 
+#define MERGE_FUNCTION(merged_funcs, src_funcs, op_type, func_name)           \
+  if (merged_funcs.func_name == nullptr) {                                    \
+    merged_funcs.func_name = src_funcs.func_name;                             \
+  } else if (src_funcs.func_name != nullptr) {                                \
+    GELOGW("op type %s %s func has been registered", op_type, #func_name);    \
+  }
+
 void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &merged_funcs,
                                          const OpImplKernelRegistry::OpImplFunctions &src_funcs,
                                          const std::string &op_type) const {
@@ -75,42 +74,34 @@ void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &
     merged_funcs.max_tiling_data_size = src_funcs.max_tiling_data_size;
   } else if (src_funcs.max_tiling_data_size != 0U) {
     GELOGW("op type %s max_tiling_data_size has been registered", op_type.c_str());
-  } else {
-    // 已经注册且没有重复注册
   }
 
   if (merged_funcs.inputs_dependency == 0U) {
     merged_funcs.inputs_dependency = src_funcs.inputs_dependency;
   } else if (src_funcs.inputs_dependency != 0U) {
     GELOGW("op type %s inputs_dependency has been registered", op_type.c_str());
-  } else {
-    // 已经注册且没有重复注册
   }
   if (merged_funcs.private_attrs.size() == 0U) {
     merged_funcs.private_attrs = src_funcs.private_attrs;
   } else if (src_funcs.private_attrs.size() != 0U) {
     GELOGW("op type %s private_attrs has been registered", op_type.c_str());
-  } else {
-    // 已经注册且没有重复注册
   }
   if (merged_funcs.unique_private_attrs.size() == 0U) {
     merged_funcs.unique_private_attrs = src_funcs.unique_private_attrs;
   } else if (src_funcs.unique_private_attrs.size() != 0U) {
     GELOGW("op type %s unique_private_attrs has been registered", op_type.c_str());
-  } else {
-    // 已经注册且没有重复注册
   }
 }
 
 void OpImplSpaceRegistry::MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl) const {
   for (auto iter = src_impl.cbegin(); iter != src_impl.cend(); ++iter) {
-    const auto op_type = iter->first;
+    auto op_type = iter->first;
     GELOGD("Merge types to impl, op type %s", op_type.c_str());
     if (merged_impl.find(op_type) == merged_impl.end()) {
       merged_impl[op_type] = src_impl[op_type];
       continue;
     } else {
-      const auto src_funcs = iter->second;
+      auto src_funcs = iter->second;
       MergeFunctions(merged_impl[op_type], src_funcs, op_type);
     }
   }
@@ -126,7 +117,7 @@ ge::graphStatus OpImplSpaceRegistry::AddRegistry(const std::shared_ptr<OpImplReg
 
 const OpImplKernelRegistry::OpImplFunctions *OpImplSpaceRegistry::GetOpImpl(
     const OpImplKernelRegistry::OpType &op_type) const {
-  const auto iter = merged_types_to_impl_.find(op_type);
+  auto iter = merged_types_to_impl_.find(op_type);
   if (iter == merged_types_to_impl_.end()) {
     return nullptr;
   }
@@ -135,7 +126,7 @@ const OpImplKernelRegistry::OpImplFunctions *OpImplSpaceRegistry::GetOpImpl(
 
 const OpImplKernelRegistry::PrivateAttrList &OpImplSpaceRegistry::GetPrivateAttrs(
     const OpImplKernelRegistry::OpType &op_type) const {
-  const auto op_impl_ptr = GetOpImpl(op_type);
+  auto op_impl_ptr = GetOpImpl(op_type);
   if (op_impl_ptr == nullptr) {
     static OpImplKernelRegistry::PrivateAttrList emptyPrivateAttr;
     return emptyPrivateAttr;
