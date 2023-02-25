@@ -3501,6 +3501,50 @@
         "Possible Cause": "The IR is invalid.",
         "Solution": "Check that the Compute and Schedule APIs are used correctly. For details, see the TBE Custom Operator Developer Guide. If the error persists, contact Huawei technical support."
       }
+    },
+    {
+      "errClass": "TBE Pass Compiler Errors",
+      "errTitle": "Primitives Error",
+      "ErrCode": "EB1000",
+      "ErrMessage": "Primitives check failed. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "1.The Primitives are not properly usedor not aligned. 2. Incorrect parameter types are used. 3. The correct primitive is not punched on the corresponding axis.",
+        "Solution": "Check the schedule and compute statements to ensure that the schedule is correct."
+      }
+    },
+    {
+      "errClass": "TBE Pass Compiler Errors",
+      "errTitle": "Memory Error",
+      "ErrCode": "EB3000",
+      "ErrMessage": "Memory allocation check failed. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "The allocated memory is out of the allowed range.",
+        "Solution": "Check whether the size of the specified memory is incorrectly calculated."
+      }
+    },
+   {
+      "errClass": "TBE Pass Compiler Errors",
+      "errTitle": "Emit Insn Error",
+      "ErrCode": "EB4000",
+      "ErrMessage": "Insn check failed. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "The command parameter is incorrect.",
+        "Solution": "Check whether the offset address of the instruction map is aligned and whether the correct instruction is selected."
+      }
+    },
+   {
+      "errClass": "TBE Pass Compiler Errors",
+      "errTitle": "Common Compilation Optimization Error",
+      "ErrCode": "EB9000",
+      "ErrMessage": "Compiler Error check failed. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "The IR is invalid.",
+        "Solution": "N/A"
+      }
     }
   ]
 }
