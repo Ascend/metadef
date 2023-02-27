@@ -140,7 +140,7 @@ ge::graphStatus RecoverIrAttrNames(const ge::NodePtr &node, IrDefinition &ir_def
 
 namespace ge {
 ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &op_type, IrDefinition &ir_def) {
-  if (node->GetType() == ge::NETOUTPUT) {
+  if ((node->GetType() == ge::NETOUTPUT) || (node->GetType() == ge::DATA)) {
     return ge::GRAPH_SUCCESS;
   }
   InitIrDefinitionsIfNeed(op_type, ir_def);
