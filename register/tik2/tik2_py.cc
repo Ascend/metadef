@@ -344,7 +344,7 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
   ge::AscendString op_type_str = optype;
   auto check_func = OpCheckFuncRegistry::GetOpCapability(check_type_str, op_type_str);
   if (check_func == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to GetOpCapability. check_type = %s, optype = %s", check_type, optype);
+    GELOGE(ge::GRAPH_FAILED, "Failed to GetOpCapability. check_type = %s, optype = %s", check_type, optype);
     return 0;
   }
 
@@ -390,7 +390,7 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
   ge::AscendString op_type_str = optype;
   auto generalize_func = OpCheckFuncRegistry::GetParamGeneralize(op_type_str);
   if (generalize_func == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to GetParamGeneralize. optype = %s", optype);
+    GELOGE(ge::GRAPH_FAILED, "Failed to GetParamGeneralize. optype = %s", optype);
     return 0;
   }
 
@@ -457,7 +457,7 @@ extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_
 
 extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int block_dim,
                                        const char *tiling_data, const char *kernel_name, const char *entry_file,
-                                       const char *output_kernel_file) {
+                                       const char *output_kernel_file, int core_type, int task_ration) {
   if ((optype == nullptr) || (soc_version == nullptr) || (tiling_data == nullptr) || (kernel_name == nullptr) ||
       (entry_file == nullptr) || (output_kernel_file == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
@@ -466,16 +466,36 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
            optype, soc_version, tiling_data, kernel_name, entry_file, output_kernel_file);
     return 0;
   }
+  const int CORE_TYPE_BOTH = 0;
+  const int CORE_TYPE_CUBE = 1;
+  const int CORE_TYPE_VEC = 2;
+  if ((core_type != CORE_TYPE_BOTH) && (core_type != CORE_TYPE_CUBE) && (core_type != CORE_TYPE_VEC)) {
+    GELOGE(ge::GRAPH_FAILED,
+           "core_type is valid, should be one of 0/1/2, but args is "
+           "%d",
+           core_type);
+    return 0;
+  }
+  const int TASK_RATION_ONE = 1;
+  const int TASK_RATION_TWO = 2;
+  if ((task_ration != TASK_RATION_ONE) && (task_ration != TASK_RATION_TWO)) {
+    GELOGE(ge::GRAPH_FAILED,
+           "task_ration is valid, should be one of 1/2, but args is "
+           "%d",
+           task_ration);
+    return 0;
+  }
   ge::AscendString op_type_str = optype;
   ge::AscendString soc_version_str = soc_version;
   auto replay_func = OpCheckFuncRegistry::GetReplay(op_type_str, soc_version_str);
   if (replay_func == nullptr) {
-    REPORT_CALL_ERROR("E19999", "Failed to GetReplay. optype = %s, soc_version = %s", optype, soc_version);
+    GELOGE(ge::GRAPH_FAILED, "Failed to GetReplay. optype = %s, soc_version = %s", optype, soc_version);
     return 0;
   }
 
   try {
-    const int rc = (replay_func)(block_dim, tiling_data, kernel_name, entry_file, output_kernel_file);
+    const int rc =
+        (replay_func)(block_dim, tiling_data, kernel_name, entry_file, output_kernel_file, core_type, task_ration);
     GELOGI("replay_func return rc = %d,  optype = %s, soc_version = %s.", rc, optype, soc_version);
   } catch (...) {
     GELOGE(ge::GRAPH_FAILED, "call replay_func segment fault. optype = %s, soc_version = %s", optype, soc_version);

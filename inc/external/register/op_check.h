@@ -34,7 +34,7 @@ typedef int (*PARAM_GENERALIZE_FUNC)(const ge::Operator &op, const ge::AscendStr
                                      ge::AscendString &generalized_op_params);
 
 typedef int (*REPLAY_FUNC)(int block_dim, const char *tiling_data, const char *kernel_name, const char *entry_file,
-                           const char *output_kernel_file);
+                           const char *output_kernel_file, int core_type, int task_ration);
 
 class OpCheckFuncRegistry {
 public:

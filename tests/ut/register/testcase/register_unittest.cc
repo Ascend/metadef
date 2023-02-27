@@ -1381,16 +1381,16 @@ TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_fail_without_params) {
 }
 
 extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int block_dim,
-                                       const char *tiling_data, const char *kernel_name,
-                                       const char *entry_file, const char *output_kernel_file);
+                                       const char *tiling_data, const char *kernel_name, const char *entry_file,
+                                       const char *output_kernel_file, int core_type, int task_ration);
 
 int replay_stub(int blkdim, const char *tilingdata_file, const char *kernelname, const char *entry_file,
-                const char *output_kernel_file) {
+                const char *output_kernel_file, int core_type, int task_ration) {
   return 1;
 }
 
 int replay_stub_throw(int blkdim, const char *tilingdata_file, const char *kernelname, const char *entry_file,
-                      const char *output_kernel_file) {
+                      const char *output_kernel_file, int core_type, int task_ration) {
   throw "bad callback";
   return 1;
 }
@@ -1404,9 +1404,12 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_ok) {
   std::string kernel_name = "tik2_py_interface_op_replay_ok";
   std::string entry_file = "tik2_py_interface_op_replay_ok_entry_file.h";
   std::string output_kernel_file = "tik2_py_interface_op_replay_ok_kernel_file.cce";
+  int core_type = 0;
+  int task_ration = 1;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_ok, ascend710, replay_stub);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
-                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str()),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
+                                    core_type, task_ration),
             1);
 
   unsetenv("ENABLE_RUNTIME_V2");
@@ -1421,8 +1424,11 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_callback) {
   std::string kernel_name = "tik2_py_interface_op_replay_fail_without_callback";
   std::string entry_file = "tik2_py_interface_op_replay_fail_without_callback_entry_file.h";
   std::string output_kernel_file = "tik2_py_interface_op_replay_fail_without_callback_kernel_file.cce";
+  int core_type = 0;
+  int task_ration = 1;
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
-                                       kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str()),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
+                                    core_type, task_ration),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
@@ -1437,9 +1443,12 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_throw) {
   std::string kernel_name = "tik2_py_interface_op_replay_fail_throw";
   std::string entry_file = "tik2_py_interface_op_replay_fail_throw_entry_file.h";
   std::string output_kernel_file = "tik2_py_interface_op_replay_fail_throw_kernel_file.cce";
+  int core_type = 0;
+  int task_ration = 1;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_fail_throw, ascend710, replay_stub_throw);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim,
-                                tilingdata.c_str(),kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str()),
+                                tilingdata.c_str(),kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
+                                core_type, task_ration),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
@@ -1447,6 +1456,46 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_throw) {
 
 TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(nullptr, nullptr, 0, nullptr, nullptr, nullptr, nullptr), 0);
+  EXPECT_EQ(Tik2PyInterfaceOpReplay(nullptr, nullptr, 0, nullptr, nullptr, nullptr, nullptr, 0, 1), 0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_core_type) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  std::string op_type = "tik2_py_interface_op_replay_invalid_core_type";
+  std::string soc_version = "ascend710";
+  int blkdim = 32;
+  std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
+  std::string kernel_name = "tik2_py_interface_op_replay_invalid_core_type";
+  std::string entry_file = "tik2_py_interface_op_replay_invalid_core_type_entry_file.h";
+  std::string output_kernel_file = "tik2_py_interface_op_replay_invalid_core_type_kernel_file.cce";
+  int core_type = 4;
+  int task_ration = 1;
+  REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_core_type, ascend710, replay_stub);
+  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
+                                    core_type, task_ration),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_task_ration) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  std::string op_type = "tik2_py_interface_op_replay_invalid_task_ration";
+  std::string soc_version = "ascend710";
+  int blkdim = 32;
+  std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
+  std::string kernel_name = "tik2_py_interface_op_replay_invalid_task_ration";
+  std::string entry_file = "tik2_py_interface_op_replay_invalid_task_ration_entry_file.h";
+  std::string output_kernel_file = "tik2_py_interface_op_replay_invalid_task_ration_kernel_file.cce";
+  int core_type = 4;
+  int task_ration = -1;
+  REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_task_ration, ascend710, replay_stub);
+  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
+                                    core_type, task_ration),
+            0);
+
   unsetenv("ENABLE_RUNTIME_V2");
 }
