@@ -243,22 +243,21 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::InsertNod
   return GRAPH_SUCCESS;
 }
 
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
-                                      const NodePtr &remove_node) {
+GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph, const NodePtr &remove_node) {
   GE_CHECK_NOTNULL(compute_graph);
-  if (remove_node == nullptr) {
+  if (remove_node == nullptr || remove_node->GetOpDesc() == nullptr) {
     REPORT_INNER_ERROR("E18888", "param remove node is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
     return GRAPH_FAILED;
   }
-
-  // Check if this node is belong to this compute graph, maybe a little slow
-  const auto &all_nodes_in_graph = compute_graph->GetDirectNode();
-  if (std::find(all_nodes_in_graph.begin(), all_nodes_in_graph.end(), remove_node) == all_nodes_in_graph.end()) {
+  if (remove_node->GetOwnerComputeGraph() != compute_graph) {
     GELOGW("Can not find node %s in graph %s.", remove_node->GetName().c_str(), compute_graph->GetName().c_str());
     return GRAPH_FAILED;
+  }
+  if (remove_node->GetOpDesc()->GetSubgraphInstanceNames().empty()) {
+    GELOGD("Node %s has no subgraph.", remove_node->GetName().c_str());
+    return SUCCESS;
   }
   // Find all subgraph of this node
   const auto &root_graph = GraphUtils::FindRootGraph(compute_graph);
