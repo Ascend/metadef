@@ -181,6 +181,9 @@ const std::string ATTR_NAME_IS_ROOT_GRAPH = "_is_root_graph";
 const std::string ATTR_NAME_NODE_CONNECT_INPUT = "_is_connected_to_data";
 const std::string ATTR_NAME_NODE_CONNECT_OUTPUT = "_is_connected_to_netoutput";
 
+// Need Map rank id when hccl task init for NPU
+const std::string ATTR_NAME_NEED_MAP_RANK_ID = "_need_map_rank_id";
+
 // To be deleted
 const std::string ATTR_TO_BE_DELETED = "to_be_deleted";
 const std::string PERMUTE_RESHAPE_FUSION = "permute_reshape_fusion";
