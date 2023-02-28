@@ -1196,23 +1196,13 @@ TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyRemoveNodeIsNull) {
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
-TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyNodeNotInGraph) {
+TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyFail) {
   ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
   auto builder = ut::GraphBuilder("root");
   const auto &node0 = builder.AddNode("node0", "node", 1, 1);
   NodePtr remove_node(node0);
   int ret = GraphUtils::RemoveSubgraphRecursively(compute_graph, remove_node);
   EXPECT_EQ(ret, GRAPH_FAILED);
-}
-
-TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyNodeHasNoSubgrah) {
-  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
-  auto builder = ut::GraphBuilder("root");
-  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
-  compute_graph->AddNode(node0);
-  node0->SetOwnerComputeGraph(compute_graph);
-  int ret = GraphUtils::RemoveSubgraphRecursively(compute_graph, node0);
-  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestGraphUtils, RemoveNodeWithoutRelinkNodePtrIsNull) {

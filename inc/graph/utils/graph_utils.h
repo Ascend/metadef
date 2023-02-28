@@ -33,24 +33,6 @@
 #include "graph/utils/anchor_utils.h"
 #include "cycle_detector.h"
 
-/**
- * 图dump接口，用于把`compute_graph`对象序列化到文件，默认落盘到当前路径;
- * 如果`compute_graph`挂载了子图对象，子图对象也尝试进行落盘
- * 图的落盘行为受`DUMP_GE_GRAPH`和`DUMP_GRAPH_LEVEL`和`DUMP_GRAPH_PATH`环境变量的控制
- * DUMP_GE_GRAPH含义说明：
- * 1-全量dump
- * 2-不含有权重等数据的基础版dump
- * 3-只显示节点关系的精简版dump
- * DUMP_GRAPH_LEVEL含义说明：
- * 1-dump所有的图
- * 2-dump除子图外的所有图
- * 3-dump最后阶段的生成图
- * 4-dump入口阶段的生成图
- * DUMP_GRAPH_PATH含义说明：
- * 控制图的落盘的路径
- * @param compute_graph
- * @param name 用于拼接文件的名称
- */
 #define GE_DUMP(compute_graph, name)                                                                                   \
   do {                                                                                                                 \
     ge::GraphUtils::DumpGEGraph((compute_graph), (name));                                                              \
