@@ -95,15 +95,11 @@ class BufferFusionPattern {
                                           int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
                                           const std::vector<ShapeTypeRule> &shape_type_rules = {ONLY_SUPPORT_STATIC},
                                           bool not_pattern = false);
-#ifndef ONLY_COMPILE_OPEN_SRC
+
   BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &output_ids,
                                   int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
                                   bool ignore_output_num = false, int32_t output_max_limit = TBE_OUTPUT_MAX_NUM_LIMIT);
-#else
-  BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &output_ids,
-                                  int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
-                                  bool ignore_output_num = false);
-#endif
+
   BufferFusionPattern &SetHead(const std::vector<std::string> &head_ids);
 
   std::string GetName() const;

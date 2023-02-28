@@ -190,14 +190,9 @@ BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &
  * @param [in] relation:   output desc relation (1: serial, 2:parallel)
  * @return BufferFusionPattern: pattern object
  */
-#ifndef ONLY_COMPILE_OPEN_SRC
 BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, const std::vector<string> &output_ids,
                                                      int64_t relation, bool ignore_input_num, bool ignore_output_num,
                                                      int32_t output_max_limit) {
-#else
-BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, const std::vector<string> &output_ids,
-                                                     int64_t relation, bool ignore_input_num, bool ignore_output_num) {
-#endif
   if (desc_name.empty()) {
     GELOGW("[SetOutputs][Check] Desc_name cannot be empty.");
     error_count_++;
@@ -210,9 +205,7 @@ BufferFusionPattern &BufferFusionPattern::SetOutputs(const string &desc_name, co
     error_count_++;
     return *this;
   }
-#ifndef ONLY_COMPILE_OPEN_SRC
   op_desc->output_max_limit = output_max_limit;
-#endif
   op_desc->ignore_input_num = ignore_input_num;
   op_desc->ignore_output_num = ignore_output_num;
   if (op_desc->out_branch_type == TBE_OUTPUT_BRANCH_DEFAULT) {
