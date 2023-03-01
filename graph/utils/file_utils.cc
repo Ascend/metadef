@@ -20,9 +20,14 @@
 #include "graph/types.h"
 #include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
+#include "graph/def_types.h"
 #include <fstream>
 #include "common/checker.h"
 
+namespace {
+  const int32_t kFileSuccess = 0;
+  const uint32_t kMaxWriteSize = 1 * 1024 * 1024 * 1024U; // 1G
+}
 namespace ge {
 std::string RealPath(const char_t *path) {
   if (path == nullptr) {
@@ -46,8 +51,16 @@ std::string RealPath(const char_t *path) {
   } else {
     GELOGW("[Util][realpath] Get real_path for %s failed, reason:%s", path, strerror(errno));
   }
-
   return res;
+}
+
+std::string GetRegulatedName(const std::string name) {
+  std::string regulate_name = name;
+  replace(regulate_name.begin(), regulate_name.end(), '/', '_');
+  replace(regulate_name.begin(), regulate_name.end(), '\\', '_');
+  replace(regulate_name.begin(), regulate_name.end(), '.', '_');
+  GELOGD("Get regulated name[%s] success", regulate_name.c_str());
+  return regulate_name;
 }
 
 inline int32_t CheckAndMkdir(const char_t *tmp_dir_path, mmMode_t mode) {
@@ -120,12 +133,30 @@ std::unique_ptr<char_t[]> GetBinFromFile(std::string &path, uint32_t &data_len) 
     ifs.close();
     return nullptr;
   }
-
   (void)ifs.read(reinterpret_cast<char_t*>(bin_data.get()), static_cast<std::streamsize>(len));
   data_len = len;
   ifs.close();
-
   return bin_data;
+}
+
+graphStatus GetBinFromFile(const std::string &path, char_t *buffer, size_t &data_len) {
+  GE_ASSERT_TRUE(!path.empty());
+  GE_ASSERT_TRUE(buffer != nullptr);
+  std::string real_path = RealPath(path.c_str());
+  GE_ASSERT_TRUE(!real_path.empty());
+  std::ifstream ifs(real_path, std::ifstream::binary);
+  if (!ifs.is_open()) {
+    GELOGE(GRAPH_FAILED, "path:%s not open", real_path.c_str());
+    return GRAPH_FAILED;
+  }
+
+  (void)ifs.seekg(0, std::ifstream::end);
+  const size_t len = static_cast<size_t>(ifs.tellg());
+  (void)ifs.seekg(0, std::ifstream::beg);
+  (void)ifs.read(buffer, static_cast<std::streamsize>(len));
+  data_len = len;
+  ifs.close();
+  return GRAPH_SUCCESS;
 }
 
 graphStatus WriteBinToFile(std::string &path, char_t *data, uint32_t &data_len) {
@@ -134,7 +165,79 @@ graphStatus WriteBinToFile(std::string &path, char_t *data, uint32_t &data_len) 
   GE_ASSERT_TRUE(ofs.is_open(), "path:%s open failed", path.c_str());
   (void)ofs.write(data, static_cast<std::streamsize>(data_len));
   ofs.close();
-
   return GRAPH_SUCCESS;
+}
+
+graphStatus WriteBinToFile(const int32_t fd, const char_t * const data, size_t data_len) {
+  if ((data == nullptr) || (data_len == 0UL)) {
+    GELOGE(GRAPH_FAILED, "check param failed, data is nullptr or length is zero.");
+    return GRAPH_FAILED;
+  }
+  int64_t write_count = 0L;
+  auto seek = PtrToPtr<void, uint8_t>(static_cast<void *>(const_cast<char_t *>(data)));
+  while (data_len > kMaxWriteSize) {
+    write_count = mmWrite(fd, reinterpret_cast<void *>(seek), static_cast<uint32_t>(kMaxWriteSize));
+    GE_ASSERT_TRUE(((write_count != EN_INVALID_PARAM) && (write_count != EN_ERROR)),
+        "Write data failed, data_len: %llu", data_len);
+    seek = PtrAdd<uint8_t>(seek, static_cast<size_t>(data_len), kMaxWriteSize);
+    data_len -= kMaxWriteSize;
+  }
+  if (data_len != 0UL) {
+    write_count = mmWrite(fd, reinterpret_cast<void *>(seek), static_cast<uint32_t>(data_len));
+    GE_ASSERT_TRUE(((write_count != EN_INVALID_PARAM) && (write_count != EN_ERROR)),
+        "Write data failed, data_len: %llu", data_len);
+  }
+  return GRAPH_SUCCESS;
+}
+
+void SplitFilePath(const std::string &file_path, std::string &dir_path, std::string &file_name) {
+  int32_t split_pos = static_cast<int32_t>(file_path.length() - 1UL);
+  for (; split_pos >= 0; split_pos--) {
+    if ((file_path[static_cast<size_t>(split_pos)] == '\\') ||
+        (file_path[static_cast<size_t>(split_pos)] == '/')) {
+      break;
+    }
+  }
+  if (split_pos == 0) {
+    file_name = file_path;
+    return;
+  }
+  dir_path = std::string(file_path).substr(0U, static_cast<size_t>(split_pos));
+  file_name = std::string(file_path.substr(split_pos + 1U, file_path.length()));
+  return;
+}
+
+graphStatus SaveBinToFile(const char * const data, size_t length, const std::string &file_path) {
+  if (data == nullptr || length == 0UL) {
+    GELOGE(GRAPH_FAILED, "check param failed, data is nullptr or length is zero.");
+    return GRAPH_FAILED;
+  }
+  std::string dir_path;
+  std::string file_name;
+  SplitFilePath(file_path, dir_path, file_name);
+  if (!dir_path.empty()) {
+    GE_ASSERT_TRUE((CreateDirectory(dir_path) == kFileSuccess),
+                   "Create direct failed, path: %s.", file_path.c_str());
+  }
+  std::string real_path = RealPath(dir_path.c_str());
+  GE_ASSERT_TRUE(!real_path.empty());
+  real_path = real_path + "/" + file_name;
+  // Open file
+  const mmMode_t mode = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) | static_cast<uint32_t>(M_IWUSR));
+  const int32_t open_flag = static_cast<int32_t>(static_cast<uint32_t>(M_RDWR) |
+                                                 static_cast<uint32_t>(M_CREAT) |
+                                                 static_cast<uint32_t>(O_TRUNC));
+  int32_t fd = mmOpen2(&real_path[0UL], open_flag, mode);
+  GE_ASSERT_TRUE(((fd != EN_INVALID_PARAM) && (fd != EN_ERROR)), "Open file failed, path: %s", real_path.c_str());
+  Status ret = GRAPH_SUCCESS;
+  if (WriteBinToFile(fd, data, length) != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Write data to file: %s failed.", real_path.c_str());
+    ret = GRAPH_FAILED;
+  }
+  if (mmClose(fd) != 0) { // mmClose:0 success
+    GELOGE(GRAPH_FAILED, "Close file failed.");
+    return GRAPH_FAILED;
+  }
+  return ret;
 }
 }

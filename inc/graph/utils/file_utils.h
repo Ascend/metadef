@@ -34,7 +34,6 @@ namespace ge {
  */
 std::string RealPath(const char_t *path);
 
-
 /**
  * @ingroup domi_common
  * @brief  Recursively Creating a Directory
@@ -44,7 +43,56 @@ std::string RealPath(const char_t *path);
 int32_t CreateDirectory(const std::string &directory_path);
 
 std::unique_ptr<char[]> GetBinFromFile(std::string &path, uint32_t &data_len);
+
 graphStatus WriteBinToFile(std::string &path, char_t *data, uint32_t &data_len);
+
+/**
+ * @ingroup domi_common
+ * @brief  Get binary file from file
+ * @param [in] name origin name.
+ * @return string. name which repace special code as _.
+ */
+std::string GetRegulatedName(const std::string name);
+
+/**
+ * @ingroup domi_common
+ * @brief  Get binary file from file
+ * @param [in] path  file path.
+ * @param [out] buffer char[] used to store file data
+ * @param [out] data_len store read size
+ * @return graphStatus GRAPH_SUCCESS: success, OTHERS: fail.
+ */
+graphStatus GetBinFromFile(const std::string &path, char_t *buffer, size_t &data_len);
+
+/**
+ * @ingroup domi_common
+ * @brief  Write binary to file
+ * @param [in] fd  file desciption.
+ * @param [in] data char[] used to write to file
+ * @param [in] data_len store write size
+ * @return graphStatus GRAPH_SUCCESS: success, OTHERS: fail.
+ */
+graphStatus WriteBinToFile(const int32_t fd, const char_t * const data, size_t data_len);
+
+/**
+ * @ingroup domi_common
+ * @brief  Save data to file
+ * @param [in] file_path  file path.
+ * @param [in] data char[] used to store file data
+ * @param [in] length store read size
+ * @return graphStatus GRAPH_SUCCESS: success, OTHERS: fail.
+ */
+graphStatus SaveBinToFile(const char * const data, size_t length, const std::string &file_path);
+
+/**
+ * @ingroup domi_common
+ * @brief  split file path to directory path and file name
+ * @param [in] file_path  file path.
+ * @param [out] dir_path directory path
+ * @param [out] file_name file name
+ * @return graphStatus GRAPH_SUCCESS: success, OTHERS: fail.
+ */
+void SplitFilePath(const std::string &file_path, std::string &dir_path, std::string &file_name);
 }
 
 #endif // end COMMON_GRAPH_UTILS_FILE_UTILS_H_
