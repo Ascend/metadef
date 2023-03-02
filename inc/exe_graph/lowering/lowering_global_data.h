@@ -47,7 +47,6 @@ class LoweringGlobalData {
   bg::ValueHolderPtr GetAllocator(const AllocatorDesc &desc) const;
   LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator);
   LoweringGlobalData &SetExternalAllocator(bg::ValueHolderPtr &&allocator, const ExecuteGraphType graph_type);
-  bg::ValueHolderPtr GetExternalAllocator(const AllocatorDesc &desc, const ExecuteGraphType &graph_type) const;
   bg::ValueHolderPtr GetOrCreateAllocator(const AllocatorDesc desc);
 
   bg::ValueHolderPtr GetOrCreateUniqueValueHolder(const std::string &name,
