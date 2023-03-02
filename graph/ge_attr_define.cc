@@ -1090,6 +1090,7 @@ const std::string ATTR_NAME_COMPRESS_WEIGHT = "_is_compress_weight";
 
 // For data dump
 const std::string ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES = "_datadump_original_op_names";
+const std::string ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES = "_datadump_original_op_types";
 const std::string ATTR_NAME_DATA_DUMP_IS_MULTIOP = "_datadump_is_multiop";
 const std::string ATTR_NAME_DATA_DUMP_SUB_SPLITER_INDEX = "_datadump_sub_spliter_index";
 const std::string ATTR_NAME_DATA_DUMP_GROUP_OP_NAME = "_datadump_group_op_name";
