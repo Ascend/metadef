@@ -120,9 +120,17 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   GeTensorDescPtr MutableInputDesc(const uint32_t index) const;
 
   GeTensorDescPtr MutableInputDesc(const std::string &name) const;
-
+  /**
+   * 获取OpDesc的所有输入的GeTensorDesc对象的拷贝，
+   * 需要注意拷贝行为对性能的影响
+   * @return
+   */
   Vistor<GeTensorDesc> GetAllInputsDesc() const;
-
+  /**
+   * 获取OpDesc的所有输入的GeTensorDesc对象的引用，
+   * 无特殊需求，推荐使用此接口替代GetAllInputsDesc（）
+   * @return
+   */
   Vistor<GeTensorDescPtr> GetAllInputsDescPtr() const;
 
   size_t GetInputsSize() const;
