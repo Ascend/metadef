@@ -16,16 +16,16 @@
 
 #include "graph/model_serialize.h"
 #include <google/protobuf/text_format.h>
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-
 #include <queue>
 #include <iostream>
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 
 #include "graph/debug/ge_attr_define.h"
 #include "proto/ge_ir.pb.h"
 #include "debug/ge_log.h"
 #include "debug/ge_util.h"
+#include "graph/utils/file_utils.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "graph/op_desc_impl.h"
 #include "graph/ge_tensor.h"
@@ -35,6 +35,10 @@
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
 #include "common/util/mem_utils.h"
+
+namespace {
+  const std::string kTmpWeight = "air_weight/";
+}
 
 namespace ge {
 bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index,
@@ -392,6 +396,12 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
 
   ExtractMetaDataAttrIn(op_def_proto, opt_input, key_in, value_in);
   ExtractMetaDataAttr(op_def_proto, key_out, value_out);
+  if (op_def_proto.type() == CONSTANT || op_def_proto.type() == CONSTANTOP) {
+    if (!SetWeightForModel(op_def_proto)) {
+      GELOGE(GRAPH_FAILED, "[Unserialize][Model] Set const weight failed");
+      return false;
+    }
+  }
 
   op_desc = ComGraphMakeShared<OpDesc>(op_def_proto);
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_CALL_ERROR("E18888", "create OpDesc failed.");
@@ -786,6 +796,59 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
   return true;
 }
 
+bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, proto::ModelDef &model_def) {
+  if (SerializeToBuffer(buffer, model_def)) {
+    return true;
+  }
+  GELOGW("[Serialize][Model] Model is larger than 2G, need separate");
+  uint64_t constant_op_id = 0UL;
+  for (auto &graph_def : *model_def.mutable_graph()) {
+    for (auto &op_def : *graph_def.mutable_op()) {
+      if (op_def.type() != CONSTANT && op_def.type() != CONSTANTOP) {
+        continue;
+      }
+      auto attr_map = op_def.mutable_attr();
+      auto iter = attr_map->find(ATTR_NAME_WEIGHTS);
+      if (iter == attr_map->end()) {
+        GELOGE(GRAPH_FAILED, "Find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
+        return false;
+      }
+      auto tensor_def = iter->second.mutable_t();
+      std::string model_name = GetRegulatedName(model_def.name());
+      std::string file_path = kTmpWeight + model_name + "/" +
+                              op_def.type() + "_" + std::to_string(constant_op_id) + "_file";
+      constant_op_id++;
+      if (SaveBinToFile(tensor_def->data().c_str(), tensor_def->data().length(), file_path) != GRAPH_SUCCESS) {
+        GELOGE(GRAPH_FAILED, "Write data of attr [%s] of op[%s] to file failed.",
+               ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
+        return false;
+      }
+      int64_t length = static_cast<int64_t>(tensor_def->data().length());
+      proto::AttrDef file_attr;
+      file_attr.set_s(file_path);
+      attr_map->insert({ATTR_NAME_LOCATION, file_attr});
+      proto::AttrDef length_attr;
+      length_attr.set_i(length);
+      attr_map->insert({ATTR_NAME_LENGTH, length_attr});
+      tensor_def->set_data("");
+    }
+  }
+#if !defined(__ANDROID__) && !defined(ANDROID)
+  Buffer temp_buffer(model_def.ByteSizeLong());
+#else
+  Buffer temp_buffer(model_def.ByteSize());
+#endif
+  buffer = temp_buffer;
+  return SerializeToBuffer(buffer, model_def);
+}
+
+bool ModelSerializeImp::SerializeToBuffer(Buffer &buffer, proto::ModelDef &model_def) {
+  google::protobuf::io::ArrayOutputStream array_stream(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
+  google::protobuf::io::CodedOutputStream output_stream(&array_stream);
+  output_stream.SetSerializationDeterministic(true);
+  return model_def.SerializeToCodedStream(&output_stream);
+}
+
 Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) const {
   proto::ModelDef model_def;
   ModelSerializeImp model_imp;
@@ -799,10 +862,7 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) co
 #endif
   GE_CHK_BOOL_ONLY_LOG(buffer.GetSize() != 0UL, "get size failed");
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  google::protobuf::io::ArrayOutputStream array_stream(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
-  google::protobuf::io::CodedOutputStream output_stream(&array_stream);
-  output_stream.SetSerializationDeterministic(true);
-  if (!model_def.SerializeToCodedStream(&output_stream)) {
+  if (!model_imp.SeparateModelDef(buffer, model_def)) {
     GELOGW("[Serialize][Model] Serialize to binary failed");
     return Buffer();
   }
@@ -815,6 +875,59 @@ Status ModelSerialize::SerializeModel(const Model &model, const bool is_dump, pr
     return FAILED;
   }
   return SUCCESS;
+}
+
+bool ModelSerializeImp::LoadWeightFromFile(const std::string &file_path,
+                                           const int64_t &length,
+                                           std::string &weight) const {
+  if (length <= 0L) {
+    GELOGE(GRAPH_FAILED, "Value length is less than 0.");
+    return false;
+  }
+  size_t data_len = 0UL;
+  auto bin_data = std::unique_ptr<char_t[]>(new(std::nothrow) char_t[length]);
+  if (bin_data == nullptr) {
+    GELOGE(FAILED, "[Allocate][Mem]Allocate mem failed");
+    return false;
+  }
+  if (GetBinFromFile(file_path, static_cast<char_t *>(bin_data.get()), data_len) != GRAPH_SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Get bin from file failed.");
+    return false;
+  }
+  if (static_cast<int64_t>(data_len) != length) {
+    GELOGE(GRAPH_FAILED, "Bin length[%zu] is not equal to defined length[%lld].", data_len, length);
+    return false;
+  }
+  weight = std::string(bin_data.get(), data_len);
+  return true;
+}
+
+bool ModelSerializeImp::SetWeightForModel(proto::OpDef &op_def) const {
+  auto attr_map = op_def.mutable_attr();
+  auto iter = attr_map->find(ATTR_NAME_LOCATION);
+  if (iter == attr_map->end()) {
+    return true;
+  }
+  const std::string file_path = iter->second.s();
+  iter = attr_map->find(ATTR_NAME_LENGTH);
+  if (iter == attr_map->end()) {
+    return true;
+  }
+  const int64_t length = iter->second.i();
+  std::string weight;
+  if (!LoadWeightFromFile(file_path, length, weight)) {
+    GELOGE(GRAPH_FAILED, "Load weight from path %s failed.", file_path.c_str());
+    return false;
+  }
+  iter = attr_map->find(ATTR_NAME_WEIGHTS);
+  if (iter == attr_map->end()) {
+    GELOGE(GRAPH_FAILED, "find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
+    return false;
+  }
+  iter->second.mutable_t()->set_data(weight);
+  attr_map->erase(ATTR_NAME_LOCATION);
+  attr_map->erase(ATTR_NAME_LENGTH);
+  return true;
 }
 
 bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t len, Model &model) const {

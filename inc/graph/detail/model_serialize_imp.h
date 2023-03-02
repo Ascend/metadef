@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "graph/buffer.h"
 #include "graph/model.h"
 #include "graph/anchor.h"
 #include "graph/detail/attributes_holder.h"
@@ -77,7 +78,13 @@ class ModelSerializeImp {
 
   bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump = false) const;
 
+  bool SeparateModelDef(Buffer &buffer, proto::ModelDef &model_def);
+
+  bool SerializeToBuffer(Buffer &buffer, proto::ModelDef &model_def);
+
   bool UnserializeModel(Model &model, proto::ModelDef &model_proto);
+
+  bool SetWeightForModel(proto::OpDef &op_def) const;
 
   bool UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, proto::GraphDef &graph_proto);
 
@@ -99,6 +106,8 @@ class ModelSerializeImp {
   bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const;
 
   void SetProtobufOwner(const ProtoMsgOwner &buffer_proto_buf_onwer) { protobuf_owner_ = buffer_proto_buf_onwer; }
+
+  bool LoadWeightFromFile(const std::string &file_path, const int64_t &length, std::string &weight) const;
 
   static bool SerializeAllAttrsFromAnyMap(const std::map<std::string, AnyValue> &attr_map,
       google::protobuf::Map<std::string, ::ge::proto::AttrDef> *const mutable_attr);
