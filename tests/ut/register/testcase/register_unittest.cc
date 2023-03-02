@@ -1384,13 +1384,11 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
                                        const char *tiling_data, const char *kernel_name, const char *entry_file,
                                        const char *output_kernel_file, int core_type, int task_ration);
 
-int replay_stub(int blkdim, const char *tilingdata_file, const char *kernelname, const char *entry_file,
-                const char *output_kernel_file, int core_type, int task_ration) {
+int replay_stub(ReplayFuncParam& param, const int core_typ) {
   return 1;
 }
 
-int replay_stub_throw(int blkdim, const char *tilingdata_file, const char *kernelname, const char *entry_file,
-                      const char *output_kernel_file, int core_type, int task_ration) {
+int replay_stub_throw(ReplayFuncParam& param, const int core_typ) {
   throw "bad callback";
   return 1;
 }

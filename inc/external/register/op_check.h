@@ -33,8 +33,18 @@ typedef int (*OP_CHECK_FUNC)(const ge::Operator &op, ge::AscendString &result);
 typedef int (*PARAM_GENERALIZE_FUNC)(const ge::Operator &op, const ge::AscendString &generalize_config,
                                      ge::AscendString &generalized_op_params);
 
-typedef int (*REPLAY_FUNC)(int block_dim, const char *tiling_data, const char *kernel_name, const char *entry_file,
-                           const char *output_kernel_file, int core_type, int task_ration);
+struct ReplayFuncParam {
+  const int block_dim;
+  const char *tiling_data;
+  const char *kernel_name;
+  const char *entry_file;
+  const int gentype;
+  const char *output_kernel_file;
+  char **objptr;
+  const int task_ration;
+};
+
+typedef int (*REPLAY_FUNC)(ReplayFuncParam& param, const int core_type);
 
 class OpCheckFuncRegistry {
 public:

@@ -494,8 +494,9 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
   }
 
   try {
-    const int rc =
-        (replay_func)(block_dim, tiling_data, kernel_name, entry_file, output_kernel_file, core_type, task_ration);
+    ReplayFuncParam replayParam {block_dim, tiling_data, kernel_name, entry_file, 0, output_kernel_file, nullptr,
+      task_ration};
+    const int rc = (replay_func)(replayParam, core_type);
     GELOGI("replay_func return rc = %d,  optype = %s, soc_version = %s.", rc, optype, soc_version);
   } catch (...) {
     GELOGE(ge::GRAPH_FAILED, "call replay_func segment fault. optype = %s, soc_version = %s", optype, soc_version);
