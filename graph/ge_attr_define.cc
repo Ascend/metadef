@@ -1160,6 +1160,9 @@ const std::string ATTR_NAME_FUSIONOP_ORIGINAL_TYPE = "_fusionop_original_type";
 const std::string ATTR_NAME_PLD_FRONT_NODE_ENGINE_NAME = "pld_front_node_engine_name";
 const std::string ATTR_NAME_END_REAR_NODE_ENGINE_NAME = "end_rear_node_engine_name";
 
+// aicpu workspace type
+const std::string ATTR_NAME_AICPU_WORKSPACE_TYPE = "_aicpu_workspace_type";
+
 // input and output memory type
 const std::string ATTR_VARIABLE_PLACEMENT = "_variable_placement";
 const std::string ATTR_INPUT_MEMORY_TYPE = "_input_memory_type";
