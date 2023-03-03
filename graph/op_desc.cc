@@ -1773,6 +1773,10 @@ graphStatus OpDescImpl::InferDataTypeForOutputs(const OpDescPtr &op_desc) {
   return GRAPH_SUCCESS;
 }
 
+size_t OpDescImpl::GetIrInputsSize() const {
+  return meta_data_.ir_meta_.GetIrInputs().size();
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc::OpDesc()
     : enable_shared_from_this(), AttrHolder(), impl_(ComGraphMakeShared<OpDescImpl>()) {
 }
@@ -2395,6 +2399,9 @@ void OpDesc::AppendIrOutput(std::string name, IrOutputType output_type) {
 }
 const std::vector<std::pair<std::string, IrOutputType>> &OpDesc::GetIrOutputs() const {
   return impl_->GetIRMeta().GetIrOutputs();
+}
+size_t OpDesc::GetIrInputsSize() const {
+  return impl_->GetIrInputsSize();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescBuilder& OpDescBuilder::AddInput(const std::string &name) {
