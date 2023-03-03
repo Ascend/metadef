@@ -82,11 +82,12 @@ class ComputeGraphImpl {
   std::vector<std::shared_ptr<ComputeGraph>> GetAllSubgraphs() const;
   void SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs);
 
-  shared_ptr<ComputeGraph> GetParentGraph() const;
-  void SetParentGraph(const shared_ptr<ComputeGraph> &parent);
-  shared_ptr<Node> GetParentNode() const;
-  void SetParentNode(const shared_ptr<Node> &parent);
-
+  std::shared_ptr<ComputeGraph> GetParentGraph() const;
+  void SetParentGraph(const std::shared_ptr<ComputeGraph> &parent);
+  std::shared_ptr<Node> GetParentNode() const;
+  void SetParentNode(const std::shared_ptr<Node> &parent);
+  std::shared_ptr<Node> GetOrUpdateNetOutputNode();
+  void SetNetOutputNode(const std::shared_ptr<Node> &netoutput_node);
   const std::map<std::string, std::vector<int32_t>> &GetGraphOutNodes() const { return out_nodes_map_; }
 
   void SetOrigGraph(const ComputeGraphPtr &orig_graph) { origGraph_ = orig_graph; }
@@ -257,6 +258,7 @@ class ComputeGraphImpl {
   bool is_unknown_shape_graph_ = false;
   // Graph Before BFE
   ComputeGraphPtr origGraph_;
+  std::weak_ptr<Node> graph_netoutput_;
 };
 }  // namespace ge
 #endif  // GRAPH_COMPUTE_GRAPH_IMPL_H_

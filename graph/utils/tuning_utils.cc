@@ -729,15 +729,6 @@ graphStatus TuningUtils::MergeGraph(const std::vector<ComputeGraphPtr> &subgraph
     GELOGE(GRAPH_FAILED, "[Merge][Graph] failed");
     return GRAPH_FAILED;
   }
-  // set owner graph
-  for (const auto &node : output_merged_compute_graph->GetDirectNode()) {
-    GE_CHECK_NOTNULL(node);
-    if (node->SetOwnerComputeGraph(output_merged_compute_graph) != GRAPH_SUCCESS) {
-      REPORT_CALL_ERROR("E18888", "TUU:node %s set owner graph failed", node->GetName().c_str());
-      GELOGE(GRAPH_FAILED, "[Set][Graph] TUU:node %s set owner graph failed", node->GetName().c_str());
-      return GRAPH_FAILED;
-    }
-  }
   return GRAPH_SUCCESS;
 }
 
@@ -746,8 +737,8 @@ graphStatus TuningUtils::LoadGraphFromFile(const std::map<int64_t, std::string> 
                                            std::map<std::string, std::vector<ComputeGraphPtr>> &name_to_subgraphs) {
    // options format like {index:"subgraph_path"}
   for (const auto &pair : options) {
-    const ComputeGraphPtr compute_graph = ComGraphMakeShared<ComputeGraph>(std::to_string(pair.first));
-    if (!ge::GraphUtils::LoadGEGraph(pair.second.c_str(), *compute_graph)) {
+    auto compute_graph = ComGraphMakeShared<ComputeGraph>(std::to_string(pair.first));
+    if (!ge::GraphUtils::LoadGEGraph(pair.second.c_str(), compute_graph)) {
       REPORT_CALL_ERROR("E18888", "LoadGEGraph from file:%s failed", pair.second.c_str());
       GELOGE(FAILED, "[Load][Graph] from file:%s failed", pair.second.c_str());
     }
@@ -822,8 +813,11 @@ graphStatus TuningUtils::MergeAllSubGraph(const std::vector<ComputeGraphPtr> &su
     }
   }
 
-  for (const auto &node: merged_graph_nodes_) {
+  for (const auto &node : merged_graph_nodes_) {
     (void) output_merged_compute_graph->AddNode(node);
+    // set owner graph
+    GE_CHK_STATUS_RET(node->SetOwnerComputeGraph(output_merged_compute_graph),
+                      "[Set][Graph] TUU:node %s set owner graph failed", node->GetName().c_str());
     GELOGD("TUU:graph %s add node %s success", output_merged_compute_graph->GetName().c_str(), node->GetName().c_str());
 
     std::vector<std::string> recover_attr_name;

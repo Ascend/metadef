@@ -33,6 +33,24 @@
 #include "graph/utils/anchor_utils.h"
 #include "cycle_detector.h"
 
+/**
+ * 图dump接口，用于把`compute_graph`对象序列化到文件，默认落盘到当前路径;
+ * 如果`compute_graph`挂载了子图对象，子图对象也尝试进行落盘
+ * 图的落盘行为受`DUMP_GE_GRAPH`和`DUMP_GRAPH_LEVEL`和`DUMP_GRAPH_PATH`环境变量的控制
+ * DUMP_GE_GRAPH含义说明：
+ * 1-全量dump
+ * 2-不含有权重等数据的基础版dump
+ * 3-只显示节点关系的精简版dump
+ * DUMP_GRAPH_LEVEL含义说明：
+ * 1-dump所有的图
+ * 2-dump除子图外的所有图
+ * 3-dump最后阶段的生成图
+ * 4-dump入口阶段的生成图
+ * DUMP_GRAPH_PATH含义说明：
+ * 控制图的落盘的路径
+ * @param compute_graph
+ * @param name 用于拼接文件的名称
+ */
 #define GE_DUMP(compute_graph, name)                                                                                   \
   do {                                                                                                                 \
     ge::GraphUtils::DumpGEGraph((compute_graph), (name));                                                              \
@@ -201,6 +219,16 @@ class GraphUtils {
   static graphStatus RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const NodePtr &node);
 
   /**
+   * 从`compute_graph`中删除`nodes`对象们的所有关系，包括子图关系，从属关系，作为`compute_graph`的输入，输出的关系；
+   * 仅删除，不进行断边连边，不保证删除后节点前后的控制关系传递
+   * 此接口在图规模比较大的时候，比遍历`nodes`节点依次调用`RemoveNodeWithoutRelink`更高效一些
+   * @param compute_graph
+   * @param nodes
+   * @return
+   */
+  static graphStatus RemoveNodesWithoutRelink(const ComputeGraphPtr &compute_graph,
+                                              const std::unordered_set<NodePtr> &nodes);
+  /**
    * ComputeGraph图对象的深拷贝接口
    * @param src_compute_graph 需要是根图对象
    * @param dst_compute_graph
@@ -265,6 +293,7 @@ class GraphUtils {
    * @return 如果删除成功返回GRAPH_SUCCESS，失败返回GRAPH_FAILED
    */
   static graphStatus RemoveJustNode(ComputeGraph &compute_graph, const NodePtr &node);
+
   /**
    * 记录`original_nodes`的原始name到node上
    * @param original_nodes

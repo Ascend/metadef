@@ -243,22 +243,24 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::InsertNod
   return GRAPH_SUCCESS;
 }
 
-
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
-                                      const NodePtr &remove_node) {
+GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph, const NodePtr &remove_node) {
   GE_CHECK_NOTNULL(compute_graph);
-  if (remove_node == nullptr) {
-    REPORT_INNER_ERROR("E18888", "param remove node is nullptr, check invalid.");
-    GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr should not be null.");
-    return GRAPH_FAILED;
+  GE_CHECK_NOTNULL(remove_node);
+  GE_CHECK_NOTNULL(remove_node->GetOpDesc());
+  if (remove_node->GetOwnerComputeGraph() == nullptr) {
+    GELOGW("Node %s has not been setted owner graph.", remove_node->GetName().c_str());
+    return GRAPH_SUCCESS;
   }
-
-  // Check if this node is belong to this compute graph, maybe a little slow
-  const auto &all_nodes_in_graph = compute_graph->GetDirectNode();
-  if (std::find(all_nodes_in_graph.begin(), all_nodes_in_graph.end(), remove_node) == all_nodes_in_graph.end()) {
+  if ((remove_node->GetOwnerComputeGraph() != compute_graph) &&
+      (std::find(compute_graph->impl_->nodes_.begin(), compute_graph->impl_->nodes_.end(), remove_node) ==
+       compute_graph->impl_->nodes_.end())) {
     GELOGW("Can not find node %s in graph %s.", remove_node->GetName().c_str(), compute_graph->GetName().c_str());
     return GRAPH_FAILED;
+  }
+  if (remove_node->GetOpDesc()->GetSubgraphInstanceNames().empty()) {
+    GELOGD("Node %s has no subgraph.", remove_node->GetName().c_str());
+    return GRAPH_SUCCESS;
   }
   // Find all subgraph of this node
   const auto &root_graph = GraphUtils::FindRootGraph(compute_graph);
@@ -301,6 +303,8 @@ GraphUtils::RemoveSubgraphRecursively(const ComputeGraphPtr &compute_graph,
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
 GraphUtils::RemoveNodesByTypeWithoutRelink(const ComputeGraphPtr &compute_graph, const std::string &node_type) {
+  GE_CHECK_NOTNULL(compute_graph);
+  GE_CHECK_NOTNULL(compute_graph->impl_);
   GELOGI("Start remove %s from graph %s.", node_type.c_str(), compute_graph->GetName().c_str());
   for (auto iter = compute_graph->impl_->input_nodes_.begin();
       iter != compute_graph->impl_->input_nodes_.end();) {
@@ -369,6 +373,48 @@ GraphUtils::RemoveNodeWithoutRelink(const ComputeGraphPtr &compute_graph, const 
   return GRAPH_FAILED;
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtils::RemoveNodesWithoutRelink(const ComputeGraphPtr &compute_graph, const std::unordered_set<NodePtr> &nodes) {
+  GE_CHECK_NOTNULL(compute_graph);
+  GE_CHECK_NOTNULL(compute_graph->impl_);
+  for (auto iter = compute_graph->impl_->input_nodes_.begin(); iter != compute_graph->impl_->input_nodes_.end();) {
+    if (nodes.count(*iter) > 0U) {
+      iter = compute_graph->impl_->input_nodes_.erase(iter);
+    } else {
+      iter++;
+    }
+  }
+
+  for (auto iter = compute_graph->impl_->output_nodes_info_.begin();
+       iter != compute_graph->impl_->output_nodes_info_.end();) {
+    if (nodes.count((*iter).first) > 0U) {
+      iter = compute_graph->impl_->output_nodes_info_.erase(iter);
+    } else {
+      iter++;
+    }
+  }
+  size_t success_removed_nodes_size = 0U;
+  for (auto iter = compute_graph->impl_->nodes_.begin(); iter != compute_graph->impl_->nodes_.end();) {
+    if (nodes.count(*iter) > 0U) {
+      const auto ret = RemoveSubgraphRecursively(compute_graph, (*iter));
+      if (ret != GRAPH_SUCCESS) {
+        return GRAPH_FAILED;
+      }
+      GELOGD("Remove %s from graph %s.", (*iter)->GetName().c_str(), compute_graph->GetName().c_str());
+      iter = compute_graph->impl_->nodes_.erase(iter);
+      compute_graph->impl_->direct_nodes_size_--;
+      success_removed_nodes_size++;
+    } else {
+      iter++;
+    }
+  }
+  const auto to_be_remove_nodes_size = nodes.size();
+  if (success_removed_nodes_size != to_be_remove_nodes_size) {
+    GELOGW("Successfully remove %zu nodes but there are %zu nodes to be delete", success_removed_nodes_size,
+           to_be_remove_nodes_size);
+  }
+  return GRAPH_SUCCESS;
+}
 /// @brief Insert node: src->insert_node:input_index, insert_node:output_index->dst
 /// @param [in] src
 /// @param [in] dsts
@@ -3903,6 +3949,7 @@ void CompleteGraphBuilder::BuildNetOutputNodeWithLink(const OpDescPtr &net_outpu
     error_msg = log_msg + " failed: add NetOutput node failed.";
     return;
   }
+  owner_graph_->SetNetOutputNode(net_output);
 
   const size_t output_num = graph_outputs_.size();
   for (size_t i = 0U; i < output_num; i++) {

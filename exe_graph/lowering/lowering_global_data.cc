@@ -19,9 +19,15 @@
 #include "common/checker.h"
 #include "graph/debug/ge_log.h"
 #include "exe_graph/lowering/frame_selector.h"
+#include "runtime/allocator.h"
 
 namespace gert {
 namespace {
+const std::set<gert::TensorPlacement> kCurrentAllocatorSupportPlacement = {
+    TensorPlacement::kOnDeviceHbm, TensorPlacement::kOnHost, TensorPlacement::kFollowing};
+const std::set<gert::AllocatorUsage> kCurrentAllocatorSupportUsage = {
+    AllocatorUsage::kAllocNodeOutput, AllocatorUsage::kAllocNodeWorkspace, AllocatorUsage::kAllocNodeShapeBuffer};
+
 bool CurrentOnInitGraph() {
   ge::NodePtr subgraph_node = nullptr;
   auto current_graph = bg::ValueHolder::GetCurrentGraph();
@@ -33,6 +39,26 @@ bool CurrentOnInitGraph() {
   if (subgraph_node != nullptr) {
     return strcmp(subgraph_node->GetType().c_str(), GetExecuteGraphTypeStr(ExecuteGraphType::kInit)) == 0;
   } else {
+    return false;
+  }
+}
+/*
+ * 此处用于判断是否能使用init图里的allocator:
+ * 1.用户设置了always_external_allocator选项
+ * 2.AllocatorDesc在我们当前支持的allocator范围内
+ *
+ * 为了兼容性考虑，当前只能支持现有的allocator，否则后续我们新增placement/useage时则会出错，用户老的版本加上我们新的软件会出错
+ * */
+bool CanUseInitAllocator(const bool always_external_allocator, const AllocatorDesc &desc) {
+  if (!always_external_allocator) {
+    return false;
+  }
+  if ((kCurrentAllocatorSupportPlacement.count(desc.placement) > 0U) &&
+      (kCurrentAllocatorSupportUsage.count(desc.usage) > 0U)) {
+    return true;
+  } else {
+    GELOGW("We don't support placement[%d] or usage[%d] current while always_external_allocator is true",
+           static_cast<int32_t>(desc.placement), static_cast<int32_t>(desc.usage));
     return false;
   }
 }
@@ -99,15 +125,28 @@ LoweringGlobalData &LoweringGlobalData::SetExternalAllocator(bg::ValueHolderPtr 
   return *this;
 }
 
-bg::ValueHolderPtr LoweringGlobalData::GetExternalAllocator(const AllocatorDesc &desc,
-                                                            const ExecuteGraphType &graph_type) const {
-  auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
-  auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
-  return bg::ValueHolder::CreateSingleDataOutput(
-      "GetAllocator",
-      {placement_holder, memory_type_holder, external_allocators_.holders[static_cast<size_t>(graph_type)]});
-}
-/*
+/* CanUseInitAllocator is true
+ * +------------------------------------------------------------------+
+ * |Main Graph                                                        |
+ * |                 AllocMemory                                      |
+ * |                     |                                            |
+ * |                 (allocator)                                      |
+ * |                     |                                            |
+ * |                 InnerData                                        |
+ * +------------------------------------------------------------------+
+ * +------------------------------------------------------------------+
+ * |Init Graph                                                        |
+ * |                                                                  |
+ * |                   InnerNetOutput                                 |
+ * |                        ^                                         |
+ * |                        |                                         |
+ * |                    GetAllocator                                  |
+ * |                   /     |      \                                 |
+ * |  Const(placement) Const(usage) Data(Allocator)(-2) |             |
+ * +------------------------------------------------------------------+
+ */
+
+/* CanUseInitAllocator is false
  * +------------------------------------------------------------------+
  * |Main Graph                                                        |
  * |                 (allocator)                                      |
@@ -145,62 +184,96 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(const AllocatorDesc 
   if (allocator_holder != nullptr) {
     return allocator_holder;
   }
-  // 用户设置了的always_external_allocator情况下，校验外置allocator不为空，
-  // 同时将外置的allocator设置为UniqueValueHolder便于后续直接获取
-  if (lowering_option_.always_external_allocator) {
-    bg::ValueHolderPtr ext_allocator_holder;
+  /*
+   * 用户设置always_external_allocator场景下，同时external_allocators_不为空的情况下，一定认为所有类型的allocator都创建好了，原因：
+   * 1.不能考虑外置的external_allocators_中存在某些类型的allocator没有创建，之前为了保证正确性，必须在构图时根据placement跟usage
+   * 创建一个CreateAllocator节点，在执行时创建兜底的allocator对象，但是allocator对象是需要浪费host内存资源，对单算子场景下，
+   * 频繁创建导致host内存上升，因此设置了always_external_allocator的场景下不考虑某些类型的allocator没有创建
+   *
+   * 2.为什么这个地方不能判断满足当前placement+usage的allocator是否已经创建好了？这个地方还在构图，此时还是valueholder，还没有到初始化
+   * 执行，因此无法感知用户是否完整创建了所有allocator，只有初始化图执行时才知道。
+   *
+   * 3.因此对于此场景，考虑在初始化图执行时做一个校验，用户设置了always_external_allocator的场景下，确保所有类型的allocator都创建好了
+   *  因此, 在单算子场景下，需要无脑校验
+   *
+   * 4.为了兼容性考虑，当前只能支持现有的allocator，否则后续我们新增placement/useage时则会出错，用户老的版本加上我们新的软件会出错
+   *
+   * 5.always_external_allocator可以后续整改为always_use_init_allocator
+   * */
+  if (CanUseInitAllocator(lowering_option_.always_external_allocator, desc)) {
+    bg::ValueHolderPtr init_selected_allocator = nullptr;
+    auto init_out =
+        bg::FrameSelector::OnInitRoot([&desc, &init_selected_allocator, this]() -> std::vector<bg::ValueHolderPtr> {
+          auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
+          auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
+          if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)] != nullptr) {
+            init_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
+                "GetAllocator",
+                {placement_holder, memory_type_holder,
+                 external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)]});
+          } else {
+            GELOGE(ge::PARAM_INVALID, "always_external_allocator option is true but external_allocators is nullptr!");
+            init_selected_allocator = nullptr;
+          }
+          return {init_selected_allocator};
+        });
+    GE_ASSERT_EQ(init_out.size(), 1U);
+    GE_ASSERT_NOTNULL(init_out[0]);
+
+    auto allocator = bg::FrameSelector::OnMainRoot([&init_out]() -> std::vector<bg::ValueHolderPtr> {
+      return {init_out[0]};
+    });
+    GE_ASSERT_EQ(allocator.size(), 1U);
+
+    SetUniqueValueHolder(key + "-Init", init_selected_allocator);
+    SetUniqueValueHolder(key, allocator[0]);
     if (from_init) {
-      GE_ASSERT_NOTNULL(external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)]);
-      ext_allocator_holder = GetExternalAllocator(desc, ExecuteGraphType::kInit);
-      SetUniqueValueHolder(init_key, ext_allocator_holder);
+      return init_selected_allocator;
     } else {
-      GE_ASSERT_NOTNULL(external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)]);
-      ext_allocator_holder = GetExternalAllocator(desc, ExecuteGraphType::kMain);
-      SetUniqueValueHolder(key, ext_allocator_holder);
+      return allocator[0];
     }
-    return ext_allocator_holder;
-  }
-
-  bg::ValueHolderPtr init_selected_allocator = nullptr;
-  auto init_out = bg::FrameSelector::OnInitRoot([&desc, &init_selected_allocator,
-                                                 this]() -> std::vector<bg::ValueHolderPtr> {
-    auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
-    auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
-    auto created_allocator =
-        bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {placement_holder, memory_type_holder});
-    if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)] != nullptr) {
-      init_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
-          "SelectAllocator",
-          {placement_holder, memory_type_holder,
-           external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)],
-           created_allocator, GetStream()});
-    } else {
-      init_selected_allocator = created_allocator;
-    }
-
-    return {created_allocator, placement_holder, memory_type_holder};
-  });
-  GE_ASSERT_EQ(init_out.size(), 3U);
-
-  auto allocator = bg::FrameSelector::OnMainRoot([&init_out, this]() -> std::vector<bg::ValueHolderPtr> {
-    auto main_selected_allocator = init_out[0];
-    if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)] != nullptr) {
-      main_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
-          "SelectAllocator",
-          {init_out[1], init_out[2], external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)],
-           init_out[0], GetStream()});
-    }
-    return {main_selected_allocator};
-  });
-  GE_ASSERT_EQ(allocator.size(), 1U);
-
-  SetUniqueValueHolder(key + "-Init", init_selected_allocator);
-  SetUniqueValueHolder(key, allocator[0]);
-
-  if (from_init) {
-    return init_selected_allocator;
   } else {
-    return allocator[0];
+    bg::ValueHolderPtr init_selected_allocator = nullptr;
+    auto init_out = bg::FrameSelector::OnInitRoot([&desc, &init_selected_allocator,
+                                                      this]() -> std::vector<bg::ValueHolderPtr> {
+      auto placement_holder = bg::ValueHolder::CreateConst(&desc.placement, sizeof(desc.placement));
+      auto memory_type_holder = bg::ValueHolder::CreateConst(&desc.usage, sizeof(desc.usage));
+      auto created_allocator =
+          bg::ValueHolder::CreateSingleDataOutput("CreateAllocator", {placement_holder, memory_type_holder});
+      if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)] != nullptr) {
+        init_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
+            "SelectAllocator",
+            {placement_holder, memory_type_holder,
+             external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)],
+             created_allocator, GetStream()});
+      } else {
+        init_selected_allocator = created_allocator;
+      }
+
+      return {created_allocator, placement_holder, memory_type_holder};
+    });
+    GE_ASSERT_EQ(init_out.size(), 3U);
+
+    auto allocator = bg::FrameSelector::OnMainRoot([&init_out, this]() -> std::vector<bg::ValueHolderPtr> {
+      auto main_selected_allocator = init_out[0];
+      if (external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)] != nullptr) {
+        main_selected_allocator = bg::ValueHolder::CreateSingleDataOutput(
+            "SelectAllocator",
+            {init_out[1], init_out[2], external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kMain)],
+             init_out[0], GetStream()});
+      }
+      return {main_selected_allocator};
+    });
+    GE_ASSERT_EQ(allocator.size(), 1U);
+
+    SetUniqueValueHolder(key + "-Init", init_selected_allocator);
+    SetUniqueValueHolder(key, allocator[0]);
+
+    if (from_init) {
+      return init_selected_allocator;
+    } else {
+      return allocator[0];
+    }
   }
 }
 

@@ -22,6 +22,7 @@
 #include "checker/summary_checker.h"
 #include "checker/topo_checker.h"
 #include "exe_graph/lowering/lowering_opt.h"
+#include "graph/utils/graph_utils.h"
 
 namespace gert {
 namespace {
@@ -236,13 +237,15 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_ExternalAllocatorSet_UseAlways
 
   auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
   ASSERT_NE(allocator1, nullptr);
-  EXPECT_EQ(allocator1->GetNode()->GetType(), "GetAllocator");
-  EXPECT_EQ(NodeTopoChecker(allocator1).StrictConnectFrom(
-            {{"Const"}, {"Const"}, {"Data"}}),
-            "success");
+  EXPECT_EQ(allocator1->GetNode()->GetType(), "Init");
+
   auto create_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("CreateAllocator");
   // 外置allocator后，图中就不存在CreateAllocator节点了
   ASSERT_EQ(create_allocator_node, nullptr);
+
+  auto get_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("GetAllocator");
+  // 外置allocator后，init
+  ASSERT_NE(get_allocator_node, nullptr);
 
   bg::ValueHolderPtr init_allocator = nullptr;
   bg::FrameSelector::OnInitRoot([&]() -> std::vector<bg::ValueHolderPtr> {
