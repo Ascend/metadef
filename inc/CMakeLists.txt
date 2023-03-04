@@ -21,6 +21,7 @@ target_include_directories(metadef_headers INTERFACE
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/exe_graph>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/external>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/external/exe_graph>
+    $<BUILD_INTERFACE:${METADEF_DIR}/inc/external/op_common>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/graph>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/graph/utils>
     $<BUILD_INTERFACE:${METADEF_DIR}/inc/register>
@@ -41,6 +42,7 @@ target_include_directories(metadef_headers INTERFACE
     $<INSTALL_INTERFACE:include/metadef/exe_graph>
     $<INSTALL_INTERFACE:include/metadef/external>
     $<INSTALL_INTERFACE:include/metadef/external/exe_graph>
+    $<INSTALL_INTERFACE:include/metadef/external/op_common>
     $<INSTALL_INTERFACE:include/metadef/graph>
     $<INSTALL_INTERFACE:include/metadef/graph/utils>
     $<INSTALL_INTERFACE:include/metadef/register>
