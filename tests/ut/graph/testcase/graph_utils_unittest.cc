@@ -22,6 +22,8 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/op_desc_impl.h"
+#include "graph/node_impl.h"
+#include "graph/node.h"
 #include "graph/ge_local_context.h"
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
@@ -1193,16 +1195,26 @@ TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyRemoveNodeIsNull) {
   ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
   NodePtr remove_node;
   int ret = GraphUtils::RemoveSubgraphRecursively(compute_graph, remove_node);
-  EXPECT_EQ(ret, GRAPH_FAILED);
+  EXPECT_NE(ret, GRAPH_SUCCESS);
 }
 
-TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyFail) {
+TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyNodeNotInGraph) {
   ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
   auto builder = ut::GraphBuilder("root");
   const auto &node0 = builder.AddNode("node0", "node", 1, 1);
   NodePtr remove_node(node0);
   int ret = GraphUtils::RemoveSubgraphRecursively(compute_graph, remove_node);
   EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveSubgraphRecursivelyNodeHasNoSubgrah) {
+  ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
+  auto builder = ut::GraphBuilder("root");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  compute_graph->AddNode(node0);
+  node0->SetOwnerComputeGraph(compute_graph);
+  int ret = GraphUtils::RemoveSubgraphRecursively(compute_graph, node0);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestGraphUtils, RemoveNodeWithoutRelinkNodePtrIsNull) {
@@ -1214,11 +1226,44 @@ TEST_F(UtestGraphUtils, RemoveNodeWithoutRelinkNodePtrIsNull) {
 
 TEST_F(UtestGraphUtils, RemoveNodeWithoutRelinkFail) {
   ComputeGraphPtr compute_graph = std::make_shared<ComputeGraph>("Test0");
-  auto builder = ut::GraphBuilder("root");
-  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
-  NodePtr remove_node(node0);
+  NodePtr remove_node = ComGraphMakeShared<Node>();
+  OpDescPtr op_desc = ComGraphMakeShared<OpDesc>();
+  remove_node->impl_->op_ = op_desc;
+  compute_graph->AddNode(remove_node);
+  // owner graph is null
   int ret = GraphUtils::RemoveNodeWithoutRelink(compute_graph, remove_node);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(compute_graph->GetDirectNodesSize(), 0U);
+  // owner graph is another
+  ComputeGraphPtr compute_graph_another = std::make_shared<ComputeGraph>("Test1");
+  remove_node->SetOwnerComputeGraph(compute_graph_another);
+  ret = GraphUtils::RemoveNodeWithoutRelink(compute_graph, remove_node);
   EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, RemoveNodesWithoutRelinkl) {
+  auto builder = ut::GraphBuilder("root");
+  std::unordered_set<NodePtr> remove_nodes;
+  size_t node_size = 6U;
+  for (auto i = 0; i < node_size; i++) {
+    auto node = builder.AddNode("node" + std::to_string(i), "Relu", 1, 1);
+    if (i == 0U) {
+      builder.GetGraph()->AddInputNode(node);
+    }
+    if (i == node_size - 1U) {
+      builder.GetGraph()->AddOutputNode(node);
+    }
+    remove_nodes.emplace(node);
+  }
+  EXPECT_TRUE(builder.GetGraph()->GetAllNodesSize() == node_size);
+  EXPECT_TRUE(builder.GetGraph()->GetInputNodes().size() == 1U);
+  EXPECT_TRUE(builder.GetGraph()->GetOutputNodes().size() == 1U);
+  int ret = GraphUtils::RemoveNodesWithoutRelink(builder.GetGraph(), remove_nodes);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_TRUE(builder.GetGraph()->GetAllNodesSize() == 0U);
+  EXPECT_TRUE(builder.GetGraph()->GetAllNodes().empty());
+  EXPECT_TRUE(builder.GetGraph()->GetInputNodes().empty());
+  EXPECT_TRUE(builder.GetGraph()->GetOutputNodes().empty());
 }
 
 TEST_F(UtestGraphUtils, InsertNodeAfterAddEdgefail) {

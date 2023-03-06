@@ -1013,7 +1013,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
       GELOGW("SubGraph of node %s index 0 is null. Null is invalid.", peer_node->GetName().c_str());
       return ge::PARAM_INVALID;
     }
-    const auto sub_graph_netoutput = sub_graph->FindFirstNodeMatchType(NETOUTPUT);
+    const auto sub_graph_netoutput = sub_graph->GetOrUpdateNetOutputNode();
     GE_CHECK_NOTNULL(sub_graph_netoutput);
 
     for (const auto &in_data_anchor : sub_graph_netoutput->GetAllInDataAnchors()) {

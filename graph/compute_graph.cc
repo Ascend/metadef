@@ -368,7 +368,7 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
     return nullptr;
   }
   op->SetId(static_cast<int64_t>(GetDirectNodesSize()));
-  const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
+  const NodePtr node_ptr = std::shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node_ptr == nullptr, GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!");
                   return nullptr);
   GE_IF_BOOL_EXEC(node_ptr->Init() != GRAPH_SUCCESS,
@@ -398,7 +398,7 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const ComputeGraphPtr &com
     return nullptr;
   }
   op->SetId(static_cast<int64_t>(GetDirectNodesSize()));
-  const NodePtr node_ptr = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
+  const NodePtr node_ptr = std::shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node_ptr == nullptr,
                   REPORT_CALL_ERROR("E18888", "create node failed.");
                   GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
@@ -416,7 +416,7 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const int64_t id, const Co
     return nullptr;
   }
   op->SetId(id);
-  const NodePtr node = shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
+  const NodePtr node = std::shared_ptr<Node>(new (std::nothrow) Node(op, compute_graph));
   GE_IF_BOOL_EXEC(node == nullptr,
                   REPORT_CALL_ERROR("E18888", "create node failed.");
                   GELOGE(GRAPH_FAILED, "[Create][Node] node_ptr is NULL!!!"); return nullptr);
@@ -689,7 +689,7 @@ shared_ptr<ComputeGraph> ComputeGraphImpl::GetParentGraph() const {
   return parent_graph_.lock();
 }
 
-void ComputeGraphImpl::SetParentGraph(const shared_ptr<ComputeGraph> &parent) {
+void ComputeGraphImpl::SetParentGraph(const std::shared_ptr<ComputeGraph> &parent) {
   parent_graph_ = parent;
 }
 
@@ -697,8 +697,24 @@ shared_ptr<Node> ComputeGraphImpl::GetParentNode() const {
   return parent_node_.lock();
 }
 
-void ComputeGraphImpl::SetParentNode(const shared_ptr<Node> &parent) {
+void ComputeGraphImpl::SetParentNode(const std::shared_ptr<Node> &parent) {
   parent_node_ = parent;
+}
+
+shared_ptr<Node> ComputeGraphImpl::GetOrUpdateNetOutputNode() {
+  auto graph_netoutput = graph_netoutput_.lock();
+  if (graph_netoutput == nullptr || graph_netoutput->GetType() != NETOUTPUT) {
+    graph_netoutput = FindFirstNodeMatchType(NETOUTPUT);
+    SetNetOutputNode(graph_netoutput);
+  }
+  if (graph_netoutput == nullptr) {
+    GELOGW("Graph %s has no netoutput node", GetName().c_str());
+  }
+  return graph_netoutput;
+}
+
+void ComputeGraphImpl::SetNetOutputNode(const std::shared_ptr<Node> &netoutput_node) {
+  graph_netoutput_ = netoutput_node;
 }
 
 /// @brief Update input-mapping
@@ -1201,6 +1217,7 @@ void ComputeGraphImpl::Swap(ComputeGraphImpl &graph) {
   names_to_subgraph_.swap(graph.names_to_subgraph_);
   parent_graph_.swap(graph.parent_graph_);
   parent_node_.swap(graph.parent_node_);
+  graph_netoutput_.swap(graph.graph_netoutput_);
 
   // the members followed should not in the ComputeGraphImpl class
   std::swap(is_valid_flag_, graph.is_valid_flag_);
@@ -1742,20 +1759,29 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::AppendGraphOut
   impl_->AppendGraphOutNodes(out_nodes_map);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY shared_ptr<ComputeGraph> ComputeGraph::GetParentGraph() {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<ComputeGraph> ComputeGraph::GetParentGraph() {
   return impl_->GetParentGraph();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetParentGraph(
-    const shared_ptr<ComputeGraph> &parent) {
+    const std::shared_ptr<ComputeGraph> &parent) {
   impl_->SetParentGraph(parent);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY shared_ptr<Node> ComputeGraph::GetParentNode() {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<Node> ComputeGraph::GetParentNode() {
   return impl_->GetParentNode();
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetParentNode(const shared_ptr<Node> &parent) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetNetOutputNode(
+    const std::shared_ptr<Node> &netoutput_node) {
+  return impl_->SetNetOutputNode(netoutput_node);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<Node> ComputeGraph::GetOrUpdateNetOutputNode() {
+  return impl_->GetOrUpdateNetOutputNode();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetParentNode(const std::shared_ptr<Node> &parent) {
   return impl_->SetParentNode(parent);
 }
 

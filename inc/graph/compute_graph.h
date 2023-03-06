@@ -157,10 +157,16 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   void AppendGraphOutNodes(const std::map<std::string, std::vector<int32_t>> out_nodes_map);
 
   std::shared_ptr<ComputeGraph> GetParentGraph();
-  void SetParentGraph(const shared_ptr<ComputeGraph> &parent);
+  void SetParentGraph(const std::shared_ptr<ComputeGraph> &parent);
   std::shared_ptr<Node> GetParentNode();
-  void SetParentNode(const shared_ptr<Node> &parent);
-
+  void SetParentNode(const std::shared_ptr<Node> &parent);
+  /**
+ * 获取图的`NETOUTPUT`节点, 如果图中直接获取的`NETOUTPUT`节点无效，则会遍历图寻找
+ * 类型为`NETOUTPUT`的节点，调用`SetNetOutputNode`刷新并返回
+ * @return 如果查找成功返回图的输出节点，如果失败返回nullptr
+ */
+  std::shared_ptr<Node> GetOrUpdateNetOutputNode();
+  void SetNetOutputNode(const std::shared_ptr<Node> &netoutput_node);
   const std::map<std::string, std::vector<int32_t>> &GetGraphOutNodes() const;
   void SetOrigGraph(const ComputeGraphPtr orig_graph);
 
