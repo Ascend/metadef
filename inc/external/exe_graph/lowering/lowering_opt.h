@@ -17,6 +17,8 @@
 #ifndef INC_EXTERNAL_LOWERING_OPT_H_
 #define INC_EXTERNAL_LOWERING_OPT_H_
 
+#include <cstdint>
+
 namespace gert {
 struct LoweringOption {
   /**
