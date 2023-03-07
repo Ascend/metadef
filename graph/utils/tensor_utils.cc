@@ -134,6 +134,11 @@ static graphStatus GetMaxShapeDimsFromNoTilingTensor(const GeTensorDesc &tensor_
     GELOGE(PARAM_INVALID, "[Check][Param] GetShapeRange failed.");
     return graph_status;
   }
+  if (range.empty()) {
+    GELOGW("[Check][Param] Shape range is empty");
+    output_dims = dims;
+    return GRAPH_SUCCESS;
+  }
   if (dims.size() != range.size()) {
     REPORT_INNER_ERROR("E18888", "Error shape range size.");
     GELOGE(PARAM_INVALID, "[Check][Param] size not matched dims_size[%zu] range_size[%zu].", dims.size(), range.size());
