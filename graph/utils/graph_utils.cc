@@ -584,14 +584,17 @@ void GraphUtils::RecordOriginalNames(const std::vector<ge::NodePtr> original_nod
   GE_CHK_BOOL_EXEC(node != nullptr, REPORT_INNER_ERROR("E18888", "param node is nullptr, check invalid.");
                    return, "[Check][Param] node is null.");
   std::vector<std::string> original_names;
+  std::vector<std::string> original_types;
   for (const auto &node_tmp : original_nodes) {
     std::vector<std::string> names_tmp;
+    std::vector<std::string> types_tmp;
     const ge::OpDescPtr opdesc_tmp = node_tmp->GetOpDesc();
     if (opdesc_tmp == nullptr) {
       GELOGE(GRAPH_FAILED, "[Check][Param] Node %s get opdesc is nullptr", node_tmp->GetName().c_str());
       continue;
     }
-    const auto ret = ge::AttrUtils::GetListStr(opdesc_tmp, ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp);
+    auto ret = ge::AttrUtils::GetListStr(opdesc_tmp, ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp);
+    ret = ge::AttrUtils::GetListStr(opdesc_tmp, ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, types_tmp);
     if (!ret) {
       GELOGW("[Get][Attr] Get attr _datadump_original_op_names failed");
       continue;
@@ -601,10 +604,18 @@ void GraphUtils::RecordOriginalNames(const std::vector<ge::NodePtr> original_nod
     } else {
       original_names.push_back(opdesc_tmp->GetName());
     }
+    if (types_tmp.size() != 0UL) {
+      (void)original_types.insert(original_types.end(), types_tmp.begin(), types_tmp.end());
+    } else {
+      original_types.push_back(opdesc_tmp->GetType());
+    }
   }
   GE_CHK_BOOL_EXEC(ge::AttrUtils::SetListStr(node->GetOpDesc(), ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names),
                    REPORT_INNER_ERROR("E18888", "Set original_op_names to node:%s fail.", node->GetName().c_str());
                    return, "[Invoke][SetListStr] Set original_op_names to node:%s fail.", node->GetName().c_str());
+  GE_CHK_BOOL_EXEC(ge::AttrUtils::SetListStr(node->GetOpDesc(), ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, original_types),
+                   REPORT_INNER_ERROR("E18888", "Set original_op_types to node:%s fail.", node->GetName().c_str());
+                   return, "[Invoke][SetListStr] Set original_op_types to node:%s fail.", node->GetName().c_str());
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::RecordOriginalNames(std::vector<std::string> names_tmp,

@@ -247,6 +247,45 @@ TEST_F(GraphPassUtilUT, set_output_desc_attr_case10) {
   EXPECT_EQ(oringin_attr_check, true);
 }
 
+TEST_F(GraphPassUtilUT, set_original_op_names_and_types) {
+  putenv("DUMP_GE_GRAPH=2");
+  OpDescPtr relu1 = std::make_shared<OpDesc>("relu1", "Relu");
+  OpDescPtr relu2 = std::make_shared<OpDesc>("relu2", "Relu");
+  vector<int64_t> dim = {4, 4, 1, 4};
+  GeShape shape(dim);
+  GeTensorDesc tenosr_desc(shape, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16);
+  tenosr_desc.SetOriginFormat(FORMAT_NCHW);
+  tenosr_desc.SetOriginDataType(DT_FLOAT);
+  relu1->AddInputDesc(tenosr_desc);
+  relu1->AddOutputDesc(tenosr_desc);
+  vector<string> names = {"ori_rule1"};
+
+  relu2->AddInputDesc(tenosr_desc);
+  relu2->AddOutputDesc(tenosr_desc);
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  NodePtr relu1_node = graph->AddNode(relu1);
+  NodePtr relu2_node = graph->AddNode(relu2);
+  vector<string> names_tmp = {"A", "B"};
+  vector<string> types_tmp = {"typeA", "typeB"};
+  const ge::OpDescPtr relu1_node_op_desc_ptr = relu1_node->GetOpDesc();
+  const ge::OpDescPtr relu2_node_op_desc_ptr = relu2_node->GetOpDesc();
+  (void)ge::AttrUtils::SetListStr(relu1_node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp);
+  (void)ge::AttrUtils::SetListStr(relu1_node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, types_tmp);
+
+  std::vector<ge::NodePtr> original_nodes = {relu1_node};
+
+  GraphPassUtil::RecordOriginalNames(original_nodes, relu2_node);
+  vector<string> original_names;
+  vector<string> original_types;
+  ge::AttrUtils::GetListStr(relu2_node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  ge::AttrUtils::GetListStr(relu2_node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, original_types);
+
+  vector<string> original_names_check = {"A", "B"};
+  vector<string> original_types_check = {"typeA", "typeB"};
+  EXPECT_EQ(original_names_check, original_names);
+  EXPECT_EQ(original_types_check, original_types);
+}
+
 TEST_F(GraphPassUtilUT, set_output_desc_attr_case11) {
   putenv("DUMP_GE_GRAPH=2");
   OpDescPtr relu1 = std::make_shared<OpDesc>("relu1", "Relu");

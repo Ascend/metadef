@@ -435,6 +435,7 @@ void GraphPassUtil::RecordOriginalNames(const std::vector<ge::NodePtr> &original
                                         const ge::NodePtr &node) {
   // 1. get the original_names
   std::vector<std::string> original_names;
+  std::vector<std::string> original_types;
   for (const ge::NodePtr &original_node : original_nodes) {
     if ((original_node == nullptr) || (original_node->GetOpDesc() == nullptr)) {
       return;
@@ -442,17 +443,26 @@ void GraphPassUtil::RecordOriginalNames(const std::vector<ge::NodePtr> &original
 
     const ge::OpDescPtr origin_op_desc_ptr = original_node->GetOpDesc();
     std::vector<std::string> names_tmp;
-    const bool is_has_attr =
+    std::vector<std::string> types_tmp;
+    bool is_has_attr =
         ge::AttrUtils::GetListStr(origin_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp) &&
         !names_tmp.empty();
+    is_has_attr = ge::AttrUtils::GetListStr(origin_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, types_tmp) &&
+                  !types_tmp.empty();
     if (is_has_attr) {
       for (const auto &node_name : names_tmp) {
         if (!node_name.empty()) {
           original_names.push_back(node_name);
         }
       }
+      for (const auto &node_type : types_tmp) {
+        if (!node_type.empty()) {
+          original_types.push_back(node_type);
+        }
+      }
     } else {
       original_names.push_back(origin_op_desc_ptr->GetName());
+      original_types.push_back(origin_op_desc_ptr->GetType());
     }
   }
 
@@ -462,6 +472,7 @@ void GraphPassUtil::RecordOriginalNames(const std::vector<ge::NodePtr> &original
   }
   const ge::OpDescPtr node_op_desc_ptr = node->GetOpDesc();
   (void)ge::AttrUtils::SetListStr(node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  (void)ge::AttrUtils::SetListStr(node_op_desc_ptr, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, original_types);
 }
 
 void GraphPassUtil::AddNodeToNodeTypeMap(const NodeTypeMapPtr &node_type_map, const std::string &op_type,
