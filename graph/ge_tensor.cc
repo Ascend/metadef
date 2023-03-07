@@ -104,6 +104,8 @@ const std::string TENSOR_UTILS_RC = "rc";
 const std::string TENSOR_UTILS_ORIGIN_SHAPE = "origin_shape";
 const std::string TENSOR_UTILS_ORIGIN_SHAPE_INITIALIZED = "origin_shape_initialized";
 const std::string TENSOR_UTILS_ORIGIN_FORMAT = "origin_format";
+const std::string TENSOR_UTILS_ORIGIN_FORMAT_INT = "origin_format_for_int";
+const std::string TENSOR_UTILS_FORMAT = "format";
 const std::string TENSOR_UTILS_ORIGIN_DATA_TYPE = "origin_data_type";
 const std::string TENSOR_UTILS_SHAPE_RANGE = "shape_range";
 const std::string TENSOR_UTILS_ORIGIN_SHAPE_RANGE = "origin_shape_range";
@@ -147,6 +149,11 @@ void GeTensorSerializeUtils::GeTensorDescAsProto(const GeTensorDescImpl &desc, p
     // serialize member object
     (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_FORMAT].set_s(
         TypeUtils::FormatToSerialString(desc.GetOriginFormat()));
+
+    (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_FORMAT_INT].set_i(desc.GetOriginFormat());
+
+    (*proto->mutable_attr())[TENSOR_UTILS_FORMAT].set_i(desc.GetFormat());
+
     if (desc.GetOriginDataType() != DT_UNDEFINED) {
       (*proto->mutable_attr())[TENSOR_UTILS_ORIGIN_DATA_TYPE].set_s(
           TypeUtils::DataTypeToSerialString(desc.GetOriginDataType()));
@@ -337,6 +344,14 @@ void GeTensorSerializeUtils::GetFormatFromDescProto(const proto::TensorDescripto
   if (proto == nullptr) {
     return;
   }
+
+  auto &attrs = proto->attr();
+  auto const attr_iter = attrs.find(TENSOR_UTILS_FORMAT);
+  if (attr_iter != attrs.end()) {
+    format = static_cast<Format>(attr_iter->second.i());
+    return;
+  }
+
   format = TypeUtils::SerialStringToFormat(proto->layout());
 }
 
@@ -345,6 +360,13 @@ void GeTensorSerializeUtils::GetOriginFormatFromDescProto(const proto::TensorDes
     return;
   }
   auto &attrs = proto->attr();
+
+  auto const attr_iter = attrs.find(TENSOR_UTILS_ORIGIN_FORMAT_INT);
+  if (attr_iter != attrs.end()) {
+    format = static_cast<Format>(attr_iter->second.i());
+    return;
+  }
+
   auto const iter = attrs.find(TENSOR_UTILS_ORIGIN_FORMAT);
   if (iter != attrs.end()) {
     format = TypeUtils::SerialStringToFormat(iter->second.s());
