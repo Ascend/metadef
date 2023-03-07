@@ -1393,6 +1393,10 @@ int replay_stub_throw(ReplayFuncParam& param, const int core_typ) {
   return 1;
 }
 
+int replay_stub_invalid_ret(ReplayFuncParam& param, const int core_typ) {
+  return 0;
+}
+
 TEST_F(UtestRegister, tik2_py_interface_op_replay_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0); 
   std::string op_type = "tik2_py_interface_op_replay_ok";
@@ -1487,9 +1491,29 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_task_ration) {
   std::string kernel_name = "tik2_py_interface_op_replay_invalid_task_ration";
   std::string entry_file = "tik2_py_interface_op_replay_invalid_task_ration_entry_file.h";
   std::string output_kernel_file = "tik2_py_interface_op_replay_invalid_task_ration_kernel_file.cce";
-  int core_type = 4;
+  int core_type = 0;
   int task_ration = -1;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_task_ration, ascend710, replay_stub);
+  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
+                                    core_type, task_ration),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_ret) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  std::string op_type = "tik2_py_interface_op_replay_invalid_ret";
+  std::string soc_version = "ascend710";
+  int blkdim = 32;
+  std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
+  std::string kernel_name = "tik2_py_interface_op_replay_invalid_ret";
+  std::string entry_file = "tik2_py_interface_op_replay_invalid_ret_entry_file.h";
+  std::string output_kernel_file = "tik2_py_interface_op_replay_invalid_ret_kernel_file.cce";
+  int core_type = 1;
+  int task_ration = 2;
+  REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_ret, ascend710, replay_stub_invalid_ret);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
                                     kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
                                     core_type, task_ration),
