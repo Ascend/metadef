@@ -230,6 +230,7 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   void AppendIrInput(std::string name, IrInputType input_type);
   const std::vector<std::pair<std::string, IrInputType>> &GetIrInputs() const;
+  size_t GetIrInputsSize() const;
 
   void AppendIrOutput(std::string name, IrOutputType output_type);
   const std::vector<std::pair<std::string, IrOutputType>> &GetIrOutputs() const;

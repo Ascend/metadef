@@ -84,6 +84,7 @@ class OpDescImpl {
   OpDesc::Vistor<GeTensorDescPtr> GetAllInputsDescPtr(const ConstOpDescPtr &op_desc) const;
 
   size_t GetInputsSize() const;
+  size_t GetIrInputsSize() const;
   size_t GetAllInputsSize() const;
 
   graphStatus AddOutputDesc(const ge::GeTensorDesc &output_desc);
