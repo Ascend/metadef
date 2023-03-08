@@ -344,7 +344,7 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
   ge::AscendString op_type_str = optype;
   auto check_func = OpCheckFuncRegistry::GetOpCapability(check_type_str, op_type_str);
   if (check_func == nullptr) {
-    GELOGE(ge::GRAPH_FAILED, "Failed to GetOpCapability. check_type = %s, optype = %s", check_type, optype);
+    GELOGW("Failed to GetOpCapability. check_type = %s, optype = %s", check_type, optype);
     return 0;
   }
 
@@ -390,7 +390,7 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
   ge::AscendString op_type_str = optype;
   auto generalize_func = OpCheckFuncRegistry::GetParamGeneralize(op_type_str);
   if (generalize_func == nullptr) {
-    GELOGE(ge::GRAPH_FAILED, "Failed to GetParamGeneralize. optype = %s", optype);
+    GELOGW("Failed to GetParamGeneralize. optype = %s", optype);
     return 0;
   }
 
@@ -431,7 +431,7 @@ extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_
   ge::AscendString op_type_str = optype;
   auto tiling_def = CTilingDataClassFactory::CreateTilingDataInstance(op_type_str);
   if (tiling_def == nullptr) {
-    GELOGE(ge::GRAPH_FAILED, "Failed to CreateTilingDataInstance. optype = %s", optype);
+    GELOGW("Failed to CreateTilingDataInstance. optype = %s", optype);
     return 0;
   }
 
