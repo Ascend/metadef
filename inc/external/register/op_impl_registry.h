@@ -114,11 +114,11 @@ class OpImplRegisterV2 {
   OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, bool private_attr_val);
   OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, const std::vector<float> &private_attr_val);
   template<typename T>
-  OpImplRegisterV2 &TilingParse(KernelRegistry::KernelFunc tiling_parse_func) {
+  OpImplRegisterV2 &TilingParse(const KernelRegistry::KernelFunc tiling_parse_func) {
     return TilingParse(tiling_parse_func, CreateCompileInfo<T>, DeleteCompileInfo<T>);
   }
   template<typename T>
-  OpImplRegisterV2 &TilingParse(OpImplRegister::TilingParseFunc tiling_parse_func) {
+  OpImplRegisterV2 &TilingParse(const OpImplRegister::TilingParseFunc tiling_parse_func) {
     return TilingParse(reinterpret_cast<KernelRegistry::KernelFunc>(tiling_parse_func), CreateCompileInfo<T>,
                        DeleteCompileInfo<T>);
   }
