@@ -814,6 +814,10 @@ bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, proto::ModelDef &model_
         return false;
       }
       auto tensor_def = iter->second.mutable_t();
+      if (tensor_def->data().empty()) {
+        GELOGW("Weight attr of node: %s is empty", op_def.name().c_str());
+        continue;
+      }
       std::string model_name = GetRegulatedName(model_def.name());
       std::string file_path = kTmpWeight + model_name + "/" +
                               op_def.type() + "_" + std::to_string(constant_op_id) + "_file";
