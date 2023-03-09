@@ -594,7 +594,7 @@ void GraphUtils::RecordOriginalNames(const std::vector<ge::NodePtr> original_nod
       continue;
     }
     auto ret = ge::AttrUtils::GetListStr(opdesc_tmp, ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, names_tmp);
-    ret = ge::AttrUtils::GetListStr(opdesc_tmp, ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, types_tmp);
+    ge::AttrUtils::GetListStr(opdesc_tmp, ATTR_NAME_DATA_DUMP_ORIGIN_OP_TYPES, types_tmp);
     if (!ret) {
       GELOGW("[Get][Attr] Get attr _datadump_original_op_names failed");
       continue;
