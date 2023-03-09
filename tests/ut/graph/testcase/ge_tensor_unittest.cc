@@ -21,10 +21,11 @@
 #define private public
 #define protected public
 #include "graph/ge_tensor.h"
-
+#include "ge_ir.pb.h"
 #include "graph/ge_attr_value.h"
 #include "graph/tensor.h"
 #include "graph/utils/tensor_utils.h"
+#include "graph/utils/type_utils.h"
 #include "graph/ge_tensor_impl.h"
 #undef private
 #undef protected
@@ -367,4 +368,67 @@ TEST_F(UtestGeTensor, NullObject) {
   EXPECT_EQ(shape1.GetDims(), ints);
   GeTensorSerializeUtils::GetOriginShapeFromDescProto(nullptr, shape1);
   EXPECT_EQ(shape1.GetDims(), ints);
+}
+
+TEST_F(UtestGeTensor, GetFormatFromDescProto_OnlyGetPrimaryFormat_SerializeOp) {
+  GeShape shape({1, 2, 3, 4});
+  GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
+  desc.SetOriginDataType(DT_INT32);
+  desc.SetOriginFormat(FORMAT_FRACTAL_Z);
+  desc.SetOriginShape(GeShape({4, 3, 2, 1}));
+  GeTensor tensor(desc);
+  proto::TensorDescriptor desc_proto;
+  desc_proto.set_layout(TypeUtils::FormatToSerialString(desc.GetFormat()));
+  // get format through opdesc
+  Format format_result;
+  GeTensorSerializeUtils::GetFormatFromDescProto(&desc_proto, format_result);
+  EXPECT_EQ(format_result, FORMAT_NC1HWC0);
+}
+
+TEST_F(UtestGeTensor, GetFormatFromDescProto_GetFullFormat_SerializeOp) {
+  GeShape shape({1, 2, 3, 4});
+  // {c0_value, bit_value}: c0_value = 2 ^ (bit_value - 1)
+  // {1, 1}, {2, 2}, {4, 3}, {8, 4}, {16, 5}, {32, 6}, {64, 7}, {128, 8}, {256, 9}
+  // 5 indicates that cube size is 16
+  const Format format = static_cast<Format>(GetFormatFromSubAndC0(FORMAT_NC1HWC0, FORMAT_RESERVED, 5));
+  const Format origin_format = static_cast<Format>(GetFormatFromSubAndC0(FORMAT_FRACTAL_Z, FORMAT_RESERVED, 4));
+  GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
+  desc.SetOriginDataType(DT_INT32);
+  desc.SetOriginFormat(FORMAT_FRACTAL_Z);
+  desc.SetOriginShape(GeShape({4, 3, 2, 1}));
+  GeTensor tensor(desc);
+  proto::TensorDescriptor desc_proto;
+  desc_proto.set_layout(TypeUtils::FormatToSerialString(desc.GetFormat()));
+
+  // get format through attr
+  ge::proto::AttrDef format_attr;
+  format_attr.set_i(format);
+  (void)desc_proto.mutable_attr()->insert({"format", format_attr});
+  Format format_result;
+  GeTensorSerializeUtils::GetFormatFromDescProto(&desc_proto, format_result);
+  EXPECT_EQ(format_result, format);
+}
+
+TEST_F(UtestGeTensor, GetOriginFormatFromDescProto_GetFullOriginFormat_SerializeOp) {
+  GeShape shape({1, 2, 3, 4});
+  // {c0_value, bit_value}: c0_value = 2 ^ (bit_value - 1)
+  // {1, 1}, {2, 2}, {4, 3}, {8, 4}, {16, 5}, {32, 6}, {64, 7}, {128, 8}, {256, 9}
+  // 5 indicates that cube size is 16
+  const Format format = static_cast<Format>(GetFormatFromSubAndC0(FORMAT_NC1HWC0, FORMAT_RESERVED, 5));
+  const Format origin_format = static_cast<Format>(GetFormatFromSubAndC0(FORMAT_FRACTAL_Z, FORMAT_RESERVED, 4));
+  GeTensorDesc desc(shape, FORMAT_NC1HWC0, DT_FLOAT16);
+  desc.SetOriginDataType(DT_INT32);
+  desc.SetOriginFormat(FORMAT_FRACTAL_Z);
+  desc.SetOriginShape(GeShape({4, 3, 2, 1}));
+  GeTensor tensor(desc);
+  proto::TensorDescriptor desc_proto;
+  desc_proto.set_layout(TypeUtils::FormatToSerialString(desc.GetFormat()));
+
+  // get format through attr
+  ge::proto::AttrDef ori_format_attr;
+  ori_format_attr.set_i(origin_format);
+  (void)desc_proto.mutable_attr()->insert({"origin_format_for_int", ori_format_attr});
+  Format origin_format_result;
+  GeTensorSerializeUtils::GetOriginFormatFromDescProto(&desc_proto, origin_format_result);
+  EXPECT_EQ(origin_format_result, origin_format);
 }

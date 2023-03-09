@@ -1133,7 +1133,8 @@ const std::string ATTR_HOROVOD_ATTR_REDUCE_TYPE = "reduce_op";
 // used for allreduce tailing optimization
 const std::string ATTR_NAME_HCCL_FUSED_GROUP = "_hccl_fused_group";
 const std::string ATTR_NAME_HCCL_FUSED_FLAG = "_hccl_fused_node";
-
+// used for recording the number of tasks to be issued for each operator
+const std::string ATTR_NAME_HCCL_TASK_NUM = "_hccl_task_num";
 // used for parallel group
 const std::string ATTR_NAME_PARALLEL_GROUP = "_parallel_group";
 

@@ -16,6 +16,8 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_TENSOR_H_
 #define METADEF_CXX_INC_EXE_GRAPH_TENSOR_H_
 
+#include <cstring>
+
 #include "graph/ge_error_codes.h"
 #include "storage_shape.h"
 #include "storage_format.h"
@@ -28,19 +30,19 @@ using ConstTensorAddress = void *const;  ///< Tensor地址
 class Tensor {
  public:
   Tensor() {
-    memset(reserved_field_, 0, sizeof(reserved_field_));
+    (void)memset_s(reserved_field_, sizeof(reserved_field_), 0, sizeof(reserved_field_));
   }
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, const TensorPlacement placement,
          const ge::DataType data_type, TensorAddress addr)
       : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type),
         tensor_data_(addr, nullptr, static_cast<size_t>(ge::GetSizeInBytes(GetShapeSize(), data_type_)), placement) {
     (void) reserved_;
-    memset(reserved_field_, 0, sizeof(reserved_field_));
+    (void)memset_s(reserved_field_, sizeof(reserved_field_), 0, sizeof(reserved_field_));
   }
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, ge::DataType data_type)
       : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type) {
     (void) reserved_;
-    memset(reserved_field_, 0, sizeof(reserved_field_));
+    (void)memset_s(reserved_field_, sizeof(reserved_field_), 0, sizeof(reserved_field_));
   }
   /**
    * 获取shape size，所谓shape size是指本shape中包含的element数量
