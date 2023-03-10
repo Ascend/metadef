@@ -741,6 +741,11 @@ const std::string &ErrorManager::GetLogHeader() {
 }
 
 error_message::Context &ErrorManager::GetErrorManagerContext() {
+  // son thread need set father thread work_stream_id, but work_stream_id cannot be zero
+  // so GenWorkStreamIdDefault here directly
+  if (error_context_.work_stream_id == 0UL) {
+    GenWorkStreamIdDefault();
+  }
   return error_context_;
 }
 

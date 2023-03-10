@@ -4,7 +4,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10001",
-      "ErrMessage": "Value [%s] for parameter [%s] is invalid. Reason: %s.",
+      "ErrMessage": "Value [%s] for parameter [%s] is invalid. Reason: %s",
       "Arglist": "value,parameter,reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -15,7 +15,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid --input_shape Argument",
       "ErrCode": "E10002",
-      "ErrMessage": "Value [%s] for parameter [--input_shape] is invalid. Reason: %s. The value must be formatted as [%s].",
+      "ErrMessage": "Value [%s] for parameter [--input_shape] is invalid. Reason: %s The value must be formatted as [%s].",
       "Arglist": "shape,reason,sample",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -26,7 +26,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10003",
-      "ErrMessage": "Value [%s] for parameter [--%s] is invalid. Reason: %s.",
+      "ErrMessage": "Value [%s] for parameter [--%s] is invalid. Reason: %s",
       "Arglist": "value,parameter,reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -114,7 +114,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid --input_shape Argument",
       "ErrCode": "E10011",
-      "ErrMessage": "Value [%s] for parameter [--input_shape] is invalid. Shape values must be positive integers. The error value in the shape is %s.",
+      "ErrMessage": "Value [%s] for parameter [--input_shape] is invalid. Shape values must be positive integers. The error value in the shape is %s",
       "Arglist": "shape,result",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -224,7 +224,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10021",
-      "ErrMessage": "Path for parameter [--%s] is too long. Keep the length within %s.",
+      "ErrMessage": "Path for parameter [--%s] is too long. Keep the length within %s",
       "Arglist": "parameter,size",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -268,7 +268,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid --singleop Argument",
       "ErrCode": "E10025",
-      "ErrMessage": "File [%s] specified by [--singleop] is not a valid JSON file. Reason: %s.",
+      "ErrMessage": "File [%s] specified by [--singleop] is not a valid JSON file. Reason: %s",
       "Arglist": "realpath,errmsg",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -477,7 +477,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid --input_shape_range Argument",
       "ErrCode": "E10048",
-      "ErrMessage": "Value [%s] for parameter [--input_shape_range] is invalid. Reason: %s. The value must be formatted as [%s].",
+      "ErrMessage": "Value [%s] for parameter [--input_shape_range] is invalid. Reason: %s The value must be formatted as [%s].",
       "Arglist": "shape_range,reason,sample",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -521,7 +521,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid AIPP Configuration",
       "ErrCode": "E10052",
-      "ErrMessage": "AIPP configuration is invalid. Reason: %s.",
+      "ErrMessage": "AIPP configuration is invalid. Reason: %s",
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "N/A",
@@ -532,7 +532,7 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E10053",
-      "ErrMessage": "There is an error in the command line. Reason: %s.",
+      "ErrMessage": "There is an error in the command line. Reason: %s",
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "N/A",

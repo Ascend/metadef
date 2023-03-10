@@ -3228,7 +3228,7 @@ graphStatus GraphUtils::MergeInputNodes(const ComputeGraphPtr &graph, const Node
   for (const auto &node : graph->GetDirectNode()) {
     GE_CHECK_NOTNULL(node);
     if (node->GetType() != DATA) {
-      if (node->GetInDataNodes().empty()) {
+      if (node->GetInAllNodes().empty()) {
         (void)src_nodes.emplace(node);
       }
       continue;

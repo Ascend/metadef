@@ -200,7 +200,9 @@ TEST_F(UtestErrorManager, SetStage) {
 
 TEST_F(UtestErrorManager, Context) {
   auto &instance = ErrorManager::GetInstance();
+  instance.error_context_.work_stream_id = 0;
   auto context = instance.GetErrorManagerContext();
+  EXPECT_NE(instance.error_context_.work_stream_id, 0);
   instance.SetErrorContext(context);
 }
 
