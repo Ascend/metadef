@@ -1850,31 +1850,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(
     GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
   }
-  const auto op_def = ComGraphMakeShared<proto::OpDef>();
-  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
-
-  ModelSerializeImp imp;
-  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
-
-  imp.SetProtobufOwner(op_def);
-  OpDescPtr op_desc = nullptr;
-  if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
-    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
-    return nullptr;
-  }
-
-  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
-  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
-  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
-                                         org_op_desc->impl_->input_name_idx_.cend());
-  op_desc->impl_->MutableIRMeta() = org_op_desc->impl_->GetIRMeta();
-  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
-                                          org_op_desc->impl_->output_name_idx_.cend());
-
-  op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
-  op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
-  op_desc->impl_->verifier_func_ = org_op_desc->impl_->verifier_func_;
-
+  OpDescPtr op_desc = ComGraphMakeShared<OpDesc>(*org_op_desc);
   return op_desc;
 }
 
