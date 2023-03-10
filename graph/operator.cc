@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "external/graph/operator.h"
+
 #include <cstdint>
 #include <algorithm>
 #include <mutex>
@@ -38,7 +40,6 @@
 #include "tensor_type_impl.h"
 #include "op_io.h"
 #include "operator_impl.h"
-#include "external/graph/operator.h"
 #include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_utils_ex.h"
 #include "graph/utils/op_desc_utils_ex.h"
