@@ -1288,6 +1288,17 @@
       }
     },
     {
+      "errClass": "FE Errors",
+      "errTitle": "Compile result is not found",
+      "ErrCode": "E22001",
+      "ErrMessage": "Compile result is not found for Op [%s, %s].",
+      "Arglist": "opname,optype",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "AI CPU Errors",
       "errTitle": "NN Process Count Limit Exceeded",
       "ErrCode": "E30003",
