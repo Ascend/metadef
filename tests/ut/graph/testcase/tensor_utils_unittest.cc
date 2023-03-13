@@ -510,7 +510,7 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingDimsSizeIs0) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
-TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingWithEmptyRange) {
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingFail) {
   vector<int64_t> dims({0, -1});
   GeShape ge_shape(dims);
   Format format;
@@ -519,7 +519,7 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSizeForNoTilingWithEmptyRange) {
   GeTensorDesc tensor(ge_shape);
   graphStatus ret =
       TensorUtils::CalcTensorMemSizeForNoTiling(tensor, format, data_type, mem_size);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(ret, PARAM_INVALID);
 }
 
 TEST_F(ge_test_tensor_utils, GetMaxShapeDimsFromNoTilingTensorFail) {
