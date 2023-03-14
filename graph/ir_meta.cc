@@ -104,19 +104,6 @@ bool IRMetaData::operator==(const IRMetaData &other) const {
                  "OpDesc.ir_meta.optional_input_names_");
 }
 
-IRMetaData::IRMetaData(const IRMetaData &other) {
-  ir_attr_names_ = other.GetIrAttrNames();
-  ir_inputs_ = other.GetIrInputs();
-  subgraph_ir_names_to_type_ = other.GetSubgraphIrNames();
-}
-
-IRMetaData &IRMetaData::operator=(const IRMetaData &other) {
-  ir_attr_names_ = other.GetIrAttrNames();
-  ir_inputs_ = other.GetIrInputs();
-  subgraph_ir_names_to_type_ = other.GetSubgraphIrNames();
-  return *this;
-}
-
 std::set<std::string> IRMetaData::GetOptionalInputName() const {
   return optional_input_names_;
 }

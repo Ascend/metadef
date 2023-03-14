@@ -248,7 +248,18 @@ class GraphUtils {
                                       std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                       std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth);
 
+  /**
+   * 拷贝OpDesc对象，跟`CopyOpDesc`方法的区别是`CloneOpDesc`的拷贝内容精简一些
+   * @param org_op_desc
+   * @return
+   */
   static OpDescPtr CloneOpDesc(const ConstOpDescPtr &org_op_desc);
+  /**
+   * 拷贝OpDesc对象，跟`CloneOpDesc`方法的区别是`CopyOpDesc`的拷贝内容是全量拷贝，
+   * 包括函数指针成员等
+   * @param org_op_desc
+   * @return
+   */
   static OpDescPtr CopyOpDesc(const ConstOpDescPtr &org_op_desc);
   /**
    * 接口行为是在数据`src`锚点所属的`src_node`节点和数据`dsts`锚点所属的`dst_node`节点们之间插入一个`insert_node`节点,
