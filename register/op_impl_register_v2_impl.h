@@ -20,7 +20,7 @@
 namespace gert {
 class OpImplRegisterV2Impl {
  public:
-  std::string op_type;
+  OpImplRegistry::OpType op_type;
   OpImplRegistry::OpImplFunctions functions;
   bool is_private_attr_registered = false;
 };

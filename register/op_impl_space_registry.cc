@@ -96,13 +96,19 @@ void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &
 void OpImplSpaceRegistry::MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl) const {
   for (auto iter = src_impl.cbegin(); iter != src_impl.cend(); ++iter) {
     auto op_type = iter->first;
-    GELOGD("Merge types to impl, op type %s", op_type.c_str());
+#ifndef ONLY_COMPILE_OPEN_SRC
+    GELOGD("Merge types to impl, op type %s", op_type.GetString());
+#endif
     if (merged_impl.find(op_type) == merged_impl.end()) {
       merged_impl[op_type] = src_impl[op_type];
       continue;
     } else {
       auto src_funcs = iter->second;
+#ifndef ONLY_COMPILE_OPEN_SRC
+      MergeFunctions(merged_impl[op_type], src_funcs, op_type.GetString());
+#else
       MergeFunctions(merged_impl[op_type], src_funcs, op_type);
+#endif
     }
   }
 }
@@ -115,18 +121,16 @@ ge::graphStatus OpImplSpaceRegistry::AddRegistry(const std::shared_ptr<OpImplReg
   return ge::GRAPH_SUCCESS;
 }
 
-const OpImplKernelRegistry::OpImplFunctions *OpImplSpaceRegistry::GetOpImpl(
-    const OpImplKernelRegistry::OpType &op_type) const {
-  auto iter = merged_types_to_impl_.find(op_type);
+const OpImplKernelRegistry::OpImplFunctions *OpImplSpaceRegistry::GetOpImpl(const std::string &op_type) const {
+  auto iter = merged_types_to_impl_.find(op_type.c_str());
   if (iter == merged_types_to_impl_.end()) {
     return nullptr;
   }
   return &iter->second;
 }
 
-const OpImplKernelRegistry::PrivateAttrList &OpImplSpaceRegistry::GetPrivateAttrs(
-    const OpImplKernelRegistry::OpType &op_type) const {
-  auto op_impl_ptr = GetOpImpl(op_type);
+const OpImplKernelRegistry::PrivateAttrList &OpImplSpaceRegistry::GetPrivateAttrs(const std::string &op_type) const {
+  auto op_impl_ptr = GetOpImpl(op_type.c_str());
   if (op_impl_ptr == nullptr) {
     static OpImplKernelRegistry::PrivateAttrList emptyPrivateAttr;
     return emptyPrivateAttr;

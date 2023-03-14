@@ -27,7 +27,6 @@
 namespace gert {
 namespace bg {
 namespace {
-using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
 ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
   auto ir_index_to_instance_index_pair_map
     = ge::OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(node->GetOpDesc());
@@ -105,19 +104,25 @@ ge::graphStatus InitCompileTimeTD(const ge::NodePtr &node, ComputeNodeInfo &comp
   }
   return ge::SUCCESS;
 }
-bool GetPrivateAttrsList(const ge::NodePtr &node, const PrivateAttrList &private_attrs,
+bool GetPrivateAttrsList(const ge::NodePtr &node, const gert::OpImplKernelRegistry::PrivateAttrList &private_attrs,
                          std::vector<ge::AnyValue> &runtime_attrs_list) {
   const auto &all_attrs = node->GetOpDesc()->GetAllAttrs();
   for (auto &private_attr : private_attrs) {
     auto &private_attr_name = private_attr.first;
+#ifndef ONLY_COMPILE_OPEN_SRC
+    auto iter = all_attrs.find(private_attr_name.GetString());
+#else
     auto iter = all_attrs.find(private_attr_name);
+#endif
     if (iter == all_attrs.end()) {
       if (!private_attr.second.IsEmpty()) {
         runtime_attrs_list.push_back(private_attr.second);
         continue;
       }
+#ifndef ONLY_COMPILE_OPEN_SRC
       GELOGE(ge::FAILED, "Can not find the private attr %s from node %s",
-             private_attr_name.c_str(), node->GetName().c_str());
+             private_attr_name.GetString(), node->GetName().c_str());
+#endif
       return false;
     }
     runtime_attrs_list.push_back(iter->second);
@@ -176,7 +181,7 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, Buffer
 
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node,
                                                  BufferPool &buffer_pool,
-                                                 const PrivateAttrList &private_attrs,
+                                                 const gert::OpImplKernelRegistry::PrivateAttrList &private_attrs,
                                                  size_t &total_size) {
   std::vector<ge::AnyValue> runtime_attrs_list;
   GE_ASSERT_TRUE(GetPrivateAttrsList(node, private_attrs, runtime_attrs_list));

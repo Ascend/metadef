@@ -28,9 +28,9 @@ namespace gert {
 class OpImplRegistry : public OpImplKernelRegistry {
  public:
   static OpImplRegistry &GetInstance();
-  OpImplFunctions &CreateOrGetOpImpl(const OpType &op_type);
-  const OpImplFunctions *GetOpImpl(const OpType &op_type) const override;
-  const PrivateAttrList &GetPrivateAttrs(const OpType &op_type) const override;
+  OpImplFunctions &CreateOrGetOpImpl(const ge::char_t *op_type);
+  const OpImplFunctions *GetOpImpl(const ge::char_t *op_type) const override;
+  const PrivateAttrList &GetPrivateAttrs(const ge::char_t *op_type) const override;
   const std::map<OpType, OpImplFunctions> &GetAllTypesToImpl() const;
   std::map<OpType, OpImplFunctions> &GetAllTypesToImpl();
 

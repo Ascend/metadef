@@ -35,9 +35,15 @@ struct OpImplKernelRegistry {
   using InferShapeRangeKernelFunc = UINT32 (*)(InferShapeRangeContext *);
   using TilingKernelFunc = UINT32 (*)(TilingContext *);
   using InferDataTypeKernelFunc = UINT32 (*)(InferDataTypeContext *);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  using OpType = ge::AscendString;
+  using PrivateAttrList = std::vector<std::pair<ge::AscendString, ge::AnyValue>>;
+  using PrivateAttrSet = std::unordered_set<ge::AscendString>;
+#else
   using OpType = std::string;
   using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
   using PrivateAttrSet = std::unordered_set<std::string>;
+#endif
   using CompileInfoCreatorFunc = void *(*)();
   using CompileInfoDeleterFunc = void (*)(void *);
 
@@ -79,8 +85,8 @@ struct OpImplKernelRegistry {
     uint8_t reserved_1_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
   };
   virtual ~OpImplKernelRegistry() {}
-  virtual const OpImplFunctions *GetOpImpl(const std::string &op_type) const = 0;
-  virtual const PrivateAttrList &GetPrivateAttrs(const std::string &op_type) const = 0;
+  virtual const OpImplFunctions *GetOpImpl(const ge::char_t *op_type) const = 0;
+  virtual const PrivateAttrList &GetPrivateAttrs(const ge::char_t *op_type) const = 0;
 };
 }  // namespace gert
 
