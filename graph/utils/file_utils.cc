@@ -88,7 +88,7 @@ inline int32_t CheckAndMkdir(const char_t *tmp_dir_path, mmMode_t mode) {
  *  @return -1 fail
  *  @return 0 success
  */
-int32_t CreateDirectory(const std::string &directory_path) {
+int32_t CreateDir(const std::string &directory_path) {
   GE_CHK_BOOL_EXEC(!directory_path.empty(),
                    REPORT_INNER_ERROR("E18888", "directory path is empty, check invalid");
                        return -1, "[Check][Param] directory path is empty.");
@@ -113,6 +113,17 @@ int32_t CreateDirectory(const std::string &directory_path) {
     }
   }
   return CheckAndMkdir(directory_path.c_str(), mkdir_mode);
+}
+
+/**
+ *  @ingroup domi_common
+ *  @brief Create directory, support to create multi-level directory
+ *  @param [in] directory_path  Path, can be multi-level directory
+ *  @return -1 fail
+ *  @return 0 success
+ */
+int32_t CreateDirectory(const std::string &directory_path) {
+  return CreateDir(directory_path);
 }
 
 std::unique_ptr<char_t[]> GetBinFromFile(std::string &path, uint32_t &data_len) {
@@ -216,7 +227,7 @@ graphStatus SaveBinToFile(const char * const data, size_t length, const std::str
   std::string file_name;
   SplitFilePath(file_path, dir_path, file_name);
   if (!dir_path.empty()) {
-    GE_ASSERT_TRUE((CreateDirectory(dir_path) == kFileSuccess),
+    GE_ASSERT_TRUE((CreateDir(dir_path) == kFileSuccess),
                    "Create direct failed, path: %s.", file_path.c_str());
   }
   std::string real_path = RealPath(dir_path.c_str());

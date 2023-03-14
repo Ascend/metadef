@@ -85,7 +85,7 @@ ge::graphStatus OmOpImplRegistryHolder::CreateOmOppDir(std::string &opp_dir) con
   GELOGD("opp_dir is %s", opp_dir.c_str());
 
   GE_ASSERT_TRUE(mmAccess2(opp_dir.c_str(), M_F_OK) != EN_OK);
-  GE_ASSERT_TRUE(ge::CreateDirectory(opp_dir) == 0);
+  GE_ASSERT_TRUE(ge::CreateDir(opp_dir) == 0);
 
   return ge::GRAPH_SUCCESS;
 }

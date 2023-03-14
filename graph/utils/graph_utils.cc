@@ -30,6 +30,7 @@
 #include "graph/ge_context.h"
 #include "graph/debug/ge_util.h"
 #include "proto/ge_ir.pb.h"
+#include "graph/utils/file_utils.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
@@ -43,6 +44,7 @@
 #include "graph/op_desc_impl.h"
 #include "mmpa/mmpa_api.h"
 #include "common/checker.h"
+
 
 namespace ge {
 enum class DumpGraphLevel {
@@ -743,8 +745,8 @@ graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
       const std::lock_guard<std::mutex> lock(mutex);
       GetDumpGraphPrefix(stream_file_name);
       if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
-        if (CreateDirectory(stream_file_name.str()) != 0) {
-          GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+        if (CreateDir(stream_file_name.str()) != 0) {
+          GELOGW("[DumpGraph][CreateDir] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
           stream_file_name.str("");
           stream_file_name << "./";
         }
@@ -767,8 +769,8 @@ graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
         return GRAPH_PARAM_INVALID;
       }
 
-      if ((mmAccess2(path_dir.c_str(), M_F_OK) != EN_OK) && (CreateDirectory(path_dir) != 0)) {
-        GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", path_dir.c_str());
+      if ((mmAccess2(path_dir.c_str(), M_F_OK) != EN_OK) && (CreateDir(path_dir) != 0)) {
+        GELOGW("[DumpGraph][CreateDir] Create dump graph dir failed, path:%s", path_dir.c_str());
         path_dir = "./";
       }
       (void)relative_path.append(path_dir);
@@ -1120,9 +1122,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   std::stringstream stream_file_name;
   GetDumpGraphPrefix(stream_file_name);
   if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
-    const int32_t ret = CreateDirectory(stream_file_name.str());
+    const int32_t ret = CreateDir(stream_file_name.str());
     if (ret != 0) {
-      GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+      GELOGW("[DumpGraph][CreateDir] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
       stream_file_name.str("");
       stream_file_name << "./";
     }

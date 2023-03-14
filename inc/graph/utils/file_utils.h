@@ -40,6 +40,14 @@ std::string RealPath(const char_t *path);
  * @param [in] directory_path  Path, which can be a multi-level directory.
  * @return 0 success, 1- fail.
  */
+int32_t CreateDir(const std::string &directory_path);
+
+/**
+ * @ingroup domi_common
+ * @brief  Recursively Creating a Directory, deprecated, use CreateDir instead
+ * @param [in] directory_path  Path, which can be a multi-level directory.
+ * @return 0 success, 1- fail.
+ */
 int32_t CreateDirectory(const std::string &directory_path);
 
 std::unique_ptr<char[]> GetBinFromFile(std::string &path, uint32_t &data_len);
