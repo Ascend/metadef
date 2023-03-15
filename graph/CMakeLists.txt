@@ -61,6 +61,7 @@ set(GRAPH_BASE_SOURCE_LIST
     "compile_cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
     "profiler.cc"
     "ir_definitions_recover.cc"
+    "tensor.cc"
 )
 
 set(DATA_FLOW_GRAPH_SOURCE_LIST
@@ -74,7 +75,6 @@ set(DATA_FLOW_GRAPH_SOURCE_LIST
 SET(GRAPH_SOURCE_LIST
     "ascend_string.cc"
     "attr_value.cc"
-    "tensor.cc"
     "axis_type_info.cc"
     "operator.cc"
     "operator_factory.cc"
@@ -327,7 +327,6 @@ add_custom_command(
            ${CMAKE_CURRENT_BINARY_DIR}/stub_graph.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_operator.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_operator_factory.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_tensor.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
@@ -337,7 +336,6 @@ add_custom_command(
             && mv graph.cc stub_graph.cc
             && mv operator.cc stub_operator.cc
             && mv operator_factory.cc stub_operator_factory.cc
-            && mv tensor.cc stub_tensor.cc
             && mv inference_context.cc stub_inference_context.cc
             && mv ascend_string.cc stub_ascend_string.cc
             && mv gnode.cc stub_gnode.cc
@@ -349,10 +347,10 @@ add_custom_target(graph_stub
             ${CMAKE_CURRENT_BINARY_DIR}/stub_graph.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_operator.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_operator_factory.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_tensor.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
+            ${METADEF_DIR}/graph/stub/operator_stub.cc
 )
 
 #############################################################
@@ -362,10 +360,10 @@ add_library(atc_stub_graph SHARED
     stub_graph.cc
     stub_operator.cc
     stub_operator_factory.cc
-    stub_tensor.cc
     stub_attr_value.cc
     stub_ascend_string.cc
     stub_gnode.cc
+    ${METADEF_DIR}/graph/stub/operator_stub.cc
 )
 add_dependencies(atc_stub_graph graph_stub)
 
@@ -379,9 +377,20 @@ target_compile_options(atc_stub_graph PRIVATE
     -fno-common
 )
 
-target_link_libraries(atc_stub_graph PRIVATE
-    intf_pub
-    metadef_headers
+target_link_libraries(atc_stub_graph
+    PRIVATE
+        intf_pub
+        air_headers
+        static_mmpa
+        -Wl,--no-as-needed
+        graph_base
+        c_sec
+        json
+        -Wl,--as-needed
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
+        -ldl
+    PUBLIC
+        metadef_headers
 )
 
 set_target_properties(atc_stub_graph PROPERTIES
@@ -394,11 +403,11 @@ add_library(fwk_stub_graph SHARED
     stub_graph.cc
     stub_operator.cc
     stub_operator_factory.cc
-    stub_tensor.cc
     stub_attr_value.cc
     stub_inference_context.cc
     stub_ascend_string.cc
     stub_gnode.cc
+    ${METADEF_DIR}/graph/stub/operator_stub.cc
 )
 
 add_dependencies(fwk_stub_graph graph_stub)
@@ -413,9 +422,20 @@ target_include_directories(fwk_stub_graph PRIVATE
     ${METADEF_DIR}
 )
 
-target_link_libraries(fwk_stub_graph PRIVATE
-    intf_pub
-    metadef_headers
+target_link_libraries(fwk_stub_graph
+    PRIVATE
+        intf_pub
+        air_headers
+        static_mmpa
+        -Wl,--no-as-needed
+        graph_base
+        c_sec
+        json
+        -Wl,--as-needed
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
+        -ldl
+    PUBLIC
+        metadef_headers
 )
 
 set_target_properties(fwk_stub_graph PROPERTIES
