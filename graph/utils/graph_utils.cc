@@ -30,6 +30,7 @@
 #include "graph/ge_context.h"
 #include "graph/debug/ge_util.h"
 #include "proto/ge_ir.pb.h"
+#include "graph/utils/file_utils.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
@@ -43,6 +44,7 @@
 #include "graph/op_desc_impl.h"
 #include "mmpa/mmpa_api.h"
 #include "common/checker.h"
+
 
 namespace ge {
 enum class DumpGraphLevel {
@@ -743,8 +745,8 @@ graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
       const std::lock_guard<std::mutex> lock(mutex);
       GetDumpGraphPrefix(stream_file_name);
       if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
-        if (CreateDirectory(stream_file_name.str()) != 0) {
-          GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+        if (CreateDir(stream_file_name.str()) != 0) {
+          GELOGW("[DumpGraph][CreateDir] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
           stream_file_name.str("");
           stream_file_name << "./";
         }
@@ -767,8 +769,8 @@ graphStatus GetDumpRealPath(const int64_t file_index, const std::string &suffix,
         return GRAPH_PARAM_INVALID;
       }
 
-      if ((mmAccess2(path_dir.c_str(), M_F_OK) != EN_OK) && (CreateDirectory(path_dir) != 0)) {
-        GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", path_dir.c_str());
+      if ((mmAccess2(path_dir.c_str(), M_F_OK) != EN_OK) && (CreateDir(path_dir) != 0)) {
+        GELOGW("[DumpGraph][CreateDir] Create dump graph dir failed, path:%s", path_dir.c_str());
         path_dir = "./";
       }
       (void)relative_path.append(path_dir);
@@ -1120,9 +1122,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   std::stringstream stream_file_name;
   GetDumpGraphPrefix(stream_file_name);
   if (mmAccess2(stream_file_name.str().c_str(), M_F_OK) != EN_OK) {
-    const int32_t ret = CreateDirectory(stream_file_name.str());
+    const int32_t ret = CreateDir(stream_file_name.str());
     if (ret != 0) {
-      GELOGW("[DumpGraph][CreateDirectory] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
+      GELOGW("[DumpGraph][CreateDir] Create dump graph dir failed, path:%s", stream_file_name.str().c_str());
       stream_file_name.str("");
       stream_file_name << "./";
     }
@@ -1861,31 +1863,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(
     GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
     return nullptr;
   }
-  const auto op_def = ComGraphMakeShared<proto::OpDef>();
-  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
-
-  ModelSerializeImp imp;
-  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
-
-  imp.SetProtobufOwner(op_def);
-  OpDescPtr op_desc = nullptr;
-  if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
-    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
-    return nullptr;
-  }
-
-  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
-  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
-  op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
-                                         org_op_desc->impl_->input_name_idx_.cend());
-  op_desc->impl_->MutableIRMeta() = org_op_desc->impl_->GetIRMeta();
-  op_desc->impl_->output_name_idx_.insert(org_op_desc->impl_->output_name_idx_.cbegin(),
-                                          org_op_desc->impl_->output_name_idx_.cend());
-
-  op_desc->impl_->infer_func_ = org_op_desc->impl_->infer_func_;
-  op_desc->impl_->infer_format_func_ = org_op_desc->impl_->infer_format_func_;
-  op_desc->impl_->verifier_func_ = org_op_desc->impl_->verifier_func_;
-
+  OpDescPtr op_desc = ComGraphMakeShared<OpDesc>(*org_op_desc);
   return op_desc;
 }
 

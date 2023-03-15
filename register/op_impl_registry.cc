@@ -28,7 +28,11 @@ void RegisterOpImplToRegistry(const OpImplRegisterV2Impl *rd) {
     GELOGW("The register data is invalid, the impl is nullptr");
     return;
   }
-  auto &funcs = OpImplRegistry::GetInstance().CreateOrGetOpImpl(rd->op_type);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  auto &funcs = OpImplRegistry::GetInstance().CreateOrGetOpImpl(rd->op_type.GetString());
+#else
+  auto &funcs = OpImplRegistry::GetInstance().CreateOrGetOpImpl(rd->op_type.c_str());
+#endif
   if (rd->functions.infer_shape != nullptr) {
     funcs.infer_shape = rd->functions.infer_shape;
   }
@@ -137,18 +141,18 @@ OpImplRegistry &OpImplRegistry::GetInstance() {
   return instance;
 }
 
-OpImplRegistry::OpImplFunctions &OpImplRegistry::CreateOrGetOpImpl(const OpImplRegistry::OpType &op_type) {
+OpImplRegistry::OpImplFunctions &OpImplRegistry::CreateOrGetOpImpl(const ge::char_t *op_type) {
   (void)reserved_;
   return types_to_impl_[op_type];
 }
-const OpImplRegistry::OpImplFunctions *OpImplRegistry::GetOpImpl(const OpImplRegistry::OpType &op_type) const {
+const OpImplRegistry::OpImplFunctions *OpImplRegistry::GetOpImpl(const ge::char_t *op_type) const {
   auto iter = types_to_impl_.find(op_type);
   if (iter == types_to_impl_.end()) {
     return nullptr;
   }
   return &iter->second;
 }
-const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const OpImplRegistry::OpType &op_type) const {
+const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const ge::char_t *op_type) const {
   auto op_impl_ptr = GetOpImpl(op_type);
   if (op_impl_ptr == nullptr) {
     static OpImplRegistry::PrivateAttrList emptyPrivateAttr;
@@ -233,8 +237,10 @@ OpImplRegisterV2 &OpImplRegisterV2::InputsDataDependency(std::initializer_list<i
     impl_->functions.inputs_dependency = 0;
     for (const auto index : inputs) {
       if (impl_->functions.SetInputDataDependency(index) != ge::GRAPH_SUCCESS) {
-        GELOGE(ge::FAILED, "Failed to set data dependency for node %s, the input index %d", impl_->op_type.c_str(),
+#ifndef ONLY_COMPILE_OPEN_SRC
+        GELOGE(ge::FAILED, "Failed to set data dependency for node %s, the input index %d", impl_->op_type.GetString(),
                index);
+#endif
         return *this;
       }
     }
@@ -302,7 +308,11 @@ int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num) {
   }
   size_t cnt = 0U;
   for (auto &it : types_to_impl) {
+#ifndef ONLY_COMPILE_OPEN_SRC
+    impl[cnt].op_type = it.first.GetString();
+#else
     impl[cnt].op_type = it.first.c_str();
+#endif
     impl[cnt].funcs = it.second;
     cnt++;
   }

@@ -20,7 +20,7 @@
 #include "graph/debug/ge_util.h"
 
 namespace ge {
-class UtestFileUtils : public testing::Test { 
+class UtestFileUtils : public testing::Test {
  public:
   std::string str1 = "/longpath/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   std::string str2 = "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -47,28 +47,28 @@ TEST_F(UtestFileUtils, RealPathIsNotExist) {
   EXPECT_EQ(res, "");
 }
 
-TEST_F(UtestFileUtils, CreateDirectoryPathIsNull) {
+TEST_F(UtestFileUtils, CreateDirPathIsNull) {
   std::string directory_path;
-  int32_t ret = ge::CreateDirectory(directory_path);
+  int32_t ret = ge::CreateDir(directory_path);
   EXPECT_EQ(ret, -1);
 }
 
-TEST_F(UtestFileUtils, CreateDirectorySuccess) {
+TEST_F(UtestFileUtils, CreateDirSuccess) {
   std::string directory_path = "D:\\123\\456";
-  int32_t ret = ge::CreateDirectory(directory_path);
+  int32_t ret = ge::CreateDir(directory_path);
   EXPECT_EQ(ret, 0);
   int delete_ret = remove(directory_path.c_str());
   EXPECT_EQ(delete_ret, 0);
 }
 
-TEST_F(UtestFileUtils, CreateDirectoryPathIsGreaterThanMaxPath) {
+TEST_F(UtestFileUtils, CreateDirPathIsGreaterThanMaxPath) {
   std::string directory_path;
   for (int i = 0; i < 4000; i++)
   {
     directory_path.append(std::to_string(i));
   }
   int ret = 0;
-  ret = ge::CreateDirectory(directory_path);
+  ret = ge::CreateDir(directory_path);
   EXPECT_EQ(ret, -1);
 }
 
@@ -78,9 +78,9 @@ TEST_F(UtestFileUtils, RealPath) {
   ASSERT_EQ(ge::RealPath(str5), "");
 }
 
-TEST_F(UtestFileUtils, CreateDirectory) {
-  ASSERT_EQ(ge::CreateDirectory("~/test"), 0); 
-  ASSERT_EQ(ge::CreateDirectory(UtestFileUtils::str3), -1);
+TEST_F(UtestFileUtils, CreateDir) {
+  ASSERT_EQ(ge::CreateDir("~/test"), 0);
+  ASSERT_EQ(ge::CreateDir(UtestFileUtils::str3), -1);
 }
 
 TEST_F(UtestFileUtils, GetBinFileFromFileSuccess) {

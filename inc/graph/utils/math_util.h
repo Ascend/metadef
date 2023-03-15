@@ -24,6 +24,7 @@
 #include <functional>
 #include <iostream>
 
+#include "graph/def_types.h"
 #include "external/utils/extern_math_util.h"
 #include "framework/common/debug/log.h"
 
@@ -127,6 +128,22 @@ inline uint64_t RoundUp(const uint64_t origin_value, const uint64_t multiple_of)
     return 0;
   }
   return (origin_value + multiple_of - 1) / multiple_of * multiple_of;
+}
+
+inline Status GeMemcpy(uint8_t *dst_ptr, size_t dst_size, const uint8_t *src_ptr, const size_t src_size) {
+  GE_CHK_BOOL_RET_STATUS((dst_size >= src_size), PARAM_INVALID, "memcpy_s verify fail, src size %zu, dst size %zu",
+      src_size, dst_size);
+  size_t offset = 0U;
+  size_t remain_size = src_size;
+  do {
+    size_t copy_size = (remain_size > SECUREC_MEM_MAX_LEN) ? SECUREC_MEM_MAX_LEN : remain_size;
+    const auto err = memcpy_s((dst_ptr + offset), (dst_size - offset), (src_ptr + offset), copy_size);
+    GE_CHK_BOOL_RET_STATUS(err == EOK, PARAM_INVALID, "memcpy_s err, src size %zu, dst size %zu",
+        copy_size, (dst_size - offset));
+    offset += copy_size;
+    remain_size -= copy_size;
+  } while (remain_size > 0U);
+  return SUCCESS;
 }
 }  // end namespace ge
 

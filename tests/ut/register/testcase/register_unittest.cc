@@ -918,7 +918,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok) {
 { "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "TestReluV2";
+  const char *op_type = "TestReluV2";
   const char *cmp_info = "";
   std::string runinfo(100, 'a');
   size_t size = 100;
@@ -929,7 +929,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
-  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
   std::string result =
@@ -948,7 +948,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_const_value) {
   std::string input_str = input.dump();
   std::string output_str = " ";
   std::string attrs_str = " ";
-  std::string op_type = "TestReluV2";
+  const char *op_type = "TestReluV2";
   const char *cmp_info = "";
   std::string runinfo(100, 'a');
   size_t size = 100;
@@ -959,7 +959,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_const_value) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
-  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             0);
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
@@ -976,7 +976,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_attr) {
 { "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
 { "name": "attr_1","dtype": "int9999","value": 99}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "TestReluV2";
+  const char *op_type = "TestReluV2";
   const char *cmp_info = "";
   std::string runinfo(100, 'a');
   size_t size = 100;
@@ -987,7 +987,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_attr) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
-  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             0);
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
@@ -1009,7 +1009,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_with_float_data) {
   const nlohmann::json output = R"([ 
 {"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
   std::string output_str = output.dump();
-  std::string op_type = "TestReluV2";
+  const char *op_type = "TestReluV2";
   const char *cmp_info = "";
   std::string runinfo(100, 'a');
   size_t size = 100;
@@ -1022,7 +1022,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_with_float_data) {
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
-  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
   gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
@@ -1041,7 +1041,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
   const nlohmann::json output = R"([ 
 {"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
   std::string output_str = output.dump();
-  std::string op_type = "AutoTiling";
+  const char *op_type = "AutoTiling";
   const char *cmp_info = "";
   std::string runinfo(100, 'a');
   size_t size = 100;
@@ -1049,7 +1049,7 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
   uint64_t *elapse = nullptr;
   const nlohmann::json attrs = R"([
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
-  EXPECT_EQ(TbeOpTilingPyInterface(op_type.c_str(), cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
 }
