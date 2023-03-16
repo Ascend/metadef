@@ -27,6 +27,7 @@ const size_t DIM_SIZE_SIX = 6;
 const size_t EXT_INDEX_INPUT_SIZE = 0;
 const size_t EXT_INDEX_HIDEEN_SIZE = 1;
 const size_t EXT_INDEX_STATE_SIZE = 2;
+const size_t EXT_INDEX_M0_VAL = 3;
 
 const int32_t AXIS_NCHW_DIM_N = 0;
 const int32_t AXIS_NCHW_DIM_C = 1;

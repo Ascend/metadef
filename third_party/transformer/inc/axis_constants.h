@@ -26,6 +26,9 @@ extern const size_t DIM_SIZE_SIX;
 extern const size_t EXT_INDEX_INPUT_SIZE;
 extern const size_t EXT_INDEX_HIDEEN_SIZE;
 extern const size_t EXT_INDEX_STATE_SIZE;
+#ifndef ONLY_COMPILE_OPEN_SRC
+extern const size_t EXT_INDEX_M0_VAL;
+#endif
 
 extern const int32_t AXIS_NCHW_DIM_N;
 extern const int32_t AXIS_NCHW_DIM_C;

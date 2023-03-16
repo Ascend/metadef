@@ -72,8 +72,11 @@ class TransformerTransferShapeUT : public testing::Test {
       }
       EXPECT_EQ(new_dim, expect_dim);
     }
-
-    ExtAxisValue ext_axis;
+#ifndef ONLY_COMPILE_OPEN_SRC
+    ExtAxisValue ext_axis = {1,1,-1,16};
+#else
+    ExtAxisValue ext_axis = {1,1,-1};
+#endif
     ge::GeShape src_shape(dims);
     ge::GeShape dst_shape;
     ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape, dst_shape);

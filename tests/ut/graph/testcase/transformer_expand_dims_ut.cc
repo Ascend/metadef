@@ -22,8 +22,6 @@
 #include "graph/debug/ge_attr_define.h"
 #include "axis_util.h"
 #include "expand_dimension.h"
-#include "transfer_shape_according_to_format.h"
-#include "transfer_range_according_to_format.h"
 
 namespace transformer {
 class TransformerExpandDimsUT : public testing::Test {
