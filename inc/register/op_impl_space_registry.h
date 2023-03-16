@@ -31,9 +31,9 @@ class OpImplSpaceRegistry : public std::enable_shared_from_this<OpImplSpaceRegis
 
   ge::graphStatus AddRegistry(const std::shared_ptr<OpImplRegistryHolder> &registry_holder);
 
-  const OpImplKernelRegistry::OpImplFunctions *GetOpImpl(const OpImplKernelRegistry::OpType &op_type) const;
+  const OpImplKernelRegistry::OpImplFunctions *GetOpImpl(const std::string &op_type) const;
 
-  const OpImplKernelRegistry::PrivateAttrList &GetPrivateAttrs(const OpImplKernelRegistry::OpType &op_type) const;
+  const OpImplKernelRegistry::PrivateAttrList &GetPrivateAttrs(const std::string &op_type) const;
 
  private:
   void MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl) const;
