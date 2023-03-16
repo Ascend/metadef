@@ -442,9 +442,11 @@ OutControlAnchorPtr Node::NodeImpl::GetOutControlAnchor() const {
 
 Node::Vistor<NodePtr> Node::NodeImpl::GetInNodes(const ge::ConstNodePtr &owner_node) const {
   std::vector<NodePtr> vec;
+  vec.reserve(GetInNodesSize());
   for (const auto &in_anchor : in_data_anchors_) {
-    GE_CHK_BOOL_EXEC((in_anchor != nullptr),
-                     continue, "[Check][Param] node:%s in_data_anchor is nullptr", GetName().c_str());
+    if (in_anchor == nullptr) {
+      continue;
+    }
     const auto out_anchor = in_anchor->GetPeerOutAnchor();
     if (out_anchor == nullptr) {
       continue;
@@ -453,21 +455,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetInNodes(const ge::ConstNodePtr &owner_n
     vec.push_back(node);
   }
   if (in_control_anchor_ != nullptr) {
-    if (in_control_anchor_->IsPeerOutAnchorsEmpty()) {
-      return Node::Vistor<NodePtr>(owner_node, vec);
-    }
-
-    const auto peer_out_anchors = in_control_anchor_->GetPeerOutDataAnchors();
-    for (const auto &out_anchor : peer_out_anchors) {
-      GE_CHK_BOOL_EXEC(out_anchor != nullptr, continue,
-                       "[Check][Param] node:%s in_control_anchor_ peer out data anchors is nullptr",
-                       GetName().c_str());
-      const auto node = out_anchor->GetOwnerNode();
-      vec.push_back(node);
-    }
-
-    const auto peer_out_control_anchors = in_control_anchor_->GetPeerOutControlAnchors();
-    for (const auto &out_control_anchor : peer_out_control_anchors) {
+    for (const auto &out_control_anchor : in_control_anchor_->GetPeerOutControlAnchors()) {
       const auto node = out_control_anchor->GetOwnerNode();
       vec.push_back(node);
     }
@@ -566,14 +554,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetOutNodes(const ge::ConstNodePtr &owner_
 }
 
 Node::Vistor<NodePtr> Node::NodeImpl::GetInAllNodes(const ge::ConstNodePtr &owner_node) const {
-  std::vector<NodePtr> vec;
-  for (const auto &in_node : GetInDataNodes(owner_node)) {
-    vec.push_back(in_node);
-  }
-  for (const auto &in_control_node : GetInControlNodes(owner_node)) {
-    vec.push_back(in_control_node);
-  }
-  return Node::Vistor<NodePtr>(owner_node, vec);
+  return GetInNodes(owner_node);
 }
 
 Node::Vistor<NodePtr> Node::NodeImpl::GetOutDataNodes(const ConstNodePtr &owner_node) const {
@@ -724,6 +705,29 @@ Node::Vistor<std::pair<NodePtr, InDataAnchorPtr>> Node::NodeImpl::GetOutDataNode
     }
   }
   return Node::Vistor<std::pair<NodePtr, InDataAnchorPtr>>(owner_node, vec);
+}
+
+size_t Node::NodeImpl::GetInDataNodesSize() const {
+  size_t size = 0U;
+  for (const auto &in_anchor : in_data_anchors_) {
+    if (in_anchor == nullptr) {
+      continue;
+    }
+    size += in_anchor->GetPeerAnchorsSize();
+  }
+  return size;
+}
+
+size_t Node::NodeImpl::GetInControlNodesSize() const {
+  size_t size = 0U;
+  if (in_control_anchor_ != nullptr) {
+    size = in_control_anchor_->GetPeerAnchorsSize();
+  }
+  return size;
+}
+
+size_t Node::NodeImpl::GetInNodesSize() const {
+  return GetInDataNodesSize() + GetInControlNodesSize();
 }
 
 Node::Node()
@@ -1048,5 +1052,17 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void Node::SetOrigNode(const Node
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY NodePtr Node::GetOrigNode() {
   return impl_->GetOrigNode();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY size_t Node::GetInDataNodesSize() const {
+  return impl_->GetInDataNodesSize();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY size_t Node::GetInControlNodesSize() const {
+  return impl_->GetInControlNodesSize();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY size_t Node::GetInNodesSize() const {
+  return impl_->GetInNodesSize();
 }
 }  // namespace ge

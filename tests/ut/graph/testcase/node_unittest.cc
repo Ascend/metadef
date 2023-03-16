@@ -25,6 +25,7 @@
 #include "graph/any_value.h"
 #include "graph/anchor.h"
 #include "graph/op_desc.h"
+#include "graph/utils/graph_utils.h"
 #include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 #include "graph/operator_factory_impl.h"
@@ -85,39 +86,59 @@ TEST_F(UtestNode, GetOutAnchor) {
   EXPECT_EQ(out_anchor0, nullptr);
 }
 
-TEST_F(UtestNode, EqualCase) {
+TEST_F(UtestNode, NodeInputAndOutCheck) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data_node = builder.AddNode("Data", "Data", 1, 1);
   auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
-  auto graph = builder.GetGraph();
-  Node n();
-  EXPECT_EQ(data_node->Init(), data_node->Init());
-  EXPECT_EQ(data_node->SetOwnerComputeGraph(nullptr), GRAPH_PARAM_INVALID);
-  EXPECT_EQ(data_node->ClearOwnerGraph(graph), GRAPH_SUCCESS);
-  EXPECT_EQ(data_node->GetAllInDataAnchors().size(), 1);
-  EXPECT_EQ(data_node->GetAllOutDataAnchors().size(), 1);
-  EXPECT_EQ(data_node->NodeMembersAreEqual(*data_node), true);
-  EXPECT_EQ(data_node->AddLinkFromForParse(attr_node), GRAPH_PARAM_INVALID);
-  EXPECT_EQ(data_node->AddLinkFrom(attr_node), GRAPH_PARAM_INVALID);
-  EXPECT_EQ(data_node->AddLinkFrom(2, attr_node), GRAPH_PARAM_INVALID);
-  EXPECT_EQ(data_node->AddLinkFrom("Attr", attr_node), GRAPH_PARAM_INVALID);
-  InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
-  OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 222);
-  EXPECT_EQ(data_node->NodeAnchorIsEqual(nullptr, in_anch, 1), false);
-  EXPECT_EQ(data_node->NodeAnchorIsEqual(in_anch, nullptr, 1), false);
-  EXPECT_EQ(data_node->NodeAnchorIsEqual(in_anch, out_anch, 1), true);
-  auto node3 = builder.AddNode("Data3", "Data3", 3, 3);
-  InControlAnchorPtr inc_anch = std::make_shared<InControlAnchor>(node3, 33);
-  EXPECT_EQ(out_anch->LinkTo(inc_anch), GRAPH_SUCCESS);
-  EXPECT_EQ(data_node->NodeAnchorIsEqual(out_anch, inc_anch, 1),false);
-  EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
-  EXPECT_EQ(attr_node->AddLinkFromForParse(data_node), GRAPH_SUCCESS);
-  EXPECT_EQ(attr_node->AddLinkFrom(2, data_node),GRAPH_SUCCESS);
-  EXPECT_EQ(attr_node->AddLinkFrom("Attr", data_node),GRAPH_SUCCESS);
-  EXPECT_EQ(data_node->GetOutNodes().size(), 3);
-  EXPECT_EQ(data_node->GetOutDataNodes().size(), 3);
-  EXPECT_EQ(data_node->GetOutDataNodesSize(), 3);
-  EXPECT_EQ(attr_node->GetInNodes().size(), 3);
+  {
+    auto data_node = builder.AddNode("Data", "Data", 1, 1);
+    auto graph = builder.GetGraph();
+    EXPECT_EQ(data_node->Init(), data_node->Init());
+    EXPECT_EQ(data_node->SetOwnerComputeGraph(nullptr), GRAPH_PARAM_INVALID);
+    EXPECT_EQ(data_node->ClearOwnerGraph(graph), GRAPH_SUCCESS);
+    EXPECT_EQ(data_node->GetAllInDataAnchors().size(), 1);
+    EXPECT_EQ(data_node->GetAllOutDataAnchors().size(), 1);
+    EXPECT_EQ(data_node->NodeMembersAreEqual(*data_node), true);
+    EXPECT_EQ(data_node->AddLinkFromForParse(attr_node), GRAPH_PARAM_INVALID);
+    EXPECT_EQ(data_node->AddLinkFrom(attr_node), GRAPH_PARAM_INVALID);
+    EXPECT_EQ(data_node->AddLinkFrom(2, attr_node), GRAPH_PARAM_INVALID);
+    EXPECT_EQ(data_node->AddLinkFrom("Attr", attr_node), GRAPH_PARAM_INVALID);
+    InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
+    OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 222);
+    EXPECT_EQ(data_node->NodeAnchorIsEqual(nullptr, in_anch, 1), false);
+    EXPECT_EQ(data_node->NodeAnchorIsEqual(in_anch, nullptr, 1), false);
+    EXPECT_EQ(data_node->NodeAnchorIsEqual(in_anch, out_anch, 1), true);
+    auto node3 = builder.AddNode("Data3", "Data3", 3, 3);
+    InControlAnchorPtr inc_anch = std::make_shared<InControlAnchor>(node3, 33);
+    EXPECT_EQ(out_anch->LinkTo(inc_anch), GRAPH_SUCCESS);
+    EXPECT_EQ(data_node->NodeAnchorIsEqual(out_anch, inc_anch, 1), false);
+    EXPECT_EQ(attr_node->AddLinkFrom(data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(attr_node->AddLinkFromForParse(data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(attr_node->AddLinkFrom(2, data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(attr_node->AddLinkFrom("Attr", data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(data_node->GetOutNodes().size(), 3U);
+    EXPECT_EQ(data_node->GetOutDataNodes().size(), 3U);
+    EXPECT_EQ(data_node->GetOutDataNodesSize(), 3U);
+    EXPECT_EQ(attr_node->GetInNodes().size(), 3U);
+    EXPECT_EQ(attr_node->GetInNodesSize(), 3U);
+    EXPECT_EQ(attr_node->GetInDataNodesSize(), 3U);
+    EXPECT_EQ(attr_node->GetInDataNodes().size(), 3U);
+    EXPECT_EQ(attr_node->GetInControlNodesSize(), 0U);
+    EXPECT_EQ(attr_node->GetInControlNodes().size(), 0U);
+    builder.AddControlEdge(data_node, attr_node);
+    EXPECT_EQ(attr_node->GetInNodes().size(), 4U);
+    EXPECT_EQ(attr_node->GetInNodesSize(), 4U);
+    EXPECT_EQ(attr_node->GetInDataNodesSize(), 3U);
+    EXPECT_EQ(attr_node->GetInDataNodes().size(), 3U);
+    EXPECT_EQ(attr_node->GetInControlNodesSize(), 1U);
+    EXPECT_EQ(attr_node->GetInControlNodes().size(), 1U);
+    EXPECT_EQ(GraphUtils::RemoveNodeWithoutRelink(builder.GetGraph(), data_node), GRAPH_SUCCESS);
+  }
+  EXPECT_EQ(attr_node->GetInNodes().size(), 0U);
+  EXPECT_EQ(attr_node->GetInNodesSize(), 0U);
+  EXPECT_EQ(attr_node->GetInDataNodesSize(), 0U);
+  EXPECT_EQ(attr_node->GetInDataNodes().size(), 0U);
+  EXPECT_EQ(attr_node->GetInControlNodesSize(), 0U);
+  EXPECT_EQ(attr_node->GetInControlNodes().size(), 0U);
 }
 
 TEST_F(UtestNode, GetCase) {

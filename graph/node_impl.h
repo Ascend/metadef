@@ -65,6 +65,9 @@ class Node::NodeImpl {
   Node::Vistor<NodePtr> GetInAllNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetOutDataNodes(const ConstNodePtr &owner_node) const;
   uint32_t GetOutDataNodesSize() const;
+  size_t GetInDataNodesSize() const;
+  size_t GetInControlNodesSize() const;
+  size_t GetInNodesSize() const;
   Node::Vistor<NodePtr> GetOutControlNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetOutAllNodes(const ConstNodePtr &owner_node) const;
 

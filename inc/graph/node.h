@@ -116,6 +116,9 @@ class Node : public std::enable_shared_from_this<Node> {
   // All out Data nodes
   Vistor<NodePtr> GetOutDataNodes() const;
   uint32_t GetOutDataNodesSize() const;
+  size_t GetInDataNodesSize() const;
+  size_t GetInControlNodesSize() const;
+  size_t GetInNodesSize() const;
   // All out Control nodes
   Vistor<NodePtr> GetOutControlNodes() const;
   // All out Data nodes and Control nodes
