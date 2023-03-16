@@ -1070,7 +1070,8 @@ void ScopeTree::ScopeTreeImpl::AddNodeToScope(ge::OperatorPtr &node_def) {
           GELOGE(FAILED, "Alloc Scope failed.");
           return;
         }
-        if (sub_scope->Init(scopes[i].c_str(), nullptr, super_scope) != SUCCESS) {
+        const auto ret = sub_scope->Init(scopes[i].c_str(), nullptr, super_scope);
+        if (ret != SUCCESS) {
           GELOGE(FAILED, "Init Scope failed.");
           delete sub_scope;
           sub_scope = nullptr;
