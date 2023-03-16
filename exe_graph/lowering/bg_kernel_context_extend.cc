@@ -23,6 +23,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_util.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/math_util.h"
 
 namespace gert {
 namespace bg {
@@ -161,8 +162,8 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
         offset, attr_size);
     return nullptr;
   }
-  GE_ASSERT_EOK(memcpy_s(attr, total_size - offset, attr_buf.get(), attr_size));
-
+  ret = ge::GeMemcpy(ge::PtrToPtr<RuntimeAttrs, uint8_t>(attr), (total_size - offset), attr_buf.get(), attr_size);
+  GE_ASSERT_SUCCESS(ret, "memcpy_s failed, copy size is %zu, dst size is %zu", attr_size, (total_size - offset));
   return compute_node_info_holder;
 }
 }  // namespace
