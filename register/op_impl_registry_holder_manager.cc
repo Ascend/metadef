@@ -119,7 +119,7 @@ ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpS
     GELOGE(ge::FAILED, "Failed to open file, path = %s", opp_path.c_str());
     return ge::GRAPH_FAILED;
   }
-  const int32_t write_count = mmWrite(fd, reinterpret_cast<void *>(const_cast<uint8_t *>(so_bin->GetBinData())),
+  const int32_t write_count = mmWrite(fd, const_cast<uint8_t *>(so_bin->GetBinData()),
                                       static_cast<uint32_t>(so_bin->GetBinDataSize()));
   if ((write_count == EN_INVALID_PARAM) || (write_count == EN_ERROR)) {
     GELOGE(ge::FAILED, "Write data failed. mmpa error no is %d", write_count);

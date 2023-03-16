@@ -51,9 +51,9 @@ ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::O
 }
 
 #define MERGE_FUNCTION(merged_funcs, src_funcs, op_type, func_name)           \
-  if (merged_funcs.func_name == nullptr) {                                    \
-    merged_funcs.func_name = src_funcs.func_name;                             \
-  } else if (src_funcs.func_name != nullptr) {                                \
+  if ((merged_funcs).func_name == nullptr) {                                    \
+    (merged_funcs).func_name = (src_funcs).func_name;                             \
+  } else if ((src_funcs).func_name != nullptr) {                                \
     GELOGW("op type %s %s func has been registered", op_type, #func_name);    \
   }
 
