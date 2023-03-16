@@ -403,7 +403,7 @@ TEST_F(UtestGeTensor, GetFormatFromDescProto_GetFullFormat_SerializeOp) {
   // get format through attr
   ge::proto::AttrDef format_attr;
   format_attr.set_i(format);
-  (void)desc_proto.mutable_attr()->insert({"format", format_attr});
+  (void)desc_proto.mutable_attr()->insert({"format_for_int", format_attr});
   Format format_result;
   GeTensorSerializeUtils::GetFormatFromDescProto(&desc_proto, format_result);
   EXPECT_EQ(format_result, format);
