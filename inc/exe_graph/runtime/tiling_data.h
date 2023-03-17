@@ -17,6 +17,7 @@
 #define METADEF_CXX_INC_EXE_GRAPH_TILING_DATA_H_
 #include <cstdint>
 #include <cstddef>
+#include <cstring>
 #include <type_traits>
 #include "exe_graph/runtime/continuous_vector.h"
 #include "exe_graph/runtime/runtime_attrs.h"
@@ -162,7 +163,7 @@ class TilingData {
     capacity_ = cap_size;
     data_size_ = 0UL;
     data_ = data;
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   ge::graphStatus AppendConvertedAttrVal(const RuntimeAttrs *attrs, const size_t attr_index,
