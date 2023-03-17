@@ -24,6 +24,7 @@
 #include "exe_graph/runtime/expand_dims_type.h"
 #include "external/graph/types.h"
 #include "framework/common/debug/ge_log.h"
+#include "external/graph/ge_error_codes.h"
 
 namespace transformer {
 namespace {
@@ -353,6 +354,58 @@ int64_t ExpandDimension::GenerateReshapeType(const ge::Format &origin_format, co
          std::bitset<kBitSetDisplaySize>(ret_reshape_type).to_string().c_str(), origin_format, origin_dim_size,
          valid_shape_type.c_str());
   return ret_reshape_type;
+}
+
+bool ExpandDimension::GenerateReshapeType(const ge::Format &origin_format, const ge::Format &format,
+                                          const size_t &origin_dim_size, const std::string &reshape_type,
+                                          int64_t &reshape_type_mask) {
+  auto primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(format));
+  GELOGD("Begin to generate integer reshape type, original format[%d], format[%d], dim size[%zu], reshape type[%s].",
+         origin_format, primary_format, origin_dim_size, reshape_type.c_str());
+  size_t full_size = 0;
+  if (!GetFormatFullSize(origin_format, full_size)) {
+    return true;
+  }
+  if (!IsNeedExpand(origin_format, primary_format, origin_dim_size, full_size, reshape_type)) {
+    return true;
+  }
+
+  std::string valid_shape_type = reshape_type;
+  if (!IsReshapeTypeValid(origin_format, origin_dim_size, reshape_type)) {
+    if (!GetDefaultReshapeType(origin_format, origin_dim_size, valid_shape_type)) {
+      return true;
+    }
+    GELOGD("Reshape type[%s] is invalid, using default reshape type[%s]",
+           reshape_type.c_str(), valid_shape_type.c_str());
+  }
+
+  if (origin_dim_size > valid_shape_type.length()) {
+    GELOGE(ge::GRAPH_FAILED, "The length of reshape type[%s] is longer than dim size[%zu]. Can not generate integer reshape type.",
+           valid_shape_type.c_str(), origin_dim_size);
+    return false;
+  }
+
+  uint32_t format_key = GenerateFormatKey(origin_format);
+  std::unordered_set<int32_t> dim_pos_set;
+  for (const char &dim : valid_shape_type.substr(0, origin_dim_size)) {
+    uint32_t axis_key = format_key | (static_cast<uint32_t>(dim) & 0xff);
+    auto iter_axis_index = AXIS_INDEX_OF_FORMAT.find(axis_key);
+    if (iter_axis_index != AXIS_INDEX_OF_FORMAT.end()) {
+      dim_pos_set.emplace(iter_axis_index->second);
+    }
+  }
+
+  for (size_t i = 0; i < full_size; i++) {
+    if (dim_pos_set.count(static_cast<int32_t>(i)) == 0) {
+      reshape_type_mask = reshape_type_mask | (1 << i);
+    }
+  }
+
+  reshape_type_mask = reshape_type_mask | (static_cast<uint64_t>(full_size) << kMaxReshapeTypeSize);
+  GELOGD("Integer reshape type[%s] has been generated for original format[%d], dim size[%zu], reshape type[%s].",
+         std::bitset<kBitSetDisplaySize>(reshape_type_mask).to_string().c_str(), origin_format, origin_dim_size,
+         valid_shape_type.c_str());
+  return true;
 }
 
 bool ExpandDimension::IsNeedExpand(const ge::Format &origin_format, const ge::Format &format,
