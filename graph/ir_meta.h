@@ -32,7 +32,6 @@ class IRMetaData {
  public:
   explicit IRMetaData(const std::string &op_name) : op_name_(op_name) {};
   IRMetaData() = default;
-  IRMetaData(const IRMetaData &other);
   void SetOpName(const std::string &op_name) {
     op_name_ = op_name;
   }
@@ -67,7 +66,6 @@ class IRMetaData {
   graphStatus VerifyDataTypeSymbol() const;
 
   bool operator==(const IRMetaData &other) const;
-  IRMetaData &operator=(const IRMetaData &other);
 
  private:
   bool IsOutputSymbolValid(const std::string &output_symbol) const;
