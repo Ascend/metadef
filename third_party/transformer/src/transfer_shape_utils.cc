@@ -453,10 +453,15 @@ bool TransferShapeUtils::GetNzShapeByAxisValue(const AxisValue &axis_value, gert
    * dim_size - 2 mean the second last value of original vec */
   int64_t dim_back_two = shape.GetDim(dim_size - MINUS_VALUE_TWO);
   int64_t dim_back_one = shape.GetDim(dim_size - MINUS_VALUE_ONE);
+#ifndef ONLY_COMPILE_OPEN_SRC
+  shape.SetDim((dim_size - MINUS_VALUE_ONE), DivisionCeiling(dim_back_two, axis_value[AXIS_M0]));
+  shape.SetDim((dim_size - MINUS_VALUE_TWO), DivisionCeiling(dim_back_one, axis_value[AXIS_C0]));
+  shape.AppendDim(axis_value[AXIS_M0]);
+#else
   shape.SetDim((dim_size - MINUS_VALUE_ONE), DivisionCeiling(dim_back_two, SHAPE_NUMBER_16));
-
   shape.SetDim((dim_size - MINUS_VALUE_TWO), DivisionCeiling(dim_back_one, axis_value[AXIS_C0]));
   shape.AppendDim(SHAPE_NUMBER_16);
+#endif
   shape.AppendDim(axis_value[AXIS_C0]);
   return true;
 }
