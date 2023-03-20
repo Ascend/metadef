@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022-2023. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "graph/compile_cache_policy/aging_policy_lru.h"
+#include "graph/cache_policy/aging_policy_lru.h"
 namespace ge {
 std::vector<CacheItemId> AgingPolicyLru::DoAging(const CCStatType &cc_state) const {
   const int64_t delete_limit =

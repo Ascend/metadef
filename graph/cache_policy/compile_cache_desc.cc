@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022-2023. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include "graph/compile_cache_policy/compile_cache_desc.h"
+#include "graph/cache_policy/compile_cache_desc.h"
 #include <securec.h>
+#include "common/checker.h"
 #include "debug/ge_util.h"
 
 namespace ge {
@@ -268,31 +269,30 @@ void CompileCacheDesc::SetScopeId(const std::initializer_list<uint64_t> scope_id
   return;
 }
 
-bool CompileCacheDesc::CheckWithoutTensorInfo(const CompileCacheDesc &first,
-    const CompileCacheDesc &second) {
-  if ((first.op_type_ != second.op_type_) ||
-      (first.tensor_info_args_vec_.size() != second.tensor_info_args_vec_.size())) {
+bool CompileCacheDesc::CheckWithoutTensorInfo(const CompileCacheDesc *first, const CompileCacheDesc *second) const {
+  if ((first->op_type_ != second->op_type_) ||
+      (first->tensor_info_args_vec_.size() != second->tensor_info_args_vec_.size())) {
     GELOGD("op_type_ %s, %s is not match or size %zu %zu is not match",
-           first.op_type_.c_str(), second.op_type_.c_str(),
-           first.tensor_info_args_vec_.size(), second.tensor_info_args_vec_.size());
+           first->op_type_.c_str(), second->op_type_.c_str(),
+           first->tensor_info_args_vec_.size(), second->tensor_info_args_vec_.size());
     return false;
   }
-  if (first.scope_id_ != second.scope_id_) {
+  if (first->scope_id_ != second->scope_id_) {
     GELOGD("scope id is not match");
     return false;
   }
-  if (first.other_desc_.size() != second.other_desc_.size()) {
-    GELOGD("other_desc_ size %zu, %zu is not match ", first.other_desc_.size(), second.other_desc_.size());
+  if (first->other_desc_.size() != second->other_desc_.size()) {
+    GELOGD("other_desc_ size %zu, %zu is not match ", first->other_desc_.size(), second->other_desc_.size());
     return false;
   }
-  for (size_t i = 0U; i < first.other_desc_.size(); ++i) {
-    if (first.other_desc_[i].GetDataLen() != second.other_desc_[i].GetDataLen()) {
+  for (size_t i = 0U; i < first->other_desc_.size(); ++i) {
+    if (first->other_desc_[i].GetDataLen() != second->other_desc_[i].GetDataLen()) {
       GELOGD("other_desc_ mem size %zu, %zu is not match ",
-          first.other_desc_[i].GetDataLen(), second.other_desc_[i].GetDataLen());
+          first->other_desc_[i].GetDataLen(), second->other_desc_[i].GetDataLen());
       return false;
     }
-    const auto cmp_ret = memcmp(first.other_desc_[i].GetDataPtr(),
-        second.other_desc_[i].GetDataPtr(), second.other_desc_[i].GetDataLen());
+    const auto cmp_ret = memcmp(first->other_desc_[i].GetDataPtr(),
+        second->other_desc_[i].GetDataPtr(), second->other_desc_[i].GetDataLen());
     if (cmp_ret != 0) {
       GELOGD("mem compare fail");
       return false;
@@ -301,13 +301,14 @@ bool CompileCacheDesc::CheckWithoutTensorInfo(const CompileCacheDesc &first,
   return true;
 }
 
-bool CompileCacheDesc::IsMatchedCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second) {
-  if (!CheckWithoutTensorInfo(first, second)) {
-    return false;
-  }
-  for (size_t i = 0U; i < first.tensor_info_args_vec_.size(); ++i) {
-    const auto &first_args = first.tensor_info_args_vec_[i];
-    const auto &second_args = second.tensor_info_args_vec_[i];
+bool CompileCacheDesc::IsMatch(const CacheDescPtr &other) const {
+  const auto *second = dynamic_cast<const CompileCacheDesc *>(other.get());
+  GE_ASSERT_NOTNULL(second, "dynamic cast failed");
+  GE_ASSERT_TRUE(CheckWithoutTensorInfo(this, second));
+
+  for (size_t i = 0U; i < this->tensor_info_args_vec_.size(); ++i) {
+    const auto &first_args = this->tensor_info_args_vec_[i];
+    const auto &second_args = second->tensor_info_args_vec_[i];
     if (!first_args.IsTensorInfoMatch(second_args)) {
       GELOGD("shape is not matched");
       return false;
@@ -316,18 +317,28 @@ bool CompileCacheDesc::IsMatchedCompileDesc(const CompileCacheDesc &first, const
   return true;
 }
 
-bool CompileCacheDesc::IsSameCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second) {
-  if (!CheckWithoutTensorInfo(first, second)) {
-    return false;
-  }
-  for (size_t i = 0U; i < first.tensor_info_args_vec_.size(); ++i) {
-    const auto &first_args = first.tensor_info_args_vec_[i];
-    const auto &second_args = second.tensor_info_args_vec_[i];
+bool CompileCacheDesc::IsEqual(const CacheDescPtr &other) const {
+  const auto *second = dynamic_cast<const CompileCacheDesc *>(other.get());
+  GE_ASSERT_NOTNULL(second, "dynamic cast failed");
+  GE_ASSERT_TRUE(CheckWithoutTensorInfo(this, second));
+
+  for (size_t i = 0U; i < this->tensor_info_args_vec_.size(); ++i) {
+    const auto &first_args = this->tensor_info_args_vec_[i];
+    const auto &second_args = second->tensor_info_args_vec_[i];
     if (first_args != second_args) {
       GELOGD("tensor info is not matched");
       return false;
     }
   }
   return true;
+}
+
+CacheHashKey CompileCacheDesc::GetCacheDescHash() const {
+  CacheHashKey hash_key = 0U;
+  for (const auto &arg : tensor_info_args_vec_) {
+    hash_key = HashUtils::MultiHash(hash_key, arg.GetFormat(), arg.GetOriginFormat(), arg.GetDataType());
+  }
+  hash_key = HashUtils::MultiHash(op_type_, hash_key);
+  return hash_key;
 }
 }  // namespace ge

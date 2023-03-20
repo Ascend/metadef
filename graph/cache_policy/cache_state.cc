@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022-2023. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "graph/compile_cache_policy/compile_cache_state.h"
+#include "graph/cache_policy/cache_state.h"
 #include "framework/common/debug/ge_log.h"
 namespace ge {
-CacheItemId CompileCacheState::GetNextCacheItemId() {
+CacheItemId CacheState::GetNextCacheItemId() {
   const std::lock_guard<std::mutex> lock(cache_item_mu_);
   if (cache_item_queue_.empty()) {
     return cache_item_counter_++;
@@ -28,41 +28,40 @@ CacheItemId CompileCacheState::GetNextCacheItemId() {
   }
 }
 
-void CompileCacheState::RecoveryCacheItemId(const std::vector<CacheItemId> &cache_items) {
+void CacheState::RecoveryCacheItemId(const std::vector<CacheItemId> &cache_items) {
   const std::lock_guard<std::mutex> lock(cache_item_mu_);
   for (auto &item_id : cache_items) {
     cache_item_queue_.push(item_id);
   }
 }
 
-CacheItemId CompileCacheState::AddCache(const CompileCacheDesc &compile_cache_desc) {
-  const CacheHashKey main_hash_key = CompileCacheHasher::GetCacheDescHashWithoutShape(compile_cache_desc);
+CacheItemId CacheState::AddCache(const CacheHashKey main_hash_key, const CacheDescPtr &cache_desc) {
   const std::lock_guard<std::mutex> lock(cc_state_mu_);
   const auto iter = cc_state_.find(main_hash_key);
   if (iter == cc_state_.end()) {
     const CacheItemId next_item_id = GetNextCacheItemId();
     const CacheInfo cache_info = CacheInfo(
-        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), next_item_id, compile_cache_desc);
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), next_item_id, cache_desc);
     std::vector<CacheInfo> info = {cache_info};
     (void)cc_state_.insert({main_hash_key, std::move(info)});
     return next_item_id;
   }
   auto &cached_item = iter->second;
   for (size_t idx = 0UL; idx < cached_item.size(); idx++) {
-    if (CompileCacheDesc::IsSameCompileDesc(cached_item[idx].desc_, compile_cache_desc)) {
-      GELOGW("[AddCache] Same CompileCacheDesc has already been added, whose cache_item is %" PRIu64,
+    if (cached_item[idx].desc_->IsEqual(cache_desc)) {
+      GELOGW("[AddCache] Same CacheDesc has already been added, whose cache_item is %" PRIu64,
              cached_item[idx].item_id_);
       return cached_item[idx].item_id_;
     }
   }
   const CacheItemId next_item_id = GetNextCacheItemId();
   CacheInfo cache_info = CacheInfo(
-      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), next_item_id, compile_cache_desc);
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), next_item_id, cache_desc);
   cached_item.emplace_back(std::move(cache_info));
   return next_item_id;
 }
 
-std::vector<CacheItemId> CompileCacheState::DelCache(const DelCacheFunc &func) {
+std::vector<CacheItemId> CacheState::DelCache(const DelCacheFunc &func) {
   std::vector<CacheItemId> delete_item;
   for (auto &item : cc_state_) {
     std::vector<CacheInfo> &cache_vec = item.second;
@@ -80,7 +79,7 @@ std::vector<CacheItemId> CompileCacheState::DelCache(const DelCacheFunc &func) {
   return delete_item;
 }
 
-std::vector<CacheItemId> CompileCacheState::DelCache(const std::vector<CacheItemId> &delete_item) {
+std::vector<CacheItemId> CacheState::DelCache(const std::vector<CacheItemId> &delete_item) {
   const DelCacheFunc lamb = [&delete_item] (const CacheInfo &info) -> bool {
     const auto iter = std::find(delete_item.begin(), delete_item.end(), info.GetItemId());
     return iter != delete_item.end();

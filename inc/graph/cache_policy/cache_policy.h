@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022-2023. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,33 +14,36 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_POLICY_H_
-#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_POLICY_H_
-
-#include "graph/cache_policy/cache_policy.h"
+#ifndef GRAPH_CACHE_POLICY_CACHE_POLICY_H_
+#define GRAPH_CACHE_POLICY_CACHE_POLICY_H_
 
 #include <vector>
 #include <memory>
+#include "cache_state.h"
+#include "policy_register.h"
+#include "graph/ge_error_codes.h"
+
 namespace ge {
-class CompileCachePolicy {
-public:
-  ~CompileCachePolicy() = default;
+class CachePolicy {
+ public:
+  ~CachePolicy() = default;
 
-  CompileCachePolicy(const CompileCachePolicy &) = delete;
-  CompileCachePolicy(CompileCachePolicy &&) = delete;
-  CompileCachePolicy &operator=(const CompileCachePolicy &) = delete;
-  CompileCachePolicy &operator=(CompileCachePolicy &&) = delete;
+  CachePolicy(const CachePolicy &) = delete;
+  CachePolicy(CachePolicy &&) = delete;
+  CachePolicy &operator=(const CachePolicy &) = delete;
+  CachePolicy &operator=(CachePolicy &&) = delete;
 
-  static std::unique_ptr<CompileCachePolicy> Create(const MatchPolicyPtr mp, const AgingPolicyPtr ap);
-  static std::unique_ptr<CompileCachePolicy> Create(const MatchPolicyType mp_type, const AgingPolicyType ap_type);
+  static std::unique_ptr<CachePolicy> Create(const MatchPolicyPtr &mp, const AgingPolicyPtr &ap);
+  static std::unique_ptr<CachePolicy> Create(const MatchPolicyType mp_type, const AgingPolicyType ap_type,
+                                             size_t cached_aging_depth = kDefaultCacheQueueDepth);
 
   graphStatus SetMatchPolicy(const MatchPolicyPtr mp);
 
   graphStatus SetAgingPolicy(const AgingPolicyPtr ap);
 
-  CacheItemId AddCache(const CompileCacheDesc &compile_cache_desc);
+  CacheItemId AddCache(const CacheDescPtr &cache_desc);
 
-  CacheItemId FindCache(const CompileCacheDesc &compile_cache_desc) const;
+  CacheItemId FindCache(const CacheDescPtr &cache_desc) const;
 
   std::vector<CacheItemId> DeleteCache(const DelCacheFunc &func);
 
@@ -48,9 +51,9 @@ public:
 
   std::vector<CacheItemId> DoAging();
 
-  CompileCachePolicy() = default;
+  CachePolicy() = default;
 
-private:
+ private:
   CacheState compile_cache_state_;
   MatchPolicyPtr mp_ = nullptr;
   AgingPolicyPtr ap_ = nullptr;

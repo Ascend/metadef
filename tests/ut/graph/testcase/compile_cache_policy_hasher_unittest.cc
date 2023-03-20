@@ -16,7 +16,8 @@
 #include <gtest/gtest.h>
 #define protected public
 #define private public
-#include "graph/compile_cache_policy/compile_cache_hasher.h"
+#include "graph/cache_policy/compile_cache_desc.h"
+
 namespace ge {
 class UtestCompileCachePolicyHasher : public testing::Test {
  protected:
@@ -128,14 +129,14 @@ TEST_F(UtestCompileCachePolicyHasher, TestBinaryHolderDiffBecauseVaule) {
   ASSERT_EQ((holder1 != holder2), true);
 }
 
-TEST_F(UtestCompileCachePolicyHasher, TestGetCacheDescHashWithoutShape) {
-  CompileCacheDesc cacheDesc;
-  cacheDesc.SetOpType("1111");
+TEST_F(UtestCompileCachePolicyHasher, TestGetCacheDescHashWithoutShape) { 
+  CompileCacheDescPtr cache_desc = std::make_shared<CompileCacheDesc>();
+  cache_desc->SetOpType("1111");
   TensorInfoArgs tensor_info_args(FORMAT_ND, FORMAT_ND, DT_BF16);
-  cacheDesc.AddTensorInfo(tensor_info_args);
-  CacheHashKey id = CompileCacheHasher::GetCacheDescHashWithoutShape(cacheDesc);
-  cacheDesc.SetOpType("2222");
-  CacheHashKey id_another = CompileCacheHasher::GetCacheDescHashWithoutShape(cacheDesc);
+  cache_desc->AddTensorInfo(tensor_info_args);
+  CacheHashKey id = cache_desc->GetCacheDescHash();
+  cache_desc->SetOpType("2222");
+  CacheHashKey id_another = cache_desc->GetCacheDescHash();
   ASSERT_NE(id, id_another);
 }
 }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_STATE_H
-#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_STATE_H
+#ifndef GRAPH_CACHE_POLICY_CACHE_STATE_H
+#define GRAPH_CACHE_POLICY_CACHE_STATE_H
 
 #include <vector>
 #include <functional>
@@ -25,7 +25,6 @@
 #include <mutex>
 
 #include "compile_cache_desc.h"
-#include "compile_cache_hasher.h"
 
 namespace ge {
 class CacheInfo;
@@ -36,9 +35,9 @@ using DelCacheFunc = std::function<bool(CacheInfo &)>;
 using CCStatType = std::unordered_map<uint64_t, std::vector<CacheInfo>>;
 
 class CacheInfo {
-friend class CompileCacheState;
+friend class CacheState;
 public:
-  CacheInfo(const time_t time_stamp, const CacheItemId item_id, const CompileCacheDesc &desc):
+  CacheInfo(const time_t time_stamp, const CacheItemId item_id, const CacheDescPtr &desc):
             time_stamp_(time_stamp), item_id_(item_id), desc_(desc) {}
   CacheInfo(const CacheInfo &other) :
             time_stamp_(other.time_stamp_),
@@ -64,22 +63,22 @@ public:
     return item_id_;
   }
 
-  const CompileCacheDesc &GetCompileCacheDesc() const noexcept {
+  const CacheDescPtr &GetCacheDesc() const noexcept {
     return desc_;
   }
 
 private:
   time_t time_stamp_;
   CacheItemId item_id_;
-  CompileCacheDesc desc_;
+  CacheDescPtr desc_;
 };
 
-class CompileCacheState {
+class CacheState {
 public:
-  CompileCacheState() = default;
-  ~CompileCacheState() = default;
+  CacheState() = default;
+  ~CacheState() = default;
 
-  CacheItemId AddCache(const CompileCacheDesc &compile_cache_desc);
+  CacheItemId AddCache(const CacheHashKey main_hash_key, const CacheDescPtr &cache_desc);
 
   std::vector<CacheItemId> DelCache(const DelCacheFunc &func);
 

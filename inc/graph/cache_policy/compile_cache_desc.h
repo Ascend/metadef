@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H
-#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_DESC_H
+#ifndef GRAPH_CACHE_POLICY_COMPILE_CACHE_DESC_H
+#define GRAPH_CACHE_POLICY_COMPILE_CACHE_DESC_H
 
 #include <string>
 #include <vector>
+#include "cache_desc.h"
 #include "graph/small_vector.h"
 #include "graph/ascend_limits.h"
 #include "graph/types.h"
@@ -28,6 +29,8 @@
 #include "framework/common/debug/log.h"
 
 namespace ge {
+class CompileCacheDesc;
+using CompileCacheDescPtr = std::shared_ptr<CompileCacheDesc>;
 class BinaryHolder {
  public:
   BinaryHolder() = default;
@@ -85,13 +88,14 @@ class TensorInfoArgs {
   SmallVector<std::pair<int64_t, int64_t>, kDefaultMaxInputNum> shape_range_;
 };
 
-class CompileCacheDesc {
-  friend class CompileCacheHasher;
+class CompileCacheDesc : public CacheDesc {
+  friend class CacheHasher;
  public:
   CompileCacheDesc() = default;
   ~CompileCacheDesc() = default;
-  static bool IsSameCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second);
-  static bool IsMatchedCompileDesc(const CompileCacheDesc &first, const CompileCacheDesc &second);
+  bool IsEqual(const CacheDescPtr &other) const override;
+  bool IsMatch(const CacheDescPtr &other) const override;
+  CacheHashKey GetCacheDescHash() const override;
   void SetOpType(const std::string &op_type);
   void AddBinary(const BinaryHolder &holder);
   void AddBinary(BinaryHolder &&holder);
@@ -101,7 +105,7 @@ class CompileCacheDesc {
   TensorInfoArgs *MutableTensorInfo(size_t index);
 
  private:
-  static bool CheckWithoutTensorInfo(const CompileCacheDesc &first, const CompileCacheDesc &second);
+  bool CheckWithoutTensorInfo(const CompileCacheDesc *first, const CompileCacheDesc *second) const;
   std::string op_type_; // op type
   SmallVector<uint64_t, kDefaultMaxInputNum> scope_id_; // graph_id and session_id
   SmallVector<TensorInfoArgs, kDefaultMaxInputNum> tensor_info_args_vec_; // input tensordescs

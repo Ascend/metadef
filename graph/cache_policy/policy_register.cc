@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022-2023. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-#include "graph/compile_cache_policy/policy_register.h"
+#include "graph/cache_policy/policy_register.h"
 namespace ge {
 PolicyRegister &PolicyRegister::GetInstance() {
   static PolicyRegister instance;
   return instance;
+}
+
+MatchPolicyRegister::MatchPolicyRegister(const MatchPolicyType match_policy_type, const MatchPolicyCreator &creator) {
+  PolicyRegister::GetInstance().RegisterMatchPolicy(match_policy_type, creator);
+}
+
+AgingPolicyRegister::AgingPolicyRegister(const AgingPolicyType aging_policy_type, const AgingPolicyCreator &creator) {
+  PolicyRegister::GetInstance().RegisterAgingPolicy(aging_policy_type, creator);
 }
 }  // namespace ge

@@ -28,7 +28,8 @@ include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge/proto)
 
 file(GLOB_RECURSE UT_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/graph/testcase/*.cc")
-add_executable(ut_graph ${UT_FILES})
+file(GLOB_RECURSE FAKE_FILES CONFIGURE_DEPENDS "${METADEF_DIR}/tests/depends/cache_desc_stub/runtime_cache_desc.cc")
+add_executable(ut_graph ${UT_FILES} ${FAKE_FILES})
 
 target_compile_options(ut_graph PRIVATE
     -g --coverage -fprofile-arcs -ftest-coverage

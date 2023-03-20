@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "graph/compile_cache_policy/compile_cache_hasher.h"
 
+#ifndef GRAPH_CACHE_POLICY_CACHE_DESC_H
+#define GRAPH_CACHE_POLICY_CACHE_DESC_H
+
+#include <memory>
+#include "graph/hash_utils.h"
 namespace ge {
-CacheHashKey CompileCacheHasher::GetCacheDescHashWithoutShape(const CompileCacheDesc &cache_desc) {
-  CacheHashKey hash_key = 0U;
-  for (const auto &arg : cache_desc.tensor_info_args_vec_) {
-    hash_key = HashUtils::MultiHash(hash_key, arg.GetFormat(), arg.GetOriginFormat(), arg.GetDataType());
-  }
-  hash_key = HashUtils::MultiHash(cache_desc.op_type_, hash_key);
-  return hash_key;
-}
-}
+class CacheDesc;
+using CacheDescPtr = std::shared_ptr<const CacheDesc>;
+class CacheDesc {
+ public:
+  CacheDesc() = default;
+  virtual ~CacheDesc() = default;
+  virtual bool IsEqual(const CacheDescPtr &other) const = 0;
+  virtual bool IsMatch(const CacheDescPtr &other) const = 0;
+  virtual CacheHashKey GetCacheDescHash() const = 0;
+};
+}  // namespace ge
+#endif
