@@ -350,7 +350,7 @@ add_custom_target(graph_stub
             ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
-            ${METADEF_DIR}/graph/stub/operator_stub.cc
+            ${METADEF_DIR}/stub/operator_stub.cc
 )
 
 #############################################################
@@ -363,7 +363,7 @@ add_library(atc_stub_graph SHARED
     stub_attr_value.cc
     stub_ascend_string.cc
     stub_gnode.cc
-    ${METADEF_DIR}/graph/stub/operator_stub.cc
+    ${METADEF_DIR}/stub/operator_stub.cc
 )
 add_dependencies(atc_stub_graph graph_stub)
 
@@ -407,7 +407,7 @@ add_library(fwk_stub_graph SHARED
     stub_inference_context.cc
     stub_ascend_string.cc
     stub_gnode.cc
-    ${METADEF_DIR}/graph/stub/operator_stub.cc
+    ${METADEF_DIR}/stub/operator_stub.cc
 )
 
 add_dependencies(fwk_stub_graph graph_stub)
