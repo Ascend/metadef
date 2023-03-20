@@ -77,13 +77,13 @@ enum IOType { kIn, kOut };
 
 class NodeIndexIO {
  public:
-  NodeIndexIO(const NodePtr node, const uint32_t index, const IOType io_type)
+  NodeIndexIO(const NodePtr &node, const uint32_t index, const IOType io_type)
       : node_(node), index_(index), io_type_(io_type) {
     if (node_ != nullptr) {
       value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
     }
   }
-  NodeIndexIO(const NodePtr node, const int32_t index, const IOType io_type)
+  NodeIndexIO(const NodePtr &node, const int32_t index, const IOType io_type)
       : node_(node), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
     if (node_ != nullptr) {
       value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
