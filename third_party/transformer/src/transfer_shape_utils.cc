@@ -158,13 +158,11 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
     axis_value[AXIS_STATE_SIZE] = ext_axis[EXT_INDEX_STATE_SIZE];
   }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   if (ext_axis[EXT_INDEX_M0_VAL] > 0) {
     axis_value[AXIS_M0] = ext_axis[EXT_INDEX_M0_VAL];
   } else {
     axis_value[AXIS_M0] = SHAPE_NUMBER_16;
   }
-#endif
 
   if (!IsNeedAxisValue(primary_format, shape.GetDimNum())) {
     return TransferShapeByFormat(primary_format, axis_value, shape);
@@ -317,11 +315,7 @@ bool TransferShapeUtils::TransferShapeByOriginShape(const ge::Format &primary_fo
     case ge::FORMAT_FRACTAL_Z:
       return GetFractalZShape(c0, origin_shape, shape);
     case ge::FORMAT_FRACTAL_NZ:
-#ifndef ONLY_COMPILE_OPEN_SRC
       return GetFractalNzShape(ext_axis, c0, origin_shape, shape); // need c0
-#else
-      return GetFractalNzShape(c0, origin_shape, shape); // need c0
-#endif
     case ge::FORMAT_FRACTAL_ZN_RNN:
       return GetFractalZnRnnShape(ext_axis, c0, origin_shape, shape); // need c0, input, hidden, state
     case ge::FORMAT_ND_RNN_BIAS:
@@ -697,12 +691,8 @@ bool TransferShapeUtils::GetC1HWNCoC0Shape(const FormatIndex& format_index, cons
   shape.AppendDim(c0);
   return true;
 }
-#ifndef ONLY_COMPILE_OPEN_SRC
 bool TransferShapeUtils::GetFractalNzShape(const ExtAxisValue &ext_axis, const int64_t &c0,
                                            const gert::Shape &origin_shape, gert::Shape &shape) {
-#else
-bool TransferShapeUtils::GetFractalNzShape(const int64_t &c0, const gert::Shape &origin_shape, gert::Shape &shape) {
-#endif
   size_t dim_size = origin_shape.GetDimNum();
   shape.SetDimNum(0);
   if (dim_size > DIM_SIZE_TWO) {
@@ -715,24 +705,12 @@ bool TransferShapeUtils::GetFractalNzShape(const int64_t &c0, const gert::Shape 
    * dim_size - 2 mean the second last value of original vec */
   if (dim_size < DIM_SIZE_TWO) {
     shape.AppendDim(1);
-#ifndef ONLY_COMPILE_OPEN_SRC
     shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_ONE), ext_axis[EXT_INDEX_M0_VAL]));
-#else
-    shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_ONE), SHAPE_NUMBER_16));
-#endif
   } else {
     shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_ONE), c0));
-#ifndef ONLY_COMPILE_OPEN_SRC
     shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_TWO), ext_axis[EXT_INDEX_M0_VAL]));
-#else
-    shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_TWO), SHAPE_NUMBER_16));
-#endif
   }
-#ifndef ONLY_COMPILE_OPEN_SRC
   shape.AppendDim(ext_axis[EXT_INDEX_M0_VAL]);
-#else
-  shape.AppendDim(SHAPE_NUMBER_16);
-#endif
   shape.AppendDim(c0);
   return true;
 }

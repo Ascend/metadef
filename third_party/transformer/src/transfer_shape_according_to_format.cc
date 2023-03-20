@@ -64,13 +64,8 @@ bool ShapeTransferAccordingToFormat::GetShapeAccordingToFormat(ShapeAndFormat &s
   }
   gert::Shape shape;
   GeShapeToRtShape(shapeAndFormatInfo.oldShape, shape);
-#ifndef ONLY_COMPILE_OPEN_SRC
   ExtAxisValue ext_axis = {shapeAndFormatInfo.extra_attr.input_size, shapeAndFormatInfo.extra_attr.hidden_size,
                            shapeAndFormatInfo.extra_attr.state_size, kM0DefaultVal};
-#else
-  ExtAxisValue ext_axis = {shapeAndFormatInfo.extra_attr.input_size, shapeAndFormatInfo.extra_attr.hidden_size,
-                           shapeAndFormatInfo.extra_attr.state_size};
-#endif
   bool ret = TransferShapeUtils::TransferShape(shapeAndFormatInfo.oldFormat, shapeAndFormatInfo.newFormat,
                                                shapeAndFormatInfo.currentDataType, ext_axis, shape);
   RtShapeToGeShape(shape, shapeAndFormatInfo.oldShape);
@@ -128,8 +123,6 @@ void ShapeTransferAccordingToFormat::InitExtAxisValue(const ge::OpDescPtr &op_de
   ext_axis[EXT_INDEX_INPUT_SIZE] = input_size;
   ext_axis[EXT_INDEX_HIDEEN_SIZE] = hidden_size;
   ext_axis[EXT_INDEX_STATE_SIZE] = state_size;
-#ifndef ONLY_COMPILE_OPEN_SRC
   ext_axis[EXT_INDEX_M0_VAL] = kM0DefaultVal;
-#endif
 }
 } // namespace transformer
