@@ -22,11 +22,7 @@
 
 namespace transformer {
 const size_t ORIGIN_FORMAT_DIM_SIZE = 5;
-#ifndef ONLY_COMPILE_OPEN_SRC
 const size_t EXT_AXIS_SIZE = 4;
-#else
-const size_t EXT_AXIS_SIZE = 3;
-#endif
 using FormatIndex = std::array<size_t, ORIGIN_FORMAT_DIM_SIZE>;
 using ExtAxisValue = std::array<int64_t, EXT_AXIS_SIZE>;
 
@@ -104,12 +100,8 @@ private:
   static bool GetC1HWNCoC0Shape(const FormatIndex& format_index, const int64_t &c0, const gert::Shape &origin_shape,
                                 gert::Shape &shape);
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   static bool GetFractalNzShape(const ExtAxisValue &ext_axis, const int64_t &c0, const gert::Shape &origin_shape,
                                 gert::Shape &shape);
-#else
-  static bool GetFractalNzShape(const int64_t &c0, const gert::Shape &origin_shape, gert::Shape &shape);
-#endif
 
   static bool GetFractalZShape(const int64_t &c0, const gert::Shape &origin_shape, gert::Shape &shape);
 

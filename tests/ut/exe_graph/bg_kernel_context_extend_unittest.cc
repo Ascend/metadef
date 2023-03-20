@@ -874,7 +874,7 @@ TEST_F(BgKernelContextExtendUT, GetPrivateAttrInComputeNodeInfoOK) {
   (void)op_desc->SetAttr("ir_attr_1", av2);
   (void)op_desc->SetAttr(attr_name_1, av1);
   (void)op_desc->SetAttr(attr_name_2, av2);
-  std::vector<std::pair<std::string, ge::AnyValue>> private_attrs;
+  std::vector<std::pair<ge::AscendString, ge::AnyValue>> private_attrs;
   private_attrs.emplace_back(std::make_pair(attr_name_1, av1));
   private_attrs.emplace_back(std::make_pair(attr_name_2, av2));
   bg::BufferPool buffer_pool;
@@ -900,7 +900,7 @@ TEST_F(BgKernelContextExtendUT, GetPrivateAttrInComputeNodeInfoByDefault) {
   ge::AnyValue av2 = ge::AnyValue::CreateFrom<std::string>(attr_value_2);
   op_desc->AppendIrAttrName("ir_attr_1");
   (void)op_desc->SetAttr("ir_attr_1", av2);
-  std::vector<std::pair<std::string, ge::AnyValue>> private_attrs;
+  std::vector<std::pair<ge::AscendString, ge::AnyValue>> private_attrs;
   private_attrs.emplace_back(std::make_pair(attr_name_1, av1));
   private_attrs.emplace_back(std::make_pair(attr_name_2, av2));
   bg::BufferPool buffer_pool;
@@ -926,7 +926,7 @@ TEST_F(BgKernelContextExtendUT, CreateComputeNodeInfoFailedWhenNotRegisteringPri
   ge::AnyValue av2 = ge::AnyValue::CreateFrom<std::string>(attr_value_2);
   op_desc->AppendIrAttrName("ir_attr_1");
   (void)op_desc->SetAttr("ir_attr_1", av2);
-  std::vector<std::pair<std::string, ge::AnyValue>> private_attrs;
+  std::vector<std::pair<ge::AscendString, ge::AnyValue>> private_attrs;
   private_attrs.emplace_back(std::make_pair(attr_name_1, av1));
   private_attrs.emplace_back(std::make_pair(attr_name_2, ge::AnyValue()));
   bg::BufferPool buffer_pool;

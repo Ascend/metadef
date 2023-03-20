@@ -53,18 +53,11 @@ enum AxisValueType {
   AXIS_Co = 6,
   AXIS_D = 7,
   AXIS_G = 8,
-#ifndef ONLY_COMPILE_OPEN_SRC
   AXIS_M0 = 9,
   AXIS_INPUT_SIZE = 10,
   AXIS_HIDEEN_SIZE = 11,
   AXIS_STATE_SIZE = 12,
   AXIS_BOTTOM = 13
-#else
-  AXIS_INPUT_SIZE = 9,
-  AXIS_HIDEEN_SIZE = 10,
-  AXIS_STATE_SIZE = 11,
-  AXIS_BOTTOM = 12
-#endif
 };
 
 using AxisValue = std::array<int64_t, static_cast<size_t>(AXIS_BOTTOM)>;

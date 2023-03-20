@@ -391,7 +391,7 @@ TEST_F(OpImplRegistryUT, RegisterPrivateAttrOk) {
   const char *op_type = "TestPrivateConv2D";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(private_attrs[0].second.IsEmpty());
 
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).infer_shape, &TestInferShapeFunc1);
@@ -407,7 +407,7 @@ TEST_F(OpImplRegistryUT, RegisterPrivateAttrDuplicatedUsingSameOpType) {
   const char *op_type = "TestPrivateConv2D";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr2"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr2"));
   EXPECT_TRUE(private_attrs[0].second.IsEmpty());
 
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).infer_shape, &TestInferShapeFunc1);
@@ -421,7 +421,7 @@ TEST_F(OpImplRegistryUT, UsePrivateAttrAlreadyRegistered) {
   const char *op_type = "TestPrivateConv2D";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr2"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr2"));
   EXPECT_TRUE(private_attrs[0].second.IsEmpty());
 
   EXPECT_EQ(gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).infer_shape, &TestInferShapeFunc1);
@@ -438,7 +438,7 @@ TEST_F(OpImplRegistryUT, RegisterMultiPrivateAttrs) {
   EXPECT_EQ(private_attrs.size(), private_attr_names.size());
   for (size_t index = 0UL; index < private_attr_names.size(); ++index) {
     EXPECT_TRUE(private_attrs[index].second.IsEmpty());
-    EXPECT_EQ(private_attrs[index].first, private_attr_names[index]);
+    EXPECT_EQ(private_attrs[index].first.GetString(), private_attr_names[index]);
   }
 }
 
@@ -450,7 +450,7 @@ TEST_F(OpImplRegistryUT, RegisterSamePrivateAttrs) {
   EXPECT_EQ(private_attrs.size(), private_attr_names.size());
   for (size_t index = 0UL; index < private_attr_names.size(); ++index) {
     EXPECT_TRUE(private_attrs[index].second.IsEmpty());
-    EXPECT_EQ(private_attrs[index].first, private_attr_names[index]);
+    EXPECT_EQ(private_attrs[index].first.GetString(), private_attr_names[index]);
   }
 }
 
@@ -484,7 +484,7 @@ TEST_F(OpImplRegistryUT, RegisterIntPrivateAttrOk) {
   const char *op_type = "TestIntOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
   int64_t private_attr_val_ret;
   EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
@@ -497,7 +497,7 @@ TEST_F(OpImplRegistryUT, RegisterListIntPrivateAttrOk) {
   const char *op_type = "TestListIntOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
   std::vector<int64_t> private_attr_val_ret;
   EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
@@ -510,7 +510,7 @@ TEST_F(OpImplRegistryUT, RegisterStringPrivateAttrOk) {
   const char *op_type = "TestStringOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
   std::string private_attr_val_ret;
   EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
@@ -523,7 +523,7 @@ TEST_F(OpImplRegistryUT, RegisterFloatPrivateAttrOk) {
   const char *op_type = "TestFloatOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
   float private_attr_val_ret;
   EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
@@ -536,7 +536,7 @@ TEST_F(OpImplRegistryUT, RegisterListFloatPrivateAttrOk) {
   const char *op_type = "TestListFloatOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
   std::vector<float> private_attr_val_ret;
   EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
@@ -551,7 +551,7 @@ TEST_F(OpImplRegistryUT, OpImplRegister_RegisterListFloatOK) {
 
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(OpType);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
   std::vector<float> private_attr_val_ret;
   EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
@@ -564,7 +564,7 @@ TEST_F(OpImplRegistryUT, RegisterBoolPrivateAttrOk) {
   const char *op_type = "TestBoolOpdesc";
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   EXPECT_EQ(private_attrs.size(), 1);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
   bool private_attr_val_ret;
   EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
@@ -581,14 +581,14 @@ TEST_F(OpImplRegistryUT, RegisterMixPrivateAttrOk) {
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
   constexpr size_t private_attr_size = 3UL;
   EXPECT_EQ(private_attrs.size(), private_attr_size);
-  EXPECT_EQ(private_attrs[0].first, std::string("attr1"));
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
   EXPECT_TRUE(private_attrs[0].second.IsEmpty());
   std::string str_attr_val_ret;
-  EXPECT_EQ(private_attrs[1].first, std::string("attr2"));
+  EXPECT_EQ(private_attrs[1].first.GetString(), std::string("attr2"));
   EXPECT_EQ(private_attrs[1].second.GetValue(str_attr_val_ret), ge::GRAPH_SUCCESS);
   EXPECT_EQ(str_attr_val_ret, std::string(str_attr_val));
   std::vector<int64_t> listint_attr_val_ret;
-  EXPECT_EQ(private_attrs[2].first, std::string("attr3"));
+  EXPECT_EQ(private_attrs[2].first.GetString(), std::string("attr3"));
   EXPECT_EQ(private_attrs[2].second.GetValue(listint_attr_val_ret), ge::GRAPH_SUCCESS);
   EXPECT_EQ(listint_attr_val_ret, listint_attr_val);
 }

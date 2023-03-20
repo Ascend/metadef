@@ -110,20 +110,14 @@ bool GetPrivateAttrsList(const ge::NodePtr &node, const gert::OpImplKernelRegist
   const auto &all_attrs = node->GetOpDesc()->GetAllAttrs();
   for (auto &private_attr : private_attrs) {
     auto &private_attr_name = private_attr.first;
-#ifndef ONLY_COMPILE_OPEN_SRC
     auto iter = all_attrs.find(private_attr_name.GetString());
-#else
-    auto iter = all_attrs.find(private_attr_name);
-#endif
     if (iter == all_attrs.end()) {
       if (!private_attr.second.IsEmpty()) {
         runtime_attrs_list.push_back(private_attr.second);
         continue;
       }
-#ifndef ONLY_COMPILE_OPEN_SRC
       GELOGE(ge::FAILED, "Can not find the private attr %s from node %s",
              private_attr_name.GetString(), node->GetName().c_str());
-#endif
       return false;
     }
     runtime_attrs_list.push_back(iter->second);
