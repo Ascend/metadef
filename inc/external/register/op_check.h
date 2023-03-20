@@ -23,10 +23,10 @@
 #include "graph/operator.h"
 
 namespace optiling {
-const ge::AscendString FUNC_CHECK_SUPPORTED = "check_supported";
-const ge::AscendString FUNC_OP_SELECT_FORMAT = "op_select_format";
-const ge::AscendString FUNC_GET_OP_SUPPORT_INFO = "get_op_support_info";
-const ge::AscendString FUNC_GET_SPECIFIC_INFO = "get_op_specific_info";
+#define FUNC_CHECK_SUPPORTED "check_supported"
+#define FUNC_OP_SELECT_FORMAT "op_select_format"
+#define FUNC_GET_OP_SUPPORT_INFO "get_op_support_info"
+#define FUNC_GET_SPECIFIC_INFO "get_op_specific_info"
 
 typedef int (*OP_CHECK_FUNC)(const ge::Operator &op, ge::AscendString &result);
 

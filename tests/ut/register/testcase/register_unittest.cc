@@ -1120,7 +1120,7 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
   size_t size = 100;
   // check_supported
   REG_CHECK_SUPPORT(tik2_py_interface_check_cap_ok, check_supported_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED.GetString(), op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string check_supported_result = "{\"reason\":\"check_supported_stub\",\"ret_code\":\"1\"}";
@@ -1128,24 +1128,24 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
 
   // op_select_format
   REG_OP_SELECT_FORMAT(tik2_py_interface_check_cap_ok, op_select_format_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT.GetString(), op_type.c_str(), input_str.c_str(),
-                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string op_select_format_result = "{\"op_info\":\"op_select_format_stub\"}";
   EXPECT_EQ(op_select_format_result, res_info.substr(0, op_select_format_result.size()));
 
   // get_op_support_info
   REG_OP_SUPPORT_INFO(tik2_py_interface_check_cap_ok, get_op_support_info_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO.GetString(), op_type.c_str(), input_str.c_str(),
-                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string get_op_support_info_result = "{\"op_info\":\"get_op_support_info_stub\"}";
   EXPECT_EQ(get_op_support_info_result, res_info.substr(0, get_op_support_info_result.size()));
 
   // get_op_specific_info
   REG_OP_SPEC_INFO(tik2_py_interface_check_cap_ok, get_op_specific_info_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO.GetString(), op_type.c_str(), input_str.c_str(),
-                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string get_op_specific_info_result = "{\"op_info\":\"get_op_specific_info_stub\"}";
   EXPECT_EQ(get_op_specific_info_result, res_info.substr(0, get_op_specific_info_result.size()));
@@ -1173,23 +1173,23 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_callback) {
   std::string res_info(100, 'a');
   size_t size = 100;
   // check_supported
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED.GetString(), op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   // op_select_format
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT.GetString(), op_type.c_str(), input_str.c_str(),
-                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   // get_op_support_info
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO.GetString(), op_type.c_str(), input_str.c_str(),
-                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   // get_op_specific_info
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO.GetString(), op_type.c_str(), input_str.c_str(),
-                                   output_str.c_str(), attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
@@ -1216,7 +1216,7 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_throw) {
   size_t size = 100;
   // check_supported
   REG_CHECK_SUPPORT(tik2_py_interface_check_cap_fail_throw, check_supported_stub_throw);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED.GetString(), op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
   unsetenv("ENABLE_RUNTIME_V2");
@@ -1330,7 +1330,7 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_fail_throw) {
   EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
                                        generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
-  
+
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
@@ -1384,21 +1384,21 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
                                        const char *tiling_data, const char *kernel_name, const char *entry_file,
                                        const char *output_kernel_file, int core_type, int task_ration);
 
-int replay_stub(ReplayFuncParam& param, const int core_typ) {
+int replay_stub(ReplayFuncParam &param, const int core_typ) {
   return 1;
 }
 
-int replay_stub_throw(ReplayFuncParam& param, const int core_typ) {
+int replay_stub_throw(ReplayFuncParam &param, const int core_typ) {
   throw "bad callback";
   return 1;
 }
 
-int replay_stub_invalid_ret(ReplayFuncParam& param, const int core_typ) {
+int replay_stub_invalid_ret(ReplayFuncParam &param, const int core_typ) {
   return 0;
 }
 
 TEST_F(UtestRegister, tik2_py_interface_op_replay_ok) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "tik2_py_interface_op_replay_ok";
   std::string soc_version = "ascend710";
   int blkdim = 32;
@@ -1410,15 +1410,15 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_ok) {
   int task_ration = 1;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_ok, ascend710, replay_stub);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
-                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
-                                    core_type, task_ration),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
+                                    task_ration),
             1);
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_callback) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "tik2_py_interface_op_replay_fail_without_callback";
   std::string soc_version = "ascend710";
   int blkdim = 32;
@@ -1429,15 +1429,15 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_callback) {
   int core_type = 0;
   int task_ration = 1;
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
-                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
-                                    core_type, task_ration),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
+                                    task_ration),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_throw) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "tik2_py_interface_op_replay_fail_throw";
   std::string soc_version = "ascend710";
   int blkdim = 32;
@@ -1448,9 +1448,9 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_throw) {
   int core_type = 0;
   int task_ration = 1;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_fail_throw, ascend710, replay_stub_throw);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim,
-                                tilingdata.c_str(),kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
-                                core_type, task_ration),
+  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
+                                    task_ration),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
@@ -1463,7 +1463,7 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_params) {
 }
 
 TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_core_type) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "tik2_py_interface_op_replay_invalid_core_type";
   std::string soc_version = "ascend710";
   int blkdim = 32;
@@ -1475,15 +1475,15 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_core_type) {
   int task_ration = 1;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_core_type, ascend710, replay_stub);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
-                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
-                                    core_type, task_ration),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
+                                    task_ration),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_task_ration) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "tik2_py_interface_op_replay_invalid_task_ration";
   std::string soc_version = "ascend710";
   int blkdim = 32;
@@ -1495,15 +1495,15 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_task_ration) {
   int task_ration = -1;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_task_ration, ascend710, replay_stub);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
-                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
-                                    core_type, task_ration),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
+                                    task_ration),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
 TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_ret) {
-  setenv("ENABLE_RUNTIME_V2", "1", 0); 
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "tik2_py_interface_op_replay_invalid_ret";
   std::string soc_version = "ascend710";
   int blkdim = 32;
@@ -1515,8 +1515,8 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_ret) {
   int task_ration = 2;
   REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_ret, ascend710, replay_stub_invalid_ret);
   EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
-                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(),
-                                    core_type, task_ration),
+                                    kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
+                                    task_ration),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
