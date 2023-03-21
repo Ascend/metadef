@@ -15,24 +15,12 @@
  */
 
 #include "graph/compile_cache_policy/compile_cache_policy.h"
-#include "graph/compile_cache_policy/match_policy_exact_only.h"
-#include "graph/compile_cache_policy/aging_policy_lru.h"
+#include "graph/cache_policy/match_policy_exact_only.h"
+#include "graph/cache_policy/aging_policy_lru.h"
 #include "debug/ge_util.h"
 #include "graph/debug/ge_util.h"
 
 namespace ge {
-void CompileCachePolicy::PolicyInit() {
-  static bool policy_init_flag = false;
-  if (!policy_init_flag) {
-    PolicyRegister::GetInstance().RegisterMatchPolicy(MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
-                                                      std::make_shared<MatchPolicyExactOnly>());
-    PolicyRegister::GetInstance().RegisterAgingPolicy(AgingPolicyType::AGING_POLICY_LRU,
-                                                      std::make_shared<AgingPolicyLru>());
-    policy_init_flag = true;
-  }
-  return;
-}
-
 std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicyPtr mp,
                                                                const AgingPolicyPtr ap) {
   if (mp == nullptr) {
@@ -53,7 +41,6 @@ std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicy
 
 std::unique_ptr<CompileCachePolicy> CompileCachePolicy::Create(const MatchPolicyType mp_type,
                                                                const AgingPolicyType ap_type) {
-  CompileCachePolicy::PolicyInit();
   const auto mp = PolicyRegister::GetInstance().GetMatchPolicy(mp_type);
   const auto ap = PolicyRegister::GetInstance().GetAgingPolicy(ap_type);
   auto ccp = ComGraphMakeUnique<CompileCachePolicy>();
@@ -77,7 +64,14 @@ graphStatus CompileCachePolicy::SetAgingPolicy(const AgingPolicyPtr ap) {
 }
 
 CacheItemId CompileCachePolicy::AddCache(const CompileCacheDesc &compile_cache_desc) {
-  const auto cache_item = compile_cache_state_.AddCache(compile_cache_desc);
+  // 为了蓝区air仓老接口兼容上库，air仓修改使用CachePolicy新接口后删除
+  CompileCacheDescPtr compile_cache_desc_ptr = make_shared<CompileCacheDesc>(compile_cache_desc);
+  if (compile_cache_desc_ptr == nullptr) {
+    GELOGW("compile cache desc is nullptr");
+    return KInvalidCacheItemId;
+  }
+  const CacheHashKey main_hash_key = compile_cache_desc.GetCacheDescHash();
+  const auto cache_item = compile_cache_state_.AddCache(main_hash_key, compile_cache_desc_ptr);
   if (cache_item == KInvalidCacheItemId) {
     GELOGE(GRAPH_FAILED, "[Check][Param] AddCache failed: please check the compile cache description.");
     return KInvalidCacheItemId;
@@ -90,7 +84,13 @@ CacheItemId CompileCachePolicy::FindCache(const CompileCacheDesc &compile_cache_
     GELOGW("match policy is nullptr");
     return KInvalidCacheItemId;
   }
-  return mp_->GetCacheItemId(compile_cache_state_.GetState(), compile_cache_desc);
+  // 为了蓝区air仓老接口兼容上库，air仓修改使用CachePolicy新接口后删除
+  CompileCacheDescPtr compile_cache_desc_ptr = make_shared<CompileCacheDesc>(compile_cache_desc);
+  if (compile_cache_desc_ptr == nullptr) {
+    GELOGW("compile cache desc is nullptr");
+    return KInvalidCacheItemId;
+  }
+  return mp_->GetCacheItemId(compile_cache_state_.GetState(), compile_cache_desc_ptr);
 }
 
 std::vector<CacheItemId> CompileCachePolicy::DeleteCache(const DelCacheFunc &func) {

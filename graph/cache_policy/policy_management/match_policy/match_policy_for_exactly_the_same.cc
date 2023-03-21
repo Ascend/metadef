@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "graph/compile_cache_policy/match_policy_exact_only.h"
-#include "graph/compile_cache_policy/compile_cache_hasher.h"
+#include "graph/cache_policy/match_policy_for_exactly_the_same.h"
+
 namespace ge {
-CacheItemId MatchPolicyExactOnly::GetCacheItemId(const CCStatType &cc_state, const CompileCacheDesc &desc) const {
-  const CacheHashKey hash_key = CompileCacheHasher::GetCacheDescHashWithoutShape(desc);
+CacheItemId MatchPolicyForExactlyTheSame::GetCacheItemId(const CCStatType &cc_state,
+                                                         const CacheDescPtr &cache_desc) const {
+  const CacheHashKey hash_key = cache_desc->GetCacheDescHash();
   const auto &iter = cc_state.find(hash_key);
   if (iter == cc_state.end()) {
-    GELOGD("can not find without shape hash %lu", hash_key);
+    GELOGD("[CACHE] hash [%lu] not exist.", hash_key);
     return KInvalidCacheItemId;
   }
   const auto &info_vec = iter->second;
-  const auto cached_info = std::find_if(info_vec.begin(), info_vec.end(), [&desc] (const CacheInfo &cached) {
-      return (CompileCacheDesc::IsMatchedCompileDesc(cached.GetCompileCacheDesc(), desc));
+  const auto cached_info = std::find_if(info_vec.begin(), info_vec.end(), [&cache_desc](const CacheInfo &cached) {
+    return (cache_desc->IsEqual(cached.GetCacheDesc()));
   });
-  if (cached_info != info_vec.end()) {
+  if (cached_info != info_vec.cend()) {
     return cached_info->GetItemId();
   } else {
+    GELOGD("[CACHE] hash [%lu] collision occurred, the same cached desc not found.", hash_key);
     return KInvalidCacheItemId;
   }
 }
-}
+}  // namespace ge

@@ -13,15 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_EXACT_ONLY_H_
+#define GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_EXACT_ONLY_H_
+#include "graph/cache_policy/match_policy.h"
+#include "graph/cache_policy/policy_register.h"
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_HASHER_H_
-#define GRAPH_COMPILE_CACHE_POLICY_COMPILE_CACHE_HASHER_H_
-
-#include "compile_cache_desc.h"
 namespace ge {
-class CompileCacheHasher {
+class MatchPolicyExactOnly : public MatchPolicy {
 public:
-  static CacheHashKey GetCacheDescHashWithoutShape(const CompileCacheDesc &cache_desc);
+  CacheItemId GetCacheItemId(const CCStatType &cc_state, const CacheDescPtr &desc) const override;
+  ~MatchPolicyExactOnly() override = default;
 };
+
+REGISTER_MATCH_POLICY_CREATOR(MatchPolicyType::MATCH_POLICY_EXACT_ONLY,
+                              []() {
+                                return make_shared<MatchPolicyExactOnly>();
+                              });
 }  // namespace ge
 #endif
+

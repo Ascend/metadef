@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_H_
-#define GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_H_
-#include "graph/compile_cache_policy/compile_cache_state.h"
+#ifndef GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_AGING_POLICY_H_
+#define GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_AGING_POLICY_H_
+#include "graph/cache_policy/cache_state.h"
 
 namespace ge {
-class MatchPolicy {
+constexpr const size_t kDefaultCacheQueueDepth = 1U;
+class AgingPolicy {
  public:
-  MatchPolicy() = default;
-  virtual ~MatchPolicy() = default;
-  virtual CacheItemId GetCacheItemId(const CCStatType &cc_state, const CompileCacheDesc &desc) const = 0;
+  AgingPolicy() = default;
+  virtual ~AgingPolicy() = default;
+  virtual void SetCachedAgingDepth(size_t depth) = 0;
+  virtual std::vector<CacheItemId> DoAging(const CCStatType &cc_state) const = 0;
+  virtual bool IsReadyToAddCache(const CacheHashKey hash_key, const CacheDescPtr &cache_desc) = 0;
  private:
-  MatchPolicy &operator=(const MatchPolicy &match_polocy) = delete;
-  MatchPolicy(const MatchPolicy &match_polocy) = delete;
+  AgingPolicy &operator=(const AgingPolicy &anging_polocy) = delete;
+  AgingPolicy(const AgingPolicy &anging_polocy) = delete;
 };
-}  // namespace ge
+}
 #endif

@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_EXACT_ONLY_H_
-#define GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_EXACT_ONLY_H_
-#include "match_policy.h"
-namespace ge {
-class MatchPolicyExactOnly : public MatchPolicy {
-public:
-  virtual CacheItemId GetCacheItemId(const CCStatType &cc_state, const CompileCacheDesc &desc) const override;
-  virtual ~MatchPolicyExactOnly() override = default;
-};
-}
-#endif
 
+#ifndef GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_H_
+#define GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_MATCH_POLICY_H_
+#include "graph/cache_policy/cache_state.h"
+
+namespace ge {
+class MatchPolicy {
+ public:
+  MatchPolicy() = default;
+  virtual ~MatchPolicy() = default;
+  virtual CacheItemId GetCacheItemId(const CCStatType &cc_state, const CacheDescPtr &desc) const = 0;
+ private:
+  MatchPolicy &operator=(const MatchPolicy &match_polocy) = delete;
+  MatchPolicy(const MatchPolicy &match_polocy) = delete;
+};
+}  // namespace ge
+#endif

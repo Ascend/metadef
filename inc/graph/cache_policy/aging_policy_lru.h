@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_AGING_POLICY_LRU_H_
-#define GRAPH_COMPILE_CACHE_POLICY_POLICY_MANAGEMENT_AGING_POLICY_LRU_H_
-#include "aging_policy.h"
+#ifndef GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_AGING_POLICY_LRU_H_
+#define GRAPH_CACHE_POLICY_POLICY_MANAGEMENT_AGING_POLICY_LRU_H_
+#include "graph/cache_policy/aging_policy.h"
+#include "graph/cache_policy/policy_register.h"
+
 namespace ge {
 class AgingPolicyLru : public AgingPolicy {
 public:
@@ -24,10 +26,23 @@ public:
   void SetDeleteInterval(const int64_t &interval) {
     delete_interval_ = interval;
   }
+  void SetCachedAgingDepth(size_t depth) override {
+    (void)depth;
+  }
+  bool IsReadyToAddCache(const CacheHashKey hash_key, const CacheDescPtr &cache_desc) override {
+    (void) hash_key;
+    (void) cache_desc;
+    return true;
+  }
   std::vector<CacheItemId> DoAging(const CCStatType &cc_state) const override;
 
 private:
   int64_t delete_interval_ = 0L;
 };
-}
+
+REGISTER_AGING_POLICY_CREATOR(AgingPolicyType::AGING_POLICY_LRU,
+                              []() {
+                                return make_shared<AgingPolicyLru>();
+                              });
+}  // namespace ge
 #endif
