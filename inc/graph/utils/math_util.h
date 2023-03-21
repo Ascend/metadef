@@ -24,6 +24,7 @@
 #include <functional>
 #include <iostream>
 
+#include "graph/def_types.h"
 #include "external/utils/extern_math_util.h"
 #include "framework/common/debug/log.h"
 
