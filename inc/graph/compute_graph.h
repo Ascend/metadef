@@ -51,7 +51,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   using Vistor = RangeVistor<T, std::shared_ptr<ConstComputeGraph>>;
 
   explicit ComputeGraph(const std::string &name);
-  virtual ~ComputeGraph() override;
+  ~ComputeGraph() override;
   ComputeGraph(const ge::ComputeGraph& compute_graph);
   ComputeGraph(ge::ComputeGraph&& compute_graph);
 
@@ -232,8 +232,8 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   void ClearNodeList();
 
  protected:
-  virtual ProtoAttrMap &MutableAttrMap() override;
-  virtual ConstProtoAttrMap &GetAttrMap() const override;
+  ProtoAttrMap &MutableAttrMap() override;
+  ConstProtoAttrMap &GetAttrMap() const override;
 
  private:
   graphStatus DFSTopologicalSorting(std::vector<NodePtr> &node_vec, std::map<NodePtr, uint32_t> &map_in_edge_num,
