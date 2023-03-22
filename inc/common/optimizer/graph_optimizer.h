@@ -39,6 +39,15 @@ class GraphOptimizer {
   // close graphOptimizer
   virtual Status Finalize() = 0;
 
+  // init process for optimize graph every time because options may different in different build process
+  // 当前引擎获取编译option是在OptimizeGraphPrepare接口中获取，该接口默认会过滤vector engine。
+  // 当前出现问题场景是子图优化阶段因为算子融合直接选择了vector engine的场景，出现了vector engine获取不到编译option导致问题。
+  // 当前决策新增OptimizeGraphInit接口，该接口不会过滤引擎，全部调用.这样获取到build option操作就从OptimizeGraphPrepare剥离。
+  virtual Status OptimizeGraphInit(ComputeGraph& graph) {
+    (void)graph;
+    return SUCCESS;
+  }
+
   // optimize original graph for FE quant optimize
   virtual Status OptimizeGraphPrepare(ComputeGraph& graph) {
     (void)graph;
