@@ -797,7 +797,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
 }
 
 bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, proto::ModelDef &model_def) {
-  if (SerializeToBuffer(buffer, model_def)) {
+  if (SerializeToBuffer(model_def, buffer)) {
     return true;
   }
   GELOGW("[Serialize][Model] Model is larger than 2G, need separate");
@@ -843,10 +843,10 @@ bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, proto::ModelDef &model_
   Buffer temp_buffer(model_def.ByteSize());
 #endif
   buffer = temp_buffer;
-  return SerializeToBuffer(buffer, model_def);
+  return SerializeToBuffer(model_def, buffer);
 }
 
-bool ModelSerializeImp::SerializeToBuffer(Buffer &buffer, proto::ModelDef &model_def) {
+bool ModelSerializeImp::SerializeToBuffer(const proto::ModelDef &model_def, Buffer &buffer) const {
   google::protobuf::io::ArrayOutputStream array_stream(buffer.GetData(), static_cast<int32_t>(buffer.GetSize()));
   google::protobuf::io::CodedOutputStream output_stream(&array_stream);
   output_stream.SetSerializationDeterministic(true);

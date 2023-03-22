@@ -18,7 +18,7 @@
 #define METADEF_INC_GRAPH_PARALLELISM_GRAPH_PARALLEL_OPTION_H_
 
 #include <cstdint>
-#include "graph/types.h"
+#include <string>
 
 namespace ge {
 struct PipelineParallelOption {

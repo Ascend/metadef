@@ -80,7 +80,7 @@ class ModelSerializeImp {
 
   bool SeparateModelDef(Buffer &buffer, proto::ModelDef &model_def);
 
-  bool SerializeToBuffer(Buffer &buffer, proto::ModelDef &model_def);
+  bool SerializeToBuffer(const proto::ModelDef &model_def, Buffer &buffer) const;
 
   bool UnserializeModel(Model &model, proto::ModelDef &model_proto);
 
