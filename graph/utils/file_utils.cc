@@ -154,7 +154,8 @@ graphStatus GetBinFromFile(const std::string &path, char_t *buffer, size_t &data
   GE_ASSERT_TRUE(!path.empty());
   GE_ASSERT_TRUE(buffer != nullptr);
   std::string real_path = RealPath(path.c_str());
-  GE_ASSERT_TRUE(!real_path.empty());
+  GE_ASSERT_TRUE(!real_path.empty(),
+      "Path: %s is invalid, file or directory is not exist", path.c_str());
   std::ifstream ifs(real_path, std::ifstream::binary);
   if (!ifs.is_open()) {
     GELOGE(GRAPH_FAILED, "path:%s not open", real_path.c_str());
