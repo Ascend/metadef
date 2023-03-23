@@ -1338,6 +1338,7 @@ const std::string ATTR_NAME_IS_INSERTED_BY_GE = "_is_inserted_by_ge";
 const std::string ATTR_NAME_MEMORY_REUSE_INFO = "_mem_reuse_info";
 const std::string ATTR_NAME_OP_READ_WRITE_INDEX = "_op_read_write_index";
 const std::string ATTR_NAME_MEM_RELEASE_FIRST_REUSE_FIRST = "_mem_release_first_reuse_first";
+const std::string ATTR_NAME_NODE_NEED_MULTI_TASK = "_op_need_multi_task";
 
 // for support overflow detection
 const std::string GLOBALWORKSPACE_SPEC_WORKSPACE = "globalworkspace_spec_workspace";
@@ -1387,6 +1388,7 @@ const std::string ATTR_NAME_ESCHED_EVENT_PRIORITY = "_eschedEventPriority";
 
 // for graph deployment
 const std::string ATTR_NAME_DEVICE_INDEX = "_device_index";
+const std::string ATTR_NAME_RANK_DEVICE_INDEX = "_rank_device_index";
 const std::string ATTR_NAME_DEVICE_INDEX_TO_LOGIC_DEVICE_ID = "_device_index_to_logic_device_id";
 const std::string ATTR_NAME_NODE_DEPLOYMENT = "_node_deployment";
 const std::string ATTR_NAME_TENSOR_DEPLOYMENT = "_tensor_deployment";
