@@ -698,6 +698,26 @@ NodeToOutAnchor NodeUtils::GetParentInputAndAnchor(const NodePtr &node) {
   return std::make_pair(peer_out_anchor->GetOwnerNode(), peer_out_anchor);
 }
 
+NodeToOutAnchor NodeUtils::GetParentInputAndAnchorCrossSubgraph(const NodePtr &node) {
+  NodeToOutAnchor node_to_out_anchor = {nullptr, nullptr};
+  std::stack<NodePtr> s;
+  s.push(node);
+  while (!s.empty()) {
+    auto n = s.top();
+    s.pop();
+    node_to_out_anchor = GetParentInputAndAnchor(n);
+    auto peer_node = node_to_out_anchor.first;
+    if ((peer_node == nullptr) || (peer_node->GetType() != DATA)) {
+      continue;
+    }
+
+    if ((peer_node->GetOpDesc() != nullptr) && peer_node->GetOpDesc()->HasAttr(ATTR_NAME_PARENT_NODE_INDEX)) {
+      s.push(peer_node);
+    }
+  }
+  return node_to_out_anchor;
+}
+
 /// @brief Get is dynamic shape graph from node.
 /// @param [in] node
 /// @return bool

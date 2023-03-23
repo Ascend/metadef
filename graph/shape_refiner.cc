@@ -567,6 +567,34 @@ void ShapeRefiner::PushToContextMap(const NodePtr &node, const InferenceContextP
   (void)context_map.emplace(node, inference_context);
 }
 
+static void GetRealOutNode(const OutDataAnchorPtr &peer_out_data_anchor,
+                           std::stack<std::pair<NodePtr, int32_t>> &node_to_indx_stack,
+                           std::map<NodePtr, int32_t> &out_nodes) {
+  auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
+  if (IsOpWithSubgraph(peer_out_data_node)) {
+    node_to_indx_stack.push(std::make_pair(peer_out_data_node, peer_out_data_anchor->GetIdx()));
+  } else if ((peer_out_data_node->GetType() == DATA)
+      && peer_out_data_node->GetOpDesc()->HasAttr(ATTR_NAME_PARENT_NODE_INDEX)) {
+    NodeToOutAnchor node_to_out_anchor = NodeUtils::GetParentInputAndAnchorCrossSubgraph(peer_out_data_node);
+    if ((node_to_out_anchor.first == nullptr) || (node_to_out_anchor.second == nullptr)) {
+      GELOGW("Get parent input node or anchor is nullptr.");
+      return;
+    }
+    if (IsOpWithSubgraph(node_to_out_anchor.first)) {
+      node_to_indx_stack.push(std::make_pair(node_to_out_anchor.first, node_to_out_anchor.second->GetIdx()));
+    } else {
+      (void)out_nodes.emplace(node_to_out_anchor.first, node_to_out_anchor.second->GetIdx());
+    }
+    GELOGI("Ori peer node is:[%s][%s], change to real peer node:[%s][%s]",
+           peer_out_data_node->GetName().c_str(), peer_out_data_node->GetType().c_str(),
+           node_to_out_anchor.first->GetName().c_str(), node_to_out_anchor.first->GetType().c_str());
+  } else {
+    (void)out_nodes.emplace(peer_out_data_node, peer_out_data_anchor->GetIdx());
+    GELOGI("Peer node: %s, out index: %d.", peer_out_data_node->GetName().c_str(), peer_out_data_anchor->GetIdx());
+  }
+  return;
+}
+
 static Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const int32_t out_idx,
                                               std::map<NodePtr, int32_t> &out_nodes) {
   out_nodes.clear();
@@ -592,14 +620,7 @@ static Status GetOutNodesByParentNodeOutIndex(const NodePtr &parent_node, const 
         if (AttrUtils::GetInt(in_desc, ATTR_NAME_PARENT_NODE_INDEX, ref) && (ref == node_to_idx.second)) {
           const auto peer_out_data_anchor = in_data_anchor->GetPeerOutAnchor();
           GE_CHECK_NOTNULL(peer_out_data_anchor);
-          auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
-          if (IsOpWithSubgraph(peer_out_data_node)) {
-            node_to_indx_stack.push(std::make_pair(peer_out_data_node, peer_out_data_anchor->GetIdx()));
-          } else {
-            (void)out_nodes.emplace(peer_out_data_node, peer_out_data_anchor->GetIdx());
-          }
-          GELOGI("Peer node: %s, out index: %d, ref: %d.", peer_out_data_node->GetName().c_str(),
-                 peer_out_data_anchor->GetIdx(), ref);
+          GetRealOutNode(peer_out_data_anchor, node_to_indx_stack, out_nodes);
         }
       }
     }
