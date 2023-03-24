@@ -36,15 +36,9 @@ struct OpImplKernelRegistry {
   using InferShapeRangeKernelFunc = UINT32 (*)(InferShapeRangeContext *);
   using TilingKernelFunc = UINT32 (*)(TilingContext *);
   using InferDataTypeKernelFunc = UINT32 (*)(InferDataTypeContext *);
-#ifndef ONLY_COMPILE_OPEN_SRC
   using OpType = ge::AscendString;
   using PrivateAttrList = std::vector<std::pair<ge::AscendString, ge::AnyValue>>;
   using PrivateAttrSet = std::unordered_set<ge::AscendString>;
-#else
-  using OpType = std::string;
-  using PrivateAttrList = std::vector<std::pair<std::string, ge::AnyValue>>;
-  using PrivateAttrSet = std::unordered_set<std::string>;
-#endif
   using CompileInfoCreatorFunc = void *(*)();
   using CompileInfoDeleterFunc = void (*)(void *);
 

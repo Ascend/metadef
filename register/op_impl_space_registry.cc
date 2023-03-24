@@ -96,19 +96,13 @@ void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &
 void OpImplSpaceRegistry::MergeTypesToImpl(OpTypesToImplMap &merged_impl, OpTypesToImplMap &src_impl) const {
   for (auto iter = src_impl.cbegin(); iter != src_impl.cend(); ++iter) {
     auto op_type = iter->first;
-#ifndef ONLY_COMPILE_OPEN_SRC
     GELOGD("Merge types to impl, op type %s", op_type.GetString());
-#endif
     if (merged_impl.find(op_type) == merged_impl.end()) {
       merged_impl[op_type] = src_impl[op_type];
       continue;
     } else {
       auto src_funcs = iter->second;
-#ifndef ONLY_COMPILE_OPEN_SRC
       MergeFunctions(merged_impl[op_type], src_funcs, op_type.GetString());
-#else
-      MergeFunctions(merged_impl[op_type], src_funcs, op_type);
-#endif
     }
   }
 }
