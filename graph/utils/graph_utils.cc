@@ -1804,22 +1804,22 @@ ComputeGraphPtr GraphUtils::FindRootGraph(ComputeGraphPtr graph) {
   }
   return result;
 }
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                         const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph) {
+graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph,
+                                         ComputeGraphPtr &dst_compute_graph) {
   GE_CHECK_NOTNULL(src_compute_graph);
   if (src_compute_graph->GetParentGraph() != nullptr) {
-    GELOGE(GRAPH_FAILED,
-           "[Check][RootGraph] Only support copy root graph, current graph name:%s, "
-           "parent graph name:%s.",
-           src_compute_graph->GetName().c_str(), src_compute_graph->GetParentGraph()->GetName().c_str());
+    GELOGE(GRAPH_FAILED, "[Check][RootGraph] Only support copy root graph, current graph name:%s, "
+                         "parent graph name:%s.", src_compute_graph->GetName().c_str(),
+           src_compute_graph->GetParentGraph()->GetName().c_str());
     return GRAPH_FAILED;
   }
 
   const int32_t depth = 0;
   std::map<ConstNodePtr, NodePtr> old_2_new_node;
   std::map<ConstOpDescPtr, OpDescPtr> old_2_new_op_desc;
-  const graphStatus ret = CopyComputeGraph(src_compute_graph, node_filter, graph_filter, dst_compute_graph,
+  const graphStatus ret = CopyComputeGraph(src_compute_graph, dst_compute_graph,
                                            old_2_new_node, old_2_new_op_desc, depth);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "[Copy][ComputeGraphPtr] failed, ret:%d.", ret);
@@ -1891,21 +1891,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph) {
-  return CopyComputeGraph(src_compute_graph, nullptr, nullptr, dst_compute_graph);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph,
-                                         std::map<ConstNodePtr, NodePtr> &node_old_2_new,
-                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth) {
-  return CopyComputeGraph(src_compute_graph, nullptr, nullptr, dst_compute_graph, node_old_2_new, op_desc_old_2_new,
-                          depth);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                          const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
+graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph,
+                                          ComputeGraphPtr &dst_compute_graph,
                                           std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                           std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                                           std::unordered_map<std::string, NodePtr> &all_new_nodes,
@@ -1917,18 +1904,18 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
   const auto src_root_compute_graph = FindRootGraph(src_compute_graph);
   GE_CHECK_NOTNULL(src_root_compute_graph);
   for (const auto &n : src_compute_graph->GetDirectNode()) {
-    if ((node_filter != nullptr) && (!node_filter(*n))) {
-      continue;
-    }
     const OpDescPtr op_desc = GraphUtils::CopyOpDesc(n->GetOpDesc());
-    GE_CHECK_NOTNULL(op_desc);
-    GE_CHECK_NOTNULL(op_desc->impl_);
+    if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
+      REPORT_CALL_ERROR("E18888", "CopyOpDesc failed from node:%s", n->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Copy][OpDesc] from node:%s failed", n->GetName().c_str());
+      return GRAPH_FAILED;
+    }
     if (CopyTensorAttrs(op_desc, n) != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "[Copy][TensorAttrs] from node:%s failed.", n->GetName().c_str());
       return GRAPH_FAILED;
     }
 
-    if (NodeUtils::IsConst(*n)) {
+    if ((n->GetType() == CONSTANT) || (n->GetType() == CONSTANTOP)) {
       GeTensorPtr weight = nullptr;
       if (AttrUtils::MutableTensor(n->GetOpDesc(), ATTR_NAME_WEIGHTS, weight)) {
         const GeTensor copy_weight = weight->Clone();
@@ -1942,7 +1929,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
     }
 
     op_desc->SetName(n->GetName());
-    const NodePtr node = dst_compute_graph->AddNode(op_desc);
+    const NodePtr node = dst_compute_graph->AddNode(op_desc, n->GetOpDesc()->GetId());
     if (node == nullptr) {
       REPORT_CALL_ERROR("E18888", "AddNode %s to graph:%s failed",
                         op_desc->GetName().c_str(), dst_compute_graph->GetName().c_str());
@@ -1960,17 +1947,13 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
     for (size_t subgraph_idx = 0U; subgraph_idx < subgraph_num; ++subgraph_idx) {
       const auto src_subgraph = src_root_compute_graph->GetSubgraph(subgraph_names[subgraph_num - 1U - subgraph_idx]);
       GE_CHECK_NOTNULL(src_subgraph);
-      if ((graph_filter != nullptr) &&
-          (!graph_filter(*src_subgraph->GetParentNode(), src_subgraph->GetName().c_str(), src_subgraph))) {
-        continue;
-      }
       ComputeGraphPtr dst_subgraph = ComGraphMakeShared<ComputeGraph>(src_subgraph->GetName());
       GE_CHECK_NOTNULL(dst_subgraph);
       dst_subgraph->SetParentGraph(dst_compute_graph);
       std::map<ConstNodePtr, NodePtr> sub_node_old_2_new;
       std::map<ConstOpDescPtr, OpDescPtr> sub_op_desc_old_2_new;
-      const graphStatus ret = CopyComputeGraph(src_subgraph, node_filter, graph_filter, dst_subgraph,
-                                               sub_node_old_2_new, sub_op_desc_old_2_new, depth + 1);
+      const graphStatus ret = CopyComputeGraph(src_subgraph, dst_subgraph, sub_node_old_2_new,
+                                               sub_op_desc_old_2_new, depth + 1);
       if (ret != GRAPH_SUCCESS) {
         GELOGE(GRAPH_FAILED, "[Copy][SubGraph] %s of parent node:%s failed.",
                src_subgraph->GetName().c_str(), node->GetName().c_str());
@@ -1987,32 +1970,31 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                         const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
+graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph,
+                                         ComputeGraphPtr &dst_compute_graph,
                                          std::map<ConstNodePtr, NodePtr> &node_old_2_new,
-                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth) {
+                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
+                                         const int32_t depth) {
   GE_CHECK_NOTNULL(dst_compute_graph);
   GE_CHECK_NOTNULL(src_compute_graph);
 
   if (depth >= kCopyGraphMaxRecursionDepth) {
     REPORT_INNER_ERROR("E18888", "param depth:%d >= %d(allow max subgraphs)", depth, kCopyGraphMaxRecursionDepth);
-    GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%d > %d(allow max subgraphs)", depth,
-           kCopyGraphMaxRecursionDepth);
+    GELOGE(GRAPH_FAILED, "[Check][Param]exist too much subgraphs:%d > %d(allow max subgraphs)",
+           depth, kCopyGraphMaxRecursionDepth);
     return GRAPH_FAILED;
   }
   // copy op and subgraph from old graph to new graph
   std::unordered_map<std::string, NodePtr> all_new_nodes;
-  graphStatus ret = CopyOpAndSubgraph(src_compute_graph, node_filter, graph_filter, dst_compute_graph, node_old_2_new,
-                                      op_desc_old_2_new, all_new_nodes, depth);
+  graphStatus ret = CopyOpAndSubgraph(src_compute_graph, dst_compute_graph,
+                                      node_old_2_new, op_desc_old_2_new,
+                                      all_new_nodes, depth);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "[Copy][OpAndSubGraph] failed.");
     return GRAPH_FAILED;
   }
 
   for (const auto &n : src_compute_graph->GetDirectNode()) {
-    if ((node_filter != nullptr) && (!node_filter(*n))) {
-      continue;
-    }
     if (RelinkGraphEdges(n, "", all_new_nodes) != GRAPH_SUCCESS) {
       GELOGE(GRAPH_FAILED, "[Relink][Edges] failed.");
       return GRAPH_FAILED;
@@ -2022,12 +2004,9 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
   std::vector<ComputeGraphPtr> new_subgraphs;
   const auto old_subgraphs = src_compute_graph->GetAllSubgraphs();
   for (const auto &sub_graph : old_subgraphs) {
-    if ((graph_filter != nullptr) &&
-        (!graph_filter(*sub_graph->GetParentNode(), sub_graph->GetName().c_str(), sub_graph))) {
-      continue;
-    }
     const auto new_subgraph = dst_compute_graph->GetSubgraph(sub_graph->GetName());
-    GE_CHECK_NOTNULL(new_subgraph);
+    GE_CHK_BOOL_EXEC(new_subgraph != nullptr, return GRAPH_FAILED,
+                     "[Reorder][SubGraphs] can't find subgraph:%s in new graph.", sub_graph->GetName().c_str());
     GELOGD("Copy new subgraph:%s.", sub_graph->GetName().c_str());
     new_subgraphs.push_back(new_subgraph);
   }
@@ -2066,8 +2045,9 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
   for (const auto &info : out_nodes_info) {
     const auto it = all_new_nodes.find(info.first->GetName());
     if (it == all_new_nodes.end()) {
-      GELOGW("[Check][Param] Find output node:%s failed.", info.first->GetName().c_str());
-      continue;
+      REPORT_INNER_ERROR("E18888", "Find output node:%s failed.", info.first->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] Find output node:%s failed.", info.first->GetName().c_str());
+      return GRAPH_FAILED;
     }
     new_out_nodes_info.emplace_back(it->second, info.second);
   }
@@ -2078,8 +2058,9 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
   for (const auto &node : input_nodes) {
     const auto it = all_new_nodes.find(node->GetName());
     if (it == all_new_nodes.end()) {
-      GELOGW("[Check][Param] Find input node:%s failed.", node->GetName().c_str());
-      continue;
+      REPORT_INNER_ERROR("E18888", "Find input node:%s failed.", node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] Find input node:%s failed.", node->GetName().c_str());
+      return GRAPH_FAILED;
     }
     (void)dst_compute_graph->AddInputNode(it->second);
   }
@@ -2090,8 +2071,9 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
   for (const auto &node : src_traget_nodes_info) {
     const auto it = all_new_nodes.find(node->GetName());
     if (it == all_new_nodes.end()) {
-      GELOGW("[Check][Param] Find target info node:%s failed.", node->GetName().c_str());
-      continue;
+      REPORT_INNER_ERROR("E18888", "Find target info node:%s failed.", node->GetName().c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] Find target info node:%s failed.", node->GetName().c_str());
+      return GRAPH_FAILED;
     }
     dst_traget_nodes_info.emplace_back(it->second);
   }
@@ -2106,8 +2088,9 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
   dst_compute_graph->impl_->need_iteration_ = src_compute_graph->impl_->need_iteration_;
   dst_compute_graph->impl_->is_summary_graph_ = src_compute_graph->impl_->is_summary_graph_;
   dst_compute_graph->impl_->is_valid_flag_ = src_compute_graph->impl_->is_valid_flag_;
-  dst_compute_graph->impl_->input_size_ = dst_compute_graph->impl_->input_nodes_.size();
-  dst_compute_graph->impl_->output_size_ = dst_compute_graph->impl_->output_nodes_info_.size();
+  dst_compute_graph->impl_->input_size_ = src_compute_graph->impl_->input_size_;
+  dst_compute_graph->impl_->output_size_ = src_compute_graph->impl_->output_size_;
+  dst_compute_graph->impl_->direct_nodes_size_ = src_compute_graph->impl_->direct_nodes_size_;
   dst_compute_graph->impl_->inputs_order_ = src_compute_graph->impl_->inputs_order_;
   dst_compute_graph->impl_->op_name_map_ = src_compute_graph->impl_->op_name_map_;
   dst_compute_graph->impl_->out_nodes_map_ = src_compute_graph->impl_->out_nodes_map_;
@@ -2272,8 +2255,10 @@ graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string 
                        return GRAPH_FAILED, "Peer in node:%s is null", node->GetName().c_str());
       it = all_nodes.find(peer_in_anchor->GetOwnerNode()->GetName() + suffix);
       if (it == all_nodes.end()) {
-        GELOGW("[Check][Param] node[%s] not found", peer_in_anchor->GetOwnerNode()->GetName().c_str());
-        continue;
+        REPORT_INNER_ERROR("E18888", "all_nodes not contain node[%s]",
+                           peer_in_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "[Check][Param] node[%s] not found", peer_in_anchor->GetOwnerNode()->GetName().c_str());
+        return GRAPH_FAILED;
       }
       const auto &new_peer_in_node = it->second;
       const auto ret = GraphUtils::AddEdge(new_node->GetOutAnchor(out_anchor->GetIdx()),
@@ -2294,8 +2279,11 @@ graphStatus GraphUtils::RelinkGraphEdges(const NodePtr &node, const std::string 
                        return GRAPH_FAILED, "[Invoke][GetOwnerNode] Peer out node is null");
       it = all_nodes.find(peer_in_control_anchor->GetOwnerNode()->GetName() + suffix);
       if (it == all_nodes.end()) {
-        GELOGW("[Check][Param] node[%s] not found", peer_in_control_anchor->GetOwnerNode()->GetName().c_str());
-        continue;
+        REPORT_INNER_ERROR("E18888", "all_nodes not contain node:%s",
+                           peer_in_control_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(GRAPH_FAILED, "[Check][Param] node[%s] not found",
+               peer_in_control_anchor->GetOwnerNode()->GetName().c_str());
+        return GRAPH_FAILED;
       }
       const auto &new_peer_in_node = it->second;
       const auto ret = GraphUtils::AddEdge(new_node->GetOutControlAnchor(),
