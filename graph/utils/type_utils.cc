@@ -382,8 +382,7 @@ Format TypeUtils::SerialStringToFormat(const std::string &str) {
   if (it != kStringToFormatMap.end()) {
     primary_format = it->second;
   } else {
-    REPORT_INNER_ERROR("E18888", "Format not support %s", str.c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %s", str.c_str());
+    GELOGW("[Check][Param] Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
   return static_cast<Format>(GetFormatFromSub(primary_format, sub_format));
@@ -401,8 +400,7 @@ Format TypeUtils::DataFormatToFormat(const std::string &str) {
   if (it != kDataFormatMap.end()) {
     primary_format = it->second;
   } else {
-    REPORT_INNER_ERROR("E18888", "Format not support %s", str.c_str());
-    GELOGE(GRAPH_FAILED, "[Check][Param] Format not support %s", str.c_str());
+    GELOGW("[Check][Param] Format not support %s", str.c_str());
     return FORMAT_RESERVED;
   }
   return static_cast<Format>(GetFormatFromSub(primary_format, sub_format));
@@ -449,8 +447,7 @@ Format TypeUtils::DomiFormatToFormat(const domi::domiTensorFormat_t domi_format)
   if (it != kDomiFormatToGeFormat.end()) {
     return it->second;
   }
-  REPORT_INNER_ERROR("E18888", "do not find domi Format %d from map", domi_format);
-  GELOGE(GRAPH_FAILED, "[Check][Param] do not find domi Format %d from map", domi_format);
+  GELOGW("[Check][Param] do not find domi Format %d from map", domi_format);
   return FORMAT_RESERVED;
 }
 
