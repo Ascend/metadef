@@ -254,11 +254,19 @@ void BuildGraphWithPlaceholderAndEnd(ComputeGraphPtr &graph) {
 
 ComputeGraphPtr BuildGraphWithSubGraph() {
   auto root_builder = ut::GraphBuilder("root");
-  const auto &case0 = root_builder.AddNode("case0", "Case", 0, 0);
+  const auto &data0 = root_builder.AddNode("data0", "Data", 1, 1);
+  const auto &case0 = root_builder.AddNode("case0", "Case", 1, 1);
+  const auto &relu0 = root_builder.AddNode("relu0", "Relu", 1, 1);
+  const auto &relu1 = root_builder.AddNode("relu1", "Relu", 1, 1);
+  const auto &netoutput = root_builder.AddNode("netoutput", "NetOutput", 1, 1);
   const auto &root_graph = root_builder.GetGraph();
+  root_builder.AddDataEdge(data0, 0, case0, 0);
+  root_builder.AddDataEdge(case0, 0, relu0, 0);
+  root_builder.AddDataEdge(relu0, 0, relu1, 0);
+  root_builder.AddDataEdge(relu1, 0, netoutput, 0);
 
   auto sub_builder1 = ut::GraphBuilder("sub1");
-  const auto &data1 = sub_builder1.AddNode("data1", "Data", 0, 0);
+  const auto &data1 = sub_builder1.AddNode("data1", "Data", 0, 1);
   const auto &sub_graph1 = sub_builder1.GetGraph();
   root_graph->AddSubGraph(sub_graph1);
   sub_graph1->SetParentNode(case0);
@@ -267,13 +275,11 @@ ComputeGraphPtr BuildGraphWithSubGraph() {
   case0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
 
   auto sub_builder2 = ut::GraphBuilder("sub2");
-  const auto &data2 = sub_builder2.AddNode("data2", "Data", 0, 0);
+  const auto &data2 = sub_builder2.AddNode("data2", "Data", 0, 1);
   const auto &sub_graph2 = sub_builder2.GetGraph();
   root_graph->AddSubGraph(sub_graph2);
   sub_graph2->SetParentNode(case0);
   sub_graph2->SetParentGraph(root_graph);
-  case0->GetOpDesc()->AddSubgraphName("branch1");
-  case0->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
   case0->GetOpDesc()->AddSubgraphName("branch2");
   case0->GetOpDesc()->SetSubgraphInstanceName(1, "sub2");
   return root_graph;
@@ -1034,12 +1040,12 @@ TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
 TEST_F(UtestGraphUtils, CopyRootComputeGraph) {
   auto graph = BuildGraphWithSubGraph();
   // check origin graph size
-  ASSERT_EQ(graph->GetAllNodesSize(), 3);
+  ASSERT_EQ(graph->GetAllNodesSize(), 7);
   ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>(ComputeGraph("dst"));
   // test copy root graph success
   auto ret = GraphUtils::CopyComputeGraph(graph, dst_compute_graph);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
-  ASSERT_EQ(dst_compute_graph->GetAllNodesSize(), 3);
+  ASSERT_EQ(dst_compute_graph->GetAllNodesSize(), 7);
   // test copy subgraph failed
   auto sub1_graph = graph->GetSubgraph("sub1");
   ret = GraphUtils::CopyComputeGraph(sub1_graph, dst_compute_graph);
@@ -1049,6 +1055,42 @@ TEST_F(UtestGraphUtils, CopyRootComputeGraph) {
   ComputeGraphPtr empty_dst_compute_graph;
   ret = GraphUtils::CopyComputeGraph(graph, empty_dst_compute_graph);
   ASSERT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(UtestGraphUtils, CopyComputeGraphWithFilter) {
+  auto graph = BuildGraphWithSubGraph();
+  // check origin graph size
+  ASSERT_EQ(graph->GetAllNodesSize(), 5 + 1 + 1);
+  ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>(ComputeGraph("dst"));
+  auto node_filter = [&graph](const Node &node) {
+    // no filter node which not in root graph
+    if (node.GetOwnerComputeGraph()->GetName() != graph->GetName()) {
+      return true;
+    }
+    // filter root graph node when node name == "relu1"
+    if (node.GetName() == "relu1") {
+      return false;
+    }
+    // copy other nodes in root graph
+    return true;
+  };
+
+  auto graph_filter = [&graph](const Node &node, const char *, const ComputeGraphPtr &sub_graph) {
+    // sub2 graph not copy
+    return sub_graph->GetName() != "sub2";
+  };
+  // test copy root graph success
+  auto ret = GraphUtils::CopyComputeGraph(graph, node_filter, graph_filter, dst_compute_graph);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(dst_compute_graph->GetAllNodesSize(), 4 + 1 + 0);
+  ASSERT_EQ(dst_compute_graph->GetDirectNodesSize(), 4);
+  ASSERT_EQ(dst_compute_graph->GetDirectNode().size(), 4);
+  ASSERT_EQ(dst_compute_graph->FindNode("relu1"), nullptr);
+  ASSERT_NE(dst_compute_graph->FindNode("relu0"), nullptr);
+  auto sub1_graph = dst_compute_graph->GetSubgraph("sub1");
+  ASSERT_EQ(sub1_graph->GetDirectNodesSize(), 1);
+  ASSERT_NE(sub1_graph, nullptr);
+  ASSERT_EQ(dst_compute_graph->GetSubgraph("sub2"), nullptr);
 }
 
 TEST_F(UtestGraphUtils, DumpGraphByPath) {
@@ -2469,7 +2511,7 @@ TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphs) {
   auto graph = BuildGraphWithSubGraph();
   ASSERT_NE(graph, nullptr);
   auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
-  EXPECT_EQ(nodes.size(), 2);
+  EXPECT_EQ(nodes.size(), 3);
 }
 
 TEST_F(UtestGraphUtils, RemoveNodesByTypeWithoutRelinkPlaceholder) {
