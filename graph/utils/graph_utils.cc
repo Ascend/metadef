@@ -1097,7 +1097,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
     GELOGD("Skip DumpGEGraphToOnnx with dump_ge_graph_level %" PRId32 ".", dump_ge_graph_level);
     return;
   }
-
   // dump the graph according to different graph level
   if (GraphUtils::MatchDumpStr(suffix)) {
     return;

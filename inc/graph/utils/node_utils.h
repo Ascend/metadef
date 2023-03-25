@@ -107,6 +107,10 @@ class NodeUtils {
   /// @param [in] node
   /// @return NodeToOutAnchor  node and out_anchor which linked to in_param node
   static NodeToOutAnchor GetParentInputAndAnchor(const NodePtr &node);
+  /// @brief Get subgraph original input node and corresponding out_anchor corss subgraph.
+  /// @param [in] node
+  /// @return NodeToOutAnchor  node and out_anchor which linked to in_param node
+  static NodeToOutAnchor GetParentInputAndAnchorCrossSubgraph(const NodePtr &node);
 
   /// @brief Get is dynamic shape graph from node.
   /// @param [in] node

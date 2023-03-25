@@ -199,6 +199,7 @@ class OnnxUtils {
   static bool AddInputAndOutputNodesForGraph(const onnx::GraphProto &graph_proto,
                                              ComputeGraphPtr &graph,
                                              const std::map<std::string, NodePtr> &node_map);
+  static DumpLevel dump_level_;
 };
 }  // namespace ge
 

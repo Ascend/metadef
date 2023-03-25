@@ -276,7 +276,7 @@ graphStatus RefRelations::Impl::BuildRelationsWithFuncNodeType(
   const auto node_type = root_node->GetType();
 
   auto status = GRAPH_SUCCESS;
-  if (node_type != kWhile) {
+  if ((node_type != kWhile) && (node_type != kStatelessWhile)) {
     status = BuildRefRelationsForBranch(root_node, classed_data_nodes, classed_netoutput_nodes, node_refs);
   } else {
     status = BuildRefRelationsForWhile(root_node, classed_data_nodes, classed_netoutput_nodes, node_refs);

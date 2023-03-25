@@ -31,11 +31,6 @@ const ge::char_t *const kPrefixForOutputDesc = "output_desc_attr_";
 const ge::char_t *const kDumpGEGraph = "DUMP_GE_GRAPH";
 const int8_t kMaxRecursiveDepth = 10;
 const int32_t kDecimalBase = 10;
-ge::char_t kDumpGeGraphEnv[MMPA_MAX_PATH] = {};
-const ge::DumpLevel kDumpLevel =
-    (mmGetEnv(kDumpGEGraph, &(kDumpGeGraphEnv[0U]), static_cast<UINT32>(MMPA_MAX_PATH)) == EN_OK)
-        ? static_cast<ge::DumpLevel>(std::strtol(&(kDumpGeGraphEnv[0U]), nullptr, kDecimalBase))
-        : ge::DumpLevel::NO_DUMP;
 const uint64_t kInputPrefixLength = 5U;
 const uint64_t kOutputPrefixLength = 6U;
 }  // namespace
@@ -52,7 +47,7 @@ const std::map<ge::DataType, onnx::TensorProto_DataType> kGeDataTypeToOnnxMap = 
     {DT_DOUBLE, onnx::TensorProto_DataType_DOUBLE}, {DT_BOOL, onnx::TensorProto_DataType_BOOL},
 };
 }
-
+DumpLevel OnnxUtils::dump_level_ = DumpLevel::DUMP_LEVEL_END;
 struct AttrNameComp {
   inline bool operator()(const onnx::AttributeProto &lsh, const onnx::AttributeProto &rsh) const {
     return lsh.name() < rsh.name();
@@ -431,14 +426,14 @@ void OnnxUtils::AddAttrProtoForAttrsFromAttrMap(
       const auto device_type = tensor_desc.device_type();
       AddAttrProto(node_proto, ge::onnx::AttributeProto_AttributeType_STRING,
                    prefix + attr_name + "_desc_device_type" + suffix, &device_type);
-      if (kDumpLevel == DumpLevel::DUMP_ALL) {
+      if (dump_level_ == DumpLevel::DUMP_ALL) {
         const auto data = tensor_def.data();
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING,
                      prefix + attr_name + "_data" + suffix, &data);
       }
     }
     if (attr_type == ge::proto::AttrDef::kS) {
-      if (kDumpLevel == DumpLevel::DUMP_ALL) {
+      if (dump_level_ == DumpLevel::DUMP_ALL) {
         const auto str_value = attr_def.s();
         AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRING, prefix + attr_name + suffix, &str_value);
       }
@@ -477,7 +472,7 @@ void OnnxUtils::AddListAttrProto(const std::string &attr_name,
   const auto &list_value = attr_def.list();
   const auto &list_value_type = list_value.val_type();
   if (list_value_type == ge::proto::AttrDef_ListValue_ListValueType::AttrDef_ListValue_ListValueType_VT_LIST_STRING) {
-    if (kDumpLevel == DumpLevel::DUMP_ALL) {
+    if (dump_level_ == DumpLevel::DUMP_ALL) {
       const auto &strings = list_value.s();
       AddAttrProto(node_proto, onnx::AttributeProto_AttributeType_STRINGS, prefix + attr_name + suffix, strings);
     }
@@ -656,7 +651,7 @@ bool OnnxUtils::EncodeNode(const NodePtr &node, onnx::NodeProto *const node_prot
   /// is added to correctly display the link relation at the expense of some color features
   node_proto->set_op_type("ge:" + node->GetType());
 
-  if (kDumpLevel != DumpLevel::DUMP_WITH_OUT_DESC) {
+  if (dump_level_ != DumpLevel::DUMP_WITH_OUT_DESC) {
     // 2.for attr
     if (!EncodeNodeDesc(node, node_proto)) {
       GELOGE(GRAPH_FAILED, "[Encode][NodeDesc] failed, node:%s", node->GetName().c_str());
@@ -739,6 +734,11 @@ bool OnnxUtils::EncodeGraph(const ConstComputeGraphPtr &graph, onnx::GraphProto 
 }
 
 bool OnnxUtils::ConvertGeModelToModelProto(const ge::Model &model, onnx::ModelProto &model_proto) {
+  char_t dump_ge_graph[MMPA_MAX_PATH] = {'\0'};
+  const INT32 res = mmGetEnv(kDumpGEGraph, &(dump_ge_graph[0]), static_cast<uint32_t>(MMPA_MAX_PATH));
+  dump_level_ = (res == EN_OK) ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kDecimalBase))
+                               : DumpLevel::NO_DUMP;
+  GELOGD("DumpGEGraphToOnnx with dump_ge_graph_level %" PRId32 ".", dump_level_);
   model_proto.set_model_version(static_cast<int64_t>(model.GetVersion()));
   model_proto.set_ir_version(onnx::IR_VERSION);
   model_proto.set_producer_name(model.GetName());

@@ -422,11 +422,11 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid --framework or --model Argument",
       "ErrCode": "E10041",
-      "ErrMessage": "Failed to load the model from [%s]. Check the model file or the [--framework] argument.",
+      "ErrMessage": "Failed to load the model from [%s].",
       "Arglist": "parameter",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1. Check that the model file is valid.  2. Check that the [--framework] argument matches the actual framework of the model file."
+        "Solution": "1. Check that the model file is valid. 2. Check that the weight file or path is valid when model is more than 2G. 3. Check that the [--framework] argument matches the actual framework of the model file."
       }
     },
     {

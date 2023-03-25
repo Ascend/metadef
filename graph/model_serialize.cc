@@ -630,10 +630,11 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
   if (!graphs_proto.empty()) {
     auto &graph_proto = graphs_proto[0];
     ComputeGraphPtr compute_graph_ptr;
-    if (UnserializeGraphWithoutEdge(compute_graph_ptr, graph_proto)) {
-      model.graph_ = compute_graph_ptr;
+    if (!UnserializeGraphWithoutEdge(compute_graph_ptr, graph_proto)) {
+      GELOGE(GRAPH_FAILED, "[Call][UnserializeGraphWithoutEdge] failed");
+      return false;
     }
-
+    model.graph_ = compute_graph_ptr;
     // 0 is main graph, following is subgraph.
     std::map<std::string, ComputeGraphPtr> subgraphs;
     for (auto idx = 1; idx < graphs_proto.size(); ++idx) {
@@ -899,7 +900,12 @@ bool ModelSerializeImp::LoadWeightFromFile(const std::string &file_path,
     return false;
   }
   if (static_cast<int64_t>(data_len) != length) {
-    GELOGE(GRAPH_FAILED, "Bin length[%zu] is not equal to defined length[%lld].", data_len, length);
+    REPORT_CALL_ERROR("E18888",
+        "Bin length in model[%zu] is not equal to defined length[%zu], weight path is [%s].",
+        data_len, static_cast<size_t>(length), file_path.c_str());
+    GELOGE(GRAPH_FAILED,
+        "Bin length in model[%zu] is not equal to defined length[%zu], weight path is [%s]",
+        data_len, static_cast<size_t>(length), file_path.c_str());
     return false;
   }
   weight = std::string(bin_data.get(), data_len);
