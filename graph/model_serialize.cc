@@ -901,10 +901,11 @@ bool ModelSerializeImp::LoadWeightFromFile(const std::string &file_path,
   }
   if (static_cast<int64_t>(data_len) != length) {
     REPORT_CALL_ERROR("E18888",
-        "Bin length in model[%zu] is not equal to defined length[%ld], weight path is [%s].",
-        data_len, length, file_path.c_str());
+        "Bin length in model[%zu] is not equal to defined length[%zu], weight path is [%s].",
+        data_len, static_cast<size_t>(length), file_path.c_str());
     GELOGE(GRAPH_FAILED,
-        "Bin length in model[%zu] is not equal to defined length[%ld].", data_len, length);
+        "Bin length in model[%zu] is not equal to defined length[%zu], weight path is [%s]",
+        data_len, static_cast<size_t>(length), file_path.c_str());
     return false;
   }
   weight = std::string(bin_data.get(), data_len);
