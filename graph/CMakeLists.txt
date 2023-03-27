@@ -447,14 +447,6 @@ set_target_properties(fwk_stub_graph PROPERTIES
 
 ############ install ############
 install(TARGETS atc_stub_graph OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/stub
-)
-
-install(TARGETS fwk_stub_graph OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/fwk_stub
-)
-
-install(TARGETS atc_stub_graph OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR}/stub
 )
 
