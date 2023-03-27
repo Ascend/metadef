@@ -153,6 +153,77 @@ ComputeGraphPtr CreateGraphWithMultiSubgraph() {
   return root_graph;
 }
 
+/*
+ *              Data1
+ *                |
+ *              relu1                   sub_data0
+ *                |                         |
+ *        PartitionedCall0     ===>     sub_output0
+ *                |                     sub_data1
+ *        PartitionedCall1     ===>         |
+ *                |                     sub_output1
+ *              relu2
+ *                |
+ *            netoutput
+ */
+ComputeGraphPtr CreateGraphWithSubgraphDataToNetoutput() {
+  ut::GraphBuilder builder = ut::GraphBuilder("root_graph");
+  auto data = builder.AddNode("Data1", "Data", 1, 1);
+  auto relu1 = builder.AddNode("relu1", "Relu", 1, 1);
+  auto partcall0 = builder.AddNode("partcall0", "PartitionedCall", 1, 1);
+  auto partcall1 = builder.AddNode("partcall1", "PartitionedCall", 1, 1);
+  auto relu2 = builder.AddNode("relu2", "Relu", 1, 1);
+  auto netoutput = builder.AddNode("netoutput", "NetOutput", 1, 0);
+
+  builder.AddDataEdge(data, 0, relu1, 0);
+  builder.AddDataEdge(relu1, 0, partcall0, 0);
+  builder.AddDataEdge(partcall0, 0, partcall1, 0);
+  builder.AddDataEdge(partcall1, 0, relu2, 0);
+  builder.AddDataEdge(relu2, 0, netoutput, 0);
+  auto root_graph = builder.GetGraph();
+
+  ut::GraphBuilder sub_builder1 = ut::GraphBuilder("sub_graph1");
+  auto sub_data1 = sub_builder1.AddNode("sub_data1", "Data", 1, 1);
+  auto data1_desc = sub_data1->GetOpDesc();
+  AttrUtils::SetInt(data1_desc, "_parent_node_index", 0);
+  auto sub_output1 = sub_builder1.AddNode("sub_output1", "NetOutput", 1, 0);
+  auto output1_desc = sub_output1->GetOpDesc();
+  auto output1_desc_in = output1_desc->MutableInputDesc(0);
+  AttrUtils::SetInt(output1_desc_in, "_parent_node_index", 0);
+  sub_builder1.AddDataEdge(sub_data1, 0, sub_output1, 0);
+  auto subgraph1 = sub_builder1.GetGraph();
+
+  auto part_node1 = root_graph->FindNode("partcall1");
+  auto part_desc1 = part_node1->GetOpDesc();
+  part_desc1->AddSubgraphName("sub_graph1");
+  part_desc1->SetSubgraphInstanceName(0, "sub_graph1");
+
+  subgraph1->SetParentNode(part_node1);
+  subgraph1->SetParentGraph(root_graph);
+  root_graph->AddSubgraph("sub_graph1", subgraph1);
+
+  ut::GraphBuilder sub_builder0 = ut::GraphBuilder("sub_graph0");
+  auto sub_data0 = sub_builder0.AddNode("sub_data0", "Data", 1, 1);
+  auto data0_desc = sub_data0->GetOpDesc();
+  AttrUtils::SetInt(data0_desc, "_parent_node_index", 0);
+  auto sub_output0 = sub_builder0.AddNode("sub_output0", "NetOutput", 1, 0);
+  auto output0_desc = sub_output0->GetOpDesc();
+  auto output0_desc_in = output0_desc->MutableInputDesc(0);
+  AttrUtils::SetInt(output0_desc_in, "_parent_node_index", 0);
+  sub_builder0.AddDataEdge(sub_data0, 0, sub_output0, 0);
+  auto subgraph0 = sub_builder0.GetGraph();
+
+  auto part_node0 = root_graph->FindNode("partcall0");
+  auto part_desc0 = part_node0->GetOpDesc();
+  part_desc0->AddSubgraphName("sub_graph0");
+  part_desc0->SetSubgraphInstanceName(0, "sub_graph0");
+
+  subgraph0->SetParentNode(part_node0);
+  subgraph0->SetParentGraph(root_graph);
+  root_graph->AddSubgraph("sub_graph0", subgraph0);
+  return root_graph;
+}
+
 TEST_F(UtestShapeRefiner, infer_shape_and_type_for_running) {
   const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
   auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
@@ -195,6 +266,22 @@ TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
   EXPECT_EQ(nodes_idx.size(), 1);
   for (const auto &node_idx : nodes_idx) {
     EXPECT_EQ(node_idx.first->GetName(), "sub_relu2");
+  }
+}
+
+TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph_data_to_netoutput) {
+  auto graph = CreateGraphWithSubgraphDataToNetoutput();
+  auto relu = graph->FindNode("relu2");
+
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(relu, false), GRAPH_SUCCESS);
+  auto in_data_node = relu->GetInDataNodes().at(0);
+  int32_t out_idx = 0;
+  std::map<NodePtr, int32_t> nodes_idx;
+  auto ret = ShapeRefiner::GetRealInNodesAndIndex(in_data_node, out_idx, nodes_idx);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  EXPECT_EQ(nodes_idx.size(), 1);
+  for (const auto &node_idx : nodes_idx) {
+    EXPECT_EQ(node_idx.first->GetName(), "relu1");
   }
 }
 
