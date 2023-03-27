@@ -28,10 +28,10 @@ namespace optiling {
 #define FUNC_GET_OP_SUPPORT_INFO "get_op_support_info"
 #define FUNC_GET_SPECIFIC_INFO "get_op_specific_info"
 
-typedef int (*OP_CHECK_FUNC)(const ge::Operator &op, ge::AscendString &result);
+using OP_CHECK_FUNC = int (*)(const ge::Operator &op, ge::AscendString &result);
 
-typedef int (*PARAM_GENERALIZE_FUNC)(const ge::Operator &op, const ge::AscendString &generalize_config,
-                                     ge::AscendString &generalized_op_params);
+using PARAM_GENERALIZE_FUNC = int (*)(const ge::Operator &op, const ge::AscendString &generalize_config,
+                                      ge::AscendString &generalized_op_params);
 
 struct ReplayFuncParam {
   const int block_dim;
@@ -44,7 +44,7 @@ struct ReplayFuncParam {
   const int task_ration;
 };
 
-typedef int (*REPLAY_FUNC)(ReplayFuncParam& param, const int core_type);
+using REPLAY_FUNC = int (*)(ReplayFuncParam &param, const int core_type);
 
 class OpCheckFuncRegistry {
 public:

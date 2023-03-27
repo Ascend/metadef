@@ -15,7 +15,6 @@
  */
 
 #include "register/op_check.h"
-#include "register/tilingdata_base.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace optiling {
@@ -23,7 +22,6 @@ std::map<ge::AscendString, std::map<ge::AscendString, OP_CHECK_FUNC>>
     OpCheckFuncRegistry::check_op_capability_instance_;
 std::map<ge::AscendString, PARAM_GENERALIZE_FUNC> OpCheckFuncRegistry::param_generalize_instance_;
 std::map<ge::AscendString, std::map<ge::AscendString, REPLAY_FUNC>> OpCheckFuncRegistry::replay_instance_;
-std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
 
 void OpCheckFuncRegistry::RegisterOpCapability(const ge::AscendString &check_type, const ge::AscendString &op_type,
                                                OP_CHECK_FUNC func) {
