@@ -86,8 +86,8 @@ public:
   OpAttrDef &Float(float value);
   OpAttrDef &Int(void);
   OpAttrDef &Int(int64_t value);
-  OpAttrDef &Str(void);
-  OpAttrDef &Str(const char *value);
+  OpAttrDef &String(void);
+  OpAttrDef &String(const char *value);
   OpAttrDef &ListBool(void);
   OpAttrDef &ListBool(std::vector<bool> value);
   OpAttrDef &ListFloat(void);
