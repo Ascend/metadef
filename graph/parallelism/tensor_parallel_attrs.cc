@@ -332,6 +332,20 @@ USED_BY_JSON void from_json(const Json &j, ConcatReshardTask &task_info) {
   GetValue(j, "concat_dim", task_info.concat_dim);
 }
 
+USED_BY_JSON void to_json(Json &j, const UniqueConcatReshardTask &task_info) {
+  j = Json();
+  j["task_type"] = kCommTaskTypeUniqueConcat;
+  j["concat_dim"] = task_info.concat_dim;
+  j["src_device_indices"] = task_info.src_device_indices;
+  j["dst_device_index"] = task_info.dst_device_index;
+}
+
+USED_BY_JSON void from_json(const Json &j, UniqueConcatReshardTask &task_info) {
+  GetValue(j, "concat_dim", task_info.concat_dim);
+  GetValue(j, "src_device_indices", task_info.src_device_indices);
+  GetValue(j, "dst_device_index", task_info.dst_device_index);
+}
+
 USED_BY_JSON void to_json(Json &j, const SplitReshardTask &task_info) {
   j = Json();
   j["task_type"] = kCommTaskTypeSplit;
@@ -505,6 +519,9 @@ void CommTaskBuilder::InitCommTaskBuilders() {
   builders_[kCommTaskTypeConcat] = [](const Json &j, CommTask &comm_task) {
     comm_task.concat_reshard_task = CreateReshardTaskInfo<ConcatReshardTask>(j);
   };
+  builders_[kCommTaskTypeUniqueConcat] = [](const Json &j, CommTask &comm_task) {
+    comm_task.unique_concat_reshard_task = CreateReshardTaskInfo<UniqueConcatReshardTask>(j);
+  };
   builders_[kCommTaskTypeTranspose] = [](const Json &j, CommTask &comm_task) {
     comm_task.transpose_reshard_task = CreateReshardTaskInfo<TransposeReshardTask>(j);
   };
@@ -553,6 +570,9 @@ void CommTaskBuilder::InitJsonConverters() {
   };
   json_converters_[kCommTaskTypeConcat] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.concat_reshard_task.get(), j);
+  };
+  json_converters_[kCommTaskTypeUniqueConcat] = [](const CommTask &comm_task, nlohmann::json &j) {
+    return ConvertToJson(comm_task.unique_concat_reshard_task.get(), j);
   };
   json_converters_[kCommTaskTypeTranspose] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.transpose_reshard_task.get(), j);

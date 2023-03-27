@@ -27,6 +27,7 @@
 namespace ge {
 namespace tp {
 constexpr const char_t *kCommTaskTypeConcat = "Concat";
+constexpr const char_t *kCommTaskTypeUniqueConcat = "UniqueConcat";
 constexpr const char_t *kCommTaskTypeModifyValue = "ModifyValue";
 constexpr const char_t *kCommTaskTypeSlice = "Slice";
 constexpr const char_t *kCommTaskTypeSliceByAxis = "SliceByAxis";
@@ -147,6 +148,12 @@ struct ConcatReshardTask {
   int32_t concat_dim = 0;
 };
 
+struct UniqueConcatReshardTask {
+  int32_t concat_dim = 0;
+  std::vector<DeviceIndex> src_device_indices;
+  DeviceIndex dst_device_index;
+};
+
 struct TransposeReshardTask {
   std::vector<int32_t> perm;
 };
@@ -167,6 +174,7 @@ struct CommTask {
   std::shared_ptr<BroadcastReshardTask> broadcast_reshard_task;
   std::shared_ptr<SplitReshardTask> split_reshard_task;
   std::shared_ptr<ConcatReshardTask> concat_reshard_task;
+  std::shared_ptr<UniqueConcatReshardTask> unique_concat_reshard_task;
   std::shared_ptr<SliceReshardTask> slice_reshard_task;
   std::shared_ptr<SliceByAxisReshardTask> slice_by_axis_reshard_task;
   std::shared_ptr<TransposeReshardTask> transpose_reshard_task;

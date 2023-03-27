@@ -377,6 +377,33 @@ TEST_F(TensorParallelAttrsTest, ParseConcatCommTask) {
   ASSERT_EQ(out_comm_task.concat_reshard_task->concat_dim, 1);
 }
 
+TEST_F(TensorParallelAttrsTest, ParseUniqueConcatCommTask) {
+  const std::string &json_str =
+      R"(
+{
+  "task_type": "UniqueConcat",
+  "concat_dim": 1,
+  "src_device_indices": [
+    {"engine_type": "NPU", "index": [0, 0, 0]},
+    {"engine_type": "NPU", "index": [0, 0, 1]},
+    {"engine_type": "NPU", "index": [0, 0, 2]},
+    {"engine_type": "NPU", "index": [0, 0, 3]}
+  ],
+  "dst_device_index": {"engine_type": "HOST_CPU", "index": [0, 0, 1]}
+}
+)";
+  CommTask comm_task;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.unique_concat_reshard_task != nullptr);
+  ASSERT_EQ(out_comm_task.unique_concat_reshard_task->concat_dim, 1);
+  ASSERT_EQ(out_comm_task.unique_concat_reshard_task->src_device_indices.size(), 4);
+  DeviceIndex device_index{"HOST_CPU", {0, 0, 1}};
+  ASSERT_EQ(out_comm_task.unique_concat_reshard_task->dst_device_index, device_index);
+}
+
 TEST_F(TensorParallelAttrsTest, ParseTransposeTaskInfo) {
   const std::string &json_str =
       R"(
