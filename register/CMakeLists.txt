@@ -43,6 +43,7 @@ set(SRC_LIST
     "shape_inference.cc"
     "tik2/tik2_py.cc"
     "tik2/op_check.cc"
+    "tik2/tilingdata_base.cc"
     "opdef/op_def.cc"
     "opdef/op_def_attr.cc"
     "opdef/op_def_param.cc"

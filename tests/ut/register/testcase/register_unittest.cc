@@ -1342,9 +1342,15 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_params) {
 
 BEGIN_TILING_DATA_DEF(TestMaxPoolTilingData)
 // format: TILING_DATA_FIELD_DEF(data_type, field_name);
-TILING_DATA_FIELD_DEF(int32_t, dim_0);
-TILING_DATA_FIELD_DEF(uint16_t, var_1);
-TILING_DATA_FIELD_DEF(int64_t, factor_1);
+TILING_DATA_FIELD_DEF(int8_t, dim_0);
+TILING_DATA_FIELD_DEF(int16_t, dim_1);
+TILING_DATA_FIELD_DEF(int32_t, dim_2);
+TILING_DATA_FIELD_DEF(int64_t, dim_3);
+TILING_DATA_FIELD_DEF(uint8_t, dim_4);
+TILING_DATA_FIELD_DEF(uint16_t, dim_5);
+TILING_DATA_FIELD_DEF(uint32_t, dim_6);
+TILING_DATA_FIELD_DEF(uint64_t, dim_7);
+TILING_DATA_FIELD_DEF(int32_t, act_core_num);
 END_TILING_DATA_DEF
 
 // register class
@@ -1356,10 +1362,10 @@ TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_ok) {
   std::string res_info(1024, 'a');
   size_t size = 1024;
   EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
-  std::string result =
-      "{\"class_name\":\"TestMaxPoolTilingData\",\"fields\":[{\"dtype\":\"int32_t\",\"name\":\"dim_0\"},{\"dtype\":"
-      "\"uint16_t\",\"name\":\"var_1\"},{\"dtype\":\"int64_t\",\"name\":\"factor_1\"}]}";
-  EXPECT_EQ(result, res_info.substr(0, result.size()));
+  const nlohmann::json result =
+      R"({"class_name":"TestMaxPoolTilingData","fields":[{"dtype":"int8_t","name":"dim_0"},{"dtype":"int16_t","name":"dim_1"},{"dtype":"int32_t","name":"dim_2"},{"dtype":"int64_t","name":"dim_3"},{"dtype":"uint8_t","name":"dim_4"},{"dtype":"uint16_t","name":"dim_5"},{"dtype":"uint32_t","name":"dim_6"},{"dtype":"uint64_t","name":"dim_7"},{"dtype":"int32_t","name":"act_core_num"}]})"_json;
+  std::string result_str = result.dump();
+  EXPECT_EQ(result_str, res_info.substr(0, result_str.size()));
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
@@ -1377,6 +1383,42 @@ TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_without_callback) {
 TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(nullptr, nullptr, 0), 0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_register_tilingdata_base_ok) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  auto params = TestMaxPoolTilingData();
+  params.set_dim_0(0);
+  params.set_dim_1(10);
+  params.set_dim_2(20);
+  params.set_dim_3(30);
+  params.set_dim_4(40);
+  params.set_dim_5(50);
+  params.set_dim_6(60);
+  params.set_dim_7(70);
+  params.set_act_core_num(8);
+  uint8_t res_data[1024];
+  int offset = 0;
+  params.SaveToBuffer((void *) (&res_data), params.GetDataSize());
+  EXPECT_EQ(*((int8_t *) (res_data + offset)), params.get_dim_0());
+  offset += sizeof(int8_t);
+  EXPECT_EQ(*((int16_t *) (res_data + offset)), params.get_dim_1());
+  offset += sizeof(int16_t);
+  EXPECT_EQ(*((int32_t *) (res_data + offset)), params.get_dim_2());
+  offset += sizeof(int32_t);
+  EXPECT_EQ(*((int64_t *) (res_data + offset)), params.get_dim_3());
+  offset += sizeof(int64_t);
+  EXPECT_EQ(*((uint8_t *) (res_data + offset)), params.get_dim_4());
+  offset += sizeof(uint8_t);
+  EXPECT_EQ(*((uint16_t *) (res_data + offset)), params.get_dim_5());
+  offset += sizeof(uint16_t);
+  EXPECT_EQ(*((uint32_t *) (res_data + offset)), params.get_dim_6());
+  offset += sizeof(uint32_t);
+  EXPECT_EQ(*((uint64_t *) (res_data + offset)), params.get_dim_7());
+  offset += sizeof(uint64_t);
+  EXPECT_EQ(*((int32_t *) (res_data + offset)), params.get_act_core_num());
+  offset += sizeof(int32_t);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 

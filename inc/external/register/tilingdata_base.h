@@ -17,11 +17,11 @@
 #ifndef __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
 #define __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
 
-#include "graph/ascend_string.h"
 #include <vector>
 #include <map>
 #include <memory>
 #include <securec.h>
+#include "graph/ascend_string.h"
 
 namespace optiling {
 class FieldInfo {
@@ -90,28 +90,11 @@ public:
       data_ptr_ = nullptr;
     }
   }
-  void SaveToBuffer(void *pdata, size_t capacity) {
-    memcpy_s(pdata, capacity, data_ptr_, data_size_);
-  }
-  std::vector<FieldInfo> GetFieldInfo() {
-    return field_info_;
-  }
-  ge::AscendString GetClassName() {
-    return class_name_;
-  }
-  size_t GetDataSize() {
-    return data_size_;
-  }
-
-  void InitData() {
-    if (data_ptr_ != nullptr) {
-      delete data_ptr_;
-      data_ptr_ = nullptr;
-    }
-    if (data_size_ > 0) {
-      data_ptr_ = new uint8_t[data_size_];
-    }
-  }
+  void SaveToBuffer(void *pdata, size_t capacity) const;
+  std::vector<FieldInfo> GetFieldInfo() const;
+  ge::AscendString GetTilingClassName() const;
+  size_t GetDataSize() const;
+  void InitData();
 
 protected:
   // dtype, name
@@ -122,27 +105,12 @@ protected:
   ge::AscendString class_name_;
 };
 
-typedef std::shared_ptr<TilingDef> (*TilingDataConstructor)();
+using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
 
 class CTilingDataClassFactory {
 public:
-  static void RegisterTilingData(ge::AscendString op_type, TilingDataConstructor constructor) {
-    instance_[op_type] = constructor;
-  }
-
-  static std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type) {
-    auto it = instance_.find(op_type);
-    if (it == instance_.end()) {
-      return nullptr;
-    }
-    TilingDataConstructor constructor = it->second;
-
-    if (constructor == nullptr) {
-      return nullptr;
-    }
-
-    return (*constructor)();
-  }
+  static void RegisterTilingData(ge::AscendString op_type, TilingDataConstructor constructor);
+  static std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
 
 private:
   static std::map<ge::AscendString, TilingDataConstructor> instance_;
@@ -159,5 +127,5 @@ private:
     }                                                                                                                  \
   };                                                                                                                   \
   op_type##class_name##Helper g_tilingdata_##op_type##class_name##helper;
-} // end of namespace optiling
+}  // end of namespace optiling
 #endif  // __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
