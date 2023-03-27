@@ -92,14 +92,14 @@ OpAttrDef &OpAttrDef::Int(int64_t value) {
   return this->Int();
 }
 
-OpAttrDef &OpAttrDef::Str(void) {
+OpAttrDef &OpAttrDef::String(void) {
   this->impl_->data_type = ATTR_DT_STR;
   return *this;
 }
 
-OpAttrDef &OpAttrDef::Str(const char *value) {
+OpAttrDef &OpAttrDef::String(const char *value) {
   this->impl_->str_value = value;
-  return this->Str();
+  return this->String();
 }
 
 OpAttrDef &OpAttrDef::ListBool(void) {
@@ -157,7 +157,7 @@ ge::AscendString &OpAttrDef::GetCfgDataType(void) const {
 }
 
 ge::AscendString &OpAttrDef::GetProtoDataType(void) const {
-  static ge::AscendString dtype_names[] = {"Bool",     "Float",     "Int",     "Str",
+  static ge::AscendString dtype_names[] = {"Bool",     "Float",     "Int",     "String",
                                            "ListBool", "ListFloat", "ListInt", "ListListInt"};
   return dtype_names[this->impl_->data_type];
 }

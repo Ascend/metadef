@@ -34,7 +34,7 @@ TEST_F(OpAttrDefUT, AttrTest) {
   EXPECT_EQ(attr.GetAttrDefaultVal("[]"), "true");
   attr.AttrType(OPTIONAL).Int(10);
   EXPECT_EQ(attr.GetAttrDefaultVal("[]"), "10");
-  attr.AttrType(OPTIONAL).Str("test");
+  attr.AttrType(OPTIONAL).String("test");
   EXPECT_EQ(attr.GetAttrDefaultVal("[]"), "test");
   attr.AttrType(OPTIONAL).Float(0.1);
   EXPECT_EQ(attr.GetAttrDefaultVal("[]"), "0.1");
