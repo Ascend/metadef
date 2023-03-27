@@ -33,7 +33,7 @@ class AgingPolicyLruK : public AgingPolicy {
   bool IsReadyToAddCache(const CacheHashKey hash_key, const CacheDescPtr &cache_desc) override {
     return IsCacheDescAppearKTimes(hash_key, cache_desc);
   }
-  std::vector<CacheItemId> DoAging(const CCStatType &cc_state) const override;
+  std::vector<CacheItemId> DoAging(const CacheState &cache_state) const override;
 
  private:
   bool IsCacheDescAppearKTimes(const CacheHashKey hash_key, const CacheDescPtr &cache_desc);

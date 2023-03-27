@@ -23,7 +23,7 @@ namespace ge {
 class AgingPolicyLru : public AgingPolicy {
 public:
   virtual ~AgingPolicyLru() override = default;
-  void SetDeleteInterval(const int64_t &interval) {
+  void SetDeleteInterval(const uint64_t &interval) {
     delete_interval_ = interval;
   }
   void SetCachedAgingDepth(size_t depth) override {
@@ -34,10 +34,10 @@ public:
     (void) cache_desc;
     return true;
   }
-  std::vector<CacheItemId> DoAging(const CCStatType &cc_state) const override;
+  std::vector<CacheItemId> DoAging(const CacheState &cache_state) const override;
 
 private:
-  int64_t delete_interval_ = 0L;
+  uint64_t delete_interval_ = 0U;
 };
 
 REGISTER_AGING_POLICY_CREATOR(AgingPolicyType::AGING_POLICY_LRU,

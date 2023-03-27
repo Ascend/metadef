@@ -102,7 +102,7 @@ std::vector<CacheItemId> CachePolicy::DeleteCache(const std::vector<CacheItemId>
 }
 
 std::vector<CacheItemId> CachePolicy::DoAging() {
-  const auto delete_item = ap_->DoAging(compile_cache_state_.GetState());
+  const auto delete_item = ap_->DoAging(compile_cache_state_);
   (void)compile_cache_state_.DelCache(delete_item);
   return delete_item;
 }

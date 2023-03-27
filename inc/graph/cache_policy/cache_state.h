@@ -37,13 +37,12 @@ using CCStatType = std::unordered_map<uint64_t, std::vector<CacheInfo>>;
 class CacheInfo {
 friend class CacheState;
 public:
-  CacheInfo(const time_t time_stamp, const CacheItemId item_id, const CacheDescPtr &desc):
-            time_stamp_(time_stamp), item_id_(item_id), desc_(desc) {}
-  CacheInfo(const CacheInfo &other) :
-            time_stamp_(other.time_stamp_),
-            item_id_(other.item_id_), desc_(other.desc_) {}
+  CacheInfo(const uint64_t timer_count, const CacheItemId item_id, const CacheDescPtr &desc)
+     : item_id_(item_id), desc_(desc), timer_count_(timer_count) {}
+  CacheInfo(const CacheInfo &other)
+     : item_id_(other.item_id_), desc_(other.desc_), timer_count_(other.timer_count_) {}
   CacheInfo &operator=(const CacheInfo &other) {
-    time_stamp_ = other.time_stamp_;
+    timer_count_ = other.timer_count_;
     item_id_ = other.item_id_;
     desc_ = other.desc_;
     return *this;
@@ -51,12 +50,12 @@ public:
   CacheInfo() = delete;
   ~CacheInfo() = default;
 
-  void RefreshTimeStamp() {
-    time_stamp_ = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  void RefreshTimerCount(uint64_t time_count) {
+    timer_count_ = time_count;
   }
 
-  const time_t &GetTimeStamp() const noexcept {
-    return time_stamp_;
+  uint64_t GetTimerCount() const noexcept {
+    return timer_count_;
   }
 
   CacheItemId GetItemId() const noexcept {
@@ -68,9 +67,25 @@ public:
   }
 
 private:
+#ifndef ONLY_COMPILE_OPEN_SRC
+  CacheItemId item_id_;
+  CacheDescPtr desc_;
+  uint64_t timer_count_;
+#else
   time_t time_stamp_;
   CacheItemId item_id_;
   CacheDescPtr desc_;
+  uint64_t timer_count_;
+#endif
+};
+
+struct CacheInfoQueue {
+  void Insert(const CacheHashKey main_hash_key, std::vector<CacheInfo> &cache_info);
+  void EmplaceBack(const CacheHashKey main_hash_key, CacheInfo &cache_info);
+  void Erase(std::vector<CacheItemId> &delete_ids, const DelCacheFunc &is_need_delete_func);
+
+  CCStatType cc_state_;
+  uint64_t cache_info_num_ = 0U;
 };
 
 class CacheState {
@@ -85,19 +100,33 @@ public:
   std::vector<CacheItemId> DelCache(const std::vector<CacheItemId> &delete_item);
 
   const CCStatType &GetState() const {
-    return cc_state_;
+    return cache_info_queue.cc_state_;
   }
 
+  uint64_t GetCacheInfoNum() const {
+    return cache_info_queue.cache_info_num_;
+  }
+
+  uint64_t GetCurTimerCount() const {
+    return cache_timer_count_;
+  }
 private:
   CacheItemId GetNextCacheItemId();
   void RecoveryCacheItemId(const std::vector<CacheItemId> &cache_items);
+  uint64_t GetNextTimerCount() {
+    const std::lock_guard<std::mutex> lock(cache_timer_count_mu_);
+    return cache_timer_count_++;
+  }
 
-  std::mutex cc_state_mu_;
+  std::mutex cache_info_queue_mu_;
   std::mutex cache_item_mu_;
 
   int64_t cache_item_counter_ = 0L;
   std::queue<int64_t> cache_item_queue_;
-  CCStatType cc_state_;
+  CacheInfoQueue cache_info_queue;
+
+  uint64_t cache_timer_count_ = 0U;
+  std::mutex cache_timer_count_mu_;
 };
 }  // namespace ge
 #endif
