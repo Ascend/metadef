@@ -107,6 +107,8 @@ class BufferFusionPattern {
   std::vector<BufferFusionOpDesc *> GetOpDescs() const;
   std::vector<BufferFusionOpDesc *> GetHead() const;
   int64_t GetErrorCnt() const;
+  void SetGraphModType(int64_t graph_mod_type);
+  int64_t GetGraphModType() const;
   bool GetOutputs(BufferFusionOpDesc *op_desc, std::vector<BufferFusionOpDesc *> &outputs, bool ignore_repeat = false);
 
  private:
@@ -121,6 +123,9 @@ class BufferFusionPattern {
   std::map<std::string, BufferFusionOpDesc *> op_map_;
   std::vector<BufferFusionOpDesc *> head_;
   int64_t error_count_;
+  // 0: this pattern will not modify graph(default)
+  // 1: this pattern will modify graph
+  int64_t graph_mod_type_;
 };
 }  // namespace fe
 #endif  // INC_REGISTER_GRAPH_OPTIMIZER_BUFFER_FUSION_PATTERN_H_

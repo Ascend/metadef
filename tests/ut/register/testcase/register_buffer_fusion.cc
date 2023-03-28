@@ -2211,6 +2211,8 @@ TEST_F(UB_FUSION_UT_CONV_ELT_RELU, dyn_static_check) {
   std::vector<BufferFusionPattern *> patterns = common0->DefinePatterns();
   BufferFusionMapping mapping;
   auto pattern = patterns[0];
+  pattern->SetGraphModType(1);
+  EXPECT_EQ(1, pattern->GetGraphModType());
   auto conv = pattern->GetOpDesc(PATTERN_CONV);
   auto eltwise = pattern->GetOpDesc(PATTERN_ELEMWISE);
   auto quant = pattern->GetOpDesc(PATTERN_QUANT);

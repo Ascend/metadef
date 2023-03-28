@@ -47,7 +47,8 @@ inline bool IsAddOverflow(const int64_t &a, const int64_t &b) {
 }
 
 BufferFusionPattern::BufferFusionPattern(string name, int64_t op_max_count)
-    : name_(name), op_max_count_(op_max_count), error_count_(0) {}
+    : name_(name), op_max_count_(op_max_count), error_count_(0),
+      graph_mod_type_(0) {}
 
 BufferFusionPattern::~BufferFusionPattern() {
   for (auto op : ops_) {
@@ -380,6 +381,12 @@ std::string BufferFusionPattern::GetName() const { return name_; }
 int64_t BufferFusionPattern::GetOpMaxCount() const { return op_max_count_; }
 
 int64_t BufferFusionPattern::GetErrorCnt() const { return error_count_; }
+
+void BufferFusionPattern::SetGraphModType(int64_t graph_mod_type) {
+  graph_mod_type_ = graph_mod_type;
+}
+
+int64_t BufferFusionPattern::GetGraphModType() const { return graph_mod_type_; }
 
 std::vector<BufferFusionOpDesc *> BufferFusionPattern::GetOpDescs() const { return ops_; }
 }  // namespace fe
