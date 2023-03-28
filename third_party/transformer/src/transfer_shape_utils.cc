@@ -133,13 +133,12 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
                                        const ge::DataType &data_type, const ExtAxisValue &ext_axis,
                                        gert::Shape &shape) {
   GELOGD("Original format is %u, new format %u", origin_format, format);
-  if (!IsNeedTransferShape(origin_format, format, shape)) {
+  ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
+  ge::Format origin_primary_format = static_cast<ge::Format>(GetPrimaryFormat(origin_format));
+  if (!IsNeedTransferShape(origin_primary_format, primary_format, shape)) {
     return true;
   }
 
-  ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
-  ge::Format origin_primary_format =
-      static_cast<ge::Format>(GetPrimaryFormat(origin_format));
   if (!CheckInputParam(origin_primary_format, primary_format, data_type)) {
     return false;
   }
@@ -168,7 +167,7 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
     return TransferShapeByFormat(primary_format, axis_value, shape);
   }
 
-  if (!AxisUtil::GetAxisValueByOriginFormat(origin_format, shape, axis_value)) {
+  if (!AxisUtil::GetAxisValueByOriginFormat(origin_primary_format, shape, axis_value)) {
     return true;
   }
 
@@ -180,11 +179,12 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
                                        const gert::Shape &origin_shape, gert::Shape &shape) {
   GELOGD("Tranfer shape from original format[%d] to format [%d].", origin_format, format);
   ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
-  if (!IsNeedTransferShape(origin_format, primary_format, origin_shape)) {
+  ge::Format origin_primary_format = static_cast<ge::Format>(GetPrimaryFormat(origin_format));
+  if (!IsNeedTransferShape(origin_primary_format, primary_format, origin_shape)) {
     return true;
   }
 
-  if (!CheckInputParam(origin_format, primary_format, data_type)) {
+  if (!CheckInputParam(origin_primary_format, primary_format, data_type)) {
     return false;
   }
 
@@ -192,7 +192,7 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
   if (!IsNeedAxisValue(primary_format, origin_shape.GetDimNum())) {
     return TransferShapeByOriginShape(primary_format, c0, ext_axis, origin_shape, shape);
   } else {
-    return TransferShapeByFormatIndex(origin_format, format, c0, origin_shape, shape);
+    return TransferShapeByFormatIndex(origin_primary_format, format, c0, origin_shape, shape);
   }
 }
 
