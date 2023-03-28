@@ -1322,6 +1322,17 @@
     },
     {
       "errClass": "AI CPU Errors",
+      "errTitle": "AI CPU Timeout",
+      "ErrCode": "E30008",
+      "ErrMessage": "AI CPU operator execution time out.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "1. For the GetNext operator, its preprocessing duration may be too long. 2. For a custom operator, its logic may be improper.",
+        "Solution": "1. For the GetNext operator, check its preprocessing or set OpExecuteTimeOut to a larger value. 2. For a custom operator, make sure its logic is proper."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "E39001",
       "ErrMessage": "The argument is invalid.",
