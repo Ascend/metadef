@@ -304,7 +304,9 @@ bool CompileCacheDesc::CheckWithoutTensorInfo(const CompileCacheDesc *first, con
 bool CompileCacheDesc::IsMatch(const CacheDescPtr &other) const {
   const auto *second = dynamic_cast<const CompileCacheDesc *>(other.get());
   GE_ASSERT_NOTNULL(second, "dynamic cast failed");
-  GE_ASSERT_TRUE(CheckWithoutTensorInfo(this, second));
+  if (!CheckWithoutTensorInfo(this, second)) {
+    return false;
+  }
 
   for (size_t i = 0U; i < this->tensor_info_args_vec_.size(); ++i) {
     const auto &first_args = this->tensor_info_args_vec_[i];
@@ -320,7 +322,9 @@ bool CompileCacheDesc::IsMatch(const CacheDescPtr &other) const {
 bool CompileCacheDesc::IsEqual(const CacheDescPtr &other) const {
   const auto *second = dynamic_cast<const CompileCacheDesc *>(other.get());
   GE_ASSERT_NOTNULL(second, "dynamic cast failed");
-  GE_ASSERT_TRUE(CheckWithoutTensorInfo(this, second));
+  if (!CheckWithoutTensorInfo(this, second)) {
+    return false;
+  }
 
   for (size_t i = 0U; i < this->tensor_info_args_vec_.size(); ++i) {
     const auto &first_args = this->tensor_info_args_vec_[i];

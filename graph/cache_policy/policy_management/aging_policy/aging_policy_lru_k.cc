@@ -16,22 +16,18 @@
 
 #include "graph/cache_policy/aging_policy_lru_k.h"
 namespace ge {
-std::vector<CacheItemId> AgingPolicyLruK::DoAging(const CCStatType &cc_state) const {
-  size_t cur_depth = 0U;
-  // todo cur_depth性能优化
-  for (const auto &each_cc_state : cc_state) {
-    cur_depth += each_cc_state.second.size();
-  }
+std::vector<CacheItemId> AgingPolicyLruK::DoAging(const CacheState &cache_state) const {
+  size_t cur_depth = cache_state.GetCacheInfoNum();
+  const auto &cc_state = cache_state.GetState();
   GELOGD("[CAHCE][AGING] current depth[%zu] cache queue capacity[%zu].", cur_depth, depth_);
   if (cur_depth <= depth_) {
     return {};
   }
-  std::pair<CacheItemId, time_t> delete_item(
-      {KInvalidCacheItemId, std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())});
+  std::pair<CacheItemId, uint64_t> delete_item({KInvalidCacheItemId, UINT64_MAX});
   for (const auto &each_cc_state : cc_state) {
     for (const auto &cache_info : each_cc_state.second) {
-      if (cache_info.GetTimeStamp() < delete_item.second) {
-        delete_item = {cache_info.GetItemId(), cache_info.GetTimeStamp()};
+      if (cache_info.GetTimerCount() <= delete_item.second) {
+        delete_item = {cache_info.GetItemId(), cache_info.GetTimerCount()};
       }
     }
   }

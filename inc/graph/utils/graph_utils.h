@@ -229,18 +229,46 @@ class GraphUtils {
   static graphStatus RemoveNodesWithoutRelink(const ComputeGraphPtr &compute_graph,
                                               const std::unordered_set<NodePtr> &nodes);
   /**
-   * ComputeGraph图对象的深拷贝接口
+   * ComputeGraph图对象的全量深拷贝接口
    * @param src_compute_graph 需要是根图对象
    * @param dst_compute_graph
-   * @return 成功返回GRAPH_SUCCESS, 失败返回GRAPH_FAILED
+   * @return
    */
   static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph);
+
+  /**
+    * ComputeGraph图对象的深拷贝接口
+    * @param src_compute_graph 需要是根图对象
+    * @param node_filter 节点拷贝白名单过滤器，可以通过传递此参数实现满足条件的节点的复制，不传递时代表全量拷贝
+    * @param graph_filter 子图拷贝白名单过滤器，可以通过传递此参数实现满足条件的子图的复制，不传递时代表全量拷贝
+    * @param dst_compute_graph
+    * @return
+    */
+  static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
+                                      const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph);
+
+  /**
+  * ComputeGraph图对象的深拷贝接口
+  * @param src_compute_graph
+  * @param node_filter 节点拷贝白名单过滤器，可以通过传递此参数实现满足条件的节点的复制，不传递时代表全量拷贝
+  * @param graph_filter 子图拷贝白名单过滤器，可以通过传递此参数实现满足条件的子图的复制，不传递时代表全量拷贝
+  * @param dst_compute_graph
+  * @param node_old_2_new 新旧节点映射关系
+  * @param op_desc_old_2_new 新旧节点描述信息的映射关系
+  * @param depth 子图拷贝深度, 最大支持为10
+  * @return
+  */
+  static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
+                                      const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
+                                      std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                                      std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth);
+
   /**
    * ComputeGraph图对象的深拷贝接口
    * @param src_compute_graph
    * @param dst_compute_graph
-   * @param node_old_2_new
-   * @param op_desc_old_2_new
+   * @param node_old_2_new 新旧节点映射关系
+   * @param op_desc_old_2_new 新旧节点描述信息的映射关系
    * @param depth 子图拷贝深度, 最大支持为10
    * @return
    */
@@ -725,7 +753,8 @@ class GraphUtils {
 
   static bool MatchDumpStr(const std::string &suffix);
 
-  static graphStatus CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph,
+  static graphStatus CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
+                                       const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
                                        std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                        std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                                        std::unordered_map<std::string, NodePtr> &all_new_nodes, const int32_t depth);

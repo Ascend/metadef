@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "graph/cache_policy/cache_state.h"
 #include "framework/common/debug/ge_log.h"
 namespace ge {
@@ -36,45 +35,35 @@ void CacheState::RecoveryCacheItemId(const std::vector<CacheItemId> &cache_items
 }
 
 CacheItemId CacheState::AddCache(const CacheHashKey main_hash_key, const CacheDescPtr &cache_desc) {
-  const std::lock_guard<std::mutex> lock(cc_state_mu_);
-  const auto iter = cc_state_.find(main_hash_key);
-  if (iter == cc_state_.end()) {
+  const std::lock_guard<std::mutex> lock(cache_info_queue_mu_);
+  const auto iter = cache_info_queue.cc_state_.find(main_hash_key);
+  if (iter == cache_info_queue.cc_state_.end()) {
     const CacheItemId next_item_id = GetNextCacheItemId();
-    const CacheInfo cache_info = CacheInfo(
-        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), next_item_id, cache_desc);
+    const CacheInfo cache_info = CacheInfo(GetNextTimerCount(), next_item_id, cache_desc);
     std::vector<CacheInfo> info = {cache_info};
-    (void)cc_state_.insert({main_hash_key, std::move(info)});
+    cache_info_queue.Insert(main_hash_key, info);
     return next_item_id;
   }
-  auto &cached_item = iter->second;
-  for (size_t idx = 0UL; idx < cached_item.size(); idx++) {
-    if (cached_item[idx].desc_->IsEqual(cache_desc)) {
-      GELOGW("[AddCache] Same CacheDesc has already been added, whose cache_item is %" PRIu64,
-             cached_item[idx].item_id_);
-      return cached_item[idx].item_id_;
+  auto &cache_infos = iter->second;
+  for (auto &cache_info : cache_infos) {
+    if (cache_desc->IsEqual(cache_info.desc_)) {
+      cache_info.RefreshTimerCount(GetNextTimerCount());
+      GELOGW("[AddCache] Same CacheDesc has already been added, whose cache_item is %" PRIu64, cache_info.item_id_);
+      return cache_info.item_id_;
     }
   }
+  // hash collision may happened
   const CacheItemId next_item_id = GetNextCacheItemId();
-  CacheInfo cache_info = CacheInfo(
-      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), next_item_id, cache_desc);
-  cached_item.emplace_back(std::move(cache_info));
+  CacheInfo cache_info = CacheInfo(GetNextTimerCount(), next_item_id, cache_desc);
+  cache_info_queue.EmplaceBack(main_hash_key, cache_info);
   return next_item_id;
 }
 
 std::vector<CacheItemId> CacheState::DelCache(const DelCacheFunc &func) {
   std::vector<CacheItemId> delete_item;
-  for (auto &item : cc_state_) {
-    std::vector<CacheInfo> &cache_vec = item.second;
-    for (auto iter = cache_vec.begin(); iter != cache_vec.end();) {
-      if (func(*iter)) {
-        delete_item.emplace_back((*iter).item_id_);
-        const std::lock_guard<std::mutex> lock(cc_state_mu_);
-        iter = cache_vec.erase(iter);
-      } else {
-         iter++;
-      }
-    }
-  }
+  const std::lock_guard<std::mutex> lock(cache_info_queue_mu_);
+  cache_info_queue.Erase(delete_item, func);
+
   RecoveryCacheItemId(delete_item);
   return delete_item;
 }
@@ -86,4 +75,27 @@ std::vector<CacheItemId> CacheState::DelCache(const std::vector<CacheItemId> &de
   };
   return DelCache(lamb);
 }
+
+void CacheInfoQueue::Insert(const CacheHashKey main_hash_key, std::vector<CacheInfo> &cache_info) {
+  (void) cc_state_.insert({main_hash_key, std::move(cache_info)});
+  ++cache_info_num_;
 }
+void CacheInfoQueue::EmplaceBack(const CacheHashKey main_hash_key, CacheInfo &cache_info) {
+  cc_state_[main_hash_key].emplace_back(std::move(cache_info));
+  ++cache_info_num_;
+}
+void CacheInfoQueue::Erase(std::vector<CacheItemId> &delete_ids, const DelCacheFunc &is_need_delete_func) {
+  for (auto &item : cc_state_) {
+    std::vector<CacheInfo> &cache_vec = item.second;
+    for (auto iter = cache_vec.begin(); iter != cache_vec.end();) {
+      if (is_need_delete_func(*iter)) {
+        delete_ids.emplace_back((*iter).GetItemId());
+        iter = cache_vec.erase(iter);
+        --cache_info_num_;
+      } else {
+        iter++;
+      }
+    }
+  }
+}
+}  // namespace ge

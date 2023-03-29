@@ -1419,4 +1419,7 @@ const std::string ATTR_NAME_EMBEDDING_GRAPH_FLAG = "_embedding_graph_flag";
 
 const std::string ATTR_MODEL_HOST_ENV_OS = "host_env_os";
 const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";
+
+// for static shape reuse operator binary
+const std::string ATTR_NAME_OP_RUN_INFO = "op_run_info";
 }  // namespace ge

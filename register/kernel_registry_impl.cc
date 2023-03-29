@@ -106,8 +106,9 @@ KernelRegisterV2 &KernelRegisterV2::RunFunc(KernelRegistry::KernelFunc func) {
   }
   return *this;
 }
-KernelRegisterV2 &KernelRegisterV2::OutputsCreator(KernelRegistry::CreateOutputsFunc) {
+KernelRegisterV2 &KernelRegisterV2::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
   GELOGW("The OutputsCreator is no longer supported, use OutputsCreatorFunc instead");
+  (void)func;
   return *this;
 }
 KernelRegisterV2 &KernelRegisterV2::OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func) {
@@ -116,8 +117,9 @@ KernelRegisterV2 &KernelRegisterV2::OutputsCreatorFunc(KernelRegistry::OutputsCr
   }
   return *this;
 }
-KernelRegisterV2 &KernelRegisterV2::OutputsInitializer(KernelRegistry::CreateOutputsFunc) {
+KernelRegisterV2 &KernelRegisterV2::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
   GELOGW("The OutputsInitializer is no longer supported");
+  (void)func;
   return *this;
 }
 KernelRegisterV2 &KernelRegisterV2::TracePrinter(KernelRegistry::TracePrinter func) {

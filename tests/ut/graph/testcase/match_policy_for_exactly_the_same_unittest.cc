@@ -25,9 +25,10 @@ CacheDescPtr CreateRuntimeCacheDesc(const std::vector<gert::Shape> &shapes) {
   cache_desc->SetShapes(shapes);
   return cache_desc;
 }
-CacheInfo CreateCacheInfo(const time_t time_stamp, const CacheItemId item_id, const std::vector<gert::Shape> &shapes) {
+CacheInfo CreateCacheInfo(const uint64_t time_count, const CacheItemId item_id,
+                          const std::vector<gert::Shape> &shapes) {
   auto cache_desc = CreateRuntimeCacheDesc(shapes);
-  CacheInfo cache_info{time_stamp, item_id, cache_desc};
+  CacheInfo cache_info{time_count, item_id, cache_desc};
   return cache_info;
 }
 }

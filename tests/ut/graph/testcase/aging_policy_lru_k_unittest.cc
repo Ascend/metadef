@@ -25,38 +25,16 @@ CacheDescPtr CreateRuntimeCacheDesc(const std::vector<gert::Shape> &shapes) {
   cache_desc->SetShapes(shapes);
   return cache_desc;
 }
-void InsertCCStatTypeImpl(CCStatType &hash_2_cache_infos, const time_t time_stamp, const CacheItemId item_id,
-                          const std::vector<gert::Shape> &shapes) {
-  auto cache_desc = CreateRuntimeCacheDesc(shapes);
-  auto hash_key = cache_desc->GetCacheDescHash();
-  CacheInfo cache_info{time_stamp, item_id, cache_desc};
-  hash_2_cache_infos[hash_key] = {cache_info};
-}
-void InsertCCStatType(CCStatType &hash_2_cache_infos, uint16_t depth) {
+void InsertCacheInfoQueue(CacheState &cache_state, uint16_t depth) {
   for (uint16_t i = 0; i < depth; ++i) {
     int64_t dim_0 = i;
     gert::Shape s{dim_0, 256, 256};
-    InsertCCStatTypeImpl(hash_2_cache_infos, i, i, {s});
+    auto cache_desc = CreateRuntimeCacheDesc({s});
+    auto hash_key = cache_desc->GetCacheDescHash();
+    (void) cache_state.AddCache(hash_key, cache_desc);
   }
 }
-void DeleteAgingItem(CCStatType &hash_2_cache_infos, const CacheItemId delete_id) {
-  for (auto &hash_and_cache_infos : hash_2_cache_infos) {
-    auto &cache_infos = hash_and_cache_infos.second;
-    for (auto iter = cache_infos.begin(); iter != cache_infos.end();) {
-      if (iter->GetItemId() == delete_id) {
-        iter = cache_infos.erase(iter);
-      } else {
-        ++iter;
-      }
-    }
-  }
-}
-void DeleteAgingItems(CCStatType &hash_2_cache_infos, const std::vector<CacheItemId> &delete_ids) {
-  for (const auto &delete_id : delete_ids) {
-    DeleteAgingItem(hash_2_cache_infos, delete_id);
-  }
-}
-}
+}  // namespace
 class AgingPolicyLruKUT : public testing::Test {};
 
 TEST_F(AgingPolicyLruKUT, IsReadyToAddCache_ReturnFalse_CacheDescNotAppear2Times) {
@@ -110,54 +88,54 @@ TEST_F(AgingPolicyLruKUT, IsReadyToAddCache_ReturnTrue_HashCollisionButCacheDesc
 }
 
 TEST_F(AgingPolicyLruKUT, DoAging_NoAgingId_CacheQueueNotReachDepth) {
-  CCStatType hash_2_cache_infos;
+  CacheState cache_state;
   uint16_t depth = 20;
   AgingPolicyLruK ag(depth);
 
-  auto delete_ids = ag.DoAging(hash_2_cache_infos);
+  auto delete_ids = ag.DoAging(cache_state);
   EXPECT_EQ(delete_ids.size(), 0);
 
-  InsertCCStatType(hash_2_cache_infos, depth);
-  delete_ids = ag.DoAging(hash_2_cache_infos);
+  InsertCacheInfoQueue(cache_state, depth);
+  delete_ids = ag.DoAging(cache_state);
   EXPECT_EQ(delete_ids.size(), 0);
 }
 
 TEST_F(AgingPolicyLruKUT, DoAging_GetAgingIds_CacheQueueOverDepth) {
-  CCStatType hash_2_cache_infos;
+  CacheState cache_state;
   AgingPolicyLruK ag(20);
-  auto delete_ids = ag.DoAging(hash_2_cache_infos);
+  auto delete_ids = ag.DoAging(cache_state);
   EXPECT_EQ(delete_ids.size(), 0);
 
   uint16_t depth = 21;
-  InsertCCStatType(hash_2_cache_infos, depth);
-  delete_ids = ag.DoAging(hash_2_cache_infos);
-  EXPECT_EQ(delete_ids.size(), 1);
+  InsertCacheInfoQueue(cache_state, depth);
+  delete_ids = ag.DoAging(cache_state);
+  ASSERT_EQ(delete_ids.size(), 1);
   EXPECT_EQ(delete_ids[0], 0);
 
   depth = 25;
-  InsertCCStatType(hash_2_cache_infos, depth);
-  delete_ids = ag.DoAging(hash_2_cache_infos);
-  EXPECT_EQ(delete_ids.size(), 1);
+  InsertCacheInfoQueue(cache_state, depth);
+  delete_ids = ag.DoAging(cache_state);
+  ASSERT_EQ(delete_ids.size(), 1);
   EXPECT_EQ(delete_ids[0], 0);
 }
 TEST_F(AgingPolicyLruKUT, DoAging_Aging5Times_CacheQueueDepthIs25) {
-  CCStatType hash_2_cache_infos;
+  CacheState cache_state;
   AgingPolicyLruK ag(20);
-  auto delete_ids = ag.DoAging(hash_2_cache_infos);
+  auto delete_ids = ag.DoAging(cache_state);
   EXPECT_EQ(delete_ids.size(), 0);
 
   int16_t depth = 25;
-  InsertCCStatType(hash_2_cache_infos, depth);
+  InsertCacheInfoQueue(cache_state, depth);
 
   for (size_t i = 0U; i < depth; ++i) {
-    delete_ids = ag.DoAging(hash_2_cache_infos);
+    delete_ids = ag.DoAging(cache_state);
     if (i < 5U) {
-      EXPECT_EQ(delete_ids.size(), 1);
+      ASSERT_EQ(delete_ids.size(), 1);
       EXPECT_EQ(delete_ids[0], i);
     } else {
       EXPECT_EQ(delete_ids.size(), 0);
     }
-    DeleteAgingItems(hash_2_cache_infos, delete_ids);
+    cache_state.DelCache(delete_ids);
   }
 }
 }  // namespace ge

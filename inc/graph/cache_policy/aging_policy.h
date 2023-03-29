@@ -25,7 +25,7 @@ class AgingPolicy {
   AgingPolicy() = default;
   virtual ~AgingPolicy() = default;
   virtual void SetCachedAgingDepth(size_t depth) = 0;
-  virtual std::vector<CacheItemId> DoAging(const CCStatType &cc_state) const = 0;
+  virtual std::vector<CacheItemId> DoAging(const CacheState &cache_state) const = 0;
   virtual bool IsReadyToAddCache(const CacheHashKey hash_key, const CacheDescPtr &cache_desc) = 0;
  private:
   AgingPolicy &operator=(const AgingPolicy &anging_polocy) = delete;

@@ -124,10 +124,11 @@ T FloorDiv(const T u_value, const T d_value) {
 }
 
 inline uint64_t RoundUp(const uint64_t origin_value, const uint64_t multiple_of) {
-  if (multiple_of == 0) {
-    return 0;
+  uint64_t ret = 0U;
+  if (RoundUpOverflow(origin_value, multiple_of, ret)) {
+    return 0U;
   }
-  return (origin_value + multiple_of - 1) / multiple_of * multiple_of;
+  return ret;
 }
 
 inline Status GeMemcpy(uint8_t *dst_ptr, size_t dst_size, const uint8_t *src_ptr, const size_t src_size) {

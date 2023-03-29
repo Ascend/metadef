@@ -119,6 +119,8 @@ TEST_F(MathUtilUT, RoundUp) {
   EXPECT_EQ(RoundUp(10, 3), 12);
   EXPECT_EQ(RoundUp(10, 2), 10);
   EXPECT_EQ(RoundUp(10, 1), 10);
+  // fail
+  EXPECT_EQ(RoundUp(std::numeric_limits<uint64_t>::max(), 10), 0);
 }
 
 TEST_F(MathUtilUT, CeilDiv16) {

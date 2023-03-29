@@ -24,6 +24,7 @@
 #include "graph/cache_policy/aging_policy_lru_k.h"
 #include "cache_desc_stub/runtime_cache_desc.h"
 #include "graph/cache_policy/cache_policy.h"
+#include "graph/cache_policy/aging_policy_lru.h"
 
 namespace ge {
 namespace {
@@ -35,12 +36,29 @@ std::vector<CacheItemId> AddCachesByDepth(std::unique_ptr<CachePolicy> &cp, uint
     auto cache_desc = std::make_shared<RuntimeCacheDesc>();
     cache_desc->SetShapes({s});
     CacheItemId cache_id = cp->AddCache(cache_desc);
-    sleep(1);
+
     if (cache_id != KInvalidCacheItemId) {
       GELOGE(ge::FAILED, "AddCachesByDepth falied.");
       return {};
     }
     cache_id = cp->AddCache(cache_desc);
+    if (cache_id == KInvalidCacheItemId) {
+      GELOGE(ge::FAILED, "AddCachesByDepth falied.");
+      return {};
+    }
+    ids.emplace_back(cache_id);
+  }
+  return ids;
+}
+
+std::vector<CacheItemId> AddCachesByDepthForLRU(std::unique_ptr<CachePolicy> &cp, uint16_t depth) {
+  std::vector<CacheItemId> ids;
+  for (uint16_t i = 0; i < depth; ++i) {
+    int64_t dim_0 = i;
+    gert::Shape s{dim_0, 256, 256};
+    auto cache_desc = std::make_shared<RuntimeCacheDesc>();
+    cache_desc->SetShapes({s});
+    auto cache_id = cp->AddCache(cache_desc);
     if (cache_id == KInvalidCacheItemId) {
       GELOGE(ge::FAILED, "AddCachesByDepth falied.");
       return {};
@@ -692,8 +710,28 @@ TEST_F(UtestCompileCachePolicy, DoAging_Aging2Times_CacheQueueOverDepth) {
 
   for (size_t i = 0U; i < 2U; ++i) {
     auto delete_ids = cp->DoAging();
-    EXPECT_EQ(delete_ids.size(), 1);
+    ASSERT_EQ(delete_ids.size(), 1);
     EXPECT_EQ(delete_ids[0], add_cache_ids[i]);
   }
+}
+
+TEST_F(UtestCompileCachePolicy, DoAging_TestSetIntervalForLRU) {
+  auto mp = std::make_shared<MatchPolicyForExactlyTheSame>();
+  auto ap = std::make_shared<AgingPolicyLru>();
+  auto cp = CachePolicy::Create(mp, ap);
+
+  uint16_t depth = 3;
+  auto add_cache_ids = AddCachesByDepthForLRU(cp, depth);
+  ASSERT_EQ(add_cache_ids.size(), depth);
+
+  ap->SetDeleteInterval(depth);
+  auto delete_ids = cp->DoAging();
+  EXPECT_EQ(delete_ids.size(), 0U);
+
+  ap->SetDeleteInterval(1U);
+  delete_ids = cp->DoAging();
+  ASSERT_EQ(delete_ids.size(), 2);
+  EXPECT_TRUE(delete_ids[0] == 0 || delete_ids[0] == 1);
+  EXPECT_TRUE(delete_ids[1] == 0 || delete_ids[1] == 1);
 }
 }

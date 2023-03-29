@@ -94,14 +94,18 @@ class AgingPolicyRegister {
   ~AgingPolicyRegister() = default;
 };
 
-#define REGISTER_MATCH_POLICY_CREATOR_COUNT(policy_type, func, counter)          \
+#define REGISTER_MATCH_POLICY_CREATOR_COUNTER(policy_type, func, counter)                                              \
   static MatchPolicyRegister match_policy_register##counter(policy_type, func)
-#define REGISTER_MATCH_POLICY_CREATOR(policy_type, func)                         \
-  REGISTER_MATCH_POLICY_CREATOR_COUNT(policy_type, func, __COUNTER__)
+#define REGISTER_MATCH_POLICY_CREATOR_COUNTER_NUMBER(policy_type, func, counter)                                       \
+  REGISTER_MATCH_POLICY_CREATOR_COUNTER(policy_type, func, counter)
+#define REGISTER_MATCH_POLICY_CREATOR(policy_type, func)                                                               \
+  REGISTER_MATCH_POLICY_CREATOR_COUNTER_NUMBER(policy_type, func, __COUNTER__)
 
-#define REGISTER_AGING_POLICY_CREATOR_COUNT(policy_type, func, counter)          \
+#define REGISTER_AGING_POLICY_CREATOR_COUNTER(policy_type, func, counter)                                              \
   static AgingPolicyRegister aging_policy_register##counter(policy_type, func)
-#define REGISTER_AGING_POLICY_CREATOR(policy_type, func)                         \
-  REGISTER_AGING_POLICY_CREATOR_COUNT(policy_type, func, __COUNTER__)
+#define REGISTER_AGING_POLICY_CREATOR_COUNTER_NUMBER(policy_type, func, counter)                                       \
+  REGISTER_AGING_POLICY_CREATOR_COUNTER(policy_type, func, counter)
+#define REGISTER_AGING_POLICY_CREATOR(policy_type, func)                                                               \
+  REGISTER_AGING_POLICY_CREATOR_COUNTER_NUMBER(policy_type, func, __COUNTER__)
 } // namespace ge
 #endif
