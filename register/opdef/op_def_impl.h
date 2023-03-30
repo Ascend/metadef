@@ -79,7 +79,7 @@ public:
   std::vector<OpAttrDef> attrs;
   OpAICoreDef op_aicore;
   ge::AscendString op_type;
-  bool has_workspace;
+  bool has_workspace = true;
 };
 }  // namespace ops
 
