@@ -20,7 +20,6 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <securec.h>
 #include "graph/ascend_string.h"
 
 namespace optiling {

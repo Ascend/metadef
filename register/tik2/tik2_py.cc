@@ -331,9 +331,9 @@ void ParseInputsAndOutputs(const char *inputs, const char *outputs, ge::OpDescPt
 
 using namespace optiling;
 
-extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
-                                      const char *outputs, const char *attrs, char *result_info,
-                                      size_t result_info_len) {
+extern "C" int32_t Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
+                                          const char *outputs, const char *attrs, char *result_info,
+                                          size_t result_info_len) {
   if ((check_type == nullptr) || (optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) ||
       (attrs == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
@@ -362,7 +362,7 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
 
   ge::AscendString result;
   try {
-    const int rc = (check_func)(operator_param, result);
+    const int32_t rc = (check_func)(operator_param, result);
     GELOGI("check_func return rc = %d, check_type = %s, optype = %s.", rc, check_type, optype);
   } catch (...) {
     GELOGE(ge::GRAPH_FAILED, "check_func failed. check_type = %s, optype = %s", check_type, optype);
@@ -377,9 +377,9 @@ extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype
   return 1;
 }
 
-extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
-                                          const char *attrs, const char *generalize_config, char *result_info,
-                                          size_t result_info_len) {
+extern "C" int32_t Tik2PyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
+                                              const char *attrs, const char *generalize_config, char *result_info,
+                                              size_t result_info_len) {
   if ((optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) || (attrs == nullptr) ||
       (generalize_config == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
@@ -407,7 +407,7 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
   ge::AscendString generalize_config_str(generalize_config);
   ge::AscendString result;
   try {
-    const int rc = (generalize_func)(operator_params, generalize_config_str, result);
+    const int32_t rc = (generalize_func)(operator_params, generalize_config_str, result);
     GELOGI("generalize_func return rc = %d, optype = %s, generalize_config = %s", rc, optype, generalize_config);
   } catch (...) {
     GELOGE(ge::GRAPH_FAILED, "call generalize_func failed. optype = %s, generalize_config = %s", optype,
@@ -423,7 +423,7 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
   return 1;
 }
 
-extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len) {
+extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len) {
   if ((optype == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "optype/result_info is null, %s, %s", optype, result_info);
     return 0;
@@ -455,9 +455,9 @@ extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_
   return 1;
 }
 
-extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int block_dim,
-                                       const char *tiling_data, const char *kernel_name, const char *entry_file,
-                                       const char *output_kernel_file, int core_type, int task_ration) {
+extern "C" int32_t Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int32_t block_dim,
+                                           const char *tiling_data, const char *kernel_name, const char *entry_file,
+                                           const char *output_kernel_file, int32_t core_type, int32_t task_ration) {
   if ((optype == nullptr) || (soc_version == nullptr) || (tiling_data == nullptr) || (kernel_name == nullptr) ||
       (entry_file == nullptr) || (output_kernel_file == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
@@ -466,9 +466,9 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
            optype, soc_version, tiling_data, kernel_name, entry_file, output_kernel_file);
     return 0;
   }
-  const int CORE_TYPE_BOTH = 0;
-  const int CORE_TYPE_CUBE = 1;
-  const int CORE_TYPE_VEC = 2;
+  constexpr int32_t CORE_TYPE_BOTH = 0;
+  constexpr int32_t CORE_TYPE_CUBE = 1;
+  constexpr int32_t CORE_TYPE_VEC = 2;
   if ((core_type != CORE_TYPE_BOTH) && (core_type != CORE_TYPE_CUBE) && (core_type != CORE_TYPE_VEC)) {
     GELOGE(ge::GRAPH_FAILED,
            "core_type is valid, should be one of 0/1/2, but args is "
@@ -476,8 +476,8 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
            core_type);
     return 0;
   }
-  const int TASK_RATION_ONE = 1;
-  const int TASK_RATION_TWO = 2;
+  constexpr int32_t TASK_RATION_ONE = 1;
+  constexpr int32_t TASK_RATION_TWO = 2;
   if ((task_ration != TASK_RATION_ONE) && (task_ration != TASK_RATION_TWO)) {
     GELOGE(ge::GRAPH_FAILED,
            "task_ration is valid, should be one of 1/2, but args is "
@@ -494,9 +494,9 @@ extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_versi
   }
 
   try {
-    ReplayFuncParam replayParam {block_dim, tiling_data, kernel_name, entry_file, 0, output_kernel_file, nullptr,
-      task_ration};
-    const int rc = (replay_func)(replayParam, core_type);
+    ReplayFuncParam replayParam {block_dim, tiling_data,        kernel_name, entry_file,
+                                 0,         output_kernel_file, nullptr,     task_ration};
+    const int32_t rc = (replay_func)(replayParam, core_type);
     if (rc <= 0) {
       GELOGE(ge::GRAPH_FAILED, "call replay_func return %d. optype = %s, soc_version = %s", rc, optype, soc_version);
       return 0;
