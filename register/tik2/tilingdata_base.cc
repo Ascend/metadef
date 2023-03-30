@@ -15,6 +15,7 @@
  */
 
 #include "register/tilingdata_base.h"
+#include <securec.h>
 #include "framework/common/debug/ge_log.h"
 #include "graph/ascend_string.h"
 
@@ -22,7 +23,7 @@ namespace optiling {
 std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
 
 void TilingDef::SaveToBuffer(void *pdata, size_t capacity) const {
-  int mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
+  auto  mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
   if (mem_ret != EOK) {
     GELOGW("TilingDef::SaveToBuffer failed: memcpy_s return [%d].", mem_ret);
   }

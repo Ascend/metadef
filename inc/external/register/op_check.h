@@ -28,23 +28,23 @@ namespace optiling {
 #define FUNC_GET_OP_SUPPORT_INFO "get_op_support_info"
 #define FUNC_GET_SPECIFIC_INFO "get_op_specific_info"
 
-using OP_CHECK_FUNC = int (*)(const ge::Operator &op, ge::AscendString &result);
+using OP_CHECK_FUNC = int32_t (*)(const ge::Operator &op, ge::AscendString &result);
 
-using PARAM_GENERALIZE_FUNC = int (*)(const ge::Operator &op, const ge::AscendString &generalize_config,
+using PARAM_GENERALIZE_FUNC = int32_t (*)(const ge::Operator &op, const ge::AscendString &generalize_config,
                                       ge::AscendString &generalized_op_params);
 
 struct ReplayFuncParam {
-  const int block_dim;
+  const int32_t block_dim;
   const char *tiling_data;
   const char *kernel_name;
   const char *entry_file;
-  const int gentype;
+  const int32_t gentype;
   const char *output_kernel_file;
   char **objptr;
-  const int task_ration;
+  const int32_t task_ration;
 };
 
-using REPLAY_FUNC = int (*)(ReplayFuncParam &param, const int core_type);
+using REPLAY_FUNC = int32_t (*)(ReplayFuncParam &param, const int32_t core_type);
 
 class OpCheckFuncRegistry {
 public:
