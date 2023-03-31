@@ -1408,14 +1408,14 @@ const std::string ATTR_NAME_OFFSET = "offset";
 const std::string ATTR_NAME_LENGTH = "length";
 
 // for embedding service
-const std::string ATTR_NAME_DEPLOY_INJECT_CONFIG = "_deploy_inject_config";
 const std::string ATTR_NAME_EXECUTE_TIMES = "_execute_times";
 const std::string ATTR_NAME_MAX_KEY_NUM = "_max_key_num";
 const std::string ATTR_NAME_EMBEDDING_DIM = "_embedding_dim";
-const std::string ATTR_NAME_IS_PS_GRAPH = "_is_ps_engine_graph";
 const std::string ATTR_NAME_TAG_ID = "_tag_id";
 const std::string ATTR_NAME_OPTIMIZER_GRAPH_FLAG = "_optimizer_graph_flag";
 const std::string ATTR_NAME_EMBEDDING_GRAPH_FLAG = "_embedding_graph_flag";
+const std::string ATTR_NAME_DATA_TRANSFER_TYPE = "_data_transfer_type";
+const std::string ATTR_NAME_COMM_GROUP_NAMES = "_comm_group_names";
 
 const std::string ATTR_MODEL_HOST_ENV_OS = "host_env_os";
 const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";

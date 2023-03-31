@@ -77,21 +77,84 @@ int64_t GetNodeOutputSize(const NodePtr& node) {
   return total_size;
 }
 
-void SortNodesInStack(std::vector<NodePtr> &stack) {
+struct NodeOutInfo {
+  explicit NodeOutInfo(const NodePtr &node) {
+    num_out_data_nodes = node->GetOutDataNodesSize();
+    output_size = GetNodeOutputSize(node);
+    node_name = node->GetName();
+  }
+
+  bool operator<(const NodeOutInfo &rhs) const {
+    if (num_out_data_nodes < rhs.num_out_data_nodes) {
+      return true;
+    }
+    if (num_out_data_nodes > rhs.num_out_data_nodes) {
+      return false;
+    }
+    if (output_size < rhs.output_size) {
+      return true;
+    }
+    if (output_size > rhs.output_size) {
+      return false;
+    }
+    return node_name < rhs.node_name;
+  }
+
+  int64_t num_out_data_nodes;
+  int64_t output_size;
+  std::string node_name;
+};
+
+bool IsMemoryPriority() {
   std::string memory_optimization_policy;
   (void) ge::GetContext().GetOption(MEMORY_OPTIMIZATION_POLICY, memory_optimization_policy);
-  if (memory_optimization_policy == kMemoryPriority) {
-    std::sort(stack.begin(), stack.end(), [](const NodePtr &a, const NodePtr &b) {
-      if (a->GetOutDataNodesSize() == b->GetOutDataNodesSize()) {
-        if (GetNodeOutputSize(a) == GetNodeOutputSize(b)) {
-          return a->GetName() > b->GetName();
-        }
-        return GetNodeOutputSize(a) > GetNodeOutputSize(b);
-      }
-      return a->GetOutDataNodesSize() > b->GetOutDataNodesSize();
-    });
-  }
+  return (memory_optimization_policy == kMemoryPriority);
 }
+
+class TopoSortStack {
+ public:
+  explicit TopoSortStack(const bool is_mem_priority = false, const bool is_dfs = false,
+                         const bool is_reverse_dfs = false)
+      : is_mem_priority_(is_mem_priority), is_dfs_(is_dfs), is_reverse_dfs_(is_reverse_dfs) {}
+
+  NodePtr Pop() {
+    if (is_mem_priority_ && (!is_reverse_dfs_)) {
+      const auto &it = mem_priority_stack_.cbegin();
+      const NodePtr node = it->second;
+      (void) mem_priority_stack_.erase(it);
+      return node;
+    }
+    const NodePtr node = normal_stack_.back();
+    normal_stack_.pop_back();
+    return node;
+  }
+
+  void Push(const NodePtr &node) {
+    if (is_mem_priority_ && (!is_reverse_dfs_)) {
+      (void) mem_priority_stack_.emplace(NodeOutInfo(node), node);
+      return;
+    }
+    if (is_dfs_) {
+      (void) normal_stack_.insert(normal_stack_.end(), node);
+    } else {
+      (void) normal_stack_.insert(normal_stack_.begin(), node);
+    }
+  }
+
+  bool Empty() {
+    if (is_mem_priority_ && (!is_reverse_dfs_)) {
+      return mem_priority_stack_.empty();
+    }
+    return normal_stack_.empty();
+  }
+
+ private:
+  bool is_mem_priority_;
+  bool is_dfs_;
+  bool is_reverse_dfs_;
+  std::vector<NodePtr> normal_stack_;
+  std::map<NodeOutInfo, NodePtr> mem_priority_stack_;
+};
 }  // namespace
 
 ComputeGraphImpl::ComputeGraphImpl(const std::string &name)
@@ -852,19 +915,23 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
   // Record the number of non data nodes but no input nodes
   GE_CHK_BOOL_EXEC(SortNodes(stack, map_in_edge_num, compute_graph) == GRAPH_SUCCESS,
                    return GRAPH_FAILED, "sort nodes failed");
+  TopoSortStack topo_sort_stack(IsMemoryPriority(), true, reverse);
+  for (const auto &node : stack) {
+    topo_sort_stack.Push(node);
+  }
   std::vector<NodePtr> out_nodes;
-  const auto stack_push = [&reverse, &stack](std::vector<NodePtr>& tmp_out_nodes) {
+  const auto stack_push = [&reverse, &topo_sort_stack](std::vector<NodePtr>& tmp_out_nodes) {
       if (reverse) {
         std::reverse(tmp_out_nodes.begin(), tmp_out_nodes.end());
       }
-      stack.insert(stack.end(), tmp_out_nodes.begin(), tmp_out_nodes.end());
-      SortNodesInStack(stack);
+      for (const auto &node: tmp_out_nodes) {
+        topo_sort_stack.Push(node);
+      }
       tmp_out_nodes.clear();
   };
   // Only data nodes here
-  while (!stack.empty()) {
-    const NodePtr node = stack.back();
-    stack.pop_back();
+  while (!topo_sort_stack.Empty()) {
+    const NodePtr node = topo_sort_stack.Pop();
     node_vec.push_back(node);
     GE_CHECK_NOTNULL(node->GetOpDesc());
     for (const auto &anchor : node->GetAllOutDataAnchors()) {
@@ -897,7 +964,7 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                                                     const ConstComputeGraphPtr &compute_graph) {
   GELOGD("Runing_Bfs_Sort: %s", name_.c_str());
   (void) stack;
-  std::vector<NodePtr> res_stack;
+  TopoSortStack topo_sort_stack(IsMemoryPriority());
   std::vector<NodePtr> stack_input;
   std::map<std::string, NodePtr> breadth_node_map;
   // Record the number of non data nodes but no input nodes
@@ -905,11 +972,10 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                    return GRAPH_FAILED, "sort nodes failed");
 
   // Only data nodes here
-  while ((!stack_input.empty()) || (!res_stack.empty())) {
+  while ((!stack_input.empty()) || (!topo_sort_stack.Empty())) {
     NodePtr node = nullptr;
-    if (!res_stack.empty()) {
-      node = res_stack.back();
-      res_stack.pop_back();
+    if (!topo_sort_stack.Empty()) {
+      node = topo_sort_stack.Pop();
     } else {
       node = stack_input.back();
       stack_input.pop_back();
@@ -921,9 +987,8 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
     (void)CollectBreadthOutNode(node, map_in_edge_num, breadth_node_map);
 
     for (const auto &name_node : breadth_node_map) {
-      (void) res_stack.insert(res_stack.begin(), name_node.second);
+      (void) topo_sort_stack.Push(name_node.second);
     }
-    SortNodesInStack(res_stack);
     breadth_node_map.clear();
   }
   return GRAPH_SUCCESS;
