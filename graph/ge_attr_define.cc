@@ -1343,6 +1343,7 @@ const std::string ATTR_NAME_NODE_NEED_MULTI_TASK = "_op_need_multi_task";
 // for support overflow detection
 const std::string GLOBALWORKSPACE_SPEC_WORKSPACE = "globalworkspace_spec_workspace";
 const std::string GLOBALWORKSPACE_SPEC_WORKSPACE_BYTES = "globalworkspace_spec_workspace_bytes";
+const std::string GLOBALWORKSPACE_TYPE = "globalworkspace_type";
 
 // for value depend
 const std::string ATTR_NAME_VALUE_DEPEND = "_is_value_depend";
