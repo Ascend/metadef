@@ -24,6 +24,9 @@ TEST_F(OpDefFactoryUT, OpDefFactoryTest) {
   for (auto &op : ops) {
     OpDef opDef = OpDefFactory::OpDefCreate(op.GetString());
     EXPECT_EQ(opDef.GetOpType(), "AddTik2");
+    EXPECT_EQ(opDef.GetWorkspaceFlag(), true);
+    opDef.SetWorkspaceFlag(false);
+    EXPECT_EQ(opDef.GetWorkspaceFlag(), false);
   }
   EXPECT_EQ(ops.size(), 1);
 }
