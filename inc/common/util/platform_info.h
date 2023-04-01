@@ -127,6 +127,8 @@ class PlatformInfoManager {
   void ParseVectorCoreintrinsicDtypeMap(std::map<std::string, std::string> &vector_coreintrinsic_dtype_map,
                                         PlatFormInfos &platform_info_temp);
 
+  void ParseSoftwareSpec(map<string, string> &software_spec_map, PlatformInfo &platform_info_temp);
+
   void ParsePlatformRes(const std::string &label,
                         std::map<std::string, std::string> &platform_res_map,
                         PlatFormInfos &platform_info_temp);

@@ -122,6 +122,10 @@ typedef struct tag_cpu_cache {
   uint32_t TSCPUSyncBySW;
 } CPUCache;
 
+typedef struct tag_software_spec {
+  bool jit_compile_default_value;
+} SoftwareSpec;
+
 typedef struct tag_platform_info {
   StrInfo str_info;
   SoCInfo soc_info;
@@ -132,6 +136,7 @@ typedef struct tag_platform_info {
   VectorCoreMemoryRates vector_core_memory_rates;
   CPUCache cpucache;
   std::map<std::string, std::vector<std::string>> vector_core_intrinsic_dtype_map;
+  SoftwareSpec software_spec;
 } PlatformInfo;
 
 typedef struct tag_optional_info {
