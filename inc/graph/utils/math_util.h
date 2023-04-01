@@ -206,7 +206,7 @@ inline Status GeMemcpy(uint8_t *dst_ptr, size_t dst_size, const uint8_t *src_ptr
   size_t remain_size = src_size;
   do {
     size_t copy_size = (remain_size > SECUREC_MEM_MAX_LEN) ? SECUREC_MEM_MAX_LEN : remain_size;
-    const auto err = memcpy_s((dst_ptr + offset), (dst_size - offset), (src_ptr + offset), copy_size);
+    const auto err = memcpy_s((dst_ptr + offset), copy_size, (src_ptr + offset), copy_size);
     GE_CHK_BOOL_RET_STATUS(err == EOK, PARAM_INVALID, "memcpy_s err, src size %zu, dst size %zu",
         copy_size, (dst_size - offset));
     offset += copy_size;

@@ -303,7 +303,6 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const std::vector<std::vector<uint8_
   auto attr_pos = attr_holder.get();
   for (size_t i = 0; i < attrs.size(); ++i) {
     attr_def->offset[i] = current_offset;
-    GE_ASSERT_EOK(memcpy_s(attr_pos + current_offset, total_size - current_offset, attrs[i].data(), attrs[i].size()));
     const auto ret = ge::GeMemcpy(attr_pos + current_offset, total_size - current_offset,
         attrs[i].data(), attrs[i].size());
     GE_ASSERT_TRUE((ret == ge::SUCCESS), "memcpy_s failed, copy size is %zu, dst size is %zu",
