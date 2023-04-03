@@ -43,18 +43,24 @@ OpParamDef &OpParamDef::operator=(const OpParamDef &def) {
 
 void OpParamDef::MergeParam(const OpParamDef &def) {
   this->impl_->param_type = def.impl_->param_type;
-  if (def.impl_->types.size() > 0)
+  if (def.impl_->types.size() > 0) {
     this->impl_->types = def.impl_->types;
-  if (def.impl_->formats.size() > 0)
+  }
+  if (def.impl_->formats.size() > 0) {
     this->impl_->formats = def.impl_->formats;
-  if (def.impl_->need_compile.GetLength() > 0)
+  }
+  if (def.impl_->need_compile.GetLength() > 0) {
     this->impl_->need_compile = def.impl_->need_compile;
-  if (def.impl_->reshape_type.GetLength() > 0)
+  }
+  if (def.impl_->reshape_type.GetLength() > 0) {
     this->impl_->reshape_type = def.impl_->reshape_type;
-  if (def.impl_->value_depend.GetLength() > 0)
+  }
+  if (def.impl_->value_depend.GetLength() > 0) {
     this->impl_->value_depend = def.impl_->value_depend;
-  if (def.impl_->unknown_shape_formats.size() > 0)
+  }
+  if (def.impl_->unknown_shape_formats.size() > 0) {
     this->impl_->unknown_shape_formats = def.impl_->unknown_shape_formats;
+  }
 }
 
 OpParamDef::~OpParamDef() = default;
@@ -97,9 +103,9 @@ OpParamDef &OpParamDef::ReshapeType(const char *reshape_type) {
 }
 
 OpParamDef &OpParamDef::ValueDepend(Option value_depend) {
-  if (REQUIRED == value_depend) {
+  if (value_depend == REQUIRED) {
     this->impl_->value_depend = "required";
-  } else if (OPTIONAL == value_depend) {
+  } else if (value_depend == OPTIONAL) {
     this->impl_->value_depend = "optional";
   } else {
     this->impl_->value_depend = "";
@@ -143,7 +149,7 @@ OpParamDef &OpParamTrunk::Output(const char *name) {
 
 OpParamDef &OpParamTrunk::ParamGetOrCreate(const char *name, bool is_output) {
   OpParamDef *param;
-  if (ITEM_FIND == this->ParamFind(name, is_output, &param)) {
+  if (this->ParamFind(name, is_output, &param) == ITEM_FIND) {
     return *param;
   } else {
     OpParamDef addParam(name);

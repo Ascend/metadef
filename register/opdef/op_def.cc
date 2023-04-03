@@ -15,9 +15,9 @@
  */
 
 #include <vector>
-#include "register/op_def.h"
 #include "op_def_impl.h"
 #include "framework/common/debug/ge_log.h"
+#include "register/op_def.h"
 
 namespace ops {
 OpDef::OpDef(const char *type) : impl_(new(std::nothrow) OpDefImpl) {
@@ -74,7 +74,7 @@ OpAttrDef &OpDef::AddAttr(OpAttrDef &attr) {
 
 OpAttrDef &OpDef::GetOrCreateAttr(const char *name) {
   OpAttrDef *pAttr;
-  if (ITEM_FIND == this->FindAttr(name, &pAttr)) {
+  if (this->FindAttr(name, &pAttr) == ITEM_FIND) {
     return *pAttr;
   } else {
     OpAttrDef attr(name);
@@ -149,7 +149,7 @@ void OpDef::MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &
 void OpDef::CheckParam(std::vector<OpParamDef> &params) {
   for (auto &param : params) {
     if (param.GetFormats().size() != 0) {
-      if (!param.GetDataTypes().size()) {
+      if (param.GetDataTypes().size() == 0) {
         continue;
       }
       if (param.GetDataTypes().size() != param.GetFormats().size()) {

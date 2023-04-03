@@ -166,7 +166,7 @@ template<class T>
 std::string GetListStr(std::vector<T> list, const char *brac, void (*pfSout)(std::stringstream &s, T v)) {
   std::string str = "";
   std::stringstream sstream;
-  if (nullptr == brac || '\0' == brac[0] || '\0' == brac[1]) {
+  if (brac == nullptr || brac[0] == '\0' || brac[1] == '\0') {
     return str.c_str();
   }
   sstream << brac[0];

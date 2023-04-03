@@ -17,9 +17,9 @@
 #include <iostream>
 #include <algorithm>
 #include <map>
-#include "register/op_def_factory.h"
 #include "register/op_def.h"
 #include "op_def_impl.h"
+#include "register/op_def_factory.h"
 
 namespace ops {
 static std::map<ge::AscendString, OpDefCreator> g_opsdef_creator;

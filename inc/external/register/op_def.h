@@ -172,7 +172,7 @@ public:
     impl.TilingParse<T>(this->GetTilingParse());
     gert::OpImplRegisterV2 implReg(impl);
   }
-  void OpCheckPost(const char *opType);
+  void OpCheckPost(const char *op_type);
 
 private:
   void Log(const char *op_type, const char *info);
@@ -210,7 +210,7 @@ private:
   void MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &aicore_params);
   void CheckParam(std::vector<OpParamDef> &params);
   int FindAttr(const char *name, OpAttrDef **attr);
-  OpAttrDef &AddAttr(OpAttrDef &param);
+  OpAttrDef &AddAttr(OpAttrDef &attr);
   OpAttrDef &GetOrCreateAttr(const char *name);
   std::unique_ptr<OpDefImpl> impl_;
 };
