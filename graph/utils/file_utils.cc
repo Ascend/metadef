@@ -203,6 +203,10 @@ graphStatus WriteBinToFile(const int32_t fd, const char_t * const data, size_t d
 }
 
 void SplitFilePath(const std::string &file_path, std::string &dir_path, std::string &file_name) {
+  if (file_path.empty()) {
+    GELOGD("file_path is empty, no need split");
+    return;
+  }
   int32_t split_pos = static_cast<int32_t>(file_path.length() - 1UL);
   for (; split_pos >= 0; split_pos--) {
     if ((file_path[static_cast<size_t>(split_pos)] == '\\') ||
@@ -232,7 +236,7 @@ graphStatus SaveBinToFile(const char * const data, size_t length, const std::str
                    "Create direct failed, path: %s.", file_path.c_str());
   }
   std::string real_path = RealPath(dir_path.c_str());
-  GE_ASSERT_TRUE(!real_path.empty());
+  GE_ASSERT_TRUE(!real_path.empty(), "Path: %s is empty", file_path.c_str());
   real_path = real_path + "/" + file_name;
   // Open file
   const mmMode_t mode = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) | static_cast<uint32_t>(M_IWUSR));
