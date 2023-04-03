@@ -35,7 +35,9 @@ message ModelRelationDef {
     repeated string output_endpoint_name = 3;
     repeated string external_input_queue_name = 4;
     repeated string external_output_queue_name = 5;
-    repeated string invoke_model_key = 6;
+    repeated string event_input_name = 6;
+    repeated string event_output_name = 7;
+    repeated string invoke_model_key = 8;
   }
 
   repeated QueueDef queue_def = 1;
