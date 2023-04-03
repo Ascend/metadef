@@ -67,16 +67,9 @@ public:
   }
 
 private:
-#ifndef ONLY_COMPILE_OPEN_SRC
   CacheItemId item_id_;
   CacheDescPtr desc_;
   uint64_t timer_count_;
-#else
-  time_t time_stamp_;
-  CacheItemId item_id_;
-  CacheDescPtr desc_;
-  uint64_t timer_count_;
-#endif
 };
 
 struct CacheInfoQueue {

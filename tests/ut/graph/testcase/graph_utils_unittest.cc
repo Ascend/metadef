@@ -282,6 +282,7 @@ ComputeGraphPtr BuildGraphWithSubGraph() {
   sub_graph2->SetParentGraph(root_graph);
   case0->GetOpDesc()->AddSubgraphName("branch2");
   case0->GetOpDesc()->SetSubgraphInstanceName(1, "sub2");
+  root_graph->TopologicalSorting();
   return root_graph;
 }
 } // namespace
@@ -1089,6 +1090,10 @@ TEST_F(UtestGraphUtils, CopyComputeGraphWithFilter) {
   ASSERT_NE(dst_compute_graph->FindNode("relu0"), nullptr);
   auto sub1_graph = dst_compute_graph->GetSubgraph("sub1");
   ASSERT_EQ(sub1_graph->GetDirectNodesSize(), 1);
+  ASSERT_NE(sub1_graph->GetDirectNode().at(0U), nullptr);
+  ASSERT_NE(sub1_graph->GetDirectNode().at(0U)->GetOpDesc(), nullptr);
+  ASSERT_EQ(sub1_graph->GetDirectNode().at(0U)->GetOpDesc()->GetId(),
+            graph->GetSubgraph("sub1")->GetDirectNode().at(0U)->GetOpDesc()->GetId());
   ASSERT_NE(sub1_graph, nullptr);
   ASSERT_EQ(dst_compute_graph->GetSubgraph("sub2"), nullptr);
 }

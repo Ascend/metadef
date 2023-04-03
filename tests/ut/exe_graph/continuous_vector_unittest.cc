@@ -95,9 +95,9 @@ TEST_F(ContinuousVectorUT, TypedOk) {
 }
 
 TEST_F(ContinuousVectorUT, GetOverHeadLengthOk) {
-  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(0), 56U);
-  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(1), 64U);
-  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(3), 80U);
+  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(0), sizeof(ContinuousVectorVector));
+  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(1), sizeof(ContinuousVectorVector));
+  EXPECT_EQ(ContinuousVectorVector::GetOverHeadLength(3), sizeof(ContinuousVectorVector) + (3U - 1U) * sizeof(size_t));
 }
 
 TEST_F(ContinuousVectorUT, AddOk) {

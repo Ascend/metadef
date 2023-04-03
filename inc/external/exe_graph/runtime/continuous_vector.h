@@ -189,6 +189,9 @@ class ContinuousVectorVector {
   }
 
   static size_t GetOverHeadLength(const size_t capacity) {
+    if (capacity == 0U) {
+      return sizeof(ContinuousVectorVector);
+    }
     return sizeof(capacity_) + sizeof(size_) + sizeof(reserved_) + sizeof(size_t) * capacity;
   }
 
