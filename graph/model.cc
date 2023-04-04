@@ -28,9 +28,11 @@
 #include "debug/ge_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/model_serialize.h"
+#include "graph/utils/file_utils.h"
 #include "mmpa/mmpa_api.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/ge_ir_utils.h"
+#include "common/checker.h"
 #include "proto/ge_ir.pb.h"
 
 namespace {
@@ -88,6 +90,11 @@ graphStatus Model::Save(Buffer &buffer, const bool is_dump) const {
   return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
+graphStatus Model::Save(Buffer &buffer, const std::string &path, const bool is_dump) const {
+  buffer = SERIALIZE.SerializeModel(*this, path, is_dump);
+  return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
+}
+
 graphStatus Model::Save(proto::ModelDef &model_def, const bool is_dump) const {
   return SERIALIZE.SerializeModel(*this, is_dump, model_def);
 }
@@ -98,13 +105,28 @@ graphStatus Model::Load(const uint8_t *data, size_t len, Model &model) {
   return SERIALIZE.UnserializeModel(data, len, model) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
+graphStatus Model::Load(ge::proto::ModelDef &model_def, const std::string &path) {
+  return SERIALIZE.UnserializeModel(model_def, *this, path) ? GRAPH_SUCCESS : GRAPH_FAILED;
+}
+
 graphStatus Model::Load(ge::proto::ModelDef &model_def) {
   return SERIALIZE.UnserializeModel(model_def, *this) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
 graphStatus Model::SaveToFile(const std::string &file_name) const {
   Buffer buffer;
-  if ((*this).Save(buffer) != GRAPH_SUCCESS) {
+  std::string dir_path;
+  std::string file;
+  SplitFilePath(file_name, dir_path, file);
+  if (!dir_path.empty()) {
+    GE_ASSERT_TRUE((CreateDir(dir_path) == 0),
+                   "Create direct failed, path: %s.", file_name.c_str());
+  }
+  std::string real_path = RealPath(dir_path.c_str());
+  GE_ASSERT_TRUE(!real_path.empty(), "Path: %s is empty", file_name.c_str());
+  real_path = real_path + "/" + file;
+
+  if ((*this).Save(buffer, real_path) != GRAPH_SUCCESS) {
     GE_LOGE("[Save][Data] to file:%s fail.", file_name.c_str());
     return GRAPH_FAILED;
   }
@@ -114,14 +136,6 @@ graphStatus Model::SaveToFile(const std::string &file_name) const {
     const std::string str(PtrToPtr<uint8_t, char_t>(buffer.GetData()), buffer.GetSize());
     if (!ge_proto.ParseFromString(str)) {
       return GRAPH_FAILED;
-    }
-    char_t real_path[MMPA_MAX_PATH] = {};
-    if (strnlen(file_name.c_str(), sizeof(real_path)) >= sizeof(real_path)) {
-      return GRAPH_FAILED;
-    }
-    const INT32 result = mmRealPath(file_name.c_str(), &real_path[0], MMPA_MAX_PATH);
-    if (result != EN_OK) {
-      GELOGI("file %s does not exit, it will be created.", file_name.c_str());
     }
     const int32_t fd =
         mmOpen2(&real_path[0], static_cast<int32_t>(static_cast<uint32_t>(M_WRONLY) | static_cast<uint32_t>(M_CREAT) |
@@ -198,7 +212,8 @@ graphStatus Model::LoadFromFile(const std::string &file_name) {
     GELOGE(GRAPH_FAILED, "[Call][ParseFromFileDescriptor] failed, file:%s.", &real_path[0]);
     return GRAPH_FAILED;
   }
-  return Load(model_def);
+  std::string path(real_path);
+  return Load(model_def, file_name);
 }
 
 ProtoAttrMap &Model::MutableAttrMap() { return attrs_; }

@@ -215,8 +215,14 @@ const std::string DATA_ATTR_NAME_DATA_TYPE = "data_type";
 // Send
 const std::string SEND_ATTR_EVENT_ID = "event_id";
 
+// SendNotify
+const std::string SEND_ATTR_NOTIFY_ID = "notify_id";
+
 // Recv
 const std::string RECV_ATTR_EVENT_ID = "event_id";
+
+// RecvNotify
+const std::string RECV_ATTR_NOTIFY_ID = "notify_id";
 
 // convolution
 const std::string ATTR_NAME_COEF = "coef";
@@ -739,6 +745,8 @@ const std::string ATTR_MODEL_TARGET_TYPE = "target_type";
 const std::string ATTR_MODEL_STREAM_NUM = "stream_num";
 
 const std::string ATTR_MODEL_EVENT_NUM = "event_num";
+
+const std::string ATTR_MODEL_NOTIFY_NUM = "notify_num";
 
 const std::string ATTR_MODEL_HUGE_STREAM_LIST = "huge_stream_list";
 

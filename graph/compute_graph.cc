@@ -855,7 +855,7 @@ graphStatus ComputeGraphImpl::UpdateOutputMapping(const std::map<uint32_t, uint3
 graphStatus ComputeGraphImpl::ReorderEventNodes(const ConstComputeGraphPtr &compute_graph) {
   std::list<NodePtr> &node_list = nodes_;
   for (const auto &node : GetDirectNode(compute_graph)) {
-    if (node->GetType() == RECV) {
+    if (node->GetType() == RECV || (node->GetType() == RECV_NOTIFY)) {
       const auto iter = find(node_list.cbegin(), node_list.cend(), node);
       if (iter != node_list.cend()) {
         (void)node_list.erase(iter);
@@ -864,7 +864,7 @@ graphStatus ComputeGraphImpl::ReorderEventNodes(const ConstComputeGraphPtr &comp
       const auto dst_iter = find(node_list.cbegin(), node_list.cend(), node->GetOutControlNodes().at(0UL));
       (void)node_list.insert(dst_iter, node);
     }
-    if (node->GetType() == SEND) {
+    if (node->GetType() == SEND || (node->GetType() == SEND_NOTIFY)) {
       const auto iter = find(node_list.cbegin(), node_list.cend(), node);
       if (iter != node_list.cend()) {
         (void)node_list.erase(iter);

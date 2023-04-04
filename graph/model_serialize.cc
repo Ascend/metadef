@@ -17,7 +17,6 @@
 #include "graph/model_serialize.h"
 #include <google/protobuf/text_format.h>
 #include <queue>
-#include <iostream>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
@@ -640,6 +639,7 @@ bool ModelSerializeImp::UnserializeModel(Model &model, proto::ModelDef &model_pr
     for (auto idx = 1; idx < graphs_proto.size(); ++idx) {
       ComputeGraphPtr subgraph;
       ModelSerializeImp impl;
+      impl.SetAirModelPath(air_path_);
       if (!impl.UnserializeGraphWithoutEdge(subgraph, graphs_proto[idx])) {
         GELOGE(GRAPH_FAILED, "[Call][UnserializeGraphWithoutEdge] failed");
         return false;
@@ -797,7 +797,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
   return true;
 }
 
-bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, proto::ModelDef &model_def) {
+bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path, proto::ModelDef &model_def) {
   if (SerializeToBuffer(model_def, buffer)) {
     return true;
   }
@@ -819,11 +819,21 @@ bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, proto::ModelDef &model_
         GELOGW("Weight attr of node: %s is empty", op_def.name().c_str());
         continue;
       }
+      std::string dir_path;
+      std::string file_name;
+      SplitFilePath(path, dir_path, file_name);
       std::string model_name = GetRegulatedName(model_def.name());
-      std::string file_path = kTmpWeight + model_name + "/" +
+      if (!dir_path.empty()) {
+        dir_path += "/";
+      }
+      if (!model_name.empty()) {
+        model_name += "/";
+      }
+      std::string file_path = kTmpWeight + model_name +
                               op_def.type() + "_" + std::to_string(constant_op_id) + "_file";
+      std::string real_file_path = dir_path + file_path;
       constant_op_id++;
-      if (SaveBinToFile(tensor_def->data().c_str(), tensor_def->data().length(), file_path) != GRAPH_SUCCESS) {
+      if (SaveBinToFile(tensor_def->data().c_str(), tensor_def->data().length(), real_file_path) != GRAPH_SUCCESS) {
         GELOGE(GRAPH_FAILED, "Write data of attr [%s] of op[%s] to file failed.",
                ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
         return false;
@@ -855,6 +865,11 @@ bool ModelSerializeImp::SerializeToBuffer(const proto::ModelDef &model_def, Buff
 }
 
 Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) const {
+  std::string path;
+  return SerializeModel(model, path, is_dump);
+}
+
+Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &path, const bool is_dump) const {
   proto::ModelDef model_def;
   ModelSerializeImp model_imp;
   if (!model_imp.SerializeModel(model, &model_def, is_dump)) {
@@ -867,7 +882,7 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) co
 #endif
   GE_CHK_BOOL_ONLY_LOG(buffer.GetSize() != 0UL, "get size failed");
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  if (!model_imp.SeparateModelDef(buffer, model_def)) {
+  if (!model_imp.SeparateModelDef(buffer, path, model_def)) {
     GELOGW("[Serialize][Model] Serialize to binary failed");
     return Buffer();
   }
@@ -895,7 +910,16 @@ bool ModelSerializeImp::LoadWeightFromFile(const std::string &file_path,
     GELOGE(FAILED, "[Allocate][Mem]Allocate mem failed");
     return false;
   }
-  if (GetBinFromFile(file_path, static_cast<char_t *>(bin_data.get()), data_len) != GRAPH_SUCCESS) {
+  std::string air_directory;
+  std::string air_filename;
+  SplitFilePath(air_path_, air_directory, air_filename);
+  std::string weight_path;
+  if (!air_directory.empty()) {
+    weight_path = air_directory + "/" + file_path;
+  } else {
+    weight_path = file_path;
+  }
+  if (GetBinFromFile(weight_path, static_cast<char_t *>(bin_data.get()), data_len) != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "Get bin from file failed.");
     return false;
   }
@@ -971,11 +995,17 @@ bool ModelSerialize::UnserializeModel(const uint8_t *const data, const size_t le
 }
 
 bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &model) const {
+  std::string path;
+  return UnserializeModel(model_def, model, path);
+}
+
+bool ModelSerialize::UnserializeModel(ge::proto::ModelDef &model_def, Model &model, const std::string &path) const {
   const std::shared_ptr<proto::ModelDef> model_def_ptr = ComGraphMakeShared<proto::ModelDef>(model_def);
   GE_CHK_BOOL_EXEC(model_def_ptr != nullptr, REPORT_CALL_ERROR("E18888", "create ModelDef failed.");
                    return false, "[Create][ModelDef] mode_def make shared failed");
 
   ModelSerializeImp model_imp;
+  model_imp.SetAirModelPath(path);
   model_imp.SetProtobufOwner(model_def_ptr);
   if (!model_imp.UnserializeModel(model, *model_def_ptr)) {
     GELOGE(GRAPH_FAILED, "[Unserialize][Model] fail");

@@ -72,6 +72,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
 
  private:
   void Init();
+  graphStatus Load(ge::proto::ModelDef &model_def, const std::string &path);
+  graphStatus Save(Buffer &buffer, const std::string &path, const bool is_dump = false) const;
   AttrStore attrs_;
   friend class ModelSerializeImp;
   friend class GraphDebugImp;
