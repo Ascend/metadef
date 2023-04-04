@@ -84,4 +84,22 @@ TEST_F(MatchPolicyForExactlyTheSameUT, GetCacheItemId_ShapesAndHashMatched) {
   EXPECT_EQ(find_id, cache_info.GetItemId());
 }
 
+TEST_F(MatchPolicyForExactlyTheSameUT, GetCacheItemId_LogHashNotExist_KeyExistButVectorEmpty) {
+  dlog_setlevel(0, 0, 0);
+  gert::Shape s1{256, 256};
+  const std::vector<gert::Shape> shapes1{s1};
+
+  CCStatType hash_2_cache_infos;
+  auto cache_info = CreateCacheInfo(1, 1, shapes1);
+  auto find_cache_desc = CreateRuntimeCacheDesc(shapes1);
+  auto hash = find_cache_desc->GetCacheDescHash();
+  hash_2_cache_infos[hash] = {cache_info};
+  hash_2_cache_infos[hash].erase(hash_2_cache_infos[hash].begin());  // key exist but vector value empty
+
+  MatchPolicyForExactlyTheSame mp;
+  auto find_id = mp.GetCacheItemId(hash_2_cache_infos, find_cache_desc);
+  EXPECT_EQ(find_id, KInvalidCacheItemId);
+  dlog_setlevel(0, 3, 0);
+}
+
 }  // namespace ge

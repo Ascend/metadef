@@ -20,7 +20,7 @@ CacheItemId MatchPolicyForExactlyTheSame::GetCacheItemId(const CCStatType &cc_st
                                                          const CacheDescPtr &cache_desc) const {
   const CacheHashKey hash_key = cache_desc->GetCacheDescHash();
   const auto &iter = cc_state.find(hash_key);
-  if (iter == cc_state.end()) {
+  if (iter == cc_state.end() || iter->second.empty()) {
     GELOGD("[CACHE] hash [%lu] not exist.", hash_key);
     return KInvalidCacheItemId;
   }
