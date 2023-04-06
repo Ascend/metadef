@@ -45,6 +45,7 @@ ge::graphStatus CheckOverFlow(const size_t attr_size, const size_t tiling_data_s
 // get basic type attr and append
 template<typename T>
 ge::graphStatus AppendAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
   const T *attr = attrs->GetAttrPointer<T>(attr_index);
   GE_CHECK_NOTNULL(attr);
   return tiling_data->Append<T>(*attr);
@@ -53,6 +54,7 @@ ge::graphStatus AppendAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, c
 // get list attr and append
 template<typename T>
 ge::graphStatus AppendListAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
   const ContinuousVector *attr = attrs->GetAttrPointer<ContinuousVector>(attr_index);
   GE_CHECK_NOTNULL(attr);
   return tiling_data->Append<T>(reinterpret_cast<const T *>(attr->GetData()), attr->GetSize());
@@ -61,6 +63,7 @@ ge::graphStatus AppendListAttr(TilingData *tiling_data, const RuntimeAttrs *attr
 // get basic type attr to convert and append
 template<typename T1, typename T2>
 ge::graphStatus AppendConvertedAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
   const T1 *attr = attrs->GetAttrPointer<T1>(attr_index);
   GE_CHECK_NOTNULL(attr);
   if (!ge::IntegerChecker<T2>::Compat(*attr)) {
@@ -73,6 +76,7 @@ ge::graphStatus AppendConvertedAttr(TilingData *tiling_data, const RuntimeAttrs 
 // get list attr to convert and append
 template<typename T1, typename T2>
 ge::graphStatus AppendConvertedListAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
   const ContinuousVector *attr = attrs->GetAttrPointer<ContinuousVector>(attr_index);
   GE_CHECK_NOTNULL(attr);
   const auto ret = CheckOverFlow<T2>(attr->GetSize(), tiling_data->GetDataSize(), tiling_data->GetCapacity());
@@ -82,6 +86,7 @@ ge::graphStatus AppendConvertedListAttr(TilingData *tiling_data, const RuntimeAt
 
   auto data_size = tiling_data->GetDataSize();
   const T1 *attr_data = reinterpret_cast<const T1 *>(attr->GetData());
+  GE_CHECK_NOTNULL(attr_data);
   for (size_t i = 0UL; i < attr->GetSize(); ++i) {
     *reinterpret_cast<T2 *>(reinterpret_cast<uint8_t *>(tiling_data->GetData()) + data_size) =
         static_cast<T2>(attr_data[i]);
@@ -93,6 +98,7 @@ ge::graphStatus AppendConvertedListAttr(TilingData *tiling_data, const RuntimeAt
 
 // get char * attr to append
 ge::graphStatus AppendStrAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
   const char *attr = attrs->GetAttrPointer<char>(attr_index);
   GE_CHECK_NOTNULL(attr);
   return tiling_data->Append<char>(attr, strlen(attr));
@@ -100,6 +106,7 @@ ge::graphStatus AppendStrAttr(TilingData *tiling_data, const RuntimeAttrs *attrs
 
 // convert float32 attr to uint16 and append
 ge::graphStatus AppendConvertedFpAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
   const float *attr = attrs->GetAttrPointer<float>(attr_index);
   GE_CHECK_NOTNULL(attr);
   const uint16_t target_attr_val = optiling::FloatToUint16(*attr);
@@ -108,6 +115,7 @@ ge::graphStatus AppendConvertedFpAttr(TilingData *tiling_data, const RuntimeAttr
 
 // convert list_float32 attr to list_uint16 and append
 ge::graphStatus AppendConvertedListFpAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
   const ContinuousVector *attr = attrs->GetAttrPointer<ContinuousVector>(attr_index);
   GE_CHECK_NOTNULL(attr);
   const auto ret = CheckOverFlow<uint16_t>(attr->GetSize(), tiling_data->GetDataSize(), tiling_data->GetCapacity());
@@ -117,6 +125,7 @@ ge::graphStatus AppendConvertedListFpAttr(TilingData *tiling_data, const Runtime
 
   auto data_size = tiling_data->GetDataSize();
   const float *attr_data = ge::PtrToPtr<const void, const float>(attr->GetData());
+  GE_CHECK_NOTNULL(attr_data);
   for (size_t i = 0UL; i < attr->GetSize(); ++i) {
     *ge::PtrToPtr<uint8_t, uint16_t>(ge::PtrToPtr<void, uint8_t>(tiling_data->GetData()) + data_size) =
         optiling::FloatToUint16(attr_data[i]);
