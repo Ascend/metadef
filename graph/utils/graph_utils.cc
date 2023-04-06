@@ -3341,8 +3341,8 @@ graphStatus GraphUtils::MergeNetOutputNode(const ComputeGraphPtr &graph, const N
   }
 
   // transfer out control edges
-  const std::set<NodePtr> in_node_set(all_in_nodes.begin(), all_in_nodes.end());
-  const std::set<NodePtr> out_node_set(all_out_nodes.begin(), all_out_nodes.end());
+  const OrderedNodeSet in_node_set(all_in_nodes.begin(), all_in_nodes.end());
+  const OrderedNodeSet out_node_set(all_out_nodes.begin(), all_out_nodes.end());
   for (auto &src_node : in_node_set) {
     GELOGD("[%s] process in node.", src_node->GetName().c_str());
     auto out_nodes = src_node->GetOutAllNodes();
