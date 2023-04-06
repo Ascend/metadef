@@ -414,7 +414,7 @@ OpDescUtils::CopyOperatorLinks(const std::map<std::string, ge::Operator> &src_op
     const auto op_name = it.first;
     auto &dst_op = dst_op_list[op_name];
     const OperatorImplPtr src_impl_ptr = src_op.GetOperatorImplPtr();
-    const OperatorImplPtr dst_impl_ptr = dst_op.GetOperatorImplPtr();
+    GE_CHECK_NOTNULL(src_impl_ptr);
     for (const auto &itr : src_impl_ptr->input_link_) {
       const std::string dst_name = itr.first;
       const OpIO &op_io = itr.second;
