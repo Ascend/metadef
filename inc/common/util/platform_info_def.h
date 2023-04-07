@@ -124,6 +124,9 @@ typedef struct tag_cpu_cache {
 
 typedef struct tag_software_spec {
   bool jit_compile_default_value;
+  tag_software_spec() {
+    jit_compile_default_value = false;
+  }
 } SoftwareSpec;
 
 typedef struct tag_platform_info {
