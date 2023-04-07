@@ -16,6 +16,7 @@ target_include_directories(exec_graph_benchmark PRIVATE
 target_link_libraries(exec_graph_benchmark PRIVATE benchmark exe_graph error_manager
         slog_stub ascend_protobuf c_sec mmpa_stub -lrt -ldl
         metadef_headers
+        air_headers
         graph
         )
 

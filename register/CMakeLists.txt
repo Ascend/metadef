@@ -258,6 +258,7 @@ target_link_libraries(rt2_registry_static
     $<BUILD_INTERFACE:intf_pub>
     c_sec
     slog
+    air_headers
     PUBLIC
     metadef_headers
 )

@@ -110,6 +110,7 @@ add_subdirectory(exe_graph)
 add_subdirectory(error_manager)
 add_subdirectory(register)
 if (ENABLE_METADEF_UT OR ENABLE_METADEF_ST)
+    include(cmake/external_libs/gbenchmark.cmake)
     add_subdirectory(tests)
 endif()
 
