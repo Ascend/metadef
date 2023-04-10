@@ -34,14 +34,14 @@ using PARAM_GENERALIZE_FUNC = int32_t (*)(const ge::Operator &op, const ge::Asce
                                       ge::AscendString &generalized_op_params);
 
 struct ReplayFuncParam {
-  const int32_t block_dim;
-  const char *tiling_data;
-  const char *kernel_name;
-  const char *entry_file;
-  const int32_t gentype;
-  const char *output_kernel_file;
-  char **objptr;
-  const int32_t task_ration;
+  int32_t block_dim = 0;
+  const char *tiling_data = nullptr;
+  const char *kernel_name = nullptr;
+  const char *entry_file = nullptr;
+  int32_t gentype = 0;
+  const char *output_kernel_file = nullptr;
+  char **objptr = nullptr;
+  int32_t task_ration = 0;
 };
 
 using REPLAY_FUNC = int32_t (*)(ReplayFuncParam &param, const int32_t core_type);
