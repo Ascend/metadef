@@ -494,8 +494,14 @@ extern "C" int32_t Tik2PyInterfaceOpReplay(const char *optype, const char *soc_v
   }
 
   try {
-    ReplayFuncParam replayParam {block_dim, tiling_data,        kernel_name, entry_file,
-                                 0,         output_kernel_file, nullptr,     task_ration};
+    ReplayFuncParam replayParam;
+    replayParam.block_dim = block_dim;
+    replayParam.tiling_data = tiling_data;
+    replayParam.kernel_name = kernel_name;
+    replayParam.entry_file = entry_file;
+    replayParam.gentype = 0;
+    replayParam.output_kernel_file = output_kernel_file;
+    replayParam.task_ration = task_ration;
     const int32_t rc = (replay_func)(replayParam, core_type);
     if (rc <= 0) {
       GELOGE(ge::GRAPH_FAILED, "call replay_func return %d. optype = %s, soc_version = %s", rc, optype, soc_version);
