@@ -69,7 +69,8 @@ struct ConnectionPathPoint {
 ge::InDataAnchorPtr EnsureHasDataEdge(const ge::NodePtr &src, int32_t src_index, const ConnectionPathPoint &point) {
   auto src_anchor = src->GetOutDataAnchor(src_index);
   GE_ASSERT_NOTNULL(src_anchor);
-
+  GE_ASSERT_NOTNULL(point.node);
+ 
   for (const auto &dst_anchor : src_anchor->GetPeerInDataAnchors()) {
     GE_ASSERT_NOTNULL(dst_anchor);
     auto dst_node = dst_anchor->GetOwnerNode();
@@ -90,6 +91,7 @@ ge::InDataAnchorPtr EnsureHasDataEdge(const ge::NodePtr &src, int32_t src_index,
 }
 ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index) {
   ge::NodePtr data;
+  GE_ASSERT_NOTNULL(point.frame);
   if (!FindValFromMapExtAttr<int32_t, ge::NodePtr>(point.frame->GetExeGraph(), kInnerDataNodes, index, data)) {
     data = ValueHolder::AddNode(kInnerData, 0, 1, *point.frame);
     GE_ASSERT_NOTNULL(data);
@@ -478,6 +480,7 @@ ge::graphStatus ValueHolder::RefFrom(const ValueHolderPtr &other) {
     return ge::PARAM_INVALID;
   }
 
+  GE_ASSERT_NOTNULL(node_->GetOpDesc());
   auto td = node_->GetOpDesc()->MutableOutputDesc(index_);
   GE_ASSERT_NOTNULL(td);
 
@@ -493,6 +496,7 @@ ValueHolderPtr ValueHolder::CreateVoidGuarder(const char *node_type, const Value
   inputs.insert(inputs.cend(), args.cbegin(), args.cend());
   auto ret = CreateVoid(node_type, inputs);
   GE_ASSERT_NOTNULL(ret);
+  GE_ASSERT_NOTNULL(ret->GetNode());
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(ret->GetNode()->GetOpDesc(), kReleaseResourceIndex, 0));
   resource->guarder_ = ret;
   return ret;
@@ -536,6 +540,8 @@ std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHo
   GE_ASSERT_NOTNULL(out_holder);
   if (strcmp(ge::NETOUTPUT, out_node_type) == 0) {
     // the name of NetOutput node must be `NetOutput`
+    GE_ASSERT_NOTNULL(out_holder->GetNode());
+    GE_ASSERT_NOTNULL(out_holder->GetNode()->GetOpDesc());
     out_holder->GetNode()->GetOpDesc()->SetName(out_node_type);
   }
 

@@ -214,7 +214,7 @@ void SplitFilePath(const std::string &file_path, std::string &dir_path, std::str
       break;
     }
   }
-  if (split_pos == 0) {
+  if (split_pos < 0) {
     file_name = file_path;
     return;
   }
