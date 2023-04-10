@@ -36,7 +36,7 @@ private:
 class OpAttrDefImpl {
 public:
   ge::AscendString name;
-  int data_type;
+  int data_type = 0;
   bool required = true;
   bool bool_value = false;
   float float_value = 0;
