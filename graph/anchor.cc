@@ -26,7 +26,7 @@
 namespace {
 constexpr size_t kAnchorTypeMaxLen = 1024U;
 bool CanAddPeer(const ge::AnchorPtr &anchor) {
-  if (anchor->IsTypeOf<ge::InDataAnchor>() && (anchor->GetPeerAnchorsSize() != 0U)) {
+  if (anchor->IsTypeIdOf<ge::InDataAnchor>() && (anchor->GetPeerAnchorsSize() != 0U)) {
     REPORT_INNER_ERROR("E18888", "anchor is type of InDataAnchor, it's peer is not empty.");
     GELOGE(ge::GRAPH_FAILED, "[Check][Param] anchor is type of InDataAnchor, it's peer is not empty.");
     return false;
@@ -49,8 +49,10 @@ class AnchorImpl {
   ~AnchorImpl() = default;
   size_t GetPeerAnchorsSize() const;
   Anchor::Vistor<AnchorPtr> GetPeerAnchors(const std::shared_ptr<ConstAnchor> &anchor_ptr) const;
+  std::vector<Anchor *> GetPeerAnchorsPtr() const;
   AnchorPtr GetFirstPeerAnchor() const;
   NodePtr GetOwnerNode() const;
+  Node *GetOwnerNodeBarePtr() const;
   int32_t GetIdx() const;
   void SetIdx(const int32_t index);
 
@@ -59,6 +61,8 @@ class AnchorImpl {
   std::vector<std::weak_ptr<Anchor>> peer_anchors_;
   // The owner node of anchor
   std::weak_ptr<Node> owner_node_;
+  // The bare ptr of owner node,
+  Node *const owner_node_ptr_;
   // The index of current anchor
   int32_t idx_;
 
@@ -69,7 +73,8 @@ class AnchorImpl {
   friend class InDataAnchor;
 };
 
-AnchorImpl::AnchorImpl(const NodePtr &owner_node, const int32_t idx) : owner_node_(owner_node), idx_(idx) {}
+AnchorImpl::AnchorImpl(const NodePtr &owner_node, const int32_t idx)
+    : owner_node_(owner_node), owner_node_ptr_(owner_node_.lock().get()), idx_(idx) {}
 
 size_t AnchorImpl::GetPeerAnchorsSize() const {
   return peer_anchors_.size();
@@ -80,10 +85,18 @@ Anchor::Vistor<AnchorPtr> AnchorImpl::GetPeerAnchors(
   std::vector<AnchorPtr> ret;
   ret.resize(peer_anchors_.size());
   (void)std::transform(peer_anchors_.begin(), peer_anchors_.end(), ret.begin(),
-                       [] (const std::weak_ptr<Anchor> anchor) {
+                       [] (const std::weak_ptr<Anchor>& anchor) {
                          return anchor.lock();
                        });
   return Anchor::Vistor<AnchorPtr>(anchor_ptr, ret);
+}
+
+std::vector<Anchor *> AnchorImpl::GetPeerAnchorsPtr() const {
+  std::vector<Anchor *> ret;
+  ret.resize(peer_anchors_.size());
+  (void) std::transform(peer_anchors_.begin(), peer_anchors_.end(), ret.begin(),
+                        [](const std::weak_ptr<Anchor> &anchor) { return anchor.lock().get(); });
+  return ret;
 }
 
 AnchorPtr AnchorImpl::GetFirstPeerAnchor() const {
@@ -94,7 +107,12 @@ AnchorPtr AnchorImpl::GetFirstPeerAnchor() const {
   }
 }
 
-NodePtr AnchorImpl::GetOwnerNode() const { return owner_node_.lock(); }
+NodePtr AnchorImpl::GetOwnerNode() const {
+  return owner_node_.lock();
+}
+Node *AnchorImpl::GetOwnerNodeBarePtr() const {
+  return owner_node_ptr_;
+}
 
 int32_t AnchorImpl::GetIdx() const { return idx_; }
 
@@ -107,6 +125,10 @@ Anchor::~Anchor() = default;
 
 bool Anchor::IsTypeOf(const TYPE type) const {
   return strncmp(Anchor::TypeOf<Anchor>(), type, kAnchorTypeMaxLen) == 0;
+}
+
+bool Anchor::IsTypeIdOf(const TypeId& type) const {
+    return GetTypeId<Anchor>() == type;
 }
 
 Anchor::TYPE Anchor::GetSelfType() const {
@@ -130,6 +152,15 @@ Anchor::Vistor<AnchorPtr> Anchor::GetPeerAnchors() const {
   return impl_->GetPeerAnchors(shared_from_this());
 }
 
+std::vector<Anchor *> Anchor::GetPeerAnchorsPtr() const {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    std::vector<Anchor *> ret;
+    return ret;
+  }
+  return impl_->GetPeerAnchorsPtr();
+}
+
 AnchorPtr Anchor::GetFirstPeerAnchor() const {
   if (impl_ == nullptr) {
     GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
@@ -144,6 +175,14 @@ NodePtr Anchor::GetOwnerNode() const {
     return nullptr;
   }
   return impl_->GetOwnerNode();
+}
+
+Node *Anchor::GetOwnerNodeBarePtr() const {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] impl_ of anchor is nullptr.");
+    return nullptr;
+  }
+  return impl_->GetOwnerNodeBarePtr();
 }
 
 void Anchor::UnlinkAll() noexcept {
@@ -341,6 +380,13 @@ Anchor::TYPE DataAnchor::GetSelfType() const {
   return Anchor::TypeOf<DataAnchor>();
 }
 
+bool DataAnchor::IsTypeIdOf(const TypeId &type) const {
+  if (GetTypeId<DataAnchor>() == type) {
+    return true;
+  }
+  return Anchor::IsTypeIdOf(type);
+}
+
 InDataAnchor::InDataAnchor(const NodePtr &owner_node, const int32_t idx) : DataAnchor(owner_node, idx) {}
 
 OutDataAnchorPtr InDataAnchor::GetPeerOutAnchor() const {
@@ -393,11 +439,19 @@ Anchor::TYPE InDataAnchor::GetSelfType() const {
   return Anchor::TypeOf<InDataAnchor>();
 }
 
+bool InDataAnchor::IsTypeIdOf(const TypeId &type) const {
+  if (GetTypeId<InDataAnchor>() == type) {
+    return true;
+  }
+  return DataAnchor::IsTypeIdOf(type);
+}
+
 OutDataAnchor::OutDataAnchor(const NodePtr &owner_node, const int32_t idx) : DataAnchor(owner_node, idx) {}
 
 OutDataAnchor::Vistor<InDataAnchorPtr> OutDataAnchor::GetPeerInDataAnchors() const {
   std::vector<InDataAnchorPtr> ret;
   if (impl_ != nullptr) {
+    ret.reserve(impl_->peer_anchors_.size());
     for (const auto &anchor : impl_->peer_anchors_) {
       const auto in_data_anchor = Anchor::DynamicAnchorCast<InDataAnchor>(anchor.lock());
       if (in_data_anchor != nullptr) {
@@ -406,6 +460,20 @@ OutDataAnchor::Vistor<InDataAnchorPtr> OutDataAnchor::GetPeerInDataAnchors() con
     }
   }
   return OutDataAnchor::Vistor<InDataAnchorPtr>(shared_from_this(), ret);
+}
+
+std::vector<InDataAnchor *> OutDataAnchor::GetPeerInDataAnchorsPtr() const {
+  std::vector<InDataAnchor *> ret;
+  if (impl_ != nullptr) {
+    ret.reserve(impl_->peer_anchors_.size());
+    for (const auto &anchor : impl_->peer_anchors_) {
+      const auto in_data_anchor = Anchor::DynamicAnchorPtrCast<InDataAnchor>(anchor.lock().get());
+      if (in_data_anchor != nullptr) {
+        ret.push_back(in_data_anchor);
+      }
+    }
+  }
+  return ret;
 }
 
 uint32_t OutDataAnchor::GetPeerInDataNodesSize() const {
@@ -424,6 +492,7 @@ uint32_t OutDataAnchor::GetPeerInDataNodesSize() const {
 OutDataAnchor::Vistor<InControlAnchorPtr> OutDataAnchor::GetPeerInControlAnchors() const {
   std::vector<InControlAnchorPtr> ret;
   if (impl_ != nullptr) {
+    ret.reserve(impl_->peer_anchors_.size());
     for (const auto &anchor : impl_->peer_anchors_) {
       const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
       if (in_control_anchor != nullptr) {
@@ -516,6 +585,13 @@ Anchor::TYPE OutDataAnchor::GetSelfType() const {
   return Anchor::TypeOf<OutDataAnchor>();
 }
 
+bool OutDataAnchor::IsTypeIdOf(const TypeId &type) const {
+  if (GetTypeId<OutDataAnchor>() == type) {
+    return true;
+  }
+  return DataAnchor::IsTypeIdOf(type);
+}
+
 ControlAnchor::ControlAnchor(const NodePtr &owner_node) : Anchor(owner_node, -1) {}
 
 ControlAnchor::ControlAnchor(const NodePtr &owner_node, const int32_t idx) : Anchor(owner_node, idx) {}
@@ -531,6 +607,13 @@ Anchor::TYPE ControlAnchor::GetSelfType() const {
   return Anchor::TypeOf<ControlAnchor>();
 }
 
+bool ControlAnchor::IsTypeIdOf(const TypeId &type) const {
+  if (GetTypeId<ControlAnchor>() == type) {
+    return true;
+  }
+  return Anchor::IsTypeIdOf(type);
+}
+
 InControlAnchor::InControlAnchor(const NodePtr &owner_node) : ControlAnchor(owner_node) {}
 
 InControlAnchor::InControlAnchor(const NodePtr &owner_node, const int32_t idx) : ControlAnchor(owner_node, idx) {}
@@ -538,6 +621,7 @@ InControlAnchor::InControlAnchor(const NodePtr &owner_node, const int32_t idx) :
 InControlAnchor::Vistor<OutControlAnchorPtr> InControlAnchor::GetPeerOutControlAnchors() const {
   std::vector<OutControlAnchorPtr> ret;
   if (impl_ != nullptr) {
+    ret.reserve(impl_->peer_anchors_.size());
     for (const auto &anchor : impl_->peer_anchors_) {
       const auto out_control_anchor = Anchor::DynamicAnchorCast<OutControlAnchor>(anchor.lock());
       if (out_control_anchor != nullptr) {
@@ -546,6 +630,20 @@ InControlAnchor::Vistor<OutControlAnchorPtr> InControlAnchor::GetPeerOutControlA
     }
   }
   return InControlAnchor::Vistor<OutControlAnchorPtr>(shared_from_this(), ret);
+}
+
+std::vector<OutControlAnchor *> InControlAnchor::GetPeerOutControlAnchorsPtr() const {
+  std::vector<OutControlAnchor *> ret;
+  if (impl_ != nullptr) {
+    ret.reserve(impl_->peer_anchors_.size());
+    for (const auto &anchor : impl_->peer_anchors_) {
+      const auto out_control_anchor = Anchor::DynamicAnchorPtrCast<OutControlAnchor>(anchor.lock().get());
+      if (out_control_anchor != nullptr) {
+        ret.push_back(out_control_anchor);
+      }
+    }
+  }
+  return ret;
 }
 
 bool InControlAnchor::IsPeerOutAnchorsEmpty() const {
@@ -611,6 +709,13 @@ Anchor::TYPE InControlAnchor::GetSelfType() const {
   return Anchor::TypeOf<InControlAnchor>();
 }
 
+bool InControlAnchor::IsTypeIdOf(const TypeId &type) const {
+  if (GetTypeId<InControlAnchor>() == type) {
+    return true;
+  }
+  return ControlAnchor::IsTypeIdOf(type);
+}
+
 OutControlAnchor::OutControlAnchor(const NodePtr &owner_node) : ControlAnchor(owner_node) {}
 
 OutControlAnchor::OutControlAnchor(const NodePtr &owner_node, const int32_t idx) : ControlAnchor(owner_node, idx) {}
@@ -618,6 +723,7 @@ OutControlAnchor::OutControlAnchor(const NodePtr &owner_node, const int32_t idx)
 OutControlAnchor::Vistor<InControlAnchorPtr> OutControlAnchor::GetPeerInControlAnchors() const {
   std::vector<InControlAnchorPtr> ret;
   if (impl_ != nullptr) {
+    ret.reserve(impl_->peer_anchors_.size());
     for (const auto &anchor : impl_->peer_anchors_) {
       const auto in_control_anchor = Anchor::DynamicAnchorCast<InControlAnchor>(anchor.lock());
       if (in_control_anchor != nullptr) {
@@ -626,6 +732,20 @@ OutControlAnchor::Vistor<InControlAnchorPtr> OutControlAnchor::GetPeerInControlA
     }
   }
   return OutControlAnchor::Vistor<InControlAnchorPtr>(shared_from_this(), ret);
+}
+
+std::vector<InControlAnchor *> OutControlAnchor::GetPeerInControlAnchorsPtr() const {
+  std::vector<InControlAnchor *> ret;
+  if (impl_ != nullptr) {
+    ret.reserve(impl_->peer_anchors_.size());
+    for (const auto &anchor : impl_->peer_anchors_) {
+      const auto in_control_anchor = Anchor::DynamicAnchorPtrCast<InControlAnchor>(anchor.lock().get());
+      if (in_control_anchor != nullptr) {
+        ret.push_back(in_control_anchor);
+      }
+    }
+  }
+  return ret;
 }
 
 OutControlAnchor::Vistor<InDataAnchorPtr> OutControlAnchor::GetPeerInDataAnchors() const {
@@ -680,5 +800,46 @@ bool OutControlAnchor::IsTypeOf(const TYPE type) const {
 
 Anchor::TYPE OutControlAnchor::GetSelfType() const {
   return Anchor::TypeOf<OutControlAnchor>();
+}
+
+bool OutControlAnchor::IsTypeIdOf(const TypeId &type) const {
+  if (GetTypeId<OutControlAnchor>() == type) {
+    return true;
+  }
+  return ControlAnchor::IsTypeIdOf(type);
+}
+
+template<>
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<Anchor>() {
+  return reinterpret_cast<TypeId>(1);
+}
+
+template<>
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<DataAnchor>() {
+  return reinterpret_cast<TypeId>(2);
+}
+
+template<>
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<ControlAnchor>() {
+  return reinterpret_cast<TypeId>(3);
+}
+template<>
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<InDataAnchor>() {
+  return reinterpret_cast<TypeId>(4);
+}
+
+template<>
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<OutDataAnchor>() {
+  return reinterpret_cast<TypeId>(5);
+}
+
+template<>
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<InControlAnchor>() {
+  return reinterpret_cast<TypeId>(6);
+};
+
+template<>
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<OutControlAnchor>() {
+  return reinterpret_cast<TypeId>(7);
 }
 }  // namespace ge

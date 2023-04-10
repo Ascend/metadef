@@ -83,14 +83,38 @@ class Node : public std::enable_shared_from_this<Node> {
   graphStatus Init();
 
   std::string GetName() const;
+  const char *GetNamePtr() const;
   std::string GetType() const;
+  const char *GetTypePtr() const;
 
   ComputeGraphPtr GetOwnerComputeGraph() const;
+  ComputeGraph *GetOwnerComputeGraphBarePtr() const;
   graphStatus SetOwnerComputeGraph(const ComputeGraphPtr &graph);
   graphStatus ClearOwnerGraph(const ComputeGraphPtr &graph);
 
+  /**
+   * 获取Node的输入锚点的智能指针对象，存在复杂对象的拷贝性能较差，适用于边遍历边修改场景
+   * @return
+   */
   Vistor<InDataAnchorPtr> GetAllInDataAnchors() const;
+
+  /**
+   * 获取Node的输入锚点的裸指针，性能优于`Vistor<InDataAnchorPtr> GetAllInDataAnchors()`, 适用于只读场景
+   * @return
+   */
+  std::vector<InDataAnchor *> GetAllInDataAnchorsPtr() const;
+
+  /**
+   * 获取Node的输出锚点的智能指针对象，存在复杂对象的拷贝所以性能较差，适用于边遍历边修改场景
+   * @return
+   */
   Vistor<OutDataAnchorPtr> GetAllOutDataAnchors() const;
+
+  /**
+ * 获取Node的输出锚点的裸指针，性能优于`Vistor<OutDataAnchorPtr> GetAllOutDataAnchors()`, 适用于只读场景
+ * @return
+ */
+  std::vector<OutDataAnchor *> GetAllOutDataAnchorsPtr() const;
   uint32_t GetAllInDataAnchorsSize() const;
   uint32_t GetAllOutDataAnchorsSize() const;
   Vistor<AnchorPtr> GetAllOutAnchors() const;
@@ -99,7 +123,16 @@ class Node : public std::enable_shared_from_this<Node> {
   OutDataAnchorPtr GetOutDataAnchor(const int32_t idx) const;
   InControlAnchorPtr GetInControlAnchor() const;
   OutControlAnchorPtr GetOutControlAnchor() const;
+  /**
+   * 获取Node的输入节点的智能指针对象，存在拷贝所以性能较差，适用于边遍历边修改场景
+   * @return
+   */
   Vistor<NodePtr> GetInNodes() const;
+  /**
+   * 获取Node的输入节点的裸指针，性能优于`Vistor<NodePtr> GetInNodes()`, 适用于只读场景
+   * @return
+   */
+  std::vector<Node *> GetInNodesPtr() const;
   Vistor<NodePtr> GetOutNodes() const;
   AnchorPtr GetInAnchor(const int32_t idx) const;
   AnchorPtr GetOutAnchor(const int32_t idx) const;
@@ -115,14 +148,17 @@ class Node : public std::enable_shared_from_this<Node> {
 
   // All out Data nodes
   Vistor<NodePtr> GetOutDataNodes() const;
-  uint32_t GetOutDataNodesSize() const;
-  size_t GetInDataNodesSize() const;
-  size_t GetInControlNodesSize() const;
-  size_t GetInNodesSize() const;
   // All out Control nodes
   Vistor<NodePtr> GetOutControlNodes() const;
   // All out Data nodes and Control nodes
   Vistor<NodePtr> GetOutAllNodes() const;
+
+  uint32_t GetOutDataNodesSize() const;
+  uint32_t GetOutControlNodesSize() const;
+  uint32_t GetOutNodesSize() const;
+  size_t GetInDataNodesSize() const;
+  size_t GetInControlNodesSize() const;
+  size_t GetInNodesSize() const;
 
   // Get all in data nodes and its out-anchor
   Vistor<std::pair<NodePtr, OutDataAnchorPtr>> GetInDataNodesAndAnchors() const;
@@ -131,6 +167,7 @@ class Node : public std::enable_shared_from_this<Node> {
   Vistor<std::pair<NodePtr, InDataAnchorPtr>> GetOutDataNodesAndAnchors() const;
 
   OpDescPtr GetOpDesc() const;
+  OpDesc *GetOpDescBarePtr() const;
 
   graphStatus UpdateOpDesc(const OpDescPtr &op_desc);
 

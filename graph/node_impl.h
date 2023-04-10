@@ -27,7 +27,9 @@ class Node::NodeImpl {
   ~NodeImpl();
   graphStatus Init(const NodePtr &node);
   std::string GetName() const;
+  const char *GetNamePtr() const;
   std::string GetType() const;
+  const char *GetTypePtr() const;
   bool NodeMembersAreEqual(const NodeImpl &r_node) const;
   bool NodeAnchorIsEqual(const AnchorPtr &left_anchor,
                          const AnchorPtr &right_anchor,
@@ -39,13 +41,17 @@ class Node::NodeImpl {
                           const NodePtr &owner_node);
   graphStatus AddLinkFromForParse(const NodePtr &input_node, const NodePtr &owner_node);
   graphStatus AddLinkFrom(const std::string &name, const NodePtr &input_node, const NodePtr &owner_node);
-
+  // Get the node belong to which compute graph
+  // Normally, return value is not null
   ComputeGraphPtr GetOwnerComputeGraph() const;
+  ComputeGraph *GetOwnerComputeGraphBarePtr() const;
   graphStatus SetOwnerComputeGraph(const ComputeGraphPtr &graph);
   graphStatus ClearOwnerGraph(const ComputeGraphPtr &graph);
 
   Node::Vistor<InDataAnchorPtr> GetAllInDataAnchors(const ConstNodePtr &node_ptr) const;
+  std::vector<InDataAnchor *> GetAllInDataAnchorsPtr() const;
   Node::Vistor<OutDataAnchorPtr> GetAllOutDataAnchors(const ConstNodePtr &node_ptr) const;
+  std::vector<OutDataAnchor *> GetAllOutDataAnchorsPtr() const;
   uint32_t GetAllInDataAnchorsSize() const;
   uint32_t GetAllOutDataAnchorsSize() const;
   Node::Vistor<AnchorPtr> GetAllInAnchors(const ConstNodePtr &owner_node) const;
@@ -58,6 +64,7 @@ class Node::NodeImpl {
   OutControlAnchorPtr GetOutControlAnchor() const;
 
   Node::Vistor<NodePtr> GetInNodes(const ConstNodePtr &owner_node) const;
+  std::vector<Node *> GetInNodesPtr() const;
   bool IsAllInNodesSeen(const std::unordered_set<Node *> &nodes_seen) const;
   Node::Vistor<NodePtr> GetInDataNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetInControlNodes(const ConstNodePtr &owner_node) const;
@@ -65,6 +72,8 @@ class Node::NodeImpl {
   Node::Vistor<NodePtr> GetInAllNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetOutDataNodes(const ConstNodePtr &owner_node) const;
   uint32_t GetOutDataNodesSize() const;
+  uint32_t GetOutControlNodesSize() const;
+  uint32_t GetOutNodesSize() const;
   size_t GetInDataNodesSize() const;
   size_t GetInControlNodesSize() const;
   size_t GetInNodesSize() const;
@@ -72,6 +81,7 @@ class Node::NodeImpl {
   Node::Vistor<NodePtr> GetOutAllNodes(const ConstNodePtr &owner_node) const;
 
   OpDescPtr GetOpDesc() const;
+  OpDesc *GetOpDescBarePtr() const;
   graphStatus UpdateOpDesc(const OpDescPtr &op_desc);
   Node::Vistor<std::pair<NodePtr, OutDataAnchorPtr>>
   GetInDataNodesAndAnchors(const ConstNodePtr &owner_node) const;
@@ -109,6 +119,7 @@ class Node::NodeImpl {
   friend class OnnxUtils;
   OpDescPtr op_;
   std::weak_ptr<ComputeGraph> owner_graph_;
+  ComputeGraph *owner_graph_ptr_;
   std::vector<InDataAnchorPtr> in_data_anchors_;
   std::vector<OutDataAnchorPtr> out_data_anchors_;
   InControlAnchorPtr in_control_anchor_;
