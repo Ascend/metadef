@@ -78,7 +78,7 @@ class ModelSerializeImp {
 
   bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump = false) const;
 
-  bool SeparateModelDef(Buffer &buffer, proto::ModelDef &model_def);
+  bool SeparateModelDef(Buffer &buffer, const std::string &path, proto::ModelDef &model_def);
 
   bool SerializeToBuffer(const proto::ModelDef &model_def, Buffer &buffer) const;
 
@@ -109,6 +109,7 @@ class ModelSerializeImp {
 
   bool LoadWeightFromFile(const std::string &file_path, const int64_t &length, std::string &weight) const;
 
+  void SetAirModelPath(const std::string &path) { air_path_ = path; }
   static bool SerializeAllAttrsFromAnyMap(const std::map<std::string, AnyValue> &attr_map,
       google::protobuf::Map<std::string, ::ge::proto::AttrDef> *const mutable_attr);
   static bool DeserializeAllAttrsToAttrHolder(
@@ -129,6 +130,7 @@ class ModelSerializeImp {
   std::vector<NodeNameNodeReq> node_input_node_names_;
   std::map<std::string, NodePtr> node_map_;
   ProtoMsgOwner protobuf_owner_;
+  std::string air_path_; // path store air model path
 };
 }  // namespace ge
 
