@@ -296,13 +296,21 @@ string OpDescImpl::GetName() const {
   return meta_data_.name_;
 }
 
+const char *OpDescImpl::GetNamePtr() const {
+  return meta_data_.name_.c_str();
+}
+
 void OpDescImpl::SetName(const std::string &name) {
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    this->GetName(), "name", "", "", name);
   meta_data_.SetOpName(name);
 }
 
-string OpDescImpl::GetType() const {
+const char *OpDescImpl::GetTypePtr() const {
+  return meta_data_.type_.c_str();
+}
+
+std::string OpDescImpl::GetType() const {
   return meta_data_.type_;
 }
 
@@ -1823,12 +1831,20 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetName() con
   return impl_->GetName();
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const char *OpDesc::GetNamePtr() const {
+  return impl_->GetNamePtr();
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetName(const std::string &name) {
   return impl_->SetName(name);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string OpDesc::GetType() const {
   return impl_->GetType();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const char *OpDesc::GetTypePtr() const {
+  return impl_->GetTypePtr();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetType(const std::string &type) {

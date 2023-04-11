@@ -175,7 +175,8 @@ TEST_F(AnchorUt, SubInDataAnchor) {
   EXPECT_EQ(in_anch->EncaEq(Anchor::DynamicAnchorCast<Anchor>(in_anch)), true);
   EXPECT_EQ(in_anch->GetPeerAnchorsSize(),0);
   EXPECT_EQ(in_anch->GetFirstPeerAnchor(),nullptr);
-  EXPECT_EQ(in_anch->GetOwnerNode(),node);
+  EXPECT_EQ(in_anch->GetOwnerNode(), node);
+  EXPECT_EQ(in_anch->GetOwnerNodeBarePtr(), node.get());
   EXPECT_EQ(in_anch->IsLinkedWith(nullptr), false);
   EXPECT_EQ(in_anch->GetPeerOutAnchor(), nullptr);
   EXPECT_EQ(in_anch->LinkFrom(nullptr), GRAPH_FAILED);
@@ -214,6 +215,7 @@ TEST_F(AnchorUt, SubOutDataAnchor) {
   auto attr = builder.AddNode("Attr", "Attr", 1, 1);
   SubOutDataAnchorPtr out_anch = std::make_shared<SubOutDataAnchor>(node, 111);
   out_anch->SetIdx(222);
+  EXPECT_EQ(out_anch->EncaEq(Anchor::DynamicAnchorCast<Anchor>(out_anch)), true);
   EXPECT_EQ(out_anch->GetIdx(), 222);
   EXPECT_EQ(out_anch->GetPeerAnchorsSize(),0);
   EXPECT_EQ(out_anch->GetFirstPeerAnchor(),nullptr);
@@ -260,6 +262,7 @@ TEST_F(AnchorUt, SubInControlAnchor) {
   auto node0 = builder.AddNode("Data", "Data", 111, 1);
   SubInControlAnchorPtr in_canch0 = std::make_shared<SubInControlAnchor>(node0);
   EXPECT_NE(in_canch0, nullptr);
+  EXPECT_EQ(in_canch0->EncaEq(Anchor::DynamicAnchorCast<Anchor>(in_canch0)), true);
   auto node = builder.AddNode("Data", "Data", 1, 1);
   SubInControlAnchorPtr inc_anch = std::make_shared<SubInControlAnchor>(node, 111);
   inc_anch->SetIdx(222);
@@ -275,6 +278,7 @@ TEST_F(AnchorUt, SubInControlAnchor) {
   EXPECT_EQ(inc_anch->IsPeerOutAnchorsEmpty(),false);
   EXPECT_EQ(inc_anch->GetPeerAnchorsSize(),1);
   EXPECT_EQ(inc_anch->GetPeerAnchors().size(),1);
+  EXPECT_EQ(inc_anch->GetPeerAnchorsPtr().size(),1);
   EXPECT_EQ(inc_anch->GetPeerOutDataAnchors().size(), 0);
   EXPECT_NE(inc_anch->GetFirstPeerAnchor(),nullptr);
   EXPECT_NE(inc_anch->GetOwnerNode(),nullptr);
@@ -299,6 +303,7 @@ TEST_F(AnchorUt, SubOutControlAnchor) {
   auto node0 = builder.AddNode("Data", "Data", 111, 1);
   SubOutControlAnchorPtr out_canch0 = std::make_shared<SubOutControlAnchor>(node0);
   EXPECT_NE(out_canch0, nullptr);
+  EXPECT_EQ(out_canch0->EncaEq(Anchor::DynamicAnchorCast<Anchor>(out_canch0)), true);
   auto node = builder.AddNode("Data", "Data", 1, 1);
   SubOutControlAnchorPtr outc_anch = std::make_shared<SubOutControlAnchor>(node, 111);
   outc_anch->SetIdx(222);
@@ -326,6 +331,8 @@ TEST_F(AnchorUt, SubOutControlAnchor) {
   peerctr2->SetImpNull();
   EXPECT_EQ(outc_anch->LinkTo(peerctr2), GRAPH_FAILED);
   EXPECT_NE(outc_anch->GetPeerInControlAnchors().size(), 0);
+  EXPECT_NE(outc_anch->GetPeerInControlAnchorsPtr().size(), 0);
+  EXPECT_EQ(outc_anch->GetPeerInControlAnchorsPtr().size(), outc_anch->GetPeerInControlAnchors().size());
   EXPECT_NE(outc_anch->GetPeerInDataAnchors().size(), 0);
 
   EXPECT_EQ(outc_anch->Unlink(nullptr),GRAPH_FAILED);
@@ -379,9 +386,10 @@ TEST_F(AnchorUt, ControlAnchorReplacePeer) {
   auto node4 = builder.AddNode("Data", "Data", 1, 1);
   (void)ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node1->GetInControlAnchor());
   (void)ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node2->GetInControlAnchor());
-  (void)ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node3->GetInControlAnchor());
-  graphStatus ret = node0->GetOutControlAnchor()->ReplacePeer(node1->GetInControlAnchor(),
-                                                              node4->GetInControlAnchor());
+  (void) ge::GraphUtils::AddEdge(node0->GetOutControlAnchor(), node3->GetInControlAnchor());
+  EXPECT_EQ(node1->GetInControlAnchor()->GetPeerOutControlAnchors().size(),
+            node1->GetInControlAnchor()->GetPeerOutControlAnchorsPtr().size());
+  graphStatus ret = node0->GetOutControlAnchor()->ReplacePeer(node1->GetInControlAnchor(), node4->GetInControlAnchor());
   EXPECT_EQ(ret, GRAPH_SUCCESS);
   bool check_same = node0->GetOutControlAnchor()->GetFirstPeerAnchor()->Equal(node4->GetInControlAnchor());
   EXPECT_TRUE(check_same);
@@ -416,8 +424,9 @@ TEST_F(AnchorUt, ReplacePeerOfOutDataAnchor) {
 
   graphStatus ret = ge::GraphUtils::AddEdge(node0->GetOutDataAnchor(0U), node1->GetInDataAnchor(0));
   EXPECT_EQ(ret, GRAPH_SUCCESS);
-  ret = node1->GetInDataAnchor(0U)->ReplacePeer(node0->GetOutAnchor(0U),
-                                                node2->GetOutAnchor(0U));
+  EXPECT_EQ(node0->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(),
+            node0->GetOutDataAnchor(0)->GetPeerInDataAnchorsPtr().size());
+  ret = node1->GetInDataAnchor(0U)->ReplacePeer(node0->GetOutAnchor(0U), node2->GetOutAnchor(0U));
   EXPECT_EQ(ret, GRAPH_SUCCESS);
   bool check_same = node1->GetInDataAnchor(0U)->GetFirstPeerAnchor()->Equal(node2->GetOutAnchor(0U));
   EXPECT_TRUE(check_same);

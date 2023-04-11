@@ -525,7 +525,7 @@ graphStatus TuningUtils::LinkEnd2NetOutput(NodePtr &end_node, NodePtr &out_node)
     return FAILED;
   }
   // add edge between `end in node` and `out_node`
-  if (src_anchor->IsTypeOf<OutDataAnchor>()) {
+  if (src_anchor->IsTypeIdOf<OutDataAnchor>()) {
     const std::shared_ptr<InDataAnchor>
         anchor = ComGraphMakeShared<InDataAnchor>(out_node, out_node->GetAllInDataAnchors().size());
     GE_CHECK_NOTNULL(anchor);
@@ -558,7 +558,7 @@ graphStatus TuningUtils::LinkEnd2NetOutput(NodePtr &end_node, NodePtr &out_node)
              end_node->GetName().c_str(), end_node->GetOwnerComputeGraph()->GetName().c_str());
       return FAILED;
     }
-  } else if (src_anchor->IsTypeOf<OutControlAnchor>()) {
+  } else if (src_anchor->IsTypeIdOf<OutControlAnchor>()) {
     OpDescPtr noop = nullptr;
     noop = ComGraphMakeShared<OpDesc>(end_node->GetName() + NOOP, NOOP);
     GE_CHECK_NOTNULL(noop);

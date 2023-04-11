@@ -119,6 +119,7 @@ TEST_F(UtestNode, NodeInputAndOutCheck) {
     EXPECT_EQ(data_node->GetOutDataNodes().size(), 3U);
     EXPECT_EQ(data_node->GetOutDataNodesSize(), 3U);
     EXPECT_EQ(attr_node->GetInNodes().size(), 3U);
+    EXPECT_EQ(attr_node->GetInNodesPtr().size(), 3U);
     EXPECT_EQ(attr_node->GetInNodesSize(), 3U);
     EXPECT_EQ(attr_node->GetInDataNodesSize(), 3U);
     EXPECT_EQ(attr_node->GetInDataNodes().size(), 3U);
@@ -143,12 +144,17 @@ TEST_F(UtestNode, NodeInputAndOutCheck) {
 
 TEST_F(UtestNode, GetCase) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto data_node = builder.AddNode("Data", "Data", 1, 1);
-  auto attr_node = builder.AddNode("Attr", "Attr", 2, 2);
+  auto data_node = builder.AddNode("DataNode", "Data", 1, 1);
+  auto attr_node = builder.AddNode("AttrNode", "Attr", 2, 2);
   auto graph = builder.GetGraph();
+  EXPECT_EQ(data_node->GetName(), "DataNode");
+  EXPECT_EQ(data_node->GetType(), "Data");
+  EXPECT_EQ(std::string(attr_node->GetNamePtr()), "AttrNode");
+  EXPECT_EQ(std::string(attr_node->GetTypePtr()), "Attr");
   EXPECT_EQ(data_node->GetAllInAnchors().size(), 1);
   EXPECT_EQ(attr_node->GetAllOutAnchors().size(), 2);
   EXPECT_EQ(data_node->GetInNodes().size(), 0);
+  EXPECT_EQ(data_node->GetInNodesPtr().size(), 0);
   EXPECT_EQ(attr_node->GetOutNodes().size(), 0);
   EXPECT_EQ(attr_node->GetOutDataNodes().size(), 0);
   EXPECT_EQ(NodeUtilsEx::InferShapeAndType(attr_node), GRAPH_PARAM_INVALID);
@@ -187,9 +193,10 @@ TEST_F(UtestNode, NodeInConnectsAreEqual) {
   InDataAnchorPtr in_anch = std::make_shared<InDataAnchor>(data_node, 111);
   EXPECT_EQ(data_node->NodeAnchorIsEqual(nullptr, in_anch, 1), false);
   data_node->impl_->in_data_anchors_.push_back(in_anch);
-  EXPECT_EQ(data_node->GetAllInDataAnchors().size(),2);
-  EXPECT_EQ(attr_node->GetAllInDataAnchors().size(),2);
-  EXPECT_EQ(data_node->NodeInConnectsAreEqual(*attr_node),true);
+  EXPECT_EQ(data_node->GetAllInDataAnchors().size(), 2);
+  EXPECT_EQ(data_node->GetAllInDataAnchorsPtr().size(), 2);
+  EXPECT_EQ(attr_node->GetAllInDataAnchors().size(), 2);
+  EXPECT_EQ(data_node->NodeInConnectsAreEqual(*attr_node), true);
 }
 
 TEST_F(UtestNode, NodeOutConnectsAreEqual) {
@@ -199,9 +206,11 @@ TEST_F(UtestNode, NodeOutConnectsAreEqual) {
   OutDataAnchorPtr out_anch = std::make_shared<OutDataAnchor>(data_node, 111);
   EXPECT_EQ(data_node->NodeAnchorIsEqual(nullptr, out_anch, 1), false);
   data_node->impl_->out_data_anchors_.push_back(out_anch);
-  EXPECT_EQ(data_node->GetAllOutDataAnchors().size(),2);
-  EXPECT_EQ(attr_node->GetAllOutDataAnchors().size(),2);
-  EXPECT_EQ(data_node->NodeOutConnectsAreEqual(*attr_node),true);
+  EXPECT_EQ(data_node->GetAllOutDataAnchors().size(), 2);
+  EXPECT_EQ(data_node->GetAllOutDataAnchorsPtr().size(), 2);
+  EXPECT_EQ(attr_node->GetAllOutDataAnchors().size(), 2);
+  EXPECT_EQ(attr_node->GetAllOutDataAnchorsPtr().size(), 2);
+  EXPECT_EQ(data_node->NodeOutConnectsAreEqual(*attr_node), true);
 }
 
 TEST_F(UtestNode, NodeAnchorIsEqual) {
@@ -226,6 +235,8 @@ TEST_F(UtestNode, AddLink) {
   data_node->impl_->op_->impl_->input_name_idx_["input_name"] = 10;
   data_node->impl_->op_->impl_->outputs_desc_.push_back(MakeNullptr<GeTensorDesc>());
   auto odesc = data_node->GetOpDesc()->GetOutputDesc(0);
+  auto another_desc = data_node->GetOpDescBarePtr()->GetOutputDesc(0);
+  EXPECT_EQ(odesc, another_desc);
   attr_node->impl_->op_->impl_->input_name_idx_["__input3"] = 20;
   EXPECT_NE(attr_node->impl_->op_->impl_->input_name_idx_.find("__input3"), attr_node->impl_->op_->impl_->input_name_idx_.end());
   EXPECT_EQ(attr_node->impl_->op_->impl_->inputs_desc_.size(), 3);
@@ -335,7 +346,12 @@ TEST_F(UtestNode, GetOutControlNodes) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto data_node1 = builder.AddNode("Data1", "Data", 1, 1);
   auto data_node2 = builder.AddNode("Data2", "Data", 1, 1);
-  EXPECT_EQ(data_node1->GetOutDataAnchor(0)->LinkTo(data_node2->GetInControlAnchor()), GRAPH_SUCCESS);
+  EXPECT_EQ(data_node1->GetOutControlAnchor()->LinkTo(data_node2->GetInControlAnchor()), GRAPH_SUCCESS);
   EXPECT_EQ(data_node1->GetOutControlNodes().size(), 1);
+  EXPECT_EQ(data_node1->GetOutControlNodesSize(), 1);
+  EXPECT_EQ(data_node1->GetOutNodesSize(), 1);
+  EXPECT_EQ(data_node1->GetOutDataAnchor(0)->LinkTo(data_node2->GetInDataAnchor(0)), GRAPH_SUCCESS);
+  EXPECT_EQ(data_node1->GetOutDataNodesSize(), 1);
+  EXPECT_EQ(data_node1->GetOutNodesSize(), 2);
 }
 }

@@ -2535,7 +2535,7 @@ graphStatus GraphUtils::HandleMergeInput(const NodePtr &node,
   }
 
   size_t anchor_nums = 0U;
-  NodeIndexIO max_node_index_io(nullptr, 0, kOut);
+  NodeIndexIO max_node_index_io(static_cast<const Node *>(nullptr), 0, kOut);
   for (const auto &temp_node_info : exist_node_infos) {
     const auto iter1 = anchor_to_symbol.find(temp_node_info.ToString());
     if (iter1 != anchor_to_symbol.end()) {

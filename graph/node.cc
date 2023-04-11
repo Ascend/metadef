@@ -30,6 +30,7 @@ namespace ge {
 Node::NodeImpl::NodeImpl(const OpDescPtr &op, const ComputeGraphPtr &owner_graph)
     : op_(op),
       owner_graph_(owner_graph),
+      owner_graph_ptr_(owner_graph.get()),
       in_data_anchors_(),
       out_data_anchors_(),
       in_control_anchor_(nullptr),
@@ -105,6 +106,18 @@ std::string Node::NodeImpl::GetType() const {
   GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E18888", "original OpDesc is nullptr");
                    return std::string(), "[Check][Param] original OpDesc is nullptr");
   return op_->GetType();
+}
+
+const char *Node::NodeImpl::GetNamePtr() const {
+  GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E18888", "original OpDesc is nullptr");
+                   return nullptr, "[Check][Param] original OpDesc is nullptr");
+  return op_->GetNamePtr();
+}
+
+const char *Node::NodeImpl::GetTypePtr() const {
+  GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E18888", "original OpDesc is nullptr");
+                   return nullptr, "[Check][Param] original OpDesc is nullptr");
+  return op_->GetTypePtr();
 }
 
 bool Node::NodeImpl::NodeMembersAreEqual(const NodeImpl &r_node) const {
@@ -303,11 +316,16 @@ ComputeGraphPtr Node::NodeImpl::GetOwnerComputeGraph() const {
   return owner_graph_.lock();
 }
 
+ComputeGraph *Node::NodeImpl::GetOwnerComputeGraphBarePtr() const {
+  return owner_graph_ptr_;
+}
+
 graphStatus Node::NodeImpl::SetOwnerComputeGraph(const ComputeGraphPtr &graph) {
   if (graph == nullptr) {
     return GRAPH_PARAM_INVALID;
   }
   owner_graph_ = graph;
+  owner_graph_ptr_ = graph.get();
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    this->GetName(), "owner_graph", "", "", graph->GetName());
@@ -316,6 +334,7 @@ graphStatus Node::NodeImpl::SetOwnerComputeGraph(const ComputeGraphPtr &graph) {
 
 graphStatus Node::NodeImpl::ClearOwnerGraph(const ComputeGraphPtr &graph) {
   owner_graph_ = graph;
+  owner_graph_ptr_ = graph.get();
 
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "delete", TraceManager::GetOutGraphName(),
                    this->GetName(), "owner_graph", "", "", ((graph == nullptr) ? std::string("") : graph->GetName()));
@@ -463,6 +482,29 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetInNodes(const ge::ConstNodePtr &owner_n
   return Node::Vistor<NodePtr>(owner_node, vec);
 }
 
+std::vector<Node *> Node::NodeImpl::GetInNodesPtr() const {
+  std::vector<Node *> in_nodes;
+  in_nodes.reserve(GetInNodesSize());
+  for (const auto &in_anchor : in_data_anchors_) {
+    if (in_anchor == nullptr) {
+      continue;
+    }
+    const auto &out_anchor = in_anchor->GetPeerOutAnchor();
+    if (out_anchor == nullptr) {
+      continue;
+    }
+    const auto &node = out_anchor->GetOwnerNode();
+    in_nodes.push_back(node.get());
+  }
+  if (in_control_anchor_ != nullptr) {
+    for (const auto &out_control_anchor : in_control_anchor_->GetPeerOutControlAnchors()) {
+      const auto &node = out_control_anchor->GetOwnerNode();
+      in_nodes.push_back(node.get());
+    }
+  }
+  return in_nodes;
+}
+
 bool Node::NodeImpl::IsAllInNodesSeen(const std::unordered_set<Node *> &nodes_seen) const {
   for (const auto &in_anchor : in_data_anchors_) {
     GE_CHK_BOOL_EXEC((in_anchor != nullptr),
@@ -575,11 +617,23 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetOutDataNodes(const ConstNodePtr &owner_
 uint32_t Node::NodeImpl::GetOutDataNodesSize() const {
   uint32_t out_nums = 0U;
   for (const auto &out_anchor : out_data_anchors_) {
-    GE_CHK_BOOL_EXEC((out_anchor != nullptr), continue,
-                     "[Check][Param] out data anchor is nullptr, node:%s", GetName().c_str());
+    GE_CHK_BOOL_EXEC((out_anchor != nullptr), continue, "[Check][Param] out data anchor is nullptr, node:%s",
+                     GetName().c_str());
     out_nums += out_anchor->GetPeerInDataNodesSize();
   }
   return out_nums;
+}
+
+uint32_t Node::NodeImpl::GetOutControlNodesSize() const {
+  uint32_t out_nums = 0U;
+  if (out_control_anchor_ != nullptr) {
+    out_nums += out_control_anchor_->GetPeerAnchorsSize();
+  }
+  return out_nums;
+}
+
+uint32_t Node::NodeImpl::GetOutNodesSize() const {
+  return GetOutDataNodesSize() + GetOutControlNodesSize();
 }
 
 Node::Vistor<NodePtr> Node::NodeImpl::GetOutControlNodes(const ge::ConstNodePtr &owner_node) const {
@@ -632,7 +686,13 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetOutAllNodes(const ge::ConstNodePtr &own
   return Node::Vistor<NodePtr>(owner_node, vec);
 }
 
-OpDescPtr Node::NodeImpl::GetOpDesc() const { return op_; }
+OpDescPtr Node::NodeImpl::GetOpDesc() const {
+  return op_;
+}
+
+OpDesc *Node::NodeImpl::GetOpDescBarePtr() const {
+  return op_.get();
+}
 
 graphStatus Node::NodeImpl::UpdateOpDesc(const OpDescPtr &op_desc) {
   GE_CHK_BOOL_EXEC(op_ != nullptr, REPORT_INNER_ERROR("E18888", "original OpDesc is nullptr");
@@ -730,8 +790,25 @@ size_t Node::NodeImpl::GetInNodesSize() const {
   return GetInDataNodesSize() + GetInControlNodesSize();
 }
 
-Node::Node()
-    : enable_shared_from_this(), impl_(std::make_shared<NodeImpl>()) {}
+std::vector<InDataAnchor *> Node::NodeImpl::GetAllInDataAnchorsPtr() const {
+  std::vector<InDataAnchor *> in_data_anchors;
+  in_data_anchors.reserve(in_data_anchors_.size());
+  for (const auto &in_data_anchor : in_data_anchors_) {
+    in_data_anchors.emplace_back(in_data_anchor.get());
+  }
+  return in_data_anchors;
+}
+
+std::vector<OutDataAnchor *> Node::NodeImpl::GetAllOutDataAnchorsPtr() const {
+  std::vector<OutDataAnchor *> out_data_anchors;
+  out_data_anchors.reserve(out_data_anchors_.size());
+  for (const auto &out_data_anchor : out_data_anchors_) {
+    out_data_anchors.emplace_back(out_data_anchor.get());
+  }
+  return out_data_anchors;
+}
+
+Node::Node() : enable_shared_from_this(), impl_(std::make_shared<NodeImpl>()) {}
 
 Node::Node(const OpDescPtr &op, const ComputeGraphPtr &owner_graph)
     : enable_shared_from_this(), impl_(std::make_shared<NodeImpl>(op, owner_graph)) {}
@@ -746,8 +823,16 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string Node::GetName() const
   return impl_->GetName();
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const char *Node::GetNamePtr() const {
+  return impl_->GetNamePtr();
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::string Node::GetType() const {
   return impl_->GetType();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const char *Node::GetTypePtr() const {
+  return impl_->GetTypePtr();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool Node::NodeMembersAreEqual(const Node &r_node) const {
@@ -889,6 +974,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraphPtr Node::GetOwnerCom
   return impl_->GetOwnerComputeGraph();
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph *Node::GetOwnerComputeGraphBarePtr() const {
+  return impl_->GetOwnerComputeGraphBarePtr();
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::SetOwnerComputeGraph(const ComputeGraphPtr &graph) {
   return impl_->SetOwnerComputeGraph(graph);
 }
@@ -978,6 +1067,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t Node::GetOutDataNodesSiz
   return impl_->GetOutDataNodesSize();
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t Node::GetOutControlNodesSize() const {
+  return impl_->GetOutControlNodesSize();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t Node::GetOutNodesSize() const {
+  return impl_->GetOutNodesSize();
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<NodePtr> Node::GetOutControlNodes() const {
   return impl_->GetOutControlNodes(shared_from_this());
 }
@@ -988,6 +1085,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Node::Vistor<NodePtr> Node::GetOu
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr Node::GetOpDesc() const {
   return impl_->GetOpDesc();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDesc *Node::GetOpDescBarePtr() const {
+  return impl_->GetOpDescBarePtr();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus Node::UpdateOpDesc(const OpDescPtr &op_desc) {
@@ -1064,5 +1165,17 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY size_t Node::GetInControlNodesSiz
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY size_t Node::GetInNodesSize() const {
   return impl_->GetInNodesSize();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<Node *> Node::GetInNodesPtr() const {
+  return impl_->GetInNodesPtr();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<InDataAnchor *> Node::GetAllInDataAnchorsPtr() const {
+  return impl_->GetAllInDataAnchorsPtr();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::vector<OutDataAnchor *> Node::GetAllOutDataAnchorsPtr() const {
+  return impl_->GetAllOutDataAnchorsPtr();
 }
 }  // namespace ge

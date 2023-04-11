@@ -78,22 +78,20 @@ enum IOType { kIn, kOut };
 class NodeIndexIO {
  public:
   NodeIndexIO(const NodePtr &node, const uint32_t index, const IOType io_type)
-      : node_(node), index_(index), io_type_(io_type) {
-    if (node_ != nullptr) {
-      value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
-    }
+      : node_(node), index_(index), io_type_(io_type), node_ptr_(node.get()) {
+    ToValue();
   }
   NodeIndexIO(const NodePtr &node, const int32_t index, const IOType io_type)
-      : node_(node), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
-    if (node_ != nullptr) {
-      value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
-    }
+      : node_(node), index_(static_cast<uint32_t>(index)), io_type_(io_type), node_ptr_(node.get()) {
+    ToValue();
   }
   NodeIndexIO(const NodePtr &node, const int64_t index, const IOType io_type)
-      : node_(node), index_(static_cast<uint32_t>(index)), io_type_(io_type) {
-    if (node_ != nullptr) {
-      value_ = node_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
-    }
+      : node_(node), index_(static_cast<uint32_t>(index)), io_type_(io_type), node_ptr_(node.get()) {
+    ToValue();
+  }
+  NodeIndexIO(const Node *node, const uint32_t index, const IOType io_type)
+      : node_(nullptr), index_(index), io_type_(io_type), node_ptr_(node) {
+    ToValue();
   }
   ~NodeIndexIO() {}
 
@@ -101,10 +99,17 @@ class NodeIndexIO {
     return value_;
   }
 
+  void ToValue() {
+    if (node_ptr_ != nullptr) {
+      value_ = node_ptr_->GetName() + ((io_type_ == kOut) ? "_out_" : "_in_") + std::to_string(index_);
+    }
+  }
+
   NodePtr node_ = nullptr;
   uint32_t index_ = 0U;
   IOType io_type_ = kOut;
   std::string value_;
+  const Node *node_ptr_ = nullptr;
 };
 
 class GraphUtils {

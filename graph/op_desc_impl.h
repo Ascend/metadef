@@ -45,11 +45,14 @@ class OpDescImpl {
 
   ~OpDescImpl() = default;
 
+  const char *GetNamePtr() const;
   std::string GetName() const;
   void SetName(const std::string &name);
 
+  const char *GetTypePtr() const;
   std::string GetType() const;
   void SetType(const std::string &type);
+
   void SetIrRelated(const OpDescImpl *r_op_desc);
 
   graphStatus AddInputDesc(const ge::GeTensorDesc &input_desc);
