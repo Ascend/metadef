@@ -41,4 +41,5 @@ message ProcessPoint {
   repeated FlowEdge in_edges = 7; // node inputs
   repeated FlowEdge out_edges = 8; // node outputs
   map<string, ge.proto.AttrDef> attrs = 9; // func init attrs
+  bool is_built_in = 10;
 }
