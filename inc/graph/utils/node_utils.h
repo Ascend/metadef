@@ -24,6 +24,7 @@
 #include "external/graph/types.h"
 #include "graph/anchor.h"
 #include "graph/node.h"
+#include "graph/compute_graph.h"
 
 /*lint -e148*/
 namespace ge {
@@ -193,6 +194,14 @@ struct NodeCompareKey {
   bool operator()(const NodePtr &n0, const NodePtr &n1) const {
     if ((n0 == nullptr) || (n1 == nullptr)) {
       return false;
+    }
+    if (n0->GetName() == n1->GetName()) {
+      const auto graph0 = n0->GetOwnerComputeGraph();
+      const auto graph1 = n1->GetOwnerComputeGraph();
+      if ((graph0 == nullptr) || (graph1 == nullptr)) {
+        return false;
+      }
+      return (graph0->GetName() < graph1->GetName());
     }
     return (n0->GetName() < n1->GetName());
   }
