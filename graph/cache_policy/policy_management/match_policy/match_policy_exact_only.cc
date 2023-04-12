@@ -23,7 +23,7 @@ CacheItemId MatchPolicyExactOnly::GetCacheItemId(const CCStatType &cc_state, con
     return KInvalidCacheItemId;
   }
   const auto &info_vec = iter->second;
-  const auto cached_info = std::find_if(info_vec.begin(), info_vec.end(), [&] (const CacheInfo &cached) {
+  const auto cached_info = std::find_if(info_vec.begin(), info_vec.end(), [&desc] (const CacheInfo &cached) {
       return (cached.GetCacheDesc()->IsMatch(desc));
   });
   if (cached_info != info_vec.end()) {

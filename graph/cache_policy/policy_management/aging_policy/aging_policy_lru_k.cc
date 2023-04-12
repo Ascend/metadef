@@ -39,7 +39,7 @@ std::vector<CacheItemId> AgingPolicyLruK::DoAging(const CacheState &cache_state)
 
 bool AgingPolicyLruK::IsCacheDescAppearKTimes(const CacheHashKey hash_key, const CacheDescPtr &cache_desc) {
   const std::lock_guard<std::mutex> lock(hash_2_cache_descs_and_count_mu_);
-  if (hash_2_cache_descs_and_count_.count(hash_key)) {
+  if (hash_2_cache_descs_and_count_.count(hash_key) > 0U) {
     auto &cache_descs_and_count = hash_2_cache_descs_and_count_[hash_key];
     for (auto &cache_desc_and_count : cache_descs_and_count) {
       if (cache_desc->IsEqual(cache_desc_and_count.first)) {
