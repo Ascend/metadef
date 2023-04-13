@@ -72,7 +72,8 @@ class TransformerTransferShapeUT : public testing::Test {
       }
       EXPECT_EQ(new_dim, expect_dim);
     }
-    ExtAxisValue ext_axis = {1,1,-1,16};
+    ExtAxisValue ext_axis;
+    shape_transfer.InitExtAxisValue(nullptr, ext_axis);
     ge::GeShape src_shape(dims);
     ge::GeShape dst_shape;
     ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape, dst_shape);
@@ -90,7 +91,8 @@ class TransformerTransferShapeUT : public testing::Test {
 
   void RunTransferShape(const ge::OpDescPtr &op_desc, const ge::Format &origin_format, const ge::Format &format,
                         const ge::DataType &dtype, const bool &expect_ret, const vector<int64_t> &dims,
-                        const vector<int64_t> &expect_dim, bool only_test_first_interface = false) {
+                        const vector<int64_t> &expect_dim, bool only_test_first_interface = false,
+                        const int64_t &m0_val = 16) {
     std::cout << "RunTransferShape: origin_format=" << origin_format << ", format=" << format << ", dtype=" << dtype
               << ", dim size=" << dims.size() << std::endl;
     ge::GeShape shape(dims);
@@ -132,9 +134,35 @@ class TransformerTransferShapeUT : public testing::Test {
 
     ExtAxisValue ext_axis;
     shape_transfer.InitExtAxisValue(op_desc, ext_axis);
+    ext_axis[3] = m0_val;
     ge::GeShape src_shape(dims);
     ge::GeShape dst_shape;
     ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape, dst_shape);
+    EXPECT_EQ(ret, expect_ret);
+    if (ret && dims != expect_dim) {
+      EXPECT_EQ(dst_shape.GetDims(), expect_dim);
+    }
+
+    ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape);
+    EXPECT_EQ(ret, expect_ret);
+    if (ret) {
+      EXPECT_EQ(src_shape.GetDims(), expect_dim);
+    }
+  }
+
+  void RunTransferShapeWithExtAxis(const ge::OpDescPtr &op_desc, const ge::Format &origin_format, const ge::Format &format,
+                        const ge::DataType &dtype, const bool &expect_ret, const vector<int64_t> &dims,
+                        const vector<int64_t> &expect_dim, const int64_t &m0_val = 16) {
+    std::cout << "RunTransferShape: origin_format=" << origin_format << ", format=" << format << ", dtype=" << dtype
+              << ", dim size=" << dims.size() << ", m0 value=" << m0_val << std::endl;
+
+    ShapeTransferAccordingToFormat shape_transfer;
+    ExtAxisValue ext_axis;
+    shape_transfer.InitExtAxisValue(op_desc, ext_axis);
+    ext_axis[3] = m0_val;
+    ge::GeShape src_shape(dims);
+    ge::GeShape dst_shape;
+    bool ret = shape_transfer.TransferShape(origin_format, format, dtype, ext_axis, src_shape, dst_shape);
     EXPECT_EQ(ret, expect_ret);
     if (ret && dims != expect_dim) {
       EXPECT_EQ(dst_shape.GetDims(), expect_dim);
@@ -466,6 +494,23 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nz) {
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT4, true, {1, 18, 134}, {1, 3, 2, 16, 64});
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {-2}, {-2}, true);
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {8, 1000}, {63, 1, 16, 16});
+
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34}, {1, 34, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34, 1}, {1, 34, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT, true, {18, 34}, {3, 18, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_UINT8, true, {1, 18, 34}, {1, 2, 18, 1, 32}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT8, true, {1, 18, 34}, {1, 2, 18, 1, 32}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_UINT16, true, {1, 18, 34}, {1, 3, 18, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT16, true, {1, 18, 34}, {1, 3, 18, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_UINT32, true, {1, 18, 34}, {1, 3, 18, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT32, true, {1, 18, 34}, {1, 3, 18, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT, true, {1, 18, 34}, {1, 3, 18, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {1, 18, 34}, {1, 3, 18, 1, 16}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_UINT1, true, {1, 18, 134}, {1, 1, 18, 1, 256}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_UINT2, true, {1, 18, 134}, {1, 2, 18, 1, 128}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT2, true, {1, 18, 134}, {1, 2, 18, 1, 128}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT4, true, {1, 18, 134}, {1, 3, 18, 1, 64}, 1);
+  RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {8, 1000}, {63, 8, 1, 16}, 1);
 }
 
 TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_fz) {
