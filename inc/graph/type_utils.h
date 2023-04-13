@@ -115,5 +115,5 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<std::vector<Name
 
 template<>
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TypeId GetTypeId<std::vector<DataType>>() ;
-}
+}  // namespace ge
 #endif  // EXECUTE_GRAPH_TYPE_UTILS_H

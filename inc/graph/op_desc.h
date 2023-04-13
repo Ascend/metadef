@@ -80,10 +80,12 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   bool operator==(const OpDesc &r_op_desc) const;
 
   std::string GetName() const;
+  const char *GetNamePtr() const;
 
   void SetName(const std::string &name);
 
   std::string GetType() const;
+  const char *GetTypePtr() const;
 
   void SetType(const std::string &type);
 
