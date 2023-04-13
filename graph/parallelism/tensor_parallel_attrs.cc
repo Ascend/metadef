@@ -335,12 +335,14 @@ USED_BY_JSON void from_json(const Json &j, ConcatReshardTask &task_info) {
 USED_BY_JSON void to_json(Json &j, const UniqueConcatReshardTask &task_info) {
   j = Json();
   j["task_type"] = kCommTaskTypeUniqueConcat;
+  j["unique_id"] = task_info.unique_id;
   j["concat_dim"] = task_info.concat_dim;
   j["src_device_indices"] = task_info.src_device_indices;
   j["dst_device_index"] = task_info.dst_device_index;
 }
 
 USED_BY_JSON void from_json(const Json &j, UniqueConcatReshardTask &task_info) {
+  TryGetValue(j, "unique_id", task_info.unique_id);
   GetValue(j, "concat_dim", task_info.concat_dim);
   GetValue(j, "src_device_indices", task_info.src_device_indices);
   GetValue(j, "dst_device_index", task_info.dst_device_index);
