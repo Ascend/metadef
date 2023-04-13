@@ -27,7 +27,7 @@ class KernelRegisterData {
     return funcs_;
   }
 
-  const std::string GetKernelType() {
+  const std::string &GetKernelType() const {
     return kernel_type_;
   }
 

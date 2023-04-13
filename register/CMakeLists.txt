@@ -222,24 +222,24 @@ target_link_libraries(op_tiling_o2 PRIVATE
 )
 
 ############ librt2_registry.a ############
-add_library(rt2_registry_static STATIC
+add_library(rt2_registry_objects OBJECT
     "op_impl_registry.cc"
 )
 
-target_compile_options(rt2_registry_static PRIVATE
+target_compile_options(rt2_registry_objects PRIVATE
     $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fvisibility=hidden -fno-common -fPIC -O2 -Werror -Wextra -Wfloat-equal>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:/utf-8>
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
     $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
 )
 
-target_compile_definitions(rt2_registry_static PRIVATE
+target_compile_definitions(rt2_registry_objects PRIVATE
     $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
     $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
-target_include_directories(rt2_registry_static PRIVATE
+target_include_directories(rt2_registry_objects PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/external
@@ -248,17 +248,32 @@ target_include_directories(rt2_registry_static PRIVATE
     ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
+set_target_properties(rt2_registry_objects PROPERTIES
+    WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+    OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,librt2_registry,rt2_registry>
+)
+
+target_link_libraries(rt2_registry_objects
+    PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
+    c_sec
+    slog
+    air_headers
+    PUBLIC
+    metadef_headers
+)
+
+############ librt2_registry.a ############
+add_library(rt2_registry_static STATIC
+    $<TARGET_OBJECTS:rt2_registry_objects>
+)
+
 set_target_properties(rt2_registry_static PROPERTIES
     WINDOWS_EXPORT_ALL_SYMBOLS TRUE
     OUTPUT_NAME $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,librt2_registry,rt2_registry>
 )
 
 target_link_libraries(rt2_registry_static
-    PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    c_sec
-    slog
-    air_headers
     PUBLIC
     metadef_headers
 )
