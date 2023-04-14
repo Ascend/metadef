@@ -948,6 +948,17 @@
     },
     {
       "errClass": "GE Errors",
+      "errTitle": "Failed to Obtain Tensor Attribute",
+      "ErrCode": "E14002",
+      "ErrMessage": "In the current process, obtaining the attribute of %s must be successful. Reason: %s.",
+      "Arglist": "attribute,reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "GE Errors",
       "errTitle": "ONNX Model Data Error",
       "ErrCode": "E16001",
       "ErrMessage": "Model has no [%s] node.",
