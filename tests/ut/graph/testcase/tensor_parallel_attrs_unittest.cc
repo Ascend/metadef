@@ -382,6 +382,7 @@ TEST_F(TensorParallelAttrsTest, ParseUniqueConcatCommTask) {
       R"(
 {
   "task_type": "UniqueConcat",
+  "unique_id": "0:1",
   "concat_dim": 1,
   "src_device_indices": [
     {"engine_type": "NPU", "index": [0, 0, 0]},

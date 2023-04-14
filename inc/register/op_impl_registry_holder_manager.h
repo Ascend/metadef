@@ -36,13 +36,23 @@ class OpImplRegistryHolder {
     return types_to_impl_;
   }
 
-  void SetHandle(void *handle) { handle_ = handle; }
-
+  void SetHandle(const void *handle) { handle_ = const_cast<void *>(handle); }
+#ifndef ONLY_COMPILE_OPEN_SRC
+  std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(const void *handle,
+                                                            const std::string &so_path,
+                                                            size_t &impl_num) const;
+#else
   std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle,
                                                             const std::string &so_path,
                                                             size_t &impl_num) const;
+#endif
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+  void AddTypesToImpl(const gert::OpImplKernelRegistry::OpType op_type,
+                      const gert::OpImplKernelRegistry::OpImplFunctions funcs);
+#else
   void AddTypesToImpl(gert::OpImplKernelRegistry::OpType op_type, gert::OpImplKernelRegistry::OpImplFunctions funcs);
+#endif
  protected:
   std::map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions> types_to_impl_;
   void *handle_ = nullptr;
@@ -53,7 +63,7 @@ class OmOpImplRegistryHolder : public OpImplRegistryHolder {
  public:
   OmOpImplRegistryHolder() = default;
 
-  ~OmOpImplRegistryHolder() = default;
+  virtual ~OmOpImplRegistryHolder() = default;
 
   ge::graphStatus LoadSo(const std::shared_ptr<ge::OpSoBin> &so_bin);
 
@@ -77,7 +87,7 @@ class OpImplRegistryHolderManager {
 
   void UpdateOpImplRegistries();
 
-  const OpImplRegistryHolderPtr GetOpImplRegistryHolder (std::string &so_data);
+  const OpImplRegistryHolderPtr GetOpImplRegistryHolder(std::string &so_data);
 
   OpImplRegistryHolderPtr GetOrCreateOpImplRegistryHolder(std::string &so_data,
                                                           const std::string &so_name,

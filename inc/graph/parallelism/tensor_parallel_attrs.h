@@ -149,6 +149,7 @@ struct ConcatReshardTask {
 };
 
 struct UniqueConcatReshardTask {
+  std::string unique_id;
   int32_t concat_dim = 0;
   std::vector<DeviceIndex> src_device_indices;
   DeviceIndex dst_device_index;
