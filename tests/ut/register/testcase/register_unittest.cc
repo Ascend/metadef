@@ -1363,7 +1363,7 @@ TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_ok) {
   size_t size = 1024;
   EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
   const nlohmann::json result =
-      R"({"class_name":"TestMaxPoolTilingData","fields":[{"dtype":"int8_t","name":"dim_0"},{"dtype":"int16_t","name":"dim_1"},{"dtype":"int32_t","name":"dim_2"},{"dtype":"int64_t","name":"dim_3"},{"dtype":"uint8_t","name":"dim_4"},{"dtype":"uint16_t","name":"dim_5"},{"dtype":"uint32_t","name":"dim_6"},{"dtype":"uint64_t","name":"dim_7"},{"dtype":"int32_t","name":"act_core_num"}]})"_json;
+      R"({"class_name":"TestMaxPoolTilingData","data_size":34,"fields":[{"dtype":"int8_t","name":"dim_0"},{"dtype":"int16_t","name":"dim_1"},{"dtype":"int32_t","name":"dim_2"},{"dtype":"int64_t","name":"dim_3"},{"dtype":"uint8_t","name":"dim_4"},{"dtype":"uint16_t","name":"dim_5"},{"dtype":"uint32_t","name":"dim_6"},{"dtype":"uint64_t","name":"dim_7"},{"dtype":"int32_t","name":"act_core_num"}]})"_json;
   std::string result_str = result.dump();
   EXPECT_EQ(result_str, res_info.substr(0, result_str.size()));
 
@@ -1419,6 +1419,27 @@ TEST_F(UtestRegister, tik2_register_tilingdata_base_ok) {
   offset += sizeof(uint64_t);
   EXPECT_EQ(*((int32_t *) (res_data + offset)), params.get_act_core_num());
   offset += sizeof(int32_t);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, tik2_register_tilingdata_base_failed) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  auto params = TestMaxPoolTilingData();
+  params.set_dim_0(0);
+  params.set_dim_1(10);
+  params.set_dim_2(20);
+  params.set_dim_3(30);
+  params.set_dim_4(40);
+  params.set_dim_5(50);
+  params.set_dim_6(60);
+  params.set_dim_7(70);
+  params.set_act_core_num(8);
+  uint8_t res_data[1024];
+  int offset = 0;
+  params.SaveToBuffer((void *) (&res_data), 1);
+  EXPECT_EQ(*((int8_t *) (res_data + offset)), params.get_dim_0());
+  offset += sizeof(int8_t);
+  EXPECT_EQ(*((int16_t *) (res_data + offset)), params.get_dim_1());
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
