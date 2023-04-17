@@ -35,7 +35,7 @@
 #include "register/tilingdata_base.h"
 
 namespace {
-bool DumpResultInfo(const std::string &result_string, char *result_info_char, const size_t &result_info_len) {
+bool DumpResultInfo(const std::string &result_string, char *result_info_char, const size_t result_info_len) {
   if (result_info_char == nullptr) {
     GE_LOGE("run_info buffer is null");
     return false;
@@ -162,9 +162,8 @@ void ParseConstShapeDescV2(const nlohmann::json &shape_json, ge::Operator &op_pa
   (void) op_para.SetInput(name.c_str(), const_op);
 }
 
-void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, const bool &is_input) {
+void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, const bool is_input) {
   ge::GeTensorDesc tensor;
-  std::string name;
   if (shape.contains("shape")) {
     tensor.SetShape(ge::GeShape(shape["shape"].get<std::vector<int64_t>>()));
   }
@@ -191,7 +190,7 @@ void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, const
     tensor.SetDataType(ge_dtype);
   }
   if (shape.contains("name")) {
-    name = shape["name"];
+    std::string name = shape["name"];
     tensor.SetName(name);
     is_input ? op_desc->AddInputDesc(name, tensor) : op_desc->AddOutputDesc(name, tensor);
   } else {
@@ -199,7 +198,7 @@ void ParseShapeDescV2(const nlohmann::json &shape, ge::OpDescPtr &op_desc, const
   }
 }
 
-void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_desc, const bool &is_input) {
+void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_desc, const bool is_input) {
   for (const auto &elem : shape_list) {
     if (elem.is_array()) {
       for (const auto &shape : elem) {
@@ -279,7 +278,7 @@ const std::map<std::string, ParseAndSetAttrValuePtr> parse_attr_dtype_map = {
     {"list_list_int64", ge::MakeShared<ParseAndSetAttrValueFunc>(&ParseAndSetAttrListListInt64Value)}};
 
 void ParseAndSetAttr(const nlohmann::json &attr, ge::Operator &op) {
-  if (!attr.contains("name") || !attr.contains("dtype") || !attr.contains("value")) {
+  if ((!attr.contains("name")) || (!attr.contains("dtype")) || (!attr.contains("value"))) {
     REPORT_CALL_ERROR("E19999", "cur attr does not contain name or dtype or value.");
     return;
   }
@@ -333,7 +332,7 @@ using namespace optiling;
 
 extern "C" int32_t Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
                                           const char *outputs, const char *attrs, char *result_info,
-                                          size_t result_info_len) {
+                                          const size_t result_info_len) {
   if ((check_type == nullptr) || (optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) ||
       (attrs == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
@@ -379,7 +378,7 @@ extern "C" int32_t Tik2PyInterfaceCheckOp(const char *check_type, const char *op
 
 extern "C" int32_t Tik2PyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
                                               const char *attrs, const char *generalize_config, char *result_info,
-                                              size_t result_info_len) {
+                                              const size_t result_info_len) {
   if ((optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) || (attrs == nullptr) ||
       (generalize_config == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
@@ -456,9 +455,10 @@ extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *res
   return 1;
 }
 
-extern "C" int32_t Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int32_t block_dim,
+extern "C" int32_t Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, const int32_t block_dim,
                                            const char *tiling_data, const char *kernel_name, const char *entry_file,
-                                           const char *output_kernel_file, int32_t core_type, int32_t task_ration) {
+                                           const char *output_kernel_file, const int32_t core_type,
+                                           const int32_t task_ration) {
   if ((optype == nullptr) || (soc_version == nullptr) || (tiling_data == nullptr) || (kernel_name == nullptr) ||
       (entry_file == nullptr) || (output_kernel_file == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
