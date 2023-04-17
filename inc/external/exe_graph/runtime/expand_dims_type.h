@@ -41,14 +41,15 @@ class ExpandDimsType {
   using AxisIndex = uint64_t;
   static constexpr size_t kMaxExpandSize = 56;
 
-  ExpandDimsType() = default;
+  ExpandDimsType() : size_(0U), mask_(0U) {
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
+  }
 
   /**
    * 通过字符串创建一个补维规则
    * @param expand_dims_type 字符串描述的补维规则
    */
   explicit ExpandDimsType(const ge::char_t *const expand_dims_type) : size_(0), mask_(0) {
-    (void) reserved_;
     if (expand_dims_type == nullptr) {
       return;
     }
@@ -64,6 +65,7 @@ class ExpandDimsType {
         SetExpandIndex(i);
       }
     }
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
@@ -76,7 +78,7 @@ class ExpandDimsType {
    * 为了实现简单，补维规则部分与字符串的顺序相反，例如字符串描述的补维规则为"1100"，那么对应的补维规则为"0011"转换为数字为3
    * @param expand_dims_type 补维规则
    */
-  explicit ExpandDimsType(const int64_t &reshape_type_mask) : size_(0), mask_(0) {
+  explicit ExpandDimsType(const int64_t reshape_type_mask) : size_(0), mask_(0) {
     if (reshape_type_mask == 0) {
       return;
     }
@@ -85,6 +87,7 @@ class ExpandDimsType {
       return;
     }
     mask_ = static_cast<uint64_t>(static_cast<uint64_t>(reshape_type_mask) & 0xffULL);
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
   /**
    * 判断补维规则是否一致
@@ -177,7 +180,7 @@ class ExpandDimsType {
  private:
   uint64_t size_ : 8;
   uint64_t mask_ : kMaxExpandSize;
-  uint8_t reserved_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
+  uint8_t reserved_[40];  // Reserved field, 32+8, do not directly use when only 8-byte left
 };
 }  // namespace gert
 

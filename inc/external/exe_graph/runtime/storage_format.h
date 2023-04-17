@@ -75,7 +75,7 @@ struct StorageFormat {
    * 设置补维规则
    * @param expand_dims_type 补维规则
    */
-  void SetExpandDimsType(const ExpandDimsType expand_dims_type) {
+  void SetExpandDimsType(const ExpandDimsType &expand_dims_type) {
     expand_dims_type_ = expand_dims_type;
   }
   /**
