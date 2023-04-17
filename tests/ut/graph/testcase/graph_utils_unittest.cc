@@ -37,6 +37,8 @@
 
 namespace ge {
 namespace {
+const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
+const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
 bool IfNodeExist(const ComputeGraphPtr &graph, std::function<bool(const NodePtr &)> filter,
                  bool direct_node_flag = true) {
   for (const auto &node : graph->GetNodes(direct_node_flag)) {
@@ -323,6 +325,8 @@ class UtestGraphUtils : public testing::Test {
   void SetUp() {}
 
   void TearDown() {
+    unsetenv(kDumpGraphLevel);
+    unsetenv(kDumpGeGraph);
   }
 };
 
@@ -668,7 +672,6 @@ TEST_F(UtestGraphUtils, InsertNodeAfter) {
 
   TEST_F(UtestGraphUtils, MatchDumpStrLevel4True) {
     std::string suffix="test";
-    const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
     (void)setenv(kDumpGraphLevel, "4", 1);
     bool ret = GraphUtils::MatchDumpStr(suffix);
     EXPECT_EQ(ret, true);
@@ -677,7 +680,6 @@ TEST_F(UtestGraphUtils, InsertNodeAfter) {
   TEST_F(UtestGraphUtils, MatchDumpStrLevel4False) {
     const char_t *const kDumpStrPreRunBegin = "PreRunBegin";
     std::string suffix=kDumpStrPreRunBegin;
-    const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
     (void)setenv(kDumpGraphLevel, "4", 1);
     bool ret = GraphUtils::MatchDumpStr(suffix);
     EXPECT_EQ(ret, false);
@@ -766,9 +768,7 @@ TEST_F(UtestGraphUtils, DumpGEGraphNoOptionsSucc) {
   global_maps.insert(std::make_pair(key2, value2));
   context.SetGlobalOption(global_maps);
 
-  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
   (void)setenv(kDumpGraphLevel, "4", 1);
-  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
   (void)setenv(kDumpGeGraph, "3", 1);
   // test existed dir
   system("rm -f ./ge_test_graph_options_wt_0001.txt");
@@ -832,14 +832,17 @@ TEST_F(UtestGraphUtils, DumpGEGraphOptionsSucc) {
   global_maps.insert(std::make_pair(key2, value2));
   context.SetGlobalOption(global_maps);
 
-  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
   (void)setenv(kDumpGraphLevel, "4", 1);
-  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
   (void)setenv(kDumpGeGraph, "1", 1);
   // test existed dir
   system("rm -f ./ge_test_graph_options_wt_0002.txt");
   GraphUtils::DumpGEGraph(graph, "PreRunBegin", false, "./ge_test_graph_options_wt_0002.txt");
+  GraphUtils::DumpGEGraph(graph, "PreRunBegin", false, "./ge_test_graph_options_wt_0003.txt");  // file will not be dump
   ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  ASSERT_EQ(GraphUtils::LoadGEGraph("./ge_test_graph_options_wt_0003.txt", *com_graph1), false);
+  GraphUtils::DumpGEGraph(graph, "PreRunBegin", true,
+                          "./ge_test_graph_options_wt_0003.txt");  // always dump even if graph is same
+  ASSERT_EQ(GraphUtils::LoadGEGraph("./ge_test_graph_options_wt_0003.txt", *com_graph1), true);
   bool state = GraphUtils::LoadGEGraph("./ge_test_graph_options_wt_0002.txt", *com_graph1);
   ASSERT_EQ(state, true);
   ASSERT_EQ(com_graph1->GetAllNodesSize(), 4);
@@ -922,9 +925,7 @@ TEST_F(UtestGraphUtils, DumpGEGraphOptionsLevelNot4) {
   global_maps.insert(std::make_pair(key2, value2));
   context.SetGlobalOption(global_maps);
 
-  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
   (void)setenv(kDumpGraphLevel, "1", 1);
-  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
   (void)setenv(kDumpGeGraph, "1", 1);
   // test existed dir
   system("rm -f ./ge_test_graph_options_wt_0004.txt");
@@ -1013,9 +1014,7 @@ TEST_F(UtestGraphUtils, DumpGEGraphOptionsNotPreRunBeginNoDump) {
   global_maps.insert(std::make_pair(key2, value2));
   context.SetGlobalOption(global_maps);
 
-  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
   (void)setenv(kDumpGraphLevel, "4", 1);
-  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
   (void)setenv(kDumpGeGraph, "1", 1);
   // test existed dir
   system("rm -f ./ge_test_graph_options_wt_0003.txt");
