@@ -33,6 +33,18 @@
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/math_util.h"
 
+static std::string GetOverflowDescribeOfListint(const std::string &name, const size_t &index, const int64_t &value) {
+  std::string reason = "When obtaining the attribute of " + name + ", the list_value[" + std::to_string(index) +
+      "] is " + std::to_string(value) + ", which exceeds the maximum value of integer type and causes value overflow.";
+  return reason;
+}
+
+static std::string GetOverflowDescribeOfInt(const std::string &name, const int64_t &value) {
+  std::string reason = "When obtaining the attribute of " + name + ", the value is " + std::to_string(value) +
+      ", which exceeds the maximum value of integer type and causes value overflow.";
+  return reason;
+}
+
 namespace ge {
 void NamedAttrs::SetName(const std::string &name) {
   name_ = name;
@@ -70,8 +82,9 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, in
     return false;
   }
   if (!IntegerChecker<int32_t>::Compat(int64_val)) {
-    REPORT_INNER_ERROR("E18888", "Get the value %" PRId64 " overflow, large than max int32_t!", int64_val);
-    GELOGE(GRAPH_FAILED, "[Check][Param] Get the value %" PRId64 " overflow, large than max int32_t", int64_val);
+    const std::string reason = GetOverflowDescribeOfInt(name, int64_val);
+    REPORT_INNER_ERROR("E18888", "%s", reason.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] %s", reason.c_str());
     return false;
   }
   value = static_cast<int32_t>(int64_val);
@@ -85,8 +98,9 @@ bool AttrUtils::GetInt(ConstAttrHolderAdapter &&obj, const std::string &name, ui
     return false;
   }
   if (!IntegerChecker<uint32_t>::Compat(int64_val)) {
-    REPORT_INNER_ERROR("E18888", "Get the value %" PRId64 " overflow, large than max uint32_t", int64_val);
-    GELOGE(GRAPH_FAILED, "[Check][Param] Get the value %" PRId64 " overflow, large than max uint32_t", int64_val);
+    const std::string reason = GetOverflowDescribeOfInt(name, int64_val);
+    REPORT_INNER_ERROR("E18888", "%s", reason.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] %s", reason.c_str());
     return false;
   }
   value = static_cast<uint32_t>(int64_val);
@@ -418,8 +432,9 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
 
   for (size_t i = 0UL; i < int64_list.size(); ++i) {
     if (!IntegerChecker<int32_t>::Compat(int64_list[i])) {
-      REPORT_INNER_ERROR("E18888", "list[%zu] = %" PRId64 " overflow, large than max int32_t", i, int64_list[i]);
-      GELOGE(GRAPH_FAILED, "[Check][Param] list[%zu] = %" PRId64 " overflow, large than max int32_t", i, int64_list[i]);
+      const std::string reason = GetOverflowDescribeOfListint(name, i, int64_list[i]);
+      REPORT_INNER_ERROR("E18888", "%s", reason.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] %s", reason.c_str());
       return false;
     }
   }
@@ -436,9 +451,9 @@ bool AttrUtils::GetListInt(ConstAttrHolderAdapter &&obj, const std::string &name
 
   for (size_t i = 0UL; i < int64_list.size(); ++i) {
     if (!IntegerChecker<uint32_t>::Compat(int64_list[i])) {
-      REPORT_INNER_ERROR("E18888", "list[%zu] = %" PRId64 " overflow, large than max uint32_t", i, int64_list[i]);
-      GELOGE(GRAPH_FAILED, "[Check][Param] list[%zu] = %" PRId64 " overflow, large than max uint32_t", i,
-             int64_list[i]);
+      const std::string reason = GetOverflowDescribeOfListint(name, i, int64_list[i]);
+      REPORT_INNER_ERROR("E18888", "%s", reason.c_str());
+      GELOGE(GRAPH_FAILED, "[Check][Param] %s", reason.c_str());
       return false;
     }
   }

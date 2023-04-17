@@ -10,12 +10,17 @@ message ModelRelationDef {
     string enqueue_policy = 3;
     bool is_control = 4;
   }
+  message AttrValue {
+    oneof value {
+      bytes s = 1;           //"string"
+      int64 i = 2;           //"int"
+      bool b = 3;            //"bool"
+    }
+  }
   message Endpoint {
     string name = 1;
     int32 endpoint_type = 2;
-    bool need_deploy = 3;
-    repeated string attrs = 4;
-    int32 in_out = 5;
+    map<string, AttrValue> attrs = 3;
   }
   message InvokedModelQueueInfo {
     repeated string input_queue_name = 1;
