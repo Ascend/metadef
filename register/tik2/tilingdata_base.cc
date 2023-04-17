@@ -22,8 +22,8 @@
 namespace optiling {
 std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
 
-void TilingDef::SaveToBuffer(void *pdata, size_t capacity) const {
-  auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
+void TilingDef::SaveToBuffer(void *pdata, const size_t capacity) const {
+  const auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
   if (mem_ret != EOK) {
     GELOGE(ge::GRAPH_FAILED,
            "TilingDef::SaveToBuffer failed: memcpy_s return [%d], capacity = [%zu], data_size_ = [%zu].", mem_ret,
@@ -53,19 +53,20 @@ void TilingDef::InitData() {
   }
 }
 
-void CTilingDataClassFactory::RegisterTilingData(ge::AscendString op_type, TilingDataConstructor constructor) {
+void CTilingDataClassFactory::RegisterTilingData(const ge::AscendString &op_type,
+                                                 const TilingDataConstructor constructor) {
   instance_[op_type] = constructor;
   GELOGI("RegisterTilingData: op_type:%s, constructor:%p, registered count:%zu", op_type.GetString(), constructor,
          instance_.size());
 }
 
 std::shared_ptr<TilingDef> CTilingDataClassFactory::CreateTilingDataInstance(const ge::AscendString &op_type) {
-  auto it = instance_.find(op_type);
+  const auto it = instance_.find(op_type);
   if (it == instance_.end()) {
     GELOGW("CreateTilingDataInstance: cannot find op_type:%s.", op_type.GetString());
     return nullptr;
   }
-  TilingDataConstructor constructor = it->second;
+  const TilingDataConstructor constructor = it->second;
 
   if (constructor == nullptr) {
     GELOGW("CreateTilingDataInstance: constructor is nullptr.");

@@ -23,14 +23,45 @@
 #include "graph/ascend_string.h"
 
 namespace optiling {
-class FieldInfo {
-public:
-  FieldInfo(const ge::AscendString &dtype, const ge::AscendString &name) : dtype_(dtype), name_(name) {}
-
-public:
+struct FieldInfo {
   ge::AscendString dtype_;
   ge::AscendString name_;
 };
+
+class TilingDef {
+public:
+  ~TilingDef() {
+    if (data_ptr_ != nullptr) {
+      delete data_ptr_;
+      data_ptr_ = nullptr;
+    }
+  }
+  void SaveToBuffer(void *pdata, const size_t capacity) const;
+  std::vector<FieldInfo> GetFieldInfo() const;
+  ge::AscendString GetTilingClassName() const;
+  size_t GetDataSize() const;
+  void InitData();
+
+protected:
+  // dtype, name
+  std::vector<FieldInfo> field_info_;
+  std::map<ge::AscendString, size_t> field_offset_map_;
+  uint8_t *data_ptr_ = nullptr;
+  size_t data_size_ = 0;
+  ge::AscendString class_name_;
+};
+
+using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
+
+class CTilingDataClassFactory {
+public:
+  static void RegisterTilingData(const ge::AscendString &op_type, const TilingDataConstructor constructor);
+  static std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
+
+private:
+  static std::map<ge::AscendString, TilingDataConstructor> instance_;
+};
+}  // end of namespace optiling
 
 /*
 example:
@@ -49,7 +80,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
     class FieldHandler {                                                                                               \
     public:                                                                                                            \
       FieldHandler(class_name *pinstance, const ge::AscendString &dtype, const ge::AscendString &name, size_t len) {   \
-        pinstance->field_info_.push_back(FieldInfo(dtype, name));                                                      \
+        pinstance->field_info_.push_back( {dtype, name} );                                                             \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += len;                                                                                  \
         pinstance->InitData();                                                                                         \
@@ -81,40 +112,6 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   }                                                                                                                    \
   ;
 
-class TilingDef {
-public:
-  ~TilingDef() {
-    if (data_ptr_ != nullptr) {
-      delete data_ptr_;
-      data_ptr_ = nullptr;
-    }
-  }
-  void SaveToBuffer(void *pdata, size_t capacity) const;
-  std::vector<FieldInfo> GetFieldInfo() const;
-  ge::AscendString GetTilingClassName() const;
-  size_t GetDataSize() const;
-  void InitData();
-
-protected:
-  // dtype, name
-  std::vector<FieldInfo> field_info_;
-  std::map<ge::AscendString, size_t> field_offset_map_;
-  uint8_t *data_ptr_ = nullptr;
-  size_t data_size_ = 0;
-  ge::AscendString class_name_;
-};
-
-using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
-
-class CTilingDataClassFactory {
-public:
-  static void RegisterTilingData(ge::AscendString op_type, TilingDataConstructor constructor);
-  static std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
-
-private:
-  static std::map<ge::AscendString, TilingDataConstructor> instance_;
-};
-
 #define REGISTER_TILING_DATA_CLASS(op_type, class_name)                                                                \
   class op_type##class_name##Helper {                                                                                  \
   public:                                                                                                              \
@@ -126,5 +123,5 @@ private:
     }                                                                                                                  \
   };                                                                                                                   \
   op_type##class_name##Helper g_tilingdata_##op_type##class_name##helper;
-}  // end of namespace optiling
+
 #endif  // __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
