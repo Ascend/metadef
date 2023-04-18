@@ -37,22 +37,14 @@ class OpImplRegistryHolder {
   }
 
   void SetHandle(const void *handle) { handle_ = const_cast<void *>(handle); }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
   std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(const void *handle,
                                                             const std::string &so_path,
                                                             size_t &impl_num) const;
-#else
-  std::unique_ptr<TypesToImpl[]> GetOpImplFunctionsByHandle(void *handle,
-                                                            const std::string &so_path,
-                                                            size_t &impl_num) const;
-#endif
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   void AddTypesToImpl(const gert::OpImplKernelRegistry::OpType op_type,
                       const gert::OpImplKernelRegistry::OpImplFunctions funcs);
-#else
-  void AddTypesToImpl(gert::OpImplKernelRegistry::OpType op_type, gert::OpImplKernelRegistry::OpImplFunctions funcs);
-#endif
+
  protected:
   std::map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions> types_to_impl_;
   void *handle_ = nullptr;
