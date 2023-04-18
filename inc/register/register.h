@@ -26,7 +26,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY HostCpuOp {
  public:
   HostCpuOp() = default;
   HostCpuOp(HostCpuOp &&) = delete;
-  HostCpuOp &operator=(HostCpuOp &&) = delete;
+  HostCpuOp &operator=(HostCpuOp &&) & = delete;
   virtual ~HostCpuOp() = default;
   virtual graphStatus Compute(Operator &op,
                               const std::map<std::string, const Tensor> &inputs,
@@ -34,7 +34,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY HostCpuOp {
 
  private:
   HostCpuOp(const HostCpuOp &) = delete;
-  HostCpuOp &operator=(const HostCpuOp &) = delete;
+  HostCpuOp &operator=(const HostCpuOp &) & = delete;
 };
 
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY HostCpuOpRegistrar {
