@@ -30,18 +30,19 @@ using ConstTensorAddress = void *const;  ///< Tensor地址
 class Tensor {
  public:
   Tensor() {
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
     (void)memset_s(reserved_field_, sizeof(reserved_field_), 0, sizeof(reserved_field_));
   }
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, const TensorPlacement placement,
          const ge::DataType data_type, TensorAddress addr)
       : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type),
         tensor_data_(addr, nullptr, static_cast<size_t>(ge::GetSizeInBytes(GetShapeSize(), data_type_)), placement) {
-    (void) reserved_;
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
     (void)memset_s(reserved_field_, sizeof(reserved_field_), 0, sizeof(reserved_field_));
   }
   Tensor(const StorageShape &storage_shape, const StorageFormat &storage_format, ge::DataType data_type)
       : storage_shape_(storage_shape), storage_format_(storage_format), data_type_(data_type) {
-    (void) reserved_;
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
     (void)memset_s(reserved_field_, sizeof(reserved_field_), 0, sizeof(reserved_field_));
   }
   /**
@@ -258,7 +259,7 @@ class Tensor {
    * 设置补维规则
    * @param expand_dims_type 补维规则
    */
-  void SetExpandDimsType(const ExpandDimsType expand_dims_type) {
+  void SetExpandDimsType(const ExpandDimsType &expand_dims_type) {
     storage_format_.SetExpandDimsType(expand_dims_type);
   }
   /**
@@ -307,7 +308,7 @@ class Tensor {
  private:
   StorageShape storage_shape_;
   StorageFormat storage_format_;
-  uint8_t reserved_[4] = {0U}; // Reserved field, 4-byte aligned
+  uint8_t reserved_[4]; // Reserved field, 4-byte aligned
   ge::DataType data_type_;
   TensorData tensor_data_;
   uint8_t reserved_field_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left

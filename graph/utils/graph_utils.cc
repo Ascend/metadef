@@ -62,8 +62,6 @@ const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
 const int32_t kDumpGraphIndexWidth = 8;
 const char_t *const kNpuCollectPath = "NPU_COLLECT_PATH";
 const char_t *const kDumpGraphPath = "DUMP_GRAPH_PATH";
-#endif
-
 const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
 const char_t *const kDumpStrBuild = "Build";
 const char_t *const kDumpStrPreRunBegin = "PreRunBegin";
@@ -71,6 +69,9 @@ const char_t *const kDumpStrPartition = "partition";
 const char_t *const kDumpStrOptimizeSubgraph = "OptimizeSubGraph";
 const char_t *const kDumpStrSubgraphFunc = "sub_graph";
 const char_t *const kDumpStrAicpu = "Aicpu";
+std::mutex mutex_file;
+#endif
+
 const size_t kNameMax = 255U;
 const int32_t kCopyGraphMaxRecursionDepth = 10;
 const int32_t kNameWidth = 5;
@@ -637,7 +638,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::RecordOriginalNa
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(const std::string &suffix) {
-  char_t dump_level[MMPA_MAX_PATH] = { '\0' };
+#ifdef FMK_SUPPORT_DUMP
+  char_t dump_level[MMPA_MAX_PATH] = {'\0'};
   const INT32 res = mmGetEnv(kDumpGraphLevel, &(dump_level[0U]), static_cast<uint32_t>(MMPA_MAX_PATH));
   const int64_t dump_graph_level = (res == EN_OK) ? std::strtol(&(dump_level[0U]), nullptr, kBaseOfIntegerValue)
                                                   : static_cast<int64_t>(DumpGraphLevel::kDumpLevel2);
@@ -664,6 +666,11 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::MatchDumpStr(con
   }
 
   return false;
+#else
+  (void) suffix;
+  GELOGW("[DumpGraph][Check] Need to define FMK_SUPPORT_DUMP for dump graph.");
+  return false;
+#endif
 }
 
 namespace {
@@ -853,6 +860,24 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
   if (model.Save(ge_proto, (dump_level != static_cast<int64_t>(ge::DumpLevel::DUMP_ALL))
                  && (!is_always_dump)) != SUCCESS) {
     return;
+  }
+  char_t dump_graph_level_env[MMPA_MAX_PATH] = {'\0'};
+  const INT32 dump_graph_level_res =
+      mmGetEnv(kDumpGraphLevel, &(dump_graph_level_env[0U]), static_cast<uint32_t>(MMPA_MAX_PATH));
+  const int64_t dump_graph_level = (dump_graph_level_res == EN_OK)
+      ? std::strtol(&(dump_graph_level_env[0U]), nullptr, kBaseOfIntegerValue)
+      : static_cast<int64_t>(DumpGraphLevel::kDumpLevel2);
+  if ((dump_graph_level == static_cast<int64_t>(DumpGraphLevel::kDumpLevel4)) && (!is_always_dump)) {
+    std::string graph_str;
+    google::protobuf::TextFormat::PrintToString(ge_proto, &graph_str);
+    std::size_t file_hash = std::hash<std::string>{}(graph_str);
+    const std::lock_guard<std::mutex> lock(mutex_file);
+    static std::set<size_t> file_hash_set;
+    if (!(file_hash_set.insert(file_hash).second)) {
+      GELOGD("Same graph %s has been dumped, this graph will not be dumped with %s is %ld", graph->GetName().c_str(),
+             kDumpGraphLevel, static_cast<int64_t>(DumpGraphLevel::kDumpLevel4));
+      return;
+    }
   }
   GraphUtils::WriteProtoToTextFile(ge_proto, real_path_name.c_str());
 #else
@@ -1089,7 +1114,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
                                                                                   const std::string &suffix) {
 #ifdef FMK_SUPPORT_DUMP
   char_t dump_ge_graph[MMPA_MAX_PATH] = { '\0' };
-  const INT32 res = mmGetEnv(kDumpGeGraph, &(dump_ge_graph[0]), static_cast<uint32_t>(MMPA_MAX_PATH));
+  INT32 res = mmGetEnv(kDumpGeGraph, &(dump_ge_graph[0]), static_cast<uint32_t>(MMPA_MAX_PATH));
   const ge::DumpLevel dump_ge_graph_level =
       (res == EN_OK) ? static_cast<ge::DumpLevel>(std::strtol(&(dump_ge_graph[0U]), nullptr, kBaseOfIntegerValue))
                      : DumpLevel::NO_DUMP;
@@ -1099,6 +1124,14 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraphToOnn
   }
   // dump the graph according to different graph level
   if (GraphUtils::MatchDumpStr(suffix)) {
+    return;
+  }
+  // pbtxt will not dump when dump graph level is 4
+  char_t dump_level[MMPA_MAX_PATH] = {'\0'};
+  res = mmGetEnv(kDumpGraphLevel, &(dump_level[0U]), static_cast<uint32_t>(MMPA_MAX_PATH));
+  const int64_t dump_graph_level = (res == EN_OK) ? std::strtol(&(dump_level[0U]), nullptr, kBaseOfIntegerValue)
+                                                  : static_cast<int64_t>(DumpGraphLevel::kDumpLevel2);
+  if (dump_graph_level == static_cast<int64_t>(DumpGraphLevel::kDumpLevel4)) {
     return;
   }
 

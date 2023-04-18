@@ -137,7 +137,7 @@ class CompileTimeTensorDesc {
    * 设置原始format向运行时format转换时的补维规则
    * @param expand_dims_type 补维规则
    */
-  void SetExpandDimsType(const ExpandDimsType expand_dims_type) {
+  void SetExpandDimsType(const ExpandDimsType &expand_dims_type) {
     storage_format_.SetExpandDimsType(expand_dims_type);
   }
 
