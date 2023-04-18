@@ -64,6 +64,7 @@ KernelContextHolder KernelRunContextBuilder::Build(const ge::OpDescPtr &op_desc)
 }
 
 ge::NodePtr KernelRunContextBuilder::MakeNode(const ge::OpDescPtr &op_desc) {
+  const auto node_id = op_desc->GetId();
   graph_ = std::make_shared<ge::ComputeGraph>("tmp");
   auto fake_node = graph_->AddNode(op_desc);
   for (size_t i = 0UL; i < op_desc->GetAllInputsSize(); ++i) {
@@ -76,6 +77,8 @@ ge::NodePtr KernelRunContextBuilder::MakeNode(const ge::OpDescPtr &op_desc) {
     auto data_node = graph_->AddNode(op_data);
     ge::GraphUtils::AddEdge(data_node->GetOutDataAnchor(0), fake_node->GetInDataAnchor(i));
   }
+  // AddNode operation may change node id to 0, which need to be recovered
+  op_desc->SetId(node_id);
   return fake_node;
 }
 }  // namespace gert
