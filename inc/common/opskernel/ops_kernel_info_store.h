@@ -32,9 +32,9 @@
 namespace ge {
 class OpsKernelInfoStore {
  public:
-  OpsKernelInfoStore() {}
+  OpsKernelInfoStore() = default;
 
-  virtual ~OpsKernelInfoStore() {}
+  virtual ~OpsKernelInfoStore() = default;
   OpsKernelInfoStore(const OpsKernelInfoStore &) = delete;
   OpsKernelInfoStore(OpsKernelInfoStore &&) = delete;
   OpsKernelInfoStore &operator=(const OpsKernelInfoStore &) = delete;

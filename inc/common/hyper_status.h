@@ -33,7 +33,7 @@ class HyperStatus {
     delete[] status_;
   }
 
-  HyperStatus() : status_(nullptr) {}
+  HyperStatus() {}
   HyperStatus(const HyperStatus &other);
   HyperStatus(HyperStatus &&other) noexcept;
   HyperStatus &operator=(const HyperStatus &other);
@@ -44,7 +44,7 @@ class HyperStatus {
   static HyperStatus ErrorStatus(std::unique_ptr<ge::char_t[]> message);
 
  private:
-  ge::char_t *status_;
+  ge::char_t *status_ = nullptr;
 };
 }  // namespace gert
 

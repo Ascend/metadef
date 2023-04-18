@@ -15,7 +15,7 @@
  */
 
 #include "graph/utils/graph_utils.h"
-#include "graph/ge_local_context.h"
+
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
@@ -29,6 +29,7 @@
 
 #include "graph/ge_context.h"
 #include "graph/debug/ge_util.h"
+#include "graph/ge_local_context.h"
 #include "proto/ge_ir.pb.h"
 #include "graph/utils/file_utils.h"
 #include "graph/utils/ge_ir_utils.h"

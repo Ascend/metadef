@@ -17,11 +17,11 @@
 #include "graph/utils/file_utils.h"
 
 #include <cerrno>
+#include <fstream>
 #include "graph/types.h"
 #include "graph/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
 #include "graph/def_types.h"
-#include <fstream>
 #include "common/checker.h"
 
 namespace {
@@ -186,16 +186,16 @@ graphStatus WriteBinToFile(const int32_t fd, const char_t * const data, size_t d
     return GRAPH_FAILED;
   }
   int64_t write_count = 0L;
-  auto seek = PtrToPtr<void, uint8_t>(static_cast<void *>(const_cast<char_t *>(data)));
+  auto seek = static_cast<void *>(const_cast<char_t *>(data));
   while (data_len > kMaxWriteSize) {
-    write_count = mmWrite(fd, reinterpret_cast<void *>(seek), static_cast<uint32_t>(kMaxWriteSize));
+    write_count = mmWrite(fd, seek, static_cast<uint32_t>(kMaxWriteSize));
     GE_ASSERT_TRUE(((write_count != EN_INVALID_PARAM) && (write_count != EN_ERROR)),
         "Write data failed, data_len: %llu", data_len);
-    seek = PtrAdd<uint8_t>(seek, static_cast<size_t>(data_len), kMaxWriteSize);
+    seek = PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(seek), static_cast<size_t>(data_len), kMaxWriteSize);
     data_len -= kMaxWriteSize;
   }
   if (data_len != 0UL) {
-    write_count = mmWrite(fd, reinterpret_cast<void *>(seek), static_cast<uint32_t>(data_len));
+    write_count = mmWrite(fd, seek, static_cast<uint32_t>(data_len));
     GE_ASSERT_TRUE(((write_count != EN_INVALID_PARAM) && (write_count != EN_ERROR)),
         "Write data failed, data_len: %llu", data_len);
   }

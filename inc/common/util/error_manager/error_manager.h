@@ -215,8 +215,8 @@ class ErrorManager {
     }
   };
 
-  ErrorManager() {}
-  ~ErrorManager() {}
+  ErrorManager() = default;
+  ~ErrorManager() = default;
 
   ErrorManager(const ErrorManager &) = delete;
   ErrorManager(ErrorManager &&) = delete;

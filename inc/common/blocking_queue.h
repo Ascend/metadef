@@ -28,15 +28,15 @@ constexpr int32_t kDefaultWaitTimeoutInSec = 600;
 template <typename T>
 class BlockingQueue {
  public:
-  explicit BlockingQueue(const uint32_t max_size = kDefaultMaxQueueSize) : max_size_(max_size), is_stoped_(false) {}
+  explicit BlockingQueue(const uint32_t max_size = kDefaultMaxQueueSize) : max_size_(max_size) {}
 
-  ~BlockingQueue() {}
+  ~BlockingQueue() = default;
 
   bool Pop(T &item, const int32_t time_out = INT32_MAX) {
     std::unique_lock<std::mutex> lock(mutex_);
 
     while (!empty_cond_.wait_for(lock, std::chrono::seconds(time_out),
-                                 [this]() { return (!queue_.empty()) || (is_stoped_); })) {
+                                 [this]() -> bool { return (!queue_.empty()) || (is_stoped_); })) {
       is_stuck_ = true;
       return false;
     }
@@ -158,7 +158,7 @@ class BlockingQueue {
   std::condition_variable full_cond_;
   uint32_t max_size_;
 
-  bool is_stoped_;
+  bool is_stoped_ = false;
   bool is_stuck_ = false;
 };
 }  // namespace ge
