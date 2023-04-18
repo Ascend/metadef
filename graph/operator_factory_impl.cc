@@ -214,10 +214,10 @@ graphStatus OperatorFactoryImpl::RegisterInferShapeFunc(const std::string &opera
   const std::map<std::string, ge::InferShapeFunc>::const_iterator
       it = operator_infershape_funcs_->find(operator_type);
   if (it != operator_infershape_funcs_->cend()) {
-    GELOGW("[Register][InferFunc] op [%s] has already registered infer_func", operator_type.c_str());
+    GELOGW("op [%s] has registered infer func", operator_type.c_str());
     return GRAPH_FAILED;
   }
-  GELOGD("Register infershape function of type: %s.", operator_type.c_str());
+  GELOGD("Register infer func for type: %s.", operator_type.c_str());
   (void)operator_infershape_funcs_->emplace(operator_type, infer_shape_func);
   return GRAPH_SUCCESS;
 }
@@ -306,7 +306,7 @@ graphStatus OperatorFactoryImpl::RegisterInferValueRangeFunc(const std::string &
   const std::map<std::string, ge::InferValueRangePara>::const_iterator
       it = operator_infer_value_range_paras_->find(operator_type);
   if (it != operator_infer_value_range_paras_->cend()) {
-    GELOGW("optype[%s] has registered infervalue func, no duplicate registration", operator_type.c_str());
+    GELOGW("optype[%s] has registered infervalue func", operator_type.c_str());
     return GRAPH_FAILED;
   }
   InferValueRangePara tmp_para(when_call, use_cpu_kernel, infer_value_range_func);
@@ -367,7 +367,7 @@ graphStatus OperatorFactoryImpl::RegisterInferAxisTypeInfoFunc(const std::string
   const std::map<std::string, InferAxisTypeInfoFunc>::const_iterator
       it = operator_infer_axis_type_info_funcs_->find(operator_type);
   if (it != operator_infer_axis_type_info_funcs_->cend()) {
-    GELOGW("[Register][InferFunc] optype[%s] has registered axis type info func", operator_type.c_str());
+    GELOGW("optype[%s] has registered axis type info func", operator_type.c_str());
     return GRAPH_FAILED;
   }
   (void)operator_infer_axis_type_info_funcs_->emplace(operator_type, infer_axis_type_info_func);
