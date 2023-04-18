@@ -130,15 +130,10 @@ ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpS
   GE_ASSERT_TRUE(mmClose(fd) == EN_OK);
   return ge::GRAPH_SUCCESS;
 }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
 std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(const void *handle,
                                                                                 const std::string &so_path,
                                                                                 size_t &impl_num) const {
-#else
-std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(void *handle,
-                                                                                const std::string &so_path,
-                                                                                size_t &impl_num) const {
-#endif
   if (handle == nullptr) {
     GELOGE(ge::FAILED, "handle is nullptr");
     return nullptr;
@@ -180,13 +175,9 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
 
   return impl_funcs;
 }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
 void OpImplRegistryHolder::AddTypesToImpl(const gert::OpImplKernelRegistry::OpType op_type,
                                           const gert::OpImplKernelRegistry::OpImplFunctions funcs) {
-#else
-void OpImplRegistryHolder::AddTypesToImpl(gert::OpImplKernelRegistry::OpType op_type,
-                                          gert::OpImplKernelRegistry::OpImplFunctions funcs) {
-#endif
   types_to_impl_[op_type] = funcs;
 }
 
