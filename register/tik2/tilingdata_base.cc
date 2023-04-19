@@ -23,9 +23,11 @@ namespace optiling {
 std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
 
 void TilingDef::SaveToBuffer(void *pdata, size_t capacity) const {
-  auto  mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
+  auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
   if (mem_ret != EOK) {
-    GELOGW("TilingDef::SaveToBuffer failed: memcpy_s return [%d].", mem_ret);
+    GELOGE(ge::GRAPH_FAILED,
+           "TilingDef::SaveToBuffer failed: memcpy_s return [%d], capacity = [%zu], data_size_ = [%zu].", mem_ret,
+           capacity, data_size_);
   }
 }
 

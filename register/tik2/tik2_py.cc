@@ -437,6 +437,7 @@ extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *res
 
   nlohmann::json json_obj;
   json_obj["class_name"] = tiling_def->GetTilingClassName().GetString();
+  json_obj["data_size"] = tiling_def->GetDataSize();
   const auto &field_list = tiling_def->GetFieldInfo();
   nlohmann::json json_field_list;
   for (const auto &filed : field_list) {
