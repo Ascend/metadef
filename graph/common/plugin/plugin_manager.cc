@@ -334,7 +334,7 @@ Status PluginManager::LoadSo(const std::string &path, const std::vector<std::str
       continue;
     }
 
-    GELOGI("dlopen the shared library path name: %s.", file_path_dlopen.c_str());
+    GELOGI("dlopen path: %s.", file_path_dlopen.c_str());
 
     // load continue when dlopen is failed
     const auto handle = mmDlopen(file_path_dlopen.c_str(),
@@ -385,7 +385,7 @@ Status PluginManager::LoadSo(const std::string &path, const std::vector<std::str
 
   GELOGI("The total number of shared libraries loaded: %u", num_of_loaded_so);
   for (const auto &name : so_list_) {
-    GELOGI("load shared library %s successfully", name.c_str());
+    GELOGI("load %s successfully", name.c_str());
   }
 
   if (num_of_loaded_so == 0U) {
@@ -491,7 +491,7 @@ Status PluginManager::Load(const std::string &path, const std::vector<std::strin
       continue;
     }
 
-    GELOGI("Dlopen so path name: %s. ", file_path_dlopen.c_str());
+    GELOGI("Dlopen path: %s.", file_path_dlopen.c_str());
 
     // load continue when dlopen is failed
     const auto handle = mmDlopen(file_path_dlopen.c_str(),
@@ -617,7 +617,7 @@ void PluginManager::GetCurEnvPackageOsAndCpuType(std::string &host_env_os, std::
     GELOGW("opp and runtime not exit");
     return;
   }
-  GELOGI("Begin to extract os and cpu info from %s", scene.c_str());
+  GELOGI("extract os and cpu info from %s", scene.c_str());
   std::ifstream ifs(scene);
   if (!ifs.good()) {
     GELOGW("Can not open file:%s", scene.c_str());

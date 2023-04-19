@@ -64,7 +64,7 @@ BroadCastInfer(const std::function<std::vector<int64_t>()> &get_in1_shape,
     return GRAPH_SUCCESS;
   }
 
-  const auto len_diff = static_cast<int64_t>(x1_shape.size()) - static_cast<int64_t>(x2_shape.size());
+  const int64_t len_diff = static_cast<int64_t>(x1_shape.size()) - static_cast<int64_t>(x2_shape.size());
   if (len_diff >= 0) {
     return BroadCastRankAndDim(x1_shape, x2_shape, len_diff, set_out_shape);
   } else {

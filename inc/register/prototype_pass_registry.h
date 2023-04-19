@@ -33,11 +33,11 @@ class ProtoTypeBasePass {
  public:
   ProtoTypeBasePass() = default;
   virtual Status Run(google::protobuf::Message *message) = 0;
-  virtual ~ProtoTypeBasePass() {}
+  virtual ~ProtoTypeBasePass() = default;
 
  private:
   ProtoTypeBasePass(const ProtoTypeBasePass &) = delete;
-  ProtoTypeBasePass &operator=(const ProtoTypeBasePass &) = delete;
+  ProtoTypeBasePass &operator=(const ProtoTypeBasePass &) & = delete;
 };
 
 class ProtoTypePassRegistry {
@@ -62,7 +62,7 @@ class ProtoTypePassRegistrar {
  public:
   ProtoTypePassRegistrar(const char_t *const pass_name, ProtoTypeBasePass *(*const create_fn)(),
                          const domi::FrameworkType &fmk_type);
-  ~ProtoTypePassRegistrar() {}
+  ~ProtoTypePassRegistrar() = default;
 };
 }  // namespace ge
 

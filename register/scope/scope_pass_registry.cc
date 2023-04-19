@@ -42,8 +42,7 @@ void ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::RegisterScopeFusionPa
   create_fn_pack.create_fn = create_fn;
   create_fn_packs_[pass_name] = create_fn_pack;
   pass_names_.push_back(pass_name);
-  GELOGI("Register scope fusion pass, pass name = %s, is_enable = %s.",
-         pass_name.c_str(), is_general ? "true" : "false");
+  GELOGI("Register pass name = %s, is_enable = %s.", pass_name.c_str(), is_general ? "true" : "false");
 }
 
 ScopeFusionPassRegistry::CreateFn ScopeFusionPassRegistry::ScopeFusionPassRegistryImpl::GetCreateFn(

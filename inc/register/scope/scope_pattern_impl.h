@@ -28,7 +28,7 @@ constexpr float32_t kCompareRatio = 2.0F;
 class ScopeAttrValue::ScopeAttrValueImpl {
  public:
   ScopeAttrValueImpl() : int_value_(0), float_value_(0.0F), string_value_(""), bool_value_(false) {}
-  ~ScopeAttrValueImpl() {}
+  ~ScopeAttrValueImpl() = default;
 
   void SetIntValue(const int64_t &value) { int_value_ = value; }
   void SetFloatValue(const float32_t &value) { float_value_ = value; }
@@ -67,7 +67,7 @@ class NodeAttrFeature::NodeAttrFeatureImpl : ScopeBaseFeature {
                       const ScopeAttrValue &attr_value)
       : ScopeBaseFeature(), node_type_(nodeType), attr_name_(attr_name), datatype_(datatype),
         attr_value_(attr_value) {}
-  ~NodeAttrFeatureImpl() override {}
+  ~NodeAttrFeatureImpl() override = default;
   bool Match(const Scope *scope) override;
   Status CheckNodeAttrFeatureData(const bool init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
   Status CheckNodeAttrFeatureData(const std::string init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
@@ -97,7 +97,7 @@ class ScopeFeature::ScopeFeatureImpl : ScopeBaseFeature {
                    const std::string sub_scope_mask = "", const int64_t step = 0)
       : ScopeBaseFeature(), sub_type_(sub_type), num_(num), suffix_(suffix), sub_scope_mask_(sub_scope_mask),
         step_(step) {}
-  ~ScopeFeatureImpl() override {}
+  ~ScopeFeatureImpl() override = default;
   bool Match(const Scope *const scope) override;
   bool SubScopesMatch(const std::vector<Scope *> &scopes);
 
@@ -113,7 +113,7 @@ class ScopeFeature::ScopeFeatureImpl : ScopeBaseFeature {
 class ScopePattern::ScopePatternImpl {
  public:
   ScopePatternImpl() {}
-  ~ScopePatternImpl() {}
+  ~ScopePatternImpl() = default;
   bool Match(const Scope *scope) const;
   void SetSubType(const std::string &sub_type);
   const std::string &SubType() const { return sub_type_; }

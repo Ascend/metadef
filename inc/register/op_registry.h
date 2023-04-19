@@ -27,7 +27,7 @@
 #include "register/register.h"
 
 namespace domi {
-enum class RemoveInputType {
+enum class RemoveInputType : uint16_t {
   OMG_MOVE_TYPE_DTYPE = 0,
   OMG_MOVE_TYPE_VALUE = 1,
   OMG_MOVE_TYPE_SHAPE = 2,
@@ -45,7 +45,7 @@ struct RemoveInputConfigure {
   RemoveInputType moveType;
   bool attrValue = false;
   std::string originalType;
-  std::vector<int> input_order;
+  std::vector<int32_t> input_order;
 };
 
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpRegistry {
