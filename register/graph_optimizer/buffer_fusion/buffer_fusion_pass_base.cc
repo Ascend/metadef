@@ -23,7 +23,7 @@
 namespace fe {
 namespace {
   constexpr char const *kAttrNameIsOpDynamicImpl = "_is_op_dynamic_impl";
-  const uint32_t kNoNeedCompareSize = 2;
+  constexpr uint32_t kNoNeedCompareSize = 2;
 }
 BufferFusionPassBase::BufferFusionPassBase() {}
 

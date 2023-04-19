@@ -69,7 +69,7 @@ bool PatternFusionBasePassImpl::CheckAccuracySupported(const ge::NodePtr &node) 
     return false;
   }
   std::string un_supported_reason;
-  bool ret = ops_kernel_info_store_ptr_->CheckAccuracySupported(node, un_supported_reason, true);
+  const bool ret = ops_kernel_info_store_ptr_->CheckAccuracySupported(node, un_supported_reason, true);
   GELOGD("Check result for op[%s, %s] is [%d], reason is [%s].",
          node->GetName().c_str(), node->GetType().c_str(), ret, un_supported_reason.c_str());
   return ret;
@@ -207,7 +207,7 @@ bool PatternFusionBasePassImpl::MatchFromOutput(CandidateAndMapping &cand) const
         return false;
       }
 
-      bool matching_result =
+      const bool matching_result =
           (IsOpTypeExist(ge::NodeUtils::GetNodeType(*input_node), input_desc->types) || input_desc->types.empty()) &&
           ((!usage_flags[static_cast<size_t>(j)]) || input_desc->repeatable);
       if (!matching_result) {
@@ -251,7 +251,7 @@ void PatternFusionBasePassImpl::MatchOneOutputNode(const ge::NodePtr &output_nod
   }
   for (size_t i = 0; i < outputs_desc.size(); i++) {
     const FusionPattern::OpDescPtr &output_desc = outputs_desc.at(i);
-    bool is_matched =
+    const bool is_matched =
         (IsOpTypeExist(ge::NodeUtils::GetNodeType(*output_node), output_desc->types) || output_desc->types.empty()) &&
         (!usage_flags[out_idx + i]);
     if (!is_matched) {

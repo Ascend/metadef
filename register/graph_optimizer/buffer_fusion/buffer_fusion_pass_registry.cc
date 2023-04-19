@@ -28,7 +28,7 @@ class BufferFusionPassRegistry::BufferFusionPassRegistryImpl {
   void RegisterPass(const BufferFusionPassType &pass_type, const std::string &pass_name,
                     const BufferFusionPassRegistry::CreateFn create_fn, PassAttr attr) {
     const std::lock_guard<std::mutex> lock(mu_);
-    std::string pass_module = IsPassAttrTypeOn(attr, PassAttrType::FE_PASS_FLAG) ? "FE" : "TBE";
+    const std::string pass_module = IsPassAttrTypeOn(attr, PassAttrType::FE_PASS_FLAG) ? "FE" : "TBE";
     if (pass_descs_.find(pass_type) != pass_descs_.cend()) {
       pass_descs_[pass_type][pass_name].attr = attr;
       pass_descs_[pass_type][pass_name].create_fn = create_fn;

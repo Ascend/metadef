@@ -25,15 +25,15 @@ using std::map;
 using std::string;
 using std::vector;
 
-const int64_t TBE_FUSION_OP_NUM_MAX = 5L;
-const int64_t TBE_PATTERN_NUM_MAX = 5L;
-const int64_t TBE_PATTERN_NUM_NONE = 0L;
-const int64_t TBE_PATTERN_NUM_DEFAULT = 1L;
-const int64_t TBE_OUTPUT_BRANCH_DEFAULT = 0L;
-const int64_t TBE_OUTPUT_BRANCH_SINGLE = 1L;
-const int64_t TBE_OUTPUT_BRANCH_MULTI = 2L;
-const int64_t TBE_PATTERN_GROUPID_INVALID = -1L;
-const int32_t TBE_OUTPUT_MAX_NUM_LIMIT = 10;
+constexpr int64_t TBE_FUSION_OP_NUM_MAX = 5L;
+constexpr int64_t TBE_PATTERN_NUM_MAX = 5L;
+constexpr int64_t TBE_PATTERN_NUM_NONE = 0L;
+constexpr int64_t TBE_PATTERN_NUM_DEFAULT = 1L;
+constexpr int64_t TBE_OUTPUT_BRANCH_DEFAULT = 0L;
+constexpr int64_t TBE_OUTPUT_BRANCH_SINGLE = 1L;
+constexpr int64_t TBE_OUTPUT_BRANCH_MULTI = 2L;
+constexpr int64_t TBE_PATTERN_GROUPID_INVALID = -1L;
+constexpr int32_t TBE_OUTPUT_MAX_NUM_LIMIT = 10;
 
 const std::map<ShapeTypeRule, const std::string> kShapeTypeRuleToStr {
         {IGNORE_SHAPE_TYPE, "IGNORE_SHAPE_TYPE"},

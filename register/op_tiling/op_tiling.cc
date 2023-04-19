@@ -112,7 +112,7 @@ private:
         dest.emplace_back(static_cast<T>(elem));
       }
     }
-    auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
+    const auto dest_ptr = std::make_shared<AnyVecValue<T>>(dest);
     data_map_.emplace(name + '_' + typeid(T).name(), dest_ptr);
     data = dest_ptr->GetDataBuf();
     GELOGI("IntListList attr found. %s", name.c_str());
@@ -226,7 +226,7 @@ bool FeedTeOpTensorArg(ge::OpDesc::Vistor<ge::GeTensorDescPtr> &tensor_desc_vec,
     tensor.ori_shape = tensor_desc_ptr->GetOriginShape().GetDims();
     tensor.name = op_desc->GetInputNameByIndex(static_cast<uint32_t>(index));
 
-    ge::Format primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(tensor_desc_ptr->GetFormat()));
+    const ge::Format primary_format = static_cast<ge::Format>(ge::GetPrimaryFormat(tensor_desc_ptr->GetFormat()));
     tensor.format = ge::TypeUtils::FormatToSerialString(primary_format);
     tensor.ori_format = ge::TypeUtils::FormatToSerialString(tensor_desc_ptr->GetOriginFormat());
 
@@ -471,7 +471,7 @@ ge::graphStatus PostProcCalculateV2(const ge::Operator &op, OpRunInfoV2 &run_inf
   const std::vector<int64_t> all_workspaces = op_desc->GetWorkspaceBytes();
   std::vector<int64_t> op_workspaces;
   run_info.GetAllWorkspaces(op_workspaces);
-  size_t op_work_size = op_workspaces.size();
+  const size_t op_work_size = op_workspaces.size();
   if (op_work_size > all_workspaces.size()) {
     GELOGW("Op name:%s tiling return workspace number(%zu) large than all workspace num(%zu).",
            op_desc->GetName().c_str(), op_work_size, all_workspaces.size());
@@ -1123,7 +1123,7 @@ extern "C" ge::graphStatus OpFftsPlusCalculate(const ge::Operator &op, std::vect
       return ge::GRAPH_FAILED;
     }
     // call original interface
-    ge::graphStatus rc = OpParaCalculateV2(op, op_run_info[i]);
+    const ge::graphStatus rc = OpParaCalculateV2(op, op_run_info[i]);
     if (rc != ge::GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E19999", "OpParaCalculateV2 failed, op_type:%s, op_name:%s", op_desc->GetType().c_str(),
                         op_desc->GetName().c_str());
