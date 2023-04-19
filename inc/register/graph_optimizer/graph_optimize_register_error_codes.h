@@ -23,10 +23,10 @@
 namespace fe {
 
 /** Assigned SYS ID */
-constexpr uint8_t SYSID_FE = 3;
+const uint8_t SYSID_FE = 3;
 
 /** Common module ID */
-constexpr uint8_t FE_MODID_COMMON = 50;
+const uint8_t FE_MODID_COMMON = 50;
 
 /**  FE error code definiton Macro
 *  Build error code

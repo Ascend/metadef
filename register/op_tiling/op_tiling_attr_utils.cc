@@ -98,7 +98,7 @@ static const std::vector<AttrDataType> kValidDstDTypeList {
   AttrDataType::LIST_FLOAT32
 };
 
-static constexpr uint32_t kBitsOfByte = 8;
+static const uint32_t kBitsOfByte = 8;
 
 inline uint32_t GenerateAttrFuncKey(const AttrDataType attr_dtype) {
   return ((static_cast<uint32_t>(attr_dtype) & 0xFF) << kBitsOfByte) | (static_cast<uint32_t>(attr_dtype) & 0xFF);
