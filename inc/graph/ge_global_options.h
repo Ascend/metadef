@@ -18,8 +18,10 @@
 
 #include <map>
 #include <string>
+#include <mutex>
 
 namespace ge {
+std::mutex &GetGlobalOptionsMutex();
 std::map<std::string, std::string> &GetMutableGlobalOptions();
 }
 #endif  // INC_GRAPH_GE_GLOBAL_OPTIONS_H_
