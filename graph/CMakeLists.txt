@@ -93,6 +93,7 @@ SET(GRAPH_SOURCE_LIST
     "debug/graph_debug.cc"
     "opsproto/opsproto_manager.cc"
     "utils/op_desc_utils.cc"
+    "utils/op_type_utils.cc"
     "utils/tuning_utils.cc"
     "utils/ffts_graph_utils.cc"
     "utils/transformer_utils.cc"
