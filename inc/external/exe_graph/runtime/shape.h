@@ -43,7 +43,7 @@ struct Shape {
    * 通过dims值构造shape，例如：Shape({8,3,224,224})创建一个Shape实例，有4个维度，每个维度的值分别是8,3,224,224
    * @param dims shape的所有dim值
    */
-  Shape(const std::initializer_list<int64_t> &args) : dim_num_(0), dims_{0} {
+  Shape(const std::initializer_list<int64_t> &args) : Shape() {
     if (args.size() > kMaxDimNum) {
       return;
     }
@@ -52,7 +52,6 @@ struct Shape {
     for (const auto arg : args) {
       dims_[i++] = arg;
     }
-    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
