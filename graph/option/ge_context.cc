@@ -81,6 +81,11 @@ bool GEContext::GetTrainGraphFlag() const {
   return false;
 }
 
+std::mutex &GetGlobalOptionsMutex() {
+  static std::mutex global_options_mutex;
+  return global_options_mutex;
+}
+
 std::map<std::string, std::string> &GetMutableGlobalOptions() {
   static std::map<std::string, std::string> context_global_options{};
   return context_global_options;

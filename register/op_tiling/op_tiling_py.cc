@@ -322,12 +322,20 @@ ge::graphStatus ParseInputs(const char *inputs, ge::OpDescPtr &op_desc, std::vec
   for (const auto &desc : desc_list) {
     if (desc.is_array()) {
       for (const auto &ele : desc) {
+        if (ele.is_null()) {
+          GELOGW("Empty input, cur index %u", index);
+          continue;
+        }
         if (ParseInput(ele, op_desc, index, storage_shapes, index_to_tensor) != ge::GRAPH_SUCCESS) {
           return ge::GRAPH_FAILED;
         }
         ++index;
       }
     } else {
+      if (desc.is_null()) {
+        GELOGW("Empty input, cur index %u", index);
+        continue;
+      }
       if (ParseInput(desc, op_desc, index, storage_shapes, index_to_tensor) != ge::GRAPH_SUCCESS) {
         return ge::GRAPH_FAILED;
       }

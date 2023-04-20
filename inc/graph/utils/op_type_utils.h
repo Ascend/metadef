@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef INC_GRAPH_GE_GLOBAL_OPTIONS_H_
-#define INC_GRAPH_GE_GLOBAL_OPTIONS_H_
 
-#include <map>
+#ifndef __INC_METADEF_OP_TYPE_UTILS_H
+#define __INC_METADEF_OP_TYPE_UTILS_H
 #include <string>
-#include <mutex>
 
 namespace ge {
-std::mutex &GetGlobalOptionsMutex();
-std::map<std::string, std::string> &GetMutableGlobalOptions();
-}
-#endif  // INC_GRAPH_GE_GLOBAL_OPTIONS_H_
+class OpTypeUtils {
+ public:
+  static bool IsDataNode(const std::string &type);
+  static bool IsVariableNode(const std::string &type);
+  static bool IsVarLikeNode(const std::string &type);
+};
+} // namespace ge
+#endif // __INC_METADEF_OP_TYPE_UTILS_H
