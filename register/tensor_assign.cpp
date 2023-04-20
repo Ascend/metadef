@@ -276,7 +276,7 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
 void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int32_t val_size,
                                          const int32_t count, GeTensorPtr &weight) {
   const tensorflow::DataType data_type = tensor.dtype();
-  const int32_t kNumElementOfComplex = 2;
+  constexpr int32_t kNumElementOfComplex = 2;
   if (CheckFloatVal(data_type)) {
     (void)GetVal(val_size, tensor.float_val(), count, weight);
   } else if (CheckComplex64Val(data_type)) {

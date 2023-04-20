@@ -30,8 +30,8 @@ class OpKernelRegistry::OpKernelRegistryImpl {
 
   OpKernelRegistry::CreateFn GetCreateFn(const std::string &op_type) {
     const std::lock_guard<std::mutex> lock(mu_);
-    const std::map<std::string, OpKernelRegistry::CreateFn>::const_iterator it = create_fns_.find(op_type);
-    if (it == create_fns_.cend()) {
+    const auto it = create_fns_.find(op_type);
+    if (it == create_fns_.end()) {
       return nullptr;
     }
 
@@ -47,8 +47,7 @@ OpKernelRegistry::OpKernelRegistry() {
   impl_ = ge::ComGraphMakeUnique<OpKernelRegistryImpl>();
 }
 
-OpKernelRegistry::~OpKernelRegistry() {
-}
+OpKernelRegistry::~OpKernelRegistry() = default;
 
 OpKernelRegistry& OpKernelRegistry::GetInstance() {
   static OpKernelRegistry instance;

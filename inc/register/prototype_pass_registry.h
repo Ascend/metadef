@@ -48,7 +48,7 @@ class ProtoTypePassRegistry {
   static ProtoTypePassRegistry &GetInstance();
 
   void RegisterProtoTypePass(const char_t *const pass_name, const CreateFn &create_fn,
-                             const domi::FrameworkType &fmk_type);
+                             const domi::FrameworkType fmk_type);
 
   std::vector<std::pair<std::string, CreateFn>> GetCreateFnByType(const domi::FrameworkType fmk_type) const;
 
@@ -61,7 +61,7 @@ class ProtoTypePassRegistry {
 class ProtoTypePassRegistrar {
  public:
   ProtoTypePassRegistrar(const char_t *const pass_name, ProtoTypeBasePass *(*const create_fn)(),
-                         const domi::FrameworkType &fmk_type);
+                         const domi::FrameworkType fmk_type);
   ~ProtoTypePassRegistrar() = default;
 };
 }  // namespace ge
