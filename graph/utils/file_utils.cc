@@ -165,8 +165,17 @@ graphStatus GetBinFromFile(const std::string &path, char_t *buffer, size_t &data
   (void)ifs.seekg(0, std::ifstream::end);
   const size_t len = static_cast<size_t>(ifs.tellg());
   (void)ifs.seekg(0, std::ifstream::beg);
+  if (len != data_len) {
+    REPORT_CALL_ERROR("E18888",
+        "Bin length[%zu] is not equal to defined length[%zu], file_path[%s].",
+        len, data_len, path.c_str());
+    GELOGE(GRAPH_FAILED,
+        "Bin length[%zu] is not equal to defined length[%zu], file_path[%s].",
+        len, data_len, path.c_str());
+    ifs.close();
+    return GRAPH_FAILED;
+  }
   (void)ifs.read(buffer, static_cast<std::streamsize>(len));
-  data_len = len;
   ifs.close();
   return GRAPH_SUCCESS;
 }

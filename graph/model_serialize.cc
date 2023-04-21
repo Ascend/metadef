@@ -904,7 +904,6 @@ bool ModelSerializeImp::LoadWeightFromFile(const std::string &file_path,
     GELOGE(GRAPH_FAILED, "Value length is less than 0.");
     return false;
   }
-  size_t data_len = 0UL;
   auto bin_data = std::unique_ptr<char_t[]>(new(std::nothrow) char_t[length]);
   if (bin_data == nullptr) {
     GELOGE(FAILED, "[Allocate][Mem]Allocate mem failed");
@@ -919,20 +918,12 @@ bool ModelSerializeImp::LoadWeightFromFile(const std::string &file_path,
   } else {
     weight_path = file_path;
   }
+  size_t data_len = static_cast<size_t>(length);
   if (GetBinFromFile(weight_path, static_cast<char_t *>(bin_data.get()), data_len) != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "Get bin from file failed.");
     return false;
   }
-  if (static_cast<int64_t>(data_len) != length) {
-    REPORT_CALL_ERROR("E18888",
-        "Bin length in model[%zu] is not equal to defined length[%zu], weight path is [%s].",
-        data_len, static_cast<size_t>(length), file_path.c_str());
-    GELOGE(GRAPH_FAILED,
-        "Bin length in model[%zu] is not equal to defined length[%zu], weight path is [%s]",
-        data_len, static_cast<size_t>(length), file_path.c_str());
-    return false;
-  }
-  weight = std::string(bin_data.get(), data_len);
+  weight = std::string(bin_data.get(), length);
   return true;
 }
 

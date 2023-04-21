@@ -294,6 +294,7 @@ TEST_F(ModelUt, SaveLargeModelWithRelatedPath2) {
   system("rm -rf ./air_weight");
   system("rm -rf ./model.air");
 }
+
 TEST_F(ModelUt, SaveLargeModelWithRelatedPath3) {
   auto md = BuildModelWithLargeConst();
   std::string file_name = "model.air";
@@ -322,6 +323,26 @@ TEST_F(ModelUt, SaveLargeModelWithRelatedPath3) {
   auto sub_graph = com_graph1->GetSubgraph("sub_graph");
   ASSERT_EQ((sub_graph == nullptr), false);
   ASSERT_EQ(sub_graph->GetAllNodesSize(), 5);
+  system("rm -rf ./air_weight");
+  system("rm -rf ./model.air");
+}
+
+TEST_F(ModelUt, LoadLargeModelWithWrongWeight) {
+  auto md = BuildModelWithLargeConst();
+  std::string file_name = "./model.air";
+  EXPECT_EQ(md.SaveToFile(file_name), GRAPH_SUCCESS);
+  std::string weight_path = "./air_weight/model_name_main_model/Const_0_file";
+  char real_path[128];
+  auto res = realpath(weight_path.c_str(), real_path);
+  std::ofstream ofs(real_path, std::ios::out | std::ofstream::app);
+  char_t* data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  if (ofs.is_open()) {
+    ofs << data << std::endl;
+    ofs.close();
+  }
+
+  Model model_back;
+  EXPECT_NE(model_back.LoadFromFile("./model.air"), GRAPH_SUCCESS);
   system("rm -rf ./air_weight");
   system("rm -rf ./model.air");
 }
