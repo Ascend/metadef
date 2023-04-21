@@ -26,11 +26,11 @@ namespace gert {
 class AnchorInstanceInfo {
  public:
   AnchorInstanceInfo() {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   };
   AnchorInstanceInfo(const uint32_t instance_start, const uint32_t instantiation_num)
       : instance_start_(instance_start), instantiation_num_(instantiation_num) {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
@@ -75,7 +75,7 @@ static_assert(std::is_standard_layout<AnchorInstanceInfo>::value, "The class Anc
 class CompileTimeTensorDesc {
  public:
   CompileTimeTensorDesc() {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
   /**
    * 获取DataType

@@ -68,7 +68,7 @@ class ContinuousVector {
   void Init(const size_t capacity) {
     capacity_ = capacity;
     size_ = 0U;
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
   /**
    * 获取当前保存的元素个数
@@ -154,7 +154,7 @@ class ContinuousVectorVector {
       return;
     }
     SetOffset(0U, GetOverHeadLength(capacity_));
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   template<typename T>
