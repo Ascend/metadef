@@ -247,7 +247,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeBaseFeature {
   ScopeBaseFeature &operator=(const ScopeBaseFeature &) = delete;
   ScopeBaseFeature(ScopeBaseFeature &&) = delete;
   ScopeBaseFeature &operator=(ScopeBaseFeature &&) = delete;
-  virtual ~ScopeBaseFeature(){};
+  virtual ~ScopeBaseFeature()= default;
 };
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBaseFeature {
@@ -391,7 +391,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeUtil {
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFusionPassRegistrar {
  public:
   ScopeFusionPassRegistrar(const char_t *pass_name, ScopeBasePass *(*create_fn)(), bool is_general);
-  ~ScopeFusionPassRegistrar() {}
+  ~ScopeFusionPassRegistrar() = default;
 };
 }  // namespace ge
 #define REGISTER_SCOPE_FUSION_PASS(pass_name, scope_pass, is_general) \

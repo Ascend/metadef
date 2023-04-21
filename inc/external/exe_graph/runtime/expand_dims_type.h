@@ -49,7 +49,7 @@ class ExpandDimsType {
    * 通过字符串创建一个补维规则
    * @param expand_dims_type 字符串描述的补维规则
    */
-  explicit ExpandDimsType(const ge::char_t *const expand_dims_type) : size_(0), mask_(0) {
+  explicit ExpandDimsType(const ge::char_t *const expand_dims_type) : ExpandDimsType() {
     if (expand_dims_type == nullptr) {
       return;
     }
@@ -65,7 +65,6 @@ class ExpandDimsType {
         SetExpandIndex(i);
       }
     }
-    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
@@ -78,7 +77,7 @@ class ExpandDimsType {
    * 为了实现简单，补维规则部分与字符串的顺序相反，例如字符串描述的补维规则为"1100"，那么对应的补维规则为"0011"转换为数字为3
    * @param expand_dims_type 补维规则
    */
-  explicit ExpandDimsType(const int64_t reshape_type_mask) : size_(0), mask_(0) {
+  explicit ExpandDimsType(const int64_t reshape_type_mask) : ExpandDimsType() {
     if (reshape_type_mask == 0) {
       return;
     }
@@ -87,7 +86,6 @@ class ExpandDimsType {
       return;
     }
     mask_ = static_cast<uint64_t>(static_cast<uint64_t>(reshape_type_mask) & 0xffULL);
-    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
   /**
    * 判断补维规则是否一致

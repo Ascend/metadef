@@ -24,7 +24,7 @@ namespace ge {
 class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
  public:
   void RegisterProtoTypePass(const std::string &pass_name, ProtoTypePassRegistry::CreateFn create_fn,
-                             const domi::FrameworkType &fmk_type) {
+                             const domi::FrameworkType fmk_type) {
     const std::lock_guard<std::mutex> lock(mu_);
     if (std::find(pass_names_.begin(), pass_names_.end(), pass_name) != pass_names_.end()) {
       GELOGW("[Register][Check] The prototype pass %s has been registered and will not overwrite the previous one",
@@ -33,10 +33,8 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
     }
     pass_names_.push_back(pass_name);
 
-    const std::map<domi::FrameworkType,
-                   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>>::const_iterator iter =
-        create_fns_.find(fmk_type);
-    if (iter != create_fns_.cend()) {
+    const auto iter = create_fns_.find(fmk_type);
+    if (iter != create_fns_.end()) {
       create_fns_[fmk_type].push_back(std::make_pair(pass_name, create_fn));
       GELOGD("Register prototype pass, pass name = %s", pass_name.c_str());
       return;
@@ -51,10 +49,8 @@ class ProtoTypePassRegistry::ProtoTypePassRegistryImpl {
   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> GetCreateFnByType(
     domi::FrameworkType fmk_type) {
     const std::lock_guard<std::mutex> lock(mu_);
-    const std::map<domi::FrameworkType,
-                   std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>>::const_iterator iter =
-        create_fns_.find(fmk_type);
-    if (iter == create_fns_.cend()) {
+    const auto iter = create_fns_.find(fmk_type);
+    if (iter == create_fns_.end()) {
       return std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>>{};
     }
     return iter->second;
@@ -70,7 +66,7 @@ ProtoTypePassRegistry::ProtoTypePassRegistry() {
   impl_ = ge::ComGraphMakeUnique<ProtoTypePassRegistryImpl>();
 }
 
-ProtoTypePassRegistry::~ProtoTypePassRegistry() {}
+ProtoTypePassRegistry::~ProtoTypePassRegistry() = default;
 
 ProtoTypePassRegistry &ProtoTypePassRegistry::GetInstance() {
   static ProtoTypePassRegistry instance;
@@ -78,7 +74,7 @@ ProtoTypePassRegistry &ProtoTypePassRegistry::GetInstance() {
 }
 
 void ProtoTypePassRegistry::RegisterProtoTypePass(const char_t *const pass_name, const CreateFn &create_fn,
-                                                  const domi::FrameworkType &fmk_type) {
+                                                  const domi::FrameworkType fmk_type) {
   if (impl_ == nullptr) {
     GELOGE(MEMALLOC_FAILED, "ProtoTypePassRegistry is not properly initialized.");
     return;
@@ -100,7 +96,7 @@ std::vector<std::pair<std::string, ProtoTypePassRegistry::CreateFn>> ProtoTypePa
 }
 
 ProtoTypePassRegistrar::ProtoTypePassRegistrar(const char_t *const pass_name, ProtoTypeBasePass *(*const create_fn)(),
-                                               const domi::FrameworkType &fmk_type) {
+                                               const domi::FrameworkType fmk_type) {
   if (pass_name == nullptr) {
     GELOGE(PARAM_INVALID, "Failed to register ProtoType pass, pass name is null.");
     return;

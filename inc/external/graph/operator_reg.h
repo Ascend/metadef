@@ -81,7 +81,10 @@ using std::vector;
     Operator::SetAttr(#x, v);                                               \
     return *this;                                                           \
   }                                                                         \
-  _THIS_TYPE &set_attr_##x(const function<AscendString()> &v) { return *this; }
+  _THIS_TYPE &set_attr_##x(const function<AscendString()> &v) {             \
+    (void)v;                                                                \
+    return *this;                                                           \
+  }
 
 #define ATTR_ListString(x, ...)                                             \
   graphStatus get_attr_##x(std::vector<AscendString> &ret) const {          \
@@ -98,7 +101,9 @@ using std::vector;
     return *this;                                                           \
   }                                                                         \
   _THIS_TYPE &set_attr_##x(const function<vector<AscendString>()> &v) {     \
-    return *this; }
+    (void)v;                                                                \
+    return *this;                                                           \
+  }
 
 #define ATTR_AscendString(x, ...)                                           \
   graphStatus get_attr_##x(AscendString &ret) const {                       \
@@ -178,7 +183,10 @@ using std::vector;
     Operator::SetAttr(#x, v);                                               \
     return *this;                                                           \
   }                                                                         \
-  _THIS_TYPE &set_attr_##x(const function<AscendString()> &v) { return *this; }
+  _THIS_TYPE &set_attr_##x(const function<AscendString()> &v) {             \
+    (void)v;                                                                \
+    return *this;                                                           \
+  }
 
 #define REQUIRED_ATTR_ListString(x)                                         \
   graphStatus get_attr_##x(std::vector<AscendString> &ret) const {          \
@@ -192,7 +200,9 @@ using std::vector;
     return *this;                                                           \
   }                                                                         \
   _THIS_TYPE &set_attr_##x(const function<vector<AscendString>()> &v) {     \
-    return *this; }
+    (void)v;                                                                \
+    return *this;                                                           \
+  }
 
 #define REQUIRED_ATTR_AscendString(x)                                       \
   graphStatus get_attr_##x(AscendString &ret) const {                       \
@@ -286,7 +296,10 @@ class OpReg {
     Operator::SetAttr(#x, v);                                               \
     return *this;                                                           \
   }                                                                         \
-  _THIS_TYPE &set_attr_##x(const function<Op##Type()> &v) { return *this; } \
+  _THIS_TYPE &set_attr_##x(const function<Op##Type()> &v) {                 \
+    (void)v;                                                                \
+    return *this;                                                           \
+  }                                                                         \
                                                                             \
  private:                                                                   \
   void __attr_##x() {                                                       \
@@ -318,7 +331,10 @@ class OpReg {
     Operator::SetAttr(#x, v);                                               \
     return *this;                                                           \
   }                                                                         \
-  _THIS_TYPE &set_attr_##x(const function<Op##Type()> &v) { return *this; } \
+  _THIS_TYPE &set_attr_##x(const function<Op##Type()> &v) {                 \
+    (void)v;                                                                \
+    return *this;                                                           \
+  }                                                                         \
                                                                             \
  private:                                                                   \
   void __required_attr_##x() {                                              \
