@@ -63,7 +63,7 @@ OpImplRegistryHolder::~OpImplRegistryHolder() {
 ge::graphStatus OmOpImplRegistryHolder::CreateOmOppDir(std::string &opp_dir) const {
   ge::char_t path_env[MMPA_MAX_PATH] = {'\0'};
   const int32_t ret = mmGetEnv(kHomeEnvName, path_env, MMPA_MAX_PATH);
-  if ((ret != EN_OK) || (strlen(path_env) == 0)) {
+  if ((ret != EN_OK) || (strnlen(path_env, static_cast<size_t>(MMPA_MAX_PATH)) == 0U)) {
     GELOGE(ge::FAILED, "Get %s path failed.", kHomeEnvName);
     return ge::GRAPH_FAILED;
   }
@@ -108,7 +108,7 @@ ge::graphStatus OmOpImplRegistryHolder::RmOmOppDir(const std::string &opp_dir) c
 
 ge::graphStatus OmOpImplRegistryHolder::SaveToFile(const std::shared_ptr<ge::OpSoBin> &so_bin,
                                                    const std::string &opp_path) const {
-  const mmMode_t kAccess = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) |
+  constexpr mmMode_t kAccess = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) |
       static_cast<uint32_t>(M_IWUSR) |
       static_cast<uint32_t>(M_UMASK_USREXEC));
   const int32_t fd = mmOpen2(opp_path.c_str(),
@@ -244,7 +244,8 @@ void OpImplRegistryHolderManager::AddRegistry(std::string &so_data,
 
 void OpImplRegistryHolderManager::UpdateOpImplRegistries() {
   const std::lock_guard<std::mutex> lock(map_mutex_);
-  for (auto iter = op_impl_registries_.begin(); iter != op_impl_registries_.end();) {
+  auto iter = op_impl_registries_.begin();
+  while (iter != op_impl_registries_.end()) {
     if (iter->second == nullptr) {
       (void)op_impl_registries_.erase(iter++);
     } else {
