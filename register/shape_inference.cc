@@ -98,6 +98,7 @@ bool IsTensorDependencyValid(const ge::Operator &op, const ge::OpDescPtr &op_des
   GE_ASSERT_NOTNULL(space_registry);
 
   const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
+  GE_ASSERT_NOTNULL(functions);
   size_t instance_index = input_index - invalid_index_num;
   size_t ir_index;
   GE_ASSERT_GRAPH_SUCCESS(ge::OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, instance_index, ir_index),
@@ -440,13 +441,17 @@ ge::graphStatus InferShapeRangeOnCompile(const ge::Operator &op, const ge::OpDes
   GE_ASSERT_NOTNULL(space_registry);
 
   const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
-  if ((functions == nullptr) || (functions->infer_shape_range == nullptr)) {
+  GE_ASSERT_NOTNULL(functions);
+  if (functions->infer_shape_range != nullptr) {
+    GELOGD("Op[%s], type[%s] use custom derivation strategy.", op_desc->GetName().c_str(), op_desc->GetType().c_str());
+    return InferShapeRangeCustom(op, op_desc, functions->infer_shape_range);
+  } else if (functions->infer_shape != nullptr) {
     GELOGD("Can not get infer shape range func op[%s], type[%s], will use an automatic derivation strategy.",
            op_desc->GetName().c_str(), op_desc->GetType().c_str());
     return InferShapeRangeAutomaticly(op, op_desc, functions->infer_shape);
   } else {
-    GELOGD("Use custom derivation strategy.", op_desc->GetName().c_str(), op_desc->GetType().c_str());
-    return InferShapeRangeCustom(op, op_desc, functions->infer_shape_range);
+    GELOGE(ge::PARAM_INVALID, "infer_shape_range and infer_shape is nullptr.");
+    return ge::PARAM_INVALID;
   }
 }
 
