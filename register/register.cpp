@@ -240,8 +240,8 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t input_index = 0U;
   uint32_t input_increment = 0U;
   for (const auto &input_name : register_input_names) {
-    const map<string, DynamicInfo>::const_iterator input_iter = port_dynamic_info.find(input_name);
-    if (input_iter != port_dynamic_info.cend()) {
+    const auto input_iter = port_dynamic_info.find(input_name);
+    if (input_iter != port_dynamic_info.end()) {
       port_dynamic_info[input_name].SetInsetIndex(input_index + input_increment);
       const uint32_t tensor_num = port_dynamic_info[input_name].GetTensorNum();
       if (tensor_num == 0U) {
@@ -258,8 +258,8 @@ Status UpdateDynamicInputOutPutIndex(const std::shared_ptr<ge::OpDesc> &op_desc,
   uint32_t output_index = 0U;
   uint32_t out_increment = 0U;
   for (const auto &output_name : register_output_names) {
-    const map<string, DynamicInfo>::const_iterator output_iter = port_dynamic_info.find(output_name);
-    if (output_iter != port_dynamic_info.cend()) {
+    const auto output_iter = port_dynamic_info.find(output_name);
+    if (output_iter != port_dynamic_info.end()) {
       port_dynamic_info[output_name].SetInsetIndex(output_index + out_increment);
       const uint32_t tensor_num = port_dynamic_info[output_name].GetTensorNum();
       if (tensor_num == 0U) {
@@ -441,7 +441,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status OperatorAutoMapping(cons
       continue;
     }
     if (subgraph_attr_names.count(attr_pair.first) > 0U) {
-      const auto ret = AutoMappingFunction(attr_pair, op_dst);
+      const Status ret = AutoMappingFunction(attr_pair, op_dst);
       if (ret != SUCCESS) {
         return ret;
       }
@@ -671,9 +671,8 @@ void FrameworkRegistryImpl::AddAutoMappingSubgraphIOIndexFunc(
 
 AutoMappingSubgraphIOIndexFunc FrameworkRegistryImpl::GetAutoMappingSubgraphIOIndexFunc(
     const domi::FrameworkType framework) {
-  const std::map<domi::FrameworkType, AutoMappingSubgraphIOIndexFunc>::const_iterator itr =
-      fmk_type_to_auto_mapping_subgraph_index_fun_.find(framework);
-  if (itr != fmk_type_to_auto_mapping_subgraph_index_fun_.cend()) {
+  const auto itr = fmk_type_to_auto_mapping_subgraph_index_fun_.find(framework);
+  if (itr != fmk_type_to_auto_mapping_subgraph_index_fun_.end()) {
     return itr->second;
   }
   return nullptr;
@@ -920,7 +919,7 @@ OpRegistrationData &OpRegistrationData::ImplyType(const domi::ImplyType &imply_t
 }
 
 domi::ImplyType OpRegistrationData::GetImplyType() const {
-  const domi::ImplyType imply_type = domi::ImplyType::BUILDIN;
+  constexpr domi::ImplyType imply_type = domi::ImplyType::BUILDIN;
   if (impl_ != nullptr) {
     return impl_->imply_type_;
   }
@@ -1084,8 +1083,8 @@ bool OpRegistry::Register(const OpRegistrationData &reg_data) {
 
 domi::ImplyType OpRegistry::GetImplyTypeByOriOpType(const std::string &ori_optype) {
   domi::ImplyType result = domi::ImplyType::BUILDIN;
-  const std::map<std::string, std::string>::const_iterator iter = origin_type_to_om_type_.find(ori_optype);
-  if (iter != origin_type_to_om_type_.cend()) {
+  const auto iter = origin_type_to_om_type_.find(ori_optype);
+  if (iter != origin_type_to_om_type_.end()) {
     result = GetImplyType(iter->second);
   }
   return result;
@@ -1160,7 +1159,7 @@ Status OpRegistry::GetParseSubgraphPostFunc(const std::string &op_type,
   return SUCCESS;
 }
 
-void OpRegistry::GetOpTypeByImplyType(std::vector<std::string> &vec_op_type, const domi::ImplyType &imply_type) {
+void OpRegistry::GetOpTypeByImplyType(std::vector<std::string> &vec_op_type, const domi::ImplyType imply_type) {
   for (const auto &iter : op_run_mode_map_) {
     if (iter.second == imply_type) {
       vec_op_type.push_back(iter.first);

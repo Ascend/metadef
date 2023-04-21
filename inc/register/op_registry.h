@@ -58,7 +58,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpRegistry {
 
   domi::ImplyType GetImplyType(const std::string &op_type);
 
-  void GetOpTypeByImplyType(std::vector<std::string> &vec_op_type, const domi::ImplyType &imply_type);
+  void GetOpTypeByImplyType(std::vector<std::string> &vec_op_type, const domi::ImplyType imply_type);
 
   domi::ParseParamFunc GetParseParamFunc(const std::string &op_type, const std::string &ori_type);
 

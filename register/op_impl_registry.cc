@@ -142,14 +142,14 @@ OpImplRegistry::OpImplFunctions &OpImplRegistry::CreateOrGetOpImpl(const ge::cha
   return types_to_impl_[op_type];
 }
 const OpImplRegistry::OpImplFunctions *OpImplRegistry::GetOpImpl(const ge::char_t *op_type) const {
-  auto iter = types_to_impl_.find(op_type);
+  const auto iter = types_to_impl_.find(op_type);
   if (iter == types_to_impl_.end()) {
     return nullptr;
   }
   return &iter->second;
 }
 const OpImplRegistry::PrivateAttrList &OpImplRegistry::GetPrivateAttrs(const ge::char_t *op_type) const {
-  auto op_impl_ptr = GetOpImpl(op_type);
+  const auto op_impl_ptr = GetOpImpl(op_type);
   if (op_impl_ptr == nullptr) {
     static OpImplRegistry::PrivateAttrList emptyPrivateAttr;
     return emptyPrivateAttr;
@@ -180,8 +180,7 @@ OpImplRegisterV2::OpImplRegisterV2(const ge::char_t *op_type) : impl_(new(std::n
     impl_->functions.compile_info_deleter = nullptr;
 
     // private attr controlled by is_private_attr_registered
-
-    OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type);
+    (void)OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type);
   }
 }
 OpImplRegisterV2::~OpImplRegisterV2() = default;
@@ -230,9 +229,9 @@ OpImplRegisterV2 &OpImplRegisterV2::Tiling(OpImplKernelRegistry::TilingKernelFun
 }
 OpImplRegisterV2 &OpImplRegisterV2::InputsDataDependency(std::initializer_list<int32_t> inputs) {
   if (impl_ != nullptr) {
-    impl_->functions.inputs_dependency = 0;
-    for (const auto index : inputs) {
-      if (impl_->functions.SetInputDataDependency(index) != ge::GRAPH_SUCCESS) {
+    impl_->functions.inputs_dependency = 0UL;
+    for (const int32_t index : inputs) {
+      if (impl_->functions.SetInputDataDependency(static_cast<size_t>(index)) != ge::GRAPH_SUCCESS) {
         GELOGE(ge::FAILED, "Failed to set data dependency for node %s, the input index %d", impl_->op_type.GetString(),
                index);
         return *this;
@@ -294,11 +293,11 @@ size_t GetRegisteredOpNum(void) {
   return gert::OpImplRegistry::GetInstance().GetAllTypesToImpl().size();
 }
 int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num) {
-  auto types_to_impl = gert::OpImplRegistry::GetInstance().GetAllTypesToImpl();
+  const auto types_to_impl = gert::OpImplRegistry::GetInstance().GetAllTypesToImpl();
   if (impl_num != types_to_impl.size()) {
     GELOGE(ge::FAILED, "Get types_to_impl_ failed, impl_num[%zu] and map size[%zu] not match",
            impl_num, types_to_impl.size());
-    return ge::GRAPH_FAILED;
+    return static_cast<int32_t>(ge::GRAPH_FAILED);
   }
   size_t cnt = 0U;
   for (auto &it : types_to_impl) {
@@ -306,7 +305,7 @@ int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num) {
     impl[cnt].funcs = it.second;
     cnt++;
   }
-  return ge::GRAPH_SUCCESS;
+  return static_cast<int32_t>(ge::GRAPH_SUCCESS);
 }
 
 #ifdef __cplusplus
