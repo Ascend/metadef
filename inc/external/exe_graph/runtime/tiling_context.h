@@ -142,7 +142,7 @@ class TilingContext : public ExtendedKernelContext {
    * outputs[4]: workspace sizes
    * outputs[5]: tiling condition
    */
-  enum TilingOutputIndex {
+  enum TilingOutputIndex : uint32_t {
     kOutputTilingKey,
     kOutputBlockDim,
     kOutputAtomicCleanFlag,

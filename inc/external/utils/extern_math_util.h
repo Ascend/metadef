@@ -47,8 +47,8 @@ bool MulOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
     ret = 0;
     return false;
   }
-  auto reminder = std::numeric_limits<TRet>::max() / static_cast<TRet>(rhs);
-  const auto lhs_ret_type = static_cast<TRet>(lhs);
+  TRet reminder = std::numeric_limits<TRet>::max() / static_cast<TRet>(rhs);
+  const TRet lhs_ret_type = static_cast<TRet>(lhs);
   if (lhs_ret_type < 0) {
     if (reminder > 0) {
       reminder *= static_cast<TRet>(-1);

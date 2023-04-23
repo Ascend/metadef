@@ -27,7 +27,7 @@ namespace gert {
 /**
  * 在节点输入后的扩展输入的索引，若需要扩展，请新增枚举类型
  */
-enum class InputExternLayout {
+enum class InputExternLayout : uint32_t {
   kInferShapeFunc = 1,   // only exe runtime need infer shape func, compile stage need set to null
   kInferenceContext = 2, // only resource op in compile stage need inference context, exe runtime need set to null
 };
@@ -91,7 +91,7 @@ class InferShapeContext : public ExtendedKernelContext {
     if (compute_node_info == nullptr) {
       return nullptr;
     }
-    const auto offset = compute_node_info->GetInputsNum() + static_cast<size_t>(InputExternLayout::kInferShapeFunc);
+    const size_t offset = compute_node_info->GetInputsNum() + static_cast<size_t>(InputExternLayout::kInferShapeFunc);
     if (GetContext()->input_size < offset) {
       return nullptr;
     }
@@ -108,7 +108,7 @@ class InferShapeContext : public ExtendedKernelContext {
     if (compute_node_info == nullptr) {
       return nullptr;
     }
-    const auto offset = compute_node_info->GetInputsNum() + static_cast<size_t>(InputExternLayout::kInferenceContext);
+    const size_t offset = compute_node_info->GetInputsNum() + static_cast<size_t>(InputExternLayout::kInferenceContext);
     if (GetContext()->input_size < offset) {
       return nullptr;
     }

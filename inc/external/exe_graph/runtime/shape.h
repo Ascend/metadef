@@ -49,7 +49,7 @@ struct Shape {
     }
     dim_num_ = args.size();
     size_t i = 0;
-    for (const auto arg : args) {
+    for (const int64_t arg : args) {
       dims_[i++] = arg;
     }
   }
