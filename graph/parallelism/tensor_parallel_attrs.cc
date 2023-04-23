@@ -637,5 +637,79 @@ bool operator<(const CommStepInput &lhs, const CommStepInput &rhs) {
   }
   return lhs.output_index < rhs.output_index;
 }
+
+bool operator==(const SrcNodeInfo &lhs, const SrcNodeInfo &rhs) {
+  return (lhs.inserted_node_id == rhs.inserted_node_id) && (lhs.output_index == rhs.output_index);
+}
+bool operator<(const SrcNodeInfo &lhs, const SrcNodeInfo &rhs) {
+  if (lhs.inserted_node_id < rhs.inserted_node_id) {
+    return true;
+  }
+  if (rhs.inserted_node_id < lhs.inserted_node_id) {
+    return false;
+  }
+  return lhs.output_index < rhs.output_index;
+}
+
+bool operator==(const OrigNodeInfo &lhs, const OrigNodeInfo &rhs) {
+  return (lhs.node_name == rhs.node_name) && (lhs.sliced_id == rhs.sliced_id);
+}
+
+bool operator<(const OrigNodeInfo &lhs, const OrigNodeInfo &rhs) {
+  if (lhs.node_name < rhs.node_name) {
+    return true;
+  }
+  if (rhs.node_name < lhs.node_name) {
+    return false;
+  }
+  return lhs.sliced_id < rhs.sliced_id;
+}
+
+bool operator==(const DstNodeInfo &lhs, const DstNodeInfo &rhs) {
+  return (lhs.orig_node_info == rhs.orig_node_info) && (lhs.input_indexes == rhs.input_indexes);
+}
+
+bool operator<(const DstNodeInfo &lhs, const DstNodeInfo &rhs) {
+  if (lhs.orig_node_info < rhs.orig_node_info) {
+    return true;
+  }
+  if (rhs.orig_node_info < lhs.orig_node_info) {
+    return false;
+  }
+  return lhs.InputIndexesToString() < rhs.InputIndexesToString();
+}
+
+bool operator==(const InsertedNodeInput &lhs, const InsertedNodeInput &rhs) {
+  if ((lhs.input_info.inserted_node_id >= 0) && (rhs.input_info.inserted_node_id >= 0)) {
+    return (lhs.input_info == rhs.input_info);
+  }
+  if ((lhs.input_info.inserted_node_id < 0) && (rhs.input_info.inserted_node_id < 0)) {
+    return (lhs.input_info == rhs.input_info) && (lhs.orig_node_info == rhs.orig_node_info);
+  }
+  return false;
+}
+bool operator<(const InsertedNodeInput &lhs, const InsertedNodeInput &rhs) {
+  if (lhs.input_info < rhs.input_info) {
+    return true;
+  }
+  if (rhs.input_info < lhs.input_info) {
+    return false;
+  }
+  return lhs.orig_node_info < rhs.orig_node_info;
+}
+
+bool operator==(const PeerOutNodeInfo &lhs, const PeerOutNodeInfo &rhs) {
+  return (lhs.input_info == rhs.input_info) && (lhs.node_info == rhs.node_info);
+}
+
+bool operator<(const PeerOutNodeInfo &lhs, const PeerOutNodeInfo &rhs) {
+  if (lhs.input_info < rhs.input_info) {
+    return true;
+  }
+  if (rhs.input_info < lhs.input_info) {
+    return false;
+  }
+  return lhs.node_info < rhs.node_info;
+}
 }  // namespace tp
 }  // namespace ge

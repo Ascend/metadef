@@ -56,8 +56,8 @@ void FftsPlusUpdateManager::RegisterCreator(const std::string &core_type, const 
     return;
   }
 
-  const std::map<std::string, FftsCtxUpdateCreatorFun>::const_iterator it = creators_.find(core_type);
-  if (it != creators_.cend()) {
+  const auto it = creators_.find(core_type);
+  if (it != creators_.end()) {
     GELOGW("Creator already exist for core type: %s", core_type.c_str());
     return;
   }

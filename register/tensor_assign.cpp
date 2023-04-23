@@ -155,8 +155,8 @@ bool TensorAssign::CheckUnsignedEightByte(const tensorflow::DataType data_type) 
   return ((data_type == tensorflow::DT_UINT64) || (data_type == tensorflow::DT_UINT64_REF));
 }
 
-Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
-                                      const int32_t count, GeTensorPtr &weight) {
+Status TensorAssign::GetDoubleByteVal(const int64_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
+                                      const int64_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
   const bool zerosLike = ((count != val_size) && (val_size == 1));
   std::vector<uint16_t> addr(static_cast<uint64_t>(count));
@@ -165,15 +165,15 @@ Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::prot
     return SUCCESS;
   }
   if (!zerosLike) {
-    const int32_t minCount = (count > val_size) ? val_size : count;
-    for (int32_t i = 0; i < minCount; i++) {
+    const int64_t minCount = (count > val_size) ? val_size : count;
+    for (int64_t i = 0; i < minCount; i++) {
       addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(i));
     }
-    for (int32_t i = minCount; i < count; i++) {
+    for (int64_t i = minCount; i < count; i++) {
       addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(minCount - 1));
     }
   } else {
-    for (int32_t i = 0; i < count; i++) {
+    for (int64_t i = 0; i < count; i++) {
       addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(0));
     }
   }
@@ -181,8 +181,8 @@ Status TensorAssign::GetDoubleByteVal(const int32_t val_size, const google::prot
   return SUCCESS;
 }
 
-Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
-                                const int32_t count, GeTensorPtr &weight) {
+Status TensorAssign::GetByteVal(const int64_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
+                                const int64_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
   const bool zerosLike = ((count != val_size) && (val_size == 1));
   std::vector<uint8_t> addr(static_cast<uint64_t>(count));
@@ -191,15 +191,15 @@ Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::
     return SUCCESS;
   }
   if (!zerosLike) {
-    const int32_t minCount = (count > val_size) ? val_size : count;
-    for (int32_t i = 0; i < minCount; i++) {
+    const int64_t minCount = (count > val_size) ? val_size : count;
+    for (int64_t i = 0; i < minCount; i++) {
       addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(i));
     }
-    for (int32_t i = minCount; i < count; i++) {
+    for (int64_t i = minCount; i < count; i++) {
       addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(minCount - 1));
     }
   } else {
-    for (int32_t i = 0; i < count; i++) {
+    for (int64_t i = 0; i < count; i++) {
       addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(0));
     }
   }
@@ -207,15 +207,15 @@ Status TensorAssign::GetByteVal(const int32_t val_size, const google::protobuf::
   return SUCCESS;
 }
 
-Status TensorAssign::GetStringVal(const int32_t val_size,
+Status TensorAssign::GetStringVal(const int64_t val_size,
                                   const google::protobuf::RepeatedPtrField<std::string> &val_vector,
-                                  const int32_t count, GeTensorPtr &weight) {
+                                  const int64_t count, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
   const bool flag = ((count != val_size) && (val_size == 1));
   size_t total_size = 0U;
   if (!flag) {
-    const int32_t min_count = (count > val_size) ? val_size : count;
-    for (int32_t i = 0; i < min_count; i++) {
+    const int64_t min_count = (count > val_size) ? val_size : count;
+    for (int64_t i = 0; i < min_count; i++) {
       // extra 16 bytes store head of string
       // extra 1 byte store '\0'
       total_size += (val_vector[i].size() + sizeof(ge::StringHead) + 1U);
@@ -227,7 +227,7 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
                                         static_cast<size_t>(count) * sizeof(ge::StringHead));
     uint64_t ptr_size = count * sizeof(ge::StringHead);
-    for (int32_t i = 0; i < count; ++i) {
+    for (int64_t i = 0; i < count; ++i) {
       ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
                                  static_cast<size_t>(i))->addr = static_cast<int64_t>(ptr_size);
       if (i < val_size) {
@@ -256,7 +256,7 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
     auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
                                         static_cast<size_t>(count) * sizeof(ge::StringHead));
     uint64_t ptr_size = count * sizeof(ge::StringHead);
-    for (int32_t i = 0; i < count; ++i) {
+    for (int64_t i = 0; i < count; ++i) {
       ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
                                  static_cast<size_t>(i))->addr = static_cast<int64_t>(ptr_size);
       ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
@@ -273,10 +273,10 @@ Status TensorAssign::GetStringVal(const int32_t val_size,
   return SUCCESS;
 }
 
-void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int32_t val_size,
-                                         const int32_t count, GeTensorPtr &weight) {
+void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int64_t val_size,
+                                         const int64_t count, GeTensorPtr &weight) {
   const tensorflow::DataType data_type = tensor.dtype();
-  constexpr int32_t kNumElementOfComplex = 2;
+  constexpr int64_t kNumElementOfComplex = 2;
   if (CheckFloatVal(data_type)) {
     (void)GetVal(val_size, tensor.float_val(), count, weight);
   } else if (CheckComplex64Val(data_type)) {
@@ -308,13 +308,13 @@ void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int32_
   }
 }
 
-void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int32_t count,
+void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int64_t count,
                                  const std::string &tensor_content, GeTensorPtr &weight) {
   if (weight == nullptr) {
     GE_LOGE("weight is nullptr.");
     return;
   }
-  GELOGD("Set data from tensor_content, count = %d, data_type = %s.",
+  GELOGD("Set data from tensor_content, count = %ld, data_type = %s.",
          count, DataType_Name(data_type).c_str());
   const auto tensor_content_data = tensor_content.data();
   const bool is_four_byte = CheckSignedFourByte(data_type) || CheckUnsignedFourByte(data_type);
@@ -367,7 +367,7 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
 
 Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight) {
   GE_CHECK_NOTNULL(weight);
-  std::map<tensorflow::DataType, int32_t> datatype_val_size_map = {
+  std::map<tensorflow::DataType, int64_t> datatype_val_size_map = {
       {tensorflow::DT_FLOAT, tensor.float_val().size()},
       {tensorflow::DT_INT32, tensor.int_val().size()},
       {tensorflow::DT_INT64, tensor.int64_val().size()},
@@ -416,7 +416,7 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
       {tensorflow::DT_VARIANT_REF, tensor.variant_val().size()},
   };
   const tensorflow::DataType data_type = tensor.dtype();
-  int32_t datatype_val_size = 0;
+  int64_t datatype_val_size = 0;
 
   const auto iter = datatype_val_size_map.find(data_type);
   if (iter != datatype_val_size_map.cend()) {
@@ -429,10 +429,10 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
 
   std::vector<int64_t> shape_vec;
   // There is tensor shape, get the dimension
-  int32_t count = 1;
+  int64_t count = 1;
   GE_IF_BOOL_EXEC(
       tensor.has_tensor_shape(), const tensorflow::TensorShapeProto &tensor_shape = tensor.tensor_shape();
-      for (int32_t i = 0; i < tensor_shape.dim_size(); i++) {
+      for (int64_t i = 0; i < tensor_shape.dim_size(); i++) {
         const tensorflow::TensorShapeProto_Dim &shape_dim = tensor_shape.dim(i);
         shape_vec.push_back(shape_dim.size());
         const int64_t dim = shape_vec[static_cast<size_t>(i)];

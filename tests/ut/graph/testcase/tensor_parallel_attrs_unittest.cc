@@ -630,5 +630,95 @@ TEST_F(TensorParallelAttrsTest, TensorDeploymentToAndFromJson) {
   EXPECT_EQ(tensor_slice_deployment.device_indices_each_slice.size(), 4);
   EXPECT_EQ(tensor_slice_deployment.axis_slices.size(), 2);
 }
+
+TEST_F(TensorParallelAttrsTest, StructCmp) {
+  SrcNodeInfo src_node_info;
+  src_node_info.inserted_node_id = 0;
+  src_node_info.output_index = 0;
+  SrcNodeInfo src_node_info1;
+  src_node_info1.inserted_node_id = 0;
+  src_node_info1.output_index = 0;
+  EXPECT_EQ(src_node_info == src_node_info1, true);
+  SrcNodeInfo src_node_info2;
+  src_node_info2.inserted_node_id = 0;
+  src_node_info2.output_index = 1;
+  EXPECT_EQ(src_node_info < src_node_info2, true);
+  SrcNodeInfo src_node_info3;
+  src_node_info3.inserted_node_id = 1;
+  src_node_info3.output_index = 1;
+  EXPECT_EQ(src_node_info < src_node_info3, true);
+  EXPECT_EQ(src_node_info3 < src_node_info1, false);
+
+  OrigNodeInfo orig_node_info;
+  orig_node_info.node_name = "node";
+  orig_node_info.sliced_id = 0;
+  DstNodeInfo dst_node_info;
+  dst_node_info.orig_node_info = orig_node_info;
+  dst_node_info.input_indexes = {0};
+  InsertedNodeInput inserted_node_input;
+  inserted_node_input.orig_node_info = orig_node_info;
+  inserted_node_input.input_info = src_node_info;
+  PeerOutNodeInfo peer_out_node_info;
+  peer_out_node_info.input_info = src_node_info;
+  peer_out_node_info.node_info = dst_node_info;
+
+  OrigNodeInfo orig_node_info1;
+  orig_node_info1.node_name = "node";
+  orig_node_info1.sliced_id = 0;
+  DstNodeInfo dst_node_info1;
+  dst_node_info1.orig_node_info = orig_node_info1;
+  dst_node_info1.input_indexes = {0};
+  InsertedNodeInput inserted_node_input1;
+  inserted_node_input1.orig_node_info = orig_node_info1;
+  inserted_node_input1.input_info = src_node_info1;
+  PeerOutNodeInfo peer_out_node_info1;
+  peer_out_node_info1.input_info = src_node_info1;
+  peer_out_node_info1.node_info = dst_node_info1;
+
+  EXPECT_EQ(orig_node_info1 == orig_node_info, true);
+  EXPECT_EQ(dst_node_info == dst_node_info1, true);
+  EXPECT_EQ(inserted_node_input == inserted_node_input1, true);
+  EXPECT_EQ(peer_out_node_info == peer_out_node_info1, true);
+
+  OrigNodeInfo orig_node_info2;
+  orig_node_info2.node_name = "node1";
+  orig_node_info2.sliced_id = 0;
+  DstNodeInfo dst_node_info2;
+  dst_node_info2.orig_node_info = orig_node_info2;
+  dst_node_info2.input_indexes = {0};
+  InsertedNodeInput inserted_node_input2;
+  inserted_node_input2.orig_node_info = orig_node_info2;
+  inserted_node_input2.input_info = src_node_info2;
+  PeerOutNodeInfo peer_out_node_info2;
+  peer_out_node_info2.input_info = src_node_info2;
+  peer_out_node_info2.node_info = dst_node_info2;
+
+  EXPECT_EQ(orig_node_info < orig_node_info2, true);
+  EXPECT_EQ(orig_node_info2 < orig_node_info, false);
+  EXPECT_EQ(dst_node_info < dst_node_info2, true);
+  EXPECT_EQ(dst_node_info2 < dst_node_info, false);
+  EXPECT_EQ(inserted_node_input < inserted_node_input2, true);
+  EXPECT_EQ(inserted_node_input2 < inserted_node_input, false);
+  EXPECT_EQ(peer_out_node_info < peer_out_node_info2, true);
+  EXPECT_EQ(peer_out_node_info2 < peer_out_node_info, false);
+
+  OrigNodeInfo orig_node_info3;
+  orig_node_info3.node_name = "node";
+  orig_node_info3.sliced_id = 1;
+  DstNodeInfo dst_node_info3;
+  dst_node_info3.orig_node_info = orig_node_info3;
+  dst_node_info3.input_indexes = {0, 1};
+  InsertedNodeInput inserted_node_input3;
+  inserted_node_input3.orig_node_info = orig_node_info3;
+  inserted_node_input3.input_info = src_node_info3;
+  PeerOutNodeInfo peer_out_node_info3;
+  peer_out_node_info3.input_info = src_node_info3;
+  peer_out_node_info3.node_info = dst_node_info3;
+
+  EXPECT_EQ(orig_node_info < orig_node_info3, true);
+  EXPECT_EQ(dst_node_info < dst_node_info3, true);
+  EXPECT_EQ(inserted_node_input < inserted_node_input3, true);
+  EXPECT_EQ(peer_out_node_info < peer_out_node_info3, true);
+}
 }  // namespace tp
 }  // namespace ge

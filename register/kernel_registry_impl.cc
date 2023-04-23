@@ -69,7 +69,7 @@ KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_ty
   kernel_funcs_.outputs_initializer = NullDestoryer;
   kernel_funcs_.trace_printer = nullptr;
 }
-KernelRegister::~KernelRegister() {}
+KernelRegister::~KernelRegister() = default;
 KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
   kernel_funcs_.run_func = func;
   return *this;
@@ -129,7 +129,7 @@ KernelRegisterV2 &KernelRegisterV2::TracePrinter(KernelRegistry::TracePrinter fu
   return *this;
 }
 KernelRegisterV2::KernelRegisterV2(const KernelRegisterV2 &other) : register_data_(nullptr) {
-  auto register_data = other.register_data_.get();
+  const auto register_data = other.register_data_.get();
   if (register_data == nullptr) {
     GE_LOGE("The register_data_ in register object is nullptr, failed to register funcs");
     return;

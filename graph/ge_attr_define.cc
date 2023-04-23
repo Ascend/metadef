@@ -1390,6 +1390,8 @@ const std::string ATTR_NAME_STAGE_ORDER_ID = "_stage_order_id";
 const std::string ATTR_NAME_RECOMPUTE = "_recompute";
 const std::string ATTR_NAME_BACKWARD = "_backward";
 const std::string ATTR_NAME_OPTIMIZER = "_optimizer";
+const std::string ATTR_NAME_GRAPH_SLICE_SCOPE = "_graph_slicing_scope";
+const std::string ATTR_NAME_GRAPH_SLICE_NUM = "_graph_slice_num";
 
 // for model eshced priority
 const std::string ATTR_NAME_ESCHED_PROCESS_PRIORITY = "_eschedProcessPriority";
@@ -1431,4 +1433,7 @@ const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";
 
 // for static shape reuse operator binary
 const std::string ATTR_NAME_OP_RUN_INFO = "op_run_info";
+
+// for local reduce
+const std::string REDUCE_OP_ATTR_KEEP_DIMS = "keep_dims";
 }  // namespace ge

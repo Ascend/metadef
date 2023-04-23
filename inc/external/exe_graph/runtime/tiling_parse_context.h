@@ -39,7 +39,7 @@ class TilingParseContext : public ExtendedKernelContext {
    * @return 指向`CompiledInfo`实例的指针
    */
   template<typename T>
-  T *GetCompiledInfo() {
+  auto GetCompiledInfo() -> T* {
     auto av = GetOutput(0);
     if (av == nullptr) {
       return nullptr;

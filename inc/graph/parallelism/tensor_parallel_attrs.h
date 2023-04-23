@@ -40,6 +40,8 @@ constexpr const char_t *kCommTaskTypeHcomReduceScatter = "HcomReduceScatter";
 constexpr const char_t *kCommTaskTypeHcomBroadcast = "HcomBroadcast";
 constexpr const char_t *kCommTaskTypeHcomAllToAll = "HcomAllToAll";
 constexpr const char_t *kCommTaskTypeSendReceive = "SendReceive";
+constexpr const char_t *kCommTaskTypeLocalReduce = "LocalReduce";
+constexpr const char_t *kGraphSlicingSuffix = "_by_graph_slice_";
 
 // tensor deployment attrs
 struct DimSlice {
@@ -96,7 +98,7 @@ struct AllToAllReshardTask {
 
 struct AllGatherReshardTask {
   std::vector<CommGroup> comm_groups;
-  int32_t axis; // axis to concat
+  int32_t axis;  // axis to concat
   std::string parallel_group;
   std::string output_allocator;
 };
@@ -164,6 +166,10 @@ struct ModifyValueReshardTask {
   std::vector<int64_t> value;
 };
 
+struct LocalReduceReshardTask {
+  std::string op_type;
+};
+
 struct CommTask {
   std::string task_type;
   std::shared_ptr<SendRecvReshardTask> send_recv_reshard_task;
@@ -180,6 +186,7 @@ struct CommTask {
   std::shared_ptr<SliceByAxisReshardTask> slice_by_axis_reshard_task;
   std::shared_ptr<TransposeReshardTask> transpose_reshard_task;
   std::shared_ptr<ModifyValueReshardTask> modify_value_reshard_task;
+  std::shared_ptr<LocalReduceReshardTask> local_reduce_reshard_task;
 };
 
 struct CommStepInput {
@@ -211,6 +218,85 @@ struct OutputReshardRes {
 
 struct ReshardAttr {
   std::vector<std::vector<OutputReshardRes>> reshard_infos;  // indexed by output index
+};
+
+struct SrcNodeInfo {
+  int32_t inserted_node_id = -1;
+  int32_t output_index = -1;
+};
+bool operator==(const SrcNodeInfo &lhs, const SrcNodeInfo &rhs);
+bool operator<(const SrcNodeInfo &lhs, const SrcNodeInfo &rhs);
+
+struct OrigNodeInfo {
+  std::string node_name;
+  int32_t sliced_id = -1;
+
+  std::string Name() const {
+    return (sliced_id == -1) ? node_name : (node_name + kGraphSlicingSuffix + std::to_string(sliced_id));
+  }
+};
+
+bool operator==(const OrigNodeInfo &lhs, const OrigNodeInfo &rhs);
+bool operator<(const OrigNodeInfo &lhs, const OrigNodeInfo &rhs);
+
+struct DstNodeInfo {
+  OrigNodeInfo orig_node_info;
+  std::vector<uint32_t> input_indexes;
+
+  std::string InputIndexesToString() const {
+    std::string res;
+    for (const uint32_t input_index : input_indexes) {
+      res += std::to_string(input_index) + " ";
+    }
+    return res;
+  }
+};
+
+bool operator==(const DstNodeInfo &lhs, const DstNodeInfo &rhs);
+bool operator<(const DstNodeInfo &lhs, const DstNodeInfo &rhs);
+
+struct InsertedNodeInput {
+  SrcNodeInfo input_info;
+  OrigNodeInfo orig_node_info;
+};
+
+bool operator==(const InsertedNodeInput &lhs, const InsertedNodeInput &rhs);
+bool operator<(const InsertedNodeInput &lhs, const InsertedNodeInput &rhs);
+
+struct PeerOutNodeInfo {
+  SrcNodeInfo input_info;
+  DstNodeInfo node_info;
+};
+
+bool operator==(const PeerOutNodeInfo &lhs, const PeerOutNodeInfo &rhs);
+bool operator<(const PeerOutNodeInfo &lhs, const PeerOutNodeInfo &rhs);
+
+struct InsertedNodeInfo {
+  uint32_t id;
+  CommTask task;
+  std::vector<InsertedNodeInput> inputs;
+};
+
+struct OutputSlicedRes {
+  std::vector<InsertedNodeInfo> inserted_nodes_info;
+  std::vector<PeerOutNodeInfo> peer_out_nodes;
+};
+
+struct SlicedEdgeInfo {
+  std::vector<OutputSlicedRes> steps_sliced;
+};
+
+struct TensorShapeSlicedInfo {
+  std::vector<std::vector<DimSlice>> axis_slices;
+};
+
+struct NodeSliceStrategy {
+  std::map<uint32_t, TensorShapeSlicedInfo> input_shape_sliced_info;
+  std::map<uint32_t, TensorShapeSlicedInfo> output_shape_sliced_info;
+
+  std::map<uint32_t, SlicedEdgeInfo> outputs_sliced_edge_info;
+  std::vector<std::vector<std::pair<std::string, uint32_t>>> dependencies;
+  size_t size = 1U;
 };
 
 class TensorParallelAttrs {

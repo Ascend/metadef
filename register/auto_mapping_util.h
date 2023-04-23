@@ -58,19 +58,19 @@ class AutoMappingUtil {
       (void) ge::AttrUtils::SetListStr(obj, key, vec);
     } else if (list.i_size() > 0) {
       std::vector<int64_t> vec;
-      for (const auto e : list.i()) {
+      for (const int64_t e : list.i()) {
         vec.push_back(e);
       }
       (void) ge::AttrUtils::SetListInt(obj, key, vec);
     } else if (list.f_size() > 0) {
       std::vector<float32_t> vec;
-      for (const auto e : list.f()) {
+      for (const float32_t e : list.f()) {
         vec.push_back(e);
       }
       (void) ge::AttrUtils::SetListFloat(obj, key, vec);
     } else if (list.b_size() > 0) {
       std::vector<bool> vec;
-      for (const auto e : list.b()) {
+      for (const bool e : list.b()) {
         vec.push_back(e);
       }
       (void) ge::AttrUtils::SetListBool(obj, key, vec);

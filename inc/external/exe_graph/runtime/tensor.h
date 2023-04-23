@@ -67,7 +67,7 @@ class Tensor {
    * @return 数据地址
    */
   template<class T>
-  T *GetData() {
+  auto GetData() -> T* {
     return static_cast<T *>(GetAddr());
   }
   /**

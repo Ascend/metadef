@@ -17,7 +17,7 @@
 #include "graph/debug/ge_util.h"
 
 namespace {
-const int32_t kMaxFuncRecursiveDepth = 30;
+constexpr int32_t kMaxFuncRecursiveDepth = 30;
 }  // namespace
 namespace ge {
 

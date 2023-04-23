@@ -38,7 +38,7 @@ class Range {
    * @param max range最大值指针
    */
   Range(T *min, T* max) : min_(min), max_(max) {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
@@ -46,7 +46,7 @@ class Range {
    * @param same_ele T指针
    */
   explicit Range(T *same_ele) : min_(same_ele), max_(same_ele) {
-    memset(reserved_, 0, sizeof(reserved_));
+    (void)memset_s(reserved_, sizeof(reserved_), 0, sizeof(reserved_));
   }
 
   /**
