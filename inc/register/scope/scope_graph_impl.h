@@ -104,7 +104,7 @@ class FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl {
 class FusionScopesResult::FusionScopesResultImpl {
  public:
   FusionScopesResultImpl() {}
-  ~FusionScopesResultImpl(){};
+  ~FusionScopesResultImpl() = default;
   void SetName(const std::string &name) { name_ = name; }
   void SetType(const std::string &type) { type_ = type; }
   void SetDescription(const std::string &description) { description_ = description; }
