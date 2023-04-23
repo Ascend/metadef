@@ -255,7 +255,7 @@ class TilingContext : public ExtendedKernelContext {
    * @return tiling data指针，失败时返回空指针
    */
   template<typename T>
-  T *GetTilingData() {
+  auto GetTilingData() -> T* {
     auto tiling_data = GetRawTilingData();
     if (tiling_data == nullptr) {
       return nullptr;

@@ -46,7 +46,7 @@ class Chain {
    * @return 指向数据的指针
    */
   template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
-  T *GetPointer() {
+  auto GetPointer() -> T* {
     return reinterpret_cast<T *>(any_value_.data.inplace);
   }
   /**
@@ -55,7 +55,7 @@ class Chain {
    * @return 指向数据的指针
    */
   template<typename T, typename std::enable_if<(sizeof(T) > sizeof(void *)), int>::type = 0>
-  T *GetPointer() {
+  auto GetPointer() -> T* {
     return reinterpret_cast<T *>(any_value_.data.pointer);
   }
   /**
@@ -73,7 +73,7 @@ class Chain {
    * @return 数据的值的引用
    */
   template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
-  T &GetValue() {
+  auto GetValue() -> T& {
     return *reinterpret_cast<T *>(any_value_.data.inplace);
   }
   /**
@@ -235,7 +235,7 @@ class KernelContext {
    * @return 输入数据的指针
    */
   template<typename T>
-  T *MutableInputPointer(size_t i) const {
+  auto MutableInputPointer(size_t i) const -> T* {
     const auto av = MutableInput(i);
     if (av == nullptr) {
       return nullptr;
@@ -277,7 +277,7 @@ class KernelContext {
    * @return 输出数据的指针
    */
   template<typename T>
-  T *GetOutputPointer(size_t i) {
+  auto GetOutputPointer(size_t i) -> T* {
     const auto av = GetOutput(i);
     if (av == nullptr) {
       return nullptr;
