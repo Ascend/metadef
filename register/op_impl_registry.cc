@@ -273,15 +273,15 @@ OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr,
 OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, const ge::char_t *private_attr_val) {
   return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::string>(private_attr_val));
 }
-OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, float private_attr_val) {
-  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<float>(private_attr_val));
+OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, ge::float32_t private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<ge::float32_t>(private_attr_val));
 }
 OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, bool private_attr_val) {
   return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<bool>(private_attr_val));
 }
 OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr,
-                                                const std::vector<float> &private_attr_val) {
-  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::vector<float>>(private_attr_val));
+                                                const std::vector<ge::float32_t> &private_attr_val) {
+  return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::vector<ge::float32_t>>(private_attr_val));
 }
 }  // namespace gert
 

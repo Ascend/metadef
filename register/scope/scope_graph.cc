@@ -31,13 +31,13 @@ namespace ge {
 namespace {
 using NodeEdges = std::map<int32_t, std::set<std::pair<std::string, int32_t>>>;
 using GraphNodesInOut = std::unordered_map<std::string, std::pair<NodeEdges, NodeEdges>>;
-const char_t *const kTfIdentityType = "Identity";
-const char_t *const kTfConstType = "Const";
-const char_t *const kNumerics = "0123456789";
-const size_t kInputPartsSize = 2U;
-const size_t kInputNodeName = 0U;
-const size_t kPeerOutIndex = 1U;
-const int32_t kControlSlot = -1;
+constexpr char_t *const kTfIdentityType = "Identity";
+constexpr char_t *const kTfConstType = "Const";
+constexpr char_t *const kNumerics = "0123456789";
+constexpr size_t kInputPartsSize = 2U;
+constexpr size_t kInputNodeName = 0U;
+constexpr size_t kPeerOutIndex = 1U;
+constexpr int32_t kControlSlot = -1;
 
 Status DecomposeInputName(const std::string &input_name, std::string &node_name, int32_t &index, bool &is_control) {
   if (StringUtils::StartWith(input_name, "^")) {

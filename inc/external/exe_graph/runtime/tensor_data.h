@@ -26,7 +26,7 @@ namespace gert {
 using TensorAddress = void *;
 using ConstTensorAddressPtr = const void *;
 
-enum TensorPlacement {
+enum TensorPlacement : int32_t {
     kOnDeviceHbm,  ///< Tensor位于Device上的HBM内存
     kOnHost,       ///< Tensor位于Host
     kFollowing,    ///< Tensor位于Host，且数据紧跟在结构体后面
@@ -42,7 +42,7 @@ inline const char *GetPlacementStr(const TensorPlacement placement) {
   return placement_str[placement];
 }
 
-enum TensorOperateType {
+enum TensorOperateType : int32_t {
   kGetTensorAddress,  ///< 获取Tensor的地址
   kFreeTensor,        ///< 释放Tensor
   kPlusShareCount,    ///< 共享Tensor

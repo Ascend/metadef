@@ -26,7 +26,7 @@
 #include "utils/extern_math_util.h"
 
 namespace gert {
-enum class AttrDataType {
+enum class AttrDataType : int32_t {
   kBool = 0,
   kString,
   kInt32,

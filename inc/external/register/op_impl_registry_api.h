@@ -17,13 +17,13 @@
 #ifndef INC_EXTERNAL_REGISTER_OP_IMPL_REGISTRY_API_H_
 #define INC_EXTERNAL_REGISTER_OP_IMPL_REGISTRY_API_H_
 
-#include <stdlib.h>
+#include <cstdlib>
 #include "op_impl_kernel_registry.h"
 
-typedef struct {
+struct TypesToImpl {
   const char *op_type;
   gert::OpImplKernelRegistry::OpImplFunctions funcs;
-} TypesToImpl;
+};
 
 #ifdef __cplusplus
 extern "C" {

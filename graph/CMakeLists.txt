@@ -377,6 +377,7 @@ target_include_directories(atc_stub_graph PRIVATE
 )
 
 target_compile_options(atc_stub_graph PRIVATE
+    -Wfloat-equal
     -fno-common
 )
 
@@ -416,6 +417,7 @@ add_library(fwk_stub_graph SHARED
 add_dependencies(fwk_stub_graph graph_stub)
 
 target_compile_options(fwk_stub_graph PRIVATE
+    -Wfloat-equal
     -fno-common
 )
 

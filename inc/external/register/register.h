@@ -57,9 +57,9 @@ class Message;
 }
 
 namespace domi {
-const int64_t kMaxNameLength = 1048576; // 1M
+constexpr int64_t kMaxNameLength = 1048576; // 1M
 
-enum DynamicType {
+enum DynamicType : int16_t {
   kInvalid = 0,
   kInput = 1,
   kOutput = 2
@@ -70,13 +70,12 @@ struct DynamicInputOutputInfo {
   int64_t port_name_len;
   const char_t *attr_name;
   int64_t attr_name_len;
-  DynamicInputOutputInfo()
-      : type(kInvalid), port_name(nullptr), port_name_len(0), attr_name(nullptr), attr_name_len(0) {}
   DynamicInputOutputInfo(const DynamicType type_instance, const char_t *const port_name_instance,
                          const int64_t port_name_len_instance, const char_t *const attr_name_instance,
                          const int64_t attr_name_len_instance)
       : type(type_instance), port_name(port_name_instance), port_name_len(port_name_len_instance),
         attr_name(attr_name_instance), attr_name_len(attr_name_len_instance) {}
+  DynamicInputOutputInfo() : DynamicInputOutputInfo(kInvalid, nullptr, 0l, nullptr, 0l) {}
 };
 Status AutoMappingByOpFn(const ge::Operator &op_src, ge::Operator &op);
 Status AutoMappingByOpFnDynamic(const ge::Operator &op_src, ge::Operator &op,
@@ -126,7 +125,7 @@ class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkRegistry {
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY AutoMappingSubgraphIOIndexFuncRegister {
  public:
   AutoMappingSubgraphIOIndexFuncRegister(domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun);
-  ~AutoMappingSubgraphIOIndexFuncRegister() {}
+  ~AutoMappingSubgraphIOIndexFuncRegister() = default;
 };
 
 class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY OpRegistrationData {

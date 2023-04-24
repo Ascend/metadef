@@ -72,7 +72,7 @@ class OpImplRegister {
   OpImplRegister &InputsDataDependency(std::initializer_list<int32_t> inputs);
 
  private:
-  template<typename T, typename std::enable_if<(!std::is_array<T>::value), int>::type = 0>
+  template<typename T, typename std::enable_if<(!std::is_array<T>::value), int32_t>::type = 0>
   static void *CreateCompileInfo() {
     return new T();
   }
@@ -110,15 +110,15 @@ class OpImplRegisterV2 {
   OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, int64_t private_attr_val);
   OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, const std::vector<int64_t> &private_attr_val);
   OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, const ge::char_t *private_attr_val);
-  OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, float private_attr_val);
+  OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, ge::float32_t private_attr_val);
   OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, bool private_attr_val);
-  OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, const std::vector<float> &private_attr_val);
+  OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, const std::vector<ge::float32_t> &private_attr_val);
   template<typename T>
-  OpImplRegisterV2 &TilingParse(const KernelRegistry::KernelFunc tiling_parse_func) {
+  OpImplRegisterV2 &TilingParse(KernelRegistry::KernelFunc const tiling_parse_func) {
     return TilingParse(tiling_parse_func, CreateCompileInfo<T>, DeleteCompileInfo<T>);
   }
   template<typename T>
-  OpImplRegisterV2 &TilingParse(const OpImplRegister::TilingParseFunc tiling_parse_func) {
+  OpImplRegisterV2 &TilingParse(OpImplRegister::TilingParseFunc const tiling_parse_func) {
     return TilingParse(reinterpret_cast<KernelRegistry::KernelFunc>(tiling_parse_func), CreateCompileInfo<T>,
                        DeleteCompileInfo<T>);
   }
@@ -130,7 +130,7 @@ class OpImplRegisterV2 {
                                 OpImplKernelRegistry::CompileInfoDeleterFunc deleter_func);
   OpImplRegisterV2 &PrivateAttr(const ge::char_t *private_attr, ge::AnyValue private_attr_av);
 
-  template<typename T, typename std::enable_if<(!std::is_array<T>::value), int>::type = 0>
+  template<typename T, typename std::enable_if<(!std::is_array<T>::value), int32_t>::type = 0>
   static void *CreateCompileInfo() {
     return new T();
   }
