@@ -48,14 +48,11 @@ const std::string kTfOutputDesc = "output_tensor_desc";
 const std::string kFuncNameKey = "name";
 
 struct DynamicInfo {
-  DynamicInfo()
-      : type(kInvalid),
-        inset_index(0U),
-        tensor_num(0U) {}
   DynamicInfo(const DynamicType dynamic_type, const uint32_t index, const uint32_t num)
       : type(dynamic_type),
         inset_index(index),
         tensor_num(num) {}
+  explicit DynamicInfo() : DynamicInfo(kInvalid, 0U, 0U) {}
 
   DynamicType GetType() const {return type;}
   uint32_t GetInsetIndex() const {return inset_index;}

@@ -87,7 +87,7 @@ OpImplRegister &OpImplRegister::Tiling(OpImplKernelRegistry::TilingKernelFunc ti
 }
 OpImplRegister &OpImplRegister::InputsDataDependency(std::initializer_list<int32_t> inputs) {
   functions_.inputs_dependency = 0;
-  for (const auto index : inputs) {
+  for (const int32_t index : inputs) {
     if (functions_.SetInputDataDependency(index) != ge::GRAPH_SUCCESS) {
       GELOGE(ge::FAILED, "Failed to set data dependency for node %s, the input index %d", op_type_, index);
       return *this;

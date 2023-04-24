@@ -18,7 +18,7 @@
 #include "graph/debug/ge_log.h"
 
 namespace ge {
-OpsKernelBuilderRegistry::~OpsKernelBuilderRegistry() {
+OpsKernelBuilderRegistry::~OpsKernelBuilderRegistry() noexcept {
   for (auto &it : kernel_builders_) {
     GELOGW("[Unregister][Destruct] %s was not unregistered", it.first.c_str());
     // to avoid core dump when unregister is not called when so was close
@@ -56,7 +56,7 @@ OpsKernelBuilderRegistry &OpsKernelBuilderRegistry::GetInstance() {
 OpsKernelBuilderRegistrar::OpsKernelBuilderRegistrar(const string &kernel_lib_name,
                                                      const CreateFn fn)
     : kernel_lib_name_(kernel_lib_name) {
-  GELOGI("Register kernel lib name = %s", kernel_lib_name.c_str());
+  GELOGI("Register kernel lib name = %s.", kernel_lib_name.c_str());
   std::shared_ptr<OpsKernelBuilder> builder;
   if (fn != nullptr) {
     builder.reset(fn());
@@ -71,7 +71,7 @@ OpsKernelBuilderRegistrar::OpsKernelBuilderRegistrar(const string &kernel_lib_na
   OpsKernelBuilderRegistry::GetInstance().Register(kernel_lib_name, builder);
 }
 
-OpsKernelBuilderRegistrar::~OpsKernelBuilderRegistrar() {
+OpsKernelBuilderRegistrar::~OpsKernelBuilderRegistrar() noexcept {
   GELOGI("Unregister kernel lib name = %s", kernel_lib_name_.c_str());
   OpsKernelBuilderRegistry::GetInstance().Unregister(kernel_lib_name_);
 }
