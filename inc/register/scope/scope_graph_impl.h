@@ -32,7 +32,7 @@ using FusionInnerNodesInfo = std::vector<std::tuple<std::string, std::string,   
 
 class Scope::ScopeImpl {
  public:
-  ScopeImpl() : father_scope_(nullptr) {}
+  ScopeImpl() = default;
   Status Init(const std::string &name, const std::string &sub_type = "", Scope *const father_scope = nullptr);
   ~ScopeImpl();
 
@@ -57,7 +57,7 @@ class Scope::ScopeImpl {
  private:
   std::string name_;
   std::string sub_type_;
-  Scope *father_scope_;
+  Scope *father_scope_ = nullptr;
   std::map<std::string, int32_t> op_nums_;
   std::unordered_map<std::string, Scope *> sub_scopes_;
   std::vector<ge::OperatorPtr> nodes_;
@@ -111,7 +111,7 @@ class FusionScopesResult::FusionScopesResultImpl {
   const std::string &Name() const { return name_; }
   const std::string &Type() const { return type_; }
   const std::string &Description() const { return description_; }
-  void AddNodes(std::vector<ge::OperatorPtr> nodes);
+  void AddNodes(const std::vector<ge::OperatorPtr> &nodes);
   const std::vector<ge::OperatorPtr> &Nodes() const { return nodes_; }
   void AddScopes(const std::vector<Scope *> &scopes) {
     (void)scopes_.insert(scopes_.cend(), scopes.cbegin(), scopes.cend());
@@ -143,7 +143,7 @@ class FusionScopesResult::FusionScopesResultImpl {
 
 class ScopeTree::ScopeTreeImpl {
  public:
-  ScopeTreeImpl() : root_(nullptr) {}
+  ScopeTreeImpl() = default;
   ScopeTreeImpl(const ScopeTreeImpl &) = delete;
   ScopeTreeImpl &operator=(const ScopeTreeImpl &) = delete;
   Status Init();
@@ -155,7 +155,7 @@ class ScopeTree::ScopeTreeImpl {
 
  private:
   std::vector<std::string> SplitNodeName(const std::string &node_name, const char_t delim) const;
-  Scope *root_;
+  Scope *root_ = nullptr;
   std::vector<Scope *> scopes_;
 };
 
@@ -169,7 +169,7 @@ struct ScopeFusionOpInfo {
 
 class ScopeGraph::ScopeGraphImpl {
  public:
-  ScopeGraphImpl() : scope_tree_(nullptr) {}
+  ScopeGraphImpl() = default;
   ScopeGraphImpl(const ScopeGraphImpl &) = delete;
   ScopeGraphImpl &operator=(const ScopeGraphImpl &) = delete;
   Status Init();
@@ -195,7 +195,7 @@ class ScopeGraph::ScopeGraphImpl {
   std::unordered_map<std::string, FusionScopesResult *> fusion_results_;
   std::unordered_map<std::string, ge::OperatorPtr> nodes_map_;
   std::map<std::string, ge::OperatorPtr> nodes_map_new_;
-  ScopeTree *scope_tree_;
+  ScopeTree *scope_tree_ = nullptr;
 };
 }  // namespace ge
 #endif  // REGISTER_SCOPE_SCOPE_GRAPH_IMPL_H

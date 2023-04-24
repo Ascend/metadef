@@ -106,7 +106,7 @@ ScopeFusionPassRegistry::ScopeFusionPassRegistry() {
   impl_ = ge::ComGraphMakeUnique<ScopeFusionPassRegistryImpl>();
 }
 
-ScopeFusionPassRegistry::~ScopeFusionPassRegistry() {}
+ScopeFusionPassRegistry::~ScopeFusionPassRegistry() = default;
 
 ScopeFusionPassRegistry& ScopeFusionPassRegistry::GetInstance() {
   static ScopeFusionPassRegistry instance;
