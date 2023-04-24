@@ -20,8 +20,10 @@
 #include <vector>
 #include "graph/ge_tensor.h"
 #include "graph/def_types.h"
+#include "common/checker.h"
 #include "framework/common/debug/ge_log.h"
 #include "external/register/register_error_codes.h"
+#include "external/utils/extern_math_util.h"
 #include "proto/tensorflow/tensor.pb.h"
 
 namespace domi {
@@ -100,16 +102,20 @@ class TensorAssign {
       for (size_t i = 0UL; i < static_cast<size_t>(val_size); i++) {
         addr[i] = val_vector.Get(static_cast<int32_t>(i));
       }
+      const int64_t value_r = val_size - 1;
+      GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(value_r), true);
       if (is_complex) {
         // val_vector format is real value, complex value..., here is getting the corresponding value.
         // real value and complex value are stored spaced apart, so use 2 and 1 to store in the correct addr.
+        const int64_t value_l = val_size - kComplexWidth;
+        GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(value_l), true);
         for (int64_t i = val_size; i < count; i = i + kComplexWidth) {
-          addr[static_cast<size_t>(i)] = val_vector.Get(val_size - kComplexWidth);
-          addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(val_size - 1);
+          addr[static_cast<size_t>(i)] = val_vector.Get(static_cast<int>(value_l));
+          addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(static_cast<int>(value_r));
         }
       } else {
         for (int64_t i = val_size; i < count; i++) {
-          addr[static_cast<size_t>(i)] = val_vector.Get(val_size - 1);
+          addr[static_cast<size_t>(i)] = val_vector.Get(value_r);
         }
       }
     } else {
