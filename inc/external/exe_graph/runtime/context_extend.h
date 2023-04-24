@@ -48,7 +48,7 @@ class KernelExtendInfo {
    * 设置kernel type
    * @param kernel_type kernel type
    */
-  void SetKernelType(const ge::char_t *kernel_type) {
+  void SetKernelType(const ge::char_t *const kernel_type) {
     (void) reserved_;
     kernel_type_ = kernel_type;
   }
