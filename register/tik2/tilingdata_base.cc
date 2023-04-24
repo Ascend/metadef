@@ -15,6 +15,7 @@
  */
 
 #include "register/tilingdata_base.h"
+#include <cstring>
 #include <securec.h>
 #include "framework/common/debug/ge_log.h"
 #include "graph/ascend_string.h"
@@ -22,12 +23,28 @@
 namespace optiling {
 std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
 
-void TilingDef::SaveToBuffer(void *pdata, const size_t capacity) const {
-  const auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
+void TilingDef::GeLogError(const std::string& str) const {
+  GELOGE(ge::GRAPH_FAILED, "%s", str.c_str());
+}
+
+void TilingDef::SaveToBuffer(void *pdata, size_t capacity) const {
+  size_t copy_size = data_size_ - struct_size_;
+  // copy tilingdata to buffer without struct tiling data.
+  const auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, copy_size);
   if (mem_ret != EOK) {
     GELOGE(ge::GRAPH_FAILED,
            "TilingDef::SaveToBuffer failed: memcpy_s return [%d], capacity = [%zu], data_size_ = [%zu].", mem_ret,
            capacity, data_size_);
+  }
+  pdata = (void*)((uint8_t*)(pdata) + copy_size);
+  capacity -= copy_size;
+  // save struct tiling data to buffer
+  for (auto ptr : saveBufferPtr) {
+    TilingDef* sub_ptr = (TilingDef *)ptr;
+    sub_ptr->SaveToBuffer(pdata, capacity);
+      copy_size = sub_ptr->data_size_ - sub_ptr->struct_size_;
+      pdata = (void*)((uint8_t*)(pdata) + copy_size);
+      capacity -= copy_size;
   }
 }
 

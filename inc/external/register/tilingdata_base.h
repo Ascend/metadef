@@ -20,27 +20,68 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <cstring>
+#include <securec.h>
 #include "graph/ascend_string.h"
 
 namespace optiling {
-struct FieldInfo {
+class StructSizeInfoBase {
+public:
+  static StructSizeInfoBase &GetInstance()
+  {
+    static StructSizeInfoBase instance;
+    return instance;
+  }
+  void SetStructSize(const ge::AscendString structType, const size_t structSize)
+  {
+    structSizeInfo[structType] = structSize;
+  }
+  size_t GetStructSize(const ge::AscendString structType)
+  {
+    return structSizeInfo.at(structType);
+  }
+private:
+  StructSizeInfoBase() { };
+  ~StructSizeInfoBase() { };
+  StructSizeInfoBase(const StructSizeInfoBase &);
+  StructSizeInfoBase &operator=(const StructSizeInfoBase &);
+  std::map<ge::AscendString, size_t> structSizeInfo;
+};
+
+class FieldInfo {
+public:
+  FieldInfo(const ge::AscendString &dtype, const ge::AscendString &name)
+      : dtype_(dtype), name_(name), classType_("0") {}
+  FieldInfo(const ge::AscendString &dtype, const ge::AscendString &name, const ge::AscendString &arrSize)
+      : dtype_(dtype), name_(name), arrSize_(arrSize), classType_("1") {}
+  FieldInfo(const ge::AscendString &dtype, const ge::AscendString &name, const ge::AscendString &structType,
+            const ge::AscendString &structSize)
+      : dtype_(dtype), name_(name), structType_(structType), structSize_(structSize), classType_("2") {}
+
+public:
   ge::AscendString dtype_;
   ge::AscendString name_;
+  ge::AscendString arrSize_;
+  ge::AscendString structType_;
+  ge::AscendString structSize_;
+  ge::AscendString classType_;
 };
 
 class TilingDef {
 public:
-  ~TilingDef() {
+  ~TilingDef()
+  {
     if (data_ptr_ != nullptr) {
       delete data_ptr_;
       data_ptr_ = nullptr;
     }
   }
-  void SaveToBuffer(void *pdata, const size_t capacity) const;
+  void SaveToBuffer(void *pdata, size_t capacity) const;
   std::vector<FieldInfo> GetFieldInfo() const;
   ge::AscendString GetTilingClassName() const;
   size_t GetDataSize() const;
   void InitData();
+  void GeLogError(const std::string& str) const;
 
 protected:
   // dtype, name
@@ -49,6 +90,8 @@ protected:
   uint8_t *data_ptr_ = nullptr;
   size_t data_size_ = 0;
   ge::AscendString class_name_;
+  std::vector<void *> saveBufferPtr;
+  size_t struct_size_ = 0;
 };
 
 using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
@@ -76,22 +119,39 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
 */
 #define BEGIN_TILING_DATA_DEF(class_name)                                                                              \
   class class_name : public TilingDef {                                                                                \
-  public:                                                                                                              \
+   public:                                                                                                             \
     class FieldHandler {                                                                                               \
-    public:                                                                                                            \
+     public:                                                                                                           \
       FieldHandler(class_name *pinstance, const ge::AscendString &dtype, const ge::AscendString &name, size_t len) {   \
-        pinstance->field_info_.push_back( {dtype, name} );                                                             \
+        pinstance->field_info_.push_back( { dtype, name });                                                            \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += len;                                                                                  \
         pinstance->InitData();                                                                                         \
+        StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
+      }                                                                                                                \
+      FieldHandler(class_name *pinstance, const ge::AscendString &dtype, const ge::AscendString &name, size_t len,     \
+                   size_t arrSize) {                                                                                   \
+        pinstance->field_info_.push_back(FieldInfo(dtype, name, std::to_string(arrSize).c_str()));                     \
+        pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
+        pinstance->data_size_ += len * arrSize;                                                                        \
+        pinstance->InitData();                                                                                         \
+        StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
+      }                                                                                                                \
+      FieldHandler(class_name *pinstance, const ge::AscendString &dtype, const ge::AscendString &name,                 \
+                   const ge::AscendString &structType, size_t structSize, void *ptr) {                                 \
+        pinstance->field_info_.push_back(FieldInfo(dtype, name, structType, std::to_string(structSize).c_str()));      \
+        pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
+        pinstance->data_size_ += structSize;                                                                           \
+        pinstance->InitData();                                                                                         \
+        StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
+        pinstance->saveBufferPtr.push_back(ptr);                                                                       \
+        pinstance->struct_size_ += structSize;                                                                         \
       }                                                                                                                \
     };                                                                                                                 \
     friend class FieldHandler;                                                                                         \
                                                                                                                        \
-  public:                                                                                                              \
-    class_name() {                                                                                                     \
-      class_name_ = #class_name;                                                                                       \
-    };
+   public:                                                                                                             \
+    class_name() { class_name_ = #class_name; }
 
 #define TILING_DATA_FIELD_DEF(data_type, field_name)                                                                   \
  public:                                                                                                               \
@@ -100,13 +160,36 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
     auto offset = field_offset_map_[#field_name];                                                                      \
     *((data_type *) (data_ptr_ + offset)) = field_name;                                                                \
   }                                                                                                                    \
-  data_type get_##field_name() {                                                                                       \
-    return field_name##_;                                                                                              \
-  }                                                                                                                    \
+  data_type get_##field_name() { return field_name##_; }                                                               \
                                                                                                                        \
  private:                                                                                                              \
   data_type field_name##_;                                                                                             \
   FieldHandler field_name##_handler_ = FieldHandler(this, #data_type, #field_name, sizeof(data_type));
+
+#define TILING_DATA_FIELD_DEF_ARR(arr_type, arr_size, field_name)                                                      \
+ public:                                                                                                               \
+  void set_##field_name(arr_type *field_name) {                                                                        \
+    field_name##_ = field_name;                                                                                        \
+    auto offset = field_offset_map_[#field_name];                                                                      \
+    const auto err_t = memcpy_s(data_ptr_ + offset, data_size_ - offset, field_name, arr_size * sizeof(arr_type));     \
+    if (err_t != EOK) {                                                                                                \
+        GeLogError("tilingdata_base.h TILING_DATA_FIELD_DEF_ARR memcpy is failed !");                                  \
+    }                                                                                                                  \
+  }                                                                                                                    \
+  arr_type *get_##field_name() { return field_name##_; }                                                               \
+                                                                                                                       \
+ private:                                                                                                              \
+  arr_type *field_name##_;                                                                                             \
+  FieldHandler field_name##_handler_ = FieldHandler(this, #arr_type, #field_name, sizeof(arr_type), arr_size);
+
+#define TILING_DATA_FIELD_DEF_STRUCT(struct_type, field_name)                                                          \
+ public:                                                                                                               \
+  struct_type field_name;                                                                                              \
+                                                                                                                       \
+ private:                                                                                                              \
+  FieldHandler field_name##_handler_ =                                                                                 \
+      FieldHandler(this, "struct", #field_name, #struct_type,                                                          \
+                   StructSizeInfoBase::GetInstance().GetStructSize(#struct_type), (void *) &field_name)
 
 #define END_TILING_DATA_DEF                                                                                            \
   }                                                                                                                    \
@@ -114,13 +197,11 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
 
 #define REGISTER_TILING_DATA_CLASS(op_type, class_name)                                                                \
   class op_type##class_name##Helper {                                                                                  \
-  public:                                                                                                              \
+   public:                                                                                                             \
     op_type##class_name##Helper() {                                                                                    \
       CTilingDataClassFactory::RegisterTilingData(#op_type, op_type##class_name##Helper::CreateTilingDataInstance);    \
     }                                                                                                                  \
-    static std::shared_ptr<TilingDef> CreateTilingDataInstance() {                                                     \
-      return std::make_shared<class_name>();                                                                           \
-    }                                                                                                                  \
+    static std::shared_ptr<TilingDef> CreateTilingDataInstance() { return std::make_shared<class_name>(); }            \
   };                                                                                                                   \
   op_type##class_name##Helper g_tilingdata_##op_type##class_name##helper;
 

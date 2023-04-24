@@ -439,10 +439,17 @@ extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *res
   json_obj["data_size"] = tiling_def->GetDataSize();
   const auto &field_list = tiling_def->GetFieldInfo();
   nlohmann::json json_field_list;
-  for (const auto &filed : field_list) {
+  for (const auto &field : field_list) {
     nlohmann::json json_field;
-    json_field["name"] = filed.name_.GetString();
-    json_field["dtype"] = filed.dtype_.GetString();
+    json_field["classType"] = field.classType_.GetString();
+    json_field["name"] = field.name_.GetString();
+    json_field["dtype"] = field.dtype_.GetString();
+    if (json_field["classType"] == "1") {
+      json_field["arrSize"] = field.arrSize_.GetString();
+    } else if (json_field["classType"] == "2") {
+      json_field["structType"] = field.structType_.GetString();
+      json_field["structSize"] = field.structSize_.GetString();
+    }
     json_field_list.emplace_back(json_field);
   }
   json_obj["fields"] = json_field_list;
