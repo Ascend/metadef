@@ -769,13 +769,16 @@ TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndexSubgraph) {
   p1_sub_builder.AddDataEdge(partitioncall_0_data, 0, partitioncall_0_cast, 0);
   p1_sub_builder.AddDataEdge(partitioncall_0_cast, 0, partitioncall_0_netoutput, 1);
   const auto &sub_graph = p1_sub_builder.GetGraph();
-  root_graph->AddSubgraph("partitioncall_0_sub", sub_graph);
   sub_graph->SetParentNode(partitioncall_0);
   sub_graph->SetParentGraph(root_graph);
+  root_graph->AddSubgraph("partitioncall_0_sub", sub_graph);
   partitioncall_0->GetOpDesc()->AddSubgraphName("f");
   partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
   auto compute_graph = partitioncall_0->GetOwnerComputeGraph();
   EXPECT_NE(compute_graph, nullptr);
+  EXPECT_EQ(NodeUtils::GetSubgraphOutputNodes(*partitioncall_0).size(), 1);
+  EXPECT_NE(sub_graph->GetOrUpdateNetOutputNode(), nullptr);
+  EXPECT_EQ(sub_graph->GetOrUpdateNetOutputNode()->GetType(), NETOUTPUT);
 }
 
 
