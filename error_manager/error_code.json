@@ -1245,6 +1245,17 @@
     },
     {
       "errClass": "FE Errors",
+      "errTitle": "Invalid Content",
+      "ErrCode": "E20003",
+      "ErrMessage": "Configuration file [%s] for parameter [%s] has invalid content. Reason: [%s]",
+      "Arglist": "parameter0,parameter1,parameter2",
+      "suggestion": {
+        "Possible Cause": "The content or format of the configuration file does not comply with the specifications provided in the documentation.",
+        "Solution": "Modify the configuration file by referring to the specifications in the user guide."
+      }
+    },
+    {
+      "errClass": "FE Errors",
       "errTitle": "Fusion Pass Execution Failure",
       "ErrCode": "E20007",
       "ErrMessage": "Failed to run graph fusion pass [%s]. The pass type is [%s]",
