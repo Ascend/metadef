@@ -53,7 +53,7 @@ ScopesResult &ScopesResult::operator=(ScopesResult const &result) {
   return *this;
 }
 
-ScopesResult::~ScopesResult() {}
+ScopesResult::~ScopesResult() = default;
 
 void ScopesResult::SetScopes(std::vector<Scope *> &scopes) {
   if (impl_ == nullptr) {
@@ -334,5 +334,5 @@ ScopeBasePass::ScopeBasePass() {
   impl_ = ge::ComGraphMakeUnique<ScopeBasePassImpl>(this);
 }
 
-ScopeBasePass::~ScopeBasePass() {}
+ScopeBasePass::~ScopeBasePass() = default;
 }  // namespace ge

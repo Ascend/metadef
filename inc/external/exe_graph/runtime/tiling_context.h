@@ -264,7 +264,7 @@ class TilingContext : public ExtendedKernelContext {
       return nullptr;
     }
     tiling_data->SetDataSize(sizeof(T));
-    return reinterpret_cast<T *>(tiling_data->GetData());
+    return static_cast<T *>(tiling_data->GetData());
   }
   /**
    * 获取无类型的tiling data码流

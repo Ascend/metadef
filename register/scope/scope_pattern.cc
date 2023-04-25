@@ -54,7 +54,7 @@ ScopeAttrValue &ScopeAttrValue::operator=(ScopeAttrValue const &attr_value) {
   return *this;
 }
 
-ScopeAttrValue::~ScopeAttrValue() {}
+ScopeAttrValue::~ScopeAttrValue() = default;
 
 void ScopeAttrValue::SetIntValue(int64_t value) {
   if (impl_ == nullptr) {
@@ -160,7 +160,7 @@ NodeOpTypeFeature &NodeOpTypeFeature::operator=(NodeOpTypeFeature const &feature
   return *this;
 }
 
-NodeOpTypeFeature::~NodeOpTypeFeature() {}
+NodeOpTypeFeature::~NodeOpTypeFeature() = default;
 
 bool NodeOpTypeFeature::Match(const Scope *scope) {
   if (impl_ == nullptr) {
@@ -231,7 +231,7 @@ Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const bool
   return FAILED;
 }
 
-Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const std::string init_value,
+Status NodeAttrFeature::NodeAttrFeatureImpl::CheckNodeAttrFeatureData(const std::string &init_value,
                                                                       const ge::OpDescPtr &op_desc,
                                                                       const Scope *const scope) {
   std::string value = init_value;
@@ -323,7 +323,7 @@ NodeAttrFeature &NodeAttrFeature::operator=(NodeAttrFeature const &feature) {
   return *this;
 }
 
-NodeAttrFeature::~NodeAttrFeature() {}
+NodeAttrFeature::~NodeAttrFeature() = default;
 
 bool NodeAttrFeature::Match(const Scope *scope) {
   if (impl_ == nullptr) {
@@ -433,7 +433,7 @@ ScopeFeature &ScopeFeature::operator=(ScopeFeature const &feature) {
   return *this;
 }
 
-ScopeFeature::~ScopeFeature() {}
+ScopeFeature::~ScopeFeature() = default;
 
 bool ScopeFeature::Match(const Scope *scope) {
   if (impl_ == nullptr) {
@@ -496,7 +496,7 @@ ScopePattern::ScopePattern() {
   impl_ = ge::ComGraphMakeUnique<ScopePatternImpl>();
 }
 
-ScopePattern::~ScopePattern() {}
+ScopePattern::~ScopePattern() = default;
 
 ScopePattern &ScopePattern::SetSubType(const std::string &sub_type) {
   if (impl_ == nullptr) {

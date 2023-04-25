@@ -76,7 +76,7 @@ Status DecomposeInputName(const std::string &input_name, std::string &node_name,
 
 void AddEdgeCtx(const std::string &peer_node_name, const int32_t peer_index,
                 const int32_t curr_index, NodeEdges &node_edges) {
-  (void)node_edges[curr_index].insert({peer_node_name, peer_index});
+  (void) node_edges[curr_index].insert({peer_node_name, peer_index});
 }
 
 Status GetGraphDefInOutMap(domi::tensorflow::GraphDef *graph_def, GraphNodesInOut &in_out_map) {
@@ -323,7 +323,7 @@ Status Scope::Init(const char_t *name, const char_t *sub_type, Scope *father_sco
   return impl_->Init(scope_name, scope_sub_type, father_scope);
 }
 
-Scope::~Scope() {}
+Scope::~Scope() = default;
 
 const std::string &Scope::Name() const {
   return impl_->Name();
@@ -481,7 +481,7 @@ FusionScopesResult::InnerNodeInfo::InnerNodeInfo(const char_t *fusion_node_name,
 FusionScopesResult::InnerNodeInfo::InnerNodeInfo(FusionScopesResult::InnerNodeInfo &&other) noexcept
     : impl_(std::move(other.impl_)) {}
 
-FusionScopesResult::InnerNodeInfo::~InnerNodeInfo() {}
+FusionScopesResult::InnerNodeInfo::~InnerNodeInfo() = default;
 
 FusionScopesResult::InnerNodeInfo &FusionScopesResult::InnerNodeInfo::operator=(
     FusionScopesResult::InnerNodeInfo &&other) noexcept {
@@ -709,7 +709,7 @@ ge::graphStatus FusionScopesResult::InnerNodeInfo::GetOutputs(
   return GRAPH_SUCCESS;
 }
 
-void FusionScopesResult::FusionScopesResultImpl::AddNodes(std::vector<ge::OperatorPtr> nodes) {
+void FusionScopesResult::FusionScopesResultImpl::AddNodes(const std::vector<ge::OperatorPtr> &nodes) {
   (void)nodes_.insert(nodes_.cend(), nodes.cbegin(), nodes.cend());
 }
 
@@ -850,7 +850,7 @@ Status FusionScopesResult::Init() {
   return SUCCESS;
 }
 
-FusionScopesResult::~FusionScopesResult() {}
+FusionScopesResult::~FusionScopesResult() = default;
 
 void FusionScopesResult::SetName(const std::string &name) {
   if (impl_ == nullptr) {
@@ -1118,7 +1118,7 @@ std::vector<std::string> ScopeTree::ScopeTreeImpl::SplitNodeName(const std::stri
 
 ScopeTree::ScopeTree() {}
 
-ScopeTree::~ScopeTree() {}
+ScopeTree::~ScopeTree() = default;
 
 Status ScopeTree::Init() {
   impl_ = ge::ComGraphMakeUnique<ScopeTreeImpl>();
@@ -1347,7 +1347,7 @@ FusionScopesResult *ScopeGraph::ScopeGraphImpl::GetFusionScopesResults(const str
 
 ScopeGraph::ScopeGraph() {}
 
-ScopeGraph::~ScopeGraph() {}
+ScopeGraph::~ScopeGraph() = default;
 
 Status ScopeGraph::Init() {
   impl_ = ge::ComGraphMakeUnique<ScopeGraphImpl>();

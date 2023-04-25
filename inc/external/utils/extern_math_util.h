@@ -40,10 +40,10 @@ bool MulOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
 #if __GNUC__ >= 5
   return __builtin_mul_overflow(lhs, rhs, &ret);
 #else
-  if (!IntegerChecker<TRet>::Compat(lhs) || !IntegerChecker<TRet>::Compat(rhs)) {
+  if ((!IntegerChecker<TRet>::Compat(lhs)) || (!IntegerChecker<TRet>::Compat(rhs))) {
     return true;
   }
-  if (lhs == 0 || rhs == 0) {
+  if ((lhs == 0) || (rhs == 0)) {
     ret = 0;
     return false;
   }
@@ -74,7 +74,7 @@ bool AddOverflow(TLhs lhs, TRhs rhs, TRet &ret) {
 #if __GNUC__ >= 5
   return __builtin_add_overflow(lhs, rhs, &ret);
 #else
-  if (!IntegerChecker<TRet>::Compat(lhs) || !IntegerChecker<TRet>::Compat(rhs)) {
+  if ((!IntegerChecker<TRet>::Compat(lhs)) || (!IntegerChecker<TRet>::Compat(rhs))) {
     return true;
   }
   if (rhs >= 0) {

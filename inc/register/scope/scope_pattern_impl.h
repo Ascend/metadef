@@ -27,23 +27,23 @@ namespace ge {
 constexpr float32_t kCompareRatio = 2.0F;
 class ScopeAttrValue::ScopeAttrValueImpl {
  public:
-  ScopeAttrValueImpl() : int_value_(0), float_value_(0.0F), string_value_(""), bool_value_(false) {}
+  ScopeAttrValueImpl() = default;
   ~ScopeAttrValueImpl() = default;
 
-  void SetIntValue(const int64_t &value) { int_value_ = value; }
-  void SetFloatValue(const float32_t &value) { float_value_ = value; }
+  void SetIntValue(const int64_t value) { int_value_ = value; }
+  void SetFloatValue(const float32_t value) { float_value_ = value; }
   void SetStringValue(const std::string &value) { string_value_ = value; }
-  void SetBoolValue(const bool &value) { bool_value_ = value; }
+  void SetBoolValue(const bool value) { bool_value_ = value; }
   const int64_t &GetIntValue() const { return int_value_; }
   const float32_t &GetFloatValue() const { return float_value_; }
   const std::string &GetStrValue() const { return string_value_; }
   const bool &GetBoolValue() const { return bool_value_; }
 
  private:
-  int64_t int_value_;
-  float32_t float_value_;
-  std::string string_value_;
-  bool bool_value_;
+  int64_t int_value_ = 0;
+  float32_t float_value_ = 0.0F;
+  std::string string_value_ = "";
+  bool bool_value_ = false;
 };
 
 
@@ -51,7 +51,7 @@ class NodeOpTypeFeature::NodeOpTypeFeatureImpl : ScopeBaseFeature {
  public:
   NodeOpTypeFeatureImpl(const std::string nodeType, const int64_t num, const int64_t step = 0)
       : ScopeBaseFeature(), node_type_(nodeType), num_(num), step_(step) {}
-  ~NodeOpTypeFeatureImpl() override {}
+  ~NodeOpTypeFeatureImpl() override = default;
   bool Match(const Scope *const scope) override;
 
 private:
@@ -67,10 +67,11 @@ class NodeAttrFeature::NodeAttrFeatureImpl : ScopeBaseFeature {
                       const ScopeAttrValue &attr_value)
       : ScopeBaseFeature(), node_type_(nodeType), attr_name_(attr_name), datatype_(datatype),
         attr_value_(attr_value) {}
-  ~NodeAttrFeatureImpl() override = default;
-  bool Match(const Scope *scope) override;
+  virtual ~NodeAttrFeatureImpl() override = default;
+  virtual bool Match(const Scope *scope) override;
   Status CheckNodeAttrFeatureData(const bool init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
-  Status CheckNodeAttrFeatureData(const std::string init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
+  Status CheckNodeAttrFeatureData(const std::string &init_value,
+                                  const ge::OpDescPtr &op_desc, const Scope *const scope);
   Status CheckNodeAttrFeatureData(const int64_t init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
   Status CheckNodeAttrFeatureData(const float32_t init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
   template<class T>
@@ -97,8 +98,8 @@ class ScopeFeature::ScopeFeatureImpl : ScopeBaseFeature {
                    const std::string sub_scope_mask = "", const int64_t step = 0)
       : ScopeBaseFeature(), sub_type_(sub_type), num_(num), suffix_(suffix), sub_scope_mask_(sub_scope_mask),
         step_(step) {}
-  ~ScopeFeatureImpl() override = default;
-  bool Match(const Scope *const scope) override;
+  virtual ~ScopeFeatureImpl() override = default;
+  virtual bool Match(const Scope *const scope) override;
   bool SubScopesMatch(const std::vector<Scope *> &scopes);
 
  private:
