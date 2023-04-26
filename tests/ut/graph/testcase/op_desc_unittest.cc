@@ -792,4 +792,17 @@ TEST_F(UtestOpDesc, GetTilingInfo) {
   EXPECT_EQ(op_desc->GetTilingFuncInfo(), &tiling_info);
   EXPECT_EQ(op_desc->GetAtomicTilingFuncInfo(), &atomic_tiling_info);
 }
+
+TEST_F(UtestOpDesc, CopyAssignTest) {
+  auto op_desc = std::make_shared<OpDesc>();
+  EXPECT_NE(op_desc, nullptr);
+  op_desc->SetType("Test");
+  OpDescImpl op_desc_impl;
+  op_desc_impl = *(op_desc->impl_);
+  EXPECT_EQ(op_desc_impl.GetType(), op_desc->GetType());
+  // same object
+  auto fake = &op_desc_impl;
+  op_desc_impl = *fake;
+  EXPECT_EQ(op_desc_impl.GetType(), op_desc->GetType());
+}
 }

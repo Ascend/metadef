@@ -206,6 +206,36 @@ OpDescImpl::OpDescImpl(const OpDescImpl &op_desc_impl) {
   engine_name_ = op_desc_impl.engine_name_;
   meta_data_ = op_desc_impl.meta_data_;
   attrs_ = op_desc_impl.attrs_;
+  tiling_func_info_ = op_desc_impl.tiling_func_info_;
+  atomic_tiling_func_info_ = op_desc_impl.atomic_tiling_func_info_;
+}
+
+OpDescImpl &OpDescImpl::operator=(const OpDescImpl &op_desc_impl) & {
+  if (this == &op_desc_impl) {
+    return *this;
+  }
+  subgraph_instance_names_ = op_desc_impl.subgraph_instance_names_;
+  subgraph_names_to_index_ = op_desc_impl.subgraph_names_to_index_;
+  for (const auto &input_desc : op_desc_impl.inputs_desc_) {
+    inputs_desc_.emplace_back(MakeShared<GeTensorDesc>(*input_desc));
+  }
+  input_name_idx_ = op_desc_impl.input_name_idx_;
+  for (const auto &output_desc : op_desc_impl.outputs_desc_) {
+    outputs_desc_.emplace_back(MakeShared<GeTensorDesc>(*output_desc));
+  }
+  output_name_idx_ = op_desc_impl.output_name_idx_;
+  infer_func_ = op_desc_impl.infer_func_;
+  infer_format_func_ = op_desc_impl.infer_format_func_;
+  infer_value_range_func_ = op_desc_impl.infer_value_range_func_;
+  verifier_func_ = op_desc_impl.verifier_func_;
+  infer_data_slice_func_ = op_desc_impl.infer_data_slice_func_;
+  op_kernel_lib_name_ = op_desc_impl.op_kernel_lib_name_;
+  engine_name_ = op_desc_impl.engine_name_;
+  meta_data_ = op_desc_impl.meta_data_;
+  attrs_ = op_desc_impl.attrs_;
+  tiling_func_info_ = op_desc_impl.tiling_func_info_;
+  atomic_tiling_func_info_ = op_desc_impl.atomic_tiling_func_info_;
+  return *this;
 }
 
 OpDescImpl::OpDescImpl(const ge::proto::OpDef &op_def) : meta_data_(op_def.name(), op_def.type()) {

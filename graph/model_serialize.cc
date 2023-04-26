@@ -797,7 +797,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
   return true;
 }
 
-bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path, proto::ModelDef &model_def) {
+bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path, proto::ModelDef &model_def) const {
   if (SerializeToBuffer(model_def, buffer)) {
     return true;
   }

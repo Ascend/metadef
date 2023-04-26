@@ -41,6 +41,7 @@ class OpDescImpl {
   OpDescImpl();
   OpDescImpl(const std::string &name, const std::string &type);
   OpDescImpl(const OpDescImpl &op_desc_impl);
+  OpDescImpl& operator=(const OpDescImpl &op_desc_impl) &;
   explicit OpDescImpl(const ge::proto::OpDef &op_def);
 
   ~OpDescImpl() = default;
