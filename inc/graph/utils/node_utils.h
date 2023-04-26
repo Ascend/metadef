@@ -144,9 +144,12 @@ class NodeUtils {
    */
   static std::vector<NodePtr> GetSubgraphDataNodesByIndex(const Node &node, const int32_t index);
 
-  /// @brief Get subgraph input data node by index.
-  /// @param [in] node
-  /// @return Node
+  /**
+ * 获取`node`挂载的所有子图中的NetOutput节点集合;
+ * 每个子图有且只有一个NetOutput节点
+ * @param node
+ * @return
+ */
   static std::vector<NodePtr> GetSubgraphOutputNodes(const Node &node);
 
   static NodePtr GetInDataNodeByIndex(const Node &node, const int32_t index);

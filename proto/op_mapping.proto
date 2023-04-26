@@ -66,6 +66,18 @@ message Workspace {
     uint64 size = 3;
 }
 
+message RealAddressAndSize {
+    uint64 address = 1;
+    uint64 size = 2;
+}
+
+message Context {
+    uint32 context_id = 1;
+    uint32 thread_id = 2;
+    repeated RealAddressAndSize input = 3;
+    repeated RealAddressAndSize output = 4;
+}
+
 message Task {
     enum TaskType {
         AICORE = 0;
@@ -86,6 +98,8 @@ message Task {
     uint32 context_id = 9;
     repeated OpAttr attr = 10;
     repeated Workspace space = 11;
+    repeated Context context = 12;
+    uint32 thread_id = 13;
 }
 
 enum DumpData {
