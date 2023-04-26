@@ -45,7 +45,7 @@ class Chain {
    * @tparam T 数据类型
    * @return 指向数据的指针
    */
-  template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int32_t>::type = 0>
+  template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
   auto GetPointer() -> T* {
     return reinterpret_cast<T *>(any_value_.data.inplace);
   }
@@ -54,7 +54,7 @@ class Chain {
    * @tparam T 数据类型
    * @return 指向数据的指针
    */
-  template<typename T, typename std::enable_if<(sizeof(T) > sizeof(void *)), int32_t>::type = 0>
+  template<typename T, typename std::enable_if<(sizeof(T) > sizeof(void *)), int>::type = 0>
   auto GetPointer() -> T* {
     return reinterpret_cast<T *>(any_value_.data.pointer);
   }
@@ -72,7 +72,7 @@ class Chain {
    * @tparam T 数据类型
    * @return 数据的值的引用
    */
-  template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int32_t>::type = 0>
+  template<typename T, typename std::enable_if<(sizeof(T) <= sizeof(void *)), int>::type = 0>
   auto GetValue() -> T& {
     return *reinterpret_cast<T *>(any_value_.data.inplace);
   }
