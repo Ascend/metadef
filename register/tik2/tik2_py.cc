@@ -465,7 +465,7 @@ extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *res
 extern "C" int32_t Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, const int32_t block_dim,
                                            const char *tiling_data, const char *kernel_name, const char *entry_file,
                                            const char *output_kernel_file, const int32_t core_type,
-                                           const int32_t task_ration) {
+                                           const int32_t task_ration, const int32_t tiling_key) {
   if ((optype == nullptr) || (soc_version == nullptr) || (tiling_data == nullptr) || (kernel_name == nullptr) ||
       (entry_file == nullptr) || (output_kernel_file == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
@@ -510,6 +510,7 @@ extern "C" int32_t Tik2PyInterfaceOpReplay(const char *optype, const char *soc_v
     replayParam.gentype = 0;
     replayParam.output_kernel_file = output_kernel_file;
     replayParam.task_ration = task_ration;
+    replayParam.tiling_key = tiling_key;
     const int32_t rc = (replay_func)(replayParam, core_type);
     if (rc <= 0) {
       GELOGE(ge::GRAPH_FAILED, "call replay_func return %d. optype = %s, soc_version = %s", rc, optype, soc_version);

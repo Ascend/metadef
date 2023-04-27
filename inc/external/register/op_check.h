@@ -42,6 +42,7 @@ struct ReplayFuncParam {
   const char *output_kernel_file = nullptr;
   char **objptr = nullptr;
   int32_t task_ration = 0;
+  int32_t tiling_key = 0;
 };
 
 using REPLAY_FUNC = int32_t (*)(ReplayFuncParam &param, const int32_t core_type);
