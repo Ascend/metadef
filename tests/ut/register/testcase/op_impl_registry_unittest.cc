@@ -548,6 +548,7 @@ TEST_F(OpImplRegistryUT, OpImplRegister_RegisterListFloatOK) {
   std::vector<float> private_attr_val = {10.0, 20.0, 30.0};
   static gert::OpImplRegister list_float_op = gert::OpImplRegister(OpType);
   list_float_op.PrivateAttr("attr1", private_attr_val);
+  list_float_op.InputsDataDependency({0});
 
   const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(OpType);
   EXPECT_EQ(private_attrs.size(), 1);

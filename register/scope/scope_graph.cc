@@ -385,7 +385,7 @@ const std::vector<Scope *> &Scope::GetAllSubScopes() const {
   return impl_->GetAllSubScopes();
 }
 
-FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::~InnerNodeInfoImpl() {
+FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl::~InnerNodeInfoImpl() noexcept {
   operator_.BreakConnect();
 }
 
@@ -1147,7 +1147,7 @@ Status ScopeGraph::ScopeGraphImpl::Init() {
   return SUCCESS;
 }
 
-ScopeGraph::ScopeGraphImpl::~ScopeGraphImpl() {
+ScopeGraph::ScopeGraphImpl::~ScopeGraphImpl() noexcept {
   if (scope_tree_ != nullptr) {
     delete scope_tree_;
     scope_tree_ = nullptr;

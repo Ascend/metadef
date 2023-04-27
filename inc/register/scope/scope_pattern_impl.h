@@ -49,9 +49,9 @@ class ScopeAttrValue::ScopeAttrValueImpl {
 
 class NodeOpTypeFeature::NodeOpTypeFeatureImpl : ScopeBaseFeature {
  public:
-  NodeOpTypeFeatureImpl(const std::string nodeType, const int64_t num, const int64_t step = 0)
+  NodeOpTypeFeatureImpl(const std::string &nodeType, const int64_t num, const int64_t step)
       : ScopeBaseFeature(), node_type_(nodeType), num_(num), step_(step) {}
-  ~NodeOpTypeFeatureImpl() override = default;
+  ~NodeOpTypeFeatureImpl() = default;
   bool Match(const Scope *const scope) override;
 
 private:
@@ -63,12 +63,12 @@ private:
 
 class NodeAttrFeature::NodeAttrFeatureImpl : ScopeBaseFeature {
  public:
-  NodeAttrFeatureImpl(const std::string nodeType, const std::string attr_name, const ge::DataType datatype,
+  NodeAttrFeatureImpl(const std::string &nodeType, const std::string &attr_name, const ge::DataType datatype,
                       const ScopeAttrValue &attr_value)
       : ScopeBaseFeature(), node_type_(nodeType), attr_name_(attr_name), datatype_(datatype),
         attr_value_(attr_value) {}
-  virtual ~NodeAttrFeatureImpl() override = default;
-  virtual bool Match(const Scope *scope) override;
+  ~NodeAttrFeatureImpl() override = default;
+  bool Match(const Scope *scope) override;
   Status CheckNodeAttrFeatureData(const bool init_value, const ge::OpDescPtr &op_desc, const Scope *const scope);
   Status CheckNodeAttrFeatureData(const std::string &init_value,
                                   const ge::OpDescPtr &op_desc, const Scope *const scope);
@@ -94,12 +94,12 @@ private:
 
 class ScopeFeature::ScopeFeatureImpl : ScopeBaseFeature {
  public:
-  ScopeFeatureImpl(const std::string sub_type, const int32_t num, const std::string suffix = "",
-                   const std::string sub_scope_mask = "", const int64_t step = 0)
+  ScopeFeatureImpl(const std::string &sub_type, const int32_t num, const std::string &suffix,
+                   const std::string &sub_scope_mask, const int64_t step)
       : ScopeBaseFeature(), sub_type_(sub_type), num_(num), suffix_(suffix), sub_scope_mask_(sub_scope_mask),
         step_(step) {}
-  virtual ~ScopeFeatureImpl() override = default;
-  virtual bool Match(const Scope *const scope) override;
+  ~ScopeFeatureImpl() = default;
+  bool Match(const Scope *const scope) override;
   bool SubScopesMatch(const std::vector<Scope *> &scopes);
 
  private:

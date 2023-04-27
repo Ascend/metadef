@@ -158,8 +158,8 @@ class ExpandDimsType {
       return ge::GRAPH_SUCCESS;
     }
     size_t dim_size = shape.GetDimNum();
-    size_t i = dim_size;
-    while (i++ < size_) {
+    size_t cur_dim_size = dim_size;
+    while (cur_dim_size++ < size_) {
       (void) shape.AppendDim(1);
     }
 

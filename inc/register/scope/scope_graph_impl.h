@@ -73,7 +73,7 @@ class FusionScopesResult::InnerNodeInfo::InnerNodeInfoImpl {
       : fusion_node_name_(fusion_node_name), name_(name), type_(type) {
     SetName(name);
   }
-  ~InnerNodeInfoImpl();
+  ~InnerNodeInfoImpl() noexcept;
   std::string GetFullNodeName(const std::string &relative_name);
   void SetName(const std::string &name) { name_ = GetFullNodeName(name); }
   void SetType(const std::string &type) { type_ = type; }
@@ -145,7 +145,7 @@ class ScopeTree::ScopeTreeImpl {
  public:
   ScopeTreeImpl() = default;
   ScopeTreeImpl(const ScopeTreeImpl &) = delete;
-  ScopeTreeImpl &operator=(const ScopeTreeImpl &) = delete;
+  ScopeTreeImpl &operator=(const ScopeTreeImpl &) & = delete;
   Status Init();
   ~ScopeTreeImpl();
 
@@ -171,9 +171,9 @@ class ScopeGraph::ScopeGraphImpl {
  public:
   ScopeGraphImpl() = default;
   ScopeGraphImpl(const ScopeGraphImpl &) = delete;
-  ScopeGraphImpl &operator=(const ScopeGraphImpl &) = delete;
+  ScopeGraphImpl &operator=(const ScopeGraphImpl &) & = delete;
   Status Init();
-  ~ScopeGraphImpl();
+  ~ScopeGraphImpl() noexcept;
 
   const ScopeTree *GetScopeTree() const { return scope_tree_; }
   void BuildScopeGraph(domi::tensorflow::GraphDef *graph_def);

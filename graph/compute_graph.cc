@@ -78,11 +78,9 @@ int64_t GetNodeOutputSize(const NodePtr& node) {
 }
 
 struct NodeOutInfo {
-  explicit NodeOutInfo(const NodePtr &node) {
-    num_out_data_nodes = node->GetOutDataNodesSize();
-    output_size = GetNodeOutputSize(node);
-    node_name = node->GetName();
-  }
+  explicit NodeOutInfo(const NodePtr &node)
+      : num_out_data_nodes(node->GetOutDataNodesSize()), output_size(GetNodeOutputSize(node)),
+        node_name(node->GetName()) {}
 
   bool operator<(const NodeOutInfo &rhs) const {
     if (num_out_data_nodes < rhs.num_out_data_nodes) {

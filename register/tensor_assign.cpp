@@ -167,13 +167,13 @@ Status TensorAssign::GetDoubleByteVal(const int64_t val_size, const google::prot
   if (!zerosLike) {
     const int64_t minCount = (count > val_size) ? val_size : count;
     for (int64_t i = 0; i < minCount; i++) {
-      GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(i), true);
-      addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(static_cast<int>(i)));
+      GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(i), true);
+      addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(static_cast<int32_t>(i)));
     }
-    int64_t value_index = minCount - 1;
-    GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(value_index), true);
+    const int64_t value_index = minCount - 1;
+    GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(value_index), true);
     for (int64_t i = minCount; i < count; i++) {
-      addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(static_cast<int>(value_index)));
+      addr[static_cast<uint64_t>(i)] = static_cast<uint16_t>(val_vector.Get(static_cast<int32_t>(value_index)));
     }
   } else {
     for (int64_t i = 0; i < count; i++) {
@@ -196,13 +196,13 @@ Status TensorAssign::GetByteVal(const int64_t val_size, const google::protobuf::
   if (!zerosLike) {
     const int64_t minCount = (count > val_size) ? val_size : count;
     for (int64_t i = 0; i < minCount; i++) {
-      GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(i), true);
-      addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(static_cast<int>(i)));
+      GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(i), true);
+      addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(static_cast<int32_t>(i)));
     }
-    int64_t value_index = minCount - 1;
-    GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(value_index), true);
+    const int64_t value_index = minCount - 1;
+    GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(value_index), true);
     for (int64_t i = minCount; i < count; i++) {
-      addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(static_cast<int>(value_index)));
+      addr[static_cast<uint64_t>(i)] = static_cast<uint8_t>(val_vector.Get(static_cast<int32_t>(value_index)));
     }
   } else {
     for (int64_t i = 0; i < count; i++) {
@@ -224,8 +224,8 @@ Status TensorAssign::GetStringVal(const int64_t val_size,
     for (int64_t i = 0; i < min_count; i++) {
       // extra 16 bytes store head of string
       // extra 1 byte store '\0'
-      GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(i), true);
-      total_size += (val_vector[static_cast<int>(i)].size() + sizeof(ge::StringHead) + 1U);
+      GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(i), true);
+      total_size += (val_vector[static_cast<int32_t>(i)].size() + sizeof(ge::StringHead) + 1U);
     }
     total_size += (static_cast<size_t>(count) - static_cast<size_t>(min_count)) * (sizeof(ge::StringHead) + 1U);
     std::vector<uint8_t> addr(total_size);
@@ -234,14 +234,16 @@ Status TensorAssign::GetStringVal(const int64_t val_size,
     auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
                                         static_cast<size_t>(count) * sizeof(ge::StringHead));
     GE_ASSERT_TRUE(count > 0);
-    GE_ASSERT_EQ(ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count), sizeof(ge::StringHead)), false);
-    uint64_t ptr_size = count * sizeof(ge::StringHead);
+    GE_ASSERT_EQ(ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count),
+                                                       static_cast<uint32_t>(sizeof(ge::StringHead))),
+                 false);
+    uint64_t ptr_size = static_cast<uint64_t>(count) * sizeof(ge::StringHead);
     for (int64_t i = 0; i < count; ++i) {
       ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
                                  static_cast<size_t>(i))->addr = static_cast<int64_t>(ptr_size);
       if (i < val_size) {
-        GE_ASSERT_EQ(ge::IntegerChecker<int>::Compat(i), true);
-        const string &str = val_vector.Get(static_cast<int>(i));
+        GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(i), true);
+        const string &str = val_vector.Get(static_cast<int32_t>(i));
         ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
                                    static_cast<size_t>(i))->len = static_cast<int64_t>(str.size());
         CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
@@ -266,7 +268,9 @@ Status TensorAssign::GetStringVal(const int64_t val_size,
     auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U,
                                         static_cast<size_t>(count) * sizeof(ge::StringHead));
     GE_ASSERT_TRUE(count > 0);
-    GE_ASSERT_EQ(ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count), sizeof(ge::StringHead)), false);
+    GE_ASSERT_EQ(ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count),
+                                                       static_cast<uint32_t>(sizeof(ge::StringHead))),
+                 false);
     uint64_t ptr_size = static_cast<uint64_t>(count) * sizeof(ge::StringHead);
     for (int64_t i = 0; i < count; ++i) {
       ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U,
@@ -444,7 +448,7 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
   int64_t count = 1;
   GE_IF_BOOL_EXEC(
       tensor.has_tensor_shape(), const tensorflow::TensorShapeProto &tensor_shape = tensor.tensor_shape();
-      for (int i = 0; i < tensor_shape.dim_size(); i++) {
+      for (int32_t i = 0; i < tensor_shape.dim_size(); i++) {
         const tensorflow::TensorShapeProto_Dim &shape_dim = tensor_shape.dim(i);
         shape_vec.push_back(shape_dim.size());
         const int64_t dim = shape_vec[static_cast<size_t>(i)];
