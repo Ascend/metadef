@@ -882,11 +882,7 @@ std::vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
     if (subgraph == nullptr) {
       continue;
     }
-    for (const auto &node_in_subgraph : subgraph->GetDirectNode()) {
-      if (NodeUtils::IsSubgraphOutput(node_in_subgraph)) {
-        out_data_node_vec.emplace_back(node_in_subgraph);
-      }
-    }
+    out_data_node_vec.emplace_back(subgraph->GetOrUpdateNetOutputNode());
   }
   return out_data_node_vec;
 }

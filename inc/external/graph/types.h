@@ -25,6 +25,7 @@ namespace ge {
 using char_t = char;
 using float32_t = float;
 using float64_t = double;
+using vector_bit_t = std::vector<bool>;
 
 static const int64_t UNKNOWN_DIM = -1;
 static const int64_t UNKNOWN_DIM_NUM = -2;
