@@ -44,8 +44,8 @@
  * DUMP_GRAPH_LEVEL含义说明：
  * 1-dump所有的图
  * 2-dump除子图外的所有图
- * 3-dump最后阶段的生成图 命名如：ge*Build*
- * 4-dump入口阶段的图 命名如：ge_proto*PreRunBegin.txt图(含去重功能，如果入口阶段的图重复，只会保留一份)
+ * 3-dump最后阶段的生成图
+ * 4-dump入口阶段的生成图
  * DUMP_GRAPH_PATH含义说明：
  * 控制图的落盘的路径
  * @param compute_graph
