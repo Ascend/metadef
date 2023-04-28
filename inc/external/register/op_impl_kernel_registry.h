@@ -79,7 +79,7 @@ struct OpImplKernelRegistry {
     uint8_t reserved_0_[7] = {0U};   // Reserved field, 8-byte aligned for unique_private_attrs
     uint8_t reserved_1_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
   };
-  virtual ~OpImplKernelRegistry() {}
+  virtual ~OpImplKernelRegistry() = default;
   virtual const OpImplFunctions *GetOpImpl(const ge::char_t *op_type) const = 0;
   virtual const PrivateAttrList &GetPrivateAttrs(const ge::char_t *op_type) const = 0;
 };
