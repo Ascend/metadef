@@ -56,6 +56,8 @@ private:
 
   ge::LargeBitmap &GetBitMap(const ge::NodePtr &node);
 
+  ge::LargeBitmap &GetBitMap(uint64_t index);
+
   size_t size_;
 
   std::vector<ge::LargeBitmap> bit_maps;

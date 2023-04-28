@@ -43,22 +43,22 @@ Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
   return ge::GRAPH_SUCCESS;
 }
 
-void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const vector<ge::NodePtr> &fusion_nodes) {
+void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const std::vector<ge::NodePtr> &fusion_nodes) {
   ge::LargeBitmap new_bit_vector(graph.GetDirectNode().size());
   new_bit_vector.SetValues(0U);
-  for (size_t i = 0; i < fusion_nodes.size(); i++) {
-    new_bit_vector.Or(GetBitMap(fusion_nodes[i]));
+  std::vector<uint64_t> fusion_indexs(fusion_nodes.size(), 0);
+  for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
+    auto index = static_cast<uint64_t>(GetIndex(fusion_nodes[i]));
+    new_bit_vector.Or(GetBitMap(index));
+    fusion_indexs[i] = index;
   }
-  for (auto &node : graph.GetDirectNode()) {
-    bool is_connected_to_fusion = false;
-    for (size_t i = 0U; i < fusion_nodes.size(); i++) {
-      if (GetBitMap(node).GetBit(static_cast<size_t>(GetIndex(fusion_nodes[i])))) {
-        is_connected_to_fusion = true;
+
+  for (auto& node_map: bit_maps) {
+    for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
+      if (node_map.GetBit(fusion_indexs[i])) {
+        node_map.Or(new_bit_vector);
         break;
       }
-    }
-    if (is_connected_to_fusion) {
-      GetBitMap(node).Or(new_bit_vector);
     }
   }
 }
@@ -97,5 +97,9 @@ const ge::LargeBitmap &ConnectionMatrix::GetBitMap(const ge::NodePtr &node) cons
 
 ge::LargeBitmap &ConnectionMatrix::GetBitMap(const ge::NodePtr &node) {
   return bit_maps[static_cast<uint64_t>(GetIndex(node))];
+}
+
+ge::LargeBitmap &ConnectionMatrix::GetBitMap(uint64_t index) {
+  return bit_maps[index];
 }
 }
