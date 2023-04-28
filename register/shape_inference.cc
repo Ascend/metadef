@@ -67,11 +67,11 @@ void GetMinMaxStorageShape(const ge::GeTensorDesc &input_desc, gert::StorageShap
 ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op_desc, const size_t input_index,
                                  const size_t invalid_index_num, TensorAddress &address,
                                  std::vector<std::unique_ptr<ge::Tensor>> &ge_tensors_holder) {
-  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  const auto *space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry().get();
   GE_ASSERT_NOTNULL(space_registry);
 
   const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
-  size_t instance_index = input_index - invalid_index_num;
+  const size_t instance_index = input_index - invalid_index_num;
   // check valid map
   const auto valid_op_ir_map = ge::OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(op_desc);
   if (valid_op_ir_map.empty()) {
@@ -94,12 +94,12 @@ ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op
 
 bool IsTensorDependencyValid(const ge::Operator &op, const ge::OpDescPtr &op_desc,
                              const size_t input_index, const size_t invalid_index_num) {
-  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  const auto *space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry().get();
   GE_ASSERT_NOTNULL(space_registry);
 
   const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
   GE_ASSERT_NOTNULL(functions);
-  size_t instance_index = input_index - invalid_index_num;
+  const size_t instance_index = input_index - invalid_index_num;
   size_t ir_index;
   GE_ASSERT_GRAPH_SUCCESS(ge::OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, instance_index, ir_index),
                           "[Get][InputIrIndexByInstanceIndex] failed, op[%s], instance index[%zu], input_index[%zu]",
@@ -437,7 +437,7 @@ ge::graphStatus InferShapeRangeAutomaticly(const ge::Operator &op, const ge::OpD
 }
 
 ge::graphStatus InferShapeRangeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc) {
-  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  const auto *space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry().get();
   GE_ASSERT_NOTNULL(space_registry);
 
   const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
@@ -456,7 +456,7 @@ ge::graphStatus InferShapeRangeOnCompile(const ge::Operator &op, const ge::OpDes
 }
 
 ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr &op_desc) {
-  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  const auto *space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry().get();
   GE_ASSERT_NOTNULL(space_registry);
 
   const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
@@ -486,7 +486,7 @@ ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr 
 }
 
 ge::graphStatus InferDataTypeOnCompile(const ge::OpDescPtr &op_desc) {
-  auto space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  const auto *space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry().get();
   if (space_registry == nullptr) {
     GELOGW("Default space registry has not been initialized!");
     return op_desc->DefaultInferDataType();
@@ -515,9 +515,9 @@ class CompileAdaptFunctionsRegister {
  public:
   CompileAdaptFunctionsRegister() {
     // only infer shape is necessary, as register all infer func in infer shape
-    (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(gert::InferShapeOnCompile);
-    (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(gert::InferShapeRangeOnCompile);
-    (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(gert::InferDataTypeOnCompile);
+    (void) ge::OperatorFactoryImpl::RegisterInferShapeV2Func(&gert::InferShapeOnCompile);
+    (void) ge::OperatorFactoryImpl::RegisterInferShapeRangeFunc(&gert::InferShapeRangeOnCompile);
+    (void) ge::OperatorFactoryImpl::RegisterInferDataTypeFunc(&gert::InferDataTypeOnCompile);
   }
 };
 static CompileAdaptFunctionsRegister VAR_UNUSED g_register_adapt_funcs;
