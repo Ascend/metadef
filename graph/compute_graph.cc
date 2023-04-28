@@ -34,6 +34,7 @@
 #include "framework/common/ge_types.h"
 #include "graph/utils/tensor_utils.h"
 #include "common/util/mem_utils.h"
+#include "graph/utils/op_type_utils.h"
 
 namespace ge {
 namespace {
@@ -492,7 +493,7 @@ NodePtr ComputeGraphImpl::AddNode(const OpDescPtr op, const int64_t id, const Co
 }
 
 void ComputeGraphImpl::AddInputDataNode(const NodePtr &node) {
-  if ((node->GetType() == DATA) || (node->GetType() == AIPPDATA) || (node->GetType() == ANN_DATA)) {
+  if (OpTypeUtils::IsDataNode(node->GetType())) {
     if (std::find(input_nodes_.begin(), input_nodes_.end(), node) == input_nodes_.end()) {
       input_nodes_.push_back(node);
     }
@@ -1134,8 +1135,8 @@ graphStatus ComputeGraphImpl::SortNodes(std::vector<NodePtr> &stack,
     GE_IF_BOOL_EXEC(node->GetOpDesc() == nullptr, continue);
     map_in_edge_num[node] = static_cast<uint32_t>(GetInEdgeSize(node));
     if (map_in_edge_num[node] == 0U) {
-      if ((node->GetOpDesc()->GetType() != DATA) && (node->GetOpDesc()->GetType() != AIPPDATA) &&
-          (node->GetOpDesc()->GetType() != INPUT_TYPE) && (node->GetOpDesc()->GetType() != ANN_DATA)) {
+      if ((!OpTypeUtils::IsDataNode(node->GetOpDesc()->GetType())) &&
+          (node->GetOpDesc()->GetType() != INPUT_TYPE)) {
         (void)stack.insert(stack.begin(), node);
         spec_node_size++;
         continue;

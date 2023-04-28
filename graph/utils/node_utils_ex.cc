@@ -30,6 +30,7 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "common/util/mem_utils.h"
+#include "graph/utils/op_type_utils.h"
 
 namespace ge {
 graphStatus NodeUtilsEx::InferShapeAndType(const NodePtr &node) {
@@ -62,7 +63,7 @@ graphStatus NodeUtilsEx::IsInputsValid(const NodePtr &node) {
       GELOGW("[Verify][CheckParam] In data anchor is null");
       continue;
     }
-    const bool valid_anchor = (node->GetType() == DATA) || (node->GetType() == AIPPDATA) ||
+    const bool valid_anchor = OpTypeUtils::IsDataNode(node->GetType()) ||
                               (node->GetType() == CONSTANT) || (node->GetType() == VARIABLE) ||
                               (node->GetType() == CONSTANTOP) ||
                               (op_desc->MutableInputDesc(static_cast<uint32_t>(in_anchor->GetIdx())) == nullptr) ||

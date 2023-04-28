@@ -25,6 +25,7 @@
 #include "graph/utils/node_utils.h"
 #include "graph/debug/ge_op_types.h"
 #include "framework/common/debug/ge_log.h"
+#include "graph/utils/op_type_utils.h"
 
 namespace {
 struct IrDefinition {
@@ -140,7 +141,7 @@ ge::graphStatus RecoverIrAttrNames(const ge::NodePtr &node, IrDefinition &ir_def
 
 namespace ge {
 ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &op_type, IrDefinition &ir_def) {
-  if ((node->GetType() == ge::NETOUTPUT) || (node->GetType() == ge::DATA)) {
+  if ((node->GetType() == ge::NETOUTPUT) || OpTypeUtils::IsDataNode(node->GetType())) {
     return ge::GRAPH_SUCCESS;
   }
   InitIrDefinitionsIfNeed(op_type, ir_def);
