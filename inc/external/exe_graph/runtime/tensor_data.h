@@ -36,7 +36,7 @@ inline const char *GetPlacementStr(const TensorPlacement placement) {
   static const char
       *placement_str[static_cast<int32_t>(kTensorPlacementEnd) + 1] = {
           "DeviceHbm", "HostDDR", "HostDDR", "Unknown"};
-  if (placement >= kTensorPlacementEnd || placement < kOnDeviceHbm) {
+  if ((placement >= kTensorPlacementEnd) || (placement < kOnDeviceHbm)) {
     return placement_str[kTensorPlacementEnd];
   }
   return placement_str[placement];
