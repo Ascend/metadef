@@ -1508,7 +1508,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "Remote Device Connection Failure",
       "ErrCode": "EC0000",
       "ErrMessage": "Failed to connect the remote device [IP: %s, Port: %s].",
@@ -1519,7 +1519,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "Remote Device Login Failure",
       "ErrCode": "EC0001",
       "ErrMessage": "User [%s] failed to log in to the remote device.",
@@ -1530,7 +1530,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "Invalid NFS Mount Path",
       "ErrCode": "EC0002",
       "ErrMessage": "Remote mount path [%s] does not exist.",
@@ -1541,7 +1541,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "File Not Found",
       "ErrCode": "EC0003",
       "ErrMessage": "File [tss/bin/kernel_perf_comm] does not exist in remote mount path [%s].",
@@ -1563,7 +1563,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EC0005",
       "ErrMessage": "Value for parameter [--soc_version]  is invalid or the config.json is not set correctly.",
@@ -1574,7 +1574,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "Directory Operation Failure",
       "ErrCode": "EC0006",
       "ErrMessage": "Directory operation failed. Reason: %s.",
@@ -1585,7 +1585,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "Invalid Environment Variable",
       "ErrCode": "EC0007",
       "ErrMessage": "The environment variable argument is invalid. Value [%s] for environment variable [%s] must be less than [%s].",
@@ -1596,7 +1596,7 @@
       }
     },
     {
-      "errClass": "Autotune Errors",
+      "errClass": "Auto Tune Errors",
       "errTitle": "Invalid Environment Variable",
       "ErrCode": "EC0008",
       "ErrMessage": "Environment variable [%s] is not set. Use bash command [env] to check whether the environment variable is missing, and then use the [export] command to set it correctly.",
@@ -1604,6 +1604,17 @@
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Auto Tune Errors",
+      "errTitle": "Resources Insufficient",
+      "ErrCode": "EC0009",
+      "ErrMessage": "Computing resources are insufficient. Reason: %s.",
+      "Arglist": "err_detail",
+      "suggestion": {
+        "Possible Cause": "1. Memory resources are insufficient.\t2. The number of file handles exceeds the limit.",
+        "Solution": "1. Check whether the memory usage reaches the upper limit.\t2. Check whether the file handle usage reaches the system limit."
       }
     },
     {
