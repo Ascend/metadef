@@ -886,4 +886,13 @@ std::string AttrUtils::GetAllAttrsStr(ConstAttrHolderAdapter &&obj) {
   }
   return ss.str();
 }
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
+bool AttrUtils::ClearAllAttrs(AttrHolderAdapter &&obj) {
+  if (!obj) {
+    return false;
+  }
+  obj->MutableAttrMap().Clear();
+  return true;
+}
 }  // namespace ge

@@ -127,6 +127,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static std::string GetAllAttrsStr(ConstAttrHolderAdapter &&obj);
   static std::map<std::string, AnyValue> GetAllAttrs(ConstAttrHolderAdapter &&obj);
   static std::string GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const std::set<std::string> &un_compute_attrs);
+  static bool ClearAllAttrs(AttrHolderAdapter &&obj);
 
   class AttrHolderAdapter {
    public:
