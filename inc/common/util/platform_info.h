@@ -57,6 +57,12 @@ class PlatformInfoManager {
 
   uint32_t GetPlatformInstanceByDevice(const uint32_t &device_id, PlatFormInfos &platform_infos);
 
+  uint32_t GetRuntimePlatformInfosByDevice(const uint32_t &device_id, PlatFormInfos &platform_infos);
+
+  uint32_t UpdateRuntimePlatformInfosByDevice(const uint32_t &device_id, PlatFormInfos &platform_infos);
+
+  uint32_t InitRuntimePlatformInfos(const std::string &SoCVersion);
+
  private:
   PlatformInfoManager();
   ~PlatformInfoManager();
@@ -150,6 +156,10 @@ class PlatformInfoManager {
   OptionalInfos opti_compilation_infos_;
 
   std::map<uint32_t, PlatFormInfos> device_platform_infos_map_;
+
+  PlatFormInfos runtime_platform_infos_;
+
+  std::map<uint32_t, PlatFormInfos> runtime_device_platform_infos_map_;
 };
 }  // namespace fe
 #endif
