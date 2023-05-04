@@ -33,6 +33,5 @@ KernelRegisterData::KernelRegisterData(const ge::char_t *kernel_type) : kernel_t
   funcs_.outputs_creator_func = NullCreator;
   funcs_.outputs_initializer = NullDestoryer;
   funcs_.trace_printer = nullptr;
-  critical_section_ = "";
 }
 }  // namespace gert

@@ -48,18 +48,32 @@ class KernelRegistry {
     TracePrinter trace_printer;
   };
 
-  struct KernelInfo {
-    KernelFuncs func;
-    std::string critical_section;
-  };
-
   virtual ~KernelRegistry() = default;
   virtual const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const = 0;
-  virtual const KernelInfo *FindKernelInfo(const std::string &kernel_type) const = 0;
-  virtual void RegisterKernel(std::string kernel_type, KernelInfo kernel_infos) {
+  virtual void RegisterKernel(const std::string kernel_type, KernelFuncs func) {
     (void) kernel_type;
-    (void) kernel_infos;
+    (void) func;
   };
+};
+
+// todo delete this class after the next synchronization from yellow to blue
+class KernelRegister {
+ public:
+  explicit KernelRegister(const ge::char_t *kernel_type);
+  KernelRegister(const KernelRegister &other);
+  ~KernelRegister();
+  KernelRegister &operator=(const KernelRegister &other) = default;
+
+  KernelRegister &RunFunc(KernelRegistry::KernelFunc func);
+
+  KernelRegister &OutputsCreator(KernelRegistry::CreateOutputsFunc func); // to be deleted
+  KernelRegister &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func);
+  KernelRegister &OutputsInitializer(KernelRegistry::CreateOutputsFunc func); // to be deleted
+  KernelRegister &TracePrinter(KernelRegistry::TracePrinter func);
+
+ private:
+  std::string kernel_type_;
+  KernelRegistry::KernelFuncs kernel_funcs_;
 };
 
 class KernelRegisterData;
@@ -73,7 +87,6 @@ class KernelRegisterV2 {
   KernelRegisterV2(KernelRegisterV2 &&other) = delete;
 
   KernelRegisterV2 &RunFunc(KernelRegistry::KernelFunc func);
-  KernelRegisterV2 &ConcurrentCriticalSectionKey(const std::string &critical_section_key);
 
   ATTRIBUTED_DEPRECATED(KernelRegisterV2 &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func))
   KernelRegisterV2 &OutputsCreator(KernelRegistry::CreateOutputsFunc func); // to be deleted

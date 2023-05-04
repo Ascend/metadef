@@ -25,14 +25,13 @@ namespace gert {
 class KernelRegistryImpl : public KernelRegistry {
  public:
   static KernelRegistryImpl &GetInstance();
-  void RegisterKernel(std::string kernel_type, KernelInfo kernel_infos) override;
+  void RegisterKernel(std::string kernel_type, KernelFuncs func) override;
   const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const override;
-  const KernelInfo *FindKernelInfo(const std::string &kernel_type) const override;
 
-  const std::unordered_map<std::string, KernelInfo> &GetAll() const;
+  const std::unordered_map<std::string, KernelFuncs> &GetAll() const;
 
  private:
-  std::unordered_map<std::string, KernelInfo> kernel_infos_;
+  std::unordered_map<std::string, KernelFuncs> types_to_func_;
 };
 }
 
