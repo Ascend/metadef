@@ -45,7 +45,7 @@
 #include "graph/op_desc_impl.h"
 #include "mmpa/mmpa_api.h"
 #include "common/checker.h"
-#include "graph/utils/op_type_utils.h"
+
 
 namespace ge {
 enum class DumpGraphLevel {
@@ -2168,7 +2168,7 @@ ComputeGraphPtr GraphUtils::CloneGraph(const ComputeGraphPtr &graph, const std::
                      op_desc->GetName().c_str(), new_graph->GetName().c_str());
     all_new_nodes[node->GetName()] = node;
 
-    if (OpTypeUtils::IsDataNode(node->GetType())) {
+    if (node->GetType() == DATA) {
       input_nodes.emplace_back(node);
     } else if (node->GetType() == NETOUTPUT) {
       output_nodes.emplace_back(node);
