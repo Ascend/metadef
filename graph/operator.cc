@@ -43,7 +43,6 @@
 #include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_utils_ex.h"
 #include "graph/utils/op_desc_utils_ex.h"
-#include "graph/utils/op_type_utils.h"
 
 #define OP_ATTR_SET_IMP(ArgType, AttrUtilsFun)                                                                         \
   Operator &ge::Operator::SetAttr(const std::string &name, ArgType attr_value) {                                       \
@@ -2653,8 +2652,8 @@ public:
       node_op.BreakConnect();
 
       GE_CHK_BOOL_EXEC(tensor_desc != nullptr, continue, "[Get][Opdesc] tensor_desc is null.");
-      if (((tensor_desc->GetInputsSize() == 0UL) && (tensor_desc->GetOutputsSize() > 0UL)) ||
-          OpTypeUtils::IsDataNode(type) || (type == VARIABLE) || (type == INITDATA) || (type == GETNEXT)) {
+      if (((tensor_desc->GetInputsSize() == 0UL) && (tensor_desc->GetOutputsSize() > 0UL)) || (type == DATA) ||
+          (type == VARIABLE) || (type == INITDATA) || (type == GETNEXT)) {
         vec_inputs.push_back(it.operator_impl_);
       } else {
         GELOGW("[BuildGraph][CheckInput] Input operator should be Data, Variable operator or operator that has output "

@@ -30,7 +30,6 @@
 #include "graph/utils/transformer_utils.h"
 #include "graph/utils/node_utils_ex.h"
 #include "common/util/mem_utils.h"
-#include "graph/utils/op_type_utils.h"
 
 namespace ge {
 graphStatus GraphUtilsEx::Verify(const ComputeGraphPtr &graph) {
@@ -70,7 +69,7 @@ graphStatus GraphUtilsEx::InferShapeInNeed(const ComputeGraphPtr &graph) {
       }
 
       const graphStatus status = NodeUtilsEx::InferShapeAndType(node_ptr);
-      if ((!OpTypeUtils::IsDataNode(node_ptr->GetType())) && (status == GRAPH_PARAM_INVALID)) {
+      if ((node_ptr->GetType() != DATA) && (status == GRAPH_PARAM_INVALID)) {
         GELOGI("Op %s does not have the IMPLEMT_INFERFUNC definition, "
                "and subsequent operators no longer perform shape inference.",
                node_ptr->GetName().c_str());
