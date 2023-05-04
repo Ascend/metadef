@@ -214,6 +214,7 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     mkdir ${BASEPATH}/cov
     lcov -c \
         -d ${BUILD_RELATIVE_PATH}/graph/CMakeFiles/graph.dir \
+        -d ${BUILD_RELATIVE_PATH}/graph/CMakeFiles/flow_graph.dir \
         -d ${BUILD_RELATIVE_PATH}/graph/CMakeFiles/graph_base.dir \
         -d ${BUILD_RELATIVE_PATH}/register/CMakeFiles/register.dir/ \
         -d ${BUILD_RELATIVE_PATH}/error_manager/CMakeFiles/error_manager.dir/ \
