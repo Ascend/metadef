@@ -70,6 +70,7 @@ class AttrStore {
   bool Exists(const std::string &name) const noexcept;
 
   bool Delete(const std::string &name);
+  void Clear();
 
   void Swap(AttrStore &other);
   bool SetAnyValueByName(const std::string &name, const AnyValue &value);
@@ -91,6 +92,7 @@ class AttrStore {
   public:
     bool Exists(const AttrSubId index) const noexcept;
     bool Delete(const AttrSubId index);
+    void Clear();
     void Swap(PreDefinedAttrStore &other);
 
     AnyValue *GetOrCreateAnyValue(const AttrSubId index) const;
@@ -107,6 +109,7 @@ class AttrStore {
    public:
     bool Exists(const std::string &name) const noexcept;
     bool Delete(const std::string &name);
+    void Clear();
     void Swap(CustomDefinedAttrStore &other);
 
     AnyValue *GetOrCreateAnyValue(const std::string &name);

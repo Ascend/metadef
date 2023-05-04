@@ -17,17 +17,18 @@
 #ifndef METADEF_CXX_INC_COMMON_UTIL_TILING_UTILS_H_
 #define METADEF_CXX_INC_COMMON_UTIL_TILING_UTILS_H_
 #include <cstdint>
+#include "graph/types.h"
 
 namespace optiling {
 union Fp32 {
   uint32_t u;
-  float f;
+  ge::float32_t f;
 };
 
-inline uint16_t FloatToUint16(const float &value) {
-  const Fp32 f32infty = {255U << 23};
-  const Fp32 f16infty = {31U << 23};
-  const Fp32 magic = {15U << 23};
+inline uint16_t FloatToUint16(const ge::float32_t value) {
+  constexpr Fp32 f32infty = {255U << 23};
+  constexpr Fp32 f16infty = {31U << 23};
+  constexpr Fp32 magic = {15U << 23};
   constexpr uint32_t sign_mask = 0x80000000U;
   constexpr uint32_t round_mask = ~0xFFFU;
   constexpr uint32_t round_max = 0x7FFFU;

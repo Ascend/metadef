@@ -96,37 +96,37 @@ int32_t FormatErrorMessage(char_t *str_dst, size_t dst_max, const char_t *format
 
 namespace {
 #ifdef __GNUC__
-const error_message::char_t *const kErrorCodePath = "../conf/error_manager/error_code.json";
-const error_message::char_t *const kSeparator = "/";
+constexpr const error_message::char_t *const kErrorCodePath = "../conf/error_manager/error_code.json";
+constexpr const error_message::char_t *const kSeparator = "/";
 #else
 const error_message::char_t *const kErrorCodePath = "..\\conf\\error_manager\\error_code.json";
 const error_message::char_t *const kSeparator = "\\";
 #endif
 
-const error_message::char_t *const kErrorList = "error_info_list";
-const error_message::char_t *const kErrCode = "ErrCode";
-const error_message::char_t *const kErrMessage = "ErrMessage";
-const error_message::char_t *const kSuggestion = "suggestion";
-const error_message::char_t *const kPossibleCause = "Possible Cause";
-const error_message::char_t *const kSolution = "Solution";
-const error_message::char_t *const kArgList = "Arglist";
-const uint64_t kLength = 2UL;
+constexpr const error_message::char_t *const kErrorList = "error_info_list";
+constexpr const error_message::char_t *const kErrCode = "ErrCode";
+constexpr const error_message::char_t *const kErrMessage = "ErrMessage";
+constexpr const error_message::char_t *const kSuggestion = "suggestion";
+constexpr const error_message::char_t *const kPossibleCause = "Possible Cause";
+constexpr const error_message::char_t *const kSolution = "Solution";
+constexpr const error_message::char_t *const kArgList = "Arglist";
+constexpr uint64_t kLength = 2UL;
 
-std::string Ltrim(std::string s) {
+std::string &Ltrim(std::string &s) {
   (void) s.erase(s.begin(),
                  std::find_if(s.begin(),
                               s.end(),
                               [](const error_message::char_t c) {
-                                return (std::isspace(static_cast<int32_t>(c)) == 0);
+                                return static_cast<bool>(std::isspace(static_cast<unsigned char>(c)) == 0);
                               }));
   return s;
 }
 
-std::string Rtrim(std::string s) {
+std::string &Rtrim(std::string &s) {
   (void) s.erase(std::find_if(s.rbegin(),
                               s.rend(),
                               [](const error_message::char_t c) {
-                                return (std::isspace(static_cast<int32_t>(c)) == 0);
+                                return static_cast<bool>(std::isspace(static_cast<unsigned char>(c)) == 0);
                               }).base(),
                  s.end());
   return s;
@@ -226,7 +226,7 @@ int32_t ErrorManager::Init() {
 }
 
 int32_t ErrorManager::ReportInterErrMessage(const std::string error_code, const std::string &error_msg) {
-  const uint64_t kMaxWorkSize = 1000UL;
+  constexpr uint64_t kMaxWorkSize = 1000UL;
   if (!is_init_) {
     const int32_t kRetInit = Init();
     if (kRetInit == -1) {
@@ -331,10 +331,14 @@ int32_t ErrorManager::ReportErrMessage(const std::string error_code,
       error_info.possible_cause, error_info.solution};
   if (error_code[0UL] == 'W') {
     const auto it = find(warning_messages.begin(), warning_messages.end(), error_item);
-    if (it == warning_messages.end()) { warning_messages.emplace_back(error_item); }
+    if (it == warning_messages.end()) {
+      warning_messages.emplace_back(error_item);
+    }
   } else {
     const auto it = find(error_messages.begin(), error_messages.end(), error_item);
-    if (it == error_messages.end()) { error_messages.emplace_back(error_item); }
+    if (it == error_messages.end()) {
+      error_messages.emplace_back(error_item);
+    }
   }
   return 0;
 }
@@ -698,14 +702,14 @@ void ErrorManager::GenWorkStreamIdDefault() {
   const int32_t pid = mmGetPid();
   const int32_t tid = mmGetTid();
 
-  const uint64_t kPidOffset = 100000UL;
+  constexpr uint64_t kPidOffset = 100000UL;
   const uint64_t work_stream_id = static_cast<uint64_t>((static_cast<uint32_t>(pid) * kPidOffset) +
       static_cast<uint32_t>(tid));
   error_context_.work_stream_id = work_stream_id;
 }
 
 void ErrorManager::GenWorkStreamIdBySessionGraph(const uint64_t session_id, const uint64_t graph_id) {
-  const uint64_t kSessionIdOffset = 100000UL;
+  constexpr uint64_t kSessionIdOffset = 100000UL;
   const uint64_t work_stream_id = (session_id * kSessionIdOffset) + graph_id;
   error_context_.work_stream_id = work_stream_id;
 

@@ -51,7 +51,7 @@ class NodeOpTypeFeature::NodeOpTypeFeatureImpl : ScopeBaseFeature {
  public:
   NodeOpTypeFeatureImpl(const std::string &nodeType, const int64_t num, const int64_t step)
       : ScopeBaseFeature(), node_type_(nodeType), num_(num), step_(step) {}
-  ~NodeOpTypeFeatureImpl() = default;
+  ~NodeOpTypeFeatureImpl() override = default;
   bool Match(const Scope *const scope) override;
 
 private:
@@ -98,7 +98,7 @@ class ScopeFeature::ScopeFeatureImpl : ScopeBaseFeature {
                    const std::string &sub_scope_mask, const int64_t step)
       : ScopeBaseFeature(), sub_type_(sub_type), num_(num), suffix_(suffix), sub_scope_mask_(sub_scope_mask),
         step_(step) {}
-  ~ScopeFeatureImpl() = default;
+  ~ScopeFeatureImpl() override = default;
   bool Match(const Scope *const scope) override;
   bool SubScopesMatch(const std::vector<Scope *> &scopes);
 

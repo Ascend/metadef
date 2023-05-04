@@ -191,4 +191,14 @@ bool AttrStore::SetAnyValueByName(const std::string &name, const AnyValue &value
   *av = value;
   return true;
 }
+void AttrStore::Clear() {
+  pre_defined_attrs_.Clear();
+  general_attrs_.Clear();
+}
+void AttrStore::PreDefinedAttrStore::Clear() {
+  attrs_.clear();
+}
+void AttrStore::CustomDefinedAttrStore::Clear() {
+  attrs_.clear();
+}
 }  // namespace ge

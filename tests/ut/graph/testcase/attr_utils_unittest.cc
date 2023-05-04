@@ -1231,4 +1231,16 @@ TEST_F(AttrUtilsUt, SetGetListNamedAttrs) {
     EXPECT_EQ(*out_av.Get<int32_t>(), *av.Get<int32_t>());
   }
 }
+
+TEST_F(AttrUtilsUt, ClearAttrs) {
+  auto op_desc = std::make_shared<OpDesc>();
+  NamedAttrs nas;
+  nas.SetName("Hello Name");
+  nas.SetAttr("abc", AnyValue::CreateFrom(static_cast<int64_t>(10)));
+
+  EXPECT_TRUE(AttrUtils::SetNamedAttrs(op_desc, "attr", nas));
+  EXPECT_EQ(AttrUtils::GetAllAttrs(op_desc).size(), 1);
+  AttrUtils::ClearAllAttrs(op_desc);
+  EXPECT_EQ(AttrUtils::GetAllAttrs(op_desc).size(), 0);
+}
 }
