@@ -31,12 +31,7 @@ class KernelRegisterData {
     return kernel_type_;
   }
 
-  std::string &GetCriticalSection() {
-    return critical_section_;
-  }
-
  private:
-  std::string critical_section_;
   std::string kernel_type_;
   KernelRegistry::KernelFuncs funcs_;
 };

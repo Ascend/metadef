@@ -30,7 +30,7 @@ std::vector<std::string> TestTraceFunc(const gert::KernelContext *) {
 class KernelRegistryImplUT : public testing::Test {};
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_AllFuncRegistered) {
  KernelRegistryImpl registry;
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}, ""});
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc});
  ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, &TestFuncCreator);
@@ -38,7 +38,7 @@ TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_AllFuncRegistered) {
 }
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_OnlyRegisterRunFunc) {
  KernelRegistryImpl registry;
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr}, ""});
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr});
  ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, nullptr);
@@ -47,22 +47,20 @@ TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_OnlyRegisterRunFunc) {
 TEST_F(KernelRegistryImplUT, FailedToFindWhenNotRegister) {
  KernelRegistryImpl registry;
  ASSERT_EQ(registry.FindKernelFuncs("Foo"), nullptr);
- ASSERT_EQ(registry.FindKernelInfo("Foo"), nullptr);
 }
 TEST_F(KernelRegistryImplUT, GetAll_Ok) {
  KernelRegistryImpl registry;
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr}, "memory"});
- std::unordered_map<std::string, KernelRegistry::KernelInfo> expect_kernel_infos = {
-     {"Foo", {{TestFunc, nullptr, nullptr, nullptr, nullptr}, "memory"}},
-     {"Bar", {{TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}, "memory"}}
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr});
+ std::unordered_map<std::string, KernelRegistry::KernelFuncs> expect = {
+     {"Foo", {TestFunc, nullptr, nullptr, nullptr, nullptr}},
+     {"Bar", {TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}}
  };
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr, nullptr, nullptr}, "memory"});
- registry.RegisterKernel("Bar", {{TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}, "memory"});
- ASSERT_EQ(registry.GetAll().size(), expect_kernel_infos.size());
- for (const auto &key_to_infos : registry.GetAll()) {
-   ASSERT_TRUE(expect_kernel_infos.count(key_to_infos.first) > 0);
-   ASSERT_EQ(key_to_infos.second.func.run_func, expect_kernel_infos[key_to_infos.first].func.run_func);
-   ASSERT_EQ(key_to_infos.second.critical_section, expect_kernel_infos[key_to_infos.first].critical_section);
+ registry.RegisterKernel("Foo", {TestFunc, nullptr, nullptr, nullptr, nullptr});
+ registry.RegisterKernel("Bar", {TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc});
+ ASSERT_EQ(registry.GetAll().size(), expect.size());
+ for (const auto &key_to_funcs : registry.GetAll()) {
+   ASSERT_TRUE(expect.count(key_to_funcs.first) > 0);
+   ASSERT_EQ(key_to_funcs.second.run_func, expect[key_to_funcs.first].run_func);
  }
 }
 }  // namespace gert
