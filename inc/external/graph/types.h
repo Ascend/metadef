@@ -179,8 +179,9 @@ enum Format {
   FORMAT_NULL,
   FORMAT_ND_RNN_BIAS,
   FORMAT_FRACTAL_ZN_RNN,
-  FORMAT_NYUV,
+  FORMAT_NYUV = 45,
   FORMAT_NYUV_A,
+  FORMAT_NCL,
   // Add new formats definition here
   FORMAT_END,
   // FORMAT_MAX defines the max value of Format.
