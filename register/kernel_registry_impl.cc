@@ -49,52 +49,26 @@ KernelRegistryImpl &KernelRegistryImpl::GetInstance() {
   static KernelRegistryImpl registry;
   return registry;
 }
-void KernelRegistryImpl::RegisterKernel(std::string kernel_type, KernelRegistry::KernelFuncs func) {
-  types_to_func_[std::move(kernel_type)] = std::move(func);
+void KernelRegistryImpl::RegisterKernel(std::string kernel_type, KernelInfo kernel_infos) {
+  kernel_infos_[std::move(kernel_type)] = std::move(kernel_infos);
 }
 
 const KernelRegistry::KernelFuncs *KernelRegistryImpl::FindKernelFuncs(const std::string &kernel_type) const {
-  auto iter = types_to_func_.find(kernel_type);
-  if (iter == types_to_func_.end()) {
+  auto iter = kernel_infos_.find(kernel_type);
+  if (iter == kernel_infos_.end()) {
+    return nullptr;
+  }
+  return &iter->second.func;
+}
+const KernelRegistry::KernelInfo *KernelRegistryImpl::FindKernelInfo(const std::string &kernel_type) const {
+  auto iter = kernel_infos_.find(kernel_type);
+  if (iter == kernel_infos_.end()) {
     return nullptr;
   }
   return &iter->second;
 }
-const std::unordered_map<std::string, KernelRegistry::KernelFuncs> &KernelRegistryImpl::GetAll() const {
-  return types_to_func_;
-}
-KernelRegister::KernelRegister(const char *kernel_type) : kernel_type_(kernel_type) {
-  kernel_funcs_.outputs_creator = NullCreator;
-  kernel_funcs_.outputs_creator_func = NullCreator;
-  kernel_funcs_.outputs_initializer = NullDestoryer;
-  kernel_funcs_.trace_printer = nullptr;
-}
-KernelRegister::~KernelRegister() = default;
-KernelRegister &KernelRegister::RunFunc(KernelRegistry::KernelFunc func) {
-  kernel_funcs_.run_func = func;
-  return *this;
-}
-KernelRegister &KernelRegister::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
-  kernel_funcs_.outputs_creator = std::move(func);
-  return *this;
-}
-KernelRegister &KernelRegister::OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func) {
-  kernel_funcs_.outputs_creator_func = func;
-  return *this;
-}
-KernelRegister &KernelRegister::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
-  kernel_funcs_.outputs_initializer = std::move(func);
-  return *this;
-}
-KernelRegister &KernelRegister::TracePrinter(KernelRegistry::TracePrinter func) {
-  kernel_funcs_.trace_printer = std::move(func);
-  return *this;
-}
-KernelRegister::KernelRegister(const KernelRegister &other) {
-  if (other.kernel_type_.size() > 1 && other.kernel_type_[0] == '"') {
-    GELOGW("The kernel type starts with \", that maybe a mistake");
-  }
-  KernelRegistry::GetInstance().RegisterKernel(other.kernel_type_, other.kernel_funcs_);
+const std::unordered_map<std::string, KernelRegistryImpl::KernelInfo> &KernelRegistryImpl::GetAll() const {
+  return kernel_infos_;
 }
 
 KernelRegisterV2::KernelRegisterV2(const char *kernel_type)
@@ -103,6 +77,12 @@ KernelRegisterV2::~KernelRegisterV2() = default;
 KernelRegisterV2 &KernelRegisterV2::RunFunc(KernelRegistry::KernelFunc func) {
   if (register_data_ != nullptr) {
     register_data_->GetFuncs().run_func = func;
+  }
+  return *this;
+}
+KernelRegisterV2 &KernelRegisterV2::ConcurrentCriticalSectionKey(const std::string &critical_section_key) {
+  if (register_data_ != nullptr) {
+    register_data_->GetCriticalSection() = critical_section_key;
   }
   return *this;
 }
@@ -135,6 +115,7 @@ KernelRegisterV2::KernelRegisterV2(const KernelRegisterV2 &other) : register_dat
     return;
   }
   GELOGD("GERT kernel type %s registered", register_data->GetKernelType().c_str());
-  KernelRegistry::GetInstance().RegisterKernel(register_data->GetKernelType(), register_data->GetFuncs());
+  KernelRegistry::GetInstance().RegisterKernel(register_data->GetKernelType(),
+                                               {register_data->GetFuncs(), register_data->GetCriticalSection()});
 }
 }  // namespace gert
