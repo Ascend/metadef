@@ -17,6 +17,11 @@
 #include "flow_graph/data_flow.h"
 #include "proto/dflow.pb.h"
 #include "graph/utils/op_desc_utils.h"
+#define protected public
+#define private public
+#include "inc/common/util/error_manager/error_manager.h"
+#define protected public
+#define private public
 
 using namespace ge::dflow;
 
@@ -34,11 +39,7 @@ TEST_F(FlowGraphUTest, DflowFuncBasicTest_AddPp) {
   ge::Graph graph("user_graph");
   GraphBuilder graph_build = [graph]() { return graph; };
   auto pp1 = GraphPp("pp1", graph_build).SetCompileConfig("./pp1.json");
-  auto node0 = FlowNode("node0", 3, 2).SetInput(0, data0)
-                                      .SetInput(1, data1)
-                                      .SetInput(2, data2)
-                                      .AddPp(pp1)
-                                      .AddPp(pp1);
+  auto node0 = FlowNode("node0", 3, 2).SetInput(0, data0).SetInput(1, data1).SetInput(2, data2).AddPp(pp1).AddPp(pp1);
 
   std::vector<std::string> pp_attrs;
   auto op_desc = OpDescUtils::GetOpDescFromOperator(node0);
@@ -62,19 +63,20 @@ TEST_F(FlowGraphUTest, DflowFuncBasicTest_Map) {
   auto data2 = FlowData("Data2", 2);
   auto pp1 = FunctionPp("pp1").SetCompileConfig("./pp1.json");
   auto pp2 = FunctionPp("pp2");
-  auto node0 = FlowNode("node0", 4, 3).SetInput(0, data0)
-                                      .SetInput(1, data1)
-                                      .SetInput(2, data2)
-                                      .AddPp(pp1)
-                                      .MapInput(0, pp1, 2)
-                                      .MapInput(1, pp1, 1)
-                                      .MapInput(2, pp1, 0)
-                                      .MapInput(3, pp2, 0)
-                                      .MapInput(10, pp2, 0)
-                                      .MapOutput(0, pp1, 1)
-                                      .MapOutput(1, pp1, 0)
-                                      .MapOutput(2, pp2, 0)
-                                      .MapOutput(10, pp2, 0);
+  auto node0 = FlowNode("node0", 4, 3)
+                   .SetInput(0, data0)
+                   .SetInput(1, data1)
+                   .SetInput(2, data2)
+                   .AddPp(pp1)
+                   .MapInput(0, pp1, 2)
+                   .MapInput(1, pp1, 1)
+                   .MapInput(2, pp1, 0)
+                   .MapInput(3, pp2, 0)
+                   .MapInput(10, pp2, 0)
+                   .MapOutput(0, pp1, 1)
+                   .MapOutput(1, pp1, 0)
+                   .MapOutput(2, pp2, 0)
+                   .MapOutput(10, pp2, 0);
 
   std::vector<std::string> pp_attrs;
   auto op_desc = OpDescUtils::GetOpDescFromOperator(node0);
@@ -137,13 +139,11 @@ TEST_F(FlowGraphUTest, DflowInvokePp) {
   GraphBuilder graph_build2 = []() { return ge::Graph("ge_graph2"); };
   auto graphPp1 = GraphPp("graphPp_1", graph_build).SetCompileConfig("./graph.json");
   auto graphPp2 = GraphPp("graphPp_2", graph_build2).SetCompileConfig("./graph2.json");
-  auto pp1 = FunctionPp("pp1").SetCompileConfig("./pp1.json")
-                              .AddInvokedClosure("graph1", graphPp1)
-                              .AddInvokedClosure("graph2", graphPp2);
-  auto node0 = FlowNode("node0", 3, 2).SetInput(0, data0)
-                                      .SetInput(1, data1)
-                                      .SetInput(2, data2)
-                                      .AddPp(pp1);
+  auto pp1 = FunctionPp("pp1")
+                 .SetCompileConfig("./pp1.json")
+                 .AddInvokedClosure("graph1", graphPp1)
+                 .AddInvokedClosure("graph2", graphPp2);
+  auto node0 = FlowNode("node0", 3, 2).SetInput(0, data0).SetInput(1, data1).SetInput(2, data2).AddPp(pp1);
   std::vector<std::string> pp_attrs;
   auto op_desc = OpDescUtils::GetOpDescFromOperator(node0);
   ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs);
@@ -168,4 +168,15 @@ TEST_F(FlowGraphUTest, DflowInvokePp) {
   ASSERT_EQ(invoke_pp1.compile_cfg_file(), "./graph2.json");
   ASSERT_EQ(invoke_pp1.graphs(0), "graphPp_2");
 }
-} // namespace ge
+
+TEST_F(FlowGraphUTest, TestPrintErrMsg) {
+  auto &instance = ErrorManager::GetInstance();
+  instance.is_init_ = true;
+  auto data0 = FlowData("Data0", 0);
+  auto flow_node = FlowNode("FlowNode", 2, 1);
+  flow_node.SetInput(2, data0);
+  auto flow_graph = FlowGraph("FlowGraph");
+  flow_graph.SetInputs({data0}).SetOutputs({flow_node});
+  ASSERT_EQ(flow_graph.ToGeGraph().IsValid(), false);
+}
+}  // namespace ge

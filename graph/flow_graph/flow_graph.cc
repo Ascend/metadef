@@ -407,6 +407,10 @@ FlowGraph &FlowGraph::SetOutputs(const std::vector<FlowOperator> &outputs) {
   }
 
   impl_->SetOutputs(outputs);
+  const std::string err_msg = ErrorManager::GetInstance().GetErrorMessage();
+  if (!err_msg.empty()) {
+    std::cout << err_msg << std::endl;
+  }
   return *this;
 }
 

@@ -66,6 +66,7 @@ const std::map<Format, std::string> kFormatToStringMap = {
     {FORMAT_FRACTAL_ZN_RNN, "FRACTAL_ZN_RNN"},
     {FORMAT_NYUV, "NYUV"},
     {FORMAT_NYUV_A, "NYUV_A"},
+    {FORMAT_NCL, "NCL"},
     {FORMAT_RESERVED, "FORMAT_RESERVED"},
     {FORMAT_ALL, "ALL"},
     {FORMAT_NULL, "NULL"},
@@ -174,6 +175,7 @@ const std::map<std::string, Format> kStringToFormatMap = {
     {"FRACTAL_ZN_RNN", FORMAT_FRACTAL_ZN_RNN},
     {"NYUV", FORMAT_NYUV},
     {"NYUV_A", FORMAT_NYUV_A},
+    {"NCL", FORMAT_NCL},
     {"RESERVED", FORMAT_RESERVED},
     {"UNDEFINED", FORMAT_RESERVED}
   };
