@@ -119,7 +119,7 @@ class Node::NodeImpl {
   friend class OnnxUtils;
   OpDescPtr op_;
   std::weak_ptr<ComputeGraph> owner_graph_;
-  ComputeGraph *owner_graph_ptr_;
+  ComputeGraph *owner_graph_ptr_ = nullptr;
   std::vector<InDataAnchorPtr> in_data_anchors_;
   std::vector<OutDataAnchorPtr> out_data_anchors_;
   InControlAnchorPtr in_control_anchor_;

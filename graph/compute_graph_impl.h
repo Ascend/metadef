@@ -83,8 +83,10 @@ class ComputeGraphImpl {
   void SetAllSubgraphs(const std::vector<std::shared_ptr<ComputeGraph>> &subgraphs);
 
   std::shared_ptr<ComputeGraph> GetParentGraph() const;
+  const ComputeGraph *GetParentGraphBarePtr() const;
   void SetParentGraph(const std::shared_ptr<ComputeGraph> &parent);
   std::shared_ptr<Node> GetParentNode() const;
+  const Node *GetParentNodeBarePtr() const;
   void SetParentNode(const std::shared_ptr<Node> &parent);
   std::shared_ptr<Node> GetOrUpdateNetOutputNode();
   void SetNetOutputNode(const std::shared_ptr<Node> &netoutput_node);
@@ -204,9 +206,9 @@ class ComputeGraphImpl {
  private:
   void inline AddInputDataNode(const NodePtr &node);
 
-  void inline GetAllNodesFromOpdesc(const OpDescPtr &op_desc, const GraphFilter &graph_filter,
+  void inline GetAllNodesFromOpdesc(const OpDesc &op_desc, const GraphFilter &graph_filter,
                                     std::deque<NodePtr>& candidates, const NodePtr node) const;
-  void inline GetAllNodesFromOpdesc(std::vector<ComputeGraphPtr> &subgraphs, const OpDescPtr &op_desc,
+  void inline GetAllNodesFromOpdesc(std::vector<ComputeGraphPtr> &subgraphs, const OpDesc &op_desc,
                                     std::deque<NodePtr>& candidates) const;
 
   template<typename AnchorPtr>
@@ -259,6 +261,8 @@ class ComputeGraphImpl {
   // Graph Before BFE
   ComputeGraphPtr origGraph_;
   std::weak_ptr<Node> graph_netoutput_;
+  Node *parent_node_bare_ptr_ = nullptr;
+  ComputeGraph *parent_graph_bare_ptr_ = nullptr;
 };
 }  // namespace ge
 #endif  // GRAPH_COMPUTE_GRAPH_IMPL_H_
