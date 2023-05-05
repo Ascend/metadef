@@ -173,4 +173,21 @@ TEST_F(KernelRegistryTest, RegisterKernel_NoEffect_RegDeprectedFunc) {
  EXPECT_EQ(funcs->outputs_creator(nullptr, nullptr), ge::GRAPH_SUCCESS);
  EXPECT_EQ(funcs->outputs_initializer(nullptr, nullptr), ge::GRAPH_SUCCESS);
 }
+TEST_F(KernelRegistryTest, RegisterKernel_RegisterSuccess_OnlyRegisterCriticalSection) {
+  REGISTER_KERNEL(KernelRegistryTest1).ConcurrentCriticalSectionKey("memory");
+  auto kernel_info = gert::KernelRegistry::GetInstance().FindKernelInfo("KernelRegistryTest1");
+  ASSERT_NE(kernel_info, nullptr);
+  std::string critical_section = kernel_info->critical_section;
+  EXPECT_EQ(critical_section, "memory");
+}
+TEST_F(KernelRegistryTest, RegisterKernel_RegisterSuccess_NotRegisterCriticalSection) {
+  REGISTER_KERNEL(KernelRegistryTest1).RunFunc(TestFunc1);
+  auto kernel_info =gert::KernelRegistry::GetInstance().FindKernelInfo("KernelRegistryTest1");
+  ASSERT_NE(kernel_info, nullptr);
+  std::string critical_section = kernel_info->critical_section;
+  EXPECT_EQ(critical_section, "");
+}
+TEST_F(KernelRegistryTest, RegisterKernel_NotRegister_NotFindKernelInfos) {
+  EXPECT_EQ(gert::KernelRegistry::GetInstance().FindKernelInfo("KernelRegistryTest1"), nullptr);
+}
 }  // namespace test_gert
