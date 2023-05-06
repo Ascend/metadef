@@ -34,6 +34,7 @@
 #include "graph/utils/file_utils.h"
 #include "graph/utils/ge_ir_utils.h"
 #include "graph/utils/node_utils.h"
+#include "graph/utils/attr_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
 #include "graph/debug/ge_op_types.h"
 #include "external/ge/ge_api_types.h"
@@ -77,6 +78,31 @@ const int32_t kCopyGraphMaxRecursionDepth = 10;
 const int32_t kNameWidth = 5;
 const uint32_t kSubgraphIndexOfPartitionedCall = 0U;
 const std::set<std::string> kMergeInputSkipTypes{ STREAMACTIVE, STREAMSWITCH, CONSTANT, CONSTANTOP };
+
+bool IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, ge::NodeIndexIO &exist_node_info) {
+  const auto owner_node = out_data_anchor->GetOwnerNode();
+  const auto out_desc = owner_node->GetOpDesc()->GetOutputDescPtr(static_cast<uint32_t>(out_data_anchor->GetIdx()));
+  GE_ASSERT_NOTNULL(out_desc);
+  std::string ref_var_src_var_name;
+  bool has_ref_attr = ge::AttrUtils::GetStr(out_desc, REF_VAR_SRC_VAR_NAME, ref_var_src_var_name);
+  if (!has_ref_attr) {
+    return false;
+  }
+  // find src ref_data
+  auto root_graph = ge::GraphUtils::FindRootGraph(owner_node->GetOwnerComputeGraph());
+  // 不保证调用阶段是否在图拆分后，因此用allnode查找
+  const auto ref_data = ge::GraphUtils::FindNodeFromAllNodes(root_graph, ref_var_src_var_name);
+  if (ref_data == nullptr) {
+    GELOGW("Can not find refdata named %s. Please check ref relation on graph.", ref_var_src_var_name.c_str());
+    return false;
+  }
+  if (ref_data->GetType() != REFDATA) {
+    return false;
+  }
+  ge::NodeIndexIO ref_data_node_info(ref_data, 0U, ge::kOut);
+  exist_node_info = ref_data_node_info;
+  return true;
+}
 } // namespace
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
@@ -2444,6 +2470,16 @@ graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
       continue;
     }
 
+    NodeIndexIO exist_ref_data_info(node, 0U, kOut);
+    const bool is_ref_from_refdata = IsRefFromRefData(out_data_anchor, exist_ref_data_info);
+    if (is_ref_from_refdata) {
+      GELOGD("Node %s output:%d is ref form refdata: %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
+             exist_ref_data_info.ToString().c_str());
+      GE_ASSERT_GRAPH_SUCCESS(
+          UpdateRefMapping(cur_node_info, exist_ref_data_info, symbol_to_anchors, anchor_to_symbol));
+    }
+
+    // 这里ref from input和ref from refdata不冲突
     int32_t reuse_in_index = -1;
     const bool reuse_input_flag = IsRefFromInput(out_data_anchor, reuse_in_index);
     if (reuse_input_flag && (node->GetInDataAnchor(reuse_in_index) != nullptr)) {
