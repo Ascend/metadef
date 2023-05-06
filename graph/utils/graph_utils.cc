@@ -2740,7 +2740,7 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   const int32_t output_index = out_data_anchor->GetIdx();
 
   // pass-through op
-  const NodePtr node = out_data_anchor->GetOwnerNode();
+  const auto node = out_data_anchor->GetOwnerNodeBarePtr();
   const std::string &type = node->GetType();
   const std::set<std::string> pass_through_set = { NETOUTPUT, WHILE, _WHILE, STATELESSWHILE };
   if ((pass_through_set.count(type) > 0U) || (NodeUtils::IsSubgraphInput(node))) {
@@ -2759,7 +2759,7 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
 
   // ref op
   // op_desc of node should not be null
-  const OpDescPtr op_desc = node->GetOpDesc();
+  const auto op_desc = node->GetOpDescBarePtr();
   bool is_ref = false;
   (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_REFERENCE, is_ref);
   if (is_ref) {
@@ -2793,15 +2793,16 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
 }
 
 bool GraphUtils::IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {
-  const NodePtr node = out_data_anchor->GetOwnerNode();
+  const auto node = out_data_anchor->GetOwnerNodeBarePtr();
   // nopadding means output[0] reuse input[0], but as history reason,
   // other output index also return true for mem assign in block_mem_assigner
   bool attr_reuse = false;
   bool is_input_continuous = false;
   bool is_out_continuous = false;
-  (void)ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, is_input_continuous);
-  (void)ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, is_out_continuous);
-  const bool get_reuse_flag = ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_OUTPUT_REUSE_INPUT, attr_reuse);
+  (void)ge::AttrUtils::GetBool(node->GetOpDescBarePtr(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, is_input_continuous);
+  (void)ge::AttrUtils::GetBool(node->GetOpDescBarePtr(), ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, is_out_continuous);
+  const bool get_reuse_flag = ge::AttrUtils::GetBool(node->GetOpDescBarePtr(), ATTR_NAME_OUTPUT_REUSE_INPUT,
+                                                     attr_reuse);
   const bool is_no_padding_reuse_input = (is_input_continuous || is_out_continuous) && get_reuse_flag && attr_reuse;
   if (is_no_padding_reuse_input) {
     reuse_in_index = 0;

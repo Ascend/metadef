@@ -69,7 +69,7 @@ int64_t GetNodeOutputSize(const NodePtr& node) {
   if (node == nullptr) {
     return total_size;
   }
-  for (const auto &out_desc : node->GetOpDesc()->GetAllOutputsDesc()) {
+  for (const auto &out_desc : node->GetOpDescBarePtr()->GetAllOutputsDesc()) {
     int64_t output_size = 0;
     (void) ge::TensorUtils::GetSize(out_desc, output_size);
     total_size += output_size;
@@ -177,9 +177,9 @@ ComputeGraphImpl::Vistor<NodePtr> ComputeGraphImpl::GetAllNodes(const ConstCompu
   return AllGraphNodes(subgraphs, compute_graph);
 }
 
-void ComputeGraphImpl::GetAllNodesFromOpdesc(const OpDescPtr &op_desc, const GraphFilter &graph_filter,
+void ComputeGraphImpl::GetAllNodesFromOpdesc(const OpDesc &op_desc, const GraphFilter &graph_filter,
                                              std::deque<NodePtr>& candidates, const NodePtr node) const {
-  const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
+  const auto &subgraph_names = op_desc.GetSubgraphInstanceNames();
   auto name_iter = subgraph_names.rbegin();
   while (name_iter != subgraph_names.rend()) {
     const auto subgraph = GetSubgraph(*name_iter);
@@ -208,18 +208,18 @@ ComputeGraphImpl::Vistor<NodePtr> ComputeGraphImpl::GetAllNodes(const NodeFilter
       all_nodes.emplace_back(node);
     }
 
-    const OpDescPtr op_desc = node->GetOpDesc();
+    const auto op_desc = node->GetOpDescBarePtr();
     if (op_desc != nullptr) {
-      GetAllNodesFromOpdesc(op_desc, graph_filter, candidates, node);
+      GetAllNodesFromOpdesc(*op_desc, graph_filter, candidates, node);
     }
   }
 
   return Vistor<NodePtr>(compute_graph, all_nodes);
 }
 
-void inline ComputeGraphImpl::GetAllNodesFromOpdesc(std::vector<ComputeGraphPtr> &subgraphs, const OpDescPtr &op_desc,
+void inline ComputeGraphImpl::GetAllNodesFromOpdesc(std::vector<ComputeGraphPtr> &subgraphs, const OpDesc &op_desc,
                                                     std::deque<NodePtr>& candidates) const {
-  const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
+  const auto &subgraph_names = op_desc.GetSubgraphInstanceNames();
   auto name_iter = subgraph_names.rbegin();
   while (name_iter != subgraph_names.rend()) {
     auto subgraph = GetSubgraph(*name_iter);
@@ -243,9 +243,9 @@ ComputeGraphImpl::Vistor<NodePtr> ComputeGraphImpl::AllGraphNodes(std::vector<Co
     all_nodes.emplace_back(node);
     candidates.pop_front();
 
-    const OpDescPtr op_desc = node->GetOpDesc();
+    const auto op_desc = node->GetOpDescBarePtr();
     if (op_desc != nullptr) {
-      GetAllNodesFromOpdesc(subgraphs, op_desc, candidates);
+      GetAllNodesFromOpdesc(subgraphs, *op_desc, candidates);
     }
   }
 
@@ -405,13 +405,13 @@ bool ComputeGraphImpl::operator==(const ComputeGraphImpl &r_graph) const {
 }
 
 NodePtr ComputeGraphImpl::AddNodeFront(const NodePtr node) {
-  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
+  if ((node == nullptr) || (node->GetOpDescBarePtr() == nullptr)) {
     REPORT_INNER_ERROR("E18888", "The node ptr or op desc should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op desc should not be null.");
     return nullptr;
   }
   node->SetHostNode(is_valid_flag_);
-  node->GetOpDesc()->SetId(static_cast<int64_t>(GetDirectNodesSize()));
+  node->GetOpDescBarePtr()->SetId(static_cast<int64_t>(GetDirectNodesSize()));
   if ((GetDirectNodesSize() > 0UL) && ((*(nodes_.begin()))->GetType() == DATA)) {
     InsertToNodeList(next(nodes_.begin()), node);
   } else {
@@ -440,13 +440,13 @@ NodePtr ComputeGraphImpl::AddNodeFront(const OpDescPtr &op,
 }
 
 NodePtr ComputeGraphImpl::AddNode(const NodePtr node) {
-  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
+  if ((node == nullptr) || (node->GetOpDescBarePtr() == nullptr)) {
     REPORT_INNER_ERROR("E18888", "the node ptr or op desc ptr should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op desc ptr should not be null.");
     return nullptr;
   }
   node->SetHostNode(is_valid_flag_);
-  node->GetOpDesc()->SetId(static_cast<int64_t>(GetDirectNodesSize()));
+  node->GetOpDescBarePtr()->SetId(static_cast<int64_t>(GetDirectNodesSize()));
   PushBackToNodeList(node);
   AddInputDataNode(node);
   return node;
@@ -519,7 +519,7 @@ NodePtr ComputeGraphImpl::AddOutputNode(const NodePtr node) {
 }
 
 NodePtr ComputeGraphImpl::AddOutputNodeByIndex(const NodePtr node, const int32_t index) {
-  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
+  if ((node == nullptr) || (node->GetOpDescBarePtr() == nullptr)) {
     REPORT_INNER_ERROR("E18888", "The node ptr or opdesc should not be null.");
     GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or opdesc should not be null.");
     return nullptr;
@@ -750,16 +750,26 @@ shared_ptr<ComputeGraph> ComputeGraphImpl::GetParentGraph() const {
   return parent_graph_.lock();
 }
 
+const ComputeGraph *ComputeGraphImpl::GetParentGraphBarePtr() const {
+  return parent_graph_bare_ptr_;
+}
+
 void ComputeGraphImpl::SetParentGraph(const std::shared_ptr<ComputeGraph> &parent) {
   parent_graph_ = parent;
+  parent_graph_bare_ptr_ = parent_graph_.lock().get();
 }
 
 shared_ptr<Node> ComputeGraphImpl::GetParentNode() const {
   return parent_node_.lock();
 }
 
+const Node *ComputeGraphImpl::GetParentNodeBarePtr() const {
+  return parent_node_bare_ptr_;
+}
+
 void ComputeGraphImpl::SetParentNode(const std::shared_ptr<Node> &parent) {
   parent_node_ = parent;
+  parent_node_bare_ptr_ = parent_node_.lock().get();
 }
 
 shared_ptr<Node> ComputeGraphImpl::GetOrUpdateNetOutputNode() {
@@ -785,18 +795,19 @@ graphStatus ComputeGraphImpl::UpdateInputMapping(const std::map<uint32_t, uint32
   for (auto &input : nodes_) {
     if (input->GetType() == DATA) {
       uint32_t cur_index = 0U;
-      if (!ge::AttrUtils::GetInt(input->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, cur_index)) {
+      if (!ge::AttrUtils::GetInt(input->GetOpDescBarePtr(), ATTR_NAME_PARENT_NODE_INDEX, cur_index)) {
         continue;
       }
       const auto iter = input_mapping.find(cur_index);
       if (iter == input_mapping.end()) {
         continue;
       }
-      if (!ge::AttrUtils::SetInt(input->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, static_cast<int64_t>(iter->second))) {
+      if (!ge::AttrUtils::SetInt(input->GetOpDescBarePtr(), ATTR_NAME_PARENT_NODE_INDEX,
+                                 static_cast<int64_t>(iter->second))) {
         REPORT_CALL_ERROR("E18888", "set attr ATTR_NAME_PARENT_NODE_INDEX failed, op:%s.",
-                          input->GetOpDesc()->GetName().c_str());
+                          input->GetOpDescBarePtr()->GetName().c_str());
         GE_LOGE("[Call][SetInt] UpdateInputMapping failed: set attr ATTR_NAME_PARENT_NODE_INDEX failed, op:%s.",
-                input->GetOpDesc()->GetName().c_str());
+                input->GetOpDescBarePtr()->GetName().c_str());
         return GRAPH_FAILED;
       }
     }
@@ -815,7 +826,7 @@ graphStatus ComputeGraphImpl::UpdateOutputMapping(const std::map<uint32_t, uint3
     GE_LOGE("[Get][NodeType] UpdateOutputMapping failed: node type %s not exist in graph.", NETOUTPUT);
     return GRAPH_FAILED;
   }
-  const OpDescPtr op_desc = net_output->GetOpDesc();
+  const auto op_desc = net_output->GetOpDescBarePtr();
   if (op_desc == nullptr) {
     REPORT_INNER_ERROR("E18888", "net output's op desc pr should not be null.");
     GE_LOGE("[Get][OpDesc] UpdateOutputMapping failed: op_desc is NULL.");
@@ -899,7 +910,7 @@ graphStatus ComputeGraphImpl::InsertGraphEvents(const ConstComputeGraphPtr &comp
   const auto nodes = AllGraphNodes(subgraphs, compute_graph);
   for (size_t i = 0UL; i < nodes.size(); ++i) {
     const NodePtr node = nodes.at(i);   // [node: should not be null]
-    node->GetOpDesc()->SetId(static_cast<int64_t>(i));  // [node->GetOpDesc(): should not be null]
+    node->GetOpDescBarePtr()->SetId(static_cast<int64_t>(i));  // [node->GetOpDescBarePtr(): should not be null]
   }
 
   return GRAPH_SUCCESS;
@@ -931,7 +942,7 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
   while (!topo_sort_stack.Empty()) {
     const NodePtr node = topo_sort_stack.Pop();
     node_vec.push_back(node);
-    GE_CHECK_NOTNULL(node->GetOpDesc());
+    GE_CHECK_NOTNULL(node->GetOpDescBarePtr());
     for (const auto &anchor : node->GetAllOutDataAnchors()) {
       GE_CHECK_NOTNULL(anchor);
       for (const auto &peer_in_anchor : anchor->GetPeerInDataAnchors()) {
@@ -980,8 +991,8 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
     }
 
     node_vec.push_back(node);
-    GE_CHECK_NOTNULL(node->GetOpDesc());
-    GELOGD("node_vec.push_back %s", node->GetOpDesc()->GetName().c_str());
+    GE_CHECK_NOTNULL(node->GetOpDescBarePtr());
+    GELOGD("node_vec.push_back %s", node->GetOpDescBarePtr()->GetName().c_str());
     (void)CollectBreadthOutNode(node, map_in_edge_num, breadth_node_map);
 
     for (const auto &name_node : breadth_node_map) {
@@ -1033,7 +1044,7 @@ void ComputeGraphImpl::TopologicalSorting(const std::function<bool (const NodePt
   nodes_.sort(std::move(comp));
   int64_t num = 0;
   for (const NodePtr &node : nodes_) {
-    node->GetOpDesc()->SetId(num++);  // node should not be null, node->GetOpDesc() should not be null]
+    node->GetOpDescBarePtr()->SetId(num++);  // node should not be null, node->GetOpDescBarePtr() should not be null]
   }
 }
 
@@ -1068,7 +1079,7 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
   auto nodes = AllGraphNodes(subgraphs, const_compute_graph);
   for (size_t i = 0UL; i < nodes.size(); i++) {
     const NodePtr node = nodes.at(i);   // [node: should not be null]
-    node->GetOpDesc()->SetId(static_cast<int64_t>(i));  // [node->GetOpDesc(): should not be null]
+    node->GetOpDescBarePtr()->SetId(static_cast<int64_t>(i));  // [node->GetOpDescBarePtr(): should not be null]
   }
   if (sub_graph_.size() != subgraphs.size()) {  // Graph Partition use subgraph, Keep original
     GELOGW("[TopoSort][CheckNodeSize] Keep original subgraph for graph size %zu not equal %zu.", sub_graph_.size(),
@@ -1117,7 +1128,7 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
   ClearNodeList();
   for (size_t i = 0UL; i < node_vec.size(); i++) {
     const NodePtr node = node_vec[i];   // [node: should not be null]
-    node->GetOpDesc()->SetId(static_cast<int64_t>(i));  // [node->GetOpDesc(): should not be null]
+    node->GetOpDescBarePtr()->SetId(static_cast<int64_t>(i));  // [node->GetOpDescBarePtr(): should not be null]
     PushBackToNodeList(node);
   }
 
@@ -1131,11 +1142,11 @@ graphStatus ComputeGraphImpl::SortNodes(std::vector<NodePtr> &stack,
   // Record the number of non data nodes but no input nodes
   uint32_t spec_node_size = 0U;
   for (const auto &node : GetDirectNode(compute_graph)) {
-    GE_IF_BOOL_EXEC(node->GetOpDesc() == nullptr, continue);
+    GE_IF_BOOL_EXEC(node->GetOpDescBarePtr() == nullptr, continue);
     map_in_edge_num[node] = static_cast<uint32_t>(GetInEdgeSize(node));
     if (map_in_edge_num[node] == 0U) {
-      if ((node->GetOpDesc()->GetType() != DATA) && (node->GetOpDesc()->GetType() != AIPPDATA) &&
-          (node->GetOpDesc()->GetType() != INPUT_TYPE) && (node->GetOpDesc()->GetType() != ANN_DATA)) {
+      if ((node->GetOpDescBarePtr()->GetType() != DATA) && (node->GetOpDescBarePtr()->GetType() != AIPPDATA) &&
+          (node->GetOpDescBarePtr()->GetType() != INPUT_TYPE) && (node->GetOpDescBarePtr()->GetType() != ANN_DATA)) {
         (void)stack.insert(stack.begin(), node);
         spec_node_size++;
         continue;
@@ -1279,7 +1290,9 @@ void ComputeGraphImpl::Swap(ComputeGraphImpl &graph) {
   sub_graph_.swap(graph.sub_graph_);
   names_to_subgraph_.swap(graph.names_to_subgraph_);
   parent_graph_.swap(graph.parent_graph_);
+  parent_graph_bare_ptr_ = parent_graph_.lock().get();
   parent_node_.swap(graph.parent_node_);
+  parent_node_bare_ptr_ = parent_node_.lock().get();
   graph_netoutput_.swap(graph.graph_netoutput_);
 
   // the members followed should not in the ComputeGraphImpl class
@@ -1826,6 +1839,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<ComputeGraph> Com
   return impl_->GetParentGraph();
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const ComputeGraph *ComputeGraph::GetParentGraphBarePtr() const {
+  return impl_->GetParentGraphBarePtr();
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetParentGraph(
     const std::shared_ptr<ComputeGraph> &parent) {
   impl_->SetParentGraph(parent);
@@ -1833,6 +1850,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetParentGraph
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY std::shared_ptr<Node> ComputeGraph::GetParentNode() {
   return impl_->GetParentNode();
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY const Node *ComputeGraph::GetParentNodeBarePtr() const {
+  return impl_->GetParentNodeBarePtr();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetNetOutputNode(

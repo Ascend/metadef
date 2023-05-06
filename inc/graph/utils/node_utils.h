@@ -93,6 +93,7 @@ class NodeUtils {
   /// @param [in] node
   /// @return bool
   static bool IsSubgraphInput(const NodePtr &node);
+  static bool IsSubgraphInput(const Node *const node);
 
   /// Check if node is output of subgraph
   /// @param [in] node

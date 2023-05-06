@@ -573,12 +573,16 @@ graphStatus NodeUtils::AddSubgraph(Node &node, const std::string &subgraph_name,
 /// @param [in] node
 /// @return bool
 bool NodeUtils::IsSubgraphInput(const NodePtr &node) {
-  if ((node == nullptr) || (node->GetOpDesc() == nullptr) ||
-      (node->GetOwnerComputeGraph()->GetParentNode() == nullptr)) {
+  return IsSubgraphInput(node.get());
+}
+
+bool NodeUtils::IsSubgraphInput(const Node *const node) {
+  if ((node == nullptr) || (node->GetOpDescBarePtr() == nullptr) ||
+      (node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr() == nullptr)) {
     return false;
   }
 
-  const auto parent_op_desc = node->GetOwnerComputeGraph()->GetParentNode()->GetOpDesc();
+  const auto parent_op_desc = node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetOpDescBarePtr();
   if (parent_op_desc == nullptr) {
     return false;
   }
@@ -586,16 +590,17 @@ bool NodeUtils::IsSubgraphInput(const NodePtr &node) {
   // dynamic shape unknown graph false
   // dynamic shape known graph with functional subgraph maybe true
   if (AttrUtils::HasAttr(parent_op_desc, ATTR_NAME_IS_UNKNOWN_SHAPE)) {
-    if (node->GetOwnerComputeGraph()->GetParentGraph()->GetGraphUnknownFlag()) {
+    if (node->GetOwnerComputeGraphBarePtr()->GetParentGraphBarePtr()->GetGraphUnknownFlag()) {
       return false;
     } else {
-      if (node->GetOwnerComputeGraph()->GetParentNode()->GetOwnerComputeGraph()->GetParentNode() == nullptr) {
+      if (node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetOwnerComputeGraphBarePtr()
+          ->GetParentNodeBarePtr() == nullptr) {
         return false;
       }
     }
   }
 
-  return node->GetOpDesc()->HasAttr(ATTR_NAME_PARENT_NODE_INDEX);
+  return node->GetOpDescBarePtr()->HasAttr(ATTR_NAME_PARENT_NODE_INDEX);
 }
 
 /// Check if node is output of subgraph
