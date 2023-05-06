@@ -31,6 +31,7 @@
 #include "graph/types.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/node_utils_ex.h"
+#include "graph/utils/op_type_utils.h"
 
 namespace ge {
 namespace {
@@ -126,7 +127,7 @@ static bool JudgeNodeIsAllNd(const OpDescPtr &one_op_desc, const ge::NodePtr &on
     GE_IF_BOOL_EXEC(one_op_desc->MutableInputDesc(i) == nullptr, continue);
     const auto input_format = one_op_desc->MutableInputDesc(i)->GetFormat();
     // Pre-save data node (only main graph data) and default infer fail
-    if (one_node_ptr->GetType() == DATA) {
+    if (OpTypeUtils::IsDataNode(one_node_ptr->GetType())) {
       anchor_data_nodes.push_back(one_node_ptr);
     }
     if ((input_format != FORMAT_ND) && (input_format != FORMAT_RESERVED)) {
