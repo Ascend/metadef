@@ -48,5 +48,13 @@ const char *const ATTR_NAME_FLOW_FUNC_FUNC_LIST = "_flow_func_func_list";
 const char *const ATTR_NAME_FLOW_FUNC_FUNC_INPUTS_INDEX = "_flow_func_func_inputs_index";
 const char *const ATTR_NAME_FLOW_FUNC_FUNC_OUTPUTS_INDEX = "_flow_func_func_outputs_index";
 const char *const ATTR_NAME_FLOW_FUNC_INVOKE_KEYS = "_flow_func_invoke_keys";
+
+// for balance
+const char *const ATTR_NAME_BALANCE_SCATTER = "_balance_scatter";
+const char *const ATTR_NAME_BALANCE_GATHER = "_balance_gather";
+const char *const ATTR_NAME_DYNAMIC_BALANCED_DISTRIBUTION_HCOM = "_dynamic_balanced_distribution_hcom";
+const char *const ATTR_NAME_DYNAMIC_BALANCED_DISTRIBUTION_HCOM_GROUP = "_dynamic_balanced_distribution_hcom_group";
+const char *const ATTR_NAME_DYNAMIC_BALANCED_DISTRIBUTION_HCOM_TAG = "_dynamic_balanced_distribution_hcom_tag";
+const char *const ATTR_NAME_DYNAMIC_BALANCED_DISTRIBUTION_HCOM_IS_RECV = "_dynamic_balanced_distribution_hcom_is_recv";
 }  // namespace dflow
 }  // namespace ge
