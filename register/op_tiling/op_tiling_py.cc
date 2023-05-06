@@ -604,9 +604,17 @@ void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_de
   for (const auto &elem : shape_list) {
     if (elem.is_array()) {
       for (const auto &shape : elem) {
+        if (shape.is_null()) {
+          GELOGW("Empty input.");
+          continue;
+        }
         ParseShapeDescV2(shape, op_desc, is_input);
       }
     } else {
+      if (elem.is_null()) {
+        GELOGW("Empty input.");
+        continue;
+      }
       ParseShapeDescV2(elem, op_desc, is_input);
     }
   }
