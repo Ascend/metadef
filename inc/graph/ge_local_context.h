@@ -33,10 +33,14 @@ class GEThreadLocalContext {
   std::map<std::string, std::string> GetAllGlobalOptions() const;
   std::map<std::string, std::string> GetAllOptions() const;
 
+  void SetDeviceId(const uint32_t device_id);
+  uint32_t GetDeviceId() const;
+
  private:
   std::map<std::string, std::string> graph_options_;
   std::map<std::string, std::string> session_options_;
   std::map<std::string, std::string> global_options_;
+  uint32_t device_id_ = 0U;
 };  // class GEThreadLocalContext
 
 GEThreadLocalContext &GetThreadLocalContext();

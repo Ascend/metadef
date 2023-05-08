@@ -107,7 +107,8 @@ void GEContext::Init() {
   std::string device_id;
   (void)GetOption("ge.exec.deviceId", device_id);
   try {
-    device_id_ = static_cast<uint32_t>(std::stoi(device_id.c_str()));
+    const auto thread_device_id = static_cast<uint32_t>(std::stoi(device_id));
+    GetThreadLocalContext().SetDeviceId(thread_device_id);
   } catch (std::invalid_argument &) {
     GELOGW("[Init][GetDeviceId] Transform option device_id %s to int failed, as catching invalid_argument exception",
            device_id.c_str());
@@ -138,12 +139,15 @@ void GEContext::Init() {
 
 uint64_t GEContext::SessionId() const { return session_id_; }
 
-uint32_t GEContext::DeviceId() const { return device_id_; }
+uint32_t GEContext::DeviceId() const {
+  return GetThreadLocalContext().GetDeviceId();
+}
 
 void GEContext::SetSessionId(const uint64_t session_id) { session_id_ = session_id; }
 
 void GEContext::SetContextId(const uint64_t context_id) { context_id_ = context_id; }
 
-void GEContext::SetCtxDeviceId(const uint32_t device_id) { device_id_ = device_id; }
-
+void GEContext::SetCtxDeviceId(const uint32_t device_id) {
+  GetThreadLocalContext().SetDeviceId(device_id);
+}
 }  // namespace ge

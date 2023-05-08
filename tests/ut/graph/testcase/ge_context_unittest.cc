@@ -30,12 +30,14 @@ class GeContextUt : public testing::Test {};
 
 TEST_F(GeContextUt, All) {
   ge::GEContext cont = GetContext();
+  std::map<std::string, std::string> session_option{{"ge.exec.deviceId", "1"}};
+  GetThreadLocalContext().SetSessionOption(session_option);
   cont.Init();
   EXPECT_EQ(cont.GetHostExecFlag(), false);
   EXPECT_EQ(cont.IsOverflowDetectionOpen(), false);
   EXPECT_EQ(GetMutableGlobalOptions().size(), 0);
   EXPECT_EQ(cont.SessionId(), 0);
-  EXPECT_EQ(cont.DeviceId(), 0);
+  EXPECT_EQ(cont.DeviceId(), 1);
 
   cont.SetSessionId(1);
   cont.SetContextId(2);
