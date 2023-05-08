@@ -259,11 +259,14 @@ ge::graphStatus ParseConstValue(const nlohmann::json &input, const gert::Storage
                                                                       tensor_desc.GetDataType()));
     auto tensor_holder = gert::Tensor::CreateFollowing(tensor_desc.GetDataType(), tensor_size, total_size);
     GE_CHECK_NOTNULL(tensor_holder);
-    auto func = kFuncTable.Find(tensor_desc.GetDataType());
-    GE_CHECK_NOTNULL(func);
-    if (!func(input["const_value"], total_size, tensor_holder)) {
-      GELOGE(ge::GRAPH_FAILED, "Make tensor failed.");
-      return ge::GRAPH_FAILED;
+
+    if (tensor_size != 0UL) {
+      auto func = kFuncTable.Find(tensor_desc.GetDataType());
+      GE_CHECK_NOTNULL(func);
+      if (!func(input["const_value"], total_size, tensor_holder)) {
+        GELOGE(ge::GRAPH_FAILED, "Make tensor failed.");
+        return ge::GRAPH_FAILED;
+      }
     }
     auto tensor = reinterpret_cast<gert::Tensor *>(tensor_holder.get());
     tensor->MutableOriginShape() = storage_shape.GetOriginShape();
@@ -601,9 +604,17 @@ void ParseShapeDescListV2(const nlohmann::json &shape_list, ge::OpDescPtr &op_de
   for (const auto &elem : shape_list) {
     if (elem.is_array()) {
       for (const auto &shape : elem) {
+        if (shape.is_null()) {
+          GELOGW("Empty input.");
+          continue;
+        }
         ParseShapeDescV2(shape, op_desc, is_input);
       }
     } else {
+      if (elem.is_null()) {
+        GELOGW("Empty input.");
+        continue;
+      }
       ParseShapeDescV2(elem, op_desc, is_input);
     }
   }

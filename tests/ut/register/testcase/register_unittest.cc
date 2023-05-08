@@ -1054,6 +1054,30 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
             1);
 }
 
+TEST_F(UtestRegister, NewOptilingInterface_Ok_WithEmptyTensor) {
+  IMPL_OP_DEFAULT().Tiling(DefaultOptilingStub).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  // expect rt1 tiling not to work
+  REGISTER_OP_TILING_V2(AutoTiling, op_tiling_stub_failed);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8","shape": [0],"format": "ND", "const value": ""}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+  const char *op_type = "AutoTiling";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  const nlohmann::json attrs = R"([
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            1);
+}
+
+
 extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
                                       const char *outputs, const char *attrs, char *result_info,
                                       size_t result_info_len);

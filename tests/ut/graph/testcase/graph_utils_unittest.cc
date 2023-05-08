@@ -2564,4 +2564,65 @@ TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphsNullInput) {
   auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
   EXPECT_EQ(nodes.size(), 0);
 }
+
+/*   
+   refdata(a) const(b)
+     \       /
+       assign
+         |(a)
+         |
+      transdata
+         |(a)
+         |
+     netoutput
+*/
+TEST_F(UtestGraphUtils, GetRefMappingWithRefData) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &refdata = builder.AddNode("refdata", REFDATA, 1, 1);
+  const auto &const1 = builder.AddNode("const1", CONSTANT, 0, 1);
+  const auto &assign = builder.AddNode("assign", "Assign", 2, 1);
+  const auto &transdata = builder.AddNode("transdata", "TransData", 1, 1);
+  AttrUtils::SetStr(transdata->GetOpDesc()->MutableOutputDesc(0), REF_VAR_SRC_VAR_NAME, "refdata");
+  const auto &netoutput = builder.AddNode("netoutput", NETOUTPUT, 1, 0);
+  builder.AddDataEdge(refdata, 0, assign, 0);
+  builder.AddDataEdge(const1, 0, assign, 1);
+  builder.AddDataEdge(assign, 0, transdata, 0);
+  builder.AddDataEdge(transdata, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  std::map<std::string, std::string> anchor_to_symbol;
+  int ret = GraphUtils::GetRefMapping(graph, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  // 当前图共5个symbol
+  EXPECT_EQ(symbol_to_anchors.size(), 5);
+
+  // 校验transdata输出和refdata共享一个symbol
+  NodeIndexIO transdata_out_info(transdata, 0, kOut);
+  auto iter = anchor_to_symbol.find(transdata_out_info.ToString());
+  EXPECT_NE(iter, anchor_to_symbol.end());
+  std::string symbol_transdata = iter->second;
+
+  NodeIndexIO refdata_info(refdata, 0, kOut);
+  iter = anchor_to_symbol.find(refdata_info.ToString());
+  EXPECT_NE(iter, anchor_to_symbol.end());
+  std::string symbol_ref_data = iter->second;
+
+  EXPECT_STREQ(symbol_transdata.c_str(), symbol_ref_data.c_str());
+
+  // 校验图中refdata的symbol, 有4个tensor共享
+  // 
+  auto iter_a = symbol_to_anchors.find(symbol_transdata);
+  EXPECT_NE(iter_a, symbol_to_anchors.end());
+  EXPECT_EQ(iter_a->second.size(), 4);
+
+  NodeIndexIO assing_in_0_info(assign, 0, kIn);
+  NodeIndexIO netoutput_in_0_info(netoutput, 0, kIn);
+  std::unordered_set<std::string> expect_anchors_set{refdata_info.ToString(), transdata_out_info.ToString(),
+                                                     assing_in_0_info.ToString(), netoutput_in_0_info.ToString()};
+  std::list<NodeIndexIO> all_anchors_of_symbol = iter_a->second;
+  for (auto iter_e = all_anchors_of_symbol.begin(); iter_e != all_anchors_of_symbol.end(); ++iter_e) {
+    EXPECT_EQ(expect_anchors_set.count((*iter_e).ToString()), 1);
+  }
+}
 }  // namespace ge

@@ -26,15 +26,12 @@ union Fp32 {
 };
 
 inline uint16_t FloatToUint16(const ge::float32_t value) {
-  constexpr Fp32 f32infty = {255U << 23};
-  constexpr Fp32 f16infty = {31U << 23};
-  constexpr Fp32 magic = {15U << 23};
+  constexpr Fp32 f32infty = {static_cast<uint32_t>(255) << static_cast<uint32_t>(23)};
   constexpr uint32_t sign_mask = 0x80000000U;
-  constexpr uint32_t round_mask = ~0xFFFU;
   constexpr uint32_t round_max = 0x7FFFU;
   constexpr uint32_t dst_addr = 0x7C00U;
-  constexpr uint32_t right_shift_13 = 13;
-  constexpr uint32_t right_shift_16 = 16;
+  constexpr uint32_t right_shift_13 = 13U;
+  constexpr uint32_t right_shift_16 = 16U;
 
   Fp32 temp;
   uint16_t out;
@@ -45,6 +42,10 @@ inline uint16_t FloatToUint16(const ge::float32_t value) {
   if (temp.u >= f32infty.u) {
     out = (temp.u > f32infty.u) ? round_max : dst_addr;
   } else {
+    constexpr Fp32 f16infty = {static_cast<uint32_t>(31) << static_cast<uint32_t>(23)};
+    constexpr Fp32 magic = {static_cast<uint32_t>(15) << static_cast<uint32_t>(23)};
+    constexpr uint32_t round_mask = static_cast<uint32_t>(~0xFFFU);
+
     temp.u &= round_mask;
     temp.f *= magic.f;
     temp.u -= round_mask;
