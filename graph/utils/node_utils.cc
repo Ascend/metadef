@@ -16,6 +16,7 @@
 #include "graph/utils/node_utils.h"
 #include <stack>
 #include <securec.h>
+#include "graph/utils/op_type_utils.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/debug/ge_op_types.h"
@@ -1148,5 +1149,47 @@ bool NodeUtils::IsDtResourceNode(const NodePtr &node) {
 bool NodeUtils::IsLikeAtomicClean(const NodePtr &node) {
   const auto node_type = NodeUtils::GetNodeType(node);
   return (node_type == ATOMICADDRCLEAN) || (node_type == MEMSET);
+}
+
+bool NodeUtils::IsIdentityUsefulForRWControl(const NodePtr &node_ptr) {
+  GE_ASSERT_NOTNULL(node_ptr);
+  if (!(OpTypeUtils::IsIdentityLikeNode(node_ptr->GetType()))) {
+    return false;
+  }
+  Node &node = *(node_ptr.get());
+  if (node.GetOutControlNodesSize() == 0U) {
+    return false;
+  }
+  if (node.GetInDataNodesSize() != 1U) {
+    return false;
+  }
+  if (node.GetOutDataNodesSize() == 0U) {
+    return false;
+  }
+  const auto &out_data_node = node.GetOutDataNodes().at(0U);
+  const auto &in_node_out_data_anchor = node.GetInDataAnchor(0U)->GetPeerOutAnchor();
+  if (in_node_out_data_anchor == nullptr) {
+    return false;
+  }
+  const auto in_node_ptr = in_node_out_data_anchor->GetOwnerNodeBarePtr();  // in_node_ptr must not be null
+  for (const auto out_control_node_in_control_anchor : node.GetOutControlAnchor()->GetPeerInControlAnchorsPtr()) {
+    const auto out_control_node =
+        out_control_node_in_control_anchor->GetOwnerNodeBarePtr();  // out_control node must not be null
+    for (const auto out_control_node_in_data_anchor : out_control_node->GetAllInDataAnchorsPtr())
+      // out_control_node_in_data_anchor must not be null
+      // out_control_node_in_data_anchor->GetOwnerNodeBarePtr() must not be null
+      if (in_node_out_data_anchor->IsLinkedWith(out_control_node_in_data_anchor->shared_from_this())) {
+        if ((OpTypeUtils::IsVarLikeNode(in_node_ptr->GetType())) &&
+            (OpTypeUtils::IsAssignLikeNode(out_control_node->GetType()))) {
+          GELOGD("Node[%s %s] is useful for control relation,  keep this node to ensure out data node[%s %s] read "
+                 "in_data_node [%s %s] firstly, then out control node [%s %s] write in_data_node",
+                 node.GetName().c_str(), node.GetType().c_str(), out_data_node->GetName().c_str(),
+                 out_data_node->GetType().c_str(), in_node_ptr->GetName().c_str(), in_node_ptr->GetType().c_str(),
+                 out_control_node->GetName().c_str(), out_control_node->GetType().c_str());
+          return true;
+        }
+      }
+  }
+  return false;
 }
 }  // namespace ge
