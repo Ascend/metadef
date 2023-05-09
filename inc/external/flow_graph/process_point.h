@@ -43,7 +43,7 @@ public:
 
 protected:
   ProcessPoint(const char_t *pp_name, ProcessPointType pp_type);
-  void SetCompileConfig(const char_t *json_file_path);
+  void SetCompileConfigFile(const char_t *json_file_path);
 
 private:
   std::shared_ptr<ProcessPointImpl> impl_;

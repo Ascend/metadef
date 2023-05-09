@@ -80,7 +80,7 @@ const char_t *ProcessPoint::GetProcessPointName() const {
   return impl_->GetProcessPointName();
 }
 
-void ProcessPoint::SetCompileConfig(const char_t *json_file_path) {
+void ProcessPoint::SetCompileConfigFile(const char_t *json_file_path) {
   GE_RETURN_IF_NULL(impl_, "[Check][Param] ProcessPointImpl is nullptr, check failed");
   GE_RETURN_IF_NULL(json_file_path, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
                     this->GetProcessPointName());
@@ -140,7 +140,7 @@ GraphPp &GraphPp::SetCompileConfig(const char_t *json_file_path) {
     return *this;
   }
 
-  ProcessPoint::SetCompileConfig(json_file_path);
+  ProcessPoint::SetCompileConfigFile(json_file_path);
   GELOGI("SetCompileConfig, json_file_path=%s.", json_file_path);
   return *this;
 }
@@ -175,7 +175,7 @@ public:
     GE_RETURN_IF_TRUE(invoked_closures_.find(name) != invoked_closures_.end(),
                       "AddInvokedClosure failed for duplicate name(%s).", name);
 
-    invoked_closures_.emplace(name, std::move(graph_pp));
+    invoked_closures_.emplace(name, graph_pp);
     GELOGI("AddInvokedClosure key(%s), pp name(%s).", name, graph_pp.GetProcessPointName());
     return;
   }
@@ -260,7 +260,7 @@ FunctionPp &FunctionPp::SetCompileConfig(const char_t *json_file_path) {
     return *this;
   }
 
-  ProcessPoint::SetCompileConfig(json_file_path);
+  ProcessPoint::SetCompileConfigFile(json_file_path);
   GELOGI("SetCompileConfig, json_file_path=%s.", json_file_path);
   return *this;
 }
