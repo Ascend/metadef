@@ -294,8 +294,10 @@ ge::graphStatus UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc, gert::In
       GELOGD("min dim num:%zu, max dim num:%zu", min_shape->GetDimNum(), max_shape->GetDimNum());
       GE_RETURN_WITH_LOG_IF_TRUE((min_shape->GetDimNum()) != (max_shape->GetDimNum()));
       for (size_t i = 0UL; i < min_shape->GetDimNum(); ++i) {
-        GELOGD("min dim:%lu, max dim:%lu", min_shape->GetDim(i), max_shape->GetDim(i));
-        GE_CHECK_LE(min_shape->GetDim(i), max_shape->GetDim(i));
+        GELOGD("min dim:%ld, max dim:%ld", min_shape->GetDim(i), max_shape->GetDim(i));
+        if (max_shape->GetDim(i) != -1) {
+          GE_CHECK_LE(min_shape->GetDim(i), max_shape->GetDim(i));
+        }
         shape_range.emplace_back(std::make_pair(min_shape->GetDim(i), max_shape->GetDim(i)));
       }
       output_desc->SetShapeRange(shape_range);
