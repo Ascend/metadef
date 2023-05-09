@@ -18,6 +18,7 @@
 #define AIR_CXX_RUNTIME_V2_LOWERING_BUFFER_POOL_H_
 #include <unordered_map>
 #include <string>
+#include <vector>
 #include <memory>
 
 namespace gert {
@@ -36,9 +37,12 @@ class BufferPool {
 
  private:
   BufId AddBuf(std::string &&str);
+  BufId AddLargeBuf(std::string &&str);
 
  private:
   std::unordered_map<std::string, BufId> bufs_to_id_;
+  std::vector<std::pair<std::string, BufId>> large_bufs_to_id_; // large buf size, not do hash
+  uint64_t id_generator_{0U};
 };
 }  // namespace bg
 }  // namespace gert

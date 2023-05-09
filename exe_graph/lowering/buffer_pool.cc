@@ -28,14 +28,33 @@
 
 namespace gert {
 namespace bg {
+namespace {
+constexpr size_t kLargeBufSizeThreshold = 1024U * 1024U; // 1M
+}
 BufferPool::BufId BufferPool::AddBuf(const uint8_t *data, const size_t len) {
+  if (len >= kLargeBufSizeThreshold) {
+    return AddLargeBuf(std::string(ge::PtrToPtr<uint8_t, char>(data), len));
+  }
   return AddBuf(std::string(ge::PtrToPtr<uint8_t, char>(data), len));
 }
 BufferPool::BufId BufferPool::AddStr(const char *data) {
-  return AddBuf(std::string(data, strlen(data) + 1));
+  size_t len = strlen(data) + 1;
+  if (len >= kLargeBufSizeThreshold) {
+    return AddLargeBuf(std::string(data, len));
+  }
+  return AddBuf(std::string(data, len));
 }
 BufferPool::BufId BufferPool::AddBuf(std::string &&str) {
-  return bufs_to_id_.emplace(std::move(str), bufs_to_id_.size()).first->second;
+  auto res = bufs_to_id_.emplace(std::move(str), id_generator_);
+  if (res.second) {
+    ++id_generator_;
+  }
+  return res.first->second;
+}
+BufferPool::BufId BufferPool::AddLargeBuf(std::string &&str) {
+  auto id = id_generator_++;
+  large_bufs_to_id_.emplace_back(std::move(str), id);
+  return id;
 }
 std::unique_ptr<uint8_t[]> BufferPool::Serialize() const {
   size_t total_size;
@@ -43,7 +62,7 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize() const {
 }
 std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
   total_size = sizeof(ContinuousBuffer);
-  const size_t buf_count = bufs_to_id_.size();
+  const size_t buf_count = id_generator_;
   size_t offset_size;
   size_t text_offset;
   // 申请了n个，但是使用时会用n+1个，多的一个由ContinuousText自带
@@ -59,6 +78,17 @@ std::unique_ptr<uint8_t[]> BufferPool::Serialize(size_t &total_size) const {
 
   std::vector<const std::string *> ids_to_buf(buf_count);
   for (const auto &iter : bufs_to_id_) {
+    if (iter.second >= buf_count) {
+      return nullptr;
+    }
+    ids_to_buf[iter.second] = &iter.first;
+
+    if (ge::AddOverflow(total_size, iter.first.size(), total_size)) {
+      GE_LOGE("Failed to serialize buffer pool, size overflow, buf size %zu, id %zu", iter.first.size(), iter.second);
+      return nullptr;
+    }
+  }
+  for (const auto &iter : large_bufs_to_id_) {
     if (iter.second >= buf_count) {
       return nullptr;
     }
@@ -100,10 +130,15 @@ const char *BufferPool::GetBufById(const BufId id) const {
       return buf_and_id.first.c_str();
     }
   }
+  for (const auto &buf_and_id : large_bufs_to_id_) {
+    if (buf_and_id.second == id) {
+      return buf_and_id.first.c_str();
+    }
+  }
   return nullptr;
 }
 size_t BufferPool::GetSize() const {
-  return bufs_to_id_.size();
+  return id_generator_;
 }
 }  // namespace bg
 }  // namespace gert
