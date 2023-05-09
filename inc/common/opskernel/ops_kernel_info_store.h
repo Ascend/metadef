@@ -37,8 +37,8 @@ class OpsKernelInfoStore {
   virtual ~OpsKernelInfoStore() = default;
   OpsKernelInfoStore(const OpsKernelInfoStore &) = delete;
   OpsKernelInfoStore(OpsKernelInfoStore &&) = delete;
-  OpsKernelInfoStore &operator=(const OpsKernelInfoStore &) = delete;
-  OpsKernelInfoStore &operator=(OpsKernelInfoStore &&) = delete;
+  OpsKernelInfoStore &operator=(const OpsKernelInfoStore &)& = delete;
+  OpsKernelInfoStore &operator=(OpsKernelInfoStore &&)& = delete;
 
   // initialize opsKernelInfoStore
   virtual Status Initialize(const std::map<std::string, std::string> &options) = 0;

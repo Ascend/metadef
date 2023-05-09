@@ -237,7 +237,7 @@ inline std::string GetModelPath() {
 
   char_t path[MMPA_MAX_PATH] = {};
   if (mmRealPath(dl_info.dli_fname, &path[0], MMPA_MAX_PATH) != EN_OK) {
-    const size_t max_error_strlen = 128U;
+    constexpr size_t max_error_strlen = 128U;
     char_t err_buf[max_error_strlen + 1U] = {};
     const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], max_error_strlen);
     GELOGW("Failed to get realpath of %s, errmsg:%s", dl_info.dli_fname, err_msg);

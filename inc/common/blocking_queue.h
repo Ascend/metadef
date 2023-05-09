@@ -158,8 +158,8 @@ class BlockingQueue {
   std::condition_variable full_cond_;
   uint32_t max_size_;
 
-  bool is_stoped_ = false;
-  bool is_stuck_ = false;
+  bool is_stoped_{false};
+  bool is_stuck_{false};
 };
 }  // namespace ge
 

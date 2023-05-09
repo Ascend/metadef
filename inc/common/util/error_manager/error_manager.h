@@ -220,8 +220,8 @@ class ErrorManager {
 
   ErrorManager(const ErrorManager &) = delete;
   ErrorManager(ErrorManager &&) = delete;
-  ErrorManager &operator=(const ErrorManager &) = delete;
-  ErrorManager &operator=(ErrorManager &&) = delete;
+  ErrorManager &operator=(const ErrorManager &)& = delete;
+  ErrorManager &operator=(ErrorManager &&)& = delete;
 
   int32_t ParseJsonFile(const std::string path);
 
@@ -236,7 +236,7 @@ class ErrorManager {
   bool IsParamCheckErrorId(const std::string &error_code) const;
 
   inline bool IsValidErrorCode(const std::string &error_codes) const {
-    const uint32_t kErrorCodeValidLength = 6U;
+    constexpr uint32_t kErrorCodeValidLength = 6U;
     return error_codes.size() == kErrorCodeValidLength;
   }
 
