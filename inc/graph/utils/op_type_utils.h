@@ -24,6 +24,8 @@ class OpTypeUtils {
   static bool IsDataNode(const std::string &type);
   static bool IsVariableNode(const std::string &type);
   static bool IsVarLikeNode(const std::string &type);
+  static bool IsAssignLikeNode(const std::string &type);
+  static bool IsIdentityLikeNode(const std::string &type);
 };
 } // namespace ge
 #endif // __INC_METADEF_OP_TYPE_UTILS_H

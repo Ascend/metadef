@@ -192,6 +192,13 @@ class NodeUtils {
   static graphStatus UpdateOutputOriginalShapeAndShape(const Node &node, const uint32_t index, const GeShape &shape);
   static bool IsDtResourceNode(const NodePtr &node);
   static bool IsLikeAtomicClean(const NodePtr &node);
+  /**
+   * 用于判断identity节点是否被用于控制读写顺序的，如果是的话，
+   * 则图优化的时候不能无脑删除identity节点来提升性能
+   * @param node_ptr
+   * @return
+   */
+  static bool IsIdentityUsefulForRWControl(const NodePtr &node_ptr);
 };
 
 struct NodeCompareKey {

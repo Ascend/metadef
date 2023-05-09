@@ -22,6 +22,9 @@ namespace ge {
 namespace {
 const std::unordered_set<std::string> kDataOpSet = {DATA, REFDATA, AIPPDATA, ANN_DATA, QUEUE_DATA};
 const std::unordered_set<std::string> kVariableOpSet = {VARIABLE, VARIABLEV2, VARHANDLEOP};
+const std::unordered_set<std::string> kAssignOpSet = {
+    ASSIGNADD, ASSIGN, ASSIGNSUB, ASSIGNADDVARIABLEOP, ASSIGNSUBVARIABLEOP, ASSIGNVARIABLEOP};
+const std::unordered_set<std::string> kIdentityOpSet = {IDENTITY, READVARIABLEOP};
 }  // namespace
 
 bool OpTypeUtils::IsDataNode(const std::string &type) {
@@ -34,5 +37,13 @@ bool OpTypeUtils::IsVariableNode(const std::string &type) {
 
 bool OpTypeUtils::IsVarLikeNode(const std::string &type) {
   return IsVariableNode(type) || (type == REFDATA);
+}
+
+bool OpTypeUtils::IsAssignLikeNode(const std::string &type) {
+  return kAssignOpSet.count(type) > 0U;
+}
+
+bool OpTypeUtils::IsIdentityLikeNode(const std::string &type) {
+  return kIdentityOpSet.count(type) > 0U;
 }
 }  // namespace ge

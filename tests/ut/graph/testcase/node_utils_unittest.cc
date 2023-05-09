@@ -264,6 +264,34 @@ ComputeGraphPtr BuildGraphPartitionCall4() {
   root_graph->AddSubgraph(sub_graph->GetName(), sub_graph);
   return root_graph;
 }
+
+/**
+ * var---->identity--->cast--->netoutput
+ *    \       ||
+ *       \    ||
+ *         \  \/
+ *  const->assgin
+ */
+ComputeGraphPtr BuildGraphWithUsefulIdentity() {
+  auto builder = ut::GraphBuilder("test");
+  // id1 is useful
+  auto id1 = builder.AddNode("id1", IDENTITY, 1, 1);
+  auto var0 = builder.AddNode("var0", VARIABLE, 1, 1);
+  auto const0 = builder.AddNode("const0", CONSTANT, 1, 1);
+  auto cast = builder.AddNode("cast", "CAST", 1, 1);
+  auto ref_node = builder.AddNode("ref_node", ASSIGN, 2, 1);
+  ref_node->GetOpDesc()->UpdateInputName({{"ref", 0}, {"value", 1}});
+  ref_node->GetOpDesc()->UpdateOutputName({{"ref", 0}});
+  auto netoutput_node = builder.AddNode("netoutput", NETOUTPUT, 1, 1);
+
+  builder.AddDataEdge(var0, 0, id1, 0);
+  builder.AddDataEdge(id1, 0, cast, 0);
+  builder.AddDataEdge(cast, 0, netoutput_node, 0);
+  builder.AddDataEdge(var0, 0, ref_node, 0);
+  builder.AddDataEdge(const0, 0, ref_node, 1);
+  builder.AddControlEdge(id1, ref_node);
+  return builder.GetGraph();
+}
 }
 
 TEST_F(UtestNodeUtils, UpdateOriginShapeAndShape) {
@@ -974,5 +1002,12 @@ TEST_F(UtestNodeUtils, IsDtResourceNode_Success) {
   auto out_desc2 = node2->GetOpDesc()->MutableOutputDesc(0);
   out_desc2->SetDataType(DT_RESOURCE);
   EXPECT_EQ(NodeUtils::IsDtResourceNode(node2), true);
+}
+TEST_F(UtestNodeUtils, IsIdentityUsefulForRWControl) {
+  ComputeGraphPtr graph = BuildGraphWithUsefulIdentity();
+  auto node = graph->FindNode("id1");
+  EXPECT_NE(node, nullptr);
+  // id1 is useful, not remove
+  EXPECT_EQ(NodeUtils::IsIdentityUsefulForRWControl(node), true);
 }
 }  // namespace ge
