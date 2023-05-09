@@ -1166,7 +1166,7 @@ bool NodeUtils::IsIdentityUsefulForRWControl(const NodePtr &node_ptr) {
   if (node.GetOutDataNodesSize() == 0U) {
     return false;
   }
-  const auto &out_data_node = node.GetOutDataNodes().at(0U);
+  const auto out_data_node = node.GetOutDataNodes().at(0U);
   const auto &in_node_out_data_anchor = node.GetInDataAnchor(0U)->GetPeerOutAnchor();
   if (in_node_out_data_anchor == nullptr) {
     return false;
