@@ -25,8 +25,11 @@
 #include "exe_graph/lowering/lowering_global_data.h"
 
 namespace gert {
-using FFTSPreThreadFunc = std::function<ge::graphStatus(const ge::ComputeGraphPtr sub_graph,
+using FFTSPreThreadFunc = std::function<ge::graphStatus(const ge::ComputeGraphPtr &sub_graph,
     const std::vector<bg::ValueHolderPtr> &input_shapes, std::vector<bg::ValueHolderPtr> &output)>;
+using FFTSPreThreadFuncNew = std::function<ge::graphStatus(const ge::ComputeGraphPtr &sub_graph,
+    const std::vector<bg::ValueHolderPtr> &input_shapes, const std::vector<bg::ValueHolderPtr> &input_addrs,
+    std::vector<bg::ValueHolderPtr> &output)>;
 using FFTSThreadFunc = std::function<ge::graphStatus(const ge::NodePtr &node,
     const std::vector<bg::ValueHolderPtr> &input_shapes,
     const std::vector<bg::ValueHolderPtr> &output_shapes, const bg::ValueHolderPtr thread_dim,
