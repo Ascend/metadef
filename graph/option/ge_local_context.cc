@@ -74,8 +74,4 @@ std::map<std::string, std::string> GEThreadLocalContext::GetAllOptions() const {
   options_all.insert(global_options_.cbegin(), global_options_.cend());
   return options_all;
 }
-
-void GEThreadLocalContext::SetDeviceId(const uint32_t device_id) { device_id_ = device_id; }
-
-uint32_t GEThreadLocalContext::GetDeviceId() const { return device_id_; }
 }  // namespace ge
