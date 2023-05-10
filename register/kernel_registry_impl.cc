@@ -20,17 +20,6 @@
 #include "kernel_register_data.h"
 namespace gert {
 namespace {
-ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context) {
-  (void) node;
-  (void) context;
-  return ge::GRAPH_SUCCESS;
-}
-
-ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context) {
-  (void) node;
-  (void) context;
-  return ge::GRAPH_SUCCESS;
-}
 std::shared_ptr<KernelRegistry> g_user_defined_registry = nullptr;
 }  // namespace
 
@@ -54,14 +43,14 @@ void KernelRegistryImpl::RegisterKernel(std::string kernel_type, KernelInfo kern
 }
 
 const KernelRegistry::KernelFuncs *KernelRegistryImpl::FindKernelFuncs(const std::string &kernel_type) const {
-  auto iter = kernel_infos_.find(kernel_type);
+  const auto iter = kernel_infos_.find(kernel_type);
   if (iter == kernel_infos_.end()) {
     return nullptr;
   }
   return &iter->second.func;
 }
 const KernelRegistry::KernelInfo *KernelRegistryImpl::FindKernelInfo(const std::string &kernel_type) const {
-  auto iter = kernel_infos_.find(kernel_type);
+  const auto iter = kernel_infos_.find(kernel_type);
   if (iter == kernel_infos_.end()) {
     return nullptr;
   }
