@@ -535,6 +535,59 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange_min_bigg
   ASSERT_EQ(shape_range.size(), 0U);
 }
 
+// 动态输入的input测试 动态轴-1, shape range 设值, min大于max, max为-1的正常场景
+TEST_F(ShapeInferenceUT, CallInferV2Func_DynamicInput_unknow_shaperange_min_bigger_max_success) {
+  auto operator_dynamic = op::DynamicInput3Input3Output3("test4");
+  operator_dynamic.create_dynamic_input_byindex_dyn_input(2, true);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(operator_dynamic);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetAllInputsSize(), 4);
+  // input1
+  GeShape shape1({1, 2, 3, -1});
+  GeTensorDesc tensor_desc1(shape1, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc1.SetOriginShape(shape1);
+  tensor_desc1.SetOriginDataType(DT_FLOAT16);
+  std::vector<std::pair<int64_t, int64_t>> range = {{1, -1}, {2, -1}, {3, -1}, {999, -1}};
+  tensor_desc1.SetShapeRange(range);
+  op_desc->UpdateInputDesc(0, tensor_desc1);
+  // input3
+  GeShape shape2({4, 3, 2});
+  GeTensorDesc tensor_desc2(shape2, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc2.SetOriginShape(shape2);
+  tensor_desc2.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(1, tensor_desc2);
+  // dynamic input
+  GeShape shape3({4, 3});
+  GeTensorDesc tensor_desc3(shape3, Format::FORMAT_NCHW, DT_FLOAT16);
+  tensor_desc3.SetOriginShape(shape3);
+  tensor_desc3.SetOriginDataType(DT_FLOAT16);
+  op_desc->UpdateInputDesc(2, tensor_desc3);
+  op_desc->UpdateInputDesc(3, tensor_desc1);
+  IMPL_OP(DynamicInput3Input3Output3).InferShape(INFER_SHAPE_FUNC)
+    .InferDataType(nullptr)
+    .InferShapeRange(nullptr);
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.infer_shape = INFER_SHAPE_FUNC;
+  op_impl_func.infer_shape_range = nullptr;
+  registry_holder->AddTypesToImpl("DynamicInput3Input3Output3", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
+  const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
+  ASSERT_NE(call_infer_shape_v2, nullptr);
+  auto status = call_infer_shape_v2(operator_dynamic, op_desc);
+  ASSERT_EQ(status, GRAPH_SUCCESS);
+  ASSERT_EQ(op_desc->GetOutputDesc(0U).GetShape().GetDimNum(), 3);
+  ASSERT_EQ(op_desc->GetOutputDesc(1U).GetShape().GetDimNum(), 2);
+  ASSERT_EQ(op_desc->GetOutputDesc(2U).GetShape().GetDimNum(), 4);
+  const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
+  status = call_infer_shape_range(operator_dynamic, op_desc);
+  ASSERT_EQ(status, ge::GRAPH_SUCCESS);
+}
+
 // 二类算子值依赖测试
 REG_OP(Type2_1Input_1Output)
     .INPUT(input1, "T")

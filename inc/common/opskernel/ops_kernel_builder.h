@@ -27,7 +27,7 @@
 namespace ge {
 class OpsKernelBuilder {
  public:
-  enum class Mode {
+  enum class Mode : uint32_t {
     kNormal,
     kFfts,
     kFftsPlus
@@ -36,8 +36,8 @@ class OpsKernelBuilder {
   virtual ~OpsKernelBuilder() = default;
   OpsKernelBuilder(const OpsKernelBuilder &) = delete;
   OpsKernelBuilder(OpsKernelBuilder &&) = delete;
-  OpsKernelBuilder &operator=(const OpsKernelBuilder &) = delete;
-  OpsKernelBuilder &operator=(OpsKernelBuilder &&) = delete;
+  OpsKernelBuilder &operator=(const OpsKernelBuilder &)& = delete;
+  OpsKernelBuilder &operator=(OpsKernelBuilder &&)& = delete;
 
   // initialize OpsKernelBuilder
   virtual Status Initialize(const std::map<std::string, std::string> &options) = 0;

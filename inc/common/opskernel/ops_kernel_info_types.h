@@ -62,7 +62,7 @@ struct OpInfo {
   std::string opFuncName;   // op function name
 };
 
-enum class CheckSupportFlag {
+enum class CheckSupportFlag : uint32_t {
   kDefault = 0,
   kNotSupportDynamicShape
 };
