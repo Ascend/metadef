@@ -63,7 +63,6 @@ set(GRAPH_BASE_SOURCE_LIST
     "cache_policy/policy_management/aging_policy/aging_policy_lru.cc"
     "cache_policy/policy_management/aging_policy/aging_policy_lru_k.cc"
     "profiler.cc"
-    "ir_definitions_recover.cc"
     "tensor.cc"
 )
 
@@ -91,6 +90,7 @@ SET(GRAPH_SOURCE_LIST
     "resource_context_mgr.cc"
     "runtime_inference_context.cc"
     "shape_refiner.cc"
+    "ir_definitions_recover.cc"
     "debug/graph_debug.cc"
     "opsproto/opsproto_manager.cc"
     "utils/op_desc_utils.cc"
