@@ -62,7 +62,7 @@ size_t TilingDef::GetDataSize() const {
 
 void TilingDef::InitData() {
   if (data_ptr_ != nullptr) {
-    delete data_ptr_;
+    delete[] data_ptr_;
     data_ptr_ = nullptr;
   }
   if (data_size_ > 0) {

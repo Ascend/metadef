@@ -72,7 +72,7 @@ public:
   ~TilingDef()
   {
     if (data_ptr_ != nullptr) {
-      delete data_ptr_;
+      delete[] data_ptr_;
       data_ptr_ = nullptr;
     }
   }
@@ -203,6 +203,6 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
     }                                                                                                                  \
     static std::shared_ptr<TilingDef> CreateTilingDataInstance() { return std::make_shared<class_name>(); }            \
   };                                                                                                                   \
-  op_type##class_name##Helper g_tilingdata_##op_type##class_name##helper;
+  static op_type##class_name##Helper g_tilingdata_##op_type##class_name##helper;
 
 #endif  // __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
