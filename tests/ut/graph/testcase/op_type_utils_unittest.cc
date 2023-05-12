@@ -37,9 +37,6 @@ TEST_F(UtestOpTypeUtils, TestDataNodeType) {
   test_node_type = "AippData";
   EXPECT_TRUE(OpTypeUtils::IsDataNode(test_node_type));
 
-  test_node_type = "QueueData";
-  EXPECT_TRUE(OpTypeUtils::IsDataNode(test_node_type));
-
   test_node_type = "RefData";
   EXPECT_TRUE(OpTypeUtils::IsDataNode(test_node_type));
 }
@@ -50,10 +47,6 @@ TEST_F(UtestOpTypeUtils, TestVariableNodeType) {
   EXPECT_TRUE(OpTypeUtils::IsVarLikeNode(test_node_type));
 
   test_node_type = "VariableV2";
-  EXPECT_TRUE(OpTypeUtils::IsVariableNode(test_node_type));
-  EXPECT_TRUE(OpTypeUtils::IsVarLikeNode(test_node_type));
-
-  test_node_type = "VarHandleOp";
   EXPECT_TRUE(OpTypeUtils::IsVariableNode(test_node_type));
   EXPECT_TRUE(OpTypeUtils::IsVarLikeNode(test_node_type));
 }

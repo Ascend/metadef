@@ -20,13 +20,22 @@
 
 namespace ge {
 namespace {
-const std::unordered_set<std::string> kDataOpSet = {DATA, REFDATA, AIPPDATA, ANN_DATA, QUEUE_DATA};
-const std::unordered_set<std::string> kVariableOpSet = {VARIABLE, VARIABLEV2, VARHANDLEOP};
+const std::unordered_set<std::string> kDataOpSet = {DATA, REFDATA, AIPPDATA, ANN_DATA};
+const std::unordered_set<std::string> kVariableOpSet = {VARIABLE, VARIABLEV2};
 const std::unordered_set<std::string> kAssignOpSet = {
     ASSIGNADD, ASSIGN, ASSIGNSUB, ASSIGNADDVARIABLEOP, ASSIGNSUBVARIABLEOP, ASSIGNVARIABLEOP};
 const std::unordered_set<std::string> kIdentityOpSet = {IDENTITY, READVARIABLEOP};
 }  // namespace
 
+/**
+ * @brief 判断类型是否为DATA
+ *        其中不包含QueueData, 该算子原型与其他Data不同，只有输出没有输出
+ *        且在编译过程中有自由逻辑，不宜一起判断。
+ *
+ * @param type
+ * @return true
+ * @return false
+ */
 bool OpTypeUtils::IsDataNode(const std::string &type) {
   return (kDataOpSet.count(type) > 0);
 }
