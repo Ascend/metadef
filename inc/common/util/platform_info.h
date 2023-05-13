@@ -22,6 +22,11 @@
 #include "platform_info_def.h"
 #include "platform_infos_def.h"
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#endif
+
 namespace fe {
 class PlatformInfoManager {
  public:
@@ -147,6 +152,7 @@ class PlatformInfoManager {
   void FillupFixPipeInfo(PlatFormInfos &platform_infos);
 
   bool init_flag_;
+  bool runtime_init_flag_;
   std::map<std::string, PlatformInfo> platform_info_map_;
 
   OptionalInfo opti_compilation_info_;
@@ -162,4 +168,9 @@ class PlatformInfoManager {
   std::map<uint32_t, PlatFormInfos> runtime_device_platform_infos_map_;
 };
 }  // namespace fe
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 #endif
