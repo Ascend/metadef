@@ -20,6 +20,17 @@
 #include "graph/compute_graph.h"
 
 namespace ge {
+enum class TopoSortingMode {
+  kBFS = 0,
+  kDFS,
+  kDFS_POSTORDER
+};
+
+enum class WalkStatus {
+  kNotWalked,
+  kWalking,
+  kWalked
+};
 class ComputeGraphImpl {
  public:
   using ConstComputeGraphPtr  = std::shared_ptr<ConstComputeGraph>;
@@ -157,14 +168,12 @@ class ComputeGraphImpl {
   graphStatus ReorderEventNodes(const ConstComputeGraphPtr &compute_graph);
   graphStatus InsertGraphEvents(const ConstComputeGraphPtr &compute_graph);
 
-  graphStatus DFSTopologicalSorting(std::vector<NodePtr> &node_vec,
-                                    std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    std::vector<NodePtr> &stack, const bool reverse,
+  graphStatus DFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
                                     const ConstComputeGraphPtr &compute_graph);
-  graphStatus BFSTopologicalSorting(std::vector<NodePtr> &node_vec,
-                                    std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    const std::deque<NodePtr> &stack,
+  graphStatus BFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
                                     const ConstComputeGraphPtr &compute_graph);
+  graphStatus DFSPOSTORDERTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
+                                             const ConstComputeGraphPtr &compute_graph);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::map<std::string, NodePtr> &breadth_node_map) const;
   void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);

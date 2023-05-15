@@ -118,7 +118,7 @@ ge::ComputeGraphPtr BuildNormalGraph(const std::string &name) {
   builder.AddDataEdge(node1, 0, node2, 0);
   builder.AddDataEdge(node1, 1, node3, 0);
   builder.AddDataEdge(node2, 0, node4, 0);
-  builder.AddDataEdge(node3, 0, node5, 1);
+  builder.AddDataEdge(node3, 0, node5, 0);
   builder.AddDataEdge(node4, 0, netoutput, 0);
   builder.AddDataEdge(node5, 0, netoutput, 1);
   builder.AddDataEdge(node6, 0, netoutput, 2);
@@ -130,7 +130,6 @@ ge::ComputeGraphPtr BuildNormalGraph(const std::string &name) {
   builder.AddControlEdge(node4, netoutput);
   builder.AddControlEdge(node5, netoutput);
   builder.AddControlEdge(node6, netoutput);
-
   return builder.GetGraph();
 }
 }
@@ -481,10 +480,10 @@ TEST_F(UtestComputeGraph, BFSTopologicalSortingInPriorityMode_success) {
 
   auto graph = BuildNormalGraph("test_bfs_topo_graph");
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
-  std::vector<std::string> expected_bfs_names = {"node1", "node3", "node2", "node4", "node5", "node6", "netoutput"};
+  std::vector<std::string> expected_bfs_names = {"node6", "node1", "node2", "node3", "node4", "node5", "netoutput"};
   std::vector<std::string> bfs_names;
-  options_map.emplace("ge.topoSortingMode", "0");
-  options_map.emplace("ge.exec.memoryOptimizationPolicy", "MemoryPriority");
+  options_map["ge.topoSortingMode"] = "0";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
   const auto &graph_bfs_topo = graph->GetAllNodes();
@@ -500,10 +499,10 @@ TEST_F(UtestComputeGraph, DFSTopologicalSortingInPriorityMode_success) {
 
   auto graph = BuildNormalGraph("test_dfs_topo_graph");
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
-  std::vector<std::string> expected_dfs_names = {"node6", "node1", "node3", "node2", "node4", "node5", "netoutput"};
+  std::vector<std::string> expected_dfs_names = {"node6", "node1", "node2", "node3", "node4", "node5", "netoutput"};
   std::vector<std::string> dfs_names;
-  options_map.emplace("ge.topoSortingMode", "1");
-  options_map.emplace("ge.exec.memoryOptimizationPolicy", "MemoryPriority");
+  options_map["ge.topoSortingMode"] = "1";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
   const auto &graph_dfs_topo = graph->GetAllNodes();
@@ -521,8 +520,8 @@ TEST_F(UtestComputeGraph, ReverseDfsTopologicalSortingInPriorityMode_success) {
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
   std::vector<std::string> expected_dfs_names = {"node6", "node1", "node2", "node4", "node3", "node5", "netoutput"};
   std::vector<std::string> dfs_names;
-  options_map.emplace("ge.topoSortingMode", "1");
-  options_map.emplace("ge.exec.memoryOptimizationPolicy", "MemoryPriority");
+  options_map["ge.topoSortingMode"] = "1";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSortingGraph(true), GRAPH_SUCCESS);
   const auto &graph_dfs_topo = graph->GetAllNodes();
@@ -742,5 +741,102 @@ TEST_F(UtestComputeGraph, SetSummaryGraph_success) {
   auto summary_flag = !graph->IsSummaryGraph();
   graph->SetSummaryFlag(summary_flag);
   EXPECT_EQ(graph->IsSummaryGraph(), summary_flag);
+}
+TEST_F(UtestComputeGraph, DFSPOSTORDERTopologicalSorting_success) {
+  auto builder = ut::GraphBuilder("graph_reverse_dfs");
+  const auto &node1 = builder.AddNode("node1", "node1", 0, 3, FORMAT_NCHW, DT_FLOAT, {1,1});
+  const auto &node2 = builder.AddNode("node2", "node2", 0, 3,FORMAT_NCHW, DT_FLOAT, {1,1});
+  const auto &node3 = builder.AddNode("node3", "node3", 0, 3,FORMAT_NCHW, DT_FLOAT, {1,1});
+  const auto &node4 = builder.AddNode("node4", "node4", 0, 3,FORMAT_NCHW, DT_FLOAT, {1,1});
+  const auto &node5 = builder.AddNode("node5", "node5", 1, 1,FORMAT_NCHW, DT_FLOAT, {1,2});
+  const auto &node6 = builder.AddNode("node6", "node6", 1, 1,FORMAT_NCHW, DT_FLOAT, {1,3});
+  const auto &node7 = builder.AddNode("node7", "node7", 1, 1,FORMAT_NCHW, DT_FLOAT, {1,4});
+  const auto &node8 = builder.AddNode("node8", "node8", 1, 1,FORMAT_NCHW, DT_FLOAT, {1,5});
+  const auto &node9 = builder.AddNode("node9", "node9", 1, 1,FORMAT_NCHW, DT_FLOAT, {2,2});
+  const auto &node10 = builder.AddNode("node10", "node10", 1, 1,FORMAT_NCHW, DT_FLOAT, {2,3});
+  const auto &node11 = builder.AddNode("node11", "node11", 1, 1,FORMAT_NCHW, DT_FLOAT, {2,3});
+  const auto &node12 = builder.AddNode("node12", "node12", 1, 1,FORMAT_NCHW, DT_FLOAT, {2,4});
+  const auto &node13 = builder.AddNode("node13", "node13", 1, 1,FORMAT_NCHW, DT_FLOAT, {3,2});
+  const auto &node14 = builder.AddNode("node14", "node14", 1, 1,FORMAT_NCHW, DT_FLOAT, {3,3});
+  const auto &node15 = builder.AddNode("node15", "node15", 1, 1,FORMAT_NCHW, DT_FLOAT, {3,4});
+  const auto &node16 = builder.AddNode("node16", "node16", 1, 1,FORMAT_NCHW, DT_FLOAT, {3,5});
+  const auto &node17 = builder.AddNode("node17", "node17", 4, 1,FORMAT_NCHW, DT_FLOAT, {4,2});
+  const auto &node18 = builder.AddNode("node18", "node18", 4, 1,FORMAT_NCHW, DT_FLOAT, {4,2});
+  const auto &node19 = builder.AddNode("node19", "node19", 4, 1,FORMAT_NCHW, DT_FLOAT, {4,2});
+  const auto &node20 = builder.AddNode("node20", "node20", 3, 0);
+
+  builder.AddDataEdge(node1, 0, node5, 0);
+  builder.AddDataEdge(node1, 1, node9, 0);
+  builder.AddDataEdge(node1, 2, node13, 0);
+  builder.AddDataEdge(node2, 0, node6, 0);
+  builder.AddDataEdge(node2, 1, node10, 0);
+  builder.AddDataEdge(node2, 2, node14, 0);
+  builder.AddDataEdge(node3, 0, node7, 0);
+  builder.AddDataEdge(node3, 1, node11, 0);
+  builder.AddDataEdge(node3, 2, node15, 0);
+  builder.AddDataEdge(node4, 0, node8, 0);
+  builder.AddDataEdge(node4, 1, node12, 0);
+  builder.AddDataEdge(node4, 2, node16, 0);
+  builder.AddDataEdge(node5, 0, node17, 0);
+  builder.AddDataEdge(node6, 0, node17, 1);
+  builder.AddDataEdge(node7, 0, node17, 2);
+  builder.AddDataEdge(node8, 0, node17, 3);
+  builder.AddDataEdge(node9, 0, node18, 0);
+  builder.AddDataEdge(node10, 0, node18, 1);
+  builder.AddDataEdge(node11, 0, node18, 2);
+  builder.AddDataEdge(node12, 0, node18, 3);
+  builder.AddDataEdge(node13, 0, node19, 0);
+  builder.AddDataEdge(node14, 0, node19, 1);
+  builder.AddDataEdge(node15, 0, node19, 2);
+  builder.AddDataEdge(node16, 0, node19, 3);
+
+  builder.AddControlEdge(node17, node20);
+  builder.AddControlEdge(node18, node20);
+  builder.AddControlEdge(node19, node20);
+  GetThreadLocalContext().SetGraphOption({});
+  auto graph = builder.GetGraph();
+  std::map<std::string, std::string> options_map;
+  options_map["ge.topoSortingMode"] = "2";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+
+  EXPECT_EQ(node1->GetOpDesc()->GetId(), 6);
+  EXPECT_EQ(node2->GetOpDesc()->GetId(), 4);
+  EXPECT_EQ(node3->GetOpDesc()->GetId(), 2);
+  EXPECT_EQ(node4->GetOpDesc()->GetId(), 0);
+  EXPECT_EQ(node5->GetOpDesc()->GetId(), 17);
+  EXPECT_EQ(node6->GetOpDesc()->GetId(), 16);
+  EXPECT_EQ(node7->GetOpDesc()->GetId(), 15);
+  EXPECT_EQ(node8->GetOpDesc()->GetId(), 14);
+  EXPECT_EQ(node9->GetOpDesc()->GetId(), 12);
+  EXPECT_EQ(node10->GetOpDesc()->GetId(), 11);
+  EXPECT_EQ(node11->GetOpDesc()->GetId(), 10);
+  EXPECT_EQ(node12->GetOpDesc()->GetId(), 9);
+  EXPECT_EQ(node13->GetOpDesc()->GetId(), 7);
+  EXPECT_EQ(node14->GetOpDesc()->GetId(), 5);
+  EXPECT_EQ(node15->GetOpDesc()->GetId(), 3);
+  EXPECT_EQ(node16->GetOpDesc()->GetId(), 1);
+  EXPECT_EQ(node17->GetOpDesc()->GetId(), 18);
+  EXPECT_EQ(node18->GetOpDesc()->GetId(), 13);
+  EXPECT_EQ(node19->GetOpDesc()->GetId(), 8);
+  EXPECT_EQ(node20->GetOpDesc()->GetId(), 19);
+}
+
+TEST_F(UtestComputeGraph, DFSPOSTORDERTopologicalSorting_ringing_fail) {
+  auto builder = ut::GraphBuilder("graph");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+
+  builder.AddDataEdge(node1, 0, node2, 0);
+  builder.AddDataEdge(node2, 0, node3, 0);
+  builder.AddDataEdge(node3, 0, node1, 0);
+
+  auto graph = builder.GetGraph();
+  std::map<std::string, std::string> options_map;
+  options_map["ge.topoSortingMode"] = "2";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_NE(graph->TopologicalSorting(), GRAPH_SUCCESS);
 }
 }
