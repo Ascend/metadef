@@ -273,7 +273,7 @@ graphStatus RefRelations::Impl::BuildRelationsWithFuncNodeType(
     const std::vector<std::vector<std::pair<NodePtr, size_t>>> &classed_netoutput_nodes,
     std::vector<std::vector<RefCell>> &node_refs) const {
   // data_nodes has been sorted
-  const auto node_type = root_node->GetType();
+  const auto &node_type = root_node->GetType();
 
   auto status = GRAPH_SUCCESS;
   if ((node_type != kWhile) && (node_type != kStatelessWhile)) {
@@ -291,14 +291,14 @@ void RefRelations::Impl::GetDataAndNetoutputOfSubGraph(const ge::ComputeGraph &r
                                                        const std::string &node_type) const {
   int32_t sub_graph_idx = 0;
   for (const auto &name : sub_graph_names) {
-    const auto sub_graph = root_graph.GetSubgraph(name);
+    const auto &sub_graph = root_graph.GetSubgraph(name);
     if (sub_graph == nullptr) {
       GELOGW("[RefRelations][Check] Can not find sub graph %s, root graph: %s.", name.c_str(),
              root_graph.GetName().c_str());
       continue;
     }
     for (const auto &sub_graph_node : sub_graph->GetDirectNode()) {
-      const auto sub_graph_node_type = sub_graph_node->GetType();
+      const auto &sub_graph_node_type = sub_graph_node->GetType();
       if (sub_graph_node_type == DATA) {
         graph_data_nodes.emplace_back(sub_graph_node);
       }
@@ -459,9 +459,9 @@ graphStatus RefRelations::Impl::BuildRefRelations(ge::ComputeGraph &graph) {
   }
 
   for (const auto &node : graph.GetAllNodes()) {
-    const auto node_type = node->GetType();
-    const auto op_desc = node->GetOpDesc();
-    const auto sub_graph_names = op_desc->GetSubgraphInstanceNames();
+    const auto &node_type = node->GetType();
+    const auto &op_desc = node->GetOpDesc();
+    const auto &sub_graph_names = op_desc->GetSubgraphInstanceNames();
     if (sub_graph_names.empty()) {
       continue;
     }

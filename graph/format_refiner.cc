@@ -49,15 +49,13 @@ static graphStatus ReflectionProcess(const std::unordered_set<RefCell, RefCellHa
     GE_CHECK_NOTNULL(reflection_node);
     GE_CHECK_NOTNULL(reflection_node->GetOpDesc());
     if (reflection_cell.in_out == ge::NODE_IN) {
-      auto desc = reflection_node->GetOpDesc()->GetInputDesc(static_cast<uint32_t>(in_out_idx));
-      desc.SetOriginFormat(to_be_set_format);
-      desc.SetFormat(to_be_set_format);
-      (void)reflection_node->GetOpDesc()->UpdateInputDesc(static_cast<uint32_t>(in_out_idx), desc);
+      auto desc = reflection_node->GetOpDesc()->MutableInputDesc(static_cast<uint32_t>(in_out_idx));
+      desc->SetOriginFormat(to_be_set_format);
+      desc->SetFormat(to_be_set_format);
     } else {
-      auto desc = reflection_node->GetOpDesc()->GetOutputDesc(static_cast<uint32_t>(in_out_idx));
-      desc.SetOriginFormat(to_be_set_format);
-      desc.SetFormat(to_be_set_format);
-      (void)reflection_node->GetOpDesc()->UpdateOutputDesc(static_cast<uint32_t>(in_out_idx), desc);
+      auto desc = reflection_node->GetOpDesc()->MutableOutputDesc(static_cast<uint32_t>(in_out_idx));
+      desc->SetOriginFormat(to_be_set_format);
+      desc->SetFormat(to_be_set_format);
     }
     nodes.push_back(reflection_cell.node);
   }
@@ -118,32 +116,34 @@ static graphStatus BiasAddFormatFixProcess(const ge::NodePtr &graph_node_ptr) {
 
 static bool JudgeNodeIsAllNd(const OpDescPtr &one_op_desc, const ge::NodePtr &one_node_ptr,
                              std::vector<ge::NodePtr> &anchor_data_nodes) {
-  bool node_is_all_nd = false;
   // consider special node save process
+  // Pre-save data node (only main graph data) and default infer fail
+  if (OpTypeUtils::IsDataNode(one_node_ptr->GetType())) {
+    anchor_data_nodes.push_back(one_node_ptr);
+  }
+
   // get all input desc format
   const auto input_size = static_cast<uint32_t>(one_op_desc->GetAllInputsSize());
   for (uint32_t i = 0U; i < input_size; i++) {
     // Operator pre-set format but not origin format
-    GE_IF_BOOL_EXEC(one_op_desc->MutableInputDesc(i) == nullptr, continue);
-    const auto input_format = one_op_desc->MutableInputDesc(i)->GetFormat();
-    // Pre-save data node (only main graph data) and default infer fail
-    if (OpTypeUtils::IsDataNode(one_node_ptr->GetType())) {
-      anchor_data_nodes.push_back(one_node_ptr);
-    }
+    const auto &input_desc = one_op_desc->MutableInputDesc(i);
+    GE_IF_BOOL_EXEC(input_desc == nullptr, continue);
+    const auto input_format = input_desc->GetFormat();
     if ((input_format != FORMAT_ND) && (input_format != FORMAT_RESERVED)) {
-      node_is_all_nd = true;
+      return false;
     }
   }
   // Get all output desc format
   const auto output_size = static_cast<uint32_t>(one_op_desc->GetOutputsSize());
   for (uint32_t i = 0U; i < output_size; i++) {
-    GE_IF_BOOL_EXEC(one_op_desc->MutableOutputDesc(i) == nullptr, continue);
-    const auto output_format = one_op_desc->MutableOutputDesc(i)->GetFormat();
+    const auto &output_desc = one_op_desc->MutableOutputDesc(i);
+    GE_IF_BOOL_EXEC(output_desc == nullptr, continue);
+    const auto output_format = output_desc->GetFormat();
     if ((output_format != FORMAT_ND) && (output_format != FORMAT_RESERVED)) {
-      node_is_all_nd = true;
+      return false;
     }
   }
-  return node_is_all_nd;
+  return true;
 }
 
 static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const OutDataAnchorPtr &out_data_anchor,
@@ -153,7 +153,8 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
 
     const auto peer_in_data_node = peer_in_data_anchor->GetOwnerNode();
     GE_IF_BOOL_EXEC(peer_in_data_node == nullptr, continue);
-    GE_IF_BOOL_EXEC(peer_in_data_node->GetOpDesc() == nullptr, continue);
+    const auto peer_in_data_opdesc = peer_in_data_node->GetOpDesc();
+    GE_IF_BOOL_EXEC(peer_in_data_opdesc == nullptr, continue);
 
     // Check format whether have been set
     const int32_t idx = peer_in_data_anchor->GetIdx();
@@ -170,13 +171,13 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
     }
 
     bool format_locked = false;
-    (void)AttrUtils::GetBool(peer_in_data_node->GetOpDesc(), ATTR_NAME_FORMAT_LOCKED, format_locked);
+    (void)AttrUtils::GetBool(peer_in_data_opdesc, ATTR_NAME_FORMAT_LOCKED, format_locked);
     GELOGD("Get format locked flag:%u (shape can not be changed while value is equal to 1) from peer in node:%s.",
            static_cast<uint32_t>(format_locked), peer_in_data_node->GetName().c_str());
 
-    auto ge_tensor_desc = peer_in_data_node->GetOpDesc()->GetInputDesc(static_cast<uint32_t>(idx));
-    if ((ge_tensor_desc.GetOriginFormat() == FORMAT_ND) && (!format_locked)) {
-      const auto dim_num = ge_tensor_desc.GetShape().GetDimNum();
+    auto ge_tensor_desc = peer_in_data_opdesc->MutableInputDesc(static_cast<uint32_t>(idx));
+    if ((ge_tensor_desc->GetOriginFormat() == FORMAT_ND) && (!format_locked)) {
+      const auto dim_num = ge_tensor_desc->GetShape().GetDimNum();
       GE_IF_BOOL_EXEC(dim_num == 0UL,
           GELOGI("node name:%s idx:%d in is scalar. stop forward infer!", peer_in_data_node->GetName().c_str(), idx);
           continue);
@@ -192,9 +193,8 @@ static graphStatus AnchorsInferProcess(std::deque<ge::NodePtr> &nodes, const Out
       }
 
       if (reflection.empty()) {
-        ge_tensor_desc.SetOriginFormat(to_be_set_format);
-        ge_tensor_desc.SetFormat(to_be_set_format);
-        (void) peer_in_data_node->GetOpDesc()->UpdateInputDesc(static_cast<uint32_t>(idx), ge_tensor_desc);
+        ge_tensor_desc->SetOriginFormat(to_be_set_format);
+        ge_tensor_desc->SetFormat(to_be_set_format);
 
         /// Because netoutput node added before infer format ,so netoutput is end condition
         /// must set netoutput format , because saved result depend on format
@@ -250,7 +250,7 @@ graphStatus FormatRefiner::GetAnchorPoints(const ge::ComputeGraphPtr &com_graph,
       GELOGE(GRAPH_FAILED, "[Check][Param] node ptr in graph(%s) should not be null", com_graph->GetName().c_str());
       return GRAPH_FAILED;
     }
-    const auto one_op_desc = one_node_ptr->GetOpDesc();
+    const auto &one_op_desc = one_node_ptr->GetOpDesc();
     if (one_op_desc == nullptr) {
       REPORT_INNER_ERROR("E18888", "node's opdesc is nullptr，graph:%s", com_graph->GetName().c_str());
       GELOGE(GRAPH_FAILED, "[Check][Param] node's opdesc is nullptr，graph:%s", com_graph->GetName().c_str());
@@ -264,7 +264,7 @@ graphStatus FormatRefiner::GetAnchorPoints(const ge::ComputeGraphPtr &com_graph,
     }
 
     // check anchor point valid
-    if (!JudgeNodeIsAllNd(one_op_desc, one_node_ptr, anchor_data_nodes)) {
+    if (JudgeNodeIsAllNd(one_op_desc, one_node_ptr, anchor_data_nodes)) {
       continue;
     }
     // special process for biasAdd op
@@ -337,15 +337,15 @@ graphStatus FormatRefiner::BackInferProcess(std::deque<ge::NodePtr> &nodes, cons
 
     // Check format whether have been set
     // op_desc of node should not be null
-    auto ge_tensor_desc = peer_out_data_node->GetOpDesc()->GetOutputDesc(static_cast<uint32_t>(idx));
+    auto ge_tensor_desc = peer_out_data_node->GetOpDesc()->MutableOutputDesc(static_cast<uint32_t>(idx));
 
     bool format_locked = false;
     (void)AttrUtils::GetBool(peer_out_data_node->GetOpDesc(), ATTR_NAME_FORMAT_LOCKED, format_locked);
     GELOGD("Get format locked flag:%u (shape is locked if value is equal to 1) from peer out node:%s.",
            static_cast<uint32_t>(format_locked), peer_out_data_node->GetName().c_str());
 
-    if ((ge_tensor_desc.GetOriginFormat() == FORMAT_ND) && (!format_locked)) {
-      const auto dim_num = ge_tensor_desc.GetShape().GetDimNum();
+    if ((ge_tensor_desc->GetOriginFormat() == FORMAT_ND) && (!format_locked)) {
+      const auto dim_num = ge_tensor_desc->GetShape().GetDimNum();
       GE_IF_BOOL_EXEC(dim_num == 0UL, GELOGD("node name:%s idx:%d out is scalar. stop back infer!",
                                              peer_out_data_node->GetName().c_str(), idx); continue);
 
@@ -361,9 +361,8 @@ graphStatus FormatRefiner::BackInferProcess(std::deque<ge::NodePtr> &nodes, cons
       }
 
       if (reflection.empty()) {
-        ge_tensor_desc.SetOriginFormat(to_be_set_format);
-        ge_tensor_desc.SetFormat(to_be_set_format);
-        (void)peer_out_data_node->GetOpDesc()->UpdateOutputDesc(static_cast<uint32_t>(idx), ge_tensor_desc);
+        ge_tensor_desc->SetOriginFormat(to_be_set_format);
+        ge_tensor_desc->SetFormat(to_be_set_format);
 
         // Call operator infer format api (forward) to get out format
         GELOGD("call infer format func[Back]!Node is [%s] ", (peer_out_data_node->GetName()).c_str());
