@@ -26,6 +26,11 @@
 namespace fe {
 class ConnectionMatrix {
 public:
+#ifndef ONLY_COMPILE_OPEN_SRC
+  ConnectionMatrix();
+  ConnectionMatrix(bool enable_data_flow);
+#endif
+
   explicit ConnectionMatrix(const ge::ComputeGraph &graph);
 
   ~ConnectionMatrix();
@@ -38,16 +43,28 @@ public:
   // If some node can reach A, than it can also reach B.
   void SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inputs, const ge::NodePtr &node);
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+  bool IsDataConnected(const ge::NodePtr &a, const ge::NodePtr &b) const;
+#endif
+
   /* Computes the connectivity between two nodes in the
    * computation. The returned ConnectivityMatrix is constructed such that
    * ConnectivityMatrix::IsConnected(a, b) returns true iff there exists a
    * directed path (from producer to consumer) from 'a' to 'b'. Both data
    * connection and control connection are considered for connectivity.
    * A node is connected to itself. */
+#ifndef ONLY_COMPILE_OPEN_SRC
+  void Generate(const ge::ComputeGraph &graph);
+#else
   Status Generate(const ge::ComputeGraph &graph);
+#endif
 
   // update reachablity map for fused nodes.
   void Update(const ge::ComputeGraph &graph, const std::vector<ge::NodePtr> &fusion_nodes);
+
+  void BackupBitMap();
+
+  void RestoreBitMap();
 
 private:
   int64_t GetIndex(const ge::NodePtr &node) const;
@@ -58,10 +75,24 @@ private:
 
   ge::LargeBitmap &GetBitMap(uint64_t index);
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+  const ge::LargeBitmap &GetDataBitMap(const ge::NodePtr &node) const;
+
+  ge::LargeBitmap &GetDataBitMap(const ge::NodePtr &node);
+
+  ge::LargeBitmap &GetDataBitMap(uint64_t index);
+
+  void SetDataConnectivity(const ge::Node::Vistor<ge::NodePtr> &inputs, const ge::NodePtr &node);
+
+  bool enable_data_flow_;
+#endif
   size_t size_;
-
   std::vector<ge::LargeBitmap> bit_maps;
-
+#ifndef ONLY_COMPILE_OPEN_SRC
+  std::vector<ge::LargeBitmap> bit_maps_back_up_;
+  std::vector<ge::LargeBitmap> data_bit_maps_;
+  std::vector<ge::LargeBitmap> data_bit_maps_back_up_;
+#endif
   std::map<std::string, int64_t> name_to_index_;
 };
 }

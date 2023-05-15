@@ -385,12 +385,7 @@ bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
       GELOGW("Make shared failed");
       return false;
     }
-
-    const Status ret = connectivity_->Generate(graph);
-    if (ret != SUCCESS) {
-      GE_LOGE("Cannot generate connection matrix for graph %s.", graph.GetName().c_str());
-      return false;
-    }
+    connectivity_->Generate(graph);
   }
 
   for (const auto &scope_nodes : fusion_nodes) {
@@ -399,6 +394,21 @@ bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
     }
   }
   return false;
+}
+
+bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
+                                           const std::vector<ge::NodePtr> &fusion_nodes) {
+  if (connectivity_ == nullptr) {
+    try {
+      connectivity_ = std::unique_ptr<fe::ConnectionMatrix>(new(std::nothrow) fe::ConnectionMatrix(graph));
+    } catch (...) {
+      GELOGW("Make shared failed");
+      return false;
+    }
+    connectivity_->Generate(graph);
+  }
+
+  return DetectOneScope(fusion_nodes);
 }
 
 bool PatternFusionBasePass::CheckGraphCycle(ge::ComputeGraph &graph) const {

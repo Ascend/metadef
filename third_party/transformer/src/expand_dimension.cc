@@ -328,7 +328,7 @@ int64_t ExpandDimension::GenerateReshapeType(const ge::Format &origin_format, co
   }
 
   if (origin_dim_size > valid_shape_type.length()) {
-    GELOGW("The length of reshape type[%s] is longer than dim size[%zu]. Can not generate integer reshape type.",
+    GELOGW("The length of reshape type[%s] is shorter than dim size[%zu]. Can not generate integer reshape type.",
            valid_shape_type.c_str(), origin_dim_size);
     return ret_reshape_type;
   }

@@ -98,50 +98,43 @@ bool BufferFusionPattern::IsShapeRulesSizeValid(const size_t &types_size, const 
  * with the value
  * @return BufferFusionPattern: pattern object
  */
-BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name,
-                                                    const std::vector<std::string> &types,
-                                                    int64_t repeat_min, int64_t repeat_max, int64_t group_id,
-                                                    ShapeTypeRule shape_type_rule, bool not_pattern) {
-  if (!IsOpDescValid(desc_name, repeat_min, repeat_max)) {
-    error_count_++;
-    return *this;
-  }
-
-  BufferFusionOpDesc *op = new (std::nothrow) BufferFusionOpDesc();
-  if (op == nullptr) {
-    GELOGW("[AddOpDesc][Check] New an object failed.");
-    error_count_++;
-    return *this;
-  }
-
-  op->desc_name = desc_name;
-  op->types = types;
-  op->repeate_min = repeat_min;
-  op->repeate_max = repeat_max;
-  op->repeate_curr = 0;
-  op->group_id = group_id;
-  op->shape_type_rules = {shape_type_rule};
-  op->match_status = false;
-  op->out_branch_type = TBE_OUTPUT_BRANCH_DEFAULT;
-  op->output_max_limit = TBE_OUTPUT_MAX_NUM_LIMIT;
-  op->ignore_input_num = false;
-  op->ignore_output_num = false;
-  op->not_pattern = not_pattern;
-  if (repeat_max > repeat_min) {
-    for (int64_t i = repeat_min; i < repeat_max; i++) {
-      (void)op->multi_output_skip_status.insert(std::pair<int64_t, SkipStatus>(i, SkipStatus::DISABLED));
-    }
-  }
-  ops_.push_back(op);
-  op_map_[desc_name] = op;
-
-  op->outputs.clear();
-  return *this;
+#ifndef ONLY_COMPILE_OPEN_SRC
+BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
+                                                    const int64_t repeat_min, const int64_t repeat_max,
+                                                    const int64_t group_id, const ShapeTypeRule shape_type_rule,
+                                                    const bool not_pattern, const bool is_allow_series) {
+  std::vector<ShapeTypeRule> shape_type_rules = {shape_type_rule};
+  return AddOpDescTypeRules(desc_name, types, repeat_min, repeat_max, group_id, shape_type_rules,
+                            not_pattern, is_allow_series);
 }
 
+BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
+                                                    const int64_t repeat_min, const int64_t repeat_max,
+                                                    bool is_allow_series) {
+  return AddOpDescTypeRules(desc_name, types, repeat_min, repeat_max, TBE_PATTERN_GROUPID_INVALID,
+                            {ONLY_SUPPORT_STATIC}, false, is_allow_series);
+}
+#else
+BufferFusionPattern &BufferFusionPattern::AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
+                                                    int64_t repeat_min, int64_t repeat_max, int64_t group_id,
+                                                    ShapeTypeRule shape_type_rule, const bool not_pattern) {
+  std::vector<ShapeTypeRule> shape_type_rules = {shape_type_rule};
+  return AddOpDescTypeRules(desc_name, types, repeat_min, repeat_max, group_id, shape_type_rules, not_pattern);
+}
+#endif
+
+#ifndef ONLY_COMPILE_OPEN_SRC
+BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &desc_name,
+                                                             const std::vector<std::string> &types,
+                                                             const int64_t repeat_min, const int64_t repeat_max,
+                                                             const int64_t group_id,
+                                                             const std::vector<ShapeTypeRule> &shape_type_rules,
+                                                             const bool not_pattern, const bool is_allow_series) {
+#else
 BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &desc_name,
     const std::vector<std::string> &types, int64_t repeat_min, int64_t repeat_max, int64_t group_id,
     const std::vector<ShapeTypeRule> &shape_type_rules, bool not_pattern) {
+#endif
   if (!IsOpDescValid(desc_name, repeat_min, repeat_max)) {
     error_count_++;
     return *this;
@@ -171,6 +164,9 @@ BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &
   op->ignore_input_num = false;
   op->ignore_output_num = false;
   op->not_pattern = not_pattern;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  op->is_allow_series = is_allow_series;
+#endif
   if (repeat_max > repeat_min) {
     for (int64_t i = repeat_min; i < repeat_max; i++) {
       (void)op->multi_output_skip_status.insert(std::pair<int64_t, SkipStatus>(i, SkipStatus::DISABLED));
@@ -182,7 +178,6 @@ BufferFusionPattern &BufferFusionPattern::AddOpDescTypeRules(const std::string &
   op->outputs.clear();
   return *this;
 }
-
 
 /*
  * @brief:  set output desc info
@@ -361,6 +356,35 @@ void BufferFusionPattern::UpdateSkipStatus(const BufferFusionOpDesc *op_desc) co
   }
 }
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+BufferFusionPattern &BufferFusionPattern::SetRelation(const std::string &src_desc_name,
+                                                      const std::string &dst_desc_name,
+                                                      const PatternRelation pattern_relation) {
+  if (src_desc_name.empty() || dst_desc_name.empty()) {
+    GELOGW("[SetRelation][Check] src desc name or dst desc name is empty.");
+    error_count_++;
+    return *this;
+  }
+  BufferFusionOpDesc *src_op_desc = GetOpDesc(src_desc_name);
+  if (src_op_desc == nullptr) {
+    GELOGW("[SetRelation][Check] Op desc of [%s] is null.", src_desc_name.c_str());
+    error_count_++;
+    return *this;
+  }
+  BufferFusionOpDesc *dst_op_desc = GetOpDesc(dst_desc_name);
+  if (dst_op_desc == nullptr) {
+    GELOGW("[SetRelation][Check] Op desc of [%s] is null.", dst_desc_name.c_str());
+    error_count_++;
+    return *this;
+  }
+  src_op_desc->relations.push_back(std::make_pair(dst_op_desc, pattern_relation));
+  if (pattern_relation == PatternRelation::RELATIVE_POSITION_CONSISTENT) {
+    dst_op_desc->relations.push_back(std::make_pair(src_op_desc, pattern_relation));
+  }
+  return *this;
+}
+#endif
+
 /*
  * @brief: get description ptr by name
  * @param [in] desc_name: fusion pattern desc name
@@ -374,9 +398,15 @@ BufferFusionOpDesc *BufferFusionPattern::GetOpDesc(const string &desc_name) cons
   return nullptr;
 }
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+const std::vector<BufferFusionOpDesc *>& BufferFusionPattern::GetHead() const { return head_; }
+
+const std::string& BufferFusionPattern::GetName() const { return name_; }
+#else
 std::vector<BufferFusionOpDesc *> BufferFusionPattern::GetHead() const { return head_; }
 
 std::string BufferFusionPattern::GetName() const { return name_; }
+#endif
 
 int64_t BufferFusionPattern::GetOpMaxCount() const { return op_max_count_; }
 
@@ -388,5 +418,9 @@ void BufferFusionPattern::SetGraphModType(int64_t graph_mod_type) {
 
 int64_t BufferFusionPattern::GetGraphModType() const { return graph_mod_type_; }
 
+#ifndef ONLY_COMPILE_OPEN_SRC
+const std::vector<BufferFusionOpDesc *>& BufferFusionPattern::GetOpDescs() const { return ops_; }
+#else
 std::vector<BufferFusionOpDesc *> BufferFusionPattern::GetOpDescs() const { return ops_; }
+#endif
 }  // namespace fe

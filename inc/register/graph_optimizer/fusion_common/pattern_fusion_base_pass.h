@@ -96,8 +96,9 @@ class PatternFusionBasePass : public GraphPass {
    * so this function we cannot tell if e and f are in a
    * cycle.
    * */
-  bool CycleDetection(const ge::ComputeGraph &graph,
-                      const std::vector<std::vector<ge::NodePtr>> &fusion_nodes);
+  bool CycleDetection(const ge::ComputeGraph &graph, const std::vector<std::vector<ge::NodePtr>> &fusion_nodes);
+
+  bool CycleDetection(const ge::ComputeGraph &graph, const std::vector<ge::NodePtr> &fusion_nodes);
 
   void GetConnectionMatrix(std::unique_ptr<ConnectionMatrix> &connection_matrix);
 
