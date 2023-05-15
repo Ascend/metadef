@@ -39,6 +39,18 @@ message BroadcastMultiInfo {
   map<string, BroadcastInfo> broadcast_info = 1;
 }
 
+message VarDescInfo {
+  map<string, ge.proto.TensorDescriptor> cur_var_tensor_desc_map = 1;
+  map<string, TransNodeMultiInfo> var_to_trans_road = 2;
+  repeated string changed_var_names = 3;
+  map<string, ge.proto.TensorDescriptor> staged_var_tensor_desc_map = 4;
+}
+
+message VarMatchInfo {
+  VarDescInfo desc_info_before_compile = 1;
+  VarDescInfo desc_info_after_compile = 2;
+}
+
 message VarResourceInfo {
   map<uint64, uint32> var_offset_map = 1;
   map<string, VarAddrMgrInfo> var_addr_mgr_map = 2;
