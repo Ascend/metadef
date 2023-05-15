@@ -1367,12 +1367,12 @@
     {
       "errClass": "AI CPU Errors",
       "errTitle": "Cgroup Add Failure",
-      "ErrCode": "E39003",
+      "ErrCode": "E30007",
       "ErrMessage": "Failed to add the AI CPU scheduler to the Cgroup.",
       "Arglist": "",
       "suggestion": {
-        "Possible Cause": "The Cgroup configuration is incorrect.",
-        "Solution": "Check the AI CPU Cgroup information from device logs."
+        "Possible Cause": "1. The User have no sudo Permission.\n2. The Cgroup configuration is incorrect.",
+        "Solution": "1. Check whether the user have sudo Permission or not.\n2. Submit an issue on Gitee at https://gitee.com/ascend."
       }
     },
     {
@@ -1384,6 +1384,61 @@
       "suggestion": {
         "Possible Cause": "Something wrong with aicpu_scheduler",
         "Solution": "Check the initialization information from device logs."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
+      "errTitle": "Device Connection Failure",
+      "ErrCode": "E30005",
+      "ErrMessage": "The device failed to be connected.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "1. The device is broken.\n2. The device failed to be started.",
+        "Solution": "1.Restart the device.\n2. Submit an issue on Gitee at https://gitee.com/ascend."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
+      "errTitle": "TSDaemon Process Abnormal",
+      "ErrCode": "E39005",
+      "ErrMessage": "The TSDaemon process is abnormal.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "The TSDaemon process failed to be started.",
+        "Solution": "Check the device logs to see if TSDaemon is normal."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
+      "errTitle": "Failed to Send OPP to device",
+      "ErrCode": "E39006",
+      "ErrMessage": "Failed to send the OPP to the device.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "1.The HDCD process is abnormal.\n2. The device failed to be connected.",
+        "Solution": "Check the host and device logs to see if HDC is normal."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
+      "errTitle": "Device Subprocess Startup Timeout",
+      "ErrCode": "E39007",
+      "ErrMessage": "Starting a subprocess on the device timed out.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "1.The subprocess failed to be started.\n2. HDC is abnormal.",
+        "Solution": "1. Check the device logs to see if the subprocess is started is started successfully.\n2. Check the host and device logs to see if HDC is normal."
+      }
+    },
+    {
+      "errClass": "AI CPU Errors",
+      "errTitle": "OPP Verification Failure",
+      "ErrCode": "E30006",
+      "ErrMessage": "Failed to verify the OPP",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "1.The OPP is incorrect.",
+        "Solution": "1. Use a correct OPP."
       }
     },
     {
