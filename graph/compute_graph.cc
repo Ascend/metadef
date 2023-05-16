@@ -41,46 +41,64 @@ namespace {
 const size_t OUTPUT_PARAM_SIZE = 2UL;
 constexpr int32_t kTopoSortingBfs = 0;
 constexpr int32_t kTopoSortingDfs = 1;
+constexpr int32_t kTopoSortingDfsPostOrder = 2;
 const std::string kMemoryPriority = "MemoryPriority";
-bool IsUseBFS() {
+TopoSortingMode GetTopoSortingStrategy() {
   std::string topo_sorting_mode_str;
   if ((ge::GetContext().GetOption(ge::OPTION_TOPOSORTING_MODE, topo_sorting_mode_str) == GRAPH_SUCCESS) &&
       (!topo_sorting_mode_str.empty())) {
     const int32_t base = 10;
     const auto topo_sorting_mode = static_cast<int32_t>(std::strtol(topo_sorting_mode_str.c_str(), nullptr, base));
     if (topo_sorting_mode == kTopoSortingBfs) {
-      return true;
+      return TopoSortingMode::kBFS;
     } else if (topo_sorting_mode == kTopoSortingDfs) {
-      return false;
+      return TopoSortingMode::kDFS;
+    } else if (topo_sorting_mode == kTopoSortingDfsPostOrder) {
+      return TopoSortingMode::kDFS_POSTORDER;
     } else {
       GELOGI("OPTION_TOPOSORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",
              topo_sorting_mode_str.c_str());
     }
   }
   if (ge::GetContext().GetTrainGraphFlag()) {
-    return true;
+    return TopoSortingMode::kBFS;
   } else {
     GELOGI("OPTION_GRAPH_RUN_MODE not set, use DFSTopologicalSorting by default.");
   }
-  return false;
+  return TopoSortingMode::kDFS;
 }
 
-int64_t GetNodeOutputSize(const NodePtr& node) {
+int64_t GetNodeOutputRealSize(const NodePtr& node) {
   int64_t total_size = 0;
   if (node == nullptr) {
     return total_size;
   }
-  for (const auto &out_desc : node->GetOpDescBarePtr()->GetAllOutputsDesc()) {
+  for (const auto &out_desc : node->GetOpDescBarePtr()->GetAllOutputsDescPtr()) {
+    if (out_desc == nullptr) {
+      continue;
+    }
     int64_t output_size = 0;
-    (void) ge::TensorUtils::GetSize(out_desc, output_size);
+    (void) ge::TensorUtils::CalcTensorMemSize(out_desc->GetShape(), out_desc->GetFormat(), out_desc->GetDataType(),
+                                              output_size);
     total_size += output_size;
   }
   return total_size;
 }
 
+struct NodeCmp {
+  bool operator()(const NodePtr &lhs, const NodePtr &rhs) const {
+    const auto lhs_size = GetNodeOutputRealSize(lhs);
+    const auto rhs_size = GetNodeOutputRealSize(rhs);
+    if (lhs_size == rhs_size) {
+      return lhs->GetName() < rhs->GetName();
+    }
+    return lhs_size < rhs_size;
+  }
+};
+
 struct NodeOutInfo {
   explicit NodeOutInfo(const NodePtr &node)
-      : num_out_data_nodes(node->GetOutDataNodesSize()), output_size(GetNodeOutputSize(node)),
+      : num_out_data_nodes(node->GetOutDataNodesSize()), output_size(GetNodeOutputRealSize(node)),
         node_name(node->GetName()) {}
 
   bool operator<(const NodeOutInfo &rhs) const {
@@ -917,11 +935,11 @@ graphStatus ComputeGraphImpl::InsertGraphEvents(const ConstComputeGraphPtr &comp
   return GRAPH_SUCCESS;
 }
 
-graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_vec,
-                                                    std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                    std::vector<NodePtr> &stack, const bool reverse,
+graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
                                                     const ConstComputeGraphPtr &compute_graph) {
   GELOGD("Runing_Dfs_Sort: %s", name_.c_str());
+  std::vector<NodePtr> stack;
+  std::map<NodePtr, uint32_t> map_in_edge_num;
   // Record the number of non data nodes but no input nodes
   GE_CHK_BOOL_EXEC(SortNodes(stack, map_in_edge_num, compute_graph) == GRAPH_SUCCESS,
                    return GRAPH_FAILED, "sort nodes failed");
@@ -968,15 +986,50 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
   return GRAPH_SUCCESS;
 }
 
-graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_vec,
-                                                    std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                                    const std::deque<NodePtr> &stack,
+graphStatus ComputeGraphImpl::DFSPOSTORDERTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
+                                                             const ConstComputeGraphPtr &compute_graph) {
+  (void) reverse;
+  GELOGD("Runing_Dfs_Post_Order_Sort: %s", name_.c_str());
+  std::unordered_map<NodePtr, WalkStatus> walk_status;
+  for (const auto &node : compute_graph->GetDirectNode()) {
+    walk_status[node] = WalkStatus::kNotWalked;
+  }
+
+  for (const auto &node : compute_graph->GetDirectNode()) {
+    if (!node->GetOutAllNodes().empty()) {
+      continue;
+    }
+
+    std::vector<NodePtr> stack = {node};
+    while (!stack.empty()) {
+      const auto current = stack.back();
+      if (walk_status[current] == WalkStatus::kNotWalked) {
+        walk_status[current] = WalkStatus::kWalking;
+
+        const auto in_all_nodes = current->GetInAllNodes();
+        std::set<NodePtr, NodeCmp> input_nodes{in_all_nodes.begin(), in_all_nodes.end()};
+        stack.insert(stack.end(), input_nodes.cbegin(), input_nodes.cend());
+        continue;
+      }
+      stack.pop_back();
+      if (walk_status[current] == WalkStatus::kWalking) {
+        walk_status[current] = WalkStatus::kWalked;
+        node_vec.emplace_back(current);
+      }
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
                                                     const ConstComputeGraphPtr &compute_graph) {
   GELOGD("Runing_Bfs_Sort: %s", name_.c_str());
-  (void) stack;
+  (void) reverse;
   TopoSortStack topo_sort_stack(IsMemoryPriority());
   std::vector<NodePtr> stack_input;
   std::map<std::string, NodePtr> breadth_node_map;
+  std::map<NodePtr, uint32_t> map_in_edge_num;
   // Record the number of non data nodes but no input nodes
   GE_CHK_BOOL_EXEC(SortNodes(stack_input, map_in_edge_num, compute_graph) == GRAPH_SUCCESS,
                    return GRAPH_FAILED, "sort nodes failed");
@@ -1093,19 +1146,22 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
 
 graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr &compute_graph,
                                                       const bool dfs_reverse) {
+  using TopoSortingStrategy =
+      std::function<graphStatus(ComputeGraphImpl *, std::vector<NodePtr> &, const bool, const ConstComputeGraphPtr &)>;
+  static const std::map<TopoSortingMode, TopoSortingStrategy> topo_sorting_strategy{
+      {TopoSortingMode::kBFS, &ComputeGraphImpl::BFSTopologicalSorting},
+      {TopoSortingMode::kDFS, &ComputeGraphImpl::DFSTopologicalSorting},
+      {TopoSortingMode::kDFS_POSTORDER, &ComputeGraphImpl::DFSPOSTORDERTopologicalSorting}};
+
   std::vector<NodePtr> node_vec;
-  std::map<NodePtr, uint32_t> map_in_edge_num;
-  const bool use_BFS = IsUseBFS();
-  if (use_BFS) {
-    std::deque<NodePtr> stack;
-    if (BFSTopologicalSorting(node_vec, map_in_edge_num, stack, compute_graph) != GRAPH_SUCCESS) {
-      return GRAPH_FAILED;
-    }
-  } else {
-    std::vector<NodePtr> stack;
-    if (DFSTopologicalSorting(node_vec, map_in_edge_num, stack, dfs_reverse, compute_graph) != GRAPH_SUCCESS) {
-      return GRAPH_FAILED;
-    }
+  const auto use_topo_strategy = GetTopoSortingStrategy();
+  const auto it = topo_sorting_strategy.find(use_topo_strategy);
+  if (it == topo_sorting_strategy.end()) {
+    GELOGE(GRAPH_FAILED, "Can not find topo sorting strategy of %d.", static_cast<int32_t>(use_topo_strategy));
+    return GRAPH_FAILED;
+  }
+  if (it->second(this, node_vec, dfs_reverse, compute_graph) != GRAPH_SUCCESS) {
+    return GRAPH_FAILED;
   }
 
   // If they are not equal, there is a closed loop
@@ -1947,13 +2003,17 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus ComputeGraph::InsertG
 graphStatus ComputeGraph::DFSTopologicalSorting(std::vector<NodePtr> &node_vec,
                                                 std::map<NodePtr, uint32_t> &map_in_edge_num,
                                                 std::vector<NodePtr> &stack, const bool reverse) {
-  return impl_->DFSTopologicalSorting(node_vec, map_in_edge_num, stack, reverse, shared_from_this());
+  (void) map_in_edge_num;
+  (void) stack;
+  return impl_->DFSTopologicalSorting(node_vec, reverse, shared_from_this());
 }
 
 graphStatus ComputeGraph::BFSTopologicalSorting(std::vector<NodePtr> &node_vec,
                                                 std::map<NodePtr, uint32_t> &map_in_edge_num,
                                                 std::deque<NodePtr> &stack) {
-  return impl_->BFSTopologicalSorting(node_vec, map_in_edge_num, stack, shared_from_this());
+  (void) map_in_edge_num;
+  (void) stack;
+  return impl_->BFSTopologicalSorting(node_vec, false, shared_from_this());
 }
 
 graphStatus ComputeGraph::CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
