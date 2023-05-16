@@ -769,8 +769,8 @@ Status Run(ge::ComputeGraph &graph, std::shared_ptr<BufferFusionPassBase> &pass)
   // 1. get pattern info
   auto patterns = pass->DefinePatterns();
 
-  fe::ConnectionMatrix a(graph);
-  auto connectivity = a.Generate(graph);
+  fe::ConnectionMatrix a;
+  a.Generate(graph);
   
   // 2. for all patterns
   for (BufferFusionPattern *pattern : patterns) {

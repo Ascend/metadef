@@ -18,37 +18,23 @@
 #include "graph/debug/ge_log.h"
 
 namespace fe {
-#ifndef ONLY_COMPILE_OPEN_SRC
 ConnectionMatrix::ConnectionMatrix() : enable_data_flow_(false) {}
 ConnectionMatrix::ConnectionMatrix(bool enable_data_flow) : enable_data_flow_(enable_data_flow) {}
 ConnectionMatrix::ConnectionMatrix(const ge::ComputeGraph &graph) : enable_data_flow_(false) {
   (void)graph;
 }
-#else
-ConnectionMatrix::ConnectionMatrix(const ge::ComputeGraph &graph) {
-  (void)graph;
-}
-#endif
 
 ConnectionMatrix::~ConnectionMatrix() {
   bit_maps.clear();
   name_to_index_.clear();
-#ifndef ONLY_COMPILE_OPEN_SRC
   bit_maps_back_up_.clear();
   data_bit_maps_.clear();
   data_bit_maps_back_up_.clear();
-#endif
 }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 void ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
-#else
-Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
-#endif
   bit_maps.clear();
-#ifndef ONLY_COMPILE_OPEN_SRC
   data_bit_maps_.clear();
-#endif
   name_to_index_.clear();
   const ge::ComputeGraph::Vistor<ge::NodePtr> direct_nodes = graph.GetDirectNode();
   size_ = direct_nodes.size();
@@ -59,24 +45,19 @@ Status ConnectionMatrix::Generate(const ge::ComputeGraph &graph) {
     bit_maps.emplace_back(size_);
     index_loop++;
   }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
   if (enable_data_flow_) {
     data_bit_maps_ = bit_maps;
   }
-#endif
+
   for (const ge::NodePtr &node : direct_nodes) {
     const ge::Node::Vistor<ge::NodePtr> inputs = node->GetInAllNodes();
     SetConnectivity(inputs, node);
-#ifndef ONLY_COMPILE_OPEN_SRC
     if (enable_data_flow_) {
       const ge::Node::Vistor<ge::NodePtr> data_inputs = node->GetInDataNodes();
       SetDataConnectivity(data_inputs, node);
     }
-#endif
   }
-#ifdef ONLY_COMPILE_OPEN_SRC
-  return SUCCESS;
-#endif
 }
 
 void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const std::vector<ge::NodePtr> &fusion_nodes) {
@@ -97,7 +78,7 @@ void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const std::vector<g
       }
     }
   }
-#ifndef ONLY_COMPILE_OPEN_SRC
+
   if (enable_data_flow_) {
     new_bit_vector.SetValues(0U);
     for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
@@ -113,21 +94,16 @@ void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const std::vector<g
       }
     }
   }
-#endif
 }
 
 void ConnectionMatrix::BackupBitMap() {
-#ifndef ONLY_COMPILE_OPEN_SRC
   bit_maps_back_up_ = bit_maps;
   data_bit_maps_back_up_ = data_bit_maps_;
-#endif
 }
 
 void ConnectionMatrix::RestoreBitMap() {
-#ifndef ONLY_COMPILE_OPEN_SRC
   bit_maps = bit_maps_back_up_;
   data_bit_maps_ = data_bit_maps_back_up_;
-#endif
 }
 
 void ConnectionMatrix::SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inputs, const ge::NodePtr &node) {
@@ -144,7 +120,6 @@ void ConnectionMatrix::SetConnectivity(const ge::Node::Vistor<ge::NodePtr> &inpu
   }
 }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 void ConnectionMatrix::SetDataConnectivity(const ge::Node::Vistor<ge::NodePtr> &inputs, const ge::NodePtr &node) {
   ge::LargeBitmap &bitmap = GetDataBitMap(node);
   if (std::find(inputs.begin(), inputs.end(), node) == inputs.end()) {
@@ -158,7 +133,6 @@ void ConnectionMatrix::SetDataConnectivity(const ge::Node::Vistor<ge::NodePtr> &
     }
   }
 }
-#endif
 
 int64_t ConnectionMatrix::GetIndex(const ge::NodePtr &node) const {
   const auto iter = name_to_index_.find(node->GetName());
@@ -174,11 +148,9 @@ bool ConnectionMatrix::IsConnected(const ge::NodePtr &a, const ge::NodePtr &b) c
   return GetBitMap(b).GetBit(static_cast<size_t>(GetIndex(a)));
 }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 bool ConnectionMatrix::IsDataConnected(const ge::NodePtr &a, const ge::NodePtr &b) const {
   return GetDataBitMap(b).GetBit(static_cast<size_t>(GetIndex(a)));
 }
-#endif
 
 const ge::LargeBitmap &ConnectionMatrix::GetBitMap(const ge::NodePtr &node) const {
   return bit_maps[static_cast<uint64_t>(GetIndex(node))];
@@ -192,7 +164,6 @@ ge::LargeBitmap &ConnectionMatrix::GetBitMap(uint64_t index) {
   return bit_maps[index];
 }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 const ge::LargeBitmap &ConnectionMatrix::GetDataBitMap(const ge::NodePtr &node) const {
   return data_bit_maps_[static_cast<uint64_t>(GetIndex(node))];
 }
@@ -204,5 +175,4 @@ ge::LargeBitmap &ConnectionMatrix::GetDataBitMap(const ge::NodePtr &node) {
 ge::LargeBitmap &ConnectionMatrix::GetDataBitMap(uint64_t index) {
   return data_bit_maps_[index];
 }
-#endif
 }

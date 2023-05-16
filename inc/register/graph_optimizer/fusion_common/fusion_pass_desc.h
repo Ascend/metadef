@@ -31,9 +31,7 @@ enum class PassAttrType {
   NEED_TOPO_SORT = 1, // Mark those graph fusion passes that need topological sorting before executing
   SINGLE_OP_SCENE_MUST_ON = 2, // Mark those passes that must be turned on in single-op mode or jit_compile=false
   FE_PASS_FLAG = 3,  // Mark those passes that belong to FE
-#ifndef ONLY_COMPILE_OPEN_SRC
   AUTO_FUSION_FLAG = 4  // Using auto match fusion frame
-#endif
 };
 
 bool IsPassAttrTypeOn(PassAttr pass_attr, PassAttrType attr_type);

@@ -58,17 +58,13 @@ struct BufferFusionOpDesc {
   std::vector<ShapeTypeRule> shape_type_rules;
   bool ignore_input_num;
   bool ignore_output_num;
-#ifndef ONLY_COMPILE_OPEN_SRC
   bool is_allow_series;  // whether the nodes with the same pattern can be series in match graph
-#endif
   int32_t output_max_limit;
   // used for two connected op, first opdesc has optional multiple nodes and
   // ignore_output_num is true, second opdesc is same pattern type and
   // out_branch_type is TBE_OUTPUT_BRANCH_MULTI
   std::map<int64_t, SkipStatus> multi_output_skip_status;
-#ifndef ONLY_COMPILE_OPEN_SRC
   std::vector<std::pair<const BufferFusionOpDesc *, PatternRelation>> relations;
-#endif
 };
 
 struct MappingCmpKey {
@@ -88,7 +84,6 @@ class BufferFusionPattern {
   /*
    * types vector use one ShapeTypeRule
    */
-#ifndef ONLY_COMPILE_OPEN_SRC
   BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
                                  const int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
                                  const int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
@@ -107,31 +102,14 @@ class BufferFusionPattern {
  */
   BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
                                  const int64_t repeat_min, const int64_t repeat_max, const bool is_allow_series);
-#else
-  BufferFusionPattern &AddOpDesc(const std::string &desc_name, const std::vector<std::string> &types,
-                                 int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
-                                 int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
-                                 int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
-                                 ShapeTypeRule shape_type_rule = ONLY_SUPPORT_STATIC,
-                                 bool not_pattern = false);
-#endif
 
   /*
    * types vector use ShapeTypeRule vector, and size should be same or ShapeTypeRule size equal 1
    */
-#ifndef ONLY_COMPILE_OPEN_SRC
   BufferFusionPattern &AddOpDescTypeRules(const std::string &desc_name, const std::vector<std::string> &types,
                                           const int64_t repeat_min, const int64_t repeat_max, const int64_t group_id,
                                           const std::vector<ShapeTypeRule> &shape_type_rules,
                                           const bool not_pattern = false, const bool is_allow_series = true);
-#else
-  BufferFusionPattern &AddOpDescTypeRules(const std::string &desc_name, const std::vector<std::string> &types,
-                                          int64_t repeat_min = TBE_PATTERN_NUM_DEFAULT,
-                                          int64_t repeat_max = TBE_PATTERN_NUM_DEFAULT,
-                                          int64_t group_id = TBE_PATTERN_GROUPID_INVALID,
-                                          const std::vector<ShapeTypeRule> &shape_type_rules = {ONLY_SUPPORT_STATIC},
-                                          bool not_pattern = false);
-#endif
 
   BufferFusionPattern &SetOutputs(const std::string &desc_name, const std::vector<std::string> &output_ids,
                                   int64_t relation = TBE_OUTPUT_BRANCH_SINGLE, bool ignore_input_num = false,
@@ -148,25 +126,13 @@ class BufferFusionPattern {
    * @param is_allow_series
    * @return ref
    */
-#ifndef ONLY_COMPILE_OPEN_SRC
   BufferFusionPattern &SetRelation(const std::string &src_desc_name, const std::string &dst_desc_name,
                                    const PatternRelation pattern_relation);
-#endif
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   const std::string& GetName() const;
-#else
-  std::string GetName() const;
-#endif
   int64_t GetOpMaxCount() const;
-
-#ifndef ONLY_COMPILE_OPEN_SRC
   const std::vector<BufferFusionOpDesc *>& GetOpDescs() const;
   const std::vector<BufferFusionOpDesc *>& GetHead() const;
-#else
-  std::vector<BufferFusionOpDesc *> GetOpDescs() const;
-  std::vector<BufferFusionOpDesc *> GetHead() const;
-#endif
   int64_t GetErrorCnt() const;
   void SetGraphModType(int64_t graph_mod_type);
   int64_t GetGraphModType() const;
