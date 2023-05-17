@@ -137,6 +137,12 @@ UINT32 OpTilingParseStubNew(gert::KernelContext *kernel_context) {
   return ge::GRAPH_SUCCESS;
 }
 
+UINT32 OpTilingStubNewWithName(gert::TilingContext *kernel_context) {
+  std::string node_name = kernel_context->GetNodeName();
+  EXPECT_EQ(node_name, "test");
+  return ge::GRAPH_SUCCESS;
+}
+
 UINT32 OpTilingStubV5(gert::TilingContext *kernel_context) {
   auto tensor = kernel_context->GetInputTensor(0);
   std::vector<float> real_data = {1.1, 2.1, 3.1, 4.1};
@@ -176,7 +182,9 @@ extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile
 extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_info, const char *compile_info_hash,
                                       const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
                                       size_t run_info_len, uint64_t *elapse);
-
+extern "C" int OpTilingForCompile(const char *optype, const char *compile_info, const char *compile_info_hash,
+                                  const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
+                                  size_t run_info_len, uint64_t *elapse, const char *extra_info);
 bool op_tiling_stub_v2(const Operator &op, const utils::OpCompileInfo &compile_info, utils::OpRunInfo &run_info) {
   return true;
 }
@@ -1077,6 +1085,31 @@ TEST_F(UtestRegister, NewOptilingInterface_Ok_WithEmptyTensor) {
             1);
 }
 
+TEST_F(UtestRegister, NewOptilingInterface_Ok_WithNodeName) {
+  IMPL_OP_DEFAULT().Tiling(OpTilingStubNewWithName).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  // expect rt1 tiling not to work
+  REGISTER_OP_TILING_V2(AutoTiling, op_tiling_stub_failed);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8","shape": [0],"format": "ND", "const value": ""}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+  const nlohmann::json extra_info = R"({"op_name": "test"})"_json;
+  std::string extra_info_str = extra_info.dump();
+  const char *op_type = "AutoTiling";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  const nlohmann::json attrs = R"([
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  EXPECT_EQ(OpTilingForCompile(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                               attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse,
+                               extra_info_str.c_str()),
+            1);
+}
 
 extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
                                       const char *outputs, const char *attrs, char *result_info,

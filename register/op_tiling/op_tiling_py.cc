@@ -365,6 +365,35 @@ void ParseOutput(const nlohmann::json &output, ge::OpDescPtr &op_desc,
   }
 }
 
+void ParseExtraInfo(const nlohmann::json &extra_info, ge::OpDescPtr &op_desc) {
+  if (extra_info.contains("op_name")) {
+    const std::string name = extra_info["op_name"];
+    op_desc->SetName(name);
+  }
+}
+
+ge::graphStatus ParseExtraInfos(const char *const extra_info, ge::OpDescPtr &op_desc) {
+  if (extra_info == nullptr) {
+    GELOGI("Extra info is nullptr.");
+    return ge::GRAPH_SUCCESS;
+  }
+  nlohmann::json desc;
+  try {
+    desc = nlohmann::json::parse(extra_info);
+  } catch (const nlohmann::json::exception &e) {
+    GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", extra_info);
+    return ge::GRAPH_FAILED;
+  }
+  if (desc.is_array()) {
+    for (const auto &ele : desc) {
+      ParseExtraInfo(ele, op_desc);
+    }
+  } else {
+    ParseExtraInfo(desc, op_desc);
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
 ge::graphStatus ParseOutputs(const char *outputs, ge::OpDescPtr &op_desc,
                              std::vector<gert::StorageShape> &storage_shapes) {
   nlohmann::json desc_list;
@@ -879,10 +908,10 @@ bool DumpRunInfoV2(const OpRunInfoV2 &run_info, char *run_info_json, const size_
   return memcpy_s(run_info_json, str.size() + 1, str.c_str(), str.size() + 1) == EOK;
 }
 
-extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *compile_info, const char *inputs,
-                                               const char *outputs, char *run_info_json, size_t run_info_len,
-                                               const char *compile_info_hash, uint64_t *elapse,
-                                               const OpTilingFunc &tiling_func) {
+int TbeOpTilingPyInterfaceEx2BackUpInner(const char *const optype, const char *const compile_info,
+                                         const char *const inputs, const char *const outputs, char *run_info_json,
+                                         size_t run_info_len, const char *const compile_info_hash, uint64_t *elapse,
+                                         const OpTilingFunc &tiling_func) {
   if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
@@ -959,11 +988,10 @@ void ParseInputsAndOutputs(const char *inputs, const char *outputs, ge::OpDescPt
   ParseConstTensorListV2(inputs_json, operator_param, const_values);
 }
 
-extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *compile_info, const char *inputs,
-                                            const char *outputs, char *run_info_json, size_t run_info_len,
-                                            const char *compile_info_hash, uint64_t *elapse,
-                                            const OpTilingFuncV2 &tiling_func,
-                                            const char *attrs) {
+int TbeOpTilingPyInterfaceEx2NewInner(const char *const optype, const char *const compile_info,
+                                      const char *const inputs, const char *const outputs, char *run_info_json,
+                                      size_t run_info_len, const char *const compile_info_hash, uint64_t *elapse,
+                                      const OpTilingFuncV2 &tiling_func, const char *const attrs) {
   if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
@@ -1019,11 +1047,11 @@ extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *comp
   return 1;
 }
 
-extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile_info, const char *inputs,
-                                         const char *outputs, char *run_info_json, size_t run_info_len,
-                                         const char *compile_info_hash, uint64_t *elapse,
-                                         const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func,
-                                         const char *attrs) {
+int TbeOpTilingPyInterfaceEx3Inner(const char *const optype, const char *const compile_info, const char *const inputs,
+                                   const char *const outputs, char *run_info_json, size_t run_info_len,
+                                   const char *const compile_info_hash, uint64_t *elapse,
+                                   const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func,
+                                   const char *const attrs) {
   if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
@@ -1077,11 +1105,11 @@ extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile
   return 1;
 }
 
-extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile_info, const char *inputs,
-                                         const char *outputs, char *run_info_json, size_t run_info_len,
-                                         const char *compile_info_hash, uint64_t *elapse,
-                                         const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func,
-                                         const char *attrs) {
+int TbeOpTilingPyInterfaceEx4Inner(const char *const optype, const char *const compile_info, const char *const inputs,
+                                   const char *const outputs, char *run_info_json, size_t run_info_len,
+                                   const char *const compile_info_hash, uint64_t *elapse,
+                                   const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func,
+                                   const char *const attrs) {
   if ((optype == nullptr) || (compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     REPORT_CALL_ERROR("E19999", "optype/compile_info/inputs/outputs is null, %s, %s, %s, %s", optype, compile_info,
                       inputs, outputs);
@@ -1124,14 +1152,14 @@ extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile
   }
 
   if (elapse != nullptr) {
-    *elapse = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(\
-        after_tiling - before_tiling).count());
+    *elapse = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(after_tiling - before_tiling).count());
     *(elapse + 1) = static_cast<uint64_t>(last_op_tiling_perf);
     last_op_tiling_perf = -1;
   }
 
   GELOGI("Op tiling v4 succeed. op_type:%s", optype);
-  (void)DumpRunInfoV2(run_info, run_info_json, run_info_len);
+  (void) DumpRunInfoV2(run_info, run_info_json, run_info_len);
   return 1;
 }
 
@@ -1205,7 +1233,13 @@ ge::graphStatus DoTilingWithTiming(const gert::OpImplRegistry::OpImplFunctions *
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus ParseJson(const char *inputs, const char *outputs, const char *attrs, ContextComponent &context_com) {
+ge::graphStatus ParseJson(const char *const inputs, const char *const outputs, const char *const attrs,
+                          const char *const extra_info, ContextComponent &context_com) {
+  if (ParseExtraInfos(extra_info, context_com.op_desc) != ge::GRAPH_SUCCESS) {
+    GELOGE(ge::GRAPH_FAILED, "Parse extra info failed.");
+    REPORT_CALL_ERROR("E19999", "Parse extra info failed.");
+    return ge::GRAPH_FAILED;
+  }
   if (ParseInputs(inputs, context_com.op_desc, context_com.storage_shapes, context_com.index_to_tensors) !=
       ge::GRAPH_SUCCESS) {
     GELOGE(ge::GRAPH_FAILED, "Parse inputs failed.");
@@ -1284,8 +1318,9 @@ int32_t GetPlatformInfo(const char *compile_info, fe::PlatFormInfos &platform_in
   return 1;
 }
 
-int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, const char *inputs, const char *outputs,
-                              char *run_info_json, size_t run_info_len, uint64_t *elapse, const char *attrs) {
+int TbeOptilingPyInterfaceNew(const char *const op_type, const char *const compile_info, const char *const inputs,
+                              const char *const outputs, char *run_info_json, size_t run_info_len, uint64_t *elapse,
+                              const char *const attrs, const char *const extra_info) {
   if ((compile_info == nullptr) || (inputs == nullptr) || (outputs == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "compile_info/inputs/outputs is null.");
     REPORT_CALL_ERROR("E19999", "compile_info/inputs/outputs is null.");
@@ -1298,7 +1333,8 @@ int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, con
   }
   ContextComponent context_com {};
   context_com.op_desc = std::make_shared<ge::OpDesc>("", op_type);
-  if ((context_com.op_desc == nullptr) || (ParseJson(inputs, outputs, attrs, context_com) != ge::GRAPH_SUCCESS)) {
+  if ((context_com.op_desc == nullptr) ||
+      (ParseJson(inputs, outputs, attrs, extra_info, context_com) != ge::GRAPH_SUCCESS)) {
     return 0;
   }
 
@@ -1342,44 +1378,46 @@ int TbeOptilingPyInterfaceNew(const char *op_type, const char *compile_info, con
   return 1;
 }
 
-extern "C" int TbeOpTilingPyInterfaceOld(const char *optype, const char *compile_info, const char *compile_info_hash,
-                                         const char *inputs, const char *outputs, const char *attrs,
-                                         char *run_info_json, size_t run_info_len, uint64_t *elapse) {
+int TbeOpTilingPyInterfaceOld(const char *const optype, const char *const compile_info,
+                              const char *const compile_info_hash, const char *const inputs, const char *const outputs,
+                              const char *const attrs, char *run_info_json, size_t run_info_len, uint64_t *elapse,
+                              const char *const extra_info) {
   auto &op_func_map = OpTilingFuncRegistry::RegisteredOpFuncInfo();
   auto iter = op_func_map.find(optype);
   if (iter == op_func_map.end()) {
     GELOGI("Op tiling function is not found by op type[%s].", optype);
-    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs);
+    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs,
+                                     extra_info);
   }
   OpTilingFuncInfo &op_func_info = iter->second;
   int ret = 0;
   if (op_func_info.IsFunctionV4()) {
     const OpTilingFuncV4 &tiling_func = op_func_info.GetOpTilingFuncV4();
     const OpParseFuncV4 &parse_func = op_func_info.GetOpParseFuncV4();
-    ret = TbeOpTilingPyInterfaceEx4(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
-                                    compile_info_hash, elapse, tiling_func, parse_func, attrs);
+    ret = TbeOpTilingPyInterfaceEx4Inner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                         compile_info_hash, elapse, tiling_func, parse_func, attrs);
   } else if (op_func_info.IsFunctionV3()) {
     const OpTilingFuncV3 &tiling_func = op_func_info.GetOpTilingFuncV3();
     const OpParseFuncV3 &parse_func = op_func_info.GetOpParseFuncV3();
-    ret = TbeOpTilingPyInterfaceEx3(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
-                                    compile_info_hash, elapse, tiling_func, parse_func, attrs);
+    ret = TbeOpTilingPyInterfaceEx3Inner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                         compile_info_hash, elapse, tiling_func, parse_func, attrs);
   } else if (op_func_info.IsFunctionV2()) {
-    const OpTilingFuncV2  &tiling_func = op_func_info.GetOpTilingFuncV2();
-    ret = TbeOpTilingPyInterfaceEx2New(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
-                                       compile_info_hash, elapse, tiling_func, attrs);
+    const OpTilingFuncV2 &tiling_func = op_func_info.GetOpTilingFuncV2();
+    ret = TbeOpTilingPyInterfaceEx2NewInner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                            compile_info_hash, elapse, tiling_func, attrs);
   } else if (op_func_info.IsFunctionV1()) {
-    const OpTilingFunc  &tiling_func = op_func_info.GetOpTilingFunc();
-    ret = TbeOpTilingPyInterfaceEx2BackUp(optype, compile_info, inputs, outputs, run_info_json,
-                                          run_info_len, compile_info_hash, elapse, tiling_func);
+    const OpTilingFunc &tiling_func = op_func_info.GetOpTilingFunc();
+    ret = TbeOpTilingPyInterfaceEx2BackUpInner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                               compile_info_hash, elapse, tiling_func);
   } else {
     GE_LOGE("Optiling func of op type[%s] is all empty.", optype);
   }
   return ret;
 }
 
-extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_info, const char *compile_info_hash,
-                                      const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
-                                      size_t run_info_len, uint64_t *elapse) {
+extern "C" int OpTilingForCompile(const char *optype, const char *compile_info, const char *compile_info_hash,
+                                  const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
+                                  size_t run_info_len, uint64_t *elapse, const char *extra_info) {
   if (optype == nullptr) {
     GELOGE(ge::GRAPH_FAILED, "op type is null.");
     REPORT_CALL_ERROR("E19999", "op type is null.");
@@ -1388,17 +1426,77 @@ extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_in
 
   if (strcmp(optype, OP_TYPE_AUTO_TILING.c_str()) == 0) {
     GELOGI("Op tiling function is auto tiling on rt2.");
-    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs);
+    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs,
+                                     extra_info);
   }
 
   return TbeOpTilingPyInterfaceOld(optype, compile_info, compile_info_hash, inputs, outputs, attrs, run_info_json,
-                                   run_info_len, elapse);
+                                   run_info_len, elapse, extra_info);
+}
+
+extern "C" int TbeOpTilingPyInterface(const char *optype, const char *compile_info, const char *compile_info_hash,
+                                      const char *inputs, const char *outputs, const char *attrs, char *run_info_json,
+                                      size_t run_info_len, uint64_t *elapse) {
+  GELOGW("Deprecated api, use OpTilingForCompile instead.");
+  if (optype == nullptr) {
+    GELOGE(ge::GRAPH_FAILED, "op type is null.");
+    REPORT_CALL_ERROR("E19999", "op type is null.");
+    return 0;
+  }
+
+  if (strcmp(optype, OP_TYPE_AUTO_TILING.c_str()) == 0) {
+    GELOGI("Op tiling function is auto tiling on rt2.");
+    return TbeOptilingPyInterfaceNew(optype, compile_info, inputs, outputs, run_info_json, run_info_len, elapse, attrs,
+                                     nullptr);
+  }
+
+  return TbeOpTilingPyInterfaceOld(optype, compile_info, compile_info_hash, inputs, outputs, attrs, run_info_json,
+                                   run_info_len, elapse, nullptr);
 }
 
 extern "C" int TbeOpTilingPyInterfaceEx2(const char *optype, const char *compile_info, const char *inputs,
                                          const char *outputs, char *run_info_json, size_t run_info_len,
                                          const char *compile_info_hash, uint64_t *elapse) {
-  return TbeOpTilingPyInterface(optype, compile_info, compile_info_hash, inputs, outputs, nullptr,
-                                run_info_json, run_info_len, elapse);
+  GELOGW("Deprecated api, use OpTilingForCompile instead.");
+  return TbeOpTilingPyInterface(optype, compile_info, compile_info_hash, inputs, outputs, nullptr, run_info_json,
+                                run_info_len, elapse);
+}
+
+extern "C" int TbeOpTilingPyInterfaceEx4(const char *optype, const char *compile_info, const char *inputs,
+                                         const char *outputs, char *run_info_json, size_t run_info_len,
+                                         const char *compile_info_hash, uint64_t *elapse,
+                                         const OpTilingFuncV4 &tiling_func, const OpParseFuncV4 &parse_func,
+                                         const char *attrs) {
+  GELOGW("Deprecated api, use OpTilingForCompile instead.");
+  return TbeOpTilingPyInterfaceEx4Inner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                        compile_info_hash, elapse, tiling_func, parse_func, attrs);
+}
+
+extern "C" int TbeOpTilingPyInterfaceEx3(const char *optype, const char *compile_info, const char *inputs,
+                                         const char *outputs, char *run_info_json, size_t run_info_len,
+                                         const char *compile_info_hash, uint64_t *elapse,
+                                         const OpTilingFuncV3 &tiling_func, const OpParseFuncV3 &parse_func,
+                                         const char *attrs) {
+  GELOGW("Deprecated api, use OpTilingForCompile instead.");
+  return TbeOpTilingPyInterfaceEx3Inner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                        compile_info_hash, elapse, tiling_func, parse_func, attrs);
+}
+
+extern "C" int TbeOpTilingPyInterfaceEx2New(const char *optype, const char *compile_info, const char *inputs,
+                                            const char *outputs, char *run_info_json, size_t run_info_len,
+                                            const char *compile_info_hash, uint64_t *elapse,
+                                            const OpTilingFuncV2 &tiling_func, const char *attrs) {
+  GELOGW("Deprecated api, use OpTilingForCompile instead.");
+  return TbeOpTilingPyInterfaceEx2NewInner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                           compile_info_hash, elapse, tiling_func, attrs);
+}
+
+extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *compile_info, const char *inputs,
+                                               const char *outputs, char *run_info_json, size_t run_info_len,
+                                               const char *compile_info_hash, uint64_t *elapse,
+                                               const OpTilingFunc &tiling_func) {
+  GELOGW("Deprecated api, use OpTilingForCompile instead.");
+  return TbeOpTilingPyInterfaceEx2BackUpInner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
+                                              compile_info_hash, elapse, tiling_func);
 }
 }  // namespace optiling
