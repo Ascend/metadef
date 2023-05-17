@@ -78,6 +78,11 @@ message SubmodelDef {
   ModelDeployInfo deploy_info = 6;
 }
 
+message CompileResource {
+  string host_resource_type = 1;
+  map<string, string> logic_device_id_to_resource_type = 2;
+}
+
 message FlowModelDef {
   message EschedPriority {
     map<string, int32> esched_priority = 1;
@@ -92,4 +97,5 @@ message FlowModelDef {
   map<string, uint32> model_name_to_rank_id = 6;
   map<string, RankIds> group_name_to_rank_ids = 5;
   map<string, RankIds> device_to_rank_ids = 7;
+  CompileResource compile_resource = 8;
 }
