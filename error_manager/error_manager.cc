@@ -116,8 +116,8 @@ std::string &Ltrim(std::string &s) {
   (void) s.erase(s.begin(),
                  std::find_if(s.begin(),
                               s.end(),
-                              [](const error_message::char_t c) {
-                                return static_cast<bool>(std::isspace(static_cast<unsigned char>(c)) == 0);
+                              [](const error_message::char_t c) -> bool {
+                                return static_cast<bool>(std::isspace(static_cast<int>(c)) == 0);
                               }));
   return s;
 }
@@ -125,8 +125,8 @@ std::string &Ltrim(std::string &s) {
 std::string &Rtrim(std::string &s) {
   (void) s.erase(std::find_if(s.rbegin(),
                               s.rend(),
-                              [](const error_message::char_t c) {
-                                return static_cast<bool>(std::isspace(static_cast<unsigned char>(c)) == 0);
+                              [](const error_message::char_t c) -> bool {
+                                return static_cast<bool>(std::isspace(static_cast<int>(c)) == 0);
                               }).base(),
                  s.end());
   return s;
