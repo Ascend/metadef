@@ -480,7 +480,7 @@ TEST_F(UtestComputeGraph, BFSTopologicalSortingInPriorityMode_success) {
 
   auto graph = BuildNormalGraph("test_bfs_topo_graph");
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
-  std::vector<std::string> expected_bfs_names = {"node6", "node1", "node2", "node3", "node4", "node5", "netoutput"};
+  std::vector<std::string> expected_bfs_names = {"node1", "node2", "node3", "node4", "node5", "node6", "netoutput"};
   std::vector<std::string> bfs_names;
   options_map["ge.topoSortingMode"] = "0";
   options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
@@ -800,25 +800,25 @@ TEST_F(UtestComputeGraph, DFSPOSTORDERTopologicalSorting_success) {
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
 
-  EXPECT_EQ(node1->GetOpDesc()->GetId(), 6);
-  EXPECT_EQ(node2->GetOpDesc()->GetId(), 4);
-  EXPECT_EQ(node3->GetOpDesc()->GetId(), 2);
-  EXPECT_EQ(node4->GetOpDesc()->GetId(), 0);
-  EXPECT_EQ(node5->GetOpDesc()->GetId(), 17);
-  EXPECT_EQ(node6->GetOpDesc()->GetId(), 16);
-  EXPECT_EQ(node7->GetOpDesc()->GetId(), 15);
-  EXPECT_EQ(node8->GetOpDesc()->GetId(), 14);
-  EXPECT_EQ(node9->GetOpDesc()->GetId(), 12);
-  EXPECT_EQ(node10->GetOpDesc()->GetId(), 11);
-  EXPECT_EQ(node11->GetOpDesc()->GetId(), 10);
-  EXPECT_EQ(node12->GetOpDesc()->GetId(), 9);
-  EXPECT_EQ(node13->GetOpDesc()->GetId(), 7);
-  EXPECT_EQ(node14->GetOpDesc()->GetId(), 5);
-  EXPECT_EQ(node15->GetOpDesc()->GetId(), 3);
-  EXPECT_EQ(node16->GetOpDesc()->GetId(), 1);
-  EXPECT_EQ(node17->GetOpDesc()->GetId(), 18);
+  EXPECT_EQ(node1->GetOpDesc()->GetId(), 0);
+  EXPECT_EQ(node2->GetOpDesc()->GetId(), 2);
+  EXPECT_EQ(node3->GetOpDesc()->GetId(), 4);
+  EXPECT_EQ(node4->GetOpDesc()->GetId(), 6);
+  EXPECT_EQ(node5->GetOpDesc()->GetId(), 1);
+  EXPECT_EQ(node6->GetOpDesc()->GetId(), 3);
+  EXPECT_EQ(node7->GetOpDesc()->GetId(), 5);
+  EXPECT_EQ(node8->GetOpDesc()->GetId(), 7);
+  EXPECT_EQ(node9->GetOpDesc()->GetId(), 9);
+  EXPECT_EQ(node10->GetOpDesc()->GetId(), 10);
+  EXPECT_EQ(node11->GetOpDesc()->GetId(), 11);
+  EXPECT_EQ(node12->GetOpDesc()->GetId(), 12);
+  EXPECT_EQ(node13->GetOpDesc()->GetId(), 14);
+  EXPECT_EQ(node14->GetOpDesc()->GetId(), 15);
+  EXPECT_EQ(node15->GetOpDesc()->GetId(), 16);
+  EXPECT_EQ(node16->GetOpDesc()->GetId(), 17);
+  EXPECT_EQ(node17->GetOpDesc()->GetId(), 8);
   EXPECT_EQ(node18->GetOpDesc()->GetId(), 13);
-  EXPECT_EQ(node19->GetOpDesc()->GetId(), 8);
+  EXPECT_EQ(node19->GetOpDesc()->GetId(), 18);
   EXPECT_EQ(node20->GetOpDesc()->GetId(), 19);
 }
 
