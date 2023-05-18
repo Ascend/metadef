@@ -2080,6 +2080,39 @@
       }
     },
     {
+      "errClass": "HCCP Errors",
+      "errTitle": "Environment Error",
+      "ErrCode": "EJ0002",
+      "ErrMessage": "The network port is down.Suggest: %s",
+      "Arglist": "suggest",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "HCCP Errors",
+      "errTitle": "Bind Failed",
+      "ErrCode": "EJ0003",
+      "ErrMessage": "Failed to bind the IP port. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "HCCP Errors",
+      "errTitle": "Check Ip Failed",
+      "ErrCode": "EJ0004",
+      "ErrMessage": "Check ip fail. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
       "errClass": "Profiling Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EK0001",
