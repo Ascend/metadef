@@ -552,6 +552,17 @@
     },
     {
       "errClass": "GE Errors",
+      "errTitle": "Unsupported Feature",
+      "ErrCode": "E10055",
+      "ErrMessage": "The operation is not supported. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "GE Errors",
       "errTitle": "Invalid Operator Input Count",
       "ErrCode": "E10401",
       "ErrMessage": "The number of operator inputs ([%s]) exceeds the allowed maximum ([%s]).",
