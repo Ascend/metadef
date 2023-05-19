@@ -60,6 +60,7 @@ set(SRC_LIST
 add_library(register SHARED
     ${SRC_LIST}
     $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
+    $<TARGET_OBJECTS:metadef_aicpu_protos_obj>
 )
 
 target_compile_options(register PRIVATE
@@ -114,6 +115,7 @@ target_link_libraries(register
 add_library(register_static STATIC
     ${SRC_LIST}
     $<TARGET_OBJECTS:metadef_tensorflow_protos_obj>
+    $<TARGET_OBJECTS:metadef_aicpu_protos_obj>
     "op_tiling/op_tiling.cc"
     "op_tiling/op_tiling_info.cc"
     "op_tiling/op_tiling_utils.cc"

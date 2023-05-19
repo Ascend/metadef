@@ -19,6 +19,10 @@ set(METADEF_PROTO_LIST
         "${METADEF_DIR}/proto/tensorflow/versions.proto"
         "${METADEF_DIR}/proto/var_manager.proto"
         "${METADEF_DIR}/proto/flow_model.proto"
+        "${METADEF_DIR}/proto/aicpu/cpu_attr.proto"
+        "${METADEF_DIR}/proto/aicpu/cpu_node_def.proto"
+        "${METADEF_DIR}/proto/aicpu/cpu_tensor_shape.proto"
+        "${METADEF_DIR}/proto/aicpu/cpu_tensor.proto"
         )
 
 set(METADEF_DATA_FLOW_PROTO_LIST
@@ -53,6 +57,13 @@ set(METADEF_TENSORFLOW_PROTO_SRCS
         "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/tensorflow/tensor_shape.pb.cc"
         "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/tensorflow/types.pb.cc"
         "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/tensorflow/resource_handle.pb.cc"
+        )
+
+set(METADEF_AICPU_PROTO_SRCS
+        "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/aicpu/cpu_attr.pb.cc"
+        "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/aicpu/cpu_node_def.pb.cc"
+        "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/aicpu/cpu_tensor_shape.pb.cc"
+        "${CMAKE_BINARY_DIR}/proto/metadef_protos/proto/aicpu/cpu_tensor.pb.cc"
         )
 
 set(METADEF_FLOW_GRAPH_PROTO_SRCS
@@ -94,6 +105,20 @@ target_compile_definitions(metadef_tensorflow_protos_obj PRIVATE
         )
 target_link_libraries(metadef_tensorflow_protos_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(metadef_tensorflow_protos_obj PRIVATE
+        $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
+        $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
+        $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
+        $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+        $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
+        )
+
+add_library(metadef_aicpu_protos_obj OBJECT ${METADEF_AICPU_PROTO_SRCS})
+add_dependencies(metadef_aicpu_protos_obj metadef_protos)
+target_compile_definitions(metadef_aicpu_protos_obj PRIVATE
+        google=ascend_private
+        )
+target_link_libraries(metadef_aicpu_protos_obj PRIVATE ascend_protobuf intf_pub)
+target_compile_options(metadef_aicpu_protos_obj PRIVATE
         $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
         $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
         $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
