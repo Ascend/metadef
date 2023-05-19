@@ -90,9 +90,9 @@ struct NodeCmp {
     const auto lhs_size = GetNodeOutputRealSize(lhs);
     const auto rhs_size = GetNodeOutputRealSize(rhs);
     if (lhs_size == rhs_size) {
-      return lhs->GetName() < rhs->GetName();
+      return lhs->GetName() > rhs->GetName();
     }
-    return lhs_size < rhs_size;
+    return lhs_size > rhs_size;
   }
 };
 
