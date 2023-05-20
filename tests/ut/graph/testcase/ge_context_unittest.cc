@@ -42,6 +42,14 @@ TEST_F(GeContextUt, All) {
   cont.SetCtxDeviceId(4);
   EXPECT_EQ(cont.SessionId(), 1);
   EXPECT_EQ(cont.DeviceId(), 4);
+
+  EXPECT_EQ(cont.StreamSyncTimeout(), -1);
+  cont.SetStreamSyncTimeout(10000);
+  EXPECT_EQ(cont.StreamSyncTimeout(), 10000);
+
+  EXPECT_EQ(cont.EventSyncTimeout(), -1);
+  cont.SetEventSyncTimeout(20000);
+  EXPECT_EQ(cont.EventSyncTimeout(), 20000);
 }
 
 TEST_F(GeContextUt, Plus) {
@@ -74,6 +82,49 @@ TEST_F(GeContextUt, Plus) {
   std::map<std::string, std::string> session_option5{{"ge.exec.jobId", "65536"}};
   GetThreadLocalContext().SetSessionOption(session_option5);
   cont.Init();
+}
+
+TEST_F(GeContextUt, set_valid_SyncTimeout_from_option) {
+  std::map<std::string, std::string> session_option{{"ge.exec.sessionId", "0"},
+                                                    {"ge.exec.deviceId", "1"},
+                                                    {"ge.exec.jobId", "2"},
+                                                    {"stream_sync_timeout", "10000"},
+                                                    {"event_sync_timeout", "20000"}};
+  GetThreadLocalContext().SetSessionOption(session_option);
+  ge::GEContext ctx = GetContext();
+  ctx.Init();
+  EXPECT_EQ(ctx.StreamSyncTimeout(), 10000);
+  EXPECT_EQ(ctx.EventSyncTimeout(), 20000);
+}
+
+TEST_F(GeContextUt, set_invalid_option) {
+  std::map<std::string, std::string> session_option{{"ge.exec.sessionId", "-1"},
+                                                    {"ge.exec.deviceId", "-1"},
+                                                    {"ge.exec.jobId", "-1"},
+                                                    {"stream_sync_timeout", ""},
+                                                    {"event_sync_timeout", ""}};
+  GetThreadLocalContext().SetSessionOption(session_option);
+  ge::GEContext ctx = GetContext();
+  ctx.Init();
+  EXPECT_EQ(ctx.SessionId(), 0U);
+  EXPECT_EQ(ctx.DeviceId(), 0U);
+  EXPECT_EQ(ctx.StreamSyncTimeout(), -1);
+  EXPECT_EQ(ctx.EventSyncTimeout(), -1);
+}
+
+TEST_F(GeContextUt, set_OutOfRange_SyncTimeout_from_option) {
+  std::map<std::string, std::string> session_option{{"ge.exec.sessionId", "1234567898765432112345"},
+                                                    {"ge.exec.deviceId", "1234567898765432112345"},
+                                                    {"ge.exec.jobId", "1234567898765432112345"},
+                                                    {"stream_sync_timeout", "1234567898765432112345"},
+                                                    {"event_sync_timeout", "1234567898765432112345"}};
+  GetThreadLocalContext().SetSessionOption(session_option);
+  ge::GEContext ctx = GetContext();
+  ctx.Init();
+  EXPECT_EQ(ctx.SessionId(), 0U);
+  EXPECT_EQ(ctx.DeviceId(), 0U);
+  EXPECT_EQ(ctx.StreamSyncTimeout(), -1);
+  EXPECT_EQ(ctx.EventSyncTimeout(), -1);
 }
 
 }  // namespace ge

@@ -29,15 +29,21 @@ class GEContext {
   bool IsGraphLevelSat() const;
   uint64_t SessionId() const;
   uint32_t DeviceId() const;
+  int32_t StreamSyncTimeout() const;
+  int32_t EventSyncTimeout() const;
   void Init();
   void SetSessionId(const uint64_t session_id);
   void SetContextId(const uint64_t context_id);
   void SetCtxDeviceId(const uint32_t device_id);
+  void SetStreamSyncTimeout(const int32_t timeout);
+  void SetEventSyncTimeout(const int32_t timeout);
  private:
   thread_local static uint64_t session_id_;
   thread_local static uint64_t context_id_;
   uint32_t device_id_ = 0U;
   uint64_t trace_id_ = 0U;
+  int32_t stream_sync_timeout_ = -1;
+  int32_t event_sync_timeout_ = -1;
 };  // class GEContext
 
 /// Get context

@@ -19,6 +19,7 @@
 #include "graph/ge_local_context.h"
 #include "graph/types.h"
 #include "framework/common/debug/ge_log.h"
+#include "utils/extern_math_util.h"
 
 namespace ge {
 namespace {
@@ -26,7 +27,32 @@ const uint64_t kMinTrainingTraceJobId = 65536U;
 const int32_t kDecimal = 10;
 const char_t *kHostExecPlacement = "HOST";
 const char_t *kEnabled = "1";
+
+template<class T>
+ge::Status GetOptionValue(const std::string &option_name, T &var) {
+  std::string option;
+  (void) ge::GetContext().GetOption(option_name, option);
+  int64_t value = 0;
+  try {
+    value = static_cast<int64_t>(std::stoi(option.c_str()));
+  } catch (std::invalid_argument &) {
+    GELOGW("[Init] Transform option %s %s to int failed, as catching invalid_argument exception", option_name.c_str(),
+           option.c_str());
+    return ge::FAILED;
+  } catch (std::out_of_range &) {
+    GELOGW("[Init] Transform option %s %s to int failed, as catching out_of_range exception", option_name.c_str(),
+           option.c_str());
+    return ge::FAILED;
+  }
+  if (!IntegerChecker<T>::Compat(value)) {
+    GELOGW("[Init] Transform option %s %s to int failed, value is invalid_argument", option_name.c_str(),
+           option.c_str());
+    return ge::FAILED;
+  }
+  var = value;
+  return ge::SUCCESS;
 }
+}  // namespace
 GEContext &GetContext() {
   static GEContext ge_context {};
   return ge_context;
@@ -92,29 +118,9 @@ std::map<std::string, std::string> &GetMutableGlobalOptions() {
 }
 
 void GEContext::Init() {
-  std::string session_id;
-  (void)GetOption("ge.exec.sessionId", session_id);
-  try {
-    session_id_ = static_cast<uint64_t>(std::stoi(session_id.c_str()));
-  } catch (std::invalid_argument &) {
-    GELOGW("[Init][GetSessionId] Transform option session_id %s to int failed, as catching invalid_argument exception",
-           session_id.c_str());
-  } catch (std::out_of_range &) {
-    GELOGW("[Init][GetSessionId] Transform option session_id %s to int failed, as catching out_of_range exception",
-           session_id.c_str());
-  }
+  (void) GetOptionValue("ge.exec.sessionId", session_id_);
 
-  std::string device_id;
-  (void)GetOption("ge.exec.deviceId", device_id);
-  try {
-    device_id_ = static_cast<uint32_t>(std::stoi(device_id.c_str()));
-  } catch (std::invalid_argument &) {
-    GELOGW("[Init][GetDeviceId] Transform option device_id %s to int failed, as catching invalid_argument exception",
-           device_id.c_str());
-  } catch (std::out_of_range &) {
-    GELOGW("[Init][GetDeviceId] Transform option device_id %s to int failed, as catching out_of_range exception",
-           device_id.c_str());
-  }
+  (void) GetOptionValue("ge.exec.deviceId", device_id_);
 
   std::string job_id;
   (void)GetOption("ge.exec.jobId", job_id);
@@ -134,16 +140,28 @@ void GEContext::Init() {
   } else {
     trace_id_ = static_cast<uint64_t>(d_job_id);
   }
+
+  (void) GetOptionValue("stream_sync_timeout", stream_sync_timeout_);
+
+  (void) GetOptionValue("event_sync_timeout", event_sync_timeout_);
 }
 
 uint64_t GEContext::SessionId() const { return session_id_; }
 
 uint32_t GEContext::DeviceId() const { return device_id_; }
 
+int32_t GEContext::StreamSyncTimeout() const { return stream_sync_timeout_; }
+
+int32_t GEContext::EventSyncTimeout() const { return event_sync_timeout_; }
+
 void GEContext::SetSessionId(const uint64_t session_id) { session_id_ = session_id; }
 
 void GEContext::SetContextId(const uint64_t context_id) { context_id_ = context_id; }
 
 void GEContext::SetCtxDeviceId(const uint32_t device_id) { device_id_ = device_id; }
+
+void GEContext::SetStreamSyncTimeout(const int32_t timeout) { stream_sync_timeout_ = timeout; }
+
+void GEContext::SetEventSyncTimeout(const int32_t timeout) { event_sync_timeout_ = timeout; }
 
 }  // namespace ge
