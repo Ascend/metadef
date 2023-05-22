@@ -242,6 +242,9 @@ TEST_F(UtestGeTensor, test_tensor_utils_weight_size) {
   auto tensor_ptr = std::make_shared<GeTensor>();
   TensorUtils::SetWeightSize(tensor_ptr->MutableTensorDesc(), 100);
   EXPECT_EQ(TensorUtils::GetWeightSize(tensor_ptr), 100);
+  // test weight size is larger than 2g
+  TensorUtils::SetWeightSize(tensor_ptr->MutableTensorDesc(), INT64_MAX - 100);
+  EXPECT_EQ(TensorUtils::GetWeightSize(tensor_ptr), INT64_MAX - 100);
   EXPECT_TRUE(TensorUtils::GetWeightAddr(tensor_ptr, buffer) != nullptr);
 
   GeTensor tensor1 = tensor;
