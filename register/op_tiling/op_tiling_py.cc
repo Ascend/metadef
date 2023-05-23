@@ -1289,6 +1289,15 @@ int32_t ParseDeviceIdAndCoreType(const char *compile_info, uint32_t &device_id, 
       core_type = info_list[ge::ATTR_NAME_SGT_CUBE_VECTOR_CORE_TYPE].get<std::string>();
       GELOGI("Parse core type: %s.", core_type.c_str());
     }
+  } else {
+    if (info_list.contains(ge::ATTR_NAME_CUBE_VECTOR_CORE_TYPE)) {
+      if (info_list[ge::ATTR_NAME_CUBE_VECTOR_CORE_TYPE].is_null()) {
+        GELOGD("Attr %s is null.", ge::ATTR_NAME_CUBE_VECTOR_CORE_TYPE.c_str());
+      } else {
+        core_type = info_list[ge::ATTR_NAME_CUBE_VECTOR_CORE_TYPE].get<std::string>();
+        GELOGI("Parse core type: %s.", core_type.c_str());
+      }
+    }
   }
 
   return 1;
