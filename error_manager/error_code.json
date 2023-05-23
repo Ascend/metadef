@@ -1519,6 +1519,17 @@
       }
     },
     {
+      "errClass": "TE Fusion Errors",
+      "errTitle": "Failed to Open JSON File",
+      "ErrCode": "E40003",
+      "ErrMessage": "Failed to open the JSON file: %s",
+      "Arglist": "file_name",
+      "suggestion": {
+        "Possible Cause": "1. The file has been deleted.\n2. You do not have the permission to open the file.\n3. The file is locked.",
+        "Solution": "Run your program again in a single-user environment(to ensure that no other user accesses the file)"
+      }
+    },
+    {
       "errClass": " TEFusion Errors",
       "errTitle": "Failure to Import Python Module",
       "ErrCode": "E40020",
@@ -1558,7 +1569,7 @@
       "ErrMessage": "Path [%s] for [%s] is invalid. Result: %s. Reason: %s.",
       "Arglist": "path,arg,result,reason",
       "suggestion": {
-        "Possible Cause": "The path is empty or does not exist.",
+        "Possible Cause": "The path does not exist.",
         "Solution": "N/A"
       }
     },
