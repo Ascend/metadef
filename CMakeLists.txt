@@ -68,7 +68,7 @@ option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
 
 if (ENABLE_OPEN_SRC)
     set(HI_PYTHON python3)
-    
+    include(cmake/test_funcs.cmake)    
     # 开源软件包
     find_package(json MODULE)
     find_package(protoc MODULE)
@@ -99,7 +99,7 @@ if (ENABLE_OPEN_SRC)
     endif()
 
     include(cmake/intf_pub_linux.cmake)
-    include(cmake/test_funcs.cmake)
+
 endif()
 
 include(cmake/common_funcs.cmake)

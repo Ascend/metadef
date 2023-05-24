@@ -41,5 +41,6 @@ target_compile_definitions(ut_error_manager PRIVATE
 target_link_libraries(ut_error_manager
     intf_pub
     error_manager
+    mmpa
     GTest::gtest GTest::gtest_main ascend_protobuf c_sec -lrt -ldl -lgcov
 )

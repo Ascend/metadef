@@ -22,14 +22,17 @@ target_compile_definitions(ut_exe_graph PRIVATE
 
 target_link_libraries(ut_exe_graph PRIVATE
         intf_pub
+        -Wl,--no-as-needed
         air_headers
         slog_headers
         platform_stub
         msprof_headers
         runtime_headers
         exe_graph error_manager
+        mmpa
         GTest::gtest GTest::gtest_main slog_stub ascend_protobuf c_sec mmpa_stub -lrt -ldl -lgcov
         metadef_headers
         graph
         graph_base
+        -Wl,--as-needed
         )

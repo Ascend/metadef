@@ -32,3 +32,16 @@ target_link_libraries(mmpa_stub
     PUBLIC
         mmpa_headers
 )
+if (ENABLE_METADEF_UT OR ENABLE_METADEF_ST)
+    add_library(mmpa SHARED ${SRCS})
+    target_link_libraries(mmpa
+        PRIVATE
+            intf_pub
+            -Wl,--no-as-needed
+            ascend_protobuf
+            -Wl,--as-needed
+            c_sec
+        PUBLIC
+            mmpa_headers
+    )
+endif()
