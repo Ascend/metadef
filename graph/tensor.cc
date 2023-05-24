@@ -882,7 +882,8 @@ GeTensor TensorAdapter::NormalizeGeTensor(const GeTensor &tensor) {
   auto normalized_tensor = tensor;
   auto &desc = normalized_tensor.MutableTensorDesc();
   bool origin_format_is_set = false;
-  if (AttrUtils::GetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set) && origin_format_is_set) {
+  if (AttrUtils::GetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set) && origin_format_is_set &&
+      TensorUtils::IsOriginShapeInited(desc)) {
     (void)AttrUtils::SetInt(desc, ATTR_NAME_STORAGE_FORMAT, static_cast<int64_t>(desc.GetFormat()));
     (void)AttrUtils::SetListInt(desc, ATTR_NAME_STORAGE_SHAPE, desc.GetShape().GetDims());
     desc.SetFormat(desc.GetOriginFormat());

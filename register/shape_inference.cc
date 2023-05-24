@@ -313,6 +313,8 @@ ge::graphStatus UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc,
     std::vector<std::pair<int64_t, int64_t>> shape_range;
     auto out_range = infer_shape_range_ctx->GetOutputShapeRange(i);
     GE_ASSERT_NOTNULL(out_range, "out range is nullptr.");
+    GE_ASSERT_NOTNULL(out_range->GetMax(), "out range max is nullptr.");
+    GE_ASSERT_NOTNULL(out_range->GetMin(), "out range min is nullptr.");
     for (size_t j = 0UL; j < out_range->GetMax()->GetDimNum(); ++j) {
       shape_range.emplace_back(std::make_pair(out_range->GetMin()->GetDim(j), out_range->GetMax()->GetDim(j)));
     }
