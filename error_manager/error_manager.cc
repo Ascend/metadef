@@ -112,29 +112,30 @@ constexpr const error_message::char_t *const kSolution = "Solution";
 constexpr const error_message::char_t *const kArgList = "Arglist";
 constexpr uint64_t kLength = 2UL;
 
-std::string &Ltrim(std::string &s) {
+void Ltrim(std::string &s) {
   (void) s.erase(s.begin(),
                  std::find_if(s.begin(),
                               s.end(),
                               [](const error_message::char_t c) -> bool {
                                 return static_cast<bool>(std::isspace(static_cast<int>(c)) == 0);
                               }));
-  return s;
 }
 
-std::string &Rtrim(std::string &s) {
+void Rtrim(std::string &s) {
   (void) s.erase(std::find_if(s.rbegin(),
                               s.rend(),
                               [](const error_message::char_t c) -> bool {
                                 return static_cast<bool>(std::isspace(static_cast<int>(c)) == 0);
                               }).base(),
                  s.end());
-  return s;
 }
 
 /// @ingroup domi_common
 /// @brief trim space
-std::string Trim(std::string &s) { return Ltrim(Rtrim(s)); }
+void Trim(std::string &s) {
+    Rtrim(s);
+    Ltrim(s);
+}
 
 ///
 /// @brief Obtain error manager self library path
@@ -178,7 +179,8 @@ std::vector<std::string> SplitByDelim(const std::string &str, const error_messag
   std::string item;
 
   while (getline(ss, item, delim)) {
-    elems.push_back(Trim(item));
+    Trim(item);
+    elems.push_back(item);
   }
   const auto str_size = str.size();
   if ((str_size > 0U) && (str[str_size - 1U] == delim)) {
