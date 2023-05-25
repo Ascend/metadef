@@ -1237,6 +1237,7 @@ const std::string ATTR_NAME_ALIAS_ENGINE_NAME = "_alias_engine_name";
 const std::string ATTR_NAME_KERNEL_NAMES_PREFIX = "_kernel_names_prefix";
 const std::string ATTR_NAME_FFTS_SUB_TASK_TENSOR_SIZE = "_ffts_sub_task_tensor_size";
 const std::string ATTR_NAME_FFTS_SUB_TASK_TENSOR_OFFSETS = "_ffts_sub_task_tensor_offsets";
+const std::string ATTR_NAME_IS_FFTS_UNSUPPORTED = "_is_ffts_unsupported";
 
 // mark fuzz build scene
 const std::string ATTR_NAME_FUZZ_BUILD = "_fuzz_build";
