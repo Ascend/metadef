@@ -1525,19 +1525,20 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetSize(
   }
 }
 
-uint32_t TensorUtils::GetWeightSize(const GeTensorDesc &tensor_desc) {
-  if ((tensor_desc.impl_ != nullptr) &&
-      IntegerChecker<uint32_t>::Compat(tensor_desc.impl_->ext_meta_.GetWeightSize())) {
-    return static_cast<uint32_t>(tensor_desc.impl_->ext_meta_.GetWeightSize());
+int64_t TensorUtils::GetWeightSize(const GeTensorDesc &tensor_desc) {
+  if (tensor_desc.impl_ != nullptr) {
+    return tensor_desc.impl_->ext_meta_.GetWeightSize();
   }
-  return 0U;
+  return 0;
 }
 
-uint32_t TensorUtils::GetWeightSize(const GeTensor &tensor) { return GetWeightSize(tensor.GetTensorDesc()); }
+int64_t TensorUtils::GetWeightSize(const GeTensor &tensor) {
+  return GetWeightSize(tensor.GetTensorDesc());
+}
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t TensorUtils::GetWeightSize(const ConstGeTensorPtr &tensor_ptr) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int64_t TensorUtils::GetWeightSize(const ConstGeTensorPtr &tensor_ptr) {
   if (tensor_ptr == nullptr) {
-    return 0U;
+    return 0;
   }
   return GetWeightSize(*tensor_ptr);
 }
@@ -1572,9 +1573,9 @@ uint8_t *TensorUtils::GetWeightAddr(const GeTensor &tensor, const uint8_t *const
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void TensorUtils::SetWeightSize(GeTensorDesc &tensor_desc,
-                                                                               const uint32_t size) {
+                                                                               const int64_t size) {
   if (tensor_desc.impl_ != nullptr) {
-    tensor_desc.impl_->ext_meta_.SetWeightSize(static_cast<int64_t>(size));
+    tensor_desc.impl_->ext_meta_.SetWeightSize(size);
   }
 }
 
