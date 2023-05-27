@@ -38,6 +38,9 @@ struct RefCell {
   ge::NodePtr node = nullptr;
   InOutFlag in_out = NODE_IN;
   int32_t in_out_idx = 0;
+#ifndef ONLY_COMPILE_OPEN_SRC
+  std::string hash_key;
+#endif
   bool operator == (const RefCell &c) const {
     return (node_name == c.node_name) && (node == c.node) && (in_out == c.in_out) && (in_out_idx == c.in_out_idx);
   }
@@ -48,6 +51,12 @@ struct RefCell {
     node = node_ptr;
     in_out = in_out_flag;
     in_out_idx = idx;
+#ifndef ONLY_COMPILE_OPEN_SRC
+    hash_key.append(node_name);
+    hash_key.append(std::to_string(in_out));
+    hash_key.append(std::to_string(in_out_idx));
+    hash_key.append(std::to_string(PtrToValue(node.get())));
+#endif
   };
   ~RefCell() = default;
 };
