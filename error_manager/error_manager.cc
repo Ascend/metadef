@@ -117,7 +117,7 @@ void Ltrim(std::string &s) {
                  std::find_if(s.begin(),
                               s.end(),
                               [](const error_message::char_t c) -> bool {
-                                return static_cast<bool>(std::isspace(static_cast<int>(c)) == 0);
+                                return static_cast<bool>(std::isspace(static_cast<uint8_t>(c)) == 0);
                               }));
 }
 
@@ -125,7 +125,7 @@ void Rtrim(std::string &s) {
   (void) s.erase(std::find_if(s.rbegin(),
                               s.rend(),
                               [](const error_message::char_t c) -> bool {
-                                return static_cast<bool>(std::isspace(static_cast<int>(c)) == 0);
+                                return static_cast<bool>(std::isspace(static_cast<uint8_t>(c)) == 0);
                               }).base(),
                  s.end());
 }
@@ -705,8 +705,8 @@ void ErrorManager::GenWorkStreamIdDefault() {
   const int32_t tid = mmGetTid();
 
   constexpr uint64_t kPidOffset = 100000UL;
-  const uint64_t work_stream_id = static_cast<uint64_t>((static_cast<uint32_t>(pid) * kPidOffset) +
-      static_cast<uint32_t>(tid));
+  const uint64_t work_stream_id = static_cast<uint64_t>(static_cast<uint32_t>(pid) * kPidOffset) +
+      static_cast<uint64_t>(tid);
   error_context_.work_stream_id = work_stream_id;
 }
 
