@@ -441,8 +441,8 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
           GELOGE(FAILED, "Dim size invalid");
           return FAILED;
         }
-        if ((count != 0) && (dim >= (std::numeric_limits<int64_t>::max() / count))) {
-          GELOGE(FAILED, "Dim size exceeds INT64_MAX");
+        if ((count != 0) && (dim >= (std::numeric_limits<int32_t>::max() / count))) {
+          GELOGE(FAILED, "Dim size exceeds INT32_MAX");
           return FAILED;
         }
         count *= dim;
