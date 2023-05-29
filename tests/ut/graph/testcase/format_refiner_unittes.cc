@@ -500,6 +500,37 @@ ut::GraphBuilder BuildGraph9() {
 /*
  *   netoutput1
  *       |      \
+ *      sub      variable
+ *     /   \
+ * data1   data2
+ */
+ComputeGraphPtr BuildSubGraphWithVariable(const std::string name,ge::Format to_be_set_format = FORMAT_ND) {
+  ut::GraphBuilder builder(name);
+  auto data1 = builder.AddNode(name + "data1", "Data", 1, 1);
+  auto data2 = builder.AddNode(name + "data2", "Data", 1, 1);
+  auto sub = builder.AddNode(name + "sub", "Sub", 2, 1, to_be_set_format);
+  auto variable = builder.AddNode("variable", "Variable", 0, 1);
+  auto netoutput = builder.AddNode(name + "netoutput", "NetOutput", 2, 2);
+
+  AttrUtils::SetInt(data1->GetOpDesc(), "_parent_node_index", static_cast<int>(0));
+  AttrUtils::SetInt(data2->GetOpDesc(), "_parent_node_index", static_cast<int>(1));
+  AttrUtils::SetInt(netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", static_cast<int>(0));
+  AttrUtils::SetInt(netoutput->GetOpDesc()->MutableInputDesc(1), "_parent_node_index", static_cast<int>(1));
+
+
+  builder.AddDataEdge(data1, 0, sub, 0);
+  builder.AddDataEdge(data2, 0, sub, 1);
+  builder.AddDataEdge(sub, 0, netoutput, 0);
+  builder.AddDataEdge(data2, 0, variable, 0);
+  builder.AddDataEdge(variable, 0, netoutput, 1);
+
+
+  return builder.GetGraph();
+}
+
+/*
+ *   netoutput1
+ *       |      \
  *      sub      relu
  *     /   \     /
  * data1   data2
@@ -567,6 +598,55 @@ ComputeGraphPtr BuildMainGraphWithIf(string anchor_graph) {
   main_graph->AddSubgraph("sub1", sub1);
 
   auto sub2 = BuildSubGraph("sub2");
+  sub2->SetParentGraph(main_graph);
+  sub2->SetParentNode(main_graph->FindNode("if"));
+  main_graph->FindNode("if")->GetOpDesc()->AddSubgraphName("sub2");
+  main_graph->FindNode("if")->GetOpDesc()->SetSubgraphInstanceName(1, "sub2");
+  main_graph->AddSubgraph("sub2", sub2);
+
+  return main_graph;
+}
+
+/*
+ *   netoutput relu
+ *       |    /
+ *      if
+ *     /   \
+ * data1   data2
+ */
+ComputeGraphPtr BuildMainGraphWithIfAndVariable(string anchor_graph, const Format if_format = FORMAT_NCHW) {
+  ut::GraphBuilder builder("main_graph");
+  auto to_be_set_format = FORMAT_ND;
+  auto to_be_set_format_of_sub = FORMAT_ND;
+  if (anchor_graph == "main") {
+    to_be_set_format = FORMAT_NHWC;
+    to_be_set_format_of_sub = FORMAT_ND;
+  } else {
+    to_be_set_format = FORMAT_ND;
+    to_be_set_format_of_sub = FORMAT_NHWC;
+  }
+  auto data1 = builder.AddNode("data1", "Data", 1, 1, to_be_set_format);
+  auto data2 = builder.AddNode("data2", "Data", 1, 1, to_be_set_format);
+  auto if1 = builder.AddNode("if", "If", 2, 2, if_format);
+  auto netoutput1 = builder.AddNode("netoutput", "NetOutput", 2, 2);
+  auto relu = builder.AddNode("relu", "Relu", 1, 1);
+
+  builder.AddDataEdge(data1, 0, if1, 0);
+  builder.AddDataEdge(data2, 0, if1, 1);
+  builder.AddDataEdge(if1, 0, netoutput1, 0);
+  builder.AddDataEdge(if1, 1, relu, 0);
+  builder.AddDataEdge(relu, 0, netoutput1, 1);
+
+  auto main_graph = builder.GetGraph();
+
+  auto sub1 = BuildSubGraphWithVariable("sub1", to_be_set_format_of_sub);
+  sub1->SetParentGraph(main_graph);
+  sub1->SetParentNode(main_graph->FindNode("if"));
+  main_graph->FindNode("if")->GetOpDesc()->AddSubgraphName("sub1");
+  main_graph->FindNode("if")->GetOpDesc()->SetSubgraphInstanceName(0, "sub1");
+  main_graph->AddSubgraph("sub1", sub1);
+
+  auto sub2 = BuildSubGraphWithVariable("sub2");
   sub2->SetParentGraph(main_graph);
   sub2->SetParentNode(main_graph->FindNode("if"));
   main_graph->FindNode("if")->GetOpDesc()->AddSubgraphName("sub2");
@@ -674,6 +754,55 @@ TEST_F(UTEST_FormatRefiner, with_if_sub_graph_1) {
   EXPECT_EQ(sub2_relu->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NCHW);
   EXPECT_EQ(sub2_sub->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
   EXPECT_EQ(sub2_sub->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(sub2_netoutput->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(sub2_netoutput->GetOpDesc()->GetInputDesc(1).GetOriginFormat(), FORMAT_NCHW);
+}
+
+// If节点FORMAT_ND, 通过RefRelation对子图格式进行推导
+TEST_F(UTEST_FormatRefiner, InferOriginFormat_IfIsNDWithSubgraph_ReflectionProcessOK) {
+  auto main_graph = BuildMainGraphWithIfAndVariable("main", Format::FORMAT_ND);
+  EXPECT_EQ(FormatRefiner::InferOrigineFormat(main_graph), GRAPH_SUCCESS);
+  // check main graph format
+  auto if1 = main_graph->FindNode("if");
+  auto relu = main_graph->FindNode("relu");
+  auto netoutput = main_graph->FindNode("netoutput");
+  EXPECT_EQ(if1->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(if1->GetOpDesc()->GetOutputDesc(1).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(if1->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(if1->GetOpDesc()->GetInputDesc(1).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(netoutput->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(relu->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(relu->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  // check sub graph
+  auto sub_graph_1 = main_graph->GetSubgraph("sub1");
+  auto sub_graph_2 = main_graph->GetSubgraph("sub2");
+  string prefix_1 = "sub1";
+  string prefix_2 = "sub2";
+  auto sub1_data_1 = sub_graph_1->FindNode(prefix_1 + "data1");
+  auto sub1_data_2 = sub_graph_1->FindNode(prefix_1 + "data2");
+  auto sub1_relu = sub_graph_1->FindNode(prefix_1 + "relu");
+  auto sub1_sub = sub_graph_1->FindNode(prefix_1 + "sub");
+  auto sub1_netoutput = sub_graph_1->FindNode(prefix_1 + "netoutput");
+  auto sub2_data_1 = sub_graph_2->FindNode(prefix_2 + "data1");
+  auto sub2_data_2 = sub_graph_2->FindNode(prefix_2 + "data2");
+  auto sub2_relu = sub_graph_2->FindNode(prefix_2 + "relu");
+  auto sub2_sub = sub_graph_2->FindNode(prefix_2 + "sub");
+  auto sub2_netoutput = sub_graph_2->FindNode(prefix_2 + "netoutput");
+
+  EXPECT_EQ(sub1_data_1->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub1_data_1->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub1_data_2->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub1_data_2->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub1_sub->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub1_sub->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub1_netoutput->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(sub1_netoutput->GetOpDesc()->GetInputDesc(1).GetOriginFormat(), FORMAT_NCHW);
+  EXPECT_EQ(sub2_data_1->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub2_data_1->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub2_data_2->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub2_data_2->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub2_sub->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
+  EXPECT_EQ(sub2_sub->GetOpDesc()->GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
   EXPECT_EQ(sub2_netoutput->GetOpDesc()->GetInputDesc(0).GetOriginFormat(), FORMAT_NCHW);
   EXPECT_EQ(sub2_netoutput->GetOpDesc()->GetInputDesc(1).GetOriginFormat(), FORMAT_NCHW);
 }

@@ -40,10 +40,10 @@ namespace {
 class RefRelations::Impl {
 public:
   graphStatus LookUpRefRelations(const RefCell &key, std::unordered_set<RefCell, RefCellHash> &result) {
-    const size_t number = PtrToValue(key.node.get());
-    const std::string lookup_key =
-        key.node_name + std::to_string(key.in_out) + std::to_string(key.in_out_idx) + std::to_string(number);
-    const auto iter = look_up_table_.find(lookup_key);
+   const size_t number = PtrToValue(key.node.get());
+   const std::string lookup_key =
+       key.node_name + std::to_string(key.in_out) + std::to_string(key.in_out_idx) + std::to_string(number);
+   const auto iter = look_up_table_.find(lookup_key);
     if (iter != look_up_table_.end()) {
       for (auto &c : iter->second) {
         (void)result.insert(c);
@@ -108,23 +108,11 @@ graphStatus RefRelations::Impl::BuildRefRelationsForBranch(
   size_t ref_i = 0UL;
   for (const auto &ref_i_data_nodes : classed_data_nodes) {
     std::vector<RefCell> in_ref_i_all_refs;
-    RefCell cell_root;
-    cell_root.node_name = root_node->GetName();
-    cell_root.node = root_node;
-    cell_root.in_out = NODE_IN;
-    cell_root.in_out_idx = static_cast<int32_t>(ref_i);
+    RefCell cell_root(root_node->GetName(), root_node, NODE_IN, static_cast<int32_t>(ref_i));
     in_ref_i_all_refs.emplace_back(cell_root);
     for (const auto &data : ref_i_data_nodes) {
-      RefCell cell_in;
-      RefCell cell_out;
-      cell_in.node_name = data->GetName();
-      cell_in.node = data;
-      cell_in.in_out = NODE_IN;
-      cell_in.in_out_idx = 0;
-      cell_out.node_name = data->GetName();
-      cell_out.node = data;
-      cell_out.in_out = NODE_OUT;
-      cell_out.in_out_idx = 0;
+      RefCell cell_in(data->GetName(), data, NODE_IN, 0);
+      RefCell cell_out(data->GetName(), data, NODE_OUT, 0);
       in_ref_i_all_refs.emplace_back(cell_in);
       in_ref_i_all_refs.emplace_back(cell_out);
     }
@@ -135,18 +123,10 @@ graphStatus RefRelations::Impl::BuildRefRelationsForBranch(
   size_t ref_o = 0UL;
   for (const auto &ref_o_net_nodes : classed_netoutput_nodes) {
     std::vector<RefCell> out_ref_i_all_refs;
-    RefCell cell_root;
-    cell_root.node_name = root_node->GetName();
-    cell_root.node = root_node;
-    cell_root.in_out = NODE_OUT;
-    cell_root.in_out_idx = static_cast<int32_t>(ref_o);
+    RefCell cell_root(root_node->GetName(), root_node, NODE_OUT, static_cast<int32_t>(ref_o));
     out_ref_i_all_refs.emplace_back(cell_root);
     for (const auto &ele : ref_o_net_nodes) {
-      RefCell cell_netoutput_in;
-      cell_netoutput_in.node_name = (ele.first)->GetName();
-      cell_netoutput_in.node = ele.first;
-      cell_netoutput_in.in_out = NODE_IN;
-      cell_netoutput_in.in_out_idx = static_cast<int32_t>(ele.second);
+      RefCell cell_netoutput_in((ele.first)->GetName(), ele.first, NODE_IN, static_cast<int32_t>(ele.second));
       out_ref_i_all_refs.emplace_back(cell_netoutput_in);
     }
     node_refs.emplace_back(out_ref_i_all_refs);
@@ -162,8 +142,7 @@ graphStatus RefRelations::Impl::BuildLookUpTables() {
     for (const auto &ele : val) {
       for (const auto &ref_cell : ele) {
         const std::string key = ref_cell.node_name + std::to_string(ref_cell.in_out) +
-          std::to_string(ref_cell.in_out_idx) +
-          std::to_string(PtrToValue(ref_cell.node.get()));
+            std::to_string(ref_cell.in_out_idx) + std::to_string(PtrToValue(ref_cell.node.get()));
         look_up_table_[key] = ele;
       }
     }
@@ -188,39 +167,19 @@ graphStatus RefRelations::Impl::BuildRefRelationsForWhile(
     auto &ref_i_net_nodes = classed_netoutput_nodes[ref_i];
 
     std::vector<RefCell> ref_i_all_refs;
-    RefCell cell_root_i;
-    RefCell cell_root_o;
-    cell_root_i.node_name = root_node->GetName();
-    cell_root_i.node = root_node;
-    cell_root_i.in_out = NODE_IN;
-    cell_root_i.in_out_idx = static_cast<int32_t>(ref_i);
+    RefCell cell_root_i(root_node->GetName(), root_node, NODE_IN, static_cast<int32_t>(ref_i));
+    RefCell cell_root_o(root_node->GetName(), root_node, NODE_OUT, static_cast<int32_t>(ref_i));
     ref_i_all_refs.emplace_back(cell_root_i);
-    cell_root_o.node_name = root_node->GetName();
-    cell_root_o.node = root_node;
-    cell_root_o.in_out = NODE_OUT;
-    cell_root_o.in_out_idx = static_cast<int32_t>(ref_i);
     ref_i_all_refs.emplace_back(cell_root_o);
     for (const auto &data : ref_i_data_nodes) {
-      RefCell cell_in;
-      RefCell cell_out;
-      cell_in.node_name = data->GetName();
-      cell_in.node = data;
-      cell_in.in_out = NODE_IN;
-      cell_in.in_out_idx = 0;
-      cell_out.node_name = data->GetName();
-      cell_out.node = data;
-      cell_out.in_out = NODE_OUT;
-      cell_out.in_out_idx = 0;
+      RefCell cell_in(data->GetName(), data, NODE_IN, 0);
+      RefCell cell_out(data->GetName(), data, NODE_OUT, 0);
       ref_i_all_refs.emplace_back(cell_in);
       ref_i_all_refs.emplace_back(cell_out);
     }
 
     for (const auto &ele : ref_i_net_nodes) {
-      RefCell cell_netoutput_in;
-      cell_netoutput_in.node_name = (ele.first)->GetName();
-      cell_netoutput_in.node = ele.first;
-      cell_netoutput_in.in_out = NODE_IN;
-      cell_netoutput_in.in_out_idx = static_cast<int32_t>(ele.second);
+      RefCell cell_netoutput_in((ele.first)->GetName(), ele.first, NODE_IN, static_cast<int32_t>(ele.second));
       ref_i_all_refs.emplace_back(cell_netoutput_in);
       netoutput = ele.first;
     }
@@ -436,11 +395,7 @@ void RefRelations::Impl::BuildRelationsForVariables(const ge::ComputeGraph &root
     GELOGD("Variable [%s] has %zu instances", it.first.c_str(), instances.size());
     std::vector<RefCell> variable_all_refs;
     for (const auto &variable : instances) {
-      RefCell variable_ref;
-      variable_ref.node_name = it.first;
-      variable_ref.node = variable;
-      variable_ref.in_out = NODE_OUT;
-      variable_ref.in_out_idx = 0;
+      RefCell variable_ref(it.first, variable, NODE_OUT, 0);
       variable_all_refs.emplace_back(std::move(variable_ref));
     }
 

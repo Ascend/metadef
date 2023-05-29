@@ -33,6 +33,7 @@ enum InOutFlag {
   NODE_OUT  = 1,  // output flag
 };
 
+// RefCell的对象一经创建，便不允许去修改其数据成员，因此不提供修改接口。
 struct RefCell {
   std::string node_name;
   ge::NodePtr node = nullptr;
@@ -41,23 +42,20 @@ struct RefCell {
 #ifndef ONLY_COMPILE_OPEN_SRC
   std::string hash_key;
 #endif
-  bool operator == (const RefCell &c) const {
-    return (node_name == c.node_name) && (node == c.node) && (in_out == c.in_out) && (in_out_idx == c.in_out_idx);
-  }
 
   RefCell() = default;
-  RefCell(const std::string &name, const ge::NodePtr &node_ptr, const InOutFlag in_out_flag, const int32_t idx) {
-    node_name = name;
-    node = node_ptr;
-    in_out = in_out_flag;
-    in_out_idx = idx;
+  RefCell(const std::string &name, const ge::NodePtr &node_ptr, const InOutFlag in_out_flag, const int32_t idx)
+      : node_name(name), node(node_ptr), in_out(in_out_flag), in_out_idx(idx) {
 #ifndef ONLY_COMPILE_OPEN_SRC
     hash_key.append(node_name);
     hash_key.append(std::to_string(in_out));
     hash_key.append(std::to_string(in_out_idx));
     hash_key.append(std::to_string(PtrToValue(node.get())));
 #endif
-  };
+  }
+  bool operator == (const RefCell &c) const {
+    return node_name == c.node_name && node == c.node && in_out == c.in_out && in_out_idx == c.in_out_idx;
+  }
   ~RefCell() = default;
 };
 
