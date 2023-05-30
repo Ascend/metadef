@@ -82,6 +82,13 @@ class OpsKernelInfoStore {
     (void)node_vec;
     return SUCCESS;
   }
+
+  // prepare task for op
+  virtual Status PrepareTaskAsync(GETaskInfo &task) {
+    (void)task;
+    return SUCCESS;
+  }
+
   // load task for op
   virtual Status LoadTask(GETaskInfo &task) {
     (void)task;
