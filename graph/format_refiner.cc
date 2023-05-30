@@ -41,13 +41,11 @@ const char_t *const kIsGraphInferred = "_is_graph_inferred";
 thread_local RefRelations reflection_builder;
 
 static graphStatus ReflectionProcess(const std::unordered_set<RefCell, RefCellHash> &reflection,
-                                     std::deque<ge::NodePtr> &nodes,
-                                     const ge::Format to_be_set_format) {
+                                     std::deque<ge::NodePtr> &nodes, const ge::Format to_be_set_format) {
   for (const auto &reflection_cell : reflection) {
-    const auto reflection_node = reflection_cell.node;
+    const auto &reflection_node = reflection_cell.node;
     const auto in_out_idx = reflection_cell.in_out_idx;
     GE_CHECK_NOTNULL(reflection_node);
-    GE_CHECK_NOTNULL(reflection_node->GetOpDesc());
     if (reflection_cell.in_out == ge::NODE_IN) {
       auto desc = reflection_node->GetOpDesc()->MutableInputDesc(static_cast<uint32_t>(in_out_idx));
       desc->SetOriginFormat(to_be_set_format);

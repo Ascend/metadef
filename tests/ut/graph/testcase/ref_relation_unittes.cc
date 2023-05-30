@@ -545,7 +545,8 @@ void CheckResult(RefRelations &ref_builder, vector<RefCell> &keys, unordered_set
     auto status = ref_builder.LookUpRefRelations(key, result);
     EXPECT_EQ(status, GRAPH_SUCCESS);
     for (const auto &it : result) {
-      string res = it.node_name + std::to_string(it.in_out) + std::to_string(it.in_out_idx) + std::to_string((unsigned long)it.node.get());
+      string res = it.node_name + std::to_string(it.in_out) + std::to_string(it.in_out_idx) +
+          std::to_string((unsigned long) it.node.get());
       auto iter = values.find(res);
       bool is_exist = (iter == values.end()) ? false : true;
       EXPECT_EQ(is_exist, true);
