@@ -279,6 +279,7 @@ void UpdateOpDescOutShape(const ge::OpDescPtr &op_desc, gert::InferShapeContext 
     for (size_t dim = 0UL; dim < shape->GetDimNum(); dim++) {
       dst_out_shape.SetDim(dim, shape->GetDim(dim));
     }
+    op_desc->MutableOutputDesc(index)->SetOriginShape(dst_out_shape);
   }
 }
 
