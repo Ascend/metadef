@@ -15,10 +15,15 @@
  */
 #include <gtest/gtest.h>
 #include <vector>
+#include <sstream>
+#define protected public
+#define private public
 #include "graph/utils/cycle_detector.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/connection_matrix.h"
+#include "graph/utils/connection_matrix_impl.h"
 #include "graph_builder_utils.h"
-
+using namespace std;
 using namespace ge;
 namespace {
 const int kContainCycle = 0;
@@ -154,14 +159,49 @@ static ComputeGraphPtr BuildFusionGraph02(std::vector<ge::NodePtr> &fusion_nodes
   return graph;
 }
 
+/*
+ori connection_matrix(5x5):
+1 0 0 0 0
+1 1 0 0 0
+1 0 1 0 0
+1 0 1 1 0
+1 1 1 1 1
+After update(6x6):
+1 1 1 0 0 1
+1 1 1 0 0 1
+1 1 1 0 0 1
+1 1 1 1 0 1
+1 1 1 1 1 1
+1 1 1 0 0 1
+*/
+
 TEST_F(UtestCycleDetector, cycle_detection_02) {
   std::vector<ge::NodePtr> fusion_nodes;
   auto graph = BuildFusionGraph02(fusion_nodes);
 
-  CycleDetectorPtr detector = GraphUtils::CreateCycleDetector(graph);
+  CycleDetectorSharedPtr detector = GraphUtils::CreateSharedCycleDetector(graph);
   EXPECT_NE(detector, nullptr);
   bool has_cycle = detector->HasDetectedCycle({fusion_nodes});
   EXPECT_FALSE(has_cycle);
+  std::string res_ori = "1000011000101001011011111";
+  std::string res_update = "111001111001111001111101111111111001";
+  std::stringstream val_ori;
+  for (size_t i = 0; i < 5; ++i) {
+    auto bit_map = detector->connectivity_->impl_->bit_maps_[i];
+    for (size_t j = 0; j < 5; ++j) {
+      val_ori << bit_map.GetBit(j);
+    }
+  }
+  EXPECT_EQ(val_ori.str(), res_ori);
+  detector->ExpandAndUpdate(fusion_nodes, "ABC");
+  std::stringstream val_update;
+  for (size_t i = 0; i < 6; ++i) {
+    auto bit_map = detector->connectivity_->impl_->bit_maps_[i];
+    for (size_t j = 0; j < 6; ++j) {
+      val_update << bit_map.GetBit(j);
+    }
+  }
+  EXPECT_EQ(val_update.str(), res_update);
 }
 
 /*   A--->B---->C---->D

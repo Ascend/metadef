@@ -640,6 +640,8 @@ class GraphUtils {
 
   static CycleDetectorPtr CreateCycleDetector(const ComputeGraphPtr &graph);
 
+  static CycleDetectorSharedPtr CreateSharedCycleDetector(const ComputeGraphPtr &graph);
+
   /**
      * 将node所有的输入、输出边断开，并移动到dst_graph
      * @param dst_graph 目的Graph，

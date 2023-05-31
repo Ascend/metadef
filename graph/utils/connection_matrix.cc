@@ -49,21 +49,75 @@ void ConnectionMatrix::Update(const ComputeGraphPtr &graph, const std::vector<No
   impl_->Update(graph, fusion_nodes);
 }
 
+void ConnectionMatrix::ExpandAndUpdate(const vector<ge::NodePtr> &fusion_nodes, const std::string &node_name) {
+  if (impl_ == nullptr) {
+    return;
+  }
+  impl_->ExpandAndUpdate(fusion_nodes, node_name);
+}
+
 ConnectionMatrixImpl::ConnectionMatrixImpl(const ComputeGraphPtr &graph) : graph_(graph) {
   const auto direct_nodes = graph->GetDirectNode();
   size_ = direct_nodes.size();
   bit_maps_.reserve(size_);
-  int64_t index_loop = 0;
+  uint64_t index_loop = 0;
   for (const auto &node : direct_nodes) {
     name_to_index_[node->GetName()] = index_loop;
     bit_maps_.emplace_back(size_);
     index_loop++;
   }
+  used_ = size_;
 };
 
 ConnectionMatrixImpl::~ConnectionMatrixImpl() {
   bit_maps_.clear();
   name_to_index_.clear();
+}
+
+uint64_t ConnectionMatrixImpl::AddNode(const std::string &op_name) {
+  if (used_ + 1 >= size_) {
+    size_t new_size = size_ + expand_step_;
+    for (auto &m: bit_maps_) {
+      m.ResizeBits(new_size);
+    }
+
+    ge::LargeBitmap new_bit_vector(new_size);
+    bit_maps_.resize(new_size, new_bit_vector);
+    for (size_t i = used_; i < new_size; ++i) {
+      bit_maps_[i].SetValues(0);
+    }
+
+    size_ = new_size;
+  }
+
+  uint64_t new_index = used_;
+  ++used_;
+  name_to_index_[op_name] = new_index;
+  return new_index;
+}
+
+void ConnectionMatrixImpl::ExpandAndUpdate(const vector<ge::NodePtr> &fusion_nodes, const std::string &node_name) {
+  uint64_t new_index = AddNode(node_name);
+  ge::LargeBitmap &new_bit_vector = GetBitMap(new_index);
+
+  // update
+  new_bit_vector.SetBit(new_index);
+  std::vector<uint64_t> fusion_indexs(fusion_nodes.size(), 0);
+  for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
+    auto index = GetIndex(fusion_nodes[i]);
+    new_bit_vector.Or(GetBitMap(index));
+    fusion_indexs[i] = index;
+  }
+
+  for (size_t i = 0; i < used_; ++i) {
+    ge::LargeBitmap &node_map = bit_maps_[i];
+    for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
+      if (node_map.GetBit(fusion_indexs[i])) {
+        node_map.Or(new_bit_vector);
+        break;
+      }
+    }
+  }
 }
 
 graphStatus ConnectionMatrixImpl::Generate(const ComputeGraphPtr &graph) {
@@ -119,14 +173,18 @@ void ConnectionMatrixImpl::SetConnectivity(const Node::Vistor<NodePtr> &inputs, 
   }
 }
 
-int64_t ConnectionMatrixImpl::GetIndex(const NodePtr &node) const {
-  const auto iter = name_to_index_.find(node->GetName());
+uint64_t ConnectionMatrixImpl::GetIndex(const std::string &op_name) const {
+  const auto iter = name_to_index_.find(op_name);
   if (iter != name_to_index_.end()) {
     return iter->second;
   } else {
-    GELOGW("node %s is not found in name_to_index_", node->GetName().c_str());
+    GELOGW("node %s is not found in name_to_index_", op_name.c_str());
     return 0;
   }
+}
+
+uint64_t ConnectionMatrixImpl::GetIndex(const NodePtr &node) const {
+  return GetIndex(node->GetName());
 }
 
 bool ConnectionMatrixImpl::IsConnected(const NodePtr &a, const NodePtr &b) const {
@@ -139,5 +197,9 @@ const LargeBitmap &ConnectionMatrixImpl::GetBitMap(const NodePtr &node) const {
 
 LargeBitmap &ConnectionMatrixImpl::GetBitMap(const NodePtr &node) {
   return bit_maps_[static_cast<uint64_t>(GetIndex(node))];
+}
+
+LargeBitmap &ConnectionMatrixImpl::GetBitMap(uint64_t index) {
+  return bit_maps_[index];
 }
 } // namespace ge

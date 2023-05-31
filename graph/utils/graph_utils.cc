@@ -3420,6 +3420,21 @@ CycleDetectorPtr GraphUtils::CreateCycleDetector(const ComputeGraphPtr &graph) {
   return detector;
 }
 
+CycleDetectorSharedPtr GraphUtils::CreateSharedCycleDetector(const ComputeGraphPtr &graph) {
+  CycleDetectorSharedPtr detector = nullptr;
+  GE_MAKE_SHARED(detector = std::make_shared<CycleDetector>(), return nullptr);
+  if (detector == nullptr) {
+    GELOGW("Fail to create cycle detector. Return null.");
+    return nullptr;
+  }
+  const auto ret = detector->Init(graph);
+  if (ret != SUCCESS) {
+    GELOGW("Fail to init cycle detector. Return null.");
+    return nullptr;
+  }
+  return detector;
+}
+
 /// @brief Add node to graph
 /// @param [in] op_desc
 /// @return ComputeGraphBuilder

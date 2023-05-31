@@ -103,4 +103,12 @@ void CycleDetector::Update(const ComputeGraphPtr &graph, const std::vector<NodeP
   }
   connectivity_->Update(graph, fusion_nodes);
 }
+
+void CycleDetector::ExpandAndUpdate(const vector<ge::NodePtr> &fusion_nodes, const std::string &node_name) {
+  if (connectivity_ == nullptr) {
+    GELOGW("Connectivity is empty, please generate first.");
+    return;
+  }
+  connectivity_->ExpandAndUpdate(fusion_nodes, node_name);
+}
 }  // namespace ge

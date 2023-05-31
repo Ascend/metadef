@@ -50,6 +50,12 @@ public:
   // If one bit of either one of the two bitmaps is 0,
   // the result of final bitmap is 0.
   void And(const LargeBitmap &another_bm);
+
+  void ClearBit(size_t bit_idx);
+
+  void ResizeBits(size_t new_size);
+
+  size_t GetBitSize();
 private:
   // Number of element in vector bits
   size_t size_;
