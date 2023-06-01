@@ -111,8 +111,8 @@ void ConnectionMatrixImpl::ExpandAndUpdate(const vector<ge::NodePtr> &fusion_nod
 
   for (size_t i = 0; i < used_; ++i) {
     ge::LargeBitmap &node_map = bit_maps_[i];
-    for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
-      if (node_map.GetBit(fusion_indexs[i])) {
+    for (size_t j = 0; j < fusion_nodes.size(); ++j) {
+      if (node_map.GetBit(fusion_indexs[j])) {
         node_map.Or(new_bit_vector);
         break;
       }

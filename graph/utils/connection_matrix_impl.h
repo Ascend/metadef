@@ -64,8 +64,8 @@ private:
 
   LargeBitmap &GetBitMap(uint64_t index);
 
-   size_t size_;
-   size_t used_;
+   size_t size_ = 0;
+   size_t used_ = 0;
    size_t expand_step_ = 64;
 
   std::vector<LargeBitmap> bit_maps_;
