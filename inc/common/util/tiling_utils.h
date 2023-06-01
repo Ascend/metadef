@@ -44,7 +44,7 @@ inline uint16_t FloatToUint16(const ge::float32_t value) {
     constexpr uint32_t right_shift_13 = 13U;
     constexpr Fp32 f16infty = {static_cast<uint32_t>(31) << static_cast<uint32_t>(23)};
     constexpr Fp32 magic = {static_cast<uint32_t>(15) << static_cast<uint32_t>(23)};
-    constexpr uint32_t round_mask = static_cast<uint32_t>(static_cast<uint16_t>(~0xFFFU));
+    constexpr uint32_t round_mask = static_cast<uint32_t>(~0xFFFU);
 
     temp.u &= round_mask;
     temp.f *= magic.f;
