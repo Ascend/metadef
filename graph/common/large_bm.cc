@@ -19,8 +19,40 @@
 namespace ge {
 constexpr size_t kBitsEachValue = 64UL;
 
+constexpr size_t AlignBitSize(size_t bit_size) {
+  return bit_size + kBitsEachValue - 1;
+}
+
+constexpr size_t AlignArraySize(size_t bit_size) {
+  return AlignBitSize(bit_size) >> 6;
+}
+
+void LargeBitmap::ResizeBits(size_t new_size) {
+  if (new_size < size_) {
+    return;
+  }
+
+  size_t new_byte_size = AlignArraySize(new_size);
+  if (new_byte_size == AlignArraySize(size_)) {
+    size_ = new_size;
+    return;
+  }
+
+  this->bits_.resize(new_byte_size, 0);
+  for (size_t i = size_; i < AlignBitSize(size_); ++i) {
+    ClearBit(i);
+  }
+
+  size_ = new_size;
+}
+
+// Shifting right by 6 bits is equivalent to dividing by 64
+void LargeBitmap::ClearBit(size_t bit_idx) {
+  bits_[bit_idx >> 6] &= ~(1UL << (bit_idx % kBitsEachValue));
+}
+
 LargeBitmap::LargeBitmap(const size_t &size)
-    : size_(size), bits_((size + kBitsEachValue - 1UL) / kBitsEachValue, 0UL) {}
+    : size_(size), bits_(AlignArraySize(size), 0UL) {}
 
 bool LargeBitmap::operator==(const LargeBitmap &another_bm) const {
   return bits_ == another_bm.bits_;
@@ -74,5 +106,9 @@ void LargeBitmap::And(const LargeBitmap &another_bm) {
     bit &= another_bm.bits_[index];
     ++index;
   }
+}
+
+size_t LargeBitmap::GetBitSize() {
+  return size_;
 }
 }

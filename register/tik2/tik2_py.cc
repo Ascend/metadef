@@ -428,7 +428,7 @@ extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *res
     return 0;
   }
   ge::AscendString op_type_str = optype;
-  auto tiling_def = CTilingDataClassFactory::CreateTilingDataInstance(op_type_str);
+  auto tiling_def = CTilingDataClassFactory::GetInstance().CreateTilingDataInstance(op_type_str);
   if (tiling_def == nullptr) {
     GELOGW("Failed to CreateTilingDataInstance. optype = %s", optype);
     return 0;

@@ -371,18 +371,16 @@ void GraphPassUtil::RecordOriginalOpAttrs(const std::vector<ge::NodePtr> &origin
                                           const OriginOpAttrsVec &origin_op_attrs) {
   const ge::char_t *dump_ge_graph = std::getenv(kDumpGeGraph);
   FUSION_TURBO_NOTNULL(dump_ge_graph,);
-
+  if (op_desc == nullptr) {
+    GELOGD("op_desc is nullptr");
+    return;
+  }
   // 1. get the original_names
   GELOGD("Start to record op[%s] origin op attrs after pass[%s]", op_desc->GetName().c_str(), pass_name.c_str());
   std::shared_ptr<UnorderedMapping> origin_op_attrs_map = nullptr;
   REGISTER_MAKE_SHARED(origin_op_attrs_map = std::make_shared<UnorderedMapping>(), return);
   OriginOpAttrsVec origin_op_attrs_vec;
   size_t index = 0;
-
-  if (op_desc == nullptr) {
-    GELOGD("op_desc is nullptr");
-    return;
-  }
   for (const ge::NodePtr &original_node : original_nodes) {
     if (original_node == nullptr) {
       return;

@@ -27,11 +27,7 @@
 namespace optiling {
 class StructSizeInfoBase {
 public:
-  static StructSizeInfoBase &GetInstance()
-  {
-    static StructSizeInfoBase instance;
-    return instance;
-  }
+  static StructSizeInfoBase &GetInstance();
   void SetStructSize(const ge::AscendString structType, const size_t structSize)
   {
     structSizeInfo[structType] = structSize;
@@ -98,11 +94,16 @@ using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
 
 class CTilingDataClassFactory {
 public:
-  static void RegisterTilingData(const ge::AscendString &op_type, const TilingDataConstructor constructor);
-  static std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
+  static CTilingDataClassFactory &GetInstance();
+  void RegisterTilingData(const ge::AscendString &op_type, const TilingDataConstructor constructor);
+  std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
 
 private:
-  static std::map<ge::AscendString, TilingDataConstructor> instance_;
+  CTilingDataClassFactory() { };
+  ~CTilingDataClassFactory() { };
+  CTilingDataClassFactory(const CTilingDataClassFactory &);
+  CTilingDataClassFactory &operator=(const CTilingDataClassFactory &);
+  std::map<ge::AscendString, TilingDataConstructor> instance_;
 };
 }  // end of namespace optiling
 
@@ -199,7 +200,8 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   class op_type##class_name##Helper {                                                                                  \
    public:                                                                                                             \
     op_type##class_name##Helper() {                                                                                    \
-      CTilingDataClassFactory::RegisterTilingData(#op_type, op_type##class_name##Helper::CreateTilingDataInstance);    \
+      CTilingDataClassFactory::GetInstance().RegisterTilingData(#op_type,                                              \
+                   op_type##class_name##Helper::CreateTilingDataInstance);                                             \
     }                                                                                                                  \
     static std::shared_ptr<TilingDef> CreateTilingDataInstance() { return std::make_shared<class_name>(); }            \
   };                                                                                                                   \

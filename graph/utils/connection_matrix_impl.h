@@ -48,19 +48,29 @@ public:
   // update reachablity map for fused nodes.
   void Update(const ComputeGraphPtr &graph, const std::vector<NodePtr> &fusion_nodes);
 
+  uint64_t AddNode(const string &op_name);
+
+  void ExpandAndUpdate(const vector<ge::NodePtr> &fusion_nodes, const std::string &node_name);
+
 private:
   ConnectionMatrixImpl() = delete;
-  int64_t GetIndex(const NodePtr &node) const;
+  uint64_t GetIndex(const NodePtr &node) const;
+
+  uint64_t GetIndex(const std::string &op_name) const;
 
   const LargeBitmap &GetBitMap(const NodePtr &node) const;
 
   LargeBitmap &GetBitMap(const NodePtr &node);
 
-  size_t size_ = 0;
+  LargeBitmap &GetBitMap(uint64_t index);
+
+   size_t size_ = 0;
+   size_t used_ = 0;
+   size_t expand_step_ = 64;
 
   std::vector<LargeBitmap> bit_maps_;
 
-  std::map<std::string, int64_t> name_to_index_;
+  std::unordered_map<std::string, uint64_t> name_to_index_;
 
   ComputeGraphPtr graph_;
 };

@@ -1695,6 +1695,17 @@
       }
     },
     {
+      "errClass": "Auto Tune Errors",
+      "errTitle": "Failure to Import Python Module",
+      "ErrCode": "EC0010",
+      "ErrMessage": "Failed to import Python module [%s].",
+      "Arglist": "result",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Check that all required components are properly installed and the specified Python path matches the Python installation directory. (If the path does not match the directory, run set_env.sh in the installation package.)"
+      }
+    },
+    {
       "errClass": "RLTune Errors",
       "errTitle": "Device Check Failure",
       "ErrCode": "ED0000",
@@ -3709,6 +3720,17 @@
       "suggestion": {
         "Possible Cause": "The IR is invalid.",
         "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "Vector Errors",
+      "errTitle": "Invalid Config Value",
+      "ErrCode": "E80001",
+      "ErrMessage": "The %s information is missing in the %s configuration file of OPP package",
+      "Arglist": "config_name, file_name",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "try to reinstall the OPP package."
       }
     }
   ]
