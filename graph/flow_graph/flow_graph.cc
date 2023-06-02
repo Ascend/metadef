@@ -16,6 +16,7 @@
 
 #include "flow_graph/flow_graph.h"
 #include "common/checker.h"
+#include "common/util/mem_utils.h"
 #include "debug/ge_util.h"
 #include "graph/flow_graph/data_flow_attr_define.h"
 #include "graph/flow_graph/data_flow_utils.h"
@@ -224,7 +225,7 @@ FlowNode::FlowNode(const char *name, uint32_t input_num, uint32_t output_num) : 
   if (op_desc == nullptr) {
     GELOGE(ge::FAILED, "get flow node op desc failed, name=%s.", (name == nullptr) ? "nullptr" : name);
   } else {
-    impl_ = std::make_shared<FlowNodeImpl>(op_desc, input_num, output_num);
+    impl_ = MakeShared<FlowNodeImpl>(op_desc, input_num, output_num);
     if (impl_ == nullptr) {
       GELOGE(ge::FAILED, "FlowNode make shared failed.");
     }
