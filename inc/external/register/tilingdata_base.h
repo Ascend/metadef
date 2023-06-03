@@ -94,16 +94,11 @@ using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
 
 class CTilingDataClassFactory {
 public:
-  static CTilingDataClassFactory &GetInstance();
-  void RegisterTilingData(const ge::AscendString &op_type, const TilingDataConstructor constructor);
-  std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
+  static void RegisterTilingData(const ge::AscendString &op_type, const TilingDataConstructor constructor);
+  static std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
 
 private:
-  CTilingDataClassFactory() { };
-  ~CTilingDataClassFactory() { };
-  CTilingDataClassFactory(const CTilingDataClassFactory &);
-  CTilingDataClassFactory &operator=(const CTilingDataClassFactory &);
-  std::map<ge::AscendString, TilingDataConstructor> instance_;
+  static std::map<ge::AscendString, TilingDataConstructor> instance_;
 };
 }  // end of namespace optiling
 
@@ -200,7 +195,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   class op_type##class_name##Helper {                                                                                  \
    public:                                                                                                             \
     op_type##class_name##Helper() {                                                                                    \
-      CTilingDataClassFactory::GetInstance().RegisterTilingData(#op_type,                                              \
+      CTilingDataClassFactory::RegisterTilingData(#op_type,                                                            \
                    op_type##class_name##Helper::CreateTilingDataInstance);                                             \
     }                                                                                                                  \
     static std::shared_ptr<TilingDef> CreateTilingDataInstance() { return std::make_shared<class_name>(); }            \

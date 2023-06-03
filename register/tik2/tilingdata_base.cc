@@ -21,6 +21,8 @@
 #include "graph/ascend_string.h"
 
 namespace optiling {
+std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
+
 void TilingDef::GeLogError(const std::string& str) const {
   GELOGE(ge::GRAPH_FAILED, "%s", str.c_str());
 }
@@ -71,12 +73,6 @@ void TilingDef::InitData() {
 StructSizeInfoBase &StructSizeInfoBase::GetInstance()
 {
   static StructSizeInfoBase instance;
-  return instance;
-}
-
-CTilingDataClassFactory &CTilingDataClassFactory::GetInstance()
-{
-  static CTilingDataClassFactory instance;
   return instance;
 }
 
