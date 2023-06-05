@@ -28,12 +28,6 @@ namespace ge {
 
 class GeContextUt : public testing::Test {};
 
-void SetIROptionToShowName(std::string &option_name_map, const std::string &ir_option, const std::string &show_name) {
-  std::string json = "\"" + ir_option + "\": \"" + show_name +"\",\n";
-  option_name_map += json;
-  return;
-}
-
 TEST_F(GeContextUt, All) {
   ge::GEContext cont = GetContext();
   cont.Init();
@@ -131,50 +125,6 @@ TEST_F(GeContextUt, set_OutOfRange_SyncTimeout_from_option) {
   EXPECT_EQ(ctx.DeviceId(), 0U);
   EXPECT_EQ(ctx.StreamSyncTimeout(), -1);
   EXPECT_EQ(ctx.EventSyncTimeout(), -1);
-}
-
-TEST_F(GeContextUt, set_option_name_map_success) {
-  std::string option_name_map;
-  SetIROptionToShowName(option_name_map, "ge.enableSmallChannel", "enable_small_channel");
-  SetIROptionToShowName(option_name_map, "ge.exec.enable_exception_dump", "enable_exception_dump");
-  SetIROptionToShowName(option_name_map, "ge.exec.opWaitTimeout", "op_wait_timeout");
-  option_name_map = "{\n" + option_name_map.substr(0, option_name_map.size() - 2) + "\n}";
-  ge::GEContext ctx = GetContext();
-  EXPECT_EQ(ctx.SetOptionNameMap(option_name_map), ge::GRAPH_SUCCESS);
-  std::string show_name;
-  show_name = ctx.GetReadableName("ge.enableSmallChannel");
-  EXPECT_EQ(show_name, "enable_small_channel");
-  show_name = ctx.GetReadableName("ge.exec.enable_exception_dump");
-  EXPECT_EQ(show_name, "enable_exception_dump");
-  show_name = ctx.GetReadableName("ge.exec.opWaitTimeout");
-  EXPECT_EQ(show_name, "op_wait_timeout");
-}
-
-TEST_F(GeContextUt, set_invalid_option_name_map) {
-  std::string option_name_map_1 = "";
-  ge::GEContext ctx = GetContext();
-  EXPECT_EQ(ctx.SetOptionNameMap(option_name_map_1), ge::GRAPH_FAILED);
-  std::string show_name;
-  show_name = ctx.GetReadableName("ge.enableSmallChannel");
-  EXPECT_EQ(show_name, "ge.enableSmallChannel");
-  show_name = ctx.GetReadableName("ge.exec.enable_exception_dump");
-  EXPECT_EQ(show_name, "ge.exec.enable_exception_dump");
-  show_name = ctx.GetReadableName("ge.exec.opWaitTimeout");
-  EXPECT_EQ(show_name, "ge.exec.opWaitTimeout");
-
-  std::string option_name_map_2;
-  SetIROptionToShowName(option_name_map_2, "ge.enableSmallChannel", "");
-  option_name_map_2 = "{\n" + option_name_map_2.substr(0, option_name_map_2.size() - 2) + "\n}";
-  EXPECT_EQ(ctx.SetOptionNameMap(option_name_map_2), ge::GRAPH_FAILED);
-  show_name = ctx.GetReadableName("ge.enableSmallChannel");
-  EXPECT_EQ(show_name, "ge.enableSmallChannel");
-
-  std::string option_name_map_3;
-  SetIROptionToShowName(option_name_map_3, "", "enable_small_channel");
-  option_name_map_2 = "{\n" + option_name_map_3.substr(0, option_name_map_3.size() - 2) + "\n}";
-  EXPECT_EQ(ctx.SetOptionNameMap(option_name_map_3), ge::GRAPH_FAILED);
-  show_name = ctx.GetReadableName("ge.enableSmallChannel");
-  EXPECT_EQ(show_name, "ge.enableSmallChannel");
 }
 
 }  // namespace ge

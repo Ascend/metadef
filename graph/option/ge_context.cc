@@ -20,11 +20,8 @@
 #include "graph/types.h"
 #include "framework/common/debug/ge_log.h"
 #include "utils/extern_math_util.h"
-#include "nlohmann/json.hpp"
 
 namespace ge {
-using Json = nlohmann::json;
-
 namespace {
 const uint64_t kMinTrainingTraceJobId = 65536U;
 const int32_t kDecimal = 10;
@@ -66,16 +63,6 @@ thread_local uint64_t GEContext::context_id_ = 0UL;
 
 graphStatus GEContext::GetOption(const std::string &key, std::string &option) {
   return GetThreadLocalContext().GetOption(key, option);
-}
-
-const std::string &GEContext::GetReadableName(const std::string &key) {
-  auto iter = option_name_map_.find(key);
-  if (iter != option_name_map_.end()) {
-    GELOGD("Option %s 's readable name is show name: %s", key.c_str(), iter->second.c_str());
-    return iter->second;
-  }
-  GELOGD("Option %s 's readable name is GE IR option: %s", key.c_str(), key.c_str());
-  return key;
 }
 
 bool GEContext::IsOverflowDetectionOpen() const {
@@ -176,27 +163,5 @@ void GEContext::SetCtxDeviceId(const uint32_t device_id) { device_id_ = device_i
 void GEContext::SetStreamSyncTimeout(const int32_t timeout) { stream_sync_timeout_ = timeout; }
 
 void GEContext::SetEventSyncTimeout(const int32_t timeout) { event_sync_timeout_ = timeout; }
-
-graphStatus GEContext::SetOptionNameMap(const std::string &option_name_map_json) {
-  Json option_json;
-  try {
-    option_json = Json::parse(option_name_map_json);
-  } catch (nlohmann::json::parse_error&) {
-    GELOGE(ge::GRAPH_FAILED, "Parse JsonStr to Json failed, JsonStr: %s", option_name_map_json.c_str());
-    return ge::GRAPH_FAILED;
-  }
-  for (auto iter : option_json.items()) {
-    if (iter.key().empty()) {
-      GELOGE(ge::GRAPH_FAILED, "Check option_name_map failed, key is null");
-      return ge::GRAPH_FAILED;
-    }
-    if (static_cast<std::string>(iter.value()).empty()) {
-      GELOGE(ge::GRAPH_FAILED, "Check option_name_map failed, value is null");
-      return ge::GRAPH_FAILED;
-    }
-    option_name_map_.insert({iter.key(), static_cast<std::string>(iter.value())});
-  }
-  return ge::GRAPH_SUCCESS;
-}
 
 }  // namespace ge
