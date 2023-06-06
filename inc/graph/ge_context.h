@@ -17,12 +17,14 @@
 #define INC_GRAPH_GE_CONTEXT_H_
 
 #include <string>
+#include <map>
 #include "graph/ge_error_codes.h"
 
 namespace ge {
 class GEContext {
  public:
   graphStatus GetOption(const std::string &key, std::string &option);
+  const std::string &GetReadableName(const std::string &key);
   bool GetHostExecFlag() const;
   bool GetTrainGraphFlag() const;
   bool IsOverflowDetectionOpen() const;
@@ -37,6 +39,7 @@ class GEContext {
   void SetCtxDeviceId(const uint32_t device_id);
   void SetStreamSyncTimeout(const int32_t timeout);
   void SetEventSyncTimeout(const int32_t timeout);
+  graphStatus SetOptionNameMap(const std::string &option_name_map_json);
  private:
   thread_local static uint64_t session_id_;
   thread_local static uint64_t context_id_;
@@ -44,6 +47,7 @@ class GEContext {
   uint64_t trace_id_ = 0U;
   int32_t stream_sync_timeout_ = -1;
   int32_t event_sync_timeout_ = -1;
+  std::map<std::string, std::string> option_name_map_;
 };  // class GEContext
 
 /// Get context
