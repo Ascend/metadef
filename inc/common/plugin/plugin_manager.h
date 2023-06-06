@@ -71,6 +71,8 @@ class PluginManager {
 
   static Status GetOpTilingPath(std::string &op_tiling_path);
 
+  static Status GetOpTilingForwardOrderPath(std::string &op_tiling_path);
+
   static Status GetConstantFoldingOpsPath(const std::string &path_base, std::string &constant_folding_ops_path);
 
   Status LoadSo(const std::string &path, const std::vector<std::string> &func_check_list = std::vector<std::string>());
@@ -87,6 +89,15 @@ class PluginManager {
 
   static void GetFileListWithSuffix(const std::string &path, const std::string &so_suff,
                                     std::vector<std::string> &file_list);
+
+  static bool IsVendorVersionValid(const std::string &opp_version, const std::string &compiler_version);
+
+  static bool IsVendorVersionValid(const std::string &vendor_path);
+
+  static void GetPackageSoPath(std::vector<std::string> &vendors);
+
+  static bool GetVersionFromPathWithName(const std::string &file_path, std::string &version,
+                                         const std::string version_name);
 
   template <typename R, typename... Types>
   Status GetAllFunctions(const std::string &func_name, std::map<std::string, std::function<R(Types... args)>> &funcs) {
@@ -218,7 +229,13 @@ class PluginManager {
  private:
   void ClearHandles_() noexcept;
   Status ValidateSo(const std::string &file_path, const int64_t size_of_loaded_so, int64_t &file_size) const;
-  static bool ParseVersion(std::string &line, std::string &version);
+  static bool ParseVersion(std::string &line, std::string &version, const std::string version_name);
+  static bool GetRequiredOppAbiVersion(std::vector<std::pair<uint32_t, uint32_t>> &required_opp_abi_version);
+  static bool GetEffectiveVersion(const std::string &opp_version, uint32_t &effective_version);
+  static bool CheckOppAndCompilerVersions(const std::string &opp_version, const std::string &compiler_version,
+                                          const std::vector<std::pair<uint32_t, uint32_t>> &required_opp_abi_version);
+  static void GetOppAndCompilerVersion(const std::string &vendor_path, std::string &opp_version,
+                                       std::string &compiler_version);
   std::vector<std::string> so_list_;
   std::map<std::string, void *> handles_;
 };

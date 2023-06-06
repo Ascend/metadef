@@ -780,6 +780,8 @@ const std::string ATTR_MODEL_ATC_CMDLINE = "atc_cmdline";
 
 const std::string ATTR_MODEL_OPP_VERSION = "opp_version";
 
+const std::string ATTR_MODEL_COMPILER_VERSION = "compiler_version";
+
 const std::string ATTR_MODEL_SESSION_SCOPE_MEMORY_SIZE = "session_scope_memory_size";
 
 // Public attribute

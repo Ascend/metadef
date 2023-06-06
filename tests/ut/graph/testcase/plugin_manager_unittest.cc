@@ -28,6 +28,20 @@ namespace ge {
 namespace {
 const char *const kEnvName = "ASCEND_OPP_PATH";
 const char *const kEnvNameCustom = "ASCEND_CUSTOM_OPP_PATH";
+
+void WriteRequiredVersion(const std::string &version, std::string &path, std::string &path1) {
+  path ="./runtime";
+  system(("mkdir -p " + path).c_str());
+  auto version_path = path + "/version.info";
+  system(("touch " + version_path).c_str());
+  system(("echo 'required_opp_abi_version=" + version +"' > " + version_path).c_str());
+
+  path1 ="./../runtime";
+  system(("mkdir -p " + path1).c_str());
+  auto version_path1 = path1 + "/version.info";
+  system(("touch " + version_path1).c_str());
+  system(("echo 'required_opp_abi_version=" + version +"' > " + version_path1).c_str());
+}
 }
 class UtestPluginManager : public testing::Test {
  protected:
@@ -1204,7 +1218,6 @@ TEST_F(UtestPluginManager, GetOppSupportedOsAndCpuType_SUCCESS) {
 }
 
 TEST_F(UtestPluginManager, GetOppSupportedOsAndCpuType_FAIL) {
-  dlog_setlevel(0, 0, 0);
   std::unordered_map<std::string, std::unordered_set<std::string>> opp_supported_os_cpu_tmp;
   PluginManager::GetOppSupportedOsAndCpuType(opp_supported_os_cpu_tmp, "./", "linux", 2);
   ASSERT_EQ(opp_supported_os_cpu_tmp.empty(), true);
@@ -1217,7 +1230,6 @@ TEST_F(UtestPluginManager, GetOppSupportedOsAndCpuType_FAIL) {
   PluginManager::GetOppSupportedOsAndCpuType(opp_supported_os_cpu_tmp, path, "linux", 1);
   ASSERT_EQ(opp_supported_os_cpu_tmp.empty(), true);
   system(("rm -f " + path).c_str());
-  dlog_setlevel(0, 3, 0);
 }
 
 TEST_F(UtestPluginManager, GetVersionFromPath_fail) {
@@ -1335,4 +1347,120 @@ TEST_F(UtestPluginManager, GetFileListWithSuffix_Success) {
   system(("rm -f " + path).c_str());
 }
 
+TEST_F(UtestPluginManager, test_plugin_manager_GetVersion_Valid) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  mmSetEnv(kEnvName, opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc' > " + path_config).c_str());
+
+  system(("mkdir -p " + opp_path).c_str());
+  system(("echo 'Version=6.4.T5.0.B121' > " + opp_path + "/version.info").c_str());
+
+  std::string customize1_opp_path = path_vendors + "/customize/";
+  system(("mkdir -p " + customize1_opp_path).c_str());
+  system(("echo 'compiler_version=6.4.T5.0.B121' > " + customize1_opp_path + "/version.info").c_str());
+
+  std::string customize2_opp_path = path_vendors + "/mdc/";
+  system(("mkdir -p " + customize2_opp_path).c_str());
+  system(("echo 'compiler_version=6.4.T5.0.B121' > " + customize2_opp_path + "/version.info").c_str());
+
+  std::string customize_opp_path = opp_path + "lhisi";
+  std::string customize_opp_path_version_info = customize_opp_path + "/version.info";
+  system(("mkdir -p " + customize_opp_path + "/op_impl/ai_core/tbe/").c_str());
+  system(("echo 'compiler_version=6.4.T5.0.B121' > " + customize_opp_path_version_info).c_str());
+  mmSetEnv(kEnvNameCustom, customize_opp_path.c_str(), 1);
+
+  std::string path;
+  std::string path1;
+  WriteRequiredVersion(">=6.4,<=6.4", path, path1);
+
+  std::string op_tiling_path;
+  Status ret = PluginManager::GetOpTilingPath(op_tiling_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(op_tiling_path,
+            opp_path + "built-in/op_impl/ai_core/tbe/:" +
+                path_vendors + "/mdc/op_impl/ai_core/tbe/:" +
+                path_vendors + "/customize/op_impl/ai_core/tbe/:" +
+                customize_opp_path + "/op_impl/ai_core/tbe/"
+  );
+
+  std::vector<std::string> vendors;
+  PluginManager::GetPackageSoPath(vendors);
+  std::vector<std::string> expect_vendors{customize_opp_path + "/",
+                                          "",
+                                          path_vendors + "/customize",
+                                          path_vendors + "/mdc",
+                                          opp_path + "built-in"};
+
+  EXPECT_EQ(vendors.size(), expect_vendors.size());
+  for(size_t i = 0U; i < vendors.size(); ++i) {
+    EXPECT_EQ(vendors[i], expect_vendors[i]);
+  }
+
+  system(("rm -rf " + opp_path).c_str());
+  system(("rm -rf " + path).c_str());
+  system(("rm -rf " + path1).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_IsVendorVersionValid) {
+  std::string path, path1;
+  WriteRequiredVersion(">=6.4,<=6.4", path, path1);
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("6.4.T5.0.B121", "6.4.T5.0.B121"), true);
+  system(("rm -rf " + path + " " + path1).c_str());
+
+  WriteRequiredVersion("6.5", path, path1);
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("6.4.T5.0.B121", "6.4.T5.0.B121"), false);
+  system(("rm -rf " + path + " " + path1).c_str());
+
+  WriteRequiredVersion("6.#", path, path1);
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("6.4.T5.0.B121", "6.4.T5.0.B121"), false);
+  system(("rm -rf " + path + " " + path1).c_str());
+
+  WriteRequiredVersion("", path, path1);
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("6.4.T5.0.B121", "6.4.T5.0.B121"), true);
+  system(("rm -rf " + path + " " + path1).c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_GetRequiredOppAbiVersion_InValid) {
+  std::string compiler_path ="./compiler";
+  system(("mkdir -p " + compiler_path).c_str());
+  auto path = compiler_path + "/version.info";
+  system(("touch " + path).c_str());
+  system(("echo 'required_opp_abi_version=>=6.4' > " + path).c_str());
+
+  std::string compiler_path1 ="./../compiler";
+  system(("mkdir -p " + compiler_path1).c_str());
+  auto path1 = compiler_path1 + "/version.info";
+  system(("touch " + path1).c_str());
+  system(("echo 'required_opp_abi_version=>=6.4' > " + path1).c_str());
+
+  std::vector<std::pair<uint32_t, uint32_t>> required_opp_abi_version;
+  EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
+
+  system(("echo 'required_opp_abi_version=>=6.#' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=>=6.#' > " + path1).c_str());
+  EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
+
+  system(("echo 'required_opp_abi_version=>=6.#,<=6.4' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=>=6.#,<=6.4' > " + path).c_str());
+  EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
+
+  system(("echo 'required_opp_abi_version=>=6.4,<=6.#' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=>=6.4,<=6.#' > " + path).c_str());
+  EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
+
+  system(("echo 'required_opp_abi_version=>=6.4,<=6.4' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=>=6.4,<=6.4' > " + path).c_str());
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("6.#.T5.0.B121", ""), false);
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("", "6.4.T5.0.B121,6.#.T5.0.B121"), false);
+
+  system(("rm -rf " + compiler_path).c_str());
+  system(("rm -rf " + compiler_path1).c_str());
+}
 }  // namespace ge
