@@ -230,13 +230,16 @@ inline bool HasSubFormat(int32_t format) {
   return GetSubFormat(format) > 0;
 }
 
-inline int64_t GetC0Value(int32_t format) {
-  return static_cast<int64_t>(1 <<
-      (static_cast<int32_t>((static_cast<uint32_t>(format) & 0xf000000U) >> kBitThreeBytes) - 1));
-}
-
 inline bool HasC0Format(int32_t format) {
   return ((static_cast<uint32_t>(format) & 0xf000000U) >> kBitThreeBytes) > 0;
+}
+
+inline int64_t GetC0Value(int32_t format) {
+  if (!HasC0Format(format)) {
+    return -1;
+  }
+  return static_cast<int64_t>(1 <<
+      (static_cast<int32_t>((static_cast<uint32_t>(format) & 0xf000000U) >> kBitThreeBytes) - 1));
 }
 
 // for unknown shape op type
