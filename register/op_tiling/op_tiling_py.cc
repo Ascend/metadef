@@ -26,7 +26,7 @@
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_tiling_constants.h"
 #include "common/util/tiling_utils.h"
-#include "common/util/platform_info.h"
+#include "platform/platform_info.h"
 #include "register/op_impl_registry.h"
 #include "exe_graph/runtime/storage_shape.h"
 #include "exe_graph/runtime/kernel_run_context_builder.h"

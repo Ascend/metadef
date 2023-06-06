@@ -116,6 +116,16 @@ class GraphOptimizer {
     static_cast<void>(lookup);
     return SUCCESS;
   }
+
+  virtual Status OptimizeSubgraphPreProc(ComputeGraphPtr &compute_graph) {
+    (void)compute_graph;
+    return SUCCESS;
+  }
+
+  virtual Status OptimizeSubgraphPostProc(ComputeGraphPtr &compute_graph) {
+    (void)compute_graph;
+    return SUCCESS;
+  }
 };
 }  // namespace ge
 /*lint +e148*/

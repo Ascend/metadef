@@ -16,6 +16,7 @@
 
 #include "flow_graph/process_point.h"
 #include "common/checker.h"
+#include "common/util/mem_utils.h"
 #include "debug/ge_util.h"
 #include "graph/utils/graph_utils_ex.h"
 #include "graph/serialization/attr_serializer_registry.h"
@@ -56,7 +57,7 @@ ProcessPoint::ProcessPoint(const char_t *pp_name, ProcessPointType pp_type) {
     impl_ = nullptr;
     GELOGE(ge::FAILED, "ProcessPoint name is nullptr.");
   } else {
-    impl_ = std::make_shared<ProcessPointImpl>(pp_name, pp_type);
+    impl_ = MakeShared<ProcessPointImpl>(pp_name, pp_type);
     if (impl_ == nullptr) {
       GELOGE(ge::FAILED, "ProcessPointImpl make shared failed.");
     }
@@ -125,7 +126,7 @@ GraphPp::GraphPp(const char_t *pp_name, const GraphBuilder &builder) : ProcessPo
     GELOGE(ge::FAILED, "GraphPp(%s) graph builder is null.", this->GetProcessPointName());
     impl_ = nullptr;
   } else {
-    impl_ = std::make_shared<GraphPpImpl>(pp_name, builder);
+    impl_ = MakeShared<GraphPpImpl>(pp_name, builder);
     if (impl_ == nullptr) {
       GELOGE(ge::FAILED, "GraphPpImpl make shared failed.");
     }
@@ -246,7 +247,7 @@ void FunctionPpImpl::AddFunctionPpInitPara(dataflow::ProcessPoint &process_point
 }
 
 FunctionPp::FunctionPp(const char_t *pp_name) : ProcessPoint(pp_name, ProcessPointType::FUNCTION) {
-  impl_ = std::make_shared<FunctionPpImpl>();
+  impl_ = MakeShared<FunctionPpImpl>();
   if (impl_ == nullptr) {
     GELOGW("FunctionPpImpl make shared failed.");
   }

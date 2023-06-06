@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include "faker/kernel_run_context_faker.h"
-#include "inc/common/util/platform_info.h"
+#include "platform/platform_info.h"
 namespace gert {
 class TilingParseContextUT : public testing::Test {};
 struct CompiledInfo1 {
