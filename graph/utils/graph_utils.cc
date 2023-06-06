@@ -2786,10 +2786,10 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   }
 
   // Merge op 0th output
-  const bool is_merge_op = (type == MERGE) && (output_index == 0);
-  if (is_merge_op) {
+  const bool is_ge_local_op = ((type == MERGE) || (type == RESHAPE)) && (output_index == 0);
+  if (is_ge_local_op) {
     reuse_in_index = 0;
-    GELOGI("Merge name[%s] output_index[0].", node->GetName().c_str());
+    GELOGI("%s name[%s] output_index[0] reuse input 0.", type.c_str(), node->GetName().c_str());
     return true;
   }
 
