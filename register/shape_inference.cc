@@ -25,6 +25,10 @@
 
 namespace gert {
 namespace {
+using Index = struct InputIndex {
+  size_t input_index;
+  size_t invalid_index_num;
+};
 bool IsInputDescValid(const ge::GeTensorDesc &input_desc, size_t &invalid_index_num) {
   if (input_desc.IsValid() != ge::GRAPH_SUCCESS) {
     invalid_index_num++;
@@ -64,14 +68,14 @@ void GetMinMaxStorageShape(const ge::GeTensorDesc &input_desc, gert::StorageShap
   }
 }
 
-ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op_desc, const size_t input_index,
-                                 const size_t invalid_index_num, TensorAddress &address,
+ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op_desc,
+                                 const Index index, TensorAddress &address,
                                  std::vector<std::unique_ptr<ge::Tensor>> &ge_tensors_holder) {
   const auto *const space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry().get();
   GE_ASSERT_NOTNULL(space_registry);
 
   const auto &functions = space_registry->GetOpImpl(op_desc->GetType());
-  const size_t instance_index = input_index - invalid_index_num;
+  const size_t instance_index = index.input_index - index.invalid_index_num;
   // check valid map
   const auto valid_op_ir_map = ge::OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(op_desc);
   if (valid_op_ir_map.empty()) {
@@ -80,13 +84,13 @@ ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op
   size_t ir_index;
   GE_ASSERT_GRAPH_SUCCESS(ge::OpDescUtils::GetInputIrIndexByInstanceIndex(op_desc, instance_index, ir_index),
                           "[Get][InputIrIndexByInstanceIndex] failed, op[%s], instance index[%zu], input_index[%zu]",
-                          op_desc->GetName().c_str(), instance_index, input_index);
+                          op_desc->GetName().c_str(), instance_index, index.input_index);
   if (functions->IsInputDataDependency(ir_index)) {
-    ge_tensors_holder[input_index] = ge::ComGraphMakeUnique<ge::Tensor>();
-    GE_ASSERT_NOTNULL(ge_tensors_holder[input_index], "Create ge tensor holder inputs failed.");
-    const auto index_name = op_desc->GetInputNameByIndex(input_index);
-    if (op.GetInputConstData(index_name.c_str(), *(ge_tensors_holder[input_index].get())) == ge::GRAPH_SUCCESS) {
-      address = ge_tensors_holder[input_index]->GetData();
+    ge_tensors_holder[index.input_index] = ge::ComGraphMakeUnique<ge::Tensor>();
+    GE_ASSERT_NOTNULL(ge_tensors_holder[index.input_index], "Create ge tensor holder inputs failed.");
+    const auto index_name = op_desc->GetInputNameByIndex(index.input_index);
+    if (op.GetInputConstData(index_name.c_str(), *(ge_tensors_holder[index.input_index].get())) == ge::GRAPH_SUCCESS) {
+      address = ge_tensors_holder[index.input_index]->GetData();
     }
   }
   return ge::GRAPH_SUCCESS;
@@ -167,7 +171,10 @@ ge::graphStatus ConstructInferShapeContextInputs(const ge::Operator &op, const g
     GetStorageShape(op_desc->GetInputDesc(i), storage_shape);
     // init tensor address, if can not get const tensor input, set it to nullptr
     TensorAddress address = nullptr;
-    auto status = GetTensorAddress(op, op_desc, i, invalid_index_num, address, ge_tensors_holder);
+    Index index;
+    index.input_index = i;
+    index.invalid_index_num = invalid_index_num;
+    auto status = GetTensorAddress(op, op_desc, index, address, ge_tensors_holder);
     if (status != ge::GRAPH_SUCCESS) {
       return status;
     }
@@ -196,7 +203,10 @@ ge::graphStatus ConstructInferShapeRangeContextInputs(const ge::Operator &op, co
     GetStorageShape(op_desc->GetInputDesc(i), storage_shape);
     // init tensor address, if can not get const tensor input, set it to nullptr
     TensorAddress address = nullptr;
-    auto status = GetTensorAddress(op, op_desc, i, invalid_index_num, address, ge_tensors_holder);
+    Index index;
+    index.input_index = i;
+    index.invalid_index_num = invalid_index_num;
+    auto status = GetTensorAddress(op, op_desc, index, address, ge_tensors_holder);
     if (status != ge::GRAPH_SUCCESS) {
       return status;
     }
@@ -228,7 +238,10 @@ ge::graphStatus ConstructInferShapeContextInputs(const ge::Operator &op, const g
 
     // init tensor address, if can not get const tensor input, set it to nullptr
     TensorAddress address = nullptr;
-    auto status = GetTensorAddress(op, op_desc, i, invalid_index_num, address, ge_tensors_holder);
+    Index index;
+    index.input_index = i;
+    index.invalid_index_num = invalid_index_num;
+    auto status = GetTensorAddress(op, op_desc, index, address, ge_tensors_holder);
     if (status != ge::GRAPH_SUCCESS) {
       return status;
     }
@@ -277,9 +290,9 @@ void UpdateOpDescOutShape(const ge::OpDescPtr &op_desc, gert::InferShapeContext 
     const auto *shape = infer_shape_ctx->GetOutputShape(index);
     dst_out_shape.SetDimNum(shape->GetDimNum());
     for (size_t dim = 0UL; dim < shape->GetDimNum(); dim++) {
-      dst_out_shape.SetDim(dim, shape->GetDim(dim));
+      (void)dst_out_shape.SetDim(dim, shape->GetDim(dim));
     }
-    op_desc->MutableOutputDesc(index)->SetOriginShape(dst_out_shape);
+    op_desc->MutableOutputDesc(static_cast<uint32_t>(index))->SetOriginShape(dst_out_shape);
   }
 }
 

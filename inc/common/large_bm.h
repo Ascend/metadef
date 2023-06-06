@@ -54,8 +54,6 @@ public:
   void ClearBit(size_t bit_idx);
 
   void ResizeBits(size_t new_size);
-
-  size_t GetBitSize();
 private:
   // Number of element in vector bits
   size_t size_;
