@@ -49,6 +49,8 @@ set(SRC_LIST
     "opdef/op_def_param.cc"
     "opdef/op_def_aicore.cc"
     "opdef/op_def_factory.cc"
+    "tuning_tiling_registry.cc"
+    "tuning_bank_key_registry.cc"
     "${METADEF_DIR}/exe_graph/runtime/kernel_run_context_builder.cc"
     "${METADEF_DIR}/exe_graph/lowering/bg_kernel_context_extend.cc"
     "${METADEF_DIR}/exe_graph/lowering/buffer_pool.cc"

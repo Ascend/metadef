@@ -1,0 +1,178 @@
+/**
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023. All rights reserved.
+
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ * http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+#ifndef __INC_REGISTER_TUNING_TILING_REFLECTION_UTILS_HEADER__
+#define __INC_REGISTER_TUNING_TILING_REFLECTION_UTILS_HEADER__
+#include <type_traits>
+#include <tuple>
+#include <nlohmann/json.hpp>
+#include "graph/ascend_string.h"
+namespace tuningtiling {
+namespace detail {
+// implement for std c++11
+template<class T>
+using decay_t = typename std::decay<T>::type;
+
+template<bool B, class T = void>
+using enable_if_t = typename std::enable_if<B, T>::type;
+
+template<typename T, T... Ints>
+struct integer_sequence {
+  typedef T value_type;
+  static constexpr std::size_t size() {
+    return sizeof...(Ints);
+  }
+};
+
+template<std::size_t... Ints>
+using index_sequence = integer_sequence<std::size_t, Ints...>;
+
+template<typename T, std::size_t N, T... Is>
+struct make_integer_sequence : make_integer_sequence<T, N - 1, N - 1, Is...> {};
+
+template<typename T, T... Is>
+struct make_integer_sequence<T, 0, Is...> : integer_sequence<T, Is...> {};
+
+template<std::size_t N>
+using make_index_sequence = make_integer_sequence<std::size_t, N>;
+}  // namespace detail
+
+template<typename T>
+struct StructInfo {
+  static std::tuple<> Info() {
+    return std::make_tuple();
+  }
+};
+
+#define DECLARE_SCHEMA(Struct, ...)                                                                                    \
+  template<>                                                                                                           \
+  struct StructInfo<Struct> {                                                                                          \
+    static decltype(std::make_tuple(__VA_ARGS__)) Info() {                                                             \
+      return std::make_tuple(__VA_ARGS__);                                                                             \
+    }                                                                                                                  \
+  };
+
+#define FIELD(class, FieldName) std::make_tuple(#FieldName, &class ::FieldName)
+
+namespace detail {
+template<typename Fn, typename Tuple, typename Field, std::size_t... Is>
+void ForEachTuple(Tuple &&tuple, Field &&fields, Fn &&fn, detail::index_sequence<Is...>) {
+  (void) std::initializer_list<size_t> {
+      (fn(std::get<0>(std::get<Is>(fields)), tuple.*std::get<1>(std::get<Is>(fields))), Is)...};
+}
+
+template<typename Fn, typename Tuple>
+void ForEachTuple(Tuple &&tuple, Fn &&fn) {
+  auto fields = StructInfo<detail::decay_t<Tuple>>::Info();
+  ForEachTuple(std::forward<Tuple>(tuple), fields, std::forward<Fn>(fn),
+               detail::make_index_sequence<std::tuple_size<decltype(fields)>::value> {});
+}
+}  // namespace detail
+
+template<typename T>
+struct is_optional : std::false_type {};
+
+template<typename T>
+struct is_optional<std::unique_ptr<T>> : std::true_type {};
+
+template<typename T>
+bool is_optional_v() {
+  return is_optional<detail::decay_t<T>>::value;
+}
+
+template<typename T>
+decltype(std::begin(T()), std::true_type {}) containable(int);
+
+template<typename T>
+std::false_type containable(...);
+
+template<typename T>
+using is_containable = decltype(containable<T>(0));
+
+template<typename T>
+constexpr bool IsSerializeType() {
+  return (!std::is_class<detail::decay_t<T>>::value || is_containable<detail::decay_t<T>>());
+}
+
+template<typename T, typename Fn>
+void ForEachField(T &&value, Fn &&fn) {
+  detail::ForEachTuple(value, fn);
+}
+
+template<typename Fn>
+struct DumpFunctor;
+
+template<typename T, typename Js, detail::enable_if_t<!IsSerializeType<T>()>* = nullptr>
+void DumpObj(T &&obj, const char *field_name, Js &j) {
+  if (strcmp(field_name, "") == 0) {
+    ForEachField(obj, DumpFunctor<Js>(j));
+    return;
+  }
+  ForEachField(obj, DumpFunctor<Js>(j[field_name]));
+}
+
+template<typename T, typename Js, detail::enable_if_t<IsSerializeType<T>()>* = nullptr>
+void DumpObj(T &&obj, const char *field_name, Js &j) {
+  if (strcmp(field_name, "") == 0) {
+    return;
+  }
+  j[field_name] = obj;
+}
+
+template<typename T>
+struct DumpFunctor {
+  DumpFunctor(T &j) : js(j) {}
+  template<typename Name, typename Field>
+  void operator()(Name &&name, Field &&field) {
+    DumpObj(field, name, js);
+  }
+  T &js;
+};
+
+template<typename Fn>
+struct FromJsonFunctor;
+
+template<typename T, typename Js, detail::enable_if_t<!IsSerializeType<T>()>* = nullptr>
+void FromJsonImpl(T &&obj, const char *field_name, const Js &j) {
+  if (strcmp(field_name, "") == 0) {
+    ForEachField(obj, FromJsonFunctor<Js>(j));
+    return;
+  }
+  if (j.find(field_name) == j.cend()) {
+    return;
+  }
+  ForEachField(obj, FromJsonFunctor<Js>(j[field_name]));
+}
+
+template<typename T, typename Js, detail::enable_if_t<IsSerializeType<T>()>* = nullptr>
+void FromJsonImpl(T &&obj, const char *field_name, const Js &j) {
+  // ignore missing field of optional
+  if ((tuningtiling::is_optional_v<decltype(obj)>()) || (j.find(field_name) == j.cend())) {
+    return;
+  }
+  j.at(field_name).get_to(obj);
+}
+
+template<typename Js>
+struct FromJsonFunctor {
+  FromJsonFunctor(const Js &j) : js(j) {}
+  template<typename Name, typename Field>
+  void operator()(Name &&name, Field &&field) {
+    FromJsonImpl(field, name, js);
+  }
+  const Js &js;
+};
+}  // namespace tuningtiling
+#endif
