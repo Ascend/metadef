@@ -898,8 +898,7 @@ bool PluginManager::GetVersionFromPathWithName(const std::string &file_path, std
 }
 
 bool PluginManager::GetVersionFromPath(const std::string &file_path, std::string &version) {
-  GE_ASSERT_TRUE(GetVersionFromPathWithName(file_path, version, kOppVersion));
-  return true;
+  return GetVersionFromPathWithName(file_path, version, kOppVersion);
 }
 
 // Parsing the command line
