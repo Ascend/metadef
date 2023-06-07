@@ -107,8 +107,4 @@ void LargeBitmap::And(const LargeBitmap &another_bm) {
     ++index;
   }
 }
-
-size_t LargeBitmap::GetBitSize() {
-  return size_;
-}
 }

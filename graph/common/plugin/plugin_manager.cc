@@ -21,6 +21,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <queue>
 #include <regex>
 #include <string>
 #include <sys/stat.h>
@@ -49,12 +50,26 @@ const uint32_t kLibFirstLayer = 0U;
 const uint32_t kLibSecondLayer = 1U;
 const char_t *const kOppPath = "opp/";
 const char_t *const kRuntimePath = "runtime/";
+const char_t *const kCompilerPath = "compiler/";
 const char_t *const kScene = "scene.info";
 const size_t kSceneValueCount = 2U;
 const size_t kSceneKeyIndex = 0U;
 const size_t kSceneValueIndex = 1U;
 const char_t *const kSceneOs = "os";
 const char_t *const kSceneArch = "arch";
+const char_t *const kRequiredOppAbiVersion = "required_opp_abi_version=";
+const char_t *const kCompilerVersion = "compiler_version=";
+const char_t *const kVersionInfo = "/version.info";
+const char_t *const kOppVersion = "Version=";
+const size_t kEffectiveVersionNum = 2U;
+
+std::string TransRequiredOppAbiVersionToString(const std::vector<std::pair<uint32_t, uint32_t>> &required_version) {
+  std::stringstream ss;
+  for (const auto &it : required_version) {
+    ss << "[" << it.first << ", " << it.second << "], ";
+  }
+  return ss.str();
+}
 }  // namespace
 
 void PluginManager::ClearHandles_() noexcept {
@@ -154,8 +169,10 @@ void PluginManager::GetPluginPathFromCustomOppPath(const std::string &sub_path, 
   std::vector<std::string> custom_paths = StringUtils::Split(custom_opp_path, ':');
   for (const auto &custom_path : custom_paths) {
     if ((!custom_path.empty()) && (mmIsDir((custom_path + "/" + sub_path).c_str()) == EN_OK)) {
-      plugin_path += custom_path + "/" + sub_path + ":";
-      GELOGI("custom_path '%s' is valid.", custom_path.c_str());
+      if (IsVendorVersionValid(custom_path)) {
+        plugin_path += custom_path + "/" + sub_path + ":";
+        GELOGI("custom_path '%s' is valid.", custom_path.c_str());
+      }
     } else {
       GELOGI("custom_path '%s' is invalid, which is skipped.", custom_path.c_str());
     }
@@ -175,6 +192,204 @@ Status PluginManager::GetOppPluginPathOld(const std::string &opp_path,
   return SUCCESS;
 }
 
+bool PluginManager::GetRequiredOppAbiVersion(std::vector<std::pair<uint32_t, uint32_t>> &required_opp_abi_version) {
+  std::string model_path = GetModelPath();
+  GELOGD("Current lib path is:%s", model_path.c_str());
+  model_path = model_path.substr(0, model_path.rfind('/'));
+  model_path = model_path.substr(0, model_path.rfind('/'));
+  model_path = model_path.substr(0, model_path.rfind('/') + 1);
+  GELOGD("Run package path is:%s", model_path.c_str());
+
+  std::string version_path;
+  if (mmIsDir((model_path + kCompilerPath).c_str()) == EN_OK) {
+    version_path = model_path + kCompilerPath + kVersionInfo;
+  } else if (mmIsDir((model_path + kRuntimePath).c_str()) == EN_OK) {
+    version_path = model_path + kRuntimePath + kVersionInfo;
+  } else {
+    GELOGW("compiler and runtime not exited");
+    return true;
+  }
+  GELOGI("extract required opp abi version info from %s", version_path.c_str());
+
+  std::string version;
+  if (!PluginManager::GetVersionFromPathWithName(version_path, version, kRequiredOppAbiVersion)) {
+    GELOGW("Not get required_opp_abi_version from path:%s", version_path.c_str());
+    return true;
+  }
+
+  // valid required_opp_abi_version: ">=6.3, <=6.4, 6.4"
+  std::queue<std::string> split_version;
+  const auto version_tmp = StringUtils::Split(version, ',');
+  for (const auto &it : version_tmp) {
+    split_version.emplace(it);
+  }
+  while (!split_version.empty()) {
+    auto first = split_version.front();
+    split_version.pop();
+    if (StringUtils::StartWith(first, ">=")) {
+      if (split_version.empty() || !StringUtils::StartWith(split_version.front(), "<=")) {
+        GELOGW("Format of required_opp_abi_version [%s] is invalid, start with >= but not end with <=",
+               version.c_str());
+        return false;
+      }
+      auto second = split_version.front();
+      split_version.pop();
+      first = first.substr(kEffectiveVersionNum, first.size() - kEffectiveVersionNum);
+      second = second.substr(kEffectiveVersionNum, second.size() - kEffectiveVersionNum);
+      uint32_t first_num = 0U;
+      if (!GetEffectiveVersion(first, first_num)) {
+        GELOGW("[InvalidVersion] Format of required_opp_abi_version [%s] is not invalid", version.c_str());
+        return false;
+      }
+      uint32_t second_num = 0U;
+      if (!GetEffectiveVersion(second, second_num)) {
+        GELOGW("[InvalidVersion] Format of required_opp_abi_version [%s] is not invalid", version.c_str());
+        return false;
+      }
+      required_opp_abi_version.emplace_back(first_num, second_num);
+    } else {
+      uint32_t tmp_num = 0U;
+      if (!GetEffectiveVersion(first, tmp_num)) {
+        GELOGW("[InvalidVersion] Format of required_opp_abi_version [%s] is not invalid", version.c_str());
+        return false;
+      }
+      required_opp_abi_version.emplace_back(tmp_num, tmp_num);
+    }
+  }
+  return true;
+}
+
+bool PluginManager::GetEffectiveVersion(const std::string &opp_version, uint32_t &effective_version) {
+  const auto split_version = StringUtils::Split(opp_version, '.');
+  GE_ASSERT_TRUE(split_version.size() >= kEffectiveVersionNum);
+  std::stringstream ss;
+  ss << split_version[0];        // Cann version
+  ss << split_version[1];        // C version
+  ss >> effective_version;
+  if (ss.fail() || !ss.eof()) {
+    GELOGW("Can not convert [%s] to number from %s", ss.str().c_str(), opp_version.c_str());
+    return false;
+  }
+  GELOGD("Get effective version:%u from %s", effective_version, opp_version.c_str());
+  return true;
+}
+
+bool PluginManager::IsVendorVersionValid(const std::string &vendor_path) {
+  // 获取opp包版本号：内置算子包字段为opp_version， 自定义算子包字段为compiler_version
+  std::string opp_version;
+  std::string compiler_version;
+  GetOppAndCompilerVersion(vendor_path, opp_version, compiler_version);
+  if (opp_version.empty() && compiler_version.empty()) {
+    GELOGW("[NotVerification] Will not verify version as the opp version and compiler version are not set");
+    return true;
+  }
+
+  GE_ASSERT_TRUE(IsVendorVersionValid(opp_version, compiler_version));
+  return true;
+}
+
+bool PluginManager::IsVendorVersionValid(const std::string &opp_version, const std::string &compiler_version) {
+  // 获取compiler或者runtime包支持的版本号范围
+  std::vector<std::pair<uint32_t, uint32_t>> required_opp_abi_version;
+  GE_ASSERT_TRUE(GetRequiredOppAbiVersion(required_opp_abi_version), "Get required opp abi version failed.");
+  if (required_opp_abi_version.empty()) {
+    GELOGW("[NotVerification] Will not verify version as the required_opp_abi_version are not set");
+    return true;
+  }
+
+  // 校验版本号是否在支持的版本号列表范围内
+  GE_ASSERT_TRUE(CheckOppAndCompilerVersions(opp_version, compiler_version, required_opp_abi_version),
+                 "opp version:%s or compiler version:%s not within the required range:%s",
+                 opp_version.c_str(), compiler_version.c_str(),
+                 TransRequiredOppAbiVersionToString(required_opp_abi_version).c_str());
+  return true;
+}
+
+bool IsVersionWithInRequiredRange(const uint32_t effective_version,
+                                  const std::vector<std::pair<uint32_t, uint32_t>> &required_version) {
+  for (const auto &it : required_version) {
+    if ((effective_version >= it.first) && (effective_version <= it.second)) {
+      GELOGD("[ValidVersion] Effective version:%s within the required range.", effective_version);
+      return true;
+    }
+  }
+
+  GELOGW("[InvalidVersion] Effective version:%s not within the required range.", effective_version);
+  return false;
+}
+
+void PluginManager::GetOppAndCompilerVersion(const std::string &vendor_path, std::string &opp_version,
+                                             std::string &compiler_version) {
+  std::string version_path;
+  if (vendor_path.find(kBuiltIn) != std::string::npos) {
+    version_path = vendor_path.substr(0, vendor_path.rfind("/")) + kVersionInfo;
+    (void) PluginManager::GetVersionFromPathWithName(version_path, opp_version, kOppVersion);
+    GELOGD("Get opp_version:%s", opp_version.c_str());
+  } else {
+    version_path = vendor_path + kVersionInfo;
+    (void) PluginManager::GetVersionFromPathWithName(version_path, compiler_version, kCompilerVersion);
+    GELOGD("Get compiler_version:%s", compiler_version.c_str());
+  }
+  return;
+}
+
+bool PluginManager::CheckOppAndCompilerVersions(const std::string &opp_version, const std::string &compiler_version,
+                                                const std::vector<std::pair<uint32_t, uint32_t>> &required_version) {
+  std::vector<uint32_t> effective_opp_versions;
+  if (!opp_version.empty()) {
+    uint32_t effective_opp_version = 0U;
+    if (!GetEffectiveVersion(opp_version, effective_opp_version)) {
+      GELOGW("[InvalidVersion] Format of opp version [%s] is invalid", opp_version.c_str());
+      return false;
+    }
+    GE_ASSERT_TRUE(IsVersionWithInRequiredRange(effective_opp_version, required_version),
+                   "opp_version:%s is not with in required_opp_abi_version:%s",
+                   opp_version.c_str(), TransRequiredOppAbiVersionToString(required_version).c_str());
+  }
+
+  if (!compiler_version.empty()) {
+    for (const auto &it : StringUtils::Split(compiler_version, ',')) {
+      uint32_t effective_compiler_version = 0U;
+      if (!GetEffectiveVersion(it, effective_compiler_version)) {
+        GELOGW("[InvalidVersion] Format of compiler version [%s] is invalid", it.c_str());
+        return false;
+      }
+      GE_ASSERT_TRUE(IsVersionWithInRequiredRange(effective_compiler_version, required_version),
+                     "opp_version:%s is not with in required_opp_abi_version:%s",
+                     compiler_version.c_str(), TransRequiredOppAbiVersionToString(required_version).c_str());
+    }
+  }
+
+  GELOGD("[ValidVersion] opp version:%s and compiler version:%s are within the required range:%s",
+         opp_version.c_str(), compiler_version.c_str(),
+         TransRequiredOppAbiVersionToString(required_version).c_str());
+  return true;
+}
+
+// 需要打包进om的so优先级：
+// 1. ASCEND_CUSTOM_OPP_PATH
+// 2. ASCEND_OPP_PATH + vendors + 厂商名
+// 3. ASCEND_OPP_PATH + build-in
+void PluginManager::GetPackageSoPath(std::vector<std::string> &vendors) {
+  std::string custom_opp_path;
+  ge::PluginManager::GetPluginPathFromCustomOppPath("", custom_opp_path);
+  if (!custom_opp_path.empty()) {
+    std::vector<std::string> split_custom_opp_path = ge::StringUtils::Split(custom_opp_path, ':');
+    vendors.insert(vendors.end(), split_custom_opp_path.begin(), split_custom_opp_path.end());
+  }
+
+  std::string opp_path;
+  if (ge::PluginManager::GetOppPath(opp_path) == ge::SUCCESS) {
+    std::string vendors_path;
+    (void) ge::PluginManager::GetOppPluginPathNew(opp_path, "%s", vendors_path, "");
+    if (!vendors_path.empty()) {
+      auto split_vendors_path = ge::StringUtils::Split(vendors_path, ':');
+      vendors.insert(vendors.end(), split_vendors_path.begin(), split_vendors_path.end());
+    }
+  }
+  return;
+}
+
 Status PluginManager::GetOppPluginPathNew(const std::string &opp_path,
                                           const std::string &path_fmt,
                                           std::string &plugin_path,
@@ -189,10 +404,14 @@ Status PluginManager::GetOppPluginPathNew(const std::string &opp_path,
   } else {
     const std::string &fmt_custom  = path_fmt_custom.empty() ? path_fmt : path_fmt_custom;
     for (const auto &vendor : vendors) {
-      plugin_path += opp_path + kVendors + "/" + std::regex_replace(fmt_custom, std::regex("%s"), vendor) + ":";
+      if (IsVendorVersionValid(opp_path + kVendors + "/" + vendor)) {
+        plugin_path += opp_path + kVendors + "/" + std::regex_replace(fmt_custom, std::regex("%s"), vendor) + ":";
+      }
     }
   }
-  plugin_path += opp_path + std::regex_replace(path_fmt, std::regex("%s"), "built-in");
+  if (IsVendorVersionValid(opp_path + "/" + kBuiltIn)) {
+    plugin_path += opp_path + std::regex_replace(path_fmt, std::regex("%s"), "built-in");
+  }
   GELOGI("plugin_path is '%s'", plugin_path.c_str());
   return SUCCESS;
 }
@@ -253,14 +472,14 @@ Status PluginManager::GetCustomCaffeProtoPath(std::string &customcaffe_path) {
   }
 }
 
-Status PluginManager::GetOpTilingPath(std::string &op_tiling_path) {
+Status PluginManager::GetOpTilingForwardOrderPath(std::string &op_tiling_path) {
   GELOGI("Enter GetOpTilingPath schedule");
   std::string opp_path;
   GE_ASSERT_TRUE(GetOppPath(opp_path) == SUCCESS, "Failed to get opp path!");
   if (!IsNewOppPathStruct(opp_path)) {
     GELOGI("Opp plugin path structure is old version!");
     GE_ASSERT_TRUE(GetOppPluginPathOld(opp_path, "op_impl/%s/ai_core/tbe/", op_tiling_path) == SUCCESS,
-        "GetOppPluginPathOld failed!");
+                   "GetOppPluginPathOld failed!");
   } else {
     GELOGI("Opp plugin path structure is new version!");
     GetPluginPathFromCustomOppPath("op_impl/ai_core/tbe/", op_tiling_path);
@@ -268,6 +487,11 @@ Status PluginManager::GetOpTilingPath(std::string &op_tiling_path) {
                                        "op_impl/custom/ai_core/tbe/") == SUCCESS,
                    "GetOppPluginPathNew failed!");
   }
+  return SUCCESS;
+}
+
+Status PluginManager::GetOpTilingPath(std::string &op_tiling_path) {
+  GE_ASSERT_SUCCESS(GetOpTilingForwardOrderPath(op_tiling_path));
   return ReversePathString(op_tiling_path);
 }
 
@@ -642,7 +866,8 @@ void PluginManager::GetCurEnvPackageOsAndCpuType(std::string &host_env_os, std::
   return;
 }
 
-bool PluginManager::GetVersionFromPath(const std::string &file_path, std::string &version) {
+bool PluginManager::GetVersionFromPathWithName(const std::string &file_path, std::string &version,
+                                               const std::string version_name) {
   // Normalize the path
   std::string resolved_file_path = RealPath(file_path.c_str());
   if (resolved_file_path.empty()) {
@@ -657,7 +882,7 @@ bool PluginManager::GetVersionFromPath(const std::string &file_path, std::string
 
   std::string line;
   if (getline(fs, line)) {
-    if (!ParseVersion(line, version)) {
+    if (!ParseVersion(line, version, version_name)) {
       GELOGW("Parse version failed. content is [%s].", line.c_str());
       fs.close();
       return false;
@@ -672,27 +897,30 @@ bool PluginManager::GetVersionFromPath(const std::string &file_path, std::string
   return true;
 }
 
+bool PluginManager::GetVersionFromPath(const std::string &file_path, std::string &version) {
+  return GetVersionFromPathWithName(file_path, version, kOppVersion);
+}
+
 // Parsing the command line
-bool PluginManager::ParseVersion(std::string &line, std::string &version) {
-  std::string flag = "Version=";
+bool PluginManager::ParseVersion(std::string &line, std::string &version, const std::string version_name) {
   line = StringUtils::Trim(line);
   if (line.empty()) {
     GELOGW("line is empty.");
     return false;
   }
 
-  std::string::size_type pos = line.find(flag);
+  std::string::size_type pos = line.find(version_name);
   if (pos == std::string::npos) {
-    GELOGW("Incorrect line [%s], it must include [%s].", line.c_str(), flag.c_str());
+    GELOGW("Incorrect line [%s], it must include [%s].", line.c_str(), version_name.c_str());
     return false;
   }
 
-  if (line.size() == flag.size()) {
+  if (line.size() == version_name.size()) {
     GELOGW("version information is empty. %s", line.c_str());
     return false;
   }
 
-  version = line.substr(pos + flag.size());
+  version = line.substr(pos + version_name.size());
 
   return true;
 }

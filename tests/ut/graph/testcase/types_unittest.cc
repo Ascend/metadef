@@ -154,4 +154,14 @@ TEST_F(UtestTypes, GetSizeInBytes) {
   EXPECT_EQ(GetSizeInBytes(10, DT_UINT1), 2);
   EXPECT_EQ(GetSizeInBytes(9, DT_UINT1), 2);
 }
+
+TEST_F(UtestTypes, GetC0ValueFromFormat) {
+  // {c0_value, bit_value}: c0_value = 2 ^ (bit_value - 1)
+  // {1, 1}, {2, 2}, {4, 3}, {8, 4}, {16, 5}, {32, 6}, {64, 7}, {128, 8}, {256, 9}
+  // 5 indicates that cube size is 16
+  const Format format = static_cast<Format>(GetFormatFromSubAndC0(FORMAT_NC1HWC0, FORMAT_RESERVED, 5));
+  EXPECT_EQ(GetC0Value(format), 16);
+  const Format origin_format = static_cast<Format>(GetFormatFromSub(FORMAT_FRACTAL_Z, FORMAT_RESERVED));
+  EXPECT_EQ(GetC0Value(origin_format), -1);
+}
 }

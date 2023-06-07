@@ -2086,6 +2086,15 @@ TEST_F(UtestGraphUtils, IsRefFromInputTypeIsMergeSuccess) {
   EXPECT_EQ(ret, true);
 }
 
+TEST_F(UtestGraphUtils, IsRefFromInputTypeIsReshapeSuccess) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", RESHAPE, 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, true);
+  EXPECT_EQ(reuse_in_index, 0);
+}
+
 TEST_F(UtestGraphUtils, IsRefFromInputRefOpFail) {
   auto builder = ut::GraphBuilder("test0");
   const auto &node1 = builder.AddNode("node", "node", 1, 1);
