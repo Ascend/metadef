@@ -3732,6 +3732,27 @@
         "Possible Cause": "N/A",
         "Solution": "try to reinstall the OPP package."
       }
+    },
+    {
+      "errClass": "HostApi Errors",
+      "errTitle": "AclNN Inner Error",
+      "ErrCode": "EZ9999",
+      "ErrMessage": "%s",
+      "Arglist": "message"
+    },
+    {
+      "errClass": "HostApi Errors",
+      "errTitle": "AclNN Parameter Error",
+      "ErrCode": "EZ9901",
+      "ErrMessage": "%s",
+      "Arglist": "message"
+    },
+    {
+      "errClass": "HostApi Errors",
+      "errTitle": "AclNN Runtime Error",
+      "ErrCode": "EZ9903",
+      "ErrMessage": "%s",
+      "Arglist": "message"
     }
   ]
 }
