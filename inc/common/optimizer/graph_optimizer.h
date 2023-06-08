@@ -117,13 +117,13 @@ class GraphOptimizer {
     return SUCCESS;
   }
 
-  virtual Status OptimizeSubgraphPreProc(ComputeGraphPtr &compute_graph) {
-    (void)compute_graph;
+  // 为避免子图优化中多线程操作导致的数据读写冲突，提供子图优化前后的单线程接口，由引擎实现以实现改图功能
+  virtual Status OptimizeSubgraphPreProc(ComputeGraph &graph) {
+    (void)graph;
     return SUCCESS;
   }
-
-  virtual Status OptimizeSubgraphPostProc(ComputeGraphPtr &compute_graph) {
-    (void)compute_graph;
+  virtual Status OptimizeSubgraphPostProc(ComputeGraph &graph) {
+    (void)graph;
     return SUCCESS;
   }
 };
