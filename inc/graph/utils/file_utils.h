@@ -44,6 +44,15 @@ int32_t CreateDir(const std::string &directory_path);
 
 /**
  * @ingroup domi_common
+ * @brief  Recursively Creating a Directory with mode
+ * @param [in] directory_path  Path, which can be a multi-level directory.
+ * @param [in] mode  dir mode, E.G., 0700
+ * @return 0 success, 1- fail.
+ */
+int32_t CreateDir(const std::string &directory_path, uint32_t mode);
+
+/**
+ * @ingroup domi_common
  * @brief  Recursively Creating a Directory, deprecated, use CreateDir instead
  * @param [in] directory_path  Path, which can be a multi-level directory.
  * @return 0 success, 1- fail.
