@@ -296,6 +296,18 @@ void UpdateOpDescOutShape(const ge::OpDescPtr &op_desc, gert::InferShapeContext 
   }
 }
 
+ge::graphStatus AddRange(std::vector<std::pair<int64_t, int64_t>> &shape_range,
+                         const gert::Shape *min_shape, const gert::Shape *max_shape) {
+  for (size_t i = 0UL; i < min_shape->GetDimNum(); ++i) {
+    GELOGD("min dim:%ld, max dim:%ld", min_shape->GetDim(i), max_shape->GetDim(i));
+    if (max_shape->GetDim(i) != -1) {
+      GE_CHECK_LE(min_shape->GetDim(i), max_shape->GetDim(i));
+    }
+    shape_range.emplace_back(std::make_pair(min_shape->GetDim(i), max_shape->GetDim(i)));
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
 ge::graphStatus UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc, gert::InferShapeContext *min_ctx,
                                           gert::InferShapeContext *max_ctx) {
   for (size_t index = 0UL; index < op_desc->GetOutputsSize(); index++) {
@@ -307,12 +319,9 @@ ge::graphStatus UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc, gert::In
       const auto *max_shape = max_ctx->GetOutputShape(index);
       GELOGD("min dim num:%zu, max dim num:%zu", min_shape->GetDimNum(), max_shape->GetDimNum());
       GE_RETURN_WITH_LOG_IF_TRUE((min_shape->GetDimNum()) != (max_shape->GetDimNum()));
-      for (size_t i = 0UL; i < min_shape->GetDimNum(); ++i) {
-        GELOGD("min dim:%ld, max dim:%ld", min_shape->GetDim(i), max_shape->GetDim(i));
-        if (max_shape->GetDim(i) != -1) {
-          GE_CHECK_LE(min_shape->GetDim(i), max_shape->GetDim(i));
-        }
-        shape_range.emplace_back(std::make_pair(min_shape->GetDim(i), max_shape->GetDim(i)));
+      auto ret = AddRange(shape_range, min_shape, max_shape);
+      if (ret != ge::GRAPH_SUCCESS) {
+        return ret;
       }
       output_desc->SetShapeRange(shape_range);
     }
@@ -325,7 +334,7 @@ ge::graphStatus UpdateOpDescOutShapeRange(const ge::OpDescPtr &op_desc,
   for (size_t i = 0UL; i < op_desc->GetOutputsSize(); ++i) {
     const auto &output_tensor = op_desc->MutableOutputDesc(i);
     std::vector<std::pair<int64_t, int64_t>> shape_range;
-    auto out_range = infer_shape_range_ctx->GetOutputShapeRange(i);
+    const auto out_range = infer_shape_range_ctx->GetOutputShapeRange(i);
     GE_ASSERT_NOTNULL(out_range, "out range is nullptr.");
     GE_ASSERT_NOTNULL(out_range->GetMax(), "out range max is nullptr.");
     GE_ASSERT_NOTNULL(out_range->GetMin(), "out range min is nullptr.");
