@@ -20,9 +20,11 @@
 namespace ge {
 namespace dflow {
 void DataFlowUtils::BuildInvokedGraphFromGraphPp(const GraphPp &graph_pp, Graph &graph) {
+  const auto pp_name = graph_pp.GetProcessPointName();
+  GE_RETURN_IF_NULL(pp_name, "GraphPp name is nullptr.");
   GraphBuilder builder = graph_pp.GetGraphBuilder();
-  GE_RETURN_IF_NULL(builder, "GraphPp(%s)'s graph builder is nullptr.", graph_pp.GetProcessPointName());
-  std::string graph_name = graph_pp.GetProcessPointName();
+  GE_RETURN_IF_NULL(builder, "GraphPp(%s)'s graph builder is nullptr.", pp_name);
+  std::string graph_name = pp_name;
   graph_name += "_invoked";
   // add one FlowData and one FlowNode
   FlowGraph flow_graph(graph_name.c_str());

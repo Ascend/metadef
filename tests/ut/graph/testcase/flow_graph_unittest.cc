@@ -179,4 +179,28 @@ TEST_F(FlowGraphUTest, TestPrintErrMsg) {
   flow_graph.SetInputs({data0}).SetOutputs({flow_node});
   ASSERT_EQ(flow_graph.ToGeGraph().IsValid(), false);
 }
+
+TEST_F(FlowGraphUTest, MapInputAndMapOutputFailed) {
+  auto data0 = FlowData("Data0", 0);
+  auto data1 = FlowData("Data1", 1);
+  auto data2 = FlowData("Data2", 2);
+  auto pp1 = FunctionPp("pp1").SetCompileConfig("./pp1.json");
+  auto node0 = FlowNode("node0", 3, 2)
+                   .SetInput(0, data0)
+                   .SetInput(1, data1)
+                   .SetInput(2, data2)
+                   .AddPp(pp1)
+                   .MapInput(0, pp1, 0)
+                   .MapInput(1, pp1, 0)
+                   .MapInput(2, pp1, 0)
+                   .MapOutput(0, pp1, 0)
+                   .MapOutput(1, pp1, 0)
+                   .MapOutput(2, pp1, 0);
+  std::vector<std::string> pp_attrs;
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node0);
+  ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs);
+  dataflow::ProcessPoint process_point;
+  auto flag = process_point.ParseFromString(pp_attrs[0]);
+  ASSERT_TRUE(flag);
+}
 }  // namespace ge

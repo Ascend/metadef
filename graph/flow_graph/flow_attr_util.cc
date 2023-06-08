@@ -34,7 +34,7 @@ bool FlowAttrUtil::CheckAttrsIsSupport(const std::vector<DataFlowInputAttr> &att
     return true;
   }
 
-  for (size_t i = 0; i < attrs.size(); ++i) {
+  for (size_t i = 0U; i < attrs.size(); ++i) {
     if (attrs[i].attr_type == DataFlowAttrType::COUNT_BATCH) {
       count_batch = true;
       if (time_batch) {

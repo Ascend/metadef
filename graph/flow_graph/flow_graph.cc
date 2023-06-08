@@ -75,18 +75,18 @@ graphStatus FlowNodeImpl::AddInEdges(uint32_t node_input_index, const ProcessPoi
       continue;
     }
     // duplicate check
-    if ((static_cast<int32_t>(pp_input_index) < process_point.in_edges_size()) &&
+    if ((pp_input_index < static_cast<uint32_t>(process_point.in_edges_size())) &&
        (process_point.in_edges(pp_input_index).node_name() != "")) {
-      GELOGE(ge::FAILED, "pp name(%s) has duplicate map input index(%d).", pp.GetProcessPointName(), pp_input_index);
+      GELOGE(ge::FAILED, "pp name(%s) has duplicate map input index(%u).", pp.GetProcessPointName(), pp_input_index);
       return ge::GRAPH_FAILED;
     }
 
     process_point.add_in_edges();
-    if (static_cast<int32_t>(pp_input_index) < process_point.in_edges_size()) {
+    if (pp_input_index < static_cast<uint32_t>(process_point.in_edges_size())) {
       auto in_edge = process_point.mutable_in_edges(pp_input_index);
       in_edge->set_node_name(flow_node_name.c_str());
       in_edge->set_index(node_input_index);
-      GELOGI("add pp(%s) input index(%d) map node(%s) index(%d).", pp.GetProcessPointName(), pp_input_index,
+      GELOGI("add pp(%s) input index(%u) map node(%s) index(%u).", pp.GetProcessPointName(), pp_input_index,
              flow_node_name.c_str(), node_input_index);
     } else {
       in_edges_[pp.GetProcessPointName()][pp_input_index] = node_input_index;
@@ -97,7 +97,7 @@ graphStatus FlowNodeImpl::AddInEdges(uint32_t node_input_index, const ProcessPoi
         auto in_edge = process_point.mutable_in_edges(it->first);
         in_edge->set_node_name(flow_node_name.c_str());
         in_edge->set_index(it->second);
-        GELOGI("add pp(%s) input index(%d) map node(%s) index(%d).", pp.GetProcessPointName(), it->first,
+        GELOGI("add pp(%s) input index(%u) map node(%s) index(%u).", pp.GetProcessPointName(), it->first,
                flow_node_name.c_str(), it->second);
         in_edges_[pp.GetProcessPointName()].erase(it++);
       } else {
@@ -125,18 +125,18 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
       continue;
     }
     // duplicate check
-    if ((static_cast<int32_t>(pp_output_index) < process_point.out_edges_size()) &&
+    if ((pp_output_index < static_cast<uint32_t>(process_point.out_edges_size())) &&
         (process_point.out_edges(pp_output_index).node_name() != "")) {
-      GELOGE(ge::FAILED, "pp name(%s) has duplicate map input index(%d).", pp.GetProcessPointName(), pp_output_index);
+      GELOGE(ge::FAILED, "pp name(%s) has duplicate map input index(%u).", pp.GetProcessPointName(), pp_output_index);
       return ge::GRAPH_FAILED;
     }
 
     process_point.add_out_edges();
-    if (static_cast<int32_t>(pp_output_index) < process_point.out_edges_size()) {
+    if (pp_output_index < static_cast<uint32_t>(process_point.out_edges_size())) {
       auto out_edge = process_point.mutable_out_edges(pp_output_index);
       out_edge->set_node_name(name.c_str());
       out_edge->set_index(node_output_index);
-      GELOGI("add pp(%s) output index(%d) map node(%s) index(%d)", pp.GetProcessPointName(), pp_output_index,
+      GELOGI("add pp(%s) output index(%u) map node(%s) index(%u)", pp.GetProcessPointName(), pp_output_index,
              name.c_str(), node_output_index);
     } else {
       out_edges_[pp.GetProcessPointName()][pp_output_index] = node_output_index;
@@ -147,7 +147,7 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
         auto out_edge = process_point.mutable_out_edges(it->first);
         out_edge->set_node_name(name.c_str());
         out_edge->set_index(it->second);
-        GELOGI("add pp(%s) output index(%d) map node(%s) index(%d)", pp.GetProcessPointName(), it->first,
+        GELOGI("add pp(%s) output index(%u) map node(%s) index(%u)", pp.GetProcessPointName(), it->first,
                name.c_str(), it->second);
         out_edges_[pp.GetProcessPointName()].erase(it++);
       } else {
@@ -163,6 +163,7 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
 
 void FlowNodeImpl::MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
                             const std::vector<DataFlowInputAttr> &attrs) {
+  GE_RETURN_IF_NULL(pp.GetProcessPointName(), "The process point name is nullptr.");
   auto flow_node_name = op_desc_->GetName();
   if (node_input_index >= input_num_) {
     GELOGE(ge::FAILED, "invalid node(%s) input index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
@@ -182,6 +183,7 @@ void FlowNodeImpl::MapInput(uint32_t node_input_index, const ProcessPoint &pp, u
 }
 
 void FlowNodeImpl::MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index) {
+  GE_RETURN_IF_NULL(pp.GetProcessPointName(), "The process point name is nullptr.");
   auto flow_node_name = op_desc_->GetName();
   if (node_output_index >= output_num_) {
     GELOGE(ge::FAILED, "invalid node(%s) output index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
@@ -245,7 +247,6 @@ FlowNode &FlowNode::MapInput(uint32_t node_input_index, const ProcessPoint &pp, 
     GELOGE(ge::FAILED, "[Check][Param] MapInput:FlowNodeImpl is nullptr, check failed.");
     return *this;
   }
-
   impl_->MapInput(node_input_index, pp, pp_input_index, attrs);
   return *this;
 }
@@ -255,7 +256,6 @@ FlowNode &FlowNode::MapOutput(uint32_t node_output_index, const ProcessPoint &pp
     GELOGE(ge::FAILED, "[Check][Param] MapOutput:FlowNodeImpl is nullptr, check failed.");
     return *this;
   }
-
   impl_->MapOutput(node_output_index, pp, pp_output_index);
   return *this;
 }
