@@ -218,10 +218,11 @@ bool PluginManager::GetRequiredOppAbiVersion(std::vector<std::pair<uint32_t, uin
   }
 
   // valid required_opp_abi_version: ">=6.3, <=6.4, 6.4"
+  version = StringUtils::ReplaceAll(version, "\"", "");
+  StringUtils::Trim(version);
   std::queue<std::string> split_version;
-  const auto version_tmp = StringUtils::Split(version, ',');
-  for (const auto &it : version_tmp) {
-    split_version.emplace(it);
+  for (auto &it : StringUtils::Split(version, ',')) {
+    split_version.emplace(StringUtils::Trim(it));
   }
   while (!split_version.empty()) {
     auto first = split_version.front();
@@ -309,12 +310,12 @@ bool IsVersionWithInRequiredRange(const uint32_t effective_version,
                                   const std::vector<std::pair<uint32_t, uint32_t>> &required_version) {
   for (const auto &it : required_version) {
     if ((effective_version >= it.first) && (effective_version <= it.second)) {
-      GELOGD("[ValidVersion] Effective version:%s within the required range.", effective_version);
+      GELOGD("[ValidVersion] Effective version:%u within the required range.", effective_version);
       return true;
     }
   }
 
-  GELOGW("[InvalidVersion] Effective version:%s not within the required range.", effective_version);
+  GELOGW("[InvalidVersion] Effective version:%u not within the required range.", effective_version);
   return false;
 }
 
@@ -881,20 +882,17 @@ bool PluginManager::GetVersionFromPathWithName(const std::string &file_path, std
   }
 
   std::string line;
-  if (getline(fs, line)) {
-    if (!ParseVersion(line, version, version_name)) {
-      GELOGW("Parse version failed. content is [%s].", line.c_str());
+  while (std::getline(fs, line)) {
+    if (ParseVersion(line, version, version_name)) {
+      GELOGD("Parse version success. content is [%s].", line.c_str());
       fs.close();
-      return false;
+      return true;
     }
-  } else {
-    GELOGW("No version information found in the file path:%s", file_path.c_str());
-    fs.close();
-    return false;
   }
 
-  fs.close();  // close the file
-  return true;
+  GELOGW("No version information found in the file path:%s", file_path.c_str());
+  fs.close();
+  return false;
 }
 
 bool PluginManager::GetVersionFromPath(const std::string &file_path, std::string &version) {
