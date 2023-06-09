@@ -17,6 +17,7 @@
 #define __INC_REGISTER_TUNING_BANK_KEY_REGISTRY_HEADER__
 #include <type_traits>
 #include <nlohmann/json.hpp>
+#include <string>
 #include "graph/ascend_string.h"
 #include "external/register/register_types.h"
 #include "exe_graph/runtime/tiling_context.h"
@@ -53,7 +54,7 @@ protected:
 
 #define BEGIN_OP_BANK_KEY_DEF(class_name)                                                                              \
   class class_name : public OpBankKeyDef {                                                                             \
-  public:                                                                                                             \
+  public:                                                                                                              \
     virtual void FromJson(const nlohmann::json &j) {                                                                   \
       FromJsonImpl(*this, "", j);                                                                                      \
     }                                                                                                                  \
@@ -96,14 +97,14 @@ struct GetStructSizeFunctor;
 
 template<
     typename T, typename S,
-    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && !is_containable<detail::decay_t<T>>()>* = nullptr>
-void GetStructSize(T &&obj, const char *field_name, S &total_size) {
+    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && (!is_containable<detail::decay_t<T>>())>* = nullptr>
+void GetStructSize(const T &obj, const std::string &field_name, S &total_size) {
   (void) field_name;
   ForEachField(obj, GetStructSizeFunctor<S>(total_size));
 }
 
 template<typename T, typename S, detail::enable_if_t<!std::is_class<detail::decay_t<T>>::value>* = nullptr>
-void GetStructSize(T &&obj, const char *field_name, S &total_size) {
+void GetStructSize(const T &obj, const std::string &field_name, S &total_size) {
   (void) field_name;
   (void) obj;
   total_size += sizeof(detail::decay_t<T>);
@@ -111,19 +112,19 @@ void GetStructSize(T &&obj, const char *field_name, S &total_size) {
 
 template<
     typename T, typename S,
-    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && is_containable<detail::decay_t<T>>()>* = nullptr>
-void GetStructSize(T &&obj, const char *field_name, S &total_size) {
+    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && (is_containable<detail::decay_t<T>>())>* = nullptr>
+void GetStructSize(const T &obj, const std::string &field_name, S &total_size) {
   (void) field_name;
-  for (auto t : obj) {
+  for (const auto &t : obj) {
     GetStructSize(t, field_name, total_size);
   }
 }
 
 template<typename S>
 struct GetStructSizeFunctor {
-  GetStructSizeFunctor(S &data_len) : total_size(data_len) {}
+  explicit GetStructSizeFunctor(S &data_len) : total_size(data_len) {}
   template<typename Name, typename Field>
-  void operator()(Name &&name, Field &&field) {
+  void operator()(Name &&name, Field &&field) const {
     GetStructSize(field, name, total_size);
   }
   S &total_size;
@@ -135,29 +136,29 @@ struct SaveToBufferFunctor;
 template<
     typename T, typename D,
     detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && !is_containable<detail::decay_t<T>>()>* = nullptr>
-void SaveToBuffer(T &&obj, const char *field_name, D *buff, size_t buf_size, size_t &offset) {
+void SaveToBuffer(const T &obj, const std::string &field_name, D *buff, size_t buf_size, size_t &offset) {
   (void) field_name;
   ForEachField(obj, SaveToBufferFunctor<D>(offset, buff, buf_size));
 }
 
 template<typename T, typename D, detail::enable_if_t<!std::is_class<detail::decay_t<T>>::value>* = nullptr>
-void SaveToBuffer(T &&obj, const char *field_name, D *buff, size_t buf_size, size_t &offset) {
-  if (strcmp(field_name, "") == 0 || buff == nullptr) {
+void SaveToBuffer(const T &obj, const std::string &field_name, D *buff, size_t buf_size, size_t &offset) {
+  if (field_name.empty() || (buff == nullptr)) {
     return;
   }
-  size_t data_size = sizeof(T);
+  const size_t data_size = sizeof(T);
   if (offset + data_size > buf_size) {
     return;
   }
-  *((detail::decay_t<T> *) (buff + offset)) = obj;
+  *((detail::decay_t<T> *)(buff + offset)) = obj;
   offset += data_size;
 }
 
 template<
     typename T, typename D,
     detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && is_containable<detail::decay_t<T>>()>* = nullptr>
-void SaveToBuffer(T &&obj, const char *field_name, D *buff, size_t buf_size, size_t &offset) {
-  if (strcmp(field_name, "") == 0) {
+void SaveToBuffer(const T &obj, const std::string &field_name, D *buff, size_t buf_size, size_t &offset) {
+  if (field_name.empty()) {
     return;
   }
   size_t data_size = 0U;
@@ -174,7 +175,7 @@ template<typename T>
 struct SaveToBufferFunctor {
   SaveToBufferFunctor(size_t &i, T *data, size_t data_len) : offset(i), buff(data), buf_size(data_len) {}
   template<typename Name, typename Field>
-  void operator()(Name &&name, Field &&field) {
+  void operator()(Name &&name, Field &&field) const {
     SaveToBuffer(field, name, buff, buf_size, offset);
   }
   size_t &offset;
@@ -187,7 +188,7 @@ using OpBankKeyConstructor = std::shared_ptr<OpBankKeyDef> (*)();
 class FMK_FUNC_HOST_VISIBILITY OpBankKeyClassFactory {
 public:
   static std::map<ge::AscendString, OpBankKeyConstructor> &RegisterInfo();
-  static void RegisterOpBankKey(const ge::AscendString &optype, const OpBankKeyConstructor consructor);
+  static void RegisterOpBankKey(const ge::AscendString &optype, OpBankKeyConstructor const constructor);
   static std::shared_ptr<OpBankKeyDef> CreateBankKeyInstance(const ge::AscendString &optype);
 };
 
@@ -208,7 +209,7 @@ using OpBankKeyFun = std::function<bool(const gert::TilingContext *, OpBankKeyDe
 
 class FMK_FUNC_HOST_VISIBILITY OpBankKeyFuncRegistry {
 public:
-  OpBankKeyFuncRegistry(const ge::AscendString &optye, OpBankKeyFun bank_key_func);
+  OpBankKeyFuncRegistry(const ge::AscendString &optype, OpBankKeyFun bank_key_func);
   ~OpBankKeyFuncRegistry() = default;
   static std::unordered_map<ge::AscendString, OpBankKeyFun> &RegisteredOpFuncInfo();
 };

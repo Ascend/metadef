@@ -27,7 +27,7 @@ std::map<ge::AscendString, TuningTilingDefConstructor> &TuningTilingClassFactory
 }
 
 void TuningTilingClassFactory::RegisterTilingData(const ge::AscendString &optype,
-                                                  const TuningTilingDefConstructor constructor) {
+                                                  TuningTilingDefConstructor const constructor) {
   if (constructor == nullptr) {
     return;
   }
@@ -44,7 +44,7 @@ std::shared_ptr<TuningTilingDef> TuningTilingClassFactory::CreateTilingDataInsta
     return nullptr;
   }
 
-  const TuningTilingDefConstructor constructor = it->second;
+  TuningTilingDefConstructor const constructor = it->second;
 
   if (constructor == nullptr) {
     GELOGW("CreateTilingDataInstance: constructor is nullptr");

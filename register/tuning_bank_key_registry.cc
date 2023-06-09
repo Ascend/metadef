@@ -23,7 +23,7 @@ std::map<ge::AscendString, OpBankKeyConstructor> &OpBankKeyClassFactory::Registe
   return instance;
 }
 
-void OpBankKeyClassFactory::RegisterOpBankKey(const ge::AscendString &optype, const OpBankKeyConstructor constructor) {
+void OpBankKeyClassFactory::RegisterOpBankKey(const ge::AscendString &optype, OpBankKeyConstructor const constructor) {
   auto &instance = OpBankKeyClassFactory::RegisterInfo();
   instance[optype] = constructor;
 }

@@ -15,7 +15,6 @@
 */
 #ifndef __INC_REGISTER_TUNING_TILING_REGISTRY_HEADER__
 #define __INC_REGISTER_TUNING_TILING_REGISTRY_HEADER__
-#include <type_traits>
 #include <nlohmann/json.hpp>
 #include "graph/ascend_string.h"
 #include "register/tuning_tiling_reflection_utils.h"
@@ -81,21 +80,21 @@ using TuningTilingDefConstructor = std::shared_ptr<TuningTilingDef> (*)();
 class TuningTilingClassFactory {
 public:
   static std::map<ge::AscendString, TuningTilingDefConstructor> &RegisterInfo();
-  static void RegisterTilingData(const ge::AscendString &op_type, const TuningTilingDefConstructor constructor);
-  static std::shared_ptr<TuningTilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
+  static void RegisterTilingData(const ge::AscendString &optype, TuningTilingDefConstructor const constructor);
+  static std::shared_ptr<TuningTilingDef> CreateTilingDataInstance(const ge::AscendString &optype);
 };
 
-#define REGISTER_TUNING_TILING_CLASS(op_type, class_name)                                                              \
-  class op_type##class_name##Helper {                                                                                  \
+#define REGISTER_TUNING_TILING_CLASS(optype, class_name)                                                               \
+  class optype##class_name##Helper {                                                                                   \
   public:                                                                                                              \
-    op_type##class_name##Helper() {                                                                                    \
-      TuningTilingClassFactory::RegisterTilingData(#op_type, op_type##class_name##Helper::CreateTilingDataInstance);   \
+    optype##class_name##Helper() {                                                                                     \
+      TuningTilingClassFactory::RegisterTilingData(#optype, optype##class_name##Helper::CreateTilingDataInstance);     \
     }                                                                                                                  \
     static std::shared_ptr<TuningTilingDef> CreateTilingDataInstance() {                                               \
       return std::make_shared<class_name>();                                                                           \
     }                                                                                                                  \
   };                                                                                                                   \
-  op_type##class_name##Helper g_tuning_tiling_##op_type##class_name##Helper;
+  optype##class_name##Helper g_tuning_tiling_##optype##class_name##Helper;
 using TuningTilingDefPtr = std::shared_ptr<TuningTilingDef>;
 }  // namespace tuningtiling
 

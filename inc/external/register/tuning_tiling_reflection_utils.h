@@ -30,7 +30,7 @@ using enable_if_t = typename std::enable_if<B, T>::type;
 
 template<typename T, T... Ints>
 struct integer_sequence {
-  typedef T value_type;
+  using value_type = T;
   static constexpr std::size_t size() {
     return sizeof...(Ints);
   }
@@ -75,7 +75,7 @@ void ForEachTuple(Tuple &&tuple, Field &&fields, Fn &&fn, detail::index_sequence
 
 template<typename Fn, typename Tuple>
 void ForEachTuple(Tuple &&tuple, Fn &&fn) {
-  auto fields = StructInfo<detail::decay_t<Tuple>>::Info();
+  const auto fields = StructInfo<detail::decay_t<Tuple>>::Info();
   ForEachTuple(std::forward<Tuple>(tuple), fields, std::forward<Fn>(fn),
                detail::make_index_sequence<std::tuple_size<decltype(fields)>::value> {});
 }
@@ -93,13 +93,13 @@ bool is_optional_v() {
 }
 
 template<typename T>
-decltype(std::begin(T()), std::true_type {}) containable(int);
+decltype(std::begin(T()), std::true_type {}) containable(size_t);
 
 template<typename T>
 std::false_type containable(...);
 
 template<typename T>
-using is_containable = decltype(containable<T>(0));
+using is_containable = decltype(containable<T>(0U));
 
 template<typename T>
 constexpr bool IsSerializeType() {
@@ -115,8 +115,8 @@ template<typename Fn>
 struct DumpFunctor;
 
 template<typename T, typename Js, detail::enable_if_t<!IsSerializeType<T>()>* = nullptr>
-void DumpObj(T &&obj, const char *field_name, Js &j) {
-  if (strcmp(field_name, "") == 0) {
+void DumpObj(T &&obj, const std::string &field_name, Js &j) {
+  if (field_name.empty()) {
     ForEachField(obj, DumpFunctor<Js>(j));
     return;
   }
@@ -124,8 +124,8 @@ void DumpObj(T &&obj, const char *field_name, Js &j) {
 }
 
 template<typename T, typename Js, detail::enable_if_t<IsSerializeType<T>()>* = nullptr>
-void DumpObj(T &&obj, const char *field_name, Js &j) {
-  if (strcmp(field_name, "") == 0) {
+void DumpObj(T &&obj, const std::string &field_name, Js &j) {
+  if (field_name.empty()) {
     return;
   }
   j[field_name] = obj;
@@ -133,9 +133,9 @@ void DumpObj(T &&obj, const char *field_name, Js &j) {
 
 template<typename T>
 struct DumpFunctor {
-  DumpFunctor(T &j) : js(j) {}
+  explicit DumpFunctor(T &j) : js(j) {}
   template<typename Name, typename Field>
-  void operator()(Name &&name, Field &&field) {
+  void operator()(Name &&name, Field &&field) const {
     DumpObj(field, name, js);
   }
   T &js;
@@ -145,8 +145,8 @@ template<typename Fn>
 struct FromJsonFunctor;
 
 template<typename T, typename Js, detail::enable_if_t<!IsSerializeType<T>()>* = nullptr>
-void FromJsonImpl(T &&obj, const char *field_name, const Js &j) {
-  if (strcmp(field_name, "") == 0) {
+void FromJsonImpl(T &&obj, const std::string &field_name, const Js &j) {
+  if (field_name.empty()) {
     ForEachField(obj, FromJsonFunctor<Js>(j));
     return;
   }
@@ -157,7 +157,7 @@ void FromJsonImpl(T &&obj, const char *field_name, const Js &j) {
 }
 
 template<typename T, typename Js, detail::enable_if_t<IsSerializeType<T>()>* = nullptr>
-void FromJsonImpl(T &&obj, const char *field_name, const Js &j) {
+void FromJsonImpl(T &&obj, const std::string &field_name, const Js &j) {
   // ignore missing field of optional
   if ((tuningtiling::is_optional_v<decltype(obj)>()) || (j.find(field_name) == j.cend())) {
     return;
@@ -167,9 +167,9 @@ void FromJsonImpl(T &&obj, const char *field_name, const Js &j) {
 
 template<typename Js>
 struct FromJsonFunctor {
-  FromJsonFunctor(const Js &j) : js(j) {}
+  explicit FromJsonFunctor(const Js &j) : js(j) {}
   template<typename Name, typename Field>
-  void operator()(Name &&name, Field &&field) {
+  void operator()(Name &&name, Field &&field) const {
     FromJsonImpl(field, name, js);
   }
   const Js &js;
