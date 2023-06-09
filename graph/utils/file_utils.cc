@@ -65,7 +65,7 @@ std::string GetRegulatedName(const std::string name) {
 
 inline int32_t CheckAndMkdir(const char_t *tmp_dir_path, mmMode_t mode) {
   if (mmAccess2(tmp_dir_path, M_F_OK) != EN_OK) {
-    const int32_t ret = mmMkdir(tmp_dir_path, mode);  // 700
+    const int32_t ret = mmMkdir(tmp_dir_path, mode);
     if (ret != 0) {
       REPORT_CALL_ERROR("E18888",
                         "Can not create directory %s. Make sure the directory "
@@ -88,7 +88,7 @@ inline int32_t CheckAndMkdir(const char_t *tmp_dir_path, mmMode_t mode) {
  *  @return -1 fail
  *  @return 0 success
  */
-int32_t CreateDir(const std::string &directory_path) {
+int32_t CreateDir(const std::string &directory_path, uint32_t mode) {
   GE_CHK_BOOL_EXEC(!directory_path.empty(),
                    REPORT_INNER_ERROR("E18888", "directory path is empty, check invalid");
                        return -1, "[Check][Param] directory path is empty.");
@@ -100,9 +100,7 @@ int32_t CreateDir(const std::string &directory_path) {
     return -1;
   }
   char_t tmp_dir_path[MMPA_MAX_PATH] = {};
-  const auto mkdir_mode = static_cast<mmMode_t>(static_cast<uint32_t>(M_IRUSR) |
-                                          static_cast<uint32_t>(M_IWUSR) |
-                                          static_cast<uint32_t>(M_IXUSR));
+  const auto mkdir_mode = static_cast<mmMode_t>(mode);
   for (size_t i = 0U; i < dir_path_len; i++) {
     tmp_dir_path[i] = directory_path[i];
     if ((tmp_dir_path[i] == '\\') || (tmp_dir_path[i] == '/')) {
@@ -113,6 +111,18 @@ int32_t CreateDir(const std::string &directory_path) {
     }
   }
   return CheckAndMkdir(directory_path.c_str(), mkdir_mode);
+}
+
+/**
+ *  @ingroup domi_common
+ *  @brief Create directory, support to create multi-level directory
+ *  @param [in] directory_path  Path, can be multi-level directory
+ *  @return -1 fail
+ *  @return 0 success
+ */
+int32_t CreateDir(const std::string &directory_path) {
+  constexpr auto mkdir_mode = static_cast<uint32_t>(M_IRUSR | M_IWUSR | M_IXUSR);
+  return CreateDir(directory_path, mkdir_mode);
 }
 
 /**

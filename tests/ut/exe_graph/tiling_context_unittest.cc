@@ -18,7 +18,7 @@
 #include "exe_graph/runtime/tiling_context.h"
 #include "faker/kernel_run_context_faker.h"
 #undef private
-#include "common/util/platform_infos_def.h"
+#include "platform/platform_infos_def.h"
 
 namespace gert {
 class TilingContextUT : public testing::Test {};

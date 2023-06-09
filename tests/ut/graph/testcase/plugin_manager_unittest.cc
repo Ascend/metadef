@@ -1410,7 +1410,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetVersion_Valid) {
 
 TEST_F(UtestPluginManager, test_plugin_manager_IsVendorVersionValid) {
   std::string path, path1;
-  WriteRequiredVersion(">=6.4,<=6.4", path, path1);
+  WriteRequiredVersion("\">=6.4,<=6.4\"", path, path1);
   EXPECT_EQ(PluginManager::IsVendorVersionValid("6.4.T5.0.B121", "6.4.T5.0.B121"), true);
   system(("rm -rf " + path + " " + path1).c_str());
 
@@ -1432,35 +1432,54 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetRequiredOppAbiVersion_InValid)
   system(("mkdir -p " + compiler_path).c_str());
   auto path = compiler_path + "/version.info";
   system(("touch " + path).c_str());
-  system(("echo 'required_opp_abi_version=>=6.4' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.4\"' > " + path).c_str());
 
   std::string compiler_path1 ="./../compiler";
   system(("mkdir -p " + compiler_path1).c_str());
   auto path1 = compiler_path1 + "/version.info";
   system(("touch " + path1).c_str());
-  system(("echo 'required_opp_abi_version=>=6.4' > " + path1).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.4\"' > " + path1).c_str());
 
   std::vector<std::pair<uint32_t, uint32_t>> required_opp_abi_version;
   EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
 
-  system(("echo 'required_opp_abi_version=>=6.#' > " + path).c_str());
-  system(("echo 'required_opp_abi_version=>=6.#' > " + path1).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.#\"' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.#\"' > " + path1).c_str());
   EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
 
-  system(("echo 'required_opp_abi_version=>=6.#,<=6.4' > " + path).c_str());
-  system(("echo 'required_opp_abi_version=>=6.#,<=6.4' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=>=\"6.#,<=6.4\"' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=>=\"6.#,<=6.4\"' > " + path1).c_str());
   EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
 
-  system(("echo 'required_opp_abi_version=>=6.4,<=6.#' > " + path).c_str());
-  system(("echo 'required_opp_abi_version=>=6.4,<=6.#' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.4,<=6.#\"' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.4,<=6.#\"' > " + path1).c_str());
   EXPECT_EQ(PluginManager::GetRequiredOppAbiVersion(required_opp_abi_version), false);
 
-  system(("echo 'required_opp_abi_version=>=6.4,<=6.4' > " + path).c_str());
-  system(("echo 'required_opp_abi_version=>=6.4,<=6.4' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.4,<=6.4\"' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.4,<=6.4\"' > " + path1).c_str());
   EXPECT_EQ(PluginManager::IsVendorVersionValid("6.#.T5.0.B121", ""), false);
   EXPECT_EQ(PluginManager::IsVendorVersionValid("", "6.4.T5.0.B121,6.#.T5.0.B121"), false);
 
+  system(("echo 'required_opp_abi_version=\">=6.3, <=6.4\"' > " + path).c_str());
+  system(("echo 'required_opp_abi_version=\">=6.3, <=6.4\"' > " + path1).c_str());
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("6.4.T5.0.B121", "6.3.T5.0.B121, 6.4.T5.0.B121"), true);
+
   system(("rm -rf " + compiler_path).c_str());
   system(("rm -rf " + compiler_path1).c_str());
+}
+
+TEST_F(UtestPluginManager, GetVersionFromPath_succ) {
+  std::string opp_version = "./version.info";
+  system(("touch " + opp_version).c_str());
+  std::string version;
+  system(("echo 'Version=6.4.T5.0.B121' > " + opp_version).c_str());
+  ASSERT_EQ(PluginManager::GetVersionFromPath(opp_version, version), true);
+  ASSERT_EQ(version, "6.4.T5.0.B121");
+
+  system(("echo 'required_opp_abi_version=\">=6.4,<=6.4\"' > " + opp_version).c_str());
+  ASSERT_EQ(PluginManager::GetVersionFromPathWithName(opp_version, version, "required_opp_abi_version="), true);
+  ASSERT_EQ(version, "\">=6.4,<=6.4\"");
+
+  system(("rm -f " + opp_version).c_str());
 }
 }  // namespace ge

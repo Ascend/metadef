@@ -122,8 +122,11 @@ private:
 };
 
 GraphPp::GraphPp(const char_t *pp_name, const GraphBuilder &builder) : ProcessPoint(pp_name, ProcessPointType::GRAPH) {
-  if (builder == nullptr) {
-    GELOGE(ge::FAILED, "GraphPp(%s) graph builder is null.", this->GetProcessPointName());
+  if (pp_name == nullptr) {
+    GELOGE(ge::FAILED, "GraphPp pp_name is null.");
+    impl_ = nullptr;
+  } else if (builder == nullptr) {
+    GELOGE(ge::FAILED, "GraphPp(%s) graph builder is null.", pp_name);
     impl_ = nullptr;
   } else {
     impl_ = MakeShared<GraphPpImpl>(pp_name, builder);
@@ -135,6 +138,10 @@ GraphPp::GraphPp(const char_t *pp_name, const GraphBuilder &builder) : ProcessPo
 GraphPp::~GraphPp() = default;
 
 GraphPp &GraphPp::SetCompileConfig(const char_t *json_file_path) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::FAILED, "[Check][Param] GraphPpImpl is nullptr, check failed");
+    return *this;
+  }
   if (json_file_path == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
            this->GetProcessPointName());
@@ -147,6 +154,7 @@ GraphPp &GraphPp::SetCompileConfig(const char_t *json_file_path) {
 }
 
 void GraphPp::Serialize(ge::AscendString &str) const {
+  GE_RETURN_IF_NULL(impl_, "[Check][Param] GraphPpImpl is nullptr, check failed.");
   dataflow::ProcessPoint process_point;
   process_point.set_name(this->GetProcessPointName());
   process_point.set_type(dataflow::ProcessPoint_ProcessPointType_GRAPH);
@@ -173,6 +181,8 @@ public:
 
   void AddInvokedClosure(const char_t *name, const GraphPp graph_pp) {
     GE_RETURN_IF_NULL(name, "[Check][Param] AddInvokedClosure failed for name is nullptr.");
+    GE_RETURN_IF_NULL(graph_pp.GetProcessPointName(),
+                      "[Check][Param] AddInvokedClosure failed for graphpp name is nullptr.");
     GE_RETURN_IF_TRUE(invoked_closures_.find(name) != invoked_closures_.end(),
                       "AddInvokedClosure failed for duplicate name(%s).", name);
 
@@ -187,6 +197,10 @@ public:
 
   template<typename T>
   bool SetAttrValue(const char_t *name, T &&value) {
+    if (name == nullptr) {
+      GELOGE(ge::FAILED, "name is null.");
+      return false;
+    }
     return attrs_.SetByName(name, std::forward<T>(value));
   }
 
@@ -247,14 +261,23 @@ void FunctionPpImpl::AddFunctionPpInitPara(dataflow::ProcessPoint &process_point
 }
 
 FunctionPp::FunctionPp(const char_t *pp_name) : ProcessPoint(pp_name, ProcessPointType::FUNCTION) {
-  impl_ = MakeShared<FunctionPpImpl>();
-  if (impl_ == nullptr) {
-    GELOGW("FunctionPpImpl make shared failed.");
+  if (pp_name == nullptr) {
+    GELOGE(ge::FAILED, "[Check][Param] pp_name is nullptr.");
+    impl_ = nullptr;
+  } else {
+    impl_ = MakeShared<FunctionPpImpl>();
+    if (impl_ == nullptr) {
+      GELOGE(ge::FAILED, "FunctionPpImpl make shared failed.");
+    }
   }
 }
 FunctionPp::~FunctionPp() = default;
 
 FunctionPp &FunctionPp::SetCompileConfig(const char_t *json_file_path) {
+  if (impl_ == nullptr) {
+    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    return *this;
+  }
   if (json_file_path == nullptr) {
     GELOGE(ge::FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
            this->GetProcessPointName());

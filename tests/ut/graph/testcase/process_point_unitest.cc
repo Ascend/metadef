@@ -45,7 +45,7 @@ TEST_F(ProcessPointUTest, GraphPpNullBuilder) {
   auto pp2 = GraphPp("pp2", nullptr).SetCompileConfig(nullptr);
   ASSERT_EQ(strcmp(pp1.GetProcessPointName(), "pp1"), 0);
   ASSERT_EQ(pp1.GetProcessPointType(), ProcessPointType::GRAPH);
-  ASSERT_EQ(strcmp(pp1.GetCompileConfig(), "./pp1.json"), 0);
+  ASSERT_EQ(strcmp(pp1.GetCompileConfig(), ""), 0);
   ASSERT_EQ(pp1.GetGraphBuilder(), nullptr);
   ASSERT_EQ(strcmp(pp2.GetCompileConfig(), ""), 0);
 }
@@ -273,5 +273,11 @@ TEST_F(ProcessPointUTest, FunctionPpInvokedPp) {
   ASSERT_EQ(invoke_pp1.type(), dataflow::ProcessPoint_ProcessPointType_GRAPH);
   ASSERT_EQ(invoke_pp1.compile_cfg_file(), "./graph2.json");
   ASSERT_EQ(invoke_pp1.graphs(0), "graphPp_2");
+}
+
+TEST_F(ProcessPointUTest, SetInitParamFailed) {
+  const int64_t value = 1;
+  auto pp1 = FunctionPp("func_pp").SetInitParam(nullptr, value);
+  ASSERT_EQ(strcmp(pp1.GetProcessPointName(), "func_pp"), 0);
 }
 } // namespace ge
