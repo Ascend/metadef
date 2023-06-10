@@ -70,6 +70,17 @@ TEST_F(OpDefAICoreUT, AICoreTest) {
   std::map<ge::AscendString, OpAICoreConfig> aicfgs = aicoreDef.GetAICoreConfigs();
   EXPECT_TRUE(aicfgs.find("ascend310p") != aicfgs.end());
   EXPECT_EQ(aicfgs.size(), 2);
+  aicoreDef.AddConfig("ascend310p");
+  aicfgs = aicoreDef.GetAICoreConfigs();
+  config = aicfgs["ascend310p"];
+  cfgs = config.GetCfgInfo();
+  EXPECT_EQ(cfgs["dynamicCompileStatic.flag"], "true");
+  EXPECT_EQ(cfgs["dynamicFormat.flag"], "true");
+  EXPECT_EQ(cfgs["dynamicRankSupport.flag"], "true");
+  EXPECT_EQ(cfgs["dynamicShapeSupport.flag"], "true");
+  EXPECT_EQ(cfgs["needCheckSupport.flag"], "false");
+  EXPECT_EQ(cfgs["precision_reduce.flag"], "true");
+  EXPECT_EQ(cfgs["rangeLimit.value"], "limited");
 }
 
 }  // namespace

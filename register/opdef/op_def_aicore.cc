@@ -196,7 +196,20 @@ OpAICoreDef &OpAICoreDef::SetParamGeneralize(optiling::PARAM_GENERALIZE_FUNC fun
   return *this;
 }
 
+void OpAICoreDef::AddConfig(const char *soc) {
+  OpAICoreConfig aicore_config;
+  aicore_config.DynamicCompileStaticFlag(true)
+    .DynamicFormatFlag(true)
+    .DynamicRankSupportFlag(true)
+    .DynamicShapeSupportFlag(true)
+    .NeedCheckSupportFlag(false)
+    .PrecisionReduceFlag(true)
+    .RangeLimitValue("limited");
+  this->AddConfig(soc, aicore_config);
+}
+
 void OpAICoreDef::AddConfig(const char *soc, OpAICoreConfig &aicore_config) {
+  this->impl_->aicore_configs.erase(ge::AscendString(soc));
   this->impl_->aicore_configs.emplace(ge::AscendString(soc), aicore_config);
 }
 

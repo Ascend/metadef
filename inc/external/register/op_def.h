@@ -162,6 +162,7 @@ public:
   optiling::OP_CHECK_FUNC &GetOpSupportInfo(void);
   optiling::OP_CHECK_FUNC &GetOpSpecInfo(void);
   optiling::PARAM_GENERALIZE_FUNC &GetParamGeneralize(void);
+  void AddConfig(const char *soc);
   void AddConfig(const char *soc, OpAICoreConfig &aicore_config);
   std::map<ge::AscendString, OpAICoreConfig> &GetAICoreConfigs(void);
   template<class T>
