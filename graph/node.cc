@@ -565,13 +565,7 @@ Node::Vistor<NodePtr> Node::NodeImpl::GetInDataNodes(const ge::ConstNodePtr &own
 }
 
 Node::Vistor<NodePtr> Node::NodeImpl::GetInControlNodes(const ge::ConstNodePtr &owner_node) const {
-  std::vector<NodePtr> vec;
-  if (in_control_anchor_ != nullptr) {
-    for (const auto &in_anchor : in_control_anchor_->GetPeerOutControlAnchors()) {
-      const auto node = in_anchor->GetOwnerNode();
-      vec.push_back(node);
-    }
-  }
+  const auto &vec = NodeUtils::GetInControlNodes(*owner_node, nullptr);
   return Node::Vistor<NodePtr>(owner_node, vec);
 }
 
@@ -637,26 +631,7 @@ uint32_t Node::NodeImpl::GetOutNodesSize() const {
 }
 
 Node::Vistor<NodePtr> Node::NodeImpl::GetOutControlNodes(const ge::ConstNodePtr &owner_node) const {
-  std::vector<NodePtr> vec;
-
-  for (const auto &out_anchor : out_data_anchors_) {
-    GE_CHK_BOOL_EXEC((out_anchor != nullptr), continue,
-                     "[Check][Param] out data anchor is nullptr, node:%s", GetName().c_str());
-    for (const auto &in_anchor : out_anchor->GetPeerInControlAnchors()) {
-      GE_CHK_BOOL_EXEC((in_anchor != nullptr), continue,
-                       "[Check][Param] Peer In Control Anchor is nullptr, node:%s", GetName().c_str());
-      const auto in_node = in_anchor->GetOwnerNode();
-      vec.push_back(in_node);
-    }
-  }
-
-  if (out_control_anchor_ != nullptr) {
-    for (const auto &in_anchor : out_control_anchor_->GetPeerAnchors()) {
-      const auto in_node = in_anchor->GetOwnerNode();
-      vec.push_back(in_node);
-    }
-  }
-
+  const auto &vec = NodeUtils::GetOutControlNodes(*owner_node, nullptr);
   return Node::Vistor<NodePtr>(owner_node, vec);
 }
 

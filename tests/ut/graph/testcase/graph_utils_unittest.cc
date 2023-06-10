@@ -1667,6 +1667,24 @@ TEST_F(UtestGraphUtils, CopyOutCtrlEdgesSuccess) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
+TEST_F(UtestGraphUtils, CopyOutCtrlEdgesSuccess_with_filter) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &src_node = builder.AddNode("src_node", NETOUTPUT, 1, 1);
+  const auto &ctrl_node = builder.AddNode("ctrl_node", CONSTANT, 0, 0);
+  const auto &ctrl_node2 = builder.AddNode("ctrl_node2", CONSTANT, 0, 0);
+  NodePtr dst_node = builder.AddNode("dst_node", NETOUTPUT, 1, 1);
+  auto graph = builder.GetGraph();
+  builder.AddControlEdge(src_node, ctrl_node);
+  builder.AddControlEdge(src_node, ctrl_node2);
+  NodeFilter node_filter = [&](const Node &node) { return node.GetName() == ctrl_node2->GetName(); };
+  int ret = GraphUtils::CopyOutCtrlEdges(src_node, dst_node, node_filter);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  EXPECT_EQ(dst_node->GetOutControlNodesSize(), src_node->GetOutControlNodesSize() - 1U);
+  EXPECT_EQ(dst_node->GetOutControlNodesSize(), 1U);
+  EXPECT_EQ(dst_node->GetOutControlNodes().at(0U), ctrl_node2);
+}
+
 TEST_F(UtestGraphUtils, MoveOutCtrlEdgesNodeIsNull) {
   auto builder = ut::GraphBuilder("test_graph0");
   NodePtr src_node;
@@ -1793,8 +1811,8 @@ TEST_F(UtestGraphUtils, RelinkGraphEdgesFail) {
 TEST_F(UtestGraphUtils, GetRefMappingSuccess) {
   auto builder = ut::GraphBuilder("Test1");
   auto graph = builder.GetGraph();
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::GetRefMapping(graph, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
@@ -1827,8 +1845,8 @@ TEST_F(UtestGraphUtils, HandleInAnchorMappingSuccess) {
   ComputeGraphPtr graph = std::make_shared<ComputeGraph>("Test0");
   auto builder = ut::GraphBuilder("Test1");
   const auto &node1 = builder.AddNode("node1", NETOUTPUT, 1, 1);
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::HandleInAnchorMapping(graph, node1, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
@@ -1837,8 +1855,8 @@ TEST_F(UtestGraphUtils, HandleInAnchorMappingNodeTypeIsMERGE) {
   ComputeGraphPtr graph = std::make_shared<ComputeGraph>("Test0");
   auto builder = ut::GraphBuilder("Test1");
   const auto &node1 = builder.AddNode("node1", MERGE, 1, 1);
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::HandleInAnchorMapping(graph, node1, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
@@ -1846,8 +1864,8 @@ TEST_F(UtestGraphUtils, HandleInAnchorMappingNodeTypeIsMERGE) {
 TEST_F(UtestGraphUtils, HandleSubgraphInputFail) {
   auto builder = ut::GraphBuilder("Test1");
   const auto &node1 = builder.AddNode("node1", DATA, 1, 1);
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::HandleSubgraphInput(node1, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
@@ -1865,8 +1883,8 @@ TEST_F(UtestGraphUtils, HandleSubgraphInputUpdateRefMappingFail) {
   graph->SetParentNode(func);
 
   AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::HandleSubgraphInput(input1, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
@@ -1880,8 +1898,8 @@ TEST_F(UtestGraphUtils, HandleSubgraphInputSuccess) {
   graph->SetParentNode(func);
 
   AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::HandleSubgraphInput(input1, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
@@ -1895,8 +1913,8 @@ TEST_F(UtestGraphUtils, HandleMergeInputPeerOutAnchorIsNull) {
   graph->SetParentNode(func);
 
   AttrUtils::SetStr(input1->GetOpDesc(), ATTR_NAME_NEXT_ITERATION, "data1");
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::HandleMergeInput(input1, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
@@ -1912,13 +1930,13 @@ TEST_F(UtestGraphUtils, HandleMergeInputPeerOutAnchorIsNotNull) {
   builder.AddDataEdge(func, 0, netoutput, 0);
   auto graph = builder.GetGraph();
 
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  SymbolToAnchors symbol_to_anchors;
   NodeIndexIO node_index_io(func, 0, kOut);
   std::list<NodeIndexIO> symbol_list;
   symbol_list.push_back(node_index_io);
   symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
 
-  std::map<std::string, std::string> anchor_to_symbol;
+  AnchorToSymbol anchor_to_symbol;
   anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
   int ret = GraphUtils::HandleMergeInput(func, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_FAILED);
@@ -1938,13 +1956,13 @@ TEST_F(UtestGraphUtils, HandleSubgraphOutput) {
   graph->SetParentNode(func);
   AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
 
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  SymbolToAnchors symbol_to_anchors;
   NodeIndexIO node_index_io(func, 0, kOut);
   std::list<NodeIndexIO> symbol_list;
   symbol_list.push_back(node_index_io);
   symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
 
-  std::map<std::string, std::string> anchor_to_symbol;
+  AnchorToSymbol anchor_to_symbol;
   anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
   int ret = GraphUtils::HandleSubgraphOutput(func, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, ge::PARAM_INVALID);
@@ -1969,7 +1987,7 @@ TEST_F(UtestGraphUtils, UnionSymbolMappingSuccess) {
   AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
   AttrUtils::SetInt(input2->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 1);
 
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  SymbolToAnchors symbol_to_anchors;
   NodeIndexIO node_index1(input1, 0, kOut);
   NodeIndexIO node_index2(input2, 0, kOut);
   std::list<NodeIndexIO> symbol_list;
@@ -1978,7 +1996,7 @@ TEST_F(UtestGraphUtils, UnionSymbolMappingSuccess) {
   symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
   symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var2_out_0", symbol_list));
 
-  std::map<std::string, std::string> anchor_to_symbol;
+  AnchorToSymbol anchor_to_symbol;
   anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
   anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
 
@@ -2006,7 +2024,7 @@ TEST_F(UtestGraphUtils, UpdateRefMappingSuccess) {
   AttrUtils::SetInt(input1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
   AttrUtils::SetInt(input2->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 1);
 
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
+  SymbolToAnchors symbol_to_anchors;
   NodeIndexIO cur_node_info(input1, 0, kOut);
   NodeIndexIO exist_node_info(input2, 0, kOut);
   std::list<NodeIndexIO> symbol_list;
@@ -2015,7 +2033,7 @@ TEST_F(UtestGraphUtils, UpdateRefMappingSuccess) {
   symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var1_out_0", symbol_list));
   symbol_to_anchors.insert(pair<std::string, std::list<NodeIndexIO>>("var2_out_0", symbol_list));
 
-  std::map<std::string, std::string> anchor_to_symbol;
+  AnchorToSymbol anchor_to_symbol;
   anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
   anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
 
@@ -2045,8 +2063,8 @@ TEST_F(UtestGraphUtils, UpdateRefMappingSymbolToAnchorsIsNull) {
 
   NodeIndexIO cur_node_info(input1, 0, kOut);
   NodeIndexIO exist_node_info(input2, 0, kOut);
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   anchor_to_symbol.insert(pair<std::string, std::string>("data1_out_0", "var1_out_0"));
   anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
 
@@ -2491,8 +2509,8 @@ TEST_F(UtestGraphUtils, GetRefMappingTest) {
   ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test0");
   auto op_desc = std::make_shared<OpDesc>("node1", "node1");
   graph->AddNode(op_desc);
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::GetRefMapping(graph, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
@@ -2573,7 +2591,27 @@ TEST_F(UtestGraphUtils, FindNodeByTypeFromAllGraphsNullInput) {
   auto nodes = GraphUtils::FindNodesByTypeFromAllNodes(graph, "Data");
   EXPECT_EQ(nodes.size(), 0);
 }
+namespace {
+void CheckAnchor(const std::list<NodeIndexIO> &all_anchors_of_symbol,
+                 const std::unordered_set<std::string> &expect_anchors) {
+  for (auto iter_e = all_anchors_of_symbol.begin(); iter_e != all_anchors_of_symbol.end(); ++iter_e) {
+    EXPECT_EQ(expect_anchors.count((*iter_e).ToString()), 1);
+  }
+}
 
+void PrintAnchors(const SymbolToAnchors &symbol_to_anchors) {
+  std::stringstream ss;
+  for (const auto pair : symbol_to_anchors) {
+    ss << pair.first << " : ";
+    ss << "[ ";
+    for (const auto anchor : pair.second) {
+      ss << anchor.ToString() << "|";
+    }
+    ss << " ]";
+  }
+  std::cout << ss.str() << std::endl;
+}
+}  // namespace
 /*   
    refdata(a) const(b)
      \       /
@@ -2599,13 +2637,13 @@ TEST_F(UtestGraphUtils, GetRefMappingWithRefData) {
   builder.AddDataEdge(transdata, 0, netoutput, 0);
   auto graph = builder.GetGraph();
 
-  std::map<std::string, std::list<NodeIndexIO>> symbol_to_anchors;
-  std::map<std::string, std::string> anchor_to_symbol;
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::GetRefMapping(graph, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
   // 当前图共5个symbol
   EXPECT_EQ(symbol_to_anchors.size(), 5);
-
+  PrintAnchors(symbol_to_anchors);
   // 校验transdata输出和refdata共享一个symbol
   NodeIndexIO transdata_out_info(transdata, 0, kOut);
   auto iter = anchor_to_symbol.find(transdata_out_info.ToString());
@@ -2620,7 +2658,6 @@ TEST_F(UtestGraphUtils, GetRefMappingWithRefData) {
   EXPECT_STREQ(symbol_transdata.c_str(), symbol_ref_data.c_str());
 
   // 校验图中refdata的symbol, 有4个tensor共享
-  // 
   auto iter_a = symbol_to_anchors.find(symbol_transdata);
   EXPECT_NE(iter_a, symbol_to_anchors.end());
   EXPECT_EQ(iter_a->second.size(), 4);
@@ -2629,9 +2666,110 @@ TEST_F(UtestGraphUtils, GetRefMappingWithRefData) {
   NodeIndexIO netoutput_in_0_info(netoutput, 0, kIn);
   std::unordered_set<std::string> expect_anchors_set{refdata_info.ToString(), transdata_out_info.ToString(),
                                                      assing_in_0_info.ToString(), netoutput_in_0_info.ToString()};
-  std::list<NodeIndexIO> all_anchors_of_symbol = iter_a->second;
-  for (auto iter_e = all_anchors_of_symbol.begin(); iter_e != all_anchors_of_symbol.end(); ++iter_e) {
-    EXPECT_EQ(expect_anchors_set.count((*iter_e).ToString()), 1);
-  }
+  CheckAnchor(iter_a->second, expect_anchors_set);
+}
+
+/*
+   data   data
+     \       /
+       merge
+         |
+         |
+      cast
+         |
+         |
+     netoutput
+*/
+TEST_F(UtestGraphUtils, GetRefMappingWithMergeOp) {
+  auto builder = ut::GraphBuilder("test1");
+  const auto &input1 = builder.AddNode("data1", DATA, 0, 1);
+  const auto &input2 = builder.AddNode("data2", DATA, 0, 1);
+  const auto &merge = builder.AddNode("merge", MERGE, 2, 1);
+  const auto &cast = builder.AddNode("cast", "CAST", 1, 1);
+  const auto &out = builder.AddNode("out", NETOUTPUT, 1, 1);
+  builder.AddDataEdge(input1, 0, merge, 0);
+  builder.AddDataEdge(input2, 0, merge, 1);
+  builder.AddDataEdge(merge, 0, cast, 0);
+  builder.AddDataEdge(cast, 0, out, 0);
+  auto graph = builder.GetGraph();
+
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
+  int ret = GraphUtils::GetRefMapping(graph, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  // 当前图共2个symbol
+  EXPECT_EQ(symbol_to_anchors.size(), 2);
+  PrintAnchors(symbol_to_anchors);
+  // 校验merge输出和input1,input2共享一个symbol
+  NodeIndexIO merge_out(merge, 0, kOut);
+  auto iter = anchor_to_symbol.find(merge_out.ToString());
+  EXPECT_NE(iter, anchor_to_symbol.end());
+  std::string symbol_merge = iter->second;
+
+  NodeIndexIO input1_info(input1, 0, kOut);
+  iter = anchor_to_symbol.find(input1_info.ToString());
+  EXPECT_NE(iter, anchor_to_symbol.end());
+  std::string symbol_input1 = iter->second;
+  EXPECT_STREQ(symbol_merge.c_str(), symbol_input1.c_str());
+
+  NodeIndexIO input2_info(input2, 0, kOut);
+  iter = anchor_to_symbol.find(input2_info.ToString());
+  EXPECT_NE(iter, anchor_to_symbol.end());
+  std::string symbol_input2 = iter->second;
+  EXPECT_STREQ(symbol_merge.c_str(), symbol_input2.c_str());
+}
+
+TEST_F(UtestGraphUtils, GetRefMappingWithSubgraphOp) {
+  auto root_builder = ut::GraphBuilder("root");
+  const auto &data = root_builder.AddNode("data", DATA, 0, 1);
+  const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 1, 1);
+  const auto &out = root_builder.AddNode("out", NETOUTPUT, 1, 1);
+  root_builder.AddDataEdge(data, 0, partitioncall_0, 0);
+  root_builder.AddDataEdge(partitioncall_0, 0, out, 0);
+  const auto &root_graph = root_builder.GetGraph();
+
+  int64_t index = 0;
+  auto sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+  const auto &partitioncall_0_data = sub_builder.AddNode("partitioncall_0_data", DATA, 1, 1);
+  AttrUtils::SetInt(partitioncall_0_data->GetOpDesc(), "_parent_node_index", index);
+  const auto &partitioncall_0_cast = sub_builder.AddNode("partitioncall_0_cast", "Cast", 1, 1);
+  const auto &partitioncall_0_netoutput = sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 1, 1);
+  AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", index);
+  sub_builder.AddDataEdge(partitioncall_0_data, 0, partitioncall_0_cast, 0);
+  sub_builder.AddDataEdge(partitioncall_0_cast, 0, partitioncall_0_netoutput, 0);
+  const auto &sub_graph = sub_builder.GetGraph();
+  sub_graph->SetParentNode(partitioncall_0);
+  sub_graph->SetParentGraph(root_graph);
+  root_graph->AddSubgraph("partitioncall_0_sub", sub_graph);
+  partitioncall_0->GetOpDesc()->AddSubgraphName("partitioncall_0_sub");
+  partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+
+  SymbolToAnchors symbol_to_anchors;
+  AnchorToSymbol anchor_to_symbol;
+  int ret = GraphUtils::GetRefMapping(root_graph, symbol_to_anchors, anchor_to_symbol);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  // 当前图共2个symbol
+  EXPECT_EQ(symbol_to_anchors.size(), 2);
+  PrintAnchors(symbol_to_anchors);
+  // 校验partitioncall_0输出和partitioncall_0_cast输出,partitioncall_0_netoutput的输入输出，out的输入输出共享一个symbol
+  NodeIndexIO partitioncall_0_out(partitioncall_0, 0, kOut);
+  auto iter = anchor_to_symbol.find(partitioncall_0_out.ToString());
+  EXPECT_NE(iter, anchor_to_symbol.end());
+  std::string symbol_partitioncall_0_out = iter->second;
+  auto iter_a = symbol_to_anchors.find(symbol_partitioncall_0_out);
+  EXPECT_NE(iter_a, symbol_to_anchors.end());
+  EXPECT_EQ(iter_a->second.size(), 6U);
+  std::unordered_set<std::string> expect_anchors{partitioncall_0_out.ToString()};
+  NodeIndexIO partitioncall_0_cast_out(partitioncall_0_cast, 0, kOut);
+  expect_anchors.emplace(partitioncall_0_cast_out.ToString());
+  NodeIndexIO partitioncall_0_netoutput_out(partitioncall_0_netoutput, 0, kOut);
+  expect_anchors.emplace(partitioncall_0_netoutput_out.ToString());
+  NodeIndexIO partitioncall_0_netoutput_in(partitioncall_0_netoutput, 0, kIn);
+  expect_anchors.emplace(partitioncall_0_netoutput_in.ToString());
+  NodeIndexIO out_in(out, 0, kIn);
+  expect_anchors.emplace(out_in.ToString());
+  NodeIndexIO out_out(out, 0, kOut);
+  expect_anchors.emplace(out_out.ToString());
+  CheckAnchor(iter_a->second, expect_anchors);
 }
 }  // namespace ge

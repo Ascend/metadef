@@ -153,6 +153,29 @@ class NodeUtils {
  */
   static std::vector<NodePtr> GetSubgraphOutputNodes(const Node &node);
 
+  /**
+ * 获取`node`所在的图对应的根图
+ * @param node
+ * @return
+ */
+  static ComputeGraphPtr FindRootGraph(const Node &node);
+
+  /**
+   * 根据`node_filter`获取被node控制的输出节点
+   * @param node
+   * @param node_filter 控制边拷贝白名单过滤器，可以通过传递此参数实现满足条件的输出节点的获取
+   * @return
+   */
+  static std::vector<NodePtr> GetOutControlNodes(const Node &node, const NodeFilter &node_filter);
+
+  /**
+   * 根据`node_filter`获取控制node的输入节点
+   * @param node
+   * @param node_filter 控制边拷贝白名单过滤器，可以通过传递此参数实现满足条件的输入节点的获取
+   * @return
+   */
+  static std::vector<NodePtr> GetInControlNodes(const Node &node, const NodeFilter &node_filter);
+
   static NodePtr GetInDataNodeByIndex(const Node &node, const int32_t index);
   static std::pair<NodePtr, OutDataAnchorPtr> GetInDataNodeAndAnchorByIndex(const Node &node, const int32_t index);
 
@@ -193,7 +216,7 @@ class NodeUtils {
   static bool IsDtResourceNode(const NodePtr &node);
   static bool IsLikeAtomicClean(const NodePtr &node);
   /**
-   * 用于判断identity节点是否被用于控制读写顺序的，如果是的话，
+   * 用于判断identity节点是否被用于控制先读后写顺序的，如果是的话，
    * 则图优化的时候不能无脑删除identity节点来提升性能
    * @param node_ptr
    * @return
