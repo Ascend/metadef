@@ -21,8 +21,6 @@
 #include "graph/ascend_string.h"
 
 namespace optiling {
-std::map<ge::AscendString, TilingDataConstructor> CTilingDataClassFactory::instance_;
-
 void TilingDef::GeLogError(const std::string& str) const {
   GELOGE(ge::GRAPH_FAILED, "%s", str.c_str());
 }
@@ -52,7 +50,7 @@ std::vector<FieldInfo> TilingDef::GetFieldInfo() const {
   return field_info_;
 }
 
-ge::AscendString TilingDef::GetTilingClassName() const {
+char *TilingDef::GetTilingClassName() const {
   return class_name_;
 }
 
@@ -66,7 +64,7 @@ void TilingDef::InitData() {
     data_ptr_ = nullptr;
   }
   if (data_size_ > 0) {
-    data_ptr_ = new uint8_t[data_size_];
+    data_ptr_ = new uint8_t[data_size_]();
   }
 }
 
@@ -76,17 +74,23 @@ StructSizeInfoBase &StructSizeInfoBase::GetInstance()
   return instance;
 }
 
-void CTilingDataClassFactory::RegisterTilingData(const ge::AscendString &op_type,
+CTilingDataClassFactory &CTilingDataClassFactory::GetInstance()
+{
+  static CTilingDataClassFactory instance;
+  return instance;
+}
+
+void CTilingDataClassFactory::RegisterTilingData(const char *op_type,
                                                  const TilingDataConstructor constructor) {
-  instance_[op_type] = constructor;
-  GELOGI("RegisterTilingData: op_type:%s, constructor:%p, registered count:%zu", op_type.GetString(), constructor,
+  instance_.emplace(op_type, constructor);
+  GELOGI("RegisterTilingData: op_type:%s, constructor:%p, registered count:%zu", op_type, constructor,
          instance_.size());
 }
 
-std::shared_ptr<TilingDef> CTilingDataClassFactory::CreateTilingDataInstance(const ge::AscendString &op_type) {
+std::shared_ptr<TilingDef> CTilingDataClassFactory::CreateTilingDataInstance(const char *op_type) {
   const auto it = instance_.find(op_type);
   if (it == instance_.end()) {
-    GELOGW("CreateTilingDataInstance: cannot find op_type:%s.", op_type.GetString());
+    GELOGW("CreateTilingDataInstance: cannot find op_type:%s.", op_type);
     return nullptr;
   }
   const TilingDataConstructor constructor = it->second;

@@ -99,6 +99,11 @@ OpAICoreConfig &OpAICoreConfig::SlicePatternValue(const char *value) {
   return *this;
 }
 
+OpAICoreConfig &OpAICoreConfig::ExtendCfgInfo(const char *key, const char *value) {
+  this->AddCfgItem(key, value);
+  return *this;
+}
+
 std::vector<OpParamDef> &OpAICoreConfig::GetInputs(void) {
   return this->impl_->op_params.GetInputs();
 }
@@ -151,8 +156,15 @@ OpAICoreDef &OpAICoreDef::operator=(const OpAICoreDef &aicore_def) {
   return *this;
 }
 
+ge::graphStatus TilingParsePlaceHolder(gert::TilingParseContext* context)
+{
+  (void)context;
+  return ge::GRAPH_SUCCESS;
+}
+
 OpAICoreDef &OpAICoreDef::SetTiling(gert::OpImplKernelRegistry::TilingKernelFunc func) {
   this->impl_->tiling_func = func;
+  this->impl_->tiling_parse = TilingParsePlaceHolder;
   return *this;
 }
 

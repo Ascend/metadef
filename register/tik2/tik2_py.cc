@@ -428,27 +428,27 @@ extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *res
     return 0;
   }
   ge::AscendString op_type_str = optype;
-  auto tiling_def = CTilingDataClassFactory::CreateTilingDataInstance(op_type_str);
+  auto tiling_def = CTilingDataClassFactory::GetInstance().CreateTilingDataInstance(optype);
   if (tiling_def == nullptr) {
     GELOGW("Failed to CreateTilingDataInstance. optype = %s", optype);
     return 0;
   }
 
   nlohmann::json json_obj;
-  json_obj["class_name"] = tiling_def->GetTilingClassName().GetString();
+  json_obj["class_name"] = tiling_def->GetTilingClassName();
   json_obj["data_size"] = tiling_def->GetDataSize();
   const auto &field_list = tiling_def->GetFieldInfo();
   nlohmann::json json_field_list;
   for (const auto &field : field_list) {
     nlohmann::json json_field;
-    json_field["classType"] = field.classType_.GetString();
-    json_field["name"] = field.name_.GetString();
-    json_field["dtype"] = field.dtype_.GetString();
+    json_field["classType"] = field.classType_;
+    json_field["name"] = field.name_;
+    json_field["dtype"] = field.dtype_;
     if (json_field["classType"] == "1") {
-      json_field["arrSize"] = field.arrSize_.GetString();
+      json_field["arrSize"] = field.arrSize_;
     } else if (json_field["classType"] == "2") {
-      json_field["structType"] = field.structType_.GetString();
-      json_field["structSize"] = field.structSize_.GetString();
+      json_field["structType"] = field.structType_;
+      json_field["structSize"] = field.structSize_;
     }
     json_field_list.emplace_back(json_field);
   }

@@ -25,14 +25,21 @@
 #include "graph/ascend_string.h"
 
 namespace optiling {
+struct CharPtrCmp {
+  bool operator()(const char *strLeft, const char *strRight) const
+  {
+    return strcmp(strLeft, strRight) < 0;
+  }
+};
+
 class StructSizeInfoBase {
 public:
   static StructSizeInfoBase &GetInstance();
-  void SetStructSize(const ge::AscendString structType, const size_t structSize)
+  void SetStructSize(const char *structType, const size_t structSize)
   {
     structSizeInfo[structType] = structSize;
   }
-  size_t GetStructSize(const ge::AscendString structType)
+  size_t GetStructSize(const char *structType)
   {
     return structSizeInfo.at(structType);
   }
@@ -41,26 +48,26 @@ private:
   ~StructSizeInfoBase() { };
   StructSizeInfoBase(const StructSizeInfoBase &);
   StructSizeInfoBase &operator=(const StructSizeInfoBase &);
-  std::map<ge::AscendString, size_t> structSizeInfo;
+  std::map<const char *, size_t, CharPtrCmp> structSizeInfo;
 };
 
 class FieldInfo {
 public:
-  FieldInfo(const ge::AscendString &dtype, const ge::AscendString &name)
+  FieldInfo(const char *dtype, const char *name)
       : dtype_(dtype), name_(name), classType_("0") {}
-  FieldInfo(const ge::AscendString &dtype, const ge::AscendString &name, const ge::AscendString &arrSize)
+  FieldInfo(const char *dtype, const char *name, const char *arrSize)
       : dtype_(dtype), name_(name), arrSize_(arrSize), classType_("1") {}
-  FieldInfo(const ge::AscendString &dtype, const ge::AscendString &name, const ge::AscendString &structType,
-            const ge::AscendString &structSize)
+  FieldInfo(const char *dtype, const char *name, const char *structType,
+            const char *structSize)
       : dtype_(dtype), name_(name), structType_(structType), structSize_(structSize), classType_("2") {}
 
 public:
-  ge::AscendString dtype_;
-  ge::AscendString name_;
-  ge::AscendString arrSize_;
-  ge::AscendString structType_;
-  ge::AscendString structSize_;
-  ge::AscendString classType_;
+  const char *dtype_;
+  const char *name_;
+  const char *arrSize_;
+  const char *structType_;
+  const char *structSize_;
+  const char *classType_;
 };
 
 class TilingDef {
@@ -74,7 +81,7 @@ public:
   }
   void SaveToBuffer(void *pdata, size_t capacity) const;
   std::vector<FieldInfo> GetFieldInfo() const;
-  ge::AscendString GetTilingClassName() const;
+  char *GetTilingClassName() const;
   size_t GetDataSize() const;
   void InitData();
   void GeLogError(const std::string& str) const;
@@ -82,10 +89,10 @@ public:
 protected:
   // dtype, name
   std::vector<FieldInfo> field_info_;
-  std::map<ge::AscendString, size_t> field_offset_map_;
+  std::map<const char *, size_t, CharPtrCmp> field_offset_map_;
   uint8_t *data_ptr_ = nullptr;
   size_t data_size_ = 0;
-  ge::AscendString class_name_;
+  char *class_name_;
   std::vector<void *> saveBufferPtr;
   size_t struct_size_ = 0;
 };
@@ -94,11 +101,16 @@ using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
 
 class CTilingDataClassFactory {
 public:
-  static void RegisterTilingData(const ge::AscendString &op_type, const TilingDataConstructor constructor);
-  static std::shared_ptr<TilingDef> CreateTilingDataInstance(const ge::AscendString &op_type);
+  static CTilingDataClassFactory &GetInstance();
+  void RegisterTilingData(const char *op_type, const TilingDataConstructor constructor);
+  std::shared_ptr<TilingDef> CreateTilingDataInstance(const char *op_type);
 
 private:
-  static std::map<ge::AscendString, TilingDataConstructor> instance_;
+  CTilingDataClassFactory() { };
+  ~CTilingDataClassFactory() { };
+  CTilingDataClassFactory(const CTilingDataClassFactory &);
+  CTilingDataClassFactory &operator=(const CTilingDataClassFactory &);
+  std::map<const char *, TilingDataConstructor, CharPtrCmp> instance_;
 };
 }  // end of namespace optiling
 
@@ -118,14 +130,14 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
    public:                                                                                                             \
     class FieldHandler {                                                                                               \
      public:                                                                                                           \
-      FieldHandler(class_name *pinstance, const ge::AscendString &dtype, const ge::AscendString &name, size_t len) {   \
+      FieldHandler(class_name *pinstance, const char *dtype, const char *name, size_t len) {                           \
         pinstance->field_info_.push_back( { dtype, name });                                                            \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += len;                                                                                  \
         pinstance->InitData();                                                                                         \
         StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
       }                                                                                                                \
-      FieldHandler(class_name *pinstance, const ge::AscendString &dtype, const ge::AscendString &name, size_t len,     \
+      FieldHandler(class_name *pinstance, const char *dtype, const char *name, size_t len,                             \
                    size_t arrSize) {                                                                                   \
         pinstance->field_info_.push_back(FieldInfo(dtype, name, std::to_string(arrSize).c_str()));                     \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
@@ -133,8 +145,8 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
         pinstance->InitData();                                                                                         \
         StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
       }                                                                                                                \
-      FieldHandler(class_name *pinstance, const ge::AscendString &dtype, const ge::AscendString &name,                 \
-                   const ge::AscendString &structType, size_t structSize, void *ptr) {                                 \
+      FieldHandler(class_name *pinstance, const char *dtype, const char *name,                                         \
+                   const char *structType, size_t structSize, void *ptr) {                                             \
         pinstance->field_info_.push_back(FieldInfo(dtype, name, structType, std::to_string(structSize).c_str()));      \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += structSize;                                                                           \
@@ -159,7 +171,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   data_type get_##field_name() { return field_name##_; }                                                               \
                                                                                                                        \
  private:                                                                                                              \
-  data_type field_name##_;                                                                                             \
+  data_type field_name##_ = 0;                                                                                         \
   FieldHandler field_name##_handler_ = FieldHandler(this, #data_type, #field_name, sizeof(data_type));
 
 #define TILING_DATA_FIELD_DEF_ARR(arr_type, arr_size, field_name)                                                      \
@@ -175,7 +187,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   arr_type *get_##field_name() { return field_name##_; }                                                               \
                                                                                                                        \
  private:                                                                                                              \
-  arr_type *field_name##_;                                                                                             \
+  arr_type *field_name##_ = nullptr;                                                                                   \
   FieldHandler field_name##_handler_ = FieldHandler(this, #arr_type, #field_name, sizeof(arr_type), arr_size);
 
 #define TILING_DATA_FIELD_DEF_STRUCT(struct_type, field_name)                                                          \
@@ -195,7 +207,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   class op_type##class_name##Helper {                                                                                  \
    public:                                                                                                             \
     op_type##class_name##Helper() {                                                                                    \
-      CTilingDataClassFactory::RegisterTilingData(#op_type,                                                            \
+      CTilingDataClassFactory::GetInstance().RegisterTilingData(#op_type,                                              \
                    op_type##class_name##Helper::CreateTilingDataInstance);                                             \
     }                                                                                                                  \
     static std::shared_ptr<TilingDef> CreateTilingDataInstance() { return std::make_shared<class_name>(); }            \

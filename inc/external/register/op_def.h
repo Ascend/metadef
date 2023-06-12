@@ -126,6 +126,7 @@ public:
   OpAICoreConfig &PrecisionReduceFlag(bool flag);
   OpAICoreConfig &RangeLimitValue(const char *value);
   OpAICoreConfig &SlicePatternValue(const char *value);
+  OpAICoreConfig &ExtendCfgInfo(const char *key, const char *value);
   std::vector<OpParamDef> &GetInputs(void);
   std::vector<OpParamDef> &GetOutputs(void);
   std::vector<ge::AscendString> &GetCfgKeys(void);

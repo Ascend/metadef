@@ -31,10 +31,11 @@
 
 #elif defined(OP_TILING_LIB)
 
-#define OP_ADD(opType, compInfo)                                                                                       \
+#define OP_ADD(opType, ...)                                                                                            \
+struct OpAddCompilerInfoPlaceholder##opType {};                                                                        \
   static int g_##opType##_added = [](const char *name) {                                                               \
     opType op(#opType);                                                                                                \
-    op.AICore().OpTilingPost<compInfo>(#opType);                                                                       \
+    op.AICore().OpTilingPost<OpAddCompilerInfoPlaceholder##opType>(#opType);                                           \
     op.AICore().OpCheckPost(#opType);                                                                                  \
     return 0;                                                                                                          \
   }(#opType)
