@@ -55,18 +55,18 @@ class FieldInfo {
 public:
   FieldInfo(const char *dtype, const char *name)
       : dtype_(dtype), name_(name), classType_("0") {}
-  FieldInfo(const char *dtype, const char *name, const char *arrSize)
+  FieldInfo(const char *dtype, const char *name, size_t arrSize)
       : dtype_(dtype), name_(name), arrSize_(arrSize), classType_("1") {}
   FieldInfo(const char *dtype, const char *name, const char *structType,
-            const char *structSize)
+            size_t structSize)
       : dtype_(dtype), name_(name), structType_(structType), structSize_(structSize), classType_("2") {}
 
 public:
   const char *dtype_;
   const char *name_;
-  const char *arrSize_;
+  size_t arrSize_;
   const char *structType_;
-  const char *structSize_;
+  size_t structSize_;
   const char *classType_;
 };
 
@@ -81,7 +81,7 @@ public:
   }
   void SaveToBuffer(void *pdata, size_t capacity) const;
   std::vector<FieldInfo> GetFieldInfo() const;
-  char *GetTilingClassName() const;
+  const char *GetTilingClassName() const;
   size_t GetDataSize() const;
   void InitData();
   void GeLogError(const std::string& str) const;
@@ -92,7 +92,7 @@ protected:
   std::map<const char *, size_t, CharPtrCmp> field_offset_map_;
   uint8_t *data_ptr_ = nullptr;
   size_t data_size_ = 0;
-  char *class_name_;
+  const char *class_name_;
   std::vector<void *> saveBufferPtr;
   size_t struct_size_ = 0;
 };
@@ -139,7 +139,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
       }                                                                                                                \
       FieldHandler(class_name *pinstance, const char *dtype, const char *name, size_t len,                             \
                    size_t arrSize) {                                                                                   \
-        pinstance->field_info_.push_back(FieldInfo(dtype, name, std::to_string(arrSize).c_str()));                     \
+        pinstance->field_info_.push_back(FieldInfo(dtype, name, arrSize));                     \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += len * arrSize;                                                                        \
         pinstance->InitData();                                                                                         \
@@ -147,7 +147,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
       }                                                                                                                \
       FieldHandler(class_name *pinstance, const char *dtype, const char *name,                                         \
                    const char *structType, size_t structSize, void *ptr) {                                             \
-        pinstance->field_info_.push_back(FieldInfo(dtype, name, structType, std::to_string(structSize).c_str()));      \
+        pinstance->field_info_.push_back(FieldInfo(dtype, name, structType, structSize));      \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += structSize;                                                                           \
         pinstance->InitData();                                                                                         \

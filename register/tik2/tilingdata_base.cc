@@ -50,7 +50,7 @@ std::vector<FieldInfo> TilingDef::GetFieldInfo() const {
   return field_info_;
 }
 
-char *TilingDef::GetTilingClassName() const {
+const char *TilingDef::GetTilingClassName() const {
   return class_name_;
 }
 
