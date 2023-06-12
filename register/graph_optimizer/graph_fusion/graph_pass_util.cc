@@ -36,6 +36,19 @@ const char* kBackWard = "_backward";
 const char* kRecompute = "_recompute";
 const char* kOptimizer = "_optimizer";
 const std::array<string, 2> kBoolAttrNeedInherit = {kRecompute, kOptimizer};
+// Indicates custom impl mode for specified op
+const std::string kOpCustomImplModeEnum = "_op_custom_impl_mode_enum";
+// Indicates impl mode for specified op
+const std::string kOpImplModeEnum = "_op_impl_mode_enum";
+// impl_mode priority from high to low
+const std::map<int64_t, size_t> kOpImplIntToPriorityMap = {
+    {0x40,    1},  // enable_hi_float_32_execution
+    {0x20,    2},  // enable_float_32_execution
+    {0x4,     3},  // high_precision
+    {0x2,     4},  // high_performance
+    {0x10,    5},  // support_of_bound_index
+    {0x8,     6},  // super_performance
+};
 }
 
 void GraphPassUtil::SetOutputDescAttr(const uint32_t &origin_index, const uint32_t &fusion_index,
@@ -333,6 +346,50 @@ void GraphPassUtil::InheritGraphRelatedAttr(const std::vector<ge::NodePtr> &orig
   }
 }
 
+void GraphPassUtil::GetOpCustomImplModeFromOriNode(const std::vector<ge::NodePtr> &original_nodes,
+                                                   std::set<size_t> &op_impl_mode_priority_set,
+                                                   std::map<std::string, int64_t> &origin_node_impl_mode_map) {
+  for (const auto &origin_node : original_nodes) {
+    int64_t tmp_op_impl_mode = 0;
+    (void)ge::AttrUtils::GetInt(origin_node->GetOpDesc(), kOpCustomImplModeEnum, tmp_op_impl_mode);
+    if (tmp_op_impl_mode == 0) {
+      continue;
+    }
+    GELOGD("Node[%s, %s] has _op_custom_impl_mode_enum 0x%x.", origin_node->GetName().c_str(),
+           origin_node->GetType().c_str(), tmp_op_impl_mode);
+    auto iter = kOpImplIntToPriorityMap.find(tmp_op_impl_mode);
+    if (iter != kOpImplIntToPriorityMap.end()) {
+      GELOGD("Node[%s, %s] has impl_mode priority %zu.", origin_node->GetName().c_str(),
+             origin_node->GetType().c_str(), iter->second);
+      op_impl_mode_priority_set.emplace(iter->second);
+      origin_node_impl_mode_map[origin_node->GetName()] = tmp_op_impl_mode;
+    }
+  }
+}
+
+void GraphPassUtil::SetOpCustomImplModeToFusNode(const ge::OpDescPtr &fusion_op,
+                                                 const std::map<std::string, int64_t> &origin_node_impl_mode_map,
+                                                 const std::set<size_t> &op_impl_mode_priority_set) {
+    auto iter = origin_node_impl_mode_map.find(fusion_op->GetName());
+    if (iter != origin_node_impl_mode_map.end()) {
+      (void)ge::AttrUtils::SetInt(fusion_op, kOpCustomImplModeEnum, iter->second);
+      GELOGD("Node[%s, %s] set _op_impl_mode_enum 0x%x by op_name.", fusion_op->GetName().c_str(),
+             fusion_op->GetType().c_str(), iter->second);
+    } else {
+      if (op_impl_mode_priority_set.empty()) {
+        return;
+      }
+      for (auto iter = kOpImplIntToPriorityMap.begin(); iter != kOpImplIntToPriorityMap.end(); ++iter) {
+        if (iter->second == *op_impl_mode_priority_set.begin()) {
+          (void)ge::AttrUtils::SetInt(fusion_op, kOpCustomImplModeEnum, iter->first);
+          GELOGD("Node[%s, %s] set _op_impl_mode_enum 0x%x by priority.", fusion_op->GetName().c_str(),
+                 fusion_op->GetType().c_str(), iter->first);
+        }
+      }
+    }
+  return;
+}
+
 void GraphPassUtil::InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &original_nodes,
                                             const std::vector<ge::NodePtr> &fusion_nodes,
                                             BackWardInheritMode inherit_mode) {
@@ -352,6 +409,10 @@ void GraphPassUtil::InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &orig
     }
   }
 
+  std::set<size_t> op_impl_mode_priority_set;
+  std::map<std::string, int64_t> origin_node_impl_mode_map;
+  GetOpCustomImplModeFromOriNode(original_nodes, op_impl_mode_priority_set, origin_node_impl_mode_map);
+
   for (const auto &fusion_node : fusion_nodes) {
     const ge::OpDescPtr fusion_op = fusion_node->GetOpDesc();
     if (!op_compile_strategy.empty() && !ge::AttrUtils::HasAttr(fusion_op, ge::ATTR_NAME_OP_COMPILE_STRATEGY)) {
@@ -361,8 +422,9 @@ void GraphPassUtil::InheritAttrFromOriNodes(const std::vector<ge::NodePtr> &orig
     if (keep_dtype != 0 && !ge::AttrUtils::HasAttr(fusion_op, ge::ATTR_NAME_KEEP_DTYPE)) {
       (void) ge::AttrUtils::SetInt(fusion_op, ge::ATTR_NAME_KEEP_DTYPE, keep_dtype);
     }
-  }
 
+    SetOpCustomImplModeToFusNode(fusion_op, origin_node_impl_mode_map, op_impl_mode_priority_set);
+  }
   InheritGraphRelatedAttr(original_nodes, fusion_nodes, inherit_mode);
 }
 

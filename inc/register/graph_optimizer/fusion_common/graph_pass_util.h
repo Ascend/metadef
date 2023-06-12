@@ -146,6 +146,14 @@ class GraphPassUtil {
 
   static void GetNodesFromNodeTypeMap(NodeTypeMapPtr &node_type_map, const std::string &op_type,
                                       std::vector<ge::NodePtr> &nodes);
+
+  static void GetOpCustomImplModeFromOriNode(const std::vector<ge::NodePtr> &original_nodes,
+                                             std::set<size_t> &op_impl_mode_priority_set,
+                                             std::map<std::string, int64_t> &origin_node_impl_mode_map);
+
+  static void SetOpCustomImplModeToFusNode(const ge::OpDescPtr &fusion_op,
+                                           const std::map<std::string, int64_t> &origin_node_impl_mode_map,
+                                           const std::set<size_t> &op_impl_mode_priority_set);
 };
 
 }  // namespace fe

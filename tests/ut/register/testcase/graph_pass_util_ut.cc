@@ -520,4 +520,137 @@ TEST_F(GraphPassUtilUT, test_inherit_attrs_03) {
   EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_KEEP_DTYPE), false);
   EXPECT_EQ(fus_op->HasAttr(ge::ATTR_NAME_OP_COMPILE_STRATEGY), false);
 }
+
+  // N -> 1
+TEST_F(GraphPassUtilUT, test_inherit_attrs_04) {
+  auto graph = std::make_shared<ComputeGraph>("test");
+  ge::OpDescPtr ori_op_desc1 = std::make_shared<ge::OpDesc>("node1", "Relu");
+  ge::OpDescPtr ori_op_desc2 = std::make_shared<ge::OpDesc>("node2", "Relu");
+  ge::OpDescPtr fus_op_desc = std::make_shared<ge::OpDesc>("fusion", "Fusion");
+
+  ge::NodePtr ori_node1 = graph->AddNode(ori_op_desc1);
+  ge::NodePtr ori_node2 = graph->AddNode(ori_op_desc2);
+  ge::NodePtr fus_node = graph->AddNode(fus_op_desc);
+
+  std::vector<ge::NodePtr> ori_nodes = {ori_node1, ori_node2};
+  std::vector<ge::NodePtr> fus_nodes = {fus_node};
+
+  ge::AttrUtils::SetInt(ori_op_desc1, "_op_custom_impl_mode_enum", 0x20);
+  ge::AttrUtils::SetInt(ori_op_desc2, "_op_custom_impl_mode_enum", 0x40);
+
+  GraphPassUtil::InheritAttrFromOriNodes(ori_nodes, fus_nodes, BackWardInheritMode::kFusedNode);
+
+  int64_t op_impl_mode = -1;
+  ge::AttrUtils::GetInt(fus_op_desc, "_op_custom_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, 0x40);
+}
+
+
+// 1 -> N
+TEST_F(GraphPassUtilUT, test_inherit_attrs_05) {
+  auto graph = std::make_shared<ComputeGraph>("test");
+  ge::OpDescPtr ori_op_desc = std::make_shared<ge::OpDesc>("node", "Relu");
+  ge::OpDescPtr fus_op_desc1 = std::make_shared<ge::OpDesc>("node2", "Relu");
+  ge::OpDescPtr fus_op_desc2 = std::make_shared<ge::OpDesc>("node1", "Relu");
+
+  ge::NodePtr ori_node = graph->AddNode(ori_op_desc);
+  ge::NodePtr fus_node1 = graph->AddNode(fus_op_desc1);
+  ge::NodePtr fus_node2 = graph->AddNode(fus_op_desc2);
+
+  std::vector<ge::NodePtr> ori_nodes = {ori_node};
+  std::vector<ge::NodePtr> fus_nodes = {fus_node1, fus_node2};
+
+  ge::AttrUtils::SetInt(ori_op_desc, "_op_custom_impl_mode_enum", 0x10);
+
+  GraphPassUtil::InheritAttrFromOriNodes(ori_nodes, fus_nodes, BackWardInheritMode::kFusedNode);
+
+  int64_t op_impl_mode = -1;
+  ge::AttrUtils::GetInt(fus_op_desc1, "_op_custom_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, 0x10);
+  ge::AttrUtils::GetInt(fus_op_desc2, "_op_custom_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, 0x10);
+}
+
+// N -> N
+TEST_F(GraphPassUtilUT, test_inherit_attrs_06) {
+  auto graph = std::make_shared<ComputeGraph>("test");
+  ge::OpDescPtr ori_op_desc1 = std::make_shared<ge::OpDesc>("node1", "Relu");
+  ge::OpDescPtr ori_op_desc2 = std::make_shared<ge::OpDesc>("node2", "Relu");
+  ge::OpDescPtr fus_op_desc1 = std::make_shared<ge::OpDesc>("node2", "Fusion");
+  ge::OpDescPtr fus_op_desc2 = std::make_shared<ge::OpDesc>("node1", "Fusion");
+
+  ge::NodePtr ori_node1 = graph->AddNode(ori_op_desc1);
+  ge::NodePtr ori_node2 = graph->AddNode(ori_op_desc2);
+  ge::NodePtr fus_node1 = graph->AddNode(fus_op_desc1);
+  ge::NodePtr fus_node2 = graph->AddNode(fus_op_desc2);
+
+  std::vector<ge::NodePtr> ori_nodes = {ori_node1, ori_node2};
+  std::vector<ge::NodePtr> fus_nodes = {fus_node1, fus_node2};
+
+  ge::AttrUtils::SetInt(ori_op_desc1, "_op_custom_impl_mode_enum", 0x4);
+  ge::AttrUtils::SetInt(ori_op_desc2, "_op_custom_impl_mode_enum", 0x2);
+
+  GraphPassUtil::InheritAttrFromOriNodes(ori_nodes, fus_nodes, BackWardInheritMode::kFusedNode);
+
+  int64_t op_impl_mode = -1;
+  ge::AttrUtils::GetInt(fus_op_desc1, "_op_custom_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, 0x2);
+  ge::AttrUtils::GetInt(fus_op_desc2, "_op_custom_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, 0x4);
+}
+
+// N1 -> N2
+TEST_F(GraphPassUtilUT, test_inherit_attrs_07) {
+  auto graph = std::make_shared<ComputeGraph>("test");
+  ge::OpDescPtr ori_op_desc1 = std::make_shared<ge::OpDesc>("node1", "Relu");
+  ge::OpDescPtr ori_op_desc2 = std::make_shared<ge::OpDesc>("node2", "Relu");
+  ge::OpDescPtr ori_op_desc3 = std::make_shared<ge::OpDesc>("node3", "Relu");
+  ge::OpDescPtr fus_op_desc1 = std::make_shared<ge::OpDesc>("node1", "Relu");
+  ge::OpDescPtr fus_op_desc2 = std::make_shared<ge::OpDesc>("Fusion", "Fusion");
+
+  ge::NodePtr ori_node1 = graph->AddNode(ori_op_desc1);
+  ge::NodePtr ori_node2 = graph->AddNode(ori_op_desc2);
+  ge::NodePtr ori_node3 = graph->AddNode(ori_op_desc3);
+  ge::NodePtr fus_node1 = graph->AddNode(fus_op_desc1);
+  ge::NodePtr fus_node2 = graph->AddNode(fus_op_desc2);
+
+  std::vector<ge::NodePtr> ori_nodes = {ori_node1, ori_node2, ori_node3};
+  std::vector<ge::NodePtr> fus_nodes = {fus_node1, fus_node2};
+
+  ge::AttrUtils::SetInt(ori_op_desc1, "_op_custom_impl_mode_enum", 0x8);
+  ge::AttrUtils::SetInt(ori_op_desc2, "_op_custom_impl_mode_enum", 0x4);
+  ge::AttrUtils::SetInt(ori_op_desc3, "_op_custom_impl_mode_enum", 0x2);
+
+  GraphPassUtil::InheritAttrFromOriNodes(ori_nodes, fus_nodes, BackWardInheritMode::kFusedNode);
+
+  int64_t op_impl_mode = -1;
+  ge::AttrUtils::GetInt(fus_op_desc1, "_op_custom_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, 0x8);
+  ge::AttrUtils::GetInt(fus_op_desc2, "_op_custom_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, 0x4);
+}
+
+// N -> 1
+TEST_F(GraphPassUtilUT, test_inherit_attrs_08) {
+  auto graph = std::make_shared<ComputeGraph>("test");
+  ge::OpDescPtr ori_op_desc1 = std::make_shared<ge::OpDesc>("node1", "Relu");
+  ge::OpDescPtr ori_op_desc2 = std::make_shared<ge::OpDesc>("node2", "Relu");
+  ge::OpDescPtr fus_op_desc = std::make_shared<ge::OpDesc>("fusion", "Fusion");
+
+  ge::NodePtr ori_node1 = graph->AddNode(ori_op_desc1);
+  ge::NodePtr ori_node2 = graph->AddNode(ori_op_desc2);
+  ge::NodePtr fus_node = graph->AddNode(fus_op_desc);
+
+  std::vector<ge::NodePtr> ori_nodes = {ori_node1, ori_node2};
+  std::vector<ge::NodePtr> fus_nodes = {fus_node};
+
+  ge::AttrUtils::SetInt(ori_op_desc1, "_op_impl_mode_enum", 0x20);
+  ge::AttrUtils::SetInt(ori_op_desc2, "_op_impl_mode_enum", 0x40);
+
+  GraphPassUtil::InheritAttrFromOriNodes(ori_nodes, fus_nodes, BackWardInheritMode::kFusedNode);
+
+  int64_t op_impl_mode = -1;
+  ge::AttrUtils::GetInt(fus_op_desc, "_op_impl_mode_enum", op_impl_mode);
+  EXPECT_EQ(op_impl_mode, -1);
+}
 }
