@@ -15,13 +15,14 @@
 */
 
 #include "register/op_impl_space_registry.h"
-#include <fstream>
-#include "register/op_impl_registry_holder_manager.h"
+#include "common/checker.h"
+#include "common/util/mem_utils.h"
+#include "graph/any_value.h"
 #include "graph/debug/ge_log.h"
 #include "graph/utils/file_utils.h"
-#include "graph/any_value.h"
 #include "register/op_impl_registry.h"
-#include "common/checker.h"
+#include "register/op_impl_registry_holder_manager.h"
+#include "mmpa/mmpa_api.h"
 
 #define MERGE_FUNCTION(merged_funcs, src_funcs, op_type, func_name)           \
   if ((merged_funcs).func_name == nullptr) {                                  \
@@ -32,6 +33,17 @@
   }
 
 namespace gert {
+namespace {
+void CloseHandle(void * const handle) {
+  if (handle != nullptr) {
+    if (mmDlclose(handle) != 0) {
+      const char *error = mmDlerror();
+      error = (error == nullptr) ? "" : error;
+      GELOGW("[Close][Handle] failed, reason:%s", error);
+    }
+  }
+}
+}
 ge::graphStatus OpImplSpaceRegistry::GetOrCreateRegistry(const std::vector<ge::OpSoBinPtr> &bins,
                                                          const ge::SoInOmInfo &so_info) {
   for (const auto &so_bin : bins) {
@@ -144,5 +156,54 @@ const OpImplKernelRegistry::PrivateAttrList &OpImplSpaceRegistry::GetPrivateAttr
 DefaultOpImplSpaceRegistry &DefaultOpImplSpaceRegistry::GetInstance() {
   static DefaultOpImplSpaceRegistry instance;
   return instance;
+}
+
+ge::graphStatus OpImplSpaceRegistry::LoadSoAndSaveToRegistry(const std::string &so_path, void **so_handle) {
+  uint32_t len = 0U;
+  const auto so_data = ge::GetBinFromFile(const_cast<std::string &>(so_path), len);
+  std::string str_so_data(so_data.get(), so_data.get()+len);
+  if (gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(str_so_data) != nullptr) {
+    GELOGI("So already loaded!");
+    return ge::GRAPH_FAILED;
+  }
+  void * const handle = mmDlopen(so_path.c_str(),
+                                 static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
+                                     static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
+  if (handle == nullptr) {
+    GELOGW("Failed to dlopen %s! errmsg:%s", so_path.c_str(), mmDlerror());
+    return ge::GRAPH_FAILED;
+  }
+  const std::function<void()> callback = [&handle]() {
+    CloseHandle(handle);
+  };
+  GE_DISMISSABLE_GUARD(close_handle, callback);
+  const auto om_registry_holder = ge::MakeShared<gert::OpImplRegistryHolder>();
+  GE_CHECK_NOTNULL(om_registry_holder);
+  size_t impl_num = 0U;
+  const auto impl_funcs = om_registry_holder->GetOpImplFunctionsByHandle(handle, so_path, impl_num);
+  if (impl_funcs == nullptr) {
+    GELOGW("Failed to get funcs from so!");
+    return ge::GRAPH_FAILED;
+  }
+  for (size_t i = 0U; i < impl_num; i++) {
+    om_registry_holder->GetTypesToImpl()[impl_funcs[i].op_type] = impl_funcs[i].funcs;
+  }
+  gert::OpImplRegistryHolderManager::GetInstance().AddRegistry(str_so_data, om_registry_holder);
+  auto space_registry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  if (space_registry == nullptr) {
+    space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+    GE_CHECK_NOTNULL(space_registry);
+    gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+  }
+  const auto ret = space_registry->AddRegistry(om_registry_holder);
+  if (ret != ge::GRAPH_SUCCESS) {
+    GELOGW("Space registry add new holder failed!");
+    return ge::GRAPH_FAILED;
+  }
+  om_registry_holder->SetHandle(handle);
+  *so_handle = handle;
+  GELOGI("Save so symbol and handle in path[%s] success!", so_path.c_str());
+  GE_DISMISS_GUARD(close_handle);
+  return ge::GRAPH_SUCCESS;
 }
 }  // namespace gert

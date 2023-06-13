@@ -52,9 +52,15 @@ uint32_t GetOpImplFunctions(TypesToImpl *impl, size_t g_impl_num) {
 }
 
 void *mock_handle = nullptr;
+bool get_func_null = false;
+bool close_fail = false;
 class MockMmpa : public ge::MmpaStubApi {
  public:
   void *DlSym(void *handle, const char *func_name) override {
+    if (get_func_null) {
+      get_func_null = true;
+      return nullptr;
+    }
     if (std::string(func_name) == "GetRegisteredOpNum") {
       return (void *) &GetRegisteredOpNum;
     } else if (std::string(func_name) == "GetOpImplFunctions") {
@@ -69,6 +75,10 @@ class MockMmpa : public ge::MmpaStubApi {
     return (void *) mock_handle;
   }
   int32_t DlClose(void *handle) override {
+    if (close_fail) {
+      close_fail = false;
+      return -1;
+    }
     return 0L;
   }
 };
@@ -236,5 +246,43 @@ TEST_F(OpImplSpaceRegistryUT, DefaultOpImplSpaceRegistry_SetSpaceRegistry_Succee
   auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
   gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
   EXPECT_NE(gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry(), nullptr);
+}
+
+TEST_F(OpImplSpaceRegistryUT, LoadSoAndSaveToRegistry_success) {
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = (void *) 0xffffffff;
+  g_impl_num = 1;
+
+  const std::string so_path = "./libop_master_test.so";
+  system(("touch " + so_path).c_str());
+  void *handle = nullptr;
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(nullptr);
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(handle, mock_handle);
+
+  // 重复load
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_FAILED);
+
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(nullptr);
+  system(("rm -f " + so_path).c_str());
+}
+
+TEST_F(OpImplSpaceRegistryUT, LoadSoAndSaveToRegistry_fail) {
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = nullptr;
+  g_impl_num = 0;
+  const std::string so_path = "./libop_master_test.so";
+  system(("touch " + so_path).c_str());
+  void *handle = nullptr;
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_FAILED);
+  EXPECT_EQ(handle, nullptr);
+
+  mock_handle = (void *) 0xffffffff;
+  get_func_null = true;
+  close_fail = true;
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_FAILED);
+  EXPECT_EQ(handle, nullptr);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(nullptr);
+  system(("rm -f " + so_path).c_str());
 }
 }  // namespace gert_test

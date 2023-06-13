@@ -23,6 +23,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "register/op_tiling_info.h"
 #include "register/op_tiling_registry.h"
+#include "register/op_impl_space_registry.h"
 #include "op_tiling/op_tiling_utils.h"
 #include "op_tiling/op_tiling_constants.h"
 #include "common/util/tiling_utils.h"
@@ -1507,5 +1508,10 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
   GELOGW("Deprecated api, use OpTilingForCompile instead.");
   return TbeOpTilingPyInterfaceEx2BackUpInner(optype, compile_info, inputs, outputs, run_info_json, run_info_len,
                                               compile_info_hash, elapse, tiling_func);
+}
+
+extern "C" Status LoadSoAndSaveToRegistry(const char *so_path) {
+  GE_ASSERT_NOTNULL(so_path);
+  return gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path);
 }
 }  // namespace optiling
