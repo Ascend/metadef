@@ -411,11 +411,11 @@
       "errClass": "GE Errors",
       "errTitle": "Invalid --input_shape Argument",
       "ErrCode": "E10040",
-      "ErrMessage": "As the [--dynamic_batch_size], [--dynamic_image_size], or [--dynamic_dims] argument is included, the corresponding nodes specified in [--input_shape] must have –1 axes.",
+      "ErrMessage": "As the [--dynamic_batch_size], [--dynamic_image_size], or [--dynamic_dims] argument is included, the corresponding nodes specified in [--input_shape] must have –1 axes and can not have '~'.",
       "Arglist": "",
       "suggestion": {
-        "Possible Cause": "In dynamic shape scenarios, the corresponding shape value in the input node must be set to –1.",
-        "Solution": "[step] In static shape scenarios, remove the [--dynamic_batch_size] option from your command line. [step] In dynamic shape scenarios, set the corresponding axis of the dynamic-shape input in [--input_shape] to –1."
+        "Possible Cause": "In dynamic shape scenarios, when [--dynamic_batch_size], [--dynamic_image_size], or [--dynamic_dims] argument is included, the corresponding shape value in the input node must be set to –1 and can not have '~'.",
+        "Solution": "1. In static shape scenarios, remove the [--dynamic_batch_size], [--dynamic_image_size] or [--dynamic_dims] option from your command line. \n 2. In dynamic multi-batch scenarios, set the corresponding axis of the dynamic-shape input in [--input_shape] to –1.\n 3. In dynamic shape scenarios, remove the [--dynamic_batch_size], [--dynamic_image_size] or [--dynamic_dims] option from your command line and set [--input_shape] to -1 or n1~n2"
       }
     },
     {
