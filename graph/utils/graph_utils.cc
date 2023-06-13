@@ -1752,12 +1752,18 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::MoveInCtr
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOutCtrlEdges(const NodePtr &src_node,
                                                                                         const NodePtr &dst_node) {
+  return CopyOutCtrlEdges(src_node, dst_node, nullptr);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOutCtrlEdges(const NodePtr &src_node,
+                                                                                        const NodePtr &dst_node,
+                                                                                        const NodeFilter& node_filter) {
   if ((src_node == nullptr) || (dst_node == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param src_node or dst_node is nullptr, check invalid");
     GELOGE(GRAPH_FAILED, "[Check][Param] Parameter is nullptr");
     return GRAPH_FAILED;
   }
-  const auto out_ctrl_nodes = src_node->GetOutControlNodes();
+  const auto &out_ctrl_nodes = NodeUtils::GetOutControlNodes(*src_node, node_filter);
   if (out_ctrl_nodes.empty()) {
     return GRAPH_SUCCESS;
   }
@@ -2367,6 +2373,305 @@ graphStatus GraphUtils::GetRefMapping(const ComputeGraphPtr &graph,
   return GRAPH_SUCCESS;
 }
 
+graphStatus GraphUtils::GetRefMapping(const ComputeGraphPtr &graph, SymbolToAnchors &symbol_to_anchors,
+                                      AnchorToSymbol &anchor_to_symbol) {
+  GE_CHECK_NOTNULL(graph);
+  for (const auto &node : graph->GetAllNodes()) {
+    // in_data_anchor
+    GE_ASSERT_GRAPH_SUCCESS(HandleInAnchorMapping(graph, node, symbol_to_anchors, anchor_to_symbol),
+                            "Find ref_mapping for in_data_anchors of node %s failed.", node->GetName().c_str());
+    // out_data_anchor
+    GE_ASSERT_GRAPH_SUCCESS(HandleOutAnchorMapping(node, symbol_to_anchors, anchor_to_symbol),
+                            "Find ref_mapping for out_data_anchors of node %s failed.", node->GetName().c_str());
+  }
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::HandleInAnchorMapping(const ComputeGraphPtr &graph, const NodePtr &node,
+                                              SymbolToAnchors &symbol_to_anchors,
+                                              AnchorToSymbol &anchor_to_symbol) {
+  GE_CHECK_NOTNULL(node);
+  if (node->GetOwnerComputeGraph() != graph) {
+    // when curr graph is subgraph , to handle subgraph input/output ref mapping
+    if (NodeUtils::IsSubgraphOutput(node)) {
+      return HandleSubgraphOutput(node, symbol_to_anchors, anchor_to_symbol);
+    }
+
+    if (NodeUtils::IsSubgraphInput(node)) {
+      return HandleSubgraphInput(node, symbol_to_anchors, anchor_to_symbol);
+    }
+  }
+
+  const std::string &type = node->GetType();
+  if ((type == MERGE) || (type == STREAMMERGE)) {
+    return HandleMergeInput(node, symbol_to_anchors, anchor_to_symbol);
+  }
+
+  for (const auto in_data_anchor : node->GetAllInDataAnchorsPtr()) {
+    const NodeIndexIO cur_node_info(node, in_data_anchor->GetIdx(), kIn);
+    const OutDataAnchorPtr peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
+    if (peer_out_anchor == nullptr) {
+      const std::string &symbol = cur_node_info.ToString();
+      GELOGD("Add anchor %s, symbol %s.", cur_node_info.ToString().c_str(), symbol.c_str());
+      symbol_to_anchors[symbol] = { cur_node_info };
+      anchor_to_symbol[symbol] = symbol;
+    } else {
+      const NodeIndexIO exist_node_info(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut);
+      GE_ASSERT_GRAPH_SUCCESS(UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol));
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
+                                               SymbolToAnchors &symbol_to_anchors,
+                                               AnchorToSymbol &anchor_to_symbol) {
+  GE_CHECK_NOTNULL(node);
+  for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
+    const NodeIndexIO cur_node_info(node, out_data_anchor->GetIdx(), kOut);
+    if (anchor_to_symbol.find(cur_node_info.ToString()) != anchor_to_symbol.end()) {
+      continue;
+    }
+
+    NodeIndexIO exist_ref_data_info(node, 0U, kOut);
+    const bool is_ref_from_refdata = IsRefFromRefData(out_data_anchor, exist_ref_data_info);
+    if (is_ref_from_refdata) {
+      GELOGD("Node %s output:%d is ref form refdata: %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
+             exist_ref_data_info.ToString().c_str());
+      GE_ASSERT_GRAPH_SUCCESS(
+          UpdateRefMapping(cur_node_info, exist_ref_data_info, symbol_to_anchors, anchor_to_symbol));
+    }
+
+    // 这里ref from input和ref from refdata不冲突
+    int32_t reuse_in_index = -1;
+    const bool reuse_input_flag = IsRefFromInput(out_data_anchor, reuse_in_index);
+    if (reuse_input_flag && (node->GetInDataAnchor(reuse_in_index) != nullptr)) {
+      const NodeIndexIO exist_node_info(node, reuse_in_index, kIn);
+      if (UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+        GE_LOGE("[Update][SymbolMapping] failed.");
+        return GRAPH_FAILED;
+      }
+    } else {
+      if (reuse_input_flag) {
+        GELOGW("[GetRefMapping][Check] Invalid reuse_input attr on output %d of node %s, please check attr reuse_input "
+               "and reuse_input_index", out_data_anchor->GetIdx(), node->GetName().c_str());
+      }
+      const std::string &symbol = cur_node_info.ToString();
+      GELOGD("Add anchor %s, symbol %s.", cur_node_info.ToString().c_str(), symbol.c_str());
+      (void)symbol_to_anchors.emplace(std::make_pair(symbol, std::list<NodeIndexIO>{ cur_node_info }));
+      (void)anchor_to_symbol.emplace(std::make_pair(symbol, symbol));
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::HandleSubgraphInput(const NodePtr &node,
+                                            SymbolToAnchors &symbol_to_anchors,
+                                            AnchorToSymbol &anchor_to_symbol) {
+  GE_CHECK_NOTNULL(node);
+  GE_CHECK_NOTNULL(node->GetOpDesc());
+
+  // Data in subgraph
+  uint32_t index = 0U;
+  if (!ge::AttrUtils::GetInt(node->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, index)) {
+        REPORT_CALL_ERROR("E18888", "Get  Attr ATTR_NAME_PARENT_NODE_INDEX failed, node:%s.", node->GetName().c_str());
+    GE_LOGE("[Get][Attr] ATTR_NAME_PARENT_NODE_INDEX failed, node:%s.", node->GetName().c_str());
+    return GRAPH_FAILED;
+  }
+  const NodePtr parent_node = node->GetOwnerComputeGraph()->GetParentNode();
+  GE_CHECK_NOTNULL(parent_node);
+  const InDataAnchorPtr parent_in_anchor = parent_node->GetInDataAnchor(static_cast<int32_t>(index));
+  GE_CHECK_NOTNULL(parent_in_anchor);
+  const OutDataAnchorPtr peer_out_anchor = parent_in_anchor->GetPeerOutAnchor();
+  if (peer_out_anchor != nullptr) {
+    // Data has and only has one input
+    const NodeIndexIO cur_node_info(node, 0, kIn);
+    const NodeIndexIO exist_node_info(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut);
+    if (UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+      GE_LOGE("[Update][SymbolMapping] failed.");
+      return GRAPH_FAILED;
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::HandleMergeInput(const NodePtr &node,
+                                         SymbolToAnchors &symbol_to_anchors,
+                                         AnchorToSymbol &anchor_to_symbol) {
+  GE_CHECK_NOTNULL(node);
+  std::vector<NodeIndexIO> exist_node_infos;
+  std::vector<NodeIndexIO> cur_node_infos;
+  for (const auto in_data_anchor : node->GetAllInDataAnchorsPtr()) {
+    auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
+    if (peer_out_anchor == nullptr) {
+      std::string next_name;
+      if ((AttrUtils::GetStr(node->GetOpDesc(), ATTR_NAME_NEXT_ITERATION, next_name)) && (!next_name.empty())) {
+        ComputeGraphPtr graph = node->GetOwnerComputeGraph();
+        GE_CHECK_NOTNULL(graph);
+        const ge::NodePtr next_node = FindNodeFromAllNodes(graph, next_name);
+        GE_CHECK_NOTNULL(next_node);
+        // NextIteration has and only has one output
+        peer_out_anchor = next_node->GetOutDataAnchor(0);
+        GE_CHECK_NOTNULL(peer_out_anchor);
+        cur_node_infos.emplace_back(NodeIndexIO(node, in_data_anchor->GetIdx(), kIn));
+        cur_node_infos.emplace_back(NodeIndexIO(next_node, peer_out_anchor->GetIdx(), kOut));
+      }
+    } else {
+      cur_node_infos.emplace_back(NodeIndexIO(node, in_data_anchor->GetIdx(), kIn));
+      exist_node_infos.emplace_back(NodeIndexIO(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut));
+    }
+  }
+
+  size_t anchor_nums = 0U;
+  NodeIndexIO max_node_index_io(static_cast<const Node *>(nullptr), 0, kOut);
+  for (const auto &temp_node_info : exist_node_infos) {
+    const auto iter1 = anchor_to_symbol.find(temp_node_info.ToString());
+    if (iter1 != anchor_to_symbol.end()) {
+      const std::string &temp_symbol = iter1->second;
+      const auto iter2 = symbol_to_anchors.find(temp_symbol);
+      if (iter2 != symbol_to_anchors.end()) {
+        if (iter2->second.size() > anchor_nums) {
+          max_node_index_io = temp_node_info;
+          anchor_nums = iter2->second.size();
+        }
+      }
+    }
+  }
+
+  std::string symbol;
+  for (const auto &temp_node_info : exist_node_infos) {
+    if ((UnionSymbolMapping(max_node_index_io, temp_node_info, symbol_to_anchors, anchor_to_symbol, symbol) !=
+        GRAPH_SUCCESS) ||
+        symbol.empty()) {
+      GE_LOGE("[Union][SymbolMap] anchor1:%s & anchor2:%s failed.", max_node_index_io.ToString().c_str(),
+              temp_node_info.ToString().c_str());
+      return GRAPH_FAILED;
+    }
+  }
+
+  const auto iter = symbol_to_anchors.find(symbol);
+  if (iter != symbol_to_anchors.end()) {
+    for (const auto &temp_node_info : cur_node_infos) {
+      GELOGD("Add anchor %s, symbol %s.", temp_node_info.ToString().c_str(), symbol.c_str());
+      iter->second.emplace_back(temp_node_info);
+      (void)anchor_to_symbol.emplace(std::make_pair(temp_node_info.ToString(), symbol));
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::HandleSubgraphOutput(const NodePtr &node,
+                                             SymbolToAnchors &symbol_to_anchors,
+                                             AnchorToSymbol &anchor_to_symbol) {
+  GE_CHECK_NOTNULL(node);
+  const ComputeGraphPtr owner_graph = node->GetOwnerComputeGraph();
+  GE_CHECK_NOTNULL(owner_graph);
+  const NodePtr parent_node = owner_graph->GetParentNode();
+  GE_CHECK_NOTNULL(parent_node);
+
+  const OpDescPtr op_desc = node->GetOpDesc();
+  GE_CHECK_NOTNULL(op_desc);
+  for (const auto &in_data_anchor : node->GetAllInDataAnchorsPtr()) {
+    const OutDataAnchorPtr peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
+    GE_CHECK_NOTNULL(peer_out_anchor);
+
+    const auto &in_tensor = op_desc->GetInputDescPtr(static_cast<uint32_t>(in_data_anchor->GetIdx()));
+    uint32_t index = 0U;
+    if (!ge::AttrUtils::GetInt(in_tensor, ATTR_NAME_PARENT_NODE_INDEX, index)) {
+      continue;
+    }
+    GE_CHECK_NOTNULL(parent_node->GetOutDataAnchor(static_cast<int32_t>(index)));
+    // Union symbol of peer_out_anchor & parent_out_anchor
+    const NodeIndexIO peer_node_info(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut);
+    const NodeIndexIO parent_node_info(parent_node, index, kOut);
+    std::string symbol;
+    if ((UnionSymbolMapping(peer_node_info, parent_node_info, symbol_to_anchors, anchor_to_symbol,
+                            symbol) != GRAPH_SUCCESS) || symbol.empty()) {
+      GE_LOGE("[Union][SymbolMap] anchor1:%s, and anchor2:%s failed.",
+              peer_node_info.ToString().c_str(), parent_node_info.ToString().c_str());
+      return GRAPH_FAILED;
+    }
+
+    NodeIndexIO cur_node_info(node, in_data_anchor->GetIdx(), kIn);
+    GELOGD("Add anchor %s, symbol %s.", cur_node_info.ToString().c_str(), symbol.c_str());
+    symbol_to_anchors[symbol].emplace_back(cur_node_info);
+    (void)anchor_to_symbol.emplace(std::make_pair(cur_node_info.ToString(), symbol));
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::UnionSymbolMapping(const NodeIndexIO &exist_node_info1, const NodeIndexIO &exist_node_info2,
+                                           SymbolToAnchors &symbol_to_anchors,
+                                           AnchorToSymbol &anchor_to_symbol, std::string &symbol) {
+  const std::string &symbol1 = anchor_to_symbol[exist_node_info1.ToString()];
+  const std::string &symbol2 = anchor_to_symbol[exist_node_info2.ToString()];
+  if (symbol1 == symbol2) {
+    symbol = symbol1;
+    GELOGI("no need to union.");
+    return GRAPH_SUCCESS;
+  }
+
+  const auto iter1 = symbol_to_anchors.find(symbol1);
+  const auto iter2 = symbol_to_anchors.find(symbol2);
+  if ((iter1 == symbol_to_anchors.end()) || (iter2 == symbol_to_anchors.end())) {
+    REPORT_INNER_ERROR("E18888", "symbol %s or %s not exist.", symbol1.c_str(), symbol2.c_str());
+    GE_LOGE("[Check][Param] symbol %s or %s not exist.", symbol1.c_str(), symbol2.c_str());
+    return GRAPH_FAILED;
+  }
+
+  auto &max_iter = ((iter1->second.size() > iter2->second.size()) ? iter1 : iter2);
+  auto &min_iter = ((iter1->second.size() > iter2->second.size()) ? iter2 : iter1);
+  symbol = ((iter1->second.size() > iter2->second.size()) ? symbol1 : symbol2);
+  const std::string min_symbol = ((iter1->second.size() > iter2->second.size()) ? symbol2 : symbol1);
+  for (auto &node_index_io : min_iter->second) {
+    GELOGD("Update anchor %s, symbol %s.", node_index_io.ToString().c_str(), symbol.c_str());
+    max_iter->second.emplace_back(node_index_io);
+    const auto iter = anchor_to_symbol.find(node_index_io.ToString());
+    GE_ASSERT_TRUE(iter != anchor_to_symbol.end(), "anchor %s not exist in anchor_to_symbol.",
+                   node_index_io.ToString().c_str());
+    if (iter->second != min_symbol) {
+      GELOGW("[GetRefMapping][Check] not expected symbol of anchor %s, expect %s but %s exactly.", iter->first.c_str(),
+             min_symbol.c_str(), iter->second.c_str());
+    }
+    iter->second = symbol;
+  }
+
+  GELOGI("Union symbol %s and %s succ.", symbol.c_str(), min_symbol.c_str());
+  (void)symbol_to_anchors.erase(min_iter);
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GraphUtils::UpdateRefMapping(const NodeIndexIO &cur_node_info, const NodeIndexIO &exist_node_info,
+                                         SymbolToAnchors &symbol_to_anchors,
+                                         AnchorToSymbol &anchor_to_symbol) {
+  const auto iter1 = anchor_to_symbol.find(exist_node_info.ToString());
+  if (iter1 == anchor_to_symbol.end()) {
+    REPORT_INNER_ERROR("E18888", "data_anchor %s is not visible before data_anchor %s, maybe TopoSorting is missing.",
+                       exist_node_info.ToString().c_str(), cur_node_info.ToString().c_str());
+    GE_LOGE("[Check][Param] data_anchor %s is not visible before data_anchor %s, maybe TopoSorting is missing.",
+            exist_node_info.ToString().c_str(), cur_node_info.ToString().c_str());
+    return GRAPH_FAILED;
+  }
+
+  const std::string &symbol = iter1->second;
+  const auto iter2 = symbol_to_anchors.find(symbol);
+  if (iter2 == symbol_to_anchors.end()) {
+    REPORT_INNER_ERROR("E18888", "symbol %s not exist in symbol_to_anchors.", symbol.c_str());
+    GE_LOGE("[Check][Param] symbol %s not found.", symbol.c_str());
+    return GRAPH_FAILED;
+  }
+  GELOGD("Add anchor %s, symbol %s.", cur_node_info.ToString().c_str(), symbol.c_str());
+  iter2->second.emplace_back(cur_node_info);
+  (void)anchor_to_symbol.emplace(std::make_pair(cur_node_info.ToString(), symbol));
+
+  return GRAPH_SUCCESS;
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
 NodePtr GraphUtils::FindNodeFromAllNodes(ComputeGraphPtr &graph, const std::string &name) {
   const auto root_graph = FindRootGraph(graph);
@@ -2778,8 +3083,8 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   // pass-through op
   const auto node = out_data_anchor->GetOwnerNodeBarePtr();
   const std::string &type = node->GetType();
-  const std::set<std::string> pass_through_set = { NETOUTPUT, WHILE, _WHILE, STATELESSWHILE };
-  if ((pass_through_set.count(type) > 0U) || (NodeUtils::IsSubgraphInput(node))) {
+  static const std::unordered_set<std::string> pass_through_types = {NETOUTPUT, WHILE, _WHILE, STATELESSWHILE};
+  if ((pass_through_types.count(type) > 0U) || (NodeUtils::IsSubgraphInput(node))) {
     reuse_in_index = output_index;
     GELOGI("Pass-Through node name[%s] index[%u].", node->GetName().c_str(), reuse_in_index);
     return true;

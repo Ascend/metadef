@@ -871,7 +871,7 @@ std::vector<NodePtr> NodeUtils::GetSubgraphDataNodesByIndex(const Node &node, co
   if (subgraph_names.empty()) {
     return in_data_node_vec;
   }
-  const auto compute_graph = node.GetOwnerComputeGraph();
+  const auto compute_graph = FindRootGraph(node);
   for (const std::string &instance_name : subgraph_names) {
     const auto subgraph = compute_graph->GetSubgraph(instance_name);
     if (subgraph == nullptr) {
@@ -902,7 +902,7 @@ std::vector<NodePtr> NodeUtils::GetSubgraphOutputNodes(const Node &node) {
     GELOGI("Node %s is single node without sub graph.", node.GetName().c_str());
     return out_data_node_vec;
   }
-  const auto compute_graph = node.GetOwnerComputeGraph();
+  const auto compute_graph = FindRootGraph(node);
   for (const std::string &instance_name : subgraph_names) {
     const auto subgraph = compute_graph->GetSubgraph(instance_name);
     if (subgraph == nullptr) {
@@ -1191,5 +1191,41 @@ bool NodeUtils::IsIdentityUsefulForRWControl(const NodePtr &node_ptr) {
       }
   }
   return false;
+}
+
+ComputeGraphPtr NodeUtils::FindRootGraph(const Node &node) {
+  return GraphUtils::FindRootGraph(node.GetOwnerComputeGraph());
+}
+
+std::vector<NodePtr> NodeUtils::GetOutControlNodes(const Node &node, const NodeFilter &node_filter) {
+  std::vector<NodePtr> out_ctrl_nodes;
+  const auto &out_control = node.GetOutControlAnchor();
+  if (out_control == nullptr) {
+    return out_ctrl_nodes;
+  }
+  out_ctrl_nodes.reserve(node.GetOutControlNodesSize());
+  for (const auto &in_anchor : out_control->GetPeerAnchors()) {
+    const auto &peer_node = in_anchor->GetOwnerNode();
+    if ((node_filter == nullptr) || node_filter(*peer_node)) {
+      out_ctrl_nodes.push_back(peer_node);
+    }
+  }
+  return out_ctrl_nodes;
+}
+
+std::vector<NodePtr> NodeUtils::GetInControlNodes(const Node &node, const NodeFilter &node_filter) {
+  std::vector<NodePtr> in_ctrl_nodes;
+  const auto &in_control = node.GetInControlAnchor();
+  if (in_control == nullptr) {
+    return in_ctrl_nodes;
+  }
+  in_ctrl_nodes.reserve(node.GetInControlNodesSize());
+  for (const auto &out_anchor : in_control->GetPeerAnchors()) {
+    const auto &peer_node = out_anchor->GetOwnerNode();
+    if ((node_filter == nullptr) || node_filter(*peer_node)) {
+      in_ctrl_nodes.push_back(peer_node);
+    }
+  }
+  return in_ctrl_nodes;
 }
 }  // namespace ge

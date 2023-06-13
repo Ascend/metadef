@@ -776,7 +776,7 @@ TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndex) {
   EXPECT_EQ(NodeUtils::GetSubgraphDataNodesByIndex(*node, 0).size(), 0);
 }
 
-TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndexSubgraph) {
+TEST_F(UtestNodeUtils, GetSubgraphDataAndNetoutput) {
   auto root_builder = ut::GraphBuilder("root");
   const auto &data = root_builder.AddNode("data", DATA, 1, 1);
   const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", PARTITIONEDCALL, 3, 3);
@@ -785,10 +785,11 @@ TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndexSubgraph) {
   root_builder.AddDataEdge(partitioncall_0, 1, partitioncall_1, 0);
   const auto &root_graph = root_builder.GetGraph();
 
+  int64_t index = 0;
   // 1.build partitioncall_0 sub graph
   auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
   const auto &partitioncall_0_data = p1_sub_builder.AddNode("partitioncall_0_data", DATA, 0, 1);
-  AttrUtils::SetInt(partitioncall_0_data->GetOpDesc(), "_parent_node_index", 1);
+  AttrUtils::SetInt(partitioncall_0_data->GetOpDesc(), "_parent_node_index", index);
   const auto &partitioncall_0_cast = p1_sub_builder.AddNode("partitioncall_0_cast", "Cast", 1, 1);
   const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", NETOUTPUT, 3, 3);
   AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
@@ -805,10 +806,10 @@ TEST_F(UtestNodeUtils, GetSubgraphDataNodesByIndexSubgraph) {
   auto compute_graph = partitioncall_0->GetOwnerComputeGraph();
   EXPECT_NE(compute_graph, nullptr);
   EXPECT_EQ(NodeUtils::GetSubgraphOutputNodes(*partitioncall_0).size(), 1);
+  EXPECT_EQ(NodeUtils::GetSubgraphDataNodesByIndex(*partitioncall_0, index).size(), 1);
   EXPECT_NE(sub_graph->GetOrUpdateNetOutputNode(), nullptr);
   EXPECT_EQ(sub_graph->GetOrUpdateNetOutputNode()->GetType(), NETOUTPUT);
 }
-
 
 TEST_F(UtestNodeUtils, GetSubgraphOutputNodes) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
@@ -1009,5 +1010,38 @@ TEST_F(UtestNodeUtils, IsIdentityUsefulForRWControl) {
   EXPECT_NE(node, nullptr);
   // id1 is useful, not remove
   EXPECT_EQ(NodeUtils::IsIdentityUsefulForRWControl(node), true);
+}
+TEST_F(UtestNodeUtils, FindRootGraph) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto node = builder.AddNode("Node", "Node", 1, 1);
+  EXPECT_NE(node, nullptr);
+  EXPECT_EQ(NodeUtils::FindRootGraph(*node), node->GetOwnerComputeGraph());
+}
+TEST_F(UtestNodeUtils, GetOutControlNodes) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &src_node = builder.AddNode("src_node", DATA, 1, 1);
+  const auto &ctrl_node = builder.AddNode("ctrl_node", CONSTANT, 0, 0);
+  const auto &ctrl_node2 = builder.AddNode("ctrl_node2", CONSTANT, 0, 0);
+  auto graph = builder.GetGraph();
+  builder.AddControlEdge(src_node, ctrl_node);
+  builder.AddControlEdge(src_node, ctrl_node2);
+  EXPECT_EQ(NodeUtils::GetOutControlNodes(*src_node, nullptr).size(), 2U);
+  NodeFilter node_filter = [&](const Node &node) { return node.GetName() == ctrl_node2->GetName(); };
+  EXPECT_EQ(NodeUtils::GetOutControlNodes(*src_node, node_filter).size(), 1U);
+  EXPECT_EQ(NodeUtils::GetOutControlNodes(*src_node, node_filter).front(), ctrl_node2);
+}
+TEST_F(UtestNodeUtils, GetInControlNodes) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &ctrl_node = builder.AddNode("ctrl_node", CONSTANT, 0, 0);
+  const auto &ctrl_node2 = builder.AddNode("ctrl_node2", CONSTANT, 0, 0);
+  const auto &dst_node = builder.AddNode("dst_node", NETOUTPUT, 0, 0);
+
+  auto graph = builder.GetGraph();
+  builder.AddControlEdge(ctrl_node, dst_node);
+  builder.AddControlEdge(ctrl_node2, dst_node);
+  EXPECT_EQ(NodeUtils::GetInControlNodes(*dst_node, nullptr).size(), 2U);
+  NodeFilter node_filter = [&](const Node &node) { return node.GetName() == ctrl_node2->GetName(); };
+  EXPECT_EQ(NodeUtils::GetInControlNodes(*dst_node, node_filter).size(), 1U);
+  EXPECT_EQ(NodeUtils::GetInControlNodes(*dst_node, node_filter).front(), ctrl_node2);
 }
 }  // namespace ge

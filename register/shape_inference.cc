@@ -69,7 +69,7 @@ void GetMinMaxStorageShape(const ge::GeTensorDesc &input_desc, gert::StorageShap
 }
 
 ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op_desc,
-                                 const Index index, TensorAddress &address,
+                                 const Index &index, TensorAddress &address,
                                  std::vector<std::unique_ptr<ge::Tensor>> &ge_tensors_holder) {
   const auto *const space_registry = DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry().get();
   GE_ASSERT_NOTNULL(space_registry);
@@ -88,7 +88,7 @@ ge::graphStatus GetTensorAddress(const ge::Operator &op, const ge::OpDescPtr &op
   if (functions->IsInputDataDependency(ir_index)) {
     ge_tensors_holder[index.input_index] = ge::ComGraphMakeUnique<ge::Tensor>();
     GE_ASSERT_NOTNULL(ge_tensors_holder[index.input_index], "Create ge tensor holder inputs failed.");
-    const auto index_name = op_desc->GetInputNameByIndex(index.input_index);
+    const auto index_name = op_desc->GetInputNameByIndex(static_cast<uint32_t>(index.input_index));
     if (op.GetInputConstData(index_name.c_str(), *(ge_tensors_holder[index.input_index].get())) == ge::GRAPH_SUCCESS) {
       address = ge_tensors_holder[index.input_index]->GetData();
     }
