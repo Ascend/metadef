@@ -26,6 +26,7 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/op_desc_utils_ex.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/transformer_utils.h"
 #include "graph/utils/node_utils_ex.h"
@@ -84,14 +85,17 @@ graphStatus GraphUtilsEx::InferShapeInNeed(const ComputeGraphPtr &graph) {
 
       for (const auto &out_anchor : node_ptr->GetAllOutDataAnchors()) {
         GE_CHECK_NOTNULL(out_anchor->GetOwnerNode()->GetOpDesc());
-        auto output_tensor = out_anchor->GetOwnerNode()->GetOpDesc()->GetOutputDesc(
-            static_cast<uint32_t>(out_anchor->GetIdx()));
-        TensorUtils::SetRealDimCnt(output_tensor, static_cast<uint32_t>(output_tensor.GetShape().GetDims().size()));
-        (void)out_anchor->GetOwnerNode()->GetOpDesc()->UpdateOutputDesc(static_cast<uint32_t>(out_anchor->GetIdx()),
-                                                                        output_tensor);
+        auto output_tensor =
+            out_anchor->GetOwnerNode()->GetOpDesc()->MutableOutputDesc(static_cast<uint32_t>(out_anchor->GetIdx()));
+        GE_CHECK_NOTNULL(output_tensor);
+        TensorUtils::SetRealDimCnt(*(output_tensor.get()),
+                                   static_cast<uint32_t>(output_tensor->GetShape().GetDims().size()));
+
         for (const auto &peer_anchor : out_anchor->GetPeerInDataAnchors()) {
-          (void)peer_anchor->GetOwnerNode()->GetOpDesc()->UpdateInputDesc(static_cast<uint32_t>(peer_anchor->GetIdx()),
-                                                                          output_tensor);
+          const auto peer_in_tensor_desc =
+              peer_anchor->GetOwnerNode()->GetOpDesc()->MutableInputDesc(static_cast<uint32_t>(peer_anchor->GetIdx()));
+          GE_CHECK_NOTNULL(peer_in_tensor_desc);
+          OpDescUtilsEx::UpdateShapeAndDType(output_tensor, peer_in_tensor_desc);
         }
       }
     }
