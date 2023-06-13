@@ -45,6 +45,7 @@ TEST_F(GeContextUt, All) {
 
   cont.SetSessionId(1);
   cont.SetContextId(2);
+  cont.SetThreadDeviceId(-1);
   cont.SetCtxDeviceId(4);
   EXPECT_EQ(cont.SessionId(), 1);
   EXPECT_EQ(cont.DeviceId(), 4);
