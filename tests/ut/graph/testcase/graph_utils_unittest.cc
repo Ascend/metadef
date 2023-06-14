@@ -2772,4 +2772,25 @@ TEST_F(UtestGraphUtils, GetRefMappingWithSubgraphOp) {
   expect_anchors.emplace(out_out.ToString());
   CheckAnchor(iter_a->second, expect_anchors);
 }
+
+TEST_F(UtestGraphUtils, InfershapeIfNeedOk) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("data", "Data", 1, 1, FORMAT_NHWC, DT_FLOAT, {16, 228, 228, 3});
+  auto cast = builder.AddNode("cast", "Cast", 1, 1, FORMAT_NHWC, DT_FLOAT, {16, 228, 228, 3});
+  auto netoutput = builder.AddNode("netoutput", "NetOutput", 1, 1, FORMAT_NHWC, DT_FLOAT, {5, 228, 228, 3});
+  AttrUtils::SetBool(cast->GetOpDesc(), "isNeedInfer", true);
+  const auto stub_func = [](Operator &op) { return GRAPH_SUCCESS; };
+  cast->GetOpDesc()->AddInferFunc(stub_func);
+  AttrUtils::SetInt(netoutput->GetOpDesc()->MutableInputDesc(0), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  builder.AddDataEdge(data, 0, cast, 0);
+  builder.AddDataEdge(cast, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+
+  EXPECT_EQ(GraphUtilsEx::InferShapeInNeed(graph), GRAPH_SUCCESS);
+  std::vector<int64_t> expect_shape = {16, 228, 228, 3};
+  EXPECT_EQ(netoutput->GetOpDesc()->GetInputDesc(0).GetShape().GetDims(), expect_shape);
+  int64_t parent_node_index = -1;
+  AttrUtils::GetInt(netoutput->GetOpDesc()->MutableInputDesc(0), ATTR_NAME_PARENT_NODE_INDEX, parent_node_index);
+  EXPECT_EQ(parent_node_index, 0);
+}
 }  // namespace ge

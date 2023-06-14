@@ -212,5 +212,17 @@ void OpDescUtilsEx::SetType(OpDescPtr &op_desc, const std::string &type) {
   TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(),
                    op_desc->GetName(), "type", "", "", type);
 }
-} // namespace ge
 
+
+void OpDescUtilsEx::UpdateShapeAndDType(const GeTensorDescPtr &src, const GeTensorDescPtr &dst) {
+  dst->SetOriginShape(src->GetOriginShape());
+  dst->SetShape(src->GetShape());
+  dst->SetDataType(src->GetDataType());
+  dst->SetOriginDataType(src->GetOriginDataType());
+  std::vector<std::pair<int64_t, int64_t>> src_shape_range;
+  src->GetShapeRange(src_shape_range);
+  dst->SetShapeRange(src_shape_range);
+  dst->SetOriginShapeRange(src_shape_range);
+  ge::TensorUtils::SetRealDimCnt(*dst, static_cast<uint32_t>(src->GetShape().GetDims().size()));
+}
+} // namespace ge
