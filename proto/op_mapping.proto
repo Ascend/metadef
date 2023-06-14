@@ -9,6 +9,9 @@ enum AddressType {
     TRADITIONAL_ADDR = 0;
     NOTILING_ADDR = 1;
     RAW_ADDR = 2;
+    NANO_IO_ADDR = 3;
+    NANO_WEIGHT_ADDR = 4;
+    NANO_WORK_ADDR = 5;
 }
 
 message Output {
