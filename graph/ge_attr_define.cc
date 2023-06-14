@@ -1402,7 +1402,6 @@ const std::string ATTR_NAME_ESCHED_EVENT_PRIORITY = "_eschedEventPriority";
 
 // for graph deployment
 const std::string ATTR_NAME_DEVICE_INDEX = "_device_index";
-const std::string ATTR_NAME_RANK_DEVICE_INDEX = "_rank_device_index";
 const std::string ATTR_NAME_DEVICE_INDEX_TO_LOGIC_DEVICE_ID = "_device_index_to_logic_device_id";
 const std::string ATTR_NAME_NODE_DEPLOYMENT = "_node_deployment";
 const std::string ATTR_NAME_TENSOR_DEPLOYMENT = "_tensor_deployment";
