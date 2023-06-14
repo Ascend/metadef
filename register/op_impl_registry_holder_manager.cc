@@ -139,11 +139,12 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
     return nullptr;
   }
 
+  // 兼容1.0注册方式注册自定义算子so，查找不到符号告警返回
   const auto get_impl_num = reinterpret_cast<GetImplNum>(mmDlsym(const_cast<void *>(handle), "GetRegisteredOpNum"));
   if (get_impl_num == nullptr) {
     const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
-    GELOGE(ge::FAILED, "Get registered op num functions failed", so_path.c_str(), error);
+    GELOGW("Get registered op num functions failed", so_path.c_str(), error);
     return nullptr;
   }
   impl_num = get_impl_num();
@@ -154,7 +155,7 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
   if (get_impl_funcs == nullptr) {
     const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
-    GELOGE(ge::FAILED, "Get op impl functions failed", so_path.c_str(), error);
+    GELOGW("Get op impl functions failed", so_path.c_str(), error);
     return nullptr;
   }
 
