@@ -21,6 +21,7 @@
 #include "mmpa/mmpa_api.h"
 #include "tests/depends/mmpa/src/mmpa_stub.h"
 #include <gtest/gtest.h>
+#include <iostream>
 
 namespace gert_test {
 namespace {
@@ -49,12 +50,17 @@ uint32_t GetOpImplFunctions(TypesToImpl *impl, size_t g_impl_num) {
 }
 
 void *mock_handle = nullptr;
+bool dlsys_get_impl_func_fail = false;
 class MockMmpa : public ge::MmpaStubApi {
  public:
   void *DlSym(void *handle, const char *func_name) override {
     if (std::string(func_name) == "GetRegisteredOpNum") {
       return (void *) &GetRegisteredOpNum;
     } else if (std::string(func_name) == "GetOpImplFunctions") {
+      if (dlsys_get_impl_func_fail) {
+        dlsys_get_impl_func_fail = false;
+        return nullptr;
+      }
       return (void *) &GetOpImplFunctions;
     }
     return nullptr;
@@ -113,6 +119,21 @@ TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_DlsymFailed)
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0x7000;
   g_impl_num = 1;
+
+  std::string so_name("libopmaster.so");
+  std::string vendor_name("MDC");
+  ge::OpSoBinPtr so_bin_ptr = CreateSoBinPtr(so_name, vendor_name);
+  gert::OmOpImplRegistryHolder om_op_impl_registry_holder;
+  auto ret = om_op_impl_registry_holder.LoadSo(so_bin_ptr);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
+  EXPECT_EQ(om_op_impl_registry_holder.GetTypesToImpl().size(), 0);
+}
+
+TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_GetImplFunc_fail) {
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = (void *) 0xffffffff;
+  g_impl_num = 1;
+  dlsys_get_impl_func_fail = true;
 
   std::string so_name("libopmaster.so");
   std::string vendor_name("MDC");
