@@ -25,7 +25,11 @@
 #define OP_ADD(opType, ...)                                                                                            \
   static int g_##opType##_added = [](const char *name) {                                                               \
     opType op(#opType);                                                                                                \
-    op.OpProtoPost(#opType);                                                                                           \
+    gert::OpImplRegisterV2 impl(#opType);                                                                              \
+    impl.InferShape(op.GetInferShape())                                                                                \
+      .InferShapeRange(op.GetInferShapeRange())                                                                        \
+      .InferDataType(op.GetInferDataType());                                                                           \
+    gert::OpImplRegisterV2 implReg(impl);                                                                              \
     return 0;                                                                                                          \
   }(#opType)
 
@@ -35,8 +39,15 @@
 struct OpAddCompilerInfoPlaceholder##opType {};                                                                        \
   static int g_##opType##_added = [](const char *name) {                                                               \
     opType op(#opType);                                                                                                \
-    op.AICore().OpTilingPost<OpAddCompilerInfoPlaceholder##opType>(#opType);                                           \
-    op.AICore().OpCheckPost(#opType);                                                                                  \
+    gert::OpImplRegisterV2 impl(#opType);                                                                              \
+    impl.Tiling(op.AICore().GetTiling());                                                                              \
+    impl.TilingParse<OpAddCompilerInfoPlaceholder##opType>(op.AICore().GetTilingParse());                              \
+    optiling::OpCheckFuncHelper(FUNC_CHECK_SUPPORTED, #opType, op.AICore().GetCheckSupport());                         \
+    optiling::OpCheckFuncHelper(FUNC_OP_SELECT_FORMAT, #opType, op.AICore().GetOpSelectFormat());                      \
+    optiling::OpCheckFuncHelper(FUNC_GET_OP_SUPPORT_INFO, #opType, op.AICore().GetOpSupportInfo());                    \
+    optiling::OpCheckFuncHelper(FUNC_GET_SPECIFIC_INFO, #opType, op.AICore().GetOpSpecInfo());                         \
+    optiling::OpCheckFuncHelper(#opType, op.AICore().GetParamGeneralize());                                            \
+    gert::OpImplRegisterV2 implReg(impl);                                                                              \
     return 0;                                                                                                          \
   }(#opType)
 

@@ -163,7 +163,7 @@ ge::graphStatus OpImplSpaceRegistry::LoadSoAndSaveToRegistry(const std::string &
   const auto so_data = ge::GetBinFromFile(const_cast<std::string &>(so_path), len);
   std::string str_so_data(so_data.get(), so_data.get()+len);
   if (gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(str_so_data) != nullptr) {
-    GELOGI("So already loaded!");
+    GELOGI("So already loaded! so path:%s", so_path.c_str());
     return ge::GRAPH_FAILED;
   }
   void * const handle = mmDlopen(so_path.c_str(),
@@ -201,7 +201,9 @@ ge::graphStatus OpImplSpaceRegistry::LoadSoAndSaveToRegistry(const std::string &
     return ge::GRAPH_FAILED;
   }
   om_registry_holder->SetHandle(handle);
-  *so_handle = handle;
+  if (so_handle != nullptr) {
+    *so_handle = handle;
+  }
   GELOGI("Save so symbol and handle in path[%s] success!", so_path.c_str());
   GE_DISMISS_GUARD(close_handle);
   return ge::GRAPH_SUCCESS;

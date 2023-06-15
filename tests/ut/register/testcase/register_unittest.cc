@@ -26,6 +26,7 @@
 #include "graph/debug/ge_op_types.h"
 #include "graph/compute_graph_impl.h"
 #include "external/register/register.h"
+#include "register/op_impl_space_registry.h"
 #undef private
 #undef protected
 
@@ -932,21 +933,28 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok) {
   size_t size = 100;
   const char *cmp_info_hash = "";
   uint64_t *elapse = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubNew;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubNew;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubNew;
+  op_impl_func.tiling_parse = OpTilingParseStubNew;
+  op_impl_func.compile_info_creator = CreateCompileInfo;
+  op_impl_func.compile_info_deleter = DeleteCompileInfo;
+  op_impl_func.max_tiling_data_size = 50;
+  registry_holder->AddTypesToImpl(op_type, op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
   std::string result =
       "{\"block_dim\":2,\"clear_atomic\":true,\"tiling_data\":\"060708090A\",\"tiling_key\":78,\"workspaces\":[12]}";
   EXPECT_EQ(result, runinfo.substr(0, 96));
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_const_value) {
@@ -962,18 +970,27 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_const_value) {
   size_t size = 100;
   const char *cmp_info_hash = "";
   uint64_t *elapse = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubNew;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubNew;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubNew;
+  op_impl_func.tiling_parse = OpTilingParseStubNew;
+  op_impl_func.compile_info_creator = CreateCompileInfo;
+  op_impl_func.compile_info_deleter = DeleteCompileInfo;
+  op_impl_func.max_tiling_data_size = 50;
+  registry_holder->AddTypesToImpl(op_type, op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
+
   EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             0);
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_attr) {
@@ -990,18 +1007,25 @@ TEST_F(UtestRegister, new_optiling_py_interface_fail_with_invalid_attr) {
   size_t size = 100;
   const char *cmp_info_hash = "";
   uint64_t *elapse = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubNew;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubNew;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubNew;
+  op_impl_func.tiling_parse = OpTilingParseStubNew;
+  op_impl_func.compile_info_creator = CreateCompileInfo;
+  op_impl_func.compile_info_deleter = DeleteCompileInfo;
+  op_impl_func.max_tiling_data_size = 50;
+  registry_holder->AddTypesToImpl(op_type, op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             0);
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_fail_without_params) {
@@ -1025,22 +1049,37 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_with_float_data) {
   uint64_t *elapse = nullptr;
   const nlohmann::json attrs = R"([
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = OpTilingStubV5;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = OpTilingParseStubV5;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = CreateCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = DeleteCompileInfo;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).max_tiling_data_size = 50;
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubV5;
+  op_impl_func.tiling_parse = OpTilingParseStubV5;
+  op_impl_func.compile_info_creator = CreateCompileInfo;
+  op_impl_func.compile_info_deleter = DeleteCompileInfo;
+  op_impl_func.max_tiling_data_size = 50;
+  registry_holder->AddTypesToImpl(op_type, op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).tiling_parse = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_creator = nullptr;
-  gert::OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type).compile_info_deleter = nullptr;
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
 }
 
 TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
-  IMPL_OP_DEFAULT().Tiling(DefaultOptilingStub).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = DefaultOptilingStub;
+  op_impl_func.tiling_parse = OpTilingParseStubV5;
+  registry_holder->AddTypesToImpl("DefaultImpl", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
   // expect rt1 tiling not to work
   REGISTER_OP_TILING_V2(AutoTiling, op_tiling_stub_failed);
   const nlohmann::json input = R"([
@@ -1060,10 +1099,20 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_auto_tiling) {
   EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
 }
 
 TEST_F(UtestRegister, NewOptilingInterface_Ok_WithEmptyTensor) {
-  IMPL_OP_DEFAULT().Tiling(DefaultOptilingStub).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = DefaultOptilingStub;
+  op_impl_func.tiling_parse = OpTilingParseStubV5;
+  registry_holder->AddTypesToImpl("DefaultImpl", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
   // expect rt1 tiling not to work
   REGISTER_OP_TILING_V2(AutoTiling, op_tiling_stub_failed);
   const nlohmann::json input = R"([
@@ -1083,10 +1132,20 @@ TEST_F(UtestRegister, NewOptilingInterface_Ok_WithEmptyTensor) {
   EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
             1);
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
 }
 
 TEST_F(UtestRegister, NewOptilingInterface_Ok_WithNodeName) {
-  IMPL_OP_DEFAULT().Tiling(OpTilingStubNewWithName).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubNewWithName;
+  op_impl_func.tiling_parse = OpTilingParseStubV5;
+  registry_holder->AddTypesToImpl("DefaultImpl", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
   // expect rt1 tiling not to work
   REGISTER_OP_TILING_V2(AutoTiling, op_tiling_stub_failed);
   const nlohmann::json input = R"([
@@ -1109,6 +1168,9 @@ TEST_F(UtestRegister, NewOptilingInterface_Ok_WithNodeName) {
                                attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse,
                                extra_info_str.c_str()),
             1);
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
 }
 
 extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,

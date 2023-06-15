@@ -56,4 +56,7 @@ target_link_libraries(ut_register
     -lrt
     -ldl
     -lgcov
+    -Wl,--whole-archive
+    rt2_registry_static
+    -Wl,--no-whole-archive
 )

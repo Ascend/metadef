@@ -78,16 +78,42 @@ struct ContextComponent {
   bool atomic_flag = true;
 };
 
-bool FindImplFuncs(const ge::char_t *op_type, const gert::OpImplRegistry::OpImplFunctions *&funcs) {
+bool FindImplFuncsOld(const ge::char_t *op_type, const gert::OpImplKernelRegistry::OpImplFunctions *&funcs) {
     funcs = gert::OpImplRegistry::GetInstance().GetOpImpl(op_type);
     if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
       funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("DefaultImpl");
       if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
-        GELOGE(ge::GRAPH_FAILED, "funcs/tiling/tiling_parse is null. op type is %s.", op_type);
-        REPORT_CALL_ERROR("E19999", "funcs/tiling/tiling_parse is null. op type is %s.", op_type);
+        GELOGE(ge::GRAPH_FAILED, "failed to find implfuncs in 1.0 way,\
+          funcs/tiling/tiling_parse is null. op type is %s.", op_type);
+        REPORT_CALL_ERROR("E19999", "old funcs/tiling/tiling_parse is null. op type is %s.", op_type);
         return false;
       }
+      GELOGD("find default implfuncs in 1.0 way, op type is %s.", op_type);
+      return true;
     }
+    GELOGD("find implfuncs in 1.0 way, op type is %s.", op_type);
+    return true;
+}
+
+bool FindImplFuncs(const ge::char_t *op_type, const gert::OpImplKernelRegistry::OpImplFunctions *&funcs) {
+    auto registry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+    if (registry == nullptr) {
+      GELOGW("failed to find implfuncs in 2.0 way, registery is null. op type is %s.", op_type);
+      return FindImplFuncsOld(op_type, funcs);
+    }
+    std::string op_type_str(op_type);
+    funcs = registry->GetOpImpl(op_type_str);
+    if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
+      std::string default_impl_str("DefaultImpl");
+      funcs = registry->GetOpImpl(default_impl_str);
+      if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
+        GELOGW("failed to find implfuncs in 2.0 way, funcs/tiling/tiling_parse is null. op type is %s.", op_type);
+        return FindImplFuncsOld(op_type, funcs);
+      }
+      GELOGD("find default implfuncs in 2.0 way, op type is %s.", op_type);
+      return true;
+    }
+    GELOGD("find implfuncs in 2.0 way, op type is %s.", op_type);
     return true;
 }
 
@@ -1337,7 +1363,7 @@ int TbeOptilingPyInterfaceNew(const char *const op_type, const char *const compi
     return 0;
   }
 
-  const gert::OpImplRegistry::OpImplFunctions *funcs;
+  const gert::OpImplKernelRegistry::OpImplFunctions *funcs;
   if (!FindImplFuncs(op_type, funcs)) {
     return 0;
   }
@@ -1510,8 +1536,9 @@ extern "C" int TbeOpTilingPyInterfaceEx2BackUp(const char *optype, const char *c
                                               compile_info_hash, elapse, tiling_func);
 }
 
-extern "C" Status LoadSoAndSaveToRegistry(const char *so_path) {
+extern "C" Status TbeLoadSoAndSaveToRegistry(const char *so_path) {
   GE_ASSERT_NOTNULL(so_path);
+  GELOGD("start TbeLoadSoAndSaveToRegistry, so path: %s, pid is %d", so_path, getpid());
   return gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path);
 }
 }  // namespace optiling
