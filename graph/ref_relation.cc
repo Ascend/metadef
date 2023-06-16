@@ -40,17 +40,14 @@ namespace {
 class RefRelations::Impl {
 public:
   graphStatus LookUpRefRelations(const RefCell &key, std::unordered_set<RefCell, RefCellHash> &result) {
-   const size_t number = PtrToValue(key.node.get());
-   const std::string lookup_key =
-       key.node_name + std::to_string(key.in_out) + std::to_string(key.in_out_idx) + std::to_string(number);
-   const auto iter = look_up_table_.find(lookup_key);
+   const auto iter = look_up_table_.find(key.hash_key);
     if (iter != look_up_table_.end()) {
       for (auto &c : iter->second) {
         (void)result.insert(c);
       }
       return GRAPH_SUCCESS;
     }
-    GELOGD("[RefRelations][Check] can not find any relations! key value of dest relation is %s", lookup_key.c_str());
+    GELOGD("[RefRelations][Check] can not find any relations! key value of dest relation is %s", key.hash_key.c_str());
     return GRAPH_SUCCESS;
   };
   graphStatus BuildRefRelations(ge::ComputeGraph &graph);
@@ -141,9 +138,7 @@ graphStatus RefRelations::Impl::BuildLookUpTables() {
     std::vector<std::vector<RefCell>> &val = values_[i];
     for (const auto &ele : val) {
       for (const auto &ref_cell : ele) {
-        const std::string key = ref_cell.node_name + std::to_string(ref_cell.in_out) +
-            std::to_string(ref_cell.in_out_idx) + std::to_string(PtrToValue(ref_cell.node.get()));
-        look_up_table_[key] = ele;
+        look_up_table_.emplace(ref_cell.hash_key, ele);
       }
     }
   }
@@ -219,8 +214,14 @@ graphStatus RefRelations::Impl::BuildRefRelationsForWhile(
     const size_t ref_desc = static_cast<size_t>(ref_d);
     const size_t ref_in = static_cast<size_t>(ref_n);
 
-    (void)node_refs[ref_desc].insert(node_refs[ref_desc].cend(), node_refs[ref_in].cbegin(), node_refs[ref_in].cend());
-    (void)node_refs[ref_in].insert(node_refs[ref_in].cend(), node_refs[ref_desc].cbegin(), node_refs[ref_desc].cend());
+    const size_t idx1 = node_refs[ref_in].size();  // 注意，不要删除idx1、idx2，存在ref_desc=ref_in的情况
+    for (size_t i = 0U; i < idx1; ++i) {
+      node_refs[ref_desc].emplace_back(node_refs[ref_in][i]);
+    }
+    const size_t idx2 = node_refs[ref_desc].size();
+    for (size_t i = 0U; i < idx2; ++i) {
+      node_refs[ref_in].emplace_back(node_refs[ref_desc][i]);
+    }
   }
 
   return GRAPH_SUCCESS;
