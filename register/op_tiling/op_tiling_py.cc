@@ -288,33 +288,30 @@ ge::graphStatus ParseConstValue(const nlohmann::json &input, const gert::Storage
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus ParseInput(const nlohmann::json &input, ge::OpDescPtr &op_desc, const uint32_t index,
-                           std::vector<gert::StorageShape> &storage_shapes,
-                           std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> &index_to_tensor) {
+ge::graphStatus ParseInput(const nlohmann::json &input, const uint32_t index, const ge::IrInputType input_type,
+                           ContextComponent &context_com) {
   ge::GeTensorDesc tensor_desc;
   gert::StorageShape storage_shape;
   ParseDtype(input, tensor_desc);
-  ParseStorageShape(input, storage_shape, storage_shapes);
+  ParseStorageShape(input, storage_shape, context_com.storage_shapes);
   ParseStorageFormat(input, tensor_desc);
-  const auto ret = ParseConstValue(input, storage_shape, tensor_desc, index, index_to_tensor);
+  const auto ret = ParseConstValue(input, storage_shape, tensor_desc, index, context_com.index_to_tensors);
   if (ret != ge::GRAPH_SUCCESS) {
     return ret;
   }
 
-  if (input.contains("name")) {
-    const std::string name = input["name"];
-    tensor_desc.SetName(name);
-    op_desc->AppendIrInput(name, ge::kIrInputRequired);
-    (void)op_desc->AddInputDesc(name, tensor_desc);
+  if (input_type == ge::kIrInputRequired) {
+    (void) context_com.op_desc->AddInputDesc(std::to_string(index), tensor_desc);
+  } else if (input_type == ge::kIrInputDynamic) {
+    (void) context_com.op_desc->UpdateInputDesc(index, tensor_desc);
   } else {
-    op_desc->AppendIrInput(std::to_string(index), ge::kIrInputRequired);
-    (void)op_desc->AddInputDesc(std::to_string(index), tensor_desc);
+    GELOGE(ge::GRAPH_FAILED, "Unsupported ir type.");
+    return ge::GRAPH_FAILED;
   }
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus ParseInputs(const char *inputs, ge::OpDescPtr &op_desc, std::vector<gert::StorageShape> &storage_shapes,
-                            std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> &index_to_tensor) {
+ge::graphStatus ParseInputs(const char* inputs, ContextComponent& context_com) {
   nlohmann::json desc_list;
   try {
     desc_list = nlohmann::json::parse(inputs);
@@ -325,22 +322,30 @@ ge::graphStatus ParseInputs(const char *inputs, ge::OpDescPtr &op_desc, std::vec
   uint32_t index = 0;
   for (const auto &desc : desc_list) {
     if (desc.is_array()) {
+      const auto input_num = desc.size();
+      context_com.op_desc->AddDynamicInputDesc(std::to_string(index) + std::to_string(input_num),
+                                               input_num);
+      context_com.op_desc->AppendIrInput(std::to_string(index) + std::to_string(input_num), ge::kIrInputDynamic);
       for (const auto &ele : desc) {
         if (ele.is_null()) {
           GELOGW("Empty input, cur index %u", index);
           continue;
         }
-        if (ParseInput(ele, op_desc, index, storage_shapes, index_to_tensor) != ge::GRAPH_SUCCESS) {
+        if (ParseInput(ele, index, ge::kIrInputDynamic, context_com) != ge::GRAPH_SUCCESS) {
           return ge::GRAPH_FAILED;
         }
         ++index;
       }
     } else {
       if (desc.is_null()) {
-        GELOGW("Empty input, cur index %u", index);
+        context_com.op_desc->AppendIrInput("optional" + std::to_string(index), ge::kIrInputOptional);
+        context_com.op_desc->AddOptionalInputDesc(
+            "optional" + std::to_string(index), ge::GeTensorDesc(ge::GeShape(), ge::FORMAT_RESERVED, ge::DT_UNDEFINED));
+        GELOGI("Optional input index %u is null.", index);
         continue;
       }
-      if (ParseInput(desc, op_desc, index, storage_shapes, index_to_tensor) != ge::GRAPH_SUCCESS) {
+      context_com.op_desc->AppendIrInput(std::to_string(index), ge::kIrInputRequired);
+      if (ParseInput(desc, index, ge::kIrInputRequired, context_com) != ge::GRAPH_SUCCESS) {
         return ge::GRAPH_FAILED;
       }
       ++index;
@@ -349,21 +354,23 @@ ge::graphStatus ParseInputs(const char *inputs, ge::OpDescPtr &op_desc, std::vec
   return ge::GRAPH_SUCCESS;
 }
 
-void ParseOutput(const nlohmann::json &output, ge::OpDescPtr &op_desc,
-                 std::vector<gert::StorageShape> &storage_shapes) {
+ge::graphStatus ParseOutput(const nlohmann::json &output, ge::IrOutputType output_type, const uint32_t index,
+                            ContextComponent &context_com) {
   ge::GeTensorDesc tensor_desc;
   gert::StorageShape storage_shape;
   ParseDtype(output, tensor_desc);
-  ParseStorageShape(output, storage_shape, storage_shapes);
+  ParseStorageShape(output, storage_shape, context_com.storage_shapes);
   ParseStorageFormat(output, tensor_desc);
 
-  if (output.contains("name")) {
-    const std::string name = output["name"];
-    tensor_desc.SetName(name);
-    (void)op_desc->AddOutputDesc(name, tensor_desc);
+  if (output_type == ge::kIrOutputRequired) {
+    (void) context_com.op_desc->AddOutputDesc(std::to_string(index), tensor_desc);
+  } else if (output_type == ge::kIrOutputDynamic) {
+    (void) context_com.op_desc->UpdateOutputDesc(index, tensor_desc);
   } else {
-    (void)op_desc->AddOutputDesc(tensor_desc);
+    GELOGE(ge::GRAPH_FAILED, "Unsupported ir type.");
+    return ge::GRAPH_FAILED;
   }
+  return ge::GRAPH_SUCCESS;
 }
 
 void ParseExtraInfo(const nlohmann::json &extra_info, ge::OpDescPtr &op_desc) {
@@ -395,8 +402,7 @@ ge::graphStatus ParseExtraInfos(const char *const extra_info, ge::OpDescPtr &op_
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus ParseOutputs(const char *outputs, ge::OpDescPtr &op_desc,
-                             std::vector<gert::StorageShape> &storage_shapes) {
+ge::graphStatus ParseOutputs(const char *outputs, ContextComponent &context_com) {
   nlohmann::json desc_list;
   try {
     desc_list = nlohmann::json::parse(outputs);
@@ -404,13 +410,29 @@ ge::graphStatus ParseOutputs(const char *outputs, ge::OpDescPtr &op_desc,
     GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", outputs);
     return ge::GRAPH_FAILED;
   }
+  uint32_t index = 0;
   for (const auto &desc : desc_list) {
     if (desc.is_array()) {
+      const size_t output_num = desc.size();
+      //  可能传过来的输入没有指定名字,所有用index+num拼一个统一的假名字,输出也是相同的处理
+      context_com.op_desc->AddDynamicOutputDesc(std::to_string(index) + std::to_string(output_num), output_num);
+      context_com.op_desc->AppendIrOutput(std::to_string(index) + std::to_string(output_num), ge::kIrOutputDynamic);
       for (const auto &ele : desc) {
-        ParseOutput(ele, op_desc, storage_shapes);
+        if (ele.is_null()) {
+          GELOGW("Empty output, cur index %u", index);
+          continue;
+        }
+        GE_ASSERT_GRAPH_SUCCESS(ParseOutput(ele, ge::kIrOutputDynamic, index, context_com));
+        ++index;
       }
     } else {
-      ParseOutput(desc, op_desc, storage_shapes);
+      if (desc.is_null()) {
+        GELOGW("Empty output, cur index %u", index);
+        continue;
+      }
+      context_com.op_desc->AppendIrOutput(std::to_string(index), ge::kIrOutputRequired);
+      GE_ASSERT_GRAPH_SUCCESS(ParseOutput(desc, ge::kIrOutputRequired, index, context_com));
+      ++index;
     }
   }
   return ge::GRAPH_SUCCESS;
@@ -1241,13 +1263,12 @@ ge::graphStatus ParseJson(const char *const inputs, const char *const outputs, c
     REPORT_CALL_ERROR("E19999", "Parse extra info failed.");
     return ge::GRAPH_FAILED;
   }
-  if (ParseInputs(inputs, context_com.op_desc, context_com.storage_shapes, context_com.index_to_tensors) !=
-      ge::GRAPH_SUCCESS) {
+  if (ParseInputs(inputs, context_com) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::GRAPH_FAILED, "Parse inputs failed.");
     REPORT_CALL_ERROR("E19999", "Parse inputs failed.");
     return ge::GRAPH_FAILED;
   }
-  if (ParseOutputs(outputs, context_com.op_desc, context_com.storage_shapes) != ge::GRAPH_SUCCESS) {
+  if (ParseOutputs(outputs, context_com) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::GRAPH_FAILED, "Parse outputs failed.");
     REPORT_CALL_ERROR("E19999", "Parse outputs failed.");
     return ge::GRAPH_FAILED;

@@ -152,6 +152,24 @@ UINT32 OpTilingStubV5(gert::TilingContext *kernel_context) {
   return ge::GRAPH_SUCCESS;
 }
 
+UINT32 OpTilingStubNewWithDynamicInput(gert::TilingContext *kernel_context) {
+  auto shape = kernel_context->GetDynamicInputShape(0, 0);
+  EXPECT_EQ(*shape, gert::StorageShape( {4, 256, 200, 336}, {4, 16, 200, 336, 16}));
+  auto shape0_1 = kernel_context->GetDynamicInputShape(0, 1);
+  EXPECT_EQ(*shape0_1, gert::StorageShape( {4, 256, 100, 168}, {4, 16, 100, 168, 16}));
+  auto shape_1 = kernel_context->GetOptionalInputShape(1);
+  EXPECT_EQ(shape_1, nullptr);
+  auto shape_2 = kernel_context->GetDynamicInputShape(2, 0);
+  EXPECT_EQ(*shape_2, gert::StorageShape({100, 5}, {100, 5}));
+  auto input_1 = kernel_context->GetInputShape(4);
+  EXPECT_EQ(*input_1, gert::StorageShape({100, 5}, {100, 5}));
+  auto output = kernel_context->GetOutputShape(0);
+  EXPECT_EQ(*output, gert::StorageShape({9, 9, 9, 9}, {9, 9, 9, 9}));
+  EXPECT_EQ(kernel_context->GetComputeNodeInputNum(), 5);
+  EXPECT_EQ(kernel_context->GetComputeNodeOutputNum(), 1);
+  return ge::GRAPH_SUCCESS;
+}
+
 UINT32 DefaultOptilingStub(gert::TilingContext *kernel_context) {
   return ge::GRAPH_SUCCESS;
 }
@@ -1091,6 +1109,133 @@ TEST_F(UtestRegister, NewOptilingInterface_Ok_WithNodeName) {
   REGISTER_OP_TILING_V2(AutoTiling, op_tiling_stub_failed);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8","shape": [0],"format": "ND", "const value": ""}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+  const nlohmann::json extra_info = R"({"op_name": "test"})"_json;
+  std::string extra_info_str = extra_info.dump();
+  const char *op_type = "AutoTiling";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  const nlohmann::json attrs = R"([
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  EXPECT_EQ(OpTilingForCompile(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                               attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse,
+                               extra_info_str.c_str()),
+            1);
+}
+
+TEST_F(UtestRegister, NewOptilingInterface_Ok_WithDynamicInput) {
+  IMPL_OP_DEFAULT().Tiling(OpTilingStubNewWithDynamicInput).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  const nlohmann::json input = R"([
+  [{
+    "shape": [4, 16, 200, 336, 16],
+    "ori_shape": [4, 256, 200, 336],
+    "format": "NC1HWC0",
+        "sub_format": 0,
+        "ori_format": "NCHW",
+        "dtype": "float16",
+        "addr_type": 0,
+        "total_shape": [4, 16, 200, 336, 16],
+    "slice_offset": [],
+        "L1_addr_offset": 0,
+        "L1_fusion_type": -1,
+        "L1_workspace_size": -1,
+        "valid_shape": [],
+        "split_index": 0,
+        "atomic_type": "",
+        "input_c_values": 256,
+        "range": [ [4, 4], [16, 16], [200, 200], [336, 336], [16, 16] ],
+    "param_name": "feats",
+        "name": "feats_gm_0"
+  },
+  {
+    "shape": [4, 16, 100, 168, 16],
+    "ori_shape": [4, 256, 100, 168],
+    "format": "NC1HWC0",
+        "sub_format": 0,
+        "ori_format": "NCHW",
+        "dtype": "float16",
+        "addr_type": 0,
+        "total_shape": [4, 16, 100, 168, 16],
+    "slice_offset": [],
+        "L1_addr_offset": 0,
+        "L1_fusion_type": -1,
+        "L1_workspace_size": -1,
+        "valid_shape": [],
+        "split_index": 0,
+        "atomic_type": "",
+        "input_c_values": 256,
+        "range": [ [4, 4], [16, 16], [100, 100], [168, 168], [16, 16] ],
+    "param_name": "feats",
+        "name": "feats_gm_1"
+  },
+  {
+    "shape": [4, 16, 50, 84, 16],
+    "ori_shape": [4, 256, 50, 84],
+    "format": "NC1HWC0",
+        "sub_format": 0,
+        "ori_format": "NCHW",
+        "dtype": "float16",
+        "addr_type": 0,
+        "total_shape": [4, 16, 50, 84, 16],
+    "slice_offset": [],
+        "L1_addr_offset": 0,
+        "L1_fusion_type": -1,
+        "L1_workspace_size": -1,
+        "valid_shape": [],
+        "split_index": 0,
+        "atomic_type": "",
+        "input_c_values": 256,
+        "range": [ [4, 4], [16, 16], [50, 50], [84, 84], [16, 16] ],
+    "param_name": "feats"
+  },
+  {
+    "shape": [4, 16, 25, 42, 16],
+    "ori_shape": [4, 256, 25, 42],
+    "format": "NC1HWC0",
+        "sub_format": 0,
+        "ori_format": "NCHW",
+        "dtype": "float16",
+        "addr_type": 0,
+        "total_shape": [4, 16, 25, 42, 16],
+    "slice_offset": [],
+        "L1_addr_offset": 0,
+        "L1_fusion_type": -1,
+        "L1_workspace_size": -1,
+        "valid_shape": [],
+        "split_index": 0,
+        "atomic_type": "",
+        "input_c_values": 256,
+        "range": [ [4, 4], [16, 16], [25, 25], [42, 42], [16, 16] ],
+    "param_name": "feats"
+  }
+  ],
+  null,
+  {
+    "shape": [100, 5],
+    "ori_shape": [100, 5],
+    "format": "NCHW",
+        "sub_format": 0,
+        "ori_format": "NCHW",
+        "dtype": "float16",
+        "addr_type": 0,
+        "total_shape": [100, 5],
+    "slice_offset": [],
+        "L1_addr_offset": 0,
+        "L1_fusion_type": -1,
+        "L1_workspace_size": -1,
+        "valid_shape": [],
+        "split_index": 0,
+        "atomic_type": "",
+        "input_c_values": 5,
+        "range": [ [100, 100], [5, 5] ],
+    "param_name": "rois"
+  }])"_json;
   std::string input_str = input.dump();
   const nlohmann::json output = R"([
 {"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
