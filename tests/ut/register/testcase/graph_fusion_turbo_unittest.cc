@@ -88,6 +88,30 @@ REG_OP(Relu)
                            DT_UINT8, DT_UINT16, DT_QINT8}))
     .OP_END_FACTORY_REG(Relu)
 
+REG_OP(Split)
+    .INPUT(split_dim, TensorType({DT_INT32}))
+    .INPUT(x, TensorType::BasicType())
+    .DYNAMIC_OUTPUT(y, TensorType::BasicType())
+    .REQUIRED_ATTR(num_split, Int)
+    .OP_END_FACTORY_REG(Split)
+
+REG_OP(Concat)
+    .DYNAMIC_INPUT(x, TensorType::BasicType())
+    .INPUT(concat_dim, TensorType::IndexNumberType())
+    .OUTPUT(y, TensorType::BasicType())
+    .ATTR(N, Int, 1)
+    .OP_END_FACTORY_REG(Concat)
+
+REG_OP(RaggedTensorFromVariant)
+    .INPUT(encoded_ragged, TensorType({DT_VARIANT}))
+    .DYNAMIC_OUTPUT(output_nested_splits, TensorType({DT_INT32, DT_INT64}))
+    .OUTPUT(output_dense_values, TensorType::BasicType())
+    .REQUIRED_ATTR(input_ragged_rank, Int)
+    .REQUIRED_ATTR(output_ragged_rank, Int)
+    .REQUIRED_ATTR(Tvalues, Type)
+    .ATTR(Tsplits, Type, DT_INT64)
+    .OP_END_FACTORY_REG(RaggedTensorFromVariant)
+
 class UTestFusionTurbo : public testing::Test {
  public:
 
@@ -451,6 +475,108 @@ TEST_F(UTestFusionTurbo, test_case_02_1) {
 
   EXPECT_EQ(node->GetInDataAnchor(0)->GetPeerOutAnchor()->GetOwnerNode()->GetName(), "relu");
   EXPECT_EQ(node->GetOutDataAnchor(0)->GetPeerInDataAnchors().size(), 0);
+}
+
+TEST_F(UTestFusionTurbo, test_concat_and_split_node) {
+  auto graph = std::make_shared<ComputeGraph>("test1");
+  FusionTurbo acc(graph);
+  string name1 = "split";
+  string type1 = "Split";
+  auto split = acc.AddNodeOnly(name1, type1, 32);
+
+  string name2 = "concat";
+  string type2 = "Concat";
+  auto concat = acc.AddNodeOnly(name2, type2, 32);
+  ASSERT_NE(split, nullptr);
+  ASSERT_NE(concat, nullptr);
+
+  auto split_input_size = split->GetOpDesc()->GetAllInputsSize();
+  EXPECT_EQ(split_input_size, 2);
+
+  auto split_output_size = split->GetOpDesc()->GetOutputsSize();
+  EXPECT_EQ(split_output_size, 32);
+
+  auto concat_input_size = concat->GetOpDesc()->GetAllInputsSize();
+  EXPECT_EQ(concat_input_size, 33);
+
+  auto concat_output_size = concat->GetOpDesc()->GetOutputsSize();
+  EXPECT_EQ(concat_output_size, 1);
+
+  Relations output_relation;
+  for (size_t i = 0; i < 32; ++i) {
+    output_relation.Add(i, {concat, static_cast<int32_t>(i)});
+  }
+  acc.LinkOutput(output_relation, split);
+  auto out_data_nodes = split->GetOutDataNodes();
+  ASSERT_EQ(out_data_nodes.size(), 32);
+  for (size_t i = 0; i < 32; ++i) {
+    EXPECT_EQ(out_data_nodes.at(i)->GetName(), "concat");
+  }
+
+  auto split_input_0_name = split->GetOpDesc()->GetInputNameByIndex(0);
+  EXPECT_EQ(split_input_0_name, "split_dim");
+
+  auto split_input_1_name = split->GetOpDesc()->GetInputNameByIndex(1);
+  EXPECT_EQ(split_input_1_name, "x");
+
+  for (size_t i = 0; i < 32; ++i) {
+    auto name = concat->GetOpDesc()->GetInputNameByIndex(i);
+    EXPECT_EQ(name, "x" + std::to_string(i));
+  }
+
+  for (size_t i = 0; i < 32; ++i) {
+    auto name = split->GetOpDesc()->GetOutputNameByIndex(i);
+    EXPECT_EQ(name, "y" + std::to_string(i));
+  }
+}
+
+TEST_F(UTestFusionTurbo, test_concat_and_ragged_node) {
+  auto graph = std::make_shared<ComputeGraph>("test1");
+  FusionTurbo acc(graph);
+  string name1 = "ragged";
+  string type1 = "RaggedTensorFromVariant";
+  auto ragged = acc.AddNodeOnly(name1, type1, 32);
+
+  string name2 = "concat";
+  string type2 = "Concat";
+  auto concat = acc.AddNodeOnly(name2, type2, 32);
+  ASSERT_NE(ragged, nullptr);
+  ASSERT_NE(concat, nullptr);
+
+  auto split_input_size = ragged->GetOpDesc()->GetAllInputsSize();
+  EXPECT_EQ(split_input_size, 1);
+
+  auto split_output_size = ragged->GetOpDesc()->GetOutputsSize();
+  EXPECT_EQ(split_output_size, 33);
+
+  auto concat_input_size = concat->GetOpDesc()->GetAllInputsSize();
+  EXPECT_EQ(concat_input_size, 33);
+
+  auto concat_output_size = concat->GetOpDesc()->GetOutputsSize();
+  EXPECT_EQ(concat_output_size, 1);
+
+  Relations output_relation;
+  for (size_t i = 1; i < 33; ++i) {
+    output_relation.Add(i, {concat, static_cast<int32_t>(i)});
+  }
+  acc.LinkOutput(output_relation, ragged);
+  auto out_data_nodes = ragged->GetOutDataNodes();
+  ASSERT_EQ(out_data_nodes.size(), 32);
+  for (size_t i = 0; i < 32; ++i) {
+    EXPECT_EQ(out_data_nodes.at(i)->GetName(), "concat");
+  }
+
+  for (size_t i = 0; i < 32; ++i) {
+    auto name = concat->GetOpDesc()->GetInputNameByIndex(i);
+    EXPECT_EQ(name, "x" + std::to_string(i));
+  }
+
+  for (size_t i = 0; i < 32; ++i) {
+    auto name = ragged->GetOpDesc()->GetOutputNameByIndex(i);
+    EXPECT_EQ(name, "output_nested_splits" + std::to_string(i));
+  }
+  auto output_32_name = ragged->GetOpDesc()->GetOutputNameByIndex(32);
+  EXPECT_EQ(output_32_name, "output_dense_values");
 }
 
 TEST_F(UTestFusionTurbo, test_case_03) {

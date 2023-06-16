@@ -450,22 +450,50 @@ ge::GeTensorPtr FusionTurbo::MutableWeight(const ge::NodePtr &node, int32_t inde
 }
 
 ge::NodePtr FusionTurbo::AddNodeOnly(const string &op_name, const string &op_type) const {
-  const auto op = ge::OperatorFactory::CreateOperator(op_name.c_str(), op_type.c_str());
-  if (op.IsEmpty()) {
-    return nullptr;
-  }
-  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
-  auto ret_node = graph_->AddNode(op_desc);
-  return ret_node;
+  return AddNodeOnly(*graph_, op_name, op_type, 0);
 }
 
-ge::NodePtr FusionTurbo::AddNodeOnly(ge::ComputeGraph &graph,
-                                     const string &op_name, const string &op_type) {
+ge::NodePtr FusionTurbo::AddNodeOnly(ge::ComputeGraph &graph, const string &op_name, const string &op_type) {
+  return AddNodeOnly(graph, op_name, op_type, 0);
+}
+
+ge::NodePtr FusionTurbo::AddNodeOnly(const string &op_name, const string &op_type, size_t dynamic_num) const {
+  return AddNodeOnly(*graph_, op_name, op_type, dynamic_num);
+}
+
+ge::NodePtr FusionTurbo::AddNodeOnly(ge::ComputeGraph &graph, const string &op_name,
+                                     const string &op_type, size_t dynamic_num) {
   const auto op = ge::OperatorFactory::CreateOperator(op_name.c_str(), op_type.c_str());
   if (op.IsEmpty()) {
+    GELOGW("Fail to create operator %s %s.", op_name.c_str(), op_type.c_str());
     return nullptr;
   }
+
   const auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  if (dynamic_num != 0) {
+    size_t index = 0;
+    const auto &ir_inputs = op_desc->GetIrInputs();
+    for (auto &ir_input : ir_inputs) {
+      if (ir_input.second == ge::kIrInputDynamic) {
+        op_desc->AddInputDescMiddle(ir_input.first, dynamic_num, index);
+        index += dynamic_num;
+      } else {
+        ++index;
+      }
+    }
+
+    index = 0;
+    const auto &ir_outputs = op_desc->GetIrOutputs();
+    for (auto &ir_output : ir_outputs) {
+      if (ir_output.second == ge::kIrOutputDynamic) {
+        op_desc->AddOutputDescMiddle(ir_output.first, dynamic_num, index);
+        index += dynamic_num;
+      } else {
+        ++index;
+      }
+    }
+  }
+
   auto ret_node = graph.AddNode(op_desc);
   return ret_node;
 }
