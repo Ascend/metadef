@@ -284,9 +284,7 @@ bool PluginManager::IsVendorVersionValid(const std::string &vendor_path) {
     GELOGW("[NotVerification] Will not verify version as the opp version and compiler version are not set");
     return true;
   }
-
-  GE_ASSERT_TRUE(IsVendorVersionValid(opp_version, compiler_version));
-  return true;
+  return IsVendorVersionValid(opp_version, compiler_version);
 }
 
 bool PluginManager::IsVendorVersionValid(const std::string &opp_version, const std::string &compiler_version) {
@@ -299,11 +297,7 @@ bool PluginManager::IsVendorVersionValid(const std::string &opp_version, const s
   }
 
   // 校验版本号是否在支持的版本号列表范围内
-  GE_ASSERT_TRUE(CheckOppAndCompilerVersions(opp_version, compiler_version, required_opp_abi_version),
-                 "opp version:%s or compiler version:%s not within the required range:%s",
-                 opp_version.c_str(), compiler_version.c_str(),
-                 TransRequiredOppAbiVersionToString(required_opp_abi_version).c_str());
-  return true;
+  return CheckOppAndCompilerVersions(opp_version, compiler_version, required_opp_abi_version);
 }
 
 bool IsVersionWithInRequiredRange(const uint32_t effective_version,
@@ -343,9 +337,11 @@ bool PluginManager::CheckOppAndCompilerVersions(const std::string &opp_version, 
       GELOGW("[InvalidVersion] Format of opp version [%s] is invalid", opp_version.c_str());
       return false;
     }
-    GE_ASSERT_TRUE(IsVersionWithInRequiredRange(effective_opp_version, required_version),
-                   "opp_version:%s is not with in required_opp_abi_version:%s",
-                   opp_version.c_str(), TransRequiredOppAbiVersionToString(required_version).c_str());
+    if (!IsVersionWithInRequiredRange(effective_opp_version, required_version)) {
+      GELOGW("opp_version:%s is not with in required_opp_abi_version:%s",
+             opp_version.c_str(), TransRequiredOppAbiVersionToString(required_version).c_str());
+      return false;
+    }
   }
 
   if (!compiler_version.empty()) {
@@ -355,9 +351,11 @@ bool PluginManager::CheckOppAndCompilerVersions(const std::string &opp_version, 
         GELOGW("[InvalidVersion] Format of compiler version [%s] is invalid", it.c_str());
         return false;
       }
-      GE_ASSERT_TRUE(IsVersionWithInRequiredRange(effective_compiler_version, required_version),
-                     "opp_version:%s is not with in required_opp_abi_version:%s",
-                     compiler_version.c_str(), TransRequiredOppAbiVersionToString(required_version).c_str());
+      if (!IsVersionWithInRequiredRange(effective_compiler_version, required_version)) {
+        GELOGW("compiler version:%s is not with in required_opp_abi_version:%s",
+               opp_version.c_str(), TransRequiredOppAbiVersionToString(required_version).c_str());
+        return false;
+      }
     }
   }
 

@@ -233,7 +233,7 @@ class PluginManager {
   static bool GetRequiredOppAbiVersion(std::vector<std::pair<uint32_t, uint32_t>> &required_opp_abi_version);
   static bool GetEffectiveVersion(const std::string &opp_version, uint32_t &effective_version);
   static bool CheckOppAndCompilerVersions(const std::string &opp_version, const std::string &compiler_version,
-                                          const std::vector<std::pair<uint32_t, uint32_t>> &required_opp_abi_version);
+                                          const std::vector<std::pair<uint32_t, uint32_t>> &required_version);
   static void GetOppAndCompilerVersion(const std::string &vendor_path, std::string &opp_version,
                                        std::string &compiler_version);
   std::vector<std::string> so_list_;

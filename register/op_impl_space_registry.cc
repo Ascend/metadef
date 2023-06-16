@@ -37,7 +37,7 @@ namespace {
 void CloseHandle(void * const handle) {
   if (handle != nullptr) {
     if (mmDlclose(handle) != 0) {
-      const char *error = mmDlerror();
+      const ge::char_t *error = mmDlerror();
       error = (error == nullptr) ? "" : error;
       GELOGW("[Close][Handle] failed, reason:%s", error);
     }
