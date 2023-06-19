@@ -20,29 +20,26 @@
 #include "register/tuning_bank_key_registry.h"
 
 namespace tuningtiling {
-BEGIN_OP_BANK_KEY_DEF(MatmulKy)
-OP_BANK_KEY_FIELD_DEF(uint32_t, batch);
-OP_BANK_KEY_FIELD_DEF(std::vector<uint32_t>, shape);
-END_OP_BANK_KEY_DEF
-
-DECLARE_SCHEMA(MatmulKy, FIELD(MatmulKy, batch), FIELD(MatmulKy, shape));
-
-REGISTER_OP_BANK_KEY_CLASS(matmul, MatmulKy);
-
-bool ConvertForMatmul(const gert::TilingContext *context, OpBankKeyDefPtr &inArgs) {
-  std::shared_ptr<MatmulKy> mmKy = std::static_pointer_cast<MatmulKy>(inArgs);
+struct DynamicRnnInputArgsV2 {
+  int64_t batch;
+  int32_t dims;
+};
+bool ConvertTilingContext(const gert::TilingContext* context,
+                          std::shared_ptr<void> &input_args, size_t &size) {
   if (context == nullptr) {
-    mmKy->batch = 4;
-    mmKy->shape = {1, 2};
+    auto rnn = std::make_shared<DynamicRnnInputArgsV2>();
+    rnn->batch = 0;
+    rnn->dims = 1;
+    size = sizeof(DynamicRnnInputArgsV2);
+    input_args = rnn;
     return false;
   }
-  mmKy->batch = 8;
-  mmKy->shape = {1, 2, 3};
   return true;
 }
 
-REGISTER_OP_BANK_KEY_CONVERT_FUN(matmul, ConvertForMatmul);
-
+DECLARE_STRUCT_RELATE_WITH_OP(DynamicRNN, DynamicRnnInputArgsV2,
+  batch, dims);
+REGISTER_OP_BANK_KEY_CONVERT_FUN(DynamicRNN, ConvertTilingContext);
 class RegisterOPBankKeyUT : public testing::Test {
  protected:
   void SetUp() {}
@@ -51,31 +48,29 @@ class RegisterOPBankKeyUT : public testing::Test {
 };
 
 TEST_F(RegisterOPBankKeyUT, convert_tiling_context) {
-  MatmulKy mm;
-  mm.batch = 1;
-  mm.shape = {1, 2};
-  nlohmann::json jsonval;
-  mm.ToJson(jsonval);
-  std::cout << "vec:" << jsonval["shape"].size() << std::endl;
-  std::cout << "ori json:" << jsonval.dump() << std::endl;
-  auto kydef = OpBankKeyClassFactory::CreateBankKeyInstance(ge::AscendString("unknow"));
-  EXPECT_EQ(kydef == nullptr, true);
-  kydef = OpBankKeyClassFactory::CreateBankKeyInstance(ge::AscendString("matmul"));
-  ;
-  EXPECT_EQ(kydef != nullptr, true);
-  kydef->FromJson(jsonval);
-  nlohmann::json res;
-  kydef->ToJson(res);
-  EXPECT_EQ(res, jsonval);
-  std::cout << "expected json:" << res.dump() << std::endl;
-  auto it = OpBankKeyFuncRegistry::RegisteredOpFuncInfo().find("matmul");
-  it->second(nullptr, kydef);
-  auto rawdata = kydef->GetRawBankKey();
-  EXPECT_EQ(rawdata != nullptr, true);
-  auto dsize = kydef->GetDataSize();
-  EXPECT_EQ(dsize, 12);
-  EXPECT_EQ(*((uint32_t *) (rawdata)), 4);
-  EXPECT_EQ(*((uint32_t *) (rawdata + 4)), 1);
-  EXPECT_EQ(*((uint32_t *) (rawdata + 8)), 2);
+  auto& func = OpBankKeyFuncRegistry::RegisteredOpFuncInfo();
+  auto iter = func.find("DynamicRNN");
+  nlohmann::json test;
+  test["batch"] = 12;
+  test["dims"] = 2;
+  ASSERT_TRUE(iter != func.cend());
+  const OpBankLoadFun& load_func = iter->second.GetBankKeyLoadFunc();
+  std::shared_ptr<void> ld = nullptr;
+  size_t len = 0;
+  EXPECT_TRUE(load_func(ld, len, test));
+  EXPECT_TRUE(ld != nullptr);
+  const auto &parse_func = iter->second.GetBankKeyParseFunc();
+  nlohmann::json test2;
+  EXPECT_TRUE(parse_func(ld, len, test2));
+  EXPECT_EQ(test, test2);
+  const auto &convert_func = iter->second.GetBankKeyConvertFunc();
+  std::shared_ptr<void> op_key = nullptr;
+  size_t s = 0U;
+  EXPECT_FALSE(convert_func(nullptr, op_key, s));
+  EXPECT_TRUE(s !=0);
+  EXPECT_TRUE(op_key != nullptr);
+  auto rnn_ky = std::static_pointer_cast<DynamicRnnInputArgsV2>(op_key);
+  EXPECT_EQ(rnn_ky->batch, 0);
+
 }
 }  // namespace tuningtiling

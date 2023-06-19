@@ -15,13 +15,13 @@
 */
 #ifndef __INC_REGISTER_TUNING_BANK_KEY_REGISTRY_HEADER__
 #define __INC_REGISTER_TUNING_BANK_KEY_REGISTRY_HEADER__
-#include <type_traits>
+#include <memory>
+#include <unordered_map>
 #include <nlohmann/json.hpp>
-#include <string>
 #include "graph/ascend_string.h"
+#include "framework/common/debug/ge_log.h"
 #include "external/register/register_types.h"
 #include "exe_graph/runtime/tiling_context.h"
-#include "register/tuning_tiling_reflection_utils.h"
 
 #define REGISTER_OP_BANK_KEY_CONVERT_FUN(op, opfunc)                                                                   \
   REGISTER_OP_BANK_KEY_CONVERT_FUN_UNIQ_HELPER(op, (opfunc), __COUNTER__)
@@ -32,186 +32,76 @@
 #define REGISTER_OP_BANK_KEY_UNIQ(optype, opfunc, counter)                                                             \
   static tuningtiling::OpBankKeyFuncRegistry g_##optype##BankKeyRegistryInterf##counter(#optype, (opfunc))
 
-namespace tuningtiling {
-class OpBankKeyDef {
-public:
-  OpBankKeyDef() = default;
-  virtual ~OpBankKeyDef() {
-    if (bank_key_ != nullptr) {
-      delete[] bank_key_;
-      bank_key_ = nullptr;
-    }
-  }
+#define REGISTER_OP_BANK_KEY_PARSE_FUN(op, parse_func, load_func)                                                      \
+  REGISTER_OP_BANK_KEY_PARSE_FUN_UNIQ_HELPER(op, (parse_func), (load_func), __COUNTER__)
 
-  virtual void FromJson(const nlohmann::json &j) = 0;
-  virtual void ToJson(nlohmann::json &j) = 0;
-  virtual uint8_t *GetRawBankKey() = 0;
-  virtual size_t GetDataSize() const = 0;
+#define REGISTER_OP_BANK_KEY_PARSE_FUN_UNIQ_HELPER(optype, parse_func, load_func, counter)                             \
+  REGISTER_OP_BANK_KEY_PARSE_UNIQ(optype, (parse_func), (load_func), counter)
 
-protected:
-  uint8_t *bank_key_ = nullptr;
-};
+#define REGISTER_OP_BANK_KEY_PARSE_UNIQ(optype, parse_func, load_func, counter)                                        \
+  static tuningtiling::OpBankKeyFuncRegistry g_##optype##BankParseInterf##counter(#optype, (parse_func), (load_func))
 
-#define BEGIN_OP_BANK_KEY_DEF(class_name)                                                                              \
-  class class_name : public OpBankKeyDef {                                                                             \
-  public:                                                                                                              \
-    virtual void FromJson(const nlohmann::json &j) {                                                                   \
-      FromJsonImpl(*this, "", j);                                                                                      \
+#define TUNING_TILING_MAKE_SHARED(exec_expr0, exec_expr1)                                                              \
+  do {                                                                                                                 \
+    try {                                                                                                              \
+      exec_expr0;                                                                                                      \
+    } catch (...) {                                                                                                    \
+      GELOGW("Make shared failed");                                                                                    \
+      exec_expr1;                                                                                                      \
     }                                                                                                                  \
-                                                                                                                       \
-    virtual void ToJson(nlohmann::json &j) {                                                                           \
-      DumpObj(*this, "", j);                                                                                           \
-    }                                                                                                                  \
-                                                                                                                       \
-    uint8_t *GetRawBankKey() {                                                                                         \
-      if (bank_key_ != nullptr) {                                                                                      \
-        return bank_key_;                                                                                              \
-      }                                                                                                                \
-      size_t data_size = 0;                                                                                            \
-      GetStructSize(*this, "", data_size);                                                                             \
-      if (data_size <= 0) {                                                                                            \
-        return nullptr;                                                                                                \
-      }                                                                                                                \
-      bank_key_ = new uint8_t[data_size];                                                                              \
-      size_t offset = 0U;                                                                                              \
-      SaveToBuffer(*this, "", bank_key_, data_size, offset);                                                           \
-      return bank_key_;                                                                                                \
-    }                                                                                                                  \
-                                                                                                                       \
-    size_t GetDataSize() const {                                                                                       \
-      size_t data_size = 0;                                                                                            \
-      GetStructSize(*this, "", data_size);                                                                             \
-      return data_size;                                                                                                \
-    }
+  } while (0)
 
-#define OP_BANK_KEY_FIELD_DEF(data_type, field_name)                                                                   \
-  public:                                                                                                              \
-    data_type field_name;
-
-#define END_OP_BANK_KEY_DEF                                                                                            \
+#define DECLARE_STRUCT_RELATE_WITH_OP(op, bank_key, ...)                                                               \
+  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(bank_key, __VA_ARGS__);                                                           \
+  bool ParseFunc##op##bank_key(const std::shared_ptr<void> &in_args, size_t len, nlohmann::json &bank_key_json) {      \
+    if (sizeof(bank_key) != len || in_args == nullptr) {                                                               \
+      return false;                                                                                                    \
+    }                                                                                                                  \
+    bank_key_json = *(std::static_pointer_cast<bank_key>(in_args));                                                    \
+    return true;                                                                                                       \
   }                                                                                                                    \
-  ;
+  bool LoadFunc##op##bank_key(std::shared_ptr<void> &in_args, size_t &len, const nlohmann::json &bank_key_json) {      \
+    len = sizeof(bank_key);                                                                                            \
+    TUNING_TILING_MAKE_SHARED(in_args = std::make_shared<bank_key>(), return false);                                   \
+    auto op_ky = std::static_pointer_cast<bank_key>(in_args);                                                          \
+    *op_ky = bank_key_json.get<bank_key>();                                                                            \
+    return true;                                                                                                       \
+  }                                                                                                                    \
+  REGISTER_OP_BANK_KEY_PARSE_FUN(op, ParseFunc##op##bank_key, LoadFunc##op##bank_key);
 
-template<typename T>
-struct GetStructSizeFunctor;
 
-template<
-    typename T, typename S,
-    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && (!is_containable<detail::decay_t<T>>())>* = nullptr>
-void GetStructSize(const T &obj, const std::string &field_name, S &total_size) {
-  (void) field_name;
-  ForEachField(obj, GetStructSizeFunctor<S>(total_size));
-}
-
-template<typename T, typename S, detail::enable_if_t<!std::is_class<detail::decay_t<T>>::value>* = nullptr>
-void GetStructSize(const T &obj, const std::string &field_name, S &total_size) {
-  (void) field_name;
-  (void) obj;
-  total_size += sizeof(detail::decay_t<T>);
-}
-
-template<
-    typename T, typename S,
-    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && (is_containable<detail::decay_t<T>>())>* = nullptr>
-void GetStructSize(const T &obj, const std::string &field_name, S &total_size) {
-  (void) field_name;
-  for (const auto &t : obj) {
-    GetStructSize(t, field_name, total_size);
-  }
-}
-
-template<typename S>
-struct GetStructSizeFunctor {
-  explicit GetStructSizeFunctor(S &data_len) : total_size(data_len) {}
-  template<typename Name, typename Field>
-  void operator()(Name &&name, Field &&field) const {
-    GetStructSize(field, name, total_size);
-  }
-  S &total_size;
-};
-
-template<typename T>
-struct SaveToBufferFunctor;
-
-template<
-    typename T, typename D,
-    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && !is_containable<detail::decay_t<T>>()>* = nullptr>
-void SaveToBuffer(const T &obj, const std::string &field_name, D *buff, size_t buf_size, size_t &offset) {
-  (void) field_name;
-  ForEachField(obj, SaveToBufferFunctor<D>(offset, buff, buf_size));
-}
-
-template<typename T, typename D, detail::enable_if_t<!std::is_class<detail::decay_t<T>>::value>* = nullptr>
-void SaveToBuffer(const T &obj, const std::string &field_name, D *buff, size_t buf_size, size_t &offset) {
-  if (field_name.empty() || (buff == nullptr)) {
-    return;
-  }
-  const size_t data_size = sizeof(T);
-  if (offset + data_size > buf_size) {
-    return;
-  }
-  *((detail::decay_t<T> *)(buff + offset)) = obj;
-  offset += data_size;
-}
-
-template<
-    typename T, typename D,
-    detail::enable_if_t<std::is_class<detail::decay_t<T>>::value && is_containable<detail::decay_t<T>>()>* = nullptr>
-void SaveToBuffer(const T &obj, const std::string &field_name, D *buff, size_t buf_size, size_t &offset) {
-  if (field_name.empty()) {
-    return;
-  }
-  size_t data_size = 0U;
-  GetStructSize(obj, field_name, data_size);
-  if (offset + data_size > buf_size) {
-    return;
-  }
-  for (const auto &v : obj) {
-    SaveToBuffer(v, field_name, buff, buf_size, offset);
-  }
-}
-
-template<typename T>
-struct SaveToBufferFunctor {
-  SaveToBufferFunctor(size_t &i, T *data, size_t data_len) : offset(i), buff(data), buf_size(data_len) {}
-  template<typename Name, typename Field>
-  void operator()(Name &&name, Field &&field) const {
-    SaveToBuffer(field, name, buff, buf_size, offset);
-  }
-  size_t &offset;
-  T *buff;
-  size_t buf_size;
-};
-
-using OpBankKeyConstructor = std::shared_ptr<OpBankKeyDef> (*)();
-
-class FMK_FUNC_HOST_VISIBILITY OpBankKeyClassFactory {
+namespace tuningtiling {
+using OpBankKeyConvertFun = std::function<bool(const gert::TilingContext *, std::shared_ptr<void> &, size_t &)>;
+using OpBankParseFun = std::function<bool(const std::shared_ptr<void> &, size_t, nlohmann::json &)>;
+using OpBankLoadFun = std::function<bool(std::shared_ptr<void> &, size_t &, const nlohmann::json &)>;
+class FMK_FUNC_HOST_VISIBILITY OpBankKeyFuncInfo {
 public:
-  static std::map<ge::AscendString, OpBankKeyConstructor> &RegisterInfo();
-  static void RegisterOpBankKey(const ge::AscendString &optype, OpBankKeyConstructor const constructor);
-  static std::shared_ptr<OpBankKeyDef> CreateBankKeyInstance(const ge::AscendString &optype);
+  explicit OpBankKeyFuncInfo(const ge::AscendString &optype);
+  OpBankKeyFuncInfo() = default;
+  ~OpBankKeyFuncInfo() = default;
+  void SetOpConvertFunc(const OpBankKeyConvertFun &convert_func);
+  void SetOpParseFunc(const OpBankParseFun &parse_func);
+  void SetOpLoadFunc(const OpBankLoadFun &load_func);
+  const OpBankKeyConvertFun& GetBankKeyConvertFunc() const;
+  const OpBankParseFun& GetBankKeyParseFunc() const;
+  const OpBankLoadFun& GetBankKeyLoadFunc() const;
+  const ge::AscendString& GetOpType() const {
+    return optype_;
+  }
+private:
+  ge::AscendString optype_;
+  OpBankKeyConvertFun convert_func_;
+  OpBankParseFun parse_func_;
+  OpBankLoadFun load_func_;
 };
-
-#define REGISTER_OP_BANK_KEY_CLASS(optype, class_name)                                                                 \
-  class optype##class_name##Helper {                                                                                   \
-  public:                                                                                                              \
-    optype##class_name##Helper() {                                                                                     \
-      OpBankKeyClassFactory::RegisterOpBankKey(#optype, optype##class_name##Helper::CreateBankKeyInstance);            \
-    }                                                                                                                  \
-    static std::shared_ptr<OpBankKeyDef> CreateBankKeyInstance() {                                                     \
-      return std::make_shared<class_name>();                                                                           \
-    }                                                                                                                  \
-  };                                                                                                                   \
-  optype##class_name##Helper g_op_bank_key_##optype##class_name##Helper;
-
-using OpBankKeyDefPtr = std::shared_ptr<OpBankKeyDef>;
-using OpBankKeyFun = std::function<bool(const gert::TilingContext *, OpBankKeyDefPtr &)>;
 
 class FMK_FUNC_HOST_VISIBILITY OpBankKeyFuncRegistry {
 public:
-  OpBankKeyFuncRegistry(const ge::AscendString &optype, OpBankKeyFun bank_key_func);
+  OpBankKeyFuncRegistry(const ge::AscendString &optype, const OpBankKeyConvertFun &convert_func);
+  OpBankKeyFuncRegistry(const ge::AscendString &optype, const OpBankParseFun &parse_func,
+    const OpBankLoadFun &load_func);
   ~OpBankKeyFuncRegistry() = default;
-  static std::unordered_map<ge::AscendString, OpBankKeyFun> &RegisteredOpFuncInfo();
+  static std::unordered_map<ge::AscendString, OpBankKeyFuncInfo> &RegisteredOpFuncInfo();
 };
 }  // namespace tuningtiling
 #endif

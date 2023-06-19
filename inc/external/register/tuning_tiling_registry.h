@@ -15,6 +15,9 @@
 */
 #ifndef __INC_REGISTER_TUNING_TILING_REGISTRY_HEADER__
 #define __INC_REGISTER_TUNING_TILING_REGISTRY_HEADER__
+#include <vector>
+#include <map>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include "graph/ascend_string.h"
 #include "register/tuning_tiling_reflection_utils.h"

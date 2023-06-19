@@ -15,6 +15,7 @@
 */
 #ifndef __INC_REGISTER_TUNING_TILING_REFLECTION_UTILS_HEADER__
 #define __INC_REGISTER_TUNING_TILING_REFLECTION_UTILS_HEADER__
+#include <string>
 #include <type_traits>
 #include <tuple>
 #include <nlohmann/json.hpp>

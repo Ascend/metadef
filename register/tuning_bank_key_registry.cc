@@ -18,44 +18,63 @@
 #include "framework/common/debug/ge_log.h"
 
 namespace tuningtiling {
-std::map<ge::AscendString, OpBankKeyConstructor> &OpBankKeyClassFactory::RegisterInfo() {
-  static std::map<ge::AscendString, OpBankKeyConstructor> instance;
-  return instance;
+OpBankKeyFuncInfo::OpBankKeyFuncInfo(const ge::AscendString &optype) : optype_(optype) {}
+
+void OpBankKeyFuncInfo::SetOpConvertFunc(const OpBankKeyConvertFun &convert_func) {
+  convert_func_ = convert_func;
 }
 
-void OpBankKeyClassFactory::RegisterOpBankKey(const ge::AscendString &optype, OpBankKeyConstructor const constructor) {
-  auto &instance = OpBankKeyClassFactory::RegisterInfo();
-  instance[optype] = constructor;
+void OpBankKeyFuncInfo::SetOpParseFunc(const OpBankParseFun &parse_func) {
+  parse_func_ = parse_func;
 }
 
-std::shared_ptr<OpBankKeyDef> OpBankKeyClassFactory::CreateBankKeyInstance(const ge::AscendString &optype) {
-  const auto &instance = OpBankKeyClassFactory::RegisterInfo();
-  const auto it = instance.find(optype);
-  if (it == instance.cend()) {
-    GELOGW("CreateBankKeyInstance: can not find optype: %s", optype.GetString());
-    return nullptr;
-  }
-  const OpBankKeyConstructor constructor = it->second;
-  if (constructor == nullptr) {
-    GELOGW("CreateBankKeyInstance: constructor is nullptr");
-    return nullptr;
-  }
-  return (*constructor)();
+void OpBankKeyFuncInfo::SetOpLoadFunc(const OpBankLoadFun &load_func) {
+  load_func_ = load_func;
 }
 
-OpBankKeyFuncRegistry::OpBankKeyFuncRegistry(const ge::AscendString &optype, OpBankKeyFun bank_key_fun) {
+const OpBankKeyConvertFun& OpBankKeyFuncInfo::OpBankKeyFuncInfo::GetBankKeyConvertFunc() const {
+  return convert_func_;
+}
+
+const OpBankParseFun& OpBankKeyFuncInfo::GetBankKeyParseFunc() const {
+  return parse_func_;
+}
+
+const OpBankLoadFun& OpBankKeyFuncInfo::GetBankKeyLoadFunc() const {
+  return load_func_;
+}
+
+std::unordered_map<ge::AscendString, OpBankKeyFuncInfo> &OpBankKeyFuncRegistry::RegisteredOpFuncInfo() {
+  static std::unordered_map<ge::AscendString, OpBankKeyFuncInfo> op_func_map;
+  return op_func_map;
+}
+
+OpBankKeyFuncRegistry::OpBankKeyFuncRegistry(const ge::AscendString &optype, const OpBankKeyConvertFun &convert_func) {
   auto &op_func_map = RegisteredOpFuncInfo();
   const auto iter = op_func_map.find(optype);
   if (iter == op_func_map.cend()) {
-    (void) op_func_map.emplace(optype, bank_key_fun);
+    OpBankKeyFuncInfo op_func_info(optype);
+    op_func_info.SetOpConvertFunc(convert_func);
+    (void)op_func_map.emplace(optype, op_func_info);
   } else {
-    iter->second = bank_key_fun;
+    iter->second.SetOpConvertFunc(convert_func);
   }
-  GELOGI("Register op bank key function for optype: %s", optype.GetString());
+  GELOGI("Register op bank key convert function for optype:%s", optype.GetString());
 }
 
-std::unordered_map<ge::AscendString, OpBankKeyFun> &OpBankKeyFuncRegistry::RegisteredOpFuncInfo() {
-  static std::unordered_map<ge::AscendString, OpBankKeyFun> op_func_map;
-  return op_func_map;
+OpBankKeyFuncRegistry::OpBankKeyFuncRegistry(const ge::AscendString &optype,
+                                             const OpBankParseFun &parse_func, const OpBankLoadFun &load_func) {
+  auto &op_func_map = RegisteredOpFuncInfo();
+  const auto iter = op_func_map.find(optype);
+  if (iter == op_func_map.cend()) {
+    OpBankKeyFuncInfo op_func_info(optype);
+    op_func_info.SetOpParseFunc(parse_func);
+    op_func_info.SetOpLoadFunc(load_func);
+    (void)op_func_map.emplace(optype, op_func_info);
+  } else {
+    iter->second.SetOpParseFunc(parse_func);
+    iter->second.SetOpLoadFunc(load_func);
+  }
+  GELOGI("Register op bank key parse and load function for optype:%s", optype.GetString());
 }
 }  // namespace tuningtiling
