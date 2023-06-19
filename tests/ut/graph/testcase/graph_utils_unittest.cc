@@ -2793,4 +2793,19 @@ TEST_F(UtestGraphUtils, InfershapeIfNeedOk) {
   AttrUtils::GetInt(netoutput->GetOpDesc()->MutableInputDesc(0), ATTR_NAME_PARENT_NODE_INDEX, parent_node_index);
   EXPECT_EQ(parent_node_index, 0);
 }
+
+TEST_F(UtestGraphUtils, LoadGraph_parse_fail) {
+  const std::string file_name = "./test.txt";
+  system(("touch " + file_name).c_str());
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph(file_name.c_str(), *com_graph1);
+  ASSERT_EQ(state, false);
+  state = GraphUtils::LoadGEGraph(file_name.c_str(), com_graph1);
+  ASSERT_EQ(state, false);
+  state = GraphUtils::LoadGEGraph(nullptr, *com_graph1);
+  ASSERT_EQ(state, false);
+  state = GraphUtils::LoadGEGraph(nullptr, com_graph1);
+  ASSERT_EQ(state, false);
+  system(("rm -f " + file_name).c_str());
+}
 }  // namespace ge

@@ -144,7 +144,7 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
   if (get_impl_num == nullptr) {
     const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
-    GELOGW("Get registered op num functions failed", so_path.c_str(), error);
+    GELOGW("Get registered op num functions failed, path:%s, errmsg:%s", so_path.c_str(), error);
     return nullptr;
   }
   impl_num = get_impl_num();
@@ -155,7 +155,7 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
   if (get_impl_funcs == nullptr) {
     const ge::char_t *error = mmDlerror();
     error = (error == nullptr) ? "" : error;
-    GELOGW("Get op impl functions failed", so_path.c_str(), error);
+    GELOGW("Get op impl functions failed, path:%s, errmsg:%s", so_path.c_str(), error);
     return nullptr;
   }
 

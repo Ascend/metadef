@@ -1459,6 +1459,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_GetRequiredOppAbiVersion_InValid)
   system(("echo 'required_opp_abi_version=\">=6.4,<=6.4\"' > " + path1).c_str());
   EXPECT_EQ(PluginManager::IsVendorVersionValid("6.#.T5.0.B121", ""), false);
   EXPECT_EQ(PluginManager::IsVendorVersionValid("", "6.4.T5.0.B121,6.#.T5.0.B121"), false);
+  EXPECT_EQ(PluginManager::IsVendorVersionValid("", "6.3.T5.0.B121"), false);
 
   system(("echo 'required_opp_abi_version=\">=6.3, <=6.4\"' > " + path).c_str());
   system(("echo 'required_opp_abi_version=\">=6.3, <=6.4\"' > " + path1).c_str());
