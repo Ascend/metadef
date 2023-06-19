@@ -1192,7 +1192,14 @@ TEST_F(UtestRegister, NewOptilingInterface_Ok_WithNodeName) {
 }
 
 TEST_F(UtestRegister, NewOptilingInterface_Ok_WithDynamicInput) {
-  IMPL_OP_DEFAULT().Tiling(OpTilingStubNewWithDynamicInput).TilingParse<StubCompileInfo>(OpTilingParseStubV5);
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubNewWithDynamicInput;
+  op_impl_func.tiling_parse = OpTilingParseStubV5;
+  registry_holder->AddTypesToImpl("DefaultImpl", op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
   const nlohmann::json input = R"([
   [{
     "shape": [4, 16, 200, 336, 16],
