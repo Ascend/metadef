@@ -175,10 +175,6 @@ class TensorData {
     return ge::GRAPH_SUCCESS;
   }
 
-  bool IsManagerEmpty() {
-    return (manager_ == nullptr);
-  }
-
   bool IsSharedWith(const TensorData &other) const {
     return (addr_ == other.addr_ && manager_ == other.manager_ && size_ == other.size_ &&
             placement_ == other.placement_);

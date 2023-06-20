@@ -797,9 +797,15 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
   return true;
 }
 
-bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path, proto::ModelDef &model_def) const {
+bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path,
+                                         proto::ModelDef &model_def, const bool is_need_separate) const {
   if (SerializeToBuffer(model_def, buffer)) {
     return true;
+  }
+  if (!is_need_separate) {
+    GELOGE(GRAPH_FAILED, "[Serialize][Model] Model is larger than 2G, "
+           "but can not separate in this scenario, you can use external_weight instead");
+    return false;
   }
   GELOGW("[Serialize][Model] Model is larger than 2G, need separate");
   uint64_t constant_op_id = 0UL;
@@ -866,10 +872,11 @@ bool ModelSerializeImp::SerializeToBuffer(const proto::ModelDef &model_def, Buff
 
 Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) const {
   std::string path;
-  return SerializeModel(model, path, is_dump);
+  return SerializeModel(model, path, true, is_dump);
 }
 
-Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &path, const bool is_dump) const {
+Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &path,
+                                      const bool is_need_separate, const bool is_dump) const {
   proto::ModelDef model_def;
   ModelSerializeImp model_imp;
   if (!model_imp.SerializeModel(model, &model_def, is_dump)) {
@@ -882,7 +889,7 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &pat
 #endif
   GE_CHK_BOOL_ONLY_LOG(buffer.GetSize() != 0UL, "get size failed");
   GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  if (!model_imp.SeparateModelDef(buffer, path, model_def)) {
+  if (!model_imp.SeparateModelDef(buffer, path, model_def, is_need_separate)) {
     GELOGW("[Serialize][Model] Serialize to binary failed");
     return Buffer();
   }

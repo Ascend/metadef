@@ -90,8 +90,15 @@ graphStatus Model::Save(Buffer &buffer, const bool is_dump) const {
   return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
+graphStatus Model::SaveWithoutSeparate(Buffer &buffer,
+                                       const bool is_dump) const {
+  std::string path;
+  buffer = SERIALIZE.SerializeModel(*this, path, false, is_dump);
+  return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
+}
+
 graphStatus Model::Save(Buffer &buffer, const std::string &path, const bool is_dump) const {
-  buffer = SERIALIZE.SerializeModel(*this, path, is_dump);
+  buffer = SERIALIZE.SerializeModel(*this, path, true, is_dump);
   return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 

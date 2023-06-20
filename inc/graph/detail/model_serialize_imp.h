@@ -78,7 +78,8 @@ class ModelSerializeImp {
 
   bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump = false) const;
 
-  bool SeparateModelDef(Buffer &buffer, const std::string &path, proto::ModelDef &model_def) const;
+  bool SeparateModelDef(Buffer &buffer, const std::string &path,
+                        proto::ModelDef &model_def, const bool is_need_separate) const;
 
   bool SerializeToBuffer(const proto::ModelDef &model_def, Buffer &buffer) const;
 
