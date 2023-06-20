@@ -44,11 +44,12 @@ public:
   explicit FlowNodeImpl(OpDescPtr op_desc, uint32_t input_num, uint32_t output_num)
       : op_desc_(op_desc), input_num_(input_num), output_num_(output_num) {}
   ~FlowNodeImpl() = default;
-  void MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
-                const std::vector<DataFlowInputAttr> &attrs = {});
-  void MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
-  void AddPp(const ProcessPoint &pp);
-private:
+  graphStatus MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
+                       const std::vector<DataFlowInputAttr> &attrs = {});
+  graphStatus MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
+  graphStatus AddPp(const ProcessPoint &pp);
+
+ private:
   graphStatus AddInEdges(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index);
   graphStatus AddOutEdges(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
   OpDescPtr op_desc_;
@@ -77,7 +78,7 @@ graphStatus FlowNodeImpl::AddInEdges(uint32_t node_input_index, const ProcessPoi
     // duplicate check
     if ((pp_input_index < static_cast<uint32_t>(process_point.in_edges_size())) &&
        (process_point.in_edges(pp_input_index).node_name() != "")) {
-      GELOGE(ge::FAILED, "pp name(%s) has duplicate map input index(%u).", pp.GetProcessPointName(), pp_input_index);
+      GELOGE(GRAPH_FAILED, "pp name(%s) has duplicate map input index(%u).", pp.GetProcessPointName(), pp_input_index);
       return ge::GRAPH_FAILED;
     }
 
@@ -127,7 +128,7 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
     // duplicate check
     if ((pp_output_index < static_cast<uint32_t>(process_point.out_edges_size())) &&
         (process_point.out_edges(pp_output_index).node_name() != "")) {
-      GELOGE(ge::FAILED, "pp name(%s) has duplicate map input index(%u).", pp.GetProcessPointName(), pp_output_index);
+      GELOGE(GRAPH_FAILED, "pp name(%s) has duplicate map input index(%u).", pp.GetProcessPointName(), pp_output_index);
       return ge::GRAPH_FAILED;
     }
 
@@ -161,52 +162,64 @@ graphStatus FlowNodeImpl::AddOutEdges(uint32_t node_output_index, const ProcessP
   return ge::GRAPH_SUCCESS;
 }
 
-void FlowNodeImpl::MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
-                            const std::vector<DataFlowInputAttr> &attrs) {
-  GE_RETURN_IF_NULL(pp.GetProcessPointName(), "The process point name is nullptr.");
+graphStatus FlowNodeImpl::MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
+                                   const std::vector<DataFlowInputAttr> &attrs) {
+  if (pp.GetProcessPointName() == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "The process point name is nullptr.");
+    return GRAPH_PARAM_INVALID;
+  }
   auto flow_node_name = op_desc_->GetName();
   if (node_input_index >= input_num_) {
-    GELOGE(ge::FAILED, "invalid node(%s) input index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
+    GELOGE(GRAPH_PARAM_INVALID, "invalid node(%s) input index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
            node_input_index, input_num_);
-    return;
+    return GRAPH_PARAM_INVALID;
   }
-
-  GE_RETURN_IF_TRUE(!added_pps_[pp.GetProcessPointName()], "Please exec addPp in node(%s) first.",
-                    flow_node_name.c_str());
+  if (!added_pps_[pp.GetProcessPointName()]) {
+    GELOGE(GRAPH_PARAM_INVALID, "Please add pp[%s] to node(%s) first.", pp.GetProcessPointName(),
+           flow_node_name.c_str());
+    return GRAPH_PARAM_INVALID;
+  }
 
   auto input_tensor_desc = op_desc_->MutableInputDesc(node_input_index);
-  GE_RETURN_IF_NULL(input_tensor_desc, "[Check][Param] Node(%s)'s input(%u) tensor desc is nullptr.",
-                    flow_node_name.c_str(), node_input_index);
-  (void)FlowAttrUtil::SetAttrsToTensorDesc(attrs, input_tensor_desc);
-  (void)AddInEdges(node_input_index, pp, pp_input_index);
-  return;
+  if (input_tensor_desc == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] Node(%s)'s input(%u) tensor desc is nullptr.", flow_node_name.c_str(),
+           node_input_index);
+    return GRAPH_PARAM_INVALID;
+  }
+  const auto ret = FlowAttrUtil::SetAttrsToTensorDesc(attrs, input_tensor_desc);
+  if (ret != GRAPH_SUCCESS) {
+    GELOGE(ret, "Failed to set attrs to node(%s)'s input(%u) tensor desc.", flow_node_name.c_str(), node_input_index);
+    return ret;
+  }
+  return AddInEdges(node_input_index, pp, pp_input_index);
 }
 
-void FlowNodeImpl::MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index) {
-  GE_RETURN_IF_NULL(pp.GetProcessPointName(), "The process point name is nullptr.");
+graphStatus FlowNodeImpl::MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index) {
+  if (pp.GetProcessPointName() == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "The process point name is nullptr.");
+    return GRAPH_PARAM_INVALID;
+  }
   auto flow_node_name = op_desc_->GetName();
   if (node_output_index >= output_num_) {
-    GELOGE(ge::FAILED, "invalid node(%s) output index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
+    GELOGE(GRAPH_PARAM_INVALID, "invalid node(%s) output index[%u]. valid range is [0, %u)", flow_node_name.c_str(),
            node_output_index, output_num_);
-    return;
+    return GRAPH_PARAM_INVALID;
   }
 
-  GE_RETURN_IF_TRUE(!added_pps_[pp.GetProcessPointName()], "Please exec addPp in node(%s) first.",
-                    flow_node_name.c_str());
+  if (!added_pps_[pp.GetProcessPointName()]) {
+    GELOGE(GRAPH_PARAM_INVALID, "Please add pp[%s] to node(%s) first.", pp.GetProcessPointName(),
+           flow_node_name.c_str());
+    return GRAPH_PARAM_INVALID;
+  }
 
-  (void)AddOutEdges(node_output_index, pp, pp_output_index);
-  return;
+  return AddOutEdges(node_output_index, pp, pp_output_index);
 }
 
-void FlowNodeImpl::AddPp(const ProcessPoint &pp) {
-  if (pp.GetProcessPointType() == ProcessPointType::INVALID) {
-    GELOGE(ge::FAILED, "process point type[%u] is invalid.", static_cast<uint32_t>(pp.GetProcessPointType()));
-    return;
-  }
-
+graphStatus FlowNodeImpl::AddPp(const ProcessPoint &pp) {
+  auto flow_node_name = op_desc_->GetName();
   if (added_pps_[pp.GetProcessPointName()]) {
-    GELOGI("Process point(%s) has been added to node.", pp.GetProcessPointName());
-    return;
+    GELOGI("Process point(%s) has been added to node[%s].", pp.GetProcessPointName(), flow_node_name.c_str());
+    return GRAPH_SUCCESS;
   }
 
   std::vector<std::string> pp_attrs;
@@ -214,10 +227,10 @@ void FlowNodeImpl::AddPp(const ProcessPoint &pp) {
   ge::AscendString target_str;
   pp.Serialize(target_str);
   pp_attrs.emplace_back(target_str.GetString(), target_str.GetLength());
-  GE_RETURN_IF_TRUE(!ge::AttrUtils::SetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pp_attrs),
-                    "Set attr name %s failed.", ATTR_NAME_DATA_FLOW_PROCESS_POINTS);
+  GE_ASSERT_TRUE(ge::AttrUtils::SetListStr(op_desc_, ATTR_NAME_DATA_FLOW_PROCESS_POINTS, pp_attrs),
+                 "Failed to set attr[%s] to node[%s].", ATTR_NAME_DATA_FLOW_PROCESS_POINTS, flow_node_name.c_str());
   added_pps_[pp.GetProcessPointName()] = true;
-  return;
+  return GRAPH_SUCCESS;
 }
 
 FlowNode::FlowNode(const char *name, uint32_t input_num, uint32_t output_num) : FlowOperator(name, "FlowNode") {
@@ -225,11 +238,11 @@ FlowNode::FlowNode(const char *name, uint32_t input_num, uint32_t output_num) : 
   ge::Operator::DynamicOutputRegister(ATTR_NAME_DATA_FLOW_OUTPUT, output_num);
   auto op_desc = OpDescUtils::GetOpDescFromOperator(*this);
   if (op_desc == nullptr) {
-    GELOGE(ge::FAILED, "get flow node op desc failed, name=%s.", (name == nullptr) ? "nullptr" : name);
+    GELOGE(GRAPH_FAILED, "get flow node op desc failed, name=%s.", (name == nullptr) ? "nullptr" : name);
   } else {
     impl_ = MakeShared<FlowNodeImpl>(op_desc, input_num, output_num);
     if (impl_ == nullptr) {
-      GELOGE(ge::FAILED, "FlowNode make shared failed.");
+      GELOGE(GRAPH_FAILED, "FlowNode make shared failed.");
     }
   }
 }
@@ -244,53 +257,56 @@ FlowNode &FlowNode::SetInput(uint32_t dst_index, const FlowOperator &src_op, uin
 FlowNode &FlowNode::MapInput(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index,
                              const std::vector<DataFlowInputAttr> &attrs) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] MapInput:FlowNodeImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] MapInput:FlowNodeImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "MapInput failed: FlowNode can not be used, impl is nullptr.");
     return *this;
   }
-  impl_->MapInput(node_input_index, pp, pp_input_index, attrs);
+  if (impl_->MapInput(node_input_index, pp, pp_input_index, attrs) != GRAPH_SUCCESS) {
+    REPORT_INNER_ERROR("E18888", "MapInput failed.");
+  }
   return *this;
 }
 
 FlowNode &FlowNode::MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] MapOutput:FlowNodeImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] MapOutput:FlowNodeImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "MapOutput failed: FlowNode can not be used, impl is nullptr.");
     return *this;
   }
-  impl_->MapOutput(node_output_index, pp, pp_output_index);
+  if (impl_->MapOutput(node_output_index, pp, pp_output_index) != GRAPH_SUCCESS) {
+    REPORT_INNER_ERROR("E18888", "MapOutput failed.");
+  }
   return *this;
 }
 
 FlowNode &FlowNode::AddPp(const ProcessPoint &pp) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FlowNodeImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FlowNodeImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "AddPp failed: FlowNode can not be used, impl is nullptr.");
     return *this;
   }
 
   if (pp.GetProcessPointType() == ProcessPointType::FUNCTION) {
     const FunctionPp *function_pp = dynamic_cast<const FunctionPp *>(&pp);
     if (function_pp == nullptr) {
-      GELOGE(ge::FAILED, "ProcessPoint(%s) cast failed.", pp.GetProcessPointName());
+      GELOGE(GRAPH_FAILED, "ProcessPoint(%s) cast failed.", pp.GetProcessPointName());
+      REPORT_INNER_ERROR("E18888", "AddPp failed: ProcessPoint(%s) cast failed.", pp.GetProcessPointName());
       return *this;
     }
 
     auto invoked_closures = function_pp->GetInvokedClosures();
     if (invoked_closures.empty()) {
-      impl_->AddPp(pp);
+      (void) impl_->AddPp(pp);
       return *this;
     }
     this->SubgraphRegister(pp.GetProcessPointName(), true);
     this->SubgraphCountRegister(pp.GetProcessPointName(), invoked_closures.size());
     uint32_t i = 0;
     for (auto iter = invoked_closures.cbegin(); iter != invoked_closures.cend(); ++iter) {
-      GraphBuilder builder = iter->second.GetGraphBuilder();
-      if (builder == nullptr) {
-        GELOGE(ge::FAILED, "GraphPp(%s)'s graph builder is nullptr.", iter->second.GetProcessPointName());
-        return *this;
-      }
       const auto &graph_pp = iter->second;
       auto flow_graph_builder = [graph_pp]() {
         Graph graph;
-        DataFlowUtils::BuildInvokedGraphFromGraphPp(graph_pp, graph);
+        (void) DataFlowUtils::BuildInvokedGraphFromGraphPp(graph_pp, graph);
         return graph;
       };
       this->SetSubgraphBuilder(pp.GetProcessPointName(), i++, flow_graph_builder);
@@ -298,7 +314,8 @@ FlowNode &FlowNode::AddPp(const ProcessPoint &pp) {
   } else if (pp.GetProcessPointType() == ProcessPointType::GRAPH) {
     const GraphPp *graph_pp = dynamic_cast<const GraphPp *>(&pp);
     if (graph_pp == nullptr) {
-      GELOGE(ge::FAILED, "ProcessPoint(%s) cast failed.", pp.GetProcessPointName());
+      GELOGE(GRAPH_FAILED, "ProcessPoint(%s) cast failed.", pp.GetProcessPointName());
+      REPORT_INNER_ERROR("E18888", "AddPp failed: ProcessPoint(%s) cast failed.", pp.GetProcessPointName());
       return *this;
     }
 
@@ -306,16 +323,20 @@ FlowNode &FlowNode::AddPp(const ProcessPoint &pp) {
     this->SubgraphCountRegister(pp.GetProcessPointName(), 1);
     GraphBuilder builder = graph_pp->GetGraphBuilder();
     if (builder == nullptr) {
-      GELOGE(ge::FAILED, "GraphPp(%s)'s graph builder is nullptr.", graph_pp->GetProcessPointName());
+      GELOGE(GRAPH_FAILED, "GraphPp(%s)'s graph builder is nullptr.", graph_pp->GetProcessPointName());
+      REPORT_INNER_ERROR("E18888", "AddPp failed: GraphPp(%s)'s graph builder is nullptr.",
+                         graph_pp->GetProcessPointName());
       return *this;
     }
     this->SetSubgraphBuilder(pp.GetProcessPointName(), 0, builder);
   } else {
-    GELOGE(ge::FAILED, "process point type[%u] is invalid.", static_cast<uint32_t>(pp.GetProcessPointType()));
+    GELOGE(GRAPH_FAILED, "process point type[%u] is invalid.", static_cast<uint32_t>(pp.GetProcessPointType()));
+    REPORT_INNER_ERROR("E18888", "AddPp failed: Process point type[%u] is invalid.",
+                       static_cast<uint32_t>(pp.GetProcessPointType()));
     return *this;
   }
 
-  impl_->AddPp(pp);
+  (void) impl_->AddPp(pp);
   return *this;
 }
 
@@ -362,11 +383,11 @@ FlowGraph::FlowGraph(const char *name) {
   if (name != nullptr) {
     impl_ = ComGraphMakeShared<FlowGraphImpl>(name);
     if (impl_ == nullptr) {
-      GELOGE(ge::FAILED, "FlowGraphImpl make shared failed.");
+      GELOGE(GRAPH_FAILED, "FlowGraphImpl make shared failed.");
     }
   } else {
     impl_ = nullptr;
-    GELOGE(ge::FAILED, "Input graph name is nullptr.");
+    GELOGE(GRAPH_FAILED, "Input graph name is nullptr.");
   }
 }
 FlowGraph::~FlowGraph() = default;
@@ -375,6 +396,7 @@ const ge::Graph &FlowGraph::ToGeGraph() const {
   if (impl_ == nullptr) {
     static ge::Graph graph;
     GELOGE(GRAPH_FAILED, "ToGeGraph failed: graph can not be used, impl is nullptr.");
+    REPORT_INNER_ERROR("E18888", "ToGeGraph failed: graph can not be used, impl is nullptr.");
     return graph;
   }
 
@@ -384,11 +406,13 @@ const ge::Graph &FlowGraph::ToGeGraph() const {
 FlowGraph &FlowGraph::SetInputs(const std::vector<FlowOperator> &inputs) {
   if (impl_ == nullptr) {
     GELOGE(GRAPH_FAILED, "SetInputs failed: graph can not be used, impl is nullptr.");
+    REPORT_INNER_ERROR("E18888", "SetInputs failed: graph can not be used, impl is nullptr.");
     return *this;
   }
 
   if (inputs.empty()) {
     GELOGE(GRAPH_FAILED, "SetInputs failed: input operator size can not be 0.");
+    REPORT_INNER_ERROR("E18888", "SetInputs failed: input operator size can not be 0.");
     return *this;
   }
 
@@ -399,11 +423,13 @@ FlowGraph &FlowGraph::SetInputs(const std::vector<FlowOperator> &inputs) {
 FlowGraph &FlowGraph::SetOutputs(const std::vector<FlowOperator> &outputs) {
   if (impl_ == nullptr) {
     GELOGE(GRAPH_FAILED, "SetOutputs failed: graph can not be used, impl is nullptr.");
+    REPORT_INNER_ERROR("E18888", "SetOutputs failed: graph can not be used, impl is nullptr.");
     return *this;
   }
 
   if (outputs.empty()) {
     GELOGE(GRAPH_FAILED, "SetOutputs failed: outputs operator size can not be 0.");
+    REPORT_INNER_ERROR("E18888", "SetOutputs failed: outputs operator size can not be 0.");
     return *this;
   }
 

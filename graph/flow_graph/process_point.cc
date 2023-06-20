@@ -55,11 +55,11 @@ private:
 ProcessPoint::ProcessPoint(const char_t *pp_name, ProcessPointType pp_type) {
   if (pp_name == nullptr) {
     impl_ = nullptr;
-    GELOGE(ge::FAILED, "ProcessPoint name is nullptr.");
+    GELOGE(GRAPH_FAILED, "ProcessPoint name is nullptr.");
   } else {
     impl_ = MakeShared<ProcessPointImpl>(pp_name, pp_type);
     if (impl_ == nullptr) {
-      GELOGE(ge::FAILED, "ProcessPointImpl make shared failed.");
+      GELOGE(GRAPH_FAILED, "ProcessPointImpl make shared failed.");
     }
   }
 }
@@ -67,7 +67,8 @@ ProcessPoint::~ProcessPoint() {}
 
 ProcessPointType ProcessPoint::GetProcessPointType() const {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
+    GELOGE(GRAPH_FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
+    REPORT_INNER_ERROR("E18888", "GetProcessPointType failed: ProcessPoint can not be used, impl is nullptr.");
     return ProcessPointType::INVALID;
   }
   return impl_->GetProcessPointType();
@@ -75,22 +76,33 @@ ProcessPointType ProcessPoint::GetProcessPointType() const {
 
 const char_t *ProcessPoint::GetProcessPointName() const {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
+    GELOGE(GRAPH_FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
+    REPORT_INNER_ERROR("E18888", "GetProcessPointName failed: ProcessPoint can not be used, impl is nullptr.");
     return nullptr;
   }
   return impl_->GetProcessPointName();
 }
 
 void ProcessPoint::SetCompileConfigFile(const char_t *json_file_path) {
-  GE_RETURN_IF_NULL(impl_, "[Check][Param] ProcessPointImpl is nullptr, check failed");
-  GE_RETURN_IF_NULL(json_file_path, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
-                    this->GetProcessPointName());
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] ProcessPointImpl is nullptr, check failed");
+    REPORT_INNER_ERROR("E18888", "SetCompileConfigFile failed: ProcessPoint can not be used, impl is nullptr.");
+    return;
+  }
+  if (json_file_path == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
+           this->GetProcessPointName());
+    REPORT_INNER_ERROR("E18888",
+                       "SetCompileConfigFile failed: [Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
+                       this->GetProcessPointName());
+    return;
+  }
   return impl_->SetCompileConfig(json_file_path);
 }
 
 const char_t *ProcessPoint::GetCompileConfig() const {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
+    GELOGE(GRAPH_FAILED, "[Check][Param] ProcessPointImpl is nullptr, check failed");
     return nullptr;
   }
   return impl_->GetCompileConfig();
@@ -108,7 +120,7 @@ public:
       auto graph = builder();
       auto compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
       if (compute_graph == nullptr) {
-        GELOGE(ge::FAILED, "graph is invalid.");
+        GELOGE(GRAPH_FAILED, "graph is invalid.");
         return graph;
       }
       compute_graph->SetName(pp_name);
@@ -123,15 +135,15 @@ private:
 
 GraphPp::GraphPp(const char_t *pp_name, const GraphBuilder &builder) : ProcessPoint(pp_name, ProcessPointType::GRAPH) {
   if (pp_name == nullptr) {
-    GELOGE(ge::FAILED, "GraphPp pp_name is null.");
+    GELOGE(GRAPH_FAILED, "GraphPp pp_name is null.");
     impl_ = nullptr;
   } else if (builder == nullptr) {
-    GELOGE(ge::FAILED, "GraphPp(%s) graph builder is null.", pp_name);
+    GELOGE(GRAPH_FAILED, "GraphPp(%s) graph builder is null.", pp_name);
     impl_ = nullptr;
   } else {
     impl_ = MakeShared<GraphPpImpl>(pp_name, builder);
     if (impl_ == nullptr) {
-      GELOGE(ge::FAILED, "GraphPpImpl make shared failed.");
+      GELOGE(GRAPH_FAILED, "GraphPpImpl make shared failed.");
     }
   }
 }
@@ -139,12 +151,16 @@ GraphPp::~GraphPp() = default;
 
 GraphPp &GraphPp::SetCompileConfig(const char_t *json_file_path) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] GraphPpImpl is nullptr, check failed");
+    GELOGE(GRAPH_FAILED, "[Check][Param] GraphPpImpl is nullptr, check failed");
+    REPORT_INNER_ERROR("E18888", "SetCompileConfig failed: GraphPp can not be used, impl is nullptr.");
     return *this;
   }
   if (json_file_path == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
+    GELOGE(GRAPH_FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
            this->GetProcessPointName());
+    REPORT_INNER_ERROR("E18888",
+                       "SetCompileConfig failed: [Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
+                       this->GetProcessPointName());
     return *this;
   }
 
@@ -154,7 +170,11 @@ GraphPp &GraphPp::SetCompileConfig(const char_t *json_file_path) {
 }
 
 void GraphPp::Serialize(ge::AscendString &str) const {
-  GE_RETURN_IF_NULL(impl_, "[Check][Param] GraphPpImpl is nullptr, check failed.");
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] GraphPpImpl is nullptr, check failed");
+    REPORT_INNER_ERROR("E18888", "Serialize failed: GraphPp can not be used, impl is nullptr.");
+    return;
+  }
   dataflow::ProcessPoint process_point;
   process_point.set_name(this->GetProcessPointName());
   process_point.set_type(dataflow::ProcessPoint_ProcessPointType_GRAPH);
@@ -168,7 +188,8 @@ void GraphPp::Serialize(ge::AscendString &str) const {
 
 GraphBuilder GraphPp::GetGraphBuilder() const {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] GraphPpImpl is nullptr, check failed");
+    GELOGE(GRAPH_FAILED, "[Check][Param] GraphPpImpl is nullptr, check failed");
+    REPORT_INNER_ERROR("E18888", "GetGraphBuilder failed: GraphPp can not be used, impl is nullptr.");
     return nullptr;
   }
   return impl_->GetGraphBuilder();
@@ -179,16 +200,22 @@ public:
   FunctionPpImpl() = default;
   ~FunctionPpImpl() = default;
 
-  void AddInvokedClosure(const char_t *name, const GraphPp graph_pp) {
-    GE_RETURN_IF_NULL(name, "[Check][Param] AddInvokedClosure failed for name is nullptr.");
-    GE_RETURN_IF_NULL(graph_pp.GetProcessPointName(),
-                      "[Check][Param] AddInvokedClosure failed for graphpp name is nullptr.");
-    GE_RETURN_IF_TRUE(invoked_closures_.find(name) != invoked_closures_.end(),
-                      "AddInvokedClosure failed for duplicate name(%s).", name);
-
-    invoked_closures_.emplace(name, graph_pp);
+  graphStatus AddInvokedClosure(const char_t *name, const GraphPp graph_pp) {
+    if (name == nullptr) {
+      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] AddInvokedClosure failed for name is nullptr.");
+      return GRAPH_PARAM_INVALID;
+    }
+    if (graph_pp.GetGraphBuilder() == nullptr) {
+      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] AddInvokedClosure failed for graphpp graph builder is nullptr.");
+      return GRAPH_PARAM_INVALID;
+    }
+    if (invoked_closures_.find(name) != invoked_closures_.end()) {
+      GELOGE(GRAPH_PARAM_INVALID, "AddInvokedClosure failed for duplicate name(%s).", name);
+      return GRAPH_PARAM_INVALID;
+    }
+    (void) invoked_closures_.emplace(name, graph_pp);
     GELOGI("AddInvokedClosure key(%s), pp name(%s).", name, graph_pp.GetProcessPointName());
-    return;
+    return GRAPH_SUCCESS;
   }
 
   const std::map<const std::string, const GraphPp> &GetInvokedClosures() const {
@@ -198,7 +225,7 @@ public:
   template<typename T>
   bool SetAttrValue(const char_t *name, T &&value) {
     if (name == nullptr) {
-      GELOGE(ge::FAILED, "name is null.");
+      GELOGE(GRAPH_FAILED, "name is null.");
       return false;
     }
     return attrs_.SetByName(name, std::forward<T>(value));
@@ -228,13 +255,7 @@ void FunctionPpImpl::AddInvokedPps(dataflow::ProcessPoint &process_point) {
     invoked_pp.set_name(graph_pp.GetProcessPointName());
     invoked_pp.set_type(dataflow::ProcessPoint_ProcessPointType_GRAPH);
     invoked_pp.set_compile_cfg_file(graph_pp.GetCompileConfig());
-
     const auto builder = graph_pp.GetGraphBuilder();
-    if (builder == nullptr) {
-      GELOGE(ge::FAILED, "GraphBuilder is null.");
-      return;
-    }
-
     invoked_pp.add_graphs(graph_pp.GetProcessPointName());
     (*invoke_pps)[iter->first] = std::move(invoked_pp);
     GELOGI("Add invoke pp success. key:%s, invoked pp name:%s", (iter->first).c_str(), graph_pp.GetProcessPointName());
@@ -252,7 +273,7 @@ void FunctionPpImpl::AddFunctionPpInitPara(dataflow::ProcessPoint &process_point
 
     proto::AttrDef attr_def;
     if (serializer->Serialize(attr_value, attr_def) != GRAPH_SUCCESS) {
-      GELOGE(ge::FAILED, "Attr serialized failed, name:[%s].", attr.first.c_str());
+      GELOGE(GRAPH_FAILED, "Attr serialized failed, name:[%s].", attr.first.c_str());
       return;
     }
     (*init_attr)[attr.first] = attr_def;
@@ -262,12 +283,12 @@ void FunctionPpImpl::AddFunctionPpInitPara(dataflow::ProcessPoint &process_point
 
 FunctionPp::FunctionPp(const char_t *pp_name) : ProcessPoint(pp_name, ProcessPointType::FUNCTION) {
   if (pp_name == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] pp_name is nullptr.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] pp_name is nullptr.");
     impl_ = nullptr;
   } else {
     impl_ = MakeShared<FunctionPpImpl>();
     if (impl_ == nullptr) {
-      GELOGE(ge::FAILED, "FunctionPpImpl make shared failed.");
+      GELOGE(GRAPH_FAILED, "FunctionPpImpl make shared failed.");
     }
   }
 }
@@ -275,12 +296,16 @@ FunctionPp::~FunctionPp() = default;
 
 FunctionPp &FunctionPp::SetCompileConfig(const char_t *json_file_path) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetCompileConfig failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
   if (json_file_path == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
+    GELOGE(GRAPH_FAILED, "[Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
            this->GetProcessPointName());
+    REPORT_INNER_ERROR("E18888",
+                       "SetCompileConfig failed: [Check][Param] ProcessPoint(%s)'s compile config json is nullptr.",
+                       this->GetProcessPointName());
     return *this;
   }
 
@@ -291,13 +316,16 @@ FunctionPp &FunctionPp::SetCompileConfig(const char_t *json_file_path) {
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const ge::AscendString &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   std::string str_value(value.GetString());
   if (!impl_->SetAttrValue(attr_name, str_value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -305,18 +333,22 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const ge::AscendSt
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const char_t *value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (value == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] Set init param value is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Set init param value is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: [Check][Param] Set init param value is nullptr, check failed.");
     return *this;
   }
 
   std::string str_value(value);
   if (!impl_->SetAttrValue(attr_name, str_value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -324,7 +356,8 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const char_t *valu
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<ge::AscendString> &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
@@ -333,7 +366,9 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<
     vec_value.emplace_back(iter->GetString());
   }
   if (!impl_->SetAttrValue(attr_name, vec_value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -341,12 +376,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const int64_t &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -354,12 +392,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const int64_t &val
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<int64_t> &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -367,12 +408,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<std::vector<int64_t>> &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -380,12 +424,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const float &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -393,12 +440,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const float &value
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<float> &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -406,12 +456,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const bool &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -419,12 +472,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const bool &value)
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<bool> &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -432,12 +488,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const ge::DataType &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -445,12 +504,15 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const ge::DataType
 
 FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<ge::DataType> &value) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
   if (!impl_->SetAttrValue(attr_name, value)) {
-    GELOGE(ge::FAILED, "set attr name(%s) failed.", attr_name);
+    const std::string name = (attr_name == nullptr) ? "nullptr" : attr_name;
+    GELOGE(GRAPH_FAILED, "set attr name(%s) failed.", name.c_str());
+    REPORT_INNER_ERROR("E18888", "SetInitParam failed: set attr name(%s) failed.", name.c_str());
   }
 
   return *this;
@@ -458,11 +520,14 @@ FunctionPp &FunctionPp::SetInitParam(const char_t *attr_name, const std::vector<
 
 FunctionPp &FunctionPp::AddInvokedClosure(const char_t *name, const GraphPp &graph_pp) {
   if (impl_ == nullptr) {
-    GELOGE(ge::FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+    REPORT_INNER_ERROR("E18888", "AddInvokedClosure failed: FunctionPp can not be used, impl is nullptr.");
     return *this;
   }
 
-  impl_->AddInvokedClosure(name, graph_pp);
+  if (impl_->AddInvokedClosure(name, graph_pp) != GRAPH_SUCCESS) {
+    REPORT_INNER_ERROR("E18888", "AddInvokedClosure failed.");
+  }
   return *this;
 }
 
@@ -476,7 +541,11 @@ const std::map<const std::string, const GraphPp> &FunctionPp::GetInvokedClosures
 }
 
 void FunctionPp::Serialize(ge::AscendString &str) const {
-  GE_RETURN_IF_NULL(impl_, "[Check][Param] FunctionPpImpl is nullptr, check failed.");
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] FunctionPpImpl is nullptr, check failed");
+    REPORT_INNER_ERROR("E18888", "Serialize failed: FunctionPp can not be used, impl is nullptr.");
+    return;
+  }
   dataflow::ProcessPoint process_point;
   process_point.set_name(this->GetProcessPointName());
   process_point.set_type(dataflow::ProcessPoint_ProcessPointType_FUNCTION);

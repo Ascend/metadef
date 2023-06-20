@@ -15,15 +15,18 @@
  */
 
 #include "flow_graph/data_flow_utils.h"
-#include "common/checker.h"
+#include "framework/common/debug/ge_log.h"
 
 namespace ge {
 namespace dflow {
-void DataFlowUtils::BuildInvokedGraphFromGraphPp(const GraphPp &graph_pp, Graph &graph) {
+graphStatus DataFlowUtils::BuildInvokedGraphFromGraphPp(const GraphPp &graph_pp, Graph &graph) {
   const auto pp_name = graph_pp.GetProcessPointName();
-  GE_RETURN_IF_NULL(pp_name, "GraphPp name is nullptr.");
   GraphBuilder builder = graph_pp.GetGraphBuilder();
-  GE_RETURN_IF_NULL(builder, "GraphPp(%s)'s graph builder is nullptr.", pp_name);
+  if (builder == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "GraphPp(%s)'s graph builder is nullptr.",
+           ((pp_name == nullptr) ? "nullptr" : pp_name));
+    return GRAPH_PARAM_INVALID;
+  }
   std::string graph_name = pp_name;
   graph_name += "_invoked";
   // add one FlowData and one FlowNode
@@ -32,6 +35,7 @@ void DataFlowUtils::BuildInvokedGraphFromGraphPp(const GraphPp &graph_pp, Graph 
   // 1 input and 1 output
   auto flow_node = FlowNode("flow_node", 1, 1).SetInput(0, flow_data).AddPp(graph_pp);
   graph = flow_graph.SetInputs({flow_data}).SetOutputs({flow_node}).ToGeGraph();
+  return GRAPH_SUCCESS;
 }
 }  // namespace dflow
 }  // namespace ge
