@@ -158,7 +158,7 @@ DefaultOpImplSpaceRegistry &DefaultOpImplSpaceRegistry::GetInstance() {
   return instance;
 }
 
-ge::graphStatus OpImplSpaceRegistry::LoadSoAndSaveToRegistry(const std::string &so_path, void **so_handle) {
+ge::graphStatus OpImplSpaceRegistry::LoadSoAndSaveToRegistry(const std::string &so_path) {
   uint32_t len = 0U;
   const auto so_data = ge::GetBinFromFile(const_cast<std::string &>(so_path), len);
   std::string str_so_data(so_data.get(), so_data.get()+len);
@@ -201,9 +201,6 @@ ge::graphStatus OpImplSpaceRegistry::LoadSoAndSaveToRegistry(const std::string &
     return ge::GRAPH_FAILED;
   }
   om_registry_holder->SetHandle(handle);
-  if (so_handle != nullptr) {
-    *so_handle = handle;
-  }
   GELOGI("Save so symbol and handle in path[%s] success!", so_path.c_str());
   GE_DISMISS_GUARD(close_handle);
   return ge::GRAPH_SUCCESS;

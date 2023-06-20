@@ -255,13 +255,11 @@ TEST_F(OpImplSpaceRegistryUT, LoadSoAndSaveToRegistry_success) {
 
   const std::string so_path = "./libop_master_test.so";
   system(("touch " + so_path).c_str());
-  void *handle = nullptr;
   gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(nullptr);
-  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_SUCCESS);
-  EXPECT_EQ(handle, mock_handle);
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path), ge::GRAPH_SUCCESS);
 
   // 重复load
-  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_FAILED);
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path), ge::GRAPH_FAILED);
 
   gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(nullptr);
   system(("rm -f " + so_path).c_str());
@@ -273,15 +271,12 @@ TEST_F(OpImplSpaceRegistryUT, LoadSoAndSaveToRegistry_fail) {
   g_impl_num = 0;
   const std::string so_path = "./libop_master_test.so";
   system(("touch " + so_path).c_str());
-  void *handle = nullptr;
-  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_FAILED);
-  EXPECT_EQ(handle, nullptr);
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path), ge::GRAPH_FAILED);
 
   mock_handle = (void *) 0xffffffff;
   get_func_null = true;
   close_fail = true;
-  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path, &handle), ge::GRAPH_FAILED);
-  EXPECT_EQ(handle, nullptr);
+  EXPECT_EQ(gert::OpImplSpaceRegistry::LoadSoAndSaveToRegistry(so_path), ge::GRAPH_FAILED);
   gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(nullptr);
   system(("rm -f " + so_path).c_str());
 }
