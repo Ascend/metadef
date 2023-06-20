@@ -16,7 +16,7 @@ file(GLOB_RECURSE SRC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     "src/*.cc"
 )
 
-include_directories(${METADEF_DIR}/inc/common/util)
+include_directories(${METADEF_DIR}/inc/external/platform)
 
 add_library(platform_stub SHARED ${SRC_FILES})
 target_link_libraries(platform_stub
