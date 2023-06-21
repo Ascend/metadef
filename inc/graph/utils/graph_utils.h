@@ -547,17 +547,6 @@ class GraphUtils {
   static graphStatus CopyTensorAttrs(const OpDescPtr &dst_desc, const NodePtr &src_node);
 
   /**
-   * 获取当前图里面的所有的节点的输入输出tensor的复用关系
-   * @param graph
-   * @param symbol_to_anchors 使用同一块内存特征值的所有的tensor
-   * @param anchor_to_symbol tensor和内存特征值的对应关系
-   * @return
-   */
-  static graphStatus GetRefMapping(const ComputeGraphPtr &graph,
-                                   std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                   std::map<std::string, std::string> &anchor_to_symbol);
-
-  /**
  * 获取当前图里面的所有的节点的输入输出tensor的复用关系
  * @param graph
  * @param symbol_to_anchors
@@ -685,71 +674,6 @@ class GraphUtils {
     std::list<std::pair<ge::OutControlAnchorPtr, ge::InControlAnchorPtr>> inner_ctrl_edges_;
     friend class GraphUtils;
   };
-  /// Get reference-mapping for in_data_anchors of node
-  /// @param [in] node
-  /// @param [out] symbol_to_anchors
-  /// @param [out] anchor_to_symbol
-  /// @return success: GRAPH_SUCESS
-  static graphStatus HandleInAnchorMapping(const ComputeGraphPtr &graph, const NodePtr &node,
-                                           std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                           std::map<std::string, std::string> &anchor_to_symbol);
-
-  /// Get reference-mapping for out_data_anchors of node
-  /// @param [in] node
-  /// @param [out] symbol_to_anchors
-  /// @param [out] anchor_to_symbol
-  /// @return success: GRAPH_SUCESS
-  static graphStatus HandleOutAnchorMapping(const NodePtr &node,
-                                            std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                            std::map<std::string, std::string> &anchor_to_symbol);
-
-  /// Handle input of subgraph
-  /// @param [in] node
-  /// @param [out] symbol_to_anchors
-  /// @param [out] anchor_to_symbol
-  /// @return success: GRAPH_SUCESS
-  static graphStatus HandleSubgraphInput(const NodePtr &node,
-                                         std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                         std::map<std::string, std::string> &anchor_to_symbol);
-
-  /// Handle input of Merge op
-  /// @param [in] node
-  /// @param [out] symbol_to_anchors
-  /// @param [out] anchor_to_symbol
-  /// @return success: GRAPH_SUCESS
-  static graphStatus HandleMergeInput(const NodePtr &node,
-                                      std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                      std::map<std::string, std::string> &anchor_to_symbol);
-
-  /// Handle output of subgraph
-  /// @param [in] node
-  /// @param [out] symbol_to_anchors
-  /// @param [out] anchor_to_symbol
-  /// @return success: GRAPH_SUCESS
-  static graphStatus HandleSubgraphOutput(const NodePtr &node,
-                                          std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                          std::map<std::string, std::string> &anchor_to_symbol);
-
-  /// Union ref-mapping
-  /// @param [in] exist_node_info1
-  /// @param [in] exist_node_info2
-  /// @param [out] symbol_to_anchors
-  /// @param [out] anchor_to_symbol
-  /// @param [out] symbol
-  /// @return success: GRAPH_SUCESS
-  static graphStatus UnionSymbolMapping(const NodeIndexIO &exist_node_info1, const NodeIndexIO &exist_node_info2,
-                                        std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                        std::map<std::string, std::string> &anchor_to_symbol, std::string &symbol);
-
-  /// Update symbol mapping with a new reference pair
-  /// @param [in] cur_node_info
-  /// @param [in] exist_node_info
-  /// @param [out] symbol_to_anchors
-  /// @param [out] anchor_to_symbol
-  /// @return success: GRAPH_SUCESS
-  static graphStatus UpdateRefMapping(const NodeIndexIO &cur_node_info, const NodeIndexIO &exist_node_info,
-                                      std::map<std::string, std::list<NodeIndexIO>> &symbol_to_anchors,
-                                      std::map<std::string, std::string> &anchor_to_symbol);
 
   /**
    * 创建节点输入tensor的内存符号，正常情况下，应该跟其对端的输出tensor的内存符号相同，因为二者是一块地址

@@ -1746,7 +1746,7 @@
       "Arglist": "extend_info",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "N/A"
+        "Solution": "1.Check the input parameter range of the function. 2.Check the function invocation relationship."
       }
     },
     {

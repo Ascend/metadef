@@ -278,6 +278,70 @@ TEST_F(ProcessPointUTest, FunctionPpInvokedPp) {
 TEST_F(ProcessPointUTest, SetInitParamFailed) {
   const int64_t value = 1;
   auto pp1 = FunctionPp("func_pp").SetInitParam(nullptr, value);
+  AscendString str;
+  pp1.SetInitParam(nullptr, str);
+  std::string s;
+  pp1.SetInitParam(nullptr, s.c_str());
+  std::vector<AscendString> strs;
+  pp1.SetInitParam(nullptr, strs);
+  std::vector<int64_t> ints;
+  pp1.SetInitParam(nullptr, ints);
+  std::vector<std::vector<int64_t>> intss;
+  pp1.SetInitParam(nullptr, intss);
+  float f = 0;
+  pp1.SetInitParam(nullptr, f);
+  std::vector<float> fs;
+  pp1.SetInitParam(nullptr, fs);
+  bool b = false;
+  pp1.SetInitParam(nullptr, b);
+  std::vector<bool> bs;
+  pp1.SetInitParam(nullptr, bs);
+  DataType dt = DT_UNDEFINED;
+  pp1.SetInitParam(nullptr, dt);
+  std::vector<DataType> dts;
+  pp1.SetInitParam(nullptr, dts);
   ASSERT_EQ(strcmp(pp1.GetProcessPointName(), "func_pp"), 0);
+}
+
+class StubProcessPoint : public ProcessPoint {
+ public:
+  StubProcessPoint(const char_t *name, ProcessPointType type) : ProcessPoint(name, type) {}
+  void Serialize(ge::AscendString &str) const override {
+    return;
+  }
+  StubProcessPoint &SetCompileConfig(const char_t *json_file_path) {
+    ProcessPoint::SetCompileConfigFile(json_file_path);
+    return *this;
+  }
+};
+
+TEST_F(ProcessPointUTest, SetCompileConfigFileFailed) {
+  auto pp = FunctionPp(nullptr).SetCompileConfig("./config.json");
+  ASSERT_EQ(pp.GetProcessPointName(), nullptr);
+  auto funcpp = FunctionPp("funcpp").SetCompileConfig(nullptr);
+  ASSERT_EQ(strcmp(funcpp.GetCompileConfig(), ""), 0);
+  auto graphpp = GraphPp("graphpp", []() { return Graph(); }).SetCompileConfig(nullptr);
+  ASSERT_EQ(strcmp(funcpp.GetCompileConfig(), ""), 0);
+  auto stubpp = StubProcessPoint(nullptr, ProcessPointType::GRAPH).SetCompileConfig("./config");
+  ASSERT_EQ(stubpp.GetCompileConfig(), nullptr);
+  stubpp = StubProcessPoint("stubpp", ProcessPointType::GRAPH).SetCompileConfig(nullptr);
+  ASSERT_EQ(strcmp(stubpp.GetCompileConfig(), ""), 0);
+}
+
+TEST_F(ProcessPointUTest, InvalidPp) {
+  auto graphpp = GraphPp("graphpp", nullptr);
+  AscendString str;
+  graphpp.Serialize(str);
+  ASSERT_EQ(str.GetLength(), 0);
+  auto funcpp = FunctionPp(nullptr).AddInvokedClosure("graph", graphpp).SetInitParam("attr", "value");
+  funcpp.Serialize(str);
+  ASSERT_EQ(str.GetLength(), 0);
+  ASSERT_TRUE(funcpp.GetInvokedClosures().empty());
+}
+
+TEST_F(ProcessPointUTest, AddInvokedClosureFailed) {
+  auto graphpp = GraphPp("graphpp", nullptr);
+  auto funcpp = FunctionPp("funcpp").AddInvokedClosure(nullptr, graphpp).AddInvokedClosure("graph", graphpp);
+  ASSERT_EQ(funcpp.GetInvokedClosures().size(), 0);
 }
 } // namespace ge

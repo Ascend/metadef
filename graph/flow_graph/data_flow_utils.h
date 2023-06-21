@@ -23,7 +23,7 @@ namespace ge {
 namespace dflow {
 class DataFlowUtils {
  public:
-  static void BuildInvokedGraphFromGraphPp(const GraphPp &graph_pp, Graph &graph);
+  static graphStatus BuildInvokedGraphFromGraphPp(const GraphPp &graph_pp, Graph &graph);
 };
 }  // namespace dflow
 }  // namespace ge

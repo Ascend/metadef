@@ -28,7 +28,8 @@ namespace ge {
 class ModelSerialize {
  public:
   Buffer SerializeModel(const Model &model, const bool is_dump = false) const;
-  Buffer SerializeModel(const Model &model, const std::string &path, const bool is_dump = false) const;
+  Buffer SerializeModel(const Model &model, const std::string &path,
+                        const bool is_need_separate, const bool is_dump = false) const;
   Status SerializeModel(const Model &model, const bool is_dump, proto::ModelDef &model_def) const;
 
   bool UnserializeModel(const uint8_t *const data, const size_t len, Model &model) const;

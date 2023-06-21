@@ -55,7 +55,7 @@ class DataFlowUtilsUTest : public testing::Test {
 };
 std::shared_ptr<std::map<std::string, OpCreator>> DataFlowUtilsUTest::backup_operator_creators_;
 
-TEST_F(DataFlowUtilsUTest, BuildInvokedGraphFromGraphPp) {
+TEST_F(DataFlowUtilsUTest, BuildInvokedGraphFromGraphPp_Success) {
   GraphBuilder graph_build = []() {
     ut::GraphBuilder builder = ut::GraphBuilder("subgraph");
     auto data = builder.AddNode("Data", "Data", 0, 1);
@@ -96,5 +96,15 @@ TEST_F(DataFlowUtilsUTest, BuildInvokedGraphFromGraphPp) {
     }
   }
   ASSERT_EQ(has_flow_node, true);
+}
+
+TEST_F(DataFlowUtilsUTest, BuildInvokedGraphFromGraphPp_Failed) {
+  auto graph_pp = GraphPp(nullptr, nullptr);
+  Graph graph;
+  auto ret = DataFlowUtils::BuildInvokedGraphFromGraphPp(graph_pp, graph);
+  ASSERT_EQ(ret, GRAPH_PARAM_INVALID);
+  graph_pp = GraphPp("graph_pp", nullptr);
+  ret = DataFlowUtils::BuildInvokedGraphFromGraphPp(graph_pp, graph);
+  ASSERT_EQ(ret, GRAPH_PARAM_INVALID);
 }
 }  // namespace ge

@@ -199,6 +199,14 @@ TEST_F(ModelUt, Load_Nonfilename) {
   EXPECT_EQ(md.LoadFromFile("/tmp/non-exsit"),GRAPH_FAILED);
 }
 
+TEST_F(ModelUt, SaveLargeModelWithoutSeparate) {
+  auto md = BuildModelWithLargeConst();
+  Buffer buf = Buffer(1024);
+  EXPECT_EQ(buf.GetSize(),1024);
+  EXPECT_EQ(md.IsValid(),true);
+  EXPECT_EQ(md.SaveWithoutSeparate(buf), GRAPH_FAILED);
+}
+
 TEST_F(ModelUt, SaveLargeModelWithRealPath) {
   auto md = BuildModelWithLargeConst();
   std::string file_name = "/tmp/test/model.air";

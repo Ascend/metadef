@@ -72,10 +72,10 @@ graphStatus GEContext::GetOption(const std::string &key, std::string &option) {
 const std::string &GEContext::GetReadableName(const std::string &key) {
   auto iter = option_name_map_.find(key);
   if (iter != option_name_map_.end()) {
-    GELOGD("Option %s 's readable name is show name: %s", key.c_str(), iter->second.c_str());
+    GELOGD("Option %s's readable name is show name: %s", key.c_str(), iter->second.c_str());
     return iter->second;
   }
-  GELOGD("Option %s 's readable name is GE IR option: %s", key.c_str(), key.c_str());
+  GELOGD("Option %s's readable name is GE IR option: %s", key.c_str(), key.c_str());
   return key;
 }
 

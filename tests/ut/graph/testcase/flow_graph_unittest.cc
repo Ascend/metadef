@@ -203,4 +203,67 @@ TEST_F(FlowGraphUTest, MapInputAndMapOutputFailed) {
   auto flag = process_point.ParseFromString(pp_attrs[0]);
   ASSERT_TRUE(flag);
 }
+
+TEST_F(FlowGraphUTest, FlowNode_FlowNodeImpl_nullptr) {
+  auto pp = FunctionPp("func_pp");
+  auto node = FlowNode(nullptr, 0, 0).AddPp(pp).MapInput(0, pp, 0).MapOutput(0, pp, 0);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  std::vector<std::string> pp_attrs;
+  ASSERT_FALSE(ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs));
+}
+
+class StubProcessPoint : public ProcessPoint {
+ public:
+  StubProcessPoint(const char_t *name, ProcessPointType type) : ProcessPoint(name, type) {}
+  void Serialize(ge::AscendString &str) const override {
+    return;
+  }
+};
+
+TEST_F(FlowGraphUTest, FlowNode_Invalid_Pp) {
+  auto pp = FunctionPp(nullptr);
+  auto node = FlowNode("node", 1, 1).AddPp(pp).MapInput(0, pp, 0).MapOutput(0, pp, 0);
+  auto stub_pp = StubProcessPoint("stub_pp", ProcessPointType::FUNCTION);
+  node.AddPp(stub_pp);
+  stub_pp = StubProcessPoint("stub_pp", ProcessPointType::GRAPH);
+  node.AddPp(stub_pp);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  std::vector<std::string> pp_attrs;
+  ASSERT_FALSE(ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs));
+}
+
+TEST_F(FlowGraphUTest, FlowNode_MapInput_Failed) {
+  auto pp = FunctionPp("pp");
+  auto node = FlowNode("node", 1, 1).AddPp(pp);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  DataFlowInputAttr attr{DataFlowAttrType::INVALID, nullptr};
+  node.MapInput(0, pp, 0, {attr});
+  auto input_desc = op_desc->MutableInputDesc(0);
+  input_desc->SetDataType(DT_UNDEFINED);
+  input_desc->SetFormat(FORMAT_RESERVED);
+  node.MapInput(0, pp, 0);
+  std::vector<std::string> pp_attrs;
+  ASSERT_TRUE(ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs));
+  dataflow::ProcessPoint process_point;
+  auto flag = process_point.ParseFromString(pp_attrs[0]);
+  ASSERT_TRUE(flag);
+  ASSERT_EQ(process_point.in_edges_size(), 0);
+}
+
+TEST_F(FlowGraphUTest, FlowNode_AddPp_Failed) {
+  auto pp = GraphPp("graphpp", nullptr);
+  auto node = FlowNode("node", 1, 1).AddPp(pp);
+  std::vector<std::string> pp_attrs;
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  ASSERT_FALSE(ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs));
+}
+
+TEST_F(FlowGraphUTest, FlowGraph_FlowGraphImpl_nullptr) {
+  auto data0 = FlowData("Data0", 0);
+  auto flow_node = FlowNode("FlowNode", 2, 1);
+  flow_node.SetInput(2, data0);
+  auto flow_graph = FlowGraph(nullptr);
+  flow_graph.SetInputs({data0}).SetOutputs({flow_node});
+  ASSERT_EQ(flow_graph.ToGeGraph().IsValid(), false);
+}
 }  // namespace ge
