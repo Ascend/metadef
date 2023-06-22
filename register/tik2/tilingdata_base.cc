@@ -25,24 +25,26 @@ void TilingDef::GeLogError(const std::string& str) const {
   GELOGE(ge::GRAPH_FAILED, "%s", str.c_str());
 }
 
-void TilingDef::SaveToBuffer(void *pdata, size_t capacity) const {
-  size_t copy_size = data_size_ - struct_size_;
+void TilingDef::SaveToBuffer(void *pdata, size_t capacity) {
   // copy tilingdata to buffer without struct tiling data.
-  const auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, copy_size);
+  auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
   if (mem_ret != EOK) {
     GELOGE(ge::GRAPH_FAILED,
            "TilingDef::SaveToBuffer failed: memcpy_s return [%d], capacity = [%zu], data_size_ = [%zu].", mem_ret,
            capacity, data_size_);
   }
-  pdata = (void*)((uint8_t*)(pdata) + copy_size);
-  capacity -= copy_size;
   // save struct tiling data to buffer
   for (auto ptr : saveBufferPtr) {
-    TilingDef* sub_ptr = (TilingDef *)ptr;
-    sub_ptr->SaveToBuffer(pdata, capacity);
-      copy_size = sub_ptr->data_size_ - sub_ptr->struct_size_;
-      pdata = (void*)((uint8_t*)(pdata) + copy_size);
-      capacity -= copy_size;
+    const char* struct_name = ptr.first;
+    TilingDef* sub_ptr = (TilingDef *)ptr.second;
+    size_t offset = field_offset_map_[struct_name];
+    uint8_t* struct_ptr = (uint8_t*)pdata + offset;
+    mem_ret = memcpy_s(struct_ptr, sub_ptr->data_size_, sub_ptr->data_ptr_, sub_ptr->data_size_);
+    if (mem_ret != EOK) {
+    GELOGE(ge::GRAPH_FAILED,
+           "TilingDef::SaveToBuffer failed: memcpy_s return [%d], capacity = [%zu], data_size_ = [%zu].", mem_ret,
+           sub_ptr->data_size_, sub_ptr->data_size_);
+   }
   }
 }
 
